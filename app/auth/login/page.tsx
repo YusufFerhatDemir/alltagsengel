@@ -24,7 +24,13 @@ export default function LoginPage() {
     const supabase = createClient()
     const { data: signInData, error: authError } = await supabase.auth.signInWithPassword(creds[role])
     if (authError) {
-      setError(authError.message)
+      if (authError.message === 'Email not confirmed') {
+        setError('Bitte bestätigen Sie zuerst Ihre E-Mail-Adresse. Prüfen Sie Ihren Posteingang.')
+      } else if (authError.message === 'Invalid login credentials') {
+        setError('E-Mail oder Passwort ist falsch.')
+      } else {
+        setError(authError.message)
+      }
       setDemoLoading('')
       return
     }
@@ -46,7 +52,13 @@ export default function LoginPage() {
     const { data: signInData, error: authError } = await supabase.auth.signInWithPassword({ email, password })
 
     if (authError) {
-      setError(authError.message)
+      if (authError.message === 'Email not confirmed') {
+        setError('Bitte bestätigen Sie zuerst Ihre E-Mail-Adresse. Prüfen Sie Ihren Posteingang.')
+      } else if (authError.message === 'Invalid login credentials') {
+        setError('E-Mail oder Passwort ist falsch.')
+      } else {
+        setError(authError.message)
+      }
       setLoading(false)
       return
     }
