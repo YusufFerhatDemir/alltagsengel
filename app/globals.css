@@ -703,3 +703,52 @@ body {
 .auth-error { font-size:12px; color:var(--red-w); margin-bottom:12px; text-align:center; }
 .auth-link { font-size:13px; color:rgba(255,255,255,.3); text-align:center; margin-top:16px; }
 .auth-link a { color:var(--gold2); cursor:pointer; text-decoration:none; }
+
+/* ── Admin Panel ── */
+.admin-layout { display:flex; min-height:100vh; background:#F5F3EF; font-family:'Jost',sans-serif; }
+.admin-sidebar { width:220px; background:#1A1612; color:white; display:flex; flex-direction:column; padding:20px 0; position:fixed; top:0; left:0; bottom:0; z-index:10; }
+.admin-logo { display:flex; align-items:center; gap:10px; padding:0 20px 24px; font-family:'Cormorant Garamond',serif; font-size:18px; font-weight:700; border-bottom:1px solid rgba(255,255,255,.1); margin-bottom:12px; }
+.admin-nav { flex:1; display:flex; flex-direction:column; gap:2px; padding:8px 10px; }
+.admin-nav-item { display:flex; align-items:center; gap:10px; padding:10px 14px; border-radius:8px; color:rgba(255,255,255,.6); text-decoration:none; font-size:14px; transition:all .15s; border:none; background:none; cursor:pointer; text-align:left; width:100%; }
+.admin-nav-item:hover { background:rgba(255,255,255,.08); color:white; }
+.admin-nav-item.active { background:var(--gold); color:#1A1612; font-weight:600; }
+.admin-logout { margin:8px 10px; color:rgba(255,255,255,.4); }
+.admin-logout:hover { color:#F44336; background:rgba(244,67,54,.1); }
+.admin-main { flex:1; margin-left:220px; padding:32px 40px; overflow-y:auto; }
+.admin-page h1 { font-family:'Cormorant Garamond',serif; font-size:28px; font-weight:700; color:#1A1612; margin:0 0 4px; }
+.admin-page h2 { font-family:'Cormorant Garamond',serif; font-size:20px; font-weight:700; color:#1A1612; margin:0 0 16px; }
+.admin-subtitle { font-size:14px; color:#888; margin:0 0 24px; }
+.admin-page-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px; }
+.admin-stats-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
+.admin-stat-card { background:white; border-radius:12px; padding:20px; box-shadow:0 1px 3px rgba(0,0,0,.06); }
+.admin-stat-card.wide { grid-column:span 1; }
+.admin-stat-card.accent { border-left:3px solid #E8A000; }
+.admin-stat-card.success { border-left:3px solid #4CAF50; }
+.admin-stat-card.gold { border-left:3px solid var(--gold); }
+.admin-stat-value { font-size:28px; font-weight:700; color:#1A1612; font-family:'Cormorant Garamond',serif; }
+.admin-stat-label { font-size:13px; color:#888; margin-top:4px; }
+.admin-filters { display:flex; gap:8px; margin-bottom:20px; flex-wrap:wrap; }
+.admin-filter-btn { padding:6px 16px; border-radius:20px; border:1.5px solid #DDD; background:white; font-size:13px; cursor:pointer; color:#666; transition:all .15s; font-family:'Jost',sans-serif; }
+.admin-filter-btn.active { background:#1A1612; color:white; border-color:#1A1612; }
+.admin-filter-btn:hover:not(.active) { border-color:#999; }
+.admin-table-wrap { background:white; border-radius:12px; overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,.06); }
+.admin-table { width:100%; border-collapse:collapse; font-size:14px; }
+.admin-table th { background:#FAFAF7; padding:12px 16px; text-align:left; font-weight:600; color:#555; font-size:12px; text-transform:uppercase; letter-spacing:.5px; border-bottom:1px solid #EEE; }
+.admin-table td { padding:12px 16px; border-bottom:1px solid #F5F3EF; color:#333; }
+.admin-table tr:hover td { background:#FAFAF7; }
+.admin-user-cell { display:flex; align-items:center; gap:10px; }
+.admin-avatar { width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; font-size:12px; font-weight:600; }
+.admin-badge { padding:3px 10px; border-radius:12px; font-size:12px; font-weight:500; }
+.admin-badge.kunde { background:#E3F2FD; color:#1565C0; }
+.admin-badge.engel { background:#FFF3E0; color:#E65100; }
+.admin-badge.admin { background:#F3E5F5; color:#7B1FA2; }
+.admin-status { display:inline-block; padding:3px 10px; border-radius:12px; font-size:12px; font-weight:500; color:white; }
+
+@media (max-width:768px) {
+  .admin-sidebar { width:60px; padding:12px 0; }
+  .admin-logo span:last-child, .admin-nav-item span:last-child, .admin-logout span:last-child { display:none; }
+  .admin-main { margin-left:60px; padding:20px; }
+  .admin-stats-grid { grid-template-columns:repeat(2,1fr); }
+  .admin-table { font-size:12px; }
+  .admin-table th, .admin-table td { padding:8px 10px; }
+}

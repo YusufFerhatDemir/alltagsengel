@@ -25,15 +25,25 @@ export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname
 
   // Protected routes - redirect to login if not authenticated
-  if (!user && (pathname.startsWith('/kunde') || pathname.startsWith('/engel'))) {
+  if (!user && (pathname.startsWith('/kunde') || pathname.startsWith('/engel') || pathname.startsWith('/admin'))) {
     const url = request.nextUrl.clone()
     url.pathname = '/auth/login'
     return NextResponse.redirect(url)
+  }
+
+  // Admin routes - check admin role
+  if (user && pathname.startsWith('/admin')) {
+    const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+    if (profile?.role !== 'admin') {
+      const url = request.nextUrl.clone()
+      url.pathname = '/auth/login'
+      return NextResponse.redirect(url)
+    }
   }
 
   return supabaseResponse
 }
 
 export const config = {
-  matcher: ['/kunde/:path*', '/engel/:path*'],
+  matcher: ['/kunde/:path*', '/engel/:path*', '/admin/:path*'],
 }

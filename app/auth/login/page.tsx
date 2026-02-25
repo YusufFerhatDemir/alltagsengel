@@ -28,7 +28,9 @@ export default function LoginPage() {
 
     if (signInData.user) {
       const { data: profile } = await supabase.from('profiles').select('role').eq('id', signInData.user.id).single()
-      if (profile?.role === 'engel') {
+      if (profile?.role === 'admin') {
+        router.push('/admin/home')
+      } else if (profile?.role === 'engel') {
         router.push('/engel/home')
       } else {
         router.push('/kunde/home')
@@ -49,6 +51,9 @@ export default function LoginPage() {
           <input className="auth-input" type="email" placeholder="E-Mail-Adresse" value={email} onChange={e => setEmail(e.target.value)} required />
           <input className="auth-input" type="password" placeholder="Passwort" value={password} onChange={e => setPassword(e.target.value)} required />
           {error && <div className="auth-error">{error}</div>}
+          <div style={{ textAlign: 'right', marginBottom: 4 }}>
+            <Link href="/auth/forgot-password" style={{ color: 'var(--gold-2)', fontSize: 13, textDecoration: 'none' }}>Passwort vergessen?</Link>
+          </div>
           <button className="btn-gold" type="submit" disabled={loading} style={{ width: '100%', marginTop: 8 }}>
             {loading ? 'Anmelden...' : 'ANMELDEN'}
           </button>
