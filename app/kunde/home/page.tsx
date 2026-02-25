@@ -1,4 +1,6 @@
-import { createClient } from '@/lib/supabase/server'
+'use client'
+import { useState, useEffect } from 'react'
+import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 
 const categories = [
@@ -8,27 +10,60 @@ const categories = [
   { key: 'einkauf', icon: '🛒', label: 'Einkauf' },
   { key: 'haushalt', icon: '🏠', label: 'Haushalt' },
   { key: 'freizeit', icon: '☕', label: 'Freizeit' },
+  { key: 'apotheke', icon: '💊', label: 'Apotheke' },
+  { key: 'spazieren', icon: '🚶', label: 'Spazieren' },
+  { key: 'gedaechtnis', icon: '🧠', label: 'Gedächtnis' },
 ]
 
-export default async function KundeHomePage() {
-  let profile = null
-  let angels: any[] = []
+const serviceMap: Record<string, string> = {
+  begleitung: 'Begleitung',
+  arzt: 'Arztbesuch',
+  einkauf: 'Einkauf',
+  haushalt: 'Haushalt',
+  freizeit: 'Freizeit',
+  apotheke: 'Apotheke',
+  spazieren: 'Spazieren',
+  gedaechtnis: 'Gedächtnis',
+}
 
-  try {
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
+export default function KundeHomePage() {
+  const [profile, setProfile] = useState<any>(null)
+  const [angels, setAngels] = useState<any[]>([])
+  const [activeCategory, setActiveCategory] = useState('all')
 
-    if (user) {
-      const { data: p } = await supabase.from('profiles').select('*').eq('id', user.id).single()
-      profile = p
-      const { data: a } = await supabase.from('angels').select('*, profiles(*)').order('rating', { ascending: false })
-      angels = a || []
+  useEffect(() => {
+    async function load() {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        const { data: p } = await supabase.from('profiles').select('*').eq('id', user.id).single()
+        setProfile(p)
+        const { data: a } = await supabase.from('angels').select('*, profiles(*)').order('rating', { ascending: false })
+        setAngels(a || [])
+      }
     }
-  } catch (err) {
-    console.error('Kunde home load error:', err)
-  }
+    load()
+  }, [])
 
   const firstName = profile?.first_name || 'Maria'
+
+  const filteredAngels = activeCategory === 'all'
+    ? angels
+    : angels.filter(a => (a.services || []).some((s: string) =>
+        s.toLowerCase().includes(serviceMap[activeCategory]?.toLowerCase() || activeCategory)
+      ))
+
+  const demoAngels = [
+    { id: 'demo-anna', name: 'Anna Müller', rating: 4.9, jobs: 127, services: ['Begleitung', 'Einkauf', 'Haushalt'], price: 32, online: true, bg: 'var(--gold-pale)', is45b: true },
+    { id: 'demo-thomas', name: 'Thomas Weber', rating: 4.8, jobs: 89, services: ['Arztbesuch', 'Begleitung', 'Spazieren'], price: 28, online: true, bg: 'var(--green-pale)', is45b: true },
+    { id: 'demo-lisa', name: 'Lisa Schneider', rating: 4.7, jobs: 56, services: ['Freizeit', 'Haushalt', 'Apotheke'], price: 30, online: false, bg: 'var(--cream2)', is45b: true },
+  ]
+
+  const filteredDemos = activeCategory === 'all'
+    ? demoAngels
+    : demoAngels.filter(a => a.services.some(s =>
+        s.toLowerCase().includes(serviceMap[activeCategory]?.toLowerCase() || activeCategory)
+      ))
 
   return (
     <div className="screen" id="khome">
@@ -50,8 +85,12 @@ export default async function KundeHomePage() {
         </div>
 
         <div className="cat-list">
-          {categories.map((cat, i) => (
-            <div key={cat.key} className={`cat-item${i === 0 ? ' on' : ''}`}>
+          {categories.map(cat => (
+            <div
+              key={cat.key}
+              className={`cat-item${activeCategory === cat.key ? ' on' : ''}`}
+              onClick={() => setActiveCategory(cat.key)}
+            >
               <div className="cat-ic">{cat.icon}</div>
               <div className="cat-lbl">{cat.label}</div>
             </div>
@@ -74,11 +113,13 @@ export default async function KundeHomePage() {
         </div>
 
         <div className="section-row">
-          <div className="section-title">Top Engel</div>
+          <div className="section-title">
+            {activeCategory === 'all' ? 'Top Engel' : categories.find(c => c.key === activeCategory)?.label || 'Engel'}
+          </div>
           <div className="section-link">Alle ansehen</div>
         </div>
 
-        {angels.length > 0 ? angels.map((angel: any) => (
+        {filteredAngels.length > 0 ? filteredAngels.map((angel: any) => (
           <Link key={angel.id} href={`/kunde/engel/${angel.id}`} style={{ textDecoration: 'none' }}>
             <div className="engel-card">
               <div className="engel-avatar" style={{ background: angel.profiles?.avatar_color || 'var(--gold-pale)' }}>
@@ -103,42 +144,31 @@ export default async function KundeHomePage() {
               </div>
             </div>
           </Link>
+        )) : filteredDemos.length > 0 ? filteredDemos.map(angel => (
+          <Link key={angel.id} href={`/kunde/engel/${angel.id}`} style={{ textDecoration: 'none' }}>
+            <div className="engel-card">
+              <div className="engel-avatar" style={{ background: angel.bg }}>
+                👼<div className={`online-dot${angel.online ? '' : ' away'}`}></div>
+              </div>
+              <div className="engel-info">
+                <div className="engel-row1"><div className="engel-name">{angel.name}</div><div className="engel-rating">★ {angel.rating}</div></div>
+                <div className="engel-cert">✓ Zertifiziert · {angel.jobs} Einsätze</div>
+                <div className="engel-tags">
+                  {angel.services.slice(0, 3).map(s => (
+                    <span key={s} className="engel-tag">{s}</span>
+                  ))}
+                </div>
+                <div className="engel-price-row">
+                  <div className="engel-price">{angel.price}€ <span>/Std.</span></div>
+                  {angel.is45b && <div className="badge-45b">💳 §45b</div>}
+                </div>
+              </div>
+            </div>
+          </Link>
         )) : (
-          <>
-            <Link href="/kunde/engel/demo-anna" style={{ textDecoration: 'none' }}>
-              <div className="engel-card">
-                <div className="engel-avatar" style={{ background: 'var(--gold-pale)' }}>👼<div className="online-dot"></div></div>
-                <div className="engel-info">
-                  <div className="engel-row1"><div className="engel-name">Anna Müller</div><div className="engel-rating">★ 4.9</div></div>
-                  <div className="engel-cert">✓ Zertifiziert · 127 Einsätze</div>
-                  <div className="engel-tags"><span className="engel-tag">Begleitung</span><span className="engel-tag">Einkauf</span><span className="engel-tag">Haushalt</span></div>
-                  <div className="engel-price-row"><div className="engel-price">32€ <span>/Std.</span></div><div className="badge-45b">💳 §45b</div></div>
-                </div>
-              </div>
-            </Link>
-            <Link href="/kunde/engel/demo-thomas" style={{ textDecoration: 'none' }}>
-              <div className="engel-card">
-                <div className="engel-avatar" style={{ background: 'var(--green-pale)' }}>👼<div className="online-dot"></div></div>
-                <div className="engel-info">
-                  <div className="engel-row1"><div className="engel-name">Thomas Weber</div><div className="engel-rating">★ 4.8</div></div>
-                  <div className="engel-cert">✓ Zertifiziert · 89 Einsätze</div>
-                  <div className="engel-tags"><span className="engel-tag">Arztbesuch</span><span className="engel-tag">Begleitung</span></div>
-                  <div className="engel-price-row"><div className="engel-price">28€ <span>/Std.</span></div><div className="badge-45b">💳 §45b</div></div>
-                </div>
-              </div>
-            </Link>
-            <Link href="/kunde/engel/demo-lisa" style={{ textDecoration: 'none' }}>
-              <div className="engel-card">
-                <div className="engel-avatar" style={{ background: 'var(--cream2)' }}>👼<div className="online-dot away"></div></div>
-                <div className="engel-info">
-                  <div className="engel-row1"><div className="engel-name">Lisa Schneider</div><div className="engel-rating">★ 4.7</div></div>
-                  <div className="engel-cert">✓ Zertifiziert · 56 Einsätze</div>
-                  <div className="engel-tags"><span className="engel-tag">Freizeit</span><span className="engel-tag">Haushalt</span></div>
-                  <div className="engel-price-row"><div className="engel-price">30€ <span>/Std.</span></div><div className="badge-45b">💳 §45b</div></div>
-                </div>
-              </div>
-            </Link>
-          </>
+          <div style={{ textAlign: 'center', padding: '32px 16px', color: 'var(--ink4)', fontSize: 14 }}>
+            Keine Engel für diese Kategorie gefunden.
+          </div>
         )}
       </div>
     </div>
