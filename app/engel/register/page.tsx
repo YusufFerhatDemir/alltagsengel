@@ -10,7 +10,7 @@ const serviceOptions = [
   { icon: '🛒', label: 'Einkauf' },
   { icon: '🏠', label: 'Haushalt' },
   { icon: '☕', label: 'Freizeit' },
-  { icon: '🧠', label: 'Gedächtnis' },
+  { icon: '🎯', label: 'Aktivitäten' },
 ]
 
 const days = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So']
