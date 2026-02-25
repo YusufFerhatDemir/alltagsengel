@@ -16,7 +16,6 @@ function RegisterForm() {
   const [lastName, setLastName] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  const [emailSent, setEmailSent] = useState(false)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -40,7 +39,21 @@ function RegisterForm() {
       })
 
       if (authError) {
-        setError(authError.message)
+        if (authError.message.includes('already registered') || authError.message.includes('already been registered')) {
+          setError('Diese E-Mail ist bereits registriert. Bitte melden Sie sich an.')
+        } else if (authError.message.includes('valid email')) {
+          setError('Bitte geben Sie eine gültige E-Mail-Adresse ein.')
+        } else if (authError.message.includes('at least')) {
+          setError('Das Passwort muss mindestens 6 Zeichen lang sein.')
+        } else if (authError.message.includes('rate limit') || authError.message.includes('too many')) {
+          setError('Zu viele Versuche. Bitte warten Sie einen Moment.')
+        } else if (authError.message.includes('signups not allowed') || authError.message.includes('Signups not allowed')) {
+          setError('Registrierung ist derzeit deaktiviert. Bitte kontaktieren Sie den Support.')
+        } else if (authError.message.includes('Database error')) {
+          setError('Datenbankfehler. Bitte stellen Sie sicher, dass die Datenbank korrekt eingerichtet ist.')
+        } else {
+          setError(`Fehler: ${authError.message}`)
+        }
         setLoading(false)
         return
       }
@@ -52,59 +65,41 @@ function RegisterForm() {
         return
       }
 
-      // Email confirmation required (session is null)
-      if (data.user && !data.session) {
-        setEmailSent(true)
-        setLoading(false)
-        return
-      }
-
-      // Auto-confirmed — create profile and redirect
-      if (data.user && data.session) {
-        await supabase.from('profiles').upsert({
-          id: data.user.id,
-          role,
-          first_name: firstName,
-          last_name: lastName,
-          email,
-        })
-
-        if (role === 'engel') {
-          router.push('/engel/register')
-        } else {
-          router.push('/kunde/home')
+      // User created successfully
+      if (data.user) {
+        // Try to create/update profile (may already exist via auth trigger)
+        if (data.session) {
+          await supabase.from('profiles').upsert({
+            id: data.user.id,
+            role,
+            first_name: firstName,
+            last_name: lastName,
+            email,
+          }).then(() => {})
         }
+
+        // If session exists, redirect directly to home
+        if (data.session) {
+          if (role === 'engel') {
+            router.push('/engel/register')
+          } else {
+            router.push('/kunde/home')
+          }
+          router.refresh()
+          return
+        }
+
+        // No session (email confirmation required) — redirect to login with success
+        router.push('/auth/login?registered=true')
         return
       }
 
-      // Fallback — should not happen
       setError('Unbekannter Fehler. Bitte versuchen Sie es erneut.')
     } catch (err: any) {
       setError(err?.message || 'Netzwerkfehler. Bitte prüfen Sie Ihre Internetverbindung.')
     } finally {
       setLoading(false)
     }
-  }
-
-  if (emailSent) {
-    return (
-      <div className="screen auth-screen">
-        <div className="auth-card">
-          <div style={{ marginBottom: 24, textAlign: 'center' }}>
-            <Icon3D size={56} />
-          </div>
-          <div className="auth-title">E-Mail bestätigen</div>
-          <div style={{ textAlign: 'center', color: 'var(--ink-3, #aaa)', lineHeight: 1.6, margin: '16px 0' }}>
-            Wir haben eine Bestätigungs-E-Mail an <strong style={{ color: 'var(--gold-2, #c9a84c)' }}>{email}</strong> gesendet.
-            <br /><br />
-            Bitte klicken Sie auf den Link in der E-Mail, um Ihr Konto zu aktivieren.
-          </div>
-          <div className="auth-link" style={{ marginTop: 20 }}>
-            <Link href="/auth/login">Zurück zur Anmeldung</Link>
-          </div>
-        </div>
-      </div>
-    )
   }
 
   return (
