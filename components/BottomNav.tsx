@@ -6,7 +6,7 @@ const kundeItems = [
   { href: '/kunde/home', icon: '🏠', label: 'Home' },
   { href: '#', icon: '🔍', label: 'Suche' },
   { href: '#', icon: '📅', label: 'Buchungen' },
-  { href: '#', icon: '👤', label: 'Profil' },
+  { href: '/kunde/profil', icon: '👤', label: 'Profil' },
 ]
 
 const engelItems = [
