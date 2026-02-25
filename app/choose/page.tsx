@@ -13,7 +13,9 @@ export default function ChoosePage() {
 
         <Link href="/auth/register?role=kunde" style={{ textDecoration: 'none' }}>
           <div className="role-card">
-            <div className="role-icon">👤</div>
+            <div className="role-icon-3d">
+              <img src="/assets/hilfe-icon.svg" alt="Hilfe" />
+            </div>
             <div className="role-text">
               <h3>Ich suche Hilfe</h3>
               <p>Finden Sie zertifizierte Alltagsbegleiter in Ihrer Nähe. Versichert &amp; §45b-fähig.</p>
@@ -24,7 +26,7 @@ export default function ChoosePage() {
 
         <Link href="/auth/register?role=engel" style={{ textDecoration: 'none' }}>
           <div className="role-card">
-            <div className="role-icon">👼</div>
+            <Icon3D size={52} />
             <div className="role-text">
               <h3>Ich bin ein Engel</h3>
               <p>Zertifiziert · Selbständig · Bundesweit Aufträge. Versicherungsschutz über Alltagsengel.</p>
