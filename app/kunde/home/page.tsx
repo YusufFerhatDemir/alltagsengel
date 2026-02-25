@@ -33,6 +33,7 @@ export default function KundeHomePage() {
   const [angels, setAngels] = useState<any[]>([])
   const [activeCategory, setActiveCategory] = useState('all')
   const [searchRadius, setSearchRadius] = useState(10)
+  const [searchQuery, setSearchQuery] = useState('')
 
   useEffect(() => {
     async function load() {
@@ -64,6 +65,13 @@ export default function KundeHomePage() {
 
   const filteredAngels = angelsWithDistance
     .filter((a: any) => {
+      // İsim araması
+      if (searchQuery.trim()) {
+        const fullName = `${a.profiles?.first_name || ''} ${a.profiles?.last_name || ''}`.toLowerCase()
+        const services = (a.services || []).join(' ').toLowerCase()
+        const q = searchQuery.toLowerCase()
+        if (!fullName.includes(q) && !services.includes(q)) return false
+      }
       // Kategori filtresi
       if (activeCategory !== 'all') {
         const match = (a.services || []).some((s: string) =>
@@ -88,11 +96,16 @@ export default function KundeHomePage() {
     { id: 'demo-lisa', name: 'Lisa Schneider', rating: 4.7, jobs: 56, services: ['Freizeit', 'Haushalt', 'Apotheke'], price: 30, online: false, bg: 'var(--cream2)', is45b: true },
   ]
 
-  const filteredDemos = activeCategory === 'all'
-    ? demoAngels
-    : demoAngels.filter(a => a.services.some(s =>
-        s.toLowerCase().includes(serviceMap[activeCategory]?.toLowerCase() || activeCategory)
-      ))
+  const filteredDemos = demoAngels.filter(a => {
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase()
+      if (!a.name.toLowerCase().includes(q) && !a.services.join(' ').toLowerCase().includes(q)) return false
+    }
+    if (activeCategory !== 'all') {
+      if (!a.services.some(s => s.toLowerCase().includes(serviceMap[activeCategory]?.toLowerCase() || activeCategory))) return false
+    }
+    return true
+  })
 
   return (
     <div className="screen" id="khome">
@@ -108,9 +121,18 @@ export default function KundeHomePage() {
       </div>
 
       <div className="kh-body">
-        <div className="search-bar">
+        <div className="search-bar" id="search-bar">
           <span><IconSearch size={16} /></span>
-          <span className="search-placeholder">Engel suchen...</span>
+          <input
+            type="text"
+            className="search-input"
+            placeholder="Engel suchen..."
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+          />
+          {searchQuery && (
+            <button className="search-clear" onClick={() => setSearchQuery('')}>✕</button>
+          )}
         </div>
 
         <div className="radius-bar">

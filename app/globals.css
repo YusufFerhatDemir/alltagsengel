@@ -199,15 +199,17 @@ body {
 /* Bottom Nav */
 .bottom-nav {
   position:absolute; bottom:0; width:var(--phone-w);
-  background:rgba(253,250,244,.97); backdrop-filter:blur(24px);
-  border-top:1px solid var(--border);
+  background:var(--coal); backdrop-filter:blur(24px);
+  border-top:1px solid var(--coal3);
   display:flex; padding:10px 0 28px; z-index:100;
 }
-.bnav-item { flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; cursor:pointer; padding:2px 0; }
-.bnav-item .bnav-ic  { font-size:21px; color:var(--ink5); line-height:1; }
-.bnav-item .bnav-lbl { font-size:10px; font-weight:600; color:var(--ink5); }
+.bnav-item { flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; cursor:pointer; padding:2px 0; text-decoration:none; }
+.bnav-item .bnav-ic  { font-size:21px; color:var(--ink4); line-height:1; }
+.bnav-item .bnav-lbl { font-size:10px; font-weight:600; color:var(--ink4); }
 .bnav-item.on .bnav-ic  { color:var(--gold); }
 .bnav-item.on .bnav-lbl { color:var(--gold); }
+.bnav-item:active .bnav-ic  { color:var(--gold2); }
+.bnav-item:active .bnav-lbl { color:var(--gold2); }
 
 /* Section headers */
 .section-label { font-size:11px; font-weight:600; letter-spacing:.1em; text-transform:uppercase; color:var(--ink4); margin-bottom:12px; }
@@ -238,11 +240,22 @@ body {
   background:var(--white); border:1.5px solid var(--border);
   border-radius:14px; padding:13px 16px;
   display:flex; align-items:center; gap:10px;
-  margin-bottom:22px; cursor:pointer;
+  margin-bottom:22px;
   box-shadow:0 2px 12px rgba(26,22,18,.06); transition:border-color .2s;
 }
-.search-bar:active { border-color:var(--gold); }
-.search-bar .search-placeholder { font-size:14px; color:var(--ink4); font-weight:300; flex:1; }
+.search-bar:focus-within { border-color:var(--gold); box-shadow:0 2px 16px rgba(201,150,60,.15); }
+.search-bar .search-input {
+  flex:1; border:none; outline:none; background:transparent;
+  font-family:'Jost',sans-serif; font-size:14px; color:var(--ink); font-weight:400;
+}
+.search-bar .search-input::placeholder { color:var(--ink4); font-weight:300; }
+.search-clear {
+  border:none; background:var(--cream2); color:var(--ink3);
+  width:22px; height:22px; border-radius:50%; cursor:pointer;
+  font-size:11px; display:flex; align-items:center; justify-content:center;
+  transition:background .2s;
+}
+.search-clear:hover { background:var(--cream3); }
 
 /* Suchradius */
 .radius-bar {
