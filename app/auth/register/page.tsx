@@ -16,6 +16,7 @@ function RegisterForm() {
   const [lastName, setLastName] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [emailSent, setEmailSent] = useState(false)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -23,9 +24,18 @@ function RegisterForm() {
     setError('')
     const supabase = createClient()
 
+    // Sign up with user metadata (profile data stored in metadata for callback to use)
     const { data, error: authError } = await supabase.auth.signUp({
       email,
       password,
+      options: {
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
+        data: {
+          first_name: firstName,
+          last_name: lastName,
+          role: role,
+        },
+      },
     })
 
     if (authError) {
@@ -34,7 +44,16 @@ function RegisterForm() {
       return
     }
 
-    if (data.user) {
+    // Check if email confirmation is required
+    if (data.user && !data.session) {
+      // Email confirmation required - show message
+      setEmailSent(true)
+      setLoading(false)
+      return
+    }
+
+    // Auto-confirmed (no email verification required) - create profile and redirect
+    if (data.user && data.session) {
       const { error: profileError } = await supabase.from('profiles').upsert({
         id: data.user.id,
         role,
@@ -55,6 +74,27 @@ function RegisterForm() {
         router.push('/kunde/home')
       }
     }
+  }
+
+  if (emailSent) {
+    return (
+      <div className="screen auth-screen">
+        <div className="auth-card">
+          <div style={{ marginBottom: 24, textAlign: 'center' }}>
+            <Icon3D size={56} />
+          </div>
+          <div className="auth-title">E-Mail bestätigen</div>
+          <div style={{ textAlign: 'center', color: 'var(--ink-3, #aaa)', lineHeight: 1.6, margin: '16px 0' }}>
+            Wir haben eine Bestätigungs-E-Mail an <strong style={{ color: 'var(--gold-2, #c9a84c)' }}>{email}</strong> gesendet.
+            <br /><br />
+            Bitte klicken Sie auf den Link in der E-Mail, um Ihr Konto zu aktivieren.
+          </div>
+          <div className="auth-link" style={{ marginTop: 20 }}>
+            <Link href="/auth/login">Zurück zur Anmeldung</Link>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
