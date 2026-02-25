@@ -18,7 +18,7 @@ export default function LoginPage() {
     setError('')
     const supabase = createClient()
 
-    const { error: authError } = await supabase.auth.signInWithPassword({ email, password })
+    const { data: signInData, error: authError } = await supabase.auth.signInWithPassword({ email, password })
 
     if (authError) {
       setError(authError.message)
@@ -26,15 +26,14 @@ export default function LoginPage() {
       return
     }
 
-    // Get profile to determine role
-    const { data: { user } } = await supabase.auth.getUser()
-    if (user) {
-      const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+    if (signInData.user) {
+      const { data: profile } = await supabase.from('profiles').select('role').eq('id', signInData.user.id).single()
       if (profile?.role === 'engel') {
         router.push('/engel/home')
       } else {
         router.push('/kunde/home')
       }
+      router.refresh()
     }
   }
 
