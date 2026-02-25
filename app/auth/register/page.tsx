@@ -22,57 +22,67 @@ function RegisterForm() {
     e.preventDefault()
     setLoading(true)
     setError('')
-    const supabase = createClient()
 
-    // Sign up with user metadata (profile data stored in metadata for callback to use)
-    const { data, error: authError } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
-        data: {
-          first_name: firstName,
-          last_name: lastName,
-          role: role,
-        },
-      },
-    })
+    try {
+      const supabase = createClient()
 
-    if (authError) {
-      setError(authError.message)
-      setLoading(false)
-      return
-    }
-
-    // Check if email confirmation is required
-    if (data.user && !data.session) {
-      // Email confirmation required - show message
-      setEmailSent(true)
-      setLoading(false)
-      return
-    }
-
-    // Auto-confirmed (no email verification required) - create profile and redirect
-    if (data.user && data.session) {
-      const { error: profileError } = await supabase.from('profiles').upsert({
-        id: data.user.id,
-        role,
-        first_name: firstName,
-        last_name: lastName,
+      const { data, error: authError } = await supabase.auth.signUp({
         email,
+        password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+          data: {
+            first_name: firstName,
+            last_name: lastName,
+            role: role,
+          },
+        },
       })
 
-      if (profileError) {
-        setError(profileError.message)
+      if (authError) {
+        setError(authError.message)
         setLoading(false)
         return
       }
 
-      if (role === 'engel') {
-        router.push('/engel/register')
-      } else {
-        router.push('/kunde/home')
+      // User already exists (Supabase returns user with empty identities for security)
+      if (data.user && data.user.identities && data.user.identities.length === 0) {
+        setError('Ein Konto mit dieser E-Mail existiert bereits. Bitte melden Sie sich an.')
+        setLoading(false)
+        return
       }
+
+      // Email confirmation required (session is null)
+      if (data.user && !data.session) {
+        setEmailSent(true)
+        setLoading(false)
+        return
+      }
+
+      // Auto-confirmed — create profile and redirect
+      if (data.user && data.session) {
+        await supabase.from('profiles').upsert({
+          id: data.user.id,
+          role,
+          first_name: firstName,
+          last_name: lastName,
+          email,
+        })
+
+        if (role === 'engel') {
+          router.push('/engel/register')
+        } else {
+          router.push('/kunde/home')
+        }
+        return
+      }
+
+      // Fallback — should not happen
+      setError('Unbekannter Fehler. Bitte versuchen Sie es erneut.')
+    } catch (err: any) {
+      setError(err?.message || 'Netzwerkfehler. Bitte prüfen Sie Ihre Internetverbindung.')
+    } finally {
+      setLoading(false)
     }
   }
 

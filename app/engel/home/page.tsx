@@ -16,43 +16,47 @@ export default function EngelHomePage() {
 
   useEffect(() => {
     async function loadData() {
-      const supabase = createClient()
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
+      try {
+        const supabase = createClient()
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) { setLoading(false); return }
 
-      const { data: p } = await supabase.from('profiles').select('*').eq('id', user.id).single()
-      const { data: a } = await supabase.from('angels').select('*').eq('id', user.id).single()
-      setProfile(p)
-      setAngel(a)
-      if (a) setIsOnline(a.is_online)
+        const { data: p } = await supabase.from('profiles').select('*').eq('id', user.id).single()
+        const { data: a } = await supabase.from('angels').select('*').eq('id', user.id).single()
+        setProfile(p)
+        setAngel(a)
+        if (a) setIsOnline(a.is_online)
 
-      const { data: pending } = await supabase
-        .from('bookings')
-        .select('*, customer:profiles!bookings_customer_id_fkey(first_name, last_name)')
-        .eq('angel_id', user.id)
-        .eq('status', 'pending')
-        .order('created_at', { ascending: false })
-      setPendingBookings(pending || [])
+        const { data: pending } = await supabase
+          .from('bookings')
+          .select('*, customer:profiles!bookings_customer_id_fkey(first_name, last_name)')
+          .eq('angel_id', user.id)
+          .eq('status', 'pending')
+          .order('created_at', { ascending: false })
+        setPendingBookings(pending || [])
 
-      const { data: upcoming } = await supabase
-        .from('bookings')
-        .select('*, customer:profiles!bookings_customer_id_fkey(first_name, last_name)')
-        .eq('angel_id', user.id)
-        .eq('status', 'accepted')
-        .order('date', { ascending: true })
-      setUpcomingBookings(upcoming || [])
+        const { data: upcoming } = await supabase
+          .from('bookings')
+          .select('*, customer:profiles!bookings_customer_id_fkey(first_name, last_name)')
+          .eq('angel_id', user.id)
+          .eq('status', 'accepted')
+          .order('date', { ascending: true })
+        setUpcomingBookings(upcoming || [])
 
-      const now = new Date()
-      const monthStart = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`
-      const { data: completed } = await supabase
-        .from('bookings')
-        .select('total_amount')
-        .eq('angel_id', user.id)
-        .eq('status', 'completed')
-        .gte('date', monthStart)
-      setMonthEarnings((completed || []).reduce((sum, b) => sum + (b.total_amount || 0), 0))
-
-      setLoading(false)
+        const now = new Date()
+        const monthStart = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`
+        const { data: completed } = await supabase
+          .from('bookings')
+          .select('total_amount')
+          .eq('angel_id', user.id)
+          .eq('status', 'completed')
+          .gte('date', monthStart)
+        setMonthEarnings((completed || []).reduce((sum, b) => sum + (b.total_amount || 0), 0))
+      } catch (err) {
+        console.error('Engel home load error:', err)
+      } finally {
+        setLoading(false)
+      }
     }
     loadData()
   }, [])
