@@ -16,45 +16,95 @@ function RegisterForm() {
   const [lastName, setLastName] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [emailSent, setEmailSent] = useState(false)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
     setError('')
-    const supabase = createClient()
 
-    const { data, error: authError } = await supabase.auth.signUp({
-      email,
-      password,
-    })
+    try {
+      const supabase = createClient()
 
-    if (authError) {
-      setError(authError.message)
-      setLoading(false)
-      return
-    }
-
-    if (data.user) {
-      const { error: profileError } = await supabase.from('profiles').upsert({
-        id: data.user.id,
-        role,
-        first_name: firstName,
-        last_name: lastName,
+      const { data, error: authError } = await supabase.auth.signUp({
         email,
+        password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+          data: {
+            first_name: firstName,
+            last_name: lastName,
+            role: role,
+          },
+        },
       })
 
-      if (profileError) {
-        setError(profileError.message)
+      if (authError) {
+        setError(authError.message)
         setLoading(false)
         return
       }
 
-      if (role === 'engel') {
-        router.push('/engel/register')
-      } else {
-        router.push('/kunde/home')
+      // User already exists (Supabase returns user with empty identities for security)
+      if (data.user && data.user.identities && data.user.identities.length === 0) {
+        setError('Ein Konto mit dieser E-Mail existiert bereits. Bitte melden Sie sich an.')
+        setLoading(false)
+        return
       }
+
+      // Email confirmation required (session is null)
+      if (data.user && !data.session) {
+        setEmailSent(true)
+        setLoading(false)
+        return
+      }
+
+      // Auto-confirmed — create profile and redirect
+      if (data.user && data.session) {
+        await supabase.from('profiles').upsert({
+          id: data.user.id,
+          role,
+          first_name: firstName,
+          last_name: lastName,
+          email,
+        })
+
+        if (role === 'engel') {
+          router.push('/engel/register')
+        } else {
+          router.push('/kunde/home')
+        }
+        return
+      }
+
+      // Fallback — should not happen
+      setError('Unbekannter Fehler. Bitte versuchen Sie es erneut.')
+    } catch (err: any) {
+      setError(err?.message || 'Netzwerkfehler. Bitte prüfen Sie Ihre Internetverbindung.')
+    } finally {
+      setLoading(false)
     }
+  }
+
+  if (emailSent) {
+    return (
+      <div className="screen auth-screen">
+        <div className="auth-card">
+          <div style={{ marginBottom: 24, textAlign: 'center' }}>
+            <Icon3D size={56} />
+          </div>
+          <div className="auth-title">E-Mail bestätigen</div>
+          <div style={{ textAlign: 'center', color: 'var(--ink-3, #aaa)', lineHeight: 1.6, margin: '16px 0' }}>
+            Wir haben eine Bestätigungs-E-Mail an <strong style={{ color: 'var(--gold-2, #c9a84c)' }}>{email}</strong> gesendet.
+            <br /><br />
+            Bitte klicken Sie auf den Link in der E-Mail, um Ihr Konto zu aktivieren.
+          </div>
+          <div className="auth-link" style={{ marginTop: 20 }}>
+            <Link href="/auth/login">Zurück zur Anmeldung</Link>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (

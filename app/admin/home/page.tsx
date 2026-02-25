@@ -19,28 +19,33 @@ export default function AdminHomePage() {
 
   useEffect(() => {
     async function loadStats() {
-      const supabase = createClient()
+      try {
+        const supabase = createClient()
 
-      const [profilesRes, angelsRes, bookingsRes] = await Promise.all([
-        supabase.from('profiles').select('role'),
-        supabase.from('angels').select('id'),
-        supabase.from('bookings').select('status, total_amount, platform_fee'),
-      ])
+        const [profilesRes, angelsRes, bookingsRes] = await Promise.all([
+          supabase.from('profiles').select('role'),
+          supabase.from('angels').select('id'),
+          supabase.from('bookings').select('status, total_amount, platform_fee'),
+        ])
 
-      const profiles = profilesRes.data || []
-      const bookings = bookingsRes.data || []
+        const profiles = profilesRes.data || []
+        const bookings = bookingsRes.data || []
 
-      setStats({
-        totalUsers: profiles.length,
-        totalEngel: profiles.filter(p => p.role === 'engel').length,
-        totalKunden: profiles.filter(p => p.role === 'kunde').length,
-        totalBookings: bookings.length,
-        pendingBookings: bookings.filter(b => b.status === 'pending').length,
-        completedBookings: bookings.filter(b => b.status === 'completed').length,
-        totalRevenue: bookings.reduce((sum, b) => sum + (b.total_amount || 0), 0),
-        totalFees: bookings.reduce((sum, b) => sum + (b.platform_fee || 0), 0),
-      })
-      setLoading(false)
+        setStats({
+          totalUsers: profiles.length,
+          totalEngel: profiles.filter(p => p.role === 'engel').length,
+          totalKunden: profiles.filter(p => p.role === 'kunde').length,
+          totalBookings: bookings.length,
+          pendingBookings: bookings.filter(b => b.status === 'pending').length,
+          completedBookings: bookings.filter(b => b.status === 'completed').length,
+          totalRevenue: bookings.reduce((sum, b) => sum + (b.total_amount || 0), 0),
+          totalFees: bookings.reduce((sum, b) => sum + (b.platform_fee || 0), 0),
+        })
+      } catch (err) {
+        console.error('Admin stats load error:', err)
+      } finally {
+        setLoading(false)
+      }
     }
     loadStats()
   }, [])

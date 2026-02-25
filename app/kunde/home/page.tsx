@@ -11,17 +11,21 @@ const categories = [
 ]
 
 export default async function KundeHomePage() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-
   let profile = null
   let angels: any[] = []
 
-  if (user) {
-    const { data: p } = await supabase.from('profiles').select('*').eq('id', user.id).single()
-    profile = p
-    const { data: a } = await supabase.from('angels').select('*, profiles(*)').order('rating', { ascending: false })
-    angels = a || []
+  try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (user) {
+      const { data: p } = await supabase.from('profiles').select('*').eq('id', user.id).single()
+      profile = p
+      const { data: a } = await supabase.from('angels').select('*, profiles(*)').order('rating', { ascending: false })
+      angels = a || []
+    }
+  } catch (err) {
+    console.error('Kunde home load error:', err)
   }
 
   const firstName = profile?.first_name || 'Maria'
