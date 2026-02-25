@@ -14,6 +14,8 @@ function RegisterForm() {
   const [password, setPassword] = useState('')
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
+  const [plz, setPlz] = useState('')
+  const [stadt, setStadt] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -69,13 +71,17 @@ function RegisterForm() {
       if (data.user) {
         // Try to create/update profile (may already exist via auth trigger)
         if (data.session) {
-          await supabase.from('profiles').upsert({
+          const profileData: Record<string, string> = {
             id: data.user.id,
             role,
             first_name: firstName,
             last_name: lastName,
             email,
-          }).then(() => {})
+          }
+          if (plz || stadt) {
+            profileData.location = [plz, stadt].filter(Boolean).join(' ')
+          }
+          await supabase.from('profiles').upsert(profileData).then(() => {})
         }
 
         // If session exists, redirect directly to home
@@ -119,6 +125,12 @@ function RegisterForm() {
           </div>
           <input className="auth-input" type="email" placeholder="E-Mail-Adresse" value={email} onChange={e => setEmail(e.target.value)} required />
           <input className="auth-input" type="password" placeholder="Passwort (min. 6 Zeichen)" value={password} onChange={e => setPassword(e.target.value)} required minLength={6} />
+          {role === 'kunde' && (
+            <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr', gap: 10 }}>
+              <input className="auth-input" type="text" placeholder="PLZ" value={plz} onChange={e => setPlz(e.target.value.replace(/\D/g, '').slice(0, 5))} inputMode="numeric" maxLength={5} required />
+              <input className="auth-input" type="text" placeholder="Stadt" value={stadt} onChange={e => setStadt(e.target.value)} required />
+            </div>
+          )}
           {error && <div className="auth-error">{error}</div>}
           <button className="btn-gold" type="submit" disabled={loading} style={{ width: '100%', marginTop: 8 }}>
             {loading ? 'Wird erstellt...' : 'REGISTRIEREN'}
