@@ -1,6 +1,7 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 
 export default function BuchenPage() {
@@ -9,9 +10,63 @@ export default function BuchenPage() {
   const [payMethod, setPayMethod] = useState('kasse')
   const [kkType, setKkType] = useState('gesetzlich')
   const [selectedKK, setSelectedKK] = useState('AOK')
+  const [angel, setAngel] = useState<any>(null)
+  const [date, setDate] = useState('2026-03-01')
+  const [time, setTime] = useState('10:00')
+  const [duration, setDuration] = useState(2)
+  const [service, setService] = useState('Alltagsbegleitung')
+  const [notes, setNotes] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState('')
 
-  const handleSubmit = () => {
-    router.push(`/kunde/warten/${params.id}`)
+  useEffect(() => {
+    async function loadAngel() {
+      const supabase = createClient()
+      const { data } = await supabase
+        .from('angels')
+        .select('*, profiles(first_name, last_name)')
+        .eq('id', params.id)
+        .single()
+      setAngel(data)
+    }
+    if (params.id) loadAngel()
+  }, [params.id])
+
+  const rate = angel?.hourly_rate || 32
+  const subtotal = rate * duration
+  const platformFee = Math.round(subtotal * 0.085 * 100) / 100
+  const total = subtotal + platformFee
+  const angelName = angel?.profiles ? `${angel.profiles.first_name} ${angel.profiles.last_name}` : 'Engel'
+
+  const handleSubmit = async () => {
+    setSubmitting(true)
+    setError('')
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) { setError('Nicht eingeloggt'); setSubmitting(false); return }
+
+    const { data: booking, error: bookErr } = await supabase
+      .from('bookings')
+      .insert({
+        customer_id: user.id,
+        angel_id: params.id as string,
+        service,
+        date,
+        time,
+        duration_hours: duration,
+        status: 'pending',
+        payment_method: payMethod,
+        insurance_type: (payMethod === 'kasse' || payMethod === 'kombi') ? kkType : null,
+        insurance_provider: (payMethod === 'kasse' || payMethod === 'kombi') ? selectedKK : null,
+        total_amount: total,
+        platform_fee: platformFee,
+        notes: notes || null,
+      })
+      .select()
+      .single()
+
+    if (bookErr) { setError(bookErr.message); setSubmitting(false); return }
+    router.push(`/kunde/warten/${booking.id}`)
   }
 
   return (
@@ -26,30 +81,30 @@ export default function BuchenPage() {
           <div className="form-engel">
             <div className="form-engel-av">👼</div>
             <div>
-              <div className="form-engel-name">Anna Müller</div>
-              <div className="form-engel-sub">★ 4.9 · Zertifiziert</div>
+              <div className="form-engel-name">{angelName}</div>
+              <div className="form-engel-sub">★ {angel?.rating || '5.0'} · Zertifiziert</div>
             </div>
-            <div className="form-engel-price">32€<span>/h</span></div>
+            <div className="form-engel-price">{rate}€<span>/h</span></div>
           </div>
         </div>
 
         <div className="form-card">
           <div className="form-card-h">Termin</div>
-          <input className="input" type="date" defaultValue="2026-03-01" />
+          <input className="input" type="date" value={date} onChange={e => setDate(e.target.value)} />
           <div className="input-row2">
-            <input className="input" type="time" defaultValue="10:00" />
-            <select className="input">
-              <option>2 Stunden</option><option>3 Stunden</option><option>4 Stunden</option><option>Ganzer Tag</option>
+            <input className="input" type="time" value={time} onChange={e => setTime(e.target.value)} />
+            <select className="input" value={duration} onChange={e => setDuration(Number(e.target.value))}>
+              <option value={2}>2 Stunden</option><option value={3}>3 Stunden</option><option value={4}>4 Stunden</option><option value={8}>Ganzer Tag</option>
             </select>
           </div>
         </div>
 
         <div className="form-card">
           <div className="form-card-h">Leistung</div>
-          <select className="input">
+          <select className="input" value={service} onChange={e => setService(e.target.value)}>
             <option>Alltagsbegleitung</option><option>Arztbesuch-Begleitung</option><option>Einkaufsbegleitung</option><option>Haushaltshilfe</option><option>Freizeitbegleitung</option>
           </select>
-          <textarea className="input" rows={3} placeholder="Besondere Wünsche oder Hinweise..."></textarea>
+          <textarea className="input" rows={3} placeholder="Besondere Wünsche oder Hinweise..." value={notes} onChange={e => setNotes(e.target.value)}></textarea>
         </div>
 
         <div className="form-card">
@@ -96,17 +151,21 @@ export default function BuchenPage() {
         </div>
 
         <div className="total-card">
-          <div className="total-row"><div className="total-lbl">2 Stunden × 32€</div><div className="total-val">64,00€</div></div>
+          <div className="total-row"><div className="total-lbl">{duration} Stunden × {rate}€</div><div className="total-val">{subtotal.toFixed(2)}€</div></div>
           <div className="total-row"><div className="total-lbl">Versicherung</div><div className="total-val" style={{ color: 'var(--green)' }}>Inklusive</div></div>
-          <div className="total-row"><div className="total-lbl">Plattformgebühr</div><div className="total-val">5,90€</div></div>
-          <div className="total-row"><div className="total-sum-lbl">Gesamtbetrag</div><div className="total-sum">69,90€</div></div>
+          <div className="total-row"><div className="total-lbl">Plattformgebühr</div><div className="total-val">{platformFee.toFixed(2)}€</div></div>
+          <div className="total-row"><div className="total-sum-lbl">Gesamtbetrag</div><div className="total-sum">{total.toFixed(2)}€</div></div>
         </div>
+
+        {error && <div style={{ color: 'var(--red-w)', padding: '8px 16px', fontSize: 13 }}>{error}</div>}
 
         <div style={{ height: 80 }}></div>
       </div>
 
       <div className="submit-bar">
-        <button className="btn-submit" onClick={handleSubmit}>VERBINDLICH BUCHEN</button>
+        <button className="btn-submit" onClick={handleSubmit} disabled={submitting}>
+          {submitting ? 'Wird gebucht...' : 'VERBINDLICH BUCHEN'}
+        </button>
       </div>
     </div>
   )

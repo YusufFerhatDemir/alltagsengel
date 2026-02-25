@@ -1,17 +1,46 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 
 export default function MeinProfilPage() {
-  const [settings, setSettings] = useState({
-    sofort: true,
-    push: true,
-    kasse: false,
-  })
+  const [settings, setSettings] = useState({ sofort: true, push: true, kasse: false })
+  const [profile, setProfile] = useState<any>(null)
+  const [angel, setAngel] = useState<any>(null)
+  const [totalEarnings, setTotalEarnings] = useState(0)
+  const [loading, setLoading] = useState(true)
 
   const toggle = (key: keyof typeof settings) => {
     setSettings(prev => ({ ...prev, [key]: !prev[key] }))
   }
+
+  useEffect(() => {
+    async function loadProfile() {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+
+      const { data: p } = await supabase.from('profiles').select('*').eq('id', user.id).single()
+      const { data: a } = await supabase.from('angels').select('*').eq('id', user.id).single()
+      setProfile(p)
+      setAngel(a)
+
+      const { data: completed } = await supabase
+        .from('bookings')
+        .select('total_amount')
+        .eq('angel_id', user.id)
+        .eq('status', 'completed')
+      setTotalEarnings((completed || []).reduce((sum, b) => sum + (b.total_amount || 0), 0))
+      setLoading(false)
+    }
+    loadProfile()
+  }, [])
+
+  const name = profile ? `${profile.first_name} ${profile.last_name}` : '...'
+  const qualLabel = angel?.qualification || 'Alltagsbegleiter/in'
+  const loc = profile?.location || '—'
+
+  if (loading) return <div className="screen" id="mprofil"><div className="mp-header"><div className="mp-nav"><Link href="/engel/home" className="mp-back">‹</Link><div className="mp-title">Mein Profil</div></div></div></div>
 
   return (
     <div className="screen" id="mprofil">
@@ -23,11 +52,11 @@ export default function MeinProfilPage() {
         <div className="mp-main">
           <div className="mp-avatar">👼</div>
           <div>
-            <div className="mp-name">Anna Müller</div>
-            <div className="mp-sub">Zertifizierte Alltagsbegleiterin</div>
+            <div className="mp-name">{name}</div>
+            <div className="mp-sub">{qualLabel}</div>
             <div className="mp-chips">
-              <span className="mp-chip light">Berlin</span>
-              <span className="mp-chip gold">§45b</span>
+              <span className="mp-chip light">{loc}</span>
+              {angel?.is_45b_capable && <span className="mp-chip gold">§45b</span>}
             </div>
           </div>
         </div>
@@ -38,8 +67,8 @@ export default function MeinProfilPage() {
           <div className="earn-top">
             <div>
               <div className="earn-label">Gesamtverdienst</div>
-              <div className="earn-val">4.680€</div>
-              <div className="earn-change">+12% gegenüber letztem Monat</div>
+              <div className="earn-val">{totalEarnings.toFixed(0)}€</div>
+              <div className="earn-change">{angel?.hourly_rate || 30}€/Std.</div>
             </div>
             <div className="earn-btn">Auszahlen</div>
           </div>

@@ -33,7 +33,7 @@ export default async function KundeHomePage() {
           <div>
             <div className="kh-greet">Willkommen zurück</div>
             <div className="kh-name">Hallo, {firstName}</div>
-            <div className="kh-loc">📍 Berlin-Charlottenburg</div>
+            <div className="kh-loc">📍 {profile?.location || 'Berlin'}</div>
           </div>
           <div className="kh-avatar">👤</div>
         </div>
