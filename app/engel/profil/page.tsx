@@ -1,17 +1,28 @@
 'use client'
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 
 export default function MeinProfilPage() {
+  const router = useRouter()
   const [settings, setSettings] = useState({ sofort: true, push: true, kasse: false })
   const [profile, setProfile] = useState<any>(null)
   const [angel, setAngel] = useState<any>(null)
   const [totalEarnings, setTotalEarnings] = useState(0)
   const [loading, setLoading] = useState(true)
+  const [loggingOut, setLoggingOut] = useState(false)
 
   const toggle = (key: keyof typeof settings) => {
     setSettings(prev => ({ ...prev, [key]: !prev[key] }))
+  }
+
+  async function handleLogout() {
+    setLoggingOut(true)
+    const supabase = createClient()
+    await supabase.auth.signOut()
+    router.push('/')
+    router.refresh()
   }
 
   useEffect(() => {
@@ -97,6 +108,25 @@ export default function MeinProfilPage() {
           <div className="setting-row"><div><div className="setting-main">📄 Polizeiliches Führungszeugnis</div><div className="setting-sub" style={{ color: 'var(--gold)' }}>⏳ Wird geprüft</div></div></div>
           <div className="setting-row"><div><div className="setting-main">📄 Versicherungsnachweis</div><div className="setting-sub" style={{ color: 'var(--green)' }}>✓ Automatisch</div></div></div>
         </div>
+
+        <button
+          onClick={handleLogout}
+          disabled={loggingOut}
+          style={{
+            width: '100%',
+            padding: '14px 0',
+            borderRadius: 12,
+            border: '1px solid rgba(255,80,80,0.3)',
+            background: 'rgba(255,80,80,0.1)',
+            color: '#ff6b6b',
+            fontSize: 15,
+            fontWeight: 600,
+            cursor: 'pointer',
+            marginTop: 8,
+          }}
+        >
+          {loggingOut ? 'Abmelden...' : 'Abmelden'}
+        </button>
 
         <div style={{ height: 80 }}></div>
       </div>
