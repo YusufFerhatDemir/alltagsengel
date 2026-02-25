@@ -40,7 +40,21 @@ function RegisterForm() {
       })
 
       if (authError) {
-        setError(authError.message)
+        if (authError.message.includes('already registered') || authError.message.includes('already been registered')) {
+          setError('Diese E-Mail ist bereits registriert. Bitte melden Sie sich an.')
+        } else if (authError.message.includes('valid email')) {
+          setError('Bitte geben Sie eine gültige E-Mail-Adresse ein.')
+        } else if (authError.message.includes('at least')) {
+          setError('Das Passwort muss mindestens 6 Zeichen lang sein.')
+        } else if (authError.message.includes('rate limit') || authError.message.includes('too many')) {
+          setError('Zu viele Versuche. Bitte warten Sie einen Moment.')
+        } else if (authError.message.includes('signups not allowed') || authError.message.includes('Signups not allowed')) {
+          setError('Registrierung ist derzeit deaktiviert. Bitte kontaktieren Sie den Support.')
+        } else if (authError.message.includes('Database error')) {
+          setError('Datenbankfehler. Bitte stellen Sie sicher, dass die Datenbank korrekt eingerichtet ist.')
+        } else {
+          setError(`Fehler: ${authError.message}`)
+        }
         setLoading(false)
         return
       }
@@ -61,13 +75,19 @@ function RegisterForm() {
 
       // Auto-confirmed — create profile and redirect
       if (data.user && data.session) {
-        await supabase.from('profiles').upsert({
+        // Profile may already exist via auth trigger, upsert to be safe
+        const { error: profileError } = await supabase.from('profiles').upsert({
           id: data.user.id,
           role,
           first_name: firstName,
           last_name: lastName,
           email,
         })
+
+        if (profileError) {
+          console.error('Profile upsert error:', profileError)
+          // Don't block redirect — profile might already exist from auth trigger
+        }
 
         if (role === 'engel') {
           router.push('/engel/register')
