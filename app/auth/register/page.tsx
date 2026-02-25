@@ -16,7 +16,6 @@ function RegisterForm() {
   const [lastName, setLastName] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  const [emailSent, setEmailSent] = useState(false)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -66,65 +65,41 @@ function RegisterForm() {
         return
       }
 
-      // Email confirmation required (session is null)
-      if (data.user && !data.session) {
-        setEmailSent(true)
-        setLoading(false)
+      // User created successfully
+      if (data.user) {
+        // Try to create/update profile (may already exist via auth trigger)
+        if (data.session) {
+          await supabase.from('profiles').upsert({
+            id: data.user.id,
+            role,
+            first_name: firstName,
+            last_name: lastName,
+            email,
+          }).then(() => {})
+        }
+
+        // If session exists, redirect directly to home
+        if (data.session) {
+          if (role === 'engel') {
+            router.push('/engel/register')
+          } else {
+            router.push('/kunde/home')
+          }
+          router.refresh()
+          return
+        }
+
+        // No session (email confirmation required) — redirect to login with success
+        router.push('/auth/login?registered=true')
         return
       }
 
-      // Auto-confirmed — create profile and redirect
-      if (data.user && data.session) {
-        // Profile may already exist via auth trigger, upsert to be safe
-        const { error: profileError } = await supabase.from('profiles').upsert({
-          id: data.user.id,
-          role,
-          first_name: firstName,
-          last_name: lastName,
-          email,
-        })
-
-        if (profileError) {
-          console.error('Profile upsert error:', profileError)
-          // Don't block redirect — profile might already exist from auth trigger
-        }
-
-        if (role === 'engel') {
-          router.push('/engel/register')
-        } else {
-          router.push('/kunde/home')
-        }
-        return
-      }
-
-      // Fallback — should not happen
       setError('Unbekannter Fehler. Bitte versuchen Sie es erneut.')
     } catch (err: any) {
       setError(err?.message || 'Netzwerkfehler. Bitte prüfen Sie Ihre Internetverbindung.')
     } finally {
       setLoading(false)
     }
-  }
-
-  if (emailSent) {
-    return (
-      <div className="screen auth-screen">
-        <div className="auth-card">
-          <div style={{ marginBottom: 24, textAlign: 'center' }}>
-            <Icon3D size={56} />
-          </div>
-          <div className="auth-title">E-Mail bestätigen</div>
-          <div style={{ textAlign: 'center', color: 'var(--ink-3, #aaa)', lineHeight: 1.6, margin: '16px 0' }}>
-            Wir haben eine Bestätigungs-E-Mail an <strong style={{ color: 'var(--gold-2, #c9a84c)' }}>{email}</strong> gesendet.
-            <br /><br />
-            Bitte klicken Sie auf den Link in der E-Mail, um Ihr Konto zu aktivieren.
-          </div>
-          <div className="auth-link" style={{ marginTop: 20 }}>
-            <Link href="/auth/login">Zurück zur Anmeldung</Link>
-          </div>
-        </div>
-      </div>
-    )
   }
 
   return (
