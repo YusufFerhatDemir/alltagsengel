@@ -6,6 +6,8 @@ export interface Profile {
   email: string
   phone: string | null
   location: string | null
+  latitude: number | null
+  longitude: number | null
   avatar_color: string
   created_at: string
 }

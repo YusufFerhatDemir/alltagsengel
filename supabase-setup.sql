@@ -13,6 +13,8 @@ create table if not exists public.profiles (
   email text,
   phone text,
   location text,
+  latitude numeric,
+  longitude numeric,
   avatar_color text,
   created_at timestamptz not null default now()
 );

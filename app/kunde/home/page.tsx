@@ -3,6 +3,7 @@ import { useState, useEffect, ReactNode } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import { IconStar, IconHandshake, IconMedical, IconBag, IconHome as IconHouse, IconCoffee, IconPill, IconWalk, IconTarget, IconPin, IconSearch, IconUser, IconWings, IconCard, IconStarFilled, IconCheck } from '@/components/Icons'
+import { haversineDistance } from '@/lib/geocoding'
 
 const categories: { key: string; icon: ReactNode; label: string }[] = [
   { key: 'all', icon: <IconStar size={18} />, label: 'Alle' },
@@ -49,11 +50,37 @@ export default function KundeHomePage() {
 
   const firstName = profile?.first_name || 'Maria'
 
-  const filteredAngels = activeCategory === 'all'
-    ? angels
-    : angels.filter(a => (a.services || []).some((s: string) =>
-        s.toLowerCase().includes(serviceMap[activeCategory]?.toLowerCase() || activeCategory)
-      ))
+  // Mesafe filtresi: Müşteri ve engel koordinatları varsa hesapla
+  const angelsWithDistance = angels.map((a: any) => {
+    const aLat = a.profiles?.latitude
+    const aLng = a.profiles?.longitude
+    const pLat = profile?.latitude
+    const pLng = profile?.longitude
+    const distance = (pLat && pLng && aLat && aLng)
+      ? haversineDistance(pLat, pLng, aLat, aLng)
+      : null
+    return { ...a, _distance: distance }
+  })
+
+  const filteredAngels = angelsWithDistance
+    .filter((a: any) => {
+      // Kategori filtresi
+      if (activeCategory !== 'all') {
+        const match = (a.services || []).some((s: string) =>
+          s.toLowerCase().includes(serviceMap[activeCategory]?.toLowerCase() || activeCategory)
+        )
+        if (!match) return false
+      }
+      // Mesafe filtresi (koordinat yoksa engeli göster)
+      if (a._distance !== null && a._distance > searchRadius) return false
+      return true
+    })
+    .sort((a: any, b: any) => {
+      if (a._distance !== null && b._distance !== null) return a._distance - b._distance
+      if (a._distance !== null) return -1
+      if (b._distance !== null) return 1
+      return 0
+    })
 
   const demoAngels = [
     { id: 'demo-anna', name: 'Anna Müller', rating: 4.9, jobs: 127, services: ['Begleitung', 'Einkauf', 'Haushalt'], price: 32, online: true, bg: 'var(--gold-pale)', is45b: true },
@@ -149,7 +176,7 @@ export default function KundeHomePage() {
                   <div className="engel-name">{angel.profiles?.first_name} {angel.profiles?.last_name}</div>
                   <div className="engel-rating"><IconStarFilled size={13} /> {angel.rating}</div>
                 </div>
-                <div className="engel-cert"><IconCheck size={12} /> Zertifiziert · {angel.total_jobs} Einsätze{angel.profiles?.location ? ` · ${angel.profiles.location}` : ''}</div>
+                <div className="engel-cert"><IconCheck size={12} /> Zertifiziert · {angel.total_jobs} Einsätze{angel._distance !== null ? ` · ${angel._distance.toFixed(1)} km` : angel.profiles?.location ? ` · ${angel.profiles.location}` : ''}</div>
                 <div className="engel-tags">
                   {(angel.services || []).slice(0, 3).map((s: string) => (
                     <span key={s} className="engel-tag">{s}</span>
