@@ -12,7 +12,7 @@ const categories = [
   { key: 'freizeit', icon: '☕', label: 'Freizeit' },
   { key: 'apotheke', icon: '💊', label: 'Apotheke' },
   { key: 'spazieren', icon: '🚶', label: 'Spazieren' },
-  { key: 'gedaechtnis', icon: '🧠', label: 'Gedächtnis' },
+  { key: 'aktivitaeten', icon: '🎯', label: 'Aktivitäten' },
 ]
 
 const serviceMap: Record<string, string> = {
@@ -23,7 +23,7 @@ const serviceMap: Record<string, string> = {
   freizeit: 'Freizeit',
   apotheke: 'Apotheke',
   spazieren: 'Spazieren',
-  gedaechtnis: 'Gedächtnis',
+  aktivitaeten: 'Aktivitäten',
 }
 
 export default function KundeHomePage() {
