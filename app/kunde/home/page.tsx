@@ -31,6 +31,7 @@ export default function KundeHomePage() {
   const [profile, setProfile] = useState<any>(null)
   const [angels, setAngels] = useState<any[]>([])
   const [activeCategory, setActiveCategory] = useState('all')
+  const [searchRadius, setSearchRadius] = useState(10)
 
   useEffect(() => {
     async function load() {
@@ -73,7 +74,7 @@ export default function KundeHomePage() {
           <div>
             <div className="kh-greet">Willkommen zurück</div>
             <div className="kh-name">Hallo, {firstName}</div>
-            <div className="kh-loc"><IconPin size={14} /> {profile?.location || 'Berlin'}</div>
+            <div className="kh-loc"><IconPin size={14} /> {profile?.location || 'Berlin'} · {searchRadius} km</div>
           </div>
           <div className="kh-avatar"><IconUser size={22} /></div>
         </div>
@@ -83,6 +84,21 @@ export default function KundeHomePage() {
         <div className="search-bar">
           <span><IconSearch size={16} /></span>
           <span className="search-placeholder">Engel suchen...</span>
+        </div>
+
+        <div className="radius-bar">
+          <div className="radius-label"><IconPin size={13} /> Suchradius</div>
+          <div className="radius-options">
+            {[5, 10, 25, 50].map(r => (
+              <button
+                key={r}
+                className={`radius-chip${searchRadius === r ? ' active' : ''}`}
+                onClick={() => setSearchRadius(r)}
+              >
+                {r} km
+              </button>
+            ))}
+          </div>
         </div>
 
         <div className="cat-list">
@@ -116,6 +132,7 @@ export default function KundeHomePage() {
         <div className="section-row">
           <div className="section-title">
             {activeCategory === 'all' ? 'Top Engel' : categories.find(c => c.key === activeCategory)?.label || 'Engel'}
+            <span style={{ fontSize: 12, fontWeight: 400, color: 'var(--ink4)', marginLeft: 6 }}>im Umkreis von {searchRadius} km</span>
           </div>
           <div className="section-link">Alle ansehen</div>
         </div>
@@ -132,7 +149,7 @@ export default function KundeHomePage() {
                   <div className="engel-name">{angel.profiles?.first_name} {angel.profiles?.last_name}</div>
                   <div className="engel-rating"><IconStarFilled size={13} /> {angel.rating}</div>
                 </div>
-                <div className="engel-cert"><IconCheck size={12} /> Zertifiziert · {angel.total_jobs} Einsätze</div>
+                <div className="engel-cert"><IconCheck size={12} /> Zertifiziert · {angel.total_jobs} Einsätze{angel.profiles?.location ? ` · ${angel.profiles.location}` : ''}</div>
                 <div className="engel-tags">
                   {(angel.services || []).slice(0, 3).map((s: string) => (
                     <span key={s} className="engel-tag">{s}</span>

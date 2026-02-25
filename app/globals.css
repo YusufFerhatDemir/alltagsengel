@@ -244,6 +244,30 @@ body {
 .search-bar:active { border-color:var(--gold); }
 .search-bar .search-placeholder { font-size:14px; color:var(--ink4); font-weight:300; flex:1; }
 
+/* Suchradius */
+.radius-bar {
+  display:flex; align-items:center; justify-content:space-between;
+  margin-bottom:18px; padding:0 2px;
+}
+.radius-label {
+  font-size:12px; color:var(--ink3); font-weight:500;
+  display:flex; align-items:center; gap:4px;
+}
+.radius-options { display:flex; gap:6px; }
+.radius-chip {
+  font-family:'Jost',sans-serif;
+  font-size:12px; font-weight:500;
+  padding:5px 12px; border-radius:20px;
+  border:1.5px solid var(--border);
+  background:var(--white); color:var(--ink3);
+  cursor:pointer; transition:all .2s;
+}
+.radius-chip:hover { border-color:var(--gold-lt); }
+.radius-chip.active {
+  background:var(--gold); color:white;
+  border-color:var(--gold); box-shadow:0 2px 8px rgba(201,150,60,.25);
+}
+
 /* Kategorien */
 .cat-list { display:flex; gap:8px; overflow-x:auto; padding-bottom:4px; margin-bottom:24px; scrollbar-width:none; }
 .cat-list::-webkit-scrollbar { display:none; }
