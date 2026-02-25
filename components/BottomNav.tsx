@@ -1,19 +1,20 @@
 'use client'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { IconHome, IconSearch, IconCalendar, IconUser, IconClipboard } from '@/components/Icons'
 
 const kundeItems = [
-  { href: '/kunde/home', icon: '🏠', label: 'Home' },
-  { href: '#', icon: '🔍', label: 'Suche' },
-  { href: '#', icon: '📅', label: 'Buchungen' },
-  { href: '/kunde/profil', icon: '👤', label: 'Profil' },
+  { href: '/kunde/home', icon: <IconHome size={20} />, label: 'Home' },
+  { href: '#', icon: <IconSearch size={20} />, label: 'Suche' },
+  { href: '#', icon: <IconCalendar size={20} />, label: 'Buchungen' },
+  { href: '/kunde/profil', icon: <IconUser size={20} />, label: 'Profil' },
 ]
 
 const engelItems = [
-  { href: '/engel/home', icon: '🏠', label: 'Home' },
-  { href: '#', icon: '📋', label: 'Aufträge' },
-  { href: '#', icon: '📅', label: 'Kalender' },
-  { href: '/engel/profil', icon: '👤', label: 'Profil' },
+  { href: '/engel/home', icon: <IconHome size={20} />, label: 'Home' },
+  { href: '#', icon: <IconClipboard size={20} />, label: 'Aufträge' },
+  { href: '#', icon: <IconCalendar size={20} />, label: 'Kalender' },
+  { href: '/engel/profil', icon: <IconUser size={20} />, label: 'Profil' },
 ]
 
 export default function BottomNav({ role }: { role: 'kunde' | 'engel' }) {

@@ -1,16 +1,17 @@
 'use client'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, ReactNode } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import Icon3D from '@/components/Icon3D'
+import { IconHandshake, IconMedical, IconBag, IconHome as IconHouse, IconCoffee, IconTarget, IconCheck } from '@/components/Icons'
 
-const serviceOptions = [
-  { icon: '🤝', label: 'Begleitung' },
-  { icon: '🏥', label: 'Arztbesuch' },
-  { icon: '🛒', label: 'Einkauf' },
-  { icon: '🏠', label: 'Haushalt' },
-  { icon: '☕', label: 'Freizeit' },
-  { icon: '🎯', label: 'Aktivitäten' },
+const serviceOptions: { icon: ReactNode; label: string }[] = [
+  { icon: <IconHandshake size={16} />, label: 'Begleitung' },
+  { icon: <IconMedical size={16} />, label: 'Arztbesuch' },
+  { icon: <IconBag size={16} />, label: 'Einkauf' },
+  { icon: <IconHouse size={16} />, label: 'Haushalt' },
+  { icon: <IconCoffee size={16} />, label: 'Freizeit' },
+  { icon: <IconTarget size={16} />, label: 'Aktivitäten' },
 ]
 
 const days = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So']
@@ -189,7 +190,7 @@ export default function EngelRegisterPage() {
 
         <div className="ereg-agree">
           <div className="ereg-agree-row">
-            <div className="ereg-checkbox">✓</div>
+            <div className="ereg-checkbox"><IconCheck size={14} /></div>
             <div className="ereg-agree-text">Ich akzeptiere die <strong>AGB</strong>, <strong>Datenschutzerklärung</strong> und bestätige meine Qualifikation. Versicherungsschutz wird bei Aufträgen automatisch aktiviert.</div>
           </div>
         </div>

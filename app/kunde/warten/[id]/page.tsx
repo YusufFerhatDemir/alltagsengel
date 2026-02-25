@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
+import { IconWings, IconCheck } from '@/components/Icons'
 
 export default function WartenPage() {
   const router = useRouter()
@@ -42,7 +43,7 @@ export default function WartenPage() {
         <div className="wait-pulse">
           <div className="wait-ring"></div>
           <div className="wait-ring"></div>
-          <div className="wait-core">👼</div>
+          <div className="wait-core"><IconWings size={28} /></div>
         </div>
         <div className="wait-title">{confirmed ? 'Buchung bestätigt!' : 'Anfrage wird gesendet...'}</div>
         <div className="wait-sub">
@@ -64,7 +65,7 @@ export default function WartenPage() {
 
         {confirmed && (
           <button className="btn-done" onClick={() => router.push(`/kunde/bestaetigt/${params.id}`)} style={{ animation: 'screenIn .28s cubic-bezier(.4,0,.2,1) both' }}>
-            BUCHUNG BESTÄTIGT ✓
+            BUCHUNG BESTÄTIGT <IconCheck size={16} />
           </button>
         )}
         <Link href="/kunde/home" className="btn-cancel">Abbrechen</Link>

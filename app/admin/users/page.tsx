@@ -110,7 +110,7 @@ export default function AdminUsersPage() {
                       onClick={() => { setSelectedUser(p); setNewPassword(''); setResetMessage(null) }}
                       title="Passwort zurücksetzen"
                     >
-                      🔑
+                      Passwort
                     </button>
                   </td>
                 </tr>
