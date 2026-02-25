@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef, ReactNode } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { geocodePLZ, extractPLZ } from '@/lib/geocoding'
 import Icon3D from '@/components/Icon3D'
 import { IconHandshake, IconMedical, IconBag, IconHome as IconHouse, IconCoffee, IconTarget, IconCheck } from '@/components/Icons'
 
@@ -87,12 +88,22 @@ export default function EngelRegisterPage() {
 
     if (angelError) { setError(angelError.message); setSubmitting(false); return }
 
-    const profileUpdate: Record<string, string> = {}
+    const profileUpdate: Record<string, any> = {}
     if (firstName) profileUpdate.first_name = firstName
     if (lastName) profileUpdate.last_name = lastName
     if (email) profileUpdate.email = email
     if (phone) profileUpdate.phone = phone
-    if (location) profileUpdate.location = location
+    if (location) {
+      profileUpdate.location = location
+      const plz = extractPLZ(location)
+      if (plz) {
+        const coords = await geocodePLZ(plz)
+        if (coords) {
+          profileUpdate.latitude = coords.lat
+          profileUpdate.longitude = coords.lng
+        }
+      }
+    }
     if (Object.keys(profileUpdate).length > 0) {
       await supabase.from('profiles').update(profileUpdate).eq('id', user.id)
     }

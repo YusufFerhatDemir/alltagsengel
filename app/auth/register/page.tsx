@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Suspense } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { geocodePLZ } from '@/lib/geocoding'
 import Link from 'next/link'
 import Icon3D from '@/components/Icon3D'
 
@@ -80,6 +81,13 @@ function RegisterForm() {
           }
           if (plz || stadt) {
             profileData.location = [plz, stadt].filter(Boolean).join(' ')
+          }
+          if (plz && plz.length === 5) {
+            const coords = await geocodePLZ(plz)
+            if (coords) {
+              ;(profileData as any).latitude = coords.lat
+              ;(profileData as any).longitude = coords.lng
+            }
           }
           await supabase.from('profiles').upsert(profileData).then(() => {})
         }
