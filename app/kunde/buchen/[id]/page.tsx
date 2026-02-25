@@ -72,7 +72,7 @@ export default function BuchenPage() {
   return (
     <div className="screen" id="bform">
       <div className="topbar">
-        <Link href={`/kunde/engel/${params.id}`} className="back-btn">‹</Link>
+        <button className="back-btn" onClick={() => router.back()} type="button">‹</button>
         <div className="topbar-title">Buchung</div>
       </div>
 

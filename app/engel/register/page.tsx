@@ -1,9 +1,8 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import Icon3D from '@/components/Icon3D'
-import Link from 'next/link'
 
 const serviceOptions = [
   { icon: '🤝', label: 'Begleitung' },
@@ -26,7 +25,11 @@ export default function EngelRegisterPage() {
   const [hourlyRate, setHourlyRate] = useState(30)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
-  const [profile, setProfile] = useState<{ first_name: string; last_name: string; email: string } | null>(null)
+  const [firstName, setFirstName] = useState('')
+  const [lastName, setLastName] = useState('')
+  const [email, setEmail] = useState('')
+  const [menuOpen, setMenuOpen] = useState(false)
+  const menuRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     async function loadProfile() {
@@ -34,10 +37,22 @@ export default function EngelRegisterPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
         const { data } = await supabase.from('profiles').select('first_name, last_name, email').eq('id', user.id).single()
-        if (data) setProfile(data)
+        if (data) {
+          setFirstName(data.first_name || '')
+          setLastName(data.last_name || '')
+          setEmail(data.email || '')
+        }
       }
     }
     loadProfile()
+  }, [])
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setMenuOpen(false)
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
   const toggleService = (s: string) => {
@@ -71,11 +86,14 @@ export default function EngelRegisterPage() {
 
     if (angelError) { setError(angelError.message); setSubmitting(false); return }
 
-    if (phone || location) {
-      await supabase.from('profiles').update({
-        ...(phone ? { phone } : {}),
-        ...(location ? { location } : {}),
-      }).eq('id', user.id)
+    const profileUpdate: Record<string, string> = {}
+    if (firstName) profileUpdate.first_name = firstName
+    if (lastName) profileUpdate.last_name = lastName
+    if (email) profileUpdate.email = email
+    if (phone) profileUpdate.phone = phone
+    if (location) profileUpdate.location = location
+    if (Object.keys(profileUpdate).length > 0) {
+      await supabase.from('profiles').update(profileUpdate).eq('id', user.id)
     }
 
     router.push('/engel/home')
@@ -84,8 +102,17 @@ export default function EngelRegisterPage() {
   return (
     <div className="screen" id="eregister">
       <div className="topbar">
-        <Link href="/choose" className="back-btn dark">‹</Link>
-        <div className="topbar-title light">Engel werden</div>
+        <button className="back-btn dark" onClick={() => router.back()} type="button">‹</button>
+        <div className="topbar-title light" style={{ flex: 1 }}>Engel werden</div>
+        <div className="topbar-menu" ref={menuRef}>
+          <button className="topbar-dots dark" onClick={() => setMenuOpen(!menuOpen)} type="button">⋮</button>
+          {menuOpen && (
+            <div className="topbar-dropdown">
+              <button onClick={() => { setMenuOpen(false); router.push('/choose') }}>Rollenwahl</button>
+              <button onClick={() => { setMenuOpen(false); router.push('/auth/login') }}>Abmelden</button>
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="ereg-hero">
@@ -104,10 +131,10 @@ export default function EngelRegisterPage() {
         <div className="form-card">
           <div className="form-card-h">Persönliche Daten</div>
           <div className="input-row2">
-            <input className="input" type="text" placeholder="Vorname" defaultValue={profile?.first_name || ''} readOnly style={{ opacity: .7 }} />
-            <input className="input" type="text" placeholder="Nachname" defaultValue={profile?.last_name || ''} readOnly style={{ opacity: .7 }} />
+            <input className="input" type="text" placeholder="Vorname" value={firstName} onChange={e => setFirstName(e.target.value)} />
+            <input className="input" type="text" placeholder="Nachname" value={lastName} onChange={e => setLastName(e.target.value)} />
           </div>
-          <input className="input" type="email" placeholder="E-Mail-Adresse" defaultValue={profile?.email || ''} readOnly style={{ opacity: .7 }} />
+          <input className="input" type="email" placeholder="E-Mail-Adresse" value={email} onChange={e => setEmail(e.target.value)} />
           <input className="input" type="tel" placeholder="Telefonnummer" value={phone} onChange={e => setPhone(e.target.value)} />
           <input className="input" type="text" placeholder="PLZ & Stadt" value={location} onChange={e => setLocation(e.target.value)} />
         </div>
