@@ -60,8 +60,7 @@ body {
 .sb-ic { display:flex; gap:4px; align-items:center; font-size:12px; }
 
 /* ─── Screens (SPA) ─── */
-.screen { display:none; flex-direction:column; min-height:804px; animation:screenIn .28s cubic-bezier(.4,0,.2,1) both; }
-.screen.on { display:flex; }
+.screen { display:flex; flex-direction:column; min-height:804px; animation:screenIn .28s cubic-bezier(.4,0,.2,1) both; }
 @keyframes screenIn { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
 
 
@@ -171,7 +170,7 @@ body {
 
 /* Bottom Nav */
 .bottom-nav {
-  position:fixed; bottom:0; width:var(--phone-w);
+  position:absolute; bottom:0; width:var(--phone-w);
   background:rgba(253,250,244,.97); backdrop-filter:blur(24px);
   border-top:1px solid var(--border);
   display:flex; padding:10px 0 28px; z-index:100;
@@ -334,7 +333,7 @@ body {
 .review-text { font-size:12px; color:var(--ink3); line-height:1.6; font-weight:300; }
 
 /* Booking bar */
-.booking-bar { position:fixed; bottom:0; width:var(--phone-w); background:rgba(253,250,244,.97); backdrop-filter:blur(24px); border-top:1px solid var(--border); padding:14px 20px 32px; display:flex; gap:14px; align-items:center; }
+.booking-bar { position:absolute; bottom:0; width:var(--phone-w); background:rgba(253,250,244,.97); backdrop-filter:blur(24px); border-top:1px solid var(--border); padding:14px 20px 32px; display:flex; gap:14px; align-items:center; }
 .booking-price .price-val { font-family:'Cormorant Garamond',serif; font-size:24px; font-weight:700; color:var(--ink); }
 .booking-price .price-sub { font-size:11px; color:var(--ink4); margin-top:2px; }
 .btn-book { flex:1; height:52px; border-radius:14px; background:var(--coal); border:none; cursor:pointer; font-family:'Jost',sans-serif; font-size:13px; font-weight:700; color:var(--gold2); letter-spacing:.06em; text-transform:uppercase; box-shadow:0 4px 18px rgba(26,22,18,.22); transition:all .15s; }
@@ -425,7 +424,7 @@ body {
 .total-sum-lbl { font-size:13px; color:rgba(255,255,255,.4); }
 
 /* Submit bar */
-.submit-bar { position:fixed; bottom:0; width:var(--phone-w); background:rgba(253,250,244,.97); backdrop-filter:blur(24px); border-top:1px solid var(--border); padding:14px 20px 32px; }
+.submit-bar { position:absolute; bottom:0; width:var(--phone-w); background:rgba(253,250,244,.97); backdrop-filter:blur(24px); border-top:1px solid var(--border); padding:14px 20px 32px; }
 .btn-submit { width:100%; height:52px; border-radius:14px; background:var(--coal); border:none; cursor:pointer; font-family:'Jost',sans-serif; font-size:13px; font-weight:700; color:var(--gold2); letter-spacing:.06em; text-transform:uppercase; box-shadow:0 4px 18px rgba(26,22,18,.22); transition:all .15s; }
 .btn-submit:active { transform:scale(.98); }
 
@@ -460,7 +459,7 @@ body {
 
 
 /* ══════════════════════════════════════════════
-   8. BESTÄTIGT (KUNDE & ENGEL)
+   8. BESTATIGT (KUNDE & ENGEL)
    ══════════════════════════════════════════════ */
 #bbestaetigt, #ebestaetigt { background:var(--cream); padding-bottom:100px; }
 
@@ -692,3 +691,15 @@ body {
   .phone { width:100%; border-radius:0; box-shadow:none; }
   .bottom-nav, .booking-bar, .submit-bar { width:100%; }
 }
+
+/* ── Auth Screens ── */
+.auth-screen { background:var(--coal); min-height:852px; align-items:center; justify-content:center; padding:0 24px; }
+.auth-card { width:100%; max-width:340px; }
+.auth-title { font-family:'Cormorant Garamond',serif; font-size:28px; font-weight:700; color:white; text-align:center; margin-bottom:8px; }
+.auth-sub { font-size:13px; color:rgba(255,255,255,.3); text-align:center; margin-bottom:28px; font-weight:300; }
+.auth-input { width:100%; background:var(--coal3); border:1.5px solid rgba(255,255,255,.1); border-radius:12px; padding:14px 16px; font-family:'Jost',sans-serif; font-size:14px; color:white; outline:none; margin-bottom:12px; transition:border-color .2s; }
+.auth-input:focus { border-color:var(--gold); }
+.auth-input::placeholder { color:rgba(255,255,255,.25); }
+.auth-error { font-size:12px; color:var(--red-w); margin-bottom:12px; text-align:center; }
+.auth-link { font-size:13px; color:rgba(255,255,255,.3); text-align:center; margin-top:16px; }
+.auth-link a { color:var(--gold2); cursor:pointer; text-decoration:none; }

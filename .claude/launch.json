@@ -3,8 +3,8 @@
   "configurations": [
     {
       "name": "alltagsengel-dev",
-      "runtimeExecutable": "ruby",
-      "runtimeArgs": ["-run", "-e", "httpd", ".", "-p", "8080"],
+      "runtimeExecutable": "/Users/work/alltagsengel/node_modules/.bin/next",
+      "runtimeArgs": ["dev", "--port", "8080"],
       "port": 8080
     }
   ]
