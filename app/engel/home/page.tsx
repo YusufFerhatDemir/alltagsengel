@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import Icon3D from '@/components/Icon3D'
+import { IconUser, IconCard } from '@/components/Icons'
 
 export default function EngelHomePage() {
   const router = useRouter()
@@ -116,7 +117,7 @@ export default function EngelHomePage() {
           <div key={b.id} className="req-card new">
             <div className="req-badge">NEU</div>
             <div className="req-top">
-              <div className="req-av">👤</div>
+              <div className="req-av"><IconUser size={18} /></div>
               <div>
                 <div className="req-name">{b.customer?.first_name} {b.customer?.last_name}</div>
                 <div className="req-type">{b.service}</div>
@@ -129,7 +130,7 @@ export default function EngelHomePage() {
               <div className="req-info"><div className="req-info-lbl">Vergütung</div><div className="req-info-val">{b.total_amount?.toFixed(2)}€</div></div>
             </div>
             {b.payment_method === 'kasse' && (
-              <div className="req-note">💳 <strong>§45b-Buchung</strong> — Abrechnung direkt über Pflegekasse{b.insurance_provider ? ` (${b.insurance_provider})` : ''}.</div>
+              <div className="req-note"><IconCard size={13} /> <strong>§45b-Buchung</strong> — Abrechnung direkt über Pflegekasse{b.insurance_provider ? ` (${b.insurance_provider})` : ''}.</div>
             )}
             <div className="req-btns">
               <div className="req-btn decline" onClick={() => handleBooking(b.id, 'declined')}>Ablehnen</div>
@@ -146,7 +147,7 @@ export default function EngelHomePage() {
             </div>
           ) : upcomingBookings.map(b => (
             <div key={b.id} className="upcoming-item">
-              <div className="upcoming-av" style={{ background: 'var(--gold-pale)' }}>👤</div>
+              <div className="upcoming-av" style={{ background: 'var(--gold-pale)' }}><IconUser size={18} /></div>
               <div>
                 <div className="upcoming-name">{b.customer?.first_name} {b.customer?.last_name}</div>
                 <div className="upcoming-sub">{b.service} · {new Date(b.date).toLocaleDateString('de-DE')}, {b.time?.slice(0,5)}</div>

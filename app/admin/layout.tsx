@@ -2,14 +2,16 @@
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { IconChart, IconUsers, IconClipboard, IconWings, IconLogout } from '@/components/Icons'
+import { ReactNode } from 'react'
 
 const navItems = [
-  { href: '/admin/home', label: 'Dashboard', icon: '📊' },
-  { href: '/admin/users', label: 'Benutzer', icon: '👥' },
-  { href: '/admin/bookings', label: 'Buchungen', icon: '📋' },
+  { href: '/admin/home', label: 'Dashboard', icon: <IconChart size={18} /> },
+  { href: '/admin/users', label: 'Benutzer', icon: <IconUsers size={18} /> },
+  { href: '/admin/bookings', label: 'Buchungen', icon: <IconClipboard size={18} /> },
 ]
 
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
+export default function AdminLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname()
   const router = useRouter()
 
@@ -24,7 +26,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     <div className="admin-layout">
       <div className="admin-sidebar">
         <div className="admin-logo">
-          <span style={{ fontSize: 20 }}>👼</span>
+          <span style={{ display: 'flex', alignItems: 'center' }}><IconWings size={20} /></span>
           <span>Admin Panel</span>
         </div>
         <nav className="admin-nav">
@@ -40,7 +42,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           ))}
         </nav>
         <button onClick={handleLogout} className="admin-nav-item admin-logout">
-          <span>🚪</span>
+          <span><IconLogout size={18} /></span>
           <span>Abmelden</span>
         </button>
       </div>

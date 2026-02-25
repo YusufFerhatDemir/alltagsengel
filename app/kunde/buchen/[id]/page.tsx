@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
+import { IconWings, IconStarFilled, IconCard, IconShield, IconMedical, IconLock, IconInfo } from '@/components/Icons'
 
 export default function BuchenPage() {
   const router = useRouter()
@@ -79,10 +80,10 @@ export default function BuchenPage() {
       <div className="form-body">
         <div className="form-card">
           <div className="form-engel">
-            <div className="form-engel-av">👼</div>
+            <div className="form-engel-av"><IconWings size={22} /></div>
             <div>
               <div className="form-engel-name">{angelName}</div>
-              <div className="form-engel-sub">★ {angel?.rating || '5.0'} · Zertifiziert</div>
+              <div className="form-engel-sub"><IconStarFilled size={12} /> {angel?.rating || '5.0'} · Zertifiziert</div>
             </div>
             <div className="form-engel-price">{rate}€<span>/h</span></div>
           </div>
@@ -110,9 +111,9 @@ export default function BuchenPage() {
         <div className="form-card">
           <div className="form-card-h">Zahlungsart</div>
           <div className="pay-row">
-            {[{key:'kasse',icon:'💳',label:'§45b Kasse',sub:'Direkte Abrechnung'},{key:'privat',icon:'💳',label:'Privat',sub:'Selbstzahler'},{key:'kombi',icon:'💳',label:'Kombi',sub:'Kasse + Privat'}].map(p => (
+            {[{key:'kasse',label:'§45b Kasse',sub:'Direkte Abrechnung'},{key:'privat',label:'Privat',sub:'Selbstzahler'},{key:'kombi',label:'Kombi',sub:'Kasse + Privat'}].map(p => (
               <div key={p.key} className={`pay-opt${payMethod===p.key?' on':''}`} onClick={() => setPayMethod(p.key)}>
-                <div className="pay-ic">{p.icon}</div>
+                <div className="pay-ic"><IconCard size={16} /></div>
                 <div className="pay-lbl">{p.label}</div>
                 <div className="pay-sub">{p.sub}</div>
               </div>
@@ -139,15 +140,15 @@ export default function BuchenPage() {
                 ))}
               </div>
               <input className="kk-other" placeholder="Andere Kasse eingeben..." />
-              <div className="kk-result">ℹ️ Ihr <strong>§45b Budget:</strong> 125€/Monat verfügbar. Restbudget dieses Monat: <strong>125,00€</strong></div>
+              <div className="kk-result"><IconInfo size={14} /> Ihr <strong>§45b Budget:</strong> 125€/Monat verfügbar. Restbudget dieses Monat: <strong>125,00€</strong></div>
             </div>
           )}
         </div>
 
         <div className="protect-list">
-          <div className="protect-item"><div className="protect-ic">🛡️</div><div className="protect-text"><strong>Haftpflichtversicherung</strong> — Bis zu 5 Mio. € Deckung bei Schäden</div></div>
-          <div className="protect-item"><div className="protect-ic">🏥</div><div className="protect-text"><strong>Unfallversicherung</strong> — Voller Schutz während des Einsatzes</div></div>
-          <div className="protect-item"><div className="protect-ic">🔒</div><div className="protect-text"><strong>Datenschutz</strong> — DSGVO-konform, Ende-zu-Ende-Verschlüsselung</div></div>
+          <div className="protect-item"><div className="protect-ic"><IconShield size={16} /></div><div className="protect-text"><strong>Haftpflichtversicherung</strong> — Bis zu 5 Mio. € Deckung bei Schäden</div></div>
+          <div className="protect-item"><div className="protect-ic"><IconMedical size={16} /></div><div className="protect-text"><strong>Unfallversicherung</strong> — Voller Schutz während des Einsatzes</div></div>
+          <div className="protect-item"><div className="protect-ic"><IconLock size={16} /></div><div className="protect-text"><strong>Datenschutz</strong> — DSGVO-konform, Ende-zu-Ende-Verschlüsselung</div></div>
         </div>
 
         <div className="total-card">

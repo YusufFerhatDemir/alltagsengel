@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
+import { IconUser } from '@/components/Icons'
 
 export default function KundeProfilPage() {
   const router = useRouter()
@@ -44,7 +45,7 @@ export default function KundeProfilPage() {
           <div className="mp-title">Mein Profil</div>
         </div>
         <div className="mp-main">
-          <div className="mp-avatar">👤</div>
+          <div className="mp-avatar"><IconUser size={26} /></div>
           <div>
             <div className="mp-name">{name}</div>
             <div className="mp-sub">Kunde</div>

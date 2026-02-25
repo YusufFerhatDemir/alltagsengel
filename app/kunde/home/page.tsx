@@ -1,18 +1,19 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, ReactNode } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
+import { IconStar, IconHandshake, IconMedical, IconBag, IconHome as IconHouse, IconCoffee, IconPill, IconWalk, IconTarget, IconPin, IconSearch, IconUser, IconWings, IconCard, IconStarFilled, IconCheck } from '@/components/Icons'
 
-const categories = [
-  { key: 'all', icon: '⭐', label: 'Alle' },
-  { key: 'begleitung', icon: '🤝', label: 'Begleitung' },
-  { key: 'arzt', icon: '🏥', label: 'Arztbesuch' },
-  { key: 'einkauf', icon: '🛒', label: 'Einkauf' },
-  { key: 'haushalt', icon: '🏠', label: 'Haushalt' },
-  { key: 'freizeit', icon: '☕', label: 'Freizeit' },
-  { key: 'apotheke', icon: '💊', label: 'Apotheke' },
-  { key: 'spazieren', icon: '🚶', label: 'Spazieren' },
-  { key: 'aktivitaeten', icon: '🎯', label: 'Aktivitäten' },
+const categories: { key: string; icon: ReactNode; label: string }[] = [
+  { key: 'all', icon: <IconStar size={18} />, label: 'Alle' },
+  { key: 'begleitung', icon: <IconHandshake size={18} />, label: 'Begleitung' },
+  { key: 'arzt', icon: <IconMedical size={18} />, label: 'Arztbesuch' },
+  { key: 'einkauf', icon: <IconBag size={18} />, label: 'Einkauf' },
+  { key: 'haushalt', icon: <IconHouse size={18} />, label: 'Haushalt' },
+  { key: 'freizeit', icon: <IconCoffee size={18} />, label: 'Freizeit' },
+  { key: 'apotheke', icon: <IconPill size={18} />, label: 'Apotheke' },
+  { key: 'spazieren', icon: <IconWalk size={18} />, label: 'Spazieren' },
+  { key: 'aktivitaeten', icon: <IconTarget size={18} />, label: 'Aktivitäten' },
 ]
 
 const serviceMap: Record<string, string> = {
@@ -72,15 +73,15 @@ export default function KundeHomePage() {
           <div>
             <div className="kh-greet">Willkommen zurück</div>
             <div className="kh-name">Hallo, {firstName}</div>
-            <div className="kh-loc">📍 {profile?.location || 'Berlin'}</div>
+            <div className="kh-loc"><IconPin size={14} /> {profile?.location || 'Berlin'}</div>
           </div>
-          <div className="kh-avatar">👤</div>
+          <div className="kh-avatar"><IconUser size={22} /></div>
         </div>
       </div>
 
       <div className="kh-body">
         <div className="search-bar">
-          <span>🔍</span>
+          <span><IconSearch size={16} /></span>
           <span className="search-placeholder">Engel suchen...</span>
         </div>
 
@@ -99,7 +100,7 @@ export default function KundeHomePage() {
 
         <div className="banner-45b">
           <div className="banner-row">
-            <div className="banner-icon">💳</div>
+            <div className="banner-icon"><IconCard size={22} /></div>
             <div>
               <div className="banner-title">§45b Entlastungsbetrag</div>
               <div className="banner-sub">Bis zu <strong>125€/Monat</strong> über Ihre Pflegekasse. Direkt über Alltagsengel abrechnen.</div>
@@ -123,15 +124,15 @@ export default function KundeHomePage() {
           <Link key={angel.id} href={`/kunde/engel/${angel.id}`} style={{ textDecoration: 'none' }}>
             <div className="engel-card">
               <div className="engel-avatar" style={{ background: angel.profiles?.avatar_color || 'var(--gold-pale)' }}>
-                👼
+                <IconWings size={22} />
                 <div className={`online-dot${angel.is_online ? '' : ' away'}`}></div>
               </div>
               <div className="engel-info">
                 <div className="engel-row1">
                   <div className="engel-name">{angel.profiles?.first_name} {angel.profiles?.last_name}</div>
-                  <div className="engel-rating">★ {angel.rating}</div>
+                  <div className="engel-rating"><IconStarFilled size={13} /> {angel.rating}</div>
                 </div>
-                <div className="engel-cert">✓ Zertifiziert · {angel.total_jobs} Einsätze</div>
+                <div className="engel-cert"><IconCheck size={12} /> Zertifiziert · {angel.total_jobs} Einsätze</div>
                 <div className="engel-tags">
                   {(angel.services || []).slice(0, 3).map((s: string) => (
                     <span key={s} className="engel-tag">{s}</span>
@@ -139,7 +140,7 @@ export default function KundeHomePage() {
                 </div>
                 <div className="engel-price-row">
                   <div className="engel-price">{angel.hourly_rate}€ <span>/Std.</span></div>
-                  {angel.is_45b_capable && <div className="badge-45b">💳 §45b</div>}
+                  {angel.is_45b_capable && <div className="badge-45b"><IconCard size={12} /> §45b</div>}
                 </div>
               </div>
             </div>
@@ -148,11 +149,11 @@ export default function KundeHomePage() {
           <Link key={angel.id} href={`/kunde/engel/${angel.id}`} style={{ textDecoration: 'none' }}>
             <div className="engel-card">
               <div className="engel-avatar" style={{ background: angel.bg }}>
-                👼<div className={`online-dot${angel.online ? '' : ' away'}`}></div>
+                <IconWings size={22} /><div className={`online-dot${angel.online ? '' : ' away'}`}></div>
               </div>
               <div className="engel-info">
-                <div className="engel-row1"><div className="engel-name">{angel.name}</div><div className="engel-rating">★ {angel.rating}</div></div>
-                <div className="engel-cert">✓ Zertifiziert · {angel.jobs} Einsätze</div>
+                <div className="engel-row1"><div className="engel-name">{angel.name}</div><div className="engel-rating"><IconStarFilled size={13} /> {angel.rating}</div></div>
+                <div className="engel-cert"><IconCheck size={12} /> Zertifiziert · {angel.jobs} Einsätze</div>
                 <div className="engel-tags">
                   {angel.services.slice(0, 3).map(s => (
                     <span key={s} className="engel-tag">{s}</span>
@@ -160,7 +161,7 @@ export default function KundeHomePage() {
                 </div>
                 <div className="engel-price-row">
                   <div className="engel-price">{angel.price}€ <span>/Std.</span></div>
-                  {angel.is45b && <div className="badge-45b">💳 §45b</div>}
+                  {angel.is45b && <div className="badge-45b"><IconCard size={12} /> §45b</div>}
                 </div>
               </div>
             </div>
