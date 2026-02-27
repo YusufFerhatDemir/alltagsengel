@@ -45,7 +45,7 @@ export default function ForgotPasswordPage() {
 
         {sent ? (
           <div style={{ textAlign: 'center', padding: '20px 0' }}>
-            <div style={{ fontSize: 48, marginBottom: 16 }}>📧</div>
+            <div style={{ fontSize: 32, marginBottom: 16, color: 'var(--gold)' }}>&#9993;</div>
             <p style={{ color: 'var(--ink-3)', lineHeight: 1.5, marginBottom: 20 }}>
               Bitte prüfen Sie Ihr Postfach und klicken Sie auf den Link, um Ihr Passwort zurückzusetzen.
             </p>

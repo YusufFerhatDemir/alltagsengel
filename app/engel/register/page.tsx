@@ -1,16 +1,18 @@
 'use client'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, ReactNode } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { geocodePLZ, extractPLZ } from '@/lib/geocoding'
 import Icon3D from '@/components/Icon3D'
+import { IconHandshake, IconMedical, IconBag, IconHome as IconHouse, IconCoffee, IconTarget, IconCheck } from '@/components/Icons'
 
-const serviceOptions = [
-  { icon: '🤝', label: 'Begleitung' },
-  { icon: '🏥', label: 'Arztbesuch' },
-  { icon: '🛒', label: 'Einkauf' },
-  { icon: '🏠', label: 'Haushalt' },
-  { icon: '☕', label: 'Freizeit' },
-  { icon: '🎯', label: 'Aktivitäten' },
+const serviceOptions: { icon: ReactNode; label: string }[] = [
+  { icon: <IconHandshake size={16} />, label: 'Begleitung' },
+  { icon: <IconMedical size={16} />, label: 'Arztbesuch' },
+  { icon: <IconBag size={16} />, label: 'Einkauf' },
+  { icon: <IconHouse size={16} />, label: 'Haushalt' },
+  { icon: <IconCoffee size={16} />, label: 'Freizeit' },
+  { icon: <IconTarget size={16} />, label: 'Aktivitäten' },
 ]
 
 const days = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So']
@@ -86,12 +88,22 @@ export default function EngelRegisterPage() {
 
     if (angelError) { setError(angelError.message); setSubmitting(false); return }
 
-    const profileUpdate: Record<string, string> = {}
+    const profileUpdate: Record<string, any> = {}
     if (firstName) profileUpdate.first_name = firstName
     if (lastName) profileUpdate.last_name = lastName
     if (email) profileUpdate.email = email
     if (phone) profileUpdate.phone = phone
-    if (location) profileUpdate.location = location
+    if (location) {
+      profileUpdate.location = location
+      const plz = extractPLZ(location)
+      if (plz) {
+        const coords = await geocodePLZ(plz)
+        if (coords) {
+          profileUpdate.latitude = coords.lat
+          profileUpdate.longitude = coords.lng
+        }
+      }
+    }
     if (Object.keys(profileUpdate).length > 0) {
       await supabase.from('profiles').update(profileUpdate).eq('id', user.id)
     }
@@ -189,7 +201,7 @@ export default function EngelRegisterPage() {
 
         <div className="ereg-agree">
           <div className="ereg-agree-row">
-            <div className="ereg-checkbox">✓</div>
+            <div className="ereg-checkbox"><IconCheck size={14} /></div>
             <div className="ereg-agree-text">Ich akzeptiere die <strong>AGB</strong>, <strong>Datenschutzerklärung</strong> und bestätige meine Qualifikation. Versicherungsschutz wird bei Aufträgen automatisch aktiviert.</div>
           </div>
         </div>

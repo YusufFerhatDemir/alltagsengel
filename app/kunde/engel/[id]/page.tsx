@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
+import { IconWings, IconStar, IconStarFilled, IconHeart, IconMore, IconUser, IconCheck } from '@/components/Icons'
 
 export default async function EngelProfilPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -25,10 +26,10 @@ export default async function EngelProfilPage({ params }: { params: Promise<{ id
         <div className="ep-header">
           <div className="ep-nav">
             <Link href="/kunde/home" className="ep-back">‹</Link>
-            <div className="ep-actions"><div className="ep-action">♡</div><div className="ep-action">…</div></div>
+            <div className="ep-actions"><div className="ep-action"><IconHeart size={18} /></div><div className="ep-action"><IconMore size={18} /></div></div>
           </div>
           <div className="ep-main">
-            <div className="ep-avatar" style={{ background: 'rgba(201,150,60,.12)' }}>👼</div>
+            <div className="ep-avatar" style={{ background: 'rgba(201,150,60,.12)' }}><IconWings size={24} /></div>
             <div>
               <div className="ep-name">Engel nicht gefunden</div>
               <div className="ep-role">Dieser Engel existiert nicht mehr</div>
@@ -51,17 +52,17 @@ export default async function EngelProfilPage({ params }: { params: Promise<{ id
         <div className="ep-nav">
           <Link href="/kunde/home" className="ep-back">‹</Link>
           <div className="ep-actions">
-            <div className="ep-action">♡</div>
-            <div className="ep-action">…</div>
+            <div className="ep-action"><IconHeart size={18} /></div>
+            <div className="ep-action"><IconMore size={18} /></div>
           </div>
         </div>
         <div className="ep-main">
-          <div className="ep-avatar" style={{ background: angel.profiles?.avatar_color || 'rgba(201,150,60,.12)' }}>👼</div>
+          <div className="ep-avatar" style={{ background: angel.profiles?.avatar_color || 'rgba(201,150,60,.12)' }}><IconWings size={24} /></div>
           <div>
             <div className="ep-name">{name}</div>
             <div className="ep-role">{angel.qualification || 'Alltagsbegleiter/in'}</div>
             <div className="ep-stars">
-              <span className="ep-stars-icons">{'★'.repeat(Math.round(angel.rating))}</span>
+              <span className="ep-stars-icons">{Array.from({ length: Math.round(angel.rating) }).map((_, i) => <IconStarFilled key={i} size={13} color="var(--gold)" />)}</span>
               <span className="ep-stars-count">{angel.rating} · {angel.total_jobs} Bewertungen</span>
             </div>
             <div className="ep-badges">
@@ -115,10 +116,10 @@ export default async function EngelProfilPage({ params }: { params: Promise<{ id
               {reviews.map((r: any) => (
                 <div key={r.id} className="review-item">
                   <div className="review-top">
-                    <div className="review-av">👤</div>
+                    <div className="review-av"><IconUser size={16} /></div>
                     <div>
                       <div className="review-name">{r.profiles?.first_name} {r.profiles?.last_name?.[0]}.</div>
-                      <div className="review-stars">{'★'.repeat(r.rating)}{'☆'.repeat(5 - r.rating)}</div>
+                      <div className="review-stars">{Array.from({ length: r.rating }).map((_, i) => <IconStarFilled key={i} size={11} color="var(--gold)" />)}{Array.from({ length: 5 - r.rating }).map((_, i) => <IconStar key={i} size={11} color="var(--ink5)" />)}</div>
                     </div>
                   </div>
                   {r.comment && <div className="review-text">{r.comment}</div>}

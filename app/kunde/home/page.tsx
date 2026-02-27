@@ -1,18 +1,20 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, ReactNode } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
+import { IconStar, IconHandshake, IconMedical, IconBag, IconHome as IconHouse, IconCoffee, IconPill, IconWalk, IconTarget, IconPin, IconSearch, IconUser, IconWings, IconCard, IconStarFilled, IconCheck } from '@/components/Icons'
+import { haversineDistance } from '@/lib/geocoding'
 
-const categories = [
-  { key: 'all', icon: '⭐', label: 'Alle' },
-  { key: 'begleitung', icon: '🤝', label: 'Begleitung' },
-  { key: 'arzt', icon: '🏥', label: 'Arztbesuch' },
-  { key: 'einkauf', icon: '🛒', label: 'Einkauf' },
-  { key: 'haushalt', icon: '🏠', label: 'Haushalt' },
-  { key: 'freizeit', icon: '☕', label: 'Freizeit' },
-  { key: 'apotheke', icon: '💊', label: 'Apotheke' },
-  { key: 'spazieren', icon: '🚶', label: 'Spazieren' },
-  { key: 'aktivitaeten', icon: '🎯', label: 'Aktivitäten' },
+const categories: { key: string; icon: ReactNode; label: string }[] = [
+  { key: 'all', icon: <IconStar size={18} />, label: 'Alle' },
+  { key: 'begleitung', icon: <IconHandshake size={18} />, label: 'Begleitung' },
+  { key: 'arzt', icon: <IconMedical size={18} />, label: 'Arztbesuch' },
+  { key: 'einkauf', icon: <IconBag size={18} />, label: 'Einkauf' },
+  { key: 'haushalt', icon: <IconHouse size={18} />, label: 'Haushalt' },
+  { key: 'freizeit', icon: <IconCoffee size={18} />, label: 'Freizeit' },
+  { key: 'apotheke', icon: <IconPill size={18} />, label: 'Apotheke' },
+  { key: 'spazieren', icon: <IconWalk size={18} />, label: 'Spazieren' },
+  { key: 'aktivitaeten', icon: <IconTarget size={18} />, label: 'Aktivitäten' },
 ]
 
 const serviceMap: Record<string, string> = {
@@ -30,6 +32,8 @@ export default function KundeHomePage() {
   const [profile, setProfile] = useState<any>(null)
   const [angels, setAngels] = useState<any[]>([])
   const [activeCategory, setActiveCategory] = useState('all')
+  const [searchRadius, setSearchRadius] = useState(10)
+  const [searchQuery, setSearchQuery] = useState('')
 
   useEffect(() => {
     async function load() {
@@ -47,11 +51,44 @@ export default function KundeHomePage() {
 
   const firstName = profile?.first_name || 'Maria'
 
-  const filteredAngels = activeCategory === 'all'
-    ? angels
-    : angels.filter(a => (a.services || []).some((s: string) =>
-        s.toLowerCase().includes(serviceMap[activeCategory]?.toLowerCase() || activeCategory)
-      ))
+  // Mesafe filtresi: Müşteri ve engel koordinatları varsa hesapla
+  const angelsWithDistance = angels.map((a: any) => {
+    const aLat = a.profiles?.latitude
+    const aLng = a.profiles?.longitude
+    const pLat = profile?.latitude
+    const pLng = profile?.longitude
+    const distance = (pLat && pLng && aLat && aLng)
+      ? haversineDistance(pLat, pLng, aLat, aLng)
+      : null
+    return { ...a, _distance: distance }
+  })
+
+  const filteredAngels = angelsWithDistance
+    .filter((a: any) => {
+      // İsim araması
+      if (searchQuery.trim()) {
+        const fullName = `${a.profiles?.first_name || ''} ${a.profiles?.last_name || ''}`.toLowerCase()
+        const services = (a.services || []).join(' ').toLowerCase()
+        const q = searchQuery.toLowerCase()
+        if (!fullName.includes(q) && !services.includes(q)) return false
+      }
+      // Kategori filtresi
+      if (activeCategory !== 'all') {
+        const match = (a.services || []).some((s: string) =>
+          s.toLowerCase().includes(serviceMap[activeCategory]?.toLowerCase() || activeCategory)
+        )
+        if (!match) return false
+      }
+      // Mesafe filtresi (koordinat yoksa engeli göster)
+      if (a._distance !== null && a._distance > searchRadius) return false
+      return true
+    })
+    .sort((a: any, b: any) => {
+      if (a._distance !== null && b._distance !== null) return a._distance - b._distance
+      if (a._distance !== null) return -1
+      if (b._distance !== null) return 1
+      return 0
+    })
 
   const demoAngels = [
     { id: 'demo-anna', name: 'Anna Müller', rating: 4.9, jobs: 127, services: ['Begleitung', 'Einkauf', 'Haushalt'], price: 32, online: true, bg: 'var(--gold-pale)', is45b: true },
@@ -59,11 +96,16 @@ export default function KundeHomePage() {
     { id: 'demo-lisa', name: 'Lisa Schneider', rating: 4.7, jobs: 56, services: ['Freizeit', 'Haushalt', 'Apotheke'], price: 30, online: false, bg: 'var(--cream2)', is45b: true },
   ]
 
-  const filteredDemos = activeCategory === 'all'
-    ? demoAngels
-    : demoAngels.filter(a => a.services.some(s =>
-        s.toLowerCase().includes(serviceMap[activeCategory]?.toLowerCase() || activeCategory)
-      ))
+  const filteredDemos = demoAngels.filter(a => {
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase()
+      if (!a.name.toLowerCase().includes(q) && !a.services.join(' ').toLowerCase().includes(q)) return false
+    }
+    if (activeCategory !== 'all') {
+      if (!a.services.some(s => s.toLowerCase().includes(serviceMap[activeCategory]?.toLowerCase() || activeCategory))) return false
+    }
+    return true
+  })
 
   return (
     <div className="screen" id="khome">
@@ -72,16 +114,40 @@ export default function KundeHomePage() {
           <div>
             <div className="kh-greet">Willkommen zurück</div>
             <div className="kh-name">Hallo, {firstName}</div>
-            <div className="kh-loc">📍 {profile?.location || 'Berlin'}</div>
+            <div className="kh-loc"><IconPin size={14} /> {profile?.location || 'Berlin'} · {searchRadius} km</div>
           </div>
-          <div className="kh-avatar">👤</div>
+          <div className="kh-avatar"><IconUser size={22} /></div>
         </div>
       </div>
 
       <div className="kh-body">
-        <div className="search-bar">
-          <span>🔍</span>
-          <span className="search-placeholder">Engel suchen...</span>
+        <div className="search-bar" id="search-bar">
+          <span><IconSearch size={16} /></span>
+          <input
+            type="text"
+            className="search-input"
+            placeholder="Engel suchen..."
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+          />
+          {searchQuery && (
+            <button className="search-clear" onClick={() => setSearchQuery('')}>✕</button>
+          )}
+        </div>
+
+        <div className="radius-bar">
+          <div className="radius-label"><IconPin size={13} /> Suchradius</div>
+          <div className="radius-options">
+            {[5, 10, 25, 50].map(r => (
+              <button
+                key={r}
+                className={`radius-chip${searchRadius === r ? ' active' : ''}`}
+                onClick={() => setSearchRadius(r)}
+              >
+                {r} km
+              </button>
+            ))}
+          </div>
         </div>
 
         <div className="cat-list">
@@ -99,7 +165,7 @@ export default function KundeHomePage() {
 
         <div className="banner-45b">
           <div className="banner-row">
-            <div className="banner-icon">💳</div>
+            <div className="banner-icon"><IconCard size={22} /></div>
             <div>
               <div className="banner-title">§45b Entlastungsbetrag</div>
               <div className="banner-sub">Bis zu <strong>125€/Monat</strong> über Ihre Pflegekasse. Direkt über Alltagsengel abrechnen.</div>
@@ -115,6 +181,7 @@ export default function KundeHomePage() {
         <div className="section-row">
           <div className="section-title">
             {activeCategory === 'all' ? 'Top Engel' : categories.find(c => c.key === activeCategory)?.label || 'Engel'}
+            <span style={{ fontSize: 12, fontWeight: 400, color: 'var(--ink4)', marginLeft: 6 }}>im Umkreis von {searchRadius} km</span>
           </div>
           <div className="section-link">Alle ansehen</div>
         </div>
@@ -123,15 +190,15 @@ export default function KundeHomePage() {
           <Link key={angel.id} href={`/kunde/engel/${angel.id}`} style={{ textDecoration: 'none' }}>
             <div className="engel-card">
               <div className="engel-avatar" style={{ background: angel.profiles?.avatar_color || 'var(--gold-pale)' }}>
-                👼
+                <IconWings size={22} />
                 <div className={`online-dot${angel.is_online ? '' : ' away'}`}></div>
               </div>
               <div className="engel-info">
                 <div className="engel-row1">
                   <div className="engel-name">{angel.profiles?.first_name} {angel.profiles?.last_name}</div>
-                  <div className="engel-rating">★ {angel.rating}</div>
+                  <div className="engel-rating"><IconStarFilled size={13} /> {angel.rating}</div>
                 </div>
-                <div className="engel-cert">✓ Zertifiziert · {angel.total_jobs} Einsätze</div>
+                <div className="engel-cert"><IconCheck size={12} /> Zertifiziert · {angel.total_jobs} Einsätze{angel._distance !== null ? ` · ${angel._distance.toFixed(1)} km` : angel.profiles?.location ? ` · ${angel.profiles.location}` : ''}</div>
                 <div className="engel-tags">
                   {(angel.services || []).slice(0, 3).map((s: string) => (
                     <span key={s} className="engel-tag">{s}</span>
@@ -139,7 +206,7 @@ export default function KundeHomePage() {
                 </div>
                 <div className="engel-price-row">
                   <div className="engel-price">{angel.hourly_rate}€ <span>/Std.</span></div>
-                  {angel.is_45b_capable && <div className="badge-45b">💳 §45b</div>}
+                  {angel.is_45b_capable && <div className="badge-45b"><IconCard size={12} /> §45b</div>}
                 </div>
               </div>
             </div>
@@ -148,11 +215,11 @@ export default function KundeHomePage() {
           <Link key={angel.id} href={`/kunde/engel/${angel.id}`} style={{ textDecoration: 'none' }}>
             <div className="engel-card">
               <div className="engel-avatar" style={{ background: angel.bg }}>
-                👼<div className={`online-dot${angel.online ? '' : ' away'}`}></div>
+                <IconWings size={22} /><div className={`online-dot${angel.online ? '' : ' away'}`}></div>
               </div>
               <div className="engel-info">
-                <div className="engel-row1"><div className="engel-name">{angel.name}</div><div className="engel-rating">★ {angel.rating}</div></div>
-                <div className="engel-cert">✓ Zertifiziert · {angel.jobs} Einsätze</div>
+                <div className="engel-row1"><div className="engel-name">{angel.name}</div><div className="engel-rating"><IconStarFilled size={13} /> {angel.rating}</div></div>
+                <div className="engel-cert"><IconCheck size={12} /> Zertifiziert · {angel.jobs} Einsätze</div>
                 <div className="engel-tags">
                   {angel.services.slice(0, 3).map(s => (
                     <span key={s} className="engel-tag">{s}</span>
@@ -160,7 +227,7 @@ export default function KundeHomePage() {
                 </div>
                 <div className="engel-price-row">
                   <div className="engel-price">{angel.price}€ <span>/Std.</span></div>
-                  {angel.is45b && <div className="badge-45b">💳 §45b</div>}
+                  {angel.is45b && <div className="badge-45b"><IconCard size={12} /> §45b</div>}
                 </div>
               </div>
             </div>

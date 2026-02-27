@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
+import { IconWings, IconDocument, IconCheck, IconClock } from '@/components/Icons'
 
 export default function MeinProfilPage() {
   const router = useRouter()
@@ -61,7 +62,7 @@ export default function MeinProfilPage() {
           <div className="mp-title">Mein Profil</div>
         </div>
         <div className="mp-main">
-          <div className="mp-avatar">👼</div>
+          <div className="mp-avatar"><IconWings size={26} /></div>
           <div>
             <div className="mp-name">{name}</div>
             <div className="mp-sub">{qualLabel}</div>
@@ -103,10 +104,10 @@ export default function MeinProfilPage() {
 
         <div className="section-label">Dokumente & Zertifikate</div>
         <div className="docs-card">
-          <div className="setting-row"><div><div className="setting-main">📄 §45b Zertifikat</div><div className="setting-sub" style={{ color: 'var(--green)' }}>✓ Verifiziert</div></div></div>
-          <div className="setting-row"><div><div className="setting-main">📄 Erste-Hilfe-Nachweis</div><div className="setting-sub" style={{ color: 'var(--green)' }}>✓ Verifiziert</div></div></div>
-          <div className="setting-row"><div><div className="setting-main">📄 Polizeiliches Führungszeugnis</div><div className="setting-sub" style={{ color: 'var(--gold)' }}>⏳ Wird geprüft</div></div></div>
-          <div className="setting-row"><div><div className="setting-main">📄 Versicherungsnachweis</div><div className="setting-sub" style={{ color: 'var(--green)' }}>✓ Automatisch</div></div></div>
+          <div className="setting-row"><div><div className="setting-main"><IconDocument size={14} /> §45b Zertifikat</div><div className="setting-sub" style={{ color: 'var(--green)' }}><IconCheck size={11} /> Verifiziert</div></div></div>
+          <div className="setting-row"><div><div className="setting-main"><IconDocument size={14} /> Erste-Hilfe-Nachweis</div><div className="setting-sub" style={{ color: 'var(--green)' }}><IconCheck size={11} /> Verifiziert</div></div></div>
+          <div className="setting-row"><div><div className="setting-main"><IconDocument size={14} /> Polizeiliches Führungszeugnis</div><div className="setting-sub" style={{ color: 'var(--gold)' }}><IconClock size={11} /> Wird geprüft</div></div></div>
+          <div className="setting-row"><div><div className="setting-main"><IconDocument size={14} /> Versicherungsnachweis</div><div className="setting-sub" style={{ color: 'var(--green)' }}><IconCheck size={11} /> Automatisch</div></div></div>
         </div>
 
         <button
