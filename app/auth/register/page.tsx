@@ -133,8 +133,8 @@ function RegisterForm() {
   return (
     <div className="screen auth-screen">
       <div className="auth-card">
-        <div style={{ marginBottom: 24, textAlign: 'center' }}>
-          <Icon3D size={56} />
+        <div style={{ marginBottom: 14, textAlign: 'center' }}>
+          <Icon3D size={44} />
         </div>
         <div className="auth-title">Konto erstellen</div>
         <div className="auth-sub">

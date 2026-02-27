@@ -868,11 +868,11 @@ body {
 }
 
 /* ── Auth Screens ── */
-.auth-screen { background:var(--coal); min-height:852px; align-items:center; justify-content:center; padding:0 24px; }
-.auth-card { width:100%; max-width:340px; }
-.auth-title { font-family:'Cormorant Garamond',serif; font-size:28px; font-weight:700; color:white; text-align:center; margin-bottom:8px; }
-.auth-sub { font-size:13px; color:rgba(255,255,255,.3); text-align:center; margin-bottom:28px; font-weight:300; }
-.auth-input { width:100%; background:var(--coal3); border:1.5px solid rgba(255,255,255,.1); border-radius:12px; padding:14px 16px; font-family:'Jost',sans-serif; font-size:14px; color:white; outline:none; margin-bottom:12px; transition:border-color .2s; }
+.auth-screen { background:var(--coal); min-height:852px; align-items:center; justify-content:flex-start; padding:0 24px; overflow-y:auto; }
+.auth-card { width:100%; max-width:340px; padding:16px 0 32px; }
+.auth-title { font-family:'Cormorant Garamond',serif; font-size:26px; font-weight:700; color:white; text-align:center; margin-bottom:5px; }
+.auth-sub { font-size:13px; color:rgba(255,255,255,.3); text-align:center; margin-bottom:18px; font-weight:300; }
+.auth-input { width:100%; background:var(--coal3); border:1.5px solid rgba(255,255,255,.1); border-radius:11px; padding:11px 14px; font-family:'Jost',sans-serif; font-size:13px; color:white; outline:none; margin-bottom:9px; transition:border-color .2s; }
 .auth-input:focus { border-color:var(--gold); }
 .auth-input::placeholder { color:rgba(255,255,255,.25); }
 .auth-error { font-size:12px; color:var(--red-w); margin-bottom:12px; text-align:center; }
@@ -1150,50 +1150,50 @@ body {
 /* ══════════════════════════════════════════════
    REGISTRATION: Pflegegrad Toggle & Switch
    ══════════════════════════════════════════════ */
-.reg-section { margin-top:14px; }
+.reg-section { margin-top:10px; }
 .reg-section-title {
-  font-size:12px; font-weight:600; color:var(--ink3);
-  letter-spacing:.04em; margin-bottom:8px;
+  font-size:11px; font-weight:600; color:var(--ink3);
+  letter-spacing:.04em; margin-bottom:6px;
 }
 .reg-section-desc {
-  font-size:11px; color:var(--ink4); line-height:1.5;
-  margin-bottom:8px; font-weight:300;
+  font-size:10px; color:var(--ink4); line-height:1.4;
+  margin-bottom:6px; font-weight:300;
 }
 .reg-hint {
-  font-size:11px; color:var(--green); margin-top:6px; font-weight:500;
+  font-size:10px; color:var(--green); margin-top:4px; font-weight:500;
 }
 
 /* Pflegegrad Toggle Buttons (row of 6) */
 .reg-toggle-row {
-  display:flex; gap:6px;
+  display:flex; gap:4px;
 }
 .reg-toggle-btn {
-  flex:1; padding:10px 0; border-radius:10px;
+  flex:1; padding:8px 0; border-radius:9px;
   background:var(--coal3); border:1.5px solid var(--border);
   color:var(--ink3); font-family:'Jost',sans-serif;
-  font-size:13px; font-weight:600; cursor:pointer;
+  font-size:12px; font-weight:600; cursor:pointer;
   transition:all .2s; text-align:center;
 }
 .reg-toggle-btn:hover { border-color:var(--gold-lt); }
 .reg-toggle-btn.active {
   background:linear-gradient(135deg,var(--gold2),var(--gold));
   color:var(--coal); border-color:var(--gold);
-  box-shadow:0 2px 12px rgba(201,150,60,.3);
+  box-shadow:0 2px 10px rgba(201,150,60,.3);
 }
 
 /* Slide Switch */
 .reg-switch-row {
   display:flex; align-items:center; justify-content:space-between;
-  padding:12px 14px; background:var(--coal3);
-  border:1.5px solid var(--border); border-radius:12px;
+  padding:9px 12px; background:var(--coal3);
+  border:1.5px solid var(--border); border-radius:10px;
   cursor:pointer; transition:all .2s;
 }
 .reg-switch-row:hover { border-color:var(--gold-lt); }
 .reg-switch-label {
-  font-size:13px; font-weight:500; color:var(--ink2);
+  font-size:12px; font-weight:500; color:var(--ink2);
 }
 .reg-switch {
-  width:46px; height:26px; border-radius:13px;
+  width:40px; height:22px; border-radius:11px;
   background:var(--coal4); position:relative;
   transition:background .25s; flex-shrink:0;
 }
@@ -1201,13 +1201,13 @@ body {
   background:linear-gradient(135deg,var(--gold2),var(--gold));
 }
 .reg-switch-knob {
-  width:22px; height:22px; border-radius:50%;
+  width:18px; height:18px; border-radius:50%;
   background:white; position:absolute; top:2px; left:2px;
   transition:transform .25s cubic-bezier(.4,0,.2,1);
-  box-shadow:0 1px 4px rgba(0,0,0,.3);
+  box-shadow:0 1px 3px rgba(0,0,0,.3);
 }
 .reg-switch.on .reg-switch-knob {
-  transform:translateX(20px);
+  transform:translateX(18px);
 }
 
 
