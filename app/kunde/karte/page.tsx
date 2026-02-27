@@ -41,8 +41,8 @@ export default function KarteSeite() {
       const L = (window as any).L
       if (!L || !mapRef.current) return
 
-      const lat = profile.latitude || 52.52
-      const lng = profile.longitude || 13.405
+      const lat = profile.latitude || 50.1109
+      const lng = profile.longitude || 8.6821
       const map = L.map(mapRef.current).setView([lat, lng], 13)
       leafletMap.current = map
 
