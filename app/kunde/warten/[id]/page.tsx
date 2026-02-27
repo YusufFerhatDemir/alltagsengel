@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
-import { IconWings, IconCheck } from '@/components/Icons'
+import { IconWingsGold, IconCheck } from '@/components/Icons'
 
 export default function WartenPage() {
   const router = useRouter()
@@ -43,7 +43,7 @@ export default function WartenPage() {
         <div className="wait-pulse">
           <div className="wait-ring"></div>
           <div className="wait-ring"></div>
-          <div className="wait-core"><IconWings size={28} /></div>
+          <div className="wait-core"><IconWingsGold size={34} /></div>
         </div>
         <div className="wait-title">{confirmed ? 'Buchung bestätigt!' : 'Anfrage wird gesendet...'}</div>
         <div className="wait-sub">
