@@ -2,19 +2,19 @@
 import { useState, useEffect, ReactNode } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
-import { IconStar, IconHandshake, IconMedical, IconBag, IconHome as IconHouse, IconCoffee, IconPill, IconWalk, IconTarget, IconPin, IconSearch, IconUser, IconWings, IconCard, IconStarFilled, IconCheck } from '@/components/Icons'
+import { IconPin, IconSearch, IconUser, IconCard, IconStarFilled, IconCheck, IconStarGold, IconHandshakeGold, IconMedicalGold, IconBagGold, IconHomeGold, IconCoffeeGold, IconPillGold, IconWalkGold, IconTargetGold, IconWingsGold } from '@/components/Icons'
 import { haversineDistance } from '@/lib/geocoding'
 
 const categories: { key: string; icon: ReactNode; label: string }[] = [
-  { key: 'all', icon: <IconStar size={18} />, label: 'Alle' },
-  { key: 'begleitung', icon: <IconHandshake size={18} />, label: 'Begleitung' },
-  { key: 'arzt', icon: <IconMedical size={18} />, label: 'Arztbesuch' },
-  { key: 'einkauf', icon: <IconBag size={18} />, label: 'Einkauf' },
-  { key: 'haushalt', icon: <IconHouse size={18} />, label: 'Haushalt' },
-  { key: 'freizeit', icon: <IconCoffee size={18} />, label: 'Freizeit' },
-  { key: 'apotheke', icon: <IconPill size={18} />, label: 'Apotheke' },
-  { key: 'spazieren', icon: <IconWalk size={18} />, label: 'Spazieren' },
-  { key: 'aktivitaeten', icon: <IconTarget size={18} />, label: 'Aktivitäten' },
+  { key: 'all', icon: <IconStarGold size={20} />, label: 'Alle' },
+  { key: 'begleitung', icon: <IconHandshakeGold size={20} />, label: 'Begleitung' },
+  { key: 'arzt', icon: <IconMedicalGold size={20} />, label: 'Arztbesuch' },
+  { key: 'einkauf', icon: <IconBagGold size={20} />, label: 'Einkauf' },
+  { key: 'haushalt', icon: <IconHomeGold size={20} />, label: 'Haushalt' },
+  { key: 'freizeit', icon: <IconCoffeeGold size={20} />, label: 'Freizeit' },
+  { key: 'apotheke', icon: <IconPillGold size={20} />, label: 'Apotheke' },
+  { key: 'spazieren', icon: <IconWalkGold size={20} />, label: 'Spazieren' },
+  { key: 'aktivitaeten', icon: <IconTargetGold size={20} />, label: 'Aktivitäten' },
 ]
 
 const serviceMap: Record<string, string> = {
@@ -190,7 +190,7 @@ export default function KundeHomePage() {
           <Link key={angel.id} href={`/kunde/engel/${angel.id}`} style={{ textDecoration: 'none' }}>
             <div className={`engel-card${angel.is_online ? ' engel-online' : ''}`}>
               <div className={`engel-avatar${angel.is_online ? ' glow-available' : ''}`} style={{ background: angel.profiles?.avatar_color || 'var(--gold-pale)' }}>
-                <IconWings size={22} />
+                <IconWingsGold size={26} />
                 <div className={`online-dot${angel.is_online ? '' : ' away'}`}></div>
               </div>
               <div className="engel-info">
@@ -215,7 +215,7 @@ export default function KundeHomePage() {
           <Link key={angel.id} href={`/kunde/engel/${angel.id}`} style={{ textDecoration: 'none' }}>
             <div className={`engel-card${angel.online ? ' engel-online' : ''}`}>
               <div className={`engel-avatar${angel.online ? ' glow-available' : ''}`} style={{ background: angel.bg }}>
-                <IconWings size={22} /><div className={`online-dot${angel.online ? '' : ' away'}`}></div>
+                <IconWingsGold size={26} /><div className={`online-dot${angel.online ? '' : ' away'}`}></div>
               </div>
               <div className="engel-info">
                 <div className="engel-row1"><div className="engel-name">{angel.name}</div><div className="engel-rating"><IconStarFilled size={13} /> {angel.rating}</div></div>

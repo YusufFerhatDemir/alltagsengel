@@ -7,7 +7,7 @@ export default function SplashPage() {
       <div className="sp-glow"></div>
       <div className="sp-inner">
         <div style={{ marginBottom: 26 }}>
-          <Icon3D size={118} float />
+          <Icon3D size={140} float />
         </div>
         <div className="sp-word">ALLTAGSENGEL</div>
         <div className="sp-tag">Mit Herz für dich da</div>
