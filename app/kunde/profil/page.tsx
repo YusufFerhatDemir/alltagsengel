@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
-import { IconUser } from '@/components/Icons'
+import { IconUser, IconDocument, IconNav, IconCalendar } from '@/components/Icons'
 
 export default function KundeProfilPage() {
   const router = useRouter()
@@ -73,14 +73,41 @@ export default function KundeProfilPage() {
           </div>
         </div>
 
-        <div className="section-label">Buchungen</div>
+        <div className="section-label">Services</div>
         <div className="settings-card">
-          <div className="setting-row">
-            <div>
-              <div className="setting-main">Meine Buchungen</div>
-              <div className="setting-sub">Alle vergangenen und aktiven Buchungen</div>
+          <Link href="/kunde/buchungen" style={{ textDecoration: 'none' }}>
+            <div className="setting-row" style={{ cursor: 'pointer' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <IconCalendar size={18} color="var(--gold2)" />
+                <div>
+                  <div className="setting-main">Meine Buchungen</div>
+                  <div className="setting-sub">Alle vergangenen und aktiven Buchungen</div>
+                </div>
+              </div>
             </div>
-          </div>
+          </Link>
+          <Link href="/kunde/dokumente" style={{ textDecoration: 'none' }}>
+            <div className="setting-row" style={{ cursor: 'pointer' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <IconDocument size={18} color="var(--gold2)" />
+                <div>
+                  <div className="setting-main">Dokumente</div>
+                  <div className="setting-sub">Ausweise und Versicherungsnachweise</div>
+                </div>
+              </div>
+            </div>
+          </Link>
+          <Link href="/kunde/karte" style={{ textDecoration: 'none' }}>
+            <div className="setting-row" style={{ cursor: 'pointer' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <IconNav size={18} color="var(--gold2)" />
+                <div>
+                  <div className="setting-main">Karte</div>
+                  <div className="setting-sub">Engel in deiner Nähe anzeigen</div>
+                </div>
+              </div>
+            </div>
+          </Link>
         </div>
 
         <button

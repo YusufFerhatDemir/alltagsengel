@@ -160,3 +160,108 @@ create trigger on_auth_user_created
 -- ============================================
 -- NOT: Demo kullanıcıları Supabase Auth > Users'dan
 -- manuel oluşturup aşağıdaki ID'leri güncelleyebilirsiniz
+
+
+-- ============================================
+-- 5. MESSAGES tablosu (Chat)
+-- ============================================
+create table if not exists public.messages (
+  id uuid default gen_random_uuid() primary key,
+  booking_id uuid references public.bookings(id) on delete cascade,
+  sender_id uuid references public.profiles(id) on delete set null,
+  receiver_id uuid references public.profiles(id) on delete set null,
+  content text not null,
+  read boolean not null default false,
+  created_at timestamptz not null default now()
+);
+
+alter table public.messages enable row level security;
+
+create policy "Kullanıcı kendi mesajlarını okuyabilir" on public.messages
+  for select using (auth.uid() = sender_id or auth.uid() = receiver_id);
+
+create policy "Kullanıcı mesaj gönderebilir" on public.messages
+  for insert with check (auth.uid() = sender_id);
+
+create policy "Kullanıcı kendi mesajlarını güncelleyebilir" on public.messages
+  for update using (auth.uid() = receiver_id);
+
+-- ============================================
+-- 6. DOCUMENTS tablosu (Belge Yükleme)
+-- ============================================
+create table if not exists public.documents (
+  id uuid default gen_random_uuid() primary key,
+  user_id uuid references public.profiles(id) on delete cascade,
+  type text not null check (type in ('ausweis','fuehrungszeugnis','zertifikat','versicherung','sonstiges')),
+  file_name text not null,
+  file_url text,
+  status text not null default 'pending' check (status in ('pending','verified','rejected')),
+  note text,
+  uploaded_at timestamptz not null default now(),
+  verified_at timestamptz
+);
+
+alter table public.documents enable row level security;
+
+create policy "Kullanıcı kendi belgelerini okuyabilir" on public.documents
+  for select using (auth.uid() = user_id);
+
+create policy "Kullanıcı belge yükleyebilir" on public.documents
+  for insert with check (auth.uid() = user_id);
+
+create policy "Admin belgeleri yönetebilir" on public.documents
+  for all using (
+    exists (select 1 from public.profiles where id = auth.uid() and role = 'admin')
+  );
+
+-- ============================================
+-- 7. PAYMENTS tablosu (Ödeme)
+-- ============================================
+create table if not exists public.payments (
+  id uuid default gen_random_uuid() primary key,
+  booking_id uuid references public.bookings(id) on delete set null,
+  user_id uuid references public.profiles(id) on delete set null,
+  amount numeric(10,2) not null,
+  platform_fee numeric(10,2) default 0,
+  payment_method text not null default 'card' check (payment_method in ('card','sepa','45b','paypal')),
+  status text not null default 'pending' check (status in ('pending','processing','completed','failed','refunded')),
+  stripe_payment_id text,
+  created_at timestamptz not null default now()
+);
+
+alter table public.payments enable row level security;
+
+create policy "Kullanıcı kendi ödemelerini okuyabilir" on public.payments
+  for select using (auth.uid() = user_id);
+
+create policy "Admin ödemeleri yönetebilir" on public.payments
+  for all using (
+    exists (select 1 from public.profiles where id = auth.uid() and role = 'admin')
+  );
+
+-- ============================================
+-- 8. NOTIFICATIONS tablosu (Bildirimler)
+-- ============================================
+create table if not exists public.notifications (
+  id uuid default gen_random_uuid() primary key,
+  user_id uuid references public.profiles(id) on delete cascade,
+  type text not null check (type in ('booking_new','booking_accepted','booking_declined','booking_completed','message','payment','system')),
+  title text not null,
+  body text,
+  read boolean not null default false,
+  data jsonb,
+  created_at timestamptz not null default now()
+);
+
+alter table public.notifications enable row level security;
+
+create policy "Kullanıcı kendi bildirimlerini okuyabilir" on public.notifications
+  for select using (auth.uid() = user_id);
+
+create policy "Kullanıcı bildirimlerini güncelleyebilir" on public.notifications
+  for update using (auth.uid() = user_id);
+
+create policy "Admin bildirimleri yönetebilir" on public.notifications
+  for all using (
+    exists (select 1 from public.profiles where id = auth.uid() and role = 'admin')
+  );
