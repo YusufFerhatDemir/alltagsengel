@@ -153,3 +153,101 @@ export function IconMore(p: IconProps) {
     </svg>
   )
 }
+
+// ══════════════════════════════════════════════
+// PREMIUM GOLD ICONS (Filled with Gold Gradient)
+// ══════════════════════════════════════════════
+
+function IGold({ size = 20, gid, className, children }: { size?: number; gid: string; className?: string; children: React.ReactNode }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" className={className}>
+      <defs>
+        <linearGradient id={gid} x1="4" y1="2" x2="20" y2="22" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor="#F8E064"/>
+          <stop offset="45%" stopColor="#DBA84A"/>
+          <stop offset="100%" stopColor="#B8882E"/>
+        </linearGradient>
+        <linearGradient id={`${gid}L`} x1="4" y1="4" x2="20" y2="20" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor="#FCF0A0"/>
+          <stop offset="50%" stopColor="#E8C850"/>
+          <stop offset="100%" stopColor="#C9963C"/>
+        </linearGradient>
+      </defs>
+      {children}
+    </svg>
+  )
+}
+
+export function IconStarGold(p: IconProps) {
+  return <IGold size={p.size} gid="gSt" className={p.className}>
+    <path d="M12 2l2.9 5.9 6.5.95-4.7 4.58 1.1 6.47L12 17l-5.8 2.9 1.1-6.47L2.6 8.85l6.5-.95z" fill="url(#gSt)" stroke="#A07428" strokeWidth="0.4" strokeLinejoin="round"/>
+  </IGold>
+}
+
+export function IconHandshakeGold(p: IconProps) {
+  return <IGold size={p.size} gid="gHs" className={p.className}>
+    <path d="M2 12a5 5 0 015-5h2l3 3 3-3h2a5 5 0 015 5v0a5 5 0 01-5 5H7a5 5 0 01-5-5z" fill="url(#gHs)" stroke="#A07428" strokeWidth="0.4"/>
+    <path d="M7.5 11.5l3 3L16.5 8.5" fill="none" stroke="#1A1612" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+  </IGold>
+}
+
+export function IconMedicalGold(p: IconProps) {
+  return <IGold size={p.size} gid="gMd" className={p.className}>
+    <rect x="3" y="3" width="18" height="18" rx="4" fill="url(#gMd)" stroke="#A07428" strokeWidth="0.4"/>
+    <path d="M12 7.5v9M7.5 12h9" fill="none" stroke="#1A1612" strokeWidth="2.2" strokeLinecap="round"/>
+  </IGold>
+}
+
+export function IconBagGold(p: IconProps) {
+  return <IGold size={p.size} gid="gBg" className={p.className}>
+    <path d="M5.5 8h13l1 13H4.5z" fill="url(#gBg)" stroke="#A07428" strokeWidth="0.4" strokeLinejoin="round"/>
+    <path d="M9 8V5.5a3 3 0 016 0V8" fill="none" stroke="url(#gBgL)" strokeWidth="1.4" strokeLinecap="round"/>
+  </IGold>
+}
+
+export function IconHomeGold(p: IconProps) {
+  return <IGold size={p.size} gid="gHm" className={p.className}>
+    <path d="M3 10.5L12 3l9 7.5V20a1.5 1.5 0 01-1.5 1.5h-15A1.5 1.5 0 013 20z" fill="url(#gHm)" stroke="#A07428" strokeWidth="0.4" strokeLinejoin="round"/>
+    <rect x="9" y="14" width="6" height="7.5" rx="0.5" fill="#1A1612"/>
+  </IGold>
+}
+
+export function IconCoffeeGold(p: IconProps) {
+  return <IGold size={p.size} gid="gCf" className={p.className}>
+    <path d="M3.5 10h13v6a4.5 4.5 0 01-4.5 4.5h-4A4.5 4.5 0 013.5 16z" fill="url(#gCf)" stroke="#A07428" strokeWidth="0.4"/>
+    <path d="M16.5 11h1a3 3 0 010 6h-1" fill="none" stroke="url(#gCfL)" strokeWidth="1.5" strokeLinecap="round"/>
+    <path d="M6 7V5.5M10 7V4M14 7V5.5" fill="none" stroke="url(#gCfL)" strokeWidth="1.3" strokeLinecap="round"/>
+  </IGold>
+}
+
+export function IconPillGold(p: IconProps) {
+  return <IGold size={p.size} gid="gPl" className={p.className}>
+    <path d="M8.5 2.5l13 13a4.24 4.24 0 01-6 6l-13-13a4.24 4.24 0 016-6z" fill="url(#gPl)" stroke="#A07428" strokeWidth="0.4"/>
+    <path d="M12 10L6 16" fill="none" stroke="#1A1612" strokeWidth="1.8" strokeLinecap="round"/>
+  </IGold>
+}
+
+export function IconWalkGold(p: IconProps) {
+  return <IGold size={p.size} gid="gWk" className={p.className}>
+    <circle cx="13" cy="4" r="2.8" fill="url(#gWk)"/>
+    <path d="M9.5 10l-2 7.5 4.5-1.5M9.5 10l4.5 2 2 6M9.5 10l2-4" fill="none" stroke="url(#gWk)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+  </IGold>
+}
+
+export function IconTargetGold(p: IconProps) {
+  return <IGold size={p.size} gid="gTg" className={p.className}>
+    <circle cx="12" cy="12" r="10" fill="url(#gTg)" stroke="#A07428" strokeWidth="0.3"/>
+    <circle cx="12" cy="12" r="6" fill="#1A1612"/>
+    <circle cx="12" cy="12" r="3" fill="url(#gTgL)"/>
+  </IGold>
+}
+
+export function IconWingsGold(p: IconProps) {
+  return <IGold size={p.size} gid="gWg" className={p.className}>
+    <circle cx="12" cy="5.5" r="3.2" fill="url(#gWg)"/>
+    <path d="M12 8.5c-4 0-6.5 2-7.5 5.5 1 2.5 4 4 7.5 4s6.5-1.5 7.5-4c-1-3.5-3.5-5.5-7.5-5.5z" fill="url(#gWg)" stroke="#A07428" strokeWidth="0.3"/>
+    <path d="M4.5 8.5C2.5 9.5 1.5 12 2.5 15" fill="none" stroke="url(#gWgL)" strokeWidth="2" strokeLinecap="round"/>
+    <path d="M19.5 8.5c2 1 3 3.5 2 6.5" fill="none" stroke="url(#gWgL)" strokeWidth="2" strokeLinecap="round"/>
+    <circle cx="12" cy="5.5" r="1.2" fill="url(#gWgL)" opacity="0.6"/>
+  </IGold>
+}

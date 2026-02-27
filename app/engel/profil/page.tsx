@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
-import { IconWings, IconDocument, IconCheck, IconClock } from '@/components/Icons'
+import { IconWingsGold, IconDocument, IconCheck, IconClock } from '@/components/Icons'
 
 export default function MeinProfilPage() {
   const router = useRouter()
@@ -62,7 +62,7 @@ export default function MeinProfilPage() {
           <div className="mp-title">Mein Profil</div>
         </div>
         <div className="mp-main">
-          <div className="mp-avatar"><IconWings size={26} /></div>
+          <div className="mp-avatar"><IconWingsGold size={30} /></div>
           <div>
             <div className="mp-name">{name}</div>
             <div className="mp-sub">{qualLabel}</div>

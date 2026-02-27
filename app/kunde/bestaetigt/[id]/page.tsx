@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
-import { IconCheck, IconWings, IconChat, IconShield, IconCalendar, IconClock, IconHome as IconHouse, IconCard, IconMoney, IconPhone } from '@/components/Icons'
+import { IconCheck, IconWingsGold, IconChat, IconShield, IconCalendar, IconClock, IconHome as IconHouse, IconCard, IconMoney, IconPhone } from '@/components/Icons'
 
 export default async function BestaetigtPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -27,7 +27,7 @@ export default async function BestaetigtPage({ params }: { params: Promise<{ id:
 
       <div className="confirm-body">
         <div className="person-row">
-          <div className="person-av" style={{ background: booking?.angel?.profiles?.avatar_color || 'var(--gold-pale)' }}><IconWings size={20} /></div>
+          <div className="person-av" style={{ background: booking?.angel?.profiles?.avatar_color || 'var(--gold-pale)' }}><IconWingsGold size={22} /></div>
           <div>
             <div className="person-name">{angelName}</div>
             <div className="person-sub"><IconCheck size={12} /> Bestätigt · Unterwegs</div>

@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
-import { IconPin, IconWings, IconStarFilled, IconNav } from '@/components/Icons'
+import { IconPin, IconWingsGold, IconStarFilled, IconNav } from '@/components/Icons'
 
 export default function KarteSeite() {
   const router = useRouter()
@@ -93,7 +93,7 @@ export default function KarteSeite() {
           <div className="map-card-close" onClick={() => setSelectedAngel(null)}>&times;</div>
           <div className="engel-card" style={{ marginBottom: 0 }}>
             <div className="engel-avatar" style={{ background: selectedAngel.profiles?.avatar_color || 'var(--gold-pale)' }}>
-              <IconWings size={22} />
+              <IconWingsGold size={24} />
             </div>
             <div className="engel-info">
               <div className="engel-row1">
