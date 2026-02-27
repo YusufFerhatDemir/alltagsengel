@@ -222,8 +222,9 @@ export function IconCoffeeGold(p: IconProps) {
 
 export function IconPillGold(p: IconProps) {
   return <IGold size={p.size} gid="gPl" className={p.className}>
-    <path d="M8.5 2.5l13 13a4.24 4.24 0 01-6 6l-13-13a4.24 4.24 0 016-6z" fill="url(#gPl)" stroke="#A07428" strokeWidth="0.4"/>
-    <path d="M12 10L6 16" fill="none" stroke="#1A1612" strokeWidth="1.8" strokeLinecap="round"/>
+    <rect x="4" y="4" width="16" height="16" rx="3" fill="url(#gPl)" stroke="#A07428" strokeWidth="0.4"/>
+    <path d="M12 7v10" fill="none" stroke="#1A1612" strokeWidth="2.8" strokeLinecap="round"/>
+    <path d="M7 12h10" fill="none" stroke="#1A1612" strokeWidth="2.8" strokeLinecap="round"/>
   </IGold>
 }
 
