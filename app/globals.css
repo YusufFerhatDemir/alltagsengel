@@ -59,7 +59,7 @@ body {
 /* ─── Status Bar ─── */
 .sb { height:48px; display:flex; align-items:flex-end; justify-content:space-between; padding:0 28px 9px; position:relative; z-index:30; background:var(--coal); color:rgba(255,255,255,.7); transition:background .3s,color .3s; }
 .sb-time { font-size:15px; font-weight:600; letter-spacing:-0.3px; }
-.sb-ic { display:flex; gap:4px; align-items:center; font-size:12px; }
+.sb-date { font-size:13px; font-weight:500; letter-spacing:0.2px; color:rgba(255,255,255,.5); }
 
 /* ─── Screens (SPA) ─── */
 .screen { display:flex; flex-direction:column; min-height:804px; animation:screenIn .35s cubic-bezier(.4,0,.2,1) both; }
@@ -356,40 +356,40 @@ body {
 .engel-card:hover { border-color:rgba(201,150,60,.2); box-shadow:0 4px 20px rgba(201,150,60,.08); }
 .engel-card:active { transform:scale(.99); border-color:var(--gold); }
 .engel-avatar {
-  width:64px; height:64px; border-radius:18px;
+  width:74px; height:74px; border-radius:20px;
   display:flex; align-items:center; justify-content:center;
   font-size:30px; flex-shrink:0; position:relative;
-  box-shadow:0 3px 10px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.05);
-  border:1.5px solid rgba(201,150,60,.2);
+  box-shadow:0 4px 14px rgba(0,0,0,.3), 0 1px 3px rgba(201,150,60,.15);
+  border:2px solid rgba(201,150,60,.3);
   overflow:hidden;
 }
 .engel-avatar::before {
-  content:''; position:absolute; inset:-1.5px; border-radius:19px;
-  background:linear-gradient(135deg, rgba(248,224,100,.5) 0%, rgba(196,154,46,.25) 28%, rgba(70,48,6,.05) 50%, rgba(196,154,46,.25) 74%, rgba(248,224,100,.5) 100%);
+  content:''; position:absolute; inset:-2px; border-radius:22px;
+  background:linear-gradient(135deg, rgba(248,224,100,.6) 0%, rgba(196,154,46,.3) 28%, rgba(70,48,6,.05) 50%, rgba(196,154,46,.3) 74%, rgba(248,224,100,.6) 100%);
   background-size:200% 200%; animation:borderSpin3d 4s linear infinite; z-index:0;
 }
 .engel-avatar::after {
-  content:''; position:absolute; inset:1.5px; border-radius:16px;
+  content:''; position:absolute; inset:2px; border-radius:18px;
   background:inherit; z-index:1;
 }
-.engel-avatar svg { position:relative; z-index:2; color:var(--gold2); filter:drop-shadow(0 1px 2px rgba(201,150,60,.3)); }
-.online-dot   { position:absolute; bottom:2px; right:2px; width:11px; height:11px; border-radius:50%; background:#5CB882; border:2px solid var(--white); z-index:5; }
+.engel-avatar svg { position:relative; z-index:2; filter:drop-shadow(0 2px 4px rgba(201,150,60,.4)); }
+.online-dot   { position:absolute; bottom:3px; right:3px; width:14px; height:14px; border-radius:50%; background:#5CB882; border:2.5px solid var(--white); z-index:5; box-shadow:0 1px 4px rgba(0,0,0,.2); }
 .online-dot.away { background:#D4A020; }
 
 /* Verfügbare Engel Glow-Effekt */
-.engel-card.engel-online { border-color:rgba(201,150,60,.25); box-shadow:0 0 20px rgba(201,150,60,.12),0 2px 14px rgba(26,22,18,.08); }
+.engel-card.engel-online { border-color:rgba(201,150,60,.3); box-shadow:0 0 24px rgba(201,150,60,.15),0 2px 14px rgba(26,22,18,.08); }
 .engel-card.engel-online::before { opacity:1; }
 .engel-avatar.glow-available {
   animation:avatarGlow 2.5s ease-in-out infinite;
-  border-color:rgba(201,150,60,.4);
+  border-color:rgba(201,150,60,.5);
 }
 .engel-avatar.glow-available::before {
-  background:linear-gradient(135deg, rgba(248,224,100,.7) 0%, rgba(196,154,46,.4) 28%, rgba(70,48,6,.08) 50%, rgba(196,154,46,.4) 74%, rgba(248,224,100,.7) 100%);
+  background:linear-gradient(135deg, rgba(248,224,100,.8) 0%, rgba(196,154,46,.5) 28%, rgba(70,48,6,.1) 50%, rgba(196,154,46,.5) 74%, rgba(248,224,100,.8) 100%);
   background-size:200% 200%; animation:borderSpin3d 3s linear infinite;
 }
 @keyframes avatarGlow {
-  0%,100% { box-shadow:0 0 12px rgba(201,150,60,.25),0 0 24px rgba(201,150,60,.08); }
-  50% { box-shadow:0 0 22px rgba(201,150,60,.4),0 0 40px rgba(201,150,60,.15); }
+  0%,100% { box-shadow:0 0 16px rgba(201,150,60,.3),0 0 30px rgba(201,150,60,.1); }
+  50% { box-shadow:0 0 28px rgba(201,150,60,.5),0 0 50px rgba(201,150,60,.2); }
 }
 .engel-card.engel-online .online-dot { animation:dotPulse 2s ease-in-out infinite; }
 @keyframes dotPulse {
@@ -398,14 +398,14 @@ body {
 }
 .engel-info   { flex:1; min-width:0; }
 .engel-row1   { display:flex; justify-content:space-between; align-items:flex-start; }
-.engel-name   { font-size:15px; font-weight:600; color:var(--ink); }
-.engel-rating { font-size:12px; color:var(--gold); font-weight:700; }
-.engel-cert   { font-size:12px; color:var(--green); font-weight:500; margin-top:2px; }
-.engel-tags   { display:flex; gap:5px; flex-wrap:wrap; margin-top:7px; }
-.engel-tag    { font-size:10px; font-weight:600; color:var(--ink3); background:var(--cream2); border-radius:6px; padding:3px 8px; }
-.engel-price-row { display:flex; justify-content:space-between; align-items:center; margin-top:9px; }
-.engel-price  { font-size:14px; font-weight:700; color:var(--ink); }
-.engel-price span { font-size:11px; font-weight:400; color:var(--ink4); }
+.engel-name   { font-size:16px; font-weight:700; color:var(--ink); letter-spacing:0.01em; }
+.engel-rating { font-size:13px; color:var(--gold); font-weight:700; display:flex; align-items:center; gap:3px; }
+.engel-cert   { font-size:12.5px; color:var(--green); font-weight:600; margin-top:3px; display:flex; align-items:center; gap:4px; }
+.engel-tags   { display:flex; gap:6px; flex-wrap:wrap; margin-top:8px; }
+.engel-tag    { font-size:11px; font-weight:600; color:var(--ink2); background:var(--cream2); border:1px solid rgba(255,255,255,.06); border-radius:8px; padding:4px 10px; }
+.engel-price-row { display:flex; justify-content:space-between; align-items:center; margin-top:10px; }
+.engel-price  { font-size:16px; font-weight:700; color:var(--ink); }
+.engel-price span { font-size:12px; font-weight:400; color:var(--ink4); }
 .badge-45b    { display:flex; align-items:center; gap:4px; background:var(--gold-pale); border:1px solid var(--gold-lt); border-radius:7px; padding:4px 9px; font-size:10px; font-weight:700; color:var(--gold2); }
 
 
@@ -862,7 +862,7 @@ body {
   .cat-item { padding:10px 2px 8px; border-radius:14px; }
   .cat-ic { width:36px; height:36px; border-radius:10px; }
   .cat-lbl { font-size:10px; }
-  .engel-avatar { width:56px; height:56px; border-radius:16px; }
+  .engel-avatar { width:64px; height:64px; border-radius:18px; }
 }
 
 /* ── Auth Screens ── */
