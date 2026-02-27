@@ -116,7 +116,7 @@ export default function KundeHomePage() {
             <div className="kh-name">Hallo, {firstName}</div>
             <div className="kh-loc"><IconPin size={14} /> {profile?.location || 'Frankfurt am Main'} · {searchRadius} km</div>
           </div>
-          <div className="kh-avatar"><IconUser size={22} /></div>
+          <Link href="/kunde/profil" className="kh-avatar"><IconUser size={22} /></Link>
         </div>
       </div>
 
