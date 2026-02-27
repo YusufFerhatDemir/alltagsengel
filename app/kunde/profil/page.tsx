@@ -1,15 +1,26 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
-import { IconUser, IconDocument, IconNav, IconCalendar } from '@/components/Icons'
+import { IconDocument, IconNav, IconCalendar, IconMedical, IconBox } from '@/components/Icons'
+import { AvatarKunde } from '@/components/AvatarGlow'
+
+const KASSEN = ['AOK', 'TK', 'Barmer', 'DAK', 'IKK', 'KKH', 'BKK', 'HEK', 'Knappschaft']
 
 export default function KundeProfilPage() {
   const router = useRouter()
   const [profile, setProfile] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [loggingOut, setLoggingOut] = useState(false)
+  const [userId, setUserId] = useState<string | null>(null)
+
+  // Care eligibility state
+  const [pflegegrad, setPflegegrad] = useState(0)
+  const [homeCare, setHomeCare] = useState(true)
+  const [pflegehilfsmittel, setPflegehilfsmittel] = useState(false)
+  const [krankenkasse, setKrankenkasse] = useState('')
+  const [savedHint, setSavedHint] = useState('')
 
   async function handleLogout() {
     setLoggingOut(true)
@@ -25,12 +36,58 @@ export default function KundeProfilPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
 
+      setUserId(user.id)
+
       const { data: p } = await supabase.from('profiles').select('*').eq('id', user.id).single()
       setProfile(p)
+
+      // Load care eligibility
+      const { data: ce } = await supabase.from('care_eligibility').select('*').eq('user_id', user.id).single()
+      if (ce) {
+        setPflegegrad(ce.pflegegrad || 0)
+        setHomeCare(ce.home_care ?? true)
+        setPflegehilfsmittel(ce.pflegehilfsmittel_interest ?? false)
+        setKrankenkasse(ce.insurance_type === 'public' ? (ce.krankenkasse || '') : '')
+      }
+
       setLoading(false)
     }
     loadProfile()
   }, [])
+
+  const saveCareData = useCallback(async (updates: Record<string, any>) => {
+    if (!userId) return
+    const supabase = createClient()
+    await supabase.from('care_eligibility').upsert({
+      user_id: userId,
+      ...updates,
+    })
+    setSavedHint('saved')
+    setTimeout(() => setSavedHint(''), 1800)
+  }, [userId])
+
+  function handlePflegegrad(g: number) {
+    setPflegegrad(g)
+    saveCareData({ pflegegrad: g, home_care: homeCare, pflegehilfsmittel_interest: pflegehilfsmittel, insurance_type: krankenkasse ? 'public' : 'unknown', krankenkasse })
+  }
+
+  function handleHomeCare() {
+    const v = !homeCare
+    setHomeCare(v)
+    saveCareData({ pflegegrad, home_care: v, pflegehilfsmittel_interest: pflegehilfsmittel, insurance_type: krankenkasse ? 'public' : 'unknown', krankenkasse })
+  }
+
+  function handlePflegehilfsmittel() {
+    const v = !pflegehilfsmittel
+    setPflegehilfsmittel(v)
+    saveCareData({ pflegegrad, home_care: homeCare, pflegehilfsmittel_interest: v, insurance_type: krankenkasse ? 'public' : 'unknown', krankenkasse })
+  }
+
+  function handleKrankenkasse(kk: string) {
+    const v = krankenkasse === kk ? '' : kk
+    setKrankenkasse(v)
+    saveCareData({ pflegegrad, home_care: homeCare, pflegehilfsmittel_interest: pflegehilfsmittel, insurance_type: v ? 'public' : 'unknown', krankenkasse: v })
+  }
 
   const name = profile ? `${profile.first_name} ${profile.last_name}` : '...'
   const loc = profile?.location || '—'
@@ -45,18 +102,92 @@ export default function KundeProfilPage() {
           <div className="mp-title">Mein Profil</div>
         </div>
         <div className="mp-main">
-          <div className="mp-avatar"><IconUser size={26} /></div>
+          <AvatarKunde size={72} />
           <div>
             <div className="mp-name">{name}</div>
             <div className="mp-sub">Kunde</div>
             <div className="mp-chips">
               <span className="mp-chip light">{loc}</span>
+              {pflegegrad > 0 && <span className="mp-chip gold">PG {pflegegrad}</span>}
             </div>
           </div>
         </div>
       </div>
 
       <div className="mp-body">
+        {/* Pflegegrad Section */}
+        <div className="section-label">
+          Pflegedaten
+          <span className={`pf-saved${savedHint ? ' show' : ''}`}>✓ Gespeichert</span>
+        </div>
+        <div className="settings-card" style={{ padding: '14px 16px' }}>
+          <div className="pf-section">
+            <div className="pf-section-title">Pflegegrad</div>
+            <div className="pf-toggle-row">
+              {[0, 1, 2, 3, 4, 5].map(g => (
+                <button
+                  key={g}
+                  type="button"
+                  className={`pf-toggle-btn${pflegegrad === g ? ' active' : ''}`}
+                  onClick={() => handlePflegegrad(g)}
+                >
+                  {g === 0 ? 'Kein' : `${g}`}
+                </button>
+              ))}
+            </div>
+            {pflegegrad > 0 && (
+              <div className="pf-hint">Pflegegrad {pflegegrad} — Anspruch auf Entlastungsleistungen</div>
+            )}
+          </div>
+
+          {pflegegrad > 0 && (
+            <>
+              <div className="pf-section">
+                <div className="pf-section-title">Pflege zu Hause?</div>
+                <div className="pf-switch-row" onClick={handleHomeCare}>
+                  <span className="pf-switch-label">{homeCare ? 'Ja, häusliche Pflege' : 'Nein'}</span>
+                  <div className={`reg-switch${homeCare ? ' on' : ''}`}>
+                    <div className="reg-switch-knob" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="pf-section">
+                <div className="pf-section-title">Gesetzliche Krankenkasse</div>
+                <div className="pf-kk-grid">
+                  {KASSEN.map(kk => (
+                    <div
+                      key={kk}
+                      className={`pf-kk-item${krankenkasse === kk ? ' on' : ''}`}
+                      onClick={() => handleKrankenkasse(kk)}
+                    >
+                      {kk}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {homeCare && (
+                <div className="pf-section">
+                  <div className="pf-section-title" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <IconBox size={14} color="var(--gold2)" />
+                    Pflegehilfsmittel (bis 42 €/Monat)
+                  </div>
+                  <div style={{ fontSize: 10, color: 'var(--ink4)', marginBottom: 6, fontWeight: 300 }}>
+                    Handschuhe, Desinfektion, Masken u.v.m. — von der Pflegekasse übernommen.
+                  </div>
+                  <div className="pf-switch-row" onClick={handlePflegehilfsmittel}>
+                    <span className="pf-switch-label">{pflegehilfsmittel ? 'Ja, ich habe Interesse' : 'Noch kein Interesse'}</span>
+                    <div className={`reg-switch${pflegehilfsmittel ? ' on' : ''}`}>
+                      <div className="reg-switch-knob" />
+                    </div>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+
         <div className="section-label">Einstellungen</div>
         <div className="settings-card">
           <div className="setting-row">
@@ -82,6 +213,17 @@ export default function KundeProfilPage() {
                 <div>
                   <div className="setting-main">Meine Buchungen</div>
                   <div className="setting-sub">Alle vergangenen und aktiven Buchungen</div>
+                </div>
+              </div>
+            </div>
+          </Link>
+          <Link href="/kunde/pflegebox" style={{ textDecoration: 'none' }}>
+            <div className="setting-row" style={{ cursor: 'pointer' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <IconMedical size={18} color="var(--gold2)" />
+                <div>
+                  <div className="setting-main">Pflegebox</div>
+                  <div className="setting-sub">Kostenlose Pflegehilfsmittel bestellen</div>
                 </div>
               </div>
             </div>

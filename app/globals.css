@@ -842,6 +842,49 @@ body {
 .icon3d::after { content:''; position:absolute; inset:1.5px; border-radius:calc(var(--sz)*.228 - .5px); background:#0e0b04; z-index:1; pointer-events:none; }
 .icon3d-float { animation:iconFloat 5s ease-in-out infinite; }
 @keyframes iconFloat { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-10px); } }
+@keyframes avatarSpin { from { transform:rotate(0deg); } to { transform:rotate(360deg); } }
+@keyframes heartPulse { 0%,100% { transform:scale(1); } 50% { transform:scale(1.08); } }
+
+/* ── Profile: Pflege Section ── */
+.pf-section { margin-bottom:16px; }
+.pf-section-title { font-size:11px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:var(--ink4); margin-bottom:8px; }
+.pf-toggle-row { display:flex; gap:5px; }
+.pf-toggle-btn {
+  flex:1; padding:9px 0; border-radius:10px;
+  background:var(--cream2); border:1.5px solid var(--border);
+  color:var(--ink3); font-family:'Jost',sans-serif;
+  font-size:12px; font-weight:600; cursor:pointer;
+  transition:all .2s; text-align:center;
+}
+.pf-toggle-btn:hover { border-color:var(--gold-lt); }
+.pf-toggle-btn.active {
+  background:linear-gradient(135deg,var(--gold2),var(--gold));
+  color:white; border-color:var(--gold);
+  box-shadow:0 2px 10px rgba(201,150,60,.25);
+}
+.pf-hint { font-size:11px; color:var(--green); margin-top:6px; font-weight:500; }
+.pf-switch-row {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:10px 14px; background:var(--cream2);
+  border:1.5px solid var(--border); border-radius:11px;
+  cursor:pointer; transition:all .2s;
+}
+.pf-switch-row:hover { border-color:var(--gold-lt); }
+.pf-switch-label { font-size:12px; font-weight:500; color:var(--ink2); }
+.pf-kk-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; }
+.pf-kk-item {
+  padding:9px 6px; background:var(--cream2); border:1.5px solid var(--border);
+  border-radius:10px; cursor:pointer; text-align:center;
+  font-size:11px; font-weight:600; color:var(--ink3);
+  transition:all .15s; font-family:'Jost',sans-serif;
+}
+.pf-kk-item:hover { border-color:var(--gold-lt); }
+.pf-kk-item.on { background:var(--gold-pale); border-color:var(--gold); color:var(--gold2); }
+.pf-saved {
+  display:inline-block; font-size:10px; color:var(--green); font-weight:600;
+  margin-left:8px; opacity:0; transition:opacity .3s;
+}
+.pf-saved.show { opacity:1; }
 
 
 /* ══════════════════════════════════════════════
