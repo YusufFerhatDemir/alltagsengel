@@ -265,3 +265,134 @@ create policy "Admin bildirimleri yönetebilir" on public.notifications
   for all using (
     exists (select 1 from public.profiles where id = auth.uid() and role = 'admin')
   );
+
+-- ============================================
+-- 9. CARE ELIGIBILITY (Pflegegrad & Anspruch)
+-- ============================================
+create table if not exists public.care_eligibility (
+  user_id uuid references public.profiles(id) on delete cascade primary key,
+  pflegegrad integer not null default 0 check (pflegegrad >= 0 and pflegegrad <= 5),
+  home_care boolean not null default true,
+  insurance_type text not null default 'unknown' check (insurance_type in ('public', 'private', 'unknown')),
+  krankenkasse text not null default '',
+  pflegehilfsmittel_interest boolean not null default false,
+  updated_at timestamptz not null default now()
+);
+
+alter table public.care_eligibility enable row level security;
+
+create policy "Kullanıcı kendi eligibility okuyabilir" on public.care_eligibility
+  for select using (auth.uid() = user_id);
+
+create policy "Kullanıcı kendi eligibility oluşturabilir" on public.care_eligibility
+  for insert with check (auth.uid() = user_id);
+
+create policy "Kullanıcı kendi eligibility güncelleyebilir" on public.care_eligibility
+  for update using (auth.uid() = user_id);
+
+create policy "Admin eligibility yönetebilir" on public.care_eligibility
+  for all using (
+    exists (select 1 from public.profiles where id = auth.uid() and role = 'admin')
+  );
+
+-- ============================================
+-- 10. CAREBOX CATALOG (Pflegehilfsmittel Katalog)
+-- ============================================
+create table if not exists public.carebox_catalog_items (
+  id uuid default gen_random_uuid() primary key,
+  name text not null,
+  category text not null default 'hygiene',
+  description text,
+  unit_type text not null default 'Stück',
+  default_price_estimate numeric(10,2),
+  max_qty integer not null default 1,
+  active boolean not null default true,
+  sort_order integer not null default 0,
+  created_at timestamptz not null default now()
+);
+
+alter table public.carebox_catalog_items enable row level security;
+
+create policy "Jeder kann Katalog lesen" on public.carebox_catalog_items
+  for select using (true);
+
+create policy "Admin Katalog yönetebilir" on public.carebox_catalog_items
+  for all using (
+    exists (select 1 from public.profiles where id = auth.uid() and role = 'admin')
+  );
+
+-- Default Katalog-Einträge
+insert into public.carebox_catalog_items (name, category, description, unit_type, default_price_estimate, max_qty, sort_order) values
+  ('Einmalhandschuhe (Nitril)', 'hygiene', '100 Stück, puderfrei, latexfrei', 'Box', 8.50, 2, 1),
+  ('Händedesinfektionsmittel', 'desinfektion', '500 ml Flasche', 'Flasche', 5.90, 2, 2),
+  ('Flächendesinfektionstücher', 'desinfektion', '80 Tücher pro Packung', 'Packung', 6.50, 2, 3),
+  ('Mundschutz (OP-Masken)', 'hygiene', '50 Stück, 3-lagig', 'Box', 4.90, 2, 4),
+  ('Schutzschürzen (Einweg)', 'hygiene', '100 Stück, PE-Folie', 'Box', 7.90, 1, 5),
+  ('Bettschutzeinlagen (Einweg)', 'hygiene', '25 Stück, 60×90 cm, saugstark', 'Packung', 9.90, 2, 6),
+  ('Fingerlinge', 'hygiene', '100 Stück, Latex', 'Box', 3.50, 1, 7),
+  ('FFP2-Masken', 'hygiene', '10 Stück, einzelverpackt', 'Box', 6.90, 1, 8);
+
+-- ============================================
+-- 11. CAREBOX CART (Warenkorb)
+-- ============================================
+create table if not exists public.carebox_cart (
+  id uuid default gen_random_uuid() primary key,
+  user_id uuid references public.profiles(id) on delete cascade not null,
+  month text not null default to_char(now(), 'YYYY-MM'),
+  items jsonb not null default '[]',
+  estimated_total numeric(10,2) not null default 0,
+  status text not null default 'draft' check (status in ('draft', 'submitted')),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+alter table public.carebox_cart enable row level security;
+
+create policy "Kullanıcı kendi cart okuyabilir" on public.carebox_cart
+  for select using (auth.uid() = user_id);
+
+create policy "Kullanıcı kendi cart oluşturabilir" on public.carebox_cart
+  for insert with check (auth.uid() = user_id);
+
+create policy "Kullanıcı kendi cart güncelleyebilir" on public.carebox_cart
+  for update using (auth.uid() = user_id);
+
+create policy "Admin cart yönetebilir" on public.carebox_cart
+  for all using (
+    exists (select 1 from public.profiles where id = auth.uid() and role = 'admin')
+  );
+
+-- ============================================
+-- 12. CAREBOX ORDER REQUESTS (Bestellungen)
+-- ============================================
+create table if not exists public.carebox_order_requests (
+  id uuid default gen_random_uuid() primary key,
+  user_id uuid references public.profiles(id) on delete set null,
+  cart_id uuid references public.carebox_cart(id) on delete set null,
+  delivery_name text not null,
+  delivery_address text not null,
+  delivery_phone text,
+  consent_share_data boolean not null default false,
+  partner_id text,
+  status text not null default 'draft' check (status in ('draft','submitted','sent','accepted','rejected','shipped','delivered','cancelled')),
+  partner_reference text,
+  audit_log jsonb not null default '[]',
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+alter table public.carebox_order_requests enable row level security;
+
+create policy "Kullanıcı kendi order okuyabilir" on public.carebox_order_requests
+  for select using (auth.uid() = user_id);
+
+create policy "Kullanıcı order oluşturabilir" on public.carebox_order_requests
+  for insert with check (auth.uid() = user_id);
+
+create policy "Kullanıcı kendi order güncelleyebilir" on public.carebox_order_requests
+  for update using (auth.uid() = user_id);
+
+create policy "Admin order yönetebilir" on public.carebox_order_requests
+  for all using (
+    exists (select 1 from public.profiles where id = auth.uid() and role = 'admin')
+  );
