@@ -1,12 +1,13 @@
 'use client'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { IconHome, IconSearch, IconCalendar, IconUser, IconClipboard } from '@/components/Icons'
+import { IconHome, IconSearch, IconCalendar, IconUser, IconClipboard, IconChat } from '@/components/Icons'
 
 const engelItems = [
   { href: '/engel/home', icon: <IconHome size={20} />, label: 'Home' },
-  { href: '#', icon: <IconClipboard size={20} />, label: 'Aufträge' },
-  { href: '#', icon: <IconCalendar size={20} />, label: 'Kalender' },
+  { href: '/engel/buchungen', icon: <IconClipboard size={20} />, label: 'Aufträge' },
+  { href: '/engel/chat', icon: <IconChat size={20} />, label: 'Chat' },
+  { href: '/engel/kalender', icon: <IconCalendar size={20} />, label: 'Kalender' },
   { href: '/engel/profil', icon: <IconUser size={20} />, label: 'Profil' },
 ]
 
@@ -18,7 +19,7 @@ export default function BottomNav({ role }: { role: 'kunde' | 'engel' }) {
     return (
       <div className="bottom-nav">
         {engelItems.map(item => {
-          const isActive = pathname.startsWith(item.href) && item.href !== '#'
+          const isActive = pathname.startsWith(item.href)
           return (
             <Link key={item.label} href={item.href} className={`bnav-item${isActive ? ' on' : ''}`}>
               <div className="bnav-ic">{item.icon}</div>
@@ -33,7 +34,8 @@ export default function BottomNav({ role }: { role: 'kunde' | 'engel' }) {
   const kundeItems = [
     { key: 'home', href: '/kunde/home', icon: <IconHome size={20} />, label: 'Home' },
     { key: 'suche', href: '/kunde/home', icon: <IconSearch size={20} />, label: 'Suche' },
-    { key: 'buchungen', href: '#', icon: <IconCalendar size={20} />, label: 'Buchungen' },
+    { key: 'chat', href: '/kunde/chat', icon: <IconChat size={20} />, label: 'Chat' },
+    { key: 'buchungen', href: '/kunde/buchungen', icon: <IconCalendar size={20} />, label: 'Buchungen' },
     { key: 'profil', href: '/kunde/profil', icon: <IconUser size={20} />, label: 'Profil' },
   ]
 
@@ -64,7 +66,7 @@ export default function BottomNav({ role }: { role: 'kunde' | 'engel' }) {
       {kundeItems.map(item => {
         const isActive = item.key === 'home'
           ? pathname === '/kunde/home'
-          : pathname.startsWith(item.href) && item.href !== '#' && item.key !== 'suche'
+          : item.key !== 'suche' && pathname.startsWith(item.href)
         if (item.key === 'suche') {
           return (
             <a key={item.label} href="#" className="bnav-item" onClick={handleSearchClick}>
