@@ -168,13 +168,13 @@ export default function KundeHomePage() {
             <div className="banner-icon"><IconCard size={22} /></div>
             <div>
               <div className="banner-title">§45b Entlastungsbetrag</div>
-              <div className="banner-sub">Bis zu <strong>125€/Monat</strong> über Ihre Pflegekasse. Direkt über Alltagsengel abrechnen.</div>
+              <div className="banner-sub">Bis zu <strong>131€/Monat</strong> über Ihre Pflegekasse. Direkt über Alltagsengel abrechnen.</div>
             </div>
           </div>
           <div className="banner-pills">
             <span className="banner-pill">Pflegegrad 1-5</span>
             <span className="banner-pill">Direkte Abrechnung</span>
-            <span className="banner-pill">1.500€/Jahr</span>
+            <span className="banner-pill">1.572€/Jahr</span>
           </div>
         </div>
 
@@ -188,8 +188,8 @@ export default function KundeHomePage() {
 
         {filteredAngels.length > 0 ? filteredAngels.map((angel: any) => (
           <Link key={angel.id} href={`/kunde/engel/${angel.id}`} style={{ textDecoration: 'none' }}>
-            <div className="engel-card">
-              <div className="engel-avatar" style={{ background: angel.profiles?.avatar_color || 'var(--gold-pale)' }}>
+            <div className={`engel-card${angel.is_online ? ' engel-online' : ''}`}>
+              <div className={`engel-avatar${angel.is_online ? ' glow-available' : ''}`} style={{ background: angel.profiles?.avatar_color || 'var(--gold-pale)' }}>
                 <IconWings size={22} />
                 <div className={`online-dot${angel.is_online ? '' : ' away'}`}></div>
               </div>
@@ -213,8 +213,8 @@ export default function KundeHomePage() {
           </Link>
         )) : filteredDemos.length > 0 ? filteredDemos.map(angel => (
           <Link key={angel.id} href={`/kunde/engel/${angel.id}`} style={{ textDecoration: 'none' }}>
-            <div className="engel-card">
-              <div className="engel-avatar" style={{ background: angel.bg }}>
+            <div className={`engel-card${angel.online ? ' engel-online' : ''}`}>
+              <div className={`engel-avatar${angel.online ? ' glow-available' : ''}`} style={{ background: angel.bg }}>
                 <IconWings size={22} /><div className={`online-dot${angel.online ? '' : ' away'}`}></div>
               </div>
               <div className="engel-info">
