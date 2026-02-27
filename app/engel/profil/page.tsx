@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import { IconWingsGold, IconDocument, IconCheck, IconClock } from '@/components/Icons'
+import { AvatarEngel } from '@/components/AvatarGlow'
 
 export default function MeinProfilPage() {
   const router = useRouter()
@@ -62,7 +63,7 @@ export default function MeinProfilPage() {
           <div className="mp-title">Mein Profil</div>
         </div>
         <div className="mp-main">
-          <div className="mp-avatar"><IconWingsGold size={30} /></div>
+          <AvatarEngel size={72} />
           <div>
             <div className="mp-name">{name}</div>
             <div className="mp-sub">{qualLabel}</div>

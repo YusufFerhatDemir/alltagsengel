@@ -274,6 +274,7 @@ create table if not exists public.care_eligibility (
   pflegegrad integer not null default 0 check (pflegegrad >= 0 and pflegegrad <= 5),
   home_care boolean not null default true,
   insurance_type text not null default 'unknown' check (insurance_type in ('public', 'private', 'unknown')),
+  krankenkasse text not null default '',
   pflegehilfsmittel_interest boolean not null default false,
   updated_at timestamptz not null default now()
 );

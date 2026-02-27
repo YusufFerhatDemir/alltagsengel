@@ -64,6 +64,7 @@ export interface CareEligibility {
   pflegegrad: 0 | 1 | 2 | 3 | 4 | 5
   home_care: boolean
   insurance_type: 'public' | 'private' | 'unknown'
+  krankenkasse: string
   pflegehilfsmittel_interest: boolean
   updated_at: string
 }
