@@ -6,15 +6,15 @@ import { IconPin, IconSearch, IconUser, IconCard, IconStarFilled, IconCheck, Ico
 import { haversineDistance } from '@/lib/geocoding'
 
 const categories: { key: string; icon: ReactNode; label: string }[] = [
-  { key: 'all', icon: <IconStarGold size={20} />, label: 'Alle' },
-  { key: 'begleitung', icon: <IconHandshakeGold size={20} />, label: 'Begleitung' },
-  { key: 'arzt', icon: <IconMedicalGold size={20} />, label: 'Arztbesuch' },
-  { key: 'einkauf', icon: <IconBagGold size={20} />, label: 'Einkauf' },
-  { key: 'haushalt', icon: <IconHomeGold size={20} />, label: 'Haushalt' },
-  { key: 'freizeit', icon: <IconCoffeeGold size={20} />, label: 'Freizeit' },
-  { key: 'apotheke', icon: <IconPillGold size={20} />, label: 'Apotheke' },
-  { key: 'spazieren', icon: <IconWalkGold size={20} />, label: 'Spazieren' },
-  { key: 'aktivitaeten', icon: <IconTargetGold size={20} />, label: 'Aktivitäten' },
+  { key: 'all', icon: <IconStarGold size={26} />, label: 'Alle' },
+  { key: 'begleitung', icon: <IconHandshakeGold size={26} />, label: 'Begleitung' },
+  { key: 'arzt', icon: <IconMedicalGold size={26} />, label: 'Arztbesuch' },
+  { key: 'einkauf', icon: <IconBagGold size={26} />, label: 'Einkauf' },
+  { key: 'haushalt', icon: <IconHomeGold size={26} />, label: 'Haushalt' },
+  { key: 'freizeit', icon: <IconCoffeeGold size={26} />, label: 'Freizeit' },
+  { key: 'apotheke', icon: <IconPillGold size={26} />, label: 'Apotheke' },
+  { key: 'spazieren', icon: <IconWalkGold size={26} />, label: 'Spazieren' },
+  { key: 'aktivitaeten', icon: <IconTargetGold size={26} />, label: 'Aktivitäten' },
 ]
 
 const serviceMap: Record<string, string> = {
