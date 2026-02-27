@@ -49,7 +49,7 @@ export default function KundeHomePage() {
     load()
   }, [])
 
-  const firstName = profile?.first_name || 'Maria'
+  const firstName = profile?.first_name || 'Yusuf'
 
   // Mesafe filtresi: Müşteri ve engel koordinatları varsa hesapla
   const angelsWithDistance = angels.map((a: any) => {
@@ -114,7 +114,7 @@ export default function KundeHomePage() {
           <div>
             <div className="kh-greet">Willkommen zurück</div>
             <div className="kh-name">Hallo, {firstName}</div>
-            <div className="kh-loc"><IconPin size={14} /> {profile?.location || 'Berlin'} · {searchRadius} km</div>
+            <div className="kh-loc"><IconPin size={14} /> {profile?.location || 'Frankfurt am Main'} · {searchRadius} km</div>
           </div>
           <div className="kh-avatar"><IconUser size={22} /></div>
         </div>
