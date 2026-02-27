@@ -2,7 +2,7 @@
 import { useState, useEffect, ReactNode } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
-import { IconPin, IconSearch, IconUser, IconCard, IconStarFilled, IconCheck, IconStarGold, IconHandshakeGold, IconMedicalGold, IconBagGold, IconHomeGold, IconCoffeeGold, IconPillGold, IconWalkGold, IconTargetGold, IconWingsGold } from '@/components/Icons'
+import { IconPin, IconSearch, IconUser, IconCard, IconStarFilled, IconCheck, IconStarGold, IconHandshakeGold, IconMedicalGold, IconBagGold, IconHomeGold, IconCoffeeGold, IconPillGold, IconWalkGold, IconTargetGold, IconWingsGold, IconBox } from '@/components/Icons'
 import { haversineDistance } from '@/lib/geocoding'
 
 const categories: { key: string; icon: ReactNode; label: string }[] = [
@@ -177,6 +177,23 @@ export default function KundeHomePage() {
             <span className="banner-pill">1.572€/Jahr</span>
           </div>
         </div>
+
+        <Link href="/kunde/pflegebox" style={{ textDecoration: 'none' }}>
+          <div className="banner-pflegebox">
+            <div className="banner-row">
+              <div className="banner-icon"><IconBox size={22} /></div>
+              <div>
+                <div className="banner-title">Pflegebox: Hygiene & Desinfektion</div>
+                <div className="banner-sub">Bis <strong>42 €/Monat</strong> • Handschuhe, Desinfektion, Masken, Bettschutzeinlagen</div>
+              </div>
+            </div>
+            <div className="banner-pills">
+              <span className="banner-pill">Pflegegrad 1–5</span>
+              <span className="banner-pill">Bis 42 €/Monat</span>
+              <span className="banner-pill">Direkt bestellen</span>
+            </div>
+          </div>
+        </Link>
 
         <div className="section-row">
           <div className="section-title">
