@@ -243,6 +243,27 @@ export function IconTargetGold(p: IconProps) {
   </IGold>
 }
 
+// ── Pflegebox ──
+export function IconBox(p: IconProps) {
+  return <I {...p}><path d="M21 8V21H3V8" /><rect x="1" y="3" width="22" height="5" rx="1" /><path d="M10 12h4" /></I>
+}
+
+export function IconShield(p: IconProps) {
+  return <I {...p}><path d="M12 2L3 7v5c0 5.5 3.8 10.7 9 12 5.2-1.3 9-6.5 9-12V7z" /></I>
+}
+
+export function IconDroplet(p: IconProps) {
+  return <I {...p}><path d="M12 2.69l5.66 5.66a8 8 0 11-11.31 0z" /></I>
+}
+
+export function IconGloves(p: IconProps) {
+  return <I {...p}><path d="M6.5 3C5.67 3 5 3.67 5 4.5V12l-1.5-2a1.5 1.5 0 00-2.6 1.5l3.6 6.2A6.5 6.5 0 0010 21h4a6.5 6.5 0 005.5-3.3l3.6-6.2a1.5 1.5 0 00-2.6-1.5L19 12V4.5c0-.83-.67-1.5-1.5-1.5S16 3.67 16 4.5V9M14 4.5c0-.83-.67-1.5-1.5-1.5S11 3.67 11 4.5V9M11 4.5V9M8.5 4.5c0-.83-.67-1.5-1.5-1.5" /><path d="M8 4.5V10" /></I>
+}
+
+export function IconTruck(p: IconProps) {
+  return <I {...p}><rect x="1" y="3" width="15" height="13" rx="1" /><path d="M16 8h4l3 4v4h-7V8z" /><circle cx="5.5" cy="18.5" r="2.5" /><circle cx="18.5" cy="18.5" r="2.5" /></I>
+}
+
 export function IconWingsGold(p: IconProps) {
   return <IGold size={p.size} gid="gWg" className={p.className}>
     <circle cx="12" cy="5.5" r="3.2" fill="url(#gWg)"/>

@@ -17,6 +17,9 @@ function RegisterForm() {
   const [lastName, setLastName] = useState('')
   const [plz, setPlz] = useState('')
   const [stadt, setStadt] = useState('')
+  const [pflegegrad, setPflegegrad] = useState<number>(0)
+  const [homeCare, setHomeCare] = useState(true)
+  const [pflegehilfsmittel, setPflegehilfsmittel] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -90,6 +93,17 @@ function RegisterForm() {
             }
           }
           await supabase.from('profiles').upsert(profileData).then(() => {})
+
+          // Pflegegrad speichern (nur für Kunden)
+          if (role === 'kunde') {
+            await supabase.from('care_eligibility').upsert({
+              user_id: data.user.id,
+              pflegegrad,
+              home_care: homeCare,
+              insurance_type: 'unknown',
+              pflegehilfsmittel_interest: pflegehilfsmittel,
+            }).then(() => {})
+          }
         }
 
         // If session exists, redirect directly to home
@@ -119,8 +133,8 @@ function RegisterForm() {
   return (
     <div className="screen auth-screen">
       <div className="auth-card">
-        <div style={{ marginBottom: 24, textAlign: 'center' }}>
-          <Icon3D size={56} />
+        <div style={{ marginBottom: 14, textAlign: 'center' }}>
+          <Icon3D size={44} />
         </div>
         <div className="auth-title">Konto erstellen</div>
         <div className="auth-sub">
@@ -134,10 +148,57 @@ function RegisterForm() {
           <input className="auth-input" type="email" placeholder="E-Mail-Adresse" value={email} onChange={e => setEmail(e.target.value)} required />
           <input className="auth-input" type="password" placeholder="Passwort (min. 6 Zeichen)" value={password} onChange={e => setPassword(e.target.value)} required minLength={6} />
           {role === 'kunde' && (
-            <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr', gap: 10 }}>
-              <input className="auth-input" type="text" placeholder="PLZ" value={plz} onChange={e => setPlz(e.target.value.replace(/\D/g, '').slice(0, 5))} inputMode="numeric" maxLength={5} required />
-              <input className="auth-input" type="text" placeholder="Stadt" value={stadt} onChange={e => setStadt(e.target.value)} required />
-            </div>
+            <>
+              <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr', gap: 10 }}>
+                <input className="auth-input" type="text" placeholder="PLZ" value={plz} onChange={e => setPlz(e.target.value.replace(/\D/g, '').slice(0, 5))} inputMode="numeric" maxLength={5} required />
+                <input className="auth-input" type="text" placeholder="Stadt" value={stadt} onChange={e => setStadt(e.target.value)} required />
+              </div>
+
+              {/* Pflegegrad Toggle-Buttons */}
+              <div className="reg-section">
+                <div className="reg-section-title">Pflegegrad</div>
+                <div className="reg-toggle-row">
+                  {[0, 1, 2, 3, 4, 5].map(g => (
+                    <button
+                      key={g}
+                      type="button"
+                      className={`reg-toggle-btn${pflegegrad === g ? ' active' : ''}`}
+                      onClick={() => setPflegegrad(g)}
+                    >
+                      {g === 0 ? 'Kein' : `${g}`}
+                    </button>
+                  ))}
+                </div>
+                {pflegegrad > 0 && (
+                  <div className="reg-hint">Pflegegrad {pflegegrad} — Sie haben Anspruch auf Entlastungsleistungen</div>
+                )}
+              </div>
+
+              {/* Häusliche Pflege Toggle */}
+              <div className="reg-section">
+                <div className="reg-section-title">Pflege zu Hause?</div>
+                <div className="reg-switch-row" onClick={() => setHomeCare(!homeCare)}>
+                  <span className="reg-switch-label">{homeCare ? 'Ja, häusliche Pflege' : 'Nein'}</span>
+                  <div className={`reg-switch${homeCare ? ' on' : ''}`}>
+                    <div className="reg-switch-knob" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Pflegehilfsmittel Toggle */}
+              {pflegegrad >= 1 && homeCare && (
+                <div className="reg-section">
+                  <div className="reg-section-title">Pflegehilfsmittel (bis 42 €/Monat)</div>
+                  <div className="reg-section-desc">Handschuhe, Desinfektion, Masken u.v.m. — von der Pflegekasse übernommen.</div>
+                  <div className="reg-switch-row" onClick={() => setPflegehilfsmittel(!pflegehilfsmittel)}>
+                    <span className="reg-switch-label">{pflegehilfsmittel ? 'Ja, Interesse' : 'Noch nicht'}</span>
+                    <div className={`reg-switch${pflegehilfsmittel ? ' on' : ''}`}>
+                      <div className="reg-switch-knob" />
+                    </div>
+                  </div>
+                </div>
+              )}
+            </>
           )}
           {error && <div className="auth-error">{error}</div>}
           <button className="btn-gold" type="submit" disabled={loading} style={{ width: '100%', marginTop: 8 }}>
