@@ -190,7 +190,7 @@ export default function KundeHomePage() {
           <Link key={angel.id} href={`/kunde/engel/${angel.id}`} style={{ textDecoration: 'none' }}>
             <div className={`engel-card${angel.is_online ? ' engel-online' : ''}`}>
               <div className={`engel-avatar${angel.is_online ? ' glow-available' : ''}`} style={{ background: angel.profiles?.avatar_color || 'var(--gold-pale)' }}>
-                <IconWingsGold size={26} />
+                <IconWingsGold size={34} />
                 <div className={`online-dot${angel.is_online ? '' : ' away'}`}></div>
               </div>
               <div className="engel-info">
@@ -215,7 +215,7 @@ export default function KundeHomePage() {
           <Link key={angel.id} href={`/kunde/engel/${angel.id}`} style={{ textDecoration: 'none' }}>
             <div className={`engel-card${angel.online ? ' engel-online' : ''}`}>
               <div className={`engel-avatar${angel.online ? ' glow-available' : ''}`} style={{ background: angel.bg }}>
-                <IconWingsGold size={26} /><div className={`online-dot${angel.online ? '' : ' away'}`}></div>
+                <IconWingsGold size={34} /><div className={`online-dot${angel.online ? '' : ' away'}`}></div>
               </div>
               <div className="engel-info">
                 <div className="engel-row1"><div className="engel-name">{angel.name}</div><div className="engel-rating"><IconStarFilled size={13} /> {angel.rating}</div></div>
