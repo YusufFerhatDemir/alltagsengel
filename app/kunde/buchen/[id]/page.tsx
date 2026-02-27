@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
-import { IconWings, IconStarFilled, IconCard, IconShield, IconMedical, IconLock, IconInfo } from '@/components/Icons'
+import { IconWingsGold, IconStarFilled, IconCard, IconShield, IconMedical, IconLock, IconInfo } from '@/components/Icons'
 
 export default function BuchenPage() {
   const router = useRouter()
@@ -80,7 +80,7 @@ export default function BuchenPage() {
       <div className="form-body">
         <div className="form-card">
           <div className="form-engel">
-            <div className="form-engel-av"><IconWings size={22} /></div>
+            <div className="form-engel-av"><IconWingsGold size={24} /></div>
             <div>
               <div className="form-engel-name">{angelName}</div>
               <div className="form-engel-sub"><IconStarFilled size={12} /> {angel?.rating || '5.0'} · Zertifiziert</div>

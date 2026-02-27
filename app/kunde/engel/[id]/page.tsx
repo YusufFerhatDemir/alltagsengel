@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
-import { IconWings, IconStar, IconStarFilled, IconHeart, IconMore, IconUser, IconCheck } from '@/components/Icons'
+import { IconWingsGold, IconStar, IconStarFilled, IconHeart, IconMore, IconUser, IconCheck } from '@/components/Icons'
 
 export default async function EngelProfilPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -29,7 +29,7 @@ export default async function EngelProfilPage({ params }: { params: Promise<{ id
             <div className="ep-actions"><div className="ep-action"><IconHeart size={18} /></div><div className="ep-action"><IconMore size={18} /></div></div>
           </div>
           <div className="ep-main">
-            <div className="ep-avatar" style={{ background: 'rgba(201,150,60,.12)' }}><IconWings size={24} /></div>
+            <div className="ep-avatar" style={{ background: 'rgba(201,150,60,.12)' }}><IconWingsGold size={28} /></div>
             <div>
               <div className="ep-name">Engel nicht gefunden</div>
               <div className="ep-role">Dieser Engel existiert nicht mehr</div>
@@ -57,7 +57,7 @@ export default async function EngelProfilPage({ params }: { params: Promise<{ id
           </div>
         </div>
         <div className="ep-main">
-          <div className="ep-avatar" style={{ background: angel.profiles?.avatar_color || 'rgba(201,150,60,.12)' }}><IconWings size={24} /></div>
+          <div className="ep-avatar" style={{ background: angel.profiles?.avatar_color || 'rgba(201,150,60,.12)' }}><IconWingsGold size={28} /></div>
           <div>
             <div className="ep-name">{name}</div>
             <div className="ep-role">{angel.qualification || 'Alltagsbegleiter/in'}</div>
