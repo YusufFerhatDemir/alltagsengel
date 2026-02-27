@@ -337,6 +337,20 @@ body {
 .engel-avatar { width:64px; height:64px; border-radius:18px; display:flex; align-items:center; justify-content:center; font-size:30px; flex-shrink:0; position:relative; }
 .online-dot   { position:absolute; bottom:2px; right:2px; width:11px; height:11px; border-radius:50%; background:#5CB882; border:2px solid var(--white); }
 .online-dot.away { background:#D4A020; }
+
+/* Verfügbare Engel Glow-Effekt */
+.engel-card.engel-online { border-color:rgba(201,150,60,.22); box-shadow:0 0 16px rgba(201,150,60,.1),0 2px 14px rgba(26,22,18,.06); }
+.engel-card.engel-online::before { opacity:1; }
+.engel-avatar.glow-available { animation:avatarGlow 2.5s ease-in-out infinite; box-shadow:0 0 12px rgba(201,150,60,.25),0 0 24px rgba(201,150,60,.1); }
+@keyframes avatarGlow {
+  0%,100% { box-shadow:0 0 10px rgba(201,150,60,.2),0 0 20px rgba(201,150,60,.06); }
+  50% { box-shadow:0 0 18px rgba(201,150,60,.35),0 0 36px rgba(201,150,60,.12); }
+}
+.engel-card.engel-online .online-dot { animation:dotPulse 2s ease-in-out infinite; }
+@keyframes dotPulse {
+  0%,100% { box-shadow:0 0 0 0 rgba(92,184,130,.5); }
+  50% { box-shadow:0 0 0 5px rgba(92,184,130,0); }
+}
 .engel-info   { flex:1; min-width:0; }
 .engel-row1   { display:flex; justify-content:space-between; align-items:flex-start; }
 .engel-name   { font-size:15px; font-weight:600; color:var(--ink); }

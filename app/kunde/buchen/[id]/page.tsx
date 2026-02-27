@@ -140,7 +140,7 @@ export default function BuchenPage() {
                 ))}
               </div>
               <input className="kk-other" placeholder="Andere Kasse eingeben..." />
-              <div className="kk-result"><IconInfo size={14} /> Ihr <strong>§45b Budget:</strong> 125€/Monat verfügbar. Restbudget dieses Monat: <strong>125,00€</strong></div>
+              <div className="kk-result"><IconInfo size={14} /> Ihr <strong>§45b Budget:</strong> 131€/Monat verfügbar. Restbudget dieses Monat: <strong>131,00€</strong></div>
             </div>
           )}
         </div>
