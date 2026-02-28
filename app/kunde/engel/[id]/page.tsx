@@ -1,46 +1,41 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
+import { safeSingleQuery, logError } from '@/lib/safe-query'
+import { NotFoundState, ErrorState } from '@/components/UIStates'
 import { IconWingsGold, IconStar, IconStarFilled, IconHeart, IconMore, IconUser, IconCheck } from '@/components/Icons'
 
 export default async function EngelProfilPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const supabase = await createClient()
 
-  const { data: angel } = await supabase
-    .from('angels')
-    .select('*, profiles(*)')
-    .eq('id', id)
-    .single()
+  const { data: angel, status } = await safeSingleQuery<any>(supabase, 'angels', id, {
+    select: '*, profiles(*)',
+  })
 
-  const { data: reviews } = await supabase
-    .from('reviews')
-    .select('*, profiles:reviewer_id(first_name, last_name)')
-    .eq('angel_id', id)
-    .order('created_at', { ascending: false })
-    .limit(5)
+  if (status === 'invalid_id' || status === 'not_found') {
+    return <NotFoundState homeHref="/kunde/home" />
+  }
 
-  // Fallback for demo IDs
-  if (!angel) {
+  if (status === 'error' || !angel) {
     return (
-      <div className="screen" id="eprofil">
-        <div className="ep-header">
-          <div className="ep-nav">
-            <Link href="/kunde/home" className="ep-back">‹</Link>
-            <div className="ep-actions"><div className="ep-action"><IconHeart size={18} /></div><div className="ep-action"><IconMore size={18} /></div></div>
-          </div>
-          <div className="ep-main">
-            <div className="ep-avatar" style={{ background: 'rgba(201,150,60,.12)' }}><IconWingsGold size={28} /></div>
-            <div>
-              <div className="ep-name">Engel nicht gefunden</div>
-              <div className="ep-role">Dieser Engel existiert nicht mehr</div>
-            </div>
-          </div>
-        </div>
-        <div className="ep-body" style={{ textAlign: 'center', padding: 40 }}>
-          <Link href="/kunde/home" style={{ color: 'var(--gold)' }}>Zurück zur Startseite</Link>
-        </div>
+      <div className="screen">
+        <ErrorState homeHref="/kunde/home" />
       </div>
     )
+  }
+
+  let reviews: any[] = []
+  try {
+    const { data, error } = await supabase
+      .from('reviews')
+      .select('*, profiles:reviewer_id(first_name, last_name)')
+      .eq('angel_id', id)
+      .order('created_at', { ascending: false })
+      .limit(5)
+    if (error) logError('EngelProfil:reviews', error.message)
+    reviews = data || []
+  } catch (err) {
+    logError('EngelProfil:reviews', err)
   }
 
   const name = `${angel.profiles?.first_name || ''} ${angel.profiles?.last_name || ''}`
@@ -109,7 +104,7 @@ export default async function EngelProfilPage({ params }: { params: Promise<{ id
           </div>
         </div>
 
-        {reviews && reviews.length > 0 && (
+        {reviews.length > 0 && (
           <div className="prof-section">
             <div className="prof-section-hdr">Bewertungen</div>
             <div className="review-list">
