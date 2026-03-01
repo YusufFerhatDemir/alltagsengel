@@ -2,12 +2,14 @@
 import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import Link from 'next/link'
+import { isValidUUID, logError } from '@/lib/safe-query'
+import { NotFoundState, ErrorState, LoadingState } from '@/components/UIStates'
 import { IconWingsGold, IconStarFilled, IconCard, IconShield, IconMedical, IconLock, IconInfo } from '@/components/Icons'
 
 export default function BuchenPage() {
   const router = useRouter()
   const params = useParams()
+  const angelId = params.id as string
   const [payMethod, setPayMethod] = useState('kasse')
   const [kkType, setKkType] = useState('gesetzlich')
   const [selectedKK, setSelectedKK] = useState('AOK')
@@ -19,19 +21,43 @@ export default function BuchenPage() {
   const [notes, setNotes] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
+  const [pageStatus, setPageStatus] = useState<'loading' | 'ok' | 'not_found' | 'error'>('loading')
 
   useEffect(() => {
-    async function loadAngel() {
-      const supabase = createClient()
-      const { data } = await supabase
-        .from('angels')
-        .select('*, profiles(first_name, last_name)')
-        .eq('id', params.id)
-        .single()
-      setAngel(data)
+    if (!isValidUUID(angelId)) {
+      setPageStatus('not_found')
+      return
     }
-    if (params.id) loadAngel()
-  }, [params.id])
+    async function loadAngel() {
+      try {
+        const supabase = createClient()
+        const { data, error: fetchErr } = await supabase
+          .from('angels')
+          .select('*, profiles(first_name, last_name)')
+          .eq('id', angelId)
+          .single()
+        if (fetchErr || !data) {
+          if (fetchErr) logError('BuchenPage:loadAngel', fetchErr.message)
+          setPageStatus(fetchErr?.code === 'PGRST116' || !data ? 'not_found' : 'error')
+          return
+        }
+        setAngel(data)
+        setPageStatus('ok')
+      } catch (err) {
+        logError('BuchenPage:loadAngel', err)
+        setPageStatus('error')
+      }
+    }
+    loadAngel()
+  }, [angelId])
+
+  if (pageStatus === 'loading') return <LoadingState />
+  if (pageStatus === 'not_found') return <NotFoundState homeHref="/kunde/home" />
+  if (pageStatus === 'error') return (
+    <div className="screen">
+      <ErrorState homeHref="/kunde/home" onRetry={() => window.location.reload()} />
+    </div>
+  )
 
   const rate = angel?.hourly_rate || 32
   const subtotal = rate * duration
@@ -42,32 +68,43 @@ export default function BuchenPage() {
   const handleSubmit = async () => {
     setSubmitting(true)
     setError('')
-    const supabase = createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) { setError('Nicht eingeloggt'); setSubmitting(false); return }
+    try {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) { setError('Nicht eingeloggt'); setSubmitting(false); return }
 
-    const { data: booking, error: bookErr } = await supabase
-      .from('bookings')
-      .insert({
-        customer_id: user.id,
-        angel_id: params.id as string,
-        service,
-        date,
-        time,
-        duration_hours: duration,
-        status: 'pending',
-        payment_method: payMethod,
-        insurance_type: (payMethod === 'kasse' || payMethod === 'kombi') ? kkType : null,
-        insurance_provider: (payMethod === 'kasse' || payMethod === 'kombi') ? selectedKK : null,
-        total_amount: total,
-        platform_fee: platformFee,
-        notes: notes || null,
-      })
-      .select()
-      .single()
+      const { data: booking, error: bookErr } = await supabase
+        .from('bookings')
+        .insert({
+          customer_id: user.id,
+          angel_id: angelId,
+          service,
+          date,
+          time,
+          duration_hours: duration,
+          status: 'pending',
+          payment_method: payMethod,
+          insurance_type: (payMethod === 'kasse' || payMethod === 'kombi') ? kkType : null,
+          insurance_provider: (payMethod === 'kasse' || payMethod === 'kombi') ? selectedKK : null,
+          total_amount: total,
+          platform_fee: platformFee,
+          notes: notes || null,
+        })
+        .select()
+        .single()
 
-    if (bookErr) { setError(bookErr.message); setSubmitting(false); return }
-    router.push(`/kunde/warten/${booking.id}`)
+      if (bookErr) {
+        logError('BuchenPage:submit', bookErr.message)
+        setError('Buchung konnte nicht erstellt werden. Bitte versuchen Sie es erneut.')
+        setSubmitting(false)
+        return
+      }
+      router.push(`/kunde/warten/${booking.id}`)
+    } catch (err) {
+      logError('BuchenPage:submit', err)
+      setError('Ein unerwarteter Fehler ist aufgetreten. Bitte versuchen Sie es erneut.')
+      setSubmitting(false)
+    }
   }
 
   return (
@@ -158,7 +195,7 @@ export default function BuchenPage() {
           <div className="total-row"><div className="total-sum-lbl">Gesamtbetrag</div><div className="total-sum">{total.toFixed(2)}€</div></div>
         </div>
 
-        {error && <div style={{ color: 'var(--red-w)', padding: '8px 16px', fontSize: 13 }}>{error}</div>}
+        {error && <div className="ui-inline-error">{error}</div>}
 
         <div style={{ height: 80 }}></div>
       </div>
