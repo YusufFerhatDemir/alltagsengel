@@ -2,7 +2,7 @@
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { IconChart, IconUsers, IconClipboard, IconWings, IconLogout, IconBox } from '@/components/Icons'
+import { IconChart, IconUsers, IconClipboard, IconWings, IconLogout, IconBox, IconTarget } from '@/components/Icons'
 import { ReactNode } from 'react'
 
 const navItems = [
@@ -10,6 +10,7 @@ const navItems = [
   { href: '/admin/users', label: 'Benutzer', icon: <IconUsers size={18} /> },
   { href: '/admin/bookings', label: 'Buchungen', icon: <IconClipboard size={18} /> },
   { href: '/admin/pflegebox', label: 'Pflegebox', icon: <IconBox size={18} /> },
+  { href: '/admin/analytics', label: 'Analytik', icon: <IconTarget size={18} /> },
 ]
 
 export default function AdminLayout({ children }: { children: ReactNode }) {

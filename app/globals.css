@@ -1495,3 +1495,106 @@ body {
 .pb-filter-tab.active {
   background:var(--gold); color:var(--coal); border-color:var(--gold);
 }
+
+/* ══════════════════════════════════════════════
+   ADMIN ANALYTICS
+   ══════════════════════════════════════════════ */
+
+.an-header {
+  display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:20px;
+}
+.an-refresh {
+  font-family:'Jost',sans-serif; font-size:13px; font-weight:500;
+  padding:8px 16px; border-radius:8px; border:1.5px solid var(--border);
+  background:var(--coal2); color:var(--ink2); cursor:pointer; transition:all .2s;
+}
+.an-refresh:hover { background:var(--coal3); color:var(--ink); }
+.an-refresh:disabled { opacity:.5; cursor:default; }
+
+.an-controls {
+  display:flex; justify-content:space-between; align-items:center;
+  margin-bottom:16px; gap:12px; flex-wrap:wrap;
+}
+.an-tabs { display:flex; gap:4px; }
+.an-tab {
+  font-family:'Jost',sans-serif; font-size:13px; font-weight:600;
+  padding:8px 18px; border-radius:100px; border:1.5px solid var(--border);
+  background:var(--coal); color:var(--ink3); cursor:pointer; transition:all .2s;
+}
+.an-tab.active { background:var(--gold); color:var(--coal); border-color:var(--gold); }
+.an-tab:hover:not(.active) { background:var(--coal3); }
+
+.an-date-filter { display:flex; gap:4px; }
+.an-date-btn {
+  font-family:'Jost',sans-serif; font-size:12px; font-weight:500;
+  padding:6px 12px; border-radius:6px; border:1px solid var(--border);
+  background:var(--coal); color:var(--ink4); cursor:pointer; transition:all .2s;
+}
+.an-date-btn.active { background:var(--coal3); color:var(--ink); border-color:var(--ink5); }
+
+.an-loading {
+  text-align:center; padding:60px 20px; color:var(--ink4); font-size:14px;
+}
+
+/* Analytics Table */
+.an-table-wrap {
+  border:1px solid var(--border); border-radius:12px; overflow:hidden;
+  background:var(--coal2);
+}
+.an-table {
+  width:100%; border-collapse:collapse; font-size:13px;
+}
+.an-table th {
+  text-align:left; padding:12px 14px; font-weight:600; font-size:11px;
+  text-transform:uppercase; letter-spacing:.5px;
+  color:var(--ink4); background:var(--coal3); border-bottom:1px solid var(--border);
+}
+.an-table td {
+  padding:10px 14px; border-bottom:1px solid var(--border); vertical-align:middle;
+}
+.an-table tr:last-child td { border-bottom:none; }
+.an-table tr:hover td { background:rgba(201,150,60,.04); }
+
+.an-empty { text-align:center !important; color:var(--ink5); padding:40px 20px !important; }
+
+.an-time { white-space:nowrap; }
+.an-time-sub { font-size:11px; color:var(--ink5); }
+
+.an-user-cell { display:flex; align-items:center; gap:8px; }
+.an-user-av {
+  width:28px; height:28px; border-radius:50%; display:flex; align-items:center;
+  justify-content:center; background:var(--gold-pale); color:var(--gold); flex-shrink:0;
+}
+.an-user-name { font-weight:500; color:var(--ink); font-size:13px; }
+.an-user-email { font-size:11px; color:var(--ink5); }
+.an-anon { color:var(--ink5); font-style:italic; font-size:12px; }
+
+.an-role-badge {
+  font-size:10px; font-weight:600; padding:2px 8px; border-radius:100px;
+  text-transform:uppercase; letter-spacing:.3px; white-space:nowrap;
+}
+
+.an-page-name { font-weight:500; color:var(--ink2); }
+.an-page-path { font-size:11px; color:var(--ink5); font-family:monospace; }
+.an-device { font-size:12px; color:var(--ink4); white-space:nowrap; }
+
+.an-rank { font-weight:700; color:var(--gold); font-size:14px; text-align:center; }
+.an-num { font-weight:600; color:var(--ink2); text-align:center; }
+
+/* Bar Chart */
+.an-bar-wrap {
+  display:flex; align-items:center; gap:8px; min-width:100px;
+}
+.an-bar {
+  height:6px; border-radius:3px; background:var(--gold);
+  min-width:2px; transition:width .3s;
+}
+.an-bar-lbl { font-size:11px; color:var(--ink4); font-weight:500; white-space:nowrap; }
+
+/* Page Tags */
+.an-page-tags { display:flex; flex-wrap:wrap; gap:4px; }
+.an-page-tag {
+  font-size:10px; padding:2px 8px; border-radius:4px;
+  background:var(--coal3); color:var(--ink3); white-space:nowrap;
+}
+.an-page-tag.more { background:var(--gold-pale); color:var(--gold); font-weight:600; }
