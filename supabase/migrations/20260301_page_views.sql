@@ -3,7 +3,7 @@
 
 CREATE TABLE IF NOT EXISTS page_views (
   id            UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  user_id       UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  user_id       UUID,
   path          TEXT NOT NULL,
   page_label    TEXT NOT NULL DEFAULT '',
   user_agent    TEXT,

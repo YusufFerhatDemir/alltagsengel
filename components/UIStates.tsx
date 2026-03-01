@@ -1,6 +1,6 @@
 'use client'
 import Link from 'next/link'
-import { IconWingsGold, IconSearch } from '@/components/Icons'
+import { IconWingsGold } from '@/components/Icons'
 
 /* ── Loading State: Skeleton Shimmer ── */
 export function LoadingState({ lines = 4 }: { lines?: number }) {
@@ -12,34 +12,6 @@ export function LoadingState({ lines = 4 }: { lines?: number }) {
           <div key={i} className="ui-shimmer-line" style={{ width: `${85 - i * 12}%`, animationDelay: `${i * 0.08}s` }} />
         ))}
       </div>
-    </div>
-  )
-}
-
-/* ── Empty State: No Results ── */
-export function EmptyState({
-  title = 'Keine Ergebnisse',
-  subtitle = 'Versuchen Sie es mit anderen Suchfiltern oder einem größeren Radius.',
-  ctaLabel = 'Filter ändern',
-  ctaHref,
-  onCtaClick,
-}: {
-  title?: string
-  subtitle?: string
-  ctaLabel?: string
-  ctaHref?: string
-  onCtaClick?: () => void
-}) {
-  return (
-    <div className="ui-state-card">
-      <div className="ui-state-icon empty"><IconSearch size={28} /></div>
-      <div className="ui-state-title">{title}</div>
-      <div className="ui-state-sub">{subtitle}</div>
-      {ctaHref ? (
-        <Link href={ctaHref} className="ui-state-btn">{ctaLabel}</Link>
-      ) : onCtaClick ? (
-        <button className="ui-state-btn" onClick={onCtaClick}>{ctaLabel}</button>
-      ) : null}
     </div>
   )
 }
