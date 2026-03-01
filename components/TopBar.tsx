@@ -1,10 +1,9 @@
 'use client'
-import { useState, useRef, useEffect, ReactNode } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 
-export default function TopBar({ title, backHref, dark = false, menuItems }: {
+export default function TopBar({ title, dark = false, menuItems }: {
   title: string
-  backHref: string
   dark?: boolean
   menuItems?: { label: string; href: string }[]
 }) {
