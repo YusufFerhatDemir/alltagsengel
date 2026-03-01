@@ -2,6 +2,7 @@
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { useAdminGuard } from '@/lib/useAdminGuard'
 import { IconChart, IconUsers, IconClipboard, IconWings, IconLogout, IconBox } from '@/components/Icons'
 import { ReactNode } from 'react'
 
@@ -15,12 +16,17 @@ const navItems = [
 export default function AdminLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname()
   const router = useRouter()
+  const { isAdmin, loading: adminLoading } = useAdminGuard()
 
   async function handleLogout() {
     const supabase = createClient()
     await supabase.auth.signOut()
     router.push('/auth/login')
     router.refresh()
+  }
+
+  if (adminLoading || !isAdmin) {
+    return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', color: 'var(--ink3)' }}>Laden...</div>
   }
 
   return (

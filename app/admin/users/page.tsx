@@ -127,9 +127,9 @@ export default function AdminUsersPage() {
             <p style={{ color: 'var(--ink3)', marginBottom: 16, fontSize: 14 }}>
               {selectedUser.first_name} {selectedUser.last_name} ({selectedUser.email})
             </p>
-            <input
+              <input
               type="password"
-              placeholder="Neues Passwort (min. 6 Zeichen)"
+              placeholder="Neues Passwort (min. 8 Zeichen, Groß-/Kleinbuchstaben + Zahl)"
               value={newPassword}
               onChange={e => setNewPassword(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && handleResetPassword()}
@@ -148,7 +148,7 @@ export default function AdminUsersPage() {
               <button
                 className="btn-confirm"
                 onClick={handleResetPassword}
-                disabled={resetLoading || newPassword.length < 6}
+                disabled={resetLoading || newPassword.length < 8}
               >
                 {resetLoading ? 'Wird gesetzt...' : 'Zurücksetzen'}
               </button>

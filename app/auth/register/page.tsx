@@ -146,7 +146,7 @@ function RegisterForm() {
             <input className="auth-input" type="text" placeholder="Nachname" value={lastName} onChange={e => setLastName(e.target.value)} required />
           </div>
           <input className="auth-input" type="email" placeholder="E-Mail-Adresse" value={email} onChange={e => setEmail(e.target.value)} required />
-          <input className="auth-input" type="password" placeholder="Passwort (min. 6 Zeichen)" value={password} onChange={e => setPassword(e.target.value)} required minLength={6} />
+          <input className="auth-input" type="password" placeholder="Passwort (min. 8 Zeichen, Groß-/Kleinbuchstaben + Zahl)" value={password} onChange={e => setPassword(e.target.value)} required minLength={8} />
           {role === 'kunde' && (
             <>
               <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr', gap: 10 }}>
