@@ -18,11 +18,21 @@ const statusInfo: Record<string, { label: string; color: string }> = {
   rejected: { label: 'Abgelehnt', color: 'var(--red-w)' },
 }
 
+interface DocumentItem {
+  id: string
+  type: string
+  file_name: string
+  status: string
+  uploaded_at: string
+}
+
 export default function EngelDokumentePage() {
   const router = useRouter()
-  const [documents, setDocuments] = useState<any[]>([])
+  const [documents, setDocuments] = useState<DocumentItem[]>([])
   const [loading, setLoading] = useState(true)
   const [uploading, setUploading] = useState(false)
+  const [openingId, setOpeningId] = useState<string | null>(null)
+  const [actionError, setActionError] = useState('')
   const [selectedType, setSelectedType] = useState('')
 
   useEffect(() => { loadDocs() }, [])
@@ -31,11 +41,16 @@ export default function EngelDokumentePage() {
     const supabase = createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('documents')
-      .select('*')
+      .select('id, type, file_name, status, uploaded_at')
       .eq('user_id', user.id)
       .order('uploaded_at', { ascending: false })
+    if (error) {
+      setActionError('Dokumente konnten nicht geladen werden.')
+      setLoading(false)
+      return
+    }
     setDocuments(data || [])
     setLoading(false)
   }
@@ -48,21 +63,57 @@ export default function EngelDokumentePage() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { setUploading(false); return }
 
-    const filePath = `${user.id}/${Date.now()}-${file.name}`
+    const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_')
+    const filePath = `${user.id}/${Date.now()}-${safeName}`
     const { error: uploadErr } = await supabase.storage.from('documents').upload(filePath, file)
-    if (uploadErr) { console.error('Upload error:', uploadErr); setUploading(false); return }
+    if (uploadErr) {
+      console.error('Upload error:', uploadErr)
+      setActionError('Upload fehlgeschlagen. Bitte versuchen Sie es erneut.')
+      setUploading(false)
+      return
+    }
 
-    const { data: urlData } = supabase.storage.from('documents').getPublicUrl(filePath)
     await supabase.from('documents').insert({
       user_id: user.id,
       type: selectedType,
       file_name: file.name,
-      file_url: urlData.publicUrl,
+      storage_path: filePath,
       status: 'pending',
     })
+    setActionError('')
     setSelectedType('')
     setUploading(false)
     loadDocs()
+  }
+
+  async function handleOpenDocument(documentId: string) {
+    setOpeningId(documentId)
+    setActionError('')
+
+    try {
+      const res = await fetch('/api/documents/signed-url', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ documentId }),
+      })
+
+      const payload = await res.json()
+      if (!res.ok) {
+        setActionError(payload?.error || 'Dokument konnte nicht geöffnet werden.')
+        return
+      }
+
+      if (!payload?.url) {
+        setActionError('Kein gültiger Download-Link verfügbar.')
+        return
+      }
+
+      window.open(payload.url, '_blank', 'noopener,noreferrer')
+    } catch {
+      setActionError('Dokument konnte nicht geöffnet werden.')
+    } finally {
+      setOpeningId(null)
+    }
   }
 
   return (
@@ -98,6 +149,10 @@ export default function EngelDokumentePage() {
           </label>
         )}
 
+        {actionError && (
+          <div style={{ color: 'var(--red-w)', fontSize: 12, marginTop: 8 }}>{actionError}</div>
+        )}
+
         <div className="section-label" style={{ marginTop: 24 }}>Meine Dokumente</div>
         {loading ? (
           <div className="chat-empty">Laden...</div>
@@ -118,9 +173,19 @@ export default function EngelDokumentePage() {
                   <div className="dok-card-type">{docTypes.find(d => d.key === doc.type)?.label || doc.type}</div>
                   <div className="dok-card-date">{new Date(doc.uploaded_at).toLocaleDateString('de-DE')}</div>
                 </div>
-                <div className="dok-card-status" style={{ color: st.color }}>
-                  {doc.status === 'verified' ? <IconCheck size={14} /> : <IconClock size={14} />}
-                  {st.label}
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
+                  <div className="dok-card-status" style={{ color: st.color }}>
+                    {doc.status === 'verified' ? <IconCheck size={14} /> : <IconClock size={14} />}
+                    {st.label}
+                  </div>
+                  <button
+                    className="admin-order-btn ghost"
+                    type="button"
+                    disabled={openingId === doc.id}
+                    onClick={() => handleOpenDocument(doc.id)}
+                  >
+                    {openingId === doc.id ? 'Öffnet...' : 'Öffnen'}
+                  </button>
                 </div>
               </div>
             )

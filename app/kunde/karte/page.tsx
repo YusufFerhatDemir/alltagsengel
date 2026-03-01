@@ -3,46 +3,78 @@ import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
-import { IconPin, IconWingsGold, IconStarFilled, IconNav } from '@/components/Icons'
+import type { Map as LeafletMap } from 'leaflet'
+import { IconWingsGold, IconStarFilled } from '@/components/Icons'
+
+interface MapProfile {
+  id: string
+  first_name: string | null
+  last_name: string | null
+  location: string | null
+  latitude: number | null
+  longitude: number | null
+}
+
+interface MapAngel {
+  id: string
+  hourly_rate: number
+  rating: number
+  total_jobs: number
+  profiles: {
+    id: string
+    first_name: string | null
+    last_name: string | null
+    avatar_color: string | null
+    latitude: number | null
+    longitude: number | null
+  } | null
+}
 
 export default function KarteSeite() {
   const router = useRouter()
   const mapRef = useRef<HTMLDivElement>(null)
-  const [profile, setProfile] = useState<any>(null)
-  const [angels, setAngels] = useState<any[]>([])
-  const [selectedAngel, setSelectedAngel] = useState<any>(null)
-  const [mapLoaded, setMapLoaded] = useState(false)
-  const leafletMap = useRef<any>(null)
+  const [profile, setProfile] = useState<MapProfile | null>(null)
+  const [angels, setAngels] = useState<MapAngel[]>([])
+  const [selectedAngel, setSelectedAngel] = useState<MapAngel | null>(null)
+  const leafletMap = useRef<LeafletMap | null>(null)
 
   useEffect(() => {
     async function load() {
       const supabase = createClient()
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
-      const { data: p } = await supabase.from('profiles').select('*').eq('id', user.id).single()
-      setProfile(p)
-      const { data: a } = await supabase.from('angels').select('*, profiles(*)').eq('is_online', true)
-      setAngels(a || [])
+      const { data: p } = await supabase
+        .from('profiles')
+        .select('id, first_name, last_name, location, latitude, longitude')
+        .eq('id', user.id)
+        .single()
+      setProfile((p as MapProfile | null) || null)
+      const { data: a } = await supabase
+        .from('angels')
+        .select('id, hourly_rate, rating, total_jobs, profiles(id, first_name, last_name, avatar_color, latitude, longitude)')
+        .eq('is_online', true)
+      setAngels((a as MapAngel[] | null) || [])
     }
     load()
   }, [])
 
   useEffect(() => {
-    if (!profile || mapLoaded) return
+    if (!profile || !mapRef.current) return
 
-    const link = document.createElement('link')
-    link.rel = 'stylesheet'
-    link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css'
-    document.head.appendChild(link)
+    let cancelled = false
+    const currentProfile = profile
 
-    const script = document.createElement('script')
-    script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'
-    script.onload = () => {
-      const L = (window as any).L
-      if (!L || !mapRef.current) return
+    async function renderMap() {
+      const L = await import('leaflet')
+      if (cancelled || !mapRef.current) return
 
-      const lat = profile.latitude || 50.1109
-      const lng = profile.longitude || 8.6821
+      if (leafletMap.current) {
+        leafletMap.current.remove()
+        leafletMap.current = null
+      }
+
+      const lat = currentProfile.latitude || 50.1109
+      const lng = currentProfile.longitude || 8.6821
       const map = L.map(mapRef.current).setView([lat, lng], 13)
       leafletMap.current = map
 
@@ -58,9 +90,9 @@ export default function KarteSeite() {
       })
       L.marker([lat, lng], { icon: goldIcon }).addTo(map).bindPopup('Dein Standort')
 
-      angels.forEach(a => {
-        const aLat = a.profiles?.latitude
-        const aLng = a.profiles?.longitude
+      angels.forEach((angel) => {
+        const aLat = angel.profiles?.latitude
+        const aLng = angel.profiles?.longitude
         if (!aLat || !aLng) return
 
         const angelIcon = L.divIcon({
@@ -71,13 +103,25 @@ export default function KarteSeite() {
 
         L.marker([aLat, aLng], { icon: angelIcon })
           .addTo(map)
-          .on('click', () => setSelectedAngel(a))
+          .on('click', () => setSelectedAngel(angel))
       })
-
-      setMapLoaded(true)
     }
-    document.head.appendChild(script)
-  }, [profile, angels, mapLoaded])
+
+    renderMap()
+
+    return () => {
+      cancelled = true
+    }
+  }, [profile, angels])
+
+  useEffect(() => {
+    return () => {
+      if (leafletMap.current) {
+        leafletMap.current.remove()
+        leafletMap.current = null
+      }
+    }
+  }, [])
 
   return (
     <div className="screen" id="karte">

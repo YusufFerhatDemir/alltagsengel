@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { Jost, Cormorant_Garamond } from 'next/font/google'
 import './globals.css'
+import 'leaflet/dist/leaflet.css'
 import StatusBar from '@/components/StatusBar'
 
 const jost = Jost({ subsets: ['latin'], variable: '--font-jost', weight: ['300','400','500','600','700'] })

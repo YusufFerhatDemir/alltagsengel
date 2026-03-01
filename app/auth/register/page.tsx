@@ -10,7 +10,8 @@ import Icon3D from '@/components/Icon3D'
 function RegisterForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const role = searchParams.get('role') || 'kunde'
+  const requestedRole = searchParams.get('role')
+  const role: 'kunde' | 'engel' = requestedRole === 'engel' ? 'engel' : 'kunde'
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [firstName, setFirstName] = useState('')
@@ -75,36 +76,45 @@ function RegisterForm() {
       if (data.user) {
         // Try to create/update profile (may already exist via auth trigger)
         if (data.session) {
-          const profileData: Record<string, string> = {
-            id: data.user.id,
-            role,
-            first_name: firstName,
-            last_name: lastName,
-            email,
-          }
-          if (plz || stadt) {
-            profileData.location = [plz, stadt].filter(Boolean).join(' ')
-          }
-          if (plz && plz.length === 5) {
-            const coords = await geocodePLZ(plz)
-            if (coords) {
-              ;(profileData as any).latitude = coords.lat
-              ;(profileData as any).longitude = coords.lng
+            const profileData: {
+              id: string
+              role: 'kunde' | 'engel'
+              first_name: string
+              last_name: string
+              email: string
+              location?: string
+              latitude?: number
+              longitude?: number
+            } = {
+              id: data.user.id,
+              role,
+              first_name: firstName,
+              last_name: lastName,
+              email,
+            }
+            if (plz || stadt) {
+              profileData.location = [plz, stadt].filter(Boolean).join(' ')
+            }
+            if (plz && plz.length === 5) {
+              const coords = await geocodePLZ(plz)
+              if (coords) {
+                profileData.latitude = coords.lat
+                profileData.longitude = coords.lng
+              }
+            }
+            await supabase.from('profiles').upsert(profileData).then(() => {})
+
+            // Pflegegrad speichern (nur für Kunden)
+            if (role === 'kunde') {
+              await supabase.from('care_eligibility').upsert({
+                user_id: data.user.id,
+                pflegegrad,
+                home_care: homeCare,
+                insurance_type: 'unknown',
+                pflegehilfsmittel_interest: pflegehilfsmittel,
+              }).then(() => {})
             }
           }
-          await supabase.from('profiles').upsert(profileData).then(() => {})
-
-          // Pflegegrad speichern (nur für Kunden)
-          if (role === 'kunde') {
-            await supabase.from('care_eligibility').upsert({
-              user_id: data.user.id,
-              pflegegrad,
-              home_care: homeCare,
-              insurance_type: 'unknown',
-              pflegehilfsmittel_interest: pflegehilfsmittel,
-            }).then(() => {})
-          }
-        }
 
         // If session exists, redirect directly to home
         if (data.session) {
@@ -123,8 +133,8 @@ function RegisterForm() {
       }
 
       setError('Unbekannter Fehler. Bitte versuchen Sie es erneut.')
-    } catch (err: any) {
-      setError(err?.message || 'Netzwerkfehler. Bitte prüfen Sie Ihre Internetverbindung.')
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Netzwerkfehler. Bitte prüfen Sie Ihre Internetverbindung.')
     } finally {
       setLoading(false)
     }

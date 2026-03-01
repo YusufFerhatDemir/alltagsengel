@@ -10,11 +10,23 @@ export async function POST(req: NextRequest) {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: 'Nicht authentifiziert' }, { status: 401 })
 
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+
+    const targetUserId = typeof userId === 'string' && userId ? userId : user.id
+    const canNotifyOthers = profile?.role === 'admin'
+    if (!canNotifyOthers && targetUserId !== user.id) {
+      return NextResponse.json({ error: 'Keine Berechtigung für fremde Benachrichtigungen' }, { status: 403 })
+    }
+
     // Benachrichtigung in DB speichern
     const { data: notification, error } = await supabase
       .from('notifications')
       .insert({
-        user_id: userId,
+        user_id: targetUserId,
         type: type || 'system',
         title,
         body: bodyText,
@@ -39,8 +51,9 @@ export async function POST(req: NextRequest) {
     // }
 
     return NextResponse.json({ success: true, notification })
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 })
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Unerwarteter Fehler'
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }
 
@@ -61,7 +74,8 @@ export async function GET() {
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
     return NextResponse.json({ notifications: data })
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 })
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Unerwarteter Fehler'
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }

@@ -18,6 +18,17 @@ export async function POST(req: NextRequest) {
 
     if (!booking) return NextResponse.json({ error: 'Buchung nicht gefunden' }, { status: 404 })
 
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+
+    const isAdmin = profile?.role === 'admin'
+    if (!isAdmin && booking.customer_id !== user.id) {
+      return NextResponse.json({ error: 'Keine Berechtigung für diese Zahlung' }, { status: 403 })
+    }
+
     // Zahlung erstellen
     const { data: payment, error } = await supabase
       .from('payments')
@@ -58,7 +69,8 @@ export async function POST(req: NextRequest) {
     })
 
     return NextResponse.json({ success: true, payment })
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 })
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Unerwarteter Fehler'
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }

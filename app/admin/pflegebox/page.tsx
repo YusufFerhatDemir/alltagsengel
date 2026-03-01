@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { buildCsvRow } from '@/lib/security/csv'
 
 const statusLabels: Record<string, string> = {
   draft: 'Entwurf',
@@ -47,10 +48,6 @@ export default function AdminPflegeboxPage() {
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [catalogMap, setCatalogMap] = useState<Record<string, string>>({})
 
-  useEffect(() => {
-    loadData()
-  }, [])
-
   async function loadData() {
     const supabase = createClient()
     const [ordersRes, catalogRes] = await Promise.all([
@@ -72,6 +69,11 @@ export default function AdminPflegeboxPage() {
     setCatalogMap(map)
     setLoading(false)
   }
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadData()
+  }, [])
 
   async function updateStatus(orderId: string, newStatus: string) {
     const supabase = createClient()
@@ -97,8 +99,8 @@ export default function AdminPflegeboxPage() {
   function exportCSV() {
     const filtered = filter === 'all' ? orders : orders.filter(o => o.status === filter)
     const rows = [
-      ['ID', 'Name', 'Adresse', 'Telefon', 'Status', 'Betrag', 'Monat', 'Erstellt'].join(';'),
-      ...filtered.map(o => [
+      buildCsvRow(['ID', 'Name', 'Adresse', 'Telefon', 'Status', 'Betrag', 'Monat', 'Erstellt']),
+      ...filtered.map(o => buildCsvRow([
         o.id.slice(0, 8),
         o.delivery_name,
         o.delivery_address,
@@ -107,7 +109,7 @@ export default function AdminPflegeboxPage() {
         o.carebox_cart?.estimated_total?.toFixed(2) || '0',
         o.carebox_cart?.month || '',
         new Date(o.created_at).toLocaleDateString('de-DE'),
-      ].join(';'))
+      ]))
     ]
     const blob = new Blob([rows.join('\n')], { type: 'text/csv;charset=utf-8;' })
     const url = URL.createObjectURL(blob)
