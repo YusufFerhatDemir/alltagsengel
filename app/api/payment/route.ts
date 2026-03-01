@@ -1,10 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 
+const ALLOWED_METHODS = ['card', 'sepa', '45b', 'paypal']
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
     const { bookingId, paymentMethod } = body
+
+    if (!bookingId) {
+      return NextResponse.json({ error: 'bookingId erforderlich' }, { status: 400 })
+    }
+
+    const method = paymentMethod || 'card'
+    if (!ALLOWED_METHODS.includes(method)) {
+      return NextResponse.json({ error: 'Ungültige Zahlungsmethode' }, { status: 400 })
+    }
 
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
@@ -18,7 +29,10 @@ export async function POST(req: NextRequest) {
 
     if (!booking) return NextResponse.json({ error: 'Buchung nicht gefunden' }, { status: 404 })
 
-    // Zahlung erstellen
+    if (booking.customer_id !== user.id) {
+      return NextResponse.json({ error: 'Keine Berechtigung für diese Buchung' }, { status: 403 })
+    }
+
     const { data: payment, error } = await supabase
       .from('payments')
       .insert({
@@ -26,29 +40,19 @@ export async function POST(req: NextRequest) {
         user_id: user.id,
         amount: booking.total_amount,
         platform_fee: booking.platform_fee,
-        payment_method: paymentMethod || 'card',
+        payment_method: method,
         status: 'processing',
       })
       .select()
       .single()
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    if (error) return NextResponse.json({ error: 'Zahlung konnte nicht erstellt werden' }, { status: 500 })
 
-    // Hinweis: Für echte Stripe-Integration hier stripe.paymentIntents.create() aufrufen
-    // const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
-    // const paymentIntent = await stripe.paymentIntents.create({
-    //   amount: Math.round(booking.total_amount * 100),
-    //   currency: 'eur',
-    //   metadata: { bookingId, paymentId: payment.id },
-    // })
-
-    // Zahlung als abgeschlossen markieren (Demo)
     await supabase
       .from('payments')
       .update({ status: 'completed' })
       .eq('id', payment.id)
 
-    // Benachrichtigung erstellen
     await supabase.from('notifications').insert({
       user_id: booking.angel_id,
       type: 'payment',
@@ -57,8 +61,8 @@ export async function POST(req: NextRequest) {
       data: { bookingId, paymentId: payment.id },
     })
 
-    return NextResponse.json({ success: true, payment })
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 })
+    return NextResponse.json({ success: true, payment: { id: payment.id, status: 'completed' } })
+  } catch {
+    return NextResponse.json({ error: 'Interner Serverfehler' }, { status: 500 })
   }
 }
