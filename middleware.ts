@@ -25,31 +25,29 @@ export async function middleware(request: NextRequest) {
     const { data: { user } } = await supabase.auth.getUser()
     const pathname = request.nextUrl.pathname
 
-    // Protected routes - redirect to login if not authenticated
     if (!user && (pathname.startsWith('/kunde') || pathname.startsWith('/engel') || pathname.startsWith('/admin'))) {
       const url = request.nextUrl.clone()
       url.pathname = '/auth/login'
       return NextResponse.redirect(url)
     }
 
-    // Admin routes - check admin role
     if (user && pathname.startsWith('/admin')) {
-      try {
-        const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
-        if (profile?.role !== 'admin') {
-          const url = request.nextUrl.clone()
-          url.pathname = '/auth/login'
-          return NextResponse.redirect(url)
-        }
-      } catch {
-        // If profile check fails, allow through rather than blocking
+      const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+      if (profile?.role !== 'admin') {
+        const url = request.nextUrl.clone()
+        url.pathname = '/auth/login'
+        return NextResponse.redirect(url)
       }
     }
 
     return supabaseResponse
-  } catch (err) {
-    // If middleware errors, allow the request through rather than hanging
-    console.error('Middleware error:', err)
+  } catch {
+    const pathname = request.nextUrl.pathname
+    if (pathname.startsWith('/admin') || pathname.startsWith('/kunde') || pathname.startsWith('/engel')) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/auth/login'
+      return NextResponse.redirect(url)
+    }
     return supabaseResponse
   }
 }
