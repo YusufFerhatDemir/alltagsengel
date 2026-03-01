@@ -81,7 +81,8 @@ create policy "Herkes profilleri okuyabilir" on public.profiles
   for select using (true);
 
 create policy "Kullanıcı kendi profilini güncelleyebilir" on public.profiles
-  for update using (auth.uid() = id);
+  for update using (auth.uid() = id)
+  with check (role in ('kunde', 'engel'));
 
 create policy "Kullanıcı kendi profilini oluşturabilir" on public.profiles
   for insert with check (auth.uid() = id);
@@ -136,11 +137,19 @@ create policy "Admin bookingleri yönetebilir" on public.bookings
 -- ============================================
 create or replace function public.handle_new_user()
 returns trigger as $$
+declare
+  requested_role text;
 begin
+  requested_role := coalesce(new.raw_user_meta_data->>'role', 'kunde');
+  -- Nur 'kunde' und 'engel' sind erlaubt — admin kann nur manuell gesetzt werden
+  if requested_role not in ('kunde', 'engel') then
+    requested_role := 'kunde';
+  end if;
+
   insert into public.profiles (id, role, first_name, last_name, email)
   values (
     new.id,
-    coalesce(new.raw_user_meta_data->>'role', 'kunde'),
+    requested_role,
     coalesce(new.raw_user_meta_data->>'first_name', ''),
     coalesce(new.raw_user_meta_data->>'last_name', ''),
     new.email
@@ -234,6 +243,9 @@ alter table public.payments enable row level security;
 create policy "Kullanıcı kendi ödemelerini okuyabilir" on public.payments
   for select using (auth.uid() = user_id);
 
+create policy "Kullanıcı ödeme oluşturabilir" on public.payments
+  for insert with check (auth.uid() = user_id);
+
 create policy "Admin ödemeleri yönetebilir" on public.payments
   for all using (
     exists (select 1 from public.profiles where id = auth.uid() and role = 'admin')
@@ -257,6 +269,9 @@ alter table public.notifications enable row level security;
 
 create policy "Kullanıcı kendi bildirimlerini okuyabilir" on public.notifications
   for select using (auth.uid() = user_id);
+
+create policy "Kullanıcı bildirim oluşturabilir" on public.notifications
+  for insert with check (true);
 
 create policy "Kullanıcı bildirimlerini güncelleyebilir" on public.notifications
   for update using (auth.uid() = user_id);
