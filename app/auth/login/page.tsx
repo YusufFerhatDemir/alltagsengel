@@ -13,7 +13,6 @@ function LoginForm() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  const [demoLoading, setDemoLoading] = useState('')
 
   async function loginAndRedirect(loginEmail: string, loginPassword: string) {
     const supabase = createClient()
@@ -48,23 +47,6 @@ function LoginForm() {
         router.push('/kunde/home')
       }
       router.refresh()
-    }
-  }
-
-  async function demoLogin(role: 'admin' | 'engel' | 'kunde') {
-    setDemoLoading(role)
-    setError('')
-    const creds = {
-      admin: { email: 'admin@alltagsengel.de', password: 'Admin2026!' },
-      engel: { email: 'anna@example.com', password: 'password123' },
-      kunde: { email: 'maria@example.com', password: 'password123' },
-    }
-    try {
-      await loginAndRedirect(creds[role].email, creds[role].password)
-    } catch (err: any) {
-      setError(err?.message || 'Netzwerkfehler. Bitte versuchen Sie es erneut.')
-    } finally {
-      setDemoLoading('')
     }
   }
 
@@ -103,7 +85,7 @@ function LoginForm() {
           <div style={{ textAlign: 'right', marginBottom: 4 }}>
             <Link href="/auth/forgot-password" style={{ color: 'var(--gold-2)', fontSize: 13, textDecoration: 'none' }}>Passwort vergessen?</Link>
           </div>
-          <button className="btn-gold" type="submit" disabled={loading || !!demoLoading} style={{ width: '100%', marginTop: 8 }}>
+          <button className="btn-gold" type="submit" disabled={loading} style={{ width: '100%', marginTop: 8 }}>
             {loading ? 'Anmelden...' : 'ANMELDEN'}
           </button>
         </form>
@@ -111,32 +93,6 @@ function LoginForm() {
           Noch kein Konto? <Link href="/choose">Registrieren</Link>
         </div>
 
-        <div style={{ marginTop: 20, paddingTop: 16, borderTop: '1px solid var(--ink-6, #333)' }}>
-          <div style={{ textAlign: 'center', fontSize: 11, color: 'var(--ink-4, #888)', marginBottom: 10, textTransform: 'uppercase', letterSpacing: 1 }}>Demo Zugang</div>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <button
-              onClick={() => demoLogin('admin')}
-              disabled={!!demoLoading || loading}
-              style={{ flex: 1, padding: '10px 0', borderRadius: 10, border: '1px solid var(--gold-2, #c9a84c)', background: 'transparent', color: 'var(--gold-2, #c9a84c)', fontSize: 13, fontWeight: 600, cursor: 'pointer', opacity: (demoLoading || loading) ? 0.5 : 1 }}
-            >
-              {demoLoading === 'admin' ? '...' : 'Admin'}
-            </button>
-            <button
-              onClick={() => demoLogin('engel')}
-              disabled={!!demoLoading || loading}
-              style={{ flex: 1, padding: '10px 0', borderRadius: 10, border: '1px solid var(--gold-2, #c9a84c)', background: 'transparent', color: 'var(--gold-2, #c9a84c)', fontSize: 13, fontWeight: 600, cursor: 'pointer', opacity: (demoLoading || loading) ? 0.5 : 1 }}
-            >
-              {demoLoading === 'engel' ? '...' : 'Engel'}
-            </button>
-            <button
-              onClick={() => demoLogin('kunde')}
-              disabled={!!demoLoading || loading}
-              style={{ flex: 1, padding: '10px 0', borderRadius: 10, border: '1px solid var(--gold-2, #c9a84c)', background: 'transparent', color: 'var(--gold-2, #c9a84c)', fontSize: 13, fontWeight: 600, cursor: 'pointer', opacity: (demoLoading || loading) ? 0.5 : 1 }}
-            >
-              {demoLoading === 'kunde' ? '...' : 'Kunde'}
-            </button>
-          </div>
-        </div>
       </div>
     </div>
   )
