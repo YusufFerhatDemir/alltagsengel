@@ -2,36 +2,61 @@
 import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { isValidUUID, logError } from '@/lib/safe-query'
+import { NotFoundState, ErrorState, LoadingState } from '@/components/UIStates'
 import Link from 'next/link'
 import { IconWingsGold, IconCheck } from '@/components/Icons'
 
 export default function WartenPage() {
   const router = useRouter()
   const params = useParams()
+  const bookingId = params.id as string
   const [confirmed, setConfirmed] = useState(false)
   const [booking, setBooking] = useState<any>(null)
+  const [pageStatus, setPageStatus] = useState<'loading' | 'ok' | 'not_found' | 'error'>('loading')
 
   useEffect(() => {
+    if (!isValidUUID(bookingId)) { setPageStatus('not_found'); return }
     async function loadBooking() {
-      const supabase = createClient()
-      const { data } = await supabase
-        .from('bookings')
-        .select('*, angel:angels!bookings_angel_id_fkey(profiles(first_name, last_name))')
-        .eq('id', params.id)
-        .single()
-      setBooking(data)
+      try {
+        const supabase = createClient()
+        const { data, error } = await supabase
+          .from('bookings')
+          .select('*, angel:angels!bookings_angel_id_fkey(profiles(first_name, last_name))')
+          .eq('id', bookingId)
+          .single()
+        if (error || !data) {
+          if (error) logError('WartenPage:load', error.message)
+          setPageStatus(error?.code === 'PGRST116' || !data ? 'not_found' : 'error')
+          return
+        }
+        setBooking(data)
+        setPageStatus('ok')
+      } catch (err) {
+        logError('WartenPage:load', err)
+        setPageStatus('error')
+      }
     }
-    if (params.id) loadBooking()
-  }, [params.id])
+    loadBooking()
+  }, [bookingId])
 
   useEffect(() => {
+    if (pageStatus !== 'ok') return
     const timer = setTimeout(async () => {
-      const supabase = createClient()
-      await supabase.from('bookings').update({ status: 'accepted' }).eq('id', params.id)
-      setConfirmed(true)
+      try {
+        const supabase = createClient()
+        await supabase.from('bookings').update({ status: 'accepted' }).eq('id', bookingId)
+        setConfirmed(true)
+      } catch (err) {
+        logError('WartenPage:confirm', err)
+      }
     }, 4000)
     return () => clearTimeout(timer)
-  }, [params.id])
+  }, [bookingId, pageStatus])
+
+  if (pageStatus === 'loading') return <LoadingState />
+  if (pageStatus === 'not_found') return <NotFoundState title="Buchung nicht gefunden" subtitle="Diese Buchung existiert nicht oder wurde bereits storniert." homeHref="/kunde/home" />
+  if (pageStatus === 'error') return <div className="screen"><ErrorState homeHref="/kunde/home" onRetry={() => window.location.reload()} /></div>
 
   const angelName = booking?.angel?.profiles ? `${booking.angel.profiles.first_name} ${booking.angel.profiles.last_name}` : 'Engel'
   const dateStr = booking?.date ? new Date(booking.date).toLocaleDateString('de-DE') : '...'
@@ -64,7 +89,7 @@ export default function WartenPage() {
         <div className="wait-bar"><div className="wait-fill"></div></div>
 
         {confirmed && (
-          <button className="btn-done" onClick={() => router.push(`/kunde/bestaetigt/${params.id}`)} style={{ animation: 'screenIn .28s cubic-bezier(.4,0,.2,1) both' }}>
+          <button className="btn-done" onClick={() => router.push(`/kunde/bestaetigt/${bookingId}`)} style={{ animation: 'screenIn .28s cubic-bezier(.4,0,.2,1) both' }}>
             BUCHUNG BESTÄTIGT <IconCheck size={16} />
           </button>
         )}
