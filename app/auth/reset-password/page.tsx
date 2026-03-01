@@ -29,8 +29,12 @@ export default function ResetPasswordPage() {
       setError('Passwörter stimmen nicht überein')
       return
     }
-    if (password.length < 6) {
-      setError('Passwort muss mindestens 6 Zeichen lang sein')
+    if (password.length < 8) {
+      setError('Passwort muss mindestens 8 Zeichen lang sein')
+      return
+    }
+    if (!/[A-Z]/.test(password) || !/[a-z]/.test(password) || !/[0-9]/.test(password)) {
+      setError('Passwort muss Groß-, Kleinbuchstaben und Zahlen enthalten')
       return
     }
 
@@ -43,7 +47,7 @@ export default function ResetPasswordPage() {
     })
 
     if (updateError) {
-      setError(updateError.message)
+      setError('Passwort konnte nicht geändert werden. Bitte versuchen Sie es erneut.')
       setLoading(false)
       return
     }
@@ -76,11 +80,11 @@ export default function ResetPasswordPage() {
             <input
               className="auth-input"
               type="password"
-              placeholder="Neues Passwort (min. 6 Zeichen)"
+              placeholder="Neues Passwort (min. 8 Zeichen, Groß-/Kleinbuchstaben + Zahl)"
               value={password}
               onChange={e => setPassword(e.target.value)}
               required
-              minLength={6}
+              minLength={8}
             />
             <input
               className="auth-input"
@@ -89,7 +93,7 @@ export default function ResetPasswordPage() {
               value={confirmPassword}
               onChange={e => setConfirmPassword(e.target.value)}
               required
-              minLength={6}
+              minLength={8}
             />
             {error && <div className="auth-error">{error}</div>}
             {!sessionReady && (
