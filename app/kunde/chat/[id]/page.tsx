@@ -2,6 +2,8 @@
 import { useState, useEffect, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { isValidUUID, logError } from '@/lib/safe-query'
+import { NotFoundState, ErrorState, LoadingState } from '@/components/UIStates'
 import { IconWings, IconUser } from '@/components/Icons'
 
 export default function ChatConversationPage() {
@@ -13,52 +15,64 @@ export default function ChatConversationPage() {
   const [userId, setUserId] = useState<string | null>(null)
   const [partner, setPartner] = useState<string>('Engel')
   const [sending, setSending] = useState(false)
+  const [pageStatus, setPageStatus] = useState<'loading' | 'ok' | 'not_found' | 'error'>('loading')
   const bottomRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
+    if (!isValidUUID(bookingId)) { setPageStatus('not_found'); return }
     async function load() {
-      const supabase = createClient()
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
-      setUserId(user.id)
+      try {
+        const supabase = createClient()
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) { setPageStatus('error'); return }
+        setUserId(user.id)
 
-      const { data: booking } = await supabase
-        .from('bookings')
-        .select('angel_id, angels:angel_id(profiles(first_name, last_name))')
-        .eq('id', bookingId)
-        .single()
+        const { data: booking, error: bookErr } = await supabase
+          .from('bookings')
+          .select('angel_id, angels:angel_id(profiles(first_name, last_name))')
+          .eq('id', bookingId)
+          .single()
 
-      if (booking) {
+        if (bookErr || !booking) {
+          if (bookErr) logError('KundeChat:load', bookErr.message)
+          setPageStatus(bookErr?.code === 'PGRST116' || !booking ? 'not_found' : 'error')
+          return
+        }
+
         const angel = booking.angels as any
         setPartner(angel?.profiles ? `${angel.profiles.first_name} ${angel.profiles.last_name}` : 'Engel')
+
+        const { data: msgs } = await supabase
+          .from('messages')
+          .select('*')
+          .eq('booking_id', bookingId)
+          .order('created_at', { ascending: true })
+        setMessages(msgs || [])
+
+        await supabase
+          .from('messages')
+          .update({ read: true })
+          .eq('booking_id', bookingId)
+          .eq('receiver_id', user.id)
+
+        const channel = supabase
+          .channel(`chat-${bookingId}`)
+          .on('postgres_changes', {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'messages',
+            filter: `booking_id=eq.${bookingId}`,
+          }, (payload) => {
+            setMessages(prev => [...prev, payload.new])
+          })
+          .subscribe()
+
+        setPageStatus('ok')
+        return () => { supabase.removeChannel(channel) }
+      } catch (err) {
+        logError('KundeChat:load', err)
+        setPageStatus('error')
       }
-
-      const { data: msgs } = await supabase
-        .from('messages')
-        .select('*')
-        .eq('booking_id', bookingId)
-        .order('created_at', { ascending: true })
-      setMessages(msgs || [])
-
-      await supabase
-        .from('messages')
-        .update({ read: true })
-        .eq('booking_id', bookingId)
-        .eq('receiver_id', user.id)
-
-      const channel = supabase
-        .channel(`chat-${bookingId}`)
-        .on('postgres_changes', {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'messages',
-          filter: `booking_id=eq.${bookingId}`,
-        }, (payload) => {
-          setMessages(prev => [...prev, payload.new])
-        })
-        .subscribe()
-
-      return () => { supabase.removeChannel(channel) }
     }
     load()
   }, [bookingId])
@@ -70,28 +84,36 @@ export default function ChatConversationPage() {
   async function handleSend() {
     if (!newMsg.trim() || !userId || sending) return
     setSending(true)
-    const supabase = createClient()
+    try {
+      const supabase = createClient()
+      const { data: booking } = await supabase
+        .from('bookings')
+        .select('angel_id, customer_id')
+        .eq('id', bookingId)
+        .single()
 
-    const { data: booking } = await supabase
-      .from('bookings')
-      .select('angel_id, customer_id')
-      .eq('id', bookingId)
-      .single()
+      if (!booking) { setSending(false); return }
 
-    if (!booking) { setSending(false); return }
+      const receiverId = userId === booking.customer_id ? booking.angel_id : booking.customer_id
 
-    const receiverId = userId === booking.customer_id ? booking.angel_id : booking.customer_id
+      await supabase.from('messages').insert({
+        booking_id: bookingId,
+        sender_id: userId,
+        receiver_id: receiverId,
+        content: newMsg.trim(),
+      })
 
-    await supabase.from('messages').insert({
-      booking_id: bookingId,
-      sender_id: userId,
-      receiver_id: receiverId,
-      content: newMsg.trim(),
-    })
-
-    setNewMsg('')
-    setSending(false)
+      setNewMsg('')
+    } catch (err) {
+      logError('KundeChat:send', err)
+    } finally {
+      setSending(false)
+    }
   }
+
+  if (pageStatus === 'loading') return <LoadingState />
+  if (pageStatus === 'not_found') return <NotFoundState title="Chat nicht gefunden" subtitle="Diese Buchung existiert nicht." homeHref="/kunde/home" />
+  if (pageStatus === 'error') return <div className="screen"><ErrorState homeHref="/kunde/home" onRetry={() => window.location.reload()} /></div>
 
   return (
     <div className="screen" id="chatconv">
