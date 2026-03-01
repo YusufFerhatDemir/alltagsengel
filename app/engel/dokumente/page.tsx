@@ -48,16 +48,31 @@ export default function EngelDokumentePage() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { setUploading(false); return }
 
-    const filePath = `${user.id}/${Date.now()}-${file.name}`
+    const MAX_SIZE = 10 * 1024 * 1024
+    const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'application/pdf']
+
+    if (file.size > MAX_SIZE) {
+      alert('Datei zu groß (max. 10 MB)')
+      setUploading(false)
+      return
+    }
+
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      alert('Ungültiger Dateityp. Erlaubt: JPEG, PNG, WebP, GIF, PDF')
+      setUploading(false)
+      return
+    }
+
+    const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_')
+    const filePath = `${user.id}/${Date.now()}-${safeName}`
     const { error: uploadErr } = await supabase.storage.from('documents').upload(filePath, file)
     if (uploadErr) { console.error('Upload error:', uploadErr); setUploading(false); return }
 
-    const { data: urlData } = supabase.storage.from('documents').getPublicUrl(filePath)
     await supabase.from('documents').insert({
       user_id: user.id,
       type: selectedType,
       file_name: file.name,
-      file_url: urlData.publicUrl,
+      file_url: filePath,
       status: 'pending',
     })
     setSelectedType('')
