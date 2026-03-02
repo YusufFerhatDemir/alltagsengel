@@ -8,23 +8,15 @@ export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
   const [sent, setSent] = useState(false)
-  const [error, setError] = useState('')
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
-    setError('')
     const supabase = createClient()
 
-    const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
+    await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/auth/reset-password`,
     })
-
-    if (resetError) {
-      setError(resetError.message)
-      setLoading(false)
-      return
-    }
 
     setSent(true)
     setLoading(false)
@@ -63,7 +55,6 @@ export default function ForgotPasswordPage() {
               onChange={e => setEmail(e.target.value)}
               required
             />
-            {error && <div className="auth-error">{error}</div>}
             <button className="btn-gold" type="submit" disabled={loading} style={{ width: '100%', marginTop: 8 }}>
               {loading ? 'Wird gesendet...' : 'LINK SENDEN'}
             </button>
