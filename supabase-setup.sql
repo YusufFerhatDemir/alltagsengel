@@ -421,3 +421,24 @@ create policy "Admin order yönetebilir" on public.carebox_order_requests
   for all using (
     exists (select 1 from public.profiles where id = auth.uid() and role = 'admin')
   );
+
+-- ============================================
+-- 13. STORAGE: Documents Bucket (Private)
+-- ============================================
+-- WICHTIG: Im Supabase-Dashboard muss der "documents" Bucket
+-- als PRIVATE eingerichtet werden (nicht öffentlich).
+-- Zugriff nur über signierte URLs (createSignedUrl).
+--
+-- Storage-Policies (im Supabase Dashboard → Storage → Policies):
+--
+-- INSERT: Nur eigene Dateien hochladen
+--   bucket_id = 'documents' AND auth.uid()::text = (storage.foldername(name))[1]
+--
+-- SELECT: Nur eigene Dateien oder Admin
+--   bucket_id = 'documents' AND (
+--     auth.uid()::text = (storage.foldername(name))[1]
+--     OR exists(select 1 from public.profiles where id = auth.uid() and role = 'admin')
+--   )
+--
+-- DELETE: Nur eigene Dateien
+--   bucket_id = 'documents' AND auth.uid()::text = (storage.foldername(name))[1]
