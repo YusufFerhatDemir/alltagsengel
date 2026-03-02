@@ -85,6 +85,41 @@ insert into storage.buckets (id, name, public)
 values ('documents', 'documents', false)
 on conflict (id) do update set public = false;
 
+alter table storage.objects enable row level security;
+
+drop policy if exists "Kullanıcı kendi documents dosyalarını yükleyebilir" on storage.objects;
+create policy "Kullanıcı kendi documents dosyalarını yükleyebilir" on storage.objects
+  for insert to authenticated
+  with check (
+    bucket_id = 'documents'
+    and (storage.foldername(name))[1] = auth.uid()::text
+  );
+
+drop policy if exists "Kullanıcı kendi documents dosyalarını güncelleyebilir" on storage.objects;
+create policy "Kullanıcı kendi documents dosyalarını güncelleyebilir" on storage.objects
+  for update to authenticated
+  using (
+    bucket_id = 'documents'
+    and (storage.foldername(name))[1] = auth.uid()::text
+  )
+  with check (
+    bucket_id = 'documents'
+    and (storage.foldername(name))[1] = auth.uid()::text
+  );
+
+drop policy if exists "Kullanıcı kendi documents dosyalarını silebilir" on storage.objects;
+create policy "Kullanıcı kendi documents dosyalarını silebilir" on storage.objects
+  for delete to authenticated
+  using (
+    bucket_id = 'documents'
+    and (storage.foldername(name))[1] = auth.uid()::text
+  );
+
+drop policy if exists "Admin documents dosyalarını yönetebilir" on storage.objects;
+create policy "Admin documents dosyalarını yönetebilir" on storage.objects
+  for all using (public.is_admin())
+  with check (public.is_admin());
+
 -- Messages: booking tarafı dışı mesaj gönderimini engelle
 delete from public.messages
 where booking_id is null or sender_id is null or receiver_id is null;
