@@ -76,15 +76,56 @@ alter table public.angels enable row level security;
 alter table public.bookings enable row level security;
 alter table public.reviews enable row level security;
 
+-- Admin kontrolü (RLS recursion riskini azaltmak için helper)
+create or replace function public.is_admin()
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1 from public.profiles where id = auth.uid() and role = 'admin'
+  );
+$$;
+
 -- PROFILES policies
-create policy "Herkes profilleri okuyabilir" on public.profiles
-  for select using (true);
+create policy "Kullanıcı gerekli profilleri okuyabilir" on public.profiles
+  for select using (
+    auth.uid() = id
+    or exists (select 1 from public.angels a where a.id = id)
+    or exists (
+      select 1
+      from public.bookings b
+      where (b.customer_id = id and b.angel_id = auth.uid())
+         or (b.angel_id = id and b.customer_id = auth.uid())
+    )
+    or public.is_admin()
+  );
 
 create policy "Kullanıcı kendi profilini güncelleyebilir" on public.profiles
   for update using (auth.uid() = id);
 
 create policy "Kullanıcı kendi profilini oluşturabilir" on public.profiles
-  for insert with check (auth.uid() = id);
+  for insert with check (
+    auth.uid() = id
+    and role in ('kunde', 'engel')
+  );
+
+create or replace function public.prevent_profile_role_change()
+returns trigger as $$
+begin
+  if new.role is distinct from old.role and not public.is_admin() then
+    raise exception 'role change not allowed';
+  end if;
+  return new;
+end;
+$$ language plpgsql security definer set search_path = public;
+
+drop trigger if exists prevent_profile_role_change on public.profiles;
+create trigger prevent_profile_role_change
+  before update on public.profiles
+  for each row execute procedure public.prevent_profile_role_change();
 
 -- ANGELS policies
 create policy "Herkes engelleri okuyabilir" on public.angels
@@ -117,19 +158,13 @@ create policy "Müşteri review yazabilir" on public.reviews
 -- ADMIN: Tüm tablolara tam erişim
 -- ============================================
 create policy "Admin profilleri yönetebilir" on public.profiles
-  for all using (
-    exists (select 1 from public.profiles where id = auth.uid() and role = 'admin')
-  );
+  for all using (public.is_admin());
 
 create policy "Admin engelleri yönetebilir" on public.angels
-  for all using (
-    exists (select 1 from public.profiles where id = auth.uid() and role = 'admin')
-  );
+  for all using (public.is_admin());
 
 create policy "Admin bookingleri yönetebilir" on public.bookings
-  for all using (
-    exists (select 1 from public.profiles where id = auth.uid() and role = 'admin')
-  );
+  for all using (public.is_admin());
 
 -- ============================================
 -- AUTH TRIGGER: Yeni kayıtta otomatik profil oluştur
@@ -140,7 +175,11 @@ begin
   insert into public.profiles (id, role, first_name, last_name, email)
   values (
     new.id,
-    coalesce(new.raw_user_meta_data->>'role', 'kunde'),
+    case
+      when lower(coalesce(new.raw_user_meta_data->>'role', 'kunde')) in ('kunde', 'engel')
+        then lower(coalesce(new.raw_user_meta_data->>'role', 'kunde'))
+      else 'kunde'
+    end,
     coalesce(new.raw_user_meta_data->>'first_name', ''),
     coalesce(new.raw_user_meta_data->>'last_name', ''),
     new.email
@@ -167,9 +206,9 @@ create trigger on_auth_user_created
 -- ============================================
 create table if not exists public.messages (
   id uuid default gen_random_uuid() primary key,
-  booking_id uuid references public.bookings(id) on delete cascade,
-  sender_id uuid references public.profiles(id) on delete set null,
-  receiver_id uuid references public.profiles(id) on delete set null,
+  booking_id uuid references public.bookings(id) on delete cascade not null,
+  sender_id uuid references public.profiles(id) on delete cascade not null,
+  receiver_id uuid references public.profiles(id) on delete cascade not null,
   content text not null,
   read boolean not null default false,
   created_at timestamptz not null default now()
@@ -178,13 +217,50 @@ create table if not exists public.messages (
 alter table public.messages enable row level security;
 
 create policy "Kullanıcı kendi mesajlarını okuyabilir" on public.messages
-  for select using (auth.uid() = sender_id or auth.uid() = receiver_id);
+  for select using (
+    (auth.uid() = sender_id or auth.uid() = receiver_id)
+    and exists (
+      select 1
+      from public.bookings b
+      where b.id = booking_id
+        and (b.customer_id = auth.uid() or b.angel_id = auth.uid())
+    )
+  );
 
 create policy "Kullanıcı mesaj gönderebilir" on public.messages
-  for insert with check (auth.uid() = sender_id);
+  for insert with check (
+    auth.uid() = sender_id
+    and exists (
+      select 1
+      from public.bookings b
+      where b.id = booking_id
+        and (
+          (b.customer_id = sender_id and b.angel_id = receiver_id)
+          or
+          (b.angel_id = sender_id and b.customer_id = receiver_id)
+        )
+    )
+  );
 
 create policy "Kullanıcı kendi mesajlarını güncelleyebilir" on public.messages
-  for update using (auth.uid() = receiver_id);
+  for update using (
+    auth.uid() = receiver_id
+    and exists (
+      select 1
+      from public.bookings b
+      where b.id = booking_id
+        and (b.customer_id = auth.uid() or b.angel_id = auth.uid())
+    )
+  )
+  with check (
+    auth.uid() = receiver_id
+    and exists (
+      select 1
+      from public.bookings b
+      where b.id = booking_id
+        and (b.customer_id = auth.uid() or b.angel_id = auth.uid())
+    )
+  );
 
 -- ============================================
 -- 6. DOCUMENTS tablosu (Belge Yükleme)
@@ -194,12 +270,49 @@ create table if not exists public.documents (
   user_id uuid references public.profiles(id) on delete cascade,
   type text not null check (type in ('ausweis','fuehrungszeugnis','zertifikat','versicherung','sonstiges')),
   file_name text not null,
-  file_url text,
+  storage_path text,
+  file_url text, -- Legacy: nur für Rückwärtskompatibilität
   status text not null default 'pending' check (status in ('pending','verified','rejected')),
   note text,
   uploaded_at timestamptz not null default now(),
   verified_at timestamptz
 );
+
+-- Documents bucket private olmalı
+insert into storage.buckets (id, name, public)
+values ('documents', 'documents', false)
+on conflict (id) do update set public = false;
+
+alter table storage.objects enable row level security;
+
+create policy "Kullanıcı kendi documents dosyalarını yükleyebilir" on storage.objects
+  for insert to authenticated
+  with check (
+    bucket_id = 'documents'
+    and (storage.foldername(name))[1] = auth.uid()::text
+  );
+
+create policy "Kullanıcı kendi documents dosyalarını güncelleyebilir" on storage.objects
+  for update to authenticated
+  using (
+    bucket_id = 'documents'
+    and (storage.foldername(name))[1] = auth.uid()::text
+  )
+  with check (
+    bucket_id = 'documents'
+    and (storage.foldername(name))[1] = auth.uid()::text
+  );
+
+create policy "Kullanıcı kendi documents dosyalarını silebilir" on storage.objects
+  for delete to authenticated
+  using (
+    bucket_id = 'documents'
+    and (storage.foldername(name))[1] = auth.uid()::text
+  );
+
+create policy "Admin documents dosyalarını yönetebilir" on storage.objects
+  for all using (public.is_admin())
+  with check (public.is_admin());
 
 alter table public.documents enable row level security;
 
@@ -210,9 +323,7 @@ create policy "Kullanıcı belge yükleyebilir" on public.documents
   for insert with check (auth.uid() = user_id);
 
 create policy "Admin belgeleri yönetebilir" on public.documents
-  for all using (
-    exists (select 1 from public.profiles where id = auth.uid() and role = 'admin')
-  );
+  for all using (public.is_admin());
 
 -- ============================================
 -- 7. PAYMENTS tablosu (Ödeme)
@@ -235,9 +346,7 @@ create policy "Kullanıcı kendi ödemelerini okuyabilir" on public.payments
   for select using (auth.uid() = user_id);
 
 create policy "Admin ödemeleri yönetebilir" on public.payments
-  for all using (
-    exists (select 1 from public.profiles where id = auth.uid() and role = 'admin')
-  );
+  for all using (public.is_admin());
 
 -- ============================================
 -- 8. NOTIFICATIONS tablosu (Bildirimler)
@@ -262,9 +371,7 @@ create policy "Kullanıcı bildirimlerini güncelleyebilir" on public.notificati
   for update using (auth.uid() = user_id);
 
 create policy "Admin bildirimleri yönetebilir" on public.notifications
-  for all using (
-    exists (select 1 from public.profiles where id = auth.uid() and role = 'admin')
-  );
+  for all using (public.is_admin());
 
 -- ============================================
 -- 9. CARE ELIGIBILITY (Pflegegrad & Anspruch)
@@ -291,9 +398,7 @@ create policy "Kullanıcı kendi eligibility güncelleyebilir" on public.care_el
   for update using (auth.uid() = user_id);
 
 create policy "Admin eligibility yönetebilir" on public.care_eligibility
-  for all using (
-    exists (select 1 from public.profiles where id = auth.uid() and role = 'admin')
-  );
+  for all using (public.is_admin());
 
 -- ============================================
 -- 10. CAREBOX CATALOG (Pflegehilfsmittel Katalog)
@@ -317,9 +422,7 @@ create policy "Jeder kann Katalog lesen" on public.carebox_catalog_items
   for select using (true);
 
 create policy "Admin Katalog yönetebilir" on public.carebox_catalog_items
-  for all using (
-    exists (select 1 from public.profiles where id = auth.uid() and role = 'admin')
-  );
+  for all using (public.is_admin());
 
 -- Default Katalog-Einträge
 insert into public.carebox_catalog_items (name, category, description, unit_type, default_price_estimate, max_qty, sort_order) values
@@ -358,9 +461,7 @@ create policy "Kullanıcı kendi cart güncelleyebilir" on public.carebox_cart
   for update using (auth.uid() = user_id);
 
 create policy "Admin cart yönetebilir" on public.carebox_cart
-  for all using (
-    exists (select 1 from public.profiles where id = auth.uid() and role = 'admin')
-  );
+  for all using (public.is_admin());
 
 -- ============================================
 -- 12. CAREBOX ORDER REQUESTS (Bestellungen)
@@ -393,6 +494,4 @@ create policy "Kullanıcı kendi order güncelleyebilir" on public.carebox_order
   for update using (auth.uid() = user_id);
 
 create policy "Admin order yönetebilir" on public.carebox_order_requests
-  for all using (
-    exists (select 1 from public.profiles where id = auth.uid() and role = 'admin')
-  );
+  for all using (public.is_admin());

@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { Jost, Cormorant_Garamond } from 'next/font/google'
 import './globals.css'
+import 'leaflet/dist/leaflet.css'
 import StatusBar from '@/components/StatusBar'
 import PageTracker from '@/components/PageTracker'
 
