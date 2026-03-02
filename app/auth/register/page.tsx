@@ -10,7 +10,8 @@ import Icon3D from '@/components/Icon3D'
 function RegisterForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const role = searchParams.get('role') || 'kunde'
+  const rawRole = searchParams.get('role') || 'kunde'
+  const role = rawRole === 'engel' ? 'engel' : 'kunde'
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [firstName, setFirstName] = useState('')
@@ -50,15 +51,13 @@ function RegisterForm() {
         } else if (authError.message.includes('valid email')) {
           setError('Bitte geben Sie eine gültige E-Mail-Adresse ein.')
         } else if (authError.message.includes('at least')) {
-          setError('Das Passwort muss mindestens 6 Zeichen lang sein.')
+          setError('Das Passwort muss mindestens 8 Zeichen lang sein.')
         } else if (authError.message.includes('rate limit') || authError.message.includes('too many')) {
           setError('Zu viele Versuche. Bitte warten Sie einen Moment.')
         } else if (authError.message.includes('signups not allowed') || authError.message.includes('Signups not allowed')) {
           setError('Registrierung ist derzeit deaktiviert. Bitte kontaktieren Sie den Support.')
-        } else if (authError.message.includes('Database error')) {
-          setError('Datenbankfehler. Bitte stellen Sie sicher, dass die Datenbank korrekt eingerichtet ist.')
         } else {
-          setError(`Fehler: ${authError.message}`)
+          setError('Registrierung fehlgeschlagen. Bitte versuchen Sie es erneut.')
         }
         setLoading(false)
         return
@@ -123,8 +122,8 @@ function RegisterForm() {
       }
 
       setError('Unbekannter Fehler. Bitte versuchen Sie es erneut.')
-    } catch (err: any) {
-      setError(err?.message || 'Netzwerkfehler. Bitte prüfen Sie Ihre Internetverbindung.')
+    } catch {
+      setError('Netzwerkfehler. Bitte prüfen Sie Ihre Internetverbindung.')
     } finally {
       setLoading(false)
     }

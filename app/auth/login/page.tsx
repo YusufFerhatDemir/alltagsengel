@@ -24,10 +24,8 @@ function LoginForm() {
     if (authError) {
       if (authError.message === 'Email not confirmed') {
         setError('Bitte bestätigen Sie zuerst Ihre E-Mail-Adresse. Prüfen Sie Ihren Posteingang.')
-      } else if (authError.message === 'Invalid login credentials') {
-        setError('E-Mail oder Passwort ist falsch.')
       } else {
-        setError(authError.message)
+        setError('E-Mail oder Passwort ist falsch.')
       }
       return
     }
@@ -56,8 +54,8 @@ function LoginForm() {
     setError('')
     try {
       await loginAndRedirect(email, password)
-    } catch (err: any) {
-      setError(err?.message || 'Netzwerkfehler. Bitte versuchen Sie es erneut.')
+    } catch {
+      setError('Netzwerkfehler. Bitte versuchen Sie es erneut.')
     } finally {
       setLoading(false)
     }
