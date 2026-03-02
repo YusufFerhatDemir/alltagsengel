@@ -157,6 +157,11 @@ export const DocPageLayout = ({ title, subtitle, icon, badge, children, lang }: 
         <div>Schiller Str. 31 · 60313 Frankfurt am Main</div>
         <div style={{ marginTop: 4 }}>info@alltagsengel.care · www.alltagsengel.de</div>
         <div style={{ marginTop: 12, color: C.ink5, fontSize: 10 }}>Vertraulich — Nur für autorisierte Investoren</div>
+        <div style={{ marginTop: 14, paddingTop: 14, borderTop: `1px solid rgba(201,150,60,0.08)` }}>
+          <a href="https://dripfy.app" target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', fontSize: 11, color: C.ink5, letterSpacing: '0.04em' }}>
+            Powered by <span style={{ fontWeight: 700, color: C.gold }}>DRIPFY.APP</span>
+          </a>
+        </div>
       </div>
     </div>
   )
