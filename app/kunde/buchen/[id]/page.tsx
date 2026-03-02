@@ -66,7 +66,7 @@ export default function BuchenPage() {
       .select()
       .single()
 
-    if (bookErr) { setError(bookErr.message); setSubmitting(false); return }
+    if (bookErr) { setError('Buchung konnte nicht erstellt werden. Bitte versuchen Sie es erneut.'); setSubmitting(false); return }
     router.push(`/kunde/warten/${booking.id}`)
   }
 

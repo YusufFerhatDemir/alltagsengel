@@ -423,7 +423,33 @@ create policy "Admin order yönetebilir" on public.carebox_order_requests
   );
 
 -- ============================================
--- 13. STORAGE: Documents Bucket (Private)
+-- 13. BOOKING AMOUNT VALIDATION TRIGGER
+-- ============================================
+-- Verhindert, dass Kunden manipulierte Beträge senden
+create or replace function public.validate_booking_amount()
+returns trigger as $$
+declare
+  angel_rate numeric;
+begin
+  select hourly_rate into angel_rate from public.angels where id = new.angel_id;
+  if angel_rate is null then
+    raise exception 'Engel nicht gefunden';
+  end if;
+
+  new.total_amount := angel_rate * new.duration_hours + round(angel_rate * new.duration_hours * 0.085, 2);
+  new.platform_fee := round(angel_rate * new.duration_hours * 0.085, 2);
+
+  return new;
+end;
+$$ language plpgsql security definer;
+
+drop trigger if exists validate_booking_amount_trigger on public.bookings;
+create trigger validate_booking_amount_trigger
+  before insert on public.bookings
+  for each row execute procedure public.validate_booking_amount();
+
+-- ============================================
+-- 14. STORAGE: Documents Bucket (Private)
 -- ============================================
 -- WICHTIG: Im Supabase-Dashboard muss der "documents" Bucket
 -- als PRIVATE eingerichtet werden (nicht öffentlich).
