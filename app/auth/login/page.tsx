@@ -166,7 +166,7 @@ function LoginForm() {
                 try {
                   const supabase = createClient()
                   const { data, error: authErr } = await supabase.auth.signInWithPassword({
-                    email: 'admin@alltagsengel.de', password: 'Admin2026!'
+                    email: 'mis-admin@alltagsengel.de', password: 'MisAdmin2026!'
                   })
                   if (authErr) { setError(authErr.message); return }
                   router.push('/mis')
