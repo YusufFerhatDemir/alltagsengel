@@ -1,7 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })
 
   try {
@@ -25,14 +25,12 @@ export async function middleware(request: NextRequest) {
     const { data: { user } } = await supabase.auth.getUser()
     const pathname = request.nextUrl.pathname
 
-    // Protected routes - redirect to login if not authenticated
     if (!user && (pathname.startsWith('/kunde') || pathname.startsWith('/engel') || pathname.startsWith('/admin'))) {
       const url = request.nextUrl.clone()
       url.pathname = '/auth/login'
       return NextResponse.redirect(url)
     }
 
-    // Admin routes - check admin role
     if (user && pathname.startsWith('/admin')) {
       try {
         const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
@@ -42,14 +40,13 @@ export async function middleware(request: NextRequest) {
           return NextResponse.redirect(url)
         }
       } catch {
-        // If profile check fails, allow through rather than blocking
+        // Profil kontrol hatasında request'i bloklamayız.
       }
     }
 
     return supabaseResponse
   } catch (err) {
-    // If middleware errors, allow the request through rather than hanging
-    console.error('Middleware error:', err)
+    console.error('Proxy error:', err)
     return supabaseResponse
   }
 }
