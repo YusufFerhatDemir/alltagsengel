@@ -560,6 +560,9 @@ export default function PitchDeck() {
           ))}
           <div style={{ marginTop: 'auto', padding: '16px 20px', borderTop: `1px solid ${C.border}` }}>
             <div style={{ fontSize: 10, color: C.ink5 }}>&copy; 2026 AlltagsEngel UG</div>
+            <a href="https://dripfy.app" target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', fontSize: 9, color: C.ink5, marginTop: 8, display: 'block' }}>
+              Powered by <span style={{ fontWeight: 700, color: C.gold }}>DRIPFY.APP</span>
+            </a>
           </div>
         </nav>
 

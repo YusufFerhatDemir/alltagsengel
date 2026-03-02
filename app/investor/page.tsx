@@ -192,6 +192,12 @@ export default function InvestorPortal() {
           <div style={{ marginTop: 20, fontSize: 11, color: '#5A4E3E' }}>
             © 2026 AlltagsEngel UG. Vertraulich — nur für autorisierte Investoren.
           </div>
+          <div style={{ marginTop: 16, paddingTop: 16, borderTop: '1px solid rgba(201,150,60,0.08)' }}>
+            <a href="https://dripfy.app" target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', fontSize: 11, color: '#5A4E3E', letterSpacing: '0.04em', transition: 'color 0.2s' }}
+              onMouseEnter={e => (e.currentTarget.style.color = '#C9963C')}
+              onMouseLeave={e => (e.currentTarget.style.color = '#5A4E3E')}
+            >Powered by <span style={{ fontWeight: 700, color: '#C9963C' }}>DRIPFY.APP</span></a>
+          </div>
         </div>
       </div>
     </div>
