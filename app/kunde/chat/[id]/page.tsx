@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { IconWings, IconUser } from '@/components/Icons'
+import { sanitizeMessage } from '@/lib/sanitize'
 
 export default function ChatConversationPage() {
   const params = useParams()
@@ -85,11 +86,14 @@ export default function ChatConversationPage() {
 
     const receiverId = userId === booking.customer_id ? booking.angel_id : booking.customer_id
 
+    const sanitized = sanitizeMessage(newMsg)
+    if (!sanitized) { setSending(false); return }
+
     await supabase.from('messages').insert({
       booking_id: bookingId,
       sender_id: userId,
       receiver_id: receiverId,
-      content: newMsg.trim(),
+      content: sanitized,
     })
 
     setNewMsg('')
@@ -129,6 +133,7 @@ export default function ChatConversationPage() {
           value={newMsg}
           onChange={e => setNewMsg(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && handleSend()}
+          maxLength={2000}
         />
         <button className="chat-send" onClick={handleSend} disabled={sending || !newMsg.trim()}>
           Senden

@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import { IconDocument, IconCheck, IconClock, IconInfo } from '@/components/Icons'
+import { sanitizeFileName } from '@/lib/sanitize'
 
 const docTypes = [
   { key: 'ausweis', label: 'Personalausweis', desc: 'Vorder- und Rückseite' },
@@ -65,7 +66,7 @@ export default function KundeDokumentePage() {
       return
     }
 
-    const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_')
+    const safeName = sanitizeFileName(file.name)
     const filePath = `${user.id}/${Date.now()}-${safeName}`
     const { error: uploadErr } = await supabase.storage
       .from('documents')
