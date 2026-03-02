@@ -37,6 +37,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Passwort muss Groß-, Kleinbuchstaben und Zahlen enthalten' }, { status: 400 })
     }
 
+    const { data: targetProfile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', userId)
+      .single()
+
+    if (targetProfile?.role === 'admin' && userId !== user.id) {
+      return NextResponse.json({ error: 'Passwort anderer Admins kann nicht zurückgesetzt werden' }, { status: 403 })
+    }
+
     const adminSupabase = createAdminClient()
     const { error } = await adminSupabase.auth.admin.updateUserById(userId, {
       password: newPassword,
