@@ -448,8 +448,40 @@ create trigger validate_booking_amount_trigger
   before insert on public.bookings
   for each row execute procedure public.validate_booking_amount();
 
+-- Verhindert Manipulation finanzieller Felder bei UPDATE
+create or replace function public.protect_booking_update()
+returns trigger as $$
+begin
+  new.total_amount := old.total_amount;
+  new.platform_fee := old.platform_fee;
+  new.customer_id := old.customer_id;
+  new.angel_id := old.angel_id;
+  return new;
+end;
+$$ language plpgsql security definer;
+
+drop trigger if exists protect_booking_update_trigger on public.bookings;
+create trigger protect_booking_update_trigger
+  before update on public.bookings
+  for each row execute procedure public.protect_booking_update();
+
 -- ============================================
--- 14. STORAGE: Documents Bucket (Private)
+-- 15. GDPR: DELETE-Policies (Recht auf Löschung)
+-- ============================================
+create policy "Kullanıcı kendi belgelerini silebilir" on public.documents
+  for delete using (auth.uid() = user_id);
+
+create policy "Kullanıcı kendi bildirimlerini silebilir" on public.notifications
+  for delete using (auth.uid() = user_id);
+
+create policy "Kullanıcı kendi mesajlarını silebilir" on public.messages
+  for delete using (auth.uid() = sender_id);
+
+create policy "Kullanıcı kendi cart silebilir" on public.carebox_cart
+  for delete using (auth.uid() = user_id);
+
+-- ============================================
+-- 16. STORAGE: Documents Bucket (Private)
 -- ============================================
 -- WICHTIG: Im Supabase-Dashboard muss der "documents" Bucket
 -- als PRIVATE eingerichtet werden (nicht öffentlich).
