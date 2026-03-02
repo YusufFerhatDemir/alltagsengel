@@ -158,7 +158,7 @@ function LoginForm() {
             </button>
           </div>
 
-          <div style={{ marginTop: 10 }}>
+          <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 8 }}>
             <button
               onClick={async () => {
                 setDemoLoading('mis')
@@ -179,6 +179,15 @@ function LoginForm() {
               style={{ width: '100%', padding: '10px 0', borderRadius: 10, border: '1px solid #C9963C', background: 'rgba(201,150,60,0.12)', color: '#C9963C', fontSize: 13, fontWeight: 600, cursor: 'pointer', opacity: (demoLoading || loading) ? 0.5 : 1, letterSpacing: 0.5 }}
             >
               {demoLoading === 'mis' ? '...' : '⚡ MIS Portal'}
+            </button>
+            <button
+              onClick={() => {
+                router.push('/investor')
+              }}
+              disabled={!!demoLoading || loading}
+              style={{ width: '100%', padding: '10px 0', borderRadius: 10, border: '1px solid #C9963C', background: 'linear-gradient(135deg, rgba(201,150,60,0.18), rgba(201,150,60,0.06))', color: '#C9963C', fontSize: 13, fontWeight: 600, cursor: 'pointer', opacity: (demoLoading || loading) ? 0.5 : 1, letterSpacing: 0.5 }}
+            >
+              📊 Investor Portal
             </button>
           </div>
         </div>
