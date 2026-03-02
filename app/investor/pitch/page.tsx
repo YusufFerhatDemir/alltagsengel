@@ -5,6 +5,7 @@ import Link from 'next/link'
 /* ════════════════════════════════════════════
    AlltagsEngel — Investor Pitch Deck (Web)
    Full-screen scroll-based presentation
+   Mobile-responsive with hamburger nav
    ════════════════════════════════════════════ */
 
 interface Slide {
@@ -24,7 +25,7 @@ const C = {
 }
 
 const Card = ({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) => (
-  <div style={{
+  <div className="pitch-card" style={{
     background: C.coal2, borderRadius: 18, padding: 24,
     border: `1.5px solid ${C.border}`,
     boxShadow: '0 2px 14px rgba(26,22,18,0.15)',
@@ -34,7 +35,7 @@ const Card = ({ children, style }: { children: React.ReactNode; style?: React.CS
 
 const StatBox = ({ value, label, sub }: { value: string; label: string; sub?: string }) => (
   <div style={{ textAlign: 'center' }}>
-    <div style={{ fontSize: 36, fontWeight: 700, color: C.gold, fontFamily: "'Cormorant Garamond', serif" }}>{value}</div>
+    <div className="stat-value" style={{ fontSize: 36, fontWeight: 700, color: C.gold, fontFamily: "'Cormorant Garamond', serif" }}>{value}</div>
     <div style={{ fontSize: 13, fontWeight: 600, color: C.ink, marginTop: 4 }}>{label}</div>
     {sub && <div style={{ fontSize: 11, color: C.ink4, marginTop: 2 }}>{sub}</div>}
   </div>
@@ -51,7 +52,7 @@ const SectionLabel = ({ children }: { children: React.ReactNode }) => (
 const GoldSep = () => <div style={{ width: 40, height: 2, background: `linear-gradient(90deg, ${C.gold}, transparent)`, borderRadius: 1, margin: '16px 0' }} />
 
 const FeatureRow = ({ icon, title, desc }: { icon: string; title: string; desc: string }) => (
-  <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start', marginBottom: 20 }}>
+  <div className="feature-row" style={{ display: 'flex', gap: 16, alignItems: 'flex-start', marginBottom: 20 }}>
     <div style={{ width: 44, height: 44, borderRadius: 13, background: C.goldPale, border: `1px solid rgba(201,150,60,0.18)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}>{icon}</div>
     <div>
       <div style={{ fontSize: 15, fontWeight: 700, color: C.ink, marginBottom: 2 }}>{title}</div>
@@ -70,7 +71,7 @@ const TeamCard = ({ initials, name, role, skill, color }: { initials: string; na
 )
 
 const CheckRow = ({ label, ae, trad, other }: { label: string; ae: boolean; trad: boolean; other: boolean }) => (
-  <div style={{ display: 'grid', gridTemplateColumns: '1fr 80px 80px 80px', alignItems: 'center', padding: '10px 0', borderBottom: `1px solid ${C.border}` }}>
+  <div className="check-row" style={{ display: 'grid', gridTemplateColumns: '1fr 60px 60px 60px', alignItems: 'center', padding: '10px 0', borderBottom: `1px solid ${C.border}` }}>
     <div style={{ fontSize: 13, color: C.ink2 }}>{label}</div>
     <div style={{ textAlign: 'center', fontSize: 16 }}>{ae ? '✅' : '❌'}</div>
     <div style={{ textAlign: 'center', fontSize: 16 }}>{trad ? '✅' : '❌'}</div>
@@ -110,15 +111,15 @@ function buildSlides(): Slide[] {
     {
       id: 'title', label: 'Start', title: '',
       content: (
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '80vh', textAlign: 'center', position: 'relative' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '70vh', textAlign: 'center', position: 'relative' }}>
           <div style={{ position: 'absolute', width: 500, height: 500, borderRadius: '50%', background: 'radial-gradient(circle, rgba(201,150,60,0.08) 0%, transparent 65%)', pointerEvents: 'none' }} />
           <div style={{ position: 'relative', zIndex: 1 }}>
             <div style={{ fontSize: 14, color: C.ink4, marginBottom: 24 }}>👼</div>
-            <h1 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 56, fontWeight: 700, color: C.ink, letterSpacing: 6, marginBottom: 8 }}>ALLTAGSENGEL</h1>
-            <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 24, fontStyle: 'italic', color: C.gold, marginBottom: 8 }}>Mit Herz für dich da</p>
+            <h1 className="hero-title" style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 56, fontWeight: 700, color: C.ink, letterSpacing: 6, marginBottom: 8 }}>ALLTAGSENGEL</h1>
+            <p className="hero-sub" style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 24, fontStyle: 'italic', color: C.gold, marginBottom: 8 }}>Mit Herz für dich da</p>
             <GoldSep />
             <p style={{ fontSize: 12, color: C.ink4, marginTop: 8, letterSpacing: '0.08em' }}>PREMIUM ALLTAGSBEGLEITUNG</p>
-            <div style={{ display: 'flex', justifyContent: 'center', gap: 32, marginTop: 48, flexWrap: 'wrap' as const }}>
+            <div className="hero-stats" style={{ display: 'flex', justifyContent: 'center', gap: 32, marginTop: 48, flexWrap: 'wrap' as const }}>
               <StatBox value="100%" label="Versichert" />
               <StatBox value="§45b" label="Integriert" />
               <StatBox value="24/7" label="Verfügbar" />
@@ -131,7 +132,7 @@ function buildSlides(): Slide[] {
     {
       id: 'problem', label: 'Problem', title: 'Der Pflegemarkt braucht digitale Innovation',
       content: (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 16, marginTop: 24 }}>
+        <div className="grid-3" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16, marginTop: 24 }}>
           <Card><StatBox value="€4,4 Mrd." label="Ungenutzte §45b-Mittel" sub="Von €7,44 Mrd. werden nur 40% abgerufen" /></Card>
           <Card><StatBox value="0" label="Digitale Plattform" sub="Analoge Vermittlung, lange Wartezeiten" /></Card>
           <Card><StatBox value="Ø 14 Tage" label="Wartezeit" sub="Keine standardisierte Qualitätssicherung" /></Card>
@@ -141,14 +142,14 @@ function buildSlides(): Slide[] {
     {
       id: 'solution', label: 'Lösung', title: 'AlltagsEngel — Die Plattform für Alltagsbegleitung',
       content: (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 32, marginTop: 24 }}>
+        <div className="grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 32, marginTop: 24 }}>
           <div>
             <FeatureRow icon="⚡" title="Sofortige Vermittlung" desc="Zertifizierte Alltagsbegleiter in Ihrer Nähe — Buchung in unter 2 Minuten" />
             <FeatureRow icon="🏥" title="§45b Integration" desc="Direkte Abrechnung mit allen Pflegekassen. €125/Monat pro Pflegebedürftigem" />
             <FeatureRow icon="⭐" title="Qualitätsgarantie" desc="Alle Engel sind nach §53b SGB XI zertifiziert und werden bewertet" />
             <FeatureRow icon="📱" title="Dual-App" desc="Eigene Oberfläche für Kunden und Engel. iOS & Android" />
           </div>
-          <Card style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: C.coal3, minHeight: 300 }}>
+          <Card style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: C.coal3, minHeight: 260 }}>
             <div style={{ width: 120, height: 220, borderRadius: 20, background: C.coal, border: `2px solid ${C.coal4}`, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
               <div style={{ fontSize: 28 }}>👼</div>
               <div style={{ fontSize: 10, color: C.gold, fontWeight: 700, letterSpacing: 2 }}>ALLTAGSENGEL</div>
@@ -165,7 +166,7 @@ function buildSlides(): Slide[] {
       id: 'market', label: 'Markt', title: 'Ein Markt mit €50 Mrd.+ Potenzial',
       content: (
         <div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginTop: 24 }}>
+          <div className="grid-3" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginTop: 24 }}>
             <Card style={{ textAlign: 'center', borderColor: 'rgba(201,150,60,0.2)' }}>
               <div style={{ fontSize: 11, color: C.ink4, fontWeight: 700, letterSpacing: '0.1em', marginBottom: 8 }}>TAM</div>
               <StatBox value="€50 Mrd.+" label="Dt. Pflegemarkt" />
@@ -191,9 +192,9 @@ function buildSlides(): Slide[] {
       id: 'business', label: 'Geschäftsmodell', title: 'Zwei Einnahmequellen, starke Unit Economics',
       content: (
         <div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginTop: 24 }}>
+          <div className="grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginTop: 24 }}>
             <Card style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: 48, fontWeight: 700, color: C.gold, fontFamily: "'Cormorant Garamond', serif" }}>18%</div>
+              <div className="big-num" style={{ fontSize: 48, fontWeight: 700, color: C.gold, fontFamily: "'Cormorant Garamond', serif" }}>18%</div>
               <div style={{ fontSize: 16, fontWeight: 700, color: C.ink, marginTop: 4 }}>Provision pro Buchung</div>
               <GoldSep />
               <div style={{ fontSize: 13, color: C.ink3, lineHeight: 1.5 }}>
@@ -201,7 +202,7 @@ function buildSlides(): Slide[] {
               </div>
             </Card>
             <Card style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: 48, fontWeight: 700, color: C.gold, fontFamily: "'Cormorant Garamond', serif" }}>€9,99</div>
+              <div className="big-num" style={{ fontSize: 48, fontWeight: 700, color: C.gold, fontFamily: "'Cormorant Garamond', serif" }}>€9,99</div>
               <div style={{ fontSize: 16, fontWeight: 700, color: C.ink, marginTop: 4 }}>Premium-Abo / Monat</div>
               <GoldSep />
               <div style={{ fontSize: 13, color: C.ink3, lineHeight: 1.5 }}>
@@ -211,7 +212,7 @@ function buildSlides(): Slide[] {
           </div>
           <Card style={{ marginTop: 16, textAlign: 'center' }}>
             <div style={{ fontSize: 13, color: C.ink3 }}>Ø Kundenbudget durch §45b</div>
-            <div style={{ fontSize: 36, fontWeight: 700, color: C.gold, fontFamily: "'Cormorant Garamond', serif", marginTop: 4 }}>€125 / Monat</div>
+            <div className="big-num" style={{ fontSize: 36, fontWeight: 700, color: C.gold, fontFamily: "'Cormorant Garamond', serif", marginTop: 4 }}>€125 / Monat</div>
             <div style={{ fontSize: 12, color: C.ink4, marginTop: 4 }}>= €1.500 / Jahr pro Pflegebedürftigem über Pflegekasse</div>
           </Card>
         </div>
@@ -220,7 +221,7 @@ function buildSlides(): Slide[] {
     {
       id: 'product', label: 'Produkt', title: 'Eine App, zwei Welten',
       content: (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginTop: 24 }}>
+        <div className="grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginTop: 24 }}>
           <Card>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
               <span style={{ fontSize: 18 }}>👤</span>
@@ -252,20 +253,22 @@ function buildSlides(): Slide[] {
     {
       id: 'competition', label: 'Wettbewerb', title: 'Klare Differenzierung im Markt',
       content: (
-        <Card style={{ marginTop: 24 }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 80px 80px 80px', padding: '12px 0', borderBottom: `2px solid ${C.gold}` }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: C.ink }}>Feature</div>
-            <div style={{ textAlign: 'center', fontSize: 11, fontWeight: 700, color: C.gold }}>Alltags-<br />Engel</div>
-            <div style={{ textAlign: 'center', fontSize: 11, fontWeight: 700, color: C.ink4 }}>Trad.<br />Agenturen</div>
-            <div style={{ textAlign: 'center', fontSize: 11, fontWeight: 700, color: C.ink4 }}>Andere<br />Plattformen</div>
+        <Card style={{ marginTop: 24, overflowX: 'auto' }}>
+          <div style={{ minWidth: 340 }}>
+            <div className="check-row" style={{ display: 'grid', gridTemplateColumns: '1fr 60px 60px 60px', padding: '12px 0', borderBottom: `2px solid ${C.gold}` }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: C.ink }}>Feature</div>
+              <div style={{ textAlign: 'center', fontSize: 10, fontWeight: 700, color: C.gold }}>Alltags-<br />Engel</div>
+              <div style={{ textAlign: 'center', fontSize: 10, fontWeight: 700, color: C.ink4 }}>Trad.<br />Agenturen</div>
+              <div style={{ textAlign: 'center', fontSize: 10, fontWeight: 700, color: C.ink4 }}>Andere<br />Plattf.</div>
+            </div>
+            <CheckRow label="Digitale Buchung" ae={true} trad={false} other={true} />
+            <CheckRow label="§45b Integration" ae={true} trad={false} other={false} />
+            <CheckRow label="Qualitätssicherung" ae={true} trad={true} other={false} />
+            <CheckRow label="Preistransparenz" ae={true} trad={false} other={true} />
+            <CheckRow label="Bewertungssystem" ae={true} trad={false} other={false} />
+            <CheckRow label="Echtzeit-Verfügbarkeit" ae={true} trad={false} other={false} />
+            <CheckRow label="Mobile App" ae={true} trad={false} other={true} />
           </div>
-          <CheckRow label="Digitale Buchung" ae={true} trad={false} other={true} />
-          <CheckRow label="§45b Integration" ae={true} trad={false} other={false} />
-          <CheckRow label="Qualitätssicherung" ae={true} trad={true} other={false} />
-          <CheckRow label="Preistransparenz" ae={true} trad={false} other={true} />
-          <CheckRow label="Bewertungssystem" ae={true} trad={false} other={false} />
-          <CheckRow label="Echtzeit-Verfügbarkeit" ae={true} trad={false} other={false} />
-          <CheckRow label="Mobile App" ae={true} trad={false} other={true} />
         </Card>
       ),
     },
@@ -285,7 +288,7 @@ function buildSlides(): Slide[] {
     {
       id: 'team', label: 'Team', title: 'Erfahrung trifft Leidenschaft',
       content: (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 12, marginTop: 24 }}>
+        <div className="grid-team" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 12, marginTop: 24 }}>
           <TeamCard initials="YD" name="Yusuf F. Demir" role="Gründer & CEO" skill="Strategie & Vision" color={C.gold} />
           <TeamCard initials="LL" name="Laura Leeman" role="Teamleiterin" skill="Pflege & Qualität" color={C.gold2} />
           <TeamCard initials="MY" name="Mehmet Yilmaz" role="CTO" skill="Technologie & Produkt" color={C.gold3} />
@@ -298,9 +301,8 @@ function buildSlides(): Slide[] {
       id: 'finance', label: 'Finanzen', title: 'Profitabel ab Jahr 2',
       content: (
         <div>
-          {/* Chart-like visualization */}
           <Card style={{ marginTop: 24 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16, flexWrap: 'wrap' as const, gap: 8 }}>
               <span style={{ fontSize: 13, fontWeight: 600, color: C.ink }}>5-Jahres-Prognose</span>
               <div style={{ display: 'flex', gap: 16 }}>
                 <span style={{ fontSize: 11, color: C.gold }}>● Umsatz</span>
@@ -326,7 +328,7 @@ function buildSlides(): Slide[] {
               </div>
             ))}
           </Card>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginTop: 12 }}>
+          <div className="grid-3" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginTop: 12 }}>
             <Card style={{ textAlign: 'center', padding: 16 }}><StatBox value="€33,5K" label="Monatl. Kosten" /></Card>
             <Card style={{ textAlign: 'center', padding: 16 }}><StatBox value="Jahr 2" label="Break-Even" /></Card>
             <Card style={{ textAlign: 'center', padding: 16 }}><StatBox value="€2,52M" label="Gewinn Jahr 5" /></Card>
@@ -339,7 +341,7 @@ function buildSlides(): Slide[] {
       content: (
         <div style={{ marginTop: 24 }}>
           <div style={{ textAlign: 'center', marginBottom: 32 }}>
-            <div style={{ fontSize: 64, fontWeight: 700, color: C.gold, fontFamily: "'Cormorant Garamond', serif" }}>€500K</div>
+            <div className="big-num" style={{ fontSize: 64, fontWeight: 700, color: C.gold, fontFamily: "'Cormorant Garamond', serif" }}>€500K</div>
             <div style={{ fontSize: 14, color: C.ink3 }}>Pre-Seed / Seed-Finanzierung</div>
           </div>
           <Card>
@@ -355,11 +357,11 @@ function buildSlides(): Slide[] {
       id: 'vision', label: 'Vision', title: 'Die Zukunft der Alltagsbegleitung',
       content: (
         <div style={{ textAlign: 'center', marginTop: 40 }}>
-          <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 28, fontStyle: 'italic', color: C.gold, lineHeight: 1.4, maxWidth: 600, margin: '0 auto' }}>
-            „Jeder Mensch verdient einen Engel an seiner Seite."
+          <div className="vision-quote" style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 28, fontStyle: 'italic', color: C.gold, lineHeight: 1.4, maxWidth: 600, margin: '0 auto' }}>
+            &bdquo;Jeder Mensch verdient einen Engel an seiner Seite.&ldquo;
           </div>
           <GoldSep />
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginTop: 40, maxWidth: 700, margin: '40px auto 0' }}>
+          <div className="grid-3" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginTop: 40, maxWidth: 700, margin: '40px auto 0' }}>
             <Card style={{ textAlign: 'center', padding: 20 }}>
               <div style={{ fontSize: 24, fontWeight: 700, color: C.gold, fontFamily: "'Cormorant Garamond', serif" }}>2027</div>
               <div style={{ fontSize: 13, color: C.ink, fontWeight: 600, marginTop: 8 }}>10.000+ Nutzer</div>
@@ -384,17 +386,17 @@ function buildSlides(): Slide[] {
       content: (
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '70vh', textAlign: 'center', position: 'relative' }}>
           <div style={{ position: 'absolute', width: 400, height: 400, borderRadius: '50%', background: 'radial-gradient(circle, rgba(201,150,60,0.08) 0%, transparent 65%)', pointerEvents: 'none' }} />
-          <div style={{ position: 'relative', zIndex: 1 }}>
-            <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 44, fontWeight: 700, color: C.ink, letterSpacing: 4 }}>ALLTAGSENGEL</h2>
+          <div style={{ position: 'relative', zIndex: 1, width: '100%', maxWidth: 500 }}>
+            <h2 className="hero-title" style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 44, fontWeight: 700, color: C.ink, letterSpacing: 4 }}>ALLTAGSENGEL</h2>
             <p style={{ fontSize: 16, color: C.ink3, marginTop: 16, marginBottom: 32, lineHeight: 1.6 }}>
               Lassen Sie uns gemeinsam<br />die Pflege revolutionieren.
             </p>
-            <Card style={{ display: 'inline-block', padding: '28px 40px', textAlign: 'left' }}>
+            <Card style={{ display: 'inline-block', padding: '28px 40px', textAlign: 'left', maxWidth: '100%' }}>
               <div style={{ fontSize: 16, fontWeight: 700, color: C.ink, marginBottom: 4 }}>Yusuf Ferhat Demir</div>
               <div style={{ fontSize: 13, color: C.gold, fontWeight: 600, marginBottom: 16 }}>Gründer & CEO</div>
               <div style={{ fontSize: 13, color: C.ink3, lineHeight: 2 }}>
-                ✉️ info@alltagsengel.care<br />
-                🌐 www.alltagsengel.de<br />
+                <a href="mailto:info@alltagsengel.care" style={{ color: C.ink3, textDecoration: 'none' }}>✉️ info@alltagsengel.care</a><br />
+                <a href="https://www.alltagsengel.de" target="_blank" rel="noopener" style={{ color: C.ink3, textDecoration: 'none' }}>🌐 www.alltagsengel.de</a><br />
                 📍 Schiller Str. 31, 60313 Frankfurt am Main
               </div>
             </Card>
@@ -421,6 +423,7 @@ function buildSlides(): Slide[] {
 export default function PitchDeck() {
   const slides = buildSlides()
   const [current, setCurrent] = useState(0)
+  const [menuOpen, setMenuOpen] = useState(false)
   const slideRefs = useRef<(HTMLDivElement | null)[]>([])
 
   useEffect(() => {
@@ -433,7 +436,7 @@ export default function PitchDeck() {
           }
         })
       },
-      { threshold: 0.5 }
+      { threshold: 0.4 }
     )
     slideRefs.current.forEach(ref => { if (ref) observer.observe(ref) })
     return () => observer.disconnect()
@@ -441,75 +444,153 @@ export default function PitchDeck() {
 
   const scrollTo = (idx: number) => {
     slideRefs.current[idx]?.scrollIntoView({ behavior: 'smooth' })
+    setMenuOpen(false)
   }
 
   return (
-    <div style={{ background: C.coal, minHeight: '100vh', fontFamily: "'Jost', sans-serif", display: 'flex' }}>
-      {/* Sidebar Navigation */}
-      <nav style={{
-        position: 'fixed', left: 0, top: 0, bottom: 0, width: 180,
-        background: C.coal2, borderRight: `1px solid ${C.border}`,
-        padding: '24px 0', display: 'flex', flexDirection: 'column',
-        zIndex: 100, overflowY: 'auto',
-      }}>
-        <Link href="/investor" style={{ textDecoration: 'none', padding: '0 20px', marginBottom: 24 }}>
-          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', color: C.gold, marginBottom: 2 }}>ALLTAGSENGEL</div>
-          <div style={{ fontSize: 10, color: C.ink4 }}>Investor Pitch Deck</div>
-        </Link>
-        {slides.map((s, i) => (
-          <button key={s.id} onClick={() => scrollTo(i)} style={{
-            display: 'flex', alignItems: 'center', gap: 8,
-            padding: '8px 20px', border: 'none', background: 'transparent',
-            cursor: 'pointer', width: '100%', textAlign: 'left',
-            transition: 'all 0.2s',
+    <>
+      <style>{`
+        /* ─── Mobile Responsive ─── */
+        .pitch-sidebar {
+          position: fixed; left: 0; top: 0; bottom: 0; width: 180px;
+          background: ${C.coal2}; border-right: 1px solid ${C.border};
+          padding: 24px 0; display: flex; flex-direction: column;
+          z-index: 100; overflow-y: auto; transition: transform 0.3s ease;
+        }
+        .pitch-main {
+          margin-left: 180px; flex: 1; max-width: 900px; padding: 0 48px;
+        }
+        .pitch-progress {
+          position: fixed; top: 0; left: 180px; right: 0; height: 3px;
+          background: ${C.coal2}; z-index: 99;
+        }
+        .hamburger { display: none; }
+        .overlay { display: none; }
+        .mobile-header { display: none; }
+
+        @media (max-width: 768px) {
+          .pitch-sidebar {
+            transform: ${menuOpen ? 'translateX(0)' : 'translateX(-100%)'};
+            width: 220px;
+          }
+          .pitch-main {
+            margin-left: 0; padding: 0 20px; padding-top: 60px;
+          }
+          .pitch-progress {
+            left: 0; top: 56px;
+          }
+          .mobile-header {
+            display: flex !important; align-items: center; justify-content: space-between;
+            position: fixed; top: 0; left: 0; right: 0; height: 56px;
+            background: ${C.coal2}; border-bottom: 1px solid ${C.border};
+            padding: 0 16px; z-index: 101;
+          }
+          .hamburger { display: block !important; }
+          .overlay {
+            display: ${menuOpen ? 'block' : 'none'};
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5); z-index: 99;
+          }
+          .hero-title { font-size: 32px !important; letter-spacing: 3px !important; }
+          .hero-sub { font-size: 18px !important; }
+          .big-num { font-size: 36px !important; }
+          .vision-quote { font-size: 20px !important; }
+          .stat-value { font-size: 28px !important; }
+          .grid-2 { grid-template-columns: 1fr !important; gap: 12px !important; }
+          .grid-3 { grid-template-columns: 1fr !important; gap: 12px !important; }
+          .grid-team { grid-template-columns: repeat(2, 1fr) !important; }
+          .pitch-card { padding: 16px !important; border-radius: 14px !important; }
+          .check-row { grid-template-columns: 1fr 48px 48px 48px !important; }
+          .check-row div { font-size: 11px !important; }
+          .feature-row { gap: 12px !important; }
+        }
+        @media (max-width: 420px) {
+          .pitch-main { padding: 0 12px; padding-top: 60px; }
+          .hero-title { font-size: 26px !important; letter-spacing: 2px !important; }
+          .big-num { font-size: 28px !important; }
+          .grid-team { grid-template-columns: 1fr !important; }
+          .hero-stats { gap: 16px !important; }
+        }
+      `}</style>
+
+      <div style={{ background: C.coal, minHeight: '100vh', fontFamily: "'Jost', sans-serif", display: 'flex' }}>
+        {/* Mobile Header */}
+        <div className="mobile-header" style={{ display: 'none' }}>
+          <button className="hamburger" onClick={() => setMenuOpen(!menuOpen)} style={{
+            display: 'none', background: 'transparent', border: 'none', cursor: 'pointer', padding: 8,
           }}>
-            <div style={{
-              width: 6, height: 6, borderRadius: '50%', flexShrink: 0,
-              background: current === i ? C.gold : C.coal4,
-              boxShadow: current === i ? '0 0 8px rgba(201,150,60,0.4)' : 'none',
-              transition: 'all 0.3s',
-            }} />
-            <span style={{
-              fontSize: 12, fontWeight: current === i ? 600 : 400,
-              color: current === i ? C.ink : C.ink4,
-              transition: 'all 0.2s',
-            }}>{s.label}</span>
+            <div style={{ width: 22, height: 2, background: C.gold, marginBottom: 5, borderRadius: 1, transition: 'all 0.3s', transform: menuOpen ? 'rotate(45deg) translate(5px, 5px)' : 'none' }} />
+            <div style={{ width: 22, height: 2, background: C.gold, marginBottom: 5, borderRadius: 1, transition: 'all 0.3s', opacity: menuOpen ? 0 : 1 }} />
+            <div style={{ width: 22, height: 2, background: C.gold, borderRadius: 1, transition: 'all 0.3s', transform: menuOpen ? 'rotate(-45deg) translate(5px, -5px)' : 'none' }} />
           </button>
-        ))}
-        <div style={{ marginTop: 'auto', padding: '16px 20px', borderTop: `1px solid ${C.border}` }}>
-          <div style={{ fontSize: 10, color: C.ink5 }}>© 2026 AlltagsEngel UG</div>
+          <Link href="/investor" style={{ textDecoration: 'none' }}>
+            <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.12em', color: C.gold }}>ALLTAGSENGEL</span>
+          </Link>
+          <span style={{ fontSize: 10, color: C.ink4 }}>Slide {current + 1}/{slides.length}</span>
         </div>
-      </nav>
 
-      {/* Main Content */}
-      <main style={{ marginLeft: 180, flex: 1, maxWidth: 900, padding: '0 48px' }}>
-        {slides.map((s, i) => (
-          <div
-            key={s.id}
-            ref={el => { slideRefs.current[i] = el }}
-            style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '60px 0' }}
-          >
-            {s.title && (
-              <div>
-                <SectionLabel>{s.label}</SectionLabel>
-                <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 36, fontWeight: 700, color: C.ink, lineHeight: 1.2 }}>{s.title}</h2>
-              </div>
-            )}
-            {s.content}
+        {/* Overlay for mobile */}
+        <div className="overlay" onClick={() => setMenuOpen(false)} />
+
+        {/* Sidebar Navigation */}
+        <nav className="pitch-sidebar">
+          <Link href="/investor" style={{ textDecoration: 'none', padding: '0 20px', marginBottom: 24, display: 'block' }}>
+            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', color: C.gold, marginBottom: 2 }}>ALLTAGSENGEL</div>
+            <div style={{ fontSize: 10, color: C.ink4 }}>Investor Pitch Deck</div>
+          </Link>
+          {slides.map((s, i) => (
+            <button key={s.id} onClick={() => scrollTo(i)} style={{
+              display: 'flex', alignItems: 'center', gap: 8,
+              padding: '8px 20px', border: 'none', background: 'transparent',
+              cursor: 'pointer', width: '100%', textAlign: 'left',
+              transition: 'all 0.2s',
+            }}>
+              <div style={{
+                width: 6, height: 6, borderRadius: '50%', flexShrink: 0,
+                background: current === i ? C.gold : C.coal4,
+                boxShadow: current === i ? '0 0 8px rgba(201,150,60,0.4)' : 'none',
+                transition: 'all 0.3s',
+              }} />
+              <span style={{
+                fontSize: 12, fontWeight: current === i ? 600 : 400,
+                color: current === i ? C.ink : C.ink4,
+                transition: 'all 0.2s',
+              }}>{s.label}</span>
+            </button>
+          ))}
+          <div style={{ marginTop: 'auto', padding: '16px 20px', borderTop: `1px solid ${C.border}` }}>
+            <div style={{ fontSize: 10, color: C.ink5 }}>&copy; 2026 AlltagsEngel UG</div>
           </div>
-        ))}
-      </main>
+        </nav>
 
-      {/* Progress bar */}
-      <div style={{
-        position: 'fixed', top: 0, left: 180, right: 0, height: 3, background: C.coal2, zIndex: 99,
-      }}>
-        <div style={{
-          height: '100%', background: `linear-gradient(90deg, ${C.gold}, ${C.gold2})`,
-          width: `${((current + 1) / slides.length) * 100}%`,
-          transition: 'width 0.3s ease', borderRadius: '0 2px 2px 0',
-        }} />
+        {/* Main Content */}
+        <main className="pitch-main">
+          {slides.map((s, i) => (
+            <div
+              key={s.id}
+              ref={el => { slideRefs.current[i] = el }}
+              style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '60px 0' }}
+            >
+              {s.title && (
+                <div>
+                  <SectionLabel>{s.label}</SectionLabel>
+                  <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 36, fontWeight: 700, color: C.ink, lineHeight: 1.2 }}>{s.title}</h2>
+                </div>
+              )}
+              {s.content}
+            </div>
+          ))}
+        </main>
+
+        {/* Progress bar */}
+        <div className="pitch-progress">
+          <div style={{
+            height: '100%', background: `linear-gradient(90deg, ${C.gold}, ${C.gold2})`,
+            width: `${((current + 1) / slides.length) * 100}%`,
+            transition: 'width 0.3s ease', borderRadius: '0 2px 2px 0',
+          }} />
+        </div>
       </div>
-    </div>
+    </>
   )
 }

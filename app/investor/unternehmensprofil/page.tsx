@@ -15,10 +15,10 @@ export default function UnternehmensprofiltPage() {
       <Card>
         <SectionTitle>Unternehmensübersicht</SectionTitle>
         <Paragraph>
-          <C>AlltagsEngel</C> ist eine digitale Plattform, die Pflegebedürftige mit zertifizierten Alltagsbegleitern verbindet. Als Two-Sided Marketplace transformieren wir die fragmentierte Pflege- und Begleitlandschaft in Deutschland.
+          <strong style={{color:'#C9963C'}}>AlltagsEngel</strong> ist eine digitale Plattform, die Pflegebedürftige mit zertifizierten Alltagsbegleitern verbindet. Als Two-Sided Marketplace transformieren wir die fragmentierte Pflege- und Begleitlandschaft in Deutschland.
         </Paragraph>
         <Paragraph>
-          <C>Mission:</C> Alltagsbegleitung in Deutschland zugänglicher, sicherer und menschlicher zu machen.
+          <strong style={{color:'#C9963C'}}>Mission:</strong> Alltagsbegleitung in Deutschland zugänglicher, sicherer und menschlicher zu machen.
         </Paragraph>
       </Card>
 
@@ -86,10 +86,10 @@ export default function UnternehmensprofiltPage() {
       {/* Wettbewerbsvorteil */}
       <Card>
         <SectionTitle>Wettbewerbsvorteil</SectionTitle>
-        <BulletItem><C>Erste digitale §45b-Plattform:</C> Keine etablierten Konkurrenten mit vollständiger Lösung</BulletItem>
-        <BulletItem><C>Vollversicherung:</C> 100% der Begleiter versichert – Wettbewerbern fehlt dies</BulletItem>
-        <BulletItem><C>Digital-First:</C> Native Mobile Apps mit modernem UX/UI</BulletItem>
-        <BulletItem><C>Netzwerkeffekte:</C> Zwei-Seiten-Marktplatz mit exponentieller Wachstumsdynamik</BulletItem>
+        <BulletItem><strong style={{color:'#C9963C'}}>Erste digitale §45b-Plattform:</strong> Keine etablierten Konkurrenten mit vollständiger Lösung</BulletItem>
+        <BulletItem><strong style={{color:'#C9963C'}}>Vollversicherung:</strong> 100% der Begleiter versichert – Wettbewerbern fehlt dies</BulletItem>
+        <BulletItem><strong style={{color:'#C9963C'}}>Digital-First:</strong> Native Mobile Apps mit modernem UX/UI</BulletItem>
+        <BulletItem><strong style={{color:'#C9963C'}}>Netzwerkeffekte:</strong> Zwei-Seiten-Marktplatz mit exponentieller Wachstumsdynamik</BulletItem>
       </Card>
 
       {/* Team */}
@@ -140,7 +140,7 @@ export default function UnternehmensprofiltPage() {
           <StatBox value="4 Team" label="Vollzeit-Mitglieder" />
         </div>
         <Paragraph>
-          <C>Seed-Finanzierungsziel: €500.000</C>
+          <strong style={{color:'#C9963C'}}>Seed-Finanzierungsziel: €500.000</strong>
         </Paragraph>
         <Paragraph>
           Wir befinden uns in einer kritischen Wachstumsphase mit MVP-Fertigstellung, Launch-Vorbereitung und Seedfinanzierung für Marktexpansion.

@@ -109,7 +109,7 @@ export default function FinanzplanPage() {
           </table>
         </div>
         <Paragraph style={{ marginTop: '1rem', fontSize: '0.9rem', color: '#B0B0B0' }}>
-          <C>Annahmen:</C> Durchschnittlicher Buchungswert: €40 | Plattform-Provision: 18% (€7,20 pro Buchung) | Organisches Wachstum mit gezieltem Marketing
+          <strong style={{color:'#C9963C'}}>Annahmen:</strong> Durchschnittlicher Buchungswert: €40 | Plattform-Provision: 18% (€7,20 pro Buchung) | Organisches Wachstum mit gezieltem Marketing
         </Paragraph>
       </Card>
 
@@ -231,7 +231,7 @@ export default function FinanzplanPage() {
           </table>
         </div>
         <Paragraph style={{ marginTop: '1rem', fontSize: '0.9rem', color: '#B0B0B0' }}>
-          <C>Hinweis:</C> Jahr 1 wird ein Verlust von ~€337K produzieren (€417K Kosten - €80K Umsatz). Dies ist erwartet und durch die Seed-Runde gedeckt.
+          <strong style={{color:'#C9963C'}}>Hinweis:</strong> Jahr 1 wird ein Verlust von ~€337K produzieren (€417K Kosten - €80K Umsatz). Dies ist erwartet und durch die Seed-Runde gedeckt.
         </Paragraph>
       </Card>
 
@@ -303,7 +303,7 @@ export default function FinanzplanPage() {
           </table>
         </div>
         <Paragraph style={{ marginTop: '1rem', fontSize: '0.9rem', color: '#B0B0B0' }}>
-          <C>Break-Even-Punkt:</C> End of Jahr 2 (M20–M24 von Gründung)
+          <strong style={{color:'#C9963C'}}>Break-Even-Punkt:</strong> End of Jahr 2 (M20–M24 von Gründung)
         </Paragraph>
       </Card>
 
@@ -339,7 +339,7 @@ export default function FinanzplanPage() {
           <StatBox value="€20" label="CAC mit effizientem Marketing" />
         </div>
         <Paragraph>
-          <C>Interpretation:</C> Ein LTV/CAC von 25–40x ist extrem stark und deutet auf ein sehr profitables Unit-Modell hin. Dies ist typisch für Plattformen mit Netzwerkeffekten und hoher Retention.
+          <strong style={{color:'#C9963C'}}>Interpretation:</strong> Ein LTV/CAC von 25–40x ist extrem stark und deutet auf ein sehr profitables Unit-Modell hin. Dies ist typisch für Plattformen mit Netzwerkeffekten und hoher Retention.
         </Paragraph>
 
         <SectionLabel style={{ marginTop: '1.5rem' }}>Churn Rate:</SectionLabel>
@@ -455,11 +455,11 @@ export default function FinanzplanPage() {
       {/* Zusammenfassung */}
       <Card>
         <SectionTitle>Finanzielle Zusammenfassung</SectionTitle>
-        <BulletItem><C>Starke Unit Economics:</C> LTV/CAC 25–40x (Benchmark: 3x)</BulletItem>
-        <BulletItem><C>Break-Even:</C> Ende Jahr 2 (M20–24), dann rapide Profitabilität</BulletItem>
-        <BulletItem><C>Year 5 Revenue:</C> €30M+ (Base Case), mit Bull-Case €60M+</BulletItem>
-        <BulletItem><C>Finanzierungsbedarf:</C> €500K Seed für MVP & lokales Launch, €2–3M Series A für Nationale Expansion</BulletItem>
-        <BulletItem><C>Exit-Potenzial:</C> Strategic Acquisition (€200M–€500M+) oder IPO (€1B+) Jahr 5–7</BulletItem>
+        <BulletItem><strong style={{color:'#C9963C'}}>Starke Unit Economics:</strong> LTV/CAC 25–40x (Benchmark: 3x)</BulletItem>
+        <BulletItem><strong style={{color:'#C9963C'}}>Break-Even:</strong> Ende Jahr 2 (M20–24), dann rapide Profitabilität</BulletItem>
+        <BulletItem><strong style={{color:'#C9963C'}}>Year 5 Revenue:</strong> €30M+ (Base Case), mit Bull-Case €60M+</BulletItem>
+        <BulletItem><strong style={{color:'#C9963C'}}>Finanzierungsbedarf:</strong> €500K Seed für MVP & lokales Launch, €2–3M Series A für Nationale Expansion</BulletItem>
+        <BulletItem><strong style={{color:'#C9963C'}}>Exit-Potenzial:</strong> Strategic Acquisition (€200M–€500M+) oder IPO (€1B+) Jahr 5–7</BulletItem>
       </Card>
     </DocPageLayout>
   )

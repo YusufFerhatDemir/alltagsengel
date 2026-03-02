@@ -128,7 +128,7 @@ export default function RechtCompliancePage() {
           <BulletItem><strong>Verträge:</strong> Schriftliche Arbeitsverträge mit Datenschutzklauseln</BulletItem>
           <BulletItem><strong>Sozialversicherung:</strong> Vollständig durch AlltagsEngel abgedeckt</BulletItem>
           <BulletItem><strong>Tarifwerk:</strong> Über Allgemeine Gewerbliche Arbeitsbedingungen</BulletItem>
-          <BulletItem><strong>Betriebsrat:</strong> Nicht erforderlich (Mitarbeiterzahl <5 betroffene Stellen)</BulletItem>
+          <BulletItem><strong>Betriebsrat:</strong> Nicht erforderlich (Mitarbeiterzahl &lt;5 betroffene Stellen)</BulletItem>
         </div>
       </Card>
 

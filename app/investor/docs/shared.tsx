@@ -18,8 +18,8 @@ export const C = {
 export const goldGrad = `linear-gradient(135deg, ${C.gold2} 0%, ${C.gold} 55%, #9A7020 100%)`
 
 /* ── Reusable Components ── */
-export const SectionLabel = ({ children }: { children: React.ReactNode }) => (
-  <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', color: C.ink4, textTransform: 'uppercase', marginBottom: 10 }}>{children}</div>
+export const SectionLabel = ({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) => (
+  <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', color: C.ink4, textTransform: 'uppercase', marginBottom: 10, ...style }}>{children}</div>
 )
 
 export const GoldSep = () => (
@@ -44,14 +44,15 @@ export const Badge = ({ children, color }: { children: React.ReactNode; color?: 
   }}>{children}</span>
 )
 
-export const StatBox = ({ value, label, icon }: { value: string; label: string; icon?: string }) => (
+export const StatBox = ({ value, label, icon, subLabel, style }: { value: string; label: string; icon?: string; subLabel?: string; style?: React.CSSProperties }) => (
   <div style={{
     flex: '1 1 140px', minWidth: 140, background: C.coal2, borderRadius: 14,
-    padding: '18px 16px', border: `1px solid ${C.border}`, textAlign: 'center',
+    padding: '18px 16px', border: `1px solid ${C.border}`, textAlign: 'center', ...style,
   }}>
     {icon && <div style={{ fontSize: 24, marginBottom: 6 }}>{icon}</div>}
     <div style={{ fontSize: 22, fontWeight: 700, color: C.gold, fontFamily: "'Cormorant Garamond', serif" }}>{value}</div>
     <div style={{ fontSize: 11, color: C.ink3, marginTop: 4, lineHeight: 1.3 }}>{label}</div>
+    {subLabel && <div style={{ fontSize: 10, color: C.ink4, marginTop: 2 }}>{subLabel}</div>}
   </div>
 )
 
@@ -69,8 +70,8 @@ export const TableRow = ({ cells, header }: { cells: string[]; header?: boolean 
   </div>
 )
 
-export const BulletItem = ({ children, icon }: { children: React.ReactNode; icon?: string }) => (
-  <div style={{ display: 'flex', gap: 10, marginBottom: 10, alignItems: 'flex-start' }}>
+export const BulletItem = ({ children, icon, style }: { children: React.ReactNode; icon?: string; style?: React.CSSProperties }) => (
+  <div style={{ display: 'flex', gap: 10, marginBottom: 10, alignItems: 'flex-start', ...style }}>
     <span style={{ color: C.gold, fontSize: 14, lineHeight: 1.6, flexShrink: 0 }}>{icon || '▸'}</span>
     <span style={{ color: C.ink2, fontSize: 14, lineHeight: 1.6 }}>{children}</span>
   </div>
@@ -86,8 +87,8 @@ export const SectionTitle = ({ children, icon }: { children: React.ReactNode; ic
   </div>
 )
 
-export const Paragraph = ({ children }: { children: React.ReactNode }) => (
-  <p style={{ color: C.ink2, fontSize: 14, lineHeight: 1.75, margin: '0 0 16px 0' }}>{children}</p>
+export const Paragraph = ({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) => (
+  <p style={{ color: C.ink2, fontSize: 14, lineHeight: 1.75, margin: '0 0 16px 0', ...style }}>{children}</p>
 )
 
 /* ── Page Layout ── */

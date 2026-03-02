@@ -50,10 +50,10 @@ export default function GoToMarketPage() {
               </tr>
             </thead>
             <tbody>
-              <TableRow label="Familien" value="35-65 Jahre, Betreuungsbedarf" extra="Facebook, Instagram, Lokal" />
-              <TableRow label="Senioren" value="65+ Jahre, Unterstützungsbedarf" extra="Print, Arztpraxen, Offline" />
-              <TableRow label="Alltagsbegleiter" value="25-55 Jahre, Jobsuchend" extra="LinkedIn, Indeed, Facebook" />
-              <TableRow label="Multiplikatoren" value="Ärzte, Pflegeberater, Sozialarbeiter" extra="LinkedIn, E-Mail, Direct" />
+              <TableRow cells={["Familien", "35-65 Jahre, Betreuungsbedarf", "Facebook, Instagram, Lokal"]} />
+              <TableRow cells={["Senioren", "65+ Jahre, Unterstützungsbedarf", "Print, Arztpraxen, Offline"]} />
+              <TableRow cells={["Alltagsbegleiter", "25-55 Jahre, Jobsuchend", "LinkedIn, Indeed, Facebook"]} />
+              <TableRow cells={["Multiplikatoren", "Ärzte, Pflegeberater, Sozialarbeiter", "LinkedIn, E-Mail, Direct"]} />
             </tbody>
           </table>
         </div>
