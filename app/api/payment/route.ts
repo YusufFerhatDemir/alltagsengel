@@ -1,10 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { rateLimit } from '@/lib/rateLimit'
 
 const ALLOWED_METHODS = ['card', 'sepa', '45b', 'paypal']
 
 export async function POST(req: NextRequest) {
   try {
+    const ip = req.headers.get('x-forwarded-for') || 'unknown'
+    const { success } = rateLimit(`payment:${ip}`, 5, 60_000)
+    if (!success) {
+      return NextResponse.json({ error: 'Zu viele Anfragen. Bitte warten Sie.' }, { status: 429 })
+    }
+
     const body = await req.json()
     const { bookingId, paymentMethod } = body
 

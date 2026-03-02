@@ -1,8 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { rateLimit } from '@/lib/rateLimit'
 
 export async function POST(req: NextRequest) {
   try {
+    const ip = req.headers.get('x-forwarded-for') || 'unknown'
+    const { success } = rateLimit(`notify:${ip}`, 20, 60_000)
+    if (!success) {
+      return NextResponse.json({ error: 'Zu viele Anfragen. Bitte warten Sie.' }, { status: 429 })
+    }
+
     const body = await req.json()
     const { bookingId, type, title, bodyText, data } = body
 
