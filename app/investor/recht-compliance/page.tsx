@@ -1,5 +1,6 @@
 'use client';
 
+import { Icons } from '../docs/shared';
 import { DocPageLayout, Card, SectionTitle, Paragraph, BulletItem, StatBox, TableRow, Badge, C, GoldSep, SectionLabel } from '../docs/shared';
 
 export default function RechtCompliancePage() {
@@ -7,7 +8,7 @@ export default function RechtCompliancePage() {
     <DocPageLayout
       title="Recht & Compliance"
       subtitle="SGB XI, Datenschutz, Versicherung & Regulatorik"
-      icon="⚖️"
+      icon={Icons.shield(32)}
       badge="Legal"
       lang="de"
     >

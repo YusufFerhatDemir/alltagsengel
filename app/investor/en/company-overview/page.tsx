@@ -1,13 +1,13 @@
 'use client';
 
-import { DocPageLayout, Card, SectionTitle, Paragraph, BulletItem, StatBox, Badge, C, GoldSep, SectionLabel } from '../../docs/shared';
+import { DocPageLayout, Card, SectionTitle, Paragraph, BulletItem, StatBox, Badge, C, GoldSep, SectionLabel, Icons } from '../../docs/shared';
 
 export default function CompanyOverviewPage() {
   return (
     <DocPageLayout 
       title="Company Overview"
       subtitle="Profile, Team & Vision"
-      icon="🏢"
+      icon={Icons.building(32)}
       badge="Company"
       lang="en"
     >

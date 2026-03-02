@@ -1,5 +1,6 @@
 'use client';
 
+import { Icons } from '../docs/shared';
 import { DocPageLayout, Card, SectionTitle, Paragraph, BulletItem, StatBox, TableRow, Badge, C, GoldSep, SectionLabel } from '../docs/shared';
 
 export default function ProdukttechnologiePage() {
@@ -7,7 +8,7 @@ export default function ProdukttechnologiePage() {
     <DocPageLayout
       title="Produkt & Technologie"
       subtitle="Tech Stack, Architektur, Features & Roadmap"
-      icon="⚙️"
+      icon={Icons.cog(32)}
       badge="Produkt"
       lang="de"
     >

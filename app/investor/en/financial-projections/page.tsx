@@ -1,13 +1,13 @@
 'use client';
 
-import { DocPageLayout, Card, SectionTitle, Paragraph, BulletItem, StatBox, Badge, C, GoldSep, SectionLabel } from '../../docs/shared';
+import { DocPageLayout, Card, SectionTitle, Paragraph, BulletItem, StatBox, Badge, C, GoldSep, SectionLabel, Icons } from '../../docs/shared';
 
 export default function FinancialProjectionsPage() {
   return (
     <DocPageLayout 
       title="Financial Projections"
       subtitle="5-Year Revenue Forecast & Key Metrics"
-      icon="💰"
+      icon={Icons.coins(32)}
       badge="Finance"
       lang="en"
     >

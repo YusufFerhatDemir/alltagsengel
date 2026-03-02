@@ -1,13 +1,13 @@
 'use client';
 
-import { DocPageLayout, Card, SectionTitle, Paragraph, BulletItem, Badge, C, GoldSep, SectionLabel } from '../../docs/shared';
+import { DocPageLayout, Card, SectionTitle, Paragraph, BulletItem, Badge, C, GoldSep, SectionLabel, Icons } from '../../docs/shared';
 
 export default function LegalCompliancePage() {
   return (
     <DocPageLayout 
       title="Legal & Compliance"
       subtitle="SGB XI, Data Privacy, Insurance & IP"
-      icon="⚖️"
+      icon={Icons.shield(32)}
       badge="Legal"
       lang="en"
     >

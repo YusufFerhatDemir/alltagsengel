@@ -1,5 +1,6 @@
 'use client';
 
+import { Icons } from '../docs/shared';
 import { DocPageLayout, Card, SectionTitle, Paragraph, BulletItem, StatBox, TableRow, Badge, C, GoldSep, SectionLabel } from '../docs/shared';
 
 export default function GoToMarketPage() {
@@ -7,7 +8,7 @@ export default function GoToMarketPage() {
     <DocPageLayout
       title="Go-to-Market Strategie"
       subtitle="Launchkampagne, Kanäle & Wachstumsplan"
-      icon="🚀"
+      icon={Icons.rocket(32)}
       badge="Strategie"
       lang="de"
     >

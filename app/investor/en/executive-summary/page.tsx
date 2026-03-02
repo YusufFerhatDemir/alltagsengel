@@ -1,13 +1,13 @@
 'use client';
 
-import { DocPageLayout, Card, SectionTitle, Paragraph, BulletItem, StatBox, TableRow, Badge, C, GoldSep, SectionLabel } from '../../docs/shared';
+import { DocPageLayout, Card, SectionTitle, Paragraph, BulletItem, StatBox, TableRow, Badge, C, GoldSep, SectionLabel, Icons } from '../../docs/shared';
 
 export default function ExecutiveSummaryPage() {
   return (
     <DocPageLayout 
       title="Executive Summary"
       subtitle="Investment Opportunity at a Glance"
-      icon="📄"
+      icon={Icons.fileText(32)}
       badge="Overview"
       lang="en"
     >

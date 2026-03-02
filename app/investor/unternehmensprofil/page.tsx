@@ -1,5 +1,6 @@
 'use client'
 
+import { Icons } from '../docs/shared'
 import { DocPageLayout, Card, SectionTitle, Paragraph, BulletItem, StatBox, TableRow, Badge, C, GoldSep, SectionLabel } from '../docs/shared'
 
 export default function UnternehmensprofiltPage() {
@@ -7,7 +8,7 @@ export default function UnternehmensprofiltPage() {
     <DocPageLayout
       title="Unternehmensprofil"
       subtitle="Firmenprofil, Gründerteam & Vision"
-      icon="🏢"
+      icon={Icons.building(32)}
       badge="Unternehmen"
       lang="de"
     >

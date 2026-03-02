@@ -1,13 +1,13 @@
 'use client';
 
-import { DocPageLayout, Card, SectionTitle, Paragraph, BulletItem, Badge, C, GoldSep, SectionLabel } from '../../docs/shared';
+import { DocPageLayout, Card, SectionTitle, Paragraph, BulletItem, Badge, C, GoldSep, SectionLabel, Icons } from '../../docs/shared';
 
 export default function BrandIdentityPage() {
   return (
     <DocPageLayout 
       title="Brand Identity"
       subtitle="Logo, Colors, Typography & Design Guidelines"
-      icon="🎨"
+      icon={Icons.palette(32)}
       badge="Brand"
       lang="en"
     >

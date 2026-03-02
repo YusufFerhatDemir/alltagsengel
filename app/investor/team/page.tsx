@@ -1,5 +1,6 @@
 'use client';
 
+import { Icons } from '../docs/shared';
 import { DocPageLayout, Card, SectionTitle, Paragraph, BulletItem, StatBox, TableRow, Badge, C, GoldSep, SectionLabel } from '../docs/shared';
 
 export default function TeamPage() {
@@ -7,7 +8,7 @@ export default function TeamPage() {
     <DocPageLayout
       title="Teamübersicht"
       subtitle="Mitarbeiterprofile, Qualifikationen & Gehaltsstruktur"
-      icon="👥"
+      icon={Icons.users(32)}
       badge="Team"
       lang="de"
     >

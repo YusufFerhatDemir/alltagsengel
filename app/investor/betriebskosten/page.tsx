@@ -1,5 +1,6 @@
 'use client';
 
+import { Icons } from '../docs/shared';
 import { DocPageLayout, Card, SectionTitle, Paragraph, BulletItem, StatBox, TableRow, Badge, C, GoldSep, SectionLabel } from '../docs/shared';
 
 export default function BetriebskostenPage() {
@@ -7,7 +8,7 @@ export default function BetriebskostenPage() {
     <DocPageLayout
       title="Betriebskosten"
       subtitle="Personal-, Büro- & Gesamtkostenübersicht"
-      icon="📋"
+      icon={Icons.clipboard(32)}
       badge="Finanzen"
       lang="de"
     >

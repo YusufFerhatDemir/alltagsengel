@@ -1,5 +1,6 @@
 'use client'
 
+import { Icons } from '../docs/shared'
 import { DocPageLayout, Card, SectionTitle, Paragraph, BulletItem, StatBox, TableRow, Badge, C, GoldSep, SectionLabel } from '../docs/shared'
 
 export default function MarktanalysePage() {
@@ -7,7 +8,7 @@ export default function MarktanalysePage() {
     <DocPageLayout
       title="Marktanalyse"
       subtitle="TAM/SAM/SOM, Wettbewerb & Geschäftsmodell"
-      icon="📈"
+      icon={Icons.trending(32)}
       badge="Markt"
       lang="de"
     >
