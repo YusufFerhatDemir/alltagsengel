@@ -1,0 +1,40 @@
+# AlltagsEngel — Cursor Project Rules
+
+## Tech Stack
+- Next.js 16 (App Router) — `app/` directory, NO `src/` folder
+- React 19, TypeScript
+- Supabase (Auth + Database + RLS)
+- @supabase/ssr for server-side auth
+
+## Project Structure
+- NO `App.tsx` — This is Next.js App Router, not CRA/Vite
+- `app/layout.tsx` = Root layout (fonts, metadata, global CSS) — equivalent of App.tsx
+- `app/page.tsx` = Homepage
+- Each folder under `app/` is a route (file-based routing)
+- Route groups: `app/(kunde)/`, `app/(engel)/`, `app/admin/`, `app/mis/`
+- Each route group can have its own `layout.tsx`
+
+## Key Files
+- `app/layout.tsx` — Root layout, Jost + Cormorant fonts, LayoutWrapper
+- `middleware.ts` — Auth protection for /kunde, /engel, /admin, /mis routes
+- `lib/supabase/client.ts` — Browser Supabase client
+- `lib/supabase/server.ts` — Server Supabase client (cookies)
+- `components/LayoutWrapper.tsx` — Conditional navbar/footer wrapper
+
+## Auth & Roles
+- Supabase Auth (email/password)
+- Roles: admin, engel, kunde (stored in profiles table)
+- Middleware checks role for /admin and /mis routes
+- RLS policies on profiles table use JWT user_metadata for role checks
+
+## Language
+- UI text: German (Deutsch)
+- Code comments / dev communication: Turkish or German
+- Commit messages: Turkish or German
+
+## Rules
+- Always commit and push after changes
+- Use `'use client'` directive for client components
+- Server components are default in App Router
+- Supabase client: use `createClient()` from `@/lib/supabase/client` in client components
+- Supabase server: use `createClient()` from `@/lib/supabase/server` in server components
