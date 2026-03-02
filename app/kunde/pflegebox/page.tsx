@@ -210,7 +210,7 @@ export default function PflegeboxPage() {
   if (loading) {
     return (
       <div className="screen" id="pflegebox">
-        <TopBar title="Pflegebox" dark />
+        <TopBar title="Pflegebox" backHref="/kunde/home" dark />
         <div className="pb-body" style={{ textAlign: 'center', paddingTop: 60, color: 'var(--ink4)' }}>Laden...</div>
       </div>
     )
@@ -220,7 +220,7 @@ export default function PflegeboxPage() {
   if (existingOrder && step !== 'done') {
     return (
       <div className="screen" id="pflegebox">
-        <TopBar title="Pflegebox" dark />
+        <TopBar title="Pflegebox" backHref="/kunde/home" dark />
         <div className="pb-body">
           <div className="pb-elig-card">
             <div className="pb-elig-title">Ihre aktuelle Bestellung</div>
@@ -259,7 +259,7 @@ export default function PflegeboxPage() {
 
   return (
     <div className="screen" id="pflegebox">
-      <TopBar title="Pflegebox" dark />
+      <TopBar title="Pflegebox" backHref="/kunde/home" dark />
       <div className="pb-body">
 
         {/* ── STEP 1: Anspruchsprüfung ── */}
