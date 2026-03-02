@@ -80,16 +80,16 @@ export default function ProdukttechnologiePage() {
               </tr>
             </thead>
             <tbody>
-              <TableRow label="Frontend" value="React Native (Expo SDK 54)" />
-              <TableRow label="Router" value="Expo Router" />
-              <TableRow label="Backend" value="Supabase (PostgreSQL)" />
-              <TableRow label="Authentifizierung" value="Supabase Auth + Expo Secure Store" />
-              <TableRow label="Datenspeicher" value="Supabase Storage" />
-              <TableRow label="Echtzeit-Daten" value="Supabase Realtime" />
-              <TableRow label="Design System" value="Dark Mode + Gold Accents (#C9963C)" />
-              <TableRow label="Schriftarten" value="Jost + Cormorant Garamond" />
-              <TableRow label="Icons" value="Ionicons" />
-              <TableRow label="Hosting" value="Supabase Cloud EU-Region" />
+              <TableRow cells={["Frontend", "React Native (Expo SDK 54)"]} />
+              <TableRow cells={["Router", "Expo Router"]} />
+              <TableRow cells={["Backend", "Supabase (PostgreSQL)"]} />
+              <TableRow cells={["Authentifizierung", "Supabase Auth + Expo Secure Store"]} />
+              <TableRow cells={["Datenspeicher", "Supabase Storage"]} />
+              <TableRow cells={["Echtzeit-Daten", "Supabase Realtime"]} />
+              <TableRow cells={["Design System", "Dark Mode + Gold Accents (#C9963C)"]} />
+              <TableRow cells={["Schriftarten", "Jost + Cormorant Garamond"]} />
+              <TableRow cells={["Icons", "Ionicons"]} />
+              <TableRow cells={["Hosting", "Supabase Cloud EU-Region"]} />
             </tbody>
           </table>
         </div>

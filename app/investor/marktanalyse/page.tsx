@@ -41,7 +41,7 @@ export default function MarktanalysePage() {
           Der §45b Entlastungsbetrag ist ein Regelwerk des Sozialgesetzbuches (SGB XI), das Pflegebedürftigen monatlich €125 für Alltagsbegleitung zur Verfügung stellt. Dies gilt für Versicherte mit anerkanntem Pflegegrad.
         </Paragraph>
         <Paragraph>
-          <C>Die entscheidende Erkenntnis:</C> Diese €125/Monat sind bereits von den Krankenkassen budgetiert und fließen automatisch – es ist keine private Zahlung. Das Geld wird nur nicht genutzt, weil der Markt fragmentiert ist.
+          <strong style={{color:'#C9963C'}}>Die entscheidende Erkenntnis:</strong> Diese €125/Monat sind bereits von den Krankenkassen budgetiert und fließen automatisch – es ist keine private Zahlung. Das Geld wird nur nicht genutzt, weil der Markt fragmentiert ist.
         </Paragraph>
         <BulletItem>Gesamtbudget pro Jahr: 4,96 Mio Menschen × €125 × 12 = €7,44 Mrd</BulletItem>
         <BulletItem>Aktuell genutzter Anteil: ~40% = €2,98 Mrd/Jahr</BulletItem>
@@ -89,31 +89,31 @@ export default function MarktanalysePage() {
             </thead>
             <tbody>
               <tr style={{ borderBottom: '1px solid #333' }}>
-                <td style={{ padding: '0.75rem' }}><C>Pflegehelden.de</C></td>
+                <td style={{ padding: '0.75rem' }}><strong style={{color:'#C9963C'}}>Pflegehelden.de</strong></td>
                 <td style={{ padding: '0.75rem' }}>Vermittlungsportal</td>
                 <td style={{ padding: '0.75rem' }}>Große Datenbank</td>
                 <td style={{ padding: '0.75rem' }}>Keine App, keine §45b, keine Versicherung, legacy tech</td>
               </tr>
               <tr style={{ borderBottom: '1px solid #333' }}>
-                <td style={{ padding: '0.75rem' }}><C>Careship</C></td>
+                <td style={{ padding: '0.75rem' }}><strong style={{color:'#C9963C'}}>Careship</strong></td>
                 <td style={{ padding: '0.75rem' }}>Care-Management</td>
                 <td style={{ padding: '0.75rem' }}>B2B2C-Netzwerk</td>
                 <td style={{ padding: '0.75rem' }}>Fokus auf Medizin, keine Alltagsbegleitung, teuer</td>
               </tr>
               <tr style={{ borderBottom: '1px solid #333' }}>
-                <td style={{ padding: '0.75rem' }}><C>Lokale Sozialstationen</C></td>
+                <td style={{ padding: '0.75rem' }}><strong style={{color:'#C9963C'}}>Lokale Sozialstationen</strong></td>
                 <td style={{ padding: '0.75rem' }}>Traditional offline</td>
                 <td style={{ padding: '0.75rem' }}>Beziehungen, lokales Vertrauen</td>
                 <td style={{ padding: '0.75rem' }}>Keine digitale Plattform, regionale Silos, hohe Ausfallquote</td>
               </tr>
               <tr style={{ borderBottom: '1px solid #333' }}>
-                <td style={{ padding: '0.75rem' }}><C>Private Vermittler</C></td>
+                <td style={{ padding: '0.75rem' }}><strong style={{color:'#C9963C'}}>Private Vermittler</strong></td>
                 <td style={{ padding: '0.75rem' }}>1:1 Coaching</td>
                 <td style={{ padding: '0.75rem' }}>Personalisiert</td>
                 <td style={{ padding: '0.75rem' }}>Nicht skalierbar, keine Standardisierung, unsicher</td>
               </tr>
               <tr style={{ backgroundColor: '#0d1117' }}>
-                <td style={{ padding: '0.75rem', color: '#D4AF37', fontWeight: '600' }}><C>AlltagsEngel</C></td>
+                <td style={{ padding: '0.75rem', color: '#D4AF37', fontWeight: '600' }}><strong style={{color:'#C9963C'}}>AlltagsEngel</strong></td>
                 <td style={{ padding: '0.75rem', color: '#D4AF37', fontWeight: '600' }}>Digital-First Marketplace</td>
                 <td style={{ padding: '0.75rem', color: '#D4AF37', fontWeight: '600' }}>Vollversicherung, §45b, App, Chat, sichere Zahlungen</td>
                 <td style={{ padding: '0.75rem', color: '#D4AF37', fontWeight: '600' }}>—</td>
@@ -145,7 +145,7 @@ export default function MarktanalysePage() {
           </div>
         </div>
         <Paragraph>
-          <C>Unit Economics (bei stabiler Nutzung):</C>
+          <strong style={{color:'#C9963C'}}>Unit Economics (bei stabiler Nutzung):</strong>
         </Paragraph>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
           <StatBox value="€40" label="Ø Buchungswert (Betrag für Begleiter)" />
@@ -169,7 +169,7 @@ export default function MarktanalysePage() {
           Break-Even nach ~3 Monaten.
         </Paragraph>
         <Paragraph>
-          <C>LTV/CAC Ratio: 1.728 / 50 = 34,5x</C> – Industriestandard ist 3x. Dies ist ein sehr starkes Verhältnis.
+          <strong style={{color:'#C9963C'}}>LTV/CAC Ratio: 1.728 / 50 = 34,5x</strong> – Industriestandard ist 3x. Dies ist ein sehr starkes Verhältnis.
         </Paragraph>
       </Card>
 
@@ -243,11 +243,11 @@ export default function MarktanalysePage() {
         <Paragraph>
           Der Markt für Alltagsbegleitung in Deutschland ist:
         </Paragraph>
-        <BulletItem><C>Groß:</C> €50+ Mrd TAM mit 4,96 Mio potenziellen Kunden</BulletItem>
-        <BulletItem><C>Staatlich finanziert:</C> €7,44 Mrd/Jahr durch §45b, 60% ungenutztes Potenzial</BulletItem>
-        <BulletItem><C>Wachsend:</C> 3–5% jährlich durch demografische Verschiebung</BulletItem>
-        <BulletItem><C>Fragmentiert:</C> Keine etablierte digitale Lösung</BulletItem>
-        <BulletItem><C>Erste-Mover-Chance:</C> AlltagsEngel kann den Markt mit digitalem Marketplace transformieren</BulletItem>
+        <BulletItem><strong style={{color:'#C9963C'}}>Groß:</strong> €50+ Mrd TAM mit 4,96 Mio potenziellen Kunden</BulletItem>
+        <BulletItem><strong style={{color:'#C9963C'}}>Staatlich finanziert:</strong> €7,44 Mrd/Jahr durch §45b, 60% ungenutztes Potenzial</BulletItem>
+        <BulletItem><strong style={{color:'#C9963C'}}>Wachsend:</strong> 3–5% jährlich durch demografische Verschiebung</BulletItem>
+        <BulletItem><strong style={{color:'#C9963C'}}>Fragmentiert:</strong> Keine etablierte digitale Lösung</BulletItem>
+        <BulletItem><strong style={{color:'#C9963C'}}>Erste-Mover-Chance:</strong> AlltagsEngel kann den Markt mit digitalem Marketplace transformieren</BulletItem>
       </Card>
     </DocPageLayout>
   )
