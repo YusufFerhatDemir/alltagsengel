@@ -24,14 +24,17 @@ export default function ChatConversationPage() {
 
       const { data: booking } = await supabase
         .from('bookings')
-        .select('angel_id, angels:angel_id(profiles(first_name, last_name))')
+        .select('customer_id, angel_id, angels:angel_id(profiles(first_name, last_name))')
         .eq('id', bookingId)
         .single()
 
-      if (booking) {
-        const angel = booking.angels as any
-        setPartner(angel?.profiles ? `${angel.profiles.first_name} ${angel.profiles.last_name}` : 'Engel')
+      if (!booking || (booking.customer_id !== user.id && booking.angel_id !== user.id)) {
+        router.back()
+        return
       }
+
+      const angel = booking.angels as any
+      setPartner(angel?.profiles ? `${angel.profiles.first_name} ${angel.profiles.last_name}` : 'Engel')
 
       const { data: msgs } = await supabase
         .from('messages')
