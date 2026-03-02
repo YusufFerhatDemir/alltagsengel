@@ -29,6 +29,7 @@ export async function middleware(request: NextRequest) {
     if (!user && (pathname.startsWith('/kunde') || pathname.startsWith('/engel') || pathname.startsWith('/admin') || pathname.startsWith('/mis'))) {
       const url = request.nextUrl.clone()
       url.pathname = '/auth/login'
+      url.searchParams.set('redirectTo', pathname)
       return NextResponse.redirect(url)
     }
 
@@ -39,6 +40,7 @@ export async function middleware(request: NextRequest) {
         if (profile?.role !== 'admin') {
           const url = request.nextUrl.clone()
           url.pathname = '/auth/login'
+          url.searchParams.set('error', 'admin_required')
           return NextResponse.redirect(url)
         }
       } catch {

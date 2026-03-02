@@ -9,6 +9,8 @@ function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const justRegistered = searchParams.get('registered') === 'true'
+  const redirectTo = searchParams.get('redirectTo') || ''
+  const adminError = searchParams.get('error') === 'admin_required'
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -34,6 +36,13 @@ function LoginForm() {
     }
 
     if (signInData.user) {
+      // If there's a redirectTo URL, go there directly
+      if (redirectTo) {
+        router.push(redirectTo)
+        router.refresh()
+        return
+      }
+
       const { data: profile } = await supabase
         .from('profiles')
         .select('role')
@@ -56,8 +65,8 @@ function LoginForm() {
     setError('')
     const creds = {
       admin: { email: 'admin@alltagsengel.de', password: 'Admin2026!' },
-      engel: { email: 'anna@example.com', password: 'password123' },
-      kunde: { email: 'maria@example.com', password: 'password123' },
+      engel: { email: 'anna@example.com', password: 'Anna2026!' },
+      kunde: { email: 'maria@example.com', password: 'Maria2026!' },
     }
     try {
       await loginAndRedirect(creds[role].email, creds[role].password)
@@ -93,6 +102,18 @@ function LoginForm() {
         {justRegistered && (
           <div style={{ background: 'rgba(76, 175, 80, 0.15)', border: '1px solid rgba(76, 175, 80, 0.3)', borderRadius: 10, padding: '12px 16px', marginBottom: 12, fontSize: 13, color: '#81c784', textAlign: 'center' }}>
             Konto erfolgreich erstellt! Bitte prüfen Sie Ihre E-Mail und melden Sie sich dann an.
+          </div>
+        )}
+
+        {adminError && (
+          <div style={{ background: 'rgba(208, 75, 59, 0.15)', border: '1px solid rgba(208, 75, 59, 0.3)', borderRadius: 10, padding: '12px 16px', marginBottom: 12, fontSize: 13, color: '#ef9a9a', textAlign: 'center' }}>
+            Zugriff verweigert. Admin-Berechtigung erforderlich.
+          </div>
+        )}
+
+        {redirectTo?.startsWith('/mis') && (
+          <div style={{ background: 'rgba(201, 150, 60, 0.12)', border: '1px solid rgba(201, 150, 60, 0.3)', borderRadius: 10, padding: '12px 16px', marginBottom: 12, fontSize: 13, color: '#C9963C', textAlign: 'center' }}>
+            MIS Portal — Bitte melden Sie sich mit Ihrem Admin-Konto an.
           </div>
         )}
 
@@ -134,6 +155,30 @@ function LoginForm() {
               style={{ flex: 1, padding: '10px 0', borderRadius: 10, border: '1px solid var(--gold-2, #c9a84c)', background: 'transparent', color: 'var(--gold-2, #c9a84c)', fontSize: 13, fontWeight: 600, cursor: 'pointer', opacity: (demoLoading || loading) ? 0.5 : 1 }}
             >
               {demoLoading === 'kunde' ? '...' : 'Kunde'}
+            </button>
+          </div>
+
+          <div style={{ marginTop: 10 }}>
+            <button
+              onClick={async () => {
+                setDemoLoading('mis')
+                setError('')
+                try {
+                  const supabase = createClient()
+                  const { data, error: authErr } = await supabase.auth.signInWithPassword({
+                    email: 'admin@alltagsengel.de', password: 'Admin2026!'
+                  })
+                  if (authErr) { setError(authErr.message); return }
+                  router.push('/mis')
+                  router.refresh()
+                } catch (err: any) {
+                  setError(err?.message || 'Fehler')
+                } finally { setDemoLoading('') }
+              }}
+              disabled={!!demoLoading || loading}
+              style={{ width: '100%', padding: '10px 0', borderRadius: 10, border: '1px solid #C9963C', background: 'rgba(201,150,60,0.12)', color: '#C9963C', fontSize: 13, fontWeight: 600, cursor: 'pointer', opacity: (demoLoading || loading) ? 0.5 : 1, letterSpacing: 0.5 }}
+            >
+              {demoLoading === 'mis' ? '...' : '⚡ MIS Portal'}
             </button>
           </div>
         </div>
