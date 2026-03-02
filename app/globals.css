@@ -33,15 +33,26 @@
 /* ─── Reset ─── */
 *,*::before,*::after { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
 :root { color-scheme:dark; }
+
+/* Android Force-Dark koruması — kendi dark theme'imiz var */
+:root, body, .phone, .screen {
+  forced-color-adjust: none;
+  -webkit-text-size-adjust: 100%;
+}
+@media (prefers-color-scheme: light) {
+  :root { color-scheme: dark; }
+  html { background: #1A1612; }
+}
 select.input option, .kk-other option { background:var(--coal3); color:var(--ink); }
 
 /* ─── Body & Phone Frame ─── */
 body {
   font-family:'Jost',sans-serif;
   background:#111009;
-  min-height:100vh;
+  min-height:100vh; min-height:100dvh;
   display:flex; justify-content:center; align-items:flex-start;
   padding:24px 0 60px;
+  overflow-x:hidden;
 }
 
 .phone {
@@ -892,15 +903,27 @@ body {
    ══════════════════════════════════════════════ */
 @media (max-width:420px) {
   body { padding:0; background:var(--coal); }
-  .phone { width:100%; min-height:100dvh; border-radius:0; box-shadow:none; }
+  .phone {
+    width:100%; min-height:100dvh; border-radius:0; box-shadow:none;
+    /* Safe area for notch/status bar on Android & iOS */
+    padding-top:env(safe-area-inset-top);
+    padding-bottom:env(safe-area-inset-bottom);
+  }
   .screen { min-height:calc(100dvh - 48px); }
   .sb { padding:0 20px 9px; }
-  .bottom-nav, .booking-bar, .submit-bar { width:100%; border-radius:0; }
+  .bottom-nav, .booking-bar, .submit-bar {
+    width:100%; border-radius:0;
+    padding-bottom:env(safe-area-inset-bottom);
+  }
   .kh-body, .ed-body, .ep-body, .mp-body, .form-body { padding-left:16px; padding-right:16px; }
   .cat-list { gap:8px; }
   .cat-item { padding:12px 3px 10px; }
   .cat-ic { width:40px; height:40px; }
   .cat-lbl { font-size:11px; }
+  /* Android input zoom engelle */
+  input, select, textarea { font-size:16px !important; }
+  /* Chat input bar — Android klavye üstünde kalsın */
+  .chat-input-bar { padding-bottom:env(safe-area-inset-bottom); }
 }
 @media (max-width:360px) {
   .cat-list { grid-template-columns:repeat(5, 1fr); gap:6px; }
