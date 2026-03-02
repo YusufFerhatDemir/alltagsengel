@@ -1,6 +1,23 @@
 import type { NextConfig } from "next";
 
+const csp = [
+  "default-src 'self'",
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com",
+  "style-src 'self' 'unsafe-inline' https://unpkg.com",
+  "img-src 'self' data: blob: https://*.tile.openstreetmap.org https://*.supabase.co",
+  "font-src 'self'",
+  "connect-src 'self' https://*.supabase.co wss://*.supabase.co",
+  "frame-src 'none'",
+  "object-src 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
+].join('; ')
+
 const securityHeaders = [
+  {
+    key: 'Content-Security-Policy',
+    value: csp,
+  },
   {
     key: 'X-Content-Type-Options',
     value: 'nosniff',
