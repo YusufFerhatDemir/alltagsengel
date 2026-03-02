@@ -393,13 +393,13 @@ function buildSlides(): Slide[] {
               <div style={{ fontSize: 16, fontWeight: 700, color: C.ink, marginBottom: 4 }}>Yusuf Ferhat Demir</div>
               <div style={{ fontSize: 13, color: C.gold, fontWeight: 600, marginBottom: 16 }}>Gründer & CEO</div>
               <div style={{ fontSize: 13, color: C.ink3, lineHeight: 2 }}>
-                ✉️ info@alltagsengel.de<br />
+                ✉️ info@alltagsengel.care<br />
                 🌐 www.alltagsengel.de<br />
                 📍 Schiller Str. 31, 60313 Frankfurt am Main
               </div>
             </Card>
             <div style={{ marginTop: 24 }}>
-              <a href="mailto:info@alltagsengel.de" style={{
+              <a href="mailto:info@alltagsengel.care" style={{
                 display: 'inline-flex', alignItems: 'center', gap: 8,
                 padding: '16px 40px', borderRadius: 14,
                 background: `linear-gradient(135deg, ${C.gold2} 0%, ${C.gold} 55%, #9A7020 100%)`,

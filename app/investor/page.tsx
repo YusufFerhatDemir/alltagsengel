@@ -9,7 +9,7 @@ import Link from 'next/link'
 const docs = [
   { id: '01', title: 'Unternehmensprofil', desc: 'Firmenprofil, Gründerteam, Unternehmensstruktur & Vision', icon: '🏢', cat: 'Unternehmen', format: 'DOCX' },
   { id: '02', title: 'Investor Pitch Deck', desc: '14-seitiges Premium Pitch Deck mit Finanzplan & Marktanalyse', icon: '📊', cat: 'Präsentation', format: 'PPTX / PDF', link: '/investor/pitch' },
-  { id: '03', title: 'Markenidentität', desc: 'Logo, Farben, Typografie & Corporate Design Guidelines', icon: '🎨', cat: 'Brand', format: 'PDF' },
+  { id: '03', title: 'Markenidentität', desc: 'Logo, Farben, Typografie & Corporate Design Guidelines', icon: '🎨', cat: 'Brand', format: 'PDF', link: '/investor/brand' },
   { id: '04', title: 'Marktanalyse', desc: 'TAM/SAM/SOM, Wettbewerbsanalyse & Markttrends', icon: '📈', cat: 'Markt', format: 'DOCX' },
   { id: '05', title: 'Finanzplan', desc: '5-Jahres-Prognose, P&L, Break-Even & Kennzahlen', icon: '💰', cat: 'Finanzen', format: 'XLSX' },
   { id: '06', title: 'Produkt & Technologie', desc: 'Tech Stack, Architektur, Features & Roadmap', icon: '⚙️', cat: 'Produkt', format: 'PDF' },
@@ -71,7 +71,7 @@ export default function InvestorPortal() {
             <Link href="/investor/pitch" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '14px 32px', borderRadius: 14, background: 'linear-gradient(135deg, #DBA84A 0%, #C9963C 55%, #9A7020 100%)', color: '#1A1612', fontWeight: 600, fontSize: 14, textDecoration: 'none', boxShadow: '0 4px 28px rgba(201,150,60,0.35)' }}>
               📊 Pitch Deck ansehen
             </Link>
-            <a href="mailto:info@alltagsengel.de" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '14px 32px', borderRadius: 14, border: '1px solid rgba(201,150,60,0.25)', color: '#C9963C', fontWeight: 500, fontSize: 14, textDecoration: 'none', background: 'transparent' }}>
+            <a href="mailto:info@alltagsengel.care" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '14px 32px', borderRadius: 14, border: '1px solid rgba(201,150,60,0.25)', color: '#C9963C', fontWeight: 500, fontSize: 14, textDecoration: 'none', background: 'transparent' }}>
               ✉️ Kontakt aufnehmen
             </a>
           </div>
@@ -141,7 +141,7 @@ export default function InvestorPortal() {
           <div style={{ fontSize: 13, color: '#9A8C7C', lineHeight: 1.8 }}>
             Yusuf Ferhat Demir · Gründer & CEO<br />
             Schiller Str. 31, 60313 Frankfurt am Main<br />
-            info@alltagsengel.de · www.alltagsengel.de
+            info@alltagsengel.care · www.alltagsengel.de
           </div>
           <div style={{ marginTop: 20, fontSize: 11, color: '#5A4E3E' }}>
             © 2026 AlltagsEngel UG. Vertraulich — nur für autorisierte Investoren.
