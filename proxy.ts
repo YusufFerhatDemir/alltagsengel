@@ -3,6 +3,13 @@ import { NextResponse, type NextRequest } from 'next/server'
 
 export async function proxy(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })
+  const pathname = request.nextUrl.pathname
+
+  const redirectToLogin = () => {
+    const url = request.nextUrl.clone()
+    url.pathname = '/auth/login'
+    return NextResponse.redirect(url)
+  }
 
   try {
     const supabase = createServerClient(
@@ -23,30 +30,28 @@ export async function proxy(request: NextRequest) {
     )
 
     const { data: { user } } = await supabase.auth.getUser()
-    const pathname = request.nextUrl.pathname
 
     if (!user && (pathname.startsWith('/kunde') || pathname.startsWith('/engel') || pathname.startsWith('/admin'))) {
-      const url = request.nextUrl.clone()
-      url.pathname = '/auth/login'
-      return NextResponse.redirect(url)
+      return redirectToLogin()
     }
 
     if (user && pathname.startsWith('/admin')) {
       try {
         const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
         if (profile?.role !== 'admin') {
-          const url = request.nextUrl.clone()
-          url.pathname = '/auth/login'
-          return NextResponse.redirect(url)
+          return redirectToLogin()
         }
       } catch {
-        // Profil kontrol hatasında request'i bloklamayız.
+        return redirectToLogin()
       }
     }
 
     return supabaseResponse
   } catch (err) {
     console.error('Proxy error:', err)
+    if (pathname.startsWith('/kunde') || pathname.startsWith('/engel') || pathname.startsWith('/admin')) {
+      return redirectToLogin()
+    }
     return supabaseResponse
   }
 }
