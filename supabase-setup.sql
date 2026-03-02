@@ -77,8 +77,18 @@ alter table public.bookings enable row level security;
 alter table public.reviews enable row level security;
 
 -- PROFILES policies
-create policy "Herkes profilleri okuyabilir" on public.profiles
-  for select using (true);
+-- Kendi profilini ve booking ortaklarını görebilir; admin herkesi görebilir
+create policy "Authenticated profilleri sınırlı okuyabilir" on public.profiles
+  for select using (
+    auth.uid() = id
+    or exists (select 1 from public.profiles where id = auth.uid() and role = 'admin')
+    or exists (
+      select 1 from public.bookings
+      where (customer_id = auth.uid() and angel_id = profiles.id)
+         or (angel_id = auth.uid() and customer_id = profiles.id)
+    )
+    or exists (select 1 from public.angels where id = profiles.id)
+  );
 
 create policy "Kullanıcı kendi profilini güncelleyebilir" on public.profiles
   for update using (auth.uid() = id)
