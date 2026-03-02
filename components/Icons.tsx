@@ -248,6 +248,10 @@ export function IconBox(p: IconProps) {
   return <I {...p}><path d="M21 8V21H3V8" /><rect x="1" y="3" width="22" height="5" rx="1" /><path d="M10 12h4" /></I>
 }
 
+export function IconShieldPlain(p: IconProps) {
+  return <I {...p}><path d="M12 2L3 7v5c0 5.5 3.8 10.7 9 12 5.2-1.3 9-6.5 9-12V7z" /></I>
+}
+
 export function IconDroplet(p: IconProps) {
   return <I {...p}><path d="M12 2.69l5.66 5.66a8 8 0 11-11.31 0z" /></I>
 }
