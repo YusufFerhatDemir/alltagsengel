@@ -1,13 +1,13 @@
 'use client';
 
-import { DocPageLayout, Card, SectionTitle, Paragraph, BulletItem, StatBox, Badge, C, GoldSep, SectionLabel } from '../../docs/shared';
+import { DocPageLayout, Card, SectionTitle, Paragraph, BulletItem, StatBox, Badge, C, GoldSep, SectionLabel, Icons } from '../../docs/shared';
 
 export default function MarketAnalysisPage() {
   return (
     <DocPageLayout 
       title="Market Analysis"
       subtitle="TAM/SAM/SOM, Competition & Business Model"
-      icon="📈"
+      icon={Icons.trending(32)}
       badge="Market"
       lang="en"
     >

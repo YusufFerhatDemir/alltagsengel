@@ -1,5 +1,6 @@
 'use client'
 
+import { Icons } from '../docs/shared'
 import { DocPageLayout, Card, SectionTitle, Paragraph, BulletItem, StatBox, TableRow, Badge, C, GoldSep, SectionLabel } from '../docs/shared'
 
 export default function ZusammenfassungPage() {
@@ -7,7 +8,7 @@ export default function ZusammenfassungPage() {
     <DocPageLayout
       title="Executive Summary"
       subtitle="Investitionsmöglichkeit auf einen Blick"
-      icon="📄"
+      icon={Icons.fileText(32)}
       badge="Übersicht"
       lang="de"
     >

@@ -1,13 +1,13 @@
 'use client';
 
-import { DocPageLayout, Card, SectionTitle, Paragraph, BulletItem, Badge, C, GoldSep, SectionLabel } from '../../docs/shared';
+import { DocPageLayout, Card, SectionTitle, Paragraph, BulletItem, Badge, C, GoldSep, SectionLabel, Icons } from '../../docs/shared';
 
 export default function GoToMarketPage() {
   return (
     <DocPageLayout 
       title="Go-to-Market Strategy"
       subtitle="Launch Campaign, Channels & Growth Plan"
-      icon="🚀"
+      icon={Icons.rocket(32)}
       badge="Strategy"
       lang="en"
     >

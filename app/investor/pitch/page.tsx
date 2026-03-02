@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
+import { Icons } from '../docs/shared'
 
 /* ════════════════════════════════════════════
    AlltagsEngel — Investor Pitch Deck (Web)
@@ -51,9 +52,9 @@ const SectionLabel = ({ children }: { children: React.ReactNode }) => (
 
 const GoldSep = () => <div style={{ width: 40, height: 2, background: `linear-gradient(90deg, ${C.gold}, transparent)`, borderRadius: 1, margin: '16px 0' }} />
 
-const FeatureRow = ({ icon, title, desc }: { icon: string; title: string; desc: string }) => (
+const FeatureRow = ({ icon, title, desc }: { icon: React.ReactNode; title: string; desc: string }) => (
   <div className="feature-row" style={{ display: 'flex', gap: 16, alignItems: 'flex-start', marginBottom: 20 }}>
-    <div style={{ width: 44, height: 44, borderRadius: 13, background: C.goldPale, border: `1px solid rgba(201,150,60,0.18)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}>{icon}</div>
+    <div style={{ width: 44, height: 44, borderRadius: 13, background: C.goldPale, border: `1px solid rgba(201,150,60,0.18)`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{icon}</div>
     <div>
       <div style={{ fontSize: 15, fontWeight: 700, color: C.ink, marginBottom: 2 }}>{title}</div>
       <div style={{ fontSize: 13, color: C.ink3, lineHeight: 1.5 }}>{desc}</div>
@@ -73,9 +74,9 @@ const TeamCard = ({ initials, name, role, skill, color }: { initials: string; na
 const CheckRow = ({ label, ae, trad, other }: { label: string; ae: boolean; trad: boolean; other: boolean }) => (
   <div className="check-row" style={{ display: 'grid', gridTemplateColumns: '1fr 60px 60px 60px', alignItems: 'center', padding: '10px 0', borderBottom: `1px solid ${C.border}` }}>
     <div style={{ fontSize: 13, color: C.ink2 }}>{label}</div>
-    <div style={{ textAlign: 'center', fontSize: 16 }}>{ae ? '✅' : '❌'}</div>
-    <div style={{ textAlign: 'center', fontSize: 16 }}>{trad ? '✅' : '❌'}</div>
-    <div style={{ textAlign: 'center', fontSize: 16 }}>{other ? '✅' : '❌'}</div>
+    <div style={{ textAlign: 'center', display: 'flex', justifyContent: 'center' }}>{ae ? Icons.check(18) : Icons.cross(18)}</div>
+    <div style={{ textAlign: 'center', display: 'flex', justifyContent: 'center' }}>{trad ? Icons.check(18) : Icons.cross(18)}</div>
+    <div style={{ textAlign: 'center', display: 'flex', justifyContent: 'center' }}>{other ? Icons.check(18) : Icons.cross(18)}</div>
   </div>
 )
 
@@ -114,7 +115,7 @@ function buildSlides(): Slide[] {
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '70vh', textAlign: 'center', position: 'relative' }}>
           <div style={{ position: 'absolute', width: 500, height: 500, borderRadius: '50%', background: 'radial-gradient(circle, rgba(201,150,60,0.08) 0%, transparent 65%)', pointerEvents: 'none' }} />
           <div style={{ position: 'relative', zIndex: 1 }}>
-            <div style={{ fontSize: 14, color: C.ink4, marginBottom: 24 }}>👼</div>
+            <div style={{ marginBottom: 24 }}>{Icons.angelWing(28)}</div>
             <h1 className="hero-title" style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 56, fontWeight: 700, color: C.ink, letterSpacing: 6, marginBottom: 8 }}>ALLTAGSENGEL</h1>
             <p className="hero-sub" style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 24, fontStyle: 'italic', color: C.gold, marginBottom: 8 }}>Mit Herz für dich da</p>
             <GoldSep />
@@ -144,14 +145,14 @@ function buildSlides(): Slide[] {
       content: (
         <div className="grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 32, marginTop: 24 }}>
           <div>
-            <FeatureRow icon="⚡" title="Sofortige Vermittlung" desc="Zertifizierte Alltagsbegleiter in Ihrer Nähe — Buchung in unter 2 Minuten" />
-            <FeatureRow icon="🏥" title="§45b Integration" desc="Direkte Abrechnung mit allen Pflegekassen. €125/Monat pro Pflegebedürftigem" />
-            <FeatureRow icon="⭐" title="Qualitätsgarantie" desc="Alle Engel sind nach §53b SGB XI zertifiziert und werden bewertet" />
-            <FeatureRow icon="📱" title="Dual-App" desc="Eigene Oberfläche für Kunden und Engel. iOS & Android" />
+            <FeatureRow icon={Icons.zap(20)} title="Sofortige Vermittlung" desc="Zertifizierte Alltagsbegleiter in Ihrer Nähe — Buchung in unter 2 Minuten" />
+            <FeatureRow icon={Icons.heart(20)} title="§45b Integration" desc="Direkte Abrechnung mit allen Pflegekassen. €125/Monat pro Pflegebedürftigem" />
+            <FeatureRow icon={Icons.star(20)} title="Qualitätsgarantie" desc="Alle Engel sind nach §53b SGB XI zertifiziert und werden bewertet" />
+            <FeatureRow icon={Icons.phone(20)} title="Dual-App" desc="Eigene Oberfläche für Kunden und Engel. iOS & Android" />
           </div>
           <Card style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: C.coal3, minHeight: 260 }}>
             <div style={{ width: 120, height: 220, borderRadius: 20, background: C.coal, border: `2px solid ${C.coal4}`, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-              <div style={{ fontSize: 28 }}>👼</div>
+              <div>{Icons.angelWing(28)}</div>
               <div style={{ fontSize: 10, color: C.gold, fontWeight: 700, letterSpacing: 2 }}>ALLTAGSENGEL</div>
               <div style={{ width: 60, height: 4, borderRadius: 2, background: C.gold, opacity: 0.3 }} />
               <div style={{ width: 60, height: 4, borderRadius: 2, background: C.ink4, opacity: 0.2 }} />
@@ -224,23 +225,23 @@ function buildSlides(): Slide[] {
         <div className="grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginTop: 24 }}>
           <Card>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
-              <span style={{ fontSize: 18 }}>👤</span>
+              <span>{Icons.users(18)}</span>
               <span style={{ fontSize: 16, fontWeight: 700, color: C.ink }}>Für Kunden</span>
             </div>
-            <FeatureRow icon="🔍" title="Engel finden" desc="Filter nach Service, Standort & Bewertung" />
-            <FeatureRow icon="📅" title="Sofort buchen" desc="Verfügbarkeit in Echtzeit" />
-            <FeatureRow icon="💳" title="§45b abrechnen" desc="Direkte Kassenabrechnung" />
-            <FeatureRow icon="⭐" title="Bewerten" desc="Transparentes Rating-System" />
+            <FeatureRow icon={Icons.search(20)} title="Engel finden" desc="Filter nach Service, Standort & Bewertung" />
+            <FeatureRow icon={Icons.calendar(20)} title="Sofort buchen" desc="Verfügbarkeit in Echtzeit" />
+            <FeatureRow icon={Icons.creditCard(20)} title="§45b abrechnen" desc="Direkte Kassenabrechnung" />
+            <FeatureRow icon={Icons.star(20)} title="Bewerten" desc="Transparentes Rating-System" />
           </Card>
           <Card>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
-              <span style={{ fontSize: 18 }}>👼</span>
+              <span>{Icons.angelWing(18)}</span>
               <span style={{ fontSize: 16, fontWeight: 700, color: C.ink }}>Für Engel</span>
             </div>
-            <FeatureRow icon="📋" title="Profil erstellen" desc="Qualifikationen & Services verwalten" />
-            <FeatureRow icon="📩" title="Anfragen erhalten" desc="Push-Benachrichtigungen in Echtzeit" />
-            <FeatureRow icon="💰" title="Verdienst tracken" desc="Dashboard mit Umsatzübersicht" />
-            <FeatureRow icon="📈" title="Wachsen" desc="Premium-Abo für mehr Sichtbarkeit" />
+            <FeatureRow icon={Icons.clipboard(20)} title="Profil erstellen" desc="Qualifikationen & Services verwalten" />
+            <FeatureRow icon={Icons.mail(20)} title="Anfragen erhalten" desc="Push-Benachrichtigungen in Echtzeit" />
+            <FeatureRow icon={Icons.coins(20)} title="Verdienst tracken" desc="Dashboard mit Umsatzübersicht" />
+            <FeatureRow icon={Icons.trending(20)} title="Wachsen" desc="Premium-Abo für mehr Sichtbarkeit" />
           </Card>
           <div style={{ gridColumn: '1 / -1', display: 'flex', justifyContent: 'center', gap: 8, flexWrap: 'wrap' as const }}>
             {['React Native', 'Expo SDK', 'Supabase', 'PostgreSQL', 'iOS', 'Android'].map(t => (
@@ -395,9 +396,9 @@ function buildSlides(): Slide[] {
               <div style={{ fontSize: 16, fontWeight: 700, color: C.ink, marginBottom: 4 }}>Yusuf Ferhat Demir</div>
               <div style={{ fontSize: 13, color: C.gold, fontWeight: 600, marginBottom: 16 }}>Gründer & CEO</div>
               <div style={{ fontSize: 13, color: C.ink3, lineHeight: 2 }}>
-                <a href="mailto:info@alltagsengel.care" style={{ color: C.ink3, textDecoration: 'none' }}>✉️ info@alltagsengel.care</a><br />
-                <a href="https://www.alltagsengel.de" target="_blank" rel="noopener" style={{ color: C.ink3, textDecoration: 'none' }}>🌐 www.alltagsengel.de</a><br />
-                📍 Schiller Str. 31, 60313 Frankfurt am Main
+                <a href="mailto:info@alltagsengel.care" style={{ color: C.ink3, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 8 }}>{Icons.mail(14)} info@alltagsengel.care</a><br />
+                <a href="https://www.alltagsengel.de" target="_blank" rel="noopener" style={{ color: C.ink3, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 8 }}>{Icons.globe(14)} www.alltagsengel.de</a><br />
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>{Icons.mapPin(14)} Schiller Str. 31, 60313 Frankfurt am Main</span>
               </div>
             </Card>
             <div style={{ marginTop: 24 }}>

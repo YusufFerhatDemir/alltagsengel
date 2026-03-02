@@ -1,34 +1,35 @@
 'use client'
 import { useState } from 'react'
 import Link from 'next/link'
+import { Icons } from './docs/shared'
 
 /* ════════════════════════════════════════════
    AlltagsEngel — Investor Data Room Portal
    ════════════════════════════════════════════ */
 
 const docsDe = [
-  { id: '01', title: 'Unternehmensprofil', desc: 'Firmenprofil, Gründerteam, Unternehmensstruktur & Vision', icon: '🏢', cat: 'Unternehmen', format: 'WEB', link: '/investor/unternehmensprofil' },
-  { id: '02', title: 'Investor Pitch Deck', desc: '14-seitiges Premium Pitch Deck mit Finanzplan & Marktanalyse', icon: '📊', cat: 'Präsentation', format: 'WEB', link: '/investor/pitch' },
-  { id: '03', title: 'Markenidentität', desc: 'Logo, Farben, Typografie & Corporate Design Guidelines', icon: '🎨', cat: 'Brand', format: 'WEB', link: '/investor/brand' },
-  { id: '04', title: 'Marktanalyse', desc: 'TAM/SAM/SOM, Wettbewerbsanalyse & Markttrends', icon: '📈', cat: 'Markt', format: 'WEB', link: '/investor/marktanalyse' },
-  { id: '05', title: 'Finanzplan', desc: '5-Jahres-Prognose, P&L, Break-Even & Kennzahlen', icon: '💰', cat: 'Finanzen', format: 'WEB', link: '/investor/finanzplan' },
-  { id: '06', title: 'Produkt & Technologie', desc: 'Tech Stack, Architektur, Features & Roadmap', icon: '⚙️', cat: 'Produkt', format: 'WEB', link: '/investor/produkt-technologie' },
-  { id: '07', title: 'Go-to-Market Strategie', desc: 'Launch-Plan, Marketingkanäle & Wachstumsstrategie', icon: '🚀', cat: 'Strategie', format: 'WEB', link: '/investor/go-to-market' },
-  { id: '08', title: 'Recht & Compliance', desc: 'SGB XI, Datenschutz, Versicherung & regulatorischer Rahmen', icon: '⚖️', cat: 'Legal', format: 'WEB', link: '/investor/recht-compliance' },
-  { id: '09', title: 'Teamübersicht', desc: 'Mitarbeiterprofile, Qualifikationen & Gehaltsstruktur', icon: '👥', cat: 'Team', format: 'WEB', link: '/investor/team' },
-  { id: '10', title: 'Betriebskosten', desc: 'Personal-, Büro-, Fahrzeug- & Gesamtkostenübersicht', icon: '📋', cat: 'Finanzen', format: 'WEB', link: '/investor/betriebskosten' },
-  { id: '11', title: 'Zusammenfassung', desc: 'Executive Summary aller Kernpunkte für Investoren', icon: '📄', cat: 'Übersicht', format: 'WEB', link: '/investor/zusammenfassung' },
+  { id: '01', title: 'Unternehmensprofil', desc: 'Firmenprofil, Gründerteam, Unternehmensstruktur & Vision', icon: Icons.building(20), cat: 'Unternehmen', format: 'WEB', link: '/investor/unternehmensprofil' },
+  { id: '02', title: 'Investor Pitch Deck', desc: '14-seitiges Premium Pitch Deck mit Finanzplan & Marktanalyse', icon: Icons.presentation(20), cat: 'Präsentation', format: 'WEB', link: '/investor/pitch' },
+  { id: '03', title: 'Markenidentität', desc: 'Logo, Farben, Typografie & Corporate Design Guidelines', icon: Icons.palette(20), cat: 'Brand', format: 'WEB', link: '/investor/brand' },
+  { id: '04', title: 'Marktanalyse', desc: 'TAM/SAM/SOM, Wettbewerbsanalyse & Markttrends', icon: Icons.trending(20), cat: 'Markt', format: 'WEB', link: '/investor/marktanalyse' },
+  { id: '05', title: 'Finanzplan', desc: '5-Jahres-Prognose, P&L, Break-Even & Kennzahlen', icon: Icons.coins(20), cat: 'Finanzen', format: 'WEB', link: '/investor/finanzplan' },
+  { id: '06', title: 'Produkt & Technologie', desc: 'Tech Stack, Architektur, Features & Roadmap', icon: Icons.cog(20), cat: 'Produkt', format: 'WEB', link: '/investor/produkt-technologie' },
+  { id: '07', title: 'Go-to-Market Strategie', desc: 'Launch-Plan, Marketingkanäle & Wachstumsstrategie', icon: Icons.rocket(20), cat: 'Strategie', format: 'WEB', link: '/investor/go-to-market' },
+  { id: '08', title: 'Recht & Compliance', desc: 'SGB XI, Datenschutz, Versicherung & regulatorischer Rahmen', icon: Icons.shield(20), cat: 'Legal', format: 'WEB', link: '/investor/recht-compliance' },
+  { id: '09', title: 'Teamübersicht', desc: 'Mitarbeiterprofile, Qualifikationen & Gehaltsstruktur', icon: Icons.users(20), cat: 'Team', format: 'WEB', link: '/investor/team' },
+  { id: '10', title: 'Betriebskosten', desc: 'Personal-, Büro-, Fahrzeug- & Gesamtkostenübersicht', icon: Icons.clipboard(20), cat: 'Finanzen', format: 'WEB', link: '/investor/betriebskosten' },
+  { id: '11', title: 'Zusammenfassung', desc: 'Executive Summary aller Kernpunkte für Investoren', icon: Icons.fileText(20), cat: 'Übersicht', format: 'WEB', link: '/investor/zusammenfassung' },
 ]
 
 const docsEn = [
-  { id: 'E1', title: 'Executive Summary', desc: 'Investment opportunity overview with key metrics', icon: '📄', cat: 'Overview', format: 'WEB', link: '/investor/en/executive-summary' },
-  { id: 'E2', title: 'Company Overview', desc: 'Company profile, team & vision', icon: '🏢', cat: 'Company', format: 'WEB', link: '/investor/en/company-overview' },
-  { id: 'E3', title: 'Brand Identity', desc: 'Logo, colors, typography & design guidelines', icon: '🎨', cat: 'Brand', format: 'WEB', link: '/investor/en/brand-identity' },
-  { id: 'E4', title: 'Market Analysis', desc: 'TAM/SAM/SOM, competition & business model', icon: '📈', cat: 'Market', format: 'WEB', link: '/investor/en/market-analysis' },
-  { id: 'E5', title: 'Financial Projections', desc: '5-year revenue forecast & key metrics', icon: '💰', cat: 'Finance', format: 'WEB', link: '/investor/en/financial-projections' },
-  { id: 'E6', title: 'Product & Technology', desc: 'Tech stack, architecture & roadmap', icon: '⚙️', cat: 'Product', format: 'WEB', link: '/investor/en/product-technology' },
-  { id: 'E7', title: 'Go-to-Market Strategy', desc: 'Launch campaign, channels & growth plan', icon: '🚀', cat: 'Strategy', format: 'WEB', link: '/investor/en/go-to-market' },
-  { id: 'E8', title: 'Legal & Compliance', desc: 'SGB XI, data privacy, insurance & IP', icon: '⚖️', cat: 'Legal', format: 'WEB', link: '/investor/en/legal-compliance' },
+  { id: 'E1', title: 'Executive Summary', desc: 'Investment opportunity overview with key metrics', icon: Icons.fileText(20), cat: 'Overview', format: 'WEB', link: '/investor/en/executive-summary' },
+  { id: 'E2', title: 'Company Overview', desc: 'Company profile, team & vision', icon: Icons.building(20), cat: 'Company', format: 'WEB', link: '/investor/en/company-overview' },
+  { id: 'E3', title: 'Brand Identity', desc: 'Logo, colors, typography & design guidelines', icon: Icons.palette(20), cat: 'Brand', format: 'WEB', link: '/investor/en/brand-identity' },
+  { id: 'E4', title: 'Market Analysis', desc: 'TAM/SAM/SOM, competition & business model', icon: Icons.trending(20), cat: 'Market', format: 'WEB', link: '/investor/en/market-analysis' },
+  { id: 'E5', title: 'Financial Projections', desc: '5-year revenue forecast & key metrics', icon: Icons.coins(20), cat: 'Finance', format: 'WEB', link: '/investor/en/financial-projections' },
+  { id: 'E6', title: 'Product & Technology', desc: 'Tech stack, architecture & roadmap', icon: Icons.cog(20), cat: 'Product', format: 'WEB', link: '/investor/en/product-technology' },
+  { id: 'E7', title: 'Go-to-Market Strategy', desc: 'Launch campaign, channels & growth plan', icon: Icons.rocket(20), cat: 'Strategy', format: 'WEB', link: '/investor/en/go-to-market' },
+  { id: 'E8', title: 'Legal & Compliance', desc: 'SGB XI, data privacy, insurance & IP', icon: Icons.shield(20), cat: 'Legal', format: 'WEB', link: '/investor/en/legal-compliance' },
 ]
 
 const stats = [
