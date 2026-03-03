@@ -1,0 +1,16 @@
+{
+  "headers": {
+    "x-nextjs-stale-time": "300",
+    "x-nextjs-prerender": "1",
+    "x-next-cache-tags": "_N_T_/layout,_N_T_/mis/layout,_N_T_/mis/dataroom/layout,_N_T_/mis/dataroom/page,_N_T_/mis/dataroom"
+  },
+  "segmentPaths": [
+    "/_tree",
+    "/_full",
+    "/mis/dataroom/__PAGE__",
+    "/mis/dataroom",
+    "/mis",
+    "/_index",
+    "/_head"
+  ]
+}

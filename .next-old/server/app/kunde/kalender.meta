@@ -1,0 +1,16 @@
+{
+  "headers": {
+    "x-nextjs-stale-time": "300",
+    "x-nextjs-prerender": "1",
+    "x-next-cache-tags": "_N_T_/layout,_N_T_/kunde/layout,_N_T_/kunde/kalender/layout,_N_T_/kunde/kalender/page,_N_T_/kunde/kalender"
+  },
+  "segmentPaths": [
+    "/_tree",
+    "/_full",
+    "/kunde/kalender/__PAGE__",
+    "/kunde/kalender",
+    "/kunde",
+    "/_index",
+    "/_head"
+  ]
+}

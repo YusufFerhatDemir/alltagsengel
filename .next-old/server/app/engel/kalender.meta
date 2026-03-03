@@ -1,0 +1,16 @@
+{
+  "headers": {
+    "x-nextjs-stale-time": "300",
+    "x-nextjs-prerender": "1",
+    "x-next-cache-tags": "_N_T_/layout,_N_T_/engel/layout,_N_T_/engel/kalender/layout,_N_T_/engel/kalender/page,_N_T_/engel/kalender"
+  },
+  "segmentPaths": [
+    "/_tree",
+    "/_full",
+    "/engel/kalender/__PAGE__",
+    "/engel/kalender",
+    "/engel",
+    "/_index",
+    "/_head"
+  ]
+}
