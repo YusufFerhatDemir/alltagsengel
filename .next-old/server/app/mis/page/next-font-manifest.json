@@ -1,0 +1,12 @@
+{
+  "pages": {},
+  "app": {
+    "[project]/mnt/alltagsengel-app/app/mis/page": [
+      "static/media/81cef6a21128489e-s.p.6cf41120.woff2",
+      "static/media/8bd76523131fa0fc-s.p.eb17b6b9.woff2",
+      "static/media/01e4147cff8141ee-s.p.7787e134.woff2"
+    ]
+  },
+  "appUsingSizeAdjust": true,
+  "pagesUsingSizeAdjust": false
+}

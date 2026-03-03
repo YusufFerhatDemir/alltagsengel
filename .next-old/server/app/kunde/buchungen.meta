@@ -1,0 +1,16 @@
+{
+  "headers": {
+    "x-nextjs-stale-time": "300",
+    "x-nextjs-prerender": "1",
+    "x-next-cache-tags": "_N_T_/layout,_N_T_/kunde/layout,_N_T_/kunde/buchungen/layout,_N_T_/kunde/buchungen/page,_N_T_/kunde/buchungen"
+  },
+  "segmentPaths": [
+    "/_tree",
+    "/_full",
+    "/kunde/buchungen/__PAGE__",
+    "/kunde/buchungen",
+    "/kunde",
+    "/_index",
+    "/_head"
+  ]
+}

@@ -1,0 +1,237 @@
+{
+  "app": {
+    "[project]/mnt/alltagsengel-app/app/_not-found/page": [
+      "static/media/81cef6a21128489e-s.p.6cf41120.woff2",
+      "static/media/8bd76523131fa0fc-s.p.eb17b6b9.woff2",
+      "static/media/01e4147cff8141ee-s.p.7787e134.woff2"
+    ],
+    "[project]/mnt/alltagsengel-app/app/admin/analytics/page": [
+      "static/media/81cef6a21128489e-s.p.6cf41120.woff2",
+      "static/media/8bd76523131fa0fc-s.p.eb17b6b9.woff2",
+      "static/media/01e4147cff8141ee-s.p.7787e134.woff2"
+    ],
+    "[project]/mnt/alltagsengel-app/app/admin/bookings/page": [
+      "static/media/81cef6a21128489e-s.p.6cf41120.woff2",
+      "static/media/8bd76523131fa0fc-s.p.eb17b6b9.woff2",
+      "static/media/01e4147cff8141ee-s.p.7787e134.woff2"
+    ],
+    "[project]/mnt/alltagsengel-app/app/admin/home/page": [
+      "static/media/81cef6a21128489e-s.p.6cf41120.woff2",
+      "static/media/8bd76523131fa0fc-s.p.eb17b6b9.woff2",
+      "static/media/01e4147cff8141ee-s.p.7787e134.woff2"
+    ],
+    "[project]/mnt/alltagsengel-app/app/admin/pflegebox/page": [
+      "static/media/81cef6a21128489e-s.p.6cf41120.woff2",
+      "static/media/8bd76523131fa0fc-s.p.eb17b6b9.woff2",
+      "static/media/01e4147cff8141ee-s.p.7787e134.woff2"
+    ],
+    "[project]/mnt/alltagsengel-app/app/admin/users/page": [
+      "static/media/81cef6a21128489e-s.p.6cf41120.woff2",
+      "static/media/8bd76523131fa0fc-s.p.eb17b6b9.woff2",
+      "static/media/01e4147cff8141ee-s.p.7787e134.woff2"
+    ],
+    "[project]/mnt/alltagsengel-app/app/auth/forgot-password/page": [
+      "static/media/81cef6a21128489e-s.p.6cf41120.woff2",
+      "static/media/8bd76523131fa0fc-s.p.eb17b6b9.woff2",
+      "static/media/01e4147cff8141ee-s.p.7787e134.woff2"
+    ],
+    "[project]/mnt/alltagsengel-app/app/auth/login/page": [
+      "static/media/81cef6a21128489e-s.p.6cf41120.woff2",
+      "static/media/8bd76523131fa0fc-s.p.eb17b6b9.woff2",
+      "static/media/01e4147cff8141ee-s.p.7787e134.woff2"
+    ],
+    "[project]/mnt/alltagsengel-app/app/auth/register/page": [
+      "static/media/81cef6a21128489e-s.p.6cf41120.woff2",
+      "static/media/8bd76523131fa0fc-s.p.eb17b6b9.woff2",
+      "static/media/01e4147cff8141ee-s.p.7787e134.woff2"
+    ],
+    "[project]/mnt/alltagsengel-app/app/auth/reset-password/page": [
+      "static/media/81cef6a21128489e-s.p.6cf41120.woff2",
+      "static/media/8bd76523131fa0fc-s.p.eb17b6b9.woff2",
+      "static/media/01e4147cff8141ee-s.p.7787e134.woff2"
+    ],
+    "[project]/mnt/alltagsengel-app/app/choose/page": [
+      "static/media/81cef6a21128489e-s.p.6cf41120.woff2",
+      "static/media/8bd76523131fa0fc-s.p.eb17b6b9.woff2",
+      "static/media/01e4147cff8141ee-s.p.7787e134.woff2"
+    ],
+    "[project]/mnt/alltagsengel-app/app/engel/bestaetigt/[id]/page": [
+      "static/media/81cef6a21128489e-s.p.6cf41120.woff2",
+      "static/media/8bd76523131fa0fc-s.p.eb17b6b9.woff2",
+      "static/media/01e4147cff8141ee-s.p.7787e134.woff2"
+    ],
+    "[project]/mnt/alltagsengel-app/app/engel/buchungen/page": [
+      "static/media/81cef6a21128489e-s.p.6cf41120.woff2",
+      "static/media/8bd76523131fa0fc-s.p.eb17b6b9.woff2",
+      "static/media/01e4147cff8141ee-s.p.7787e134.woff2"
+    ],
+    "[project]/mnt/alltagsengel-app/app/engel/chat/[id]/page": [
+      "static/media/81cef6a21128489e-s.p.6cf41120.woff2",
+      "static/media/8bd76523131fa0fc-s.p.eb17b6b9.woff2",
+      "static/media/01e4147cff8141ee-s.p.7787e134.woff2"
+    ],
+    "[project]/mnt/alltagsengel-app/app/engel/chat/page": [
+      "static/media/81cef6a21128489e-s.p.6cf41120.woff2",
+      "static/media/8bd76523131fa0fc-s.p.eb17b6b9.woff2",
+      "static/media/01e4147cff8141ee-s.p.7787e134.woff2"
+    ],
+    "[project]/mnt/alltagsengel-app/app/engel/dokumente/page": [
+      "static/media/81cef6a21128489e-s.p.6cf41120.woff2",
+      "static/media/8bd76523131fa0fc-s.p.eb17b6b9.woff2",
+      "static/media/01e4147cff8141ee-s.p.7787e134.woff2"
+    ],
+    "[project]/mnt/alltagsengel-app/app/engel/home/page": [
+      "static/media/81cef6a21128489e-s.p.6cf41120.woff2",
+      "static/media/8bd76523131fa0fc-s.p.eb17b6b9.woff2",
+      "static/media/01e4147cff8141ee-s.p.7787e134.woff2"
+    ],
+    "[project]/mnt/alltagsengel-app/app/engel/kalender/page": [
+      "static/media/81cef6a21128489e-s.p.6cf41120.woff2",
+      "static/media/8bd76523131fa0fc-s.p.eb17b6b9.woff2",
+      "static/media/01e4147cff8141ee-s.p.7787e134.woff2"
+    ],
+    "[project]/mnt/alltagsengel-app/app/engel/profil/page": [
+      "static/media/81cef6a21128489e-s.p.6cf41120.woff2",
+      "static/media/8bd76523131fa0fc-s.p.eb17b6b9.woff2",
+      "static/media/01e4147cff8141ee-s.p.7787e134.woff2"
+    ],
+    "[project]/mnt/alltagsengel-app/app/engel/register/page": [
+      "static/media/81cef6a21128489e-s.p.6cf41120.woff2",
+      "static/media/8bd76523131fa0fc-s.p.eb17b6b9.woff2",
+      "static/media/01e4147cff8141ee-s.p.7787e134.woff2"
+    ],
+    "[project]/mnt/alltagsengel-app/app/investor/page": [
+      "static/media/81cef6a21128489e-s.p.6cf41120.woff2",
+      "static/media/8bd76523131fa0fc-s.p.eb17b6b9.woff2",
+      "static/media/01e4147cff8141ee-s.p.7787e134.woff2"
+    ],
+    "[project]/mnt/alltagsengel-app/app/investor/pitch/page": [
+      "static/media/81cef6a21128489e-s.p.6cf41120.woff2",
+      "static/media/8bd76523131fa0fc-s.p.eb17b6b9.woff2",
+      "static/media/01e4147cff8141ee-s.p.7787e134.woff2"
+    ],
+    "[project]/mnt/alltagsengel-app/app/kunde/bestaetigt/[id]/page": [
+      "static/media/81cef6a21128489e-s.p.6cf41120.woff2",
+      "static/media/8bd76523131fa0fc-s.p.eb17b6b9.woff2",
+      "static/media/01e4147cff8141ee-s.p.7787e134.woff2"
+    ],
+    "[project]/mnt/alltagsengel-app/app/kunde/buchen/[id]/page": [
+      "static/media/81cef6a21128489e-s.p.6cf41120.woff2",
+      "static/media/8bd76523131fa0fc-s.p.eb17b6b9.woff2",
+      "static/media/01e4147cff8141ee-s.p.7787e134.woff2"
+    ],
+    "[project]/mnt/alltagsengel-app/app/kunde/buchungen/page": [
+      "static/media/81cef6a21128489e-s.p.6cf41120.woff2",
+      "static/media/8bd76523131fa0fc-s.p.eb17b6b9.woff2",
+      "static/media/01e4147cff8141ee-s.p.7787e134.woff2"
+    ],
+    "[project]/mnt/alltagsengel-app/app/kunde/chat/[id]/page": [
+      "static/media/81cef6a21128489e-s.p.6cf41120.woff2",
+      "static/media/8bd76523131fa0fc-s.p.eb17b6b9.woff2",
+      "static/media/01e4147cff8141ee-s.p.7787e134.woff2"
+    ],
+    "[project]/mnt/alltagsengel-app/app/kunde/chat/page": [
+      "static/media/81cef6a21128489e-s.p.6cf41120.woff2",
+      "static/media/8bd76523131fa0fc-s.p.eb17b6b9.woff2",
+      "static/media/01e4147cff8141ee-s.p.7787e134.woff2"
+    ],
+    "[project]/mnt/alltagsengel-app/app/kunde/dokumente/page": [
+      "static/media/81cef6a21128489e-s.p.6cf41120.woff2",
+      "static/media/8bd76523131fa0fc-s.p.eb17b6b9.woff2",
+      "static/media/01e4147cff8141ee-s.p.7787e134.woff2"
+    ],
+    "[project]/mnt/alltagsengel-app/app/kunde/engel/[id]/page": [
+      "static/media/81cef6a21128489e-s.p.6cf41120.woff2",
+      "static/media/8bd76523131fa0fc-s.p.eb17b6b9.woff2",
+      "static/media/01e4147cff8141ee-s.p.7787e134.woff2"
+    ],
+    "[project]/mnt/alltagsengel-app/app/kunde/home/page": [
+      "static/media/81cef6a21128489e-s.p.6cf41120.woff2",
+      "static/media/8bd76523131fa0fc-s.p.eb17b6b9.woff2",
+      "static/media/01e4147cff8141ee-s.p.7787e134.woff2"
+    ],
+    "[project]/mnt/alltagsengel-app/app/kunde/kalender/page": [
+      "static/media/81cef6a21128489e-s.p.6cf41120.woff2",
+      "static/media/8bd76523131fa0fc-s.p.eb17b6b9.woff2",
+      "static/media/01e4147cff8141ee-s.p.7787e134.woff2"
+    ],
+    "[project]/mnt/alltagsengel-app/app/kunde/karte/page": [
+      "static/media/81cef6a21128489e-s.p.6cf41120.woff2",
+      "static/media/8bd76523131fa0fc-s.p.eb17b6b9.woff2",
+      "static/media/01e4147cff8141ee-s.p.7787e134.woff2"
+    ],
+    "[project]/mnt/alltagsengel-app/app/kunde/pflegebox/page": [
+      "static/media/81cef6a21128489e-s.p.6cf41120.woff2",
+      "static/media/8bd76523131fa0fc-s.p.eb17b6b9.woff2",
+      "static/media/01e4147cff8141ee-s.p.7787e134.woff2"
+    ],
+    "[project]/mnt/alltagsengel-app/app/kunde/profil/page": [
+      "static/media/81cef6a21128489e-s.p.6cf41120.woff2",
+      "static/media/8bd76523131fa0fc-s.p.eb17b6b9.woff2",
+      "static/media/01e4147cff8141ee-s.p.7787e134.woff2"
+    ],
+    "[project]/mnt/alltagsengel-app/app/kunde/warten/[id]/page": [
+      "static/media/81cef6a21128489e-s.p.6cf41120.woff2",
+      "static/media/8bd76523131fa0fc-s.p.eb17b6b9.woff2",
+      "static/media/01e4147cff8141ee-s.p.7787e134.woff2"
+    ],
+    "[project]/mnt/alltagsengel-app/app/mis/ai-assistant/page": [
+      "static/media/81cef6a21128489e-s.p.6cf41120.woff2",
+      "static/media/8bd76523131fa0fc-s.p.eb17b6b9.woff2",
+      "static/media/01e4147cff8141ee-s.p.7787e134.woff2"
+    ],
+    "[project]/mnt/alltagsengel-app/app/mis/dataroom/page": [
+      "static/media/81cef6a21128489e-s.p.6cf41120.woff2",
+      "static/media/8bd76523131fa0fc-s.p.eb17b6b9.woff2",
+      "static/media/01e4147cff8141ee-s.p.7787e134.woff2"
+    ],
+    "[project]/mnt/alltagsengel-app/app/mis/documents/page": [
+      "static/media/81cef6a21128489e-s.p.6cf41120.woff2",
+      "static/media/8bd76523131fa0fc-s.p.eb17b6b9.woff2",
+      "static/media/01e4147cff8141ee-s.p.7787e134.woff2"
+    ],
+    "[project]/mnt/alltagsengel-app/app/mis/finance/page": [
+      "static/media/81cef6a21128489e-s.p.6cf41120.woff2",
+      "static/media/8bd76523131fa0fc-s.p.eb17b6b9.woff2",
+      "static/media/01e4147cff8141ee-s.p.7787e134.woff2"
+    ],
+    "[project]/mnt/alltagsengel-app/app/mis/market/page": [
+      "static/media/81cef6a21128489e-s.p.6cf41120.woff2",
+      "static/media/8bd76523131fa0fc-s.p.eb17b6b9.woff2",
+      "static/media/01e4147cff8141ee-s.p.7787e134.woff2"
+    ],
+    "[project]/mnt/alltagsengel-app/app/mis/page": [
+      "static/media/81cef6a21128489e-s.p.6cf41120.woff2",
+      "static/media/8bd76523131fa0fc-s.p.eb17b6b9.woff2",
+      "static/media/01e4147cff8141ee-s.p.7787e134.woff2"
+    ],
+    "[project]/mnt/alltagsengel-app/app/mis/quality/page": [
+      "static/media/81cef6a21128489e-s.p.6cf41120.woff2",
+      "static/media/8bd76523131fa0fc-s.p.eb17b6b9.woff2",
+      "static/media/01e4147cff8141ee-s.p.7787e134.woff2"
+    ],
+    "[project]/mnt/alltagsengel-app/app/mis/settings/page": [
+      "static/media/81cef6a21128489e-s.p.6cf41120.woff2",
+      "static/media/8bd76523131fa0fc-s.p.eb17b6b9.woff2",
+      "static/media/01e4147cff8141ee-s.p.7787e134.woff2"
+    ],
+    "[project]/mnt/alltagsengel-app/app/mis/supply-chain/page": [
+      "static/media/81cef6a21128489e-s.p.6cf41120.woff2",
+      "static/media/8bd76523131fa0fc-s.p.eb17b6b9.woff2",
+      "static/media/01e4147cff8141ee-s.p.7787e134.woff2"
+    ],
+    "[project]/mnt/alltagsengel-app/app/mis/team/page": [
+      "static/media/81cef6a21128489e-s.p.6cf41120.woff2",
+      "static/media/8bd76523131fa0fc-s.p.eb17b6b9.woff2",
+      "static/media/01e4147cff8141ee-s.p.7787e134.woff2"
+    ],
+    "[project]/mnt/alltagsengel-app/app/page": [
+      "static/media/81cef6a21128489e-s.p.6cf41120.woff2",
+      "static/media/8bd76523131fa0fc-s.p.eb17b6b9.woff2",
+      "static/media/01e4147cff8141ee-s.p.7787e134.woff2"
+    ]
+  },
+  "appUsingSizeAdjust": true,
+  "pages": {},
+  "pagesUsingSizeAdjust": false
+}
