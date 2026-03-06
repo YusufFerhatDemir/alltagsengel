@@ -15,7 +15,7 @@ export default function ProductTechnologyPage() {
       <SectionLabel>Product Overview</SectionLabel>
       <Card style={{ marginBottom: '40px' }}>
         <Paragraph>
-          AlltagsEngel is a cross-platform mobile application built with React Native + Expo, delivering a seamless experience for two user types: <strong>Kunden</strong> (families/seniors seeking companionship) and <strong>Engel</strong> (verified companions offering services). The platform integrates §45b care relief billing, real-time matching, secure payments, and comprehensive companion verification.
+          AlltagsEngel is a cross-platform mobile application built with React Native + Expo, delivering a seamless experience for two user types: <strong>Kunden</strong> (families/seniors seeking companionship) and <strong>Engel</strong> (verified companions offering services). The platform handles <strong>direct Pflegekasse billing</strong> for §45b relief services (€125/month budget per person), pays helpers a fixed <strong>€20/hr</strong>, and retains <strong>~50% gross margin</strong> through direct billing to care insurance funds. All bookings, payments, and accounting flow exclusively through the platform.
         </Paragraph>
       </Card>
 
@@ -29,24 +29,79 @@ export default function ProductTechnologyPage() {
             <Paragraph style={{ fontSize: '13px', margin: '0' }}>Cross-platform native experience; offline support; push notifications; accessible design for older users</Paragraph>
           </div>
           <div>
-            <div style={{ fontSize: '14px', color: '#C9963C', fontWeight: 'bold', marginBottom: '8px' }}>🔍 Smart Matching Engine</div>
-            <Paragraph style={{ fontSize: '13px', margin: '0' }}>Location-based, preference-driven companion matching; machine learning improves suggestions over time</Paragraph>
+            <div style={{ fontSize: '14px', color: '#C9963C', fontWeight: 'bold', marginBottom: '8px' }}>🔍 Smart Matching Algorithm</div>
+            <Paragraph style={{ fontSize: '13px', margin: '0' }}>Location-based, preference-driven companion matching; availability scheduling; ML-optimized suggestions over time</Paragraph>
           </div>
           <div>
-            <div style={{ fontSize: '14px', color: '#C9963C', fontWeight: 'bold', marginBottom: '8px' }}>💳 §45b Integration</div>
-            <Paragraph style={{ fontSize: '13px', margin: '0' }}>Direct billing to care relief benefit; automated invoice generation; compliance with insurance requirements</Paragraph>
+            <div style={{ fontSize: '14px', color: '#C9963C', fontWeight: 'bold', marginBottom: '8px' }}>💳 Direct Pflegekasse Billing</div>
+            <Paragraph style={{ fontSize: '13px', margin: '0' }}>Platform bills Pflegekassen directly for §45b services; automated invoice generation; full accounting handled by platform; ~50% gross margin</Paragraph>
           </div>
           <div>
-            <div style={{ fontSize: '14px', color: '#C9963C', fontWeight: 'bold', marginBottom: '8px' }}>🛡️ Verification System</div>
-            <Paragraph style={{ fontSize: '13px', margin: '0' }}>Background checks, §53b qualifications, references; real-time identity verification; insurance coverage display</Paragraph>
+            <div style={{ fontSize: '14px', color: '#C9963C', fontWeight: 'bold', marginBottom: '8px' }}>📊 §45b Budget Tracking</div>
+            <Paragraph style={{ fontSize: '13px', margin: '0' }}>Tracks each user's €125/month Entlastungsleistung budget; shows remaining balance; automatic rollover management; transparent usage history</Paragraph>
           </div>
           <div>
-            <div style={{ fontSize: '14px', color: '#C9963C', fontWeight: 'bold', marginBottom: '8px' }}>💰 Secure Payments</div>
-            <Paragraph style={{ fontSize: '13px', margin: '0' }}>Stripe integration; escrow system; instant payouts to companions; transparent fee breakdown</Paragraph>
+            <div style={{ fontSize: '14px', color: '#C9963C', fontWeight: 'bold', marginBottom: '8px' }}>💰 Fixed Helper Payments</div>
+            <Paragraph style={{ fontSize: '13px', margin: '0' }}>Helpers receive fixed €20/hr; platform handles all billing and payouts; no subscription fees for helpers; Stripe-powered disbursements</Paragraph>
+          </div>
+          <div>
+            <div style={{ fontSize: '14px', color: '#C9963C', fontWeight: 'bold', marginBottom: '8px' }}>🛡️ Verification & Quality Assurance</div>
+            <Paragraph style={{ fontSize: '13px', margin: '0' }}>Background checks, §53b qualifications, references; real-time identity verification; ratings & reviews; insurance coverage through platform only</Paragraph>
           </div>
           <div>
             <div style={{ fontSize: '14px', color: '#C9963C', fontWeight: 'bold', marginBottom: '8px' }}>📞 Customer Support</div>
-            <Paragraph style={{ fontSize: '13px', margin: '0' }}>In-app chat; phone support; premium tier gets priority; dispute resolution system</Paragraph>
+            <Paragraph style={{ fontSize: '13px', margin: '0' }}>In-app chat; phone support; dispute resolution system; dedicated support for Pflegekasse billing questions</Paragraph>
+          </div>
+        </div>
+      </Card>
+
+      {/* Anti-Bypass Mechanisms */}
+      <SectionTitle>Anti-Bypass Mechanisms</SectionTitle>
+      <GoldSep />
+      <Card style={{ marginBottom: '40px' }}>
+        <Paragraph style={{ marginBottom: '16px' }}>
+          To protect platform revenue and ensure quality/safety standards, AlltagsEngel enforces strict anti-bypass measures that keep all transactions within the ecosystem:
+        </Paragraph>
+        <BulletItem icon="🔒">
+          <strong>Mandatory Platform Bookings:</strong> All bookings must be created and confirmed through the platform; direct arrangements outside the app are contractually prohibited
+        </BulletItem>
+        <BulletItem icon="💳">
+          <strong>Exclusive Payment Processing:</strong> All payments and Pflegekasse billing flow exclusively through the platform; helpers cannot invoice clients or insurers directly
+        </BulletItem>
+        <BulletItem icon="📱">
+          <strong>Controlled Contact Sharing:</strong> Contact information (phone, email, address) is only shared after a booking is confirmed and paid; no pre-booking contact exchange
+        </BulletItem>
+        <BulletItem icon="🛡️">
+          <strong>Platform-Only Insurance & Ratings:</strong> Liability insurance coverage and verified ratings/reviews are only valid for bookings made through AlltagsEngel; off-platform work has no coverage or reputation benefit
+        </BulletItem>
+        <BulletItem icon="📊">
+          <strong>Usage Monitoring:</strong> Algorithmic detection of unusual patterns (e.g., repeated cancellations after contact sharing) to identify potential bypass attempts
+        </BulletItem>
+      </Card>
+
+      {/* Krankentransport Module */}
+      <SectionTitle>Krankentransport Module (Patient Transport)</SectionTitle>
+      <GoldSep />
+      <Card style={{ marginBottom: '40px' }}>
+        <Paragraph style={{ marginBottom: '16px' }}>
+          A dedicated B2B module for mediating non-emergency patient transport (Krankentransport), connecting transport companies with booking demand through the AlltagsEngel ecosystem:
+        </Paragraph>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '20px', marginBottom: '16px' }}>
+          <div>
+            <div style={{ fontSize: '14px', color: '#C9963C', fontWeight: 'bold', marginBottom: '8px' }}>🚑 Patient Transport Mediation</div>
+            <Paragraph style={{ fontSize: '13px', margin: '0' }}>Platform mediates non-emergency patient transport requests; connects patients/families with licensed transport providers</Paragraph>
+          </div>
+          <div>
+            <div style={{ fontSize: '14px', color: '#C9963C', fontWeight: 'bold', marginBottom: '8px' }}>🏢 B2B Portal for Transport Companies</div>
+            <Paragraph style={{ fontSize: '13px', margin: '0' }}>Subscription-based portal (€99–199/month) for transport companies to receive ride requests, manage fleet, and handle dispatching</Paragraph>
+          </div>
+          <div>
+            <div style={{ fontSize: '14px', color: '#C9963C', fontWeight: 'bold', marginBottom: '8px' }}>🤖 Ride Matching Algorithm</div>
+            <Paragraph style={{ fontSize: '13px', margin: '0' }}>Intelligent matching of transport requests to available vehicles based on location, vehicle type, patient needs, and availability windows</Paragraph>
+          </div>
+          <div>
+            <div style={{ fontSize: '14px', color: '#C9963C', fontWeight: 'bold', marginBottom: '8px' }}>📍 Real-Time Tracking</div>
+            <Paragraph style={{ fontSize: '13px', margin: '0' }}>Live GPS tracking for patients and families; ETA updates; driver status; pick-up/drop-off confirmation with timestamps</Paragraph>
           </div>
         </div>
       </Card>
@@ -90,7 +145,7 @@ export default function ProductTechnologyPage() {
         <div style={{ borderTop: '1px solid #3A3530', paddingTop: '16px', marginBottom: '24px' }}>
           <div style={{ fontSize: '14px', color: '#C9963C', fontWeight: 'bold', marginBottom: '12px' }}>Infrastructure & APIs</div>
           <BulletItem icon="💳">
-            <strong>Payments:</strong> Stripe for payment processing, escrow, and payouts
+            <strong>Payments & Billing:</strong> Stripe for helper payouts; direct Pflegekasse billing engine for §45b claims; automated invoice generation and reconciliation
           </BulletItem>
           <BulletItem icon="📧">
             <strong>Email:</strong> Sendgrid or Mailgun for transactional emails and marketing
@@ -106,7 +161,7 @@ export default function ProductTechnologyPage() {
         <div style={{ borderTop: '1px solid #3A3530', paddingTop: '16px' }}>
           <div style={{ fontSize: '14px', color: '#C9963C', fontWeight: 'bold', marginBottom: '12px' }}>Third-Party Integrations</div>
           <BulletItem icon="🏥">
-            <strong>Insurance APIs:</strong> Planned integration with major German health insurance providers for §45b claims
+            <strong>Pflegekasse Billing APIs:</strong> Direct integration with German Pflegekassen for §45b Entlastungsleistung claims; automated billing, reconciliation, and budget tracking
           </BulletItem>
           <BulletItem icon="📋">
             <strong>Background Check:</strong> Integration with German criminal database and verification services
@@ -149,19 +204,22 @@ export default function ProductTechnologyPage() {
       <GoldSep />
       <Card>
         <BulletItem icon="🎯">
-          <strong>MVP (Q1 2026):</strong> Core matching, booking, payments, §45b integration; beta testing with 200+ companions; Frankfurt pilot launch
+          <strong>MVP (Q1 2026):</strong> Core matching, booking, direct Pflegekasse billing, §45b budget tracking; fixed €20/hr helper payments; beta testing with 200+ companions; Frankfurt pilot launch
         </BulletItem>
         <BulletItem icon="📱">
-          <strong>Beta (Q2 2026):</strong> Refine matching algorithm; add ratings & reviews; improve accessibility; expand to 1,000 companions
+          <strong>Beta (Q2 2026):</strong> Refine matching algorithm; add ratings & reviews; anti-bypass monitoring; improve accessibility; expand to 1,000 companions
         </BulletItem>
         <BulletItem icon="🚀">
-          <strong>v1.0 Launch (Q3 2026):</strong> Public release; marketing campaign; expand to Berlin, Munich, Cologne
+          <strong>v1.0 Launch (Q3 2026):</strong> Public release; marketing campaign; full Pflegekasse billing automation; expand to Berlin, Munich, Cologne
+        </BulletItem>
+        <BulletItem icon="🚑">
+          <strong>Krankentransport Module (Q4 2026):</strong> B2B portal for transport companies (€99–199/month); ride matching algorithm; real-time tracking; patient transport mediation
         </BulletItem>
         <BulletItem icon="✨">
           <strong>v2.0 (Q4 2026):</strong> Video profiles for companions; real-time availability calendar; advanced filters; group bookings; referral system
         </BulletItem>
         <BulletItem icon="🌍">
-          <strong>Scale (2026+):</strong> Direct insurance billing integration; white-label B2B platform; expand to DACH region; AI-powered scheduling
+          <strong>Scale (2027+):</strong> White-label B2B platform for care providers; expand Krankentransport nationally; DACH region expansion; AI-powered scheduling
         </BulletItem>
       </Card>
 
@@ -176,22 +234,23 @@ export default function ProductTechnologyPage() {
                      │ HTTPS/TLS 1.3
 ┌────────────────────▼────────────────────────────────┐
 │      API Gateway & Authentication Layer            │
-│  • JWT Validation • Rate Limiting • Request Logging│
+│  • JWT Validation • Rate Limiting • Anti-Bypass    │
 └────────────────────┬────────────────────────────────┘
                      │
-    ┌────────────────┼────────────────┐
-    │                │                │
-┌───▼────────┐  ┌──▼──────────┐  ┌──▼──────────────┐
-│  Supabase  │  │   Stripe    │  │  Firebase/FCM   │
-│ PostgreSQL │  │  Payments   │  │   Push Notifs   │
-│ Storage    │  │  & Escrow   │  │                 │
-│ Auth/RLS   │  │             │  │                 │
-└────────────┘  └─────────────┘  └─────────────────┘
+    ┌────────┬───────┼───────┬────────────┐
+    │        │       │       │            │
+┌───▼─────┐ ┌▼─────────┐ ┌─▼──────┐ ┌───▼──────────┐
+│Supabase │ │Pflegekasse│ │ Stripe │ │Firebase/FCM  │
+│PostgreSQL│ │ Billing  │ │Payouts │ │ Push Notifs  │
+│Storage  │ │ Engine   │ │& Disb. │ │              │
+│Auth/RLS │ │ §45b API │ │        │ │              │
+└─────────┘ └──────────┘ └────────┘ └──────────────┘
 
 ┌────────────────────────────────────────────────────┐
 │      External Services & Integrations             │
-│  • Insurance APIs • Background Checks • Maps     │
+│  • Pflegekasse APIs • Background Checks • Maps   │
 │  • SMS (Twilio) • Email (Sendgrid)               │
+│  • Krankentransport B2B Portal & Ride Matching   │
 └────────────────────────────────────────────────────┘`}
       </Card>
 
@@ -219,7 +278,7 @@ export default function ProductTechnologyPage() {
       {/* Summary */}
       <Card style={{ marginTop: '40px', backgroundColor: 'rgba(201, 150, 60, 0.1)', borderLeft: '4px solid #C9963C', padding: '24px' }}>
         <Paragraph style={{ margin: 0, color: '#F7F2EA' }}>
-          <strong>AlltagsEngel's tech stack combines best-in-class tools (React Native, Supabase, Stripe) with custom features for care marketplace excellence.</strong> Our architecture prioritizes security (GDPR, EU hosting, encryption), accessibility (dark theme, 44px+ tap targets), and performance (offline-first, real-time sync). With clear product roadmap, we'll scale from MVP to national platform efficiently.
+          <strong>AlltagsEngel's tech stack combines best-in-class tools (React Native, Supabase, Stripe) with a proprietary Pflegekasse direct-billing engine for ~50% gross margin.</strong> Our architecture prioritizes security (GDPR, EU hosting, encryption), platform lock-in (anti-bypass mechanisms, controlled contact sharing), and scalability (offline-first, real-time sync). With direct billing, fixed helper payments, the Krankentransport B2B module, and robust anti-bypass measures, we scale from MVP to national care platform efficiently.
         </Paragraph>
       </Card>
     </DocPageLayout>

@@ -124,34 +124,59 @@ export default function MarktanalysePage() {
         </div>
       </Card>
 
+      {/* Krankentransport-Markt */}
+      <Card>
+        <SectionTitle>Krankentransport-Markt</SectionTitle>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
+          <StatBox value="~€3 Mrd" label="Deutscher Krankentransport-Markt" />
+          <StatBox value="B2B SaaS" label="Abo-Modell für Transportunternehmen" />
+          <StatBox value="€99–199/Mo" label="Abo-Gebühr pro Unternehmen" />
+        </div>
+        <Paragraph>
+          Der deutsche Krankentransportmarkt umfasst ein Volumen von rund €3 Milliarden jährlich. AlltagsEngel positioniert sich als <strong style={{color:'#C9963C'}}>digitaler Vermittler</strong> zwischen Patienten/Pflegebedürftigen und Transportunternehmen – ohne eigene Fahrzeuge zu betreiben.
+        </Paragraph>
+        <SectionLabel style={{ marginTop: '1.5rem' }}>B2B-Modell:</SectionLabel>
+        <BulletItem>Abo-Gebühr €99–199/Monat für Transportunternehmen (Zugang zur Plattform & Fahrtenaufträge)</BulletItem>
+        <BulletItem>Zusätzliche kleine Vermittlungsprovision pro erfolgreich vermittelter Fahrt</BulletItem>
+        <BulletItem>AlltagsEngel betreibt keine eigenen Fahrzeuge – reines Plattformmodell</BulletItem>
+        <BulletItem>Synergie mit Alltagsbegleitung: Bestehende Kundenbasis als Nachfragequelle</BulletItem>
+        <BulletItem>Skalierung durch digitale Infrastruktur ohne physische Asset-Last</BulletItem>
+      </Card>
+
       {/* Geschäftsmodell */}
       <Card>
         <SectionTitle>Geschäftsmodell</SectionTitle>
         <SectionLabel>Revenue Streams:</SectionLabel>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginTop: '1rem', marginBottom: '1.5rem' }}>
           <div style={{ padding: '1rem', backgroundColor: '#1a1a1a', borderRadius: '0.5rem', borderLeft: '3px solid #D4AF37' }}>
-            <div style={{ color: '#D4AF37', fontWeight: '600', marginBottom: '0.5rem' }}>Plattform-Provision</div>
-            <div style={{ fontSize: '0.95rem', fontWeight: '600' }}>18% pro Buchung</div>
-            <div style={{ fontSize: '0.85rem', color: '#B0B0B0', marginTop: '0.5rem' }}>Bei Ø €40 Buchungswert = €7,20 pro Transaktion</div>
+            <div style={{ color: '#D4AF37', fontWeight: '600', marginBottom: '0.5rem' }}>Direktabrechnung mit Pflegekassen</div>
+            <div style={{ fontSize: '0.95rem', fontWeight: '600' }}>~€35–40/Std. Abrechnungssatz</div>
+            <div style={{ fontSize: '0.85rem', color: '#B0B0B0', marginTop: '0.5rem' }}>AlltagsEngel rechnet den vollen Betrag direkt mit den Pflegekassen ab</div>
           </div>
           <div style={{ padding: '1rem', backgroundColor: '#1a1a1a', borderRadius: '0.5rem', borderLeft: '3px solid #D4AF37' }}>
-            <div style={{ color: '#D4AF37', fontWeight: '600', marginBottom: '0.5rem' }}>Premium-Abo</div>
-            <div style={{ fontSize: '0.95rem', fontWeight: '600' }}>€9,99/Monat</div>
-            <div style={{ fontSize: '0.85rem', color: '#B0B0B0', marginTop: '0.5rem' }}>Für Nutzer mit Lieblingsbegleiter (Prioritätsbuchung, Rabatte)</div>
+            <div style={{ color: '#D4AF37', fontWeight: '600', marginBottom: '0.5rem' }}>Feste Engel-Vergütung</div>
+            <div style={{ fontSize: '0.95rem', fontWeight: '600' }}>€20/Std.</div>
+            <div style={{ fontSize: '0.85rem', color: '#B0B0B0', marginTop: '0.5rem' }}>Planbare Kosten, attraktiver Verdienst für Alltagsbegleiter</div>
           </div>
           <div style={{ padding: '1rem', backgroundColor: '#1a1a1a', borderRadius: '0.5rem', borderLeft: '3px solid #D4AF37' }}>
-            <div style={{ color: '#D4AF37', fontWeight: '600', marginBottom: '0.5rem' }}>B2B Partnerschaften</div>
-            <div style={{ fontSize: '0.95rem', fontWeight: '600' }}>Geplant: Jahr 2+</div>
-            <div style={{ fontSize: '0.85rem', color: '#B0B0B0', marginTop: '0.5rem' }}>Direkte Krankenkassen-Abrechnung, Seniorenresidenzen</div>
+            <div style={{ color: '#D4AF37', fontWeight: '600', marginBottom: '0.5rem' }}>Plattform-Marge</div>
+            <div style={{ fontSize: '0.95rem', fontWeight: '600' }}>~50% (~€15–20/Std.)</div>
+            <div style={{ fontSize: '0.85rem', color: '#B0B0B0', marginTop: '0.5rem' }}>~€65 pro Kunde/Monat Deckungsbeitrag</div>
+          </div>
+          <div style={{ padding: '1rem', backgroundColor: '#1a1a1a', borderRadius: '0.5rem', borderLeft: '3px solid #D4AF37' }}>
+            <div style={{ color: '#D4AF37', fontWeight: '600', marginBottom: '0.5rem' }}>Krankentransport B2B</div>
+            <div style={{ fontSize: '0.95rem', fontWeight: '600' }}>€99–199/Monat Abo</div>
+            <div style={{ fontSize: '0.85rem', color: '#B0B0B0', marginTop: '0.5rem' }}>Abo-Gebühr für Transportunternehmen + kleine Vermittlungsprovision pro Fahrt</div>
           </div>
         </div>
         <Paragraph>
           <strong style={{color:'#C9963C'}}>Unit Economics (bei stabiler Nutzung):</strong>
         </Paragraph>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
-          <StatBox value="€40" label="Ø Buchungswert (Betrag für Begleiter)" />
-          <StatBox value="€7,20" label="Plattform-Provision (18%)" />
-          <StatBox value="25–40x" label="LTV/CAC Verhältnis" />
+          <StatBox value="€40/Std" label="Abrechnungssatz mit Pflegekassen" />
+          <StatBox value="€20/Std" label="Feste Engel-Vergütung" />
+          <StatBox value="€65/Mo" label="Marge pro Kunde" />
+          <StatBox value="44x" label="LTV/CAC Verhältnis" />
         </div>
       </Card>
 
@@ -160,17 +185,16 @@ export default function MarktanalysePage() {
         <SectionTitle>Unit Economics in Detail</SectionTitle>
         <SectionLabel>Customer Lifetime Value (LTV):</SectionLabel>
         <Paragraph style={{ marginBottom: '1rem' }}>
-          Ein durchschnittlicher Nutzer bucht ~10 Stunden/Monat à €40 = €400 Umsatz/Monat.
-          Mit 18% Provision = €72 Profit/Monat.
-          Bei durchschnittlicher Nutzungsdauer von 24 Monaten = LTV €1.728.
+          Plattform-Marge pro Kunde: ~€65/Monat (Differenz zwischen Kassensatz und Engel-Vergütung).
+          Bei durchschnittlicher Nutzungsdauer von 24 Monaten = LTV: €65 × 24 = €1.560.
         </Paragraph>
         <SectionLabel>Customer Acquisition Cost (CAC):</SectionLabel>
         <Paragraph style={{ marginBottom: '1rem' }}>
-          Akquisitionsbudget: €50 pro Nutzer (Digital Marketing, Ads).
-          Break-Even nach ~3 Monaten.
+          Akquisitionsbudget: €35–50 pro Nutzer (Digital Marketing, Ads, Kooperationen).
+          Break-Even nach &lt;1 Monat.
         </Paragraph>
         <Paragraph>
-          <strong style={{color:'#C9963C'}}>LTV/CAC Ratio: 1.728 / 50 = 34,5x</strong> – Industriestandard ist 3x. Dies ist ein sehr starkes Verhältnis.
+          <strong style={{color:'#C9963C'}}>LTV/CAC Ratio: 1.560 / 35–50 = 31–44x</strong> – Industriestandard ist 3x. Dies ist ein herausragendes Verhältnis mit extrem schnellem Payback.
         </Paragraph>
       </Card>
 

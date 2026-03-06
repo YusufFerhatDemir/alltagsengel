@@ -123,11 +123,14 @@ export default function FinancePage() {
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
           <Card title="Einheitsökonomie" icon="pieChart">
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-              <StatRow label="Ø Buchungswert" value={`€${UE.avgBookingValue}`} />
-              <StatRow label="Plattformgebühr" value={`${UE.platformFee * 100}%`} />
-              <StatRow label="Ø Ertrag pro Buchung" value={`€${(UE.avgBookingValue * UE.platformFee).toFixed(2)}`} />
+              <StatRow label="Abrechnungssatz (Pflegekasse)" value={`€${UE.billingRatePerHour}/Std.`} />
+              <StatRow label="Engel-Vergütung (fest)" value={`€${UE.helperPayPerHour}/Std.`} />
+              <StatRow label="Plattform-Marge/Std." value={`€${UE.marginPerHour}`} />
+              <StatRow label="Bruttomarge" value={`${(UE.marginPercent * 100).toFixed(0)}%`} />
+              <StatRow label="Ø Stunden/Kunde/Monat" value={`${UE.avgHoursPerCustomerMonth}`} />
+              <StatRow label="Marge/Kunde/Monat" value={`€${UE.marginPerCustomerMonth}`} />
               <StatRow label="Kundenakquisekosten (CAC)" value={`€${UE.cac}`} />
-              <StatRow label="Lifetime Value (LTV)" value={`€${UE.ltv}`} />
+              <StatRow label="Lifetime Value (LTV)" value={`€${UE.ltv.toLocaleString('de-DE')}`} />
               <StatRow label="LTV / CAC Ratio" value={`${UE.ltvCacRatio}x`} subValue="(Ziel: >3x)" />
               <StatRow label="Payback Period" value={`${UE.paybackMonths} Monate`} />
               <StatRow label="Monatliche Churn Rate" value={`${(UE.monthlyChurn * 100).toFixed(1)}%`} />
@@ -142,7 +145,7 @@ export default function FinancePage() {
               <StatRow label="Jährlich pro Person" value={`€${(UE.entlastungsbetrag * 12).toLocaleString('de-DE')}`} />
               <StatRow label="Anspruchsberechtigte" value="4,96 Mio." />
               <StatRow label="Gesamtvolumen/Jahr" value="€7,84 Mrd." />
-              <StatRow label="Davon ungenutzt (60%)" value="€4,7 Mrd." />
+              <StatRow label="Davon ungenutzt (60%)" value="€4,46 Mrd." />
             </div>
           </Card>
         </div>

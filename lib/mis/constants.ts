@@ -58,33 +58,40 @@ export const CLASSIFICATION_LABELS: Record<string, string> = {
   restricted: 'Eingeschränkt',
 }
 
-// Financial Data (matching data room)
+// Financial Data (matching data room) — Festmarge-Modell
+// Direktabrechnung mit Pflegekassen, feste €20/Std an Engel, Marge ~€65/Kunde/Monat
 export const FINANCIAL_PROJECTIONS = {
   years: ['2026', '2027', '2028', '2029', '2030'],
-  revenue: [180000, 960000, 3200000, 8400000, 18000000],
-  costs: [380000, 720000, 1600000, 3400000, 6200000],
-  profit: [-200000, 240000, 1600000, 5000000, 11800000],
-  users: [500, 2800, 9500, 25000, 50000],
-  bookings: [2400, 16800, 57000, 150000, 360000],
+  // Alltagsbegleitung: Nutzer × €65/Monat × 12 + Krankentransport ab Jahr 2
+  revenue: [390000, 1957500, 7890000, 28080000, 58500000],
+  costs: [420000, 960000, 3200000, 9800000, 19500000],
+  profit: [-30000, 997500, 4690000, 18280000, 39000000],
+  users: [500, 2500, 10000, 36000, 75000],
+  bookings: [18000, 90000, 360000, 1296000, 2700000],
 }
 
 export const UNIT_ECONOMICS = {
-  avgBookingValue: 45,
-  platformFee: 0.18,
+  billingRatePerHour: 40,      // Abrechnungssatz an Pflegekasse
+  helperPayPerHour: 20,        // Feste Vergütung an Engel
+  marginPerHour: 20,           // Plattform-Marge pro Stunde
+  marginPercent: 0.50,         // ~50% Bruttomarge
+  avgHoursPerCustomerMonth: 3, // Ø Stunden pro Kunde/Monat
+  marginPerCustomerMonth: 65,  // €65 Marge pro Kunde/Monat
   cac: 35,
-  ltv: 810,
-  ltvCacRatio: 23.1,
-  paybackMonths: 2.5,
+  ltv: 1560,                   // €65 × 24 Monate Retention
+  ltvCacRatio: 44.6,
+  paybackMonths: 0.5,
   monthlyChurn: 0.03,
-  entlastungsbetrag: 131,
+  entlastungsbetrag: 125,      // §45b Budget pro Person/Monat
 }
 
 export const MARKET_DATA = {
-  tam: 24.6e9,
-  sam: 7.84e9,
-  som5yr: 52e6,
+  tam: 50e9,
+  sam: 7.44e9,
+  som5yr: 400e6,
   pflegebeduerftige: 4.96e6,
-  entlastungsbetrag: 131,
+  entlastungsbetrag: 125,
   unusedRate: 0.60,
-  unusedVolume: 4.7e9,
+  unusedVolume: 4.46e9,
+  krankentransportMarket: 3e9,  // Krankentransport-Vermittlung Markt
 }

@@ -159,6 +159,42 @@ export default function GoToMarketPage() {
 
       <GoldSep />
 
+      {/* Krankentransport GTM */}
+      <SectionTitle>Krankentransport-Vermittlung – Go-to-Market</SectionTitle>
+      <Card>
+        <Paragraph>
+          Neben dem Kerngeschäft der Alltagsbegleitung erschließt AlltagsEngel die Krankentransport-Vermittlung als zusätzliche B2B-Vertikale.
+        </Paragraph>
+        <div style={{ marginTop: '16px', padding: '12px', backgroundColor: 'rgba(201, 150, 60, 0.08)', borderRadius: '8px', borderLeft: '3px solid #C9963C' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '16px' }}>
+            <div>
+              <div style={{ fontSize: '12px', color: '#C9963C', fontWeight: '600', marginBottom: '4px' }}>ZIELMARKT</div>
+              <div style={{ fontSize: '16px', fontWeight: '600' }}>Frankfurt/Rhein-Main</div>
+            </div>
+            <div>
+              <div style={{ fontSize: '12px', color: '#C9963C', fontWeight: '600', marginBottom: '4px' }}>PREISMODELL</div>
+              <div style={{ fontSize: '16px', fontWeight: '600' }}>€99–199/Mo + Provision</div>
+            </div>
+            <div>
+              <div style={{ fontSize: '12px', color: '#C9963C', fontWeight: '600', marginBottom: '4px' }}>SKALIERUNG</div>
+              <div style={{ fontSize: '16px', fontWeight: '600' }}>Deutschlandweit ab Jahr 2</div>
+            </div>
+          </div>
+        </div>
+        <div style={{ marginTop: '16px' }}>
+          <SectionLabel>Vertriebsstrategie</SectionLabel>
+          <div style={{ marginTop: '12px' }}>
+            <BulletItem><strong>Zielgruppe:</strong> Transportunternehmen in der Frankfurt/Rhein-Main Region</BulletItem>
+            <BulletItem><strong>B2B Vertrieb:</strong> Direktansprache von Transportunternehmen, persönliche Demos und Onboarding</BulletItem>
+            <BulletItem><strong>Pricing:</strong> €99–199/Monat Abo-Gebühr + Vermittlungsgebühr pro Fahrt</BulletItem>
+            <BulletItem><strong>Skalierung:</strong> Start in Frankfurt/Rhein-Main, deutschlandweite Expansion ab Jahr 2</BulletItem>
+            <BulletItem><strong>Synergien:</strong> Gemeinsame Plattform-Infrastruktur und bestehende Pflegekassen-Kontakte nutzen</BulletItem>
+          </div>
+        </div>
+      </Card>
+
+      <GoldSep />
+
       {/* Budget */}
       <SectionTitle>Marketing-Budget (6 Monate)</SectionTitle>
       <Card>

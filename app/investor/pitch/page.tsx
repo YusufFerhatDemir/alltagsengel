@@ -190,31 +190,40 @@ function buildSlides(): Slide[] {
       ),
     },
     {
-      id: 'business', label: 'Geschäftsmodell', title: 'Zwei Einnahmequellen, starke Unit Economics',
+      id: 'business', label: 'Geschäftsmodell', title: 'Direktabrechnung & Festmarge',
       content: (
         <div>
           <div className="grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginTop: 24 }}>
             <Card style={{ textAlign: 'center' }}>
-              <div className="big-num" style={{ fontSize: 48, fontWeight: 700, color: C.gold, fontFamily: "'Cormorant Garamond', serif" }}>18%</div>
-              <div style={{ fontSize: 16, fontWeight: 700, color: C.ink, marginTop: 4 }}>Provision pro Buchung</div>
+              <div className="big-num" style={{ fontSize: 48, fontWeight: 700, color: C.gold, fontFamily: "'Cormorant Garamond', serif" }}>~50%</div>
+              <div style={{ fontSize: 16, fontWeight: 700, color: C.ink, marginTop: 4 }}>Bruttomarge</div>
               <GoldSep />
               <div style={{ fontSize: 13, color: C.ink3, lineHeight: 1.5 }}>
-                Ø €40 Buchungswert = <strong style={{ color: C.gold }}>€7,20</strong> Provision pro Buchung
+                Direktabrechnung mit Pflegekassen. Engel erhalten feste <strong style={{ color: C.gold }}>€20/Std.</strong> — Rest bleibt als Marge.
               </div>
             </Card>
             <Card style={{ textAlign: 'center' }}>
-              <div className="big-num" style={{ fontSize: 48, fontWeight: 700, color: C.gold, fontFamily: "'Cormorant Garamond', serif" }}>€9,99</div>
-              <div style={{ fontSize: 16, fontWeight: 700, color: C.ink, marginTop: 4 }}>Premium-Abo / Monat</div>
+              <div className="big-num" style={{ fontSize: 48, fontWeight: 700, color: C.gold, fontFamily: "'Cormorant Garamond', serif" }}>€65</div>
+              <div style={{ fontSize: 16, fontWeight: 700, color: C.ink, marginTop: 4 }}>Marge / Kunde / Monat</div>
               <GoldSep />
               <div style={{ fontSize: 13, color: C.ink3, lineHeight: 1.5 }}>
-                Premium-Features für Engel: Profilboost, Priorität & Analytics
+                ~3 Std./Monat × ~€20 Marge/Std. = <strong style={{ color: C.gold }}>€65 pro Kunde</strong> monatlich
               </div>
             </Card>
           </div>
           <Card style={{ marginTop: 16, textAlign: 'center' }}>
-            <div style={{ fontSize: 13, color: C.ink3 }}>Ø Kundenbudget durch §45b</div>
+            <div style={{ fontSize: 13, color: C.ink3 }}>§45b Entlastungsbudget pro Pflegebedürftigem</div>
             <div className="big-num" style={{ fontSize: 36, fontWeight: 700, color: C.gold, fontFamily: "'Cormorant Garamond', serif", marginTop: 4 }}>€125 / Monat</div>
-            <div style={{ fontSize: 12, color: C.ink4, marginTop: 4 }}>= €1.500 / Jahr pro Pflegebedürftigem über Pflegekasse</div>
+            <div style={{ fontSize: 12, color: C.ink4, marginTop: 4 }}>= €1.500 / Jahr — AlltagsEngel rechnet direkt mit der Pflegekasse ab</div>
+          </Card>
+          <Card style={{ marginTop: 16 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+              <span>{Icons.trending(18)}</span>
+              <span style={{ fontSize: 14, fontWeight: 700, color: C.ink }}>Zusätzlich: Krankentransport-Vermittlung</span>
+            </div>
+            <div style={{ fontSize: 13, color: C.ink3, lineHeight: 1.6 }}>
+              Transportunternehmen registrieren sich auf der Plattform. <strong style={{ color: C.gold }}>B2B-Abo €99–199/Monat</strong> + kleine Vermittlungsgebühr pro Fahrt. AlltagsEngel vermittelt nur — keine eigenen Fahrzeuge.
+            </div>
           </Card>
         </div>
       ),
@@ -241,7 +250,7 @@ function buildSlides(): Slide[] {
             <FeatureRow icon={Icons.clipboard(20)} title="Profil erstellen" desc="Qualifikationen & Services verwalten" />
             <FeatureRow icon={Icons.mail(20)} title="Anfragen erhalten" desc="Push-Benachrichtigungen in Echtzeit" />
             <FeatureRow icon={Icons.coins(20)} title="Verdienst tracken" desc="Dashboard mit Umsatzübersicht" />
-            <FeatureRow icon={Icons.trending(20)} title="Wachsen" desc="Premium-Abo für mehr Sichtbarkeit" />
+            <FeatureRow icon={Icons.trending(20)} title="Feste €20/Std." desc="Transparente, planbare Vergütung" />
           </Card>
           <div style={{ gridColumn: '1 / -1', display: 'flex', justifyContent: 'center', gap: 8, flexWrap: 'wrap' as const }}>
             {['React Native', 'Expo SDK', 'Supabase', 'PostgreSQL', 'iOS', 'Android'].map(t => (
@@ -299,23 +308,23 @@ function buildSlides(): Slide[] {
       ),
     },
     {
-      id: 'finance', label: 'Finanzen', title: 'Profitabel ab Jahr 2',
+      id: 'finance', label: 'Finanzen', title: 'Nahezu Break-Even in Jahr 1',
       content: (
         <div>
           <Card style={{ marginTop: 24 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16, flexWrap: 'wrap' as const, gap: 8 }}>
-              <span style={{ fontSize: 13, fontWeight: 600, color: C.ink }}>5-Jahres-Prognose</span>
+              <span style={{ fontSize: 13, fontWeight: 600, color: C.ink }}>5-Jahres-Prognose (Festmarge-Modell)</span>
               <div style={{ display: 'flex', gap: 16 }}>
                 <span style={{ fontSize: 11, color: C.gold }}>● Umsatz</span>
                 <span style={{ fontSize: 11, color: C.green }}>● Nettogewinn</span>
               </div>
             </div>
             {[
-              { year: 'Jahr 1', rev: '€180K', profit: '-€222K', revPct: 2.5, profitPct: 0, loss: true },
-              { year: 'Jahr 2', rev: '€720K', profit: '€78K', revPct: 10, profitPct: 3, loss: false },
-              { year: 'Jahr 3', rev: '€1,8M', profit: '€468K', revPct: 25, profitPct: 18, loss: false },
-              { year: 'Jahr 4', rev: '€3,6M', profit: '€1,08M', revPct: 50, profitPct: 42, loss: false },
-              { year: 'Jahr 5', rev: '€7,2M', profit: '€2,52M', revPct: 100, profitPct: 98, loss: false },
+              { year: 'Jahr 1', rev: '€390K', profit: '-€30K', revPct: 1, profitPct: 0, loss: true },
+              { year: 'Jahr 2', rev: '€1,95M', profit: '€990K', revPct: 3.3, profitPct: 2.5, loss: false },
+              { year: 'Jahr 3', rev: '€7,8M', profit: '€4,6M', revPct: 13.3, profitPct: 11.8, loss: false },
+              { year: 'Jahr 4', rev: '€28M', profit: '€18,3M', revPct: 48, profitPct: 47, loss: false },
+              { year: 'Jahr 5', rev: '€58,5M', profit: '€39M', revPct: 100, profitPct: 100, loss: false },
             ].map((y, i) => (
               <div key={i} style={{ marginBottom: 12 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
@@ -330,9 +339,9 @@ function buildSlides(): Slide[] {
             ))}
           </Card>
           <div className="grid-3" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginTop: 12 }}>
-            <Card style={{ textAlign: 'center', padding: 16 }}><StatBox value="€33,5K" label="Monatl. Kosten" /></Card>
-            <Card style={{ textAlign: 'center', padding: 16 }}><StatBox value="Jahr 2" label="Break-Even" /></Card>
-            <Card style={{ textAlign: 'center', padding: 16 }}><StatBox value="€2,52M" label="Gewinn Jahr 5" /></Card>
+            <Card style={{ textAlign: 'center', padding: 16 }}><StatBox value="€35K" label="Monatl. Kosten" /></Card>
+            <Card style={{ textAlign: 'center', padding: 16 }}><StatBox value="~Jahr 1" label="Break-Even" /></Card>
+            <Card style={{ textAlign: 'center', padding: 16 }}><StatBox value="€39M" label="Gewinn Jahr 5" /></Card>
           </div>
         </div>
       ),
@@ -365,18 +374,18 @@ function buildSlides(): Slide[] {
           <div className="grid-3" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginTop: 40, maxWidth: 700, margin: '40px auto 0' }}>
             <Card style={{ textAlign: 'center', padding: 20 }}>
               <div style={{ fontSize: 24, fontWeight: 700, color: C.gold, fontFamily: "'Cormorant Garamond', serif" }}>2027</div>
-              <div style={{ fontSize: 13, color: C.ink, fontWeight: 600, marginTop: 8 }}>10.000+ Nutzer</div>
-              <div style={{ fontSize: 11, color: C.ink4, marginTop: 4 }}>Marktführer Frankfurt</div>
+              <div style={{ fontSize: 13, color: C.ink, fontWeight: 600, marginTop: 8 }}>25.000+ Nutzer</div>
+              <div style={{ fontSize: 11, color: C.ink4, marginTop: 4 }}>Deutschlandweit + Krankentransport</div>
             </Card>
             <Card style={{ textAlign: 'center', padding: 20 }}>
               <div style={{ fontSize: 24, fontWeight: 700, color: C.gold, fontFamily: "'Cormorant Garamond', serif" }}>2028</div>
-              <div style={{ fontSize: 13, color: C.ink, fontWeight: 600, marginTop: 8 }}>5 Bundesländer</div>
-              <div style={{ fontSize: 11, color: C.ink4, marginTop: 4 }}>Marktführer Deutschland</div>
+              <div style={{ fontSize: 13, color: C.ink, fontWeight: 600, marginTop: 8 }}>75.000+ Nutzer</div>
+              <div style={{ fontSize: 11, color: C.ink4, marginTop: 4 }}>Marktführer DACH-Raum</div>
             </Card>
             <Card style={{ textAlign: 'center', padding: 20 }}>
               <div style={{ fontSize: 24, fontWeight: 700, color: C.gold, fontFamily: "'Cormorant Garamond', serif" }}>2030</div>
-              <div style={{ fontSize: 13, color: C.ink, fontWeight: 600, marginTop: 8 }}>Europa</div>
-              <div style={{ fontSize: 11, color: C.ink4, marginTop: 4 }}>Internationale Expansion</div>
+              <div style={{ fontSize: 13, color: C.ink, fontWeight: 600, marginTop: 8 }}>Milliarden-Potenzial</div>
+              <div style={{ fontSize: 11, color: C.ink4, marginTop: 4 }}>Europäische Expansion</div>
             </Card>
           </div>
         </div>

@@ -28,7 +28,7 @@ export default function DashboardPage() {
         users: userCount || 0,
         bookings: bookingCount || 0,
         angels: angelCount || 0,
-        revenue: (bookingCount || 0) * UNIT_ECONOMICS.avgBookingValue,
+        revenue: (bookingCount || 0) * UNIT_ECONOMICS.billingRatePerHour,
       })
       setRecentBookings(bookings || [])
     } catch (e) {
@@ -57,9 +57,9 @@ export default function DashboardPage() {
 
       {/* Market Opportunity */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
-        <KpiCard title="TAM" value="24,6" unit="Mrd. €" icon="globe" trend="up" />
-        <KpiCard title="SAM" value="7,84" unit="Mrd. €" icon="target" trend="up" />
-        <KpiCard title="Ungenutzt" value="4,7" unit="Mrd. €" icon="zap" trend="up" color={BRAND.error} />
+        <KpiCard title="TAM" value="50" unit="Mrd. €" icon="globe" trend="up" />
+        <KpiCard title="SAM" value="7,44" unit="Mrd. €" icon="target" trend="up" />
+        <KpiCard title="Ungenutzt" value="4,46" unit="Mrd. €" icon="zap" trend="up" color={BRAND.error} />
       </div>
 
       {/* Main Grid */}
@@ -72,17 +72,19 @@ export default function DashboardPage() {
             height={160}
           />
           <div style={{ display: 'flex', gap: 20, marginTop: 16 }}>
-            <StatRow label="Break-Even" value="Q3 2027" />
-            <StatRow label="Jahr-5 Umsatz" value="€18M" />
-            <StatRow label="CAGR" value="152%" />
+            <StatRow label="Break-Even" value="~Monat 10-12" />
+            <StatRow label="Jahr-5 Umsatz" value="€58,5M" />
+            <StatRow label="Bruttomarge" value="~50%" />
           </div>
         </Card>
 
         {/* Unit Economics */}
         <Card title="Einheitsökonomie" icon="pieChart">
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <StatRow label="Ø Buchungswert" value={`€${UNIT_ECONOMICS.avgBookingValue}`} />
-            <StatRow label="Plattformgebühr" value={`${UNIT_ECONOMICS.platformFee * 100}%`} />
+            <StatRow label="Abrechnungssatz" value={`€${UNIT_ECONOMICS.billingRatePerHour}/Std.`} />
+            <StatRow label="Engel-Vergütung" value={`€${UNIT_ECONOMICS.helperPayPerHour}/Std.`} />
+            <StatRow label="Bruttomarge" value={`${(UNIT_ECONOMICS.marginPercent * 100).toFixed(0)}%`} />
+            <StatRow label="Marge/Kunde/Mon." value={`€${UNIT_ECONOMICS.marginPerCustomerMonth}`} />
             <StatRow label="CAC" value={`€${UNIT_ECONOMICS.cac}`} />
             <StatRow label="LTV" value={`€${UNIT_ECONOMICS.ltv}`} />
             <StatRow label="LTV/CAC" value={`${UNIT_ECONOMICS.ltvCacRatio}x`} />

@@ -15,89 +15,65 @@ export default function FinancialProjectionsPage() {
       <SectionLabel>Financial Overview</SectionLabel>
       <Card style={{ marginBottom: '40px' }}>
         <Paragraph>
-          AlltagsEngel's financial model is based on conservative user adoption, 18% commission per booking, and €9.99/month premium subscriptions. We project break-even by Q4 2026 and profitability scaling through 2027-2028.
+          AlltagsEngel's financial model is based on direct billing with Pflegekassen at ~€40/hr under §45b SGB XI. Helpers receive a fixed €20/hr, and the platform retains ~€20/hr (~50% gross margin). With an average of 3 hours/customer/month and €65 margin per customer, we project break-even by Month 10-12 and aggressive profitability scaling from Year 2 onward. An additional B2B revenue stream from Krankentransport subscriptions further diversifies income.
         </Paragraph>
       </Card>
 
       {/* Revenue Forecast */}
-      <SectionTitle>Revenue Forecast (12 Months + Year 2-5)</SectionTitle>
+      <SectionTitle>5-Year Financial Overview</SectionTitle>
       <GoldSep />
       <div style={{ overflowX: 'auto', marginBottom: '40px' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
           <thead>
             <tr style={{ borderBottom: '2px solid #C9963C' }}>
               <th style={{ padding: '12px 8px', textAlign: 'left', color: '#C9963C', fontWeight: '600' }}>Period</th>
-              <th style={{ padding: '12px 8px', textAlign: 'center', color: '#C9963C', fontWeight: '600' }}>Users</th>
-              <th style={{ padding: '12px 8px', textAlign: 'center', color: '#C9963C', fontWeight: '600' }}>Companions</th>
-              <th style={{ padding: '12px 8px', textAlign: 'center', color: '#C9963C', fontWeight: '600' }}>Monthly Bookings</th>
-              <th style={{ padding: '12px 8px', textAlign: 'center', color: '#C9963C', fontWeight: '600' }}>Commission Revenue</th>
-              <th style={{ padding: '12px 8px', textAlign: 'center', color: '#C9963C', fontWeight: '600' }}>Premium Subs</th>
+              <th style={{ padding: '12px 8px', textAlign: 'center', color: '#C9963C', fontWeight: '600' }}>Customers</th>
+              <th style={{ padding: '12px 8px', textAlign: 'center', color: '#C9963C', fontWeight: '600' }}>Revenue</th>
+              <th style={{ padding: '12px 8px', textAlign: 'center', color: '#C9963C', fontWeight: '600' }}>Costs</th>
+              <th style={{ padding: '12px 8px', textAlign: 'center', color: '#C9963C', fontWeight: '600' }}>Net Profit</th>
+              <th style={{ padding: '12px 8px', textAlign: 'center', color: '#C9963C', fontWeight: '600' }}>Margin</th>
             </tr>
           </thead>
           <tbody>
-            <tr style={{ borderBottom: '1px solid #3A3530' }}>
-              <td style={{ padding: '12px 8px', color: '#F7F2EA', fontSize: '11px' }}>M1 (April 2026)</td>
-              <td style={{ padding: '12px 8px', textAlign: 'center', color: '#5CB882' }}>150</td>
-              <td style={{ padding: '12px 8px', textAlign: 'center', color: '#5CB882' }}>50</td>
-              <td style={{ padding: '12px 8px', textAlign: 'center', color: '#5CB882' }}>60</td>
-              <td style={{ padding: '12px 8px', textAlign: 'center', color: '#5CB882' }}>€432</td>
-              <td style={{ padding: '12px 8px', textAlign: 'center', color: '#A0978A' }}>€150</td>
-            </tr>
-            <tr style={{ borderBottom: '1px solid #3A3530' }}>
-              <td style={{ padding: '12px 8px', color: '#F7F2EA', fontSize: '11px' }}>M3 (June 2026)</td>
-              <td style={{ padding: '12px 8px', textAlign: 'center', color: '#5CB882' }}>280</td>
-              <td style={{ padding: '12px 8px', textAlign: 'center', color: '#5CB882' }}>100</td>
-              <td style={{ padding: '12px 8px', textAlign: 'center', color: '#5CB882' }}>250</td>
-              <td style={{ padding: '12px 8px', textAlign: 'center', color: '#5CB882' }}>€1,800</td>
-              <td style={{ padding: '12px 8px', textAlign: 'center', color: '#A0978A' }}>€420</td>
-            </tr>
-            <tr style={{ borderBottom: '1px solid #3A3530' }}>
-              <td style={{ padding: '12px 8px', color: '#F7F2EA', fontSize: '11px' }}>M6 (Sept 2026)</td>
-              <td style={{ padding: '12px 8px', textAlign: 'center', color: '#5CB882' }}>500</td>
-              <td style={{ padding: '12px 8px', textAlign: 'center', color: '#5CB882' }}>180</td>
-              <td style={{ padding: '12px 8px', textAlign: 'center', color: '#5CB882' }}>800</td>
-              <td style={{ padding: '12px 8px', textAlign: 'center', color: '#5CB882' }}>€5,760</td>
-              <td style={{ padding: '12px 8px', textAlign: 'center', color: '#A0978A' }}>€1,200</td>
-            </tr>
             <tr style={{ borderBottom: '1px solid #3A3530', backgroundColor: 'rgba(201, 150, 60, 0.1)' }}>
-              <td style={{ padding: '12px 8px', color: '#C9963C', fontWeight: 'bold' }}>Year 1 (Full)</td>
+              <td style={{ padding: '12px 8px', color: '#C9963C', fontWeight: 'bold' }}>Year 1</td>
               <td style={{ padding: '12px 8px', textAlign: 'center', color: '#C9963C', fontWeight: 'bold' }}>500</td>
-              <td style={{ padding: '12px 8px', textAlign: 'center', color: '#C9963C', fontWeight: 'bold' }}>200</td>
-              <td style={{ padding: '12px 8px', textAlign: 'center', color: '#C9963C', fontWeight: 'bold' }}>1,500</td>
-              <td style={{ padding: '12px 8px', textAlign: 'center', color: '#C9963C', fontWeight: 'bold' }}>€10,800</td>
-              <td style={{ padding: '12px 8px', textAlign: 'center', color: '#C9963C', fontWeight: 'bold' }}>€8,200</td>
+              <td style={{ padding: '12px 8px', textAlign: 'center', color: '#C9963C', fontWeight: 'bold' }}>€390K</td>
+              <td style={{ padding: '12px 8px', textAlign: 'center', color: '#C9963C', fontWeight: 'bold' }}>€420K</td>
+              <td style={{ padding: '12px 8px', textAlign: 'center', color: '#D04B3B', fontWeight: 'bold' }}>-€30K</td>
+              <td style={{ padding: '12px 8px', textAlign: 'center', color: '#D04B3B', fontWeight: 'bold' }}>-7.7%</td>
             </tr>
             <tr style={{ borderBottom: '1px solid #3A3530' }}>
               <td style={{ padding: '12px 8px', color: '#F7F2EA' }}>Year 2</td>
-              <td style={{ padding: '12px 8px', textAlign: 'center', color: '#5CB882' }}>3,500</td>
-              <td style={{ padding: '12px 8px', textAlign: 'center', color: '#5CB882' }}>800</td>
-              <td style={{ padding: '12px 8px', textAlign: 'center', color: '#5CB882' }}>15,000</td>
-              <td style={{ padding: '12px 8px', textAlign: 'center', color: '#5CB882' }}>€108,000</td>
-              <td style={{ padding: '12px 8px', textAlign: 'center', color: '#A0978A' }}>€35,700</td>
+              <td style={{ padding: '12px 8px', textAlign: 'center', color: '#5CB882' }}>2,500</td>
+              <td style={{ padding: '12px 8px', textAlign: 'center', color: '#5CB882' }}>€1.95M</td>
+              <td style={{ padding: '12px 8px', textAlign: 'center', color: '#F7F2EA' }}>€960K</td>
+              <td style={{ padding: '12px 8px', textAlign: 'center', color: '#5CB882' }}>€990K</td>
+              <td style={{ padding: '12px 8px', textAlign: 'center', color: '#5CB882' }}>50.8%</td>
             </tr>
             <tr style={{ borderBottom: '1px solid #3A3530' }}>
               <td style={{ padding: '12px 8px', color: '#F7F2EA' }}>Year 3</td>
               <td style={{ padding: '12px 8px', textAlign: 'center', color: '#5CB882' }}>10,000</td>
-              <td style={{ padding: '12px 8px', textAlign: 'center', color: '#5CB882' }}>1,800</td>
-              <td style={{ padding: '12px 8px', textAlign: 'center', color: '#5CB882' }}>45,000</td>
-              <td style={{ padding: '12px 8px', textAlign: 'center', color: '#5CB882' }}>€324,000</td>
-              <td style={{ padding: '12px 8px', textAlign: 'center', color: '#A0978A' }}>€120,000</td>
+              <td style={{ padding: '12px 8px', textAlign: 'center', color: '#5CB882' }}>€7.8M</td>
+              <td style={{ padding: '12px 8px', textAlign: 'center', color: '#F7F2EA' }}>€3.2M</td>
+              <td style={{ padding: '12px 8px', textAlign: 'center', color: '#5CB882' }}>€4.6M</td>
+              <td style={{ padding: '12px 8px', textAlign: 'center', color: '#5CB882' }}>59.0%</td>
             </tr>
             <tr style={{ borderBottom: '1px solid #3A3530' }}>
               <td style={{ padding: '12px 8px', color: '#F7F2EA' }}>Year 4</td>
-              <td style={{ padding: '12px 8px', textAlign: 'center', color: '#5CB882' }}>35,000</td>
-              <td style={{ padding: '12px 8px', textAlign: 'center', color: '#5CB882' }}>3,500</td>
-              <td style={{ padding: '12px 8px', textAlign: 'center', color: '#5CB882' }}>180,000</td>
-              <td style={{ padding: '12px 8px', textAlign: 'center', color: '#5CB882' }}>€1,296,000</td>
-              <td style={{ padding: '12px 8px', textAlign: 'center', color: '#A0978A' }}>€420,000</td>
+              <td style={{ padding: '12px 8px', textAlign: 'center', color: '#5CB882' }}>36,000</td>
+              <td style={{ padding: '12px 8px', textAlign: 'center', color: '#5CB882' }}>€28M</td>
+              <td style={{ padding: '12px 8px', textAlign: 'center', color: '#F7F2EA' }}>€9.8M</td>
+              <td style={{ padding: '12px 8px', textAlign: 'center', color: '#5CB882' }}>€18.2M</td>
+              <td style={{ padding: '12px 8px', textAlign: 'center', color: '#5CB882' }}>65.0%</td>
             </tr>
             <tr style={{ backgroundColor: 'rgba(201, 150, 60, 0.1)' }}>
               <td style={{ padding: '12px 8px', color: '#C9963C', fontWeight: 'bold' }}>Year 5</td>
               <td style={{ padding: '12px 8px', textAlign: 'center', color: '#C9963C', fontWeight: 'bold' }}>75,000</td>
-              <td style={{ padding: '12px 8px', textAlign: 'center', color: '#C9963C', fontWeight: 'bold' }}>5,000</td>
-              <td style={{ padding: '12px 8px', textAlign: 'center', color: '#C9963C', fontWeight: 'bold' }}>450,000</td>
-              <td style={{ padding: '12px 8px', textAlign: 'center', color: '#C9963C', fontWeight: 'bold' }}>€3,240,000</td>
-              <td style={{ padding: '12px 8px', textAlign: 'center', color: '#C9963C', fontWeight: 'bold' }}>€900,000</td>
+              <td style={{ padding: '12px 8px', textAlign: 'center', color: '#C9963C', fontWeight: 'bold' }}>€58.5M</td>
+              <td style={{ padding: '12px 8px', textAlign: 'center', color: '#C9963C', fontWeight: 'bold' }}>€19.5M</td>
+              <td style={{ padding: '12px 8px', textAlign: 'center', color: '#C9963C', fontWeight: 'bold' }}>€39M</td>
+              <td style={{ padding: '12px 8px', textAlign: 'center', color: '#C9963C', fontWeight: 'bold' }}>66.7%</td>
             </tr>
           </tbody>
         </table>
@@ -111,51 +87,53 @@ export default function FinancialProjectionsPage() {
           <div style={{ borderRight: '1px solid #3A3530', paddingRight: '16px' }}>
             <div style={{ fontSize: '14px', color: '#C9963C', fontWeight: 'bold', marginBottom: '12px' }}>Revenue</div>
             <div style={{ marginBottom: '8px' }}>
-              <div style={{ fontSize: '12px', color: '#A0978A' }}>Commission (€10.8K)</div>
-              <div style={{ fontSize: '13px', color: '#F7F2EA', marginTop: '2px' }}>€10,800</div>
+              <div style={{ fontSize: '12px', color: '#A0978A' }}>Platform Margin (Pflegekasse billing)</div>
+              <div style={{ fontSize: '13px', color: '#F7F2EA', marginTop: '2px' }}>€375,000</div>
+              <div style={{ fontSize: '10px', color: '#7A7570', marginTop: '2px' }}>~500 customers x €65/mo x avg 11.5 months</div>
             </div>
             <div>
-              <div style={{ fontSize: '12px', color: '#A0978A' }}>Premium Subscriptions (€8.2K)</div>
-              <div style={{ fontSize: '13px', color: '#F7F2EA', marginTop: '2px' }}>€8,200</div>
+              <div style={{ fontSize: '12px', color: '#A0978A' }}>Krankentransport B2B Subs</div>
+              <div style={{ fontSize: '13px', color: '#F7F2EA', marginTop: '2px' }}>€15,000</div>
+              <div style={{ fontSize: '10px', color: '#7A7570', marginTop: '2px' }}>Early pilot: ~10-15 transport companies</div>
             </div>
             <div style={{ borderTop: '1px solid #3A3530', marginTop: '12px', paddingTop: '8px' }}>
               <div style={{ fontSize: '12px', color: '#A0978A', marginBottom: '4px' }}>Total Revenue</div>
-              <div style={{ fontSize: '16px', color: '#5CB882', fontWeight: 'bold' }}>€19,000</div>
+              <div style={{ fontSize: '16px', color: '#5CB882', fontWeight: 'bold' }}>€390,000</div>
             </div>
           </div>
 
           <div>
             <div style={{ fontSize: '14px', color: '#C9963C', fontWeight: 'bold', marginBottom: '12px' }}>Costs</div>
             <div style={{ marginBottom: '8px' }}>
-              <div style={{ fontSize: '12px', color: '#A0978A' }}>Personnel (€31.2K/mo)</div>
-              <div style={{ fontSize: '13px', color: '#F7F2EA', marginTop: '2px' }}>€374,400</div>
+              <div style={{ fontSize: '12px', color: '#A0978A' }}>Personnel (€25K/mo)</div>
+              <div style={{ fontSize: '13px', color: '#F7F2EA', marginTop: '2px' }}>€300,000</div>
             </div>
             <div style={{ marginBottom: '8px' }}>
-              <div style={{ fontSize: '12px', color: '#A0978A' }}>Office (€600/mo)</div>
-              <div style={{ fontSize: '13px', color: '#F7F2EA', marginTop: '2px' }}>€7,200</div>
+              <div style={{ fontSize: '12px', color: '#A0978A' }}>Office & Operations (€2K/mo)</div>
+              <div style={{ fontSize: '13px', color: '#F7F2EA', marginTop: '2px' }}>€24,000</div>
             </div>
             <div style={{ marginBottom: '8px' }}>
-              <div style={{ fontSize: '12px', color: '#A0978A' }}>Vehicle/Transport (€1K/mo)</div>
-              <div style={{ fontSize: '13px', color: '#F7F2EA', marginTop: '2px' }}>€12,000</div>
+              <div style={{ fontSize: '12px', color: '#A0978A' }}>Software & Infrastructure (€1.5K/mo)</div>
+              <div style={{ fontSize: '13px', color: '#F7F2EA', marginTop: '2px' }}>€18,000</div>
             </div>
             <div style={{ marginBottom: '8px' }}>
-              <div style={{ fontSize: '12px', color: '#A0978A' }}>Software (€200/mo)</div>
-              <div style={{ fontSize: '13px', color: '#F7F2EA', marginTop: '2px' }}>€2,400</div>
+              <div style={{ fontSize: '12px', color: '#A0978A' }}>Marketing & Customer Acquisition (€5K/mo)</div>
+              <div style={{ fontSize: '13px', color: '#F7F2EA', marginTop: '2px' }}>€60,000</div>
             </div>
             <div>
-              <div style={{ fontSize: '12px', color: '#A0978A' }}>Marketing (€850/mo)</div>
-              <div style={{ fontSize: '13px', color: '#F7F2EA', marginTop: '2px' }}>€10,200</div>
+              <div style={{ fontSize: '12px', color: '#A0978A' }}>Insurance & Compliance (€1.5K/mo)</div>
+              <div style={{ fontSize: '13px', color: '#F7F2EA', marginTop: '2px' }}>€18,000</div>
             </div>
             <div style={{ borderTop: '1px solid #3A3530', marginTop: '12px', paddingTop: '8px' }}>
               <div style={{ fontSize: '12px', color: '#A0978A', marginBottom: '4px' }}>Total Costs</div>
-              <div style={{ fontSize: '16px', color: '#D04B3B', fontWeight: 'bold' }}>€406,200</div>
+              <div style={{ fontSize: '16px', color: '#D04B3B', fontWeight: 'bold' }}>€420,000</div>
             </div>
           </div>
         </div>
         <div style={{ borderTop: '2px solid #3A3530', marginTop: '24px', paddingTop: '16px', backgroundColor: 'rgba(201, 150, 60, 0.05)', padding: '16px', borderRadius: '6px' }}>
           <div style={{ fontSize: '12px', color: '#A0978A', marginBottom: '4px' }}>Year 1 EBITDA</div>
-          <div style={{ fontSize: '20px', color: '#D04B3B', fontWeight: 'bold' }}>-€387,200</div>
-          <div style={{ fontSize: '11px', color: '#7A7570', marginTop: '4px' }}>Expected burn in MVP phase; focus on user acquisition and product validation</div>
+          <div style={{ fontSize: '20px', color: '#D04B3B', fontWeight: 'bold' }}>-€30,000</div>
+          <div style={{ fontSize: '11px', color: '#7A7570', marginTop: '4px' }}>Near break-even in Year 1; platform becomes profitable around Month 10-12 with ~540 active customers</div>
         </div>
       </Card>
 
@@ -166,18 +144,84 @@ export default function FinancialProjectionsPage() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px' }}>
           <div>
             <div style={{ fontSize: '12px', color: '#A0978A', marginBottom: '8px' }}>Monthly Burn (Year 1)</div>
-            <div style={{ fontSize: '18px', color: '#C9963C', fontWeight: 'bold' }}>€33.5K</div>
-            <div style={{ fontSize: '11px', color: '#7A7570', marginTop: '4px' }}>Personnel €31.2K + Ops €2.3K</div>
+            <div style={{ fontSize: '18px', color: '#C9963C', fontWeight: 'bold' }}>€35K</div>
+            <div style={{ fontSize: '11px', color: '#7A7570', marginTop: '4px' }}>Personnel €25K + Ops €5K + Marketing €5K</div>
           </div>
           <div>
-            <div style={{ fontSize: '12px', color: '#A0978A', marginBottom: '8px' }}>Monthly Revenue Target</div>
-            <div style={{ fontSize: '18px', color: '#5CB882', fontWeight: 'bold' }}>€33.5K</div>
-            <div style={{ fontSize: '11px', color: '#7A7570', marginTop: '4px' }}>~3,500 active users at €9.50/month ARPU</div>
+            <div style={{ fontSize: '12px', color: '#A0978A', marginBottom: '8px' }}>Customers Needed for Break-Even</div>
+            <div style={{ fontSize: '18px', color: '#5CB882', fontWeight: 'bold' }}>~540</div>
+            <div style={{ fontSize: '11px', color: '#7A7570', marginTop: '4px' }}>540 x €65/mo margin = €35.1K monthly revenue</div>
           </div>
           <div>
             <div style={{ fontSize: '12px', color: '#A0978A', marginBottom: '8px' }}>Estimated Break-Even</div>
-            <div style={{ fontSize: '18px', color: '#5CB882', fontWeight: 'bold' }}>Q4 2026</div>
-            <div style={{ fontSize: '11px', color: '#7A7570', marginTop: '4px' }}>9 months post-launch with network effects</div>
+            <div style={{ fontSize: '18px', color: '#5CB882', fontWeight: 'bold' }}>Month 10-12</div>
+            <div style={{ fontSize: '11px', color: '#7A7570', marginTop: '4px' }}>Year 1 ramp-up; profitable from Year 2 onward</div>
+          </div>
+        </div>
+      </Card>
+
+      {/* Unit Economics */}
+      <SectionTitle>Unit Economics</SectionTitle>
+      <GoldSep />
+      <Card style={{ marginBottom: '40px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px', marginBottom: '20px' }}>
+          <div>
+            <div style={{ fontSize: '12px', color: '#A0978A', marginBottom: '8px' }}>Billing Rate (Pflegekasse)</div>
+            <div style={{ fontSize: '18px', color: '#C9963C', fontWeight: 'bold' }}>~€40/hr</div>
+            <div style={{ fontSize: '11px', color: '#7A7570', marginTop: '4px' }}>Direct billing under §45b SGB XI</div>
+          </div>
+          <div>
+            <div style={{ fontSize: '12px', color: '#A0978A', marginBottom: '8px' }}>Helper Compensation</div>
+            <div style={{ fontSize: '18px', color: '#C9963C', fontWeight: 'bold' }}>€20/hr</div>
+            <div style={{ fontSize: '11px', color: '#7A7570', marginTop: '4px' }}>Fixed rate; attractive above market avg</div>
+          </div>
+          <div>
+            <div style={{ fontSize: '12px', color: '#A0978A', marginBottom: '8px' }}>Platform Margin</div>
+            <div style={{ fontSize: '18px', color: '#5CB882', fontWeight: 'bold' }}>~€20/hr (~50%)</div>
+            <div style={{ fontSize: '11px', color: '#7A7570', marginTop: '4px' }}>Covers ops, tech, compliance, profit</div>
+          </div>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px' }}>
+          <div>
+            <div style={{ fontSize: '12px', color: '#A0978A', marginBottom: '8px' }}>Monthly Margin per Customer</div>
+            <div style={{ fontSize: '18px', color: '#5CB882', fontWeight: 'bold' }}>€65</div>
+            <div style={{ fontSize: '11px', color: '#7A7570', marginTop: '4px' }}>3 hrs avg/month x ~€20 platform margin + scheduling overhead</div>
+          </div>
+          <div>
+            <div style={{ fontSize: '12px', color: '#A0978A', marginBottom: '8px' }}>§45b Monthly Budget</div>
+            <div style={{ fontSize: '18px', color: '#C9963C', fontWeight: 'bold' }}>€125/month</div>
+            <div style={{ fontSize: '11px', color: '#7A7570', marginTop: '4px' }}>Government-funded; no out-of-pocket for users</div>
+          </div>
+          <div>
+            <div style={{ fontSize: '12px', color: '#A0978A', marginBottom: '8px' }}>Customer Lifetime Value</div>
+            <div style={{ fontSize: '18px', color: '#5CB882', fontWeight: 'bold' }}>€1,560</div>
+            <div style={{ fontSize: '11px', color: '#7A7570', marginTop: '4px' }}>24 months avg retention x €65/mo</div>
+          </div>
+        </div>
+      </Card>
+
+      {/* Krankentransport Revenue Stream */}
+      <SectionTitle>Krankentransport B2B Revenue Stream</SectionTitle>
+      <GoldSep />
+      <Card style={{ marginBottom: '40px' }}>
+        <Paragraph>
+          Additional revenue stream through B2B SaaS subscriptions for Krankentransport (medical transport) companies. Platform provides dispatch optimization, compliance tracking, and patient management tools.
+        </Paragraph>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px', marginTop: '16px' }}>
+          <div>
+            <div style={{ fontSize: '12px', color: '#A0978A', marginBottom: '8px' }}>Subscription Tiers</div>
+            <div style={{ fontSize: '18px', color: '#C9963C', fontWeight: 'bold' }}>€99-199/mo</div>
+            <div style={{ fontSize: '11px', color: '#7A7570', marginTop: '4px' }}>Per transport company; tiered by fleet size</div>
+          </div>
+          <div>
+            <div style={{ fontSize: '12px', color: '#A0978A', marginBottom: '8px' }}>Commission per Ride</div>
+            <div style={{ fontSize: '18px', color: '#C9963C', fontWeight: 'bold' }}>Small fee</div>
+            <div style={{ fontSize: '11px', color: '#7A7570', marginTop: '4px' }}>Additional per-ride commission on dispatched trips</div>
+          </div>
+          <div>
+            <div style={{ fontSize: '12px', color: '#A0978A', marginBottom: '8px' }}>Target Year 2+</div>
+            <div style={{ fontSize: '18px', color: '#5CB882', fontWeight: 'bold' }}>50-200 companies</div>
+            <div style={{ fontSize: '11px', color: '#7A7570', marginTop: '4px' }}>Scaling across DACH region</div>
           </div>
         </div>
       </Card>
@@ -187,39 +231,83 @@ export default function FinancialProjectionsPage() {
       <GoldSep />
       <Card>
         <BulletItem icon="📱">
-          <strong>User Growth:</strong> 5-10% monthly growth Year 1 (Frankfurt pilot), 15-20% Year 2+ (multi-city expansion)
+          <strong>Customer Growth:</strong> 5-10% monthly growth Year 1 (Frankfurt pilot), 15-20% Year 2+ (multi-city expansion via Pflegekassen partnerships)
         </BulletItem>
         <BulletItem icon="💼">
-          <strong>Companion Supply:</strong> 20-25% of user base becomes active companions; network effects accelerate supply growth
+          <strong>Helper Supply:</strong> Recruiting trained §45b-qualified helpers; €20/hr fixed rate is above typical care-sector wages, ensuring supply
         </BulletItem>
         <BulletItem icon="📊">
-          <strong>Average Booking Value:</strong> €40/hour is conservative; mix of companionship (€25-40/hr) and household help (€40-50/hr)
+          <strong>Billing Rate:</strong> ~€40/hr direct billing to Pflegekassen under §45b SGB XI; platform retains ~€20/hr (~50% gross margin)
         </BulletItem>
         <BulletItem icon="📈">
-          <strong>Booking Frequency:</strong> 2-3 bookings/month per user average; increases with time/retention
+          <strong>Usage Frequency:</strong> 3 hours/customer/month average; within the €125/month §45b budget cap
         </BulletItem>
         <BulletItem icon="⭐">
-          <strong>Premium Adoption:</strong> 10-12% of users adopt €9.99/month premium; grows to 15% in Year 2+
+          <strong>CAC & LTV:</strong> CAC €35 (digital + Pflegekassen referrals), LTV €1,560 (24 months x €65/mo), LTV/CAC ratio 44x
         </BulletItem>
         <BulletItem icon="🔄">
-          <strong>Retention:</strong> 85%+ monthly retention for users; 90%+ for active companions (network effects)
+          <strong>Retention:</strong> 85%+ monthly retention; government-funded service with no user cost creates strong retention dynamics
         </BulletItem>
+      </Card>
+
+      {/* Sensitivity Analysis */}
+      <SectionTitle>Sensitivity Analysis</SectionTitle>
+      <GoldSep />
+      <Card style={{ marginBottom: '40px' }}>
+        <Paragraph>
+          Key margin drivers and their impact on profitability under the direct-billing model:
+        </Paragraph>
+        <div style={{ overflowX: 'auto', marginTop: '16px' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
+            <thead>
+              <tr style={{ borderBottom: '2px solid #C9963C' }}>
+                <th style={{ padding: '10px 8px', textAlign: 'left', color: '#C9963C', fontWeight: '600' }}>Scenario</th>
+                <th style={{ padding: '10px 8px', textAlign: 'center', color: '#C9963C', fontWeight: '600' }}>Margin/Customer</th>
+                <th style={{ padding: '10px 8px', textAlign: 'center', color: '#C9963C', fontWeight: '600' }}>Year 3 Profit</th>
+                <th style={{ padding: '10px 8px', textAlign: 'center', color: '#C9963C', fontWeight: '600' }}>Year 5 Profit</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr style={{ borderBottom: '1px solid #3A3530' }}>
+                <td style={{ padding: '10px 8px', color: '#D04B3B' }}>Bear Case (40% margin)</td>
+                <td style={{ padding: '10px 8px', textAlign: 'center', color: '#F7F2EA' }}>€48/mo</td>
+                <td style={{ padding: '10px 8px', textAlign: 'center', color: '#D04B3B' }}>€2.5M</td>
+                <td style={{ padding: '10px 8px', textAlign: 'center', color: '#D04B3B' }}>€25M</td>
+              </tr>
+              <tr style={{ borderBottom: '1px solid #3A3530', backgroundColor: 'rgba(201, 150, 60, 0.1)' }}>
+                <td style={{ padding: '10px 8px', color: '#C9963C', fontWeight: 'bold' }}>Base Case (50% margin)</td>
+                <td style={{ padding: '10px 8px', textAlign: 'center', color: '#C9963C', fontWeight: 'bold' }}>€65/mo</td>
+                <td style={{ padding: '10px 8px', textAlign: 'center', color: '#C9963C', fontWeight: 'bold' }}>€4.6M</td>
+                <td style={{ padding: '10px 8px', textAlign: 'center', color: '#C9963C', fontWeight: 'bold' }}>€39M</td>
+              </tr>
+              <tr>
+                <td style={{ padding: '10px 8px', color: '#5CB882' }}>Bull Case (55% margin)</td>
+                <td style={{ padding: '10px 8px', textAlign: 'center', color: '#F7F2EA' }}>€75/mo</td>
+                <td style={{ padding: '10px 8px', textAlign: 'center', color: '#5CB882' }}>€5.8M</td>
+                <td style={{ padding: '10px 8px', textAlign: 'center', color: '#5CB882' }}>€48M</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div style={{ fontSize: '11px', color: '#7A7570', marginTop: '12px' }}>
+          Bear case assumes higher helper costs (€24/hr) or lower billing rates. Bull case assumes operational efficiencies and premium service tiers.
+        </div>
       </Card>
 
       {/* Financial Highlights */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginTop: '40px', marginBottom: '40px' }}>
-        <StatBox label="Year 1 Revenue" value="€19K" subLabel="Conservative pilot phase" />
-        <StatBox label="Year 3 Revenue" value="€444K" subLabel="Post-break-even growth" />
-        <StatBox label="Year 5 Revenue" value="€4.14M" subLabel="National scale, DACH expansion" />
-        <StatBox label="CAC" value="€20" subLabel="Low-cost social + word-of-mouth" />
-        <StatBox label="LTV" value="€500" subLabel="18-24 month customer lifecycle" />
-        <StatBox label="Payback Period" value="6 months" subLabel="LTV/CAC ratio 25x" />
+        <StatBox label="Year 1 Revenue" value="€390K" subLabel="Near break-even pilot phase" />
+        <StatBox label="Year 3 Revenue" value="€7.8M" subLabel="Multi-city scaling" />
+        <StatBox label="Year 5 Revenue" value="€58.5M" subLabel="National scale, DACH expansion" />
+        <StatBox label="CAC" value="€35" subLabel="Digital + Pflegekassen referrals" />
+        <StatBox label="LTV" value="€1,560" subLabel="24-month avg retention" />
+        <StatBox label="LTV/CAC" value="44x" subLabel="Best-in-class payback ratio" />
       </div>
 
       {/* Summary */}
       <Card style={{ backgroundColor: 'rgba(201, 150, 60, 0.1)', borderLeft: '4px solid #C9963C', padding: '24px' }}>
         <Paragraph style={{ margin: 0, color: '#F7F2EA' }}>
-          <strong>AlltagsEngel's financial model demonstrates clear path to profitability with modest €500K investment.</strong> Conservative revenue assumptions show break-even by Q4 2026 and €4.14M revenue by Year 5. High LTV/CAC ratio (25x) and low burn rate (€33.5K/month) provide substantial runway and minimize downside risk. Success depends on user acquisition momentum in Frankfurt pilot and scaling across DACH region.
+          <strong>AlltagsEngel's margin-based model delivers near break-even in Year 1 and strong profitability from Year 2.</strong> Direct Pflegekassen billing at ~€40/hr with fixed €20/hr helper compensation creates a sustainable ~50% gross margin. With €65/customer/month, break-even requires only ~540 customers (Month 10-12). LTV/CAC ratio of 44x (€1,560 LTV vs €35 CAC) is best-in-class. Year 5 projects €58.5M revenue and €39M profit across DACH region, supplemented by Krankentransport B2B subscriptions.
         </Paragraph>
       </Card>
     </DocPageLayout>

@@ -15,7 +15,7 @@ export default function GoToMarketPage() {
       <SectionLabel>Launch Campaign: "Dein Engel für den Alltag"</SectionLabel>
       <Card style={{ marginBottom: '40px' }}>
         <Paragraph>
-          Our 4-week Frankfurt pilot launch campaign positions AlltagsEngel as the trustworthy, digital-first solution for daily companionship. We're targeting families seeking care, seniors wanting independence, and verified companions eager to earn flexible income. Campaign theme: "Dein Engel für den Alltag" (Your Angel for Everyday Life) emphasizes warmth, trust, and accessibility.
+          Our Frankfurt pilot launch campaign positions AlltagsEngel as the trustworthy, digital-first platform for daily companionship &mdash; with a direct billing model where the platform bills Pflegekassen directly (~50% gross margin). We're targeting families seeking care, seniors wanting independence, verified companions eager to earn flexible income, and transport companies (Krankentransportunternehmen) looking for digital ride mediation. Campaign theme: "Dein Engel für den Alltag" (Your Angel for Everyday Life) emphasizes warmth, trust, and accessibility.
         </Paragraph>
       </Card>
 
@@ -54,7 +54,7 @@ export default function GoToMarketPage() {
           <strong>Facebook & WhatsApp:</strong> Community groups for seniors and families; targeted ads to 45+ age group; FAQ chatbot; community management
         </BulletItem>
         <BulletItem icon="💼">
-          <strong>LinkedIn:</strong> B2B partnerships with care agencies, health insurers, social workers; thought leadership articles; recruitment of companions
+          <strong>LinkedIn &amp; B2B Sales:</strong> Partnerships with Pflegekassen, care facilities, hospitals; direct B2B sales to Krankentransportunternehmen; thought leadership articles; recruitment of companions
         </BulletItem>
         <BulletItem icon="📧">
           <strong>Email Newsletter:</strong> Weekly tips for families; companion success stories; exclusive offers; high-value content for retention
@@ -211,10 +211,11 @@ export default function GoToMarketPage() {
           <div>
             <div style={{ fontSize: '14px', color: '#C9963C', fontWeight: 'bold', marginBottom: '8px' }}>User Acquisition</div>
             <Paragraph style={{ fontSize: '13px', margin: '0' }}>
-              • 1,500+ app downloads Month 1
-              • 500+ active users by end of Month 1
-              • 2,500+ by Month 3
-              • CAC &lt;€20
+              • Year 1: 500 active users
+              • Year 2: 2,500 users
+              • Year 3: 10,000 users
+              • Year 5: 75,000 users (nationwide Germany)
+              • CAC: €35-50
             </Paragraph>
           </div>
           <div>
@@ -238,10 +239,10 @@ export default function GoToMarketPage() {
           <div>
             <div style={{ fontSize: '14px', color: '#C9963C', fontWeight: 'bold', marginBottom: '8px' }}>Revenue</div>
             <Paragraph style={{ fontSize: '13px', margin: '0' }}>
-              • €500+ commission revenue Month 1
-              • €5,000+ by Month 6
-              • 10%+ premium subscription adoption
-              • €9.99/month ARPU
+              • Direct Pflegekassen billing (~50% gross margin)
+              • Krankentransport B2B: €99-199/month per company + per-ride commission
+              • €5,000+ revenue by Month 6
+              • Scaling to nationwide Germany
             </Paragraph>
           </div>
         </div>
@@ -252,16 +253,19 @@ export default function GoToMarketPage() {
       <GoldSep />
       <Card>
         <BulletItem icon="🌍">
-          <strong>Geographic Expansion:</strong> Berlin, Munich, Cologne by Month 6; full Germany by Month 12; leverage Frankfurt playbook
+          <strong>Geographic Expansion:</strong> Start regionally (Frankfurt/Rhein-Main), expand Deutschlandweit (nationwide Germany) by Year 3-5; potential DACH expansion (Austria, Switzerland) thereafter
         </BulletItem>
         <BulletItem icon="🔗">
-          <strong>Partnership Growth:</strong> B2B agreements with insurance providers, care agencies, social work organizations
+          <strong>Partnership Growth:</strong> B2B agreements with Pflegekassen, care facilities, hospitals, social work organizations
         </BulletItem>
         <BulletItem icon="💰">
-          <strong>Direct Billing:</strong> Push insurance integration to enable direct §45b billing (35% margins vs. 18% commission)
+          <strong>Direct Billing Model:</strong> Platform bills Pflegekassen directly for Alltagsbegleitung services (~50% gross margin); no commission-based middlemen
+        </BulletItem>
+        <BulletItem icon="🚑">
+          <strong>Krankentransport Vertical:</strong> B2B subscription (€99-199/month) for transport companies + per-ride commission; direct sales to regional Krankentransportunternehmen; partnerships with hospitals &amp; care facilities
         </BulletItem>
         <BulletItem icon="📈">
-          <strong>Content Marketing:</strong> Blog to become go-to resource for German elderly care; organic search traffic growth
+          <strong>Content Marketing &amp; SEO:</strong> Blog to become go-to resource for German elderly care; organic search traffic growth; §45b guides
         </BulletItem>
         <BulletItem icon="👥">
           <strong>Community Building:</strong> Facebook groups, local events, companion meetups; network effects accelerate growth
@@ -271,10 +275,80 @@ export default function GoToMarketPage() {
         </BulletItem>
       </Card>
 
+      {/* Krankentransport Go-to-Market */}
+      <SectionTitle>Krankentransport Go-to-Market</SectionTitle>
+      <GoldSep />
+      <Card style={{ marginBottom: '40px' }}>
+        <Paragraph>
+          AlltagsEngel expands into digital ride mediation for Krankentransport (medical patient transport). We target regional transport companies (Krankentransportunternehmen) seeking modern, digital ride mediation to replace phone/fax-based workflows.
+        </Paragraph>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px', marginTop: '16px' }}>
+          <div>
+            <div style={{ fontSize: '14px', color: '#C9963C', fontWeight: 'bold', marginBottom: '8px' }}>Target Customers</div>
+            <Paragraph style={{ fontSize: '13px', margin: '0' }}>
+              • Regional Krankentransportunternehmen
+              • Hospitals &amp; care facilities needing transport partners
+              • Pflegedienste coordinating patient transfers
+            </Paragraph>
+          </div>
+          <div>
+            <div style={{ fontSize: '14px', color: '#C9963C', fontWeight: 'bold', marginBottom: '8px' }}>Revenue Model</div>
+            <Paragraph style={{ fontSize: '13px', margin: '0' }}>
+              • B2B subscription: €99-199/month per transport company
+              • Plus small commission per mediated ride
+              • Scalable SaaS pricing as fleet size grows
+            </Paragraph>
+          </div>
+          <div>
+            <div style={{ fontSize: '14px', color: '#C9963C', fontWeight: 'bold', marginBottom: '8px' }}>Go-to-Market Channels</div>
+            <Paragraph style={{ fontSize: '13px', margin: '0' }}>
+              • Direct B2B sales to regional transport companies
+              • Partnerships with hospitals &amp; care facilities
+              • Industry events &amp; trade fairs
+              • LinkedIn outreach &amp; case studies
+            </Paragraph>
+          </div>
+          <div>
+            <div style={{ fontSize: '14px', color: '#C9963C', fontWeight: 'bold', marginBottom: '8px' }}>Scaling Strategy</div>
+            <Paragraph style={{ fontSize: '13px', margin: '0' }}>
+              • Start regionally (Rhein-Main area)
+              • Prove model, gather testimonials
+              • Expand nationwide (Deutschlandweit)
+              • Potential DACH expansion
+            </Paragraph>
+          </div>
+        </div>
+      </Card>
+
+      {/* Customer Acquisition Economics */}
+      <SectionTitle>Customer Acquisition Economics</SectionTitle>
+      <GoldSep />
+      <Card style={{ marginBottom: '40px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px' }}>
+          <div>
+            <div style={{ fontSize: '14px', color: '#C9963C', fontWeight: 'bold', marginBottom: '8px' }}>Alltagsbegleitung (B2C)</div>
+            <Paragraph style={{ fontSize: '13px', margin: '0' }}>
+              • CAC: €35-50 per user
+              • Channels: Pflegekassen partnerships, care facility referrals, social media, SEO
+              • Retention-driven: high LTV through recurring bookings
+            </Paragraph>
+          </div>
+          <div>
+            <div style={{ fontSize: '14px', color: '#C9963C', fontWeight: 'bold', marginBottom: '8px' }}>Krankentransport (B2B)</div>
+            <Paragraph style={{ fontSize: '13px', margin: '0' }}>
+              • Direct B2B sales cycle
+              • Target: transport company decision-makers
+              • Low churn once integrated into operations
+              • Upsell potential as fleet grows
+            </Paragraph>
+          </div>
+        </div>
+      </Card>
+
       {/* Summary */}
       <Card style={{ marginTop: '40px', backgroundColor: 'rgba(201, 150, 60, 0.1)', borderLeft: '4px solid #C9963C', padding: '24px' }}>
         <Paragraph style={{ margin: 0, color: '#F7F2EA' }}>
-          <strong>AlltagsEngel's go-to-market strategy combines digital marketing efficiency (€10.2K budget), authentic storytelling ("Dein Engel für den Alltag"), and rapid execution (4-week launch).</strong> We'll acquire users at low CAC (€20), drive engagement through network effects, and scale to 10,000+ users within 12 months. Clear KPI targets and channel focus ensure disciplined marketing spend.
+          <strong>AlltagsEngel's go-to-market strategy combines direct Pflegekassen billing (~50% gross margin), a Krankentransport B2B vertical (€99-199/month per company), and authentic storytelling ("Dein Engel für den Alltag").</strong> We acquire users at €35-50 CAC through Pflegekassen partnerships, care facility referrals, social media, and SEO. Growth targets: 500 users Year 1, 2,500 Year 2, 10,000 Year 3, and 75,000 Year 5 (Deutschlandweit). Krankentransport scales via direct B2B sales to regional transport companies. Long-term vision: nationwide Germany with potential DACH expansion.
         </Paragraph>
       </Card>
     </DocPageLayout>

@@ -282,32 +282,33 @@ export default function BetriebskostenPage() {
       <Card>
         <SectionLabel>Berechnung der Profitabilität</SectionLabel>
         <div style={{ marginBottom: '16px' }}>
-          <BulletItem><strong>Durchschnittliche Buchungsgröße:</strong> €40 pro Einsatz</BulletItem>
-          <BulletItem><strong>Provisions-Model:</strong> 18% des Buchungspreises = €7.20 pro Buchung</BulletItem>
-          <BulletItem><strong>Monatliche Mindestumsätze:</strong> €29.830 / €7.20 = ~4.143 Buchungen</BulletItem>
+          <BulletItem><strong>Abrechnungssatz Pflegekasse:</strong> ~€40 pro Stunde</BulletItem>
+          <BulletItem><strong>Festmarge-Modell:</strong> €20/Std. Marge (Engel erhält fest €20/Std.) → ~50% Bruttomarge</BulletItem>
+          <BulletItem><strong>Marge pro Kunde/Monat:</strong> ~3 Std. × €20 = €65 pro Kunde</BulletItem>
+          <BulletItem><strong>Monatliche Fixkosten:</strong> ~€35.000 / €65 = ~540 Kunden für Break-Even</BulletItem>
         </div>
 
         <SectionLabel style={{ marginTop: '16px' }}>Break-Even Punkt (monatlich)</SectionLabel>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '12px' }}>
           <div style={{ padding: '12px', backgroundColor: 'rgba(201, 150, 60, 0.08)', borderRadius: '8px', borderLeft: '3px solid #C9963C' }}>
-            <div style={{ fontSize: '12px', color: '#C9963C', fontWeight: '600', marginBottom: '6px' }}>KOSTEN</div>
-            <div style={{ fontSize: '18px', fontWeight: '700' }}>€29.830</div>
+            <div style={{ fontSize: '12px', color: '#C9963C', fontWeight: '600', marginBottom: '6px' }}>FIXKOSTEN/MONAT</div>
+            <div style={{ fontSize: '18px', fontWeight: '700' }}>€35.000</div>
           </div>
           <div style={{ padding: '12px', backgroundColor: 'rgba(201, 150, 60, 0.08)', borderRadius: '8px', borderLeft: '3px solid #C9963C' }}>
-            <div style={{ fontSize: '12px', color: '#C9963C', fontWeight: '600', marginBottom: '6px' }}>PROVISION/BUCHUNG</div>
-            <div style={{ fontSize: '18px', fontWeight: '700' }}>€7.20</div>
+            <div style={{ fontSize: '12px', color: '#C9963C', fontWeight: '600', marginBottom: '6px' }}>MARGE/KUNDE/MON.</div>
+            <div style={{ fontSize: '18px', fontWeight: '700' }}>€65</div>
           </div>
           <div style={{ padding: '12px', backgroundColor: 'rgba(201, 150, 60, 0.12)', borderRadius: '8px', borderLeft: '3px solid #C9963C' }}>
-            <div style={{ fontSize: '12px', color: '#C9963C', fontWeight: '600', marginBottom: '6px' }}>NÖTIGE BUCHUNGEN</div>
-            <div style={{ fontSize: '20px', fontWeight: '700', color: '#C9963C' }}>~4.143</div>
+            <div style={{ fontSize: '12px', color: '#C9963C', fontWeight: '600', marginBottom: '6px' }}>NÖTIGE KUNDEN</div>
+            <div style={{ fontSize: '20px', fontWeight: '700', color: '#C9963C' }}>~540</div>
           </div>
         </div>
 
         <div style={{ marginTop: '16px', padding: '12px', backgroundColor: 'rgba(201, 150, 60, 0.08)', borderRadius: '8px' }}>
           <Paragraph style={{ margin: '0', fontSize: '13px', color: 'rgba(255, 255, 255, 0.8)' }}>
-            <strong>Monatliches Break-Even Ziel:</strong> <span style={{ color: '#C9963C', fontWeight: '600' }}>4.143 Buchungen</span>
+            <strong>Break-Even Ziel:</strong> <span style={{ color: '#C9963C', fontWeight: '600' }}>~540 aktive Kunden (Monat 10-12)</span>
             <br />
-            <span style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.7)' }}>Bei 500 aktiven Nutzern im Pilotmarkt sind ~8 Buchungen pro Nutzer/Monat nötig</span>
+            <span style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.7)' }}>Bei €65 Marge/Kunde/Monat und €35K monatlichen Fixkosten — erreichbar im ersten Jahr</span>
           </Paragraph>
         </div>
       </Card>
@@ -330,35 +331,35 @@ export default function BetriebskostenPage() {
             </thead>
             <tbody>
               <tr style={{ borderBottom: '1px solid rgba(201, 150, 60, 0.2)' }}>
-                <td style={{ padding: '10px 8px', color: 'rgba(255, 255, 255, 0.9)' }}>Q1 2025 (MVP)</td>
-                <td style={{ padding: '10px 8px', textAlign: 'center', fontWeight: '500' }}>50</td>
-                <td style={{ padding: '10px 8px', textAlign: 'center', fontWeight: '500' }}>100</td>
-                <td style={{ padding: '10px 8px', textAlign: 'right', fontWeight: '500' }}>€29.830</td>
+                <td style={{ padding: '10px 8px', color: 'rgba(255, 255, 255, 0.9)' }}>H1 2026 (MVP)</td>
+                <td style={{ padding: '10px 8px', textAlign: 'center', fontWeight: '500' }}>200</td>
+                <td style={{ padding: '10px 8px', textAlign: 'center', fontWeight: '500' }}>600</td>
+                <td style={{ padding: '10px 8px', textAlign: 'right', fontWeight: '500' }}>€35.000</td>
               </tr>
               <tr style={{ borderBottom: '1px solid rgba(201, 150, 60, 0.2)' }}>
-                <td style={{ padding: '10px 8px', color: 'rgba(255, 255, 255, 0.9)' }}>Q3 2025 (Launch)</td>
+                <td style={{ padding: '10px 8px', color: 'rgba(255, 255, 255, 0.9)' }}>H2 2026 (Launch)</td>
                 <td style={{ padding: '10px 8px', textAlign: 'center', fontWeight: '500' }}>500</td>
                 <td style={{ padding: '10px 8px', textAlign: 'center', fontWeight: '500' }}>1.500</td>
-                <td style={{ padding: '10px 8px', textAlign: 'right', fontWeight: '500', color: '#C9963C' }}>€32.000</td>
+                <td style={{ padding: '10px 8px', textAlign: 'right', fontWeight: '500', color: '#C9963C' }}>€35.000</td>
               </tr>
               <tr style={{ borderBottom: '1px solid rgba(201, 150, 60, 0.2)' }}>
-                <td style={{ padding: '10px 8px', color: 'rgba(255, 255, 255, 0.9)' }}>Q1 2026 (Wachstum)</td>
-                <td style={{ padding: '10px 8px', textAlign: 'center', fontWeight: '500' }}>2.000</td>
-                <td style={{ padding: '10px 8px', textAlign: 'center', fontWeight: '500' }}>6.000</td>
-                <td style={{ padding: '10px 8px', textAlign: 'right', fontWeight: '500', color: '#C9963C' }}>€37.000</td>
+                <td style={{ padding: '10px 8px', color: 'rgba(255, 255, 255, 0.9)' }}>2027 (Wachstum)</td>
+                <td style={{ padding: '10px 8px', textAlign: 'center', fontWeight: '500' }}>2.500</td>
+                <td style={{ padding: '10px 8px', textAlign: 'center', fontWeight: '500' }}>7.500</td>
+                <td style={{ padding: '10px 8px', textAlign: 'right', fontWeight: '500', color: '#C9963C' }}>€80.000</td>
               </tr>
               <tr style={{ borderBottom: '2px solid #C9963C' }}>
-                <td style={{ padding: '10px 8px', color: 'rgba(255, 255, 255, 0.9)' }}>2026+ (Skalierung)</td>
+                <td style={{ padding: '10px 8px', color: 'rgba(255, 255, 255, 0.9)' }}>2028+ (Skalierung)</td>
                 <td style={{ padding: '10px 8px', textAlign: 'center', fontWeight: '500' }}>10.000+</td>
                 <td style={{ padding: '10px 8px', textAlign: 'center', fontWeight: '500' }}>30.000+</td>
-                <td style={{ padding: '10px 8px', textAlign: 'right', fontWeight: '500', color: '#C9963C' }}>€50.000+</td>
+                <td style={{ padding: '10px 8px', textAlign: 'right', fontWeight: '500', color: '#C9963C' }}>€270.000+</td>
               </tr>
             </tbody>
           </table>
         </div>
 
         <Paragraph style={{ fontSize: '13px', color: 'rgba(255, 255, 255, 0.7)', marginTop: '12px' }}>
-          <strong>Annahme:</strong> Die Kostenstruktur wächst unterproportional (Skalierungseffekte bei IT, Overhead kann verteilt werden). Eine Erhöhung auf 10-20% mehr wird durch höhere Provisionsvolumina kompensiert.
+          <strong>Annahme:</strong> Die Kostenstruktur wächst unterproportional (Skalierungseffekte bei IT, Overhead kann verteilt werden). Eine Erhöhung auf 10-20% mehr wird durch höhere Margenvolumina bei wachsender Nutzerbasis kompensiert.
         </Paragraph>
       </Card>
 
