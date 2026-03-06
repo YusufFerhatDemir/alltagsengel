@@ -127,6 +127,38 @@ export default function ProdukttechnologiePage() {
 
       <GoldSep />
 
+      {/* Anti-Bypass-Mechanismen */}
+      <SectionTitle>Anti-Bypass-Mechanismen</SectionTitle>
+      <Card>
+        <Paragraph>
+          Um die Plattform-Integrität zu schützen und sicherzustellen, dass alle Buchungen über AlltagsEngel laufen, setzen wir folgende Mechanismen ein:
+        </Paragraph>
+        <div style={{ marginTop: '12px' }}>
+          <BulletItem><strong style={{color:'#C9963C'}}>Plattform-gebundene Abrechnung:</strong> Alle Zahlungen laufen ausschließlich über AlltagsEngel</BulletItem>
+          <BulletItem><strong style={{color:'#C9963C'}}>Kontaktschutz:</strong> Kontaktdaten werden erst nach bestätigter Buchung freigegeben</BulletItem>
+          <BulletItem><strong style={{color:'#C9963C'}}>Versicherungsschutz:</strong> Nur bei Plattform-Buchungen besteht voller Versicherungsschutz</BulletItem>
+          <BulletItem><strong style={{color:'#C9963C'}}>Bewertungssystem:</strong> Bewertungen nur über verifizierte Plattform-Buchungen</BulletItem>
+        </div>
+      </Card>
+
+      <GoldSep />
+
+      {/* Krankentransport-Modul */}
+      <SectionTitle>Krankentransport-Modul</SectionTitle>
+      <Card>
+        <Paragraph>
+          Als zusätzliche Vertikale entwickelt AlltagsEngel ein B2B-Vermittlungsmodul für Krankentransporte. Die Plattform verbindet Transportunternehmen mit Fahrtanfragen und optimiert die Auslastung.
+        </Paragraph>
+        <div style={{ marginTop: '12px' }}>
+          <BulletItem><strong style={{color:'#C9963C'}}>Zielgruppe:</strong> Krankentransportunternehmen in der Rhein-Main-Region und deutschlandweit</BulletItem>
+          <BulletItem><strong style={{color:'#C9963C'}}>Preismodell:</strong> €99–199/Monat Abo-Gebühr + Vermittlungsgebühr pro Fahrt</BulletItem>
+          <BulletItem><strong style={{color:'#C9963C'}}>Funktionen:</strong> Echtzeit-Fahrtvermittlung, Routenoptimierung, digitale Abrechnung</BulletItem>
+          <BulletItem><strong style={{color:'#C9963C'}}>Synergie:</strong> Gemeinsame Infrastruktur mit der Alltagsbegleitung-Plattform</BulletItem>
+        </div>
+      </Card>
+
+      <GoldSep />
+
       {/* Entwicklungs-Roadmap */}
       <SectionTitle>Entwicklungs-Roadmap</SectionTitle>
       <Card>

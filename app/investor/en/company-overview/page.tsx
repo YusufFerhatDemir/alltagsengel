@@ -17,11 +17,11 @@ export default function CompanyOverviewPage() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '24px' }}>
           <div>
             <div style={{ fontSize: '12px', color: '#A0978A', marginBottom: '8px' }}>Company Name</div>
-            <div style={{ fontSize: '18px', color: '#C9963C', fontWeight: 'bold' }}>AlltagsEngel</div>
+            <div style={{ fontSize: '18px', color: '#C9963C', fontWeight: 'bold' }}>AlltagsEngel GmbH</div>
           </div>
           <div>
             <div style={{ fontSize: '12px', color: '#A0978A', marginBottom: '8px' }}>Legal Form</div>
-            <div style={{ fontSize: '18px', color: '#C9963C', fontWeight: 'bold' }}>UG haftungsbeschränkt</div>
+            <div style={{ fontSize: '18px', color: '#C9963C', fontWeight: 'bold' }}>GmbH (HRB eingetragen)</div>
           </div>
           <div>
             <div style={{ fontSize: '12px', color: '#A0978A', marginBottom: '8px' }}>Headquarters</div>
@@ -30,6 +30,10 @@ export default function CompanyOverviewPage() {
           <div>
             <div style={{ fontSize: '12px', color: '#A0978A', marginBottom: '8px' }}>Founded</div>
             <div style={{ fontSize: '18px', color: '#C9963C', fontWeight: 'bold' }}>2026</div>
+          </div>
+          <div>
+            <div style={{ fontSize: '12px', color: '#A0978A', marginBottom: '8px' }}>Domain</div>
+            <div style={{ fontSize: '18px', color: '#C9963C', fontWeight: 'bold' }}>alltagsengel.care</div>
           </div>
         </div>
       </Card>
@@ -62,17 +66,38 @@ export default function CompanyOverviewPage() {
         <BulletItem icon="📲">
           <strong>Mobile-First App:</strong> Cross-platform React Native application on iOS & Android for easy booking and management
         </BulletItem>
-        <BulletItem icon="🔗">
-          <strong>§45b Integration:</strong> Automated billing integration with care relief benefit system—no paperwork for families
+        <BulletItem icon="🏥">
+          <strong>Direct Pflegekasse Billing:</strong> Platform bills care insurance directly at §45b rates—no paperwork for families, no commission model
         </BulletItem>
         <BulletItem icon="✅">
-          <strong>Verified & Insured Companions:</strong> All caregivers are §53b qualified, background-checked, and professionally insured
+          <strong>Verified & Insured Companions:</strong> All caregivers are §53b qualified, background-checked, and professionally insured through the platform
         </BulletItem>
-        <BulletItem icon="🛡️">
-          <strong>Two-Sided Marketplace:</strong> Kunden (families/seniors) match with Engel (verified companions); earn commission on bookings
+        <BulletItem icon="🚑">
+          <strong>Two Verticals:</strong> Alltagsbegleitung (care companionship) and Krankentransport (patient transport mediation)—synergistic services on one platform
         </BulletItem>
         <BulletItem icon="🌍">
           <strong>Digital-First Design:</strong> Seamless experience for families and companions; premium dark theme with accessibility focus
+        </BulletItem>
+      </Card>
+
+      {/* Anti-Bypass Mechanisms */}
+      <SectionTitle>Platform Lock-In & Anti-Bypass</SectionTitle>
+      <GoldSep />
+      <Card>
+        <BulletItem icon="🔒">
+          <strong>Booking Only Through Platform:</strong> All appointments must be scheduled via the app—no off-platform arrangements possible
+        </BulletItem>
+        <BulletItem icon="📞">
+          <strong>Contact Info After Booking:</strong> Helper contact details (phone, address) are only shared after a confirmed and paid booking
+        </BulletItem>
+        <BulletItem icon="💳">
+          <strong>Payment Only Through Platform:</strong> All payments processed via AlltagsEngel; direct Pflegekasse billing ensures revenue stays on-platform
+        </BulletItem>
+        <BulletItem icon="🛡️">
+          <strong>Insurance & Ratings On-Platform:</strong> Liability insurance coverage and verified ratings/reviews only apply to bookings made through AlltagsEngel
+        </BulletItem>
+        <BulletItem icon="📜">
+          <strong>Contractual Protection:</strong> Terms of service prohibit off-platform arrangements; helpers agree to exclusivity clauses for platform-sourced clients
         </BulletItem>
       </Card>
 
@@ -88,18 +113,42 @@ export default function CompanyOverviewPage() {
       {/* Business Model */}
       <SectionTitle>Business Model</SectionTitle>
       <GoldSep />
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px', marginBottom: '24px' }}>
+        <StatBox label="Gross Margin" value="~50%" subLabel="Direct Pflegekasse billing" />
+        <StatBox label="Helper Payment" value="€20/hr" subLabel="Fixed, transparent rate" />
+        <StatBox label="Billing Rate" value="€35-40/hr" subLabel="Billed to Pflegekassen" />
+        <StatBox label="Monthly Margin" value="€65" subLabel="Per active customer" />
+      </div>
+
+      <SectionLabel>Vertical 1: Alltagsbegleitung (Care Companionship)</SectionLabel>
       <Card>
-        <BulletItem icon="💳">
-          <strong>Commission Model (18%):</strong> €18 commission on €100 booking (€7.20 on typical €40/hour booking)
-        </BulletItem>
-        <BulletItem icon="⭐">
-          <strong>Premium Subscription:</strong> €9.99/month optional premium for unlimited customer support & priority matching
-        </BulletItem>
         <BulletItem icon="🏥">
-          <strong>Direct Billing (Future):</strong> Direct insurance reimbursement for §45b bookings; increases margin to ~35%
+          <strong>Direct Pflegekasse Billing:</strong> Platform bills Pflegekassen (care insurance) directly at ~€35-40/hr for §45b services—no intermediary, no family paperwork
+        </BulletItem>
+        <BulletItem icon="💰">
+          <strong>~50% Gross Margin:</strong> Alltagsbegleiter receive a fixed €20/hr; AlltagsEngel retains ~€15-20/hr margin per booking
         </BulletItem>
         <BulletItem icon="📊">
-          <strong>Unit Economics:</strong> CAC €15-25, LTV €400-600, LTV/CAC ratio 16-40x
+          <strong>Unit Economics:</strong> ~€65 margin per active customer per month; CAC €15-25, LTV €600+, LTV/CAC ratio 24x+
+        </BulletItem>
+        <BulletItem icon="✅">
+          <strong>Transparent Pricing:</strong> Helpers know their fixed €20/hr rate upfront—no hidden fees, no commission surprises
+        </BulletItem>
+      </Card>
+
+      <SectionLabel>Vertical 2: Krankentransport (Patient Transport Mediation)</SectionLabel>
+      <Card>
+        <BulletItem icon="🚑">
+          <strong>Transport Mediation Platform:</strong> AlltagsEngel connects patients with licensed Krankentransport companies—digital booking, real-time tracking, automated dispatch
+        </BulletItem>
+        <BulletItem icon="💼">
+          <strong>B2B Subscription Model:</strong> Transport companies pay €99-199/month for platform access, lead generation, and digital dispatch tools
+        </BulletItem>
+        <BulletItem icon="📋">
+          <strong>Per-Ride Commission:</strong> Small commission per mediated ride on top of subscription—scalable revenue as ride volume grows
+        </BulletItem>
+        <BulletItem icon="🔗">
+          <strong>Synergy with Care Vertical:</strong> Care customers often need medical transport; cross-selling between verticals increases LTV and platform stickiness
         </BulletItem>
       </Card>
 
@@ -170,7 +219,7 @@ export default function CompanyOverviewPage() {
       {/* Investment Highlights */}
       <Card style={{ marginTop: '40px', backgroundColor: 'rgba(201, 150, 60, 0.1)', borderLeft: '4px solid #C9963C', padding: '24px' }}>
         <Paragraph style={{ margin: 0, color: '#F7F2EA' }}>
-          <strong>AlltagsEngel combines a massive market opportunity (€7.44B underutilized), first-mover advantage (only §45b digital platform), proven team expertise, and clear unit economics.</strong> With €500K seed funding, we'll dominate the digital care marketplace in Germany and expand across DACH.
+          <strong>AlltagsEngel GmbH (HRB registered) combines a massive market opportunity (€7.44B underutilized §45b budget), ~50% gross margin through direct Pflegekasse billing, two revenue verticals (Alltagsbegleitung + Krankentransport), strong anti-bypass mechanisms, and first-mover advantage as the only §45b digital platform.</strong> With €500K seed funding, we will dominate the digital care marketplace in Germany and expand across DACH.
         </Paragraph>
       </Card>
     </DocPageLayout>

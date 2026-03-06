@@ -19,7 +19,7 @@ export default function ZusammenfassungPage() {
           <StatBox value="€50+ Mrd" label="Marktgröße (TAM)" />
           <StatBox value="4,96 Mio" label="Pflegebedürftige" />
           <StatBox value="€500K" label="Seed-Finanzierung gesucht" />
-          <StatBox value="18%" label="Provisionsmodell" />
+          <StatBox value="~50%" label="Bruttomarge" />
         </div>
       </Card>
 
@@ -46,6 +46,8 @@ export default function ZusammenfassungPage() {
                 <th style={{ padding: '0.75rem', textAlign: 'right', color: '#D4AF37', fontWeight: '600' }}>Aktive Nutzer</th>
                 <th style={{ padding: '0.75rem', textAlign: 'right', color: '#D4AF37', fontWeight: '600' }}>Registrierte Engel</th>
                 <th style={{ padding: '0.75rem', textAlign: 'right', color: '#D4AF37', fontWeight: '600' }}>Monatl. Umsatz</th>
+                <th style={{ padding: '0.75rem', textAlign: 'right', color: '#D4AF37', fontWeight: '600' }}>Jahresumsatz</th>
+                <th style={{ padding: '0.75rem', textAlign: 'right', color: '#D4AF37', fontWeight: '600' }}>Gewinn</th>
               </tr>
             </thead>
             <tbody>
@@ -53,37 +55,47 @@ export default function ZusammenfassungPage() {
                 <td style={{ padding: '0.75rem' }}>Jahr 1</td>
                 <td style={{ padding: '0.75rem', textAlign: 'right' }}>500</td>
                 <td style={{ padding: '0.75rem', textAlign: 'right' }}>50</td>
-                <td style={{ padding: '0.75rem', textAlign: 'right' }}>~€19K</td>
+                <td style={{ padding: '0.75rem', textAlign: 'right' }}>~€32,5K</td>
+                <td style={{ padding: '0.75rem', textAlign: 'right' }}>€390K</td>
+                <td style={{ padding: '0.75rem', textAlign: 'right', color: '#ff6b6b' }}>-€30K</td>
               </tr>
               <tr style={{ borderBottom: '1px solid #333' }}>
                 <td style={{ padding: '0.75rem' }}>Jahr 2</td>
                 <td style={{ padding: '0.75rem', textAlign: 'right' }}>2.500</td>
                 <td style={{ padding: '0.75rem', textAlign: 'right' }}>150</td>
-                <td style={{ padding: '0.75rem', textAlign: 'right' }}>~€95K</td>
+                <td style={{ padding: '0.75rem', textAlign: 'right' }}>~€162,5K</td>
+                <td style={{ padding: '0.75rem', textAlign: 'right' }}>€1,95M</td>
+                <td style={{ padding: '0.75rem', textAlign: 'right', color: '#4ade80' }}>€990K</td>
               </tr>
               <tr style={{ borderBottom: '1px solid #333' }}>
                 <td style={{ padding: '0.75rem' }}>Jahr 3</td>
                 <td style={{ padding: '0.75rem', textAlign: 'right' }}>10.000</td>
                 <td style={{ padding: '0.75rem', textAlign: 'right' }}>500</td>
-                <td style={{ padding: '0.75rem', textAlign: 'right' }}>~€370K</td>
+                <td style={{ padding: '0.75rem', textAlign: 'right' }}>~€650K</td>
+                <td style={{ padding: '0.75rem', textAlign: 'right' }}>€7,8M</td>
+                <td style={{ padding: '0.75rem', textAlign: 'right', color: '#4ade80' }}>€4,6M</td>
               </tr>
               <tr style={{ borderBottom: '1px solid #333' }}>
                 <td style={{ padding: '0.75rem' }}>Jahr 4</td>
                 <td style={{ padding: '0.75rem', textAlign: 'right' }}>35.000</td>
                 <td style={{ padding: '0.75rem', textAlign: 'right' }}>2.000</td>
-                <td style={{ padding: '0.75rem', textAlign: 'right' }}>~€1,3M</td>
+                <td style={{ padding: '0.75rem', textAlign: 'right' }}>~€2,3M</td>
+                <td style={{ padding: '0.75rem', textAlign: 'right' }}>€27,3M</td>
+                <td style={{ padding: '0.75rem', textAlign: 'right', color: '#4ade80' }}>€18,2M</td>
               </tr>
               <tr>
                 <td style={{ padding: '0.75rem' }}>Jahr 5</td>
                 <td style={{ padding: '0.75rem', textAlign: 'right' }}>75.000</td>
                 <td style={{ padding: '0.75rem', textAlign: 'right' }}>5.000</td>
-                <td style={{ padding: '0.75rem', textAlign: 'right' }}>~€2,5M</td>
+                <td style={{ padding: '0.75rem', textAlign: 'right' }}>~€4,9M</td>
+                <td style={{ padding: '0.75rem', textAlign: 'right' }}>€58,5M</td>
+                <td style={{ padding: '0.75rem', textAlign: 'right', color: '#4ade80' }}>€39M</td>
               </tr>
             </tbody>
           </table>
         </div>
         <Paragraph style={{ marginTop: '1rem', fontSize: '0.9rem', color: '#B0B0B0' }}>
-          Annahmen: Ø Buchungswert €40, 18% Provision, exponentielles Wachstum in den ersten 3 Jahren
+          Annahmen: Festmarge-Modell (~€65/Kunde/Monat), Direktabrechnung mit Pflegekassen, Engel erhalten €20/Std fest, exponentielles Wachstum in den ersten 3 Jahren
         </Paragraph>
       </Card>
 

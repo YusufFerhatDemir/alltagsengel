@@ -16,7 +16,7 @@ export default function UnternehmensprofiltPage() {
       <Card>
         <SectionTitle>Unternehmensübersicht</SectionTitle>
         <Paragraph>
-          <strong style={{color:'#C9963C'}}>AlltagsEngel</strong> ist eine digitale Plattform, die Pflegebedürftige mit zertifizierten Alltagsbegleitern verbindet. Als Two-Sided Marketplace transformieren wir die fragmentierte Pflege- und Begleitlandschaft in Deutschland.
+          <strong style={{color:'#C9963C'}}>AlltagsEngel</strong> ist eine digitale Plattform (HRB eingetragen), die Pflegebedürftige mit zertifizierten Alltagsbegleitern verbindet. Als Two-Sided Marketplace mit Direktabrechnung über die Pflegekassen transformieren wir die fragmentierte Pflege- und Begleitlandschaft in Deutschland. Zusätzlich wird Krankentransport-Vermittlung als B2B-Vertikale aufgebaut.
         </Paragraph>
         <Paragraph>
           <strong style={{color:'#C9963C'}}>Mission:</strong> Alltagsbegleitung in Deutschland zugänglicher, sicherer und menschlicher zu machen.
@@ -75,12 +75,18 @@ export default function UnternehmensprofiltPage() {
       <Card>
         <SectionTitle>Geschäftsmodell</SectionTitle>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
-          <StatBox value="18%" label="Plattform-Provision pro Buchung" />
-          <StatBox value="€9,99" label="Premium-Abo pro Monat" />
-          <StatBox value="Geplant" label="Direktabrechnung mit Krankenkassen" />
+          <StatBox value="~50%" label="Bruttomarge (Direktabrechnung)" />
+          <StatBox value="€20/Std" label="Feste Engel-Vergütung" />
+          <StatBox value="Aktiv" label="Pflegekassen-Abrechnung" />
         </div>
         <Paragraph>
-          Unser Geschäftsmodell kombiniert Provisionsgebühren, Premium-Features und zukünftige B2B-Partnerschaften.
+          Unser Geschäftsmodell basiert auf Direktabrechnung mit den Pflegekassen. Kunden zahlen nichts aus eigener Tasche – der §45b-Entlastungsbetrag wird direkt abgerechnet. Alltagsbegleiter erhalten eine feste Vergütung von €20/Std, die Plattform behält eine Bruttomarge von ~50% (~€65/Kunde/Monat). Kein Abo-Modell für Kunden oder Engel im Kerngeschäft.
+        </Paragraph>
+        <Paragraph>
+          <strong style={{color:'#C9963C'}}>Zweites Standbein – Krankentransport-Vermittlung:</strong> B2B-Plattform zur Vermittlung von Krankentransporten an Transportunternehmen. Preismodell: €99–199/Monat Abo + Vermittlungsgebühr pro Fahrt.
+        </Paragraph>
+        <Paragraph>
+          <strong style={{color:'#C9963C'}}>Unternehmensform:</strong> HRB eingetragen (offiziell registriert), Standort Frankfurt am Main.
         </Paragraph>
       </Card>
 

@@ -39,13 +39,13 @@ export default function MarketAnalysisPage() {
           <strong>Total Annual Pool:</strong> €7.44B (4.96M beneficiaries × €125/month × 12 months)
         </BulletItem>
         <BulletItem icon="📊">
-          <strong>Utilization Rate:</strong> Only ~40% currently utilized; €4.46B in benefits go unused annually
+          <strong>Utilization Rate:</strong> 60% of benefits go unused -- €4.46B in annual unused volume represents massive untapped demand
         </BulletItem>
         <BulletItem icon="✅">
           <strong>Eligible Activities:</strong> Companionship, household help, transportation, hobbies, social activities
         </BulletItem>
         <BulletItem icon="🔗">
-          <strong>Payment Method:</strong> Direct §45b billing integration or reimbursement through insurance
+          <strong>Payment Method:</strong> Direktabrechnung (direct billing) with Pflegekassen -- families pay nothing out of pocket
         </BulletItem>
       </Card>
 
@@ -58,15 +58,15 @@ export default function MarketAnalysisPage() {
           value="€50B+" 
           subLabel="Entire German care & elderly support market"
         />
-        <StatBox 
-          label="SAM (Serviceable)" 
-          value="€8-12B" 
-          subLabel="§45b care relief benefit market (€7.44B utilized)"
+        <StatBox
+          label="SAM (Serviceable)"
+          value="€7.44B"
+          subLabel="Alltagsbegleitung addressable market (§45b benefits)"
         />
-        <StatBox 
-          label="SOM (Obtainable)" 
-          value="€200-400M" 
-          subLabel="AlltagsEngel target (5-8% market capture in 5 years)"
+        <StatBox
+          label="SOM (5yr Obtainable)"
+          value="€400M"
+          subLabel="AlltagsEngel 5-year revenue target"
         />
       </div>
 
@@ -129,21 +129,21 @@ export default function MarketAnalysisPage() {
       <GoldSep />
       <Card style={{ marginBottom: '24px' }}>
         <div style={{ marginBottom: '24px' }}>
-          <div style={{ fontSize: '14px', color: '#C9963C', fontWeight: 'bold', marginBottom: '8px' }}>Commission Model</div>
+          <div style={{ fontSize: '14px', color: '#C9963C', fontWeight: 'bold', marginBottom: '8px' }}>Direktabrechnung (Direct Billing) with Pflegekassen</div>
           <Paragraph style={{ fontSize: '13px', margin: '0' }}>
-            18% commission on every booking. Typical €40/hour booking generates €7.20 revenue. Scales with volume without additional cost per transaction.
+            AlltagsEngel bills Pflegekassen directly at ~€40/hr. Helpers are paid a fixed €20/hr, yielding a platform gross margin of ~€20/hr (~50%). No commission model -- the platform captures margin through the spread between billing rate and helper compensation.
           </Paragraph>
         </div>
         <div style={{ marginBottom: '24px', borderTop: '1px solid #3A3530', paddingTop: '16px' }}>
-          <div style={{ fontSize: '14px', color: '#C9963C', fontWeight: 'bold', marginBottom: '8px' }}>Premium Subscription</div>
+          <div style={{ fontSize: '14px', color: '#C9963C', fontWeight: 'bold', marginBottom: '8px' }}>Unit Economics per Customer</div>
           <Paragraph style={{ fontSize: '13px', margin: '0' }}>
-            €9.99/month optional premium for priority matching, unlimited support, and advanced features. Estimated 10-15% adoption rate.
+            Billing rate: ~€40/hr to Pflegekasse | Helper pay: €20/hr (fixed) | Platform margin: ~€20/hr (~50% gross margin). Average margin per customer per month: €65. Customer LTV: €1,560 | CAC: €35 | LTV/CAC ratio: 44x.
           </Paragraph>
         </div>
         <div style={{ borderTop: '1px solid #3A3530', paddingTop: '16px' }}>
-          <div style={{ fontSize: '14px', color: '#C9963C', fontWeight: 'bold', marginBottom: '8px' }}>Direct Billing (Future)</div>
+          <div style={{ fontSize: '14px', color: '#C9963C', fontWeight: 'bold', marginBottom: '8px' }}>Krankentransport (Patient Transport) Mediation</div>
           <Paragraph style={{ fontSize: '13px', margin: '0' }}>
-            Once insurance partnerships mature, direct §45b billing increases margin to ~35%. Estimated timeline: Year 2-3.
+            B2B revenue stream: mediation of patient transport bookings without owning vehicles. Transport companies subscribe at €99-199/month for access to booking demand. German Krankentransport market size: €3B. AlltagsEngel acts as digital marketplace connecting patients with licensed transport providers.
           </Paragraph>
         </div>
       </Card>
@@ -151,21 +151,31 @@ export default function MarketAnalysisPage() {
       {/* Unit Economics */}
       <SectionTitle>Unit Economics & Metrics</SectionTitle>
       <GoldSep />
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginBottom: '40px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '20px', marginBottom: '40px' }}>
         <Card style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: '24px', color: '#C9963C', fontWeight: 'bold', marginBottom: '8px' }}>€20</div>
+          <div style={{ fontSize: '24px', color: '#C9963C', fontWeight: 'bold', marginBottom: '8px' }}>~50%</div>
+          <div style={{ fontSize: '12px', color: '#A0978A' }}>Gross Margin</div>
+          <div style={{ fontSize: '11px', color: '#7A7570', marginTop: '8px' }}>~€20/hr margin on €40/hr billing rate; direct billing model</div>
+        </Card>
+        <Card style={{ textAlign: 'center' }}>
+          <div style={{ fontSize: '24px', color: '#C9963C', fontWeight: 'bold', marginBottom: '8px' }}>€65</div>
+          <div style={{ fontSize: '12px', color: '#A0978A' }}>Margin per Customer/Month</div>
+          <div style={{ fontSize: '11px', color: '#7A7570', marginTop: '8px' }}>Recurring monthly platform margin per active customer</div>
+        </Card>
+        <Card style={{ textAlign: 'center' }}>
+          <div style={{ fontSize: '24px', color: '#C9963C', fontWeight: 'bold', marginBottom: '8px' }}>€35</div>
           <div style={{ fontSize: '12px', color: '#A0978A' }}>CAC (Customer Acquisition Cost)</div>
           <div style={{ fontSize: '11px', color: '#7A7570', marginTop: '8px' }}>Social media & word-of-mouth focused; low-cost customer acquisition</div>
         </Card>
         <Card style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: '24px', color: '#C9963C', fontWeight: 'bold', marginBottom: '8px' }}>€500</div>
+          <div style={{ fontSize: '24px', color: '#C9963C', fontWeight: 'bold', marginBottom: '8px' }}>€1,560</div>
           <div style={{ fontSize: '12px', color: '#A0978A' }}>LTV (Lifetime Value)</div>
-          <div style={{ fontSize: '11px', color: '#7A7570', marginTop: '8px' }}>18-24 month average customer lifetime; repeat bookings compound revenue</div>
+          <div style={{ fontSize: '11px', color: '#7A7570', marginTop: '8px' }}>24-month average customer lifetime; recurring direct billing revenue</div>
         </Card>
         <Card style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: '24px', color: '#5CB882', fontWeight: 'bold', marginBottom: '8px' }}>25x</div>
+          <div style={{ fontSize: '24px', color: '#5CB882', fontWeight: 'bold', marginBottom: '8px' }}>44x</div>
           <div style={{ fontSize: '12px', color: '#A0978A' }}>LTV/CAC Ratio</div>
-          <div style={{ fontSize: '11px', color: '#7A7570', marginTop: '8px' }}>Exceptional unit economics; every €1 spent on acquisition returns €25 lifetime value</div>
+          <div style={{ fontSize: '11px', color: '#7A7570', marginTop: '8px' }}>Exceptional unit economics; every €1 spent on acquisition returns €44 lifetime value</div>
         </Card>
       </div>
 
@@ -195,10 +205,10 @@ export default function MarketAnalysisPage() {
       <GoldSep />
       <Card>
         <BulletItem icon="⚠️">
-          <strong>Regulatory Risk:</strong> §45b rules could change. Mitigation: Diversify revenue (commission + premium + B2B licensing); stay compliant; engage insurance partners early.
+          <strong>Regulatory Risk:</strong> §45b rules could change. Mitigation: Diversify revenue (direct billing + Krankentransport B2B); stay compliant; engage Pflegekassen partners early.
         </BulletItem>
         <BulletItem icon="⚠️">
-          <strong>Competitor Risk:</strong> Established players might build §45b integration. Mitigation: Move fast; lock in insurance partnerships; network effects & brand loyalty.
+          <strong>Competitor Risk:</strong> Established players might build §45b integration. Mitigation: Move fast; lock in Pflegekassen direct billing contracts; network effects & brand loyalty.
         </BulletItem>
         <BulletItem icon="⚠️">
           <strong>Adoption Risk:</strong> Older demographics slower to adopt apps. Mitigation: Accessible design; phone support; family/caregiver handles onboarding.
@@ -207,14 +217,14 @@ export default function MarketAnalysisPage() {
           <strong>Supply Risk:</strong> Finding qualified §53b companions. Mitigation: Fast companion onboarding; premium companion earnings; referral incentives.
         </BulletItem>
         <BulletItem icon="⚠️">
-          <strong>Insurance Risk:</strong> Partners might not offer full coverage. Mitigation: Multi-partner approach; own white-label insurance product research.
+          <strong>Billing Risk:</strong> Pflegekassen approval process can be slow. Mitigation: Multi-Kasse approach; robust documentation & compliance; proven §45b billing workflows.
         </BulletItem>
       </Card>
 
       {/* Market Opportunity Summary */}
       <Card style={{ marginTop: '40px', backgroundColor: 'rgba(201, 150, 60, 0.1)', borderLeft: '4px solid #C9963C', padding: '24px' }}>
         <Paragraph style={{ margin: 0, color: '#F7F2EA' }}>
-          <strong>Germany's care market is massive (€50B+), with €7.44B in underutilized §45b benefits and 4.96M care-dependent people.</strong> AlltagsEngel's first-mover advantage in automated §45b integration positions us to capture €200-400M in revenue within 5 years. Unit economics are exceptional (25x LTV/CAC), and the digital gap is real—competitors still operate offline or without insurance integration.
+          <strong>Germany's care market is massive (€50B+), with €4.46B in unused §45b Entlastungsbetrag (60% unused rate) and 4.96M Pflegebed&uuml;rftige.</strong> AlltagsEngel's direct billing model (Direktabrechnung) with Pflegekassen yields ~50% gross margin and exceptional unit economics (44x LTV/CAC). Combined with a €3B Krankentransport mediation opportunity, we target €400M in revenue within 5 years. The digital gap is real -- competitors still operate offline or without automated billing integration.
         </Paragraph>
       </Card>
     </DocPageLayout>

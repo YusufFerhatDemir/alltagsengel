@@ -36,7 +36,7 @@ const stats = [
   { value: '€50 Mrd.+', label: 'Marktpotenzial' },
   { value: '4,96 Mio.', label: 'Pflegebedürftige' },
   { value: '€500K', label: 'Seed-Runde' },
-  { value: '18%', label: 'Provision' },
+  { value: '~50%', label: 'Bruttomarge' },
 ]
 
 const catsDe = ['Alle', 'Unternehmen', 'Finanzen', 'Markt', 'Produkt', 'Strategie', 'Brand', 'Legal', 'Team', 'Übersicht', 'Präsentation']
@@ -184,7 +184,7 @@ export default function InvestorPortal() {
       <div style={{ background: '#1A1612', borderTop: '1px solid rgba(201,150,60,0.1)', padding: '40px 24px', textAlign: 'center' }}>
         <div style={{ maxWidth: 600, margin: '0 auto' }}>
           <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 22, fontWeight: 700, color: '#F7F2EA', marginBottom: 8 }}>AlltagsEngel UG</div>
-          <div style={{ fontSize: 13, color: '#7A6E5E', marginBottom: 16 }}>(haftungsbeschränkt)</div>
+          <div style={{ fontSize: 13, color: '#7A6E5E', marginBottom: 16 }}>(haftungsbeschränkt) · HRB eingetragen</div>
           <div style={{ fontSize: 13, color: '#9A8C7C', lineHeight: 1.8 }}>
             Yusuf Ferhat Demir · Gründer & CEO<br />
             Schiller Str. 31, 60313 Frankfurt am Main<br />
