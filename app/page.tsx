@@ -71,13 +71,13 @@ export default function SplashPage() {
               <span className="lp-svc-price">ab 32 €/Std.</span>
             </Link>
             <Link href="/krankenfahrten" className="lp-service-card">
-              <div className="lp-svc-icon"><img src="/assets/icons/krankenfahrdienst.png" alt="Krankenfahrdienst" width={48} height={48} style={{ objectFit: 'contain' }} /></div>
+              <div className="lp-svc-icon">🚑</div>
               <h4>Krankenfahrten</h4>
               <p>Sichere Fahrten zu Ärzten, Kliniken und Therapien</p>
               <span className="lp-svc-price">ab 0,35 €/km</span>
             </Link>
             <Link href="/hygienebox" className="lp-service-card">
-              <div className="lp-svc-icon"><img src="/assets/icons/hygienebox.png" alt="Hygienebox" width={48} height={48} style={{ objectFit: 'contain' }} /></div>
+              <div className="lp-svc-icon">🧴</div>
               <h4>Hygienebox</h4>
               <p>Monatliche Pflegehilfsmittel — bis 40 € von der Kasse</p>
               <span className="lp-svc-price">ab 29,90 €/Mon.</span>
