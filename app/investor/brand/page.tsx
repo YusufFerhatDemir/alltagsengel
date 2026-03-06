@@ -455,7 +455,7 @@ export default function BrandPage() {
             <div style={{ fontSize: 13, color: C.ink3, lineHeight: 2 }}>
               Schiller Str. 31, 60313 Frankfurt am Main<br />
               Geschäftsführer: Yusuf Ferhat Demir<br />
-              info@alltagsengel.care · www.alltagsengel.de
+              info@alltagsengel.care · www.alltagsengel.care
             </div>
             <div style={{ marginTop: 20, fontSize: 11, color: C.ink5 }}>
               Bei Fragen zur Markenidentität kontaktieren Sie die Marketing-Abteilung.

@@ -141,7 +141,7 @@ export default function RechtCompliancePage() {
         <SectionLabel>Marke & Branding</SectionLabel>
         <div style={{ marginBottom: '16px' }}>
           <BulletItem><strong>Marke "AlltagsEngel":</strong> Anmeldung beim DPMA geplant (Q1 2025)</BulletItem>
-          <BulletItem><strong>Domain:</strong> alltagsengel.de gesichert</BulletItem>
+          <BulletItem><strong>Domain:</strong> alltagsengel.care gesichert</BulletItem>
           <BulletItem><strong>Slogan:</strong> "Mit Herz für dich da" (Marke geplant)</BulletItem>
           <BulletItem><strong>Logo & Design:</strong> Eigenentwicklung, volle Nutzungsrechte bei UG</BulletItem>
         </div>
