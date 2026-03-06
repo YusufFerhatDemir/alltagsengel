@@ -28,10 +28,10 @@ export default function ExecutiveSummaryPage() {
           <strong>Germany's Aging Population:</strong> 4.96 million care-dependent people with growing needs
         </BulletItem>
         <BulletItem icon="📋">
-          <strong>§45b Framework:</strong> €125/month care relief benefit serves 2.98M people, but only ~40% fully utilize it
+          <strong>§45b Framework:</strong> €131/month care relief benefit serves 2.98M people, but only ~40% fully utilize it
         </BulletItem>
         <BulletItem icon="💰">
-          <strong>Market Opportunity:</strong> €7.44B annual benefit pool, mostly fragmented and offline
+          <strong>Market Opportunity:</strong> €7.79B annual benefit pool, mostly fragmented and offline
         </BulletItem>
         <BulletItem icon="📱">
           <strong>Digital Gap:</strong> No integrated digital-first platform exists for §45b hiring and direct Pflegekasse billing
@@ -196,7 +196,7 @@ export default function ExecutiveSummaryPage() {
       {/* Call to Action */}
       <Card style={{ marginTop: '40px', backgroundColor: 'rgba(201, 150, 60, 0.1)', borderLeft: '4px solid #C9963C', padding: '24px' }}>
         <Paragraph style={{ margin: 0, color: '#F7F2EA' }}>
-          <strong>AlltagsEngel is the first digital platform that bills Pflegekassen directly for §45b care relief services — with ~50% gross margin and zero cost to families.</strong> With an LTV/CAC ratio of 44x, break-even projected by month 10–12 of Year 1, and a second vertical in Krankentransport, we are positioned to capture a significant share of Germany's €7.44B underutilized care benefit market. The company is officially registered (HRB eingetragen) and ready to scale. We're seeking €500K to accelerate growth across the DACH region.
+          <strong>AlltagsEngel is the first digital platform that bills Pflegekassen directly for §45b care relief services — with ~50% gross margin and zero cost to families.</strong> With an LTV/CAC ratio of 44x, break-even projected by month 10–12 of Year 1, and a second vertical in Krankentransport, we are positioned to capture a significant share of Germany's €7.79B underutilized care benefit market. The company is officially registered (HRB eingetragen) and ready to scale. We're seeking €500K to accelerate growth across the DACH region.
         </Paragraph>
       </Card>
     </DocPageLayout>

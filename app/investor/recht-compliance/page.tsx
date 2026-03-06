@@ -39,7 +39,7 @@ export default function RechtCompliancePage() {
           <Paragraph style={{ marginBottom: '12px', fontSize: '14px' }}>
             Die App basiert auf dem deutschen Regulierungsrahmen für Alltagsbegleiter gemäß <strong>§45b SGB XI</strong> (Elftes Buch Sozialgesetzbuch).
           </Paragraph>
-          <BulletItem><strong>Förderung:</strong> €125/Monat von Pflegekassen für Nutzer mit Pflegegrad</BulletItem>
+          <BulletItem><strong>Förderung:</strong> €131/Monat von Pflegekassen für Nutzer mit Pflegegrad</BulletItem>
           <BulletItem><strong>Geltungsbereich:</strong> Bundesland Hessen (erweiterbar)</BulletItem>
           <BulletItem><strong>Anforderung:</strong> §53b Kompetenzschulung (160-Stunden-Kurs) für Engel</BulletItem>
           <BulletItem><strong>Zertifizierung:</strong> Durch Hessisches Ministerium für Soziales und Integration</BulletItem>

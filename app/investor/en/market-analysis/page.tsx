@@ -33,10 +33,10 @@ export default function MarketAnalysisPage() {
       <GoldSep />
       <Card style={{ marginBottom: '40px' }}>
         <BulletItem icon="📋">
-          <strong>Benefit Amount:</strong> €125/month per care-dependent person (€1,500/year)
+          <strong>Benefit Amount:</strong> €131/month per care-dependent person (€1,500/year)
         </BulletItem>
         <BulletItem icon="💰">
-          <strong>Total Annual Pool:</strong> €7.44B (4.96M beneficiaries × €125/month × 12 months)
+          <strong>Total Annual Pool:</strong> €7.79B (4.96M beneficiaries × €131/month × 12 months)
         </BulletItem>
         <BulletItem icon="📊">
           <strong>Utilization Rate:</strong> 60% of benefits go unused -- €4.46B in annual unused volume represents massive untapped demand
@@ -60,7 +60,7 @@ export default function MarketAnalysisPage() {
         />
         <StatBox
           label="SAM (Serviceable)"
-          value="€7.44B"
+          value="€7.79B"
           subLabel="Alltagsbegleitung addressable market (§45b benefits)"
         />
         <StatBox

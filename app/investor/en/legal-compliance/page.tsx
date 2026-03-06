@@ -43,7 +43,7 @@ export default function LegalCompliancePage() {
       <GoldSep />
       <Card style={{ marginBottom: '40px' }}>
         <BulletItem icon="📋">
-          <strong>§45b SGB XI:</strong> Care relief benefit regulation. AlltagsEngel facilitates legal §45b benefit utilization by connecting families with companions. Users receive €125/month for approved activities (companionship, household, transportation).
+          <strong>§45b SGB XI:</strong> Care relief benefit regulation. AlltagsEngel facilitates legal §45b benefit utilization by connecting families with companions. Users receive €131/month for approved activities (companionship, household, transportation).
         </BulletItem>
         <BulletItem icon="✅">
           <strong>§53b SGB XI (Companion Qualifications):</strong> Companions must meet €53b criteria for care relief billing eligibility. Requirements: Specific training (24-hour course), background check clearance, ongoing education. AlltagsEngel enforces §53b verification in platform.
