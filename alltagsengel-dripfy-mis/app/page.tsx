@@ -28,7 +28,7 @@ export default function DashboardPage() {
         users: userCount || 0,
         bookings: bookingCount || 0,
         angels: angelCount || 0,
-        revenue: (bookingCount || 0) * UNIT_ECONOMICS.avgBookingValue,
+        revenue: (bookingCount || 0) * UNIT_ECONOMICS.billingRatePerHour * UNIT_ECONOMICS.avgHoursPerCustomerMonth,
       })
       setRecentBookings(bookings || [])
     } catch (e) {
@@ -81,8 +81,8 @@ export default function DashboardPage() {
         {/* Unit Economics */}
         <Card title="Einheitsökonomie" icon="pieChart">
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <StatRow label="Ø Buchungswert" value={`€${UNIT_ECONOMICS.avgBookingValue}`} />
-            <StatRow label="Plattformgebühr" value={`${UNIT_ECONOMICS.platformFee * 100}%`} />
+            <StatRow label="Marge/Std" value={`€${UNIT_ECONOMICS.marginPerHour}`} />
+            <StatRow label="Marge/Kunde/Monat" value={`€${UNIT_ECONOMICS.marginPerCustomerMonth}`} />
             <StatRow label="CAC" value={`€${UNIT_ECONOMICS.cac}`} />
             <StatRow label="LTV" value={`€${UNIT_ECONOMICS.ltv}`} />
             <StatRow label="LTV/CAC" value={`${UNIT_ECONOMICS.ltvCacRatio}x`} />

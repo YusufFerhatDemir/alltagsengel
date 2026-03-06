@@ -123,9 +123,9 @@ export default function FinancePage() {
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
           <Card title="Einheitsökonomie" icon="pieChart">
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-              <StatRow label="Ø Buchungswert" value={`€${UE.avgBookingValue}`} />
-              <StatRow label="Plattformgebühr" value={`${UE.platformFee * 100}%`} />
-              <StatRow label="Ø Ertrag pro Buchung" value={`€${(UE.avgBookingValue * UE.platformFee).toFixed(2)}`} />
+              <StatRow label="Abrechnungssatz/Std" value={`€${UE.billingRatePerHour}`} />
+              <StatRow label="Engel-Vergütung/Std" value={`€${UE.helperPayPerHour}`} />
+              <StatRow label="Marge/Std" value={`€${UE.marginPerHour}`} />
               <StatRow label="Kundenakquisekosten (CAC)" value={`€${UE.cac}`} />
               <StatRow label="Lifetime Value (LTV)" value={`€${UE.ltv}`} />
               <StatRow label="LTV / CAC Ratio" value={`${UE.ltvCacRatio}x`} subValue="(Ziel: >3x)" />
