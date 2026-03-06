@@ -15,6 +15,8 @@ const categories: { key: string; icon: ReactNode; label: string }[] = [
   { key: 'apotheke', icon: <IconPillGold size={26} />, label: 'Apotheke' },
   { key: 'spazieren', icon: <IconWalkGold size={26} />, label: 'Spazieren' },
   { key: 'aktivitaeten', icon: <IconTargetGold size={26} />, label: 'Aktivitäten' },
+  { key: 'krankenfahrdienst', icon: <img src="/assets/icons/krankenfahrdienst.png" alt="Krankenfahrdienst" width={26} height={26} style={{ objectFit: 'contain' }} />, label: 'Krankenfahrt' },
+  { key: 'hygienebox', icon: <img src="/assets/icons/hygienebox.png" alt="Hygienebox" width={26} height={26} style={{ objectFit: 'contain' }} />, label: 'Hygienebox' },
 ]
 
 const serviceMap: Record<string, string> = {
@@ -26,6 +28,8 @@ const serviceMap: Record<string, string> = {
   apotheke: 'Apotheke',
   spazieren: 'Spazieren',
   aktivitaeten: 'Aktivitäten',
+  krankenfahrdienst: 'Krankenfahrdienst',
+  hygienebox: 'Hygienebox',
 }
 
 export default function KundeHomePage() {
