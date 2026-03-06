@@ -273,3 +273,24 @@ export function IconWingsGold(p: IconProps) {
     <circle cx="12" cy="5.5" r="1.2" fill="url(#gWgL)" opacity="0.6"/>
   </IGold>
 }
+
+// ── Krankenfahrdienst (Ambulance) ──
+export function IconKrankenfahrtGold(p: IconProps) {
+  return <IGold size={p.size} gid="gKf" className={p.className}>
+    <rect x="1" y="10" width="15" height="8" rx="1.5" fill="url(#gKf)" stroke="#A07428" strokeWidth="0.4"/>
+    <path d="M16 13h4.5l2.5 3v2h-7v-5z" fill="url(#gKfL)" stroke="#A07428" strokeWidth="0.4" strokeLinejoin="round"/>
+    <circle cx="5.5" cy="19.5" r="2" fill="url(#gKf)" stroke="#A07428" strokeWidth="0.5"/>
+    <circle cx="18.5" cy="19.5" r="2" fill="url(#gKf)" stroke="#A07428" strokeWidth="0.5"/>
+    <path d="M8.5 13v4M6.5 15h4" fill="none" stroke="#1A1612" strokeWidth="2" strokeLinecap="round"/>
+  </IGold>
+}
+
+// ── Hygienebox ──
+export function IconHygieneboxGold(p: IconProps) {
+  return <IGold size={p.size} gid="gHb" className={p.className}>
+    <rect x="2" y="9" width="20" height="12" rx="2" fill="url(#gHb)" stroke="#A07428" strokeWidth="0.4"/>
+    <rect x="1" y="5" width="22" height="5" rx="1.5" fill="url(#gHbL)" stroke="#A07428" strokeWidth="0.3"/>
+    <path d="M10 5V3.5a2 2 0 014 0V5" fill="none" stroke="#A07428" strokeWidth="1.2" strokeLinecap="round"/>
+    <path d="M9 14.5l2 2 4-4" fill="none" stroke="#1A1612" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+  </IGold>
+}
