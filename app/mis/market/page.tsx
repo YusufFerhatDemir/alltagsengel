@@ -28,7 +28,7 @@ export default function MarketPage() {
       {/* TAM SAM SOM */}
       <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
         <KpiCard title="TAM" value="€24,6 Mrd." icon="globe" trend="up" />
-        <KpiCard title="SAM" value="€7,84 Mrd." icon="target" trend="up" />
+        <KpiCard title="SAM" value="€7,80 Mrd." icon="target" trend="up" />
         <KpiCard title="SOM (Jahr 5)" value="€52 Mio." icon="zap" trend="up" color={BRAND.success} />
         <KpiCard title="Entlastungsbetrag" value={`€${M.entlastungsbetrag}`} unit="/Monat" icon="banknote" color={BRAND.gold} />
       </div>
@@ -39,7 +39,7 @@ export default function MarketPage() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
             <StatRow label="Pflegebedürftige (PG 1-5)" value="4,96 Mio." />
             <StatRow label="§45b Entlastungsbetrag" value={`€${M.entlastungsbetrag}/Monat`} />
-            <StatRow label="SAM = 4,96M × €131 × 12" value="€7,84 Mrd." />
+            <StatRow label="SAM = 4,96M × €131 × 12" value="€7,80 Mrd." />
             <StatRow label="Ungenutzte Rate" value={`${(M.unusedRate * 100).toFixed(0)}%`} />
             <StatRow label="Ungenutztes Volumen" value={`€${(M.unusedVolume / 1e9).toFixed(1)} Mrd.`} />
           </div>

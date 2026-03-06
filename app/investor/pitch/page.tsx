@@ -134,7 +134,7 @@ function buildSlides(): Slide[] {
       id: 'problem', label: 'Problem', title: 'Der Pflegemarkt braucht digitale Innovation',
       content: (
         <div className="grid-3" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16, marginTop: 24 }}>
-          <Card><StatBox value="€4,4 Mrd." label="Ungenutzte §45b-Mittel" sub="Von €7,44 Mrd. werden nur 40% abgerufen" /></Card>
+          <Card><StatBox value="€4,4 Mrd." label="Ungenutzte §45b-Mittel" sub="Von €7,79 Mrd. werden nur 40% abgerufen" /></Card>
           <Card><StatBox value="0" label="Digitale Plattform" sub="Analoge Vermittlung, lange Wartezeiten" /></Card>
           <Card><StatBox value="Ø 14 Tage" label="Wartezeit" sub="Keine standardisierte Qualitätssicherung" /></Card>
         </div>
@@ -146,7 +146,7 @@ function buildSlides(): Slide[] {
         <div className="grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 32, marginTop: 24 }}>
           <div>
             <FeatureRow icon={Icons.zap(20)} title="Sofortige Vermittlung" desc="Zertifizierte Alltagsbegleiter in Ihrer Nähe — Buchung in unter 2 Minuten" />
-            <FeatureRow icon={Icons.heart(20)} title="§45b Integration" desc="Direkte Abrechnung mit allen Pflegekassen. €125/Monat pro Pflegebedürftigem" />
+            <FeatureRow icon={Icons.heart(20)} title="§45b Integration" desc="Direkte Abrechnung mit allen Pflegekassen. €131/Monat pro Pflegebedürftigem" />
             <FeatureRow icon={Icons.star(20)} title="Qualitätsgarantie" desc="Alle Engel sind nach §53b SGB XI zertifiziert und werden bewertet" />
             <FeatureRow icon={Icons.phone(20)} title="Dual-App" desc="Eigene Oberfläche für Kunden und Engel. iOS & Android" />
           </div>
@@ -174,7 +174,7 @@ function buildSlides(): Slide[] {
             </Card>
             <Card style={{ textAlign: 'center', borderColor: 'rgba(201,150,60,0.15)' }}>
               <div style={{ fontSize: 11, color: C.ink4, fontWeight: 700, letterSpacing: '0.1em', marginBottom: 8 }}>SAM</div>
-              <StatBox value="€7,44 Mrd." label="§45b Jahresbudget" />
+              <StatBox value="€7,79 Mrd." label="§45b Jahresbudget" />
             </Card>
             <Card style={{ textAlign: 'center' }}>
               <div style={{ fontSize: 11, color: C.ink4, fontWeight: 700, letterSpacing: '0.1em', marginBottom: 8 }}>SOM</div>
@@ -213,7 +213,7 @@ function buildSlides(): Slide[] {
           </div>
           <Card style={{ marginTop: 16, textAlign: 'center' }}>
             <div style={{ fontSize: 13, color: C.ink3 }}>§45b Entlastungsbudget pro Pflegebedürftigem</div>
-            <div className="big-num" style={{ fontSize: 36, fontWeight: 700, color: C.gold, fontFamily: "'Cormorant Garamond', serif", marginTop: 4 }}>€125 / Monat</div>
+            <div className="big-num" style={{ fontSize: 36, fontWeight: 700, color: C.gold, fontFamily: "'Cormorant Garamond', serif", marginTop: 4 }}>€131 / Monat</div>
             <div style={{ fontSize: 12, color: C.ink4, marginTop: 4 }}>= €1.500 / Jahr — AlltagsEngel rechnet direkt mit der Pflegekasse ab</div>
           </Card>
           <Card style={{ marginTop: 16 }}>

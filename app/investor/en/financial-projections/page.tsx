@@ -189,7 +189,7 @@ export default function FinancialProjectionsPage() {
           </div>
           <div>
             <div style={{ fontSize: '12px', color: '#A0978A', marginBottom: '8px' }}>§45b Monthly Budget</div>
-            <div style={{ fontSize: '18px', color: '#C9963C', fontWeight: 'bold' }}>€125/month</div>
+            <div style={{ fontSize: '18px', color: '#C9963C', fontWeight: 'bold' }}>€131/month</div>
             <div style={{ fontSize: '11px', color: '#7A7570', marginTop: '4px' }}>Government-funded; no out-of-pocket for users</div>
           </div>
           <div>
@@ -240,7 +240,7 @@ export default function FinancialProjectionsPage() {
           <strong>Billing Rate:</strong> ~€40/hr direct billing to Pflegekassen under §45b SGB XI; platform retains ~€20/hr (~50% gross margin)
         </BulletItem>
         <BulletItem icon="📈">
-          <strong>Usage Frequency:</strong> 3 hours/customer/month average; within the €125/month §45b budget cap
+          <strong>Usage Frequency:</strong> 3 hours/customer/month average; within the €131/month §45b budget cap
         </BulletItem>
         <BulletItem icon="⭐">
           <strong>CAC & LTV:</strong> CAC €35 (digital + Pflegekassen referrals), LTV €1,560 (24 months x €65/mo), LTV/CAC ratio 44x

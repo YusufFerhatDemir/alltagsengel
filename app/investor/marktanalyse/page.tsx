@@ -33,18 +33,18 @@ export default function MarktanalysePage() {
       <Card>
         <SectionTitle>§45b Entlastungsbetrag – Der Katalysator</SectionTitle>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
-          <StatBox value="€125" label="Pro Pflegebedürftiger/Monat" />
+          <StatBox value="€131" label="Pro Pflegebedürftiger/Monat" />
           <StatBox value="€1.500" label="Pro Pflegebedürftiger/Jahr" />
-          <StatBox value="€7,44 Mrd" label="Gesamtbudget/Jahr" />
+          <StatBox value="€7,79 Mrd" label="Gesamtbudget/Jahr" />
           <StatBox value="Nur 40%" label="Aktuell genutzter Anteil" />
         </div>
         <Paragraph>
-          Der §45b Entlastungsbetrag ist ein Regelwerk des Sozialgesetzbuches (SGB XI), das Pflegebedürftigen monatlich €125 für Alltagsbegleitung zur Verfügung stellt. Dies gilt für Versicherte mit anerkanntem Pflegegrad.
+          Der §45b Entlastungsbetrag ist ein Regelwerk des Sozialgesetzbuches (SGB XI), das Pflegebedürftigen monatlich €131 für Alltagsbegleitung zur Verfügung stellt. Dies gilt für Versicherte mit anerkanntem Pflegegrad.
         </Paragraph>
         <Paragraph>
-          <strong style={{color:'#C9963C'}}>Die entscheidende Erkenntnis:</strong> Diese €125/Monat sind bereits von den Krankenkassen budgetiert und fließen automatisch – es ist keine private Zahlung. Das Geld wird nur nicht genutzt, weil der Markt fragmentiert ist.
+          <strong style={{color:'#C9963C'}}>Die entscheidende Erkenntnis:</strong> Diese €131/Monat sind bereits von den Krankenkassen budgetiert und fließen automatisch – es ist keine private Zahlung. Das Geld wird nur nicht genutzt, weil der Markt fragmentiert ist.
         </Paragraph>
-        <BulletItem>Gesamtbudget pro Jahr: 4,96 Mio Menschen × €125 × 12 = €7,44 Mrd</BulletItem>
+        <BulletItem>Gesamtbudget pro Jahr: 4,96 Mio Menschen × €131 × 12 = €7,79 Mrd</BulletItem>
         <BulletItem>Aktuell genutzter Anteil: ~40% = €2,98 Mrd/Jahr</BulletItem>
         <BulletItem>Ungenutztes Potenzial: €4,46 Mrd/Jahr (60%)</BulletItem>
         <BulletItem>AlltagsEngel adressiert diesen Markt mit digitaler Effizienz</BulletItem>
@@ -60,7 +60,7 @@ export default function MarktanalysePage() {
         </div>
         <SectionLabel>TAM - Total Addressable Market:</SectionLabel>
         <Paragraph>
-          Der gesamte Markt für Alltagsbegleitung, Pflege und Haushalthilfen in Deutschland. Dieser umfasst alle €125-Entlastungen, private Ausgaben, Krankenkassen-Leistungen und Sozialetat insgesamt.
+          Der gesamte Markt für Alltagsbegleitung, Pflege und Haushalthilfen in Deutschland. Dieser umfasst alle €131-Entlastungen, private Ausgaben, Krankenkassen-Leistungen und Sozialetat insgesamt.
         </Paragraph>
         <SectionLabel style={{ marginTop: '1.5rem' }}>SAM - Serviceable Available Market:</SectionLabel>
         <Paragraph>
@@ -269,7 +269,7 @@ export default function MarktanalysePage() {
           Der Markt für Alltagsbegleitung in Deutschland ist:
         </Paragraph>
         <BulletItem><strong style={{color:'#C9963C'}}>Groß:</strong> €50+ Mrd TAM mit 4,96 Mio potenziellen Kunden</BulletItem>
-        <BulletItem><strong style={{color:'#C9963C'}}>Staatlich finanziert:</strong> €7,44 Mrd/Jahr durch §45b, 60% ungenutztes Potenzial</BulletItem>
+        <BulletItem><strong style={{color:'#C9963C'}}>Staatlich finanziert:</strong> €7,79 Mrd/Jahr durch §45b, 60% ungenutztes Potenzial</BulletItem>
         <BulletItem><strong style={{color:'#C9963C'}}>Wachsend:</strong> 3–5% jährlich durch demografische Verschiebung</BulletItem>
         <BulletItem><strong style={{color:'#C9963C'}}>Fragmentiert:</strong> Keine etablierte digitale Lösung</BulletItem>
         <BulletItem><strong style={{color:'#C9963C'}}>Erste-Mover-Chance:</strong> AlltagsEngel kann den Markt mit digitalem Marketplace transformieren</BulletItem>

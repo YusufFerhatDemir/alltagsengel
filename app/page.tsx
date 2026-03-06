@@ -90,13 +90,13 @@ export default function SplashPage() {
           <div className="lp-badge">Preise</div>
           <h2 className="lp-h2">Transparent &amp; fair</h2>
           <p className="lp-text">
-            Mit dem Entlastungsbetrag (§ 45b) stehen Ihnen 125 € monatlich zu.
+            Mit dem Entlastungsbetrag (§ 45b) stehen Ihnen 131 € monatlich zu.
             Nicht genutztes Budget verfällt am 30.06. des Folgejahres — nutzen Sie es!
           </p>
           <div className="lp-price-cards">
             <div className="lp-price-card">
               <div className="lp-pc-name">Entlastungsbetrag</div>
-              <div className="lp-pc-val">125 €</div>
+              <div className="lp-pc-val">131 €</div>
               <div className="lp-pc-per">pro Monat</div>
               <p>Ab Pflegegrad 1 — direkt mit Kasse abrechenbar</p>
             </div>
@@ -117,7 +117,7 @@ export default function SplashPage() {
             <details className="lp-faq-item">
               <summary>Was ist der Entlastungsbetrag nach § 45b?</summary>
               <p>
-                Jede Person mit anerkanntem Pflegegrad (1–5) erhält monatlich 125 € zur Entlastung
+                Jede Person mit anerkanntem Pflegegrad (1–5) erhält monatlich 131 € zur Entlastung
                 im Alltag. Dieser Betrag kann für unsere Alltagsbegleitung genutzt und direkt mit
                 der Pflegekasse abgerechnet werden.
               </p>

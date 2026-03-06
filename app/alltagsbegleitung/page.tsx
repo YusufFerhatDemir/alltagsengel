@@ -43,14 +43,14 @@ export default function AlltagsbegleitungPage() {
           </div>
           <div className="info-price-row">
             <span className="info-price-label">Entlastungsbetrag (§ 45b)</span>
-            <span className="info-price-val">125 €/Monat</span>
+            <span className="info-price-val">131 €/Monat</span>
           </div>
           <div className="info-price-row">
             <span className="info-price-label">Versicherungsschutz</span>
             <span className="info-price-val">inklusive</span>
           </div>
           <p className="info-price-note">
-            Mit dem Entlastungsbetrag (§ 45b SGB XI) stehen Ihnen 125 € monatlich zu, die direkt
+            Mit dem Entlastungsbetrag (§ 45b SGB XI) stehen Ihnen 131 € monatlich zu, die direkt
             mit der Pflegekasse abgerechnet werden. Nicht genutzte Beträge verfallen am 30. Juni
             des Folgejahres.
           </p>
@@ -60,7 +60,7 @@ export default function AlltagsbegleitungPage() {
           <h3>Wer hat Anspruch?</h3>
           <p>
             Jede Person mit anerkanntem Pflegegrad (1–5) hat Anspruch auf den Entlastungsbetrag
-            von 125 € monatlich. Damit können Sie Alltagsbegleitung über Alltagsengel buchen —
+            von 131 € monatlich. Damit können Sie Alltagsbegleitung über Alltagsengel buchen —
             ohne eigene Zuzahlung.
           </p>
         </section>

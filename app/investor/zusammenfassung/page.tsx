@@ -29,7 +29,7 @@ export default function ZusammenfassungPage() {
         <Paragraph>
           Deutschland erlebt eine der größten demografischen Verschiebungen seiner Geschichte. Die alternde Bevölkerung führt zu wachsender Nachfrage nach Alltagsbegleitung – und der Staat hat bereits die Lösung finanziert.
         </Paragraph>
-        <BulletItem><strong style={{color:'#C9963C'}}>§45b-Rahmen:</strong> €125/Monat pro Pflegebedürftiger – 4,96 Mio Menschen × €125 = €7,44 Mrd/Jahr</BulletItem>
+        <BulletItem><strong style={{color:'#C9963C'}}>§45b-Rahmen:</strong> €131/Monat pro Pflegebedürftiger – 4,96 Mio Menschen × €131 = €7,79 Mrd/Jahr</BulletItem>
         <BulletItem><strong style={{color:'#C9963C'}}>Eingebauter Finanzierungsmechanismus:</strong> Krankenkassen zahlen direkt – kein Zahlungsausfallrisiko</BulletItem>
         <BulletItem><strong style={{color:'#C9963C'}}>Fragmentierter Markt:</strong> Keine digitale Lösung dominiert – First-Mover-Vorteil</BulletItem>
         <BulletItem><strong style={{color:'#C9963C'}}>AlltagsEngel digitalisiert diese Ineffizienz</strong> – und schafft einen profitablen Zweiseitenmarkt</BulletItem>

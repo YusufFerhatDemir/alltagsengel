@@ -15,7 +15,7 @@ export default function ProductTechnologyPage() {
       <SectionLabel>Product Overview</SectionLabel>
       <Card style={{ marginBottom: '40px' }}>
         <Paragraph>
-          AlltagsEngel is a cross-platform mobile application built with React Native + Expo, delivering a seamless experience for two user types: <strong>Kunden</strong> (families/seniors seeking companionship) and <strong>Engel</strong> (verified companions offering services). The platform handles <strong>direct Pflegekasse billing</strong> for §45b relief services (€125/month budget per person), pays helpers a fixed <strong>€20/hr</strong>, and retains <strong>~50% gross margin</strong> through direct billing to care insurance funds. All bookings, payments, and accounting flow exclusively through the platform.
+          AlltagsEngel is a cross-platform mobile application built with React Native + Expo, delivering a seamless experience for two user types: <strong>Kunden</strong> (families/seniors seeking companionship) and <strong>Engel</strong> (verified companions offering services). The platform handles <strong>direct Pflegekasse billing</strong> for §45b relief services (€131/month budget per person), pays helpers a fixed <strong>€20/hr</strong>, and retains <strong>~50% gross margin</strong> through direct billing to care insurance funds. All bookings, payments, and accounting flow exclusively through the platform.
         </Paragraph>
       </Card>
 
@@ -38,7 +38,7 @@ export default function ProductTechnologyPage() {
           </div>
           <div>
             <div style={{ fontSize: '14px', color: '#C9963C', fontWeight: 'bold', marginBottom: '8px' }}>📊 §45b Budget Tracking</div>
-            <Paragraph style={{ fontSize: '13px', margin: '0' }}>Tracks each user's €125/month Entlastungsleistung budget; shows remaining balance; automatic rollover management; transparent usage history</Paragraph>
+            <Paragraph style={{ fontSize: '13px', margin: '0' }}>Tracks each user's €131/month Entlastungsleistung budget; shows remaining balance; automatic rollover management; transparent usage history</Paragraph>
           </div>
           <div>
             <div style={{ fontSize: '14px', color: '#C9963C', fontWeight: 'bold', marginBottom: '8px' }}>💰 Fixed Helper Payments</div>
