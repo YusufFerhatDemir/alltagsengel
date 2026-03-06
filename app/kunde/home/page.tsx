@@ -2,7 +2,7 @@
 import { useState, useEffect, ReactNode } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
-import { IconPin, IconSearch, IconUser, IconCard, IconStarFilled, IconCheck, IconStarGold, IconHandshakeGold, IconMedicalGold, IconBagGold, IconHomeGold, IconCoffeeGold, IconPillGold, IconWalkGold, IconTargetGold, IconWingsGold, IconBox } from '@/components/Icons'
+import { IconPin, IconSearch, IconUser, IconCard, IconStarFilled, IconCheck, IconStarGold, IconHandshakeGold, IconMedicalGold, IconBagGold, IconHomeGold, IconCoffeeGold, IconPillGold, IconWalkGold, IconTargetGold, IconWingsGold, IconBox, IconKrankenfahrtGold, IconHygieneboxGold } from '@/components/Icons'
 import { haversineDistance } from '@/lib/geocoding'
 
 const categories: { key: string; icon: ReactNode; label: string }[] = [
@@ -15,8 +15,8 @@ const categories: { key: string; icon: ReactNode; label: string }[] = [
   { key: 'apotheke', icon: <IconPillGold size={26} />, label: 'Apotheke' },
   { key: 'spazieren', icon: <IconWalkGold size={26} />, label: 'Spazieren' },
   { key: 'aktivitaeten', icon: <IconTargetGold size={26} />, label: 'Aktivitäten' },
-  { key: 'krankenfahrdienst', icon: <img src="/assets/icons/krankenfahrdienst.png" alt="Krankenfahrdienst" width={26} height={26} style={{ objectFit: 'contain' }} />, label: 'Krankenfahrt' },
-  { key: 'hygienebox', icon: <img src="/assets/icons/hygienebox.png" alt="Hygienebox" width={26} height={26} style={{ objectFit: 'contain' }} />, label: 'Hygienebox' },
+  { key: 'krankenfahrdienst', icon: <IconKrankenfahrtGold size={26} />, label: 'Krankenfahrt' },
+  { key: 'hygienebox', icon: <IconHygieneboxGold size={26} />, label: 'Hygienebox' },
 ]
 
 const serviceMap: Record<string, string> = {
