@@ -36,7 +36,7 @@ export default function ChoosePage() {
         </Link>
 
         <div className="ch-legal">
-          Mit Nutzung stimmen Sie den <a>AGB</a> &amp; <a>Datenschutzerklärung</a> zu.
+          Mit Nutzung stimmen Sie den <Link href="/agb">AGB</Link> &amp; <Link href="/datenschutz">Datenschutzerklärung</Link> zu.
         </div>
       </div>
     </div>
