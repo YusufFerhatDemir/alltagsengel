@@ -188,7 +188,7 @@ export default function InvestorPortal() {
           <div style={{ fontSize: 13, color: '#9A8C7C', lineHeight: 1.8 }}>
             Yusuf Ferhat Demir · Gründer & CEO<br />
             Schiller Str. 31, 60313 Frankfurt am Main<br />
-            info@alltagsengel.care · www.alltagsengel.de
+            info@alltagsengel.care · www.alltagsengel.care
           </div>
           <div style={{ marginTop: 20, fontSize: 11, color: '#5A4E3E' }}>
             © 2026 AlltagsEngel UG. Vertraulich — nur für autorisierte Investoren.

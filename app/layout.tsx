@@ -7,7 +7,7 @@ const jost = Jost({ subsets: ['latin'], variable: '--font-jost', weight: ['300',
 const cormorant = Cormorant_Garamond({ subsets: ['latin'], variable: '--font-cormorant', weight: ['400','500','600','700'], style: ['normal','italic'] })
 
 export const metadata: Metadata = {
-  title: 'ALLTAGSENGEL',
+  title: 'Alltagsengel.care',
   description: 'Premium Alltagsbegleitung — Mit Herz für dich da',
 }
 

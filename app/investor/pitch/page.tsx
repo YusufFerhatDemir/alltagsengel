@@ -397,7 +397,7 @@ function buildSlides(): Slide[] {
               <div style={{ fontSize: 13, color: C.gold, fontWeight: 600, marginBottom: 16 }}>Gründer & CEO</div>
               <div style={{ fontSize: 13, color: C.ink3, lineHeight: 2 }}>
                 <a href="mailto:info@alltagsengel.care" style={{ color: C.ink3, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 8 }}>{Icons.mail(14)} info@alltagsengel.care</a><br />
-                <a href="https://www.alltagsengel.de" target="_blank" rel="noopener" style={{ color: C.ink3, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 8 }}>{Icons.globe(14)} www.alltagsengel.de</a><br />
+                <a href="https://www.alltagsengel.care" target="_blank" rel="noopener" style={{ color: C.ink3, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 8 }}>{Icons.globe(14)} www.alltagsengel.care</a><br />
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>{Icons.mapPin(14)} Schiller Str. 31, 60313 Frankfurt am Main</span>
               </div>
             </Card>
