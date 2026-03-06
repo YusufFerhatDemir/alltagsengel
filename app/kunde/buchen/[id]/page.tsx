@@ -140,7 +140,7 @@ export default function BuchenPage() {
         <div className="form-card">
           <div className="form-card-h">Leistung</div>
           <select className="input" value={service} onChange={e => setService(e.target.value)}>
-            <option>Alltagsbegleitung</option><option>Arztbesuch-Begleitung</option><option>Einkaufsbegleitung</option><option>Haushaltshilfe</option><option>Freizeitbegleitung</option>
+            <option>Alltagsbegleitung</option><option>Arztbesuch-Begleitung</option><option>Einkaufsbegleitung</option><option>Haushaltshilfe</option><option>Freizeitbegleitung</option><option>Krankenfahrdienst</option><option>Hygienebox</option>
           </select>
           <textarea className="input" rows={3} placeholder="Besondere Wünsche oder Hinweise..." value={notes} onChange={e => setNotes(e.target.value)}></textarea>
         </div>
