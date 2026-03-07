@@ -16,8 +16,33 @@ export const viewport: Viewport = {
 }
 
 export const metadata: Metadata = {
-  title: 'Alltagsengel.care',
-  description: 'Premium Alltagsbegleitung — Mit Herz für dich da',
+  title: {
+    default: 'Alltagsengel.care — Premium Alltagsbegleitung',
+    template: '%s | Alltagsengel.care',
+  },
+  description: 'Zertifizierte Alltagsbegleiter für Senioren & Pflegebedürftige. Abrechnung über §45b SGB XI — 131€/Monat. Jetzt Engel finden.',
+  keywords: ['Alltagsbegleitung', 'Seniorenbetreuung', 'Pflegehilfe', '§45b SGB XI', 'Entlastungsbetrag', 'Alltagsbegleiter', 'Frankfurt', 'Pflege'],
+  metadataBase: new URL('https://alltagsengel.care'),
+  alternates: {
+    canonical: '/',
+  },
+  openGraph: {
+    title: 'Alltagsengel.care — Premium Alltagsbegleitung',
+    description: 'Zertifizierte Alltagsbegleiter für Senioren & Pflegebedürftige. 131€/Monat über die Pflegekasse. Jetzt kostenlos registrieren.',
+    url: 'https://alltagsengel.care',
+    siteName: 'Alltagsengel.care',
+    locale: 'de_DE',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Alltagsengel.care — Premium Alltagsbegleitung',
+    description: 'Zertifizierte Alltagsbegleiter für Senioren & Pflegebedürftige. 131€/Monat über die Pflegekasse.',
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
