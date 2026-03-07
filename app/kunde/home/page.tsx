@@ -182,22 +182,33 @@ export default function KundeHomePage() {
           </div>
         </div>
 
-        <Link href="/kunde/pflegebox" style={{ textDecoration: 'none' }}>
+        <Link href="/kunde/hygienebox" style={{ textDecoration: 'none' }}>
           <div className="banner-pflegebox">
             <div className="banner-row">
               <div className="banner-icon"><IconBox size={22} /></div>
               <div>
-                <div className="banner-title">Pflegebox: Hygiene & Desinfektion</div>
+                <div className="banner-title">Hygienebox bestellen</div>
                 <div className="banner-sub">Bis <strong>42 €/Monat</strong> • Handschuhe, Desinfektion, Masken, Bettschutzeinlagen</div>
               </div>
             </div>
             <div className="banner-pills">
               <span className="banner-pill">Pflegegrad 1–5</span>
-              <span className="banner-pill">Bis 42 €/Monat</span>
-              <span className="banner-pill">Direkt bestellen</span>
+              <span className="banner-pill">0 € Eigenanteil</span>
+              <span className="banner-pill">Jetzt bestellen</span>
             </div>
           </div>
         </Link>
+
+        <div className="quick-links">
+          <Link href="/kunde/krankenfahrt" className="quick-link">
+            <IconKrankenfahrtGold size={20} />
+            <span>Krankenfahrt buchen</span>
+          </Link>
+          <Link href="/kunde/buchungen" className="quick-link">
+            <IconCheck size={18} />
+            <span>Meine Buchungen</span>
+          </Link>
+        </div>
 
         <div className="section-row">
           <div className="section-title">

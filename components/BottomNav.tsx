@@ -17,17 +17,17 @@ export default function BottomNav({ role }: { role: 'kunde' | 'engel' }) {
 
   if (role === 'engel') {
     return (
-      <div className="bottom-nav">
+      <nav className="bottom-nav" role="navigation" aria-label="Hauptnavigation">
         {engelItems.map(item => {
           const isActive = pathname.startsWith(item.href)
           return (
-            <Link key={item.label} href={item.href} className={`bnav-item${isActive ? ' on' : ''}`}>
+            <Link key={item.label} href={item.href} className={`bnav-item${isActive ? ' on' : ''}`} aria-label={item.label} aria-current={isActive ? 'page' : undefined}>
               <div className="bnav-ic">{item.icon}</div>
               <div className="bnav-lbl">{item.label}</div>
             </Link>
           )
         })}
-      </div>
+      </nav>
     )
   }
 
@@ -62,26 +62,26 @@ export default function BottomNav({ role }: { role: 'kunde' | 'engel' }) {
   }
 
   return (
-    <div className="bottom-nav">
+    <nav className="bottom-nav" role="navigation" aria-label="Hauptnavigation">
       {kundeItems.map(item => {
         const isActive = item.key === 'home'
           ? pathname === '/kunde/home'
           : item.key !== 'suche' && pathname.startsWith(item.href)
         if (item.key === 'suche') {
           return (
-            <a key={item.label} href="#" className="bnav-item" onClick={handleSearchClick}>
+            <a key={item.label} href="#" className="bnav-item" onClick={handleSearchClick} aria-label="Engel suchen">
               <div className="bnav-ic">{item.icon}</div>
               <div className="bnav-lbl">{item.label}</div>
             </a>
           )
         }
         return (
-          <Link key={item.label} href={item.href} className={`bnav-item${isActive ? ' on' : ''}`}>
+          <Link key={item.label} href={item.href} className={`bnav-item${isActive ? ' on' : ''}`} aria-label={item.label} aria-current={isActive ? 'page' : undefined}>
             <div className="bnav-ic">{item.icon}</div>
             <div className="bnav-lbl">{item.label}</div>
           </Link>
         )
       })}
-    </div>
+    </nav>
   )
 }

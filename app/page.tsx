@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import Icon3D from '@/components/Icon3D'
+import AppMockup from '@/components/AppMockup'
 
 export default function SplashPage() {
   return (
@@ -30,6 +31,33 @@ export default function SplashPage() {
 
       {/* ── Scroll-Bereich: Mission, Services, Preise, FAQ ── */}
       <div className="lp-sections">
+
+        {/* App Vorschau */}
+        <section className="lp-section" style={{ textAlign: 'center' }}>
+          <div className="lp-badge">So funktioniert&apos;s</div>
+          <h2 className="lp-h2">Ihre App für den Alltag</h2>
+          <p className="lp-text">
+            Finden Sie zertifizierte Alltagsbegleiter in Ihrer Nähe, buchen Sie direkt
+            und rechnen Sie bequem über Ihre Pflegekasse ab.
+          </p>
+          <div style={{ display: 'flex', justifyContent: 'center', margin: '24px 0 8px' }}>
+            <AppMockup size={260} />
+          </div>
+          <div className="lp-steps">
+            <div className="lp-step">
+              <div className="lp-step-num">1</div>
+              <div className="lp-step-text"><strong>Engel finden</strong><br />Nach Umkreis &amp; Leistung filtern</div>
+            </div>
+            <div className="lp-step">
+              <div className="lp-step-num">2</div>
+              <div className="lp-step-text"><strong>Direkt buchen</strong><br />Termin, Dauer &amp; Zahlung wählen</div>
+            </div>
+            <div className="lp-step">
+              <div className="lp-step-num">3</div>
+              <div className="lp-step-text"><strong>Kasse abrechnen</strong><br />Wir übernehmen die Abrechnung</div>
+            </div>
+          </div>
+        </section>
 
         {/* Mission */}
         <section className="lp-section">
@@ -158,6 +186,46 @@ export default function SplashPage() {
                 Sie bundesweit Aufträge. Versicherungsschutz inklusive.
               </p>
             </details>
+          </div>
+        </section>
+
+        {/* Testimonials / Social Proof */}
+        <section className="lp-section">
+          <div className="lp-badge">Erfahrungen</div>
+          <h2 className="lp-h2">Das sagen unsere Kunden</h2>
+          <div className="lp-testimonials">
+            <div className="lp-testimonial">
+              <div className="lp-test-stars">★★★★★</div>
+              <p className="lp-test-text">&bdquo;Endlich jemand, der meiner Mutter mit Herz und Geduld hilft. Die Abrechnung über die Pflegekasse war überraschend einfach.&ldquo;</p>
+              <div className="lp-test-author">— Sabine K., Frankfurt</div>
+            </div>
+            <div className="lp-testimonial">
+              <div className="lp-test-stars">★★★★★</div>
+              <p className="lp-test-text">&bdquo;Seit 3 Monaten nutze ich Alltagsengel für Arztbesuche und Einkäufe. Mein Engel ist immer pünktlich und sehr freundlich.&ldquo;</p>
+              <div className="lp-test-author">— Heinrich W., Offenbach</div>
+            </div>
+            <div className="lp-testimonial">
+              <div className="lp-test-stars">★★★★★</div>
+              <p className="lp-test-text">&bdquo;Die Hygienebox kommt jeden Monat zuverlässig — und kostenlos! Großartiger Service.&ldquo;</p>
+              <div className="lp-test-author">— Maria L., Darmstadt</div>
+            </div>
+          </div>
+        </section>
+
+        {/* CTA */}
+        <section className="lp-section lp-cta-section">
+          <h2 className="lp-h2">Jetzt starten — kostenlos &amp; unverbindlich</h2>
+          <p className="lp-text">
+            Registrieren Sie sich in 2 Minuten und finden Sie einen Engel in Ihrer Nähe.
+            Keine Vorauszahlung, keine Bindung.
+          </p>
+          <div className="sp-btns" style={{ marginTop: 20 }}>
+            <Link href="/choose"><button className="btn-gold">JETZT REGISTRIEREN</button></Link>
+          </div>
+          <div className="lp-cta-stats">
+            <div className="lp-cta-stat"><strong>500+</strong><span>Engel deutschlandweit</span></div>
+            <div className="lp-cta-stat"><strong>4,9</strong><span>Durchschnittsbewertung</span></div>
+            <div className="lp-cta-stat"><strong>0 €</strong><span>Registrierungskosten</span></div>
           </div>
         </section>
 
