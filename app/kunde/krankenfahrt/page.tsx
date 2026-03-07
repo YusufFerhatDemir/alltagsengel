@@ -328,7 +328,7 @@ export default function KrankenfahrtPage() {
           gap: '12px',
           alignItems: 'flex-start',
         }}>
-          <IconInfo size={18} style={{ color: '#4CAF50', marginTop: '2px', flexShrink: 0 }} />
+          <span style={{ color: '#4CAF50', marginTop: '2px', flexShrink: 0 }}><IconInfo size={18} /></span>
           <div style={{ fontSize: '14px', lineHeight: '1.4', color: 'var(--text)' }}>
             <strong>Kostenübernahme möglich</strong> — Mit einer Verordnung vom Arzt kann die Krankenkasse die Kosten übernehmen
           </div>
