@@ -430,7 +430,7 @@ export default function HygieneboBoxPage() {
           gap: 10,
           marginBottom: 24,
         }}>
-          <IconInfo size={18} color="var(--green)" style={{ flexShrink: 0, marginTop: 1 }} />
+          <span style={{ flexShrink: 0, marginTop: 1 }}><IconInfo size={18} /></span>
           <div style={{ fontSize: 12, color: 'var(--ink3)', lineHeight: 1.5 }}>
             Nach Ihrer Bestellung kümmern wir uns um die Antragstellung bei Ihrer Pflegekasse. Die Lieferung erfolgt direkt zu Ihnen nach Hause.
           </div>
