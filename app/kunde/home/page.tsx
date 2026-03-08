@@ -209,7 +209,6 @@ export default function KundeHomePage() {
             <span>Meine Buchungen</span>
           </Link>
           <Link href="/kunde/notfall" className="quick-link">
-            <span style={{ fontSize: 18 }}>❤️‍🩹</span>
             <span>Notfall & Medikamente</span>
           </Link>
         </div>
