@@ -53,6 +53,8 @@ function LoginForm() {
         router.push('/admin/home')
       } else if (profile?.role === 'engel') {
         router.push('/engel/home')
+      } else if (profile?.role === 'fahrer') {
+        router.push('/fahrer/home')
       } else {
         router.push('/kunde/home')
       }
