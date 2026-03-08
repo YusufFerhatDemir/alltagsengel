@@ -37,7 +37,9 @@ export default function ChoosePage() {
 
         <Link href="/fahrer/register" style={{ textDecoration: 'none' }}>
           <div className="role-card">
-            <div className="role-icon-3d" style={{ fontSize: '28px' }}>🚗</div>
+            <div className="role-icon-3d">
+              <img src="/assets/krankenfahrt-icon.png" alt="Krankenfahrt" />
+            </div>
             <div className="role-text">
               <h3>Krankenfahrt-Dienstleister</h3>
               <p>Registrieren Sie Ihr Unternehmen &amp; Fahrzeuge. Aufträge über Alltagsengel erhalten.</p>
