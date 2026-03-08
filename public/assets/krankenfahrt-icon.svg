@@ -1,0 +1,101 @@
+<svg width="1000" height="1000" viewBox="0 0 1000 1000" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1000" height="1000" fill="#000000"/>
+
+  <defs>
+    <linearGradient id="bodyGold" x1="200" y1="250" x2="800" y2="700" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#F0D060"/>
+      <stop offset="25%" stop-color="#D4A840"/>
+      <stop offset="50%" stop-color="#C9963C"/>
+      <stop offset="75%" stop-color="#B8882E"/>
+      <stop offset="100%" stop-color="#A07428"/>
+    </linearGradient>
+    <linearGradient id="windowGold" x1="350" y1="280" x2="650" y2="450" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#F8E878"/>
+      <stop offset="50%" stop-color="#E8C850"/>
+      <stop offset="100%" stop-color="#C9963C"/>
+    </linearGradient>
+    <linearGradient id="wheelGold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#F8E064"/>
+      <stop offset="100%" stop-color="#B8882E"/>
+    </linearGradient>
+    <linearGradient id="crossGold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#F8E878"/>
+      <stop offset="100%" stop-color="#DBA84A"/>
+    </linearGradient>
+    <filter id="glow" x="-10%" y="-10%" width="120%" height="120%">
+      <feGaussianBlur stdDeviation="6" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+  </defs>
+
+  <!-- Van body -->
+  <path d="M160 420
+           L160 620
+           C160 645, 175 660, 200 660
+           L280 660
+           C280 660, 280 660, 280 660
+           L720 660
+           L800 660
+           C825 660, 840 645, 840 620
+           L840 420
+           C840 395, 825 380, 800 380
+           L680 380
+           L620 280
+           C608 260, 585 250, 560 250
+           L300 250
+           C275 250, 260 260, 248 280
+           L200 380
+           C175 380, 160 395, 160 420Z"
+        fill="url(#bodyGold)" filter="url(#glow)"/>
+
+  <!-- Windshield -->
+  <path d="M268 380
+           L330 280
+           C338 268, 350 262, 365 262
+           L480 262
+           L480 380
+           Z"
+        fill="url(#windowGold)" opacity="0.5"/>
+
+  <!-- Side window -->
+  <path d="M500 262
+           L580 262
+           C592 262, 602 268, 608 280
+           L660 380
+           L500 380
+           Z"
+        fill="url(#windowGold)" opacity="0.5"/>
+
+  <!-- Medical cross on side -->
+  <rect x="240" y="460" width="100" height="30" rx="6" fill="url(#crossGold)" opacity="0.8"/>
+  <rect x="275" y="425" width="30" height="100" rx="6" fill="url(#crossGold)" opacity="0.8"/>
+
+  <!-- Door line -->
+  <line x1="480" y1="390" x2="480" y2="650" stroke="#A07428" stroke-width="3" opacity="0.5"/>
+
+  <!-- Door handle -->
+  <rect x="440" y="500" width="30" height="10" rx="5" fill="#F8E064" opacity="0.7"/>
+
+  <!-- Left wheel -->
+  <circle cx="310" cy="670" r="65" fill="#1A1612" stroke="url(#wheelGold)" stroke-width="8"/>
+  <circle cx="310" cy="670" r="28" fill="url(#wheelGold)" opacity="0.6"/>
+
+  <!-- Right wheel -->
+  <circle cx="700" cy="670" r="65" fill="#1A1612" stroke="url(#wheelGold)" stroke-width="8"/>
+  <circle cx="700" cy="670" r="28" fill="url(#wheelGold)" opacity="0.6"/>
+
+  <!-- Headlight -->
+  <rect x="815" y="430" width="25" height="40" rx="8" fill="#F8E878" opacity="0.8"/>
+
+  <!-- Tail light -->
+  <rect x="160" y="440" width="12" height="35" rx="4" fill="#DBA84A" opacity="0.6"/>
+
+  <!-- Wheelchair symbol on back -->
+  <g transform="translate(700, 420)" opacity="0.7">
+    <!-- Wheelchair circle -->
+    <circle cx="50" cy="50" r="40" stroke="url(#crossGold)" stroke-width="5" fill="none"/>
+    <!-- Person in chair -->
+    <circle cx="45" cy="25" r="8" fill="url(#crossGold)"/>
+    <path d="M45 35 L45 55 L60 70 M45 55 L30 70" stroke="url(#crossGold)" stroke-width="5" fill="none" stroke-linecap="round"/>
+  </g>
+</svg>

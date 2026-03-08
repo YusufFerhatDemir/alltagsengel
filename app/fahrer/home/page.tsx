@@ -9,6 +9,7 @@ export default function FahrerHomePage() {
   const [user, setUser] = useState<any>(null)
   const [profile, setProfile] = useState<any>(null)
   const [provider, setProvider] = useState<any>(null)
+  const [stats, setStats] = useState<{ avg: number | null; count: number; total: number }>({ avg: null, count: 0, total: 0 })
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -29,7 +30,19 @@ export default function FahrerHomePage() {
 
       // Load provider data if exists
       const { data: providerData } = await supabase.from('krankenfahrt_providers').select('*').eq('user_id', user.id).single()
-      if (providerData) setProvider(providerData)
+      if (providerData) {
+        setProvider(providerData)
+
+        // Load reviews & stats
+        const { data: reviews } = await supabase.from('krankenfahrt_reviews').select('rating').eq('provider_id', providerData.id)
+        const { count: totalRides } = await supabase.from('krankenfahrten').select('*', { count: 'exact', head: true }).eq('provider_id', providerData.id).eq('status', 'completed')
+        if (reviews && reviews.length > 0) {
+          const avg = reviews.reduce((s: number, r: any) => s + r.rating, 0) / reviews.length
+          setStats({ avg: Math.round(avg * 10) / 10, count: reviews.length, total: totalRides || 0 })
+        } else {
+          setStats({ avg: null, count: 0, total: totalRides || 0 })
+        }
+      }
 
       setLoading(false)
     }
@@ -111,6 +124,30 @@ export default function FahrerHomePage() {
               lineHeight: 1.6,
             }}>
               Ihre Registrierung wird überprüft
+            </div>
+          </div>
+
+          {/* Stats Row */}
+          <div style={{ display: 'flex', gap: 10, marginBottom: 16 }}>
+            <div style={{ flex: 1, background: '#252118', border: '1px solid rgba(201,150,60,0.15)', borderRadius: 14, padding: '14px 12px', textAlign: 'center' }}>
+              <div style={{ fontSize: 26, fontWeight: 700, color: '#C9963C' }}>
+                {stats.avg !== null ? `${stats.avg}` : '–'}
+              </div>
+              <div style={{ fontSize: 11, color: 'rgba(245,240,232,0.5)', marginTop: 2 }}>
+                {stats.avg !== null ? '⭐ Bewertung' : 'Keine Bewertung'}
+              </div>
+            </div>
+            <div style={{ flex: 1, background: '#252118', border: '1px solid rgba(201,150,60,0.15)', borderRadius: 14, padding: '14px 12px', textAlign: 'center' }}>
+              <div style={{ fontSize: 26, fontWeight: 700, color: '#F5F0E8' }}>
+                {stats.count}
+              </div>
+              <div style={{ fontSize: 11, color: 'rgba(245,240,232,0.5)', marginTop: 2 }}>Bewertungen</div>
+            </div>
+            <div style={{ flex: 1, background: '#252118', border: '1px solid rgba(201,150,60,0.15)', borderRadius: 14, padding: '14px 12px', textAlign: 'center' }}>
+              <div style={{ fontSize: 26, fontWeight: 700, color: '#F5F0E8' }}>
+                {stats.total}
+              </div>
+              <div style={{ fontSize: 11, color: 'rgba(245,240,232,0.5)', marginTop: 2 }}>Fahrten</div>
             </div>
           </div>
 
