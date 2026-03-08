@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import Tesseract from 'tesseract.js'
 
 interface Medication {
   id: string
@@ -290,7 +291,94 @@ export default function NotfallPage() {
     loadData()
   }
 
-  // ─── Photo Scan ───
+  // ─── Photo Scan (Tesseract.js — runs fully in browser) ───
+  const [scanProgress, setScanProgress] = useState(0)
+
+  function parseMedicationText(text: string) {
+    const lines = text.split('\n').map(l => l.trim()).filter(Boolean)
+    const fullText = lines.join(' ')
+
+    let medikament_name = ''
+    let wirkstoff = ''
+    let dosierung = ''
+    let einheit = 'mg'
+    let einnahme_hinweis = ''
+
+    // 1) Find dosage pattern: number + unit (e.g. "400 mg", "500mg", "20 ml")
+    const dosMatch = fullText.match(/(\d+[\.,]?\d*)\s*(mg|ml|µg|mcg|IE|g)\b/i)
+    if (dosMatch) {
+      dosierung = dosMatch[1].replace(',', '.')
+      const rawUnit = dosMatch[2].toLowerCase()
+      einheit = rawUnit === 'mcg' ? 'µg' : rawUnit === 'g' ? 'mg' : rawUnit
+    }
+
+    // 2) Known medication names (common German medications)
+    const knownMeds = [
+      'Ibuprofen', 'Paracetamol', 'Aspirin', 'Metformin', 'Ramipril', 'Bisoprolol',
+      'Amlodipin', 'Omeprazol', 'Pantoprazol', 'Simvastatin', 'Atorvastatin',
+      'Metoprolol', 'Levothyroxin', 'L-Thyroxin', 'Torasemid', 'Furosemid',
+      'Candesartan', 'Valsartan', 'Losartan', 'Enalapril', 'Lisinopril',
+      'Clopidogrel', 'Marcumar', 'Eliquis', 'Xarelto', 'Pradaxa',
+      'Diclofenac', 'Naproxen', 'Tramadol', 'Tilidin', 'Novaminsulfon',
+      'Pregabalin', 'Gabapentin', 'Duloxetin', 'Sertralin', 'Citalopram',
+      'Mirtazapin', 'Amitriptylin', 'Quetiapin', 'Risperidon', 'Insulin',
+      'Jardiance', 'Forxiga', 'Ozempic', 'Trulicity', 'Victoza',
+      'Salbutamol', 'Budesonid', 'Tiotropium', 'Formoterol',
+      'Tamsulosin', 'Finasterid', 'Sildenafil', 'Tadalafil',
+      'Prednisolon', 'Dexamethason', 'Cortison',
+      'Amoxicillin', 'Ciprofloxacin', 'Azithromycin', 'Doxycyclin',
+      'Novalgin', 'Voltaren', 'Thomapyrin', 'Grippostad', 'ACC',
+      'MCP', 'Vomex', 'Loperamid', 'Lactulose', 'Movicol',
+    ]
+
+    const upperText = fullText.toUpperCase()
+    for (const med of knownMeds) {
+      if (upperText.includes(med.toUpperCase())) {
+        medikament_name = med
+        // Try to build full name with dosage
+        const nameWithDose = fullText.match(new RegExp(`${med}[®]?\\s*\\d+`, 'i'))
+        if (nameWithDose && dosMatch) {
+          medikament_name = `${med} ${dosierung} ${einheit}`
+        }
+        break
+      }
+    }
+
+    // 3) If no known med found, take first line that looks like a name (capitalized, not too long)
+    if (!medikament_name) {
+      for (const line of lines) {
+        // Skip very short or very long lines, lines that are just numbers
+        if (line.length >= 3 && line.length <= 50 && /[A-ZÄÖÜ]/.test(line[0]) && !/^\d+$/.test(line)) {
+          medikament_name = line.replace(/[®™©]/g, '').trim()
+          break
+        }
+      }
+    }
+
+    // 4) Look for "Wirkstoff:" pattern
+    const wirkstoffMatch = fullText.match(/Wirkstoff[:\s]+([A-Za-zäöüÄÖÜß\s-]+)/i)
+    if (wirkstoffMatch) {
+      wirkstoff = wirkstoffMatch[1].trim()
+    }
+
+    // 5) Look for Einnahme hints
+    const hinweisPatterns = [
+      /(?:vor|nach|zu|mit|zwischen)\s+(?:dem\s+)?(?:Essen|Mahlzeit|Wasser|Milch)/gi,
+      /(?:nüchtern|unzerkaut|auflösen)/gi,
+      /(?:morgens|mittags|abends|nachts|täglich)\s*(?:einnehmen|nehmen)?/gi,
+    ]
+    const hints: string[] = []
+    for (const pattern of hinweisPatterns) {
+      const match = fullText.match(pattern)
+      if (match) hints.push(...match)
+    }
+    if (hints.length > 0) {
+      einnahme_hinweis = hints.map(h => h.charAt(0).toUpperCase() + h.slice(1).toLowerCase()).join(', ')
+    }
+
+    return { medikament_name, wirkstoff, dosierung, einheit, einnahme_hinweis }
+  }
+
   async function handlePhotoScan(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
@@ -298,44 +386,44 @@ export default function NotfallPage() {
     setScanning(true)
     setScanError('')
     setScanSuccess(false)
+    setScanProgress(0)
 
     try {
-      // Convert to base64
-      const reader = new FileReader()
-      const base64 = await new Promise<string>((resolve, reject) => {
-        reader.onload = () => resolve(reader.result as string)
-        reader.onerror = reject
-        reader.readAsDataURL(file)
+      const result = await Tesseract.recognize(file, 'deu', {
+        logger: (m: { status: string; progress: number }) => {
+          if (m.status === 'recognizing text') {
+            setScanProgress(Math.round(m.progress * 100))
+          }
+        }
       })
 
-      const res = await fetch('/api/scan-medikament', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ image: base64 }),
-      })
+      const text = result.data.text
+      if (!text || text.trim().length < 5) {
+        setScanError('Kein Text erkannt. Bitte das Foto nochmal versuchen — gute Beleuchtung hilft!')
+        return
+      }
 
-      const result = await res.json()
+      const parsed = parseMedicationText(text)
 
-      if (result.success && result.data) {
-        const d = result.data
+      if (parsed.medikament_name || parsed.dosierung) {
         setMedForm(prev => ({
           ...prev,
-          medikament_name: d.medikament_name || prev.medikament_name,
-          wirkstoff: d.wirkstoff || prev.wirkstoff,
-          dosierung: d.dosierung ? String(d.dosierung) : prev.dosierung,
-          einheit: d.einheit || prev.einheit,
-          einnahme_hinweis: d.einnahme_hinweis || prev.einnahme_hinweis,
+          medikament_name: parsed.medikament_name || prev.medikament_name,
+          wirkstoff: parsed.wirkstoff || prev.wirkstoff,
+          dosierung: parsed.dosierung || prev.dosierung,
+          einheit: parsed.einheit || prev.einheit,
+          einnahme_hinweis: parsed.einnahme_hinweis || prev.einnahme_hinweis,
         }))
         setScanSuccess(true)
-        setTimeout(() => setScanSuccess(false), 4000)
+        setTimeout(() => setScanSuccess(false), 5000)
       } else {
-        setScanError(result.error || 'Erkennung fehlgeschlagen')
+        setScanError('Medikament konnte nicht erkannt werden. Bitte manuell eingeben oder nochmal fotografieren.')
       }
     } catch {
-      setScanError('Verbindungsfehler. Bitte versuche es erneut.')
+      setScanError('Fehler bei der Erkennung. Bitte versuche es erneut.')
     } finally {
       setScanning(false)
-      // Reset file input
+      setScanProgress(0)
       if (fileInputRef.current) fileInputRef.current.value = ''
     }
   }
@@ -741,6 +829,27 @@ export default function NotfallPage() {
                       Fotografiere die Packung — Name, Wirkstoff und Dosierung werden automatisch erkannt
                     </p>
 
+                    {scanning && (
+                      <div style={{ marginBottom: '14px' }}>
+                        <div style={{
+                          width: '100%', height: '6px',
+                          backgroundColor: 'rgba(201,150,60,0.1)',
+                          borderRadius: '3px', overflow: 'hidden',
+                        }}>
+                          <div style={{
+                            width: `${scanProgress}%`,
+                            height: '100%',
+                            backgroundColor: '#C9963C',
+                            borderRadius: '3px',
+                            transition: 'width 0.3s ease',
+                          }} />
+                        </div>
+                        <p style={{ margin: '8px 0 0 0', color: 'rgba(245,240,232,0.4)', fontSize: '11px' }}>
+                          {scanProgress < 30 ? 'Bild wird geladen...' : scanProgress < 80 ? 'Text wird erkannt...' : 'Medikament wird analysiert...'}
+                        </p>
+                      </div>
+                    )}
+
                     <button
                       onClick={() => fileInputRef.current?.click()}
                       disabled={scanning}
@@ -756,7 +865,7 @@ export default function NotfallPage() {
                       }}
                     >
                       {scanning ? (
-                        <>⏳ Erkennung läuft...</>
+                        <>⏳ {scanProgress}% — Bitte warten...</>
                       ) : (
                         <>📷 Foto aufnehmen</>
                       )}
