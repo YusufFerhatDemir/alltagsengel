@@ -33,7 +33,16 @@ export async function GET(request: Request) {
           .single()
 
         if (profile?.role === 'admin') return NextResponse.redirect(`${origin}/admin/home`)
-        if (profile?.role === 'engel') return NextResponse.redirect(`${origin}/engel/home`)
+        if (profile?.role === 'engel') {
+          // Check if angel profile exists — if not, redirect to registration
+          const { data: angel } = await supabase
+            .from('angels')
+            .select('id')
+            .eq('id', user.id)
+            .single()
+          if (!angel) return NextResponse.redirect(`${origin}/engel/register`)
+          return NextResponse.redirect(`${origin}/engel/home`)
+        }
         return NextResponse.redirect(`${origin}/kunde/home`)
       }
     }

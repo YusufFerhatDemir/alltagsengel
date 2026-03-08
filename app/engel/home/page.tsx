@@ -24,6 +24,13 @@ export default function EngelHomePage() {
 
         const { data: p } = await supabase.from('profiles').select('*').eq('id', user.id).single()
         const { data: a } = await supabase.from('angels').select('*').eq('id', user.id).single()
+
+        // If no angel profile exists, redirect to registration
+        if (!a) {
+          router.replace('/engel/register')
+          return
+        }
+
         setProfile(p)
         setAngel(a)
         if (a) setIsOnline(a.is_online)
