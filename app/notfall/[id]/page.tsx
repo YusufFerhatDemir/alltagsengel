@@ -14,24 +14,28 @@ interface NotfallInfo {
   notfallkontakt_name?: string;
   notfallkontakt_telefon?: string;
   notfallkontakt_beziehung?: string;
-  krankenkasse?: string;
-  krankenkasse_nummer?: string;
+  versicherung?: string;
+  versicherungsnummer?: string;
   hausarzt_name?: string;
   hausarzt_telefon?: string;
 }
 
 interface Medication {
   id: string;
-  name: string;
-  dosierung?: string;
-  einnahmezeiten?: string;
-  hinweis?: string;
+  medikament_name: string;
+  dosierung?: number;
+  einheit?: string;
+  einnahme_morgens?: boolean;
+  einnahme_mittags?: boolean;
+  einnahme_abends?: boolean;
+  einnahme_nachts?: boolean;
+  einnahme_hinweis?: string;
 }
 
 interface Profile {
   id: string;
-  vorname?: string;
-  nachname?: string;
+  first_name?: string;
+  last_name?: string;
 }
 
 export default function NotfallPage() {
@@ -81,19 +85,19 @@ export default function NotfallPage() {
         return;
       }
 
-      // Fetch profile
+      // Fetch profile with correct column names
       const { data: profileData } = await supabase
         .from('profiles')
-        .select('id, vorname, nachname')
+        .select('id, first_name, last_name')
         .eq('id', id)
         .single();
 
-      // Fetch medications
+      // Fetch medications with correct column names and filter
       const { data: medData } = await supabase
         .from('medikamentenplan')
-        .select('id, name, dosierung, einnahmezeiten, hinweis')
+        .select('id, medikament_name, dosierung, einheit, einnahme_morgens, einnahme_mittags, einnahme_abends, einnahme_nachts, einnahme_hinweis')
         .eq('user_id', id)
-        .eq('status', 'aktiv');
+        .eq('aktiv', true);
 
       setNotfallInfo(notfallData);
       setProfile(profileData || null);
@@ -117,6 +121,22 @@ export default function NotfallPage() {
     if (e.key === 'Enter') {
       handlePinSubmit();
     }
+  };
+
+  const formatMedicationTimes = (med: Medication): string => {
+    const times: string[] = [];
+    if (med.einnahme_morgens) times.push('Morgens');
+    if (med.einnahme_mittags) times.push('Mittags');
+    if (med.einnahme_abends) times.push('Abends');
+    if (med.einnahme_nachts) times.push('Nachts');
+    return times.length > 0 ? times.join(', ') : '';
+  };
+
+  const formatDosage = (med: Medication): string => {
+    if (med.dosierung && med.einheit) {
+      return `${med.dosierung} ${med.einheit}`;
+    }
+    return med.dosierung ? `${med.dosierung}` : '';
   };
 
   if (!id) {
@@ -221,7 +241,7 @@ export default function NotfallPage() {
               NOTFALL-INFORMATIONEN
             </h1>
             <p style={{ color: '#F5F0E8', fontSize: '16px', margin: 0 }}>
-              {profile?.vorname} {profile?.nachname}
+              {profile?.first_name} {profile?.last_name}
             </p>
           </div>
 
@@ -245,21 +265,21 @@ export default function NotfallPage() {
                     }}
                   >
                     <p style={{ color: '#DBA84A', fontSize: '16px', fontWeight: 'bold', margin: '0 0 6px 0' }}>
-                      {med.name}
+                      {med.medikament_name}
                     </p>
-                    {med.dosierung && (
+                    {formatDosage(med) && (
                       <p style={{ color: '#F5F0E8', fontSize: '14px', margin: '4px 0' }}>
-                        <span style={{ color: '#C9963C', fontWeight: 'bold' }}>Dosierung:</span> {med.dosierung}
+                        <span style={{ color: '#C9963C', fontWeight: 'bold' }}>Dosierung:</span> {formatDosage(med)}
                       </p>
                     )}
-                    {med.einnahmezeiten && (
+                    {formatMedicationTimes(med) && (
                       <p style={{ color: '#F5F0E8', fontSize: '14px', margin: '4px 0' }}>
-                        <span style={{ color: '#C9963C', fontWeight: 'bold' }}>Einnahmezeiten:</span> {med.einnahmezeiten}
+                        <span style={{ color: '#C9963C', fontWeight: 'bold' }}>Einnahmezeiten:</span> {formatMedicationTimes(med)}
                       </p>
                     )}
-                    {med.hinweis && (
+                    {med.einnahme_hinweis && (
                       <p style={{ color: '#E53E3E', fontSize: '13px', margin: '6px 0 0 0', fontStyle: 'italic' }}>
-                        ⚠️ {med.hinweis}
+                        ⚠️ {med.einnahme_hinweis}
                       </p>
                     )}
                   </div>
@@ -380,8 +400,8 @@ export default function NotfallPage() {
                 📋 Versicherung & Hausarzt
               </h2>
 
-              {/* Krankenkasse */}
-              {notfallInfo.krankenkasse && (
+              {/* Versicherung */}
+              {notfallInfo.versicherung && (
                 <div
                   style={{
                     backgroundColor: '#252118',
@@ -392,14 +412,14 @@ export default function NotfallPage() {
                   }}
                 >
                   <p style={{ color: '#C9963C', fontSize: '13px', fontWeight: 'bold', margin: '0 0 4px 0' }}>
-                    Krankenkasse
+                    Versicherung
                   </p>
                   <p style={{ color: '#DBA84A', fontSize: '15px', fontWeight: 'bold', margin: '0 0 4px 0' }}>
-                    {notfallInfo.krankenkasse}
+                    {notfallInfo.versicherung}
                   </p>
-                  {notfallInfo.krankenkasse_nummer && (
+                  {notfallInfo.versicherungsnummer && (
                     <p style={{ color: '#F5F0E8', fontSize: '13px', margin: 0 }}>
-                      Nr: {notfallInfo.krankenkasse_nummer}
+                      Nr: {notfallInfo.versicherungsnummer}
                     </p>
                   )}
                 </div>
