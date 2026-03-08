@@ -208,13 +208,9 @@ export default function KundeHomePage() {
             <IconCheck size={18} />
             <span>Meine Buchungen</span>
           </Link>
-          <Link href="/kunde/medikamente" className="quick-link">
-            <span style={{ fontSize: 18 }}>💊</span>
-            <span>Medikamentenplan</span>
-          </Link>
           <Link href="/kunde/notfall" className="quick-link">
             <span style={{ fontSize: 18 }}>🚨</span>
-            <span>Notfall-Info</span>
+            <span>Notfall & Medikamente</span>
           </Link>
         </div>
 

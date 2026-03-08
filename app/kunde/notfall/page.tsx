@@ -206,7 +206,7 @@ export default function NotfallPage() {
           .eq('id', editingMed.id)
         
         if (!error) {
-          setMedications(medications.map(m => m.id === editingMed.id ? { ...m, ...medData } : m))
+          setMedications(medications.map(m => m.id === editingMed.id ? { ...m, ...medData } as Medication : m))
         }
       } else {
         const { data } = await supabase
@@ -215,7 +215,7 @@ export default function NotfallPage() {
           .select()
         
         if (data) {
-          setMedications([...medications, ...data])
+          setMedications([...medications, ...(data as Medication[])])
         }
       }
       
