@@ -1,6 +1,6 @@
 export interface Profile {
   id: string
-  role: 'kunde' | 'engel' | 'admin'
+  role: 'kunde' | 'engel' | 'admin' | 'fahrer'
   first_name: string
   last_name: string
   email: string

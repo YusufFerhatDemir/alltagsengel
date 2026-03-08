@@ -416,18 +416,12 @@ export default function AuftraegePage() {
                     flexWrap: 'wrap',
                   }}>
                     {ride.rollstuhl_benoetig && (
-                      <span style={{
-                        fontSize: '18px',
-                        title: 'Rollstuhl',
-                      }}>
+                      <span title="Rollstuhl" style={{ fontSize: '18px' }}>
                         🦽
                       </span>
                     )}
                     {ride.tragestuhl_benoetig && (
-                      <span style={{
-                        fontSize: '18px',
-                        title: 'Tragestuhl',
-                      }}>
+                      <span title="Tragestuhl" style={{ fontSize: '18px' }}>
                         🪑
                       </span>
                     )}
