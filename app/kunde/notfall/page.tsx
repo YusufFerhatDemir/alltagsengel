@@ -11,7 +11,10 @@ interface Medication {
   wirkstoff?: string
   dosierung: number
   einheit: string
-  einnahmezeiten: string[]
+  einnahme_morgens: boolean
+  einnahme_mittags: boolean
+  einnahme_abends: boolean
+  einnahme_nachts: boolean
   einnahme_hinweis?: string
   verordnet_von?: string
   dauermedikation: boolean
@@ -155,10 +158,10 @@ export default function NotfallPage() {
         dosierung: med.dosierung.toString(),
         einheit: med.einheit,
         einnahmezeiten: {
-          morgens: med.einnahmezeiten.includes('morgens'),
-          mittags: med.einnahmezeiten.includes('mittags'),
-          abends: med.einnahmezeiten.includes('abends'),
-          nachts: med.einnahmezeiten.includes('nachts')
+          morgens: med.einnahme_morgens,
+          mittags: med.einnahme_mittags,
+          abends: med.einnahme_abends,
+          nachts: med.einnahme_nachts
         },
         einnahme_hinweis: med.einnahme_hinweis || '',
         verordnet_von: med.verordnet_von || '',
@@ -176,19 +179,16 @@ export default function NotfallPage() {
   const saveMedication = async () => {
     if (!medForm.medikament_name || !medForm.dosierung || !user) return
 
-    const einnahmezeiten = []
-    if (medForm.einnahmezeiten.morgens) einnahmezeiten.push('morgens')
-    if (medForm.einnahmezeiten.mittags) einnahmezeiten.push('mittags')
-    if (medForm.einnahmezeiten.abends) einnahmezeiten.push('abends')
-    if (medForm.einnahmezeiten.nachts) einnahmezeiten.push('nachts')
-
     const medData = {
       user_id: user.id,
       medikament_name: medForm.medikament_name,
       wirkstoff: medForm.wirkstoff || null,
       dosierung: parseFloat(medForm.dosierung),
       einheit: medForm.einheit,
-      einnahmezeiten,
+      einnahme_morgens: medForm.einnahmezeiten.morgens,
+      einnahme_mittags: medForm.einnahmezeiten.mittags,
+      einnahme_abends: medForm.einnahmezeiten.abends,
+      einnahme_nachts: medForm.einnahmezeiten.nachts,
       einnahme_hinweis: medForm.einnahme_hinweis || null,
       verordnet_von: medForm.verordnet_von || null,
       dauermedikation: medForm.dauermedikation,
@@ -383,11 +383,16 @@ export default function NotfallPage() {
                         {med.dosierung} {med.einheit}
                       </p>
 
-                      {med.einnahmezeiten.length > 0 && (
+                      {(med.einnahme_morgens || med.einnahme_mittags || med.einnahme_abends || med.einnahme_nachts) && (
                         <div style={{ display: 'flex', gap: '6px', marginBottom: '8px', flexWrap: 'wrap' }}>
-                          {med.einnahmezeiten.map(zeit => (
+                          {[
+                            med.einnahme_morgens && 'Morgens',
+                            med.einnahme_mittags && 'Mittags',
+                            med.einnahme_abends && 'Abends',
+                            med.einnahme_nachts && 'Nachts'
+                          ].filter(Boolean).map(zeit => (
                             <span
-                              key={zeit}
+                              key={zeit as string}
                               style={{
                                 backgroundColor: '#C9963C',
                                 color: '#1A1612',
@@ -397,7 +402,7 @@ export default function NotfallPage() {
                                 fontWeight: '500'
                               }}
                             >
-                              {zeit.charAt(0).toUpperCase() + zeit.slice(1)}
+                              {zeit}
                             </span>
                           ))}
                         </div>
