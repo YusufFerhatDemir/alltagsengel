@@ -271,9 +271,7 @@ export default function MedikamentePage() {
           style={{
             flex: 1,
             overflowY: 'auto',
-            paddingBottom: '80px',
-            padding: '16px',
-            paddingBottom: '80px',
+            padding: '16px 16px 80px',
           }}
         >
           {loading ? (
