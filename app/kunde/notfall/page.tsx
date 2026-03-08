@@ -279,7 +279,7 @@ export default function NotfallPage() {
 
   return (
     <div className="phone">
-      <div className="screen" style={{ backgroundColor: '#1A1612', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+      <div className="screen" style={{ backgroundColor: '#1A1612', minHeight: '100vh', display: 'flex', flexDirection: 'column', position: 'relative' }}>
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', padding: '16px', borderBottom: '1px solid rgba(201,150,60,0.2)', gap: '12px' }}>
           <button
@@ -325,12 +325,12 @@ export default function NotfallPage() {
               transition: 'all 0.3s ease'
             }}
           >
-            🚨 Notfall-Info
+            Notfall-Info
           </button>
         </div>
 
         {/* Content */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '16px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '16px', paddingBottom: '100px' }}>
           {activeTab === 'medikamente' && (
             <div>
               {medications.length === 0 ? (
@@ -789,9 +789,10 @@ export default function NotfallPage() {
           <button
             onClick={() => openMedModal()}
             style={{
-              position: 'fixed',
+              position: 'absolute',
               bottom: '80px',
               right: '16px',
+              zIndex: 10,
               width: '56px',
               height: '56px',
               borderRadius: '50%',
@@ -862,7 +863,7 @@ export default function NotfallPage() {
               padding: '8px'
             }}
           >
-            <span style={{ fontSize: '20px' }}>🚨</span>
+            <span style={{ fontSize: '20px' }}>❤️‍🩹</span>
             <span>Notfall</span>
           </button>
           <button
