@@ -181,6 +181,8 @@ body {
 .role-icon-3d { width:52px; height:52px; border-radius:14px; position:relative; overflow:hidden; background:#0e0b04; flex-shrink:0; display:flex; align-items:center; justify-content:center; box-shadow:0 0 0 1.5px rgba(201,150,60,.4), 0 4px 8px rgba(0,0,0,.6), 0 10px 28px rgba(0,0,0,.7), inset 0 1px 0 rgba(255,255,255,.06); }
 .role-icon-3d::before { content:''; position:absolute; inset:-1.5px; pointer-events:none; border-radius:16px; background:linear-gradient(135deg, rgba(248,224,100,.88) 0%, rgba(196,154,46,.5) 28%, rgba(70,48,6,.12) 50%, rgba(196,154,46,.48) 74%, rgba(248,224,100,.82) 100%); background-size:200% 200%; animation:borderSpin3d 3.5s linear infinite; z-index:1; }
 .role-icon-3d img { width:100%; height:100%; object-fit:cover; position:relative; z-index:2; }
+.role-icon-3d::after { content:''; position:absolute; top:0; left:-60%; width:55%; height:100%; background:linear-gradient(105deg, transparent 30%, rgba(248,224,100,.15) 42%, rgba(255,255,255,.22) 50%, rgba(248,224,100,.15) 58%, transparent 70%); z-index:3; pointer-events:none; border-radius:14px; animation:iconShine 4s ease-in-out infinite; }
+@keyframes iconShine { 0%,100%{left:-60%;opacity:0} 10%{opacity:1} 50%{left:120%;opacity:1} 60%,100%{opacity:0} }
 .role-icon-3d svg { position:relative; z-index:2; }
 .role-text h3 { font-size:17px; font-weight:600; color:white; margin-bottom:4px; }
 .role-text p  { font-size:13px; color:rgba(255,255,255,.35); line-height:1.55; font-weight:300; }
