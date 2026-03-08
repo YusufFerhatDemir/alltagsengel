@@ -12,7 +12,7 @@ export const viewport: Viewport = {
   maximumScale: 1,
   userScalable: false,
   themeColor: '#1A1612',
-  colorScheme: 'dark',
+  colorScheme: 'dark only' as any,
 }
 
 export const metadata: Metadata = {
@@ -55,8 +55,12 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="de">
-      <body className={`${jost.variable} ${cormorant.variable}`} style={{ fontFamily: "'Jost', sans-serif" }}>
+    <html lang="de" style={{ colorScheme: 'dark only' } as any}>
+      <head>
+        <meta name="color-scheme" content="dark only" />
+        <meta name="supported-color-schemes" content="dark only" />
+      </head>
+      <body className={`${jost.variable} ${cormorant.variable}`} style={{ fontFamily: "'Jost', sans-serif", backgroundColor: '#1A1612', color: '#F5F0E8' }}>
         <LayoutWrapper>
           {children}
         </LayoutWrapper>

@@ -32,16 +32,25 @@
 
 /* ─── Reset ─── */
 *,*::before,*::after { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
-:root { color-scheme:dark; }
+/* "dark only" verhindert, dass Chrome Auto-Dark anwendet (Android Stromsparmodus) */
+:root { color-scheme: dark only; }
 
-/* Android Force-Dark koruması — kendi dark theme'imiz var */
-:root, body, .phone, .screen {
+/* Android Force-Dark & Chrome Auto-Dark Schutz */
+:root, body, .phone, .screen, html {
   forced-color-adjust: none;
   -webkit-text-size-adjust: 100%;
 }
+html, body {
+  background-color: #1A1612 !important;
+  color: #F5F0E8 !important;
+}
 @media (prefers-color-scheme: light) {
-  :root { color-scheme: dark; }
-  html { background: #1A1612; }
+  :root { color-scheme: dark only; }
+  html { background: #1A1612 !important; }
+}
+/* Zusätzlicher Schutz: Chrome Dark Mode Override verhindern */
+@media (prefers-color-scheme: dark) {
+  img, svg, video { filter: none !important; }
 }
 select.input option, .kk-other option { background:var(--coal3); color:var(--ink); }
 
