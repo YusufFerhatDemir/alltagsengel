@@ -863,7 +863,6 @@ export default function NotfallPage() {
               padding: '8px'
             }}
           >
-            <span style={{ fontSize: '20px' }}>❤️‍🩹</span>
             <span>Notfall</span>
           </button>
           <button
