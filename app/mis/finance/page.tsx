@@ -3,9 +3,11 @@ import React, { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { BRAND, FINANCIAL_PROJECTIONS, UNIT_ECONOMICS } from '@/lib/mis/constants'
 import { SectionHeader, Card, KpiCard, MiniBarChart, DataTable, StatRow, ProgressBar, Tabs, MisButton, Badge } from '@/components/mis/MisComponents'
+import { useMis } from '@/lib/mis/MisContext'
 import type { BudgetItem } from '@/lib/mis/types'
 
 export default function FinancePage() {
+  const { isMobile } = useMis()
   const [budgetItems, setBudgetItems] = useState<BudgetItem[]>([])
   const [activeTab, setActiveTab] = useState('overview')
 
@@ -38,7 +40,7 @@ export default function FinancePage() {
             <KpiCard title="Burn Rate" value="€12K" unit="/Monat" icon="activity" color={BRAND.warning} />
             <KpiCard title="Runway" value="~42" unit="Monate" icon="clock" color={BRAND.success} />
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? 12 : 20 }}>
             <Card title="Umsatzentwicklung" icon="chart">
               <MiniBarChart data={FP.revenue} labels={FP.years} height={150} />
             </Card>
@@ -120,7 +122,7 @@ export default function FinancePage() {
       )}
 
       {activeTab === 'unit-economics' && (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? 12 : 20 }}>
           <Card title="Einheitsökonomie" icon="pieChart">
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
               <StatRow label="Abrechnungssatz (Pflegekasse)" value={`€${UE.billingRatePerHour}/Std.`} />

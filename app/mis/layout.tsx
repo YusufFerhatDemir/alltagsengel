@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client'
 import { NAV_ITEMS, BRAND } from '@/lib/mis/constants'
 import { MIcon } from '@/components/mis/MisIcons'
 import { SearchInput } from '@/components/mis/MisComponents'
+import { MisProvider } from '@/lib/mis/MisContext'
 
 export default function MISLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
@@ -67,7 +68,8 @@ export default function MISLayout({ children }: { children: React.ReactNode }) {
   )
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: BRAND.light, fontFamily: "'Jost', var(--font-jost), sans-serif" }}>
+    <MisProvider>
+    <div className="mis-root" style={{ display: 'flex', minHeight: '100vh', background: BRAND.light, fontFamily: "'Jost', var(--font-jost), sans-serif", overflowX: 'hidden' }}>
       {/* MOBILE OVERLAY */}
       {isMobile && mobileOpen && (
         <div onClick={() => setMobileOpen(false)} style={{
@@ -228,7 +230,7 @@ export default function MISLayout({ children }: { children: React.ReactNode }) {
         </header>
 
         {/* PAGE CONTENT */}
-        <main style={{ flex: 1, padding: isMobile ? 14 : 28, maxWidth: 1440, width: '100%' }}>
+        <main className="mis-content" style={{ flex: 1, padding: isMobile ? 12 : 28, maxWidth: 1440, width: '100%', overflowX: 'hidden' }}>
           {children}
         </main>
 
@@ -308,6 +310,7 @@ export default function MISLayout({ children }: { children: React.ReactNode }) {
         </div>
       )}
     </div>
+    </MisProvider>
   )
 }
 

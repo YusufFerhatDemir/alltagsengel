@@ -3,9 +3,11 @@ import React, { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { BRAND } from '@/lib/mis/constants'
 import { SectionHeader, Card, KpiCard, DataTable, Tabs, MisButton, Badge, RiskBadge, ProgressBar, StatRow, EmptyState } from '@/components/mis/MisComponents'
+import { useMis } from '@/lib/mis/MisContext'
 import type { QualityProcess, QualityAudit, CAPA } from '@/lib/mis/types'
 
 export default function QualityPage() {
+  const { isMobile } = useMis()
   const [processes, setProcesses] = useState<QualityProcess[]>([])
   const [audits, setAudits] = useState<QualityAudit[]>([])
   const [capas, setCapas] = useState<CAPA[]>([])
@@ -118,7 +120,7 @@ export default function QualityPage() {
 
       {tab === 'matrix' && (
         <Card title="ISO 9001 Prozesslandkarte" icon="target">
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr 1fr', gap: isMobile ? 10 : 16 }}>
             {['Kernprozesse', 'Supportprozesse', 'Managementprozesse'].map((cat, ci) => {
               const catKey = ['core', 'support', 'management'][ci]
               const catColor = [BRAND.gold, BRAND.info, BRAND.muted][ci]
