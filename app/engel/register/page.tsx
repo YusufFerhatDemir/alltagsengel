@@ -24,7 +24,7 @@ export default function EngelRegisterPage() {
   const [phone, setPhone] = useState('')
   const [location, setLocation] = useState('')
   const [qualification, setQualification] = useState('')
-  const [hourlyRate, setHourlyRate] = useState(30)
+  const hourlyRate = 20 // Fest – nur Admin darf ändern
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
   const [firstName, setFirstName] = useState('')
@@ -191,10 +191,10 @@ export default function EngelRegisterPage() {
         <div className="form-card">
           <div className="form-card-h">Stundensatz</div>
           <div className="ereg-rate">
-            <input className="input" type="number" placeholder="30" min={15} max={60} value={hourlyRate} onChange={e => setHourlyRate(Number(e.target.value))} />
+            <div className="input" style={{ display: 'flex', alignItems: 'center', color: 'var(--gold2)', fontWeight: 700, fontSize: 18 }}>20</div>
             <span className="ereg-rate-unit">€ / Stunde</span>
           </div>
-          <div className="ereg-hint">Empfohlen: 25–40€/Std. je nach Region und Qualifikation.</div>
+          <div className="ereg-hint">Der Stundensatz wird zentral von Alltagsengel festgelegt.</div>
         </div>
 
         {error && <div style={{ color: 'var(--red-w)', padding: '8px 16px', fontSize: 13 }}>{error}</div>}
