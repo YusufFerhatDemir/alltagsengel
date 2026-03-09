@@ -53,7 +53,7 @@ export default function KundeHomePage() {
     load()
   }, [])
 
-  const firstName = profile?.first_name || 'Yusuf'
+  const firstName = profile?.first_name || ''
 
   // Mesafe filtresi: Müşteri ve engel koordinatları varsa hesapla
   const angelsWithDistance = angels.map((a: any) => {

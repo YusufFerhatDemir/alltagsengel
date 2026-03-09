@@ -52,7 +52,13 @@ function LoginForm() {
       if (profile?.role === 'admin') {
         router.push('/admin/home')
       } else if (profile?.role === 'engel') {
-        router.push('/engel/home')
+        // Check if angel profile exists
+        const { data: angel } = await supabase
+          .from('angels')
+          .select('id')
+          .eq('id', signInData.user.id)
+          .single()
+        router.push(angel ? '/engel/home' : '/engel/register')
       } else if (profile?.role === 'fahrer') {
         router.push('/fahrer/home')
       } else {
