@@ -12,7 +12,16 @@ export default function MISLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter()
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
   const [search, setSearch] = useState('')
+
+  // Detect mobile
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 900)
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [])
   const [aiOpen, setAiOpen] = useState(false)
   const [aiMessages, setAiMessages] = useState<{ role: string; text: string }[]>([
     { role: 'assistant', text: 'Willkommen im AlltagsEngel KI-Assistenten. Wie kann ich Ihnen helfen?' }
@@ -59,11 +68,21 @@ export default function MISLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: BRAND.light, fontFamily: "'Jost', var(--font-jost), sans-serif" }}>
+      {/* MOBILE OVERLAY */}
+      {isMobile && mobileOpen && (
+        <div onClick={() => setMobileOpen(false)} style={{
+          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)',
+          zIndex: 49, transition: 'opacity 0.25s',
+        }} />
+      )}
+
       {/* SIDEBAR */}
       <aside style={{
-        width: sidebarOpen ? 260 : 72, background: BRAND.coal, color: BRAND.cream,
-        display: 'flex', flexDirection: 'column', transition: 'width 0.25s ease',
+        width: isMobile ? 260 : (sidebarOpen ? 260 : 72),
+        background: BRAND.coal, color: BRAND.cream,
+        display: 'flex', flexDirection: 'column', transition: 'transform 0.25s ease, width 0.25s ease',
         position: 'fixed', top: 0, left: 0, bottom: 0, zIndex: 50, overflow: 'hidden',
+        transform: isMobile && !mobileOpen ? 'translateX(-100%)' : 'translateX(0)',
       }}>
         {/* Logo */}
         <div style={{
@@ -90,7 +109,7 @@ export default function MISLayout({ children }: { children: React.ReactNode }) {
           {NAV_ITEMS.map(item => {
             const isActive = pathname === item.href || (item.href !== '/mis' && pathname.startsWith(item.href))
             return (
-              <Link key={item.href} href={item.href} style={{
+              <Link key={item.href} href={item.href} onClick={() => isMobile && setMobileOpen(false)} style={{
                 display: 'flex', alignItems: 'center', gap: 12, padding: sidebarOpen ? '10px 14px' : '10px 0',
                 borderRadius: 10, textDecoration: 'none', transition: 'all 0.15s',
                 background: isActive ? `${BRAND.gold}20` : 'transparent',
@@ -133,17 +152,18 @@ export default function MISLayout({ children }: { children: React.ReactNode }) {
       </aside>
 
       {/* MAIN */}
-      <div style={{ flex: 1, marginLeft: sidebarOpen ? 260 : 72, transition: 'margin 0.25s ease', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ flex: 1, marginLeft: isMobile ? 0 : (sidebarOpen ? 260 : 72), transition: 'margin 0.25s ease', display: 'flex', flexDirection: 'column' }}>
         {/* HEADER */}
         <header style={{
-          height: 64, background: BRAND.white, borderBottom: `1px solid ${BRAND.border}`,
+          height: 56, background: BRAND.white, borderBottom: `1px solid ${BRAND.border}`,
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          padding: '0 28px', position: 'sticky', top: 0, zIndex: 40,
+          padding: isMobile ? '0 14px' : '0 28px', position: 'sticky', top: 0, zIndex: 40,
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
             <button onClick={() => setMobileOpen(!mobileOpen)} style={{
               background: 'none', border: 'none', cursor: 'pointer', color: BRAND.coal,
-              display: 'none', // TODO: show on mobile via CSS
+              display: isMobile ? 'flex' : 'none', alignItems: 'center', justifyContent: 'center',
+              padding: 4,
             }}>
               <MIcon name="menu" size={22} />
             </button>
@@ -154,10 +174,12 @@ export default function MISLayout({ children }: { children: React.ReactNode }) {
             </div>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div style={{ width: 260 }}>
-              <SearchInput value={search} onChange={setSearch} placeholder="MIS durchsuchen..." />
-            </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 8 : 12 }}>
+            {!isMobile && (
+              <div style={{ width: 260 }}>
+                <SearchInput value={search} onChange={setSearch} placeholder="MIS durchsuchen..." />
+              </div>
+            )}
 
             {/* AI Button */}
             <button onClick={() => setAiOpen(!aiOpen)} style={{
@@ -186,7 +208,7 @@ export default function MISLayout({ children }: { children: React.ReactNode }) {
             </button>
 
             {/* User */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginLeft: 8 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginLeft: isMobile ? 0 : 8 }}>
               <div style={{
                 width: 34, height: 34, borderRadius: '50%',
                 background: `linear-gradient(135deg, ${BRAND.gold}, ${BRAND.coal})`,
@@ -195,7 +217,7 @@ export default function MISLayout({ children }: { children: React.ReactNode }) {
               }}>
                 {userName.charAt(0)}
               </div>
-              <span style={{ fontSize: 13, fontWeight: 500, color: BRAND.coal }}>{userName}</span>
+              {!isMobile && <span style={{ fontSize: 13, fontWeight: 500, color: BRAND.coal }}>{userName}</span>}
               <button onClick={handleLogout} title="Abmelden" style={{
                 background: 'none', border: 'none', cursor: 'pointer', color: BRAND.muted, padding: 4,
               }}>
@@ -206,14 +228,15 @@ export default function MISLayout({ children }: { children: React.ReactNode }) {
         </header>
 
         {/* PAGE CONTENT */}
-        <main style={{ flex: 1, padding: 28, maxWidth: 1440, width: '100%' }}>
+        <main style={{ flex: 1, padding: isMobile ? 14 : 28, maxWidth: 1440, width: '100%' }}>
           {children}
         </main>
 
         {/* FOOTER */}
         <footer style={{
-          padding: '16px 28px', borderTop: `1px solid ${BRAND.border}`, background: BRAND.white,
+          padding: isMobile ? '12px 14px' : '16px 28px', borderTop: `1px solid ${BRAND.border}`, background: BRAND.white,
           display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 11, color: BRAND.muted,
+          flexWrap: 'wrap' as const, gap: 4,
         }}>
           <span>AlltagsEngel GmbH — Management Information System — VERTRAULICH</span>
           <span>powered by <a href="https://dripfy.app" target="_blank" rel="noopener noreferrer" style={{ color: BRAND.gold, textDecoration: 'none', fontWeight: 700 }}>DRIPFY.APP</a></span>
@@ -223,7 +246,8 @@ export default function MISLayout({ children }: { children: React.ReactNode }) {
       {/* AI CHAT PANEL */}
       {aiOpen && (
         <div style={{
-          position: 'fixed', right: 20, bottom: 20, width: 380, height: 520,
+          position: 'fixed', right: isMobile ? 0 : 20, bottom: isMobile ? 0 : 20,
+          width: isMobile ? '100%' : 380, height: isMobile ? '100%' : 520,
           background: BRAND.white, borderRadius: 16, boxShadow: '0 20px 60px rgba(0,0,0,0.2)',
           border: `1px solid ${BRAND.border}`, display: 'flex', flexDirection: 'column', zIndex: 100,
           overflow: 'hidden',
