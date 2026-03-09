@@ -3,6 +3,18 @@ import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { IconUser, IconClock, IconTarget, IconChart } from '@/components/Icons'
 
+interface Visitor {
+  id: number
+  ip: string
+  country: string
+  city: string
+  region: string
+  user_agent: string
+  referrer: string
+  page: string
+  created_at: string
+}
+
 interface PageView {
   id: string
   user_id: string | null
@@ -32,8 +44,9 @@ interface UserActivity {
 
 export default function AdminAnalyticsPage() {
   const [views, setViews] = useState<PageView[]>([])
+  const [visitors, setVisitors] = useState<Visitor[]>([])
   const [loading, setLoading] = useState(true)
-  const [tab, setTab] = useState<'live' | 'pages' | 'users'>('live')
+  const [tab, setTab] = useState<'visitors' | 'live' | 'pages' | 'users'>('visitors')
   const [dateFilter, setDateFilter] = useState<'today' | '7d' | '30d' | 'all'>('today')
 
   useEffect(() => {
@@ -71,6 +84,29 @@ export default function AdminAnalyticsPage() {
       } else {
         setViews((data as PageView[]) || [])
       }
+
+      // Besucher-Daten (IP, Region) laden
+      let vQuery = supabase
+        .from('visitors')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(500)
+
+      if (dateFilter !== 'all') {
+        const now = new Date()
+        let from: Date
+        if (dateFilter === 'today') {
+          from = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+        } else if (dateFilter === '7d') {
+          from = new Date(now.getTime() - 7 * 86400000)
+        } else {
+          from = new Date(now.getTime() - 30 * 86400000)
+        }
+        vQuery = vQuery.gte('created_at', from.toISOString())
+      }
+
+      const { data: vData } = await vQuery
+      setVisitors((vData as Visitor[]) || [])
     } catch (err) {
       console.error('[Analytics] Unexpected error:', err)
     } finally {
@@ -191,7 +227,7 @@ export default function AdminAnalyticsPage() {
       {/* Date Filter + Tabs */}
       <div className="an-controls">
         <div className="an-tabs">
-          {([['live', 'Live-Feed'], ['pages', 'Seiten'], ['users', 'Nutzer']] as const).map(([key, label]) => (
+          {([['visitors', 'Besucher 🌍'], ['live', 'Live-Feed'], ['pages', 'Seiten'], ['users', 'Nutzer']] as const).map(([key, label]) => (
             <button key={key} className={`an-tab ${tab === key ? 'active' : ''}`} onClick={() => setTab(key)}>{label}</button>
           ))}
         </div>
@@ -206,6 +242,54 @@ export default function AdminAnalyticsPage() {
         <div className="an-loading">Daten werden geladen...</div>
       ) : (
         <>
+          {/* Visitors Tab - IP, Region, Land */}
+          {tab === 'visitors' && (
+            <div className="an-table-wrap">
+              <div style={{ padding: '12px 16px', fontSize: 13, color: 'var(--gold)', background: 'rgba(201,150,60,0.08)', borderRadius: 8, marginBottom: 12 }}>
+                {visitors.length} Besucher · {new Set(visitors.map(v => v.ip)).size} einzigartige IPs · {new Set(visitors.filter(v => v.country).map(v => v.country)).size} Länder
+              </div>
+              <table className="an-table">
+                <thead>
+                  <tr>
+                    <th>Zeit</th>
+                    <th>IP</th>
+                    <th>Land / Region / Stadt</th>
+                    <th>Seite</th>
+                    <th>Referrer</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {visitors.length === 0 && (
+                    <tr><td colSpan={5} className="an-empty">Noch keine Besucher-Daten. Tracking startet nach dem nächsten Deploy.</td></tr>
+                  )}
+                  {visitors.map(v => (
+                    <tr key={v.id}>
+                      <td className="an-time">
+                        <div>{formatTime(v.created_at)}</div>
+                        <div className="an-time-sub">{formatDate(v.created_at)}</div>
+                      </td>
+                      <td style={{ fontFamily: 'monospace', fontSize: 12 }}>{v.ip}</td>
+                      <td>
+                        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                          {v.country && <span className="an-page-tag">{v.country}</span>}
+                          {v.region && <span className="an-page-tag">{v.region}</span>}
+                          {v.city && <span className="an-page-tag">{v.city}</span>}
+                          {!v.country && !v.region && !v.city && <span className="an-anon">—</span>}
+                        </div>
+                      </td>
+                      <td>
+                        <div className="an-page-name">{v.page}</div>
+                      </td>
+                      <td style={{ fontSize: 11, color: 'var(--ink4)', maxWidth: 150, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {v.referrer || '—'}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
           {/* Live Feed Tab */}
           {tab === 'live' && (
             <div className="an-table-wrap">

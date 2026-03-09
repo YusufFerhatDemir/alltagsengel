@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next'
 import { Jost, Cormorant_Garamond } from 'next/font/google'
 import './globals.css'
 import LayoutWrapper from '@/components/LayoutWrapper'
+import VisitorTracker from '@/components/VisitorTracker'
 
 const jost = Jost({ subsets: ['latin'], variable: '--font-jost', weight: ['300','400','500','600','700'] })
 const cormorant = Cormorant_Garamond({ subsets: ['latin'], variable: '--font-cormorant', weight: ['400','500','600','700'], style: ['normal','italic'] })
@@ -76,6 +77,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="supported-color-schemes" content="dark only" />
       </head>
       <body className={`${jost.variable} ${cormorant.variable}`} style={{ fontFamily: "'Jost', sans-serif", backgroundColor: '#1A1612', color: '#F5F0E8' }}>
+        <VisitorTracker />
         <LayoutWrapper>
           {children}
         </LayoutWrapper>
