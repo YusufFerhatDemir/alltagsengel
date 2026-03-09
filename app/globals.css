@@ -707,6 +707,8 @@ body {
    9. ENGEL REGISTRIERUNG
    ══════════════════════════════════════════════ */
 #eregister { background:var(--coal); padding-bottom:100px; }
+#krankenfahrt-form { padding-bottom:100px; }
+#hygienebox-form { padding-bottom:100px; }
 .ereg-hero { background:var(--coal); padding:0 22px 32px; text-align:center; }
 .ereg-title { font-family:'Cormorant Garamond',serif; font-size:22px; font-weight:700; color:white; margin-bottom:6px; }
 .ereg-sub   { font-size:13px; color:rgba(255,255,255,.32); line-height:1.6; font-weight:300; }
