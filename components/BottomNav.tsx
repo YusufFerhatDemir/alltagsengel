@@ -15,6 +15,9 @@ export default function BottomNav({ role }: { role: 'kunde' | 'engel' }) {
   const pathname = usePathname()
   const router = useRouter()
 
+  // Hide BottomNav on registration pages - it covers the submit button
+  if (pathname === '/engel/register' || pathname === '/kunde/register') return null
+
   if (role === 'engel') {
     return (
       <nav className="bottom-nav" role="navigation" aria-label="Hauptnavigation">
