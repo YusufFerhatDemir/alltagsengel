@@ -14,7 +14,7 @@ export default function BuchenPage() {
   const [kkType, setKkType] = useState('gesetzlich')
   const [selectedKK, setSelectedKK] = useState('AOK')
   const [angel, setAngel] = useState<any>(null)
-  const [date, setDate] = useState('2026-03-01')
+  const [date, setDate] = useState(() => new Date().toISOString().split('T')[0])
   const [time, setTime] = useState('10:00')
   const [duration, setDuration] = useState(2)
   const [service, setService] = useState('Alltagsbegleitung')
