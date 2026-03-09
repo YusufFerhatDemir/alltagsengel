@@ -15,8 +15,14 @@ export default function BottomNav({ role }: { role: 'kunde' | 'engel' }) {
   const pathname = usePathname()
   const router = useRouter()
 
-  // Hide BottomNav on registration pages - it covers the submit button
-  if (pathname === '/engel/register' || pathname === '/kunde/register') return null
+  // Hide BottomNav on pages with submit bars - it covers the submit button
+  const hideOnPages = [
+    '/engel/register',
+    '/kunde/register',
+    '/kunde/krankenfahrt',
+    '/kunde/hygienebox',
+  ]
+  if (hideOnPages.includes(pathname) || pathname.startsWith('/kunde/buchen/')) return null
 
   if (role === 'engel') {
     return (

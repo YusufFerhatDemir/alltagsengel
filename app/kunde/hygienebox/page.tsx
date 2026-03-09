@@ -133,7 +133,7 @@ export default function HygieneboBoxPage() {
   }
 
   return (
-    <div className="screen">
+    <div className="screen" id="hygienebox-form">
       {/* Header */}
       <div className="topbar">
         <Link href="/kunde/home" className="back-btn">←</Link>
