@@ -3,8 +3,10 @@ import React, { useState } from 'react'
 import { BRAND } from '@/lib/mis/constants'
 import { SectionHeader, Card, MisButton, Tabs, StatRow, Badge } from '@/components/mis/MisComponents'
 import { MIcon } from '@/components/mis/MisIcons'
+import { useMis } from '@/lib/mis/MisContext'
 
 export default function SettingsPage() {
+  const { isMobile } = useMis()
   const [tab, setTab] = useState('general')
 
   return (
@@ -19,7 +21,7 @@ export default function SettingsPage() {
       ]} active={tab} onChange={setTab} />
 
       {tab === 'general' && (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? 12 : 20 }}>
           <Card title="System" icon="settings">
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
               <StatRow label="Unternehmen" value="AlltagsEngel GmbH" />
@@ -54,7 +56,7 @@ export default function SettingsPage() {
       )}
 
       {tab === 'integrations' && (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr 1fr', gap: isMobile ? 10 : 16 }}>
           {[
             { name: 'Supabase', desc: 'Datenbank, Auth, Storage', status: 'connected', icon: 'layers' },
             { name: 'Vercel', desc: 'Hosting & Deployment', status: 'connected', icon: 'globe' },

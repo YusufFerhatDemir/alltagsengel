@@ -4,9 +4,11 @@ import { createClient } from '@/lib/supabase/client'
 import { BRAND, DOC_STATUS_LABELS, CLASSIFICATION_LABELS } from '@/lib/mis/constants'
 import { SectionHeader, Card, DataTable, MisButton, SearchInput, StatusBadge, Badge, Tabs, EmptyState, Modal } from '@/components/mis/MisComponents'
 import { MIcon } from '@/components/mis/MisIcons'
+import { useMis } from '@/lib/mis/MisContext'
 import type { MisDocument, DocumentCategory } from '@/lib/mis/types'
 
 export default function DocumentsPage() {
+  const { isMobile } = useMis()
   const [docs, setDocs] = useState<MisDocument[]>([])
   const [categories, setCategories] = useState<DocumentCategory[]>([])
   const [search, setSearch] = useState('')
@@ -190,7 +192,7 @@ export default function DocumentsPage() {
             <label style={labelStyle}>Beschreibung</label>
             <textarea value={uploadForm.description} onChange={e => setUploadForm({...uploadForm, description: e.target.value})} style={{...inputStyle, minHeight: 80}} placeholder="Kurzbeschreibung" />
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? 10 : 12 }}>
             <div>
               <label style={labelStyle}>Kategorie</label>
               <select value={uploadForm.category_id} onChange={e => setUploadForm({...uploadForm, category_id: e.target.value})} style={inputStyle}>
@@ -205,7 +207,7 @@ export default function DocumentsPage() {
               </select>
             </div>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? 10 : 12 }}>
             <div>
               <label style={labelStyle}>ISO Dok.-Nr.</label>
               <input value={uploadForm.iso_doc_number} onChange={e => setUploadForm({...uploadForm, iso_doc_number: e.target.value})} style={inputStyle} placeholder="z.B. DOC-QMS-001" />
@@ -230,7 +232,7 @@ export default function DocumentsPage() {
       <Modal open={!!selectedDoc} onClose={() => setSelectedDoc(null)} title={selectedDoc?.title || 'Dokument'} width={640}>
         {selectedDoc && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? 10 : 12 }}>
               <div><span style={labelStyle}>Status</span><div><StatusBadge status={selectedDoc.status} /></div></div>
               <div><span style={labelStyle}>Klassifikation</span><div>{CLASSIFICATION_LABELS[selectedDoc.classification]}</div></div>
               <div><span style={labelStyle}>Version</span><div>{selectedDoc.version} (Rev. {selectedDoc.iso_revision})</div></div>

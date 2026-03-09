@@ -2,6 +2,7 @@
 import React from 'react'
 import { BRAND, MARKET_DATA } from '@/lib/mis/constants'
 import { SectionHeader, Card, KpiCard, StatRow, MiniBarChart, Badge, DataTable } from '@/components/mis/MisComponents'
+import { useMis } from '@/lib/mis/MisContext'
 
 const COMPETITORS = [
   { name: 'Careship', segment: 'Plattform', price: 'Ab €29/h', strengths: 'Bekannte Marke, breiteres Angebot', weakness: 'Keine §45b-Integration', threat: 'medium' },
@@ -19,6 +20,7 @@ const DEMOGRAPHICS = [
 ]
 
 export default function MarketPage() {
+  const { isMobile } = useMis()
   const M = MARKET_DATA
 
   return (
@@ -33,7 +35,7 @@ export default function MarketPage() {
         <KpiCard title="Entlastungsbetrag" value={`€${M.entlastungsbetrag}`} unit="/Monat" icon="banknote" color={BRAND.gold} />
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? 12 : 20 }}>
         {/* Market Size */}
         <Card title="Marktchance" icon="pieChart">
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
@@ -89,7 +91,7 @@ export default function MarketPage() {
 
       {/* Competitive Advantage */}
       <Card title="Unser Wettbewerbsvorteil" icon="zap" style={{ background: `linear-gradient(135deg, ${BRAND.coal}, #2D2820)`, border: 'none' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr 1fr', gap: isMobile ? 10 : 16 }}>
           {[
             { title: '§45b Integration', desc: 'Einzige Plattform mit direkter Abrechnung über den Entlastungsbetrag' },
             { title: 'Zweisei­tiger Marktplatz', desc: 'Matching-Algorithmus verbindet Kunden und zertifizierte Engel' },

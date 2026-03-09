@@ -3,9 +3,11 @@ import React, { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { BRAND } from '@/lib/mis/constants'
 import { SectionHeader, Card, KpiCard, DataTable, Tabs, MisButton, Badge, EmptyState, Modal, StatRow } from '@/components/mis/MisComponents'
+import { useMis } from '@/lib/mis/MisContext'
 import type { Supplier, PurchaseOrder } from '@/lib/mis/types'
 
 export default function SupplyChainPage() {
+  const { isMobile } = useMis()
   const [suppliers, setSuppliers] = useState<Supplier[]>([])
   const [orders, setOrders] = useState<PurchaseOrder[]>([])
   const [tab, setTab] = useState('suppliers')
@@ -103,7 +105,7 @@ export default function SupplyChainPage() {
           <input value={form.name} onChange={e => setForm({...form, name: e.target.value})} placeholder="Firmenname *" style={inputStyle} />
           <input value={form.category} onChange={e => setForm({...form, category: e.target.value})} placeholder="Kategorie" style={inputStyle} />
           <input value={form.contact_person} onChange={e => setForm({...form, contact_person: e.target.value})} placeholder="Kontaktperson" style={inputStyle} />
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? 10 : 12 }}>
             <input value={form.email} onChange={e => setForm({...form, email: e.target.value})} placeholder="E-Mail" style={inputStyle} />
             <input value={form.phone} onChange={e => setForm({...form, phone: e.target.value})} placeholder="Telefon" style={inputStyle} />
           </div>

@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { BRAND, FINANCIAL_PROJECTIONS, UNIT_ECONOMICS, MARKET_DATA } from '@/lib/mis/constants'
+import { useMis } from '@/lib/mis/MisContext'
 import { KpiCard, SectionHeader, Card, MiniBarChart, ProgressBar, ActivityItem, StatRow, MisButton, Badge, DataTable } from '@/components/mis/MisComponents'
 import { MIcon } from '@/components/mis/MisIcons'
 
@@ -10,6 +11,7 @@ export default function DashboardPage() {
   const [stats, setStats] = useState({ users: 0, bookings: 0, angels: 0, revenue: 0 })
   const [recentBookings, setRecentBookings] = useState<Record<string,unknown>[]>([])
   const [loading, setLoading] = useState(true)
+  const { isMobile } = useMis()
 
   useEffect(() => {
     loadDashboardData()
@@ -48,7 +50,7 @@ export default function DashboardPage() {
       />
 
       {/* KPI Row */}
-      <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(4, 1fr)', gap: isMobile ? 10 : 16 }}>
         <KpiCard title="Benutzer" value={stats.users} icon="users" trend="up" />
         <KpiCard title="Buchungen" value={stats.bookings} icon="calendar" trend="up" />
         <KpiCard title="Engel" value={stats.angels} icon="wings" trend="up" color={BRAND.success} />
@@ -56,14 +58,14 @@ export default function DashboardPage() {
       </div>
 
       {/* Market Opportunity */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : '1fr 1fr 1fr', gap: isMobile ? 10 : 16 }}>
         <KpiCard title="TAM" value="50" unit="Mrd. €" icon="globe" trend="up" />
         <KpiCard title="SAM" value="7,44" unit="Mrd. €" icon="target" trend="up" />
         <KpiCard title="Ungenutzt" value="4,46" unit="Mrd. €" icon="zap" trend="up" color={BRAND.error} />
       </div>
 
       {/* Main Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 20 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '2fr 1fr', gap: isMobile ? 14 : 20 }}>
         {/* Revenue Projection */}
         <Card title="5-Jahres-Umsatzprognose" icon="chart">
           <MiniBarChart
@@ -95,7 +97,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Second Row */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 20 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr 1fr', gap: isMobile ? 14 : 20 }}>
         {/* Quick Actions */}
         <Card title="Schnellaktionen" icon="zap">
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -145,7 +147,7 @@ export default function DashboardPage() {
       </div>
 
       {/* User Growth Chart */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? 14 : 20 }}>
         <Card title="Nutzerwachstum (5 Jahre)" icon="trending">
           <MiniBarChart
             data={FINANCIAL_PROJECTIONS.users}

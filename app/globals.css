@@ -2269,3 +2269,15 @@ button, a, .cat-item, .pay-opt, .kk-item, .radius-chip {
 .lp-footer-copy {
   font-size:10px; color:rgba(255,255,255,.1); letter-spacing:.03em;
 }
+
+/* ===== MIS PORTAL MOBILE RESPONSIVE ===== */
+@media (max-width:900px) {
+  .mis-root { overflow-x: hidden !important; }
+  .mis-content { overflow-x: hidden !important; }
+  .mis-content table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    font-size: 12px;
+  }
+}
