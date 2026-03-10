@@ -49,7 +49,7 @@ export default function CompanyOverviewPage() {
           <strong>Fragmented Market:</strong> Caregivers scattered across local agencies, freelancers, and informal networks—no central platform
         </BulletItem>
         <BulletItem icon="📋">
-          <strong>Underutilized §45b Benefit:</strong> €7.44B annual care relief budget sits unused; only 40% of eligible people utilize it
+          <strong>Underutilized §45b Benefit:</strong> €7.79B annual care relief budget sits unused; only 40% of eligible people utilize it
         </BulletItem>
         <BulletItem icon="⚠️">
           <strong>Trust & Safety Issues:</strong> Families struggle to find verified, insured, background-checked companions
@@ -219,7 +219,7 @@ export default function CompanyOverviewPage() {
       {/* Investment Highlights */}
       <Card style={{ marginTop: '40px', backgroundColor: 'rgba(201, 150, 60, 0.1)', borderLeft: '4px solid #C9963C', padding: '24px' }}>
         <Paragraph style={{ margin: 0, color: '#F7F2EA' }}>
-          <strong>AlltagsEngel UG (HRB registered) combines a massive market opportunity (€7.44B underutilized §45b budget), ~50% gross margin through direct Pflegekasse billing, two revenue verticals (Alltagsbegleitung + Krankentransport), strong anti-bypass mechanisms, and first-mover advantage as the only §45b digital platform.</strong> With €500K seed funding, we will dominate the digital care marketplace in Germany and expand across DACH.
+          <strong>AlltagsEngel UG (HRB registered) combines a massive market opportunity (€7.79B underutilized §45b budget), ~50% gross margin through direct Pflegekasse billing, two revenue verticals (Alltagsbegleitung + Krankentransport), strong anti-bypass mechanisms, and first-mover advantage as the only §45b digital platform.</strong> With €500K seed funding, we will dominate the digital care marketplace in Germany and expand across DACH.
         </Paragraph>
       </Card>
     </DocPageLayout>
