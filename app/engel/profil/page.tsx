@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import { IconWingsGold, IconDocument, IconCheck, IconClock } from '@/components/Icons'
+import { UNIT_ECONOMICS } from '@/lib/mis/constants'
 import { AvatarEngel } from '@/components/AvatarGlow'
 
 export default function MeinProfilPage() {
@@ -81,7 +82,7 @@ export default function MeinProfilPage() {
             <div>
               <div className="earn-label">Gesamtverdienst</div>
               <div className="earn-val">{totalEarnings.toFixed(0)}€</div>
-              <div className="earn-change">{angel?.hourly_rate || 30}€/Std.</div>
+              <div className="earn-change">{UNIT_ECONOMICS.helperPayPerHour}€/Std.</div>
             </div>
             <div className="earn-btn">Auszahlen</div>
           </div>
