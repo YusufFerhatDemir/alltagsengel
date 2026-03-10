@@ -68,9 +68,9 @@ export default async function BestaetigtPage({ params }: { params: Promise<{ id:
         </div>
 
         <div className="action-grid">
-          <button className="action-btn"><IconChat size={15} /> Chat</button>
-          <button className="action-btn"><IconPhone size={15} /> Anrufen</button>
-          <button className="action-btn"><IconCalendar size={15} /> Kalender</button>
+          <Link href={`/kunde/chat/${booking.angel_id || ''}`}><button className="action-btn"><IconChat size={15} /> Chat</button></Link>
+          <button className="action-btn" onClick={() => window.location.href = `tel:${booking.angel_phone || ''}`}><IconPhone size={15} /> Anrufen</button>
+          <Link href="/kunde/kalender"><button className="action-btn"><IconCalendar size={15} /> Kalender</button></Link>
           <Link href="/kunde/home"><button className="action-btn primary"><IconHouse size={15} /> Home</button></Link>
         </div>
       </div>

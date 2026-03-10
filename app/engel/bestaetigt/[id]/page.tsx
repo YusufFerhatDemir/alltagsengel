@@ -67,9 +67,9 @@ export default async function EngelBestaetigtPage({ params }: { params: Promise<
         </div>
 
         <div className="action-grid">
-          <button className="action-btn"><IconChat size={15} /> Chat</button>
-          <button className="action-btn"><IconPin size={15} /> Navigation</button>
-          <button className="action-btn"><IconCalendar size={15} /> Kalender</button>
+          <Link href={`/engel/chat/${booking.customer_id || ''}`}><button className="action-btn"><IconChat size={15} /> Chat</button></Link>
+          <button className="action-btn" onClick={() => { if (booking.address) window.open(`https://maps.google.com/?q=${encodeURIComponent(booking.address)}`, '_blank') }}><IconPin size={15} /> Navigation</button>
+          <Link href="/engel/kalender"><button className="action-btn"><IconCalendar size={15} /> Kalender</button></Link>
           <Link href="/engel/home"><button className="action-btn primary"><IconHouse size={15} /> Dashboard</button></Link>
         </div>
       </div>

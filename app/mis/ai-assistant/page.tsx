@@ -1,6 +1,6 @@
 'use client'
 import React, { useState, useRef, useEffect } from 'react'
-import { BRAND } from '@/lib/mis/constants'
+import { BRAND, UNIT_ECONOMICS, MARKET_DATA, FINANCIAL_PROJECTIONS } from '@/lib/mis/constants'
 import { SectionHeader, Card, MisButton, Badge } from '@/components/mis/MisComponents'
 import { MIcon } from '@/components/mis/MisIcons'
 import { useMis } from '@/lib/mis/MisContext'
@@ -166,7 +166,7 @@ function generateResponse(query: string): { response: string; sources: { title: 
   }
   if (q.includes('finanz') || q.includes('umsatz') || q.includes('revenue') || q.includes('burn')) {
     return {
-      response: `Aktuelle Finanzkennzahlen:\n\n📊 5-Jahres-Prognose:\n• 2026: €180K Umsatz (Start)\n• 2027: €960K (Break-Even Q3)\n• 2028: €3,2M\n• 2029: €8,4M\n• 2030: €18M\n\n💰 Seed-Runde: €500K bei €2,5M Pre-Money\n• Burn Rate: ~€12K/Monat\n• Runway: ~42 Monate\n\n📈 Unit Economics:\n• CAC: €35 | LTV: €810 | Ratio: 23,1x\n• Payback: 2,5 Monate`,
+      response: `Aktuelle Finanzkennzahlen:\n\n📊 5-Jahres-Prognose:\n• 2026: €390K Umsatz (Start)\n• 2027: €1,96M (Break-Even Q3)\n• 2028: €7,8M\n• 2029: €23,4M\n• 2030: €58,5M\n\n💰 Seed-Runde: €500K bei €2,5M Pre-Money\n• Burn Rate: ~€12K/Monat\n• Runway: ~42 Monate\n\n📈 Unit Economics:\n• CAC: €${UNIT_ECONOMICS.cac} | LTV: €${UNIT_ECONOMICS.ltv} | Ratio: ${UNIT_ECONOMICS.ltvCacRatio}x\n• Payback: ${UNIT_ECONOMICS.paybackMonths} Monate`,
       sources: [{ title: 'Financial Projections', module: 'finance' }, { title: 'Pitch Deck', module: 'dataroom' }],
     }
   }
