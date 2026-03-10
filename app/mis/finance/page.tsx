@@ -46,7 +46,7 @@ export default function FinancePage() {
             </Card>
             <Card title="Gewinn/Verlust" icon="trending">
               <MiniBarChart data={FP.profit.map(v => Math.abs(v))} labels={FP.years} color={BRAND.success} height={150} />
-              <div style={{ display: 'flex', gap: 16, marginTop: 8, fontSize: 11, color: BRAND.muted }}>
+              <div style={{ display: 'flex', gap: 16, marginTop: 8, fontSize: 11, color: BRAND.muted, flexWrap: 'wrap' }}>
                 {FP.years.map((y, i) => (
                   <span key={y} style={{ color: FP.profit[i] >= 0 ? BRAND.success : BRAND.error }}>
                     {y}: {FP.profit[i] >= 0 ? '+' : ''}{(FP.profit[i]/1e6).toFixed(1)}M

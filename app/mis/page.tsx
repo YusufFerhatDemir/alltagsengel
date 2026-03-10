@@ -80,7 +80,7 @@ export default function DashboardPage() {
             labels={FINANCIAL_PROJECTIONS.years}
             height={160}
           />
-          <div style={{ display: 'flex', gap: 20, marginTop: 16 }}>
+          <div style={{ display: 'flex', gap: 20, marginTop: 16, flexWrap: 'wrap' }}>
             <StatRow label="Break-Even" value="~Monat 10-12" />
             <StatRow label="Jahr-5 Umsatz" value="€58,5M" />
             <StatRow label="Bruttomarge" value="~50%" />
