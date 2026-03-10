@@ -3,8 +3,10 @@ import React, { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { BRAND } from '@/lib/mis/constants'
 import { SectionHeader, Card, KpiCard, DataTable, MisButton, Badge, Tabs } from '@/components/mis/MisComponents'
+import { useMis } from '@/lib/mis/MisContext'
 
 export default function TeamPage() {
+  const { isMobile } = useMis()
   const [users, setUsers] = useState<Record<string,unknown>[]>([])
   const [tasks, setTasks] = useState<Record<string,unknown>[]>([])
   const [tab, setTab] = useState('members')
@@ -28,7 +30,7 @@ export default function TeamPage() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
       <SectionHeader title="Team & Personal" subtitle="Benutzer, Rollen und Aufgabenverwaltung" icon="users" />
 
-      <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(4, 1fr)', gap: isMobile ? 10 : 16 }}>
         <KpiCard title="Gesamt Benutzer" value={users.length} icon="users" />
         <KpiCard title="Admins" value={admins.length} icon="shield" color={BRAND.gold} />
         <KpiCard title="Engel" value={angels.length} icon="wings" color={BRAND.success} />
