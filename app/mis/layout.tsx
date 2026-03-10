@@ -180,14 +180,14 @@ export default function MISLayout({ children }: { children: React.ReactNode }) {
             }}>
               <MIcon name="menu" size={22} />
             </button>
-            <div>
-              <h1 style={{ fontSize: 18, fontWeight: 700, color: BRAND.text, margin: 0, fontFamily: 'var(--font-cormorant), serif' }}>
+            <div style={{ overflow: 'hidden' }}>
+              <h1 style={{ fontSize: isMobile ? 15 : 18, fontWeight: 700, color: BRAND.text, margin: 0, fontFamily: 'var(--font-cormorant), serif', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                 {activeModule?.label || 'Dashboard'}
               </h1>
             </div>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 8 : 12 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 6 : 12, flexShrink: 0 }}>
             {!isMobile && (
               <div style={{ width: 260 }}>
                 <SearchInput value={search} onChange={setSearch} placeholder="MIS durchsuchen..." />
@@ -196,22 +196,22 @@ export default function MISLayout({ children }: { children: React.ReactNode }) {
 
             {/* AI Button */}
             <button onClick={() => setAiOpen(!aiOpen)} style={{
-              width: 38, height: 38, borderRadius: 10, border: `1px solid ${BRAND.border}`,
+              width: isMobile ? 34 : 38, height: isMobile ? 34 : 38, borderRadius: 10, border: `1px solid ${BRAND.border}`,
               background: aiOpen ? `${BRAND.gold}15` : BRAND.white, cursor: 'pointer',
               display: 'flex', alignItems: 'center', justifyContent: 'center', color: BRAND.gold,
-              position: 'relative',
+              position: 'relative', flexShrink: 0,
             }}>
-              <MIcon name="sparkles" size={18} />
+              <MIcon name="sparkles" size={isMobile ? 16 : 18} />
             </button>
 
             {/* Notifications */}
             <div style={{ position: 'relative' }}>
               <button onClick={() => { setNotifOpen(!notifOpen); setUserMenuOpen(false) }} style={{
-                width: 38, height: 38, borderRadius: 10, border: `1px solid ${BRAND.border}`,
+                width: isMobile ? 34 : 38, height: isMobile ? 34 : 38, borderRadius: 10, border: `1px solid ${BRAND.border}`,
                 background: notifOpen ? `${BRAND.gold}15` : BRAND.white, cursor: 'pointer', position: 'relative',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', color: BRAND.muted,
+                display: 'flex', alignItems: 'center', justifyContent: 'center', color: BRAND.muted, flexShrink: 0,
               }}>
-                <MIcon name="bell" size={18} />
+                <MIcon name="bell" size={isMobile ? 16 : 18} />
                 {notifications > 0 && (
                   <span style={{
                     position: 'absolute', top: -4, right: -4, width: 18, height: 18,
@@ -259,15 +259,15 @@ export default function MISLayout({ children }: { children: React.ReactNode }) {
             </div>
 
             {/* User */}
-            <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 8, marginLeft: isMobile ? 0 : 8 }}>
+            <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 8, marginLeft: isMobile ? 0 : 8, flexShrink: 0 }}>
               <button onClick={() => { setUserMenuOpen(!userMenuOpen); setNotifOpen(false) }} style={{
                 background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, padding: 0,
               }}>
                 <div style={{
-                  width: 34, height: 34, borderRadius: '50%',
+                  width: isMobile ? 30 : 34, height: isMobile ? 30 : 34, borderRadius: '50%',
                   background: `linear-gradient(135deg, ${BRAND.gold}, ${BRAND.coal})`,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  color: BRAND.cream, fontSize: 14, fontWeight: 700,
+                  color: BRAND.cream, fontSize: isMobile ? 12 : 14, fontWeight: 700, flexShrink: 0,
                 }}>
                   {userName.charAt(0)}
                 </div>

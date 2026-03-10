@@ -14,7 +14,7 @@ export function KpiCard({ title, value, target, unit, trend, icon, color, onClic
       background: BRAND.white, borderRadius: 14, padding: '20px 22px',
       boxShadow: '0 1px 3px rgba(0,0,0,0.06)', border: `1px solid ${BRAND.border}`,
       cursor: onClick ? 'pointer' : 'default', transition: 'all 0.2s',
-      display: 'flex', flexDirection: 'column', gap: 8, minWidth: 0, flex: '1 1 140px',
+      display: 'flex', flexDirection: 'column', gap: 8, minWidth: 0, overflow: 'hidden',
     }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <span style={{ fontSize: 13, color: BRAND.muted, fontWeight: 500 }}>{title}</span>
@@ -356,11 +356,11 @@ export function StatRow({ label, value, subValue }: { label: string; value: stri
   return (
     <div style={{
       display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-      padding: '10px 0', borderBottom: `1px solid ${BRAND.border}`,
+      padding: '10px 0', borderBottom: `1px solid ${BRAND.border}`, gap: 8, minWidth: 0,
     }}>
-      <span style={{ fontSize: 13, color: BRAND.muted }}>{label}</span>
-      <div style={{ textAlign: 'right' }}>
-        <span style={{ fontSize: 14, fontWeight: 600, color: BRAND.text }}>{value}</span>
+      <span style={{ fontSize: 13, color: BRAND.muted, flexShrink: 0 }}>{label}</span>
+      <div style={{ textAlign: 'right', overflow: 'hidden', minWidth: 0 }}>
+        <span style={{ fontSize: 14, fontWeight: 600, color: BRAND.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>{value}</span>
         {subValue && <span style={{ fontSize: 11, color: BRAND.muted, marginLeft: 6 }}>{subValue}</span>}
       </div>
     </div>
