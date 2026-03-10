@@ -240,7 +240,7 @@ export default function DocumentsPage() {
               <div><span style={labelStyle}>Downloads</span><div>{selectedDoc.download_count}</div></div>
               <div><span style={labelStyle}>Aktualisiert</span><div>{new Date(selectedDoc.updated_at).toLocaleString('de-DE')}</div></div>
             </div>
-            {selectedDoc.description && <div><span style={labelStyle}>Beschreibung</span><p style={{ fontSize: 13, color: BRAND.coal, margin: '4px 0' }}>{selectedDoc.description}</p></div>}
+            {selectedDoc.description && <div><span style={labelStyle}>Beschreibung</span><p style={{ fontSize: 13, color: BRAND.text, margin: '4px 0' }}>{selectedDoc.description}</p></div>}
             {selectedDoc.tags.length > 0 && (
               <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
                 {selectedDoc.tags.map(t => <Badge key={t} label={t} color={BRAND.gold} size="sm" />)}

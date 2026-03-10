@@ -134,7 +134,7 @@ export default function QualityPage() {
                         padding: '10px 12px', borderRadius: 8, background: `${catColor}08`,
                         border: `1px solid ${catColor}20`, fontSize: 12,
                       }}>
-                        <div style={{ fontWeight: 600, color: BRAND.coal }}>{p.process_id}: {p.name}</div>
+                        <div style={{ fontWeight: 600, color: BRAND.text }}>{p.process_id}: {p.name}</div>
                         <div style={{ fontSize: 11, color: BRAND.muted, marginTop: 2 }}>{p.description}</div>
                       </div>
                     ))}

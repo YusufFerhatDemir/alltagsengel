@@ -21,7 +21,7 @@ export function KpiCard({ title, value, target, unit, trend, icon, color, onClic
         {icon && <span style={{ color: color || BRAND.gold, opacity: 0.7 }}><MIcon name={icon} size={18} /></span>}
       </div>
       <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
-        <span style={{ fontSize: 28, fontWeight: 700, color: BRAND.coal, fontFamily: 'var(--font-cormorant), serif' }}>{value}</span>
+        <span style={{ fontSize: 28, fontWeight: 700, color: BRAND.text, fontFamily: 'var(--font-cormorant), serif' }}>{value}</span>
         {unit && <span style={{ fontSize: 14, color: BRAND.muted }}>{unit}</span>}
       </div>
       {(target !== undefined || trend) && (
@@ -46,7 +46,7 @@ export function SectionHeader({ title, subtitle, icon, actions }: {
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
         {icon && <span style={{ color: BRAND.gold }}><MIcon name={icon} size={24} /></span>}
         <div>
-          <h2 style={{ fontSize: 22, fontWeight: 700, color: BRAND.coal, fontFamily: 'var(--font-cormorant), serif', margin: 0 }}>{title}</h2>
+          <h2 style={{ fontSize: 22, fontWeight: 700, color: BRAND.text, fontFamily: 'var(--font-cormorant), serif', margin: 0 }}>{title}</h2>
           {subtitle && <p style={{ fontSize: 13, color: BRAND.muted, margin: '4px 0 0' }}>{subtitle}</p>}
         </div>
       </div>
@@ -61,10 +61,10 @@ export function MisButton({ children, variant = 'primary', icon, onClick, disabl
   icon?: string; onClick?: () => void; disabled?: boolean; size?: 'sm' | 'md'
 }) {
   const styles: Record<string, React.CSSProperties> = {
-    primary: { background: BRAND.gold, color: BRAND.white, border: 'none' },
-    secondary: { background: BRAND.white, color: BRAND.coal, border: `1px solid ${BRAND.border}` },
+    primary: { background: BRAND.gold, color: '#1A1612', border: 'none' },
+    secondary: { background: BRAND.white, color: BRAND.cream, border: `1px solid ${BRAND.border}` },
     ghost: { background: 'transparent', color: BRAND.muted, border: 'none' },
-    danger: { background: '#FEE2E2', color: BRAND.error, border: `1px solid #FECACA` },
+    danger: { background: 'rgba(239,68,68,0.15)', color: BRAND.error, border: `1px solid rgba(239,68,68,0.3)` },
   }
   const pad = size === 'sm' ? '6px 12px' : '8px 16px'
   const fs = size === 'sm' ? 12 : 13
@@ -136,7 +136,7 @@ export function DataTable<T extends Record<string, unknown>>({ columns, data, on
             }} onMouseEnter={e => (e.currentTarget.style.background = BRAND.light)}
                onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
               {columns.map(col => (
-                <td key={col.key} style={{ padding: '12px 16px', color: BRAND.coal }}>
+                <td key={col.key} style={{ padding: '12px 16px', color: BRAND.text }}>
                   {col.render ? col.render(row) : String(row[col.key] ?? '')}
                 </td>
               ))}
@@ -210,7 +210,7 @@ export function Card({ children, title, icon, actions, noPad, style }: {
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             {icon && <span style={{ color: BRAND.gold }}><MIcon name={icon} size={18} /></span>}
-            <h3 style={{ fontSize: 15, fontWeight: 600, color: BRAND.coal, margin: 0 }}>{title}</h3>
+            <h3 style={{ fontSize: 15, fontWeight: 600, color: BRAND.text, margin: 0 }}>{title}</h3>
           </div>
           {actions}
         </div>
@@ -242,7 +242,7 @@ export function EmptyState({ icon, title, description, action }: {
       padding: '60px 20px', textAlign: 'center',
     }}>
       <span style={{ color: BRAND.border, marginBottom: 16 }}><MIcon name={icon} size={48} /></span>
-      <h3 style={{ fontSize: 18, fontWeight: 600, color: BRAND.coal, margin: '0 0 6px' }}>{title}</h3>
+      <h3 style={{ fontSize: 18, fontWeight: 600, color: BRAND.text, margin: '0 0 6px' }}>{title}</h3>
       {description && <p style={{ fontSize: 14, color: BRAND.muted, margin: '0 0 20px', maxWidth: 400 }}>{description}</p>}
       {action}
     </div>
@@ -293,7 +293,7 @@ export function SearchInput({ value, onChange, placeholder = 'Suchen...' }: {
         value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder}
         style={{
           border: 'none', background: 'none', outline: 'none', fontSize: 13,
-          color: BRAND.coal, width: '100%', fontFamily: 'inherit',
+          color: BRAND.cream, width: '100%', fontFamily: 'inherit',
         }}
       />
     </div>
@@ -320,7 +320,7 @@ export function Modal({ open, onClose, title, children, width = 560 }: {
           padding: '16px 20px', borderBottom: `1px solid ${BRAND.border}`,
           position: 'sticky', top: 0, background: BRAND.white, zIndex: 1,
         }}>
-          <h3 style={{ fontSize: 17, fontWeight: 700, color: BRAND.coal, margin: 0, fontFamily: 'var(--font-cormorant), serif' }}>{title}</h3>
+          <h3 style={{ fontSize: 17, fontWeight: 700, color: BRAND.text, margin: 0, fontFamily: 'var(--font-cormorant), serif' }}>{title}</h3>
           <button onClick={onClose} style={{
             background: 'none', border: 'none', cursor: 'pointer', color: BRAND.muted, padding: 4,
           }}><MIcon name="x" size={20} /></button>
@@ -344,7 +344,7 @@ export function ActivityItem({ icon, title, time, color }: {
         <MIcon name={icon} size={16} />
       </div>
       <div style={{ flex: 1 }}>
-        <p style={{ fontSize: 13, color: BRAND.coal, margin: 0 }}>{title}</p>
+        <p style={{ fontSize: 13, color: BRAND.text, margin: 0 }}>{title}</p>
         <p style={{ fontSize: 11, color: BRAND.muted, margin: '2px 0 0' }}>{time}</p>
       </div>
     </div>
@@ -360,7 +360,7 @@ export function StatRow({ label, value, subValue }: { label: string; value: stri
     }}>
       <span style={{ fontSize: 13, color: BRAND.muted }}>{label}</span>
       <div style={{ textAlign: 'right' }}>
-        <span style={{ fontSize: 14, fontWeight: 600, color: BRAND.coal }}>{value}</span>
+        <span style={{ fontSize: 14, fontWeight: 600, color: BRAND.text }}>{value}</span>
         {subValue && <span style={{ fontSize: 11, color: BRAND.muted, marginLeft: 6 }}>{subValue}</span>}
       </div>
     </div>

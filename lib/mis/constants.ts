@@ -3,13 +3,14 @@
 // ========================================
 
 export const BRAND = {
-  coal: '#1A1612',
+  coal: '#1A1612',        // original dark color (sidebar, dark backgrounds)
   gold: '#C9963C',
   cream: '#F7F2EA',
-  white: '#FFFFFF',
-  light: '#F8F6F2',
-  border: '#E8E2D8',
-  muted: '#8A8278',
+  text: '#F7F2EA',        // primary text on dark backgrounds
+  white: '#1E1B17',       // card background (dark)
+  light: '#141210',       // page background (dark)
+  border: 'rgba(201,150,60,0.15)',
+  muted: 'rgba(255,255,255,0.5)',
   success: '#22C55E',
   warning: '#F59E0B',
   error: '#EF4444',
