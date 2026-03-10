@@ -29,6 +29,8 @@ export default function MISLayout({ children }: { children: React.ReactNode }) {
   ])
   const [aiInput, setAiInput] = useState('')
   const [notifications, setNotifications] = useState(3)
+  const [notifOpen, setNotifOpen] = useState(false)
+  const [userMenuOpen, setUserMenuOpen] = useState(false)
   const [userName, setUserName] = useState('Admin')
 
   useEffect(() => {
@@ -62,6 +64,15 @@ export default function MISLayout({ children }: { children: React.ReactNode }) {
     await supabase.auth.signOut()
     router.push('/auth/login')
   }
+
+  // Close dropdowns on outside click
+  useEffect(() => {
+    const handleClick = () => { setNotifOpen(false); setUserMenuOpen(false) }
+    if (notifOpen || userMenuOpen) {
+      const timer = setTimeout(() => document.addEventListener('click', handleClick), 0)
+      return () => { clearTimeout(timer); document.removeEventListener('click', handleClick) }
+    }
+  }, [notifOpen, userMenuOpen])
 
   const activeModule = NAV_ITEMS.find(item =>
     pathname === item.href || (item.href !== '/mis' && pathname.startsWith(item.href))
@@ -194,38 +205,114 @@ export default function MISLayout({ children }: { children: React.ReactNode }) {
             </button>
 
             {/* Notifications */}
-            <button style={{
-              width: 38, height: 38, borderRadius: 10, border: `1px solid ${BRAND.border}`,
-              background: BRAND.white, cursor: 'pointer', position: 'relative',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', color: BRAND.muted,
-            }}>
-              <MIcon name="bell" size={18} />
-              {notifications > 0 && (
-                <span style={{
-                  position: 'absolute', top: -4, right: -4, width: 18, height: 18,
-                  borderRadius: '50%', background: BRAND.error, color: '#ffffff',
-                  fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                }}>{notifications}</span>
+            <div style={{ position: 'relative' }}>
+              <button onClick={() => { setNotifOpen(!notifOpen); setUserMenuOpen(false) }} style={{
+                width: 38, height: 38, borderRadius: 10, border: `1px solid ${BRAND.border}`,
+                background: notifOpen ? `${BRAND.gold}15` : BRAND.white, cursor: 'pointer', position: 'relative',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', color: BRAND.muted,
+              }}>
+                <MIcon name="bell" size={18} />
+                {notifications > 0 && (
+                  <span style={{
+                    position: 'absolute', top: -4, right: -4, width: 18, height: 18,
+                    borderRadius: '50%', background: BRAND.error, color: '#ffffff',
+                    fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}>{notifications}</span>
+                )}
+              </button>
+              {notifOpen && (
+                <div style={{
+                  position: 'absolute', top: 46, right: 0, width: isMobile ? 280 : 320,
+                  background: BRAND.white, border: `1px solid ${BRAND.border}`, borderRadius: 12,
+                  boxShadow: '0 12px 40px rgba(0,0,0,0.3)', zIndex: 200, overflow: 'hidden',
+                }}>
+                  <div style={{ padding: '12px 16px', borderBottom: `1px solid ${BRAND.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: 14, fontWeight: 700, color: BRAND.text }}>Benachrichtigungen</span>
+                    <button onClick={() => { setNotifications(0); setNotifOpen(false) }} style={{ background: 'none', border: 'none', color: BRAND.gold, cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>Alle gelesen</button>
+                  </div>
+                  {[
+                    { icon: 'files', title: 'Pitch Deck v2 hochgeladen', time: 'vor 2 Stunden', color: BRAND.gold },
+                    { icon: 'shield', title: 'QP-002 Audit abgeschlossen', time: 'vor 5 Stunden', color: BRAND.success },
+                    { icon: 'users', title: 'Neuer Engel registriert', time: 'vor 1 Tag', color: BRAND.info },
+                  ].map((n, i) => (
+                    <div key={i} onClick={() => setNotifOpen(false)} style={{
+                      padding: '12px 16px', display: 'flex', alignItems: 'flex-start', gap: 10,
+                      borderBottom: `1px solid ${BRAND.border}`, cursor: 'pointer', transition: 'background 0.15s',
+                    }}
+                    onMouseEnter={e => e.currentTarget.style.background = BRAND.light}
+                    onMouseLeave={e => e.currentTarget.style.background = ''}
+                    >
+                      <div style={{ width: 28, height: 28, borderRadius: 8, background: `${n.color}20`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <MIcon name={n.icon} size={14} />
+                      </div>
+                      <div>
+                        <div style={{ fontSize: 13, fontWeight: 500, color: BRAND.text }}>{n.title}</div>
+                        <div style={{ fontSize: 11, color: BRAND.muted, marginTop: 2 }}>{n.time}</div>
+                      </div>
+                    </div>
+                  ))}
+                  <div style={{ padding: '10px 16px', textAlign: 'center' }}>
+                    <a href="/mis/settings" onClick={() => setNotifOpen(false)} style={{ fontSize: 12, color: BRAND.gold, textDecoration: 'none', fontWeight: 600 }}>Alle anzeigen</a>
+                  </div>
+                </div>
               )}
-            </button>
+            </div>
 
             {/* User */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginLeft: isMobile ? 0 : 8 }}>
-              <div style={{
-                width: 34, height: 34, borderRadius: '50%',
-                background: `linear-gradient(135deg, ${BRAND.gold}, ${BRAND.coal})`,
-
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                color: BRAND.cream, fontSize: 14, fontWeight: 700,
+            <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 8, marginLeft: isMobile ? 0 : 8 }}>
+              <button onClick={() => { setUserMenuOpen(!userMenuOpen); setNotifOpen(false) }} style={{
+                background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, padding: 0,
               }}>
-                {userName.charAt(0)}
-              </div>
-              {!isMobile && <span style={{ fontSize: 13, fontWeight: 500, color: BRAND.text }}>{userName}</span>}
-              <button onClick={handleLogout} title="Abmelden" style={{
-                background: 'none', border: 'none', cursor: 'pointer', color: BRAND.muted, padding: 4,
-              }}>
-                <MIcon name="logout" size={16} />
+                <div style={{
+                  width: 34, height: 34, borderRadius: '50%',
+                  background: `linear-gradient(135deg, ${BRAND.gold}, ${BRAND.coal})`,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  color: BRAND.cream, fontSize: 14, fontWeight: 700,
+                }}>
+                  {userName.charAt(0)}
+                </div>
+                {!isMobile && <span style={{ fontSize: 13, fontWeight: 500, color: BRAND.text }}>{userName}</span>}
               </button>
+              {userMenuOpen && (
+                <div style={{
+                  position: 'absolute', top: 46, right: 0, width: 200,
+                  background: BRAND.white, border: `1px solid ${BRAND.border}`, borderRadius: 12,
+                  boxShadow: '0 12px 40px rgba(0,0,0,0.3)', zIndex: 200, overflow: 'hidden',
+                }}>
+                  <div style={{ padding: '12px 16px', borderBottom: `1px solid ${BRAND.border}` }}>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: BRAND.text }}>{userName}</div>
+                    <div style={{ fontSize: 11, color: BRAND.muted }}>Administrator</div>
+                  </div>
+                  {[
+                    { icon: 'users', label: 'Profil', href: '/mis/settings' },
+                    { icon: 'settings', label: 'Einstellungen', href: '/mis/settings' },
+                  ].map((item, i) => (
+                    <a key={i} href={item.href} onClick={() => setUserMenuOpen(false)} style={{
+                      display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px',
+                      textDecoration: 'none', color: BRAND.text, fontSize: 13, transition: 'background 0.15s',
+                    }}
+                    onMouseEnter={e => e.currentTarget.style.background = BRAND.light}
+                    onMouseLeave={e => e.currentTarget.style.background = ''}
+                    >
+                      <MIcon name={item.icon} size={16} />
+                      {item.label}
+                    </a>
+                  ))}
+                  <div style={{ borderTop: `1px solid ${BRAND.border}` }}>
+                    <button onClick={() => { setUserMenuOpen(false); handleLogout() }} style={{
+                      display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px',
+                      background: 'none', border: 'none', cursor: 'pointer', color: BRAND.error,
+                      fontSize: 13, width: '100%',
+                    }}
+                    onMouseEnter={e => e.currentTarget.style.background = BRAND.light}
+                    onMouseLeave={e => e.currentTarget.style.background = ''}
+                    >
+                      <MIcon name="logout" size={16} />
+                      Abmelden
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </header>

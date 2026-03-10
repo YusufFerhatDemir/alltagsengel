@@ -34,7 +34,7 @@ export default function FinancePage() {
 
       {activeTab === 'overview' && (
         <>
-          <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(4, 1fr)', gap: isMobile ? 10 : 16 }}>
             <KpiCard title="Seed-Runde" value="€500K" icon="target" color={BRAND.gold} />
             <KpiCard title="Bewertung" value="€2,5M" icon="trending" trend="up" />
             <KpiCard title="Burn Rate" value="€12K" unit="/Monat" icon="activity" color={BRAND.warning} />

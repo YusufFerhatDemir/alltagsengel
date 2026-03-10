@@ -2273,7 +2273,8 @@ button, a, .cat-item, .pay-opt, .kk-item, .radius-chip {
 /* ===== MIS PORTAL ===== */
 .mis-root { overflow-x: hidden; max-width: 100vw; }
 .mis-root *, .mis-root *::before, .mis-root *::after { box-sizing: border-box; }
-.mis-content { overflow-x: hidden; max-width: 100%; }
+.mis-content { overflow-x: hidden; max-width: 100%; width: 100%; }
+.mis-content > div { max-width: 100%; overflow-x: hidden; }
 @media (max-width:900px) {
   .mis-content { padding: 10px !important; }
   .mis-content table {
@@ -2281,5 +2282,8 @@ button, a, .cat-item, .pay-opt, .kk-item, .radius-chip {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     font-size: 12px;
+  }
+  .mis-content > div > div[style*="grid"] {
+    max-width: 100% !important;
   }
 }
