@@ -2271,7 +2271,17 @@ button, a, .cat-item, .pay-opt, .kk-item, .radius-chip {
 }
 
 /* ===== MIS PORTAL ===== */
-.mis-root { overflow-x: hidden; max-width: 100vw; }
+/* Override body phone-frame styles when MIS portal or admin panel is active */
+body:has(.mis-root),
+body:has(.admin-layout) {
+  padding: 0 !important;
+  display: block !important;
+  background: #141210 !important;
+  align-items: stretch !important;
+  justify-content: stretch !important;
+  min-height: 100vh !important;
+}
+.mis-root { overflow-x: hidden; max-width: 100vw; width: 100%; min-height: 100vh; }
 .mis-root *, .mis-root *::before, .mis-root *::after { box-sizing: border-box; }
 .mis-content { overflow-x: hidden; max-width: 100%; width: 100%; }
 .mis-content > div { max-width: 100%; overflow-x: hidden; }

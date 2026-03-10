@@ -24,7 +24,7 @@ const doc = new Document({
         new Paragraph({ text: '', spacing: { line: 240 } }),
         new Paragraph({ text: '', spacing: { line: 240 } }),
         new Paragraph({
-          text: 'AlltagsEngel GmbH',
+          text: 'AlltagsEngel UG',
           heading: HeadingLevel.HEADING_1,
           alignment: AlignmentType.CENTER,
           spacing: { before: 400, after: 200 },
@@ -106,7 +106,7 @@ const doc = new Document({
                 }),
                 new TableCell({
                   width: { size: 4000, type: WidthType.DXA },
-                  children: [new Paragraph({ text: 'AlltagsEngel GmbH' })],
+                  children: [new Paragraph({ text: 'AlltagsEngel UG' })],
                 }),
               ],
             }),

@@ -178,7 +178,7 @@ function createDocument() {
       new Paragraph({ text: '', spacing: { after: 100 } }),
       
       goldHeader('Company Formation', 3),
-      bulletPoint('Legal Entity: AlltagsEngel GmbH (planned incorporation)'),
+      bulletPoint('Legal Entity: AlltagsEngel UG (planned incorporation)'),
       bulletPoint('Registered Office: Germany (to be finalized upon incorporation)'),
       bulletPoint('Business Purpose: Provision of companion services for elderly care under German social care regulations'),
       new Paragraph({ text: '', spacing: { after: 100 } }),
@@ -361,7 +361,7 @@ function createDocument() {
       new Paragraph({ text: '', spacing: { after: 100 } }),
       
       goldHeader('Software & Codebase Ownership', 3),
-      bulletPoint('Ownership: All software code exclusively owned by AlltagsEngel GmbH'),
+      bulletPoint('Ownership: All software code exclusively owned by AlltagsEngel UG'),
       bulletPoint('Development Documentation: IP assignment agreements with all developers and contractors'),
       bulletPoint('Third-Party Libraries: Proper licensing compliance for open-source components'),
       bulletPoint('Security: Source code protected with appropriate access controls and confidentiality measures'),

@@ -41,9 +41,9 @@ export default function MarketPage() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
             <StatRow label="Pflegebedürftige (PG 1-5)" value="4,96 Mio." />
             <StatRow label="§45b Entlastungsbetrag" value={`€${M.entlastungsbetrag}/Monat`} />
-            <StatRow label="SAM = 4,96M × €131 × 12" value="€7,80 Mrd." />
+            <StatRow label={`SAM = 4,96M × €${M.entlastungsbetrag} × 12`} value={`€${(M.sam / 1e9).toFixed(2)} Mrd.`} />
             <StatRow label="Ungenutzte Rate" value={`${(M.unusedRate * 100).toFixed(0)}%`} />
-            <StatRow label="Ungenutztes Volumen" value={`€${(M.unusedVolume / 1e9).toFixed(1)} Mrd.`} />
+            <StatRow label="Ungenutztes Volumen" value={`€${(M.unusedVolume / 1e9).toFixed(2)} Mrd.`} />
           </div>
           <div style={{
             marginTop: 16, padding: 16, background: `${BRAND.gold}10`, borderRadius: 10,
