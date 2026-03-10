@@ -130,7 +130,7 @@ export default function KrankenfahrtPage() {
         return
       }
 
-      router.push('/kunde/home')
+      router.push('/kunde/krankenfahrt/fahrten')
     } catch (err) {
       logError('KrankenfahrtPage:submit', err)
       setError('Ein unerwarteter Fehler ist aufgetreten')

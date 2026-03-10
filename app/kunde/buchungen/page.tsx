@@ -2,11 +2,13 @@
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
-import { IconCalendar, IconClock, IconWings, IconCheck, IconMoney } from '@/components/Icons'
+import { IconCalendar, IconClock, IconWings, IconCheck, IconMoney, IconTruck } from '@/components/Icons'
 
 const statusLabels: Record<string, { label: string; color: string }> = {
   pending: { label: 'Ausstehend', color: 'var(--gold2)' },
   accepted: { label: 'Bestätigt', color: 'var(--green)' },
+  confirmed: { label: 'Bestätigt', color: 'var(--green)' },
+  in_progress: { label: 'Unterwegs', color: '#2196F3' },
   declined: { label: 'Abgelehnt', color: 'var(--red-w)' },
   completed: { label: 'Abgeschlossen', color: 'var(--ink3)' },
   cancelled: { label: 'Storniert', color: 'var(--ink4)' },
@@ -23,13 +25,40 @@ export default function KundeBuchungenPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
 
-      const { data } = await supabase
+      // Normale Buchungen
+      const { data: normalBookings } = await supabase
         .from('bookings')
         .select('*, angels:angel_id(profiles(first_name, last_name))')
         .eq('customer_id', user.id)
         .order('created_at', { ascending: false })
 
-      setBookings(data || [])
+      // Krankenfahrten
+      const { data: rides } = await supabase
+        .from('krankenfahrten')
+        .select('*')
+        .eq('customer_id', user.id)
+        .order('created_at', { ascending: false })
+
+      // Krankenfahrten als Buchungen formatieren
+      const rideBookings = (rides || []).map((r: any) => ({
+        id: r.id,
+        service: 'Krankenfahrt',
+        date: r.datum,
+        time: r.uhrzeit,
+        duration_hours: null,
+        total_amount: r.total_amount,
+        status: r.status,
+        created_at: r.created_at,
+        _type: 'krankenfahrt',
+        _ride: r,
+        angels: null,
+      }))
+
+      // Zusammenführen und nach Datum sortieren
+      const all = [...(normalBookings || []).map((b: any) => ({ ...b, _type: 'booking' })), ...rideBookings]
+        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+
+      setBookings(all)
       setLoading(false)
     }
     load()
@@ -69,14 +98,18 @@ export default function KundeBuchungenPage() {
           </div>
         ) : (
           filtered.map(b => {
+            const isRide = b._type === 'krankenfahrt'
             const angel = b.angels as any
-            const name = angel?.profiles ? `${angel.profiles.first_name} ${angel.profiles.last_name}` : 'Engel'
+            const name = isRide
+              ? (b._ride?.abholadresse ? `${b._ride.abholadresse.substring(0, 25)}...` : 'Krankenfahrt')
+              : (angel?.profiles ? `${angel.profiles.first_name} ${angel.profiles.last_name}` : 'Engel')
             const st = statusLabels[b.status] || statusLabels.pending
+            const linkHref = isRide ? '/kunde/krankenfahrt/fahrten' : `/kunde/bestaetigt/${b.id}`
             return (
-              <Link key={b.id} href={`/kunde/bestaetigt/${b.id}`} style={{ textDecoration: 'none' }}>
+              <Link key={b.id} href={linkHref} style={{ textDecoration: 'none' }}>
                 <div className="buch-card">
                   <div className="buch-top">
-                    <div className="buch-avatar"><IconWings size={18} /></div>
+                    <div className="buch-avatar">{isRide ? <IconTruck size={18} /> : <IconWings size={18} />}</div>
                     <div className="buch-info">
                       <div className="buch-name">{name}</div>
                       <div className="buch-service">{b.service}</div>
@@ -84,9 +117,9 @@ export default function KundeBuchungenPage() {
                     <div className="buch-status" style={{ color: st.color }}>{st.label}</div>
                   </div>
                   <div className="buch-details">
-                    <div className="buch-detail"><IconCalendar size={13} /> {new Date(b.date).toLocaleDateString('de-DE', { day: '2-digit', month: 'short', year: 'numeric' })}</div>
-                    <div className="buch-detail"><IconClock size={13} /> {b.time?.slice(0,5)} · {b.duration_hours}h</div>
-                    <div className="buch-detail"><IconMoney size={13} /> {b.total_amount?.toFixed(2)}€</div>
+                    <div className="buch-detail"><IconCalendar size={13} /> {b.date ? new Date(b.date).toLocaleDateString('de-DE', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'}</div>
+                    <div className="buch-detail"><IconClock size={13} /> {b.time?.slice(0,5)}{b.duration_hours ? ` · ${b.duration_hours}h` : ''}</div>
+                    <div className="buch-detail"><IconMoney size={13} /> {b.total_amount ? `${Number(b.total_amount).toFixed(2)}€` : '—'}</div>
                   </div>
                 </div>
               </Link>
