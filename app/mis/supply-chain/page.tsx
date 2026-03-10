@@ -38,7 +38,7 @@ export default function SupplyChainPage() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
       <SectionHeader title="Lieferkette" subtitle="Lieferantenmanagement, Bestellungen & Beschaffung" icon="truck" />
 
-      <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(4, 1fr)', gap: isMobile ? 10 : 16 }}>
         <KpiCard title="Lieferanten" value={suppliers.length} icon="users" />
         <KpiCard title="Aktive Bestellungen" value={orders.filter(o => !['closed','cancelled'].includes(o.status)).length} icon="truck" color={BRAND.info} />
         <KpiCard title="ISO-zertifiziert" value={suppliers.filter(s => s.iso_certified).length} icon="award" color={BRAND.success} />

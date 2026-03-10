@@ -32,7 +32,7 @@ export default function QualityPage() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
       <SectionHeader title="Qualitätsmanagement (ISO 9001)" subtitle="Prozesse, Audits, CAPA und kontinuierliche Verbesserung" icon="shield" />
 
-      <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(4, 1fr)', gap: isMobile ? 10 : 16 }}>
         <KpiCard title="Prozesse" value={processes.length} icon="layers" />
         <KpiCard title="Audits geplant" value={audits.filter(a => a.status === 'planned').length} icon="calendar" color={BRAND.info} />
         <KpiCard title="Offene CAPA" value={openCapas} icon="zap" color={openCapas > 0 ? BRAND.warning : BRAND.success} />

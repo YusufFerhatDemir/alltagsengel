@@ -20,6 +20,7 @@ const DATA_ROOM_DOCS = [
 ]
 
 export default function DataRoomPage() {
+  const { isMobile } = useMis()
   const [accessLog, setAccessLog] = useState<Record<string,unknown>[]>([])
 
   useEffect(() => {
@@ -38,7 +39,7 @@ export default function DataRoomPage() {
       />
 
       {/* Stats */}
-      <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(4, 1fr)', gap: isMobile ? 10 : 16 }}>
         <KpiCard title="Dokumente" value={DATA_ROOM_DOCS.length} icon="files" />
         <KpiCard title="Sektionen" value="8" icon="layers" />
         <KpiCard title="Zugriffe (30 Tage)" value={accessLog.length} icon="eye" trend="up" />

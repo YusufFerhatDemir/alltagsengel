@@ -28,7 +28,7 @@ export default function MarketPage() {
       <SectionHeader title="Marktanalyse" subtitle="TAM/SAM/SOM, Wettbewerb und demografische Entwicklung" icon="trending" />
 
       {/* TAM SAM SOM */}
-      <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(4, 1fr)', gap: isMobile ? 10 : 16 }}>
         <KpiCard title="TAM" value="€24,6 Mrd." icon="globe" trend="up" />
         <KpiCard title="SAM" value="€7,80 Mrd." icon="target" trend="up" />
         <KpiCard title="SOM (Jahr 5)" value="€52 Mio." icon="zap" trend="up" color={BRAND.success} />
