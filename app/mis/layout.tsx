@@ -172,15 +172,15 @@ export default function MISLayout({ children }: { children: React.ReactNode }) {
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           padding: isMobile ? '0 14px' : '0 28px', position: 'sticky', top: 0, zIndex: 40,
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16, flex: 1, minWidth: 0 }}>
             <button onClick={() => setMobileOpen(!mobileOpen)} style={{
               background: 'none', border: 'none', cursor: 'pointer', color: BRAND.text,
               display: isMobile ? 'flex' : 'none', alignItems: 'center', justifyContent: 'center',
-              padding: 4,
+              padding: 4, flexShrink: 0,
             }}>
               <MIcon name="menu" size={22} />
             </button>
-            <div style={{ overflow: 'hidden' }}>
+            <div style={{ overflow: 'hidden', minWidth: 0 }}>
               <h1 style={{ fontSize: isMobile ? 15 : 18, fontWeight: 700, color: BRAND.text, margin: 0, fontFamily: 'var(--font-cormorant), serif', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                 {activeModule?.label || 'Dashboard'}
               </h1>

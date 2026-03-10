@@ -3,6 +3,7 @@ import React, { useState, useRef, useEffect } from 'react'
 import { BRAND } from '@/lib/mis/constants'
 import { SectionHeader, Card, MisButton, Badge } from '@/components/mis/MisComponents'
 import { MIcon } from '@/components/mis/MisIcons'
+import { useMis } from '@/lib/mis/MisContext'
 
 interface Message {
   id: string
@@ -24,6 +25,7 @@ const SUGGESTIONS = [
 ]
 
 export default function AiAssistantPage() {
+  const { isMobile } = useMis()
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1', role: 'assistant', content:
@@ -57,12 +59,12 @@ export default function AiAssistantPage() {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 20, height: 'calc(100vh - 180px)' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 20, height: isMobile ? 'auto' : 'calc(100vh - 180px)' }}>
       <SectionHeader title="KI-Assistent" subtitle="Intelligente Suche, Analyse und Empfehlungen über alle MIS-Module" icon="sparkles" />
 
-      <div style={{ display: 'flex', gap: 20, flex: 1, minHeight: 0 }}>
+      <div style={{ display: 'flex', gap: 20, flex: 1, minHeight: 0, flexDirection: isMobile ? 'column' : 'row' }}>
         {/* Chat Area */}
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: BRAND.white, borderRadius: 14, border: `1px solid ${BRAND.border}`, overflow: 'hidden' }}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: BRAND.white, borderRadius: 14, border: `1px solid ${BRAND.border}`, overflow: 'hidden', minHeight: isMobile ? 400 : 0 }}>
           {/* Messages */}
           <div style={{ flex: 1, overflowY: 'auto', padding: 20, display: 'flex', flexDirection: 'column', gap: 16 }}>
             {messages.map(msg => (
@@ -119,7 +121,7 @@ export default function AiAssistantPage() {
         </div>
 
         {/* Sidebar: Suggestions */}
-        <div style={{ width: 300, display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div style={{ width: isMobile ? '100%' : 300, display: 'flex', flexDirection: 'column', gap: 12, flexShrink: 0 }}>
           <Card title="Vorschläge" icon="sparkles">
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
               {SUGGESTIONS.map((s, i) => (
