@@ -3,6 +3,7 @@ import { useState, useEffect, ReactNode } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import { IconPin, IconSearch, IconUser, IconCard, IconStarFilled, IconCheck, IconStarGold, IconHandshakeGold, IconMedicalGold, IconBagGold, IconHomeGold, IconCoffeeGold, IconPillGold, IconWalkGold, IconTargetGold, IconWingsGold, IconBox, IconKrankenfahrtGold, IconHygieneboxGold } from '@/components/Icons'
+import { useRouter } from 'next/navigation'
 import { haversineDistance } from '@/lib/geocoding'
 
 const categories: { key: string; icon: ReactNode; label: string }[] = [
@@ -33,6 +34,7 @@ const serviceMap: Record<string, string> = {
 }
 
 export default function KundeHomePage() {
+  const router = useRouter()
   const [profile, setProfile] = useState<any>(null)
   const [angels, setAngels] = useState<any[]>([])
   const [activeCategory, setActiveCategory] = useState('all')
@@ -159,7 +161,12 @@ export default function KundeHomePage() {
             <div
               key={cat.key}
               className={`cat-item${activeCategory === cat.key ? ' on' : ''}`}
-              onClick={() => setActiveCategory(cat.key)}
+              onClick={() => {
+                if (cat.key === 'all') { setActiveCategory('all'); return }
+                if (cat.key === 'krankenfahrdienst') { router.push('/kunde/krankenfahrt'); return }
+                if (cat.key === 'hygienebox') { router.push('/kunde/hygienebox'); return }
+                router.push(`/kunde/buchen-service?service=${cat.key}`)
+              }}
             >
               <div className="cat-ic">{cat.icon}</div>
               <div className="cat-lbl">{cat.label}</div>
