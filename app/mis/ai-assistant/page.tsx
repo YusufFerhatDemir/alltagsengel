@@ -70,7 +70,7 @@ export default function AiAssistantPage() {
                 <div style={{
                   maxWidth: '80%', padding: '12px 16px', borderRadius: 14,
                   background: msg.role === 'user' ? BRAND.gold : BRAND.light,
-                  color: msg.role === 'user' ? BRAND.white : BRAND.coal,
+                  color: msg.role === 'user' ? '#1A1612' : BRAND.text,
                   fontSize: 14, lineHeight: 1.6, whiteSpace: 'pre-wrap',
                 }}>
                   {msg.content}
@@ -105,13 +105,13 @@ export default function AiAssistantPage() {
               placeholder="Stellen Sie eine Frage zu Ihrem Unternehmen..."
               style={{
                 flex: 1, padding: '12px 16px', borderRadius: 12, border: `1px solid ${BRAND.border}`,
-                fontSize: 14, fontFamily: 'inherit', outline: 'none', background: BRAND.light,
+                fontSize: 14, fontFamily: 'inherit', outline: 'none', background: BRAND.light, color: BRAND.text,
               }}
             />
             <button onClick={() => handleSend()} disabled={!input.trim()} style={{
               width: 44, height: 44, borderRadius: 12, background: BRAND.gold, border: 'none',
               cursor: input.trim() ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: BRAND.white, opacity: input.trim() ? 1 : 0.5,
+              color: '#1A1612', opacity: input.trim() ? 1 : 0.5,
             }}>
               <MIcon name="send" size={18} />
             </button>
@@ -126,7 +126,7 @@ export default function AiAssistantPage() {
                 <button key={i} onClick={() => handleSend(s.text)} style={{
                   display: 'flex', alignItems: 'flex-start', gap: 8, padding: '10px 12px',
                   borderRadius: 8, border: `1px solid ${BRAND.border}`, background: 'none',
-                  cursor: 'pointer', textAlign: 'left', fontSize: 12, color: BRAND.coal,
+                  cursor: 'pointer', textAlign: 'left', fontSize: 12, color: BRAND.text,
                   fontFamily: 'inherit', transition: 'all 0.15s', lineHeight: 1.4,
                 }}
                 onMouseEnter={e => { e.currentTarget.style.background = BRAND.light; e.currentTarget.style.borderColor = BRAND.gold }}

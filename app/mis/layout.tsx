@@ -157,20 +157,20 @@ export default function MISLayout({ children }: { children: React.ReactNode }) {
       <div style={{ flex: 1, marginLeft: isMobile ? 0 : (sidebarOpen ? 260 : 72), transition: 'margin 0.25s ease', display: 'flex', flexDirection: 'column' }}>
         {/* HEADER */}
         <header style={{
-          height: 56, background: BRAND.white, borderBottom: `1px solid ${BRAND.border}`,
+          height: 56, background: '#1E1B17', borderBottom: `1px solid ${BRAND.border}`,
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           padding: isMobile ? '0 14px' : '0 28px', position: 'sticky', top: 0, zIndex: 40,
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
             <button onClick={() => setMobileOpen(!mobileOpen)} style={{
-              background: 'none', border: 'none', cursor: 'pointer', color: BRAND.coal,
+              background: 'none', border: 'none', cursor: 'pointer', color: BRAND.text,
               display: isMobile ? 'flex' : 'none', alignItems: 'center', justifyContent: 'center',
               padding: 4,
             }}>
               <MIcon name="menu" size={22} />
             </button>
             <div>
-              <h1 style={{ fontSize: 18, fontWeight: 700, color: BRAND.coal, margin: 0, fontFamily: 'var(--font-cormorant), serif' }}>
+              <h1 style={{ fontSize: 18, fontWeight: 700, color: BRAND.text, margin: 0, fontFamily: 'var(--font-cormorant), serif' }}>
                 {activeModule?.label || 'Dashboard'}
               </h1>
             </div>
@@ -203,7 +203,7 @@ export default function MISLayout({ children }: { children: React.ReactNode }) {
               {notifications > 0 && (
                 <span style={{
                   position: 'absolute', top: -4, right: -4, width: 18, height: 18,
-                  borderRadius: '50%', background: BRAND.error, color: BRAND.white,
+                  borderRadius: '50%', background: BRAND.error, color: '#ffffff',
                   fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center',
                 }}>{notifications}</span>
               )}
@@ -214,12 +214,13 @@ export default function MISLayout({ children }: { children: React.ReactNode }) {
               <div style={{
                 width: 34, height: 34, borderRadius: '50%',
                 background: `linear-gradient(135deg, ${BRAND.gold}, ${BRAND.coal})`,
+
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 color: BRAND.cream, fontSize: 14, fontWeight: 700,
               }}>
                 {userName.charAt(0)}
               </div>
-              {!isMobile && <span style={{ fontSize: 13, fontWeight: 500, color: BRAND.coal }}>{userName}</span>}
+              {!isMobile && <span style={{ fontSize: 13, fontWeight: 500, color: BRAND.text }}>{userName}</span>}
               <button onClick={handleLogout} title="Abmelden" style={{
                 background: 'none', border: 'none', cursor: 'pointer', color: BRAND.muted, padding: 4,
               }}>
@@ -236,7 +237,7 @@ export default function MISLayout({ children }: { children: React.ReactNode }) {
 
         {/* FOOTER */}
         <footer style={{
-          padding: isMobile ? '12px 14px' : '16px 28px', borderTop: `1px solid ${BRAND.border}`, background: BRAND.white,
+          padding: isMobile ? '12px 14px' : '16px 28px', borderTop: `1px solid ${BRAND.border}`, background: '#1E1B17',
           display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 11, color: BRAND.muted,
           flexWrap: 'wrap' as const, gap: 4,
         }}>
@@ -276,7 +277,7 @@ export default function MISLayout({ children }: { children: React.ReactNode }) {
                 alignSelf: msg.role === 'user' ? 'flex-end' : 'flex-start',
                 maxWidth: '85%', padding: '10px 14px', borderRadius: 12,
                 background: msg.role === 'user' ? BRAND.gold : BRAND.light,
-                color: msg.role === 'user' ? BRAND.white : BRAND.coal,
+                color: msg.role === 'user' ? '#1A1612' : BRAND.text,
                 fontSize: 13, lineHeight: 1.5,
               }}>
                 {msg.text}
@@ -296,13 +297,13 @@ export default function MISLayout({ children }: { children: React.ReactNode }) {
               style={{
                 flex: 1, border: `1px solid ${BRAND.border}`, borderRadius: 10,
                 padding: '8px 14px', fontSize: 13, outline: 'none', fontFamily: 'inherit',
-                background: BRAND.light,
+                background: BRAND.light, color: BRAND.text,
               }}
             />
             <button onClick={handleAiSend} style={{
               width: 38, height: 38, borderRadius: 10, background: BRAND.gold, border: 'none',
               cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: BRAND.white,
+              color: '#1A1612',
             }}>
               <MIcon name="send" size={16} />
             </button>

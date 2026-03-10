@@ -68,7 +68,7 @@ export default function SettingsPage() {
             <Card key={int.name}>
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: 8, padding: 10 }}>
                 <span style={{ color: int.status === 'connected' ? BRAND.gold : BRAND.muted }}><MIcon name={int.icon} size={28} /></span>
-                <h4 style={{ fontSize: 14, fontWeight: 700, color: BRAND.coal, margin: 0 }}>{int.name}</h4>
+                <h4 style={{ fontSize: 14, fontWeight: 700, color: BRAND.text, margin: 0 }}>{int.name}</h4>
                 <p style={{ fontSize: 12, color: BRAND.muted, margin: 0 }}>{int.desc}</p>
                 <Badge label={int.status === 'connected' ? 'Verbunden' : 'Geplant'} color={int.status === 'connected' ? BRAND.success : BRAND.muted} size="sm" />
               </div>

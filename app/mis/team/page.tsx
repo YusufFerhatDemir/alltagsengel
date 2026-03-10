@@ -48,7 +48,7 @@ export default function TeamPage() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                   <div style={{
                     width: 32, height: 32, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    background: r.avatar_color as string || `${BRAND.gold}30`, color: BRAND.coal, fontWeight: 700, fontSize: 13,
+                    background: r.avatar_color as string || `${BRAND.gold}30`, color: BRAND.text, fontWeight: 700, fontSize: 13,
                   }}>
                     {(r.first_name as string || '?').charAt(0)}{(r.last_name as string || '').charAt(0)}
                   </div>

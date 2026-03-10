@@ -2270,10 +2270,12 @@ button, a, .cat-item, .pay-opt, .kk-item, .radius-chip {
   font-size:10px; color:rgba(255,255,255,.1); letter-spacing:.03em;
 }
 
-/* ===== MIS PORTAL MOBILE RESPONSIVE ===== */
+/* ===== MIS PORTAL ===== */
+.mis-root { overflow-x: hidden; max-width: 100vw; }
+.mis-root *, .mis-root *::before, .mis-root *::after { box-sizing: border-box; }
+.mis-content { overflow-x: hidden; max-width: 100%; }
 @media (max-width:900px) {
-  .mis-root { overflow-x: hidden !important; }
-  .mis-content { overflow-x: hidden !important; }
+  .mis-content { padding: 10px !important; }
   .mis-content table {
     display: block;
     overflow-x: auto;

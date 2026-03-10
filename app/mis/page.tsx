@@ -110,7 +110,7 @@ export default function DashboardPage() {
             ].map((action, i) => (
               <a key={i} href={action.href} style={{
                 display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px',
-                borderRadius: 8, textDecoration: 'none', color: BRAND.coal,
+                borderRadius: 8, textDecoration: 'none', color: BRAND.text,
                 border: `1px solid ${BRAND.border}`, fontSize: 13, transition: 'all 0.15s',
               }}
               onMouseEnter={e => { e.currentTarget.style.background = BRAND.light; e.currentTarget.style.borderColor = BRAND.gold }}
