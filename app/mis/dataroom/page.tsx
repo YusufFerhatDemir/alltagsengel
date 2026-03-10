@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/client'
 import { BRAND } from '@/lib/mis/constants'
 import { SectionHeader, Card, DataTable, MisButton, Badge, EmptyState, StatRow, KpiCard } from '@/components/mis/MisComponents'
 import { MIcon } from '@/components/mis/MisIcons'
+import { useMis } from '@/lib/mis/MisContext'
 
 const DATA_ROOM_DOCS = [
   { section: 'Unternehmensübersicht', file: 'AlltagsEngel-Company-Overview.docx', size: '13 KB', type: 'DOCX', status: 'final' },

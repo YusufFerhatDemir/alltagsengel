@@ -46,7 +46,14 @@ export default function DashboardPage() {
         title="Kontrollzentrum"
         subtitle="Echtzeit-Übersicht aller Geschäftskennzahlen"
         icon="gauge"
-        actions={<MisButton icon="refresh" variant="secondary" onClick={loadDashboardData}>Aktualisieren</MisButton>}
+        actions={
+          <MisButton icon={loading ? 'clock' : 'refresh'} variant="secondary" onClick={async () => {
+            setLoading(true)
+            await loadDashboardData()
+          }} disabled={loading}>
+            {loading ? 'Lädt...' : 'Aktualisieren'}
+          </MisButton>
+        }
       />
 
       {/* KPI Row */}
