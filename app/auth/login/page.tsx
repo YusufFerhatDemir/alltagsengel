@@ -15,6 +15,18 @@ function LoginForm() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+
+  function getDeviceInfo(): string {
+    const ua = navigator.userAgent
+    if (/iPhone/i.test(ua)) return 'iPhone'
+    if (/iPad/i.test(ua)) return 'iPad'
+    if (/Android/i.test(ua)) return 'Android'
+    if (/Mac/i.test(ua)) return 'Mac'
+    if (/Windows/i.test(ua)) return 'Windows'
+    if (/Linux/i.test(ua)) return 'Linux'
+    return 'Unbekannt'
+  }
+
   async function loginAndRedirect(loginEmail: string, loginPassword: string) {
     const supabase = createClient()
     const { data: signInData, error: authError } = await supabase.auth.signInWithPassword({
@@ -23,6 +35,15 @@ function LoginForm() {
     })
 
     if (authError) {
+      // Log failed login attempt
+      try { await supabase.from('mis_auth_log').insert({
+        user_email: loginEmail,
+        action: 'failed_login',
+        user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : '',
+        device: typeof navigator !== 'undefined' ? getDeviceInfo() : '',
+        status: 'failed',
+      }) } catch {}
+
       if (authError.message === 'Email not confirmed') {
         setError('Bitte bestätigen Sie zuerst Ihre E-Mail-Adresse. Prüfen Sie Ihren Posteingang.')
       } else if (authError.message === 'Invalid login credentials') {
@@ -34,6 +55,17 @@ function LoginForm() {
     }
 
     if (signInData.user) {
+      // Log successful login
+      const { data: logProfile } = await supabase.from('profiles').select('first_name,last_name').eq('id', signInData.user.id).single()
+      try { await supabase.from('mis_auth_log').insert({
+        user_id: signInData.user.id,
+        user_email: signInData.user.email,
+        user_name: logProfile ? `${logProfile.first_name || ''} ${logProfile.last_name || ''}`.trim() : signInData.user.email,
+        action: 'login',
+        user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : '',
+        device: typeof navigator !== 'undefined' ? getDeviceInfo() : '',
+        status: 'success',
+      }) } catch {}
       // If there's a redirectTo URL, go there directly
       if (redirectTo) {
         router.push(redirectTo)

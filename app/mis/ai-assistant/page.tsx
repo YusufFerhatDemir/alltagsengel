@@ -160,7 +160,7 @@ function generateResponse(query: string): { response: string; sources: { title: 
   const q = query.toLowerCase()
   if (q.includes('entlastung') || q.includes('§45b') || q.includes('131')) {
     return {
-      response: `Der Entlastungsbetrag nach §45b SGB XI beträgt seit 2026:\n\n• Monatlich: €131 pro Person\n• Jährlich: €1.572 pro Person\n• Anspruchsberechtigte: 4,96 Millionen (PG 1-5)\n• Gesamtvolumen: €7,84 Mrd. p.a.\n\nCa. 60% dieses Budgets bleibt aktuell ungenutzt — das sind €4,7 Mrd. jährlich. AlltagsEngel adressiert genau diese Lücke durch einfache digitale Buchung und §45b-Integration.`,
+      response: `Der Entlastungsbetrag nach §45b SGB XI beträgt seit 2026:\n\n• Monatlich: €131 pro Person\n• Jährlich: €1.572 pro Person\n• Anspruchsberechtigte: 4,96 Millionen (PG 1-5)\n• Gesamtvolumen: €7,80 Mrd. p.a.\n\nCa. 60% dieses Budgets bleibt aktuell ungenutzt — das sind €4,7 Mrd. jährlich. AlltagsEngel adressiert genau diese Lücke durch einfache digitale Buchung und §45b-Integration.`,
       sources: [{ title: 'Marktanalyse', module: 'market' }, { title: 'Financial Projections', module: 'finance' }],
     }
   }
@@ -172,7 +172,7 @@ function generateResponse(query: string): { response: string; sources: { title: 
   }
   if (q.includes('markt') || q.includes('tam') || q.includes('sam') || q.includes('wettbewerb')) {
     return {
-      response: `Marktübersicht:\n\n🌍 Marktgröße:\n• TAM: €24,6 Mrd. (gesamter Pflegemarkt)\n• SAM: €7,84 Mrd. (§45b Entlastungsbetrag)\n• SOM (Jahr 5): €52 Mio.\n\n🏆 Hauptwettbewerber:\n• Careship — Plattform, keine §45b-Integration\n• Pflege.de — Nur Vermittlung\n• Home Instead — Premium, wenig digital\n\n✅ Unser Vorteil: Einzige volldigitale Plattform mit direkter §45b-Abrechnung.`,
+      response: `Marktübersicht:\n\n🌍 Marktgröße:\n• TAM: €24,6 Mrd. (gesamter Pflegemarkt)\n• SAM: €7,80 Mrd. (§45b Entlastungsbetrag)\n• SOM (Jahr 5): €52 Mio.\n\n🏆 Hauptwettbewerber:\n• Careship — Plattform, keine §45b-Integration\n• Pflege.de — Nur Vermittlung\n• Home Instead — Premium, wenig digital\n\n✅ Unser Vorteil: Einzige volldigitale Plattform mit direkter §45b-Abrechnung.`,
       sources: [{ title: 'Market Analysis', module: 'market' }],
     }
   }

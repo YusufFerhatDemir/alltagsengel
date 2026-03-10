@@ -26,6 +26,7 @@ export const NAV_ITEMS = [
   { href: '/mis/quality', label: 'Qualität', icon: 'shield', module: 'quality' },
   { href: '/mis/market', label: 'Marktanalyse', icon: 'trending', module: 'market' },
   { href: '/mis/team', label: 'Team', icon: 'users', module: 'team' },
+  { href: '/mis/analytics', label: 'Analytics', icon: 'activity', module: 'analytics' },
   { href: '/mis/ai-assistant', label: 'KI-Assistent', icon: 'sparkles', module: 'ai-assistant' },
   { href: '/mis/settings', label: 'Einstellungen', icon: 'settings', module: 'settings' },
 ] as const
@@ -83,16 +84,16 @@ export const UNIT_ECONOMICS = {
   ltvCacRatio: 44.6,
   paybackMonths: 0.5,
   monthlyChurn: 0.03,
-  entlastungsbetrag: 125,      // §45b Budget pro Person/Monat
+  entlastungsbetrag: 131,      // §45b Budget pro Person/Monat (2026)
 }
 
 export const MARKET_DATA = {
   tam: 50e9,
-  sam: 7.44e9,
+  sam: 7.80e9,                  // 4,96M × €131 × 12
   som5yr: 400e6,
   pflegebeduerftige: 4.96e6,
-  entlastungsbetrag: 125,
+  entlastungsbetrag: 131,       // §45b 2026
   unusedRate: 0.60,
-  unusedVolume: 4.46e9,
+  unusedVolume: 4.68e9,         // 7,80 Mrd × 60%
   krankentransportMarket: 3e9,  // Krankentransport-Vermittlung Markt
 }

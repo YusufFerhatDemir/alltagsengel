@@ -209,7 +209,7 @@ function MISShell({ children }: { children: React.ReactNode }) {
           padding: '16px 28px', borderTop: `1px solid ${BRAND.border}`, background: BRAND.white,
           display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 11, color: BRAND.muted,
         }}>
-          <span>AlltagsEngel GmbH — Management Information System — VERTRAULICH</span>
+          <span>AlltagsEngel UG — Management Information System — VERTRAULICH</span>
           <span>powered by <a href="https://dripfy.app" target="_blank" rel="noopener noreferrer" style={{ color: BRAND.gold, textDecoration: 'none', fontWeight: 700 }}>DRIPFY.APP</a></span>
         </footer>
       </div>

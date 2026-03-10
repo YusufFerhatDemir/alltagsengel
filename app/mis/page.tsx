@@ -67,8 +67,8 @@ export default function DashboardPage() {
       {/* Market Opportunity */}
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : '1fr 1fr 1fr', gap: isMobile ? 10 : 16 }}>
         <KpiCard title="TAM" value="50" unit="Mrd. €" icon="globe" trend="up" />
-        <KpiCard title="SAM" value="7,44" unit="Mrd. €" icon="target" trend="up" />
-        <KpiCard title="Ungenutzt" value="4,46" unit="Mrd. €" icon="zap" trend="up" color={BRAND.error} />
+        <KpiCard title="SAM" value="7,80" unit="Mrd. €" icon="target" trend="up" />
+        <KpiCard title="Ungenutzt" value="4,68" unit="Mrd. €" icon="zap" trend="up" color={BRAND.error} />
       </div>
 
       {/* Main Grid */}

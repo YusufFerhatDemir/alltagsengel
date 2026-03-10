@@ -17,11 +17,11 @@ export default function CompanyOverviewPage() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '24px' }}>
           <div>
             <div style={{ fontSize: '12px', color: '#A0978A', marginBottom: '8px' }}>Company Name</div>
-            <div style={{ fontSize: '18px', color: '#C9963C', fontWeight: 'bold' }}>AlltagsEngel GmbH</div>
+            <div style={{ fontSize: '18px', color: '#C9963C', fontWeight: 'bold' }}>AlltagsEngel UG</div>
           </div>
           <div>
             <div style={{ fontSize: '12px', color: '#A0978A', marginBottom: '8px' }}>Legal Form</div>
-            <div style={{ fontSize: '18px', color: '#C9963C', fontWeight: 'bold' }}>GmbH (HRB eingetragen)</div>
+            <div style={{ fontSize: '18px', color: '#C9963C', fontWeight: 'bold' }}>UG (haftungsbeschränkt)</div>
           </div>
           <div>
             <div style={{ fontSize: '12px', color: '#A0978A', marginBottom: '8px' }}>Headquarters</div>
@@ -219,7 +219,7 @@ export default function CompanyOverviewPage() {
       {/* Investment Highlights */}
       <Card style={{ marginTop: '40px', backgroundColor: 'rgba(201, 150, 60, 0.1)', borderLeft: '4px solid #C9963C', padding: '24px' }}>
         <Paragraph style={{ margin: 0, color: '#F7F2EA' }}>
-          <strong>AlltagsEngel GmbH (HRB registered) combines a massive market opportunity (€7.44B underutilized §45b budget), ~50% gross margin through direct Pflegekasse billing, two revenue verticals (Alltagsbegleitung + Krankentransport), strong anti-bypass mechanisms, and first-mover advantage as the only §45b digital platform.</strong> With €500K seed funding, we will dominate the digital care marketplace in Germany and expand across DACH.
+          <strong>AlltagsEngel UG (HRB registered) combines a massive market opportunity (€7.44B underutilized §45b budget), ~50% gross margin through direct Pflegekasse billing, two revenue verticals (Alltagsbegleitung + Krankentransport), strong anti-bypass mechanisms, and first-mover advantage as the only §45b digital platform.</strong> With €500K seed funding, we will dominate the digital care marketplace in Germany and expand across DACH.
         </Paragraph>
       </Card>
     </DocPageLayout>

@@ -40,7 +40,7 @@ export default function ExecutiveSummaryPage() {
           <strong>Second Vertical — Krankentransport:</strong> Patient transport mediation as additional revenue stream with similar marketplace dynamics
         </BulletItem>
         <BulletItem icon="🏢">
-          <strong>Company Registered:</strong> AlltagsEngel GmbH officially registered (HRB eingetragen), ready for operations
+          <strong>Company Registered:</strong> AlltagsEngel UG (haftungsbeschränkt) officially registered, ready for operations
         </BulletItem>
       </Card>
 

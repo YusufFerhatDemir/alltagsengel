@@ -61,6 +61,14 @@ export default function MISLayout({ children }: { children: React.ReactNode }) {
 
   const handleLogout = async () => {
     const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (user) {
+      try { await supabase.from('mis_auth_log').insert({
+        user_id: user.id, user_email: user.email, user_name: userName,
+        action: 'logout', device: /iPhone|iPad/i.test(navigator.userAgent) ? 'iOS' : /Android/i.test(navigator.userAgent) ? 'Android' : /Mac/i.test(navigator.userAgent) ? 'Mac' : 'Desktop',
+        status: 'success',
+      }) } catch {}
+    }
     await supabase.auth.signOut()
     router.push('/auth/login')
   }
@@ -80,7 +88,7 @@ export default function MISLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <MisProvider>
-    <div className="mis-root" style={{ display: 'flex', minHeight: '100vh', background: BRAND.light, fontFamily: "'Jost', var(--font-jost), sans-serif", overflowX: 'hidden' }}>
+    <div className="mis-root" style={{ display: 'flex', minHeight: '100dvh', background: BRAND.light, fontFamily: "'Jost', var(--font-jost), sans-serif", overflowX: 'hidden' }}>
       {/* MOBILE OVERLAY */}
       {isMobile && mobileOpen && (
         <div onClick={() => setMobileOpen(false)} style={{
@@ -328,7 +336,7 @@ export default function MISLayout({ children }: { children: React.ReactNode }) {
           display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 11, color: BRAND.muted,
           flexWrap: 'wrap' as const, gap: 4,
         }}>
-          <span>AlltagsEngel GmbH — Management Information System — VERTRAULICH</span>
+          <span>AlltagsEngel UG — Management Information System — VERTRAULICH</span>
           <span>powered by <a href="https://dripfy.app" target="_blank" rel="noopener noreferrer" style={{ color: BRAND.gold, textDecoration: 'none', fontWeight: 700 }}>DRIPFY.APP</a></span>
         </footer>
       </div>
@@ -407,7 +415,7 @@ function getAiResponse(query: string): string {
   const q = query.toLowerCase()
   if (q.includes('entlastung')) return 'Der Entlastungsbetrag nach §45b SGB XI beträgt seit 2026 monatlich 131 €. Dies ergibt ein jährliches Volumen von 1.572 € pro anspruchsberechtigter Person.'
   if (q.includes('umsatz') || q.includes('revenue')) return 'Laut den Finanzprognosen wird der Umsatz von 180K € (2026) auf 18M € (2030) wachsen. Die Break-Even-Punkt wird für Q3 2027 erwartet.'
-  if (q.includes('markt') || q.includes('tam') || q.includes('sam')) return 'Der TAM beträgt 24,6 Mrd. €, SAM 7,84 Mrd. € (4,96M Pflegebedürftige × 131 € × 12 Monate). Ca. 60% des Budgets bleiben ungenutzt — 4,7 Mrd. € Marktchance.'
+  if (q.includes('markt') || q.includes('tam') || q.includes('sam')) return 'Der TAM beträgt 24,6 Mrd. €, SAM 7,80 Mrd. € (4,96M Pflegebedürftige × 131 € × 12 Monate). Ca. 60% des Budgets bleiben ungenutzt — 4,7 Mrd. € Marktchance.'
   if (q.includes('team') || q.includes('mitarbeiter')) return 'Das Gründerteam besteht derzeit aus den Kernmitgliedern. Weitere Informationen finden Sie unter Team im MIS-Portal.'
   if (q.includes('iso') || q.includes('qualität')) return 'Das ISO 9001 QMS umfasst 10 definierte Prozesse: 4 Kernprozesse (QP-001 bis QP-004), 2 Supportprozesse und 4 Managementprozesse.'
   if (q.includes('dokument') || q.includes('data room')) return 'Der Data Room enthält 10+ Dokumente in 8 Kategorien. Alle Dokumente sind ISO 9001-konform gelenkt mit Versionierung, Freigabe-Workflows und Audit-Trail.'

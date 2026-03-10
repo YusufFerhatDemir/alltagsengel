@@ -24,7 +24,7 @@ export default function SettingsPage() {
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? 12 : 20 }}>
           <Card title="System" icon="settings">
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-              <StatRow label="Unternehmen" value="AlltagsEngel GmbH" />
+              <StatRow label="Unternehmen" value="AlltagsEngel UG" />
               <StatRow label="MIS Version" value="1.0.0" />
               <StatRow label="Framework" value="Next.js 16" />
               <StatRow label="Datenbank" value="Supabase (PostgreSQL)" />
@@ -109,7 +109,7 @@ export default function SettingsPage() {
               Management Information System v1.0
             </p>
             <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', maxWidth: 500, margin: '0 auto 20px', lineHeight: 1.6 }}>
-              Integriertes Management-Informationssystem für AlltagsEngel GmbH.
+              Integriertes Management-Informationssystem für AlltagsEngel UG.
               Dokumentenmanagement, Finanzen, Qualitätsmanagement (ISO 9001),
               Lieferkette, Marktanalyse und KI-gestützte Entscheidungsunterstützung.
             </p>

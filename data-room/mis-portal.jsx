@@ -690,7 +690,7 @@ export default function MISPortal() {
           {/* Bottom footer on every page */}
           <div style={{ marginTop: 40, paddingTop: 20, borderTop: `1px solid ${DARK_CARD}`, textAlign: "center" }}>
             <div style={{ fontSize: 10, color: GREY, letterSpacing: 1 }}>
-              AlltagsEngel GmbH — Investor Data Room — VERTRAULICH
+              AlltagsEngel UG — Investor Data Room — VERTRAULICH
             </div>
             <div style={{ marginTop: 8 }}>
               <span style={{ fontSize: 9, color: GREY }}>powered by </span>
