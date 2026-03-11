@@ -444,7 +444,7 @@ body {
 /* ══════════════════════════════════════════════
    5. ENGEL PROFIL
    ══════════════════════════════════════════════ */
-#eprofil { background:var(--cream); padding-bottom:100px; position:relative; }
+#eprofil { background:var(--cream); padding-bottom:170px; position:relative; }
 #eprofil::after { content:''; position:absolute; top:50%; left:50%; width:300px; height:300px; transform:translate(-50%,-50%); background:radial-gradient(circle,rgba(201,150,60,.03) 0%,transparent 70%); pointer-events:none; z-index:0; }
 
 .ep-header { background:var(--coal); padding:0 22px 42px; position:relative; overflow:hidden; }
@@ -506,7 +506,7 @@ body {
 .review-text { font-size:12px; color:var(--ink3); line-height:1.6; font-weight:300; }
 
 /* Booking bar */
-.booking-bar { position:absolute; bottom:0; width:var(--phone-w); background:rgba(26,22,18,.97); backdrop-filter:blur(24px); border-top:1px solid rgba(255,255,255,.06); padding:14px 20px 32px; display:flex; gap:14px; align-items:center; }
+.booking-bar { position:absolute; bottom:76px; width:var(--phone-w); background:rgba(26,22,18,.97); backdrop-filter:blur(24px); border-top:1px solid rgba(255,255,255,.06); padding:14px 20px 16px; display:flex; gap:14px; align-items:center; z-index:50; }
 .booking-price .price-val { font-family:'Cormorant Garamond',serif; font-size:24px; font-weight:700; color:white; }
 .booking-price .price-sub { font-size:11px; color:rgba(255,255,255,.35); margin-top:2px; }
 .btn-book { flex:1; height:52px; border-radius:14px; background:linear-gradient(135deg,var(--gold2) 0%,var(--gold) 55%,#9A7020 100%); border:none; cursor:pointer; font-family:'Jost',sans-serif; font-size:13px; font-weight:700; color:var(--coal); letter-spacing:.06em; text-transform:uppercase; box-shadow:0 4px 18px rgba(201,150,60,.35); transition:all .2s; position:relative; overflow:hidden; }
@@ -932,9 +932,13 @@ body {
   }
   .screen { min-height:calc(100dvh - 48px); }
   .sb { padding:0 20px 9px; }
-  .bottom-nav, .booking-bar, .submit-bar {
+  .bottom-nav, .submit-bar {
     width:100%; border-radius:0;
     padding-bottom:env(safe-area-inset-bottom);
+  }
+  .booking-bar {
+    width:100%; border-radius:0;
+    bottom:calc(76px + env(safe-area-inset-bottom));
   }
   .kh-body, .ed-body, .ep-body, .mp-body, .form-body { padding-left:16px; padding-right:16px; }
   .cat-list { gap:8px; }
