@@ -1,157 +1,205 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
-import { useParams, useRouter } from 'next/navigation'
+import { useRouter, useParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { isValidUUID, logError } from '@/lib/safe-query'
-import { NotFoundState, ErrorState, LoadingState } from '@/components/UIStates'
-import { IconWings, IconUser } from '@/components/Icons'
 
-export default function ChatConversationPage() {
-  const params = useParams()
+interface Message {
+  id: string
+  sender_id: string
+  content: string
+  created_at: string
+}
+
+export default function KundeChatPage() {
   const router = useRouter()
-  const bookingId = params.id as string
-  const [messages, setMessages] = useState<any[]>([])
+  const params = useParams()
+  const rideId = params.id as string
+  const supabase = createClient()
+  const [messages, setMessages] = useState<Message[]>([])
   const [newMsg, setNewMsg] = useState('')
-  const [userId, setUserId] = useState<string | null>(null)
-  const [partner, setPartner] = useState<string>('Engel')
-  const [sending, setSending] = useState(false)
-  const [pageStatus, setPageStatus] = useState<'loading' | 'ok' | 'not_found' | 'error'>('loading')
+  const [partnerName, setPartnerName] = useState('Fahrer')
+  const [userId, setUserId] = useState('')
+  const [loading, setLoading] = useState(true)
   const bottomRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    if (!isValidUUID(bookingId)) { setPageStatus('not_found'); return }
-    async function load() {
-      try {
-        const supabase = createClient()
-        const { data: { user } } = await supabase.auth.getUser()
-        if (!user) { setPageStatus('error'); return }
-        setUserId(user.id)
-
-        const { data: booking, error: bookErr } = await supabase
-          .from('bookings')
-          .select('angel_id, angels:angel_id(profiles(first_name, last_name))')
-          .eq('id', bookingId)
-          .single()
-
-        if (bookErr || !booking) {
-          if (bookErr) logError('KundeChat:load', bookErr.message)
-          setPageStatus(bookErr?.code === 'PGRST116' || !booking ? 'not_found' : 'error')
-          return
-        }
-
-        const angel = booking.angels as any
-        setPartner(angel?.profiles ? `${angel.profiles.first_name} ${angel.profiles.last_name}` : 'Engel')
-
-        const { data: msgs } = await supabase
-          .from('messages')
-          .select('*')
-          .eq('booking_id', bookingId)
-          .order('created_at', { ascending: true })
-        setMessages(msgs || [])
-
-        await supabase
-          .from('messages')
-          .update({ read: true })
-          .eq('booking_id', bookingId)
-          .eq('receiver_id', user.id)
-
-        const channel = supabase
-          .channel(`chat-${bookingId}`)
-          .on('postgres_changes', {
-            event: 'INSERT',
-            schema: 'public',
-            table: 'messages',
-            filter: `booking_id=eq.${bookingId}`,
-          }, (payload) => {
-            setMessages(prev => [...prev, payload.new])
-          })
-          .subscribe()
-
-        setPageStatus('ok')
-        return () => { supabase.removeChannel(channel) }
-      } catch (err) {
-        logError('KundeChat:load', err)
-        setPageStatus('error')
-      }
-    }
-    load()
-  }, [bookingId])
+    loadChat()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
+  // Realtime subscription
+  useEffect(() => {
+    if (!rideId) return
+
+    const channel = supabase
+      .channel(`chat-${rideId}`)
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'chat_messages', filter: `ride_id=eq.${rideId}` },
+        (payload) => {
+          const newMessage = payload.new as Message
+          setMessages(prev => {
+            if (prev.some(m => m.id === newMessage.id)) return prev
+            return [...prev, newMessage]
+          })
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [rideId, supabase])
+
+  async function loadChat() {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) { router.push('/auth/login'); return }
+    setUserId(user.id)
+
+    // Get ride info to find provider/driver name
+    const { data: ride } = await supabase
+      .from('krankenfahrten')
+      .select('provider_id, krankenfahrt_providers(company_name, user_id)')
+      .eq('id', rideId)
+      .single()
+
+    if (ride?.krankenfahrt_providers) {
+      const provider = ride.krankenfahrt_providers as any
+      if (provider.user_id) {
+        const { data: driverProfile } = await supabase
+          .from('profiles')
+          .select('first_name, last_name')
+          .eq('id', provider.user_id)
+          .single()
+        if (driverProfile) {
+          setPartnerName(`${driverProfile.first_name || ''} ${driverProfile.last_name || ''}`.trim() || provider.company_name || 'Fahrer')
+        } else {
+          setPartnerName(provider.company_name || 'Fahrer')
+        }
+      } else {
+        setPartnerName(provider.company_name || 'Fahrer')
+      }
+    }
+
+    // Load messages
+    const { data: msgs } = await supabase
+      .from('chat_messages')
+      .select('*')
+      .eq('ride_id', rideId)
+      .order('created_at', { ascending: true })
+
+    setMessages(msgs || [])
+    setLoading(false)
+  }
+
   async function handleSend() {
-    if (!newMsg.trim() || !userId || sending) return
-    setSending(true)
-    try {
-      const supabase = createClient()
-      const { data: booking } = await supabase
-        .from('bookings')
-        .select('angel_id, customer_id')
-        .eq('id', bookingId)
-        .single()
+    if (!newMsg.trim() || !userId) return
 
-      if (!booking) { setSending(false); return }
+    const content = newMsg.trim()
+    setNewMsg('')
 
-      const receiverId = userId === booking.customer_id ? booking.angel_id : booking.customer_id
+    const optimistic: Message = {
+      id: `temp-${Date.now()}`,
+      sender_id: userId,
+      content,
+      created_at: new Date().toISOString(),
+    }
+    setMessages(prev => [...prev, optimistic])
 
-      await supabase.from('messages').insert({
-        booking_id: bookingId,
-        sender_id: userId,
-        receiver_id: receiverId,
-        content: newMsg.trim(),
-      })
+    const { data, error } = await supabase
+      .from('chat_messages')
+      .insert({ ride_id: rideId, sender_id: userId, content })
+      .select()
+      .single()
 
-      setNewMsg('')
-    } catch (err) {
-      logError('KundeChat:send', err)
-    } finally {
-      setSending(false)
+    if (data) {
+      setMessages(prev => prev.map(m => m.id === optimistic.id ? data : m))
+    } else if (error) {
+      setMessages(prev => prev.filter(m => m.id !== optimistic.id))
     }
   }
 
-  if (pageStatus === 'loading') return <LoadingState />
-  if (pageStatus === 'not_found') return <NotFoundState title="Chat nicht gefunden" subtitle="Diese Buchung existiert nicht." homeHref="/kunde/home" />
-  if (pageStatus === 'error') return <div className="screen"><ErrorState homeHref="/kunde/home" onRetry={() => window.location.reload()} /></div>
-
   return (
-    <div className="screen" id="chatconv">
-      <div className="topbar">
-        <button className="back-btn" onClick={() => router.back()} type="button">‹</button>
-        <div className="chat-conv-header">
-          <div className="chat-conv-avatar"><IconWings size={16} /></div>
-          <div className="topbar-title">{partner}</div>
+    <div className="screen" style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
+      {/* Top Bar */}
+      <div style={{
+        display: 'flex', alignItems: 'center', gap: '12px', padding: '16px 20px',
+        borderBottom: '1px solid var(--border)', flexShrink: 0,
+      }}>
+        <button onClick={() => router.back()} className="back-btn" type="button">‹</button>
+        <div style={{
+          width: '36px', height: '36px', borderRadius: '50%',
+          background: 'linear-gradient(135deg, var(--gold), var(--gold2))',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: '14px', fontWeight: '700', color: 'var(--bg)',
+        }}>
+          {partnerName.split(' ').map(n => n[0]).join('').slice(0, 2)}
         </div>
+        <span style={{ fontSize: '16px', fontWeight: '600', color: 'var(--text)' }}>{partnerName}</span>
       </div>
 
-      <div className="chat-messages">
-        {messages.length === 0 && (
-          <div className="chat-start-hint">Schreibe die erste Nachricht...</div>
-        )}
-        {messages.map(msg => (
-          <div key={msg.id} className={`chat-msg ${msg.sender_id === userId ? 'sent' : 'received'}`}>
-            <div className="chat-bubble">{msg.content}</div>
-            <div className="chat-msg-time">
-              {new Date(msg.created_at).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}
-            </div>
+      {/* Messages */}
+      <div style={{ flex: 1, overflowY: 'auto', padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        {loading ? (
+          <div style={{ textAlign: 'center', color: 'var(--ink4)', padding: '40px 0' }}>Laden...</div>
+        ) : messages.length === 0 ? (
+          <div style={{ textAlign: 'center', color: 'var(--ink4)', padding: '60px 0', fontSize: '13px' }}>
+            Noch keine Nachrichten. Schreiben Sie dem Fahrer!
           </div>
-        ))}
-        <div ref={bottomRef}></div>
+        ) : (
+          messages.map(msg => {
+            const isMe = msg.sender_id === userId
+            return (
+              <div key={msg.id} style={{
+                alignSelf: isMe ? 'flex-end' : 'flex-start',
+                maxWidth: '75%',
+                background: isMe ? 'linear-gradient(135deg, var(--gold), var(--gold2))' : 'var(--card)',
+                color: isMe ? 'var(--bg)' : 'var(--text)',
+                padding: '10px 14px',
+                borderRadius: isMe ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
+                fontSize: '14px',
+                lineHeight: '1.5',
+              }}>
+                {msg.content}
+                <div style={{
+                  fontSize: '10px', marginTop: '4px',
+                  opacity: 0.6, textAlign: 'right',
+                }}>
+                  {new Date(msg.created_at).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}
+                </div>
+              </div>
+            )
+          })
+        )}
+        <div ref={bottomRef} />
       </div>
 
-      <div className="chat-input-bar">
+      {/* Input */}
+      <div style={{
+        padding: '12px 20px 28px', borderTop: '1px solid var(--border)',
+        display: 'flex', gap: '8px', flexShrink: 0,
+      }}>
         <input
-          className="chat-input"
-          type="text"
-          placeholder="Nachricht schreiben..."
           value={newMsg}
           onChange={e => setNewMsg(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && handleSend()}
+          placeholder="Nachricht schreiben..."
+          className="input"
+          style={{
+            flex: 1, borderRadius: '24px', padding: '12px 16px',
+          }}
         />
-        <button className="chat-send" onClick={handleSend} disabled={sending || !newMsg.trim()}>
-          Senden
-        </button>
+        <button onClick={handleSend} style={{
+          width: '44px', height: '44px', borderRadius: '50%',
+          background: newMsg.trim() ? 'linear-gradient(135deg, var(--gold), var(--gold2))' : 'var(--card)',
+          border: 'none', color: newMsg.trim() ? 'var(--bg)' : 'var(--ink4)',
+          fontSize: '18px', cursor: 'pointer', display: 'flex',
+          alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+        }}>➤</button>
       </div>
     </div>
   )

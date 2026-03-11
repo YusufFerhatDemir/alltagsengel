@@ -440,6 +440,34 @@ export default function AuftraegePage() {
                     )}
                   </div>
 
+                  {/* Kontakt-Buttons für zugewiesene Fahrten */}
+                  {ride.provider_id === providerId && (ride.status === 'confirmed' || ride.status === 'in_progress') && (
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <button
+                        onClick={() => router.push(`/fahrer/chat/${ride.id}`)}
+                        style={{
+                          flex: 1, padding: '10px', borderRadius: '10px',
+                          background: 'rgba(201,150,60,0.15)', border: '1px solid rgba(201,150,60,0.25)',
+                          color: '#DBA84A', fontSize: '13px', fontWeight: '600',
+                          cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
+                        }}
+                      >
+                        💬 Kunde kontaktieren
+                      </button>
+                      <button
+                        onClick={() => window.location.href = 'tel:+4969123456'}
+                        style={{
+                          flex: 1, padding: '10px', borderRadius: '10px',
+                          background: 'rgba(76,175,80,0.15)', border: '1px solid rgba(76,175,80,0.25)',
+                          color: '#4CAF50', fontSize: '13px', fontWeight: '600',
+                          cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
+                        }}
+                      >
+                        📞 Anrufen
+                      </button>
+                    </div>
+                  )}
+
                   {/* Amount */}
                   <div style={{
                     display: 'flex',
