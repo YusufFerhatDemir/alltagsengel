@@ -194,8 +194,14 @@ export default function KrankenfahrtPage() {
           <input className="input" type="text" placeholder="Abholadresse" value={formData.abholadresse} onChange={(e) => handleInputChange('abholadresse', e.target.value)} />
           <input className="input" type="text" placeholder="Zieladresse" value={formData.zieladresse} onChange={(e) => handleInputChange('zieladresse', e.target.value)} />
           <div className="input-row2">
-            <input className="input" type="date" value={formData.datum} onChange={(e) => handleInputChange('datum', e.target.value)} />
-            <input className="input" type="time" value={formData.uhrzeit} onChange={(e) => handleInputChange('uhrzeit', e.target.value)} />
+            <div>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: 'var(--ink4)', marginBottom: '4px' }}>Datum</label>
+              <input className="input" type="date" value={formData.datum} onChange={(e) => handleInputChange('datum', e.target.value)} style={{ width: '100%' }} />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: 'var(--ink4)', marginBottom: '4px' }}>Uhrzeit</label>
+              <input className="input" type="time" value={formData.uhrzeit} onChange={(e) => handleInputChange('uhrzeit', e.target.value)} style={{ width: '100%' }} />
+            </div>
           </div>
         </div>
 
