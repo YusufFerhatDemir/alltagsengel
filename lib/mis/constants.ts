@@ -26,6 +26,7 @@ export const NAV_ITEMS = [
   { href: '/mis/quality', label: 'Qualität', icon: 'shield', module: 'quality' },
   { href: '/mis/market', label: 'Marktanalyse', icon: 'trending', module: 'market' },
   { href: '/mis/team', label: 'Team', icon: 'users', module: 'team' },
+  { href: '/mis/krankenfahrt-pricing', label: 'Krankenfahrt', icon: 'truck', module: 'krankenfahrt-pricing' },
   { href: '/mis/analytics', label: 'Analytics', icon: 'activity', module: 'analytics' },
   { href: '/mis/ai-assistant', label: 'KI-Assistent', icon: 'sparkles', module: 'ai-assistant' },
   { href: '/mis/settings', label: 'Einstellungen', icon: 'settings', module: 'settings' },
