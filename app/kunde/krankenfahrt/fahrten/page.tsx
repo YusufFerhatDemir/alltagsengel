@@ -135,6 +135,34 @@ export default function KundeFahrtenPage() {
                         <span style={{ fontSize: '12px', color: '#4CAF50', fontWeight: '500' }}>✓ Bewertet</span>
                       )}
                     </div>
+
+                    {/* Kontakt-Buttons für aktive Fahrten */}
+                    {(ride.status === 'confirmed' || ride.status === 'in_progress') && ride.provider_id && (
+                      <div style={{ display: 'flex', gap: '8px', marginTop: '10px', paddingTop: '10px', borderTop: '1px solid rgba(201,150,60,0.1)' }}>
+                        <button
+                          onClick={() => router.push(`/kunde/chat/${ride.id}`)}
+                          style={{
+                            flex: 1, padding: '10px', borderRadius: '10px',
+                            background: 'rgba(201,150,60,0.15)', border: '1px solid rgba(201,150,60,0.25)',
+                            color: '#DBA84A', fontSize: '13px', fontWeight: '600',
+                            cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
+                          }}
+                        >
+                          💬 Nachricht
+                        </button>
+                        <button
+                          onClick={() => window.location.href = 'tel:+4969123456'}
+                          style={{
+                            flex: 1, padding: '10px', borderRadius: '10px',
+                            background: 'rgba(76,175,80,0.15)', border: '1px solid rgba(76,175,80,0.25)',
+                            color: '#4CAF50', fontSize: '13px', fontWeight: '600',
+                            cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
+                          }}
+                        >
+                          📞 Anrufen
+                        </button>
+                      </div>
+                    )}
                   </div>
                 )
               })}
