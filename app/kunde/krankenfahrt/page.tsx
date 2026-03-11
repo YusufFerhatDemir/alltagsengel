@@ -1,42 +1,50 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { IconTruck, IconCard, IconShield, IconInfo } from '@/components/Icons'
 import { logError } from '@/lib/safe-query'
+import type { PricingTier, PricingSurcharge, PricingBreakdown } from '@/lib/types/pricing'
 
 export default function KrankenfahrtPage() {
   const router = useRouter()
+  const supabase = createClient()
+
+  // Form state
   const [formData, setFormData] = useState({
     abholadresse: '',
     zieladresse: '',
     datum: '',
     uhrzeit: '',
     rueckfahrt: false,
-    rollstuhl: false,
-    tragestuhl: false,
     hinweise: '',
   })
-  
+  const [selectedTier, setSelectedTier] = useState('sitzend')
+  const [extraSurcharges, setExtraSurcharges] = useState<string[]>([])
   const [payMethod, setPayMethod] = useState('kasse')
   const [kkType, setKkType] = useState('gesetzlich')
   const [selectedKK, setSelectedKK] = useState('AOK')
+
+  // Pricing data from API
+  const [tiers, setTiers] = useState<PricingTier[]>([])
+  const [surcharges, setSurcharges] = useState<PricingSurcharge[]>([])
+  const [breakdown, setBreakdown] = useState<PricingBreakdown | null>(null)
+  const [priceLoading, setPriceLoading] = useState(false)
+
+  // UI state
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
   const [userId, setUserId] = useState<string | null>(null)
+  const [dataLoading, setDataLoading] = useState(true)
 
+  // Load auth + pricing data on mount
   useEffect(() => {
-    async function checkAuth() {
-      const supabase = createClient()
+    async function init() {
       const { data: { user } } = await supabase.auth.getUser()
-      if (!user) {
-        router.push('/auth/login')
-        return
-      }
+      if (!user) { router.push('/auth/login'); return }
       setUserId(user.id)
 
-      // Load default address from profile
+      // Load default address
       const { data: profile } = await supabase
         .from('profiles')
         .select('location')
@@ -45,62 +53,93 @@ export default function KrankenfahrtPage() {
       if (profile?.location) {
         setFormData(prev => ({ ...prev, abholadresse: profile.location }))
       }
-    }
-    checkAuth()
-  }, [router])
 
-  // Kalkulationen
-  const grundgebuehr = 8.50
-  const kosten_pro_km = 0.35
-  const rollstuhl_zuschlag = formData.rollstuhl ? 15 : 0
-  const tragestuhl_zuschlag = formData.tragestuhl ? 15 : 0
-  
-  // Vereinfachte Kalkulation: durchschnittlich 10 km pro Fahrt
-  const km_estimate = 10
-  const km_kosten = km_estimate * kosten_pro_km
-  
-  const subtotal_einfach = grundgebuehr + km_kosten + rollstuhl_zuschlag + tragestuhl_zuschlag
-  const subtotal = formData.rueckfahrt ? subtotal_einfach * 2 : subtotal_einfach
-  const total = subtotal
+      // Load tiers + surcharges from API
+      try {
+        const res = await fetch('/api/pricing/calculate')
+        if (res.ok) {
+          const data = await res.json()
+          setTiers(data.tiers || [])
+          setSurcharges(data.surcharges || [])
+        }
+      } catch (err) {
+        logError('KrankenfahrtPage:loadPricing', err)
+      }
+      setDataLoading(false)
+    }
+    init()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // Detect night hours
+  function isNightTime(time: string): boolean {
+    if (!time) return false
+    const hour = parseInt(time.split(':')[0], 10)
+    return hour >= 20 || hour < 6
+  }
+
+  // Recalculate price when inputs change
+  const recalculate = useCallback(async () => {
+    if (!selectedTier) return
+    setPriceLoading(true)
+    try {
+      const res = await fetch('/api/pricing/calculate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tier_slug: selectedTier,
+          estimated_km: 10, // Default estimate
+          estimated_wait_minutes: 15,
+          is_return_trip: formData.rueckfahrt,
+          is_night: isNightTime(formData.uhrzeit),
+          is_holiday: false,
+          extra_surcharges: extraSurcharges,
+        }),
+      })
+      if (res.ok) {
+        const data = await res.json()
+        setBreakdown(data)
+      }
+    } catch (err) {
+      logError('KrankenfahrtPage:recalculate', err)
+    }
+    setPriceLoading(false)
+  }, [selectedTier, formData.rueckfahrt, formData.uhrzeit, extraSurcharges])
+
+  useEffect(() => {
+    if (!dataLoading) {
+      const timer = setTimeout(recalculate, 300) // Debounce
+      return () => clearTimeout(timer)
+    }
+  }, [recalculate, dataLoading])
 
   const handleInputChange = (field: string, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }))
   }
 
+  const toggleSurcharge = (slug: string) => {
+    setExtraSurcharges(prev =>
+      prev.includes(slug) ? prev.filter(s => s !== slug) : [...prev, slug]
+    )
+  }
+
+  // Selectable surcharges (exclude auto-applied ones like night/holiday)
+  const selectableSurcharges = surcharges.filter(s =>
+    !['night_premium', 'holiday_premium'].includes(s.slug)
+  )
+
   const handleSubmit = async () => {
     setSubmitting(true)
     setError('')
 
-    // Validierung
-    if (!formData.abholadresse.trim()) {
-      setError('Bitte geben Sie eine Abholadresse ein')
-      setSubmitting(false)
-      return
-    }
-    if (!formData.zieladresse.trim()) {
-      setError('Bitte geben Sie eine Zieladresse ein')
-      setSubmitting(false)
-      return
-    }
-    if (!formData.datum) {
-      setError('Bitte wählen Sie ein Datum')
-      setSubmitting(false)
-      return
-    }
-    if (!formData.uhrzeit) {
-      setError('Bitte wählen Sie eine Uhrzeit')
-      setSubmitting(false)
-      return
-    }
+    if (!formData.abholadresse.trim()) { setError('Bitte geben Sie eine Abholadresse ein'); setSubmitting(false); return }
+    if (!formData.zieladresse.trim()) { setError('Bitte geben Sie eine Zieladresse ein'); setSubmitting(false); return }
+    if (!formData.datum) { setError('Bitte wählen Sie ein Datum'); setSubmitting(false); return }
+    if (!formData.uhrzeit) { setError('Bitte wählen Sie eine Uhrzeit'); setSubmitting(false); return }
 
     try {
-      const supabase = createClient()
       const { data: { user } } = await supabase.auth.getUser()
-      if (!user) {
-        setError('Sie sind nicht eingeloggt')
-        setSubmitting(false)
-        return
-      }
+      if (!user) { setError('Sie sind nicht eingeloggt'); setSubmitting(false); return }
 
       const { data: booking, error: bookErr } = await supabase
         .from('krankenfahrten')
@@ -111,13 +150,14 @@ export default function KrankenfahrtPage() {
           datum: formData.datum,
           uhrzeit: formData.uhrzeit,
           rueckfahrt: formData.rueckfahrt,
-          rollstuhl_benoetig: formData.rollstuhl,
-          tragestuhl_benoetig: formData.tragestuhl,
+          rollstuhl_benoetig: selectedTier === 'rollstuhl',
+          tragestuhl_benoetig: selectedTier === 'tragestuhl',
           hinweise: formData.hinweise || null,
           payment_method: payMethod,
           insurance_type: (payMethod === 'kasse' || payMethod === 'kombi') ? kkType : null,
           insurance_provider: (payMethod === 'kasse' || payMethod === 'kombi') ? selectedKK : null,
-          total_amount: total,
+          total_amount: breakdown?.total || 0,
+          pricing_snapshot: breakdown || null,
           status: 'pending',
         })
         .select()
@@ -138,6 +178,8 @@ export default function KrankenfahrtPage() {
     }
   }
 
+  const currentTier = tiers.find(t => t.slug === selectedTier)
+
   return (
     <div className="screen" id="krankenfahrt-form">
       <div className="topbar">
@@ -149,52 +191,47 @@ export default function KrankenfahrtPage() {
         {/* Fahrtdaten */}
         <div className="form-card">
           <div className="form-card-h">Fahrtdaten</div>
-          <input
-            className="input"
-            type="text"
-            placeholder="Abholadresse"
-            value={formData.abholadresse}
-            onChange={(e) => handleInputChange('abholadresse', e.target.value)}
-          />
-          <input
-            className="input"
-            type="text"
-            placeholder="Zieladresse"
-            value={formData.zieladresse}
-            onChange={(e) => handleInputChange('zieladresse', e.target.value)}
-          />
+          <input className="input" type="text" placeholder="Abholadresse" value={formData.abholadresse} onChange={(e) => handleInputChange('abholadresse', e.target.value)} />
+          <input className="input" type="text" placeholder="Zieladresse" value={formData.zieladresse} onChange={(e) => handleInputChange('zieladresse', e.target.value)} />
           <div className="input-row2">
-            <input
-              className="input"
-              type="date"
-              value={formData.datum}
-              onChange={(e) => handleInputChange('datum', e.target.value)}
-            />
-            <input
-              className="input"
-              type="time"
-              value={formData.uhrzeit}
-              onChange={(e) => handleInputChange('uhrzeit', e.target.value)}
-            />
+            <input className="input" type="date" value={formData.datum} onChange={(e) => handleInputChange('datum', e.target.value)} />
+            <input className="input" type="time" value={formData.uhrzeit} onChange={(e) => handleInputChange('uhrzeit', e.target.value)} />
           </div>
+        </div>
+
+        {/* Transportart (Tier Selection) */}
+        <div className="form-card">
+          <div className="form-card-h">Transportart</div>
+          {dataLoading ? (
+            <div style={{ padding: '16px', textAlign: 'center', color: 'var(--ink4)', fontSize: '13px' }}>Preise werden geladen...</div>
+          ) : (
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+              {tiers.map(tier => (
+                <div
+                  key={tier.slug}
+                  className={`pay-opt${selectedTier === tier.slug ? ' on' : ''}`}
+                  onClick={() => setSelectedTier(tier.slug)}
+                  style={{ textAlign: 'center', padding: '14px 8px', cursor: 'pointer' }}
+                >
+                  <div style={{ fontSize: '24px', marginBottom: '4px' }}>{tier.icon || '🚐'}</div>
+                  <div className="pay-lbl">{tier.name}</div>
+                  <div className="pay-sub">ab {Number(tier.min_price).toFixed(0)}€</div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Fahrttyp */}
         <div className="form-card">
           <div className="form-card-h">Fahrttyp</div>
           <div className="pay-row">
-            <div
-              className={`pay-opt${!formData.rueckfahrt ? ' on' : ''}`}
-              onClick={() => handleInputChange('rueckfahrt', false)}
-            >
+            <div className={`pay-opt${!formData.rueckfahrt ? ' on' : ''}`} onClick={() => handleInputChange('rueckfahrt', false)}>
               <div className="pay-ic"><IconTruck size={16} /></div>
               <div className="pay-lbl">Hinfahrt</div>
               <div className="pay-sub">Einfache Fahrt</div>
             </div>
-            <div
-              className={`pay-opt${formData.rueckfahrt ? ' on' : ''}`}
-              onClick={() => handleInputChange('rueckfahrt', true)}
-            >
+            <div className={`pay-opt${formData.rueckfahrt ? ' on' : ''}`} onClick={() => handleInputChange('rueckfahrt', true)}>
               <div className="pay-ic"><IconTruck size={16} /></div>
               <div className="pay-lbl">Hin- und Rückfahrt</div>
               <div className="pay-sub">2× Grundgebühr</div>
@@ -202,47 +239,35 @@ export default function KrankenfahrtPage() {
           </div>
         </div>
 
-        {/* Zusatzausstattung */}
-        <div className="form-card">
-          <div className="form-card-h">Zusatzausstattung</div>
-          <div style={{ display: 'flex', alignItems: 'center', padding: '12px 0', borderBottom: '1px solid var(--border)' }}>
-            <input
-              type="checkbox"
-              id="rollstuhl"
-              checked={formData.rollstuhl}
-              onChange={(e) => handleInputChange('rollstuhl', e.target.checked)}
-              style={{ width: '20px', height: '20px', cursor: 'pointer', marginRight: '12px' }}
-            />
-            <label htmlFor="rollstuhl" style={{ cursor: 'pointer', flex: 1 }}>
-              <div style={{ fontWeight: 500 }}>Rollstuhl benötigt</div>
-              <div style={{ fontSize: '13px', color: 'var(--gray)' }}>+15€</div>
-            </label>
+        {/* Zusatzleistungen (Dynamic Surcharges) */}
+        {selectableSurcharges.length > 0 && (
+          <div className="form-card">
+            <div className="form-card-h">Zusatzleistungen</div>
+            {selectableSurcharges.map(sc => (
+              <div key={sc.slug} style={{ display: 'flex', alignItems: 'center', padding: '12px 0', borderBottom: '1px solid var(--border)' }}>
+                <input
+                  type="checkbox"
+                  id={sc.slug}
+                  checked={extraSurcharges.includes(sc.slug)}
+                  onChange={() => toggleSurcharge(sc.slug)}
+                  style={{ width: '20px', height: '20px', cursor: 'pointer', marginRight: '12px' }}
+                />
+                <label htmlFor={sc.slug} style={{ cursor: 'pointer', flex: 1 }}>
+                  <div style={{ fontWeight: 500 }}>{sc.name}</div>
+                  <div style={{ fontSize: '13px', color: 'var(--gray)' }}>
+                    {sc.surcharge_type === 'fixed' ? `+${Number(sc.value).toFixed(0)}€` : `+${Number(sc.value).toFixed(0)}%`}
+                    {sc.description && ` — ${sc.description}`}
+                  </div>
+                </label>
+              </div>
+            ))}
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', padding: '12px 0' }}>
-            <input
-              type="checkbox"
-              id="tragestuhl"
-              checked={formData.tragestuhl}
-              onChange={(e) => handleInputChange('tragestuhl', e.target.checked)}
-              style={{ width: '20px', height: '20px', cursor: 'pointer', marginRight: '12px' }}
-            />
-            <label htmlFor="tragestuhl" style={{ cursor: 'pointer', flex: 1 }}>
-              <div style={{ fontWeight: 500 }}>Tragestuhl benötigt</div>
-              <div style={{ fontSize: '13px', color: 'var(--gray)' }}>+15€</div>
-            </label>
-          </div>
-        </div>
+        )}
 
         {/* Spezielle Hinweise */}
         <div className="form-card">
           <div className="form-card-h">Spezielle Hinweise</div>
-          <textarea
-            className="input"
-            rows={3}
-            placeholder="z.B. Treppen, Gehbehinderung, spezielle Anforderungen..."
-            value={formData.hinweise}
-            onChange={(e) => handleInputChange('hinweise', e.target.value)}
-          />
+          <textarea className="input" rows={3} placeholder="z.B. Treppen, Gehbehinderung, spezielle Anforderungen..." value={formData.hinweise} onChange={(e) => handleInputChange('hinweise', e.target.value)} />
         </div>
 
         {/* Zahlungsart */}
@@ -254,11 +279,7 @@ export default function KrankenfahrtPage() {
               { key: 'privat', label: 'Privat', sub: 'Selbstzahler' },
               { key: 'kombi', label: 'Kombi', sub: 'Kasse + Privat' },
             ].map((p) => (
-              <div
-                key={p.key}
-                className={`pay-opt${payMethod === p.key ? ' on' : ''}`}
-                onClick={() => setPayMethod(p.key)}
-              >
+              <div key={p.key} className={`pay-opt${payMethod === p.key ? ' on' : ''}`} onClick={() => setPayMethod(p.key)}>
                 <div className="pay-ic"><IconCard size={16} /></div>
                 <div className="pay-lbl">{p.label}</div>
                 <div className="pay-sub">{p.sub}</div>
@@ -270,11 +291,7 @@ export default function KrankenfahrtPage() {
             <div className="kk-panel show">
               <div className="kk-type-row">
                 {['gesetzlich', 'privat'].map((t) => (
-                  <div
-                    key={t}
-                    className={`kk-type${kkType === t ? ' on' : ''}`}
-                    onClick={() => setKkType(t)}
-                  >
+                  <div key={t} className={`kk-type${kkType === t ? ' on' : ''}`} onClick={() => setKkType(t)}>
                     <div className="kk-type-main">{t === 'gesetzlich' ? 'Gesetzlich' : 'Privat'}</div>
                     <div className="kk-type-sub">{t === 'gesetzlich' ? 'GKV' : 'PKV'}</div>
                   </div>
@@ -283,11 +300,7 @@ export default function KrankenfahrtPage() {
               <div className="kk-label">Krankenkasse wählen</div>
               <div className="kk-grid">
                 {['AOK', 'TK', 'Barmer', 'DAK', 'IKK', 'KKH'].map((kk) => (
-                  <div
-                    key={kk}
-                    className={`kk-item${selectedKK === kk ? ' on' : ''}`}
-                    onClick={() => setSelectedKK(kk)}
-                  >
+                  <div key={kk} className={`kk-item${selectedKK === kk ? ' on' : ''}`} onClick={() => setSelectedKK(kk)}>
                     <div className="kk-dot"></div>
                     <div className="kk-name">{kk}</div>
                   </div>
@@ -305,28 +318,18 @@ export default function KrankenfahrtPage() {
         <div className="protect-list">
           <div className="protect-item">
             <div className="protect-ic"><IconShield size={16} /></div>
-            <div className="protect-text">
-              <strong>Haftpflichtversicherung</strong> — Bis zu 5 Mio. € Deckung bei Schäden
-            </div>
+            <div className="protect-text"><strong>Haftpflichtversicherung</strong> — Bis zu 5 Mio. € Deckung bei Schäden</div>
           </div>
           <div className="protect-item">
             <div className="protect-ic"><IconShield size={16} /></div>
-            <div className="protect-text">
-              <strong>Unfallversicherung</strong> — Voller Schutz während der Fahrt
-            </div>
+            <div className="protect-text"><strong>Unfallversicherung</strong> — Voller Schutz während der Fahrt</div>
           </div>
         </div>
 
         {/* Info Banner */}
         <div style={{
-          backgroundColor: 'rgba(76, 175, 80, 0.08)',
-          border: '1px solid rgba(76, 175, 80, 0.2)',
-          borderRadius: '8px',
-          padding: '12px 14px',
-          marginBottom: '20px',
-          display: 'flex',
-          gap: '12px',
-          alignItems: 'flex-start',
+          backgroundColor: 'rgba(76, 175, 80, 0.08)', border: '1px solid rgba(76, 175, 80, 0.2)',
+          borderRadius: '8px', padding: '12px 14px', marginBottom: '20px', display: 'flex', gap: '12px', alignItems: 'flex-start',
         }}>
           <span style={{ color: '#4CAF50', marginTop: '2px', flexShrink: 0 }}><IconInfo size={18} /></span>
           <div style={{ fontSize: '14px', lineHeight: '1.4', color: 'var(--text)' }}>
@@ -334,53 +337,68 @@ export default function KrankenfahrtPage() {
           </div>
         </div>
 
-        {/* Preisberechnung */}
+        {/* Dynamic Preisberechnung */}
         <div className="total-card">
-          <div className="total-row">
-            <div className="total-lbl">Grundgebühr</div>
-            <div className="total-val">{grundgebuehr.toFixed(2)}€</div>
-          </div>
-          <div className="total-row">
-            <div className="total-lbl">Kilometerkosten ({km_estimate} km)</div>
-            <div className="total-val">{km_kosten.toFixed(2)}€</div>
-          </div>
-          {formData.rollstuhl && (
-            <div className="total-row">
-              <div className="total-lbl">Rollstuhl</div>
-              <div className="total-val">{rollstuhl_zuschlag.toFixed(2)}€</div>
+          {priceLoading || !breakdown ? (
+            <div style={{ padding: '16px', textAlign: 'center', color: 'var(--ink4)', fontSize: '13px' }}>
+              {dataLoading ? 'Preise werden geladen...' : 'Preis wird berechnet...'}
             </div>
+          ) : (
+            <>
+              <div className="total-row">
+                <div className="total-lbl">Grundpreis ({breakdown.tier.name})</div>
+                <div className="total-val">{breakdown.base_price.toFixed(2)}€</div>
+              </div>
+              <div className="total-row">
+                <div className="total-lbl">Strecke (ca. 10 km)</div>
+                <div className="total-val">{breakdown.distance_cost.toFixed(2)}€</div>
+              </div>
+              {breakdown.wait_cost > 0 && (
+                <div className="total-row">
+                  <div className="total-lbl">Wartezeit</div>
+                  <div className="total-val">{breakdown.wait_cost.toFixed(2)}€</div>
+                </div>
+              )}
+              {breakdown.tier_surcharge > 0 && (
+                <div className="total-row">
+                  <div className="total-lbl">Transportzuschlag</div>
+                  <div className="total-val">{breakdown.tier_surcharge.toFixed(2)}€</div>
+                </div>
+              )}
+              {breakdown.surcharges.map(sc => (
+                <div key={sc.slug} className="total-row">
+                  <div className="total-lbl">{sc.name}{sc.type === 'percentage' ? ` (${sc.value}%)` : ''}</div>
+                  <div className="total-val">{sc.amount.toFixed(2)}€</div>
+                </div>
+              ))}
+              {breakdown.is_min_price_applied && (
+                <div className="total-row">
+                  <div className="total-lbl" style={{ fontSize: '12px', color: 'var(--ink4)' }}>Mindestpreis angewendet</div>
+                  <div className="total-val" style={{ fontSize: '12px', color: 'var(--ink4)' }}>{breakdown.min_price.toFixed(2)}€</div>
+                </div>
+              )}
+              {formData.rueckfahrt && (
+                <div className="total-row">
+                  <div className="total-lbl">Hin- und Rückfahrt</div>
+                  <div className="total-val">×2</div>
+                </div>
+              )}
+              <div className="total-row">
+                <div className="total-lbl">Versicherung</div>
+                <div className="total-val" style={{ color: 'var(--green)' }}>Inklusive</div>
+              </div>
+              <div className="total-row">
+                <div className="total-sum-lbl">Geschätzter Preis</div>
+                <div className="total-sum">{breakdown.total.toFixed(2)}€</div>
+              </div>
+            </>
           )}
-          {formData.tragestuhl && (
-            <div className="total-row">
-              <div className="total-lbl">Tragestuhl</div>
-              <div className="total-val">{tragestuhl_zuschlag.toFixed(2)}€</div>
-            </div>
-          )}
-          {formData.rueckfahrt && (
-            <div className="total-row">
-              <div className="total-lbl">Rückfahrt (2× Grundgebühr)</div>
-              <div className="total-val">{grundgebuehr.toFixed(2)}€</div>
-            </div>
-          )}
-          <div className="total-row">
-            <div className="total-lbl">Versicherung</div>
-            <div className="total-val" style={{ color: 'var(--green)' }}>Inklusive</div>
-          </div>
-          <div className="total-row">
-            <div className="total-sum-lbl">Geschätzter Preis</div>
-            <div className="total-sum">{total.toFixed(2)}€</div>
-          </div>
         </div>
 
         {error && (
           <div style={{
-            backgroundColor: 'rgba(244, 67, 54, 0.1)',
-            border: '1px solid rgba(244, 67, 54, 0.3)',
-            borderRadius: '8px',
-            padding: '12px 14px',
-            marginBottom: '20px',
-            color: '#C62828',
-            fontSize: '14px',
+            backgroundColor: 'rgba(244, 67, 54, 0.1)', border: '1px solid rgba(244, 67, 54, 0.3)',
+            borderRadius: '8px', padding: '12px 14px', marginBottom: '20px', color: '#C62828', fontSize: '14px',
           }}>
             {error}
           </div>
@@ -390,11 +408,7 @@ export default function KrankenfahrtPage() {
       </div>
 
       <div className="submit-bar">
-        <button
-          className="btn-submit"
-          onClick={handleSubmit}
-          disabled={submitting}
-        >
+        <button className="btn-submit" onClick={handleSubmit} disabled={submitting}>
           {submitting ? 'Wird gebucht...' : 'FAHRT BUCHEN'}
         </button>
       </div>
