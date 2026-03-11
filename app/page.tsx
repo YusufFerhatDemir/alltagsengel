@@ -102,7 +102,7 @@ export default function SplashPage() {
               <div className="lp-svc-icon">🚑</div>
               <h4>Krankenfahrten</h4>
               <p>Sichere Fahrten zu Ärzten, Kliniken und Therapien</p>
-              <span className="lp-svc-price">ab 0,35 €/km</span>
+              <span className="lp-svc-price">ab 15 €</span>
             </Link>
             <Link href="/hygienebox" className="lp-service-card">
               <div className="lp-svc-icon">🧴</div>
