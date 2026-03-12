@@ -40,7 +40,7 @@ export default function DataRoomPage() {
       />
 
       {/* Stats */}
-      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(4, 1fr)', gap: isMobile ? 10 : 16 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: isMobile ? 10 : 16 }}>
         <KpiCard title="Dokumente" value={DATA_ROOM_DOCS.length} icon="files" />
         <KpiCard title="Sektionen" value="8" icon="layers" />
         <KpiCard title="Zugriffe (30 Tage)" value={accessLog.length} icon="eye" trend="up" />

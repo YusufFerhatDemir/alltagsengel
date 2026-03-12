@@ -28,14 +28,14 @@ export default function MarketPage() {
       <SectionHeader title="Marktanalyse" subtitle="TAM/SAM/SOM, Wettbewerb und demografische Entwicklung" icon="trending" />
 
       {/* TAM SAM SOM */}
-      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(4, 1fr)', gap: isMobile ? 10 : 16 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: isMobile ? 10 : 16 }}>
         <KpiCard title="TAM" value="€24,6 Mrd." icon="globe" trend="up" />
         <KpiCard title="SAM" value="€7,80 Mrd." icon="target" trend="up" />
         <KpiCard title="SOM (Jahr 5)" value="€52 Mio." icon="zap" trend="up" color={BRAND.success} />
         <KpiCard title="Entlastungsbetrag" value={`€${M.entlastungsbetrag}`} unit="/Monat" icon="banknote" color={BRAND.gold} />
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? 12 : 20 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: isMobile ? 12 : 20 }}>
         {/* Market Size */}
         <Card title="Marktchance" icon="pieChart">
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
@@ -91,7 +91,7 @@ export default function MarketPage() {
 
       {/* Competitive Advantage */}
       <Card title="Unser Wettbewerbsvorteil" icon="zap" style={{ background: `linear-gradient(135deg, ${BRAND.coal}, #2D2820)`, border: 'none' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr 1fr', gap: isMobile ? 10 : 16 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: isMobile ? 10 : 16 }}>
           {[
             { title: '§45b Integration', desc: 'Einzige Plattform mit direkter Abrechnung über den Entlastungsbetrag' },
             { title: 'Zweisei­tiger Marktplatz', desc: 'Matching-Algorithmus verbindet Kunden und zertifizierte Engel' },
