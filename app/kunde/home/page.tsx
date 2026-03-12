@@ -228,7 +228,9 @@ export default function KundeHomePage() {
           <div className="section-link">Alle ansehen</div>
         </div>
 
-        {filteredAngels.length > 0 ? filteredAngels.map((angel: any) => (
+        {filteredAngels.length > 0 ? (
+          <>
+          {filteredAngels.map((angel: any) => (
           <Link key={angel.id} href={`/kunde/engel/${angel.id}`} style={{ textDecoration: 'none' }}>
             <div className={`engel-card${angel.is_online ? ' engel-online' : ''}`}>
               <div className={`engel-avatar${angel.is_online ? ' glow-available' : ''}`} style={{ background: angel.profiles?.avatar_color || 'var(--gold-pale)' }}>
@@ -253,7 +255,14 @@ export default function KundeHomePage() {
               </div>
             </div>
           </Link>
-        )) : filteredDemos.length > 0 ? filteredDemos.map(angel => (
+        ))}
+          </>
+        ) : filteredDemos.length > 0 ? (
+          <>
+          <div style={{ textAlign: 'center', padding: '12px 16px 4px', color: 'rgba(201,150,60,0.6)', fontSize: 12, fontStyle: 'italic' }}>
+            Vorschau — Diese Engel werden bald in Ihrer Nähe verfügbar sein
+          </div>
+          {filteredDemos.map(angel => (
           <Link key={angel.id} href={`/kunde/engel/${angel.id}`} style={{ textDecoration: 'none' }}>
             <div className={`engel-card${angel.online ? ' engel-online' : ''}`}>
               <div className={`engel-avatar${angel.online ? ' glow-available' : ''}`} style={{ background: angel.bg }}>
@@ -274,7 +283,9 @@ export default function KundeHomePage() {
               </div>
             </div>
           </Link>
-        )) : (
+        ))}
+          </>
+        ) : (
           <div style={{ textAlign: 'center', padding: '32px 16px', color: 'var(--ink4)', fontSize: 14 }}>
             Keine Engel für diese Kategorie gefunden.
           </div>
