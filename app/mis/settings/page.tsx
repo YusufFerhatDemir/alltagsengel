@@ -21,7 +21,7 @@ export default function SettingsPage() {
       ]} active={tab} onChange={setTab} />
 
       {tab === 'general' && (
-        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? 12 : 20 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: isMobile ? 12 : 20 }}>
           <Card title="System" icon="settings">
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
               <StatRow label="Unternehmen" value="AlltagsEngel UG" />
@@ -56,7 +56,7 @@ export default function SettingsPage() {
       )}
 
       {tab === 'integrations' && (
-        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr 1fr', gap: isMobile ? 10 : 16 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: isMobile ? 10 : 16 }}>
           {[
             { name: 'Supabase', desc: 'Datenbank, Auth, Storage', status: 'connected', icon: 'layers' },
             { name: 'Vercel', desc: 'Hosting & Deployment', status: 'connected', icon: 'globe' },

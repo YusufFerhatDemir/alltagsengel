@@ -121,7 +121,7 @@ export default function AiAssistantPage() {
         </div>
 
         {/* Sidebar: Suggestions */}
-        <div style={{ width: isMobile ? '100%' : 300, display: 'flex', flexDirection: 'column', gap: 12, flexShrink: 0 }}>
+        <div style={{ width: isMobile ? '100%' : 280, minWidth: 200, display: 'flex', flexDirection: 'column', gap: 12, flexShrink: 1 }}>
           <Card title="Vorschläge" icon="sparkles">
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
               {SUGGESTIONS.map((s, i) => (

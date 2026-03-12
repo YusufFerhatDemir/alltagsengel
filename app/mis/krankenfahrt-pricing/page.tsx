@@ -308,7 +308,7 @@ function EditModal({ entity, item, tiers, onSave, onClose, saving }: {
           <Field label="Name"><Input value={form.name} onChange={v => set('name', v)} placeholder="z.B. Sitzend" /></Field>
           <Field label="Slug"><Input value={form.slug} onChange={v => set('slug', v)} placeholder="z.B. sitzend" /></Field>
           <Field label="Icon (Emoji)"><Input value={form.icon || ''} onChange={v => set('icon', v)} placeholder="z.B. 🪑" /></Field>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: 8 }}>
             <Field label="Grundpreis (€)"><Input type="number" value={form.base_price} onChange={v => set('base_price', Number(v))} /></Field>
             <Field label="€/km"><Input type="number" value={form.per_km_rate} onChange={v => set('per_km_rate', Number(v))} /></Field>
             <Field label="Mindestpreis (€)"><Input type="number" value={form.min_price} onChange={v => set('min_price', Number(v))} /></Field>
@@ -330,7 +330,7 @@ function EditModal({ entity, item, tiers, onSave, onClose, saving }: {
           <Field label="Name"><Input value={form.name} onChange={v => set('name', v)} /></Field>
           <Field label="Slug"><Input value={form.slug} onChange={v => set('slug', v)} /></Field>
           <Field label="Beschreibung"><Input value={form.description || ''} onChange={v => set('description', v)} /></Field>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: 8 }}>
             <Field label="Typ">
               <Select value={form.surcharge_type} onChange={v => set('surcharge_type', v)}>
                 <option value="fixed">Festbetrag (€)</option>
@@ -419,7 +419,7 @@ function PricingPreview({ tiers, surcharges }: { tiers: PricingTier[]; surcharge
   const selectableSurcharges = surcharges.filter(s => !['night_premium', 'holiday_premium'].includes(s.slug))
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: 20 }}>
       <Card title="Preiskalkulator" icon="calculator">
         <Field label="Tarif">
           <Select value={tier} onChange={setTier}>
@@ -427,7 +427,7 @@ function PricingPreview({ tiers, surcharges }: { tiers: PricingTier[]; surcharge
           </Select>
         </Field>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: 8 }}>
           <Field label="Kilometer"><Input type="number" value={km} onChange={v => setKm(Number(v))} /></Field>
           <Field label="Wartezeit (Min)"><Input type="number" value={wait} onChange={v => setWait(Number(v))} /></Field>
         </div>
