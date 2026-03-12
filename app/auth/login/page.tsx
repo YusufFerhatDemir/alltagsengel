@@ -153,10 +153,8 @@ function LoginForm() {
           Noch kein Konto? <Link href="/choose">Registrieren</Link>
         </div>
 
-        {/* Demo-Zugang nur in Development */}
-        {process.env.NODE_ENV === 'development' && (
         <div style={{ marginTop: 24, borderTop: '1px solid rgba(201,150,60,0.15)', paddingTop: 16 }}>
-          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', textAlign: 'center', marginBottom: 10, textTransform: 'uppercase', letterSpacing: 1 }}>Demo-Zugang (Dev)</div>
+          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', textAlign: 'center', marginBottom: 10, textTransform: 'uppercase', letterSpacing: 1 }}>Demo-Zugang</div>
           <div style={{ display: 'flex', gap: 8 }}>
             <button
               type="button"
@@ -187,7 +185,6 @@ function LoginForm() {
             </button>
           </div>
         </div>
-        )}
 
         <div style={{ marginTop: 16, borderTop: '1px solid rgba(201,150,60,0.08)', paddingTop: 14 }}>
           <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.25)', textAlign: 'center', marginBottom: 10, textTransform: 'uppercase', letterSpacing: 1 }}>Portale</div>
