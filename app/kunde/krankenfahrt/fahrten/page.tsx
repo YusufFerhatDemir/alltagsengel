@@ -151,7 +151,7 @@ export default function KundeFahrtenPage() {
                           💬 Nachricht
                         </button>
                         <button
-                          onClick={() => window.location.href = 'tel:+4969123456'}
+                          onClick={() => window.location.href = `tel:${(ride as Record<string, unknown>).provider_phone || '+4969247047'}`}
                           style={{
                             flex: 1, padding: '10px', borderRadius: '10px',
                             background: 'rgba(76,175,80,0.15)', border: '1px solid rgba(76,175,80,0.25)',

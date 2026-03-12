@@ -44,7 +44,11 @@ export async function middleware(request: NextRequest) {
           return NextResponse.redirect(url)
         }
       } catch {
-        // If profile check fails, allow through rather than blocking
+        // If profile check fails, deny access for security
+        const url = request.nextUrl.clone()
+        url.pathname = '/auth/login'
+        url.searchParams.set('error', 'admin_required')
+        return NextResponse.redirect(url)
       }
     }
 

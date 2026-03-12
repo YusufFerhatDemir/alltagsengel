@@ -105,10 +105,10 @@ function BuchenServiceInner() {
       service: serviceLabel,
       date: selectedDate,
       time: selectedTime,
-      duration,
+      duration_hours: duration,
       total_amount: total,
       status: 'pending',
-      address: profile?.address || null,
+      notes: profile?.address ? `Adresse: ${profile.address}` : null,
     }).select().single()
 
     if (error) { setSubmitting(false); return }
