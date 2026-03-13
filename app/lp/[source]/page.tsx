@@ -169,7 +169,7 @@ export default async function LandingPage({ params }: Props) {
         <div style={styles.steps}>
           {[
             { num: '1', title: 'Registrieren', text: 'Kostenlos in 2 Minuten' },
-            { num: '2', title: 'Engel finden', text: 'Nach PLZ & Leistung filtern' },
+            { num: '2', title: 'Engel finden', text: 'Passenden Engel auswählen' },
             { num: '3', title: 'Buchen & genießen', text: 'Direkt über die Pflegekasse' },
           ].map((s, i) => (
             <div key={i} style={styles.step}>
@@ -328,7 +328,6 @@ const styles: Record<string, React.CSSProperties> = {
     color: gold,
     fontWeight: 500,
   },
-  plzText: { fontSize: 16, color: ink2, lineHeight: 1.6 },
   finalCta: {
     background: `linear-gradient(135deg, ${gold}, #DBA84A)`,
     padding: '48px 24px',
