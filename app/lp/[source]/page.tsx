@@ -72,7 +72,7 @@ const platformData: Record<string, {
       { icon: '✅', title: '§45b zertifiziert', text: 'Offizielle Anerkennung nach SGB XI.' },
       { icon: '💶', title: '131€ Entlastungsbetrag', text: 'Monatlich über die Pflegekasse abrechnen.' },
       { icon: '🏥', title: 'Umfassende Leistungen', text: 'Einkauf, Arzt, Behörden, Begleitung.' },
-      { icon: '📍', title: 'Frankfurt am Main', text: 'PLZ 60318–60433 und Umgebung.' },
+      { icon: '📍', title: 'Frankfurt am Main', text: 'In ganz Frankfurt & Rhein-Main verfügbar.' },
     ],
     cta: 'Kostenlos registrieren',
     ctaSub: 'Keine Wartezeit · Sofort verfügbar',
@@ -197,14 +197,11 @@ export default async function LandingPage({ params }: Props) {
         </div>
       </section>
 
-      {/* Frankfurt PLZ */}
+      {/* Frankfurt */}
       <section style={{...styles.section, textAlign: 'center' as const}}>
-        <h2 style={styles.h2}>Verfügbar in Frankfurt</h2>
-        <p style={styles.plzText}>
-          PLZ 60318 · 60320 · 60321 · 60323 · 60385 · 60389 · 60431 · 60433
-        </p>
-        <p style={{...styles.desc, marginTop: 8, fontSize: 14, opacity: 0.7}}>
-          Und bald in ganz Frankfurt & Rhein-Main
+        <h2 style={styles.h2}>Verfügbar in Frankfurt & Umgebung</h2>
+        <p style={styles.desc}>
+          Wir begleiten Ihre Liebsten in ganz Frankfurt am Main und im Rhein-Main-Gebiet — zuverlässig, persönlich und mit Herz.
         </p>
       </section>
 
@@ -331,7 +328,7 @@ const styles: Record<string, React.CSSProperties> = {
     color: gold,
     fontWeight: 500,
   },
-  plzText: { fontSize: 16, color: ink, fontWeight: 600, letterSpacing: 1 },
+  plzText: { fontSize: 16, color: ink2, lineHeight: 1.6 },
   finalCta: {
     background: `linear-gradient(135deg, ${gold}, #DBA84A)`,
     padding: '48px 24px',
