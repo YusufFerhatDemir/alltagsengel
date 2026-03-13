@@ -92,8 +92,10 @@ Sen hiçbir şey ödemiyorsun — bakım sigortası karşılıyor.
 
 ## 13.03.2026 — 131€ Reels Video (ANIMIERT)
 
-**Status:** 📋 Bereit zum Posten
+**Status:** ✅ TikTok veröffentlicht (13.03.2026 ~19:10 Uhr) | 📋 Instagram/Facebook noch offen
 **Plattform:** Instagram Reels + TikTok + Facebook Reels
+**TikTok-Link:** https://www.tiktok.com/@alltagsengel/video/7616806484965428502
+**TikTok-Location:** Frankfurt am Main Stadion · Frankfurt am Main
 **Typ:** Video (15 Sek, animiert)
 **Datei:** REELS-131euro-animated.mp4
 **Format:** 1080x1920 (9:16)
