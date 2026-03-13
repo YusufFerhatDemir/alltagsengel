@@ -150,3 +150,55 @@ Kaydet & paylaş, herkes öğrensin! 🔁
 
 #alltagsengel #frankfurt #türklerfrankfurt #bakım #yaşlıbakımı #bakımsigortası #entlastungsbetrag #pflegekasse #fyp #viral #reels #keşfet
 ```
+
+---
+
+## 13.03.2026 — Krankenfahrt Reels (ANIMIERT MIT MUSIK)
+
+**Status:** 📋 Bereit zum Posten (manueller Upload nötig — TikTok CSP blockiert)
+**Plattform:** Instagram Reels + TikTok
+**Typ:** Video (18 Sek, animiert + generierter Lo-Fi Beat)
+**Datei:** REELS-krankenfahrt-animated.mp4
+**Format:** 1080x1920 (9:16), 642 KB
+
+**Caption:**
+```
+Arzttermin aber kein Auto? Kein Problem! AlltagsEngel Krankenfahrt bringt dich sicher zum Arzt. Pflegekasse zahlt! Link in Bio 📱
+
+#pflegemitherz #entlastungsbetrag #alltagsbegleitung #engel #frankfurt #viral #krankenfahrten #pflegekasse #alltagsengel.care #frankfurtammain #senioren #seniorenhilfen #pflegealltag #nordend #dornbusch #bornheim #bockenheim #60318 #60320 #60385
+```
+
+---
+
+## 13.03.2026 — Viral Real Video v1 (MIT MUSIK)
+
+**Status:** ✅ TikTok veröffentlicht (automatisch hochgeladen im Editor)
+**Plattform:** TikTok + Instagram Reels
+**Typ:** Video (27 Sek, echte Clips + Text Overlays + generierter Beat 105BPM)
+**Datei:** REELS-viral-real-v1.mp4
+**Format:** 1080x1920 (9:16), 9.911 KB
+**Clips verwendet:** 6 vertikale User-Videos
+
+**Caption:**
+```
+alltagsengel.care #pflegemitherz #entlastungsbetrag #alltagsbegleitung #engel #frankfurt #schönheit #herzlichwillkommen #viral #ichliebemeinenjob #love #alltagsengel.care #entlasstunspaket #kurzzeitpflege #nordend #dornbusch #bornheim #ginnheim #krankenfahrten #pflegefachkraft #pflegestufe #bockenheim #frankfurtammain #rheinmaingebiet #pflegekassen #alltagshelfer #alltagshelden #pflegegradbeantragen #senioren #seniorenhilfen #pflegealltag #pflegekräfte #pflegemitherz
+```
+
+---
+
+## 13.03.2026 — Viral Nomusic v2 (OHNE MUSIK — User wählt eigene)
+
+**Status:** 📋 Bereit zum Posten (manueller Upload nötig)
+**Plattform:** TikTok + Instagram Reels
+**Typ:** Video (42.5 Sek, alle 13 User-Clips + Text Overlays, KEIN AUDIO)
+**Datei:** REELS-viral-nomusic-v2.mp4
+**Format:** 1080x1920 (9:16), 10.421 KB
+**Clips verwendet:** Alle 13 User-Videos (8 vertikal + 5 quadratisch)
+**Hinweis:** User fügt eigene Musik über TikTok/Instagram hinzu
+
+**Empfohlene Caption:**
+```
+Wir pflegen nicht. Wir begleiten. 💛 Premium Alltagsbegleitung in Frankfurt. Pflegekasse zahlt! Link in Bio 📱 alltagsengel.care
+
+#pflegemitherz #entlastungsbetrag #alltagsbegleitung #engel #frankfurt #schönheit #herzlichwillkommen #viral #ichliebemeinenjob #love #alltagsengel.care #entlasstunspaket #kurzzeitpflege #nordend #dornbusch #bornheim #ginnheim #krankenfahrten #pflegefachkraft #pflegestufe #bockenheim #frankfurtammain #rheinmaingebiet #pflegekassen #alltagshelfer #alltagshelden #pflegegradbeantragen #senioren #seniorenhilfen #pflegealltag #pflegekräfte #pflegemitherz
+```
