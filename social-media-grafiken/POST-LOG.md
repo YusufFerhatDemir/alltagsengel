@@ -87,3 +87,64 @@ Sen hiçbir şey ödemiyorsun — bakım sigortası karşılıyor.
 
 #AlltagsEngel #Frankfurt #YaşlıBakımı #BakımSigortası #TürklerFrankfurt #Bakım #Entlastungsbetrag #Senioren
 ```
+
+---
+
+## 13.03.2026 — 131€ Reels Video (ANIMIERT)
+
+**Status:** 📋 Bereit zum Posten
+**Plattform:** Instagram Reels + TikTok + Facebook Reels
+**Typ:** Video (15 Sek, animiert)
+**Datei:** REELS-131euro-animated.mp4
+**Format:** 1080x1920 (9:16)
+
+**Instagram Reels Caption (DE) — VIRAL HOOK:**
+```
+STOP! Das wissen die wenigsten... 🤯
+
+131€ jeden Monat — und du zahlst NICHTS.
+
+Deine Oma hat Pflegegrad? Dann hat sie Anspruch auf 131€ Entlastungsbetrag. Jeden. Monat.
+
+Was damit möglich ist:
+→ Begleitung zum Arzt
+→ Einkaufen & Kochen
+→ Spaziergänge & Gesellschaft
+→ Behördengänge
+
+Die Pflegekasse zahlt — du musst nur buchen.
+
+📱 Link in Bio: alltagsengel.care
+
+Speichern & teilen, damit es alle erfahren! 🔁
+
+#alltagsengel #entlastungsbetrag #131euro #pflegekasse #pflege #frankfurt #frankfurtammain #seniorenhilfe #alltagsbegleitung #pflegegrad #oma #opa #altenpflege #seniorenbetreuung #sgbxi #fyp #viral #reels
+```
+
+**TikTok Caption (DE):**
+```
+STOP! Wusstest du das? 🤯 131€ pro Monat und du zahlst NICHTS. Deine Oma hat Pflegegrad? Dann steht ihr das zu! Pflegekasse zahlt — du musst nur buchen. Link in Bio 📱 #alltagsengel #131euro #pflegekasse #pflege #frankfurt #fyp #viral #seniorenhilfe #foryou #foryoupage
+```
+
+**Instagram Reels Caption (TR):**
+```
+DUR! Bunu çoğu kişi bilmiyor... 🤯
+
+Ayda 131€ — ve sen HİÇBİR ŞEY ödemiyorsun.
+
+Büyükanne/büyükbaban bakım derecesine sahip mi? O zaman her ay 131€ hakkı var!
+
+Neler yapılabilir:
+→ Doktora refakat
+→ Alışveriş & yemek
+→ Gezinti & sohbet
+→ Resmi işlemler
+
+Bakım sigortası ödüyor — sadece randevu al.
+
+📱 Link bio'da: alltagsengel.care
+
+Kaydet & paylaş, herkes öğrensin! 🔁
+
+#alltagsengel #frankfurt #türklerfrankfurt #bakım #yaşlıbakımı #bakımsigortası #entlastungsbetrag #pflegekasse #fyp #viral #reels #keşfet
+```
