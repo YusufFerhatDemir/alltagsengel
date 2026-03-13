@@ -6,8 +6,9 @@ import PageTracker from '@/components/PageTracker'
 export default function LayoutWrapper({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const isMIS = pathname.startsWith('/mis')
+  const isLP = pathname.startsWith('/lp')
 
-  if (isMIS) {
+  if (isMIS || isLP) {
     return <>{children}</>
   }
 
