@@ -6,6 +6,7 @@ import { IconPin, IconSearch, IconUser, IconCard, IconStarFilled, IconCheck, Ico
 import { useRouter } from 'next/navigation'
 import { haversineDistance } from '@/lib/geocoding'
 import { useUserLocation } from '@/hooks/useUserLocation'
+import { useTrackVisit } from '@/hooks/useTrackVisit'
 
 const categories: { key: string; icon: ReactNode; label: string }[] = [
   { key: 'all', icon: <IconStarGold size={26} />, label: 'Alle' },
@@ -42,6 +43,7 @@ export default function KundeHomePage() {
   const [searchRadius, setSearchRadius] = useState(10)
   const [searchQuery, setSearchQuery] = useState('')
   const userLocation = useUserLocation()
+  useTrackVisit('kunde')
 
   useEffect(() => {
     async function load() {

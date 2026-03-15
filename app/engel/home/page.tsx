@@ -5,9 +5,11 @@ import { createClient } from '@/lib/supabase/client'
 import Icon3D from '@/components/Icon3D'
 import { IconUser, IconCard } from '@/components/Icons'
 import { useUserLocation } from '@/hooks/useUserLocation'
+import { useTrackVisit } from '@/hooks/useTrackVisit'
 
 export default function EngelHomePage() {
   const router = useRouter()
+  useTrackVisit('engel')
   const [isOnline, setIsOnline] = useState(true)
   const [loading, setLoading] = useState(true)
   const [profile, setProfile] = useState<any>(null)

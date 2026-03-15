@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Icon3D from '@/components/Icon3D'
 import { useUserLocation } from '@/hooks/useUserLocation'
+import { useTrackVisit } from '@/hooks/useTrackVisit'
 
 interface Ride {
   id: string
@@ -22,6 +23,7 @@ interface Ride {
 
 export default function FahrerHomePage() {
   const router = useRouter()
+  useTrackVisit('fahrer')
   const [user, setUser] = useState<any>(null)
   const [profile, setProfile] = useState<any>(null)
   const [provider, setProvider] = useState<any>(null)
