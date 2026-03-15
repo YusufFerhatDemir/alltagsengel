@@ -15,7 +15,7 @@ export default function BetriebskostenPage() {
       {/* Zusammenfassung */}
       <SectionTitle>Kostenübersicht</SectionTitle>
       <Card>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '12px', marginBottom: '16px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(160px, 100%), 1fr))', gap: '12px', marginBottom: '16px' }}>
           <StatBox label="Personalkosten" value="€27.200" />
           <StatBox label="Betriebskosten" value="€2.630" />
           <StatBox label="Gesamt monatlich" value="€29.830" />
@@ -237,7 +237,7 @@ export default function BetriebskostenPage() {
       <SectionTitle>Gesamtbudget & Finanzübersicht</SectionTitle>
       <Card>
         <SectionLabel>Monatliches Budget</SectionLabel>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px', marginBottom: '16px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(180px, 100%), 1fr))', gap: '12px', marginBottom: '16px' }}>
           <div style={{ padding: '14px', backgroundColor: 'rgba(201, 150, 60, 0.08)', borderRadius: '8px', borderTop: '3px solid #C9963C' }}>
             <div style={{ fontSize: '12px', color: '#C9963C', fontWeight: '600', marginBottom: '6px' }}>PERSONALKOSTEN</div>
             <div style={{ fontSize: '18px', fontWeight: '700', marginBottom: '4px' }}>€27.200</div>
@@ -256,7 +256,7 @@ export default function BetriebskostenPage() {
         </div>
 
         <SectionLabel style={{ marginTop: '16px' }}>Jährliches Budget</SectionLabel>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(200px, 100%), 1fr))', gap: '12px' }}>
           <div style={{ padding: '14px', backgroundColor: 'rgba(201, 150, 60, 0.08)', borderRadius: '8px' }}>
             <Paragraph style={{ margin: '0', fontSize: '13px', color: 'rgba(255, 255, 255, 0.8)' }}>
               <strong>Personalkosten:</strong><br />€326.400/Jahr
@@ -289,7 +289,7 @@ export default function BetriebskostenPage() {
         </div>
 
         <SectionLabel style={{ marginTop: '16px' }}>Break-Even Punkt (monatlich)</SectionLabel>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '12px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(150px, 100%), 1fr))', gap: '12px' }}>
           <div style={{ padding: '12px', backgroundColor: 'rgba(201, 150, 60, 0.08)', borderRadius: '8px', borderLeft: '3px solid #C9963C' }}>
             <div style={{ fontSize: '12px', color: '#C9963C', fontWeight: '600', marginBottom: '6px' }}>FIXKOSTEN/MONAT</div>
             <div style={{ fontSize: '18px', fontWeight: '700' }}>€35.000</div>
@@ -368,7 +368,7 @@ export default function BetriebskostenPage() {
       {/* Optimierungspotentiale */}
       <SectionTitle>Kostenoptimierungspotentiale</SectionTitle>
       <Card>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '12px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(160px, 100%), 1fr))', gap: '12px' }}>
           <div style={{ padding: '12px', backgroundColor: 'rgba(201, 150, 60, 0.08)', borderRadius: '8px', borderLeft: '3px solid #C9963C' }}>
             <div style={{ fontWeight: '600', color: '#C9963C', marginBottom: '6px', fontSize: '13px' }}>Home Office</div>
             <Paragraph style={{ margin: '0', fontSize: '12px', color: 'rgba(255, 255, 255, 0.8)' }}>Reduzierung Bürokosten um 30% möglich</Paragraph>

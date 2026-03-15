@@ -38,7 +38,7 @@ export default function SupplyChainPage() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
       <SectionHeader title="Lieferkette" subtitle="Lieferantenmanagement, Bestellungen & Beschaffung" icon="truck" />
 
-      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(auto-fill, minmax(220px, 1fr))', gap: isMobile ? 10 : 16 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(auto-fill, minmax(min(220px, 100%), 1fr))', gap: isMobile ? 10 : 16 }}>
         <KpiCard title="Lieferanten" value={suppliers.length} icon="users" />
         <KpiCard title="Aktive Bestellungen" value={orders.filter(o => !['closed','cancelled'].includes(o.status)).length} icon="truck" color={BRAND.info} />
         <KpiCard title="ISO-zertifiziert" value={suppliers.filter(s => s.iso_certified).length} icon="award" color={BRAND.success} />
@@ -105,7 +105,7 @@ export default function SupplyChainPage() {
           <input value={form.name} onChange={e => setForm({...form, name: e.target.value})} placeholder="Firmenname *" style={inputStyle} />
           <input value={form.category} onChange={e => setForm({...form, category: e.target.value})} placeholder="Kategorie" style={inputStyle} />
           <input value={form.contact_person} onChange={e => setForm({...form, contact_person: e.target.value})} placeholder="Kontaktperson" style={inputStyle} />
-          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(250px, 1fr))', gap: isMobile ? 10 : 12 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(min(250px, 100%), 1fr))', gap: isMobile ? 10 : 12 }}>
             <input value={form.email} onChange={e => setForm({...form, email: e.target.value})} placeholder="E-Mail" style={inputStyle} />
             <input value={form.phone} onChange={e => setForm({...form, phone: e.target.value})} placeholder="Telefon" style={inputStyle} />
           </div>

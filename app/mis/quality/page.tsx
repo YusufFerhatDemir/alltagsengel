@@ -32,7 +32,7 @@ export default function QualityPage() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
       <SectionHeader title="Qualitätsmanagement (ISO 9001)" subtitle="Prozesse, Audits, CAPA und kontinuierliche Verbesserung" icon="shield" />
 
-      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(auto-fill, minmax(220px, 1fr))', gap: isMobile ? 10 : 16 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(auto-fill, minmax(min(220px, 100%), 1fr))', gap: isMobile ? 10 : 16 }}>
         <KpiCard title="Prozesse" value={processes.length} icon="layers" />
         <KpiCard title="Audits geplant" value={audits.filter(a => a.status === 'planned').length} icon="calendar" color={BRAND.info} />
         <KpiCard title="Offene CAPA" value={openCapas} icon="zap" color={openCapas > 0 ? BRAND.warning : BRAND.success} />
@@ -120,7 +120,7 @@ export default function QualityPage() {
 
       {tab === 'matrix' && (
         <Card title="ISO 9001 Prozesslandkarte" icon="target">
-          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(280px, 1fr))', gap: isMobile ? 10 : 16 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(min(280px, 100%), 1fr))', gap: isMobile ? 10 : 16 }}>
             {['Kernprozesse', 'Supportprozesse', 'Managementprozesse'].map((cat, ci) => {
               const catKey = ['core', 'support', 'management'][ci]
               const catColor = [BRAND.gold, BRAND.info, BRAND.muted][ci]

@@ -235,7 +235,7 @@ export default function AnalyticsPage() {
       />
 
       {/* KPIs */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: isMobile ? 10 : 16 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(160px, 100%), 1fr))', gap: isMobile ? 10 : 16 }}>
         <KpiCard title="Logins gesamt" value={totalLogins} icon="users" />
         <KpiCard title="Heute" value={todayLogins} icon="calendar" color={BRAND.info} />
         <KpiCard title="Aktive Nutzer" value={uniqueUsers} icon="activity" color={BRAND.success} />
@@ -276,7 +276,7 @@ export default function AnalyticsPage() {
       {tab === 'herkunft' && (
         <>
           {/* Herkunft KPIs */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: isMobile ? 10 : 16 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(140px, 100%), 1fr))', gap: isMobile ? 10 : 16 }}>
             <KpiCard title="Besuche gesamt" value={visitors.length} icon="globe" />
             <KpiCard title="Städte" value={Object.keys(cityCounts).length} icon="mapPin" color={BRAND.info} />
             <KpiCard title="Länder" value={Object.keys(countryCounts).length} icon="flag" color={BRAND.success} />
@@ -595,7 +595,7 @@ export default function AnalyticsPage() {
 
       {/* Übersicht / Statistik */}
       {tab === 'live' && (
-        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(340px, 1fr))', gap: isMobile ? 12 : 20 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(min(340px, 100%), 1fr))', gap: isMobile ? 12 : 20 }}>
           <Card title="Login-Verteilung nach Rolle" icon="pieChart">
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {[

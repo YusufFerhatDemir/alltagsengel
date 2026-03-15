@@ -13,7 +13,7 @@ export default function ExecutiveSummaryPage() {
     >
       {/* Key Facts */}
       <SectionLabel>Key Facts at a Glance</SectionLabel>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '40px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(200px, 100%), 1fr))', gap: '16px', marginBottom: '40px' }}>
         <StatBox label="Market Size" value="€50B+" />
         <StatBox label="Care-Dependent" value="4.96M" />
         <StatBox label="Gross Margin" value="~50%" />
@@ -129,7 +129,7 @@ export default function ExecutiveSummaryPage() {
           <strong>Second Vertical — Krankentransport:</strong> Patient transport mediation follows the same marketplace model, connecting patients with licensed transport providers and earning a mediation fee per ride.
         </Paragraph>
       </Card>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '16px', marginBottom: '40px', marginTop: '16px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(160px, 100%), 1fr))', gap: '16px', marginBottom: '40px', marginTop: '16px' }}>
         <Card style={{ textAlign: 'center' }}>
           <div style={{ fontSize: '24px', color: '#5CB882', fontWeight: 'bold' }}>€1,560</div>
           <div style={{ fontSize: '12px', color: '#A0978A', marginTop: '8px' }}>Customer LTV</div>
@@ -151,7 +151,7 @@ export default function ExecutiveSummaryPage() {
       {/* Investment Ask */}
       <SectionTitle>Investment Ask: €500K Seed Round</SectionTitle>
       <GoldSep />
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '16px', marginBottom: '40px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(160px, 100%), 1fr))', gap: '16px', marginBottom: '40px' }}>
         <Card style={{ textAlign: 'center' }}>
           <div style={{ fontSize: '24px', color: '#C9963C', fontWeight: 'bold' }}>€200K</div>
           <div style={{ fontSize: '12px', color: '#A0978A', marginTop: '8px' }}>Product Development (40%)</div>
@@ -174,7 +174,7 @@ export default function ExecutiveSummaryPage() {
       <SectionTitle>Monthly Burn Rate & Runway</SectionTitle>
       <GoldSep />
       <Card>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '24px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(200px, 100%), 1fr))', gap: '24px' }}>
           <div>
             <div style={{ fontSize: '12px', color: '#A0978A', marginBottom: '8px' }}>Personnel Costs</div>
             <div style={{ fontSize: '20px', color: '#C9963C', fontWeight: 'bold' }}>€31.2K/month</div>

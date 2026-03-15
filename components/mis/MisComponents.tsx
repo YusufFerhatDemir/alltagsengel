@@ -14,7 +14,7 @@ export function KpiCard({ title, value, target, unit, trend, icon, color, onClic
       background: BRAND.white, borderRadius: 14, padding: '20px 22px',
       boxShadow: '0 1px 3px rgba(0,0,0,0.06)', border: `1px solid ${BRAND.border}`,
       cursor: onClick ? 'pointer' : 'default', transition: 'all 0.2s',
-      display: 'flex', flexDirection: 'column', gap: 8, minWidth: 0, overflow: 'hidden',
+      display: 'flex', flexDirection: 'column', gap: 8, minWidth: 0,
     }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <span style={{ fontSize: 13, color: BRAND.muted, fontWeight: 500 }}>{title}</span>
@@ -201,7 +201,7 @@ export function Card({ children, title, icon, actions, noPad, style }: {
   return (
     <div style={{
       background: BRAND.white, borderRadius: 14, boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
-      border: `1px solid ${BRAND.border}`, ...style,
+      border: `1px solid ${BRAND.border}`, overflow: 'visible', ...style,
     }}>
       {title && (
         <div style={{

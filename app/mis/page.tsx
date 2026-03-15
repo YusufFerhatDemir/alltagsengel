@@ -57,7 +57,7 @@ export default function DashboardPage() {
       />
 
       {/* KPI Row */}
-      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(auto-fill, minmax(220px, 1fr))', gap: isMobile ? 10 : 16 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(auto-fill, minmax(min(220px, 100%), 1fr))', gap: isMobile ? 10 : 16 }}>
         <KpiCard title="Benutzer" value={stats.users} icon="users" trend="up" />
         <KpiCard title="Buchungen" value={stats.bookings} icon="calendar" trend="up" />
         <KpiCard title="Engel" value={stats.angels} icon="wings" trend="up" color={BRAND.success} />
@@ -65,7 +65,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Market Opportunity */}
-      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(auto-fill, minmax(220px, 1fr))', gap: isMobile ? 10 : 16 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(auto-fill, minmax(min(220px, 100%), 1fr))', gap: isMobile ? 10 : 16 }}>
         <KpiCard title="TAM" value="50" unit="Mrd. €" icon="globe" trend="up" />
         <KpiCard title="SAM" value="7,80" unit="Mrd. €" icon="target" trend="up" />
         <KpiCard title="Ungenutzt" value="4,68" unit="Mrd. €" icon="zap" trend="up" color={BRAND.error} />
@@ -74,7 +74,7 @@ export default function DashboardPage() {
       {/* Main Grid */}
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(min(340px, 100%), 1fr))', gap: isMobile ? 14 : 20 }}>
         {/* Revenue Projection */}
-        <Card title="5-Jahres-Umsatzprognose" icon="chart" style={{ overflow: 'visible' }}>
+        <Card title="5-Jahres-Umsatzprognose" icon="chart" >
           <MiniBarChart
             data={FINANCIAL_PROJECTIONS.revenue}
             labels={FINANCIAL_PROJECTIONS.years}
@@ -88,7 +88,7 @@ export default function DashboardPage() {
         </Card>
 
         {/* Unit Economics */}
-        <Card title="Einheitsökonomie" icon="pieChart" style={{ overflow: 'visible' }}>
+        <Card title="Einheitsökonomie" icon="pieChart" >
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             <StatRow label="Abrechnungssatz" value={`€${UNIT_ECONOMICS.billingRatePerHour}/Std.`} />
             <StatRow label="Engel-Vergütung" value={`€${UNIT_ECONOMICS.helperPayPerHour}/Std.`} />
@@ -106,7 +106,7 @@ export default function DashboardPage() {
       {/* Second Row */}
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(min(280px, 100%), 1fr))', gap: isMobile ? 14 : 20 }}>
         {/* Quick Actions */}
-        <Card title="Schnellaktionen" icon="zap" style={{ overflow: 'visible' }}>
+        <Card title="Schnellaktionen" icon="zap" >
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {[
               { icon: 'upload', label: 'Dokument hochladen', href: '/mis/documents' },
@@ -131,7 +131,7 @@ export default function DashboardPage() {
         </Card>
 
         {/* System Health */}
-        <Card title="Systemstatus" icon="activity" style={{ overflow: 'visible' }}>
+        <Card title="Systemstatus" icon="activity" >
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             <ProgressBar value={95} label="API-Verfügbarkeit" color={BRAND.success} />
             <ProgressBar value={42} label="Speicherauslastung" color={BRAND.gold} />
@@ -142,7 +142,7 @@ export default function DashboardPage() {
         </Card>
 
         {/* Recent Activity */}
-        <Card title="Letzte Aktivitäten" icon="clock" style={{ overflow: 'visible' }}>
+        <Card title="Letzte Aktivitäten" icon="clock" >
           <div style={{ display: 'flex', flexDirection: 'column' }}>
             <ActivityItem icon="files" title="Pitch Deck v2 hochgeladen" time="vor 2 Stunden" />
             <ActivityItem icon="shield" title="QP-002 Audit abgeschlossen" time="vor 5 Stunden" color={BRAND.success} />

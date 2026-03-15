@@ -15,7 +15,7 @@ export default function TeamPage() {
       {/* Organisationsstruktur */}
       <SectionTitle>Organisationsstruktur</SectionTitle>
       <Card>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '12px', marginBottom: '16px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(150px, 100%), 1fr))', gap: '12px', marginBottom: '16px' }}>
           <StatBox label="Mitarbeiter" value="5 Personen" />
           <StatBox label="Festangestellte" value="4 + 1 GF" />
           <StatBox label="Gründer/CEO" value="Yusuf Demir" />
@@ -283,7 +283,7 @@ export default function TeamPage() {
       {/* Gesamtbudget */}
       <SectionTitle>Monatliches Gesamtbudget</SectionTitle>
       <Card>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px', marginBottom: '16px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(180px, 100%), 1fr))', gap: '12px', marginBottom: '16px' }}>
           <div style={{ padding: '14px', backgroundColor: 'rgba(201, 150, 60, 0.08)', borderRadius: '8px', borderLeft: '4px solid #C9963C' }}>
             <div style={{ fontSize: '12px', color: '#C9963C', fontWeight: '600', marginBottom: '6px' }}>PERSONALKOSTEN</div>
             <div style={{ fontSize: '20px', fontWeight: '700', marginBottom: '4px' }}>€27.200</div>

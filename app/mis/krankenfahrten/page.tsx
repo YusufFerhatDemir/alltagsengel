@@ -150,7 +150,7 @@ export default function KrankenfahrtenAdminPage() {
       />
 
       {/* KPIs */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12, marginBottom: 24 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(160px, 100%), 1fr))', gap: 12, marginBottom: 24 }}>
         <KpiCard title="Aufträge gesamt" value={stats.totalRides} />
         <KpiCard title="Offen" value={stats.pendingRides} color={BRAND.warning} />
         <KpiCard title="Aktiv" value={stats.activeRides} color={BRAND.info} />

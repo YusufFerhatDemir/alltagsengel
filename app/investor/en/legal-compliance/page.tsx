@@ -14,7 +14,7 @@ export default function LegalCompliancePage() {
       {/* Company Structure */}
       <SectionLabel>Company Legal Structure</SectionLabel>
       <Card style={{ marginBottom: '40px' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(200px, 100%), 1fr))', gap: '20px' }}>
           <div>
             <div style={{ fontSize: '12px', color: '#A0978A', marginBottom: '8px' }}>Legal Form</div>
             <div style={{ fontSize: '16px', color: '#C9963C', fontWeight: 'bold' }}>UG (limited liability)</div>
