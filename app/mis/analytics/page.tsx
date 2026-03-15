@@ -99,23 +99,24 @@ export default function AnalyticsPage() {
     let from = 0
     const pageSize = 1000
     while (true) {
+      // Erst mit Profil-Join versuchen
       const { data: chunk, error: vErr } = await supabase
         .from('visitor_locations')
-        .select('*, profile:profiles!visitor_locations_user_id_profiles_fkey(first_name, last_name, email, role)')
+        .select('*, profile:profiles(first_name, last_name, email, role)')
         .gte('created_at', since.toISOString())
         .order('created_at', { ascending: false })
         .range(from, from + pageSize - 1)
-      // Falls Join fehlschlägt: ohne Profil-Join laden
       if (vErr) {
-        const { data: fallback } = await supabase
+        // Fallback: ohne Profil-Join laden
+        const { data: fb } = await supabase
           .from('visitor_locations')
           .select('*')
           .gte('created_at', since.toISOString())
           .order('created_at', { ascending: false })
           .range(from, from + pageSize - 1)
-        if (!fallback || fallback.length === 0) break
-        allVisitors = allVisitors.concat(fallback.map((v: any) => ({ ...v, profile: null })))
-        if (fallback.length < pageSize) break
+        if (!fb || fb.length === 0) break
+        allVisitors = allVisitors.concat(fb.map((v: any) => ({ ...v, profile: null })))
+        if (fb.length < pageSize) break
         from += pageSize
         continue
       }
