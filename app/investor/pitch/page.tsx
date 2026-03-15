@@ -291,7 +291,7 @@ function buildSlides(): Slide[] {
           <TimelineItem year="Q1 2026" title="Beta-Launch Frankfurt" desc="Erste Engel onboarded, Testbuchungen erfolgreich" done={true} />
           <TimelineItem year="Q2 2026" title="Öffentlicher Launch" desc="Go-to-Market Frankfurt, Marketing-Kampagne, PR" done={false} />
           <TimelineItem year="Q3 2026" title="Erste 500 Nutzer" desc="Wachstumsphase: Partnerschaften mit Pflegediensten" done={false} />
-          <TimelineItem year="Q1 2027" title="Expansion" desc="Rollout in 3 weitere Städte: Berlin, München, Hamburg" done={false} />
+          <TimelineItem year="Q1 2027" title="Expansion" desc="Deutschlandweiter Rollout in weitere Großstädte" done={false} />
         </div>
       ),
     },

@@ -210,7 +210,7 @@ export default function ProductTechnologyPage() {
           <strong>Beta (Q2 2026):</strong> Refine matching algorithm; add ratings & reviews; anti-bypass monitoring; improve accessibility; expand to 1,000 companions
         </BulletItem>
         <BulletItem icon="🚀">
-          <strong>v1.0 Launch (Q3 2026):</strong> Public release; marketing campaign; full Pflegekasse billing automation; expand to Berlin, Munich, Cologne
+          <strong>v1.0 Launch (Q3 2026):</strong> Public release; marketing campaign; full Pflegekasse billing automation; expand nationwide across Germany
         </BulletItem>
         <BulletItem icon="🚑">
           <strong>Krankentransport Module (Q4 2026):</strong> B2B portal for transport companies (€99–199/month); ride matching algorithm; real-time tracking; patient transport mediation
