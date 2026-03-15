@@ -63,7 +63,7 @@ export default function BuchenPage() {
   const subtotal = rate * duration
   const platformFee = Math.round(subtotal * 0.085 * 100) / 100
   const total = subtotal + platformFee
-  const angelName = angel?.profiles ? `${angel.profiles.first_name} ${angel.profiles.last_name}` : 'Engel'
+  const angelName = angel?.profiles ? `${angel.profiles.first_name} ${angel.profiles.last_name?.[0]}.` : 'Engel'
 
   const handleSubmit = async () => {
     setSubmitting(true)

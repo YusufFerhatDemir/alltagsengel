@@ -76,7 +76,7 @@ export default function KundeChatPage() {
           .eq('id', provider.user_id)
           .single()
         if (driverProfile) {
-          setPartnerName(`${driverProfile.first_name || ''} ${driverProfile.last_name || ''}`.trim() || provider.company_name || 'Fahrer')
+          setPartnerName(`${driverProfile.first_name || ''} ${driverProfile.last_name?.[0] ? driverProfile.last_name[0] + '.' : ''}`.trim() || provider.company_name || 'Fahrer')
         } else {
           setPartnerName(provider.company_name || 'Fahrer')
         }

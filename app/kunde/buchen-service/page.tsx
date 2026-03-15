@@ -328,7 +328,7 @@ function BuchenServiceInner() {
                     </div>
                     <div style={{ flex: 1 }}>
                       <div style={{ fontSize: 15, fontWeight: 600 }}>
-                        {angel.profiles?.first_name} {angel.profiles?.last_name}
+                        {angel.profiles?.first_name} {angel.profiles?.last_name?.[0]}.
                       </div>
                       <div style={{ fontSize: 13, color: 'var(--ink4)', display: 'flex', alignItems: 'center', gap: 4 }}>
                         <IconStarFilled size={12} /> {angel.rating} · {angel.total_jobs} Einsätze
@@ -363,7 +363,7 @@ function BuchenServiceInner() {
                 </div>
                 <div>
                   <div style={{ fontSize: 16, fontWeight: 600 }}>
-                    {selectedAngel.profiles?.first_name} {selectedAngel.profiles?.last_name}
+                    {selectedAngel.profiles?.first_name} {selectedAngel.profiles?.last_name?.[0]}.
                   </div>
                   <div style={{ fontSize: 13, color: 'var(--ink4)' }}>
                     <IconStarFilled size={12} /> {selectedAngel.rating} · {selectedAngel.total_jobs} Einsätze

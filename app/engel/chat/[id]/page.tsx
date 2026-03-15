@@ -40,7 +40,7 @@ export default function EngelChatConversationPage() {
         }
 
         const customer = booking.profiles as any
-        setPartner(customer ? `${customer.first_name} ${customer.last_name}` : 'Kunde')
+        setPartner(customer ? `${customer.first_name} ${customer.last_name?.[0] || ''}.` : 'Kunde')
 
         const { data: msgs } = await supabase
           .from('messages')

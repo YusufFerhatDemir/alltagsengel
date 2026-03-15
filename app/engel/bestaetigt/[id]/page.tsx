@@ -19,7 +19,7 @@ export default async function EngelBestaetigtPage({ params }: { params: Promise<
     return <div className="screen"><ErrorState homeHref="/engel/home" /></div>
   }
 
-  const customerName = booking.customer ? `${booking.customer.first_name} ${booking.customer.last_name}` : 'Kunde'
+  const customerName = booking.customer ? `${booking.customer.first_name} ${booking.customer.last_name?.[0] || ''}.` : 'Kunde'
   const dateStr = booking.date ? new Date(booking.date).toLocaleDateString('de-DE', { day: '2-digit', month: 'long', year: 'numeric' }) : '01. März 2026'
   const timeEnd = `${booking.time?.slice(0,5)} – ${String(Number(booking.time?.slice(0,2)) + booking.duration_hours).padStart(2,'0')}:${booking.time?.slice(3,5)} Uhr`
 

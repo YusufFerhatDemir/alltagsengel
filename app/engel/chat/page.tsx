@@ -26,7 +26,7 @@ export default function EngelChatPage() {
       const chatList: any[] = []
       for (const b of bookings) {
         const customer = b.profiles as any
-        const name = customer ? `${customer.first_name} ${customer.last_name}` : 'Kunde'
+        const name = customer ? `${customer.first_name} ${customer.last_name?.[0] || ''}.` : 'Kunde'
 
         const { data: msgs } = await supabase
           .from('messages')

@@ -93,7 +93,7 @@ export default function EngelKalenderPage() {
             ) : (
               selectedBookings.map(b => {
                 const customer = b.profiles as any
-                const name = customer ? `${customer.first_name} ${customer.last_name}` : 'Kunde'
+                const name = customer ? `${customer.first_name} ${customer.last_name?.[0] || ''}.` : 'Kunde'
                 return (
                   <div key={b.id} className="kal-event">
                     <div className="kal-event-time"><IconClock size={13} /> {b.time?.slice(0, 5)} · {b.duration_hours}h</div>
