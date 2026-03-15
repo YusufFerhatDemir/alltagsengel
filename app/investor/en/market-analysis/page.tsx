@@ -187,7 +187,7 @@ export default function MarketAnalysisPage() {
           <strong>Phase 1 (Q1-Q2 2026):</strong> Frankfurt pilot launch. 500 users, 200 companions, refine product & operations
         </BulletItem>
         <BulletItem icon="2️⃣">
-          <strong>Phase 2 (Q3-Q4 2026):</strong> Expand to major German cities (Berlin, Munich, Cologne). 5,000 users, network effects accelerate
+          <strong>Phase 2 (Q3-Q4 2026):</strong> Expand to major German cities nationwide. 5,000 users, network effects accelerate
         </BulletItem>
         <BulletItem icon="3️⃣">
           <strong>Phase 3 (2027):</strong> Full German coverage. 25,000 users, break-even or better. Series A fundraising
