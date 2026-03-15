@@ -14,7 +14,7 @@ export const viewport: Viewport = {
   maximumScale: 1,
   userScalable: false,
   themeColor: '#1A1612',
-  colorScheme: 'dark only' as any,
+  colorScheme: 'only dark' as any,
 }
 
 export const metadata: Metadata = {
@@ -72,20 +72,48 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="de" style={{ colorScheme: 'dark only' } as any}>
+    <html lang="de" data-theme="dark" style={{ colorScheme: 'only dark' } as any}>
       <head>
-        {/* Android Chrome Auto-Dark / Akku-Sparmodus Schutz */}
-        <meta name="color-scheme" content="dark only" />
-        <meta name="supported-color-schemes" content="dark only" />
+        {/* ═══ ANDROID AUTO-DARK / AKKU-SPARMODUS SCHUTZ ═══ */}
+        {/* Chrome Auto Dark Theme opt-out (offizielle Methode) */}
+        <meta name="color-scheme" content="only dark" />
+        <meta name="supported-color-schemes" content="dark" />
         {/* DarkReader Browser-Extension blockieren */}
         <meta name="darkreader-lock" />
+        <meta name="darkreader" content="NO" />
         {/* Samsung Internet Dark Mode blockieren */}
         <meta name="nightmode" content="disable" />
         {/* Android Chrome Theme */}
-        <meta name="theme-color" content="#1A1612" media="(prefers-color-scheme: dark)" />
-        <meta name="theme-color" content="#1A1612" media="(prefers-color-scheme: light)" />
+        <meta name="theme-color" content="#1A1612" />
         <meta name="msapplication-navbutton-color" content="#1A1612" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        {/* Frühes Script: Auto-Dark Detection und Removal */}
+        <script dangerouslySetInnerHTML={{ __html: `
+          (function(){
+            // Ensure color-scheme is set before any rendering
+            document.documentElement.style.colorScheme='dark';
+            // Remove any filter/inversion applied by browser dark mode
+            var s=document.documentElement.style;
+            if(s.filter)s.filter='none';
+            // Observer: watch for browser-injected style changes
+            var obs=new MutationObserver(function(m){
+              m.forEach(function(r){
+                if(r.attributeName==='style'){
+                  var el=r.target;
+                  var cs=el.style;
+                  if(cs.filter&&cs.filter!=='none'){cs.filter='none';}
+                  if(cs.getPropertyValue&&cs.getPropertyValue('-webkit-filter')!=='none'){
+                    cs.setProperty('-webkit-filter','none','important');
+                  }
+                }
+              });
+            });
+            obs.observe(document.documentElement,{attributes:true,attributeFilter:['style']});
+            document.addEventListener('DOMContentLoaded',function(){
+              obs.observe(document.body,{attributes:true,attributeFilter:['style']});
+            });
+          })();
+        `}} />
       </head>
       <body className={`${jost.variable} ${cormorant.variable}`} style={{ fontFamily: "'Jost', sans-serif", backgroundColor: '#1A1612', color: '#F5F0E8' }}>
         <VisitorTracker />

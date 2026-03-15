@@ -39,7 +39,7 @@
    Da AlltagsEngel bereits dunkel ist, muss das verhindert werden. */
 
 /* 1) color-scheme: dark → Browser weiß, Seite ist bereits dunkel */
-:root { color-scheme: dark only; }
+:root { color-scheme: only dark !important; }
 
 /* 2) forced-color-adjust: none → ALLE Elemente vor Zwangsfarben schützen */
 *, *::before, *::after {
@@ -51,9 +51,12 @@
   text-size-adjust: 100%;
 }
 
-/* 3) Explizite Farben → Android kann sie nicht überschreiben */
+/* 3) Explizite Farben + background-image Trick
+   Chrome Auto-Dark ändert background-color, aber NICHT background-image.
+   Deshalb nutzen wir einen 1px gradient als zusätzlichen Schutz. */
 html, body {
   background-color: #1A1612 !important;
+  background-image: linear-gradient(#1A1612, #1A1612) !important;
   color: #F5F0E8 !important;
 }
 
@@ -71,21 +74,35 @@ input, select, textarea, button {
   color: inherit;
 }
 
-/* 6) Light-Mode Override verhindern */
+/* 6) Alle Haupt-Container mit background-image Schutz */
+.phone, .screen, .mis-root, .admin-layout, .admin-sidebar, .admin-main,
+.mis-sidebar, .mis-main, .mis-content, [data-theme="dark"] {
+  color-scheme: only dark !important;
+}
+.phone { background-image: linear-gradient(var(--cream), var(--cream)) !important; }
+.screen { background-image: linear-gradient(var(--cream), var(--cream)) !important; }
+
+/* 7) Light-Mode Override verhindern */
 @media (prefers-color-scheme: light) {
-  :root { color-scheme: dark only !important; }
-  html, body { background-color: #1A1612 !important; color: #F5F0E8 !important; }
-  .phone, .screen { background-color: #1A1612 !important; }
+  :root { color-scheme: only dark !important; }
+  html, body { background-color: #1A1612 !important; background-image: linear-gradient(#1A1612, #1A1612) !important; color: #F5F0E8 !important; }
+  .phone, .screen { background-color: #1A1612 !important; background-image: linear-gradient(#1A1612, #1A1612) !important; }
   img, svg, video { filter: none !important; }
 }
 @media (prefers-color-scheme: dark) {
   img, svg, video { filter: none !important; }
 }
 
-/* 7) High Contrast / Forced Colors Override */
+/* 8) High Contrast / Forced Colors Override */
 @media (forced-colors: active) {
   * { forced-color-adjust: none !important; }
   html, body { background-color: #1A1612 !important; color: #F5F0E8 !important; }
+}
+
+/* 9) Gold-Farben Schutz — Chrome Auto-Dark ändert manchmal helle Akzentfarben */
+[style*="C9963C"], [style*="c9963c"], [style*="gold"] {
+  filter: none !important;
+  -webkit-filter: none !important;
 }
 
 select.input option, .kk-other option { background:var(--coal3); color:var(--ink); }
