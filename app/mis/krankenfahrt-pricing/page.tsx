@@ -4,6 +4,7 @@ import { BRAND } from '@/lib/mis/constants'
 import {
   SectionHeader, Tabs, KpiCard, Card, DataTable, MisButton, Badge, Modal, EmptyState,
 } from '@/components/mis/MisComponents'
+import { useMis } from '@/lib/mis/MisContext'
 import type { PricingTier, PricingSurcharge, PricingRegion, PricingConfig, PricingAuditEntry, PricingBreakdown } from '@/lib/types/pricing'
 
 // ─── Helpers ───
@@ -296,6 +297,7 @@ export default function KrankenfahrtPricingPage() {
 function EditModal({ entity, item, tiers, onSave, onClose, saving }: {
   entity: string; item: any; tiers: PricingTier[]; onSave: (item: any) => void; onClose: () => void; saving: boolean
 }) {
+  const { isMobile } = useMis()
   const [form, setForm] = useState({ ...item })
   const set = (key: string, val: any) => setForm((p: any) => ({ ...p, [key]: val }))
 
@@ -385,6 +387,7 @@ function EditModal({ entity, item, tiers, onSave, onClose, saving }: {
 
 // ─── Pricing Preview ───
 function PricingPreview({ tiers, surcharges }: { tiers: PricingTier[]; surcharges: PricingSurcharge[] }) {
+  const { isMobile } = useMis()
   const [tier, setTier] = useState(tiers[0]?.slug || 'sitzend')
   const [km, setKm] = useState(10)
   const [wait, setWait] = useState(15)

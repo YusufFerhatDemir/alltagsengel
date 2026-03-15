@@ -1067,10 +1067,39 @@ body {
 .admin-badge.admin { background:rgba(156,39,176,.12); color:#CE93D8; }
 .admin-status { display:inline-block; padding:3px 10px; border-radius:12px; font-size:12px; font-weight:500; color:white; }
 
+/* Admin mobile header (hamburger) — gizli by default */
+.admin-mobile-header { display:none; }
+
 @media (max-width:768px) {
-  .admin-sidebar { width:60px; padding:12px 0; }
-  .admin-logo span:last-child, .admin-nav-item span:last-child, .admin-logout span:last-child { display:none; }
-  .admin-main { margin-left:60px; padding:20px; }
+  /* Sidebar: mobilde tamamen gizle, açılınca overlay olarak göster */
+  .admin-sidebar {
+    transform: translateX(-100%);
+    transition: transform 0.25s ease;
+    width: 260px !important;
+    z-index: 10;
+  }
+  .admin-sidebar.admin-sidebar-open {
+    transform: translateX(0);
+  }
+  /* Sidebar açıkken text göster */
+  .admin-sidebar.admin-sidebar-open .admin-logo span:last-child,
+  .admin-sidebar.admin-sidebar-open .admin-nav-item span:last-child,
+  .admin-sidebar.admin-sidebar-open .admin-logout span:last-child { display:inline; }
+  /* Main content: margin kaldır, tam genişlik */
+  .admin-main { margin-left:0 !important; padding:16px !important; padding-top:60px !important; }
+  /* Mobile header göster */
+  .admin-mobile-header {
+    display:flex !important;
+    align-items:center;
+    gap:12px;
+    position:fixed;
+    top:0; left:0; right:0;
+    height:52px;
+    background:var(--coal2);
+    border-bottom:1px solid var(--border);
+    padding:0 16px;
+    z-index:8;
+  }
   .admin-stats-grid { grid-template-columns:repeat(2,1fr); }
   .admin-table { font-size:12px; }
   .admin-table th, .admin-table td { padding:8px 10px; }
@@ -2326,6 +2355,13 @@ body:has(.admin-layout) {
 .mis-content { overflow-x: hidden; max-width: 100%; width: 100%; }
 .mis-content > div { max-width: 100%; overflow-x: hidden; }
 @media (max-width:900px) {
+  /* Sidebar: mobilde tamamen gizle (JS fallback) */
+  .mis-sidebar { transform: translateX(-100%) !important; }
+  .mis-sidebar.mis-sidebar-open { transform: translateX(0) !important; }
+  /* Main content: mobilde margin kaldır */
+  .mis-main { margin-left: 0 !important; }
+  /* Hamburger menü butonu: mobilde göster */
+  .mis-hamburger { display: flex !important; }
   .mis-content { padding: 10px !important; }
   .mis-content table {
     display: block;
