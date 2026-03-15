@@ -32,26 +32,62 @@
 
 /* ─── Reset ─── */
 *,*::before,*::after { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
-/* "dark only" verhindert, dass Chrome Auto-Dark anwendet (Android Stromsparmodus) */
+
+/* ═══ ANDROID DARK MODE / AKKU-SPARMODUS SCHUTZ ═══
+   Chrome Auto-Dark, Samsung Internet Dark Mode, und
+   Akku-Sparmodus dunkeln Webseiten automatisch ab.
+   Da AlltagsEngel bereits dunkel ist, muss das verhindert werden. */
+
+/* 1) color-scheme: dark → Browser weiß, Seite ist bereits dunkel */
 :root { color-scheme: dark only; }
 
-/* Android Force-Dark & Chrome Auto-Dark Schutz */
-:root, body, .phone, .screen, html {
-  forced-color-adjust: none;
-  -webkit-text-size-adjust: 100%;
+/* 2) forced-color-adjust: none → ALLE Elemente vor Zwangsfarben schützen */
+*, *::before, *::after {
+  forced-color-adjust: none !important;
+  -webkit-forced-color-adjust: none !important;
 }
+:root, html, body, .phone, .screen, .mis-root, .admin-layout {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/* 3) Explizite Farben → Android kann sie nicht überschreiben */
 html, body {
   background-color: #1A1612 !important;
   color: #F5F0E8 !important;
 }
-@media (prefers-color-scheme: light) {
-  :root { color-scheme: dark only; }
-  html { background: #1A1612 !important; }
+
+/* 4) Bilder, SVGs, Videos nie invertieren */
+img, svg, video, canvas, picture {
+  filter: none !important;
+  -webkit-filter: none !important;
+  mix-blend-mode: normal !important;
 }
-/* Zusätzlicher Schutz: Chrome Dark Mode Override verhindern */
+
+/* 5) Inputs, Selects, Buttons explizit stylen (Android überschreibt diese gerne) */
+input, select, textarea, button {
+  color-scheme: dark !important;
+  background-color: inherit;
+  color: inherit;
+}
+
+/* 6) Light-Mode Override verhindern */
+@media (prefers-color-scheme: light) {
+  :root { color-scheme: dark only !important; }
+  html, body { background-color: #1A1612 !important; color: #F5F0E8 !important; }
+  .phone, .screen { background-color: #1A1612 !important; }
+  img, svg, video { filter: none !important; }
+}
 @media (prefers-color-scheme: dark) {
   img, svg, video { filter: none !important; }
 }
+
+/* 7) High Contrast / Forced Colors Override */
+@media (forced-colors: active) {
+  * { forced-color-adjust: none !important; }
+  html, body { background-color: #1A1612 !important; color: #F5F0E8 !important; }
+}
+
 select.input option, .kk-other option { background:var(--coal3); color:var(--ink); }
 
 /* ─── Body & Phone Frame ─── */
