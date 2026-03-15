@@ -31,3 +31,4 @@ supabase/.temp/
 # private targeting strategy (nicht öffentlich)
 .TARGETING-STRATEGY-PRIVATE.md
 */.TARGETING-STRATEGY-PRIVATE.md
+*.mp4

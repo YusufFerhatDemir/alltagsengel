@@ -1,11 +1,19 @@
 import { createClient } from '@/lib/supabase/server'
+import { isFeatureEnabled } from '@/lib/feature-flags'
 import type {
   PricingTier,
   PricingSurcharge,
   PricingConfig,
   PricingRegion,
   PricingRequest,
+  PricingRequestExtended,
   PricingBreakdown,
+  PricingBreakdownExtended,
+  PricingCost,
+  CostBreakdown,
+  MarginBreakdown,
+  ReviewFlag,
+  ReviewRule,
   SurchargeDetail,
 } from '@/lib/types/pricing'
 
@@ -232,6 +240,222 @@ export async function calculatePrice(req: PricingRequest): Promise<PricingBreakd
     return_trip_multiplier,
     total,
     display_lines,
+  }
+}
+
+// =============================================
+// Extended Pricing: Cost, Margin, Review Rules
+// =============================================
+
+/** Load cost config for a tier */
+async function loadCostForTier(tierId: string): Promise<PricingCost | null> {
+  const supabase = await createClient()
+  const today = new Date().toISOString().split('T')[0]
+
+  const { data } = await supabase
+    .from('kf_pricing_costs')
+    .select('*')
+    .eq('tier_id', tierId)
+    .lte('effective_from', today)
+    .or(`effective_to.is.null,effective_to.gte.${today}`)
+    .order('effective_from', { ascending: false })
+    .limit(1)
+    .single()
+
+  if (!data) return null
+  return {
+    ...data,
+    fuel_cost_per_km: Number(data.fuel_cost_per_km),
+    driver_rate_per_km: Number(data.driver_rate_per_km),
+    vehicle_cost_per_km: Number(data.vehicle_cost_per_km),
+    driver_rate_per_min: Number(data.driver_rate_per_min),
+    fixed_overhead: Number(data.fixed_overhead),
+  } as PricingCost
+}
+
+/** Calculate internal costs for a trip */
+export function calculateCosts(
+  cost: PricingCost,
+  km: number,
+  waitMinutes: number
+): CostBreakdown {
+  const fuel = round2(km * cost.fuel_cost_per_km)
+  const driver_distance = round2(km * cost.driver_rate_per_km)
+  const driver_time = round2(waitMinutes * cost.driver_rate_per_min)
+  const vehicle = round2(km * cost.vehicle_cost_per_km)
+  const fixed_overhead = cost.fixed_overhead
+
+  return {
+    fuel,
+    driver_distance,
+    driver_time,
+    vehicle,
+    fixed_overhead,
+    total: round2(fuel + driver_distance + driver_time + vehicle + fixed_overhead),
+  }
+}
+
+/** Calculate margin and check thresholds */
+export async function calculateMargin(
+  revenue: number,
+  costTotal: number
+): Promise<MarginBreakdown> {
+  const data = await loadPricingData()
+  const minAmount = Number(data.config['min_margin_amount'] || 12)
+  const minPercent = Number(data.config['min_margin_percent'] || 20)
+
+  const margin_amount = round2(revenue - costTotal)
+  const margin_percent = revenue > 0 ? round2((margin_amount / revenue) * 100) : 0
+
+  return {
+    revenue,
+    total_cost: costTotal,
+    margin_amount,
+    margin_percent,
+    meets_amount_threshold: margin_amount >= minAmount,
+    meets_percent_threshold: margin_percent >= minPercent,
+    meets_threshold: margin_amount >= minAmount && margin_percent >= minPercent,
+  }
+}
+
+/** Load and evaluate review rules against a request + breakdown */
+export async function evaluateReviewRules(
+  req: PricingRequestExtended,
+  breakdown: PricingBreakdown,
+  margin?: MarginBreakdown
+): Promise<ReviewFlag[]> {
+  const supabase = await createClient()
+  const { data: rules } = await supabase
+    .from('kf_review_rules')
+    .select('*')
+    .eq('enabled', true)
+    .order('sort_order')
+
+  if (!rules || rules.length === 0) return []
+
+  const flags: ReviewFlag[] = []
+
+  // Build evaluation context
+  const ctx: Record<string, any> = {
+    estimated_km: req.estimated_km || 0,
+    estimated_wait_minutes: req.estimated_wait_minutes || 0,
+    is_night: req.is_night || false,
+    is_holiday: req.is_holiday || false,
+    is_return_trip: req.is_return_trip || false,
+    has_missing_docs: req.has_missing_docs || false,
+    total: breakdown.total,
+    margin_amount: margin?.margin_amount ?? 999,
+    margin_percent: margin?.margin_percent ?? 100,
+  }
+
+  for (const rule of rules as ReviewRule[]) {
+    if (rule.trigger_type === 'always') {
+      flags.push({
+        rule_slug: rule.slug,
+        rule_name: rule.name,
+        severity: rule.severity,
+        action: rule.action,
+        message: rule.description || rule.name,
+      })
+      continue
+    }
+
+    if (!rule.trigger_field || !rule.trigger_operator || rule.trigger_value === null) {
+      continue
+    }
+
+    const fieldValue = ctx[rule.trigger_field]
+    if (fieldValue === undefined) continue
+
+    const targetValue = rule.trigger_value === 'true' ? true
+      : rule.trigger_value === 'false' ? false
+      : Number(rule.trigger_value)
+
+    let triggered = false
+
+    switch (rule.trigger_operator) {
+      case 'gt':  triggered = fieldValue > targetValue; break
+      case 'gte': triggered = fieldValue >= targetValue; break
+      case 'lt':  triggered = fieldValue < targetValue; break
+      case 'lte': triggered = fieldValue <= targetValue; break
+      case 'eq':  triggered = fieldValue === targetValue; break
+      case 'ne':  triggered = fieldValue !== targetValue; break
+      default:    break
+    }
+
+    if (triggered) {
+      flags.push({
+        rule_slug: rule.slug,
+        rule_name: rule.name,
+        severity: rule.severity,
+        action: rule.action,
+        message: rule.description || `${rule.name}: ${rule.trigger_field} ${rule.trigger_operator} ${rule.trigger_value}`,
+      })
+    }
+  }
+
+  return flags
+}
+
+/**
+ * Extended pricing calculation with cost, margin, and review rules.
+ * Only runs full analysis when 'enhanced_pricing_v2' feature flag is enabled.
+ * Falls back to standard calculatePrice() otherwise.
+ */
+export async function calculatePriceExtended(
+  req: PricingRequestExtended
+): Promise<PricingBreakdownExtended> {
+  // Standard price calculation
+  const breakdown = await calculatePrice(req)
+
+  // Check if enhanced pricing is enabled
+  const enhanced = await isFeatureEnabled('enhanced_pricing_v2', req.user_id)
+
+  if (!enhanced) {
+    return {
+      ...breakdown,
+      review_flags: [],
+      requires_manual_review: false,
+    }
+  }
+
+  // Find tier for cost lookup
+  const data = await loadPricingData()
+  const tier = data.tiers.find(t => t.slug === req.tier_slug)
+
+  let cost_breakdown: CostBreakdown | undefined
+  let margin_info: MarginBreakdown | undefined
+
+  if (tier) {
+    const costConfig = await loadCostForTier(tier.id)
+    if (costConfig) {
+      cost_breakdown = calculateCosts(
+        costConfig,
+        req.estimated_km || 0,
+        req.estimated_wait_minutes || 0
+      )
+      margin_info = await calculateMargin(breakdown.total, cost_breakdown.total)
+    }
+  }
+
+  // Evaluate review rules
+  const reviewEnabled = await isFeatureEnabled('manual_review_queue', req.user_id)
+  let review_flags: ReviewFlag[] = []
+
+  if (reviewEnabled) {
+    review_flags = await evaluateReviewRules(req, breakdown, margin_info)
+  }
+
+  const requires_manual_review = review_flags.some(
+    f => f.action === 'block' || f.severity === 'critical'
+  )
+
+  return {
+    ...breakdown,
+    cost_breakdown,
+    margin_info,
+    review_flags,
+    requires_manual_review,
   }
 }
 

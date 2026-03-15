@@ -1,0 +1,4 @@
+-- See Supabase migration: pricing_enhancements_v2
+-- Tables: kf_pricing_costs, kf_review_rules, kf_pricing_rules, kf_feature_flags,
+--         kf_booking_reviews, kf_service_doc_requirements, kf_partners, kf_partner_availability
+-- Applied via Supabase MCP on 2026-03-14
