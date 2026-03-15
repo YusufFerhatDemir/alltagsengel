@@ -5,6 +5,13 @@ import { BRAND } from '@/lib/mis/constants'
 import { SectionHeader, Card, KpiCard, DataTable, Tabs, Badge, SearchInput, EmptyState } from '@/components/mis/MisComponents'
 import { useMis } from '@/lib/mis/MisContext'
 
+interface VisitorProfile {
+  first_name: string | null
+  last_name: string | null
+  email: string | null
+  role: string | null
+}
+
 interface VisitorLocation {
   id: string
   portal: string
@@ -15,7 +22,10 @@ interface VisitorLocation {
   longitude: number | null
   source: string | null
   page_path: string | null
+  user_agent: string | null
+  user_id: string | null
   created_at: string
+  profile: VisitorProfile | null
 }
 
 interface AuthLogEntry {
@@ -83,14 +93,14 @@ export default function AnalyticsPage() {
       .select('*')
       .order('created_at', { ascending: false })
 
-    // Besucher-Standorte laden (ALLE Daten, kein Limit)
+    // Besucher-Standorte laden (ALLE Daten, kein Limit, mit User-Profil)
     let allVisitors: any[] = []
     let from = 0
     const pageSize = 1000
     while (true) {
       const { data: chunk } = await supabase
         .from('visitor_locations')
-        .select('*')
+        .select('*, profile:user_id(first_name, last_name, email, role)')
         .gte('created_at', since.toISOString())
         .order('created_at', { ascending: false })
         .range(from, from + pageSize - 1)
@@ -356,6 +366,27 @@ export default function AnalyticsPage() {
           <Card title={`Alle Besuche (${visitors.length} gesamt)`} icon="clock" noPad>
             <DataTable
               columns={[
+                { key: 'user', label: 'Besucher', render: (r: any) => {
+                  const v = r as VisitorLocation
+                  const profile = v.profile
+                  if (profile?.first_name) {
+                    return (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <div style={{
+                          width: 28, height: 28, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          background: `${BRAND.gold}30`, color: BRAND.cream, fontWeight: 700, fontSize: 10, flexShrink: 0,
+                        }}>
+                          {(profile.first_name || '?').charAt(0)}{(profile.last_name || '').charAt(0)}
+                        </div>
+                        <div>
+                          <div style={{ fontWeight: 600, fontSize: 13 }}>{profile.first_name} {profile.last_name?.[0] || ''}.</div>
+                          <div style={{ fontSize: 11, color: BRAND.muted }}>{profile.role === 'admin' ? 'Admin' : profile.role === 'engel' ? 'Engel' : profile.role === 'kunde' ? 'Kunde' : profile.role || ''}</div>
+                        </div>
+                      </div>
+                    )
+                  }
+                  return <span style={{ fontSize: 12, color: BRAND.muted }}>Anonym</span>
+                }},
                 { key: 'city', label: 'Stadt', render: (r: any) => (
                   <div>
                     <div style={{ fontWeight: 500, fontSize: 13 }}>{r.city || '—'}</div>
@@ -368,13 +399,26 @@ export default function AnalyticsPage() {
                 { key: 'portal', label: 'Portal', render: (r: any) => (
                   <Badge label={portalLabels[r.portal] || r.portal} color={portalColors[r.portal] || BRAND.muted} size="sm" />
                 )},
-                { key: 'source', label: 'Quelle', render: (r: any) => (
-                  <Badge
-                    label={r.source === 'gps' ? 'GPS' : r.source === 'ip' ? 'IP' : 'Fallback'}
-                    color={r.source === 'gps' ? BRAND.success : r.source === 'ip' ? BRAND.info : BRAND.muted}
-                    size="sm"
-                  />
+                { key: 'source', label: 'GPS-Erlaubnis', render: (r: any) => (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <Badge
+                      label={r.source === 'gps' ? 'Erlaubt' : r.source === 'ip' ? 'Verweigert' : 'Fallback'}
+                      color={r.source === 'gps' ? BRAND.success : r.source === 'ip' ? BRAND.info : BRAND.muted}
+                      size="sm"
+                    />
+                  </div>
                 )},
+                { key: 'device', label: 'Gerät', render: (r: any) => {
+                  const ua = (r as VisitorLocation).user_agent || ''
+                  let device = 'Unbekannt'
+                  if (/iPhone/i.test(ua)) device = 'iPhone'
+                  else if (/iPad/i.test(ua)) device = 'iPad'
+                  else if (/Android/i.test(ua)) device = 'Android'
+                  else if (/Mac/i.test(ua)) device = 'Mac'
+                  else if (/Windows/i.test(ua)) device = 'Windows'
+                  else if (/Linux/i.test(ua)) device = 'Linux'
+                  return <span style={{ fontSize: 12, color: BRAND.muted }}>{device}</span>
+                }},
                 { key: 'created_at', label: 'Zeitpunkt', render: (r: any) => {
                   const d = new Date(r.created_at)
                   return (
