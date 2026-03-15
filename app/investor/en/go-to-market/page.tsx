@@ -23,7 +23,7 @@ export default function GoToMarketPage() {
       <SectionTitle>Target Audiences</SectionTitle>
       <GoldSep />
       <Card style={{ marginBottom: '40px' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(220px, 100%), 1fr))', gap: '20px' }}>
           <div>
             <div style={{ fontSize: '14px', color: '#C9963C', fontWeight: 'bold', marginBottom: '8px' }}>👨‍👩‍👦 Families</div>
             <Paragraph style={{ fontSize: '13px', margin: '0' }}>Adult children seeking companions for aging parents; seeking vetted, insured support; responsive to digital solutions</Paragraph>
@@ -77,7 +77,7 @@ export default function GoToMarketPage() {
       <SectionTitle>4-Week Frankfurt Launch Plan</SectionTitle>
       <GoldSep />
       <Card style={{ marginBottom: '40px' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '20px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(240px, 100%), 1fr))', gap: '20px' }}>
           <div style={{ borderRight: '1px solid #3A3530', paddingRight: '16px' }}>
             <div style={{ fontSize: '14px', color: '#C9963C', fontWeight: 'bold', marginBottom: '8px' }}>Week 1: Teaser & Community Build</div>
             <Paragraph style={{ fontSize: '13px', margin: '0' }}>
@@ -207,7 +207,7 @@ export default function GoToMarketPage() {
       <SectionTitle>KPI Targets & Success Metrics</SectionTitle>
       <GoldSep />
       <Card>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(200px, 100%), 1fr))', gap: '20px' }}>
           <div>
             <div style={{ fontSize: '14px', color: '#C9963C', fontWeight: 'bold', marginBottom: '8px' }}>User Acquisition</div>
             <Paragraph style={{ fontSize: '13px', margin: '0' }}>
@@ -282,7 +282,7 @@ export default function GoToMarketPage() {
         <Paragraph>
           AlltagsEngel expands into digital ride mediation for Krankentransport (medical patient transport). We target regional transport companies (Krankentransportunternehmen) seeking modern, digital ride mediation to replace phone/fax-based workflows.
         </Paragraph>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px', marginTop: '16px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(220px, 100%), 1fr))', gap: '20px', marginTop: '16px' }}>
           <div>
             <div style={{ fontSize: '14px', color: '#C9963C', fontWeight: 'bold', marginBottom: '8px' }}>Target Customers</div>
             <Paragraph style={{ fontSize: '13px', margin: '0' }}>
@@ -324,7 +324,7 @@ export default function GoToMarketPage() {
       <SectionTitle>Customer Acquisition Economics</SectionTitle>
       <GoldSep />
       <Card style={{ marginBottom: '40px' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(220px, 100%), 1fr))', gap: '20px' }}>
           <div>
             <div style={{ fontSize: '14px', color: '#C9963C', fontWeight: 'bold', marginBottom: '8px' }}>Alltagsbegleitung (B2C)</div>
             <Paragraph style={{ fontSize: '13px', margin: '0' }}>

@@ -18,7 +18,7 @@ export default function FinanzplanPage() {
         <Paragraph>
           AlltagsEngel projiziert exponentielles Wachstum basierend auf Direktabrechnung mit Pflegekassen und einer konservativen Marktpenetration. Der folgende Plan zeigt eine realistische 5-Jahres-Prognose mit Key Milestones. Helfer erhalten eine feste Vergütung von €20/Std., die Plattform-Marge beträgt ~€15–20/Std. (~50%).
         </Paragraph>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginTop: '1.5rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(200px, 100%), 1fr))', gap: '1rem', marginTop: '1.5rem' }}>
           <StatBox value="Jahr 1" label="MVP Launch & lokales Growth (Frankfurt)" />
           <StatBox value="Jahr 2" label="Regionale Expansion (Rhein-Main)" />
           <StatBox value="Jahr 3" label="Nationale Skalierung (Deutschland)" />
@@ -145,7 +145,7 @@ export default function FinanzplanPage() {
         <Paragraph>
           Mit einer Seed-Finanzierung von €500.000 und monatlichen Kosten von €35.000 beträgt die Runway:
         </Paragraph>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginTop: '1.5rem', marginBottom: '1.5rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(200px, 100%), 1fr))', gap: '1rem', marginTop: '1.5rem', marginBottom: '1.5rem' }}>
           <StatBox value="€500.000" label="Seed-Kapital" />
           <StatBox value="€35.000" label="Monatliche Kosten (M1)" />
           <StatBox value="14,3 Monate" label="Runway bis Erschöpfung" />

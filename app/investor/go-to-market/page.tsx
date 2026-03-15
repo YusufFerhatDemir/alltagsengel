@@ -19,7 +19,7 @@ export default function GoToMarketPage() {
           Die <strong>"Dein Engel für den Alltag"</strong> Launchkampagne wurde strategisch für eine 4-wöchige intensive Periode konzipiert. Der Fokus liegt auf dem Pilotmarkt <strong>Frankfurt/Rhein-Main</strong>, mit einer dualen Zielgruppen-Ansprache für Kunden (Familien & Senioren) und Anbieter (Alltagsbegleiter).
         </Paragraph>
         <div style={{ marginTop: '16px', padding: '12px', backgroundColor: 'rgba(201, 150, 60, 0.08)', borderRadius: '8px', borderLeft: '3px solid #C9963C' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '16px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(150px, 100%), 1fr))', gap: '16px' }}>
             <div>
               <div style={{ fontSize: '12px', color: '#C9963C', fontWeight: '600', marginBottom: '4px' }}>KAMPAGNEN-DAUER</div>
               <div style={{ fontSize: '16px', fontWeight: '600' }}>4 Wochen</div>
@@ -166,7 +166,7 @@ export default function GoToMarketPage() {
           Neben dem Kerngeschäft der Alltagsbegleitung erschließt AlltagsEngel die Krankentransport-Vermittlung als zusätzliche B2B-Vertikale.
         </Paragraph>
         <div style={{ marginTop: '16px', padding: '12px', backgroundColor: 'rgba(201, 150, 60, 0.08)', borderRadius: '8px', borderLeft: '3px solid #C9963C' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '16px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(150px, 100%), 1fr))', gap: '16px' }}>
             <div>
               <div style={{ fontSize: '12px', color: '#C9963C', fontWeight: '600', marginBottom: '4px' }}>ZIELMARKT</div>
               <div style={{ fontSize: '16px', fontWeight: '600' }}>Frankfurt/Rhein-Main</div>
@@ -298,7 +298,7 @@ export default function GoToMarketPage() {
       {/* Marketing Team */}
       <SectionTitle>Marketing Team & Verantwortlichkeiten</SectionTitle>
       <Card>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(200px, 100%), 1fr))', gap: '16px' }}>
           <div style={{ padding: '14px', backgroundColor: 'rgba(201, 150, 60, 0.08)', borderRadius: '8px', borderTop: '3px solid #C9963C' }}>
             <div style={{ fontWeight: '600', color: '#C9963C', marginBottom: '8px' }}>Sophie Weber</div>
             <Paragraph style={{ margin: '0 0 8px 0', fontSize: '13px' }}>Content & Social Media</Paragraph>

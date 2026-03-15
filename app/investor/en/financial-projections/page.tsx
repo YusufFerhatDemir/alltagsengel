@@ -83,7 +83,7 @@ export default function FinancialProjectionsPage() {
       <SectionTitle>Year 1 P&L Forecast</SectionTitle>
       <GoldSep />
       <Card style={{ marginBottom: '40px' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '24px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(250px, 100%), 1fr))', gap: '24px' }}>
           <div style={{ borderRight: '1px solid #3A3530', paddingRight: '16px' }}>
             <div style={{ fontSize: '14px', color: '#C9963C', fontWeight: 'bold', marginBottom: '12px' }}>Revenue</div>
             <div style={{ marginBottom: '8px' }}>
@@ -141,7 +141,7 @@ export default function FinancialProjectionsPage() {
       <SectionTitle>Path to Break-Even</SectionTitle>
       <GoldSep />
       <Card style={{ marginBottom: '40px' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(220px, 100%), 1fr))', gap: '20px' }}>
           <div>
             <div style={{ fontSize: '12px', color: '#A0978A', marginBottom: '8px' }}>Monthly Burn (Year 1)</div>
             <div style={{ fontSize: '18px', color: '#C9963C', fontWeight: 'bold' }}>€35K</div>
@@ -164,7 +164,7 @@ export default function FinancialProjectionsPage() {
       <SectionTitle>Unit Economics</SectionTitle>
       <GoldSep />
       <Card style={{ marginBottom: '40px' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px', marginBottom: '20px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(220px, 100%), 1fr))', gap: '20px', marginBottom: '20px' }}>
           <div>
             <div style={{ fontSize: '12px', color: '#A0978A', marginBottom: '8px' }}>Billing Rate (Pflegekasse)</div>
             <div style={{ fontSize: '18px', color: '#C9963C', fontWeight: 'bold' }}>~€40/hr</div>
@@ -181,7 +181,7 @@ export default function FinancialProjectionsPage() {
             <div style={{ fontSize: '11px', color: '#7A7570', marginTop: '4px' }}>Covers ops, tech, compliance, profit</div>
           </div>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(220px, 100%), 1fr))', gap: '20px' }}>
           <div>
             <div style={{ fontSize: '12px', color: '#A0978A', marginBottom: '8px' }}>Monthly Margin per Customer</div>
             <div style={{ fontSize: '18px', color: '#5CB882', fontWeight: 'bold' }}>€65</div>
@@ -207,7 +207,7 @@ export default function FinancialProjectionsPage() {
         <Paragraph>
           Additional revenue stream through B2B SaaS subscriptions for Krankentransport (medical transport) companies. Platform provides dispatch optimization, compliance tracking, and patient management tools.
         </Paragraph>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px', marginTop: '16px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(220px, 100%), 1fr))', gap: '20px', marginTop: '16px' }}>
           <div>
             <div style={{ fontSize: '12px', color: '#A0978A', marginBottom: '8px' }}>Subscription Tiers</div>
             <div style={{ fontSize: '18px', color: '#C9963C', fontWeight: 'bold' }}>€99-199/mo</div>
@@ -295,7 +295,7 @@ export default function FinancialProjectionsPage() {
       </Card>
 
       {/* Financial Highlights */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginTop: '40px', marginBottom: '40px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(200px, 100%), 1fr))', gap: '16px', marginTop: '40px', marginBottom: '40px' }}>
         <StatBox label="Year 1 Revenue" value="€390K" subLabel="Near break-even pilot phase" />
         <StatBox label="Year 3 Revenue" value="€7.8M" subLabel="Multi-city scaling" />
         <StatBox label="Year 5 Revenue" value="€58.5M" subLabel="National scale, DACH expansion" />

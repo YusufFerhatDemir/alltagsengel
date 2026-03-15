@@ -15,7 +15,7 @@ export default function ZusammenfassungPage() {
       {/* Key Facts */}
       <Card>
         <SectionTitle>Schlüsselfakten</SectionTitle>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(250px, 100%), 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
           <StatBox value="€50+ Mrd" label="Marktgröße (TAM)" />
           <StatBox value="4,96 Mio" label="Pflegebedürftige" />
           <StatBox value="€500K" label="Seed-Finanzierung gesucht" />
@@ -102,7 +102,7 @@ export default function ZusammenfassungPage() {
       {/* Kernvorteile */}
       <Card>
         <SectionTitle>Kernvorteile</SectionTitle>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(200px, 100%), 1fr))', gap: '1rem' }}>
           <div style={{ padding: '1rem', backgroundColor: '#1a1a1a', borderRadius: '0.5rem', borderLeft: '3px solid #D4AF37' }}>
             <div style={{ color: '#D4AF37', fontWeight: '600', marginBottom: '0.5rem' }}>1. Market Fit</div>
             <div style={{ fontSize: '0.9rem', color: '#E0E0E0' }}>§45b schafft deterministische Nachfrage für 4,96 Mio Menschen</div>
@@ -129,11 +129,11 @@ export default function ZusammenfassungPage() {
       {/* Investitionsanfrage */}
       <Card>
         <SectionTitle>Investitionsanfrage</SectionTitle>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(200px, 100%), 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
           <StatBox value="€500K" label="Seed-Finanzierung" />
         </div>
         <SectionLabel>Verwendung der Mittel:</SectionLabel>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginTop: '1rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(200px, 100%), 1fr))', gap: '1rem', marginTop: '1rem' }}>
           <div style={{ padding: '1rem', backgroundColor: '#1a1a1a', borderRadius: '0.5rem' }}>
             <div style={{ color: '#D4AF37', fontWeight: '600', marginBottom: '0.5rem' }}>Produkt & Tech</div>
             <div style={{ fontSize: '1.1rem', fontWeight: '600' }}>40% (€200K)</div>
@@ -217,7 +217,7 @@ export default function ZusammenfassungPage() {
       {/* Nächste Schritte */}
       <Card>
         <SectionTitle>Nächste Schritte</SectionTitle>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(200px, 100%), 1fr))', gap: '1.5rem' }}>
           <div style={{ padding: '1rem', backgroundColor: '#1a1a1a', borderRadius: '0.5rem', borderLeft: '3px solid #D4AF37' }}>
             <div style={{ color: '#D4AF37', fontWeight: '600', marginBottom: '0.5rem' }}>1. Gespräch</div>
             <div style={{ fontSize: '0.9rem', color: '#E0E0E0' }}>30-Minuten Intro Call zur Mission & Strategie</div>

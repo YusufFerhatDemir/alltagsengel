@@ -52,7 +52,7 @@ export default function MarketAnalysisPage() {
       {/* TAM / SAM / SOM */}
       <SectionTitle>Market Sizing (TAM / SAM / SOM)</SectionTitle>
       <GoldSep />
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '40px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(200px, 100%), 1fr))', gap: '16px', marginBottom: '40px' }}>
         <StatBox 
           label="TAM (Total Addressable)" 
           value="€50B+" 
@@ -151,7 +151,7 @@ export default function MarketAnalysisPage() {
       {/* Unit Economics */}
       <SectionTitle>Unit Economics & Metrics</SectionTitle>
       <GoldSep />
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '20px', marginBottom: '40px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(180px, 100%), 1fr))', gap: '20px', marginBottom: '40px' }}>
         <Card style={{ textAlign: 'center' }}>
           <div style={{ fontSize: '24px', color: '#C9963C', fontWeight: 'bold', marginBottom: '8px' }}>~50%</div>
           <div style={{ fontSize: '12px', color: '#A0978A' }}>Gross Margin</div>

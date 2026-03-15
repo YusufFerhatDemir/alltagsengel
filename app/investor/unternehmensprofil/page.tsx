@@ -26,7 +26,7 @@ export default function UnternehmensprofiltPage() {
       {/* Das Problem */}
       <Card>
         <SectionTitle>Das Problem</SectionTitle>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(250px, 100%), 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
           <StatBox value="4,96 Mio" label="Pflegebedürftige in Deutschland" />
           <StatBox value="€131/Monat" label="§45b Entlastungsbetrag pro Person" />
           <StatBox value="€7,79 Mrd" label="Jährliches Gesamtbudget" />
@@ -41,7 +41,7 @@ export default function UnternehmensprofiltPage() {
       {/* Unsere Lösung */}
       <Card>
         <SectionTitle>Unsere Lösung</SectionTitle>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(250px, 100%), 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
           <Badge>Mobile App iOS/Android</Badge>
           <Badge>§45b Integration</Badge>
           <Badge>100% Versicherte Begleiter</Badge>
@@ -61,7 +61,7 @@ export default function UnternehmensprofiltPage() {
       {/* Marktchance */}
       <Card>
         <SectionTitle>Marktchance</SectionTitle>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(250px, 100%), 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
           <StatBox value="€50+ Mrd" label="TAM (Gesamt adressierbarer Markt)" />
           <StatBox value="€8–12 Mrd" label="SAM (Servicierbarer Markt)" />
           <StatBox value="€200–400 Mio" label="SOM (Erreichbarer Markt, 5 Jahre)" />
@@ -74,7 +74,7 @@ export default function UnternehmensprofiltPage() {
       {/* Geschäftsmodell */}
       <Card>
         <SectionTitle>Geschäftsmodell</SectionTitle>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(250px, 100%), 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
           <StatBox value="~50%" label="Bruttomarge (Direktabrechnung)" />
           <StatBox value="€20/Std" label="Feste Engel-Vergütung" />
           <StatBox value="Aktiv" label="Pflegekassen-Abrechnung" />
@@ -140,7 +140,7 @@ export default function UnternehmensprofiltPage() {
       {/* Aktuelle Phase */}
       <Card>
         <SectionTitle>Aktuelle Phase</SectionTitle>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(200px, 100%), 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
           <StatBox value="MVP" label="Entwicklung in Fortschritt" />
           <StatBox value="4 Wochen" label="Marketing-Plan läuft" />
           <StatBox value="Frankfurt" label="Bürostandort" />

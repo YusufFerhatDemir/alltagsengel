@@ -15,7 +15,7 @@ export default function RechtCompliancePage() {
       {/* Unternehmensstruktur */}
       <SectionTitle>Unternehmensstruktur</SectionTitle>
       <Card>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '16px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(200px, 100%), 1fr))', gap: '16px', marginBottom: '16px' }}>
           <StatBox label="Rechtsform" value="UG (haftungsbeschränkt)" />
           <StatBox label="Sitz" value="Frankfurt am Main" />
           <StatBox label="Stammkapital" value="€1.000" />
@@ -260,7 +260,7 @@ export default function RechtCompliancePage() {
       {/* Risikominimierung */}
       <SectionTitle>Risikominimierung & Best Practices</SectionTitle>
       <Card>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '12px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(160px, 100%), 1fr))', gap: '12px' }}>
           <div style={{ padding: '12px', backgroundColor: 'rgba(201, 150, 60, 0.08)', borderRadius: '8px', borderLeft: '3px solid #C9963C' }}>
             <div style={{ fontWeight: '600', color: '#C9963C', marginBottom: '6px', fontSize: '13px' }}>Rechtsberatung</div>
             <Paragraph style={{ margin: '0', fontSize: '12px', color: 'rgba(255, 255, 255, 0.8)' }}>Externe Anwälte für komplexe Fragen</Paragraph>

@@ -28,7 +28,7 @@ export default function MarketPage() {
       <SectionHeader title="Marktanalyse" subtitle="TAM/SAM/SOM, Wettbewerb und demografische Entwicklung" icon="trending" />
 
       {/* TAM SAM SOM */}
-      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(auto-fill, minmax(220px, 1fr))', gap: isMobile ? 10 : 16 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(auto-fill, minmax(min(220px, 100%), 1fr))', gap: isMobile ? 10 : 16 }}>
         <KpiCard title="TAM" value="€24,6 Mrd." icon="globe" trend="up" />
         <KpiCard title="SAM" value="€7,80 Mrd." icon="target" trend="up" />
         <KpiCard title="SOM (Jahr 5)" value="€52 Mio." icon="zap" trend="up" color={BRAND.success} />
@@ -37,7 +37,7 @@ export default function MarketPage() {
 
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(min(340px, 100%), 1fr))', gap: isMobile ? 12 : 20 }}>
         {/* Market Size */}
-        <Card title="Marktchance" icon="pieChart" style={{ overflow: 'visible' }}>
+        <Card title="Marktchance" icon="pieChart">
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
             <StatRow label="Pflegebedürftige (PG 1-5)" value="4,96 Mio." />
             <StatRow label="§45b Entlastungsbetrag" value={`€${M.entlastungsbetrag}/Monat`} />
@@ -58,7 +58,7 @@ export default function MarketPage() {
         </Card>
 
         {/* Demographics */}
-        <Card title="Demografische Entwicklung" icon="users" style={{ overflow: 'visible' }}>
+        <Card title="Demografische Entwicklung" icon="users">
           <MiniBarChart
             data={DEMOGRAPHICS.map(d => d.count)}
             labels={DEMOGRAPHICS.map(d => d.year)}
@@ -72,7 +72,7 @@ export default function MarketPage() {
       </div>
 
       {/* Competition */}
-      <Card title="Wettbewerbslandschaft" icon="target" noPad style={{ overflow: 'visible' }}>
+      <Card title="Wettbewerbslandschaft" icon="target" noPad>
         <DataTable
           columns={[
             { key: 'name', label: 'Wettbewerber', render: (r) => <span style={{ fontWeight: 600 }}>{r.name as string}</span> },
@@ -90,7 +90,7 @@ export default function MarketPage() {
       </Card>
 
       {/* Competitive Advantage */}
-      <Card title="Unser Wettbewerbsvorteil" icon="zap" style={{ background: `linear-gradient(135deg, ${BRAND.coal}, #2D2820)`, border: 'none', overflow: 'visible' }}>
+      <Card title="Unser Wettbewerbsvorteil" icon="zap" style={{ background: `linear-gradient(135deg, ${BRAND.coal}, #2D2820)`, border: 'none' }}>
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(min(280px, 100%), 1fr))', gap: isMobile ? 10 : 16 }}>
           {[
             { title: '§45b Integration', desc: 'Einzige Plattform mit direkter Abrechnung über den Entlastungsbetrag' },

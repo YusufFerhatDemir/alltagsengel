@@ -15,7 +15,7 @@ export default function MarktanalysePage() {
       {/* Pflegebedarf */}
       <Card>
         <SectionTitle>Pflegebedarf in Deutschland</SectionTitle>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(250px, 100%), 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
           <StatBox value="4,96 Mio" label="Pflegebedürftige (aktuell)" />
           <StatBox value="6+ Mio" label="Prognose bis 2030" />
           <StatBox value="3–5%" label="Jährliches Wachstum" />
@@ -32,7 +32,7 @@ export default function MarktanalysePage() {
       {/* §45b Entlastungsbetrag */}
       <Card>
         <SectionTitle>§45b Entlastungsbetrag – Der Katalysator</SectionTitle>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(250px, 100%), 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
           <StatBox value="€131" label="Pro Pflegebedürftiger/Monat" />
           <StatBox value="€1.500" label="Pro Pflegebedürftiger/Jahr" />
           <StatBox value="€7,79 Mrd" label="Gesamtbudget/Jahr" />
@@ -53,7 +53,7 @@ export default function MarktanalysePage() {
       {/* TAM SAM SOM */}
       <Card>
         <SectionTitle>TAM / SAM / SOM Analyse</SectionTitle>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(250px, 100%), 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
           <StatBox value="€50+ Mrd" label="TAM (Gesamt adressierbarer Markt)" />
           <StatBox value="€8–12 Mrd" label="SAM (Servicierbarer Markt)" />
           <StatBox value="€200–400 Mio" label="SOM (Erreichbarer Markt, 5J)" />
@@ -127,7 +127,7 @@ export default function MarktanalysePage() {
       {/* Krankentransport-Markt */}
       <Card>
         <SectionTitle>Krankentransport-Markt</SectionTitle>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(250px, 100%), 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
           <StatBox value="~€3 Mrd" label="Deutscher Krankentransport-Markt" />
           <StatBox value="B2B SaaS" label="Abo-Modell für Transportunternehmen" />
           <StatBox value="€99–199/Mo" label="Abo-Gebühr pro Unternehmen" />
@@ -147,7 +147,7 @@ export default function MarktanalysePage() {
       <Card>
         <SectionTitle>Geschäftsmodell</SectionTitle>
         <SectionLabel>Revenue Streams:</SectionLabel>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginTop: '1rem', marginBottom: '1.5rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(200px, 100%), 1fr))', gap: '1rem', marginTop: '1rem', marginBottom: '1.5rem' }}>
           <div style={{ padding: '1rem', backgroundColor: '#1a1a1a', borderRadius: '0.5rem', borderLeft: '3px solid #D4AF37' }}>
             <div style={{ color: '#D4AF37', fontWeight: '600', marginBottom: '0.5rem' }}>Direktabrechnung mit Pflegekassen</div>
             <div style={{ fontSize: '0.95rem', fontWeight: '600' }}>~€35–40/Std. Abrechnungssatz</div>
@@ -172,7 +172,7 @@ export default function MarktanalysePage() {
         <Paragraph>
           <strong style={{color:'#C9963C'}}>Unit Economics (bei stabiler Nutzung):</strong>
         </Paragraph>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(200px, 100%), 1fr))', gap: '1rem' }}>
           <StatBox value="€40/Std" label="Abrechnungssatz mit Pflegekassen" />
           <StatBox value="€20/Std" label="Feste Engel-Vergütung" />
           <StatBox value="€65/Mo" label="Marge pro Kunde" />
@@ -228,7 +228,7 @@ export default function MarktanalysePage() {
       {/* Risiken und Gegenmaßnahmen */}
       <Card>
         <SectionTitle>Risiken & Gegenmaßnahmen</SectionTitle>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(280px, 100%), 1fr))', gap: '1.5rem' }}>
           <div style={{ padding: '1rem', backgroundColor: '#1a1a1a', borderRadius: '0.5rem', borderLeft: '3px solid #FF6B6B' }}>
             <div style={{ color: '#FF6B6B', fontWeight: '600', marginBottom: '0.5rem' }}>Regulatorisches Risiko</div>
             <div style={{ fontSize: '0.85rem', color: '#E0E0E0', marginBottom: '0.75rem' }}>Neue Gesetze für Pflege-Apps könnten Geschäftsmodell beeinflussen</div>

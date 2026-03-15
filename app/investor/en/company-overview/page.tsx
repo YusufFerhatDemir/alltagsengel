@@ -14,7 +14,7 @@ export default function CompanyOverviewPage() {
       {/* Company Profile */}
       <SectionLabel>Company Profile</SectionLabel>
       <Card style={{ marginBottom: '40px' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '24px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(200px, 100%), 1fr))', gap: '24px' }}>
           <div>
             <div style={{ fontSize: '12px', color: '#A0978A', marginBottom: '8px' }}>Company Name</div>
             <div style={{ fontSize: '18px', color: '#C9963C', fontWeight: 'bold' }}>AlltagsEngel UG</div>
@@ -104,7 +104,7 @@ export default function CompanyOverviewPage() {
       {/* Market Opportunity */}
       <SectionTitle>Market Opportunity (TAM / SAM / SOM)</SectionTitle>
       <GoldSep />
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '40px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(200px, 100%), 1fr))', gap: '16px', marginBottom: '40px' }}>
         <StatBox label="TAM (Total)" value="€50B+" subLabel="Entire German care market" />
         <StatBox label="SAM (Serviceable)" value="€8-12B" subLabel="§45b care relief benefit" />
         <StatBox label="SOM (Obtainable)" value="€200-400M" subLabel="5-year target (5-8% share)" />
@@ -113,7 +113,7 @@ export default function CompanyOverviewPage() {
       {/* Business Model */}
       <SectionTitle>Business Model</SectionTitle>
       <GoldSep />
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px', marginBottom: '24px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(180px, 100%), 1fr))', gap: '16px', marginBottom: '24px' }}>
         <StatBox label="Gross Margin" value="~50%" subLabel="Direct Pflegekasse billing" />
         <StatBox label="Helper Payment" value="€20/hr" subLabel="Fixed, transparent rate" />
         <StatBox label="Billing Rate" value="€35-40/hr" subLabel="Billed to Pflegekassen" />
@@ -176,7 +176,7 @@ export default function CompanyOverviewPage() {
       {/* Team */}
       <SectionTitle>Team</SectionTitle>
       <GoldSep />
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '24px', marginBottom: '40px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(240px, 100%), 1fr))', gap: '24px', marginBottom: '40px' }}>
         <Card>
           <div style={{ fontSize: '16px', color: '#C9963C', fontWeight: 'bold', marginBottom: '8px' }}>Yusuf • CEO</div>
           <Paragraph style={{ fontSize: '13px', margin: '0' }}>Founder & strategic vision. Healthcare background, 5+ years startup experience. Passion for solving elderly care challenges.</Paragraph>

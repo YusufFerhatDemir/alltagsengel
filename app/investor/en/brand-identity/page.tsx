@@ -28,7 +28,7 @@ export default function BrandIdentityPage() {
       {/* Color Palette */}
       <SectionTitle>Color Palette</SectionTitle>
       <GoldSep />
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '24px', marginBottom: '40px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(180px, 100%), 1fr))', gap: '24px', marginBottom: '40px' }}>
         <Card style={{ border: '2px solid #C9963C' }}>
           <div style={{ width: '100%', height: '60px', backgroundColor: '#C9963C', borderRadius: '6px', marginBottom: '12px' }} />
           <div style={{ fontSize: '14px', color: '#C9963C', fontWeight: 'bold' }}>Gold</div>
@@ -109,7 +109,7 @@ export default function BrandIdentityPage() {
       <SectionTitle>Tone of Voice</SectionTitle>
       <GoldSep />
       <Card style={{ marginBottom: '40px' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(200px, 100%), 1fr))', gap: '20px' }}>
           <div>
             <div style={{ fontSize: '14px', color: '#C9963C', fontWeight: 'bold', marginBottom: '8px' }}>Warm</div>
             <Paragraph style={{ fontSize: '13px', margin: '0', color: '#A0978A' }}>Personal, approachable, friendly. We care about you and your loved ones. Always human, never corporate.</Paragraph>

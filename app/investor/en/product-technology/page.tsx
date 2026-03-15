@@ -23,7 +23,7 @@ export default function ProductTechnologyPage() {
       <SectionTitle>Core Product Features</SectionTitle>
       <GoldSep />
       <Card style={{ marginBottom: '40px' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '20px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(240px, 100%), 1fr))', gap: '20px' }}>
           <div>
             <div style={{ fontSize: '14px', color: '#C9963C', fontWeight: 'bold', marginBottom: '8px' }}>📱 Mobile App (iOS & Android)</div>
             <Paragraph style={{ fontSize: '13px', margin: '0' }}>Cross-platform native experience; offline support; push notifications; accessible design for older users</Paragraph>
@@ -86,7 +86,7 @@ export default function ProductTechnologyPage() {
         <Paragraph style={{ marginBottom: '16px' }}>
           A dedicated B2B module for mediating non-emergency patient transport (Krankentransport), connecting transport companies with booking demand through the AlltagsEngel ecosystem:
         </Paragraph>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '20px', marginBottom: '16px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(240px, 100%), 1fr))', gap: '20px', marginBottom: '16px' }}>
           <div>
             <div style={{ fontSize: '14px', color: '#C9963C', fontWeight: 'bold', marginBottom: '8px' }}>🚑 Patient Transport Mediation</div>
             <Paragraph style={{ fontSize: '13px', margin: '0' }}>Platform mediates non-emergency patient transport requests; connects patients/families with licensed transport providers</Paragraph>

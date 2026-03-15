@@ -162,7 +162,7 @@ export default function ProdukttechnologiePage() {
       {/* Entwicklungs-Roadmap */}
       <SectionTitle>Entwicklungs-Roadmap</SectionTitle>
       <Card>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px', marginBottom: '16px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(200px, 100%), 1fr))', gap: '12px', marginBottom: '16px' }}>
           <StatBox label="MVP" value="Q1 2025" />
           <StatBox label="Beta Launch" value="Q2 2025" />
           <StatBox label="Produktstart" value="Q3 2025" />
@@ -186,7 +186,7 @@ export default function ProdukttechnologiePage() {
       {/* Nächste Schritte */}
       <SectionTitle>Nächste Schritte</SectionTitle>
       <Card>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(180px, 100%), 1fr))', gap: '16px' }}>
           <div style={{ padding: '12px', backgroundColor: 'rgba(201, 150, 60, 0.08)', borderRadius: '8px', borderLeft: '3px solid #C9963C' }}>
             <div style={{ fontWeight: '600', color: '#C9963C', marginBottom: '6px' }}>User Testing</div>
             <Paragraph style={{ margin: 0, fontSize: '13px' }}>Erste Nutzer-Tests mit Kunden und Engeln durchführen</Paragraph>

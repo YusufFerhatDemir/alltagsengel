@@ -143,7 +143,7 @@ export default function InvestorPortal() {
         </div>
 
         {/* Documents Grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 16, paddingBottom: 60 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(300px, 100%), 1fr))', gap: 16, paddingBottom: 60 }}>
           {filtered.map(doc => {
             const inner = (
               <div style={{

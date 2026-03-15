@@ -133,7 +133,7 @@ function buildSlides(): Slide[] {
     {
       id: 'problem', label: 'Problem', title: 'Der Pflegemarkt braucht digitale Innovation',
       content: (
-        <div className="grid-3" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16, marginTop: 24 }}>
+        <div className="grid-3" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(220px, 100%), 1fr))', gap: 16, marginTop: 24 }}>
           <Card><StatBox value="€4,4 Mrd." label="Ungenutzte §45b-Mittel" sub="Von €7,79 Mrd. werden nur 40% abgerufen" /></Card>
           <Card><StatBox value="0" label="Digitale Plattform" sub="Analoge Vermittlung, lange Wartezeiten" /></Card>
           <Card><StatBox value="Ø 14 Tage" label="Wartezeit" sub="Keine standardisierte Qualitätssicherung" /></Card>
@@ -298,7 +298,7 @@ function buildSlides(): Slide[] {
     {
       id: 'team', label: 'Team', title: 'Erfahrung trifft Leidenschaft',
       content: (
-        <div className="grid-team" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 12, marginTop: 24 }}>
+        <div className="grid-team" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(140px, 100%), 1fr))', gap: 12, marginTop: 24 }}>
           <TeamCard initials="YD" name="Yusuf F. Demir" role="Gründer & CEO" skill="Strategie & Vision" color={C.gold} />
           <TeamCard initials="LL" name="Laura Leeman" role="Teamleiterin" skill="Pflege & Qualität" color={C.gold2} />
           <TeamCard initials="MY" name="Mehmet Yilmaz" role="CTO" skill="Technologie & Produkt" color={C.gold3} />
