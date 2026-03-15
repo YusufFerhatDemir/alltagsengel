@@ -92,6 +92,105 @@ export interface PricingBreakdown {
   display_lines: string[]
 }
 
+// --- Extended Request (with payer type, document info) ---
+
+export interface PricingRequestExtended extends PricingRequest {
+  /** Kostenträger: kasse, selbstzahler, firmenkunde */
+  payer_type?: string
+  /** Whether required documents are provided */
+  has_missing_docs?: boolean
+  /** User ID for feature flag evaluation */
+  user_id?: string
+  /** Booking ID (for review queue) */
+  booking_id?: string
+}
+
+// --- Cost & Margin ---
+
+export interface PricingCost {
+  id: string
+  tier_id: string
+  fuel_cost_per_km: number
+  driver_rate_per_km: number
+  vehicle_cost_per_km: number
+  driver_rate_per_min: number
+  fixed_overhead: number
+  effective_from: string
+  effective_to: string | null
+}
+
+export interface CostBreakdown {
+  fuel: number
+  driver_distance: number
+  driver_time: number
+  vehicle: number
+  fixed_overhead: number
+  total: number
+}
+
+export interface MarginBreakdown {
+  revenue: number
+  total_cost: number
+  margin_amount: number
+  margin_percent: number
+  meets_amount_threshold: boolean
+  meets_percent_threshold: boolean
+  meets_threshold: boolean
+}
+
+// --- Review Rules ---
+
+export interface ReviewFlag {
+  rule_slug: string
+  rule_name: string
+  severity: 'info' | 'warning' | 'critical'
+  action: 'flag' | 'block' | 'notify' | 'escalate'
+  message: string
+}
+
+export interface ReviewRule {
+  id: string
+  name: string
+  slug: string
+  description: string | null
+  trigger_type: 'condition' | 'threshold' | 'always'
+  trigger_field: string | null
+  trigger_operator: string | null
+  trigger_value: string | null
+  trigger_condition: Record<string, any>
+  severity: 'info' | 'warning' | 'critical'
+  action: 'flag' | 'block' | 'notify' | 'escalate'
+  enabled: boolean
+  sort_order: number
+}
+
+// --- Extended Breakdown (with cost + margin + flags) ---
+
+export interface PricingBreakdownExtended extends PricingBreakdown {
+  cost_breakdown?: CostBreakdown
+  margin_info?: MarginBreakdown
+  review_flags: ReviewFlag[]
+  /** True if any critical review flag blocks auto-approval */
+  requires_manual_review: boolean
+}
+
+// --- Pricing Rules ---
+
+export interface PricingRule {
+  id: string
+  name: string
+  slug: string
+  description: string | null
+  rule_type: 'seasonal' | 'ab_test' | 'regional' | 'payer_type' | 'promo' | 'override'
+  priority: number
+  condition_json: Record<string, any>
+  pricing_adjustments: Record<string, any>
+  version: number
+  active: boolean
+  starts_at: string | null
+  ends_at: string | null
+}
+
 // --- Admin types ---
 
 export interface PricingAuditEntry {
@@ -103,4 +202,56 @@ export interface PricingAuditEntry {
   new_values: Record<string, any> | null
   actor_id: string | null
   created_at: string
+}
+
+// --- Partner types ---
+
+export interface KfPartner {
+  id: string
+  user_id: string | null
+  name: string
+  company_name: string | null
+  email: string | null
+  phone: string | null
+  vehicle_types: string[]
+  service_areas: Record<string, any>
+  coverage_plz: string[]
+  max_bookings_per_day: number
+  rating: number
+  total_trips: number
+  commission_rate: number
+  verified: boolean
+  enabled: boolean
+}
+
+export interface PartnerAvailability {
+  id: string
+  partner_id: string
+  available_date: string
+  start_time: string
+  end_time: string
+  vehicle_type: string | null
+  max_trips: number
+  booked_trips: number
+}
+
+export interface PartnerMatch {
+  partner: KfPartner
+  score: number
+  reasons: string[]
+  availability: PartnerAvailability | null
+}
+
+// --- Document types ---
+
+export interface ServiceDocRequirement {
+  service_type: string
+  required_documents: DocumentSpec[]
+  optional_documents: DocumentSpec[]
+}
+
+export interface DocumentSpec {
+  type: string
+  name: string
+  description?: string
 }

@@ -11,7 +11,7 @@ const engelItems = [
   { href: '/engel/profil', icon: <IconUser size={20} />, label: 'Profil' },
 ]
 
-export default function BottomNav({ role }: { role: 'kunde' | 'engel' }) {
+export default function BottomNav({ role }: { role: 'kunde' | 'engel' | 'fahrer' }) {
   const pathname = usePathname()
   const router = useRouter()
 
@@ -21,8 +21,32 @@ export default function BottomNav({ role }: { role: 'kunde' | 'engel' }) {
     '/kunde/register',
     '/kunde/krankenfahrt',
     '/kunde/hygienebox',
+    '/fahrer/register',
   ]
   if (hideOnPages.includes(pathname) || pathname.startsWith('/kunde/buchen/')) return null
+
+  if (role === 'fahrer') {
+    const fahrerItems = [
+      { href: '/fahrer/home', icon: <IconHome size={20} />, label: 'Home' },
+      { href: '/fahrer/auftraege', icon: <IconClipboard size={20} />, label: 'Aufträge' },
+      { href: '/fahrer/chat', icon: <IconChat size={20} />, label: 'Chat' },
+      { href: '/fahrer/fahrzeuge', icon: <IconCalendar size={20} />, label: 'Fahrzeuge' },
+      { href: '/fahrer/profil', icon: <IconUser size={20} />, label: 'Profil' },
+    ]
+    return (
+      <nav className="bottom-nav" role="navigation" aria-label="Hauptnavigation">
+        {fahrerItems.map(item => {
+          const isActive = pathname.startsWith(item.href)
+          return (
+            <Link key={item.label} href={item.href} className={`bnav-item${isActive ? ' on' : ''}`} aria-label={item.label} aria-current={isActive ? 'page' : undefined}>
+              <div className="bnav-ic">{item.icon}</div>
+              <div className="bnav-lbl">{item.label}</div>
+            </Link>
+          )
+        })}
+      </nav>
+    )
+  }
 
   if (role === 'engel') {
     return (

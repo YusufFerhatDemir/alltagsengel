@@ -37,7 +37,7 @@ export default function KrankenfahrtenPage() {
         <div className="info-hero">
           <div className="info-hero-icon">🚗</div>
           <h2 className="info-hero-title">Krankenfahrten-Vermittlung</h2>
-          <p className="info-hero-sub">Sicher und zuverlässig zum Arzt — über Alltagsengel vermittelt</p>
+          <p className="info-hero-sub">Sicher und zuverlässig zum Arzt — die Preise richten sich nach Region, Fahrtart und Hilfebedarf</p>
         </div>
 
         <section className="info-card">
@@ -56,7 +56,7 @@ export default function KrankenfahrtenPage() {
             <li>Begleitung für mobilitätseingeschränkte Personen</li>
             <li>Pünktliche Abholung und Rückfahrt</li>
             <li>Abrechnung über Verordnung möglich</li>
-            <li>Bundesweite Verfügbarkeit</li>
+            <li>Verfügbarkeit nach Region und Partnernetz</li>
           </ul>
         </section>
 
@@ -122,6 +122,7 @@ export default function KrankenfahrtenPage() {
             </>
           )}
           <p className="info-price-note">
+            Die Preise richten sich nach Region, Fahrtart, Hilfebedarf, Dokumentenstatus und Partnerverfügbarkeit.
             Bei ärztlicher Verordnung übernimmt die Krankenkasse die Kosten ganz oder teilweise.
           </p>
         </section>
