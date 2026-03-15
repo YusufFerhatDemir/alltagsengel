@@ -126,7 +126,7 @@ export default function EngelHomePage() {
             <div className="req-top">
               <div className="req-av"><IconUser size={18} /></div>
               <div>
-                <div className="req-name">{b.customer?.first_name} {b.customer?.last_name}</div>
+                <div className="req-name">{b.customer?.first_name} {b.customer?.last_name?.[0]}.</div>
                 <div className="req-type">{b.service}</div>
               </div>
             </div>
@@ -156,7 +156,7 @@ export default function EngelHomePage() {
             <div key={b.id} className="upcoming-item">
               <div className="upcoming-av" style={{ background: 'var(--gold-pale)' }}><IconUser size={18} /></div>
               <div>
-                <div className="upcoming-name">{b.customer?.first_name} {b.customer?.last_name}</div>
+                <div className="upcoming-name">{b.customer?.first_name} {b.customer?.last_name?.[0]}.</div>
                 <div className="upcoming-sub">{b.service} · {new Date(b.date).toLocaleDateString('de-DE')}, {b.time?.slice(0,5)}</div>
               </div>
               <div className="upcoming-end">

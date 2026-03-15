@@ -97,7 +97,7 @@ export default function KarteSeite() {
             </div>
             <div className="engel-info">
               <div className="engel-row1">
-                <div className="engel-name">{selectedAngel.profiles?.first_name} {selectedAngel.profiles?.last_name}</div>
+                <div className="engel-name">{selectedAngel.profiles?.first_name} {selectedAngel.profiles?.last_name?.[0]}.</div>
                 <div className="engel-rating"><IconStarFilled size={13} /> {selectedAngel.rating}</div>
               </div>
               <div className="engel-cert" style={{ color: 'var(--green)' }}>{selectedAngel.total_jobs} Einsätze · {selectedAngel.hourly_rate}€/h</div>

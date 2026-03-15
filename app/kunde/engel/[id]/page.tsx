@@ -38,7 +38,7 @@ export default async function EngelProfilPage({ params }: { params: Promise<{ id
     logError('EngelProfil:reviews', err)
   }
 
-  const name = `${angel.profiles?.first_name || ''} ${angel.profiles?.last_name || ''}`
+  const name = `${angel.profiles?.first_name || ''} ${angel.profiles?.last_name?.[0] || ''}.`
   const dayMap = ['Mo','Di','Mi','Do','Fr','Sa','So']
 
   return (

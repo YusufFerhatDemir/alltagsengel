@@ -19,7 +19,7 @@ export default async function BestaetigtPage({ params }: { params: Promise<{ id:
     return <div className="screen"><ErrorState homeHref="/kunde/home" /></div>
   }
 
-  const angelName = booking.angel?.profiles ? `${booking.angel.profiles.first_name} ${booking.angel.profiles.last_name}` : 'Engel'
+  const angelName = booking.angel?.profiles ? `${booking.angel.profiles.first_name} ${booking.angel.profiles.last_name?.[0]}.` : 'Engel'
   const dateStr = booking.date ? new Date(booking.date).toLocaleDateString('de-DE', { day: '2-digit', month: 'long', year: 'numeric' }) : '01. März 2026'
   const timeEnd = `${booking.time?.slice(0,5)} – ${String(Number(booking.time?.slice(0,2)) + booking.duration_hours).padStart(2,'0')}:${booking.time?.slice(3,5)} Uhr`
   const payLabel = booking.payment_method === 'kasse' ? `§45b · ${booking.insurance_provider || ''}` : booking.payment_method === 'kombi' ? `Kombi · ${booking.insurance_provider || ''}` : 'Privat'

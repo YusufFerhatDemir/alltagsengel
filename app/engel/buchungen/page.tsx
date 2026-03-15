@@ -70,7 +70,7 @@ export default function EngelBuchungenPage() {
         ) : (
           filtered.map(b => {
             const customer = b.profiles as any
-            const name = customer ? `${customer.first_name} ${customer.last_name}` : 'Kunde'
+            const name = customer ? `${customer.first_name} ${customer.last_name?.[0] || ''}.` : 'Kunde'
             const st = statusLabels[b.status] || statusLabels.pending
             return (
               <Link key={b.id} href={`/engel/bestaetigt/${b.id}`} style={{ textDecoration: 'none' }}>

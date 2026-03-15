@@ -58,7 +58,7 @@ export default function WartenPage() {
   if (pageStatus === 'not_found') return <NotFoundState title="Buchung nicht gefunden" subtitle="Diese Buchung existiert nicht oder wurde bereits storniert." homeHref="/kunde/home" />
   if (pageStatus === 'error') return <div className="screen"><ErrorState homeHref="/kunde/home" onRetry={() => window.location.reload()} /></div>
 
-  const angelName = booking?.angel?.profiles ? `${booking.angel.profiles.first_name} ${booking.angel.profiles.last_name}` : 'Engel'
+  const angelName = booking?.angel?.profiles ? `${booking.angel.profiles.first_name} ${booking.angel.profiles.last_name?.[0]}.` : 'Engel'
   const dateStr = booking?.date ? new Date(booking.date).toLocaleDateString('de-DE') : '...'
   const timeStr = booking?.time ? `${booking.time.slice(0,5)} Uhr` : '...'
 

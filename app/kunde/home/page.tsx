@@ -239,7 +239,7 @@ export default function KundeHomePage() {
               </div>
               <div className="engel-info">
                 <div className="engel-row1">
-                  <div className="engel-name">{angel.profiles?.first_name} {angel.profiles?.last_name}</div>
+                  <div className="engel-name">{angel.profiles?.first_name} {angel.profiles?.last_name?.[0]}.</div>
                   <div className="engel-rating"><IconStarFilled size={13} /> {angel.rating}</div>
                 </div>
                 <div className="engel-cert"><IconCheck size={12} /> Zertifiziert · {angel.total_jobs} Einsätze{angel._distance !== null ? ` · ${angel._distance.toFixed(1)} km` : angel.profiles?.location ? ` · ${angel.profiles.location}` : ''}</div>

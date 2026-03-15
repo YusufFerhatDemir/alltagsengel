@@ -102,7 +102,7 @@ export default function KundeBuchungenPage() {
             const angel = b.angels as any
             const name = isRide
               ? (b._ride?.abholadresse ? `${b._ride.abholadresse.substring(0, 25)}...` : 'Krankenfahrt')
-              : (angel?.profiles ? `${angel.profiles.first_name} ${angel.profiles.last_name}` : 'Engel')
+              : (angel?.profiles ? `${angel.profiles.first_name} ${angel.profiles.last_name?.[0]}.` : 'Engel')
             const st = statusLabels[b.status] || statusLabels.pending
             const linkHref = isRide ? '/kunde/krankenfahrt/fahrten' : `/kunde/bestaetigt/${b.id}`
             return (

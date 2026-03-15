@@ -36,7 +36,7 @@ export default function KundeChatPage() {
       const chatList: ChatPartner[] = []
       for (const b of bookings) {
         const angel = b.angels as any
-        const name = angel?.profiles ? `${angel.profiles.first_name} ${angel.profiles.last_name}` : 'Engel'
+        const name = angel?.profiles ? `${angel.profiles.first_name} ${angel.profiles.last_name?.[0]}.` : 'Engel'
 
         const { data: msgs } = await supabase
           .from('messages')

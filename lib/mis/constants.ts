@@ -75,16 +75,16 @@ export const FINANCIAL_PROJECTIONS = {
 }
 
 export const UNIT_ECONOMICS = {
-  billingRatePerHour: 40,      // Abrechnungssatz an Pflegekasse
+  billingRatePerHour: 35,      // Abrechnungssatz an Pflegekasse (Kundenpreis 32-35€)
   helperPayPerHour: 20,        // Feste Vergütung an Engel
-  marginPerHour: 20,           // Plattform-Marge pro Stunde
-  marginPercent: 0.50,         // ~50% Bruttomarge
+  marginPerHour: 15,           // Plattform-Marge pro Stunde (35-20)
+  marginPercent: 0.43,         // ~43% Bruttomarge
   avgHoursPerCustomerMonth: 3, // Ø Stunden pro Kunde/Monat
-  marginPerCustomerMonth: 65,  // €65 Marge pro Kunde/Monat
+  marginPerCustomerMonth: 45,  // €15 × 3 Std = €45 Marge pro Kunde/Monat
   cac: 35,
-  ltv: 1560,                   // €65 × 24 Monate Retention
-  ltvCacRatio: 44.6,
-  paybackMonths: 0.5,
+  ltv: 1080,                   // €45 × 24 Monate Retention
+  ltvCacRatio: 30.9,
+  paybackMonths: 0.8,
   monthlyChurn: 0.03,
   entlastungsbetrag: 131,      // §45b Budget pro Person/Monat (2026)
 }
