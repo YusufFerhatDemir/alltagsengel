@@ -98,7 +98,7 @@ export default function MISLayout({ children }: { children: React.ReactNode }) {
       )}
 
       {/* SIDEBAR */}
-      <aside style={{
+      <aside className={`mis-sidebar${mobileOpen ? ' mis-sidebar-open' : ''}`} style={{
         width: isMobile ? 260 : (sidebarOpen ? 260 : 72),
         background: BRAND.coal, color: BRAND.cream,
         display: 'flex', flexDirection: 'column', transition: 'transform 0.25s ease, width 0.25s ease',
@@ -174,7 +174,7 @@ export default function MISLayout({ children }: { children: React.ReactNode }) {
       </aside>
 
       {/* MAIN */}
-      <div style={{ flex: 1, marginLeft: isMobile ? 0 : (sidebarOpen ? 260 : 72), transition: 'margin 0.25s ease', display: 'flex', flexDirection: 'column' }}>
+      <div className="mis-main" style={{ flex: 1, marginLeft: isMobile ? 0 : (sidebarOpen ? 260 : 72), transition: 'margin 0.25s ease', display: 'flex', flexDirection: 'column' }}>
         {/* HEADER */}
         <header style={{
           height: 56, background: '#1E1B17', borderBottom: `1px solid ${BRAND.border}`,
@@ -182,7 +182,7 @@ export default function MISLayout({ children }: { children: React.ReactNode }) {
           padding: isMobile ? '0 14px' : '0 28px', position: 'sticky', top: 0, zIndex: 40,
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16, flex: 1, minWidth: 0 }}>
-            <button onClick={() => setMobileOpen(!mobileOpen)} style={{
+            <button className="mis-hamburger" onClick={() => setMobileOpen(!mobileOpen)} style={{
               background: 'none', border: 'none', cursor: 'pointer', color: BRAND.text,
               display: isMobile ? 'flex' : 'none', alignItems: 'center', justifyContent: 'center',
               padding: 4, flexShrink: 0,

@@ -46,26 +46,34 @@ export default function TeamPage() {
         <Card noPad>
           <DataTable
             columns={[
-              { key: 'name', label: 'Name', render: (r) => (
+              { key: 'name', label: 'Name', render: (r) => {
+                const firstName = r.first_name as string || '?'
+                const lastName = r.last_name as string || ''
+                const displayName = `${firstName} ${lastName.charAt(0)}.`
+                return (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                   <div style={{
                     width: 32, height: 32, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
                     background: r.avatar_color as string || `${BRAND.gold}30`, color: BRAND.text, fontWeight: 700, fontSize: 13,
                   }}>
-                    {(r.first_name as string || '?').charAt(0)}{(r.last_name as string || '').charAt(0)}
+                    {firstName.charAt(0)}{lastName.charAt(0)}
                   </div>
                   <div>
-                    <div style={{ fontWeight: 600 }}>{r.first_name as string} {r.last_name as string}</div>
-                    <div style={{ fontSize: 11, color: BRAND.muted }}>{r.email as string || '—'}</div>
+                    <div style={{ fontWeight: 600 }}>{displayName}</div>
                   </div>
                 </div>
+              )}},
+              { key: 'email', label: 'E-Mail', render: (r) => (
+                <span style={{ fontSize: isMobile ? 11 : 13, wordBreak: 'break-all' }}>{r.email as string || '—'}</span>
               )},
               { key: 'role', label: 'Rolle', render: (r) => (
                 <Badge label={r.role === 'admin' ? 'Admin' : r.role === 'engel' ? 'Engel' : 'Kunde'}
                   color={r.role === 'admin' ? BRAND.gold : r.role === 'engel' ? BRAND.success : BRAND.info} size="sm" />
               )},
-              { key: 'location', label: 'Standort', render: (r) => r.location as string || '—' },
-              { key: 'created_at', label: 'Registriert', render: (r) => new Date(r.created_at as string).toLocaleDateString('de-DE') },
+              ...(!isMobile ? [
+                { key: 'location', label: 'Standort', render: (r: Record<string,unknown>) => r.location as string || '—' },
+                { key: 'created_at', label: 'Registriert', render: (r: Record<string,unknown>) => new Date(r.created_at as string).toLocaleDateString('de-DE') },
+              ] : []),
             ]}
             data={users}
           />

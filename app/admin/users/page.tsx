@@ -38,7 +38,7 @@ export default function AdminUsersPage() {
     const data = await res.json()
 
     if (data.success) {
-      setResetMessage({ type: 'success', text: `Passwort für ${selectedUser.first_name} ${selectedUser.last_name} zurückgesetzt` })
+      setResetMessage({ type: 'success', text: `Passwort für ${selectedUser.first_name} ${(selectedUser.last_name || '').charAt(0)}. zurückgesetzt` })
       setNewPassword('')
       setTimeout(() => { setSelectedUser(null); setResetMessage(null) }, 2000)
     } else {
@@ -93,7 +93,7 @@ export default function AdminUsersPage() {
                       <div className="admin-avatar" style={{ background: p.avatar_color || '#C5A572' }}>
                         {p.first_name?.[0]}{p.last_name?.[0]}
                       </div>
-                      <span>{p.first_name} {p.last_name}</span>
+                      <span>{p.first_name} {(p.last_name || '').charAt(0)}.</span>
                     </div>
                   </td>
                   <td>{p.email}</td>
@@ -125,7 +125,7 @@ export default function AdminUsersPage() {
           <div className="admin-modal" onClick={e => e.stopPropagation()}>
             <h3>Passwort zurücksetzen</h3>
             <p style={{ color: 'var(--ink3)', marginBottom: 16, fontSize: 14 }}>
-              {selectedUser.first_name} {selectedUser.last_name} ({selectedUser.email})
+              {selectedUser.first_name} {(selectedUser.last_name || '').charAt(0)}. ({selectedUser.email})
             </p>
             <input
               type="password"
