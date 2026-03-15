@@ -74,7 +74,7 @@ export default function DashboardPage() {
       {/* Main Grid */}
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(min(340px, 100%), 1fr))', gap: isMobile ? 14 : 20 }}>
         {/* Revenue Projection */}
-        <Card title="5-Jahres-Umsatzprognose" icon="chart">
+        <Card title="5-Jahres-Umsatzprognose" icon="chart" style={{ overflow: 'visible' }}>
           <MiniBarChart
             data={FINANCIAL_PROJECTIONS.revenue}
             labels={FINANCIAL_PROJECTIONS.years}
@@ -88,7 +88,7 @@ export default function DashboardPage() {
         </Card>
 
         {/* Unit Economics */}
-        <Card title="Einheitsökonomie" icon="pieChart">
+        <Card title="Einheitsökonomie" icon="pieChart" style={{ overflow: 'visible' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             <StatRow label="Abrechnungssatz" value={`€${UNIT_ECONOMICS.billingRatePerHour}/Std.`} />
             <StatRow label="Engel-Vergütung" value={`€${UNIT_ECONOMICS.helperPayPerHour}/Std.`} />
@@ -106,7 +106,7 @@ export default function DashboardPage() {
       {/* Second Row */}
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(min(280px, 100%), 1fr))', gap: isMobile ? 14 : 20 }}>
         {/* Quick Actions */}
-        <Card title="Schnellaktionen" icon="zap">
+        <Card title="Schnellaktionen" icon="zap" style={{ overflow: 'visible' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {[
               { icon: 'upload', label: 'Dokument hochladen', href: '/mis/documents' },
@@ -131,7 +131,7 @@ export default function DashboardPage() {
         </Card>
 
         {/* System Health */}
-        <Card title="Systemstatus" icon="activity">
+        <Card title="Systemstatus" icon="activity" style={{ overflow: 'visible' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             <ProgressBar value={95} label="API-Verfügbarkeit" color={BRAND.success} />
             <ProgressBar value={42} label="Speicherauslastung" color={BRAND.gold} />
@@ -142,7 +142,7 @@ export default function DashboardPage() {
         </Card>
 
         {/* Recent Activity */}
-        <Card title="Letzte Aktivitäten" icon="clock">
+        <Card title="Letzte Aktivitäten" icon="clock" style={{ overflow: 'visible' }}>
           <div style={{ display: 'flex', flexDirection: 'column' }}>
             <ActivityItem icon="files" title="Pitch Deck v2 hochgeladen" time="vor 2 Stunden" />
             <ActivityItem icon="shield" title="QP-002 Audit abgeschlossen" time="vor 5 Stunden" color={BRAND.success} />
