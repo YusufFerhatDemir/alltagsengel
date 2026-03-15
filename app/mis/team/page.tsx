@@ -30,7 +30,7 @@ export default function TeamPage() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
       <SectionHeader title="Team & Personal" subtitle="Benutzer, Rollen und Aufgabenverwaltung" icon="users" />
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: isMobile ? 10 : 16 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(auto-fill, minmax(220px, 1fr))', gap: isMobile ? 10 : 16 }}>
         <KpiCard title="Gesamt Benutzer" value={users.length} icon="users" />
         <KpiCard title="Admins" value={admins.length} icon="shield" color={BRAND.gold} />
         <KpiCard title="Engel" value={angels.length} icon="wings" color={BRAND.success} />
