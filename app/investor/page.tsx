@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { Icons } from './docs/shared'
+import { useTrackVisit } from '@/hooks/useTrackVisit'
 
 /* ════════════════════════════════════════════
    AlltagsEngel — Investor Data Room Portal
@@ -43,6 +44,7 @@ const catsDe = ['Alle', 'Unternehmen', 'Finanzen', 'Markt', 'Produkt', 'Strategi
 const catsEn = ['All', 'Company', 'Finance', 'Market', 'Product', 'Strategy', 'Brand', 'Legal', 'Overview']
 
 export default function InvestorPortal() {
+  useTrackVisit('investor')
   const [lang, setLang] = useState<'de' | 'en'>('de')
   const [filter, setFilter] = useState('Alle')
   const docs = lang === 'de' ? docsDe : docsEn

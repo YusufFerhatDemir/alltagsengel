@@ -5,6 +5,19 @@ import { BRAND } from '@/lib/mis/constants'
 import { SectionHeader, Card, KpiCard, DataTable, Tabs, Badge, SearchInput, EmptyState } from '@/components/mis/MisComponents'
 import { useMis } from '@/lib/mis/MisContext'
 
+interface VisitorLocation {
+  id: string
+  portal: string
+  city: string | null
+  country: string | null
+  region: string | null
+  latitude: number | null
+  longitude: number | null
+  source: string | null
+  page_path: string | null
+  created_at: string
+}
+
 interface AuthLogEntry {
   id: string
   user_id: string | null
@@ -34,7 +47,8 @@ export default function AnalyticsPage() {
   const { isMobile } = useMis()
   const [authLogs, setAuthLogs] = useState<AuthLogEntry[]>([])
   const [users, setUsers] = useState<UserSession[]>([])
-  const [tab, setTab] = useState('logins')
+  const [visitors, setVisitors] = useState<VisitorLocation[]>([])
+  const [tab, setTab] = useState('herkunft')
   const [search, setSearch] = useState('')
   const [timeFilter, setTimeFilter] = useState('7d')
   const [loading, setLoading] = useState(true)
@@ -67,8 +81,17 @@ export default function AnalyticsPage() {
       .select('*')
       .order('created_at', { ascending: false })
 
+    // Besucher-Standorte laden
+    const { data: visitorData } = await supabase
+      .from('visitor_locations')
+      .select('*')
+      .gte('created_at', since.toISOString())
+      .order('created_at', { ascending: false })
+      .limit(500)
+
     setAuthLogs(logs as AuthLogEntry[] || [])
     setUsers(profiles as UserSession[] || [])
+    setVisitors(visitorData as VisitorLocation[] || [])
     setLoading(false)
   }
 
@@ -133,6 +156,41 @@ export default function AnalyticsPage() {
            (u.role?.toLowerCase().includes(s))
   })
 
+  // Besucher-Herkunft Statistiken
+  const cityCounts = visitors.reduce<Record<string, number>>((acc, v) => {
+    const key = v.city || 'Unbekannt'
+    acc[key] = (acc[key] || 0) + 1
+    return acc
+  }, {})
+  const topCities = Object.entries(cityCounts).sort((a, b) => b[1] - a[1]).slice(0, 15)
+
+  const countryCounts = visitors.reduce<Record<string, number>>((acc, v) => {
+    const key = v.country || 'Unbekannt'
+    acc[key] = (acc[key] || 0) + 1
+    return acc
+  }, {})
+  const topCountries = Object.entries(countryCounts).sort((a, b) => b[1] - a[1]).slice(0, 10)
+
+  const portalCounts = visitors.reduce<Record<string, number>>((acc, v) => {
+    acc[v.portal] = (acc[v.portal] || 0) + 1
+    return acc
+  }, {})
+
+  const sourceCounts = visitors.reduce<Record<string, number>>((acc, v) => {
+    const key = v.source || 'unbekannt'
+    acc[key] = (acc[key] || 0) + 1
+    return acc
+  }, {})
+
+  const portalColors: Record<string, string> = {
+    kunde: BRAND.info, engel: BRAND.success, fahrer: '#FF9800',
+    investor: BRAND.gold, landing: '#9C27B0',
+  }
+  const portalLabels: Record<string, string> = {
+    kunde: 'Kunden', engel: 'Engel', fahrer: 'Fahrer',
+    investor: 'Investor', landing: 'Landing Page',
+  }
+
   const timeButtons = [
     { id: 'today', label: 'Heute' },
     { id: '7d', label: '7 Tage' },
@@ -180,10 +238,147 @@ export default function AnalyticsPage() {
 
       {/* Tabs */}
       <Tabs tabs={[
+        { id: 'herkunft', label: 'Besucher-Herkunft', icon: 'globe', count: visitors.length },
         { id: 'logins', label: 'Login-Protokoll', icon: 'clock', count: filteredLogs.length },
         { id: 'users', label: 'Benutzer', icon: 'users', count: filteredUsers.length },
         { id: 'live', label: 'Übersicht', icon: 'activity' },
       ]} active={tab} onChange={setTab} />
+
+      {/* Besucher-Herkunft */}
+      {tab === 'herkunft' && (
+        <>
+          {/* Herkunft KPIs */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: isMobile ? 10 : 16 }}>
+            <KpiCard title="Besuche gesamt" value={visitors.length} icon="globe" />
+            <KpiCard title="Städte" value={Object.keys(cityCounts).length} icon="mapPin" color={BRAND.info} />
+            <KpiCard title="Länder" value={Object.keys(countryCounts).length} icon="flag" color={BRAND.success} />
+            <KpiCard title="GPS-Genauigkeit" value={`${visitors.length > 0 ? Math.round((sourceCounts['gps'] || 0) / visitors.length * 100) : 0}%`} icon="target" color={BRAND.gold} />
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 16 }}>
+            {/* Top Städte */}
+            <Card title="Top Städte" icon="mapPin">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {topCities.length === 0 ? (
+                  <div style={{ padding: 20, textAlign: 'center', color: BRAND.muted, fontSize: 13 }}>Noch keine Daten</div>
+                ) : topCities.map(([city, count], i) => {
+                  const pct = visitors.length > 0 ? (count / visitors.length * 100) : 0
+                  return (
+                    <div key={city} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '6px 0' }}>
+                      <span style={{ width: 20, fontSize: 11, color: BRAND.muted, textAlign: 'right' }}>{i + 1}.</span>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3 }}>
+                          <span style={{ fontSize: 13, fontWeight: 500, color: BRAND.text }}>{city}</span>
+                          <span style={{ fontSize: 12, color: BRAND.muted }}>{count}× ({pct.toFixed(0)}%)</span>
+                        </div>
+                        <div style={{ height: 4, borderRadius: 2, background: `${BRAND.gold}20` }}>
+                          <div style={{ height: 4, borderRadius: 2, background: BRAND.gold, width: `${pct}%`, transition: 'width 0.3s' }} />
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </Card>
+
+            {/* Top Länder */}
+            <Card title="Top Länder" icon="flag">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {topCountries.length === 0 ? (
+                  <div style={{ padding: 20, textAlign: 'center', color: BRAND.muted, fontSize: 13 }}>Noch keine Daten</div>
+                ) : topCountries.map(([country, count], i) => {
+                  const pct = visitors.length > 0 ? (count / visitors.length * 100) : 0
+                  return (
+                    <div key={country} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '6px 0' }}>
+                      <span style={{ width: 20, fontSize: 11, color: BRAND.muted, textAlign: 'right' }}>{i + 1}.</span>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3 }}>
+                          <span style={{ fontSize: 13, fontWeight: 500, color: BRAND.text }}>{country}</span>
+                          <span style={{ fontSize: 12, color: BRAND.muted }}>{count}× ({pct.toFixed(0)}%)</span>
+                        </div>
+                        <div style={{ height: 4, borderRadius: 2, background: `${BRAND.info}20` }}>
+                          <div style={{ height: 4, borderRadius: 2, background: BRAND.info, width: `${pct}%`, transition: 'width 0.3s' }} />
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </Card>
+
+            {/* Portal-Verteilung */}
+            <Card title="Besuche nach Portal" icon="layout">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {Object.entries(portalCounts).sort((a, b) => b[1] - a[1]).map(([portal, count]) => (
+                  <div key={portal} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <div style={{ width: 10, height: 10, borderRadius: '50%', background: portalColors[portal] || BRAND.muted, flexShrink: 0 }} />
+                    <span style={{ fontSize: 13, color: BRAND.text, flex: 1 }}>{portalLabels[portal] || portal}</span>
+                    <span style={{ fontSize: 15, fontWeight: 700, color: portalColors[portal] || BRAND.muted }}>{count}</span>
+                  </div>
+                ))}
+                {Object.keys(portalCounts).length === 0 && (
+                  <div style={{ padding: 20, textAlign: 'center', color: BRAND.muted, fontSize: 13 }}>Noch keine Daten</div>
+                )}
+              </div>
+            </Card>
+
+            {/* Standort-Quelle */}
+            <Card title="Standort-Erkennung" icon="target">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {[
+                  { key: 'gps', label: 'GPS (genau)', color: BRAND.success, icon: '📍' },
+                  { key: 'ip', label: 'IP-Adresse (Stadt)', color: BRAND.info, icon: '🌐' },
+                  { key: 'fallback', label: 'Fallback (Standard)', color: BRAND.muted, icon: '📌' },
+                ].map(s => (
+                  <div key={s.key} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <span style={{ fontSize: 16 }}>{s.icon}</span>
+                    <span style={{ fontSize: 13, color: BRAND.text, flex: 1 }}>{s.label}</span>
+                    <span style={{ fontSize: 15, fontWeight: 700, color: s.color }}>{sourceCounts[s.key] || 0}</span>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          </div>
+
+          {/* Letzte Besuche Tabelle */}
+          <Card title="Letzte Besuche" icon="clock" noPad>
+            <DataTable
+              columns={[
+                { key: 'city', label: 'Stadt', render: (r: any) => (
+                  <div>
+                    <div style={{ fontWeight: 500, fontSize: 13 }}>{r.city || '—'}</div>
+                    <div style={{ fontSize: 11, color: BRAND.muted }}>{r.region || ''}</div>
+                  </div>
+                )},
+                { key: 'country', label: 'Land', render: (r: any) => (
+                  <span style={{ fontSize: 13 }}>{r.country || '—'}</span>
+                )},
+                { key: 'portal', label: 'Portal', render: (r: any) => (
+                  <Badge label={portalLabels[r.portal] || r.portal} color={portalColors[r.portal] || BRAND.muted} size="sm" />
+                )},
+                { key: 'source', label: 'Quelle', render: (r: any) => (
+                  <Badge
+                    label={r.source === 'gps' ? 'GPS' : r.source === 'ip' ? 'IP' : 'Fallback'}
+                    color={r.source === 'gps' ? BRAND.success : r.source === 'ip' ? BRAND.info : BRAND.muted}
+                    size="sm"
+                  />
+                )},
+                { key: 'created_at', label: 'Zeitpunkt', render: (r: any) => {
+                  const d = new Date(r.created_at)
+                  return (
+                    <div>
+                      <div style={{ fontSize: 13 }}>{d.toLocaleDateString('de-DE')}</div>
+                      <div style={{ fontSize: 11, color: BRAND.muted }}>{d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}</div>
+                    </div>
+                  )
+                }},
+              ]}
+              data={visitors.slice(0, 50) as unknown as Record<string, unknown>[]}
+              emptyMessage="Noch keine Besucher-Daten"
+            />
+          </Card>
+        </>
+      )}
 
       {/* Login-Protokoll */}
       {tab === 'logins' && (

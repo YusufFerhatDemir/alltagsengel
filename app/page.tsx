@@ -1,10 +1,12 @@
 import Link from 'next/link'
 import Icon3D from '@/components/Icon3D'
 import AppMockup from '@/components/AppMockup'
+import VisitTracker from '@/components/VisitTracker'
 
 export default function SplashPage() {
   return (
     <div className="screen" id="splash">
+      <VisitTracker portal="landing" />
       <div className="sp-glow"></div>
       <div className="sp-inner">
         <div style={{ marginBottom: 26 }}>
