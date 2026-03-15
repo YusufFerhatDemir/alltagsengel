@@ -80,7 +80,7 @@ function LoginForm() {
         .single()
 
       if (profile?.role === 'admin') {
-        router.push('/admin/home')
+        router.push('/mis')
       } else if (profile?.role === 'engel') {
         // Check if angel profile exists
         const { data: angel } = await supabase

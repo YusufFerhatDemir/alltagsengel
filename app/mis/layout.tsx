@@ -148,13 +148,22 @@ export default function MISLayout({ children }: { children: React.ReactNode }) {
         {/* Sidebar Footer */}
         <div style={{ padding: sidebarOpen ? '16px 22px' : '16px 8px', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
           {sidebarOpen && (
-            <a href="https://alltagsengel.vercel.app/kunde/home" target="_blank" rel="noopener noreferrer" style={{
-              display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px', borderRadius: 10,
-              background: `${BRAND.gold}15`, color: BRAND.gold, textDecoration: 'none', fontSize: 12, fontWeight: 600,
-              marginBottom: 12,
-            }}>
-              <MIcon name="externalLink" size={14} /> App öffnen
-            </a>
+            <>
+              <a href="/admin/home" style={{
+                display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px', borderRadius: 10,
+                background: `${BRAND.gold}15`, color: BRAND.gold, textDecoration: 'none', fontSize: 12, fontWeight: 600,
+                marginBottom: 8,
+              }}>
+                <MIcon name="settings" size={14} /> Admin Panel
+              </a>
+              <a href="https://alltagsengel.care/kunde/home" target="_blank" rel="noopener noreferrer" style={{
+                display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px', borderRadius: 10,
+                background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.5)', textDecoration: 'none', fontSize: 12, fontWeight: 600,
+                marginBottom: 12,
+              }}>
+                <MIcon name="externalLink" size={14} /> App öffnen
+              </a>
+            </>
           )}
           <button onClick={() => setSidebarOpen(!sidebarOpen)} style={{
             background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)',
