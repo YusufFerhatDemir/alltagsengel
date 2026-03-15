@@ -7,6 +7,7 @@ import { NAV_ITEMS, BRAND } from '@/lib/mis/constants'
 import { MIcon } from '@/components/mis/MisIcons'
 import { SearchInput } from '@/components/mis/MisComponents'
 import { MisProvider } from '@/lib/mis/MisContext'
+import './responsive.css'
 
 export default function MISLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()

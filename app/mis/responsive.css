@@ -1,0 +1,50 @@
+/* ==============================================
+   MIS Portal — Mobile Responsive CSS Safety Net
+   ==============================================
+   These media queries ensure correct mobile layout
+   BEFORE JavaScript hydration (SSR renders desktop
+   layout since isMobile defaults to false on server).
+   After hydration, React inline styles take over.
+   ============================================== */
+
+@media (max-width: 899px) {
+  /* KPI grids (220px items) — 2 columns on mobile */
+  .mis-content [style*="minmax(min(220px"] {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
+  }
+
+  /* Small item grids (160px) — 2 columns on mobile */
+  .mis-content [style*="minmax(min(160px"] {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
+  }
+
+  /* Content card grids — single column on mobile */
+  .mis-content [style*="minmax(min(340px"],
+  .mis-content [style*="minmax(min(300px"],
+  .mis-content [style*="minmax(min(280px"],
+  .mis-content [style*="minmax(min(250px"] {
+    grid-template-columns: 1fr !important;
+    gap: 14px !important;
+  }
+
+  /* Main content area — tight padding on mobile */
+  .mis-content {
+    padding: 12px !important;
+    overflow-x: hidden !important;
+  }
+
+  /* Prevent ANY horizontal overflow in content area */
+  .mis-content > * {
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+  }
+
+  /* Tables: allow horizontal scroll only within cards */
+  .mis-content table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
