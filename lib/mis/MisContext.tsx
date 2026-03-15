@@ -3,8 +3,14 @@ import React, { createContext, useContext, useState, useEffect } from 'react'
 
 const MisContext = createContext({ isMobile: false })
 
+// SSR-safe: check user agent for initial mobile detection to avoid flash
+function getInitialMobile(): boolean {
+  if (typeof window === 'undefined') return false
+  return window.innerWidth < 900
+}
+
 export function MisProvider({ children }: { children: React.ReactNode }) {
-  const [isMobile, setIsMobile] = useState(false)
+  const [isMobile, setIsMobile] = useState(getInitialMobile)
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 900)
     check()
