@@ -53,12 +53,12 @@ export default function QualityPage() {
           ) : (
             <DataTable
               columns={[
-                { key: 'process_id', label: 'ID', width: '80px' },
-                { key: 'name', label: 'Prozessname', render: (r) => <span style={{ fontWeight: 600 }}>{r.name as string}</span> },
-                { key: 'category', label: 'Kategorie', render: (r) => (
-                  <Badge label={r.category === 'core' ? 'Kern' : r.category === 'support' ? 'Support' : 'Management'} color={r.category === 'core' ? BRAND.gold : r.category === 'support' ? BRAND.info : BRAND.muted} size="sm" />
+                { key: 'process_id', label: 'ID', width: isMobile ? '50px' : '80px' },
+                { key: 'name', label: 'Prozess', render: (r) => <span style={{ fontWeight: 600, fontSize: isMobile ? 12 : 14 }}>{r.name as string}</span> },
+                { key: 'category', label: 'Kat.', render: (r) => (
+                  <Badge label={r.category === 'core' ? 'Kern' : r.category === 'support' ? 'Supp.' : 'Mgmt.'} color={r.category === 'core' ? BRAND.gold : r.category === 'support' ? BRAND.info : BRAND.muted} size="sm" />
                 )},
-                { key: 'risk_level', label: 'Risiko', render: (r) => <RiskBadge level={r.risk_level as string} /> },
+                ...(!isMobile ? [{ key: 'risk_level', label: 'Risiko', render: (r: Record<string,unknown>) => <RiskBadge level={r.risk_level as string} /> }] : []),
                 { key: 'status', label: 'Status', render: (r) => (
                   <Badge label={r.status === 'active' ? 'Aktiv' : String(r.status)} color={r.status === 'active' ? BRAND.success : BRAND.warning} size="sm" />
                 )},
@@ -80,11 +80,11 @@ export default function QualityPage() {
             <Card noPad>
               <DataTable
                 columns={[
-                  { key: 'audit_number', label: 'Audit-Nr.' },
+                  { key: 'audit_number', label: 'Nr.' },
                   { key: 'audit_type', label: 'Typ', render: (r) => <Badge label={String(r.audit_type)} color={BRAND.info} size="sm" /> },
-                  { key: 'auditor_name', label: 'Auditor' },
+                  ...(!isMobile ? [{ key: 'auditor_name', label: 'Auditor' }] : []),
                   { key: 'status', label: 'Status', render: (r) => <Badge label={String(r.status)} color={r.status === 'completed' ? BRAND.success : BRAND.warning} size="sm" /> },
-                  { key: 'findings_count', label: 'Befunde' },
+                  ...(!isMobile ? [{ key: 'findings_count', label: 'Befunde' }] : []),
                   { key: 'scheduled_date', label: 'Datum', render: (r) => r.scheduled_date ? new Date(r.scheduled_date as string).toLocaleDateString('de-DE') : '—' },
                 ]}
                 data={audits as unknown as Record<string,unknown>[]}
