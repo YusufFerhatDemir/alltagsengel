@@ -35,9 +35,9 @@ export default function MarketPage() {
         <KpiCard title="Entlastungsbetrag" value={`€${M.entlastungsbetrag}`} unit="/Monat" icon="banknote" color={BRAND.gold} />
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(340px, 1fr))', gap: isMobile ? 12 : 20 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(min(340px, 100%), 1fr))', gap: isMobile ? 12 : 20 }}>
         {/* Market Size */}
-        <Card title="Marktchance" icon="pieChart">
+        <Card title="Marktchance" icon="pieChart" style={{ overflow: 'visible' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
             <StatRow label="Pflegebedürftige (PG 1-5)" value="4,96 Mio." />
             <StatRow label="§45b Entlastungsbetrag" value={`€${M.entlastungsbetrag}/Monat`} />
@@ -58,7 +58,7 @@ export default function MarketPage() {
         </Card>
 
         {/* Demographics */}
-        <Card title="Demografische Entwicklung" icon="users">
+        <Card title="Demografische Entwicklung" icon="users" style={{ overflow: 'visible' }}>
           <MiniBarChart
             data={DEMOGRAPHICS.map(d => d.count)}
             labels={DEMOGRAPHICS.map(d => d.year)}
@@ -72,7 +72,7 @@ export default function MarketPage() {
       </div>
 
       {/* Competition */}
-      <Card title="Wettbewerbslandschaft" icon="target" noPad>
+      <Card title="Wettbewerbslandschaft" icon="target" noPad style={{ overflow: 'visible' }}>
         <DataTable
           columns={[
             { key: 'name', label: 'Wettbewerber', render: (r) => <span style={{ fontWeight: 600 }}>{r.name as string}</span> },
@@ -90,8 +90,8 @@ export default function MarketPage() {
       </Card>
 
       {/* Competitive Advantage */}
-      <Card title="Unser Wettbewerbsvorteil" icon="zap" style={{ background: `linear-gradient(135deg, ${BRAND.coal}, #2D2820)`, border: 'none' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(280px, 1fr))', gap: isMobile ? 10 : 16 }}>
+      <Card title="Unser Wettbewerbsvorteil" icon="zap" style={{ background: `linear-gradient(135deg, ${BRAND.coal}, #2D2820)`, border: 'none', overflow: 'visible' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(min(280px, 100%), 1fr))', gap: isMobile ? 10 : 16 }}>
           {[
             { title: '§45b Integration', desc: 'Einzige Plattform mit direkter Abrechnung über den Entlastungsbetrag' },
             { title: 'Zweisei­tiger Marktplatz', desc: 'Matching-Algorithmus verbindet Kunden und zertifizierte Engel' },

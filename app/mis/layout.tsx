@@ -336,7 +336,7 @@ export default function MISLayout({ children }: { children: React.ReactNode }) {
         </header>
 
         {/* PAGE CONTENT */}
-        <main className="mis-content" style={{ flex: 1, padding: isMobile ? 12 : 28, width: '100%', maxWidth: '100%', overflowX: 'hidden', minWidth: 0, boxSizing: 'border-box' }}>
+        <main className="mis-content" style={{ flex: 1, padding: isMobile ? 12 : 28, width: '100%', maxWidth: '100%', overflowX: 'auto', minWidth: 0, boxSizing: 'border-box' }}>
           {children}
         </main>
 
