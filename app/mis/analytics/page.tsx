@@ -50,8 +50,10 @@ export default function AnalyticsPage() {
   const [visitors, setVisitors] = useState<VisitorLocation[]>([])
   const [tab, setTab] = useState('herkunft')
   const [search, setSearch] = useState('')
-  const [timeFilter, setTimeFilter] = useState('7d')
+  const [timeFilter, setTimeFilter] = useState('all')
   const [loading, setLoading] = useState(true)
+  const [visitorPage, setVisitorPage] = useState(1)
+  const visitorPageSize = 100
 
   useEffect(() => { loadData() }, [timeFilter])
 
@@ -81,13 +83,23 @@ export default function AnalyticsPage() {
       .select('*')
       .order('created_at', { ascending: false })
 
-    // Besucher-Standorte laden
-    const { data: visitorData } = await supabase
-      .from('visitor_locations')
-      .select('*')
-      .gte('created_at', since.toISOString())
-      .order('created_at', { ascending: false })
-      .limit(500)
+    // Besucher-Standorte laden (ALLE Daten, kein Limit)
+    let allVisitors: any[] = []
+    let from = 0
+    const pageSize = 1000
+    while (true) {
+      const { data: chunk } = await supabase
+        .from('visitor_locations')
+        .select('*')
+        .gte('created_at', since.toISOString())
+        .order('created_at', { ascending: false })
+        .range(from, from + pageSize - 1)
+      if (!chunk || chunk.length === 0) break
+      allVisitors = allVisitors.concat(chunk)
+      if (chunk.length < pageSize) break
+      from += pageSize
+    }
+    const visitorData = allVisitors
 
     setAuthLogs(logs as AuthLogEntry[] || [])
     setUsers(profiles as UserSession[] || [])
@@ -340,8 +352,8 @@ export default function AnalyticsPage() {
             </Card>
           </div>
 
-          {/* Letzte Besuche Tabelle */}
-          <Card title="Letzte Besuche" icon="clock" noPad>
+          {/* Alle Besuche Tabelle mit Pagination */}
+          <Card title={`Alle Besuche (${visitors.length} gesamt)`} icon="clock" noPad>
             <DataTable
               columns={[
                 { key: 'city', label: 'Stadt', render: (r: any) => (
@@ -373,9 +385,44 @@ export default function AnalyticsPage() {
                   )
                 }},
               ]}
-              data={visitors.slice(0, 50) as unknown as Record<string, unknown>[]}
+              data={visitors.slice((visitorPage - 1) * visitorPageSize, visitorPage * visitorPageSize) as unknown as Record<string, unknown>[]}
               emptyMessage="Noch keine Besucher-Daten"
             />
+            {/* Pagination */}
+            {visitors.length > visitorPageSize && (
+              <div style={{
+                display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8,
+                padding: '16px 20px', borderTop: `1px solid ${BRAND.border}`,
+              }}>
+                <button
+                  onClick={() => setVisitorPage(p => Math.max(1, p - 1))}
+                  disabled={visitorPage <= 1}
+                  style={{
+                    padding: '6px 14px', borderRadius: 8, fontSize: 12, fontWeight: 600,
+                    border: `1px solid ${BRAND.border}`, cursor: visitorPage <= 1 ? 'default' : 'pointer',
+                    background: BRAND.white, color: visitorPage <= 1 ? BRAND.muted : BRAND.text,
+                    opacity: visitorPage <= 1 ? 0.5 : 1, fontFamily: 'inherit',
+                  }}
+                >
+                  ← Zurück
+                </button>
+                <span style={{ fontSize: 13, color: BRAND.muted }}>
+                  Seite {visitorPage} von {Math.ceil(visitors.length / visitorPageSize)} ({visitors.length} Einträge)
+                </span>
+                <button
+                  onClick={() => setVisitorPage(p => Math.min(Math.ceil(visitors.length / visitorPageSize), p + 1))}
+                  disabled={visitorPage >= Math.ceil(visitors.length / visitorPageSize)}
+                  style={{
+                    padding: '6px 14px', borderRadius: 8, fontSize: 12, fontWeight: 600,
+                    border: `1px solid ${BRAND.border}`, cursor: visitorPage >= Math.ceil(visitors.length / visitorPageSize) ? 'default' : 'pointer',
+                    background: BRAND.white, color: visitorPage >= Math.ceil(visitors.length / visitorPageSize) ? BRAND.muted : BRAND.text,
+                    opacity: visitorPage >= Math.ceil(visitors.length / visitorPageSize) ? 0.5 : 1, fontFamily: 'inherit',
+                  }}
+                >
+                  Weiter →
+                </button>
+              </div>
+            )}
           </Card>
         </>
       )}
