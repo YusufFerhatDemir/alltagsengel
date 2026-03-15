@@ -197,7 +197,7 @@ export default function KrankenfahrtenAdminPage() {
           <DataTable
             columns={[
               { key: 'datum', label: 'Datum', render: (r: any) => `${new Date(r.datum).toLocaleDateString('de-DE')} ${r.uhrzeit}` },
-              { key: 'customer', label: 'Kunde', render: (r: any) => r.customer ? `${r.customer.first_name} ${r.customer.last_name}` : '–' },
+              { key: 'customer', label: 'Kunde', render: (r: any) => r.customer ? `${r.customer.first_name} ${(r.customer.last_name || '').charAt(0)}.` : '–' },
               { key: 'abholadresse', label: 'Von', render: (r: any) => r.abholadresse?.substring(0, 30) + (r.abholadresse?.length > 30 ? '…' : '') },
               { key: 'zieladresse', label: 'Nach', render: (r: any) => r.zieladresse?.substring(0, 30) + (r.zieladresse?.length > 30 ? '…' : '') },
               { key: 'total_amount', label: 'Betrag', render: (r: any) => `${(r.total_amount || 0).toFixed(2)} €` },
@@ -222,7 +222,7 @@ export default function KrankenfahrtenAdminPage() {
           <DataTable
             columns={[
               { key: 'company', label: 'Firma', render: (p: any) => p.company_name || '–' },
-              { key: 'name', label: 'Name', render: (p: any) => p.profile ? `${p.profile.first_name} ${p.profile.last_name}` : '–' },
+              { key: 'name', label: 'Name', render: (p: any) => p.profile ? `${p.profile.first_name} ${(p.profile.last_name || '').charAt(0)}.` : '–' },
               { key: 'license', label: 'Lizenz', render: (p: any) => p.license_number || '–' },
               { key: 'city', label: 'Stadt', render: (p: any) => p.city || '–' },
               { key: 'phone', label: 'Telefon', render: (p: any) => p.phone || p.profile?.phone || '–' },
@@ -249,7 +249,7 @@ export default function KrankenfahrtenAdminPage() {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               <InfoField label="Datum" value={`${new Date(selectedRide.datum).toLocaleDateString('de-DE')} ${selectedRide.uhrzeit}`} />
               <InfoField label="Status" value={statusLabel(selectedRide.status)} />
-              <InfoField label="Kunde" value={selectedRide.customer ? `${selectedRide.customer.first_name} ${selectedRide.customer.last_name}` : '–'} />
+              <InfoField label="Kunde" value={selectedRide.customer ? `${selectedRide.customer.first_name} ${(selectedRide.customer.last_name || '').charAt(0)}.` : '–'} />
               <InfoField label="Betrag" value={`${(selectedRide.total_amount || 0).toFixed(2)} €`} />
             </div>
             <InfoField label="Abholadresse" value={selectedRide.abholadresse} />
@@ -314,7 +314,7 @@ export default function KrankenfahrtenAdminPage() {
         <Modal open={true} title="Fahrer verwalten" onClose={() => setSelectedProvider(null)}>
           <div style={{ display: 'grid', gap: 12, fontSize: 13, color: BRAND.text }}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-              <InfoField label="Name" value={selectedProvider.profile ? `${selectedProvider.profile.first_name} ${selectedProvider.profile.last_name}` : '–'} />
+              <InfoField label="Name" value={selectedProvider.profile ? `${selectedProvider.profile.first_name} ${(selectedProvider.profile.last_name || '').charAt(0)}.` : '–'} />
               <InfoField label="Firma" value={selectedProvider.company_name || '–'} />
               <InfoField label="Lizenz" value={selectedProvider.license_number || '–'} />
               <InfoField label="Steuer-ID" value={selectedProvider.tax_id || '–'} />

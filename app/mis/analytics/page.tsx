@@ -583,7 +583,7 @@ export default function AnalyticsPage() {
 
       {/* Übersicht / Statistik */}
       {tab === 'live' && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: isMobile ? 12 : 20 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(340px, 1fr))', gap: isMobile ? 12 : 20 }}>
           <Card title="Login-Verteilung nach Rolle" icon="pieChart">
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {[
