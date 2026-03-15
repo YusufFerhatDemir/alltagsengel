@@ -102,8 +102,9 @@ export default function MISLayout({ children }: { children: React.ReactNode }) {
         width: isMobile ? 260 : (sidebarOpen ? 260 : 72),
         background: BRAND.coal, color: BRAND.cream,
         display: 'flex', flexDirection: 'column', transition: 'transform 0.25s ease, width 0.25s ease',
-        position: 'fixed', top: 0, left: 0, bottom: 0, zIndex: 50, overflow: 'hidden',
+        position: 'fixed', top: 0, left: 0, bottom: 0, zIndex: 50, overflowY: 'auto', overflowX: 'hidden',
         transform: isMobile && !mobileOpen ? 'translateX(-100%)' : 'translateX(0)',
+        WebkitOverflowScrolling: 'touch',
       }}>
         {/* Logo */}
         <div style={{

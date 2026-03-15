@@ -1018,7 +1018,7 @@ body {
 .admin-filter-btn { padding:6px 16px; border-radius:20px; border:1.5px solid var(--border); background:var(--coal2); font-size:13px; cursor:pointer; color:var(--ink3); transition:all .2s; font-family:'Jost',sans-serif; }
 .admin-filter-btn.active { background:linear-gradient(135deg,var(--gold2),var(--gold)); color:var(--coal); border-color:var(--gold); font-weight:600; box-shadow:0 2px 12px rgba(201,150,60,.25); }
 .admin-filter-btn:hover:not(.active) { border-color:rgba(201,150,60,.3); color:var(--ink2); }
-.admin-table-wrap { background:var(--coal2); border:1px solid var(--border); border-radius:16px; overflow:hidden; box-shadow:0 4px 20px rgba(0,0,0,.2); }
+.admin-table-wrap { background:var(--coal2); border:1px solid var(--border); border-radius:16px; overflow-x:auto; overflow-y:hidden; box-shadow:0 4px 20px rgba(0,0,0,.2); -webkit-overflow-scrolling:touch; }
 .admin-table { width:100%; border-collapse:collapse; font-size:14px; }
 .admin-table th { background:var(--coal3); padding:12px 16px; text-align:left; font-weight:600; color:var(--ink3); font-size:12px; text-transform:uppercase; letter-spacing:.5px; border-bottom:1px solid var(--border); }
 .admin-table td { padding:12px 16px; border-bottom:1px solid var(--border); color:var(--ink2); }
