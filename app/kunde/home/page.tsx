@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { IconPin, IconSearch, IconUser, IconCard, IconStarFilled, IconCheck, IconStarGold, IconHandshakeGold, IconMedicalGold, IconBagGold, IconHomeGold, IconCoffeeGold, IconPillGold, IconWalkGold, IconTargetGold, IconWingsGold, IconBox, IconKrankenfahrtGold, IconHygieneboxGold } from '@/components/Icons'
 import { useRouter } from 'next/navigation'
 import { haversineDistance } from '@/lib/geocoding'
+import { useUserLocation } from '@/hooks/useUserLocation'
 
 const categories: { key: string; icon: ReactNode; label: string }[] = [
   { key: 'all', icon: <IconStarGold size={26} />, label: 'Alle' },
@@ -40,6 +41,7 @@ export default function KundeHomePage() {
   const [activeCategory, setActiveCategory] = useState('all')
   const [searchRadius, setSearchRadius] = useState(10)
   const [searchQuery, setSearchQuery] = useState('')
+  const userLocation = useUserLocation()
 
   useEffect(() => {
     async function load() {
@@ -55,14 +57,26 @@ export default function KundeHomePage() {
     load()
   }, [])
 
+  // Standort in Profil aktualisieren (GPS/IP)
+  useEffect(() => {
+    if (!userLocation.loading && userLocation.city && profile && !profile.location) {
+      const supabase = createClient()
+      supabase.auth.getUser().then(({ data: { user } }) => {
+        if (user) {
+          supabase.from('profiles').update({ location: userLocation.city }).eq('id', user.id)
+        }
+      })
+    }
+  }, [userLocation.loading, userLocation.city, profile])
+
   const firstName = profile?.first_name || ''
 
-  // Mesafe filtresi: Müşteri ve engel koordinatları varsa hesapla
+  // Mesafe filtresi: GPS veya profil koordinatları ile hesapla
   const angelsWithDistance = angels.map((a: any) => {
     const aLat = a.profiles?.latitude
     const aLng = a.profiles?.longitude
-    const pLat = profile?.latitude
-    const pLng = profile?.longitude
+    const pLat = profile?.latitude || userLocation.lat
+    const pLng = profile?.longitude || userLocation.lng
     const distance = (pLat && pLng && aLat && aLng)
       ? haversineDistance(pLat, pLng, aLat, aLng)
       : null
