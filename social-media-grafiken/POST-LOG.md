@@ -202,3 +202,66 @@ Wir pflegen nicht. Wir begleiten. 💛 Premium Alltagsbegleitung in Frankfurt. P
 
 #pflegemitherz #entlastungsbetrag #alltagsbegleitung #engel #frankfurt #schönheit #herzlichwillkommen #viral #ichliebemeinenjob #love #alltagsengel.care #entlasstunspaket #kurzzeitpflege #nordend #dornbusch #bornheim #ginnheim #krankenfahrten #pflegefachkraft #pflegestufe #bockenheim #frankfurtammain #rheinmaingebiet #pflegekassen #alltagshelfer #alltagshelden #pflegegradbeantragen #senioren #seniorenhilfen #pflegealltag #pflegekräfte #pflegemitherz
 ```
+
+---
+
+## 15.03.2026 — Unsere Leistungen (Awareness Post)
+
+**Status:** 📋 Bereit zum Posten (Browser-Timeout — manueller Upload nötig)
+**Plattform:** Instagram + Facebook + TikTok
+**Typ:** Grafik (1080x1080)
+**Datei:** POST-2026-03-15-leistungen.png
+**Geplante Uhrzeit:** 10:00-12:00 Uhr (Sonntag optimal)
+
+**Caption (DE):**
+```
+Was macht ein AlltagsEngel? 😇
+
+Unsere 6 Leistungen für dich:
+
+1️⃣ Einkaufsbegleitung — Wir gehen mit dir einkaufen
+2️⃣ Arzt- & Klinikbegleitung — Sicher zum Termin
+3️⃣ Krankenfahrt — Ohne Auto? Kein Problem!
+4️⃣ Behördengänge & Termine — Wir begleiten dich
+5️⃣ Gesellschaft & Gespräche — Gegen Einsamkeit
+6️⃣ Haushaltsnahe Hilfe — Kochen, Putzen, Ordnung
+
+Alles über die Pflegekasse — 131€/Monat. Du zahlst nichts.
+
+📱 alltagsengel.care
+✉️ info@alltagsengel.care
+
+COMING SOON — Bald verfügbar in Frankfurt!
+
+#AlltagsEngel #Alltagsbegleitung #Frankfurt #Pflege #Seniorenhilfe #Pflegekasse #Entlastungsbetrag #131Euro #FrankfurtAmMain #Senioren #§45b #ComingSoon #Krankenfahrt #Einkaufshilfe #Arztbegleitung
+```
+
+**Caption (TR):**
+```
+Bir AlltagsEngel ne yapar? 😇
+
+Sana sunduğumuz 6 hizmet:
+
+1️⃣ Alışveriş refakati — Seninle birlikte alışverişe çıkıyoruz
+2️⃣ Doktor & klinik refakati — Randevuna güvenle git
+3️⃣ Hasta nakliyesi — Araban yok mu? Sorun değil!
+4️⃣ Resmi işlemler & randevular — Sana eşlik ediyoruz
+5️⃣ Sohbet & arkadaşlık — Yalnızlığa karşı
+6️⃣ Ev işlerinde yardım — Yemek, temizlik, düzen
+
+Hepsi bakım sigortası üzerinden — ayda 131€. Sen hiçbir şey ödemiyorsun.
+
+📱 alltagsengel.care
+✉️ info@alltagsengel.care
+
+YAKINDA — Frankfurt'ta hizmetinizde!
+
+#AlltagsEngel #Frankfurt #YaşlıBakımı #TürklerFrankfurt #Bakım #BakımSigortası #Entlastungsbetrag #Senioren #Pflege
+```
+
+**Posting-Anleitung (manuell):**
+1. Meta Business Suite öffnen → business.facebook.com
+2. "Beitrag erstellen" → Grafik hochladen (POST-2026-03-15-leistungen.png)
+3. DE Caption einfügen → Instagram + Facebook auswählen → Veröffentlichen
+4. TikTok Studio öffnen → Grafik als Slideshow posten
+5. Optional: TR Caption als zweiten Post oder in den Kommentaren

@@ -27,7 +27,7 @@ export async function GET() {
     const [ridesRes, providersRes, reviewsRes] = await Promise.all([
       supabase
         .from('krankenfahrten')
-        .select('*, customer:profiles!krankenfahrten_user_id_fkey(first_name, last_name, email, phone)')
+        .select('*, customer:profiles!krankenfahrten_customer_id_fkey(first_name, last_name, email, phone)')
         .order('created_at', { ascending: false })
         .limit(200),
       supabase

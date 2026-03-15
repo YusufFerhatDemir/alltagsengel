@@ -16,7 +16,7 @@ interface Ride {
   total_amount: number
   status: string
   provider_id: string | null
-  user_id: string
+  customer_id: string
 }
 
 export default function FahrerHomePage() {
