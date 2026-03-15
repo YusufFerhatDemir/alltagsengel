@@ -21,6 +21,7 @@ interface VisitorLocation {
   latitude: number | null
   longitude: number | null
   source: string | null
+  ip_address: string | null
   page_path: string | null
   user_agent: string | null
   user_id: string | null
@@ -408,6 +409,9 @@ export default function AnalyticsPage() {
                     />
                   </div>
                 )},
+                { key: 'ip_address', label: 'IP-Adresse', render: (r: any) => (
+                  <span style={{ fontSize: 12, color: BRAND.muted, fontFamily: 'monospace' }}>{(r as VisitorLocation).ip_address || '—'}</span>
+                )},
                 { key: 'device', label: 'Gerät', render: (r: any) => {
                   const ua = (r as VisitorLocation).user_agent || ''
                   let device = 'Unbekannt'
@@ -503,6 +507,9 @@ export default function AnalyticsPage() {
                       color={r.status === 'success' ? BRAND.success : BRAND.error}
                       size="sm"
                     />
+                  )},
+                  { key: 'ip_address', label: 'IP-Adresse', render: (r) => (
+                    <span style={{ fontSize: 12, color: BRAND.muted, fontFamily: 'monospace' }}>{(r.ip_address as string) || '—'}</span>
                   )},
                   { key: 'device', label: 'Gerät', render: (r) => (
                     <span style={{ fontSize: 12, color: BRAND.muted }}>{(r.device as string) || '—'}</span>

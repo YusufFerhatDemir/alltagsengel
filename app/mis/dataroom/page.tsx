@@ -36,7 +36,7 @@ export default function DataRoomPage() {
         title="Investor Data Room"
         subtitle="Sichere Dokumentenfreigabe für Investoren & Partner"
         icon="lock"
-        actions={<MisButton icon="externalLink" variant="secondary" onClick={() => window.open('/data-room', '_blank')}>Data Room öffnen</MisButton>}
+        actions={<MisButton icon="externalLink" variant="secondary" onClick={() => window.open('/mis/dataroom', '_blank')}>Data Room öffnen</MisButton>}
       />
 
       {/* Stats */}

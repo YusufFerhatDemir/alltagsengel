@@ -27,8 +27,20 @@ function LoginForm() {
     return 'Unbekannt'
   }
 
+  async function getClientIP(): Promise<string> {
+    try {
+      const res = await fetch('https://ipapi.co/json/', { signal: AbortSignal.timeout(3000) })
+      if (res.ok) {
+        const data = await res.json()
+        return data.ip || ''
+      }
+    } catch {}
+    return ''
+  }
+
   async function loginAndRedirect(loginEmail: string, loginPassword: string) {
     const supabase = createClient()
+    const clientIP = await getClientIP()
     const { data: signInData, error: authError } = await supabase.auth.signInWithPassword({
       email: loginEmail,
       password: loginPassword,
@@ -39,6 +51,7 @@ function LoginForm() {
       try { await supabase.from('mis_auth_log').insert({
         user_email: loginEmail,
         action: 'failed_login',
+        ip_address: clientIP || null,
         user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : '',
         device: typeof navigator !== 'undefined' ? getDeviceInfo() : '',
         status: 'failed',
@@ -62,6 +75,7 @@ function LoginForm() {
         user_email: signInData.user.email,
         user_name: logProfile ? `${logProfile.first_name || ''} ${logProfile.last_name || ''}`.trim() : signInData.user.email,
         action: 'login',
+        ip_address: clientIP || null,
         user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : '',
         device: typeof navigator !== 'undefined' ? getDeviceInfo() : '',
         status: 'success',
