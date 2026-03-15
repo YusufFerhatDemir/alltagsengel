@@ -137,7 +137,7 @@ export default function AdminAnalyticsPage() {
       const uid = v.user_id
       if (!map.has(uid)) {
         map.set(uid, {
-          name: p ? `${p.first_name} ${p.last_name}` : 'Unbekannt',
+          name: p ? `${p.first_name} ${(p.last_name || '').charAt(0)}.` : 'Unbekannt',
           role: p?.role || '?',
           email: p?.email || '',
           views: 0,
