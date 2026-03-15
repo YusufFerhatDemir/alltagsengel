@@ -3,6 +3,7 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Icon3D from '@/components/Icon3D'
+import { useUserLocation } from '@/hooks/useUserLocation'
 
 interface Ride {
   id: string
@@ -30,6 +31,7 @@ export default function FahrerHomePage() {
   const [activeRide, setActiveRide] = useState<Ride | null>(null)
   const [loading, setLoading] = useState(true)
   const [actionInProgress, setActionInProgress] = useState<string | null>(null)
+  const userLocation = useUserLocation()
 
   useEffect(() => {
     loadData()
@@ -93,6 +95,14 @@ export default function FahrerHomePage() {
 
     setLoading(false)
   }
+
+  // Standort in DB aktualisieren
+  useEffect(() => {
+    if (!userLocation.loading && userLocation.city && provider) {
+      const supabase = createClient()
+      supabase.from('krankenfahrt_providers').update({ city: userLocation.city }).eq('id', provider.id)
+    }
+  }, [userLocation.loading, userLocation.city, provider])
 
   async function handleClaimRide(rideId: string) {
     if (!provider) return
@@ -174,7 +184,12 @@ export default function FahrerHomePage() {
         </div>
 
         <div style={{ fontSize: 14, color: 'rgba(245,240,232,0.5)', marginBottom: 2 }}>Willkommen zurück</div>
-        <div style={{ fontSize: 22, fontWeight: 700, color: '#F5F0E8', marginBottom: 16 }}>{name}</div>
+        <div style={{ fontSize: 22, fontWeight: 700, color: '#F5F0E8', marginBottom: 4 }}>{name}</div>
+        {!userLocation.loading && userLocation.source !== 'fallback' && (
+          <div style={{ fontSize: 12, color: 'rgba(245,240,232,0.4)', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 4 }}>
+            <span style={{ fontSize: 10 }}>📍</span> {userLocation.city}
+          </div>
+        )}
 
         {/* Stats */}
         <div style={{ display: 'flex', gap: 10 }}>

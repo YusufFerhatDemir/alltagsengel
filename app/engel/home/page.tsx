@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import Icon3D from '@/components/Icon3D'
 import { IconUser, IconCard } from '@/components/Icons'
+import { useUserLocation } from '@/hooks/useUserLocation'
 
 export default function EngelHomePage() {
   const router = useRouter()
@@ -14,6 +15,7 @@ export default function EngelHomePage() {
   const [pendingBookings, setPendingBookings] = useState<any[]>([])
   const [upcomingBookings, setUpcomingBookings] = useState<any[]>([])
   const [monthEarnings, setMonthEarnings] = useState(0)
+  const userLocation = useUserLocation()
 
   useEffect(() => {
     async function loadData() {
@@ -69,6 +71,18 @@ export default function EngelHomePage() {
     loadData()
   }, [])
 
+  // Standort in DB aktualisieren wenn GPS verfügbar
+  useEffect(() => {
+    if (!userLocation.loading && userLocation.city && angel) {
+      const supabase = createClient()
+      supabase.auth.getUser().then(({ data: { user } }) => {
+        if (user) {
+          supabase.from('profiles').update({ location: userLocation.city }).eq('id', user.id)
+        }
+      })
+    }
+  }, [userLocation.loading, userLocation.city, angel])
+
   async function toggleOnline() {
     const next = !isOnline
     setIsOnline(next)
@@ -107,6 +121,11 @@ export default function EngelHomePage() {
         </div>
         <div className="ed-greet">Willkommen zurück</div>
         <div className="ed-name">{name}</div>
+        {!userLocation.loading && userLocation.source !== 'fallback' && (
+          <div style={{ fontSize: 12, color: 'var(--ink4)', marginTop: 2, display: 'flex', alignItems: 'center', gap: 4 }}>
+            <span style={{ fontSize: 10 }}>📍</span> {userLocation.city}
+          </div>
+        )}
         <div className="ed-stats">
           <div className="ed-stat"><div className="stat-val">{monthEarnings.toFixed(0)}€</div><div className="stat-lbl">Diesen Monat</div></div>
           <div className="ed-stat"><div className="stat-val">{angel?.total_jobs || 0}</div><div className="stat-lbl">Einsätze</div></div>

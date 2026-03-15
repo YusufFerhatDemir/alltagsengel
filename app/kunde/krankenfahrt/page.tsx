@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { IconTruck, IconCard, IconShield, IconInfo } from '@/components/Icons'
 import { logError } from '@/lib/safe-query'
+import { useUserLocation } from '@/hooks/useUserLocation'
 import type { PricingTier, PricingSurcharge, PricingBreakdown } from '@/lib/types/pricing'
 
 export default function KrankenfahrtPage() {
@@ -37,6 +38,9 @@ export default function KrankenfahrtPage() {
   const [userId, setUserId] = useState<string | null>(null)
   const [dataLoading, setDataLoading] = useState(true)
 
+  // Automatische Standorterkennung (GPS → IP → Fallback)
+  const userLocation = useUserLocation()
+
   // Load auth + pricing data on mount
   useEffect(() => {
     async function init() {
@@ -44,7 +48,7 @@ export default function KrankenfahrtPage() {
       if (!user) { router.push('/auth/login'); return }
       setUserId(user.id)
 
-      // Load default address
+      // Load default address from profile
       const { data: profile } = await supabase
         .from('profiles')
         .select('location')
@@ -53,6 +57,7 @@ export default function KrankenfahrtPage() {
       if (profile?.location) {
         setFormData(prev => ({ ...prev, abholadresse: profile.location }))
       }
+      // Falls kein Profil-Standort → GPS/IP wird per useEffect unten gesetzt
 
       // Load tiers + surcharges from API
       try {
@@ -70,6 +75,18 @@ export default function KrankenfahrtPage() {
     init()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  // GPS/IP-Standort als Fallback für Abholadresse
+  useEffect(() => {
+    if (!userLocation.loading && userLocation.source !== 'fallback') {
+      setFormData(prev => {
+        if (!prev.abholadresse || prev.abholadresse.trim() === '') {
+          return { ...prev, abholadresse: userLocation.address }
+        }
+        return prev
+      })
+    }
+  }, [userLocation.loading, userLocation.address, userLocation.source])
 
   // Detect night hours
   function isNightTime(time: string): boolean {
