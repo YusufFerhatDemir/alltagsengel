@@ -229,7 +229,7 @@ export default function AnalyticsPage() {
       />
 
       {/* KPIs */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: isMobile ? 10 : 16 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: isMobile ? 10 : 16 }}>
         <KpiCard title="Logins gesamt" value={totalLogins} icon="users" />
         <KpiCard title="Heute" value={todayLogins} icon="calendar" color={BRAND.info} />
         <KpiCard title="Aktive Nutzer" value={uniqueUsers} icon="activity" color={BRAND.success} />
@@ -270,7 +270,7 @@ export default function AnalyticsPage() {
       {tab === 'herkunft' && (
         <>
           {/* Herkunft KPIs */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: isMobile ? 10 : 16 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: isMobile ? 10 : 16 }}>
             <KpiCard title="Besuche gesamt" value={visitors.length} icon="globe" />
             <KpiCard title="Städte" value={Object.keys(cityCounts).length} icon="mapPin" color={BRAND.info} />
             <KpiCard title="Länder" value={Object.keys(countryCounts).length} icon="flag" color={BRAND.success} />

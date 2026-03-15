@@ -356,11 +356,11 @@ export function StatRow({ label, value, subValue }: { label: string; value: stri
   return (
     <div style={{
       display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-      padding: '10px 0', borderBottom: `1px solid ${BRAND.border}`, gap: 8, minWidth: 0,
+      padding: '10px 0', borderBottom: `1px solid ${BRAND.border}`, gap: 12, minWidth: 0,
     }}>
-      <span style={{ fontSize: 13, color: BRAND.muted, flexShrink: 0 }}>{label}</span>
-      <div style={{ textAlign: 'right', overflow: 'hidden', minWidth: 0 }}>
-        <span style={{ fontSize: 14, fontWeight: 600, color: BRAND.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>{value}</span>
+      <span style={{ fontSize: 13, color: BRAND.muted, flexShrink: 1, minWidth: 0 }}>{label}</span>
+      <div style={{ textAlign: 'right', flexShrink: 0 }}>
+        <span style={{ fontSize: 14, fontWeight: 600, color: BRAND.text, whiteSpace: 'nowrap' }}>{value}</span>
         {subValue && <span style={{ fontSize: 11, color: BRAND.muted, marginLeft: 6 }}>{subValue}</span>}
       </div>
     </div>

@@ -115,8 +115,8 @@ export default function AdminBookingsPage() {
             <tbody>
               {filtered.map(b => (
                 <tr key={b.id}>
-                  <td>{b.customer ? `${b.customer.first_name} ${b.customer.last_name}` : '—'}</td>
-                  <td>{b.angel ? `${b.angel.first_name} ${b.angel.last_name}` : '—'}</td>
+                  <td>{b.customer ? `${b.customer.first_name} ${(b.customer.last_name || '').charAt(0)}.` : '—'}</td>
+                  <td>{b.angel ? `${b.angel.first_name} ${(b.angel.last_name || '').charAt(0)}.` : '—'}</td>
                   <td>{b.service}</td>
                   <td>{b.date} {b.time}</td>
                   <td>

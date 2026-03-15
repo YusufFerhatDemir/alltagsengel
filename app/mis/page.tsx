@@ -57,7 +57,7 @@ export default function DashboardPage() {
       />
 
       {/* KPI Row */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: isMobile ? 10 : 16 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(auto-fill, minmax(220px, 1fr))', gap: isMobile ? 10 : 16 }}>
         <KpiCard title="Benutzer" value={stats.users} icon="users" trend="up" />
         <KpiCard title="Buchungen" value={stats.bookings} icon="calendar" trend="up" />
         <KpiCard title="Engel" value={stats.angels} icon="wings" trend="up" color={BRAND.success} />
@@ -65,14 +65,14 @@ export default function DashboardPage() {
       </div>
 
       {/* Market Opportunity */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: isMobile ? 10 : 16 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(auto-fill, minmax(220px, 1fr))', gap: isMobile ? 10 : 16 }}>
         <KpiCard title="TAM" value="50" unit="Mrd. €" icon="globe" trend="up" />
         <KpiCard title="SAM" value="7,80" unit="Mrd. €" icon="target" trend="up" />
         <KpiCard title="Ungenutzt" value="4,68" unit="Mrd. €" icon="zap" trend="up" color={BRAND.error} />
       </div>
 
       {/* Main Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: isMobile ? 14 : 20 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(340px, 1fr))', gap: isMobile ? 14 : 20 }}>
         {/* Revenue Projection */}
         <Card title="5-Jahres-Umsatzprognose" icon="chart">
           <MiniBarChart
@@ -104,7 +104,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Second Row */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: isMobile ? 14 : 20 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(280px, 1fr))', gap: isMobile ? 14 : 20 }}>
         {/* Quick Actions */}
         <Card title="Schnellaktionen" icon="zap">
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -154,7 +154,7 @@ export default function DashboardPage() {
       </div>
 
       {/* User Growth Chart */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: isMobile ? 14 : 20 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(340px, 1fr))', gap: isMobile ? 14 : 20 }}>
         <Card title="Nutzerwachstum (5 Jahre)" icon="trending">
           <MiniBarChart
             data={FINANCIAL_PROJECTIONS.users}
@@ -181,7 +181,7 @@ export default function DashboardPage() {
               { key: 'service', label: 'Service' },
               { key: 'customer', label: 'Kunde', render: (r: Record<string,unknown>) => {
                 const c = r.customer as Record<string,unknown> | null
-                return c ? `${c.first_name} ${c.last_name}` : '—'
+                return c ? `${c.first_name} ${((c.last_name as string) || '').charAt(0)}.` : '—'
               }},
               { key: 'status', label: 'Status', render: (r: Record<string,unknown>) => (
                 <Badge label={String(r.status)} color={r.status === 'completed' ? BRAND.success : r.status === 'pending' ? BRAND.warning : BRAND.info} />
