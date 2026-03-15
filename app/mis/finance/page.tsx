@@ -40,7 +40,7 @@ export default function FinancePage() {
             <KpiCard title="Burn Rate" value="€12K" unit="/Monat" icon="activity" color={BRAND.warning} />
             <KpiCard title="Runway" value="~42" unit="Monate" icon="clock" color={BRAND.success} />
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(340px, 1fr))', gap: isMobile ? 12 : 20 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(min(340px, 100%), 1fr))', gap: isMobile ? 12 : 20 }}>
             <Card title="Umsatzentwicklung" icon="chart">
               <MiniBarChart data={FP.revenue} labels={FP.years} height={150} />
             </Card>
@@ -122,8 +122,8 @@ export default function FinancePage() {
       )}
 
       {activeTab === 'unit-economics' && (
-        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(340px, 1fr))', gap: isMobile ? 12 : 20 }}>
-          <Card title="Einheitsökonomie" icon="pieChart">
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(min(340px, 100%), 1fr))', gap: isMobile ? 12 : 20 }}>
+          <Card title="Einheitsökonomie" icon="pieChart" style={{ overflow: 'visible' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
               <StatRow label="Abrechnungssatz (Pflegekasse)" value={`€${UE.billingRatePerHour}/Std.`} />
               <StatRow label="Engel-Vergütung (fest)" value={`€${UE.helperPayPerHour}/Std.`} />
@@ -138,7 +138,7 @@ export default function FinancePage() {
               <StatRow label="Monatliche Churn Rate" value={`${(UE.monthlyChurn * 100).toFixed(1)}%`} />
             </div>
           </Card>
-          <Card title="Entlastungsbetrag §45b" icon="banknote">
+          <Card title="Entlastungsbetrag §45b" icon="banknote" style={{ overflow: 'visible' }}>
             <div style={{ padding: 20, textAlign: 'center', background: `${BRAND.gold}10`, borderRadius: 12, marginBottom: 16 }}>
               <div style={{ fontSize: 42, fontWeight: 700, color: BRAND.gold, fontFamily: 'var(--font-cormorant), serif' }}>€{UE.entlastungsbetrag}</div>
               <div style={{ fontSize: 13, color: BRAND.muted }}>pro Monat / pro Person (seit 2026)</div>

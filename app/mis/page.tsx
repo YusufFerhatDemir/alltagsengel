@@ -72,7 +72,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Main Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(340px, 1fr))', gap: isMobile ? 14 : 20 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(min(340px, 100%), 1fr))', gap: isMobile ? 14 : 20 }}>
         {/* Revenue Projection */}
         <Card title="5-Jahres-Umsatzprognose" icon="chart">
           <MiniBarChart
@@ -104,7 +104,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Second Row */}
-      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(280px, 1fr))', gap: isMobile ? 14 : 20 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(min(280px, 100%), 1fr))', gap: isMobile ? 14 : 20 }}>
         {/* Quick Actions */}
         <Card title="Schnellaktionen" icon="zap">
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -154,7 +154,7 @@ export default function DashboardPage() {
       </div>
 
       {/* User Growth Chart */}
-      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(340px, 1fr))', gap: isMobile ? 14 : 20 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(min(340px, 100%), 1fr))', gap: isMobile ? 14 : 20 }}>
         <Card title="Nutzerwachstum (5 Jahre)" icon="trending">
           <MiniBarChart
             data={FINANCIAL_PROJECTIONS.users}
