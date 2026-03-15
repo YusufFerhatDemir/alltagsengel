@@ -94,38 +94,28 @@ export default function AnalyticsPage() {
       .select('*')
       .order('created_at', { ascending: false })
 
-    // Besucher-Standorte laden (ALLE Daten, kein Limit, mit User-Profil)
+    // Besucher-Standorte laden (ohne Join — Profile werden in JS gemappt)
     let allVisitors: any[] = []
     let from = 0
     const pageSize = 1000
     while (true) {
-      // Erst mit Profil-Join versuchen
-      const { data: chunk, error: vErr } = await supabase
+      const { data: chunk } = await supabase
         .from('visitor_locations')
-        .select('*, profile:profiles(first_name, last_name, email, role)')
+        .select('*')
         .gte('created_at', since.toISOString())
         .order('created_at', { ascending: false })
         .range(from, from + pageSize - 1)
-      if (vErr) {
-        // Fallback: ohne Profil-Join laden
-        const { data: fb } = await supabase
-          .from('visitor_locations')
-          .select('*')
-          .gte('created_at', since.toISOString())
-          .order('created_at', { ascending: false })
-          .range(from, from + pageSize - 1)
-        if (!fb || fb.length === 0) break
-        allVisitors = allVisitors.concat(fb.map((v: any) => ({ ...v, profile: null })))
-        if (fb.length < pageSize) break
-        from += pageSize
-        continue
-      }
       if (!chunk || chunk.length === 0) break
       allVisitors = allVisitors.concat(chunk)
       if (chunk.length < pageSize) break
       from += pageSize
     }
-    const visitorData = allVisitors
+    // Profile in JS mappen (kein PostgREST-Join nötig)
+    const profileMap = new Map((profiles || []).map((p: any) => [p.id, p]))
+    const visitorData = allVisitors.map((v: any) => {
+      const p = v.user_id ? profileMap.get(v.user_id) : null
+      return { ...v, profile: p ? { first_name: p.first_name, last_name: p.last_name, email: p.email, role: p.role } : null }
+    })
 
     setAuthLogs(logs as AuthLogEntry[] || [])
     setUsers(profiles as UserSession[] || [])

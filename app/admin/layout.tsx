@@ -63,15 +63,14 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
 
           {/* MIS Portal Link */}
           <div style={{ borderTop: '1px solid var(--border)', margin: '8px 0', paddingTop: 8 }}>
-            <Link
-              href="/mis"
+            <button
               className="admin-nav-item"
-              onClick={() => setMobileOpen(false)}
+              onClick={() => { setMobileOpen(false); window.location.href = '/mis' }}
               style={{ background: 'rgba(201,150,60,0.08)', color: 'var(--gold2)', fontWeight: 600 }}
             >
               <span><IconChart size={18} /></span>
               <span>MIS Portal</span>
-            </Link>
+            </button>
           </div>
         </nav>
         <button onClick={() => { handleLogout(); setMobileOpen(false) }} className="admin-nav-item admin-logout">
@@ -93,9 +92,9 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
         <span style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 700, fontSize: 16, color: 'var(--ink)' }}>
           Admin Panel
         </span>
-        <Link href="/mis" style={{ color: 'var(--gold2)', fontSize: 12, fontWeight: 600, textDecoration: 'none', padding: '4px 10px', borderRadius: 8, background: 'rgba(201,150,60,0.1)' }}>
+        <button onClick={() => { window.location.href = '/mis' }} style={{ color: 'var(--gold2)', fontSize: 12, fontWeight: 600, padding: '4px 10px', borderRadius: 8, background: 'rgba(201,150,60,0.1)', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>
           MIS
-        </Link>
+        </button>
       </div>
 
       <div className="admin-main">

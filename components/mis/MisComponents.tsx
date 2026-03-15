@@ -201,7 +201,7 @@ export function Card({ children, title, icon, actions, noPad, style }: {
   return (
     <div style={{
       background: BRAND.white, borderRadius: 14, boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
-      border: `1px solid ${BRAND.border}`, overflow: 'hidden', ...style,
+      border: `1px solid ${BRAND.border}`, ...style,
     }}>
       {title && (
         <div style={{
