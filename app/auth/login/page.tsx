@@ -29,6 +29,15 @@ function LoginForm() {
 
   async function getClientIP(): Promise<string> {
     try {
+      // Erst eigene API Route (funktioniert immer, auch auf iPhone)
+      const res = await fetch('/api/client-ip', { signal: AbortSignal.timeout(3000) })
+      if (res.ok) {
+        const data = await res.json()
+        if (data.ip) return data.ip
+      }
+    } catch {}
+    try {
+      // Fallback: ipapi.co (funktioniert auf Desktop)
       const res = await fetch('https://ipapi.co/json/', { signal: AbortSignal.timeout(3000) })
       if (res.ok) {
         const data = await res.json()
