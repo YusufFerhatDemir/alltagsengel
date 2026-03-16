@@ -265,3 +265,63 @@ YAKINDA — Frankfurt'ta hizmetinizde!
 3. DE Caption einfügen → Instagram + Facebook auswählen → Veröffentlichen
 4. TikTok Studio öffnen → Grafik als Slideshow posten
 5. Optional: TR Caption als zweiten Post oder in den Kommentaren
+
+---
+
+## 16.03.2026 — Krankenfahrt Awareness Post (DE+TR)
+
+**Status:** 📋 Bereit zum Posten (Browser-Timeout — manueller Upload nötig)
+**Plattform:** Instagram + Facebook + TikTok
+**Typ:** Grafik (1080x1080)
+**Datei:** POST-2026-03-16-krankenfahrt.png
+**Geplante Uhrzeit:** 10:00-13:00 Uhr (Montag)
+**Thema:** Krankenfahrt / Hasta Nakliyesi — zweisprachig DE+TR
+
+**Caption (DE):**
+```
+Arzttermin aber kein Auto? Kein Problem! 🚗😇
+
+AlltagsEngel Krankenfahrt bringt dich sicher zum Arzt — und wieder zurück.
+
+✅ Arztbegleitung & Krankenfahrt
+✅ Klinikbesuche & Therapietermine
+✅ Pflegekasse zahlt — 131€/Monat
+✅ Du zahlst nichts!
+
+Wir sprechen auch Türkisch! 🇹🇷🇩🇪
+
+📱 alltagsengel.care
+✉️ info@alltagsengel.care
+
+COMING SOON — Bald verfügbar in Frankfurt!
+
+#AlltagsEngel #Krankenfahrt #Frankfurt #Alltagsbegleitung #Pflege #Seniorenhilfe #Pflegekasse #Entlastungsbetrag #131Euro #FrankfurtAmMain #Senioren #§45b #ComingSoon #Arztbegleitung #Patientenfahrt #Nordend #Bornheim #Dornbusch #Bockenheim
+```
+
+**Caption (TR):**
+```
+Doktor randevun var ama araban yok mu? Sorun değil! 🚗😇
+
+AlltagsEngel Hasta Nakliyesi seni güvenle doktora götürür — ve geri getirir.
+
+✅ Doktor refakati & hasta nakliyesi
+✅ Klinik ziyaretleri & terapi randevuları
+✅ Bakım sigortası karşılıyor — ayda 131€
+✅ Sen hiçbir şey ödemiyorsun!
+
+Türkçe hizmet veriyoruz! 🇹🇷🇩🇪
+
+📱 alltagsengel.care
+✉️ info@alltagsengel.care
+
+YAKINDA — Frankfurt'ta hizmetinizde!
+
+#AlltagsEngel #Frankfurt #YaşlıBakımı #TürklerFrankfurt #Bakım #BakımSigortası #HastaNakliyesi #Entlastungsbetrag #Senioren #Pflege #Krankenfahrt
+```
+
+**Posting-Anleitung (manuell):**
+1. Meta Business Suite öffnen → business.facebook.com
+2. "Beitrag erstellen" → Grafik hochladen (POST-2026-03-16-krankenfahrt.png)
+3. DE Caption einfügen → Instagram + Facebook auswählen → Veröffentlichen
+4. TikTok Studio öffnen → Grafik als Slideshow posten
+5. TR Caption als Kommentar oder zweiten Post
