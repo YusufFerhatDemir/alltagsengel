@@ -32,13 +32,13 @@
   /* Main content area — tight padding on mobile */
   .mis-content {
     padding: 12px !important;
-    overflow-x: hidden !important;
   }
 
-  /* Prevent ANY horizontal overflow in content area */
+  /* Allow full vertical scrolling — NEVER clip content */
   .mis-content > * {
     max-width: 100% !important;
-    overflow-x: hidden !important;
+    overflow-x: auto !important;
+    overflow-y: visible !important;
   }
 
   /* Tables: allow horizontal scroll only within cards */

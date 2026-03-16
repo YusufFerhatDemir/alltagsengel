@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect, useCallback } from 'react'
+import { createClient } from '@/lib/supabase/client'
 import { BRAND } from '@/lib/mis/constants'
 import {
   SectionHeader, Tabs, KpiCard, Card, DataTable, MisButton, Badge, Modal, EmptyState,
@@ -66,13 +67,37 @@ export default function KrankenfahrtenAdminPage() {
 
   const loadData = useCallback(async () => {
     try {
-      const res = await fetch('/api/admin/krankenfahrten')
-      if (res.ok) {
-        const data = await res.json()
-        setRides(data.rides || [])
-        setProviders(data.providers || [])
-        setStats(data.stats || {})
-      }
+      const supabase = createClient()
+
+      // Load rides with customer profile join
+      const { data: ridesData } = await supabase
+        .from('krankenfahrten')
+        .select('*, customer:profiles!krankenfahrten_customer_id_fkey(first_name, last_name, email, phone)')
+        .order('created_at', { ascending: false })
+        .limit(200)
+
+      // Load providers with profile join
+      const { data: providersData } = await supabase
+        .from('krankenfahrt_providers')
+        .select('*, profile:profiles!krankenfahrt_providers_user_id_fkey(first_name, last_name, email, phone)')
+        .order('created_at', { ascending: false })
+
+      const r = (ridesData || []) as any[]
+      const p = (providersData || []) as any[]
+
+      setRides(r)
+      setProviders(p)
+
+      // Calculate stats
+      const totalRides = r.length
+      const pendingRides = r.filter((x: any) => x.status === 'pending').length
+      const activeRides = r.filter((x: any) => ['confirmed', 'in_progress'].includes(x.status)).length
+      const completedRides = r.filter((x: any) => x.status === 'completed').length
+      const totalRevenue = r.filter((x: any) => x.status === 'completed').reduce((s: number, x: any) => s + (Number(x.total_amount) || 0), 0)
+      const totalProviders = p.length
+      const verifiedProviders = p.filter((x: any) => x.is_verified).length
+
+      setStats({ totalRides, pendingRides, activeRides, completedRides, totalRevenue, totalProviders, verifiedProviders })
     } catch (err) {
       console.error('Failed to load data', err)
     }
@@ -84,12 +109,13 @@ export default function KrankenfahrtenAdminPage() {
   async function updateRide(id: string, updates: Record<string, any>) {
     setSaving(true)
     try {
-      const res = await fetch('/api/admin/krankenfahrten', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ entity: 'ride', id, ...updates }),
-      })
-      if (res.ok) {
+      const supabase = createClient()
+      const { error } = await supabase
+        .from('krankenfahrten')
+        .update(updates)
+        .eq('id', id)
+
+      if (!error) {
         await loadData()
         setSelectedRide(null)
       }
@@ -102,12 +128,13 @@ export default function KrankenfahrtenAdminPage() {
   async function updateProvider(id: string, updates: Record<string, any>) {
     setSaving(true)
     try {
-      const res = await fetch('/api/admin/krankenfahrten', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ entity: 'provider', id, ...updates }),
-      })
-      if (res.ok) {
+      const supabase = createClient()
+      const { error } = await supabase
+        .from('krankenfahrt_providers')
+        .update(updates)
+        .eq('id', id)
+
+      if (!error) {
         await loadData()
         setSelectedProvider(null)
       }
