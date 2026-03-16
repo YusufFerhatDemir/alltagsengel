@@ -285,6 +285,11 @@ export function IconKrankenfahrtGold(p: IconProps) {
   </IGold>
 }
 
+// ── Notification Bell ──
+export function IconBell(p: IconProps) {
+  return <I {...p}><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.73 21a2 2 0 01-3.46 0" /></I>
+}
+
 // ── Hygienebox ──
 export function IconHygieneboxGold(p: IconProps) {
   return <IGold size={p.size} gid="gHb" className={p.className}>

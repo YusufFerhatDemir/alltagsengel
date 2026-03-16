@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { sendEmailNotification } from '@/lib/notifications'
 
 export async function POST(req: NextRequest) {
   try {
@@ -25,18 +26,19 @@ export async function POST(req: NextRequest) {
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
-    // E-Mail senden (Hinweis: Echte Integration benötigt E-Mail-Service)
-    // Beispiel mit Resend:
-    // const resend = new Resend(process.env.RESEND_API_KEY)
-    // const { data: profile } = await supabase.from('profiles').select('email, first_name').eq('id', userId).single()
-    // if (profile?.email) {
-    //   await resend.emails.send({
-    //     from: 'ALLTAGSENGEL <noreply@alltagsengel.de>',
-    //     to: profile.email,
-    //     subject: title,
-    //     html: `<h2>${title}</h2><p>${bodyText}</p>`,
-    //   })
-    // }
+    // E-Mail senden (mit Resend, falls konfiguriert)
+    const { data: profile } = await supabase.from('profiles').select('email, first_name').eq('id', userId).single()
+    if (profile?.email) {
+      const emailSent = await sendEmailNotification(
+        profile.email,
+        profile.first_name || 'Nutzer',
+        title,
+        `<p>${bodyText}</p>`
+      )
+      if (emailSent) {
+        await supabase.from('notifications').update({ email_sent: true }).eq('id', notification.id)
+      }
+    }
 
     return NextResponse.json({ success: true, notification })
   } catch (err: any) {
@@ -61,6 +63,24 @@ export async function GET() {
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
     return NextResponse.json({ notifications: data })
+  } catch (err: any) {
+    return NextResponse.json({ error: err.message }, { status: 500 })
+  }
+}
+
+// PATCH: Als gelesen markieren
+export async function PATCH(req: NextRequest) {
+  try {
+    const { ids } = await req.json()
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return NextResponse.json({ error: 'Nicht authentifiziert' }, { status: 401 })
+
+    if (ids && Array.isArray(ids)) {
+      await supabase.from('notifications').update({ is_read: true }).in('id', ids).eq('user_id', user.id)
+    }
+
+    return NextResponse.json({ success: true })
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 })
   }

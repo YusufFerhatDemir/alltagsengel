@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import Icon3D from '@/components/Icon3D'
 import { IconUser, IconCard } from '@/components/Icons'
+import NotificationBell from '@/components/NotificationBell'
 import { useUserLocation } from '@/hooks/useUserLocation'
 import { useTrackVisit } from '@/hooks/useTrackVisit'
 
@@ -116,9 +117,12 @@ export default function EngelHomePage() {
             <Icon3D size={28} />
             <div className="ed-wordmark">ENGEL</div>
           </div>
-          <div className="online-toggle" onClick={toggleOnline}>
-            <div className={`online-indicator${isOnline ? '' : ' off'}`}></div>
-            <div className="online-label">{isOnline ? 'Online' : 'Offline'}</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <NotificationBell />
+            <div className="online-toggle" onClick={toggleOnline}>
+              <div className={`online-indicator${isOnline ? '' : ' off'}`}></div>
+              <div className="online-label">{isOnline ? 'Online' : 'Offline'}</div>
+            </div>
           </div>
         </div>
         <div className="ed-greet">Willkommen zurück</div>

@@ -3,6 +3,7 @@ import { useState, useEffect, ReactNode } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import { IconPin, IconSearch, IconUser, IconCard, IconStarFilled, IconCheck, IconStarGold, IconHandshakeGold, IconMedicalGold, IconBagGold, IconHomeGold, IconCoffeeGold, IconPillGold, IconWalkGold, IconTargetGold, IconWingsGold, IconBox, IconKrankenfahrtGold, IconHygieneboxGold } from '@/components/Icons'
+import NotificationBell from '@/components/NotificationBell'
 import { useRouter } from 'next/navigation'
 import { haversineDistance } from '@/lib/geocoding'
 import { useUserLocation } from '@/hooks/useUserLocation'
@@ -138,7 +139,10 @@ export default function KundeHomePage() {
             <div className="kh-name">Hallo, {firstName}</div>
             <div className="kh-loc"><IconPin size={14} /> {profile?.location || 'Frankfurt am Main'} · {searchRadius} km</div>
           </div>
-          <Link href="/kunde/profil" className="kh-avatar"><IconUser size={22} /></Link>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <NotificationBell />
+            <Link href="/kunde/profil" className="kh-avatar"><IconUser size={22} /></Link>
+          </div>
         </div>
       </div>
 

@@ -99,6 +99,14 @@ export default function BuchenPage() {
         setSubmitting(false)
         return
       }
+
+      // Engel benachrichtigen (in-app + email) — fire and forget
+      fetch('/api/bookings/notify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bookingId: booking.id, event: 'created' }),
+      }).catch(() => {})
+
       router.push(`/kunde/warten/${booking.id}`)
     } catch (err) {
       logError('BuchenPage:submit', err)
