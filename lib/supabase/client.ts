@@ -1,4 +1,4 @@
-import { createClient as createSupabaseClient } from '@supabase/supabase-js'
+import { createClient as createSupabaseClient, SupabaseClient } from '@supabase/supabase-js'
 
 // Cookie helpers for reading/writing Supabase auth session
 const STORAGE_KEY = 'sb-nnwyktkqibdjxgimjyuq-auth-token'
@@ -32,7 +32,7 @@ function removeSessionCookie() {
 }
 
 // Singleton client — same pattern as @supabase/ssr but with explicit cookie handling
-let cachedClient: ReturnType<typeof createSupabaseClient> | null = null
+let cachedClient: SupabaseClient | null = null
 
 export function createClient() {
   if (cachedClient) return cachedClient
