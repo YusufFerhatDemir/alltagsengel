@@ -21,10 +21,12 @@ export default function TeamPage() {
     Promise.all([
       supabase.from('profiles').select('*').order('created_at', { ascending: false }),
       supabase.from('mis_tasks').select('*').order('created_at', { ascending: false }).limit(20),
-    ]).then(([{ data: u }, { data: t }]) => {
+    ]).then(([{ data: u, error: e1 }, { data: t, error: e2 }]) => {
+      if (e1) console.error('Profiles error:', e1)
+      if (e2) console.error('Tasks error:', e2)
       setUsers(u || [])
       setTasks(t || [])
-    })
+    }).catch(err => console.error('Team loadData error:', err))
   }, [])
 
   const admins = users.filter(u => u.role === 'admin' || u.role === 'superadmin')

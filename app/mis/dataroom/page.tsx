@@ -27,7 +27,8 @@ export default function DataRoomPage() {
   useEffect(() => {
     const supabase = createClient()
     supabase.from('mis_dataroom_access').select('*').order('created_at', { ascending: false }).limit(20)
-      .then(({ data }) => setAccessLog(data || []))
+      .then(({ data, error }) => { if (error) console.error('Dataroom access error:', error); setAccessLog(data || []) })
+      .catch(err => console.error('Dataroom loadData error:', err))
   }, [])
 
   return (

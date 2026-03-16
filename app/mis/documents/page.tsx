@@ -22,13 +22,19 @@ export default function DocumentsPage() {
   useEffect(() => { loadData() }, [])
 
   async function loadData() {
-    const supabase = createClient()
-    const [{ data: docData }, { data: catData }] = await Promise.all([
-      supabase.from('mis_documents').select('*, category:mis_document_categories(*)').order('updated_at', { ascending: false }),
-      supabase.from('mis_document_categories').select('*').order('sort_order'),
-    ])
-    setDocs(docData as MisDocument[] || [])
-    setCategories(catData as DocumentCategory[] || [])
+    try {
+      const supabase = createClient()
+      const [{ data: docData, error: e1 }, { data: catData, error: e2 }] = await Promise.all([
+        supabase.from('mis_documents').select('*, category:mis_document_categories(*)').order('updated_at', { ascending: false }),
+        supabase.from('mis_document_categories').select('*').order('sort_order'),
+      ])
+      if (e1) console.error('Documents error:', e1)
+      if (e2) console.error('Categories error:', e2)
+      setDocs(docData as MisDocument[] || [])
+      setCategories(catData as DocumentCategory[] || [])
+    } catch (err) {
+      console.error('Documents loadData error:', err)
+    }
     setLoading(false)
   }
 

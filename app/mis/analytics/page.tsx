@@ -70,56 +70,65 @@ export default function AnalyticsPage() {
 
   async function loadData() {
     setLoading(true)
-    const supabase = createClient()
+    try {
+      const supabase = createClient()
 
-    // Zeitfilter berechnen
-    const now = new Date()
-    let since = new Date()
-    if (timeFilter === 'today') since.setHours(0, 0, 0, 0)
-    else if (timeFilter === '7d') since.setDate(now.getDate() - 7)
-    else if (timeFilter === '30d') since.setDate(now.getDate() - 30)
-    else since = new Date(0) // all
+      // Zeitfilter berechnen
+      const now = new Date()
+      let since = new Date()
+      if (timeFilter === 'today') since.setHours(0, 0, 0, 0)
+      else if (timeFilter === '7d') since.setDate(now.getDate() - 7)
+      else if (timeFilter === '30d') since.setDate(now.getDate() - 30)
+      else since = new Date(0) // all
 
-    // Auth Logs laden
-    const { data: logs } = await supabase
-      .from('mis_auth_log')
-      .select('*')
-      .gte('created_at', since.toISOString())
-      .order('created_at', { ascending: false })
-      .limit(200)
-
-    // Benutzer laden mit letztem Login
-    const { data: profiles } = await supabase
-      .from('profiles')
-      .select('*')
-      .order('created_at', { ascending: false })
-
-    // Besucher-Standorte laden (ohne Join — Profile werden in JS gemappt)
-    let allVisitors: any[] = []
-    let from = 0
-    const pageSize = 1000
-    while (true) {
-      const { data: chunk } = await supabase
-        .from('visitor_locations')
+      // Auth Logs laden
+      const { data: logs, error: logsErr } = await supabase
+        .from('mis_auth_log')
         .select('*')
         .gte('created_at', since.toISOString())
         .order('created_at', { ascending: false })
-        .range(from, from + pageSize - 1)
-      if (!chunk || chunk.length === 0) break
-      allVisitors = allVisitors.concat(chunk)
-      if (chunk.length < pageSize) break
-      from += pageSize
-    }
-    // Profile in JS mappen (kein PostgREST-Join nötig)
-    const profileMap = new Map((profiles || []).map((p: any) => [p.id, p]))
-    const visitorData = allVisitors.map((v: any) => {
-      const p = v.user_id ? profileMap.get(v.user_id) : null
-      return { ...v, profile: p ? { first_name: p.first_name, last_name: p.last_name, email: p.email, role: p.role } : null }
-    })
+        .limit(200)
+      if (logsErr) console.error('Auth logs error:', logsErr)
 
-    setAuthLogs(logs as AuthLogEntry[] || [])
-    setUsers(profiles as UserSession[] || [])
-    setVisitors(visitorData as VisitorLocation[] || [])
+      // Benutzer laden mit letztem Login
+      const { data: profiles, error: profilesErr } = await supabase
+        .from('profiles')
+        .select('*')
+        .order('created_at', { ascending: false })
+      if (profilesErr) console.error('Profiles error:', profilesErr)
+
+      // Besucher-Standorte laden (ohne Join — Profile werden in JS gemappt)
+      let allVisitors: any[] = []
+      let from = 0
+      const pageSize = 1000
+      let loopGuard = 0
+      while (loopGuard < 20) {
+        loopGuard++
+        const { data: chunk, error: chunkErr } = await supabase
+          .from('visitor_locations')
+          .select('*')
+          .gte('created_at', since.toISOString())
+          .order('created_at', { ascending: false })
+          .range(from, from + pageSize - 1)
+        if (chunkErr) { console.error('Visitors error:', chunkErr); break }
+        if (!chunk || chunk.length === 0) break
+        allVisitors = allVisitors.concat(chunk)
+        if (chunk.length < pageSize) break
+        from += pageSize
+      }
+      // Profile in JS mappen (kein PostgREST-Join nötig)
+      const profileMap = new Map((profiles || []).map((p: any) => [p.id, p]))
+      const visitorData = allVisitors.map((v: any) => {
+        const p = v.user_id ? profileMap.get(v.user_id) : null
+        return { ...v, profile: p ? { first_name: p.first_name, last_name: p.last_name, email: p.email, role: p.role } : null }
+      })
+
+      setAuthLogs(logs as AuthLogEntry[] || [])
+      setUsers(profiles as UserSession[] || [])
+      setVisitors(visitorData as VisitorLocation[] || [])
+    } catch (err) {
+      console.error('Analytics loadData error:', err)
+    }
     setLoading(false)
   }
 
