@@ -56,6 +56,7 @@ interface UserSession {
 
 export default function AnalyticsPage() {
   const { isMobile } = useMis()
+  const [mounted, setMounted] = useState(false)
   const [authLogs, setAuthLogs] = useState<AuthLogEntry[]>([])
   const [users, setUsers] = useState<UserSession[]>([])
   const [visitors, setVisitors] = useState<VisitorLocation[]>([])
@@ -66,7 +67,11 @@ export default function AnalyticsPage() {
   const [visitorPage, setVisitorPage] = useState(1)
   const visitorPageSize = 100
 
-  useEffect(() => { loadData() }, [timeFilter])
+  // Force client-only rendering to avoid hydration mismatch
+  useEffect(() => { setMounted(true) }, [])
+
+  // Load data when mounted or timeFilter changes
+  useEffect(() => { if (mounted) loadData() }, [mounted, timeFilter])
 
   async function loadData() {
     setLoading(true)
@@ -145,16 +150,16 @@ export default function AnalyticsPage() {
     setLoading(false)
   }
 
-  // Login bei Auth-State-Change tracken
+  // Login bei Auth-State-Change tracken (einmalig — kein [users] Dependency um Loop zu vermeiden)
   useEffect(() => {
+    if (!mounted) return
     const supabase = createClient()
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_IN' && session?.user) {
-        const profile = users.find(u => u.id === session.user.id)
         await supabase.from('mis_auth_log').insert({
           user_id: session.user.id,
           user_email: session.user.email,
-          user_name: profile ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim() : session.user.email,
+          user_name: session.user.email,
           action: 'login',
           user_agent: navigator.userAgent,
           device: getDeviceInfo(),
@@ -164,7 +169,7 @@ export default function AnalyticsPage() {
       }
     })
     return () => subscription.unsubscribe()
-  }, [users])
+  }, [mounted])
 
   function getDeviceInfo(): string {
     const ua = navigator.userAgent
@@ -247,6 +252,19 @@ export default function AnalyticsPage() {
     { id: '30d', label: '30 Tage' },
     { id: 'all', label: 'Alle' },
   ]
+
+  // Show loading skeleton until client-side mount completes
+  if (!mounted) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+        <SectionHeader title="Analytics & Aktivitäten" subtitle="Login-Tracking, Benutzeraktivitäten und Zugriffsprotokoll" icon="activity" />
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(160px, 100%), 1fr))', gap: 16 }}>
+          {[1,2,3,4].map(i => <KpiCard key={i} title="Laden..." value="—" icon="activity" />)}
+        </div>
+        <Card><div style={{ padding: 60, textAlign: 'center', color: BRAND.muted, fontSize: 14 }}>Daten werden geladen...</div></Card>
+      </div>
+    )
+  }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
