@@ -68,8 +68,8 @@ function LoginForm() {
     }
 
     if (signInData.user) {
-      // Log successful login
-      const { data: logProfile } = await supabase.from('profiles').select('first_name,last_name').eq('id', signInData.user.id).single()
+      // Log successful login (non-blocking)
+      const { data: logProfile } = await supabase.from('profiles').select('first_name,last_name,role').eq('id', signInData.user.id).single()
       try { await supabase.from('mis_auth_log').insert({
         user_id: signInData.user.id,
         user_email: signInData.user.email,
@@ -80,13 +80,11 @@ function LoginForm() {
         device: typeof navigator !== 'undefined' ? getDeviceInfo() : '',
         status: 'success',
       }) } catch {}
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', signInData.user.id)
-        .single()
 
-      const role = profile?.role || ''
+      // Get role from profile, fallback to JWT user_metadata
+      const role = logProfile?.role
+        || signInData.user.user_metadata?.role
+        || ''
 
       // Determine target URL based on role
       let targetUrl = '/kunde/home'
@@ -103,12 +101,7 @@ function LoginForm() {
         targetUrl = '/fahrer/home'
       }
 
-      // If there's a redirectTo and user has matching role, use it
-      if (redirectTo && (role === 'admin' || role === 'superadmin') && redirectTo.startsWith('/mis')) {
-        targetUrl = redirectTo
-      }
-
-      // Use window.location for reliable redirect (ensures cookies are sent with new session)
+      // Use window.location for reliable redirect with new session cookies
       window.location.href = targetUrl
     }
   }
