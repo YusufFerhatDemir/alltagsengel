@@ -33,19 +33,25 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(url)
     }
 
-    // Admin & MIS routes - check admin role
+    // Admin & MIS routes - check admin role via JWT metadata (no DB query needed)
     if (user && (pathname.startsWith('/admin') || pathname.startsWith('/mis'))) {
-      try {
-        const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
-        if (!profile || !['admin', 'superadmin'].includes(profile.role)) {
-          const url = request.nextUrl.clone()
-          url.pathname = '/auth/login'
-          url.searchParams.set('error', 'admin_required')
-          return NextResponse.redirect(url)
+      const metaRole = user.user_metadata?.role || ''
+      const isAdmin = metaRole === 'admin' || metaRole === 'superadmin'
+
+      if (!isAdmin) {
+        // Fallback: check profiles table
+        try {
+          const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+          if (!profile || !['admin', 'superadmin'].includes(profile.role)) {
+            const url = request.nextUrl.clone()
+            url.pathname = '/auth/login'
+            url.searchParams.set('error', 'admin_required')
+            return NextResponse.redirect(url)
+          }
+        } catch {
+          // If both checks fail, allow through — layout will handle
+          return supabaseResponse
         }
-      } catch {
-        // If profile check fails, allow through — layout will handle auth
-        return supabaseResponse
       }
     }
 
