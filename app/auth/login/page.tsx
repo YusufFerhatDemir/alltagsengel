@@ -40,23 +40,12 @@ function LoginForm() {
 
   async function loginAndRedirect(loginEmail: string, loginPassword: string) {
     const supabase = createClient()
-    const clientIP = await getClientIP()
     const { data: signInData, error: authError } = await supabase.auth.signInWithPassword({
       email: loginEmail,
       password: loginPassword,
     })
 
     if (authError) {
-      // Log failed login attempt
-      try { await supabase.from('mis_auth_log').insert({
-        user_email: loginEmail,
-        action: 'failed_login',
-        ip_address: clientIP || null,
-        user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : '',
-        device: typeof navigator !== 'undefined' ? getDeviceInfo() : '',
-        status: 'failed',
-      }) } catch {}
-
       if (authError.message === 'Email not confirmed') {
         setError('Bitte bestätigen Sie zuerst Ihre E-Mail-Adresse. Prüfen Sie Ihren Posteingang.')
       } else if (authError.message === 'Invalid login credentials') {
@@ -67,47 +56,31 @@ function LoginForm() {
       return
     }
 
-    if (signInData.user) {
-      // Query profile for role
-      const { data: logProfile, error: profileError } = await supabase.from('profiles').select('first_name,last_name,role').eq('id', signInData.user.id).single()
+    if (!signInData.user) return
 
-      // Get role: profile > JWT metadata > empty
-      const profileRole = logProfile?.role || ''
-      const jwtRole = signInData.user.user_metadata?.role || ''
-      const role = profileRole || jwtRole
+    // Role direkt JWT'den al — veritabanı sorgusu YOK
+    const role = signInData.user.user_metadata?.role || ''
 
-      // Debug: log what happened
-      const debugInfo = `profile:${profileRole}|jwt:${jwtRole}|final:${role}|err:${profileError?.message || 'none'}`
+    // Log arka planda (redirect'i beklemesin)
+    supabase.from('mis_auth_log').insert({
+      user_id: signInData.user.id,
+      user_email: signInData.user.email,
+      user_name: signInData.user.user_metadata?.first_name || signInData.user.email,
+      action: 'login',
+      ip_address: `role:${role}`,
+      device: getDeviceInfo(),
+      status: 'success',
+    }).then(() => {})
 
-      // Log login + debug info
-      try { await supabase.from('mis_auth_log').insert({
-        user_id: signInData.user.id,
-        user_email: signInData.user.email,
-        user_name: logProfile ? `${logProfile.first_name || ''} ${logProfile.last_name || ''}`.trim() : signInData.user.email,
-        action: 'login',
-        ip_address: debugInfo,
-        user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : '',
-        device: typeof navigator !== 'undefined' ? getDeviceInfo() : '',
-        status: 'success',
-      }) } catch {}
-
-      // Determine target URL based on role
-      let targetUrl = '/kunde/home'
-      if (role === 'admin' || role === 'superadmin') {
-        targetUrl = '/mis'
-      } else if (role === 'engel') {
-        const { data: angel } = await supabase
-          .from('angels')
-          .select('id')
-          .eq('id', signInData.user.id)
-          .single()
-        targetUrl = angel ? '/engel/home' : '/engel/register'
-      } else if (role === 'fahrer') {
-        targetUrl = '/fahrer/home'
-      }
-
-      // Use window.location for reliable redirect with new session cookies
-      window.location.href = targetUrl
+    // Yönlendirme — basit ve hızlı
+    if (role === 'admin' || role === 'superadmin') {
+      window.location.href = '/mis'
+    } else if (role === 'engel') {
+      window.location.href = '/engel/home'
+    } else if (role === 'fahrer') {
+      window.location.href = '/fahrer/home'
+    } else {
+      window.location.href = '/kunde/home'
     }
   }
 
