@@ -61,6 +61,7 @@ export default function KrankenfahrtenAdminPage() {
   const [rideFilter, setRideFilter] = useState('alle')
   const [selectedRide, setSelectedRide] = useState<Ride | null>(null)
   const [selectedProvider, setSelectedProvider] = useState<Provider | null>(null)
+  const [editProvider, setEditProvider] = useState<Partial<Provider>>({})
   const [saving, setSaving] = useState(false)
 
   const loadData = useCallback(async () => {
@@ -233,7 +234,7 @@ export default function KrankenfahrtenAdminPage() {
                 />
               )},
               { key: 'actions', label: '', render: (p: any) => (
-                <MisButton size="sm" onClick={() => setSelectedProvider(p)}>Verwalten</MisButton>
+                <MisButton size="sm" onClick={() => { setSelectedProvider(p); setEditProvider({ company_name: p.company_name, license_number: p.license_number, tax_id: p.tax_id, city: p.city, phone: p.phone, email: p.email }) }}>Verwalten</MisButton>
               )},
             ]}
             data={providers}
@@ -315,13 +316,30 @@ export default function KrankenfahrtenAdminPage() {
           <div style={{ display: 'grid', gap: 12, fontSize: 13, color: BRAND.text }}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               <InfoField label="Name" value={selectedProvider.profile ? `${selectedProvider.profile.first_name} ${(selectedProvider.profile.last_name || '').charAt(0)}.` : '–'} />
-              <InfoField label="Firma" value={selectedProvider.company_name || '–'} />
-              <InfoField label="Lizenz" value={selectedProvider.license_number || '–'} />
-              <InfoField label="Steuer-ID" value={selectedProvider.tax_id || '–'} />
-              <InfoField label="Stadt" value={selectedProvider.city || '–'} />
-              <InfoField label="Telefon" value={selectedProvider.phone || '–'} />
-              <InfoField label="E-Mail" value={selectedProvider.email || selectedProvider.profile?.email || '–'} />
-              <InfoField label="Status" value={selectedProvider.is_verified ? 'Verifiziert' : 'Nicht verifiziert'} />
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 600, color: BRAND.muted, marginBottom: 2 }}>Firma</div>
+                <input value={editProvider.company_name || ''} onChange={e => setEditProvider({...editProvider, company_name: e.target.value})} style={inputStyle} />
+              </div>
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 600, color: BRAND.muted, marginBottom: 2 }}>Lizenz</div>
+                <input value={editProvider.license_number || ''} onChange={e => setEditProvider({...editProvider, license_number: e.target.value})} style={inputStyle} />
+              </div>
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 600, color: BRAND.muted, marginBottom: 2 }}>Steuer-ID</div>
+                <input value={editProvider.tax_id || ''} onChange={e => setEditProvider({...editProvider, tax_id: e.target.value})} style={inputStyle} />
+              </div>
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 600, color: BRAND.muted, marginBottom: 2 }}>Stadt</div>
+                <input value={editProvider.city || ''} onChange={e => setEditProvider({...editProvider, city: e.target.value})} style={inputStyle} />
+              </div>
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 600, color: BRAND.muted, marginBottom: 2 }}>Telefon</div>
+                <input value={editProvider.phone || ''} onChange={e => setEditProvider({...editProvider, phone: e.target.value})} style={inputStyle} />
+              </div>
+              <div style={{ gridColumn: '1 / -1' }}>
+                <div style={{ fontSize: 11, fontWeight: 600, color: BRAND.muted, marginBottom: 2 }}>E-Mail</div>
+                <input value={editProvider.email || ''} onChange={e => setEditProvider({...editProvider, email: e.target.value})} style={inputStyle} />
+              </div>
             </div>
 
             {/* Stats for this provider */}
@@ -336,6 +354,9 @@ export default function KrankenfahrtenAdminPage() {
             </div>
 
             <div style={{ borderTop: `1px solid ${BRAND.border}`, paddingTop: 12, display: 'flex', gap: 8 }}>
+              <MisButton onClick={() => updateProvider(selectedProvider.id, editProvider)} disabled={saving}>
+                Änderungen speichern
+              </MisButton>
               {!selectedProvider.is_verified ? (
                 <MisButton onClick={() => updateProvider(selectedProvider.id, { is_verified: true })} disabled={saving}>
                   Verifizieren ✓
@@ -370,3 +391,5 @@ function Stat({ label, value }: { label: string; value: string | number }) {
     </div>
   )
 }
+
+const inputStyle: React.CSSProperties = { width: '100%', padding: '8px 12px', borderRadius: 8, border: `1px solid ${BRAND.border}`, fontSize: 13, fontFamily: 'inherit', outline: 'none', background: BRAND.light, color: BRAND.text, boxSizing: 'border-box' }
