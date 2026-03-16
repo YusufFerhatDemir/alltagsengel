@@ -27,11 +27,14 @@ export default function SupplyChainPage() {
   }
 
   async function handleAddSupplier() {
-    const supabase = createClient()
-    await supabase.from('mis_suppliers').insert(form)
-    setAddOpen(false)
-    setForm({ name: '', category: '', contact_person: '', email: '', phone: '' })
-    loadData()
+    try {
+      const supabase = createClient()
+      const { error } = await supabase.from('mis_suppliers').insert(form)
+      if (error) { alert('Fehler: ' + error.message); return }
+      setAddOpen(false)
+      setForm({ name: '', category: '', contact_person: '', email: '', phone: '' })
+      loadData()
+    } catch (e) { alert('Speichern fehlgeschlagen') }
   }
 
   return (

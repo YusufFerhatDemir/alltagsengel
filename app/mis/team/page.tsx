@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { BRAND } from '@/lib/mis/constants'
-import { SectionHeader, Card, KpiCard, DataTable, MisButton, Badge, Tabs } from '@/components/mis/MisComponents'
+import { SectionHeader, Card, KpiCard, DataTable, MisButton, Badge, Tabs, Modal, EmptyState } from '@/components/mis/MisComponents'
 import { useMis } from '@/lib/mis/MisContext'
 
 export default function TeamPage() {
@@ -10,6 +10,8 @@ export default function TeamPage() {
   const [users, setUsers] = useState<Record<string,unknown>[]>([])
   const [tasks, setTasks] = useState<Record<string,unknown>[]>([])
   const [tab, setTab] = useState('members')
+  const [taskOpen, setTaskOpen] = useState(false)
+  const [taskForm, setTaskForm] = useState({ title: '', module: 'Team', priority: 'medium', description: '', due_date: '' })
 
   useEffect(() => {
     const supabase = createClient()
@@ -25,6 +27,22 @@ export default function TeamPage() {
   const admins = users.filter(u => u.role === 'admin')
   const angels = users.filter(u => u.role === 'engel')
   const kunden = users.filter(u => u.role === 'kunde')
+
+  async function handleAddTask() {
+    try {
+      const supabase = createClient()
+      const { error } = await supabase.from('mis_tasks').insert({
+        ...taskForm,
+        created_by: (await supabase.auth.getUser()).data.user?.id,
+      })
+      if (error) { alert('Fehler: ' + error.message); return }
+      setTaskOpen(false)
+      setTaskForm({ title: '', module: 'Team', priority: 'medium', description: '', due_date: '' })
+      // reload tasks
+      const { data } = await supabase.from('mis_tasks').select('*').order('created_at', { ascending: false }).limit(20)
+      setTasks(data || [])
+    } catch { alert('Speichern fehlgeschlagen') }
+  }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
@@ -83,7 +101,7 @@ export default function TeamPage() {
       {tab === 'tasks' && (
         <>
           <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-            <MisButton icon="plus">Aufgabe erstellen</MisButton>
+            <MisButton icon="plus" onClick={() => setTaskOpen(true)}>Aufgabe erstellen</MisButton>
           </div>
           <Card noPad>
             <DataTable
@@ -106,6 +124,37 @@ export default function TeamPage() {
           </Card>
         </>
       )}
+
+      {/* Task Modal */}
+      <Modal open={taskOpen} onClose={() => setTaskOpen(false)} title="Aufgabe erstellen">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <input value={taskForm.title} onChange={e => setTaskForm({...taskForm, title: e.target.value})} placeholder="Aufgabentitel *" style={inputStyle} />
+          <input value={taskForm.description} onChange={e => setTaskForm({...taskForm, description: e.target.value})} placeholder="Beschreibung" style={inputStyle} />
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <select value={taskForm.module} onChange={e => setTaskForm({...taskForm, module: e.target.value})} style={inputStyle}>
+              <option value="Team">Team</option>
+              <option value="Qualität">Qualität</option>
+              <option value="Finanzen">Finanzen</option>
+              <option value="Lieferkette">Lieferkette</option>
+              <option value="Krankenfahrten">Krankenfahrten</option>
+              <option value="Marketing">Marketing</option>
+            </select>
+            <select value={taskForm.priority} onChange={e => setTaskForm({...taskForm, priority: e.target.value})} style={inputStyle}>
+              <option value="low">Niedrig</option>
+              <option value="medium">Mittel</option>
+              <option value="high">Hoch</option>
+              <option value="critical">Kritisch</option>
+            </select>
+          </div>
+          <input type="date" value={taskForm.due_date} onChange={e => setTaskForm({...taskForm, due_date: e.target.value})} style={inputStyle} />
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 8 }}>
+            <MisButton variant="secondary" onClick={() => setTaskOpen(false)}>Abbrechen</MisButton>
+            <MisButton onClick={handleAddTask} disabled={!taskForm.title}>Speichern</MisButton>
+          </div>
+        </div>
+      </Modal>
     </div>
   )
 }
+
+const inputStyle: React.CSSProperties = { width: '100%', padding: '8px 12px', borderRadius: 8, border: `1px solid ${BRAND.border}`, fontSize: 13, fontFamily: 'inherit', outline: 'none', background: BRAND.light, color: BRAND.text, boxSizing: 'border-box' }
