@@ -35,15 +35,16 @@ export default function MISLayout({ children }: { children: React.ReactNode }) {
   const [userName, setUserName] = useState('Admin')
 
   useEffect(() => {
-    const supabase = createClient()
-    supabase.auth.getUser().then(({ data }) => {
-      if (data?.user) {
-        supabase.from('profiles').select('first_name,last_name').eq('id', data.user.id).single()
-          .then(({ data: profile }) => {
-            if (profile) setUserName(`${profile.first_name} ${profile.last_name}`.trim() || 'Admin')
-          })
-      }
-    })
+    (async () => {
+      try {
+        const supabase = createClient()
+        const { data } = await supabase.auth.getUser()
+        if (data?.user) {
+          const { data: profile } = await supabase.from('profiles').select('first_name,last_name').eq('id', data.user.id).single()
+          if (profile) setUserName(`${profile.first_name} ${profile.last_name}`.trim() || 'Admin')
+        }
+      } catch (err) { console.error('[MIS_DEBUG] Layout getUser error:', err) }
+    })()
   }, [])
 
   const handleAiSend = () => {
