@@ -32,6 +32,30 @@ export default function QualityPage() {
 
   const openCapas = capas.filter(c => c.status !== 'closed').length
 
+  async function handleAddAudit() {
+    try {
+      const supabase = createClient()
+      const { error } = await supabase.from('mis_quality_audits').insert(auditForm)
+      if (error) { alert('Fehler: ' + error.message); return }
+      setAuditOpen(false)
+      setAuditForm({ audit_number: '', audit_type: 'internal', auditor_name: '', scheduled_date: '', notes: '' })
+      const { data } = await supabase.from('mis_quality_audits').select('*').order('scheduled_date', { ascending: false })
+      setAudits(data as QualityAudit[] || [])
+    } catch { alert('Speichern fehlgeschlagen') }
+  }
+
+  async function handleAddCapa() {
+    try {
+      const supabase = createClient()
+      const { error } = await supabase.from('mis_capa').insert(capaForm)
+      if (error) { alert('Fehler: ' + error.message); return }
+      setCapaOpen(false)
+      setCapaForm({ capa_number: '', type: 'corrective', title: '', description: '', priority: 'medium', due_date: '' })
+      const { data } = await supabase.from('mis_capa').select('*').order('created_at', { ascending: false })
+      setCapas(data as CAPA[] || [])
+    } catch { alert('Speichern fehlgeschlagen') }
+  }
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
       <SectionHeader title="Qualitätsmanagement (ISO 9001)" subtitle="Prozesse, Audits, CAPA und kontinuierliche Verbesserung" icon="shield" />
@@ -76,7 +100,7 @@ export default function QualityPage() {
       {tab === 'audits' && (
         <>
           <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-            <MisButton icon="plus">Audit planen</MisButton>
+            <MisButton icon="plus" onClick={() => setAuditOpen(true)}>Audit planen</MisButton>
           </div>
           {audits.length === 0 ? (
             <Card><EmptyState icon="shield" title="Keine Audits geplant" description="Planen Sie interne oder externe Audits." /></Card>
@@ -101,7 +125,7 @@ export default function QualityPage() {
       {tab === 'capa' && (
         <>
           <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-            <MisButton icon="plus">CAPA erstellen</MisButton>
+            <MisButton icon="plus" onClick={() => setCapaOpen(true)}>CAPA erstellen</MisButton>
           </div>
           {capas.length === 0 ? (
             <Card><EmptyState icon="zap" title="Keine CAPA-Einträge" description="Erstellen Sie korrigierende oder vorbeugende Maßnahmen." /></Card>
@@ -150,6 +174,54 @@ export default function QualityPage() {
           </div>
         </Card>
       )}
+
+      {/* Audit Modal */}
+      <Modal open={auditOpen} onClose={() => setAuditOpen(false)} title="Audit planen">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <input value={auditForm.audit_number} onChange={e => setAuditForm({...auditForm, audit_number: e.target.value})} placeholder="Audit-Nummer (z.B. AUD-001) *" style={inputStyle} />
+          <select value={auditForm.audit_type} onChange={e => setAuditForm({...auditForm, audit_type: e.target.value})} style={inputStyle}>
+            <option value="internal">Intern</option>
+            <option value="external">Extern</option>
+            <option value="supplier">Lieferanten-Audit</option>
+          </select>
+          <input value={auditForm.auditor_name} onChange={e => setAuditForm({...auditForm, auditor_name: e.target.value})} placeholder="Auditor Name" style={inputStyle} />
+          <input type="date" value={auditForm.scheduled_date} onChange={e => setAuditForm({...auditForm, scheduled_date: e.target.value})} placeholder="Datum" style={inputStyle} />
+          <textarea value={auditForm.notes} onChange={e => setAuditForm({...auditForm, notes: e.target.value})} placeholder="Notizen" rows={3} style={{...inputStyle, resize: 'vertical' as const}} />
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 8 }}>
+            <MisButton variant="secondary" onClick={() => setAuditOpen(false)}>Abbrechen</MisButton>
+            <MisButton onClick={handleAddAudit} disabled={!auditForm.audit_number}>Speichern</MisButton>
+          </div>
+        </div>
+      </Modal>
+
+      {/* CAPA Modal */}
+      <Modal open={capaOpen} onClose={() => setCapaOpen(false)} title="CAPA erstellen">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <input value={capaForm.capa_number} onChange={e => setCapaForm({...capaForm, capa_number: e.target.value})} placeholder="CAPA-Nummer (z.B. CAPA-001) *" style={inputStyle} />
+          <input value={capaForm.title} onChange={e => setCapaForm({...capaForm, title: e.target.value})} placeholder="Titel *" style={inputStyle} />
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <select value={capaForm.type} onChange={e => setCapaForm({...capaForm, type: e.target.value})} style={inputStyle}>
+              <option value="corrective">Korrekturmaßnahme</option>
+              <option value="preventive">Vorbeugemaßnahme</option>
+              <option value="improvement">Verbesserung</option>
+            </select>
+            <select value={capaForm.priority} onChange={e => setCapaForm({...capaForm, priority: e.target.value})} style={inputStyle}>
+              <option value="low">Niedrig</option>
+              <option value="medium">Mittel</option>
+              <option value="high">Hoch</option>
+              <option value="critical">Kritisch</option>
+            </select>
+          </div>
+          <textarea value={capaForm.description} onChange={e => setCapaForm({...capaForm, description: e.target.value})} placeholder="Beschreibung" rows={3} style={{...inputStyle, resize: 'vertical' as const}} />
+          <input type="date" value={capaForm.due_date} onChange={e => setCapaForm({...capaForm, due_date: e.target.value})} style={inputStyle} />
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 8 }}>
+            <MisButton variant="secondary" onClick={() => setCapaOpen(false)}>Abbrechen</MisButton>
+            <MisButton onClick={handleAddCapa} disabled={!capaForm.capa_number || !capaForm.title}>Speichern</MisButton>
+          </div>
+        </div>
+      </Modal>
     </div>
   )
 }
+
+const inputStyle: React.CSSProperties = { width: '100%', padding: '8px 12px', borderRadius: 8, border: `1px solid ${BRAND.border}`, fontSize: 13, fontFamily: 'inherit', outline: 'none', background: BRAND.light, color: BRAND.text, boxSizing: 'border-box' }
