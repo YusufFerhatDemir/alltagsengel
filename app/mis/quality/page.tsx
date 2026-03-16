@@ -35,7 +35,10 @@ export default function QualityPage() {
   async function handleAddAudit() {
     try {
       const supabase = createClient()
-      const { error } = await supabase.from('mis_quality_audits').insert(auditForm)
+      const { error } = await supabase.from('mis_quality_audits').insert({
+        ...auditForm,
+        scheduled_date: auditForm.scheduled_date || null,
+      })
       if (error) { alert('Fehler: ' + error.message); return }
       setAuditOpen(false)
       setAuditForm({ audit_number: '', audit_type: 'internal', auditor_name: '', scheduled_date: '', notes: '' })
@@ -47,7 +50,10 @@ export default function QualityPage() {
   async function handleAddCapa() {
     try {
       const supabase = createClient()
-      const { error } = await supabase.from('mis_capa').insert(capaForm)
+      const { error } = await supabase.from('mis_capa').insert({
+        ...capaForm,
+        due_date: capaForm.due_date || null,
+      })
       if (error) { alert('Fehler: ' + error.message); return }
       setCapaOpen(false)
       setCapaForm({ capa_number: '', type: 'corrective', title: '', description: '', priority: 'medium', due_date: '' })
