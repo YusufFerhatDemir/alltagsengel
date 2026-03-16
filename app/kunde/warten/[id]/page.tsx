@@ -47,6 +47,13 @@ export default function WartenPage() {
         const supabase = createClient()
         await supabase.from('bookings').update({ status: 'accepted' }).eq('id', bookingId)
         setConfirmed(true)
+
+        // Kunde benachrichtigen: Buchung bestätigt (in-app + email)
+        fetch('/api/bookings/notify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ bookingId, event: 'accepted' }),
+        }).catch(() => {})
       } catch (err) {
         logError('WartenPage:confirm', err)
       }
