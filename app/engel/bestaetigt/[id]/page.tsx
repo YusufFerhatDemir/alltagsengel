@@ -1,27 +1,54 @@
+'use client'
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/server'
-import { safeSingleQuery } from '@/lib/safe-query'
-import { NotFoundState, ErrorState } from '@/components/UIStates'
+import { useState, useEffect } from 'react'
+import { useParams } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
+import { isValidUUID, logError } from '@/lib/safe-query'
+import { NotFoundState, ErrorState, LoadingState } from '@/components/UIStates'
 import { IconCheck, IconUser, IconChat, IconShield, IconCalendar, IconClock, IconHome as IconHouse, IconMoney, IconCard, IconPin } from '@/components/Icons'
 
-export default async function EngelBestaetigtPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params
-  const supabase = await createClient()
+export default function EngelBestaetigtPage() {
+  const params = useParams()
+  const id = params.id as string
+  const [booking, setBooking] = useState<any>(null)
+  const [pageStatus, setPageStatus] = useState<'loading' | 'ok' | 'not_found' | 'error'>('loading')
 
-  const { data: booking, status } = await safeSingleQuery<any>(supabase, 'bookings', id, {
-    select: '*, customer:profiles!bookings_customer_id_fkey(first_name, last_name)',
-  })
+  useEffect(() => {
+    if (!isValidUUID(id)) { setPageStatus('not_found'); return }
 
-  if (status === 'invalid_id' || status === 'not_found') {
-    return <NotFoundState title="Auftrag nicht gefunden" subtitle="Dieser Auftrag existiert nicht oder wurde storniert." homeHref="/engel/home" />
-  }
-  if (status === 'error' || !booking) {
-    return <div className="screen"><ErrorState homeHref="/engel/home" /></div>
-  }
+    async function loadBooking() {
+      try {
+        const supabase = createClient()
+        const { data, error } = await supabase
+          .from('bookings')
+          .select('*, customer:profiles!bookings_customer_id_fkey(first_name, last_name)')
+          .eq('id', id)
+          .single()
+
+        if (error || !data) {
+          if (error) logError('EngelBestaetigtPage:load', error.message)
+          setPageStatus(error?.code === 'PGRST116' || !data ? 'not_found' : 'error')
+          return
+        }
+        setBooking(data)
+        setPageStatus('ok')
+      } catch (err) {
+        logError('EngelBestaetigtPage', err)
+        setPageStatus('error')
+      }
+    }
+    loadBooking()
+  }, [id])
+
+  if (pageStatus === 'loading') return <div className="screen"><LoadingState /></div>
+  if (pageStatus === 'not_found') return <NotFoundState title="Auftrag nicht gefunden" subtitle="Dieser Auftrag existiert nicht oder wurde storniert." homeHref="/engel/home" />
+  if (pageStatus === 'error' || !booking) return <div className="screen"><ErrorState homeHref="/engel/home" /></div>
 
   const customerName = booking.customer ? `${booking.customer.first_name} ${booking.customer.last_name?.[0] || ''}.` : 'Kunde'
-  const dateStr = booking.date ? new Date(booking.date).toLocaleDateString('de-DE', { day: '2-digit', month: 'long', year: 'numeric' }) : '01. März 2026'
-  const timeEnd = `${booking.time?.slice(0,5)} – ${String(Number(booking.time?.slice(0,2)) + booking.duration_hours).padStart(2,'0')}:${booking.time?.slice(3,5)} Uhr`
+  const dateStr = booking.date ? new Date(booking.date).toLocaleDateString('de-DE', { day: '2-digit', month: 'long', year: 'numeric' }) : '—'
+  const timeEnd = booking.time && booking.duration_hours
+    ? `${booking.time?.slice(0,5)} – ${String(Number(booking.time?.slice(0,2)) + booking.duration_hours).padStart(2,'0')}:${booking.time?.slice(3,5)} Uhr`
+    : '—'
 
   return (
     <div className="screen" id="ebestaetigt">
@@ -62,13 +89,19 @@ export default async function EngelBestaetigtPage({ params }: { params: Promise<
           <div className="detail-row"><div className="detail-ic"><IconCalendar size={15} /></div><div><div className="detail-lbl">Datum</div><div className="detail-val">{dateStr}</div></div></div>
           <div className="detail-row"><div className="detail-ic"><IconClock size={15} /></div><div><div className="detail-lbl">Uhrzeit</div><div className="detail-val">{timeEnd}</div></div></div>
           <div className="detail-row"><div className="detail-ic"><IconHouse size={15} /></div><div><div className="detail-lbl">Leistung</div><div className="detail-val">{booking.service || 'Alltagsbegleitung'}</div></div></div>
-          <div className="detail-row"><div className="detail-ic"><IconMoney size={15} /></div><div><div className="detail-lbl">Vergütung</div><div className="detail-val">{booking.total_amount?.toFixed(2) || '64,00'}€</div></div></div>
-          <div className="detail-row"><div className="detail-ic"><IconCard size={15} /></div><div><div className="detail-lbl">Abrechnung</div><div className="detail-val">{booking.payment_method === 'kasse' ? `§45b · ${booking.insurance_provider || ''}` : booking.payment_method || '§45b · AOK'}</div></div></div>
+          <div className="detail-row"><div className="detail-ic"><IconMoney size={15} /></div><div><div className="detail-lbl">Vergütung</div><div className="detail-val">{booking.total_amount ? `${Number(booking.total_amount).toFixed(2)}€` : '—'}</div></div></div>
+          <div className="detail-row"><div className="detail-ic"><IconCard size={15} /></div><div><div className="detail-lbl">Abrechnung</div><div className="detail-val">{booking.payment_method === 'kasse' ? `§45b · ${booking.insurance_provider || ''}` : booking.payment_method || '§45b'}</div></div></div>
         </div>
 
         <div className="action-grid">
           <Link href={`/engel/chat/${booking.customer_id || ''}`}><button className="action-btn"><IconChat size={15} /> Chat</button></Link>
-          <button className="action-btn" onClick={() => { if (booking.address) window.open(`https://maps.google.com/?q=${encodeURIComponent(booking.address)}`, '_blank') }}><IconPin size={15} /> Navigation</button>
+          {booking.address ? (
+            <a href={`https://maps.google.com/?q=${encodeURIComponent(booking.address)}`} target="_blank" rel="noopener noreferrer">
+              <button className="action-btn"><IconPin size={15} /> Navigation</button>
+            </a>
+          ) : (
+            <button className="action-btn" disabled><IconPin size={15} /> Navigation</button>
+          )}
           <Link href="/engel/kalender"><button className="action-btn"><IconCalendar size={15} /> Kalender</button></Link>
           <Link href="/engel/home"><button className="action-btn primary"><IconHouse size={15} /> Dashboard</button></Link>
         </div>
