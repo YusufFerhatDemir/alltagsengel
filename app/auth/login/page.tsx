@@ -68,23 +68,28 @@ function LoginForm() {
     }
 
     if (signInData.user) {
-      // Log successful login (non-blocking)
-      const { data: logProfile } = await supabase.from('profiles').select('first_name,last_name,role').eq('id', signInData.user.id).single()
+      // Query profile for role
+      const { data: logProfile, error: profileError } = await supabase.from('profiles').select('first_name,last_name,role').eq('id', signInData.user.id).single()
+
+      // Get role: profile > JWT metadata > empty
+      const profileRole = logProfile?.role || ''
+      const jwtRole = signInData.user.user_metadata?.role || ''
+      const role = profileRole || jwtRole
+
+      // Debug: log what happened
+      const debugInfo = `profile:${profileRole}|jwt:${jwtRole}|final:${role}|err:${profileError?.message || 'none'}`
+
+      // Log login + debug info
       try { await supabase.from('mis_auth_log').insert({
         user_id: signInData.user.id,
         user_email: signInData.user.email,
         user_name: logProfile ? `${logProfile.first_name || ''} ${logProfile.last_name || ''}`.trim() : signInData.user.email,
         action: 'login',
-        ip_address: clientIP || null,
+        ip_address: debugInfo,
         user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : '',
         device: typeof navigator !== 'undefined' ? getDeviceInfo() : '',
         status: 'success',
       }) } catch {}
-
-      // Get role from profile, fallback to JWT user_metadata
-      const role = logProfile?.role
-        || signInData.user.user_metadata?.role
-        || ''
 
       // Determine target URL based on role
       let targetUrl = '/kunde/home'
