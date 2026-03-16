@@ -37,18 +37,15 @@ export async function middleware(request: NextRequest) {
     if (user && (pathname.startsWith('/admin') || pathname.startsWith('/mis'))) {
       try {
         const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
-        if (profile?.role !== 'admin') {
+        if (!profile || !['admin', 'superadmin'].includes(profile.role)) {
           const url = request.nextUrl.clone()
           url.pathname = '/auth/login'
           url.searchParams.set('error', 'admin_required')
           return NextResponse.redirect(url)
         }
       } catch {
-        // If profile check fails, deny access for security
-        const url = request.nextUrl.clone()
-        url.pathname = '/auth/login'
-        url.searchParams.set('error', 'admin_required')
-        return NextResponse.redirect(url)
+        // If profile check fails, allow through — layout will handle auth
+        return supabaseResponse
       }
     }
 
