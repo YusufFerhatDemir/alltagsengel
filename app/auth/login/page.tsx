@@ -80,35 +80,36 @@ function LoginForm() {
         device: typeof navigator !== 'undefined' ? getDeviceInfo() : '',
         status: 'success',
       }) } catch {}
-      // If there's a redirectTo URL, go there directly
-      if (redirectTo) {
-        router.push(redirectTo)
-        router.refresh()
-        return
-      }
-
       const { data: profile } = await supabase
         .from('profiles')
         .select('role')
         .eq('id', signInData.user.id)
         .single()
 
-      if (profile?.role === 'admin') {
-        router.push('/mis')
-      } else if (profile?.role === 'engel') {
-        // Check if angel profile exists
+      const role = profile?.role || ''
+
+      // Determine target URL based on role
+      let targetUrl = '/kunde/home'
+      if (role === 'admin' || role === 'superadmin') {
+        targetUrl = '/mis'
+      } else if (role === 'engel') {
         const { data: angel } = await supabase
           .from('angels')
           .select('id')
           .eq('id', signInData.user.id)
           .single()
-        router.push(angel ? '/engel/home' : '/engel/register')
-      } else if (profile?.role === 'fahrer') {
-        router.push('/fahrer/home')
-      } else {
-        router.push('/kunde/home')
+        targetUrl = angel ? '/engel/home' : '/engel/register'
+      } else if (role === 'fahrer') {
+        targetUrl = '/fahrer/home'
       }
-      router.refresh()
+
+      // If there's a redirectTo and user has matching role, use it
+      if (redirectTo && (role === 'admin' || role === 'superadmin') && redirectTo.startsWith('/mis')) {
+        targetUrl = redirectTo
+      }
+
+      // Use window.location for reliable redirect (ensures cookies are sent with new session)
+      window.location.href = targetUrl
     }
   }
 
