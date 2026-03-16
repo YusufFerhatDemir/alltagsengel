@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect, useCallback } from 'react'
+import { createClient } from '@/lib/supabase/client'
 import { BRAND } from '@/lib/mis/constants'
 import {
   SectionHeader, Tabs, KpiCard, Card, DataTable, MisButton, Badge, Modal, EmptyState,
@@ -51,17 +52,29 @@ export default function KrankenfahrtPricingPage() {
   const [editModal, setEditModal] = useState<{ entity: string; item: any } | null>(null)
   const [saving, setSaving] = useState(false)
 
+  const tableMap: Record<string, string> = {
+    tiers: 'kf_pricing_tiers',
+    surcharges: 'kf_pricing_surcharges',
+    regions: 'kf_pricing_regions',
+    config: 'kf_pricing_config',
+    audit: 'kf_pricing_audit',
+  }
+
   const loadData = useCallback(async () => {
     try {
-      const res = await fetch('/api/admin/pricing')
-      if (res.ok) {
-        const data = await res.json()
-        setTiers(data.tiers || [])
-        setSurcharges(data.surcharges || [])
-        setRegions(data.regions || [])
-        setConfig(data.config || [])
-        setAudit(data.audit || [])
-      }
+      const supabase = createClient()
+      const [tiersRes, surchargesRes, regionsRes, configRes, auditRes] = await Promise.all([
+        supabase.from('kf_pricing_tiers').select('*').order('sort_order'),
+        supabase.from('kf_pricing_surcharges').select('*').order('sort_order'),
+        supabase.from('kf_pricing_regions').select('*').order('region_code'),
+        supabase.from('kf_pricing_config').select('*').order('key'),
+        supabase.from('kf_pricing_audit').select('*').order('created_at', { ascending: false }).limit(50),
+      ])
+      setTiers((tiersRes.data || []) as any)
+      setSurcharges((surchargesRes.data || []) as any)
+      setRegions((regionsRes.data || []) as any)
+      setConfig((configRes.data || []) as any)
+      setAudit((auditRes.data || []) as any)
     } catch (err) {
       console.error('Failed to load pricing data', err)
     }
@@ -73,13 +86,20 @@ export default function KrankenfahrtPricingPage() {
   async function saveItem(entity: string, item: any) {
     setSaving(true)
     try {
-      const method = !item.id ? 'POST' : 'PUT'
-      const res = await fetch('/api/admin/pricing', {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ entity, ...item }),
-      })
-      if (!res.ok) { const e = await res.json(); alert(e.error || 'Fehler'); setSaving(false); return }
+      const supabase = createClient()
+      const table = tableMap[entity]
+      if (!table) { alert('Ungültige Entität'); setSaving(false); return }
+
+      const { id, ...values } = item
+      if (!id) {
+        // Create
+        const { error } = await supabase.from(table).insert(values)
+        if (error) { alert(error.message); setSaving(false); return }
+      } else {
+        // Update
+        const { error } = await supabase.from(table).update({ ...values, updated_at: new Date().toISOString() }).eq('id', id)
+        if (error) { alert(error.message); setSaving(false); return }
+      }
       await loadData()
       setEditModal(null)
     } catch { alert('Fehler beim Speichern') }
@@ -89,8 +109,11 @@ export default function KrankenfahrtPricingPage() {
   async function deleteItem(entity: string, id: string) {
     if (!confirm('Wirklich löschen?')) return
     try {
-      const res = await fetch(`/api/admin/pricing?entity=${entity}&id=${id}`, { method: 'DELETE' })
-      if (!res.ok) { const e = await res.json(); alert(e.error || 'Fehler'); return }
+      const supabase = createClient()
+      const table = tableMap[entity]
+      if (!table) { alert('Ungültige Entität'); return }
+      const { error } = await supabase.from(table).delete().eq('id', id)
+      if (error) { alert(error.message); return }
       await loadData()
     } catch { alert('Fehler beim Löschen') }
   }
