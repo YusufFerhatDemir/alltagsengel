@@ -72,17 +72,33 @@ export default function SplashPage() {
           </p>
           <div className="lp-values">
             <div className="lp-value-item">
-              <div className="lp-value-icon">🛡️</div>
+              <div className="lp-value-icon">
+                <svg viewBox="0 0 40 40" width="40" height="40" style={{ fill: 'none', stroke: '#C9963C', strokeWidth: 1.5, strokeLinecap: 'round', strokeLinejoin: 'round' }}>
+                  <path d="M8 12c0-2 1-4 3-4h18c2 0 3 2 3 4v10c0 2-1 4-3 4H11c-2 0-3-2-3-4v-10z" />
+                  <path d="M20 16v8m-8-8v8" />
+                  <circle cx="20" cy="8" r="1.5" fill="#C9963C" />
+                </svg>
+              </div>
               <h4>Versichert</h4>
               <p>Jeder Einsatz ist haftpflichtversichert</p>
             </div>
             <div className="lp-value-item">
-              <div className="lp-value-icon">✅</div>
+              <div className="lp-value-icon">
+                <svg viewBox="0 0 40 40" width="40" height="40" style={{ fill: 'none', stroke: '#C9963C', strokeWidth: 1.5, strokeLinecap: 'round', strokeLinejoin: 'round' }}>
+                  <circle cx="20" cy="20" r="16" />
+                  <path d="M14 20l3 3 8-8" />
+                </svg>
+              </div>
               <h4>Zertifiziert</h4>
               <p>Alle Engel nach § 45a SGB XI qualifiziert</p>
             </div>
             <div className="lp-value-item">
-              <div className="lp-value-icon">💳</div>
+              <div className="lp-value-icon">
+                <svg viewBox="0 0 40 40" width="40" height="40" style={{ fill: 'none', stroke: '#C9963C', strokeWidth: 1.5, strokeLinecap: 'round', strokeLinejoin: 'round' }}>
+                  <rect x="6" y="6" width="28" height="28" rx="2" />
+                  <path d="M13 10v24m14-24v24M10 16h20M10 24h20" />
+                </svg>
+              </div>
               <h4>§ 45b fähig</h4>
               <p>Direkte Abrechnung mit der Pflegekasse</p>
             </div>
@@ -95,19 +111,36 @@ export default function SplashPage() {
           <h2 className="lp-h2">Alles aus einer Hand</h2>
           <div className="lp-services">
             <Link href="/alltagsbegleitung" className="lp-service-card">
-              <div className="lp-svc-icon">💛</div>
+              <div className="lp-svc-icon">
+                <svg viewBox="0 0 40 40" width="40" height="40" style={{ fill: 'none', stroke: '#C9963C', strokeWidth: 1.5, strokeLinecap: 'round', strokeLinejoin: 'round' }}>
+                  <path d="M20 8c3.3 0 6 2.7 6 6s-2.7 6-6 6-6-2.7-6-6 2.7-6 6-6z" />
+                  <path d="M12 26c0-3 2-6 4-7.5h8c2 1.5 4 4.5 4 7.5v5H12v-5z" />
+                  <path d="M14 18l-4 4m0-4l4 4" />
+                </svg>
+              </div>
               <h4>Alltagsbegleitung</h4>
               <p>Haushaltsnahe Hilfen, Begleitung, psychosoziale Betreuung</p>
               <span className="lp-svc-price">ab 32 €/Std.</span>
             </Link>
             <Link href="/krankenfahrten" className="lp-service-card">
-              <div className="lp-svc-icon">🚑</div>
+              <div className="lp-svc-icon">
+                <svg viewBox="0 0 40 40" width="40" height="40" style={{ fill: 'none', stroke: '#C9963C', strokeWidth: 1.5, strokeLinecap: 'round', strokeLinejoin: 'round' }}>
+                  <rect x="4" y="12" width="32" height="16" rx="2" />
+                  <path d="M8 28v3c0 1 .5 2 2 2h2c1.5 0 2-1 2-2v-3m12 3v3c0 1 .5 2 2 2h2c1.5 0 2-1 2-2v-3M4 18h32m6-6h-4v4h-4v-4h-4" />
+                </svg>
+              </div>
               <h4>Krankenfahrten</h4>
               <p>Sichere Fahrten zu Ärzten, Kliniken und Therapien</p>
               <span className="lp-svc-price">Preis nach Region &amp; Fahrtart</span>
             </Link>
             <Link href="/hygienebox" className="lp-service-card">
-              <div className="lp-svc-icon">🧴</div>
+              <div className="lp-svc-icon">
+                <svg viewBox="0 0 40 40" width="40" height="40" style={{ fill: 'none', stroke: '#C9963C', strokeWidth: 1.5, strokeLinecap: 'round', strokeLinejoin: 'round' }}>
+                  <rect x="8" y="10" width="24" height="24" rx="1" />
+                  <path d="M14 16h12M14 22h12M14 28h12" />
+                  <circle cx="32" cy="15" r="3" fill="#C9963C" />
+                </svg>
+              </div>
               <h4>Hygienebox</h4>
               <p>Monatliche Pflegehilfsmittel — bis 40 € von der Kasse</p>
               <span className="lp-svc-price">ab 29,90 €/Mon.</span>

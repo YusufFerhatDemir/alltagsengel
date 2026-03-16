@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { BRAND } from '@/lib/mis/constants'
-import { SectionHeader, Card, KpiCard, DataTable, Tabs, MisButton, Badge, RiskBadge, ProgressBar, StatRow, EmptyState } from '@/components/mis/MisComponents'
+import { SectionHeader, Card, KpiCard, DataTable, Tabs, MisButton, Badge, RiskBadge, ProgressBar, StatRow, EmptyState, Modal } from '@/components/mis/MisComponents'
 import { useMis } from '@/lib/mis/MisContext'
 import type { QualityProcess, QualityAudit, CAPA } from '@/lib/mis/types'
 
@@ -12,6 +12,10 @@ export default function QualityPage() {
   const [audits, setAudits] = useState<QualityAudit[]>([])
   const [capas, setCapas] = useState<CAPA[]>([])
   const [tab, setTab] = useState('processes')
+  const [auditOpen, setAuditOpen] = useState(false)
+  const [auditForm, setAuditForm] = useState({ audit_number: '', audit_type: 'internal', auditor_name: '', scheduled_date: '', notes: '' })
+  const [capaOpen, setCapaOpen] = useState(false)
+  const [capaForm, setCapaForm] = useState({ capa_number: '', type: 'corrective', title: '', description: '', priority: 'medium', due_date: '' })
 
   useEffect(() => {
     const supabase = createClient()

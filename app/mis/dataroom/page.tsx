@@ -7,17 +7,17 @@ import { MIcon } from '@/components/mis/MisIcons'
 import { useMis } from '@/lib/mis/MisContext'
 
 const DATA_ROOM_DOCS = [
-  { section: 'Unternehmensübersicht', file: 'AlltagsEngel-Company-Overview.docx', size: '13 KB', type: 'DOCX', status: 'final' },
-  { section: 'Executive Summary', file: 'AlltagsEngel-Executive-Summary.pdf', size: '6,7 KB', type: 'PDF', status: 'final' },
-  { section: 'Pitch Deck (DE)', file: 'AlltagsEngel-Detailed-Pitch-Deck-2026.pptx', size: '460 KB', type: 'PPTX', status: 'final' },
-  { section: 'Pitch Deck (PDF)', file: 'AlltagsEngel-Investor-Pitch-Deck.pdf', size: '152 KB', type: 'PDF', status: 'final' },
-  { section: 'Markenidentität', file: 'AlltagsEngel-Brand-Identity-Guidelines.pdf', size: '23 KB', type: 'PDF', status: 'final' },
-  { section: 'Marktanalyse', file: 'AlltagsEngel-Market-Analysis.docx', size: '18 KB', type: 'DOCX', status: 'final' },
-  { section: 'Finanzprognosen', file: 'AlltagsEngel-Financial-Projections.xlsx', size: '8,7 KB', type: 'XLSX', status: 'final' },
-  { section: 'Produkt & Technologie', file: 'AlltagsEngel-Product-Technology-Overview.pdf', size: '17 KB', type: 'PDF', status: 'final' },
-  { section: 'Go-To-Market', file: 'AlltagsEngel-Go-To-Market-Strategy.docx', size: '13 KB', type: 'DOCX', status: 'final' },
-  { section: 'Recht & Compliance', file: 'AlltagsEngel-Legal-Compliance-Summary.docx', size: '17 KB', type: 'DOCX', status: 'final' },
-  { section: 'Data Room Index', file: 'AlltagsEngel-Data-Room-Index.pdf', size: '45 KB', type: 'PDF', status: 'final' },
+  { section: 'Unternehmensübersicht', file: 'AlltagsEngel-Company-Overview.docx', size: '13 KB', type: 'DOCX', status: 'final', link: '/investor/unternehmensprofil' },
+  { section: 'Executive Summary', file: 'AlltagsEngel-Executive-Summary.pdf', size: '6,7 KB', type: 'PDF', status: 'final', link: '/investor/zusammenfassung' },
+  { section: 'Pitch Deck (DE)', file: 'AlltagsEngel-Detailed-Pitch-Deck-2026.pptx', size: '460 KB', type: 'PPTX', status: 'final', link: '/investor/pitch' },
+  { section: 'Pitch Deck (PDF)', file: 'AlltagsEngel-Investor-Pitch-Deck.pdf', size: '152 KB', type: 'PDF', status: 'final', link: '/investor/pitch' },
+  { section: 'Markenidentität', file: 'AlltagsEngel-Brand-Identity-Guidelines.pdf', size: '23 KB', type: 'PDF', status: 'final', link: '/investor/brand' },
+  { section: 'Marktanalyse', file: 'AlltagsEngel-Market-Analysis.docx', size: '18 KB', type: 'DOCX', status: 'final', link: '/investor/marktanalyse' },
+  { section: 'Finanzprognosen', file: 'AlltagsEngel-Financial-Projections.xlsx', size: '8,7 KB', type: 'XLSX', status: 'final', link: '/investor/finanzplan' },
+  { section: 'Produkt & Technologie', file: 'AlltagsEngel-Product-Technology-Overview.pdf', size: '17 KB', type: 'PDF', status: 'final', link: '/investor/produkt-technologie' },
+  { section: 'Go-To-Market', file: 'AlltagsEngel-Go-To-Market-Strategy.docx', size: '13 KB', type: 'DOCX', status: 'final', link: '/investor/go-to-market' },
+  { section: 'Recht & Compliance', file: 'AlltagsEngel-Legal-Compliance-Summary.docx', size: '17 KB', type: 'DOCX', status: 'final', link: '/investor/recht-compliance' },
+  { section: 'Data Room Index', file: 'AlltagsEngel-Data-Room-Index.pdf', size: '45 KB', type: 'PDF', status: 'final', link: '/investor' },
 ]
 
 export default function DataRoomPage() {
@@ -61,6 +61,11 @@ export default function DataRoomPage() {
             { key: 'type', label: 'Typ', render: (r) => <Badge label={r.type as string} color={BRAND.info} size="sm" /> },
             { key: 'size', label: 'Größe' },
             { key: 'status', label: 'Status', render: () => <Badge label="Final" color={BRAND.success} size="sm" /> },
+            { key: 'link', label: 'Aktion', render: (r) => (
+              <MisButton icon="externalLink" size="sm" onClick={() => window.open(r.link as string, '_blank')}>
+                Öffnen
+              </MisButton>
+            )},
           ]}
           data={DATA_ROOM_DOCS as unknown as Record<string,unknown>[]}
         />
