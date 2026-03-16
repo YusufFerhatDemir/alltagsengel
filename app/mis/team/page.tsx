@@ -27,9 +27,10 @@ export default function TeamPage() {
     })
   }, [])
 
-  const admins = users.filter(u => u.role === 'admin')
+  const admins = users.filter(u => u.role === 'admin' || u.role === 'superadmin')
   const angels = users.filter(u => u.role === 'engel')
   const kunden = users.filter(u => u.role === 'kunde')
+  const fahrer = users.filter(u => u.role === 'fahrer')
 
   async function handleAddTask() {
     try {
@@ -85,6 +86,7 @@ export default function TeamPage() {
         <KpiCard title="Admins" value={admins.length} icon="shield" color={BRAND.gold} />
         <KpiCard title="Engel" value={angels.length} icon="wings" color={BRAND.success} />
         <KpiCard title="Kunden" value={kunden.length} icon="users" color={BRAND.info} />
+        <KpiCard title="Fahrer" value={fahrer.length} icon="truck" color="#FF9800" />
       </div>
 
       <Tabs tabs={[
@@ -97,16 +99,17 @@ export default function TeamPage() {
           <DataTable
             columns={[
               { key: 'name', label: 'Name', render: (r) => {
-                const firstName = r.first_name as string || '?'
-                const lastName = r.last_name as string || ''
-                const displayName = `${firstName} ${lastName.charAt(0)}.`
+                const firstName = (r.first_name as string) || ''
+                const lastName = (r.last_name as string) || ''
+                const displayName = firstName ? `${firstName} ${lastName ? lastName.charAt(0) + '.' : ''}`.trim() : (r.email as string || '—')
+                const initials = `${(firstName || '?').charAt(0)}${(lastName || '').charAt(0)}`
                 return (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                   <div style={{
                     width: 32, height: 32, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
                     background: r.avatar_color as string || `${BRAND.gold}30`, color: BRAND.text, fontWeight: 700, fontSize: 13,
                   }}>
-                    {firstName.charAt(0)}{lastName.charAt(0)}
+                    {initials}
                   </div>
                   <div>
                     <div style={{ fontWeight: 600 }}>{displayName}</div>
@@ -116,10 +119,12 @@ export default function TeamPage() {
               { key: 'email', label: 'E-Mail', render: (r) => (
                 <span style={{ fontSize: isMobile ? 11 : 13, wordBreak: 'break-all' }}>{r.email as string || '—'}</span>
               )},
-              { key: 'role', label: 'Rolle', render: (r) => (
-                <Badge label={r.role === 'admin' ? 'Admin' : r.role === 'engel' ? 'Engel' : 'Kunde'}
-                  color={r.role === 'admin' ? BRAND.gold : r.role === 'engel' ? BRAND.success : BRAND.info} size="sm" />
-              )},
+              { key: 'role', label: 'Rolle', render: (r) => {
+                const roleLabels: Record<string,string> = { admin: 'Admin', superadmin: 'Superadmin', engel: 'Engel', kunde: 'Kunde', fahrer: 'Fahrer' }
+                const roleColors: Record<string,string> = { admin: BRAND.gold, superadmin: BRAND.gold, engel: BRAND.success, kunde: BRAND.info, fahrer: '#FF9800' }
+                const role = (r.role as string) || 'kunde'
+                return <Badge label={roleLabels[role] || role} color={roleColors[role] || BRAND.muted} size="sm" />
+              }},
               ...(!isMobile ? [
                 { key: 'location', label: 'Standort', render: (r: Record<string,unknown>) => r.location as string || '—' },
                 { key: 'created_at', label: 'Registriert', render: (r: Record<string,unknown>) => new Date(r.created_at as string).toLocaleDateString('de-DE') },
@@ -191,8 +196,10 @@ export default function TeamPage() {
             <div style={{ fontSize: 11, fontWeight: 600, color: BRAND.muted, marginBottom: 2 }}>Rolle</div>
             <select value={editForm.role} onChange={e => setEditForm({...editForm, role: e.target.value})} style={inputStyle}>
               <option value="admin">Admin</option>
+              <option value="superadmin">Superadmin</option>
               <option value="engel">Engel</option>
               <option value="kunde">Kunde</option>
+              <option value="fahrer">Fahrer</option>
             </select>
           </div>
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 8 }}>

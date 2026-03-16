@@ -62,15 +62,23 @@ function LoginForm() {
     const role = signInData.user.user_metadata?.role || ''
 
     // Log arka planda (redirect'i beklemesin)
-    supabase.from('mis_auth_log').insert({
-      user_id: signInData.user.id,
-      user_email: signInData.user.email,
-      user_name: signInData.user.user_metadata?.first_name || signInData.user.email,
-      action: 'login',
-      ip_address: `role:${role}`,
-      device: getDeviceInfo(),
-      status: 'success',
-    }).then(() => {})
+    Promise.all([
+      getClientIP(),
+      supabase.from('profiles').select('first_name, last_name').eq('id', signInData.user.id).single()
+    ]).then(([ip, { data: profile }]) => {
+      const displayName = profile?.first_name
+        ? `${profile.first_name} ${(profile.last_name || '').charAt(0)}.`.trim()
+        : signInData.user.user_metadata?.first_name || signInData.user.email
+      supabase.from('mis_auth_log').insert({
+        user_id: signInData.user.id,
+        user_email: signInData.user.email,
+        user_name: displayName,
+        action: 'login',
+        ip_address: ip || null,
+        device: getDeviceInfo(),
+        status: 'success',
+      }).then(() => {})
+    })
 
     // Yönlendirme — basit ve hızlı
     if (role === 'admin' || role === 'superadmin') {
