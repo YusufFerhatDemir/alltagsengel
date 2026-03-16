@@ -23,11 +23,14 @@ export default function QualityPage() {
       supabase.from('mis_quality_processes').select('*').order('process_id'),
       supabase.from('mis_quality_audits').select('*').order('scheduled_date', { ascending: false }),
       supabase.from('mis_capa').select('*').order('created_at', { ascending: false }),
-    ]).then(([{ data: p }, { data: a }, { data: c }]) => {
+    ]).then(([{ data: p, error: e1 }, { data: a, error: e2 }, { data: c, error: e3 }]) => {
+      if (e1) console.error('Processes error:', e1)
+      if (e2) console.error('Audits error:', e2)
+      if (e3) console.error('CAPA error:', e3)
       setProcesses(p as QualityProcess[] || [])
       setAudits(a as QualityAudit[] || [])
       setCapas(c as CAPA[] || [])
-    })
+    }).catch(err => console.error('Quality loadData error:', err))
   }, [])
 
   const openCapas = capas.filter(c => c.status !== 'closed').length
