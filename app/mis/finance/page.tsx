@@ -12,11 +12,14 @@ export default function FinancePage() {
   const [activeTab, setActiveTab] = useState('overview')
 
   useEffect(() => {
-    const supabase = createClient()
-    supabase.from('mis_budget_items').select('*').order('category').then(({ data, error }) => {
-      if (error) console.error('Budget items error:', error)
-      setBudgetItems(data as BudgetItem[] || [])
-    }).catch(err => console.error('Finance loadData error:', err))
+    (async () => {
+      try {
+        const supabase = createClient()
+        const { data, error } = await supabase.from('mis_budget_items').select('*').order('category')
+        if (error) console.error('Budget items error:', error)
+        setBudgetItems(data as BudgetItem[] || [])
+      } catch (err) { console.error('Finance loadData error:', err) }
+    })()
   }, [])
 
   const FP = FINANCIAL_PROJECTIONS

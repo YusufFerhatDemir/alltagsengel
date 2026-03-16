@@ -17,16 +17,19 @@ export default function TeamPage() {
   const [editForm, setEditForm] = useState({ first_name: '', last_name: '', email: '', phone: '', location: '', role: 'kunde' })
 
   useEffect(() => {
-    const supabase = createClient()
-    Promise.all([
-      supabase.from('profiles').select('*').order('created_at', { ascending: false }),
-      supabase.from('mis_tasks').select('*').order('created_at', { ascending: false }).limit(20),
-    ]).then(([{ data: u, error: e1 }, { data: t, error: e2 }]) => {
-      if (e1) console.error('Profiles error:', e1)
-      if (e2) console.error('Tasks error:', e2)
-      setUsers(u || [])
-      setTasks(t || [])
-    }).catch(err => console.error('Team loadData error:', err))
+    (async () => {
+      try {
+        const supabase = createClient()
+        const [{ data: u, error: e1 }, { data: t, error: e2 }] = await Promise.all([
+          supabase.from('profiles').select('*').order('created_at', { ascending: false }),
+          supabase.from('mis_tasks').select('*').order('created_at', { ascending: false }).limit(20),
+        ])
+        if (e1) console.error('Profiles error:', e1)
+        if (e2) console.error('Tasks error:', e2)
+        setUsers(u || [])
+        setTasks(t || [])
+      } catch (err) { console.error('Team loadData error:', err) }
+    })()
   }, [])
 
   const admins = users.filter(u => u.role === 'admin' || u.role === 'superadmin')
