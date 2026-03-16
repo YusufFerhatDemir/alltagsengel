@@ -2383,6 +2383,10 @@ body:has(.admin-layout) {
     max-width: 100vw !important;
     width: 100% !important;
   }
+  /* Dekoratif radial-gradient mobilde gizle — position:fixed + width:600px viewport'u aşıyor */
+  .admin-layout::before {
+    display: none !important;
+  }
 
   /* Admin sidebar: tamamen gizle */
   .admin-sidebar {
