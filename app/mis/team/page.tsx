@@ -12,6 +12,9 @@ export default function TeamPage() {
   const [tab, setTab] = useState('members')
   const [taskOpen, setTaskOpen] = useState(false)
   const [taskForm, setTaskForm] = useState({ title: '', module: 'Team', priority: 'medium', description: '', due_date: '' })
+  const [editOpen, setEditOpen] = useState(false)
+  const [editUser, setEditUser] = useState<Record<string,unknown> | null>(null)
+  const [editForm, setEditForm] = useState({ first_name: '', last_name: '', email: '', phone: '', location: '', role: 'kunde' })
 
   useEffect(() => {
     const supabase = createClient()
@@ -31,16 +34,45 @@ export default function TeamPage() {
   async function handleAddTask() {
     try {
       const supabase = createClient()
-      const { error } = await supabase.from('mis_tasks').insert({
+      const insertData = {
         ...taskForm,
+        due_date: taskForm.due_date || null,
         created_by: (await supabase.auth.getUser()).data.user?.id,
-      })
+      }
+      const { error } = await supabase.from('mis_tasks').insert(insertData)
       if (error) { alert('Fehler: ' + error.message); return }
       setTaskOpen(false)
       setTaskForm({ title: '', module: 'Team', priority: 'medium', description: '', due_date: '' })
       // reload tasks
       const { data } = await supabase.from('mis_tasks').select('*').order('created_at', { ascending: false }).limit(20)
       setTasks(data || [])
+    } catch { alert('Speichern fehlgeschlagen') }
+  }
+
+  function openEditUser(user: Record<string,unknown>) {
+    setEditUser(user)
+    setEditForm({
+      first_name: (user.first_name as string) || '',
+      last_name: (user.last_name as string) || '',
+      email: (user.email as string) || '',
+      phone: (user.phone as string) || '',
+      location: (user.location as string) || '',
+      role: (user.role as string) || 'kunde',
+    })
+    setEditOpen(true)
+  }
+
+  async function handleEditUser() {
+    if (!editUser) return
+    try {
+      const supabase = createClient()
+      const { error } = await supabase.from('profiles').update(editForm).eq('id', editUser.id)
+      if (error) { alert('Fehler: ' + error.message); return }
+      setEditOpen(false)
+      setEditUser(null)
+      // reload users
+      const { data } = await supabase.from('profiles').select('*').order('created_at', { ascending: false })
+      setUsers(data || [])
     } catch { alert('Speichern fehlgeschlagen') }
   }
 
@@ -92,6 +124,9 @@ export default function TeamPage() {
                 { key: 'location', label: 'Standort', render: (r: Record<string,unknown>) => r.location as string || '—' },
                 { key: 'created_at', label: 'Registriert', render: (r: Record<string,unknown>) => new Date(r.created_at as string).toLocaleDateString('de-DE') },
               ] : []),
+              { key: 'actions', label: '', render: (r: Record<string,unknown>) => (
+                <MisButton size="sm" onClick={() => openEditUser(r)}>Bearbeiten</MisButton>
+              )},
             ]}
             data={users}
           />
@@ -124,6 +159,48 @@ export default function TeamPage() {
           </Card>
         </>
       )}
+
+      {/* Edit User Modal */}
+      <Modal open={editOpen} onClose={() => { setEditOpen(false); setEditUser(null) }} title="Mitglied bearbeiten">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 600, color: BRAND.muted, marginBottom: 2 }}>Vorname</div>
+              <input value={editForm.first_name} onChange={e => setEditForm({...editForm, first_name: e.target.value})} placeholder="Vorname" style={inputStyle} />
+            </div>
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 600, color: BRAND.muted, marginBottom: 2 }}>Nachname</div>
+              <input value={editForm.last_name} onChange={e => setEditForm({...editForm, last_name: e.target.value})} placeholder="Nachname" style={inputStyle} />
+            </div>
+          </div>
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 600, color: BRAND.muted, marginBottom: 2 }}>E-Mail</div>
+            <input value={editForm.email} onChange={e => setEditForm({...editForm, email: e.target.value})} placeholder="E-Mail" style={inputStyle} />
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 600, color: BRAND.muted, marginBottom: 2 }}>Telefon</div>
+              <input value={editForm.phone} onChange={e => setEditForm({...editForm, phone: e.target.value})} placeholder="Telefon" style={inputStyle} />
+            </div>
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 600, color: BRAND.muted, marginBottom: 2 }}>Standort</div>
+              <input value={editForm.location} onChange={e => setEditForm({...editForm, location: e.target.value})} placeholder="Standort" style={inputStyle} />
+            </div>
+          </div>
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 600, color: BRAND.muted, marginBottom: 2 }}>Rolle</div>
+            <select value={editForm.role} onChange={e => setEditForm({...editForm, role: e.target.value})} style={inputStyle}>
+              <option value="admin">Admin</option>
+              <option value="engel">Engel</option>
+              <option value="kunde">Kunde</option>
+            </select>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 8 }}>
+            <MisButton variant="secondary" onClick={() => { setEditOpen(false); setEditUser(null) }}>Abbrechen</MisButton>
+            <MisButton onClick={handleEditUser}>Speichern</MisButton>
+          </div>
+        </div>
+      </Modal>
 
       {/* Task Modal */}
       <Modal open={taskOpen} onClose={() => setTaskOpen(false)} title="Aufgabe erstellen">
