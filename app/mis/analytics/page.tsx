@@ -562,8 +562,8 @@ export default function AnalyticsPage() {
                     </div>
                   )},
                   { key: 'role', label: 'Rolle', render: (r) => {
-                    const roleLabels: Record<string, string> = { admin: 'Admin', engel: 'Engel', kunde: 'Kunde' }
-                    const roleColors: Record<string, string> = { admin: BRAND.gold, engel: BRAND.success, kunde: BRAND.info }
+                    const roleLabels: Record<string, string> = { admin: 'Admin', superadmin: 'Superadmin', engel: 'Engel', kunde: 'Kunde', fahrer: 'Fahrer' }
+                    const roleColors: Record<string, string> = { admin: BRAND.gold, superadmin: BRAND.gold, engel: BRAND.success, kunde: BRAND.info, fahrer: '#FF9800' }
                     return <Badge label={roleLabels[r.role as string] || String(r.role)} color={roleColors[r.role as string] || BRAND.muted} size="sm" />
                   }},
                   { key: 'location', label: 'Standort', render: (r) => (
@@ -599,9 +599,10 @@ export default function AnalyticsPage() {
           <Card title="Login-Verteilung nach Rolle" icon="pieChart">
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {[
-                { role: 'Admin', count: users.filter(u => u.role === 'admin').length, color: BRAND.gold },
+                { role: 'Admin', count: users.filter(u => u.role === 'admin' || u.role === 'superadmin').length, color: BRAND.gold },
                 { role: 'Engel', count: users.filter(u => u.role === 'engel').length, color: BRAND.success },
                 { role: 'Kunde', count: users.filter(u => u.role === 'kunde').length, color: BRAND.info },
+                { role: 'Fahrer', count: users.filter(u => u.role === 'fahrer').length, color: '#FF9800' },
               ].map(item => (
                 <div key={item.role} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                   <div style={{
