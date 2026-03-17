@@ -239,7 +239,7 @@ export default function ChatDetailPage() {
               <div key={msg.id} style={{
                 alignSelf: isMe ? 'flex-end' : 'flex-start',
                 maxWidth: '75%',
-                background: isMe ? 'linear-gradient(135deg, var(--gold), var(--gold2))' : 'var(--card)',
+                background: isMe ? 'linear-gradient(135deg, var(--gold), var(--gold2))' : 'var(--white)',
                 color: isMe ? 'var(--bg)' : 'var(--ink)',
                 padding: '10px 14px',
                 borderRadius: isMe ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
@@ -271,7 +271,7 @@ export default function ChatDetailPage() {
         />
         <button onClick={handleSend} style={{
           width: 44, height: 44, borderRadius: '50%',
-          background: newMsg.trim() ? 'linear-gradient(135deg, var(--gold), var(--gold2))' : 'var(--card)',
+          background: newMsg.trim() ? 'linear-gradient(135deg, var(--gold), var(--gold2))' : 'var(--white)',
           border: 'none', color: newMsg.trim() ? 'var(--bg)' : 'var(--ink4)',
           fontSize: 18, cursor: 'pointer', display: 'flex',
           alignItems: 'center', justifyContent: 'center', flexShrink: 0,
