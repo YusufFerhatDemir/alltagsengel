@@ -106,6 +106,22 @@ function RegisterForm() {
           }
         }
 
+        // Notify admins about new registration (fire-and-forget)
+        if (data.user) {
+          fetch('/api/notify-admin-registration', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              userId: data.user.id,
+              role,
+              firstName: firstName,
+              lastName: lastName,
+              email,
+              phone: '',
+            }),
+          }).catch(() => {})
+        }
+
         // If session exists, redirect directly to home
         if (data.session) {
           if (role === 'engel') {
