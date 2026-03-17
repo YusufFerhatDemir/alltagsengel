@@ -29,25 +29,37 @@ export default function MeinProfilPage() {
     router.refresh()
   }
 
-  useEffect(() => {
-    async function loadProfile() {
+  const loadProfile = async () => {
+    setLoading(true)
+    setError('')
+    try {
       const supabase = createClient()
       const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
+      if (!user) { setLoading(false); return }
 
-      const { data: p } = await supabase.from('profiles').select('*').eq('id', user.id).single()
-      const { data: a } = await supabase.from('angels').select('*').eq('id', user.id).single()
+      const { data: p, error: pErr } = await supabase.from('profiles').select('*').eq('id', user.id).maybeSingle()
+      if (pErr) throw pErr
+      const { data: a, error: aErr } = await supabase.from('angels').select('*').eq('id', user.id).maybeSingle()
+      if (aErr) throw aErr
       setProfile(p)
       setAngel(a)
 
-      const { data: completed } = await supabase
+      const { data: completed, error: compErr } = await supabase
         .from('bookings')
         .select('total_amount')
         .eq('angel_id', user.id)
         .eq('status', 'completed')
+      if (compErr) throw compErr
       setTotalEarnings((completed || []).reduce((sum, b) => sum + (b.total_amount || 0), 0))
+    } catch (err) {
+      console.error('Profile load error:', err)
+      setError('Fehler beim Laden des Profils. Bitte versuche es später erneut.')
+    } finally {
       setLoading(false)
     }
+  }
+
+  useEffect(() => {
     loadProfile()
   }, [])
 
@@ -56,6 +68,14 @@ export default function MeinProfilPage() {
   const loc = profile?.location || '—'
 
   if (loading) return <div className="screen" id="mprofil"><div className="mp-header"><div className="mp-nav"><Link href="/engel/home" className="mp-back">‹</Link><div className="mp-title">Mein Profil</div></div></div></div>
+
+  if (error) return (
+    <div className="screen" style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'40px 24px',textAlign:'center'}}>
+      <div style={{fontSize:40,marginBottom:12}}>⚠️</div>
+      <p style={{color:'var(--ink3)',fontSize:14,marginBottom:16}}>{error}</p>
+      <button onClick={loadProfile} style={{padding:'10px 24px',borderRadius:10,border:'none',background:'linear-gradient(135deg,var(--gold),var(--gold2))',color:'var(--coal)',fontSize:13,fontWeight:600,cursor:'pointer'}}>Erneut versuchen</button>
+    </div>
+  )
 
   return (
     <div className="screen" id="mprofil">
