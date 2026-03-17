@@ -42,7 +42,7 @@ export default function KundeProfilPage() {
       setProfile(p)
 
       // Load care eligibility
-      const { data: ce } = await supabase.from('care_eligibility').select('*').eq('user_id', user.id).single()
+      const { data: ce } = await supabase.from('care_eligibility').select('*').eq('user_id', user.id).maybeSingle()
       if (ce) {
         setPflegegrad(ce.pflegegrad || 0)
         setHomeCare(ce.home_care ?? true)
