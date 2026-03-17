@@ -325,3 +325,70 @@ YAKINDA — Frankfurt'ta hizmetinizde!
 3. DE Caption einfügen → Instagram + Facebook auswählen → Veröffentlichen
 4. TikTok Studio öffnen → Grafik als Slideshow posten
 5. TR Caption als Kommentar oder zweiten Post
+
+---
+
+## 17.03.2026 — Gegen Einsamkeit / Yalnızlığa Karşı (Awareness Post)
+
+**Status:** 📋 Bereit zum Posten (Browser-Timeout — manueller Upload nötig)
+**Plattform:** Instagram + Facebook + TikTok
+**Typ:** Grafik (1080x1080)
+**Datei:** POST-2026-03-17-einsamkeit.png
+**Geplante Uhrzeit:** 10:00-13:00 Uhr (Dienstag)
+**Thema:** Gesellschaft & Gespräche — Gegen Einsamkeit (zweisprachig DE+TR)
+
+**Caption (DE):**
+```
+Einsam? Niemand zum Reden? Wir sind für dich da. 🤝😇
+
+AlltagsEngel — Gesellschaft & Gespräche gegen Einsamkeit.
+
+✅ Wir kommen vorbei & hören dir zu
+✅ Spaziergänge & gemeinsame Zeit
+✅ Einkaufsbegleitung & Alltagshilfe
+✅ Wir sprechen auch Türkisch! 🇹🇷🇩🇪
+
+Pflegekasse zahlt — 131€/Monat. Du zahlst nichts.
+
+📱 alltagsengel.care
+✉️ info@alltagsengel.care
+
+COMING SOON — Bald verfügbar in Frankfurt!
+
+#AlltagsEngel #Alltagsbegleitung #Frankfurt #GegenEinsamkeit #Pflege #Seniorenhilfe #Pflegekasse #Entlastungsbetrag #131Euro #FrankfurtAmMain #Senioren #§45b #ComingSoon #Gesellschaft #Gespräche #Nordend #Bornheim #Dornbusch #Bockenheim
+```
+
+**Caption (TR):**
+```
+Yalnız mısın? Konuşacak kimse yok mu? Biz buradayız. 🤝😇
+
+AlltagsEngel — Yalnızlığa karşı sohbet & arkadaşlık.
+
+✅ Seni ziyaret ediyoruz & dinliyoruz
+✅ Gezinti & birlikte vakit geçirme
+✅ Alışveriş refakati & günlük yardım
+✅ Türkçe hizmet veriyoruz! 🇹🇷🇩🇪
+
+Bakım sigortası karşılıyor — ayda 131€. Sen hiçbir şey ödemiyorsun.
+
+📱 alltagsengel.care
+✉️ info@alltagsengel.care
+
+YAKINDA — Frankfurt'ta hizmetinizde!
+
+#AlltagsEngel #Frankfurt #YaşlıBakımı #TürklerFrankfurt #Bakım #BakımSigortası #Yalnızlık #Sohbet #Entlastungsbetrag #Senioren #Pflege
+```
+
+**Bonus — Video-Post (TIKTOK-begleitung.mp4, 31s):**
+```
+Einsam? Niemand zum Reden? 🤝 AlltagsEngel ist für dich da. Gesellschaft, Spaziergänge, Begleitung — Pflegekasse zahlt! Link in Bio 📱 alltagsengel.care
+
+#alltagsengel #gegeneinsamkeit #alltagsbegleitung #frankfurt #pflege #pflegekasse #entlastungsbetrag #seniorenhilfe #fyp #viral #foryou
+```
+
+**Posting-Anleitung (manuell):**
+1. Meta Business Suite öffnen → business.facebook.com
+2. "Beitrag erstellen" → Grafik hochladen (POST-2026-03-17-einsamkeit.png)
+3. DE Caption einfügen → Instagram + Facebook auswählen → Veröffentlichen
+4. TikTok Studio öffnen → Grafik als Slideshow oder Video (TIKTOK-begleitung.mp4) posten
+5. TR Caption als Kommentar oder zweiten Post
