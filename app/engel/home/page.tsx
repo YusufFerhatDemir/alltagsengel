@@ -139,7 +139,20 @@ export default function EngelHomePage() {
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <NotificationBell />
-            <div className="online-toggle" onClick={toggleOnline}>
+            <div
+              className="online-toggle"
+              onClick={toggleOnline}
+              role="switch"
+              aria-checked={isOnline}
+              aria-label={isOnline ? 'Online Status - Klicken zum Offline gehen' : 'Offline Status - Klicken zum Online gehen'}
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault()
+                  toggleOnline()
+                }
+              }}
+            >
               <div className={`online-indicator${isOnline ? '' : ' off'}`}></div>
               <div className="online-label">{isOnline ? 'Online' : 'Offline'}</div>
             </div>
@@ -185,8 +198,8 @@ export default function EngelHomePage() {
               <div className="req-note"><IconCard size={13} /> <strong>§45b-Buchung</strong> — Abrechnung direkt über Pflegekasse{b.insurance_provider ? ` (${b.insurance_provider})` : ''}.</div>
             )}
             <div className="req-btns">
-              <div className="req-btn decline" onClick={() => handleBooking(b.id, 'declined')}>Ablehnen</div>
-              <div className="req-btn accept" onClick={() => handleBooking(b.id, 'accepted')}>Annehmen</div>
+              <button className="req-btn decline" onClick={() => handleBooking(b.id, 'declined')} aria-label={`Anfrage von ${b.customer?.first_name} ablehnen`}>Ablehnen</button>
+              <button className="req-btn accept" onClick={() => handleBooking(b.id, 'accepted')} aria-label={`Anfrage von ${b.customer?.first_name} annehmen`}>Annehmen</button>
             </div>
           </div>
         ))}
