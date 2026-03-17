@@ -12,37 +12,54 @@ export default function BestaetigtPage() {
   const id = params.id as string
   const [booking, setBooking] = useState<any>(null)
   const [pageStatus, setPageStatus] = useState<'loading' | 'ok' | 'not_found' | 'error'>('loading')
+  const [error, setError] = useState('')
+
+  const loadBooking = async () => {
+    setError('')
+    try {
+      if (!isValidUUID(id)) { setPageStatus('not_found'); return }
+      const supabase = createClient()
+      const { data, error: queryErr } = await supabase
+        .from('bookings')
+        .select('*, angel:angels!bookings_angel_id_fkey(profiles(first_name, last_name, avatar_color))')
+        .eq('id', id)
+        .maybeSingle()
+
+      if (queryErr) {
+        logError('BestaetigtPage:load', queryErr.message)
+        setPageStatus('error')
+        setError('Buchung konnte nicht geladen werden')
+        return
+      }
+      
+      if (!data) {
+        setPageStatus('not_found')
+        return
+      }
+      
+      setBooking(data)
+      setPageStatus('ok')
+    } catch (err) {
+      logError('BestaetigtPage', err)
+      setPageStatus('error')
+      setError('Ein unerwarteter Fehler ist aufgetreten')
+    }
+  }
 
   useEffect(() => {
-    if (!isValidUUID(id)) { setPageStatus('not_found'); return }
-
-    async function loadBooking() {
-      try {
-        const supabase = createClient()
-        const { data, error } = await supabase
-          .from('bookings')
-          .select('*, angel:angels!bookings_angel_id_fkey(profiles(first_name, last_name, avatar_color))')
-          .eq('id', id)
-          .single()
-
-        if (error || !data) {
-          if (error) logError('BestaetigtPage:load', error.message)
-          setPageStatus(error?.code === 'PGRST116' || !data ? 'not_found' : 'error')
-          return
-        }
-        setBooking(data)
-        setPageStatus('ok')
-      } catch (err) {
-        logError('BestaetigtPage', err)
-        setPageStatus('error')
-      }
-    }
     loadBooking()
   }, [id])
 
   if (pageStatus === 'loading') return <div className="screen"><LoadingState /></div>
   if (pageStatus === 'not_found') return <NotFoundState title="Buchung nicht gefunden" subtitle="Diese Buchung existiert nicht oder wurde bereits storniert." homeHref="/kunde/home" />
-  if (pageStatus === 'error' || !booking) return <div className="screen"><ErrorState homeHref="/kunde/home" /></div>
+  if (pageStatus === 'error') return (
+    <div className="screen" style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'40px 24px',textAlign:'center'}}>
+      <div style={{fontSize:40,marginBottom:12}}>⚠️</div>
+      <p style={{color:'var(--ink3)',fontSize:14,marginBottom:16}}>{error || 'Ein Fehler beim Laden der Buchung ist aufgetreten'}</p>
+      <button onClick={()=>{loadBooking()}} style={{padding:'10px 24px',borderRadius:10,border:'none',background:'linear-gradient(135deg,var(--gold),var(--gold2))',color:'var(--coal)',fontSize:13,fontWeight:600,cursor:'pointer'}}>Erneut versuchen</button>
+    </div>
+  )
+  if (!booking) return <div className="screen"><ErrorState homeHref="/kunde/home" /></div>
 
   const angelName = booking.angel?.profiles ? `${booking.angel.profiles.first_name} ${booking.angel.profiles.last_name?.[0]}.` : 'Engel'
   const dateStr = booking.date ? new Date(booking.date).toLocaleDateString('de-DE', { day: '2-digit', month: 'long', year: 'numeric' }) : '—'

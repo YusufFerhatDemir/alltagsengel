@@ -14,29 +14,38 @@ export default function WartenPage() {
   const [confirmed, setConfirmed] = useState(false)
   const [booking, setBooking] = useState<any>(null)
   const [pageStatus, setPageStatus] = useState<'loading' | 'ok' | 'not_found' | 'error'>('loading')
+  const [error, setError] = useState('')
+
+  const loadBooking = async () => {
+    setError('')
+    try {
+      if (!isValidUUID(bookingId)) { setPageStatus('not_found'); return }
+      const supabase = createClient()
+      const { data, error: queryErr } = await supabase
+        .from('bookings')
+        .select('*, angel:angels!bookings_angel_id_fkey(profiles(first_name, last_name))')
+        .eq('id', bookingId)
+        .maybeSingle()
+      if (queryErr) {
+        logError('WartenPage:load', queryErr.message)
+        setPageStatus('error')
+        setError('Buchung konnte nicht geladen werden')
+        return
+      }
+      if (!data) {
+        setPageStatus('not_found')
+        return
+      }
+      setBooking(data)
+      setPageStatus('ok')
+    } catch (err) {
+      logError('WartenPage:load', err)
+      setPageStatus('error')
+      setError('Ein unerwarteter Fehler ist aufgetreten')
+    }
+  }
 
   useEffect(() => {
-    if (!isValidUUID(bookingId)) { setPageStatus('not_found'); return }
-    async function loadBooking() {
-      try {
-        const supabase = createClient()
-        const { data, error } = await supabase
-          .from('bookings')
-          .select('*, angel:angels!bookings_angel_id_fkey(profiles(first_name, last_name))')
-          .eq('id', bookingId)
-          .single()
-        if (error || !data) {
-          if (error) logError('WartenPage:load', error.message)
-          setPageStatus(error?.code === 'PGRST116' || !data ? 'not_found' : 'error')
-          return
-        }
-        setBooking(data)
-        setPageStatus('ok')
-      } catch (err) {
-        logError('WartenPage:load', err)
-        setPageStatus('error')
-      }
-    }
     loadBooking()
   }, [bookingId])
 
@@ -45,7 +54,8 @@ export default function WartenPage() {
     const timer = setTimeout(async () => {
       try {
         const supabase = createClient()
-        await supabase.from('bookings').update({ status: 'accepted' }).eq('id', bookingId)
+        const { error: updateErr } = await supabase.from('bookings').update({ status: 'accepted' }).eq('id', bookingId)
+        if (updateErr) throw updateErr
         setConfirmed(true)
 
         // Kunde benachrichtigen: Buchung bestätigt (in-app + email)
@@ -56,6 +66,7 @@ export default function WartenPage() {
         }).catch(() => {})
       } catch (err) {
         logError('WartenPage:confirm', err)
+        setError('Buchung konnte nicht bestätigt werden')
       }
     }, 4000)
     return () => clearTimeout(timer)
@@ -63,7 +74,13 @@ export default function WartenPage() {
 
   if (pageStatus === 'loading') return <LoadingState />
   if (pageStatus === 'not_found') return <NotFoundState title="Buchung nicht gefunden" subtitle="Diese Buchung existiert nicht oder wurde bereits storniert." homeHref="/kunde/home" />
-  if (pageStatus === 'error') return <div className="screen"><ErrorState homeHref="/kunde/home" onRetry={() => window.location.reload()} /></div>
+  if (pageStatus === 'error') return (
+    <div className="screen" style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'40px 24px',textAlign:'center'}}>
+      <div style={{fontSize:40,marginBottom:12}}>⚠️</div>
+      <p style={{color:'var(--ink3)',fontSize:14,marginBottom:16}}>{error || 'Ein Fehler beim Laden der Buchung ist aufgetreten'}</p>
+      <button onClick={()=>{loadBooking()}} style={{padding:'10px 24px',borderRadius:10,border:'none',background:'linear-gradient(135deg,var(--gold),var(--gold2))',color:'var(--coal)',fontSize:13,fontWeight:600,cursor:'pointer'}}>Erneut versuchen</button>
+    </div>
+  )
 
   const angelName = booking?.angel?.profiles ? `${booking.angel.profiles.first_name} ${booking.angel.profiles.last_name?.[0]}.` : 'Engel'
   const dateStr = booking?.date ? new Date(booking.date).toLocaleDateString('de-DE') : '...'

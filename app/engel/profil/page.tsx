@@ -14,6 +14,7 @@ export default function MeinProfilPage() {
   const [angel, setAngel] = useState<any>(null)
   const [totalEarnings, setTotalEarnings] = useState(0)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
   const [loggingOut, setLoggingOut] = useState(false)
 
   const toggle = (key: keyof typeof settings) => {

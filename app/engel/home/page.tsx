@@ -13,6 +13,7 @@ export default function EngelHomePage() {
   useTrackVisit('engel')
   const [isOnline, setIsOnline] = useState(true)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
   const [profile, setProfile] = useState<any>(null)
   const [angel, setAngel] = useState<any>(null)
   const [pendingBookings, setPendingBookings] = useState<any[]>([])
@@ -20,57 +21,64 @@ export default function EngelHomePage() {
   const [monthEarnings, setMonthEarnings] = useState(0)
   const userLocation = useUserLocation()
 
-  useEffect(() => {
-    async function loadData() {
-      try {
-        const supabase = createClient()
-        const { data: { user } } = await supabase.auth.getUser()
-        if (!user) { setLoading(false); return }
+  const loadData = async () => {
+    setLoading(true)
+    setError('')
+    try {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) { setLoading(false); return }
 
-        const { data: p } = await supabase.from('profiles').select('*').eq('id', user.id).single()
-        const { data: a } = await supabase.from('angels').select('*').eq('id', user.id).single()
+      const { data: p } = await supabase.from('profiles').select('*').eq('id', user.id).maybeSingle()
+      const { data: a } = await supabase.from('angels').select('*').eq('id', user.id).maybeSingle()
 
-        // If no angel profile exists, redirect to registration
-        if (!a) {
-          router.replace('/engel/register')
-          return
-        }
-
-        setProfile(p)
-        setAngel(a)
-        if (a) setIsOnline(a.is_online)
-
-        const { data: pending } = await supabase
-          .from('bookings')
-          .select('*, customer:profiles!bookings_customer_id_fkey(first_name, last_name)')
-          .eq('angel_id', user.id)
-          .eq('status', 'pending')
-          .order('created_at', { ascending: false })
-        setPendingBookings(pending || [])
-
-        const { data: upcoming } = await supabase
-          .from('bookings')
-          .select('*, customer:profiles!bookings_customer_id_fkey(first_name, last_name)')
-          .eq('angel_id', user.id)
-          .eq('status', 'accepted')
-          .order('date', { ascending: true })
-        setUpcomingBookings(upcoming || [])
-
-        const now = new Date()
-        const monthStart = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`
-        const { data: completed } = await supabase
-          .from('bookings')
-          .select('total_amount')
-          .eq('angel_id', user.id)
-          .eq('status', 'completed')
-          .gte('date', monthStart)
-        setMonthEarnings((completed || []).reduce((sum, b) => sum + (b.total_amount || 0), 0))
-      } catch (err) {
-        console.error('Engel home load error:', err)
-      } finally {
-        setLoading(false)
+      // If no angel profile exists, redirect to registration
+      if (!a) {
+        router.replace('/engel/register')
+        return
       }
+
+      setProfile(p)
+      setAngel(a)
+      if (a) setIsOnline(a.is_online)
+
+      const { data: pending, error: pendingErr } = await supabase
+        .from('bookings')
+        .select('*, customer:profiles!bookings_customer_id_fkey(first_name, last_name)')
+        .eq('angel_id', user.id)
+        .eq('status', 'pending')
+        .order('created_at', { ascending: false })
+      if (pendingErr) throw pendingErr
+      setPendingBookings(pending || [])
+
+      const { data: upcoming, error: upcomingErr } = await supabase
+        .from('bookings')
+        .select('*, customer:profiles!bookings_customer_id_fkey(first_name, last_name)')
+        .eq('angel_id', user.id)
+        .eq('status', 'accepted')
+        .order('date', { ascending: true })
+      if (upcomingErr) throw upcomingErr
+      setUpcomingBookings(upcoming || [])
+
+      const now = new Date()
+      const monthStart = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`
+      const { data: completed, error: completedErr } = await supabase
+        .from('bookings')
+        .select('total_amount')
+        .eq('angel_id', user.id)
+        .eq('status', 'completed')
+        .gte('date', monthStart)
+      if (completedErr) throw completedErr
+      setMonthEarnings((completed || []).reduce((sum, b) => sum + (b.total_amount || 0), 0))
+    } catch (err) {
+      console.error('Engel home load error:', err)
+      setError('Fehler beim Laden der Daten. Bitte versuche es später erneut.')
+    } finally {
+      setLoading(false)
     }
+  }
+
+  useEffect(() => {
     loadData()
   }, [])
 
@@ -107,7 +115,19 @@ export default function EngelHomePage() {
 
   const name = profile ? `${profile.first_name} ${profile.last_name}` : '...'
 
+  const handleRetry = () => {
+    loadData()
+  }
+
   if (loading) return <div className="screen" id="ehome"><div className="ed-header"><div className="ed-greet">Laden...</div></div></div>
+
+  if (error) return (
+    <div className="screen" style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'40px 24px',textAlign:'center'}}>
+      <div style={{fontSize:40,marginBottom:12}}>⚠️</div>
+      <p style={{color:'var(--ink3)',fontSize:14,marginBottom:16}}>{error}</p>
+      <button onClick={handleRetry} style={{padding:'10px 24px',borderRadius:10,border:'none',background:'linear-gradient(135deg,var(--gold),var(--gold2))',color:'var(--coal)',fontSize:13,fontWeight:600,cursor:'pointer'}}>Erneut versuchen</button>
+    </div>
+  )
 
   return (
     <div className="screen" id="ehome">

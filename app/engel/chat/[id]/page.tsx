@@ -16,6 +16,7 @@ export default function EngelChatConversationPage() {
   const [partner, setPartner] = useState<string>('Kunde')
   const [sending, setSending] = useState(false)
   const [pageStatus, setPageStatus] = useState<'loading' | 'ok' | 'not_found' | 'error'>('loading')
+  const [error, setError] = useState('')
   const bottomRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -31,29 +32,37 @@ export default function EngelChatConversationPage() {
           .from('bookings')
           .select('customer_id, profiles:customer_id(first_name, last_name)')
           .eq('id', bookingId)
-          .single()
+          .maybeSingle()
 
-        if (bookErr || !booking) {
-          if (bookErr) logError('EngelChat:load', bookErr.message)
-          setPageStatus(bookErr?.code === 'PGRST116' || !booking ? 'not_found' : 'error')
+        if (bookErr) {
+          logError('EngelChat:load', bookErr.message)
+          setError('Fehler beim Laden der Buchung. Bitte versuche es später erneut.')
+          setPageStatus('error')
+          return
+        }
+
+        if (!booking) {
+          setPageStatus('not_found')
           return
         }
 
         const customer = booking.profiles as any
         setPartner(customer ? `${customer.first_name} ${customer.last_name?.[0] || ''}.` : 'Kunde')
 
-        const { data: msgs } = await supabase
+        const { data: msgs, error: msgsErr } = await supabase
           .from('messages')
           .select('*')
           .eq('booking_id', bookingId)
           .order('created_at', { ascending: true })
+        if (msgsErr) throw msgsErr
         setMessages(msgs || [])
 
-        await supabase
+        const { error: updateErr } = await supabase
           .from('messages')
           .update({ read: true })
           .eq('booking_id', bookingId)
           .eq('receiver_id', user.id)
+        if (updateErr) throw updateErr
 
         const channel = supabase
           .channel(`chat-${bookingId}`)
@@ -115,7 +124,13 @@ export default function EngelChatConversationPage() {
 
   if (pageStatus === 'loading') return <LoadingState />
   if (pageStatus === 'not_found') return <NotFoundState title="Chat nicht gefunden" subtitle="Diese Buchung existiert nicht." homeHref="/engel/home" />
-  if (pageStatus === 'error') return <div className="screen"><ErrorState homeHref="/engel/home" onRetry={() => window.location.reload()} /></div>
+  if (pageStatus === 'error' || error) return (
+    <div className="screen" style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'40px 24px',textAlign:'center'}}>
+      <div style={{fontSize:40,marginBottom:12}}>⚠️</div>
+      <p style={{color:'var(--ink3)',fontSize:14,marginBottom:16}}>{error || 'Fehler beim Laden des Chats. Bitte versuche es später erneut.'}</p>
+      <button onClick={() => window.location.reload()} style={{padding:'10px 24px',borderRadius:10,border:'none',background:'linear-gradient(135deg,var(--gold),var(--gold2))',color:'var(--coal)',fontSize:13,fontWeight:600,cursor:'pointer'}}>Erneut versuchen</button>
+    </div>
+  )
 
   return (
     <div className="screen" id="chatconv">

@@ -23,39 +23,49 @@ export default function BuchenPage() {
   const [error, setError] = useState('')
   const [pageStatus, setPageStatus] = useState<'loading' | 'ok' | 'not_found' | 'error'>('loading')
 
-  useEffect(() => {
-    if (!isValidUUID(angelId)) {
-      setPageStatus('not_found')
-      return
-    }
-    async function loadAngel() {
-      try {
-        const supabase = createClient()
-        const { data, error: fetchErr } = await supabase
-          .from('angels')
-          .select('*, profiles(first_name, last_name)')
-          .eq('id', angelId)
-          .single()
-        if (fetchErr || !data) {
-          if (fetchErr) logError('BuchenPage:loadAngel', fetchErr.message)
-          setPageStatus(fetchErr?.code === 'PGRST116' || !data ? 'not_found' : 'error')
-          return
-        }
-        setAngel(data)
-        setPageStatus('ok')
-      } catch (err) {
-        logError('BuchenPage:loadAngel', err)
-        setPageStatus('error')
+  const loadAngel = async () => {
+    setError('')
+    try {
+      if (!isValidUUID(angelId)) {
+        setPageStatus('not_found')
+        return
       }
+      const supabase = createClient()
+      const { data, error: fetchErr } = await supabase
+        .from('angels')
+        .select('*, profiles(first_name, last_name)')
+        .eq('id', angelId)
+        .maybeSingle()
+      if (fetchErr) {
+        logError('BuchenPage:loadAngel', fetchErr.message)
+        setPageStatus('error')
+        setError('Engel konnte nicht geladen werden')
+        return
+      }
+      if (!data) {
+        setPageStatus('not_found')
+        return
+      }
+      setAngel(data)
+      setPageStatus('ok')
+    } catch (err) {
+      logError('BuchenPage:loadAngel', err)
+      setPageStatus('error')
+      setError('Ein unerwarteter Fehler ist aufgetreten')
     }
+  }
+
+  useEffect(() => {
     loadAngel()
   }, [angelId])
 
   if (pageStatus === 'loading') return <LoadingState />
   if (pageStatus === 'not_found') return <NotFoundState homeHref="/kunde/home" />
   if (pageStatus === 'error') return (
-    <div className="screen">
-      <ErrorState homeHref="/kunde/home" onRetry={() => window.location.reload()} />
+    <div className="screen" style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'40px 24px',textAlign:'center'}}>
+      <div style={{fontSize:40,marginBottom:12}}>⚠️</div>
+      <p style={{color:'var(--ink3)',fontSize:14,marginBottom:16}}>{error || 'Ein Fehler beim Laden des Engels ist aufgetreten'}</p>
+      <button onClick={()=>{loadAngel()}} style={{padding:'10px 24px',borderRadius:10,border:'none',background:'linear-gradient(135deg,var(--gold),var(--gold2))',color:'var(--coal)',fontSize:13,fontWeight:600,cursor:'pointer'}}>Erneut versuchen</button>
     </div>
   )
 
