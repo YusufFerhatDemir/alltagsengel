@@ -4,6 +4,18 @@ import { NextResponse, type NextRequest } from 'next/server'
 export async function middleware(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })
 
+  // ═══ CSRF Protection: Block cross-origin state-changing requests ═══
+  if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(request.method)) {
+    const origin = request.headers.get('origin')
+    const host = request.headers.get('host')
+    if (origin && host) {
+      const originHost = new URL(origin).host
+      if (originHost !== host && !originHost.endsWith('.alltagsengel.care') && originHost !== 'localhost:3000') {
+        return NextResponse.json({ error: 'CSRF: Ungültige Anfrage' }, { status: 403 })
+      }
+    }
+  }
+
   try {
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -64,5 +76,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/kunde/:path*', '/engel/:path*', '/admin/:path*', '/mis/:path*', '/mis', '/fahrer/home', '/fahrer/fahrzeuge', '/fahrer/auftraege', '/fahrer/profil', '/fahrer/chat/:path*'],
+  matcher: ['/kunde/:path*', '/engel/:path*', '/admin/:path*', '/mis/:path*', '/mis', '/fahrer/home', '/fahrer/fahrzeuge', '/fahrer/auftraege', '/fahrer/profil', '/fahrer/chat/:path*', '/api/:path*'],
 }
