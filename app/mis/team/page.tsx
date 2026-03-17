@@ -122,7 +122,10 @@ export default function TeamPage() {
                 </div>
               )}},
               { key: 'email', label: 'E-Mail', render: (r) => (
-                <span style={{ fontSize: isMobile ? 11 : 13, wordBreak: 'break-all' }}>{r.email as string || '—'}</span>
+                <span style={{ fontSize: isMobile ? 11 : 13, wordBreak: 'break-all' }}>{(r.email as string) || '—'}</span>
+              )},
+              { key: 'phone', label: 'Telefon', render: (r) => (
+                <span style={{ fontSize: isMobile ? 11 : 13 }}>{(r.phone as string)?.trim() || '—'}</span>
               )},
               { key: 'role', label: 'Rolle', render: (r) => {
                 const roleLabels: Record<string,string> = { admin: 'Admin', superadmin: 'Superadmin', engel: 'Engel', kunde: 'Kunde', fahrer: 'Fahrer' }
@@ -131,7 +134,7 @@ export default function TeamPage() {
                 return <Badge label={roleLabels[role] || role} color={roleColors[role] || BRAND.muted} size="sm" />
               }},
               ...(!isMobile ? [
-                { key: 'location', label: 'Standort', render: (r: Record<string,unknown>) => r.location as string || '—' },
+                { key: 'location', label: 'Standort', render: (r: Record<string,unknown>) => (r.location as string)?.trim() || '—' },
                 { key: 'created_at', label: 'Registriert', render: (r: Record<string,unknown>) => new Date(r.created_at as string).toLocaleDateString('de-DE') },
               ] : []),
               { key: 'actions', label: '', render: (r: Record<string,unknown>) => (
