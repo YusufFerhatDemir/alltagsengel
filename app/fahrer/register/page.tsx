@@ -119,6 +119,22 @@ export default function FahrerRegisterPage() {
         return
       }
 
+      // Notify admins about new registration
+      if (authData.user) {
+        fetch('/api/notify-admin-registration', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: authData.user.id,
+            role: 'fahrer',
+            firstName: formData.firstName,
+            lastName: formData.lastName,
+            email: formData.email,
+            phone: formData.phone,
+          }),
+        }).catch(() => {})
+      }
+
       // Redirect to home if session exists
       if (authData.session) {
         router.push('/fahrer/home')
