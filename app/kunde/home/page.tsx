@@ -279,7 +279,7 @@ export default function KundeHomePage() {
           <Link key={angel.id} href={`/kunde/engel/${angel.id}`} style={{ textDecoration: 'none' }} aria-label={`${angel.profiles?.first_name} ${angel.profiles?.last_name?.[0]}., Bewertung ${angel.rating}, ${angel.total_jobs} Einsätze`}>
             <div className={`engel-card${angel.is_online ? ' engel-online' : ''}`}>
               <div className={`engel-avatar${angel.is_online ? ' glow-available' : ''}`} style={{ background: angel.profiles?.avatar_color || 'var(--gold-pale)' }} aria-label={`${angel.profiles?.first_name} ist ${angel.is_online ? 'online' : 'offline'}`}>
-                <IconWingsGold size={34} alt="Engel Avatar" />
+                <IconWingsGold size={34} />
                 <div className={`online-dot${angel.is_online ? '' : ' away'}`}></div>
               </div>
               <div className="engel-info">
@@ -311,7 +311,7 @@ export default function KundeHomePage() {
           <Link key={angel.id} href={`/kunde/engel/${angel.id}`} style={{ textDecoration: 'none' }} aria-label={`${angel.name}, Bewertung ${angel.rating}, ${angel.jobs} Einsätze`}>
             <div className={`engel-card${angel.online ? ' engel-online' : ''}`}>
               <div className={`engel-avatar${angel.online ? ' glow-available' : ''}`} style={{ background: angel.bg }} aria-label={`${angel.name} ist ${angel.online ? 'online' : 'offline'}`}>
-                <IconWingsGold size={34} alt="Engel Avatar" /><div className={`online-dot${angel.online ? '' : ' away'}`}></div>
+                <IconWingsGold size={34} /><div className={`online-dot${angel.online ? '' : ' away'}`}></div>
               </div>
               <div className="engel-info">
                 <div className="engel-row1"><div className="engel-name">{angel.name}</div><div className="engel-rating"><IconStarFilled size={13} /> {angel.rating}</div></div>
