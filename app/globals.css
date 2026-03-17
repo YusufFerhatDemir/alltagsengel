@@ -7,23 +7,23 @@
   --gold:      #C9963C;
   --gold2:     #DBA84A;
   --gold3:     #ECC870;
-  --gold-pale: rgba(201,150,60,.12);
-  --gold-lt:   rgba(201,150,60,.25);
+  --gold-pale: rgba(201,150,60,.22);
+  --gold-lt:   rgba(201,150,60,.35);
   --coal:      #1A1612;
   --coal2:     #252118;
   --coal3:     #332E24;
   --coal4:     #443C2E;
-  --cream:     #231F18;
-  --cream2:    #2D2822;
-  --cream3:    #3D362E;
-  --white:     #2D2822;
+  --cream:     #1A1612;
+  --cream2:    #352F26;
+  --cream3:    #4A4236;
+  --white:     #3A3228;
   --ink:       #F7F2EA;
-  --ink2:      #C4B8A8;
-  --ink3:      #9A8C7C;
-  --ink4:      #7A6E5E;
-  --ink5:      #5A4E3E;
-  --border:    rgba(255,255,255,.10);
-  --border2:   rgba(255,255,255,.15);
+  --ink2:      #E0D6C8;
+  --ink3:      #B8AC9C;
+  --ink4:      #9A8E7E;
+  --ink5:      #7A6E5E;
+  --border:    rgba(255,255,255,.22);
+  --border2:   rgba(255,255,255,.30);
   --green:     #5CB882;
   --green-pale:rgba(74,128,96,.15);
   --red-w:     #D04B3B;
@@ -86,7 +86,7 @@ input, select, textarea, button {
 @media (prefers-color-scheme: light) {
   :root { color-scheme: only dark !important; }
   html, body { background-color: #1A1612 !important; background-image: linear-gradient(#1A1612, #1A1612) !important; color: #F5F0E8 !important; }
-  .phone, .screen { background-color: #231F18 !important; background-image: linear-gradient(#231F18, #231F18) !important; }
+  .phone, .screen { background-color: #1A1612 !important; background-image: linear-gradient(#1A1612, #1A1612) !important; }
   img, svg, video { filter: none !important; }
 }
 @media (prefers-color-scheme: dark) {
