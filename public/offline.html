@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <meta name="theme-color" content="#1A1612"/>
+  <title>Offline — AlltagsEngel</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600&display=swap');
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{
+      font-family:'Jost',sans-serif;
+      background:#1A1612;color:#F7F2EA;
+      min-height:100vh;min-height:100dvh;
+      display:flex;align-items:center;justify-content:center;
+      padding:40px 24px;text-align:center;
+    }
+    .wrap{max-width:320px}
+    .icon{font-size:56px;margin-bottom:20px}
+    h1{font-size:22px;font-weight:600;color:#C9963C;margin-bottom:10px}
+    p{font-size:14px;color:#B8AC9C;line-height:1.6;margin-bottom:28px}
+    button{
+      padding:14px 36px;border-radius:12px;border:none;
+      background:linear-gradient(135deg,#C9963C,#DBA84A);
+      color:#1A1612;font-size:14px;font-weight:600;
+      cursor:pointer;font-family:'Jost',sans-serif;
+      transition:opacity .2s;
+    }
+    button:active{opacity:.8}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="icon">📡</div>
+    <h1>Keine Internetverbindung</h1>
+    <p>Bitte überprüfe deine Verbindung und versuche es erneut. AlltagsEngel benötigt eine aktive Internetverbindung.</p>
+    <button onclick="location.reload()">Erneut versuchen</button>
+  </div>
+</body>
+</html>

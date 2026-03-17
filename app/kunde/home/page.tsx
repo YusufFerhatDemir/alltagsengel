@@ -158,34 +158,38 @@ export default function KundeHomePage() {
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <NotificationBell />
-            <Link href="/kunde/profil" className="kh-avatar"><IconUser size={22} /></Link>
+            <Link href="/kunde/profil" className="kh-avatar" aria-label="Mein Profil"><IconUser size={22} /></Link>
           </div>
         </div>
       </div>
 
       <div className="kh-body">
         <div className="search-bar" id="search-bar">
-          <span><IconSearch size={16} /></span>
+          <span><IconSearch size={16} aria-hidden="true" /></span>
           <input
             type="text"
             className="search-input"
             placeholder="Engel suchen..."
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
+            aria-label="Engel nach Name oder Service durchsuchen"
           />
           {searchQuery && (
-            <button className="search-clear" onClick={() => setSearchQuery('')}>✕</button>
+            <button className="search-clear" onClick={() => setSearchQuery('')} aria-label="Sucheingabe löschen">✕</button>
           )}
         </div>
 
         <div className="radius-bar">
           <div className="radius-label"><IconPin size={13} /> Suchradius</div>
-          <div className="radius-options">
+          <div className="radius-options" role="radiogroup" aria-label="Suchradius auswählen">
             {[5, 10, 25, 50].map(r => (
               <button
                 key={r}
                 className={`radius-chip${searchRadius === r ? ' active' : ''}`}
                 onClick={() => setSearchRadius(r)}
+                role="radio"
+                aria-checked={searchRadius === r}
+                aria-label={`${r} Kilometer`}
               >
                 {r} km
               </button>
@@ -193,7 +197,7 @@ export default function KundeHomePage() {
           </div>
         </div>
 
-        <div className="cat-list">
+        <div className="cat-list" role="tablist" aria-label="Service-Kategorien">
           {categories.map(cat => (
             <div
               key={cat.key}
@@ -204,6 +208,10 @@ export default function KundeHomePage() {
                 if (cat.key === 'hygienebox') { router.push('/kunde/hygienebox'); return }
                 router.push(`/kunde/buchen-service?service=${cat.key}`)
               }}
+              role="tab"
+              aria-selected={activeCategory === cat.key}
+              tabIndex={activeCategory === cat.key ? 0 : -1}
+              aria-label={cat.label}
             >
               <div className="cat-ic">{cat.icon}</div>
               <div className="cat-lbl">{cat.label}</div>
@@ -268,10 +276,10 @@ export default function KundeHomePage() {
         {filteredAngels.length > 0 ? (
           <>
           {filteredAngels.map((angel: any) => (
-          <Link key={angel.id} href={`/kunde/engel/${angel.id}`} style={{ textDecoration: 'none' }}>
+          <Link key={angel.id} href={`/kunde/engel/${angel.id}`} style={{ textDecoration: 'none' }} aria-label={`${angel.profiles?.first_name} ${angel.profiles?.last_name?.[0]}., Bewertung ${angel.rating}, ${angel.total_jobs} Einsätze`}>
             <div className={`engel-card${angel.is_online ? ' engel-online' : ''}`}>
-              <div className={`engel-avatar${angel.is_online ? ' glow-available' : ''}`} style={{ background: angel.profiles?.avatar_color || 'var(--gold-pale)' }}>
-                <IconWingsGold size={34} />
+              <div className={`engel-avatar${angel.is_online ? ' glow-available' : ''}`} style={{ background: angel.profiles?.avatar_color || 'var(--gold-pale)' }} aria-label={`${angel.profiles?.first_name} ist ${angel.is_online ? 'online' : 'offline'}`}>
+                <IconWingsGold size={34} alt="Engel Avatar" />
                 <div className={`online-dot${angel.is_online ? '' : ' away'}`}></div>
               </div>
               <div className="engel-info">
@@ -300,10 +308,10 @@ export default function KundeHomePage() {
             Vorschau — Diese Engel werden bald in Ihrer Nähe verfügbar sein
           </div>
           {filteredDemos.map(angel => (
-          <Link key={angel.id} href={`/kunde/engel/${angel.id}`} style={{ textDecoration: 'none' }}>
+          <Link key={angel.id} href={`/kunde/engel/${angel.id}`} style={{ textDecoration: 'none' }} aria-label={`${angel.name}, Bewertung ${angel.rating}, ${angel.jobs} Einsätze`}>
             <div className={`engel-card${angel.online ? ' engel-online' : ''}`}>
-              <div className={`engel-avatar${angel.online ? ' glow-available' : ''}`} style={{ background: angel.bg }}>
-                <IconWingsGold size={34} /><div className={`online-dot${angel.online ? '' : ' away'}`}></div>
+              <div className={`engel-avatar${angel.online ? ' glow-available' : ''}`} style={{ background: angel.bg }} aria-label={`${angel.name} ist ${angel.online ? 'online' : 'offline'}`}>
+                <IconWingsGold size={34} alt="Engel Avatar" /><div className={`online-dot${angel.online ? '' : ' away'}`}></div>
               </div>
               <div className="engel-info">
                 <div className="engel-row1"><div className="engel-name">{angel.name}</div><div className="engel-rating"><IconStarFilled size={13} /> {angel.rating}</div></div>

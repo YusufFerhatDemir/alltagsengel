@@ -4,6 +4,7 @@ import './globals.css'
 import LayoutWrapper from '@/components/LayoutWrapper'
 import VisitorTracker from '@/components/VisitorTracker'
 import CookieConsent from '@/components/CookieConsent'
+import ServiceWorkerRegister from '@/components/ServiceWorkerRegister'
 
 const jost = Jost({ subsets: ['latin'], variable: '--font-jost', weight: ['300','400','500','600','700'] })
 const cormorant = Cormorant_Garamond({ subsets: ['latin'], variable: '--font-cormorant', weight: ['400','500','600','700'], style: ['normal','italic'] })
@@ -121,6 +122,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           {children}
         </LayoutWrapper>
         <CookieConsent />
+        <ServiceWorkerRegister />
       </body>
     </html>
   )

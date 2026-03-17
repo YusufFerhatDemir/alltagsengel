@@ -107,7 +107,7 @@ export default function NotificationBell() {
           <div className="notif-panel-head">
             <span className="notif-panel-title">Benachrichtigungen</span>
             {unreadCount > 0 && (
-              <button className="notif-mark-all" onClick={markAllRead}>
+              <button className="notif-mark-all" onClick={markAllRead} aria-label="Alle Benachrichtigungen als gelesen markieren">
                 <IconCheck size={12} /> Alle gelesen
               </button>
             )}
@@ -121,6 +121,9 @@ export default function NotificationBell() {
                   key={n.id}
                   className={`notif-item${n.is_read ? '' : ' unread'}`}
                   onClick={() => handleNotificationClick(n)}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`Benachrichtigung: ${n.title}. ${n.body}`}
                 >
                   <div className="notif-dot-col">
                     {!n.is_read && <span className="notif-dot"></span>}

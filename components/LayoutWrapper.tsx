@@ -16,7 +16,7 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
   }
 
   return (
-    <div className="phone">
+    <div className="phone" role="main" aria-label="Hauptinhaltsbereich">
       <StatusBar />
       <PageTracker />
       {children}
