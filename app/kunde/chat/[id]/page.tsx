@@ -25,6 +25,7 @@ export default function ChatDetailPage() {
   const [userId, setUserId] = useState('')
   const [loading, setLoading] = useState(true)
   const [mode, setMode] = useState<ChatMode>(null)
+  const [error, setError] = useState('')
   const bottomRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -72,82 +73,97 @@ export default function ChatDetailPage() {
   }, [chatId, mode, supabase])
 
   async function loadChat() {
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) { router.push('/auth/login'); return }
-    setUserId(user.id)
+    setError('')
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) { router.push('/auth/login'); return }
+      setUserId(user.id)
 
-    // 1. Versuche Buchung zu finden (Engel-Chat)
-    const { data: booking } = await supabase
-      .from('bookings')
-      .select('id, angel_id, customer_id, angels:angel_id(user_id, profiles(first_name, last_name))')
-      .eq('id', chatId)
-      .single()
+      // 1. Versuche Buchung zu finden (Engel-Chat)
+      const { data: booking, error: bookingErr } = await supabase
+        .from('bookings')
+        .select('id, angel_id, customer_id, angels:angel_id(user_id, profiles(first_name, last_name))')
+        .eq('id', chatId)
+        .maybeSingle()
 
-    if (booking) {
-      setMode('booking')
-      const angel: any = booking.angels
-      const prof = angel?.profiles
-        ? (Array.isArray(angel.profiles) ? angel.profiles[0] : angel.profiles)
-        : null
-      const angelUserId = angel?.user_id || prof?.id || ''
-      setPartnerId(angelUserId)
-      setPartnerName(prof ? `${prof.first_name} ${prof.last_name?.[0] || ''}.` : 'Engel')
+      if (bookingErr && bookingErr.code !== 'PGRST116') throw bookingErr
 
-      // Nachrichten laden
-      const { data: msgs } = await supabase
-        .from('messages')
-        .select('id, sender_id, content, created_at')
-        .eq('booking_id', chatId)
-        .order('created_at', { ascending: true })
-      setMessages(msgs || [])
+      if (booking) {
+        setMode('booking')
+        const angel: any = booking.angels
+        const prof = angel?.profiles
+          ? (Array.isArray(angel.profiles) ? angel.profiles[0] : angel.profiles)
+          : null
+        const angelUserId = angel?.user_id || prof?.id || ''
+        setPartnerId(angelUserId)
+        setPartnerName(prof ? `${prof.first_name} ${prof.last_name?.[0] || ''}.` : 'Engel')
 
-      // Ungelesene markieren
-      await supabase
-        .from('messages')
-        .update({ read: true })
-        .eq('booking_id', chatId)
-        .eq('receiver_id', user.id)
-        .eq('read', false)
+        // Nachrichten laden
+        const { data: msgs, error: msgsErr } = await supabase
+          .from('messages')
+          .select('id, sender_id, content, created_at')
+          .eq('booking_id', chatId)
+          .order('created_at', { ascending: true })
+        if (msgsErr) throw msgsErr
+        setMessages(msgs || [])
 
-      setLoading(false)
-      return
-    }
+        // Ungelesene markieren
+        const { error: updateErr } = await supabase
+          .from('messages')
+          .update({ read: true })
+          .eq('booking_id', chatId)
+          .eq('receiver_id', user.id)
+          .eq('read', false)
+        if (updateErr) throw updateErr
 
-    // 2. Versuche Krankenfahrt zu finden (Fahrer-Chat)
-    const { data: ride } = await supabase
-      .from('krankenfahrten')
-      .select('id, provider_id, krankenfahrt_providers(company_name, user_id)')
-      .eq('id', chatId)
-      .single()
-
-    if (ride) {
-      setMode('ride')
-      const provider: any = ride.krankenfahrt_providers
-      if (provider?.user_id) {
-        const { data: driverProfile } = await supabase
-          .from('profiles')
-          .select('first_name, last_name')
-          .eq('id', provider.user_id)
-          .single()
-        setPartnerName(driverProfile ? `${driverProfile.first_name || ''} ${driverProfile.last_name?.[0] || ''}.` : provider.company_name || 'Fahrer')
-        setPartnerId(provider.user_id)
-      } else {
-        setPartnerName(provider?.company_name || 'Fahrer')
+        setLoading(false)
+        return
       }
 
-      const { data: msgs } = await supabase
-        .from('chat_messages')
-        .select('id, sender_id, content, created_at')
-        .eq('ride_id', chatId)
-        .order('created_at', { ascending: true })
-      setMessages(msgs || [])
-      setLoading(false)
-      return
-    }
+      // 2. Versuche Krankenfahrt zu finden (Fahrer-Chat)
+      const { data: ride, error: rideErr } = await supabase
+        .from('krankenfahrten')
+        .select('id, provider_id, krankenfahrt_providers(company_name, user_id)')
+        .eq('id', chatId)
+        .maybeSingle()
 
-    // Nichts gefunden
-    setPartnerName('Chat')
-    setLoading(false)
+      if (rideErr && rideErr.code !== 'PGRST116') throw rideErr
+
+      if (ride) {
+        setMode('ride')
+        const provider: any = ride.krankenfahrt_providers
+        if (provider?.user_id) {
+          const { data: driverProfile, error: driverErr } = await supabase
+            .from('profiles')
+            .select('first_name, last_name')
+            .eq('id', provider.user_id)
+            .maybeSingle()
+          if (driverErr && driverErr.code !== 'PGRST116') throw driverErr
+          setPartnerName(driverProfile ? `${driverProfile.first_name || ''} ${driverProfile.last_name?.[0] || ''}.` : provider.company_name || 'Fahrer')
+          setPartnerId(provider.user_id)
+        } else {
+          setPartnerName(provider?.company_name || 'Fahrer')
+        }
+
+        const { data: msgs, error: rideMessagesErr } = await supabase
+          .from('chat_messages')
+          .select('id, sender_id, content, created_at')
+          .eq('ride_id', chatId)
+          .order('created_at', { ascending: true })
+        if (rideMessagesErr) throw rideMessagesErr
+        setMessages(msgs || [])
+        setLoading(false)
+        return
+      }
+
+      // Nichts gefunden
+      setError('Chat nicht gefunden')
+      setPartnerName('Chat')
+      setLoading(false)
+    } catch (err: any) {
+      setError(err?.message || 'Ein Fehler beim Laden des Chats ist aufgetreten')
+      setLoading(false)
+    }
   }
 
   async function handleSend() {
@@ -197,6 +213,14 @@ export default function ChatDetailPage() {
       }
     }
   }
+
+  if (error) return (
+    <div className="screen" style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'40px 24px',textAlign:'center'}}>
+      <div style={{fontSize:40,marginBottom:12}}>⚠️</div>
+      <p style={{color:'var(--ink3)',fontSize:14,marginBottom:16}}>{error}</p>
+      <button onClick={()=>{setError('');loadChat()}} style={{padding:'10px 24px',borderRadius:10,border:'none',background:'linear-gradient(135deg,var(--gold),var(--gold2))',color:'var(--coal)',fontSize:13,fontWeight:600,cursor:'pointer'}}>Erneut versuchen</button>
+    </div>
+  )
 
   const isEngel = mode === 'booking'
   const emptyText = isEngel

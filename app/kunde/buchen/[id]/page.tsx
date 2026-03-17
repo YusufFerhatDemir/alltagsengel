@@ -25,6 +25,7 @@ export default function BuchenPage() {
 
   const loadAngel = async () => {
     setError('')
+    setPageStatus('loading')
     try {
       if (!isValidUUID(angelId)) {
         setPageStatus('not_found')
