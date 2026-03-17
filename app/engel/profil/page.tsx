@@ -16,6 +16,8 @@ export default function MeinProfilPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [loggingOut, setLoggingOut] = useState(false)
+  const [deleteConfirm, setDeleteConfirm] = useState(false)
+  const [deleting, setDeleting] = useState(false)
 
   const toggle = (key: keyof typeof settings) => {
     setSettings(prev => ({ ...prev, [key]: !prev[key] }))
@@ -151,6 +153,24 @@ export default function MeinProfilPage() {
         >
           {loggingOut ? 'Abmelden...' : 'Abmelden'}
         </button>
+
+        <button onClick={() => setDeleteConfirm(true)} style={{
+          width: '100%', padding: '12px 0', borderRadius: 12, border: 'none',
+          background: 'transparent', color: 'var(--ink5)', fontSize: 13, cursor: 'pointer', marginTop: 8,
+        }}>Konto und Daten löschen</button>
+
+        {deleteConfirm && (
+          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.7)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }} onClick={() => !deleting && setDeleteConfirm(false)}>
+            <div onClick={e => e.stopPropagation()} style={{ background: 'var(--coal2)', borderRadius: 18, padding: 24, maxWidth: 340, width: '100%', border: '1px solid rgba(255,80,80,.2)' }}>
+              <div style={{ fontSize: 16, fontWeight: 600, color: '#ff6b6b', marginBottom: 8 }}>Konto löschen?</div>
+              <p style={{ fontSize: 13, color: 'var(--ink3)', lineHeight: 1.5, marginBottom: 20 }}>Alle deine Daten werden unwiderruflich gelöscht. Diese Aktion kann nicht rückgängig gemacht werden.</p>
+              <div style={{ display: 'flex', gap: 10 }}>
+                <button onClick={() => setDeleteConfirm(false)} disabled={deleting} style={{ flex: 1, padding: '12px 0', borderRadius: 10, border: '1px solid var(--border)', background: 'transparent', color: 'var(--ink)', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Abbrechen</button>
+                <button onClick={async () => { setDeleting(true); try { const r = await fetch('/api/user/delete', { method: 'DELETE' }); if (r.ok) router.push('/'); else alert('Fehler beim Löschen.'); } catch { alert('Netzwerkfehler'); } setDeleting(false); }} disabled={deleting} style={{ flex: 1, padding: '12px 0', borderRadius: 10, border: 'none', background: '#ff4444', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>{deleting ? 'Wird gelöscht...' : 'Endgültig löschen'}</button>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div style={{ height: 80 }}></div>
       </div>

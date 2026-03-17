@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
     .eq('id', user.id)
     .single()
 
-  if (profile?.role !== 'admin') {
+  if (!profile?.role || !['admin', 'superadmin'].includes(profile.role)) {
     return NextResponse.json({ error: 'Keine Admin-Berechtigung' }, { status: 403 })
   }
 
@@ -30,7 +30,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Passwort muss mindestens 6 Zeichen lang sein' }, { status: 400 })
   }
 
+  // Prevent admins from resetting other admins' passwords (only superadmin can)
   const adminSupabase = createAdminClient()
+  const { data: targetProfile } = await adminSupabase.from('profiles').select('role').eq('id', userId).single()
+  if (targetProfile?.role && ['admin', 'superadmin'].includes(targetProfile.role) && profile.role !== 'superadmin') {
+    return NextResponse.json({ error: 'Nur Superadmins können Admin-Passwörter zurücksetzen' }, { status: 403 })
+  }
+
   const { error } = await adminSupabase.auth.admin.updateUserById(userId, {
     password: newPassword,
   })
