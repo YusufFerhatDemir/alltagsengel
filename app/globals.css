@@ -13,17 +13,17 @@
   --coal2:     #252118;
   --coal3:     #332E24;
   --coal4:     #443C2E;
-  --cream:     #1A1612;
-  --cream2:    #252118;
-  --cream3:    #332E24;
-  --white:     #201C14;
+  --cream:     #231F18;
+  --cream2:    #2D2822;
+  --cream3:    #3D362E;
+  --white:     #2D2822;
   --ink:       #F7F2EA;
   --ink2:      #C4B8A8;
   --ink3:      #9A8C7C;
   --ink4:      #7A6E5E;
   --ink5:      #5A4E3E;
-  --border:    rgba(255,255,255,.08);
-  --border2:   rgba(255,255,255,.12);
+  --border:    rgba(255,255,255,.10);
+  --border2:   rgba(255,255,255,.15);
   --green:     #5CB882;
   --green-pale:rgba(74,128,96,.15);
   --red-w:     #D04B3B;
@@ -86,7 +86,7 @@ input, select, textarea, button {
 @media (prefers-color-scheme: light) {
   :root { color-scheme: only dark !important; }
   html, body { background-color: #1A1612 !important; background-image: linear-gradient(#1A1612, #1A1612) !important; color: #F5F0E8 !important; }
-  .phone, .screen { background-color: #1A1612 !important; background-image: linear-gradient(#1A1612, #1A1612) !important; }
+  .phone, .screen { background-color: #231F18 !important; background-image: linear-gradient(#231F18, #231F18) !important; }
   img, svg, video { filter: none !important; }
 }
 @media (prefers-color-scheme: dark) {
