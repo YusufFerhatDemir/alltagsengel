@@ -94,7 +94,7 @@ export default function EngelBestaetigtPage() {
         </div>
 
         <div className="action-grid">
-          <Link href={`/engel/chat/${booking.customer_id || ''}`}><button className="action-btn"><IconChat size={15} /> Chat</button></Link>
+          <Link href={`/engel/chat/${booking.id}`}><button className="action-btn"><IconChat size={15} /> Chat</button></Link>
           {booking.address ? (
             <a href={`https://maps.google.com/?q=${encodeURIComponent(booking.address)}`} target="_blank" rel="noopener noreferrer">
               <button className="action-btn"><IconPin size={15} /> Navigation</button>

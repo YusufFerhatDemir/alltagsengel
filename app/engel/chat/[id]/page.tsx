@@ -88,13 +88,15 @@ export default function EngelChatConversationPage() {
       const supabase = createClient()
       const { data: booking } = await supabase
         .from('bookings')
-        .select('angel_id, customer_id')
+        .select('angel_id, customer_id, angels:angel_id(user_id)')
         .eq('id', bookingId)
         .single()
 
       if (!booking) { setSending(false); return }
 
-      const receiverId = userId === booking.angel_id ? booking.customer_id : booking.angel_id
+      // angel_id ist die angels-Tabelle ID, nicht user_id — prüfe beides
+      const angelUserId = (booking.angels as any)?.user_id || booking.angel_id
+      const receiverId = userId === angelUserId ? booking.customer_id : booking.customer_id
 
       await supabase.from('messages').insert({
         booking_id: bookingId,
