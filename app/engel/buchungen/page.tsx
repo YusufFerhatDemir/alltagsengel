@@ -16,26 +16,45 @@ export default function EngelBuchungenPage() {
   const [bookings, setBookings] = useState<any[]>([])
   const [filter, setFilter] = useState('all')
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
 
-  useEffect(() => {
-    async function load() {
+  const load = async () => {
+    setLoading(true)
+    setError('')
+    try {
       const supabase = createClient()
       const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
+      if (!user) { setLoading(false); return }
 
-      const { data } = await supabase
+      const { data, error: err } = await supabase
         .from('bookings')
         .select('*, profiles:customer_id(first_name, last_name)')
         .eq('angel_id', user.id)
         .order('created_at', { ascending: false })
 
+      if (err) throw err
       setBookings(data || [])
+    } catch (err) {
+      console.error('Engel buchungen load error:', err)
+      setError('Fehler beim Laden der Aufträge. Bitte versuche es später erneut.')
+    } finally {
       setLoading(false)
     }
+  }
+
+  useEffect(() => {
     load()
   }, [])
 
   const filtered = filter === 'all' ? bookings : bookings.filter(b => b.status === filter)
+
+  if (error) return (
+    <div className="screen" style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'40px 24px',textAlign:'center'}}>
+      <div style={{fontSize:40,marginBottom:12}}>⚠️</div>
+      <p style={{color:'var(--ink3)',fontSize:14,marginBottom:16}}>{error}</p>
+      <button onClick={load} style={{padding:'10px 24px',borderRadius:10,border:'none',background:'linear-gradient(135deg,var(--gold),var(--gold2))',color:'var(--coal)',fontSize:13,fontWeight:600,cursor:'pointer'}}>Erneut versuchen</button>
+    </div>
+  )
 
   return (
     <div className="screen" id="buchungen">

@@ -43,20 +43,29 @@ export default function KundeHomePage() {
   const [activeCategory, setActiveCategory] = useState('all')
   const [searchRadius, setSearchRadius] = useState(10)
   const [searchQuery, setSearchQuery] = useState('')
+  const [error, setError] = useState('')
   const userLocation = useUserLocation()
   useTrackVisit('kunde')
 
-  useEffect(() => {
-    async function load() {
+  const load = async () => {
+    setError('')
+    try {
       const supabase = createClient()
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
-        const { data: p } = await supabase.from('profiles').select('*').eq('id', user.id).single()
+        const { data: p, error: profileErr } = await supabase.from('profiles').select('*').eq('id', user.id).maybeSingle()
+        if (profileErr) throw new Error('Profil konnte nicht geladen werden')
         setProfile(p)
-        const { data: a } = await supabase.from('angels').select('*, profiles(*)').order('rating', { ascending: false })
+        const { data: a, error: angelsErr } = await supabase.from('angels').select('*, profiles(*)').order('rating', { ascending: false })
+        if (angelsErr) throw new Error('Engel konnte nicht geladen werden')
         setAngels(a || [])
       }
+    } catch (err: any) {
+      setError(err?.message || 'Ein Fehler beim Laden der Daten ist aufgetreten')
     }
+  }
+
+  useEffect(() => {
     load()
   }, [])
 
@@ -73,6 +82,14 @@ export default function KundeHomePage() {
   }, [userLocation.loading, userLocation.city, profile])
 
   const firstName = profile?.first_name || ''
+
+  if (error) return (
+    <div className="screen" style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'40px 24px',textAlign:'center'}}>
+      <div style={{fontSize:40,marginBottom:12}}>⚠️</div>
+      <p style={{color:'var(--ink3)',fontSize:14,marginBottom:16}}>{error}</p>
+      <button onClick={()=>{setError('');load()}} style={{padding:'10px 24px',borderRadius:10,border:'none',background:'linear-gradient(135deg,var(--gold),var(--gold2))',color:'var(--coal)',fontSize:13,fontWeight:600,cursor:'pointer'}}>Erneut versuchen</button>
+    </div>
+  )
 
   // Mesafe filtresi: GPS veya profil koordinatları ile hesapla
   const angelsWithDistance = angels.map((a: any) => {

@@ -18,26 +18,37 @@ export default function KundeBuchungenPage() {
   const [bookings, setBookings] = useState<any[]>([])
   const [filter, setFilter] = useState('all')
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
 
-  useEffect(() => {
-    async function load() {
+  const load = async () => {
+    setError('')
+    setLoading(true)
+    try {
       const supabase = createClient()
       const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
+      if (!user) {
+        setError('Nicht angemeldet')
+        setLoading(false)
+        return
+      }
 
       // Normale Buchungen
-      const { data: normalBookings } = await supabase
+      const { data: normalBookings, error: bookingsErr } = await supabase
         .from('bookings')
         .select('*, angels:angel_id(profiles(first_name, last_name))')
         .eq('customer_id', user.id)
         .order('created_at', { ascending: false })
 
+      if (bookingsErr) throw new Error('Buchungen konnte nicht geladen werden')
+
       // Krankenfahrten
-      const { data: rides } = await supabase
+      const { data: rides, error: ridesErr } = await supabase
         .from('krankenfahrten')
         .select('*')
         .eq('customer_id', user.id)
         .order('created_at', { ascending: false })
+
+      if (ridesErr) throw new Error('Krankenfahrten konnte nicht geladen werden')
 
       // Krankenfahrten als Buchungen formatieren
       const rideBookings = (rides || []).map((r: any) => ({
@@ -59,8 +70,14 @@ export default function KundeBuchungenPage() {
         .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
 
       setBookings(all)
+    } catch (err: any) {
+      setError(err?.message || 'Ein Fehler beim Laden der Buchungen ist aufgetreten')
+    } finally {
       setLoading(false)
     }
+  }
+
+  useEffect(() => {
     load()
   }, [])
 
@@ -73,24 +90,32 @@ export default function KundeBuchungenPage() {
       </div>
 
       <div className="buch-body">
-        <div className="buch-filters">
-          {[
-            { key: 'all', label: 'Alle' },
-            { key: 'pending', label: 'Offen' },
-            { key: 'accepted', label: 'Bestätigt' },
-            { key: 'completed', label: 'Fertig' },
-          ].map(f => (
-            <button
-              key={f.key}
-              className={`buch-filter${filter === f.key ? ' on' : ''}`}
-              onClick={() => setFilter(f.key)}
-            >{f.label}</button>
-          ))}
-        </div>
+        {error ? (
+          <div style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'40px 24px',textAlign:'center',marginTop:'40px'}}>
+            <div style={{fontSize:40,marginBottom:12}}>⚠️</div>
+            <p style={{color:'var(--ink3)',fontSize:14,marginBottom:16}}>{error}</p>
+            <button onClick={()=>{setError('');load()}} style={{padding:'10px 24px',borderRadius:10,border:'none',background:'linear-gradient(135deg,var(--gold),var(--gold2))',color:'var(--coal)',fontSize:13,fontWeight:600,cursor:'pointer'}}>Erneut versuchen</button>
+          </div>
+        ) : (
+          <>
+            <div className="buch-filters">
+              {[
+                { key: 'all', label: 'Alle' },
+                { key: 'pending', label: 'Offen' },
+                { key: 'accepted', label: 'Bestätigt' },
+                { key: 'completed', label: 'Fertig' },
+              ].map(f => (
+                <button
+                  key={f.key}
+                  className={`buch-filter${filter === f.key ? ' on' : ''}`}
+                  onClick={() => setFilter(f.key)}
+                >{f.label}</button>
+              ))}
+            </div>
 
-        {loading ? (
-          <div className="chat-empty">Laden...</div>
-        ) : filtered.length === 0 ? (
+            {loading ? (
+              <div className="chat-empty">Laden...</div>
+            ) : filtered.length === 0 ? (
           <div className="chat-empty">
             <div className="chat-empty-icon"><IconCalendar size={40} /></div>
             <div className="chat-empty-title">Keine Buchungen</div>
@@ -125,8 +150,10 @@ export default function KundeBuchungenPage() {
               </Link>
             )
           })
+            )}
+            <div style={{ height: 90 }}></div>
+          </>
         )}
-        <div style={{ height: 90 }}></div>
       </div>
     </div>
   )
