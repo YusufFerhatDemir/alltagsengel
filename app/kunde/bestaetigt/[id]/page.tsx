@@ -16,6 +16,7 @@ export default function BestaetigtPage() {
 
   const loadBooking = async () => {
     setError('')
+    setPageStatus('loading')
     try {
       if (!isValidUUID(id)) { setPageStatus('not_found'); return }
       const supabase = createClient()

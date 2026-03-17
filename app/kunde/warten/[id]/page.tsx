@@ -18,6 +18,7 @@ export default function WartenPage() {
 
   const loadBooking = async () => {
     setError('')
+    setPageStatus('loading')
     try {
       if (!isValidUUID(bookingId)) { setPageStatus('not_found'); return }
       const supabase = createClient()

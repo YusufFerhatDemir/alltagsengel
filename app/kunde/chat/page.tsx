@@ -17,41 +17,56 @@ interface ChatPartner {
 export default function KundeChatPage() {
   const [chats, setChats] = useState<ChatPartner[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
 
-  useEffect(() => {
-    async function load() {
+  async function load() {
+    setError('')
+    setLoading(true)
+    try {
       const supabase = createClient()
       const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
+      if (!user) {
+        setError('Nicht angemeldet')
+        setLoading(false)
+        return
+      }
 
-      const { data: bookings } = await supabase
+      const { data: bookings, error: bookingsErr } = await supabase
         .from('bookings')
         .select('id, angel_id, service, status, angels:angel_id(profiles(first_name, last_name))')
         .eq('customer_id', user.id)
         .in('status', ['pending', 'accepted', 'completed'])
         .order('created_at', { ascending: false })
 
-      if (!bookings || bookings.length === 0) { setLoading(false); return }
+      if (bookingsErr) throw new Error('Buchungen konnten nicht geladen werden')
+      if (!bookings || bookings.length === 0) { 
+        setLoading(false)
+        return 
+      }
 
       const chatList: ChatPartner[] = []
       for (const b of bookings) {
         const angel = b.angels as any
         const name = angel?.profiles ? `${angel.profiles.first_name} ${angel.profiles.last_name?.[0]}.` : 'Engel'
 
-        const { data: msgs } = await supabase
+        const { data: msgs, error: msgsErr } = await supabase
           .from('messages')
           .select('content, created_at, read, sender_id')
           .eq('booking_id', b.id)
           .order('created_at', { ascending: false })
           .limit(1)
 
+        if (msgsErr) throw new Error('Nachrichten konnten nicht geladen werden')
+
         const lastMsg = msgs?.[0]
-        const { count } = await supabase
+        const { count, error: countErr } = await supabase
           .from('messages')
           .select('*', { count: 'exact', head: true })
           .eq('booking_id', b.id)
           .eq('receiver_id', user.id)
           .eq('read', false)
+
+        if (countErr) throw new Error('Nachrichtenzähler konnte nicht geladen werden')
 
         chatList.push({
           id: b.angel_id!,
@@ -65,9 +80,23 @@ export default function KundeChatPage() {
       }
       setChats(chatList)
       setLoading(false)
+    } catch (err: any) {
+      setError(err?.message || 'Ein Fehler beim Laden der Chats ist aufgetreten')
+      setLoading(false)
     }
+  }
+
+  useEffect(() => {
     load()
   }, [])
+
+  if (error) return (
+    <div className="screen" style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'40px 24px',textAlign:'center'}}>
+      <div style={{fontSize:40,marginBottom:12}}>⚠️</div>
+      <p style={{color:'var(--ink3)',fontSize:14,marginBottom:16}}>{error}</p>
+      <button onClick={()=>{setError('');load()}} style={{padding:'10px 24px',borderRadius:10,border:'none',background:'linear-gradient(135deg,var(--gold),var(--gold2))',color:'var(--coal)',fontSize:13,fontWeight:600,cursor:'pointer'}}>Erneut versuchen</button>
+    </div>
+  )
 
   return (
     <div className="screen" id="chatlist">

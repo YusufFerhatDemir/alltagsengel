@@ -46,6 +46,7 @@ export default function KundeHomePage() {
   const [error, setError] = useState('')
   const userLocation = useUserLocation()
   useTrackVisit('kunde')
+  // Note: error state already defined above
 
   const load = async () => {
     setError('')

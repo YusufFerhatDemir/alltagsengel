@@ -83,6 +83,14 @@ export default function KundeBuchungenPage() {
 
   const filtered = filter === 'all' ? bookings : bookings.filter(b => b.status === filter)
 
+  if (error && !loading) return (
+    <div className="screen" style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'40px 24px',textAlign:'center'}}>
+      <div style={{fontSize:40,marginBottom:12}}>⚠️</div>
+      <p style={{color:'var(--ink3)',fontSize:14,marginBottom:16}}>{error}</p>
+      <button onClick={()=>{setError('');load()}} style={{padding:'10px 24px',borderRadius:10,border:'none',background:'linear-gradient(135deg,var(--gold),var(--gold2))',color:'var(--coal)',fontSize:13,fontWeight:600,cursor:'pointer'}}>Erneut versuchen</button>
+    </div>
+  )
+
   return (
     <div className="screen" id="buchungen">
       <div className="topbar" style={{ paddingTop: 14 }}>
@@ -90,15 +98,8 @@ export default function KundeBuchungenPage() {
       </div>
 
       <div className="buch-body">
-        {error ? (
-          <div style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'40px 24px',textAlign:'center',marginTop:'40px'}}>
-            <div style={{fontSize:40,marginBottom:12}}>⚠️</div>
-            <p style={{color:'var(--ink3)',fontSize:14,marginBottom:16}}>{error}</p>
-            <button onClick={()=>{setError('');load()}} style={{padding:'10px 24px',borderRadius:10,border:'none',background:'linear-gradient(135deg,var(--gold),var(--gold2))',color:'var(--coal)',fontSize:13,fontWeight:600,cursor:'pointer'}}>Erneut versuchen</button>
-          </div>
-        ) : (
-          <>
-            <div className="buch-filters">
+        <>
+          <div className="buch-filters">
               {[
                 { key: 'all', label: 'Alle' },
                 { key: 'pending', label: 'Offen' },
@@ -152,8 +153,7 @@ export default function KundeBuchungenPage() {
           })
             )}
             <div style={{ height: 90 }}></div>
-          </>
-        )}
+        </>
       </div>
     </div>
   )
