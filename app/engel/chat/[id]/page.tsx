@@ -96,7 +96,7 @@ export default function EngelChatConversationPage() {
 
       // angel_id ist die angels-Tabelle ID, nicht user_id — prüfe beides
       const angelUserId = (booking.angels as any)?.user_id || booking.angel_id
-      const receiverId = userId === angelUserId ? booking.customer_id : booking.customer_id
+      const receiverId = userId === angelUserId ? booking.customer_id : angelUserId
 
       await supabase.from('messages').insert({
         booking_id: bookingId,
