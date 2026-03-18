@@ -115,7 +115,7 @@ export default function BestaetigtPage() {
         <div className="action-grid">
           <Link href={`/kunde/chat/${booking.id}`}><button className="action-btn"><IconChat size={15} /> Chat</button></Link>
           <a href={`tel:${booking.angel_phone || ''}`}><button className="action-btn"><IconPhone size={15} /> Anrufen</button></a>
-          <Link href="/kunde/kalender"><button className="action-btn"><IconCalendar size={15} /> Kalender</button></Link>
+          <Link href={`/kunde/bewertung/${booking.id}`}><button className="action-btn">⭐ Bewerten</button></Link>
           <Link href="/kunde/home"><button className="action-btn primary"><IconHouse size={15} /> Home</button></Link>
         </div>
       </div>

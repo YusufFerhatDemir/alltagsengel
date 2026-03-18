@@ -19,6 +19,7 @@ export default function KundeBuchungenPage() {
   const [filter, setFilter] = useState('all')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [reviewedIds, setReviewedIds] = useState<Set<string>>(new Set())
 
   const load = async () => {
     setError('')
@@ -70,6 +71,16 @@ export default function KundeBuchungenPage() {
         .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
 
       setBookings(all)
+
+      // Check which bookings have been reviewed
+      const bookingIds = (normalBookings || []).map((b: any) => b.id)
+      if (bookingIds.length > 0) {
+        const { data: reviewed } = await supabase
+          .from('angel_reviews')
+          .select('booking_id')
+          .in('booking_id', bookingIds)
+        if (reviewed) setReviewedIds(new Set(reviewed.map(r => r.booking_id)))
+      }
     } catch (err: any) {
       setError(err?.message || 'Ein Fehler beim Laden der Buchungen ist aufgetreten')
     } finally {
@@ -147,6 +158,18 @@ export default function KundeBuchungenPage() {
                     <div className="buch-detail"><IconClock size={13} /> {b.time?.slice(0,5)}{b.duration_hours ? ` · ${b.duration_hours}h` : ''}</div>
                     <div className="buch-detail"><IconMoney size={13} /> {b.total_amount ? `${Number(b.total_amount).toFixed(2)}€` : '—'}</div>
                   </div>
+                  {/* Bewertung button — only for past bookings without review */}
+                  {!isRide && b.date && new Date(b.date) < new Date() && !reviewedIds.has(b.id) && ['accepted', 'confirmed', 'completed'].includes(b.status) && (
+                    <Link href={`/kunde/bewertung/${b.id}`} onClick={e => e.stopPropagation()} style={{
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                      marginTop: 10, padding: '9px 0', borderRadius: 10,
+                      background: 'var(--gold-pale)', border: '1px solid rgba(201,150,60,.2)',
+                      color: 'var(--gold)', fontSize: 13, fontWeight: 600, textDecoration: 'none',
+                    }}>⭐ Bewerten</Link>
+                  )}
+                  {!isRide && reviewedIds.has(b.id) && (
+                    <div style={{ marginTop: 10, textAlign: 'center', fontSize: 12, color: 'var(--ink4)' }}>✓ Bewertet</div>
+                  )}
                 </div>
               </Link>
             )

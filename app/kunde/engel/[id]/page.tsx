@@ -27,8 +27,8 @@ export default async function EngelProfilPage({ params }: { params: Promise<{ id
   let reviews: any[] = []
   try {
     const { data, error } = await supabase
-      .from('reviews')
-      .select('*, profiles:reviewer_id(first_name, last_name)')
+      .from('angel_reviews')
+      .select('*, profiles:customer_id(first_name, last_name, avatar_color)')
       .eq('angel_id', id)
       .order('created_at', { ascending: false })
       .limit(5)
