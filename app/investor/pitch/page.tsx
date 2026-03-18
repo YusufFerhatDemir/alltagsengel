@@ -1,7 +1,7 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
-import { Icons } from '../docs/shared'
+import { Icons, AppIcon } from '../docs/shared'
 
 /* ════════════════════════════════════════════
    AlltagsEngel — Investor Pitch Deck (Web)
@@ -115,7 +115,7 @@ function buildSlides(): Slide[] {
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '70vh', textAlign: 'center', position: 'relative' }}>
           <div style={{ position: 'absolute', width: 500, height: 500, borderRadius: '50%', background: 'radial-gradient(circle, rgba(201,150,60,0.08) 0%, transparent 65%)', pointerEvents: 'none' }} />
           <div style={{ position: 'relative', zIndex: 1 }}>
-            <div style={{ marginBottom: 24 }}>{Icons.angelWing(28)}</div>
+            <div style={{ marginBottom: 24 }}><AppIcon size={48} /></div>
             <h1 className="hero-title" style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 56, fontWeight: 700, color: C.ink, letterSpacing: 6, marginBottom: 8 }}>ALLTAGSENGEL</h1>
             <p className="hero-sub" style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 24, fontStyle: 'italic', color: C.gold, marginBottom: 8 }}>Mit Herz für dich da</p>
             <GoldSep />
@@ -152,7 +152,7 @@ function buildSlides(): Slide[] {
           </div>
           <Card style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: C.coal3, minHeight: 260 }}>
             <div style={{ width: 120, height: 220, borderRadius: 20, background: C.coal, border: `2px solid ${C.coal4}`, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-              <div>{Icons.angelWing(28)}</div>
+              <div><AppIcon size={48} /></div>
               <div style={{ fontSize: 10, color: C.gold, fontWeight: 700, letterSpacing: 2 }}>ALLTAGSENGEL</div>
               <div style={{ width: 60, height: 4, borderRadius: 2, background: C.gold, opacity: 0.3 }} />
               <div style={{ width: 60, height: 4, borderRadius: 2, background: C.ink4, opacity: 0.2 }} />
@@ -244,7 +244,7 @@ function buildSlides(): Slide[] {
           </Card>
           <Card>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
-              <span>{Icons.angelWing(18)}</span>
+              <span><AppIcon size={28} /></span>
               <span style={{ fontSize: 16, fontWeight: 700, color: C.ink }}>Für Engel</span>
             </div>
             <FeatureRow icon={Icons.clipboard(20)} title="Profil erstellen" desc="Qualifikationen & Services verwalten" />

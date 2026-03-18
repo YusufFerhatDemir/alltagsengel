@@ -74,6 +74,18 @@ export const HeroIcon = ({ icon, size = 56 }: { icon: React.ReactNode; size?: nu
   }}>{icon}</div>
 )
 
+/* ── AlltagsEngel Logo Icon (wie in der App) ── */
+export const AppIcon = ({ size = 56 }: { size?: number }) => (
+  <div style={{
+    width: size, height: size, borderRadius: size * 0.228,
+    overflow: 'hidden', position: 'relative',
+    boxShadow: `0 0 0 1.5px rgba(201,150,60,0.4), 0 4px 8px rgba(0,0,0,0.6), 0 14px 40px rgba(0,0,0,0.75), inset 0 1px 0 rgba(255,255,255,0.06)`,
+    margin: '0 auto 16px',
+  }}>
+    <img src="/assets/icon.jpg" alt="AlltagsEngel" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: size * 0.228, position: 'relative', zIndex: 3, display: 'block' }} />
+  </div>
+)
+
 /* ── Reusable Components ── */
 export const SectionLabel = ({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) => (
   <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', color: C.ink4, textTransform: 'uppercase', marginBottom: 10, ...style }}>{children}</div>
