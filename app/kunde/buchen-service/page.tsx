@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import { IconWingsGold, IconStarFilled, IconCheck, IconCard } from '@/components/Icons'
+import Icon3D from '@/components/Icon3D'
 import { UNIT_ECONOMICS } from '@/lib/mis/constants'
 
 const serviceOptions: { key: string; label: string; desc: string }[] = [
@@ -320,11 +321,8 @@ function BuchenServiceInner() {
                       cursor: 'pointer', textAlign: 'left',
                     }}
                   >
-                    <div style={{
-                      width: 50, height: 50, borderRadius: '50%',
-                      background: 'var(--gold-pale)', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    }}>
-                      <img src="/assets/icon.jpg" alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 'inherit' }} />
+                    <div style={{ overflow: 'visible' }}>
+                      <Icon3D size={40} />
                     </div>
                     <div style={{ flex: 1 }}>
                       <div style={{ fontSize: 15, fontWeight: 600 }}>
@@ -355,11 +353,8 @@ function BuchenServiceInner() {
               border: '1px solid var(--cream3)', marginBottom: 16,
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 16, paddingBottom: 16, borderBottom: '1px solid var(--cream2)' }}>
-                <div style={{
-                  width: 50, height: 50, borderRadius: '50%',
-                  background: 'var(--gold-pale)', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                }}>
-                  <IconWingsGold size={28} />
+                <div style={{ overflow: 'visible' }}>
+                  <Icon3D size={40} />
                 </div>
                 <div>
                   <div style={{ fontSize: 16, fontWeight: 600 }}>

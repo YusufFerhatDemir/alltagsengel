@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client'
 import { isValidUUID, logError } from '@/lib/safe-query'
 import { NotFoundState, ErrorState, LoadingState } from '@/components/UIStates'
 import { IconCheck, IconWingsGold, IconChat, IconShield, IconCalendar, IconClock, IconHome as IconHouse, IconCard, IconMoney, IconPhone } from '@/components/Icons'
+import Icon3D from '@/components/Icon3D'
 
 export default function BestaetigtPage() {
   const params = useParams()
@@ -79,7 +80,7 @@ export default function BestaetigtPage() {
 
       <div className="confirm-body">
         <div className="person-row">
-          <div className="person-av" style={{ background: 'transparent', padding: 0, overflow: 'hidden' }}><img src="/assets/icon.jpg" alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 'inherit' }} /></div>
+          <div className="person-av" style={{ overflow: 'visible' }}><Icon3D size={62} /></div>
           <div>
             <div className="person-name">{angelName}</div>
             <div className="person-sub"><IconCheck size={12} /> Bestätigt · Unterwegs</div>

@@ -6,6 +6,7 @@ import { isValidUUID, logError } from '@/lib/safe-query'
 import { NotFoundState, ErrorState, LoadingState } from '@/components/UIStates'
 import Link from 'next/link'
 import { IconWingsGold, IconCheck } from '@/components/Icons'
+import Icon3D from '@/components/Icon3D'
 
 export default function WartenPage() {
   const router = useRouter()
@@ -93,7 +94,7 @@ export default function WartenPage() {
         <div className="wait-pulse">
           <div className="wait-ring"></div>
           <div className="wait-ring"></div>
-          <div className="wait-core" style={{ padding: 0, overflow: 'hidden' }}><img src="/assets/icon.jpg" alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 'inherit' }} /></div>
+          <div className="wait-core" style={{ overflow: 'visible' }}><Icon3D size={80} /></div>
         </div>
         <div className="wait-title">{confirmed ? 'Buchung bestätigt!' : 'Anfrage wird gesendet...'}</div>
         <div className="wait-sub">
