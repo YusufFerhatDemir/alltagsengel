@@ -92,8 +92,8 @@ export default function KarteSeite() {
         <div className="map-card">
           <div className="map-card-close" onClick={() => setSelectedAngel(null)}>&times;</div>
           <div className="engel-card" style={{ marginBottom: 0 }}>
-            <div className="engel-avatar" style={{ background: selectedAngel.profiles?.avatar_color || 'var(--gold-pale)' }}>
-              <IconWingsGold size={24} />
+            <div className="engel-avatar" style={{ background: 'transparent', padding: 0, overflow: 'hidden' }}>
+              <img src="/assets/icon.jpg" alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 'inherit' }} />
             </div>
             <div className="engel-info">
               <div className="engel-row1">
