@@ -93,7 +93,7 @@ export default function WartenPage() {
         <div className="wait-pulse">
           <div className="wait-ring"></div>
           <div className="wait-ring"></div>
-          <div className="wait-core"><IconWingsGold size={34} /></div>
+          <div className="wait-core" style={{ padding: 0, overflow: 'hidden' }}><img src="/assets/icon.jpg" alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 'inherit' }} /></div>
         </div>
         <div className="wait-title">{confirmed ? 'Buchung bestätigt!' : 'Anfrage wird gesendet...'}</div>
         <div className="wait-sub">

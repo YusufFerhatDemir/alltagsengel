@@ -79,7 +79,7 @@ export default function BestaetigtPage() {
 
       <div className="confirm-body">
         <div className="person-row">
-          <div className="person-av" style={{ background: booking.angel?.profiles?.avatar_color || 'var(--gold-pale)' }}><IconWingsGold size={22} /></div>
+          <div className="person-av" style={{ background: 'transparent', padding: 0, overflow: 'hidden' }}><img src="/assets/icon.jpg" alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 'inherit' }} /></div>
           <div>
             <div className="person-name">{angelName}</div>
             <div className="person-sub"><IconCheck size={12} /> Bestätigt · Unterwegs</div>

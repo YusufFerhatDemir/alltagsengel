@@ -52,7 +52,7 @@ export default async function EngelProfilPage({ params }: { params: Promise<{ id
           </div>
         </div>
         <div className="ep-main">
-          <div className="ep-avatar" style={{ background: angel.profiles?.avatar_color || 'rgba(201,150,60,.12)' }}><IconWingsGold size={28} /></div>
+          <div className="ep-avatar" style={{ background: 'transparent', padding: 0, overflow: 'hidden' }}><img src="/assets/icon.jpg" alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 'inherit' }} /></div>
           <div>
             <div className="ep-name">{name}</div>
             <div className="ep-role">{angel.qualification || 'Alltagsbegleiter/in'}</div>

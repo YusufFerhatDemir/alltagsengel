@@ -136,7 +136,7 @@ export default function BuchenPage() {
       <div className="form-body">
         <div className="form-card">
           <div className="form-engel">
-            <div className="form-engel-av"><IconWingsGold size={24} /></div>
+            <div className="form-engel-av" style={{ padding: 0, overflow: 'hidden' }}><img src="/assets/icon.jpg" alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 'inherit' }} /></div>
             <div>
               <div className="form-engel-name">{angelName}</div>
               <div className="form-engel-sub"><IconStarFilled size={12} /> {angel?.rating || '5.0'} · Zertifiziert</div>

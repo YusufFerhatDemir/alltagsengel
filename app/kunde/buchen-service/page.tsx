@@ -324,7 +324,7 @@ function BuchenServiceInner() {
                       width: 50, height: 50, borderRadius: '50%',
                       background: 'var(--gold-pale)', display: 'flex', alignItems: 'center', justifyContent: 'center',
                     }}>
-                      <IconWingsGold size={28} />
+                      <img src="/assets/icon.jpg" alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 'inherit' }} />
                     </div>
                     <div style={{ flex: 1 }}>
                       <div style={{ fontSize: 15, fontWeight: 600 }}>
