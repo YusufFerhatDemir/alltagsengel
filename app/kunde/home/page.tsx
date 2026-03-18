@@ -279,8 +279,8 @@ export default function KundeHomePage() {
           {filteredAngels.map((angel: any) => (
           <Link key={angel.id} href={`/kunde/engel/${angel.id}`} style={{ textDecoration: 'none' }} aria-label={`${angel.profiles?.first_name} ${angel.profiles?.last_name?.[0]}., Bewertung ${angel.rating}, ${angel.total_jobs} Einsätze`}>
             <div className={`engel-card${angel.is_online ? ' engel-online' : ''}`}>
-              <div className={`engel-avatar${angel.is_online ? ' glow-available' : ''}`} style={{ background: angel.profiles?.avatar_color || 'var(--gold-pale)' }} aria-label={`${angel.profiles?.first_name} ist ${angel.is_online ? 'online' : 'offline'}`}>
-                <IconWingsGold size={34} />
+              <div className={`engel-avatar${angel.is_online ? ' glow-available' : ''}`} style={{ background: 'transparent', padding: 0, overflow: 'hidden' }} aria-label={`${angel.profiles?.first_name} ist ${angel.is_online ? 'online' : 'offline'}`}>
+                <img src="/assets/icon.jpg" alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 'inherit' }} />
                 <div className={`online-dot${angel.is_online ? '' : ' away'}`}></div>
               </div>
               <div className="engel-info">
@@ -311,8 +311,8 @@ export default function KundeHomePage() {
           {filteredDemos.map(angel => (
           <Link key={angel.id} href={`/kunde/engel/${angel.id}`} style={{ textDecoration: 'none' }} aria-label={`${angel.name}, Bewertung ${angel.rating}, ${angel.jobs} Einsätze`}>
             <div className={`engel-card${angel.online ? ' engel-online' : ''}`}>
-              <div className={`engel-avatar${angel.online ? ' glow-available' : ''}`} style={{ background: angel.bg }} aria-label={`${angel.name} ist ${angel.online ? 'online' : 'offline'}`}>
-                <IconWingsGold size={34} /><div className={`online-dot${angel.online ? '' : ' away'}`}></div>
+              <div className={`engel-avatar${angel.online ? ' glow-available' : ''}`} style={{ background: 'transparent', padding: 0, overflow: 'hidden' }} aria-label={`${angel.name} ist ${angel.online ? 'online' : 'offline'}`}>
+                <img src="/assets/icon.jpg" alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 'inherit' }} /><div className={`online-dot${angel.online ? '' : ' away'}`}></div>
               </div>
               <div className="engel-info">
                 <div className="engel-row1"><div className="engel-name">{angel.name}</div><div className="engel-rating"><IconStarFilled size={13} /> {angel.rating}</div></div>
