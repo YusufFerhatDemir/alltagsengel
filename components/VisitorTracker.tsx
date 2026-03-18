@@ -10,12 +10,11 @@ export default function VisitorTracker() {
     const consent = getCookieConsent()
     if (consent === 'rejected') return
 
-    // Jede Seite einmal pro Session tracken
     const key = `visited_${pathname}`
     if (sessionStorage.getItem(key)) return
     sessionStorage.setItem(key, '1')
 
-    // Single API call — server handles both visitors + visitor_locations
+    // Track visit
     fetch('/api/track', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -25,6 +24,27 @@ export default function VisitorTracker() {
         userAgent: navigator.userAgent || '',
       }),
     }).catch(() => {})
+
+    // Visitor Alert — IP-basierte Überwachung (nur 1x pro Session)
+    if (!sessionStorage.getItem('alert_checked')) {
+      sessionStorage.setItem('alert_checked', '1')
+      fetch('https://ipapi.co/json/', { signal: AbortSignal.timeout(4000) })
+        .then(r => r.json())
+        .then(geo => {
+          fetch('/api/visitor-alert', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              ip: geo.ip || '',
+              city: geo.city || '',
+              region: geo.region || '',
+              page: pathname,
+              userAgent: navigator.userAgent || '',
+            }),
+          }).catch(() => {})
+        })
+        .catch(() => {})
+    }
   }, [pathname])
 
   return null
