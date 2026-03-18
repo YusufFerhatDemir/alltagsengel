@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import { IconPin, IconSearch, IconUser, IconCard, IconStarFilled, IconCheck, IconStarGold, IconHandshakeGold, IconMedicalGold, IconBagGold, IconHomeGold, IconCoffeeGold, IconPillGold, IconWalkGold, IconTargetGold, IconWingsGold, IconBox, IconKrankenfahrtGold, IconHygieneboxGold } from '@/components/Icons'
 import NotificationBell from '@/components/NotificationBell'
+import Icon3D from '@/components/Icon3D'
 import { useRouter } from 'next/navigation'
 import { haversineDistance } from '@/lib/geocoding'
 import { useUserLocation } from '@/hooks/useUserLocation'
@@ -279,8 +280,8 @@ export default function KundeHomePage() {
           {filteredAngels.map((angel: any) => (
           <Link key={angel.id} href={`/kunde/engel/${angel.id}`} style={{ textDecoration: 'none' }} aria-label={`${angel.profiles?.first_name} ${angel.profiles?.last_name?.[0]}., Bewertung ${angel.rating}, ${angel.total_jobs} Einsätze`}>
             <div className={`engel-card${angel.is_online ? ' engel-online' : ''}`}>
-              <div className={`engel-avatar${angel.is_online ? ' glow-available' : ''}`} style={{ background: 'transparent', padding: 0, overflow: 'hidden' }} aria-label={`${angel.profiles?.first_name} ist ${angel.is_online ? 'online' : 'offline'}`}>
-                <img src="/assets/icon.jpg" alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 'inherit' }} />
+              <div className={`engel-avatar${angel.is_online ? ' glow-available' : ''}`} style={{ background: 'transparent', padding: 0, overflow: 'visible' }} aria-label={`${angel.profiles?.first_name} ist ${angel.is_online ? 'online' : 'offline'}`}>
+                <Icon3D size={62} />
                 <div className={`online-dot${angel.is_online ? '' : ' away'}`}></div>
               </div>
               <div className="engel-info">
@@ -311,8 +312,8 @@ export default function KundeHomePage() {
           {filteredDemos.map(angel => (
           <Link key={angel.id} href={`/kunde/engel/${angel.id}`} style={{ textDecoration: 'none' }} aria-label={`${angel.name}, Bewertung ${angel.rating}, ${angel.jobs} Einsätze`}>
             <div className={`engel-card${angel.online ? ' engel-online' : ''}`}>
-              <div className={`engel-avatar${angel.online ? ' glow-available' : ''}`} style={{ background: 'transparent', padding: 0, overflow: 'hidden' }} aria-label={`${angel.name} ist ${angel.online ? 'online' : 'offline'}`}>
-                <img src="/assets/icon.jpg" alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 'inherit' }} /><div className={`online-dot${angel.online ? '' : ' away'}`}></div>
+              <div className={`engel-avatar${angel.online ? ' glow-available' : ''}`} style={{ background: 'transparent', padding: 0, overflow: 'visible' }} aria-label={`${angel.name} ist ${angel.online ? 'online' : 'offline'}`}>
+                <Icon3D size={62} /><div className={`online-dot${angel.online ? '' : ' away'}`}></div>
               </div>
               <div className="engel-info">
                 <div className="engel-row1"><div className="engel-name">{angel.name}</div><div className="engel-rating"><IconStarFilled size={13} /> {angel.rating}</div></div>

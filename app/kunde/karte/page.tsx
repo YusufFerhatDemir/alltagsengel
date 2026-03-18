@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import { IconPin, IconWingsGold, IconStarFilled, IconNav } from '@/components/Icons'
+import Icon3D from '@/components/Icon3D'
 
 export default function KarteSeite() {
   const router = useRouter()
@@ -92,8 +93,8 @@ export default function KarteSeite() {
         <div className="map-card">
           <div className="map-card-close" onClick={() => setSelectedAngel(null)}>&times;</div>
           <div className="engel-card" style={{ marginBottom: 0 }}>
-            <div className="engel-avatar" style={{ background: 'transparent', padding: 0, overflow: 'hidden' }}>
-              <img src="/assets/icon.jpg" alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 'inherit' }} />
+            <div className="engel-avatar" style={{ overflow: 'visible' }}>
+              <Icon3D size={62} />
             </div>
             <div className="engel-info">
               <div className="engel-row1">
