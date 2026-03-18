@@ -392,3 +392,92 @@ Einsam? Niemand zum Reden? 🤝 AlltagsEngel ist für dich da. Gesellschaft, Spa
 3. DE Caption einfügen → Instagram + Facebook auswählen → Veröffentlichen
 4. TikTok Studio öffnen → Grafik als Slideshow oder Video (TIKTOK-begleitung.mp4) posten
 5. TR Caption als Kommentar oder zweiten Post
+
+---
+
+## 18.03.2026 — Einkaufsbegleitung / Alışveriş Refakati (Awareness Post)
+
+**Status:** 📋 Bereit zum Posten (Automatischer Post fehlgeschlagen — kein Login in Meta/TikTok)
+**Plattform:** Instagram + Facebook + TikTok
+**Typ:** Grafik (1080x1080) + Video (REELS-einkauf-neu.mp4)
+**Datei Grafik:** POST-2026-03-18-einkaufsbegleitung.png
+**Datei Video:** REELS-einkauf-neu.mp4 (3.7 MB)
+**Geplante Uhrzeit:** 10:00-13:00 Uhr (Mittwoch)
+**Thema:** Einkaufsbegleitung — zweisprachig DE+TR
+
+**Caption (DE):**
+```
+Schwer zu tragen? Wir helfen dir! 🛒😇
+
+AlltagsEngel Einkaufsbegleitung — wir gehen mit dir einkaufen.
+
+✅ Gemeinsam zum Supermarkt
+✅ Wir helfen beim Tragen
+✅ Rezepte & Apotheke? Kein Problem!
+✅ Pflegekasse zahlt — 131€/Monat
+✅ Du zahlst nichts!
+
+Wir sprechen auch Türkisch! 🇹🇷🇩🇪
+
+📱 alltagsengel.care
+✉️ info@alltagsengel.care
+
+COMING SOON — Bald verfügbar in Frankfurt!
+
+#AlltagsEngel #Einkaufsbegleitung #Frankfurt #Alltagsbegleitung #Pflege #Seniorenhilfe #Pflegekasse #Entlastungsbetrag #131Euro #FrankfurtAmMain #Senioren #§45b #ComingSoon #Einkaufshilfe #Nordend #Bornheim #Dornbusch #Bockenheim
+```
+
+**Caption (TR):**
+```
+Taşımak zor mu? Biz sana yardım ediyoruz! 🛒😇
+
+AlltagsEngel Alışveriş Refakati — seninle birlikte alışverişe çıkıyoruz.
+
+✅ Birlikte markete gidiyoruz
+✅ Ağır poşetleri biz taşıyoruz
+✅ Reçete & eczane? Sorun değil!
+✅ Bakım sigortası karşılıyor — ayda 131€
+✅ Sen hiçbir şey ödemiyorsun!
+
+Türkçe hizmet veriyoruz! 🇹🇷🇩🇪
+
+📱 alltagsengel.care
+✉️ info@alltagsengel.care
+
+YAKINDA — Frankfurt'ta hizmetinizde!
+
+#AlltagsEngel #Frankfurt #YaşlıBakımı #TürklerFrankfurt #Bakım #BakımSigortası #AlışverişYardımı #Entlastungsbetrag #Senioren #Pflege
+```
+
+**TikTok Caption (DE) — mit Video REELS-einkauf-neu.mp4:**
+```
+Schwer zu tragen? Wir helfen! 🛒😇 AlltagsEngel Einkaufsbegleitung — wir gehen mit dir einkaufen. Pflegekasse zahlt! 131€/Monat. Link in Bio 📱 alltagsengel.care
+
+#alltagsengel #einkaufsbegleitung #frankfurt #pflege #pflegekasse #entlastungsbetrag #seniorenhilfe #fyp #viral #foryou #alltagsbegleitung
+```
+
+**Bonus — Reels Video Caption (DE):**
+```
+Wer kennt's? Schwer zu tragen und keiner hilft? 🛒😩
+
+AlltagsEngel geht mit dir einkaufen. Wir tragen, wir begleiten, wir kümmern uns.
+
+Pflegekasse zahlt — du zahlst nichts! 131€/Monat 💛
+
+📱 Link in Bio: alltagsengel.care
+
+Speichern & teilen! 🔁
+
+#alltagsengel #einkaufsbegleitung #einkaufshilfe #frankfurt #pflege #pflegekasse #entlastungsbetrag #seniorenhilfe #fyp #viral #reels #foryou #foryoupage
+```
+
+**Posting-Anleitung (manuell):**
+1. Meta Business Suite öffnen → business.facebook.com
+2. "Beitrag erstellen" → Grafik hochladen (POST-2026-03-18-einkaufsbegleitung.png)
+3. DE Caption einfügen → Instagram + Facebook auswählen → Veröffentlichen
+4. TikTok Studio öffnen → Video (REELS-einkauf-neu.mp4) oder Grafik als Slideshow posten
+5. TR Caption als Kommentar oder zweiten Post
+
+**Hinweis (automatische Ausführung 18.03.2026):**
+Automatisches Posting fehlgeschlagen — Meta Business Suite und TikTok erfordern Login.
+Grafik und Captions sind bereit. Manueller Upload erforderlich.
