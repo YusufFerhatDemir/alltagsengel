@@ -1,9 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 
-// Überwachte IPs — bei Besuch wird sofort E-Mail gesendet
-const WATCHED_IPS = [
-  '2a02:3037:626:4b7c', // Nordend West / Vodafone — Hansaallee Bekannte
+// Überwachte Stadtteile — PLZ 60320 = Nordend Ost + West
+const WATCHED_CITIES = [
+  'nordend',       // Nordend Ost + West
+  'nordend ost',
+  'nordend west',
+]
+
+// Eigene IPs ausschließen (Yusuf)
+const EXCLUDED_IPS = [
+  '93.203.33.115',           // Yusuf Nordend Ost
+  '217.88.144.184',          // Yusuf Hansaallee/Telekom
 ]
 
 const ALERT_EMAIL = 'y.r.demir2022@gmail.com'
@@ -16,12 +24,18 @@ export async function POST(req: NextRequest) {
     const { ip, city, region, page, userAgent } = await req.json()
     if (!ip) return NextResponse.json({ ok: true })
 
-    // Prüfe ob IP überwacht wird (Prefix-Match für IPv6)
-    const isWatched = WATCHED_IPS.some(prefix => ip.startsWith(prefix))
+    // Eigene IPs ignorieren
+    if (EXCLUDED_IPS.some(ex => ip.startsWith(ex))) {
+      return NextResponse.json({ ok: true })
+    }
+
+    // Prüfe ob Stadtteil überwacht wird (Nordend = PLZ 60320)
+    const cityLower = (city || '').toLowerCase()
+    const isWatched = WATCHED_CITIES.some(w => cityLower.includes(w))
     if (!isWatched) return NextResponse.json({ ok: true })
 
-    // Cooldown prüfen (1 Stunde)
-    const ipPrefix = WATCHED_IPS.find(p => ip.startsWith(p)) || ip
+    // Cooldown prüfen (1 Stunde pro IP)
+    const ipPrefix = ip.substring(0, 20)
     const lastAlert = lastAlerts.get(ipPrefix)
     if (lastAlert && Date.now() - lastAlert < 3600000) {
       return NextResponse.json({ ok: true, cooldown: true })
