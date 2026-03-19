@@ -8,7 +8,8 @@ export default function VisitorTracker() {
 
   useEffect(() => {
     const consent = getCookieConsent()
-    if (consent === 'rejected') return
+    // DSGVO: Only track if EXPLICITLY accepted, not if decision is pending (null)
+    if (consent !== 'accepted') return
 
     const key = `visited_${pathname}`
     if (sessionStorage.getItem(key)) return
