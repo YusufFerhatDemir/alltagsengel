@@ -2479,3 +2479,243 @@ body:has(.admin-layout) {
   .admin-page { max-width: 100% !important; overflow-x: hidden !important; }
   .admin-page h1 { font-size: 22px; }
 }
+
+
+/* ════════════════════════════════════════════════
+   BLOG SEITEN STYLING
+   ════════════════════════════════════════════════ */
+
+.blog-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 40px 20px;
+  background: var(--coal);
+  color: var(--ink);
+  font-family: 'Jost', sans-serif;
+}
+
+.blog-article {
+  background: var(--coal2);
+  border-radius: 8px;
+  padding: 40px;
+  border: 1px solid var(--border);
+}
+
+.blog-header {
+  margin-bottom: 40px;
+  padding-bottom: 30px;
+  border-bottom: 2px solid var(--gold);
+}
+
+.blog-header h1 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--gold);
+  margin-bottom: 15px;
+  line-height: 1.2;
+  font-family: 'Cormorant Garamond', serif;
+}
+
+.blog-meta {
+  font-size: 0.95rem;
+  color: var(--ink3);
+  font-weight: 400;
+  letter-spacing: 0.5px;
+}
+
+.blog-intro {
+  font-size: 1.15rem;
+  color: var(--ink2);
+  line-height: 1.6;
+  margin-bottom: 30px;
+  padding: 20px;
+  background: rgba(201, 150, 60, 0.08);
+  border-left: 4px solid var(--gold);
+  border-radius: 4px;
+}
+
+.blog-content h2 {
+  font-size: 1.8rem;
+  color: var(--gold);
+  margin: 40px 0 20px 0;
+  font-weight: 600;
+  font-family: 'Cormorant Garamond', serif;
+}
+
+.blog-content h3 {
+  font-size: 1.3rem;
+  color: var(--gold2);
+  margin: 30px 0 15px 0;
+  font-weight: 600;
+}
+
+.blog-content p {
+  font-size: 1rem;
+  line-height: 1.7;
+  color: var(--ink);
+  margin-bottom: 20px;
+}
+
+.blog-content strong {
+  color: var(--gold2);
+  font-weight: 600;
+}
+
+.blog-list {
+  list-style: none;
+  margin: 20px 0 25px 0;
+  padding: 0;
+}
+
+.blog-list li {
+  font-size: 1rem;
+  line-height: 1.7;
+  color: var(--ink);
+  margin-bottom: 15px;
+  padding-left: 25px;
+  position: relative;
+}
+
+.blog-list li:before {
+  content: "▸";
+  position: absolute;
+  left: 0;
+  color: var(--gold);
+  font-weight: bold;
+}
+
+.blog-list ol li {
+  list-style: decimal;
+  margin-left: 25px;
+}
+
+.blog-list ol li:before {
+  content: "";
+}
+
+.blog-cta {
+  background: rgba(201, 150, 60, 0.12);
+  border: 2px solid var(--gold);
+  border-radius: 8px;
+  padding: 40px;
+  text-align: center;
+  margin: 50px 0;
+}
+
+.blog-cta h3 {
+  color: var(--gold);
+  font-size: 1.6rem;
+  margin-bottom: 15px;
+}
+
+.blog-cta p {
+  color: var(--ink2);
+  margin-bottom: 25px;
+  font-size: 1rem;
+}
+
+.cta-button {
+  display: inline-block;
+  background: var(--gold);
+  color: var(--coal);
+  padding: 15px 35px;
+  border-radius: 6px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 1.05rem;
+  cursor: pointer;
+  border: none;
+  transition: all 0.3s ease;
+  font-family: 'Jost', sans-serif;
+}
+
+.cta-button:hover {
+  background: var(--gold2);
+  transform: translateY(-2px);
+}
+
+.blog-footer {
+  margin-top: 50px;
+  padding-top: 30px;
+  border-top: 1px solid var(--border);
+}
+
+.blog-back {
+  display: inline-block;
+  color: var(--gold);
+  text-decoration: none;
+  font-weight: 500;
+  margin-bottom: 30px;
+  transition: all 0.2s ease;
+}
+
+.blog-back:hover {
+  color: var(--gold2);
+  transform: translateX(-5px);
+  display: inline-block;
+}
+
+.blog-share {
+  margin-top: 30px;
+  padding-top: 30px;
+  border-top: 1px solid var(--border);
+}
+
+.blog-share p {
+  color: var(--gold);
+  font-weight: 600;
+  margin-bottom: 15px;
+}
+
+.share-links {
+  display: flex;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
+.share-btn {
+  display: inline-block;
+  padding: 10px 20px;
+  background: var(--coal3);
+  color: var(--gold);
+  border: 1px solid var(--gold);
+  border-radius: 4px;
+  text-decoration: none;
+  font-size: 0.95rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.share-btn:hover {
+  background: var(--gold);
+  color: var(--coal);
+}
+
+/* Mobile responsive */
+@media (max-width: 640px) {
+  .blog-container {
+    padding: 20px 12px;
+  }
+
+  .blog-article {
+    padding: 25px;
+  }
+
+  .blog-header h1 {
+    font-size: 1.75rem;
+  }
+
+  .blog-content h2 {
+    font-size: 1.4rem;
+    margin: 30px 0 15px 0;
+  }
+
+  .blog-cta {
+    padding: 25px 20px;
+  }
+
+  .blog-intro {
+    font-size: 1rem;
+  }
+}
