@@ -481,3 +481,85 @@ Speichern & teilen! 🔁
 **Hinweis (automatische Ausführung 18.03.2026):**
 Automatisches Posting fehlgeschlagen — Meta Business Suite und TikTok erfordern Login.
 Grafik und Captions sind bereit. Manueller Upload erforderlich.
+
+---
+
+## 19.03.2026 — Arztbegleitung / Doktor Refakati (Awareness Post)
+
+**Status:** 📋 Bereit zum Posten (Bildschirm gesperrt — manueller Upload nötig)
+**Plattform:** Instagram + Facebook + TikTok
+**Typ:** Video (Reels) + optional Grafik
+**Datei Video:** REELS-arztbegleitung-neu.mp4
+**Geplante Uhrzeit:** 11:00-13:00 Uhr (Donnerstag)
+**Thema:** Arztbegleitung / Doktor Refakati — zweisprachig DE+TR
+
+**Caption (DE) — Instagram/Facebook Reels:**
+```
+Zum Arzt — aber nicht alleine! 🏥😇
+
+AlltagsEngel Arztbegleitung macht jeden Termin einfacher.
+
+✅ Wir holen dich ab & begleiten dich
+✅ Hilfe beim Ausfüllen von Formularen
+✅ Unterstützung im Arztgespräch
+✅ Pflegekasse zahlt — 131€/Monat
+✅ Du zahlst nichts!
+
+Wir sprechen auch Türkisch! 🇹🇷🇩🇪
+
+📱 alltagsengel.care
+✉️ info@alltagsengel.care
+
+COMING SOON — Bald verfügbar in Frankfurt!
+
+#AlltagsEngel #Arztbegleitung #Frankfurt #Alltagsbegleitung #Pflege #Seniorenhilfe #Pflegekasse #Entlastungsbetrag #131Euro #FrankfurtAmMain #Senioren #§45b #ComingSoon #Krankenfahrt #Nordend #Bornheim #Dornbusch #Bockenheim
+```
+
+**Caption (TR) — Instagram/Facebook:**
+```
+Doktora git — ama yalnız değil! 🏥😇
+
+AlltagsEngel Doktor Refakati ile her randevu artık daha kolay.
+
+✅ Seni alıyoruz & birlikte gidiyoruz
+✅ Formları doldurmana yardım ediyoruz
+✅ Doktorla görüşmende destek sağlıyoruz
+✅ Bakım sigortası karşılıyor — ayda 131€
+✅ Sen hiçbir şey ödemiyorsun!
+
+Türkçe hizmet veriyoruz! 🇹🇷🇩🇪
+
+📱 alltagsengel.care
+✉️ info@alltagsengel.care
+
+YAKINDA — Frankfurt'ta hizmetinizde!
+
+#AlltagsEngel #Frankfurt #YaşlıBakımı #TürklerFrankfurt #Bakım #BakımSigortası #DoktorRefakati #Entlastungsbetrag #Senioren #Pflege #Arztbegleitung
+```
+
+**TikTok Caption (DE):**
+```
+Alleine zum Arzt? Nie wieder! 🏥😇 AlltagsEngel begleitet dich zum Arzttermin. Pflegekasse zahlt — 131€/Monat. Link in Bio 📱 alltagsengel.care
+
+#alltagsengel #arztbegleitung #frankfurt #pflege #pflegekasse #entlastungsbetrag #seniorenhilfe #fyp #viral #foryou #alltagsbegleitung
+```
+
+**Posting-Anleitung (manuell):**
+1. Meta Business Suite öffnen → business.facebook.com
+2. "Reel erstellen" klicken → Video hochladen: REELS-arztbegleitung-neu.mp4
+3. DE Caption einfügen → Instagram + Facebook auswählen → Veröffentlichen
+4. TikTok Studio öffnen → tiktok.com/tiktokstudio/content → Video hochladen
+5. TikTok Caption einfügen → Veröffentlichen
+6. TR Caption optional als zweiten Post oder als Kommentar
+
+**Hinweis (automatische Ausführung 19.03.2026, Versuch 2 ~scheduled task):**
+Erneuter automatischer Posting-Versuch über Scheduled Task.
+Browser-Zugriff timeout — Meta Business Suite und TikTok konnten nicht erreicht werden.
+Video (REELS-arztbegleitung-neu.mp4) und alle Captions (DE/TR) sind vollständig vorbereitet.
+**Manueller Upload erforderlich — bitte folge der Posting-Anleitung oben.**
+
+**Zusammenfassung für manuellen Upload:**
+- **Video:** social-media-grafiken/REELS-arztbegleitung-neu.mp4
+- **Meta Business Suite:** business.facebook.com → Reel erstellen → Video + DE Caption → IG + FB
+- **TikTok:** tiktok.com/tiktokstudio/content → Video + TikTok Caption
+- **TR Caption:** Als Kommentar oder zweiter Post

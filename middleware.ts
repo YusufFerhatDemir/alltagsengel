@@ -60,9 +60,13 @@ export async function middleware(request: NextRequest) {
             url.searchParams.set('error', 'admin_required')
             return NextResponse.redirect(url)
           }
-        } catch {
-          // If both checks fail, allow through — layout will handle
-          return supabaseResponse
+        } catch (dbError) {
+          // FAIL-CLOSED: If DB check fails, DENY access (don't allow through)
+          console.error('Admin DB check failed:', dbError)
+          const url = request.nextUrl.clone()
+          url.pathname = '/auth/login'
+          url.searchParams.set('error', 'admin_required')
+          return NextResponse.redirect(url)
         }
       }
     }
