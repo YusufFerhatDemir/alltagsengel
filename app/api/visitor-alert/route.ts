@@ -10,8 +10,9 @@ const WATCHED_CITIES = [
 
 // Eigene IPs ausschließen (Yusuf)
 const EXCLUDED_IPS = [
-  '93.203.33.115',           // Yusuf Nordend Ost
-  '217.88.144.184',          // Yusuf Hansaallee/Telekom
+  '93.203.33.115',           // Yusuf Nordend Ost (Telekom DSL)
+  '217.88.144.184',          // Yusuf Bornheim/Telekom
+  '2003:c0:4f03',            // Yusuf Nordend Ost (Telekom IPv6 — Mac + iPhone)
 ]
 
 const ALERT_EMAIL = 'y.r.demir2022@gmail.com'
