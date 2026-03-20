@@ -563,3 +563,86 @@ Video (REELS-arztbegleitung-neu.mp4) und alle Captions (DE/TR) sind vollständig
 - **Meta Business Suite:** business.facebook.com → Reel erstellen → Video + DE Caption → IG + FB
 - **TikTok:** tiktok.com/tiktokstudio/content → Video + TikTok Caption
 - **TR Caption:** Als Kommentar oder zweiter Post
+
+---
+
+## 20.03.2026 — Spaziergang & Freizeit / Gezinti & Serbest Zaman (Awareness Post)
+
+**Status:** 📋 Bereit zum Posten (Login erforderlich — manueller Upload nötig)
+**Plattform:** Instagram + Facebook + TikTok
+**Typ:** Grafik (1080x1080) + Video (REELS-spaziergang-neu.mp4 oder REELS-cafe-freizeit-neu.mp4)
+**Datei Grafik:** POST-2026-03-20-spaziergang.png
+**Datei Video:** REELS-spaziergang-neu.mp4 / REELS-cafe-freizeit-neu.mp4
+**Geplante Uhrzeit:** 10:00-13:00 Uhr (Freitag)
+**Thema:** Spaziergang & Freizeit — zweisprachig DE+TR
+
+**Caption (DE) — Instagram/Facebook:**
+```
+Alleine zu Hause? Lust auf einen Spaziergang? 🚶‍♂️😇
+
+AlltagsEngel Freizeit & Begleitung — wir kommen vorbei und verbringen Zeit mit dir.
+
+✅ Spaziergänge im Park oder in der Nachbarschaft
+✅ Gemeinsam ins Café oder auf den Markt
+✅ Gesellschaft & Gespräche gegen Einsamkeit
+✅ Pflegekasse zahlt — 131€/Monat
+✅ Du zahlst nichts!
+
+Wir sprechen auch Türkisch! 🇹🇷🇩🇪
+
+📱 alltagsengel.care
+✉️ info@alltagsengel.care
+
+COMING SOON — Bald verfügbar in Frankfurt!
+
+#AlltagsEngel #Spaziergang #Freizeit #Frankfurt #Alltagsbegleitung #Pflege #Seniorenhilfe #Pflegekasse #Entlastungsbetrag #131Euro #FrankfurtAmMain #Senioren #§45b #ComingSoon #GegenEinsamkeit #Gesellschaft #Nordend #Bornheim #Dornbusch #Bockenheim
+```
+
+**Caption (TR) — Instagram/Facebook:**
+```
+Evde yalnız mısın? Bir gezintiye ne dersin? 🚶‍♂️😇
+
+AlltagsEngel Serbest Zaman & Refakat — seni ziyaret ediyoruz ve birlikte vakit geçiriyoruz.
+
+✅ Parkta veya mahallede gezinti
+✅ Birlikte kafeye veya pazara gidiyoruz
+✅ Yalnızlığa karşı sohbet & arkadaşlık
+✅ Bakım sigortası karşılıyor — ayda 131€
+✅ Sen hiçbir şey ödemiyorsun!
+
+Türkçe hizmet veriyoruz! 🇹🇷🇩🇪
+
+📱 alltagsengel.care
+✉️ info@alltagsengel.care
+
+YAKINDA — Frankfurt'ta hizmetinizde!
+
+#AlltagsEngel #Frankfurt #YaşlıBakımı #TürklerFrankfurt #Bakım #BakımSigortası #Gezinti #SerbetZaman #Entlastungsbetrag #Senioren #Pflege #Spaziergang
+```
+
+**TikTok Caption (DE) — mit Video REELS-spaziergang-neu.mp4:**
+```
+Alleine zu Hause? Wir kommen vorbei! 🚶‍♂️😇 AlltagsEngel — Spaziergänge, Café, gemeinsame Zeit. Pflegekasse zahlt! 131€/Monat. Link in Bio 📱 alltagsengel.care
+
+#alltagsengel #spaziergang #freizeit #frankfurt #pflege #pflegekasse #entlastungsbetrag #seniorenhilfe #fyp #viral #foryou #alltagsbegleitung #gegeneinsamkeit
+```
+
+**Posting-Anleitung (manuell):**
+1. Meta Business Suite öffnen → business.facebook.com
+2. "Beitrag erstellen" → Grafik hochladen (POST-2026-03-20-spaziergang.png)
+3. DE Caption einfügen → Instagram + Facebook auswählen → Veröffentlichen
+4. TikTok Studio öffnen → Video (REELS-spaziergang-neu.mp4) oder Grafik als Slideshow posten
+5. TikTok Caption einfügen → Veröffentlichen
+6. TR Caption als Kommentar oder zweiten Post
+
+**Hinweis (automatische Ausführung 20.03.2026 — Scheduled Task):**
+Automatisches Posting fehlgeschlagen — Meta Business Suite und TikTok erfordern Login.
+Grafik (POST-2026-03-20-spaziergang.png), Video und alle Captions (DE/TR) sind vollständig vorbereitet.
+**Manueller Upload erforderlich — bitte folge der Posting-Anleitung oben.**
+
+**Zusammenfassung für manuellen Upload:**
+- **Grafik:** social-media-grafiken/POST-2026-03-20-spaziergang.png
+- **Video:** social-media-grafiken/REELS-spaziergang-neu.mp4 (alternativ: REELS-cafe-freizeit-neu.mp4)
+- **Meta Business Suite:** business.facebook.com → Beitrag erstellen → Grafik + DE Caption → IG + FB
+- **TikTok:** tiktok.com/tiktokstudio/content → Video + TikTok Caption
+- **TR Caption:** Als Kommentar oder zweiter Post
