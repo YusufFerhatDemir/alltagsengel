@@ -163,12 +163,12 @@ function RegisterForm() {
           </div>
           <input className="auth-input" type="email" placeholder="E-Mail-Adresse" value={email} onChange={e => setEmail(e.target.value)} required />
           <input className="auth-input" type="password" placeholder="Passwort (min. 6 Zeichen)" value={password} onChange={e => setPassword(e.target.value)} required minLength={6} />
+          <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr', gap: 10 }}>
+            <input className="auth-input" type="text" placeholder="PLZ" value={plz} onChange={e => setPlz(e.target.value.replace(/\D/g, '').slice(0, 5))} inputMode="numeric" maxLength={5} minLength={5} required />
+            <input className="auth-input" type="text" placeholder="Stadt" value={stadt} onChange={e => setStadt(e.target.value)} required />
+          </div>
           {role === 'kunde' && (
             <>
-              <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr', gap: 10 }}>
-                <input className="auth-input" type="text" placeholder="PLZ" value={plz} onChange={e => setPlz(e.target.value.replace(/\D/g, '').slice(0, 5))} inputMode="numeric" maxLength={5} required />
-                <input className="auth-input" type="text" placeholder="Stadt" value={stadt} onChange={e => setStadt(e.target.value)} required />
-              </div>
 
               {/* Pflegegrad Toggle-Buttons */}
               <div className="reg-section">

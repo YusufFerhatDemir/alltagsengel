@@ -22,6 +22,8 @@ export default function EngelRegisterPage() {
   const [services, setServices] = useState<string[]>(['Begleitung', 'Haushalt'])
   const [availability, setAvailability] = useState<string[]>(['Mo', 'Di', 'Mi', 'Fr'])
   const [phone, setPhone] = useState('')
+  const [plz, setPlz] = useState('')
+  const [stadt, setStadt] = useState('')
   const [location, setLocation] = useState('')
   const [qualification, setQualification] = useState('')
   const hourlyRate = 20 // Fest – nur Admin darf ändern
@@ -93,10 +95,9 @@ export default function EngelRegisterPage() {
     if (lastName) profileUpdate.last_name = lastName
     if (email) profileUpdate.email = email
     if (phone) profileUpdate.phone = phone
-    if (location) {
-      profileUpdate.location = location
-      const plz = extractPLZ(location)
-      if (plz) {
+    if (plz || stadt) {
+      profileUpdate.location = [plz, stadt].filter(Boolean).join(' ')
+      if (plz && plz.length === 5) {
         const coords = await geocodePLZ(plz)
         if (coords) {
           profileUpdate.latitude = coords.lat
@@ -133,7 +134,7 @@ export default function EngelRegisterPage() {
         <div className="ereg-sub">Helfen Sie Menschen in Ihrer Nähe.<br/>Versichert. Zertifiziert. Flexibel.</div>
       </div>
 
-      <div className="ereg-form">
+      <form className="ereg-form" onSubmit={e => { e.preventDefault(); handleSubmit() }}>
         <div className="ereg-steps">
           <div className="ereg-step on"></div>
           <div className="ereg-step"></div>
@@ -148,7 +149,10 @@ export default function EngelRegisterPage() {
           </div>
           <input className="input" type="email" placeholder="E-Mail-Adresse" value={email} onChange={e => setEmail(e.target.value)} />
           <input className="input" type="tel" placeholder="Telefonnummer" value={phone} onChange={e => setPhone(e.target.value)} />
-          <input className="input" type="text" placeholder="PLZ & Stadt" value={location} onChange={e => setLocation(e.target.value)} />
+          <div className="input-row2">
+            <input className="input" type="text" placeholder="PLZ" value={plz} onChange={e => setPlz(e.target.value.replace(/\D/g, '').slice(0, 5))} inputMode="numeric" maxLength={5} minLength={5} required style={{ maxWidth: 100 }} />
+            <input className="input" type="text" placeholder="Stadt" value={stadt} onChange={e => setStadt(e.target.value)} required />
+          </div>
         </div>
 
         <div className="form-card">
@@ -205,13 +209,13 @@ export default function EngelRegisterPage() {
             <div className="ereg-agree-text">Ich akzeptiere die <strong>AGB</strong>, <strong>Datenschutzerklärung</strong> und bestätige meine Qualifikation. Versicherungsschutz wird bei Aufträgen automatisch aktiviert.</div>
           </div>
         </div>
-      </div>
 
-      <div className="submit-bar">
-        <button className="btn-submit" onClick={handleSubmit} disabled={submitting}>
-          {submitting ? 'Wird gespeichert...' : 'REGISTRIERUNG ABSCHLIESSEN'}
-        </button>
-      </div>
+        <div className="submit-bar">
+          <button className="btn-submit" type="submit" disabled={submitting}>
+            {submitting ? 'Wird gespeichert...' : 'REGISTRIERUNG ABSCHLIESSEN'}
+          </button>
+        </div>
+      </form>
     </div>
   )
 }
