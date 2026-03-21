@@ -74,19 +74,46 @@
     box-sizing: border-box !important;
   }
 
-  /* Card content text — prevent overflow */
-  .mis-content [style*="border-radius"] {
+  /* Card content text — prevent overflow (but NOT tables) */
+  .mis-content [style*="border-radius"]:not(:has(table)) {
     max-width: 100% !important;
     overflow: hidden !important;
     word-break: break-word !important;
     box-sizing: border-box !important;
   }
 
-  /* Tables: allow horizontal scroll only within cards */
+  /* Cards containing tables — allow horizontal scroll */
+  .mis-content [style*="border-radius"]:has(table) {
+    max-width: 100% !important;
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+    box-sizing: border-box !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  /* Tables: horizontal scroll, keep layout */
   .mis-content table {
-    display: block;
+    min-width: 600px;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
+  }
+
+  /* Table cells — don't break words vertically */
+  .mis-content table td,
+  .mis-content table th {
+    word-break: normal !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    max-width: 200px !important;
+  }
+
+  /* First column (Datei/file names) — allow some wrapping */
+  .mis-content table td:first-child {
+    white-space: normal !important;
+    word-break: break-all !important;
+    min-width: 120px !important;
+    max-width: 180px !important;
   }
 
   /* Tab bars — horizontal scroll instead of overflow */

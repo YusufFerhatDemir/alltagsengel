@@ -53,27 +53,50 @@ export default function DataRoomPage() {
       </div>
 
       {/* Documents */}
-      <Card title="Data Room Dokumente" icon="files" noPad>
-        <DataTable
-          columns={[
-            { key: 'section', label: 'Sektion' },
-            { key: 'file', label: 'Datei', render: (r) => (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span style={{ color: BRAND.gold }}><MIcon name="files" size={14} /></span>
-                <span style={{ fontWeight: 500 }}>{r.file as string}</span>
+      <Card title="Data Room Dokumente" icon="files" noPad={!isMobile}>
+        {isMobile ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {DATA_ROOM_DOCS.map((doc, i) => (
+              <div key={i} onClick={() => window.open(doc.link, '_blank')} style={{
+                padding: '14px 16px', borderRadius: 10, cursor: 'pointer',
+                border: `1px solid ${BRAND.border}`, background: BRAND.white,
+                display: 'flex', alignItems: 'center', gap: 12,
+                transition: 'all 0.15s',
+              }}>
+                <span style={{ color: BRAND.gold, flexShrink: 0 }}><MIcon name="files" size={20} /></span>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: BRAND.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{doc.section}</div>
+                  <div style={{ fontSize: 11, color: BRAND.muted, marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{doc.file}</div>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+                  <Badge label={doc.type} color={BRAND.info} size="sm" />
+                  <Badge label="Final" color={BRAND.success} size="sm" />
+                </div>
               </div>
-            )},
-            { key: 'type', label: 'Typ', render: (r) => <Badge label={r.type as string} color={BRAND.info} size="sm" /> },
-            { key: 'size', label: 'Größe' },
-            { key: 'status', label: 'Status', render: () => <Badge label="Final" color={BRAND.success} size="sm" /> },
-            { key: 'link', label: 'Aktion', render: (r) => (
-              <MisButton icon="externalLink" size="sm" onClick={() => window.open(r.link as string, '_blank')}>
-                Öffnen
-              </MisButton>
-            )},
-          ]}
-          data={DATA_ROOM_DOCS as unknown as Record<string,unknown>[]}
-        />
+            ))}
+          </div>
+        ) : (
+          <DataTable
+            columns={[
+              { key: 'section', label: 'Sektion' },
+              { key: 'file', label: 'Datei', render: (r) => (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ color: BRAND.gold }}><MIcon name="files" size={14} /></span>
+                  <span style={{ fontWeight: 500 }}>{r.file as string}</span>
+                </div>
+              )},
+              { key: 'type', label: 'Typ', render: (r) => <Badge label={r.type as string} color={BRAND.info} size="sm" /> },
+              { key: 'size', label: 'Größe' },
+              { key: 'status', label: 'Status', render: () => <Badge label="Final" color={BRAND.success} size="sm" /> },
+              { key: 'link', label: 'Aktion', render: (r) => (
+                <MisButton icon="externalLink" size="sm" onClick={() => window.open(r.link as string, '_blank')}>
+                  Öffnen
+                </MisButton>
+              )},
+            ]}
+            data={DATA_ROOM_DOCS as unknown as Record<string,unknown>[]}
+          />
+        )}
       </Card>
 
       {/* Access Log */}
