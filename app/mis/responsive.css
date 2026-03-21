@@ -8,6 +8,28 @@
    ============================================== */
 
 @media (max-width: 899px) {
+  /* ============ ROOT LAYOUT FIX ============ */
+  /* Force sidebar hidden and remove margin before hydration */
+  .mis-root {
+    overflow-x: hidden !important;
+  }
+
+  .mis-sidebar {
+    transform: translateX(-100%) !important;
+  }
+
+  .mis-main {
+    margin-left: 0 !important;
+    width: 100% !important;
+    max-width: 100vw !important;
+    overflow-x: hidden !important;
+  }
+
+  .mis-sidebar.mis-sidebar-open {
+    transform: translateX(0) !important;
+  }
+
+  /* ============ GRID FIXES ============ */
   /* KPI grids (220px items) — 2 columns on mobile */
   .mis-content [style*="minmax(min(220px"] {
     grid-template-columns: repeat(2, 1fr) !important;
@@ -32,13 +54,32 @@
   /* Main content area — tight padding on mobile */
   .mis-content {
     padding: 12px !important;
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+    box-sizing: border-box !important;
   }
 
-  /* Allow full vertical scrolling — NEVER clip content */
+  /* Force ALL grids inside content to respect mobile width */
+  .mis-content [style*="display: grid"],
+  .mis-content [style*="display:grid"] {
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Force all cards to stay within viewport */
   .mis-content > * {
     max-width: 100% !important;
     overflow-x: auto !important;
     overflow-y: visible !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Card content text — prevent overflow */
+  .mis-content [style*="border-radius"] {
+    max-width: 100% !important;
+    overflow: hidden !important;
+    word-break: break-word !important;
+    box-sizing: border-box !important;
   }
 
   /* Tables: allow horizontal scroll only within cards */
@@ -46,5 +87,15 @@
     display: block;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
+  }
+
+  /* Tab bars — horizontal scroll instead of overflow */
+  .mis-content [style*="border-bottom"][style*="display: flex"] {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
+  }
+  .mis-content [style*="border-bottom"][style*="display: flex"]::-webkit-scrollbar {
+    display: none !important;
   }
 }
