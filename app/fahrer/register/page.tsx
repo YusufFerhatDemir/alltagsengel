@@ -15,6 +15,7 @@ export default function FahrerRegisterPage() {
     licenseNumber: '',
     taxId: '',
     address: '',
+    plz: '',
     city: '',
     phone: '',
   })
@@ -90,7 +91,7 @@ export default function FahrerRegisterPage() {
         first_name: formData.firstName,
         last_name: formData.lastName,
         phone: formData.phone,
-        location: [formData.address, formData.city].filter(Boolean).join(', '),
+        location: [formData.plz, formData.city].filter(Boolean).join(' '),
       }).eq('id', userId)
 
       if (profileError) {
@@ -484,24 +485,45 @@ export default function FahrerRegisterPage() {
                   marginBottom: 10,
                 }}
               />
-              <input
-                type="text"
-                placeholder="Stadt"
-                value={formData.city}
-                onChange={e => handleInputChange('city', e.target.value)}
-                required
-                style={{
-                  width: '100%',
-                  padding: '10px 12px',
-                  borderRadius: 10,
-                  border: '1px solid rgba(255, 255, 255, 0.08)',
-                  background: '#1A1612',
-                  color: '#F5F0E8',
-                  fontSize: 14,
-                  fontFamily: 'Jost, sans-serif',
-                  marginBottom: 10,
-                }}
-              />
+              <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr', gap: 10, marginBottom: 10 }}>
+                <input
+                  type="text"
+                  placeholder="PLZ"
+                  value={formData.plz}
+                  onChange={e => handleInputChange('plz', e.target.value.replace(/\D/g, '').slice(0, 5))}
+                  inputMode="numeric"
+                  maxLength={5}
+                  minLength={5}
+                  required
+                  style={{
+                    width: '100%',
+                    padding: '10px 12px',
+                    borderRadius: 10,
+                    border: '1px solid rgba(255, 255, 255, 0.08)',
+                    background: '#1A1612',
+                    color: '#F5F0E8',
+                    fontSize: 14,
+                    fontFamily: 'Jost, sans-serif',
+                  }}
+                />
+                <input
+                  type="text"
+                  placeholder="Stadt"
+                  value={formData.city}
+                  onChange={e => handleInputChange('city', e.target.value)}
+                  required
+                  style={{
+                    width: '100%',
+                    padding: '10px 12px',
+                    borderRadius: 10,
+                    border: '1px solid rgba(255, 255, 255, 0.08)',
+                    background: '#1A1612',
+                    color: '#F5F0E8',
+                    fontSize: 14,
+                    fontFamily: 'Jost, sans-serif',
+                  }}
+                />
+              </div>
               <input
                 type="tel"
                 placeholder="Telefonnummer"
