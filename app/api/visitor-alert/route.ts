@@ -1,11 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 
-// Überwachte Stadtteile — PLZ 60320 = Nordend Ost + West
+// Überwachte Stadtteile & PLZ
 const WATCHED_CITIES = [
   'nordend',       // Nordend Ost + West
   'nordend ost',
   'nordend west',
+  'stadtallendorf',
+  'alsfeld',
+  'marburg',
+]
+
+// Überwachte Postleitzahlen
+const WATCHED_POSTAL_CODES = [
+  '60318', '60320', '60322', // Frankfurt Nordend
+  '35260',                   // Stadtallendorf
+  '36304',                   // Alsfeld
+  '35037',                   // Marburg
 ]
 
 // Eigene IPs ausschließen (Yusuf)
@@ -22,7 +33,7 @@ const lastAlerts = new Map<string, number>()
 
 export async function POST(req: NextRequest) {
   try {
-    const { ip, city, region, page, userAgent } = await req.json()
+    const { ip, city, region, page, userAgent, postalCode, isp: bodyIsp, district } = await req.json()
     if (!ip) return NextResponse.json({ ok: true })
 
     // Eigene IPs ignorieren
@@ -30,9 +41,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: true })
     }
 
-    // Prüfe ob Stadtteil überwacht wird (Nordend = PLZ 60320)
+    // Prüfe ob Stadtteil, PLZ oder District überwacht wird
     const cityLower = (city || '').toLowerCase()
-    const isWatched = WATCHED_CITIES.some(w => cityLower.includes(w))
+    const districtLower = (district || '').toLowerCase()
+    const isWatchedCity = WATCHED_CITIES.some(w => cityLower.includes(w) || districtLower.includes(w))
+    const isWatchedPLZ = postalCode && WATCHED_POSTAL_CODES.includes(postalCode)
+    const isWatched = isWatchedCity || isWatchedPLZ
     if (!isWatched) return NextResponse.json({ ok: true })
 
     // Cooldown prüfen (1 Stunde pro IP)
@@ -55,12 +69,14 @@ export async function POST(req: NextRequest) {
     const iosMatch = userAgent?.match(/iPhone OS (\d+_\d+)/)
     const iosVersion = iosMatch ? iosMatch[1].replace('_', '.') : ''
 
-    // ISP aus IP-Prefix
-    let isp = 'Unbekannt'
-    if (ip.startsWith('2a02:3037')) isp = 'Vodafone Kabel Deutschland'
-    else if (ip.startsWith('2003:')) isp = 'Deutsche Telekom'
-    else if (ip.startsWith('2a00:20')) isp = 'Deutsche Telekom (Mobilfunk)'
-    else if (ip.startsWith('93.')) isp = 'Deutsche Telekom (DSL)'
+    // ISP: bevorzugt ip-api Daten, Fallback auf IP-Prefix
+    let isp = bodyIsp || 'Unbekannt'
+    if (isp === 'Unbekannt') {
+      if (ip.startsWith('2a02:3037')) isp = 'Vodafone Kabel Deutschland'
+      else if (ip.startsWith('2003:')) isp = 'Deutsche Telekom'
+      else if (ip.startsWith('2a00:20')) isp = 'Deutsche Telekom (Mobilfunk)'
+      else if (ip.startsWith('93.')) isp = 'Deutsche Telekom (DSL)'
+    }
 
     // Letzte Besuche dieser IP laden
     const supabase = createAdminClient()
@@ -99,7 +115,8 @@ export async function POST(req: NextRequest) {
               <table style="width:100%;border-collapse:collapse;margin:16px 0;">
                 <tr><td style="padding:8px;color:#A89C8C;border-bottom:1px solid #332E24;">Zeitpunkt</td><td style="padding:8px;border-bottom:1px solid #332E24;font-weight:bold;">${now}</td></tr>
                 <tr><td style="padding:8px;color:#A89C8C;border-bottom:1px solid #332E24;">Aktuelle Seite</td><td style="padding:8px;border-bottom:1px solid #332E24;font-weight:bold;">${page || '/'}</td></tr>
-                <tr><td style="padding:8px;color:#A89C8C;border-bottom:1px solid #332E24;">Stadtteil</td><td style="padding:8px;border-bottom:1px solid #332E24;font-weight:bold;">${city || 'Unbekannt'}${region ? ', ' + region : ''}</td></tr>
+                <tr><td style="padding:8px;color:#A89C8C;border-bottom:1px solid #332E24;">Ort / Stadtteil</td><td style="padding:8px;border-bottom:1px solid #332E24;font-weight:bold;">${city || 'Unbekannt'}${district ? ' — ' + district : ''}${region ? ', ' + region : ''}</td></tr>
+                <tr><td style="padding:8px;color:#A89C8C;border-bottom:1px solid #332E24;">PLZ</td><td style="padding:8px;border-bottom:1px solid #332E24;font-weight:bold;">${postalCode || '—'}</td></tr>
                 <tr><td style="padding:8px;color:#A89C8C;border-bottom:1px solid #332E24;">Gerät</td><td style="padding:8px;border-bottom:1px solid #332E24;font-weight:bold;">${device}${iosVersion ? ' (iOS ' + iosVersion + ')' : ''}</td></tr>
                 <tr><td style="padding:8px;color:#A89C8C;border-bottom:1px solid #332E24;">Internet-Anbieter</td><td style="padding:8px;border-bottom:1px solid #332E24;font-weight:bold;">${isp}</td></tr>
                 <tr><td style="padding:8px;color:#A89C8C;border-bottom:1px solid #332E24;">IP-Adresse</td><td style="padding:8px;border-bottom:1px solid #332E24;font-size:12px;">${ip}</td></tr>
@@ -131,7 +148,7 @@ export async function POST(req: NextRequest) {
         user_id: a.id,
         type: 'system',
         title: `🚨 Besucher-Alert: ${city || 'Unbekannt'}`,
-        body: `${device} aus ${city || 'Unbekannt'} (${isp}) ist gerade auf ${page || '/'}`,
+        body: `${device} aus ${city || 'Unbekannt'}${postalCode ? ' (PLZ ' + postalCode + ')' : ''} — ${isp} — auf ${page || '/'}`,
         link: '/mis/analytics',
       }))
       await supabase.from('notifications').insert(notifs)
