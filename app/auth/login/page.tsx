@@ -13,6 +13,7 @@ function LoginForm() {
   const adminError = searchParams.get('error') === 'admin_required'
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -143,7 +144,16 @@ function LoginForm() {
 
         <form onSubmit={handleSubmit}>
           <input className="auth-input" type="email" placeholder="E-Mail-Adresse" value={email} onChange={e => setEmail(e.target.value)} required />
-          <input className="auth-input" type="password" placeholder="Passwort" value={password} onChange={e => setPassword(e.target.value)} required />
+          <div style={{ position: 'relative' }}>
+            <input className="auth-input" type={showPassword ? 'text' : 'password'} placeholder="Passwort" value={password} onChange={e => setPassword(e.target.value)} required style={{ paddingRight: 48 }} />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'rgba(201,150,60,0.6)', cursor: 'pointer', fontSize: 13, padding: '4px 0' }}
+            >
+              {showPassword ? 'Verbergen' : 'Anzeigen'}
+            </button>
+          </div>
           {error && <div className="auth-error">{error}</div>}
           <div style={{ textAlign: 'right', marginBottom: 4 }}>
             <Link href="/auth/forgot-password" style={{ color: 'var(--gold-2)', fontSize: 13, textDecoration: 'none' }}>Passwort vergessen?</Link>
@@ -164,7 +174,7 @@ function LoginForm() {
               className="btn-gold"
               style={{ flex: 1, fontSize: 12, padding: '10px 0', background: 'rgba(201,150,60,0.12)', color: 'var(--gold-2)', border: '1px solid rgba(201,150,60,0.25)' }}
               disabled={loading}
-              onClick={async () => { setLoading(true); setError(''); try { await loginAndRedirect('admin@alltagsengel.de', 'Admin2026!') } catch { setError('Demo-Login fehlgeschlagen') } finally { setLoading(false) } }}
+              onClick={async () => { setLoading(true); setError(''); try { await loginAndRedirect('admin@alltagsengel.de', 'Alltagsengel2026!') } catch { setError('Demo-Login fehlgeschlagen') } finally { setLoading(false) } }}
             >
               Admin
             </button>
