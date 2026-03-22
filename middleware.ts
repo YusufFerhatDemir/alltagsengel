@@ -70,17 +70,7 @@ export async function middleware(request: NextRequest) {
         }
       }
 
-      // ═══ Email Whitelist: Only allowed emails can access admin ═══
-      const allowedEmails = (process.env.ADMIN_ALLOWED_EMAILS || '').split(',').map(e => e.trim().toLowerCase()).filter(Boolean)
-      const userEmail = (user.email || '').toLowerCase()
 
-      if (allowedEmails.length > 0 && !allowedEmails.includes(userEmail)) {
-        console.warn(`Admin access denied for ${userEmail} — not in ADMIN_ALLOWED_EMAILS whitelist`)
-        const url = request.nextUrl.clone()
-        url.pathname = '/auth/login'
-        url.searchParams.set('error', 'admin_required')
-        return NextResponse.redirect(url)
-      }
     }
 
     return supabaseResponse
