@@ -12,6 +12,8 @@ export default function AdminSettings() {
   // Passwort ändern
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
+  const [showNewPw, setShowNewPw] = useState(false)
+  const [showConfirmPw, setShowConfirmPw] = useState(false)
   const [pwMsg, setPwMsg] = useState('')
   const [pwLoading, setPwLoading] = useState(false)
 
@@ -22,6 +24,7 @@ export default function AdminSettings() {
   // Passwort zurücksetzen für andere
   const [resetUserId, setResetUserId] = useState('')
   const [resetPassword, setResetPassword] = useState('')
+  const [showResetPw, setShowResetPw] = useState(false)
   const [resetMsg, setResetMsg] = useState('')
 
   const supabase = createClient()
@@ -190,23 +193,33 @@ export default function AdminSettings() {
           Mein Passwort ändern
         </h2>
         <form onSubmit={handlePasswordChange}>
-          <input
-            type="password"
-            placeholder="Neues Passwort (min. 6 Zeichen)"
-            value={newPassword}
-            onChange={e => setNewPassword(e.target.value)}
-            style={inputStyle}
-            minLength={6}
-            required
-          />
-          <input
-            type="password"
-            placeholder="Passwort bestätigen"
-            value={confirmPassword}
-            onChange={e => setConfirmPassword(e.target.value)}
-            style={inputStyle}
-            required
-          />
+          <div style={{ position: 'relative', marginBottom: 10 }}>
+            <input
+              type={showNewPw ? 'text' : 'password'}
+              placeholder="Neues Passwort (min. 6 Zeichen)"
+              value={newPassword}
+              onChange={e => setNewPassword(e.target.value)}
+              style={{ ...inputStyle, marginBottom: 0, paddingRight: 80 }}
+              minLength={6}
+              required
+            />
+            <button type="button" onClick={() => setShowNewPw(!showNewPw)} style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'rgba(201,150,60,0.6)', cursor: 'pointer', fontSize: 12 }}>
+              {showNewPw ? 'Verbergen' : 'Anzeigen'}
+            </button>
+          </div>
+          <div style={{ position: 'relative', marginBottom: 10 }}>
+            <input
+              type={showConfirmPw ? 'text' : 'password'}
+              placeholder="Passwort bestätigen"
+              value={confirmPassword}
+              onChange={e => setConfirmPassword(e.target.value)}
+              style={{ ...inputStyle, marginBottom: 0, paddingRight: 80 }}
+              required
+            />
+            <button type="button" onClick={() => setShowConfirmPw(!showConfirmPw)} style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'rgba(201,150,60,0.6)', cursor: 'pointer', fontSize: 12 }}>
+              {showConfirmPw ? 'Verbergen' : 'Anzeigen'}
+            </button>
+          </div>
           <button type="submit" disabled={pwLoading} style={btnStyle}>
             {pwLoading ? 'Wird geändert...' : 'Passwort ändern'}
           </button>
@@ -305,15 +318,20 @@ export default function AdminSettings() {
                 </option>
               ))}
             </select>
-            <input
-              type="password"
-              placeholder="Neues Passwort (min. 6 Zeichen)"
-              value={resetPassword}
-              onChange={e => setResetPassword(e.target.value)}
-              style={inputStyle}
-              minLength={6}
-              required
-            />
+            <div style={{ position: 'relative', marginBottom: 10 }}>
+              <input
+                type={showResetPw ? 'text' : 'password'}
+                placeholder="Neues Passwort (min. 6 Zeichen)"
+                value={resetPassword}
+                onChange={e => setResetPassword(e.target.value)}
+                style={{ ...inputStyle, marginBottom: 0, paddingRight: 80 }}
+                minLength={6}
+                required
+              />
+              <button type="button" onClick={() => setShowResetPw(!showResetPw)} style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'rgba(201,150,60,0.6)', cursor: 'pointer', fontSize: 12 }}>
+                {showResetPw ? 'Verbergen' : 'Anzeigen'}
+              </button>
+            </div>
             <button type="submit" style={btnStyle}>Passwort zurücksetzen</button>
             {resetMsg && <div style={msgStyle(resetMsg)}>{resetMsg}</div>}
           </form>
