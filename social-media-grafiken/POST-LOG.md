@@ -646,3 +646,240 @@ Grafik (POST-2026-03-20-spaziergang.png), Video und alle Captions (DE/TR) sind v
 - **Meta Business Suite:** business.facebook.com → Beitrag erstellen → Grafik + DE Caption → IG + FB
 - **TikTok:** tiktok.com/tiktokstudio/content → Video + TikTok Caption
 - **TR Caption:** Als Kommentar oder zweiter Post
+
+---
+
+## 21.03.2026 — Arztbegleitung Awareness Post (DE+TR)
+
+**Status:** 📋 Bereit zum Posten (Meta Business Suite Login erforderlich — manueller Upload nötig)
+**Plattform:** Instagram + Facebook + TikTok
+**Typ:** Grafik (1080x1080) + Video
+**Datei:** POST-2026-03-21-arztbegleitung.png
+**Video (optional):** REELS-arztbegleitung-neu.mp4
+**Geplante Uhrzeit:** 10:00-13:00 Uhr (Samstag)
+**Thema:** Arztbegleitung / Doktor Refakati — zweisprachig DE+TR
+
+**Caption (DE) — Instagram/Facebook:**
+```
+Zum Arzt — aber nicht allein! 🏥😇
+
+AlltagsEngel Arztbegleitung — wir bringen dich sicher zum Termin und bleiben an deiner Seite.
+
+✅ Arzt, Klinik, Therapie — wir begleiten dich
+✅ Wartezeit? Nicht allein! Dein Engel bleibt
+✅ Formulare & Fragen? Wir helfen dir
+✅ Pflegekasse zahlt — 131€/Monat (§45b)
+✅ Du zahlst nichts!
+
+Wir sprechen auch Türkisch! 🇹🇷🇩🇪
+
+📱 alltagsengel.care
+✉️ info@alltagsengel.care
+
+COMING SOON — Bald verfügbar in Frankfurt!
+
+#AlltagsEngel #Arztbegleitung #Frankfurt #Alltagsbegleitung #Pflege #Seniorenhilfe #Pflegekasse #Entlastungsbetrag #131Euro #FrankfurtAmMain #Senioren #§45b #ComingSoon #Arzttermin #Klinikbegleitung #Nordend #Bornheim #Dornbusch #Bockenheim
+```
+
+**Caption (TR) — Instagram/Facebook:**
+```
+Doktora — ama yalnız değil! 🏥😇
+
+AlltagsEngel Doktor Refakati — seni güvenle randevuna götürüyoruz ve yanında kalıyoruz.
+
+✅ Doktor, klinik, terapi — sana eşlik ediyoruz
+✅ Bekleme süresi? Yalnız değilsin! Meleğin yanında
+✅ Formlar & sorular? Sana yardımcı oluyoruz
+✅ Bakım sigortası karşılıyor — ayda 131€ (§45b)
+✅ Sen hiçbir şey ödemiyorsun!
+
+Türkçe hizmet veriyoruz! 🇹🇷🇩🇪
+
+📱 alltagsengel.care
+✉️ info@alltagsengel.care
+
+YAKINDA — Frankfurt'ta hizmetinizde!
+
+#AlltagsEngel #Frankfurt #YaşlıBakımı #TürklerFrankfurt #Bakım #BakımSigortası #DoktorRefakati #Arztbegleitung #Entlastungsbetrag #Senioren #Pflege
+```
+
+**TikTok Caption (DE) — mit Video REELS-arztbegleitung-neu.mp4:**
+```
+Zum Arzt — aber nicht allein! 🏥😇 AlltagsEngel Arztbegleitung — wir bringen dich sicher hin und bleiben bei dir. Pflegekasse zahlt! 131€/Monat. Link in Bio 📱 alltagsengel.care
+
+#alltagsengel #arztbegleitung #frankfurt #pflege #pflegekasse #entlastungsbetrag #seniorenhilfe #fyp #viral #foryou #alltagsbegleitung #arzttermin
+```
+
+**Posting-Anleitung (manuell):**
+1. Meta Business Suite öffnen → business.facebook.com
+2. "Beitrag erstellen" → Grafik hochladen (POST-2026-03-21-arztbegleitung.png)
+3. DE Caption einfügen → Instagram + Facebook auswählen → Veröffentlichen
+4. TikTok Studio öffnen → Video (REELS-arztbegleitung-neu.mp4) oder Grafik als Slideshow posten
+5. TikTok Caption einfügen → Veröffentlichen
+6. TR Caption als Kommentar oder zweiten Post
+
+**Hinweis (automatische Ausführung 21.03.2026 — Scheduled Task):**
+Automatisches Posting fehlgeschlagen — Meta Business Suite und TikTok erfordern Login.
+Grafik (POST-2026-03-21-arztbegleitung.png), Video und alle Captions (DE/TR) sind vollständig vorbereitet.
+**Manueller Upload erforderlich — bitte folge der Posting-Anleitung oben.**
+
+**Zusammenfassung für manuellen Upload:**
+- **Grafik:** social-media-grafiken/POST-2026-03-21-arztbegleitung.png
+- **Video:** social-media-grafiken/REELS-arztbegleitung-neu.mp4
+- **Meta Business Suite:** business.facebook.com → Beitrag erstellen → Grafik + DE Caption → IG + FB
+- **TikTok:** tiktok.com/tiktokstudio/content → Video + TikTok Caption
+- **TR Caption:** Als Kommentar oder zweiter Post
+
+---
+
+## 22.03.2026 — Sonntagsbegleitung / Pazar Refakati (Awareness Post)
+
+**Status:** 📋 Bereit zum Posten (Login erforderlich — manueller Upload nötig)
+**Plattform:** Instagram + Facebook + TikTok
+**Typ:** Grafik (1080x1080)
+**Datei:** POST-2026-03-22-sonntagsbegleitung.png
+**Geplante Uhrzeit:** 11:00-13:00 Uhr (Sonntag)
+**Thema:** Sonntagsbegleitung — gegen Einsamkeit am Wochenende
+
+**Caption (DE):**
+```
+Sonntag allein? Das muss nicht sein. 😇
+
+Viele Senioren verbringen den Sonntag allein — ohne Gespräch, ohne Gesellschaft.
+
+AlltagsEngel ist auch am Wochenende für dich da:
+
+☕ Gemeinsam Kaffee trinken
+🌳 Spaziergang im Park
+💬 Einfach reden und zuhören
+⛪ Begleitung zum Gottesdienst
+
+131 Euro/Monat — die Pflegekasse zahlt über §45b.
+Du zahlst nichts.
+
+📱 www.alltagsengel.care
+✉️ info@alltagsengel.care
+
+COMING SOON — Bald verfügbar in Frankfurt!
+
+#AlltagsEngel #Alltagsbegleitung #Frankfurt #Sonntag #GegenEinsamkeit #Senioren #Pflege #Pflegekasse #Entlastungsbetrag #131Euro #§45b #FrankfurtAmMain #Seniorenhilfe #Wochenende #Gesellschaft #MitHerz
+```
+
+**Caption (TR):**
+```
+Pazar günü yalnız mı? Öyle olmak zorunda değil. 😇
+
+Birçok yaşlı insan pazar gününü yalnız geçiriyor — sohbet yok, arkadaşlık yok.
+
+AlltagsEngel hafta sonları da senin için burada:
+
+☕ Birlikte kahve içmek
+🌳 Parkta yürüyüş
+💬 Sohbet etmek ve dinlemek
+⛪ İbadete eşlik
+
+Ayda 131 Euro — bakım sigortası §45b üzerinden ödüyor.
+Sen hiçbir şey ödemiyorsun.
+
+📱 www.alltagsengel.care
+✉️ info@alltagsengel.care
+
+YAKINDA — Frankfurt'ta hizmetinizde!
+
+#AlltagsEngel #Frankfurt #YaşlıBakımı #TürklerFrankfurt #Bakım #BakımSigortası #PazarGünü #Yalnızlık #Refakat #Senioren #Entlastungsbetrag
+```
+
+**Posting-Anleitung (manuell):**
+1. Meta Business Suite öffnen → business.facebook.com
+2. "Beitrag erstellen" → Grafik hochladen (POST-2026-03-22-sonntagsbegleitung.png)
+3. DE Caption einfügen → Instagram + Facebook auswählen → Veröffentlichen
+4. 1 Stunde später: TR Caption als zweiten Post oder Kommentar
+5. TikTok Studio öffnen → Grafik als Slideshow posten mit DE Caption
+
+**Hinweis (automatische Ausführung 22.03.2026 — Scheduled Task):**
+Automatisches Posting fehlgeschlagen — Meta Business Suite und TikTok erfordern Login.
+Grafik (POST-2026-03-22-sonntagsbegleitung.png) und alle Captions (DE/TR) sind vollständig vorbereitet.
+**Manueller Upload erforderlich — bitte folge der Posting-Anleitung oben.**
+
+**Zusammenfassung für manuellen Upload:**
+- **Grafik:** social-media-grafiken/POST-2026-03-22-sonntagsbegleitung.png
+- **Meta Business Suite:** business.facebook.com → Beitrag erstellen → Grafik + DE Caption → IG + FB
+- **TikTok:** tiktok.com/tiktokstudio/content → Grafik als Slideshow + Caption
+- **TR Caption:** Als Kommentar oder zweiter Post (1h später)
+
+---
+
+## 23.03.2026 — Behördengänge & Termine (Awareness Post)
+
+**Status:** 📋 Bereit zum Posten (Browser-Timeout — manueller Upload nötig)
+**Plattform:** Instagram + Facebook + TikTok
+**Typ:** Grafik (1080x1080)
+**Datei:** POST-2026-03-23-behoerdengaenge.png
+**Geplante Uhrzeit:** 10:00-13:00 Uhr (Montag)
+**Thema:** Behördengänge & Termine — Begleitung zu Amt, Bank, Post
+
+**Caption (DE):**
+```
+Allein zum Amt? Muss nicht sein! 😇
+
+Viele Senioren haben Angst vor Behördengängen — Formulare, Wartezeiten, fremde Sprache.
+
+Dein AlltagsEngel begleitet dich:
+
+📋 Amt, Jobcenter, Bürgerbüro
+📝 Formulare & Anträge ausfüllen
+🏦 Bank, Post, Versicherung
+⏰ Wartezeit? Dein Engel bleibt bei dir!
+
+131 Euro/Monat — die Pflegekasse zahlt über §45b.
+Du zahlst nichts.
+
+📱 www.alltagsengel.care
+✉️ info@alltagsengel.care
+
+COMING SOON — Bald verfügbar in Frankfurt!
+
+#AlltagsEngel #Alltagsbegleitung #Frankfurt #Behördengänge #Seniorenhilfe #Pflege #Pflegekasse #Entlastungsbetrag #131Euro #§45b #FrankfurtAmMain #Senioren #Amt #Formulare #MitHerz #ComingSoon
+```
+
+**Caption (TR):**
+```
+Resmi işlemlere yalnız mı? Öyle olmak zorunda değil! 😇
+
+Birçok yaşlı insan resmi işlemlerden korkuyor — formlar, bekleme süreleri, yabancı dil.
+
+AlltagsEngel sana eşlik ediyor:
+
+📋 Devlet dairesi, iş kurumu, belediye
+📝 Form & başvuru doldurmak
+🏦 Banka, posta, sigorta
+⏰ Bekleme süresi? Engel'in yanında kalıyor!
+
+Ayda 131 Euro — bakım sigortası §45b üzerinden ödüyor.
+Sen hiçbir şey ödemiyorsun.
+
+📱 www.alltagsengel.care
+✉️ info@alltagsengel.care
+
+YAKINDA — Frankfurt'ta hizmetinizde!
+
+#AlltagsEngel #Frankfurt #YaşlıBakımı #TürklerFrankfurt #Bakım #BakımSigortası #Resmiİşlemler #Entlastungsbetrag #Senioren #Pflege
+```
+
+**Posting-Anleitung (manuell):**
+1. Meta Business Suite öffnen → business.facebook.com
+2. "Beitrag erstellen" → Grafik hochladen (POST-2026-03-23-behoerdengaenge.png)
+3. DE Caption einfügen → Instagram + Facebook auswählen → Veröffentlichen
+4. 1 Stunde später: TR Caption als zweiten Post oder Kommentar
+5. TikTok Studio öffnen → Grafik als Slideshow posten mit DE Caption
+
+**Hinweis (automatische Ausführung 23.03.2026 — Scheduled Task):**
+Automatisches Posting fehlgeschlagen — Browser-Timeout (Chrome Extension nicht erreichbar).
+Grafik (POST-2026-03-23-behoerdengaenge.png) und alle Captions (DE/TR) sind vollständig vorbereitet.
+**Manueller Upload erforderlich — bitte folge der Posting-Anleitung oben.**
+
+**Zusammenfassung für manuellen Upload:**
+- **Grafik:** social-media-grafiken/POST-2026-03-23-behoerdengaenge.png
+- **Meta Business Suite:** business.facebook.com → Beitrag erstellen → Grafik + DE Caption → IG + FB
+- **TikTok:** tiktok.com/tiktokstudio/content → Grafik als Slideshow + Caption
+- **TR Caption:** Als Kommentar oder zweiter Post (1h später)
