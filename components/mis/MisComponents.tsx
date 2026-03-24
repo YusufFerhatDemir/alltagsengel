@@ -332,11 +332,25 @@ export function Modal({ open, onClose, title, children, width = 560 }: {
 }
 
 // ===== Activity Item =====
-export function ActivityItem({ icon, title, time, color }: {
-  icon: string; title: string; time: string; color?: string
+export function ActivityItem({ icon, title, time, color, onClick, href }: {
+  icon: string; title: string; time: string; color?: string; onClick?: () => void; href?: string
 }) {
+  const isClickable = !!(onClick || href)
+  const handleClick = () => {
+    if (onClick) onClick()
+    else if (href) window.location.href = href
+  }
   return (
-    <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start', padding: '10px 0', borderBottom: `1px solid ${BRAND.border}` }}>
+    <div
+      onClick={isClickable ? handleClick : undefined}
+      style={{
+        display: 'flex', gap: 12, alignItems: 'flex-start', padding: '10px 0',
+        borderBottom: `1px solid ${BRAND.border}`,
+        cursor: isClickable ? 'pointer' : 'default',
+        transition: 'background 0.15s',
+      }}
+      role={isClickable ? 'button' : undefined}
+    >
       <div style={{
         width: 32, height: 32, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center',
         background: `${color || BRAND.gold}15`, color: color || BRAND.gold, flexShrink: 0,

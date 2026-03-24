@@ -2480,6 +2480,31 @@ body:has(.admin-layout) {
   .admin-table th, .admin-table td { padding: 8px 8px; white-space: nowrap; }
   .admin-page { max-width: 100% !important; overflow-x: hidden !important; }
   .admin-page h1 { font-size: 22px; }
+
+  /* ─── Mobil tıklama güvenilirliği ─── */
+  .admin-layout button,
+  .admin-layout a,
+  .admin-layout [role="button"],
+  .admin-layout .admin-filter-btn,
+  .admin-layout .admin-action-btn,
+  .admin-layout .admin-nav-item,
+  .admin-layout .notif-item,
+  .mis-root button,
+  .mis-root a,
+  .mis-root [role="button"] {
+    -webkit-tap-highlight-color: rgba(201,150,60,.2);
+    touch-action: manipulation;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  /* Notification panel mobilde tam genişlik */
+  .notif-panel {
+    right: 8px !important;
+    left: 8px !important;
+    width: auto !important;
+    top: 52px !important;
+  }
 }
 
 
