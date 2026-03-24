@@ -146,11 +146,11 @@ export default function DashboardPage() {
         {/* Recent Activity */}
         <Card title="Letzte Aktivitäten" icon="clock" >
           <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <ActivityItem icon="files" title="Pitch Deck v2 hochgeladen" time="vor 2 Stunden" />
-            <ActivityItem icon="shield" title="QP-002 Audit abgeschlossen" time="vor 5 Stunden" color={BRAND.success} />
-            <ActivityItem icon="users" title="Neuer Engel registriert" time="vor 1 Tag" color={BRAND.info} />
-            <ActivityItem icon="banknote" title="Finanzprognose aktualisiert" time="vor 2 Tagen" color={BRAND.gold} />
-            <ActivityItem icon="truck" title="Lieferant bewertet" time="vor 3 Tagen" />
+            <ActivityItem icon="files" title="Pitch Deck v2 hochgeladen" time="vor 2 Stunden" href="/mis/documents" />
+            <ActivityItem icon="shield" title="QP-002 Audit abgeschlossen" time="vor 5 Stunden" color={BRAND.success} href="/mis/quality" />
+            <ActivityItem icon="users" title="Neuer Engel registriert" time="vor 1 Tag" color={BRAND.info} href="/mis/team" />
+            <ActivityItem icon="banknote" title="Finanzprognose aktualisiert" time="vor 2 Tagen" color={BRAND.gold} href="/mis/finance" />
+            <ActivityItem icon="truck" title="Lieferant bewertet" time="vor 3 Tagen" href="/mis/supply-chain" />
           </div>
         </Card>
       </div>
