@@ -133,7 +133,15 @@ export default function TeamPage() {
                 const role = (r.role as string) || 'kunde'
                 return <Badge label={roleLabels[role] || role} color={roleColors[role] || BRAND.muted} size="sm" />
               }},
+              { key: 'typ', label: 'Typ', render: (r: Record<string,unknown>) => (
+                r.is_test
+                  ? <Badge label="TEST" color={BRAND.error} size="sm" />
+                  : <Badge label="ECHT" color={BRAND.success} size="sm" />
+              )},
               ...(!isMobile ? [
+                { key: 'postal_code', label: 'PLZ', render: (r: Record<string,unknown>) => (
+                  <span style={{ fontWeight: 600 }}>{(r.postal_code as string) || '—'}</span>
+                )},
                 { key: 'location', label: 'Standort', render: (r: Record<string,unknown>) => (r.location as string)?.trim() || '—' },
                 { key: 'created_at', label: 'Registriert', render: (r: Record<string,unknown>) => new Date(r.created_at as string).toLocaleDateString('de-DE') },
               ] : []),

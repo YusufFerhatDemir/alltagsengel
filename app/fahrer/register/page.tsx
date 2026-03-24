@@ -92,6 +92,7 @@ export default function FahrerRegisterPage() {
         last_name: formData.lastName,
         phone: formData.phone,
         location: [formData.plz, formData.city].filter(Boolean).join(' '),
+        postal_code: formData.plz && formData.plz.length === 5 ? formData.plz : null,
       }).eq('id', userId)
 
       if (profileError) {
