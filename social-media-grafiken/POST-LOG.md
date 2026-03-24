@@ -883,3 +883,104 @@ Grafik (POST-2026-03-23-behoerdengaenge.png) und alle Captions (DE/TR) sind voll
 - **Meta Business Suite:** business.facebook.com → Beitrag erstellen → Grafik + DE Caption → IG + FB
 - **TikTok:** tiktok.com/tiktokstudio/content → Grafik als Slideshow + Caption
 - **TR Caption:** Als Kommentar oder zweiter Post (1h später)
+
+
+---
+
+## 24.03.2026 — 131€ verfallen! / Urgency Awareness Post (DE+TR)
+
+**Status:** 📋 Bereit zum Posten (Meta Business Suite Login erforderlich — manueller Upload nötig)
+**Plattform:** Instagram + Facebook + TikTok
+**Typ:** Grafik (1080x1080)
+**Datei:** social-media-grafiken/neue-kampagne-2/POST-kunden-131-verfaellt.png
+**Geplante Uhrzeit:** 10:00-13:00 Uhr (Dienstag)
+**Thema:** Achtung! 131€ pro Monat verfallen — Entlastungsbetrag jetzt nutzen
+
+**Caption (DE) — Instagram/Facebook:**
+```
+ACHTUNG! 131€ pro Monat verfallen! 😳💸
+
+Die meisten wissen es nicht:
+Wer einen Pflegegrad hat, bekommt 131€ pro Monat — den Entlastungsbetrag nach §45b.
+
+Aber: Was du nicht nutzt, verfällt!
+
+Nicht ansparen. Nicht auszahlen lassen. Einfach weg.
+
+Dabei ist es so einfach:
+✅ Einkaufsbegleitung
+✅ Arztbegleitung & Krankenfahrt
+✅ Behördengänge & Termine
+✅ Gesellschaft & Gespräche
+✅ Haushaltsnahe Hilfe
+
+Deine Pflegekasse zahlt — du zahlst nichts.
+
+Wir sprechen auch Türkisch! 🇹🇷🇩🇪
+
+📱 www.alltagsengel.care
+✉️ info@alltagsengel.care
+
+COMING SOON — Bald verfügbar in Frankfurt!
+
+Speichern & teilen, damit es alle erfahren! 🔁
+
+#AlltagsEngel #Entlastungsbetrag #131Euro #Pflegekasse #Frankfurt #Alltagsbegleitung #Seniorenhilfe #§45b #SGBXI #Pflege #FrankfurtAmMain #Senioren #ComingSoon #GeldVerfällt #Pflegegrad #MitHerz
+```
+
+**Caption (TR) — Instagram/Facebook:**
+```
+DİKKAT! Ayda 131€ boşa gidiyor! 😳💸
+
+Çoğu kişi bilmiyor:
+Bakım derecesi olan herkesin ayda 131€ hakkı var — §45b rahatlatma ödeneği.
+
+Ama: Kullanmazsan, kaybolur!
+
+Biriktirmek yok. Nakit almak yok. Kullanmasan gidiyor.
+
+Oysa çok kolay:
+✅ Alışveriş refakati
+✅ Doktor refakati & hasta nakliyesi
+✅ Resmi işlemler & randevular
+✅ Sohbet & arkadaşlık
+✅ Ev işlerinde yardım
+
+Bakım sigortası ödüyor — sen hiçbir şey ödemiyorsun.
+
+Türkçe hizmet veriyoruz! 🇹🇷🇩🇪
+
+📱 www.alltagsengel.care
+✉️ info@alltagsengel.care
+
+YAKINDA — Frankfurt'ta hizmetinizde!
+
+Kaydet & paylaş, herkes öğrensin! 🔁
+
+#AlltagsEngel #Frankfurt #YaşlıBakımı #TürklerFrankfurt #Bakım #BakımSigortası #131Euro #Entlastungsbetrag #ParaKaybı #Senioren #Pflege #Pflegegrad
+```
+
+**TikTok Caption (DE):**
+```
+ACHTUNG! 131€ pro Monat verfallen! 😳 Pflegegrad? Dann steht dir Geld zu — und wenn du es nicht nutzt, ist es weg! AlltagsEngel macht's einfach. Pflegekasse zahlt! Link in Bio 📱 alltagsengel.care
+
+#alltagsengel #131euro #entlastungsbetrag #pflegekasse #pflege #frankfurt #fyp #viral #foryou #seniorenhilfe #pflegegrad #geldverfällt
+```
+
+**Posting-Anleitung (manuell):**
+1. Meta Business Suite öffnen → business.facebook.com
+2. "Beitrag erstellen" → Grafik hochladen (neue-kampagne-2/POST-kunden-131-verfaellt.png)
+3. DE Caption einfügen → Instagram + Facebook auswählen → Veröffentlichen
+4. 1 Stunde später: TR Caption als zweiten Post oder Kommentar
+5. TikTok Studio öffnen → tiktok.com/tiktokstudio/content → Grafik als Slideshow posten mit TikTok Caption
+
+**Hinweis (automatische Ausführung 24.03.2026 — Scheduled Task):**
+Automatisches Posting fehlgeschlagen — Meta Business Suite und TikTok erfordern Login.
+Grafik (neue-kampagne-2/POST-kunden-131-verfaellt.png) und alle Captions (DE/TR) sind vollständig vorbereitet.
+**Manueller Upload erforderlich — bitte folge der Posting-Anleitung oben.**
+
+**Zusammenfassung für manuellen Upload:**
+- **Grafik:** social-media-grafiken/neue-kampagne-2/POST-kunden-131-verfaellt.png
+- **Meta Business Suite:** business.facebook.com → Beitrag erstellen → Grafik + DE Caption → IG + FB
+- **TikTok:** tiktok.com/tiktokstudio/content → Grafik als Slideshow + TikTok Caption
+- **TR Caption:** Als Kommentar oder zweiter Post (1h später)
