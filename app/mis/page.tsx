@@ -3,11 +3,13 @@ import React, { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { BRAND, FINANCIAL_PROJECTIONS, UNIT_ECONOMICS, MARKET_DATA } from '@/lib/mis/constants'
 import { useMis } from '@/lib/mis/MisContext'
+import { useRouter } from 'next/navigation'
 import { KpiCard, SectionHeader, Card, MiniBarChart, ProgressBar, ActivityItem, StatRow, MisButton, Badge, DataTable } from '@/components/mis/MisComponents'
 import { MIcon } from '@/components/mis/MisIcons'
 
 // ===== DASHBOARD: Control Pilot View =====
 export default function DashboardPage() {
+  const router = useRouter()
   const [stats, setStats] = useState({ users: 0, bookings: 0, angels: 0, revenue: 0 })
   const [recentBookings, setRecentBookings] = useState<Record<string,unknown>[]>([])
   const [loading, setLoading] = useState(true)
@@ -58,17 +60,17 @@ export default function DashboardPage() {
 
       {/* KPI Row */}
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(auto-fill, minmax(min(220px, 100%), 1fr))', gap: isMobile ? 10 : 16 }}>
-        <KpiCard title="Benutzer" value={stats.users} icon="users" trend="up" />
-        <KpiCard title="Buchungen" value={stats.bookings} icon="calendar" trend="up" />
-        <KpiCard title="Engel" value={stats.angels} icon="wings" trend="up" color={BRAND.success} />
-        <KpiCard title="Umsatz" value={`€${stats.revenue.toLocaleString('de-DE')}`} icon="banknote" trend="up" color={BRAND.gold} />
+        <KpiCard title="Benutzer" value={stats.users} icon="users" trend="up" onClick={() => router.push('/mis/team')} />
+        <KpiCard title="Buchungen" value={stats.bookings} icon="calendar" trend="up" onClick={() => router.push('/admin/bookings')} />
+        <KpiCard title="Engel" value={stats.angels} icon="wings" trend="up" color={BRAND.success} onClick={() => router.push('/mis/team')} />
+        <KpiCard title="Umsatz" value={`€${stats.revenue.toLocaleString('de-DE')}`} icon="banknote" trend="up" color={BRAND.gold} onClick={() => router.push('/mis/finance')} />
       </div>
 
       {/* Market Opportunity */}
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(auto-fill, minmax(min(220px, 100%), 1fr))', gap: isMobile ? 10 : 16 }}>
-        <KpiCard title="TAM" value="50" unit="Mrd. €" icon="globe" trend="up" />
-        <KpiCard title="SAM" value="7,80" unit="Mrd. €" icon="target" trend="up" />
-        <KpiCard title="Ungenutzt" value="4,68" unit="Mrd. €" icon="zap" trend="up" color={BRAND.error} />
+        <KpiCard title="TAM" value="50" unit="Mrd. €" icon="globe" trend="up" onClick={() => router.push('/mis/market')} />
+        <KpiCard title="SAM" value="7,80" unit="Mrd. €" icon="target" trend="up" onClick={() => router.push('/mis/market')} />
+        <KpiCard title="Ungenutzt" value="4,68" unit="Mrd. €" icon="zap" trend="up" color={BRAND.error} onClick={() => router.push('/mis/market')} />
       </div>
 
       {/* Main Grid */}
