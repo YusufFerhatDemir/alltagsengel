@@ -333,8 +333,22 @@ export default function KundeHomePage() {
         ))}
           </>
         ) : (
-          <div style={{ textAlign: 'center', padding: '32px 16px', color: 'var(--ink4)', fontSize: 14 }}>
-            Keine Engel für diese Kategorie gefunden.
+          <div style={{ textAlign: 'center', padding: '40px 20px' }}>
+            <div style={{ fontSize: 48, marginBottom: 12 }}>🙏</div>
+            <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--ink)', marginBottom: 8 }}>
+              Noch keine Engel in Ihrer Nähe
+            </div>
+            <div style={{ fontSize: 13, color: 'var(--ink4)', lineHeight: 1.6, marginBottom: 16 }}>
+              Wir bitten vielmals um Entschuldigung — in Ihrer Region sind aktuell noch
+              keine AlltagsEngel verfügbar. Aber keine Sorge: Wir wachsen schnell und
+              sind bald auch bei Ihnen!
+            </div>
+            <div style={{
+              background: 'rgba(201,150,60,0.08)', border: '1px solid rgba(201,150,60,0.2)',
+              borderRadius: 12, padding: '14px 18px', fontSize: 13, color: 'var(--gold2)',
+            }}>
+              ✨ Wir benachrichtigen Sie, sobald ein Engel in Ihrer Region startet.
+            </div>
           </div>
         )}
       </div>

@@ -64,12 +64,24 @@ export default function KundeFahrtenPage() {
           {loading ? (
             <div style={{ textAlign: 'center', padding: '40px', color: 'rgba(245,240,232,0.4)' }}>Laden...</div>
           ) : rides.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '60px 20px', color: 'rgba(245,240,232,0.3)' }}>
-              <div style={{ fontSize: '40px', marginBottom: '12px' }}>🚗</div>
-              <div style={{ fontWeight: '600', color: 'rgba(245,240,232,0.5)', marginBottom: '4px' }}>Keine Fahrten</div>
-              <div style={{ fontSize: '13px' }}>Buchen Sie Ihre erste Krankenfahrt!</div>
+            <div style={{ textAlign: 'center', padding: '48px 20px' }}>
+              <div style={{ fontSize: '48px', marginBottom: '12px' }}>🚗</div>
+              <div style={{ fontWeight: '600', fontSize: 17, color: 'rgba(245,240,232,0.7)', marginBottom: '8px' }}>Noch keine Fahrten</div>
+              <div style={{ fontSize: '13px', color: 'rgba(245,240,232,0.4)', lineHeight: 1.6, marginBottom: 20 }}>
+                Buchen Sie Ihre erste Krankenfahrt! Sollte in Ihrer Region noch
+                kein Fahrer verfügbar sein — keine Sorge, wir wachsen täglich.
+              </div>
+              <div style={{
+                background: 'rgba(201,150,60,0.08)', border: '1px solid rgba(201,150,60,0.2)',
+                borderRadius: 12, padding: '12px 16px', marginBottom: 20, textAlign: 'left',
+              }}>
+                <div style={{ fontSize: 13, color: '#C9963C', lineHeight: 1.5 }}>
+                  🙏 Wir bitten vielmals um Entschuldigung, falls Ihre Region noch
+                  nicht abgedeckt ist. Neue Krankenfahrer kommen laufend dazu!
+                </div>
+              </div>
               <button onClick={() => router.push('/kunde/krankenfahrt')} style={{
-                marginTop: '16px', padding: '12px 24px', borderRadius: '12px',
+                marginTop: '8px', padding: '14px 28px', borderRadius: '12px',
                 background: 'linear-gradient(135deg, #C9963C, #DBA84A)',
                 border: 'none', color: '#1A1612', fontSize: '14px', fontWeight: '600', cursor: 'pointer',
               }}>Fahrt buchen</button>
