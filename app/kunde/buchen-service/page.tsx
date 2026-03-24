@@ -299,12 +299,30 @@ function BuchenServiceInner() {
             {loading ? (
               <div style={{ textAlign: 'center', padding: 40, color: 'var(--ink4)' }}>Suche verfügbare Engel...</div>
             ) : angels.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '32px 16px' }}>
-                <div style={{ fontSize: 15, color: 'var(--ink4)', marginBottom: 12 }}>
-                  Aktuell keine verfügbaren Engel für {serviceLabel} gefunden.
+              <div style={{ textAlign: 'center', padding: '40px 20px' }}>
+                <div style={{ fontSize: 48, marginBottom: 16 }}>🙏</div>
+                <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--ink)', marginBottom: 8 }}>
+                  Noch keine Engel in Ihrer Nähe
+                </div>
+                <div style={{ fontSize: 14, color: 'var(--ink4)', lineHeight: 1.6, marginBottom: 20 }}>
+                  Wir bitten vielmals um Entschuldigung — in Ihrer Region sind aktuell noch
+                  keine AlltagsEngel für <strong>{serviceLabel}</strong> verfügbar.
+                </div>
+                <div style={{
+                  background: 'rgba(201,150,60,0.08)', border: '1px solid rgba(201,150,60,0.2)',
+                  borderRadius: 12, padding: '16px 20px', marginBottom: 20, textAlign: 'left',
+                }}>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--gold2)', marginBottom: 6 }}>
+                    ✨ Wir wachsen schnell!
+                  </div>
+                  <div style={{ fontSize: 13, color: 'var(--ink4)', lineHeight: 1.5 }}>
+                    Wir bauen unser Netzwerk kontinuierlich aus und sind bald auch in Ihrer
+                    Nähe verfügbar. Wir benachrichtigen Sie, sobald ein Engel in Ihrer Region startet.
+                  </div>
                 </div>
                 <div style={{ fontSize: 13, color: 'var(--ink5)' }}>
-                  Versuchen Sie einen anderen Termin oder Service.
+                  Tipp: Versuchen Sie auch einen anderen Termin oder Service —
+                  vielleicht ist zu einer anderen Zeit jemand verfügbar.
                 </div>
               </div>
             ) : (

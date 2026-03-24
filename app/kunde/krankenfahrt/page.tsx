@@ -35,6 +35,7 @@ export default function KrankenfahrtPage() {
   // UI state
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
+  const [showSuccess, setShowSuccess] = useState(false)
   const [userId, setUserId] = useState<string | null>(null)
   const [dataLoading, setDataLoading] = useState(true)
 
@@ -187,7 +188,9 @@ export default function KrankenfahrtPage() {
         return
       }
 
-      router.push('/kunde/krankenfahrt/fahrten')
+      // Erfolgs-Meldung statt sofort-Redirect
+      setSubmitting(false)
+      setShowSuccess(true)
     } catch (err) {
       logError('KrankenfahrtPage:submit', err)
       setError('Ein unerwarteter Fehler ist aufgetreten')
@@ -199,12 +202,64 @@ export default function KrankenfahrtPage() {
 
   return (
     <div className="screen" id="krankenfahrt-form">
+      {/* Erfolgs-Overlay */}
+      {showSuccess && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 100,
+          background: 'rgba(13,10,8,0.95)', display: 'flex',
+          flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+          padding: 24, textAlign: 'center',
+        }}>
+          <div style={{ fontSize: 64, marginBottom: 16 }}>✅</div>
+          <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--gold2)', marginBottom: 8 }}>
+            Fahrt erfolgreich angefragt!
+          </div>
+          <div style={{ fontSize: 14, color: 'var(--ink4)', lineHeight: 1.6, marginBottom: 24, maxWidth: 340 }}>
+            Wir suchen jetzt einen Fahrer in Ihrer Nähe. Sollte in Ihrem Gebiet noch kein
+            Krankenfahrer verfügbar sein, bitten wir um etwas Geduld — wir bauen unser
+            Netzwerk täglich aus und melden uns bei Ihnen!
+          </div>
+          <div style={{
+            background: 'rgba(201,150,60,0.1)', border: '1px solid rgba(201,150,60,0.25)',
+            borderRadius: 12, padding: '14px 20px', marginBottom: 24, maxWidth: 340,
+          }}>
+            <div style={{ fontSize: 13, color: 'var(--gold2)', lineHeight: 1.5 }}>
+              🙏 Wir bitten vielmals um Entschuldigung, falls es in Ihrer Region noch etwas
+              dauert. Neue Fahrer kommen laufend dazu!
+            </div>
+          </div>
+          <button
+            onClick={() => router.push('/kunde/krankenfahrt/fahrten')}
+            style={{
+              padding: '14px 32px', borderRadius: 12, border: 'none',
+              background: 'var(--gold)', color: '#0D0A08', fontWeight: 700,
+              fontSize: 15, cursor: 'pointer', fontFamily: 'inherit',
+            }}
+          >
+            Meine Fahrten ansehen →
+          </button>
+        </div>
+      )}
+
       <div className="topbar">
         <button className="back-btn" onClick={() => router.back()} type="button">‹</button>
         <div className="topbar-title">Krankenfahrt buchen</div>
       </div>
 
       <div className="form-body">
+        {/* Info-Banner */}
+        <div style={{
+          background: 'rgba(201,150,60,0.06)', border: '1px solid rgba(201,150,60,0.15)',
+          borderRadius: 12, padding: '12px 16px', marginBottom: 16,
+          display: 'flex', gap: 10, alignItems: 'flex-start',
+        }}>
+          <span style={{ fontSize: 18, flexShrink: 0 }}>ℹ️</span>
+          <div style={{ fontSize: 12, color: 'var(--ink4)', lineHeight: 1.5 }}>
+            Wir expandieren gerade in neue Regionen. Sollte noch kein Fahrer in Ihrer
+            Nähe verfügbar sein, wird Ihre Anfrage vorgemerkt und wir melden uns,
+            sobald ein Fahrer bereitsteht.
+          </div>
+        </div>
         {/* Fahrtdaten */}
         <div className="form-card">
           <div className="form-card-h">Fahrtdaten</div>
