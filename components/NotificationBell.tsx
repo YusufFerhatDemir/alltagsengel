@@ -142,10 +142,15 @@ export default function NotificationBell() {
     setUnreadCount(0)
   }
 
-  function handleNotificationClick(n: Notification) {
+  function handleNotificationClick(n: Notification, e: React.MouseEvent) {
+    e.preventDefault()
+    e.stopPropagation()
     if (!n.is_read) markAsRead(n.id)
-    if (n.link) router.push(n.link)
     setOpen(false)
+    if (n.link) {
+      // Use window.location for reliable cross-layout navigation
+      setTimeout(() => { window.location.href = n.link! }, 50)
+    }
   }
 
   function timeAgo(dateStr: string): string {
@@ -181,13 +186,16 @@ export default function NotificationBell() {
               <div className="notif-empty">Keine Benachrichtigungen</div>
             ) : (
               notifications.map(n => (
-                <div
+                <button
                   key={n.id}
                   className={`notif-item${n.is_read ? '' : ' unread'}`}
-                  onClick={() => handleNotificationClick(n)}
-                  role="button"
-                  tabIndex={0}
+                  onClick={(e) => handleNotificationClick(n, e)}
+                  onTouchEnd={(e) => {
+                    e.preventDefault()
+                    handleNotificationClick(n, e as unknown as React.MouseEvent)
+                  }}
                   aria-label={`Benachrichtigung: ${n.title}. ${n.body}`}
+                  style={{ display: 'flex', width: '100%', textAlign: 'left', background: 'none', border: 'none', font: 'inherit' }}
                 >
                   <div className="notif-dot-col">
                     {!n.is_read && <span className="notif-dot"></span>}
@@ -197,7 +205,7 @@ export default function NotificationBell() {
                     <div className="notif-item-body">{n.body}</div>
                     <div className="notif-item-time">{timeAgo(n.created_at)}</div>
                   </div>
-                </div>
+                </button>
               ))
             )}
           </div>

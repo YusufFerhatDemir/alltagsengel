@@ -313,9 +313,9 @@ body {
   padding:0 4px; line-height:1; border:2px solid var(--coal);
 }
 .notif-panel {
-  position:absolute; top:calc(100% + 8px); right:0; width:320px;
+  position:fixed; top:56px; right:16px; width:320px;
   background:var(--coal2); border:1px solid var(--border); border-radius:14px;
-  box-shadow:0 12px 40px rgba(0,0,0,.5); z-index:999; overflow:hidden;
+  box-shadow:0 12px 40px rgba(0,0,0,.5); z-index:9999; overflow:hidden;
   animation:screenIn .18s ease-out;
 }
 .notif-panel-head {
@@ -332,6 +332,8 @@ body {
 .notif-item {
   display:flex; gap:10px; padding:12px 16px; cursor:pointer;
   border-bottom:1px solid rgba(255,255,255,.03); transition:background .12s;
+  -webkit-tap-highlight-color:rgba(201,150,60,.15); touch-action:manipulation;
+  pointer-events:auto; position:relative; z-index:1;
 }
 .notif-item:hover { background:rgba(201,150,60,.05); }
 .notif-item.unread { background:rgba(201,150,60,.08); }
