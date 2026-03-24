@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AlltagsEngel Analytics Report — 24.03.2026</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0D0A08;color:#F5F0E6;font-family:'Segoe UI',system-ui,sans-serif;padding:20px}
+.header{text-align:center;padding:30px 0;border-bottom:2px solid #C9963C}
+.header h1{font-size:2.2em;color:#C9963C;font-family:Georgia,serif}
+.header p{color:#999;margin-top:8px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin:24px 0}
+.card{background:#1a1714;border:1px solid #2a2520;border-radius:12px;padding:20px;text-align:center}
+.card .num{font-size:2.4em;font-weight:700;color:#C9963C;font-family:Georgia,serif}
+.card .label{color:#999;font-size:0.85em;margin-top:4px}
+.card.green .num{color:#28b44c}
+.card.red .num{color:#dc3228}
+.card.blue .num{color:#4a9eff}
+.section{margin:32px 0}
+.section h2{color:#C9963C;font-family:Georgia,serif;font-size:1.5em;margin-bottom:16px;padding-bottom:8px;border-bottom:1px solid #2a2520}
+.chart-container{background:#1a1714;border:1px solid #2a2520;border-radius:12px;padding:20px;margin:16px 0}
+table{width:100%;border-collapse:collapse;margin:12px 0}
+th{text-align:left;color:#C9963C;padding:10px;border-bottom:2px solid #2a2520;font-size:0.85em}
+td{padding:10px;border-bottom:1px solid #1a1714;font-size:0.9em}
+tr:hover{background:#1a1714}
+.tag{display:inline-block;padding:3px 10px;border-radius:20px;font-size:0.75em;font-weight:600}
+.tag-kunde{background:#28b44c22;color:#28b44c;border:1px solid #28b44c55}
+.tag-engel{background:#C9963C22;color:#C9963C;border:1px solid #C9963C55}
+.tag-fahrer{background:#4a9eff22;color:#4a9eff;border:1px solid #4a9eff55}
+.tag-admin{background:#dc322822;color:#dc3228;border:1px solid #dc322855}
+.funnel{display:flex;flex-direction:column;gap:8px;margin:16px 0}
+.funnel-step{display:flex;align-items:center;gap:12px}
+.funnel-bar{height:36px;background:linear-gradient(90deg,#C9963C,#DBA84A);border-radius:6px;display:flex;align-items:center;padding:0 12px;font-weight:600;font-size:0.85em;color:#0D0A08;min-width:40px}
+.funnel-label{color:#999;font-size:0.85em;min-width:140px}
+.alert{background:#dc322815;border:1px solid #dc322855;border-radius:10px;padding:16px;margin:16px 0;color:#F5F0E6}
+.alert strong{color:#dc3228}
+.success{background:#28b44c15;border:1px solid #28b44c55;border-radius:10px;padding:16px;margin:16px 0}
+.success strong{color:#28b44c}
+.plz-highlight{background:#C9963C22;border:1px solid #C9963C55;border-radius:10px;padding:16px;margin:16px 0}
+.plz-highlight strong{color:#C9963C}
+.footer{text-align:center;padding:30px 0;color:#666;border-top:1px solid #2a2520;margin-top:40px}
+</style>
+</head>
+<body>
+
+<div class="header">
+<h1>AlltagsEngel Analytics</h1>
+<p>Rapor Tarihi: 24. Mart 2026 &bull; Son 30 gün</p>
+</div>
+
+<!-- KPI Cards -->
+<div class="grid">
+<div class="card"><div class="num">172</div><div class="label">Tekil Ziyaretçi (Landing)</div></div>
+<div class="card"><div class="num">1.264</div><div class="label">Toplam Sayfa Görüntüleme</div></div>
+<div class="card green"><div class="num">20</div><div class="label">Kayıtlı Kullanıcı</div></div>
+<div class="card blue"><div class="num">9</div><div class="label">Krankenfahrt Buchungen</div></div>
+<div class="card"><div class="num">84%</div><div class="label">Mobil Kullanıcı</div></div>
+<div class="card green"><div class="num">9</div><div class="label">Google'dan Gelen</div></div>
+</div>
+
+<!-- PLZ 603xx Section -->
+<div class="section">
+<h2>📍 Frankfurt 603xx Bölgesi — Seni İlgilendiren Kısım</h2>
+
+<div class="plz-highlight">
+<strong>PLZ 60316 (Nordend/Ostend):</strong> 2 tekil ziyaretçi, 17 sayfa görüntüleme<br>
+İlk ziyaret: 21.03.2026 — Son ziyaret: 22.03.2026
+</div>
+
+<div class="plz-highlight">
+<strong>PLZ 60386 (Fechenheim/Bergen-Enkheim):</strong> 1 tekil ziyaretçi, 14 sayfa görüntüleme<br>
+İlk ziyaret: 22.03.2026 — Admin + Engel + Kunde sayfalarını gezmiş
+</div>
+
+<div class="alert">
+<strong>⚠️ PLZ 60318 ve 60320:</strong> Bu bölgelerden henüz ziyaretçi yok. 60316 ve 60386'dan geliyorlar ama Nordend merkez (60318/60320) henüz siteye gelmemiş. TikTok videoları bu bölgeyi hedeflemeli!
+</div>
+
+<div class="success">
+<strong>✅ Yeni Gerçek Kayıt:</strong> Marija Kraljevic — Kunde, 60386 Frankfurt am Main, 21.03.2026<br>
+Bu, Frankfurt bölgesinden gelen ilk gerçek müşteri kaydı!
+</div>
+</div>
+
+<!-- Daily Visitors Chart -->
+<div class="section">
+<h2>📊 Günlük Ziyaretçi Trendi (Son 14 Gün)</h2>
+<div class="chart-container">
+<canvas id="dailyChart" height="120"></canvas>
+</div>
+<div class="alert">
+<strong>Düşüş trendi:</strong> 15-16 Mart'ta zirve (19-25 ziyaretçi/gün) — sonra 3-5'e düştü. Yeni TikTok videoları ile tekrar yükseltmemiz lazım!
+</div>
+</div>
+
+<!-- Funnel -->
+<div class="section">
+<h2>🔄 Kayıt Funnel'ı (Dönüşüm Oranları)</h2>
+<div class="funnel">
+<div class="funnel-step"><div class="funnel-label">Landing Page /</div><div class="funnel-bar" style="width:100%">172</div></div>
+<div class="funnel-step"><div class="funnel-label">Seçim /choose</div><div class="funnel-bar" style="width:22.7%">39 (22.7%)</div></div>
+<div class="funnel-step"><div class="funnel-label">Kayıt /register</div><div class="funnel-bar" style="width:20.3%">35 (20.3%)</div></div>
+<div class="funnel-step"><div class="funnel-label">Login /login</div><div class="funnel-bar" style="width:20.3%">35 (20.3%)</div></div>
+<div class="funnel-step"><div class="funnel-label">Kunde Home</div><div class="funnel-bar" style="width:11.6%">20 (11.6%)</div></div>
+<div class="funnel-step"><div class="funnel-label">Engel Home</div><div class="funnel-bar" style="width:11.6%">20 (11.6%)</div></div>
+<div class="funnel-step"><div class="funnel-label">Buchung starten</div><div class="funnel-bar" style="width:4.1%">7 (4.1%)</div></div>
+<div class="funnel-step"><div class="funnel-label">Krankenfahrt</div><div class="funnel-bar" style="width:3.5%">6 (3.5%)</div></div>
+</div>
+</div>
+
+<!-- City Breakdown -->
+<div class="section">
+<h2>🌍 Şehirlere Göre Ziyaretçiler</h2>
+<div class="chart-container">
+<canvas id="cityChart" height="100"></canvas>
+</div>
+</div>
+
+<!-- Device Breakdown -->
+<div class="section">
+<h2>📱 Cihaz Dağılımı</h2>
+<div class="grid" style="grid-template-columns:1fr 1fr">
+<div class="chart-container" style="display:flex;align-items:center;justify-content:center">
+<canvas id="deviceChart" height="180" width="180"></canvas>
+</div>
+<div style="display:flex;flex-direction:column;justify-content:center;gap:16px">
+<div class="card"><div class="num">106</div><div class="label">📱 Mobil Ziyaretçi (84%)</div></div>
+<div class="card"><div class="num">21</div><div class="label">💻 Desktop Ziyaretçi (16%)</div></div>
+</div>
+</div>
+</div>
+
+<!-- Registered Users -->
+<div class="section">
+<h2>👤 Kayıtlı Kullanıcılar</h2>
+<div class="grid" style="grid-template-columns:repeat(4,1fr)">
+<div class="card green"><div class="num">8</div><div class="label">👼 Engel</div></div>
+<div class="card"><div class="num">5</div><div class="label">👤 Kunde</div></div>
+<div class="card blue"><div class="num">4</div><div class="label">🚗 Fahrer</div></div>
+<div class="card red"><div class="num">3</div><div class="label">⚙️ Admin</div></div>
+</div>
+
+<table>
+<thead><tr><th>İsim</th><th>Rol</th><th>Konum</th><th>Kayıt Tarihi</th></tr></thead>
+<tbody>
+<tr><td>Marija Kraljevic</td><td><span class="tag tag-kunde">Kunde</span></td><td>60386 Frankfurt am Main</td><td>21.03.2026</td></tr>
+<tr><td>Manuela Hedrich</td><td><span class="tag tag-engel">Engel</span></td><td>Usingen</td><td>21.03.2026</td></tr>
+<tr><td>Laura Polansni</td><td><span class="tag tag-engel">Engel</span></td><td>—</td><td>17.03.2026</td></tr>
+<tr><td>Luise Lusia</td><td><span class="tag tag-engel">Engel</span></td><td>—</td><td>15.03.2026</td></tr>
+<tr><td>Nilay Atalay</td><td><span class="tag tag-engel">Engel</span></td><td>Hamm</td><td>08.03.2026</td></tr>
+</tbody>
+</table>
+</div>
+
+<!-- Referrers -->
+<div class="section">
+<h2>🔗 Nereden Geliyorlar?</h2>
+<table>
+<thead><tr><th>Kaynak</th><th>Ziyaret</th><th>Tekil</th></tr></thead>
+<tbody>
+<tr><td>Google Arama</td><td>31</td><td>9</td></tr>
+<tr><td>Direkt (URL/Bookmark)</td><td>~200</td><td>~100</td></tr>
+<tr><td>wl.co (Link-in-bio)</td><td>6</td><td>3</td></tr>
+<tr><td>Vercel Preview</td><td>4</td><td>3</td></tr>
+</tbody>
+</table>
+</div>
+
+<!-- Krankenfahrten -->
+<div class="section">
+<h2>🚗 Krankenfahrt Buchungen</h2>
+<div class="grid" style="grid-template-columns:repeat(4,1fr)">
+<div class="card green"><div class="num">3</div><div class="label">✅ Completed</div></div>
+<div class="card blue"><div class="num">1</div><div class="label">🔄 In Progress</div></div>
+<div class="card"><div class="num">1</div><div class="label">✓ Confirmed</div></div>
+<div class="card red"><div class="num">4</div><div class="label">⏳ Pending</div></div>
+</div>
+</div>
+
+<!-- Top Pages -->
+<div class="section">
+<h2>📄 En Çok Ziyaret Edilen Sayfalar</h2>
+<table>
+<thead><tr><th>Sayfa</th><th>Görüntüleme</th><th>Tekil</th></tr></thead>
+<tbody>
+<tr><td>/ (Landing)</td><td>198</td><td>103</td></tr>
+<tr><td>/auth/login</td><td>134</td><td>35</td></tr>
+<tr><td>/choose (Rol seçimi)</td><td>129</td><td>39</td></tr>
+<tr><td>/auth/register</td><td>113</td><td>35</td></tr>
+<tr><td>/kunde/home</td><td>54</td><td>20</td></tr>
+<tr><td>/mis (Yönetim)</td><td>54</td><td>18</td></tr>
+<tr><td>/engel/home</td><td>40</td><td>20</td></tr>
+<tr><td>/admin/home</td><td>39</td><td>12</td></tr>
+</tbody>
+</table>
+</div>
+
+<!-- Active Visitors -->
+<div class="section">
+<h2>🔥 Son Aktif Ziyaretçiler (Gerçek Kullanıcılar)</h2>
+<table>
+<thead><tr><th>Şehir / PLZ</th><th>Cihaz</th><th>Son Sayfa</th><th>Tarih</th><th>Kaynak</th></tr></thead>
+<tbody>
+<tr><td>Mannheim (68161)</td><td>Android + Mac</td><td>/engel/home, /leistungen</td><td>23.03 (23:20)</td><td>Google</td></tr>
+<tr><td>Langfurth, Bavaria (91731)</td><td>Android</td><td>/engel/profil, /engel/buchungen</td><td>23.03 (17:48)</td><td>Google</td></tr>
+<tr><td>Cologne (51063)</td><td>iPhone</td><td>/kunde/krankenfahrt, /hygienebox</td><td>23.03 (14:01)</td><td>Direkt</td></tr>
+<tr><td>Frankfurt (60386)</td><td>iPhone</td><td>/engel/home, /admin, /kunde</td><td>22.03 (21:29)</td><td>Direkt</td></tr>
+<tr><td>Cologne (50825)</td><td>iPhone</td><td>/admin, /mis/settings</td><td>22.03 (17:42)</td><td>Direkt</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="footer">
+AlltagsEngel Analytics — alltagsengel.care<br>
+<small>Veriler Supabase visitors tablosundan çekildi. Bot ve crawler trafiği filtrelendi.</small>
+</div>
+
+<script>
+// Daily visitors chart
+new Chart(document.getElementById('dailyChart'),{
+type:'bar',
+data:{
+labels:['10.03','11.03','12.03','13.03','14.03','15.03','16.03','17.03','18.03','19.03','20.03','21.03','22.03','23.03'],
+datasets:[
+{label:'Tekil Ziyaretçi',data:[10,8,11,14,6,19,25,7,11,6,3,5,5,4],backgroundColor:'#C9963C',borderRadius:4},
+{label:'Sayfa Görüntüleme',data:[156,139,72,36,32,204,190,70,81,43,7,83,65,28],backgroundColor:'#DBA84A44',borderRadius:4}
+]},
+options:{responsive:true,plugins:{legend:{labels:{color:'#999'}}},scales:{x:{ticks:{color:'#666'},grid:{color:'#1a1714'}},y:{ticks:{color:'#666'},grid:{color:'#2a2520'}}}}
+});
+
+// City chart
+new Chart(document.getElementById('cityChart'),{
+type:'bar',
+data:{
+labels:['Köln','Frankfurt','Tbilisi','Hanoi','Istanbul','Stuttgart','Ankara','Bonn','Berlin','Bergkamen'],
+datasets:[{label:'Tekil Ziyaretçi',data:[19,14,4,4,3,2,2,1,1,1],backgroundColor:['#C9963C','#DBA84A','#666','#666','#dc3228','#666','#dc3228','#666','#666','#666'],borderRadius:4}]
+},
+options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#666'},grid:{color:'#1a1714'}},y:{ticks:{color:'#F5F0E6'},grid:{display:false}}}}
+});
+
+// Device chart
+new Chart(document.getElementById('deviceChart'),{
+type:'doughnut',
+data:{
+labels:['Mobil','Desktop'],
+datasets:[{data:[106,21],backgroundColor:['#C9963C','#2a2520'],borderColor:'#0D0A08',borderWidth:3}]
+},
+options:{responsive:false,plugins:{legend:{labels:{color:'#999'}}}}
+});
+</script>
+</body>
+</html>

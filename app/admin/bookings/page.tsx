@@ -14,45 +14,77 @@ interface BookingRow {
   platform_fee: number
   notes: string | null
   created_at: string
-  customer: { first_name: string; last_name: string } | null
-  angel: { first_name: string; last_name: string } | null
+  customer_id: string | null
+  angel_id: string | null
+  customer_name: string
+  angel_name: string
 }
 
 export default function AdminBookingsPage() {
   const [bookings, setBookings] = useState<BookingRow[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [filter, setFilter] = useState<string>('all')
 
   useEffect(() => {
     async function loadBookings() {
-      const supabase = createClient()
-      const { data } = await supabase
-        .from('bookings')
-        .select(`
-          *,
-          customer:profiles!bookings_customer_id_fkey(first_name, last_name),
-          angel:angels!bookings_angel_id_fkey(profiles(first_name, last_name))
-        `)
-        .order('created_at', { ascending: false })
+      try {
+        const supabase = createClient()
 
-      const rows: BookingRow[] = (data || []).map((b: Record<string, unknown>) => ({
-        id: b.id as string,
-        service: b.service as string,
-        date: b.date as string,
-        time: b.time as string,
-        duration_hours: b.duration_hours as number,
-        status: b.status as string,
-        payment_method: b.payment_method as string,
-        total_amount: b.total_amount as number,
-        platform_fee: b.platform_fee as number,
-        notes: b.notes as string | null,
-        created_at: b.created_at as string,
-        customer: b.customer as { first_name: string; last_name: string } | null,
-        angel: ((b.angel as Record<string, unknown>)?.profiles as { first_name: string; last_name: string }) || null,
-      }))
+        // Load bookings separately from profiles to avoid join issues
+        const { data: bookingsData, error: bookingsError } = await supabase
+          .from('bookings')
+          .select('*')
+          .order('created_at', { ascending: false })
 
-      setBookings(rows)
-      setLoading(false)
+        if (bookingsError) {
+          console.error('Bookings load error:', bookingsError)
+          setError(`Fehler beim Laden: ${bookingsError.message}`)
+          setLoading(false)
+          return
+        }
+
+        if (!bookingsData || bookingsData.length === 0) {
+          setBookings([])
+          setLoading(false)
+          return
+        }
+
+        // Load all profiles for name resolution
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('id, first_name, last_name')
+
+        const profileMap = new Map<string, string>()
+        ;(profiles || []).forEach((p: any) => {
+          profileMap.set(p.id, `${p.first_name || ''} ${(p.last_name || '').charAt(0)}.`.trim())
+        })
+
+        const rows: BookingRow[] = bookingsData.map((b: any) => ({
+          id: b.id,
+          service: b.service || '—',
+          date: b.date || '—',
+          time: b.time || '—',
+          duration_hours: b.duration_hours || 0,
+          status: b.status || 'pending',
+          payment_method: b.payment_method || '—',
+          total_amount: b.total_amount || 0,
+          platform_fee: b.platform_fee || 0,
+          notes: b.notes,
+          created_at: b.created_at,
+          customer_id: b.customer_id,
+          angel_id: b.angel_id,
+          customer_name: b.customer_id ? (profileMap.get(b.customer_id) || 'Unbekannt') : '—',
+          angel_name: b.angel_id ? (profileMap.get(b.angel_id) || 'Nicht zugewiesen') : 'Nicht zugewiesen',
+        }))
+
+        setBookings(rows)
+      } catch (err: any) {
+        console.error('Bookings page error:', err)
+        setError(`Unerwarteter Fehler: ${err.message}`)
+      } finally {
+        setLoading(false)
+      }
     }
     loadBookings()
   }, [])
@@ -92,9 +124,19 @@ export default function AdminBookingsPage() {
             onClick={() => setFilter(f)}
           >
             {f === 'all' ? 'Alle' : statusLabels[f]}
+            {f !== 'all' && ` (${bookings.filter(b => b.status === f).length})`}
           </button>
         ))}
       </div>
+
+      {error && (
+        <div style={{
+          background: 'rgba(244,67,54,0.1)', border: '1px solid rgba(244,67,54,0.3)',
+          borderRadius: 8, padding: 16, margin: '16px 0', color: '#F44336',
+        }}>
+          {error}
+        </div>
+      )}
 
       {loading ? (
         <p>Laden...</p>
@@ -113,21 +155,27 @@ export default function AdminBookingsPage() {
               </tr>
             </thead>
             <tbody>
-              {filtered.map(b => (
-                <tr key={b.id}>
-                  <td>{b.customer ? `${b.customer.first_name} ${(b.customer.last_name || '').charAt(0)}.` : '—'}</td>
-                  <td>{b.angel ? `${b.angel.first_name} ${(b.angel.last_name || '').charAt(0)}.` : '—'}</td>
-                  <td>{b.service}</td>
-                  <td>{b.date} {b.time}</td>
-                  <td>
-                    <span className="admin-status" style={{ background: statusColors[b.status] || '#999' }}>
-                      {statusLabels[b.status] || b.status}
-                    </span>
-                  </td>
-                  <td>{b.total_amount?.toFixed(2)} €</td>
-                  <td>{b.platform_fee?.toFixed(2)} €</td>
-                </tr>
-              ))}
+              {filtered.length === 0 ? (
+                <tr><td colSpan={7} style={{ textAlign: 'center', color: 'var(--muted)', padding: 32 }}>
+                  {filter === 'all' ? 'Noch keine Buchungen vorhanden' : `Keine ${statusLabels[filter] || filter} Buchungen`}
+                </td></tr>
+              ) : (
+                filtered.map(b => (
+                  <tr key={b.id}>
+                    <td style={{ fontWeight: 600 }}>{b.customer_name}</td>
+                    <td>{b.angel_name}</td>
+                    <td>{b.service}</td>
+                    <td style={{ whiteSpace: 'nowrap' }}>{b.date} {b.time}</td>
+                    <td>
+                      <span className="admin-status" style={{ background: statusColors[b.status] || '#999' }}>
+                        {statusLabels[b.status] || b.status}
+                      </span>
+                    </td>
+                    <td>{b.total_amount?.toFixed(2)} €</td>
+                    <td>{b.platform_fee?.toFixed(2)} €</td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
