@@ -4,6 +4,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { IconChart, IconUsers, IconClipboard, IconWings, IconLogout, IconBox, IconTarget } from '@/components/Icons'
+import NotificationBell from '@/components/NotificationBell'
 import { ReactNode } from 'react'
 
 const IconSettings = ({ size = 18 }: { size?: number }) => (
@@ -54,6 +55,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
         <div className="admin-logo">
           <span style={{ display: 'flex', alignItems: 'center' }}><IconWings size={20} /></span>
           <span>Admin Panel</span>
+          <div style={{ marginLeft: 'auto' }}><NotificationBell /></div>
         </div>
         <nav className="admin-nav">
           {navItems.map(item => (
@@ -99,9 +101,12 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
         <span style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 700, fontSize: 16, color: 'var(--ink)' }}>
           Admin Panel
         </span>
-        <button onClick={() => { window.location.href = '/mis' }} style={{ color: 'var(--gold2)', fontSize: 12, fontWeight: 600, padding: '4px 10px', borderRadius: 8, background: 'rgba(201,150,60,0.1)', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>
-          MIS
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <NotificationBell />
+          <button onClick={() => { window.location.href = '/mis' }} style={{ color: 'var(--gold2)', fontSize: 12, fontWeight: 600, padding: '4px 10px', borderRadius: 8, background: 'rgba(201,150,60,0.1)', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>
+            MIS
+          </button>
+        </div>
       </div>
 
       <div className="admin-main">

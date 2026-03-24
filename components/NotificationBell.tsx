@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { IconBell, IconCheck } from '@/components/Icons'
@@ -19,37 +19,101 @@ export default function NotificationBell() {
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [unreadCount, setUnreadCount] = useState(0)
   const [open, setOpen] = useState(false)
+  const [permissionAsked, setPermissionAsked] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
+  const prevIdsRef = useRef<Set<string>>(new Set())
 
-  // Benachrichtigungen laden
-  useEffect(() => {
-    async function load() {
-      try {
-        const supabase = createClient()
-        const { data: { user } } = await supabase.auth.getUser()
-        if (!user) return
+  // Browser-Benachrichtigung anzeigen
+  const showBrowserNotification = useCallback((title: string, body: string, link?: string | null) => {
+    if (typeof window === 'undefined') return
+    if (!('Notification' in window)) return
+    if (window.Notification.permission !== 'granted') return
 
-        const { data } = await supabase
-          .from('notifications')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false })
-          .limit(20)
-
-        if (data) {
-          setNotifications(data)
-          setUnreadCount(data.filter(n => !n.is_read).length)
-        }
-      } catch (err) {
-        console.error('NotificationBell load error:', err)
+    try {
+      const notif = new window.Notification(title, {
+        body,
+        icon: '/icon-192x192.png',
+        badge: '/icon-192x192.png',
+        tag: `ae-${Date.now()}`,
+      })
+      notif.onclick = () => {
+        window.focus()
+        if (link) router.push(link)
+        notif.close()
+      }
+    } catch (e) {
+      // Service Worker context, try registration
+      if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+        navigator.serviceWorker.ready.then(reg => {
+          reg.showNotification(title, {
+            body,
+            icon: '/icon-192x192.png',
+            tag: `ae-${Date.now()}`,
+          })
+        })
       }
     }
-    load()
+  }, [router])
 
-    // Alle 30 Sekunden aktualisieren
-    const interval = setInterval(load, 30000)
+  // Benachrichtigungen laden
+  const loadNotifications = useCallback(async () => {
+    try {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+
+      const { data } = await supabase
+        .from('notifications')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(20)
+
+      if (data) {
+        // Check for new unread notifications → browser notification
+        const newUnread = data.filter(n =>
+          !n.is_read && !prevIdsRef.current.has(n.id)
+        )
+        if (prevIdsRef.current.size > 0 && newUnread.length > 0) {
+          // Only show browser notif if not first load
+          newUnread.forEach(n => {
+            showBrowserNotification(n.title, n.body, n.link)
+          })
+        }
+
+        // Update tracked IDs
+        prevIdsRef.current = new Set(data.map(n => n.id))
+
+        setNotifications(data)
+        setUnreadCount(data.filter(n => !n.is_read).length)
+      }
+    } catch (err) {
+      console.error('NotificationBell load error:', err)
+    }
+  }, [showBrowserNotification])
+
+  useEffect(() => {
+    loadNotifications()
+    // Alle 15 Sekunden aktualisieren (statt 30)
+    const interval = setInterval(loadNotifications, 15000)
     return () => clearInterval(interval)
-  }, [])
+  }, [loadNotifications])
+
+  // Benachrichtigungserlaubnis anfragen
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    if (!('Notification' in window)) return
+    if (window.Notification.permission === 'default' && !permissionAsked) {
+      // Kurz warten, dann Erlaubnis anfragen
+      const timer = setTimeout(() => {
+        window.Notification.requestPermission().then(perm => {
+          console.log('Notification permission:', perm)
+        })
+        setPermissionAsked(true)
+      }, 3000)
+      return () => clearTimeout(timer)
+    }
+  }, [permissionAsked])
 
   // Außerhalb klicken → schließen
   useEffect(() => {
