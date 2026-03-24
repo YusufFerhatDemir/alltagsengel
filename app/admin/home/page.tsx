@@ -23,6 +23,8 @@ interface RecentUser {
   email: string
   phone: string | null
   location: string | null
+  postal_code: string | null
+  is_test: boolean
   created_at: string
 }
 
@@ -53,10 +55,10 @@ export default function AdminHomePage() {
         const [profilesRes, bookingsRes, recentProfilesRes, recentBookingsRes] = await Promise.all([
           supabase.from('profiles').select('role'),
           supabase.from('bookings').select('status, total_amount, platform_fee'),
-          supabase.from('profiles').select('id, first_name, last_name, role, email, phone, location, created_at')
+          supabase.from('profiles').select('id, first_name, last_name, role, email, phone, location, postal_code, is_test, created_at')
             .not('role', 'in', '("admin","superadmin")')
             .order('created_at', { ascending: false })
-            .limit(10),
+            .limit(20),
           supabase.from('bookings').select(`
             id, service, date, time, status, total_amount, created_at,
             customer:profiles!bookings_customer_id_fkey(first_name, last_name)
@@ -203,7 +205,9 @@ export default function AdminHomePage() {
           <thead>
             <tr>
               <th>Name</th>
+              <th>Typ</th>
               <th>Rolle</th>
+              <th>PLZ</th>
               <th>E-Mail</th>
               <th>Telefon</th>
               <th>Standort</th>
@@ -212,16 +216,24 @@ export default function AdminHomePage() {
           </thead>
           <tbody>
             {recentUsers.length === 0 ? (
-              <tr><td colSpan={6} style={{ textAlign: 'center', color: 'var(--muted)' }}>Keine Registrierungen</td></tr>
+              <tr><td colSpan={8} style={{ textAlign: 'center', color: 'var(--muted)' }}>Keine Registrierungen</td></tr>
             ) : (
               recentUsers.map(u => (
-                <tr key={u.id}>
+                <tr key={u.id} style={u.is_test ? { opacity: 0.5, background: 'rgba(244,67,54,0.05)' } : {}}>
                   <td style={{ fontWeight: 600 }}>{u.first_name} {u.last_name}</td>
+                  <td>
+                    {u.is_test ? (
+                      <span className="admin-status" style={{ background: '#F44336', fontSize: 10 }}>TEST</span>
+                    ) : (
+                      <span className="admin-status" style={{ background: '#4CAF50', fontSize: 10 }}>ECHT</span>
+                    )}
+                  </td>
                   <td>
                     <span className="admin-status" style={{ background: roleColors[u.role] || '#999' }}>
                       {roleLabels[u.role] || u.role}
                     </span>
                   </td>
+                  <td style={{ fontSize: 13, fontWeight: 600 }}>{u.postal_code || '—'}</td>
                   <td style={{ fontSize: 13 }}>{u.email || '—'}</td>
                   <td style={{ fontSize: 13 }}>{u.phone || '—'}</td>
                   <td style={{ fontSize: 13 }}>{u.location || '—'}</td>

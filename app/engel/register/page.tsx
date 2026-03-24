@@ -98,6 +98,7 @@ export default function EngelRegisterPage() {
     if (plz || stadt) {
       profileUpdate.location = [plz, stadt].filter(Boolean).join(' ')
       if (plz && plz.length === 5) {
+        profileUpdate.postal_code = plz
         const coords = await geocodePLZ(plz)
         if (coords) {
           profileUpdate.latitude = coords.lat

@@ -86,6 +86,9 @@ function RegisterForm() {
             profileData.location = [plz, stadt].filter(Boolean).join(' ')
           }
           if (plz && plz.length === 5) {
+            (profileData as any).postal_code = plz
+          }
+          if (plz && plz.length === 5) {
             const coords = await geocodePLZ(plz)
             if (coords) {
               ;(profileData as any).latitude = coords.lat
