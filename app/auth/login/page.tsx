@@ -166,54 +166,6 @@ function LoginForm() {
           Noch kein Konto? <Link href="/choose">Registrieren</Link>
         </div>
 
-        <div style={{ marginTop: 24, borderTop: '1px solid rgba(201,150,60,0.15)', paddingTop: 16 }}>
-          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', textAlign: 'center', marginBottom: 10, textTransform: 'uppercase', letterSpacing: 1 }}>Demo-Zugang</div>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <button
-              type="button"
-              className="btn-gold"
-              style={{ flex: 1, fontSize: 12, padding: '10px 0', background: 'rgba(201,150,60,0.12)', color: 'var(--gold-2)', border: '1px solid rgba(201,150,60,0.25)' }}
-              disabled={loading}
-              onClick={async () => { setLoading(true); setError(''); try { await loginAndRedirect('admin@alltagsengel.de', 'Alltagsengel2026!') } catch { setError('Demo-Login fehlgeschlagen') } finally { setLoading(false) } }}
-            >
-              Admin
-            </button>
-            <button
-              type="button"
-              className="btn-gold"
-              style={{ flex: 1, fontSize: 12, padding: '10px 0', background: 'rgba(201,150,60,0.12)', color: 'var(--gold-2)', border: '1px solid rgba(201,150,60,0.25)' }}
-              disabled={loading}
-              onClick={async () => { setLoading(true); setError(''); try { await loginAndRedirect('anna@example.com', 'Anna2026!') } catch { setError('Demo-Login fehlgeschlagen') } finally { setLoading(false) } }}
-            >
-              Engel
-            </button>
-            <button
-              type="button"
-              className="btn-gold"
-              style={{ flex: 1, fontSize: 12, padding: '10px 0', background: 'rgba(201,150,60,0.12)', color: 'var(--gold-2)', border: '1px solid rgba(201,150,60,0.25)' }}
-              disabled={loading}
-              onClick={async () => { setLoading(true); setError(''); try { await loginAndRedirect('maria@example.com', 'Maria2026!') } catch { setError('Demo-Login fehlgeschlagen') } finally { setLoading(false) } }}
-            >
-              Kunde
-            </button>
-          </div>
-        </div>
-
-        <div style={{ marginTop: 16, borderTop: '1px solid rgba(201,150,60,0.08)', paddingTop: 14 }}>
-          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.25)', textAlign: 'center', marginBottom: 10, textTransform: 'uppercase', letterSpacing: 1 }}>Portale</div>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <Link href="/mis" style={{ flex: 1, textDecoration: 'none' }}>
-              <div style={{ textAlign: 'center', fontSize: 12, padding: '10px 0', background: 'rgba(201,150,60,0.06)', color: 'rgba(255,255,255,0.4)', border: '1px solid rgba(201,150,60,0.12)', borderRadius: 10 }}>
-                MIS Portal
-              </div>
-            </Link>
-            <Link href="/investor" style={{ flex: 1, textDecoration: 'none' }}>
-              <div style={{ textAlign: 'center', fontSize: 12, padding: '10px 0', background: 'rgba(201,150,60,0.06)', color: 'rgba(255,255,255,0.4)', border: '1px solid rgba(201,150,60,0.12)', borderRadius: 10 }}>
-                Investor Portal
-              </div>
-            </Link>
-          </div>
-        </div>
 
       </div>
     </div>

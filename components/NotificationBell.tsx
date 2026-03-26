@@ -142,14 +142,15 @@ export default function NotificationBell() {
     setUnreadCount(0)
   }
 
-  function handleNotificationClick(n: Notification, e: React.MouseEvent) {
+  function handleNotificationClick(n: Notification, e: React.MouseEvent | React.TouchEvent) {
     e.preventDefault()
     e.stopPropagation()
+    const targetLink = n.link
     if (!n.is_read) markAsRead(n.id)
     setOpen(false)
-    if (n.link) {
-      // Use window.location for reliable cross-layout navigation
-      setTimeout(() => { window.location.href = n.link! }, 50)
+    if (targetLink) {
+      // Sofort navigieren — setTimeout iOS Safari'de engelleniyor
+      window.location.href = targetLink
     }
   }
 
@@ -186,16 +187,13 @@ export default function NotificationBell() {
               <div className="notif-empty">Keine Benachrichtigungen</div>
             ) : (
               notifications.map(n => (
-                <button
+                <a
                   key={n.id}
+                  href={n.link || '#'}
                   className={`notif-item${n.is_read ? '' : ' unread'}`}
                   onClick={(e) => handleNotificationClick(n, e)}
-                  onTouchEnd={(e) => {
-                    e.preventDefault()
-                    handleNotificationClick(n, e as unknown as React.MouseEvent)
-                  }}
                   aria-label={`Benachrichtigung: ${n.title}. ${n.body}`}
-                  style={{ display: 'flex', width: '100%', textAlign: 'left', background: 'none', border: 'none', font: 'inherit' }}
+                  style={{ display: 'flex', width: '100%', textAlign: 'left', background: 'none', border: 'none', font: 'inherit', textDecoration: 'none', color: 'inherit' }}
                 >
                   <div className="notif-dot-col">
                     {!n.is_read && <span className="notif-dot"></span>}
@@ -205,7 +203,7 @@ export default function NotificationBell() {
                     <div className="notif-item-body">{n.body}</div>
                     <div className="notif-item-time">{timeAgo(n.created_at)}</div>
                   </div>
-                </button>
+                </a>
               ))
             )}
           </div>
