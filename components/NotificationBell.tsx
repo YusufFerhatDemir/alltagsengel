@@ -142,16 +142,9 @@ export default function NotificationBell() {
     setUnreadCount(0)
   }
 
-  function handleNotificationClick(n: Notification, e: React.MouseEvent | React.TouchEvent) {
-    e.preventDefault()
-    e.stopPropagation()
-    const targetLink = n.link
+  function handleNotificationClick(n: Notification) {
     if (!n.is_read) markAsRead(n.id)
     setOpen(false)
-    if (targetLink) {
-      // Sofort navigieren — setTimeout iOS Safari'de engelleniyor
-      window.location.href = targetLink
-    }
   }
 
   function timeAgo(dateStr: string): string {
@@ -191,7 +184,7 @@ export default function NotificationBell() {
                   key={n.id}
                   href={n.link || '#'}
                   className={`notif-item${n.is_read ? '' : ' unread'}`}
-                  onClick={(e) => handleNotificationClick(n, e)}
+                  onClick={() => handleNotificationClick(n)}
                   aria-label={`Benachrichtigung: ${n.title}. ${n.body}`}
                   style={{ display: 'flex', width: '100%', textAlign: 'left', background: 'none', border: 'none', font: 'inherit', textDecoration: 'none', color: 'inherit' }}
                 >
