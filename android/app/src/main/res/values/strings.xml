@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">AlltagsEngel</string>
+    <string name="title_activity_main">AlltagsEngel</string>
+    <string name="package_name">care.alltagsengel.app</string>
+    <string name="custom_url_scheme">care.alltagsengel.app</string>
+</resources>
