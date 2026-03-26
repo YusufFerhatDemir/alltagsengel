@@ -1,0 +1,40 @@
+{
+  "appId": "care.alltagsengel.app",
+  "appName": "AlltagsEngel",
+  "webDir": "out",
+  "server": {
+    "url": "https://alltagsengel.care",
+    "cleartext": false
+  },
+  "ios": {
+    "contentInset": "automatic",
+    "preferredContentMode": "mobile",
+    "backgroundColor": "#1A1612",
+    "scheme": "AlltagsEngel"
+  },
+  "android": {
+    "backgroundColor": "#1A1612",
+    "allowMixedContent": false
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchAutoHide": true,
+      "launchShowDuration": 2000,
+      "backgroundColor": "#1A1612",
+      "showSpinner": false,
+      "splashFullScreen": true,
+      "splashImmersive": true
+    },
+    "StatusBar": {
+      "style": "DARK",
+      "backgroundColor": "#1A1612"
+    },
+    "Keyboard": {
+      "resize": "body",
+      "resizeOnFullScreen": true
+    },
+    "PushNotifications": {
+      "presentationOptions": ["badge", "sound", "alert"]
+    }
+  }
+}
