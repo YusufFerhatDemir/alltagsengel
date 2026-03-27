@@ -7,6 +7,21 @@ export default function SplashPage() {
   return (
     <div className="screen" id="splash">
       <VisitTracker portal="landing" />
+      {/* ── Sticky CTA Bar — immer sichtbar ── */}
+      <div style={{
+        position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 999,
+        background: 'linear-gradient(180deg, transparent 0%, rgba(20,18,16,0.95) 30%, #141210 100%)',
+        padding: '20px 16px 24px', textAlign: 'center',
+      }}>
+        <div style={{ fontSize: 13, color: '#C9963C', fontWeight: 600, marginBottom: 8 }}>
+          131€/Monat von der Pflegekasse — jetzt sichern
+        </div>
+        <Link href="/choose">
+          <button className="btn-gold" style={{ width: '100%', maxWidth: 340, fontSize: 16, padding: '14px 0' }}>
+            KOSTENLOS REGISTRIEREN
+          </button>
+        </Link>
+      </div>
       <div className="sp-glow"></div>
       <div className="sp-inner">
         <div style={{ marginBottom: 26 }}>
@@ -263,6 +278,9 @@ export default function SplashPage() {
             <div className="lp-cta-stat"><strong>0 €</strong><span>Registrierungskosten</span></div>
           </div>
         </section>
+
+        {/* Spacer für Sticky CTA Bar */}
+        <div style={{ height: 100 }} />
 
         {/* Footer */}
         <footer className="lp-footer">
