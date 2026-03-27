@@ -42,6 +42,18 @@ function getPageLabel(path: string): string {
   return path
 }
 
+// IP adresini al — /api/client-ip üzerinden
+async function getClientIP(): Promise<string | null> {
+  try {
+    const res = await fetch('/api/client-ip', { signal: AbortSignal.timeout(3000) })
+    if (res.ok) {
+      const data = await res.json()
+      return data.ip || null
+    }
+  } catch {}
+  return null
+}
+
 export default function PageTracker() {
   const pathname = usePathname()
   const lastPath = useRef<string | null>(null)
@@ -53,15 +65,21 @@ export default function PageTracker() {
     async function track() {
       try {
         const supabase = createClient()
-        const { data: { user } } = await supabase.auth.getUser()
+
+        // IP + user bilgisi paralel al
+        const [ipResult, authResult] = await Promise.all([
+          getClientIP(),
+          supabase.auth.getUser()
+        ])
 
         await supabase.from('page_views').insert({
-          user_id: user?.id || null,
+          user_id: authResult.data?.user?.id || null,
           path: pathname,
           page_label: getPageLabel(pathname),
           user_agent: navigator.userAgent,
           referrer: document.referrer || null,
           screen_width: window.innerWidth,
+          ip_address: ipResult,
           viewed_at: new Date().toISOString(),
         })
       } catch {
