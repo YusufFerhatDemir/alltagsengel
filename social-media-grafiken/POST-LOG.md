@@ -972,6 +972,103 @@ ACHTUNG! 131€ pro Monat verfallen! 😳 Pflegegrad? Dann steht dir Geld zu —
 2. "Beitrag erstellen" → Grafik hochladen (neue-kampagne-2/POST-kunden-131-verfaellt.png)
 3. DE Caption einfügen → Instagram + Facebook auswählen → Veröffentlichen
 4. 1 Stunde später: TR Caption als zweiten Post oder Kommentar
+
+---
+
+## 28.03.2026 — Frankfurt Statistik / Wusstest du? (Awareness Post DE+TR)
+
+**Status:** 📋 Bereit zum Posten (Meta Business Suite Login erforderlich — manueller Upload nötig)
+**Plattform:** Instagram + Facebook + TikTok
+**Typ:** Grafik (1080x1080)
+**Datei:** social-media-grafiken/neue-kampagne-2/POST-frankfurt-statistik.png
+**Geplante Uhrzeit:** 10:00-13:00 Uhr (Samstag)
+**Thema:** 180.000 Menschen über 65 in Frankfurt — viele sind allein. Sie brauchen Begleiter.
+
+**Caption (DE) — Instagram/Facebook:**
+```
+WUSSTEST DU? 🤔
+
+180.000 Menschen über 65 leben in Frankfurt.
+
+Viele von ihnen sind allein.
+
+Sie brauchen keine Pfleger.
+Sie brauchen Begleiter. 💛
+
+Jemanden, der mit ihnen zum Arzt geht.
+Jemanden, der mit ihnen einkaufen fährt.
+Jemanden, der einfach da ist.
+
+Das ist AlltagsEngel — die App für Alltagsbegleitung in Frankfurt.
+
+✅ Einkaufsbegleitung
+✅ Arztbegleitung & Krankenfahrt
+✅ Behördengänge & Termine
+✅ Gesellschaft & Spaziergänge
+
+Deine Pflegekasse zahlt 131€/Monat — du zahlst nichts.
+Wir sprechen auch Türkisch! 🇹🇷🇩🇪
+
+📱 www.alltagsengel.care
+✉️ info@alltagsengel.care
+
+COMING SOON — Bald verfügbar!
+
+Speichern & teilen, damit es alle erfahren! 🔁
+
+#AlltagsEngel #Frankfurt #Alltagsbegleitung #Seniorenhilfe #WusstestDu #180000 #Senioren #Pflegekasse #Entlastungsbetrag #§45b #FrankfurtAmMain #Pflege #GegenEinsamkeit #MitHerz #ComingSoon
+```
+
+**Caption (TR) — Instagram/Facebook:**
+```
+BİLİYOR MUYDUN? 🤔
+
+Frankfurt'ta 180.000 kişi 65 yaşın üzerinde.
+
+Birçoğu yalnız.
+
+Onların bakıcıya ihtiyacı yok.
+Onların refakatçiye ihtiyacı var. 💛
+
+Doktora birlikte gidecek biri.
+Alışverişte yanında olacak biri.
+Sadece orada olacak biri.
+
+Bu AlltagsEngel — Frankfurt'ta günlük refakat uygulaması.
+
+✅ Alışveriş refakati
+✅ Doktor refakati & hasta nakliyesi
+✅ Resmi işlemler & randevular
+✅ Sohbet & gezinti
+
+Bakım sigortası ayda 131€ ödüyor — sen hiçbir şey ödemiyorsun.
+Türkçe hizmet veriyoruz! 🇹🇷🇩🇪
+
+📱 www.alltagsengel.care
+✉️ info@alltagsengel.care
+
+YAKINDA — Frankfurt'ta hizmetinizde!
+
+Kaydet & paylaş, herkes öğrensin! 🔁
+
+#AlltagsEngel #Frankfurt #YaşlıBakımı #TürklerFrankfurt #Bakım #BiliyorMusun #180000 #Senioren #Pflege #BakımSigortası #Entlastungsbetrag #Yalnızlık
+```
+
+**TikTok Caption (DE):**
+```
+WUSSTEST DU? 180.000 Menschen über 65 leben in Frankfurt. Viele sind allein. 😔 Sie brauchen keine Pfleger — sie brauchen Begleiter! 💛 AlltagsEngel macht's möglich. Pflegekasse zahlt 131€/Monat! Link in Bio 📱 alltagsengel.care
+
+#alltagsengel #frankfurt #senioren #wusstestdu #180000 #alltagsbegleitung #pflegekasse #fyp #viral #foryou #gegeneinsamkeit
+```
+
+**Posting-Anleitung (manuell):**
+1. Meta Business Suite öffnen → business.facebook.com
+2. "Beitrag erstellen" → Grafik hochladen (neue-kampagne-2/POST-frankfurt-statistik.png)
+3. DE Caption einfügen → Instagram + Facebook auswählen → Veröffentlichen
+4. 1 Stunde später: TR Caption als zweiten Post oder Kommentar
+5. TikTok: Grafik als Slideshow oder statisches Bild hochladen mit TikTok Caption
+
+**Hinweis:** Automatisches Posten war nicht möglich — Facebook Login erfordert Passwort-Eingabe. Session war abgelaufen.
 5. TikTok Studio öffnen → tiktok.com/tiktokstudio/content → Grafik als Slideshow posten mit TikTok Caption
 
 **Hinweis (automatische Ausführung 24.03.2026 — Scheduled Task):**
