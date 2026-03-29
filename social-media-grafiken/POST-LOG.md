@@ -1081,3 +1081,100 @@ Grafik (neue-kampagne-2/POST-kunden-131-verfaellt.png) und alle Captions (DE/TR)
 - **Meta Business Suite:** business.facebook.com → Beitrag erstellen → Grafik + DE Caption → IG + FB
 - **TikTok:** tiktok.com/tiktokstudio/content → Grafik als Slideshow + TikTok Caption
 - **TR Caption:** Als Kommentar oder zweiter Post (1h später)
+
+---
+
+## 29.03.2026 — Hygienebox / Pflegebox GRATIS (Awareness Post DE+TR)
+
+**Status:** 📋 Bereit zum Posten (Meta Business Suite Login erforderlich — manueller Upload nötig)
+**Plattform:** Instagram + Facebook + TikTok
+**Typ:** Grafik (1080x1080) + Video (V13a-pflegebox-gratis.mp4 / V24b_hygienebox.mp4)
+**Datei Grafik:** POST-2026-03-29-hygienebox.png
+**Datei Video:** neue-kampagne-2/V13a-pflegebox-gratis.mp4 (alternativ: V24b_hygienebox.mp4)
+**Geplante Uhrzeit:** 11:00-13:00 Uhr (Sonntag)
+**Thema:** Hygienebox — kostenlose Pflegehilfsmittel ab Pflegegrad 1
+
+**Caption (DE) — Instagram/Facebook:**
+```
+KOSTENLOS! Jeden Monat. Direkt zu dir nach Hause. 📦😇
+
+Die AlltagsEngel Hygienebox — bis 40 Euro pro Monat an Pflegehilfsmitteln. Komplett gratis.
+
+Was ist drin?
+🧤 Einmalhandschuhe
+🧴 Desinfektionsmittel
+🛏️ Bettschutzeinlagen
+😷 Mundschutz & Schutzschürzen
+🧼 Pflegende Waschlappen
+
+Wer bekommt das?
+Jeder mit Pflegegrad 1, 2, 3, 4 oder 5.
+Die Pflegekasse zahlt — du zahlst nichts.
+
+Wir sprechen auch Türkisch! 🇹🇷🇩🇪
+
+📱 www.alltagsengel.care
+✉️ info@alltagsengel.care
+
+COMING SOON — Bald verfügbar in Frankfurt!
+
+Speichern & teilen, damit es alle erfahren! 🔁
+
+#AlltagsEngel #Hygienebox #Pflegebox #Pflegehilfsmittel #Kostenlos #Pflegekasse #Frankfurt #Pflegegrad #Senioren #Entlastungsbetrag #FrankfurtAmMain #§45b #Pflege #ComingSoon #MitHerz #40Euro #GratisBox
+```
+
+**Caption (TR) — Instagram/Facebook:**
+```
+ÜCRETSİZ! Her ay. Doğrudan kapına kadar. 📦😇
+
+AlltagsEngel Hijyen Kutusu — aylık 40 Euro'ya kadar bakım malzemesi. Tamamen ücretsiz.
+
+İçinde ne var?
+🧤 Tek kullanımlık eldiven
+🧴 Dezenfektan
+🛏️ Yatak koruma örtüsü
+😷 Ağız maskesi & koruyucu önlük
+🧼 Bakım mendilleri
+
+Kim alabilir?
+Bakım derecesi 1, 2, 3, 4 veya 5 olan herkes.
+Bakım sigortası ödüyor — sen hiçbir şey ödemiyorsun.
+
+Türkçe hizmet veriyoruz! 🇹🇷🇩🇪
+
+📱 www.alltagsengel.care
+✉️ info@alltagsengel.care
+
+YAKINDA — Frankfurt'ta hizmetinizde!
+
+Kaydet & paylaş, herkes öğrensin! 🔁
+
+#AlltagsEngel #Frankfurt #YaşlıBakımı #TürklerFrankfurt #Bakım #BakımSigortası #HijyenKutusu #Ücretsiz #Pflegebox #Senioren #Pflege #BakımDerecesi
+```
+
+**TikTok Caption (DE) — mit Video V13a-pflegebox-gratis.mp4:**
+```
+GRATIS Pflegebox! 📦 Jeden Monat bis 40€ an Pflegehilfsmitteln — komplett kostenlos! Ab Pflegegrad 1. Pflegekasse zahlt! 🤯 Link in Bio 📱 alltagsengel.care
+
+#alltagsengel #pflegebox #hygienebox #gratis #kostenlos #pflegekasse #pflegegrad #frankfurt #pflege #fyp #viral #foryou #seniorenhilfe #pflegehilfsmittel
+```
+
+**Posting-Anleitung (manuell):**
+1. Meta Business Suite öffnen → business.facebook.com
+2. "Beitrag erstellen" → Grafik hochladen (POST-2026-03-29-hygienebox.png)
+3. DE Caption einfügen → Instagram + Facebook auswählen → Veröffentlichen
+4. 1 Stunde später: TR Caption als zweiten Post oder Kommentar
+5. TikTok Studio öffnen → Video (neue-kampagne-2/V13a-pflegebox-gratis.mp4) hochladen mit TikTok Caption
+6. Alternativ: V24b_hygienebox.mp4 (kürzeres Format)
+
+**Hinweis (automatische Ausführung 29.03.2026 — Scheduled Task):**
+Automatisches Posting nicht möglich — Meta Business Suite und TikTok erfordern Login.
+Grafik (POST-2026-03-29-hygienebox.png), Video und alle Captions (DE/TR) sind vollständig vorbereitet.
+**Manueller Upload erforderlich — bitte folge der Posting-Anleitung oben.**
+
+**Zusammenfassung für manuellen Upload:**
+- **Grafik:** social-media-grafiken/POST-2026-03-29-hygienebox.png
+- **Video:** social-media-grafiken/neue-kampagne-2/V13a-pflegebox-gratis.mp4
+- **Meta Business Suite:** business.facebook.com → Beitrag erstellen → Grafik + DE Caption → IG + FB
+- **TikTok:** tiktok.com/tiktokstudio/content → Video + TikTok Caption
+- **TR Caption:** Als Kommentar oder zweiter Post (1h später)
