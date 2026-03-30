@@ -47,18 +47,29 @@ export default function MISLayout({ children }: { children: React.ReactNode }) {
     })()
   }, [])
 
-  const handleAiSend = () => {
-    if (!aiInput.trim()) return
-    setAiMessages(prev => [...prev, { role: 'user', text: aiInput }])
-    const q = aiInput
+  const [aiLoading, setAiLoading] = useState(false)
+  const handleAiSend = async () => {
+    if (!aiInput.trim() || aiLoading) return
+    const userText = aiInput
+    setAiMessages(prev => [...prev, { role: 'user', text: userText }])
     setAiInput('')
-    // Simulate AI response
-    setTimeout(() => {
-      setAiMessages(prev => [...prev, {
-        role: 'assistant',
-        text: getAiResponse(q)
-      }])
-    }, 800)
+    setAiLoading(true)
+    try {
+      const history = [...aiMessages.filter((_, i) => i > 0), { role: 'user', text: userText }]
+        .map(m => ({ role: m.role === 'assistant' ? 'assistant' : 'user', content: m.text }))
+      const res = await fetch('/api/ai-chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages: history }),
+      })
+      if (!res.ok) throw new Error('Fehler')
+      const data = await res.json()
+      setAiMessages(prev => [...prev, { role: 'assistant', text: data.content }])
+    } catch {
+      setAiMessages(prev => [...prev, { role: 'assistant', text: 'Verbindungsfehler. Bitte versuchen Sie es erneut.' }])
+    } finally {
+      setAiLoading(false)
+    }
   }
 
   const handleLogout = async () => {
@@ -251,11 +262,11 @@ export default function MISLayout({ children }: { children: React.ReactNode }) {
                     <button onClick={() => { setNotifications(0); setNotifOpen(false) }} style={{ background: 'none', border: 'none', color: BRAND.gold, cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>Alle gelesen</button>
                   </div>
                   {[
-                    { icon: 'files', title: 'Pitch Deck v2 hochgeladen', time: 'vor 2 Stunden', color: BRAND.gold },
-                    { icon: 'shield', title: 'QP-002 Audit abgeschlossen', time: 'vor 5 Stunden', color: BRAND.success },
-                    { icon: 'users', title: 'Neuer Engel registriert', time: 'vor 1 Tag', color: BRAND.info },
+                    { icon: 'files', title: 'Pitch Deck v2 hochgeladen', time: 'vor 2 Stunden', color: BRAND.gold, href: '/mis/data-room' },
+                    { icon: 'shield', title: 'QP-002 Audit abgeschlossen', time: 'vor 5 Stunden', color: BRAND.success, href: '/mis/quality' },
+                    { icon: 'users', title: 'Neuer Engel registriert', time: 'vor 1 Tag', color: BRAND.info, href: '/mis/team' },
                   ].map((n, i) => (
-                    <div key={i} onClick={() => setNotifOpen(false)} style={{
+                    <div key={i} onClick={() => { setNotifOpen(false); router.push(n.href) }} style={{
                       padding: '12px 16px', display: 'flex', alignItems: 'flex-start', gap: 10,
                       borderBottom: `1px solid ${BRAND.border}`, cursor: 'pointer', transition: 'background 0.15s',
                     }}
@@ -423,41 +434,4 @@ export default function MISLayout({ children }: { children: React.ReactNode }) {
 }
 
 // Simple local AI response (real version would call API)
-function getAiResponse(query: string): string {
-  const q = query.toLowerCase()
-  // Entlastungsbetrag / Pflegekasse
-  if (q.includes('entlastung') || q.includes('45b') || q.includes('pflegekasse') || q.includes('pflegegrad'))
-    return 'Der Entlastungsbetrag nach §45b SGB XI beträgt seit 2026 monatlich 131 €. Dies ergibt ein jährliches Volumen von 1.572 € pro anspruchsberechtigter Person. Voraussetzung ist ein anerkannter Pflegegrad (1–5). Nicht genutztes Budget verfällt am 30.06. des Folgejahres.'
-  // Finanzen / Umsatz
-  if (q.includes('umsatz') || q.includes('revenue') || q.includes('finanzen') || q.includes('gewinn') || q.includes('kosten') || q.includes('break'))
-    return 'Laut den Finanzprognosen wird der Umsatz von 180K € (2026) auf 18M € (2030) wachsen. Die Break-Even-Punkt wird für Q3 2027 erwartet. Hauptumsatzquellen: Alltagsbegleitung (70%), Krankenfahrten (20%), Hygienebox (10%).'
-  // Markt
-  if (q.includes('markt') || q.includes('tam') || q.includes('sam') || q.includes('wettbewerb') || q.includes('konkur'))
-    return 'Der TAM beträgt 24,6 Mrd. €, SAM 7,80 Mrd. € (4,96M Pflegebedürftige × 131 € × 12 Monate). Ca. 60% des Budgets bleiben ungenutzt — 4,7 Mrd. € Marktchance. AlltagsEngel differenziert sich durch vollständige Digitalisierung und §45b-Integration.'
-  // Team
-  if (q.includes('team') || q.includes('mitarbeiter') || q.includes('personal') || q.includes('engel'))
-    return 'Das Gründerteam besteht derzeit aus den Kernmitgliedern. Sie können alle Teammitglieder unter "Team & Personal" im MIS-Portal einsehen, bearbeiten und neue Mitglieder hinzufügen.'
-  // Qualität / ISO
-  if (q.includes('iso') || q.includes('qualität') || q.includes('audit') || q.includes('capa') || q.includes('prozess'))
-    return 'Das ISO 9001 QMS befindet sich im Aufbau. Aktuell sind Kern-, Support- und Managementprozesse definiert. Unter "Qualität" können Sie Audits planen, CAPA-Einträge verwalten und die Prozesslandkarte einsehen.'
-  // Dokumente / Data Room
-  if (q.includes('dokument') || q.includes('data room') || q.includes('investor') || q.includes('pitch'))
-    return 'Der Data Room enthält 10+ Dokumente in 8 Kategorien: Company Overview, Executive Summary, Pitch Deck, Brand Identity, Marktanalyse, Finanzprognosen, Produkt & Technologie, Go-To-Market, Recht & Compliance.'
-  // Krankenfahrten
-  if (q.includes('krankenfahrt') || q.includes('fahrer') || q.includes('fahrt') || q.includes('transport'))
-    return 'Das Krankenfahrten-Modul verwaltet Patientenfahrten zu Ärzten, Kliniken und Therapien. Fahrer können verifiziert und Aufträge zugewiesen werden. Die Preisgestaltung basiert auf Fahrtart, Entfernung und Region.'
-  // Lieferkette / Hygienebox
-  if (q.includes('lieferkette') || q.includes('lieferant') || q.includes('hygiene') || q.includes('supply'))
-    return 'Die Hygienebox enthält monatliche Pflegehilfsmittel (bis 40 €/Monat von der Pflegekasse übernommen). Lieferanten können unter "Lieferkette" verwaltet werden.'
-  // Alltagsbegleitung
-  if (q.includes('alltag') || q.includes('begleitung') || q.includes('betreuung') || q.includes('service'))
-    return 'Die Alltagsbegleitung umfasst: Haushaltsnahe Hilfen, Einkaufsbegleitung, Arztbesuche, psychosoziale Betreuung und mehr. Alle Engel sind nach §45a SGB XI zertifiziert und versichert. Abrechnung erfolgt direkt über die Pflegekasse.'
-  // Hallo / Grüße
-  if (q.includes('hallo') || q.includes('hi') || q.includes('guten') || q.includes('moin') || q.includes('servus'))
-    return 'Hallo! Ich bin der AlltagsEngel KI-Assistent. Ich kann Ihnen Fragen zu Finanzen, Markt, Team, Qualität, Krankenfahrten, Lieferkette und dem Data Room beantworten. Was möchten Sie wissen?'
-  // Hilfe
-  if (q.includes('hilfe') || q.includes('help') || q.includes('was kannst') || q.includes('funktion'))
-    return 'Ich kann Ihnen bei folgenden Themen helfen: Entlastungsbetrag & Pflegekasse, Finanzen & Umsatz, Marktanalyse, Team & Personal, ISO 9001 Qualität, Krankenfahrten, Lieferkette & Hygienebox, Data Room & Investor-Dokumente. Fragen Sie einfach!'
-  // Fallback — more helpful
-  return 'Ich kann Ihnen zu diesen Themen Auskunft geben: Entlastungsbetrag, Finanzen, Markt, Team, Qualität (ISO 9001), Krankenfahrten, Lieferkette und Data Room. Bitte formulieren Sie Ihre Frage mit einem dieser Stichworte, damit ich Ihnen gezielt helfen kann.'
-}
+// KI-Assistent nutzt jetzt die echte /api/ai-chat API mit GPT-4o und Echtzeit-Datenbankzugriff

@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { safeSingleQuery, logError } from '@/lib/safe-query'
 import { NotFoundState, ErrorState } from '@/components/UIStates'
 import { IconWingsGold, IconStar, IconStarFilled, IconHeart, IconMore, IconUser, IconCheck } from '@/components/Icons'
+import EngelProfilActions from './EngelProfilActions'
 
 export default async function EngelProfilPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -46,10 +47,7 @@ export default async function EngelProfilPage({ params }: { params: Promise<{ id
       <div className="ep-header">
         <div className="ep-nav">
           <Link href="/kunde/home" className="ep-back">‹</Link>
-          <div className="ep-actions">
-            <div className="ep-action"><IconHeart size={18} /></div>
-            <div className="ep-action"><IconMore size={18} /></div>
-          </div>
+          <EngelProfilActions angelId={id} angelName={`${angel?.profiles?.first_name || ''} ${angel?.profiles?.last_name?.[0] || ''}.`} />
         </div>
         <div className="ep-main">
           <div className="ep-avatar icon3d" style={{ '--sz': '80px' } as any}><img src="/assets/icon.jpg" alt="" /></div>
