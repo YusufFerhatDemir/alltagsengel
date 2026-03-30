@@ -1178,3 +1178,99 @@ Grafik (POST-2026-03-29-hygienebox.png), Video und alle Captions (DE/TR) sind vo
 - **Meta Business Suite:** business.facebook.com → Beitrag erstellen → Grafik + DE Caption → IG + FB
 - **TikTok:** tiktok.com/tiktokstudio/content → Video + TikTok Caption
 - **TR Caption:** Als Kommentar oder zweiter Post (1h später)
+
+---
+
+## 30.03.2026 — 1 App, alle Leistungen / Tek Uygulama, Tüm Hizmetler (Awareness Reel DE+TR)
+
+**Status:** 📋 Bereit zum Posten (Meta Business Suite + Instagram Login erforderlich — manueller Upload nötig)
+**Plattform:** Instagram Reel + Facebook + TikTok
+**Typ:** Video (Reel)
+**Datei IG/FB:** REELS-kombi-alles-in-einer-app-v1.mp4
+**Datei TikTok:** tiktok-v30/V30e_1app_4leistungen.mp4
+**Geplante Uhrzeit:** 11:00-13:00 Uhr (Montag)
+**Thema:** Alles in einer App — Krankenfahrt, Einkauf, Arztbegleitung, Gesellschaft
+
+**Caption (DE) — Instagram Reel / Facebook:**
+```
+1 App. 4 Leistungen. 0 Stress. 😇
+
+AlltagsEngel bringt alles zusammen:
+
+🚗 Krankenfahrt — sicher und pünktlich zum Arzt
+🛒 Einkaufsbegleitung — gemeinsam statt allein
+🏥 Arztbegleitung — jemand, der mitkommt und zuhört
+💬 Gesellschaft — gegen Einsamkeit, für echte Gespräche
+
+Alles über die Pflegekasse — 131 Euro/Monat (§45b).
+Kein Papierkram. Kein Stress. Einfach buchen.
+
+Wir sprechen auch Türkisch! 🇹🇷🇩🇪
+
+📱 www.alltagsengel.care
+✉️ info@alltagsengel.care
+
+COMING SOON — Bald in Frankfurt für dich da!
+
+Speichern & teilen — damit es alle erfahren! 🔁
+
+#AlltagsEngel #Alltagsbegleitung #Frankfurt #Pflege #Seniorenhilfe #Pflegekasse #Entlastungsbetrag #FrankfurtAmMain #Senioren #§45b #Krankenfahrt #Einkaufsbegleitung #Arztbegleitung #ComingSoon #AllesInEinerApp #MitHerz
+```
+
+**Caption (TR) — Instagram Reel / Facebook:**
+```
+1 Uygulama. 4 Hizmet. 0 Stres. 😇
+
+AlltagsEngel her şeyi bir araya getiriyor:
+
+🚗 Hasta Taşıma — güvenli ve zamanında doktora
+🛒 Alışveriş Refakati — yalnız değil, birlikte
+🏥 Doktor Refakati — yanında olan, dinleyen biri
+💬 Sohbet — yalnızlığa karşı, gerçek konuşmalar
+
+Her şey bakım sigortası üzerinden — aylık 131 Euro (§45b).
+Evrak yok. Stres yok. Sadece rezervasyon yap.
+
+Türkçe hizmet veriyoruz! 🇹🇷🇩🇪
+
+📱 www.alltagsengel.care
+✉️ info@alltagsengel.care
+
+YAKINDA — Frankfurt'ta hizmetinizde!
+
+Kaydet & paylaş — herkes öğrensin! 🔁
+
+#AlltagsEngel #Frankfurt #YaşlıBakımı #TürklerFrankfurt #Bakım #BakımSigortası #HastaTaşıma #DoktorRefakati #AlışverişRefakati #Sohbet #TekUygulama
+```
+
+**TikTok Caption (DE) — mit Video V30e_1app_4leistungen.mp4:**
+```
+1 App. 4 Leistungen. 0 Stress. 😇 Krankenfahrt, Einkauf, Arztbegleitung & Gesellschaft — alles in einer App! 131€/Monat über die Pflegekasse. Link in Bio 📱 alltagsengel.care
+
+#alltagsengel #alltagsbegleitung #frankfurt #pflege #seniorenhilfe #pflegekasse #krankenfahrt #einkaufsbegleitung #arztbegleitung #fyp #viral #foryou #comingnoon #app
+```
+
+**Posting-Anleitung (manuell):**
+1. Meta Business Suite öffnen → business.facebook.com (ggf. neu anmelden)
+2. "Beitrag erstellen" → Reel/Video: REELS-kombi-alles-in-einer-app-v1.mp4 hochladen
+3. DE Caption einfügen → Instagram + Facebook auswählen → Veröffentlichen
+4. 1 Stunde später: TR Caption als zweiten Post oder als Kommentar
+5. TikTok: tiktok.com/tiktokstudio/content → Video V30e_1app_4leistungen.mp4 + TikTok Caption
+
+**Alternativ über Instagram direkt:**
+1. Instagram App öffnen → "+" Button → Reel
+2. Video auswählen: REELS-kombi-alles-in-einer-app-v1.mp4
+3. DE Caption einfügen → Teilen
+4. Danach auf Facebook teilen
+
+**Hinweis (automatische Ausführung 30.03.2026 — Scheduled Task):**
+Automatisches Posting nicht möglich — Instagram Session abgelaufen, Meta Business Suite Profilzugriff fehlt.
+Video (REELS-kombi-alles-in-einer-app-v1.mp4 + V30e_1app_4leistungen.mp4) und alle Captions (DE/TR) sind vollständig vorbereitet.
+**Manueller Upload erforderlich — bitte folge der Posting-Anleitung oben.**
+
+**Zusammenfassung für manuellen Upload:**
+- **Video IG/FB:** social-media-grafiken/REELS-kombi-alles-in-einer-app-v1.mp4
+- **Video TikTok:** social-media-grafiken/tiktok-v30/V30e_1app_4leistungen.mp4
+- **Meta Business Suite:** business.facebook.com → Beitrag erstellen → Video + DE Caption → IG + FB
+- **TikTok:** tiktok.com/tiktokstudio/content → Video + TikTok Caption
+- **TR Caption:** Als Kommentar oder zweiter Post (1h später)
