@@ -1,0 +1,69 @@
+
+🎬 V28a_pov_oma_ruft_an.mp4
+  V28a clips...
+    gesellschaft.mp4: 120f
+    cafe.mp4: 120f
+    nomusic_12s.mp4: 120f
+    real_0s.mp4: 120f
+    a:0/390
+    a:90/390
+    a:180/390
+    a:270/390
+    a:360/390
+  ✓ V28a_pov_oma_ruft_an.mp4 (13s, 4.7MB)
+
+🎬 V28b_3_zeichen.mp4
+  V28b clips...
+    app_promo_0s.mp4: 120f
+    app_promo_8s.mp4: 120f
+    einkauf.mp4: 120f
+    spazieren.mp4: 120f
+    app_promo_16s.mp4: 120f
+    b:0/450
+    b:90/450
+    b:180/450
+    b:270/450
+    b:360/450
+  ✓ V28b_3_zeichen.mp4 (15s, 5.0MB)
+
+🎬 V28c_diese_app_gibt_es.mp4
+  V28c clips...
+    kombi_0s.mp4: 120f
+    kombi_12s.mp4: 120f
+    nomusic_20s.mp4: 120f
+    nomusic_24s.mp4: 120f
+    c:0/360
+    c:90/360
+    c:180/360
+    c:270/360
+  ✓ V28c_diese_app_gibt_es.mp4 (12s, 2.6MB)
+
+🎬 V28d_20euro_nebenjob.mp4
+  V28d clips...
+    fahrdienst_0s.mp4: 120f
+    fahrdienst_10s.mp4: 120f
+    real_8s.mp4: 120f
+    v3_6s.mp4: 120f
+    fahrdienst_20s.mp4: 120f
+    d:0/420
+    d:90/420
+    d:180/420
+    d:270/420
+    d:360/420
+  ✓ V28d_20euro_nebenjob.mp4 (14s, 4.0MB)
+
+🎬 V28e_oma_laechelt_wieder.mp4
+  V28e clips...
+    real_16s.mp4: 120f
+    v3_12s.mp4: 120f
+    v3_18s.mp4: 120f
+    arztbegleitung.mp4: 120f
+    kombi_22s.mp4: 120f
+    e:0/450
+    e:90/450
+    e:180/450
+    e:270/450
+    e:360/450
+  ✓ V28e_oma_laechelt_wieder.mp4 (15s, 5.9MB)
+
+✅ All 5 V28 EMOTIONAL videos done!

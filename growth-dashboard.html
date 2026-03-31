@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AlltagsEngel — Büyüme Merkezi</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:wght@400;500;600;700&display=swap');
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+  :root {
+    --coal:#1A1612; --coal2:#252118; --coal3:#332E24; --coal4:#443C2E;
+    --gold:#C9963C; --gold2:#DBA84A; --gold3:#ECC870;
+    --goldPale:rgba(201,150,60,0.12); --goldLt:rgba(201,150,60,0.25);
+    --ink:#F7F2EA; --ink2:#C4B8A8; --ink3:#9A8C7C; --ink4:#7A6E5E;
+    --green:#5CB882; --red:#D04B3B; --orange:#E8A838;
+    --border:rgba(255,255,255,0.08);
+  }
+  body { background:var(--coal); color:var(--ink); font-family:'DM Sans',sans-serif; min-height:100vh; }
+
+  .header { background:var(--coal2); border-bottom:1px solid var(--border); padding:20px 32px; display:flex; align-items:center; gap:16px; position:sticky; top:0; z-index:100; backdrop-filter:blur(20px); }
+  .header h1 { font-family:'Cormorant Garamond',serif; font-size:28px; color:var(--gold); font-weight:700; }
+  .header .subtitle { font-size:13px; color:var(--ink3); margin-top:2px; }
+  .header .logo { width:44px; height:44px; border-radius:14px; background:var(--goldPale); border:1.5px solid var(--goldLt); display:flex; align-items:center; justify-content:center; font-size:22px; }
+
+  .container { max-width:1200px; margin:0 auto; padding:24px; }
+
+  /* Status Bar */
+  .status-bar { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:16px; margin-bottom:32px; }
+  .status-card { background:var(--coal2); border:1.5px solid var(--border); border-radius:16px; padding:20px; text-align:center; }
+  .status-card .icon { font-size:28px; margin-bottom:8px; }
+  .status-card .label { font-size:11px; color:var(--ink4); text-transform:uppercase; letter-spacing:0.1em; font-weight:600; }
+  .status-card .value { font-family:'Cormorant Garamond',serif; font-size:28px; font-weight:700; color:var(--gold); margin:4px 0; }
+  .status-card .sub { font-size:12px; color:var(--ink3); }
+
+  /* Section */
+  .section { margin-bottom:32px; }
+  .section-title { font-family:'Cormorant Garamond',serif; font-size:22px; font-weight:700; color:var(--ink); margin-bottom:16px; display:flex; align-items:center; gap:10px; }
+  .section-title .num { background:var(--gold); color:var(--coal); width:30px; height:30px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-family:'DM Sans'; font-size:14px; font-weight:700; }
+
+  /* Task Cards */
+  .task-list { display:flex; flex-direction:column; gap:12px; }
+  .task { background:var(--coal2); border:1.5px solid var(--border); border-radius:14px; padding:18px 20px; display:flex; align-items:flex-start; gap:14px; transition:all 0.2s; }
+  .task:hover { border-color:var(--goldLt); }
+  .task.urgent { border-left:3px solid var(--gold); }
+  .task.done { opacity:0.5; }
+  .task .check { width:24px; height:24px; border-radius:8px; border:2px solid var(--ink4); display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:2px; cursor:pointer; transition:all 0.2s; font-size:14px; }
+  .task .check.checked { background:var(--green); border-color:var(--green); }
+  .task .check:hover { border-color:var(--gold); }
+  .task .info { flex:1; }
+  .task .title { font-size:15px; font-weight:600; color:var(--ink); margin-bottom:4px; }
+  .task .desc { font-size:13px; color:var(--ink3); line-height:1.5; }
+  .task .meta { display:flex; gap:8px; margin-top:8px; flex-wrap:wrap; }
+  .badge { font-size:10px; font-weight:700; padding:4px 10px; border-radius:7px; display:inline-flex; align-items:center; gap:4px; }
+  .badge.gold { background:var(--goldPale); color:var(--gold2); border:1px solid var(--goldLt); }
+  .badge.green { background:rgba(92,184,130,0.12); color:var(--green); border:1px solid rgba(92,184,130,0.25); }
+  .badge.red { background:rgba(208,75,59,0.12); color:var(--red); border:1px solid rgba(208,75,59,0.25); }
+  .badge.orange { background:rgba(232,168,56,0.12); color:var(--orange); border:1px solid rgba(232,168,56,0.25); }
+  .badge.blue { background:rgba(88,140,220,0.12); color:#7CB3F0; border:1px solid rgba(88,140,220,0.25); }
+
+  /* Revenue Calculator */
+  .calc-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:16px; }
+  .calc-card { background:var(--coal2); border:1.5px solid var(--border); border-radius:16px; padding:24px; }
+  .calc-card h3 { font-family:'Cormorant Garamond',serif; font-size:18px; color:var(--gold); margin-bottom:12px; }
+  .calc-row { display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--border); font-size:13px; }
+  .calc-row:last-child { border:none; }
+  .calc-row .label { color:var(--ink3); }
+  .calc-row .val { color:var(--ink); font-weight:600; }
+  .calc-total { margin-top:12px; padding-top:12px; border-top:2px solid var(--gold); display:flex; justify-content:space-between; }
+  .calc-total .label { font-size:14px; font-weight:700; color:var(--ink); }
+  .calc-total .val { font-size:20px; font-weight:700; color:var(--gold); font-family:'Cormorant Garamond',serif; }
+
+  /* Timeline */
+  .timeline { position:relative; padding-left:32px; }
+  .timeline::before { content:''; position:absolute; left:11px; top:8px; bottom:8px; width:2px; background:var(--coal4); }
+  .tl-item { position:relative; margin-bottom:24px; }
+  .tl-item::before { content:''; position:absolute; left:-25px; top:6px; width:12px; height:12px; border-radius:50%; background:var(--coal4); border:2px solid var(--coal); }
+  .tl-item.active::before { background:var(--gold); box-shadow:0 0 12px rgba(201,150,60,0.4); }
+  .tl-item.done::before { background:var(--green); }
+  .tl-item .tl-title { font-size:15px; font-weight:600; color:var(--ink); }
+  .tl-item .tl-sub { font-size:13px; color:var(--ink3); margin-top:4px; line-height:1.5; }
+  .tl-item .tl-date { font-size:11px; color:var(--ink4); margin-top:4px; }
+
+  /* Progress Bar */
+  .progress-wrap { background:var(--coal3); border-radius:8px; height:8px; overflow:hidden; margin:12px 0; }
+  .progress-fill { height:100%; border-radius:8px; transition:width 0.5s; }
+  .progress-fill.gold { background:linear-gradient(90deg,var(--gold),var(--gold3)); }
+
+  /* Tabs */
+  .tabs { display:flex; gap:4px; margin-bottom:24px; background:var(--coal2); border-radius:12px; padding:4px; border:1px solid var(--border); overflow-x:auto; }
+  .tab { padding:10px 20px; border-radius:10px; font-size:13px; font-weight:600; color:var(--ink3); cursor:pointer; transition:all 0.2s; white-space:nowrap; }
+  .tab.active { background:var(--gold); color:var(--coal); }
+  .tab:hover:not(.active) { color:var(--ink); }
+  .tab-content { display:none; }
+  .tab-content.active { display:block; }
+
+  /* Quick Links */
+  .quick-links { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:12px; margin-top:16px; }
+  .qlink { background:var(--coal2); border:1.5px solid var(--border); border-radius:14px; padding:16px 20px; display:flex; align-items:center; gap:12px; text-decoration:none; color:var(--ink); transition:all 0.2s; cursor:pointer; }
+  .qlink:hover { border-color:var(--gold); transform:translateY(-2px); }
+  .qlink .ql-icon { width:40px; height:40px; border-radius:12px; background:var(--goldPale); display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; }
+  .qlink .ql-title { font-size:14px; font-weight:600; }
+  .qlink .ql-sub { font-size:11px; color:var(--ink3); margin-top:2px; }
+
+  @media(max-width:768px) {
+    .container { padding:16px; }
+    .header { padding:16px; }
+    .header h1 { font-size:22px; }
+    .status-bar { grid-template-columns:1fr 1fr; }
+    .calc-grid { grid-template-columns:1fr; }
+    .quick-links { grid-template-columns:1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">👼</div>
+  <div>
+    <h1>AlltagsEngel Büyüme Merkezi</h1>
+    <div class="subtitle">Launch & Growth Dashboard — Stand: 31. März 2026</div>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- STATUS BAR -->
+  <div class="status-bar">
+    <div class="status-card">
+      <div class="icon">🍎</div>
+      <div class="label">iOS App Store</div>
+      <div class="value" style="color:var(--orange)">Warten</div>
+      <div class="sub">Warten auf Prüfung</div>
+    </div>
+    <div class="status-card">
+      <div class="icon">🤖</div>
+      <div class="label">Android Play Store</div>
+      <div class="value" style="color:var(--red)">Fehlt</div>
+      <div class="sub">Noch nicht eingereicht</div>
+    </div>
+    <div class="status-card">
+      <div class="icon">📢</div>
+      <div class="label">Google Ads</div>
+      <div class="value" style="color:var(--red)">Fehlt</div>
+      <div class="sub">Konto muss erstellt werden</div>
+    </div>
+    <div class="status-card">
+      <div class="icon">🌐</div>
+      <div class="label">Website</div>
+      <div class="value" style="color:var(--green)">Live ✓</div>
+      <div class="sub">alltagsengel.care</div>
+    </div>
+    <div class="status-card">
+      <div class="icon">👼</div>
+      <div class="label">Aktive Engel</div>
+      <div class="value">6</div>
+      <div class="sub">Ziel: 50 (Faz 1)</div>
+    </div>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('todo')">📋 Yapılacaklar</div>
+    <div class="tab" onclick="switchTab('google')">📢 Google Ads</div>
+    <div class="tab" onclick="switchTab('revenue')">💰 Gelir Hesabı</div>
+    <div class="tab" onclick="switchTab('timeline')">📅 Yol Haritası</div>
+    <div class="tab" onclick="switchTab('links')">🔗 Hızlı Linkler</div>
+  </div>
+
+  <!-- TAB: YAPILACAKLAR -->
+  <div id="tab-todo" class="tab-content active">
+
+    <div class="section">
+      <div class="section-title"><div class="num">!</div> Acil — Bugün Yap</div>
+      <div class="task-list">
+        <div class="task urgent">
+          <div class="check" onclick="toggleCheck(this)"></div>
+          <div class="info">
+            <div class="title">Google Ads hesabı aç</div>
+            <div class="desc">ads.google.com'a git → Yeni hesap oluştur → İş bilgileri: AlltagsEngel GmbH, alltagsengel.care → 1.200€ başlangıç kredisi al</div>
+            <div class="meta"><span class="badge gold">SEN YAPACAKSIN</span><span class="badge orange">5 dakika</span></div>
+          </div>
+        </div>
+        <div class="task urgent">
+          <div class="check" onclick="toggleCheck(this)"></div>
+          <div class="info">
+            <div class="title">Google Ads ödeme yöntemi ekle</div>
+            <div class="desc">Kredi kartı veya banka hesabı bağla → Aylık bütçe: 300€ → Başlangıç kredisi otomatik aktif olur</div>
+            <div class="meta"><span class="badge gold">SEN YAPACAKSIN</span><span class="badge orange">3 dakika</span></div>
+          </div>
+        </div>
+        <div class="task urgent">
+          <div class="check" onclick="toggleCheck(this)"></div>
+          <div class="info">
+            <div class="title">Android Developer hesabı aç</div>
+            <div class="desc">play.google.com/console → 25€ tek seferlik ödeme → Kimlik doğrulama (1-3 gün sürebilir)</div>
+            <div class="meta"><span class="badge gold">SEN YAPACAKSIN</span><span class="badge red">25€</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title"><div class="num">2</div> Bu Hafta — Claude ile Birlikte</div>
+      <div class="task-list">
+        <div class="task">
+          <div class="check" onclick="toggleCheck(this)"></div>
+          <div class="info">
+            <div class="title">Google Tag Manager'ı siteye kur</div>
+            <div class="desc">Conversion tracking için GTM snippet'i alltagsengel.care'e eklenmeli. Kayıt = conversion olarak tanımlanacak.</div>
+            <div class="meta"><span class="badge blue">CLAUDE YAPACAK</span><span class="badge orange">15 dakika</span></div>
+          </div>
+        </div>
+        <div class="task">
+          <div class="check" onclick="toggleCheck(this)"></div>
+          <div class="info">
+            <div class="title">5 Google Ads kampanyasını kur</div>
+            <div class="desc">1) Alltagsbegleitung Kunden 2) Engel Recruiting 3) Krankenfahrten 4) Fahrer Recruiting 5) Pflegebox — Tüm keyword'ler ve metinler hazır</div>
+            <div class="meta"><span class="badge gold">SEN YAPACAKSIN</span><span class="badge blue">CLAUDE REHBERLİK EDECEK</span></div>
+          </div>
+        </div>
+        <div class="task">
+          <div class="check" onclick="toggleCheck(this)"></div>
+          <div class="info">
+            <div class="title">Android APK / AAB oluştur ve yükle</div>
+            <div class="desc">Capacitor ile Android build → Play Console'a yükle → Store listing hazırla (screenshots, açıklama)</div>
+            <div class="meta"><span class="badge blue">CLAUDE YAPACAK</span></div>
+          </div>
+        </div>
+        <div class="task">
+          <div class="check" onclick="toggleCheck(this)"></div>
+          <div class="info">
+            <div class="title">Landing Page'leri Google Ads'e uyarla</div>
+            <div class="desc">/lp/google-ads-alltagsbegleitung, /lp/google-ads-krankenfahrt gibi özel sayfalar oluştur — daha yüksek conversion</div>
+            <div class="meta"><span class="badge blue">CLAUDE YAPACAK</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title"><div class="num">3</div> Devam Eden</div>
+      <div class="task-list">
+        <div class="task">
+          <div class="check checked" onclick="toggleCheck(this)">✓</div>
+          <div class="info">
+            <div class="title" style="text-decoration:line-through;opacity:0.6">iOS App Store'a gönder</div>
+            <div class="desc" style="opacity:0.5">✅ Gönderildi — "Warten auf Prüfung" durumunda</div>
+            <div class="meta"><span class="badge green">TAMAMLANDI</span></div>
+          </div>
+        </div>
+        <div class="task">
+          <div class="check checked" onclick="toggleCheck(this)">✓</div>
+          <div class="info">
+            <div class="title" style="text-decoration:line-through;opacity:0.6">Website deploy et</div>
+            <div class="desc" style="opacity:0.5">✅ alltagsengel.care — Vercel'de canlı</div>
+            <div class="meta"><span class="badge green">TAMAMLANDI</span></div>
+          </div>
+        </div>
+        <div class="task">
+          <div class="check checked" onclick="toggleCheck(this)">✓</div>
+          <div class="info">
+            <div class="title" style="text-decoration:line-through;opacity:0.6">Tüm bugları düzelt</div>
+            <div class="desc" style="opacity:0.5">✅ 90+ sayfa, 17 API, 17 component kontrol edildi — 3 bug düzeltildi</div>
+            <div class="meta"><span class="badge green">TAMAMLANDI</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: GOOGLE ADS -->
+  <div id="tab-google" class="tab-content">
+    <div class="section">
+      <div class="section-title">📢 Google Ads — 5 Kampanya Planı</div>
+      <p style="color:var(--ink3);font-size:14px;margin-bottom:20px;line-height:1.6">Toplam bütçe: <strong style="color:var(--gold)">300€/ay</strong> (10€/gün). 1.200€ Google kredisi ile ilk 4 ay neredeyse bedava reklam.</p>
+
+      <div class="calc-grid">
+        <div class="calc-card">
+          <h3>1. Alltagsbegleitung Kunden</h3>
+          <div class="calc-row"><span class="label">Bütçe</span><span class="val">90€/ay</span></div>
+          <div class="calc-row"><span class="label">Hedef</span><span class="val">Pflegebedürftige & Angehörige</span></div>
+          <div class="calc-row"><span class="label">Örnek keyword</span><span class="val">"alltagsbegleitung in meiner nähe"</span></div>
+          <div class="calc-row"><span class="label">Beklenen tıklama</span><span class="val">60-150/ay</span></div>
+          <div class="calc-row"><span class="label">Beklenen kayıt</span><span class="val">3-8/ay</span></div>
+          <div class="calc-total"><span class="label">Öncelik</span><span class="val" style="font-size:14px">🔴 YÜKSEK</span></div>
+        </div>
+        <div class="calc-card">
+          <h3>2. Engel Recruiting</h3>
+          <div class="calc-row"><span class="label">Bütçe</span><span class="val">60€/ay</span></div>
+          <div class="calc-row"><span class="label">Hedef</span><span class="val">Nebenjob arayan insanlar</span></div>
+          <div class="calc-row"><span class="label">Örnek keyword</span><span class="val">"nebenjob seniorenbetreuung"</span></div>
+          <div class="calc-row"><span class="label">Beklenen tıklama</span><span class="val">40-100/ay</span></div>
+          <div class="calc-row"><span class="label">Beklenen kayıt</span><span class="val">2-5/ay</span></div>
+          <div class="calc-total"><span class="label">Öncelik</span><span class="val" style="font-size:14px">🔴 YÜKSEK</span></div>
+        </div>
+        <div class="calc-card">
+          <h3>3. Krankenfahrten Kunden</h3>
+          <div class="calc-row"><span class="label">Bütçe</span><span class="val">75€/ay</span></div>
+          <div class="calc-row"><span class="label">Hedef</span><span class="val">Hastalar & Angehörige</span></div>
+          <div class="calc-row"><span class="label">Örnek keyword</span><span class="val">"krankenfahrt buchen"</span></div>
+          <div class="calc-row"><span class="label">Beklenen tıklama</span><span class="val">50-125/ay</span></div>
+          <div class="calc-row"><span class="label">Beklenen kayıt</span><span class="val">3-6/ay</span></div>
+          <div class="calc-total"><span class="label">Öncelik</span><span class="val" style="font-size:14px">🟡 ORTA</span></div>
+        </div>
+        <div class="calc-card">
+          <h3>4. Fahrer Recruiting</h3>
+          <div class="calc-row"><span class="label">Bütçe</span><span class="val">30€/ay</span></div>
+          <div class="calc-row"><span class="label">Hedef</span><span class="val">Nebenjob arayan şoförler</span></div>
+          <div class="calc-row"><span class="label">Örnek keyword</span><span class="val">"krankenfahrt fahrer job"</span></div>
+          <div class="calc-row"><span class="label">Beklenen tıklama</span><span class="val">20-50/ay</span></div>
+          <div class="calc-row"><span class="label">Beklenen kayıt</span><span class="val">1-3/ay</span></div>
+          <div class="calc-total"><span class="label">Öncelik</span><span class="val" style="font-size:14px">🟡 ORTA</span></div>
+        </div>
+        <div class="calc-card">
+          <h3>5. Pflegebox Kunden</h3>
+          <div class="calc-row"><span class="label">Bütçe</span><span class="val">45€/ay</span></div>
+          <div class="calc-row"><span class="label">Hedef</span><span class="val">Pflegebedürftige mit Pflegegrad</span></div>
+          <div class="calc-row"><span class="label">Örnek keyword</span><span class="val">"pflegebox kostenlos"</span></div>
+          <div class="calc-row"><span class="label">Beklenen tıklama</span><span class="val">30-75/ay</span></div>
+          <div class="calc-row"><span class="label">Beklenen kayıt</span><span class="val">2-4/ay</span></div>
+          <div class="calc-total"><span class="label">Öncelik</span><span class="val" style="font-size:14px">🟡 ORTA</span></div>
+        </div>
+        <div class="calc-card" style="border-color:var(--goldLt);background:linear-gradient(135deg,var(--coal2),var(--coal3))">
+          <h3>📊 Toplam Beklenti</h3>
+          <div class="calc-row"><span class="label">Aylık harcama</span><span class="val">300€</span></div>
+          <div class="calc-row"><span class="label">Toplam tıklama</span><span class="val">200-500/ay</span></div>
+          <div class="calc-row"><span class="label">Yeni kayıtlar</span><span class="val">10-25/ay</span></div>
+          <div class="calc-row"><span class="label">Tahmini gelir</span><span class="val">1.500-4.000€/ay</span></div>
+          <div class="calc-total"><span class="label">ROI</span><span class="val">5-13x</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: GELİR HESABI -->
+  <div id="tab-revenue" class="tab-content">
+    <div class="section">
+      <div class="section-title">💰 Ne Kadar Müşteri = Ne Kadar Para?</div>
+
+      <div class="calc-grid" style="margin-bottom:24px">
+        <div class="calc-card">
+          <h3>Alltagsbegleitung</h3>
+          <div class="calc-row"><span class="label">Saatlik ücret</span><span class="val">32€</span></div>
+          <div class="calc-row"><span class="label">Platform komisyonu</span><span class="val">%8,5 = 2,72€/saat</span></div>
+          <div class="calc-row"><span class="label">Ortalama kullanım</span><span class="val">4 saat/ay/müşteri</span></div>
+          <div class="calc-row"><span class="label">Pflegekasse öder</span><span class="val">131€/ay</span></div>
+          <div class="calc-total"><span class="label">Müşteri başı gelir</span><span class="val">~11€/ay</span></div>
+        </div>
+        <div class="calc-card">
+          <h3>Krankenfahrten</h3>
+          <div class="calc-row"><span class="label">Fahrt başı fiyat</span><span class="val">30-80€</span></div>
+          <div class="calc-row"><span class="label">Platform komisyonu</span><span class="val">%10-15</span></div>
+          <div class="calc-row"><span class="label">Dialyse hasta</span><span class="val">3x/hafta = 12x/ay</span></div>
+          <div class="calc-row"><span class="label">Krankenkasse öder</span><span class="val">Verordnung ile</span></div>
+          <div class="calc-total"><span class="label">Hasta başı gelir</span><span class="val">~50€/ay</span></div>
+        </div>
+        <div class="calc-card">
+          <h3>Pflegebox</h3>
+          <div class="calc-row"><span class="label">Aylık box değeri</span><span class="val">40€</span></div>
+          <div class="calc-row"><span class="label">Maliyet (ürün+kargo)</span><span class="val">~15€</span></div>
+          <div class="calc-row"><span class="label">Pflegekasse öder</span><span class="val">40€/ay otomatik</span></div>
+          <div class="calc-row"><span class="label">Tekrarlayan gelir</span><span class="val">Her ay otomatik ✓</span></div>
+          <div class="calc-total"><span class="label">Müşteri başı gelir</span><span class="val">~25€/ay</span></div>
+        </div>
+      </div>
+
+      <div class="calc-card" style="border-color:var(--goldLt)">
+        <h3>🎯 Hedeflere Göre Aylık Gelir Tahmini</h3>
+        <div style="overflow-x:auto">
+          <table style="width:100%;border-collapse:collapse;margin-top:12px;font-size:13px">
+            <tr style="border-bottom:2px solid var(--border)">
+              <th style="text-align:left;padding:10px 8px;color:var(--ink4);font-size:11px">HEDEF</th>
+              <th style="text-align:center;padding:10px 8px;color:var(--ink4);font-size:11px">MÜŞTERİ</th>
+              <th style="text-align:center;padding:10px 8px;color:var(--ink4);font-size:11px">ENGEL</th>
+              <th style="text-align:center;padding:10px 8px;color:var(--ink4);font-size:11px">FAHRER</th>
+              <th style="text-align:right;padding:10px 8px;color:var(--ink4);font-size:11px">AYLIK GELİR</th>
+            </tr>
+            <tr style="border-bottom:1px solid var(--border)">
+              <td style="padding:10px 8px;color:var(--ink3)">Masrafları karşıla</td>
+              <td style="text-align:center;color:var(--ink)">50</td>
+              <td style="text-align:center;color:var(--ink)">15</td>
+              <td style="text-align:center;color:var(--ink)">5</td>
+              <td style="text-align:right;color:var(--gold);font-weight:700">~1.500€</td>
+            </tr>
+            <tr style="border-bottom:1px solid var(--border)">
+              <td style="padding:10px 8px;color:var(--ink3)">Geçinebilecek gelir</td>
+              <td style="text-align:center;color:var(--ink)">200</td>
+              <td style="text-align:center;color:var(--ink)">50</td>
+              <td style="text-align:center;color:var(--ink)">15</td>
+              <td style="text-align:right;color:var(--gold);font-weight:700">~5.000€</td>
+            </tr>
+            <tr style="border-bottom:1px solid var(--border);background:var(--goldPale)">
+              <td style="padding:10px 8px;color:var(--ink);font-weight:600">⭐ Break-Even</td>
+              <td style="text-align:center;color:var(--ink);font-weight:600">540</td>
+              <td style="text-align:center;color:var(--ink);font-weight:600">135</td>
+              <td style="text-align:center;color:var(--ink);font-weight:600">40</td>
+              <td style="text-align:right;color:var(--gold);font-weight:700;font-size:15px">~15.000€</td>
+            </tr>
+            <tr style="border-bottom:1px solid var(--border)">
+              <td style="padding:10px 8px;color:var(--ink3)">Ciddi iş</td>
+              <td style="text-align:center;color:var(--ink)">2.000</td>
+              <td style="text-align:center;color:var(--ink)">500</td>
+              <td style="text-align:center;color:var(--ink)">100</td>
+              <td style="text-align:right;color:var(--gold);font-weight:700">~60.000€</td>
+            </tr>
+            <tr style="border-bottom:1px solid var(--border)">
+              <td style="padding:10px 8px;color:var(--ink3)">Yatırım sonrası (Yıl 2)</td>
+              <td style="text-align:center;color:var(--ink)">10.000</td>
+              <td style="text-align:center;color:var(--ink)">2.500</td>
+              <td style="text-align:center;color:var(--ink)">500</td>
+              <td style="text-align:right;color:var(--gold);font-weight:700">~500.000€</td>
+            </tr>
+            <tr>
+              <td style="padding:10px 8px;color:var(--gold);font-weight:700">🚀 Milyonluk (Yıl 5)</td>
+              <td style="text-align:center;color:var(--gold);font-weight:700">50.000+</td>
+              <td style="text-align:center;color:var(--gold);font-weight:700">12.000+</td>
+              <td style="text-align:center;color:var(--gold);font-weight:700">2.000+</td>
+              <td style="text-align:right;color:var(--gold);font-weight:700;font-size:17px">4.8M€+</td>
+            </tr>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: YOL HARİTASI -->
+  <div id="tab-timeline" class="tab-content">
+    <div class="section">
+      <div class="section-title">📅 AlltagsEngel Yol Haritası</div>
+
+      <div style="margin-bottom:20px">
+        <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--ink4);margin-bottom:4px">
+          <span>Şu an: Faz 1</span><span>Hedef: Faz 4</span>
+        </div>
+        <div class="progress-wrap">
+          <div class="progress-fill gold" style="width:8%"></div>
+        </div>
+      </div>
+
+      <div class="timeline">
+        <div class="tl-item active">
+          <div class="tl-title">🌱 Faz 1 — Frankfurt Launch (Şimdi → 6 ay)</div>
+          <div class="tl-sub">
+            • Google Ads ile ilk 50-100 müşteri<br>
+            • 20-30 Engel recruit et<br>
+            • 5-10 Krankenfahrt müşterisi<br>
+            • Hedef: Aylık 3.000-5.000€ gelir<br>
+            • Maliyet: 300€/ay reklam + ~50€ sunucu
+          </div>
+          <div class="tl-date">Nisan 2026 → Ekim 2026</div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-title">🌿 Faz 2 — Hessen Geneli (6-18 ay)</div>
+          <div class="tl-sub">
+            • 500+ müşteri, 125+ Engel<br>
+            • Krankenfahrten B2B anlaşmaları<br>
+            • Seed Yatırım: 500K€<br>
+            • 2-3 kişilik takım kur<br>
+            • Hedef: Aylık 15.000-30.000€
+          </div>
+          <div class="tl-date">Ekim 2026 → Ekim 2027</div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-title">🌳 Faz 3 — Almanya Geneli (18-36 ay)</div>
+          <div class="tl-sub">
+            • 5.000+ müşteri, 1.000+ Engel<br>
+            • Her büyük şehirde aktif<br>
+            • Series A yatırım: 2-5M€<br>
+            • 15-20 kişilik takım<br>
+            • Hedef: Aylık 200.000€+
+          </div>
+          <div class="tl-date">2027 → 2028</div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-title">🏆 Faz 4 — Avrupa & Exit (3-5 yıl)</div>
+          <div class="tl-sub">
+            • 50.000+ müşteri<br>
+            • Hollanda, Avusturya, İsviçre<br>
+            • Yıllık 50M€+ gelir<br>
+            • IPO veya büyük exit
+          </div>
+          <div class="tl-date">2029 → 2031</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: HIZLI LİNKLER -->
+  <div id="tab-links" class="tab-content">
+    <div class="section">
+      <div class="section-title">🔗 Hızlı Erişim</div>
+      <div class="quick-links">
+        <a class="qlink" href="https://alltagsengel.care" target="_blank">
+          <div class="ql-icon">🌐</div>
+          <div><div class="ql-title">alltagsengel.care</div><div class="ql-sub">Canlı website</div></div>
+        </a>
+        <a class="qlink" href="https://appstoreconnect.apple.com" target="_blank">
+          <div class="ql-icon">🍎</div>
+          <div><div class="ql-title">App Store Connect</div><div class="ql-sub">iOS review durumu</div></div>
+        </a>
+        <a class="qlink" href="https://ads.google.com" target="_blank">
+          <div class="ql-icon">📢</div>
+          <div><div class="ql-title">Google Ads</div><div class="ql-sub">Reklam yönetimi</div></div>
+        </a>
+        <a class="qlink" href="https://play.google.com/console" target="_blank">
+          <div class="ql-icon">🤖</div>
+          <div><div class="ql-title">Play Console</div><div class="ql-sub">Android app yönetimi</div></div>
+        </a>
+        <a class="qlink" href="https://tagmanager.google.com" target="_blank">
+          <div class="ql-icon">🏷️</div>
+          <div><div class="ql-title">Tag Manager</div><div class="ql-sub">Conversion tracking</div></div>
+        </a>
+        <a class="qlink" href="https://vercel.com/dashboard" target="_blank">
+          <div class="ql-icon">▲</div>
+          <div><div class="ql-title">Vercel</div><div class="ql-sub">Deploy & hosting</div></div>
+        </a>
+        <a class="qlink" href="https://supabase.com/dashboard/project/nnwyktkqibdjxgimjyuq" target="_blank">
+          <div class="ql-icon">⚡</div>
+          <div><div class="ql-title">Supabase</div><div class="ql-sub">Database & auth</div></div>
+        </a>
+        <a class="qlink" href="https://github.com/YusufFerhatDemir/alltagsengel" target="_blank">
+          <div class="ql-icon">🐙</div>
+          <div><div class="ql-title">GitHub</div><div class="ql-sub">Kaynak kodu</div></div>
+        </a>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function switchTab(id) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+  event.target.classList.add('active');
+}
+
+function toggleCheck(el) {
+  el.classList.toggle('checked');
+  el.textContent = el.classList.contains('checked') ? '✓' : '';
+  const task = el.closest('.task');
+  task.classList.toggle('done');
+}
+</script>
+</body>
+</html>
