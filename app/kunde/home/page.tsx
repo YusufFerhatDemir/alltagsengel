@@ -272,7 +272,7 @@ export default function KundeHomePage() {
             {activeCategory === 'all' ? 'Top Engel' : categories.find(c => c.key === activeCategory)?.label || 'Engel'}
             <span style={{ fontSize: 12, fontWeight: 400, color: 'var(--ink4)', marginLeft: 6 }}>im Umkreis von {searchRadius} km</span>
           </div>
-          <div className="section-link">Alle ansehen</div>
+          <Link href="/kunde/karte" className="section-link">Alle ansehen</Link>
         </div>
 
         {filteredAngels.length > 0 ? (
