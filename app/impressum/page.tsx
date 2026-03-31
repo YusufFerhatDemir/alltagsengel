@@ -35,7 +35,7 @@ export default function ImpressumPage() {
           <h2>Kontakt</h2>
           <p>
             E-Mail: info@alltagsengel.care<br/>
-            Telefon: +49 163 9558833
+            Telefon: +49 178 3382825
           </p>
         </section>
 
