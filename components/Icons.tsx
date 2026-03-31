@@ -3,13 +3,14 @@ interface IconProps {
   color?: string
   strokeWidth?: number
   className?: string
+  fill?: string
 }
 
 const defaults = { size: 20, color: 'currentColor', strokeWidth: 1.8 }
 
-function I({ size = defaults.size, color = defaults.color, strokeWidth = defaults.strokeWidth, className, children }: IconProps & { children: React.ReactNode }) {
+function I({ size = defaults.size, color = defaults.color, strokeWidth = defaults.strokeWidth, className, fill = 'none', children }: IconProps & { children: React.ReactNode }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <svg width={size} height={size} viewBox="0 0 24 24" fill={fill} stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" className={className}>
       {children}
     </svg>
   )
