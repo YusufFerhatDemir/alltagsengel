@@ -1,0 +1,47 @@
+
+🎬 V27a_rufst_du_an.mp4
+  Loading clips...
+    REELS-gesellschaft-neu.mp4: 120 frames
+    REELS-arztbegleitung-neu.mp4: 120 frames
+    REELS-spaziergang-neu.mp4: 120 frames
+    REELS-einkauf-neu.mp4: 120 frames
+    V27a: 0/450
+    V27a: 60/450
+    V27a: 120/450
+    V27a: 180/450
+    V27a: 240/450
+    V27a: 300/450
+    V27a: 360/450
+    V27a: 420/450
+  ✓ V27a_rufst_du_an.mp4 (15s, 4.8MB)
+
+🎬 V27c_papa_sitzt_allein.mp4
+  Loading clips...
+    REELS-gesellschaft-neu.mp4: 120 frames
+    REELS-arztbegleitung-neu.mp4: 120 frames
+    REELS-spaziergang-neu.mp4: 120 frames
+    V27c: 0/450
+    V27c: 60/450
+    V27c: 120/450
+    V27c: 180/450
+    V27c: 240/450
+    V27c: 300/450
+    V27c: 360/450
+    V27c: 420/450
+  ✓ V27c_papa_sitzt_allein.mp4 (15s, 4.5MB)
+
+🎬 V27e_was_oma_braucht.mp4
+  Loading clips...
+    REELS-einkauf-neu.mp4: 120 frames
+    REELS-gesellschaft-neu.mp4: 120 frames
+    REELS-spaziergang-neu.mp4: 120 frames
+    V27e: 0/420
+    V27e: 60/420
+    V27e: 120/420
+    V27e: 180/420
+    V27e: 240/420
+    V27e: 300/420
+    V27e: 360/420
+  ✓ V27e_was_oma_braucht.mp4 (14s, 4.2MB)
+
+✅ 3 text-matched composite videos ready!

@@ -1,0 +1,32 @@
+
+🎬 V29b_krankenfahrt_vs_transport.mp4
+  V29b clips...
+    kf_12s.mp4: 120f
+    rkf_0s.mp4: 120f
+    fahr_12s.mp4: 120f
+    kanim_0s.mp4: 120f
+    kf_18s.mp4: 120f
+    b:0/450
+    b:90/450
+    b:180/450
+    b:270/450
+    b:360/450
+  ✓ V29b_krankenfahrt_vs_transport.mp4 (15s, 2.6MB)
+
+🎬 V29e_pschein_krankenfahrer.mp4
+  V29e clips...
+    nord_12s.mp4: 120f
+    kanim_12s.mp4: 120f
+    rkf_8s.mp4: 120f
+    fwalk_10s.mp4: 120f
+    fahr_24s.mp4: 120f
+    e:0/450
+    e:90/450
+    e:180/450
+    e:270/450
+    e:360/450
+  ✓ V29e_pschein_krankenfahrer.mp4 (15s, 2.2MB)
+  🗑 removed V29b_oma_dialyse.mp4
+  🗑 removed V29e_pov_erster_tag_fahrer.mp4
+
+✅ V29b + V29e replaced — pure Aufklärung!
