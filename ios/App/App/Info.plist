@@ -29,7 +29,7 @@
 	<key>NSCameraUsageDescription</key>
 	<string>AlltagsEngel benötigt Zugriff auf die Kamera, um Dokumente und Pflegenachweise zu fotografieren.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>AlltagsEngel verwendet deinen Standort, um Alltagsbegleiter in deiner Nähe zu finden.</string>
+	<string>AlltagsEngel verwendet deinen Standort, um Alltagsbegleiter und Krankenfahrten in deiner Nähe zu finden. Zum Beispiel: Wenn du eine Alltagsbegleitung buchst, zeigen wir dir verfügbare Engel in deinem Umkreis sortiert nach Entfernung.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>AlltagsEngel benötigt Zugriff auf die Fotobibliothek, um Profilbilder und Dokumente hochzuladen.</string>
 	<key>UIBackgroundModes</key>
