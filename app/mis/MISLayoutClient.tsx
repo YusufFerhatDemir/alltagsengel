@@ -262,7 +262,7 @@ export default function MISLayout({ children }: { children: React.ReactNode }) {
                     <button onClick={() => { setNotifications(0); setNotifOpen(false) }} style={{ background: 'none', border: 'none', color: BRAND.gold, cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>Alle gelesen</button>
                   </div>
                   {[
-                    { icon: 'files', title: 'Pitch Deck v2 hochgeladen', time: 'vor 2 Stunden', color: BRAND.gold, href: '/mis/data-room' },
+                    { icon: 'files', title: 'Pitch Deck v2 hochgeladen', time: 'vor 2 Stunden', color: BRAND.gold, href: '/mis/dataroom' },
                     { icon: 'shield', title: 'QP-002 Audit abgeschlossen', time: 'vor 5 Stunden', color: BRAND.success, href: '/mis/quality' },
                     { icon: 'users', title: 'Neuer Engel registriert', time: 'vor 1 Tag', color: BRAND.info, href: '/mis/team' },
                   ].map((n, i) => (
