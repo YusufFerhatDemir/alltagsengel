@@ -5,6 +5,7 @@ import LayoutWrapper from '@/components/LayoutWrapper'
 import VisitorTracker from '@/components/VisitorTracker'
 import CookieConsent from '@/components/CookieConsent'
 import ServiceWorkerRegister from '@/components/ServiceWorkerRegister'
+import GoogleTagManager from '@/components/GoogleTagManager'
 
 const jost = Jost({ subsets: ['latin'], variable: '--font-jost', weight: ['300','400','500','600','700'] })
 const cormorant = Cormorant_Garamond({ subsets: ['latin'], variable: '--font-cormorant', weight: ['400','500','600','700'], style: ['normal','italic'] })
@@ -117,6 +118,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         `}} />
       </head>
       <body className={`${jost.variable} ${cormorant.variable}`} style={{ fontFamily: "'Jost', sans-serif", backgroundColor: '#1A1612', color: '#F5F0E8' }}>
+        <GoogleTagManager />
         <VisitorTracker />
         <LayoutWrapper>
           {children}
