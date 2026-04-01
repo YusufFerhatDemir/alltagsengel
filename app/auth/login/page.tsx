@@ -169,6 +169,9 @@ function LoginForm() {
         <div style={{ marginTop: 16, borderTop: '1px solid rgba(201,150,60,0.08)', paddingTop: 14 }}>
           <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.25)', textAlign: 'center', marginBottom: 10, textTransform: 'uppercase', letterSpacing: 1 }}>Portale</div>
           <div style={{ display: 'flex', gap: 8 }}>
+            <Link href="/admin/home" style={{ flex: 1, textDecoration: 'none' }}>
+              <div style={{ textAlign: 'center', fontSize: 12, padding: '10px 0', background: 'rgba(201,150,60,0.12)', color: 'var(--gold-2)', border: '1px solid rgba(201,150,60,0.25)', borderRadius: 10, fontWeight: 600 }}>Admin</div>
+            </Link>
             <Link href="/mis" style={{ flex: 1, textDecoration: 'none' }}>
               <div style={{ textAlign: 'center', fontSize: 12, padding: '10px 0', background: 'rgba(201,150,60,0.06)', color: 'rgba(255,255,255,0.4)', border: '1px solid rgba(201,150,60,0.12)', borderRadius: 10 }}>MIS Portal</div>
             </Link>
