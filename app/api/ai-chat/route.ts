@@ -149,6 +149,102 @@ DEINE ROLLE:
 - Du kannst Berichte erstellen, Daten analysieren, Trends erkennen
 - Formatiere Antworten übersichtlich mit Aufzählungen und Emojis`
 
+// ──────────────────────────────────────────────────────
+// Google Gemini API Call
+// ──────────────────────────────────────────────────────
+async function callGemini(systemPrompt: string, messages: Array<{ role: string; content: string }>) {
+  const apiKey = process.env.GOOGLE_AI_API_KEY
+  if (!apiKey) return null
+
+  // Gemini erwartet ein anderes Format: contents[] mit role "user" / "model"
+  const contents = []
+
+  // System-Anweisung als erster User-Turn + Model-Bestätigung
+  contents.push({
+    role: 'user',
+    parts: [{ text: systemPrompt + '\n\nBitte bestätige, dass du diese Anweisungen verstanden hast.' }]
+  })
+  contents.push({
+    role: 'model',
+    parts: [{ text: 'Verstanden! Ich bin der AlltagsEngel KI-Assistent und habe Zugriff auf die aktuellen Live-Daten. Ich antworte auf Deutsch, professionell und freundlich. Wie kann ich helfen?' }]
+  })
+
+  // Chat-Verlauf konvertieren
+  for (const msg of messages) {
+    contents.push({
+      role: msg.role === 'assistant' ? 'model' : 'user',
+      parts: [{ text: msg.content }]
+    })
+  }
+
+  const response = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents,
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: 2000,
+        },
+        safetySettings: [
+          { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
+          { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
+          { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },
+          { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' },
+        ],
+      }),
+    }
+  )
+
+  if (!response.ok) {
+    const err = await response.text()
+    console.error('Gemini API Error:', err)
+    return null
+  }
+
+  const data = await response.json()
+  return data.candidates?.[0]?.content?.parts?.[0]?.text || null
+}
+
+// ──────────────────────────────────────────────────────
+// OpenAI API Call (Fallback)
+// ──────────────────────────────────────────────────────
+async function callOpenAI(systemPrompt: string, messages: Array<{ role: string; content: string }>) {
+  const apiKey = process.env.OPENAI_API_KEY
+  if (!apiKey) return null
+
+  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: 'gpt-4o-mini',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        ...messages.slice(-10),
+      ],
+      max_tokens: 2000,
+      temperature: 0.7,
+    }),
+  })
+
+  if (!response.ok) {
+    const err = await response.text()
+    console.error('OpenAI API Error:', err)
+    return null
+  }
+
+  const data = await response.json()
+  return data.choices?.[0]?.message?.content || null
+}
+
+// ──────────────────────────────────────────────────────
+// Main Handler: Gemini (primär) → OpenAI (Fallback)
+// ──────────────────────────────────────────────────────
 export async function POST(req: NextRequest) {
   try {
     // Auth check
@@ -168,45 +264,32 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Ungültige Anfrage' }, { status: 400 })
     }
 
-    const apiKey = process.env.OPENAI_API_KEY
-    if (!apiKey) {
+    // Prüfe ob mindestens ein API-Key vorhanden ist
+    if (!process.env.GOOGLE_AI_API_KEY && !process.env.OPENAI_API_KEY) {
       return NextResponse.json(
-        { error: 'OpenAI API-Key nicht konfiguriert.' },
+        { error: 'Kein KI-API-Key konfiguriert.' },
         { status: 500 }
       )
     }
 
     // Live-Daten laden
     const liveContext = await fetchLiveContext()
+    const fullPrompt = SYSTEM_PROMPT + '\n\n' + liveContext
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: [
-          { role: 'system', content: SYSTEM_PROMPT + '\n\n' + liveContext },
-          ...messages.slice(-10), // Letzte 10 Nachrichten für Kontext
-        ],
-        max_tokens: 2000,
-        temperature: 0.7,
-      }),
-    })
+    // Gemini zuerst versuchen, dann OpenAI als Fallback
+    let content = await callGemini(fullPrompt, messages.slice(-10))
 
-    if (!response.ok) {
-      const err = await response.text()
-      console.error('OpenAI API Error:', err)
+    if (!content) {
+      console.log('Gemini nicht verfügbar, versuche OpenAI...')
+      content = await callOpenAI(fullPrompt, messages.slice(-10))
+    }
+
+    if (!content) {
       return NextResponse.json(
         { error: 'KI-Service vorübergehend nicht verfügbar.' },
         { status: 500 }
       )
     }
-
-    const data = await response.json()
-    const content = data.choices?.[0]?.message?.content || 'Keine Antwort erhalten.'
 
     return NextResponse.json({ content })
   } catch (error) {

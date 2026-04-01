@@ -113,7 +113,7 @@ export default function AiAssistantPage() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20, height: isMobile ? 'auto' : 'calc(100vh - 180px)' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
-        <SectionHeader title="KI-Assistent" subtitle="GPT-4o mit Echtzeit-Zugriff auf alle Unternehmensdaten" icon="sparkles" />
+        <SectionHeader title="KI-Assistent" subtitle="Gemini AI mit Echtzeit-Zugriff auf alle Unternehmensdaten" icon="sparkles" />
         <button onClick={clearChat} style={{
           padding: '8px 16px', borderRadius: 8, border: `1px solid ${BRAND.border}`,
           background: 'none', color: BRAND.muted, fontSize: 12, cursor: 'pointer',
@@ -267,7 +267,7 @@ export default function AiAssistantPage() {
             border: `1px solid rgba(201,150,60,0.15)`,
             fontSize: 11, color: BRAND.muted, lineHeight: 1.5,
           }}>
-            💡 Der Assistent nutzt GPT-4o mit Echtzeit-Daten aus Ihrer Supabase-Datenbank. Jede Antwort basiert auf aktuellen Unternehmenskennzahlen.
+            💡 Der Assistent nutzt Google Gemini AI mit Echtzeit-Daten aus Ihrer Supabase-Datenbank. Jede Antwort basiert auf aktuellen Unternehmenskennzahlen.
           </div>
         </div>
       </div>
