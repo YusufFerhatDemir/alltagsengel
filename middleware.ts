@@ -75,8 +75,15 @@ export async function middleware(request: NextRequest) {
 
     return supabaseResponse
   } catch (err) {
-    // If middleware errors, allow the request through rather than hanging
+    // FAIL-CLOSED: If middleware errors on protected routes, deny access
     console.error('Middleware error:', err)
+    const pathname = request.nextUrl.pathname
+    if (pathname.startsWith('/admin') || pathname.startsWith('/mis')) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/auth/login'
+      url.searchParams.set('error', 'admin_required')
+      return NextResponse.redirect(url)
+    }
     return supabaseResponse
   }
 }
