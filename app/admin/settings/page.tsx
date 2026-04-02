@@ -80,24 +80,42 @@ export default function AdminSettings() {
   async function handleGrantAdmin(userId: string) {
     if (!userId) return
     setAdminMsg('')
-    const { error } = await supabase.from('profiles').update({ role: 'admin' }).eq('id', userId)
-    if (error) {
-      setAdminMsg('Fehler: ' + error.message)
-    } else {
-      setAdminMsg('✓ Admin-Rolle vergeben!')
-      setSelectedUserId('')
-      loadData()
+    try {
+      const res = await fetch('/api/admin/manage-role', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, action: 'grant' }),
+      })
+      const data = await res.json()
+      if (data.error) {
+        setAdminMsg('Fehler: ' + data.error)
+      } else {
+        setAdminMsg('✓ ' + data.message)
+        setSelectedUserId('')
+        loadData()
+      }
+    } catch {
+      setAdminMsg('Fehler: Netzwerkfehler')
     }
   }
 
   async function handleRevokeAdmin(userId: string) {
     if (userId === currentUser?.id) { setAdminMsg('Du kannst dir selbst nicht die Rolle entziehen!'); return }
-    const { error } = await supabase.from('profiles').update({ role: 'kunde' }).eq('id', userId)
-    if (error) {
-      setAdminMsg('Fehler: ' + error.message)
-    } else {
-      setAdminMsg('✓ Admin-Rolle entzogen!')
-      loadData()
+    try {
+      const res = await fetch('/api/admin/manage-role', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, action: 'revoke' }),
+      })
+      const data = await res.json()
+      if (data.error) {
+        setAdminMsg('Fehler: ' + data.error)
+      } else {
+        setAdminMsg('✓ ' + data.message)
+        loadData()
+      }
+    } catch {
+      setAdminMsg('Fehler: Netzwerkfehler')
     }
   }
 

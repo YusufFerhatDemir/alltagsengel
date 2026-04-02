@@ -10,7 +10,10 @@ import Icon3D from '@/components/Icon3D'
 function RegisterForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const role = searchParams.get('role') || 'kunde'
+  // SICHERHEIT: Nur erlaubte Rollen — admin/superadmin NICHT per URL möglich
+  const ALLOWED_SIGNUP_ROLES = ['kunde', 'engel', 'fahrer']
+  const rawRole = searchParams.get('role') || 'kunde'
+  const role = ALLOWED_SIGNUP_ROLES.includes(rawRole) ? rawRole : 'kunde'
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [firstName, setFirstName] = useState('')
