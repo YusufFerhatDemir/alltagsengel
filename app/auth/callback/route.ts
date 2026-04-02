@@ -14,11 +14,14 @@ export async function GET(request: Request) {
 
       if (user) {
         // Create profile if it doesn't exist yet (from user metadata set during signup)
+        // SICHERHEIT: Nur erlaubte Rollen — admin/superadmin NIEMALS automatisch erstellen
+        const ALLOWED_SIGNUP_ROLES = ['kunde', 'engel', 'fahrer']
         const meta = user.user_metadata
         if (meta?.role) {
+          const safeRole = ALLOWED_SIGNUP_ROLES.includes(meta.role) ? meta.role : 'kunde'
           await supabase.from('profiles').upsert({
             id: user.id,
-            role: meta.role,
+            role: safeRole,
             first_name: meta.first_name || '',
             last_name: meta.last_name || '',
             email: user.email,
