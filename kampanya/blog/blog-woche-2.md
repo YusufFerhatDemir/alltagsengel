@@ -1,12 +1,12 @@
-# §45b SGB XI: Der Entlastungsbetrag — So nutzen Sie Ihre 125€ pro Monat
+# §45b SGB XI: Der Entlastungsbetrag — So nutzen Sie Ihre 131€ pro Monat
 
-**Meta-Beschreibung:** Entlastungsbetrag §45b SGB XI erklärt: Wer hat Anspruch auf 125€ monatlich? Praktischer Leitfaden zur Antragstellung und Nutzung.
+**Meta-Beschreibung:** Entlastungsbetrag §45b SGB XI erklärt: Wer hat Anspruch auf 131€ monatlich? Praktischer Leitfaden zur Antragstellung und Nutzung.
 
 ---
 
 ## Einleitung
 
-125 Euro pro Monat – das klingt nicht nach viel, aber für viele pflegebedürftige Menschen in Deutschland bedeutet dieser Betrag die Chance auf mehr Unabhängigkeit, bessere Lebensqualität und eine Entlastung für die Familie.
+131 Euro pro Monat – das klingt nicht nach viel, aber für viele pflegebedürftige Menschen in Deutschland bedeutet dieser Betrag die Chance auf mehr Unabhängigkeit, bessere Lebensqualität und eine Entlastung für die Familie.
 
 Der **Entlastungsbetrag nach §45b SGB XI** ist eine oft unterschätzte Leistung der Pflegeversicherung, die speziell dafür gedacht ist, den Alltag zu erleichtern. Doch viele Menschen wissen gar nicht, dass sie Anspruch darauf haben oder wie sie ihn am besten nutzen können.
 
@@ -18,7 +18,7 @@ In diesem umfassenden Leitfaden zeigen wir Ihnen genau, wie §45b funktioniert u
 
 ### Die gesetzliche Grundlage
 
-Der **§45b Abs. 1 SGB XI** sieht vor, dass jede Person, die von der Pflegekasse als pflegebedürftig anerkannt ist, einen monatlichen Anspruch auf einen **Entlastungsbetrag von bis zu 125 Euro** hat.
+Der **§45b Abs. 1 SGB XI** sieht vor, dass jede Person, die von der Pflegekasse als pflegebedürftig anerkannt ist, einen monatlichen Anspruch auf einen **Entlastungsbetrag von bis zu 131 Euro** hat.
 
 Diese Regelung wurde eingeführt, um die Lebensqualität pflegebedürftiger Menschen zu verbessern und Angehörige zu entlasten, die oft die Hauptlast der Pflegeaufgaben tragen.
 
@@ -83,7 +83,7 @@ Schritt-für-Schritt:
 
 ---
 
-## Praktischer Leitfaden: So nutzen Sie Ihre 125 Euro optimal
+## Praktischer Leitfaden: So nutzen Sie Ihre 131 Euro optimal
 
 ### Schritt 1: Pflegegradeinstufung prüfen
 
@@ -138,10 +138,10 @@ Die **AlltagsEngel-App** macht es besonders einfach:
 ### Beispiel 1: Regelmäßige Alltagsbegleitung
 **Situation**: Maria ist 78 Jahre alt und lebt allein. Sie hat Pflegegrad 2.
 
-**Lösung**: 
+**Lösung**:
 - 2 x pro Woche einen Alltagsbegleiter für 2 Stunden
 - Bei durchschnittlich 20 Euro/Stunde = 80 Euro/Woche
-- Das passt locker in die 125 Euro/Monat
+- Das passt locker in die 131 Euro/Monat
 
 **Ergebnis**: Maria kann selbstständig einkaufen, hat Gesellschaft und fühlt sich nicht isoliert.
 
@@ -152,7 +152,7 @@ Die **AlltagsEngel-App** macht es besonders einfach:
 - 1 x pro Woche 2 Stunden Alltagsbegleitung = 80-100 Euro/Monat
 - Zusätzlich 1-2 x monatlich spontane Begleitung zu Arztterminen
 
-**Ergebnis**: Hans bleibt mobil und hat Kontakt, der Betrag ist völlig ausreichend.
+**Ergebnis**: Hans bleibt mobil und hat Kontakt, der Betrag ist völlig ausreichend für 131 Euro.
 
 ### Beispiel 3: Entlastung für Angehörige
 **Situation**: Petra (65) kümmert sich um ihre 88-jährige Mutter. Die Mutter hat Pflegegrad 3.
@@ -220,7 +220,7 @@ Mit der richtigen Unterstützung bleibt die Lebensqualität erhalten, und die Fa
 
 **Sie haben einen Pflegegrad und möchten Ihren Entlastungsbetrag nutzen?**
 
-Laden Sie die **AlltagsEngel-App** herunter und finden Sie noch heute einen zertifizierten Alltagsbegleiter in Ihrer Nähe. Mit Herz für dich da – mit dem vollen Betrag von 125 Euro pro Monat.
+Laden Sie die **AlltagsEngel-App** herunter und finden Sie noch heute einen zertifizierten Alltagsbegleiter in Ihrer Nähe. Mit Herz für dich da – mit dem vollen Betrag von 131 Euro pro Monat.
 
 [App jetzt herunterladen](#download-app)
 

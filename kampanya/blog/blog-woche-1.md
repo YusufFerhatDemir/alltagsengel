@@ -57,7 +57,7 @@ Die Finanzierung von Alltagsbegleitung in Deutschland ist über das **Sozialgese
 
 ### Was ist §45b?
 
-§45b SGB XI sieht einen monatlichen **Entlastungsbetrag von 125 Euro** vor, der Pflegebedürftigen zur Verfügung steht. Dieser Betrag ist speziell dafür gedacht, Leistungen zu finanzieren, die die Pflegeperson entlasten und die Betreuung und Unterstützung im alltäglichen Leben fördern.
+§45b SGB XI sieht einen monatlichen **Entlastungsbetrag von 131 Euro** vor, der Pflegebedürftigen zur Verfügung steht. Dieser Betrag ist speziell dafür gedacht, Leistungen zu finanzieren, die die Pflegeperson entlasten und die Betreuung und Unterstützung im alltäglichen Leben fördern.
 
 ### Wer hat Anspruch?
 
@@ -67,7 +67,7 @@ Der Entlastungsbetrag steht grundsätzlich allen Personen zu, die:
 
 ### Wie funktioniert die Finanzierung?
 
-Der 125-Euro-Betrag kann direkt für die Bezahlung eines zertifizierten Alltagsbegleiters verwendet werden. Mit AlltagsEngel ist dieser Prozess besonders einfach: Sie finden schnell einen passenden Begleiter, buchen die Stunden, und die Kosten werden direkt mit Ihrer Pflegekasse abgerechnet.
+Der 131-Euro-Betrag kann direkt für die Bezahlung eines zertifizierten Alltagsbegleiters verwendet werden. Mit AlltagsEngel ist dieser Prozess besonders einfach: Sie finden schnell einen passenden Begleiter, buchen die Stunden, und die Kosten werden direkt mit Ihrer Pflegekasse abgerechnet.
 
 ---
 
@@ -96,7 +96,7 @@ Isolation ist ein großes Problem im Alter. Ein Alltagsbegleiter bietet regelmä
 Pflegende Familienmitglieder können wichtige Pausen nehmen und Burnout vermeiden.
 
 ### 4. **Kostengünstig durch §45b**
-Der 125-Euro-Monatsbetrag macht professionelle Unterstützung für viele Menschen erschwinglich.
+Der 131-Euro-Monatsbetrag macht professionelle Unterstützung für viele Menschen erschwinglich.
 
 ### 5. **Persönliche Beziehungen**
 Im Gegensatz zu institutioneller Pflege entstehen oft echte, vertrauensvolle Beziehungen zwischen Begleiter und Person.
@@ -119,7 +119,7 @@ Bei **AlltagsEngel** machen wir es einfach:
 Wenn Sie oder ein Angehöriger von Alltagsbegleitung profitieren könnte, sind hier die nächsten Schritte:
 
 1. **Pflegegrad prüfen**: Stellen Sie sicher, dass ein Pflegegrad vorhanden ist oder beantragen Sie einen bei Ihrer Pflegekasse
-2. **Informieren Sie sich**: Erfahren Sie mehr über den Entlastungsbetrag von 125 Euro
+2. **Informieren Sie sich**: Erfahren Sie mehr über den Entlastungsbetrag von 131 Euro
 3. **AlltagsEngel-App nutzen**: Laden Sie die App herunter und entdecken Sie verfügbare Alltagsbegleiter in Ihrer Nähe
 4. **Verbindung aufbauen**: Finden Sie einen Begleiter, dem Sie vertrauen, und beginnen Sie mit den ersten Stunden
 

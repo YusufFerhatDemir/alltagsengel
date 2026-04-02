@@ -13,7 +13,7 @@
 [0-3s] Hook: "Es gibt eine App, die den Alltag deiner Großeltern verändern kann."
 [3-10s] "AlltagsEngel verbindet Menschen, die Hilfe brauchen, mit zertifizierten Begleitern."
 [10-18s] "Einkaufen. Spazieren. Arztbesuche. Oder einfach da sein."
-[18-24s] "100% versichert. §45b-fähig. 125€ im Monat von der Kasse."
+[18-24s] "100% versichert. §45b-fähig. 131€ im Monat von der Kasse."
 [24-30s] "AlltagsEngel — Mit Herz für dich da. Link in Bio."
 
 **Text Overlay:** "Diese App braucht jede Familie 👇"
@@ -45,16 +45,16 @@
 
 **Dauer:** 30 Sek
 **Format:** Edutainment / Erklär-Video
-**Hook:** "125€ jeden Monat — und die meisten wissen es nicht!"
+**Hook:** "131€ jeden Monat — und die meisten wissen es nicht!"
 
 **Script:**
-[0-3s] "125 Euro. Jeden Monat. Und die meisten wissen es nicht."
-[3-8s] "Wenn du einen Pflegegrad hast, bekommst du 125€ monatlich für Entlastung."
+[0-3s] "131 Euro. Jeden Monat. Und die meisten wissen es nicht."
+[3-8s] "Wenn du einen Pflegegrad hast, bekommst du 131€ monatlich für Entlastung."
 [8-14s] "Das heißt: Einkaufshilfe, Spaziergänge, Arztbegleitung — alles bezahlt."
 [14-20s] "Das Problem? Kaum jemand weiß, wo man die passende Begleitung findet."
 [20-26s] "AlltagsEngel macht es einfach: App öffnen, Engel finden, buchen."
 [26-30s] "§45b — vergiss es nie. Link in Bio."
 
-**Text Overlay:** "§45b = 125€/Monat für Alltagsbegleitung 🤯"
+**Text Overlay:** "§45b = 131€/Monat für Alltagsbegleitung 🤯"
 **Sound:** Trending "Wusstest du das?" Sound
 **Hashtags:** #§45b #Pflegegrad #Entlastungsbetrag #AlltagsEngel #GeldDasVerfällt #Pflege #WusstestDu #fyp

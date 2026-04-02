@@ -36,7 +36,7 @@ Entdecken Sie, wie AlltagsEngel den Unterschied macht. Mit Herz für dich da. �
 Der §45b SGB XI erklärt: So funktioniert der Entlastungsbetrag wirklich
 
 **Haupttext:**
-Viele Familien wissen nicht, dass ihnen monatlich **bis zu 125€ von der Pflegeversicherung** für professionelle Alltagsbegleitung zustehen — völlig kostenlos.
+Viele Familien wissen nicht, dass ihnen monatlich **bis zu 131€ von der Pflegeversicherung** für professionelle Alltagsbegleitung zustehen — völlig kostenlos.
 
 Das ist der **Entlastungsbetrag nach §45b SGB XI**. Hier ist, was Sie wissen müssen:
 

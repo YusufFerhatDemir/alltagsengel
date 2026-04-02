@@ -14,7 +14,7 @@
 
 ### Das Problem
 
-Millionen Menschen in Deutschland sind auf Unterstützung im Alltag angewiesen — sei es beim Einkaufen, bei Arztbesuchen oder einfach beim Spaziergang. Der monatliche Entlastungsbetrag nach §45b SGB XI (125 €) wird dabei oft nicht ausgeschöpft, weil passende Begleitung schwer zu finden ist. Gleichzeitig suchen qualifizierte Alltagsbegleiter nach zuverlässigen Aufträgen und Versicherungsschutz.
+Millionen Menschen in Deutschland sind auf Unterstützung im Alltag angewiesen — sei es beim Einkaufen, bei Arztbesuchen oder einfach beim Spaziergang. Der monatliche Entlastungsbetrag nach §45b SGB XI (131 €) wird dabei oft nicht ausgeschöpft, weil passende Begleitung schwer zu finden ist. Gleichzeitig suchen qualifizierte Alltagsbegleiter nach zuverlässigen Aufträgen und Versicherungsschutz.
 
 ### Die Lösung
 

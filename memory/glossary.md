@@ -4,7 +4,7 @@
 Premium Alltagsbegleitung (günlük hayat eşlik hizmeti) uygulaması. Almanya'da yaşlı ve bakım ihtiyacı olan kişilerle sertifikalı Alltagsbegleiter'ları (günlük hayat eşlikçileri) buluşturan bir platform.
 
 ## §45b SGB XI
-Almanya'daki Pflegeversicherung (bakım sigortası) kapsamında Entlastungsleistungen (rahatlama hizmetleri) için ayrılan bütçe. Aylık 125€. AlltagsEngel hizmetleri bu bütçeyle karşılanabilir.
+Almanya'daki Pflegeversicherung (bakım sigortası) kapsamında Entlastungsleistungen (rahatlama hizmetleri) için ayrılan bütçe. Aylık 131€. AlltagsEngel hizmetleri bu bütçeyle karşılanabilir.
 
 ## Engel
 Uygulama içinde "Alltagsbegleiter" rolü — hizmet veren kişi. Sertifikalı, sigortalı, serbest çalışan.

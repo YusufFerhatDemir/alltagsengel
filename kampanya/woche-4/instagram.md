@@ -32,7 +32,7 @@ Und es werden jeden Tag mehr. 💛
 
 Mit AlltagsEngel findest du in wenigen Minuten einen zertifizierten Engel in deiner Nähe. Fair. Versichert. Mit Herz.
 
-**Der §45b Entlastungsbetrag wartet** — nutzen statt aufschieben 125€/Monat für die Unterstützung, die du verdienst.
+**Der §45b Entlastungsbetrag wartet** — nutzen statt aufschieben 131€/Monat für die Unterstützung, die du verdienst.
 
 Jetzt kostenlos herunterladen. 👇
 

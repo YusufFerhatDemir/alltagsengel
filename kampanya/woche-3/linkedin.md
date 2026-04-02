@@ -64,7 +64,7 @@ Die Realität der Pflegesituation in Deutschland ist präsent und wachsend:
 • 4,3 Millionen pflegebedürftige Menschen in Deutschland (2024)
 • 80% der Pflege erfolgt durch Angehörige – oft unter enormer Belastung
 • Durchschnittlicher Stress-Index: 8,2 von 10 bei pflegenden Angehörigen
-• §45b SGB XI: 125€/Monat Leistungsbudget für Alltagsbegleitung (unterutilisiert!)
+• §45b SGB XI: 131€/Monat Leistungsbudget für Alltagsbegleitung (unterutilisiert!)
 • Nur 12% der Anspruchsberechtigten nutzen derzeit Alltagshilfen
 
 🎯 WAS BEDEUTET DAS?

@@ -16,7 +16,7 @@ AlltagsEngel ist eine App, die pflegebedürftige Menschen mit zertifizierten All
 
 ### Warum ist das wichtig?
 
-In Deutschland sind über 5 Millionen Menschen pflegebedürftig. 80% werden zu Hause gepflegt — oft von Angehörigen, die selbst am Limit sind. Gleichzeitig gibt es den **Entlastungsbetrag nach §45b** (125€ pro Monat), der oft nicht genutzt wird, weil passende Hilfe schwer zu finden ist.
+In Deutschland sind über 5 Millionen Menschen pflegebedürftig. 80% werden zu Hause gepflegt — oft von Angehörigen, die selbst am Limit sind. Gleichzeitig gibt es den **Entlastungsbetrag nach §45b** (131€ pro Monat), der oft nicht genutzt wird, weil passende Hilfe schwer zu finden ist.
 
 AlltagsEngel ändert das.
 

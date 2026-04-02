@@ -51,7 +51,7 @@ Was ist §45b SGB XI und wie kann es Ihnen 125€ pro Monat für Entlastungsleis
 **Anspruchsvoraussetzungen:**
 - **Wer:** Personen mit anerkanntem Pflegegrad (empfohlen: ab Pflegegrad 2, aber auch Grad 1 möglich)
 - **Wie lange:** Kontinuierlich, solange Pflegegrad besteht
-- **Höhe:** Pauschal 125€ pro Monat (oder zeitbasiert 1.612€/Jahr)
+- **Höhe:** Pauschal 131€ pro Monat (oder zeitbasiert 1.572€/Jahr)
 - **Kumulierbar:** Mit anderen Leistungen kombinierbar
 
 **Häufige Missverständnisse aufklären:**
@@ -145,7 +145,7 @@ Was ist §45b SGB XI und wie kann es Ihnen 125€ pro Monat für Entlastungsleis
 
 ## Wichtigste Gesprächspunkte (Summary)
 
-1. **§45b ist ein Recht:** 125€/Monat für Entlastungsleistungen, wenn Sie einen Pflegegrad haben
+1. **§45b ist ein Recht:** 131€/Monat für Entlastungsleistungen, wenn Sie einen Pflegegrad haben
 2. **Einfache Berechtigung:** Keine komplizierten Bedingungen, nur Pflegegrad nötig
 3. **Breites Spektrum:** Von Einkaufen bis Freizeitgestaltung — vieles ist abgedeckt
 4. **Unkomplizierte Nutzung:** AlltagsEngel macht die Abrechnung einfach

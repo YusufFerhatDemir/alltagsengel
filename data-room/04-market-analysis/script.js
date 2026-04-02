@@ -6,6 +6,13 @@ const GOLD = 'C9963C';
 const DARK_GRAY = '333333';
 const LIGHT_GRAY = 'F5F5F5';
 
+// Market calculations for €131/month
+// Previous: €131/month × 4.96M people × 12 months = €7.44B
+// Updated: €131/month × 4.96M people × 12 months = €7.80B
+const MONTHLY_BENEFIT = 131; // Updated from 125
+const CARE_DEPENDENT_POPULATION = 4.96; // millions
+const ANNUAL_MARKET = MONTHLY_BENEFIT * CARE_DEPENDENT_POPULATION * 12; // €7.80B
+
 // Helper function to create styled heading
 function createHeading(text, level = 1) {
   if (level === 1) {
@@ -179,10 +186,10 @@ const doc = new Document({
       // EXECUTIVE SUMMARY
       createHeading('EXECUTIVE SUMMARY'),
       createBodyParagraph('AlltagsEngel represents a transformative opportunity in the German elderly care market, leveraging regulatory reform (§45b SGB XI) and digital innovation to address a market segment currently underserved by traditional care providers.'),
-      createBodyParagraph('The German government introduced §45b SGB XI in 2017, providing care-dependent individuals with €125 per month specifically for non-medical companion services. This creates an estimated €7.44 billion annual addressable market (€125/month × 4.96 million care-dependent people), yet only ~40% of this budget is currently utilized—representing a €4.5 billion untapped opportunity.'),
+      createBodyParagraph('The German government introduced §45b SGB XI in 2017, providing care-dependent individuals with €131 per month specifically for non-medical companion services. This creates an estimated €7.80 billion annual addressable market (€131/month × 4.96 million care-dependent people), yet only ~40% of this budget is currently utilized—representing a €4.68 billion untapped opportunity.'),
       createBodyParagraph('AlltagsEngel operates a two-sided marketplace connecting care-dependent individuals and their families with certified daily companions. Our digital-first approach reduces friction, improves quality assurance, and captures regulatory compliance at scale—advantages unavailable to traditional care agencies competing through legacy operations.'),
       createBodyParagraph('Revenue model combines an 18% platform commission on bookings plus €9.99/month companion subscription fees. Unit economics demonstrate strong gross margins (60%+) and a favorable path to profitability through platform network effects and companion acquisition efficiency.'),
-      createBodyParagraph('Market opportunity is substantial: penetrating just 6.7% of the §45b addressable budget generates €500M annual revenue by Year 5. With demographic tailwinds (care-dependent population growing to 6.5M by 2035) and regulatory tailwinds (§45b awareness expanding), AlltagsEngel is positioned to capture significant market share in Germany\'s fastest-growing care segment.'),
+      createBodyParagraph('Market opportunity is substantial: penetrating just 6.4% of the §45b addressable budget generates €500M annual revenue by Year 5. With demographic tailwinds (care-dependent population growing to 6.5M by 2035) and regulatory tailwinds (§45b awareness expanding), AlltagsEngel is positioned to capture significant market share in Germany\'s fastest-growing care segment.'),
       
       // Page break
       new Paragraph({
@@ -201,16 +208,16 @@ const doc = new Document({
       createBodyParagraph('This demographic shift creates unprecedented demand for care services. Companion care (Betreuung) specifically addresses the rising prevalence of mild-to-moderate cognitive decline, dementia, and social isolation among elderly populations, where non-medical support significantly improves quality of life.'),
       
       createHeading('Regulatory Tailwind: §45b SGB XI', 2),
-      createBodyParagraph('§45b SGB XI (introduced 2017) is a transformative regulatory framework providing €125/month directly to care-dependent individuals (Pflegegrade 1-3) for non-medical companion services. This amount is specifically earmarked and cannot be redirected to medical care. The benefit applies to all individuals assessed as care-dependent under the statutory long-term care insurance (Pflegeversicherung).'),
+      createBodyParagraph('§45b SGB XI (introduced 2017) is a transformative regulatory framework providing €131/month directly to care-dependent individuals (Pflegegrade 1-3) for non-medical companion services. This amount is specifically earmarked and cannot be redirected to medical care. The benefit applies to all individuals assessed as care-dependent under the statutory long-term care insurance (Pflegeversicherung).'),
       createBodyParagraph('Market scale calculation:'),
       createBodyParagraph('  • Care-dependent population: 4.96 million (Pflegegrade 1-3)'),
-      createBodyParagraph('  • §45b monthly benefit: €125/person'),
-      createBodyParagraph('  • Monthly addressable budget: €620 million'),
-      createBodyParagraph('  • Annual addressable budget: €7.44 billion'),
-      createBodyParagraph('Critical insight: Current utilization is only ~40%, indicating €4.5 billion in unspent annual budget. Barriers to utilization include: lack of certified provider awareness, administrative complexity, geographic gaps in service availability, and consumer preference for digital platforms over traditional agencies.'),
+      createBodyParagraph('  • §45b monthly benefit: €131/person'),
+      createBodyParagraph('  • Monthly addressable budget: €650 million'),
+      createBodyParagraph('  • Annual addressable budget: €7.80 billion'),
+      createBodyParagraph('Critical insight: Current utilization is only ~40%, indicating €4.68 billion in unspent annual budget. Barriers to utilization include: lack of certified provider awareness, administrative complexity, geographic gaps in service availability, and consumer preference for digital platforms over traditional agencies.'),
       
       createHeading('Market Gaps & Opportunities', 2),
-      createBodyParagraph('The €4.5 billion unutilized §45b budget reflects critical market failures in traditional elder care:'),
+      createBodyParagraph('The €4.68 billion unutilized §45b budget reflects critical market failures in traditional elder care:'),
       createBodyParagraph('  1. Provider Fragmentation: Elderly individuals and families struggle to locate certified companions among thousands of small agencies'),
       createBodyParagraph('  2. Administrative Burden: Navigating insurance claims, certification verification, and payment processing requires significant effort'),
       createBodyParagraph('  3. Quality Uncertainty: No standardized quality metrics or reviews for companion services'),
@@ -323,10 +330,10 @@ const doc = new Document({
       createTableWithBorders(
         [
           ['Metric', 'Value', 'Note'],
-          ['Average Booking Value', '€20', '4-hour companion visit at €5/hour (market rate for §45b services)'],
-          ['Platform Commission (18%)', '€3.60', 'AlltagsEngel revenue per booking'],
-          ['Payment Processing Fee', '-€0.54', '1.5% payment processor fee'],
-          ['Net Revenue per Booking', '€3.06', 'Core platform economics'],
+          ['Average Booking Value', '€21.75', '4-hour companion visit at €5.44/hour (market rate for updated €131 service)'],
+          ['Platform Commission (18%)', '€3.91', 'AlltagsEngel revenue per booking'],
+          ['Payment Processing Fee', '-€0.59', '1.5% payment processor fee'],
+          ['Net Revenue per Booking', '€3.32', 'Core platform economics'],
           ['Companion Subscription Revenue', '€0.70', 'Assuming 20% companion adoption at €9.99/month, amortized per booking'],
           ['Gross Margin', '60-65%', 'After payment processing; excludes marketing & operations']
         ],
@@ -345,8 +352,8 @@ const doc = new Document({
       
       createHeading('Pricing Strategy', 2),
       createBodyParagraph('Pricing is aligned with regulatory framework:'),
-      createBodyParagraph('  • Customer Cost: €125/month (covered by §45b insurance benefit) for standard companion care'),
-      createBodyParagraph('  • Companion Earning: €102.50/month from platform (82% of €125), plus subscription revenue'),
+      createBodyParagraph('  • Customer Cost: €131/month (covered by §45b insurance benefit) for standard companion care'),
+      createBodyParagraph('  • Companion Earning: €107.42/month from platform (82% of €131), plus subscription revenue'),
       createBodyParagraph('  • Premium Tiers: Accelerated booking, verified reviews, specialist companions (higher rates)'),
       createBodyParagraph('Price point is optimal—users perceive service as "free" since insurance covers it, driving adoption without price sensitivity.'),
       
@@ -363,13 +370,13 @@ const doc = new Document({
       createBodyParagraph('€50+ billion: Total German elder care market (medical, assisted living, companion services)'),
       
       createHeading('Serviceable Addressable Market (SAM)', 2),
-      createBodyParagraph('€7.44 billion: §45b SGB XI companion care benefit budget'),
-      createBodyParagraph('Calculation: 4.96 million care-dependent individuals × €125/month × 12 months'),
-      createBodyParagraph('Current utilization: ~40% = €2.98 billion in active market'),
-      createBodyParagraph('Unutilized opportunity: ~60% = €4.46 billion in latent demand'),
+      createBodyParagraph('€7.80 billion: §45b SGB XI companion care benefit budget'),
+      createBodyParagraph('Calculation: 4.96 million care-dependent individuals × €131/month × 12 months'),
+      createBodyParagraph('Current utilization: ~40% = €3.12 billion in active market'),
+      createBodyParagraph('Unutilized opportunity: ~60% = €4.68 billion in latent demand'),
       
       createHeading('Serviceable Obtainable Market (SOM) - Year 5 Projection', 2),
-      createBodyParagraph('€500 million annual revenue (6.7% market penetration by Year 5)'),
+      createBodyParagraph('€500 million annual revenue (6.4% market penetration by Year 5)'),
       createBodyParagraph('Assumptions:'),
       createBodyParagraph('  • Customer Growth: Year 1: 5K users → Year 5: 150K active users'),
       createBodyParagraph('  • Companion Growth: Year 1: 500 companions → Year 5: 5,000 active companions'),
@@ -385,8 +392,8 @@ const doc = new Document({
           ['Active Customers', '5,000', '25,000', '55,000', '100,000', '150,000'],
           ['Active Companions', '500', '1,500', '2,500', '3,750', '5,000'],
           ['Monthly Bookings (M)', '0.2M', '1.0M', '2.2M', '4.0M', '6.0M'],
-          ['Avg Booking Value', '€20', '€20', '€20', '€20', '€20'],
-          ['Annual Platform Revenue', '€43.2M', '€216M', '€475M', '€864M', '€1.30B'],
+          ['Avg Booking Value', '€21.75', '€21.75', '€21.75', '€21.75', '€21.75'],
+          ['Annual Platform Revenue', '€47.1M', '€235.5M', '€516.6M', '€940M', '€1.41B'],
           ['Subscription Revenue', '€6M', '€36M', '€90M', '€180M', '€300M'],
           ['Gross Margin', '62%', '62%', '62%', '62%', '62%']
         ],
@@ -395,7 +402,7 @@ const doc = new Document({
       
       new Paragraph({ text: '', spacing: { after: 200 } }),
       
-      createBodyParagraph('By Year 5, AlltagsEngel captures 6.7% of available §45b budget (€500M of €7.44B), representing significant but achievable market penetration given network effects and first-mover advantages.'),
+      createBodyParagraph('By Year 5, AlltagsEngel captures 6.4% of available §45b budget (€500M of €7.44B), representing significant but achievable market penetration given network effects and first-mover advantages.'),
       
       // Page break
       new Paragraph({
@@ -409,7 +416,7 @@ const doc = new Document({
       createHeading('§45b SGB XI Framework', 2),
       createBodyParagraph('§45b of the German Social Code (Sozialgesetzbuch) Book XI provides the legal foundation for AlltagsEngel\'s business model:'),
       createBodyParagraph('  • Eligibility: Individuals with Pflegegrad 1, 2, or 3 (care-dependent classification)'),
-      createBodyParagraph('  • Benefit Amount: €125/month exclusively for companion services (Begleitung)'),
+      createBodyParagraph('  • Benefit Amount: €131/month exclusively for companion services (Begleitung)'),
       createBodyParagraph('  • Service Type: Non-medical care including social engagement, daily activities, household support'),
       createBodyParagraph('  • Regulatory Change: Introduced in 2017, recently strengthened by 2023 Pflegestärkungsgesetz (Care Strengthening Act)'),
       createBodyParagraph('This regulatory framework is stable and politically supported—no significant risk of reduction or elimination.'),
@@ -516,8 +523,8 @@ const doc = new Document({
       
       // CONCLUSION
       createHeading('CONCLUSION'),
-      createBodyParagraph('AlltagsEngel addresses a €7.44 billion regulatory-driven market opportunity in German elder care, with €4.5 billion currently unutilized due to structural market inefficiencies. By combining digital-first platform design, regulatory compliance automation, and network effects, AlltagsEngel is positioned to capture significant market share in a growing, stable market.'),
-      createBodyParagraph('The convergence of demographic tailwinds (aging population), regulatory tailwinds (§45b implementation), and digital transformation creates a unique window for platform-based business models in elderly care services. With disciplined execution and capital efficiency, AlltagsEngel can achieve €500M annual revenue by Year 5, representing a 6.7% penetration of available market.'),
+      createBodyParagraph('AlltagsEngel addresses a €7.80 billion regulatory-driven market opportunity in German elder care, with €4.68 billion currently unutilized due to structural market inefficiencies. By combining digital-first platform design, regulatory compliance automation, and network effects, AlltagsEngel is positioned to capture significant market share in a growing, stable market.'),
+      createBodyParagraph('The convergence of demographic tailwinds (aging population), regulatory tailwinds (§45b implementation), and digital transformation creates a unique window for platform-based business models in elderly care services. With disciplined execution and capital efficiency, AlltagsEngel can achieve €500M annual revenue by Year 5, representing a 6.4% penetration of available market.'),
       createBodyParagraph('Strategic imperatives for success: (1) rapid companion network expansion in key regions, (2) consumer awareness campaigns for §45b benefit utilization, (3) strategic partnerships with care insurance providers and municipal services, and (4) continuous platform innovation to maintain differentiation.'),
       
       new Paragraph({ text: '', spacing: { before: 400, after: 200 } }),

@@ -67,7 +67,7 @@ Lansman kampanyası — farkındalık, güven ve indirme odaklı.
 > AlltagsEngel löst dieses Problem:
 > • Alle Begleiter sind zertifiziert und geprüft
 > • Vollständiger Versicherungsschutz
-> • Die Kosten können über §45b SGB XI (Entlastungsbetrag, 125€/Monat) abgerechnet werden
+> • Die Kosten können über §45b SGB XI (Entlastungsbetrag, 131€/Monat) abgerechnet werden
 > • Buchung und Kommunikation direkt in der App
 >
 > Jetzt kostenlos für iOS und Android.
