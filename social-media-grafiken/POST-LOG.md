@@ -1274,3 +1274,91 @@ Video (REELS-kombi-alles-in-einer-app-v1.mp4 + V30e_1app_4leistungen.mp4) und al
 - **Meta Business Suite:** business.facebook.com → Beitrag erstellen → Video + DE Caption → IG + FB
 - **TikTok:** tiktok.com/tiktokstudio/content → Video + TikTok Caption
 - **TR Caption:** Als Kommentar oder zweiter Post (1h später)
+
+---
+
+## 01.04.2026 — Noch 2 Wochen! Countdown Awareness Post (DE+TR)
+
+**Status:** 📋 Bereit zum Posten (Meta Business Suite Zugriff fehlt — manueller Upload nötig)
+**Plattform:** Instagram Reel + Facebook + TikTok
+**Typ:** Video (Reel) + Grafik-Alternative
+**Datei IG/FB:** REELS-app-promo-v1.mp4
+**Datei TikTok:** tiktok-v31/V31a_131euro_schock.mp4
+**Grafik-Alternative:** COMING-SOON-app.png
+**Geplante Uhrzeit:** 11:00–13:00 Uhr
+**Thema:** Countdown — Noch 2 Wochen bis zum offiziellen Start, 131€ Entlastungsbetrag Awareness
+
+**Caption (DE) — Instagram Reel / Facebook:**
+```
+⏳ Noch 2 Wochen — dann starten wir in Frankfurt! 😇
+
+AlltagsEngel — deine App für Alltagsbegleitung.
+
+Was dich erwartet:
+🚗 Krankenfahrt — ab 15 Euro, sicher & pünktlich
+🛒 Einkaufsbegleitung — gemeinsam statt allein
+🏥 Arztbegleitung — jemand, der mitkommt
+💬 Gesellschaft — echte Gespräche, echte Nähe
+🧴 Hygienebox — bis 40 Euro/Monat kostenlos
+
+131 Euro/Monat über die Pflegekasse (§45b) — das Geld verfällt, wenn du es nicht nutzt!
+
+Wir sprechen Deutsch & Türkisch 🇩🇪🇹🇷
+
+📱 www.alltagsengel.care
+✉️ info@alltagsengel.care
+
+Folge uns für Updates — wir zählen die Tage! 🔔
+
+#AlltagsEngel #Alltagsbegleitung #Frankfurt #Pflege #Seniorenhilfe #Pflegekasse #Entlastungsbetrag #FrankfurtAmMain #Senioren #§45b #Krankenfahrt #ComingSoon #Countdown #2Wochen #MitHerz #App
+```
+
+**Caption (TR) — Instagram Reel / Facebook:**
+```
+⏳ 2 hafta kaldı — Frankfurt'ta başlıyoruz! 😇
+
+AlltagsEngel — günlük refakat uygulamanız.
+
+Sizi neler bekliyor:
+🚗 Hasta taşıma — 15 Euro'dan, güvenli & zamanında
+🛒 Alışveriş refakati — yalnız değil, birlikte
+🏥 Doktor refakati — yanınızda olan biri
+💬 Sohbet — gerçek konuşmalar, gerçek yakınlık
+🧴 Hijyen kutusu — aylık 40 Euro'ya kadar ücretsiz
+
+Bakım sigortasından aylık 131 Euro (§45b) — kullanmazsanız bu para kaybolur!
+
+Almanca & Türkçe hizmet veriyoruz 🇩🇪🇹🇷
+
+📱 www.alltagsengel.care
+✉️ info@alltagsengel.care
+
+Güncellemeler için bizi takip edin — geri sayım başladı! 🔔
+
+#AlltagsEngel #Frankfurt #YaşlıBakımı #TürklerFrankfurt #Bakım #BakımSigortası #HastaTaşıma #GünlükRefakat #Yakında #GeriSayım #131Euro
+```
+
+**TikTok Caption (DE) — mit Video V31a_131euro_schock.mp4:**
+```
+⏳ Noch 2 Wochen! AlltagsEngel startet in Frankfurt 😇 131€/Monat von der Pflegekasse — nutzt du es schon? Krankenfahrt, Einkauf, Arztbegleitung & mehr. Link in Bio 📱 alltagsengel.care
+
+#alltagsengel #alltagsbegleitung #frankfurt #pflege #seniorenhilfe #pflegekasse #131euro #countdown #comingnoon #fyp #viral #foryou
+```
+
+**Posting-Anleitung (manuell):**
+1. Meta Business Suite öffnen → business.facebook.com → ggf. mit richtigem Konto anmelden
+2. "Beitrag erstellen" → Reel/Video: REELS-app-promo-v1.mp4 hochladen
+3. DE Caption einfügen → Instagram + Facebook auswählen → Veröffentlichen
+4. 1 Stunde später: TR Caption als zweiten Post oder als Kommentar
+5. TikTok: tiktok.com/tiktokstudio/content → Video V31a_131euro_schock.mp4 + TikTok Caption
+
+**Alternativ über Instagram direkt:**
+1. Instagram App öffnen → "+" Button → Reel
+2. Video auswählen: REELS-app-promo-v1.mp4
+3. DE Caption einfügen → Teilen
+4. Danach auf Facebook teilen
+
+**Hinweis (automatische Ausführung 01.04.2026 — Scheduled Task):**
+Automatisches Posting nicht möglich — Meta Business Suite meldet: "Du kannst mit diesem Konto nicht auf die Meta Business Suite zugreifen." Instagram/Facebook Session fehlt.
+Video (REELS-app-promo-v1.mp4 + V31a_131euro_schock.mp4) und alle Captions (DE/TR) sind vollständig vorbereitet.
+**Manueller Upload erforderlich — bitte folge der Posting-Anleitung oben.**

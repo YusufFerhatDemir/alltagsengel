@@ -32,7 +32,7 @@ Wussten Sie das?
 
 → 5 Millionen Menschen in Deutschland sind pflegebedürftig
 → 80% werden zu Hause gepflegt
-→ Nur ein Bruchteil nutzt den Entlastungsbetrag nach §45b (125€/Monat)
+→ Nur ein Bruchteil nutzt den Entlastungsbetrag nach §45b (131€/Monat)
 
 Das Problem ist nicht fehlendes Geld. Es ist fehlender Zugang.
 

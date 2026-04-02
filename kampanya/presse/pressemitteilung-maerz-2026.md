@@ -21,7 +21,7 @@ Neue App verbindet Senioren mit geprüften Alltagsbegleitern – Mit Herz für d
 
 ## Lead-Absatz
 
-AlltagsEngel startet heute eine landesweite Expansion ihrer innovativen Plattform für Alltagsbegleitung. Das Unternehmen verbindet ältere Menschen und Menschen mit Pflegebedarf mit zertifizierten Alltagsbegleitern und nutzt dabei die Finanzierungsmöglichkeiten von §45b SGB XI (Entlastungsleistungen: 125€/Monat). Mit einer Kombination aus KI-gestütztem Matching, strenger Qualitätskontrolle und einem ganzheitlichen Ansatz zur Würde und Unabhängigkeit der Nutzer setzt AlltagsEngel neue Standards im Pflege-Ökosystem Deutschlands.
+AlltagsEngel startet heute eine landesweite Expansion ihrer innovativen Plattform für Alltagsbegleitung. Das Unternehmen verbindet ältere Menschen und Menschen mit Pflegebedarf mit zertifizierten Alltagsbegleitern und nutzt dabei die Finanzierungsmöglichkeiten von §45b SGB XI (Entlastungsleistungen: 131€/Monat). Mit einer Kombination aus KI-gestütztem Matching, strenger Qualitätskontrolle und einem ganzheitlichen Ansatz zur Würde und Unabhängigkeit der Nutzer setzt AlltagsEngel neue Standards im Pflege-Ökosystem Deutschlands.
 
 ---
 
@@ -45,7 +45,7 @@ Zwischen klinischer Pflege (Wundversorgung, Medikation) und völliger Unabhängi
 
 Diese Aufgaben werden oft von überforderten Angehörigen übernommen oder – wenn es sich die Familie leisten kann – von teuren, nicht zertifizierten Anbietern. Viele ältere Menschen leiden unter Isolation, Einsamkeit und einem Verlust von Sinn und Unabhängigkeit.
 
-**Hinzu kommt:** §45b SGB XI erlaubt jedem Menschen mit Pflegegrad 2 aufwärts, 125€ pro Monat für Entlastungsleistungen zu nutzen. Viele Betroffene und ihre Familien kennen diesen Anspruch nicht oder wissen nicht, wie sie ihn umsetzen können.
+**Hinzu kommt:** §45b SGB XI erlaubt jedem Menschen mit Pflegegrad 2 aufwärts, 131€ pro Monat für Entlastungsleistungen zu nutzen. Viele Betroffene und ihre Familien kennen diesen Anspruch nicht oder wissen nicht, wie sie ihn umsetzen können.
 
 ---
 
@@ -144,7 +144,7 @@ Das Unternehmen bietet:
 | **Leistungsumfang** | Einkaufen, Haushalt, Begleitung, Gesellschaft, Freizeitgestaltung |
 | **Finanzierung** | §45b SGB XI (125€/Monat), Privatzahlung, Arbeitgeber-Zuschüsse |
 | **Verfügbarkeit** | Bundesweit, Fokus auf urbane und semi-urbane Gebiete |
-| **Preis für Nutzer** | Kostenlos (wenn §45b abdeckt); Private: 18-25€/Stunde |
+| **Finanzierung** | §45b (131€/Monat); Private: 18-25€/Stunde |
 | **Geprüfung** | 100% der Begleiter zertifiziert, regelmäßige Audits |
 | **Durchschnittliche Partnerschaftsdauer** | 18 Monate (zeigt Qualität und Zufriedenheit) |
 | **App-Verfügbarkeit** | iOS, Android, Web |

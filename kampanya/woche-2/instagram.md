@@ -120,7 +120,7 @@ Warum solltest du AlltagsEngel als Engel oder Kunde wählen? Hier sind unsere To
 **Slide 4: Grund #3 — §45b**
 **Image:** Geldschein + Versicherungs-Logo
 **Text Overlay:** "3. Kostenlos? Wir sind §45b-zertifiziert!"
-**Body Text:** Dein Entlastungsbetrag (125€/Monat) deckt unsere Services ab. Keine Zusatzkosten. Punkt. 💚
+**Body Text:** Dein Entlastungsbetrag (131€/Monat) deckt unsere Services ab. Keine Zusatzkosten. Punkt. 💚
 
 ---
 

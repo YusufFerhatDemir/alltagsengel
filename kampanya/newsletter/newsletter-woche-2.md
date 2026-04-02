@@ -21,7 +21,7 @@ Nicht jeder kann ein Engel werden. Unser Auswahlprozess stellt sicher, dass nur 
 
 ### §45b — Ihr Recht auf Entlastung
 
-Wussten Sie, dass Menschen mit Pflegegrad 1-5 Anspruch auf **125€ pro Monat** für Entlastungsleistungen haben? Das sind **1.500€ im Jahr** — und dieser Betrag verfällt, wenn er nicht genutzt wird.
+Wussten Sie, dass Menschen mit Pflegegrad 1-5 Anspruch auf **131€ pro Monat** für Entlastungsleistungen haben? Das sind **1.572€ im Jahr** — und dieser Betrag verfällt, wenn er nicht genutzt wird.
 
 AlltagsEngel macht die Nutzung einfach: Buchen Sie einen Engel, und die §45b-Abrechnung ist in der App integriert.
 
