@@ -35,6 +35,7 @@ function BuchenServiceInner() {
   const [selectedDate, setSelectedDate] = useState('')
   const [selectedTime, setSelectedTime] = useState('')
   const [duration, setDuration] = useState(2)
+  const [isFlexible, setIsFlexible] = useState(false)
   const [angels, setAngels] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
   const [submitting, setSubmitting] = useState(false)
@@ -100,6 +101,11 @@ function BuchenServiceInner() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { setSubmitting(false); return }
 
+    const notes = [
+      profile?.address ? `Adresse: ${profile.address}` : '',
+      isFlexible ? `FLEXIBEL: Mindestdauer ${duration}h, danach 15-Min-Takt (${(rate / 4).toFixed(0)}€/15 Min)` : '',
+    ].filter(Boolean).join(' | ')
+
     const { data, error } = await supabase.from('bookings').insert({
       customer_id: user.id,
       angel_id: selectedAngel.id,
@@ -108,8 +114,9 @@ function BuchenServiceInner() {
       time: selectedTime,
       duration_hours: duration,
       total_amount: total,
+      is_flexible: isFlexible,
       status: 'pending',
-      notes: profile?.address ? `Adresse: ${profile.address}` : null,
+      notes: notes || null,
     }).select().single()
 
     if (error) { setSubmitting(false); return }
@@ -256,12 +263,12 @@ function BuchenServiceInner() {
               {durationOptions.map(d => (
                 <button
                   key={d}
-                  onClick={() => setDuration(d)}
+                  onClick={() => { setDuration(d); setIsFlexible(false) }}
                   style={{
                     display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                     padding: '16px 18px', borderRadius: 14,
-                    border: duration === d ? '2px solid var(--gold)' : '1.5px solid var(--cream3)',
-                    background: duration === d ? 'var(--gold-pale)' : 'var(--white)',
+                    border: duration === d && !isFlexible ? '2px solid var(--gold)' : '1.5px solid var(--cream3)',
+                    background: duration === d && !isFlexible ? 'var(--gold-pale)' : 'var(--white)',
                     cursor: 'pointer',
                   }}
                 >
@@ -273,7 +280,60 @@ function BuchenServiceInner() {
                   </div>
                 </button>
               ))}
+
+              {/* Flexible Dauer Option */}
+              <button
+                onClick={() => { setIsFlexible(true); setDuration(2) }}
+                style={{
+                  display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                  padding: '16px 18px', borderRadius: 14,
+                  border: isFlexible ? '2px solid var(--gold)' : '1.5px solid var(--cream3)',
+                  background: isFlexible ? 'var(--gold-pale)' : 'var(--white)',
+                  cursor: 'pointer',
+                }}
+              >
+                <div>
+                  <div style={{ fontSize: 16, fontWeight: 600, color: 'var(--ink)', display: 'flex', alignItems: 'center', gap: 8 }}>
+                    Flexibel
+                    <span style={{ fontSize: 11, fontWeight: 500, background: 'rgba(201,150,60,0.15)', color: 'var(--gold2, #C9963C)', padding: '2px 8px', borderRadius: 6 }}>NEU</span>
+                  </div>
+                  <div style={{ fontSize: 12, color: 'var(--ink4)', marginTop: 3, textAlign: 'left' }}>
+                    Mindestdauer wählen — danach im 15-Min-Takt
+                  </div>
+                </div>
+                <div style={{ fontSize: 14, color: 'var(--ink4)' }}>
+                  ab 64€
+                </div>
+              </button>
             </div>
+
+            {/* Mindestdauer-Auswahl bei flexibler Buchung */}
+            {isFlexible && (
+              <div style={{ marginTop: 16, padding: '16px 18px', borderRadius: 14, background: 'rgba(201,150,60,0.06)', border: '1px solid rgba(201,150,60,0.15)' }}>
+                <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--ink)', marginBottom: 10 }}>
+                  Mindestdauer wählen
+                </div>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  {[2, 3, 4].map(d => (
+                    <button
+                      key={d}
+                      onClick={() => setDuration(d)}
+                      style={{
+                        padding: '10px 20px', borderRadius: 10,
+                        border: duration === d ? '2px solid var(--gold)' : '1.5px solid var(--cream3)',
+                        background: duration === d ? 'var(--gold-pale)' : 'var(--white)',
+                        cursor: 'pointer', fontSize: 14, fontWeight: 600,
+                      }}
+                    >
+                      {d}h
+                    </button>
+                  ))}
+                </div>
+                <div style={{ fontSize: 12, color: 'var(--ink4)', marginTop: 10, lineHeight: 1.5 }}>
+                  Ideal für Arztbesuche, Krankenhaus oder Behördengänge — Sie zahlen nur die tatsächliche Zeit. Nach der Mindestdauer wird im 15-Minuten-Takt abgerechnet.
+                </div>
+              </div>
+            )}
 
             <button
               onClick={() => setStep(4)}
@@ -293,7 +353,7 @@ function BuchenServiceInner() {
           <>
             <div style={{ fontSize: 20, fontWeight: 700, marginBottom: 4 }}>Ihren Engel wählen</div>
             <div style={{ fontSize: 14, color: 'var(--ink4)', marginBottom: 16 }}>
-              {serviceLabel} · {formatDate(selectedDate)} · {selectedTime} · {duration}h
+              {serviceLabel} · {formatDate(selectedDate)} · {selectedTime} · {isFlexible ? `ab ${duration}h (flexibel)` : `${duration}h`}
             </div>
 
             {loading ? (
@@ -399,20 +459,33 @@ function BuchenServiceInner() {
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                   <span style={{ color: 'var(--ink4)', fontSize: 14 }}>Dauer</span>
-                  <span style={{ fontWeight: 600, fontSize: 14 }}>{duration} {duration === 1 ? 'Stunde' : 'Stunden'}</span>
+                  <span style={{ fontWeight: 600, fontSize: 14 }}>
+                    {isFlexible
+                      ? `Mind. ${duration} Stunden (flexibel)`
+                      : `${duration} ${duration === 1 ? 'Stunde' : 'Stunden'}`
+                    }
+                  </span>
                 </div>
+                {isFlexible && (
+                  <div style={{
+                    background: 'rgba(201,150,60,0.08)', borderRadius: 8, padding: '8px 12px',
+                    fontSize: 12, color: 'var(--ink4)', lineHeight: 1.5,
+                  }}>
+                    Nach der Mindestdauer wird im 15-Minuten-Takt abgerechnet ({(rate / 4).toFixed(0)}€/15 Min). Kunde und Engel bestätigen die tatsächliche Dauer nach dem Einsatz.
+                  </div>
+                )}
                 <div style={{ borderTop: '1px solid var(--cream2)', paddingTop: 12, marginTop: 4 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                    <span style={{ color: 'var(--ink4)', fontSize: 14 }}>{duration}h × {rate}€</span>
-                    <span style={{ fontSize: 14 }}>{subtotal.toFixed(2)}€</span>
+                    <span style={{ color: 'var(--ink4)', fontSize: 14 }}>{isFlexible ? 'Mindestens' : ''} {duration}h × {rate}€</span>
+                    <span style={{ fontSize: 14 }}>{isFlexible ? 'ab ' : ''}{subtotal.toFixed(2)}€</span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
                     <span style={{ color: 'var(--ink4)', fontSize: 14 }}>Servicegebühr (8,5%)</span>
                     <span style={{ fontSize: 14 }}>{platformFee.toFixed(2)}€</span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 700, fontSize: 17 }}>
-                    <span>Gesamt</span>
-                    <span>{total.toFixed(2)}€</span>
+                    <span>Gesamt{isFlexible ? ' (Minimum)' : ''}</span>
+                    <span>{isFlexible ? 'ab ' : ''}{total.toFixed(2)}€</span>
                   </div>
                 </div>
               </div>
