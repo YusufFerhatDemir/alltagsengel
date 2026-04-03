@@ -1,5 +1,5 @@
 'use client'
-import { useState, Suspense } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
@@ -16,6 +16,24 @@ function LoginForm() {
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [demoEnabled, setDemoEnabled] = useState(false)
+  const [demoPassword, setDemoPassword] = useState('')
+  const [showAdminPw, setShowAdminPw] = useState(false)
+  const [adminPwInput, setAdminPwInput] = useState('')
+
+  // Demo-Zugang + Demo-Passwort aus DB laden
+  useEffect(() => {
+    const supabase = createClient()
+    supabase.from('app_settings').select('key, value').in('key', ['demo_enabled', 'demo_password'])
+      .then(({ data }) => {
+        if (data) {
+          for (const row of data) {
+            if (row.key === 'demo_enabled' && row.value === true) setDemoEnabled(true)
+            if (row.key === 'demo_password' && typeof row.value === 'string') setDemoPassword(row.value)
+          }
+        }
+      })
+  }, [])
 
   function getDeviceInfo(): string {
     const ua = navigator.userAgent
@@ -166,26 +184,52 @@ function LoginForm() {
           Noch kein Konto? <Link href="/choose">Registrieren</Link>
         </div>
 
+        {/* ═══ Admin-Zugang — Passwort wird abgefragt ═══ */}
         <div style={{ marginTop: 24, borderTop: '1px solid rgba(201,150,60,0.15)', paddingTop: 16 }}>
-          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', textAlign: 'center', marginBottom: 10, textTransform: 'uppercase', letterSpacing: 1 }}>Demo-Zugang</div>
-          <div style={{ display: 'flex', gap: 8 }}>
+          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', textAlign: 'center', marginBottom: 10, textTransform: 'uppercase', letterSpacing: 1 }}>Admin-Zugang</div>
+          {!showAdminPw ? (
             <button type="button" className="btn-gold"
-              style={{ flex: 1, fontSize: 12, padding: '10px 0', background: 'rgba(201,150,60,0.12)', color: 'var(--gold-2)', border: '1px solid rgba(201,150,60,0.25)' }}
-              disabled={loading}
-              onClick={async () => { setLoading(true); setError(''); try { await loginAndRedirect('admin@alltagsengel.de', 'Engel2026') } catch { setError('Demo-Login fehlgeschlagen') } finally { setLoading(false) } }}
+              style={{ width: '100%', fontSize: 12, padding: '10px 0', background: 'rgba(201,150,60,0.08)', color: 'var(--gold-2)', border: '1px solid rgba(201,150,60,0.2)' }}
+              onClick={() => setShowAdminPw(true)}
             >Admin</button>
-            <button type="button" className="btn-gold"
-              style={{ flex: 1, fontSize: 12, padding: '10px 0', background: 'rgba(201,150,60,0.12)', color: 'var(--gold-2)', border: '1px solid rgba(201,150,60,0.25)' }}
-              disabled={loading}
-              onClick={async () => { setLoading(true); setError(''); try { await loginAndRedirect('anna@example.com', 'Anna2026!') } catch { setError('Demo-Login fehlgeschlagen') } finally { setLoading(false) } }}
-            >Engel</button>
-            <button type="button" className="btn-gold"
-              style={{ flex: 1, fontSize: 12, padding: '10px 0', background: 'rgba(201,150,60,0.12)', color: 'var(--gold-2)', border: '1px solid rgba(201,150,60,0.25)' }}
-              disabled={loading}
-              onClick={async () => { setLoading(true); setError(''); try { await loginAndRedirect('maria@example.com', 'Maria2026!') } catch { setError('Demo-Login fehlgeschlagen') } finally { setLoading(false) } }}
-            >Kunde</button>
-          </div>
+          ) : (
+            <div style={{ display: 'flex', gap: 8 }}>
+              <input
+                type="password"
+                placeholder="Admin-Passwort eingeben"
+                value={adminPwInput}
+                onChange={e => setAdminPwInput(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') { setLoading(true); setError(''); loginAndRedirect('admin@alltagsengel.de', adminPwInput).catch(() => setError('Login fehlgeschlagen')).finally(() => setLoading(false)) } }}
+                style={{ flex: 1, padding: '10px 14px', borderRadius: 10, border: '1px solid rgba(201,150,60,0.25)', background: 'rgba(13,10,8,0.5)', color: '#e8e0d4', fontSize: 13, fontFamily: 'inherit' }}
+                autoFocus
+              />
+              <button type="button" className="btn-gold"
+                style={{ fontSize: 12, padding: '10px 16px', background: 'linear-gradient(135deg, #C9963C, #DBA84A)', color: '#0D0A08', border: 'none', borderRadius: 10, fontWeight: 700, cursor: 'pointer' }}
+                disabled={loading || !adminPwInput}
+                onClick={async () => { setLoading(true); setError(''); try { await loginAndRedirect('admin@alltagsengel.de', adminPwInput) } catch { setError('Login fehlgeschlagen') } finally { setLoading(false) } }}
+              >OK</button>
+            </div>
+          )}
         </div>
+
+        {/* ═══ Demo-Zugang — nur sichtbar wenn aktiviert ═══ */}
+        {demoEnabled && demoPassword && (
+          <div style={{ marginTop: 16 }}>
+            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', textAlign: 'center', marginBottom: 10, textTransform: 'uppercase', letterSpacing: 1 }}>Demo-Zugang</div>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button type="button" className="btn-gold"
+                style={{ flex: 1, fontSize: 12, padding: '10px 0', background: 'rgba(201,150,60,0.12)', color: 'var(--gold-2)', border: '1px solid rgba(201,150,60,0.25)' }}
+                disabled={loading}
+                onClick={async () => { setLoading(true); setError(''); try { await loginAndRedirect('anna@example.com', demoPassword) } catch { setError('Demo-Login fehlgeschlagen') } finally { setLoading(false) } }}
+              >Engel</button>
+              <button type="button" className="btn-gold"
+                style={{ flex: 1, fontSize: 12, padding: '10px 0', background: 'rgba(201,150,60,0.12)', color: 'var(--gold-2)', border: '1px solid rgba(201,150,60,0.25)' }}
+                disabled={loading}
+                onClick={async () => { setLoading(true); setError(''); try { await loginAndRedirect('maria@example.com', demoPassword) } catch { setError('Demo-Login fehlgeschlagen') } finally { setLoading(false) } }}
+              >Kunde</button>
+            </div>
+          </div>
+        )}
 
       </div>
     </div>
