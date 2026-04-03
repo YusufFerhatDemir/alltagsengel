@@ -1362,3 +1362,80 @@ Güncellemeler için bizi takip edin — geri sayım başladı! 🔔
 Automatisches Posting nicht möglich — Meta Business Suite meldet: "Du kannst mit diesem Konto nicht auf die Meta Business Suite zugreifen." Instagram/Facebook Session fehlt.
 Video (REELS-app-promo-v1.mp4 + V31a_131euro_schock.mp4) und alle Captions (DE/TR) sind vollständig vorbereitet.
 **Manueller Upload erforderlich — bitte folge der Posting-Anleitung oben.**
+
+---
+
+## 03.04.2026 — Wer kann AlltagsEngel nutzen? / Eligibility Awareness Post (DE+TR)
+
+**Status:** 📋 Bereit zum Posten (manueller Upload nötig)
+**Plattform:** Instagram + Facebook + TikTok
+**Typ:** Grafik (IG/FB) + Video (TikTok)
+**Datei IG/FB:** POST-2026-04-03-wer-kann-nutzen.png
+**Datei TikTok:** TIKTOK-2026-04-03-wer-kann-nutzen.mp4
+**Geplante Uhrzeit:** 11:00–13:00 Uhr
+**Thema:** Wer kann AlltagsEngel nutzen? Pflegegrad 1–5, §45b, 131€ Entlastungsbetrag — Countdown 11 Tage
+
+**Caption (DE) — Instagram / Facebook:**
+```
+Wer kann AlltagsEngel nutzen? 🤔😇
+
+Ganz einfach: Alle mit Pflegegrad 1, 2, 3, 4 oder 5!
+
+Das bekommst du:
+✅ 131 Euro/Monat — von der Pflegekasse (§45b SGB XI)
+✅ Kein Eigenanteil nötig
+✅ Krankenfahrt, Einkaufsbegleitung, Arztbegleitung & mehr
+✅ Wir sprechen Deutsch & Türkisch 🇩🇪🇹🇷
+
+Und das Beste: Wenn du es nicht nutzt, verfällt das Geld!
+Hol dir, was dir zusteht — AlltagsEngel macht's einfach.
+
+⏳ Noch 11 Tage bis zum Start in Frankfurt!
+
+📱 www.alltagsengel.care
+✉️ info@alltagsengel.care
+
+#AlltagsEngel #Alltagsbegleitung #Frankfurt #Pflege #Seniorenhilfe #Pflegekasse #Entlastungsbetrag #FrankfurtAmMain #Senioren #§45b #Pflegegrad #131Euro #ComingSoon #Countdown #MitHerz
+```
+
+**Caption (TR) — Instagram / Facebook:**
+```
+AlltagsEngel'i kimler kullanabilir? 🤔😇
+
+Çok basit: Bakım derecesi 1, 2, 3, 4 veya 5 olan herkes!
+
+Neler alıyorsunuz:
+✅ Bakım sigortasından aylık 131 Euro (§45b SGB XI)
+✅ Ek ödeme yok
+✅ Hasta taşıma, alışveriş refakati, doktor refakati ve daha fazlası
+✅ Almanca & Türkçe hizmet veriyoruz 🇩🇪🇹🇷
+
+Ve en önemlisi: Kullanmazsanız bu para kaybolur!
+Hakkınız olanı alın — AlltagsEngel bunu kolaylaştırıyor.
+
+⏳ Frankfurt'ta başlamaya 11 gün kaldı!
+
+📱 www.alltagsengel.care
+✉️ info@alltagsengel.care
+
+#AlltagsEngel #Frankfurt #YaşlıBakımı #TürklerFrankfurt #Bakım #BakımSigortası #BakımDerecesi #131Euro #Yakında #GeriSayım #GünlükRefakat
+```
+
+**TikTok Caption (DE):**
+```
+Wer kann AlltagsEngel nutzen? 🤔 Alle mit Pflegegrad 1–5! 131€/Monat von der Pflegekasse — kein Eigenanteil. Krankenfahrt, Einkauf, Arztbegleitung & mehr. Noch 11 Tage! 📱 alltagsengel.care
+
+#alltagsengel #alltagsbegleitung #frankfurt #pflege #seniorenhilfe #pflegekasse #131euro #pflegegrad #comingnoon #fyp #viral #foryou
+```
+
+**Posting-Anleitung (manuell):**
+1. **Instagram/Facebook:** Meta Business Suite öffnen → business.facebook.com → "Beitrag erstellen" → Grafik: POST-2026-04-03-wer-kann-nutzen.png hochladen → DE Caption einfügen → Instagram + Facebook auswählen → Veröffentlichen
+2. **TR Version:** 1 Stunde später als zweiten Post oder als Kommentar unter den DE-Post
+3. **TikTok:** tiktok.com/tiktokstudio/content → Upload → Video: TIKTOK-2026-04-03-wer-kann-nutzen.mp4 → TikTok Caption einfügen → Veröffentlichen
+
+**Hinweis (automatische Ausführung 03.04.2026 — Scheduled Task):**
+Automatisches Posting nicht möglich:
+- Meta Business Suite: Keine Facebook-Seiten oder Instagram-Konten mit diesem Business-Portfolio verknüpft (0 Business-Assets)
+- TikTok Studio: Datei-Upload-Berechtigung fehlt (file upload blocked)
+- Grafik (POST-2026-04-03-wer-kann-nutzen.png) und TikTok-Video (TIKTOK-2026-04-03-wer-kann-nutzen.mp4) sind im Ordner social-media-grafiken/ erstellt und bereit
+**Manueller Upload erforderlich — bitte folge der Posting-Anleitung oben.**
