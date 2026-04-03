@@ -13,6 +13,7 @@ export default function AdminSettings() {
   const [demoEnabled, setDemoEnabled] = useState(false)
   const [demoLoading, setDemoLoading] = useState(false)
   const [demoMsg, setDemoMsg] = useState('')
+  const [demoRemaining, setDemoRemaining] = useState('')
 
   // Passwort ändern
   const [newPassword, setNewPassword] = useState('')
@@ -61,23 +62,76 @@ export default function AdminSettings() {
       .order('created_at', { ascending: false })
     setAllUsers(users || [])
 
-    // Demo-Zugang Status laden
-    const { data: demoSetting } = await supabase.from('app_settings').select('value').eq('key', 'demo_enabled').single()
-    if (demoSetting?.value === true) setDemoEnabled(true)
+    // Demo-Zugang Status + Ablaufzeit laden
+    const { data: demoSettings } = await supabase.from('app_settings').select('key, value').in('key', ['demo_enabled', 'demo_expires_at'])
+    if (demoSettings) {
+      let enabled = false
+      let expiresAt: string | null = null
+      for (const row of demoSettings) {
+        if (row.key === 'demo_enabled' && row.value === true) enabled = true
+        if (row.key === 'demo_expires_at' && typeof row.value === 'string') expiresAt = row.value
+      }
+      if (enabled && expiresAt && new Date(expiresAt).getTime() > Date.now()) {
+        setDemoEnabled(true)
+        startCountdown(new Date(expiresAt).getTime())
+      } else if (enabled && expiresAt && new Date(expiresAt).getTime() <= Date.now()) {
+        // Abgelaufen → automatisch deaktivieren
+        setDemoEnabled(false)
+        await supabase.from('app_settings').update({ value: false }).eq('key', 'demo_enabled')
+      }
+    }
 
     setLoading(false)
+  }
+
+  function startCountdown(expiryTime: number) {
+    const update = () => {
+      const diff = expiryTime - Date.now()
+      if (diff <= 0) {
+        setDemoEnabled(false)
+        setDemoRemaining('')
+        setDemoMsg('Demo-Zugang abgelaufen')
+        // DB auch deaktivieren
+        supabase.from('app_settings').update({ value: false }).eq('key', 'demo_enabled')
+        return
+      }
+      const min = Math.floor(diff / 60000)
+      const sec = Math.floor((diff % 60000) / 1000)
+      setDemoRemaining(`${min}:${sec.toString().padStart(2, '0')}`)
+      setTimeout(update, 1000)
+    }
+    update()
   }
 
   async function toggleDemo() {
     setDemoLoading(true)
     setDemoMsg('')
     const newValue = !demoEnabled
-    const { error } = await supabase.from('app_settings').update({ value: newValue, updated_at: new Date().toISOString(), updated_by: currentUser?.id }).eq('key', 'demo_enabled')
-    if (error) {
-      setDemoMsg('Fehler: ' + error.message)
+
+    if (newValue) {
+      // Aktivieren: 10 Minuten Timer setzen
+      const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString()
+      const [r1, r2] = await Promise.all([
+        supabase.from('app_settings').update({ value: true, updated_at: new Date().toISOString(), updated_by: currentUser?.id }).eq('key', 'demo_enabled'),
+        supabase.from('app_settings').update({ value: expiresAt, updated_at: new Date().toISOString(), updated_by: currentUser?.id }).eq('key', 'demo_expires_at'),
+      ])
+      if (r1.error || r2.error) {
+        setDemoMsg('Fehler: ' + (r1.error?.message || r2.error?.message))
+      } else {
+        setDemoEnabled(true)
+        setDemoMsg('✓ Demo-Zugang für 10 Minuten aktiviert!')
+        startCountdown(new Date(expiresAt).getTime())
+      }
     } else {
-      setDemoEnabled(newValue)
-      setDemoMsg(newValue ? '✓ Demo-Zugang aktiviert' : '✓ Demo-Zugang deaktiviert')
+      // Deaktivieren
+      const { error } = await supabase.from('app_settings').update({ value: false, updated_at: new Date().toISOString(), updated_by: currentUser?.id }).eq('key', 'demo_enabled')
+      if (error) {
+        setDemoMsg('Fehler: ' + error.message)
+      } else {
+        setDemoEnabled(false)
+        setDemoRemaining('')
+        setDemoMsg('✓ Demo-Zugang deaktiviert')
+      }
     }
     setDemoLoading(false)
   }
@@ -235,7 +289,7 @@ export default function AdminSettings() {
             Demo-Zugang steuern
           </h2>
           <p style={{ color: 'var(--dim)', fontSize: 13, marginBottom: 16 }}>
-            Steuere, ob die Demo-Buttons (Engel & Kunde) auf der Login-Seite sichtbar sind. Perfekt für Investoren-Demos.
+            Steuere, ob die Demo-Buttons (Engel & Kunde) auf der Login-Seite sichtbar sind. Schaltet sich nach 10 Minuten automatisch ab.
           </p>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 16 }}>
             <span style={{ color: 'var(--ink)', fontSize: 14 }}>Demo-Zugang:</span>
@@ -248,8 +302,13 @@ export default function AdminSettings() {
                 color: demoEnabled ? '#6ddf80' : '#ff8080',
               }}
             >
-              {demoLoading ? '...' : demoEnabled ? 'AKTIV' : 'INAKTIV'}
+              {demoLoading ? '...' : demoEnabled ? 'AKTIV — Deaktivieren' : '10 Min. aktivieren'}
             </button>
+            {demoEnabled && demoRemaining && (
+              <span style={{ fontSize: 20, fontWeight: 700, color: '#DBA84A', fontFamily: 'monospace' }}>
+                {demoRemaining}
+              </span>
+            )}
           </div>
           <div style={{ marginBottom: 10 }}>
             <label style={{ color: 'var(--dim)', fontSize: 13, display: 'block', marginBottom: 6 }}>Demo-Passwort (für Engel & Kunde Accounts):</label>
