@@ -21,15 +21,33 @@ function LoginForm() {
   const [showAdminPw, setShowAdminPw] = useState(false)
   const [adminPwInput, setAdminPwInput] = useState('')
 
-  // Demo-Zugang + Demo-Passwort aus DB laden
+  // Demo-Zugang + Demo-Passwort + Ablaufzeit aus DB laden
   useEffect(() => {
     const supabase = createClient()
-    supabase.from('app_settings').select('key, value').in('key', ['demo_enabled', 'demo_password'])
+    supabase.from('app_settings').select('key, value').in('key', ['demo_enabled', 'demo_password', 'demo_expires_at'])
       .then(({ data }) => {
         if (data) {
+          let enabled = false
+          let expiresAt: string | null = null
           for (const row of data) {
-            if (row.key === 'demo_enabled' && row.value === true) setDemoEnabled(true)
+            if (row.key === 'demo_enabled' && row.value === true) enabled = true
             if (row.key === 'demo_password' && typeof row.value === 'string') setDemoPassword(row.value)
+            if (row.key === 'demo_expires_at' && typeof row.value === 'string') expiresAt = row.value
+          }
+          // Nur aktiv wenn enabled UND noch nicht abgelaufen
+          if (enabled && expiresAt) {
+            const expiry = new Date(expiresAt).getTime()
+            if (Date.now() < expiry) {
+              setDemoEnabled(true)
+              // Auto-deaktivieren wenn Zeit abläuft
+              const remaining = expiry - Date.now()
+              setTimeout(() => setDemoEnabled(false), remaining)
+            } else {
+              setDemoEnabled(false)
+            }
+          } else if (enabled && !expiresAt) {
+            // Fallback: wenn kein Ablaufdatum → nicht anzeigen (Sicherheit)
+            setDemoEnabled(false)
           }
         }
       })
