@@ -1,8 +1,47 @@
 import Link from 'next/link'
+import type { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: 'Alltagsbegleitung Frankfurt | 131€ Entlastungsbetrag nutzen — Alltagsengel',
+  description: 'Zertifizierte Alltagsbegleitung in Frankfurt am Main. 131€/Monat über den Entlastungsbetrag (§45b SGB XI). Einkaufshilfe, Arztbegleitung, Haushaltshilfe — jetzt kostenlos buchen.',
+  keywords: ['Alltagsbegleitung Frankfurt', 'Entlastungsbetrag', '§45b SGB XI', 'Alltagsbegleiter', 'Pflegegrad', 'Betreuung Frankfurt', 'Haushaltshilfe Frankfurt', '131 Euro Pflegekasse'],
+  openGraph: {
+    title: 'Alltagsbegleitung Frankfurt — 131€/Monat von der Pflegekasse',
+    description: 'Professionelle Alltagsbegleitung in Frankfurt. Abrechnung direkt über den Entlastungsbetrag §45b. Versichert und zertifiziert.',
+    url: 'https://alltagsengel.care/alltagsbegleitung',
+    siteName: 'Alltagsengel',
+    locale: 'de_DE',
+    type: 'website',
+  },
+  alternates: { canonical: 'https://alltagsengel.care/alltagsbegleitung' },
+}
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Service',
+  name: 'Alltagsbegleitung Frankfurt',
+  description: 'Zertifizierte Alltagsbegleitung nach §45a SGB XI in Frankfurt am Main. Haushaltshilfe, Arztbegleitung, Einkaufshilfe und psychosoziale Betreuung.',
+  provider: {
+    '@type': 'Organization',
+    name: 'Alltagsengel',
+    url: 'https://alltagsengel.care',
+    address: { '@type': 'PostalAddress', addressLocality: 'Frankfurt am Main', addressRegion: 'Hessen', addressCountry: 'DE' },
+  },
+  areaServed: { '@type': 'City', name: 'Frankfurt am Main' },
+  serviceType: 'Alltagsbegleitung',
+  offers: {
+    '@type': 'Offer',
+    price: '32.00',
+    priceCurrency: 'EUR',
+    priceSpecification: { '@type': 'UnitPriceSpecification', price: '32.00', priceCurrency: 'EUR', unitText: 'Stunde' },
+    description: '131€/Monat über Entlastungsbetrag §45b SGB XI abrechenbar',
+  },
+}
 
 export default function AlltagsbegleitungPage() {
   return (
     <div className="screen info-screen">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <div className="legal-header">
         <Link href="/" className="legal-back">‹</Link>
         <h1 className="legal-title">Alltagsbegleitung</h1>

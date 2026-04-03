@@ -1,8 +1,38 @@
 import Link from 'next/link'
+import type { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: 'Pflegebox Frankfurt | Kostenlose Pflegehilfsmittel — 42€/Monat von der Kasse',
+  description: 'Kostenlose Pflegebox mit Pflegehilfsmitteln nach §40 SGB XI. Handschuhe, Desinfektionsmittel, Bettschutz — monatlich geliefert. 0€ Zuzahlung bei Pflegegrad 1-5.',
+  keywords: ['Pflegebox', 'Pflegehilfsmittel', 'Hygienebox', '§40 SGB XI', 'kostenlose Pflegehilfsmittel', 'Pflegebox bestellen', 'Pflegebox Frankfurt', '42 Euro Pflegekasse'],
+  openGraph: {
+    title: 'Kostenlose Pflegebox — Pflegehilfsmittel monatlich geliefert',
+    description: 'Pflegebox mit Handschuhen, Desinfektionsmittel & mehr. Bis 42€/Monat von der Pflegekasse. 0€ Zuzahlung.',
+    url: 'https://alltagsengel.care/hygienebox',
+    siteName: 'Alltagsengel',
+    locale: 'de_DE',
+    type: 'website',
+  },
+  alternates: { canonical: 'https://alltagsengel.care/hygienebox' },
+}
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Product',
+  name: 'Pflegebox / Hygienebox',
+  description: 'Monatliche Pflegehilfsmittel-Box nach §40 SGB XI. Enthält Einmalhandschuhe, Desinfektionsmittel, Bettschutzeinlagen, Mundschutz und Schutzschürzen.',
+  brand: { '@type': 'Brand', name: 'Alltagsengel' },
+  offers: [
+    { '@type': 'Offer', name: 'Basis-Box', price: '29.90', priceCurrency: 'EUR', description: 'Grundversorgung mit Pflegehilfsmitteln', availability: 'https://schema.org/InStock' },
+    { '@type': 'Offer', name: 'Komfort-Box', price: '40.00', priceCurrency: 'EUR', description: 'Vollständige Versorgung — maximale Kassenerstattung', availability: 'https://schema.org/InStock' },
+  ],
+  areaServed: { '@type': 'City', name: 'Frankfurt am Main' },
+}
 
 export default function HygieneboxPage() {
   return (
     <div className="screen info-screen">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <div className="legal-header">
         <Link href="/" className="legal-back">‹</Link>
         <h1 className="legal-title">Hygienebox</h1>
