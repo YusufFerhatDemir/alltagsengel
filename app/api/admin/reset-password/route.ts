@@ -20,24 +20,36 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Keine Admin-Berechtigung' }, { status: 403 })
   }
 
-  const { userId, newPassword } = await request.json()
+  const { userId, newPassword, email } = await request.json()
 
-  if (!userId || !newPassword) {
-    return NextResponse.json({ error: 'userId und newPassword erforderlich' }, { status: 400 })
+  if ((!userId && !email) || !newPassword) {
+    return NextResponse.json({ error: 'userId/email und newPassword erforderlich' }, { status: 400 })
   }
 
   if (newPassword.length < 6) {
     return NextResponse.json({ error: 'Passwort muss mindestens 6 Zeichen lang sein' }, { status: 400 })
   }
 
-  // Prevent admins from resetting other admins' passwords (only superadmin can)
   const adminSupabase = createAdminClient()
-  const { data: targetProfile } = await adminSupabase.from('profiles').select('role').eq('id', userId).single()
+
+  // Wenn email statt userId übergeben wurde → userId per E-Mail finden
+  let targetUserId = userId
+  if (!targetUserId && email) {
+    const { data: users } = await adminSupabase.auth.admin.listUsers()
+    const found = users?.users?.find((u: any) => u.email === email)
+    if (!found) {
+      return NextResponse.json({ error: 'Benutzer nicht gefunden: ' + email }, { status: 404 })
+    }
+    targetUserId = found.id
+  }
+
+  // Prevent admins from resetting other admins' passwords (only superadmin can)
+  const { data: targetProfile } = await adminSupabase.from('profiles').select('role').eq('id', targetUserId).single()
   if (targetProfile?.role && ['admin', 'superadmin'].includes(targetProfile.role) && profile.role !== 'superadmin') {
     return NextResponse.json({ error: 'Nur Superadmins können Admin-Passwörter zurücksetzen' }, { status: 403 })
   }
 
-  const { error } = await adminSupabase.auth.admin.updateUserById(userId, {
+  const { error } = await adminSupabase.auth.admin.updateUserById(targetUserId, {
     password: newPassword,
   })
 

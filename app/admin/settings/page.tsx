@@ -9,6 +9,11 @@ export default function AdminSettings() {
   const [allUsers, setAllUsers] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 
+  // Demo-Zugang
+  const [demoEnabled, setDemoEnabled] = useState(false)
+  const [demoLoading, setDemoLoading] = useState(false)
+  const [demoMsg, setDemoMsg] = useState('')
+
   // Passwort ändern
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -56,7 +61,25 @@ export default function AdminSettings() {
       .order('created_at', { ascending: false })
     setAllUsers(users || [])
 
+    // Demo-Zugang Status laden
+    const { data: demoSetting } = await supabase.from('app_settings').select('value').eq('key', 'demo_enabled').single()
+    if (demoSetting?.value === true) setDemoEnabled(true)
+
     setLoading(false)
+  }
+
+  async function toggleDemo() {
+    setDemoLoading(true)
+    setDemoMsg('')
+    const newValue = !demoEnabled
+    const { error } = await supabase.from('app_settings').update({ value: newValue, updated_at: new Date().toISOString(), updated_by: currentUser?.id }).eq('key', 'demo_enabled')
+    if (error) {
+      setDemoMsg('Fehler: ' + error.message)
+    } else {
+      setDemoEnabled(newValue)
+      setDemoMsg(newValue ? '✓ Demo-Zugang aktiviert' : '✓ Demo-Zugang deaktiviert')
+    }
+    setDemoLoading(false)
   }
 
   async function handlePasswordChange(e: React.FormEvent) {
@@ -204,6 +227,73 @@ export default function AdminSettings() {
           {currentRole}
         </span>
       </p>
+
+      {/* ═══ Demo-Zugang steuern ═══ */}
+      {isSuperadmin && (
+        <div style={cardStyle}>
+          <h2 style={{ fontSize: 18, fontWeight: 700, color: 'var(--ink)', marginBottom: 16, fontFamily: "'Cormorant Garamond', serif" }}>
+            Demo-Zugang steuern
+          </h2>
+          <p style={{ color: 'var(--dim)', fontSize: 13, marginBottom: 16 }}>
+            Steuere, ob die Demo-Buttons (Engel & Kunde) auf der Login-Seite sichtbar sind. Perfekt für Investoren-Demos.
+          </p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 16 }}>
+            <span style={{ color: 'var(--ink)', fontSize: 14 }}>Demo-Zugang:</span>
+            <button
+              onClick={toggleDemo}
+              disabled={demoLoading}
+              style={{
+                padding: '8px 24px', borderRadius: 10, border: 'none', fontWeight: 700, fontSize: 14, cursor: 'pointer', fontFamily: 'inherit',
+                background: demoEnabled ? 'rgba(50,180,80,0.25)' : 'rgba(180,50,50,0.25)',
+                color: demoEnabled ? '#6ddf80' : '#ff8080',
+              }}
+            >
+              {demoLoading ? '...' : demoEnabled ? 'AKTIV' : 'INAKTIV'}
+            </button>
+          </div>
+          <div style={{ marginBottom: 10 }}>
+            <label style={{ color: 'var(--dim)', fontSize: 13, display: 'block', marginBottom: 6 }}>Demo-Passwort (für Engel & Kunde Accounts):</label>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <input
+                type="text"
+                placeholder="Demo-Passwort festlegen"
+                defaultValue=""
+                id="demo-pw-input"
+                style={{ ...inputStyle, flex: 1, marginBottom: 0 }}
+              />
+              <button
+                onClick={async () => {
+                  const pw = (document.getElementById('demo-pw-input') as HTMLInputElement)?.value
+                  if (!pw || pw.length < 6) { setDemoMsg('Mindestens 6 Zeichen'); return }
+                  setDemoLoading(true)
+                  setDemoMsg('')
+                  // Demo-Passwort in app_settings speichern
+                  const { error: settingsErr } = await supabase.from('app_settings').update({ value: pw, updated_at: new Date().toISOString(), updated_by: currentUser?.id }).eq('key', 'demo_password')
+                  if (settingsErr) { setDemoMsg('Fehler: ' + settingsErr.message); setDemoLoading(false); return }
+                  // Passwörter der Demo-Accounts aktualisieren
+                  const res = await fetch('/api/admin/reset-password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId: 'demo-engel', newPassword: pw, email: 'anna@example.com' }),
+                  })
+                  const res2 = await fetch('/api/admin/reset-password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId: 'demo-kunde', newPassword: pw, email: 'maria@example.com' }),
+                  })
+                  setDemoMsg('✓ Demo-Passwort aktualisiert!')
+                  setDemoLoading(false)
+                }}
+                style={{ ...btnStyle, whiteSpace: 'nowrap' }}
+                disabled={demoLoading}
+              >
+                Speichern
+              </button>
+            </div>
+          </div>
+          {demoMsg && <div style={msgStyle(demoMsg)}>{demoMsg}</div>}
+        </div>
+      )}
 
       {/* ═══ Mein Passwort ändern ═══ */}
       <div style={cardStyle}>
