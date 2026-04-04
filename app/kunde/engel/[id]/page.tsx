@@ -127,7 +127,7 @@ export default async function EngelProfilPage({ params }: { params: Promise<{ id
 
       <div className="booking-bar">
         <div className="booking-price">
-          <div className="price-val">{angel.hourly_rate}€<span style={{ fontSize: 14, fontWeight: 400, color: 'var(--ink4)' }}>/Std.</span></div>
+          <div className="price-val">32€<span style={{ fontSize: 14, fontWeight: 400, color: 'var(--ink4)' }}>/Std.</span></div>
           {angel.is_45b_capable && <div className="price-sub">§45b-fähig</div>}
         </div>
         <Link href={`/kunde/buchen/${id}`}><button className="btn-book">JETZT BUCHEN</button></Link>
