@@ -296,7 +296,7 @@ export default function KundeHomePage() {
                   ))}
                 </div>
                 <div className="engel-price-row">
-                  <div className="engel-price">{angel.hourly_rate}€ <span>/Std.</span></div>
+                  <div className="engel-price">32€ <span>/Std.</span></div>
                   {angel.is_45b_capable && <div className="badge-45b"><IconCard size={12} /> §45b</div>}
                 </div>
               </div>

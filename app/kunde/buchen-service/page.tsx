@@ -89,7 +89,7 @@ function BuchenServiceInner() {
   }, [step, selectedService])
 
   const serviceLabel = serviceOptions.find(s => s.key === selectedService)?.label || selectedService
-  const rate = selectedAngel?.hourly_rate || UNIT_ECONOMICS.billingRatePerHour
+  const rate = 32 // Kundenpreis immer 32€/h
   const subtotal = rate * duration
   const platformFee = Math.round(subtotal * 0.085 * 100) / 100
   const total = subtotal + platformFee
@@ -412,7 +412,7 @@ function BuchenServiceInner() {
                       </div>
                     </div>
                     <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--ink)' }}>
-                      {angel.hourly_rate || 32}€<span style={{ fontSize: 12, fontWeight: 400 }}>/h</span>
+                      32€<span style={{ fontSize: 12, fontWeight: 400 }}>/h</span>
                     </div>
                   </button>
                 ))}

@@ -71,7 +71,7 @@ export default function BuchenPage() {
     </div>
   )
 
-  const rate = angel?.hourly_rate || 32
+  const rate = 32 // Kundenpreis immer 32€/h
   const subtotal = rate * duration
   const platformFee = Math.round(subtotal * 0.085 * 100) / 100
   const total = subtotal + platformFee
