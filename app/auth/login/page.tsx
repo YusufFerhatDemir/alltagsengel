@@ -46,8 +46,8 @@ function LoginForm() {
               setDemoEnabled(false)
             }
           } else if (enabled && !expiresAt) {
-            // Fallback: wenn kein Ablaufdatum → nicht anzeigen (Sicherheit)
-            setDemoEnabled(false)
+            // Kein Ablaufdatum → unbegrenzt aktiv
+            setDemoEnabled(true)
           }
         }
       })
