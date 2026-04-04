@@ -26,7 +26,7 @@ export default function EngelRegisterPage() {
   const [stadt, setStadt] = useState('')
   const [location, setLocation] = useState('')
   const [qualification, setQualification] = useState('')
-  const hourlyRate = 32 // Kundenpreis – Engel-Vergütung (20€) wird intern geregelt
+  const hourlyRate = 20 // Engel-Vergütung fest 20€/h – Kundenpreis (32€) wird im Kunden-UI hardcoded
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
   const [firstName, setFirstName] = useState('')
