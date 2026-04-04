@@ -134,8 +134,8 @@ export default function KundeHomePage() {
 
   const demoAngels = [
     { id: 'demo-anna', name: 'Anna Müller', rating: 4.9, jobs: 127, services: ['Begleitung', 'Einkauf', 'Haushalt'], price: 32, online: true, bg: 'var(--gold-pale)', is45b: true },
-    { id: 'demo-thomas', name: 'Thomas Weber', rating: 4.8, jobs: 89, services: ['Arztbesuch', 'Begleitung', 'Spazieren'], price: 28, online: true, bg: 'var(--green-pale)', is45b: true },
-    { id: 'demo-lisa', name: 'Lisa Schneider', rating: 4.7, jobs: 56, services: ['Freizeit', 'Haushalt', 'Apotheke'], price: 30, online: false, bg: 'var(--cream2)', is45b: true },
+    { id: 'demo-thomas', name: 'Thomas Weber', rating: 4.8, jobs: 89, services: ['Arztbesuch', 'Begleitung', 'Spazieren'], price: 32, online: true, bg: 'var(--green-pale)', is45b: true },
+    { id: 'demo-lisa', name: 'Lisa Schneider', rating: 4.7, jobs: 56, services: ['Freizeit', 'Haushalt', 'Apotheke'], price: 32, online: false, bg: 'var(--cream2)', is45b: true },
   ]
 
   const filteredDemos = demoAngels.filter(a => {
