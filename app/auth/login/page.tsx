@@ -205,21 +205,22 @@ function LoginForm() {
         {/* ═══ Admin-Zugang ═══ */}
         <div style={{ marginTop: 24, borderTop: '1px solid rgba(201,150,60,0.15)', paddingTop: 16 }}>
           <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', textAlign: 'center', marginBottom: 10, textTransform: 'uppercase', letterSpacing: 1 }}>Admin-Zugang</div>
-          <div style={{ display: 'flex', gap: 8, marginBottom: showAdminPw ? 10 : 0 }}>
-            <button type="button" className="btn-gold"
-              style={{ flex: 1, fontSize: 12, padding: '10px 0', background: 'rgba(201,150,60,0.08)', color: 'var(--gold-2)', border: '1px solid rgba(201,150,60,0.2)' }}
-              onClick={() => setShowAdminPw(true)}
-            >ADMIN</button>
-            <button type="button" className="btn-gold"
-              style={{ flex: 1, fontSize: 12, padding: '10px 0', background: 'rgba(201,150,60,0.08)', color: 'var(--gold-2)', border: '1px solid rgba(201,150,60,0.2)' }}
-              onClick={() => setShowAdminPw(true)}
-            >MIS PORTAL</button>
-          </div>
-          {showAdminPw && (
+          {!showAdminPw ? (
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button type="button" className="btn-gold"
+                style={{ flex: 1, fontSize: 12, padding: '10px 0', background: 'rgba(201,150,60,0.08)', color: 'var(--gold-2)', border: '1px solid rgba(201,150,60,0.2)' }}
+                onClick={() => setShowAdminPw(true)}
+              >ADMIN</button>
+              <button type="button" className="btn-gold"
+                style={{ flex: 1, fontSize: 12, padding: '10px 0', background: 'linear-gradient(135deg, #C9963C, #DBA84A)', color: '#0D0A08', border: '1px solid rgba(201,150,60,0.2)', fontWeight: 700 }}
+                onClick={() => router.push('/mis')}
+              >MIS PORTAL</button>
+            </div>
+          ) : (
             <div style={{ display: 'flex', gap: 8 }}>
               <input
                 type="password"
-                placeholder="Passwort"
+                placeholder="Admin-Passwort"
                 value={adminPwInput}
                 onChange={e => setAdminPwInput(e.target.value)}
                 onKeyDown={e => { if (e.key === 'Enter') { setLoading(true); setError(''); loginAndRedirect('admin@alltagsengel.de', adminPwInput).catch(() => setError('Login fehlgeschlagen')).finally(() => setLoading(false)) } }}
