@@ -22,6 +22,7 @@
     "@capacitor/status-bar": "^8.0.1",
     "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.97.0",
+    "google-auth-library": "^10.6.2",
     "next": "^16.2.0",
     "react": "19.2.3",
     "react-dom": "19.2.3",

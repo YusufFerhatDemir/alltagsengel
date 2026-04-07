@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "595368705723",
+    "project_id": "alltagsengel-2bbe9",
+    "storage_bucket": "alltagsengel-2bbe9.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:595368705723:android:4597f296cc3f0268ffb39e",
+        "android_client_info": {
+          "package_name": "care.alltagsengel.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyClry7NT4hI1K96jWNxWxGninGE-ugoBYw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
