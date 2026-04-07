@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=430, initial-scale=1.0">
+<title>Alltagsengel — TikTok/Reels Ad</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;400;600;700&display=swap');
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  width: 430px;
+  height: 932px;
+  background: #0D0A08;
+  font-family: 'Inter', sans-serif;
+  overflow: hidden;
+  position: relative;
+}
+
+.scene { position: absolute; inset: 0; opacity: 0; transition: opacity 0.8s; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 30px; }
+.scene.active { opacity: 1; }
+
+/* Scene 1: Problem */
+.scene-1 {
+  background: linear-gradient(180deg, #0D0A08 0%, #1a1510 100%);
+}
+.scene-1 .emoji { font-size: 80px; margin-bottom: 20px; animation: float 2s ease-in-out infinite; }
+.scene-1 h1 { font-family: 'Playfair Display', serif; color: #e8e0d4; font-size: 32px; text-align: center; line-height: 1.3; margin-bottom: 16px; }
+.scene-1 .highlight { color: #C9963C; }
+.scene-1 p { color: rgba(255,255,255,0.5); font-size: 16px; text-align: center; line-height: 1.6; }
+
+/* Scene 2: Solution */
+.scene-2 { background: linear-gradient(180deg, #0D0A08 0%, #1A1208 100%); }
+.scene-2 .app-mockup {
+  width: 260px; height: 520px;
+  background: linear-gradient(145deg, #1a1510, #0D0A08);
+  border-radius: 40px; border: 2px solid rgba(201,150,60,0.3);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 30px;
+  box-shadow: 0 30px 60px rgba(0,0,0,0.5), 0 0 40px rgba(201,150,60,0.1);
+  animation: phoneIn 0.8s ease-out;
+  margin-bottom: 24px;
+}
+.scene-2 .app-logo { font-size: 60px; margin-bottom: 10px; }
+.scene-2 .app-name { font-family: 'Playfair Display', serif; color: #C9963C; font-size: 24px; letter-spacing: 3px; margin-bottom: 6px; }
+.scene-2 .app-tagline { color: rgba(255,255,255,0.4); font-size: 12px; font-style: italic; }
+.scene-2 .app-btn { margin-top: 20px; background: linear-gradient(135deg, #C9963C, #DBA84A); color: #0D0A08; padding: 12px 40px; border-radius: 12px; font-weight: 700; font-size: 14px; letter-spacing: 2px; }
+.scene-2 h2 { color: #e8e0d4; font-size: 22px; text-align: center; font-family: 'Playfair Display', serif; }
+.scene-2 .gold { color: #C9963C; }
+
+/* Scene 3: Features */
+.scene-3 { background: linear-gradient(180deg, #0D0A08 0%, #151210 100%); }
+.scene-3 h2 { font-family: 'Playfair Display', serif; color: #C9963C; font-size: 28px; margin-bottom: 30px; }
+.feature-list { width: 100%; }
+.feature-item {
+  display: flex; align-items: center; gap: 16px;
+  background: rgba(201,150,60,0.06); border: 1px solid rgba(201,150,60,0.12);
+  border-radius: 16px; padding: 18px 20px; margin-bottom: 12px;
+  opacity: 0; transform: translateX(-30px);
+}
+.feature-item.show { opacity: 1; transform: translateX(0); transition: all 0.5s ease-out; }
+.feature-icon { font-size: 36px; flex-shrink: 0; }
+.feature-text h3 { color: #e8e0d4; font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+.feature-text p { color: rgba(255,255,255,0.4); font-size: 12px; line-height: 1.4; }
+
+/* Scene 4: Trust */
+.scene-4 { background: linear-gradient(180deg, #0D0A08 0%, #0D1008 100%); }
+.scene-4 h2 { font-family: 'Playfair Display', serif; color: #C9963C; font-size: 26px; margin-bottom: 30px; text-align: center; }
+.trust-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; width: 100%; }
+.trust-card {
+  background: rgba(201,150,60,0.06); border: 1px solid rgba(201,150,60,0.15);
+  border-radius: 16px; padding: 20px; text-align: center;
+  opacity: 0; transform: scale(0.8);
+}
+.trust-card.show { opacity: 1; transform: scale(1); transition: all 0.4s ease-out; }
+.trust-card .num { font-size: 32px; font-weight: 700; color: #C9963C; font-family: 'Playfair Display', serif; }
+.trust-card .label { color: rgba(255,255,255,0.5); font-size: 11px; margin-top: 4px; text-transform: uppercase; letter-spacing: 1px; }
+
+/* Scene 5: CTA */
+.scene-5 { background: radial-gradient(ellipse at center, #1A1208, #0D0A08); }
+.scene-5 .logo-big { font-size: 100px; margin-bottom: 16px; animation: pulse 2s ease-in-out infinite; }
+.scene-5 h1 { font-family: 'Playfair Display', serif; color: #C9963C; font-size: 36px; letter-spacing: 4px; margin-bottom: 8px; }
+.scene-5 .tagline { color: rgba(255,255,255,0.5); font-size: 14px; font-style: italic; margin-bottom: 30px; }
+.scene-5 .cta-btn {
+  background: linear-gradient(135deg, #C9963C, #DBA84A);
+  color: #0D0A08; padding: 18px 50px; border-radius: 14px;
+  font-weight: 700; font-size: 16px; letter-spacing: 2px;
+  box-shadow: 0 10px 30px rgba(201,150,60,0.3);
+  animation: ctaPulse 1.5s ease-in-out infinite;
+}
+.scene-5 .sub { color: rgba(255,255,255,0.3); font-size: 12px; margin-top: 16px; }
+.scene-5 .badges { display: flex; gap: 12px; margin-top: 20px; }
+.scene-5 .badge { background: rgba(255,255,255,0.08); padding: 8px 16px; border-radius: 8px; color: rgba(255,255,255,0.5); font-size: 11px; }
+
+/* Progress bar */
+.progress { position: fixed; top: 0; left: 0; right: 0; height: 3px; z-index: 100; display: flex; gap: 4px; padding: 8px 12px; }
+.progress-seg { flex: 1; height: 3px; background: rgba(255,255,255,0.15); border-radius: 2px; overflow: hidden; }
+.progress-seg .fill { height: 100%; background: #C9963C; width: 0%; }
+.progress-seg.done .fill { width: 100%; }
+.progress-seg.active .fill { animation: progressFill 3s linear forwards; }
+
+/* Watermark */
+.watermark { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); color: rgba(201,150,60,0.3); font-size: 11px; letter-spacing: 2px; z-index: 100; }
+
+@keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+@keyframes phoneIn { from { transform: scale(0.5) translateY(50px); opacity: 0; } to { transform: scale(1) translateY(0); opacity: 1; } }
+@keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+@keyframes ctaPulse { 0%,100% { box-shadow: 0 10px 30px rgba(201,150,60,0.3); } 50% { box-shadow: 0 10px 40px rgba(201,150,60,0.5); } }
+@keyframes progressFill { from { width: 0%; } to { width: 100%; } }
+</style>
+</head>
+<body>
+
+<div class="progress">
+  <div class="progress-seg" id="p1"><div class="fill"></div></div>
+  <div class="progress-seg" id="p2"><div class="fill"></div></div>
+  <div class="progress-seg" id="p3"><div class="fill"></div></div>
+  <div class="progress-seg" id="p4"><div class="fill"></div></div>
+  <div class="progress-seg" id="p5"><div class="fill"></div></div>
+</div>
+
+<!-- Scene 1: Problem -->
+<div class="scene scene-1 active" id="s1">
+  <div class="emoji">👵🏻</div>
+  <h1>Deine Eltern brauchen <span class="highlight">Hilfe im Alltag?</span></h1>
+  <p>Einkaufen, Arztbesuche, Behördengänge...<br>Aber du kannst nicht immer da sein.</p>
+</div>
+
+<!-- Scene 2: Solution -->
+<div class="scene scene-2" id="s2">
+  <div class="app-mockup">
+    <div class="app-logo">👼</div>
+    <div class="app-name">ALLTAGSENGEL</div>
+    <div class="app-tagline">Mit Herz für dich da</div>
+    <div class="app-btn">JETZT STARTEN</div>
+  </div>
+  <h2>Dein <span class="gold">Engel</span> für jeden Tag</h2>
+</div>
+
+<!-- Scene 3: Features -->
+<div class="scene scene-3" id="s3">
+  <h2>Was wir bieten</h2>
+  <div class="feature-list">
+    <div class="feature-item" id="f1"><div class="feature-icon">🏥</div><div class="feature-text"><h3>Krankenfahrten</h3><p>Sicher zum Arzt und zurück</p></div></div>
+    <div class="feature-item" id="f2"><div class="feature-icon">🛒</div><div class="feature-text"><h3>Einkaufsbegleitung</h3><p>Gemeinsam statt einsam</p></div></div>
+    <div class="feature-item" id="f3"><div class="feature-icon">📋</div><div class="feature-text"><h3>Behördengänge</h3><p>Kein Formular-Stress mehr</p></div></div>
+    <div class="feature-item" id="f4"><div class="feature-icon">💛</div><div class="feature-text"><h3>Alltagsbegleitung</h3><p>Zeit, Gespräche, Gesellschaft</p></div></div>
+    <div class="feature-item" id="f5"><div class="feature-icon">💰</div><div class="feature-text"><h3>§45b abrechenbar</h3><p>125€/Monat von der Kasse</p></div></div>
+  </div>
+</div>
+
+<!-- Scene 4: Trust -->
+<div class="scene scene-4" id="s4">
+  <h2>Warum Alltagsengel?</h2>
+  <div class="trust-grid">
+    <div class="trust-card" id="t1"><div class="num">100%</div><div class="label">Versichert</div></div>
+    <div class="trust-card" id="t2"><div class="num">§45b</div><div class="label">Integriert</div></div>
+    <div class="trust-card" id="t3"><div class="num">24/7</div><div class="label">Verfügbar</div></div>
+    <div class="trust-card" id="t4"><div class="num">⭐ 5.0</div><div class="label">Bewertung</div></div>
+  </div>
+</div>
+
+<!-- Scene 5: CTA -->
+<div class="scene scene-5" id="s5">
+  <div class="logo-big">👼</div>
+  <h1>ALLTAGSENGEL</h1>
+  <div class="tagline">Premium Alltagsbegleitung</div>
+  <div class="cta-btn">JETZT KOSTENLOS</div>
+  <div class="sub">alltagsengel.care</div>
+  <div class="badges">
+    <div class="badge">🍎 App Store</div>
+    <div class="badge">▶️ Google Play</div>
+  </div>
+</div>
+
+<div class="watermark">alltagsengel.care</div>
+
+<script>
+const scenes = ['s1','s2','s3','s4','s5'];
+const durations = [3000, 3000, 4000, 3000, 4000];
+let current = 0;
+
+function showScene(idx) {
+  scenes.forEach((id, i) => {
+    document.getElementById(id).classList.toggle('active', i === idx);
+    const p = document.getElementById('p' + (i+1));
+    p.classList.remove('active','done');
+    if (i < idx) p.classList.add('done');
+    if (i === idx) p.classList.add('active');
+  });
+
+  if (idx === 2) {
+    ['f1','f2','f3','f4','f5'].forEach((id, i) => {
+      setTimeout(() => document.getElementById(id).classList.add('show'), i * 400);
+    });
+  }
+  if (idx === 3) {
+    ['t1','t2','t3','t4'].forEach((id, i) => {
+      setTimeout(() => document.getElementById(id).classList.add('show'), i * 300);
+    });
+  }
+}
+
+function nextScene() {
+  current++;
+  if (current >= scenes.length) { current = 0; document.querySelectorAll('.feature-item, .trust-card').forEach(el => el.classList.remove('show')); }
+  showScene(current);
+  setTimeout(nextScene, durations[current]);
+}
+
+showScene(0);
+setTimeout(nextScene, durations[0]);
+</script>
+</body>
+</html>
