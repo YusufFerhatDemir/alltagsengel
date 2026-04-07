@@ -6,6 +6,7 @@ import VisitorTracker from '@/components/VisitorTracker'
 import CookieConsent from '@/components/CookieConsent'
 import ServiceWorkerRegister from '@/components/ServiceWorkerRegister'
 import PushProvider from '@/components/PushProvider'
+import NativePushProvider from '@/components/NativePushProvider'
 import GoogleTagManager from '@/components/GoogleTagManager'
 import SessionKeepAlive from '@/components/SessionKeepAlive'
 
@@ -129,6 +130,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <CookieConsent />
         <ServiceWorkerRegister />
         <PushProvider />
+        <NativePushProvider />
       </body>
     </html>
   )
