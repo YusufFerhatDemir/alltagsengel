@@ -1,4 +1,5 @@
 import { Resend } from 'resend'
+import { sendPushToUser } from '@/lib/push'
 
 // ─── Types ───
 export interface NotifyPayload {
@@ -67,7 +68,7 @@ export async function sendEmailNotification(
   }
   try {
     const { error } = await resend.emails.send({
-      from: 'AlltagsEngel <noreply@alltagsengel.care>',
+      from: 'AlltagsEngel <info@alltagsengel.care>',
       to,
       subject,
       html: wrapEmailTemplate(recipientName, subject, bodyHtml),
@@ -135,6 +136,17 @@ export async function notifyAngelNewBooking(
       .eq('data->>bookingId', data.bookingId)
       .eq('title', 'Neue Buchungsanfrage')
   }
+
+  // 3. Push Notification
+  await sendPushToUser(angelUserId, {
+    title: 'Neue Buchungsanfrage',
+    body: `${data.customerName} möchte ${data.service} am ${dateStr} um ${data.time} Uhr buchen.`,
+    tag: `booking-${data.bookingId}`,
+    url: '/engel/buchungen',
+    actions: [
+      { action: 'open', title: 'Ansehen' },
+    ],
+  }).catch((err) => console.error('Push to angel error:', err))
 }
 
 // ─── Booking: Engel hat angenommen → Kunde benachrichtigen ───
@@ -191,6 +203,17 @@ export async function notifyCustomerBookingAccepted(
       .eq('data->>bookingId', data.bookingId)
       .eq('title', 'Buchung bestätigt!')
   }
+
+  // 3. Push Notification
+  await sendPushToUser(customerId, {
+    title: 'Buchung bestätigt!',
+    body: `${data.angelName} hat Ihre Buchung für ${data.service} am ${dateStr} angenommen.`,
+    tag: `booking-confirmed-${data.bookingId}`,
+    url: `/kunde/bestaetigt/${data.bookingId}`,
+    actions: [
+      { action: 'open', title: 'Ansehen' },
+    ],
+  }).catch((err) => console.error('Push to customer error:', err))
 }
 
 // ─── Email Template Wrapper ───
