@@ -2,6 +2,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { validatePassword, isCommonPassword } from '@/lib/password-validation'
 import Icon3D from '@/components/Icon3D'
 
 export default function FahrerRegisterPage() {
@@ -44,6 +45,19 @@ export default function FahrerRegisterPage() {
     setSubmitting(true)
     setError('')
 
+    // ═══ Passwort-Validierung ═══
+    const pwCheck = validatePassword(formData.password)
+    if (!pwCheck.valid) {
+      setError('Passwort: ' + pwCheck.errors.join(', '))
+      setSubmitting(false)
+      return
+    }
+    if (isCommonPassword(formData.password)) {
+      setError('Dieses Passwort ist zu häufig. Bitte wählen Sie ein sichereres Passwort.')
+      setSubmitting(false)
+      return
+    }
+
     try {
       const supabase = createClient()
 
@@ -67,7 +81,7 @@ export default function FahrerRegisterPage() {
         } else if (authError.message.includes('valid email')) {
           setError('Bitte geben Sie eine gültige E-Mail-Adresse ein.')
         } else if (authError.message.includes('at least')) {
-          setError('Das Passwort muss mindestens 6 Zeichen lang sein.')
+          setError('Das Passwort muss mindestens 8 Zeichen lang sein und Großbuchstaben, Zahlen und Sonderzeichen enthalten.')
         } else if (authError.message.includes('rate limit') || authError.message.includes('too many')) {
           setError('Zu viele Versuche. Bitte warten Sie einen Moment.')
         } else {
@@ -364,11 +378,11 @@ export default function FahrerRegisterPage() {
               />
               <input
                 type="password"
-                placeholder="Passwort (min. 6 Zeichen)"
+                placeholder="Passwort (min. 8 Zeichen)"
                 value={formData.password}
                 onChange={e => handleInputChange('password', e.target.value)}
                 required
-                minLength={6}
+                minLength={8}
                 style={{
                   width: '100%',
                   padding: '10px 12px',

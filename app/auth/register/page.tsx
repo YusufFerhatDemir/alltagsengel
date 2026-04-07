@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { Suspense } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { geocodePLZ } from '@/lib/geocoding'
+import { validatePassword, isCommonPassword } from '@/lib/password-validation'
 import Link from 'next/link'
 import Icon3D from '@/components/Icon3D'
 
@@ -24,12 +25,41 @@ function RegisterForm() {
   const [homeCare, setHomeCare] = useState(true)
   const [pflegehilfsmittel, setPflegehilfsmittel] = useState(false)
   const [error, setError] = useState('')
+  const [passwordErrors, setPasswordErrors] = useState<string[]>([])
+  const [passwordStrength, setPasswordStrength] = useState<'weak' | 'medium' | 'strong'>('weak')
   const [loading, setLoading] = useState(false)
+
+  // Passwort-Validierung in Echtzeit
+  function handlePasswordChange(value: string) {
+    setPassword(value)
+    if (value.length > 0) {
+      const result = validatePassword(value)
+      setPasswordErrors(result.errors)
+      setPasswordStrength(result.strength)
+    } else {
+      setPasswordErrors([])
+      setPasswordStrength('weak')
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
     setError('')
+
+    // ═══ Passwort-Validierung ═══
+    const pwCheck = validatePassword(password)
+    if (!pwCheck.valid) {
+      setError('Passwort erfüllt nicht die Mindestanforderungen.')
+      setPasswordErrors(pwCheck.errors)
+      setLoading(false)
+      return
+    }
+    if (isCommonPassword(password)) {
+      setError('Dieses Passwort ist zu häufig. Bitte wählen Sie ein sichereres Passwort.')
+      setLoading(false)
+      return
+    }
 
     try {
       const supabase = createClient()
@@ -53,7 +83,7 @@ function RegisterForm() {
         } else if (authError.message.includes('valid email')) {
           setError('Bitte geben Sie eine gültige E-Mail-Adresse ein.')
         } else if (authError.message.includes('at least')) {
-          setError('Das Passwort muss mindestens 6 Zeichen lang sein.')
+          setError('Das Passwort muss mindestens 8 Zeichen lang sein und Großbuchstaben, Zahlen und Sonderzeichen enthalten.')
         } else if (authError.message.includes('rate limit') || authError.message.includes('too many')) {
           setError('Zu viele Versuche. Bitte warten Sie einen Moment.')
         } else if (authError.message.includes('signups not allowed') || authError.message.includes('Signups not allowed')) {
@@ -174,7 +204,24 @@ function RegisterForm() {
             <input className="auth-input" type="text" placeholder="Nachname" value={lastName} onChange={e => setLastName(e.target.value)} required />
           </div>
           <input className="auth-input" type="email" placeholder="E-Mail-Adresse" value={email} onChange={e => setEmail(e.target.value)} required autoComplete="email" />
-          <input className="auth-input" type="password" placeholder="Passwort (min. 6 Zeichen)" value={password} onChange={e => setPassword(e.target.value)} required minLength={6} autoComplete="new-password" />
+          <input className="auth-input" type="password" placeholder="Passwort (min. 8 Zeichen)" value={password} onChange={e => handlePasswordChange(e.target.value)} required minLength={8} autoComplete="new-password" />
+          {password.length > 0 && (
+            <div style={{ marginTop: -4, marginBottom: 8 }}>
+              <div style={{ display: 'flex', gap: 4, marginBottom: 4 }}>
+                <div style={{ flex: 1, height: 3, borderRadius: 2, background: passwordStrength === 'weak' ? '#D04B3B' : passwordStrength === 'medium' ? '#ff9800' : '#4caf50' }} />
+                <div style={{ flex: 1, height: 3, borderRadius: 2, background: passwordStrength === 'medium' ? '#ff9800' : passwordStrength === 'strong' ? '#4caf50' : 'rgba(255,255,255,0.1)' }} />
+                <div style={{ flex: 1, height: 3, borderRadius: 2, background: passwordStrength === 'strong' ? '#4caf50' : 'rgba(255,255,255,0.1)' }} />
+              </div>
+              {passwordErrors.length > 0 && (
+                <div style={{ fontSize: 11, color: '#ef9a9a' }}>
+                  {passwordErrors.map((err, i) => <div key={i}>• {err}</div>)}
+                </div>
+              )}
+              {passwordErrors.length === 0 && (
+                <div style={{ fontSize: 11, color: '#81c784' }}>Passwort erfüllt alle Anforderungen</div>
+              )}
+            </div>
+          )}
           <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr', gap: 10 }}>
             <input className="auth-input" type="text" placeholder="PLZ" value={plz} onChange={e => setPlz(e.target.value.replace(/\D/g, '').slice(0, 5))} inputMode="numeric" maxLength={5} minLength={5} required />
             <input className="auth-input" type="text" placeholder="Stadt" value={stadt} onChange={e => setStadt(e.target.value)} required />

@@ -36,6 +36,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Buchung nicht gefunden' }, { status: 404 })
     }
 
+    // Sicherheit: Nur Beteiligte der Buchung oder Admins dürfen Notifications auslösen
+    const isBookingParticipant = booking.customer_id === user.id || (booking.angel_id && booking.angel_id === user.id)
+    if (!isBookingParticipant) {
+      const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+      if (!profile || !['admin', 'superadmin'].includes(profile.role)) {
+        return NextResponse.json({ error: 'Keine Berechtigung für diese Buchung' }, { status: 403 })
+      }
+    }
+
     const cust: any = Array.isArray(booking.customer) ? booking.customer[0] : booking.customer
     const customerName = cust
       ? `${cust.first_name} ${cust.last_name?.[0] || ''}.`
