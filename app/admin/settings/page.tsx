@@ -32,6 +32,7 @@ export default function AdminSettings() {
   const [resetPassword, setResetPassword] = useState('')
   const [showResetPw, setShowResetPw] = useState(false)
   const [resetMsg, setResetMsg] = useState('')
+  const [resetSendNotification, setResetSendNotification] = useState(true)
 
   const supabase = createClient()
 
@@ -205,13 +206,14 @@ export default function AdminSettings() {
     const res = await fetch('/api/admin/reset-password', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId: resetUserId, newPassword: resetPassword }),
+      body: JSON.stringify({ userId: resetUserId, newPassword: resetPassword, sendNotification: resetSendNotification }),
     })
     const data = await res.json()
     if (data.error) {
       setResetMsg('Fehler: ' + data.error)
     } else {
-      setResetMsg('✓ Passwort zurückgesetzt!')
+      const notifyText = resetSendNotification ? ' · E-Mail gesendet' : ''
+      setResetMsg('✓ Passwort zurückgesetzt!' + notifyText)
       setResetPassword('')
       setResetUserId('')
     }
@@ -499,6 +501,15 @@ export default function AdminSettings() {
                 {showResetPw ? 'Verbergen' : 'Anzeigen'}
               </button>
             </div>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '10px 0', fontSize: 13, color: 'var(--dim)', cursor: 'pointer' }}>
+              <input
+                type="checkbox"
+                checked={resetSendNotification}
+                onChange={e => setResetSendNotification(e.target.checked)}
+                style={{ width: 16, height: 16, accentColor: '#C9963C' }}
+              />
+              Neues Passwort per E-Mail an Benutzer senden
+            </label>
             <button type="submit" style={btnStyle}>Passwort zurücksetzen</button>
             {resetMsg && <div style={msgStyle(resetMsg)}>{resetMsg}</div>}
           </form>
