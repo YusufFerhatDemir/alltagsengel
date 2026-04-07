@@ -179,9 +179,9 @@ function LoginForm() {
         )}
 
         <form onSubmit={handleSubmit}>
-          <input className="auth-input" type="email" placeholder="E-Mail-Adresse" value={email} onChange={e => setEmail(e.target.value)} required />
+          <input className="auth-input" type="email" placeholder="E-Mail-Adresse" value={email} onChange={e => setEmail(e.target.value)} required autoComplete="email" name="email" />
           <div style={{ position: 'relative' }}>
-            <input className="auth-input" type={showPassword ? 'text' : 'password'} placeholder="Passwort" value={password} onChange={e => setPassword(e.target.value)} required style={{ paddingRight: 48 }} />
+            <input className="auth-input" type={showPassword ? 'text' : 'password'} placeholder="Passwort" value={password} onChange={e => setPassword(e.target.value)} required style={{ paddingRight: 48 }} autoComplete="current-password" name="password" />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}

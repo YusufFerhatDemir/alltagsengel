@@ -5,7 +5,7 @@ import { sendEmailNotification } from '@/lib/notifications'
 /**
  * POST /api/auth/send-reset
  * Sends a custom password reset email via Resend.
- * Uses Supabase admin API to generate recovery link, then sends branded email.
+ * First checks if user exists via profiles table, then generates recovery link.
  */
 export async function POST(request: Request) {
   try {
@@ -16,6 +16,20 @@ export async function POST(request: Request) {
 
     const supabase = createAdminClient()
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://alltagsengel.care'
+
+    // Check if user exists via profiles table (avoid creating phantom users)
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('id, first_name')
+      .eq('email', email)
+      .single()
+
+    if (!profile) {
+      // User doesn't exist — return success anyway (don't reveal)
+      return NextResponse.json({ success: true })
+    }
+
+    const userName = profile.first_name || 'Nutzer'
 
     // Generate a recovery link via admin API
     const { data, error } = await supabase.auth.admin.generateLink({
@@ -28,26 +42,15 @@ export async function POST(request: Request) {
 
     if (error) {
       console.error('generateLink recovery error:', error)
-      // Fallback: use Supabase built-in reset (may fail for non-team emails)
-      const { error: resetError } = await supabase.auth.admin.generateLink({
-        type: 'magiclink',
-        email,
-        options: {
-          redirectTo: `${siteUrl}/auth/callback?next=/auth/reset-password`,
-        },
-      })
-      if (resetError) {
-        // Don't reveal whether the email exists
-        return NextResponse.json({ success: true })
-      }
+      return NextResponse.json({ success: true })
     }
 
-    // Send via Resend
+    // Send branded email via Resend
     if (data?.properties?.action_link) {
       const resetLink = data.properties.action_link
-      const sent = await sendEmailNotification(
+      await sendEmailNotification(
         email,
-        'Nutzer',
+        userName,
         'Passwort zurücksetzen — AlltagsEngel',
         `
           <p>Sie haben angefordert, Ihr Passwort zurückzusetzen.</p>
@@ -56,17 +59,11 @@ export async function POST(request: Request) {
           <p style="color:#888;font-size:12px;margin-top:16px;">Dieser Link ist 24 Stunden gültig. Wenn Sie kein neues Passwort angefordert haben, können Sie diese E-Mail ignorieren.</p>
         `
       )
-
-      if (sent) {
-        return NextResponse.json({ success: true, method: 'custom' })
-      }
     }
 
-    // Always return success (don't reveal if email exists)
     return NextResponse.json({ success: true })
   } catch (err) {
     console.error('send-reset error:', err)
-    // Always return success for security
     return NextResponse.json({ success: true })
   }
 }
