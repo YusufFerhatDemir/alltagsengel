@@ -1,10 +1,28 @@
-import { createClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
+// Rate Limiter: max 10 Tracking-Requests pro IP pro Minute
+const trackRateLimit = new Map<string, { count: number; resetAt: number }>()
+
+function checkTrackRateLimit(ip: string): boolean {
+  const now = Date.now()
+  const entry = trackRateLimit.get(ip)
+  if (!entry || now > entry.resetAt) {
+    trackRateLimit.set(ip, { count: 1, resetAt: now + 60000 })
+    return true
+  }
+  if (entry.count >= 10) return false
+  entry.count++
+  return true
+}
+
+// Aufräumen alle 5 Minuten
+setInterval(() => {
+  const now = Date.now()
+  for (const [key, entry] of trackRateLimit.entries()) {
+    if (now > entry.resetAt) trackRateLimit.delete(key)
+  }
+}, 300000)
 
 // Cache für IP-Geo-Daten (vermeidet doppelte API-Aufrufe)
 const geoCache = new Map<string, { data: GeoData; ts: number }>()
@@ -74,13 +92,25 @@ async function getDetailedGeo(ip: string): Promise<GeoData | null> {
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json()
-
     // IP aus Header lesen (Vercel / Cloudflare)
     const ip =
       req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
       req.headers.get('x-real-ip') ||
       'unknown'
+
+    // Rate Limiting
+    if (!checkTrackRateLimit(ip)) {
+      return NextResponse.json({ ok: true }) // Stille Ablehnung
+    }
+
+    const body = await req.json()
+
+    // Input-Validierung
+    if (typeof body.page !== 'string' || body.page.length > 500) {
+      return NextResponse.json({ ok: true })
+    }
+
+    const supabase = createAdminClient()
 
     // Vercel Geo-Header (Basis)
     const vercelCountry = req.headers.get('x-vercel-ip-country') || ''

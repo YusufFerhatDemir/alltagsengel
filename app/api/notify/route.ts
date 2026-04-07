@@ -11,6 +11,19 @@ export async function POST(req: NextRequest) {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: 'Nicht authentifiziert' }, { status: 401 })
 
+    // Sicherheit: Nur Admins dürfen Benachrichtigungen an andere User senden
+    // Normale User dürfen nur an sich selbst senden
+    if (userId !== user.id) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single()
+      if (!profile || !['admin', 'superadmin'].includes(profile.role)) {
+        return NextResponse.json({ error: 'Keine Berechtigung, Benachrichtigungen an andere User zu senden' }, { status: 403 })
+      }
+    }
+
     // Benachrichtigung in DB speichern
     const { data: notification, error } = await supabase
       .from('notifications')

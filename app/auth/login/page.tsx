@@ -1,9 +1,13 @@
 'use client'
-import { useState, useEffect, Suspense } from 'react'
+import { useState, useEffect, useCallback, useRef, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import Icon3D from '@/components/Icon3D'
+
+// ═══ Brute-Force Schutz: Konstanten ═══
+const MAX_CLIENT_ATTEMPTS = 5
+const LOCKOUT_DURATION_MS = 900000 // 15 Minuten
 
 function LoginForm() {
   const router = useRouter()
@@ -16,41 +20,113 @@ function LoginForm() {
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  const [demoEnabled, setDemoEnabled] = useState(false)
-  const [demoPassword, setDemoPassword] = useState('')
   const [showAdminPw, setShowAdminPw] = useState(false)
   const [adminPwInput, setAdminPwInput] = useState('')
 
-  // Demo-Zugang + Demo-Passwort + Ablaufzeit aus DB laden
+  // ═══ Brute-Force State ═══
+  const [lockoutUntil, setLockoutUntil] = useState<number>(0)
+  const [lockoutMessage, setLockoutMessage] = useState('')
+  const [attemptsWarning, setAttemptsWarning] = useState('')
+  const lockoutTimerRef = useRef<NodeJS.Timeout | null>(null)
+
+  // Client-side Lockout aus localStorage laden
   useEffect(() => {
-    const supabase = createClient()
-    supabase.from('app_settings').select('key, value').in('key', ['demo_enabled', 'demo_password', 'demo_expires_at'])
-      .then(({ data }) => {
-        if (data) {
-          let enabled = false
-          let expiresAt: string | null = null
-          for (const row of data) {
-            if (row.key === 'demo_enabled' && row.value === true) enabled = true
-            if (row.key === 'demo_password' && typeof row.value === 'string') setDemoPassword(row.value)
-            if (row.key === 'demo_expires_at' && typeof row.value === 'string') expiresAt = row.value
-          }
-          // Nur aktiv wenn enabled UND noch nicht abgelaufen
-          if (enabled && expiresAt) {
-            const expiry = new Date(expiresAt).getTime()
-            if (Date.now() < expiry) {
-              setDemoEnabled(true)
-              // Auto-deaktivieren wenn Zeit abläuft
-              const remaining = expiry - Date.now()
-              setTimeout(() => setDemoEnabled(false), remaining)
-            } else {
-              setDemoEnabled(false)
-            }
-          } else if (enabled && !expiresAt) {
-            // Kein Ablaufdatum → unbegrenzt aktiv
-            setDemoEnabled(true)
-          }
+    try {
+      const stored = localStorage.getItem('ae_login_lockout')
+      if (stored) {
+        const data = JSON.parse(stored)
+        if (data.until > Date.now()) {
+          setLockoutUntil(data.until)
+          setLockoutMessage(data.message || 'Zu viele Fehlversuche.')
+        } else {
+          localStorage.removeItem('ae_login_lockout')
         }
+      }
+    } catch {}
+  }, [])
+
+  // Lockout Countdown Timer
+  useEffect(() => {
+    if (lockoutUntil <= Date.now()) {
+      setLockoutMessage('')
+      return
+    }
+    const tick = () => {
+      const remaining = lockoutUntil - Date.now()
+      if (remaining <= 0) {
+        setLockoutUntil(0)
+        setLockoutMessage('')
+        localStorage.removeItem('ae_login_lockout')
+        return
+      }
+      const min = Math.ceil(remaining / 60000)
+      setLockoutMessage(
+        min > 60
+          ? `Zu viele Fehlversuche. Gesperrt für ${Math.ceil(min / 60)} Stunde(n).`
+          : `Zu viele Fehlversuche. Bitte warten Sie ${min} Minute(n).`
+      )
+    }
+    tick()
+    lockoutTimerRef.current = setInterval(tick, 10000)
+    return () => { if (lockoutTimerRef.current) clearInterval(lockoutTimerRef.current) }
+  }, [lockoutUntil])
+
+  // Server-side Rate Limit Check
+  const checkServerRateLimit = useCallback(async (loginEmail: string): Promise<boolean> => {
+    try {
+      const res = await fetch('/api/auth/check-rate-limit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: loginEmail, action: 'check' }),
       })
+      const data = await res.json()
+      if (data.locked) {
+        const until = Date.now() + (data.remainingSeconds || 900) * 1000
+        setLockoutUntil(until)
+        setLockoutMessage(data.message || 'Zu viele Fehlversuche.')
+        try { localStorage.setItem('ae_login_lockout', JSON.stringify({ until, message: data.message })) } catch {}
+        return false
+      }
+      return data.allowed !== false
+    } catch {
+      // Fail-open: Bei Netzwerkfehler Login erlauben
+      return true
+    }
+  }, [])
+
+  // Failed Login an Server melden
+  const reportFailedLogin = useCallback(async (loginEmail: string) => {
+    try {
+      const res = await fetch('/api/auth/check-rate-limit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: loginEmail, action: 'fail' }),
+      })
+      const data = await res.json()
+      if (data.locked) {
+        const until = Date.now() + (data.remainingSeconds || 900) * 1000
+        setLockoutUntil(until)
+        setLockoutMessage(data.message)
+        try { localStorage.setItem('ae_login_lockout', JSON.stringify({ until, message: data.message })) } catch {}
+      } else if (data.message) {
+        setAttemptsWarning(data.message)
+      }
+    } catch {}
+  }, [])
+
+  // Erfolgreichen Login melden
+  const reportSuccessfulLogin = useCallback(async (loginEmail: string) => {
+    try {
+      await fetch('/api/auth/check-rate-limit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: loginEmail, action: 'success' }),
+      })
+      localStorage.removeItem('ae_login_lockout')
+      setLockoutUntil(0)
+      setLockoutMessage('')
+      setAttemptsWarning('')
+    } catch {}
   }, [])
 
   function getDeviceInfo(): string {
@@ -66,7 +142,6 @@ function LoginForm() {
 
   async function getClientIP(): Promise<string> {
     try {
-      // Erst eigene API Route (funktioniert immer, auch auf iPhone)
       const res = await fetch('/api/client-ip', { signal: AbortSignal.timeout(3000) })
       if (res.ok) {
         const data = await res.json()
@@ -74,7 +149,6 @@ function LoginForm() {
       }
     } catch {}
     try {
-      // Fallback: ipapi.co (funktioniert auf Desktop)
       const res = await fetch('https://ipapi.co/json/', { signal: AbortSignal.timeout(3000) })
       if (res.ok) {
         const data = await res.json()
@@ -85,6 +159,16 @@ function LoginForm() {
   }
 
   async function loginAndRedirect(loginEmail: string, loginPassword: string) {
+    // ═══ Brute-Force Check: Client-side Lockout ═══
+    if (lockoutUntil > Date.now()) {
+      setError(lockoutMessage || 'Zu viele Fehlversuche. Bitte warten Sie.')
+      return
+    }
+
+    // ═══ Brute-Force Check: Server-side Rate Limit ═══
+    const allowed = await checkServerRateLimit(loginEmail)
+    if (!allowed) return
+
     const supabase = createClient()
     const { data: signInData, error: authError } = await supabase.auth.signInWithPassword({
       email: loginEmail,
@@ -92,6 +176,23 @@ function LoginForm() {
     })
 
     if (authError) {
+      // ═══ Fehlversuch melden ═══
+      await reportFailedLogin(loginEmail)
+
+      // Failed Login loggen (im Hintergrund)
+      getClientIP().then(ip => {
+        const supabaseLog = createClient()
+        supabaseLog.from('mis_auth_log').insert({
+          user_id: null,
+          user_email: loginEmail,
+          user_name: null,
+          action: 'login_failed',
+          ip_address: ip || null,
+          device: getDeviceInfo(),
+          status: 'failed',
+        }).then(() => {})
+      })
+
       if (authError.message === 'Email not confirmed') {
         setError('Bitte bestätigen Sie zuerst Ihre E-Mail-Adresse. Prüfen Sie Ihren Posteingang.')
       } else if (authError.message === 'Invalid login credentials') {
@@ -104,10 +205,12 @@ function LoginForm() {
 
     if (!signInData.user) return
 
-    // Role direkt JWT'den al — veritabanı sorgusu YOK
+    // ═══ Erfolgreichen Login melden → Counter zurücksetzen ═══
+    await reportSuccessfulLogin(loginEmail)
+
     const role = signInData.user.user_metadata?.role || ''
 
-    // Log arka planda (redirect'i beklemesin)
+    // Log im Hintergrund
     Promise.all([
       getClientIP(),
       supabase.from('profiles').select('first_name, last_name').eq('id', signInData.user.id).single()
@@ -126,7 +229,7 @@ function LoginForm() {
       }).then(() => {})
     })
 
-    // Yönlendirme — basit ve hızlı
+    // Redirect
     if (role === 'admin' || role === 'superadmin') {
       window.location.href = '/mis'
     } else if (role === 'engel') {
@@ -140,8 +243,13 @@ function LoginForm() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    if (lockoutUntil > Date.now()) {
+      setError(lockoutMessage || 'Zu viele Fehlversuche. Bitte warten Sie.')
+      return
+    }
     setLoading(true)
     setError('')
+    setAttemptsWarning('')
     try {
       await loginAndRedirect(email, password)
     } catch (err: any) {
@@ -150,6 +258,8 @@ function LoginForm() {
       setLoading(false)
     }
   }
+
+  const isLocked = lockoutUntil > Date.now()
 
   return (
     <div className="screen auth-screen">
@@ -178,10 +288,17 @@ function LoginForm() {
           </div>
         )}
 
+        {/* ═══ Lockout Warnung ═══ */}
+        {isLocked && lockoutMessage && (
+          <div style={{ background: 'rgba(208, 75, 59, 0.15)', border: '1px solid rgba(208, 75, 59, 0.3)', borderRadius: 10, padding: '12px 16px', marginBottom: 12, fontSize: 13, color: '#ef9a9a', textAlign: 'center' }}>
+            {lockoutMessage}
+          </div>
+        )}
+
         <form onSubmit={handleSubmit}>
-          <input className="auth-input" type="email" placeholder="E-Mail-Adresse" value={email} onChange={e => setEmail(e.target.value)} required autoComplete="email" name="email" />
+          <input className="auth-input" type="email" placeholder="E-Mail-Adresse" value={email} onChange={e => setEmail(e.target.value)} required autoComplete="email" name="email" disabled={isLocked} />
           <div style={{ position: 'relative' }}>
-            <input className="auth-input" type={showPassword ? 'text' : 'password'} placeholder="Passwort" value={password} onChange={e => setPassword(e.target.value)} required style={{ paddingRight: 48 }} autoComplete="current-password" name="password" />
+            <input className="auth-input" type={showPassword ? 'text' : 'password'} placeholder="Passwort" value={password} onChange={e => setPassword(e.target.value)} required style={{ paddingRight: 48 }} autoComplete="current-password" name="password" disabled={isLocked} />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
@@ -191,18 +308,21 @@ function LoginForm() {
             </button>
           </div>
           {error && <div className="auth-error">{error}</div>}
+          {attemptsWarning && !error && (
+            <div style={{ color: '#ff9800', fontSize: 12, marginBottom: 4, textAlign: 'center' }}>{attemptsWarning}</div>
+          )}
           <div style={{ textAlign: 'right', marginBottom: 4 }}>
             <Link href="/auth/forgot-password" style={{ color: 'var(--gold-2)', fontSize: 13, textDecoration: 'none' }}>Passwort vergessen?</Link>
           </div>
-          <button className="btn-gold" type="submit" disabled={loading} style={{ width: '100%', marginTop: 8 }}>
-            {loading ? 'Anmelden...' : 'ANMELDEN'}
+          <button className="btn-gold" type="submit" disabled={loading || isLocked} style={{ width: '100%', marginTop: 8, opacity: isLocked ? 0.5 : 1 }}>
+            {loading ? 'Anmelden...' : isLocked ? 'Gesperrt' : 'ANMELDEN'}
           </button>
         </form>
         <div className="auth-link">
           Noch kein Konto? <Link href="/choose">Registrieren</Link>
         </div>
 
-        {/* ═══ Admin-Zugang ═══ */}
+        {/* ═══ Admin-Zugang (E-Mail NICHT hardcoded) ═══ */}
         <div style={{ marginTop: 24, borderTop: '1px solid rgba(201,150,60,0.15)', paddingTop: 16 }}>
           <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', textAlign: 'center', marginBottom: 10, textTransform: 'uppercase', letterSpacing: 1 }}>Admin-Zugang</div>
           {!showAdminPw ? (
@@ -210,6 +330,7 @@ function LoginForm() {
               <button type="button" className="btn-gold"
                 style={{ flex: 1, fontSize: 12, padding: '10px 0', background: 'rgba(201,150,60,0.08)', color: 'var(--gold-2)', border: '1px solid rgba(201,150,60,0.2)' }}
                 onClick={() => setShowAdminPw(true)}
+                disabled={isLocked}
               >ADMIN</button>
               <button type="button" className="btn-gold"
                 style={{ flex: 1, fontSize: 12, padding: '10px 0', background: 'linear-gradient(135deg, #C9963C, #DBA84A)', color: '#0D0A08', border: '1px solid rgba(201,150,60,0.2)', fontWeight: 700 }}
@@ -217,43 +338,35 @@ function LoginForm() {
               >MIS PORTAL</button>
             </div>
           ) : (
-            <div style={{ display: 'flex', gap: 8 }}>
+            <div>
               <input
-                type="password"
-                placeholder="Admin-Passwort"
-                value={adminPwInput}
-                onChange={e => setAdminPwInput(e.target.value)}
-                onKeyDown={e => { if (e.key === 'Enter') { setLoading(true); setError(''); loginAndRedirect('admin@alltagsengel.de', adminPwInput).catch(() => setError('Login fehlgeschlagen')).finally(() => setLoading(false)) } }}
-                style={{ flex: 1, padding: '10px 14px', borderRadius: 10, border: '1px solid rgba(201,150,60,0.25)', background: 'rgba(13,10,8,0.5)', color: '#e8e0d4', fontSize: 13, fontFamily: 'inherit' }}
-                autoFocus
+                type="email"
+                placeholder="Admin E-Mail"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                style={{ width: '100%', marginBottom: 8, padding: '10px 14px', borderRadius: 10, border: '1px solid rgba(201,150,60,0.25)', background: 'rgba(13,10,8,0.5)', color: '#e8e0d4', fontSize: 13, fontFamily: 'inherit', boxSizing: 'border-box' }}
+                disabled={isLocked}
               />
-              <button type="button" className="btn-gold"
-                style={{ fontSize: 12, padding: '10px 16px', background: 'linear-gradient(135deg, #C9963C, #DBA84A)', color: '#0D0A08', border: 'none', borderRadius: 10, fontWeight: 700, cursor: 'pointer' }}
-                disabled={loading || !adminPwInput}
-                onClick={async () => { setLoading(true); setError(''); try { await loginAndRedirect('admin@alltagsengel.de', adminPwInput) } catch { setError('Login fehlgeschlagen') } finally { setLoading(false) } }}
-              >OK</button>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <input
+                  type="password"
+                  placeholder="Admin-Passwort"
+                  value={adminPwInput}
+                  onChange={e => setAdminPwInput(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter' && !isLocked && email && adminPwInput) { setLoading(true); setError(''); loginAndRedirect(email, adminPwInput).catch(() => setError('Login fehlgeschlagen')).finally(() => setLoading(false)) } }}
+                  style={{ flex: 1, padding: '10px 14px', borderRadius: 10, border: '1px solid rgba(201,150,60,0.25)', background: 'rgba(13,10,8,0.5)', color: '#e8e0d4', fontSize: 13, fontFamily: 'inherit' }}
+                  autoFocus
+                  disabled={isLocked}
+                />
+                <button type="button" className="btn-gold"
+                  style={{ fontSize: 12, padding: '10px 16px', background: 'linear-gradient(135deg, #C9963C, #DBA84A)', color: '#0D0A08', border: 'none', borderRadius: 10, fontWeight: 700, cursor: 'pointer', opacity: isLocked ? 0.5 : 1 }}
+                  disabled={loading || !adminPwInput || !email || isLocked}
+                  onClick={async () => { setLoading(true); setError(''); try { await loginAndRedirect(email, adminPwInput) } catch { setError('Login fehlgeschlagen') } finally { setLoading(false) } }}
+                >OK</button>
+              </div>
             </div>
           )}
         </div>
-
-        {/* ═══ Demo-Zugang — nur sichtbar wenn aktiviert ═══ */}
-        {demoEnabled && demoPassword && (
-          <div style={{ marginTop: 16 }}>
-            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', textAlign: 'center', marginBottom: 10, textTransform: 'uppercase', letterSpacing: 1 }}>Demo-Zugang</div>
-            <div style={{ display: 'flex', gap: 8 }}>
-              <button type="button" className="btn-gold"
-                style={{ flex: 1, fontSize: 12, padding: '10px 0', background: 'rgba(201,150,60,0.12)', color: 'var(--gold-2)', border: '1px solid rgba(201,150,60,0.25)' }}
-                disabled={loading}
-                onClick={async () => { setLoading(true); setError(''); try { await loginAndRedirect('anna@example.com', demoPassword) } catch { setError('Demo-Login fehlgeschlagen') } finally { setLoading(false) } }}
-              >Engel</button>
-              <button type="button" className="btn-gold"
-                style={{ flex: 1, fontSize: 12, padding: '10px 0', background: 'rgba(201,150,60,0.12)', color: 'var(--gold-2)', border: '1px solid rgba(201,150,60,0.25)' }}
-                disabled={loading}
-                onClick={async () => { setLoading(true); setError(''); try { await loginAndRedirect('maria@example.com', demoPassword) } catch { setError('Demo-Login fehlgeschlagen') } finally { setLoading(false) } }}
-              >Kunde</button>
-            </div>
-          </div>
-        )}
 
       </div>
     </div>
