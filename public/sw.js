@@ -65,14 +65,18 @@ self.addEventListener('fetch', (event) => {
 // Push notifications
 self.addEventListener('push', (event) => {
   if (!event.data) return
-  const data = event.data.json()
+  let data = {}
+  try { data = event.data.json() } catch { data = { body: event.data.text() } }
   event.waitUntil(
     self.registration.showNotification(data.title || 'AlltagsEngel', {
       body: data.body || '',
       icon: '/icon-192x192.png',
       badge: '/icon-192x192.png',
       tag: data.tag || 'default',
+      renotify: true,
+      vibrate: [200, 100, 200],
       data: { url: data.url || '/' },
+      actions: data.actions || [],
     })
   )
 })
