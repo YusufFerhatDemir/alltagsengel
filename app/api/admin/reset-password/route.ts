@@ -4,6 +4,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { sendEmailNotification } from '@/lib/notifications'
 
 export async function POST(request: NextRequest) {
+  try {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
@@ -89,4 +90,8 @@ export async function POST(request: NextRequest) {
   }
 
   return NextResponse.json({ success: true })
+  } catch (err: any) {
+    console.error('reset-password error:', err)
+    return NextResponse.json({ error: err.message || 'Fehler beim Zurücksetzen des Passworts' }, { status: 500 })
+  }
 }

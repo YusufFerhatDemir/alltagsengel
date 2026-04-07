@@ -93,6 +93,45 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="msapplication-navbutton-color" content="#1A1612" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         {/* Frühes Script: Auto-Dark Detection und Removal */}
+        {/* ═══ JSON-LD STRUCTURED DATA ═══ */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'LocalBusiness',
+            '@id': 'https://alltagsengel.care/#organization',
+            name: 'AlltagsEngel',
+            legalName: 'AlltagsEngel',
+            url: 'https://alltagsengel.care',
+            logo: 'https://alltagsengel.care/icon-512x512.png',
+            image: 'https://alltagsengel.care/og-image.png',
+            description: 'Zertifizierte Alltagsbegleitung für Senioren & Pflegebedürftige in Frankfurt am Main. Abrechnung über §45b SGB XI — 131€/Monat von der Pflegekasse.',
+            telephone: '+4915678543210',
+            email: 'info@alltagsengel.care',
+            address: {
+              '@type': 'PostalAddress',
+              addressLocality: 'Frankfurt am Main',
+              addressRegion: 'Hessen',
+              addressCountry: 'DE',
+            },
+            geo: {
+              '@type': 'GeoCoordinates',
+              latitude: 50.1109,
+              longitude: 8.6821,
+            },
+            areaServed: {
+              '@type': 'City',
+              name: 'Frankfurt am Main',
+            },
+            serviceType: ['Alltagsbegleitung', 'Seniorenbetreuung', 'Haushaltshilfe', 'Arztbegleitung', 'Krankenfahrten', 'Behördengänge'],
+            priceRange: '€€',
+            sameAs: [
+              'https://www.instagram.com/alltagsengel.care',
+              'https://www.facebook.com/alltagsengel.care',
+              'https://www.tiktok.com/@alltagsengel.care',
+            ],
+          }) }}
+        />
         <script dangerouslySetInnerHTML={{ __html: `
           (function(){
             // Ensure color-scheme is set before any rendering
