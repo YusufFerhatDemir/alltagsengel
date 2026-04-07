@@ -18,7 +18,7 @@ export async function POST(request: Request) {
 
     // Generate a magic link for email verification
     const { data, error } = await supabase.auth.admin.generateLink({
-      type: 'signup',
+      type: 'magiclink',
       email,
       options: {
         redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://alltagsengel.care'}/auth/callback`,
