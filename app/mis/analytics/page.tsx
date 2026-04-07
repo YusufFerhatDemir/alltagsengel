@@ -83,7 +83,7 @@ export default function AnalyticsPage() {
       const session = sessionData?.session
       if (session) {
         const meta = session.user?.user_metadata
-        console.log('[MIS_DEBUG] Auth OK:', session.user?.email, 'role_meta:', meta?.role, 'expires:', new Date((session.expires_at || 0) * 1000).toISOString())
+        // console.log('[MIS_DEBUG] Auth OK:', session.user?.email, 'role_meta:', meta?.role, 'expires:', new Date((session.expires_at || 0) * 1000).toISOString())
       } else {
         console.warn('[MIS_DEBUG] NO AUTH SESSION — alle Admin-Queries werden leer sein!')
       }
@@ -104,7 +104,7 @@ export default function AnalyticsPage() {
         .order('created_at', { ascending: false })
         .limit(200)
       if (logsErr) console.error('[MIS_DEBUG] Auth logs error:', logsErr)
-      console.log('[MIS_DEBUG] auth_logs:', logs?.length || 0, 'rows')
+      // console.log('[MIS_DEBUG] auth_logs:', logs?.length || 0, 'rows')
 
       // Benutzer laden mit letztem Login
       const { data: profiles, error: profilesErr } = await supabase
@@ -112,7 +112,7 @@ export default function AnalyticsPage() {
         .select('*')
         .order('created_at', { ascending: false })
       if (profilesErr) console.error('[MIS_DEBUG] Profiles error:', profilesErr)
-      console.log('[MIS_DEBUG] profiles:', profiles?.length || 0, 'rows')
+      // console.log('[MIS_DEBUG] profiles:', profiles?.length || 0, 'rows')
 
       // Besucher-Standorte laden (ohne Join — Profile werden in JS gemappt)
       let allVisitors: any[] = []
@@ -140,7 +140,7 @@ export default function AnalyticsPage() {
         return { ...v, profile: p ? { first_name: p.first_name, last_name: p.last_name, email: p.email, role: p.role } : null }
       })
 
-      console.log('[MIS_DEBUG] visitors:', visitorData?.length || 0, 'rows')
+      // console.log('[MIS_DEBUG] visitors:', visitorData?.length || 0, 'rows')
       setAuthLogs(logs as AuthLogEntry[] || [])
       setUsers(profiles as UserSession[] || [])
       setVisitors(visitorData as VisitorLocation[] || [])

@@ -104,6 +104,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: true })
   } catch (err) {
     console.error('send-welcome error:', err)
-    return NextResponse.json({ success: true })
+    return NextResponse.json({ error: 'Fehler beim Senden der Willkommens-E-Mail' }, { status: 500 })
   }
 }
