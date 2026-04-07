@@ -1,7 +1,9 @@
 import { createClient as createSupabaseClient, SupabaseClient } from '@supabase/supabase-js'
 
-// Cookie helpers for reading/writing Supabase auth session
+// Cookie + localStorage helpers for reading/writing Supabase auth session
+// Dual storage ensures persistence even if one storage is cleared (WhatsApp-like behavior)
 const STORAGE_KEY = 'sb-nnwyktkqibdjxgimjyuq-auth-token'
+const LS_BACKUP_KEY = 'sb-session-backup'
 const BASE64_PREFIX = 'base64-'
 
 function readSessionFromCookie(): string | null {
@@ -19,17 +21,42 @@ function readSessionFromCookie(): string | null {
   return raw
 }
 
+function readSessionFromLocalStorage(): string | null {
+  try {
+    if (typeof localStorage === 'undefined') return null
+    return localStorage.getItem(LS_BACKUP_KEY)
+  } catch {
+    return null
+  }
+}
+
 function writeSessionCookie(value: string) {
   if (typeof document === 'undefined') return
   const encoded = BASE64_PREFIX + btoa(value)
   const maxAge = 365 * 24 * 60 * 60 // 1 year
-  const isSecure = window.location.protocol === 'https:'
+  const isSecure = typeof window !== 'undefined' && window.location.protocol === 'https:'
   document.cookie = `${STORAGE_KEY}=${encodeURIComponent(encoded)}; path=/; max-age=${maxAge}; SameSite=Lax${isSecure ? '; Secure' : ''}`
+}
+
+function writeSessionBackup(value: string) {
+  try {
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem(LS_BACKUP_KEY, value)
+    }
+  } catch { /* ignore */ }
 }
 
 function removeSessionCookie() {
   if (typeof document === 'undefined') return
   document.cookie = `${STORAGE_KEY}=; path=/; max-age=0; SameSite=Lax`
+}
+
+function removeSessionBackup() {
+  try {
+    if (typeof localStorage !== 'undefined') {
+      localStorage.removeItem(LS_BACKUP_KEY)
+    }
+  } catch { /* ignore */ }
 }
 
 // Singleton client — same pattern as @supabase/ssr but with explicit cookie handling
@@ -48,13 +75,22 @@ export function createClient() {
         flowType: 'pkce',
         autoRefreshToken: typeof window !== 'undefined',
         storageKey: STORAGE_KEY,
-        // Custom storage that reads/writes cookies (matching @supabase/ssr behavior)
+        // Custom storage: cookie (primary) + localStorage (backup)
         storage: {
           getItem: (key: string): string | null => {
             if (key === STORAGE_KEY) {
-              return readSessionFromCookie()
+              // Try cookie first, fall back to localStorage backup
+              const fromCookie = readSessionFromCookie()
+              if (fromCookie) return fromCookie
+              const fromLS = readSessionFromLocalStorage()
+              if (fromLS) {
+                // Restore cookie from localStorage backup
+                writeSessionCookie(fromLS)
+                return fromLS
+              }
+              return null
             }
-            // Fallback to localStorage for other keys (e.g. PKCE code verifier)
+            // Other keys (e.g. PKCE code verifier) → localStorage
             try {
               return typeof localStorage !== 'undefined' ? localStorage.getItem(key) : null
             } catch {
@@ -63,7 +99,9 @@ export function createClient() {
           },
           setItem: (key: string, value: string) => {
             if (key === STORAGE_KEY) {
+              // Write to BOTH cookie and localStorage for redundancy
               writeSessionCookie(value)
+              writeSessionBackup(value)
               return
             }
             try {
@@ -73,6 +111,7 @@ export function createClient() {
           removeItem: (key: string) => {
             if (key === STORAGE_KEY) {
               removeSessionCookie()
+              removeSessionBackup()
               return
             }
             try {
@@ -81,9 +120,6 @@ export function createClient() {
           },
         },
         // CRITICAL: Bypass Navigator LockManager completely.
-        // The @supabase/ssr createBrowserClient initialization hangs because
-        // the Navigator Lock is acquired but never released, blocking ALL
-        // Supabase operations (auth refresh, queries) on the same origin.
         lock: async (_name: string, _acquireTimeout: number, fn: () => Promise<any>) => {
           return fn()
         },

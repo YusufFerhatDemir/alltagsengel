@@ -128,6 +128,13 @@ function RegisterForm() {
           }).catch(() => {})
         }
 
+        // Always send welcome/confirmation email via Resend (fire-and-forget)
+        fetch('/api/auth/send-welcome', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, firstName, role }),
+        }).catch(() => {})
+
         // If session exists, redirect directly to home
         if (data.session) {
           if (role === 'engel') {
@@ -138,13 +145,6 @@ function RegisterForm() {
           router.refresh()
           return
         }
-
-        // No session (email confirmation required) — send custom verification email via Resend
-        fetch('/api/auth/send-verification', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email }),
-        }).catch(() => {})
 
         router.push('/auth/login?registered=true')
         return
