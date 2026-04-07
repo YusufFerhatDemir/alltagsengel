@@ -1,7 +1,6 @@
 'use client'
 import { useState } from 'react'
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/client'
 import Icon3D from '@/components/Icon3D'
 
 export default function ForgotPasswordPage() {
@@ -14,20 +13,28 @@ export default function ForgotPasswordPage() {
     e.preventDefault()
     setLoading(true)
     setError('')
-    const supabase = createClient()
 
-    const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/auth/callback?next=/auth/reset-password`,
-    })
+    try {
+      // Use custom endpoint that sends reset email via Resend
+      const res = await fetch('/api/auth/send-reset', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      })
 
-    if (resetError) {
-      setError(resetError.message)
+      if (!res.ok) {
+        const data = await res.json()
+        setError(data.error || 'Fehler beim Senden der E-Mail')
+        setLoading(false)
+        return
+      }
+
+      setSent(true)
+    } catch (err) {
+      setError('Netzwerkfehler. Bitte prüfen Sie Ihre Internetverbindung.')
+    } finally {
       setLoading(false)
-      return
     }
-
-    setSent(true)
-    setLoading(false)
   }
 
   return (
