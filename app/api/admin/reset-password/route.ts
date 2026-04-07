@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { sendEmailNotification } from '@/lib/notifications'
 
 export async function POST(request: NextRequest) {
   const supabase = await createClient()
@@ -20,7 +21,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Keine Admin-Berechtigung' }, { status: 403 })
   }
 
-  const { userId, newPassword, email } = await request.json()
+  const { userId, newPassword, email, sendNotification } = await request.json()
 
   if ((!userId && !email) || !newPassword) {
     return NextResponse.json({ error: 'userId/email und newPassword erforderlich' }, { status: 400 })
@@ -55,6 +56,36 @@ export async function POST(request: NextRequest) {
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 })
+  }
+
+  // Optionale E-Mail-Benachrichtigung an den Benutzer senden
+  if (sendNotification) {
+    const { data: targetUser } = await adminSupabase
+      .from('profiles')
+      .select('email, first_name')
+      .eq('id', targetUserId)
+      .single()
+
+    if (targetUser?.email) {
+      await sendEmailNotification(
+        targetUser.email,
+        targetUser.first_name || 'Nutzer',
+        'Ihr Passwort wurde zurückgesetzt — AlltagsEngel',
+        `
+          <p>Ihr Passwort wurde von unserem Team zurückgesetzt.</p>
+          <div style="background:rgba(201,150,60,0.08);border-radius:12px;padding:18px 20px;margin:20px 0;">
+            <p style="font-weight:600;color:#C9963C;margin:0 0 8px;">Ihre neuen Zugangsdaten:</p>
+            <table style="width:100%;border-collapse:collapse;">
+              <tr><td style="padding:8px 12px;border-bottom:1px solid #eee;color:#888;width:120px;">E-Mail</td><td style="padding:8px 12px;border-bottom:1px solid #eee;font-weight:600;">${targetUser.email}</td></tr>
+              <tr><td style="padding:8px 12px;color:#888;">Passwort</td><td style="padding:8px 12px;font-weight:600;font-family:monospace;font-size:16px;">${newPassword}</td></tr>
+            </table>
+          </div>
+          <p>Bitte ändern Sie Ihr Passwort nach dem ersten Login in Ihrem Profil.</p>
+          <a href="https://alltagsengel.care/auth/login" style="display:inline-block;padding:14px 32px;background:#C9963C;color:#1A1612;text-decoration:none;border-radius:10px;font-weight:600;margin:16px 0;">JETZT EINLOGGEN</a>
+          <p style="margin-top:20px;color:#888;">Liebe Grüße,<br/><strong style="color:#C9963C;">Ihr Alltagsengel Team</strong></p>
+        `
+      )
+    }
   }
 
   return NextResponse.json({ success: true })

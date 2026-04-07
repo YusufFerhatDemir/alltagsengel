@@ -11,6 +11,7 @@ export default function AdminUsersPage() {
   const [newPassword, setNewPassword] = useState('')
   const [resetLoading, setResetLoading] = useState(false)
   const [resetMessage, setResetMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+  const [sendNotification, setSendNotification] = useState(true)
 
   useEffect(() => {
     async function loadUsers() {
@@ -33,12 +34,13 @@ export default function AdminUsersPage() {
     const res = await fetch('/api/admin/reset-password', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId: selectedUser.id, newPassword }),
+      body: JSON.stringify({ userId: selectedUser.id, newPassword, sendNotification }),
     })
     const data = await res.json()
 
     if (data.success) {
-      setResetMessage({ type: 'success', text: `Passwort für ${selectedUser.first_name} ${(selectedUser.last_name || '').charAt(0)}. zurückgesetzt` })
+      const notifyText = sendNotification ? ' · E-Mail gesendet' : ''
+      setResetMessage({ type: 'success', text: `Passwort für ${selectedUser.first_name} ${(selectedUser.last_name || '').charAt(0)}. zurückgesetzt${notifyText}` })
       setNewPassword('')
       setTimeout(() => { setSelectedUser(null); setResetMessage(null) }, 2000)
     } else {
@@ -107,7 +109,7 @@ export default function AdminUsersPage() {
                   <td>
                     <button
                       className="admin-action-btn"
-                      onClick={() => { setSelectedUser(p); setNewPassword(''); setResetMessage(null) }}
+                      onClick={() => { setSelectedUser(p); setNewPassword(''); setResetMessage(null); setSendNotification(true) }}
                       title="Passwort zurücksetzen"
                     >
                       Passwort
@@ -134,6 +136,15 @@ export default function AdminUsersPage() {
               onChange={e => setNewPassword(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && handleResetPassword()}
             />
+            <label style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '12px 0', fontSize: 13, color: 'var(--ink3)', cursor: 'pointer' }}>
+              <input
+                type="checkbox"
+                checked={sendNotification}
+                onChange={e => setSendNotification(e.target.checked)}
+                style={{ width: 16, height: 16, accentColor: '#C9963C' }}
+              />
+              Neues Passwort per E-Mail an Benutzer senden
+            </label>
             {resetMessage && (
               <div style={{
                 padding: '8px 12px', borderRadius: 8, marginBottom: 12, fontSize: 13,
