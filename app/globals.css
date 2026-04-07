@@ -1021,7 +1021,7 @@ body {
 /* ══════════════════════════════════════════════
    13. RESPONSIVE
    ══════════════════════════════════════════════ */
-@media (max-width:420px) {
+@media (max-width:520px) {
   body { padding:0; background:var(--coal); }
   .phone {
     width:100%; min-height:100dvh; border-radius:0; box-shadow:none;

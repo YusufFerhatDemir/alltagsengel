@@ -23,7 +23,8 @@ function writeSessionCookie(value: string) {
   if (typeof document === 'undefined') return
   const encoded = BASE64_PREFIX + btoa(value)
   const maxAge = 365 * 24 * 60 * 60 // 1 year
-  document.cookie = `${STORAGE_KEY}=${encodeURIComponent(encoded)}; path=/; max-age=${maxAge}; SameSite=Lax`
+  const isSecure = window.location.protocol === 'https:'
+  document.cookie = `${STORAGE_KEY}=${encodeURIComponent(encoded)}; path=/; max-age=${maxAge}; SameSite=Lax${isSecure ? '; Secure' : ''}`
 }
 
 function removeSessionCookie() {
