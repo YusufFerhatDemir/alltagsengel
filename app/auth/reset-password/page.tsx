@@ -12,15 +12,45 @@ export default function ResetPasswordPage() {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
   const [sessionReady, setSessionReady] = useState(false)
+  const [checking, setChecking] = useState(true)
 
   useEffect(() => {
     const supabase = createClient()
-    // Supabase will automatically pick up the token from the URL hash
-    supabase.auth.onAuthStateChange((event) => {
-      if (event === 'PASSWORD_RECOVERY') {
+
+    // 1) Check if we already have a valid session (e.g. came through /auth/callback)
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
         setSessionReady(true)
+        setChecking(false)
       }
     })
+
+    // 2) Listen for PASSWORD_RECOVERY event (fallback for implicit/hash flow)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'PASSWORD_RECOVERY' || event === 'SIGNED_IN') {
+        setSessionReady(true)
+        setChecking(false)
+      }
+    })
+
+    // 3) Try to exchange code from URL if present (handles PKCE when verifier is available)
+    const params = new URLSearchParams(window.location.search)
+    const code = params.get('code')
+    if (code) {
+      supabase.auth.exchangeCodeForSession(code).then(({ error: exchangeError }) => {
+        if (!exchangeError) {
+          setSessionReady(true)
+          // Clean up URL
+          window.history.replaceState({}, '', window.location.pathname)
+        }
+        setChecking(false)
+      })
+    } else {
+      // No code in URL — give a moment for session check / auth state change
+      setTimeout(() => setChecking(false), 1500)
+    }
+
+    return () => subscription.unsubscribe()
   }, [])
 
   async function handleSubmit(e: React.FormEvent) {
@@ -43,14 +73,20 @@ export default function ResetPasswordPage() {
     })
 
     if (updateError) {
-      setError(updateError.message)
+      if (updateError.message.includes('session') || updateError.message.includes('token')) {
+        setError('Der Link ist abgelaufen. Bitte fordern Sie einen neuen Link an.')
+      } else {
+        setError(updateError.message)
+      }
       setLoading(false)
       return
     }
 
+    // Sign out so the user logs in fresh with the new password
+    await supabase.auth.signOut()
     setSuccess(true)
     setLoading(false)
-    setTimeout(() => router.push('/auth/login'), 2000)
+    setTimeout(() => router.push('/auth/login'), 2500)
   }
 
   return (
@@ -71,6 +107,26 @@ export default function ResetPasswordPage() {
               Sie werden zum Login weitergeleitet...
             </p>
           </div>
+        ) : checking ? (
+          <div style={{ textAlign: 'center', padding: '20px 0' }}>
+            <p style={{ color: 'var(--ink-4)', lineHeight: 1.5 }}>
+              Sitzung wird überprüft...
+            </p>
+          </div>
+        ) : !sessionReady ? (
+          <div style={{ textAlign: 'center', padding: '20px 0' }}>
+            <div style={{ fontSize: 32, marginBottom: 16, color: 'var(--red-w)' }}>&#9888;</div>
+            <p style={{ color: 'var(--ink-3)', lineHeight: 1.5, marginBottom: 20 }}>
+              Der Link ist abgelaufen oder ungültig. Bitte fordern Sie einen neuen Link an.
+            </p>
+            <button
+              className="btn-gold"
+              onClick={() => router.push('/auth/forgot-password')}
+              style={{ width: '100%' }}
+            >
+              NEUEN LINK ANFORDERN
+            </button>
+          </div>
         ) : (
           <form onSubmit={handleSubmit}>
             <input
@@ -81,6 +137,7 @@ export default function ResetPasswordPage() {
               onChange={e => setPassword(e.target.value)}
               required
               minLength={6}
+              autoComplete="new-password"
             />
             <input
               className="auth-input"
@@ -90,14 +147,15 @@ export default function ResetPasswordPage() {
               onChange={e => setConfirmPassword(e.target.value)}
               required
               minLength={6}
+              autoComplete="new-password"
             />
             {error && <div className="auth-error">{error}</div>}
-            {!sessionReady && (
-              <div style={{ color: 'var(--ink-4)', fontSize: 13, marginBottom: 8, textAlign: 'center' }}>
-                Bitte den Link in Ihrer E-Mail verwenden.
-              </div>
-            )}
-            <button className="btn-gold" type="submit" disabled={loading} style={{ width: '100%', marginTop: 8 }}>
+            <button
+              className="btn-gold"
+              type="submit"
+              disabled={loading}
+              style={{ width: '100%', marginTop: 8 }}
+            >
               {loading ? 'Wird gespeichert...' : 'PASSWORT ÄNDERN'}
             </button>
           </form>

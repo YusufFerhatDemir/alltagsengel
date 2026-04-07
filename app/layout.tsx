@@ -6,6 +6,7 @@ import VisitorTracker from '@/components/VisitorTracker'
 import CookieConsent from '@/components/CookieConsent'
 import ServiceWorkerRegister from '@/components/ServiceWorkerRegister'
 import GoogleTagManager from '@/components/GoogleTagManager'
+import SessionKeepAlive from '@/components/SessionKeepAlive'
 
 const jost = Jost({ subsets: ['latin'], variable: '--font-jost', weight: ['300','400','500','600','700'] })
 const cormorant = Cormorant_Garamond({ subsets: ['latin'], variable: '--font-cormorant', weight: ['400','500','600','700'], style: ['normal','italic'] })
@@ -123,6 +124,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <LayoutWrapper>
           {children}
         </LayoutWrapper>
+        <SessionKeepAlive />
         <CookieConsent />
         <ServiceWorkerRegister />
       </body>

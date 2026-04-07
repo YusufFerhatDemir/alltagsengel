@@ -17,7 +17,7 @@ export default function ForgotPasswordPage() {
     const supabase = createClient()
 
     const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/auth/reset-password`,
+      redirectTo: `${window.location.origin}/auth/callback?next=/auth/reset-password`,
     })
 
     if (resetError) {
@@ -62,6 +62,7 @@ export default function ForgotPasswordPage() {
               value={email}
               onChange={e => setEmail(e.target.value)}
               required
+              autoComplete="email"
             />
             {error && <div className="auth-error">{error}</div>}
             <button className="btn-gold" type="submit" disabled={loading} style={{ width: '100%', marginTop: 8 }}>

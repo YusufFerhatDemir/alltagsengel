@@ -139,7 +139,13 @@ function RegisterForm() {
           return
         }
 
-        // No session (email confirmation required) — redirect to login with success
+        // No session (email confirmation required) — send custom verification email via Resend
+        fetch('/api/auth/send-verification', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email }),
+        }).catch(() => {})
+
         router.push('/auth/login?registered=true')
         return
       }
@@ -167,8 +173,8 @@ function RegisterForm() {
             <input className="auth-input" type="text" placeholder="Vorname" value={firstName} onChange={e => setFirstName(e.target.value)} required />
             <input className="auth-input" type="text" placeholder="Nachname" value={lastName} onChange={e => setLastName(e.target.value)} required />
           </div>
-          <input className="auth-input" type="email" placeholder="E-Mail-Adresse" value={email} onChange={e => setEmail(e.target.value)} required />
-          <input className="auth-input" type="password" placeholder="Passwort (min. 6 Zeichen)" value={password} onChange={e => setPassword(e.target.value)} required minLength={6} />
+          <input className="auth-input" type="email" placeholder="E-Mail-Adresse" value={email} onChange={e => setEmail(e.target.value)} required autoComplete="email" />
+          <input className="auth-input" type="password" placeholder="Passwort (min. 6 Zeichen)" value={password} onChange={e => setPassword(e.target.value)} required minLength={6} autoComplete="new-password" />
           <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr', gap: 10 }}>
             <input className="auth-input" type="text" placeholder="PLZ" value={plz} onChange={e => setPlz(e.target.value.replace(/\D/g, '').slice(0, 5))} inputMode="numeric" maxLength={5} minLength={5} required />
             <input className="auth-input" type="text" placeholder="Stadt" value={stadt} onChange={e => setStadt(e.target.value)} required />
