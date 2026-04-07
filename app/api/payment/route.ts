@@ -18,6 +18,11 @@ export async function POST(req: NextRequest) {
 
     if (!booking) return NextResponse.json({ error: 'Buchung nicht gefunden' }, { status: 404 })
 
+    // Sicherheitscheck: Nur der Kunde dieser Buchung darf bezahlen
+    if (booking.customer_id !== user.id) {
+      return NextResponse.json({ error: 'Keine Berechtigung für diese Buchung' }, { status: 403 })
+    }
+
     // Zahlung erstellen
     const { data: payment, error } = await supabase
       .from('payments')

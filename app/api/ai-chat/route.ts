@@ -247,11 +247,22 @@ async function callOpenAI(systemPrompt: string, messages: Array<{ role: string; 
 // ──────────────────────────────────────────────────────
 export async function POST(req: NextRequest) {
   try {
-    // Auth check
+    // Auth check — NUR Admins dürfen auf Live-Daten zugreifen
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) {
       return NextResponse.json({ error: 'Nicht autorisiert' }, { status: 401 })
+    }
+
+    // Admin-Rolle prüfen — normale User dürfen KEINE Geschäftsdaten sehen
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+
+    if (!profile || !['admin', 'superadmin'].includes(profile.role)) {
+      return NextResponse.json({ error: 'Nur für Administratoren verfügbar' }, { status: 403 })
     }
 
     // Rate limiting

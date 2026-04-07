@@ -19,14 +19,10 @@ const WATCHED_POSTAL_CODES = [
   '35037',                   // Marburg
 ]
 
-// Eigene IPs ausschließen (Yusuf)
-const EXCLUDED_IPS = [
-  '93.203.33.115',           // Yusuf Nordend Ost (Telekom DSL)
-  '217.88.144.184',          // Yusuf Bornheim/Telekom
-  '2003:c0:4f03',            // Yusuf Nordend Ost (Telekom IPv6 — Mac + iPhone)
-]
+// Eigene IPs ausschließen (aus Env-Variable laden)
+const EXCLUDED_IPS = (process.env.EXCLUDED_TRACKING_IPS || '').split(',').filter(Boolean)
 
-const ALERT_EMAIL = 'y.r.demir2022@gmail.com'
+const ALERT_EMAIL = process.env.ADMIN_ALERT_EMAIL || ''
 
 // Cooldown: maximal 1 E-Mail pro Stunde pro IP
 const lastAlerts = new Map<string, number>()

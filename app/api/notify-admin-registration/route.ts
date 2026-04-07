@@ -1,10 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { createClient } from '@/lib/supabase/server'
 
 export async function POST(req: NextRequest) {
   try {
+    // Auth-Check: Nur authentifizierte User dürfen diese Route aufrufen
+    const authSupabase = await createClient()
+    const { data: { user } } = await authSupabase.auth.getUser()
+    if (!user) {
+      return NextResponse.json({ error: 'Nicht autorisiert' }, { status: 401 })
+    }
+
     const { userId, role, firstName, lastName, email, phone } = await req.json()
     if (!userId || !role) return NextResponse.json({ error: 'Missing data' }, { status: 400 })
+
+    // Sicherheit: User darf nur sich selbst melden
+    if (userId !== user.id) {
+      return NextResponse.json({ error: 'Nicht berechtigt' }, { status: 403 })
+    }
 
     const supabase = createAdminClient()
 
