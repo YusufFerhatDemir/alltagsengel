@@ -15,8 +15,22 @@
 # debug
 npm-debug.log*
 
-# local env files
+# env files (NEVER commit secrets!)
+.env
+.env.*
 .env*.local
+
+# Firebase service account keys (NEVER commit!)
+*firebase-adminsdk*.json
+*service-account*.json
+
+# Personal/sensitive files
+ausweis_*.jpg
+fuehrerschein*.pdf
+*.aab
+*.apk
+*.mobileprovision
+*.lock.*.xlsx#
 
 # vercel
 .vercel
