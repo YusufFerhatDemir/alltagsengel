@@ -7,6 +7,7 @@ import { geocodePLZ } from '@/lib/geocoding'
 import { validatePassword, isCommonPassword } from '@/lib/password-validation'
 import Link from 'next/link'
 import Icon3D from '@/components/Icon3D'
+import { trackRegistration } from '@/lib/tracking'
 
 function RegisterForm() {
   const router = useRouter()
@@ -164,6 +165,9 @@ function RegisterForm() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email, firstName, role }),
         }).catch(() => {})
+
+        // Conversion-Tracking für Google Ads
+        trackRegistration(role as 'kunde' | 'engel' | 'fahrer')
 
         // If session exists, redirect directly to home
         if (data.session) {

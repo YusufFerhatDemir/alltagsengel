@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { IconTruck, IconCard, IconShield, IconInfo } from '@/components/Icons'
 import { logError } from '@/lib/safe-query'
+import { trackKrankenfahrt } from '@/lib/tracking'
 import { useUserLocation } from '@/hooks/useUserLocation'
 import type { PricingTier, PricingSurcharge, PricingBreakdown } from '@/lib/types/pricing'
 
@@ -187,6 +188,9 @@ export default function KrankenfahrtPage() {
         setSubmitting(false)
         return
       }
+
+      // Conversion-Tracking für Google Ads
+      trackKrankenfahrt({ distance: 0, vehicleType: selectedTier, totalPrice: breakdown?.total || 0 })
 
       // Erfolgs-Meldung statt sofort-Redirect
       setSubmitting(false)

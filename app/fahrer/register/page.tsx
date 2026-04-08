@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { validatePassword, isCommonPassword } from '@/lib/password-validation'
 import Icon3D from '@/components/Icon3D'
+import { trackRegistration } from '@/lib/tracking'
 
 export default function FahrerRegisterPage() {
   const router = useRouter()
@@ -134,6 +135,9 @@ export default function FahrerRegisterPage() {
         setSubmitting(false)
         return
       }
+
+      // Conversion-Tracking für Google Ads
+      trackRegistration('fahrer')
 
       // Notify admins about new registration
       if (authData.user) {
