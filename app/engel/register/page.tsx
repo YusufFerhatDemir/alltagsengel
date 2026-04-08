@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { geocodePLZ, extractPLZ } from '@/lib/geocoding'
 import Icon3D from '@/components/Icon3D'
 import { IconHandshake, IconMedical, IconBag, IconHome as IconHouse, IconCoffee, IconTarget, IconCheck } from '@/components/Icons'
+import { trackRegistration } from '@/lib/tracking'
 
 const serviceOptions: { icon: ReactNode; label: string }[] = [
   { icon: <IconHandshake size={16} />, label: 'Begleitung' },
@@ -109,6 +110,9 @@ export default function EngelRegisterPage() {
     if (Object.keys(profileUpdate).length > 0) {
       await supabase.from('profiles').update(profileUpdate).eq('id', user.id)
     }
+
+    // Conversion-Tracking für Google Ads
+    trackRegistration('engel')
 
     router.push('/engel/home')
   }

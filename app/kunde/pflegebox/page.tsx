@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import TopBar from '@/components/TopBar'
 import { IconCheck, IconBox, IconShieldPlain, IconDroplet, IconTruck } from '@/components/Icons'
 import type { CareboxCatalogItem, CareboxCartItem } from '@/lib/types'
+import { trackPflegeboxOrder } from '@/lib/tracking'
 
 const BUDGET_MAX = 42
 
@@ -197,6 +198,9 @@ export default function PflegeboxPage() {
       }).select().single()
 
       if (orderErr) throw orderErr
+
+      // Conversion-Tracking für Google Ads
+      trackPflegeboxOrder(estimatedTotal > 30 ? 'komfort' : 'basis')
 
       setExistingOrder(order)
       setStep('done')

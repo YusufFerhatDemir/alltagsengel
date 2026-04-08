@@ -6,6 +6,7 @@ import { isValidUUID, logError } from '@/lib/safe-query'
 import { NotFoundState, ErrorState, LoadingState } from '@/components/UIStates'
 import { IconWingsGold, IconStarFilled, IconCard, IconShield, IconMedical, IconLock, IconInfo } from '@/components/Icons'
 import Icon3D from '@/components/Icon3D'
+import { trackBooking } from '@/lib/tracking'
 
 export default function BuchenPage() {
   const router = useRouter()
@@ -111,6 +112,9 @@ export default function BuchenPage() {
         setSubmitting(false)
         return
       }
+
+      // Conversion-Tracking für Google Ads
+      trackBooking({ service, duration, isFlexible: false, totalPrice: total })
 
       // Engel benachrichtigen (in-app + email) — fire and forget
       fetch('/api/bookings/notify', {
