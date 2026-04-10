@@ -1517,4 +1517,172 @@ Automatisches Posting nicht möglich:
 - Meta Business Suite: Keine Facebook-Seiten oder Instagram-Konten mit diesem Business-Portfolio verknüpft (0 Business-Assets)
 - TikTok Studio: Datei-Upload-Berechtigung fehlt (file upload blocked)
 - Grafik (POST-2026-04-07-countdown-7tage.png) ist im Ordner social-media-grafiken/ erstellt und bereit
-**Manueller Upload erforderlich — bitte folge der Posting-Anleitung oben.**
+**Manueller Upload erforderlich — bitte folge die Posting-Anleitung oben.**
+
+---
+
+## 09.04.2026 — Countdown 5 Tage / Geri Sayım 5 Gün (Awareness Post)
+
+**Status:** ✅ Facebook veröffentlicht | ⚠️ Instagram/TikTok ausstehend
+**Plattform:** Instagram + Facebook + TikTok
+**Typ:** Grafik (1080x1080)
+**Datei Grafik:** POST-2026-04-09-countdown-5tage.png
+**Datei Video (optional):** REELS-kombi-alles-in-einer-app-v1.mp4
+**Geplante Uhrzeit:** 11:00–13:00 Uhr (Donnerstag)
+**Thema:** 5-Tage-Countdown bis App-Launch am 14.04.2026 — Fokus: Zweisprachigkeit (DE+TR)
+
+**Caption (DE) — Instagram / Facebook:**
+```
+⏳ NOCH 5 TAGE — AlltagsEngel startet in Frankfurt! 😇
+
+Am 14. April geht's los!
+
+Wir sprechen deine Sprache — Deutsch & Türkçe! 🇩🇪🇹🇷
+
+Deine Alltagsbegleitung — alles in einer App:
+🛒 Einkaufsbegleitung
+🏥 Arztbegleitung & Krankenfahrt
+📋 Behördengänge & Termine
+🤝 Gesellschaft & Gespräche
+🧴 Hygienebox — GRATIS (Pflegegrad 1+)
+
+131 Euro/Monat — die Pflegekasse zahlt über §45b.
+Du zahlst nichts.
+
+📱 www.alltagsengel.care
+✉️ info@alltagsengel.care
+
+#AlltagsEngel #Alltagsbegleitung #Frankfurt #Pflege #Seniorenhilfe #Pflegekasse #Entlastungsbetrag #FrankfurtAmMain #Senioren #§45b #131Euro #ComingSoon #Countdown #5Tage #MitHerz #App #Krankenfahrt #Hygienebox #Zweisprachig
+```
+
+**Caption (TR) — Instagram / Facebook:**
+```
+⏳ 5 GÜN KALDI — AlltagsEngel Frankfurt'ta başlıyor! 😇
+
+14 Nisan'da başlıyoruz!
+
+Senin dilini konuşuyoruz — Almanca & Türkçe! 🇩🇪🇹🇷
+
+Premium günlük refakat hizmetin — hepsi tek uygulamada:
+🛒 Alışveriş refakati
+🏥 Doktor refakati & hasta taşıma
+📋 Resmi işlemler & randevular
+🤝 Sohbet & arkadaşlık
+🧴 Hijyen kutusu — ÜCRETSİZ (bakım derecesi 1+)
+
+Ayda 131 Euro — bakım sigortası §45b üzerinden ödüyor.
+Sen hiçbir şey ödemiyorsun.
+
+📱 www.alltagsengel.care
+✉️ info@alltagsengel.care
+
+#AlltagsEngel #Frankfurt #YaşlıBakımı #TürklerFrankfurt #Bakım #BakımSigortası #131Euro #Yakında #GeriSayım #5Gün #GünlükRefakat #HastaTaşıma #HijyenKutusu #İkiDilli
+```
+
+**TikTok Caption (DE):**
+```
+⏳ NOCH 5 TAGE! AlltagsEngel startet am 14. April in Frankfurt! 😇 Wir sprechen Deutsch & Türkçe! 🇩🇪🇹🇷 Einkauf, Arzt, Behörden, Gespräche & Hygienebox — alles in einer App. 131€/Monat, Pflegekasse zahlt. 📱 alltagsengel.care
+
+#alltagsengel #alltagsbegleitung #frankfurt #pflege #seniorenhilfe #pflegekasse #131euro #countdown #comingsoon #fyp #viral #foryou #5tage #zweisprachig
+```
+
+**Posting-Anleitung (manuell):**
+1. **Instagram/Facebook:** Meta Business Suite öffnen → business.facebook.com → "Beitrag erstellen" → Grafik: POST-2026-04-09-countdown-5tage.png hochladen → DE Caption einfügen → Instagram + Facebook auswählen → Veröffentlichen
+2. **TR Version:** 1 Stunde später als zweiten Post oder als Kommentar unter den DE-Post
+3. **TikTok:** tiktok.com/tiktokstudio/upload → Video: REELS-kombi-alles-in-einer-app-v1.mp4 hochladen → TikTok Caption einfügen → Veröffentlichen (alternativ Grafik als Slideshow)
+
+**Ausführung 09.04.2026 — Scheduled Task + manuelle Intervention:**
+
+✅ **Facebook-Seite "AlltagsEngel" erstellt** (facebook.com/profile.php?id=61574324923379)
+  - Kategorie: Lokaler Dienstleister
+  - Bio, Website (alltagsengel.care), Stadt (Frankfurt am Main) eingerichtet
+  - Seite automatisch mit Meta Business Suite verknüpft
+
+✅ **Facebook-Post veröffentlicht** via Meta Business Suite Composer
+  - Bilingual DE+TR Caption mit Countdown (5 Tage)
+  - Link-Vorschau zu alltagsengel.care automatisch generiert (mit Logo + Beschreibung)
+  - Grafik-Upload via Browser-Automatisierung nicht möglich (file_upload restriction)
+
+⚠️ **Instagram-Verknüpfung:** Versuch über Facebook-Einstellungen → Instagram → "Konto verknüpfen"
+  - Instagram-Login erforderlich — Benutzer muss Instagram-Kontodaten eingeben
+  - Ohne verknüpftes Instagram-Konto kann nicht über Meta Business Suite gepostet werden
+
+❌ **Instagram-Post:** Nicht möglich ohne verknüpftes Instagram-Konto
+❌ **TikTok:** Datei-Upload-Berechtigung fehlt weiterhin
+
+---
+
+## 10.04.2026 — Countdown 4 Tage / Geri Sayım 4 Gün (Awareness Post)
+
+**Status:** ✅ Facebook veröffentlicht | ⚠️ Instagram/TikTok ausstehend (manuell)
+**Plattform:** Facebook (veröffentlicht via Meta Business Suite) + Instagram (manuell) + TikTok (manuell)
+**Typ:** Grafik (1080x1080) + Text-Post mit Link-Vorschau
+**Datei Grafik:** POST-2026-04-10-countdown-4tage.png
+**Geplante Uhrzeit:** 11:00–13:00 Uhr (Freitag)
+**Thema:** 4-Tage-Countdown bis App-Launch am 14.04.2026 — Fokus: Alle Leistungen zweisprachig (DE+TR)
+
+**Caption (DE) — Instagram / Facebook:**
+```
+⏳ NOCH 4 TAGE — AlltagsEngel startet in Frankfurt! 😇
+
+Am 14. April geht's los! Deine Premium-Alltagsbegleitung — alles in einer App.
+
+🛒 Einkaufsbegleitung
+🏥 Arztbegleitung & Krankenfahrt
+📋 Behördengänge & Termine
+🤝 Gesellschaft & Gespräche
+🧴 Hygienebox — GRATIS (Pflegegrad 1+)
+
+131 Euro/Monat — die Pflegekasse zahlt über §45b.
+Du zahlst nichts.
+
+📱 www.alltagsengel.care
+✉️ info@alltagsengel.care
+
+#AlltagsEngel #Alltagsbegleitung #Frankfurt #Pflege #Seniorenhilfe #Pflegekasse #Entlastungsbetrag #FrankfurtAmMain #Senioren #§45b #131Euro #ComingSoon #Countdown #4Tage #MitHerz #App #Krankenfahrt #Hygienebox
+```
+
+**Caption (TR) — Instagram / Facebook:**
+```
+⏳ 4 GÜN KALDI — AlltagsEngel Frankfurt'ta başlıyor! 😇
+
+14 Nisan'da başlıyoruz! Premium günlük refakat hizmetin — tek uygulamada.
+
+🛒 Alışveriş refakati
+🏥 Doktor refakati & hasta taşıma
+📋 Resmi işlemler & randevular
+🤝 Sohbet & arkadaşlık
+🧴 Hijyen kutusu — ÜCRETSİZ (bakım derecesi 1+)
+
+Ayda 131 Euro — bakım sigortası §45b üzerinden ödüyor.
+Sen hiçbir şey ödemiyorsun.
+
+📱 www.alltagsengel.care
+✉️ info@alltagsengel.care
+
+#AlltagsEngel #Frankfurt #YaşlıBakımı #TürklerFrankfurt #Bakım #BakımSigortası #131Euro #Yakında #GeriSayım #4Gün #GünlükRefakat #HastaTaşıma #HijyenKutusu
+```
+
+**TikTok Caption (DE):**
+```
+⏳ NOCH 4 TAGE! AlltagsEngel startet am 14. April in Frankfurt! 😇 Einkauf, Arzt, Behörden, Gespräche & Hygienebox — alles in einer App. 131€/Monat, Pflegekasse zahlt. 📱 alltagsengel.care
+
+#alltagsengel #alltagsbegleitung #frankfurt #pflege #seniorenhilfe #pflegekasse #131euro #countdown #comingsoon #fyp #viral #foryou #4tage
+```
+
+**Posting-Anleitung (manuell):**
+1. **Instagram/Facebook:** Meta Business Suite öffnen → business.facebook.com → "Beitrag erstellen" → Grafik: POST-2026-04-10-countdown-4tage.png hochladen → DE Caption einfügen → Instagram + Facebook auswählen → Veröffentlichen
+2. **TR Version:** 1 Stunde später als zweiten Post oder als Kommentar unter den DE-Post
+3. **TikTok:** tiktok.com/tiktokstudio/upload → Video: REELS-app-promo-v1.mp4 oder REELS-kombi-alles-in-einer-app-v1.mp4 hochladen → TikTok Caption einfügen → Veröffentlichen (alternativ Grafik als Slideshow)
+
+**Ausführung 10.04.2026 — Scheduled Task:**
+
+✅ **Grafik erstellt:** POST-2026-04-10-countdown-4tage.png (1080x1080, Brand Colors COAL/GOLD/CREAM, zweisprachig DE+TR)
+✅ **Facebook-Post veröffentlicht** via Meta Business Suite Composer
+  - Bilingual DE+TR Caption mit Countdown (4 Tage) und allen Leistungen
+  - Link-Vorschau zu alltagsengel.care automatisch generiert (mit Logo + Beschreibung)
+  - Grafik-Upload via Browser-Automatisierung nicht möglich (file_upload restriction) — Text-Post mit Link-Vorschau veröffentlicht
+
+⚠️ **Instagram-Verknüpfung:** Weiterhin ausstehend — Benutzer muss Instagram-Kontodaten verknüpfen
+❌ **Instagram-Post:** Nicht möglich ohne verknüpftes Instagram-Konto
+❌ **TikTok:** Datei-Upload-Berechtigung fehlt weiterhin — manueller Upload erforderlich
