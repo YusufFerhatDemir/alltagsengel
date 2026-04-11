@@ -9,6 +9,7 @@ import { useRouter } from 'next/navigation'
 import { haversineDistance } from '@/lib/geocoding'
 import { useUserLocation } from '@/hooks/useUserLocation'
 import { useTrackVisit } from '@/hooks/useTrackVisit'
+import ReferralWidget from '@/components/ReferralWidget'
 
 const categories: { key: string; icon: ReactNode; label: string }[] = [
   { key: 'all', icon: <IconStarGold size={26} />, label: 'Alle' },
@@ -364,6 +365,11 @@ export default function KundeHomePage() {
             </div>
           </div>
         )}
+
+        {/* Referral Widget */}
+        <div style={{ marginTop: 16 }}>
+          <ReferralWidget />
+        </div>
       </div>
     </div>
   )

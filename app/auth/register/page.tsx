@@ -16,6 +16,11 @@ function RegisterForm() {
   const ALLOWED_SIGNUP_ROLES = ['kunde', 'engel', 'fahrer']
   const rawRole = searchParams.get('role') || 'kunde'
   const role = ALLOWED_SIGNUP_ROLES.includes(rawRole) ? rawRole : 'kunde'
+  // Referral-Code: aus URL oder Cookie (wurde von Middleware gesetzt)
+  const refFromUrl = searchParams.get('ref') || ''
+  const refCode = refFromUrl || (typeof document !== 'undefined'
+    ? document.cookie.match(/ref_code=([^;]+)/)?.[1] || ''
+    : '')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [firstName, setFirstName] = useState('')
@@ -165,6 +170,18 @@ function RegisterForm() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email, firstName, role }),
         }).catch(() => {})
+
+        // Referral-Code einlösen (fire-and-forget)
+        if (refCode && data.user) {
+          fetch('/api/referral', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              referral_code: refCode,
+              referred_user_id: data.user.id,
+            }),
+          }).catch(() => {})
+        }
 
         // Conversion-Tracking für Google Ads
         trackRegistration(role as 'kunde' | 'engel' | 'fahrer')
