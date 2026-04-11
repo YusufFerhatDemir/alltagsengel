@@ -8,6 +8,8 @@ import ServiceWorkerRegister from '@/components/ServiceWorkerRegister'
 import PushProvider from '@/components/PushProvider'
 import NativePushProvider from '@/components/NativePushProvider'
 import GoogleTagManager from '@/components/GoogleTagManager'
+import MetaPixel from '@/components/MetaPixel'
+import TikTokPixel from '@/components/TikTokPixel'
 import SessionKeepAlive from '@/components/SessionKeepAlive'
 
 const jost = Jost({ subsets: ['latin'], variable: '--font-jost', weight: ['300','400','500','600','700'] })
@@ -161,6 +163,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className={`${jost.variable} ${cormorant.variable}`} style={{ fontFamily: "'Jost', sans-serif", backgroundColor: '#1A1612', color: '#F5F0E8' }}>
         <GoogleTagManager />
+        <MetaPixel />
+        <TikTokPixel />
         <VisitorTracker />
         <LayoutWrapper>
           {children}

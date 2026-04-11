@@ -14,7 +14,21 @@ declare global {
   interface Window {
     dataLayer: Array<Record<string, any>>
     gtag: (...args: any[]) => void
+    fbq: (...args: any[]) => void
+    ttq: { track: (...args: any[]) => void }
   }
+}
+
+// ═══ Meta (Facebook) Pixel Helper ═══
+function fbEvent(event: string, params?: Record<string, any>) {
+  if (typeof window === 'undefined' || typeof window.fbq !== 'function') return
+  window.fbq('track', event, params)
+}
+
+// ═══ TikTok Pixel Helper ═══
+function ttEvent(event: string, params?: Record<string, any>) {
+  if (typeof window === 'undefined' || !window.ttq?.track) return
+  window.ttq.track(event, params)
 }
 
 // ═══ Google Ads Conversion IDs ═══
@@ -52,6 +66,12 @@ export function trackRegistration(role: 'kunde' | 'engel' | 'fahrer') {
     user_role: role,
     conversion_type: 'signup',
   })
+
+  // Meta Pixel
+  fbEvent('CompleteRegistration', { value: 110, currency: 'EUR', content_name: role })
+
+  // TikTok Pixel
+  ttEvent('CompleteRegistration', { value: 110, currency: 'EUR' })
 }
 
 /** Buchung erstellt (Alltagsbegleitung, Krankenfahrt, etc.) */
@@ -73,6 +93,12 @@ export function trackBooking(data: {
     currency: 'EUR',
     conversion_type: 'booking',
   })
+
+  // Meta Pixel
+  fbEvent('Schedule', { value: data.totalPrice, currency: 'EUR', content_name: data.service })
+
+  // TikTok Pixel
+  ttEvent('PlaceAnOrder', { value: data.totalPrice, currency: 'EUR' })
 }
 
 /** Pflegebox / Hygienebox bestellt */
@@ -114,6 +140,12 @@ export function trackContactRequest(source: string) {
     source,
     conversion_type: 'lead',
   })
+
+  // Meta Pixel
+  fbEvent('Contact', { content_name: source })
+
+  // TikTok Pixel
+  ttEvent('Contact', { content_name: source })
 }
 
 /** Landing Page aufgerufen (für Ads Attribution) */
