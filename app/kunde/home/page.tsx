@@ -53,15 +53,28 @@ export default function KundeHomePage() {
     setError('')
     try {
       const supabase = createClient()
-      const { data: { user } } = await supabase.auth.getUser()
-      if (user) {
-        const { data: p, error: profileErr } = await supabase.from('profiles').select('*').eq('id', user.id).maybeSingle()
-        if (profileErr) throw new Error('Profil konnte nicht geladen werden')
-        setProfile(p)
-        const { data: a, error: angelsErr } = await supabase.from('angels').select('*, profiles(*)').order('rating', { ascending: false })
-        if (angelsErr) throw new Error('Engel konnte nicht geladen werden')
-        setAngels(a || [])
+      // Erst getSession (liest lokalen Token), dann getUser (verifiziert serverseitig)
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) {
+        // Kein lokaler Token → versuche einmal Refresh
+        const { data: refreshData } = await supabase.auth.refreshSession()
+        if (!refreshData.session) {
+          // Wirklich keine Session → Login
+          router.push('/auth/login?redirectTo=/kunde/home')
+          return
+        }
       }
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        router.push('/auth/login?redirectTo=/kunde/home')
+        return
+      }
+      const { data: p, error: profileErr } = await supabase.from('profiles').select('*').eq('id', user.id).maybeSingle()
+      if (profileErr) throw new Error('Profil konnte nicht geladen werden')
+      setProfile(p)
+      const { data: a, error: angelsErr } = await supabase.from('angels').select('*, profiles(*)').order('rating', { ascending: false })
+      if (angelsErr) throw new Error('Engel konnte nicht geladen werden')
+      setAngels(a || [])
     } catch (err: any) {
       setError(err?.message || 'Ein Fehler beim Laden der Daten ist aufgetreten')
     }
