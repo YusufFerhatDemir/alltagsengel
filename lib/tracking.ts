@@ -1,39 +1,70 @@
 /**
- * Google Ads & GTM Conversion Tracking
+ * Google Ads Conversion Tracking — Direct gtag() calls
  *
- * Events werden über GTM dataLayer gepusht.
- * In GTM müssen die entsprechenden Tags konfiguriert werden:
- * - Google Ads Conversion Tag (registration, booking, pflegebox_order)
- * - Google Analytics 4 Events
+ * Conversion-Aktionen direkt über gtag() gesendet.
+ * Kein GTM-Tag-Setup nötig — die Events werden sofort an Google Ads gemeldet.
+ *
+ * Google Ads Account: AW-18061588897
+ * Conversion Actions:
+ *   - Registrierung: AW-18061588897/f8HXCJuQvJgcEKHzt6RD (Wert: 110 EUR)
+ *   - Buchung:       AW-18061588897/QXYmCJ6QvJgcEKHzt6RD (Wert: 50 EUR)
  */
 
 declare global {
   interface Window {
     dataLayer: Array<Record<string, any>>
+    gtag: (...args: any[]) => void
   }
 }
 
+// ═══ Google Ads Conversion IDs ═══
+const GOOGLE_ADS_ID = 'AW-18061588897'
+const CONVERSION_LABELS = {
+  registration: 'f8HXCJuQvJgcEKHzt6RD',  // Registrierung → 110 EUR
+  booking:      'QXYmCJ6QvJgcEKHzt6RD',  // Buchung (Abonnieren) → 50 EUR
+} as const
+
+// ═══ Helpers ═══
 function pushEvent(event: string, data?: Record<string, any>) {
   if (typeof window === 'undefined') return
   window.dataLayer = window.dataLayer || []
   window.dataLayer.push({ event, ...data })
 }
 
+function gtagConversion(label: string, value?: number, currency = 'EUR') {
+  if (typeof window === 'undefined' || typeof window.gtag !== 'function') return
+  window.gtag('event', 'conversion', {
+    send_to: `${GOOGLE_ADS_ID}/${label}`,
+    value: value ?? 0,
+    currency,
+  })
+}
+
+// ═══ Tracking Functions ═══
+
 /** Neuer Benutzer hat sich registriert */
 export function trackRegistration(role: 'kunde' | 'engel' | 'fahrer') {
+  // Google Ads Conversion — Registrierung
+  gtagConversion(CONVERSION_LABELS.registration, 110.0, 'EUR')
+
+  // GTM dataLayer (für GA4 etc.)
   pushEvent('registration', {
     user_role: role,
     conversion_type: 'signup',
   })
 }
 
-/** Buchung erstellt */
+/** Buchung erstellt (Alltagsbegleitung, Krankenfahrt, etc.) */
 export function trackBooking(data: {
   service: string
   duration: number
   isFlexible: boolean
   totalPrice: number
 }) {
+  // Google Ads Conversion — Buchung / Abonnieren
+  gtagConversion(CONVERSION_LABELS.booking, data.totalPrice || 50.0, 'EUR')
+
+  // GTM dataLayer
   pushEvent('booking_created', {
     service_type: data.service,
     duration_hours: data.duration,
@@ -46,9 +77,14 @@ export function trackBooking(data: {
 
 /** Pflegebox / Hygienebox bestellt */
 export function trackPflegeboxOrder(boxType: 'basis' | 'komfort') {
+  const value = boxType === 'komfort' ? 40 : 29.9
+
+  // Pflegebox → auch als Buchung/Abonnieren Conversion melden
+  gtagConversion(CONVERSION_LABELS.booking, value, 'EUR')
+
   pushEvent('pflegebox_order', {
     box_type: boxType,
-    value: boxType === 'komfort' ? 40 : 29.9,
+    value,
     currency: 'EUR',
     conversion_type: 'pflegebox',
   })
@@ -60,6 +96,9 @@ export function trackKrankenfahrt(data: {
   vehicleType: string
   totalPrice: number
 }) {
+  // Krankenfahrt → auch als Buchung/Abonnieren Conversion melden
+  gtagConversion(CONVERSION_LABELS.booking, data.totalPrice, 'EUR')
+
   pushEvent('krankenfahrt_booked', {
     distance_km: data.distance,
     vehicle_type: data.vehicleType,
