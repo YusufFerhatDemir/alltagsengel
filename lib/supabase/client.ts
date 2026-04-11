@@ -33,7 +33,7 @@ function readSessionFromLocalStorage(): string | null {
 function writeSessionCookie(value: string) {
   if (typeof document === 'undefined') return
   const encoded = BASE64_PREFIX + btoa(value)
-  const maxAge = 7 * 24 * 60 * 60 // 7 Tage (Security: kürzere Session-Lebensdauer)
+  const maxAge = 30 * 24 * 60 * 60 // 30 Tage — Nutzer sollen eingeloggt bleiben
   const isSecure = typeof window !== 'undefined' && window.location.protocol === 'https:'
   document.cookie = `${STORAGE_KEY}=${encodeURIComponent(encoded)}; path=/; max-age=${maxAge}; SameSite=Lax${isSecure ? '; Secure' : ''}`
 }
