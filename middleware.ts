@@ -1,6 +1,28 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
+// ═══ Cookie-Format Kompatibilität zwischen Browser-Client und Middleware ═══
+const STORAGE_KEY = 'sb-nnwyktkqibdjxgimjyuq-auth-token'
+const BASE64_PREFIX = 'base64-'
+
+function decodeSessionCookie(name: string, value: string): string {
+  if (name === STORAGE_KEY && value.startsWith(BASE64_PREFIX)) {
+    try {
+      return Buffer.from(value.substring(BASE64_PREFIX.length), 'base64').toString('utf-8')
+    } catch {
+      return value
+    }
+  }
+  return value
+}
+
+function encodeSessionCookie(name: string, value: string): string {
+  if (name === STORAGE_KEY) {
+    return BASE64_PREFIX + Buffer.from(value).toString('base64')
+  }
+  return value
+}
+
 export async function middleware(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })
 
@@ -22,12 +44,21 @@ export async function middleware(request: NextRequest) {
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       {
         cookies: {
-          getAll: () => request.cookies.getAll(),
+          getAll: () => {
+            // Decode base64-encoded session cookie so @supabase/ssr can parse it
+            return request.cookies.getAll().map(c => ({
+              name: c.name,
+              value: decodeSessionCookie(c.name, c.value),
+            }))
+          },
           setAll: (cookiesToSet) => {
-            cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
+            // Re-encode session cookie to match browser client format
+            cookiesToSet.forEach(({ name, value }) =>
+              request.cookies.set(name, encodeSessionCookie(name, value))
+            )
             supabaseResponse = NextResponse.next({ request })
             cookiesToSet.forEach(({ name, value, options }) =>
-              supabaseResponse.cookies.set(name, value, options)
+              supabaseResponse.cookies.set(name, encodeSessionCookie(name, value), options)
             )
           },
         },
