@@ -44,7 +44,7 @@
 
 **Entlastungsleistung (§45b):**
 - entlastungsleistung nutzen
-- 125 euro pflegekasse
+- 131 euro pflegekasse
 - entlastungsbetrag pflege
 - §45b sgb xi leistungen
 - pflegekasse entlastungsbetrag beantragen
