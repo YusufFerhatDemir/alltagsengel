@@ -73,20 +73,15 @@ export async function middleware(request: NextRequest) {
     const isProtected = pathname.startsWith('/kunde') || pathname.startsWith('/engel') || pathname.startsWith('/admin') || pathname.startsWith('/mis') || (pathname.startsWith('/fahrer') && !pathname.startsWith('/fahrer/register'))
 
     if (!user && isProtected) {
-      // ═══ FAIL-SOFT für Kunde/Engel/Fahrer: Nicht sofort wegschicken ═══
-      // Der Client-Side SessionKeepAlive kann den Token noch refreshen.
-      // Nur bei Admin/MIS strikt sein.
-      if (pathname.startsWith('/admin') || pathname.startsWith('/mis')) {
-        const url = request.nextUrl.clone()
-        url.pathname = '/auth/login'
-        url.searchParams.set('redirectTo', pathname)
-        return NextResponse.redirect(url)
-      }
-
-      // Für Kunde/Engel/Fahrer: Lass die Seite laden — der Client
-      // versucht den Refresh Token. Wenn das auch fehlschlägt,
-      // redirected die Client-Seite selbst zum Login.
-      // Dies verhindert unnötige Login-Redirects bei kurzfristigen Token-Ablauf.
+      // ═══ FAIL-SOFT für ALLE geschützten Routen ═══
+      // Nicht sofort zum Login schicken! Der Client-Side SessionKeepAlive
+      // kann den Token noch via Refresh Token / IndexedDB / Cookie refreshen.
+      // Genau wie WhatsApp/Instagram: App öffnen → Session wird im Hintergrund
+      // wiederhergestellt, ohne dass der User erneut einloggen muss.
+      //
+      // Die Client-Seite (AdminAuthGuard / Seitenlogik) prüft nach kurzer
+      // Wartezeit ob die Session wiederhergestellt wurde. Falls nicht,
+      // redirected sie selbst zum Login.
       return supabaseResponse
     }
 

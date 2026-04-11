@@ -1,11 +1,91 @@
 'use client'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { IconChart, IconUsers, IconClipboard, IconWings, IconLogout, IconBox, IconTarget } from '@/components/Icons'
 import NotificationBell from '@/components/NotificationBell'
 import { ReactNode } from 'react'
+
+// ═══════════════════════════════════════════════════════════════
+// AdminAuthGuard — WhatsApp-Level Persistenz für Admin
+// ═══════════════════════════════════════════════════════════════
+// Wartet bis SessionKeepAlive den Token refreshen konnte,
+// bevor es den User zum Login schickt. Maximal 4 Sekunden
+// Geduld, dann Redirect.
+// ═══════════════════════════════════════════════════════════════
+function useAdminAuth() {
+  const router = useRouter()
+  const [authState, setAuthState] = useState<'loading' | 'authenticated' | 'unauthenticated'>('loading')
+
+  const checkAuth = useCallback(async () => {
+    const supabase = createClient()
+
+    // Versuch 1: Sofort prüfen
+    const { data: { session } } = await supabase.auth.getSession()
+    if (session) {
+      // Prüfe Admin-Rolle
+      const { data: { user } } = await supabase.auth.getUser()
+      const role = user?.user_metadata?.role || ''
+      if (role === 'admin' || role === 'superadmin') {
+        setAuthState('authenticated')
+        return
+      }
+      // Fallback: profiles Tabelle
+      if (user) {
+        const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+        if (profile && ['admin', 'superadmin'].includes(profile.role)) {
+          setAuthState('authenticated')
+          return
+        }
+      }
+      // User ist eingeloggt aber kein Admin
+      router.replace('/auth/login?error=admin_required')
+      return
+    }
+
+    // Versuch 2: Warte auf SessionKeepAlive Recovery (max 3.5s)
+    // SessionKeepAlive versucht: Cookie → localStorage → IndexedDB → refreshSession
+    let attempts = 0
+    const maxAttempts = 7 // 7 × 500ms = 3.5 Sekunden
+    const retryInterval = setInterval(async () => {
+      attempts++
+      const { data: { session: retrySession } } = await supabase.auth.getSession()
+      if (retrySession) {
+        clearInterval(retryInterval)
+        const { data: { user } } = await supabase.auth.getUser()
+        const role = user?.user_metadata?.role || ''
+        if (role === 'admin' || role === 'superadmin') {
+          setAuthState('authenticated')
+          return
+        }
+        if (user) {
+          const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+          if (profile && ['admin', 'superadmin'].includes(profile.role)) {
+            setAuthState('authenticated')
+            return
+          }
+        }
+        router.replace('/auth/login?error=admin_required')
+        return
+      }
+      if (attempts >= maxAttempts) {
+        clearInterval(retryInterval)
+        // Alle Versuche gescheitert → Login
+        const redirectTo = typeof window !== 'undefined' ? window.location.pathname : '/admin/home'
+        router.replace(`/auth/login?redirectTo=${encodeURIComponent(redirectTo)}`)
+      }
+    }, 500)
+
+    return () => clearInterval(retryInterval)
+  }, [router])
+
+  useEffect(() => {
+    checkAuth()
+  }, [checkAuth])
+
+  return authState
+}
 
 const IconSettings = ({ size = 18 }: { size?: number }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -27,6 +107,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   const router = useRouter()
   const [mobileOpen, setMobileOpen] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
+  const authState = useAdminAuth()
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768)
@@ -34,6 +115,28 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     window.addEventListener('resize', check)
     return () => window.removeEventListener('resize', check)
   }, [])
+
+  // ═══ Loading Screen während Auth-Check ═══
+  if (authState === 'loading') {
+    return (
+      <div style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        minHeight: '100vh', background: 'var(--bg, #F7F2EA)',
+        flexDirection: 'column', gap: 12,
+      }}>
+        <div style={{
+          width: 40, height: 40, border: '3px solid var(--gold2, #C9963C)',
+          borderTopColor: 'transparent', borderRadius: '50%',
+          animation: 'spin 0.8s linear infinite',
+        }} />
+        <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
+      </div>
+    )
+  }
+
+  if (authState === 'unauthenticated') {
+    return null // Router redirect is in progress
+  }
 
   async function handleLogout() {
     const supabase = createClient()
