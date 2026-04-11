@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Deine Aufgaben – Alltagsengel</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #0D0A08;
+    color: #e8e0d4;
+    min-height: 100vh;
+    padding: 20px;
+  }
+  .header {
+    text-align: center;
+    margin-bottom: 32px;
+    padding: 24px 0;
+    border-bottom: 1px solid rgba(201,150,60,0.2);
+  }
+  .header h1 {
+    font-size: 22px;
+    color: #C9963C;
+    margin-bottom: 6px;
+    letter-spacing: 1px;
+  }
+  .header .date {
+    font-size: 13px;
+    color: rgba(255,255,255,0.4);
+  }
+  .status-bar {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 28px;
+    flex-wrap: wrap;
+  }
+  .status-chip {
+    flex: 1;
+    min-width: 140px;
+    padding: 14px 16px;
+    border-radius: 12px;
+    text-align: center;
+  }
+  .chip-waiting {
+    background: rgba(255,180,0,0.1);
+    border: 1px solid rgba(255,180,0,0.25);
+  }
+  .chip-active {
+    background: rgba(80,200,120,0.1);
+    border: 1px solid rgba(80,200,120,0.25);
+  }
+  .chip-todo {
+    background: rgba(255,80,80,0.1);
+    border: 1px solid rgba(255,80,80,0.25);
+  }
+  .chip-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+  }
+  .chip-waiting .chip-label { color: #FFB400; }
+  .chip-active .chip-label { color: #50C878; }
+  .chip-todo .chip-label { color: #FF5050; }
+  .chip-value {
+    font-size: 15px;
+    font-weight: 600;
+  }
+
+  .section {
+    margin-bottom: 24px;
+  }
+  .section-title {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: rgba(201,150,60,0.6);
+    margin-bottom: 12px;
+    padding-left: 4px;
+  }
+
+  .task-card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(201,150,60,0.12);
+    border-radius: 14px;
+    padding: 18px 20px;
+    margin-bottom: 10px;
+    transition: all 0.2s;
+  }
+  .task-card:hover {
+    border-color: rgba(201,150,60,0.3);
+    background: rgba(255,255,255,0.05);
+  }
+
+  .task-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+  }
+  .task-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+  .icon-red { background: rgba(255,80,80,0.15); }
+  .icon-yellow { background: rgba(255,180,0,0.15); }
+  .icon-green { background: rgba(80,200,120,0.15); }
+  .icon-blue { background: rgba(80,150,255,0.15); }
+
+  .task-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: #f0e8dc;
+  }
+  .task-priority {
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-weight: 600;
+    margin-left: auto;
+    flex-shrink: 0;
+  }
+  .priority-high {
+    background: rgba(255,80,80,0.2);
+    color: #FF5050;
+  }
+  .priority-medium {
+    background: rgba(255,180,0,0.2);
+    color: #FFB400;
+  }
+  .priority-low {
+    background: rgba(80,200,120,0.2);
+    color: #50C878;
+  }
+
+  .task-desc {
+    font-size: 13px;
+    color: rgba(255,255,255,0.55);
+    line-height: 1.5;
+    padding-left: 48px;
+  }
+
+  .steps {
+    padding-left: 48px;
+    margin-top: 10px;
+  }
+  .step {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 6px;
+    font-size: 13px;
+    color: rgba(255,255,255,0.7);
+  }
+  .step-num {
+    background: rgba(201,150,60,0.15);
+    color: #C9963C;
+    width: 20px;
+    height: 20px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 700;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .link-btn {
+    display: inline-block;
+    margin-top: 10px;
+    margin-left: 48px;
+    padding: 8px 16px;
+    background: rgba(201,150,60,0.12);
+    border: 1px solid rgba(201,150,60,0.25);
+    border-radius: 8px;
+    color: #C9963C;
+    font-size: 12px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.2s;
+  }
+  .link-btn:hover {
+    background: rgba(201,150,60,0.2);
+    border-color: rgba(201,150,60,0.4);
+  }
+
+  .waiting-section .task-card {
+    opacity: 0.6;
+    border-style: dashed;
+  }
+
+  .footer {
+    text-align: center;
+    margin-top: 32px;
+    padding-top: 20px;
+    border-top: 1px solid rgba(201,150,60,0.1);
+    font-size: 11px;
+    color: rgba(255,255,255,0.25);
+  }
+
+  .progress-bar {
+    width: 100%;
+    height: 6px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 3px;
+    margin-top: 12px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.5s;
+  }
+  .fill-green { background: linear-gradient(90deg, #50C878, #3DA85C); }
+  .fill-yellow { background: linear-gradient(90deg, #FFB400, #E6A000); }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>📋 DEINE AUFGABEN</h1>
+  <div class="date">Samstag, 4. April 2026 – Alltagsengel Launch</div>
+</div>
+
+<div class="status-bar">
+  <div class="status-chip chip-todo">
+    <div class="chip-label">Offen</div>
+    <div class="chip-value">2 Aufgaben</div>
+  </div>
+  <div class="status-chip chip-waiting">
+    <div class="chip-label">Warten</div>
+    <div class="chip-value">2 Dinge</div>
+  </div>
+  <div class="status-chip chip-active">
+    <div class="chip-label">Läuft</div>
+    <div class="chip-value">1 Kampagne</div>
+  </div>
+</div>
+
+<!-- ═══ DU MUSST TUN ═══ -->
+<div class="section">
+  <div class="section-title">🔴 Du musst erledigen</div>
+
+  <div class="task-card">
+    <div class="task-header">
+      <div class="task-icon icon-red">🤖</div>
+      <div class="task-title">Google Play Developer Account</div>
+      <span class="task-priority priority-high">DRINGEND</span>
+    </div>
+    <div class="task-desc">
+      Ohne dieses Konto können wir die Android-App nicht veröffentlichen. Chrome-Extension hat Fehler gemacht – du musst manuell weitermachen.
+    </div>
+    <div class="steps">
+      <div class="step"><span class="step-num">1</span> play.google.com/console öffnen</div>
+      <div class="step"><span class="step-num">2</span> Mit deinem Google-Konto anmelden</div>
+      <div class="step"><span class="step-num">3</span> 25 $ Registrierungsgebühr zahlen</div>
+      <div class="step"><span class="step-num">4</span> Identitätsverifizierung abschließen</div>
+      <div class="step"><span class="step-num">5</span> Mir Bescheid geben → ich lade die AAB hoch</div>
+    </div>
+    <a href="https://play.google.com/console" target="_blank" class="link-btn">→ Google Play Console öffnen</a>
+  </div>
+
+  <div class="task-card">
+    <div class="task-header">
+      <div class="task-icon icon-red">📱</div>
+      <div class="task-title">App Store Connect prüfen</div>
+      <span class="task-priority priority-medium">WICHTIG</span>
+    </div>
+    <div class="task-desc">
+      Deine iOS-App ist seit Mittwoch (1. April) in Prüfung – jetzt 3 Tage. Falls Apple Fragen hat oder die App abgelehnt wird, kommt eine E-Mail. Bitte prüfe täglich.
+    </div>
+    <div class="steps">
+      <div class="step"><span class="step-num">1</span> appstoreconnect.apple.com öffnen</div>
+      <div class="step"><span class="step-num">2</span> Status der App prüfen</div>
+      <div class="step"><span class="step-num">3</span> Falls „Rejected" → mir sofort Bescheid geben</div>
+    </div>
+    <a href="https://appstoreconnect.apple.com" target="_blank" class="link-btn">→ App Store Connect öffnen</a>
+  </div>
+</div>
+
+<!-- ═══ WARTEN ═══ -->
+<div class="section waiting-section">
+  <div class="section-title">⏳ Wir warten auf</div>
+
+  <div class="task-card">
+    <div class="task-header">
+      <div class="task-icon icon-yellow">🍎</div>
+      <div class="task-title">Apple App Review</div>
+      <span class="task-priority priority-low">WARTEN</span>
+    </div>
+    <div class="task-desc">In Prüfung seit 01.04.2026 – Apple braucht bis zu 7 Tage bei der Erstprüfung.</div>
+    <div class="progress-bar"><div class="progress-fill fill-yellow" style="width: 43%"></div></div>
+  </div>
+
+  <div class="task-card">
+    <div class="task-header">
+      <div class="task-icon icon-yellow">📊</div>
+      <div class="task-title">Google Ads Lernphase</div>
+      <span class="task-priority priority-low">WARTEN</span>
+    </div>
+    <div class="task-desc">Kampagne aktiv seit 03.04.2026 – Google optimiert 1-2 Wochen. Budget: 29,35 €/Tag.</div>
+    <div class="progress-bar"><div class="progress-fill fill-yellow" style="width: 7%"></div></div>
+  </div>
+</div>
+
+<!-- ═══ LÄUFT ═══ -->
+<div class="section">
+  <div class="section-title">✅ Läuft bereits</div>
+
+  <div class="task-card">
+    <div class="task-header">
+      <div class="task-icon icon-green">📢</div>
+      <div class="task-title">Google Ads Kampagne</div>
+      <span class="task-priority priority-low">AKTIV</span>
+    </div>
+    <div class="task-desc">Performance Max läuft. 9 Überschriften, 4 Textzeilen, 3 Sitelinks, 20 Bilder. Alle Kategorien ✓</div>
+  </div>
+
+  <div class="task-card">
+    <div class="task-header">
+      <div class="task-icon icon-green">🌐</div>
+      <div class="task-title">Web-App live</div>
+      <span class="task-priority priority-low">AKTIV</span>
+    </div>
+    <div class="task-desc">alltagsengel.de läuft auf Vercel. 21 Nutzer, 6 Buchungen, 10 aus Frankfurt.</div>
+  </div>
+</div>
+
+<div class="footer">
+  Alltagsengel – Stand: Samstag 4. April 2026
+</div>
+
+</body>
+</html>

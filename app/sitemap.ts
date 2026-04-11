@@ -19,5 +19,21 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${baseUrl}/lp/facebook`, lastModified: now, changeFrequency: 'monthly', priority: 0.7 },
     { url: `${baseUrl}/lp/instagram`, lastModified: now, changeFrequency: 'monthly', priority: 0.7 },
     { url: `${baseUrl}/lp/tiktok`, lastModified: now, changeFrequency: 'monthly', priority: 0.7 },
+    // Blog Artikel (SEO)
+    { url: `${baseUrl}/blog/alltagsbegleitung-frankfurt`, lastModified: now, changeFrequency: 'monthly', priority: 0.8 },
+    { url: `${baseUrl}/blog/entlastungsbetrag-45b`, lastModified: now, changeFrequency: 'monthly', priority: 0.8 },
+    { url: `${baseUrl}/blog/pflegehilfsmittel-40-euro`, lastModified: now, changeFrequency: 'monthly', priority: 0.8 },
+    { url: `${baseUrl}/blog/entlastungsbetrag-beantragen`, lastModified: now, changeFrequency: 'monthly', priority: 0.8 },
+    { url: `${baseUrl}/blog/krankenfahrt-kostenuebernahme`, lastModified: now, changeFrequency: 'monthly', priority: 0.8 },
+    { url: `${baseUrl}/blog/alltagsbegleiter-werden`, lastModified: now, changeFrequency: 'monthly', priority: 0.8 },
+    { url: `${baseUrl}/blog/seniorenbetreuung-zu-hause`, lastModified: now, changeFrequency: 'monthly', priority: 0.8 },
+    { url: `${baseUrl}/blog/pflegegrad-beantragen`, lastModified: now, changeFrequency: 'monthly', priority: 0.8 },
+    { url: `${baseUrl}/blog/alltagshilfe-senioren`, lastModified: now, changeFrequency: 'monthly', priority: 0.8 },
+    { url: `${baseUrl}/blog/verhinderungspflege-beantragen`, lastModified: now, changeFrequency: 'monthly', priority: 0.8 },
+    { url: `${baseUrl}/blog/einkaufshilfe-senioren`, lastModified: now, changeFrequency: 'monthly', priority: 0.8 },
+    { url: `${baseUrl}/blog/arztbegleitung-senioren`, lastModified: now, changeFrequency: 'monthly', priority: 0.8 },
+    { url: `${baseUrl}/blog/pflege-app-vergleich`, lastModified: now, changeFrequency: 'monthly', priority: 0.8 },
+    { url: `${baseUrl}/blog/einsamkeit-im-alter`, lastModified: now, changeFrequency: 'monthly', priority: 0.8 },
+    { url: `${baseUrl}/blog/nebenjob-pflege`, lastModified: now, changeFrequency: 'monthly', priority: 0.8 },
   ]
 }

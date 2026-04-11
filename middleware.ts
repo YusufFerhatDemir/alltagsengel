@@ -26,6 +26,16 @@ function encodeSessionCookie(name: string, value: string): string {
 export async function middleware(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })
 
+  // ═══ Referral-Code in Cookie speichern ═══
+  const refCode = request.nextUrl.searchParams.get('ref')
+  if (refCode) {
+    supabaseResponse.cookies.set('ref_code', refCode, {
+      path: '/',
+      maxAge: 30 * 24 * 60 * 60, // 30 Tage
+      sameSite: 'lax',
+    })
+  }
+
   // ═══ CSRF Protection: Block cross-origin state-changing requests ═══
   if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(request.method)) {
     const origin = request.headers.get('origin')
