@@ -10,6 +10,7 @@ import { haversineDistance } from '@/lib/geocoding'
 import { useUserLocation } from '@/hooks/useUserLocation'
 import { useTrackVisit } from '@/hooks/useTrackVisit'
 import ReferralWidget from '@/components/ReferralWidget'
+import OnboardingFlow from '@/components/OnboardingFlow'
 
 const categories: { key: string; icon: ReactNode; label: string }[] = [
   { key: 'all', icon: <IconStarGold size={26} />, label: 'Alle' },
@@ -165,6 +166,7 @@ export default function KundeHomePage() {
 
   return (
     <div className="screen" id="khome">
+      <OnboardingFlow />
       <div className="kh-header">
         <div className="kh-row">
           <div>
