@@ -1,34 +1,71 @@
 'use client'
 import { useEffect } from 'react'
-import { createClient } from '@/lib/supabase/client'
+import { createClient, readSessionFromIDB, writeSessionCookie, writeSessionBackup } from '@/lib/supabase/client'
 
 /**
- * SessionKeepAlive — Keeps the auth session alive across app resume/visibility changes.
- * On mobile (Capacitor/PWA), when the app goes to background and comes back,
- * the access token may have expired. This component refreshes it automatically.
+ * SessionKeepAlive — WhatsApp-Level Session-Persistenz
  *
- * Also listens for auth state changes to handle token refresh events properly.
+ * Einmal anmelden → nie wieder fragen.
+ *
+ * Was dieser Komponent macht:
+ * 1. Beim App-Start: IndexedDB Recovery (falls Cookie + localStorage gelöscht)
+ * 2. onAuthStateChange: Hört auf alle Auth-Events
+ * 3. Visibility Change: Sofortiger Token-Refresh wenn App wieder sichtbar
+ * 4. Window Focus: Refresh bei Tab-Wechsel
+ * 5. Capacitor Resume: Refresh bei nativer App-Rückkehr
+ * 6. Periodic: Alle 2 Minuten Token erneuern
  */
 export default function SessionKeepAlive() {
   useEffect(() => {
     const supabase = createClient()
 
-    // ═══ Auth State Listener: Handle all auth events (login, logout, token refresh) ═══
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'TOKEN_REFRESHED' && session) {
-        // Session was refreshed — cookie + localStorage are auto-updated by custom storage
-        console.debug('[SessionKeepAlive] Token refreshed')
+    // ═══ 1. IndexedDB Recovery beim Start ═══
+    // Falls Cookie UND localStorage gelöscht wurden (z.B. "Daten löschen" im Browser),
+    // stellt IndexedDB die Session wieder her
+    async function recoverFromIDB() {
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
+        if (session) return // Session ist da, alles gut
+
+        // Kein Session → versuche IndexedDB
+        const idbSession = await readSessionFromIDB()
+        if (idbSession) {
+          // Restore to cookie + localStorage
+          writeSessionCookie(idbSession)
+          writeSessionBackup(idbSession)
+          // Parse and set session
+          try {
+            const parsed = JSON.parse(idbSession)
+            if (parsed.refresh_token) {
+              const { error } = await supabase.auth.refreshSession({
+                refresh_token: parsed.refresh_token,
+              })
+              if (!error) {
+                console.debug('[SessionKeepAlive] Session aus IndexedDB wiederhergestellt')
+              }
+            }
+          } catch { /* invalid JSON, ignore */ }
+        }
+      } catch { /* ignore */ }
+    }
+    recoverFromIDB()
+
+    // ═══ 2. Auth State Listener ═══
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, _session) => {
+      if (event === 'TOKEN_REFRESHED') {
+        console.debug('[SessionKeepAlive] Token erneuert ✓')
       } else if (event === 'SIGNED_OUT') {
-        console.debug('[SessionKeepAlive] User signed out')
+        console.debug('[SessionKeepAlive] Abgemeldet')
+      } else if (event === 'SIGNED_IN') {
+        console.debug('[SessionKeepAlive] Angemeldet ✓')
       }
     })
 
-    // ═══ Visibility Change: Refresh session when app becomes visible ═══
+    // ═══ 3. Sofortiger Refresh bei Sichtbarkeit ═══
     function handleVisibilityChange() {
       if (document.visibilityState === 'visible') {
         supabase.auth.getSession().then(({ data: { session } }) => {
           if (session) {
-            // Token still valid — refresh proactively to extend lifetime
             supabase.auth.refreshSession()
           }
         })
@@ -36,7 +73,7 @@ export default function SessionKeepAlive() {
     }
     document.addEventListener('visibilitychange', handleVisibilityChange)
 
-    // ═══ Focus: Also refresh on window focus (e.g. switching browser tabs) ═══
+    // ═══ 4. Refresh bei Tab-Fokus ═══
     function handleFocus() {
       supabase.auth.getSession().then(({ data: { session } }) => {
         if (session) {
@@ -46,7 +83,7 @@ export default function SessionKeepAlive() {
     }
     window.addEventListener('focus', handleFocus)
 
-    // ═══ Capacitor: Listen for native app resume event ═══
+    // ═══ 5. Capacitor App Resume ═══
     let capacitorCleanup: (() => void) | undefined
     if (typeof window !== 'undefined' && (window as any).Capacitor) {
       const { App } = (window as any).Capacitor.Plugins || {}
@@ -64,7 +101,7 @@ export default function SessionKeepAlive() {
       }
     }
 
-    // ═══ Periodic Refresh: Every 4 minutes while app is active ═══
+    // ═══ 6. Periodic Refresh: Alle 2 Minuten ═══
     const interval = setInterval(() => {
       if (document.visibilityState === 'visible') {
         supabase.auth.getSession().then(({ data: { session } }) => {
@@ -73,7 +110,7 @@ export default function SessionKeepAlive() {
           }
         })
       }
-    }, 4 * 60 * 1000) // 4 Minuten statt 10
+    }, 2 * 60 * 1000)
 
     return () => {
       subscription.unsubscribe()
