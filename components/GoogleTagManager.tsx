@@ -4,6 +4,7 @@ import Script from 'next/script'
 import { getCookieConsent } from './CookieConsent'
 
 const GTM_ID = 'GTM-NPNL3D3Q'
+const GOOGLE_ADS_ID = 'AW-18061588897'
 
 /**
  * Google Tag Manager – NUR im Web-Browser laden, NICHT in der Capacitor iOS/Android App.
@@ -49,6 +50,24 @@ export default function GoogleTagManager() {
 
   return (
     <>
+      {/* Google Tag (gtag.js) für Google Ads Conversion Tracking */}
+      <Script
+        id="gtag-script"
+        strategy="afterInteractive"
+        src={`https://www.googletagmanager.com/gtag/js?id=${GOOGLE_ADS_ID}`}
+      />
+      <Script
+        id="gtag-config"
+        strategy="afterInteractive"
+        dangerouslySetInnerHTML={{
+          __html: `
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', '${GOOGLE_ADS_ID}');
+          `,
+        }}
+      />
       {/* GTM Script im Head */}
       <Script
         id="gtm-script"
