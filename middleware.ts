@@ -65,15 +65,29 @@ export async function middleware(request: NextRequest) {
       }
     )
 
-    const { data: { user } } = await supabase.auth.getUser()
+    // ═══ Session-Prüfung: getUser verifiziert den JWT serverseitig ═══
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
     const pathname = request.nextUrl.pathname
 
     // Protected routes - redirect to login if not authenticated
-    if (!user && (pathname.startsWith('/kunde') || pathname.startsWith('/engel') || pathname.startsWith('/admin') || pathname.startsWith('/mis') || (pathname.startsWith('/fahrer') && !pathname.startsWith('/fahrer/register')))) {
-      const url = request.nextUrl.clone()
-      url.pathname = '/auth/login'
-      url.searchParams.set('redirectTo', pathname)
-      return NextResponse.redirect(url)
+    const isProtected = pathname.startsWith('/kunde') || pathname.startsWith('/engel') || pathname.startsWith('/admin') || pathname.startsWith('/mis') || (pathname.startsWith('/fahrer') && !pathname.startsWith('/fahrer/register'))
+
+    if (!user && isProtected) {
+      // ═══ FAIL-SOFT für Kunde/Engel/Fahrer: Nicht sofort wegschicken ═══
+      // Der Client-Side SessionKeepAlive kann den Token noch refreshen.
+      // Nur bei Admin/MIS strikt sein.
+      if (pathname.startsWith('/admin') || pathname.startsWith('/mis')) {
+        const url = request.nextUrl.clone()
+        url.pathname = '/auth/login'
+        url.searchParams.set('redirectTo', pathname)
+        return NextResponse.redirect(url)
+      }
+
+      // Für Kunde/Engel/Fahrer: Lass die Seite laden — der Client
+      // versucht den Refresh Token. Wenn das auch fehlschlägt,
+      // redirected die Client-Seite selbst zum Login.
+      // Dies verhindert unnötige Login-Redirects bei kurzfristigen Token-Ablauf.
+      return supabaseResponse
     }
 
     // Admin & MIS routes - check admin role via JWT metadata (no DB query needed)
