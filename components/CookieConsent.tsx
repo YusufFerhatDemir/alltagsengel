@@ -1,6 +1,12 @@
 'use client'
 import { useState, useEffect } from 'react'
 
+declare global {
+  interface Window {
+    gtag: (...args: any[]) => void
+  }
+}
+
 const CONSENT_KEY = 'ae_cookie_consent'
 
 type ConsentStatus = 'accepted' | 'rejected' | null
@@ -26,11 +32,21 @@ export default function CookieConsent() {
   const handleAccept = () => {
     localStorage.setItem(CONSENT_KEY, 'accepted')
     setVisible(false)
+    // Google Consent Mode v2: Consent sofort auf granted aktualisieren
+    if (typeof window !== 'undefined' && typeof window.gtag === 'function') {
+      window.gtag('consent', 'update', {
+        'ad_storage': 'granted',
+        'ad_user_data': 'granted',
+        'ad_personalization': 'granted',
+        'analytics_storage': 'granted',
+      })
+    }
   }
 
   const handleReject = () => {
     localStorage.setItem(CONSENT_KEY, 'rejected')
     setVisible(false)
+    // Consent bleibt auf denied (Default aus GoogleTagManager.tsx)
   }
 
   if (!visible) return null
