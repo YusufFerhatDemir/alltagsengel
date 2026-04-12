@@ -162,6 +162,18 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             });
           })();
         `}} />
+        {/* Google Consent Mode v2: Default DENIED — muss VOR gtag.js stehen */}
+        <script dangerouslySetInnerHTML={{ __html: `
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('consent', 'default', {
+            'ad_storage': 'denied',
+            'ad_user_data': 'denied',
+            'ad_personalization': 'denied',
+            'analytics_storage': 'denied',
+            'wait_for_update': 500
+          });
+        `}} />
       </head>
       <body className={`${jost.variable} ${cormorant.variable}`} style={{ fontFamily: "'Jost', sans-serif", backgroundColor: '#1A1612', color: '#F5F0E8' }}>
         <GoogleTagManager />
