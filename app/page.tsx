@@ -2,6 +2,7 @@ import Link from 'next/link'
 import Icon3D from '@/components/Icon3D'
 import AppMockup from '@/components/AppMockup'
 import VisitTracker from '@/components/VisitTracker'
+import SocialProof from '@/components/SocialProof'
 
 export default function SplashPage() {
   return (
@@ -239,28 +240,8 @@ export default function SplashPage() {
           </div>
         </section>
 
-        {/* Testimonials / Social Proof */}
-        <section className="lp-section">
-          <div className="lp-badge">Erfahrungen</div>
-          <h2 className="lp-h2">Das sagen unsere Kunden</h2>
-          <div className="lp-testimonials">
-            <div className="lp-testimonial">
-              <div className="lp-test-stars">★★★★★</div>
-              <p className="lp-test-text">&bdquo;Endlich jemand, der meiner Mutter mit Herz und Geduld hilft. Die Abrechnung über die Pflegekasse war überraschend einfach.&ldquo;</p>
-              <div className="lp-test-author">— Sabine K., Frankfurt</div>
-            </div>
-            <div className="lp-testimonial">
-              <div className="lp-test-stars">★★★★★</div>
-              <p className="lp-test-text">&bdquo;Seit 3 Monaten nutze ich Alltagsengel für Arztbesuche und Einkäufe. Mein Engel ist immer pünktlich und sehr freundlich.&ldquo;</p>
-              <div className="lp-test-author">— Heinrich W., Offenbach</div>
-            </div>
-            <div className="lp-testimonial">
-              <div className="lp-test-stars">★★★★★</div>
-              <p className="lp-test-text">&bdquo;Die Hygienebox kommt jeden Monat zuverlässig — und kostenlos! Großartiger Service.&ldquo;</p>
-              <div className="lp-test-author">— Maria L., Darmstadt</div>
-            </div>
-          </div>
-        </section>
+        {/* Testimonials / Social Proof — Enhanced */}
+        <SocialProof />
 
         {/* CTA */}
         <section className="lp-section lp-cta-section">
@@ -287,6 +268,8 @@ export default function SplashPage() {
           <div className="lp-footer-brand">ALLTAGSENGEL</div>
           <div className="lp-footer-sub">Mit Herz für dich da</div>
           <div className="lp-footer-links">
+            <Link href="/blog">Ratgeber</Link>
+            <Link href="/faq">FAQ</Link>
             <Link href="/impressum">Impressum</Link>
             <Link href="/datenschutz">Datenschutz</Link>
             <Link href="/agb">AGB</Link>
