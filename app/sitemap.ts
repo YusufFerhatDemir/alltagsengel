@@ -17,6 +17,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     // Blog Index & FAQ
     { url: `${baseUrl}/blog`, lastModified: now, changeFrequency: 'weekly', priority: 0.9 },
     { url: `${baseUrl}/faq`, lastModified: now, changeFrequency: 'monthly', priority: 0.8 },
+    { url: `${baseUrl}/kontakt`, lastModified: now, changeFrequency: 'monthly', priority: 0.7 },
     // Landing Pages für Ads
     { url: `${baseUrl}/lp/google`, lastModified: now, changeFrequency: 'monthly', priority: 0.8 },
     { url: `${baseUrl}/lp/facebook`, lastModified: now, changeFrequency: 'monthly', priority: 0.7 },

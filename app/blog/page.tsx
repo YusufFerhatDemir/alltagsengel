@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import NewsletterSignup from '@/components/NewsletterSignup'
 
 export const metadata: Metadata = {
   title: 'Ratgeber — Pflege, Alltagsbegleitung & Entlastungsbetrag',
@@ -322,6 +323,11 @@ export default function BlogIndexPage() {
         }}>
           Kostenlos beraten lassen
         </Link>
+      </section>
+
+      {/* Newsletter Signup */}
+      <section style={{ maxWidth: 800, margin: '40px auto 0' }}>
+        <NewsletterSignup />
       </section>
 
       {/* Schema.org structured data */}

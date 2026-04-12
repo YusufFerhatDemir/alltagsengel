@@ -1,0 +1,25 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appID": "TEAMID.care.alltagsengel.app",
+        "paths": [
+          "/kunde/*",
+          "/engel/*",
+          "/fahrer/*",
+          "/auth/*",
+          "/blog/*",
+          "/faq",
+          "/kontakt",
+          "/?ref=*"
+        ]
+      }
+    ]
+  },
+  "webcredentials": {
+    "apps": [
+      "TEAMID.care.alltagsengel.app"
+    ]
+  }
+}
