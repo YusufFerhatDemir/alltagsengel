@@ -11,6 +11,8 @@ import GoogleTagManager from '@/components/GoogleTagManager'
 import MetaPixel from '@/components/MetaPixel'
 import TikTokPixel from '@/components/TikTokPixel'
 import SessionKeepAlive from '@/components/SessionKeepAlive'
+import WhatsAppButton from '@/components/WhatsAppButton'
+import InstallPrompt from '@/components/InstallPrompt'
 
 const jost = Jost({ subsets: ['latin'], variable: '--font-jost', weight: ['300','400','500','600','700'] })
 const cormorant = Cormorant_Garamond({ subsets: ['latin'], variable: '--font-cormorant', weight: ['400','500','600','700'], style: ['normal','italic'] })
@@ -170,6 +172,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           {children}
         </LayoutWrapper>
         <SessionKeepAlive />
+        <WhatsAppButton />
+        <InstallPrompt />
         <CookieConsent />
         <ServiceWorkerRegister />
         <PushProvider />
