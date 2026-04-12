@@ -7,11 +7,19 @@ const GTM_ID = 'GTM-NPNL3D3Q'
 const GOOGLE_ADS_ID = 'AW-18061588897'
 
 /**
- * Google Tag Manager – NUR im Web-Browser laden, NICHT in der Capacitor iOS/Android App.
- * Zusätzlich wird auf Cookie-Consent gewartet (GDPR/DSGVO-konform).
+ * Google Tag Manager + Google Ads Conversion Tracking
+ *
+ * DSGVO-konform mit Google Consent Mode v2:
+ * - gtag.js wird IMMER geladen (damit Google den Tag verifizieren kann)
+ * - Default Consent = denied (keine Cookies bis Nutzer zustimmt)
+ * - Nach Cookie-Akzeptierung → Consent wird auf granted aktualisiert
+ * - NICHT in Capacitor (native App) geladen
+ *
+ * Das löst das "Falsch konfiguriert" Problem in Google Ads,
+ * weil Google den Tag jetzt auf der Seite erkennen kann.
  */
 export default function GoogleTagManager() {
-  const [shouldLoad, setShouldLoad] = useState(false)
+  const [isWeb, setIsWeb] = useState(false)
 
   useEffect(() => {
     // Prüfe ob wir in Capacitor (native App) laufen
@@ -21,24 +29,24 @@ export default function GoogleTagManager() {
       (window as any).webkit?.messageHandlers?.bridge
     )
 
-    // GTM nur im normalen Browser laden, NICHT in der App
     if (isCapacitor) {
       console.log('[GTM] Capacitor erkannt – GTM wird NICHT geladen')
       return
     }
 
-    // Prüfe Cookie-Consent
+    setIsWeb(true)
+
+    // Prüfe ob Consent bereits vorhanden ist und aktualisiere
     const consent = getCookieConsent()
     if (consent === 'accepted') {
-      setShouldLoad(true)
-      return
+      updateConsentToGranted()
     }
 
     // Warte auf Consent-Änderung (falls Nutzer erst später zustimmt)
     const interval = setInterval(() => {
       const currentConsent = getCookieConsent()
       if (currentConsent === 'accepted') {
-        setShouldLoad(true)
+        updateConsentToGranted()
         clearInterval(interval)
       }
     }, 2000)
@@ -46,11 +54,35 @@ export default function GoogleTagManager() {
     return () => clearInterval(interval)
   }, [])
 
-  if (!shouldLoad) return null
+  if (!isWeb) return null
 
   return (
     <>
-      {/* Google Tag (gtag.js) für Google Ads Conversion Tracking */}
+      {/*
+        1. Google Consent Mode v2 – Default auf "denied" setzen
+        MUSS vor gtag.js geladen werden!
+      */}
+      <Script
+        id="gtag-consent-default"
+        strategy="beforeInteractive"
+        dangerouslySetInnerHTML={{
+          __html: `
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+
+            // Consent Mode v2: Default alles auf denied
+            gtag('consent', 'default', {
+              'ad_storage': 'denied',
+              'ad_user_data': 'denied',
+              'ad_personalization': 'denied',
+              'analytics_storage': 'denied',
+              'wait_for_update': 500
+            });
+          `,
+        }}
+      />
+
+      {/* 2. Google Tag (gtag.js) für Google Ads Conversion Tracking */}
       <Script
         id="gtag-script"
         strategy="afterInteractive"
@@ -64,11 +96,14 @@ export default function GoogleTagManager() {
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
             gtag('js', new Date());
-            gtag('config', '${GOOGLE_ADS_ID}');
+            gtag('config', '${GOOGLE_ADS_ID}', {
+              'allow_enhanced_conversions': true
+            });
           `,
         }}
       />
-      {/* GTM Script im Head */}
+
+      {/* 3. GTM Script */}
       <Script
         id="gtm-script"
         strategy="afterInteractive"
@@ -82,6 +117,7 @@ export default function GoogleTagManager() {
           `,
         }}
       />
+
       {/* GTM Noscript Fallback */}
       <noscript>
         <iframe
@@ -93,4 +129,24 @@ export default function GoogleTagManager() {
       </noscript>
     </>
   )
+}
+
+/**
+ * Consent auf "granted" aktualisieren — wird aufgerufen wenn der Nutzer
+ * Cookies akzeptiert. Erlaubt Google Ads Conversion-Tracking und Analytics.
+ */
+function updateConsentToGranted() {
+  if (typeof window === 'undefined' || typeof window.gtag !== 'function') {
+    // gtag noch nicht geladen — warte kurz
+    setTimeout(() => updateConsentToGranted(), 500)
+    return
+  }
+
+  window.gtag('consent', 'update', {
+    'ad_storage': 'granted',
+    'ad_user_data': 'granted',
+    'ad_personalization': 'granted',
+    'analytics_storage': 'granted',
+  })
+  console.log('[GTM] Consent aktualisiert → granted (Nutzer hat Cookies akzeptiert)')
 }
