@@ -1686,3 +1686,31 @@ Sen hiçbir şey ödemiyorsun.
 ⚠️ **Instagram-Verknüpfung:** Weiterhin ausstehend — Benutzer muss Instagram-Kontodaten verknüpfen
 ❌ **Instagram-Post:** Nicht möglich ohne verknüpftes Instagram-Konto
 ❌ **TikTok:** Datei-Upload-Berechtigung fehlt weiterhin — manueller Upload erforderlich
+
+---
+
+## 12.04.2026 (Sonntag) — Pre-Launch Awareness: Coming Soon + 131€ Entlastungsbetrag
+
+**Datum:** 12.04.2026 (vor Content Calendar Start am 14.04.)
+**Thema:** App-Vorstellung + 131€ Entlastungsbetrag (§45b) Awareness
+**Typ:** Text-Post mit Link-Preview
+
+### Veröffentlicht
+
+✅ **Facebook DE-Post:** Veröffentlicht um 10:53 Uhr — ID: 122103369332810830
+✅ **Facebook TR-Post:** Veröffentlicht um 10:55 Uhr — ID: 122103375926810830
+  - Beide Posts mit alltagsengel.care Link-Vorschau (Logo + Beschreibung)
+  - DE-Post: Coming Soon Ankündigung mit 131€ Info, Leistungsübersicht, Hashtags
+  - TR-Post: Türkische Version mit angepassten Hashtags (#TürklerFrankfurt etc.)
+
+### Nicht veröffentlicht
+
+⚠️ **Instagram:** Nicht gepostet — Instagram-Konto weiterhin nicht verknüpft
+❌ **TikTok:** Datei-Upload über Automation gesperrt (Sicherheitsbeschränkung)
+❌ **Grafik-Upload:** COMING-SOON-app.png konnte nicht automatisch hochgeladen werden (file_upload restriction bei Meta Business Suite)
+
+### Manuelle Aktionen erforderlich
+
+1. Instagram-Konto in Meta Business Suite verknüpfen
+2. COMING-SOON-app.png manuell zu Posts hinzufügen oder als separaten Post erstellen
+3. TikTok: COMING-SOON-tiktok.mp4 manuell über TikTok Studio hochladen
