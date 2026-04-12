@@ -58,31 +58,8 @@ export default function GoogleTagManager() {
 
   return (
     <>
-      {/*
-        1. Google Consent Mode v2 – Default auf "denied" setzen
-        MUSS vor gtag.js geladen werden!
-      */}
-      <Script
-        id="gtag-consent-default"
-        strategy="beforeInteractive"
-        dangerouslySetInnerHTML={{
-          __html: `
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-
-            // Consent Mode v2: Default alles auf denied
-            gtag('consent', 'default', {
-              'ad_storage': 'denied',
-              'ad_user_data': 'denied',
-              'ad_personalization': 'denied',
-              'analytics_storage': 'denied',
-              'wait_for_update': 500
-            });
-          `,
-        }}
-      />
-
-      {/* 2. Google Tag (gtag.js) für Google Ads Conversion Tracking */}
+      {/* Google Tag (gtag.js) für Google Ads Conversion Tracking
+          Consent Mode v2 Default wird in layout.tsx gesetzt (vor diesem Script) */}
       <Script
         id="gtag-script"
         strategy="afterInteractive"
