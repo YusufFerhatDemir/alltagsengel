@@ -1714,3 +1714,92 @@ Sen hiçbir şey ödemiyorsun.
 1. Instagram-Konto in Meta Business Suite verknüpfen
 2. COMING-SOON-app.png manuell zu Posts hinzufügen oder als separaten Post erstellen
 3. TikTok: COMING-SOON-tiktok.mp4 manuell über TikTok Studio hochladen
+
+---
+
+## 13.04.2026 (Sonntag) — Countdown 1 Tag: MORGEN IST ES SOWEIT!
+
+**Datum:** 13.04.2026 (vor Content Calendar Start am 14.04.)
+**Thema:** Letzter Countdown — 1 Tag bis App-Launch am 14.04.2026
+**Typ:** Grafik (1080x1080) + Text-Post mit Link-Preview
+
+### Erstellt
+
+✅ **Grafik erstellt:** POST-2026-04-13-countdown-1tag.png (1080x1080, Brand Colors COAL/GOLD/CREAM, zweisprachig DE+TR, "MORGEN IST ES SOWEIT!")
+
+### Veröffentlicht
+
+✅ **Facebook DE+TR Post:** Veröffentlicht um 09:52 Uhr — ID: 122103964376810830
+  - Bilingual DE+TR Caption mit Countdown (1 Tag) und allen Leistungen
+  - Link-Vorschau zu alltagsengel.care automatisch generiert (mit Logo + Beschreibung)
+  - Grafik-Upload nicht möglich (file_upload restriction) — Text-Post mit Link-Vorschau veröffentlicht
+
+### Nicht veröffentlicht
+
+⚠️ **Instagram:** Nicht gepostet — Instagram-Konto weiterhin nicht verknüpft in Meta Business Suite
+❌ **TikTok:** Datei-Upload über Automation gesperrt (Sicherheitsbeschränkung)
+❌ **Grafik-Upload:** POST-2026-04-13-countdown-1tag.png konnte nicht automatisch hochgeladen werden (file_upload restriction bei Meta Business Suite)
+
+### Caption (DE) — Facebook:
+
+```
+🚀 MORGEN IST ES SOWEIT — AlltagsEngel startet in Frankfurt! 😇
+
+Noch 1 Tag bis zum App-Start am 14. April 2026!
+
+Deine Premium-Alltagsbegleitung — alles in einer App:
+
+🛒 Einkaufsbegleitung
+🏥 Arztbegleitung & Krankenfahrt
+📋 Behördengänge & Termine
+🤝 Gesellschaft & Gespräche
+🧴 Hygienebox — GRATIS (Pflegegrad 1+)
+
+131 Euro/Monat — die Pflegekasse zahlt über §45b.
+Du zahlst nichts.
+
+📱 www.alltagsengel.care
+✉️ info@alltagsengel.care
+```
+
+### Caption (TR) — Facebook (im selben Post):
+
+```
+🚀 YARIN BAŞLIYORUZ — AlltagsEngel Frankfurt'ta! 😇
+
+Uygulamaya son 1 gün — 14 Nisan 2026!
+
+Premium günlük refakat hizmetin — tek uygulamada:
+
+🛒 Alışveriş refakati
+🏥 Doktor refakati & hasta taşıma
+📋 Resmi işlemler & randevular
+🤝 Sohbet & arkadaşlık
+🧴 Hijyen kutusu — ÜCRETSİZ (bakım derecesi 1+)
+
+Ayda 131 Euro — bakım sigortası §45b üzerinden ödüyor.
+Sen hiçbir şey ödemiyorsun.
+
+📱 www.alltagsengel.care
+✉️ info@alltagsengel.care
+```
+
+### Hashtags:
+
+```
+#AlltagsEngel #Alltagsbegleitung #Frankfurt #Pflege #Seniorenhilfe #Pflegekasse #Entlastungsbetrag #FrankfurtAmMain #Senioren #§45b #131Euro #ComingSoon #Countdown #1Tag #MorgenGehtEsLos #MitHerz #App #Krankenfahrt #Hygienebox #YaşlıBakımı #TürklerFrankfurt #Bakım
+```
+
+### TikTok Caption (bereit für manuellen Upload):
+
+```
+🚀 MORGEN geht's los! AlltagsEngel startet am 14. April in Frankfurt! 😇 Einkauf, Arzt, Behörden, Gespräche & Hygienebox — alles in einer App. 131€/Monat, Pflegekasse zahlt. 📱 alltagsengel.care
+
+#alltagsengel #alltagsbegleitung #frankfurt #pflege #seniorenhilfe #pflegekasse #131euro #countdown #comingsoon #fyp #viral #foryou #1tag #morgengehtslos
+```
+
+### Manuelle Aktionen erforderlich
+
+1. **Instagram:** Instagram-Konto in Meta Business Suite verknüpfen, dann POST-2026-04-13-countdown-1tag.png manuell posten
+2. **Grafik zu Facebook hinzufügen:** POST-2026-04-13-countdown-1tag.png manuell zum bestehenden Facebook-Post hinzufügen oder als separaten Post erstellen
+3. **TikTok:** POST-2026-04-13-countdown-1tag.png oder REELS-app-promo-v1.mp4 manuell über TikTok Studio hochladen mit TikTok Caption
