@@ -30,6 +30,16 @@ function RegisterForm() {
   const [pflegegrad, setPflegegrad] = useState<number>(0)
   const [homeCare, setHomeCare] = useState(true)
   const [pflegehilfsmittel, setPflegehilfsmittel] = useState(false)
+  // Angehörigen-Modus
+  const [registerFor, setRegisterFor] = useState<'selbst' | 'angehoerig'>('selbst')
+  const [crFirstName, setCrFirstName] = useState('')
+  const [crLastName, setCrLastName] = useState('')
+  const [crBirthYear, setCrBirthYear] = useState('')
+  const [crAddress, setCrAddress] = useState('')
+  const [crPlz, setCrPlz] = useState('')
+  const [crCity, setCrCity] = useState('')
+  const [crRelationship, setCrRelationship] = useState('')
+  const [crNotes, setCrNotes] = useState('')
   const [error, setError] = useState('')
   const [passwordErrors, setPasswordErrors] = useState<string[]>([])
   const [passwordStrength, setPasswordStrength] = useState<'weak' | 'medium' | 'strong'>('weak')
@@ -138,13 +148,31 @@ function RegisterForm() {
 
           // Pflegegrad speichern (nur für Kunden)
           if (role === 'kunde') {
+            // Bei Angehörigen-Modus: Pflegegrad gehört zum Angehörigen
+            const pflegegradForProfile = registerFor === 'selbst' ? pflegegrad : 0
             await supabase.from('care_eligibility').upsert({
               user_id: data.user.id,
-              pflegegrad,
+              pflegegrad: pflegegradForProfile,
               home_care: homeCare,
               insurance_type: 'unknown',
               pflegehilfsmittel_interest: pflegehilfsmittel,
             }).then(() => {})
+
+            // Angehörige Person speichern
+            if (registerFor === 'angehoerig' && crFirstName && crLastName) {
+              await supabase.from('care_recipients').insert({
+                profile_id: data.user.id,
+                first_name: crFirstName,
+                last_name: crLastName,
+                birth_year: crBirthYear ? parseInt(crBirthYear) : null,
+                pflegegrad: pflegegrad || null,
+                address: crAddress || null,
+                postal_code: crPlz || null,
+                city: crCity || null,
+                relationship: crRelationship || null,
+                notes: crNotes || null,
+              }).then(() => {})
+            }
           }
         }
 
@@ -249,10 +277,63 @@ function RegisterForm() {
           </div>
           {role === 'kunde' && (
             <>
+              {/* Für wen suchen Sie Unterstützung? */}
+              <div className="reg-section">
+                <div className="reg-section-title">Für wen suchen Sie Unterstützung?</div>
+                <div className="reg-toggle-row">
+                  <button
+                    type="button"
+                    className={`reg-toggle-btn${registerFor === 'selbst' ? ' active' : ''}`}
+                    style={{ flex: 1 }}
+                    onClick={() => setRegisterFor('selbst')}
+                  >
+                    Für mich selbst
+                  </button>
+                  <button
+                    type="button"
+                    className={`reg-toggle-btn${registerFor === 'angehoerig' ? ' active' : ''}`}
+                    style={{ flex: 1 }}
+                    onClick={() => setRegisterFor('angehoerig')}
+                  >
+                    Für einen Angehörigen
+                  </button>
+                </div>
+              </div>
+
+              {/* Angehörigen-Daten */}
+              {registerFor === 'angehoerig' && (
+                <div className="reg-section" style={{ background: 'rgba(212,175,55,0.08)', borderRadius: 12, padding: 14, marginBottom: 8 }}>
+                  <div className="reg-section-title" style={{ marginBottom: 8 }}>Angaben zur pflegebedürftigen Person</div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                    <input className="auth-input" type="text" placeholder="Vorname *" value={crFirstName} onChange={e => setCrFirstName(e.target.value)} required />
+                    <input className="auth-input" type="text" placeholder="Nachname *" value={crLastName} onChange={e => setCrLastName(e.target.value)} required />
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                    <input className="auth-input" type="text" placeholder="Geburtsjahr" value={crBirthYear} onChange={e => setCrBirthYear(e.target.value.replace(/\D/g, '').slice(0, 4))} inputMode="numeric" maxLength={4} />
+                    <select className="auth-input" value={crRelationship} onChange={e => setCrRelationship(e.target.value)} style={{ color: crRelationship ? '#F5F0E8' : '#8a8070' }}>
+                      <option value="">Beziehung...</option>
+                      <option value="Mutter">Mutter</option>
+                      <option value="Vater">Vater</option>
+                      <option value="Kind">Kind</option>
+                      <option value="Ehepartner/in">Ehepartner/in</option>
+                      <option value="Großelternteil">Großelternteil</option>
+                      <option value="Sonstige">Sonstige</option>
+                    </select>
+                  </div>
+                  <input className="auth-input" type="text" placeholder="Adresse der pflegebedürftigen Person" value={crAddress} onChange={e => setCrAddress(e.target.value)} />
+                  <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr', gap: 10 }}>
+                    <input className="auth-input" type="text" placeholder="PLZ" value={crPlz} onChange={e => setCrPlz(e.target.value.replace(/\D/g, '').slice(0, 5))} inputMode="numeric" maxLength={5} />
+                    <input className="auth-input" type="text" placeholder="Stadt" value={crCity} onChange={e => setCrCity(e.target.value)} />
+                  </div>
+                  <textarea className="auth-input" placeholder="Besondere Hinweise (z.B. Mobilität, Demenz, Allergien...)" value={crNotes} onChange={e => setCrNotes(e.target.value)} rows={2} style={{ resize: 'vertical', minHeight: 50 }} />
+                </div>
+              )}
 
               {/* Pflegegrad Toggle-Buttons */}
               <div className="reg-section">
-                <div className="reg-section-title">Pflegegrad</div>
+                <div className="reg-section-title">
+                  {registerFor === 'angehoerig' ? 'Pflegegrad des Angehörigen' : 'Pflegegrad'}
+                </div>
                 <div className="reg-toggle-row">
                   {[0, 1, 2, 3, 4, 5].map(g => (
                     <button
@@ -266,7 +347,9 @@ function RegisterForm() {
                   ))}
                 </div>
                 {pflegegrad > 0 && (
-                  <div className="reg-hint">Pflegegrad {pflegegrad} — Sie haben Anspruch auf Entlastungsleistungen</div>
+                  <div className="reg-hint">
+                    Pflegegrad {pflegegrad} — {registerFor === 'angehoerig' ? 'Ihr Angehöriger hat' : 'Sie haben'} Anspruch auf Entlastungsleistungen
+                  </div>
                 )}
               </div>
 
