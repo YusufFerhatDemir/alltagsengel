@@ -43,10 +43,12 @@ export async function POST(request: NextRequest) {
       .eq('id', referral.id)
 
     // 2. Bonus für Referrer gutschreiben
-    await supabaseAdmin.rpc('increment_referral_credit', {
-      user_id: referral.referrer_id,
-      amount: bonus,
-    }).catch(async () => {
+    try {
+      await supabaseAdmin.rpc('increment_referral_credit', {
+        user_id: referral.referrer_id,
+        amount: bonus,
+      })
+    } catch {
       // Fallback wenn RPC nicht existiert
       const { data: referrerProfile } = await supabaseAdmin
         .from('profiles')
@@ -58,13 +60,15 @@ export async function POST(request: NextRequest) {
         .from('profiles')
         .update({ referral_credit: (referrerProfile?.referral_credit || 0) + bonus })
         .eq('id', referral.referrer_id)
-    })
+    }
 
     // 3. Bonus für Referred gutschreiben
-    await supabaseAdmin.rpc('increment_referral_credit', {
-      user_id: referral.referred_id,
-      amount: bonus,
-    }).catch(async () => {
+    try {
+      await supabaseAdmin.rpc('increment_referral_credit', {
+        user_id: referral.referred_id,
+        amount: bonus,
+      })
+    } catch {
       const { data: referredProfile } = await supabaseAdmin
         .from('profiles')
         .select('referral_credit')
@@ -75,7 +79,7 @@ export async function POST(request: NextRequest) {
         .from('profiles')
         .update({ referral_credit: (referredProfile?.referral_credit || 0) + bonus })
         .eq('id', referral.referred_id)
-    })
+    }
 
     // 4. Notification an Referrer senden
     await supabaseAdmin.from('notifications').insert({
