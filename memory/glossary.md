@@ -1,23 +1,112 @@
-# Glossary
+# Glossary — AlltagsEngel
 
-## AlltagsEngel
-Premium Alltagsbegleitung (günlük hayat eşlik hizmeti) uygulaması. Almanya'da yaşlı ve bakım ihtiyacı olan kişilerle sertifikalı Alltagsbegleiter'ları (günlük hayat eşlikçileri) buluşturan bir platform.
+Interne Begriffe, Abkürzungen und Shorthand für das AlltagsEngel-Projekt.
 
-## §45b SGB XI
-Almanya'daki Pflegeversicherung (bakım sigortası) kapsamında Entlastungsleistungen (rahatlama hizmetleri) için ayrılan bütçe. Aylık 131€. AlltagsEngel hizmetleri bu bütçeyle karşılanabilir.
+## Produkt & Rollen
 
-## Engel
-Uygulama içinde "Alltagsbegleiter" rolü — hizmet veren kişi. Sertifikalı, sigortalı, serbest çalışan.
+| Begriff | Bedeutung |
+|---------|-----------|
+| **AlltagsEngel** | Marktplatz-App: zertifizierte Alltagsbegleiter ↔ Senioren/Pflegebedürftige |
+| **Engel** | Alltagsbegleiter-Rolle (Dienstleister, zertifiziert nach §45a SGB XI) |
+| **Kunde** | Pflegebedürftiger / Senior (bucht Engel) |
+| **Angehörige** | Familienmitglied, das für einen Pflegebedürftigen bucht (neue Rolle, seit 13.04.2026) |
+| **Fahrer** | Krankenfahrt-Fahrer (eigenes Modul mit Fahrzeugen, Preistabellen) |
+| **Superadmin / Admin** | Plattform-Betreiber (Yusuf + 2 weitere) |
+| **MIS** | Management-Informationssystem (internes Dashboard mit KPIs, Prozessen, Dokumenten) |
+| **Slogan** | "Mit Herz für dich da" |
 
-## Kunde
-Uygulama içinde "müşteri" rolü — hizmet arayan kişi (genellikle yaşlı bireyler veya aileleri).
+## Gesetze & Geld
 
-## Alltagsbegleitung
-Yaşlılara günlük işlerinde (alışveriş, gezinti, randevulara eşlik, sohbet vb.) yardımcı olma hizmeti.
+| Begriff | Bedeutung |
+|---------|-----------|
+| **§45b SGB XI** | Entlastungsbetrag — 131 €/Monat von der Pflegekasse für Alltagsbegleitung |
+| **§45a SGB XI** | Anerkennung niedrigschwelliger Betreuungsangebote (Engel-Zertifizierung) |
+| **Pflegegrad** | 1–5, Voraussetzung für §45b-Anspruch |
+| **Entlastungsbetrag** | Synonym für §45b SGB XI — Killer-Message der App |
+| **Pflegekasse** | Gesetzliche Pflegeversicherung, rechnet den Entlastungsbetrag direkt ab |
 
-## Tech Stack
-- **Framework:** React Native (Expo SDK 54)
-- **Router:** Expo Router (file-based routing)
-- **Backend:** Supabase
-- **UI Theme:** Dark mode, gold (#C9963C) accent, Jost + Cormorant Garamond fontları
-- **Platforms:** iOS, Android
+## Tech-Stack (aktuell, Stand 14.04.2026)
+
+| Begriff | Bedeutung |
+|---------|-----------|
+| **Next.js 16.2** | Web-Framework (nicht Expo/React Native — alte Glossary-Einträge sind veraltet) |
+| **Capacitor 8.2** | Hybrid-Wrapper für iOS + Android (wrappt die Next.js-Webapp) |
+| **Supabase** | Backend: Postgres + Auth + RLS. Projekt-ID: `nnwyktkqibdjxgimjyuq` |
+| **RLS** | Row Level Security (Postgres-Policies pro Tabelle) |
+| **Resend** | Transactional E-Mail (info@alltagsengel.care) |
+| **FCM V1** | Firebase Cloud Messaging OAuth2 für Push |
+| **VAPID** | Web-Push-Keys |
+| **Tesseract.js** | OCR für Ausweis-/Dokumenten-Upload |
+| **GTM + Consent Mode v2** | Google Tag Manager, DSGVO-konform |
+
+## Code-Organisation
+
+| Begriff | Bedeutung |
+|---------|-----------|
+| **(auth)** | Next.js Route-Group für Login/Registrierung (wird in tsconfig excluded) |
+| **(kunde)** | Route-Group für Kunden-Flow |
+| **(engel)** | Route-Group für Engel-Flow |
+| **cap:sync** | `npm run cap:sync` — syncht Web-Build in iOS/Android Capacitor-Projekte |
+| **bundleRelease** | Android Gradle-Build für Play Store |
+| **care.alltagsengel.app** | iOS/Android Bundle-ID |
+
+## Wichtige Tabellen (Supabase)
+
+| Tabelle | Zweck |
+|---------|-------|
+| `profiles` | 29 Nutzer (13 kunde, 9 engel, 4 fahrer, 3 superadmin) |
+| `angels` | 7 Engel-Profile (Preis, Bio, Zertifikate, §45b-fähig) |
+| `bookings` | Buchungen (6: 5 accepted + 1 completed, Umsatz gesamt 500 €) |
+| `krankenfahrten` | Krankenfahrten (9: 4 pending, 3 completed, 1 confirmed, 1 in_progress) |
+| `care_recipients` | **NEU 14.04.2026** — Angehörige verwalten Pflegebedürftige |
+| `visitors` | Website-Traffic (2260 gesamt, 267 in letzten 7 Tagen) |
+| `page_views` | Seitenaufrufe (1126 gesamt, 626 in letzten 7 Tagen) |
+| `notfall_info`, `medikamentenplan` | Pflege-Dokumentation |
+| `mis_*` | Management-Informationssystem (KPIs, Prozesse, Dokumente) |
+| `kf_pricing_*` | Krankenfahrten-Preislogik (Tiers, Surcharges, Config) |
+
+## Personen (Nicknames → Vollname)
+
+| Kürzel | Person |
+|--------|--------|
+| **Yusuf** | Yusuf Cilcioglu — Gründer, Entwickler (y.cilcioglu@googlemail.com) |
+| **RA Dörr** | Rechtsanwalt für UG-Gründung (ra.doerr@t-online.de) |
+| **Trabzon / Faroz** | Kontaktperson, bekam Leistungskonzept + Datenschutz + Minijob-/Pflegekassen-Docs (Mai 2025) |
+| **Marika** | Beta-Testerin (marika-74@gmx.de) |
+| **Hasan** | Beta-Tester (hasan.kuecuekyalcin@outlook.de) |
+| **Ali** | Beta-Tester (ali_k88@hotmail.de) |
+
+## Store-Status (Stand 14.04.2026)
+
+| Plattform | Status |
+|-----------|--------|
+| **iOS App Store** | LIVE — Version 1.0.0 Build 4 (seit ca. 12.04.2026 nach 2 Apple-Review-Runden: Build 2 am 31.03, Build 4 am 01.04) — 18 Downloads, 20.9 % Conversion |
+| **Google Play** | Identity verified 08.04.2026, 25 $ Dev-Fee bezahlt 06.04.2026. Noch KEIN bestätigter Live-Status |
+| **Web (Vercel)** | alltagsengel.care — live |
+
+## Drittanbieter & Konten
+
+| Dienst | Detail |
+|--------|--------|
+| **Vercel** | Hosting Web |
+| **STRATO** | Domain + Mail (Kundennr. 78372956) |
+| **Zadarma** | Telefonie |
+| **Google Ads** | 132-671-1476 |
+| **GitHub Repo** | YusufFerhatDemir/alltagsengel |
+
+## Bekannte Probleme / Risiken
+
+| Thema | Status |
+|-------|--------|
+| **GitGuardian-Alert 02.03.2026** | Company-Email-Passwort auf GitHub exponiert — muss rotiert werden |
+| **Service-Role-Key in .env** | Laut Security Audit exponiert — Rotation ausstehend |
+| **DSGVO VisitorTracker** | Trackt bei `consent === null` statt nur bei `'accepted'` — Fix dokumentiert, Umsetzung prüfen |
+| **RLS "Herkes profilleri okuyabilir"** | Public-Read auf profiles — laut Audit kritisch |
+
+## Prozesse
+
+| Prozess | Bedeutung |
+|---------|-----------|
+| **Buchungsflow** | Kunde wählt Engel → Datum/Zeit → Zahlungsart → Bestätigung |
+| **Angehörigen-Modus** | Angehöriger erstellt `care_recipient`, bucht für diese Person |
+| **§45b-Abrechnung** | Direkt mit Pflegekasse (Kostenvoranschlag → Rechnung) — größter Pain Point |
