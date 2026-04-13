@@ -28,7 +28,7 @@ export default function EngelBuchungenPage() {
 
       const { data, error: err } = await supabase
         .from('bookings')
-        .select('*, profiles:customer_id(first_name, last_name)')
+        .select('*, profiles:customer_id(first_name, last_name), care_recipients:care_recipient_id(first_name, last_name, relationship, pflegegrad)')
         .eq('angel_id', user.id)
         .order('created_at', { ascending: false })
 
@@ -89,7 +89,9 @@ export default function EngelBuchungenPage() {
         ) : (
           filtered.map(b => {
             const customer = b.profiles as any
+            const careRecipient = b.care_recipients as any
             const name = customer ? `${customer.first_name} ${customer.last_name?.[0] || ''}.` : 'Kunde'
+            const crName = careRecipient ? `${careRecipient.first_name} ${careRecipient.last_name?.[0] || ''}.` : null
             const st = statusLabels[b.status] || statusLabels.pending
             return (
               <Link key={b.id} href={`/engel/bestaetigt/${b.id}`} style={{ textDecoration: 'none' }}>
@@ -97,8 +99,8 @@ export default function EngelBuchungenPage() {
                   <div className="buch-top">
                     <div className="buch-avatar" style={{ background: 'var(--green-pale)' }}><IconUser size={18} /></div>
                     <div className="buch-info">
-                      <div className="buch-name">{name}</div>
-                      <div className="buch-service">{b.service}</div>
+                      <div className="buch-name">{crName || name}</div>
+                      <div className="buch-service">{b.service}{crName ? ` · via ${name}` : ''}</div>
                     </div>
                     <div className="buch-status" style={{ color: st.color }}>{st.label}</div>
                   </div>

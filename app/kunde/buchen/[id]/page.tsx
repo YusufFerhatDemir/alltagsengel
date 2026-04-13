@@ -24,6 +24,9 @@ export default function BuchenPage() {
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
   const [pageStatus, setPageStatus] = useState<'loading' | 'ok' | 'not_found' | 'error'>('loading')
+  // Angehörigen-Auswahl
+  const [careRecipients, setCareRecipients] = useState<any[]>([])
+  const [selectedCareRecipient, setSelectedCareRecipient] = useState<string>('')
 
   const loadAngel = async () => {
     setError('')
@@ -60,6 +63,21 @@ export default function BuchenPage() {
 
   useEffect(() => {
     loadAngel()
+    // Angehörige laden
+    const loadCareRecipients = async () => {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+      const { data } = await supabase
+        .from('care_recipients')
+        .select('id, first_name, last_name, relationship, pflegegrad')
+        .eq('profile_id', user.id)
+      if (data && data.length > 0) {
+        setCareRecipients(data)
+        setSelectedCareRecipient(data[0].id) // Standardmäßig den ersten Angehörigen auswählen
+      }
+    }
+    loadCareRecipients()
   }, [angelId])
 
   if (pageStatus === 'loading') return <LoadingState />
@@ -102,6 +120,7 @@ export default function BuchenPage() {
           total_amount: total,
           platform_fee: platformFee,
           notes: notes || null,
+          care_recipient_id: selectedCareRecipient || null,
         })
         .select()
         .single()
@@ -149,6 +168,34 @@ export default function BuchenPage() {
             <div className="form-engel-price">{rate}€<span>/h</span></div>
           </div>
         </div>
+
+        {careRecipients.length > 0 && (
+          <div className="form-card">
+            <div className="form-card-h">Für wen buchen Sie?</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <div
+                className={`pay-opt${!selectedCareRecipient ? ' on' : ''}`}
+                onClick={() => setSelectedCareRecipient('')}
+                style={{ padding: '10px 14px', cursor: 'pointer' }}
+              >
+                <div className="pay-lbl">Für mich selbst</div>
+              </div>
+              {careRecipients.map(cr => (
+                <div
+                  key={cr.id}
+                  className={`pay-opt${selectedCareRecipient === cr.id ? ' on' : ''}`}
+                  onClick={() => setSelectedCareRecipient(cr.id)}
+                  style={{ padding: '10px 14px', cursor: 'pointer' }}
+                >
+                  <div className="pay-lbl">{cr.first_name} {cr.last_name}</div>
+                  <div className="pay-sub">
+                    {cr.relationship}{cr.pflegegrad ? ` · Pflegegrad ${cr.pflegegrad}` : ''}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div className="form-card">
           <div className="form-card-h">Termin</div>

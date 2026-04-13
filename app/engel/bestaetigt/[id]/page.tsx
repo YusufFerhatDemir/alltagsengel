@@ -21,7 +21,7 @@ export default function EngelBestaetigtPage() {
         const supabase = createClient()
         const { data, error } = await supabase
           .from('bookings')
-          .select('*, customer:profiles!bookings_customer_id_fkey(first_name, last_name)')
+          .select('*, customer:profiles!bookings_customer_id_fkey(first_name, last_name), care_recipient:care_recipients!bookings_care_recipient_id_fkey(first_name, last_name, relationship, pflegegrad, address, postal_code, city, notes)')
           .eq('id', id)
           .single()
 
@@ -45,6 +45,10 @@ export default function EngelBestaetigtPage() {
   if (pageStatus === 'error' || !booking) return <div className="screen"><ErrorState homeHref="/engel/home" /></div>
 
   const customerName = booking.customer ? `${booking.customer.first_name} ${booking.customer.last_name?.[0] || ''}.` : 'Kunde'
+  const cr = booking.care_recipient as any
+  const hasCareRecipient = !!cr
+  const careRecipientName = cr ? `${cr.first_name} ${cr.last_name}` : null
+  const displayName = careRecipientName || customerName
   const dateStr = booking.date ? new Date(booking.date).toLocaleDateString('de-DE', { day: '2-digit', month: 'long', year: 'numeric' }) : '—'
   const timeEnd = booking.time && booking.duration_hours
     ? `${booking.time?.slice(0,5)} – ${String(Number(booking.time?.slice(0,2)) + booking.duration_hours).padStart(2,'0')}:${booking.time?.slice(3,5)} Uhr`
@@ -55,18 +59,37 @@ export default function EngelBestaetigtPage() {
       <div className="confirm-header">
         <div className="confirm-check gold"><IconCheck size={28} /></div>
         <div className="confirm-title">Auftrag angenommen!</div>
-        <div className="confirm-sub">Sie haben den Einsatz bei {customerName} bestätigt</div>
+        <div className="confirm-sub">Sie haben den Einsatz bei {displayName} bestätigt</div>
       </div>
 
       <div className="confirm-body">
         <div className="person-row">
           <div className="person-av" style={{ background: 'var(--cream2)' }}><IconUser size={20} /></div>
           <div>
-            <div className="person-name">{customerName}</div>
-            <div className="person-sub"><IconCheck size={12} /> Verifiziert · Stammkundin</div>
+            <div className="person-name">{displayName}</div>
+            <div className="person-sub">
+              {hasCareRecipient
+                ? <><IconCheck size={12} /> Angehörige/r von {customerName}{cr.pflegegrad ? ` · Pflegegrad ${cr.pflegegrad}` : ''}</>
+                : <><IconCheck size={12} /> Verifiziert · Stammkundin</>
+              }
+            </div>
           </div>
           <div className="person-chat"><IconChat size={18} /></div>
         </div>
+
+        {hasCareRecipient && (
+          <div className="detail-card" style={{ marginBottom: 12 }}>
+            <div className="detail-card-h">Pflegebedürftige Person</div>
+            <div className="detail-row"><div className="detail-ic"><IconUser size={15} /></div><div><div className="detail-lbl">Name</div><div className="detail-val">{cr.first_name} {cr.last_name}</div></div></div>
+            {cr.relationship && <div className="detail-row"><div className="detail-ic"><IconUser size={15} /></div><div><div className="detail-lbl">Beziehung</div><div className="detail-val">{cr.relationship} von {customerName}</div></div></div>}
+            {cr.pflegegrad && <div className="detail-row"><div className="detail-ic"><IconShield size={15} /></div><div><div className="detail-lbl">Pflegegrad</div><div className="detail-val">{cr.pflegegrad}</div></div></div>}
+            {(cr.address || cr.city) && <div className="detail-row"><div className="detail-ic"><IconPin size={15} /></div><div><div className="detail-lbl">Adresse</div><div className="detail-val">{[cr.address, cr.postal_code, cr.city].filter(Boolean).join(', ')}</div></div></div>}
+            {cr.notes && <div className="detail-row"><div className="detail-ic"><IconCalendar size={15} /></div><div><div className="detail-lbl">Hinweise</div><div className="detail-val" style={{ whiteSpace: 'pre-wrap' }}>{cr.notes}</div></div></div>}
+            <div style={{ fontSize: 11, color: 'var(--ink4)', marginTop: 8, padding: '0 4px' }}>
+              Kontaktperson: {customerName} (erhält alle Benachrichtigungen)
+            </div>
+          </div>
+        )}
 
         <div className="insurance">
           <div className="ins-header">
