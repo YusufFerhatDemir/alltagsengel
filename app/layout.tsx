@@ -110,7 +110,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             logo: 'https://alltagsengel.care/icon-512x512.png',
             image: 'https://alltagsengel.care/og-image.png',
             description: 'Zertifizierte Alltagsbegleitung für Senioren & Pflegebedürftige in Frankfurt am Main. Abrechnung über §45b SGB XI — 131€/Monat von der Pflegekasse.',
-            telephone: '+4915678543210',
+            telephone: '+491783382825',
             email: 'info@alltagsengel.care',
             address: {
               '@type': 'PostalAddress',
