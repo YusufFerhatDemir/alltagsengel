@@ -1803,3 +1803,75 @@ Sen hiçbir şey ödemiyorsun.
 1. **Instagram:** Instagram-Konto in Meta Business Suite verknüpfen, dann POST-2026-04-13-countdown-1tag.png manuell posten
 2. **Grafik zu Facebook hinzufügen:** POST-2026-04-13-countdown-1tag.png manuell zum bestehenden Facebook-Post hinzufügen oder als separaten Post erstellen
 3. **TikTok:** POST-2026-04-13-countdown-1tag.png oder REELS-app-promo-v1.mp4 manuell über TikTok Studio hochladen mit TikTok Caption
+
+---
+
+## 14.04.2026 — 🚀 LAUNCH DAY — Woche 1 / Mo: Krankenfahrt Video
+
+**Status:** 📋 Bereit zum Posten (Autonomer Scheduler-Lauf — manuelle Veröffentlichung erforderlich)
+**Plattform:** Instagram Reel + TikTok + Facebook
+**Typ:** Video (Reel)
+**Empfohlene Datei:** `social-media-grafiken/neue-kampagne-2/FINAL-krankenfahrten.mp4`
+  - Alternativ (animierte Version): `social-media-grafiken/REELS-krankenfahrt-animated.mp4`
+  - Alternativ (Square 1080x1080 für Feed): `SQUARE-131euro-1080x1080.mp4` (passt thematisch nur eingeschränkt — Haupt-Upload sollte das Krankenfahrt-Video sein)
+**Content Calendar Referenz:** Video #1 Krankenfahrt Auto (Quelldatei: `23-34-39.mov`, Format 480x480)
+**Geplante Uhrzeit:** 11:00 Uhr (DE) · 12:00 Uhr (TR, 1h später)
+
+### Caption (DE):
+
+```
+Dein Weg zum Arzt — sicher, pünktlich und begleitet.
+
+Mit Alltagsengel kommst du entspannt an.
+Krankenfahrten ab 15 Euro — direkt über die Pflegekasse.
+
+Jetzt buchen: www.alltagsengel.care
+info@alltagsengel.care
+
+#Krankenfahrt #Pflegefahrt #Frankfurt #Senioren #Alltagsengel #Pflegekasse #Mobilität #Arztfahrt #Begleitung
+```
+
+### Caption (TR) — 1 Stunde später als separater Post:
+
+```
+Doktora giden yol — güvenli, zamanında ve yanında biriyle.
+
+Alltagsengel ile rahatça ulaşırsın.
+Hasta taşıma 15 Euro'dan başlayan fiyatlarla — bakım sigortası üzerinden.
+
+Hemen rezervasyon yap: www.alltagsengel.care
+info@alltagsengel.care
+
+#HastaTaşıma #Frankfurt #Yaşlılar #Alltagsengel #BakımSigortası #Ulaşım
+```
+
+### TikTok Caption (kombiniert DE+TR kurz):
+
+```
+🚑 Dein Weg zum Arzt — sicher, pünktlich, begleitet.
+Krankenfahrten ab 15 € über die Pflegekasse. Jetzt in Frankfurt!
+
+📱 alltagsengel.care
+
+#alltagsengel #krankenfahrt #frankfurt #pflege #pflegekasse #senioren #fyp #foryou #launchday #arztfahrt #mobilität
+```
+
+### Manuelle Aktionen (Autonom nicht möglich — Login/2FA erforderlich)
+
+1. **Meta Business Suite** (business.facebook.com)
+   - Upload: `FINAL-krankenfahrten.mp4` als Instagram Reel + Facebook Video
+   - Caption DE einfügen (siehe oben)
+   - Plattformen: Instagram Reel + Facebook Feed gleichzeitig
+   - Veröffentlichung: 11:00 Uhr CEST
+   - 12:00 Uhr: TR-Version als separater Post veröffentlichen
+
+2. **TikTok Creator Center** (tiktok.com/creator-center)
+   - Upload: `FINAL-krankenfahrten.mp4`
+   - TikTok-Caption (siehe oben)
+   - Veröffentlichung: 11:00 Uhr CEST
+   - Location: Frankfurt am Main
+
+### Hinweis (Scheduler-Lauf 09:06 CEST)
+Dieser Lauf erfolgte automatisch um 09:06 Uhr — ~2h vor dem geplanten Posting-Zeitpunkt. Die Inhalte sind vorbereitet. Der eigentliche Upload zu Meta/TikTok erfordert manuelle Anmeldung und wurde **nicht** automatisch durchgeführt, da dafür aktive Browser-Sessions mit 2FA benötigt würden.
+
+**🎉 HEUTE IST LAUNCH DAY — AlltagsEngel geht heute live in Frankfurt!**
