@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import Script from 'next/script'
 import { getCookieConsent } from './CookieConsent'
 
@@ -10,32 +10,21 @@ const GOOGLE_ADS_ID = 'AW-18061588897'
  * Google Tag Manager + Google Ads Conversion Tracking
  *
  * DSGVO-konform mit Google Consent Mode v2:
- * - gtag.js wird IMMER geladen (damit Google den Tag verifizieren kann)
- * - Default Consent = denied (keine Cookies bis Nutzer zustimmt)
- * - Nach Cookie-Akzeptierung → Consent wird auf granted aktualisiert
- * - NICHT in Capacitor (native App) geladen
+ * - gtag.js wird IMMER und SOFORT (auch im SSR) geladen, damit
+ *   Google den Tag bei jedem Crawl verifizieren kann.
+ * - Default Consent = denied (Setup in layout.tsx <head>)
+ * - Nach Cookie-Akzeptierung → Consent auf granted aktualisiert
+ * - In Capacitor (native App) wird gtag/gtm trotzdem geladen,
+ *   feuert aber keine Conversions, weil tracking.ts nichts sendet
+ *   solange kein Web-Kontext. (Vorher: komplett ausgeschaltet -
+ *   das verhinderte aber, dass Google den Tag im SSR-HTML findet.)
  *
- * Das löst das "Falsch konfiguriert" Problem in Google Ads,
- * weil Google den Tag jetzt auf der Seite erkennen kann.
+ * Hintergrund: Vorher war das gesamte JSX hinter useEffect+useState
+ * versteckt. Bedeutet: SSR rendert "null" -> Google Bot findet
+ * keinen Tag -> "Tag falsch konfiguriert" -> Conversions fehlten.
  */
 export default function GoogleTagManager() {
-  const [isWeb, setIsWeb] = useState(false)
-
   useEffect(() => {
-    // Prüfe ob wir in Capacitor (native App) laufen
-    const isCapacitor = !!(
-      (window as any).Capacitor ||
-      navigator.userAgent.includes('Capacitor') ||
-      (window as any).webkit?.messageHandlers?.bridge
-    )
-
-    if (isCapacitor) {
-      console.log('[GTM] Capacitor erkannt – GTM wird NICHT geladen')
-      return
-    }
-
-    setIsWeb(true)
-
     // Prüfe ob Consent bereits vorhanden ist und aktualisiere
     const consent = getCookieConsent()
     if (consent === 'accepted') {
@@ -53,8 +42,6 @@ export default function GoogleTagManager() {
 
     return () => clearInterval(interval)
   }, [])
-
-  if (!isWeb) return null
 
   return (
     <>
