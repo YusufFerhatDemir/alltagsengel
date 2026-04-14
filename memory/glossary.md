@@ -50,6 +50,20 @@ Interne Begriffe, Abkürzungen und Shorthand für das AlltagsEngel-Projekt.
 | **bundleRelease** | Android Gradle-Build für Play Store |
 | **care.alltagsengel.app** | iOS/Android Bundle-ID |
 
+## Projektstruktur (Stand 14.04.2026, nach Aufräumen)
+
+| Pfad | Zweck |
+|---|---|
+| `app/` | Next.js App Router (Web + Admin + MIS + 22 API-Routes) |
+| `components/`, `lib/`, `hooks/`, `constants/`, `types/` | Shared Code |
+| `supabase/` | Migrations + initial-setup.sql |
+| `android/`, `ios/` | Capacitor-Projekte |
+| `docs/` | Dokumentation: store/, security/, growth/, releases/, data-room/, data-room-de/ |
+| `marketing/` | Broschüren, Videos, Images, Scripts, ads, kampanya, social-media-grafiken, werbe-videos |
+| `archive/` | Altlasten: dripfy-mis-legacy/, expo-legacy/, debug-screenshots/ + (gitignored) next-old/, video-generation/, private/ |
+| `memory/` | Cowork-Memory (glossary, projects, people, context) |
+| `README.md` | Einstiegspunkt |
+
 ## Wichtige Tabellen (Supabase)
 
 | Tabelle | Zweck |
@@ -98,10 +112,14 @@ Interne Begriffe, Abkürzungen und Shorthand für das AlltagsEngel-Projekt.
 
 | Thema | Status |
 |-------|--------|
-| **GitGuardian-Alert 02.03.2026** | Company-Email-Passwort auf GitHub exponiert — muss rotiert werden |
-| **Service-Role-Key in .env** | Laut Security Audit exponiert — Rotation ausstehend |
-| **DSGVO VisitorTracker** | Trackt bei `consent === null` statt nur bei `'accepted'` — Fix dokumentiert, Umsetzung prüfen |
-| **RLS "Herkes profilleri okuyabilir"** | Public-Read auf profiles — laut Audit kritisch |
+| **GitGuardian-Alert 02.03.2026** | Company-Email-Passwort auf GitHub exponiert — Rotation noch manuell durch Yusuf in STRATO erforderlich |
+| **Service-Role-Key in .env** | Laut Security Audit exponiert — Rotation noch manuell durch Yusuf im Supabase-Dashboard erforderlich |
+| ~~**DSGVO VisitorTracker**~~ | ✓ ERLEDIGT 14.04.2026 — Code prüft `consent !== 'accepted'` korrekt |
+| ~~**RLS "Herkes profilleri okuyabilir"**~~ | ✓ ERLEDIGT 14.04.2026 — true-SELECT-Policies entfernt, ersetzt durch `profiles_select_own/admin/engels/booking_partner` |
+| **`angels` public SELECT** | Marktplatz braucht es, aber sensible Felder (z. B. `hourly_rate`) nur für authentifizierte Nutzer zeigen — offen |
+| **`/api/admin/*` Authz** | Audit aller Admin-Routes auf authz-Checks — offen |
+| **`/api/visitor-alert` Rate-Limiting** | Kein Rate-Limit — offen |
+| **Upload-Validation** | Dateigröße + Mime-Type auf allen Upload-Routes — offen |
 
 ## Prozesse
 
