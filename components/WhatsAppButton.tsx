@@ -9,7 +9,7 @@ import { useState, useEffect } from 'react'
 // Wird NICHT in der nativen App (Capacitor) angezeigt.
 // ═══════════════════════════════════════════════════════════
 
-const WHATSAPP_NUMBER = '4915678543210' // AlltagsEngel Nummer
+const WHATSAPP_NUMBER = '491783382825' // AlltagsEngel Nummer
 const DEFAULT_MESSAGE = 'Hallo! Ich interessiere mich für AlltagsEngel und hätte gerne mehr Informationen.'
 
 export default function WhatsAppButton() {

@@ -64,7 +64,7 @@ export async function POST(request: Request) {
             </p>
             <div style="background:#F7F2EA;border-radius:12px;padding:16px;margin:16px 0">
               <p style="margin:0;font-size:14px;color:#333">📞 <strong>+49 178 338 28 25</strong></p>
-              <p style="margin:4px 0 0;font-size:14px;color:#333">💬 <a href="https://wa.me/4915678543210" style="color:#C9963C">WhatsApp Chat</a></p>
+              <p style="margin:4px 0 0;font-size:14px;color:#333">💬 <a href="https://wa.me/491783382825" style="color:#C9963C">WhatsApp Chat</a></p>
             </div>
             <p style="color:#888;font-size:13px;margin-top:16px">
               Herzliche Grüße,<br>Ihr AlltagsEngel Team
