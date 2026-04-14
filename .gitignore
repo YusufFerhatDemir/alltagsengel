@@ -46,3 +46,10 @@ supabase/.temp/
 .TARGETING-STRATEGY-PRIVATE.md
 */.TARGETING-STRATEGY-PRIVATE.md
 *.mp4
+
+# Archive: privater/PII-Bereich (Ausweise, Führerscheine, Release-Builds)
+/archive/private/
+
+# Archive: alte Build-Caches (große Binaries, lokal halten)
+/archive/next-old/
+/archive/video-generation/

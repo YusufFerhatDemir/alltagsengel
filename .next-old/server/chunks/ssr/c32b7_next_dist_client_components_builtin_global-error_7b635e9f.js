@@ -1,3 +1,0 @@
-module.exports=[89018,(a,b,c)=>{let{createClientModuleProxy:d}=a.r(64034);a.n(d("[project]/mnt/alltagsengel-app/node_modules/next/dist/client/components/builtin/global-error.js <module evaluation>"))},70826,(a,b,c)=>{let{createClientModuleProxy:d}=a.r(64034);a.n(d("[project]/mnt/alltagsengel-app/node_modules/next/dist/client/components/builtin/global-error.js"))},42696,a=>{"use strict";a.i(89018);var b=a.i(70826);a.n(b)}];
-
-//# sourceMappingURL=c32b7_next_dist_client_components_builtin_global-error_7b635e9f.js.map
