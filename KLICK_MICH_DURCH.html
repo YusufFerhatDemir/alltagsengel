@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>AlltagsEngel - Klick-dich-durch Dashboard</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+  .step-done { opacity: 0.5; background: #f0fdf4 !important; }
+  .step-done .step-content { text-decoration: line-through; }
+  pre { white-space: pre-wrap; word-break: break-word; }
+  .copy-btn { transition: all 0.15s; }
+  .copy-btn.copied { background: #16a34a !important; color: white; }
+</style>
+</head>
+<body class="bg-stone-50 text-stone-900">
+
+<div class="max-w-4xl mx-auto p-6">
+
+  <!-- Header -->
+  <div class="mb-8 p-6 rounded-2xl" style="background: linear-gradient(135deg, #1A1612 0%, #3d2f20 100%); color: #C9963C;">
+    <h1 class="text-3xl font-bold mb-2">AlltagsEngel &mdash; Klick-dich-durch</h1>
+    <p class="text-stone-300">Yusuf, arbeite die 9 Schritte in Reihenfolge ab. Jeder Button öffnet direkt die richtige Seite. Copy-Buttons bei allen Texten. Haken setzen &rarr; nächster Schritt erscheint hervorgehoben.</p>
+    <div class="mt-4 flex items-center gap-4">
+      <div class="text-sm">Fortschritt: <span id="progress" class="font-bold text-2xl">0</span> / 9</div>
+      <div class="flex-1 bg-stone-700 rounded-full h-3 overflow-hidden">
+        <div id="progress-bar" class="h-full transition-all duration-300" style="background: #C9963C; width: 0%;"></div>
+      </div>
+      <button onclick="resetAll()" class="text-xs text-stone-400 hover:text-white">Reset</button>
+    </div>
+  </div>
+
+  <!-- Credentials Box -->
+  <details class="mb-6 bg-amber-50 border-2 border-amber-400 rounded-xl p-4">
+    <summary class="font-bold cursor-pointer text-amber-900">🔑 Alle Zugangsdaten / Credentials (aufklappen)</summary>
+    <div class="mt-3 space-y-2 text-sm font-mono">
+      <div class="flex justify-between items-center bg-white p-2 rounded">
+        <span><strong>Supabase Project ID:</strong> nnwyktkqibdjxgimjyuq</span>
+        <button onclick="copy(this,'nnwyktkqibdjxgimjyuq')" class="copy-btn px-3 py-1 bg-stone-800 text-white rounded text-xs">Copy</button>
+      </div>
+      <div class="flex justify-between items-center bg-white p-2 rounded">
+        <span><strong>Demo-Kunde:</strong> demo.kunde@alltagsengel.care / DemoKunde2026!</span>
+        <button onclick="copy(this,'demo.kunde@alltagsengel.care\nDemoKunde2026!')" class="copy-btn px-3 py-1 bg-stone-800 text-white rounded text-xs">Copy beides</button>
+      </div>
+      <div class="flex justify-between items-center bg-white p-2 rounded">
+        <span><strong>Demo-Engel:</strong> demo.engel@alltagsengel.care / DemoEngel2026!</span>
+        <button onclick="copy(this,'demo.engel@alltagsengel.care\nDemoEngel2026!')" class="copy-btn px-3 py-1 bg-stone-800 text-white rounded text-xs">Copy beides</button>
+      </div>
+      <div class="flex justify-between items-center bg-white p-2 rounded">
+        <span><strong>Google Ads Konto:</strong> 132-671-1476</span>
+        <button onclick="copy(this,'132-671-1476')" class="copy-btn px-3 py-1 bg-stone-800 text-white rounded text-xs">Copy</button>
+      </div>
+      <div class="flex justify-between items-center bg-white p-2 rounded">
+        <span><strong>STRATO Kundennr:</strong> 78372956</span>
+        <button onclick="copy(this,'78372956')" class="copy-btn px-3 py-1 bg-stone-800 text-white rounded text-xs">Copy</button>
+      </div>
+    </div>
+  </details>
+
+  <!-- Steps Container -->
+  <div id="steps"></div>
+
+  <!-- Done -->
+  <div id="done-message" class="hidden mt-8 p-8 bg-green-100 border-4 border-green-500 rounded-2xl text-center">
+    <div class="text-6xl mb-4">🎉</div>
+    <h2 class="text-2xl font-bold text-green-900">Alles durch! AlltagsEngel ist live.</h2>
+    <p class="text-green-800 mt-2">Ruf heute Abend den Growth-Plan <code>GROWTH_WEEK_14042026.md</code> auf.</p>
+  </div>
+
+</div>
+
+<script>
+const steps = [
+  {
+    id: 1,
+    time: '5 min',
+    title: 'Supabase Service-Role-Key rotieren',
+    why: 'Alter Key war evtl. in git-Historie. Neuer Key = sicher.',
+    link: 'https://supabase.com/dashboard/project/nnwyktkqibdjxgimjyuq/settings/api',
+    linkLabel: '🔗 Supabase API Settings öffnen',
+    actions: [
+      'Scrolle zu "service_role secret"',
+      'Klicke "Reveal" → kopiere den aktuellen Key (falls du ihn brauchst)',
+      'Klicke "Reset service_role key" → Bestätigen',
+      'Kopiere den NEUEN Key',
+      'Gehe zu Vercel → alltagsengel Project → Settings → Environment Variables',
+      'Update SUPABASE_SERVICE_ROLE_KEY mit neuem Wert → Save',
+      'Trigger redeploy in Vercel (Deployments → ⋯ → Redeploy)'
+    ],
+    secondLink: 'https://vercel.com/dashboard',
+    secondLinkLabel: '🔗 Vercel Dashboard öffnen'
+  },
+  {
+    id: 2,
+    time: '2 min',
+    title: 'Leaked-Password-Protection in Supabase aktivieren',
+    why: 'Supabase prüft dann Passwörter gegen HaveIBeenPwned-Datenbank.',
+    link: 'https://supabase.com/dashboard/project/nnwyktkqibdjxgimjyuq/auth/providers',
+    linkLabel: '🔗 Supabase Auth Settings öffnen',
+    actions: [
+      'Auth → Providers → Email',
+      'Scroll runter zu "Password Security"',
+      'Toggle "Leaked Password Protection" → ON',
+      'Save'
+    ]
+  },
+  {
+    id: 3,
+    time: '5 min',
+    title: 'STRATO E-Mail-Passwort rotieren',
+    why: 'Falls das alte Passwort irgendwo geleakt war.',
+    link: 'https://www.strato.de/apps/CustomerService',
+    linkLabel: '🔗 STRATO Kundencenter',
+    actions: [
+      'Login mit Kundennr. 78372956',
+      'E-Mail → Postfach-Verwaltung → info@alltagsengel.care',
+      'Passwort ändern → neues starkes Passwort generieren',
+      'In 1Password / Bitwarden speichern',
+      'Falls SMTP in Vercel env: neue Credentials eintragen'
+    ]
+  },
+  {
+    id: 4,
+    time: '25 min',
+    title: 'iOS v1.0.1 bauen & zu App Store Connect uploaden',
+    why: 'Build 5 / Version 1.0.1 ist schon in project.pbxproj gesetzt.',
+    link: 'file:///Users/work/alltagsengel/ios/App/App.xcworkspace',
+    linkLabel: '🔗 Xcode Workspace öffnen',
+    actions: [
+      'Oben links Target "App" wählen, Scheme "App", Destination "Any iOS Device (arm64)"',
+      'Menü: Product → Archive (dauert ~3-5 min)',
+      'Wenn fertig: Organizer öffnet → "Distribute App"',
+      'App Store Connect → Upload → Next → Next → Upload',
+      'Warte ~15 min bis App Store Connect den Build verarbeitet hat',
+      'appstoreconnect.apple.com → AlltagsEngel → + Version or Platform → 1.0.1',
+      'Release Notes einfügen (s. Copy-Button unten)',
+      '"Build" auswählen → den neuen Build 5',
+      '"Submit to Review" klicken'
+    ],
+    copyText: `Was ist neu in 1.0.1:
+
+• Angehörigen-Modus: Buche für Mutter, Vater, Großeltern oder Freunde
+• Verbesserte Sicherheit beim Profil-Lesen
+• Performance- und Stabilitäts-Verbesserungen
+• Kleinere Bugfixes im Buchungsfluss
+
+Danke, dass ihr AlltagsEngel nutzt! 💛`,
+    copyLabel: 'Release Notes kopieren',
+    secondLink: 'https://appstoreconnect.apple.com/apps',
+    secondLinkLabel: '🔗 App Store Connect'
+  },
+  {
+    id: 5,
+    time: '20 min',
+    title: 'Android AAB v1.0.1 in Play Console hochladen',
+    why: 'AAB liegt fertig bei /Users/work/alltagsengel/releases/',
+    link: 'https://play.google.com/console',
+    linkLabel: '🔗 Play Console öffnen',
+    actions: [
+      'Play Console → AlltagsEngel → Produktion (nicht "Interner Test"!)',
+      '"Neue Version erstellen" klicken',
+      'Drag&Drop die AAB-Datei (siehe Pfad unten)',
+      'Release-Name: "1.0.1"',
+      'Release Notes einfügen (Copy-Button bei Schritt 4)',
+      'Speichern → "Überprüfen und veröffentlichen"',
+      'Schrittweiser Rollout: 20 %',
+      'Veröffentlichung starten'
+    ],
+    copyText: '/Users/work/alltagsengel/releases/alltagsengel-v1.0.1-versionCode2.aab',
+    copyLabel: 'AAB-Pfad kopieren'
+  },
+  {
+    id: 6,
+    time: '10 min',
+    title: 'Play Console: Demo-Accounts bei "App-Zugriff" eintragen',
+    why: 'Ohne Demo-Account lehnt Google Review die App ab.',
+    link: 'https://play.google.com/console',
+    linkLabel: '🔗 Play Console → App-Inhalte',
+    actions: [
+      'Play Console → AlltagsEngel → App-Inhalte',
+      '"App-Zugriff" → Bearbeiten',
+      'Option wählen: "Einige Funktionen sind eingeschränkt"',
+      '"Anweisungen hinzufügen" → neue Gruppe "Kunde + Engel Demo"',
+      'Nutzername: demo.kunde@alltagsengel.care / Passwort: DemoKunde2026!',
+      'Weitere Gruppe: Nutzername: demo.engel@alltagsengel.care / Passwort: DemoEngel2026!',
+      'Anweisungen: "Bitte mit beiden Accounts einloggen und Buchungsfluss testen"',
+      'Speichern'
+    ],
+    copyText: `demo.kunde@alltagsengel.care
+DemoKunde2026!
+demo.engel@alltagsengel.care
+DemoEngel2026!`,
+    copyLabel: 'Alle 4 Zugangsdaten kopieren'
+  },
+  {
+    id: 7,
+    time: '30 min',
+    title: 'Google Business Profile anlegen',
+    why: 'Grundlage für lokales Google-Ranking + Google Maps.',
+    link: 'https://business.google.com/create',
+    linkLabel: '🔗 Google Business Profile erstellen',
+    actions: [
+      'Firmenname: AlltagsEngel',
+      'Kategorie: Pflegedienst / Seniorenbetreuung',
+      'Service-Gebiet (nicht Ladengeschäft) → Postleitzahlen Berlin umliegend eintragen',
+      'Telefon: +49 ... (deine Nummer)',
+      'Website: https://alltagsengel.care',
+      'Verifizierung per Postkarte beantragen (kommt in 5-14 Tagen)',
+      'Beschreibung einfügen (Copy-Button)',
+      'Mindestens 3 Fotos hochladen (Logo, Team, Symbolbild)'
+    ],
+    copyText: `AlltagsEngel vermittelt Alltagshilfen und Krankenfahrten für Senioren und pflegebedürftige Angehörige in Berlin und Umgebung. Unser Service ist nach §45b SGB XI über die Pflegekasse abrechenbar (Entlastungsbetrag 131€/Monat). Persönlich, zuverlässig, und auf Augenhöhe. Seit 2026 mit eigener App im App Store & Google Play.`,
+    copyLabel: 'Beschreibung kopieren'
+  },
+  {
+    id: 8,
+    time: '45 min',
+    title: 'Google Ads Kampagne aktivieren',
+    why: 'Konto existiert (132-671-1476), Kampagne nur noch starten.',
+    link: 'https://ads.google.com',
+    linkLabel: '🔗 Google Ads öffnen',
+    actions: [
+      'Konto 132-671-1476 → Kampagnen',
+      'Neue Kampagne → Ziel "Leads" oder "Website-Zugriffe"',
+      'Kampagnentyp: Suche',
+      'Budget: 10 €/Tag (start klein)',
+      'Standort: Berlin + 50km Umkreis',
+      'Sprache: Deutsch',
+      'Keywords einfügen (Copy-Button)',
+      'Anzeigentexte einfügen (Copy-Button)',
+      'Final-URL: https://alltagsengel.care',
+      'Kampagne starten'
+    ],
+    copyText: `Keywords (Broad Match):
+alltagshilfe berlin
+seniorenbetreuung berlin
+entlastungsbetrag nutzen
+pflegekasse 131 euro
+einkaufshilfe senioren
+arztfahrt berlin
+krankenfahrt berlin
+§45b alltagshilfe
+
+Anzeigentext 1:
+Überschrift: AlltagsEngel – Hilfe im Alltag
+Überschrift 2: 131€/Monat über Pflegekasse
+Überschrift 3: Berlin & Umgebung
+Beschreibung: Zuverlässige Alltagshilfen für Senioren. Einkaufen, Begleitung, Fahrten. Abrechnung direkt mit der Pflegekasse möglich.
+
+Anzeigentext 2:
+Überschrift: Entlastungsbetrag endlich nutzen
+Überschrift 2: 131€ monatlich – §45b SGB XI
+Überschrift 3: In 5 Min. gebucht
+Beschreibung: Alltagsengel kommt zu Ihnen. Einfach App laden, buchen, fertig. Pflegekasse zahlt.`,
+    copyLabel: 'Keywords + Anzeigentexte kopieren'
+  },
+  {
+    id: 9,
+    time: '20 min',
+    title: 'Kleinanzeige für Engel-Recruiting posten',
+    why: 'Wir brauchen diese Woche 3 neue Engel.',
+    link: 'https://www.kleinanzeigen.de/p-anzeige-aufgeben-schritt1.html',
+    linkLabel: '🔗 Kleinanzeige aufgeben',
+    actions: [
+      'Kategorie: Jobs → Teilzeit',
+      'PLZ: 10115 (Berlin)',
+      'Titel einfügen (Copy-Button)',
+      'Beschreibung einfügen (Copy-Button)',
+      'Foto: Logo hochladen',
+      'Anzeige veröffentlichen (kostenlos reicht)',
+      'Nach 7 Tagen "Pushen" wiederholen'
+    ],
+    copyText: `Titel: Alltagshelfer:in (m/w/d) gesucht - flexibel, sinnvoll, fair bezahlt
+
+Beschreibung:
+AlltagsEngel sucht liebevolle Menschen, die Senioren im Alltag unterstützen wollen.
+
+Was du machst:
+• Einkäufe, Begleitung zu Terminen, Behördengänge
+• Spaziergänge, Gespräche, kleine Hilfen daheim
+• KEINE Pflege - nur Alltagsbegleitung
+
+Was wir bieten:
+• Flexible Zeiten - du entscheidest wann du arbeitest
+• 15-18 €/Stunde - Auszahlung wöchentlich
+• Einfache App-basierte Buchung
+• Keine Erfahrung nötig - wir lernen dich an
+
+Voraussetzungen:
+• Mind. 18 Jahre
+• Freundlich, zuverlässig, Geduld mit älteren Menschen
+• Polizeiliches Führungszeugnis (übernehmen wir die Gebühr)
+
+Interesse? Melde dich direkt bei:
+📧 team@alltagsengel.care
+📱 oder App laden "AlltagsEngel" (iOS/Android)
+🌐 alltagsengel.care/mitmachen
+
+Wir freuen uns auf dich!`,
+    copyLabel: 'Kleinanzeigen-Text komplett kopieren'
+  }
+];
+
+const stepsEl = document.getElementById('steps');
+
+function render() {
+  stepsEl.innerHTML = '';
+  steps.forEach((s, idx) => {
+    const done = localStorage.getItem(`step-${s.id}`) === 'true';
+    const prevDone = idx === 0 || localStorage.getItem(`step-${steps[idx-1].id}`) === 'true';
+    const active = !done && prevDone;
+
+    const card = document.createElement('div');
+    card.className = `mb-4 rounded-2xl border-2 p-5 transition-all ${
+      done ? 'step-done border-green-300' :
+      active ? 'border-amber-500 bg-white shadow-lg ring-4 ring-amber-100' :
+      'border-stone-200 bg-white opacity-70'
+    }`;
+
+    const actionsHtml = s.actions.map((a,i) => `<li class="mb-1">${i+1}. ${a}</li>`).join('');
+
+    card.innerHTML = `
+      <div class="flex items-start gap-4">
+        <input type="checkbox" ${done?'checked':''} onchange="toggle(${s.id})"
+               class="mt-1 w-6 h-6 cursor-pointer accent-green-600">
+        <div class="flex-1 step-content">
+          <div class="flex items-center gap-3 mb-2">
+            <span class="bg-stone-800 text-white px-3 py-1 rounded-full text-sm font-bold">Schritt ${s.id}</span>
+            <span class="text-xs bg-amber-100 text-amber-900 px-2 py-1 rounded">⏱ ${s.time}</span>
+            ${active ? '<span class="text-xs bg-amber-500 text-white px-2 py-1 rounded animate-pulse">▶ JETZT DRAN</span>' : ''}
+          </div>
+          <h3 class="text-xl font-bold mb-1">${s.title}</h3>
+          <p class="text-sm text-stone-600 mb-3">${s.why}</p>
+
+          <a href="${s.link}" target="_blank" rel="noopener"
+             class="inline-block bg-amber-600 hover:bg-amber-700 text-white px-5 py-3 rounded-lg font-bold mb-3">
+            ${s.linkLabel}
+          </a>
+          ${s.secondLink ? `
+          <a href="${s.secondLink}" target="_blank" rel="noopener"
+             class="inline-block bg-stone-800 hover:bg-stone-900 text-white px-5 py-3 rounded-lg font-bold mb-3 ml-2">
+            ${s.secondLinkLabel}
+          </a>` : ''}
+
+          <details class="mt-3 bg-stone-50 rounded-lg p-3">
+            <summary class="cursor-pointer font-semibold text-sm">📋 Schritt-für-Schritt Anleitung</summary>
+            <ol class="mt-2 text-sm text-stone-700 list-none pl-2">${actionsHtml}</ol>
+          </details>
+
+          ${s.copyText ? `
+          <div class="mt-3 bg-stone-900 text-stone-100 rounded-lg p-3">
+            <div class="flex justify-between items-center mb-2">
+              <span class="text-xs text-stone-400">${s.copyLabel}</span>
+              <button onclick="copy(this, document.getElementById('copy-${s.id}').textContent)"
+                      class="copy-btn bg-amber-600 hover:bg-amber-700 text-white px-3 py-1 rounded text-xs font-bold">
+                📋 Kopieren
+              </button>
+            </div>
+            <pre id="copy-${s.id}" class="text-xs">${s.copyText.replace(/</g,'&lt;')}</pre>
+          </div>` : ''}
+        </div>
+      </div>
+    `;
+    stepsEl.appendChild(card);
+  });
+
+  // Progress
+  const done = steps.filter(s => localStorage.getItem(`step-${s.id}`) === 'true').length;
+  document.getElementById('progress').textContent = done;
+  document.getElementById('progress-bar').style.width = (done / steps.length * 100) + '%';
+  document.getElementById('done-message').classList.toggle('hidden', done !== steps.length);
+}
+
+function toggle(id) {
+  const cur = localStorage.getItem(`step-${id}`) === 'true';
+  localStorage.setItem(`step-${id}`, !cur);
+  render();
+  if (!cur) {
+    const next = document.querySelector('.ring-amber-100');
+    if (next) next.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+}
+
+function resetAll() {
+  if (!confirm('Wirklich alle Haken zurücksetzen?')) return;
+  steps.forEach(s => localStorage.removeItem(`step-${s.id}`));
+  render();
+}
+
+function copy(btn, text) {
+  navigator.clipboard.writeText(text).then(() => {
+    const orig = btn.textContent;
+    btn.textContent = '✓ Kopiert!';
+    btn.classList.add('copied');
+    setTimeout(() => {
+      btn.textContent = orig;
+      btn.classList.remove('copied');
+    }, 1500);
+  });
+}
+
+render();
+</script>
+</body>
+</html>
