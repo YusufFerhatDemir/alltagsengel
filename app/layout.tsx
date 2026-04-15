@@ -12,6 +12,7 @@ import MetaPixel from '@/components/MetaPixel'
 import TikTokPixel from '@/components/TikTokPixel'
 import SessionKeepAlive from '@/components/SessionKeepAlive'
 import SplashController from '@/components/SplashController'
+import CapacitorLinkInterceptor from '@/components/CapacitorLinkInterceptor'
 import WhatsAppButton from '@/components/WhatsAppButton'
 import InstallPrompt from '@/components/InstallPrompt'
 
@@ -186,6 +187,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </LayoutWrapper>
         <SessionKeepAlive />
         <SplashController />
+        <CapacitorLinkInterceptor />
         <WhatsAppButton />
         <InstallPrompt />
         <CookieConsent />
