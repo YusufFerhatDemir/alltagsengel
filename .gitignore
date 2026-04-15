@@ -53,3 +53,5 @@ supabase/.temp/
 # Archive: alte Build-Caches (große Binaries, lokal halten)
 /archive/next-old/
 /archive/video-generation/
+.tmp_organizer.png
+xcode-state.png
