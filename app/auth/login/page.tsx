@@ -141,20 +141,27 @@ function LoginForm() {
   }
 
   async function getClientIP(): Promise<string> {
+    // Schnelle interne API zuerst (1.5s Timeout)
     try {
-      const res = await fetch('/api/client-ip', { signal: AbortSignal.timeout(3000) })
+      const res = await fetch('/api/client-ip', { signal: AbortSignal.timeout(1500) })
       if (res.ok) {
         const data = await res.json()
         if (data.ip) return data.ip
       }
     } catch {}
-    try {
-      const res = await fetch('https://ipapi.co/json/', { signal: AbortSignal.timeout(3000) })
-      if (res.ok) {
-        const data = await res.json()
-        return data.ip || ''
-      }
-    } catch {}
+    // ipapi.co nur im Web (NICHT in Capacitor — externe Calls hängen WebView)
+    const isNative =
+      typeof window !== 'undefined' &&
+      (window as any).Capacitor?.isNativePlatform?.()
+    if (!isNative) {
+      try {
+        const res = await fetch('https://ipapi.co/json/', { signal: AbortSignal.timeout(1500) })
+        if (res.ok) {
+          const data = await res.json()
+          return data.ip || ''
+        }
+      } catch {}
+    }
     return ''
   }
 

@@ -11,6 +11,7 @@ import GoogleTagManager from '@/components/GoogleTagManager'
 import MetaPixel from '@/components/MetaPixel'
 import TikTokPixel from '@/components/TikTokPixel'
 import SessionKeepAlive from '@/components/SessionKeepAlive'
+import SplashController from '@/components/SplashController'
 import WhatsAppButton from '@/components/WhatsAppButton'
 import InstallPrompt from '@/components/InstallPrompt'
 
@@ -184,6 +185,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           {children}
         </LayoutWrapper>
         <SessionKeepAlive />
+        <SplashController />
         <WhatsAppButton />
         <InstallPrompt />
         <CookieConsent />

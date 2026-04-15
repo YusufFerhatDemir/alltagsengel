@@ -7,15 +7,17 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        // Override point for customization after application launch.
-        // Request notification permissions
-        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { granted, error in
-            if granted {
-                DispatchQueue.main.async {
-                    UIApplication.shared.registerForRemoteNotifications()
-                }
-            }
-        }
+        // ═══════════════════════════════════════════════════════════════
+        // PROFESSIONAL APP-START — wie Uber / WhatsApp / Instagram
+        // ═══════════════════════════════════════════════════════════════
+        // Hier KEINE blockierenden Operationen!
+        // - Push-Permission wird NICHT beim Start gefragt (verzögert auf nach Login)
+        // - APNS-Registrierung erfolgt nur wenn User eingeloggt ist
+        // - Network-Calls werden in der WebView durch JS getriggert
+        //
+        // Diese Methode muss schnell zurückkehren (< 100ms),
+        // sonst killt iOS die App wegen "Watchdog Timeout".
+        // ═══════════════════════════════════════════════════════════════
         return true
     }
 

@@ -7,6 +7,13 @@ export default function VisitorTracker() {
   const pathname = usePathname()
 
   useEffect(() => {
+    // In Capacitor (iOS/Android) → Web-Tracking deaktivieren
+    // (App nutzt eigenes mis_auth_log + native Analytics)
+    const isNative =
+      typeof window !== 'undefined' &&
+      (window as any).Capacitor?.isNativePlatform?.()
+    if (isNative) return
+
     const consent = getCookieConsent()
     // DSGVO: Only track if EXPLICITLY accepted, not if decision is pending (null)
     if (consent !== 'accepted') return

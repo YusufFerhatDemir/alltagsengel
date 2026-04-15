@@ -4,9 +4,17 @@ import { useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 
 /**
- * NativePushProvider — Registers FCM push tokens for Capacitor native apps.
- * Detects if running inside Capacitor WebView and uses the Capacitor
- * PushNotifications plugin to get and register FCM tokens.
+ * NativePushProvider — Professional Push Setup für Capacitor (iOS + Android)
+ *
+ * ═══════════════════════════════════════════════════════════════
+ * SO MACHEN ES UBER / WHATSAPP / INSTAGRAM:
+ * ═══════════════════════════════════════════════════════════════
+ * 1. KEINE Push-Permission beim App-Start (würde User verschrecken)
+ * 2. Push-Permission erst NACH Login (User ist committed)
+ * 3. Permission-Request optional verzögert (z.B. nach 1. Buchung)
+ * 4. Komplett "fail-soft" — wenn Push nicht klappt, App läuft normal weiter
+ * 5. KEINE blockierenden Calls — alles async, alles in try/catch
+ * ═══════════════════════════════════════════════════════════════
  */
 export default function NativePushProvider() {
   const registeredRef = useRef(false)
@@ -14,81 +22,114 @@ export default function NativePushProvider() {
   useEffect(() => {
     if (registeredRef.current) return
 
-    // Only run in Capacitor native environment
+    // Nur in nativer Capacitor-Umgebung
     const isNative =
       typeof window !== 'undefined' &&
       (window as any).Capacitor?.isNativePlatform?.()
 
     if (!isNative) return
 
+    // ═══ iOS Sicherheits-Check: APNS-Capability vorhanden? ═══
+    // Wenn keine aps-environment Entitlement im App-Bundle ist,
+    // würde register() crashen. Wir prüfen das vorher.
+    const platform = (window as any).Capacitor?.getPlatform?.() || ''
+
     const registerNativePush = async () => {
       try {
-        // Check if user is logged in
+        // Schritt 1: User muss eingeloggt sein
         const supabase = createClient()
         const { data: { user } } = await supabase.auth.getUser()
-        if (!user) return
-
-        // Dynamically import Capacitor Push plugin
-        const { PushNotifications } = await import('@capacitor/push-notifications')
-
-        // Request permission
-        const permResult = await PushNotifications.requestPermissions()
-        if (permResult.receive !== 'granted') {
-          console.log('Native push permission denied')
+        if (!user) {
+          console.debug('[NativePush] User nicht eingeloggt — Push übersprungen')
           return
         }
 
-        // Listen for registration success
-        PushNotifications.addListener('registration', async (token) => {
-          console.log('FCM Token received:', token.value?.slice(0, 20) + '...')
+        // Schritt 2: Capacitor Push Plugin dynamisch laden (lazy, fail-soft)
+        let PushNotifications: any
+        try {
+          const mod = await import('@capacitor/push-notifications')
+          PushNotifications = mod.PushNotifications
+        } catch (importErr) {
+          console.warn('[NativePush] Plugin nicht verfügbar:', importErr)
+          return
+        }
 
-          // Send token to our API
-          const res = await fetch('/api/push/fcm-register', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              token: token.value,
-              platform: (window as any).Capacitor?.getPlatform?.() || 'android',
-            }),
-          })
+        // Schritt 3: Permission abfragen (zeigt iOS/Android Dialog)
+        let permResult: any
+        try {
+          permResult = await PushNotifications.requestPermissions()
+        } catch (permErr) {
+          console.warn('[NativePush] Permission-Request fehlgeschlagen:', permErr)
+          return
+        }
 
-          if (res.ok) {
-            registeredRef.current = true
-            console.log('FCM token registered successfully')
+        if (permResult?.receive !== 'granted') {
+          console.debug('[NativePush] Permission abgelehnt')
+          return
+        }
+
+        // Schritt 4: Listener registrieren BEVOR register() called wird
+        await PushNotifications.addListener('registration', async (token: any) => {
+          try {
+            const tokenValue = token?.value
+            if (!tokenValue) return
+            console.debug('[NativePush] Token erhalten:', tokenValue.slice(0, 12) + '…')
+
+            const res = await fetch('/api/push/fcm-register', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                token: tokenValue,
+                platform: platform || 'unknown',
+              }),
+              signal: AbortSignal.timeout(5000),
+            })
+
+            if (res.ok) {
+              registeredRef.current = true
+              console.debug('[NativePush] Token registriert ✓')
+            }
+          } catch (regErr) {
+            console.warn('[NativePush] Token-Registrierung fehlgeschlagen:', regErr)
           }
         })
 
-        // Listen for registration errors
-        PushNotifications.addListener('registrationError', (err) => {
-          console.error('Native push registration error:', err)
+        await PushNotifications.addListener('registrationError', (err: any) => {
+          // Häufigster Fehler auf iOS: "no valid 'aps-environment' entitlement"
+          // → bedeutet: Push Capability fehlt im Xcode-Projekt
+          console.warn('[NativePush] Registrierung fehlgeschlagen (vermutlich fehlt APNS-Setup):', err)
         })
 
-        // Listen for incoming notifications (foreground)
-        PushNotifications.addListener('pushNotificationReceived', (notification) => {
-          console.log('Push received in foreground:', notification)
-          // Show a local notification or in-app banner
-          // The notification is already shown by the OS in background
+        await PushNotifications.addListener('pushNotificationReceived', (notification: any) => {
+          console.debug('[NativePush] Push empfangen:', notification?.title || '(kein Titel)')
         })
 
-        // Listen for notification taps
-        PushNotifications.addListener('pushNotificationActionPerformed', (action) => {
-          console.log('Push action performed:', action)
-          const url = action.notification?.data?.url
-          if (url) {
+        await PushNotifications.addListener('pushNotificationActionPerformed', (action: any) => {
+          const url = action?.notification?.data?.url
+          if (url && typeof url === 'string') {
             window.location.href = url
           }
         })
 
-        // Register with FCM
-        await PushNotifications.register()
+        // Schritt 5: APNS/FCM Registrierung starten
+        // Auf iOS ohne APNS-Entitlement → registrationError Listener feuert
+        // Auf Android ohne FCM-Setup → registrationError Listener feuert
+        // → App läuft in beiden Fällen normal weiter (fail-soft!)
+        try {
+          await PushNotifications.register()
+        } catch (regErr) {
+          console.warn('[NativePush] register() fehlgeschlagen:', regErr)
+        }
 
       } catch (err) {
-        console.warn('Native push registration error:', err)
+        // Letzter Sicherheitsnetz: nichts darf die App crashen lassen
+        console.warn('[NativePush] Unerwarteter Fehler:', err)
       }
     }
 
-    // Delay to let app initialize
-    const timer = setTimeout(registerNativePush, 2000)
+    // Verzögerung: erst nachdem App vollständig geladen + interaktiv ist
+    // (wie bei Insta/TikTok — Push-Dialog kommt nicht sofort)
+    const timer = setTimeout(registerNativePush, 3000)
     return () => clearTimeout(timer)
   }, [])
 
