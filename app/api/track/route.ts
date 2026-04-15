@@ -129,7 +129,7 @@ export async function POST(req: NextRequest) {
     const lat = detailedGeo?.latitude || (vercelLat ? parseFloat(vercelLat) : null)
     const lng = detailedGeo?.longitude || (vercelLng ? parseFloat(vercelLng) : null)
 
-    // 1) visitors-Tabelle (erweitert mit PLZ, ISP, Stadtteil)
+    // 1) visitors-Tabelle (erweitert mit PLZ, ISP, Stadtteil, UTM/gclid für Google Ads Attribution)
     await supabase.from('visitors').insert({
       ip,
       country,
@@ -145,6 +145,14 @@ export async function POST(req: NextRequest) {
       user_agent: req.headers.get('user-agent') || '',
       referrer: body.referrer || '',
       page: body.page || '/',
+      landing_page: body.landing_page || null,
+      gclid: body.gclid || null,
+      fbclid: body.fbclid || null,
+      utm_source: body.utm_source || null,
+      utm_medium: body.utm_medium || null,
+      utm_campaign: body.utm_campaign || null,
+      utm_term: body.utm_term || null,
+      utm_content: body.utm_content || null,
     })
 
     // 2) visitor_locations befüllen (für MIS Analytics)

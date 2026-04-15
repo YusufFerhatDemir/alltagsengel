@@ -22,6 +22,27 @@ export default function VisitorTracker() {
     if (sessionStorage.getItem(key)) return
     sessionStorage.setItem(key, '1')
 
+    // ═══ UTM + gclid aus URL extrahieren und in sessionStorage speichern ═══
+    // Google Ads Click-ID (gclid) erlaubt Conversion-Attribution
+    try {
+      const params = new URLSearchParams(window.location.search)
+      const utmKeys = ['gclid', 'fbclid', 'utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content']
+      utmKeys.forEach(k => {
+        const v = params.get(k)
+        if (v) {
+          // Persist first-touch attribution (30 Tage)
+          sessionStorage.setItem(`attr_${k}`, v)
+          try { localStorage.setItem(`attr_${k}`, v) } catch {}
+        }
+      })
+    } catch {}
+
+    const getAttr = (k: string): string | null => {
+      try {
+        return sessionStorage.getItem(`attr_${k}`) || localStorage.getItem(`attr_${k}`)
+      } catch { return null }
+    }
+
     // Track visit
     fetch('/api/track', {
       method: 'POST',
@@ -30,6 +51,14 @@ export default function VisitorTracker() {
         page: pathname,
         referrer: document.referrer || '',
         userAgent: navigator.userAgent || '',
+        landing_page: window.location.pathname + window.location.search,
+        gclid: getAttr('gclid'),
+        fbclid: getAttr('fbclid'),
+        utm_source: getAttr('utm_source'),
+        utm_medium: getAttr('utm_medium'),
+        utm_campaign: getAttr('utm_campaign'),
+        utm_term: getAttr('utm_term'),
+        utm_content: getAttr('utm_content'),
       }),
     }).catch(() => {})
 

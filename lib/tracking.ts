@@ -45,13 +45,60 @@ function pushEvent(event: string, data?: Record<string, any>) {
   window.dataLayer.push({ event, ...data })
 }
 
-function gtagConversion(label: string, value?: number, currency = 'EUR') {
+/** Liest gclid / wbraid / gbraid aus Session- oder LocalStorage (persistiert 30 Tage) */
+function getAttributionData() {
+  if (typeof window === 'undefined') return {}
+  const get = (k: string): string | null => {
+    try {
+      return sessionStorage.getItem(`attr_${k}`) || localStorage.getItem(`attr_${k}`) || null
+    } catch {
+      return null
+    }
+  }
+  const gclid = get('gclid')
+  return gclid ? { gclid } : {}
+}
+
+function gtagConversion(label: string, value?: number, currency = 'EUR', userData?: { email?: string; phone?: string }) {
   if (typeof window === 'undefined' || typeof window.gtag !== 'function') return
-  window.gtag('event', 'conversion', {
+
+  const attribution = getAttributionData()
+
+  // Enhanced Conversions: Hashed User-Data verbessert Attribution trotz ITP (iOS Safari)
+  // Google Ads hasht Email/Phone automatisch, wenn sie als "normalisierte" Strings übergeben werden
+  const conversionData: Record<string, any> = {
     send_to: `${GOOGLE_ADS_ID}/${label}`,
     value: value ?? 0,
     currency,
-  })
+    ...attribution, // fügt gclid hinzu, falls vorhanden
+  }
+
+  if (userData?.email) {
+    conversionData.email = userData.email.trim().toLowerCase()
+  }
+  if (userData?.phone) {
+    conversionData.phone_number = userData.phone.replace(/\D/g, '')
+  }
+
+  window.gtag('event', 'conversion', conversionData)
+
+  // Offline-Conversion-Fallback: Server-seitig über /api/track-conversion senden (auch wenn gtag blockiert wird)
+  try {
+    fetch('/api/track-conversion', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        label,
+        value: value ?? 0,
+        currency,
+        gclid: attribution.gclid || null,
+        email: userData?.email || null,
+        phone: userData?.phone || null,
+        timestamp: new Date().toISOString(),
+      }),
+      keepalive: true,
+    }).catch(() => {})
+  } catch {}
 }
 
 // ═══ Tracking Functions ═══
