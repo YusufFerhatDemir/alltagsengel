@@ -23,6 +23,12 @@ export default function PushProvider() {
     if (subscribedRef.current) return
     if (!VAPID_PUBLIC_KEY) return
     if (!('serviceWorker' in navigator) || !('PushManager' in window)) return
+    // In Capacitor (iOS/Android) → Web-Push deaktivieren
+    // Native Push läuft via NativePushProvider (FCM/APNS)
+    const isNative =
+      typeof window !== 'undefined' &&
+      (window as any).Capacitor?.isNativePlatform?.()
+    if (isNative) return
 
     const subscribe = async () => {
       try {
