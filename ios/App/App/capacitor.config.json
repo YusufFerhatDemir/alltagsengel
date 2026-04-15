@@ -1,51 +1,62 @@
 {
-  "appId": "care.alltagsengel.app",
-  "appName": "AlltagsEngel",
-  "webDir": "out",
-  "server": {
-    "url": "https://alltagsengel.care",
-    "cleartext": false,
-    "iosScheme": "https",
-    "androidScheme": "https"
-  },
-  "ios": {
-    "contentInset": "automatic",
-    "preferredContentMode": "mobile",
-    "backgroundColor": "#1A1612",
-    "scheme": "AlltagsEngel",
-    "limitsNavigationsToAppBoundDomains": false,
-    "scrollEnabled": true,
-    "webContentsDebuggingEnabled": false
-  },
-  "android": {
-    "backgroundColor": "#1A1612",
-    "allowMixedContent": false,
-    "captureInput": true,
-    "webContentsDebuggingEnabled": false
-  },
-  "plugins": {
-    "SplashScreen": {
-      "launchAutoHide": false,
-      "launchShowDuration": 0,
-      "backgroundColor": "#1A1612",
-      "showSpinner": true,
-      "spinnerColor": "#C9963C",
-      "splashFullScreen": true,
-      "splashImmersive": true,
-      "androidScaleType": "CENTER_CROP",
-      "androidSpinnerStyle": "large",
-      "iosSpinnerStyle": "large"
-    },
-    "StatusBar": {
-      "style": "DARK",
-      "backgroundColor": "#1A1612"
-    },
-    "Keyboard": {
-      "resize": "body",
-      "resizeOnFullScreen": true
-    },
-    "PushNotifications": {
-      "presentationOptions": ["badge", "sound", "alert"]
-    }
-  }
+	"appId": "care.alltagsengel.app",
+	"appName": "AlltagsEngel",
+	"webDir": "out",
+	"server": {
+		"url": "https://alltagsengel.care",
+		"cleartext": false,
+		"iosScheme": "https",
+		"androidScheme": "https"
+	},
+	"ios": {
+		"contentInset": "automatic",
+		"preferredContentMode": "mobile",
+		"backgroundColor": "#1A1612",
+		"scheme": "AlltagsEngel",
+		"limitsNavigationsToAppBoundDomains": false,
+		"scrollEnabled": true,
+		"webContentsDebuggingEnabled": false
+	},
+	"android": {
+		"backgroundColor": "#1A1612",
+		"allowMixedContent": false,
+		"captureInput": true,
+		"webContentsDebuggingEnabled": false
+	},
+	"plugins": {
+		"SplashScreen": {
+			"launchAutoHide": false,
+			"launchShowDuration": 0,
+			"backgroundColor": "#1A1612",
+			"showSpinner": true,
+			"spinnerColor": "#C9963C",
+			"splashFullScreen": true,
+			"splashImmersive": true,
+			"androidScaleType": "CENTER_CROP",
+			"androidSpinnerStyle": "large",
+			"iosSpinnerStyle": "large"
+		},
+		"StatusBar": {
+			"style": "DARK",
+			"backgroundColor": "#1A1612"
+		},
+		"Keyboard": {
+			"resize": "body",
+			"resizeOnFullScreen": true
+		},
+		"PushNotifications": {
+			"presentationOptions": [
+				"badge",
+				"sound",
+				"alert"
+			]
+		}
+	},
+	"packageClassList": [
+		"HapticsPlugin",
+		"KeyboardPlugin",
+		"PushNotificationsPlugin",
+		"SplashScreenPlugin",
+		"StatusBarPlugin"
+	]
 }
