@@ -1875,3 +1875,78 @@ Krankenfahrten ab 15 € über die Pflegekasse. Jetzt in Frankfurt!
 Dieser Lauf erfolgte automatisch um 09:06 Uhr — ~2h vor dem geplanten Posting-Zeitpunkt. Die Inhalte sind vorbereitet. Der eigentliche Upload zu Meta/TikTok erfordert manuelle Anmeldung und wurde **nicht** automatisch durchgeführt, da dafür aktive Browser-Sessions mit 2FA benötigt würden.
 
 **🎉 HEUTE IST LAUNCH DAY — AlltagsEngel geht heute live in Frankfurt!**
+
+---
+
+## 15.04.2026 — Di W1 — 4 Aufgaben Umfrage (Instagram/Facebook)
+
+**Status:** 📋 Vorbereitet — Upload um 12:00 Uhr CEST geplant (Scheduler lief 09:10 Uhr)
+**Plattform:** Instagram + Facebook (via Meta Business Suite)
+**Typ:** Grafik-Post (Karussell möglich)
+**Datei:** `social-media-grafiken/W1-DI-4aufgaben.png`
+**Uhrzeit (DE):** 12:00 Uhr CEST
+**Uhrzeit (TR):** 13:00 Uhr CEST (separater Post, 1 Stunde später)
+**Content Calendar:** Woche 1 — Vertrauen aufbauen
+
+### Caption (DE) — 12:00 Uhr:
+
+```
+Welche dieser 4 Aufgaben würdest du dir am liebsten abnehmen lassen?
+
+A) Einkaufen gehen 🛒
+B) Arzttermin fahren 🏥
+C) Haushalt erledigen 🏠
+D) Jemand zum Reden 💬
+
+Alltagsengel erledigt alle vier — für Menschen mit Pflegegrad in Frankfurt.
+131 Euro/Monat über die Pflegekasse (§45b).
+
+www.alltagsengel.care
+info@alltagsengel.care
+
+#Alltagsbegleitung #Pflegegrad #Frankfurt #Entlastungsbetrag #45b #Senioren #Alltagshilfe #AlltagsEngel #Pflegekasse #Seniorenhilfe #FrankfurtAmMain
+```
+
+### Caption (TR) — 13:00 Uhr (separater Post):
+
+```
+Bu 4 görevden hangisini birinin senin yerine yapmasını en çok isterdin?
+
+A) Alışveriş yapmak 🛒
+B) Doktor randevusuna gitmek 🏥
+C) Ev işlerini halletmek 🏠
+D) Konuşacak biri 💬
+
+Alltagsengel dördünü de yapıyor — Frankfurt'ta bakım derecesi olanlar için.
+Aylık 131 Euro bakım sigortasından (§45b).
+
+www.alltagsengel.care
+info@alltagsengel.care
+
+#GünlükYardım #BakımDerecesi #Frankfurt #Yaşlılar #Alltagsengel #YaşlıBakımı #TürklerFrankfurt #Bakım
+```
+
+### Meta Business Suite — Upload-Anleitung
+
+1. **business.facebook.com** öffnen → Posts erstellen → Instagram + Facebook auswählen
+2. Bild-Upload: `marketing/social-media-grafiken/W1-DI-4aufgaben.png`
+3. DE-Caption (siehe oben) einfügen
+4. Veröffentlichung planen: **15.04.2026, 12:00 Uhr CEST**
+5. Zweiter Post mit TR-Caption für **13:00 Uhr CEST** planen
+6. Engagement-Hinweis: Da es ein Umfrage-Post ist — in der ersten Stunde nach Veröffentlichung aktiv auf Kommentare antworten (Algorithmus-Boost).
+
+### Strategischer Hinweis
+
+Dies ist der erste Engagement-Post nach dem gestrigen Launch (Krankenfahrt-Video).
+Ziel heute: **Community-Aktivierung** durch Multiple-Choice-Frage in Kommentaren.
+KPI: Kommentar-Rate (Ziel ≥ 3%), Speicherungen, Profilbesuche.
+
+### TikTok
+
+Laut Content Calendar ist der heutige Post **nur IG Post / FB** (kein TikTok für Di 15.04). TikTok-Post erfolgt morgen (Mi 16.04) mit Video #2 "Sofa Gespräch".
+
+### Hinweis (Scheduler-Lauf 09:10 CEST)
+
+Dieser Lauf erfolgte automatisch um 09:10 Uhr CEST — rund 2:50 Stunden vor dem geplanten Posting-Zeitpunkt (12:00 Uhr). Die Inhalte (Grafik + DE/TR Captions + Hashtags) sind vollständig vorbereitet. Der eigentliche Upload zu Meta Business Suite erfordert Login + 2FA und muss manuell oder via geplantem Post in Meta Business Suite erfolgen.
+
+**Nächster Post:** Mi 16.04.2026 — IG Reel / TT / FB — Video #2 (Sofa Gespräch) — 18:00 DE / 19:00 TR
