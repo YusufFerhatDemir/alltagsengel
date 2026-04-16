@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { sendEmailNotification } from '@/lib/notifications'
+import { validatePassword, isCommonPassword } from '@/lib/password-validation'
 
 export async function POST(request: NextRequest) {
   try {
@@ -28,8 +29,17 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'userId/email und newPassword erforderlich' }, { status: 400 })
   }
 
-  if (newPassword.length < 6) {
-    return NextResponse.json({ error: 'Passwort muss mindestens 6 Zeichen lang sein' }, { status: 400 })
+  // Strenge Passwort-Validierung (gleiche Regeln wie bei Registrierung)
+  const passwordCheck = validatePassword(newPassword)
+  if (!passwordCheck.valid) {
+    return NextResponse.json({
+      error: 'Passwort zu schwach: ' + passwordCheck.errors.join(', ')
+    }, { status: 400 })
+  }
+  if (isCommonPassword(newPassword)) {
+    return NextResponse.json({
+      error: 'Dieses Passwort ist zu häufig und unsicher'
+    }, { status: 400 })
   }
 
   const adminSupabase = createAdminClient()

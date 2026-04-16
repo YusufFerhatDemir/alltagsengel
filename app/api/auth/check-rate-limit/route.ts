@@ -1,32 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 // ═══════════════════════════════════════════════════════════
-// Server-Side Login Rate Limiter
+// Server-Side Login Rate Limiter (Persistent via Supabase)
 // Max 5 Versuche pro IP + E-Mail in 15 Minuten
 // Nach 5 Fehlversuchen: 15 Min Sperre
 // Nach 10 Fehlversuchen: 60 Min Sperre
 // Nach 20 Fehlversuchen: 24h Sperre (Brute-Force-Verdacht)
 // ═══════════════════════════════════════════════════════════
-
-interface RateLimitEntry {
-  attempts: number
-  firstAttempt: number
-  lockedUntil: number
-}
-
-// In-Memory Store (wird bei Serverless-Restart zurückgesetzt — für Produktion: Redis/Supabase)
-const loginAttempts = new Map<string, RateLimitEntry>()
-
-// Aufräumen: Alte Einträge alle 10 Minuten entfernen
-setInterval(() => {
-  const now = Date.now()
-  for (const [key, entry] of loginAttempts.entries()) {
-    // Einträge älter als 24h entfernen
-    if (now - entry.firstAttempt > 86400000 && now > entry.lockedUntil) {
-      loginAttempts.delete(key)
-    }
-  }
-}, 600000)
 
 function getClientIP(req: NextRequest): string {
   return (
@@ -43,6 +24,34 @@ function getLockDuration(attempts: number): number {
   return 0
 }
 
+function formatLockMessage(remainingMs: number): string {
+  const remainingMin = Math.ceil(remainingMs / 60000)
+  return remainingMin > 60
+    ? `Zu viele Fehlversuche. Konto für ${Math.ceil(remainingMin / 60)} Stunden gesperrt.`
+    : `Zu viele Fehlversuche. Bitte warten Sie ${remainingMin} Minuten.`
+}
+
+async function getEntry(supabase: any, key: string) {
+  const { data } = await supabase
+    .from('login_rate_limits')
+    .select('*')
+    .eq('key', key)
+    .single()
+  return data
+}
+
+async function upsertEntry(supabase: any, key: string, attempts: number, firstAttempt: string, lockedUntil: string) {
+  await supabase
+    .from('login_rate_limits')
+    .upsert({
+      key,
+      attempts,
+      first_attempt: firstAttempt,
+      locked_until: lockedUntil,
+      updated_at: new Date().toISOString(),
+    }, { onConflict: 'key' })
+}
+
 export async function POST(req: NextRequest) {
   try {
     const { email, action } = await req.json()
@@ -52,70 +61,71 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Missing data' }, { status: 400 })
     }
 
-    // Composite Key: IP + E-Mail (schützt gegen IP-Wechsel UND Credential Stuffing)
+    const supabase = createAdminClient()
     const keyByIP = `ip:${ip}`
     const keyByEmail = `email:${email.toLowerCase()}`
+    const now = new Date()
 
     if (action === 'check') {
-      // Prüfe ob gesperrt
-      const now = Date.now()
-
       for (const key of [keyByIP, keyByEmail]) {
-        const entry = loginAttempts.get(key)
-        if (entry && entry.lockedUntil > now) {
-          const remainingMs = entry.lockedUntil - now
-          const remainingMin = Math.ceil(remainingMs / 60000)
+        const entry = await getEntry(supabase, key)
+        if (entry && new Date(entry.locked_until) > now) {
+          const remainingMs = new Date(entry.locked_until).getTime() - now.getTime()
           return NextResponse.json({
             allowed: false,
             locked: true,
             remainingSeconds: Math.ceil(remainingMs / 1000),
-            message: remainingMin > 60
-              ? `Zu viele Fehlversuche. Konto für ${Math.ceil(remainingMin / 60)} Stunden gesperrt.`
-              : `Zu viele Fehlversuche. Bitte warten Sie ${remainingMin} Minuten.`,
+            message: formatLockMessage(remainingMs),
             attempts: entry.attempts,
           })
         }
       }
-
       return NextResponse.json({ allowed: true })
     }
 
     if (action === 'fail') {
-      const now = Date.now()
-
       for (const key of [keyByIP, keyByEmail]) {
-        const entry = loginAttempts.get(key) || { attempts: 0, firstAttempt: now, lockedUntil: 0 }
+        let entry = await getEntry(supabase, key)
 
-        // Reset wenn Window abgelaufen (24h) und nicht gesperrt
-        if (now - entry.firstAttempt > 86400000 && now > entry.lockedUntil) {
-          entry.attempts = 0
-          entry.firstAttempt = now
-          entry.lockedUntil = 0
+        let attempts = 0
+        let firstAttempt = now.toISOString()
+        let lockedUntil = now.toISOString()
+
+        if (entry) {
+          const entryAge = now.getTime() - new Date(entry.first_attempt).getTime()
+          const stillLocked = new Date(entry.locked_until) > now
+
+          // Reset wenn Window abgelaufen (24h) und nicht gesperrt
+          if (entryAge > 86400000 && !stillLocked) {
+            attempts = 1
+            firstAttempt = now.toISOString()
+            lockedUntil = now.toISOString()
+          } else {
+            attempts = entry.attempts + 1
+            firstAttempt = entry.first_attempt
+            const lockDuration = getLockDuration(attempts)
+            lockedUntil = lockDuration > 0
+              ? new Date(now.getTime() + lockDuration).toISOString()
+              : entry.locked_until
+          }
+        } else {
+          attempts = 1
         }
 
-        entry.attempts++
-
-        const lockDuration = getLockDuration(entry.attempts)
-        if (lockDuration > 0) {
-          entry.lockedUntil = now + lockDuration
-        }
-
-        loginAttempts.set(key, entry)
+        await upsertEntry(supabase, key, attempts, firstAttempt, lockedUntil)
       }
 
-      const ipEntry = loginAttempts.get(keyByIP)
-      const emailEntry = loginAttempts.get(keyByEmail)
+      // Aktuelle Werte für Response laden
+      const ipEntry = await getEntry(supabase, keyByIP)
+      const emailEntry = await getEntry(supabase, keyByEmail)
       const maxAttempts = Math.max(ipEntry?.attempts || 0, emailEntry?.attempts || 0)
 
       if (maxAttempts >= 5) {
         const lockDuration = getLockDuration(maxAttempts)
-        const remainingMin = Math.ceil(lockDuration / 60000)
         return NextResponse.json({
           locked: true,
           remainingSeconds: Math.ceil(lockDuration / 1000),
-          message: remainingMin > 60
-            ? `Zu viele Fehlversuche. Konto für ${Math.ceil(remainingMin / 60)} Stunden gesperrt.`
-            : `Zu viele Fehlversuche. Bitte warten Sie ${remainingMin} Minuten.`,
+          message: formatLockMessage(lockDuration),
           attempts: maxAttempts,
         })
       }
@@ -131,9 +141,9 @@ export async function POST(req: NextRequest) {
     }
 
     if (action === 'success') {
-      // Bei erfolgreichem Login: E-Mail-Counter zurücksetzen
-      loginAttempts.delete(keyByEmail)
-      // IP-Counter NICHT zurücksetzen (schützt gegen Credential Stuffing)
+      // Bei erfolgreichem Login: E-Mail-Counter löschen
+      await supabase.from('login_rate_limits').delete().eq('key', keyByEmail)
+      // IP-Counter NICHT löschen (schützt gegen Credential Stuffing)
       return NextResponse.json({ ok: true })
     }
 
