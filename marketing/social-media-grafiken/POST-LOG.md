@@ -1950,3 +1950,62 @@ Laut Content Calendar ist der heutige Post **nur IG Post / FB** (kein TikTok fü
 Dieser Lauf erfolgte automatisch um 09:10 Uhr CEST — rund 2:50 Stunden vor dem geplanten Posting-Zeitpunkt (12:00 Uhr). Die Inhalte (Grafik + DE/TR Captions + Hashtags) sind vollständig vorbereitet. Der eigentliche Upload zu Meta Business Suite erfordert Login + 2FA und muss manuell oder via geplantem Post in Meta Business Suite erfolgen.
 
 **Nächster Post:** Mi 16.04.2026 — IG Reel / TT / FB — Video #2 (Sofa Gespräch) — 18:00 DE / 19:00 TR
+
+---
+
+## 16.04.2026 — Video Reel: Sofa Gespräch (Instagram/Facebook/TikTok)
+
+**Status:** ⏳ Caption vorbereitet — Video-Upload manuell erforderlich
+**Plattform:** Instagram Reel + Facebook Reel + TikTok
+**Typ:** Video (Reel)
+**Datei:** REELS-gesellschaft-neu.mp4 (Alternativ für Video #2 "Sofa Gespräch" — Original 23-35-51.mov nicht im Repo)
+**Geplante Uhrzeit:** 18:00 (DE) / 19:00 (TR)
+**Content Calendar Woche:** Woche 1 — Vertrauen aufbauen
+
+**Caption (DE):**
+```
+Manchmal hilft schon ein Gespräch.
+Ein Engel, der zuhört — für dich oder jemanden, den du liebst.
+
+Alltagsengel: Begleitung mit Herz.
+
+Jetzt buchen: www.alltagsengel.care
+info@alltagsengel.care
+
+#Gespräch #Seniorenbetreuung #Frankfurt #Alltagsengel #Zuhören #MenschlicheNähe #Pflegehilfe #Begleitung
+```
+
+**Caption (TR):**
+```
+Bazen sadece bir sohbet yeter.
+Dinleyen bir melek — senin için ya da sevdiğin biri için.
+
+Alltagsengel: Kalpten refakat.
+
+Hemen rezervasyon yap: www.alltagsengel.care
+info@alltagsengel.care
+
+#Sohbet #YaşlıBakımı #Frankfurt #Alltagsengel #Dinlemek #İnsaniYakınlık #BakımYardımı
+```
+
+### Meta Business Suite
+
+Caption wurde im Reel Composer eingegeben (DE-Version). Video-Upload konnte nicht automatisiert werden — Meta Business Suite erfordert nativen Datei-Dialog, der nicht programmgesteuert bedient werden kann. 
+
+**Manuelle Schritte:**
+1. Im Reel Composer auf "Video hinzufügen" klicken
+2. Datei `REELS-gesellschaft-neu.mp4` aus `marketing/social-media-grafiken/` hochladen
+3. "Weiter" → Veröffentlichen oder planen für 18:00 Uhr
+
+### TikTok
+
+TikTok-Upload ebenfalls manuell erforderlich:
+1. TikTok Creator Center öffnen
+2. Gleiche Videodatei hochladen
+3. TR-Caption verwenden (oder DE zuerst, TR als Kommentar)
+
+### Hinweis (Scheduler-Lauf 09:13 CEST)
+
+Dieser Lauf erfolgte automatisch um ca. 09:13 Uhr CEST — rund 8:47 Stunden vor dem geplanten Posting-Zeitpunkt (18:00 Uhr). Die DE-Caption wurde bereits im Meta Business Suite Reel Composer eingetragen. Video-Upload und finale Veröffentlichung müssen manuell erfolgen.
+
+**Nächster Post:** Do 17.04.2026 — IG Post / FB — Grafik W1-DO-kennstdujemanden.png — 10:00 DE / 11:00 TR
