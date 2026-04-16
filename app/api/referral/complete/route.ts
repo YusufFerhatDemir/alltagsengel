@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextResponse, NextRequest } from 'next/server'
+import { createClient as createServerClient } from '@/lib/supabase/server'
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -8,13 +9,26 @@ const supabaseAdmin = createClient(
 
 // ═══ POST: Referral abschließen nach erster Buchung ═══
 // Wird aufgerufen wenn ein referred User seine erste Buchung abschließt
+// Geschützt: Nutzer muss authentifiziert sein und kann nur eigene Referrals abschließen
 export async function POST(request: NextRequest) {
   try {
+    // Auth-Prüfung: Nur eingeloggte Nutzer
+    const supabase = await createServerClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      return NextResponse.json({ error: 'Nicht authentifiziert' }, { status: 401 })
+    }
+
     const body = await request.json()
     const { user_id } = body
 
     if (!user_id) {
       return NextResponse.json({ error: 'user_id erforderlich' }, { status: 400 })
+    }
+
+    // Sicherheit: Nutzer kann nur eigene Referrals abschließen
+    if (user.id !== user_id) {
+      return NextResponse.json({ error: 'Nicht autorisiert für diesen Nutzer' }, { status: 403 })
     }
 
     // Pending Referral für diesen User finden

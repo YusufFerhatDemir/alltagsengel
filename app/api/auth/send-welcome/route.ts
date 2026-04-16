@@ -1,16 +1,30 @@
 import { NextResponse } from 'next/server'
 import { sendEmailNotification } from '@/lib/notifications'
+import { createClient } from '@/lib/supabase/server'
 
 /**
  * POST /api/auth/send-welcome
  * Sends a branded welcome email with usage guide to newly registered users via Resend.
  * Different content for Engel, Kunde, and Fahrer.
+ * Geschützt: Nur authentifizierte Nutzer können ihre eigene Welcome-Mail auslösen.
  */
 export async function POST(request: Request) {
   try {
+    // Auth-Prüfung: Nur eingeloggte Nutzer dürfen Welcome-Mail auslösen
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      return NextResponse.json({ error: 'Nicht authentifiziert' }, { status: 401 })
+    }
+
     const { email, firstName, role } = await request.json()
     if (!email) {
       return NextResponse.json({ error: 'E-Mail erforderlich' }, { status: 400 })
+    }
+
+    // Sicherheit: Nutzer kann nur seine eigene E-Mail-Adresse verwenden
+    if (user.email !== email) {
+      return NextResponse.json({ error: 'Nicht autorisiert für diese E-Mail' }, { status: 403 })
     }
 
     const name = firstName || 'Nutzer'
