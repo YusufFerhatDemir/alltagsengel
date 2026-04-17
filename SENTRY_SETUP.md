@@ -45,11 +45,16 @@ Danach: Deployment neu triggern (Vercel → Deployments → `...` → "Redeploy"
 
 ## 4. Erstes Test-Event auslösen
 
-Nach Redeploy:
+Nach Redeploy stehen dir **zwei** Smoke-Test-Wege zur Verfügung:
 
-1. Öffne `https://alltagsengel.care/sentry-example` (falls wir den Test-Route dazufügen — nicht Pflicht) **oder** öffne eine Seite, wirf eine bekannte Exception:
+**Weg A — Smoke-Test-Seite (empfohlen):**
+1. Öffne `https://alltagsengel.care/sentry-example`
+2. Klick auf **"Client-Error auslösen"** → löst einen React-Render-Throw aus → erscheint als Browser-Issue in Sentry
+3. Klick auf **"Server-Error auslösen"** → POST an `/sentry-example/api` → wirft serverseitig einen TypeError → erscheint als Server-Issue in Sentry
+4. Die Seite ist via `robots.ts` auf Disallow und hat keinen Navigationspfad — sie bleibt als permanentes Debug-Tool liegen.
+
+**Weg B — manuell in der Browser-Konsole:**
    ```js
-   // In der Browser-Konsole auf einer beliebigen Seite:
    throw new Error('Sentry-Smoke-Test ' + Date.now())
    ```
 2. In Sentry-Dashboard → Issues → sollte innerhalb von 30 Sekunden ein neues Issue erscheinen.

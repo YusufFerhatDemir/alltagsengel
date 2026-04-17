@@ -49,7 +49,7 @@ Dieses Dokument ist die **Check-Liste**, die ich durch alle drei Ebenen gezogen 
 | AUTH-002 Roh-Error-Objekte im Log | ✅ behoben (sanitized) | — |
 | AUTH-004 Admin-Reset sendet PW | ✅ behoben (Recovery-Link) | — |
 | AUTH-005 Email-Enumeration | ✅ behoben (unified errors + silent redirect) | — |
-| AUTH-003 Delete-Account ohne Re-Auth | ⚠️ offen | P1 |
+| AUTH-003 Delete-Account ohne Re-Auth | ✅ behoben (Re-Auth + erweiterte Kaskade + Playwright-Test) | — |
 | AUTH-006..012 (s. AUTH_AUDIT.md) | ⚠️ teilweise offen | P1/P2 |
 
 **Empfehlung:** AUTH-003 nächster Sprint. Ein Angreifer mit kurzem Gerät-Zugriff könnte sonst "Konto löschen" klicken und alle Engel-Daten/Dokumente unwiderruflich zerstören.
@@ -180,10 +180,11 @@ Dieses Dokument ist die **Check-Liste**, die ich durch alle drei Ebenen gezogen 
 2. **Playwright lokal** auf deinem Mac: `npm run test:e2e:install && npm run test:e2e` — verifiziert AUTH-005/011 Regressions
 
 ### P1 (nächste 2 Wochen)
-1. `AUTH-003` — Re-Auth vor Konto-Löschung (Passwort-Eingabe als Confirm-Schritt)
+1. ~~`AUTH-003` — Re-Auth vor Konto-Löschung~~ ✅ 2026-04-17
 2. `next build --profile` Report + Bundle-Size-Optimierung (Ziel: Landing <150 kB)
 3. RLS-Policy-Matrix: Script das alle Tabellen gegen ihre Policies prüft
 4. `/impressum` + `/agb` gegen aktuelle Rechtsprechung prüfen
+5. AUTH-003 Rest: Soft-Delete + Grace-Period + E-Mail-Bestätigung
 
 ### P2 (Backlog)
 1. hreflang de/at/ch
