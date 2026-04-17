@@ -195,10 +195,41 @@ Route (app)                              Size     First Load JS
 - [x] Statische Bundle-Analyse durchgeführt
 - [x] Tesseract-Static-Import als P1-Performance-Issue dokumentiert
 - [x] Build-Ignore-Flags als Sprint-3-Schuld festgehalten
+- [x] Tesseract auf `dynamic import` umgestellt (2026-04-17, siehe Mitigation-Log)
 - [ ] `@next/bundle-analyzer` hinzugefügt + einmal lokal laufen lassen
 - [ ] First-Load-JS pro Route in CI-Artefakt loggen (z.B. via
   `next build` Output in PR-Kommentar — GitHub-Action `next-bundle-analyzer-action`)
-- [ ] Tesseract auf `dynamic import` umgestellt (separater PR)
+
+---
+
+## Mitigation-Log
+
+### 2026-04-17 — Tesseract auf dynamic import umgestellt (PERF-P1)
+
+**Vorher** (`app/kunde/notfall/page.tsx`, Zeile 6):
+```ts
+import Tesseract from 'tesseract.js'
+```
+
+**Nachher** (in `handlePhotoScan`, direkt vor `Tesseract.recognize(...)`):
+```ts
+// Dynamic Import: Tesseract (~2.3 MB WASM) erst laden, wenn Nutzer wirklich scannt
+const { default: Tesseract } = await import('tesseract.js')
+const result = await Tesseract.recognize(file, 'deu', { logger: ... })
+```
+
+**Begründung:** Tesseract wird nur im OCR-Pfad gebraucht (Kamera-Button „📷 Foto
+aufnehmen") — nicht beim Seitenaufruf. Durch `dynamic import` fällt das ~2.3 MB
+WASM-Paket aus dem First-Load-JS der Route `/kunde/notfall` raus und lädt erst
+nach Interaktion. Erwartete First-Load-JS-Reduktion: von ~2.5 MB → ~200 KB für
+diese Route.
+
+**Verifiziert:** `npx tsc --noEmit` ohne neue Fehler (nur vorbestehende Fehler in
+`archive/`, unrelated). Runtime-Smoketest steht noch aus — erfolgt beim nächsten
+`npm run build` + Gerätetest.
+
+**Bundle-Analyzer-Run steht noch aus** — ohne kann die tatsächliche Ersparnis
+nicht auf 10 KB genau berichtet werden.
 
 ---
 
