@@ -82,7 +82,7 @@ export default function ChatDetailPage() {
       // 1. Versuche Buchung zu finden (Engel-Chat)
       const { data: booking, error: bookingErr } = await supabase
         .from('bookings')
-        .select('id, angel_id, customer_id, angels:angel_id(user_id, profiles(first_name, last_name))')
+        .select('id, angel_id, customer_id, angels:angel_id(id, profiles(first_name, last_name))')
         .eq('id', chatId)
         .maybeSingle()
 
@@ -94,7 +94,7 @@ export default function ChatDetailPage() {
         const prof = angel?.profiles
           ? (Array.isArray(angel.profiles) ? angel.profiles[0] : angel.profiles)
           : null
-        const angelUserId = angel?.user_id || prof?.id || ''
+        const angelUserId = angel?.id || prof?.id || ''
         setPartnerId(angelUserId)
         setPartnerName(prof ? `${prof.first_name} ${prof.last_name?.[0] || ''}.` : 'Engel')
 
