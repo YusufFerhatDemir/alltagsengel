@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { withSentryConfig } from "@sentry/nextjs";
 
 const nextConfig: NextConfig = {
   // @ts-expect-error – eslint key valid at runtime, missing from types in Next 16
@@ -51,4 +52,29 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default withSentryConfig(nextConfig, {
+  // Sentry Build-Time-Optionen
+  org: process.env.SENTRY_ORG,
+  project: process.env.SENTRY_PROJECT,
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+
+  // Logs nur in CI ausgeben
+  silent: !process.env.CI,
+
+  // Alle Client-Files (inkl. Worker/Service-Worker) einbeziehen
+  widenClientFileUpload: true,
+
+  // Source-Maps nach Upload löschen (nicht öffentlich ausliefern)
+  sourcemaps: {
+    deleteSourcemapsAfterUpload: true,
+  },
+
+  // Sentry-SDK-Logger aus Production-Bundle entfernen (kleiner, weniger Noise)
+  disableLogger: true,
+
+  // Vercel-Cron-Monitoring automatisch aktivieren
+  automaticVercelMonitors: true,
+
+  // Tunnel-Route umgeht AdBlocker (client events gehen über eigene Domain)
+  tunnelRoute: '/monitoring',
+});

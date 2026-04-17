@@ -19,6 +19,13 @@ npm-debug.log*
 .env
 .env.*
 .env*.local
+# Exception: template with placeholders (no real secrets)
+!.env.example
+
+# Playwright / E2E
+/test-results/
+/playwright-report/
+/playwright/.cache/
 
 # Firebase service account keys (NEVER commit!)
 *firebase-adminsdk*.json
