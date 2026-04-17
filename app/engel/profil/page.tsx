@@ -18,6 +18,8 @@ export default function MeinProfilPage() {
   const [loggingOut, setLoggingOut] = useState(false)
   const [deleteConfirm, setDeleteConfirm] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [deletePassword, setDeletePassword] = useState('')
+  const [deleteError, setDeleteError] = useState('')
 
   const toggle = (key: keyof typeof settings) => {
     setSettings(prev => ({ ...prev, [key]: !prev[key] }))
@@ -178,13 +180,59 @@ export default function MeinProfilPage() {
         }}>Konto und Daten löschen</button>
 
         {deleteConfirm && (
-          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.7)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }} onClick={() => !deleting && setDeleteConfirm(false)}>
+          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.7)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }} onClick={() => { if (!deleting) { setDeleteConfirm(false); setDeletePassword(''); setDeleteError('') } }}>
             <div onClick={e => e.stopPropagation()} style={{ background: 'var(--coal2)', borderRadius: 18, padding: 24, maxWidth: 340, width: '100%', border: '1px solid rgba(255,80,80,.2)' }}>
               <div style={{ fontSize: 16, fontWeight: 600, color: '#ff6b6b', marginBottom: 8 }}>Konto löschen?</div>
-              <p style={{ fontSize: 13, color: 'var(--ink3)', lineHeight: 1.5, marginBottom: 20 }}>Alle deine Daten werden unwiderruflich gelöscht. Diese Aktion kann nicht rückgängig gemacht werden.</p>
+              <p style={{ fontSize: 13, color: 'var(--ink3)', lineHeight: 1.5, marginBottom: 14 }}>Alle deine Daten werden unwiderruflich gelöscht. Diese Aktion kann nicht rückgängig gemacht werden.</p>
+              <label style={{ fontSize: 12, color: 'var(--ink3)', fontWeight: 500, display: 'block', marginBottom: 6 }}>
+                Zur Bestätigung: Dein aktuelles Passwort
+              </label>
+              <input
+                type="password"
+                autoFocus
+                autoComplete="current-password"
+                value={deletePassword}
+                onChange={(e) => { setDeletePassword(e.target.value); setDeleteError('') }}
+                disabled={deleting}
+                placeholder="Passwort"
+                style={{
+                  width: '100%', padding: '12px 14px', borderRadius: 10,
+                  border: `1px solid ${deleteError ? 'rgba(255,80,80,.5)' : 'var(--border2)'}`,
+                  background: 'var(--coal)', color: 'var(--ink)', fontSize: 14,
+                  marginBottom: deleteError ? 6 : 16, outline: 'none',
+                }}
+              />
+              {deleteError && (
+                <div style={{ fontSize: 12, color: '#ff6b6b', marginBottom: 14 }}>{deleteError}</div>
+              )}
               <div style={{ display: 'flex', gap: 10 }}>
-                <button onClick={() => setDeleteConfirm(false)} disabled={deleting} style={{ flex: 1, padding: '12px 0', borderRadius: 10, border: '1px solid var(--border)', background: 'transparent', color: 'var(--ink)', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Abbrechen</button>
-                <button onClick={async () => { setDeleting(true); try { const r = await fetch('/api/user/delete', { method: 'DELETE' }); if (r.ok) router.push('/'); else alert('Fehler beim Löschen.'); } catch { alert('Netzwerkfehler'); } setDeleting(false); }} disabled={deleting} style={{ flex: 1, padding: '12px 0', borderRadius: 10, border: 'none', background: '#ff4444', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>{deleting ? 'Wird gelöscht...' : 'Endgültig löschen'}</button>
+                <button onClick={() => { setDeleteConfirm(false); setDeletePassword(''); setDeleteError('') }} disabled={deleting} style={{ flex: 1, padding: '12px 0', borderRadius: 10, border: '1px solid var(--border)', background: 'transparent', color: 'var(--ink)', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Abbrechen</button>
+                <button
+                  onClick={async () => {
+                    if (!deletePassword) { setDeleteError('Passwort erforderlich'); return }
+                    setDeleting(true); setDeleteError('')
+                    try {
+                      const r = await fetch('/api/user/delete', {
+                        method: 'DELETE',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ password: deletePassword }),
+                      })
+                      if (r.ok) {
+                        router.push('/')
+                      } else {
+                        const data = await r.json().catch(() => ({}))
+                        setDeleteError(data?.error || 'Fehler beim Löschen. Bitte versuche es erneut.')
+                      }
+                    } catch {
+                      setDeleteError('Netzwerkfehler. Bitte prüfe deine Verbindung.')
+                    }
+                    setDeleting(false)
+                  }}
+                  disabled={deleting || !deletePassword}
+                  style={{ flex: 1, padding: '12px 0', borderRadius: 10, border: 'none', background: deletePassword ? '#ff4444' : 'var(--coal4)', color: '#fff', fontSize: 13, fontWeight: 600, cursor: deletePassword ? 'pointer' : 'not-allowed', opacity: deleting || !deletePassword ? 0.6 : 1 }}
+                >
+                  {deleting ? 'Wird gelöscht...' : 'Endgültig löschen'}
+                </button>
               </div>
             </div>
           </div>

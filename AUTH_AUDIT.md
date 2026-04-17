@@ -69,7 +69,7 @@ console.error('reset-password error:', { code: err?.code, name: err?.name })
 
 ---
 
-### AUTH-003 [P0] Account-Deletion ohne Passwort-Bestätigung + unvollständige Kaskade
+### AUTH-003 [P0] Account-Deletion ohne Passwort-Bestätigung + unvollständige Kaskade ✅ TEIL-FIX 2026-04-17
 
 **File:** `app/api/user/delete/route.ts`
 
@@ -81,13 +81,33 @@ DELETE-Endpoint löscht sofort, ohne Re-Authentication. Kaskadierung ist unvolls
 - XSS im Chat → `fetch('/api/user/delete', {method:'DELETE'})` → Audit-Trail entfernt
 - DSGVO Art. 17: Recht auf Vergessenwerden nicht vollständig erfüllt
 
-**Fix-Empfehlung:**
+**Fix-Empfehlung (Original):**
 1. Passwort-Confirm via `signInWithPassword` vor Löschung
 2. Soft-Delete mit 7-Tage-Grace-Period (DSGVO-konforme Wiederherstellung)
 3. E-Mail-Bestätigung vor Hard-Delete
 4. Kaskade-Audit: jede FK-Relation prüfen
 
-**Effort:** L
+**Fix-Umsetzung (2026-04-17):**
+- ✅ Punkt 1: `signInWithPassword` via isolierter `@supabase/supabase-js`-Client
+  (ohne `persistSession`), damit die aktive Session unberührt bleibt. Bei
+  Fehler → `401 + "Passwort ist falsch."`. Ohne Body → `400`.
+- ✅ Punkt 4: Kaskade um `bookings.angel_id` + `care_eligibility` erweitert
+  (vorher nur `customer_id` → dadurch wurden Engel-Bookings nicht gelöscht).
+- ✅ Frontend-UIs (Engel-Profil + Kunde-Profil): Modal fordert jetzt
+  Passwort, Button bleibt disabled ohne Eingabe, generische Fehlermeldung.
+- ✅ AUTH-002-Pattern: Catch-Block loggt nur `{code, name, status}`,
+  kein rohes `err`-Objekt, kein `err.message` an Client.
+- ✅ Playwright-Regression in `e2e/auth-delete.spec.ts` (4 Tests:
+  Unauth→401, NoBody→400, WrongPW→401, UI-Modal-required-Password).
+- ⏳ Punkt 2 (Soft-Delete mit Grace-Period) + Punkt 3 (E-Mail-Bestätigung)
+  bleiben offen → verschoben auf Sprint 3 (Tabellen-Schema-Änderung + neue
+  Mail-Flow-Route nötig).
+
+**Rest-Risiko:** CSRF-Attack reduziert — Angreifer bräuchte jetzt das Passwort
+des Opfers, was die Angriffsfläche drastisch verkleinert. Soft-Delete +
+E-Mail-Bestätigung würden die letzten 5% Rest-Risiko abdecken.
+
+**Effort:** L (davon M umgesetzt, S offen)
 
 ---
 
@@ -282,7 +302,7 @@ Stichprobe zeigt: keine hardcoded Secrets in Logs. Aber AUTH-002 zeigt, dass roh
 - [ ] AUTH-005: Enumeration-Fehler vereinheitlichen
 
 ### Sprint 2 — nächste 2 Wochen (~5 Tage)
-- [ ] AUTH-003: Account-Deletion mit Passwort-Confirm + Soft-Delete + Grace-Period
+- [x] ~~AUTH-003: Account-Deletion mit Passwort-Confirm~~ ✅ 2026-04-17 (Soft-Delete + Grace-Period verschoben auf Sprint 3)
 - [ ] AUTH-006: IP-Rate-Limit-Decay bei Success
 - [ ] AUTH-010: Magic-Link-Expiry 1h
 - [ ] AUTH-007: FAIL-CLOSED für sensible Kunden-Routen
