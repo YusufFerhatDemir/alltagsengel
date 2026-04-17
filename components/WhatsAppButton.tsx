@@ -17,14 +17,7 @@ export default function WhatsAppButton() {
   const [showTooltip, setShowTooltip] = useState(false)
 
   useEffect(() => {
-    // Nicht in Capacitor anzeigen
-    const isCapacitor = !!(
-      (window as any).Capacitor ||
-      navigator.userAgent.includes('Capacitor') ||
-      (window as any).webkit?.messageHandlers?.bridge
-    )
-    if (isCapacitor) return
-
+    // Auch in Capacitor (native App) anzeigen — WhatsApp-Kontakt soll immer verfügbar sein
     // Nach 3 Sekunden einblenden (nicht sofort)
     const timer = setTimeout(() => setVisible(true), 3000)
 

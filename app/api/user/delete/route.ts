@@ -20,7 +20,7 @@ export async function DELETE() {
     await adminClient.from('bookings').delete().eq('customer_id', userId)
 
     // 3. Delete angel profile if exists
-    await adminClient.from('angels').delete().eq('user_id', userId)
+    await adminClient.from('angels').delete().eq('id', userId)
 
     // 4. Delete profile
     await adminClient.from('profiles').delete().eq('id', userId)

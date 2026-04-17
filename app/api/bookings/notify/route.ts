@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
       .select(`
         id, customer_id, angel_id, service, date, time, duration_hours, total_amount, status,
         customer:profiles!bookings_customer_id_fkey(id, first_name, last_name, email),
-        angel:angels!bookings_angel_id_fkey(id, user_id, profiles(id, first_name, last_name, email))
+        angel:angels!bookings_angel_id_fkey(id, profiles(id, first_name, last_name, email))
       `)
       .eq('id', bookingId)
       .single()
@@ -68,7 +68,7 @@ export async function POST(req: NextRequest) {
 
     if (event === 'created') {
       // Neue Buchung → Engel benachrichtigen
-      const angelUserId = angel?.user_id || ap?.id
+      const angelUserId = angel?.id || ap?.id
       if (angelUserId) {
         await notifyAngelNewBooking(supabase, angelUserId, notifyData)
       }
