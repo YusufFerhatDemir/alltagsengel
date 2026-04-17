@@ -200,12 +200,16 @@ function LoginForm() {
         }).then(() => {})
       })
 
-      if (authError.message === 'Email not confirmed') {
-        setError('Bitte bestätigen Sie zuerst Ihre E-Mail-Adresse. Prüfen Sie Ihren Posteingang.')
-      } else if (authError.message === 'Invalid login credentials') {
-        setError('E-Mail oder Passwort ist falsch.')
+      // AUTH-005 Fix: Keine E-Mail-Enumeration mehr — generische Fehlermeldung für alle Auth-Fehler,
+      // die an E-Mail-Existenz gekoppelt sind. Details nur server-seitig in mis_auth_log.
+      if (
+        authError.message === 'Email not confirmed' ||
+        authError.message === 'Invalid login credentials'
+      ) {
+        setError('E-Mail oder Passwort ist falsch. Falls Sie sich neu registriert haben, bestätigen Sie bitte zuerst Ihre E-Mail-Adresse über den Link, den wir Ihnen geschickt haben.')
       } else {
-        setError(authError.message)
+        // Generischer Fallback — Supabase-Message nicht leaken
+        setError('Anmeldung fehlgeschlagen. Bitte versuchen Sie es später erneut.')
       }
       return
     }

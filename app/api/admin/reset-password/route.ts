@@ -66,10 +66,14 @@ export async function POST(request: NextRequest) {
   })
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    // AUTH-002 Fix: Supabase-Error-Message nicht nach außen leaken (kann Enumeration / Credentials enthüllen)
+    console.error('updateUserById error:', { code: (error as any)?.code, name: error?.name, status: (error as any)?.status })
+    return NextResponse.json({ error: 'Passwort konnte nicht gesetzt werden' }, { status: 500 })
   }
 
-  // Optionale E-Mail-Benachrichtigung an den Benutzer senden
+  // AUTH-001 + AUTH-004 Fix: Klartext-Passwort NIE per E-Mail senden.
+  // Stattdessen Recovery-Link senden, über den der User sein Passwort selbst HTTPS-verschlüsselt neu setzt.
+  // Das temporär gesetzte Passwort dient nur als Platzhalter, bis der User den Link nutzt.
   if (sendNotification) {
     const { data: targetUser } = await adminSupabase
       .from('profiles')
@@ -78,30 +82,43 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (targetUser?.email) {
-      await sendEmailNotification(
-        targetUser.email,
-        targetUser.first_name || 'Nutzer',
-        'Ihr Passwort wurde zurückgesetzt — AlltagsEngel',
-        `
-          <p>Ihr Passwort wurde von unserem Team zurückgesetzt.</p>
-          <div style="background:rgba(201,150,60,0.08);border-radius:12px;padding:18px 20px;margin:20px 0;">
-            <p style="font-weight:600;color:#C9963C;margin:0 0 8px;">Ihre neuen Zugangsdaten:</p>
-            <table style="width:100%;border-collapse:collapse;">
-              <tr><td style="padding:8px 12px;border-bottom:1px solid #eee;color:#888;width:120px;">E-Mail</td><td style="padding:8px 12px;border-bottom:1px solid #eee;font-weight:600;">${targetUser.email}</td></tr>
-              <tr><td style="padding:8px 12px;color:#888;">Passwort</td><td style="padding:8px 12px;font-weight:600;font-family:monospace;font-size:16px;">${newPassword}</td></tr>
-            </table>
-          </div>
-          <p>Bitte ändern Sie Ihr Passwort nach dem ersten Login in Ihrem Profil.</p>
-          <a href="https://alltagsengel.care/auth/login" style="display:inline-block;padding:14px 32px;background:#C9963C;color:#1A1612;text-decoration:none;border-radius:10px;font-weight:600;margin:16px 0;">JETZT EINLOGGEN</a>
-          <p style="margin-top:20px;color:#888;">Liebe Grüße,<br/><strong style="color:#C9963C;">Ihr Alltagsengel Team</strong></p>
-        `
-      )
+      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://alltagsengel.care'
+
+      // Recovery-Link generieren (1-Time-Use, kurze Lebensdauer via Supabase-Dashboard-Config)
+      const { data: linkData, error: linkError } = await adminSupabase.auth.admin.generateLink({
+        type: 'recovery',
+        email: targetUser.email,
+        options: {
+          redirectTo: `${siteUrl}/auth/callback?next=/auth/reset-password`,
+        },
+      })
+
+      if (linkError || !linkData?.properties?.action_link) {
+        console.error('generateLink error in admin reset:', { code: (linkError as any)?.code, name: linkError?.name })
+        // Wir sagen dem Admin Success, weil das PW bereits gesetzt wurde — User kann sich manuell mitteilen lassen
+      } else {
+        await sendEmailNotification(
+          targetUser.email,
+          targetUser.first_name || 'Nutzer',
+          'Ihr Passwort wurde zurückgesetzt — AlltagsEngel',
+          `
+            <p>Ihr Passwort wurde auf Ihre Anfrage hin von unserem Team zurückgesetzt.</p>
+            <p>Aus Sicherheitsgründen senden wir Ihnen <strong>kein Klartext-Passwort</strong> per E-Mail.
+               Klicken Sie stattdessen auf den folgenden Button, um Ihr neues Passwort direkt in der App selbst zu setzen:</p>
+            <a href="${linkData.properties.action_link}" style="display:inline-block;padding:14px 32px;background:#C9963C;color:#1A1612;text-decoration:none;border-radius:10px;font-weight:600;margin:16px 0;">PASSWORT JETZT FESTLEGEN</a>
+            <p style="color:#888;font-size:12px;margin-top:16px;">Dieser Link ist aus Sicherheitsgründen nur begrenzt gültig.
+               Wenn Sie keine Passwort-Änderung angefordert haben, wenden Sie sich bitte umgehend an unseren Support.</p>
+            <p style="margin-top:20px;color:#888;">Liebe Grüße,<br/><strong style="color:#C9963C;">Ihr Alltagsengel Team</strong></p>
+          `
+        )
+      }
     }
   }
 
   return NextResponse.json({ success: true })
   } catch (err: any) {
-    console.error('reset-password error:', err)
-    return NextResponse.json({ error: err.message || 'Fehler beim Zurücksetzen des Passworts' }, { status: 500 })
+    // AUTH-002 Fix: Rohe Error-Objekte niemals loggen — können API-Keys / Headers enthalten
+    console.error('reset-password error:', { code: err?.code, name: err?.name, status: err?.status })
+    return NextResponse.json({ error: 'Fehler beim Zurücksetzen des Passworts' }, { status: 500 })
   }
 }
