@@ -2009,3 +2009,80 @@ TikTok-Upload ebenfalls manuell erforderlich:
 Dieser Lauf erfolgte automatisch um ca. 09:13 Uhr CEST — rund 8:47 Stunden vor dem geplanten Posting-Zeitpunkt (18:00 Uhr). Die DE-Caption wurde bereits im Meta Business Suite Reel Composer eingetragen. Video-Upload und finale Veröffentlichung müssen manuell erfolgen.
 
 **Nächster Post:** Do 17.04.2026 — IG Post / FB — Grafik W1-DO-kennstdujemanden.png — 10:00 DE / 11:00 TR
+
+---
+
+## 17.04.2026 — Tag-Post: "Kennst du jemanden?" (Instagram/Facebook)
+
+**Status:** 📋 Caption + Grafik vorbereitet — Meta Business Suite Upload manuell erforderlich
+**Plattform:** Instagram + Facebook (IG Post / FB)
+**Typ:** Grafik
+**Datei:** `marketing/social-media-grafiken/W1-DO-kennstdujemanden.png` (54 KB)
+**Geplante Uhrzeit:** 10:00 CEST (DE) / 11:00 CEST (TR — separater Post, 1h später)
+**Content Calendar Woche:** Woche 1 — Vertrauen aufbauen
+**Content Calendar Referenz:** "Do 17.04 — Tag-Post: Kennst du jemanden"
+
+**Ziel:** Reichweiten-Boost durch Tag-Mechanik. Nutzer werden aufgefordert, Familie/Freunde mit Pflegebedarf in Frankfurt zu taggen → organisches Wachstum in der Zielgruppe.
+
+### Caption (DE) — 10:00 Uhr
+
+```
+Kennst du jemanden in Frankfurt, der Hilfe im Alltag braucht?
+
+👇 Tag eine Person, die das wissen sollte.
+
+Einkaufen · Arzt · Haushalt · Gespräch
+131 Euro/Monat vom Staat — komplett über §45b
+
+www.alltagsengel.care
+info@alltagsengel.care
+
+#AlltagsEngel #Alltagsbegleitung #Hilfe #Frankfurt #Pflegekasse #Entlastungsbetrag #Senioren #Familie #Pflege #Seniorenhilfe #FrankfurtAmMain #§45b
+```
+
+### Caption (TR) — 11:00 Uhr (separater Post)
+
+```
+Frankfurt'ta günlük işlerinde yardıma ihtiyacı olan birini tanıyor musun?
+
+👇 Bunu bilmesi gereken birini etiketle.
+
+Alışveriş · Doktor · Ev işleri · Sohbet
+Devletten ayda 131 Euro — tamamen §45b üzerinden
+
+www.alltagsengel.care
+info@alltagsengel.care
+
+#AlltagsEngel #Frankfurt #YaşlıBakımı #TürklerFrankfurt #Bakım #Yardım #BakımSigortası #Yaşlılar #Aile
+```
+
+### Meta Business Suite — Upload-Anleitung
+
+1. **business.facebook.com** öffnen → Posts erstellen → Instagram + Facebook auswählen
+2. Bild-Upload: `marketing/social-media-grafiken/W1-DO-kennstdujemanden.png`
+3. DE-Caption (siehe oben) einfügen
+4. Veröffentlichung planen: **17.04.2026, 10:00 Uhr CEST**
+5. Zweiter Post mit TR-Caption für **11:00 Uhr CEST** planen
+6. Engagement-Hinweis: Tag-Posts brauchen Initial-Schub — in der ersten Stunde aktiv auf Kommentare/Tags antworten, um den Algorithmus zu triggern.
+
+### Strategischer Hinweis
+
+Tag-Mechanik zielt auf Reichweite durch Mundpropaganda. Die Zielgruppe sind nicht die Senioren selbst, sondern deren **erwachsene Kinder** (40–60 J.) — die treffen die Entscheidung über Alltagsbegleitung für ihre Eltern. Deshalb direkte Ansprache "Kennst du jemanden?" + konkreter Nutzenhinweis (131 €, §45b).
+
+**KPI-Ziele:**
+- Reichweite: ≥ 2x Follower-Anzahl (durch Tags & Shares)
+- Kommentar-Rate: ≥ 4% (Tag-Posts performen hier besonders)
+- Profilbesuche: ≥ 1,5% der Impressions
+- Link-Klicks zu alltagsengel.care: ≥ 20
+
+### TikTok
+
+Laut Content Calendar ist der heutige Post **nur IG Post / FB** (kein TikTok für Do/Fr 17.04). Der nächste TikTok-Post folgt am Fr 18.04 mit Video #5 "Markt Frankfurt Rollator".
+
+### Hinweis (Scheduler-Lauf 17.04.2026)
+
+Dieser Lauf erfolgte automatisch im Rahmen des täglichen Social-Media-Schedulers. Inhalte (Grafik + DE/TR Captions + Hashtags) sind vollständig vorbereitet.
+
+**Hinweis zur Automatisierung:** Computer-Use (Browser-Automation) ist in dieser Sitzung deaktiviert — der Meta Business Suite Upload erfordert Login + 2FA und muss manuell erfolgen. Alle Caption-Texte sind oben zum direkten Kopieren bereit.
+
+**Nächster Post:** Fr 18.04.2026 — IG Reel / TT / FB — Video #5 "Markt Frankfurt Rollator" — 11:00 DE / 12:00 TR
