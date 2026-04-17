@@ -345,13 +345,17 @@ weil Policy auf `service_role` scoped ist).
 - [x] Frontend `/notfall/[id]/page.tsx` auf RPC umgestellt (kein client-side PIN-Check mehr)
 - [x] Rate-Limit + Audit-Tabelle `notfall_access_attempts` angelegt
 - [x] Smoke-Tests gegen RPC: Happy-Path, invalid_pin, rate_limited ✅
-- [ ] CAPA-Eintrag anlegen (Due: nächste Woche)
+- [x] CAPA-Eintrag anlegen — `CAPA-2026-001` in `mis_capa` (closed, effectiveness_verified=true)
+- [x] CHECK-Constraint `notfall_info_pin_format_check` angelegt (Migration
+  `add_check_constraint_notfall_pin`, 2026-04-17) — erlaubt nur `NULL | '' | ^\d{4}$`
+- [x] CI-Lint-Script `scripts/audit-rls.ts` + RPCs `audit_rls_status`,
+  `audit_rls_policies`, `audit_check_constraint_exists` angelegt (Migration
+  `add_audit_rls_rpcs`, 2026-04-17) — npm-Script `audit:rls`
 - [ ] Klärung DSGVO-Art.-33-Meldung mit Datenschutzbeauftragtem (Scope: 2 betroffene
   notfall_info-Zeilen, 1 aktiver Medikamentenplan — Wahrscheinlichkeit einer realen
   Exfiltration gering, da Produkt pre-Launch; Entscheidung aber formal festhalten)
-- [ ] CI-Lint-Script `audit-rls.ts` eingerichtet (Sprint 3)
-- [ ] CHECK-Constraint `notfall_pin ~ '^\d{4}$' OR notfall_pin IS NULL` nachziehen
-  (Sprint 3 — verhindert ungültige PINs schon beim INSERT/UPDATE)
+- [ ] CI-Pipeline so einrichten, dass `npm run audit:rls` in jedem PR mit
+  `SUPABASE_SERVICE_ROLE_KEY`-Secret läuft und bei Verstoß failt
 
 ---
 
@@ -415,3 +419,61 @@ Admin-Zugriff auf das Audit-Log erlaubt forensische Nachverfolgung.
 notfall_info-Zeilen, 1 aktiver Medikamentenplan) spricht für „kein Risiko für
 Rechte und Freiheiten betroffener Personen" — Entscheidung aber dokumentieren,
 nicht einfach mündlich begraben.
+
+---
+
+### 2026-04-17 — Defense-in-Depth: Prevention-Controls
+
+Nachtrag zum P0-Fix. Drei präventive Controls, damit der gleiche Fehler nicht
+nochmal durchrutscht:
+
+#### 1) CAPA-Eintrag `CAPA-2026-001`
+
+Angelegt in `mis_capa` (Quality Management):
+
+- **Type:** corrective
+- **Source:** incident
+- **Priority:** critical
+- **Status:** closed
+- **Effectiveness verified:** true
+- **Titel:** „RLS P0: Notfall-PIN client-seitig geprüft (DSGVO Art. 9 Exposition)"
+- **Root-Cause:** Unsichere Policy + client-seitige PIN-Prüfung.
+- **Action-Plan:** RPC + Rate-Limiter + Policies gedroppt + Frontend-Rewrite.
+
+#### 2) DB-CHECK-Constraint auf `notfall_pin`
+
+**Migration:** `add_check_constraint_notfall_pin`
+
+```sql
+ALTER TABLE public.notfall_info
+  ADD CONSTRAINT notfall_info_pin_format_check
+  CHECK (notfall_pin IS NULL OR notfall_pin = '' OR notfall_pin ~ '^[0-9]{4}$');
+```
+
+Verifikationstests (DO-Block):
+
+- 5-stelliger PIN `'12345'` → `check_violation` ✅
+- Buchstaben `'abcd'` → `check_violation` ✅
+- NULL → akzeptiert ✅
+- `'1234'` → akzeptiert ✅
+
+**Analogie:** Wie ein Türsteher mit Dress-Code-Liste — auch wenn die App-Schicht
+mal nachlässig validiert, lässt die DB nur Format-konforme Werte rein.
+
+#### 3) CI-Lint-Script `scripts/audit-rls.ts` + Audit-RPCs
+
+**Migration:** `add_audit_rls_rpcs` — legt drei Read-Only SECURITY-DEFINER-RPCs
+an (`audit_rls_status`, `audit_rls_policies`, `audit_check_constraint_exists`),
+die nur `service_role` ausführen darf.
+
+**Script:** `scripts/audit-rls.ts` prüft bei jedem Lauf:
+
+- RLS aktiv auf `notfall_info`, `profiles`, `medikamentenplan`, `einnahme_log`,
+  `notfall_audit_log`
+- Die drei gedroppten Policies tauchen nicht wieder auf
+- Keine `SELECT`-Policy mit `USING(true)` für `anon`
+- `CHECK`-Constraint `notfall_info_pin_format_check` existiert
+
+Aufruf: `npm run audit:rls` (benötigt `SUPABASE_SERVICE_ROLE_KEY` als ENV).
+Exit-Code ≠ 0 bei Verstößen → kann in GitHub-Actions als Required-Check
+verdrahtet werden.

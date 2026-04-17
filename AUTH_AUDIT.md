@@ -312,7 +312,7 @@ Stichprobe zeigt: keine hardcoded Secrets in Logs. Aber AUTH-002 zeigt, dass roh
 - [ ] AUTH-009: Session-Lock reimplementieren
 - [ ] AUTH-011: zxcvbn (HIBP via Supabase-Dashboard — siehe `SUPABASE_AUTH_HARDENING.md`, Punkt 3)
 - [ ] **AUTH-012 (NEU): Admin-Audit-Log** — jeder Admin-State-Change-Call (User-Sperre, Rate-Limit-Reset, Dokument-Approval, Pricing-Update) muss eine Zeile in `mis_audit_log` erzeugen mit `actor_id`, `action`, `target_id`, `before_snapshot`, `after_snapshot`, `ip`, `ua`, `ts`. Grund: Compliance (DSGVO Art. 30, ISO 27001 A.12.4.1) + Insider-Threat-Forensik. Aufwand ~3 Tage (Tabelle `mis_audit_log` existiert bereits; Middleware-Wrapper um alle `/api/admin/*`-Routes + UI-Filter in `/mis/audit`). Bewusst nach Sprint 2 verschoben.
-- [ ] **RLS-P0-Fixes aus `RLS_AUDIT.md`** — RPC `get_emergency_info_with_pin` bauen, offene Policies auf `notfall_info` + `medikamentenplan` droppen.
+- [x] **RLS-P0-Fixes aus `RLS_AUDIT.md`** — RPC `get_emergency_info_with_pin` gebaut, offene Policies auf `notfall_info` + `medikamentenplan` gedroppt (2026-04-17, CAPA-2026-001). Defense-in-Depth: DB-CHECK-Constraint auf `notfall_pin` + CI-Lint `npm run audit:rls`.
 
 ---
 
@@ -325,6 +325,13 @@ Stichprobe zeigt: keine hardcoded Secrets in Logs. Aber AUTH-002 zeigt, dass roh
 - Legal-Update: Widerrufsrecht §§ 312g/355 BGB, ODR-Plattform, §§ 11/12 AGB (Abgrenzung + DSGVO Art. 28)
 - Impressum: MStV § 18 Abs. 2, USt-ID-Placeholder, Aufsichtsbehörde
 - Admin-Audit-Log als AUTH-012 für Sprint 3 eingetragen (bewusstes Deferral — zu groß für diesen Batch)
+
+**2026-04-17 (X-High-Batch 2 — Quick Wins):**
+- RLS-P0 behoben: SECURITY-DEFINER-RPC `get_emergency_info_with_pin` + Rate-Limiter + unsichere Policies gedroppt + Frontend auf RPC umgestellt. Details in `RLS_AUDIT.md` Mitigation-Log.
+- CAPA-2026-001 in `mis_capa` angelegt (closed, effectiveness_verified=true).
+- DB-CHECK-Constraint `notfall_info_pin_format_check` (`NULL | '' | ^\d{4}$`) als Defense-in-Depth.
+- Audit-RPCs + CI-Lint-Script `scripts/audit-rls.ts` + npm-Script `audit:rls` angelegt → prevention-control, damit unsichere Policies nicht unbemerkt zurückkehren.
+- Tesseract-OCR auf `dynamic import` umgestellt → First-Load-JS auf `/kunde/notfall` fällt erwartet von ~2.5 MB → ~200 KB.
 
 ---
 

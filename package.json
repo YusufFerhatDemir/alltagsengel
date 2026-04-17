@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "audit:rls": "tsx scripts/audit-rls.ts",
     "cap:sync": "npx cap sync ios",
     "cap:open": "npx cap open ios",
     "cap:sync:android": "npx cap sync android",

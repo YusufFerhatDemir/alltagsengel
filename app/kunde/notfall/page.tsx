@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import Tesseract from 'tesseract.js'
+// Tesseract wird dynamisch geladen (siehe handlePhotoScan) — spart ~2.3 MB First-Load-JS
 
 interface Medication {
   id: string
@@ -389,6 +389,8 @@ export default function NotfallPage() {
     setScanProgress(0)
 
     try {
+      // Dynamic Import: Tesseract (~2.3 MB WASM) erst laden, wenn Nutzer wirklich scannt
+      const { default: Tesseract } = await import('tesseract.js')
       const result = await Tesseract.recognize(file, 'deu', {
         logger: (m: { status: string; progress: number }) => {
           if (m.status === 'recognizing text') {
