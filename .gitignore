@@ -46,6 +46,9 @@ fuehrerschein*.pdf
 *.tsbuildinfo
 next-env.d.ts
 
+# temp commit message helper (osascript workaround)
+.commit_msg_tmp
+
 # supabase
 supabase/.temp/
 
