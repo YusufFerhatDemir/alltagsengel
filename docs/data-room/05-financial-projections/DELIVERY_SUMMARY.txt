@@ -281,7 +281,7 @@ CONTACT & SUPPORT
 
 Model created: March 2, 2026
 Based on Company Context:
-  • AlltagsEngel GmbH (Germany)
+  • Alltagsengel UG (haftungsbeschränkt) (Germany)
   • Mobile platform for elderly care companions
   • Target: 5 million care-dependent people in Germany
   • Revenue: Commission + Subscription model

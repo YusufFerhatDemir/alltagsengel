@@ -171,7 +171,7 @@ To create alternative scenarios:
 ## Contact & Support
 
 For questions about this financial model, please refer to:
-- Company: AlltagsEngel GmbH
+- Company: Alltagsengel UG (haftungsbeschränkt)
 - Model Date: March 2, 2026
 - All figures in EUR (€)
 
