@@ -40,6 +40,32 @@ export default function ImpressumPage() {
         </section>
 
         <section className="legal-section">
+          <h2>Umsatzsteuer-ID</h2>
+          <p>
+            Umsatzsteuer-Identifikationsnummer gemäß § 27a Umsatzsteuergesetz:<br/>
+            <em>wird nach Finanzamt-Zuteilung ergänzt</em>
+          </p>
+        </section>
+
+        <section className="legal-section">
+          <h2>Verantwortlich für den Inhalt nach § 18 Abs. 2 MStV</h2>
+          <p>
+            Yusuf Ferhat Demir<br/>
+            Schillerstraße 31<br/>
+            60313 Frankfurt am Main
+          </p>
+        </section>
+
+        <section className="legal-section">
+          <h2>Aufsichtsbehörde</h2>
+          <p>
+            Für die Vermittlung von Leistungen nach § 45a SGB XI:<br/>
+            Zuständige Landesbehörde des jeweiligen Leistungsortes.<br/>
+            Bei Einsätzen in Hessen: Hessisches Ministerium für Soziales und Integration.
+          </p>
+        </section>
+
+        <section className="legal-section">
           <h2>EU-Streitschlichtung</h2>
           <p>
             Die Europäische Kommission stellt eine Plattform zur Online-Streitbeilegung (OS) bereit:

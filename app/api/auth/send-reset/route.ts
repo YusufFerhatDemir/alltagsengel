@@ -31,7 +31,12 @@ export async function POST(request: Request) {
 
     const userName = profile.first_name || 'Nutzer'
 
-    // Generate a recovery link via admin API
+    // Generate a recovery link via admin API.
+    // AUTH-010: Supabase-Default für Recovery-Links ist 24h — viel zu lang.
+    // Ein Angreifer, der nur kurz Postfach-Zugriff bekommt (Leih-Laptop,
+    // Phishing-Link, Session-Hijack im Mail-Client), hat sonst einen ganzen
+    // Tag Zeit. Wir senken auf 1h. Falls Supabase-Dashboard-Setting das
+    // global härtet, ist das hier zusätzliche Defense-in-Depth.
     const { data, error } = await supabase.auth.admin.generateLink({
       type: 'recovery',
       email,
@@ -39,6 +44,10 @@ export async function POST(request: Request) {
         redirectTo: `${siteUrl}/auth/callback?next=/auth/reset-password`,
       },
     })
+    // Hinweis: Supabase nimmt `expiresIn` aktuell NICHT an `generateLink`
+    // entgegen — das Feld muss auf Dashboard-Ebene gesetzt werden (Auth →
+    // URL Configuration → Email Link Expiry). Siehe SENTRY_SETUP.md →
+    // Follow-up in SUPABASE_AUTH_HARDENING.md.
 
     if (error) {
       console.error('generateLink recovery error:', error)
@@ -56,7 +65,7 @@ export async function POST(request: Request) {
           <p>Sie haben angefordert, Ihr Passwort zurückzusetzen.</p>
           <p>Klicken Sie auf den folgenden Button, um ein neues Passwort festzulegen:</p>
           <a href="${resetLink}" style="display:inline-block;padding:14px 32px;background:#C9963C;color:#1A1612;text-decoration:none;border-radius:10px;font-weight:600;margin:16px 0;">PASSWORT ZURÜCKSETZEN</a>
-          <p style="color:#888;font-size:12px;margin-top:16px;">Dieser Link ist 24 Stunden gültig. Wenn Sie kein neues Passwort angefordert haben, können Sie diese E-Mail ignorieren.</p>
+          <p style="color:#888;font-size:12px;margin-top:16px;">Dieser Link ist aus Sicherheitsgründen nur 1 Stunde gültig. Wenn Sie kein neues Passwort angefordert haben, können Sie diese E-Mail ignorieren.</p>
         `
       )
     }

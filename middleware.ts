@@ -82,8 +82,38 @@ export async function middleware(request: NextRequest) {
     // Protected routes - redirect to login if not authenticated
     const isProtected = pathname.startsWith('/kunde') || pathname.startsWith('/engel') || pathname.startsWith('/admin') || pathname.startsWith('/mis') || (pathname.startsWith('/fahrer') && !pathname.startsWith('/fahrer/register'))
 
+    // ═══ AUTH-007: FAIL-CLOSED für sensible Routen ═══
+    // Die FAIL-SOFT-Strategie für /kunde + /engel ist gut für UX
+    // (WhatsApp-Style: Session im Hintergrund wiederherstellen, nicht
+    // sofort zum Login). Sie hat aber ein Risiko: sensible Daten (Zahlungs-
+    // infos, Dokumente, Konto-Löschung, Chat) könnten 3-5s lang client-side
+    // sichtbar sein, während der SessionKeepAlive den Token-Refresh macht.
+    //
+    // Für diese Routen gilt: FAIL-CLOSED → sofort zum Login-Redirect.
+    // Dadurch ist die Angriffsfläche für "Device-Screenshot-in-Seconds"
+    // geschlossen.
+    const sensitivePaths = [
+      '/kunde/zahlungsdaten',
+      '/kunde/dokumente',
+      '/kunde/profil',
+      '/kunde/chat',
+      '/engel/dokumente',
+      '/engel/profil',
+      '/engel/chat',
+    ]
+    const isSensitive = sensitivePaths.some(p => pathname === p || pathname.startsWith(p + '/'))
+
+    if (!user && isSensitive) {
+      // FAIL-CLOSED — direkt zum Login, keine Gnade.
+      const url = request.nextUrl.clone()
+      url.pathname = '/auth/login'
+      url.searchParams.set('next', pathname)
+      url.searchParams.set('error', 'auth_required')
+      return NextResponse.redirect(url)
+    }
+
     if (!user && isProtected) {
-      // ═══ FAIL-SOFT für ALLE geschützten Routen ═══
+      // ═══ FAIL-SOFT für restliche geschützte Routen ═══
       // Nicht sofort zum Login schicken! Der Client-Side SessionKeepAlive
       // kann den Token noch via Refresh Token / IndexedDB / Cookie refreshen.
       // Genau wie WhatsApp/Instagram: App öffnen → Session wird im Hintergrund

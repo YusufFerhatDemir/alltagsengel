@@ -303,14 +303,28 @@ Stichprobe zeigt: keine hardcoded Secrets in Logs. Aber AUTH-002 zeigt, dass roh
 
 ### Sprint 2 — nächste 2 Wochen (~5 Tage)
 - [x] ~~AUTH-003: Account-Deletion mit Passwort-Confirm~~ ✅ 2026-04-17 (Soft-Delete + Grace-Period verschoben auf Sprint 3)
-- [ ] AUTH-006: IP-Rate-Limit-Decay bei Success
-- [ ] AUTH-010: Magic-Link-Expiry 1h
-- [ ] AUTH-007: FAIL-CLOSED für sensible Kunden-Routen
+- [x] ~~AUTH-006: IP-Rate-Limit-Decay bei Success~~ ✅ 2026-04-17 (halvedAttempts-Strategy; Shared-IP-Friendly für Pflegeheime/NAT)
+- [x] ~~AUTH-010: Magic-Link-Expiry 1h~~ ✅ 2026-04-17 (Code + E-Mail auf 1h, Dashboard-Schritt in `SUPABASE_AUTH_HARDENING.md`)
+- [x] ~~AUTH-007: FAIL-CLOSED für sensible Kunden-Routen~~ ✅ 2026-04-17 (Middleware sensitivePaths → direkt zum Login)
 
 ### Sprint 3 — nächster Monat (~10 Tage)
 - [ ] AUTH-008: TOTP/MFA (Pflicht für Engel+Admin, optional für Kunden)
 - [ ] AUTH-009: Session-Lock reimplementieren
-- [ ] AUTH-011: zxcvbn + HIBP
+- [ ] AUTH-011: zxcvbn (HIBP via Supabase-Dashboard — siehe `SUPABASE_AUTH_HARDENING.md`, Punkt 3)
+- [ ] **AUTH-012 (NEU): Admin-Audit-Log** — jeder Admin-State-Change-Call (User-Sperre, Rate-Limit-Reset, Dokument-Approval, Pricing-Update) muss eine Zeile in `mis_audit_log` erzeugen mit `actor_id`, `action`, `target_id`, `before_snapshot`, `after_snapshot`, `ip`, `ua`, `ts`. Grund: Compliance (DSGVO Art. 30, ISO 27001 A.12.4.1) + Insider-Threat-Forensik. Aufwand ~3 Tage (Tabelle `mis_audit_log` existiert bereits; Middleware-Wrapper um alle `/api/admin/*`-Routes + UI-Filter in `/mis/audit`). Bewusst nach Sprint 2 verschoben.
+- [ ] **RLS-P0-Fixes aus `RLS_AUDIT.md`** — RPC `get_emergency_info_with_pin` bauen, offene Policies auf `notfall_info` + `medikamentenplan` droppen.
+
+---
+
+## Sprint-Log
+
+**2026-04-17 (X-High-Batch):**
+- 4 Auth-Audit-Items geschlossen: AUTH-003, AUTH-006, AUTH-007, AUTH-010
+- RLS-Audit über alle 57 Tabellen → 2 P0-Funde (`notfall_info`, `medikamentenplan`) → `RLS_AUDIT.md`
+- Performance-Baseline → `PERF_REPORT.md`
+- Legal-Update: Widerrufsrecht §§ 312g/355 BGB, ODR-Plattform, §§ 11/12 AGB (Abgrenzung + DSGVO Art. 28)
+- Impressum: MStV § 18 Abs. 2, USt-ID-Placeholder, Aufsichtsbehörde
+- Admin-Audit-Log als AUTH-012 für Sprint 3 eingetragen (bewusstes Deferral — zu groß für diesen Batch)
 
 ---
 
