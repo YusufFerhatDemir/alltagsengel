@@ -477,3 +477,50 @@ die nur `service_role` ausführen darf.
 Aufruf: `npm run audit:rls` (benötigt `SUPABASE_SERVICE_ROLE_KEY` als ENV).
 Exit-Code ≠ 0 bei Verstößen → kann in GitHub-Actions als Required-Check
 verdrahtet werden.
+
+#### 4) Grep-Prevention-Control `scripts/lint-forbidden.ts`
+
+**Kontext:** Nicht-technische Regressionen (z. B. falsche Rechtsform im Footer
+eines Welcome-E-Mail-Templates) sind kein Security-, aber ein Compliance-
+und Vertrauensrisiko. Root-Cause war ein unvollständiger Sweep in Commit
+`18154df` („MIS Portal: GmbH→UG"), der `lib/notifications.ts` plus 3
+Docs-Dateien nicht erwischt hat. Der Linter schließt diese Lücke.
+
+**Komponenten:**
+
+- `scripts/forbidden-strings.json` — JSON-Config mit Regel-Liste
+  (`id`, `pattern`, `reason`, `allowedReplacements`), plus `excludeGlobs`
+  für `node_modules/`, `archive/`, `ios/`, `android/`, Lockfiles usw.
+- `scripts/lint-forbidden.ts` — Node/TSX-Scanner mit zwei Modi:
+  - Voll-Scan (CI): `npm run lint:forbidden`
+  - Staged-Scan (pre-commit): `npm run lint:forbidden:staged`
+- `scripts/hooks/pre-commit` + `scripts/hooks/install.sh` — versionierter
+  Pre-Commit-Hook. Aktivierung pro Entwickler: `npm run setup:hooks`.
+
+**Aktuell geblockte Muster:**
+
+| ID | Beschreibung | Grund |
+|---|---|---|
+| `legal-entity-gmbh` | CamelCase-Markenschreibweise + alte Rechtsform | Rechtsform ist UG (haftungsbeschränkt), HRB 140351 |
+| `legal-entity-gmbh-de-spelling` | deutsche Schreibweise + alte Rechtsform | s. o. |
+
+Die exakten Literal-Patterns stehen in `scripts/forbidden-strings.json`,
+um hier keine Doku-Selbst-Treffer zu erzeugen.
+
+**Verifikation nach Einführung:**
+
+- Voll-Scan: `418 Dateien gescannt, 0 verbotene Strings` ✅
+- Gegenprobe: verbotenes Muster eingeschleust → Exit-Code 1, Datei + Zeile + Spalte
+  + Grund + erlaubter Ersatz sauber gemeldet ✅
+
+**Analogie:** Der Linter ist ein **Türsteher mit schwarzer Liste** — nicht ein
+Feuermelder, der piept, wenn es schon brennt. Namen auf der Liste kommen
+nicht mehr rein: weder beim Commit (`pre-commit`), noch in die Release-
+Pipeline (`lint:forbidden` im CI).
+
+**Neue Muster hinzufügen:** Eintrag in `scripts/forbidden-strings.json`
+ergänzen, `npm run lint:forbidden` lokal grün, Commit.
+
+**CI-Integration (TODO):** GitHub-Actions-Job, der bei jedem PR
+`npm run lint:forbidden` ausführt. Required-Check, damit unvollständige
+Sweeps die `main` nicht mehr erreichen können.

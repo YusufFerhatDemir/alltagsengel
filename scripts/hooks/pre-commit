@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+# -----------------------------------------------------------------------------
+#  pre-commit Hook — Alltagsengel
+# -----------------------------------------------------------------------------
+#  Blockiert Commits, wenn verbotene Strings (z. B. "AlltagsEngel GmbH") in
+#  gestageten Dateien auftauchen.
+#
+#  Installieren:   npm run setup:hooks
+#  Umgehen:        nur im Notfall mit `git commit --no-verify` (bitte nicht).
+# -----------------------------------------------------------------------------
+
+set -e
+
+# In das Repo-Root wechseln (nicht in .git/hooks/ verharren).
+ROOT="$(git rev-parse --show-toplevel)"
+cd "$ROOT"
+
+# npx/tsx auflösen — tsx liegt als devDependency.
+if ! command -v npx >/dev/null 2>&1; then
+  echo "❌ pre-commit: npx nicht gefunden. Hook wird übersprungen."
+  exit 0
+fi
+
+# Staged-Scan über tsx.
+echo "🔍 pre-commit: scanne gestagte Dateien auf verbotene Strings …"
+if ! npx --yes tsx scripts/lint-forbidden.ts --staged; then
+  echo ""
+  echo "🛑 Commit blockiert. Siehe Treffer oben."
+  echo "   Falls bewusst gewünscht: \`git commit --no-verify\` (bitte dokumentieren)."
+  exit 1
+fi
+
+exit 0
