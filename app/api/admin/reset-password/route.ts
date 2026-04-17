@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { sendEmailNotification } from '@/lib/notifications'
 import { validatePasswordAsync } from '@/lib/password-validation'
+import { logAuditEvent } from '@/lib/audit-log'
 
 export async function POST(request: NextRequest) {
   try {
@@ -58,7 +59,13 @@ export async function POST(request: NextRequest) {
   }
 
   // Prevent admins from resetting other admins' passwords (only superadmin can)
-  const { data: targetProfile } = await adminSupabase.from('profiles').select('role').eq('id', targetUserId).single()
+  // AUTH-012: Target-Email + Name gleich mitziehen, damit wir sie für Audit-Log
+  //           und Notification-E-Mail nicht zweimal aus der DB holen müssen.
+  const { data: targetProfile } = await adminSupabase
+    .from('profiles')
+    .select('role, email, first_name, last_name')
+    .eq('id', targetUserId)
+    .single()
   if (targetProfile?.role && ['admin', 'superadmin'].includes(targetProfile.role) && profile.role !== 'superadmin') {
     return NextResponse.json({ error: 'Nur Superadmins können Admin-Passwörter zurücksetzen' }, { status: 403 })
   }
@@ -73,23 +80,37 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Passwort konnte nicht gesetzt werden' }, { status: 500 })
   }
 
+  // AUTH-012: Audit-Log — Admin-Passwort-Reset protokollieren.
+  // Fail-soft: auch wenn das Logging nicht klappt, bleibt der Reset erfolgreich.
+  await logAuditEvent({
+    action: 'password_reset',
+    actorId: user.id,
+    actorRole: profile.role,
+    targetId: targetUserId,
+    targetEmail: targetProfile?.email || email || null,
+    entityType: 'profile',
+    entityId: targetUserId,
+    details: {
+      send_notification: Boolean(sendNotification),
+      target_role: targetProfile?.role ?? null,
+      // Kein Klartext-Passwort, kein Hash, keine Länge — nur die Tatsache der Rücksetzung.
+    },
+    request,
+  })
+
   // AUTH-001 + AUTH-004 Fix: Klartext-Passwort NIE per E-Mail senden.
   // Stattdessen Recovery-Link senden, über den der User sein Passwort selbst HTTPS-verschlüsselt neu setzt.
   // Das temporär gesetzte Passwort dient nur als Platzhalter, bis der User den Link nutzt.
   if (sendNotification) {
-    const { data: targetUser } = await adminSupabase
-      .from('profiles')
-      .select('email, first_name')
-      .eq('id', targetUserId)
-      .single()
-
-    if (targetUser?.email) {
+    // Wir nutzen die bereits oben geladenen Target-Felder (email, first_name)
+    // statt erneut zu queryen.
+    if (targetProfile?.email) {
       const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://alltagsengel.care'
 
       // Recovery-Link generieren (1-Time-Use, kurze Lebensdauer via Supabase-Dashboard-Config)
       const { data: linkData, error: linkError } = await adminSupabase.auth.admin.generateLink({
         type: 'recovery',
-        email: targetUser.email,
+        email: targetProfile.email,
         options: {
           redirectTo: `${siteUrl}/auth/callback?next=/auth/reset-password`,
         },
@@ -100,8 +121,8 @@ export async function POST(request: NextRequest) {
         // Wir sagen dem Admin Success, weil das PW bereits gesetzt wurde — User kann sich manuell mitteilen lassen
       } else {
         await sendEmailNotification(
-          targetUser.email,
-          targetUser.first_name || 'Nutzer',
+          targetProfile.email,
+          targetProfile.first_name || 'Nutzer',
           'Ihr Passwort wurde zurückgesetzt — AlltagsEngel',
           `
             <p>Ihr Passwort wurde auf Ihre Anfrage hin von unserem Team zurückgesetzt.</p>
