@@ -141,15 +141,51 @@ export async function POST(req: NextRequest) {
     }
 
     if (action === 'success') {
-      // Bei erfolgreichem Login: E-Mail-Counter löschen
+      // AUTH-006: Bisher wurde der IP-Counter bei Success GAR NICHT resettet.
+      // Das hat ein reales Problem in Shared-IP-Settings (Pflegeheim, Büro,
+      // Hotel-WLAN, NAT-Gateway): Ein Kollege tippt 5x falsch → 15min Sperre
+      // für alle 50 Leute hinter der NAT.
+      //
+      // Neuer Trade-off:
+      //  1) E-Mail-Counter: komplett löschen (wie bisher — Login-Success
+      //     beweist, dass der Account-Inhaber da ist).
+      //  2) IP-Counter: **halbieren** statt löschen. Das bewahrt Schutz
+      //     gegen Credential-Stuffing (Angreifer, der viele E-Mails
+      //     von derselben IP probiert, baut trotzdem Druck auf), gibt
+      //     aber einem ehrlichen User ein „Atmen" nach jedem erfolgreichen
+      //     Login.
+      //  3) Wenn der IP-Eintrag aktuell gesperrt ist, lassen wir die
+      //     Sperre unangetastet — Success von einem gesperrten Key sollte
+      //     gar nicht stattfinden, aber falls doch, nicht als Exploit-Weg.
       await supabase.from('login_rate_limits').delete().eq('key', keyByEmail)
-      // IP-Counter NICHT löschen (schützt gegen Credential Stuffing)
+
+      const ipEntry = await getEntry(supabase, keyByIP)
+      if (ipEntry) {
+        const stillLocked = new Date(ipEntry.locked_until) > now
+        if (!stillLocked) {
+          const halvedAttempts = Math.floor(ipEntry.attempts / 2)
+          if (halvedAttempts <= 0) {
+            // Komplett löschen bei <=1 verbleibender Markierung
+            await supabase.from('login_rate_limits').delete().eq('key', keyByIP)
+          } else {
+            await upsertEntry(
+              supabase,
+              keyByIP,
+              halvedAttempts,
+              ipEntry.first_attempt,
+              // Lock zurücksetzen, da halvedAttempts < 5 (Lock-Schwelle)
+              now.toISOString()
+            )
+          }
+        }
+      }
       return NextResponse.json({ ok: true })
     }
 
     return NextResponse.json({ error: 'Invalid action' }, { status: 400 })
   } catch (err: any) {
-    console.error('Rate limit error:', err)
+    // AUTH-002-Pattern: niemals rohes err-Objekt loggen
+    console.error('Rate limit error:', { code: err?.code, name: err?.name })
     // FAIL-OPEN bei Rate Limiter Fehler (Login nicht blockieren)
     return NextResponse.json({ allowed: true })
   }

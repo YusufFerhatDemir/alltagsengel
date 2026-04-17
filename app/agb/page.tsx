@@ -102,26 +102,104 @@ export default function AGBPage() {
         </section>
 
         <section className="legal-section">
-          <h2>§ 9 Kündigung</h2>
+          <h2>§ 9 Widerrufsrecht für Verbraucher</h2>
           <p>
-            Beide Parteien können das Nutzungsverhältnis jederzeit ohne Angabe von Gründen kündigen. Bereits
-            gebuchte und bestätigte Termine bleiben von der Kündigung unberührt.
+            Verbrauchern (§ 13 BGB) steht bei Verträgen im Fernabsatz ein Widerrufsrecht nach §§ 312g, 355 BGB zu.
+          </p>
+          <p>
+            <strong>Widerrufsbelehrung:</strong> Sie haben das Recht, binnen vierzehn Tagen ohne Angabe von Gründen
+            diesen Vertrag zu widerrufen. Die Widerrufsfrist beträgt vierzehn Tage ab dem Tag des Vertragsschlusses.
+          </p>
+          <p>
+            Um Ihr Widerrufsrecht auszuüben, müssen Sie uns (Alltagsengel UG (haftungsbeschränkt),
+            Schillerstraße 31, 60313 Frankfurt am Main, info@alltagsengel.care, +49 178 3382825) mittels einer
+            eindeutigen Erklärung (z.B. ein mit der Post versandter Brief, Telefax oder E-Mail) über Ihren
+            Entschluss, diesen Vertrag zu widerrufen, informieren.
+          </p>
+          <p>
+            <strong>Vorzeitiges Erlöschen des Widerrufsrechts:</strong> Das Widerrufsrecht erlischt vorzeitig, wenn
+            wir mit der Ausführung der Dienstleistung mit Ihrer ausdrücklichen Zustimmung vor Ende der Widerrufsfrist
+            begonnen haben und Sie bestätigt haben, dass Ihnen bekannt ist, dass Sie bei vollständiger Vertragserfüllung
+            durch uns Ihr Widerrufsrecht verlieren (§ 356 Abs. 4 BGB).
+          </p>
+          <p>
+            <strong>Widerrufsfolgen:</strong> Haben Sie verlangt, dass die Dienstleistung während der Widerrufsfrist
+            beginnen soll, haben Sie uns einen angemessenen Betrag zu zahlen, der dem Anteil der bis zum Zeitpunkt
+            des Widerrufs bereits erbrachten Dienstleistungen entspricht.
           </p>
         </section>
 
         <section className="legal-section">
-          <h2>§ 10 Schlussbestimmungen</h2>
+          <h2>§ 10 Kündigung</h2>
           <p>
-            Es gilt das Recht der Bundesrepublik Deutschland. Gerichtsstand ist Frankfurt am Main, sofern der
-            Nutzer Kaufmann ist oder keinen allgemeinen Gerichtsstand in Deutschland hat.
+            Beide Parteien können das Nutzungsverhältnis jederzeit ohne Angabe von Gründen kündigen. Bereits
+            gebuchte und bestätigte Termine bleiben von der Kündigung unberührt.
+          </p>
+          <p>
+            Die Kündigung des Nutzungsverhältnisses kann über die Funktion „Konto und Daten löschen" im
+            Nutzerprofil, per E-Mail an info@alltagsengel.care oder in Textform erfolgen. Nach Kündigung werden
+            alle personenbezogenen Daten gemäß unserer Datenschutzerklärung gelöscht oder gesperrt, soweit
+            keine gesetzlichen Aufbewahrungspflichten entgegenstehen.
+          </p>
+        </section>
+
+        <section className="legal-section">
+          <h2>§ 11 Abgrenzung der Leistungen</h2>
+          <p>
+            Die über die Plattform vermittelten Alltagsbegleiter erbringen ausschließlich Leistungen zur Unterstützung
+            im Alltag gemäß § 45a SGB XI. <strong>Ausdrücklich nicht</strong> umfasst sind:
+          </p>
+          <ul>
+            <li>Medizinische Behandlungspflege nach § 37 SGB V (z.B. Injektionen, Wundversorgung, Medikamentengabe aus Originalpackung)</li>
+            <li>Körpernahe Pflege im Sinne der Grundpflege nach SGB XI (z.B. Waschen, Anziehen, Toilettengang)</li>
+            <li>Hauswirtschaftliche Versorgung als eigenständige Leistung nach § 36 SGB XI</li>
+            <li>Fahrdienste außerhalb des vermittelten Krankenfahrten-Moduls</li>
+          </ul>
+          <p>
+            Kunden, die solche Leistungen benötigen, sind verpflichtet, sich an einen zugelassenen ambulanten
+            Pflegedienst zu wenden. Der Betreiber übernimmt keine Haftung für Schäden, die durch unzulässige
+            Leistungsausdehnung entstehen.
+          </p>
+        </section>
+
+        <section className="legal-section">
+          <h2>§ 12 Datenschutz und Auftragsverarbeitung</h2>
+          <p>
+            Die Verarbeitung personenbezogener Daten erfolgt nach den Vorgaben der DSGVO und des BDSG. Details
+            zur Verarbeitung finden Sie in unserer <Link href="/datenschutz" className="legal-link">Datenschutzerklärung</Link>.
+          </p>
+          <p>
+            Zwischen Betreiber und Alltagsbegleitern besteht ein Auftragsverarbeitungsverhältnis im Sinne
+            des Art. 28 DSGVO, soweit Alltagsbegleiter Zugriff auf Kundendaten erhalten. Die technischen und
+            organisatorischen Maßnahmen (TOMs) sind dokumentiert und werden jährlich überprüft.
+          </p>
+        </section>
+
+        <section className="legal-section">
+          <h2>§ 13 Schlussbestimmungen</h2>
+          <p>
+            Es gilt das Recht der Bundesrepublik Deutschland unter Ausschluss des UN-Kaufrechts. Die gesetzlichen
+            Vorschriften zur Beschränkung der Rechtswahl und zur Anwendbarkeit zwingender Vorschriften, insbesondere
+            des Staates, in dem der Kunde als Verbraucher seinen gewöhnlichen Aufenthalt hat, bleiben unberührt.
+          </p>
+          <p>
+            Gerichtsstand ist Frankfurt am Main, sofern der Nutzer Kaufmann, juristische Person des öffentlichen
+            Rechts oder öffentlich-rechtliches Sondervermögen ist oder keinen allgemeinen Gerichtsstand in
+            Deutschland hat.
           </p>
           <p>
             Sollten einzelne Bestimmungen dieser AGB unwirksam sein oder werden, bleibt die Wirksamkeit der
             übrigen Bestimmungen unberührt.
           </p>
+          <p>
+            <strong>Online-Streitbeilegung:</strong> Die EU-Kommission stellt eine Plattform zur Online-Streit&shy;beilegung
+            (OS) bereit: <a href="https://ec.europa.eu/consumers/odr/" target="_blank" rel="noopener noreferrer" className="legal-link">https://ec.europa.eu/consumers/odr/</a>.
+            Wir sind nicht bereit oder verpflichtet, an Streitbeilegungsverfahren vor einer
+            Verbraucherschlichtungsstelle teilzunehmen.
+          </p>
         </section>
 
-        <p className="legal-date">Stand: März 2026</p>
+        <p className="legal-date">Stand: 17. April 2026 (Version 2.0)</p>
 
         <div className="legal-footer-nav">
           <Link href="/impressum">Impressum</Link>
