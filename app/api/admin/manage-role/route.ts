@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { logAuditEvent } from '@/lib/audit-log'
 
 export async function POST(request: NextRequest) {
   try {
@@ -66,6 +67,23 @@ export async function POST(request: NextRequest) {
     // 7. Auch user_metadata aktualisieren (für JWT-Check in Middleware)
     await adminSupabase.auth.admin.updateUserById(userId, {
       user_metadata: { role: newRole },
+    })
+
+    // AUTH-012: Audit-Log — Rollenwechsel dokumentieren (Fail-soft).
+    await logAuditEvent({
+      action: action === 'grant' ? 'role_grant' : 'role_revoke',
+      actorId: user.id,
+      actorRole: callerProfile.role,
+      targetId: userId,
+      targetEmail: targetProfile.email ?? null,
+      entityType: 'profile',
+      entityId: userId,
+      details: {
+        old_role: targetProfile.role,
+        new_role: newRole,
+        target_name: [targetProfile.first_name, targetProfile.last_name].filter(Boolean).join(' ') || null,
+      },
+      request,
     })
 
     return NextResponse.json({

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient as createRawClient } from '@supabase/supabase-js'
+import { logAuditEvent } from '@/lib/audit-log'
 
 /**
  * DELETE /api/user/delete
@@ -96,6 +97,17 @@ export async function DELETE(request: NextRequest) {
     const adminClient = createAdminClient()
     const userId = user.id
 
+    // AUTH-012: Rolle VOR dem Löschen snapshotten, damit das Audit-Event
+    //           die Rolle des Actors zum Zeitpunkt der Aktion enthält.
+    const { data: snapshotProfile } = await adminClient
+      .from('profiles')
+      .select('role, first_name, last_name')
+      .eq('id', userId)
+      .single()
+    const snapshotRole: string | null = snapshotProfile?.role ?? null
+    const snapshotName: string | null =
+      [snapshotProfile?.first_name, snapshotProfile?.last_name].filter(Boolean).join(' ') || null
+
     // Order matters (FK-Constraints von "leichtesten" zu "schwersten")
     await adminClient.from('notifications').delete().eq('user_id', userId)
     await adminClient
@@ -126,6 +138,24 @@ export async function DELETE(request: NextRequest) {
         { status: 500 }
       )
     }
+
+    // AUTH-012: Audit-Log — DSGVO Art. 17 Selbst-Löschung dokumentieren.
+    // Fail-soft: Delete war erfolgreich, Audit-Insert darf das nicht
+    // rückgängig machen. Actor = Target, da Self-Service.
+    await logAuditEvent({
+      action: 'user_self_delete',
+      actorId: userId,
+      actorRole: snapshotRole,
+      targetId: userId,
+      targetEmail: user.email,
+      entityType: 'profile',
+      entityId: userId,
+      details: {
+        reason: 'dsgvo_art_17_self_deletion',
+        target_name: snapshotName,
+      },
+      request,
+    })
 
     return NextResponse.json({
       success: true,
