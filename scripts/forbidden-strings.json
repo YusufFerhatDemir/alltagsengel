@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "description": "Verbotene Strings im gesamten Repo. Jeder Eintrag führt zum Abbruch von pre-commit + CI-Lint. Analogie: Schwarze Liste am Türsteher — Name drauf, kein Einlass.",
+  "version": 1,
+  "lastUpdated": "2026-04-17",
+  "rules": [
+    {
+      "id": "legal-entity-gmbh",
+      "pattern": "AlltagsEngel GmbH",
+      "reason": "Rechtsform ist UG (haftungsbeschränkt), NICHT GmbH. Siehe Impressum / HRB 140351.",
+      "caseSensitive": false,
+      "allowedReplacements": ["Alltagsengel UG (haftungsbeschränkt)"]
+    },
+    {
+      "id": "legal-entity-gmbh-de-spelling",
+      "pattern": "Alltagsengel GmbH",
+      "reason": "Rechtsform ist UG (haftungsbeschränkt), NICHT GmbH. Siehe Impressum / HRB 140351.",
+      "caseSensitive": false,
+      "allowedReplacements": ["Alltagsengel UG (haftungsbeschränkt)"]
+    }
+  ],
+  "excludeGlobs": [
+    "node_modules/**",
+    ".next/**",
+    ".git/**",
+    "archive/**",
+    "ios/**",
+    "android/**",
+    "out/**",
+    "dist/**",
+    "build/**",
+    "coverage/**",
+    "*.log",
+    "package-lock.json",
+    "yarn.lock",
+    "pnpm-lock.yaml",
+    "scripts/forbidden-strings.json",
+    "scripts/lint-forbidden.ts",
+    ".git/hooks/pre-commit"
+  ]
+}
