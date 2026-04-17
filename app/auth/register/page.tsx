@@ -94,8 +94,11 @@ function RegisterForm() {
       })
 
       if (authError) {
+        // AUTH-005 Fix: "already registered" verrät Existenz → generischen Success-Flow nutzen (silent redirect).
+        // Supabase sendet bei bereits registrierten E-Mails intern nichts — kein Leak nach außen.
         if (authError.message.includes('already registered') || authError.message.includes('already been registered')) {
-          setError('Diese E-Mail ist bereits registriert. Bitte melden Sie sich an.')
+          router.push('/auth/login?registered=true')
+          return
         } else if (authError.message.includes('valid email')) {
           setError('Bitte geben Sie eine gültige E-Mail-Adresse ein.')
         } else if (authError.message.includes('at least')) {
@@ -105,18 +108,19 @@ function RegisterForm() {
         } else if (authError.message.includes('signups not allowed') || authError.message.includes('Signups not allowed')) {
           setError('Registrierung ist derzeit deaktiviert. Bitte kontaktieren Sie den Support.')
         } else if (authError.message.includes('Database error')) {
-          setError('Datenbankfehler. Bitte stellen Sie sicher, dass die Datenbank korrekt eingerichtet ist.')
+          setError('Registrierung fehlgeschlagen. Bitte versuchen Sie es später erneut.')
         } else {
-          setError(`Fehler: ${authError.message}`)
+          // AUTH-005: Keine rohen Supabase-Messages leaken
+          setError('Registrierung fehlgeschlagen. Bitte prüfen Sie Ihre Angaben oder versuchen Sie es später erneut.')
         }
         setLoading(false)
         return
       }
 
-      // User already exists (Supabase returns user with empty identities for security)
+      // AUTH-005 Fix: User already exists (Supabase liefert user mit leeren identities als Enumeration-Schutz).
+      // Wir behandeln das wie einen echten Erfolg → gleicher Redirect, keine Welcome-Mail (um Re-Send zu vermeiden).
       if (data.user && data.user.identities && data.user.identities.length === 0) {
-        setError('Ein Konto mit dieser E-Mail existiert bereits. Bitte melden Sie sich an.')
-        setLoading(false)
+        router.push('/auth/login?registered=true')
         return
       }
 
@@ -229,9 +233,11 @@ function RegisterForm() {
         return
       }
 
-      setError('Unbekannter Fehler. Bitte versuchen Sie es erneut.')
+      setError('Registrierung fehlgeschlagen. Bitte versuchen Sie es später erneut.')
     } catch (err: any) {
-      setError(err?.message || 'Netzwerkfehler. Bitte prüfen Sie Ihre Internetverbindung.')
+      // AUTH-005 / AUTH-002: Rohe err.message nicht leaken (kann Enumeration oder interne Details enthüllen)
+      console.error('register error:', { name: err?.name, code: err?.code })
+      setError('Netzwerkfehler. Bitte prüfen Sie Ihre Internetverbindung und versuchen Sie es erneut.')
     } finally {
       setLoading(false)
     }
