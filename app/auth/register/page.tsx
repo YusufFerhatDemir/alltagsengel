@@ -4,7 +4,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { Suspense } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { geocodePLZ } from '@/lib/geocoding'
-import { validatePassword, isCommonPassword } from '@/lib/password-validation'
+import { validatePassword, validatePasswordAsync } from '@/lib/password-validation'
 import Link from 'next/link'
 import Icon3D from '@/components/Icon3D'
 import { trackRegistration } from '@/lib/tracking'
@@ -63,16 +63,25 @@ function RegisterForm() {
     setLoading(true)
     setError('')
 
-    // ═══ Passwort-Validierung ═══
-    const pwCheck = validatePassword(password)
+    // ═══ Passwort-Validierung (zxcvbn + Regex, AUTH-011) ═══
+    // userInputs: persönliche Strings, die zxcvbn zusätzlich als „bekannt" wertet.
+    // So wird z. B. „Alltagsengel2024!" oder „yusuf12345" als zu schwach erkannt.
+    const pwCheck = await validatePasswordAsync(password, [
+      email,
+      email.split('@')[0] || '',
+      firstName,
+      lastName,
+      'Alltagsengel',
+      'alltagsengel',
+    ])
     if (!pwCheck.valid) {
-      setError('Passwort erfüllt nicht die Mindestanforderungen.')
+      setError(
+        pwCheck.errors[0] && pwCheck.errors[0].startsWith('Zu schwach')
+          ? pwCheck.errors[0]
+          : 'Passwort erfüllt nicht die Mindestanforderungen.'
+      )
       setPasswordErrors(pwCheck.errors)
-      setLoading(false)
-      return
-    }
-    if (isCommonPassword(password)) {
-      setError('Dieses Passwort ist zu häufig. Bitte wählen Sie ein sichereres Passwort.')
+      setPasswordStrength(pwCheck.strength)
       setLoading(false)
       return
     }

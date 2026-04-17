@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { sendEmailNotification } from '@/lib/notifications'
-import { validatePassword, isCommonPassword } from '@/lib/password-validation'
+import { validatePasswordAsync } from '@/lib/password-validation'
 
 export async function POST(request: NextRequest) {
   try {
@@ -29,16 +29,18 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'userId/email und newPassword erforderlich' }, { status: 400 })
   }
 
-  // Strenge Passwort-Validierung (gleiche Regeln wie bei Registrierung)
-  const passwordCheck = validatePassword(newPassword)
+  // Strenge Passwort-Validierung (AUTH-011: zxcvbn + Regex)
+  // userInputs: E-Mail-Prefix + Marke, damit typische Treffer wie
+  // „Alltagsengel2024!" auf Server-Seite verlässlich blockiert werden.
+  const passwordCheck = await validatePasswordAsync(newPassword, [
+    email || '',
+    (email || '').split('@')[0] || '',
+    'Alltagsengel',
+    'alltagsengel',
+  ])
   if (!passwordCheck.valid) {
     return NextResponse.json({
       error: 'Passwort zu schwach: ' + passwordCheck.errors.join(', ')
-    }, { status: 400 })
-  }
-  if (isCommonPassword(newPassword)) {
-    return NextResponse.json({
-      error: 'Dieses Passwort ist zu häufig und unsicher'
     }, { status: 400 })
   }
 
