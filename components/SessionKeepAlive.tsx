@@ -1,5 +1,6 @@
 'use client'
 import { useEffect } from 'react'
+import * as Sentry from '@sentry/nextjs'
 import { createClient, readSessionFromIDB, writeSessionCookie, writeSessionBackup } from '@/lib/supabase/client'
 
 /**
@@ -50,14 +51,25 @@ export default function SessionKeepAlive() {
     }
     recoverFromIDB()
 
+    // ═══ Sentry: Initial User-Context setzen (falls bereits eingeloggt) ═══
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user?.id) {
+        Sentry.setUser({ id: user.id }) // nur UUID — kein Email/IP (PII-Schutz)
+      }
+    }).catch(() => { /* ignore */ })
+
     // ═══ 2. Auth State Listener ═══
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, _session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'TOKEN_REFRESHED') {
         console.debug('[SessionKeepAlive] Token erneuert ✓')
       } else if (event === 'SIGNED_OUT') {
         console.debug('[SessionKeepAlive] Abgemeldet')
+        Sentry.setUser(null) // User-Context löschen
       } else if (event === 'SIGNED_IN') {
         console.debug('[SessionKeepAlive] Angemeldet ✓')
+        if (session?.user?.id) {
+          Sentry.setUser({ id: session.user.id }) // nur UUID — kein Email/IP
+        }
       }
     })
 

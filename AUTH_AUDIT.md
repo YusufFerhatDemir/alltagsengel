@@ -1,0 +1,298 @@
+# Auth-Audit AlltagsEngel.care
+
+**Stand:** 2026-04-17
+**Auditor:** Claude Opus 4.7 (X High)
+**Projekt:** AlltagsEngel.care (Next.js 16 + Supabase + React 19 + Capacitor 8)
+**Umfang:** Vollständige Auth-Chain — Register, Login, Callback, Recovery, MFA, Middleware, RBAC, Rate-Limiting, Account-Deletion
+
+---
+
+## Executive Summary
+
+**Befunde:** 4 kritisch (P0), 5 hoch (P1), 3 mittel (P2)
+**Gesamt-Risiko-Einschätzung:** **HOCH**
+
+Die Sicherheitsarchitektur hat **solide Grundlagen** (server-verifizierte Sessions via `getUser()`, Admin-RBAC mit Superadmin-Schutz, IP+Email-Rate-Limiting, CSRF-Origin-Check), weist aber **vier exploitable P0-Lücken** auf — besonders rund um Admin-Password-Reset (Klartext-PW in E-Mail), Account-Deletion (kein Passwort-Confirm + CSRF-anfällig) und Error-Logging (potentieller Credential-Leak).
+
+### Top-3-Must-Fix (vor nächstem Production-Deploy)
+
+1. **AUTH-001** Passwort-Reset-Token-Hijack via Klartext-Passwort in Admin-Reset-Mail
+2. **AUTH-003** Account-Deletion ohne Passwort-Bestätigung — CSRF-Wipe möglich
+3. **AUTH-005** E-Mail-Enumeration in Register/Login — Credential-Stuffing-Vehikel
+
+---
+
+## Findings
+
+### AUTH-001 [P0] Klartext-Passwort in Admin-Reset-Mail
+
+**File:** `app/api/admin/reset-password/route.ts:88-92`
+
+**Beschreibung:**
+Admin setzt ein neues Passwort und die Mail enthält `${newPassword}` im Klartext.
+
+**Exploit-Szenario:**
+1. Admin-Mailbox wird kompromittiert (Yahoo-Leak, Phishing, etc.)
+2. Angreifer durchsucht Archive nach Reset-Mails und findet Klartext-Passwörter
+3. Alle betroffenen Konten sind dauerhaft kompromittiert
+4. DSGVO-Art.-32-Verletzung (keine angemessenen TOMs)
+
+**Code-Snippet:**
+```tsx
+<tr><td>Passwort</td><td style="font-weight:600;font-family:monospace;">${newPassword}</td></tr>
+```
+
+**Fix-Empfehlung:**
+Ersatz durch One-Time-Recovery-Link (Supabase `generateLink({ type: 'recovery' })`). User setzt Passwort selbst via HTTPS. Alternativ Klartext-PW nur im Admin-UI anzeigen, nie per E-Mail senden.
+
+**Effort:** M
+
+---
+
+### AUTH-002 [P0] Unsanitized Error-Logging in Admin-Reset
+
+**File:** `app/api/admin/reset-password/route.ts:103-106`
+
+**Beschreibung:**
+`console.error('reset-password error:', err)` schreibt das komplette Error-Objekt in Logs. Supabase-Fehler können in seltenen Fällen URL-encoded API-Keys oder Request-Headers enthalten.
+
+**Exploit-Szenario:**
+Sentry/CloudWatch-Log-Zugriff → API-Key-Leak → Full-DB-Access via Service-Role.
+
+**Fix-Empfehlung:**
+```ts
+console.error('reset-password error:', { code: err?.code, name: err?.name })
+// NIEMALS err oder err.message direkt loggen
+```
+
+**Effort:** S
+
+---
+
+### AUTH-003 [P0] Account-Deletion ohne Passwort-Bestätigung + unvollständige Kaskade
+
+**File:** `app/api/user/delete/route.ts`
+
+**Beschreibung:**
+DELETE-Endpoint löscht sofort, ohne Re-Authentication. Kaskadierung ist unvollständig (z. B. `angel_certifications`, `care_recipients`-Daten).
+
+**Exploit-Szenario:**
+- CSRF-Attack via `<img src="/api/user/delete">` → Konto weg
+- XSS im Chat → `fetch('/api/user/delete', {method:'DELETE'})` → Audit-Trail entfernt
+- DSGVO Art. 17: Recht auf Vergessenwerden nicht vollständig erfüllt
+
+**Fix-Empfehlung:**
+1. Passwort-Confirm via `signInWithPassword` vor Löschung
+2. Soft-Delete mit 7-Tage-Grace-Period (DSGVO-konforme Wiederherstellung)
+3. E-Mail-Bestätigung vor Hard-Delete
+4. Kaskade-Audit: jede FK-Relation prüfen
+
+**Effort:** L
+
+---
+
+### AUTH-004 [P0] Duplikat von AUTH-001 — zweiter kritischer Pfad
+
+**File:** Admin-Reset-Flow als einziger Weg für Admins, User-Passwörter zu ändern
+
+**Beschreibung:**
+Dies ist nicht nur eine E-Mail-Option — es ist die Standard-Methode. Jeder interne Mitarbeiter mit Admin-Zugriff kann so jedes Konto übernehmen. Siehe AUTH-001 Fix.
+
+**Effort:** M (siehe AUTH-001)
+
+---
+
+### AUTH-005 [P1] E-Mail-Enumeration in Register + Login
+
+**Files:**
+- `app/auth/register/page.tsx:97-110`
+- `app/auth/login/page.tsx:203-209`
+
+**Beschreibung:**
+Register: Unterschiedliche Fehler für "existiert" vs. "ungültig" → Angreifer enumeriert registrierte E-Mails.
+Login: "Email not confirmed" vs. "Invalid login credentials" → verrät ob E-Mail registriert ist.
+
+**Exploit-Szenario:**
+Angreifer mit 1M-E-Mail-Liste findet alle registrierten Konten, startet gezielten Credential-Stuffing-Angriff mit IP-Rotation.
+
+**Fix-Empfehlung:**
+Einheitlicher Fehler nach außen: `"E-Mail oder Passwort falsch, oder Konto nicht bestätigt."`
+Detail nur server-seitig loggen.
+
+**Effort:** S
+
+---
+
+### AUTH-006 [P1] IP-Rate-Limit wird bei Success nicht zurückgesetzt
+
+**File:** `app/api/auth/check-rate-limit/route.ts:143-147`
+
+**Beschreibung:**
+Nach erfolgreichem Login wird nur der E-Mail-Counter gelöscht, nicht der IP-Counter. Intent: Schutz gegen Credential-Stuffing. Problem: Alle Nutzer hinter einer NAT (Pflegeheim, Büro) teilen sich den IP-Counter → DoS-Vektor.
+
+**Exploit-Szenario:**
+Pflegeheim mit 50 Nutzern — ein Mitarbeiter tippt 5x falsch → 24h IP-Sperre für alle.
+
+**Fix-Empfehlung:**
+- Option A: Beide Counter bei Success resetten
+- Option B: IP-Counter nach Success halbieren (exponentieller Decay)
+- Option C: Pro-User-Counter separat von Pro-IP-Counter, Pro-IP nur bei Reihen von Failures
+
+**Effort:** S
+
+---
+
+### AUTH-007 [P1] Middleware FAIL-SOFT kann geschützte Routen kurzzeitig zeigen
+
+**File:** `middleware.ts:82-96`
+
+**Beschreibung:**
+Wenn `getUser()` im Middleware-Kontext fehlschlägt (Netzwerk, Token-Parse-Fehler), wird die Route durchgelassen. Client-Side Redirect kommt danach mit ~3.5s Delay.
+
+**Bewertung:**
+- Für UX (WhatsApp-Persistenz) akzeptabel bei `/kunde`, `/engel`
+- Für `/admin` bereits FAIL-CLOSED ✓
+- Race-Conditions können sensible Daten kurz anzeigen
+
+**Fix-Empfehlung:**
+- Dokumentation der Design-Entscheidung
+- Für sensible User-Routen (z. B. `/kunde/zahlungsdaten`): FAIL-CLOSED
+- Client-Side-Timeout ggf. auf 5s erhöhen, damit Auth-Recovery Zeit hat
+
+**Effort:** S
+
+---
+
+### AUTH-008 [P1] Keine MFA/TOTP
+
+**File:** — (Feature fehlt)
+
+**Beschreibung:**
+Einzige Auth-Faktoren: Passwort + E-Mail-Bestätigung. Für eine App mit Gesundheitsdaten (Pflegegrad, Medikation-Hinweise) und finanzieller Abrechnung (§45b SGB XI) ist das zu wenig. DSGVO Art. 32 fordert "state of the art" TOMs — 2FA zählt heute dazu.
+
+**Exploit-Szenario:**
+Credential-Reuse aus anderen Leaks → Engel-Konto → Vollzugriff auf alle Kunden-PII dieser Engel.
+
+**Fix-Empfehlung:**
+Supabase bietet TOTP-Support. UI-Komponente bauen: optional für Kunden, pflichtig für Engel+Admin.
+
+**Effort:** L
+
+---
+
+### AUTH-009 [P1] Session-Lock bypassed — Race-Condition bei Refresh
+
+**File:** `lib/supabase/client.ts:192-195`
+
+**Beschreibung:**
+`lock` ist no-op implementiert. Concurrent Refresh-Requests aus mehreren Tabs können unterschiedliche Tokens bekommen → alte Sessions leben weiter.
+
+**Exploit-Szenario:**
+User ändert Passwort in Tab 1 → forcierter Refresh. Tab 2 bekommt parallel alten Token, neuer Refresh wird nicht abgewartet → Attacker mit gestohlenem Cookie kann reinloggen.
+
+**Fix-Empfehlung:**
+In-Memory Promise-Deduplizierung statt komplettem Bypass:
+```ts
+let refreshPromise: Promise<any> | null = null
+lock: async (_n, _t, fn) => {
+  if (refreshPromise) return refreshPromise
+  refreshPromise = fn().finally(() => { refreshPromise = null })
+  return refreshPromise
+}
+```
+
+**Effort:** M
+
+---
+
+### AUTH-010 [P2] Magic-Link-Expiry — Supabase-Default 24h zu lang
+
+**File:** `app/api/auth/send-reset/route.ts:35-40`
+
+**Beschreibung:**
+Supabase-Default: 24h. Reset-Mail im Postfach-Archiv bleibt einen Tag lang exploit-fähig. Branch-Check: kein `expiresIn` überschrieben.
+
+**Fix-Empfehlung:**
+`expiresIn: 3600` (1h). Alternativ Supabase Dashboard → Auth → URL Configuration → Password Recovery Expiry senken.
+
+**Effort:** S
+
+---
+
+### AUTH-011 [P2] Schwache Passwort-Policy
+
+**File:** `lib/password-validation.ts`
+
+**Beschreibung:**
+Nur 15 hardcoded schwache Passwörter. Kein zxcvbn, kein Haben-I-been-pwned. "Alltagsengel2024!" passiert die Validierung, ist aber trivial zu crucken.
+
+**Fix-Empfehlung:**
+- zxcvbn (Score ≥ 3)
+- HIBP-API mit k-anonymized Hash-Range-Lookup (nur SHA1-Prefix senden)
+
+**Effort:** M
+
+---
+
+### AUTH-012 [P2] Credential-Logging in `console.error` — stichprobenartig OK
+
+**File:** Systemweit geprüft
+
+**Beschreibung:**
+Stichprobe zeigt: keine hardcoded Secrets in Logs. Aber AUTH-002 zeigt, dass rohe Error-Objekte geloggt werden, was Credentials versehentlich mit-leaken kann.
+
+**Fix-Empfehlung:** Siehe AUTH-002.
+
+**Effort:** S
+
+---
+
+## Was gut gemacht ist
+
+1. **Server-verifizierte Sessions** — konsequent `getUser()` statt `getSession()` in Middleware und Server-Routes.
+2. **Rate-Limiting** — In-Memory + DB-Persistent, IP + Email, exponentieller Backoff (5 min → 60 min → 24h).
+3. **CSRF-Origin-Check** — `middleware.ts:40-47` validiert Origin gegen Host-Whitelist.
+4. **Admin-Routes FAIL-CLOSED** — DB-Fallback-Check wenn JWT-Metadaten fehlen.
+5. **Passwort-Requirements** — 8+ Zeichen, Mixed-Case, Zahl, Sonderzeichen, client + server validiert.
+6. **RBAC** — Superadmin-Schutz gegen Selbst-Enthebung, Rollen-JWT + DB-Fallback.
+7. **Session-Persistenz** — Cookie + localStorage + IndexedDB, Capacitor-Resume-Handling — WhatsApp-Level UX.
+8. **PII-Schutz in neuem Sentry-Setup** — `maskAllText`, `sendDefaultPii: false`, Header-Stripping (durch aktuelles Hardening hinzugefügt).
+9. **Audit-Logging** — Auth-Events werden in `mis_auth_log` protokolliert.
+
+---
+
+## Architektur-Observations
+
+1. **Session-Recovery-Komplexität** — Dreifach-Storage ist gut für UX, aber schwer zu debuggen. Erhöht Angriffsfläche bei Locks (AUTH-009).
+2. **E-Mail als einziger Zweitfaktor** — Kompromittierter Resend-API-Key = Totalausfall. Key-Rotation monatlich empfohlen.
+3. **Rate-Limiter in Supabase-DB** — OK für <100 concurrent Logins. Für Wachstum: Upstash/Redis migrieren.
+4. **DSGVO-Compliance-Lücken:**
+   - Account-Deletion nicht vollständig (kein Soft-Delete mit Grace-Period)
+   - Klartext-Passwort in Admin-E-Mail = klare Art. 32 Verletzung
+   - Recht auf Vergessenwerden nicht komplett (FK-Kaskaden unvollständig)
+5. **Admin-Password-Reset als Default-Methode** ist systemisch gefährlich — sollte nur Last-Resort sein. Primärer Flow: Self-Service via Recovery-Link.
+
+---
+
+## Priorisierte Roadmap
+
+### Sprint 1 — diese Woche (~3 Tage)
+- [ ] AUTH-001 + AUTH-004: Admin-Reset-Flow auf Recovery-Link umstellen
+- [ ] AUTH-002: Error-Logging sanitieren
+- [ ] AUTH-005: Enumeration-Fehler vereinheitlichen
+
+### Sprint 2 — nächste 2 Wochen (~5 Tage)
+- [ ] AUTH-003: Account-Deletion mit Passwort-Confirm + Soft-Delete + Grace-Period
+- [ ] AUTH-006: IP-Rate-Limit-Decay bei Success
+- [ ] AUTH-010: Magic-Link-Expiry 1h
+- [ ] AUTH-007: FAIL-CLOSED für sensible Kunden-Routen
+
+### Sprint 3 — nächster Monat (~10 Tage)
+- [ ] AUTH-008: TOTP/MFA (Pflicht für Engel+Admin, optional für Kunden)
+- [ ] AUTH-009: Session-Lock reimplementieren
+- [ ] AUTH-011: zxcvbn + HIBP
+
+---
+
+**Nächster Audit nach P0-Fixes:** 2026-05-01 (2 Wochen)
+**Penetration-Test (extern):** Empfohlen nach Sprint 2 — Budget ~7-12k€
