@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
-import { IconWingsGold, IconDocument, IconCheck, IconClock } from '@/components/Icons'
+import { IconWingsGold, IconDocument, IconCheck, IconClock, IconInfo, IconShield } from '@/components/Icons'
 import { UNIT_ECONOMICS } from '@/lib/mis/constants'
 import { AvatarEngel } from '@/components/AvatarGlow'
 
@@ -133,6 +133,24 @@ export default function MeinProfilPage() {
           <div className="setting-row"><div><div className="setting-main"><IconDocument size={14} /> Erste-Hilfe-Nachweis</div><div className="setting-sub" style={{ color: 'var(--green)' }}><IconCheck size={11} /> Verifiziert</div></div></div>
           <div className="setting-row"><div><div className="setting-main"><IconDocument size={14} /> Polizeiliches Führungszeugnis</div><div className="setting-sub" style={{ color: 'var(--gold)' }}><IconClock size={11} /> Wird geprüft</div></div></div>
           <div className="setting-row"><div><div className="setting-main"><IconDocument size={14} /> Versicherungsnachweis</div><div className="setting-sub" style={{ color: 'var(--green)' }}><IconCheck size={11} /> Automatisch</div></div></div>
+        </div>
+
+        <div className="section-label">Info &amp; Hilfe</div>
+        <div className="settings-card">
+          <Link href="/engel/info" className="setting-row" style={{ textDecoration: 'none', color: 'inherit', cursor: 'pointer' }}>
+            <div>
+              <div className="setting-main"><IconInfo size={14} /> Ablauf &amp; Vergütung</div>
+              <div className="setting-sub">Wie funktioniert AlltagsEngel für dich?</div>
+            </div>
+            <div style={{ color: 'var(--ink4)', fontSize: 18 }}>›</div>
+          </Link>
+          <Link href="/datenschutz" className="setting-row" style={{ textDecoration: 'none', color: 'inherit', cursor: 'pointer' }}>
+            <div>
+              <div className="setting-main"><IconShield size={14} /> Datenschutz</div>
+              <div className="setting-sub">Wie wir deine Daten verarbeiten</div>
+            </div>
+            <div style={{ color: 'var(--ink4)', fontSize: 18 }}>›</div>
+          </Link>
         </div>
 
         <button
