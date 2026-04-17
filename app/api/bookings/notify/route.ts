@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { notifyAngelNewBooking, notifyCustomerBookingAccepted, type BookingNotifyData } from '@/lib/notifications'
 
 /**
@@ -66,11 +67,16 @@ export async function POST(req: NextRequest) {
       amount: Number((booking as any).total_amount) || 0,
     }
 
+    // Notifications werden über den Service-Role-Client geschrieben,
+    // damit die verschärfte RLS (auth.uid() = user_id) den Cross-User-Insert
+    // (Kunde → Engel bzw. Engel → Kunde) nicht blockiert.
+    const adminSupabase = createAdminClient()
+
     if (event === 'created') {
       // Neue Buchung → Engel benachrichtigen
       const angelUserId = angel?.id || ap?.id
       if (angelUserId) {
-        await notifyAngelNewBooking(supabase, angelUserId, notifyData)
+        await notifyAngelNewBooking(adminSupabase, angelUserId, notifyData)
       }
       return NextResponse.json({ success: true, event: 'created', notified: 'angel' })
     }
@@ -78,7 +84,7 @@ export async function POST(req: NextRequest) {
     if (event === 'accepted') {
       // Buchung angenommen → Kunde benachrichtigen
       if (booking.customer_id) {
-        await notifyCustomerBookingAccepted(supabase, booking.customer_id, notifyData)
+        await notifyCustomerBookingAccepted(adminSupabase, booking.customer_id, notifyData)
       }
       return NextResponse.json({ success: true, event: 'accepted', notified: 'customer' })
     }
