@@ -2,7 +2,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { validatePassword, isCommonPassword } from '@/lib/password-validation'
+import { validatePasswordAsync } from '@/lib/password-validation'
 import Icon3D from '@/components/Icon3D'
 import { trackRegistration } from '@/lib/tracking'
 
@@ -46,15 +46,19 @@ export default function FahrerRegisterPage() {
     setSubmitting(true)
     setError('')
 
-    // ═══ Passwort-Validierung ═══
-    const pwCheck = validatePassword(formData.password)
+    // ═══ Passwort-Validierung (zxcvbn + Regex, AUTH-011) ═══
+    const pwCheck = await validatePasswordAsync(formData.password, [
+      formData.email,
+      formData.email.split('@')[0] || '',
+      formData.firstName,
+      formData.lastName,
+      formData.companyName,
+      formData.plz,
+      'Alltagsengel',
+      'alltagsengel',
+    ])
     if (!pwCheck.valid) {
       setError('Passwort: ' + pwCheck.errors.join(', '))
-      setSubmitting(false)
-      return
-    }
-    if (isCommonPassword(formData.password)) {
-      setError('Dieses Passwort ist zu häufig. Bitte wählen Sie ein sichereres Passwort.')
       setSubmitting(false)
       return
     }

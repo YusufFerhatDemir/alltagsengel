@@ -310,7 +310,7 @@ Stichprobe zeigt: keine hardcoded Secrets in Logs. Aber AUTH-002 zeigt, dass roh
 ### Sprint 3 — nächster Monat (~10 Tage)
 - [ ] AUTH-008: TOTP/MFA (Pflicht für Engel+Admin, optional für Kunden)
 - [ ] AUTH-009: Session-Lock reimplementieren
-- [ ] AUTH-011: zxcvbn (HIBP via Supabase-Dashboard — siehe `SUPABASE_AUTH_HARDENING.md`, Punkt 3)
+- [x] ~~AUTH-011: zxcvbn (Passwort-Stärke mit DE-Dictionary + User-Inputs)~~ ✅ 2026-04-17 (zxcvbn-ts, Score ≥ 3 Gate, Brand + Keyboard-Muster werden geblockt. HIBP-K-Anonymity weiter TODO für Sprint 4.)
 - [ ] **AUTH-012 (NEU): Admin-Audit-Log** — jeder Admin-State-Change-Call (User-Sperre, Rate-Limit-Reset, Dokument-Approval, Pricing-Update) muss eine Zeile in `mis_audit_log` erzeugen mit `actor_id`, `action`, `target_id`, `before_snapshot`, `after_snapshot`, `ip`, `ua`, `ts`. Grund: Compliance (DSGVO Art. 30, ISO 27001 A.12.4.1) + Insider-Threat-Forensik. Aufwand ~3 Tage (Tabelle `mis_audit_log` existiert bereits; Middleware-Wrapper um alle `/api/admin/*`-Routes + UI-Filter in `/mis/audit`). Bewusst nach Sprint 2 verschoben.
 - [x] **RLS-P0-Fixes aus `RLS_AUDIT.md`** — RPC `get_emergency_info_with_pin` gebaut, offene Policies auf `notfall_info` + `medikamentenplan` gedroppt (2026-04-17, CAPA-2026-001). Defense-in-Depth: DB-CHECK-Constraint auf `notfall_pin` + CI-Lint `npm run audit:rls`.
 
@@ -332,6 +332,11 @@ Stichprobe zeigt: keine hardcoded Secrets in Logs. Aber AUTH-002 zeigt, dass roh
 - DB-CHECK-Constraint `notfall_info_pin_format_check` (`NULL | '' | ^\d{4}$`) als Defense-in-Depth.
 - Audit-RPCs + CI-Lint-Script `scripts/audit-rls.ts` + npm-Script `audit:rls` angelegt → prevention-control, damit unsichere Policies nicht unbemerkt zurückkehren.
 - Tesseract-OCR auf `dynamic import` umgestellt → First-Load-JS auf `/kunde/notfall` fällt erwartet von ~2.5 MB → ~200 KB.
+
+**2026-04-17 (X-High-Batch 3 — Prevention + AUTH-011):**
+- Grep-Prevention-Control gegen Regressions-Strings (z. B. falsche Rechtsform im Footer) mit Pre-Commit-Hook + CI-Lint. Config: `scripts/forbidden-strings.json`, Script: `scripts/lint-forbidden.ts`, Hook: `scripts/hooks/pre-commit`, Installer: `npm run setup:hooks`. 418 Dateien gescannt, 0 Treffer; Gegenprobe mit eingeschleustem Muster greift hart. Details in `RLS_AUDIT.md` Mitigation-Log (#4).
+- AUTH-011 erledigt: `validatePasswordAsync(password, userInputs?)` in `lib/password-validation.ts` mit `@zxcvbn-ts/core` + `@zxcvbn-ts/language-de` + `@zxcvbn-ts/language-common` (dynamic import, Singleton-Init). Score ≥ 3 ist Gate, zxcvbn-Feedback wird dem Nutzer in DE angezeigt. Call-Sites: `app/auth/register/page.tsx`, `app/fahrer/register/page.tsx` (Client) + `app/api/admin/reset-password/route.ts` (Server). `userInputs` enthält E-Mail, E-Mail-Prefix, Vor-/Nachname, Marke — so wird z. B. „Alltagsengel2024!" als schwach erkannt (vorher akzeptiert).
+- Smoke-Test via tsx: Marke+Jahr → BLOCK (score 2), Keyboard-Muster (`qwertzuiop1!A`) → BLOCK (score 2), xkcd-Passwort + Random-16 → OK. HIBP-Range-Lookup bleibt für Sprint 4 offen.
 
 ---
 
