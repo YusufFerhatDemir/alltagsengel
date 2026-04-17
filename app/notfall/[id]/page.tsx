@@ -7,7 +7,8 @@ import { createClient } from '@/lib/supabase/client';
 interface NotfallInfo {
   id: string;
   user_id: string;
-  notfall_pin: string;
+  // notfall_pin wird serverseitig rausgefiltert (RLS-P0-Fix 2026-04-17):
+  // Der PIN verlässt niemals die DB — RPC liefert Response ohne diese Spalte.
   blutgruppe?: string;
   allergien?: string;
   vorerkrankungen?: string;
@@ -19,6 +20,19 @@ interface NotfallInfo {
   hausarzt_name?: string;
   hausarzt_telefon?: string;
 }
+
+interface EmergencyRpcSuccess {
+  notfall: NotfallInfo;
+  medikamente: Medication[];
+  profile: Profile;
+}
+
+interface EmergencyRpcError {
+  error: 'invalid_pin' | 'rate_limited';
+  retry_after?: number;
+}
+
+type EmergencyRpcResult = EmergencyRpcSuccess | EmergencyRpcError | null;
 
 interface Medication {
   id: string;
@@ -63,45 +77,50 @@ export default function NotfallPage() {
     setError('');
 
     try {
-      // Fetch notfall_info
-      const { data: notfallData, error: notfallError } = await supabase
-        .from('notfall_info')
-        .select('*')
-        .eq('user_id', id)
-        .single();
+      // RLS-P0-Fix 2026-04-17: PIN-Prüfung läuft serverseitig via RPC.
+      // Der PIN wird in keinem Szenario an den Client zurückgegeben —
+      // bei Match kommen Notfall-Daten (ohne notfall_pin), bei Mismatch
+      // kommt {error:'invalid_pin'}, bei Brute-Force {error:'rate_limited'}.
+      const { data, error: rpcError } = await supabase.rpc(
+        'get_emergency_info_with_pin',
+        { p_user_id: id, p_pin: pinInput }
+      );
 
-      if (notfallError || !notfallData) {
+      if (rpcError) {
+        setError('Fehler beim Abrufen der Daten');
+        setLoading(false);
+        return;
+      }
+
+      const result = data as EmergencyRpcResult;
+
+      if (!result) {
         setError('Keine Notfallinformationen hinterlegt');
         setLoading(false);
         return;
       }
 
-      // Check PIN
-      if (notfallData.notfall_pin !== pinInput) {
+      if ('error' in result) {
+        if (result.error === 'rate_limited') {
+          setError('Zu viele Versuche. Bitte in einer Stunde erneut versuchen.');
+        } else {
+          setError('Falscher PIN');
+        }
         setShake(true);
-        setError('Falscher PIN');
         setTimeout(() => setShake(false), 500);
         setLoading(false);
         return;
       }
 
-      // Fetch profile with correct column names
-      const { data: profileData } = await supabase
-        .from('profiles')
-        .select('id, first_name, last_name')
-        .eq('id', id)
-        .single();
+      if (!result.notfall) {
+        setError('Keine Notfallinformationen hinterlegt');
+        setLoading(false);
+        return;
+      }
 
-      // Fetch medications with correct column names and filter
-      const { data: medData } = await supabase
-        .from('medikamentenplan')
-        .select('id, medikament_name, dosierung, einheit, einnahme_morgens, einnahme_mittags, einnahme_abends, einnahme_nachts, einnahme_hinweis')
-        .eq('user_id', id)
-        .eq('aktiv', true);
-
-      setNotfallInfo(notfallData);
-      setProfile(profileData || null);
-      setMedications(medData || []);
+      setNotfallInfo(result.notfall);
+      setProfile(result.profile || null);
+      setMedications(result.medikamente || []);
       setStage('info');
     } catch (err) {
       console.error('Error:', err);

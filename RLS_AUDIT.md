@@ -1,9 +1,14 @@
 # RLS-Audit — AlltagsEngel.care Supabase-Policies
 
-**Stand:** 2026-04-17
+**Stand:** 2026-04-17 (Version 1.1 — P0-Mitigation complete)
 **Scope:** Alle 57 Tabellen im `public`-Schema des Projekts `nnwyktkqibdjxgimjyuq`
 **Methode:** Introspection über `pg_policies` + `pg_class.relrowsecurity`, plus Code-Review
 von App-Pfaden, die mit den betroffenen Tabellen sprechen.
+
+> **Update 2026-04-17 (zweiter Durchgang):** Beide P0-Funde sind behoben.
+> Migration `rls_p0_emergency_pin_gate` ist live, die zwei offenen Policies
+> sind gedroppt, Frontend nutzt jetzt `supabase.rpc('get_emergency_info_with_pin')`.
+> Details siehe Abschnitt „Mitigation-Log" unten.
 
 ---
 
@@ -333,10 +338,80 @@ weil Policy auf `service_role` scoped ist).
 - [x] 13 offene Policies analysiert
 - [x] 2 P0-Funde dokumentiert (`medikamentenplan`, `notfall_info`)
 - [x] App-Code-Verifikation für PIN-Gate (client-side confirmed)
-- [ ] Migrations-PR für `get_emergency_info_with_pin` geschrieben und gemergt
-- [ ] CAPA-Eintrag angelegt
-- [ ] Klärung DSGVO-Art.-33-Meldung mit Datenschutzbeauftragtem
-- [ ] CI-Lint-Script `audit-rls.ts` eingerichtet
+- [x] Migrations-PR für `get_emergency_info_with_pin` geschrieben und gemergt
+  (Migration `rls_p0_emergency_pin_gate`, 2026-04-17)
+- [x] Offene Policies gedroppt: `Public emergency access with pin` (notfall_info),
+  `Public emergency access medikamente` (medikamentenplan)
+- [x] Frontend `/notfall/[id]/page.tsx` auf RPC umgestellt (kein client-side PIN-Check mehr)
+- [x] Rate-Limit + Audit-Tabelle `notfall_access_attempts` angelegt
+- [x] Smoke-Tests gegen RPC: Happy-Path, invalid_pin, rate_limited ✅
+- [ ] CAPA-Eintrag anlegen (Due: nächste Woche)
+- [ ] Klärung DSGVO-Art.-33-Meldung mit Datenschutzbeauftragtem (Scope: 2 betroffene
+  notfall_info-Zeilen, 1 aktiver Medikamentenplan — Wahrscheinlichkeit einer realen
+  Exfiltration gering, da Produkt pre-Launch; Entscheidung aber formal festhalten)
+- [ ] CI-Lint-Script `audit-rls.ts` eingerichtet (Sprint 3)
+- [ ] CHECK-Constraint `notfall_pin ~ '^\d{4}$' OR notfall_pin IS NULL` nachziehen
+  (Sprint 3 — verhindert ungültige PINs schon beim INSERT/UPDATE)
 
-Nach Abschluss der Mitigation dieses Dokument datieren + „Version 1.1 –
-Mitigation complete" ergänzen.
+---
+
+## Mitigation-Log
+
+### 2026-04-17 — RLS-P0 behoben
+
+**Migration:** `rls_p0_emergency_pin_gate`
+**Umfang:**
+
+1. Neue Tabelle `notfall_access_attempts` (uuid, user_id, success, attempted_at)
+   mit RLS enabled. SELECT nur für Admins (`is_admin()`), kein Policy für
+   INSERT/UPDATE/DELETE — Writes laufen ausschließlich über SECURITY-DEFINER-RPC.
+2. Neue Funktion `public.get_emergency_info_with_pin(p_user_id uuid, p_pin text)`
+   als SECURITY DEFINER:
+   - Input-Validierung: PIN muss `^\d{4}$` matchen
+   - Rate-Limit: 10 Fehlversuche/h pro `user_id` → Rückgabe `{error:'rate_limited'}`
+   - PIN-Match gegen `notfall_info.notfall_pin`
+   - Erfolgs-Response: `{notfall, medikamente, profile}` als jsonb.
+     `notfall_pin` wird mittels `to_jsonb(...) - 'notfall_pin'` rausgefiltert
+     und verlässt niemals die DB.
+   - Miss-Response: `{error:'invalid_pin'}`
+3. EXECUTE-Grant auf RPC für `anon` + `authenticated`.
+4. Gedroppte Policies:
+   - `"Public emergency access with pin"` auf `notfall_info`
+   - `"Public emergency access medikamente"` auf `medikamentenplan`
+
+**Frontend-Anpassung:** `app/notfall/[id]/page.tsx`
+- Drei separate Queries (notfall_info + profiles + medikamentenplan) durch
+  **einen** `supabase.rpc('get_emergency_info_with_pin', {p_user_id, p_pin})` ersetzt.
+- Client-seitiger PIN-Vergleich entfernt.
+- TypeScript-Types `EmergencyRpcSuccess | EmergencyRpcError` für Typ-sichere
+  Diskriminierung im UI.
+- Rate-Limit-Fall zeigt Hinweis: „Zu viele Versuche. Bitte in einer Stunde erneut versuchen."
+
+**Verifikation:**
+```
+-- 1) Offene Policies sind weg
+SELECT policyname FROM pg_policies
+ WHERE tablename IN ('notfall_info','medikamentenplan')
+   AND qual = 'true';  -- 0 rows ✅
+
+-- 2) RPC-Permissions
+-- anon + authenticated haben EXECUTE ✅
+
+-- 3) Anon-SELECT scheitert
+-- curl '/rest/v1/notfall_info?select=*' -H "apikey:<anon>"
+-- → [] (RLS blockt, weil Policy "Users can view own" auf auth.uid() scoped)
+
+-- 4) Happy-Path (temp-PIN in Transaktion): {notfall, profile, medikamente} ohne notfall_pin ✅
+-- 5) Falscher PIN: {error:'invalid_pin'} ✅
+-- 6) 11 Fehlversuche: {error:'rate_limited', retry_after:3600} ✅
+```
+
+**Effekt:**
+Die DSGVO-Art.-9-Exposition ist geschlossen. Der PIN wird nie mehr an den Client
+übermittelt. Brute-Force auf 4-stellige PINs wird nach 10 Versuchen blockiert.
+Admin-Zugriff auf das Audit-Log erlaubt forensische Nachverfolgung.
+
+**Offener Rest:** DSGVO-Art.-33-Meldung formal mit DSB abstimmen. Scope (2
+notfall_info-Zeilen, 1 aktiver Medikamentenplan) spricht für „kein Risiko für
+Rechte und Freiheiten betroffener Personen" — Entscheidung aber dokumentieren,
+nicht einfach mündlich begraben.
