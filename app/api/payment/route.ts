@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 export async function POST(req: NextRequest) {
   try {
@@ -53,8 +54,9 @@ export async function POST(req: NextRequest) {
       .update({ status: 'completed' })
       .eq('id', payment.id)
 
-    // Benachrichtigung erstellen
-    await supabase.from('notifications').insert({
+    // Benachrichtigung erstellen (Service-Role, da Insert für anderen User_id erfolgt)
+    const adminSupabase = createAdminClient()
+    await adminSupabase.from('notifications').insert({
       user_id: booking.angel_id,
       type: 'payment',
       title: 'Zahlung eingegangen',
