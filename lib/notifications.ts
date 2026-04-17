@@ -249,7 +249,7 @@ function wrapEmailTemplate(name: string, subject: string, content: string): stri
       ${content}
     </div>
     <div style="text-align:center;margin-top:24px;font-size:11px;color:#aaa;">
-      <p>AlltagsEngel GmbH · Frankfurt am Main</p>
+      <p>Alltagsengel UG (haftungsbeschränkt) · Frankfurt am Main</p>
       <p>Diese E-Mail wurde automatisch gesendet. Bitte nicht antworten.</p>
     </div>
   </div>

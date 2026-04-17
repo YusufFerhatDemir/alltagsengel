@@ -42,17 +42,17 @@ export async function POST(request: Request) {
         <div style="background:rgba(201,150,60,0.08);border-radius:12px;padding:18px 20px;margin:20px 0;">
           <p style="font-weight:600;color:#C9963C;margin:0 0 12px;">So funktioniert AlltagsEngel für Sie:</p>
           <table style="width:100%;border-collapse:collapse;">
-            <tr><td style="padding:8px 0;vertical-align:top;width:32px;font-size:18px;">1️⃣</td><td style="padding:8px 0 8px 8px;"><strong>Profil vervollständigen</strong><br/><span style="color:#B8AC9C;font-size:13px;">Laden Sie Ihre Qualifikationen hoch (§45a-Zertifikat, Erste-Hilfe-Nachweis) und beschreiben Sie Ihre Erfahrung.</span></td></tr>
-            <tr><td style="padding:8px 0;vertical-align:top;font-size:18px;">2️⃣</td><td style="padding:8px 0 8px 8px;"><strong>Freischaltung abwarten</strong><br/><span style="color:#B8AC9C;font-size:13px;">Unser Team prüft Ihre Unterlagen und schaltet Sie frei. Sie werden per E-Mail benachrichtigt.</span></td></tr>
-            <tr><td style="padding:8px 0;vertical-align:top;font-size:18px;">3️⃣</td><td style="padding:8px 0 8px 8px;"><strong>Aufträge erhalten</strong><br/><span style="color:#B8AC9C;font-size:13px;">Sobald Kunden in Ihrer Nähe nach Begleitung suchen, erhalten Sie eine Benachrichtigung. Sie entscheiden selbst, welche Aufträge Sie annehmen.</span></td></tr>
-            <tr><td style="padding:8px 0;vertical-align:top;font-size:18px;">4️⃣</td><td style="padding:8px 0 8px 8px;"><strong>Einsatz durchführen & vergütet werden</strong><br/><span style="color:#B8AC9C;font-size:13px;">Nach jedem Einsatz wird die Vergütung automatisch berechnet. Sie erhalten 20€/Stunde direkt auf Ihr Konto.</span></td></tr>
+            <tr><td style="padding:8px 0;vertical-align:top;width:32px;font-size:18px;">1️⃣</td><td style="padding:8px 0 8px 8px;"><strong>Profil vervollständigen</strong><br/><span style="color:#555;font-size:13px;">Laden Sie Ihre Qualifikationen hoch (§45a-Zertifikat, Erste-Hilfe-Nachweis) und beschreiben Sie Ihre Erfahrung.</span></td></tr>
+            <tr><td style="padding:8px 0;vertical-align:top;font-size:18px;">2️⃣</td><td style="padding:8px 0 8px 8px;"><strong>Freischaltung abwarten</strong><br/><span style="color:#555;font-size:13px;">Unser Team prüft Ihre Unterlagen und schaltet Sie frei. Sie werden per E-Mail benachrichtigt.</span></td></tr>
+            <tr><td style="padding:8px 0;vertical-align:top;font-size:18px;">3️⃣</td><td style="padding:8px 0 8px 8px;"><strong>Aufträge erhalten</strong><br/><span style="color:#555;font-size:13px;">Sobald Kunden in Ihrer Nähe nach Begleitung suchen, erhalten Sie eine Benachrichtigung. Sie entscheiden selbst, welche Aufträge Sie annehmen.</span></td></tr>
+            <tr><td style="padding:8px 0;vertical-align:top;font-size:18px;">4️⃣</td><td style="padding:8px 0 8px 8px;"><strong>Einsatz durchführen & vergütet werden</strong><br/><span style="color:#555;font-size:13px;">Nach jedem Einsatz wird die Vergütung automatisch berechnet. Sie erhalten 20€/Stunde direkt auf Ihr Konto.</span></td></tr>
           </table>
         </div>
 
         <div style="background:rgba(201,150,60,0.08);border-radius:12px;padding:18px 20px;margin:20px 0;">
           <p style="font-weight:600;color:#C9963C;margin:0 0 10px;">Welche Leistungen bieten Sie an?</p>
-          <p style="margin:0;color:#B8AC9C;font-size:13px;">Als Alltagsengel können Sie folgende Dienste anbieten:</p>
-          <ul style="color:#e8e0d4;padding-left:20px;margin:10px 0;font-size:13px;">
+          <p style="margin:0;color:#555;font-size:13px;">Als Alltagsengel können Sie folgende Dienste anbieten:</p>
+          <ul style="color:#333;padding-left:20px;margin:10px 0;font-size:13px;">
             <li style="margin-bottom:6px;"><strong>Alltagsbegleitung</strong> — Spaziergänge, Gespräche, gemeinsame Aktivitäten</li>
             <li style="margin-bottom:6px;"><strong>Haushaltshilfe</strong> — Einkaufen, Kochen, leichte Hausarbeit</li>
             <li style="margin-bottom:6px;"><strong>Arztbegleitung</strong> — Begleitung zu Arztterminen und Therapien</li>
@@ -79,16 +79,16 @@ export async function POST(request: Request) {
         <div style="background:rgba(201,150,60,0.08);border-radius:12px;padding:18px 20px;margin:20px 0;">
           <p style="font-weight:600;color:#C9963C;margin:0 0 12px;">So funktioniert AlltagsEngel für Sie:</p>
           <table style="width:100%;border-collapse:collapse;">
-            <tr><td style="padding:8px 0;vertical-align:top;width:32px;font-size:18px;">1️⃣</td><td style="padding:8px 0 8px 8px;"><strong>Engel in der Nähe finden</strong><br/><span style="color:#B8AC9C;font-size:13px;">Durchsuchen Sie zertifizierte Alltagsbegleiter in Ihrer Region. Alle Engel sind geprüft und qualifiziert.</span></td></tr>
-            <tr><td style="padding:8px 0;vertical-align:top;font-size:18px;">2️⃣</td><td style="padding:8px 0 8px 8px;"><strong>Termin buchen</strong><br/><span style="color:#B8AC9C;font-size:13px;">Wählen Sie eine Leistung, Datum und Uhrzeit — die Buchung dauert nur 2 Minuten.</span></td></tr>
-            <tr><td style="padding:8px 0;vertical-align:top;font-size:18px;">3️⃣</td><td style="padding:8px 0 8px 8px;"><strong>Begleitung genießen</strong><br/><span style="color:#B8AC9C;font-size:13px;">Ihr Engel kommt zur vereinbarten Zeit. Einfach zurücklehnen und die Unterstützung genießen.</span></td></tr>
-            <tr><td style="padding:8px 0;vertical-align:top;font-size:18px;">4️⃣</td><td style="padding:8px 0 8px 8px;"><strong>Bequem abrechnen</strong><br/><span style="color:#B8AC9C;font-size:13px;">Mit Pflegegrad wird die Leistung über den Entlastungsbetrag (§45b SGB XI) abgerechnet — bis zu 131€/Monat von der Pflegekasse.</span></td></tr>
+            <tr><td style="padding:8px 0;vertical-align:top;width:32px;font-size:18px;">1️⃣</td><td style="padding:8px 0 8px 8px;"><strong>Engel in der Nähe finden</strong><br/><span style="color:#555;font-size:13px;">Durchsuchen Sie zertifizierte Alltagsbegleiter in Ihrer Region. Alle Engel sind geprüft und qualifiziert.</span></td></tr>
+            <tr><td style="padding:8px 0;vertical-align:top;font-size:18px;">2️⃣</td><td style="padding:8px 0 8px 8px;"><strong>Termin buchen</strong><br/><span style="color:#555;font-size:13px;">Wählen Sie eine Leistung, Datum und Uhrzeit — die Buchung dauert nur 2 Minuten.</span></td></tr>
+            <tr><td style="padding:8px 0;vertical-align:top;font-size:18px;">3️⃣</td><td style="padding:8px 0 8px 8px;"><strong>Begleitung genießen</strong><br/><span style="color:#555;font-size:13px;">Ihr Engel kommt zur vereinbarten Zeit. Einfach zurücklehnen und die Unterstützung genießen.</span></td></tr>
+            <tr><td style="padding:8px 0;vertical-align:top;font-size:18px;">4️⃣</td><td style="padding:8px 0 8px 8px;"><strong>Bequem abrechnen</strong><br/><span style="color:#555;font-size:13px;">Mit Pflegegrad wird die Leistung über den Entlastungsbetrag (§45b SGB XI) abgerechnet — bis zu 131€/Monat von der Pflegekasse.</span></td></tr>
           </table>
         </div>
 
         <div style="background:rgba(201,150,60,0.08);border-radius:12px;padding:18px 20px;margin:20px 0;">
           <p style="font-weight:600;color:#C9963C;margin:0 0 10px;">Unsere Leistungen für Sie:</p>
-          <ul style="color:#e8e0d4;padding-left:20px;margin:10px 0;font-size:13px;">
+          <ul style="color:#333;padding-left:20px;margin:10px 0;font-size:13px;">
             <li style="margin-bottom:6px;"><strong>Alltagsbegleitung</strong> — Spaziergänge, Gespräche, Gesellschaft im Alltag</li>
             <li style="margin-bottom:6px;"><strong>Haushaltshilfe</strong> — Einkaufen, Kochen, leichte Hausarbeit</li>
             <li style="margin-bottom:6px;"><strong>Arztbegleitung</strong> — Sicher zum Arzt und wieder nach Hause</li>
