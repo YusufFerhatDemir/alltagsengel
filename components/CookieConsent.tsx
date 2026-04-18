@@ -115,13 +115,16 @@ export default function CookieConsent() {
                 color: 'rgba(247,242,234,0.75)',
               }}>
                 <p style={{ margin: '0 0 6px' }}>
-                  <strong style={{ color: '#C9963C' }}>Notwendige Cookies:</strong> Diese sind für den Betrieb der Website erforderlich (z.B. Anmeldung, Sicherheit).
+                  <strong style={{ color: '#C9963C' }}>Notwendige Cookies:</strong> Diese sind für den Betrieb der Website erforderlich (z.B. Anmeldung, Sicherheit, Warenkorb). Werden auch ohne Zustimmung gesetzt.
                 </p>
                 <p style={{ margin: '0 0 6px' }}>
-                  <strong style={{ color: '#C9963C' }}>Analyse-Cookies:</strong> Helfen uns zu verstehen, wie Besucher unsere Website nutzen, um sie zu verbessern.
+                  <strong style={{ color: '#C9963C' }}>Analyse & Besuchertracking:</strong> Erfasst Ihre IP-Adresse, ungefähren Standort (Stadt, Region, Land) und Browser-Informationen. Eingesetzte Dienste: <em>Supabase</em> (Datenspeicherung, EU), <em>ipapi.co</em> (Standortbestimmung) und <em>Google Analytics/Ads</em>.
+                </p>
+                <p style={{ margin: '0 0 6px' }}>
+                  <strong style={{ color: '#C9963C' }}>Marketing:</strong> Meta (Facebook/Instagram) und TikTok Pixel zur Messung von Kampagnen-Erfolg und Retargeting.
                 </p>
                 <p style={{ margin: 0 }}>
-                  Weitere Informationen finden Sie in unserer{' '}
+                  Sie können Ihre Zustimmung jederzeit über den Link „Cookie-Einstellungen" im Footer widerrufen. Details in unserer{' '}
                   <a href="/datenschutz" style={{ color: '#C9963C', textDecoration: 'underline' }}>Datenschutzerklärung</a>.
                 </p>
               </div>
