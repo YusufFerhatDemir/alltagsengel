@@ -38,6 +38,9 @@ export type AuditAction =
   | 'role_revoke'
   | 'user_delete'
   | 'user_self_delete'
+  | 'user_self_soft_delete'   // AUTH-003 v2: User hat Soft-Delete angestossen
+  | 'user_self_undelete'      // AUTH-003 v2: User hat Soft-Delete per Token-Link widerrufen
+  | 'user_hard_delete_cron'   // AUTH-003 v2: Edge-Function hat nach 60d hart geloescht
   | 'data_export'
   | 'admin_login'
   | 'rate_limit_reset'
