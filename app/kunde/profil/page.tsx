@@ -1,7 +1,8 @@
 'use client'
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { requireUser } from '@/lib/supabase/require-session'
 import Link from 'next/link'
 import { IconDocument, IconNav, IconCalendar, IconMedical, IconBox } from '@/components/Icons'
 import { AvatarKunde } from '@/components/AvatarGlow'
@@ -19,12 +20,39 @@ export default function KundeProfilPage() {
   const [deleteError, setDeleteError] = useState('')
   const [userId, setUserId] = useState<string | null>(null)
 
-  // Care eligibility state
-  const [pflegegrad, setPflegegrad] = useState(0)
-  const [homeCare, setHomeCare] = useState(true)
-  const [pflegehilfsmittel, setPflegehilfsmittel] = useState(false)
-  const [krankenkasse, setKrankenkasse] = useState('')
-  const [savedHint, setSavedHint] = useState('')
+  // ═══════════════════════════════════════════════════════════════
+  // Care-Daten in EINEM State-Objekt gebuendelt.
+  //
+  // WARUM?
+  // Vorher: pflegegrad/homeCare/krankenkasse waren 4 separate States.
+  // Jeder Handler las die anderen 3 via Closure — bei schnellen Klicks
+  // waren die Closures noch nicht neu (React batched Updates async).
+  // Beispiel: Senior klickt Pflegegrad 3, dann schnell AOK. Der
+  // Krankenkasse-Handler sah pflegegrad noch als 0 und ueberschrieb
+  // die frisch gespeicherte 3 mit 0 → "Speichern tut manchmal nichts".
+  //
+  // Jetzt: Eine Quelle der Wahrheit. Mit setCareState(prev => ...)
+  // sehen wir IMMER den aktuellsten Wert, unabhaengig vom Render-Timing.
+  // ═══════════════════════════════════════════════════════════════
+  interface CareState {
+    pflegegrad: number
+    homeCare: boolean
+    pflegehilfsmittel: boolean
+    krankenkasse: string
+  }
+  const [care, setCare] = useState<CareState>({
+    pflegegrad: 0,
+    homeCare: true,
+    pflegehilfsmittel: false,
+    krankenkasse: '',
+  })
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
+  const [saveError, setSaveError] = useState('')
+
+  // AbortController fuer in-flight Request — verhindert out-of-order Writes
+  // wenn Senior schnell mehrmals hintereinander klickt.
+  const inFlightAbortRef = useRef<AbortController | null>(null)
+  const hintTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   async function handleLogout() {
     setLoggingOut(true)
@@ -36,11 +64,12 @@ export default function KundeProfilPage() {
 
   useEffect(() => {
     async function loadProfile() {
-      const supabase = createClient()
-      const { data: { user } } = await supabase.auth.getUser()
+      // Retry-faehiger Auth-Check (Race-Condition-Fix aus Bug #1)
+      const user = await requireUser(router, { redirectTo: '/kunde/profil' })
       if (!user) return
 
       setUserId(user.id)
+      const supabase = createClient()
 
       const { data: p } = await supabase.from('profiles').select('*').eq('id', user.id).single()
       setProfile(p)
@@ -48,10 +77,12 @@ export default function KundeProfilPage() {
       // Load care eligibility
       const { data: ce } = await supabase.from('care_eligibility').select('*').eq('user_id', user.id).maybeSingle()
       if (ce) {
-        setPflegegrad(ce.pflegegrad || 0)
-        setHomeCare(ce.home_care ?? true)
-        setPflegehilfsmittel(ce.pflegehilfsmittel_interest ?? false)
-        setKrankenkasse(ce.insurance_type === 'public' ? (ce.krankenkasse || '') : '')
+        setCare({
+          pflegegrad: ce.pflegegrad || 0,
+          homeCare: ce.home_care ?? true,
+          pflegehilfsmittel: ce.pflegehilfsmittel_interest ?? false,
+          krankenkasse: ce.insurance_type === 'public' ? (ce.krankenkasse || '') : '',
+        })
       }
 
       setLoading(false)
@@ -59,39 +90,100 @@ export default function KundeProfilPage() {
     loadProfile()
   }, [])
 
-  const saveCareData = useCallback(async (updates: Record<string, any>) => {
-    if (!userId) return
-    const supabase = createClient()
-    await supabase.from('care_eligibility').upsert({
-      user_id: userId,
-      ...updates,
+  // Aufraeumen bei Unmount
+  useEffect(() => {
+    return () => {
+      inFlightAbortRef.current?.abort()
+      if (hintTimerRef.current) clearTimeout(hintTimerRef.current)
+    }
+  }, [])
+
+  async function saveCare(patch: Partial<CareState>) {
+    if (!userId) {
+      // Auth noch nicht geladen — UI-Hinweis statt stilles Ignorieren
+      setSaveStatus('error')
+      setSaveError('Noch nicht angemeldet. Bitte warte einen Moment.')
+      return
+    }
+
+    // Funktionales Update: garantiert aktuellsten Stand
+    let computed: CareState = care
+    setCare(prev => {
+      computed = { ...prev, ...patch }
+      return computed
     })
-    setSavedHint('saved')
-    setTimeout(() => setSavedHint(''), 1800)
-  }, [userId])
+    const nextState: CareState = computed
+
+    // Alte in-flight-Request canceln — verhindert out-of-order Writes
+    inFlightAbortRef.current?.abort()
+    const controller = new AbortController()
+    inFlightAbortRef.current = controller
+
+    setSaveStatus('saving')
+    setSaveError('')
+
+    try {
+      const supabase = createClient()
+      const { error } = await supabase
+        .from('care_eligibility')
+        .upsert(
+          {
+            user_id: userId,
+            pflegegrad: nextState.pflegegrad,
+            home_care: nextState.homeCare,
+            pflegehilfsmittel_interest: nextState.pflegehilfsmittel,
+            insurance_type: nextState.krankenkasse ? 'public' : 'unknown',
+            krankenkasse: nextState.krankenkasse,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: 'user_id' }
+        )
+        .abortSignal(controller.signal)
+
+      // Falls waehrend des awaits ein neuer Klick kam → ignorieren
+      if (controller.signal.aborted) return
+
+      if (error) {
+        console.error('[saveCare] Supabase error:', error)
+        setSaveStatus('error')
+        setSaveError('Speichern fehlgeschlagen. Bitte versuche es erneut.')
+        return
+      }
+
+      setSaveStatus('saved')
+      if (hintTimerRef.current) clearTimeout(hintTimerRef.current)
+      hintTimerRef.current = setTimeout(() => setSaveStatus('idle'), 1800)
+    } catch (err: any) {
+      // AbortError bedeutet: ein neuer Klick hat uns abgebrochen → kein Fehler
+      if (err?.name === 'AbortError' || controller.signal.aborted) return
+      console.error('[saveCare] Unexpected error:', err)
+      setSaveStatus('error')
+      setSaveError('Netzwerkfehler. Bitte pruefe deine Verbindung.')
+    }
+  }
 
   function handlePflegegrad(g: number) {
-    setPflegegrad(g)
-    saveCareData({ pflegegrad: g, home_care: homeCare, pflegehilfsmittel_interest: pflegehilfsmittel, insurance_type: krankenkasse ? 'public' : 'unknown', krankenkasse })
+    saveCare({ pflegegrad: g })
   }
 
   function handleHomeCare() {
-    const v = !homeCare
-    setHomeCare(v)
-    saveCareData({ pflegegrad, home_care: v, pflegehilfsmittel_interest: pflegehilfsmittel, insurance_type: krankenkasse ? 'public' : 'unknown', krankenkasse })
+    saveCare({ homeCare: !care.homeCare })
   }
 
   function handlePflegehilfsmittel() {
-    const v = !pflegehilfsmittel
-    setPflegehilfsmittel(v)
-    saveCareData({ pflegegrad, home_care: homeCare, pflegehilfsmittel_interest: v, insurance_type: krankenkasse ? 'public' : 'unknown', krankenkasse })
+    saveCare({ pflegehilfsmittel: !care.pflegehilfsmittel })
   }
 
   function handleKrankenkasse(kk: string) {
-    const v = krankenkasse === kk ? '' : kk
-    setKrankenkasse(v)
-    saveCareData({ pflegegrad, home_care: homeCare, pflegehilfsmittel_interest: pflegehilfsmittel, insurance_type: v ? 'public' : 'unknown', krankenkasse: v })
+    saveCare({ krankenkasse: care.krankenkasse === kk ? '' : kk })
   }
+
+  // Bequeme Aliase fuer JSX (keine Refactor-Kaskade)
+  const pflegegrad = care.pflegegrad
+  const homeCare = care.homeCare
+  const pflegehilfsmittel = care.pflegehilfsmittel
+  const krankenkasse = care.krankenkasse
+  const savedHint = saveStatus === 'saved' ? 'saved' : ''
 
   const name = profile ? `${profile.first_name} ${profile.last_name}` : '...'
   const loc = profile?.location || '—'
@@ -123,7 +215,47 @@ export default function KundeProfilPage() {
         <div className="section-label">
           Pflegedaten
           <span className={`pf-saved${savedHint ? ' show' : ''}`}>✓ Gespeichert</span>
+          {saveStatus === 'saving' && (
+            <span style={{ marginLeft: 8, fontSize: 11, color: 'var(--ink4)', fontWeight: 400 }}>
+              Speichern...
+            </span>
+          )}
         </div>
+        {saveStatus === 'error' && saveError && (
+          <div
+            role="alert"
+            style={{
+              marginBottom: 10,
+              padding: '8px 12px',
+              borderRadius: 8,
+              background: 'rgba(220, 38, 38, 0.08)',
+              border: '1px solid rgba(220, 38, 38, 0.3)',
+              color: 'var(--red-w, #dc2626)',
+              fontSize: 12,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: 8,
+            }}
+          >
+            <span>⚠️ {saveError}</span>
+            <button
+              type="button"
+              onClick={() => setSaveStatus('idle')}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: 'inherit',
+                textDecoration: 'underline',
+                fontSize: 11,
+                cursor: 'pointer',
+                padding: 0,
+              }}
+            >
+              OK
+            </button>
+          </div>
+        )}
         <div className="settings-card" style={{ padding: '14px 16px' }}>
           <div className="pf-section">
             <div className="pf-section-title">Pflegegrad</div>
