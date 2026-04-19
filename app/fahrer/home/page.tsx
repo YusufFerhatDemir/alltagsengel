@@ -2,6 +2,7 @@
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { requireUser } from '@/lib/supabase/require-session'
 import Icon3D from '@/components/Icon3D'
 import { useUserLocation } from '@/hooks/useUserLocation'
 import { useTrackVisit } from '@/hooks/useTrackVisit'
@@ -40,13 +41,10 @@ export default function FahrerHomePage() {
   }, [])
 
   async function loadData() {
+    // ═══ Robuster Auth-Check mit Retry (verhindert "1-von-10-Logins-rauswurf") ═══
+    const user = await requireUser(router, { redirectTo: '/fahrer/home' })
+    if (!user) return
     const supabase = createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-
-    if (!user) {
-      router.push('/auth/login')
-      return
-    }
     setUser(user)
 
     const { data: profileData } = await supabase.from('profiles').select('*').eq('id', user.id).single()

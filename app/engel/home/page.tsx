@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { requireUser } from '@/lib/supabase/require-session'
 import Icon3D from '@/components/Icon3D'
 import { IconUser, IconCard } from '@/components/Icons'
 import NotificationBell from '@/components/NotificationBell'
@@ -25,9 +26,10 @@ export default function EngelHomePage() {
     setLoading(true)
     setError('')
     try {
-      const supabase = createClient()
-      const { data: { user } } = await supabase.auth.getUser()
+      // ═══ Robuster Auth-Check mit Retry (verhindert "1-von-10-Logins-rauswurf") ═══
+      const user = await requireUser(router, { redirectTo: '/engel/home' })
       if (!user) { setLoading(false); return }
+      const supabase = createClient()
 
       const { data: p } = await supabase.from('profiles').select('*').eq('id', user.id).maybeSingle()
       const { data: a } = await supabase.from('angels').select('*').eq('id', user.id).maybeSingle()
