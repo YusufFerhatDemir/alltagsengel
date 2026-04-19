@@ -60,7 +60,7 @@ Interne Begriffe, Abkürzungen und Shorthand für das AlltagsEngel-Projekt.
 | `android/`, `ios/` | Capacitor-Projekte |
 | `docs/` | Dokumentation: store/, security/, growth/, releases/, data-room/, data-room-de/ |
 | `marketing/` | Broschüren, Videos, Images, Scripts, ads, kampanya, social-media-grafiken, werbe-videos |
-| `archive/` | Altlasten: dripfy-mis-legacy/, expo-legacy/, debug-screenshots/ + (gitignored) next-old/, video-generation/, private/ |
+| `archive/` | Altlasten (gitignored): next-old/, video-generation/, private/ |
 | `memory/` | Cowork-Memory (glossary, projects, people, context) |
 | `README.md` | Einstiegspunkt |
 
