@@ -2,7 +2,8 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import Link from 'next/link'
+import { requireUser } from '@/lib/supabase/require-session'
+import { uploadDocument, MAX_FILE_SIZE_MB } from '@/lib/upload-document'
 import { IconDocument, IconCheck, IconClock, IconInfo } from '@/components/Icons'
 
 const docTypes = [
@@ -23,15 +24,17 @@ export default function KundeDokumentePage() {
   const [loading, setLoading] = useState(true)
   const [uploading, setUploading] = useState(false)
   const [selectedType, setSelectedType] = useState('')
+  const [uploadError, setUploadError] = useState('')
+  const [uploadSuccess, setUploadSuccess] = useState(false)
 
   useEffect(() => {
     loadDocs()
   }, [])
 
   async function loadDocs() {
-    const supabase = createClient()
-    const { data: { user } } = await supabase.auth.getUser()
+    const user = await requireUser(router, { redirectTo: '/kunde/dokumente' })
     if (!user) return
+    const supabase = createClient()
     const { data } = await supabase
       .from('documents')
       .select('*')
@@ -42,38 +45,38 @@ export default function KundeDokumentePage() {
   }
 
   async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
+    const input = e.target
+    const file = input.files?.[0]
     if (!file || !selectedType) return
+
     setUploading(true)
+    setUploadError('')
+    setUploadSuccess(false)
 
-    const supabase = createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) { setUploading(false); return }
+    try {
+      const user = await requireUser(router, { redirectTo: '/kunde/dokumente' })
+      if (!user) return // requireUser hat bereits redirected
 
-    const filePath = `${user.id}/${Date.now()}-${file.name}`
-    const { error: uploadErr } = await supabase.storage
-      .from('documents')
-      .upload(filePath, file)
+      const result = await uploadDocument(file, user.id, selectedType)
 
-    if (uploadErr) {
-      console.error('Upload error:', uploadErr)
+      if (!result.ok) {
+        setUploadError(result.errorMessage || 'Unbekannter Fehler beim Upload.')
+        return
+      }
+
+      setUploadSuccess(true)
+      setSelectedType('')
+      // Auto-Hide Success-Banner nach 4s
+      setTimeout(() => setUploadSuccess(false), 4000)
+      loadDocs()
+    } catch (err) {
+      console.error('[handleUpload] Unexpected error:', err)
+      setUploadError('Ein unerwarteter Fehler ist aufgetreten. Bitte versuche es erneut.')
+    } finally {
       setUploading(false)
-      return
+      // File-Input zurücksetzen, damit selbe Datei erneut wählbar ist
+      if (input) input.value = ''
     }
-
-    const { data: urlData } = supabase.storage.from('documents').getPublicUrl(filePath)
-
-    await supabase.from('documents').insert({
-      user_id: user.id,
-      type: selectedType,
-      file_name: file.name,
-      file_url: urlData.publicUrl,
-      status: 'pending',
-    })
-
-    setSelectedType('')
-    setUploading(false)
-    loadDocs()
   }
 
   return (
@@ -107,11 +110,82 @@ export default function KundeDokumentePage() {
         </div>
 
         {selectedType && (
-          <label className="dok-upload-btn">
-            <input type="file" accept="image/*,.pdf" onChange={handleUpload} hidden />
+          <label className="dok-upload-btn" style={uploading ? { opacity: 0.6, pointerEvents: 'none' } : undefined}>
+            <input
+              type="file"
+              accept="image/*,.pdf"
+              onChange={handleUpload}
+              disabled={uploading}
+              hidden
+            />
             {uploading ? 'Wird hochgeladen...' : 'Datei auswählen & hochladen'}
           </label>
         )}
+
+        {uploadError && (
+          <div
+            role="alert"
+            style={{
+              marginTop: 10,
+              padding: '10px 14px',
+              borderRadius: 10,
+              background: 'rgba(220, 38, 38, 0.08)',
+              border: '1px solid rgba(220, 38, 38, 0.3)',
+              color: 'var(--red-w, #dc2626)',
+              fontSize: 13,
+              lineHeight: 1.4,
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: 8,
+            }}
+          >
+            <span style={{ fontSize: 16, flexShrink: 0 }}>⚠️</span>
+            <div style={{ flex: 1 }}>
+              {uploadError}
+              <button
+                type="button"
+                onClick={() => setUploadError('')}
+                style={{
+                  marginLeft: 8,
+                  background: 'transparent',
+                  border: 'none',
+                  color: 'inherit',
+                  textDecoration: 'underline',
+                  fontSize: 12,
+                  cursor: 'pointer',
+                  padding: 0,
+                }}
+              >
+                Schließen
+              </button>
+            </div>
+          </div>
+        )}
+
+        {uploadSuccess && (
+          <div
+            role="status"
+            style={{
+              marginTop: 10,
+              padding: '10px 14px',
+              borderRadius: 10,
+              background: 'rgba(16, 185, 129, 0.08)',
+              border: '1px solid rgba(16, 185, 129, 0.3)',
+              color: 'var(--green, #10b981)',
+              fontSize: 13,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+            }}
+          >
+            <span style={{ fontSize: 16 }}>✓</span>
+            <span>Dokument erfolgreich hochgeladen. Wird jetzt geprüft.</span>
+          </div>
+        )}
+
+        <div style={{ fontSize: 11, color: 'var(--ink4)', marginTop: 6 }}>
+          Max. {MAX_FILE_SIZE_MB} MB · JPG, PNG, HEIC, PDF
+        </div>
 
         <div className="section-label" style={{ marginTop: 24 }}>Meine Dokumente</div>
         {loading ? (
