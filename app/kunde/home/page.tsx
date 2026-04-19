@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect, ReactNode } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { requireUser } from '@/lib/supabase/require-session'
 import Link from 'next/link'
 import { IconPin, IconSearch, IconUser, IconCard, IconStarFilled, IconCheck, IconStarGold, IconHandshakeGold, IconMedicalGold, IconBagGold, IconHomeGold, IconCoffeeGold, IconPillGold, IconWalkGold, IconTargetGold, IconWingsGold, IconBox, IconKrankenfahrtGold, IconHygieneboxGold } from '@/components/Icons'
 import NotificationBell from '@/components/NotificationBell'
@@ -54,23 +55,10 @@ export default function KundeHomePage() {
   const load = async () => {
     setError('')
     try {
+      // ═══ Robuster Auth-Check mit Retry (verhindert "1-von-10-Logins-rauswurf") ═══
+      const user = await requireUser(router, { redirectTo: '/kunde/home' })
+      if (!user) return
       const supabase = createClient()
-      // Erst getSession (liest lokalen Token), dann getUser (verifiziert serverseitig)
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) {
-        // Kein lokaler Token → versuche einmal Refresh
-        const { data: refreshData } = await supabase.auth.refreshSession()
-        if (!refreshData.session) {
-          // Wirklich keine Session → Login
-          router.push('/auth/login?redirectTo=/kunde/home')
-          return
-        }
-      }
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) {
-        router.push('/auth/login?redirectTo=/kunde/home')
-        return
-      }
       const { data: p, error: profileErr } = await supabase.from('profiles').select('*').eq('id', user.id).maybeSingle()
       if (profileErr) throw new Error('Profil konnte nicht geladen werden')
       setProfile(p)
