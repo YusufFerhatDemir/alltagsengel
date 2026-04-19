@@ -8,6 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "audit:rls": "tsx scripts/audit-rls.ts",
+    "rls:matrix": "tsx scripts/rls-matrix.ts",
+    "rls:matrix:check": "tsx scripts/rls-matrix.ts --check",
     "lint:forbidden": "tsx scripts/lint-forbidden.ts",
     "lint:forbidden:staged": "tsx scripts/lint-forbidden.ts --staged",
     "setup:hooks": "bash scripts/hooks/install.sh",
