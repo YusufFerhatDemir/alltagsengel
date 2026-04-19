@@ -2,214 +2,239 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { requireUser } from '@/lib/supabase/require-session'
 import { IconWingsGold, IconTruck } from '@/components/Icons'
-
-interface Message {
-  id: string
-  sender_id: string
-  content: string
-  created_at: string
-}
+import { useChatPagination, useScrollToLoadOlder, type ChatMessage } from '@/lib/use-chat-pagination'
 
 type ChatMode = 'booking' | 'ride' | null
+
+// Pro Mode: Tabelle + Filter-Spalte
+const MODE_CONFIG = {
+  booking: { table: 'messages', filterColumn: 'booking_id' as const },
+  ride: { table: 'chat_messages', filterColumn: 'ride_id' as const },
+}
 
 export default function ChatDetailPage() {
   const router = useRouter()
   const params = useParams()
   const chatId = params.id as string
-  const supabase = createClient()
-  const [messages, setMessages] = useState<Message[]>([])
   const [newMsg, setNewMsg] = useState('')
   const [partnerName, setPartnerName] = useState('')
   const [partnerId, setPartnerId] = useState('')
   const [userId, setUserId] = useState('')
-  const [loading, setLoading] = useState(true)
+  const [loadingMeta, setLoadingMeta] = useState(true)
   const [mode, setMode] = useState<ChatMode>(null)
   const [error, setError] = useState('')
   const bottomRef = useRef<HTMLDivElement>(null)
+  const messagesContainerRef = useRef<HTMLDivElement>(null)
+  const initialLoadDoneRef = useRef(false)
 
+  // Hook braucht immer table/filterColumn/filterValue — bei mode=null ein "leerer" Filter
+  // sodass init() nicht versehentlich greift. Wir rufen init() erst nach mode-Detection auf.
+  const cfg = mode ? MODE_CONFIG[mode] : MODE_CONFIG.booking
+  const {
+    messages,
+    loading: msgsLoading,
+    loadingOlder,
+    hasMore,
+    error: paginationError,
+    init: initMessages,
+    loadOlder,
+    appendMessage,
+    replaceMessage,
+    removeMessage,
+  } = useChatPagination({
+    table: cfg.table,
+    filterColumn: cfg.filterColumn,
+    filterValue: mode ? chatId : '__pending__',
+    selectColumns: 'id, sender_id, content, created_at',
+  })
+
+  const { requestRestoreScroll } = useScrollToLoadOlder(
+    messagesContainerRef,
+    loadOlder,
+    { enabled: !!mode && hasMore && !msgsLoading }
+  )
+
+  // ═══ 1. Mode-Detection + Partner-Info laden ═══
   useEffect(() => {
-    loadChat()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+    let cancelled = false
+    let channel: any = null
 
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages])
+    async function detectChat() {
+      setError('')
+      try {
+        const user = await requireUser(router, { redirectTo: `/kunde/chat/${chatId}` })
+        if (!user || cancelled) return
+        setUserId(user.id)
 
-  // Realtime subscription
-  useEffect(() => {
-    if (!chatId || !mode) return
+        const supabase = createClient()
 
-    if (mode === 'booking') {
-      const channel = supabase
-        .channel(`booking-chat-${chatId}`)
-        .on(
-          'postgres_changes',
-          { event: 'INSERT', schema: 'public', table: 'messages', filter: `booking_id=eq.${chatId}` },
-          (payload) => {
-            const msg = payload.new as Message
-            setMessages(prev => prev.some(m => m.id === msg.id) ? prev : [...prev, msg])
-          }
-        )
-        .subscribe()
-      return () => { supabase.removeChannel(channel) }
-    }
+        // 1a. Versuche Buchung (Engel-Chat)
+        const { data: booking, error: bookingErr } = await supabase
+          .from('bookings')
+          .select('id, angel_id, customer_id, angels:angel_id(id, profiles(first_name, last_name))')
+          .eq('id', chatId)
+          .maybeSingle()
+        if (cancelled) return
+        if (bookingErr && bookingErr.code !== 'PGRST116') throw bookingErr
 
-    if (mode === 'ride') {
-      const channel = supabase
-        .channel(`ride-chat-${chatId}`)
-        .on(
-          'postgres_changes',
-          { event: 'INSERT', schema: 'public', table: 'chat_messages', filter: `ride_id=eq.${chatId}` },
-          (payload) => {
-            const msg = payload.new as Message
-            setMessages(prev => prev.some(m => m.id === msg.id) ? prev : [...prev, msg])
-          }
-        )
-        .subscribe()
-      return () => { supabase.removeChannel(channel) }
-    }
-  }, [chatId, mode, supabase])
+        if (booking) {
+          const angel: any = booking.angels
+          const prof = angel?.profiles
+            ? (Array.isArray(angel.profiles) ? angel.profiles[0] : angel.profiles)
+            : null
+          const angelUserId = angel?.id || prof?.id || ''
+          setPartnerId(angelUserId)
+          setPartnerName(prof ? `${prof.first_name} ${prof.last_name?.[0] || ''}.` : 'Engel')
+          setMode('booking')
 
-  async function loadChat() {
-    setError('')
-    try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) { router.push('/auth/login'); return }
-      setUserId(user.id)
+          // Ungelesene markieren
+          await supabase
+            .from('messages')
+            .update({ read: true })
+            .eq('booking_id', chatId)
+            .eq('receiver_id', user.id)
+            .eq('read', false)
 
-      // 1. Versuche Buchung zu finden (Engel-Chat)
-      const { data: booking, error: bookingErr } = await supabase
-        .from('bookings')
-        .select('id, angel_id, customer_id, angels:angel_id(id, profiles(first_name, last_name))')
-        .eq('id', chatId)
-        .maybeSingle()
+          // Realtime
+          channel = supabase
+            .channel(`booking-chat-${chatId}`)
+            .on('postgres_changes', {
+              event: 'INSERT', schema: 'public', table: 'messages',
+              filter: `booking_id=eq.${chatId}`,
+            }, (payload) => appendMessage(payload.new as ChatMessage))
+            .subscribe()
 
-      if (bookingErr && bookingErr.code !== 'PGRST116') throw bookingErr
-
-      if (booking) {
-        setMode('booking')
-        const angel: any = booking.angels
-        const prof = angel?.profiles
-          ? (Array.isArray(angel.profiles) ? angel.profiles[0] : angel.profiles)
-          : null
-        const angelUserId = angel?.id || prof?.id || ''
-        setPartnerId(angelUserId)
-        setPartnerName(prof ? `${prof.first_name} ${prof.last_name?.[0] || ''}.` : 'Engel')
-
-        // Nachrichten laden
-        const { data: msgs, error: msgsErr } = await supabase
-          .from('messages')
-          .select('id, sender_id, content, created_at')
-          .eq('booking_id', chatId)
-          .order('created_at', { ascending: true })
-        if (msgsErr) throw msgsErr
-        setMessages(msgs || [])
-
-        // Ungelesene markieren
-        const { error: updateErr } = await supabase
-          .from('messages')
-          .update({ read: true })
-          .eq('booking_id', chatId)
-          .eq('receiver_id', user.id)
-          .eq('read', false)
-        if (updateErr) throw updateErr
-
-        setLoading(false)
-        return
-      }
-
-      // 2. Versuche Krankenfahrt zu finden (Fahrer-Chat)
-      const { data: ride, error: rideErr } = await supabase
-        .from('krankenfahrten')
-        .select('id, provider_id, krankenfahrt_providers(company_name, user_id)')
-        .eq('id', chatId)
-        .maybeSingle()
-
-      if (rideErr && rideErr.code !== 'PGRST116') throw rideErr
-
-      if (ride) {
-        setMode('ride')
-        const provider: any = ride.krankenfahrt_providers
-        if (provider?.user_id) {
-          const { data: driverProfile, error: driverErr } = await supabase
-            .from('profiles')
-            .select('first_name, last_name')
-            .eq('id', provider.user_id)
-            .maybeSingle()
-          if (driverErr && driverErr.code !== 'PGRST116') throw driverErr
-          setPartnerName(driverProfile ? `${driverProfile.first_name || ''} ${driverProfile.last_name?.[0] || ''}.` : provider.company_name || 'Fahrer')
-          setPartnerId(provider.user_id)
-        } else {
-          setPartnerName(provider?.company_name || 'Fahrer')
+          setLoadingMeta(false)
+          return
         }
 
-        const { data: msgs, error: rideMessagesErr } = await supabase
-          .from('chat_messages')
-          .select('id, sender_id, content, created_at')
-          .eq('ride_id', chatId)
-          .order('created_at', { ascending: true })
-        if (rideMessagesErr) throw rideMessagesErr
-        setMessages(msgs || [])
-        setLoading(false)
-        return
-      }
+        // 1b. Versuche Krankenfahrt (Fahrer-Chat)
+        const { data: ride, error: rideErr } = await supabase
+          .from('krankenfahrten')
+          .select('id, provider_id, krankenfahrt_providers(company_name, user_id)')
+          .eq('id', chatId)
+          .maybeSingle()
+        if (cancelled) return
+        if (rideErr && rideErr.code !== 'PGRST116') throw rideErr
 
-      // Nichts gefunden
-      setError('Chat nicht gefunden')
-      setPartnerName('Chat')
-      setLoading(false)
-    } catch (err: any) {
-      setError(err?.message || 'Ein Fehler beim Laden des Chats ist aufgetreten')
-      setLoading(false)
+        if (ride) {
+          const provider: any = ride.krankenfahrt_providers
+          if (provider?.user_id) {
+            const { data: driverProfile } = await supabase
+              .from('profiles')
+              .select('first_name, last_name')
+              .eq('id', provider.user_id)
+              .maybeSingle()
+            setPartnerName(driverProfile ? `${driverProfile.first_name || ''} ${driverProfile.last_name?.[0] || ''}.` : provider.company_name || 'Fahrer')
+            setPartnerId(provider.user_id)
+          } else {
+            setPartnerName(provider?.company_name || 'Fahrer')
+          }
+          setMode('ride')
+
+          // Realtime
+          channel = supabase
+            .channel(`ride-chat-${chatId}`)
+            .on('postgres_changes', {
+              event: 'INSERT', schema: 'public', table: 'chat_messages',
+              filter: `ride_id=eq.${chatId}`,
+            }, (payload) => appendMessage(payload.new as ChatMessage))
+            .subscribe()
+
+          setLoadingMeta(false)
+          return
+        }
+
+        if (!cancelled) {
+          setError('Chat nicht gefunden')
+          setPartnerName('Chat')
+          setLoadingMeta(false)
+        }
+      } catch (err: any) {
+        if (!cancelled) {
+          setError(err?.message || 'Ein Fehler beim Laden des Chats ist aufgetreten')
+          setLoadingMeta(false)
+        }
+      }
     }
-  }
+
+    detectChat()
+    return () => {
+      cancelled = true
+      if (channel) {
+        const supabase = createClient()
+        supabase.removeChannel(channel)
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [chatId])
+
+  // ═══ 2. Sobald mode gesetzt: Initial-Page laden ═══
+  useEffect(() => {
+    if (!mode) return
+    initMessages()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mode])
+
+  // ═══ 3. Scroll-Position erhalten beim Prepend ═══
+  useEffect(() => {
+    if (loadingOlder) return
+    requestRestoreScroll()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [messages.length, loadingOlder])
+
+  // ═══ 4. Smart Scroll-to-bottom ═══
+  useEffect(() => {
+    if (msgsLoading || messages.length === 0) return
+    if (!initialLoadDoneRef.current) {
+      bottomRef.current?.scrollIntoView({ behavior: 'auto' })
+      initialLoadDoneRef.current = true
+      return
+    }
+    if (!loadingOlder) {
+      bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+    }
+  }, [messages.length, msgsLoading, loadingOlder])
 
   async function handleSend() {
     if (!newMsg.trim() || !userId || !mode) return
-
+    const supabase = createClient()
     const content = newMsg.trim()
     setNewMsg('')
 
-    const optimistic: Message = {
+    const optimistic: ChatMessage = {
       id: `temp-${Date.now()}`,
       sender_id: userId,
       content,
       created_at: new Date().toISOString(),
     }
-    setMessages(prev => [...prev, optimistic])
+    appendMessage(optimistic)
 
     if (mode === 'booking') {
       const { data, error } = await supabase
         .from('messages')
-        .insert({
-          booking_id: chatId,
-          sender_id: userId,
-          receiver_id: partnerId,
-          content,
-        })
+        .insert({ booking_id: chatId, sender_id: userId, receiver_id: partnerId, content })
         .select('id, sender_id, content, created_at')
         .single()
-
       if (data) {
-        setMessages(prev => prev.map(m => m.id === optimistic.id ? data : m))
+        replaceMessage(optimistic.id, data as ChatMessage)
       } else if (error) {
-        console.error('Send error:', error)
-        setMessages(prev => prev.filter(m => m.id !== optimistic.id))
+        console.error('[KundeChat:send] booking error:', error)
+        removeMessage(optimistic.id)
       }
-    } else if (mode === 'ride') {
+    } else {
       const { data, error } = await supabase
         .from('chat_messages')
         .insert({ ride_id: chatId, sender_id: userId, content })
         .select('id, sender_id, content, created_at')
         .single()
-
       if (data) {
-        setMessages(prev => prev.map(m => m.id === optimistic.id ? data : m))
+        replaceMessage(optimistic.id, data as ChatMessage)
       } else if (error) {
-        console.error('Send error:', error)
-        setMessages(prev => prev.filter(m => m.id !== optimistic.id))
+        console.error('[KundeChat:send] ride error:', error)
+        removeMessage(optimistic.id)
       }
     }
   }
@@ -218,7 +243,7 @@ export default function ChatDetailPage() {
     <div className="screen" style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'40px 24px',textAlign:'center'}}>
       <div style={{fontSize:40,marginBottom:12}}>⚠️</div>
       <p style={{color:'var(--ink3)',fontSize:14,marginBottom:16}}>{error}</p>
-      <button onClick={()=>{setError('');loadChat()}} style={{padding:'10px 24px',borderRadius:10,border:'none',background:'linear-gradient(135deg,var(--gold),var(--gold2))',color:'var(--coal)',fontSize:13,fontWeight:600,cursor:'pointer'}}>Erneut versuchen</button>
+      <button onClick={()=>{setError(''); window.location.reload()}} style={{padding:'10px 24px',borderRadius:10,border:'none',background:'linear-gradient(135deg,var(--gold),var(--gold2))',color:'var(--coal)',fontSize:13,fontWeight:600,cursor:'pointer'}}>Erneut versuchen</button>
     </div>
   )
 
@@ -249,8 +274,26 @@ export default function ChatDetailPage() {
       </div>
 
       {/* Messages */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-        {loading ? (
+      <div ref={messagesContainerRef} style={{ flex: 1, overflowY: 'auto', padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {hasMore && (
+          <div style={{ textAlign: 'center', padding: '8px 0', fontSize: 11, color: 'var(--ink4)' }}>
+            {loadingOlder ? 'Aeltere Nachrichten werden geladen...' : 'Nach oben scrollen fuer aeltere Nachrichten'}
+          </div>
+        )}
+        {!hasMore && messages.length >= 30 && (
+          <div style={{ textAlign: 'center', padding: '8px 0', fontSize: 11, color: 'var(--ink4)' }}>
+            Anfang des Gespraechs
+          </div>
+        )}
+        {paginationError && (
+          <div style={{ textAlign: 'center', padding: '8px 12px', margin: '4px 8px', fontSize: 12, color: 'var(--red-w, #dc2626)', background: 'rgba(220,38,38,0.08)', borderRadius: 8 }}>
+            ⚠️ {paginationError}
+            <button onClick={() => loadOlder()} style={{ marginLeft: 8, background: 'transparent', border: 'none', color: 'inherit', textDecoration: 'underline', fontSize: 11, cursor: 'pointer' }}>
+              Erneut versuchen
+            </button>
+          </div>
+        )}
+        {(loadingMeta || msgsLoading) ? (
           <div style={{ textAlign: 'center', color: 'var(--ink4)', padding: '40px 0' }}>Laden...</div>
         ) : messages.length === 0 ? (
           <div style={{ textAlign: 'center', color: 'var(--ink4)', padding: '60px 0', fontSize: 13 }}>
