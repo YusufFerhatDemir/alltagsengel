@@ -162,7 +162,10 @@ export function useChatPagination(opts: ChatPaginationOptions): ChatPaginationRe
     setMessages(prev => prev.filter(m => m.id !== id))
   }, [])
 
-  // Reset state when filterValue changes (z.B. anderer Chat geoeffnet)
+  // Reset state when filterValue changes (z.B. anderer Chat geoeffnet).
+  // Bewusstes Reset-Pattern bei Schluessel-Wechsel — alternative Loesung waere
+  // <ChatList key={chatId} />, aber das ist Aufgabe des Parent-Components.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => {
     setMessages([])
     setHasMore(false)
@@ -199,7 +202,10 @@ export function useScrollToLoadOlder(
 ) {
   const { threshold = 100, enabled = true } = options
   const onReachTopRef = useRef(onReachTop)
-  onReachTopRef.current = onReachTop
+  // Ref-Update gehoert in Effect (nicht im Render-Body), sonst React-Hooks-Verletzung.
+  useEffect(() => {
+    onReachTopRef.current = onReachTop
+  }, [onReachTop])
 
   // Beim Prepend: alte scrollHeight merken, nach Render Differenz korrigieren
   const prevScrollHeightRef = useRef<number>(0)
