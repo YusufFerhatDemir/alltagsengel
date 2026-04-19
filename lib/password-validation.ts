@@ -119,6 +119,106 @@ function getZxcvbn() {
   return zxcvbnReady
 }
 
+// ── HIBP "Have I Been Pwned" — k-Anonymity Breach Check ─────────
+//
+// Idee: Wir wollen wissen, ob ein Passwort bereits in einem
+// öffentlichen Datenleck aufgetaucht ist (z. B. LinkedIn 2012,
+// Adobe 2013, Yahoo 2014 — Milliarden Datensätze). Aber wir wollen
+// das Passwort NIEMALS im Klartext oder als vollen Hash an einen
+// fremden Server schicken.
+//
+// Lösung (k-Anonymity, von Troy Hunt erfunden):
+//   1. SHA-1 vom Passwort bilden (z. B. "P@ssw0rd" → "21BD12...")
+//   2. Nur die ersten 5 Zeichen des Hashes an die API schicken
+//   3. Server schickt eine Liste ALLER Passwort-Hashes zurück,
+//      die mit diesen 5 Zeichen anfangen (typisch: 300-800 Stück)
+//   4. Wir suchen lokal in der Liste, ob unser voller Hash drin ist
+//
+// Analogie: Du fragst beim Telefonbuch "wer hat eine Nummer mit
+// Vorwahl 0211?" und bekommst alle Düsseldorfer zurück. Niemand
+// weiß welche genaue Nummer du eigentlich gesucht hast — du
+// schaust selbst nach.
+//
+// Verwendet Web Crypto API (verfügbar in Node 20+, allen modernen
+// Browsern, Edge Runtime, Deno). Kein npm-Package nötig.
+// ════════════════════════════════════════════════════════════════
+
+const HIBP_API_URL = 'https://api.pwnedpasswords.com/range/'
+const HIBP_TIMEOUT_MS = 3000 // 3s — Login soll nicht hängen wenn API langsam
+
+/**
+ * Prüft, ob `password` in einem bekannten Datenleck enthalten ist.
+ *
+ * Verwendet die HIBP "Pwned Passwords" k-Anonymity API:
+ *   POST nicht nötig — GET reicht, nur die ersten 5 Zeichen des SHA-1.
+ *
+ * @returns `true` wenn das Passwort kompromittiert ist, sonst `false`.
+ *          Bei Netzfehler / Timeout: `false` (fail-safe — User wird
+ *          nicht blockiert wenn die API down ist; das Ereignis landet
+ *          im console.warn).
+ */
+export async function checkPasswordBreach(password: string): Promise<boolean> {
+  if (!password) return false
+
+  try {
+    // SHA-1 via Web Crypto API
+    const encoder = new TextEncoder()
+    const data = encoder.encode(password)
+    const hashBuffer = await crypto.subtle.digest('SHA-1', data)
+    const hashHex = Array.from(new Uint8Array(hashBuffer))
+      .map(b => b.toString(16).padStart(2, '0'))
+      .join('')
+      .toUpperCase()
+
+    const prefix = hashHex.slice(0, 5)
+    const suffix = hashHex.slice(5)
+
+    // Timeout via AbortController — Login darf nicht ewig warten
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), HIBP_TIMEOUT_MS)
+
+    let response: Response
+    try {
+      response = await fetch(`${HIBP_API_URL}${prefix}`, {
+        method: 'GET',
+        signal: controller.signal,
+        // Add-Padding: Server sendet zufällige Hash-Länge zurück, damit
+        // ein Angreifer aus der Response-Größe nichts ableiten kann.
+        headers: { 'Add-Padding': 'true' },
+      })
+    } finally {
+      clearTimeout(timeoutId)
+    }
+
+    if (!response.ok) {
+      console.warn('[checkPasswordBreach] HIBP API returned non-OK:', response.status)
+      return false
+    }
+
+    const text = await response.text()
+
+    // Format pro Zeile: "SUFFIX:COUNT"  (z. B. "1E4C9B93F3F0682250B6CF8331B7EE68FD8:3303003")
+    // Padding-Eintraege haben COUNT=0 — wir ignorieren sie (zur Sicherheit).
+    const lines = text.split('\n')
+    for (const line of lines) {
+      const [hashSuffix, countStr] = line.trim().split(':')
+      if (!hashSuffix) continue
+      if (hashSuffix.toUpperCase() === suffix && Number(countStr) > 0) {
+        return true
+      }
+    }
+    return false
+  } catch (err: any) {
+    // Fail-safe: Netzfehler / Timeout / SubtleCrypto-Probleme
+    if (err?.name === 'AbortError') {
+      console.warn('[checkPasswordBreach] HIBP API timeout — skipping breach check')
+    } else {
+      console.warn('[checkPasswordBreach] HIBP check failed — skipping:', err?.message || err)
+    }
+    return false
+  }
+}
+
 // ── Asynchrone Voll-Validierung ────────────────────────────────
 /**
  * Prüft Passwort gegen Regex-Mindestregeln UND zxcvbn-Dictionary.
@@ -129,11 +229,16 @@ function getZxcvbn() {
  *                   bekannt behandelt (E-Mail, Vor-/Nachname, Marke). Dadurch
  *                   wird z. B. „Alltagsengel2024!" als schwach erkannt,
  *                   wenn „Alltagsengel" im Kontext des Nutzers vorkommt.
+ * @param options.checkBreach Wenn true (Default), wird zusätzlich gegen
+ *                   die HIBP-Datenleck-Datenbank geprüft. Setze false,
+ *                   wenn du nicht ins Internet willst (z. B. in Tests).
  */
 export async function validatePasswordAsync(
   password: string,
-  userInputs: string[] = []
+  userInputs: string[] = [],
+  options: { checkBreach?: boolean } = {}
 ): Promise<PasswordValidationResult> {
+  const { checkBreach = true } = options
   const base = validatePassword(password)
 
   // Wenn die Regex-Regeln schon scheitern, sparen wir uns zxcvbn nicht
@@ -154,6 +259,22 @@ export async function validatePasswordAsync(
         : 'Passwort zu schwach (Wörterbuch-Treffer oder gängiges Muster)'
       base.errors.push(msg)
       base.valid = false
+    }
+
+    // ── HIBP-Breach-Check ───────────────────────────────────────
+    // Parallelisierung wäre möglich (Promise.all mit zxcvbn), aber:
+    // 1. zxcvbn lädt schon Dictionary-Files → dominiert die Latenz
+    // 2. HIBP nur prüfen wenn die Basics OK sind, sonst Netz-Verschwendung
+    // 3. Wenn Regex-Regeln versagen, ist HIBP irrelevant — Nutzer muss
+    //    sowieso ein neues Passwort wählen
+    if (checkBreach && base.errors.length === 0 && password.length >= 8) {
+      const isBreached = await checkPasswordBreach(password)
+      if (isBreached) {
+        base.errors.push(
+          'Dieses Passwort wurde in einem Datenleak gefunden. Bitte wähle ein anderes.'
+        )
+        base.valid = false
+      }
     }
 
     return {
