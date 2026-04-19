@@ -2,31 +2,48 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient as createRawClient } from '@supabase/supabase-js'
+import { randomBytes } from 'node:crypto'
 import { logAuditEvent } from '@/lib/audit-log'
+import { sendAccountDeletionEmail } from '@/lib/emails/account-deletion'
 
 /**
  * DELETE /api/user/delete
  *
- * AUTH-003 Fix: Konto-Löschung erfordert JETZT eine Re-Authentifizierung
- * durch Passwort-Eingabe. Verhindert, dass jemand mit kurzem Gerät-Zugriff
- * (entsperrtes Handy, offener Browser) irreversibel alle Daten zerstört.
- *
- * Request-Body: { "password": "…" }
+ * AUTH-003 (v2): Soft-Delete mit 60-Tage-Widerrufsfrist.
  *
  * Ablauf:
- *   1. Session-Check: ist der User authentifiziert?
- *   2. Passwort-Check: kann der User sich mit Email+Passwort neu einloggen?
- *   3. Kaskaden-Löschung: Notifications → Messages → Bookings → Angels → Profile → Auth
+ *   1. Session-Check: User muss eingeloggt sein.
+ *   2. Body parsen: password erforderlich.
+ *   3. Re-Auth mit frischem Client (persistSession:false), damit die
+ *      laufende Session nicht ueberschrieben wird.
+ *   4. Snapshot: Profil-Daten fuers Audit + Mail.
+ *   5. profiles.deleted_at = now()  →  RLS blendet den User ueberall aus.
+ *   6. Token generieren (64 Hex), expires_at = now() + 60 Tage, in
+ *      account_deletion_tokens einfuegen.
+ *   7. Widerruf-Mail an die User-Mail schicken (enthaelt /api/user/delete/undo
+ *      ?token=… Link). Mail-Fehler ist fail-soft — Soft-Delete bleibt.
+ *   8. Audit-Event 'user_self_soft_delete' loggen.
+ *   9. signOut() → Client hat keine Session mehr, Kunde landet auf /login.
  *
- * Hinweis zum Passwort-Check:
- *   Wir nutzen einen **neuen** Supabase-Client (ohne Session), damit der
- *   signInWithPassword-Aufruf die laufende Session NICHT überschreibt.
- *   Sonst hätten wir einen Race-Condition (neue Session vor Delete →
- *   Admin-Delete bekommt falsche User-ID, wenn Session-Handling zickt).
+ * Die eigentliche Cascade-Loeschung (Auth-User + Kind-Tabellen) uebernimmt
+ * eine Supabase-Edge-Function, die via pg_cron nach 60 Tagen laeuft.
+ *
+ * Die Route ist damit:
+ *   - idempotent-robust: wenn deleted_at schon gesetzt ist, regenerieren wir
+ *     nur den Token (falls der User die Mail nicht mehr hat).
+ *   - schnell: keine Cascade-Deletes mehr synchron. <200ms.
+ *
+ * Analogie:
+ *   Wie ein Konto-Kuendigungs-Schreiben bei der Bank. Sofort wirksam,
+ *   aber die Kontonummer wird erst nach 60 Tagen geloescht, falls
+ *   man sich's nicht anders ueberlegt.
  */
+
+const GRACE_DAYS = 60
+
 export async function DELETE(request: NextRequest) {
   try {
-    // 1. Session-Check
+    // ── 1. Session-Check ─────────────────────────────────────────
     const supabase = await createClient()
     const {
       data: { user },
@@ -35,115 +52,121 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Nicht authentifiziert' }, { status: 401 })
     }
     if (!user.email) {
-      // Sollte nicht vorkommen — Supabase-Auth braucht Email. Abbruch.
       return NextResponse.json({ error: 'Konto konnte nicht verifiziert werden' }, { status: 400 })
     }
 
-    // 2. Body parsen
+    // ── 2. Body parsen ───────────────────────────────────────────
     let body: { password?: string } = {}
     try {
       body = await request.json()
     } catch {
-      // Kein/ungültiger Body
+      // ignore
     }
     const password = (body.password || '').trim()
     if (!password) {
       return NextResponse.json(
-        { error: 'Passwort-Bestätigung erforderlich' },
+        { error: 'Passwort-Bestaetigung erforderlich' },
         { status: 400 }
       )
     }
 
-    // 3. Re-Authentifizierung: frischer Client ohne Cookie-Session,
-    //    damit unsere aktive Session unberührt bleibt.
+    // ── 3. Re-Auth via Isolations-Client ─────────────────────────
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
-      || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    const supabaseAnonKey =
+      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
     if (!supabaseUrl || !supabaseAnonKey) {
       console.error('user/delete: Supabase-Env-Vars fehlen')
-      return NextResponse.json(
-        { error: 'Konfigurationsfehler' },
-        { status: 500 }
-      )
+      return NextResponse.json({ error: 'Konfigurationsfehler' }, { status: 500 })
     }
-    // Frischer Client ohne Cookie-Sync — reine Isolations­instanz nur
-    // für den Passwort-Check. Keine Session wird persistiert.
     const verifier = createRawClient(supabaseUrl, supabaseAnonKey, {
-      auth: {
-        persistSession: false,
-        autoRefreshToken: false,
-        detectSessionInUrl: false,
-      },
+      auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
     })
-
     const { error: signInError } = await verifier.auth.signInWithPassword({
       email: user.email,
       password,
     })
-
     if (signInError) {
-      // AUTH-002-Style: Error-Details nie nach außen leaken
       console.error('user/delete re-auth error:', {
         code: (signInError as any)?.code,
         name: signInError?.name,
       })
-      return NextResponse.json(
-        { error: 'Passwort ist falsch.' },
-        { status: 401 }
-      )
+      return NextResponse.json({ error: 'Passwort ist falsch.' }, { status: 401 })
     }
 
-    // 4. Jetzt Kaskaden-Löschung — wie bisher, aber mit zusätzlichen Tabellen.
+    // ── 4. Snapshot (vor Soft-Delete, weil RLS uns sonst aussperrt) ──
     const adminClient = createAdminClient()
     const userId = user.id
-
-    // AUTH-012: Rolle VOR dem Löschen snapshotten, damit das Audit-Event
-    //           die Rolle des Actors zum Zeitpunkt der Aktion enthält.
     const { data: snapshotProfile } = await adminClient
       .from('profiles')
-      .select('role, first_name, last_name')
+      .select('role, first_name, last_name, deleted_at')
       .eq('id', userId)
       .single()
     const snapshotRole: string | null = snapshotProfile?.role ?? null
+    const firstName: string = snapshotProfile?.first_name ?? ''
     const snapshotName: string | null =
-      [snapshotProfile?.first_name, snapshotProfile?.last_name].filter(Boolean).join(' ') || null
+      [snapshotProfile?.first_name, snapshotProfile?.last_name].filter(Boolean).join(' ') ||
+      null
+    const alreadySoftDeleted = Boolean(snapshotProfile?.deleted_at)
 
-    // Order matters (FK-Constraints von "leichtesten" zu "schwersten")
-    await adminClient.from('notifications').delete().eq('user_id', userId)
-    await adminClient
-      .from('messages')
-      .delete()
-      .or(`sender_id.eq.${userId},receiver_id.eq.${userId}`)
-    await adminClient.from('care_eligibility').delete().eq('user_id', userId)
-
-    // Bookings: sowohl als Kunde als auch als Engel
-    await adminClient.from('bookings').delete().eq('customer_id', userId)
-    await adminClient.from('bookings').delete().eq('angel_id', userId)
-
-    // Engel-Profil
-    await adminClient.from('angels').delete().eq('id', userId)
-
-    // Profil
-    await adminClient.from('profiles').delete().eq('id', userId)
-
-    // 5. Auth-User (invalidiert alle Sessions)
-    const { error: authError } = await adminClient.auth.admin.deleteUser(userId)
-    if (authError) {
-      console.error('user/delete auth-delete error:', {
-        code: (authError as any)?.code,
-        name: authError?.name,
-      })
-      return NextResponse.json(
-        { error: 'Konto konnte nicht gelöscht werden' },
-        { status: 500 }
-      )
+    // ── 5. Soft-Delete setzen (oder idempotent ueberspringen) ────
+    if (!alreadySoftDeleted) {
+      const { error: softErr } = await adminClient
+        .from('profiles')
+        .update({ deleted_at: new Date().toISOString() })
+        .eq('id', userId)
+      if (softErr) {
+        console.error('user/delete soft-delete error:', {
+          code: (softErr as any)?.code,
+          name: (softErr as any)?.name,
+        })
+        return NextResponse.json(
+          { error: 'Konto konnte nicht geloescht werden' },
+          { status: 500 }
+        )
+      }
     }
 
-    // AUTH-012: Audit-Log — DSGVO Art. 17 Selbst-Löschung dokumentieren.
-    // Fail-soft: Delete war erfolgreich, Audit-Insert darf das nicht
-    // rückgängig machen. Actor = Target, da Self-Service.
+    // ── 6. Token generieren + speichern (upsert) ─────────────────
+    const token = randomBytes(32).toString('hex') // 64 hex chars
+    const expiresAt = new Date(Date.now() + GRACE_DAYS * 24 * 60 * 60 * 1000)
+
+    const { error: tokenErr } = await adminClient
+      .from('account_deletion_tokens')
+      .upsert(
+        {
+          user_id: userId,
+          token,
+          expires_at: expiresAt.toISOString(),
+          confirmed_at: null,
+        },
+        { onConflict: 'user_id' }
+      )
+    if (tokenErr) {
+      console.error('user/delete token upsert error:', {
+        code: (tokenErr as any)?.code,
+        name: (tokenErr as any)?.name,
+      })
+      // fail-soft: Soft-Delete ist trotzdem aktiv, Admin kann manuell reaktivieren
+    }
+
+    // ── 7. Widerruf-Mail (fail-soft) ─────────────────────────────
+    try {
+      await sendAccountDeletionEmail({
+        email: user.email,
+        firstName,
+        token,
+      })
+    } catch (mailErr: any) {
+      console.error('user/delete mail error:', {
+        name: mailErr?.name,
+        code: mailErr?.code,
+      })
+    }
+
+    // ── 8. Audit-Log ─────────────────────────────────────────────
     await logAuditEvent({
-      action: 'user_self_delete',
+      action: 'user_self_soft_delete',
       actorId: userId,
       actorRole: snapshotRole,
       targetId: userId,
@@ -153,24 +176,29 @@ export async function DELETE(request: NextRequest) {
       details: {
         reason: 'dsgvo_art_17_self_deletion',
         target_name: snapshotName,
+        grace_days: GRACE_DAYS,
+        expires_at: expiresAt.toISOString(),
+        already_soft_deleted: alreadySoftDeleted,
       },
       request,
     })
 
+    // ── 9. signOut (Cookie-Session zerstoeren) ───────────────────
+    await supabase.auth.signOut()
+
     return NextResponse.json({
       success: true,
-      message: 'Konto und alle Daten wurden gelöscht',
+      message:
+        'Konto wurde deaktiviert. Du hast 60 Tage Zeit, die Loeschung per E-Mail-Link zu widerrufen.',
+      grace_days: GRACE_DAYS,
+      expires_at: expiresAt.toISOString(),
     })
   } catch (err: any) {
-    // AUTH-002: Kein rohes err-Objekt loggen, kein err.message an Client.
     console.error('user/delete unexpected error:', {
       code: err?.code,
       name: err?.name,
       status: err?.status,
     })
-    return NextResponse.json(
-      { error: 'Fehler beim Löschen des Kontos' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Fehler beim Loeschen des Kontos' }, { status: 500 })
   }
 }

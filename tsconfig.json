@@ -40,6 +40,8 @@
     "app/choose.tsx",
     "lib/supabase.ts",
     "constants/**",
-    "hooks/**"
+    "hooks/**",
+    "archive/**",
+    "supabase/functions/**"
   ]
 }
