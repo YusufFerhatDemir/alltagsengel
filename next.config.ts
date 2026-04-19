@@ -1,5 +1,14 @@
 import type { NextConfig } from "next";
 import { withSentryConfig } from "@sentry/nextjs";
+// P1.4 Bundle-Size-Report: konditional aktiv, nur wenn ANALYZE=true gesetzt ist.
+// Normalbetrieb bleibt unveraendert. Nutzung: `ANALYZE=true npm run build`.
+// Analogie: Wie ein Roentgen-Bild — nur bei Bedarf einschalten, sonst
+// bleibt die Maschine im Normalbetrieb und zeigt nichts an.
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const withBundleAnalyzer = require("@next/bundle-analyzer")({
+  enabled: process.env.ANALYZE === "true",
+  openAnalyzer: false, // CI-safe: kein Browser-Auto-Open
+});
 
 const nextConfig: NextConfig = {
   // @ts-expect-error – eslint key valid at runtime, missing from types in Next 16
@@ -52,7 +61,7 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default withSentryConfig(nextConfig, {
+export default withSentryConfig(withBundleAnalyzer(nextConfig), {
   // Sentry Build-Time-Optionen
   org: process.env.SENTRY_ORG,
   project: process.env.SENTRY_PROJECT,
