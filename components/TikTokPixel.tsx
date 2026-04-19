@@ -28,9 +28,10 @@ export default function TikTokPixel() {
     )
     if (isCapacitor) return
 
-    // Cookie-Consent prüfen
+    // Cookie-Consent prüfen — bewusster Initial-Check beim Mount.
     const consent = getCookieConsent()
     if (consent === 'accepted') {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setShouldLoad(true)
       return
     }

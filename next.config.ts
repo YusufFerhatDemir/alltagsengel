@@ -11,10 +11,8 @@ const withBundleAnalyzer = require("@next/bundle-analyzer")({
 });
 
 const nextConfig: NextConfig = {
-  // @ts-expect-error – eslint key valid at runtime, missing from types in Next 16
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
+  // Hinweis (Apr 2026): `eslint` als next.config-Key ist seit Next 16 entfernt.
+  // ESLint laeuft unabhaengig vom Build (siehe `npm run lint`).
   typescript: {
     ignoreBuildErrors: true,
   },
@@ -78,12 +76,11 @@ export default withSentryConfig(withBundleAnalyzer(nextConfig), {
     deleteSourcemapsAfterUpload: true,
   },
 
-  // Sentry-SDK-Logger aus Production-Bundle entfernen (kleiner, weniger Noise)
-  disableLogger: true,
-
-  // Vercel-Cron-Monitoring automatisch aktivieren
-  automaticVercelMonitors: true,
-
   // Tunnel-Route umgeht AdBlocker (client events gehen über eigene Domain)
   tunnelRoute: '/monitoring',
+
+  // Hinweis (Apr 2026): Die fruehre Sentry-Optionen `disableLogger` und
+  // `automaticVercelMonitors` sind deprecated. Beide haben in Turbopack-Builds
+  // ohnehin keinen Effekt. Bei Wechsel auf Webpack stattdessen:
+  //   webpack: { treeshake: { removeDebugLogging: true }, automaticVercelMonitors: true }
 });
