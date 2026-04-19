@@ -1,7 +1,12 @@
 # Status-Handover für neue Session
 
 **Erstellt am:** 2026-04-18
+**Zuletzt aktualisiert:** 2026-04-19 (P1-Roadmap abgeschlossen)
 **Zweck:** Kontext-Übergabe an die nächste Cowork-Session, damit der neue Assistent ohne langes Einlesen direkt mitarbeiten kann.
+
+> **Stand 2026-04-19:** Alle 4 Punkte der P1-Roadmap sind abgeschlossen und
+> auf `main` gepusht. Nächste Session sollte mit dem **Dead-Code-Audit**
+> starten — siehe `docs/next-session/02-prompt-deadcode-audit.md`.
 
 ---
 
@@ -56,35 +61,55 @@
 
 ---
 
-## 4. Was noch offen ist — P1-Liste
+## 4. P1-Liste — ABGESCHLOSSEN (Stand 2026-04-19)
 
-Reihenfolge = meine Empfehlung für die Bearbeitung:
+| # | Thema | Commit | Status |
+|---|-------|--------|--------|
+| 4.1 | HIBP Password-Leak-Check (k-Anonymity) | `e52f263` | ✅ gepusht |
+| 4.2 | Soft-Delete + 60-Tage-Grace + Widerrufs-Mail | `8d4d660` | ✅ gepusht |
+| 4.3 | RLS-Policy-Matrix-Skript | `3eb46ea` | ✅ gepusht |
+| 4.4 | Bundle-Size-Report + `@next/bundle-analyzer` | `fff88be` | ✅ gepusht |
 
-### 4.1 HIBP Password-Leak-Check (k-Anonymity)
-- **Datei:** `lib/password-validation.ts`
-- **Funktion:** Neue Funktion `checkPasswordBreach(password)` — SHA-1-Hash bilden, erste 5 Hex-Zeichen an `https://api.pwnedpasswords.com/range/` senden, Response-Liste prüfen, ob voller Hash dabei ist.
-- **Integration:** Optional-Parameter in `validatePasswordAsync()` hinzufügen (`checkBreach: boolean`), default `true` bei Register, optional bei Login.
-- **Fail-Safe:** Wenn HIBP nicht erreichbar → nur `console.warn`, Nutzer nicht blockieren (sonst sperrt ein Drittanbieter-Ausfall die ganze App).
-- **Effort:** ca. 2-3 Stunden inkl. Tests.
+**Details:**
 
-### 4.2 AUTH-003 Rest — Soft-Delete + 30-Tage-Grace-Period
-- **Dateien:** `/app/api/user/delete/route.ts`, neue Supabase-Migration, `middleware.ts`, alle RLS-Policies.
-- **Was:** Statt sofortiger Kaskade nur `profiles.deleted_at = now()` setzen. Alle RLS-Policies um `deleted_at IS NULL` erweitern. Cron-Job (Supabase Edge Function + pg_cron) für finale Löschung nach 30 Tagen.
-- **Zusätzlich:** Bestätigungs-Mail mit Widerrufs-Link (Token in neue `account_deletion_tokens`-Tabelle).
-- **Effort:** ca. 1-2 Tage inkl. Migration und Tests.
+### 4.1 HIBP Password-Leak-Check — ✅
+- `lib/password-validation.ts` → `checkPasswordBreach(password)` (SHA-1 + k-Anonymity gegen `api.pwnedpasswords.com/range/`).
+- Integration in `validatePasswordAsync({checkBreach})`.
+- Fail-Safe: bei HIBP-Ausfall `console.warn`, User nicht blockiert.
 
-### 4.3 RLS-Policy-Matrix-Skript
-- **Datei:** neues Skript `scripts/rls-matrix.ts` (oder Python).
-- **Was:** Liest via Supabase Management API (oder `pg_policies` system table) alle Policies aller Tabellen aus, erzeugt Markdown-Tabelle `docs/security/RLS_MATRIX.md` mit Spalten: Tabelle | RLS aktiv | Policy-Name | Rolle | CMD | USING | WITH CHECK.
-- **Nutzen:** Sofort-Check auf vergessene oder zu offene Policies.
-- **Effort:** ca. 3-4 Stunden.
+### 4.2 Soft-Delete + 60-Tage-Grace — ✅
+- Migration `20260419_soft_delete.sql` deployed (`profiles.deleted_at`, 7 RLS-Policies erweitert).
+- `account_deletion_tokens`-Tabelle + Widerrufs-Link via Mail.
+- Edge-Function `supabase/functions/account-hard-delete/` für pg_cron (läuft 03:00 UTC täglich, Batch 50, Cascade-Reihenfolge: notifications → messages → chat_messages → care_eligibility → documents → bookings → angels → account_deletion_tokens → profiles → auth.admin.deleteUser).
 
-### 4.4 Bundle-Size-Report
-- **Befehl:** `npm run build` mit `ANALYZE=true` (oder `next build --profile`).
-- **Schon vorbereitet?** `PERF_REPORT.md` im Root existiert — prüfen, ob bereits eine Messung drin ist.
-- **Zielwerte:** Landing < 150 KB, App-Routen < 200 KB First-Load-JS.
-- **Bei Überschreitung:** Lazy-Load für `SocialProof`, `AppMockup`, evtl. dynamischer Import für schwere Bibliotheken (recharts, mammoth, etc.).
-- **Effort:** Messung 30 Min + Optimierung 2-4 Stunden.
+### 4.3 RLS-Policy-Matrix-Skript — ✅
+- Migration `20260419_rls_matrix_rpcs.sql` deployed (Service-Role-only RPCs).
+- `scripts/rls-matrix.ts` → `npm run rls:matrix` erzeugt `docs/security/RLS_MATRIX.md` + CSV.
+- CI-Modus: `npm run rls:matrix:check` (exit 1 bei Drift).
+- Erster Snapshot: 59 Tabellen, 156 Policies, alle RLS-aktiviert.
+
+### 4.4 Bundle-Size-Report — ✅ (mit Follow-up)
+- `@next/bundle-analyzer` installiert + konditional in `next.config.ts`.
+- `npm run analyze` (Webpack-Opt-in, weil Turbopack-inkompatibel).
+- `docs/performance/BUNDLE_REPORT_2026-04.md` mit Server-Bundle-Zahlen + struktureller Client-Analyse.
+- **Follow-up offen (Task #9):** Client-Bundle auf Dev-Maschine lokal messen, First-Load-JS-Tabelle in Abschnitt 5.3 nachtragen. (In Sandbox nicht möglich wegen FUSE-Mount-Problem.)
+
+---
+
+## 4b. Nächste Session — Dead-Code-Audit
+
+Nach P1-Abschluss ist der offizielle nächste Schritt laut Roadmap der
+**Dead-Code-Audit**. Prompt liegt bereit in:
+
+```
+docs/next-session/02-prompt-deadcode-audit.md
+```
+
+Das ist eine **eigenständige neue Session** (nicht mit Implementations-Arbeit
+mischen). Der Audit läuft über 4 parallele Agent-Teams (Frontend, Backend,
+DB via Supabase MCP, Assets + Dependencies) und produziert Reports in
+`docs/audit/DEAD_CODE_*.md` — ohne Löschungen. Löschungen folgen in einer
+späteren Session nach Yusufs manueller Review.
 
 ---
 
