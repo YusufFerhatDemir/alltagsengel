@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "analyze": "ANALYZE=true next build --webpack",
     "start": "next start",
     "lint": "eslint",
     "audit:rls": "tsx scripts/audit-rls.ts",
@@ -49,6 +50,7 @@
     "web-push": "^3.6.7"
   },
   "devDependencies": {
+    "@next/bundle-analyzer": "^16.2.4",
     "@playwright/test": "^1.59.1",
     "@types/node": "^20",
     "@types/react": "19.2.14",
