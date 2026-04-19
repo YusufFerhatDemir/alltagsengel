@@ -2086,3 +2086,88 @@ Dieser Lauf erfolgte automatisch im Rahmen des täglichen Social-Media-Scheduler
 **Hinweis zur Automatisierung:** Computer-Use (Browser-Automation) ist in dieser Sitzung deaktiviert — der Meta Business Suite Upload erfordert Login + 2FA und muss manuell erfolgen. Alle Caption-Texte sind oben zum direkten Kopieren bereit.
 
 **Nächster Post:** Fr 18.04.2026 — IG Reel / TT / FB — Video #5 "Markt Frankfurt Rollator" — 11:00 DE / 12:00 TR
+
+---
+
+## 19.04.2026 — Emotion-Reel: "Einfühlsamkeit schenkt Vertrauen" (Instagram/TikTok)
+
+**Status:** 📋 Captions + Asset-Referenz vorbereitet — Upload manuell erforderlich (Computer-Use deaktiviert)
+**Plattform:** Instagram Reel + TikTok (laut Content Calendar KEIN Facebook-Crosspost an diesem Tag)
+**Typ:** Video (Reel, hochkant 562×848)
+**Content Calendar Referenz:** Woche 1 — "Sa 19.04 — Video #4 (Einfühlsamkeit Küche)"
+**Asset (Plan):** `Video #4` — laut Video-Mapping Originaldatei `23-36-25.mov` (Küche/Kaffee-Szene, "Einfühlsamkeit schenkt Vertrauen")
+**Geplante Uhrzeit:** 14:00 CEST (DE) / 15:00 CEST (TR — separater Post, 1h später)
+
+### Caption (DE) — 14:00 Uhr
+
+```
+Einfühlsamkeit schenkt Vertrauen.
+Wir sind nicht nur Helfer — wir sind Begleiter.
+
+Mit Herz. In Frankfurt.
+
+www.alltagsengel.care
+info@alltagsengel.care
+
+#Einfühlsamkeit #Vertrauen #Begleitung #Alltagsengel #Frankfurt #Herz #Senioren #Pflege #Alltagsbegleitung #Pflegekasse #Entlastungsbetrag #FrankfurtAmMain #Seniorenhilfe #§45b
+```
+
+### Caption (TR) — 15:00 Uhr (separater Post)
+
+```
+Empati güven yaratır.
+Biz sadece yardımcı değiliz — biz refakatçiyiz.
+
+Kalpten. Frankfurt'ta.
+
+www.alltagsengel.care
+info@alltagsengel.care
+
+#Empati #Güven #Refakat #Alltagsengel #Frankfurt #Kalp #Yaşlılar #YaşlıBakımı #TürklerFrankfurt #Bakım
+```
+
+### Asset-Hinweis
+
+Der Content Calendar verweist auf `Video #4 (Einfühlsamkeit Küche)` mit Originalname `23-36-25.mov` (Video-Mapping Sheet). Die Originaldatei ist aktuell **nicht unter diesem Namen** in `marketing/social-media-grafiken/` auffindbar — Yusuf bitte vor dem Upload prüfen, ob eine der folgenden Dateien die richtige Küche/Kaffee-Szene enthält:
+
+- `REELS-gesellschaft-neu.mp4` (Sofa/Nähe, Alternativ-Kandidat)
+- `REELS-cafe-freizeit-neu.mp4` (Café-Szene)
+- Falls vorhanden: Original `23-36-25.mov` aus dem Rohmaterial-Archiv
+
+Empfehlung: Originaldatei aus dem Archiv (z. B. Fotos-App oder externer Speicher) lokalisieren und als `REELS-einfuehlsamkeit-kueche.mp4` in den Ordner legen, damit künftige Scheduler-Läufe sie direkt referenzieren können.
+
+### Meta Business Suite — Upload-Anleitung (Instagram Reel)
+
+1. **business.facebook.com** öffnen → Reel erstellen → Instagram auswählen (Facebook laut Calendar **abwählen**)
+2. Video hochladen (siehe Asset-Hinweis oben)
+3. DE-Caption (siehe oben) einfügen
+4. Veröffentlichung planen: **19.04.2026, 14:00 Uhr CEST**
+5. Zweiter Reel-Post mit TR-Caption für **15:00 Uhr CEST** planen (gleiches Video, nur Caption getauscht)
+
+### TikTok Creator Center — Upload-Anleitung
+
+1. **tiktok.com/upload** öffnen → Als @alltagsengel einloggen
+2. Gleiches Video hochladen (hochkant 9:16 bevorzugt — 562×848 passt)
+3. DE-Caption einfügen, "Alle" als Zielgruppe, Kommentare aktiviert
+4. Planen für **19.04.2026, 14:00 Uhr CEST**
+5. Zweiter TikTok mit TR-Caption für **15:00 Uhr CEST**
+
+### Strategischer Hinweis (Samstag-Emotion-Slot)
+
+Samstage sind der Emotion-Slot der Woche — Ziel ist **Markenbindung**, nicht Conversion. "Einfühlsamkeit schenkt Vertrauen" transportiert den Kern-USP (Begleitung > reiner Service) in unter 10 Sekunden.
+
+**KPI-Ziele:**
+- Durchhaltequote (Reel): ≥ 65 % (Kurz-Reel, emotionaler Hook)
+- Save-Rate: ≥ 2 % (Familie markiert sich den Post)
+- Share-Rate: ≥ 1 % (Weiterleitung an Angehörige)
+- Profilbesuche: ≥ 1 % der Impressions
+
+### Hinweis (Scheduler-Lauf 19.04.2026, ~09:07 CEST)
+
+Dieser Lauf erfolgte automatisch um ca. 09:07 Uhr CEST — rund 5 Stunden vor dem geplanten Posting-Zeitpunkt (14:00 Uhr). Captions (DE + TR) + Hashtags sind vollständig vorbereitet.
+
+**Hinweis zur Automatisierung:** Computer-Use (Browser-Automation) ist in dieser Sitzung deaktiviert (Einstellung → Desktop-App → Computer use). Meta Business Suite + TikTok Creator Center erfordern Login + 2FA und können ohne Computer-Use nicht direkt bedient werden. Die Captions sind oben zum direkten Kopieren bereit.
+
+**Offen seit gestern:** Fr 18.04.2026 — Video #5 "Markt Frankfurt Rollator" hat **keinen POST-LOG-Eintrag** zwischen 17.04 und 19.04. Bitte prüfen, ob der Scheduler am 18.04 lief oder der Post nachgeholt werden muss.
+
+**Nächster Post:** Mo 21.04.2026 — IG Reel / TT / FB — Challenge-Start "W2-MO-challenge.png + Video #9" — 10:00 DE / 11:00 TR
