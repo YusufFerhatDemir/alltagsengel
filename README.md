@@ -64,11 +64,8 @@ alltagsengel/
 │   └── *.pptx *.docx *.xlsx
 │
 ├── archive/             # Alte/abgelöste Strukturen (siehe archive/README.md)
-│   ├── dripfy-mis-legacy/   # Frühere separate MIS-App
 │   ├── next-old/            # Alter Build-Cache (gitignored)
 │   ├── video-generation/    # _clips*/, _preview*/ Zwischenstände (gitignored)
-│   ├── expo-legacy/         # Reste vor Capacitor-Umstieg
-│   ├── debug-screenshots/   # Chrome-Debug PNGs
 │   └── private/             # PII: Ausweise, Führerscheine, AABs (gitignored)
 │
 ├── memory/              # Cowork-Memory (glossary, projects, people, context)
