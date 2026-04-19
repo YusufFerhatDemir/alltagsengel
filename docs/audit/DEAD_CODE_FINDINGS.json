@@ -1,0 +1,155 @@
+{
+  "audit_date": "2026-04-20",
+  "scope": ["app", "components", "hooks", "lib", "types"],
+  "summary": {
+    "total_ts_tsx_files": 232,
+    "console_log_instances": 38,
+    "backup_files": 3,
+    "commented_code_blocks": 143,
+    "unused_hook_exports": 0,
+    "unused_components": 0,
+    "loc_optimization_potential": "200-300"
+  },
+  "findings": {
+    "console_logs": {
+      "total": 38,
+      "by_category": {
+        "api_routes_backend": {
+          "count": 7,
+          "status": "acceptable",
+          "reason": "Server-side code"
+        },
+        "client_side_debug": {
+          "count": 19,
+          "status": "review_recommended",
+          "files": [
+            "components/SessionKeepAlive.tsx",
+            "components/GoogleTagManager.tsx",
+            "components/NotificationBell.tsx",
+            "components/PushProvider.tsx",
+            "components/NativePushProvider.tsx",
+            "components/SplashController.tsx"
+          ],
+          "recommendation": "Wrap with process.env.NODE_ENV === 'development'"
+        },
+        "commented_console_log": {
+          "count": 4,
+          "status": "cleanup_candidate",
+          "file": "app/mis/analytics/page.tsx",
+          "lines": [86, 107, 115, 143]
+        },
+        "scripts": {
+          "count": 8,
+          "status": "acceptable",
+          "reason": "Build-time scripts"
+        }
+      }
+    },
+    "backup_files": {
+      "total": 3,
+      "files": [
+        {
+          "path": "archive/expo-legacy/capacitor.config.ts.bak",
+          "type": "bak",
+          "status": "in_archive_ok"
+        },
+        {
+          "path": ".git/index.lock.bak",
+          "type": "git_metadata",
+          "status": "ignore"
+        },
+        {
+          "path": ".git/HEAD.lock.bak",
+          "type": "git_metadata",
+          "status": "ignore"
+        }
+      ]
+    },
+    "hooks": {
+      "total": 2,
+      "hooks": [
+        {
+          "name": "useTrackVisit",
+          "file": "hooks/useTrackVisit.ts",
+          "imports": 11,
+          "status": "used"
+        },
+        {
+          "name": "useUserLocation",
+          "file": "hooks/useUserLocation.ts",
+          "imports": 11,
+          "status": "used"
+        }
+      ]
+    },
+    "components": {
+      "total": 32,
+      "status": "all_used",
+      "comment": "All components are either used in pages, layouts, or as global providers"
+    },
+    "library_exports": {
+      "total_files": 26,
+      "total_exports": 80,
+      "status": "all_used",
+      "critical_libraries": [
+        "lib/supabase/*",
+        "lib/pricing-engine.ts",
+        "lib/notifications.ts",
+        "lib/tracking.ts",
+        "lib/fcm.ts"
+      ]
+    },
+    "commented_code": {
+      "total_blocks": 143,
+      "by_priority": {
+        "high_cleanup": {
+          "count": 4,
+          "file": "app/mis/analytics/page.tsx",
+          "type": "commented_console_log"
+        },
+        "medium_cleanup": {
+          "count": 35,
+          "description": "Scattered fallback/debug code in API routes"
+        },
+        "low_cleanup": {
+          "count": 104,
+          "description": "Old implementations, experimental code"
+        }
+      }
+    }
+  },
+  "recommendations": [
+    {
+      "priority": "low",
+      "action": "Wrap console.debug in components",
+      "files": [
+        "components/SessionKeepAlive.tsx",
+        "components/NativePushProvider.tsx",
+        "components/SplashController.tsx"
+      ],
+      "estimated_loc_savings": 10,
+      "effort": "low"
+    },
+    {
+      "priority": "low",
+      "action": "Remove commented debug lines",
+      "file": "app/mis/analytics/page.tsx",
+      "lines": [86, 107, 115, 143],
+      "estimated_loc_savings": 4,
+      "effort": "trivial"
+    },
+    {
+      "priority": "low",
+      "action": "Clean up scattered commented blocks",
+      "estimated_loc_savings": 150,
+      "effort": "medium",
+      "note": "Gradual cleanup recommended"
+    }
+  ],
+  "non_issues": [
+    "Archive/legacy code is intentionally archived",
+    "Feature flags are in use (not dead code)",
+    "Sentry error tracking is intentional demo code",
+    "All Next.js special files (page.tsx, layout.tsx, route.ts) are implicit entry points"
+  ]
+}
