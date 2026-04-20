@@ -287,8 +287,8 @@ content.push(H2("Unternehmensdaten"));
 content.push(new Paragraph({ spacing: { after: 120 }, children: [new TextRun("")] }));
 
 const companyData = [
-  ["Firma", "AlltagsEngel (Gründung: 2026)"],
-  ["Rechtsform", "Einzelunternehmung → Umwandlung zur UG/GmbH bei Investment geplant"],
+  ["Firma", "AlltagsEngel UG (haftungsbeschränkt)"],
+  ["Rechtsform", "UG (haftungsbeschränkt) · HRB 140351, Amtsgericht Frankfurt am Main"],
   ["Sitz", "Frankfurt am Main, Hessen"],
   ["Gründer", "Yusuf Ferhat Demir — Full-Stack-Entwickler, CEO & CTO"],
   ["Branche", "DigitalHealth · AgeTech · Pflege-Plattform"],
