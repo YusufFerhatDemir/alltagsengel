@@ -1032,12 +1032,18 @@ body {
   .screen { min-height:calc(100dvh - 48px); }
   .sb { padding:0 20px 9px; }
   .bottom-nav, .submit-bar {
+    position:fixed; bottom:0; left:0; right:0;
     width:100%; border-radius:0;
     padding-bottom:env(safe-area-inset-bottom);
+    z-index:1000;
   }
+  /* Content-Padding, damit Inhalt nicht unter der Nav verschwindet */
+  .phone { padding-bottom:calc(76px + env(safe-area-inset-bottom)); }
   .booking-bar {
+    position:fixed; left:0; right:0;
     width:100%; border-radius:0;
     bottom:calc(76px + env(safe-area-inset-bottom));
+    z-index:999;
   }
   .kh-body, .ed-body, .ep-body, .mp-body, .form-body { padding-left:16px; padding-right:16px; }
   .cat-list { gap:8px; }
