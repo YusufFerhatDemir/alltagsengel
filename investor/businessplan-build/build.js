@@ -193,7 +193,7 @@ content.push(
   new Paragraph({
     alignment: AlignmentType.CENTER,
     spacing: { after: 80 },
-    children: [new TextRun({ text: "+49 178 338 2825 · hallo@alltagsengel.care", font: FONT, size: 20, color: COAL })],
+    children: [new TextRun({ text: "+49 178 338 2825 · info@alltagsengel.care", font: FONT, size: 20, color: COAL })],
   }),
 );
 
@@ -293,7 +293,7 @@ const companyData = [
   ["Gründer", "Yusuf Ferhat Demir — Full-Stack-Entwickler, CEO & CTO"],
   ["Branche", "DigitalHealth · AgeTech · Pflege-Plattform"],
   ["Website", "https://alltagsengel.care"],
-  ["Kontakt", "+49 178 338 2825 · hallo@alltagsengel.care"],
+  ["Kontakt", "+49 178 338 2825 · info@alltagsengel.care"],
   ["Status (April 2026)", "MVP produktiv, erste Kunden und Engel onboarded"],
   ["Mitarbeiter", "1 (Gründer) — Pre-Seed-Hires in Planung"],
   ["Finanzierungsstand", "Bootstrapped, 0 € externes Kapital"],
@@ -832,7 +832,7 @@ content.push(new Paragraph({
 content.push(new Paragraph({
   alignment: AlignmentType.CENTER,
   spacing: { before: 80 },
-  children: [new TextRun({ text: "Yusuf Ferhat Demir · +49 178 338 2825 · hallo@alltagsengel.care", font: FONT, size: 22, bold: true, color: COAL })],
+  children: [new TextRun({ text: "Yusuf Ferhat Demir · +49 178 338 2825 · info@alltagsengel.care", font: FONT, size: 22, bold: true, color: COAL })],
 }));
 content.push(new Paragraph({
   alignment: AlignmentType.CENTER,
