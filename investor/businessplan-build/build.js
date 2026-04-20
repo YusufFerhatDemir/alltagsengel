@@ -329,8 +329,8 @@ content.push(P("Das ist kein Nischenthema. Fast jeder deutsche Haushalt wird in 
 
 content.push(H2("Das eigentliche Problem: Fragmentierung und Bürokratie"));
 
-content.push(H3("Entlastungsbetrag §45b: 7,6 Mrd € pro Jahr — 60 % verfallen"));
-content.push(P("Jeder Pflegebedürftige mit Pflegegrad 1 bis 5 hat seit der Reform 2025 Anspruch auf 131 Euro pro Monat (zuvor 125 Euro) Entlastungsbetrag nach §45b SGB XI — für Alltagshilfe, Haushaltsunterstützung oder Betreuung. Das ergibt bundesweit ein Budget von 7,6 Milliarden Euro pro Jahr. Die Tragik: Laut einer Studie der Universität Bremen (2024) werden nur 38 Prozent dieses Budgets tatsächlich abgerufen. Der Rest — 4,7 Milliarden Euro — verfällt jährlich ungenutzt."));
+content.push(H3("Entlastungsbetrag §45b: 8,2 Mrd € pro Jahr — 60 % verfallen"));
+content.push(P("Jeder Pflegebedürftige mit Pflegegrad 1 bis 5 hat seit der Pflegereform 2025 Anspruch auf 131 Euro pro Monat Entlastungsbetrag nach §45b SGB XI — für Alltagshilfe, Haushaltsunterstützung oder Betreuung. Das ergibt bundesweit ein Budget von rund 8,2 Milliarden Euro pro Jahr. Die Tragik: Laut einer Studie der Universität Bremen (2024) werden nur 38 Prozent dieses Budgets tatsächlich abgerufen. Der Rest — über 5 Milliarden Euro — verfällt jährlich ungenutzt."));
 
 content.push(P("Warum? Weil die Abrechnung einen siebenstufigen Prozess erfordert: Anbieter finden → prüfen, ob er nach §45a landesrechtlich anerkannt ist → Vertrag unterschreiben → Leistung dokumentieren → Rechnung schreiben → bei der Kasse einreichen → auf Erstattung warten. Für eine 80-jährige Pflegebedürftige oder ihre berufstätigen Angehörigen ist das unüberwindbar."));
 

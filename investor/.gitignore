@@ -1,0 +1,10 @@
+# Build-Ordner-Artefakte (nicht die finalen Deliverables im /investor Root)
+*/node_modules/
+*/.~lock.*#
+*/lu*.tmp
+*/overview-*.jpg
+*/slide_check*.jpg
+pitchdeck-build/AlltagsEngel_PitchDeck_2026.pdf
+pitchdeck-build/AlltagsEngel_PitchDeck_2026.pptx
+businessplan-build/AlltagsEngel_Businessplan_2026.pdf
+businessplan-build/AlltagsEngel_Businessplan_2026.docx
