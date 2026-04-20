@@ -30,6 +30,16 @@ export default function OnboardingFlow() {
     checkOnboarding()
   }, [])
 
+  // Modal-Event: andere UI-Elemente (z.B. WhatsApp-FAB) koennen sich ausblenden
+  // solange das Onboarding offen ist.
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    window.dispatchEvent(new CustomEvent('app:modal-change', { detail: { open: show } }))
+    return () => {
+      window.dispatchEvent(new CustomEvent('app:modal-change', { detail: { open: false } }))
+    }
+  }, [show])
+
   async function checkOnboarding() {
     try {
       const supabase = createClient()
@@ -83,12 +93,19 @@ export default function OnboardingFlow() {
       content: (
         <div style={{ textAlign: 'center', padding: '20px 0' }}>
           <div style={{
-            width: 100, height: 100, borderRadius: '50%',
-            background: 'linear-gradient(135deg, #C9963C 0%, #DDB660 100%)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            margin: '0 auto 24px', fontSize: 48,
+            width: 112, height: 112, borderRadius: '50%',
+            overflow: 'hidden',
+            margin: '0 auto 24px',
+            boxShadow: '0 0 48px rgba(201, 150, 60, 0.35), 0 8px 32px rgba(0,0,0,0.4)',
+            border: '2px solid rgba(201, 150, 60, 0.5)',
+            background: '#1A1612',
           }}>
-            😇
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/icon-512x512.png"
+              alt="AlltagsEngel"
+              style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+            />
           </div>
           <p style={{ color: '#B8B0A4', fontSize: 15, lineHeight: 1.7, maxWidth: 320, margin: '0 auto' }}>
             Wir verbinden Sie mit zertifizierten Alltagsbegleitern in Ihrer Nähe.
@@ -214,12 +231,40 @@ export default function OnboardingFlow() {
       content: (
         <div style={{ textAlign: 'center', padding: '20px 0' }}>
           <div style={{
-            width: 80, height: 80, borderRadius: '50%',
-            background: 'linear-gradient(135deg, #2D6A4F 0%, #40916C 100%)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            margin: '0 auto 24px', fontSize: 36,
+            position: 'relative',
+            width: 112, height: 112,
+            margin: '0 auto 24px',
           }}>
-            ✓
+            <div style={{
+              width: '100%', height: '100%', borderRadius: '50%',
+              overflow: 'hidden',
+              boxShadow: '0 0 48px rgba(45, 106, 79, 0.4), 0 8px 32px rgba(0,0,0,0.4)',
+              border: '2px solid rgba(201, 150, 60, 0.5)',
+              background: '#1A1612',
+            }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/icon-512x512.png"
+                alt="AlltagsEngel"
+                style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+              />
+            </div>
+            {/* Success-Badge unten rechts */}
+            <div style={{
+              position: 'absolute',
+              bottom: -4,
+              right: -4,
+              width: 36, height: 36, borderRadius: '50%',
+              background: 'linear-gradient(135deg, #2D6A4F 0%, #40916C 100%)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: '#fff',
+              fontSize: 18,
+              fontWeight: 700,
+              boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+              border: '3px solid #1E1A16',
+            }}>
+              ✓
+            </div>
           </div>
           <div style={{
             background: 'rgba(201, 150, 60, 0.08)',
@@ -261,14 +306,49 @@ export default function OnboardingFlow() {
       position: 'fixed',
       inset: 0,
       zIndex: 9999,
-      background: 'rgba(0,0,0,0.85)',
-      backdropFilter: 'blur(12px)',
-      WebkitBackdropFilter: 'blur(12px)',
+      background: 'radial-gradient(ellipse at center top, rgba(201,150,60,0.08) 0%, rgba(26,22,18,0.95) 50%, rgba(0,0,0,0.95) 100%)',
+      backdropFilter: 'blur(16px)',
+      WebkitBackdropFilter: 'blur(16px)',
       display: 'flex',
       alignItems: 'flex-end',
       justifyContent: 'center',
       padding: '0 0 env(safe-area-inset-bottom, 0px)',
     }}>
+      {/* Dezente Brand-Silhouette im Hintergrund — damit der obere Bereich nicht leer wirkt */}
+      <div style={{
+        position: 'absolute',
+        top: '12vh',
+        left: '50%',
+        transform: 'translateX(-50%)',
+        width: 220,
+        height: 220,
+        opacity: 0.08,
+        pointerEvents: 'none',
+        zIndex: 0,
+      }}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/icon-512x512.png"
+          alt=""
+          aria-hidden="true"
+          style={{ width: '100%', height: '100%', objectFit: 'contain', filter: 'blur(0.5px)' }}
+        />
+      </div>
+      {/* Brand-Schriftzug dezent ueber dem Logo */}
+      <div style={{
+        position: 'absolute',
+        top: '8vh',
+        left: '50%',
+        transform: 'translateX(-50%)',
+        fontSize: 14,
+        letterSpacing: 4,
+        color: 'rgba(201, 150, 60, 0.35)',
+        fontWeight: 600,
+        pointerEvents: 'none',
+        zIndex: 1,
+      }}>
+        ALLTAGSENGEL
+      </div>
       <div style={{
         background: 'linear-gradient(180deg, #2A2420 0%, #1E1A16 100%)',
         borderRadius: '28px 28px 0 0',
