@@ -15,6 +15,7 @@ const DEFAULT_MESSAGE = 'Hallo! Ich interessiere mich für AlltagsEngel und hät
 export default function WhatsAppButton() {
   const [visible, setVisible] = useState(false)
   const [showTooltip, setShowTooltip] = useState(false)
+  const [modalOpen, setModalOpen] = useState(false)
 
   useEffect(() => {
     // Auch in Capacitor (native App) anzeigen — WhatsApp-Kontakt soll immer verfügbar sein
@@ -28,13 +29,21 @@ export default function WhatsAppButton() {
       setTimeout(() => setShowTooltip(false), 5000)
     }, 8000)
 
+    // Modal-Event-Listener: Ausblenden wenn ein Modal (Onboarding, Buchung, etc.) offen ist
+    const handleModalChange = (e: Event) => {
+      const detail = (e as CustomEvent).detail
+      setModalOpen(Boolean(detail?.open))
+    }
+    window.addEventListener('app:modal-change', handleModalChange)
+
     return () => {
       clearTimeout(timer)
       clearTimeout(tooltipTimer)
+      window.removeEventListener('app:modal-change', handleModalChange)
     }
   }, [])
 
-  if (!visible) return null
+  if (!visible || modalOpen) return null
 
   const waUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(DEFAULT_MESSAGE)}`
 
