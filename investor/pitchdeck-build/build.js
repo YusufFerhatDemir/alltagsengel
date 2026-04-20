@@ -97,6 +97,74 @@ async function main() {
   }
 
   // ═══════════════════════════════════════════════════════════
+  // APP-ICONS (Gold-Gradient wie in der AlltagsEngel-App)
+  // Quelle: components/Icons.tsx
+  // ═══════════════════════════════════════════════════════════
+  const GOLD_GRAD = `
+    <defs>
+      <linearGradient id="g1" x1="4" y1="2" x2="20" y2="22" gradientUnits="userSpaceOnUse">
+        <stop offset="0%" stop-color="#F8E064"/>
+        <stop offset="45%" stop-color="#DBA84A"/>
+        <stop offset="100%" stop-color="#B8882E"/>
+      </linearGradient>
+      <linearGradient id="g1L" x1="4" y1="4" x2="20" y2="20" gradientUnits="userSpaceOnUse">
+        <stop offset="0%" stop-color="#FCF0A0"/>
+        <stop offset="50%" stop-color="#E8C850"/>
+        <stop offset="100%" stop-color="#C9963C"/>
+      </linearGradient>
+    </defs>`;
+  const appSvg = (inner, size = 512) =>
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24">${GOLD_GRAD}${inner}</svg>`;
+
+  // App-Icons als SVG-Strings (Gold-Variante)
+  const appIcons = {
+    // IconKrankenfahrtGold - Krankenwagen
+    app_car:
+      `<rect x="1" y="10" width="15" height="8" rx="1.5" fill="url(#g1)" stroke="#A07428" stroke-width="0.4"/>
+       <path d="M16 13h4.5l2.5 3v2h-7v-5z" fill="url(#g1L)" stroke="#A07428" stroke-width="0.4"/>
+       <circle cx="5.5" cy="19.5" r="2" fill="url(#g1)" stroke="#A07428" stroke-width="0.5"/>
+       <circle cx="18.5" cy="19.5" r="2" fill="url(#g1)" stroke="#A07428" stroke-width="0.5"/>
+       <path d="M8.5 13v4M6.5 15h4" fill="none" stroke="#1A1612" stroke-width="2" stroke-linecap="round"/>`,
+    // IconHygieneboxGold - Pflegebox
+    app_box:
+      `<rect x="2" y="9" width="20" height="12" rx="2" fill="url(#g1)" stroke="#A07428" stroke-width="0.4"/>
+       <rect x="1" y="5" width="22" height="5" rx="1.5" fill="url(#g1L)" stroke="#A07428" stroke-width="0.3"/>
+       <path d="M10 5V3.5a2 2 0 014 0V5" fill="none" stroke="#A07428" stroke-width="1.2" stroke-linecap="round"/>
+       <path d="M9 14.5l2 2 4-4" fill="none" stroke="#1A1612" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>`,
+    // IconWingsGold - Engel mit Heiligenschein
+    app_angel:
+      `<circle cx="12" cy="5.5" r="3.2" fill="url(#g1)"/>
+       <path d="M12 8.5c-4 0-6.5 2-7.5 5.5 1 2.5 4 4 7.5 4s6.5-1.5 7.5-4c-1-3.5-3.5-5.5-7.5-5.5z" fill="url(#g1)" stroke="#A07428" stroke-width="0.3"/>
+       <path d="M4.5 8.5C2.5 9.5 1.5 12 2.5 15" fill="none" stroke="url(#g1L)" stroke-width="2" stroke-linecap="round"/>
+       <path d="M19.5 8.5c2 1 3 3.5 2 6.5" fill="none" stroke="url(#g1L)" stroke-width="2" stroke-linecap="round"/>
+       <circle cx="12" cy="5.5" r="1.2" fill="url(#g1L)" opacity="0.6"/>`,
+    // IconMedicalGold - Arzt/Kreuz (für Kunde)
+    app_med:
+      `<rect x="3" y="3" width="18" height="18" rx="4" fill="url(#g1)" stroke="#A07428" stroke-width="0.4"/>
+       <path d="M12 7.5v9M7.5 12h9" fill="none" stroke="#1A1612" stroke-width="2.2" stroke-linecap="round"/>`,
+    // IconHandshakeGold
+    app_shake:
+      `<path d="M2 12a5 5 0 015-5h2l3 3 3-3h2a5 5 0 015 5v0a5 5 0 01-5 5H7a5 5 0 01-5-5z" fill="url(#g1)" stroke="#A07428" stroke-width="0.4"/>
+       <path d="M7.5 11.5l3 3L16.5 8.5" fill="none" stroke="#1A1612" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>`,
+    // IconHomeGold
+    app_home:
+      `<path d="M3 10.5L12 3l9 7.5V20a1.5 1.5 0 01-1.5 1.5h-15A1.5 1.5 0 013 20z" fill="url(#g1)" stroke="#A07428" stroke-width="0.4" stroke-linejoin="round"/>
+       <rect x="9" y="14" width="6" height="7.5" rx="0.5" fill="#1A1612"/>`,
+    // IconStarGold
+    app_star:
+      `<path d="M12 2l2.9 5.9 6.5.95-4.7 4.58 1.1 6.47L12 17l-5.8 2.9 1.1-6.47L2.6 8.85l6.5-.95z" fill="url(#g1)" stroke="#A07428" stroke-width="0.4" stroke-linejoin="round"/>`,
+    // Person (Founder-Silhouette) — clean bust im Gold-Gradient
+    app_tie:
+      `<circle cx="12" cy="7.5" r="3.8" fill="url(#g1)" stroke="#A07428" stroke-width="0.3"/>
+       <path d="M4.5 20.5c0-4.2 3.4-7.5 7.5-7.5s7.5 3.3 7.5 7.5v.5h-15v-.5z" fill="url(#g1)" stroke="#A07428" stroke-width="0.3"/>`,
+  };
+  for (const [key, inner] of Object.entries(appIcons)) {
+    const svg = appSvg(inner, 512);
+    const pngBuffer = await sharp(Buffer.from(svg)).png().toBuffer();
+    ic[key] = "image/png;base64," + pngBuffer.toString("base64");
+  }
+
+  // ═══════════════════════════════════════════════════════════
   // REUSABLE ELEMENTS
   // ═══════════════════════════════════════════════════════════
   function addFooter(slide, pageNum, total) {
@@ -114,6 +182,11 @@ async function main() {
       x: W - 1.3, y: H - 0.55, w: 0.8, h: 0.3,
       fontFace: FONT_B, fontSize: 9, color: MUTED, align: "right", margin: 0
     });
+  }
+
+  // Logo-Mark (Engel) oben rechts auf jeder Slide — Brand-Signatur
+  function addBrandLogo(slide) {
+    slide.addImage({ path: "logo-mark.png", x: W - 1.3, y: 0.3, w: 0.85, h: 0.47 });
   }
 
   function addEyebrow(slide, text, y = 0.55) {
@@ -283,6 +356,7 @@ async function main() {
       });
     });
 
+    addBrandLogo(s);
     addFooter(s, 2, totalSlides);
   }
 
@@ -307,7 +381,7 @@ async function main() {
       x: phoneX + 0.15, y: phoneY + 0.3, w: phoneW - 0.3, h: phoneH - 0.6,
       fill: { color: CREAM_2 }, line: { type: "none" }, rectRadius: 0.1
     });
-    s.addImage({ data: ic.heart, x: phoneX + phoneW/2 - 0.4, y: phoneY + 0.7, w: 0.8, h: 0.8 });
+    s.addImage({ data: ic.app_angel, x: phoneX + phoneW/2 - 0.4, y: phoneY + 0.7, w: 0.8, h: 0.8 });
     s.addText("AlltagsEngel", {
       x: phoneX, y: phoneY + 1.65, w: phoneW, h: 0.4,
       fontFace: FONT_H, fontSize: 20, color: COAL, italic: true, align: "center", margin: 0
@@ -337,8 +411,8 @@ async function main() {
     const featX = 4.7;
     const features = [
       { icon: ic.hands, t: "Alltagshilfen nach §45b", b: "Vom Einkaufen bis zum Arzttermin — zertifizierte Engel, direkt in der App gebucht und von der Kasse abgerechnet." },
-      { icon: ic.car,   t: "Krankenfahrten & Taxi", b: "Zum Arzt, zur Reha, zur Dialyse. Rezept hochladen, Fahrt buchen, AlltagsEngel kümmert sich um die Abrechnung." },
-      { icon: ic.box,   t: "Pflegeboxen (§40)",     b: "42 €/Monat Pflegehilfsmittel-Pauschale — automatischer Monatsversand, kein Papierkram für die Angehörigen." },
+      { icon: ic.app_car,   t: "Krankenfahrten & Taxi", b: "Zum Arzt, zur Reha, zur Dialyse. Rezept hochladen, Fahrt buchen, AlltagsEngel kümmert sich um die Abrechnung." },
+      { icon: ic.app_box,   t: "Pflegeboxen (§40)",     b: "42 €/Monat Pflegehilfsmittel-Pauschale — automatischer Monatsversand, kein Papierkram für die Angehörigen." },
       { icon: ic.cal,   t: "Monats-Abo Premium",    b: "Koordinierter Komplett-Service mit festem Engel, Priorisierung und persönlichem Care-Manager." },
     ];
     features.forEach((f, i) => {
@@ -361,6 +435,7 @@ async function main() {
       });
     });
 
+    addBrandLogo(s);
     addFooter(s, 3, totalSlides);
   }
 
@@ -409,6 +484,7 @@ async function main() {
     });
 
     // (Quote entfernt — verursachte Overlap mit Stat-Karten)
+    addBrandLogo(s);
     addFooter(s, 4, totalSlides);
   }
 
@@ -425,7 +501,7 @@ async function main() {
       {
         title: "Kunde",
         sub: "Pflegebedürftige & Angehörige",
-        icon: ic.userMd,
+        icon: ic.app_med,
         bullets: [
           "Engel finden & buchen",
           "Krankenfahrten beantragen",
@@ -437,7 +513,7 @@ async function main() {
       {
         title: "Engel",
         sub: "Alltagshelfer & Pflegekräfte",
-        icon: ic.heart,
+        icon: ic.app_angel,
         bullets: [
           "Aufträge im Umkreis",
           "Kalender-Integration",
@@ -449,7 +525,7 @@ async function main() {
       {
         title: "Fahrer",
         sub: "Krankentransport-Partner",
-        icon: ic.car,
+        icon: ic.app_car,
         bullets: [
           "Rezept-basiertes Matching",
           "GPS-Routing",
@@ -509,6 +585,7 @@ async function main() {
       charSpacing: 2, margin: 0
     });
 
+    addBrandLogo(s);
     addFooter(s, 5, totalSlides);
   }
 
@@ -523,8 +600,8 @@ async function main() {
 
     const streams = [
       { icon: ic.hands, t: "Alltagshilfen §45b", price: "32,50 €/h", sub: "Kasse zahlt · Engel bekommt 20–25 € · Marge ~7,50 €", pct: "50%" },
-      { icon: ic.car,   t: "Krankenfahrten",    price: "~8 €/Fahrt", sub: "Pauschale auf Kassen-Erstattung · skalierbar mit Flotte", pct: "25%" },
-      { icon: ic.box,   t: "Pflegeboxen §40",   price: "~12 €/Box", sub: "42 € Kassen-Pauschale · Partner-Modell mit ProCare", pct: "15%" },
+      { icon: ic.app_car,   t: "Krankenfahrten",    price: "~8 €/Fahrt", sub: "Pauschale auf Kassen-Erstattung · skalierbar mit Flotte", pct: "25%" },
+      { icon: ic.app_box,   t: "Pflegeboxen §40",   price: "~12 €/Box", sub: "42 € Kassen-Pauschale · Partner-Modell mit ProCare", pct: "15%" },
       { icon: ic.crown, t: "Premium-Abo",       price: "29–49 €/Mo", sub: "Direktzahlung · Familie · Priorität · persönl. Manager", pct: "10%" },
     ];
 
@@ -583,6 +660,7 @@ async function main() {
       charSpacing: 2, margin: 0
     });
 
+    addBrandLogo(s);
     addFooter(s, 6, totalSlides);
   }
 
@@ -646,6 +724,7 @@ async function main() {
       });
     });
 
+    addBrandLogo(s);
     addFooter(s, 7, totalSlides);
   }
 
@@ -741,6 +820,7 @@ async function main() {
       });
     });
 
+    addBrandLogo(s);
     addFooter(s, 8, totalSlides);
   }
 
@@ -828,6 +908,7 @@ async function main() {
       });
     });
 
+    addBrandLogo(s);
     addFooter(s, 9, totalSlides);
   }
 
@@ -850,7 +931,7 @@ async function main() {
       x: fx + fw/2 - 0.8, y: fy + 0.4, w: 1.6, h: 1.6,
       fill: { color: GOLD, transparency: 80 }, line: { color: GOLD, width: 1.5 }
     });
-    s.addImage({ data: ic.tie, x: fx + fw/2 - 0.55, y: fy + 0.65, w: 1.1, h: 1.1 });
+    s.addImage({ data: ic.app_tie, x: fx + fw/2 - 0.55, y: fy + 0.65, w: 1.1, h: 1.1 });
 
     s.addText("Yusuf Ferhat Demir", {
       x: fx, y: fy + 2.15, w: fw, h: 0.5,
@@ -879,9 +960,9 @@ async function main() {
 
     const hires = [
       { t: "Head of Operations", ic: ic.cogs, b: "Stadt-Launches, Engel-Rekrutierung, Qualität" },
-      { t: "Care-Manager (x2)", ic: ic.heart, b: "Persönlicher Kunden-Kontakt, Retention" },
+      { t: "Care-Manager (x2)", ic: ic.app_angel, b: "Persönlicher Kunden-Kontakt, Retention" },
       { t: "Growth Marketer", ic: ic.chart, b: "Paid Social, SEO, Senioren-Zielgruppe" },
-      { t: "Partner-Manager", ic: ic.shake, b: "Kassen, Sanitätshäuser, ProCare/PROLIFE" },
+      { t: "Partner-Manager", ic: ic.app_shake, b: "Kassen, Sanitätshäuser, ProCare/PROLIFE" },
     ];
     hires.forEach((h, i) => {
       const y = 2.9 + i * 0.95;
@@ -905,6 +986,7 @@ async function main() {
       });
     });
 
+    addBrandLogo(s);
     addFooter(s, 10, totalSlides);
   }
 
@@ -969,6 +1051,7 @@ async function main() {
       { x: 0.7, y: 6.75, w: 11.9, h: 0.3,
         fontFace: FONT_B, fontSize: 9, color: MUTED, italic: true, margin: 0 });
 
+    addBrandLogo(s);
     addFooter(s, 11, totalSlides);
   }
 
@@ -1032,6 +1115,7 @@ async function main() {
       { x: 0.8, y: 6.7, w: 12, h: 0.4,
         fontFace: FONT_B, fontSize: 12, color: GOLD_LT, charSpacing: 2, margin: 0 });
 
+    addBrandLogo(s);
     addFooter(s, 12, totalSlides);
   }
 
@@ -1139,6 +1223,7 @@ async function main() {
       });
     });
 
+    addBrandLogo(s);
     addFooter(s, 13, totalSlides);
   }
 
@@ -1188,11 +1273,11 @@ async function main() {
     });
 
     const contact = [
-      { ic: ic.tie,    l: "Yusuf Ferhat Demir — Gründer & CEO" },
+      { ic: ic.app_tie,    l: "Yusuf Ferhat Demir — Gründer & CEO" },
       { ic: ic.phone,  l: "+49 178 338 2825" },
-      { ic: ic.shake,  l: "y.cilcioglu@googlemail.com" },
-      { ic: ic.home,   l: "AlltagsEngel UG (i.G.) · Frankfurt am Main" },
-      { ic: ic.star_l, l: "alltagsengel.care" },
+      { ic: ic.app_shake,  l: "info@alltagsengel.care" },
+      { ic: ic.app_home,   l: "AlltagsEngel UG (i.G.) · Frankfurt am Main" },
+      { ic: ic.app_star, l: "alltagsengel.care" },
     ];
     contact.forEach((c, i) => {
       const y = 4.0 + i * 0.45;
