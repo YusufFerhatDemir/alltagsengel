@@ -6,26 +6,6 @@
 - [ ] Ürün lansmanı duyurusu / Pressemitteilung hazırla
 - [ ] App Store & Play Store listing metinlerini hazırla
 
-## Lokal auf deinem Rechner ausfuehren (Sandbox-FUSE-Mount blockt unlink)
-
-Diese Aktionen kann ich in der Sandbox nicht durchfuehren — bitte einmal lokal:
-
-```bash
-# 1) Pflegebox-Ordner physisch loeschen (Phase 5, Option B)
-#    Aktuell sind nur Redirect-Stubs drin (1x file pro Ordner).
-git rm -rf app/admin/pflegebox app/kunde/pflegebox
-
-# 2) Cleanup-Skript ausfuehren (Stripe + 25 MB Archive + ungenutzte Icons + send-verification)
-./scripts/cleanup-deadcode.sh           # erst dry-run pruefen
-./scripts/cleanup-deadcode.sh --apply   # dann ausfuehren
-
-# 3) Sanity-Check + Commit
-npm run lint:forbidden
-git add -A
-git commit -m "chore: Pflegebox-Stubs entfernt + Cleanup-Skript Phase 2+3"
-git push
-```
-
 **Optional / kann warten:**
 
 - [ ] `supabase/migrations/fix_rls_policies.sql` enthaelt RLS-Policies fuer
@@ -39,6 +19,13 @@ git push
 - [x] Phase 5: Pflegebox-Code entfernt (Option B per User-Entscheidung 20.04.2026)
       → Stubs in pflegebox-Ordnern, Pflegedaten-UI im Profil raus, Admin-Menue
         bereinigt, Tracking-Helper raus, Typen raus, Account-Hard-Delete bereinigt
+        (Commit b90dc92)
+- [x] Pflegebox-Stub-Ordner physisch geloescht + Cleanup-Skript Phase 2+3
+      ausgefuehrt: ~26 MB Archive, 3 ungenutzte Icons, tote API-Endpoints
+      raus, .gitignore um /.next.stale.*/ erweitert (Commit 2f7042d)
+- [x] Entscheidung: marketing/fonts-for-claude-design/ (Cormorant + Jost,
+      2.6 MB, freie SIL-OFL-Fonts) bleibt im Repo — werden im App-Build
+      ueber next/font/google geladen, die TTFs sind fuer Print/Pitch-Material.
 
 ## Someday / Later
 
