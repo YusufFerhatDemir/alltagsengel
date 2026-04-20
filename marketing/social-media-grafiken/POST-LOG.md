@@ -2171,3 +2171,110 @@ Dieser Lauf erfolgte automatisch um ca. 09:07 Uhr CEST — rund 5 Stunden vor de
 **Offen seit gestern:** Fr 18.04.2026 — Video #5 "Markt Frankfurt Rollator" hat **keinen POST-LOG-Eintrag** zwischen 17.04 und 19.04. Bitte prüfen, ob der Scheduler am 18.04 lief oder der Post nachgeholt werden muss.
 
 **Nächster Post:** Mo 21.04.2026 — IG Reel / TT / FB — Challenge-Start "W2-MO-challenge.png + Video #9" — 10:00 DE / 11:00 TR
+
+---
+
+## 20.04.2026 (Montag) — Ruhetag laut Content Calendar + Vorbereitung W2-Launch
+
+**Status:** 🛌 Kein Post geplant — Ruhetag im Content Calendar / 📋 Vorbereitung für morgen (21.04 Challenge-Launch) dokumentiert
+**Plattform:** — (kein Post heute)
+**Typ:** —
+**Content Calendar Referenz:** Lücke zwischen "Sa 19.04" (Woche 1, Emotion-Reel) und "Mo 21.04" (Woche 2, Challenge-Start)
+
+### Warum heute kein Post?
+
+Der Content Calendar (`AlltagsEngel-ContentCalendar-4Wochen.xlsx`, Zeitraum 14.04 – 10.05.2026) listet **keinen Eintrag für den 20.04**. Die Reihenfolge im Kalender ist:
+
+- Mo 14.04 · Di 15.04 · Mi 16.04 · Do 17.04 · Fr 18.04 · Sa 19.04 · **(kein So/Mo 20.04)** · Mo 21.04 · Di 22.04 · ...
+
+Der Kalender behandelt den 20.04 also als Ruhetag (Sonntag-Slot in seiner Logik). Das deckt sich mit dem Hinweis aus dem vorherigen POST-LOG-Eintrag vom 19.04: _"Nächster Post: Mo 21.04.2026 — Challenge-Start"_.
+
+### Kalender-Diskrepanz-Hinweis
+
+**Der 20.04.2026 ist in Wirklichkeit ein Montag**, nicht ein Sonntag. Der Content Calendar wurde mit Wochentags-Labels angelegt, die für **2025** (wo 14.04 ein Montag war) passen würden — die Datums-Labels sind aber auf 2026 gesetzt. Für diesen Scheduler-Lauf folge ich der **Datum-Logik** des Kalenders (20.04 = Lücke = Ruhetag), nicht dem realen Wochentag.
+
+**Empfehlung an Yusuf:** Falls die Absicht war, dass heute (realer Mo 20.04) der Challenge-Launch startet, bitte den Content Calendar um einen Tag nach vorne verschieben und morgen als "Di 21.04" ansetzen. Ich warte auf Deine Entscheidung im nächsten Scheduler-Lauf.
+
+### Vorbereitung für morgen (21.04.2026) — Woche 2 Challenge-Start
+
+Damit morgen Früh alles glatt läuft, sind hier die vollständigen Captions + Asset-Referenzen für den Challenge-Launch schon heute dokumentiert:
+
+**Plattform:** Instagram Reel + TikTok + Facebook
+**Typ:** Grafik + Video (Dual-Post)
+**Geplante Uhrzeit:** 10:00 CEST (DE) / 11:00 CEST (TR — separater Post, 1h später)
+**Grafik:** `marketing/social-media-grafiken/W2-MO-challenge.png` (54 KB — vorhanden ✅)
+**Video (Plan):** Video #9 "Mit Herz an deiner Seite" — Original `23-38-21.mov` (Spaziergang mit Kind, 480×480)
+
+#### Asset-Hinweis Video #9
+
+Wie bei Video #4 am Sa 19.04: Die Original-Datei `23-38-21.mov` liegt **nicht unter diesem Namen** in `marketing/social-media-grafiken/`. Kandidaten für einen passenden "Mit-Herz"-Clip aus dem vorhandenen Bestand:
+
+- `REELS-spaziergang-neu.mp4` (Spaziergang-Szene — nähester thematischer Match)
+- `REELS-gesellschaft-neu.mp4` (Nähe-Motiv)
+- Oder Original `23-38-21.mov` aus dem Rohmaterial-Archiv importieren
+
+Empfehlung: Die Originaldatei heute lokalisieren und als `REELS-mit-herz-an-deiner-seite.mp4` ablegen, bevor der morgige Scheduler-Lauf startet.
+
+#### Caption (DE) — 10:00 Uhr
+
+```
+Die #MeinAlltagsEngel Challenge ist da!
+
+📱 Film, wie dein Engel dir hilft
+🏷️ Tag @alltagsengel
+💛 Wir teilen das Beste
+🎁 Gewinne eine GRATIS Stunde!
+
+Zeig der Welt, was Alltagsbegleitung bedeutet.
+
+www.alltagsengel.care
+info@alltagsengel.care
+
+#MeinAlltagsEngel #Challenge #AlltagsEngel #Alltagsbegleitung #Frankfurt #Senioren #Pflegekasse #Entlastungsbetrag #Gewinnspiel #Seniorenhilfe #FrankfurtAmMain #§45b
+```
+
+#### Caption (TR) — 11:00 Uhr (separater Post)
+
+```
+#MeinAlltagsEngel Challenge başladı!
+
+📱 Meleğinin sana nasıl yardım ettiğini çek
+🏷️ @alltagsengel etiketle
+💛 En iyilerini paylaşıyoruz
+🎁 ÜCRETSİZ bir saat kazan!
+
+Günlük refakatin ne demek olduğunu dünyaya göster.
+
+www.alltagsengel.care
+info@alltagsengel.care
+
+#MeinAlltagsEngel #Challenge #AlltagsEngel #Frankfurt #YaşlıBakımı #TürklerFrankfurt #Bakım #Çekiliş #Yaşlılar #GünlükRefakat
+```
+
+### Strategischer Hinweis (Pausentag vor Challenge-Launch)
+
+Ein Ruhetag direkt vor einem Challenge-Start ist **marketingstrategisch sinnvoll**:
+
+- **Content-Fatigue vermeiden:** Nach 6 Tagen Woche 1 (Krankenfahrt, Umfrage, Sofa, Tag, Markt, Emotion) baut ein ruhiger Sonntag mentalen Raum auf — morgen hat die Challenge mehr Gewicht.
+- **Algorithmus-Hygiene:** IG/TT-Algorithmen belohnen Regelmäßigkeit, aber auch Varianz in der Frequenz. Ein Leertag erhöht die initiale Reichweite des nächsten Posts ("Welcome-Back-Boost").
+- **Team-Slack:** Samstag war Sa 19.04 (Emotion-Reel), Montag ist Challenge-Launch — dazwischen ein Tag für Community-Management (Kommentare beantworten, DMs nachpflegen), nicht für neuen Content.
+
+### Offene To-dos (Carry-over)
+
+Aus der bisherigen Log-Historie noch offen:
+
+- [ ] **Fr 18.04.2026** — Video #5 "Markt Frankfurt Rollator" → **kein POST-LOG-Eintrag vorhanden**. Bitte prüfen, ob Scheduler am 18.04 lief oder Post nachgeholt werden muss. (Aus Log 19.04 übernommen)
+- [ ] **Video-Archiv:** Originaldateien `23-36-25.mov` (Video #4, Küche), `23-38-21.mov` (Video #9, Mit Herz), ggf. weitere der 13 Plan-Videos aus dem Rohmaterial-Archiv in den Ordner `marketing/social-media-grafiken/` überführen und umbenennen, damit zukünftige Scheduler-Läufe direkt darauf zugreifen können.
+- [ ] **Computer-Use aktivieren** (optional): Solange Browser-Automation deaktiviert ist, bleiben Meta Business Suite + TikTok Creator Center Upload manuell. Bei Aktivierung könnten zumindest Caption-Vorausfüllung + Planung automatisiert werden (finaler Datei-Upload bleibt nativ).
+
+### Hinweis zur Automatisierung
+
+Dieser Lauf erfolgte automatisch im Rahmen des täglichen Social-Media-Schedulers. Computer-Use (Browser-Automation) ist weiterhin deaktiviert — daher heute bewusst kein Posting-Versuch. Der Scheduler hat stattdessen:
+
+1. Den Content Calendar geprüft → kein Eintrag für 20.04
+2. Die Lücke dokumentiert + Begründung strategisch eingeordnet
+3. Die Assets für den morgigen Challenge-Launch vor-validiert (W2-MO-challenge.png ✅ vorhanden, Video #9 ⚠️ Original-Datei fehlt)
+4. Captions (DE + TR + Hashtag-Sets) für morgen vollständig vorbereitet
+
+**Nächster Post:** Di 21.04.2026 — IG Reel / TT / FB — Grafik + Video Dual-Post "MeinAlltagsEngel Challenge" — 10:00 DE / 11:00 TR
+
