@@ -160,17 +160,11 @@ function RegisterForm() {
           await supabase.from('profiles').upsert(profileData).then(() => {})
 
           // Pflegegrad speichern (nur für Kunden)
+          // Hinweis: care_eligibility-Schreibvorgang entfernt (Pflegebox-Feature deaktiviert,
+          // Tabelle existiert nicht in DB). Pflegegrad wandert in care_recipients beim
+          // Angehörigen-Modus; Selbst-Modus speichert nur das Profil. Wenn Pflegebox spaeter
+          // priorisiert wird, kommt eine eigene DB-Migration + Re-Insert hier dran.
           if (role === 'kunde') {
-            // Bei Angehörigen-Modus: Pflegegrad gehört zum Angehörigen
-            const pflegegradForProfile = registerFor === 'selbst' ? pflegegrad : 0
-            await supabase.from('care_eligibility').upsert({
-              user_id: data.user.id,
-              pflegegrad: pflegegradForProfile,
-              home_care: homeCare,
-              insurance_type: 'unknown',
-              pflegehilfsmittel_interest: pflegehilfsmittel,
-            }).then(() => {})
-
             // Angehörige Person speichern
             if (registerFor === 'angehoerig' && crFirstName && crLastName) {
               await supabase.from('care_recipients').insert({

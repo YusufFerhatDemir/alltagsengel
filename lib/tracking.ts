@@ -148,20 +148,9 @@ export function trackBooking(data: {
   ttEvent('PlaceAnOrder', { value: data.totalPrice, currency: 'EUR' })
 }
 
-/** Pflegebox / Hygienebox bestellt */
-export function trackPflegeboxOrder(boxType: 'basis' | 'komfort') {
-  const value = boxType === 'komfort' ? 40 : 29.9
-
-  // Pflegebox → auch als Buchung/Abonnieren Conversion melden
-  gtagConversion(CONVERSION_LABELS.booking, value, 'EUR')
-
-  pushEvent('pflegebox_order', {
-    box_type: boxType,
-    value,
-    currency: 'EUR',
-    conversion_type: 'pflegebox',
-  })
-}
+// trackPflegeboxOrder entfernt: Pflegebox-Feature deaktiviert (Phase 5).
+// Wenn Pflegebox spaeter mit DB-Migration reaktiviert wird, kommt der
+// Tracking-Helper hier zurueck (gtagConversion + pushEvent('pflegebox_order')).
 
 /** Krankenfahrt gebucht */
 export function trackKrankenfahrt(data: {

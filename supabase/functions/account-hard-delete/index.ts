@@ -28,8 +28,10 @@
 //     Authorization-Header automatisch ab, wenn man sie als "verify_jwt:true"
 //     deployed; wir machen das zusaetzlich mit einem Secret-Check, falls
 //     jemand die Function public macht).
-//   - Cascade-Loeschung: notifications → messages → care_eligibility →
-//     bookings → angels → profiles → auth.admin.deleteUser
+//   - Cascade-Loeschung: notifications → messages → bookings → angels
+//     → profiles → auth.admin.deleteUser
+//     (care_eligibility entfernt — Tabelle existiert nicht, Pflegebox-Feature
+//      deaktiviert per Phase 5 Architektur-Empfehlung)
 //   - Batch-Size: 50 User pro Lauf, damit ein Cron-Job-Timeout nicht die
 //     ganze Queue killt.
 //
@@ -118,7 +120,7 @@ serve(async (req: Request) => {
         .from('chat_messages')
         .delete()
         .eq('sender_id', userId)
-      await admin.from('care_eligibility').delete().eq('user_id', userId)
+      // care_eligibility-Delete entfernt: Tabelle existiert nicht (Phase 5).
       await admin.from('documents').delete().eq('user_id', userId)
       await admin.from('bookings').delete().eq('customer_id', userId)
       await admin.from('bookings').delete().eq('angel_id', userId)

@@ -58,6 +58,7 @@ declare -a UNUSED_API_ROUTES=(
   "app/api/scan-medikament"       # Vision/LLM Medikament-Scanner, kein Caller
   "app/api/payment"               # Stripe-Stub, Code auskommentiert
   "app/api/content-blocks"        # Admin-CMS CRUD, kein Frontend
+  "app/api/auth/send-verification" # 0 Aufrufe in 24h, redundant zur Supabase-Standard-Verifikation (Phase 5)
 )
 
 # ----------------------------------------------------------------------
