@@ -164,12 +164,12 @@ async function main() {
       charSpacing: 8, margin: 0
     });
 
-    // Logo as heart icon
-    s.addImage({ data: ic.heart, x: 0.8, y: 1.5, w: 0.8, h: 0.8 });
+    // Official AlltagsEngel Logo-Mark (Engel mit Heiligenschein, gold auf schwarz)
+    s.addImage({ path: "logo-mark.png", x: 0.8, y: 1.4, w: 1.6, h: 0.88 });
 
     // Main title
     s.addText("AlltagsEngel", {
-      x: 0.8, y: 2.4, w: 12, h: 1.4,
+      x: 0.8, y: 2.5, w: 12, h: 1.4,
       fontFace: FONT_H, fontSize: 80, color: CREAM, italic: true,
       margin: 0
     });
@@ -214,7 +214,7 @@ async function main() {
     const s = pres.addSlide();
     s.background = { color: CREAM };
     addEyebrow(s, "DAS PROBLEM");
-    addTitle(s, "125 € im Monat. Jeden Monat. Ungenutzt.");
+    addTitle(s, "131 € im Monat. Jeden Monat. Ungenutzt.");
 
     s.addText(
       "Jeder der 5,2 Mio. Pflegebedürftigen in Deutschland hat Anspruch auf §45b SGB XI — 131 € monatlich für Alltagshilfen von der Kasse bezahlt. Doch über 60 % verfallen Jahr für Jahr ungenutzt.",
@@ -1162,6 +1162,9 @@ async function main() {
     s.addShape(pres.shapes.RECTANGLE, {
       x: 0, y: 0, w: 0.18, h: H, fill: { color: GOLD }, line: { type: "none" }
     });
+
+    // AlltagsEngel Logo-Mark oben rechts (diskret, als Brand-Signatur)
+    s.addImage({ path: "logo-mark.png", x: W - 1.8, y: 0.5, w: 1.0, h: 0.55 });
 
     s.addText("DANKE.", {
       x: 0.8, y: 1.0, w: 12, h: 1.2,
