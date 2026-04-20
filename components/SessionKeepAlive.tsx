@@ -41,13 +41,22 @@ export default function SessionKeepAlive() {
               const { error } = await supabase.auth.refreshSession({
                 refresh_token: parsed.refresh_token,
               })
-              if (!error) {
+              if (error) {
+                console.warn('[SessionKeepAlive] IDB-Recovery Refresh fehlgeschlagen:', error.message)
+                Sentry.captureException(error, { tags: { source: 'SessionKeepAlive.idb_recovery' } })
+              } else {
                 console.debug('[SessionKeepAlive] Session aus IndexedDB wiederhergestellt')
               }
             }
-          } catch { /* invalid JSON, ignore */ }
+          } catch (parseErr) {
+            console.warn('[SessionKeepAlive] IDB-Session JSON-Parse fehlgeschlagen')
+            Sentry.captureException(parseErr, { tags: { source: 'SessionKeepAlive.idb_parse' } })
+          }
         }
-      } catch { /* ignore */ }
+      } catch (err) {
+        console.warn('[SessionKeepAlive] IDB-Recovery Fehler:', err)
+        Sentry.captureException(err, { tags: { source: 'SessionKeepAlive.idb_recover_outer' } })
+      }
     }
     recoverFromIDB()
 
@@ -78,7 +87,12 @@ export default function SessionKeepAlive() {
       if (document.visibilityState === 'visible') {
         supabase.auth.getSession().then(({ data: { session } }) => {
           if (session) {
-            supabase.auth.refreshSession()
+            supabase.auth.refreshSession().then(({ error }) => {
+              if (error) {
+                console.warn('[SessionKeepAlive] Visibility refresh fehlgeschlagen:', error.message)
+                Sentry.captureException(error, { tags: { source: 'SessionKeepAlive.visibility' } })
+              }
+            })
           }
         })
       }
@@ -89,7 +103,12 @@ export default function SessionKeepAlive() {
     function handleFocus() {
       supabase.auth.getSession().then(({ data: { session } }) => {
         if (session) {
-          supabase.auth.refreshSession()
+          supabase.auth.refreshSession().then(({ error }) => {
+            if (error) {
+              console.warn('[SessionKeepAlive] Focus refresh fehlgeschlagen:', error.message)
+              Sentry.captureException(error, { tags: { source: 'SessionKeepAlive.focus' } })
+            }
+          })
         }
       })
     }
@@ -104,7 +123,12 @@ export default function SessionKeepAlive() {
           if (state.isActive) {
             supabase.auth.getSession().then(({ data: { session } }) => {
               if (session) {
-                supabase.auth.refreshSession()
+                supabase.auth.refreshSession().then(({ error }) => {
+                  if (error) {
+                    console.warn('[SessionKeepAlive] Capacitor resume refresh fehlgeschlagen:', error.message)
+                    Sentry.captureException(error, { tags: { source: 'SessionKeepAlive.capacitor' } })
+                  }
+                })
               }
             })
           }
@@ -113,16 +137,23 @@ export default function SessionKeepAlive() {
       }
     }
 
-    // ═══ 6. Periodic Refresh: Alle 2 Minuten ═══
+    // ═══ 6. Periodic Refresh: Alle 20 Minuten ═══
+    // Access-Token lebt 1h → 20min = 3x Sicherheits-Puffer.
+    // 2min war zu aggressiv (Supabase Rate-Limits, unnoetige Requests).
     const interval = setInterval(() => {
       if (document.visibilityState === 'visible') {
         supabase.auth.getSession().then(({ data: { session } }) => {
           if (session) {
-            supabase.auth.refreshSession()
+            supabase.auth.refreshSession().then(({ error }) => {
+              if (error) {
+                console.warn('[SessionKeepAlive] Periodic refresh fehlgeschlagen:', error.message)
+                Sentry.captureException(error, { tags: { source: 'SessionKeepAlive.periodic' } })
+              }
+            })
           }
         })
       }
-    }, 2 * 60 * 1000)
+    }, 20 * 60 * 1000)
 
     return () => {
       subscription.unsubscribe()

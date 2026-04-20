@@ -85,21 +85,18 @@ export async function middleware(request: NextRequest) {
     // ═══ AUTH-007: FAIL-CLOSED für sensible Routen ═══
     // Die FAIL-SOFT-Strategie für /kunde + /engel ist gut für UX
     // (WhatsApp-Style: Session im Hintergrund wiederherstellen, nicht
-    // sofort zum Login). Sie hat aber ein Risiko: sensible Daten (Zahlungs-
-    // infos, Dokumente, Konto-Löschung, Chat) könnten 3-5s lang client-side
-    // sichtbar sein, während der SessionKeepAlive den Token-Refresh macht.
+    // sofort zum Login). Nur ECHTE Geheimdaten (Zahlungsinfos, Dokumente)
+    // bleiben fail-closed — dort ist das Risiko eines 3-5s Sichtbar-Fensters
+    // während Token-Refresh zu hoch.
     //
-    // Für diese Routen gilt: FAIL-CLOSED → sofort zum Login-Redirect.
-    // Dadurch ist die Angriffsfläche für "Device-Screenshot-in-Seconds"
-    // geschlossen.
+    // Profil + Chat sind BEWUSST fail-soft: Der User ist ohnehin nur er
+    // selbst dort, und die Client-Seite macht einen zusaetzlichen Session-
+    // Check. Haeufiges Rauswerfen bei kleinstem Token-Hickup ist schlimmer
+    // als das theoretische Risiko eines 3-Sekunden-Screenshots.
     const sensitivePaths = [
       '/kunde/zahlungsdaten',
       '/kunde/dokumente',
-      '/kunde/profil',
-      '/kunde/chat',
       '/engel/dokumente',
-      '/engel/profil',
-      '/engel/chat',
     ]
     const isSensitive = sensitivePaths.some(p => pathname === p || pathname.startsWith(p + '/'))
 
