@@ -13,7 +13,6 @@ const PAGE_LABELS: Record<string, string> = {
   '/kunde/home': 'Startseite',
   '/kunde/buchungen': 'Buchungen',
   '/kunde/profil': 'Profil',
-  '/kunde/pflegebox': 'Pflegebox',
   '/kunde/kalender': 'Kalender',
   '/kunde/dokumente': 'Dokumente',
   '/kunde/karte': 'Karte',
@@ -26,7 +25,6 @@ const PAGE_LABELS: Record<string, string> = {
   '/admin/home': 'Admin Dashboard',
   '/admin/users': 'Admin Benutzer',
   '/admin/bookings': 'Admin Buchungen',
-  '/admin/pflegebox': 'Admin Pflegebox',
   '/admin/analytics': 'Admin Analytik',
 }
 

@@ -1,13 +1,13 @@
 'use client'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { requireUser } from '@/lib/supabase/require-session'
 import Link from 'next/link'
-import { IconDocument, IconNav, IconCalendar, IconMedical, IconBox } from '@/components/Icons'
+import { IconDocument, IconNav, IconCalendar } from '@/components/Icons'
 import { AvatarKunde } from '@/components/AvatarGlow'
 
-const KASSEN = ['AOK', 'TK', 'Barmer', 'DAK', 'IKK', 'KKH', 'BKK', 'HEK', 'Knappschaft']
+// KASSEN-Liste entfernt (gehoerte zur Pflegedaten-UI, deaktiviert Phase 5)
 
 export default function KundeProfilPage() {
   const router = useRouter()
@@ -18,41 +18,13 @@ export default function KundeProfilPage() {
   const [deleting, setDeleting] = useState(false)
   const [deletePassword, setDeletePassword] = useState('')
   const [deleteError, setDeleteError] = useState('')
-  const [userId, setUserId] = useState<string | null>(null)
 
   // ═══════════════════════════════════════════════════════════════
-  // Care-Daten in EINEM State-Objekt gebuendelt.
-  //
-  // WARUM?
-  // Vorher: pflegegrad/homeCare/krankenkasse waren 4 separate States.
-  // Jeder Handler las die anderen 3 via Closure — bei schnellen Klicks
-  // waren die Closures noch nicht neu (React batched Updates async).
-  // Beispiel: Senior klickt Pflegegrad 3, dann schnell AOK. Der
-  // Krankenkasse-Handler sah pflegegrad noch als 0 und ueberschrieb
-  // die frisch gespeicherte 3 mit 0 → "Speichern tut manchmal nichts".
-  //
-  // Jetzt: Eine Quelle der Wahrheit. Mit setCareState(prev => ...)
-  // sehen wir IMMER den aktuellsten Wert, unabhaengig vom Render-Timing.
+  // Pflegedaten-Block entfernt (Phase 5 Architektur-Empfehlung):
+  // care_eligibility-Tabelle existiert nicht in der DB → der Block
+  // konnte nichts speichern. Wenn Pflegebox spaeter priorisiert wird,
+  // kommt der Care-State + Save-Logik mit DB-Migration zurueck.
   // ═══════════════════════════════════════════════════════════════
-  interface CareState {
-    pflegegrad: number
-    homeCare: boolean
-    pflegehilfsmittel: boolean
-    krankenkasse: string
-  }
-  const [care, setCare] = useState<CareState>({
-    pflegegrad: 0,
-    homeCare: true,
-    pflegehilfsmittel: false,
-    krankenkasse: '',
-  })
-  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
-  const [saveError, setSaveError] = useState('')
-
-  // AbortController fuer in-flight Request — verhindert out-of-order Writes
-  // wenn Senior schnell mehrmals hintereinander klickt.
-  const inFlightAbortRef = useRef<AbortController | null>(null)
-  const hintTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   async function handleLogout() {
     setLoggingOut(true)
@@ -68,22 +40,14 @@ export default function KundeProfilPage() {
       const user = await requireUser(router, { redirectTo: '/kunde/profil' })
       if (!user) return
 
-      setUserId(user.id)
       const supabase = createClient()
 
       const { data: p } = await supabase.from('profiles').select('*').eq('id', user.id).single()
       setProfile(p)
 
-      // Load care eligibility
-      const { data: ce } = await supabase.from('care_eligibility').select('*').eq('user_id', user.id).maybeSingle()
-      if (ce) {
-        setCare({
-          pflegegrad: ce.pflegegrad || 0,
-          homeCare: ce.home_care ?? true,
-          pflegehilfsmittel: ce.pflegehilfsmittel_interest ?? false,
-          krankenkasse: ce.insurance_type === 'public' ? (ce.krankenkasse || '') : '',
-        })
-      }
+      // Pflegedaten-Load entfernt: Tabelle care_eligibility existiert nicht in DB
+      // (Phase 5 Architektur-Empfehlung, Pflegebox-Feature deaktiviert). Wenn das
+      // Feature spaeter priorisiert wird, kommt hier ein neuer Load-Block + DB-Migration.
 
       setLoading(false)
     }
@@ -91,99 +55,7 @@ export default function KundeProfilPage() {
   }, [])
 
   // Aufraeumen bei Unmount
-  useEffect(() => {
-    return () => {
-      inFlightAbortRef.current?.abort()
-      if (hintTimerRef.current) clearTimeout(hintTimerRef.current)
-    }
-  }, [])
-
-  async function saveCare(patch: Partial<CareState>) {
-    if (!userId) {
-      // Auth noch nicht geladen — UI-Hinweis statt stilles Ignorieren
-      setSaveStatus('error')
-      setSaveError('Noch nicht angemeldet. Bitte warte einen Moment.')
-      return
-    }
-
-    // Funktionales Update: garantiert aktuellsten Stand
-    let computed: CareState = care
-    setCare(prev => {
-      computed = { ...prev, ...patch }
-      return computed
-    })
-    const nextState: CareState = computed
-
-    // Alte in-flight-Request canceln — verhindert out-of-order Writes
-    inFlightAbortRef.current?.abort()
-    const controller = new AbortController()
-    inFlightAbortRef.current = controller
-
-    setSaveStatus('saving')
-    setSaveError('')
-
-    try {
-      const supabase = createClient()
-      const { error } = await supabase
-        .from('care_eligibility')
-        .upsert(
-          {
-            user_id: userId,
-            pflegegrad: nextState.pflegegrad,
-            home_care: nextState.homeCare,
-            pflegehilfsmittel_interest: nextState.pflegehilfsmittel,
-            insurance_type: nextState.krankenkasse ? 'public' : 'unknown',
-            krankenkasse: nextState.krankenkasse,
-            updated_at: new Date().toISOString(),
-          },
-          { onConflict: 'user_id' }
-        )
-        .abortSignal(controller.signal)
-
-      // Falls waehrend des awaits ein neuer Klick kam → ignorieren
-      if (controller.signal.aborted) return
-
-      if (error) {
-        console.error('[saveCare] Supabase error:', error)
-        setSaveStatus('error')
-        setSaveError('Speichern fehlgeschlagen. Bitte versuche es erneut.')
-        return
-      }
-
-      setSaveStatus('saved')
-      if (hintTimerRef.current) clearTimeout(hintTimerRef.current)
-      hintTimerRef.current = setTimeout(() => setSaveStatus('idle'), 1800)
-    } catch (err: any) {
-      // AbortError bedeutet: ein neuer Klick hat uns abgebrochen → kein Fehler
-      if (err?.name === 'AbortError' || controller.signal.aborted) return
-      console.error('[saveCare] Unexpected error:', err)
-      setSaveStatus('error')
-      setSaveError('Netzwerkfehler. Bitte pruefe deine Verbindung.')
-    }
-  }
-
-  function handlePflegegrad(g: number) {
-    saveCare({ pflegegrad: g })
-  }
-
-  function handleHomeCare() {
-    saveCare({ homeCare: !care.homeCare })
-  }
-
-  function handlePflegehilfsmittel() {
-    saveCare({ pflegehilfsmittel: !care.pflegehilfsmittel })
-  }
-
-  function handleKrankenkasse(kk: string) {
-    saveCare({ krankenkasse: care.krankenkasse === kk ? '' : kk })
-  }
-
-  // Bequeme Aliase fuer JSX (keine Refactor-Kaskade)
-  const pflegegrad = care.pflegegrad
-  const homeCare = care.homeCare
-  const pflegehilfsmittel = care.pflegehilfsmittel
-  const krankenkasse = care.krankenkasse
-  const savedHint = saveStatus === 'saved' ? 'saved' : ''
+  // Aufraeum-Effect entfernt — gehoerte zur saveCare-Logik (care_eligibility)
 
   const name = profile ? `${profile.first_name} ${profile.last_name}` : '...'
   const loc = profile?.location || '—'
@@ -204,125 +76,13 @@ export default function KundeProfilPage() {
             <div className="mp-sub">Kunde</div>
             <div className="mp-chips">
               <span className="mp-chip light">{loc}</span>
-              {pflegegrad > 0 && <span className="mp-chip gold">PG {pflegegrad}</span>}
             </div>
           </div>
         </div>
       </div>
 
       <div className="mp-body">
-        {/* Pflegegrad Section */}
-        <div className="section-label">
-          Pflegedaten
-          <span className={`pf-saved${savedHint ? ' show' : ''}`}>✓ Gespeichert</span>
-          {saveStatus === 'saving' && (
-            <span style={{ marginLeft: 8, fontSize: 11, color: 'var(--ink4)', fontWeight: 400 }}>
-              Speichern...
-            </span>
-          )}
-        </div>
-        {saveStatus === 'error' && saveError && (
-          <div
-            role="alert"
-            style={{
-              marginBottom: 10,
-              padding: '8px 12px',
-              borderRadius: 8,
-              background: 'rgba(220, 38, 38, 0.08)',
-              border: '1px solid rgba(220, 38, 38, 0.3)',
-              color: 'var(--red-w, #dc2626)',
-              fontSize: 12,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: 8,
-            }}
-          >
-            <span>⚠️ {saveError}</span>
-            <button
-              type="button"
-              onClick={() => setSaveStatus('idle')}
-              style={{
-                background: 'transparent',
-                border: 'none',
-                color: 'inherit',
-                textDecoration: 'underline',
-                fontSize: 11,
-                cursor: 'pointer',
-                padding: 0,
-              }}
-            >
-              OK
-            </button>
-          </div>
-        )}
-        <div className="settings-card" style={{ padding: '14px 16px' }}>
-          <div className="pf-section">
-            <div className="pf-section-title">Pflegegrad</div>
-            <div className="pf-toggle-row">
-              {[0, 1, 2, 3, 4, 5].map(g => (
-                <button
-                  key={g}
-                  type="button"
-                  className={`pf-toggle-btn${pflegegrad === g ? ' active' : ''}`}
-                  onClick={() => handlePflegegrad(g)}
-                >
-                  {g === 0 ? 'Kein' : `${g}`}
-                </button>
-              ))}
-            </div>
-            {pflegegrad > 0 && (
-              <div className="pf-hint">Pflegegrad {pflegegrad} — Anspruch auf Entlastungsleistungen</div>
-            )}
-          </div>
-
-          {pflegegrad > 0 && (
-            <>
-              <div className="pf-section">
-                <div className="pf-section-title">Pflege zu Hause?</div>
-                <div className="pf-switch-row" onClick={handleHomeCare}>
-                  <span className="pf-switch-label">{homeCare ? 'Ja, häusliche Pflege' : 'Nein'}</span>
-                  <div className={`reg-switch${homeCare ? ' on' : ''}`}>
-                    <div className="reg-switch-knob" />
-                  </div>
-                </div>
-              </div>
-
-              <div className="pf-section">
-                <div className="pf-section-title">Gesetzliche Krankenkasse</div>
-                <div className="pf-kk-grid">
-                  {KASSEN.map(kk => (
-                    <div
-                      key={kk}
-                      className={`pf-kk-item${krankenkasse === kk ? ' on' : ''}`}
-                      onClick={() => handleKrankenkasse(kk)}
-                    >
-                      {kk}
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {homeCare && (
-                <div className="pf-section">
-                  <div className="pf-section-title" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <IconBox size={14} color="var(--gold2)" />
-                    Pflegehilfsmittel (bis 42 €/Monat)
-                  </div>
-                  <div style={{ fontSize: 10, color: 'var(--ink4)', marginBottom: 6, fontWeight: 300 }}>
-                    Handschuhe, Desinfektion, Masken u.v.m. — von der Pflegekasse übernommen.
-                  </div>
-                  <div className="pf-switch-row" onClick={handlePflegehilfsmittel}>
-                    <span className="pf-switch-label">{pflegehilfsmittel ? 'Ja, ich habe Interesse' : 'Noch kein Interesse'}</span>
-                    <div className={`reg-switch${pflegehilfsmittel ? ' on' : ''}`}>
-                      <div className="reg-switch-knob" />
-                    </div>
-                  </div>
-                </div>
-              )}
-            </>
-          )}
-        </div>
+        {/* Pflegedaten-Block entfernt: care_eligibility-Tabelle existiert nicht */}
 
         <div className="section-label">Einstellungen</div>
         <div className="settings-card">
@@ -353,17 +113,7 @@ export default function KundeProfilPage() {
               </div>
             </div>
           </Link>
-          <Link href="/kunde/pflegebox" style={{ textDecoration: 'none' }}>
-            <div className="setting-row" style={{ cursor: 'pointer' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <IconMedical size={18} color="var(--gold2)" />
-                <div>
-                  <div className="setting-main">Pflegebox</div>
-                  <div className="setting-sub">Kostenlose Pflegehilfsmittel bestellen</div>
-                </div>
-              </div>
-            </div>
-          </Link>
+          {/* Pflegebox-Link entfernt: Feature deaktiviert (Phase 5). */}
           <Link href="/kunde/dokumente" style={{ textDecoration: 'none' }}>
             <div className="setting-row" style={{ cursor: 'pointer' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>

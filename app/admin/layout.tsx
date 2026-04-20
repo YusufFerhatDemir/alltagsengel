@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useState, useEffect, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { IconChart, IconUsers, IconClipboard, IconWings, IconLogout, IconBox, IconTarget } from '@/components/Icons'
+import { IconChart, IconUsers, IconClipboard, IconWings, IconLogout, IconTarget } from '@/components/Icons'
 import NotificationBell from '@/components/NotificationBell'
 import { ReactNode } from 'react'
 
@@ -97,7 +97,7 @@ const navItems = [
   { href: '/admin/home', label: 'Dashboard', icon: <IconChart size={18} /> },
   { href: '/admin/users', label: 'Benutzer', icon: <IconUsers size={18} /> },
   { href: '/admin/bookings', label: 'Buchungen', icon: <IconClipboard size={18} /> },
-  { href: '/admin/pflegebox', label: 'Pflegebox', icon: <IconBox size={18} /> },
+  // Pflegebox-Eintrag entfernt (Phase 5): Feature deaktiviert, Tabellen fehlen in DB
   { href: '/admin/analytics', label: 'Analytik', icon: <IconTarget size={18} /> },
   { href: '/admin/settings', label: 'Einstellungen', icon: <IconSettings size={18} /> },
 ]
