@@ -183,7 +183,7 @@ content.push(
   new Paragraph({
     alignment: AlignmentType.CENTER,
     spacing: { after: 80 },
-    children: [new TextRun({ text: "Verfasser: Yusuf Cilcioglu — Gründer & CEO", font: FONT, size: 20, color: COAL })],
+    children: [new TextRun({ text: "Verfasser: Yusuf Ferhat Demir — Gründer & CEO", font: FONT, size: 20, color: COAL })],
   }),
   new Paragraph({
     alignment: AlignmentType.CENTER,
@@ -260,7 +260,7 @@ content.push(H2("Go-to-Market"));
 content.push(P("Der Rollout folgt einer geografisch konzentrierten Drei-Städte-Strategie innerhalb Nordrhein-Westfalens und Hessens: Frankfurt als Home-Market (Ziel: 500 aktive Kunden bis Q4/2026), anschließend Köln (800 Kunden bis Q2/2027) und Düsseldorf (600 Kunden bis Q4/2027). Der Vertrieb läuft über drei parallele Kanäle: (a) direkte Kassen-Partnerschaften (AOK, Barmer, TK — §45b-Vorabzulassung), (b) Sanitätshaus- und Apotheken-Kooperationen (direkter Endkunden-Zugang), (c) performance-getriebenes digitales Marketing (Paid Social auf Angehörige 45–65 Jahre plus SEO)."));
 
 content.push(H2("Team"));
-content.push(P("Das Unternehmen wird als Solo-Founder-Operation von Yusuf Cilcioglu geführt — Frankfurter mit türkisch-deutschen Wurzeln, Full-Stack-Entwickler (iOS, Android, Next.js, Supabase) und Product-Led-Founder. Die App wurde in vier Monaten von der Idee zum Live-Produkt entwickelt. Mit dem Pre-Seed werden die ersten vier Schlüssel-Hires gesetzt: Head of Operations, zwei Care-Manager, ein Growth Marketer und ein Partner-Manager."));
+content.push(P("Das Unternehmen wird als Solo-Founder-Operation von Yusuf Ferhat Demir geführt — Frankfurter mit türkisch-deutschen Wurzeln, Full-Stack-Entwickler (iOS, Android, Next.js, Supabase) und Product-Led-Founder. Die App wurde in vier Monaten von der Idee zum Live-Produkt entwickelt. Mit dem Pre-Seed werden die ersten vier Schlüssel-Hires gesetzt: Head of Operations, zwei Care-Manager, ein Growth Marketer und ein Partner-Manager."));
 
 content.push(H2("Kapitalbedarf"));
 content.push(P("AlltagsEngel sucht eine Pre-Seed-Finanzierung in Höhe von 1,0 Mio € zur Kapitalisierung der ersten 18 Monate. Die Verwendung verteilt sich auf: 40 % Team-Aufbau (Operations, Care, Growth, Partner), 30 % Marketing und Kundenakquise, 20 % geographische Expansion (Köln, Düsseldorf) und 10 % Technologie und Infrastruktur. Das Szenario erreicht den operativen Break-Even in Q2 2028 mit einem geplanten Jahresumsatz von 2,65 Mio € bei 1.900 aktiven Kunden."));
@@ -290,7 +290,7 @@ const companyData = [
   ["Firma", "AlltagsEngel (Gründung: 2026)"],
   ["Rechtsform", "Einzelunternehmung → Umwandlung zur UG/GmbH bei Investment geplant"],
   ["Sitz", "Frankfurt am Main, Hessen"],
-  ["Gründer", "Yusuf Cilcioglu — Full-Stack-Entwickler, CEO & CTO"],
+  ["Gründer", "Yusuf Ferhat Demir — Full-Stack-Entwickler, CEO & CTO"],
   ["Branche", "DigitalHealth · AgeTech · Pflege-Plattform"],
   ["Website", "https://alltagsengel.care"],
   ["Kontakt", "+49 178 338 2825 · hallo@alltagsengel.care"],
@@ -569,8 +569,8 @@ content.push(NumItem("Tag 61–90: Kassen-Integration finalisieren, Pflegebox-Lo
 // ═══════════════════════════════════════════════════════════════════
 content.push(H1("9. Team & Organisation"));
 
-content.push(H2("Gründer — Yusuf Cilcioglu"));
-content.push(P("Yusuf Cilcioglu ist Gründer, CEO und CTO von AlltagsEngel in Personalunion. Frankfurter mit türkisch-deutschen Wurzeln, Full-Stack-Entwickler und Product-Led-Founder. In den vergangenen vier Monaten hat er AlltagsEngel als Solo-Operation von der ersten Code-Zeile bis zum produktionsreifen Live-Produkt entwickelt — inklusive native iOS/Android App via Capacitor, Next.js Web-App, Supabase-Backend mit vollständiger Row-Level-Security und mehrstufiger Admin-Infrastruktur."));
+content.push(H2("Gründer — Yusuf Ferhat Demir"));
+content.push(P("Yusuf Ferhat Demir ist Gründer, CEO und CTO von AlltagsEngel in Personalunion. Frankfurter mit türkisch-deutschen Wurzeln, Full-Stack-Entwickler und Product-Led-Founder. In den vergangenen vier Monaten hat er AlltagsEngel als Solo-Operation von der ersten Code-Zeile bis zum produktionsreifen Live-Produkt entwickelt — inklusive native iOS/Android App via Capacitor, Next.js Web-App, Supabase-Backend mit vollständiger Row-Level-Security und mehrstufiger Admin-Infrastruktur."));
 
 content.push(P("Technische Tiefe: TypeScript, React, Next.js 14, Supabase (PostgreSQL, Realtime, Auth, RLS), Stripe-Integration, Sentry-Error-Tracking, Playwright E2E-Testing. Produkt-Tiefe: direkter Kunden-Kontakt über WhatsApp und Chat, UX-Design aller drei Rollen-Apps, proaktives User-Research-Programm mit echten Angehörigen."));
 
@@ -832,7 +832,7 @@ content.push(new Paragraph({
 content.push(new Paragraph({
   alignment: AlignmentType.CENTER,
   spacing: { before: 80 },
-  children: [new TextRun({ text: "Yusuf Cilcioglu · +49 178 338 2825 · hallo@alltagsengel.care", font: FONT, size: 22, bold: true, color: COAL })],
+  children: [new TextRun({ text: "Yusuf Ferhat Demir · +49 178 338 2825 · hallo@alltagsengel.care", font: FONT, size: 22, bold: true, color: COAL })],
 }));
 content.push(new Paragraph({
   alignment: AlignmentType.CENTER,

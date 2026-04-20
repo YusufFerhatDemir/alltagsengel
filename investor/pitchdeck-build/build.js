@@ -194,7 +194,7 @@ async function main() {
       fill: { color: GOLD }, line: { type: "none" }
     });
     s.addText([
-      { text: "Yusuf Cilcioglu", options: { bold: true, color: CREAM, breakLine: true } },
+      { text: "Yusuf Ferhat Demir", options: { bold: true, color: CREAM, breakLine: true } },
       { text: "Gründer & CEO · AlltagsEngel UG (i.G.)", options: { color: MUTED } }
     ], {
       x: 0.8, y: H - 1.4, w: 8, h: 0.9, fontFace: FONT_B, fontSize: 14, margin: 0
@@ -852,7 +852,7 @@ async function main() {
     });
     s.addImage({ data: ic.tie, x: fx + fw/2 - 0.55, y: fy + 0.65, w: 1.1, h: 1.1 });
 
-    s.addText("Yusuf Cilcioglu", {
+    s.addText("Yusuf Ferhat Demir", {
       x: fx, y: fy + 2.15, w: fw, h: 0.5,
       fontFace: FONT_H, fontSize: 24, color: CREAM, italic: true, align: "center", margin: 0
     });
@@ -1188,7 +1188,7 @@ async function main() {
     });
 
     const contact = [
-      { ic: ic.tie,    l: "Yusuf Cilcioglu — Gründer & CEO" },
+      { ic: ic.tie,    l: "Yusuf Ferhat Demir — Gründer & CEO" },
       { ic: ic.phone,  l: "+49 178 338 2825" },
       { ic: ic.shake,  l: "y.cilcioglu@googlemail.com" },
       { ic: ic.home,   l: "AlltagsEngel UG (i.G.) · Frankfurt am Main" },
