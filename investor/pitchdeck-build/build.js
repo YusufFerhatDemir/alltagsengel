@@ -268,7 +268,7 @@ async function main() {
     });
     s.addText([
       { text: "Yusuf Ferhat Demir", options: { bold: true, color: CREAM, breakLine: true } },
-      { text: "Gründer & CEO · AlltagsEngel UG (i.G.)", options: { color: MUTED } }
+      { text: "Gründer & CEO · AlltagsEngel UG (haftungsbeschränkt) · HRB 140351", options: { color: MUTED } }
     ], {
       x: 0.8, y: H - 1.4, w: 8, h: 0.9, fontFace: FONT_B, fontSize: 14, margin: 0
     });
@@ -675,8 +675,8 @@ async function main() {
 
     // Timeline
     const milestones = [
-      { date: "Q4 2025", t: "Idee & UG i.G.", done: true,
-        b: "Marktrecherche, UG-Gründung, erste Prototypen" },
+      { date: "Q4 2025", t: "Idee & UG-Gründung", done: true,
+        b: "Marktrecherche, UG (haftungsbeschränkt) eingetragen — HRB 140351, erste Prototypen" },
       { date: "Q1 2026", t: "MVP Build", done: true,
         b: "iOS + Android Native App, Web-Plattform, Supabase-Backend, RLS-Security" },
       { date: "April 2026", t: "Live Launch", done: true,
@@ -931,7 +931,12 @@ async function main() {
       x: fx + fw/2 - 0.8, y: fy + 0.4, w: 1.6, h: 1.6,
       fill: { color: GOLD, transparency: 80 }, line: { color: GOLD, width: 1.5 }
     });
-    s.addImage({ data: ic.app_tie, x: fx + fw/2 - 0.55, y: fy + 0.65, w: 1.1, h: 1.1 });
+    // Founder-Avatar: Initialen "YFD" in Gold auf Coal-Kreis (eleganter als generisches Person-Icon)
+    s.addText("YFD", {
+      x: fx + fw/2 - 0.8, y: fy + 0.5, w: 1.6, h: 1.4,
+      fontFace: FONT_H, fontSize: 38, color: GOLD, bold: false, italic: true,
+      align: "center", valign: "middle", margin: 0
+    });
 
     s.addText("Yusuf Ferhat Demir", {
       x: fx, y: fy + 2.15, w: fw, h: 0.5,
@@ -1276,7 +1281,7 @@ async function main() {
       { ic: ic.app_tie,    l: "Yusuf Ferhat Demir — Gründer & CEO" },
       { ic: ic.phone,  l: "+49 178 338 2825" },
       { ic: ic.app_shake,  l: "info@alltagsengel.care" },
-      { ic: ic.app_home,   l: "AlltagsEngel UG (i.G.) · Frankfurt am Main" },
+      { ic: ic.app_home,   l: "AlltagsEngel UG (haftungsbeschränkt) · HRB 140351 · Frankfurt am Main" },
       { ic: ic.app_star, l: "alltagsengel.care" },
     ];
     contact.forEach((c, i) => {
