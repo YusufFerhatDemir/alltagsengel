@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect } from 'react'
+import { usePathname } from 'next/navigation'
 
 // ═══════════════════════════════════════════════════════════
 // WHATSAPP FLOATING CHAT BUTTON
@@ -13,9 +14,25 @@ const WHATSAPP_NUMBER = '491783382825' // AlltagsEngel Nummer
 const DEFAULT_MESSAGE = 'Hallo! Ich interessiere mich für AlltagsEngel und hätte gerne mehr Informationen.'
 
 export default function WhatsAppButton() {
+  const pathname = usePathname()
   const [visible, setVisible] = useState(false)
   const [showTooltip, setShowTooltip] = useState(false)
   const [modalOpen, setModalOpen] = useState(false)
+
+  // Seiten mit Bottom-Nav → Button hoeher positionieren, damit er den Profil-Tab nicht verdeckt
+  const hasBottomNav = (
+    pathname?.startsWith('/kunde') ||
+    pathname?.startsWith('/engel') ||
+    pathname?.startsWith('/fahrer')
+  ) && !pathname.includes('/register') && !pathname.includes('/buchen/')
+
+  // Positionen: wenn Bottom-Nav da ist, 92px Abstand (Nav ~76px + 16px Luft) + Safe-Area
+  const buttonBottom = hasBottomNav
+    ? 'calc(92px + env(safe-area-inset-bottom))'
+    : 'calc(24px + env(safe-area-inset-bottom))'
+  const tooltipBottom = hasBottomNav
+    ? 'calc(158px + env(safe-area-inset-bottom))'
+    : 'calc(90px + env(safe-area-inset-bottom))'
 
   useEffect(() => {
     // Auch in Capacitor (native App) anzeigen — WhatsApp-Kontakt soll immer verfügbar sein
@@ -53,7 +70,7 @@ export default function WhatsAppButton() {
       {showTooltip && (
         <div style={{
           position: 'fixed',
-          bottom: 90,
+          bottom: tooltipBottom,
           right: 20,
           zIndex: 9998,
           background: '#fff',
@@ -78,7 +95,7 @@ export default function WhatsAppButton() {
         aria-label="WhatsApp Chat"
         style={{
           position: 'fixed',
-          bottom: 24,
+          bottom: buttonBottom,
           right: 20,
           zIndex: 9998,
           width: 56,
