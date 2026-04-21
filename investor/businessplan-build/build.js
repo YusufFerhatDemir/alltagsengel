@@ -71,7 +71,7 @@ function Quote(text) {
     alignment: AlignmentType.LEFT,
     indent: { left: 480, right: 480 },
     border: { left: { style: BorderStyle.SINGLE, size: 24, color: GOLD, space: 12 } },
-    children: [new TextRun({ text, font: FONT_H, size: 22, italic: true, color: COAL })],
+    children: [new TextRun({ text, font: FONT_H, size: 22, italic: false, color: COAL })],
   });
 }
 function Bullet(text, level = 0) {
@@ -160,18 +160,18 @@ content.push(
   new Paragraph({
     alignment: AlignmentType.CENTER,
     spacing: { after: 600 },
-    children: [new TextRun({ text: "Business Plan 2026", font: FONT_H, size: 72, bold: true, color: COAL, italic: true })],
+    children: [new TextRun({ text: "Business Plan 2026", font: FONT_H, size: 72, bold: true, color: COAL, italic: false })],
   }),
   new Paragraph({
     alignment: AlignmentType.CENTER,
     spacing: { after: 1200 },
-    children: [new TextRun({ text: "Die erste All-in-One Plattform für Pflege, Alltag und Mobilität.", font: FONT_H, size: 28, italic: true, color: MUTED })],
+    children: [new TextRun({ text: "Die erste All-in-One Plattform für Alltag, Entlastung und Mobilität.", font: FONT_H, size: 28, italic: false, color: MUTED })],
   }),
   Rule(),
   new Paragraph({
     alignment: AlignmentType.CENTER,
     spacing: { before: 400, after: 120 },
-    children: [new TextRun({ text: "Vertraulich — nur für den Empfänger bestimmt", font: FONT, size: 18, italic: true, color: MUTED })],
+    children: [new TextRun({ text: "Vertraulich — nur für den Empfänger bestimmt", font: FONT, size: 18, italic: false, color: MUTED })],
   }),
   new Paragraph({
     alignment: AlignmentType.CENTER,
@@ -291,7 +291,7 @@ const companyData = [
   ["Rechtsform", "UG (haftungsbeschränkt) · HRB 140351, Amtsgericht Frankfurt am Main"],
   ["Sitz", "Frankfurt am Main, Hessen"],
   ["Gründer", "Yusuf Ferhat Demir — Full-Stack-Entwickler, CEO & CTO"],
-  ["Branche", "DigitalHealth · AgeTech · Pflege-Plattform"],
+  ["Branche", "AgeTech · Alltagshilfe · Krankenfahrten · Pflegebox-Logistik"],
   ["Website", "https://alltagsengel.care"],
   ["Kontakt", "+49 178 338 2825 · info@alltagsengel.care"],
   ["Status (April 2026)", "MVP produktiv, erste Kunden und Engel onboarded"],
@@ -449,7 +449,7 @@ content.push(new Paragraph({ spacing: { after: 200 }, children: [new TextRun("")
 content.push(P("Der für AlltagsEngel relevante bedienbare Markt (SAM) sind die westdeutschen Ballungsräume NRW, Hessen, Baden-Württemberg und Bayern mit einem Pflegebedürftigen-Anteil von etwa 52 Prozent der Gesamtpopulation — also rund 5,1 Milliarden Euro jährliches Marktvolumen. Der realistisch adressierbare Markt (SOM) für die ersten drei Jahre konzentriert sich auf Frankfurt (~120.000 Pflegebedürftige), Köln (~150.000) und Düsseldorf (~95.000) — Summe 365.000 potenzielle Kunden in drei Großstädten."));
 
 content.push(H2("Wettbewerbslandschaft"));
-content.push(P("Der Pflege-Plattform-Markt in Deutschland ist strukturell fragmentiert. Kein einziger Wettbewerber deckt heute die Kombination aus Alltagshilfe, Krankenfahrten und Pflegeboxen in einer App ab. Die wichtigsten Player sind:"));
+content.push(P("Der Alltagshilfe- und Entlastungs-Markt in Deutschland ist strukturell fragmentiert. Kein einziger Wettbewerber deckt heute die Kombination aus Alltagshilfe, Krankenfahrten und Pflegeboxen in einer App ab. Die wichtigsten Player sind:"));
 
 content.push(H3("Helpling"));
 content.push(P("Berliner Haushalts-Plattform mit starker Marken-Präsenz. Fokus: Putzhilfe, Fensterreiniger, Handwerker. Kein Kassen-Bezug. Bezahlung durch Endkunde. Relevanz für unseren Markt: Helpling erreicht nicht die Pflege-Zielgruppe, weil es keine §45b-Abrechnung gibt — der Kunde zahlt 30 €/h aus eigener Tasche. AlltagsEngel-Kunden zahlen 0 €, solange Budget verfügbar."));
@@ -775,7 +775,7 @@ content.push(H1("15. Risiken & Gegenmaßnahmen"));
 
 content.push(H2("Markt-Risiken"));
 content.push(BulletBold("Regulatorische Änderungen §45b: ", "Gegenmaßnahme: Das Geschäftsmodell ist nicht ausschließlich von §45b abhängig. Fällt §45b weg, tragen Krankenfahrten, §40-Pflegebox und Premium-Abo bereits 50 % des Umsatzes. Zudem würden politische Änderungen mindestens 12 Monate Vorlaufzeit haben."));
-content.push(BulletBold("Eintritt eines großen Player (z.B. DocMorris, Check24): ", "Gegenmaßnahme: Lokales Engel-Netzwerk und Kassen-Direktverträge sind kein reines Tech-Spiel — schwer replizierbar. Zudem ist die Kategorie 'integrierte Pflege-Plattform' neu; ein First-Mover-Advantage in den drei Gründungsstädten ist wesentlich."));
+content.push(BulletBold("Eintritt eines großen Player (z.B. DocMorris, Check24): ", "Gegenmaßnahme: Lokales Engel-Netzwerk und Kassen-Direktverträge sind kein reines Tech-Spiel — schwer replizierbar. Zudem ist die Kategorie 'integrierte Alltagshilfe-Plattform' neu; ein First-Mover-Advantage in den drei Gründungsstädten ist wesentlich."));
 content.push(BulletBold("Kassen-Konsolidierung: ", "Gegenmaßnahme: Breite Kassen-Partnerschaft statt Single-Kasse-Bindung — wir arbeiten mit den Top-5-Kassen parallel, keine Abhängigkeit von einer einzelnen."));
 
 content.push(H2("Operative Risiken"));
@@ -815,14 +815,14 @@ content.push(NumItem("Growth-Equity-Runde (Series B, 20–40 Mio €) für bunde
 content.push(H2("Zusammenfassung für Investoren"));
 content.push(P("AlltagsEngel bietet eine einzigartige Kombination: ein Tech-Produkt, das in vier Monaten von einem Solo-Founder auf Live-Reife entwickelt wurde; ein Markt, der demografisch, digital und regulatorisch zeitgleich reift; ein Geschäftsmodell mit strukturell hohem LTV:CAC-Verhältnis (52:1); und ein strategischer Partner-Hebel mit ProCare/PROLIFE, der organische Integration in eine etablierte Pflege-Gruppe ermöglicht."));
 
-content.push(P("Wir suchen Investoren, die nicht nur Kapital bereitstellen, sondern die Vision einer integrierten digitalen Pflege-Plattform teilen und mit ihrem Netzwerk (Kassen, Apotheken, Sanitätshäuser, Pflegegruppen) den Markteintritt beschleunigen können."));
+content.push(P("Wir suchen Investoren, die nicht nur Kapital bereitstellen, sondern die Vision einer integrierten digitalen Alltagshilfe- und Entlastungs-Plattform teilen und mit ihrem Netzwerk (Kassen, Apotheken, Sanitätshäuser, Pflegegruppen) den Markteintritt beschleunigen können."));
 
 content.push(Spacer(600));
 content.push(Rule());
 content.push(new Paragraph({
   alignment: AlignmentType.CENTER,
   spacing: { before: 300 },
-  children: [new TextRun({ text: "Vielen Dank für Ihre Zeit und Ihr Vertrauen.", font: FONT_H, size: 28, italic: true, color: COAL })],
+  children: [new TextRun({ text: "Vielen Dank für Ihre Zeit und Ihr Vertrauen.", font: FONT_H, size: 28, italic: false, color: COAL })],
 }));
 content.push(new Paragraph({
   alignment: AlignmentType.CENTER,
@@ -904,7 +904,7 @@ const doc = new Document({
           children: [new Paragraph({
             alignment: AlignmentType.RIGHT,
             border: { bottom: { style: BorderStyle.SINGLE, size: 4, color: GOLD, space: 8 } },
-            children: [new TextRun({ text: "AlltagsEngel · Business Plan 2026", font: FONT, size: 16, color: MUTED, italic: true })],
+            children: [new TextRun({ text: "AlltagsEngel · Business Plan 2026", font: FONT, size: 16, color: MUTED, italic: false })],
           })],
         }),
       },
@@ -914,7 +914,7 @@ const doc = new Document({
             alignment: AlignmentType.CENTER,
             tabStops: [{ type: TabStopType.RIGHT, position: TabStopPosition.MAX }],
             children: [
-              new TextRun({ text: "Vertraulich — nur für den Empfänger bestimmt", font: FONT, size: 14, color: MUTED, italic: true }),
+              new TextRun({ text: "Vertraulich — nur für den Empfänger bestimmt", font: FONT, size: 14, color: MUTED, italic: false }),
               new TextRun({ text: "\tSeite ", font: FONT, size: 14, color: MUTED }),
               new TextRun({ children: [PageNumber.CURRENT], font: FONT, size: 14, color: MUTED }),
               new TextRun({ text: " / ", font: FONT, size: 14, color: MUTED }),
