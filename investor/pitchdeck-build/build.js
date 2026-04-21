@@ -243,7 +243,7 @@ async function main() {
     // Main title
     s.addText("AlltagsEngel", {
       x: 0.8, y: 2.5, w: 12, h: 1.4,
-      fontFace: FONT_H, fontSize: 80, color: CREAM, italic: true,
+      fontFace: FONT_H, fontSize: 80, color: CREAM, italic: false,
       margin: 0
     });
 
@@ -367,7 +367,7 @@ async function main() {
     const s = pres.addSlide();
     s.background = { color: CREAM };
     addEyebrow(s, "UNSERE LÖSUNG");
-    addTitle(s, "Eine App. Ein Login. Alles, was Pflege braucht.");
+    addTitle(s, "Eine App. Ein Login. Alles für Alltag und Entlastung.");
 
     // Left: big phone visual area (placeholder rectangle)
     const phoneX = 0.7, phoneY = 2.3, phoneW = 3.4, phoneH = 4.7;
@@ -384,7 +384,7 @@ async function main() {
     s.addImage({ data: ic.app_angel, x: phoneX + phoneW/2 - 0.4, y: phoneY + 0.7, w: 0.8, h: 0.8 });
     s.addText("AlltagsEngel", {
       x: phoneX, y: phoneY + 1.65, w: phoneW, h: 0.4,
-      fontFace: FONT_H, fontSize: 20, color: COAL, italic: true, align: "center", margin: 0
+      fontFace: FONT_H, fontSize: 20, color: COAL, italic: false, align: "center", margin: 0
     });
     s.addText("Hilfe · Fahrt · Pflegebox", {
       x: phoneX, y: phoneY + 2.1, w: phoneW, h: 0.3,
@@ -512,7 +512,7 @@ async function main() {
       },
       {
         title: "Engel",
-        sub: "Alltagshelfer & Pflegekräfte",
+        sub: "Alltagshelfer & Engel",
         icon: ic.app_angel,
         bullets: [
           "Aufträge im Umkreis",
@@ -555,7 +555,7 @@ async function main() {
       // Role name
       s.addText(c.title, {
         x, y: y + 0.9, w: colW, h: 0.35,
-        fontFace: FONT_H, fontSize: 20, color: GOLD_LT, italic: true, align: "center", margin: 0
+        fontFace: FONT_H, fontSize: 20, color: GOLD_LT, italic: false, align: "center", margin: 0
       });
       s.addText(c.sub, {
         x, y: y + 1.25, w: colW, h: 0.3,
@@ -765,7 +765,7 @@ async function main() {
       // Name
       s.addText(c.name, {
         x: citiesX + 1.3, y: y + 0.25, w: 5, h: 0.5,
-        fontFace: FONT_H, fontSize: 22, color: c.active ? CREAM : COAL, italic: true, margin: 0
+        fontFace: FONT_H, fontSize: 22, color: c.active ? CREAM : COAL, italic: false, margin: 0
       });
       // Sub
       s.addText(c.pop, {
@@ -796,7 +796,7 @@ async function main() {
     });
     s.addText("Pro Stadt in 90 Tagen", {
       x: rightX + 0.4, y: 2.85, w: 4.5, h: 0.5,
-      fontFace: FONT_H, fontSize: 22, color: CREAM, italic: true, margin: 0
+      fontFace: FONT_H, fontSize: 22, color: CREAM, italic: false, margin: 0
     });
     const steps = [
       { n: "01", t: "Lokale Engel rekrutieren", b: "Facebook-Gruppen · Minijob-Börsen · AWO/Caritas" },
@@ -887,7 +887,7 @@ async function main() {
     const rX = 7.8;
     s.addText("Was uns unterscheidet", {
       x: rX, y: 2.4, w: 5.1, h: 0.5,
-      fontFace: FONT_H, fontSize: 22, color: COAL, italic: true, margin: 0
+      fontFace: FONT_H, fontSize: 22, color: COAL, italic: false, margin: 0
     });
     const diffs = [
       { t: "Kassen-Integriert",  b: "Direktabrechnung mit §45b, §40 und Krankenkassen — keine Vorkasse für den Kunden." },
@@ -934,13 +934,13 @@ async function main() {
     // Founder-Avatar: Initialen "YFD" in Gold auf Coal-Kreis (eleganter als generisches Person-Icon)
     s.addText("YFD", {
       x: fx + fw/2 - 0.8, y: fy + 0.5, w: 1.6, h: 1.4,
-      fontFace: FONT_H, fontSize: 38, color: GOLD, bold: false, italic: true,
+      fontFace: FONT_H, fontSize: 38, color: GOLD, bold: false, italic: false,
       align: "center", valign: "middle", margin: 0
     });
 
     s.addText("Yusuf Ferhat Demir", {
       x: fx, y: fy + 2.15, w: fw, h: 0.5,
-      fontFace: FONT_H, fontSize: 24, color: CREAM, italic: true, align: "center", margin: 0
+      fontFace: FONT_H, fontSize: 24, color: CREAM, italic: false, align: "center", margin: 0
     });
     s.addText("GRÜNDER · CEO · CTO", {
       x: fx, y: fy + 2.65, w: fw, h: 0.3,
@@ -960,7 +960,7 @@ async function main() {
     const rX = 6.4, rY = 2.35;
     s.addText("Nächste Schlüssel-Hires (mit dem Pre-Seed)", {
       x: rX, y: rY, w: 6.2, h: 0.5,
-      fontFace: FONT_H, fontSize: 18, color: COAL, italic: true, margin: 0
+      fontFace: FONT_H, fontSize: 18, color: COAL, italic: false, margin: 0
     });
 
     const hires = [
@@ -1054,7 +1054,7 @@ async function main() {
     // Footnote
     s.addText("Basisszenario · Konservativ · Detaillierter Financial-Model (Excel) separat im Due-Diligence-Paket.",
       { x: 0.7, y: 6.75, w: 11.9, h: 0.3,
-        fontFace: FONT_B, fontSize: 9, color: MUTED, italic: true, margin: 0 });
+        fontFace: FONT_B, fontSize: 9, color: MUTED, italic: false, margin: 0 });
 
     addBrandLogo(s);
     addFooter(s, 11, totalSlides);
@@ -1078,7 +1078,7 @@ async function main() {
     });
     s.addText("1,0 Mio €", {
       x: 0.8, y: 1.4, w: 12, h: 1.8,
-      fontFace: FONT_H, fontSize: 96, color: CREAM, italic: true, margin: 0
+      fontFace: FONT_H, fontSize: 96, color: CREAM, italic: false, margin: 0
     });
     s.addText("Pre-Seed · Wandeldarlehen oder Equity · 18–24 Monate Runway", {
       x: 0.8, y: 3.1, w: 12, h: 0.5,
@@ -1175,7 +1175,7 @@ async function main() {
     });
     s.addText("AlltagsEngel", {
       x: rightX, y: colY, w: colW, h: 0.6,
-      fontFace: FONT_H, fontSize: 17, color: COAL, bold: true, italic: true,
+      fontFace: FONT_H, fontSize: 17, color: COAL, bold: true, italic: false,
       align: "center", valign: "middle", margin: 0
     });
     const ae = [
@@ -1258,11 +1258,11 @@ async function main() {
 
     s.addText("DANKE.", {
       x: 0.8, y: 1.0, w: 12, h: 1.2,
-      fontFace: FONT_H, fontSize: 80, color: CREAM, italic: true, margin: 0
+      fontFace: FONT_H, fontSize: 80, color: CREAM, italic: false, margin: 0
     });
-    s.addText("Lass uns die Pflege in Deutschland neu bauen.", {
+    s.addText("Lass uns Alltagshilfe und Entlastung neu bauen.", {
       x: 0.8, y: 2.4, w: 12, h: 0.7,
-      fontFace: FONT_H, fontSize: 28, color: GOLD_LT, italic: true, margin: 0
+      fontFace: FONT_H, fontSize: 28, color: GOLD_LT, italic: false, margin: 0
     });
 
     // Divider
@@ -1296,7 +1296,7 @@ async function main() {
     // Bottom disclaimer
     s.addText("Vertraulich · Für ProCare Deutschland & PROLIFE homecare GmbH · April 2026",
       { x: 0.8, y: H - 0.8, w: 12, h: 0.3,
-        fontFace: FONT_B, fontSize: 9, color: MUTED, italic: true, charSpacing: 2, margin: 0 });
+        fontFace: FONT_B, fontSize: 9, color: MUTED, italic: false, charSpacing: 2, margin: 0 });
   }
 
   // ═══════════════════════════════════════════════════════════
