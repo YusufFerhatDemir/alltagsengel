@@ -157,12 +157,114 @@ async function main() {
     app_tie:
       `<circle cx="12" cy="7.5" r="3.8" fill="url(#g1)" stroke="#A07428" stroke-width="0.3"/>
        <path d="M4.5 20.5c0-4.2 3.4-7.5 7.5-7.5s7.5 3.3 7.5 7.5v.5h-15v-.5z" fill="url(#g1)" stroke="#A07428" stroke-width="0.3"/>`,
+    // Hand mit Herz — abgeleitet aus public/assets/hilfe-icon.svg
+    app_hand:
+      `<path d="M12 6.5c-.6-.7-1.6-1.2-2.6-1.2-1.7 0-3 1.3-3 3 0 2.5 2.4 4.4 5.6 6.6 3.2-2.2 5.6-4.1 5.6-6.6 0-1.7-1.3-3-3-3-1 0-2 .5-2.6 1.2z" fill="url(#g1L)" stroke="#A07428" stroke-width="0.3"/>
+       <path d="M5.5 14.5c-.5.4-1 1.1-1 2 0 .6.4 1 1 1h4l3.5 2.5c.5.3 1 .3 1.5 0l3-2c.5-.3.5-1 0-1.4l-3-2c-.5-.3-1.2-.4-1.7-.1l-1.3.6c-.5-.7-1.5-1.2-2.5-1.2-.7 0-1.4.2-2 .6l-1.5 0z" fill="url(#g1)" stroke="#A07428" stroke-width="0.3"/>`,
+    // Krone — Premium-Abo / Crown
+    app_premium:
+      `<path d="M3 8.5l3 4 3-6 3 5 3-5 3 6 3-4-1.5 9h-15z" fill="url(#g1)" stroke="#A07428" stroke-width="0.4" stroke-linejoin="round"/>
+       <rect x="4.5" y="18" width="15" height="2.5" rx="0.4" fill="url(#g1L)" stroke="#A07428" stroke-width="0.3"/>
+       <circle cx="12" cy="6.5" r="1" fill="url(#g1L)"/>
+       <circle cx="6" cy="8" r="0.8" fill="url(#g1L)"/>
+       <circle cx="18" cy="8" r="0.8" fill="url(#g1L)"/>`,
+    // 3 Personen — Users / Markt
+    app_users:
+      `<circle cx="8" cy="8" r="2.5" fill="url(#g1)" stroke="#A07428" stroke-width="0.3"/>
+       <circle cx="16" cy="8" r="2.5" fill="url(#g1)" stroke="#A07428" stroke-width="0.3"/>
+       <circle cx="12" cy="6" r="2.8" fill="url(#g1L)" stroke="#A07428" stroke-width="0.3"/>
+       <path d="M3 19c.5-3 2.5-5 5-5s4.5 2 5 5" fill="url(#g1)" stroke="#A07428" stroke-width="0.3"/>
+       <path d="M11 19c.5-3 2.5-5 5-5s4.5 2 5 5" fill="url(#g1)" stroke="#A07428" stroke-width="0.3"/>
+       <path d="M6 21c1-4 3.5-6 6-6s5 2 6 6" fill="url(#g1L)" stroke="#A07428" stroke-width="0.3"/>`,
+    // Trend-Chart nach oben
+    app_chart:
+      `<rect x="2" y="2" width="20" height="20" rx="2" fill="none" stroke="#A07428" stroke-width="0.6"/>
+       <path d="M5 17l4-5 3 3 6-8" fill="none" stroke="url(#g1)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+       <circle cx="5" cy="17" r="1" fill="url(#g1L)"/>
+       <circle cx="9" cy="12" r="1" fill="url(#g1L)"/>
+       <circle cx="12" cy="15" r="1" fill="url(#g1L)"/>
+       <circle cx="18" cy="7" r="1.3" fill="url(#g1L)"/>`,
+    // Map-Pin — Standort
+    app_map:
+      `<path d="M12 2c-3.9 0-7 3-7 6.8 0 5 7 13.2 7 13.2s7-8.2 7-13.2c0-3.8-3.1-6.8-7-6.8z" fill="url(#g1)" stroke="#A07428" stroke-width="0.4"/>
+       <circle cx="12" cy="9" r="2.8" fill="url(#g1L)" stroke="#A07428" stroke-width="0.3"/>`,
+    // Euro
+    app_euro:
+      `<circle cx="12" cy="12" r="10" fill="url(#g1)" stroke="#A07428" stroke-width="0.4"/>
+       <path d="M16 8.5c-1-1-2.3-1.5-3.7-1.5-2.5 0-4.5 1.8-5 4.5h-1m9.7 4.5c-1 1-2.3 1.5-3.7 1.5-2.5 0-4.5-1.8-5-4.5h-1m1.5-2.5h6m-6 1.5h6" fill="none" stroke="#1A1612" stroke-width="1.6" stroke-linecap="round"/>`,
+    // Smartphone
+    app_mobile:
+      `<rect x="6" y="2" width="12" height="20" rx="2.4" fill="url(#g1)" stroke="#A07428" stroke-width="0.5"/>
+       <rect x="7.4" y="4" width="9.2" height="14" rx="0.5" fill="#1A1612"/>
+       <circle cx="12" cy="20" r="0.7" fill="#1A1612"/>
+       <rect x="9" y="6.5" width="6" height="0.8" rx="0.2" fill="url(#g1L)"/>
+       <rect x="9" y="9" width="6" height="0.8" rx="0.2" fill="url(#g1L)" opacity="0.7"/>
+       <rect x="9" y="11.5" width="4" height="0.8" rx="0.2" fill="url(#g1L)" opacity="0.5"/>`,
+    // Häkchen — Gold-Variante
+    app_check:
+      `<circle cx="12" cy="12" r="10" fill="url(#g1)" stroke="#A07428" stroke-width="0.4"/>
+       <path d="M7 12.5l3.5 3.5L17 9" fill="none" stroke="#1A1612" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>`,
+    // Häkchen — Creme-Variante (für dunkle Backgrounds)
+    app_check_l:
+      `<circle cx="12" cy="12" r="10" fill="url(#g1L)" stroke="#F5EFE6" stroke-width="0.6"/>
+       <path d="M7 12.5l3.5 3.5L17 9" fill="none" stroke="#1A1612" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>`,
+    // Uhr
+    app_clock:
+      `<circle cx="12" cy="12" r="10" fill="url(#g1)" stroke="#A07428" stroke-width="0.4"/>
+       <path d="M12 6v6l4 2.5" fill="none" stroke="#1A1612" stroke-width="2" stroke-linecap="round"/>
+       <circle cx="12" cy="12" r="0.9" fill="#1A1612"/>`,
+    // Zahnrad
+    app_cogs:
+      `<path d="M12 2l1.6 2.4 2.8-.8 1 2.7 2.8.6-.4 2.9 2.2 1.8-1.6 2.4 1 2.7-2.7 1.1.4 2.9-2.9.4-1 2.7-2.8-.8L12 22l-1.6-2.4-2.8.8-1-2.7-2.8-.6.4-2.9L2 12.2l1.6-2.4-1-2.7L5.3 6 4.9 3.1l2.9-.4 1-2.7 2.8.8z" fill="url(#g1)" stroke="#A07428" stroke-width="0.3"/>
+       <circle cx="12" cy="12" r="3.5" fill="url(#g1L)" stroke="#A07428" stroke-width="0.4"/>
+       <circle cx="12" cy="12" r="1.6" fill="#1A1612"/>`,
+    // Telefon-Hörer
+    app_phone:
+      `<path d="M5 3.5C5 2.7 5.7 2 6.5 2h3c.7 0 1.3.5 1.4 1.2l.6 3.4c.1.6-.2 1.2-.7 1.5l-2 1.3c1.4 2.7 3.6 5 6.3 6.4l1.3-2.1c.3-.5.9-.8 1.5-.7l3.4.6c.7.1 1.2.7 1.2 1.4v3c0 .8-.7 1.5-1.5 1.5C10.4 20 4 13.6 4 5c-.5-.5-.5-1 1-1.5z" fill="url(#g1)" stroke="#A07428" stroke-width="0.4" stroke-linejoin="round"/>`,
   };
   for (const [key, inner] of Object.entries(appIcons)) {
     const svg = appSvg(inner, 512);
     const pngBuffer = await sharp(Buffer.from(svg)).png().toBuffer();
     ic[key] = "image/png;base64," + pngBuffer.toString("base64");
   }
+
+  // ═══════════════════════════════════════════════════════════
+  // ALIAS-MAPPING: Alle FontAwesome-Generic-Icons im Slide-Code
+  // werden auf die echten App-Icons (Gold-Gradient) umgemappt.
+  // So muss kein einzelner Slide-Aufruf angepasst werden, und das
+  // Pitch Deck nutzt durchgängig die AlltagsEngel-Bildsprache.
+  // ic.warn bleibt rot (semantisch sinnvoll für Probleme).
+  // ═══════════════════════════════════════════════════════════
+  ic.hands     = ic.app_hand;
+  ic.heart     = ic.app_hand;
+  ic.heart_l   = ic.app_check_l;
+  ic.users     = ic.app_users;
+  ic.chart     = ic.app_chart;
+  ic.map       = ic.app_map;
+  ic.euro      = ic.app_euro;
+  ic.mobile    = ic.app_mobile;
+  ic.check     = ic.app_check;
+  ic.check_l   = ic.app_check_l;
+  ic.clock     = ic.app_clock;
+  ic.cogs      = ic.app_cogs;
+  ic.phone     = ic.app_phone;
+  ic.crown     = ic.app_premium;
+  ic.cal       = ic.app_premium;
+  ic.shake     = ic.app_shake;
+  ic.shake_l   = ic.app_shake;
+  ic.star      = ic.app_star;
+  ic.star_l    = ic.app_star;
+  ic.shield    = ic.app_med;
+  ic.bull      = ic.app_star;
+  ic.tie       = ic.app_tie;
+  ic.home      = ic.app_home;
+  ic.box       = ic.app_box;
+  ic.car       = ic.app_car;
+  ic.userMd    = ic.app_med;
+  ic.stetho    = ic.app_med;
+  ic.building  = ic.app_home;
+  ic.bulb      = ic.app_premium;
+  ic.rocket    = ic.app_premium;
 
   // ═══════════════════════════════════════════════════════════
   // REUSABLE ELEMENTS
