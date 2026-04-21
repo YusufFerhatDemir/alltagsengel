@@ -289,7 +289,7 @@ content.push(new Paragraph({ spacing: { after: 120 }, children: [new TextRun("")
 const companyData = [
   ["Firma", "AlltagsEngel UG (haftungsbeschränkt)"],
   ["Rechtsform", "UG (haftungsbeschränkt) · HRB 140351, Amtsgericht Frankfurt am Main"],
-  ["Sitz", "Frankfurt am Main, Hessen"],
+  ["Sitz", "Neue Mainzer Straße 66-68, 60311 Frankfurt am Main"],
   ["Gründer", "Yusuf Ferhat Demir — Full-Stack-Entwickler, CEO & CTO"],
   ["Branche", "AgeTech · Alltagshilfe · Krankenfahrten · Pflegebox-Logistik"],
   ["Website", "https://alltagsengel.care"],

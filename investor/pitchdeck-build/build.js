@@ -1281,7 +1281,7 @@ async function main() {
       { ic: ic.app_tie,    l: "Yusuf Ferhat Demir — Gründer & CEO" },
       { ic: ic.phone,  l: "+49 178 338 2825" },
       { ic: ic.app_shake,  l: "info@alltagsengel.care" },
-      { ic: ic.app_home,   l: "AlltagsEngel UG (haftungsbeschränkt) · HRB 140351 · Frankfurt am Main" },
+      { ic: ic.app_home,   l: "AlltagsEngel UG (haftungsbeschränkt) · HRB 140351 · Neue Mainzer Straße 66-68, 60311 Frankfurt a. M." },
       { ic: ic.app_star, l: "alltagsengel.care" },
     ];
     contact.forEach((c, i) => {
