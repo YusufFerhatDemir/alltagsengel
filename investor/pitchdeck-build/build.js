@@ -850,7 +850,7 @@ async function main() {
       line: { color: MUTED, width: 1, dashType: "dash" }
     });
     // Axis labels
-    s.addText("Pflege-Fokus →", {
+    s.addText("Kassen-abgerechnet →", {
       x: mX, y: mY + mH - 0.3, w: mW, h: 0.3,
       fontFace: FONT_B, fontSize: 10, color: MUTED, align: "center", margin: 0
     });
