@@ -204,7 +204,7 @@ content.push(H1("Inhaltsverzeichnis"));
 const toc = [
   ["1. Executive Summary", "3"],
   ["2. Vision & Unternehmen", "5"],
-  ["3. Problem — der deutsche Pflege-Markt 2026", "6"],
+  ["3. Problem — die deutsche Entlastungs-Landschaft 2026", "6"],
   ["4. Lösung — AlltagsEngel als integrierte Plattform", "8"],
   ["5. Produkt — drei Rollen, eine App", "10"],
   ["6. Markt & Wettbewerb", "12"],
@@ -242,10 +242,10 @@ content.push(H1("1. Executive Summary"));
 content.push(Quote("AlltagsEngel ist die erste App, die alle Lebensbereiche eines Pflegebedürftigen in einer Plattform bündelt: Alltagshilfe, Krankenfahrten, Pflegeboxen, Chat und Abrechnung — alles digital, alles aus einer Hand."));
 
 content.push(H2("Unternehmen auf einen Blick"));
-content.push(P("AlltagsEngel ist eine mobile Plattform mit Sitz in Frankfurt am Main, die Pflegebedürftige, Alltagsengel (Alltagshelfer und Pflegekräfte) sowie zertifizierte Krankentransport-Fahrer in einem einzigen Ökosystem verbindet. Die App ist seit April 2026 als Next.js-PWA und native iOS/Android-App verfügbar (beta), basiert auf Supabase und ist produktionsreif ausgerollt. Erste Kunden und Alltagsengel sind onboarded; das Unternehmen befindet sich unmittelbar vor der kommerziellen Markteinführung."));
+content.push(P("AlltagsEngel ist eine mobile Plattform mit Sitz in Frankfurt am Main, die Pflegebedürftige, Alltagsengel (landesrechtlich anerkannte Alltagshelfer nach §45a SGB XI) sowie zertifizierte Krankentransport-Fahrer in einem einzigen Ökosystem verbindet. Wichtige Klarstellung: AlltagsEngel erbringt keine Grundpflege oder Behandlungspflege nach SGB V/XI — wir sind eine Alltagsbegleitungs- und Entlastungs-Plattform. Die App ist seit April 2026 als Next.js-PWA und native iOS/Android-App verfügbar (beta), basiert auf Supabase und ist produktionsreif ausgerollt. Erste Kunden und Alltagsengel sind onboarded; das Unternehmen befindet sich unmittelbar vor der kommerziellen Markteinführung."));
 
 content.push(H2("Das Problem"));
-content.push(P("Der deutsche Pflege-Markt ist mit 5,2 Millionen Pflegebedürftigen (Destatis 2025) und einem jährlichen Volumen von über 50 Milliarden Euro einer der größten Sozialmärkte Europas. Über 60 Prozent des §45b-Entlastungsbudgets (131 Euro pro Monat pro Kassen-Pflegegrad) verfallen ungenutzt, weil die Antrags- und Abrechnungsbürokratie für Angehörige nicht bewältigbar ist. Gleichzeitig sind Alltagshilfe, Krankenfahrten und Pflegehilfsmittel in Deutschland vollständig fragmentiert: drei Apps, drei Rechnungen, drei Anrufe."));
+content.push(P("Deutschland zählt 5,2 Millionen Pflegebedürftige (Destatis 2025) — und für jeden davon stellt die Pflegeversicherung Entlastungs-Budgets bereit, die heute massenhaft verfallen. Über 60 Prozent des §45b-Entlastungsbudgets (131 Euro pro Monat pro Kassen-Pflegegrad) werden nicht abgerufen, weil die Antrags- und Abrechnungsbürokratie für Angehörige nicht bewältigbar ist. Gleichzeitig sind Alltagshilfe, Krankenfahrten und Pflegehilfsmittel in Deutschland vollständig fragmentiert: drei Apps, drei Rechnungen, drei Anrufe. Der Alltagshilfe- und Entlastungs-Markt als eigene Kategorie — abgegrenzt von klassischen Pflegediensten — ist heute weitgehend unbearbeitet."));
 
 content.push(H2("Die Lösung"));
 content.push(P("AlltagsEngel löst diese Fragmentierung mit einer einzigen integrierten App. Ein Kunde bucht Alltagsengel, Krankenfahrten und Pflegeboxen in einem einzigen Flow. Alle Leistungen werden automatisch gegen §45b (Entlastungsbetrag), §40 (Pflegehilfsmittel-Pauschale) oder die gesetzliche Krankenversicherung abgerechnet — über eine standardisierte Schnittstelle. Für Alltagsengel bedeutet das kalkulierbare Aufträge, sofortige Zahlung und Kalender-Integration; für Fahrer bedeutet es Rezept-basiertes Matching und Direktabrechnung mit den Kassen."));
@@ -274,11 +274,11 @@ content.push(P("Drei konvergierende Trends machen den Moment einzigartig: (1) De
 content.push(H1("2. Vision & Unternehmen"));
 
 content.push(H2("Vision"));
-content.push(Quote("Jeder Pflegebedürftige in Deutschland soll mit einer App alles bekommen, was er im Alltag braucht — Hilfe, Fahrten, Produkte, Abrechnung. Pflege soll so einfach werden wie Essen bestellen."));
+content.push(Quote("Jeder Pflegebedürftige in Deutschland soll mit einer App alles bekommen, was er im Alltag braucht — Hilfe, Fahrten, Produkte, Abrechnung. Alltagshilfe und Entlastung sollen so einfach werden wie Essen bestellen."));
 
 content.push(P("AlltagsEngel entsteht aus einer klaren Beobachtung: Der deutsche Sozialstaat stellt pflegebedürftigen Menschen jährlich über 7,6 Milliarden Euro Entlastungsbudget zur Verfügung — aber mehr als 60 Prozent dieses Budgets verfallen ungenutzt, weil Angehörige die Leistung nicht finden, nicht beantragen oder nicht korrekt abrechnen können. Gleichzeitig sind Alltagshilfen, Krankenfahrten und Pflegehilfsmittel in drei völlig voneinander getrennten Systemen organisiert."));
 
-content.push(P("Unsere Vision ist, diese drei Welten in einer einzigen digitalen Plattform zu vereinen — so natürlich, dass eine 78-jährige Angehörige ihre Mutter mit drei Klicks in einer App versorgen kann. Langfristig wollen wir die betriebssystem-ähnliche Infrastruktur für ambulante Pflege in Deutschland werden: Jede Kasse rechnet über uns ab, jedes Sanitätshaus liefert über uns, jede Pflegebezogene Dienstleistung läuft durch unser Routing."));
+content.push(P("Unsere Vision ist, diese drei Welten in einer einzigen digitalen Plattform zu vereinen — so natürlich, dass eine 78-jährige Angehörige ihre Mutter mit drei Klicks in einer App versorgen kann. Langfristig wollen wir die betriebssystem-ähnliche Infrastruktur für Alltagsbegleitung und Entlastung in Deutschland werden: Jede Kasse rechnet über uns ab, jedes Sanitätshaus liefert über uns, jede entlastungsnahe Dienstleistung läuft durch unser Routing. Wir grenzen uns dabei klar von der medizinischen Pflege ab — Grundpflege und Behandlungspflege bleiben Aufgabe ambulanter Pflegedienste und sind nicht Teil unseres Leistungsspektrums."));
 
 content.push(H2("Mission"));
 content.push(P("Wir machen Kassen-Leistungen nutzbar, bevor sie verfallen. Konkret bedeutet das: Jeder Pflegebedürftige in unserer App nutzt seinen §45b-Entlastungsbetrag zu mindestens 90 % aus (statt der bundesweiten 40 %), erhält seine §40-Pflegebox automatisch ohne einen einzigen Anruf, und bekommt jede medizinisch notwendige Fahrt ohne eigenen Verwaltungsaufwand erstattet."));
@@ -320,7 +320,7 @@ content.push(BulletBold("Transparenz: ", "Preise, Margen und Abrechnungen sind f
 // ═══════════════════════════════════════════════════════════════════
 // 3. PROBLEM
 // ═══════════════════════════════════════════════════════════════════
-content.push(H1("3. Problem — der deutsche Pflege-Markt 2026"));
+content.push(H1("3. Problem — die deutsche Entlastungs-Landschaft 2026"));
 
 content.push(H2("Der demografische Druck"));
 content.push(P("Deutschland hat im Jahr 2025 exakt 5,24 Millionen pflegebedürftige Menschen (Quelle: Destatis Pflegestatistik Dezember 2025). Die Zahl wächst um 3 bis 4 Prozent pro Jahr und wird nach Bundesvorausberechnung bis 2030 auf über 6,5 Millionen steigen — ein Zuwachs von 24 Prozent in fünf Jahren. Gleichzeitig sinkt die Zahl der professionellen Pflegekräfte pro 100 Pflegebedürftige kontinuierlich. Die sogenannte 'Pflegelücke' wird bis 2035 auf 500.000 Vollzeitstellen geschätzt."));
@@ -350,7 +350,7 @@ content.push(NumItem("Vertrauen — 73 Prozent der Befragten haben bereits schle
 content.push(NumItem("Klarheit — 84 Prozent verstehen nicht genau, was ihnen zusteht. Sie wissen vage, dass es 'einen Entlastungsbetrag' gibt, kennen aber weder die Höhe noch den Antragsprozess. Sie wollen eine App, die ihnen proaktiv sagt: 'Dir stehen noch 88 € diesen Monat zu — hier ist, was du damit buchen kannst.'"));
 
 content.push(H2("Warum keine der bestehenden Lösungen das Problem löst"));
-content.push(P("Die größten deutschen Plattformen in angrenzenden Märkten haben das Pflege-Problem nicht adressiert. Helpling ist eine Haushalts-Plattform ohne Kassen-Abrechnung. Home Instead ist ein hochpreisiger Full-Service-Anbieter für die obere Mittelschicht (keine Kassenfinanzierung). Curendo digitalisiert nur den Antrag, nicht die Leistung. ProCare Deutschland liefert hervorragend Pflegeboxen, deckt aber Alltagshilfe und Fahrten nicht ab. Klassische ambulante Pflegedienste sind lokal, analog und nicht skalierbar."));
+content.push(P("Die größten deutschen Plattformen in angrenzenden Märkten haben das Alltagshilfe- und Entlastungs-Problem nicht adressiert. Helpling ist eine Haushalts-Plattform ohne Kassen-Abrechnung. Home Instead ist ein hochpreisiger Full-Service-Anbieter für die obere Mittelschicht (keine Kassenfinanzierung). Curendo digitalisiert nur den Antrag, nicht die Leistung. ProCare Deutschland liefert hervorragend Pflegeboxen, deckt aber Alltagshilfe und Fahrten nicht ab. Klassische ambulante Pflegedienste erbringen medizinische Pflege (Grund- und Behandlungspflege) — ein anderes Marktsegment als unseres — und sind dort lokal, analog und nicht skalierbar."));
 
 content.push(P("Der Markt wartet auf eine integrierte Lösung. Wir bauen sie."));
 
@@ -360,7 +360,7 @@ content.push(P("Der Markt wartet auf eine integrierte Lösung. Wir bauen sie."))
 content.push(H1("4. Lösung — AlltagsEngel als integrierte Plattform"));
 
 content.push(H2("Die Kernidee: Drei Rollen, eine App"));
-content.push(P("AlltagsEngel ist eine mobile Plattform, die drei Nutzergruppen — Kunden, Engel (Alltagshelfer und Pflegekräfte) und Fahrer (Krankentransport-Partner) — in einem einzigen technischen System zusammenführt. Alle drei arbeiten im gleichen Terminsystem, sehen ihre Buchungen im gleichen Kalender und rechnen über die gleiche Schnittstelle ab."));
+content.push(P("AlltagsEngel ist eine mobile Plattform, die drei Nutzergruppen — Kunden, Engel (landesrechtlich anerkannte Alltagshelfer nach §45a SGB XI) und Fahrer (Krankentransport-Partner) — in einem einzigen technischen System zusammenführt. Alle drei arbeiten im gleichen Terminsystem, sehen ihre Buchungen im gleichen Kalender und rechnen über die gleiche Schnittstelle ab. Die Engel erbringen ausschließlich Alltagsbegleitung, Haushaltsunterstützung und Betreuung — keine Grund- oder Behandlungspflege."));
 
 content.push(Quote("Ein Kunde bucht Engel + Fahrt + Box in einem Flow. Eine Rechnung. Ein Ansprechpartner. Das ist der strukturelle Durchbruch gegenüber allen bestehenden Lösungen."));
 
@@ -406,8 +406,8 @@ content.push(BulletBold("Chat mit Care-Manager: ", "Persönlicher Ansprechpartne
 content.push(BulletBold("Kalender-Übersicht: ", "Alle bevorstehenden Termine (Engel-Besuche, Fahrten, Box-Lieferung) in einer Ansicht."));
 content.push(BulletBold("Budget-Tracking: ", "Echtzeit-Anzeige, wie viel vom §45b, §40 und der Krankenfahrten-Pauschale in diesem Monat bereits genutzt wurde und was noch verfügbar ist."));
 
-content.push(H2("Rolle 2 — Engel (Alltagshelfer und Pflegekräfte)"));
-content.push(P("Die Engel-App richtet sich an zertifizierte Alltagshelfer (landesrechtlich anerkannt nach §45a SGB XI) und examinierte Pflegekräfte. Ziel ist, ihnen ein kalkulierbares Einkommen, Planungssicherheit und administrative Entlastung zu bieten."));
+content.push(H2("Rolle 2 — Engel (landesrechtlich anerkannte Alltagshelfer)"));
+content.push(P("Die Engel-App richtet sich an zertifizierte Alltagshelfer, die nach §45a SGB XI landesrechtlich anerkannt sind (in Hessen: 40-Stunden-Basiskurs + Nachweis). Bewusst adressieren wir keine examinierten Pflegefachkräfte — unser Leistungsspektrum ist Alltagsbegleitung, nicht Grund- oder Behandlungspflege. Ziel ist, den Engeln ein kalkulierbares Einkommen, Planungssicherheit und administrative Entlastung zu bieten."));
 content.push(H3("Zentrale Features"));
 content.push(BulletBold("Aufträge im Umkreis: ", "Push-Benachrichtigungen über neue Aufträge passend zu Profil und Zeitfenstern."));
 content.push(BulletBold("Kalender-Integration: ", "Synchronisation mit privatem Google/Apple Kalender — keine Doppelbuchungen."));
@@ -423,6 +423,24 @@ content.push(BulletBold("GPS-Routing: ", "Navigation, Ankunftszeit-Tracking und 
 content.push(BulletBold("Kassen-Direktabrechnung: ", "Nach Fahrt-Ende wird die Abrechnung automatisch generiert und an die Kasse geschickt. Fahrer bekommen innerhalb von 10 Tagen Gutschrift."));
 content.push(BulletBold("Fahrzeug-Verwaltung: ", "Verwaltung von bis zu 10 Fahrzeugen pro Unternehmer mit separatem TÜV- und Versicherungs-Tracking."));
 content.push(BulletBold("Tour-Optimierung: ", "Bei mehreren Fahrten pro Tag schlägt das System eine optimale Route vor."));
+
+content.push(H2("Qualität & Vertrauen — Bewertungssystem für Engel und Fahrten"));
+content.push(P("Die Plattform steht und fällt mit der Qualität der Erfahrung, die ein 80-jähriger Kunde mit einem Engel oder Fahrer macht. Deshalb ist das Bewertungssystem kein Nice-to-have, sondern ein zentrales Infrastruktur-Element — vergleichbar mit dem, was Uber für Fahrer-Qualität und Airbnb für Unterkunfts-Qualität in ihren Märkten etabliert haben. Bei uns bewertet jede Seite jede Interaktion, und die Bewertungen steuern das Matching, das Badge-System und die Care-Manager-Intervention."));
+
+content.push(H3("Engel-Bewertung nach jedem Termin"));
+content.push(P("Nach jeder abgeschlossenen Alltagshilfe-Stunde bekommt der Kunde (oder der buchende Angehörige) eine Push-Benachrichtigung mit einer 1-bis-5-Sterne-Skala plus optionalem Freitext. Die Bewertung läuft über drei Dimensionen: Pünktlichkeit, Freundlichkeit und Qualität der Ausführung. Ein Termin ohne Bewertung wird nach 72 Stunden automatisch als neutrale 4-Sterne-Bewertung gezählt, damit Engel nicht durch schweigsame Kunden benachteiligt werden. Durchschnittsbewertung, Zahl der Bewertungen und Beispiel-Kommentare sind für jeden Engel im Kunden-Feed sichtbar — Transparenz ist die wichtigste Vertrauens-Ressource in einem Markt, in dem ältere Kunden schlechte Erfahrungen mit Pflegedienstleistern gemacht haben."));
+
+content.push(H3("Fahrten-Bewertung nach jeder Krankenfahrt"));
+content.push(P("Krankenfahrten sind ein eigener Qualitäts-Kontext: Hier geht es weniger um Sympathie und mehr um Pünktlichkeit, Fahrzeug-Zustand und Umgang mit dem Patienten beim Ein- und Aussteigen. Die Fahrt-Bewertung läuft deshalb nach einer eigenen 1-bis-5-Sterne-Skala mit drei Dimensionen: Pünktlichkeit, Fahrzeug-Sauberkeit und Fahrweise. Die Bewertung kann direkt in der App abgegeben werden, sobald der Kunde wieder zu Hause ist, und fließt in die Fahrer-Reputation ein. Fahrer mit einem 90-Tage-Schnitt unter 4,0 Sterne werden von neuen Rezept-Matches vorübergehend ausgeschlossen, bis eine Care-Manager-Review stattgefunden hat."));
+
+content.push(H3("Verified-Badge-Progression"));
+content.push(P("Das Bewertungssystem ist an ein Badge-System gekoppelt, das für Engel und Fahrer langfristige Anreize setzt: Neue Engel starten als 'Aktiv' (grün). Nach 20 Terminen mit durchschnittlich 4,6+ Sterne erhalten sie 'Verifiziert' (gold). Nach 50 Terminen mit 4,8+ Sterne erhalten sie 'Verified Premium' — und werden im Kunden-Feed priorisiert sowie mit +1,50 €/h Bonus entlohnt. Fahrer durchlaufen die gleiche dreistufige Progression auf Basis von Fahrten statt Stunden. Die Badges sind für Kunden sichtbar und dienen als Qualitäts-Signal im Matching."));
+
+content.push(H3("Care-Manager-Eskalation bei Negativ-Bewertungen"));
+content.push(P("Jede Bewertung unter 3 Sterne löst automatisch ein Ticket im Care-Manager-Backoffice aus. Der zuständige Care-Manager nimmt innerhalb von 24 Stunden Kontakt mit dem Kunden auf, klärt den Vorfall, dokumentiert die Rückmeldung und entscheidet über Konsequenzen: Vermittlungs-Pause, Schulungsgespräch oder Plattform-Ausschluss. Dieser menschliche Kontroll-Loop ist der Grund, warum wir bewusst auf vollautomatische Sperrungen verzichten — in einem Markt mit 80-jährigen Kunden kann eine einzelne Negativ-Bewertung viele legitime Ursachen haben, von Sprachbarrieren bis Tagesform."));
+
+content.push(H3("Gegenseitige Bewertung — auch Engel bewerten Kunden"));
+content.push(P("Um Reputationsrisiken symmetrisch zu verteilen, können auch Engel und Fahrer Kunden bewerten (1-5 Sterne, interne Sichtbarkeit nur für Care-Manager und Matching-Algorithmus). Kunden mit wiederholt niedrigen Engel-Bewertungen (z. B. wegen unfreundlichem Verhalten oder unrealistischen Erwartungen) werden bei der Vermittlung von neuen Terminen an erfahrene Engel mit gutem Konflikt-Management geroutet. Das schützt neue Engel und senkt die Fluktuation in den ersten 90 Tagen — eine der größten Kostenfallen im Alltagshilfe-Markt."));
 
 content.push(H2("Produktreife (Stand April 2026)"));
 content.push(P("Die Kunde-App ist produktionsreif und seit Januar 2026 im Live-Betrieb. Die Engel-App ist seit März 2026 live mit ersten registrierten Engeln. Die Fahrer-App ist implementiert und wird ab Mai 2026 mit den ersten drei Krankenfahrt-Partnern im Frankfurter Raum ausgerollt. Das Care-Manager-Backoffice (CRM für Care-Manager zur Betreuung von Kunden) ist in aktiver Entwicklung und wird im Juni 2026 live gehen."));
@@ -790,6 +808,7 @@ content.push(BulletBold("Zahlungsverzögerungen der Kassen: ", "Gegenmaßnahme: 
 content.push(H2("Regulatorische Risiken"));
 content.push(BulletBold("DSGVO-Verstoß durch Sub-Dienstleister: ", "Gegenmaßnahme: Nur EU-Auftragsverarbeiter (Supabase-EU, Vercel-EU). Jährliche DSGVO-Audits durch externe Anwaltskanzlei."));
 content.push(BulletBold("Landesrechtliche §45a-Anerkennung verzögert: ", "Gegenmaßnahme: Hessen-Anerkennung bereits läuft; NRW-Antrag parallel vorbereitet. Bei Verzögerung kann 100 % der Leistung über Kooperations-Pflegedienste abgerechnet werden (Sub-Contractor-Modell)."));
+content.push(BulletBold("Abgrenzung Alltagshilfe vs. Pflegedienst: ", "AlltagsEngel erbringt ausschließlich Alltagsbegleitung und Entlastung nach §45b SGB XI — keine Grundpflege, keine Behandlungspflege, keine SGB-V-Leistungen. Gegenmaßnahme: Klare Leistungs-Kataloge in AGB und Engel-Verträgen, Schulungs-Modul 'Grenzen der Alltagsbegleitung' für neue Engel, Eskalations-Pfad zu externen Pflegediensten wenn Kunden-Bedarf die Alltagsbegleitung übersteigt. Diese Trennung schützt vor Heimaufsichts- und Kassen-Aufsichts-Risiken."));
 
 // ═══════════════════════════════════════════════════════════════════
 // 16. EXIT & INVESTOR RETURN
