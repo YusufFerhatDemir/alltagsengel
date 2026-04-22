@@ -263,7 +263,7 @@ content.push(H2("Team"));
 content.push(P("Das Unternehmen wird als Solo-Founder-Operation von Yusuf Ferhat Demir geführt — Frankfurter mit türkisch-deutschen Wurzeln, Full-Stack-Entwickler (iOS, Android, Next.js, Supabase) und Product-Led-Founder. Die App wurde in vier Monaten von der Idee zum Live-Produkt entwickelt. Mit dem Pre-Seed werden die ersten vier Schlüssel-Hires gesetzt: Head of Operations, zwei Care-Manager, ein Growth Marketer und ein Partner-Manager."));
 
 content.push(H2("Kapitalbedarf"));
-content.push(P("AlltagsEngel sucht eine Pre-Seed-Finanzierung in Höhe von 1,0 Mio € zur Kapitalisierung der ersten 18 Monate. Die Verwendung verteilt sich auf: 40 % Team-Aufbau (Operations, Care, Growth, Partner), 30 % Marketing und Kundenakquise, 20 % geographische Expansion (Köln, Düsseldorf) und 10 % Technologie und Infrastruktur. Das Szenario erreicht den operativen Break-Even in Q2 2028 mit einem geplanten Jahresumsatz von 2,65 Mio € bei 1.900 aktiven Kunden."));
+content.push(P("AlltagsEngel sucht eine Pre-Seed-Finanzierung in Höhe von 1,0 Mio € zur Kapitalisierung der ersten 18 Monate. Die Verwendung verteilt sich auf: 38 % Team-Aufbau (vier operative Hires), 11 % Gründer-Gehalt (Yusuf F. Demir als CEO/CTO mit marktüblichen 6 T€/Monat brutto), 22 % Marketing und Kundenakquise, 11 % geographische Expansion (Köln, Düsseldorf), 6 % Technologie, 5 % Puffer sowie 7 % für betriebliche Grundausstattung (Firmenwagen für die 3-Städte-Betreuung, Co-Working-Büro FFM/Köln/Düsseldorf, Recht/Notar/Versicherung/Buchhaltung). Das Base-Case-Szenario erreicht den monatlichen operativen Break-Even in Q2 2028 bei einem geplanten Jahresumsatz von 2,65 Mio € und 1.900 aktiven Kunden."));
 
 content.push(H2("Warum jetzt"));
 content.push(P("Drei konvergierende Trends machen den Moment einzigartig: (1) Demografie — die Zahl der Pflegebedürftigen steigt bis 2030 um 24 % auf 6,5 Millionen, (2) Digitalisierung — 79 % der 65-plus Bevölkerung nutzen Smartphones (Bitkom 2025), ein historisch nie dagewesenes Niveau, und (3) Regulierung — die Pflegeversicherungsreform 2025 hat die digitale Leistungsabrechnung vereinfacht und die §45b-Obergrenze auf 131 €/Monat angehoben. AlltagsEngel ist das operative Vehikel, das diese drei Trends in einen konkreten Vertrag zwischen Kasse, Kunde und Engel übersetzt."));
@@ -692,11 +692,11 @@ const financials = [
   ["Jahresumsatz (T€)", "95", "780", "2.650"],
   ["Brutto-Marge (%)", "23 %", "30 %", "40 %"],
   ["Brutto-Marge (T€)", "22", "234", "1.060"],
-  ["Personalkosten (T€)", "180", "420", "680"],
+  ["Personalkosten inkl. Gründer (T€)", "205", "490", "770"],
   ["Marketing (T€)", "90", "210", "340"],
-  ["Operations & Tech (T€)", "35", "85", "140"],
-  ["EBITDA (T€)", "-283", "-481", "-100"],
-  ["Kumulierter Cashflow (T€)", "-283", "-764", "-864"],
+  ["Operations, Büro, Auto, Recht (T€)", "55", "115", "160"],
+  ["EBITDA (T€)", "-328", "-581", "-210"],
+  ["Kumulierter Cashflow (T€)", "-328", "-909", "-1.119"],
 ];
 content.push(TableSimple(financials, [3200, 1800, 1800, 1800]));
 
@@ -710,7 +710,7 @@ content.push(BulletBold("Marketing-Kosten: ", "CAC von 180 € wird konstant geh
 content.push(BulletBold("Break-Even: ", "Operativer Break-Even in Q2 2028 bei etwa 1.500 aktiven Kunden."));
 
 content.push(H2("Kosten-Entwicklung"));
-content.push(P("Die Kostenstruktur ist stark Personal-getrieben. 2026 werden die Kosten durch den Solo-Founder (0 € Gehalt) und die ersten 3 Hires (Head of Ops, 2 Care-Manager, Growth Marketer — Gesamt ~170 k€ im Jahr) dominiert. 2027 kommen Köln-Care-Manager, Partner-Manager und ein zweiter Growth Marketer dazu; die Team-Größe wächst auf 8. 2028 wird Düsseldorf-Care-Manager hinzugefügt sowie zwei weitere Engineering-Positionen für die Skalierung."));
+content.push(P("Die Kostenstruktur ist stark Personal-getrieben. 2026 werden die Kosten dominiert durch den Gründer (Yusuf F. Demir, 6 T€/Monat brutto ab Q2 2026) und die ersten drei operativen Hires (Care-Manager 1 ab Q2, Head of Ops und Growth Marketer ab Q3) — zusammen ~205 T€ Personalkosten im Launch-Jahr. 2027 kommen ein zweiter Care-Manager (Köln, Q1), ein Partner-Manager (Q3) sowie ein zweiter Growth Marketer dazu; die Team-Größe wächst auf 7 Mitarbeiter plus Gründer (~490 T€). 2028 wird Düsseldorf-Care-Manager hinzugefügt sowie zwei weitere Engineering-Positionen für die Skalierung (~770 T€ inkl. moderate Gründergehalt-Anpassung auf 6,5 T€/Monat). Nicht-Personalkosten (Büro, Firmenwagen, Recht, Versicherung, Buchhaltung) steigen parallel mit der Team-Größe und geographischen Abdeckung."));
 
 content.push(H2("Einnahme-Mix 2028"));
 content.push(P("Im Planjahr 2028 verteilt sich der Jahresumsatz von 2,65 Mio € auf die vier Streams wie folgt: Alltagshilfe 1,32 Mio € (50 %), Krankenfahrten 0,66 Mio € (25 %), Pflegeboxen 0,40 Mio € (15 %), Premium-Abo 0,27 Mio € (10 %). Die Brutto-Margen-Beiträge sind: Alltagshilfe 0,30 Mio €, Krankenfahrten 0,18 Mio €, Pflegeboxen 0,12 Mio €, Premium-Abo 0,23 Mio €. Premium-Abos sind der margenstärkste Einzel-Stream."));
@@ -720,15 +720,15 @@ content.push(P("Drei Szenarien für 2028:"));
 
 const sensitivity = [
   ["Szenario", "Kunden 2028", "Umsatz 2028", "EBITDA 2028"],
-  ["Konservativ (-20 %)", "1.520", "2,12 Mio €", "-260 T€"],
-  ["Base Case", "1.900", "2,65 Mio €", "-100 T€"],
-  ["Optimistisch (+25 %)", "2.375", "3,31 Mio €", "+180 T€"],
+  ["Konservativ (-20 %)", "1.520", "2,12 Mio €", "-380 T€"],
+  ["Base Case", "1.900", "2,65 Mio €", "-210 T€"],
+  ["Optimistisch (+25 %)", "2.375", "3,31 Mio €", "+80 T€"],
 ];
 content.push(TableSimple(sensitivity, [2800, 2200, 2200, 2200]));
 
 content.push(new Paragraph({ spacing: { after: 200 }, children: [new TextRun("")] }));
 
-content.push(P("Selbst im konservativen Szenario bleibt der operative Verlust 2028 unter 300 T€ — das Unternehmen erreicht in 2029 auch bei ungünstigem Verlauf EBITDA-positiv. Im optimistischen Szenario ist AlltagsEngel bereits 2028 EBITDA-positiv und benötigt keine weitere Finanzierungsrunde mehr."));
+content.push(P("Auch im konservativen Szenario bleibt der operative Jahresverlust 2028 unter 400 T€ — das Unternehmen erreicht spätestens Mitte 2029 auch bei ungünstigem Verlauf EBITDA-positiv. Im Base Case wird der monatliche operative Break-Even (Monats-EBITDA ≥ 0) in Q2 2028 erreicht; der Jahresverlust 2028 entsteht durch das noch negative erste Halbjahr. Im optimistischen Szenario ist AlltagsEngel bereits im Gesamtjahr 2028 EBITDA-positiv und benötigt keine weitere Finanzierungsrunde mehr."));
 
 // ═══════════════════════════════════════════════════════════════════
 // 13. KAPITALBEDARF
@@ -738,22 +738,47 @@ content.push(H1("13. Kapitalbedarf & Use-of-Funds"));
 content.push(H2("Pre-Seed Round 2026"));
 content.push(P("AlltagsEngel sucht eine Pre-Seed-Finanzierung in Höhe von 1,0 Mio € zur Kapitalisierung der ersten 18 Monate operativer Ausweitung. Die Finanzierungsrunde wird bevorzugt als Convertible Note mit 20 % Discount und 6 Mio € Valuation Cap strukturiert — das ist für die meisten deutschen Pre-Seed-Investoren das Standardformat und vermeidet eine aufwändige Bewertungs-Diskussion zum jetzigen Pre-Traktions-Zeitpunkt."));
 
-content.push(H2("Use-of-Funds"));
+content.push(H2("Use-of-Funds (detailliert, 18 Monate)"));
 
 const funds = [
   ["Kategorie", "Anteil", "Betrag", "Beschreibung"],
-  ["Team-Aufbau", "40 %", "400 T€", "Head of Ops, Care-Manager x2, Growth Marketer, Partner-Manager"],
-  ["Marketing & Vertrieb", "30 %", "300 T€", "Paid Social, SEO, Apotheken-Kooperationen, PR-Events"],
-  ["Geografische Expansion", "20 %", "200 T€", "Köln-Launch Q1/2027, Düsseldorf-Launch Q3/2027"],
-  ["Technologie & Infrastruktur", "10 %", "100 T€", "Engineering, Kassen-Integrationen, DSGVO-Audit"],
-  ["Gesamt", "100 %", "1.000 T€", "Runway 18 Monate"],
+  ["Team-Aufbau (4 Hires, gestaffelt)", "38 %", "380 T€", "Head of Ops, 2× Care-Manager, Growth Marketer, Partner-Manager (inkl. AG-Anteil)"],
+  ["Gründer-Gehalt (Yusuf F. Demir, CEO/CTO)", "10,8 %", "108 T€", "6 T€/Monat brutto × 18 Monate (marktüblich Pre-Seed-Founder)"],
+  ["Marketing & Vertrieb", "22 %", "220 T€", "Paid Social, SEO, Apotheken-Kooperationen, PR-Events, Content"],
+  ["Geografische Expansion", "11 %", "110 T€", "Köln-Launch Q1/2027 + Düsseldorf-Launch Q3/2027 (Setup, lokale Ops)"],
+  ["Technologie & Infrastruktur", "6 %", "60 T€", "Hosting (Vercel/Supabase), Kassen-APIs, DSGVO-Audit, Sentry"],
+  ["Recht, Notar, Versicherung, Buchhaltung", "3,2 %", "32 T€", "GmbH-Umwandlung, D&O-Police, Betriebshaftpflicht, Steuerberater"],
+  ["Büro & Co-Working", "2,2 %", "22 T€", "WeWork/Mindspace FFM + Satellit Köln/Düsseldorf"],
+  ["Firmenwagen", "1,8 %", "18 T€", "Leasing Mittelklasse + Versicherung + Sprit (3-Städte-Betreuung)"],
+  ["Puffer (Unvorhergesehenes)", "5 %", "50 T€", "Reserve für verzögerte Hires, Kassen-Verhandlung, Sonder-Audits"],
+  ["Gesamt", "100 %", "1.000 T€", "Runway 18 Monate bis Seed-Runde Q4/2027"],
 ];
-content.push(TableSimple(funds, [2400, 1200, 1200, 4200]));
+content.push(TableSimple(funds, [3400, 900, 1100, 3800]));
+
+content.push(new Paragraph({ spacing: { after: 200 }, children: [new TextRun("")] }));
+
+content.push(H2("Personal-Plan Detail (18-Monats-Staffelung)"));
+content.push(P("Die 380 T€ Team-Budget setzen sich aus fünf Positionen zusammen, gestaffelt nach Stadt-Launches und Traktion. Alle Beträge all-in inklusive Arbeitgeber-Anteil Sozialversicherung (~22 %):"));
+
+const personnel = [
+  ["Position", "Start", "Brutto/Jahr", "Laufzeit", "Kosten all-in"],
+  ["Head of Operations", "Q3 2026", "70 T€", "15 Monate", "107 T€"],
+  ["Care-Manager 1 (Frankfurt)", "Q2 2026", "48 T€", "16 Monate", "78 T€"],
+  ["Growth Marketer", "Q3 2026", "58 T€", "15 Monate", "88 T€"],
+  ["Care-Manager 2 (Köln)", "Q1 2027", "48 T€", "9 Monate", "44 T€"],
+  ["Partner-Manager (Kassen, B2B)", "Q3 2027", "60 T€", "6 Monate", "37 T€"],
+  ["Freelancer-Puffer (Recht, Design, DevOps)", "laufend", "—", "18 Monate", "26 T€"],
+  ["Team-Summe (ohne Gründer)", "", "", "", "380 T€"],
+];
+content.push(TableSimple(personnel, [2800, 1200, 1200, 1300, 1500]));
 
 content.push(new Paragraph({ spacing: { after: 200 }, children: [new TextRun("")] }));
 
 content.push(H2("Runway und nächste Finanzierungs-Runde"));
-content.push(P("Mit 1,0 Mio € und einer durchschnittlichen monatlichen Burn-Rate von 55 T€ (steigend von 35 T€ in Q2/2026 auf 75 T€ Ende 2027) beträgt die Laufzeit 18 Monate. Die nächste Finanzierungs-Runde (Seed, Zielvolumen 3–5 Mio €) ist für Q4/2027 geplant, sobald die drei Städte live sind und 1.500+ aktive Kunden existieren — das entspricht einer Annual Recurring Revenue von ~6 Mio €."));
+content.push(P("Mit 1,0 Mio € und einer durchschnittlichen monatlichen Burn-Rate von 56 T€ (steigend von 38 T€ in Q2/2026 auf 78 T€ Ende 2027) beträgt die Laufzeit 18 Monate. Die nächste Finanzierungs-Runde (Seed, Zielvolumen 3–5 Mio €) ist für Q4/2027 geplant, sobald die drei Städte live sind und 1.500+ aktive Kunden existieren — das entspricht einer Annual Recurring Revenue von ~6 Mio €."));
+
+content.push(H2("Worauf Investoren bei diesem Use-of-Funds achten sollten"));
+content.push(P("Die Struktur ist bewusst transparent aufgestellt: Gründer-Gehalt, Firmenwagen und Büro sind eigene, sichtbare Positionen — kein versteckter Kostenblock in einer Sammelkategorie. Das Gründer-Gehalt von 6.000 € brutto/Monat ist marktüblich für deutsche Pre-Seed-Solo-Founder (Bundesverband Deutsche Startups 2024: median 5.500–6.500 €) und hält den Founder operativ fokussiert statt durch Nebeneinkünfte abgelenkt. Der Firmenwagen ist kein Luxus, sondern operative Notwendigkeit für die geplante 3-Städte-Abdeckung (Frankfurt, Köln, Düsseldorf) bei Partnerterminen mit Sanitätshäusern, Apotheken und Krankenkassen. Recht/Notar/Versicherung enthält die anstehende Umwandlung UG → GmbH, die spätestens bei Seed-Runde Q4/2027 erforderlich wird."));
 
 content.push(H2("Meilensteine bis zur Seed-Runde"));
 content.push(NumItem("Q2 2026: Pre-Seed-Closing, erste Hires, Kassen-Verträge mit AOK und Barmer unterzeichnet."));

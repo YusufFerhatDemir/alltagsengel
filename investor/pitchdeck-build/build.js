@@ -1187,39 +1187,46 @@ async function main() {
       fontFace: FONT_B, fontSize: 16, color: GOLD_LT, charSpacing: 2, margin: 0
     });
 
-    // Use of funds — 4 buckets
-    const useY = 3.95;
+    // Use of funds — 5 Hauptbuckets
+    const useY = 3.80;
     const uses = [
-      { pct: 40, lbl: "Team-Aufbau",      desc: "Ops, Care, Growth, Partner", ic: ic.users },
-      { pct: 30, lbl: "Marketing & CAC",  desc: "Paid Social, TV-regional, SEO", ic: ic.chart },
-      { pct: 20, lbl: "Expansion NRW",    desc: "Köln + Düsseldorf Launches", ic: ic.map },
-      { pct: 10, lbl: "Technologie & Ops",desc: "Abrechnungs-Engine, KI-Matching", ic: ic.cogs },
+      { pct: "38 %", lbl: "Team (4 Hires)",    desc: "Head of Ops, 2× Care-Mgr, Growth, Partner", ic: ic.users },
+      { pct: "22 %", lbl: "Marketing & CAC",   desc: "Paid Social, SEO, Apotheken, PR",            ic: ic.chart },
+      { pct: "11 %", lbl: "Gründer-Gehalt",    desc: "Yusuf F. Demir, CEO/CTO · 6 T€/Mon brutto",  ic: ic.crown },
+      { pct: "11 %", lbl: "Expansion NRW",     desc: "Köln Q1/27 + Düsseldorf Q3/27",              ic: ic.map },
+      { pct: "18 %", lbl: "Ops, Tech, Setup",  desc: "Tech · Büro · Auto · Recht · Puffer",        ic: ic.cogs },
     ];
+    const gap = 0.15;
+    const wBox = (12.4 - 4 * gap) / 5; // = 2.36
     uses.forEach((u, i) => {
-      const x = 0.8 + i * 3.12;
-      const w = 2.9;
+      const x = 0.8 + i * (wBox + gap);
       s.addShape(pres.shapes.RECTANGLE, {
-        x, y: useY, w, h: 2.3,
+        x, y: useY, w: wBox, h: 2.15,
         fill: { color: COAL_2 }, line: { color: GOLD, width: 0.75 }
       });
-      s.addImage({ data: u.ic, x: x + w/2 - 0.3, y: useY + 0.3, w: 0.6, h: 0.6 });
-      s.addText(`${u.pct} %`, {
-        x, y: useY + 1.0, w, h: 0.6,
-        fontFace: FONT_H, fontSize: 34, color: GOLD, bold: true, align: "center", margin: 0
+      s.addImage({ data: u.ic, x: x + wBox/2 - 0.26, y: useY + 0.22, w: 0.52, h: 0.52 });
+      s.addText(u.pct, {
+        x, y: useY + 0.85, w: wBox, h: 0.55,
+        fontFace: FONT_H, fontSize: 28, color: GOLD, bold: true, align: "center", margin: 0
       });
       s.addText(u.lbl, {
-        x: x + 0.15, y: useY + 1.62, w: w - 0.3, h: 0.35,
-        fontFace: FONT_B, fontSize: 12, color: CREAM, bold: true, align: "center", margin: 0
+        x: x + 0.08, y: useY + 1.42, w: wBox - 0.16, h: 0.32,
+        fontFace: FONT_B, fontSize: 11, color: CREAM, bold: true, align: "center", margin: 0
       });
       s.addText(u.desc, {
-        x: x + 0.15, y: useY + 1.93, w: w - 0.3, h: 0.35,
-        fontFace: FONT_B, fontSize: 10, color: MUTED, align: "center", margin: 0
+        x: x + 0.08, y: useY + 1.72, w: wBox - 0.16, h: 0.4,
+        fontFace: FONT_B, fontSize: 8.5, color: MUTED, align: "center", margin: 0
       });
     });
 
+    // Detail-Zeile: Ops, Tech, Setup aufgeschlüsselt
+    s.addText("Detail Ops-Bucket:  Tech & Infrastruktur 6,0 %  ·  Recht/Notar/Versicherung 3,2 %  ·  Büro & Co-Working 2,2 %  ·  Firmenwagen 1,8 %  ·  Puffer 5,0 %",
+      { x: 0.8, y: 6.10, w: 12.4, h: 0.35,
+        fontFace: FONT_B, fontSize: 9.5, color: GOLD_LT, align: "center", italic: false, margin: 0 });
+
     // Milestones after funding
     s.addText("Nach Seed: 1.900 Kunden · 2,6 Mio € Umsatz · Break-Even Q2/2028 · Series-A ready",
-      { x: 0.8, y: 6.7, w: 12, h: 0.4,
+      { x: 0.8, y: 6.55, w: 12, h: 0.4,
         fontFace: FONT_B, fontSize: 12, color: GOLD_LT, charSpacing: 2, margin: 0 });
 
     addBrandLogo(s);
