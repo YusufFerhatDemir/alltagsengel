@@ -2278,3 +2278,98 @@ Dieser Lauf erfolgte automatisch im Rahmen des täglichen Social-Media-Scheduler
 
 **Nächster Post:** Di 21.04.2026 — IG Reel / TT / FB — Grafik + Video Dual-Post "MeinAlltagsEngel Challenge" — 10:00 DE / 11:00 TR
 
+---
+
+## 29.04.2026 (Mi, real) — Calendar-Slot "Di 29.04 / Woche 3" — Reel Video #11 "Einkaufen beide lachen"
+
+**Status:** ⚠️ **NICHT veröffentlicht** — Browser-Automation kann nativen File-Picker nicht bedienen. Manueller Upload erforderlich.
+**Plattform laut Plan:** Instagram Reel + TikTok + Facebook Reel
+**Geplante Uhrzeit:** 18:00 CEST (DE) / 19:00 CEST (TR — separater Post, 1h später)
+**Asset:** `marketing/social-media-grafiken/neue-kampagne-2/REEL-video11.mp4` (278 KB — vorhanden ✅, gemappt aus Original `23-39-04.mov`, 480×480)
+**Content-Calendar-Referenz:** Row 20, Sheet "Content Calendar", Datei `AlltagsEngel-ContentCalendar-4Wochen.xlsx`
+
+### Kalender-Diskrepanz-Hinweis (carry-over aus 20.04)
+
+Der Content Calendar verwendet Wochentags-Labels aus 2025 (wo 14.04 ein Mo war), während die realen Datum-Labels 2026 sind. Heute ist real **Mittwoch 29.04.2026**, im Kalender aber als "Di 29.04, Woche 3" geführt. Der Scheduler folgt der **Datum-Logik** des Kalenders, nicht dem realen Wochentag — daher der Reel-Slot "Di 29.04" wird heute behandelt.
+
+### Caption (DE) — 18:00 Uhr
+
+```
+Ein Engel trägt mit. 💛
+
+Einkaufen, Alltag, Lächeln — zusammen geht alles leichter.
+
+131 Euro/Monat über §45b Entlastungsbetrag.
+Du zahlst nichts — die Pflegekasse übernimmt.
+
+📱 www.alltagsengel.care
+✉️ info@alltagsengel.care
+
+#AlltagsEngel #Alltagsbegleitung #Frankfurt #Pflege #Seniorenhilfe #Pflegekasse #Entlastungsbetrag #FrankfurtAmMain #Senioren #§45b #Einkaufen #Lächeln #Hilfe #Zusammen #Einkaufsbegleitung #Pflegegrad #Seniorenbetreuung
+```
+
+### Caption (TR) — 19:00 Uhr (separater Post)
+
+```
+Bir melek taşıyor. 💛
+
+Alışveriş, günlük hayat, gülümsemek — birlikte her şey daha kolay.
+
+Aylık 131 Euro §45b rahatlatma ödeneği üzerinden.
+Sen hiçbir şey ödemiyorsun — bakım sigortası karşılıyor.
+
+📱 www.alltagsengel.care
+✉️ info@alltagsengel.care
+
+#AlltagsEngel #Frankfurt #YaşlıBakımı #TürklerFrankfurt #Bakım #BakımSigortası #Alışveriş #GünlükRefakat #Gülümseme #Yaşlılar #Birlikte #Entlastungsbetrag
+```
+
+### Was der Scheduler heute getan hat
+
+1. ✅ Content Calendar gelesen → Row 20 = Reel Video #11 "Einkaufen beide lachen" identifiziert
+2. ✅ Asset-Lookup im Video-Mapping-Sheet → Original `23-39-04.mov` ↔ exportiert als `REEL-video11.mp4` in `neue-kampagne-2/`
+3. ✅ Asset-Existenz verifiziert (278 KB, vorhanden)
+4. ✅ Captions DE + TR aus Calendar entnommen, mit Standard-Hashtag-Set aus Skill-Datei zusammengeführt
+5. ✅ Meta Business Suite (business.facebook.com) im Chrome geöffnet — eingeloggt als Page "AlltagsEngel"
+6. ✅ Reel-Composer geöffnet (`/latest/reels_composer/`)
+7. ❌ Datei-Upload **nicht möglich**: Button "Video hinzufügen" triggert dynamisch nativen OS-File-Picker, kein DOM-`input[type=file]` im Voraus vorhanden → Browser-Automation kann Datei nicht reichen
+8. ⚠️ TikTok Creator Center **nicht versucht** — gleiches File-Picker-Problem zu erwarten + historische CSP-Fehler im Log (siehe 13.03.2026 TikTok-Eintrag)
+9. ✅ Composer-Dialog sauber abgebrochen (keine Halb-Drafts hinterlassen)
+10. ✅ POST-LOG-Eintrag mit allen Captions + Asset-Referenz dokumentiert
+
+### Befund: Instagram-Verknüpfung
+
+Auf der Meta-Business-Suite-Startseite wird der Link "**Instagram verknüpfen**" angezeigt — d.h. die Instagram-Seite ist aktuell **NICHT mit dem Business-Portfolio verbunden**. Selbst bei manuellem Upload würde der Reel-Composer aktuell nur auf Facebook posten, nicht auf Instagram. Yusuf sollte das einmalig in den Einstellungen verbinden, dann reicht ein Upload für FB+IG gleichzeitig.
+
+### Manuelle Posting-Anleitung (Yusuf)
+
+**Facebook Reel (Meta Business Suite):**
+1. business.facebook.com öffnen → Page "AlltagsEngel" auswählen
+2. "Reel erstellen" klicken
+3. "Video hinzufügen" → `marketing/social-media-grafiken/neue-kampagne-2/REEL-video11.mp4` auswählen
+4. Caption DE oben einfügen
+5. Veröffentlichen oder auf 18:00 Uhr planen
+
+**Instagram Reel (Instagram App / Creator Studio):**
+- Optimal: vorher Instagram-Account in Meta Business Suite verknüpfen, dann beim Reel-Erstellen "Auch auf Instagram teilen" anhaken
+- Alternativ: Direkt Instagram-App → Reel hochladen → Caption DE einfügen
+
+**TikTok:**
+1. tiktok.com/upload (eingeloggt als @alltagsengel)
+2. Video hochladen
+3. Caption DE einfügen (TikTok-Limit beachten: ggf. Hashtags trimmen)
+4. Veröffentlichen
+
+**TR-Version (19:00 Uhr):**
+- 1 Stunde nach DE-Post separat posten (gleicher Workflow, TR-Caption)
+
+### Offene To-dos / Carry-over
+
+- [ ] **Computer-Use für Cowork aktivieren** (oder dedizierte Meta/TikTok-MCP installieren) — solange muss der finale Datei-Upload manuell erfolgen. Browser-Automation deckt nur Caption-Befüllung + Planungs-UI ab, nicht den nativen File-Picker.
+- [ ] **Instagram mit Meta Business Suite verknüpfen** — einmaliger Schritt in den Einstellungen, danach kann ein Reel-Upload direkt auf FB+IG veröffentlicht werden.
+- [ ] **POST-LOG-Lücken 21.04 – 28.04**: Im Log fehlen Einträge für die Kalendertage Di 21.04 (Challenge-Launch) bis Mo 28.04 (Challenge-Reminder). Bitte prüfen, ob Scheduler-Läufe an diesen Tagen stattfanden — falls ja, ggf. nachdokumentieren; falls nein, Coverage des Schedulers prüfen.
+- [ ] **Carry-over aus 20.04**: Video-Archiv (`23-36-25.mov`, `23-38-21.mov` etc.) konsolidieren; Video #5 "Markt Frankfurt Rollator" für Fr 18.04 nachholen oder als verfallen markieren.
+
+**Nächster geplanter Post (laut Calendar Row 21):** Mi 30.04 — Grafik `W3-MI-recruiting.png` (Recruiting / Engel werden) — Zeit laut Calendar prüfen
+
+
