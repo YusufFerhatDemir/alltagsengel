@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import InlineSignupForm from '@/components/InlineSignupForm'
 
 /* ──────────────────────────────────────────────
    Platform-specific landing page content
@@ -132,9 +133,13 @@ export default async function LandingPage({ params }: Props) {
           </div>
           <h1 style={styles.h1}>{data.headline}</h1>
           <p style={styles.subline}>{data.subline}</p>
-          <Link href={`/choose?utm_source=${source}&utm_medium=ad&utm_campaign=coming_soon`}>
-            <button style={styles.ctaBtn}>{data.cta}</button>
-          </Link>
+
+          {/* ═══ DIREKT-ANMELDE-FORMULAR (kein /choose-Umweg!) ═══ */}
+          <InlineSignupForm
+            utmSource={source}
+            ctaLabel={data.cta}
+            variant="light"
+          />
           <p style={styles.ctaSub}>{data.ctaSub}</p>
         </div>
       </header>
@@ -205,16 +210,20 @@ export default async function LandingPage({ params }: Props) {
         </p>
       </section>
 
-      {/* Final CTA */}
+      {/* Final CTA mit Form (kein /choose-Umweg) */}
       <section style={styles.finalCta}>
         <h2 style={{...styles.h2, color: '#1A1612'}}>Bereit loszulegen?</h2>
-        <p style={{...styles.desc, color: '#1A1612', opacity: 0.8}}>
-          Registrieren Sie sich kostenlos und finden Sie Ihren Alltagsengel.
+        <p style={{...styles.desc, color: '#1A1612', opacity: 0.8, marginBottom: 24}}>
+          Tragen Sie Ihre Daten ein — wir melden uns binnen 24 Stunden mit einem passenden Engel-Vorschlag.
         </p>
-        <Link href={`/choose?utm_source=${source}&utm_medium=ad&utm_campaign=coming_soon`}>
-          <button style={styles.ctaBtnDark}>{data.cta}</button>
-        </Link>
-        <div style={styles.contactRow}>
+
+        <InlineSignupForm
+          utmSource={source}
+          ctaLabel={data.cta}
+          variant="dark"
+        />
+
+        <div style={{...styles.contactRow, marginTop: 28}}>
           <a href="mailto:info@alltagsengel.care" style={styles.contactLink}>
             ✉️ info@alltagsengel.care
           </a>
