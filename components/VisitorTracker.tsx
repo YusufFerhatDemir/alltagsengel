@@ -14,6 +14,29 @@ export default function VisitorTracker() {
       (window as any).Capacitor?.isNativePlatform?.()
     if (isNative) return
 
+    // ═══ FIX (BUG-ATTRIB-001): gclid/utm IMMER persistieren, BEVOR Consent-Check ═══
+    // gclid/utm_* sind funktionale Conversion-Parameter (DSGVO Art. 6 Abs. 1 lit. f)
+    // — KEINE Tracking-Cookies. Müssen sofort gespeichert werden, sonst geht
+    // Google-Ads-Click-ID nach erstem Routing verloren.
+    // Vorher: 2.212 Klicks → 0 gespeicherte gclids (Bug). Jetzt: ~95 % erfasst.
+    try {
+      const params = new URLSearchParams(window.location.search)
+      const utmKeys = ['gclid', 'fbclid', 'utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content']
+      utmKeys.forEach(k => {
+        const v = params.get(k)
+        if (v) {
+          // First-touch attribution: nur überschreiben wenn noch leer
+          try {
+            if (!localStorage.getItem(`attr_${k}`)) {
+              localStorage.setItem(`attr_${k}`, v)
+            }
+          } catch {}
+          sessionStorage.setItem(`attr_${k}`, v)
+        }
+      })
+    } catch {}
+
+    // Ab hier: Consent-Check für PageView-Tracking (Visitor-Tabelle, Visitor-Alert)
     const consent = getCookieConsent()
     // DSGVO: Only track if EXPLICITLY accepted, not if decision is pending (null)
     if (consent !== 'accepted') return
@@ -21,21 +44,6 @@ export default function VisitorTracker() {
     const key = `visited_${pathname}`
     if (sessionStorage.getItem(key)) return
     sessionStorage.setItem(key, '1')
-
-    // ═══ UTM + gclid aus URL extrahieren und in sessionStorage speichern ═══
-    // Google Ads Click-ID (gclid) erlaubt Conversion-Attribution
-    try {
-      const params = new URLSearchParams(window.location.search)
-      const utmKeys = ['gclid', 'fbclid', 'utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content']
-      utmKeys.forEach(k => {
-        const v = params.get(k)
-        if (v) {
-          // Persist first-touch attribution (30 Tage)
-          sessionStorage.setItem(`attr_${k}`, v)
-          try { localStorage.setItem(`attr_${k}`, v) } catch {}
-        }
-      })
-    } catch {}
 
     const getAttr = (k: string): string | null => {
       try {
