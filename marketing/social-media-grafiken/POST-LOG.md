@@ -2372,4 +2372,26 @@ Auf der Meta-Business-Suite-Startseite wird der Link "**Instagram verknüpfen**"
 
 **Nächster geplanter Post (laut Calendar Row 21):** Mi 30.04 — Grafik `W3-MI-recruiting.png` (Recruiting / Engel werden) — Zeit laut Calendar prüfen
 
+---
+
+## 29.04.2026 — Follow-Up-Lauf (zweiter Scheduler-Trigger am selben Tag)
+
+**Status:** ℹ️ **Kein neuer Post — Heutiger Slot bereits vom 06:46-Lauf vollständig dokumentiert**
+**Zeit dieses Laufs:** ~09:07 CEST (07:07 UTC)
+**Vorheriger Lauf heute:** 08:46 CEST (06:46 UTC) — siehe Eintrag oben "Reel Video #11 Einkaufen beide lachen"
+
+### Was dieser Lauf geprüft hat
+
+1. ✅ POST-LOG gelesen → Eintrag für heute (Slot "Di 29.04 / Woche 3") bereits vorhanden mit vollständigen DE+TR-Captions und Asset-Verweis auf `REEL-video11.mp4`
+2. ✅ Asset-Existenz erneut verifiziert:
+   - `marketing/social-media-grafiken/neue-kampagne-2/REEL-video11.mp4` → 278 KB, vorhanden ✅
+   - `marketing/social-media-grafiken/W3-MI-recruiting.png` (für morgen) → 63 KB, vorhanden ✅
+3. ⚠️ **Kein erneuter Posting-Versuch unternommen** — Browser-Automation für nativen File-Picker bleibt nicht möglich (siehe Vorlauf-Eintrag); Computer-Use-Approval erfordert User-Präsenz, der User ist jedoch nicht anwesend (automatischer Scheduler-Lauf).
+4. ✅ Keine Doppel-Dokumentation des heutigen Posts erzeugt — diese Notiz ist nur ein kurzer Audit-Eintrag.
+
+### Empfehlung an Yusuf
+
+Der heutige Reel-Post (Video #11, 18:00 CEST DE / 19:00 CEST TR) wartet weiterhin auf manuellen Upload. Captions liegen oben im Eintrag von 06:46 — kopierbereit für Meta Business Suite + TikTok.
+
+**Nächster Scheduler-Lauf:** Do 30.04.2026 — Grafik `W3-MI-recruiting.png` (Recruiting / Engel werden, Calendar Row 21).
 
