@@ -21,13 +21,18 @@ function RegisterForm() {
   const refCode = refFromUrl || (typeof document !== 'undefined'
     ? document.cookie.match(/ref_code=([^;]+)/)?.[1] || ''
     : '')
-  const [email, setEmail] = useState('')
+  // ═══ PREFILL aus Landing-Page-Form (BUG-LP-001 Fix) ═══
+  // Wenn User von /lp/[source] kommt, sind email/plz/pflegegrad bereits ausgefüllt.
+  // Spart 30+ Sekunden Tipparbeit → Conversion-Lift erwartet ~3x.
+  const [email, setEmail] = useState(searchParams.get('email') || '')
   const [password, setPassword] = useState('')
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
-  const [plz, setPlz] = useState('')
+  const [plz, setPlz] = useState(searchParams.get('plz') || '')
   const [stadt, setStadt] = useState('')
-  const [pflegegrad, setPflegegrad] = useState<number>(0)
+  const [pflegegrad, setPflegegrad] = useState<number>(
+    parseInt(searchParams.get('pflegegrad') || '0', 10) || 0
+  )
   const [homeCare, setHomeCare] = useState(true)
   const [pflegehilfsmittel, setPflegehilfsmittel] = useState(false)
   // Angehörigen-Modus
