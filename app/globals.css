@@ -2152,12 +2152,29 @@ body {
    LANDING PAGE SECTIONS
    ══════════════════════════════════════════════ */
 .lp-sections {
-  background:var(--coal); padding:0 22px;
+  background:var(--coal);
+  padding:0 22px;
   position:relative; z-index:2;
+  /* FIX-LP-LAYOUT-001: Sektionen müssen im Phone-Rahmen bleiben.
+     Vorher konnten Texte/Boxen seitlich überlaufen, weil weder
+     box-sizing noch overflow-x gesetzt waren. */
+  width:100%;
+  max-width:100%;
+  box-sizing:border-box;
+  overflow-x:hidden;
 }
 .lp-section {
   padding:36px 0 28px;
   border-top:1px solid var(--border);
+  width:100%;
+  max-width:100%;
+  box-sizing:border-box;
+}
+.lp-h2, .lp-text, .lp-badge {
+  max-width:100%;
+  word-wrap:break-word;
+  overflow-wrap:break-word;
+  hyphens:auto;
 }
 .lp-badge {
   font-size:10px; font-weight:600; text-transform:uppercase;
@@ -2188,6 +2205,12 @@ body {
 }
 .lp-value-item p {
   font-size:12px; color:rgba(255,255,255,.35); font-weight:300; line-height:1.5;
+}
+/* FIX-LP-LAYOUT-001: alle direkten Kinder von .lp-section
+   können nicht breiter werden als der Phone-Rahmen. */
+.lp-section > * {
+  max-width:100%;
+  box-sizing:border-box;
 }
 .lp-services {
   display:flex; flex-direction:column; gap:12px; margin-top:18px;
