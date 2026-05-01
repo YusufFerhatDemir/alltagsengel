@@ -2395,3 +2395,99 @@ Der heutige Reel-Post (Video #11, 18:00 CEST DE / 19:00 CEST TR) wartet weiterhi
 
 **Nächster Scheduler-Lauf:** Do 30.04.2026 — Grafik `W3-MI-recruiting.png` (Recruiting / Engel werden, Calendar Row 21).
 
+---
+
+## 01.05.2026 (Fr, real) — Calendar-Slot "Do 01.05 / Woche 3" — Reel Video #13 "Café Kaffee anstoßen"
+
+**Status:** ⚠️ **NICHT veröffentlicht** — Browser-Automation kann nativen File-Picker weiterhin nicht bedienen; Computer-Use-Approval erfordert User-Präsenz, der User ist beim automatischen Scheduler-Lauf nicht anwesend. Manueller Upload erforderlich.
+**Zeit dieses Laufs:** ~09:08 CEST (07:08 UTC), Fr 01.05.2026
+**Plattform laut Plan:** Instagram Reel + TikTok + Facebook Reel
+**Geplante Uhrzeit laut Calendar:** 10:00 CEST (DE) / 11:00 CEST (TR — separater Post, 1h später)
+**Asset:** `marketing/social-media-grafiken/neue-kampagne-2/REEL-video13.mp4` (106 KB — vorhanden ✅, gemappt aus Original `23-39-18.mov`, Café/Kaffee/älterer Mann, 562×848)
+**Content-Calendar-Referenz:** Sheet "Content Calendar", Row "Do 01.05" (Calendar `AlltagsEngel-ContentCalendar-4Wochen.xlsx`)
+
+### Kalender-Diskrepanz-Hinweis (carry-over)
+
+Wie schon im 29.04-Eintrag dokumentiert: Der Content Calendar nutzt 2025-Wochentags-Labels, während die realen Daten in 2026 liegen. Heute ist real **Freitag 01.05.2026**, im Kalender als "Do 01.05" geführt. Der Scheduler folgt der **Datum-Logik** des Kalenders, nicht dem realen Wochentag — daher wird der Slot "Do 01.05 / Video #13" heute behandelt.
+
+### Caption (DE) — 10:00 Uhr CEST
+
+```
+Ein Kaffee, ein Lächeln — manchmal ist das alles. ☕💛
+
+Alltagsbegleitung heißt auch: gemeinsam genießen.
+
+131 Euro/Monat über §45b Entlastungsbetrag.
+Du zahlst nichts — die Pflegekasse übernimmt.
+
+📱 www.alltagsengel.care
+✉️ info@alltagsengel.care
+
+#Kaffee #Café #Frankfurt #Begleitung #Alltagsengel #Genuss #Senioren #GemeinsameZeit #AlltagsEngel #Alltagsbegleitung #Pflege #Seniorenhilfe #Pflegekasse #Entlastungsbetrag #FrankfurtAmMain #§45b
+```
+
+### Caption (TR) — 11:00 Uhr CEST (separater Post)
+
+```
+Bir kahve, bir gülümseme — bazen hepsi bu. ☕💛
+
+Günlük refakat demek: birlikte keyfini çıkarmak.
+
+Aylık 131 Euro §45b rahatlatma ödeneği üzerinden.
+Sen hiçbir şey ödemiyorsun — bakım sigortası karşılıyor.
+
+📱 www.alltagsengel.care
+✉️ info@alltagsengel.care
+
+#Kahve #Kafe #Frankfurt #Refakat #Alltagsengel #Keyif #Yaşlılar #BirlikteZaman #AlltagsEngel #YaşlıBakımı #TürklerFrankfurt #Bakım #BakımSigortası
+```
+
+### Was der Scheduler heute getan hat
+
+1. ✅ Content Calendar gelesen → "Do 01.05" Row identifiziert: Reel Video #13 "Café Kaffee anstoßen"
+2. ✅ Asset-Lookup im Video-Mapping-Sheet → Original `23-39-18.mov` ↔ exportiert als `REEL-video13.mp4` in `neue-kampagne-2/`
+3. ✅ Asset-Existenz verifiziert (106 KB, vorhanden, 562×848)
+4. ✅ Captions DE + TR aus Calendar entnommen, mit Standard-Hashtag-Set aus Skill-Datei zusammengeführt
+5. ⚠️ **Kein Posting-Versuch unternommen** — historisch (siehe 29.04-Eintrag) ist der native File-Picker per Browser-Automation nicht ansprechbar; Computer-Use-Approval erfordert anwesenden User, automatischer Scheduler-Lauf ohne User-Präsenz.
+6. ✅ POST-LOG-Eintrag mit allen Captions + Asset-Referenz dokumentiert
+
+### Lücken-Hinweis 30.04.2026
+
+Im POST-LOG fehlt ein Eintrag für **Mi 30.04.2026** (Calendar-Slot "Mi 30.04 / Woche 3" — Grafik `W3-MI-recruiting.png`, Recruiting / Engel werden). Es ist unklar, ob der Scheduler an diesem Tag gelaufen ist. Yusuf sollte:
+- Entweder den 30.04-Recruiting-Post manuell nachholen (Asset vorhanden in `marketing/social-media-grafiken/W3-MI-recruiting.png`, 63 KB)
+- Oder als verfallen markieren
+
+Die Lücke vom 21.–28.04 (vorher dokumentiert im 29.04-Eintrag) ist weiterhin offen.
+
+### Manuelle Posting-Anleitung (Yusuf) — heute Fr 01.05
+
+**Facebook Reel (Meta Business Suite):**
+1. business.facebook.com öffnen → Page "AlltagsEngel" auswählen
+2. "Reel erstellen" klicken
+3. "Video hinzufügen" → `marketing/social-media-grafiken/neue-kampagne-2/REEL-video13.mp4` auswählen
+4. Caption DE oben einfügen
+5. Veröffentlichen oder auf 10:00 Uhr planen
+
+**Instagram Reel:**
+- Optimal: Instagram-Account in Meta Business Suite verknüpfen (siehe 29.04-Befund), dann beim Reel-Erstellen "Auch auf Instagram teilen" anhaken
+- Alternativ: Direkt Instagram-App → Reel hochladen → Caption DE einfügen
+
+**TikTok:**
+1. tiktok.com/upload (eingeloggt als @alltagsengel)
+2. Video hochladen
+3. Caption DE einfügen (TikTok-Limit beachten: ggf. Hashtags trimmen)
+4. Veröffentlichen
+
+**TR-Version (11:00 Uhr CEST):**
+- 1 Stunde nach DE-Post separat posten (gleicher Workflow, TR-Caption)
+
+### Offene To-dos / Carry-over
+
+- [ ] **Computer-Use für Cowork aktivieren** (oder dedizierte Meta/TikTok-MCP installieren) — solange muss der finale Datei-Upload manuell erfolgen.
+- [ ] **Instagram mit Meta Business Suite verknüpfen** — einmaliger Schritt, danach FB+IG aus einem Reel-Upload.
+- [ ] **POST-LOG-Lücken**: 21.04–28.04 sowie 30.04 — nachdokumentieren oder als verfallen markieren.
+- [ ] **Carry-over aus 20.04**: Video-Archiv konsolidieren; Video #5 "Markt Frankfurt Rollator" für Fr 18.04 nachholen oder als verfallen markieren.
+
+**Nächster geplanter Post (laut Calendar):** Fr 02.05 — Reel Video #10 "Skyline Spaziergang" (Original `23-38-35.mov`), 11:00 CEST DE / 12:00 CEST TR
+⚠️ **Asset-Warnung:** `REEL-video10.mp4` ist im `neue-kampagne-2/`-Ordner **NICHT vorhanden** (nur Video11–16 exportiert). Yusuf muss das Original `23-38-35.mov` exportieren oder ein alternatives Skyline-Asset wählen, bevor der morgige Slot bedient werden kann.
+
