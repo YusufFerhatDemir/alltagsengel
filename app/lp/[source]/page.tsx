@@ -128,7 +128,18 @@ export default async function LandingPage({ params }: Props) {
       <header style={styles.hero}>
         <div style={styles.heroInner}>
           <div style={styles.logoRow}>
-            <div style={styles.halo}>😇</div>
+            <img
+              src="/assets/icon.jpg"
+              alt="AlltagsEngel Logo"
+              style={{
+                width: 56,
+                height: 56,
+                borderRadius: '50%',
+                objectFit: 'cover',
+                boxShadow: '0 4px 16px rgba(201,150,60,0.45)',
+                border: '2px solid rgba(201,150,60,0.6)',
+              }}
+            />
             <span style={styles.logoText}>ALLTAGSENGEL</span>
           </div>
           <h1 style={styles.h1}>{data.headline}</h1>
