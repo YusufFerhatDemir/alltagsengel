@@ -98,9 +98,16 @@ export async function middleware(request: NextRequest) {
       '/kunde/dokumente',
       '/engel/dokumente',
     ]
+    // ═══ AUTH-009 (P0): /mis und /admin sind IMMER fail-closed ═══
+    // Vorher: /mis lief fail-soft (UX-Reasoning für Profil/Chat). Resultat:
+    // nicht-authentifizierte Besucher konnten /mis-Seiten kurzzeitig sehen
+    // (bis Client-side AdminAuthGuard greift). Bei Admin-/MIS-Daten ist
+    // das ein KRITISCHES Sicherheits-Leak — niemals akzeptabel.
+    const adminPaths = ['/admin', '/mis']
     const isSensitive = sensitivePaths.some(p => pathname === p || pathname.startsWith(p + '/'))
+    const isAdminPath = adminPaths.some(p => pathname === p || pathname.startsWith(p + '/'))
 
-    if (!user && isSensitive) {
+    if (!user && (isSensitive || isAdminPath)) {
       // FAIL-CLOSED — direkt zum Login, keine Gnade.
       const url = request.nextUrl.clone()
       url.pathname = '/auth/login'
