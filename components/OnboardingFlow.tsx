@@ -24,10 +24,20 @@ export default function OnboardingFlow() {
   const [loading, setLoading] = useState(true)
   const [pflegegrad, setPflegegrad] = useState('')
   const [plz, setPlz] = useState('')
+  const [existingPflegegrad, setExistingPflegegrad] = useState('')
   const router = useRouter()
 
   useEffect(() => {
     checkOnboarding()
+  }, [])
+
+  // Re-check Onboarding bei Navigation (PopState)
+  useEffect(() => {
+    const handlePopState = () => {
+      checkOnboarding()
+    }
+    window.addEventListener('popstate', handlePopState)
+    return () => window.removeEventListener('popstate', handlePopState)
   }, [])
 
   // Modal-Event: andere UI-Elemente (z.B. WhatsApp-FAB) koennen sich ausblenden
@@ -48,9 +58,20 @@ export default function OnboardingFlow() {
 
       const { data: profile } = await supabase
         .from('profiles')
-        .select('onboarding_completed, role')
+        .select('onboarding_completed, role, pflegegrad, postal_code')
         .eq('id', user.id)
         .single()
+
+      // Pflegegrad aus Profil laden (falls bereits vorhanden)
+      if (profile?.pflegegrad) {
+        setExistingPflegegrad(String(profile.pflegegrad))
+        setPflegegrad(String(profile.pflegegrad))
+      }
+
+      // PLZ aus Profil laden
+      if (profile?.postal_code) {
+        setPlz(profile.postal_code)
+      }
 
       if (profile?.role === 'kunde' && !profile?.onboarding_completed) {
         setShow(true)
@@ -78,15 +99,7 @@ export default function OnboardingFlow() {
     setShow(false)
   }
 
-  function nextStep() {
-    if (step < steps.length - 1) {
-      setStep(step + 1)
-    } else {
-      completeOnboarding()
-    }
-  }
-
-  const steps: OnboardingStep[] = [
+  const allSteps: OnboardingStep[] = [
     {
       title: 'Willkommen bei AlltagsEngel',
       subtitle: 'Schön, dass Sie da sind!',
@@ -297,9 +310,25 @@ export default function OnboardingFlow() {
     },
   ]
 
+  // Filter: Skip Pflegegrad-Step wenn bereits ausgefüllt
+  const visibleSteps = existingPflegegrad
+    ? [allSteps[0], allSteps[2], allSteps[3]]
+    : allSteps
+
+  function nextStep() {
+    // Skip Pflegegrad-Frage (Step 1), wenn bereits vorhanden
+    if (step === 0 && existingPflegegrad) {
+      setStep(1) // Skip zu nächstem sichtbaren Step (Postleitzahl)
+    } else if (step < visibleSteps.length - 1) {
+      setStep(step + 1)
+    } else {
+      completeOnboarding()
+    }
+  }
+
   if (loading || !show) return null
 
-  const currentStep = steps[step]
+  const currentStep = visibleSteps[step]
 
   return (
     <div style={{
@@ -356,12 +385,13 @@ export default function OnboardingFlow() {
         width: '100%',
         maxWidth: 420,
         maxHeight: '85vh',
-        overflow: 'auto',
+        display: 'flex',
+        flexDirection: 'column',
         animation: 'slideUp 0.4s ease-out',
       }}>
         {/* Progress dots */}
-        <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginBottom: 28 }}>
-          {steps.map((_, i) => (
+        <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginBottom: 28, flexShrink: 0 }}>
+          {visibleSteps.map((_, i) => (
             <div key={i} style={{
               width: i === step ? 24 : 8,
               height: 8,
@@ -380,6 +410,7 @@ export default function OnboardingFlow() {
           textAlign: 'center',
           marginBottom: 4,
           lineHeight: 1.2,
+          flexShrink: 0,
         }}>
           {currentStep.title}
         </h2>
@@ -388,14 +419,17 @@ export default function OnboardingFlow() {
           fontSize: 14,
           textAlign: 'center',
           marginBottom: 20,
+          flexShrink: 0,
         }}>
           {currentStep.subtitle}
         </p>
 
-        {/* Content */}
-        {currentStep.content}
+        {/* Content — scrollbar */}
+        <div style={{ overflowY: 'auto', flex: 1, marginBottom: 20 }}>
+          {currentStep.content}
+        </div>
 
-        {/* CTA Button */}
+        {/* CTA Button — sticky */}
         <button
           onClick={nextStep}
           style={{
@@ -408,15 +442,15 @@ export default function OnboardingFlow() {
             fontSize: 17,
             fontWeight: 700,
             cursor: 'pointer',
-            marginTop: 20,
             transition: 'transform 0.2s',
+            flexShrink: 0,
           }}
         >
           {currentStep.cta}
         </button>
 
         {/* Skip button */}
-        {step < steps.length - 1 && (
+        {step < visibleSteps.length - 1 && (
           <button
             onClick={completeOnboarding}
             style={{
@@ -429,6 +463,7 @@ export default function OnboardingFlow() {
               fontSize: 14,
               cursor: 'pointer',
               marginTop: 8,
+              flexShrink: 0,
             }}
           >
             Überspringen
