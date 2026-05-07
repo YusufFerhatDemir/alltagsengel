@@ -2491,3 +2491,285 @@ Die Lücke vom 21.–28.04 (vorher dokumentiert im 29.04-Eintrag) ist weiterhin 
 **Nächster geplanter Post (laut Calendar):** Fr 02.05 — Reel Video #10 "Skyline Spaziergang" (Original `23-38-35.mov`), 11:00 CEST DE / 12:00 CEST TR
 ⚠️ **Asset-Warnung:** `REEL-video10.mp4` ist im `neue-kampagne-2/`-Ordner **NICHT vorhanden** (nur Video11–16 exportiert). Yusuf muss das Original `23-38-35.mov` exportieren oder ein alternatives Skyline-Asset wählen, bevor der morgige Slot bedient werden kann.
 
+### Git-Hinweis (heutiger Lauf)
+
+Dieser POST-LOG-Eintrag konnte vom Scheduler **nicht automatisch committed werden**:
+
+- `npm install` im Pre-Commit-Hook lief in `ENOSPC: no space left on device` (Sandbox-Disk voll), Hook brach mit "Commit blockiert" ab — obwohl ein manueller `grep "GmbH"` über die Datei 0 Treffer ergab.
+- Der fehlgeschlagene Commit-Versuch hinterließ `.git/index.lock`. Die Sandbox-Mount-Permissions verhindern `unlink` auf Dateien innerhalb von `.git/` (alle Versuche `rm`, `os.unlink`, Write-Tool: "Operation not permitted").
+
+**Manueller Fix für Yusuf (1 Befehl):**
+```bash
+cd ~/alltagsengel
+rm -f .git/index.lock
+git add marketing/social-media-grafiken/POST-LOG.md
+git commit -m "POST-LOG: Fr 01.05.2026 — Reel Video #13 Café Kaffee"
+git push
+```
+(Der Pre-Commit-Hook funktioniert lokal außerhalb der Sandbox normal — kein `--no-verify` nötig.)
+
+
+---
+
+## 06.05.2026 (Mi, real) — Calendar-Slot "Mi 06.05 / Woche 4" — Grafik W4-DI-131euro-v2.png "Du verschenkst 131 Euro"
+
+**Status:** ⚠️ **NICHT automatisch veröffentlicht** — Scheduler-Lauf ohne User-Präsenz; Browser-Automation kann den nativen File-Picker weiterhin nicht bedienen, Computer-Use-Approval erfordert anwesenden User. Captions + Asset stehen kopierfertig bereit, manueller Upload durch Yusuf erforderlich.
+**Zeit dieses Laufs:** ~09:25 CEST (07:25 UTC), Mi 06.05.2026
+**Plattform laut Plan:** Instagram Post + Facebook (laut Calendar) + TikTok (Skill-Anforderung)
+**Geplante Uhrzeit laut Calendar:** 12:00 CEST (DE) / 13:00 CEST (TR — separater Post, 1h später)
+**Asset:** `marketing/social-media-grafiken/W4-DI-131euro-v2.png` (54 KB — vorhanden ✅)
+**Content-Calendar-Referenz:** Sheet "Content Calendar", Row "Mi 06.05" (Calendar `AlltagsEngel-ContentCalendar-4Wochen.xlsx`), Woche 4 = "Conversion & Abschluss"
+**Content-Hook:** 131-Euro-Entlastungsbetrag-Conversion-Post mit 3-Schritt-Anleitung zur Buchung — strong-CTA-Push am Mittwoch der finalen Conversion-Woche.
+
+### Caption (DE) — 12:00 Uhr CEST (Hauptpost)
+
+```
+Du verschenkst 131 Euro pro Monat 😳
+
+Mit Alltagsengel nutzt du es in nur 3 Minuten:
+
+1️⃣ alltagsengel.care öffnen
+2️⃣ Engel buchen
+3️⃣ Pflegekasse zahlt direkt
+
+www.alltagsengel.care
+info@alltagsengel.care
+
+#131Euro #Entlastungsbetrag #Pflegegrad #Pflegekasse #Frankfurt #Alltagsengel #45b #Senioren #AlltagsEngel #Alltagsbegleitung #FrankfurtAmMain #Seniorenhilfe #§45b
+```
+
+### Caption (TR) — 13:00 Uhr CEST (separater Post)
+
+```
+Ayda 131 Euro'yu çöpe atıyorsun 😳
+
+Alltagsengel ile sadece 3 dakikada kullanabilirsin:
+
+1️⃣ alltagsengel.care aç
+2️⃣ Melek rezerve et
+3️⃣ Bakım sigortası direkt öder
+
+www.alltagsengel.care
+info@alltagsengel.care
+
+#131Euro #RahatlatmaÖdeneği #BakımDerecesi #BakımSigortası #Frankfurt #Alltagsengel #YaşlıBakımı #TürklerFrankfurt #Bakım
+```
+
+### TikTok-Caption (gekürzt, falls Yusuf TikTok-Slot bedient)
+
+DE:
+```
+131€/Monat einfach verschenken? 😳 Mit Alltagsengel buchst du in 3 Schritten — Pflegekasse zahlt direkt. 📍 alltagsengel.care #131Euro #Entlastungsbetrag #Frankfurt #Alltagsengel #Pflege #FYP
+```
+
+TR:
+```
+Ayda 131€'yu çöpe atma 😳 Alltagsengel ile 3 dakikada — bakım sigortası öder. 📍 alltagsengel.care #131Euro #Frankfurt #Alltagsengel #YaşlıBakımı #FYP
+```
+
+### Was der Scheduler heute getan hat
+
+1. ✅ Content Calendar gelesen → Row "Mi 06.05" identifiziert (IG Post / FB · Grafik · 12:00 DE / 13:00 TR · Asset W4-DI-131euro-v2.png).
+2. ✅ Asset-Existenz verifiziert: `W4-DI-131euro-v2.png` vorhanden, 54 KB.
+3. ✅ Captions DE + TR direkt aus Calendar-Spalten entnommen (verbatim) und mit Standard-Hashtag-Set aus Skill-Datei harmonisiert.
+4. ✅ TikTok-Kurzcaptions DE/TR generiert (TikTok-Hashtag-Limit beachtet).
+5. ⚠️ **Kein Posting-Versuch unternommen** — historisch (siehe 29.04- und 01.05-Eintrag) ist der native File-Picker per Browser-Automation nicht ansprechbar; Computer-Use-Approval erfordert anwesenden User; aktueller Lauf ist Scheduler ohne User-Präsenz.
+6. ✅ POST-LOG-Eintrag mit allen Captions + Asset-Referenz dokumentiert.
+
+### Lücken-Hinweis: 02.05 – 05.05.2026 (offen)
+
+Im POST-LOG fehlen Einträge für **5 Kalender-Slots** zwischen dem letzten Eintrag (Fr 01.05) und heute:
+
+| Datum | Calendar-Slot | Asset | Asset vorhanden? |
+|-------|--------------|-------|------------------|
+| Sa 02.05 | "Fr 02.05" — Reel Video #10 "Skyline Spaziergang" | `neue-kampagne-2/REEL-video10.mp4` | ❌ FEHLT (siehe 01.05-Warnung) |
+| So 03.05 | (laut Calendar Wochenende — vermutlich Ruhetag oder Carry-over-Reel) | tbd | tbd |
+| Mo 04.05 | "Mo 04.05" — Woche 4 Start | tbd | tbd |
+| Di 05.05 | "Di 05.05" — Reel Video #12 "Auto Krankenfahrt v2", 10:00 DE / 11:00 TR | `neue-kampagne-2/REEL-video12.mp4` | ✅ vorhanden |
+| Mi 06.05 | **HEUTE** — `W4-DI-131euro-v2.png` | `W4-DI-131euro-v2.png` | ✅ vorhanden |
+
+Yusuf sollte:
+- **Di 05.05 (Video #12 Krankenfahrt v2)** entweder manuell nachholen ODER als verfallen markieren — Asset liegt bereit.
+- **Sa 02.05 (Video #10 Skyline)** erfordert weiterhin Export aus Original `23-38-35.mov` ODER als verfallen markieren.
+- **Mo/So** auf Wochenend-Logik prüfen (laut Calendar nur Sa & So Posts in Woche 4 — siehe Carry-over).
+
+### Vorschau-Warnung Do 07.05 (morgen)
+
+**Nächster geplanter Post laut Calendar:** Do 07.05 — Reel Video #3 "Hand halten / Wäsche", 18:00 CEST DE / 19:00 CEST TR.
+⚠️ **Asset-Warnung:** `REEL-video3.mp4` ist im `neue-kampagne-2/`-Ordner **NICHT vorhanden** (nur Video #11–#16 + #engel-recruiting/krankenfahrten/kunden exportiert; Video #3 fehlt im Export-Set). Yusuf muss das Original (Video-Mapping-Sheet konsultieren) exportieren oder ein alternatives Asset aus dem Reels-Bestand wählen, bevor der morgige 18-Uhr-Slot bedient werden kann.
+
+### Manuelle Posting-Anleitung (Yusuf) — heute Mi 06.05, 12:00 / 13:00 CEST
+
+**Instagram + Facebook (Meta Business Suite — empfohlen, ein Workflow für beide):**
+1. business.facebook.com öffnen → Page "AlltagsEngel" auswählen
+2. "Beitrag erstellen" klicken
+3. "Foto/Video hinzufügen" → `marketing/social-media-grafiken/W4-DI-131euro-v2.png` auswählen
+4. Caption DE oben einfügen
+5. Beim Posting "Auch auf Instagram teilen" anhaken (falls IG verknüpft — siehe Carry-over-To-do)
+6. Veröffentlichen oder auf 12:00 CEST planen
+
+**TikTok (Bild-Slideshow oder Coming-Soon-Kombi-Video):**
+1. tiktok.com/upload (eingeloggt als @alltagsengel)
+2. Bild als Slideshow-Cover hochladen ODER ein passendes 131€-Reel (`REELS-131euro-animated.mp4`) verwenden
+3. TikTok-Caption DE einfügen (siehe oben)
+4. Veröffentlichen — Location "Frankfurt am Main" setzen
+
+**TR-Version (13:00 Uhr CEST):**
+- 1 Stunde nach DE-Post separat posten (gleicher Workflow, TR-Caption oben).
+- Bei Instagram **separater Post** (kein Karussell zusammen mit DE), damit beide Sprachen eigene Reichweite bekommen.
+
+### Offene To-dos / Carry-over
+
+- [ ] **Computer-Use für Cowork aktivieren** ODER dedizierte Meta/TikTok-MCP installieren — solange muss der finale Datei-Upload manuell erfolgen.
+- [ ] **Instagram mit Meta Business Suite verknüpfen** — einmaliger Schritt, danach FB+IG aus einem Beitrag-Upload.
+- [ ] **POST-LOG-Lücken**: 21.04–28.04, 30.04, 02.05–05.05 — nachdokumentieren oder als verfallen markieren.
+- [ ] **Asset-Lücken Woche 4**: `REEL-video10.mp4` (Sa 02.05) + `REEL-video3.mp4` (Do 07.05) aus Originalen exportieren oder Alternativen wählen.
+- [ ] **Carry-over aus 20.04**: Video-Archiv konsolidieren; Video #5 "Markt Frankfurt Rollator" für Fr 18.04 nachholen oder als verfallen markieren.
+
+**Nächster geplanter Post (laut Calendar):** Do 07.05 — Reel Video #3 "Hand halten / Wäsche", 18:00 CEST DE / 19:00 CEST TR (⚠️ Asset fehlt — siehe oben).
+
+### Git-Hinweis (heutiger Lauf)
+
+Der Scheduler versucht den POST-LOG-Eintrag automatisch zu committen + pushen. Falls der Pre-Commit-Hook in der Sandbox an `npm install` scheitert (`ENOSPC`, siehe 01.05-Eintrag), liegt der Eintrag committed-bereit, aber nicht gepusht.
+
+**Manueller Fix für Yusuf (1 Befehl, falls nötig):**
+```bash
+cd ~/alltagsengel
+rm -f .git/index.lock
+git add marketing/social-media-grafiken/POST-LOG.md
+git commit -m "POST-LOG: Mi 06.05.2026 — Grafik W4-DI-131euro-v2 Conversion-Post"
+git push
+```
+
+
+---
+
+## 07.05.2026 — Do 07.05 — Reel "Wir sind für dich da" (Video #3-Slot)
+
+**Status:** 📝 Vorbereitet (kein automatisches Posting — Computer-Use erfordert User-Anwesenheit)
+**Plattform laut Calendar:** IG Reel / TikTok / Facebook
+**Typ:** Video (Reel)
+**Calendar-Slot:** Mi 07.05 (Datum-Tag im Calendar abweichend, gemeint ist Do 07.05.2026)
+**Geplante Uhrzeiten:** 18:00 CEST (DE) / 19:00 CEST (TR)
+
+### Asset-Entscheidung
+
+**Calendar-Asset (geplant):** `Video #3 (Hand halten / Wäsche)` → entspräche `neue-kampagne-2/REEL-video3.mp4`
+**Status:** ❌ NICHT vorhanden im Repo (siehe Asset-Lücken-Hinweis vom 06.05).
+
+**Gewähltes Ersatz-Asset:** `REELS-gesellschaft-neu.mp4` (2.7 MB, 1080×1920, Master in `marketing/social-media-grafiken/`)
+**Begründung:** "Hand halten / Wäsche" ist thematisch ein Empathie-/Begleitungs-Reel ("Wir sind für dich da"). `REELS-gesellschaft-neu.mp4` zeigt Begleitungs-/Gesellschafts-Szenen und transportiert die identische Botschaft. Alternative Backups: `REELS-kunde-walkthrough.mp4` oder `neue-kampagne-2/REEL-kunden.mp4`.
+
+### Caption (DE) — verbatim aus Content Calendar
+
+```
+Wir sind für dich da.
+
+Kleine Hilfen im Alltag machen den Unterschied.
+Alltagsengel — mit Herz für Frankfurt.
+
+131 Euro/Monat über §45b.
+
+www.alltagsengel.care
+info@alltagsengel.care
+
+#WirSindDa #Alltag #Hilfe #Frankfurt #Alltagsengel #Begleitung #MitHerz #Senioren #Pflegekasse #Entlastungsbetrag #FrankfurtAmMain #Seniorenhilfe #§45b
+```
+
+### Caption (TR) — verbatim aus Content Calendar
+
+```
+Senin için buradayız.
+
+Günlük hayattaki küçük yardımlar farkı yaratır.
+Alltagsengel — Frankfurt için kalpten.
+
+Aylık 131 Euro §45b üzerinden.
+
+www.alltagsengel.care
+info@alltagsengel.care
+
+#BuradayızSenin #GünlükHayat #Yardım #Frankfurt #Alltagsengel #Refakat #KalptenYardım #YaşlıBakımı #TürklerFrankfurt #Bakım
+```
+
+### TikTok-Kurzcaptions (Hashtag-Limit beachtet)
+
+DE:
+```
+Wir sind für dich da. 💛 Kleine Hilfen im Alltag machen den Unterschied — Alltagsengel mit Herz für Frankfurt. 131€/Monat über §45b. 📍 alltagsengel.care #WirSindDa #Frankfurt #Alltagsengel #Pflege #Senioren #FYP
+```
+
+TR:
+```
+Senin için buradayız. 💛 Küçük yardımlar farkı yaratır — Frankfurt için kalpten. Aylık 131€ §45b üzerinden. 📍 alltagsengel.care #Frankfurt #Alltagsengel #YaşlıBakımı #FYP
+```
+
+### Was der Scheduler heute getan hat
+
+1. ✅ Content Calendar gelesen → Slot "Mi 07.05" identifiziert (IG Reel / TT / FB · Video · 18:00 DE / 19:00 TR · Asset Video #3 Hand halten / Wäsche).
+2. ⚠️ Calendar-Asset `REEL-video3.mp4` nicht vorhanden bestätigt → Ersatz-Asset `REELS-gesellschaft-neu.mp4` ausgewählt (thematisch identisch: Begleitung/Empathie/Wir-sind-da).
+3. ✅ Captions DE + TR direkt aus Calendar-Spalten entnommen (verbatim) und mit Standard-Hashtag-Set aus Skill-Datei harmonisiert (DE: #Pflegekasse #Entlastungsbetrag #FrankfurtAmMain #Seniorenhilfe #§45b ergänzt; TR: #YaşlıBakımı #TürklerFrankfurt #Bakım ergänzt).
+4. ✅ TikTok-Kurzcaptions DE/TR generiert (Hashtag-Reduzierung für TikTok-FYP-Logik).
+5. ⚠️ **Kein Posting-Versuch unternommen** — historisch (siehe 29.04, 01.05, 06.05-Einträge) ist der native File-Picker per Browser-Automation nicht ansprechbar; Computer-Use-Approval erfordert anwesenden User; aktueller Lauf ist Scheduler ohne User-Präsenz.
+6. ✅ POST-LOG-Eintrag mit allen Captions + Asset-Referenz dokumentiert.
+
+### Lücken-Status (Carry-over)
+
+| Datum | Calendar-Slot | Status |
+|-------|--------------|--------|
+| Sa 02.05 | Reel Video #10 "Skyline Spaziergang" | ❌ Asset fehlt — verfallen oder Original exportieren |
+| So 03.05 | (Wochenende, lt. Calendar Ruhetag) | ➖ kein Eintrag nötig |
+| Mo 04.05 | (Calendar Woche 4 leer) | ➖ kein Eintrag nötig |
+| Di 05.05 | Reel Video #12 "Krankenfahrt v2" | ⏰ verstrichen — Asset vorhanden, manuell nachholen oder verfallen lassen |
+| Mi 06.05 | W4-DI-131euro-v2.png | ✅ dokumentiert, manuelles Posting offen |
+| **Do 07.05** | **Reel Video #3 (Ersatz: REELS-gesellschaft-neu.mp4)** | **📝 heute — manuelles Posting fällig 18:00/19:00 CEST** |
+
+### Vorschau Fr 08.05 (morgen)
+
+Calendar-Eintrag für Fr 08.05.2026 wurde nicht im aktuellen Calendar-Auszug gefunden (Woche 4 hat überwiegend leere Tage). Yusuf sollte vor morgen früh:
+- Calendar `AlltagsEngel-ContentCalendar-4Wochen.xlsx` für Fr 08.05 prüfen ODER
+- Falls Carry-over nötig: ein virales Reel aus `neue-kampagne-2/V14–V19` als Awareness-Post nutzen.
+
+### Manuelle Posting-Anleitung (Yusuf) — heute Do 07.05, 18:00 / 19:00 CEST
+
+**Instagram + Facebook (Meta Business Suite — empfohlen, ein Workflow für beide):**
+1. business.facebook.com öffnen → Page "AlltagsEngel" auswählen
+2. "Beitrag erstellen" → Reel-Format wählen
+3. "Video hinzufügen" → `marketing/social-media-grafiken/REELS-gesellschaft-neu.mp4` auswählen
+4. Caption DE oben einfügen (siehe Block oben)
+5. "Auch auf Instagram teilen" anhaken (falls IG verknüpft — siehe Carry-over)
+6. Veröffentlichen oder auf 18:00 CEST planen
+
+**TikTok:**
+1. tiktok.com/upload (eingeloggt als @alltagsengel)
+2. `REELS-gesellschaft-neu.mp4` hochladen
+3. TikTok-Kurzcaption DE einfügen (siehe oben)
+4. Location "Frankfurt am Main" setzen
+5. Veröffentlichen
+
+**TR-Version (19:00 Uhr CEST):**
+- 1 Stunde nach DE-Post separat posten (gleicher Workflow, TR-Caption oben).
+- Bei Instagram **separater Post** (kein Karussell), damit beide Sprachen eigene Reichweite bekommen.
+
+### Offene To-dos / Carry-over
+
+- [ ] **Computer-Use für Cowork aktivieren** ODER dedizierte Meta/TikTok-MCP installieren — solange muss der finale Datei-Upload manuell erfolgen.
+- [ ] **Instagram mit Meta Business Suite verknüpfen** — einmaliger Schritt, danach FB+IG aus einem Beitrag-Upload.
+- [ ] **POST-LOG-Lücken**: 21.04–28.04, 30.04, 02.05, 04.05, 05.05 — nachdokumentieren oder als verfallen markieren.
+- [ ] **Asset-Lücken Woche 4**: `REEL-video10.mp4` (Sa 02.05) + `REEL-video3.mp4` (heute Do 07.05, Ersatz gewählt) aus Originalen nachexportieren für künftige Wiederverwendung.
+- [ ] **Calendar-Konsistenz**: Im Calendar steht für 07.05 "Mi" — 07.05.2026 ist real ein **Donnerstag**. Calendar-Datums-Tags-Spalte korrigieren bei Gelegenheit.
+- [ ] **Carry-over aus 06.05**: Mi 06.05-Post `W4-DI-131euro-v2.png` — falls noch nicht manuell gepostet, heute mit Verspätung oder verfallen lassen.
+
+### Git-Hinweis (heutiger Lauf)
+
+Der Scheduler versucht den POST-LOG-Eintrag automatisch zu committen + pushen. Falls der Pre-Commit-Hook in der Sandbox an `npm install` scheitert (`ENOSPC`), liegt der Eintrag committed-bereit, aber nicht gepusht.
+
+**Manueller Fix für Yusuf (1 Befehl, falls nötig):**
+```bash
+cd ~/alltagsengel
+rm -f .git/index.lock
+git add marketing/social-media-grafiken/POST-LOG.md
+git commit -m "POST-LOG: Do 07.05.2026 — Reel Wir-sind-für-dich-da (Ersatz REELS-gesellschaft-neu.mp4)"
+git push
+```
+
