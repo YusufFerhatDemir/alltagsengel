@@ -115,8 +115,21 @@ function RegisterForm() {
           return
         } else if (authError.message.includes('valid email')) {
           setError('Bitte geben Sie eine gültige E-Mail-Adresse ein.')
-        } else if (authError.message.includes('at least')) {
-          setError('Das Passwort muss mindestens 8 Zeichen lang sein und Großbuchstaben, Zahlen und Sonderzeichen enthalten.')
+        } else if (
+          // BUG-AUTH-PWNED Fix (Mai 2026): Supabase prüft serverseitig gegen HIBP-Datenbank.
+          // Wenn das Passwort schon mal in einem Datenleck war (auch wenn es alle Regex-Regeln
+          // erfüllt — Großbuchstabe, Zahl, Sonderzeichen, 8+ Zeichen), wird es mit 422 + Code
+          // 'weak_password' und reason 'pwned' abgelehnt. Frontend zeigte vorher generisches
+          // „Registrierung fehlgeschlagen", User wusste nicht wo das Problem lag. Live-Kundin
+          // Esser_jacqueline@yahoo.de scheiterte 18.05.2026 daran. Klartext-Meldung jetzt.
+          authError.message.toLowerCase().includes('pwned') ||
+          authError.message.includes('known to be weak') ||
+          (authError as { code?: string }).code === 'weak_password' ||
+          authError.message.includes('Password is known')
+        ) {
+          setError('Dieses Passwort wurde in einem bekannten Datenleck gefunden und ist daher unsicher. Bitte wählen Sie ein anderes — z. B. ein kreatives mit 12+ Zeichen, das Sie noch nirgends benutzt haben.')
+        } else if (authError.message.includes('at least') || authError.message.includes('weak_password') || authError.message.toLowerCase().includes('password should')) {
+          setError('Das Passwort ist zu schwach. Bitte verwenden Sie mindestens 8 Zeichen, einen Großbuchstaben, eine Zahl und ein Sonderzeichen — und etwas, das Sie noch nirgends benutzt haben.')
         } else if (authError.message.includes('rate limit') || authError.message.includes('too many')) {
           setError('Zu viele Versuche. Bitte warten Sie einen Moment.')
         } else if (authError.message.includes('signups not allowed') || authError.message.includes('Signups not allowed')) {
@@ -124,7 +137,9 @@ function RegisterForm() {
         } else if (authError.message.includes('Database error')) {
           setError('Registrierung fehlgeschlagen. Bitte versuchen Sie es später erneut.')
         } else {
-          // AUTH-005: Keine rohen Supabase-Messages leaken
+          // AUTH-005: Keine rohen Supabase-Messages leaken, aber Code mitloggen für Debug
+          // eslint-disable-next-line no-console
+          console.warn('[register] unmapped supabase error:', authError.message, (authError as { code?: string }).code)
           setError('Registrierung fehlgeschlagen. Bitte prüfen Sie Ihre Angaben oder versuchen Sie es später erneut.')
         }
         setLoading(false)
