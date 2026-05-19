@@ -32,4 +32,4 @@ export async function isRateLimited(
   return { limited: c > MAX_INBOUND_PER_HOUR, count: c }
 }
 
-export const RATE_LIMIT_REPLY = `Vielen Dank für Ihre Nachrichten. Aus Sicherheitsgründen pausieren wir kurz die Antworten. Yusuf meldet sich bei dringenden Anliegen unter info@alltagsengel.care. 🙏`
+export const RATE_LIMIT_REPLY = `Vielen Dank für Ihre Nachrichten. Aus Sicherheitsgründen pausieren wir kurz die automatischen Antworten. Bei dringenden Anliegen erreichen Sie das Alltagsengel-Team unter info@alltagsengel.care. 🙏`
