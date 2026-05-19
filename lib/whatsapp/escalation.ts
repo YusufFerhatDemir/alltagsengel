@@ -1,26 +1,60 @@
 /**
  * WhatsApp Bot — Eskalations-Detektion.
  *
- * Wenn Kunde Wörter wie "Anwalt", "kündigen", "Beschwerde", "Schmerzen", "Notfall" nutzt:
- * → Bot antwortet ESKALATIONS-Nachricht (anonyme Team-Identität)
- * → Mail an info@alltagsengel.care mit voller Konversation
+ * Zwei Eskalations-Typen:
+ *   - MEDICAL: Kunde fragt nach Symptomen, Diagnose, Medikamenten, Notfall etc.
+ *       → MEDICAL_ESCALATION_REPLY (mit 116 117 / 112 / Hausarzt-Hinweis)
+ *   - GENERAL: juristisch, Wut, B2B, Engel-Vermittlung etc.
+ *       → ESCALATION_REPLY ("Team meldet sich")
+ *
+ * Beide Typen: Mail an info@alltagsengel.care mit voller Konversation.
  *
  * WICHTIG: nirgendwo ein Personenname. Immer "das Alltagsengel-Team".
  */
 
-import { ESCALATION_KEYWORDS } from './system-prompt'
+import { ESCALATION_KEYWORDS, MEDICAL_KEYWORDS } from './system-prompt'
 
-export function shouldEscalate(messageBody: string): { escalate: boolean; reason?: string } {
+export type EscalationKind = 'medical' | 'general'
+
+export function shouldEscalate(
+  messageBody: string
+): { escalate: boolean; kind?: EscalationKind; reason?: string } {
   const lower = messageBody.toLowerCase()
-  for (const keyword of ESCALATION_KEYWORDS) {
+
+  // 1) Medizinisch zuerst — höchste Priorität, eigene Antwort
+  for (const keyword of MEDICAL_KEYWORDS) {
     if (lower.includes(keyword)) {
-      return { escalate: true, reason: `keyword:${keyword}` }
+      return { escalate: true, kind: 'medical', reason: `medical:${keyword}` }
     }
   }
+
+  // 2) Allgemeine Eskalation
+  for (const keyword of ESCALATION_KEYWORDS) {
+    if (lower.includes(keyword)) {
+      return { escalate: true, kind: 'general', reason: `keyword:${keyword}` }
+    }
+  }
+
   return { escalate: false }
 }
 
+/**
+ * Antwort an den Kunden bei medizinischen Anfragen.
+ * Wortlaut vom Team festgelegt — NICHT ohne Rückfrage ändern.
+ */
+export const MEDICAL_ESCALATION_REPLY = `Wir sind kein medizinischer Anbieter — bitte wende dich an deinen Hausarzt, die 116 117 (ärztlicher Bereitschaftsdienst) oder im Notfall die 112. Falls es um eine Pflege-Box oder Krankenfahrt geht, helfen wir gern weiter.`
+
+/**
+ * Antwort an den Kunden bei allgemeinen Eskalationen (Beschwerden, Recht, B2B, Engel-Vermittlung etc.)
+ */
 export const ESCALATION_REPLY = `Vielen Dank für Ihre Nachricht. Das Alltagsengel-Team meldet sich in Kürze persönlich bei Ihnen. Für dringende Anliegen erreichen Sie uns auch unter info@alltagsengel.care. 🙏`
+
+/**
+ * Wählt die passende Reply je nach Eskalations-Typ.
+ */
+export function escalationReplyFor(kind: EscalationKind | undefined): string {
+  return kind === 'medical' ? MEDICAL_ESCALATION_REPLY : ESCALATION_REPLY
+}
 
 /**
  * Sendet Eskalations-Mail an info@alltagsengel.care via Resend.
@@ -28,6 +62,7 @@ export const ESCALATION_REPLY = `Vielen Dank für Ihre Nachricht. Das Alltagseng
 export async function sendEscalationEmail(params: {
   fromPhone: string
   reason: string
+  kind?: EscalationKind
   conversation: Array<{ direction: 'inbound' | 'outbound'; body: string; created_at: string }>
 }): Promise<boolean> {
   const apiKey = process.env.RESEND_API_KEY
@@ -37,10 +72,16 @@ export async function sendEscalationEmail(params: {
     return false
   }
 
-  const subject = `[WhatsApp-Bot] Eskalation von ${params.fromPhone} — ${params.reason}`
+  const kindLabel = params.kind === 'medical' ? 'MEDIZINISCH' : 'allgemein'
+  const subject = `[WhatsApp-Bot] Eskalation (${kindLabel}) von ${params.fromPhone} — ${params.reason}`
   const bodyLines = [
+    `Eskalations-Typ: ${kindLabel}`,
     `Eskalations-Grund: ${params.reason}`,
     `WhatsApp-Nummer: ${params.fromPhone}`,
+    '',
+    params.kind === 'medical'
+      ? 'ACHTUNG: medizinische Anfrage. Bot hat Notruf-Hinweis (116 117 / 112) gesendet. Bitte zeitnah persönlich nachfassen — und prüfen, ob es einen versteckten Pflege-Box-/Krankenfahrt-Bedarf gibt.'
+      : 'Bitte zeitnah persönlich antworten.',
     '',
     'Konversation (chronologisch):',
     '─────────────────────────────',
@@ -50,7 +91,6 @@ export async function sendEscalationEmail(params: {
     ),
     '─────────────────────────────',
     '',
-    'Bitte zeitnah persönlich antworten.',
     '— Alltagsengel WhatsApp-Bot',
   ]
 
