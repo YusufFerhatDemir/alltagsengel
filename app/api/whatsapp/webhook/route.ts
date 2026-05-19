@@ -21,7 +21,7 @@ import { createClient } from '@supabase/supabase-js'
 import { getBotReply, WaMessage } from '@/lib/whatsapp/ai'
 import {
   shouldEscalate,
-  ESCALATION_REPLY,
+  escalationReplyFor,
   sendEscalationEmail,
   sendDraftNotificationEmail,
 } from '@/lib/whatsapp/escalation'
@@ -173,10 +173,12 @@ async function processIncomingMessage(
     return
   }
 
-  // 4. Eskalation prüfen (Beschwerde, Anwalt, Kündigung)
+  // 4. Eskalation prüfen
+  //    - 'medical': Bot sendet Notruf-Hinweis (116 117 / 112 / Hausarzt)
+  //    - 'general': Bot sendet Holding-Message ("Team meldet sich")
+  //    Beide Fälle: Mail an info@alltagsengel.care mit voller Konversation.
   const esc = shouldEscalate(msg.body)
   if (esc.escalate) {
-    // Konversations-Historie holen für Eskalations-Mail
     const { data: history } = await supabase
       .from('whatsapp_conversations')
       .select('direction, body, created_at')
@@ -186,13 +188,16 @@ async function processIncomingMessage(
     await sendEscalationEmail({
       fromPhone: msg.from,
       reason: esc.reason || 'unknown',
+      kind: esc.kind,
       conversation: (history || []) as Array<{
         direction: 'inbound' | 'outbound'
         body: string
         created_at: string
       }>,
     })
-    await replyAndLog(supabase, msg.from, ESCALATION_REPLY, 'escalation', false, esc.reason)
+    const reply = escalationReplyFor(esc.kind)
+    const tag = esc.kind === 'medical' ? 'escalation-medical' : 'escalation'
+    await replyAndLog(supabase, msg.from, reply, tag, false, esc.reason)
     return
   }
 
