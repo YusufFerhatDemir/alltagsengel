@@ -19,9 +19,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { getBotReply, WaMessage } from '@/lib/whatsapp/ai'
-import { shouldEscalate, ESCALATION_REPLY, sendEscalationEmail } from '@/lib/whatsapp/escalation'
+import {
+  shouldEscalate,
+  ESCALATION_REPLY,
+  sendEscalationEmail,
+  sendDraftNotificationEmail,
+} from '@/lib/whatsapp/escalation'
 import { isRateLimited, RATE_LIMIT_REPLY } from '@/lib/whatsapp/rate-limit'
 import { sendWhatsAppMessage } from '@/lib/whatsapp/send'
+import { isLowConfidenceReply, sanitizeNames, HOLDING_REPLY } from '@/lib/whatsapp/confidence'
 
 // Service-Role-Client (bypasst RLS, weil Webhook anonym aufgerufen wird)
 function getServiceClient() {
@@ -203,10 +209,69 @@ async function processIncomingMessage(
   }))
 
   // 6. KI-Antwort generieren
-  const { reply, model } = await getBotReply(waMessages)
+  const { reply: rawReply, model } = await getBotReply(waMessages)
+
+  // 6a. Name-Sanitizer: KI darf NIE einen persönlichen Namen einbauen.
+  // Falls doch (Halluzination) → ersetze defensiv durch "das Alltagsengel-Team".
+  const sanitized = sanitizeNames(rawReply)
+  if (sanitized.didReplace) {
+    // eslint-disable-next-line no-console
+    console.warn(
+      '[wa-webhook] persona drift: KI hat Namen verwendet, sanitisiert:',
+      sanitized.replaced.join(', ')
+    )
+  }
+  const cleanReply = sanitized.sanitized
+
+  // 6b. Confidence-Check: signalisiert die KI Unsicherheit?
+  // Wenn ja → NICHT senden, sondern Draft speichern + Holding-Message senden + Team benachrichtigen.
+  const confidence = isLowConfidenceReply(cleanReply)
+  if (confidence.lowConfidence) {
+    // Konversations-Historie für Draft-Mail
+    const { data: fullHistory } = await supabase
+      .from('whatsapp_conversations')
+      .select('direction, body, created_at')
+      .eq('wa_phone', msg.from)
+      .order('created_at', { ascending: true })
+      .limit(50)
+
+    // Draft als outbound mit escalation_reason='draft_pending' speichern.
+    // body = Holding-Message (was Kunde sieht).
+    // raw.bot_draft = Bot-Entwurf (für späteren Admin-Review).
+    const send = await sendWhatsAppMessage({ to: msg.from, body: HOLDING_REPLY })
+    await supabase.from('whatsapp_conversations').insert({
+      wa_phone: msg.from,
+      wa_msg_id: send.wamid || null,
+      direction: 'outbound',
+      body: HOLDING_REPLY,
+      raw: {
+        sent_ok: send.ok,
+        send_error: send.error || null,
+        bot_draft: cleanReply,
+        bot_draft_model: model,
+        confidence_marker: confidence.marker || null,
+      },
+      ai_model: 'draft-pending',
+      escalated: true,
+      escalation_reason: `draft_pending:${confidence.marker || 'low_confidence'}`,
+      rate_limited: false,
+    })
+
+    await sendDraftNotificationEmail({
+      fromPhone: msg.from,
+      customerMessage: msg.body,
+      botDraft: cleanReply,
+      conversation: (fullHistory || []) as Array<{
+        direction: 'inbound' | 'outbound'
+        body: string
+        created_at: string
+      }>,
+    })
+    return
+  }
 
   // 7. Antwort senden + loggen
-  await replyAndLog(supabase, msg.from, reply, model, false)
+  await replyAndLog(supabase, msg.from, cleanReply, model, false)
 }
 
 async function replyAndLog(

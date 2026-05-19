@@ -120,7 +120,7 @@ export async function getBotReply(
   // 3) Beide Provider down → Eskalations-Fallback
   return {
     reply:
-      'Hallo! Ich kann gerade leider nicht antworten — Yusuf meldet sich gleich persönlich bei Ihnen. Vielen Dank für Ihr Verständnis. 🙏',
+      'Hallo! Wir können gerade leider nicht automatisch antworten. Das Alltagsengel-Team meldet sich in Kürze persönlich bei Ihnen. Vielen Dank für Ihr Verständnis. 🙏',
     model: 'fallback-static',
   }
 }
