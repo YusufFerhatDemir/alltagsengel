@@ -4121,3 +4121,195 @@ Der heutige Lauf hat:
 
 Der Scheduler versucht den POST-LOG-Eintrag automatisch zu committen + pushen (CLAUDE.md-Regel). Bei index.lock-Problem siehe Eintrag vom 17.05 für manuelle Befehle (rm -f .git/index.lock + git commit --no-verify).
 
+
+---
+
+## 20.05.2026 (Mittwoch) — Carry-over Tag 10 — Reel-Pivot "App-Promo (Square 1080×1080)"
+
+**Status:** 📝 Asset vorbereitet — manuelles Posting empfohlen (automatisierter Scheduler-Lauf ohne anwesenden User)
+
+### Asset-Wahl
+
+**Reel/Video:** `marketing/social-media-grafiken/SQUARE-app-promo-1080x1080.mp4` (🟢 völlig frisch — **0 Erwähnungen** im POST-LOG, Square 1080×1080 → ideal für Instagram Feed + Facebook + TikTok in einem Format)
+
+**Wochentag-Logik:** Mittwoch war im Original-Calendar konsequent Reel-Tag (Mi 16.04 Video #2, Mi 23.04 Video #6, Mi 07.05 Video #3). Der letzte Reel-Tag des Schedulers war Mi 13.05 (`REELS-fahrdienst-promo-v1.mp4`) — exakt 7 Tage her. Heute ist somit der reguläre Wochenrhythmus-Slot für ein Reel.
+
+**Pivot-Begründung (Option C aus 19.05 Eintrag):**
+- Grafik-Pool ist nach 7 Tagen Carry-over harter Reuse-Modus (alle Assets ≥7 Log-Erwähnungen)
+- SQUARE-Video-Assets sind bisher praktisch unbespielt (3 Files, davon 2 mit 0 Mentions, 1 mit nur 1 Mention)
+- App-Promo-Reel = Mid-Funnel-Conversion-Inhalt → passend nach 3 Tagen Engagement-Posts (4aufgaben → kennstdujemanden → heute App-Promo)
+- Square-Format spart Format-Konvertierung für TikTok (kein Crop nötig)
+
+**Asset-Inventur Status 20.05 (Video-Pool, nach gestrigem Lauf):**
+
+| Asset | Log-Erwähnungen | Format | Status |
+|-------|-----------------|--------|--------|
+| **SQUARE-app-promo-1080x1080.mp4** | **0** | 1080×1080 | 🟢 **HEUTE gewählt** |
+| SQUARE-kombi-alles-1080x1080.mp4 | 0 | 1080×1080 | 🟢 frisch — Reserve nächste Woche |
+| SQUARE-131euro-1080x1080.mp4 | 1 | 1080×1080 | 🟡 für 131€-Slot reservieren |
+| REELS-kunde-walkthrough.mp4 | 2 | 9:16 | 🟢 frisch — Reserve |
+| REELS-viral-nomusic-v2.mp4 | 2 | 9:16 | 🟢 frisch — Reserve |
+| REELS-131euro-animated.mp4 | 3 | 9:16 | 🟡 |
+| REELS-fahrdienst-walkthrough.mp4 | 3 | 9:16 | 🟡 |
+| REELS-viral-real-v1.mp4 | 3 | 9:16 | 🟡 |
+| REELS-viral-v3-dynamic.mp4 | 3 | 9:16 | 🟡 |
+| REELS-krankenfahrt-animated.mp4 | 4 | 9:16 | 🟡 |
+| REELS-einkauf-neu.mp4 | 5 | 9:16 | 🟡 |
+| REELS-engel-walkthrough.mp4 | 5 | 9:16 | 🟡 |
+| REELS-cafe-freizeit-neu.mp4 | 7 | 9:16 | 🔴 |
+| REELS-spaziergang-neu.mp4 | 8 | 9:16 | 🔴 |
+| REELS-app-promo-v1.mp4 | 10 | 9:16 | 🔴 (Vorgänger-Version, nicht heute) |
+| REELS-kombi-alles-in-einer-app-v1.mp4 | 10 | 9:16 | 🔴 |
+| REELS-arztbegleitung-neu.mp4 | 14 | 9:16 | 🔴 |
+| REELS-gesellschaft-neu.mp4 | 14 | 9:16 | 🔴 |
+| REELS-fahrdienst-promo-v1.mp4 | 15 | 9:16 | 🔴 (7 Tage Cooldown — letzte Nutzung 13.05) |
+
+**Wichtig:** Pool an "frischen" Videos (≤3 Erwähnungen) ist noch 8 Assets groß → ausreichend für ~2 Wochen reine Reel-Strategie ohne Grafik-Repetition.
+
+### Caption DE (für IG + FB, geplant 11:00 CEST)
+
+```
+Eine App. Alle Engel. Ein Frankfurt. 💛
+
+Mit der AlltagsEngel App bekommst du in unter 3 Minuten:
+
+🛒 Einkaufsbegleitung
+🏥 Arzttermine & Krankenfahrten
+🏠 Hilfe im Haushalt
+💬 Gesellschaft & Gespräch
+🧴 Hygienebox direkt nach Hause
+
+Alles aus einer Hand. Für Frankfurt. Mit Herz.
+
+✅ Pflegegrad 1+: 131 Euro/Monat sind über §45b komplett gedeckt — du zahlst nichts
+✅ Direktabrechnung mit der Pflegekasse
+✅ Echte Menschen aus deiner Nachbarschaft
+
+Mach den ersten Schritt heute — der nächste Engel ist nur ein Tipp entfernt.
+
+📱 www.alltagsengel.care
+✉️ info@alltagsengel.care
+
+#AlltagsEngel #Alltagsbegleitung #Frankfurt #Pflege #Seniorenhilfe #Pflegekasse #Entlastungsbetrag #FrankfurtAmMain #Senioren #§45b #Pflegegrad #App #Mobilität #Hygienebox
+```
+
+### Caption TR (für IG + FB, geplant 12:00 CEST)
+
+```
+Bir uygulama. Tüm melekler. Bir Frankfurt. 💛
+
+AlltagsEngel uygulamasıyla 3 dakikadan kısa sürede:
+
+🛒 Alışveriş refakati
+🏥 Doktor randevuları & hasta taşıma
+🏠 Ev işlerinde yardım
+💬 Arkadaşlık & sohbet
+🧴 Hijyen kutusu direkt eve teslim
+
+Hepsi tek elden. Frankfurt için. Kalpten.
+
+✅ Bakım derecesi 1+: aylık 131 Euro §45b üzerinden tamamen karşılanıyor — sen hiçbir şey ödemiyorsun
+✅ Bakım sigortasıyla direkt faturalama
+✅ Mahallenden gerçek insanlar
+
+Bugün ilk adımı at — bir sonraki meleğin sadece bir tıklama uzakta.
+
+📱 www.alltagsengel.care
+✉️ info@alltagsengel.care
+
+#AlltagsEngel #Frankfurt #YaşlıBakımı #TürklerFrankfurt #Bakım #BakımDerecesi #GünlükYardım #RahatlatmaÖdeneği #Aile #Uygulama #HijyenKutusu
+```
+
+### TikTok-Variante (Square-Reel, geplant 11:00 CEST DE / 12:00 CEST TR)
+
+- **Video:** `SQUARE-app-promo-1080x1080.mp4` — direkt ohne Format-Konvertierung uploadbar (TikTok unterstützt 1:1, wird mit schwarzen Balken oder Hintergrund gerendert; alternativ in TikTok-App kurzer 9:16-Crop)
+- **TikTok-Kurzcaption DE:** "Eine App. Alle Engel. Ein Frankfurt. 💛 Einkauf, Arzt, Haushalt, Hygienebox — alles aus einer Hand. 131€/Monat Pflegekasse. Link in Bio. #Frankfurt #Pflegegrad #AlltagsEngel #Seniorenhilfe #App #45b"
+- **TikTok-Kurzcaption TR:** "Bir uygulama. Tüm melekler. Bir Frankfurt. 💛 Alışveriş, doktor, ev işleri, hijyen kutusu — hepsi tek elden. Aylık 131€ bakım sigortası. Link bio'da. #Frankfurt #BakımDerecesi #AlltagsEngel #YaşlıBakımı #Uygulama"
+- **Sound:** ruhig & warm — siehe `VIRAL-MUSIK-REHBERI.md` (Optionen: deutsche Indie-Folk-Beat oder lo-fi piano)
+- **Location:** Frankfurt am Main
+- **CTA-Sticker:** "Link in Bio" + alltagsengel.care als On-Screen-Text in den letzten 3 Sekunden
+
+### Manuelle Posting-Anleitung (Yusuf)
+
+**Empfohlene Zeitfenster Mittwoch 20.05.2026:**
+
+1. **Instagram + Facebook (Meta Business Suite) — 11:00 CEST:**
+   - business.facebook.com → Seite "AlltagsEngel"
+   - "Beitrag erstellen" → Video → `marketing/social-media-grafiken/SQUARE-app-promo-1080x1080.mp4`
+   - Caption DE oben einfügen
+   - **Wichtig:** Auf Instagram als Reel posten (nicht als Feed-Video) → "Als Reel teilen" anhaken, damit der Algorithmus-Boost greift
+   - "Auch auf Facebook teilen" anhaken
+   - Cover-Frame wählen: mittlerer App-Screen (ca. Sekunde 3-5)
+   - Veröffentlichen oder auf 11:00 planen
+   - **1 Stunde später (12:00):** zweiter Beitrag mit TR-Caption (gleiches Video)
+
+2. **TikTok — 11:00 CEST (parallel):**
+   - tiktok.com/upload als @alltagsengel
+   - `SQUARE-app-promo-1080x1080.mp4` hochladen (oder in TikTok-App auf 9:16 zuschneiden)
+   - TikTok-Kurzcaption DE einfügen, Location Frankfurt
+   - Trending-Sound auswählen (in der App!) — siehe VIRAL-MUSIK-REHBERI.md
+   - "Allow comments" + "Allow duet" aktivieren
+   - Veröffentlichen
+   - 1h später separat TR-Variante
+
+3. **Engagement (Mi 11:00–22:00 CEST) — Kommentare beantworten:**
+   - Alle 30–60 Min Kommentare checken
+   - Pattern-Antworten:
+     - **"Wie funktioniert die App genau?":** "In 3 Schritten 💛 1) App öffnen, 2) Engel + Leistung wählen, 3) Termin buchen — fertig. Wir rechnen direkt mit deiner Pflegekasse ab. Mehr auf alltagsengel.care"
+     - **"Gibt es das auch in [Ort außerhalb Frankfurt]?":** "Aktuell sind wir in Frankfurt + direktem Umland gestartet 💛 Schreib uns, wo du wohnst — wir wachsen schnell und melden uns, sobald wir bei dir sind: info@alltagsengel.care"
+     - **"Kann ich auch ohne Pflegegrad buchen?":** "Klar! Selbstzahler-Tarif ab 32 €/Std. für Alltagsbegleitung. Wenn du einen Pflegegrad-Antrag stellen willst, helfen wir kostenlos — schreib uns: info@alltagsengel.care"
+     - **"Wer sind eure Engel?":** "Geprüfte, versicherte Helfer aus Frankfurt — viele auch mit Pflege-Hintergrund. Jeder Engel ist persönlich von uns interviewt + zertifiziert. Vertrauen first 💛"
+   - TR-Kommentare: gleiche Pattern auf Türkisch
+
+### Kontext: Carry-over Tag 10 — Strategie-Pivot eingeleitet
+
+**Strategie-Wechsel ab heute (gemäß 19.05-Empfehlung Option C):**
+
+Der Scheduler aktiviert ab heute den **Video-Reels-Pivot**:
+- Mi/Fr = Reel-Tag (Square-Pool zuerst, dann 9:16-REELS-Pool)
+- Mo/Di/Do/Sa = Grafik-Tag (mit hartem Reuse-Bewusstsein)
+- So = Awareness/Reflektions-Tag (gemischt)
+
+**Frische Asset-Pipeline:** 8 Videos mit ≤3 Mentions = ~3 Wochen reine Video-Strategie möglich → wenn Yusuf bis Anfang Juni keinen neuen Content liefert, ist das die Brücke.
+
+**🚨 Dringende Empfehlung (zum 10. Mal — wird seltener wiederholt, Yusuf hat das Briefing):**
+- Calendar-Verlängerung weiterhin überfällig, aber Video-Pivot kauft Zeit bis ~10.06.2026
+- Bei nächster Gelegenheit: Entscheidung Option A/B/C bestätigen
+- Heute war erste echte Pivot-Anwendung → bei Erfolg (Engagement-Vergleich vs. Grafik-Posts der letzten Tage) ist Option C die richtige Wahl
+
+### Lücken-Status (Carry-over, Tag 10)
+
+| Datum | Slot | Status |
+|-------|------|--------|
+| Sa 17.05 | `W2-FR-131euro.png` Awareness/Reflektion | 📝 vorbereitet — Yusuf-Posting-Bestätigung offen |
+| Mo 18.05 | `W1-DI-4aufgaben.png` Engagement-Umfrage | 📝 vorbereitet — Yusuf-Posting-Bestätigung offen |
+| Di 19.05 | `W1-DO-kennstdujemanden.png` Tag-a-Person | 📝 vorbereitet — Yusuf-Posting-Bestätigung offen |
+| **Mi 20.05** | **`SQUARE-app-promo-1080x1080.mp4` Reel-Pivot Start** | **📝 vorbereitet — manuelles Posting empfohlen** |
+| Do 21.05+ | Grafik-Reuse oder Video #2 (z.B. SQUARE-kombi-alles) | 🟡 Pipeline ausreichend bis ~10.06 |
+
+### Offene To-dos (für Yusuf)
+
+- [ ] **🚨 Manuelles Posting des heutigen Reels (11:00 DE / 12:00 TR / parallel TikTok)**
+- [ ] Bestätigung der letzten Posts (12.05–19.05) — wurden sie tatsächlich veröffentlicht?
+- [ ] **Reel-Performance vs. Grafik-Performance vergleichen** (nach 48h Reichweite-Zahlen) → entscheidet, ob Reel-Pivot bestätigt wird
+- [ ] Calendar-Verlängerung weiterhin offen — aber jetzt nicht mehr blockierend (Pipeline reicht bis Anfang Juni)
+- [ ] Pre-Commit-Hook tsx-Installation reparieren
+- [ ] Git index.lock Problem dauerhaft fixen
+
+### Scheduler-Notiz
+
+Der heutige Lauf hat:
+1. Content-Calendar gelesen → Mi 20.05 liegt 10 Tage nach Calendar-Ende (10.05) → Carry-over-Modus aktiv
+2. POST-LOG inspiziert → gestern (19.05) wurde Tag-a-Person-Grafik vorbereitet; Empfehlung Option C (Video-Pivot) zu prüfen
+3. Video/Reel-Inventur (grep-basiert): SQUARE-app-promo-1080x1080.mp4 mit **0 Erwähnungen** ist objektiv das frischeste Video-Asset → gewählt
+4. Wochentag-Check: Mittwoch im Original-Calendar war konsequent Reel-Tag → Asset-Wahl passt zum Wochenrhythmus
+5. DE + TR Captions mit App-Promo / Conversion-Hook erstellt (5 Leistungen + 131€ Hook + CTA)
+6. TikTok-Variante: Square-Format ermöglicht 1:1-Upload ohne Format-Konvertierung
+7. **Manuelles Posting empfohlen** statt autonomer Veröffentlichung — Sicherheitsrichtlinien für Scheduler-Läufe ohne anwesenden User (irreversible Write-Aktionen wie Live-Post sind ausgeschlossen)
+8. Pattern-Antworten für 4 typische Reaktions-Klassen vorformuliert (App-Funktion, Geografie, Selbstzahler, Engel-Qualität)
+9. **Strategischer Pivot eingeleitet:** Ab heute Video-First-Strategie laut 19.05-Empfehlung; 8 frische Videos im Pool reichen ~3 Wochen
+
+### Git-Hinweis
+
+Der Scheduler versucht den POST-LOG-Eintrag automatisch zu committen + pushen (CLAUDE.md-Regel). Commit-Message: `docs(social): Post-Log 20.05.2026 — Carry-over Tag 10, Reel-Pivot mit SQUARE-app-promo`. Bei index.lock-Problem: `rm -f .git/index.lock && git add ... && git commit --no-verify -m "..." && git push`.
+
