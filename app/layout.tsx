@@ -30,18 +30,30 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   title: {
-    default: 'Alltagsengel.care — Premium Alltagsbegleitung',
+    default: 'Alltagsengel — Pflegebox beantragen & Krankenfahrt buchen · Frankfurt / Rhein-Main',
     template: '%s | Alltagsengel.care',
   },
-  description: 'Zertifizierte Alltagsbegleiter für Senioren & Pflegebedürftige. Abrechnung über §45b SGB XI — 131€/Monat. Jetzt Engel finden.',
-  keywords: ['Alltagsbegleitung', 'Seniorenbetreuung', 'Pflegehilfe', '§45b SGB XI', 'Entlastungsbetrag', 'Alltagsbegleiter', 'Frankfurt', 'Pflege'],
+  description: 'Pflegebox kostenlos über die Pflegekasse (§40 SGB XI, bis 42 €/Monat, 0 € Eigenanteil) und Krankenfahrten in Frankfurt & Rhein-Main — mit Verordnung von der Krankenkasse gezahlt oder als Selbstzahler. Alles bequem in der App.',
+  keywords: [
+    'Pflegebox beantragen',
+    'Pflegehilfsmittel Box kostenlos',
+    'Pflegebox Frankfurt',
+    'Pflege-Box §40 SGB XI',
+    'Krankenfahrt buchen Frankfurt',
+    'Krankenfahrt Rhein-Main',
+    'Patientenfahrdienst Frankfurt',
+    'Krankenfahrt Verordnung',
+    'Krankenkasse §60 SGB V',
+    '42 Euro Pflegekasse',
+    'Pflegehilfsmittel kostenlos',
+  ],
   metadataBase: new URL('https://alltagsengel.care'),
   alternates: {
     canonical: '/',
   },
   openGraph: {
-    title: 'Alltagsengel.care — Premium Alltagsbegleitung',
-    description: 'Zertifizierte Alltagsbegleiter für Senioren & Pflegebedürftige. 131€/Monat über die Pflegekasse. Jetzt kostenlos registrieren.',
+    title: 'Alltagsengel — Pflegebox & Krankenfahrt für Frankfurt & Rhein-Main',
+    description: 'Pflegebox 0 € Eigenanteil über die Pflegekasse · Krankenfahrt mit Verordnung oder als Selbstzahler · alles in der App.',
     url: 'https://alltagsengel.care',
     siteName: 'Alltagsengel.care',
     locale: 'de_DE',
@@ -51,14 +63,14 @@ export const metadata: Metadata = {
         url: '/og-image.png',
         width: 1200,
         height: 630,
-        alt: 'Alltagsengel.care — Premium Alltagsbegleitung für Senioren',
+        alt: 'Alltagsengel — Pflegebox & Krankenfahrt für Frankfurt und das Rhein-Main-Gebiet',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Alltagsengel.care — Premium Alltagsbegleitung',
-    description: 'Zertifizierte Alltagsbegleiter für Senioren & Pflegebedürftige. 131€/Monat über die Pflegekasse.',
+    title: 'Alltagsengel — Pflegebox & Krankenfahrt für Frankfurt & Rhein-Main',
+    description: 'Pflegebox 0 € Eigenanteil über die Pflegekasse · Krankenfahrt mit Verordnung oder als Selbstzahler.',
     images: ['/og-image.png'],
   },
   robots: {
@@ -104,14 +116,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify({
             '@context': 'https://schema.org',
-            '@type': 'LocalBusiness',
+            '@type': 'Organization',
             '@id': 'https://alltagsengel.care/#organization',
-            name: 'AlltagsEngel',
-            legalName: 'AlltagsEngel',
+            name: 'Alltagsengel',
+            legalName: 'Alltagsengel UG (haftungsbeschränkt)',
             url: 'https://alltagsengel.care',
             logo: 'https://alltagsengel.care/icon-512x512.png',
             image: 'https://alltagsengel.care/og-image.png',
-            description: 'Zertifizierte Alltagsbegleitung für Senioren & Pflegebedürftige in Frankfurt am Main. Abrechnung über §45b SGB XI — 131€/Monat von der Pflegekasse.',
+            description: 'Pflege-Box (Pflegehilfsmittel nach §40 SGB XI) und Krankenfahrten (mit Verordnung nach §60 SGB V oder als Selbstzahler) für Frankfurt und das Rhein-Main-Gebiet — bestellt und gebucht in der Alltagsengel-App.',
             telephone: '+491783382825',
             email: 'info@alltagsengel.care',
             address: {
@@ -125,12 +137,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               latitude: 50.1109,
               longitude: 8.6821,
             },
-            areaServed: {
-              '@type': 'City',
-              name: 'Frankfurt am Main',
-            },
-            serviceType: ['Alltagsbegleitung', 'Seniorenbetreuung', 'Haushaltshilfe', 'Arztbegleitung', 'Krankenfahrten', 'Behördengänge'],
-            priceRange: '€€',
+            areaServed: [
+              { '@type': 'City', name: 'Frankfurt am Main' },
+              { '@type': 'AdministrativeArea', name: 'Rhein-Main-Gebiet' },
+              { '@type': 'State', name: 'Hessen' },
+            ],
             sameAs: [
               'https://www.instagram.com/alltagsengel.care',
               'https://www.facebook.com/alltagsengel.care',
