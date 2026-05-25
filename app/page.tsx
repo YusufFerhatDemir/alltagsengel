@@ -1,3 +1,4 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import Icon3D from '@/components/Icon3D'
 import AppMockup from '@/components/AppMockup'
@@ -81,6 +82,10 @@ const jsonLdFAQ = {
     name: f.q,
     acceptedAnswer: { '@type': 'Answer', text: f.a },
   })),
+}
+
+export const metadata: Metadata = {
+  alternates: { canonical: 'https://alltagsengel.care/' },
 }
 
 export default function SplashPage() {

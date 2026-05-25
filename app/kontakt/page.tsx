@@ -3,6 +3,7 @@ import Link from 'next/link'
 import KontaktForm from './KontaktForm'
 
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://alltagsengel.care/kontakt' },
   title: 'Kontakt — AlltagsEngel',
   description: 'Nehmen Sie Kontakt mit AlltagsEngel auf. Kostenlose Beratung zu Alltagsbegleitung, Entlastungsbetrag und Pflegehilfe.',
   openGraph: {

@@ -5,6 +5,7 @@ export const metadata: Metadata = {
   title: 'Einkaufshilfe für Senioren: So klappt der Einkauf mit Begleitung',
   description: 'Praktischer Leitfaden für Einkaufshilfen bei Senioren. Erfahren Sie, wie Begleitungsdienste funktionieren, welche Kosten entstehen und wie Sie über AlltagsEngel buchen.',
   keywords: 'Einkaufshilfe Senioren, Einkaufsbegleitung, Einkaufsdienst, Begleitperson, Pflege',
+  alternates: { canonical: 'https://alltagsengel.care/blog/einkaufshilfe-senioren' },
   openGraph: {
     title: 'Einkaufshilfe für Senioren: So klappt der Einkauf mit Begleitung',
     description: 'Finden Sie die richtige Einkaufshilfe für Ihre Senioren im Alter.',

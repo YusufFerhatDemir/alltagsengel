@@ -5,6 +5,7 @@ export const metadata: Metadata = {
   title: 'Pflegehilfsmittel: 40€/Monat kostenlos — Hygienebox bestellen',
   description: 'Pflegehilfsmittel kostenlos erhalten: Bis zu 40€ monatlich von der Pflegekasse. Hygienebox mit Windeln, Bettschutz & mehr. §40 SGB XI.',
   keywords: ['Pflegehilfsmittel', 'Hygienebox', '§40 SGB XI', '40 Euro', 'Pflegekasse', 'Windeln', 'Bettschutz', 'kostenlos'],
+  alternates: { canonical: 'https://alltagsengel.care/blog/pflegehilfsmittel-40-euro' },
   openGraph: {
     title: 'Pflegehilfsmittel: 40€/Monat kostenlos — Hygienebox',
     description: 'Bestellen Sie monatlich Pflegehilfsmittel kostenlos. Die Pflegekasse zahlt bis 40€.',

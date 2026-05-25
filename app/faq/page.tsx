@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 
 export const metadata: Metadata = {
+  alternates: { canonical: 'https://alltagsengel.care/faq' },
   title: 'Häufige Fragen (FAQ) — AlltagsEngel',
   description: 'Antworten auf häufige Fragen zu AlltagsEngel, Entlastungsbetrag, Pflegegrad, Abrechnung und Alltagsbegleitung.',
   keywords: ['FAQ', 'Alltagsbegleitung', 'Entlastungsbetrag', 'Pflegegrad', 'Fragen', 'Hilfe'],

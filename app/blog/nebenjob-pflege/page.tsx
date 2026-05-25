@@ -5,6 +5,7 @@ export const metadata: Metadata = {
   title: 'Nebenjob in der Pflege: Flexibel 20€/Stunde als Alltagsbegleiter',
   description: 'Arbeiten Sie flexibel als Alltagsbegleiter und verdienen 20€/Stunde. Perfekt für Studenten und Nebeneinsteiger. So funktioniert AlltagsEngel als Helfer.',
   keywords: 'Nebenjob Pflege, Alltagsbegleiter, 20 Euro Stunde, Flexibler Job, Studentenjob',
+  alternates: { canonical: 'https://alltagsengel.care/blog/nebenjob-pflege' },
   openGraph: {
     title: 'Nebenjob in der Pflege: Flexibel 20€/Stunde als Alltagsbegleiter',
     description: 'Verdienen Sie Geld als Alltagsbegleiter – flexibel und mit gutem Verdienst.',

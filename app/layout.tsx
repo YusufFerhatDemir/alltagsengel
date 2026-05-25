@@ -8,6 +8,8 @@ import ServiceWorkerRegister from '@/components/ServiceWorkerRegister'
 import PushProvider from '@/components/PushProvider'
 import NativePushProvider from '@/components/NativePushProvider'
 import GoogleTagManager from '@/components/GoogleTagManager'
+import GA4Provider from '@/components/GA4Provider'
+import WebVitalsReporter from '@/components/WebVitalsReporter'
 import MetaPixel from '@/components/MetaPixel'
 import TikTokPixel from '@/components/TikTokPixel'
 import SessionKeepAlive from '@/components/SessionKeepAlive'
@@ -48,9 +50,8 @@ export const metadata: Metadata = {
     'Pflegehilfsmittel kostenlos',
   ],
   metadataBase: new URL('https://alltagsengel.care'),
-  alternates: {
-    canonical: '/',
-  },
+  // canonical bewusst NICHT global setzen — Sub-Pages müssen eigenes
+  // alternates.canonical liefern, sonst würde jede URL auf "/" zeigen.
   openGraph: {
     title: 'Alltagsengel — Pflegebox & Krankenfahrt für Frankfurt & Rhein-Main',
     description: 'Pflegebox 0 € Eigenanteil über die Pflegekasse · Krankenfahrt mit Verordnung oder als Selbstzahler · alles in der App.',
@@ -190,6 +191,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className={`${jost.variable} ${cormorant.variable}`} style={{ fontFamily: "'Jost', sans-serif", backgroundColor: '#1A1612', color: '#F5F0E8' }}>
         <GoogleTagManager />
+        <GA4Provider />
+        <WebVitalsReporter />
         <MetaPixel />
         <TikTokPixel />
         <VisitorTracker />

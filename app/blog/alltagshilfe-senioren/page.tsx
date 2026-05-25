@@ -5,6 +5,7 @@ export const metadata: Metadata = {
   title: 'Alltagshilfe für Senioren: Was ist möglich und wer zahlt?',
   description: 'Umfassender Überblick über Alltagshilfe für ältere Menschen: Möglichkeiten, Kostenübernahme, Finanzierungsmöglichkeiten und AlltagsEngel als Lösung.',
   keywords: 'Alltagshilfe, Seniorenhilfe, Hauswirtschaftshilfe, Kostenübernahme, Pflegekasse',
+  alternates: { canonical: 'https://alltagsengel.care/blog/alltagshilfe-senioren' },
   openGraph: {
     title: 'Alltagshilfe für Senioren: Was ist möglich und wer zahlt?',
     description: 'Erfahren Sie alles über verfügbare Alltagshilfen für Senioren und welche Kosten übernommen werden.',

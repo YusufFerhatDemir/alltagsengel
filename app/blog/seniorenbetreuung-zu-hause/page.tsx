@@ -5,6 +5,7 @@ export const metadata: Metadata = {
   title: 'Seniorenbetreuung zu Hause — Kosten, Möglichkeiten & Tipps',
   description: 'Vollständiger Überblick über Seniorenbetreuung im eigenen Zuhause: Kosten, verschiedene Betreuungsmodelle und wie AlltagsEngel helfen kann.',
   keywords: 'Seniorenbetreuung, Heimbetreuung, Pflegehilfe, Haushaltshilfe, häusliche Betreuung',
+  alternates: { canonical: 'https://alltagsengel.care/blog/seniorenbetreuung-zu-hause' },
   openGraph: {
     title: 'Seniorenbetreuung zu Hause — Kosten, Möglichkeiten & Tipps',
     description: 'Erfahren Sie alles über Seniorenbetreuung zu Hause, verfügbare Optionen und Kostenübernahmen.',
