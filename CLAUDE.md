@@ -1,7 +1,19 @@
 # Proje Talimatları
 
+## Autonomie-Regel (für Agents)
+
+**Yusuf will NIE ein Terminal anfassen müssen.** Agents committen + pushen autonom.
+
+- **Immer** `./deploy.sh "commit message"` benutzen — NICHT direkt `git push`, NICHT direkt `git commit`.
+  `deploy.sh` macht: stale-lock-cleanup → typecheck (warn-only) → `precommit-guard` (Secrets/.env/node_modules → block) → `git add -A` → commit → push → `verify-push` (Remote-Wahrheits-Check).
+- **Niemals** dem User sagen „führe X im Terminal aus". Wenn ein Schritt blockiert, selbst lösen oder im Report exakt benennen, was gerade NICHT geht.
+- **Worktree-Branches** (`claude/*`, `worktree/*`) pushen automatisch nach `main` — `deploy.sh` erkennt das.
+- **Rollback**: `./scripts/rollback.sh <N> --push` revertet die letzten N Commits via `git revert` (kein reset --hard).
+- **Notfall-Override**: `GUARD_BYPASS=1 ./deploy.sh "…"` — nur wenn der User explizit zustimmt.
+- Push-Failures (Network, divergierender Remote) löst der Agent selbst (rebase, retry). Bei Konflikten Report mit Datei-Liste statt Terminal-Anweisung.
+
 ## Git
-- Değişiklik yaptıktan sonra her zaman commit ve push yap. Kullanıcıya sormadan push et.
+- Değişiklik yaptıktan sonra her zaman `./deploy.sh "açıklama"` ile commit + push yap. Kullanıcıya sormadan deploy et.
 - Commit mesajları Türkçe veya Almanca olabilir, açıklayıcı olsun.
 
 ## Dil
