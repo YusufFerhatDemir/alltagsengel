@@ -5,6 +5,7 @@ export const metadata: Metadata = {
   title: 'Arztbegleitung für Senioren: Sicher zum Termin und zurück',
   description: 'Warum Arztbegleitung für Senioren wichtig ist. Erfahren Sie, was ein Begleiter beim Arzttermin macht und wie Sie über AlltagsEngel eine geeignete Begleitperson finden.',
   keywords: 'Arztbegleitung Senioren, Arzt Begleitung, Alltagsbegleiter, Pflege, Seniorenbetreuung',
+  alternates: { canonical: 'https://alltagsengel.care/blog/arztbegleitung-senioren' },
   openGraph: {
     title: 'Arztbegleitung für Senioren: Sicher zum Termin und zurück',
     description: 'Vollständiger Leitfaden zur Arztbegleitung für ältere Menschen.',

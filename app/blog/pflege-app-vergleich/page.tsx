@@ -5,6 +5,7 @@ export const metadata: Metadata = {
   title: 'Pflege-App Vergleich 2026: Die besten Apps für Pflegebedürftige',
   description: 'Welche Pflege-Apps gibt es? Vergleich der besten Angebote 2026 für Seniorenhilfe, Alltagsbegleitung und Pflegeleistungen. AlltagsEngel im Fokus.',
   keywords: 'Pflege App, Pflege Apps, Seniorenapp, Alltagsbegleiter App, Pflegeapp Vergleich',
+  alternates: { canonical: 'https://alltagsengel.care/blog/pflege-app-vergleich' },
   openGraph: {
     title: 'Pflege-App Vergleich 2026: Die besten Apps für Pflegebedürftige',
     description: 'Finden Sie die beste Pflege-App für Ihre Bedürfnisse.',

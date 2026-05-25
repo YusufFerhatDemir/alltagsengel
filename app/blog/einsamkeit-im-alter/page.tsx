@@ -5,6 +5,7 @@ export const metadata: Metadata = {
   title: 'Einsamkeit im Alter: So helfen Alltagsbegleiter gegen Isolation',
   description: 'Einsamkeit im Alter ist ein wachsendes Problem mit ernsten Folgen. Erfahren Sie, wie professionelle Alltagsbegleiter helfen und was wissenschaftliche Studien zeigen.',
   keywords: 'Einsamkeit im Alter, Isolation, Seniorenhilfe, Alltagsbegleiter, Seniorenbetreuung',
+  alternates: { canonical: 'https://alltagsengel.care/blog/einsamkeit-im-alter' },
   openGraph: {
     title: 'Einsamkeit im Alter: So helfen Alltagsbegleiter gegen Isolation',
     description: 'Wie Alltagsbegleiter Einsamkeit im Alter bekämpfen.',

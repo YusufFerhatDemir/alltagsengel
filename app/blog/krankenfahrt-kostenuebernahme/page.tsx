@@ -5,6 +5,7 @@ export const metadata: Metadata = {
   title: 'Krankenfahrt: Wann zahlt die Krankenkasse?',
   description: 'Erfahren Sie, wann die Krankenkasse Krankenfahrten übernimmt, welche Bedingungen gelten und wie Sie diese buchen können.',
   keywords: 'Krankenfahrt, Krankenkasse, Kostenübernahme, Fahrttransport, medizinische Transporte',
+  alternates: { canonical: 'https://alltagsengel.care/blog/krankenfahrt-kostenuebernahme' },
   openGraph: {
     title: 'Krankenfahrt: Wann zahlt die Krankenkasse?',
     description: 'Vollständiger Überblick über Krankenfahrten und deren Kostenübernahme durch die Krankenkasse.',

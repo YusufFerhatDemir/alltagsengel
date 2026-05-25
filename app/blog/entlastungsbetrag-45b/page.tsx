@@ -5,6 +5,7 @@ export const metadata: Metadata = {
   title: 'Entlastungsbetrag §45b SGB XI — 131€/Monat für Alltagsbegleitung',
   description: 'Erfahren Sie wie Sie den Entlastungsbetrag nach §45b SGB XI nutzen können. 131€ monatlich für zertifizierte Alltagsbegleitung. Abrechnung mit der Pflegekasse.',
   keywords: ['Entlastungsbetrag', '§45b', '§45b SGB XI', 'Alltagsbegleitung', 'Pflegekasse', 'Pflegegrad', '131 Euro'],
+  alternates: { canonical: 'https://alltagsengel.care/blog/entlastungsbetrag-45b' },
   openGraph: {
     title: 'Entlastungsbetrag §45b SGB XI — 131€/Monat',
     description: 'Nutzen Sie Ihren Entlastungsbetrag für zertifizierte Alltagsbegleitung',

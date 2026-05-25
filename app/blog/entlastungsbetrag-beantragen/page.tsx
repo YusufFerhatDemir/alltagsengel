@@ -5,6 +5,7 @@ export const metadata: Metadata = {
   title: 'Entlastungsbetrag beantragen: Schritt-für-Schritt Anleitung 2026',
   description: 'Erfahren Sie, wie Sie den Entlastungsbetrag nach § 45b beantragen. Vollständige Anleitung mit erforderlichen Dokumenten und Tipps für eine schnelle Genehmigung.',
   keywords: 'Entlastungsbetrag, § 45b, Pflegekasse, Pflegegrad, Beantragung 2026',
+  alternates: { canonical: 'https://alltagsengel.care/blog/entlastungsbetrag-beantragen' },
   openGraph: {
     title: 'Entlastungsbetrag beantragen: Schritt-für-Schritt Anleitung 2026',
     description: 'Vollständige Anleitung zur Beantragung des Entlastungsbetrags nach § 45b mit allen erforderlichen Dokumenten.',

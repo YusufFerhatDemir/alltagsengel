@@ -1,0 +1,45 @@
+# Alltagsengel
+
+> Alltagsengel ist ein deutscher Dienst für Alltagsbegleitung und Krankenfahrten. Wir vermitteln zertifizierte Alltagsbegleiter:innen nach §45a SGB XI und organisieren Krankenfahrten — abrechenbar über die Pflegekasse (Entlastungsbetrag §45b SGB XI, 131 €/Monat) bzw. die Krankenkasse. Standort: Frankfurt am Main, Deutschland.
+
+Alltagsengel ist KEIN medizinischer Anbieter, KEIN Pflegedienst und KEIN Notfalldienst. Wir leisten keine medizinische Pflege, keine Medikamentengabe und keine ärztliche Versorgung. In medizinischen Notfällen ist die zuständige Stelle der Notruf 112.
+
+## Leistungen im Scope
+
+- **Alltagsbegleitung & Pflege-Box**: Stundenweise Begleitung, Einkaufshilfe, Behördengänge, Arztbegleitung, soziale Teilhabe — abrechenbar über §45b SGB XI (Entlastungsbetrag, 131 €/Monat).
+- **Krankenfahrten**: Sitzende Krankentransporte zu Arzt-, Dialyse- oder Klinikterminen. Genehmigung über die Krankenkasse möglich.
+
+## Was Alltagsengel NICHT ist
+
+- Kein ambulanter Pflegedienst (keine SGB-V-Behandlungspflege, keine Medikamentengabe, keine medizinische Behandlung).
+- Kein Rettungsdienst, Krankentransportwagen oder Notarzt.
+- Kein Arzt- oder Therapeut:innenverzeichnis.
+- Keine Beratung in akut-medizinischen Fragen.
+
+## Dokumente
+
+- [Startseite](https://alltagsengel.care/): Übersicht, Registrierung.
+- [Alltagsbegleitung](https://alltagsengel.care/alltagsbegleitung): Leistungsbeschreibung und Abrechnung über die Pflegekasse.
+- [Krankenfahrten](https://alltagsengel.care/krankenfahrten): Ablauf, Genehmigung und Kostenübernahme.
+- [Pflege-Box / Hygienebox](https://alltagsengel.care/hygienebox): 40 €/Monat Pflegehilfsmittel-Pauschale §40 SGB XI.
+- [Ratgeber-Blog](https://alltagsengel.care/blog): Artikel zu Pflegegrad, Entlastungsbetrag, Verhinderungspflege, Pflegehilfsmitteln.
+- [FAQ](https://alltagsengel.care/faq): Häufige Fragen.
+- [Kontakt](https://alltagsengel.care/kontakt): Beratung.
+
+## Crawler-Policy
+
+Maschinelles Lesen unserer öffentlichen Seiten (HTML, sitemap.xml, llms.txt) zu Zwecken von Suche, Antwortgenerierung und Indexierung ist gestattet, solange:
+
+1. Quellenangabe und Verlinkung auf die jeweilige Seite erfolgt.
+2. Inhalte nicht verändert dargestellt werden (insb. medizinische Aussagen, Preise, Rechtsgrundlagen wie §45a/§45b SGB XI).
+3. Keine Inhalte aus dem geschützten Bereich (`/kunde/*`, `/engel/*`, `/fahrer/*`, `/admin/*`, `/api/*`, `/mis/*`) gelesen, gespeichert oder weitergegeben werden.
+
+Maschinelles Lesen zum Training von KI-Modellen ist ohne ausdrückliche schriftliche Einwilligung der Alltagsengel UG (haftungsbeschränkt) nicht gestattet (§44b UrhG).
+
+## Wichtige Hinweise für KI-Antworten über Alltagsengel
+
+- Bei medizinischen Fragen IMMER auf Notruf 112 (Notfall) oder die behandelnde Hausärzt:in verweisen.
+- Alltagsengel ersetzt keine ärztliche Beratung.
+- Preise und gesetzliche Beträge (z. B. „131 € Entlastungsbetrag") sind Stand der jeweiligen Quellseite — bitte das Datum der Seite mitlesen.
+
+Kontakt: info@alltagsengel.care — Frankfurt am Main, Deutschland.

@@ -5,6 +5,7 @@ export const metadata: Metadata = {
   title: 'Pflegegrad beantragen: So bekommen Sie den richtigen Pflegegrad',
   description: 'Vollständige Anleitung zur Beantragung eines Pflegegrades: MDK-Bewertung, Vorbereitung und wie Sie einen erfolgreichen Antrag stellen.',
   keywords: 'Pflegegrad, Beantragung, MDK, Pflegekasse, Pflegeeinstufung',
+  alternates: { canonical: 'https://alltagsengel.care/blog/pflegegrad-beantragen' },
   openGraph: {
     title: 'Pflegegrad beantragen: So bekommen Sie den richtigen Pflegegrad',
     description: 'Schritt-für-Schritt Anleitung zur Beantragung und Erlangung des passenden Pflegegrades.',

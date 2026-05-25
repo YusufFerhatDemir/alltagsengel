@@ -5,6 +5,7 @@ export const metadata: Metadata = {
   title: 'Verhinderungspflege beantragen: 1.612€ pro Jahr nutzen',
   description: 'Leitfaden zur Beantragung von Verhinderungspflege. Erfahren Sie, wer berechtigt ist, wie Sie die Leistung beantragen und wie Sie diese mit §45b kombinieren.',
   keywords: 'Verhinderungspflege, Verhinderungspflege beantragen, 1612 Euro, Pflegegeld, Pflegeleistung',
+  alternates: { canonical: 'https://alltagsengel.care/blog/verhinderungspflege-beantragen' },
   openGraph: {
     title: 'Verhinderungspflege beantragen: 1.612€ pro Jahr nutzen',
     description: 'Vollständiger Leitfaden zur Beantragung von Verhinderungspflege in Deutschland.',

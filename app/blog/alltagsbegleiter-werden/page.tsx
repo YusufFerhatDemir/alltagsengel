@@ -5,6 +5,7 @@ export const metadata: Metadata = {
   title: 'Alltagsbegleiter werden: Verdienst, Voraussetzungen & Bewerbung',
   description: 'Alles über den Beruf des Alltagsbegleiters: Verdienst (ca. 20€/Stunde), Anforderungen und wie Sie über AlltagsEngel direkt als Helfer arbeiten können.',
   keywords: 'Alltagsbegleiter, Verdienst, Bewerbung, Qualifizierung, Arbeit als Helfer',
+  alternates: { canonical: 'https://alltagsengel.care/blog/alltagsbegleiter-werden' },
   openGraph: {
     title: 'Alltagsbegleiter werden: Verdienst, Voraussetzungen & Bewerbung',
     description: 'Erfahren Sie, wie Sie Alltagsbegleiter werden, welche Anforderungen es gibt und wie viel Sie verdienen können.',

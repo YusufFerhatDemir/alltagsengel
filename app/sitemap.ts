@@ -1,43 +1,85 @@
 import type { MetadataRoute } from 'next'
+import { readdirSync, statSync } from 'fs'
+import { join } from 'path'
+
+export const dynamic = 'force-static'
+export const revalidate = 3600
+
+const BASE_URL = 'https://alltagsengel.care'
+
+interface RouteEntry {
+  url: string
+  lastModified: string
+  changeFrequency:
+    | 'always'
+    | 'hourly'
+    | 'daily'
+    | 'weekly'
+    | 'monthly'
+    | 'yearly'
+    | 'never'
+  priority: number
+}
+
+const STATIC_ROUTES: Omit<RouteEntry, 'lastModified'>[] = [
+  { url: '/', changeFrequency: 'weekly', priority: 1.0 },
+  { url: '/alltagsbegleitung', changeFrequency: 'monthly', priority: 0.9 },
+  { url: '/hygienebox', changeFrequency: 'monthly', priority: 0.9 },
+  { url: '/krankenfahrten', changeFrequency: 'monthly', priority: 0.9 },
+  { url: '/choose', changeFrequency: 'monthly', priority: 0.8 },
+  { url: '/blog', changeFrequency: 'weekly', priority: 0.9 },
+  { url: '/faq', changeFrequency: 'monthly', priority: 0.8 },
+  { url: '/kontakt', changeFrequency: 'monthly', priority: 0.7 },
+  { url: '/auth/login', changeFrequency: 'monthly', priority: 0.6 },
+  { url: '/lp/google', changeFrequency: 'monthly', priority: 0.8 },
+  { url: '/lp/facebook', changeFrequency: 'monthly', priority: 0.7 },
+  { url: '/lp/instagram', changeFrequency: 'monthly', priority: 0.7 },
+  { url: '/lp/tiktok', changeFrequency: 'monthly', priority: 0.7 },
+  { url: '/impressum', changeFrequency: 'yearly', priority: 0.3 },
+  { url: '/datenschutz', changeFrequency: 'yearly', priority: 0.3 },
+  { url: '/agb', changeFrequency: 'yearly', priority: 0.3 },
+]
+
+function listBlogSlugs(): { slug: string; lastModified: string }[] {
+  try {
+    const dir = join(process.cwd(), 'app', 'blog')
+    const entries = readdirSync(dir, { withFileTypes: true })
+    return entries
+      .filter((e) => e.isDirectory())
+      .map((e) => {
+        const pagePath = join(dir, e.name, 'page.tsx')
+        let lastModified = new Date().toISOString()
+        try {
+          lastModified = statSync(pagePath).mtime.toISOString()
+        } catch {
+          // page.tsx fehlt → trotzdem listen, mit "jetzt"
+        }
+        return { slug: e.name, lastModified }
+      })
+  } catch {
+    return []
+  }
+}
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = 'https://alltagsengel.care'
   const now = new Date().toISOString()
 
-  return [
-    { url: baseUrl, lastModified: now, changeFrequency: 'weekly', priority: 1.0 },
-    { url: `${baseUrl}/alltagsbegleitung`, lastModified: now, changeFrequency: 'monthly', priority: 0.9 },
-    { url: `${baseUrl}/hygienebox`, lastModified: now, changeFrequency: 'monthly', priority: 0.9 },
-    { url: `${baseUrl}/krankenfahrten`, lastModified: now, changeFrequency: 'monthly', priority: 0.9 },
-    { url: `${baseUrl}/choose`, lastModified: now, changeFrequency: 'monthly', priority: 0.8 },
-    { url: `${baseUrl}/auth/login`, lastModified: now, changeFrequency: 'monthly', priority: 0.7 },
-    { url: `${baseUrl}/impressum`, lastModified: now, changeFrequency: 'yearly', priority: 0.3 },
-    { url: `${baseUrl}/datenschutz`, lastModified: now, changeFrequency: 'yearly', priority: 0.3 },
-    { url: `${baseUrl}/agb`, lastModified: now, changeFrequency: 'yearly', priority: 0.3 },
-    // Blog Index & FAQ
-    { url: `${baseUrl}/blog`, lastModified: now, changeFrequency: 'weekly', priority: 0.9 },
-    { url: `${baseUrl}/faq`, lastModified: now, changeFrequency: 'monthly', priority: 0.8 },
-    { url: `${baseUrl}/kontakt`, lastModified: now, changeFrequency: 'monthly', priority: 0.7 },
-    // Landing Pages für Ads
-    { url: `${baseUrl}/lp/google`, lastModified: now, changeFrequency: 'monthly', priority: 0.8 },
-    { url: `${baseUrl}/lp/facebook`, lastModified: now, changeFrequency: 'monthly', priority: 0.7 },
-    { url: `${baseUrl}/lp/instagram`, lastModified: now, changeFrequency: 'monthly', priority: 0.7 },
-    { url: `${baseUrl}/lp/tiktok`, lastModified: now, changeFrequency: 'monthly', priority: 0.7 },
-    // Blog Artikel (SEO)
-    { url: `${baseUrl}/blog/alltagsbegleitung-frankfurt`, lastModified: now, changeFrequency: 'monthly', priority: 0.8 },
-    { url: `${baseUrl}/blog/entlastungsbetrag-45b`, lastModified: now, changeFrequency: 'monthly', priority: 0.8 },
-    { url: `${baseUrl}/blog/pflegehilfsmittel-40-euro`, lastModified: now, changeFrequency: 'monthly', priority: 0.8 },
-    { url: `${baseUrl}/blog/entlastungsbetrag-beantragen`, lastModified: now, changeFrequency: 'monthly', priority: 0.8 },
-    { url: `${baseUrl}/blog/krankenfahrt-kostenuebernahme`, lastModified: now, changeFrequency: 'monthly', priority: 0.8 },
-    { url: `${baseUrl}/blog/alltagsbegleiter-werden`, lastModified: now, changeFrequency: 'monthly', priority: 0.8 },
-    { url: `${baseUrl}/blog/seniorenbetreuung-zu-hause`, lastModified: now, changeFrequency: 'monthly', priority: 0.8 },
-    { url: `${baseUrl}/blog/pflegegrad-beantragen`, lastModified: now, changeFrequency: 'monthly', priority: 0.8 },
-    { url: `${baseUrl}/blog/alltagshilfe-senioren`, lastModified: now, changeFrequency: 'monthly', priority: 0.8 },
-    { url: `${baseUrl}/blog/verhinderungspflege-beantragen`, lastModified: now, changeFrequency: 'monthly', priority: 0.8 },
-    { url: `${baseUrl}/blog/einkaufshilfe-senioren`, lastModified: now, changeFrequency: 'monthly', priority: 0.8 },
-    { url: `${baseUrl}/blog/arztbegleitung-senioren`, lastModified: now, changeFrequency: 'monthly', priority: 0.8 },
-    { url: `${baseUrl}/blog/pflege-app-vergleich`, lastModified: now, changeFrequency: 'monthly', priority: 0.8 },
-    { url: `${baseUrl}/blog/einsamkeit-im-alter`, lastModified: now, changeFrequency: 'monthly', priority: 0.8 },
-    { url: `${baseUrl}/blog/nebenjob-pflege`, lastModified: now, changeFrequency: 'monthly', priority: 0.8 },
-  ]
+  const staticEntries: RouteEntry[] = STATIC_ROUTES.map((r) => ({
+    ...r,
+    lastModified: now,
+  }))
+
+  const blogEntries: RouteEntry[] = listBlogSlugs().map(({ slug, lastModified }) => ({
+    url: `/blog/${slug}`,
+    lastModified,
+    changeFrequency: 'monthly',
+    priority: 0.8,
+  }))
+
+  return [...staticEntries, ...blogEntries].map((e) => ({
+    url: `${BASE_URL}${e.url}`,
+    lastModified: e.lastModified,
+    changeFrequency: e.changeFrequency,
+    priority: e.priority,
+  }))
 }

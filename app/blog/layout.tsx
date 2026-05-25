@@ -1,8 +1,10 @@
 import Link from 'next/link'
+import BlogPostJsonLd from '@/components/BlogPostJsonLd'
 
 export default function BlogLayout({ children }: { children: React.ReactNode }) {
   return (
     <div style={{ minHeight: '100vh', background: '#1A1612' }}>
+      <BlogPostJsonLd />
       {/* Blog Navigation */}
       <nav style={{
         maxWidth: 800,

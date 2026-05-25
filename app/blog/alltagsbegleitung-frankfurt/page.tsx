@@ -5,6 +5,7 @@ export const metadata: Metadata = {
   title: 'Alltagsbegleitung in Frankfurt — Zertifizierte Alltagsbegleiter finden',
   description: 'Finden Sie zertifizierte Alltagsbegleiter in Frankfurt. §45a qualifiziert, versichert & abrechenbar über §45b. Schnell, diskret, professionell.',
   keywords: ['Alltagsbegleitung Frankfurt', 'Alltagsbegleiter', 'Seniorenbetreuung Frankfurt', 'Pflege Frankfurt', 'Altenbetreuung', '§45a'],
+  alternates: { canonical: 'https://alltagsengel.care/blog/alltagsbegleitung-frankfurt' },
   openGraph: {
     title: 'Alltagsbegleitung in Frankfurt — Zertifizierte Begleiter',
     description: 'Professionelle Alltagsbegleitung für Senioren in Frankfurt',
