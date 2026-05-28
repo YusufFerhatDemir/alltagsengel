@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__ff4c811e-6e2b-427e-b756-4dd64dce5d56__list-brand-kits",
+      "mcp__ff4c811e-6e2b-427e-b756-4dd64dce5d56__search-folders"
+    ]
+  }
+}

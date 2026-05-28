@@ -62,7 +62,12 @@ export default function KundeHomePage() {
       const { data: p, error: profileErr } = await supabase.from('profiles').select('*').eq('id', user.id).maybeSingle()
       if (profileErr) throw new Error('Profil konnte nicht geladen werden')
       setProfile(p)
-      const { data: a, error: angelsErr } = await supabase.from('angels').select('*, profiles(*)').order('rating', { ascending: false })
+      // Test-Engel (is_test=true) ausschließen — dürfen NIEMALS Kunden gematcht werden
+      const { data: a, error: angelsErr } = await supabase
+        .from('angels')
+        .select('*, profiles!inner(*)')
+        .eq('profiles.is_test', false)
+        .order('rating', { ascending: false })
       if (angelsErr) throw new Error('Engel konnte nicht geladen werden')
       setAngels(a || [])
     } catch (err: any) {

@@ -22,7 +22,12 @@ export default function KarteSeite() {
       if (!user) return
       const { data: p } = await supabase.from('profiles').select('*').eq('id', user.id).single()
       setProfile(p)
-      const { data: a } = await supabase.from('angels').select('*, profiles(*)').eq('is_online', true)
+      // Test-Engel (is_test=true) ausschließen — dürfen NIEMALS Kunden gematcht werden
+      const { data: a } = await supabase
+        .from('angels')
+        .select('*, profiles!inner(*)')
+        .eq('is_online', true)
+        .eq('profiles.is_test', false)
       setAngels(a || [])
     }
     load()
