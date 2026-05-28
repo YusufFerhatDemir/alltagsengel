@@ -37,11 +37,17 @@ export async function POST(request: Request) {
     // Phishing-Link, Session-Hijack im Mail-Client), hat sonst einen ganzen
     // Tag Zeit. Wir senken auf 1h. Falls Supabase-Dashboard-Setting das
     // global härtet, ist das hier zusätzliche Defense-in-Depth.
+    // FIX (2026-05-28): redirectTo direkt auf /auth/reset-password — die Reset-Page
+    // handhabt PKCE-Code, Hash-Flow UND PASSWORD_RECOVERY-Event selbst. Der frühere
+    // Umweg über /auth/callback hat dazu geführt, dass die Callback-Route bei
+    // Recovery-Links die rollenbasierte Weiterleitung griff und User auf der
+    // Startseite / im Kunde-Home landeten statt im Passwort-Setzen-Flow.
+    // (Frau Eßer hat genau das gemeldet: "ich komme nur zur Startseite")
     const { data, error } = await supabase.auth.admin.generateLink({
       type: 'recovery',
       email,
       options: {
-        redirectTo: `${siteUrl}/auth/callback?next=/auth/reset-password`,
+        redirectTo: `${siteUrl}/auth/reset-password`,
       },
     })
     // Hinweis: Supabase nimmt `expiresIn` aktuell NICHT an `generateLink`
