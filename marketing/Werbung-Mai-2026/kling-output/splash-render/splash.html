@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1080, initial-scale=1">
+<title>AlltagsEngel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --gold:  #C9963C;
+  --gold2: #DBA84A;
+  --gold3: #ECC870;
+  --coal:  #1A1612;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  width: 1080px;
+  height: 1920px;
+  background: #1A1612;
+  color: #F5F0E8;
+  font-family: 'Inter', sans-serif;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+body {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 120px 60px 100px;
+}
+
+/* Status bar */
+.status-bar {
+  display: flex;
+  justify-content: space-between;
+  font-size: 36px;
+  font-weight: 700;
+  color: #ccc;
+  margin-bottom: 40px;
+}
+
+/* Glow background */
+.sp-glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -45%);
+  width: 1100px;
+  height: 1100px;
+  border-radius: 50%;
+  pointer-events: none;
+  background: radial-gradient(circle, rgba(201,150,60,.15) 0%, transparent 60%);
+  z-index: 0;
+}
+
+.sp-inner {
+  text-align: center;
+  position: relative;
+  z-index: 2;
+  padding: 60px 0 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+/* 3D icon — exact replica of Icon3D component */
+.icon3d-wrap {
+  position: relative;
+  display: inline-block;
+  margin-bottom: 60px;
+  animation: iconFloat 5s ease-in-out infinite;
+}
+.icon3d {
+  --sz: 380px;
+  border-radius: calc(var(--sz)*.228);
+  width: var(--sz);
+  height: var(--sz);
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0,0,0,.6), 0 0 80px rgba(201,150,60,.25);
+}
+.icon3d img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: calc(var(--sz)*.228);
+  position: relative;
+  z-index: 3;
+  display: block;
+}
+.icon3d::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  pointer-events: none;
+  border-radius: calc(var(--sz)*.228 + 4px);
+  background: linear-gradient(135deg, rgba(248,224,100,.88) 0%, rgba(196,154,46,.5) 28%, rgba(70,48,6,.12) 50%, rgba(196,154,46,.48) 74%, rgba(248,224,100,.82) 100%);
+  z-index: 0;
+}
+.icon3d::after {
+  content: '';
+  position: absolute;
+  inset: 4px;
+  border-radius: calc(var(--sz)*.228 - 1px);
+  background: #0e0b04;
+  z-index: 1;
+  pointer-events: none;
+}
+@keyframes iconFloat { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+
+/* Word, tag, ug */
+.sp-word {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 86px;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  background: linear-gradient(135deg, var(--gold2) 0%, var(--gold) 45%, var(--gold3) 70%, var(--gold) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-top: 20px;
+}
+.sp-tag {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 56px;
+  font-style: italic;
+  color: rgba(255,255,255,.55);
+  margin-top: 25px;
+}
+.sp-ug {
+  font-size: 28px;
+  font-weight: 500;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,.32);
+  margin-top: 15px;
+}
+.gold-div {
+  width: 180px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  margin: 80px auto;
+}
+
+/* Buttons */
+.sp-btns { display: flex; flex-direction: column; gap: 32px; align-items: center; }
+.btn-gold {
+  width: 720px;
+  height: 150px;
+  border-radius: 36px;
+  background: linear-gradient(135deg, var(--gold2) 0%, var(--gold) 55%, #9A7020 100%);
+  border: none;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  font-family: 'Inter', sans-serif;
+  font-size: 56px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  color: #1a1408;
+  box-shadow: 0 0 80px rgba(201,150,60,.4), 0 10px 40px rgba(0,0,0,.4);
+}
+.btn-ghost {
+  width: 720px;
+  height: 130px;
+  border-radius: 36px;
+  background: transparent;
+  border: 2px solid rgba(255,255,255,.14);
+  cursor: pointer;
+  font-size: 42px;
+  color: rgba(255,255,255,.72);
+  font-family: 'Inter', sans-serif;
+}
+
+/* Trust bar */
+.sp-trust {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 60px;
+  position: relative;
+  z-index: 2;
+}
+.trust-row {
+  display: flex;
+  align-items: center;
+  gap: 60px;
+  border-top: 1px solid rgba(255,255,255,.1);
+  padding-top: 50px;
+}
+.trust-item { text-align: center; }
+.trust-val {
+  font-family: 'Inter', sans-serif;
+  font-size: 36px;
+  font-weight: 700;
+  color: var(--gold2);
+  letter-spacing: 0.08em;
+}
+.trust-lbl {
+  font-size: 24px;
+  color: rgba(255,255,255,.4);
+  margin-top: 6px;
+  font-weight: 300;
+}
+.trust-sep {
+  width: 1px;
+  height: 80px;
+  background: rgba(255,255,255,.12);
+}
+</style>
+</head>
+<body>
+<div class="sp-glow"></div>
+<div class="status-bar"><span>22:49</span><span>06.05.2026</span></div>
+<div class="sp-inner">
+  <div class="icon3d-wrap">
+    <div class="icon3d"><img src="icon.jpg" alt=""></div>
+  </div>
+  <div class="sp-word">ALLTAGSENGEL</div>
+  <div class="sp-tag">Mit Herz für dich da</div>
+  <div class="sp-ug">Premium Alltagsbegleitung</div>
+  <div class="gold-div"></div>
+  <div class="sp-btns">
+    <button class="btn-gold">JETZT STARTEN</button>
+    <button class="btn-ghost">Ich habe bereits ein Konto</button>
+  </div>
+</div>
+<div class="sp-trust">
+  <div class="trust-row">
+    <div class="trust-item"><div class="trust-val">100%</div><div class="trust-lbl">Versichert</div></div>
+    <div class="trust-sep"></div>
+    <div class="trust-item"><div class="trust-val">§45b</div><div class="trust-lbl">Integriert</div></div>
+    <div class="trust-sep"></div>
+    <div class="trust-item"><div class="trust-val">24/7</div><div class="trust-lbl">Verfügbar</div></div>
+  </div>
+</div>
+</body>
+</html>

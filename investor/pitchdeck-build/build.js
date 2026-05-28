@@ -1,6 +1,6 @@
 // AlltagsEngel — Investor Pitch Deck
 // Zielgruppe: ProCare Deutschland (Timo Scharpenberg) + PROLIFE homecare (Stefan Pickl)
-// Pre-Seed 1,0 Mio EUR | Frankfurt → Köln → Düsseldorf
+// Pre-Seed 1,5 Mio EUR | 25 % Equity | Frankfurt → Köln → Düsseldorf → Berlin → DE-weit
 
 const pptxgen = require("pptxgenjs");
 const React = require("react");
@@ -1178,23 +1178,23 @@ async function main() {
       x: 0.8, y: 0.8, w: 8, h: 0.4,
       fontFace: FONT_B, fontSize: 12, color: GOLD, bold: true, charSpacing: 8, margin: 0
     });
-    s.addText("1,0 Mio €", {
+    s.addText("1,5 Mio €", {
       x: 0.8, y: 1.4, w: 12, h: 1.8,
       fontFace: FONT_H, fontSize: 96, color: CREAM, italic: false, margin: 0
     });
-    s.addText("Pre-Seed · Wandeldarlehen oder Equity · 18–24 Monate Runway", {
+    s.addText("Pre-Seed · 25 % Equity · Pre-Money 4,5 Mio € · 27 Monate Runway bis Profitabilität", {
       x: 0.8, y: 3.1, w: 12, h: 0.5,
-      fontFace: FONT_B, fontSize: 16, color: GOLD_LT, charSpacing: 2, margin: 0
+      fontFace: FONT_B, fontSize: 14, color: GOLD_LT, charSpacing: 1, margin: 0
     });
 
-    // Use of funds — 5 Hauptbuckets
+    // Use of funds — 5 Hauptbuckets (skaliert auf 1,5 Mio)
     const useY = 3.80;
     const uses = [
-      { pct: "38 %", lbl: "Team (4 Hires)",    desc: "Head of Ops, 2× Care-Mgr, Growth, Partner", ic: ic.users },
-      { pct: "22 %", lbl: "Marketing & CAC",   desc: "Paid Social, SEO, Apotheken, PR",            ic: ic.chart },
-      { pct: "11 %", lbl: "Gründer-Gehalt",    desc: "Yusuf F. Demir, CEO/CTO · 6 T€/Mon brutto",  ic: ic.crown },
-      { pct: "11 %", lbl: "Expansion NRW",     desc: "Köln Q1/27 + Düsseldorf Q3/27",              ic: ic.map },
-      { pct: "18 %", lbl: "Ops, Tech, Setup",  desc: "Tech · Büro · Auto · Recht · Puffer",        ic: ic.cogs },
+      { pct: "38 %", lbl: "Team (5 Hires)",    desc: "Head of Ops, 2× Care-Mgr, Growth, Partner-Mgr", ic: ic.users },
+      { pct: "22 %", lbl: "Marketing & CAC",   desc: "Paid Social, SEO, Apotheken, PR",                ic: ic.chart },
+      { pct: "11 %", lbl: "Gründer-Gehalt",    desc: "Yusuf F. Demir, CEO/CTO · 6 T€/Mon brutto",      ic: ic.crown },
+      { pct: "13 %", lbl: "Expansion DE",      desc: "Köln Q1/27 · Düsseldorf Q3/27 · Berlin Q2/28",   ic: ic.map },
+      { pct: "16 %", lbl: "Ops, Tech, Setup",  desc: "Tech · Büro · Auto · Recht · Puffer",            ic: ic.cogs },
     ];
     const gap = 0.15;
     const wBox = (12.4 - 4 * gap) / 5; // = 2.36
@@ -1220,14 +1220,14 @@ async function main() {
     });
 
     // Detail-Zeile: Ops, Tech, Setup aufgeschlüsselt
-    s.addText("Detail Ops-Bucket:  Tech & Infrastruktur 6,0 %  ·  Recht/Notar/Versicherung 3,2 %  ·  Büro & Co-Working 2,2 %  ·  Firmenwagen 1,8 %  ·  Puffer 5,0 %",
+    s.addText("Detail Ops-Bucket:  Tech & Infrastruktur 5,5 %  ·  Recht/Notar/Versicherung 3,0 %  ·  Büro & Co-Working 2,0 %  ·  Firmenwagen 1,5 %  ·  Puffer 4,0 %",
       { x: 0.8, y: 6.10, w: 12.4, h: 0.35,
         fontFace: FONT_B, fontSize: 9.5, color: GOLD_LT, align: "center", italic: false, margin: 0 });
 
     // Milestones after funding
-    s.addText("Nach Seed: 1.900 Kunden · 2,6 Mio € Umsatz · Break-Even Q2/2028 · Series-A ready",
+    s.addText("1,5 Mio bringt uns BIS ZUR PROFITABILITÄT (Q3/2028) — keine zweite Runde nötig, keine Verwässerung für PROLIFE",
       { x: 0.8, y: 6.55, w: 12, h: 0.4,
-        fontFace: FONT_B, fontSize: 12, color: GOLD_LT, charSpacing: 2, margin: 0 });
+        fontFace: FONT_B, fontSize: 12, color: GOLD_LT, charSpacing: 1, margin: 0 });
 
     addBrandLogo(s);
     addFooter(s, 12, totalSlides);

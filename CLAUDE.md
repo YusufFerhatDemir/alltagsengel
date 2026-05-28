@@ -25,3 +25,9 @@
 - Vor größeren Umbenennungen: `npm run lint:forbidden` (Voll-Scan, 0 Treffer erwartet).
 - Neue Regressions-Pattern: `scripts/forbidden-strings.json` erweitern, Lint-Lauf grün, commit.
 - Nicht in Doku schreiben: Literal-Pattern in Erklärtexten. Verweis auf JSON-Config statt Copy-Paste.
+
+## Kundenkommunikation (WICHTIG — gilt für ALLE Antwort-Entwürfe an Kunden oder Engel)
+- **Absender / Unterschrift: IMMER „Alltagsengel" — NIEMALS persönliche Namen** (kein „Yusuf", kein „Abdullah", kein Mitarbeitername).
+- Begrüßung: „Hallo Frau/Herr [Nachname]," — neutral, professionell.
+- Verabschiedung: „Herzliche Grüße" gefolgt von „Ihr Team von Alltagsengel" oder nur „Alltagsengel".
+- Gilt für: E-Mail, WhatsApp, SMS, In-App-Chat, Pressetexte, automatisierte Mails — JEDE Kommunikation in Kundenrichtung.

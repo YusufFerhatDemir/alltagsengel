@@ -69,10 +69,12 @@ function BuchenServiceInner() {
       setLoading(true)
       const supabase = createClient()
       const serviceLabel = serviceOptions.find(s => s.key === selectedService)?.label || selectedService
+      // Test-Engel (is_test=true) ausschließen — dürfen NIEMALS Kunden gematcht werden
       const { data } = await supabase
         .from('angels')
-        .select('*, profiles(*)')
+        .select('*, profiles!inner(*)')
         .eq('is_online', true)
+        .eq('profiles.is_test', false)
         .order('rating', { ascending: false })
 
       // Filtere nach Service
