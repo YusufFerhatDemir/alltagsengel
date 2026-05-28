@@ -5,12 +5,30 @@ export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
   const next = searchParams.get('next')
+  const type = searchParams.get('type')
+
+  // SAFETY NET (2026-05-28): Wenn diese Callback-Route aus einem Recovery-Flow
+  // aufgerufen wird (entweder explizit via ?type=recovery oder via
+  // ?next=/auth/reset-password), MUSS der User auf der Reset-Password-Seite
+  // landen — niemals auf einem Rollen-Home. Das verhindert, dass der Bug
+  // "User klickt Passwort-vergessen-Link, landet auf Startseite" erneut auftritt,
+  // egal aus welcher Quelle der Recovery-Link kommt (eigene Mail, Supabase-Default,
+  // Admin-Reset, oder externe Integration).
+  const isRecoveryFlow =
+    type === 'recovery' ||
+    type === 'magiclink' ||
+    (next && next.startsWith('/auth/reset-password'))
 
   if (code) {
     const supabase = await createClient()
     const { error } = await supabase.auth.exchangeCodeForSession(code)
 
     if (!error) {
+      // Recovery hat IMMER Vorrang — nicht ins Rollen-Home schicken
+      if (isRecoveryFlow) {
+        return NextResponse.redirect(`${origin}/auth/reset-password`)
+      }
+
       // If a specific redirect target was requested (e.g. password reset), go there
       if (next && next.startsWith('/')) {
         return NextResponse.redirect(`${origin}${next}`)

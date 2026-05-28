@@ -108,11 +108,14 @@ export async function POST(request: NextRequest) {
       const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://alltagsengel.care'
 
       // Recovery-Link generieren (1-Time-Use, kurze Lebensdauer via Supabase-Dashboard-Config)
+      // FIX (2026-05-28): redirectTo direkt auf /auth/reset-password (nicht via /auth/callback),
+      // sonst greift die Rollen-Weiterleitung der Callback-Route und der User landet im Home
+      // statt im Passwort-Setzen-Flow. Defensive Maßnahme zusätzlich in /auth/callback selbst.
       const { data: linkData, error: linkError } = await adminSupabase.auth.admin.generateLink({
         type: 'recovery',
         email: targetProfile.email,
         options: {
-          redirectTo: `${siteUrl}/auth/callback?next=/auth/reset-password`,
+          redirectTo: `${siteUrl}/auth/reset-password`,
         },
       })
 
