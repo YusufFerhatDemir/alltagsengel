@@ -5141,3 +5141,402 @@ git push
 ```
 
 ---
+
+## 29.05.2026 (Freitag) — Carry-over Tag 19 — Reel „§45b / 131 € Awareness — Verfällt jeden Monat"
+
+**Status:** 📝 Vorbereitet — manuelles Posting empfohlen (Scheduler-Lauf ohne anwesenden User)
+**Plattform:** Instagram + Facebook + TikTok
+**Typ:** Video (Reel, 9:16) — Awareness / Conversion
+**Datei:** `marketing/social-media-grafiken/REELS-viral-v3-dynamic.mp4`
+**Thema:** Freitag-Awareness — Entlastungsbetrag §45b SGB XI, 131 €/Monat, „verfällt wenn nicht genutzt" + Klare CTA → alltagsengel.care
+**Geplante Uhrzeit:** 11:00 CEST (DE) · 12:00 CEST (TR) · TikTok parallel
+**Begründung Asset-Wahl:** Reel-Pivot fortgesetzt (Reels schlagen Grafiken im Algorithmus). `REELS-viral-v3-dynamic.mp4` ist ein dynamisch geschnittenes, hochenergetisches Viral-Reel — die Schnittfrequenz und das visuelle Tempo passen perfekt zu einem zahlen-/awareness-zentrierten Hook („131 € — jeden Monat — weg, wenn du nicht handelst"). Freitag-Slot laut Original-Calendar Woche 2 (25.04) und Woche 4 war jeweils §45b/131-€-Awareness — wir bleiben thematisch konsistent. Verbleibendes frisches Reel-Inventar nach heute: `REELS-viral-real-v1.mp4` (2× nach heute), `REELS-viral-v3-dynamic.mp4` (2× nach heute).
+
+### Caption DE (IG-Reel + FB, geplant 11:00 CEST)
+
+```
+Du verschenkst jeden Monat 131 €. 😳
+
+§45b SGB XI — der Entlastungsbetrag.
+Steht jedem mit Pflegegrad zu (1, 2, 3, 4 oder 5).
+Direkt von der Pflegekasse — kein Antragsdschungel.
+
+Aber: Was du im Monat nicht nutzt, verfällt.
+Jeden. Einzelnen. Monat.
+
+Mit AlltagsEngel nutzt du es in 3 Minuten:
+
+1️⃣ alltagsengel.care öffnen
+2️⃣ Engel buchen — Einkauf, Arztfahrt, Behördengang, Gesellschaft
+3️⃣ Pflegekasse zahlt direkt — du musst keinen Cent vorstrecken
+
+💛 Geprüfte Engel aus Frankfurt am Main
+🚑 Krankenfahrten ab 15 €
+🧴 Hygienebox bis 40 €/Monat — kostenlos
+
+Tag eine Person, die das wissen sollte. 👇
+
+📱 www.alltagsengel.care
+✉️ info@alltagsengel.care
+
+#AlltagsEngel #131Euro #Entlastungsbetrag #§45b #Pflegekasse #Pflegegrad #Frankfurt #Alltagsbegleitung #FrankfurtAmMain #Senioren #Seniorenhilfe #Pflege
+```
+
+### Caption TR (IG-Reel + FB, geplant 12:00 CEST)
+
+```
+Her ay 131 €'yu çöpe atıyorsun. 😳
+
+§45b SGB XI — Rahatlatma ödeneği (Entlastungsbetrag).
+Bakım derecesi olan herkesin hakkı (1, 2, 3, 4 veya 5).
+Doğrudan bakım sigortasından — evrak ormanı yok.
+
+Ama: Ay içinde kullanmadığın yanıyor.
+Her. Tek. Ay.
+
+AlltagsEngel ile 3 dakikada kullanabilirsin:
+
+1️⃣ alltagsengel.care'i aç
+2️⃣ Melek rezerve et — alışveriş, doktor yolu, resmi işler, arkadaşlık
+3️⃣ Bakım sigortası doğrudan öder — bir kuruş bile peşin ödemen gerekmiyor
+
+💛 Frankfurt am Main'dan kontrol edilmiş melekler
+🚑 Hasta taşıma 15 €'dan başlayan
+🧴 Hijyen kutusu aylık 40 €'ya kadar — ücretsiz
+
+Bunu bilmesi gereken birini etiketle. 👇
+
+📱 www.alltagsengel.care
+✉️ info@alltagsengel.care
+
+#AlltagsEngel #Frankfurt #131Euro #BakımSigortası #BakımDerecesi #YaşlıBakımı #TürklerFrankfurt #Bakım #RahatlatmaÖdeneği #§45b
+```
+
+### TikTok-Variante (geplant 11:00 CEST DE / 12:00 CEST TR)
+
+- **Video:** `REELS-viral-v3-dynamic.mp4` — 9:16, direkt uploadbar.
+- **TikTok-Kurzcaption DE:** „Du verschenkst jeden Monat 131 €. 😳 §45b SGB XI — Entlastungsbetrag von der Pflegekasse. Was du nicht nutzt, verfällt. Mit AlltagsEngel in 3 Minuten gebucht — Pflegekasse zahlt direkt. Frankfurt. Link in Bio. #AlltagsEngel #131Euro #Pflegekasse #Frankfurt #Pflegegrad #§45b"
+- **TikTok-Kurzcaption TR:** „Her ay 131 €'yu çöpe atıyorsun. 😳 §45b SGB XI — bakım sigortasından rahatlatma ödeneği. Kullanmadığın yanıyor. AlltagsEngel ile 3 dakikada rezerve — bakım sigortası direkt öder. Frankfurt. Link bio'da. #AlltagsEngel #Frankfurt #BakımSigortası #YaşlıBakımı #TürklerFrankfurt #131Euro"
+- **Sound:** In der App einen energetischen, schnellen Trending-Sound wählen (Awareness-/Zahlen-Hook — siehe `VIRAL-MUSIK-REHBERI.md`). Tempo passt zum dynamischen Schnitt des Reels.
+- **Location:** Frankfurt am Main · **CTA-Sticker:** „Link in Bio" + alltagsengel.care als On-Screen-Text in den letzten 3 Sekunden. Zusätzlich Text-Overlay „131 €" in den ersten 2 Sekunden (Hook-Boost).
+
+### Manuelle Posting-Anleitung (Yusuf) — Fr 29.05.2026
+
+1. **Instagram + Facebook (Meta Business Suite) — 11:00 CEST:**
+   - business.facebook.com → Seite „AlltagsEngel" → „Beitrag erstellen" → Video
+   - Datei: `marketing/social-media-grafiken/REELS-viral-v3-dynamic.mp4`
+   - Caption DE (oben) einfügen
+   - Auf Instagram **als Reel** posten („Als Reel teilen" anhaken) → Algorithmus-Boost
+   - „Auch auf Facebook teilen" anhaken
+   - Cover-Frame: ein Frame mit klar lesbarem „131 €"-Moment (falls im Reel) — sonst der visuell prägnanteste Mid-Frame
+   - Veröffentlichen oder auf 11:00 planen
+   - **12:00 CEST:** zweiter Beitrag mit TR-Caption (gleiches Video)
+2. **TikTok — 11:00 CEST (parallel):**
+   - tiktok.com/upload als @alltagsengel → `REELS-viral-v3-dynamic.mp4` hochladen
+   - TikTok-Kurzcaption DE einfügen, Location Frankfurt, Trending-Sound in der App wählen
+   - „Allow comments" + „Allow duet" aktivieren → veröffentlichen
+   - 1 h später (12:00) separat die TR-Variante
+3. **Engagement (11:00–22:00 CEST):** alle 30–60 Min Kommentare checken. Pattern-Antworten siehe Eintrag 22.05 (Wie funktioniert die App / außerhalb Frankfurt / ohne Pflegegrad / Angehörige). Bei Awareness/Zahlen-Posts kommen oft DMs „Habe ich Pflegegrad X — bekomme ich das?" → kurz, freundlich, mit Link beantworten.
+
+### Scheduler-Notiz
+
+- **Manuelles Posting empfohlen** statt autonomer Veröffentlichung — konsistent mit allen bisherigen Scheduler-Läufen: irreversible Live-Post-Aktionen (öffentliche Posts auf IG/FB/TikTok) werden ohne anwesenden User nicht autonom ausgeführt. Browser-/Computer-Zugriff sowie eingeloggte Meta-/TikTok-Sessions erfordern eine User-Freigabe, die im automatisierten Lauf nicht vorliegt.
+- Asset, beide Captions (DE/TR) und TikTok-Varianten sind vollständig vorbereitet → Posting ist für Yusuf ein reiner Copy-&-Upload-Vorgang.
+
+### Lücken-Status (Carry-over, Tag 19)
+
+| Datum | Slot | Status |
+|-------|------|--------|
+| Mo 25.05 | `REELS-kunde-walkthrough.mp4` Wochenstart-App-Promo-Reel | 📝 vorbereitet — Yusuf-Posting-Bestätigung offen |
+| Di 26.05 | — | ⚠️ **kein Scheduler-Lauf protokolliert** — Slot-Lücke |
+| Mi 27.05 | — | ⚠️ **kein Scheduler-Lauf protokolliert** — Slot-Lücke |
+| Do 28.05 | `REELS-viral-real-v1.mp4` Tag-a-Person Engagement-Reel | 📝 vorbereitet — Yusuf-Posting-Bestätigung offen |
+| **Fr 29.05** | **`REELS-viral-v3-dynamic.mp4` §45b/131-€-Awareness-Reel** | **📝 vorbereitet — manuelles Posting empfohlen** |
+| Sa 30.05 | Wochenend-Reel (Skyline/Spaziergang/Café) | 🟡 offen — verbleibende frische Reels nach heute: `REELS-viral-real-v1.mp4` (2×), `REELS-viral-v3-dynamic.mp4` (2×) |
+
+### Offene To-dos (für Yusuf)
+
+- [ ] **Manuelles Posting des §45b/131-€-Awareness-Reels (11:00 DE / 12:00 TR / parallel TikTok)**
+- [ ] **Klären: 26.05 + 27.05** — wurde manuell bepostet oder sind das Lücken?
+- [ ] Bestätigung der letzten Posts (12.05–28.05) — wurden sie tatsächlich veröffentlicht?
+- [ ] Reel- vs. Grafik-Performance vergleichen → Reel-Pivot validieren
+- [ ] **Content-Calendar-Verlängerung** (Calendar endete 10.05) — Carry-over läuft seit 19 Tagen; Video-Pipeline reicht noch ~4–5 Tage, danach blockierend → **DRINGEND** neue Inhalte/Reels produzieren (auch neue Caption-Themen wären gut — wir wiederholen das §45b-Motiv im Algorithmus zu oft)
+- [ ] **`.git/index.lock` entfernen** falls erneut blockierend — heute war der Working-Tree clean, Auto-Commit über `./deploy.sh` sollte funktionieren
+
+### Auto-Commit-Status (Lauf 29.05.2026)
+
+`git status` zeigt diesmal einen sauberen Working-Tree zum Start (letzter Commit auf `main`: `eaaddd0`). Die 28.05-Notiz im POST-LOG war bereits committed (HEAD enthält sie) — `.git/index.lock` ist zwar noch da (0 Bytes, Stand 21.05.), wird aber von deploy.sh als stale erkannt und entfernt (Schritt 1/6). Auto-Commit via `./deploy.sh "docs(social): Post-Log 29.05.2026 — §45b/131-€-Awareness-Reel"` wird im Anschluss versucht.
+
+---
+
+## 30.05.2026 (Samstag) — Carry-over Tag 20 — Wochenend-Reel „Spaziergang in Frankfurt — Zeit zu zweit"
+
+**Status:** 📝 Vorbereitet — manuelles Posting empfohlen (Scheduler-Lauf ohne anwesenden User)
+**Plattform:** Instagram + Facebook + TikTok
+**Typ:** Video (Reel, 9:16 / hochformat) — Emotional / Weekend-Vibe
+**Datei:** `marketing/social-media-grafiken/REELS-spaziergang-neu.mp4`
+**Thema:** Samstag-Nachmittag in Frankfurt — Spaziergang mit Begleitung. Emotional, ruhiger Ton, Weekend-Stimmung. Soft-CTA → „Auch am Wochenende für dich da."
+**Geplante Uhrzeit:** 14:00 CEST (DE) · 15:00 CEST (TR) · TikTok parallel
+**Begründung Asset-Wahl:** Carry-over-Notiz von gestern (29.05) markierte für Sa 30.05 ausdrücklich ein „Wochenend-Reel (Skyline/Spaziergang/Café)". Café-Reel (`REELS-cafe-freizeit-neu.mp4`) wurde bereits am 23.05 verwendet, deshalb heute der bisher ungenutzte `REELS-spaziergang-neu.mp4` — passt zur klassischen Samstag-14:00-Slot-Logik des Original-Calendars (Sa-Slots = emotionale Frankfurt-Atmosphäre, z. B. Video #7 „Skyline Abend" am 26.04). Inhaltlich Soft-Sell statt Hard-Push nach dem starken Awareness-Reel von gestern — Algorithmus dankt für tonale Abwechslung, Audience bekommt Atempause vor neuer Conversion-Welle Mo–Fr. Verbleibendes frisches Reel-Inventar nach heute: `REELS-viral-real-v1.mp4` (2× nach heute), `REELS-viral-v3-dynamic.mp4` (2× nach heute), `REELS-gesellschaft-neu.mp4` (1× ungenutzt).
+
+### Caption DE (IG-Reel + FB, geplant 14:00 CEST)
+
+```
+Samstagnachmittag in Frankfurt. 🍃
+
+Kein Termin. Kein Stress.
+Einfach raus — und jemand an deiner Seite.
+
+Ein Spaziergang am Main.
+Frische Luft. Ein kurzes Gespräch.
+Vielleicht ein Kaffee auf dem Rückweg.
+
+Für viele ältere Menschen ist genau das das Wertvollste:
+Nicht allein unterwegs zu sein.
+
+Mit AlltagsEngel buchst du genau das — auch am Wochenende.
+Stundenweise. Geprüfte Engel aus Frankfurt.
+Über §45b SGB XI direkt mit der Pflegekasse abrechenbar (131 €/Monat).
+
+💛 Auch Samstag. Auch Sonntag.
+📍 Frankfurt am Main
+
+👉 www.alltagsengel.care
+✉️ info@alltagsengel.care
+
+#AlltagsEngel #Spaziergang #Wochenende #Frankfurt #Alltagsbegleitung #Pflegekasse #Entlastungsbetrag #§45b #FrankfurtAmMain #Senioren #Seniorenhilfe #Pflege #Begleitung #ZeitZuZweit
+```
+
+### Caption TR (IG-Reel + FB, geplant 15:00 CEST)
+
+```
+Frankfurt'ta cumartesi öğleden sonrası. 🍃
+
+Randevu yok. Stres yok.
+Sadece dışarı — ve yanında biri.
+
+Main kıyısında bir yürüyüş.
+Temiz hava. Kısa bir sohbet.
+Belki dönüşte bir kahve.
+
+Birçok yaşlı insan için en değerlisi tam olarak bu:
+Yolda yalnız olmamak.
+
+AlltagsEngel ile tam bunu rezerve edebilirsin — hafta sonu bile.
+Saatlik. Frankfurt'tan kontrol edilmiş melekler.
+§45b SGB XI üzerinden doğrudan bakım sigortasından (ayda 131 €).
+
+💛 Cumartesi de. Pazar da.
+📍 Frankfurt am Main
+
+👉 www.alltagsengel.care
+✉️ info@alltagsengel.care
+
+#AlltagsEngel #Frankfurt #Yürüyüş #Haftasonu #YaşlıBakımı #BakımSigortası #TürklerFrankfurt #Bakım #RahatlatmaÖdeneği #§45b #Refakat #BirlikteZaman
+```
+
+### TikTok-Variante (geplant 14:00 CEST DE / 15:00 CEST TR)
+
+- **Video:** `REELS-spaziergang-neu.mp4` — 9:16, direkt uploadbar.
+- **TikTok-Kurzcaption DE:** „Samstag in Frankfurt. Einfach raus — und jemand an deiner Seite. 🍃 Mit AlltagsEngel buchst du Begleitung auch am Wochenende. Stundenweise · Pflegekasse zahlt (§45b · 131 €/Monat). Link in Bio. #AlltagsEngel #Frankfurt #Spaziergang #Wochenende #Pflegekasse #Senioren"
+- **TikTok-Kurzcaption TR:** „Frankfurt'ta cumartesi. Sadece dışarı — ve yanında biri. 🍃 AlltagsEngel ile hafta sonu bile refakat rezerve. Saatlik · bakım sigortası öder (§45b · ayda 131 €). Link bio'da. #AlltagsEngel #Frankfurt #Yürüyüş #Haftasonu #YaşlıBakımı #TürklerFrankfurt"
+- **Sound:** In der App einen ruhigen, warmen Trending-Sound wählen (Weekend-/Emotional-Hook — siehe `VIRAL-MUSIK-REHBERI.md`, Kategorie „warm/akustisch"). Bewusst Kontrast zum hochenergetischen Sound vom 29.05.
+- **Location:** Frankfurt am Main · **CTA-Sticker:** „Link in Bio" + alltagsengel.care als On-Screen-Text in den letzten 3 Sekunden. Text-Overlay in den ersten 2 Sekunden: „Auch Samstag. Auch Sonntag." (verstärkt den Wochenend-USP).
+
+### Manuelle Posting-Anleitung (Yusuf) — Sa 30.05.2026
+
+1. **Instagram + Facebook (Meta Business Suite) — 14:00 CEST:**
+   - business.facebook.com → Seite „AlltagsEngel" → „Beitrag erstellen" → Video
+   - Datei: `marketing/social-media-grafiken/REELS-spaziergang-neu.mp4`
+   - Caption DE (oben) einfügen
+   - Auf Instagram **als Reel** posten („Als Reel teilen" anhaken) → Algorithmus-Boost
+   - „Auch auf Facebook teilen" anhaken
+   - Cover-Frame: ruhiger Spaziergang-Mid-Frame mit Skyline oder Hand-an-Hand-Moment, wenn vorhanden
+   - Veröffentlichen oder auf 14:00 planen
+   - **15:00 CEST:** zweiter Beitrag mit TR-Caption (gleiches Video)
+2. **TikTok — 14:00 CEST (parallel):**
+   - tiktok.com/upload als @alltagsengel → `REELS-spaziergang-neu.mp4` hochladen
+   - TikTok-Kurzcaption DE einfügen, Location Frankfurt, ruhigen Trending-Sound in der App wählen
+   - „Allow comments" + „Allow duet" aktivieren → veröffentlichen
+   - 1 h später (15:00) separat die TR-Variante
+3. **Engagement (14:00–22:00 CEST):** Wochenend-Posts ziehen häufig persönliche DMs („Meine Mutter ist alleine am Wochenende…") → empathisch + konkret + Link antworten. Standard-Patterns siehe Eintrag 22.05 (Wie funktioniert die App / außerhalb Frankfurt / ohne Pflegegrad / Angehörige).
+
+### Scheduler-Notiz
+
+- **Manuelles Posting empfohlen** statt autonomer Veröffentlichung — konsistent mit allen bisherigen Scheduler-Läufen (siehe Einträge 23.05, 24.05, 28.05, 29.05): irreversible Live-Post-Aktionen (öffentliche Posts auf IG/FB/TikTok) werden ohne anwesenden User nicht autonom ausgeführt. Browser-/Computer-Zugriff sowie eingeloggte Meta-/TikTok-Sessions erfordern eine User-Freigabe, die im automatisierten Lauf nicht vorliegt.
+- Asset, beide Captions (DE/TR) und TikTok-Varianten sind vollständig vorbereitet → Posting ist für Yusuf ein reiner Copy-&-Upload-Vorgang.
+
+### Lücken-Status (Carry-over, Tag 20)
+
+| Datum | Slot | Status |
+|-------|------|--------|
+| Mo 25.05 | `REELS-kunde-walkthrough.mp4` Wochenstart-App-Promo-Reel | 📝 vorbereitet — Yusuf-Posting-Bestätigung offen |
+| Di 26.05 | — | ⚠️ **kein Scheduler-Lauf protokolliert** — Slot-Lücke (Carry-over) |
+| Mi 27.05 | — | ⚠️ **kein Scheduler-Lauf protokolliert** — Slot-Lücke (Carry-over) |
+| Do 28.05 | `REELS-viral-real-v1.mp4` Tag-a-Person Engagement-Reel | 📝 vorbereitet — Yusuf-Posting-Bestätigung offen |
+| Fr 29.05 | `REELS-viral-v3-dynamic.mp4` §45b/131-€-Awareness-Reel | 📝 vorbereitet — Yusuf-Posting-Bestätigung offen |
+| **Sa 30.05** | **`REELS-spaziergang-neu.mp4` Wochenend-Reel „Spaziergang in Frankfurt"** | **📝 vorbereitet — manuelles Posting empfohlen** |
+| So 31.05 | Sonntag-Reel (ruhig, reflektierend — Vorschlag: `REELS-gesellschaft-neu.mp4` oder Wiederholung Sonntagspattern 24.05) | 🟡 offen — verbleibende frische Reels nach heute: `REELS-viral-real-v1.mp4` (2×), `REELS-viral-v3-dynamic.mp4` (2×), `REELS-gesellschaft-neu.mp4` (1×) |
+
+### Offene To-dos (für Yusuf)
+
+- [ ] **Manuelles Posting des Wochenend-Spaziergang-Reels (14:00 DE / 15:00 TR / parallel TikTok)**
+- [ ] **Klären: 26.05 + 27.05** — wurde manuell bepostet oder sind das Lücken?
+- [ ] Bestätigung der letzten Posts (12.05–29.05) — wurden sie tatsächlich veröffentlicht?
+- [ ] Reel- vs. Grafik-Performance vergleichen → Reel-Pivot validieren
+- [ ] **Content-Calendar-Verlängerung** (Calendar endete 10.05) — Carry-over läuft seit 20 Tagen; Reel-Pipeline reicht noch ~5 Tage (2× viral-real-v1, 2× viral-v3-dynamic, 1× gesellschaft), danach blockierend → **WEITERHIN DRINGEND** neue Inhalte/Reels produzieren. Vorschlag: neuer 4-Wochen-Zyklus 01.06–28.06 mit frischen Themen (Demenz-Begleitung, Behördengänge, Apotheke, Engel-Stories als UGC).
+- [ ] **`.git/index.lock` entfernen** falls erneut blockierend — deploy.sh erkennt stale-locks automatisch.
+
+### Auto-Commit-Status (Lauf 30.05.2026)
+
+`git status` zum Start zeigt **ein uncommitted file**: `marketing/social-media-grafiken/POST-LOG.md` — die 29.05-Notiz von gestern ist also lokal vorhanden, wurde aber noch nicht zum Remote gepusht (deploy.sh-Lauf von 29.05 hat offenbar nicht durchgegriffen oder nach Auto-Commit lag noch ein Lock). Letzter Commit auf `main`: `eaaddd0` (Test-Engel-Fix vom 28.05). Auto-Commit via `./deploy.sh "docs(social): Post-Log 29.+30.05.2026 — Awareness-Reel + Wochenend-Spaziergang-Reel"` deckt jetzt beide Tage in einem Commit ab.
+
+---
+
+## 31.05.2026 (Sonntag) — Carry-over Tag 21 — Sonntags-Reel „Gesellschaft / Nähe — Niemand sollte sonntags allein sein"
+
+**Status:** 📝 Asset + Captions vorbereitet — manuelles Posting empfohlen (Scheduler-Lauf ohne anwesenden User — keine autonome Live-Veröffentlichung; Browser-/Computer-Zugriff sowie eingeloggte Meta-/TikTok-Sessions erfordern eine User-Freigabe, die im automatisierten Lauf nicht vorliegt)
+**Plattform:** Instagram (Reel) + Facebook + TikTok
+**Typ:** Video / Reel (9:16) — Emotional / Sonntags-Reflexion / Soft-Sell
+**Datei:** `marketing/social-media-grafiken/REELS-gesellschaft-neu.mp4` (2.6 MB, 9:16, vorhanden ✅)
+**Thema:** Sonntags-Nähe — „Niemand sollte sonntags allein sein". Gesellschaft als Kernbotschaft, ruhiger Ton, kein Hard-Sell. Bewusst tonale Variation zum Spaziergang-Reel von gestern (30.05).
+**Geplante Uhrzeit:** 11:00 CEST (DE) · 12:00 CEST (TR) · TikTok parallel
+
+### Warum heute dieses Asset?
+
+1. **Content-Calendar geprüft** → endet 10.05.2026; So 31.05 = **Carry-over-Tag 21**.
+2. **Vorheriger Lauf (30.05)** nennt im Lücken-Status für So 31.05 explizit: „Sonntag-Reel (ruhig, reflektierend — Vorschlag: `REELS-gesellschaft-neu.mp4` oder Wiederholung Sonntagspattern 24.05)". Empfehlung wird umgesetzt.
+3. **Sonntagspattern (etabliert seit 17.05 + 24.05):** Sonntage = emotionaler Reflexions-/Nähe-Tag, Soft-Sell statt Hard-Push. Konsistenz mit etabliertem Wochenend-Rhythmus.
+4. **Asset-Wahl:** `REELS-gesellschaft-neu.mp4` ist laut Carry-over-Inventur vom 30.05 als „1× ungenutzt" markiert (Reel-Pool-Reserve). Thematisch perfekter Fit: „Gesellschaft" = Companionship/Nähe = exakt der Sonntags-Hook. Letzte tatsächliche Veröffentlichung war nicht im Carry-over-Zeitraum (12.05–30.05) — Cooldown ausreichend.
+5. **Tonale Variation:** Gestern (30.05) Spaziergang-Reel mit Bewegungs-/Frische-Vibe. Heute bewusst stiller Innenraum-/Nähe-Vibe → komplementäres Sonntags-Pärchen für das Wochenende. Algorithmus dankt für Themen-Wechsel.
+6. **Datei verifiziert:** 1080×1920 (echtes 9:16), direkt als Reel/TikTok uploadbar, kein Zuschnitt nötig.
+
+### Caption DE (für IG-Reel + FB, geplant 11:00 CEST)
+
+```
+Sonntag in Frankfurt. 🕊️
+
+Für viele Familien ist es der Tag der Nähe — Mittagessen bei Oma, Anruf bei den Eltern, gemeinsam Kaffee.
+
+Aber für viele ältere Menschen ist der Sonntag der längste Tag der Woche.
+Kein Termin. Keine Pflege-Visite. Kein Klingeln an der Tür.
+Nur Stille.
+
+Niemand sollte sonntags allein sein. 💛
+
+Genau dafür gibt es AlltagsEngel:
+🤝 Ein Engel, der vorbeikommt — auch sonntags
+☕ Zeit für ein Gespräch beim Kaffee
+🚶 Ein gemeinsamer Spaziergang am Main
+📖 Vorlesen, zuhören, einfach da sein
+
+Begleitung ist keine Pflege — es ist Gesellschaft.
+Und Gesellschaft tut an jedem Tag der Woche gut.
+
+✅ Mit Pflegegrad über §45b SGB XI abrechenbar (131 €/Monat — sonst verfällt)
+✅ Direkt mit der Pflegekasse abgerechnet — kein Papierkram
+✅ Geprüfte Engel aus deiner Frankfurter Nachbarschaft
+✅ Auch Samstag, Sonntag und an Feiertagen buchbar
+
+Tagge jemanden, an den du heute denkst. 👇
+
+📱 www.alltagsengel.care
+✉️ info@alltagsengel.care
+
+#AlltagsEngel #Alltagsbegleitung #Frankfurt #Pflege #Seniorenhilfe #Pflegekasse #Entlastungsbetrag #FrankfurtAmMain #Senioren #§45b #Sonntag #Nähe #GegenEinsamkeit
+```
+
+### Caption TR (für IG-Reel + FB, geplant 12:00 CEST)
+
+```
+Frankfurt'ta pazar günü. 🕊️
+
+Birçok aile için yakınlık günüdür — anneannede yemek, ailenle telefon, birlikte kahve.
+
+Ama birçok yaşlı insan için pazar günü haftanın en uzun günüdür.
+Randevu yok. Bakım ziyareti yok. Kapı çalmıyor.
+Sadece sessizlik.
+
+Kimse pazar günü yalnız olmamalı. 💛
+
+İşte tam bunun için AlltagsEngel var:
+🤝 Pazar günü bile uğrayan bir melek
+☕ Kahve eşliğinde sohbet için zaman
+🚶 Main kıyısında birlikte yürüyüş
+📖 Okumak, dinlemek, sadece orada olmak
+
+Refakat bakım değildir — o, arkadaşlıktır.
+Ve arkadaşlık haftanın her günü iyi gelir.
+
+✅ Bakım dereceniz varsa §45b SGB XI üzerinden (aylık 131 € — kullanmazsanız yanar)
+✅ Bakım sigortasıyla doğrudan faturalandırma — size evrak işi yok
+✅ Frankfurt'taki mahallenizden, kontrol edilmiş melekler
+✅ Cumartesi, pazar ve resmi tatillerde de rezerve edilebilir
+
+Bugün aklına gelen birini etiketle. 👇
+
+📱 www.alltagsengel.care
+✉️ info@alltagsengel.care
+
+#AlltagsEngel #Frankfurt #YaşlıBakımı #TürklerFrankfurt #Bakım #BakımSigortası #RahatlatmaÖdeneği #§45b #Pazar #Yakınlık #YalnızlığaKarşı
+```
+
+### TikTok-Variante (geplant 11:00 CEST DE / 12:00 CEST TR)
+
+- **Video:** `REELS-gesellschaft-neu.mp4` — 9:16, direkt uploadbar.
+- **TikTok-Kurzcaption DE:** „Für viele ältere Menschen ist der Sonntag der längste Tag der Woche. 🕊️ Niemand sollte sonntags allein sein. AlltagsEngel: Begleitung über die Pflegekasse, auch am Wochenende (§45b · 131 €/Monat). Frankfurt · Link in Bio. #AlltagsEngel #Frankfurt #Sonntag #GegenEinsamkeit #Pflegekasse #Senioren"
+- **TikTok-Kurzcaption TR:** „Birçok yaşlı için pazar günü haftanın en uzun günüdür. 🕊️ Kimse pazar günü yalnız olmamalı. AlltagsEngel: Bakım sigortası üzerinden refakat, hafta sonu bile (§45b · ayda 131 €). Frankfurt · Link bio'da. #AlltagsEngel #Frankfurt #Pazar #YalnızlığaKarşı #YaşlıBakımı #TürklerFrankfurt"
+- **Sound:** In der App einen ruhigen, warmen Trending-Sound wählen (lo-fi Piano / deutscher Indie-Folk / sanft-akustisch — siehe `VIRAL-MUSIK-REHBERI.md`). Bewusste Fortsetzung des ruhigen Wochenend-Tons von gestern (30.05).
+- **Location:** Frankfurt am Main · **CTA-Sticker:** „Link in Bio" + alltagsengel.care als On-Screen-Text in den letzten 3 Sekunden. Text-Overlay in den ersten 2 Sekunden: „Niemand sollte sonntags allein sein." (Hook-Verstärkung).
+
+### Manuelle Posting-Anleitung (Yusuf) — So 31.05.2026
+
+1. **Instagram + Facebook (Meta Business Suite) — 11:00 CEST:**
+   - business.facebook.com → Seite „AlltagsEngel" → „Beitrag erstellen" → Video
+   - Datei: `marketing/social-media-grafiken/REELS-gesellschaft-neu.mp4`
+   - Caption DE (oben) einfügen
+   - Auf Instagram **als Reel** posten („Als Reel teilen" anhaken) → Algorithmus-Boost
+   - „Auch auf Facebook teilen" anhaken
+   - Cover-Frame: warmer Nähe-Moment (Mid-Frame), idealerweise mit sichtbarem Gesicht/Lächeln
+   - Veröffentlichen oder auf 11:00 planen
+   - **12:00 CEST:** zweiter Beitrag mit TR-Caption (gleiches Video)
+2. **TikTok — 11:00 CEST (parallel):**
+   - tiktok.com/upload als @alltagsengel → `REELS-gesellschaft-neu.mp4` hochladen
+   - TikTok-Kurzcaption DE einfügen, Location Frankfurt, ruhigen Trending-Sound in der App wählen
+   - „Allow comments" + „Allow duet" aktivieren → veröffentlichen
+   - 1 h später (12:00) separat die TR-Variante
+3. **Engagement (11:00–22:00 CEST):** Sonntags-Posts ziehen besonders persönliche DMs/Kommentare („Meine Mutter ist sonntags immer allein…", „Mein Vater wohnt allein, ich wohne in einer anderen Stadt…") → empathisch antworten, ohne sofort zu verkaufen. Standard-Pattern: Empathie → Frage zur Situation → erst dann sanfter Link-Verweis. Pattern-Antworten siehe Eintrag 22.05 (Wie funktioniert die App / außerhalb Frankfurt / ohne Pflegegrad / Angehörige).
+
+### Scheduler-Notiz
+
+- **Manuelles Posting empfohlen** statt autonomer Veröffentlichung — konsistent mit allen bisherigen Scheduler-Läufen (siehe Einträge 23.05, 24.05, 28.05, 29.05, 30.05): irreversible Live-Post-Aktionen (öffentliche Posts auf IG/FB/TikTok) werden ohne anwesenden User nicht autonom ausgeführt. Browser-/Computer-Zugriff sowie eingeloggte Meta-/TikTok-Sessions erfordern eine User-Freigabe, die im automatisierten Lauf nicht vorliegt.
+- Asset, beide Captions (DE/TR) und TikTok-Varianten sind vollständig vorbereitet → Posting ist für Yusuf ein reiner Copy-&-Upload-Vorgang.
+
+### Lücken-Status (Carry-over, Tag 21)
+
+| Datum | Slot | Status |
+|-------|------|--------|
+| Mo 25.05 | `REELS-kunde-walkthrough.mp4` Wochenstart-App-Promo-Reel | 📝 vorbereitet — Yusuf-Posting-Bestätigung offen |
+| Di 26.05 | — | ⚠️ **kein Scheduler-Lauf protokolliert** — Slot-Lücke (Carry-over) |
+| Mi 27.05 | — | ⚠️ **kein Scheduler-Lauf protokolliert** — Slot-Lücke (Carry-over) |
+| Do 28.05 | `REELS-viral-real-v1.mp4` Tag-a-Person Engagement-Reel | 📝 vorbereitet — Yusuf-Posting-Bestätigung offen |
+| Fr 29.05 | `REELS-viral-v3-dynamic.mp4` §45b/131-€-Awareness-Reel | 📝 vorbereitet — Yusuf-Posting-Bestätigung offen |
+| Sa 30.05 | `REELS-spaziergang-neu.mp4` Wochenend-Reel „Spaziergang in Frankfurt" | 📝 vorbereitet — Yusuf-Posting-Bestätigung offen |
+| **So 31.05** | **`REELS-gesellschaft-neu.mp4` Sonntags-Reel „Gesellschaft / Nähe"** | **📝 vorbereitet — manuelles Posting empfohlen** |
+| Mo 01.06 | Wochenstart-Reel (Vorschlag: `REELS-viral-real-v1.mp4` — letztes ungenutztes Tag-a-Person-Reel) | 🟡 offen — verbleibende frische Reels nach heute: `REELS-viral-real-v1.mp4` (2×), `REELS-viral-v3-dynamic.mp4` (2×) — Reel-Pool noch ~4 Tage |
+
+### Offene To-dos (für Yusuf)
+
+- [ ] **Manuelles Posting des Sonntags-Gesellschaft-Reels (11:00 DE / 12:00 TR / parallel TikTok)**
+- [ ] **Klären: 26.05 + 27.05** — wurde manuell bepostet oder sind das Lücken?
+- [ ] Bestätigung der letzten Posts (12.05–30.05) — wurden sie tatsächlich veröffentlicht?
+- [ ] Reel- vs. Grafik-Performance vergleichen → Reel-Pivot validieren
+- [ ] **Content-Calendar-Verlängerung** (Calendar endete 10.05) — Carry-over läuft seit **21 Tagen** (3 Wochen!); Reel-Pipeline reicht nach heute nur noch ~4 Tage (2× viral-real-v1, 2× viral-v3-dynamic), danach **vollständig blockierend** → **AKUT DRINGEND** neue Inhalte/Reels produzieren. Vorschlag: neuer 4-Wochen-Zyklus 01.06–28.06 mit frischen Themen (Demenz-Begleitung, Behördengänge, Apotheke, Engel-Stories als UGC, Kunden-Testimonials).
+- [ ] **Sonntags-Slot 31.05:** prüfen, ob `REELS-gesellschaft-neu.mp4` in den letzten 21 Tagen tatsächlich gepostet wurde — falls ja, wäre `REELS-viral-real-v1.mp4` mit Sonntags-Caption die Backup-Wahl.
+- [ ] **`.git/index.lock` entfernen** falls erneut blockierend — deploy.sh erkennt stale-locks automatisch.
+
+### Auto-Commit-Status (Lauf 31.05.2026)
+
+`git status` zum Start: working-tree hat **ein modified file** (`POST-LOG.md` — die 30.05-Notiz von gestern, nicht committed). Letzter Commit auf `main`: `eaaddd0` (28.05). `.git/index.lock` ist vorhanden (0 Bytes, Stand 28.05.) — wird von `deploy.sh` Schritt 1/6 als stale erkannt und entfernt. Auto-Commit via `./deploy.sh "docs(social): Post-Log 30.+31.05.2026 — Wochenend-Spaziergang + Sonntags-Gesellschaft-Reel"` deckt heute beide Tage in einem Commit ab (gestern wurde nicht durchgepusht).
+
+---
