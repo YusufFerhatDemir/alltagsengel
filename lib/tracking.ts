@@ -60,17 +60,15 @@ function getAttributionData() {
 }
 
 function gtagConversion(label: string, value?: number, currency = 'EUR', userData?: { email?: string; phone?: string }) {
-  if (typeof window === 'undefined' || typeof window.gtag !== 'function') return
+  if (typeof window === 'undefined') return
 
   const attribution = getAttributionData()
 
-  // Enhanced Conversions: Hashed User-Data verbessert Attribution trotz ITP (iOS Safari)
-  // Google Ads hasht Email/Phone automatisch, wenn sie als "normalisierte" Strings übergeben werden
   const conversionData: Record<string, any> = {
     send_to: `${GOOGLE_ADS_ID}/${label}`,
     value: value ?? 0,
     currency,
-    ...attribution, // fügt gclid hinzu, falls vorhanden
+    ...attribution,
   }
 
   if (userData?.email) {
@@ -80,9 +78,27 @@ function gtagConversion(label: string, value?: number, currency = 'EUR', userDat
     conversionData.phone_number = userData.phone.replace(/\D/g, '')
   }
 
-  window.gtag('event', 'conversion', conversionData)
+  // Retry-Mechanismus: Wartet bis gtag geladen ist (max 10 Sekunden)
+  // Vorher: wenn gtag noch nicht da war, wurde die Conversion stillschweigend verworfen.
+  // Jetzt: bis zu 20 Versuche im 500ms-Takt, damit gtag (afterInteractive) Zeit hat zu laden.
+  let attempts = 0
+  const maxAttempts = 20
+  const tryFire = () => {
+    if (typeof window.gtag === 'function') {
+      window.gtag('event', 'conversion', conversionData)
+      console.log(`[Tracking] ✅ gtag conversion fired: ${label} (${value} ${currency}) after ${attempts} retries`)
+      return
+    }
+    attempts++
+    if (attempts < maxAttempts) {
+      setTimeout(tryFire, 500)
+    } else {
+      console.warn(`[Tracking] ⚠️ gtag not available after ${maxAttempts} attempts — conversion ${label} only sent server-side`)
+    }
+  }
+  tryFire()
 
-  // Offline-Conversion-Fallback: Server-seitig über /api/track-conversion senden (auch wenn gtag blockiert wird)
+  // Server-seitiger Fallback (immer senden, unabhängig von gtag)
   try {
     fetch('/api/track-conversion', {
       method: 'POST',
