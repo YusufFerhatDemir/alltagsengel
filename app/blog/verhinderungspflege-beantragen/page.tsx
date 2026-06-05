@@ -77,7 +77,7 @@ export default function VerhinderungspflegePage() {
 
           <h2>Kombination mit §45b – Der Kniff für mehr Geld</h2>
           <p>
-            Hier ist der entscheidende Trick: Sie können Verhinderungspflege und die <strong>§45b-Leistung</strong> kombinieren. Mit §45b bekommen Sie zusätzliche 125€ pro Monat für Betreuungsleistungen. Diese können Sie auch für Verhinderungspflege einsetzen.
+            Hier ist der entscheidende Trick: Sie können Verhinderungspflege und die <strong>§45b-Leistung</strong> kombinieren. Mit §45b bekommen Sie zusätzliche 131€ pro Monat für Betreuungsleistungen. Diese können Sie auch für Verhinderungspflege einsetzen.
           </p>
           <p>
             Praktisch bedeutet das: Nutzen Sie zuerst Ihre monatliche Verhinderungspflege (1.612€ pro Jahr), und wenn Sie mehr Unterstützung brauchen, greifen Sie auf §45b-Mittel zurück.

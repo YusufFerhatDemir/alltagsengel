@@ -140,7 +140,7 @@ export default function GoToMarketPage() {
               <td style={{ padding: '12px 8px', color: '#F7F2EA' }}>Paid Social (Meta, TikTok)</td>
               <td style={{ padding: '12px 8px', textAlign: 'center', color: '#A0978A' }}>€500</td>
               <td style={{ padding: '12px 8px', textAlign: 'center', color: '#A0978A' }}>€1,000</td>
-              <td style={{ padding: '12px 8px', textAlign: 'center', color: '#A0978A' }}>€1,500</td>
+              <td style={{ padding: '12px 8px', textAlign: 'center', color: '#A0978A' }}>€1,572</td>
               <td style={{ padding: '12px 8px', textAlign: 'center', color: '#5CB882' }}>€3,000</td>
             </tr>
             <tr style={{ borderBottom: '1px solid #3A3530' }}>

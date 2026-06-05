@@ -27,8 +27,8 @@ const jsonLd = {
 }
 
 const faqData = [
-  { q: 'Was kostet eine Haushaltshilfe in Frankfurt?', a: 'Mit anerkanntem Pflegegrad übernimmt die Pflegekasse bis zu 125 € monatlich über den Entlastungsbetrag nach §45b SGB XI. Ohne Pflegegrad buchen Sie als Selbstzahler — die Preise sehen Sie transparent in der App.' },
-  { q: 'Wer hat Anspruch auf eine Haushaltshilfe?', a: 'Jeder mit Pflegegrad 1–5 hat Anspruch auf den Entlastungsbetrag (125 €/Monat). Dieser kann für Haushaltshilfe, Begleitung und Alltagsunterstützung eingesetzt werden.' },
+  { q: 'Was kostet eine Haushaltshilfe in Frankfurt?', a: 'Mit anerkanntem Pflegegrad übernimmt die Pflegekasse bis zu 131 € monatlich über den Entlastungsbetrag nach §45b SGB XI. Ohne Pflegegrad buchen Sie als Selbstzahler — die Preise sehen Sie transparent in der App.' },
+  { q: 'Wer hat Anspruch auf eine Haushaltshilfe?', a: 'Jeder mit Pflegegrad 1–5 hat Anspruch auf den Entlastungsbetrag (131 €/Monat). Dieser kann für Haushaltshilfe, Begleitung und Alltagsunterstützung eingesetzt werden.' },
   { q: 'Wie schnell bekomme ich eine Haushaltshilfe?', a: 'Nach der Registrierung bei Alltagsengel können Sie innerhalb weniger Tage eine Alltagsbegleitung buchen. Die Vermittlung läuft über unsere App.' },
   { q: 'Welche Aufgaben übernimmt die Haushaltshilfe?', a: 'Einkaufen, Kochen, leichte Reinigung, Wäsche, Begleitung zum Arzt, Spaziergänge, Behördengänge, Gesellschaft leisten — alles was den Alltag erleichtert.' },
 ]
@@ -59,7 +59,7 @@ export default function HaushaltshilfeFrankfurtPage() {
           <p className="blog-intro">
             Sie suchen eine <strong>Haushaltshilfe in Frankfurt am Main</strong> oder im Rhein-Main-Gebiet?
             Alltagsengel vermittelt zuverlässige Alltagsbegleiter, die Sie im Haushalt unterstützen —
-            und das Beste: Bei anerkanntem Pflegegrad zahlt die <strong>Pflegekasse bis zu 125 € monatlich</strong>.
+            und das Beste: Bei anerkanntem Pflegegrad zahlt die <strong>Pflegekasse bis zu 131 € monatlich</strong>.
           </p>
 
           <h2>Diese Aufgaben übernimmt unsere Haushaltshilfe</h2>
@@ -80,7 +80,7 @@ export default function HaushaltshilfeFrankfurtPage() {
           <h2>Kostenübernahme durch die Pflegekasse</h2>
           <p>
             Bei Pflegegrad 1–5 steht Ihnen der <strong>Entlastungsbetrag nach §45b SGB XI</strong> zu:
-            <strong> 125 € monatlich</strong>. Dieses Geld können Sie direkt für eine Haushaltshilfe über
+            <strong> 131 € monatlich</strong>. Dieses Geld können Sie direkt für eine Haushaltshilfe über
             Alltagsengel einsetzen. Der Betrag ist zweckgebunden und verfällt, wenn er nicht genutzt wird —
             also nutzen Sie ihn!
           </p>

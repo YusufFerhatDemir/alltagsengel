@@ -339,7 +339,7 @@ export default function BetriebskostenPage() {
               <tr style={{ borderBottom: '1px solid rgba(201, 150, 60, 0.2)' }}>
                 <td style={{ padding: '10px 8px', color: 'rgba(255, 255, 255, 0.9)' }}>H2 2026 (Launch)</td>
                 <td style={{ padding: '10px 8px', textAlign: 'center', fontWeight: '500' }}>500</td>
-                <td style={{ padding: '10px 8px', textAlign: 'center', fontWeight: '500' }}>1.500</td>
+                <td style={{ padding: '10px 8px', textAlign: 'center', fontWeight: '500' }}>1.572</td>
                 <td style={{ padding: '10px 8px', textAlign: 'right', fontWeight: '500', color: '#C9963C' }}>€35.000</td>
               </tr>
               <tr style={{ borderBottom: '1px solid rgba(201, 150, 60, 0.2)' }}>

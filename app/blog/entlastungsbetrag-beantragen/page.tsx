@@ -25,12 +25,12 @@ export default function EntlastungsbetragBeantragen() {
         </div>
 
         <div className="blog-intro">
-          <p>Der Entlastungsbetrag nach § 45b SGB XI bietet bis zu 125 Euro monatlich für pflegebedürftige Personen mit anerkanntem Pflegegrad. Viele Betroffene wissen jedoch nicht, wie man diesen Betrag beantragt und welche Dokumente notwendig sind. Dieser Leitfaden zeigt Ihnen den kompletten Weg zur erfolgreichen Beantragung.</p>
+          <p>Der Entlastungsbetrag nach § 45b SGB XI bietet bis zu 131 Euro monatlich für pflegebedürftige Personen mit anerkanntem Pflegegrad. Viele Betroffene wissen jedoch nicht, wie man diesen Betrag beantragt und welche Dokumente notwendig sind. Dieser Leitfaden zeigt Ihnen den kompletten Weg zur erfolgreichen Beantragung.</p>
         </div>
 
         <div className="blog-content">
           <h2>Was ist der Entlastungsbetrag nach § 45b?</h2>
-          <p>Der Entlastungsbetrag ist eine finanzielle Leistung der Pflegekasse für Personen mit Pflegegrad 1, 2, 3, 4 oder 5. Er kann monatlich für qualifizierte Helfer und Dienstleistungen verwendet werden, die den Alltag erleichtern – wie Haushaltshilfen, Alltagsbegleiter oder Einkaufshilfen. Der Höchstbetrag liegt bei 125 Euro pro Monat, insgesamt also 1.500 Euro pro Jahr.</p>
+          <p>Der Entlastungsbetrag ist eine finanzielle Leistung der Pflegekasse für Personen mit Pflegegrad 1, 2, 3, 4 oder 5. Er kann monatlich für qualifizierte Helfer und Dienstleistungen verwendet werden, die den Alltag erleichtern – wie Haushaltshilfen, Alltagsbegleiter oder Einkaufshilfen. Der Höchstbetrag liegt bei 131 Euro pro Monat, insgesamt also 1.572 Euro pro Jahr.</p>
 
           <h2>Voraussetzungen für die Beantragung</h2>
           <p>Um den Entlastungsbetrag zu erhalten, müssen Sie folgende Voraussetzungen erfüllen:</p>
@@ -74,7 +74,7 @@ export default function EntlastungsbetragBeantragen() {
           </ul>
 
           <h2>Wie AlltagsEngel Ihnen hilft</h2>
-          <p>Die Beantragung des Entlastungsbetrags kann kompliziert wirken, besonders wenn Sie bereits Pflegeverantwortungen haben. AlltagsEngel verfügt über umfangreiche Erfahrung mit den aktuellen Vorgaben und Anforderungen der Pflegekassen. Über AlltagsEngel können Sie direkt zugelassene Alltagsbegleiter und Helfer finden, die den Entlastungsbetrag annehmen. Unsere Helfer sind bereits korrekt registriert und Sie müssen sich keine Sorgen um die Abrechnungsformalitäten machen. So können Sie Ihre monatlichen 125 Euro sicher nutzen, ohne sich mit bürokratischen Details belastet zu fühlen.</p>
+          <p>Die Beantragung des Entlastungsbetrags kann kompliziert wirken, besonders wenn Sie bereits Pflegeverantwortungen haben. AlltagsEngel verfügt über umfangreiche Erfahrung mit den aktuellen Vorgaben und Anforderungen der Pflegekassen. Über AlltagsEngel können Sie direkt zugelassene Alltagsbegleiter und Helfer finden, die den Entlastungsbetrag annehmen. Unsere Helfer sind bereits korrekt registriert und Sie müssen sich keine Sorgen um die Abrechnungsformalitäten machen. So können Sie Ihre monatlichen 131 Euro sicher nutzen, ohne sich mit bürokratischen Details belastet zu fühlen.</p>
 
           <h2>Wichtige Fristen beachten</h2>
           <p>Der Entlastungsbetrag wird pro Kalenderjahr gewährt. Noch nicht verbrauchte Beträge können unter bestimmten Bedingungen ins nächste Jahr übertragen werden. Informieren Sie sich bei Ihrer Pflegekasse über die genauen Regelungen.</p>

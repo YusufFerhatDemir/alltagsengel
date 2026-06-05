@@ -52,7 +52,7 @@ export default function SeniorenbetreuungZuHause() {
           <p>Die Kosten variieren stark je nach Art und Umfang:</p>
           <ul>
             <li><strong>Haushaltshilfe:</strong> 12-18 Euro/Stunde (3-4 Stunden/Woche = 150-250 Euro/Monat)</li>
-            <li><strong>Alltagsbegleiter:</strong> 18-22 Euro/Stunde (bis 125 Euro/Monat über Entlastungsbetrag finanzierbar)</li>
+            <li><strong>Alltagsbegleiter:</strong> 18-22 Euro/Stunde (bis 131 Euro/Monat über Entlastungsbetrag finanzierbar)</li>
             <li><strong>Pflegehilfe:</strong> 20-35 Euro/Stunde (kann über Pflegeleistungen gedeckt sein)</li>
             <li><strong>24-Stunden-Betreuung:</strong> 2.000-4.000 Euro pro Monat</li>
           </ul>
@@ -63,7 +63,7 @@ export default function SeniorenbetreuungZuHause() {
           <p>Wenn Sie einen Pflegegrad haben, übernimmt die Pflegekasse:</p>
           <ul>
             <li>Pflegeleistungen (Körperpflege, Wundversorgung): bis zu 2.200-3.700 Euro/Monat je nach Pflegegrad</li>
-            <li>Entlastungsbetrag (Alltagsbegleiter, Haushaltshilfe): 125 Euro/Monat</li>
+            <li>Entlastungsbetrag (Alltagsbegleiter, Haushaltshilfe): 131 Euro/Monat</li>
             <li>Haushaltsnahe Dienstleistungen: bis 40 Euro/Monat</li>
           </ul>
 

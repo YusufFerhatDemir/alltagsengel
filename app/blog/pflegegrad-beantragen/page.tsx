@@ -44,7 +44,7 @@ export default function PflegegradBeantragen() {
 
           <h3>Pflegegrad 1</h3>
           <ul>
-            <li>Entlastungsbetrag: 125 Euro/Monat</li>
+            <li>Entlastungsbetrag: 131 Euro/Monat</li>
             <li>Kein Pflegegeld, aber ambulante Leistungen</li>
             <li>Zugang zu Pflege- und Unterstützungsangeboten</li>
           </ul>
@@ -53,28 +53,28 @@ export default function PflegegradBeantragen() {
           <ul>
             <li>Pflegegeld: 332 Euro/Monat (wenn Angehörige pflegen)</li>
             <li>Pflegesachleistung: 693 Euro/Monat (professionelle Pflegedienste)</li>
-            <li>Entlastungsbetrag: 125 Euro/Monat</li>
+            <li>Entlastungsbetrag: 131 Euro/Monat</li>
           </ul>
 
           <h3>Pflegegrad 3</h3>
           <ul>
             <li>Pflegegeld: 573 Euro/Monat</li>
             <li>Pflegesachleistung: 1.298 Euro/Monat</li>
-            <li>Entlastungsbetrag: 125 Euro/Monat</li>
+            <li>Entlastungsbetrag: 131 Euro/Monat</li>
           </ul>
 
           <h3>Pflegegrad 4</h3>
           <ul>
             <li>Pflegegeld: 765 Euro/Monat</li>
             <li>Pflegesachleistung: 1.612 Euro/Monat</li>
-            <li>Entlastungsbetrag: 125 Euro/Monat</li>
+            <li>Entlastungsbetrag: 131 Euro/Monat</li>
           </ul>
 
           <h3>Pflegegrad 5</h3>
           <ul>
             <li>Pflegegeld: 946 Euro/Monat</li>
             <li>Pflegesachleistung: 2.095 Euro/Monat</li>
-            <li>Entlastungsbetrag: 125 Euro/Monat</li>
+            <li>Entlastungsbetrag: 131 Euro/Monat</li>
             <li>Zusatz für besondere Anforderungen möglich</li>
           </ul>
 
