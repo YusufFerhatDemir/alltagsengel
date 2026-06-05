@@ -145,7 +145,7 @@ export default function EinsamkeitImAlterPage() {
             <strong>Privat:</strong> 15–25€ pro Stunde
           </p>
           <p>
-            <strong>Über Pflegekasse (§45b):</strong> Bis zu 125€ monatlich – und Begleitungen zur Bekämpfung von Isolation sind genau das, wofür §45b gedacht ist!
+            <strong>Über Pflegekasse (§45b):</strong> Bis zu 131€ monatlich – und Begleitungen zur Bekämpfung von Isolation sind genau das, wofür §45b gedacht ist!
           </p>
           <p>
             Tipp: Sprechen Sie mit Ihrer Krankenkasse. Viele bezahlen regelmäßige Alltagsbegleitungen, um Einsamkeit zu bekämpfen und damit teurere Krankheitsausfälle zu vermeiden.

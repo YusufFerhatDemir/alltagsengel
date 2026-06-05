@@ -214,7 +214,7 @@ function buildSlides(): Slide[] {
           <Card style={{ marginTop: 16, textAlign: 'center' }}>
             <div style={{ fontSize: 13, color: C.ink3 }}>§45b Entlastungsbudget pro Pflegebedürftigem</div>
             <div className="big-num" style={{ fontSize: 36, fontWeight: 700, color: C.gold, fontFamily: "'Cormorant Garamond', serif", marginTop: 4 }}>€131 / Monat</div>
-            <div style={{ fontSize: 12, color: C.ink4, marginTop: 4 }}>= €1.500 / Jahr — AlltagsEngel rechnet direkt mit der Pflegekasse ab</div>
+            <div style={{ fontSize: 12, color: C.ink4, marginTop: 4 }}>= €1.572 / Jahr — AlltagsEngel rechnet direkt mit der Pflegekasse ab</div>
           </Card>
           <Card style={{ marginTop: 16 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>

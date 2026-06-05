@@ -79,7 +79,7 @@ export default function AlltagshilfeSenioren() {
           <h3>Pflegekasse (mit Pflegegrad)</h3>
 
           <h4>Entlastungsbetrag (§ 45b SGB XI)</h4>
-          <p>Der wichtigste Finanzierungsweg. Alle Personen mit Pflegegrad 1-5 bekommen monatlich 125 Euro für Alltagshilfen, insgesamt 1.500 Euro pro Jahr. Der Betrag kann für folgende Dienstleistungen verwendet werden:</p>
+          <p>Der wichtigste Finanzierungsweg. Alle Personen mit Pflegegrad 1-5 bekommen monatlich 131 Euro für Alltagshilfen, insgesamt 1.572 Euro pro Jahr. Der Betrag kann für folgende Dienstleistungen verwendet werden:</p>
           <ul>
             <li>Haushaltshilfe</li>
             <li>Einkaufshilfe</li>

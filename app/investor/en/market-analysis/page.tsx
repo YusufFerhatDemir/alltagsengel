@@ -33,7 +33,7 @@ export default function MarketAnalysisPage() {
       <GoldSep />
       <Card style={{ marginBottom: '40px' }}>
         <BulletItem icon="📋">
-          <strong>Benefit Amount:</strong> €131/month per care-dependent person (€1,500/year)
+          <strong>Benefit Amount:</strong> €131/month per care-dependent person (€1,572/year)
         </BulletItem>
         <BulletItem icon="💰">
           <strong>Total Annual Pool:</strong> €7.79B (4.96M beneficiaries × €131/month × 12 months)

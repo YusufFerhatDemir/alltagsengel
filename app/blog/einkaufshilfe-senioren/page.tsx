@@ -67,7 +67,7 @@ export default function EinkaufshilfePage() {
             <strong>Private Bezahlung:</strong> 15–25€ pro Stunde, je nach Region und Qualifikation
           </p>
           <p>
-            <strong>Über Pflegekasse (§45b):</strong> Viele Krankenkassen zahlen bis zu 125€ pro Monat für Betreuungsleistungen, unter die auch Einkaufshilfen fallen.
+            <strong>Über Pflegekasse (§45b):</strong> Viele Krankenkassen zahlen bis zu 131€ pro Monat für Betreuungsleistungen, unter die auch Einkaufshilfen fallen.
           </p>
           <p>
             <strong>Über Verhinderungspflege:</strong> Falls Sie bereits Verhinderungspflege in Anspruch nehmen, können Sie diese auch für Einkaufshilfen nutzen (bis 1.612€ pro Jahr).
@@ -120,7 +120,7 @@ export default function EinkaufshilfePage() {
           <p>
             <strong>Wird Einkaufshilfe von der Krankenkasse bezahlt?</strong>
             <br />
-            Ja, über §45b-Leistungen bis zu 125€ monatlich oder über Verhinderungspflege.
+            Ja, über §45b-Leistungen bis zu 131€ monatlich oder über Verhinderungspflege.
           </p>
           <p>
             <strong>Kann ich eine feste Begleitperson haben?</strong>

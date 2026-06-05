@@ -97,7 +97,7 @@ export default function ArztbegleitungPage() {
             <strong>Privat:</strong> 15–25€ pro Stunde
           </p>
           <p>
-            <strong>Über Pflegekasse (§45b):</strong> Bis zu 125€ monatlich für Betreuungsleistungen (darin enthalten: Arztbegleitung, Einkaufen, Spaziergänge, etc.)
+            <strong>Über Pflegekasse (§45b):</strong> Bis zu 131€ monatlich für Betreuungsleistungen (darin enthalten: Arztbegleitung, Einkaufen, Spaziergänge, etc.)
           </p>
           <p>
             <strong>Über Verhinderungspflege:</strong> Bis zu 1.612€ pro Jahr
