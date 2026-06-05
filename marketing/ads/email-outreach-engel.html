@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alltagsengel — E-Mail Outreach Templates</title>
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg: #0A0A0A;
+            --surface: #111111;
+            --card: #161616;
+            --border: #252525;
+            --gold: #C9963C;
+            --gold-dim: rgba(201, 150, 60, 0.15);
+            --green: #5B8A72;
+            --white: #F5F0E8;
+            --text: #E0DBD2;
+            --muted: #8A8580;
+            --radius: 16px;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.65;
+            -webkit-font-smoothing: antialiased;
+        }
+        .container { max-width: 900px; margin: 0 auto; padding: 0 20px; }
+
+        /* Header */
+        .header {
+            text-align: center;
+            padding: 60px 0 40px;
+            border-bottom: 1px solid var(--border);
+        }
+        .header-logo {
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--white);
+            margin-bottom: 8px;
+        }
+        .header-logo span { color: var(--gold); }
+        .header-sub {
+            font-size: 16px;
+            color: var(--muted);
+        }
+
+        /* Navigation */
+        .template-nav {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            padding: 24px 0;
+            flex-wrap: wrap;
+        }
+        .template-nav a {
+            display: inline-block;
+            padding: 10px 20px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text);
+            font-size: 14px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+        .template-nav a:hover {
+            border-color: var(--gold);
+            color: var(--gold);
+        }
+
+        /* Template Card */
+        .template-section {
+            margin: 40px 0;
+            scroll-margin-top: 20px;
+        }
+        .template-label {
+            display: inline-block;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--gold);
+            margin-bottom: 8px;
+        }
+        .template-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--white);
+            margin-bottom: 6px;
+        }
+        .template-target {
+            font-size: 14px;
+            color: var(--muted);
+            margin-bottom: 20px;
+        }
+
+        .email-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+            margin-bottom: 16px;
+        }
+        .email-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            background: rgba(201, 150, 60, 0.05);
+            border-bottom: 1px solid var(--border);
+        }
+        .email-type {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--gold);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+        }
+        .copy-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            background: var(--green);
+            color: var(--white);
+            border: none;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+        .copy-btn:hover { opacity: 0.85; transform: translateY(-1px); }
+        .copy-btn.copied {
+            background: var(--gold);
+            color: var(--bg);
+        }
+
+        .email-subject {
+            padding: 16px 20px 0;
+        }
+        .email-subject-label {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 4px;
+        }
+        .email-subject-text {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--white);
+        }
+
+        .email-body {
+            padding: 20px;
+        }
+        .email-content {
+            font-size: 14px;
+            line-height: 1.75;
+            color: var(--text);
+            white-space: pre-wrap;
+            font-family: inherit;
+        }
+
+        .divider {
+            border: none;
+            border-top: 1px solid var(--border);
+            margin: 48px 0;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 40px 0;
+            border-top: 1px solid var(--border);
+            margin-top: 40px;
+        }
+        .footer-text {
+            font-size: 13px;
+            color: var(--muted);
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%) translateY(80px);
+            background: var(--green);
+            color: var(--white);
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            z-index: 999;
+            opacity: 0;
+            transition: all 0.3s;
+            pointer-events: none;
+        }
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        @media (max-width: 640px) {
+            .email-header { flex-direction: column; gap: 10px; align-items: flex-start; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- HEADER -->
+    <div class="header">
+        <div class="header-logo">Alltags<span>engel</span></div>
+        <p class="header-sub">E-Mail Outreach Templates — Lead-Generierung &amp; Recruiting</p>
+    </div>
+
+    <div class="container">
+
+        <!-- NAV -->
+        <nav class="template-nav">
+            <a href="#template-a">A: Pflegestützpunkte</a>
+            <a href="#template-b">B: Seniorenheime</a>
+            <a href="#template-c">C: Engel Recruiting</a>
+        </nav>
+
+        <!-- ═══════════════════════════════════════════════════════
+             TEMPLATE A: Pflegestützpunkte & Seniorenberatung
+             ═══════════════════════════════════════════════════════ -->
+        <div class="template-section" id="template-a">
+            <div class="template-label">Template A</div>
+            <h2 class="template-title">Outreach an Pflegestützpunkte &amp; Seniorenberatung</h2>
+            <p class="template-target">Zielgruppe: Pflegestützpunkte, Seniorenberatungsstellen, kommunale Anlaufstellen</p>
+
+            <!-- Erst-Mail -->
+            <div class="email-card">
+                <div class="email-header">
+                    <span class="email-type">Erst-Mail</span>
+                    <button class="copy-btn" onclick="copyEmail(this)">📋 Kopieren</button>
+                </div>
+                <div class="email-subject">
+                    <div class="email-subject-label">Betreff</div>
+                    <div class="email-subject-text">Kooperationsanfrage — Alltagsbegleitung für Ihre Klienten</div>
+                </div>
+                <div class="email-body">
+                    <div class="email-content">Sehr geehrte Damen und Herren,
+
+wir sind Alltagsengel, eine digitale Plattform für Alltagsbegleitung nach §45a SGB XI, mit Sitz in Frankfurt am Main.
+
+Viele Ihrer Klienten haben Anspruch auf den Entlastungsbetrag (131€/Monat nach §45b) — nutzen ihn aber nicht. Das möchten wir ändern.
+
+Unsere Plattform vermittelt geprüfte Alltagsbegleiter für:
+- Einkaufshilfe und Besorgungen
+- Arztbegleitung und Behördengänge
+- Haushaltshilfe und Alltagsunterstützung
+- Gesellschaft und Spaziergänge
+
+So funktioniert eine Kooperation:
+1. Sie empfehlen Alltagsengel an Klienten, die Unterstützung im Alltag suchen.
+2. Wir vermitteln einen passenden Engel in der Nähe.
+3. Die Abrechnung läuft direkt über die Pflegekasse — kein Aufwand für Sie oder Ihre Klienten.
+
+Für Ihre Klienten bedeutet das: professionelle Alltagsbegleitung, ohne Eigenanteil, ohne Papierkram. Für Sie: eine verlässliche Empfehlung, die Ihren Beratungsservice ergänzt.
+
+Dürfen wir Ihnen unsere Leistungen in einem kurzen Gespräch vorstellen? Gerne telefonisch oder vor Ort.
+
+Herzliche Grüße
+Ihr Team von Alltagsengel
+
+Alltagsengel — Alltagsbegleitung digital
+WhatsApp: wa.me/4915510445517
+Web: alltagsengel.de</div>
+                </div>
+            </div>
+
+            <!-- Follow-up -->
+            <div class="email-card">
+                <div class="email-header">
+                    <span class="email-type">Follow-up (nach 5-7 Tagen)</span>
+                    <button class="copy-btn" onclick="copyEmail(this)">📋 Kopieren</button>
+                </div>
+                <div class="email-subject">
+                    <div class="email-subject-label">Betreff</div>
+                    <div class="email-subject-text">Kurze Nachfrage — Kooperation Alltagsbegleitung</div>
+                </div>
+                <div class="email-body">
+                    <div class="email-content">Sehr geehrte Damen und Herren,
+
+ich möchte kurz an meine Nachricht von letzter Woche anknüpfen.
+
+Wir wissen, dass Ihre Arbeit sehr gefragt ist — umso mehr möchten wir Ihnen eine unkomplizierte Lösung bieten, die Ihren Klienten direkt hilft.
+
+Viele Pflegebedürftige kennen den Entlastungsbetrag (131€/Monat) nicht oder wissen nicht, wie sie ihn nutzen können. Genau hier setzen wir an: Wir vermitteln Alltagsbegleiter und rechnen direkt mit der Pflegekasse ab.
+
+Wäre ein 10-minütiges Telefonat diese Woche möglich? Wir richten uns gerne nach Ihrem Terminplan.
+
+Herzliche Grüße
+Ihr Team von Alltagsengel</div>
+                </div>
+            </div>
+        </div>
+
+        <hr class="divider">
+
+        <!-- ═══════════════════════════════════════════════════════
+             TEMPLATE B: Seniorenheime & Tagespflegen
+             ═══════════════════════════════════════════════════════ -->
+        <div class="template-section" id="template-b">
+            <div class="template-label">Template B</div>
+            <h2 class="template-title">Outreach an Seniorenheime &amp; Tagespflegen</h2>
+            <p class="template-target">Zielgruppe: Seniorenheime, Tagespflegeeinrichtungen, betreutes Wohnen</p>
+
+            <!-- Erst-Mail -->
+            <div class="email-card">
+                <div class="email-header">
+                    <span class="email-type">Erst-Mail</span>
+                    <button class="copy-btn" onclick="copyEmail(this)">📋 Kopieren</button>
+                </div>
+                <div class="email-subject">
+                    <div class="email-subject-label">Betreff</div>
+                    <div class="email-subject-text">Ergänzende Alltagsbegleitung für Ihre Bewohner</div>
+                </div>
+                <div class="email-body">
+                    <div class="email-content">Sehr geehrte Damen und Herren,
+
+wir wissen, dass Ihr Pflegeteam täglich Großartiges leistet. Doch für individuelle Alltagsbegleitung — Spaziergänge, Einkaufsbegleitung, Arztbesuche — fehlt oft die Zeit.
+
+Genau hier können unsere Alltagsengel unterstützen.
+
+Alltagsengel ist eine digitale Plattform für Alltagsbegleitung nach §45a SGB XI. Wir vermitteln geprüfte Begleiter, die Ihre Bewohner bei alltäglichen Aufgaben unterstützen:
+
+- Begleitete Spaziergänge und Ausflüge
+- Einkaufshilfe und Besorgungen
+- Arztbegleitung und Behördengänge
+- Gesellschaft und gemeinsame Aktivitäten
+
+Wichtig: Wir ersetzen keine Pflege — wir ergänzen sie. Die Abrechnung erfolgt direkt über den Entlastungsbetrag (131€/Monat nach §45b SGB XI), ohne zusätzliche Kosten für Ihre Einrichtung oder die Bewohner.
+
+Vorteile für Ihre Einrichtung:
+- Entlastung Ihres Pflegeteams bei nicht-pflegerischen Aufgaben
+- Mehr Lebensqualität für Ihre Bewohner
+- Kein organisatorischer Aufwand — wir kümmern uns um alles
+- Direkte Abrechnung mit der Pflegekasse
+
+Gerne stellen wir Ihnen unser Konzept persönlich vor — entweder telefonisch oder bei Ihnen vor Ort.
+
+Herzliche Grüße
+Ihr Team von Alltagsengel
+
+Alltagsengel — Alltagsbegleitung digital
+WhatsApp: wa.me/4915510445517
+Web: alltagsengel.de</div>
+                </div>
+            </div>
+
+            <!-- Follow-up -->
+            <div class="email-card">
+                <div class="email-header">
+                    <span class="email-type">Follow-up (nach 5-7 Tagen)</span>
+                    <button class="copy-btn" onclick="copyEmail(this)">📋 Kopieren</button>
+                </div>
+                <div class="email-subject">
+                    <div class="email-subject-label">Betreff</div>
+                    <div class="email-subject-text">Nachfrage — Alltagsbegleitung als Ergänzung für Ihre Bewohner</div>
+                </div>
+                <div class="email-body">
+                    <div class="email-content">Sehr geehrte Damen und Herren,
+
+ich möchte mich kurz auf meine E-Mail von letzter Woche beziehen.
+
+Unsere Alltagsengel arbeiten bereits mit Einrichtungen in der Region Frankfurt zusammen und die Rückmeldungen sind durchweg positiv — sowohl vom Pflegepersonal als auch von den Bewohnern und deren Angehörigen.
+
+Besonders geschätzt wird, dass unsere Begleiter sich Zeit nehmen können: für einen Spaziergang im Park, einen gemeinsamen Einkauf oder einfach für ein gutes Gespräch. Dinge, die im Pflegealltag oft zu kurz kommen.
+
+Hätten Sie Zeit für ein kurzes Telefonat? 10 Minuten genügen, und wir richten uns gerne nach Ihnen.
+
+Herzliche Grüße
+Ihr Team von Alltagsengel</div>
+                </div>
+            </div>
+        </div>
+
+        <hr class="divider">
+
+        <!-- ═══════════════════════════════════════════════════════
+             TEMPLATE C: Engel Recruiting
+             ═══════════════════════════════════════════════════════ -->
+        <div class="template-section" id="template-c">
+            <div class="template-label">Template C</div>
+            <h2 class="template-title">Recruiting — Alltagsengel werden</h2>
+            <p class="template-target">Zielgruppe: Jobsuchende, Quereinsteiger, Studenten, Minijobber — Social Media &amp; Jobbörsen</p>
+
+            <!-- Stellenanzeige -->
+            <div class="email-card">
+                <div class="email-header">
+                    <span class="email-type">Stellenanzeige / Posting</span>
+                    <button class="copy-btn" onclick="copyEmail(this)">📋 Kopieren</button>
+                </div>
+                <div class="email-subject">
+                    <div class="email-subject-label">Betreff / Titel</div>
+                    <div class="email-subject-text">Werde Alltagsengel — flexible Arbeit mit Sinn (18-25€/Std)</div>
+                </div>
+                <div class="email-body">
+                    <div class="email-content">Werde Alltagsengel — flexible Arbeit mit Sinn
+
+Du suchst einen Job, der sich gut anfühlt und in deinen Alltag passt? Als Alltagsengel begleitest du ältere Menschen bei ihren täglichen Aufgaben — und wirst dafür fair bezahlt.
+
+Was du machst:
+- Einkaufsbegleitung und Besorgungen
+- Arztbegleitung und Behördengänge
+- Spaziergänge und gemeinsame Aktivitäten
+- Haushaltshilfe und Kochen
+- Gesellschaft leisten und zuhören
+
+Was du bekommst:
+- 18-25€ pro Stunde
+- Flexible Zeiteinteilung — du bestimmst, wann und wie viel du arbeitest
+- Faire und pünktliche Bezahlung
+- Wir übernehmen die komplette Abrechnung mit der Pflegekasse
+- Sinnvolle Arbeit mit echtem Impact
+
+Was du brauchst:
+- Qualifikation nach §45a SGB XI (z.B. Betreuungsassistent, Alltagsbegleiter) — KEINE Pflegeausbildung nötig!
+- Empathie und Zuverlässigkeit
+- Gute Deutschkenntnisse
+- Wohnort in Frankfurt am Main oder Rhein-Main-Gebiet
+
+So startest du:
+1. Schreib uns per WhatsApp: wa.me/4915510445517
+2. Kurzes Kennenlerngespräch
+3. Loslegen — wir vermitteln dir Klienten in deiner Nähe
+
+Keine langen Bewerbungsprozesse. Kein Papierkram. Einfach loslegen.
+
+Ihr Team von Alltagsengel
+alltagsengel.de</div>
+                </div>
+            </div>
+
+            <!-- Direkt-Nachricht -->
+            <div class="email-card">
+                <div class="email-header">
+                    <span class="email-type">Direktnachricht / E-Mail an Kandidaten</span>
+                    <button class="copy-btn" onclick="copyEmail(this)">📋 Kopieren</button>
+                </div>
+                <div class="email-subject">
+                    <div class="email-subject-label">Betreff</div>
+                    <div class="email-subject-text">Flexible Arbeit als Alltagsbegleiter — 18-25€/Std in Frankfurt</div>
+                </div>
+                <div class="email-body">
+                    <div class="email-content">Hallo,
+
+wir sind auf Ihr Profil aufmerksam geworden und denken, dass Sie gut zu uns passen könnten.
+
+Alltagsengel ist eine digitale Plattform für Alltagsbegleitung in Frankfurt am Main. Wir suchen engagierte Menschen, die ältere Personen im Alltag unterstützen möchten — beim Einkaufen, bei Arztbesuchen, bei Spaziergängen oder einfach als Gesellschaft.
+
+Was wir bieten:
+- 18-25€ pro Stunde
+- Sie bestimmen Ihre Arbeitszeiten
+- Klienten in Ihrer Nähe
+- Wir kümmern uns um die Abrechnung mit der Pflegekasse
+- Keine Pflegeausbildung nötig — eine Qualifikation nach §45a reicht
+
+Haben Sie Interesse? Schreiben Sie uns einfach per WhatsApp (wa.me/4915510445517) oder antworten Sie auf diese Nachricht. Wir melden uns innerhalb von 24 Stunden.
+
+Herzliche Grüße
+Ihr Team von Alltagsengel</div>
+                </div>
+            </div>
+
+            <!-- Follow-up für Recruiting -->
+            <div class="email-card">
+                <div class="email-header">
+                    <span class="email-type">Follow-up Recruiting</span>
+                    <button class="copy-btn" onclick="copyEmail(this)">📋 Kopieren</button>
+                </div>
+                <div class="email-subject">
+                    <div class="email-subject-label">Betreff</div>
+                    <div class="email-subject-text">Kurze Nachfrage — Interesse an flexibler Arbeit als Alltagsbegleiter?</div>
+                </div>
+                <div class="email-body">
+                    <div class="email-content">Hallo,
+
+ich möchte kurz an meine Nachricht anknüpfen. Wir suchen aktuell Alltagsbegleiter in Frankfurt und Umgebung und hätten noch Plätze frei.
+
+Der Einstieg ist unkompliziert:
+- Kurzes Kennenlerngespräch per Telefon oder Video
+- Nachweis Ihrer §45a-Qualifikation
+- Und schon können wir Ihnen erste Klienten vermitteln
+
+Kein langwieriger Bewerbungsprozess, keine versteckten Kosten.
+
+Falls Sie Fragen haben, schreiben Sie uns gerne per WhatsApp: wa.me/4915510445517
+
+Herzliche Grüße
+Ihr Team von Alltagsengel</div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- FOOTER -->
+    <div class="footer">
+        <div class="container">
+            <p class="footer-text">Alltagsengel — E-Mail Outreach Templates</p>
+            <p class="footer-text" style="margin-top: 4px;">Alle Texte unterschrieben mit „Ihr Team von Alltagsengel" — keine persönlichen Namen verwenden.</p>
+        </div>
+    </div>
+
+    <!-- TOAST -->
+    <div class="toast" id="toast">In die Zwischenablage kopiert!</div>
+
+    <script>
+        function copyEmail(btn) {
+            const card = btn.closest('.email-card');
+            const subjectEl = card.querySelector('.email-subject-text');
+            const bodyEl = card.querySelector('.email-content');
+
+            const subject = subjectEl ? subjectEl.textContent.trim() : '';
+            const body = bodyEl ? bodyEl.textContent.trim() : '';
+
+            const fullText = `Betreff: ${subject}\n\n${body}`;
+
+            navigator.clipboard.writeText(fullText).then(() => {
+                btn.classList.add('copied');
+                btn.textContent = 'Kopiert!';
+
+                const toast = document.getElementById('toast');
+                toast.classList.add('show');
+
+                setTimeout(() => {
+                    btn.classList.remove('copied');
+                    btn.textContent = '📋 Kopieren';
+                    toast.classList.remove('show');
+                }, 2000);
+            }).catch(() => {
+                // Fallback
+                const textarea = document.createElement('textarea');
+                textarea.value = fullText;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+
+                btn.classList.add('copied');
+                btn.textContent = 'Kopiert!';
+                setTimeout(() => {
+                    btn.classList.remove('copied');
+                    btn.textContent = '📋 Kopieren';
+                }, 2000);
+            });
+        }
+    </script>
+</body>
+</html>
