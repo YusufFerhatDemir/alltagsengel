@@ -1,0 +1,1258 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChairMatch — Dein Stuhl. Deine Kunden. Deine Freiheit.</title>
+    <meta name="description" content="Finde flexible Arbeitsplätze in Top-Salons. Miete einen Stuhl tageweise, wochenweise oder monatlich. Keine Langzeitverträge, sofort verfügbar.">
+    <meta name="robots" content="index, follow">
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="ChairMatch — Dein Stuhl. Deine Kunden. Deine Freiheit.">
+    <meta property="og:description" content="Flexible Stuhlmiete in Top-Salons. Eigene Preise, eigene Kunden — ab 30€ pro Tag. Jetzt Stuhl finden!">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://chairmatch.de/ads/freelancer-akquise">
+    <meta property="og:locale" content="de_DE">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="ChairMatch — Dein Stuhl. Deine Kunden. Deine Freiheit.">
+    <meta name="twitter:description" content="Flexible Stuhlmiete ab 30€/Tag. Sofort verfügbar, keine Langzeitverträge.">
+
+    <!-- Schema.org JSON-LD -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "LocalBusiness",
+        "name": "ChairMatch",
+        "description": "ChairMatch vermittelt flexible Arbeitsplätze in Salons an Freelance-Friseure, Barbiere und Beauty-Profis in ganz Deutschland.",
+        "url": "https://chairmatch.de",
+        "areaServed": [
+            {"@type": "City", "name": "Frankfurt"},
+            {"@type": "City", "name": "Berlin"},
+            {"@type": "City", "name": "Hamburg"},
+            {"@type": "City", "name": "München"},
+            {"@type": "City", "name": "Köln"},
+            {"@type": "City", "name": "Düsseldorf"}
+        ],
+        "contactPoint": {
+            "@type": "ContactPoint",
+            "telephone": "+4915510445517",
+            "contactType": "sales"
+        }
+    }
+    </script>
+
+    <style>
+        *, *::before, *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg: #0D0D0D;
+            --accent: #E8A87C;
+            --accent-hover: #d4956a;
+            --text: #F8F4F0;
+            --text-muted: #b8b4b0;
+            --card-bg: #1A1A1A;
+            --card-border: #2A2A2A;
+            --success: #6BCB77;
+            --danger: #FF6B6B;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            line-height: 1.7;
+            font-size: 16px;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        h1, h2, h3, h4 {
+            font-family: Georgia, 'Times New Roman', serif;
+            font-weight: 700;
+            line-height: 1.2;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        /* NAV */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            background: rgba(13,13,13,0.95);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--card-border);
+            padding: 16px 0;
+        }
+
+        nav .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-family: Georgia, serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        .logo span {
+            color: var(--text);
+        }
+
+        .nav-cta {
+            background: var(--accent);
+            color: var(--bg);
+            padding: 10px 24px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: background 0.3s, transform 0.2s;
+        }
+
+        .nav-cta:hover {
+            background: var(--accent-hover);
+            transform: translateY(-1px);
+        }
+
+        /* HERO */
+        .hero {
+            padding: 140px 0 80px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle at 50% 80%, rgba(232,168,124,0.08) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        .hero-badge {
+            display: inline-block;
+            background: rgba(232,168,124,0.15);
+            color: var(--accent);
+            padding: 8px 20px;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 24px;
+            letter-spacing: 0.5px;
+        }
+
+        .hero h1 {
+            font-size: clamp(2rem, 5vw, 3.5rem);
+            margin-bottom: 24px;
+            color: var(--text);
+        }
+
+        .hero h1 .highlight {
+            color: var(--accent);
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            color: var(--text-muted);
+            max-width: 620px;
+            margin: 0 auto 40px;
+        }
+
+        .hero-ctas {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn-primary {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--accent);
+            color: var(--bg);
+            padding: 16px 32px;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 1.05rem;
+            transition: all 0.3s;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(232,168,124,0.3);
+        }
+
+        .btn-secondary {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: transparent;
+            color: var(--text);
+            padding: 16px 32px;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1.05rem;
+            border: 2px solid var(--card-border);
+            transition: all 0.3s;
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        /* STATS BAR */
+        .stats-bar {
+            padding: 40px 0;
+            border-top: 1px solid var(--card-border);
+            border-bottom: 1px solid var(--card-border);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 32px;
+            text-align: center;
+        }
+
+        .stat-item h3 {
+            font-size: 2.5rem;
+            color: var(--accent);
+            margin-bottom: 4px;
+        }
+
+        .stat-item p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        /* PROBLEM */
+        .problem {
+            padding: 80px 0;
+        }
+
+        .section-label {
+            display: inline-block;
+            background: rgba(232,168,124,0.12);
+            color: var(--accent);
+            padding: 6px 16px;
+            border-radius: 50px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 16px;
+        }
+
+        .problem h2 {
+            font-size: clamp(1.8rem, 3.5vw, 2.5rem);
+            margin-bottom: 20px;
+        }
+
+        .problem-text {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            max-width: 700px;
+            margin-bottom: 48px;
+        }
+
+        .problem-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+        }
+
+        .problem-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 32px;
+            transition: transform 0.3s, border-color 0.3s;
+        }
+
+        .problem-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--accent);
+        }
+
+        .problem-card .icon {
+            font-size: 2rem;
+            margin-bottom: 16px;
+        }
+
+        .problem-card h3 {
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+        }
+
+        .problem-card p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        /* BENEFITS */
+        .benefits {
+            padding: 80px 0;
+            background: linear-gradient(180deg, transparent 0%, rgba(232,168,124,0.03) 50%, transparent 100%);
+        }
+
+        .benefits-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 32px;
+            margin-top: 48px;
+        }
+
+        .benefit-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 36px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .benefit-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--accent);
+            transform: scaleX(0);
+            transition: transform 0.3s;
+        }
+
+        .benefit-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .benefit-card .icon {
+            width: 48px;
+            height: 48px;
+            background: rgba(232,168,124,0.12);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            margin-bottom: 20px;
+        }
+
+        .benefit-card h3 {
+            font-size: 1.15rem;
+            margin-bottom: 10px;
+        }
+
+        .benefit-card p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        /* COMPARISON */
+        .comparison {
+            padding: 80px 0;
+        }
+
+        .comparison-table {
+            margin-top: 48px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .comparison-col {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 36px;
+            text-align: center;
+        }
+
+        .comparison-col.highlight {
+            border-color: var(--accent);
+            position: relative;
+        }
+
+        .comparison-col.highlight::after {
+            content: 'Spare bis zu 80%';
+            position: absolute;
+            top: -14px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--accent);
+            color: var(--bg);
+            padding: 5px 18px;
+            border-radius: 50px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .comparison-col .label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+        }
+
+        .comparison-col h3 {
+            font-size: 1.3rem;
+            margin-bottom: 16px;
+        }
+
+        .comparison-price {
+            font-family: Georgia, serif;
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .comparison-col:not(.highlight) .comparison-price {
+            color: var(--danger);
+            text-decoration: line-through;
+            text-decoration-thickness: 3px;
+        }
+
+        .comparison-col.highlight .comparison-price {
+            color: var(--success);
+        }
+
+        .comparison-period {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-bottom: 24px;
+        }
+
+        .comparison-list {
+            list-style: none;
+            text-align: left;
+        }
+
+        .comparison-list li {
+            padding: 8px 0;
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .comparison-list .x-mark {
+            color: var(--danger);
+            font-weight: 700;
+        }
+
+        .comparison-list .check {
+            color: var(--success);
+            font-weight: 700;
+        }
+
+        /* HOW IT WORKS */
+        .how-it-works {
+            padding: 80px 0;
+            background: linear-gradient(180deg, transparent 0%, rgba(232,168,124,0.03) 50%, transparent 100%);
+        }
+
+        .steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 32px;
+            margin-top: 48px;
+        }
+
+        .step {
+            text-align: center;
+            position: relative;
+        }
+
+        .step-number {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: rgba(232,168,124,0.15);
+            color: var(--accent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: Georgia, serif;
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin: 0 auto 20px;
+        }
+
+        .step h3 {
+            font-size: 1.1rem;
+            margin-bottom: 8px;
+        }
+
+        .step p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        /* TRUST */
+        .trust {
+            padding: 60px 0;
+        }
+
+        .trust-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 24px;
+        }
+
+        .trust-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 24px;
+        }
+
+        .trust-item .icon {
+            font-size: 1.6rem;
+            flex-shrink: 0;
+        }
+
+        .trust-item h4 {
+            font-size: 1rem;
+            margin-bottom: 2px;
+        }
+
+        .trust-item p {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        /* CITIES */
+        .cities {
+            padding: 80px 0;
+            text-align: center;
+        }
+
+        .cities-flex {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 16px;
+            margin-top: 40px;
+        }
+
+        .city-tag {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            padding: 12px 28px;
+            border-radius: 50px;
+            font-size: 1rem;
+            color: var(--text);
+            transition: all 0.3s;
+        }
+
+        .city-tag:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        /* FORM */
+        .form-section {
+            padding: 80px 0;
+        }
+
+        .form-wrapper {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 48px;
+            align-items: start;
+        }
+
+        .form-info h2 {
+            font-size: clamp(1.8rem, 3vw, 2.2rem);
+            margin-bottom: 16px;
+        }
+
+        .form-info p {
+            color: var(--text-muted);
+            font-size: 1.05rem;
+            margin-bottom: 32px;
+        }
+
+        .form-info-list {
+            list-style: none;
+        }
+
+        .form-info-list li {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 0;
+            color: var(--text-muted);
+        }
+
+        .form-info-list li .check {
+            color: var(--accent);
+        }
+
+        .form-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 36px;
+        }
+
+        .form-card h3 {
+            font-size: 1.3rem;
+            margin-bottom: 24px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 14px 16px;
+            background: var(--bg);
+            border: 1px solid var(--card-border);
+            border-radius: 10px;
+            color: var(--text);
+            font-size: 1rem;
+            font-family: inherit;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .form-submit {
+            width: 100%;
+            padding: 16px;
+            background: var(--accent);
+            color: var(--bg);
+            border: none;
+            border-radius: 10px;
+            font-size: 1.05rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .form-submit:hover {
+            background: var(--accent-hover);
+            transform: translateY(-2px);
+        }
+
+        /* FAQ */
+        .faq {
+            padding: 80px 0;
+        }
+
+        .faq-list {
+            max-width: 750px;
+            margin: 48px auto 0;
+        }
+
+        .faq-item {
+            border-bottom: 1px solid var(--card-border);
+        }
+
+        .faq-question {
+            width: 100%;
+            background: none;
+            border: none;
+            color: var(--text);
+            padding: 24px 0;
+            font-size: 1.1rem;
+            font-family: Georgia, serif;
+            font-weight: 600;
+            text-align: left;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .faq-question::after {
+            content: '+';
+            font-size: 1.5rem;
+            color: var(--accent);
+            transition: transform 0.3s;
+            flex-shrink: 0;
+        }
+
+        .faq-item.active .faq-question::after {
+            transform: rotate(45deg);
+        }
+
+        .faq-answer {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease, padding 0.3s;
+        }
+
+        .faq-item.active .faq-answer {
+            max-height: 300px;
+            padding-bottom: 24px;
+        }
+
+        .faq-answer p {
+            color: var(--text-muted);
+            font-size: 1rem;
+            line-height: 1.7;
+        }
+
+        /* FINAL CTA */
+        .final-cta {
+            padding: 80px 0;
+            text-align: center;
+            background: linear-gradient(180deg, transparent 0%, rgba(232,168,124,0.06) 100%);
+        }
+
+        .final-cta h2 {
+            font-size: clamp(1.8rem, 4vw, 2.8rem);
+            margin-bottom: 16px;
+        }
+
+        .final-cta p {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            max-width: 550px;
+            margin: 0 auto 40px;
+        }
+
+        /* FOOTER */
+        footer {
+            padding: 40px 0;
+            border-top: 1px solid var(--card-border);
+            text-align: center;
+        }
+
+        footer p {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        footer a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        /* WHATSAPP FLOATING BUTTON */
+        .whatsapp-float {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 999;
+            background: #25D366;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 20px rgba(37,211,102,0.4);
+            transition: transform 0.3s, box-shadow 0.3s;
+            text-decoration: none;
+            animation: pulse-wa 2s infinite;
+        }
+
+        .whatsapp-float:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 30px rgba(37,211,102,0.5);
+        }
+
+        .whatsapp-float svg {
+            width: 32px;
+            height: 32px;
+            fill: white;
+        }
+
+        @keyframes pulse-wa {
+            0%, 100% { box-shadow: 0 4px 20px rgba(37,211,102,0.4); }
+            50% { box-shadow: 0 4px 30px rgba(37,211,102,0.6); }
+        }
+
+        /* ANIMATIONS */
+        .fade-up {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.6s ease, transform 0.6s ease;
+        }
+
+        .fade-up.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            .form-wrapper {
+                grid-template-columns: 1fr;
+            }
+
+            .comparison-table {
+                grid-template-columns: 1fr;
+            }
+
+            .hero {
+                padding: 120px 0 60px;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            nav .nav-cta {
+                padding: 8px 16px;
+                font-size: 0.8rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .hero-ctas {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .btn-primary, .btn-secondary {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- NAV -->
+    <nav>
+        <div class="container">
+            <a href="#" class="logo">Chair<span>Match</span></a>
+            <a href="#anmelden" class="nav-cta">Stuhl finden</a>
+        </div>
+    </nav>
+
+    <!-- HERO -->
+    <section class="hero">
+        <div class="container">
+            <div class="hero-badge">Für Freelancer &amp; Beauty-Profis</div>
+            <h1>Dein Stuhl. Deine Kunden.<br><span class="highlight">Deine Freiheit.</span></h1>
+            <p>Miete einen professionellen Arbeitsplatz in Top-Salons — flexibel, günstig und ohne Langzeitverträge. Behalte 100% deiner Einnahmen.</p>
+            <div class="hero-ctas">
+                <a href="https://wa.me/4915510445517?text=Hallo%2C%20ich%20suche%20einen%20Stuhl%20zum%20Mieten!" class="btn-primary" target="_blank" rel="noopener">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                    WhatsApp schreiben
+                </a>
+                <a href="#anmelden" class="btn-secondary">Jetzt Stuhl finden &#8595;</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- STATS BAR -->
+    <section class="stats-bar">
+        <div class="container">
+            <div class="stats-grid">
+                <div class="stat-item fade-up">
+                    <h3>50+</h3>
+                    <p>Salons verfügbar</p>
+                </div>
+                <div class="stat-item fade-up">
+                    <h3>6</h3>
+                    <p>Städte deutschlandweit</p>
+                </div>
+                <div class="stat-item fade-up">
+                    <h3>ab 30 €</h3>
+                    <p>pro Tag</p>
+                </div>
+                <div class="stat-item fade-up">
+                    <h3>100%</h3>
+                    <p>Deine Einnahmen bleiben</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- PROBLEM -->
+    <section class="problem">
+        <div class="container">
+            <span class="section-label">Das Problem</span>
+            <h2 class="fade-up">Eigener Salon? Zu teuer. Festanstellung? Zu unflexibel.</h2>
+            <p class="problem-text fade-up">Als Freelancer in der Beauty-Branche stehst du vor einer unmöglichen Wahl: Entweder du investierst tausende Euro in einen eigenen Salon — oder du arbeitest für jemand anderen und gibst deine Freiheit auf.</p>
+
+            <div class="problem-cards">
+                <div class="problem-card fade-up">
+                    <div class="icon">&#128176;</div>
+                    <h3>Hohe Startkosten</h3>
+                    <p>Eigener Salon: Miete, Einrichtung, Versicherungen. Schnell 20.000–50.000 € Investition, bevor der erste Kunde kommt.</p>
+                </div>
+                <div class="problem-card fade-up">
+                    <div class="icon">&#128274;</div>
+                    <h3>Unflexible Verträge</h3>
+                    <p>Festanstellung bedeutet: feste Zeiten, fremde Preise, Provisionen abgeben. Deine Freiheit geht verloren.</p>
+                </div>
+                <div class="problem-card fade-up">
+                    <div class="icon">&#128269;</div>
+                    <h3>Schwierige Suche</h3>
+                    <p>Einen passenden Arbeitsplatz zu finden, ist ohne Kontakte fast unmöglich. Alles läuft über Mundpropaganda.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- BENEFITS -->
+    <section class="benefits">
+        <div class="container">
+            <span class="section-label">Deine Vorteile</span>
+            <h2 class="fade-up">Arbeite wie du willst — mit ChairMatch.</h2>
+
+            <div class="benefits-grid">
+                <div class="benefit-card fade-up">
+                    <div class="icon">&#128197;</div>
+                    <h3>Flexibel mieten</h3>
+                    <p>Tageweise, wochenweise oder monatlich. Du entscheidest, wann und wie lange du arbeitest.</p>
+                </div>
+                <div class="benefit-card fade-up">
+                    <div class="icon">&#128184;</div>
+                    <h3>Eigene Preise setzen</h3>
+                    <p>Keine Provisionen, keine Umsatzbeteiligung. Was du verdienst, gehört dir — zu 100%.</p>
+                </div>
+                <div class="benefit-card fade-up">
+                    <div class="icon">&#128101;</div>
+                    <h3>Eigene Kunden behalten</h3>
+                    <p>Bring deine Kunden mit und baue deinen Stamm auf. Dein Geschäft, deine Beziehungen.</p>
+                </div>
+                <div class="benefit-card fade-up">
+                    <div class="icon">&#11088;</div>
+                    <h3>Professionelles Umfeld</h3>
+                    <p>Arbeite in ausgestatteten Salons mit professioneller Einrichtung, Waschplatz und Empfang.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- COST COMPARISON -->
+    <section class="comparison" id="vergleich">
+        <div class="container">
+            <span class="section-label">Kostenvergleich</span>
+            <h2 class="fade-up" style="text-align:center;">Eigener Salon vs. ChairMatch</h2>
+
+            <div class="comparison-table fade-up">
+                <div class="comparison-col">
+                    <div class="label">Eigener Salon</div>
+                    <h3>Volle Kosten</h3>
+                    <div class="comparison-price">2.000–5.000 €</div>
+                    <div class="comparison-period">pro Monat</div>
+                    <ul class="comparison-list">
+                        <li><span class="x-mark">&#10007;</span> Langfristiger Mietvertrag</li>
+                        <li><span class="x-mark">&#10007;</span> Einrichtung &amp; Ausstattung</li>
+                        <li><span class="x-mark">&#10007;</span> Versicherungen &amp; Nebenkosten</li>
+                        <li><span class="x-mark">&#10007;</span> Personalkosten</li>
+                        <li><span class="x-mark">&#10007;</span> Hohes finanzielles Risiko</li>
+                    </ul>
+                </div>
+                <div class="comparison-col highlight">
+                    <div class="label">ChairMatch</div>
+                    <h3>Nur Stuhlmiete</h3>
+                    <div class="comparison-price">500–900 €</div>
+                    <div class="comparison-period">pro Monat</div>
+                    <ul class="comparison-list">
+                        <li><span class="check">&#10003;</span> Keine Vertragsbindung</li>
+                        <li><span class="check">&#10003;</span> Alles ausgestattet</li>
+                        <li><span class="check">&#10003;</span> Versicherung inklusive</li>
+                        <li><span class="check">&#10003;</span> Kein Personal nötig</li>
+                        <li><span class="check">&#10003;</span> Sofort starten, sofort stoppen</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- HOW IT WORKS -->
+    <section class="how-it-works">
+        <div class="container">
+            <span class="section-label">So funktioniert's</span>
+            <h2 class="fade-up" style="text-align:center;">In 3 Schritten zum eigenen Stuhl.</h2>
+
+            <div class="steps">
+                <div class="step fade-up">
+                    <div class="step-number">1</div>
+                    <h3>Stuhl finden</h3>
+                    <p>Durchsuche verfügbare Stühle in deiner Stadt. Filtre nach Ausstattung, Preis und Lage.</p>
+                </div>
+                <div class="step fade-up">
+                    <div class="step-number">2</div>
+                    <h3>Kontakt aufnehmen</h3>
+                    <p>Schreibe dem Salonbesitzer direkt über ChairMatch oder WhatsApp. Vereinbart einen Besichtigungstermin.</p>
+                </div>
+                <div class="step fade-up">
+                    <div class="step-number">3</div>
+                    <h3>Loslegen</h3>
+                    <p>Buche deinen Stuhl, bring deine Kunden mit und starte sofort. Keine Wartezeit, kein Papierkram.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- TRUST -->
+    <section class="trust">
+        <div class="container">
+            <div class="trust-grid">
+                <div class="trust-item fade-up">
+                    <div class="icon">&#128139;</div>
+                    <div>
+                        <h4>50+ Salons gelistet</h4>
+                        <p>Wachsendes Netzwerk in ganz Deutschland.</p>
+                    </div>
+                </div>
+                <div class="trust-item fade-up">
+                    <div class="icon">&#9889;</div>
+                    <div>
+                        <h4>Sofort verfügbar</h4>
+                        <p>Viele Stühle sind ab sofort buchbar.</p>
+                    </div>
+                </div>
+                <div class="trust-item fade-up">
+                    <div class="icon">&#128196;</div>
+                    <div>
+                        <h4>Keine Langzeitverträge</h4>
+                        <p>Miete tageweise, wochenweise oder monatlich.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CITIES -->
+    <section class="cities">
+        <div class="container">
+            <span class="section-label">Verfügbar in</span>
+            <h2 class="fade-up">Finde Stühle in deiner Stadt.</h2>
+            <div class="cities-flex fade-up">
+                <span class="city-tag">Frankfurt</span>
+                <span class="city-tag">Berlin</span>
+                <span class="city-tag">Hamburg</span>
+                <span class="city-tag">München</span>
+                <span class="city-tag">Köln</span>
+                <span class="city-tag">Düsseldorf</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- FORM -->
+    <section class="form-section" id="anmelden">
+        <div class="container">
+            <div class="form-wrapper">
+                <div class="form-info fade-up">
+                    <span class="section-label">Jetzt starten</span>
+                    <h2>Finde deinen Stuhl.</h2>
+                    <p>Schreibe uns und wir helfen dir, den perfekten Arbeitsplatz in deiner Stadt zu finden. Oder stöbere direkt in unseren Angeboten.</p>
+                    <ul class="form-info-list">
+                        <li><span class="check">&#10003;</span> Kostenlose Beratung</li>
+                        <li><span class="check">&#10003;</span> Persönliche Stuhl-Empfehlungen</li>
+                        <li><span class="check">&#10003;</span> Besichtigungstermin möglich</li>
+                        <li><span class="check">&#10003;</span> Sofort-Buchung bei vielen Salons</li>
+                    </ul>
+                </div>
+                <div class="form-card fade-up">
+                    <h3>Stuhl anfragen</h3>
+                    <form id="freelancerForm" onsubmit="handleSubmit(event)">
+                        <div class="form-group">
+                            <label for="name">Name *</label>
+                            <input type="text" id="name" name="name" placeholder="Vor- und Nachname" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="phone">Telefon *</label>
+                            <input type="tel" id="phone" name="phone" placeholder="+49 ..." required>
+                        </div>
+                        <div class="form-group">
+                            <label for="city">Stadt *</label>
+                            <select id="city" name="city" required>
+                                <option value="">Stadt wählen</option>
+                                <option value="Frankfurt">Frankfurt</option>
+                                <option value="Berlin">Berlin</option>
+                                <option value="Hamburg">Hamburg</option>
+                                <option value="München">München</option>
+                                <option value="Köln">Köln</option>
+                                <option value="Düsseldorf">Düsseldorf</option>
+                                <option value="Andere">Andere Stadt</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="message">Nachricht</label>
+                            <textarea id="message" name="message" placeholder="Was suchst du? (z.B. Friseur-Stuhl, Barber-Platz, Nageldesign-Tisch...)"></textarea>
+                        </div>
+                        <button type="submit" class="form-submit">Stuhl anfragen &#8594;</button>
+                    </form>
+                    <div id="formSuccess" style="display:none; padding: 32px 0; text-align: center;">
+                        <div style="font-size: 3rem; margin-bottom: 16px;">&#10003;</div>
+                        <h3 style="margin-bottom: 8px;">Anfrage gesendet!</h3>
+                        <p style="color: var(--text-muted);">Wir melden uns innerhalb von 24 Stunden bei dir.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ -->
+    <section class="faq">
+        <div class="container">
+            <span class="section-label">Häufige Fragen</span>
+            <h2 class="fade-up" style="text-align:center;">Alles, was du wissen musst.</h2>
+
+            <div class="faq-list">
+                <div class="faq-item fade-up">
+                    <button class="faq-question" onclick="toggleFaq(this)">Was ist in der Stuhlmiete enthalten?</button>
+                    <div class="faq-answer">
+                        <p>Je nach Salon ist die Ausstattung unterschiedlich. In der Regel bekommst du einen vollausgestatteten Arbeitsplatz mit Stuhl, Spiegel, Strom und Zugang zu Waschplatz und Empfangsbereich. Details findest du in jedem Listing.</p>
+                    </div>
+                </div>
+                <div class="faq-item fade-up">
+                    <button class="faq-question" onclick="toggleFaq(this)">Kann ich meine eigenen Kunden mitbringen?</button>
+                    <div class="faq-answer">
+                        <p>Ja, absolut! Du behältst 100% deiner Kunden und deiner Einnahmen. Es gibt keine Provisionen oder Umsatzbeteiligungen. Dein Geschäft bleibt dein Geschäft.</p>
+                    </div>
+                </div>
+                <div class="faq-item fade-up">
+                    <button class="faq-question" onclick="toggleFaq(this)">Muss ich mich langfristig binden?</button>
+                    <div class="faq-answer">
+                        <p>Nein. Du kannst tageweise, wochenweise oder monatlich mieten. Es gibt keine Mindestlaufzeiten. Du kannst jederzeit aufhören oder den Salon wechseln.</p>
+                    </div>
+                </div>
+                <div class="faq-item fade-up">
+                    <button class="faq-question" onclick="toggleFaq(this)">Brauche ich einen Gewerbeschein?</button>
+                    <div class="faq-answer">
+                        <p>Ja, als Freelancer in der Beauty-Branche brauchst du in der Regel einen Gewerbeschein und ggf. einen Meisterbrief (je nach Tätigkeit und Bundesland). ChairMatch hilft dir gerne bei Fragen zur Selbstständigkeit.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FINAL CTA -->
+    <section class="final-cta">
+        <div class="container fade-up">
+            <h2>Bereit für <span style="color:var(--accent);">deine Freiheit</span>?</h2>
+            <p>Finde jetzt deinen perfekten Arbeitsplatz und starte als selbstständiger Beauty-Profi durch.</p>
+            <div class="hero-ctas">
+                <a href="https://wa.me/4915510445517?text=Hallo%2C%20ich%20suche%20einen%20Stuhl%20zum%20Mieten!" class="btn-primary" target="_blank" rel="noopener">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                    WhatsApp schreiben
+                </a>
+                <a href="#anmelden" class="btn-secondary">Stuhl anfragen &#8595;</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer>
+        <div class="container">
+            <p style="margin-bottom: 8px;"><a href="#" class="logo" style="font-size:1.2rem;">Chair<span>Match</span></a></p>
+            <p>&copy; 2026 ChairMatch. Alle Rechte vorbehalten.</p>
+            <p style="margin-top: 8px;"><a href="https://chairmatch.de/impressum">Impressum</a> · <a href="https://chairmatch.de/datenschutz">Datenschutz</a></p>
+        </div>
+    </footer>
+
+    <!-- WHATSAPP FLOATING BUTTON -->
+    <a href="https://wa.me/4915510445517?text=Hallo%2C%20ich%20suche%20einen%20Stuhl%20zum%20Mieten!" class="whatsapp-float" target="_blank" rel="noopener" aria-label="WhatsApp Kontakt">
+        <svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+    </a>
+
+    <script>
+        // Scroll animations
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, { threshold: 0.1 });
+
+        document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+
+        // FAQ toggle
+        function toggleFaq(btn) {
+            const item = btn.parentElement;
+            const wasActive = item.classList.contains('active');
+            document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('active'));
+            if (!wasActive) item.classList.add('active');
+        }
+
+        // Form handler
+        function handleSubmit(e) {
+            e.preventDefault();
+            const form = document.getElementById('freelancerForm');
+            const success = document.getElementById('formSuccess');
+            const data = new FormData(form);
+            const name = data.get('name');
+            const phone = data.get('phone');
+            const city = data.get('city');
+            const message = data.get('message');
+
+            const waText = encodeURIComponent(
+                `Hallo, ich suche einen Stuhl zum Mieten!\n\nName: ${name}\nTelefon: ${phone}\nStadt: ${city}\nNachricht: ${message || '–'}`
+            );
+            window.open(`https://wa.me/4915510445517?text=${waText}`, '_blank');
+
+            form.style.display = 'none';
+            success.style.display = 'block';
+        }
+    </script>
+</body>
+</html>
