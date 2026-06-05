@@ -285,6 +285,52 @@ export default function SplashPage() {
           </div>
         </section>
 
+        {/* ─── Soziales Engagement ─── */}
+        <section className="lp-section" style={{ textAlign: 'center' }}>
+          <div className="lp-badge">Soziales Engagement</div>
+          <h2 className="lp-h2">Mit jeder Buchung helfen wir</h2>
+          <p className="lp-text">
+            Von jeder Buchung fließt <strong>1 €</strong> direkt in unsere Hilfskasse
+            für Kinder und Familien in Not. Wir unterstützen Schulen, Kinder mit
+            Behinderung oder Pflegestufe und bedürftige Familien in der Region — ohne
+            Umwege, ohne Verwaltungskosten.
+          </p>
+          <div className="lp-values" style={{ marginTop: 20 }}>
+            <div className="lp-value-item">
+              <div className="lp-value-icon">
+                <svg viewBox="0 0 40 40" width="40" height="40" style={{ fill: 'none', stroke: '#C9963C', strokeWidth: 1.5, strokeLinecap: 'round', strokeLinejoin: 'round' }}>
+                  <path d="M20 35s-13-8-13-18a7 7 0 0 1 13-4 7 7 0 0 1 13 4c0 10-13 18-13 18z" />
+                </svg>
+              </div>
+              <h4>1 € pro Buchung</h4>
+              <p>Jede Pflege-Box und jede Krankenfahrt hilft automatisch mit.</p>
+            </div>
+            <div className="lp-value-item">
+              <div className="lp-value-icon">
+                <svg viewBox="0 0 40 40" width="40" height="40" style={{ fill: 'none', stroke: '#C9963C', strokeWidth: 1.5, strokeLinecap: 'round', strokeLinejoin: 'round' }}>
+                  <circle cx="14" cy="14" r="5" />
+                  <circle cx="26" cy="14" r="5" />
+                  <circle cx="20" cy="26" r="5" />
+                  <path d="M14 19v2M26 19v2M17 24h6" />
+                </svg>
+              </div>
+              <h4>Direkt vor Ort</h4>
+              <p>Für Schulen, Kinder mit Behinderung und Familien, die Hilfe brauchen.</p>
+            </div>
+            <div className="lp-value-item">
+              <div className="lp-value-icon">
+                <svg viewBox="0 0 40 40" width="40" height="40" style={{ fill: 'none', stroke: '#C9963C', strokeWidth: 1.5, strokeLinecap: 'round', strokeLinejoin: 'round' }}>
+                  <path d="M20 4v8M4 20h8M28 20h8M20 28v8" />
+                  <circle cx="20" cy="20" r="8" />
+                  <path d="M17 20l2 2 4-4" />
+                </svg>
+              </div>
+              <h4>100 % transparent</h4>
+              <p>Wir verwalten die Spenden selbst und legen offen, wohin jeder Euro geht.</p>
+            </div>
+          </div>
+        </section>
+
         {/* ─── CTA ─── */}
         <section className="lp-section lp-cta-section">
           <h2 className="lp-h2">Pflege-Box sichern. Fahrt buchen. In 2 Minuten.</h2>
