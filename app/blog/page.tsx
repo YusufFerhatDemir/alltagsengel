@@ -146,6 +146,30 @@ const articles: BlogArticle[] = [
     readTime: '8 min',
     date: '2. April 2026',
   },
+  {
+    slug: 'haushaltshilfe-frankfurt',
+    title: 'Haushaltshilfe Frankfurt — Jetzt über die Pflegekasse buchen',
+    description: 'Haushaltshilfe in Frankfurt am Main und Rhein-Main-Gebiet: Einkaufen, Kochen, Putzen, Begleitung. Kostenübernahme über Pflegekasse möglich.',
+    category: 'Services',
+    readTime: '6 min',
+    date: '4. Juni 2026',
+  },
+  {
+    slug: 'pflegebox-kostenlos-bestellen',
+    title: 'Pflegebox kostenlos bestellen — 42€/Monat von der Pflegekasse',
+    description: 'Bis zu 42€ monatlich für Pflegehilfsmittel von der Pflegekasse. Handschuhe, Desinfektion, Bettschutz — alles in einer Box.',
+    category: 'Finanzierung',
+    readTime: '4 min',
+    date: '4. Juni 2026',
+  },
+  {
+    slug: 'krankenfahrt-buchen-frankfurt',
+    title: 'Krankenfahrt buchen Frankfurt — Fahrt zum Arzt über die Krankenkasse',
+    description: 'Krankenfahrt in Frankfurt buchen: Fahrten zu Arzt, Klinik, Dialyse und Therapie. Mit Verordnung über die Krankenkasse abrechenbar.',
+    category: 'Services',
+    readTime: '5 min',
+    date: '4. Juni 2026',
+  },
 ]
 
 const categoryColors: Record<string, string> = {
