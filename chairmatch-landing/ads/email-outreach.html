@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChairMatch — E-Mail Outreach Templates</title>
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg: #0D0D0D;
+            --surface: #121212;
+            --card: #171717;
+            --border: #262626;
+            --peach: #E8A87C;
+            --peach-dim: rgba(232, 168, 124, 0.15);
+            --peach-dark: #C4895F;
+            --cream: #F8F4F0;
+            --text: #E0DCD8;
+            --muted: #8A8683;
+            --green: #5B8A72;
+            --radius: 16px;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.65;
+            -webkit-font-smoothing: antialiased;
+        }
+        .container { max-width: 900px; margin: 0 auto; padding: 0 20px; }
+
+        /* Header */
+        .header {
+            text-align: center;
+            padding: 60px 0 40px;
+            border-bottom: 1px solid var(--border);
+        }
+        .header-logo {
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--cream);
+            margin-bottom: 8px;
+        }
+        .header-logo span { color: var(--peach); }
+        .header-sub {
+            font-size: 16px;
+            color: var(--muted);
+        }
+
+        /* Navigation */
+        .template-nav {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            padding: 24px 0;
+            flex-wrap: wrap;
+        }
+        .template-nav a {
+            display: inline-block;
+            padding: 10px 20px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text);
+            font-size: 14px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+        .template-nav a:hover {
+            border-color: var(--peach);
+            color: var(--peach);
+        }
+
+        /* Template Card */
+        .template-section {
+            margin: 40px 0;
+            scroll-margin-top: 20px;
+        }
+        .template-label {
+            display: inline-block;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--peach);
+            margin-bottom: 8px;
+        }
+        .template-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--cream);
+            margin-bottom: 6px;
+        }
+        .template-target {
+            font-size: 14px;
+            color: var(--muted);
+            margin-bottom: 20px;
+        }
+
+        .email-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+            margin-bottom: 16px;
+        }
+        .email-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            background: var(--peach-dim);
+            border-bottom: 1px solid var(--border);
+        }
+        .email-type {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--peach);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+        }
+        .copy-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            background: var(--peach);
+            color: var(--bg);
+            border: none;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+        .copy-btn:hover { opacity: 0.85; transform: translateY(-1px); }
+        .copy-btn.copied {
+            background: var(--green);
+            color: var(--cream);
+        }
+
+        .email-subject {
+            padding: 16px 20px 0;
+        }
+        .email-subject-label {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 4px;
+        }
+        .email-subject-text {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--cream);
+        }
+
+        .email-body {
+            padding: 20px;
+        }
+        .email-content {
+            font-size: 14px;
+            line-height: 1.75;
+            color: var(--text);
+            white-space: pre-wrap;
+            font-family: inherit;
+        }
+
+        .divider {
+            border: none;
+            border-top: 1px solid var(--border);
+            margin: 48px 0;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 40px 0;
+            border-top: 1px solid var(--border);
+            margin-top: 40px;
+        }
+        .footer-text {
+            font-size: 13px;
+            color: var(--muted);
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%) translateY(80px);
+            background: var(--peach);
+            color: var(--bg);
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            z-index: 999;
+            opacity: 0;
+            transition: all 0.3s;
+            pointer-events: none;
+        }
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        @media (max-width: 640px) {
+            .email-header { flex-direction: column; gap: 10px; align-items: flex-start; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- HEADER -->
+    <div class="header">
+        <div class="header-logo">Chair<span>Match</span></div>
+        <p class="header-sub">E-Mail Outreach Templates — Salon-Akquise &amp; Freelancer-Recruiting</p>
+    </div>
+
+    <div class="container">
+
+        <!-- NAV -->
+        <nav class="template-nav">
+            <a href="#template-a">A: Friseursalons</a>
+            <a href="#template-b">B: Barbershops</a>
+            <a href="#template-c">C: Freelancer Recruiting</a>
+        </nav>
+
+        <!-- ═══════════════════════════════════════════════════════
+             TEMPLATE A: Friseursalons
+             ═══════════════════════════════════════════════════════ -->
+        <div class="template-section" id="template-a">
+            <div class="template-label">Template A</div>
+            <h2 class="template-title">Outreach an Friseursalons</h2>
+            <p class="template-target">Zielgruppe: Salonbesitzer, Filialleiter, Friseurmeister</p>
+
+            <!-- Erst-Mail -->
+            <div class="email-card">
+                <div class="email-header">
+                    <span class="email-type">Erst-Mail</span>
+                    <button class="copy-btn" onclick="copyEmail(this)">Kopieren</button>
+                </div>
+                <div class="email-subject">
+                    <div class="email-subject-label">Betreff</div>
+                    <div class="email-subject-text">Leere Stühle? ChairMatch bringt Ihnen Mieter — kostenlos listen</div>
+                </div>
+                <div class="email-body">
+                    <div class="email-content">Sehr geehrte Damen und Herren,
+
+wie viele Stühle in Ihrem Salon stehen heute leer? Jeder ungenutzte Platz kostet Sie Miete, Strom und Wasser — ohne einen Cent einzubringen.
+
+ChairMatch ist der digitale Marktplatz für Stuhlvermietung in der Beauty-Branche. Wir bringen Freelance-Friseure und Stylisten direkt zu Ihnen — Sie vermieten Ihre freien Plätze und schaffen sich ein passives Einkommen.
+
+So funktioniert es:
+1. Sie listen Ihren Salon kostenlos auf ChairMatch.
+2. Freelancer in Ihrer Nähe finden Ihren Stuhl und buchen ihn.
+3. Sie verdienen — ohne zusätzlichen Aufwand.
+
+Ihre Vorteile:
+- Passives Einkommen durch ungenutzte Kapazitäten
+- Keine Vertragsbindung — Sie bestimmen Verfügbarkeit und Preis
+- Kein Risiko: Listing ist kostenlos, Provision nur bei erfolgreicher Vermittlung
+- Mehr Leben in Ihrem Salon durch neue Gesichter
+
+Bereits Salons in Frankfurt, Berlin und Hamburg nutzen ChairMatch. Darf ich Ihnen zeigen, wie es funktioniert? Ein kurzes Telefonat oder eine Demo — ganz wie es Ihnen passt.
+
+Herzliche Grüße
+Ihr Team von ChairMatch
+
+ChairMatch — Dein Stuhl in der Beauty-Branche
+Web: chairmatch.de</div>
+                </div>
+            </div>
+
+            <!-- Follow-up -->
+            <div class="email-card">
+                <div class="email-header">
+                    <span class="email-type">Follow-up (nach 5-7 Tagen)</span>
+                    <button class="copy-btn" onclick="copyEmail(this)">Kopieren</button>
+                </div>
+                <div class="email-subject">
+                    <div class="email-subject-label">Betreff</div>
+                    <div class="email-subject-text">Kurze Nachfrage — leere Stühle in Einnahmen verwandeln</div>
+                </div>
+                <div class="email-body">
+                    <div class="email-content">Sehr geehrte Damen und Herren,
+
+ich möchte kurz an meine Nachricht von letzter Woche anknüpfen.
+
+Viele Salonbesitzer unterschätzen, wie viel Umsatz in ungenutzten Plätzen steckt. Ein einzelner vermieteter Stuhl kann leicht 500-1.500€ zusätzlich im Monat bringen — ohne dass Sie einen Finger rühren.
+
+Das Listing auf ChairMatch ist kostenlos und dauert keine 5 Minuten. Kein Risiko, keine Vertragsbindung.
+
+Wäre ein kurzes Telefonat diese Woche möglich? Ich zeige Ihnen gerne, wie andere Salons in Ihrer Region ChairMatch nutzen.
+
+Herzliche Grüße
+Ihr Team von ChairMatch</div>
+                </div>
+            </div>
+        </div>
+
+        <hr class="divider">
+
+        <!-- ═══════════════════════════════════════════════════════
+             TEMPLATE B: Barbershops
+             ═══════════════════════════════════════════════════════ -->
+        <div class="template-section" id="template-b">
+            <div class="template-label">Template B</div>
+            <h2 class="template-title">Outreach an Barbershops</h2>
+            <p class="template-target">Zielgruppe: Barbershop-Besitzer, Barber mit eigenem Laden</p>
+
+            <!-- Erst-Mail -->
+            <div class="email-card">
+                <div class="email-header">
+                    <span class="email-type">Erst-Mail</span>
+                    <button class="copy-btn" onclick="copyEmail(this)">Kopieren</button>
+                </div>
+                <div class="email-subject">
+                    <div class="email-subject-label">Betreff</div>
+                    <div class="email-subject-text">Stuhlvermietung für Ihren Barbershop — sofort starten</div>
+                </div>
+                <div class="email-body">
+                    <div class="email-content">Moin,
+
+Ihr Barbershop hat freie Stühle? Dann lassen Sie die nicht einfach rumstehen — vermieten Sie sie und machen Sie daraus bares Geld.
+
+ChairMatch ist die Plattform für Stuhlvermietung in der Beauty-Branche. Freelance-Barber suchen genau das: einen Stuhl, gute Lage, keine langfristige Bindung. Und Sie profitieren von zusätzlichen Einnahmen — ohne Stress.
+
+Warum Barbershop-Besitzer ChairMatch lieben:
+- Flexible Vermietung: tageweise, wochenweise oder monatlich
+- Sie setzen den Preis — wir bringen die Mieter
+- Mehr Laufkundschaft durch neue Barber an Ihrem Standort
+- Kostenlos listen, keine versteckten Gebühren
+
+Die Barber-Community wächst — immer mehr Freelancer suchen Arbeitsplätze ohne eigenen Laden. ChairMatch verbindet Sie direkt.
+
+Interesse? Antworten Sie einfach auf diese Mail oder schauen Sie auf chairmatch.de vorbei. Listing dauert unter 5 Minuten.
+
+Herzliche Grüße
+Ihr Team von ChairMatch
+
+ChairMatch — Dein Stuhl in der Beauty-Branche
+Web: chairmatch.de</div>
+                </div>
+            </div>
+
+            <!-- Follow-up -->
+            <div class="email-card">
+                <div class="email-header">
+                    <span class="email-type">Follow-up (nach 5-7 Tagen)</span>
+                    <button class="copy-btn" onclick="copyEmail(this)">Kopieren</button>
+                </div>
+                <div class="email-subject">
+                    <div class="email-subject-label">Betreff</div>
+                    <div class="email-subject-text">Nochmal kurz — leere Stühle, verpasstes Geld</div>
+                </div>
+                <div class="email-body">
+                    <div class="email-content">Moin,
+
+kurze Nachfrage zu meiner letzten Mail. Ich weiß, der Alltag im Barbershop ist busy — deshalb mache ich es kurz:
+
+- Listing: kostenlos, unter 5 Minuten
+- Risiko: null
+- Potenzial: 500-1.500€/Monat pro Stuhl
+
+Einfach auf chairmatch.de vorbeischauen oder kurz auf diese Mail antworten. Ich erkläre Ihnen alles in 5 Minuten.
+
+Herzliche Grüße
+Ihr Team von ChairMatch</div>
+                </div>
+            </div>
+        </div>
+
+        <hr class="divider">
+
+        <!-- ═══════════════════════════════════════════════════════
+             TEMPLATE C: Freelancer Recruiting
+             ═══════════════════════════════════════════════════════ -->
+        <div class="template-section" id="template-c">
+            <div class="template-label">Template C</div>
+            <h2 class="template-title">Recruiting — Freelance Beauty-Profis</h2>
+            <p class="template-target">Zielgruppe: Freelance-Friseure, selbstständige Barber, Stylisten, Kosmetiker</p>
+
+            <!-- Stellenanzeige -->
+            <div class="email-card">
+                <div class="email-header">
+                    <span class="email-type">Stellenanzeige / Posting</span>
+                    <button class="copy-btn" onclick="copyEmail(this)">Kopieren</button>
+                </div>
+                <div class="email-subject">
+                    <div class="email-subject-label">Betreff / Titel</div>
+                    <div class="email-subject-text">Dein eigener Stuhl — ohne eigenen Salon (ab 30€/Tag)</div>
+                </div>
+                <div class="email-body">
+                    <div class="email-content">Dein eigener Stuhl — ohne eigenen Salon
+
+Du bist Friseur, Barber, Stylist oder Beauty-Profi und willst endlich selbstständig arbeiten? Aber ein eigener Salon ist zu teuer, zu riskant, zu viel Aufwand?
+
+Dann ist ChairMatch genau dein Ding.
+
+Was ist ChairMatch?
+ChairMatch ist der Marktplatz für Stuhlvermietung in der Beauty-Branche. Du findest einen Arbeitsplatz in einem bestehenden Salon — flexibel, fair und ohne langfristige Bindung.
+
+Deine Vorteile:
+- Ab 30€/Tag — ein Bruchteil der eigenen Salonmiete
+- Deine Kunden, deine Preise, dein Business
+- Flexible Buchung: tageweise, wochenweise oder monatlich
+- Professionelle Ausstattung — einfach loslegen
+- Standorte in deiner Nähe — kein Pendeln quer durch die Stadt
+
+Für wen ist ChairMatch?
+- Freelance-Friseure und Barber
+- Stylisten, die ihre eigene Kundschaft aufbauen
+- Beauty-Profis (Nails, Kosmetik, Massage), die Raum suchen
+- Meister, die ohne eigenen Laden arbeiten wollen
+
+So startest du:
+1. Registriere dich kostenlos auf chairmatch.de
+2. Finde verfügbare Stühle in deiner Stadt
+3. Buche und leg los — dein Stuhl wartet
+
+Kein eigener Laden nötig. Kein Risiko. Volle Freiheit.
+
+Ihr Team von ChairMatch
+chairmatch.de</div>
+                </div>
+            </div>
+
+            <!-- Direkt-Ansprache -->
+            <div class="email-card">
+                <div class="email-header">
+                    <span class="email-type">Direktnachricht / E-Mail</span>
+                    <button class="copy-btn" onclick="copyEmail(this)">Kopieren</button>
+                </div>
+                <div class="email-subject">
+                    <div class="email-subject-label">Betreff</div>
+                    <div class="email-subject-text">Arbeitsplatz im Salon — flexibel und ab 30€/Tag</div>
+                </div>
+                <div class="email-body">
+                    <div class="email-content">Hallo,
+
+bist du auf der Suche nach einem Arbeitsplatz im Salon — ohne dich langfristig zu binden?
+
+ChairMatch ist die Plattform für Stuhlvermietung in der Beauty-Branche. Wir verbinden Freelancer wie dich mit Salons, die freie Plätze haben.
+
+Was das für dich bedeutet:
+- Professioneller Arbeitsplatz ab 30€/Tag
+- Du wählst Standort, Zeitraum und Ausstattung
+- Deine Kunden, deine Preise — volle Selbstständigkeit
+- Keine versteckten Kosten, keine Vertragsbindung
+
+Aktuell sind Plätze in mehreren Städten verfügbar. Schau einfach auf chairmatch.de vorbei oder antworte auf diese Nachricht.
+
+Herzliche Grüße
+Ihr Team von ChairMatch</div>
+                </div>
+            </div>
+
+            <!-- Follow-up -->
+            <div class="email-card">
+                <div class="email-header">
+                    <span class="email-type">Follow-up</span>
+                    <button class="copy-btn" onclick="copyEmail(this)">Kopieren</button>
+                </div>
+                <div class="email-subject">
+                    <div class="email-subject-label">Betreff</div>
+                    <div class="email-subject-text">Noch Plätze frei — Stuhlmiete ab 30€/Tag</div>
+                </div>
+                <div class="email-body">
+                    <div class="email-content">Hallo,
+
+kurze Erinnerung: Bei ChairMatch sind aktuell noch Stühle in deiner Nähe verfügbar.
+
+Die Registrierung ist kostenlos und dauert keine 3 Minuten. Du kannst sofort sehen, welche Salons Plätze anbieten und direkt buchen.
+
+Kein Risiko. Keine Bindung. Einfach ausprobieren: chairmatch.de
+
+Herzliche Grüße
+Ihr Team von ChairMatch</div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- FOOTER -->
+    <div class="footer">
+        <div class="container">
+            <p class="footer-text">ChairMatch — E-Mail Outreach Templates</p>
+            <p class="footer-text" style="margin-top: 4px;">Alle Texte unterschrieben mit „Ihr Team von ChairMatch" — keine persönlichen Namen verwenden.</p>
+        </div>
+    </div>
+
+    <!-- TOAST -->
+    <div class="toast" id="toast">In die Zwischenablage kopiert!</div>
+
+    <script>
+        function copyEmail(btn) {
+            const card = btn.closest('.email-card');
+            const subjectEl = card.querySelector('.email-subject-text');
+            const bodyEl = card.querySelector('.email-content');
+
+            const subject = subjectEl ? subjectEl.textContent.trim() : '';
+            const body = bodyEl ? bodyEl.textContent.trim() : '';
+
+            const fullText = `Betreff: ${subject}\n\n${body}`;
+
+            navigator.clipboard.writeText(fullText).then(() => {
+                btn.classList.add('copied');
+                btn.textContent = 'Kopiert!';
+
+                const toast = document.getElementById('toast');
+                toast.classList.add('show');
+
+                setTimeout(() => {
+                    btn.classList.remove('copied');
+                    btn.textContent = 'Kopieren';
+                    toast.classList.remove('show');
+                }, 2000);
+            }).catch(() => {
+                // Fallback
+                const textarea = document.createElement('textarea');
+                textarea.value = fullText;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+
+                btn.classList.add('copied');
+                btn.textContent = 'Kopiert!';
+                setTimeout(() => {
+                    btn.classList.remove('copied');
+                    btn.textContent = 'Kopieren';
+                }, 2000);
+            });
+        }
+    </script>
+</body>
+</html>
