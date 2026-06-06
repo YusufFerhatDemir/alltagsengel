@@ -1234,17 +1234,48 @@
             if (!wasActive) item.classList.add('active');
         }
 
-        // Form handler
-        function handleSubmit(e) {
+        // Form handler — saves to Supabase + WhatsApp
+        async function handleSubmit(e) {
             e.preventDefault();
             const form = document.getElementById('freelancerForm');
             const success = document.getElementById('formSuccess');
+            const submitBtn = form.querySelector('.form-submit');
             const data = new FormData(form);
             const name = data.get('name');
             const phone = data.get('phone');
             const city = data.get('city');
             const message = data.get('message');
 
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Wird gesendet...';
+
+            // UTM tracking
+            const params = new URLSearchParams(window.location.search);
+            const utmSource = params.get('utm_source') || params.get('source') || '';
+
+            // Save to Supabase
+            try {
+                await fetch('https://nnwyktkqibdjxgimjyuq.supabase.co/rest/v1/lead_inquiries', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ud3lrdGtxaWJkanhnaW1qeXVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5OTc3NDUsImV4cCI6MjA4NzU3Mzc0NX0.DOGjqwwoWrQzelnIQX5ve-HKts0G5Qg5r9JiKNXWxpk',
+                        'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ud3lrdGtxaWJkanhnaW1qeXVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5OTc3NDUsImV4cCI6MjA4NzU3Mzc0NX0.DOGjqwwoWrQzelnIQX5ve-HKts0G5Qg5r9JiKNXWxpk',
+                        'Prefer': 'return=minimal'
+                    },
+                    body: JSON.stringify({
+                        name: name.trim(),
+                        phone: phone.trim(),
+                        plz: city.trim(),
+                        service: 'Stuhlmiete — Freelancer',
+                        message: message ? message.trim() : null,
+                        source: 'chairmatch-freelancer',
+                        utm_source: utmSource || null
+                    })
+                });
+            } catch(err) { console.error('Lead save error:', err); }
+
+            // Also open WhatsApp
             const waText = encodeURIComponent(
                 `Hallo, ich suche einen Stuhl zum Mieten!\n\nName: ${name}\nTelefon: ${phone}\nStadt: ${city}\nNachricht: ${message || '–'}`
             );

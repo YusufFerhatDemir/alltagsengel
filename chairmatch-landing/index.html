@@ -181,12 +181,58 @@ footer .f-links a:hover{color:var(--accent)}
   </div>
 </section>
 
-<!-- ── CTA ── -->
-<section id="kontakt">
-  <div class="cta-section container">
-    <h2>Bereit für deinen Stuhl?</h2>
-    <p class="subtitle" style="margin-bottom:32px">Registrierung kostenlos. Keine Vorauszahlung, keine Bindung. Starte jetzt und finde deinen Platz in der Beauty-Branche.</p>
-    <a href="mailto:info@chairmatch.de" class="btn btn-primary">KONTAKT AUFNEHMEN</a>
+<!-- ── KONTAKTFORMULAR ── -->
+<section id="kontakt" style="padding:80px 0">
+  <div class="container" style="text-align:center">
+    <span class="section-badge">Jetzt starten</span>
+    <h2>Interesse? Melde dich kostenlos.</h2>
+    <p class="subtitle" style="margin-bottom:40px">Ob Salonbesitzer oder Beauty-Profi — hinterlasse deine Daten und wir melden uns innerhalb von 24 Stunden.</p>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px;max-width:720px;margin:0 auto">
+      <!-- Salon-Formular -->
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:28px;text-align:left">
+        <h3 style="margin-bottom:4px;font-size:17px">🏪 Salonbesitzer</h3>
+        <p style="color:var(--muted);font-size:13px;margin-bottom:16px">Stühle vermieten & verdienen</p>
+        <form id="salonForm" onsubmit="submitLead(event,'chairmatch-salon','Stuhlvermietung — Salon listen')">
+          <input type="text" name="name" required placeholder="Name *" style="width:100%;padding:12px 14px;border-radius:10px;border:1px solid var(--border);background:rgba(255,255,255,0.04);color:var(--text);font-size:14px;margin-bottom:10px;outline:none;box-sizing:border-box">
+          <input type="tel" name="phone" required placeholder="Telefon *" style="width:100%;padding:12px 14px;border-radius:10px;border:1px solid var(--border);background:rgba(255,255,255,0.04);color:var(--text);font-size:14px;margin-bottom:10px;outline:none;box-sizing:border-box">
+          <input type="text" name="city" required placeholder="Stadt *" style="width:100%;padding:12px 14px;border-radius:10px;border:1px solid var(--border);background:rgba(255,255,255,0.04);color:var(--text);font-size:14px;margin-bottom:10px;outline:none;box-sizing:border-box">
+          <textarea name="message" placeholder="Anzahl Stühle, Salon-Art..." rows="2" style="width:100%;padding:12px 14px;border-radius:10px;border:1px solid var(--border);background:rgba(255,255,255,0.04);color:var(--text);font-size:14px;margin-bottom:12px;outline:none;resize:vertical;box-sizing:border-box"></textarea>
+          <button type="submit" class="btn btn-primary" style="width:100%;font-size:14px;padding:12px">SALON LISTEN</button>
+        </form>
+        <div class="form-success" style="display:none;padding:24px 0;text-align:center">
+          <div style="font-size:36px;margin-bottom:8px">&#10003;</div>
+          <p style="font-weight:700;margin-bottom:4px">Danke!</p>
+          <p style="color:var(--muted);font-size:13px">Wir melden uns in 24h.</p>
+        </div>
+      </div>
+      <!-- Freelancer-Formular -->
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:28px;text-align:left">
+        <h3 style="margin-bottom:4px;font-size:17px">🎨 Beauty-Profi</h3>
+        <p style="color:var(--muted);font-size:13px;margin-bottom:16px">Stuhl mieten & loslegen</p>
+        <form id="freelancerForm" onsubmit="submitLead(event,'chairmatch-freelancer','Stuhlmiete — Freelancer')">
+          <input type="text" name="name" required placeholder="Name *" style="width:100%;padding:12px 14px;border-radius:10px;border:1px solid var(--border);background:rgba(255,255,255,0.04);color:var(--text);font-size:14px;margin-bottom:10px;outline:none;box-sizing:border-box">
+          <input type="tel" name="phone" required placeholder="Telefon *" style="width:100%;padding:12px 14px;border-radius:10px;border:1px solid var(--border);background:rgba(255,255,255,0.04);color:var(--text);font-size:14px;margin-bottom:10px;outline:none;box-sizing:border-box">
+          <input type="text" name="city" required placeholder="Stadt *" style="width:100%;padding:12px 14px;border-radius:10px;border:1px solid var(--border);background:rgba(255,255,255,0.04);color:var(--text);font-size:14px;margin-bottom:10px;outline:none;box-sizing:border-box">
+          <select name="branch" style="width:100%;padding:12px 14px;border-radius:10px;border:1px solid var(--border);background:rgba(255,255,255,0.04);color:var(--muted);font-size:14px;margin-bottom:12px;outline:none;box-sizing:border-box;appearance:auto">
+            <option value="">Branche (optional)</option>
+            <option value="Friseur">Friseur</option>
+            <option value="Barbershop">Barbershop</option>
+            <option value="Kosmetik">Kosmetik</option>
+            <option value="Nails">Nails</option>
+            <option value="Massage">Massage</option>
+            <option value="Ästhetik">Ästhetik</option>
+            <option value="Sonstige">Sonstige</option>
+          </select>
+          <button type="submit" class="btn btn-primary" style="width:100%;font-size:14px;padding:12px">STUHL FINDEN</button>
+        </form>
+        <div class="form-success" style="display:none;padding:24px 0;text-align:center">
+          <div style="font-size:36px;margin-bottom:8px">&#10003;</div>
+          <p style="font-weight:700;margin-bottom:4px">Danke!</p>
+          <p style="color:var(--muted);font-size:13px">Wir melden uns in 24h.</p>
+        </div>
+      </div>
+    </div>
+    <p style="color:var(--muted);font-size:12px;margin-top:16px">Deine Daten werden nur zur Kontaktaufnahme verwendet.</p>
   </div>
 </section>
 
@@ -203,5 +249,43 @@ footer .f-links a:hover{color:var(--accent)}
   <div style="margin-top:12px">© 2026 ChairMatch — Frankfurt am Main</div>
 </footer>
 
+<script>
+async function submitLead(e, source, service) {
+  e.preventDefault();
+  const form = e.target;
+  const btn = form.querySelector('button[type="submit"]');
+  const data = new FormData(form);
+  btn.disabled = true;
+  btn.textContent = 'Wird gesendet...';
+
+  const params = new URLSearchParams(window.location.search);
+  const utmSource = params.get('utm_source') || params.get('source') || '';
+  const branch = data.get('branch');
+
+  try {
+    await fetch('https://nnwyktkqibdjxgimjyuq.supabase.co/rest/v1/lead_inquiries', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ud3lrdGtxaWJkanhnaW1qeXVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5OTc3NDUsImV4cCI6MjA4NzU3Mzc0NX0.DOGjqwwoWrQzelnIQX5ve-HKts0G5Qg5r9JiKNXWxpk',
+        'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ud3lrdGtxaWJkanhnaW1qeXVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5OTc3NDUsImV4cCI6MjA4NzU3Mzc0NX0.DOGjqwwoWrQzelnIQX5ve-HKts0G5Qg5r9JiKNXWxpk',
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify({
+        name: data.get('name').trim(),
+        phone: data.get('phone').trim(),
+        plz: data.get('city').trim(),
+        service: branch ? service + ' (' + branch + ')' : service,
+        message: data.get('message') ? data.get('message').trim() : null,
+        source: source,
+        utm_source: utmSource || null
+      })
+    });
+  } catch(err) { console.error('Lead save error:', err); }
+
+  form.style.display = 'none';
+  form.parentElement.querySelector('.form-success').style.display = 'block';
+}
+</script>
 </body>
 </html>
