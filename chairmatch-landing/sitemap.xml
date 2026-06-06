@@ -21,6 +21,10 @@
   <url><loc>https://chairmatch.de/stadt/muenchen</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
   <url><loc>https://chairmatch.de/stadt/koeln</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
   <url><loc>https://chairmatch.de/stadt/duesseldorf</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://chairmatch.de/stadt/stuttgart</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://chairmatch.de/stadt/hannover</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://chairmatch.de/stadt/nuernberg</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://chairmatch.de/stadt/leipzig</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
 
   <!-- Umgebungsstädte -->
   <url><loc>https://chairmatch.de/stadt/offenbach</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
@@ -31,7 +35,6 @@
   <url><loc>https://chairmatch.de/stadt/potsdam</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://chairmatch.de/stadt/lueneburg</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://chairmatch.de/stadt/augsburg</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://chairmatch.de/stadt/nuernberg</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://chairmatch.de/stadt/bonn</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://chairmatch.de/stadt/leverkusen</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://chairmatch.de/stadt/essen</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
