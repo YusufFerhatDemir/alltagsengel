@@ -66,6 +66,3 @@ supabase/.temp/
 /archive/video-generation/
 .tmp_organizer.png
 xcode-state.png
-
-# ChairMatch landing (eigenes Projekt, enthält Supabase-Anon-Keys)
-chairmatch-landing/
