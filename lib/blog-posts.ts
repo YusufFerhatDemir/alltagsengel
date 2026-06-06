@@ -153,6 +153,60 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     datePublished: '2026-04-02',
     readTimeMin: 8,
   },
+  {
+    slug: 'haushaltshilfe-frankfurt',
+    headline: 'Haushaltshilfe Frankfurt — Jetzt über die Pflegekasse buchen',
+    description:
+      'Haushaltshilfe in Frankfurt am Main und Rhein-Main-Gebiet: Einkaufen, Kochen, Putzen, Begleitung. Kostenübernahme über Pflegekasse möglich.',
+    category: 'Services',
+    datePublished: '2026-06-04',
+    readTimeMin: 6,
+  },
+  {
+    slug: 'pflegebox-kostenlos-bestellen',
+    headline: 'Pflegebox kostenlos bestellen — 42€/Monat von der Pflegekasse',
+    description:
+      'Bis zu 42€ monatlich für Pflegehilfsmittel von der Pflegekasse. Handschuhe, Desinfektion, Bettschutz — alles in einer Box.',
+    category: 'Finanzierung',
+    datePublished: '2026-06-04',
+    readTimeMin: 4,
+  },
+  {
+    slug: 'krankenfahrt-buchen-frankfurt',
+    headline: 'Krankenfahrt buchen Frankfurt — Fahrt zum Arzt über die Krankenkasse',
+    description:
+      'Krankenfahrt in Frankfurt buchen: Fahrten zu Arzt, Klinik, Dialyse und Therapie. Mit Verordnung über die Krankenkasse abrechenbar.',
+    category: 'Services',
+    datePublished: '2026-06-04',
+    readTimeMin: 5,
+  },
+  {
+    slug: 'alltagsbegleitung-kosten',
+    headline: 'Was kostet Alltagsbegleitung? Kosten, Finanzierung & Tipps',
+    description:
+      'Stundensätze von 25–45€, Finanzierung über den Entlastungsbetrag (131€/Monat) und praktische Tipps zur Kostenübernahme.',
+    category: 'Finanzierung',
+    datePublished: '2026-06-06',
+    readTimeMin: 8,
+  },
+  {
+    slug: 'seniorenbetreuung-frankfurt',
+    headline: 'Seniorenbetreuung in Frankfurt: Angebote, Kosten & Anbieter',
+    description:
+      'Alle Angebote für Seniorenbetreuung in Frankfurt: Alltagsbegleitung, Haushaltshilfe, Demenzbetreuung im Rhein-Main-Gebiet.',
+    category: 'Alltagsbegleitung',
+    datePublished: '2026-06-06',
+    readTimeMin: 9,
+  },
+  {
+    slug: 'entlastungsbetrag-nutzen',
+    headline: 'Entlastungsbetrag richtig nutzen — 131€/Monat voll ausschöpfen',
+    description:
+      'Praktischer Ratgeber: So nutzen Sie den Entlastungsbetrag optimal. Welche Leistungen sind abgedeckt, häufige Fehler und Checkliste.',
+    category: 'Finanzierung',
+    datePublished: '2026-06-06',
+    readTimeMin: 10,
+  },
 ]
 
 export function getBlogPost(slug: string): BlogPostMeta | undefined {

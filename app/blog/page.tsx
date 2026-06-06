@@ -170,6 +170,30 @@ const articles: BlogArticle[] = [
     readTime: '5 min',
     date: '4. Juni 2026',
   },
+  {
+    slug: 'alltagsbegleitung-kosten',
+    title: 'Was kostet Alltagsbegleitung? Kosten, Finanzierung & Tipps',
+    description: 'Stundensätze von 25–45€, Finanzierung über den Entlastungsbetrag (131€/Monat) und praktische Tipps zur Kostenübernahme durch die Pflegekasse.',
+    category: 'Finanzierung',
+    readTime: '8 min',
+    date: '6. Juni 2026',
+  },
+  {
+    slug: 'seniorenbetreuung-frankfurt',
+    title: 'Seniorenbetreuung in Frankfurt: Angebote, Kosten & Anbieter',
+    description: 'Alle Angebote für Seniorenbetreuung in Frankfurt: Alltagsbegleitung, Haushaltshilfe, Demenzbetreuung und mehr im Rhein-Main-Gebiet.',
+    category: 'Alltagsbegleitung',
+    readTime: '9 min',
+    date: '6. Juni 2026',
+  },
+  {
+    slug: 'entlastungsbetrag-nutzen',
+    title: 'Entlastungsbetrag richtig nutzen — 131€/Monat voll ausschöpfen',
+    description: 'Praktischer Ratgeber: So nutzen Sie den Entlastungsbetrag optimal. Welche Leistungen sind abgedeckt, häufige Fehler und Checkliste.',
+    category: 'Finanzierung',
+    readTime: '10 min',
+    date: '6. Juni 2026',
+  },
 ]
 
 const categoryColors: Record<string, string> = {
