@@ -60,8 +60,8 @@ const articles: BlogArticle[] = [
   },
   {
     slug: 'pflegehilfsmittel-40-euro',
-    title: 'Pflegehilfsmittel — 40€/Monat kostenlos von der Kasse',
-    description: 'Diese Pflegehilfsmittel stehen Ihnen monatlich zu: Einmalhandschuhe, Desinfektionsmittel, Bettschutz und mehr.',
+    title: 'Pflegehilfsmittel — 42€/Monat kostenlos von der Kasse',
+    description: 'Diese Pflegehilfsmittel stehen Ihnen monatlich zu: Einmalhandschuhe, Desinfektionsmittel, Bettschutz und mehr. Bis zu 42€/Monat nach §40 SGB XI.',
     category: 'Finanzierung',
     readTime: '4 min',
     date: '23. März 2026',
