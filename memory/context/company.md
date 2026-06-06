@@ -3,7 +3,7 @@
 ## Firma
 
 - **Rechtsform:** UG (haftungsbeschränkt) — Gründung via RA Dörr, Juni 2025
-- **Geplante Adresse:** Schillerstraße 31, 60313 Frankfurt am Main
+- **Adresse:** Neue Mainzer Straße 66-68, 60311 Frankfurt am Main
 - **Marke:** AlltagsEngel
 - **Domain:** alltagsengel.care
 - **Kontakt-E-Mail:** info@alltagsengel.care (Resend als Versender)

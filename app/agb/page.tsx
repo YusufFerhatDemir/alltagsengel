@@ -12,8 +12,8 @@ export default function AGBPage() {
           <h2>§ 1 Geltungsbereich</h2>
           <p>
             Diese Allgemeinen Geschäftsbedingungen (AGB) gelten für die Nutzung der Plattform „Alltagsengel"
-            (alltagsengel.care), betrieben von der Alltagsengel UG (haftungsbeschränkt), Schillerstraße 31,
-            60313 Frankfurt am Main (nachfolgend „Betreiber").
+            (alltagsengel.care), betrieben von der Alltagsengel UG (haftungsbeschränkt), Neue Mainzer Straße 66-68,
+            60311 Frankfurt am Main (nachfolgend „Betreiber").
           </p>
           <p>
             Die Plattform vermittelt Leistungen zur Unterstützung im Alltag gemäß § 45a SGB XI zwischen
@@ -112,7 +112,7 @@ export default function AGBPage() {
           </p>
           <p>
             Um Ihr Widerrufsrecht auszuüben, müssen Sie uns (Alltagsengel UG (haftungsbeschränkt),
-            Schillerstraße 31, 60313 Frankfurt am Main, info@alltagsengel.care, +49 178 3382825) mittels einer
+            Neue Mainzer Straße 66-68, 60311 Frankfurt am Main, info@alltagsengel.care, +49 178 3382825) mittels einer
             eindeutigen Erklärung (z.B. ein mit der Post versandter Brief, Telefax oder E-Mail) über Ihren
             Entschluss, diesen Vertrag zu widerrufen, informieren.
           </p>

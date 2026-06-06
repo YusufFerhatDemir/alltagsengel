@@ -407,7 +407,7 @@ function buildSlides(): Slide[] {
               <div style={{ fontSize: 13, color: C.ink3, lineHeight: 2 }}>
                 <a href="mailto:info@alltagsengel.care" style={{ color: C.ink3, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 8 }}>{Icons.mail(14)} info@alltagsengel.care</a><br />
                 <a href="https://www.alltagsengel.care" target="_blank" rel="noopener" style={{ color: C.ink3, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 8 }}>{Icons.globe(14)} www.alltagsengel.care</a><br />
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>{Icons.mapPin(14)} Schiller Str. 31, 60313 Frankfurt am Main</span>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>{Icons.mapPin(14)} Neue Mainzer Str. 66-68, 60311 Frankfurt am Main</span>
               </div>
             </Card>
             <div style={{ marginTop: 24 }}>

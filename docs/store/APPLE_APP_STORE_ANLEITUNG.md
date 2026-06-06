@@ -47,7 +47,7 @@ Apple braucht **24–48 Stunden** um den Account zu verifizieren. Deshalb HEUTE 
 ### 1.3 D-U-N-S-Nummer (nur für "Organization")
 - Prüfe ob ihr bereits eine habt: **https://developer.apple.com/enroll/duns-lookup/**
 - Firmenname: **Alltagsengel UG (haftungsbeschränkt)**
-- Adresse: **Schillerstraße 31, 60313 Frankfurt am Main**
+- Adresse: **Neue Mainzer Straße 66-68, 60311 Frankfurt am Main**
 - Falls keine vorhanden: Apple beantragt sie für euch (dauert 5–14 Tage!)
 - **TIPP:** Als "Individual" anmelden geht schneller. Später auf "Organization" umstellen.
 

@@ -12,8 +12,8 @@ export default function ImpressumPage() {
           <h2>Angaben gemäß § 5 TMG</h2>
           <p>
             Alltagsengel UG (haftungsbeschränkt)<br/>
-            Schillerstraße 31<br/>
-            60313 Frankfurt am Main
+            Neue Mainzer Straße 66-68<br/>
+            60311 Frankfurt am Main
           </p>
         </section>
 
@@ -51,8 +51,8 @@ export default function ImpressumPage() {
           <h2>Verantwortlich für den Inhalt nach § 18 Abs. 2 MStV</h2>
           <p>
             Yusuf Ferhat Demir<br/>
-            Schillerstraße 31<br/>
-            60313 Frankfurt am Main
+            Neue Mainzer Straße 66-68<br/>
+            60311 Frankfurt am Main
           </p>
         </section>
 

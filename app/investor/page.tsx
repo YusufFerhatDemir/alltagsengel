@@ -189,7 +189,7 @@ export default function InvestorPortal() {
           <div style={{ fontSize: 13, color: '#7A6E5E', marginBottom: 16 }}>(haftungsbeschränkt) · HRB eingetragen</div>
           <div style={{ fontSize: 13, color: '#9A8C7C', lineHeight: 1.8 }}>
             Yusuf Ferhat Demir · Gründer & CEO<br />
-            Schiller Str. 31, 60313 Frankfurt am Main<br />
+            Neue Mainzer Str. 66-68, 60311 Frankfurt am Main<br />
             info@alltagsengel.care · www.alltagsengel.care
           </div>
           <div style={{ marginTop: 20, fontSize: 11, color: '#5A4E3E' }}>
