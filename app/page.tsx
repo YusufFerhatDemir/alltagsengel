@@ -73,6 +73,26 @@ const jsonLdServices = [
       { '@type': 'AdministrativeArea', name: 'Rhein-Main-Gebiet' },
     ],
   },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'Service',
+    '@id': 'https://alltagsengel.care/#service-alltagsbegleitung',
+    name: 'Alltagsbegleitung (nach §45a SGB XI)',
+    description: 'Zertifizierte Alltagsbegleitung für Senioren und Pflegebedürftige in Frankfurt und dem Rhein-Main-Gebiet. Einkaufshilfe, Arztbegleitung, Haushaltshilfe, psychosoziale Betreuung — abrechenbar über den Entlastungsbetrag (131 €/Monat nach §45b SGB XI).',
+    provider: { '@id': 'https://alltagsengel.care/#organization' },
+    serviceType: 'Alltagsbegleitung / Entlastungsangebot',
+    areaServed: [
+      { '@type': 'City', name: 'Frankfurt am Main' },
+      { '@type': 'AdministrativeArea', name: 'Rhein-Main-Gebiet' },
+    ],
+    offers: {
+      '@type': 'Offer',
+      price: '32.00',
+      priceCurrency: 'EUR',
+      priceSpecification: { '@type': 'UnitPriceSpecification', price: '32.00', priceCurrency: 'EUR', unitText: 'Stunde' },
+      description: '131 €/Monat über Entlastungsbetrag §45b SGB XI abrechenbar — 0 € Eigenanteil bei Pflegegrad.',
+    },
+  },
 ]
 
 const jsonLdFAQ = {
@@ -99,6 +119,10 @@ export default function SplashPage() {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdServices[1]) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdServices[2]) }}
       />
       <script
         type="application/ld+json"
