@@ -77,6 +77,62 @@ footer .f-links a:hover{color:var(--accent)}
   .categories{grid-template-columns:repeat(2,1fr)}
 }
 </style>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://chairmatch.de/#organization",
+      "name": "ChairMatch",
+      "url": "https://chairmatch.de",
+      "logo": "https://chairmatch.de/icon-512x512.png",
+      "description": "ChairMatch ist Deutschlands Plattform für Beauty- und Medical-Termine sowie die flexible Vermietung von Stühlen, Liegen und Kabinen. 0 % Provision.",
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "Neue Mainzer Straße 66-68",
+        "postalCode": "60311",
+        "addressLocality": "Frankfurt am Main",
+        "addressRegion": "Hessen",
+        "addressCountry": "DE"
+      },
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "email": "info@chairmatch.de",
+        "contactType": "customer service",
+        "availableLanguage": ["German", "English"]
+      },
+      "areaServed": {
+        "@type": "Country",
+        "name": "Deutschland"
+      }
+    },
+    {
+      "@type": "WebSite",
+      "@id": "https://chairmatch.de/#website",
+      "url": "https://chairmatch.de",
+      "name": "ChairMatch",
+      "publisher": { "@id": "https://chairmatch.de/#organization" },
+      "inLanguage": "de-DE"
+    },
+    {
+      "@type": "WebApplication",
+      "@id": "https://chairmatch.de/#app",
+      "name": "ChairMatch",
+      "url": "https://chairmatch.de",
+      "applicationCategory": "BusinessApplication",
+      "operatingSystem": "Web",
+      "description": "Deutschlands Plattform für Stuhlvermietung und Raumvermietung in der Beauty-Branche. Friseur, Kosmetik, Barbershop, Nails, Massage — 0 % Provision.",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "EUR",
+        "description": "Kostenlose Registrierung, 0 % Provision"
+      }
+    }
+  ]
+}
+</script>
 </head>
 <body>
 
