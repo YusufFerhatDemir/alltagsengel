@@ -26,6 +26,7 @@ const STATIC_ROUTES: Omit<RouteEntry, 'lastModified'>[] = [
   { url: '/hygienebox', changeFrequency: 'weekly', priority: 0.9 },
   { url: '/krankenfahrten', changeFrequency: 'weekly', priority: 0.9 },
   { url: '/alltagsbegleitung', changeFrequency: 'weekly', priority: 0.9 },
+  { url: '/engel-werden', changeFrequency: 'weekly', priority: 0.9 },
   { url: '/blog', changeFrequency: 'daily', priority: 0.9 },
   { url: '/faq', changeFrequency: 'monthly', priority: 0.8 },
   { url: '/kontakt', changeFrequency: 'monthly', priority: 0.7 },

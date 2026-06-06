@@ -24,6 +24,29 @@ export default function AlltagsbegleiterWerden() {
           </div>
         </div>
 
+        {/* ─── Prominenter CTA-Banner ─── */}
+        <div style={{
+          background: 'linear-gradient(135deg, rgba(201,150,60,0.12) 0%, rgba(201,150,60,0.04) 100%)',
+          border: '1px solid rgba(201,150,60,0.3)',
+          borderRadius: 16,
+          padding: '20px 22px',
+          marginBottom: 24,
+          textAlign: 'center',
+        }}>
+          <div style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.12em', color: '#C9963C', marginBottom: 8 }}>
+            Jetzt bewerben
+          </div>
+          <div style={{ fontSize: 17, fontWeight: 700, color: '#F5F0E8', lineHeight: 1.3, marginBottom: 8 }}>
+            Werde Alltagsengel — 20 €/Stunde, flexible Zeiten
+          </div>
+          <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.45)', lineHeight: 1.6, marginBottom: 14 }}>
+            Keine Pflegeausbildung nötig. Starte jetzt als Alltagsbegleiter in Frankfurt &amp; Rhein-Main.
+          </div>
+          <Link href="/engel-werden" className="btn-gold" style={{ display: 'inline-block', width: 'auto', padding: '12px 32px', fontSize: 13 }}>
+            Zur Bewerbung
+          </Link>
+        </div>
+
         <div className="blog-intro">
           <p>Der Beruf des Alltagsbegleiters ist eine sinnvolle Tätigkeit mit flexiblen Arbeitszeiten und regulärem Einkommen. Mit einem Stundenlohn von etwa 20 Euro ist es auch eine wirtschaftlich attraktive Option für Menschen, die älteren oder pflegebedürftigen Menschen helfen möchten. Dieser Leitfaden zeigt, wie Sie Alltagsbegleiter werden und worauf es dabei ankommt.</p>
         </div>
@@ -142,9 +165,9 @@ export default function AlltagsbegleiterWerden() {
         </div>
 
         <div className="blog-cta">
-          <h3>Jetzt AlltagsEngel testen</h3>
-          <p>Registriere dich kostenlos als Alltagsbegleiter und finde sofort deine ersten Einsätze!</p>
-          <Link href="/choose" className="btn-gold">Kostenlos registrieren</Link>
+          <h3>Jetzt Alltagsengel werden</h3>
+          <p>20 €/Stunde, flexible Zeiteinteilung, sinnvolle Arbeit. Registriere dich kostenlos als Alltagsbegleiter und starte in Frankfurt &amp; Rhein-Main.</p>
+          <Link href="/engel-werden" className="btn-gold">Jetzt bewerben</Link>
         </div>
       </article>
     </main>
