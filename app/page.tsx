@@ -409,6 +409,7 @@ export default function SplashPage() {
             <Link href="/hygienebox">Pflege-Box</Link>
             <Link href="/krankenfahrten">Krankenfahrt</Link>
             <Link href="/alltagsbegleitung">Alltagsbegleitung</Link>
+            <Link href="/engel-werden">Engel werden</Link>
             <Link href="/blog">Ratgeber</Link>
             <Link href="/faq">FAQ</Link>
             <Link href="/kontakt">Kontakt</Link>
