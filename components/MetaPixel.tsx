@@ -35,14 +35,13 @@ export default function MetaPixel() {
       return
     }
 
-    const interval = setInterval(() => {
-      if (getCookieConsent() === 'accepted') {
-        setShouldLoad(true)
-        clearInterval(interval)
-      }
-    }, 2000)
+    // Event-basiert statt Polling
+    const handleConsent = (e: Event) => {
+      if ((e as CustomEvent).detail === 'accepted') setShouldLoad(true)
+    }
+    window.addEventListener('ae_consent_change', handleConsent)
 
-    return () => clearInterval(interval)
+    return () => window.removeEventListener('ae_consent_change', handleConsent)
   }, [])
 
   if (!shouldLoad || !META_PIXEL_ID) return null

@@ -131,6 +131,22 @@ export default function HygieneboxPage() {
         </div>
 
         <section className="info-card">
+          <h3>Pflegebox in Ihrer Stadt</h3>
+          <ul className="info-list">
+            <li><Link href="/hygienebox/offenbach">Pflegebox Offenbach am Main</Link></li>
+            <li><Link href="/hygienebox/wiesbaden">Pflegebox Wiesbaden</Link></li>
+            <li><Link href="/hygienebox/darmstadt">Pflegebox Darmstadt</Link></li>
+            <li><Link href="/hygienebox/hanau">Pflegebox Hanau</Link></li>
+            <li><Link href="/hygienebox/bad-homburg">Pflegebox Bad Homburg</Link></li>
+            <li><Link href="/hygienebox/mainz">Pflegebox Mainz</Link></li>
+            <li><Link href="/hygienebox/aschaffenburg">Pflegebox Aschaffenburg</Link></li>
+            <li><Link href="/hygienebox/neu-isenburg">Pflegebox Neu-Isenburg</Link></li>
+            <li><Link href="/hygienebox/friedberg-wetterau">Pflegebox Friedberg (Wetterau)</Link></li>
+            <li><Link href="/hygienebox/rodgau">Pflegebox Rodgau</Link></li>
+          </ul>
+        </section>
+
+        <section className="info-card">
           <h3>Weitere Leistungen</h3>
           <ul className="info-list">
             <li><Link href="/alltagsbegleitung">Alltagsbegleitung — 131€/Monat über Entlastungsbetrag</Link></li>

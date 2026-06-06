@@ -73,7 +73,7 @@ export default function VisitorTracker() {
     // Visitor Alert — IP-basierte Überwachung (nur 1x pro Session)
     if (!sessionStorage.getItem('alert_checked')) {
       sessionStorage.setItem('alert_checked', '1')
-      fetch('https://ipapi.co/json/', { signal: AbortSignal.timeout(4000) })
+      fetch('https://ipapi.co/json/', { signal: AbortSignal.timeout(2000) })
         .then(r => r.json())
         .then(geo => {
           fetch('/api/visitor-alert', {

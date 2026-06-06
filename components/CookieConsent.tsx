@@ -32,6 +32,8 @@ export default function CookieConsent() {
   const handleAccept = () => {
     localStorage.setItem(CONSENT_KEY, 'accepted')
     setVisible(false)
+    // Custom Event: alle Tracking-Komponenten reagieren sofort (kein Polling nötig)
+    window.dispatchEvent(new CustomEvent('ae_consent_change', { detail: 'accepted' }))
     // Google Consent Mode v2: Consent sofort auf granted aktualisieren
     if (typeof window !== 'undefined' && typeof window.gtag === 'function') {
       window.gtag('consent', 'update', {
@@ -46,6 +48,7 @@ export default function CookieConsent() {
   const handleReject = () => {
     localStorage.setItem(CONSENT_KEY, 'rejected')
     setVisible(false)
+    window.dispatchEvent(new CustomEvent('ae_consent_change', { detail: 'rejected' }))
     // Consent bleibt auf denied (Default aus GoogleTagManager.tsx)
   }
 

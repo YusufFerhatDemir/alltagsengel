@@ -5,7 +5,7 @@ import { useState, useEffect, useRef } from 'react'
 // PWA INSTALL PROMPT + APP STORE SMART BANNER
 // ═══════════════════════════════════════════════════════════
 // Erkennt Plattform und zeigt passende Installation:
-// - iOS Safari: "Zum Startbildschirm hinzufügen"-Anleitung
+// - iOS Safari: "App installieren"-Anleitung
 // - Android Chrome: Native beforeinstallprompt
 // - Fallback: App Store / Play Store Links
 // Wird nur einmal gezeigt (localStorage).
@@ -137,7 +137,7 @@ export default function InstallPrompt() {
             </div>
             {platform === 'ios' ? (
               <div style={{ color: '#8A8279', fontSize: 12, lineHeight: 1.4 }}>
-                Tippen Sie auf <span style={{ color: '#C9963C' }}>Teilen</span> ↗ dann <span style={{ color: '#C9963C' }}>&quot;Zum Home-Bildschirm&quot;</span>
+                Tippen Sie auf <span style={{ color: '#C9963C' }}>Teilen</span> ↗ dann <span style={{ color: '#C9963C' }}>&quot;App installieren&quot;</span>
               </div>
             ) : (
               <div style={{ color: '#8A8279', fontSize: 12, lineHeight: 1.4 }}>

@@ -152,6 +152,22 @@ export default function KrankenfahrtenPage() {
         </div>
 
         <section className="info-card">
+          <h3>Krankenfahrten in Ihrer Stadt</h3>
+          <ul className="info-list">
+            <li><Link href="/krankenfahrten/offenbach">Krankenfahrt Offenbach am Main</Link></li>
+            <li><Link href="/krankenfahrten/wiesbaden">Krankenfahrt Wiesbaden</Link></li>
+            <li><Link href="/krankenfahrten/darmstadt">Krankenfahrt Darmstadt</Link></li>
+            <li><Link href="/krankenfahrten/hanau">Krankenfahrt Hanau</Link></li>
+            <li><Link href="/krankenfahrten/bad-homburg">Krankenfahrt Bad Homburg</Link></li>
+            <li><Link href="/krankenfahrten/mainz">Krankenfahrt Mainz</Link></li>
+            <li><Link href="/krankenfahrten/aschaffenburg">Krankenfahrt Aschaffenburg</Link></li>
+            <li><Link href="/krankenfahrten/frankfurt-hoechst">Krankenfahrt Frankfurt-Höchst</Link></li>
+            <li><Link href="/krankenfahrten/neu-isenburg">Krankenfahrt Neu-Isenburg</Link></li>
+            <li><Link href="/krankenfahrten/friedberg-wetterau">Krankenfahrt Friedberg (Wetterau)</Link></li>
+          </ul>
+        </section>
+
+        <section className="info-card">
           <h3>Weitere Leistungen</h3>
           <ul className="info-list">
             <li><Link href="/alltagsbegleitung">Alltagsbegleitung — 131€/Monat über Entlastungsbetrag</Link></li>
