@@ -15,7 +15,16 @@ interface CityData {
   description: string
 }
 
+export const dynamicParams = true
+
 const cities: Record<string, CityData> = {
+  frankfurt: {
+    name: 'Frankfurt am Main',
+    region: 'Hessen',
+    slug: 'frankfurt',
+    plz: '60311',
+    description: 'Frankfurt am Main und dem gesamten Stadtgebiet',
+  },
   offenbach: {
     name: 'Offenbach am Main',
     region: 'Hessen',

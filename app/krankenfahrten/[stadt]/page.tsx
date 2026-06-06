@@ -16,7 +16,17 @@ interface CityData {
   landmarks: string[]
 }
 
+export const dynamicParams = true
+
 const cities: Record<string, CityData> = {
+  frankfurt: {
+    name: 'Frankfurt am Main',
+    region: 'Hessen',
+    slug: 'frankfurt',
+    plz: '60311',
+    description: 'Frankfurt am Main und dem gesamten Stadtgebiet',
+    landmarks: ['Universitätsklinikum Frankfurt', 'Bürgerhospital Frankfurt', 'Krankenhaus Nordwest', 'Klinikum Frankfurt Höchst', 'Hospital zum Heiligen Geist'],
+  },
   offenbach: {
     name: 'Offenbach am Main',
     region: 'Hessen',
