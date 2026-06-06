@@ -1,26 +1,9 @@
 import type { Metadata, Viewport } from 'next'
 import { Jost, Cormorant_Garamond } from 'next/font/google'
-import dynamic from 'next/dynamic'
 import './globals.css'
 import LayoutWrapper from '@/components/LayoutWrapper'
 import GoogleTagManager from '@/components/GoogleTagManager'
-
-// ═══ LAZY-LOADED COMPONENTS ═══
-// Nicht-kritische UI- und Tracking-Komponenten werden erst nach dem
-// initialen Render geladen → kleineres JS-Bundle, schnellerer First Paint.
-const VisitorTracker = dynamic(() => import('@/components/VisitorTracker'), { ssr: false })
-const CookieConsent = dynamic(() => import('@/components/CookieConsent'), { ssr: false })
-const ServiceWorkerRegister = dynamic(() => import('@/components/ServiceWorkerRegister'), { ssr: false })
-const PushProvider = dynamic(() => import('@/components/PushProvider'), { ssr: false })
-const NativePushProvider = dynamic(() => import('@/components/NativePushProvider'), { ssr: false })
-const WebVitalsReporter = dynamic(() => import('@/components/WebVitalsReporter'), { ssr: false })
-const MetaPixel = dynamic(() => import('@/components/MetaPixel'), { ssr: false })
-const TikTokPixel = dynamic(() => import('@/components/TikTokPixel'), { ssr: false })
-const SessionKeepAlive = dynamic(() => import('@/components/SessionKeepAlive'), { ssr: false })
-const SplashController = dynamic(() => import('@/components/SplashController'), { ssr: false })
-const CapacitorLinkInterceptor = dynamic(() => import('@/components/CapacitorLinkInterceptor'), { ssr: false })
-const WhatsAppButton = dynamic(() => import('@/components/WhatsAppButton'), { ssr: false })
-const InstallPrompt = dynamic(() => import('@/components/InstallPrompt'), { ssr: false })
+import ClientSideProviders from '@/components/ClientSideProviders'
 
 // Fonts: Nur tatsächlich genutzte Gewichte laden (vorher: 5+8 = 13 Font-Dateien)
 const jost = Jost({ subsets: ['latin'], variable: '--font-jost', weight: ['300','400','600','700'] })
@@ -279,22 +262,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className={`${jost.variable} ${cormorant.variable}`} style={{ fontFamily: "'Jost', sans-serif", backgroundColor: '#1A1612', color: '#F5F0E8' }}>
         <GoogleTagManager />
-        <WebVitalsReporter />
-        <MetaPixel />
-        <TikTokPixel />
-        <VisitorTracker />
         <LayoutWrapper>
           {children}
         </LayoutWrapper>
-        <SessionKeepAlive />
-        <SplashController />
-        <CapacitorLinkInterceptor />
-        <WhatsAppButton />
-        <InstallPrompt />
-        <CookieConsent />
-        <ServiceWorkerRegister />
-        <PushProvider />
-        <NativePushProvider />
+        <ClientSideProviders />
       </body>
     </html>
   )
