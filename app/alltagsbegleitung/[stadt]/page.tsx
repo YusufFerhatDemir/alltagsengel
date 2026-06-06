@@ -74,6 +74,34 @@ const cities: Record<string, CityData> = {
     plz: '63739',
     description: 'Aschaffenburg und dem Bayerischen Untermain',
   },
+  'frankfurt-hoechst': {
+    name: 'Frankfurt-Höchst',
+    region: 'Hessen',
+    slug: 'frankfurt-hoechst',
+    plz: '65929',
+    description: 'Frankfurt-Höchst und dem Frankfurter Westen',
+  },
+  'neu-isenburg': {
+    name: 'Neu-Isenburg',
+    region: 'Hessen',
+    slug: 'neu-isenburg',
+    plz: '63263',
+    description: 'Neu-Isenburg und Dreieich',
+  },
+  'friedberg-wetterau': {
+    name: 'Friedberg (Wetterau)',
+    region: 'Hessen',
+    slug: 'friedberg-wetterau',
+    plz: '61169',
+    description: 'Friedberg und der Wetterau',
+  },
+  rodgau: {
+    name: 'Rodgau',
+    region: 'Hessen',
+    slug: 'rodgau',
+    plz: '63110',
+    description: 'Rodgau und dem Kreis Offenbach',
+  },
 }
 
 export function generateStaticParams() {
@@ -128,9 +156,10 @@ function buildJsonLd(city: CityData) {
           telephone: '+4969348757690',
           address: {
             '@type': 'PostalAddress',
+            streetAddress: 'Neue Mainzer Straße 66-68',
+            postalCode: '60311',
             addressLocality: 'Frankfurt am Main',
             addressRegion: 'Hessen',
-            postalCode: '60313',
             addressCountry: 'DE',
           },
           geo: {
@@ -158,6 +187,51 @@ function buildJsonLd(city: CityData) {
           },
           description: '131€/Monat über Entlastungsbetrag §45b SGB XI abrechenbar',
         },
+      },
+      {
+        '@type': 'FAQPage',
+        mainEntity: [
+          {
+            '@type': 'Question',
+            name: `Was kostet Alltagsbegleitung in ${city.name}?`,
+            acceptedAnswer: {
+              '@type': 'Answer',
+              text: `Die Alltagsbegleitung in ${city.name} kostet ab 32 € pro Stunde. Mit dem Entlastungsbetrag (§45b SGB XI) stehen Ihnen 131 € monatlich zu, die direkt mit der Pflegekasse abgerechnet werden — Sie zahlen nichts aus eigener Tasche.`,
+            },
+          },
+          {
+            '@type': 'Question',
+            name: 'Wer hat Anspruch auf den Entlastungsbetrag?',
+            acceptedAnswer: {
+              '@type': 'Answer',
+              text: 'Jede Person mit anerkanntem Pflegegrad (1–5) hat Anspruch auf den Entlastungsbetrag von 131 € monatlich nach §45b SGB XI. Auch mit Pflegegrad 1 können Sie Alltagsbegleitung über den Entlastungsbetrag finanzieren.',
+            },
+          },
+          {
+            '@type': 'Question',
+            name: `Wie buche ich Alltagsbegleitung in ${city.name}?`,
+            acceptedAnswer: {
+              '@type': 'Answer',
+              text: `Registrieren Sie sich kostenlos bei Alltagsengel, wählen Sie einen Engel in ${city.name} und buchen Sie Termine. Die Abrechnung mit der Pflegekasse übernehmen wir für Sie.`,
+            },
+          },
+          {
+            '@type': 'Question',
+            name: 'Welche Aufgaben übernimmt ein Alltagsbegleiter?',
+            acceptedAnswer: {
+              '@type': 'Answer',
+              text: 'Unsere Alltagsbegleiter helfen bei Einkäufen, Arztbesuchen, Behördengängen, Spaziergängen, Kochen, Haushalt und leisten Gesellschaft. Keine medizinische Pflege, sondern praktische Alltagshilfe und psychosoziale Betreuung.',
+            },
+          },
+          {
+            '@type': 'Question',
+            name: 'Verfällt der Entlastungsbetrag?',
+            acceptedAnswer: {
+              '@type': 'Answer',
+              text: 'Ja, nicht genutzte Beträge verfallen am 30. Juni des Folgejahres. Daher lohnt es sich, den Entlastungsbetrag regelmäßig für Alltagsbegleitung zu nutzen. Rückwirkende Beantragung ist möglich.',
+            },
+          },
+        ],
       },
       {
         '@type': 'BreadcrumbList',
@@ -281,13 +355,46 @@ export default async function StadtPage({ params }: { params: Promise<{ stadt: s
         </section>
 
         <section className="info-card">
+          <h3>Häufige Fragen zur Alltagsbegleitung in {city.name}</h3>
+          <details className="info-faq">
+            <summary>Was kostet Alltagsbegleitung in {city.name}?</summary>
+            <p>Ab 32 € pro Stunde. Mit dem Entlastungsbetrag (§45b) stehen Ihnen 131 € monatlich zu, die direkt mit der Pflegekasse abgerechnet werden — Sie zahlen nichts aus eigener Tasche.</p>
+          </details>
+          <details className="info-faq">
+            <summary>Wer hat Anspruch auf den Entlastungsbetrag?</summary>
+            <p>Jede Person mit anerkanntem Pflegegrad (1–5) hat Anspruch auf 131 € monatlich nach §45b SGB XI. Auch mit Pflegegrad 1 können Sie Alltagsbegleitung finanzieren.</p>
+          </details>
+          <details className="info-faq">
+            <summary>Wie buche ich Alltagsbegleitung in {city.name}?</summary>
+            <p>Registrieren Sie sich kostenlos bei Alltagsengel, wählen Sie einen Engel in {city.name} und buchen Sie Termine. Die Abrechnung übernehmen wir.</p>
+          </details>
+          <details className="info-faq">
+            <summary>Welche Aufgaben übernimmt ein Alltagsbegleiter?</summary>
+            <p>Einkäufe, Arztbesuche, Behördengänge, Spaziergänge, Kochen, Haushalt und Gesellschaft leisten. Keine medizinische Pflege — praktische Alltagshilfe und psychosoziale Betreuung.</p>
+          </details>
+          <details className="info-faq">
+            <summary>Verfällt der Entlastungsbetrag?</summary>
+            <p>Ja, nicht genutzte Beträge verfallen am 30. Juni des Folgejahres. Daher lohnt es sich, den Entlastungsbetrag regelmäßig zu nutzen. Rückwirkende Beantragung ist möglich.</p>
+          </details>
+        </section>
+
+        <section className="info-card">
+          <h3>Weitere Dienste in {city.name}</h3>
+          <p>Neben Alltagsbegleitung bieten wir in {city.name} auch:</p>
+          <ul className="info-list">
+            <li><Link href="/krankenfahrten">Krankenfahrten</Link> — Mit Verordnung zahlt die Krankenkasse (§60 SGB V)</li>
+            <li><Link href="/hygienebox">Pflegebox</Link> — Kostenlose Pflegehilfsmittel (42 €/Monat nach §40 SGB XI)</li>
+          </ul>
+        </section>
+
+        <section className="info-card">
           <h3>Für Alltagsbegleiter (Engel) in {city.name}</h3>
           <p>
             Sie möchten als Alltagsbegleiter in {city.name} tätig werden? Bei Alltagsengel arbeiten Sie
             selbstständig, erhalten Aufträge in Ihrer Region und sind über unsere Plattform versichert.
           </p>
           <div style={{ marginTop: 16 }}>
-            <Link href="/auth/register?role=engel">
+            <Link href="/engel-werden">
               <button className="btn-ghost" style={{ width: '100%' }}>ALS ENGEL REGISTRIEREN</button>
             </Link>
           </div>
@@ -301,6 +408,8 @@ export default async function StadtPage({ params }: { params: Promise<{ stadt: s
 
         <div className="legal-footer-nav">
           <Link href="/alltagsbegleitung">Alltagsbegleitung</Link>
+          <Link href="/krankenfahrten">Krankenfahrten</Link>
+          <Link href="/hygienebox">Pflegebox</Link>
           <Link href="/faq">FAQ</Link>
           <Link href="/impressum">Impressum</Link>
           <Link href="/datenschutz">Datenschutz</Link>
