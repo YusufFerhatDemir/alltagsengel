@@ -50,7 +50,7 @@ export default async function EngelProfilPage({ params }: { params: Promise<{ id
           <EngelProfilActions angelId={id} angelName={`${angel?.profiles?.first_name || ''} ${angel?.profiles?.last_name?.[0] || ''}.`} />
         </div>
         <div className="ep-main">
-          <div className="ep-avatar icon3d" style={{ '--sz': '80px' } as any}><img src="/assets/icon.jpg" alt="" /></div>
+          <div className="ep-avatar icon3d" style={{ '--sz': '80px' } as any}><img src="/assets/icon.jpg" alt="Engel-Profilbild" /></div>
           <div>
             <div className="ep-name">{name}</div>
             <div className="ep-role">{angel.qualification || 'Alltagsbegleiter/in'}</div>

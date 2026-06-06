@@ -1,5 +1,12 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import Icon3D from '@/components/Icon3D'
+
+export const metadata: Metadata = {
+  title: 'Rolle wählen — Hilfe suchen oder Engel werden',
+  description: 'Wählen Sie Ihre Rolle bei Alltagsengel: Suchen Sie Hilfe als Pflegebedürftiger oder Angehöriger, oder werden Sie Alltagsbegleiter/in in Frankfurt und dem Rhein-Main-Gebiet.',
+  alternates: { canonical: '/choose' },
+}
 
 export default function ChoosePage() {
   return (
