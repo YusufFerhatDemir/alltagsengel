@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import BreadcrumbSchema from '@/components/BreadcrumbSchema'
 
 export const metadata: Metadata = {
   title: 'Pflege-App Vergleich 2026: Die besten Apps für Pflegebedürftige',
@@ -14,9 +15,26 @@ export const metadata: Metadata = {
   },
 };
 
+
+const articleJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Article',
+  headline: 'Pflege-App Vergleich 2026: Die besten Apps für Pflegebedürftige',
+  description: 'Welche Pflege-Apps gibt es? Vergleich der besten Angebote 2026 für Seniorenhilfe, Alltagsbegleitung und Pflegeleistungen. AlltagsEngel im Fokus.',
+  author: { '@type': 'Organization', name: 'Alltagsengel', url: 'https://alltagsengel.care' },
+  publisher: { '@type': 'Organization', name: 'Alltagsengel', url: 'https://alltagsengel.care', logo: { '@type': 'ImageObject', url: 'https://alltagsengel.care/icon-512x512.png' } },
+  datePublished: '2026-03-19',
+  dateModified: '2026-03-19',
+  mainEntityOfPage: 'https://alltagsengel.care/blog/pflege-app-vergleich',
+  image: 'https://alltagsengel.care/og-image.png',
+  inLanguage: 'de-DE',
+}
+
 export default function PflegeAppVergleichPage() {
   return (
     <main className="blog-container">
+      <BreadcrumbSchema items={[{ name: 'Ratgeber', url: '/blog' }, { name: 'Pflege-App Vergleich 2026: Die besten Apps für Pflegebedür' }]} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }} />
       <article className="blog-article">
         <header className="blog-header">
           <h1>Pflege-App Vergleich 2026: Die besten Apps für Pflegebedürftige</h1>

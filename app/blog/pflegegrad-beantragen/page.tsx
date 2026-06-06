@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import BreadcrumbSchema from '@/components/BreadcrumbSchema'
 
 export const metadata: Metadata = {
   title: 'Pflegegrad beantragen: So bekommen Sie den richtigen Pflegegrad',
@@ -12,9 +13,26 @@ export const metadata: Metadata = {
   },
 };
 
+
+const articleJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Article',
+  headline: 'Pflegegrad beantragen: So bekommen Sie den richtigen Pflegegrad',
+  description: 'Vollständige Anleitung zur Beantragung eines Pflegegrades: MDK-Bewertung, Vorbereitung und wie Sie einen erfolgreichen Antrag stellen.',
+  author: { '@type': 'Organization', name: 'Alltagsengel', url: 'https://alltagsengel.care' },
+  publisher: { '@type': 'Organization', name: 'Alltagsengel', url: 'https://alltagsengel.care', logo: { '@type': 'ImageObject', url: 'https://alltagsengel.care/icon-512x512.png' } },
+  datePublished: '2026-03-19',
+  dateModified: '2026-03-19',
+  mainEntityOfPage: 'https://alltagsengel.care/blog/pflegegrad-beantragen',
+  image: 'https://alltagsengel.care/og-image.png',
+  inLanguage: 'de-DE',
+}
+
 export default function PflegegradBeantragen() {
   return (
     <main className="blog-container">
+      <BreadcrumbSchema items={[{ name: 'Ratgeber', url: '/blog' }, { name: 'Pflegegrad beantragen: So bekommen Sie den richtigen Pflegeg' }]} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }} />
       <article className="blog-article">
         <div className="blog-header">
           <h1>Pflegegrad beantragen: So bekommen Sie den richtigen Pflegegrad</h1>
@@ -203,6 +221,15 @@ export default function PflegegradBeantragen() {
           <p>Mit einem Pflegegrad kannst du über AlltagsEngel Helfer für Alltagsaufgaben finden und den Entlastungsbetrag nutzen.</p>
           <Link href="/choose" className="btn-gold">Kostenlos registrieren</Link>
         </div>
+      
+        <section className="blog-related" style={{ marginTop: 40, padding: '24px 20px', background: 'rgba(201,150,60,0.06)', borderRadius: 12, border: '1px solid rgba(201,150,60,0.15)' }}>
+          <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 12, color: '#C9963C' }}>Weiterführende Informationen</h3>
+          <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <li><Link href="/alltagsbegleitung" style={{ color: '#F5F0E8', textDecoration: 'underline', textUnderlineOffset: 3, fontSize: 14 }}>Alltagsbegleitung ab Pflegegrad 1 buchen</Link></li>
+            <li><Link href="/hygienebox" style={{ color: '#F5F0E8', textDecoration: 'underline', textUnderlineOffset: 3, fontSize: 14 }}>Pflegebox bei Pflegegrad 1-5 bestellen</Link></li>
+            <li><Link href="/blog/entlastungsbetrag-45b" style={{ color: '#F5F0E8', textDecoration: 'underline', textUnderlineOffset: 3, fontSize: 14 }}>Entlastungsbetrag: Was steht Ihnen zu?</Link></li>
+          </ul>
+        </section>
       </article>
     </main>
   );

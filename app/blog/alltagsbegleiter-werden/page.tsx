@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import BreadcrumbSchema from '@/components/BreadcrumbSchema'
 
 export const metadata: Metadata = {
   title: 'Alltagsbegleiter werden: Verdienst, Voraussetzungen & Bewerbung',
@@ -12,9 +13,26 @@ export const metadata: Metadata = {
   },
 };
 
+
+const articleJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Article',
+  headline: 'Alltagsbegleiter werden: Verdienst, Voraussetzungen & Bewerbung',
+  description: 'Alles über den Beruf des Alltagsbegleiters: Verdienst (ca. 20€/Stunde), Anforderungen und wie Sie über AlltagsEngel direkt als Helfer arbeiten können.',
+  author: { '@type': 'Organization', name: 'Alltagsengel', url: 'https://alltagsengel.care' },
+  publisher: { '@type': 'Organization', name: 'Alltagsengel', url: 'https://alltagsengel.care', logo: { '@type': 'ImageObject', url: 'https://alltagsengel.care/icon-512x512.png' } },
+  datePublished: '2026-03-19',
+  dateModified: '2026-03-19',
+  mainEntityOfPage: 'https://alltagsengel.care/blog/alltagsbegleiter-werden',
+  image: 'https://alltagsengel.care/og-image.png',
+  inLanguage: 'de-DE',
+}
+
 export default function AlltagsbegleiterWerden() {
   return (
     <main className="blog-container">
+      <BreadcrumbSchema items={[{ name: 'Ratgeber', url: '/blog' }, { name: 'Alltagsbegleiter werden: Verdienst, Voraussetzungen & Bewerb' }]} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }} />
       <article className="blog-article">
         <div className="blog-header">
           <h1>Alltagsbegleiter werden: Verdienst, Voraussetzungen & Bewerbung</h1>
@@ -169,6 +187,15 @@ export default function AlltagsbegleiterWerden() {
           <p>20 €/Stunde, flexible Zeiteinteilung, sinnvolle Arbeit. Registriere dich kostenlos als Alltagsbegleiter und starte in Frankfurt &amp; Rhein-Main.</p>
           <Link href="/engel-werden" className="btn-gold">Jetzt bewerben</Link>
         </div>
+      
+        <section className="blog-related" style={{ marginTop: 40, padding: '24px 20px', background: 'rgba(201,150,60,0.06)', borderRadius: 12, border: '1px solid rgba(201,150,60,0.15)' }}>
+          <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 12, color: '#C9963C' }}>Weiterführende Informationen</h3>
+          <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <li><Link href="/engel-werden" style={{ color: '#F5F0E8', textDecoration: 'underline', textUnderlineOffset: 3, fontSize: 14 }}>Jetzt als Alltagsengel bewerben</Link></li>
+            <li><Link href="/alltagsbegleitung" style={{ color: '#F5F0E8', textDecoration: 'underline', textUnderlineOffset: 3, fontSize: 14 }}>Unsere Alltagsbegleitung für Kunden</Link></li>
+            <li><Link href="/blog/nebenjob-pflege" style={{ color: '#F5F0E8', textDecoration: 'underline', textUnderlineOffset: 3, fontSize: 14 }}>Nebenjob in der Pflege: Alle Infos</Link></li>
+          </ul>
+        </section>
       </article>
     </main>
   );

@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import NewsletterSignup from '@/components/NewsletterSignup'
+import BreadcrumbSchema from '@/components/BreadcrumbSchema'
 
 export const metadata: Metadata = {
   title: 'Ratgeber — Pflege, Alltagsbegleitung & Entlastungsbetrag',
@@ -214,6 +215,7 @@ export default function BlogIndexPage() {
       background: 'linear-gradient(180deg, #1A1612 0%, #2A2420 100%)',
       padding: '0 16px 60px',
     }}>
+      <BreadcrumbSchema items={[{ name: 'Ratgeber' }]} />
       {/* Hero */}
       <section style={{
         textAlign: 'center',

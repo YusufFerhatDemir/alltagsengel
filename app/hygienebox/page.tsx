@@ -1,5 +1,7 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
+import BreadcrumbSchema from '@/components/BreadcrumbSchema'
+import HowToSchema from '@/components/HowToSchema'
 
 export const metadata: Metadata = {
   title: 'Pflegebox Frankfurt | Kostenlose Pflegehilfsmittel — 42€/Monat von der Kasse',
@@ -26,13 +28,34 @@ const jsonLd = {
     { '@type': 'Offer', name: 'Basis-Box', price: '29.90', priceCurrency: 'EUR', description: 'Grundversorgung mit Pflegehilfsmitteln', availability: 'https://schema.org/InStock' },
     { '@type': 'Offer', name: 'Komfort-Box', price: '40.00', priceCurrency: 'EUR', description: 'Vollständige Versorgung — maximale Kassenerstattung', availability: 'https://schema.org/InStock' },
   ],
-  areaServed: { '@type': 'City', name: 'Frankfurt am Main' },
+  areaServed: [
+    { '@type': 'City', name: 'Frankfurt am Main' },
+    { '@type': 'City', name: 'Offenbach am Main' },
+    { '@type': 'City', name: 'Darmstadt' },
+    { '@type': 'City', name: 'Wiesbaden' },
+    { '@type': 'City', name: 'Mainz' },
+    { '@type': 'City', name: 'Hanau' },
+    { '@type': 'AdministrativeArea', name: 'Rhein-Main-Gebiet' },
+    { '@type': 'Country', name: 'Deutschland' },
+  ],
 }
 
 export default function HygieneboxPage() {
   return (
     <div className="screen info-screen">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <BreadcrumbSchema items={[{ name: 'Pflegebox' }]} />
+      <HowToSchema
+        name="Pflegebox kostenlos beantragen"
+        description="So erhalten Sie eine kostenlose Pflegebox (Pflegehilfsmittel nach §40 SGB XI, bis 42€/Monat) über Alltagsengel — ohne Eigenanteil."
+        totalTime="PT3M"
+        steps={[
+          { name: 'Wunsch-Box auswählen', text: 'Wählen Sie die Basis-Box oder Komfort-Box in der Alltagsengel-App aus. Inhalt: Handschuhe, Desinfektion, Bettschutz, Mundschutz, Schürzen.' },
+          { name: 'Pflegegrad angeben', text: 'Geben Sie Ihren Pflegegrad (1–5) und Ihre Pflegekasse an. Wir kümmern uns um den Antrag.' },
+          { name: 'Genehmigung abwarten', text: 'Alltagsengel übernimmt die Antragstellung und Kommunikation mit Ihrer Pflegekasse. Genehmigung dauert meist wenige Tage.' },
+          { name: 'Monatliche Lieferung erhalten', text: 'Nach Genehmigung erhalten Sie Ihre Pflegebox jeden Monat automatisch nach Hause — 0€ Eigenanteil.' },
+        ]}
+      />
       <div className="legal-header">
         <Link href="/" className="legal-back">‹</Link>
         <h1 className="legal-title">Hygienebox</h1>
@@ -106,6 +129,16 @@ export default function HygieneboxPage() {
             <button className="btn-gold" style={{ width: '100%' }}>HYGIENEBOX BESTELLEN</button>
           </Link>
         </div>
+
+        <section className="info-card">
+          <h3>Weitere Leistungen</h3>
+          <ul className="info-list">
+            <li><Link href="/alltagsbegleitung">Alltagsbegleitung — 131€/Monat über Entlastungsbetrag</Link></li>
+            <li><Link href="/krankenfahrten">Krankenfahrten — mit Verordnung oder als Selbstzahler</Link></li>
+            <li><Link href="/blog/pflegehilfsmittel-40-euro">Ratgeber: Pflegehilfsmittel §40 SGB XI erklärt</Link></li>
+            <li><Link href="/faq">Häufige Fragen zu Pflegeleistungen</Link></li>
+          </ul>
+        </section>
 
         <div className="legal-footer-nav">
           <Link href="/impressum">Impressum</Link>

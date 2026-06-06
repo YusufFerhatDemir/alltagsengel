@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import BreadcrumbSchema from '@/components/BreadcrumbSchema'
 
 export const metadata: Metadata = {
   title: 'Entlastungsbetrag richtig nutzen: So schöpfen Sie 131€ monatlich voll aus',
@@ -15,9 +16,26 @@ export const metadata: Metadata = {
   },
 }
 
+
+const articleJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Article',
+  headline: 'Entlastungsbetrag richtig nutzen: So schöpfen Sie 131€ monatlich voll aus',
+  description: 'Entlastungsbetrag richtig nutzen: Praktische Tipps, welche Leistungen abgedeckt sind, häufige Fehler vermeiden und die 131€/Monat optimal einsetzen. Mit Checkli',
+  author: { '@type': 'Organization', name: 'Alltagsengel', url: 'https://alltagsengel.care' },
+  publisher: { '@type': 'Organization', name: 'Alltagsengel', url: 'https://alltagsengel.care', logo: { '@type': 'ImageObject', url: 'https://alltagsengel.care/icon-512x512.png' } },
+  datePublished: '2026-06-06',
+  dateModified: '2026-06-06',
+  mainEntityOfPage: 'https://alltagsengel.care/blog/entlastungsbetrag-nutzen',
+  image: 'https://alltagsengel.care/og-image.png',
+  inLanguage: 'de-DE',
+}
+
 export default function EntlastungsbetragNutzenPage() {
   return (
     <main className="blog-container">
+      <BreadcrumbSchema items={[{ name: 'Ratgeber', url: '/blog' }, { name: 'Entlastungsbetrag richtig nutzen: So schöpfen Sie 131€ mo' }]} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }} />
       <article className="blog-article">
         <header className="blog-header">
           <h1>Entlastungsbetrag richtig nutzen: So schöpfen Sie 131 € monatlich voll aus</h1>
@@ -329,6 +347,15 @@ export default function EntlastungsbetragNutzenPage() {
         <footer className="blog-footer">
           <Link href="/blog" className="blog-back">← Zurück zum Ratgeber</Link>
         </footer>
+      
+        <section className="blog-related" style={{ marginTop: 40, padding: '24px 20px', background: 'rgba(201,150,60,0.06)', borderRadius: 12, border: '1px solid rgba(201,150,60,0.15)' }}>
+          <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 12, color: '#C9963C' }}>Weiterführende Informationen</h3>
+          <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <li><Link href="/alltagsbegleitung" style={{ color: '#F5F0E8', textDecoration: 'underline', textUnderlineOffset: 3, fontSize: 14 }}>Alltagsbegleitung buchen — Entlastungsbetrag einsetzen</Link></li>
+            <li><Link href="/blog/entlastungsbetrag-45b" style={{ color: '#F5F0E8', textDecoration: 'underline', textUnderlineOffset: 3, fontSize: 14 }}>Entlastungsbetrag 45b komplett erklärt</Link></li>
+            <li><Link href="/faq" style={{ color: '#F5F0E8', textDecoration: 'underline', textUnderlineOffset: 3, fontSize: 14 }}>Häufige Fragen zum Entlastungsbetrag</Link></li>
+          </ul>
+        </section>
       </article>
     </main>
   )

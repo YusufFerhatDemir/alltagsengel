@@ -1,6 +1,8 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import LeadForm from '@/components/LeadForm'
+import BreadcrumbSchema from '@/components/BreadcrumbSchema'
+import HowToSchema from '@/components/HowToSchema'
 
 export const metadata: Metadata = {
   title: 'Alltagsbegleitung Frankfurt | 131€ Entlastungsbetrag nutzen — Alltagsengel',
@@ -28,7 +30,16 @@ const jsonLd = {
     url: 'https://alltagsengel.care',
     address: { '@type': 'PostalAddress', addressLocality: 'Frankfurt am Main', addressRegion: 'Hessen', addressCountry: 'DE' },
   },
-  areaServed: { '@type': 'City', name: 'Frankfurt am Main' },
+  areaServed: [
+    { '@type': 'City', name: 'Frankfurt am Main' },
+    { '@type': 'City', name: 'Offenbach am Main' },
+    { '@type': 'City', name: 'Darmstadt' },
+    { '@type': 'City', name: 'Wiesbaden' },
+    { '@type': 'City', name: 'Mainz' },
+    { '@type': 'City', name: 'Hanau' },
+    { '@type': 'City', name: 'Bad Homburg' },
+    { '@type': 'AdministrativeArea', name: 'Rhein-Main-Gebiet' },
+  ],
   serviceType: 'Alltagsbegleitung',
   offers: {
     '@type': 'Offer',
@@ -43,6 +54,18 @@ export default function AlltagsbegleitungPage() {
   return (
     <div className="screen info-screen">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <BreadcrumbSchema items={[{ name: 'Alltagsbegleitung' }]} />
+      <HowToSchema
+        name="Alltagsbegleitung über Alltagsengel buchen"
+        description="So buchen Sie eine zertifizierte Alltagsbegleitung über den Entlastungsbetrag (§45b SGB XI, 131€/Monat) bei Alltagsengel in Frankfurt & Rhein-Main."
+        totalTime="PT5M"
+        steps={[
+          { name: 'Kostenlos registrieren', text: 'Erstellen Sie ein kostenloses Konto bei Alltagsengel — in der App oder auf alltagsengel.care.', url: '/auth/register' },
+          { name: 'Pflegegrad angeben', text: 'Geben Sie Ihren Pflegegrad (1–5) an. Mit Pflegegrad stehen Ihnen 131€/Monat Entlastungsbetrag zu.' },
+          { name: 'Engel in Ihrer Nähe finden', text: 'Wählen Sie einen zertifizierten Alltagsbegleiter in Ihrer Nähe aus. Alle Engel sind versichert und geprüft.' },
+          { name: 'Termin buchen', text: 'Buchen Sie einen Termin — die Abrechnung erfolgt direkt über den Entlastungsbetrag §45b mit Ihrer Pflegekasse.' },
+        ]}
+      />
       <div className="legal-header">
         <Link href="/" className="legal-back">‹</Link>
         <h1 className="legal-title">Alltagsbegleitung</h1>
@@ -150,6 +173,16 @@ export default function AlltagsbegleitungPage() {
             <button className="btn-gold" style={{ width: '100%' }}>JETZT ENGEL FINDEN</button>
           </Link>
         </div>
+
+        <section className="info-card">
+          <h3>Weitere Leistungen</h3>
+          <ul className="info-list">
+            <li><Link href="/hygienebox">Pflegebox — kostenlose Pflegehilfsmittel (42€/Monat)</Link></li>
+            <li><Link href="/krankenfahrten">Krankenfahrten — sicher zum Arzt (§60 SGB V)</Link></li>
+            <li><Link href="/blog/entlastungsbetrag-45b">Ratgeber: Entlastungsbetrag §45b richtig nutzen</Link></li>
+            <li><Link href="/engel-werden">Als Alltagsbegleiter bei Alltagsengel arbeiten</Link></li>
+          </ul>
+        </section>
 
         <div className="legal-footer-nav">
           <Link href="/impressum">Impressum</Link>

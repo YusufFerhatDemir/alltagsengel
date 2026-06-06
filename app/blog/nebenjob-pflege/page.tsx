@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import BreadcrumbSchema from '@/components/BreadcrumbSchema'
 
 export const metadata: Metadata = {
   title: 'Nebenjob in der Pflege: Flexibel 20€/Stunde als Alltagsbegleiter',
@@ -14,9 +15,26 @@ export const metadata: Metadata = {
   },
 };
 
+
+const articleJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Article',
+  headline: 'Nebenjob in der Pflege: Flexibel 20€/Stunde als Alltagsbegleiter',
+  description: 'Arbeiten Sie flexibel als Alltagsbegleiter und verdienen 20€/Stunde. Perfekt für Studenten und Nebeneinsteiger. So funktioniert AlltagsEngel als Helfer.',
+  author: { '@type': 'Organization', name: 'Alltagsengel', url: 'https://alltagsengel.care' },
+  publisher: { '@type': 'Organization', name: 'Alltagsengel', url: 'https://alltagsengel.care', logo: { '@type': 'ImageObject', url: 'https://alltagsengel.care/icon-512x512.png' } },
+  datePublished: '2026-03-19',
+  dateModified: '2026-03-19',
+  mainEntityOfPage: 'https://alltagsengel.care/blog/nebenjob-pflege',
+  image: 'https://alltagsengel.care/og-image.png',
+  inLanguage: 'de-DE',
+}
+
 export default function NebenjobPflegePage() {
   return (
     <main className="blog-container">
+      <BreadcrumbSchema items={[{ name: 'Ratgeber', url: '/blog' }, { name: 'Nebenjob in der Pflege: Flexibel 20€/Stunde als Alltagsbeg' }]} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }} />
       <article className="blog-article">
         <header className="blog-header">
           <h1>Nebenjob in der Pflege: Flexibel 20€/Stunde als Alltagsbegleiter</h1>
@@ -211,6 +229,15 @@ export default function NebenjobPflegePage() {
             <Link href="/choose" className="btn-gold">Kostenlos registrieren</Link>
           </div>
         </div>
+      
+        <section className="blog-related" style={{ marginTop: 40, padding: '24px 20px', background: 'rgba(201,150,60,0.06)', borderRadius: 12, border: '1px solid rgba(201,150,60,0.15)' }}>
+          <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 12, color: '#C9963C' }}>Weiterführende Informationen</h3>
+          <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <li><Link href="/engel-werden" style={{ color: '#F5F0E8', textDecoration: 'underline', textUnderlineOffset: 3, fontSize: 14 }}>Als Alltagsengel bewerben — 20 Euro/Stunde</Link></li>
+            <li><Link href="/alltagsbegleitung" style={{ color: '#F5F0E8', textDecoration: 'underline', textUnderlineOffset: 3, fontSize: 14 }}>Was machen Alltagsbegleiter?</Link></li>
+            <li><Link href="/blog/alltagsbegleiter-werden" style={{ color: '#F5F0E8', textDecoration: 'underline', textUnderlineOffset: 3, fontSize: 14 }}>Alltagsbegleiter werden: Voraussetzungen</Link></li>
+          </ul>
+        </section>
       </article>
     </main>
   );

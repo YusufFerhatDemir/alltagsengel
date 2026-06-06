@@ -1,4 +1,6 @@
 import type { Metadata } from 'next'
+import BreadcrumbSchema from '@/components/BreadcrumbSchema'
+import HowToSchema from '@/components/HowToSchema'
 
 export const metadata: Metadata = {
   title: 'Krankenfahrten Frankfurt & Rhein-Main | Mit Verordnung oder Selbstzahler — Alltagsengel',
@@ -53,6 +55,14 @@ const serviceJsonLd = {
   serviceType: 'Krankenfahrt / Patientenfahrdienst',
   areaServed: [
     { '@type': 'City', name: 'Frankfurt am Main' },
+    { '@type': 'City', name: 'Offenbach am Main' },
+    { '@type': 'City', name: 'Darmstadt' },
+    { '@type': 'City', name: 'Wiesbaden' },
+    { '@type': 'City', name: 'Mainz' },
+    { '@type': 'City', name: 'Hanau' },
+    { '@type': 'City', name: 'Bad Homburg' },
+    { '@type': 'City', name: 'Oberursel' },
+    { '@type': 'City', name: 'Aschaffenburg' },
     { '@type': 'AdministrativeArea', name: 'Rhein-Main-Gebiet' },
   ],
   hasOfferCatalog: {
@@ -123,6 +133,18 @@ export default function KrankenfahrtenLayout({ children }: { children: React.Rea
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+      />
+      <BreadcrumbSchema items={[{ name: 'Krankenfahrten' }]} />
+      <HowToSchema
+        name="Krankenfahrt bei Alltagsengel buchen"
+        description="So buchen Sie eine Krankenfahrt in Frankfurt & Rhein-Main über die Alltagsengel-App — mit Verordnung (Krankenkasse zahlt) oder als Selbstzahler."
+        totalTime="PT2M"
+        steps={[
+          { name: 'Kostenlos registrieren', text: 'Erstellen Sie ein kostenloses Konto bei Alltagsengel in der App oder auf alltagsengel.care.', url: '/auth/register' },
+          { name: 'Fahrt buchen', text: 'Wählen Sie Datum, Uhrzeit und Zielort (Arzt, Klinik, Dialyse, Therapie). Geben Sie Ihren Hilfebedarf an.' },
+          { name: 'Verordnung hochladen (optional)', text: 'Haben Sie eine ärztliche Verordnung? Laden Sie diese als Foto oder PDF hoch — die Krankenkasse übernimmt die Kosten nach §60 SGB V.' },
+          { name: 'Fahrer wird zugeteilt', text: 'Ein qualifizierter Fahrer aus unserem Partnernetz wird Ihnen zugeteilt. Pünktliche Abholung garantiert.' },
+        ]}
       />
       {children}
     </>

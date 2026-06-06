@@ -1,8 +1,17 @@
 import Link from 'next/link'
+import type { Metadata } from 'next'
+import BreadcrumbSchema from '@/components/BreadcrumbSchema'
+
+export const metadata: Metadata = {
+  title: 'AGB — Allgemeine Geschäftsbedingungen | Alltagsengel',
+  description: 'Allgemeine Geschäftsbedingungen der Alltagsengel UG (haftungsbeschränkt) für die Nutzung der Plattform alltagsengel.care.',
+  alternates: { canonical: 'https://alltagsengel.care/agb' },
+}
 
 export default function AGBPage() {
   return (
     <div className="screen legal-screen">
+      <BreadcrumbSchema items={[{ name: 'AGB' }]} />
       <div className="legal-header">
         <Link href="/" className="legal-back">‹</Link>
         <h1 className="legal-title">AGB</h1>

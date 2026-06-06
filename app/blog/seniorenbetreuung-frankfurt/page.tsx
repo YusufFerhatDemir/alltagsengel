@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import BreadcrumbSchema from '@/components/BreadcrumbSchema'
 
 export const metadata: Metadata = {
   title: 'Seniorenbetreuung in Frankfurt: Angebote, Kosten & Anbieter 2026',
@@ -15,9 +16,26 @@ export const metadata: Metadata = {
   },
 }
 
+
+const articleJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Article',
+  headline: 'Seniorenbetreuung in Frankfurt: Angebote, Kosten & Anbieter 2026',
+  description: 'Seniorenbetreuung in Frankfurt am Main: Alle Angebote, Kosten und Anbieter im Überblick. Alltagsbegleitung, Haushaltshilfe & Demenzbetreuung im Rhein-Main-Gebie',
+  author: { '@type': 'Organization', name: 'Alltagsengel', url: 'https://alltagsengel.care' },
+  publisher: { '@type': 'Organization', name: 'Alltagsengel', url: 'https://alltagsengel.care', logo: { '@type': 'ImageObject', url: 'https://alltagsengel.care/icon-512x512.png' } },
+  datePublished: '2026-06-06',
+  dateModified: '2026-06-06',
+  mainEntityOfPage: 'https://alltagsengel.care/blog/seniorenbetreuung-frankfurt',
+  image: 'https://alltagsengel.care/og-image.png',
+  inLanguage: 'de-DE',
+}
+
 export default function SeniorenbetreuungFrankfurtPage() {
   return (
     <main className="blog-container">
+      <BreadcrumbSchema items={[{ name: 'Ratgeber', url: '/blog' }, { name: 'Seniorenbetreuung in Frankfurt: Angebote, Kosten & Anbieter ' }]} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }} />
       <article className="blog-article">
         <header className="blog-header">
           <h1>Seniorenbetreuung in Frankfurt: Angebote, Kosten & Anbieter</h1>

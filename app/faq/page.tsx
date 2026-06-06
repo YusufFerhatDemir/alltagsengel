@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import BreadcrumbSchema from '@/components/BreadcrumbSchema'
 
 export const metadata: Metadata = {
   alternates: { canonical: 'https://alltagsengel.care/faq' },
@@ -253,6 +254,7 @@ export default function FAQPage() {
     }}>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(orgJsonLd) }} />
+      <BreadcrumbSchema items={[{ name: 'FAQ' }]} />
 
       {/* Hero */}
       <section style={{

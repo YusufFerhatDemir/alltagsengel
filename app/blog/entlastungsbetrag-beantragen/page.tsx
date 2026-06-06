@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import BreadcrumbSchema from '@/components/BreadcrumbSchema'
 
 export const metadata: Metadata = {
   title: 'Entlastungsbetrag beantragen: Schritt-für-Schritt Anleitung 2026',
@@ -12,9 +13,26 @@ export const metadata: Metadata = {
   },
 };
 
+
+const articleJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Article',
+  headline: 'Entlastungsbetrag beantragen: Schritt-für-Schritt Anleitung 2026',
+  description: 'Erfahren Sie, wie Sie den Entlastungsbetrag nach § 45b beantragen. Vollständige Anleitung mit erforderlichen Dokumenten und Tipps für eine schnelle Genehmigung.',
+  author: { '@type': 'Organization', name: 'Alltagsengel', url: 'https://alltagsengel.care' },
+  publisher: { '@type': 'Organization', name: 'Alltagsengel', url: 'https://alltagsengel.care', logo: { '@type': 'ImageObject', url: 'https://alltagsengel.care/icon-512x512.png' } },
+  datePublished: '2026-03-19',
+  dateModified: '2026-03-19',
+  mainEntityOfPage: 'https://alltagsengel.care/blog/entlastungsbetrag-beantragen',
+  image: 'https://alltagsengel.care/og-image.png',
+  inLanguage: 'de-DE',
+}
+
 export default function EntlastungsbetragBeantragen() {
   return (
     <main className="blog-container">
+      <BreadcrumbSchema items={[{ name: 'Ratgeber', url: '/blog' }, { name: 'Entlastungsbetrag beantragen: Schritt-für-Schritt Anleitung' }]} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }} />
       <article className="blog-article">
         <div className="blog-header">
           <h1>Entlastungsbetrag beantragen: Schritt-für-Schritt Anleitung 2026</h1>
@@ -85,6 +103,15 @@ export default function EntlastungsbetragBeantragen() {
           <p>Registriere dich kostenlos und finde geprüfte Alltagsbegleiter, die deinen Entlastungsbetrag annehmen.</p>
           <Link href="/choose" className="btn-gold">Kostenlos registrieren</Link>
         </div>
+      
+        <section className="blog-related" style={{ marginTop: 40, padding: '24px 20px', background: 'rgba(201,150,60,0.06)', borderRadius: 12, border: '1px solid rgba(201,150,60,0.15)' }}>
+          <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 12, color: '#C9963C' }}>Weiterführende Informationen</h3>
+          <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <li><Link href="/alltagsbegleitung" style={{ color: '#F5F0E8', textDecoration: 'underline', textUnderlineOffset: 3, fontSize: 14 }}>Alltagsbegleitung über den Entlastungsbetrag buchen</Link></li>
+            <li><Link href="/blog/entlastungsbetrag-45b" style={{ color: '#F5F0E8', textDecoration: 'underline', textUnderlineOffset: 3, fontSize: 14 }}>Alles zum Entlastungsbetrag nach 45b</Link></li>
+            <li><Link href="/blog/pflegegrad-beantragen" style={{ color: '#F5F0E8', textDecoration: 'underline', textUnderlineOffset: 3, fontSize: 14 }}>Pflegegrad beantragen: Schritt für Schritt</Link></li>
+          </ul>
+        </section>
       </article>
     </main>
   );
