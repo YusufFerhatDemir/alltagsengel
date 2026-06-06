@@ -11,8 +11,8 @@ const doc = new Document({
       new Paragraph({ text: 'VERTRAULICH', alignment: AlignmentType.CENTER, bold: true, size: 24 * 2, color: 'DC143C', spacing: { after: 240 } }),
       new Paragraph({ text: 'März 2025', alignment: AlignmentType.CENTER, size: 20 * 2, spacing: { after: 600 } }),
       new Paragraph({ text: '', spacing: { after: 800 } }),
-      new Paragraph({ text: 'Schiller Str. 31', size: 20 * 2, spacing: { after: 0 } }),
-      new Paragraph({ text: '60313 Frankfurt am Main', size: 20 * 2, spacing: { after: 120 } }),
+      new Paragraph({ text: 'Neue Mainzer Str. 66-68', size: 20 * 2, spacing: { after: 0 } }),
+      new Paragraph({ text: '60311 Frankfurt am Main', size: 20 * 2, spacing: { after: 120 } }),
       new Paragraph({ text: 'Geschäftsführer: Yusuf Ferhat Demir', size: 20 * 2, spacing: { after: 400, pageBreakBefore: true } }),
 
       // MARKTÜBERSICHT

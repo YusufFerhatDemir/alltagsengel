@@ -223,7 +223,7 @@ export const DocPageLayout = ({ title, subtitle, icon, badge, children, lang }: 
         textAlign: 'center', color: C.ink4, fontSize: 12,
       }}>
         <div style={{ color: C.gold, fontWeight: 600, fontSize: 13, marginBottom: 8, letterSpacing: '0.06em' }}>ALLTAGSENGEL UG (haftungsbeschränkt)</div>
-        <div>Schiller Str. 31 · 60313 Frankfurt am Main</div>
+        <div>Neue Mainzer Str. 66-68 · 60311 Frankfurt am Main</div>
         <div style={{ marginTop: 4 }}>info@alltagsengel.care · www.alltagsengel.care</div>
         <div style={{ marginTop: 12, color: C.ink5, fontSize: 10 }}>Vertraulich — Nur für autorisierte Investoren</div>
         <div style={{ marginTop: 14, paddingTop: 14, borderTop: `1px solid rgba(201,150,60,0.08)` }}>

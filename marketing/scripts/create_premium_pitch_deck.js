@@ -1391,7 +1391,7 @@ const contactDetails = [
   'Yusuf Ferhat Demir · Gründer & CEO',
   'info@alltagsengel.de',
   'www.alltagsengel.de',
-  'Schiller Str. 31, 60313 Frankfurt am Main',
+  'Neue Mainzer Str. 66-68, 60311 Frankfurt am Main',
 ];
 
 let contactY = 2.3;

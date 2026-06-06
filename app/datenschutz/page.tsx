@@ -21,8 +21,8 @@ export default function DatenschutzPage() {
             <strong>Wer ist verantwortlich für die Datenerfassung auf dieser Website?</strong><br/>
             Die Datenverarbeitung auf dieser Website erfolgt durch den Websitebetreiber:<br/><br/>
             Alltagsengel UG (haftungsbeschränkt)<br/>
-            Schillerstraße 31<br/>
-            60313 Frankfurt am Main<br/>
+            Neue Mainzer Straße 66-68<br/>
+            60311 Frankfurt am Main<br/>
             Geschäftsführer: Yusuf Ferhat Demir<br/>
             E-Mail: info@alltagsengel.care
           </p>

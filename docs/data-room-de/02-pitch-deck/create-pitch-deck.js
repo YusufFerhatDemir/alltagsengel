@@ -1459,7 +1459,7 @@ slide12.addText("Kontakt:", {
 const contactInfo = [
   "Yusuf Ferhat Demir (Gründer & Geschäftsführer)",
   "AlltagsEngel UG (haftungsbeschränkt)",
-  "Schiller Str. 31, 60313 Frankfurt am Main",
+  "Neue Mainzer Str. 66-68, 60311 Frankfurt am Main",
   "📧 Email: info@alltagsengel.de",
   "🌐 Website: www.alltagsengel.de",
 ];

@@ -453,7 +453,7 @@ export default function BrandPage() {
             <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 24, fontWeight: 700, color: C.ink, marginBottom: 8 }}>AlltagsEngel UG</div>
             <div style={{ fontSize: 13, color: C.ink4, marginBottom: 16 }}>(haftungsbeschränkt)</div>
             <div style={{ fontSize: 13, color: C.ink3, lineHeight: 2 }}>
-              Schiller Str. 31, 60313 Frankfurt am Main<br />
+              Neue Mainzer Str. 66-68, 60311 Frankfurt am Main<br />
               Geschäftsführer: Yusuf Ferhat Demir<br />
               info@alltagsengel.care · www.alltagsengel.care
             </div>
