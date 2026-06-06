@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TikTok & Reels Skripte — ChairMatch</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0D0D0D;
+  --peach: #E8A87C;
+  --peach-dim: rgba(232,168,124,0.12);
+  --peach-border: rgba(232,168,124,0.25);
+  --cream: #F8F4F0;
+  --cream-dim: rgba(248,244,240,0.55);
+  --cream-muted: rgba(248,244,240,0.35);
+  --green: #5B8A72;
+  --serif: 'Cormorant Garamond', Georgia, serif;
+  --sans: 'Inter', system-ui, -apple-system, sans-serif;
+}
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; font-size: 16px; }
+body { background: var(--bg); color: var(--cream); font-family: var(--sans); line-height: 1.7; -webkit-font-smoothing: antialiased; }
+
+.container { max-width: 900px; margin: 0 auto; padding: 0 24px; }
+
+.header {
+  text-align: center; padding: 80px 24px 40px;
+  border-bottom: 1px solid var(--peach-border);
+}
+.header h1 {
+  font-family: var(--serif); font-size: 2.6rem; font-weight: 700;
+  color: var(--peach); margin-bottom: 12px;
+}
+.header p { color: var(--cream-dim); font-size: 1.05rem; max-width: 600px; margin: 0 auto; }
+
+.section-header {
+  text-align: center; padding: 48px 24px 32px;
+}
+.section-header h2 {
+  font-family: var(--serif); font-size: 2rem; font-weight: 600;
+  color: var(--peach); margin-bottom: 8px;
+}
+.section-header .subtitle { color: var(--cream-muted); font-size: 0.95rem; }
+
+.script-card {
+  background: rgba(248,244,240,0.03);
+  border: 1px solid var(--peach-border);
+  border-radius: 16px;
+  margin: 0 auto 40px;
+  max-width: 860px;
+  overflow: hidden;
+}
+.script-card__header {
+  padding: 28px 32px 20px;
+  border-bottom: 1px solid rgba(248,244,240,0.06);
+  display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px;
+}
+.script-card__number {
+  font-size: 0.75rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--peach); margin-bottom: 6px;
+}
+.script-card__title {
+  font-family: var(--serif); font-size: 1.5rem; font-weight: 700; color: var(--cream);
+}
+.script-card__meta {
+  display: flex; gap: 16px; flex-wrap: wrap; align-items: center;
+}
+.meta-tag {
+  font-size: 0.78rem; padding: 4px 12px; border-radius: 12px;
+  background: var(--peach-dim); color: var(--peach); font-weight: 500;
+}
+
+.script-card__body { padding: 28px 32px; }
+
+.script-section { margin-bottom: 28px; }
+.script-section:last-child { margin-bottom: 0; }
+.script-section__label {
+  font-size: 0.78rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--peach); margin-bottom: 10px;
+  display: flex; align-items: center; gap: 8px;
+}
+.script-section__label::before {
+  content: ''; display: inline-block; width: 8px; height: 8px;
+  border-radius: 50%; background: currentColor;
+}
+.script-section__content {
+  color: var(--cream-dim); font-size: 0.95rem; line-height: 1.8;
+}
+.script-section__content p { margin-bottom: 8px; }
+.script-section__content strong { color: var(--cream); font-weight: 600; }
+.script-section__content em { color: var(--cream-muted); font-style: italic; }
+
+.visuals-box {
+  background: rgba(232,168,124,0.06);
+  border: 1px dashed var(--peach-border);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin-top: 12px;
+}
+.visuals-box__title {
+  font-size: 0.75rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--peach); margin-bottom: 8px;
+}
+.visuals-box ul { list-style: none; padding: 0; }
+.visuals-box li {
+  color: var(--cream-muted); font-size: 0.88rem; padding: 3px 0;
+  padding-left: 20px; position: relative;
+}
+.visuals-box li::before {
+  content: '\25B8'; position: absolute; left: 0; color: var(--peach);
+}
+
+.hashtags {
+  margin-top: 20px; padding-top: 20px;
+  border-top: 1px solid rgba(248,244,240,0.06);
+}
+.hashtags__label {
+  font-size: 0.72rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--cream-muted); margin-bottom: 8px;
+}
+.hashtags__text { font-size: 0.88rem; color: var(--peach); word-break: break-word; }
+
+.caption-box {
+  margin-top: 16px; padding: 16px 20px;
+  background: rgba(248,244,240,0.04); border-radius: 10px;
+  position: relative;
+}
+.caption-box__label {
+  font-size: 0.72rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--cream-muted); margin-bottom: 8px;
+}
+.caption-box__text { color: var(--cream-dim); font-size: 0.9rem; line-height: 1.7; }
+
+.copy-btn {
+  position: absolute; top: 12px; right: 12px;
+  background: var(--peach-dim); color: var(--peach); border: 1px solid var(--peach-border);
+  padding: 5px 14px; border-radius: 8px; font-size: 0.75rem; font-weight: 600;
+  cursor: pointer; transition: all 0.2s; font-family: var(--sans);
+}
+.copy-btn:hover { background: var(--peach); color: var(--bg); }
+.copy-btn.copied { background: var(--green); color: #fff; border-color: var(--green); }
+
+.copy-all-wrap { text-align: center; padding: 20px 0 60px; }
+.copy-all-btn {
+  background: var(--peach); color: var(--bg); border: none;
+  padding: 14px 36px; border-radius: 12px; font-size: 0.95rem; font-weight: 700;
+  cursor: pointer; transition: all 0.2s; font-family: var(--sans);
+}
+.copy-all-btn:hover { filter: brightness(1.15); transform: translateY(-1px); }
+
+@media (max-width: 640px) {
+  .header h1 { font-size: 1.8rem; }
+  .script-card__header { padding: 20px; }
+  .script-card__body { padding: 20px; }
+  .script-card__title { font-size: 1.2rem; }
+}
+</style>
+</head>
+<body>
+
+<header class="header">
+  <h1>ChairMatch TikTok Skripte</h1>
+  <p>3 Video-Skripte fuer TikTok &amp; Reels. Stuhlvermietung in der Beauty-Branche &mdash; fuer Freelancer und Salonbesitzer.</p>
+</header>
+
+<div class="section-header">
+  <h2>TikTok &amp; Reels</h2>
+  <p class="subtitle">Fuer Freelancer und Salonbesitzer in der Beauty-Branche</p>
+</div>
+
+<div class="container">
+
+<!-- SKRIPT 1 / CM -->
+<div class="script-card" id="skript-1">
+  <div class="script-card__header">
+    <div>
+      <div class="script-card__number">Skript #1 &mdash; Freelancer-Akquise</div>
+      <div class="script-card__title">&laquo;Friseure aufgepasst: Eigener Salon fuer 30&euro;/Tag&raquo;</div>
+    </div>
+    <div class="script-card__meta">
+      <span class="meta-tag">30-45 Sek</span>
+      <span class="meta-tag">Chair Rental Pitch</span>
+    </div>
+  </div>
+  <div class="script-card__body">
+
+    <div class="script-section">
+      <div class="script-section__label">Hook (erste 3 Sekunden)</div>
+      <div class="script-section__content">
+        <p><strong>&laquo;Friseure aufgepasst: Ab 30 Euro am Tag hast du deinen EIGENEN Platz im Salon. Ohne Mietvertrag.&raquo;</strong></p>
+        <p><em>Text-Overlay: &laquo;30&euro;/Tag = Dein Stuhl &raquo;</em></p>
+      </div>
+    </div>
+
+    <div class="script-section">
+      <div class="script-section__label">Body (15-30 Sekunden)</div>
+      <div class="script-section__content">
+        <p>&laquo;Stell dir vor: Du bist Friseurin, Nail-Designerin oder Kosmetikerin. Du willst selbststaendig arbeiten, aber ein eigener Salon? Zu teuer. Zu viel Risiko.&raquo;</p>
+        <p><em>(B-Roll: Leerer Salon, Preisschilder, frustrierter Blick)</em></p>
+        <p>&laquo;Mit ChairMatch mietest du einen Stuhl &mdash; tageweise, wochenweise oder monatlich. In einem fertigen Salon. Mit Ausstattung, Kunden in der Naehe, ohne Stress.&raquo;</p>
+        <p><em>(B-Roll: Schoener Salon, Stuhl, glueckliche Stylistin bei der Arbeit)</em></p>
+        <p>&laquo;Ab 30 Euro am Tag. Du bestimmst deine Preise, deine Zeiten, deine Kunden.&raquo;</p>
+      </div>
+    </div>
+
+    <div class="script-section">
+      <div class="script-section__label">CTA</div>
+      <div class="script-section__content">
+        <p><strong>&laquo;Check ChairMatch &mdash; Link in Bio. Finde deinen Stuhl in deiner Stadt.&raquo;</strong></p>
+        <p><em>Text-Overlay: &laquo;chairmatch.de | Link in Bio&raquo;</em></p>
+      </div>
+    </div>
+
+    <div class="visuals-box">
+      <div class="visuals-box__title">Visuelle Hinweise / B-Roll</div>
+      <ul>
+        <li>Aesthetischer Salon-Look: gute Beleuchtung, saubere Raeume</li>
+        <li>Farbtoenung: Peach/Warmtoeene passend zur ChairMatch-Brand</li>
+        <li>Reale Salon-Umgebung, keine Stock-Fotos</li>
+        <li>Schnelle Montage: verschiedene Salontypen</li>
+        <li>Trendige Beauty-Musik</li>
+      </ul>
+    </div>
+
+    <div class="hashtags">
+      <div class="hashtags__label">Hashtags</div>
+      <div class="hashtags__text">#ChairMatch #Stuhlvermietung #FriseurSelbststaendig #BeautyBusiness #SalonMieten #FreelanceFriseur #NailDesign #Kosmetik #EigenerStuhl #BeautyTikTok #SelbststaendigArbeiten</div>
+    </div>
+
+    <div class="caption-box">
+      <button class="copy-btn" onclick="copyCaption(this)">Kopieren</button>
+      <div class="caption-box__label">Caption</div>
+      <div class="caption-box__text">Eigener Salon? Zu teuer. Angestellt bleiben? Kein Bock. Die Loesung: Stuhl mieten ab 30&euro;/Tag. ChairMatch verbindet Freelancer mit Salons &mdash; flexibel, fair, ohne Risiko. Finde deinen Stuhl: Link in Bio oder WhatsApp +49 155 10445517</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- SKRIPT 2 / CM -->
+<div class="script-card" id="skript-2">
+  <div class="script-card__header">
+    <div>
+      <div class="script-card__number">Skript #2 &mdash; Salon-Akquise</div>
+      <div class="script-card__title">&laquo;Salonbesitzer: So verdienst du an leeren Stuehlen&raquo;</div>
+    </div>
+    <div class="script-card__meta">
+      <span class="meta-tag">30-45 Sek</span>
+      <span class="meta-tag">Passive Income</span>
+    </div>
+  </div>
+  <div class="script-card__body">
+
+    <div class="script-section">
+      <div class="script-section__label">Hook (erste 3 Sekunden)</div>
+      <div class="script-section__content">
+        <p><strong>&laquo;Du hast einen Salon mit leeren Stuehlen? Die kosten dich GELD. Jeden Tag.&raquo;</strong></p>
+        <p><em>Text-Overlay: &laquo;Leere Stuehle = Verlorenes Geld &raquo;</em></p>
+      </div>
+    </div>
+
+    <div class="script-section">
+      <div class="script-section__label">Body (15-30 Sekunden)</div>
+      <div class="script-section__content">
+        <p>&laquo;Miete laeuft. Strom laeuft. Versicherung laeuft. Aber der zweite und dritte Stuhl? Steht leer.&raquo;</p>
+        <p><em>(B-Roll: Leerer Salon, Rechnungen, leere Stuehle)</em></p>
+        <p>&laquo;Stell dir vor, du verdienst 500 bis 1.500 Euro im Monat EXTRA. Ohne neuen Mitarbeiter. Ohne Risiko.&raquo;</p>
+        <p>&laquo;Einfach deinen Stuhl auf ChairMatch listen. Freelancer mieten ihn &mdash; tageweise, wochenweise oder monatlich. Du bestimmst den Preis.&raquo;</p>
+        <p><em>(B-Roll: Handy-App, Buchungsbestaetigungen, Geld eingehend)</em></p>
+        <p>&laquo;Listen ist KOSTENLOS. Du verdienst erst, wenn jemand bucht.&raquo;</p>
+      </div>
+    </div>
+
+    <div class="script-section">
+      <div class="script-section__label">CTA</div>
+      <div class="script-section__content">
+        <p><strong>&laquo;Liste deinen Salon jetzt kostenlos auf ChairMatch. Link in Bio.&raquo;</strong></p>
+        <p><em>Text-Overlay: &laquo;Kostenlos listen &mdash; chairmatch.de&raquo;</em></p>
+      </div>
+    </div>
+
+    <div class="visuals-box">
+      <div class="visuals-box__title">Visuelle Hinweise / B-Roll</div>
+      <ul>
+        <li>Vorher/Nachher: Leerer Stuhl vs. belegter Stuhl</li>
+        <li>Geld-Zahlen einblenden: 500&euro;, 1.000&euro;, 1.500&euro;</li>
+        <li>Business-Look: professionell aber nahbar</li>
+        <li>Echte Salonbesitzer als Testimonial-Style</li>
+        <li>ChairMatch-Branding: Peach-Akzente</li>
+      </ul>
+    </div>
+
+    <div class="hashtags">
+      <div class="hashtags__label">Hashtags</div>
+      <div class="hashtags__text">#ChairMatch #Salonbesitzer #PassiveIncome #Stuhlvermietung #BeautyBusiness #SalonManagement #ExtraEinkommen #FreelancerWillkommen #SalonTipps #FriseurBusiness #KostenlosListen</div>
+    </div>
+
+    <div class="caption-box">
+      <button class="copy-btn" onclick="copyCaption(this)">Kopieren</button>
+      <div class="caption-box__label">Caption</div>
+      <div class="caption-box__text">Leere Stuehle in deinem Salon kosten dich Geld. Mach sie zur Einnahmequelle! Auf ChairMatch listen Salonbesitzer ihre freien Plaetze &mdash; kostenlos. Freelancer mieten sie. Du verdienst 500-1.500&euro;/Monat extra. Jetzt kostenlos listen: Link in Bio</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- SKRIPT 3 / CM -->
+<div class="script-card" id="skript-3">
+  <div class="script-card__header">
+    <div>
+      <div class="script-card__number">Skript #3 &mdash; Freelancer POV</div>
+      <div class="script-card__title">&laquo;Warum ich keinen eigenen Salon mehr will&raquo;</div>
+    </div>
+    <div class="script-card__meta">
+      <span class="meta-tag">30-45 Sek</span>
+      <span class="meta-tag">Freelancer POV</span>
+    </div>
+  </div>
+  <div class="script-card__body">
+
+    <div class="script-section">
+      <div class="script-section__label">Hook (erste 3 Sekunden)</div>
+      <div class="script-section__content">
+        <p><strong>&laquo;Alle sagen: Mach deinen eigenen Salon auf! Aber ich sag: Nee. Und hier ist warum.&raquo;</strong></p>
+        <p><em>Text-Overlay: &laquo;Eigener Salon? Nein danke. &raquo;</em></p>
+      </div>
+    </div>
+
+    <div class="script-section">
+      <div class="script-section__label">Body (15-30 Sekunden)</div>
+      <div class="script-section__content">
+        <p>&laquo;Eigener Salon heisst: 3.000 Euro Miete. Angestellte managen. Buchhaltung. Kaputte Klimaanlage.&raquo;</p>
+        <p><em>(B-Roll: Rechnungen-Stapel, Stress-Szenen, kaputte Geraete)</em></p>
+        <p>&laquo;Stuhl mieten heisst: Ich komm morgens, mach meine Kunden, geh nachmittags. Fertig.&raquo;</p>
+        <p><em>(B-Roll: Entspannt reinkommen, Kunden bedienen, frueh Feierabend)</em></p>
+        <p>&laquo;Ich zahl 30 bis 50 Euro am Tag fuer den Stuhl. Der Rest? Bleibt bei MIR. Keine Prozente. Kein Chef.&raquo;</p>
+        <p>&laquo;Montag frei? Klar. Nur Donnerstag bis Samstag? Auch gut. Ich entscheide.&raquo;</p>
+      </div>
+    </div>
+
+    <div class="script-section">
+      <div class="script-section__label">CTA</div>
+      <div class="script-section__content">
+        <p><strong>&laquo;Wenn du auch Bock auf echte Freiheit hast &mdash; ChairMatch. Finde deinen Stuhl. Link in Bio.&raquo;</strong></p>
+        <p><em>Text-Overlay: &laquo;chairmatch.de &mdash; Dein Stuhl wartet&raquo;</em></p>
+      </div>
+    </div>
+
+    <div class="visuals-box">
+      <div class="visuals-box__title">Visuelle Hinweise / B-Roll</div>
+      <ul>
+        <li>Kontrast-Editing: Stressiger Salonbesitz (hektisch) vs. Freelancer-Life (relaxed)</li>
+        <li>POV-Kamera: Zuschauer fuehlt sich als Freelancer</li>
+        <li>Split-Screen fuer Vergleich</li>
+        <li>Trendy Beauty-Content-Aesthetik</li>
+        <li>Sound: Erst stressig, dann chill &mdash; passend zum Mood-Switch</li>
+      </ul>
+    </div>
+
+    <div class="hashtags">
+      <div class="hashtags__label">Hashtags</div>
+      <div class="hashtags__text">#ChairMatch #FreelanceFriseur #KeinEigenerSalon #BeautyFreelancer #Stuhlmiete #SelbststaendigOhneRisiko #Friseur2026 #NailTech #Kosmetikerin #WorkLifeBalance #BeautyBusiness</div>
+    </div>
+
+    <div class="caption-box">
+      <button class="copy-btn" onclick="copyCaption(this)">Kopieren</button>
+      <div class="caption-box__label">Caption</div>
+      <div class="caption-box__text">Eigener Salon war gestern. Stuhl mieten ist die Zukunft. Ab 30&euro;/Tag arbeite ich in einem top Salon &mdash; ohne Mietvertrag, ohne Personal, ohne Stress. Meine Kunden, meine Preise, meine Zeiten. ChairMatch macht's moeglich. Link in Bio oder WhatsApp +49 155 10445517</div>
+    </div>
+
+  </div>
+</div>
+
+</div><!-- container -->
+
+<div class="copy-all-wrap">
+  <button class="copy-all-btn" onclick="copyAllScripts()">Alle Skripte kopieren</button>
+</div>
+
+<footer style="text-align:center; padding:40px 24px 60px; border-top:1px solid rgba(248,244,240,0.08);">
+  <p style="color:var(--cream-muted); font-size:0.85rem;">ChairMatch &mdash; TikTok/Reels Skripte &mdash; Erstellt Juni 2026</p>
+</footer>
+
+<script>
+function copyCaption(btn) {
+  const text = btn.parentElement.querySelector('.caption-box__text').innerText;
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = 'Kopiert!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Kopieren'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+
+function copyScriptCard(card) {
+  const sections = card.querySelectorAll('.script-section');
+  let text = '';
+  const title = card.querySelector('.script-card__title')?.innerText || '';
+  text += title + '\n\n';
+  sections.forEach(s => {
+    const label = s.querySelector('.script-section__label')?.innerText || '';
+    const content = s.querySelector('.script-section__content')?.innerText || '';
+    text += label + '\n' + content + '\n\n';
+  });
+  const hashtags = card.querySelector('.hashtags__text')?.innerText || '';
+  if (hashtags) text += 'Hashtags: ' + hashtags + '\n\n';
+  const caption = card.querySelector('.caption-box__text')?.innerText || '';
+  if (caption) text += 'Caption: ' + caption + '\n';
+  return text;
+}
+
+function copyAllScripts() {
+  const cards = document.querySelectorAll('.script-card');
+  let allText = 'CHAIRMATCH TIKTOK SKRIPTE\n========================\n\n';
+  cards.forEach((card, i) => {
+    allText += '--- Skript ' + (i+1) + ' ---\n';
+    allText += copyScriptCard(card) + '\n\n';
+  });
+  navigator.clipboard.writeText(allText).then(() => {
+    const btn = document.querySelector('.copy-all-btn');
+    btn.textContent = 'Alle kopiert!';
+    setTimeout(() => { btn.textContent = 'Alle Skripte kopieren'; }, 2000);
+  });
+}
+</script>
+
+</body>
+</html>

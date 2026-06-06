@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WhatsApp Business Katalog — ChairMatch</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0D0D0D;
+  --peach: #E8A87C;
+  --peach-dim: rgba(232,168,124,0.12);
+  --peach-border: rgba(232,168,124,0.25);
+  --cream: #F8F4F0;
+  --cream-dim: rgba(248,244,240,0.55);
+  --cream-muted: rgba(248,244,240,0.35);
+  --green: #5B8A72;
+  --wa-green: #25D366;
+  --wa-green-dim: rgba(37,211,102,0.12);
+  --wa-green-border: rgba(37,211,102,0.25);
+  --serif: 'Cormorant Garamond', Georgia, serif;
+  --sans: 'Inter', system-ui, -apple-system, sans-serif;
+}
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; font-size: 16px; }
+body { background: var(--bg); color: var(--cream); font-family: var(--sans); line-height: 1.7; -webkit-font-smoothing: antialiased; }
+
+.container { max-width: 900px; margin: 0 auto; padding: 0 24px; }
+
+.header {
+  text-align: center; padding: 80px 24px 40px;
+  border-bottom: 1px solid var(--peach-border);
+}
+.header h1 {
+  font-family: var(--serif); font-size: 2.4rem; font-weight: 700;
+  color: var(--peach); margin-bottom: 12px;
+}
+.header p { color: var(--cream-dim); font-size: 1.05rem; max-width: 600px; margin: 0 auto; }
+.header .wa-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  margin-top: 16px; padding: 8px 20px; border-radius: 20px;
+  background: var(--wa-green-dim); color: var(--wa-green);
+  font-size: 0.85rem; font-weight: 600;
+}
+
+.toc {
+  display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;
+  padding: 32px 24px; border-bottom: 1px solid rgba(248,244,240,0.08);
+}
+.toc a {
+  color: var(--peach); text-decoration: none; font-size: 0.85rem; font-weight: 500;
+  padding: 6px 16px; border: 1px solid var(--peach-border); border-radius: 20px;
+  transition: all 0.2s;
+}
+.toc a:hover { background: var(--peach-dim); }
+
+.section-header {
+  text-align: center; padding: 60px 24px 28px;
+}
+.section-header h2 {
+  font-family: var(--serif); font-size: 1.8rem; font-weight: 600;
+  color: var(--peach); margin-bottom: 6px;
+}
+.section-header .subtitle { color: var(--cream-muted); font-size: 0.9rem; }
+
+.card {
+  background: rgba(248,244,240,0.03);
+  border: 1px solid var(--peach-border);
+  border-radius: 16px;
+  margin: 0 auto 28px;
+  max-width: 860px;
+  overflow: hidden;
+  position: relative;
+}
+.card__header {
+  padding: 24px 28px 16px;
+  border-bottom: 1px solid rgba(248,244,240,0.06);
+}
+.card__label {
+  font-size: 0.72rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--peach); margin-bottom: 4px;
+}
+.card__title {
+  font-family: var(--serif); font-size: 1.35rem; font-weight: 700; color: var(--cream);
+}
+.card__body { padding: 24px 28px; }
+
+.data-row {
+  display: flex; gap: 12px; padding: 10px 0;
+  border-bottom: 1px solid rgba(248,244,240,0.05);
+}
+.data-row:last-child { border-bottom: none; }
+.data-row__key {
+  min-width: 160px; font-size: 0.85rem; font-weight: 600; color: var(--peach);
+}
+.data-row__val {
+  font-size: 0.92rem; color: var(--cream-dim); flex: 1;
+}
+
+.catalog-item {
+  background: rgba(248,244,240,0.03);
+  border: 1px solid var(--peach-border);
+  border-radius: 14px;
+  padding: 24px 28px;
+  margin-bottom: 20px;
+  max-width: 860px;
+  margin-left: auto; margin-right: auto;
+  position: relative;
+}
+.catalog-item__number {
+  position: absolute; top: -12px; left: 24px;
+  background: var(--peach); color: var(--bg);
+  font-size: 0.75rem; font-weight: 700; padding: 3px 12px;
+  border-radius: 10px;
+}
+.catalog-item__name {
+  font-family: var(--serif); font-size: 1.2rem; font-weight: 700;
+  color: var(--cream); margin-bottom: 6px;
+}
+.catalog-item__desc {
+  font-size: 0.92rem; color: var(--cream-dim); margin-bottom: 10px;
+}
+.catalog-item__price {
+  display: inline-block; padding: 4px 14px; border-radius: 10px;
+  background: var(--peach-dim); color: var(--peach);
+  font-size: 0.82rem; font-weight: 600;
+}
+
+.quick-reply {
+  background: var(--wa-green-dim);
+  border: 1px solid var(--wa-green-border);
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin-bottom: 14px;
+  max-width: 860px;
+  margin-left: auto; margin-right: auto;
+  position: relative;
+}
+.quick-reply__num {
+  font-size: 0.72rem; font-weight: 700; color: var(--wa-green);
+  letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 6px;
+}
+.quick-reply__text {
+  font-size: 0.92rem; color: var(--cream-dim); line-height: 1.6;
+}
+
+.greeting-box {
+  background: rgba(37,211,102,0.08);
+  border: 2px solid var(--wa-green-border);
+  border-radius: 16px;
+  padding: 28px 28px;
+  max-width: 860px;
+  margin: 20px auto 40px;
+  position: relative;
+}
+.greeting-box__label {
+  font-size: 0.75rem; font-weight: 700; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--wa-green); margin-bottom: 12px;
+}
+.greeting-box__text {
+  font-size: 1rem; color: var(--cream); line-height: 1.7;
+}
+
+.copy-btn {
+  position: absolute; top: 12px; right: 12px;
+  background: var(--peach-dim); color: var(--peach); border: 1px solid var(--peach-border);
+  padding: 4px 12px; border-radius: 8px; font-size: 0.72rem; font-weight: 600;
+  cursor: pointer; transition: all 0.2s; font-family: var(--sans);
+}
+.copy-btn:hover { background: var(--peach); color: var(--bg); }
+.copy-btn.copied { background: var(--green); color: #fff; border-color: var(--green); }
+.copy-btn.wa { background: var(--wa-green-dim); color: var(--wa-green); border-color: var(--wa-green-border); }
+.copy-btn.wa:hover { background: var(--wa-green); color: var(--bg); }
+
+.copy-all-wrap { text-align: center; padding: 20px 0 60px; }
+.copy-all-btn {
+  background: var(--peach); color: var(--bg); border: none;
+  padding: 14px 36px; border-radius: 12px; font-size: 0.95rem; font-weight: 700;
+  cursor: pointer; transition: all 0.2s; font-family: var(--sans);
+}
+.copy-all-btn:hover { filter: brightness(1.15); transform: translateY(-1px); }
+
+@media (max-width: 640px) {
+  .header h1 { font-size: 1.8rem; }
+  .data-row { flex-direction: column; gap: 4px; }
+  .data-row__key { min-width: auto; }
+}
+</style>
+</head>
+<body>
+
+<header class="header">
+  <h1>ChairMatch WhatsApp Business</h1>
+  <p>Komplett-Setup fuer das WhatsApp Business Profil von ChairMatch. Business-Profil, Katalog, Quick Replies und Auto-Greeting.</p>
+  <div class="wa-badge">WhatsApp Business: +49 155 10445517</div>
+</header>
+
+<nav class="toc">
+  <a href="#profil">Business-Profil</a>
+  <a href="#katalog">Katalog (4 Angebote)</a>
+  <a href="#replies">Quick Replies</a>
+  <a href="#greeting">Auto-Greeting</a>
+</nav>
+
+<!-- BUSINESS PROFIL -->
+<div id="profil">
+<div class="section-header">
+  <h2>Business-Profil</h2>
+  <p class="subtitle">Einstellungen fuer WhatsApp Business</p>
+</div>
+
+<div class="container">
+  <div class="card">
+    <button class="copy-btn" onclick="copyCard(this)">Kopieren</button>
+    <div class="card__header">
+      <div class="card__label">WhatsApp Business Profil</div>
+      <div class="card__title">ChairMatch</div>
+    </div>
+    <div class="card__body">
+      <div class="data-row">
+        <div class="data-row__key">Name</div>
+        <div class="data-row__val">ChairMatch</div>
+      </div>
+      <div class="data-row">
+        <div class="data-row__key">Kategorie</div>
+        <div class="data-row__val">Schoenheit &amp; Kosmetik</div>
+      </div>
+      <div class="data-row">
+        <div class="data-row__key">Beschreibung</div>
+        <div class="data-row__val">Dein Marktplatz fuer Stuhlvermietung in der Beauty-Branche. Finde deinen Stuhl oder vermiete leere Plaetze. Fuer Freelancer und Salonbesitzer.</div>
+      </div>
+      <div class="data-row">
+        <div class="data-row__key">Website</div>
+        <div class="data-row__val">www.chairmatch.de</div>
+      </div>
+      <div class="data-row">
+        <div class="data-row__key">Telefon</div>
+        <div class="data-row__val">+49 155 10445517</div>
+      </div>
+      <div class="data-row">
+        <div class="data-row__key">E-Mail</div>
+        <div class="data-row__val">info@chairmatch.de</div>
+      </div>
+      <div class="data-row">
+        <div class="data-row__key">Oeffnungszeiten</div>
+        <div class="data-row__val">Mo-Fr 9:00-18:00</div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- KATALOG -->
+<div id="katalog">
+<div class="section-header">
+  <h2>Katalog-Eintraege</h2>
+  <p class="subtitle">4 Angebote fuer den WhatsApp Business Katalog</p>
+</div>
+
+<div class="container">
+
+  <div class="catalog-item">
+    <div class="catalog-item__number">1</div>
+    <button class="copy-btn" onclick="copyCatalogItem(this)">Kopieren</button>
+    <div class="catalog-item__name">Stuhl mieten (Tag)</div>
+    <div class="catalog-item__desc">Flexibel tageweise einen Stuhl im Salon mieten. Ideal fuer Freelancer, die erstmal testen wollen oder nur bestimmte Tage arbeiten. Salon, Ausstattung und Kundennaehe inklusive.</div>
+    <div class="catalog-item__price">Ab 30&euro;/Tag</div>
+  </div>
+
+  <div class="catalog-item">
+    <div class="catalog-item__number">2</div>
+    <button class="copy-btn" onclick="copyCatalogItem(this)">Kopieren</button>
+    <div class="catalog-item__name">Stuhl mieten (Woche)</div>
+    <div class="catalog-item__desc">Wochenmiete fuer Beauty-Profis, die regelmaessig arbeiten. Guenstiger als tageweise. Dein fester Platz im Salon &mdash; flexibel kuendbar.</div>
+    <div class="catalog-item__price">Ab 150&euro;/Woche</div>
+  </div>
+
+  <div class="catalog-item">
+    <div class="catalog-item__number">3</div>
+    <button class="copy-btn" onclick="copyCatalogItem(this)">Kopieren</button>
+    <div class="catalog-item__name">Stuhl mieten (Monat)</div>
+    <div class="catalog-item__desc">Monatliche Festmiete fuer deinen eigenen Platz. Bester Preis pro Tag. Ideal fuer etablierte Freelancer mit festem Kundenstamm.</div>
+    <div class="catalog-item__price">Ab 500&euro;/Monat</div>
+  </div>
+
+  <div class="catalog-item">
+    <div class="catalog-item__number">4</div>
+    <button class="copy-btn" onclick="copyCatalogItem(this)">Kopieren</button>
+    <div class="catalog-item__name">Salon listen (kostenlos)</div>
+    <div class="catalog-item__desc">Leere Stuehle in deinem Salon eintragen und Mieter finden. Komplett kostenlos. Du bestimmst Preis, Verfuegbarkeit und Konditionen. Nur bei erfolgreicher Vermittlung faellt eine kleine Provision an.</div>
+    <div class="catalog-item__price">Kostenlos</div>
+  </div>
+
+</div>
+</div>
+
+<!-- QUICK REPLIES -->
+<div id="replies">
+<div class="section-header">
+  <h2>Quick Replies</h2>
+  <p class="subtitle">5 vorgefertigte Schnellantworten</p>
+</div>
+
+<div class="container">
+
+  <div class="quick-reply">
+    <button class="copy-btn wa" onclick="copyQuickReply(this)">Kopieren</button>
+    <div class="quick-reply__num">Quick Reply #1 &mdash; Begruessung</div>
+    <div class="quick-reply__text">Hey! Willkommen bei ChairMatch. Suchst du einen Stuhl zum Mieten oder moechtest du deinen Salon listen?</div>
+  </div>
+
+  <div class="quick-reply">
+    <button class="copy-btn wa" onclick="copyQuickReply(this)">Kopieren</button>
+    <div class="quick-reply__num">Quick Reply #2 &mdash; Freelancer-Anfrage</div>
+    <div class="quick-reply__text">Cool, dass du einen Stuhl suchst! In welcher Stadt bist du und was ist dein Bereich (Friseur, Nails, Kosmetik)?</div>
+  </div>
+
+  <div class="quick-reply">
+    <button class="copy-btn wa" onclick="copyQuickReply(this)">Kopieren</button>
+    <div class="quick-reply__num">Quick Reply #3 &mdash; Salon-Anfrage</div>
+    <div class="quick-reply__text">Super, dass du deinen Salon listen moechtest! Das ist komplett kostenlos. Schick uns den Namen und die Adresse deines Salons, dann legen wir los.</div>
+  </div>
+
+  <div class="quick-reply">
+    <button class="copy-btn wa" onclick="copyQuickReply(this)">Kopieren</button>
+    <div class="quick-reply__num">Quick Reply #4 &mdash; Preisinfo</div>
+    <div class="quick-reply__text">Unsere Stuhlmieten starten ab 30&euro;/Tag, 150&euro;/Woche oder 500&euro;/Monat &mdash; je nach Salon und Stadt. Schau auf chairmatch.de fuer aktuelle Angebote.</div>
+  </div>
+
+  <div class="quick-reply">
+    <button class="copy-btn wa" onclick="copyQuickReply(this)">Kopieren</button>
+    <div class="quick-reply__num">Quick Reply #5 &mdash; Rueckmeldung</div>
+    <div class="quick-reply__text">Wir melden uns innerhalb von 24 Stunden bei dir. Bis dahin: check chairmatch.de fuer verfuegbare Stuehle in deiner Naehe!</div>
+  </div>
+
+</div>
+</div>
+
+<!-- AUTO-GREETING -->
+<div id="greeting">
+<div class="section-header">
+  <h2>Auto-Greeting</h2>
+  <p class="subtitle">Automatische Begruessung fuer neue Chats</p>
+</div>
+
+<div class="container">
+  <div class="greeting-box">
+    <button class="copy-btn wa" onclick="copyGreeting(this)">Kopieren</button>
+    <div class="greeting-box__label">Automatische Begruessung</div>
+    <div class="greeting-box__text">Hey! Willkommen bei ChairMatch &mdash; dein Marktplatz fuer Stuhlvermietung in der Beauty-Branche.<br><br>Schreib uns:<br><strong>1</strong> &mdash; Stuhl suchen (Freelancer)<br><strong>2</strong> &mdash; Salon listen (Salonbesitzer)<br><br>Oder erzaehl uns direkt, was du brauchst!</div>
+  </div>
+</div>
+</div>
+
+<div class="copy-all-wrap">
+  <button class="copy-all-btn" onclick="copyAll()">Alles kopieren</button>
+</div>
+
+<footer style="text-align:center; padding:40px 24px 60px; border-top:1px solid rgba(248,244,240,0.08);">
+  <p style="color:var(--cream-muted); font-size:0.85rem;">ChairMatch &mdash; WhatsApp Business Katalog &mdash; Erstellt Juni 2026</p>
+</footer>
+
+<script>
+function copyText(btn, text) {
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = 'Kopiert!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Kopieren'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+
+function copyCard(btn) {
+  const card = btn.closest('.card');
+  const rows = card.querySelectorAll('.data-row');
+  let text = '';
+  rows.forEach(r => {
+    const key = r.querySelector('.data-row__key')?.innerText || '';
+    const val = r.querySelector('.data-row__val')?.innerText || '';
+    text += key + ': ' + val + '\n';
+  });
+  copyText(btn, text.trim());
+}
+
+function copyCatalogItem(btn) {
+  const item = btn.closest('.catalog-item');
+  const name = item.querySelector('.catalog-item__name')?.innerText || '';
+  const desc = item.querySelector('.catalog-item__desc')?.innerText || '';
+  const price = item.querySelector('.catalog-item__price')?.innerText || '';
+  copyText(btn, name + '\n' + desc + '\nPreis: ' + price);
+}
+
+function copyQuickReply(btn) {
+  const text = btn.parentElement.querySelector('.quick-reply__text')?.innerText || '';
+  copyText(btn, text);
+}
+
+function copyGreeting(btn) {
+  const text = btn.parentElement.querySelector('.greeting-box__text')?.innerText || '';
+  copyText(btn, text);
+}
+
+function copyAll() {
+  let all = 'WHATSAPP BUSINESS KATALOG — CHAIRMATCH\n=======================================\n\n';
+  all += '--- BUSINESS-PROFIL ---\n';
+  document.querySelectorAll('.data-row').forEach(r => {
+    const key = r.querySelector('.data-row__key')?.innerText || '';
+    const val = r.querySelector('.data-row__val')?.innerText || '';
+    all += key + ': ' + val + '\n';
+  });
+  all += '\n--- KATALOG ---\n';
+  document.querySelectorAll('.catalog-item').forEach((item, i) => {
+    const name = item.querySelector('.catalog-item__name')?.innerText || '';
+    const desc = item.querySelector('.catalog-item__desc')?.innerText || '';
+    const price = item.querySelector('.catalog-item__price')?.innerText || '';
+    all += (i+1) + '. ' + name + '\n' + desc + '\nPreis: ' + price + '\n\n';
+  });
+  all += '--- QUICK REPLIES ---\n';
+  document.querySelectorAll('.quick-reply__text').forEach((qr, i) => {
+    all += (i+1) + '. ' + qr.innerText + '\n';
+  });
+  all += '\n--- AUTO-GREETING ---\n';
+  all += document.querySelector('.greeting-box__text')?.innerText || '';
+  navigator.clipboard.writeText(all).then(() => {
+    const btn = document.querySelector('.copy-all-btn');
+    btn.textContent = 'Alles kopiert!';
+    setTimeout(() => { btn.textContent = 'Alles kopieren'; }, 2000);
+  });
+}
+</script>
+
+</body>
+</html>
