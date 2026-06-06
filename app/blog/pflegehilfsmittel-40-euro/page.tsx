@@ -2,13 +2,13 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 
 export const metadata: Metadata = {
-  title: 'Pflegehilfsmittel: 40€/Monat kostenlos — Hygienebox bestellen',
-  description: 'Pflegehilfsmittel kostenlos erhalten: Bis zu 40€ monatlich von der Pflegekasse. Hygienebox mit Windeln, Bettschutz & mehr. §40 SGB XI.',
+  title: 'Pflegehilfsmittel: 42€/Monat kostenlos — Hygienebox bestellen',
+  description: 'Pflegehilfsmittel kostenlos erhalten: Bis zu 42€ monatlich von der Pflegekasse. Hygienebox mit Windeln, Bettschutz & mehr. §40 SGB XI.',
   keywords: ['Pflegehilfsmittel', 'Hygienebox', '§40 SGB XI', '40 Euro', 'Pflegekasse', 'Windeln', 'Bettschutz', 'kostenlos'],
   alternates: { canonical: 'https://alltagsengel.care/blog/pflegehilfsmittel-40-euro' },
   openGraph: {
     title: 'Pflegehilfsmittel: 40€/Monat kostenlos — Hygienebox',
-    description: 'Bestellen Sie monatlich Pflegehilfsmittel kostenlos. Die Pflegekasse zahlt bis 40€.',
+    description: 'Bestellen Sie monatlich Pflegehilfsmittel kostenlos. Die Pflegekasse zahlt bis 42€.',
     url: 'https://alltagsengel.care/blog/pflegehilfsmittel-40-euro',
     type: 'article',
     images: [{ url: '/og-image.png', width: 1200, height: 630 }],
@@ -20,18 +20,18 @@ export default function PflegehilfsmittelPage() {
     <main className="blog-container">
       <article className="blog-article">
         <header className="blog-header">
-          <h1>Pflegehilfsmittel: 40€/Monat kostenlos — Hygienebox bestellen</h1>
+          <h1>Pflegehilfsmittel: 42€/Monat kostenlos — Hygienebox bestellen</h1>
           <p className="blog-meta">Veröffentlicht am 19. März 2026 | 5 min Lesezeit</p>
         </header>
 
         <div className="blog-content">
           <p className="blog-intro">
-            Wussten Sie, dass Ihnen monatlich <strong>bis zu 40 Euro</strong> für Pflegehilfsmittel zustehen? 
+            Wussten Sie, dass Ihnen monatlich <strong>bis zu 42 Euro</strong> für Pflegehilfsmittel zustehen? 
             Diese Leistung nach <strong>§40 SGB XI</strong> wird oft übersehen — dabei können Sie sich damit 
             Windeln, Bettschutz, Einmalhandschuhe und vieles mehr <strong>komplett kostenlos</strong> von der Pflegekasse holen.
           </p>
 
-          <h2>40 Euro monatlich — Das ist in der Hygienebox enthalten</h2>
+          <h2>42 Euro monatlich — Das ist in der Hygienebox enthalten</h2>
           <p>
             Mit der Alltagsengel Hygienebox erhalten Sie jeden Monat:
           </p>
@@ -68,7 +68,7 @@ export default function PflegehilfsmittelPage() {
             Jede Krankenkasse muss diese Leistung uneingeschränkt erbringen.
           </p>
           <p>
-            <strong>Das Wichtigste:</strong> Sie zahlen keinen Eigenanteil. Die kompletten 40€ bezahlt die Pflegekasse. 
+            <strong>Das Wichtigste:</strong> Sie zahlen keinen Eigenanteil. Die kompletten 42€ bezahlt die Pflegekasse. 
             Sie müssen nur registriert sein — mehr nicht.
           </p>
 
