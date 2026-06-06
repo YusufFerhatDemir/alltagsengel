@@ -1,8 +1,17 @@
 import Link from 'next/link'
+import type { Metadata } from 'next'
+import BreadcrumbSchema from '@/components/BreadcrumbSchema'
+
+export const metadata: Metadata = {
+  title: 'Impressum | Alltagsengel',
+  description: 'Impressum der Alltagsengel UG (haftungsbeschränkt), Neue Mainzer Straße 66-68, 60311 Frankfurt am Main.',
+  alternates: { canonical: 'https://alltagsengel.care/impressum' },
+}
 
 export default function ImpressumPage() {
   return (
     <div className="screen legal-screen">
+      <BreadcrumbSchema items={[{ name: 'Impressum' }]} />
       <div className="legal-header">
         <Link href="/" className="legal-back">‹</Link>
         <h1 className="legal-title">Impressum</h1>

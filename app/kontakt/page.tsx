@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import KontaktForm from './KontaktForm'
+import BreadcrumbSchema from '@/components/BreadcrumbSchema'
 
 export const metadata: Metadata = {
   alternates: { canonical: 'https://alltagsengel.care/kontakt' },
@@ -20,6 +21,7 @@ export default function KontaktPage() {
       background: 'linear-gradient(180deg, #1A1612 0%, #2A2420 100%)',
       padding: '0 16px 60px',
     }}>
+      <BreadcrumbSchema items={[{ name: 'Kontakt' }]} />
       {/* Navigation */}
       <nav style={{ maxWidth: 700, margin: '0 auto', padding: '16px 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>

@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import BreadcrumbSchema from '@/components/BreadcrumbSchema'
 
 export const metadata: Metadata = {
   title: 'Alltagshilfe für Senioren: Was ist möglich und wer zahlt?',
@@ -12,9 +13,26 @@ export const metadata: Metadata = {
   },
 };
 
+
+const articleJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Article',
+  headline: 'Alltagshilfe für Senioren: Was ist möglich und wer zahlt?',
+  description: 'Umfassender Überblick über Alltagshilfe für ältere Menschen: Möglichkeiten, Kostenübernahme, Finanzierungsmöglichkeiten und AlltagsEngel als Lösung.',
+  author: { '@type': 'Organization', name: 'Alltagsengel', url: 'https://alltagsengel.care' },
+  publisher: { '@type': 'Organization', name: 'Alltagsengel', url: 'https://alltagsengel.care', logo: { '@type': 'ImageObject', url: 'https://alltagsengel.care/icon-512x512.png' } },
+  datePublished: '2026-03-19',
+  dateModified: '2026-03-19',
+  mainEntityOfPage: 'https://alltagsengel.care/blog/alltagshilfe-senioren',
+  image: 'https://alltagsengel.care/og-image.png',
+  inLanguage: 'de-DE',
+}
+
 export default function AlltagshilfeSenioren() {
   return (
     <main className="blog-container">
+      <BreadcrumbSchema items={[{ name: 'Ratgeber', url: '/blog' }, { name: 'Alltagshilfe für Senioren: Was ist möglich und wer zahlt?' }]} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }} />
       <article className="blog-article">
         <div className="blog-header">
           <h1>Alltagshilfe für Senioren: Was ist möglich und wer zahlt?</h1>

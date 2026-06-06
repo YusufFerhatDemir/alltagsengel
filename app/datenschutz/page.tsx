@@ -1,8 +1,17 @@
 import Link from 'next/link'
+import type { Metadata } from 'next'
+import BreadcrumbSchema from '@/components/BreadcrumbSchema'
+
+export const metadata: Metadata = {
+  title: 'Datenschutzerklärung | Alltagsengel',
+  description: 'Datenschutzerklärung der Alltagsengel UG (haftungsbeschränkt). Informationen zu Datenverarbeitung, Cookies und Ihren Rechten.',
+  alternates: { canonical: 'https://alltagsengel.care/datenschutz' },
+}
 
 export default function DatenschutzPage() {
   return (
     <div className="screen legal-screen">
+      <BreadcrumbSchema items={[{ name: 'Datenschutz' }]} />
       <div className="legal-header">
         <Link href="/" className="legal-back">‹</Link>
         <h1 className="legal-title">Datenschutzerklärung</h1>

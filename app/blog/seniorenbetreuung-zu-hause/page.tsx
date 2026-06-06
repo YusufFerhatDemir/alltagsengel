@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import BreadcrumbSchema from '@/components/BreadcrumbSchema'
 
 export const metadata: Metadata = {
   title: 'Seniorenbetreuung zu Hause — Kosten, Möglichkeiten & Tipps',
@@ -12,9 +13,26 @@ export const metadata: Metadata = {
   },
 };
 
+
+const articleJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Article',
+  headline: 'Seniorenbetreuung zu Hause — Kosten, Möglichkeiten & Tipps',
+  description: 'Vollständiger Überblick über Seniorenbetreuung im eigenen Zuhause: Kosten, verschiedene Betreuungsmodelle und wie AlltagsEngel helfen kann.',
+  author: { '@type': 'Organization', name: 'Alltagsengel', url: 'https://alltagsengel.care' },
+  publisher: { '@type': 'Organization', name: 'Alltagsengel', url: 'https://alltagsengel.care', logo: { '@type': 'ImageObject', url: 'https://alltagsengel.care/icon-512x512.png' } },
+  datePublished: '2026-03-19',
+  dateModified: '2026-03-19',
+  mainEntityOfPage: 'https://alltagsengel.care/blog/seniorenbetreuung-zu-hause',
+  image: 'https://alltagsengel.care/og-image.png',
+  inLanguage: 'de-DE',
+}
+
 export default function SeniorenbetreuungZuHause() {
   return (
     <main className="blog-container">
+      <BreadcrumbSchema items={[{ name: 'Ratgeber', url: '/blog' }, { name: 'Seniorenbetreuung zu Hause' }]} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }} />
       <article className="blog-article">
         <div className="blog-header">
           <h1>Seniorenbetreuung zu Hause — Kosten, Möglichkeiten & Tipps</h1>

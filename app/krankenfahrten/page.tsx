@@ -151,6 +151,16 @@ export default function KrankenfahrtenPage() {
           </Link>
         </div>
 
+        <section className="info-card">
+          <h3>Weitere Leistungen</h3>
+          <ul className="info-list">
+            <li><Link href="/alltagsbegleitung">Alltagsbegleitung — 131€/Monat über Entlastungsbetrag</Link></li>
+            <li><Link href="/hygienebox">Pflegebox — kostenlose Pflegehilfsmittel (42€/Monat)</Link></li>
+            <li><Link href="/blog/krankenfahrt-kostenuebernahme">Ratgeber: Krankenfahrt Kostenübernahme</Link></li>
+            <li><Link href="/faq">Häufige Fragen zu Pflegeleistungen</Link></li>
+          </ul>
+        </section>
+
         <div className="legal-footer-nav">
           <Link href="/impressum">Impressum</Link>
           <Link href="/datenschutz">Datenschutz</Link>

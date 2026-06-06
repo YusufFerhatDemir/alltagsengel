@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import BreadcrumbSchema from '@/components/BreadcrumbSchema'
 
 export const metadata: Metadata = {
   title: 'Einkaufshilfe für Senioren: So klappt der Einkauf mit Begleitung',
@@ -14,9 +15,26 @@ export const metadata: Metadata = {
   },
 };
 
+
+const articleJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Article',
+  headline: 'Einkaufshilfe für Senioren: So klappt der Einkauf mit Begleitung',
+  description: 'Praktischer Leitfaden für Einkaufshilfen bei Senioren. Erfahren Sie, wie Begleitungsdienste funktionieren, welche Kosten entstehen und wie Sie über AlltagsEngel',
+  author: { '@type': 'Organization', name: 'Alltagsengel', url: 'https://alltagsengel.care' },
+  publisher: { '@type': 'Organization', name: 'Alltagsengel', url: 'https://alltagsengel.care', logo: { '@type': 'ImageObject', url: 'https://alltagsengel.care/icon-512x512.png' } },
+  datePublished: '2026-03-19',
+  dateModified: '2026-03-19',
+  mainEntityOfPage: 'https://alltagsengel.care/blog/einkaufshilfe-senioren',
+  image: 'https://alltagsengel.care/og-image.png',
+  inLanguage: 'de-DE',
+}
+
 export default function EinkaufshilfePage() {
   return (
     <main className="blog-container">
+      <BreadcrumbSchema items={[{ name: 'Ratgeber', url: '/blog' }, { name: 'Einkaufshilfe für Senioren: So klappt der Einkauf mit Begle' }]} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }} />
       <article className="blog-article">
         <header className="blog-header">
           <h1>Einkaufshilfe für Senioren: So klappt der Einkauf mit Begleitung</h1>

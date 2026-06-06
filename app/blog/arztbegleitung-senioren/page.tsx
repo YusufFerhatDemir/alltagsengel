@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import BreadcrumbSchema from '@/components/BreadcrumbSchema'
 
 export const metadata: Metadata = {
   title: 'Arztbegleitung für Senioren: Sicher zum Termin und zurück',
@@ -14,9 +15,26 @@ export const metadata: Metadata = {
   },
 };
 
+
+const articleJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Article',
+  headline: 'Arztbegleitung für Senioren: Sicher zum Termin und zurück',
+  description: 'Warum Arztbegleitung für Senioren wichtig ist. Erfahren Sie, was ein Begleiter beim Arzttermin macht und wie Sie über AlltagsEngel eine geeignete Begleitperson ',
+  author: { '@type': 'Organization', name: 'Alltagsengel', url: 'https://alltagsengel.care' },
+  publisher: { '@type': 'Organization', name: 'Alltagsengel', url: 'https://alltagsengel.care', logo: { '@type': 'ImageObject', url: 'https://alltagsengel.care/icon-512x512.png' } },
+  datePublished: '2026-03-19',
+  dateModified: '2026-03-19',
+  mainEntityOfPage: 'https://alltagsengel.care/blog/arztbegleitung-senioren',
+  image: 'https://alltagsengel.care/og-image.png',
+  inLanguage: 'de-DE',
+}
+
 export default function ArztbegleitungPage() {
   return (
     <main className="blog-container">
+      <BreadcrumbSchema items={[{ name: 'Ratgeber', url: '/blog' }, { name: 'Arztbegleitung für Senioren: Sicher zum Termin und zurück' }]} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }} />
       <article className="blog-article">
         <header className="blog-header">
           <h1>Arztbegleitung für Senioren: Sicher zum Termin und zurück</h1>

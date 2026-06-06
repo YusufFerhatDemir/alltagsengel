@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import EngelBewerbungForm from '@/components/EngelBewerbungForm'
+import BreadcrumbSchema from '@/components/BreadcrumbSchema'
 
 export const metadata: Metadata = {
   title: 'Werde Alltagsengel — Flexibler Nebenjob mit Sinn | 20€/Stunde',
@@ -142,6 +143,7 @@ export default function EngelWerdenPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdFAQ) }}
       />
+      <BreadcrumbSchema items={[{ name: 'Engel werden' }]} />
 
       {/* ── Sticky CTA Bar ── */}
       <div style={{
