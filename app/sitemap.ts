@@ -30,6 +30,15 @@ const STATIC_ROUTES: Omit<RouteEntry, 'lastModified'>[] = [
   { url: '/blog', changeFrequency: 'daily', priority: 0.9 },
   { url: '/faq', changeFrequency: 'monthly', priority: 0.8 },
   { url: '/kontakt', changeFrequency: 'monthly', priority: 0.7 },
+  // City-Landingpages (Rhein-Main)
+  { url: '/alltagsbegleitung/offenbach', changeFrequency: 'weekly', priority: 0.85 },
+  { url: '/alltagsbegleitung/wiesbaden', changeFrequency: 'weekly', priority: 0.85 },
+  { url: '/alltagsbegleitung/darmstadt', changeFrequency: 'weekly', priority: 0.85 },
+  { url: '/alltagsbegleitung/hanau', changeFrequency: 'weekly', priority: 0.85 },
+  { url: '/alltagsbegleitung/bad-homburg', changeFrequency: 'weekly', priority: 0.85 },
+  { url: '/alltagsbegleitung/mainz', changeFrequency: 'weekly', priority: 0.85 },
+  { url: '/alltagsbegleitung/aschaffenburg', changeFrequency: 'weekly', priority: 0.85 },
+  // Landing pages
   { url: '/lp/google', changeFrequency: 'monthly', priority: 0.7 },
   { url: '/lp/facebook', changeFrequency: 'monthly', priority: 0.7 },
   { url: '/lp/instagram', changeFrequency: 'monthly', priority: 0.7 },

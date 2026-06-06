@@ -7,84 +7,48 @@
     <priority>1.0</priority>
   </url>
 
-  <!-- Stadt-Seiten -->
+  <!-- FAQ -->
   <url>
-    <loc>https://chairmatch.de/stadt/frankfurt</loc>
-    <changefreq>weekly</changefreq>
+    <loc>https://chairmatch.de/faq</loc>
+    <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
-  <url>
-    <loc>https://chairmatch.de/stadt/berlin</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://chairmatch.de/stadt/hamburg</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://chairmatch.de/stadt/muenchen</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://chairmatch.de/stadt/koeln</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://chairmatch.de/stadt/duesseldorf</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
+
+  <!-- Großstädte -->
+  <url><loc>https://chairmatch.de/stadt/frankfurt</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://chairmatch.de/stadt/berlin</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://chairmatch.de/stadt/hamburg</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://chairmatch.de/stadt/muenchen</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://chairmatch.de/stadt/koeln</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://chairmatch.de/stadt/duesseldorf</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+
+  <!-- Umgebungsstädte -->
+  <url><loc>https://chairmatch.de/stadt/offenbach</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://chairmatch.de/stadt/wiesbaden</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://chairmatch.de/stadt/darmstadt</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://chairmatch.de/stadt/mainz</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://chairmatch.de/stadt/hanau</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://chairmatch.de/stadt/potsdam</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://chairmatch.de/stadt/lueneburg</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://chairmatch.de/stadt/augsburg</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://chairmatch.de/stadt/nuernberg</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://chairmatch.de/stadt/bonn</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://chairmatch.de/stadt/leverkusen</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://chairmatch.de/stadt/essen</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://chairmatch.de/stadt/duisburg</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://chairmatch.de/stadt/wuppertal</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://chairmatch.de/stadt/dortmund</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
 
   <!-- Blog -->
-  <url>
-    <loc>https://chairmatch.de/blog</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://chairmatch.de/blog/stuhlvermietung-friseursalon</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://chairmatch.de/blog/freelancer-friseur-arbeitsplatz</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://chairmatch.de/blog/beauty-coworking-deutschland</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
+  <url><loc>https://chairmatch.de/blog</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://chairmatch.de/blog/stuhlvermietung-friseursalon</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://chairmatch.de/blog/freelancer-friseur-arbeitsplatz</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://chairmatch.de/blog/beauty-coworking-deutschland</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
 
   <!-- Ads / Recruiting -->
-  <url>
-    <loc>https://chairmatch.de/ads/salon-rekrutierung</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://chairmatch.de/ads/freelancer-akquise</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://chairmatch.de/ads/email-outreach</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  <url>
-    <loc>https://chairmatch.de/ads/tiktok-skripte</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  <url>
-    <loc>https://chairmatch.de/ads/whatsapp-katalog</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
-  </url>
+  <url><loc>https://chairmatch.de/ads/salon-rekrutierung</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://chairmatch.de/ads/freelancer-akquise</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://chairmatch.de/ads/email-outreach</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://chairmatch.de/ads/tiktok-skripte</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://chairmatch.de/ads/whatsapp-katalog</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
 </urlset>
