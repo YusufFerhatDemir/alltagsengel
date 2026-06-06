@@ -3,6 +3,7 @@ import Link from 'next/link'
 import Icon3D from '@/components/Icon3D'
 import AppMockup from '@/components/AppMockup'
 import VisitTracker from '@/components/VisitTracker'
+import LeadForm from '@/components/LeadForm'
 
 const FAQS = [
   {
@@ -231,6 +232,17 @@ export default function SplashPage() {
           <div style={{ display: 'flex', justifyContent: 'center', margin: '24px 0 8px' }}>
             <AppMockup size={260} />
           </div>
+        </section>
+
+        {/* ─── Lead-Formular: Kostenlose Beratung ─── */}
+        <section className="lp-section" style={{ textAlign: 'center' }}>
+          <div className="lp-badge">Persönliche Beratung</div>
+          <h2 className="lp-h2">Jetzt kostenlos beraten lassen</h2>
+          <p className="lp-text" style={{ marginBottom: 24 }}>
+            Sie haben Fragen zur Pflege-Box oder zu Krankenfahrten?
+            Hinterlassen Sie Ihre Nummer — wir rufen Sie zurück, kostenlos und unverbindlich.
+          </p>
+          <LeadForm />
         </section>
 
         {/* ─── Trust / Fakten (keine erfundenen Testimonials) ─── */}

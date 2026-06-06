@@ -1,0 +1,143 @@
+'use client'
+import { useState } from 'react'
+
+// ═══════════════════════════════════════════════════════════
+// LEAD CAPTURE FORM — Kostenlose Beratung anfragen
+// ═══════════════════════════════════════════════════════════
+// Speichert Anfragen in Supabase (lead_inquiries).
+// Design: dark theme, gold accent (#C9963C).
+// ═══════════════════════════════════════════════════════════
+
+export default function LeadForm() {
+  const [form, setForm] = useState({ name: '', phone: '', plz: '', message: '' })
+  const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    setStatus('sending')
+
+    try {
+      const res = await fetch('/api/lead-inquiry', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      })
+      if (res.ok) {
+        setStatus('sent')
+        setForm({ name: '', phone: '', plz: '', message: '' })
+      } else {
+        setStatus('error')
+      }
+    } catch {
+      setStatus('error')
+    }
+  }
+
+  if (status === 'sent') {
+    return (
+      <div style={{
+        background: 'rgba(45, 106, 79, 0.1)', borderRadius: 18, padding: 32,
+        border: '1px solid rgba(45, 106, 79, 0.2)', textAlign: 'center',
+      }}>
+        <div style={{ fontSize: 48, marginBottom: 12 }}>&#10003;</div>
+        <h3 style={{ color: '#F5F0E8', fontSize: 20, fontWeight: 700, marginBottom: 8 }}>
+          Vielen Dank!
+        </h3>
+        <p style={{ color: '#B8B0A4', fontSize: 14, lineHeight: 1.6 }}>
+          Wir melden uns innerhalb von 24 Stunden bei Ihnen.
+        </p>
+      </div>
+    )
+  }
+
+  const inputStyle: React.CSSProperties = {
+    width: '100%',
+    padding: '14px 16px',
+    borderRadius: 12,
+    border: '1px solid rgba(255,255,255,0.1)',
+    background: 'rgba(255,255,255,0.04)',
+    color: '#F5F0E8',
+    fontSize: 15,
+    outline: 'none',
+    boxSizing: 'border-box',
+    transition: 'border-color 0.2s',
+  }
+
+  return (
+    <form onSubmit={handleSubmit} style={{
+      background: 'rgba(255,255,255,0.04)', borderRadius: 18,
+      padding: 'clamp(20px, 3vw, 28px)',
+      border: '1px solid rgba(255,255,255,0.06)',
+      maxWidth: 520, margin: '0 auto',
+    }}>
+      <h3 style={{ color: '#F5F0E8', fontSize: 18, fontWeight: 700, marginBottom: 4 }}>
+        Kostenlose Beratung anfragen
+      </h3>
+      <p style={{ color: '#8A8279', fontSize: 13, marginBottom: 20 }}>
+        Wir rufen Sie zurück — unverbindlich und kostenfrei.
+      </p>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <input
+          type="text"
+          required
+          placeholder="Ihr Name *"
+          value={form.name}
+          onChange={e => setForm({ ...form, name: e.target.value })}
+          style={inputStyle}
+        />
+        <div style={{ display: 'flex', gap: 12 }}>
+          <input
+            type="tel"
+            required
+            placeholder="Telefonnummer *"
+            value={form.phone}
+            onChange={e => setForm({ ...form, phone: e.target.value })}
+            style={{ ...inputStyle, flex: 2 }}
+          />
+          <input
+            type="text"
+            required
+            placeholder="PLZ *"
+            value={form.plz}
+            onChange={e => setForm({ ...form, plz: e.target.value })}
+            pattern="[0-9]{5}"
+            maxLength={5}
+            style={{ ...inputStyle, flex: 1 }}
+          />
+        </div>
+        <textarea
+          placeholder="Ihre Nachricht (optional)"
+          value={form.message}
+          onChange={e => setForm({ ...form, message: e.target.value })}
+          rows={3}
+          style={{ ...inputStyle, resize: 'vertical', minHeight: 80 }}
+        />
+      </div>
+
+      {status === 'error' && (
+        <p style={{ color: '#E74C3C', fontSize: 13, marginTop: 8 }}>
+          Fehler beim Senden. Bitte versuchen Sie es erneut.
+        </p>
+      )}
+
+      <button
+        type="submit"
+        disabled={status === 'sending'}
+        style={{
+          width: '100%', marginTop: 16, padding: '14px', borderRadius: 12, border: 'none',
+          background: status === 'sending' ? '#8A7A5A' : '#C9963C',
+          color: '#1A1612', fontSize: 16, fontWeight: 700,
+          cursor: status === 'sending' ? 'wait' : 'pointer',
+          transition: 'background 0.2s',
+        }}
+      >
+        {status === 'sending' ? 'Wird gesendet...' : 'Jetzt Beratung anfragen'}
+      </button>
+
+      <p style={{ color: '#6A6259', fontSize: 11, textAlign: 'center', marginTop: 12 }}>
+        Ihre Daten werden nur zur Kontaktaufnahme verwendet.
+      </p>
+    </form>
+  )
+}
