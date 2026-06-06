@@ -14,7 +14,7 @@ const supabaseAdmin = createClient(
 
 export async function POST(request: Request) {
   try {
-    const { name, phone, plz, message } = await request.json()
+    const { name, phone, plz, message, service, source, utm_source } = await request.json()
 
     if (!name || !phone || !plz) {
       return NextResponse.json(
@@ -38,7 +38,9 @@ export async function POST(request: Request) {
         phone: phone.trim(),
         plz: plz.trim(),
         message: message?.trim() || null,
-        source: 'website',
+        service: service?.trim() || null,
+        source: source || 'website',
+        utm_source: utm_source?.trim() || null,
       })
 
     if (dbError) {
