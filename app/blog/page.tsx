@@ -195,6 +195,30 @@ const articles: BlogArticle[] = [
     readTime: '10 min',
     date: '6. Juni 2026',
   },
+  {
+    slug: 'krankenfahrt-verordnung-erhalten',
+    title: 'Krankenfahrt Verordnung: Wer bekommt sie & wie beantragen?',
+    description: 'Wie Sie eine Verordnung für Krankenfahrten erhalten: Voraussetzungen (Pflegegrad, Merkzeichen), Arztgespräch, Genehmigung durch die Krankenkasse.',
+    category: 'Services',
+    readTime: '7 min',
+    date: '6. Juni 2026',
+  },
+  {
+    slug: 'entlastungsbetrag-rueckwirkend',
+    title: 'Entlastungsbetrag rückwirkend nutzen — bis zu 3.144€ sichern',
+    description: 'Nicht genutzten Entlastungsbetrag nachholen: Fristen, Berechnung und wie Sie bis zu 3.144€ aus 2 Jahren vor dem Verfall retten.',
+    category: 'Finanzierung',
+    readTime: '6 min',
+    date: '6. Juni 2026',
+  },
+  {
+    slug: 'pflegegrad-1-leistungen',
+    title: 'Pflegegrad 1 Leistungen 2026 — Was steht Ihnen zu?',
+    description: 'Alle Leistungen bei Pflegegrad 1: Entlastungsbetrag 131€, Pflegehilfsmittel 42€, Wohnraumanpassung bis 4.000€ und mehr.',
+    category: 'Pflegegrad',
+    readTime: '8 min',
+    date: '6. Juni 2026',
+  },
 ]
 
 const categoryColors: Record<string, string> = {
