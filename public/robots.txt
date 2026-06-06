@@ -1,18 +1,16 @@
 User-agent: *
 Allow: /
 Disallow: /admin
-Disallow: /auth/login
-Disallow: /auth/register
+Disallow: /auth/
 Disallow: /api/
 Disallow: /kunde/
 Disallow: /engel/
+Disallow: /fahrer/
+Disallow: /mis/
+Disallow: /investor/
+Disallow: /notfall/
+Disallow: /choose
+Disallow: /loading
+Disallow: /sentry-example
 
 Sitemap: https://alltagsengel.care/sitemap.xml
-
-# Google Search Console
-# User-agent: Googlebot
-# Allow: /
-
-# Bing Webmaster Tools
-# User-agent: Bingbot
-# Allow: /

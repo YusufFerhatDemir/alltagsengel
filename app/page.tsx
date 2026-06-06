@@ -331,6 +331,49 @@ export default function SplashPage() {
           </div>
         </section>
 
+        {/* ─── Ratgeber-Teaser ─── */}
+        <section className="lp-section">
+          <div className="lp-badge">Ratgeber</div>
+          <h2 className="lp-h2">Wissen rund um Pflege &amp; Entlastung</h2>
+          <p className="lp-text">
+            Kostenlose Artikel zu Pflegegrad, Entlastungsbetrag, Krankenfahrt-Kostenübernahme
+            und mehr — verständlich erklärt, mit praktischen Tipps.
+          </p>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 280px), 1fr))',
+            gap: 16,
+            marginTop: 20,
+          }}>
+            {[
+              { slug: 'entlastungsbetrag-45b', title: 'Entlastungsbetrag §45b — 131 €/Monat', cat: 'Finanzierung' },
+              { slug: 'pflegebox-kostenlos-bestellen', title: 'Pflegebox kostenlos bestellen', cat: 'Finanzierung' },
+              { slug: 'krankenfahrt-buchen-frankfurt', title: 'Krankenfahrt buchen Frankfurt', cat: 'Services' },
+              { slug: 'pflegegrad-beantragen', title: 'Pflegegrad beantragen — Anleitung', cat: 'Pflegegrad' },
+            ].map(a => (
+              <Link key={a.slug} href={`/blog/${a.slug}`} style={{ textDecoration: 'none' }}>
+                <div style={{
+                  background: 'rgba(255,255,255,0.04)',
+                  borderRadius: 14,
+                  padding: '18px 20px',
+                  border: '1px solid rgba(255,255,255,0.06)',
+                  transition: 'border-color 0.3s',
+                }}>
+                  <div style={{ color: '#C9963C', fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
+                    {a.cat}
+                  </div>
+                  <div style={{ color: '#F5F0E8', fontSize: 15, fontWeight: 600, lineHeight: 1.4 }}>
+                    {a.title}
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+          <div className="sp-btns" style={{ marginTop: 22 }}>
+            <Link href="/blog"><button className="btn-ghost">Alle Ratgeber-Artikel ansehen →</button></Link>
+          </div>
+        </section>
+
         {/* ─── CTA ─── */}
         <section className="lp-section lp-cta-section">
           <h2 className="lp-h2">Pflege-Box sichern. Fahrt buchen. In 2 Minuten.</h2>
@@ -353,6 +396,8 @@ export default function SplashPage() {
           <div className="lp-footer-links">
             <Link href="/hygienebox">Pflege-Box</Link>
             <Link href="/krankenfahrten">Krankenfahrt</Link>
+            <Link href="/alltagsbegleitung">Alltagsbegleitung</Link>
+            <Link href="/blog">Ratgeber</Link>
             <Link href="/faq">FAQ</Link>
             <Link href="/kontakt">Kontakt</Link>
           </div>
