@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import EngelBewerbungForm from '@/components/EngelBewerbungForm'
 
 export const metadata: Metadata = {
   title: 'Werde Alltagsengel — Flexibler Nebenjob mit Sinn | 20€/Stunde',
@@ -404,6 +405,17 @@ export default function EngelWerdenPage() {
               </details>
             ))}
           </div>
+        </section>
+
+        {/* ─── Schnell-Bewerbung ─── */}
+        <section className="lp-section" style={{ textAlign: 'center' }}>
+          <div className="lp-badge">Kein Login nötig</div>
+          <h2 className="lp-h2">Interesse? Melde dich unverbindlich.</h2>
+          <p className="lp-text" style={{ marginBottom: 24 }}>
+            Hinterlasse deine Kontaktdaten — wir rufen dich an und besprechen alles Weitere.
+            Kein Account nötig, keine Verpflichtung.
+          </p>
+          <EngelBewerbungForm />
         </section>
 
         {/* ─── CTA ─── */}

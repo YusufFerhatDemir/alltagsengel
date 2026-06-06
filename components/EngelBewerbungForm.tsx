@@ -3,30 +3,21 @@ import { useState, useEffect } from 'react'
 import { trackContactRequest } from '@/lib/tracking'
 
 // ═══════════════════════════════════════════════════════════
-// LEAD CAPTURE FORM — Kostenlose Beratung anfragen
+// ENGEL BEWERBUNG FORM — Schnell-Bewerbung ohne Auth
 // ═══════════════════════════════════════════════════════════
-// Speichert Anfragen in Supabase (lead_inquiries).
-// Erfasst UTM-Parameter und Service-Interesse.
-// Design: dark theme, gold accent (#C9963C).
+// Für die engel-werden Landingpage. Speichert in lead_inquiries
+// mit source='engel-bewerbung'. Kein Login erforderlich.
 // ═══════════════════════════════════════════════════════════
 
-interface LeadFormProps {
-  /** Vorausgewählter Service, z.B. 'Alltagsbegleitung' */
-  defaultService?: string
-  /** Quelle für Tracking, z.B. 'homepage', 'alltagsbegleitung' */
-  source?: string
-}
-
-export default function LeadForm({ defaultService, source }: LeadFormProps) {
-  const [form, setForm] = useState({ name: '', phone: '', plz: '', service: defaultService || '', message: '' })
+export default function EngelBewerbungForm() {
+  const [form, setForm] = useState({ name: '', phone: '', plz: '', qualification: '', message: '' })
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
   const [utmSource, setUtmSource] = useState('')
 
   useEffect(() => {
     if (typeof window === 'undefined') return
     const params = new URLSearchParams(window.location.search)
-    const src = params.get('utm_source') || params.get('source') || ''
-    setUtmSource(src)
+    setUtmSource(params.get('utm_source') || params.get('source') || '')
   }, [])
 
   async function handleSubmit(e: React.FormEvent) {
@@ -38,15 +29,19 @@ export default function LeadForm({ defaultService, source }: LeadFormProps) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          ...form,
-          source: source || 'website',
+          name: form.name,
+          phone: form.phone,
+          plz: form.plz,
+          service: form.qualification ? `Engel-Bewerbung (${form.qualification})` : 'Engel-Bewerbung',
+          message: form.message,
+          source: 'engel-bewerbung',
           utm_source: utmSource,
         }),
       })
       if (res.ok) {
         setStatus('sent')
-        setForm({ name: '', phone: '', plz: '', service: '', message: '' })
-        trackContactRequest(source || 'lead-form')
+        setForm({ name: '', phone: '', plz: '', qualification: '', message: '' })
+        trackContactRequest('engel-bewerbung')
       } else {
         setStatus('error')
       }
@@ -63,10 +58,11 @@ export default function LeadForm({ defaultService, source }: LeadFormProps) {
       }}>
         <div style={{ fontSize: 48, marginBottom: 12 }}>&#10003;</div>
         <h3 style={{ color: '#F5F0E8', fontSize: 20, fontWeight: 700, marginBottom: 8 }}>
-          Vielen Dank!
+          Bewerbung erhalten!
         </h3>
         <p style={{ color: '#B8B0A4', fontSize: 14, lineHeight: 1.6 }}>
-          Wir melden uns innerhalb von 24 Stunden bei Ihnen.
+          Wir melden uns innerhalb von 24 Stunden bei dir.
+          Du kannst dich auch direkt in der App registrieren.
         </p>
       </div>
     )
@@ -93,17 +89,17 @@ export default function LeadForm({ defaultService, source }: LeadFormProps) {
       maxWidth: 520, margin: '0 auto',
     }}>
       <h3 style={{ color: '#F5F0E8', fontSize: 18, fontWeight: 700, marginBottom: 4 }}>
-        Kostenlose Beratung anfragen
+        Schnell-Bewerbung
       </h3>
       <p style={{ color: '#8A8279', fontSize: 13, marginBottom: 20 }}>
-        Wir rufen Sie zurück — unverbindlich und kostenfrei.
+        Hinterlasse deine Daten — wir melden uns bei dir.
       </p>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
         <input
           type="text"
           required
-          placeholder="Ihr Name *"
+          placeholder="Dein Name *"
           value={form.name}
           onChange={e => setForm({ ...form, name: e.target.value })}
           style={inputStyle}
@@ -129,28 +125,30 @@ export default function LeadForm({ defaultService, source }: LeadFormProps) {
           />
         </div>
         <select
-          value={form.service}
-          onChange={e => setForm({ ...form, service: e.target.value })}
-          style={{ ...inputStyle, appearance: 'auto', color: form.service ? '#F5F0E8' : '#8A8279' }}
+          value={form.qualification}
+          onChange={e => setForm({ ...form, qualification: e.target.value })}
+          style={{ ...inputStyle, appearance: 'auto', color: form.qualification ? '#F5F0E8' : '#8A8279' }}
         >
-          <option value="">Interesse an… (optional)</option>
-          <option value="Alltagsbegleitung">Alltagsbegleitung (§45b)</option>
-          <option value="Pflege-Box">Pflege-Box (§40)</option>
-          <option value="Krankenfahrt">Krankenfahrt (§60)</option>
-          <option value="Allgemein">Allgemeine Beratung</option>
+          <option value="">Erfahrung (optional)</option>
+          <option value="Keine Erfahrung">Keine Erfahrung — ich möchte einsteigen</option>
+          <option value="Pflegehelfer/in">Pflegehelfer/in</option>
+          <option value="Alltagsbegleiter/in (§45b)">Alltagsbegleiter/in (§45b)</option>
+          <option value="Betreuungskraft (§53b)">Betreuungskraft (§53b)</option>
+          <option value="Altenpfleger/in">Altenpfleger/in</option>
+          <option value="Sonstige">Sonstige Erfahrung</option>
         </select>
         <textarea
-          placeholder="Ihre Nachricht (optional)"
+          placeholder="Kurze Nachricht (optional)"
           value={form.message}
           onChange={e => setForm({ ...form, message: e.target.value })}
-          rows={3}
-          style={{ ...inputStyle, resize: 'vertical', minHeight: 80 }}
+          rows={2}
+          style={{ ...inputStyle, resize: 'vertical', minHeight: 60 }}
         />
       </div>
 
       {status === 'error' && (
         <p style={{ color: '#E74C3C', fontSize: 13, marginTop: 8 }}>
-          Fehler beim Senden. Bitte versuchen Sie es erneut.
+          Fehler beim Senden. Bitte versuche es erneut.
         </p>
       )}
 
@@ -165,11 +163,11 @@ export default function LeadForm({ defaultService, source }: LeadFormProps) {
           transition: 'background 0.2s',
         }}
       >
-        {status === 'sending' ? 'Wird gesendet...' : 'Jetzt Beratung anfragen'}
+        {status === 'sending' ? 'Wird gesendet...' : 'Jetzt bewerben — unverbindlich'}
       </button>
 
       <p style={{ color: '#6A6259', fontSize: 11, textAlign: 'center', marginTop: 12 }}>
-        Ihre Daten werden nur zur Kontaktaufnahme verwendet.
+        Deine Daten werden nur zur Kontaktaufnahme verwendet. Kein Login nötig.
       </p>
     </form>
   )

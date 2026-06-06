@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
+import LeadForm from '@/components/LeadForm'
 
 export const metadata: Metadata = {
   title: 'Alltagsbegleitung Frankfurt | 131€ Entlastungsbetrag nutzen — Alltagsengel',
@@ -133,6 +134,15 @@ export default function AlltagsbegleitungPage() {
               <button className="btn-ghost" style={{ width: '100%' }}>ALS ENGEL REGISTRIEREN</button>
             </Link>
           </div>
+        </section>
+
+        <section className="info-card">
+          <h3>Kostenlose Beratung anfragen</h3>
+          <p style={{ marginBottom: 16 }}>
+            Sie haben Fragen zur Alltagsbegleitung oder zum Entlastungsbetrag?
+            Hinterlassen Sie Ihre Nummer — wir rufen Sie zurück, kostenlos und unverbindlich.
+          </p>
+          <LeadForm defaultService="Alltagsbegleitung" source="alltagsbegleitung" />
         </section>
 
         <div className="info-cta">

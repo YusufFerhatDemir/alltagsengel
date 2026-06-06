@@ -242,7 +242,7 @@ export default function SplashPage() {
             Sie haben Fragen zur Pflege-Box oder zu Krankenfahrten?
             Hinterlassen Sie Ihre Nummer — wir rufen Sie zurück, kostenlos und unverbindlich.
           </p>
-          <LeadForm />
+          <LeadForm source="homepage" />
         </section>
 
         {/* ─── Trust / Fakten (keine erfundenen Testimonials) ─── */}
