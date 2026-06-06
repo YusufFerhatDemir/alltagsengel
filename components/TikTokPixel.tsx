@@ -31,19 +31,17 @@ export default function TikTokPixel() {
     // Cookie-Consent prüfen — bewusster Initial-Check beim Mount.
     const consent = getCookieConsent()
     if (consent === 'accepted') {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setShouldLoad(true)
       return
     }
 
-    const interval = setInterval(() => {
-      if (getCookieConsent() === 'accepted') {
-        setShouldLoad(true)
-        clearInterval(interval)
-      }
-    }, 2000)
+    // Event-basiert statt Polling
+    const handleConsent = (e: Event) => {
+      if ((e as CustomEvent).detail === 'accepted') setShouldLoad(true)
+    }
+    window.addEventListener('ae_consent_change', handleConsent)
 
-    return () => clearInterval(interval)
+    return () => window.removeEventListener('ae_consent_change', handleConsent)
   }, [])
 
   if (!shouldLoad || !TIKTOK_PIXEL_ID) return null

@@ -31,16 +31,15 @@ export default function GoogleTagManager() {
       updateConsentToGranted()
     }
 
-    // Warte auf Consent-Änderung (falls Nutzer erst später zustimmt)
-    const interval = setInterval(() => {
-      const currentConsent = getCookieConsent()
-      if (currentConsent === 'accepted') {
+    // Event-basiert statt Polling: reagiert sofort auf Consent-Änderung
+    const handleConsent = (e: Event) => {
+      if ((e as CustomEvent).detail === 'accepted') {
         updateConsentToGranted()
-        clearInterval(interval)
       }
-    }, 2000)
+    }
+    window.addEventListener('ae_consent_change', handleConsent)
 
-    return () => clearInterval(interval)
+    return () => window.removeEventListener('ae_consent_change', handleConsent)
   }, [])
 
   return (
