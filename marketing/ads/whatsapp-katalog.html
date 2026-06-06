@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WhatsApp Business Katalog — Alltagsengel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0A0A0A;
+  --gold: #C9963C;
+  --gold-dim: rgba(201,150,60,0.12);
+  --gold-border: rgba(201,150,60,0.25);
+  --white: #F5F0E8;
+  --white-dim: rgba(245,240,232,0.55);
+  --white-muted: rgba(245,240,232,0.35);
+  --green: #5B8A72;
+  --green-dim: rgba(91,138,114,0.12);
+  --wa-green: #25D366;
+  --wa-green-dim: rgba(37,211,102,0.12);
+  --wa-green-border: rgba(37,211,102,0.25);
+  --serif: 'Cormorant Garamond', Georgia, serif;
+  --sans: 'Inter', system-ui, -apple-system, sans-serif;
+}
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; font-size: 16px; }
+body { background: var(--bg); color: var(--white); font-family: var(--sans); line-height: 1.7; -webkit-font-smoothing: antialiased; }
+
+.container { max-width: 900px; margin: 0 auto; padding: 0 24px; }
+
+/* Header */
+.header {
+  text-align: center; padding: 80px 24px 40px;
+  border-bottom: 1px solid var(--gold-border);
+}
+.header h1 {
+  font-family: var(--serif); font-size: 2.4rem; font-weight: 700;
+  color: var(--gold); margin-bottom: 12px;
+}
+.header p { color: var(--white-dim); font-size: 1.05rem; max-width: 600px; margin: 0 auto; }
+.header .wa-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  margin-top: 16px; padding: 8px 20px; border-radius: 20px;
+  background: var(--wa-green-dim); color: var(--wa-green);
+  font-size: 0.85rem; font-weight: 600;
+}
+
+/* TOC */
+.toc {
+  display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;
+  padding: 32px 24px; border-bottom: 1px solid rgba(245,240,232,0.08);
+}
+.toc a {
+  color: var(--gold); text-decoration: none; font-size: 0.85rem; font-weight: 500;
+  padding: 6px 16px; border: 1px solid var(--gold-border); border-radius: 20px;
+  transition: all 0.2s;
+}
+.toc a:hover { background: var(--gold-dim); }
+
+/* Section */
+.section-header {
+  text-align: center; padding: 60px 24px 28px;
+}
+.section-header h2 {
+  font-family: var(--serif); font-size: 1.8rem; font-weight: 600;
+  color: var(--gold); margin-bottom: 6px;
+}
+.section-header .subtitle { color: var(--white-muted); font-size: 0.9rem; }
+
+/* Card */
+.card {
+  background: rgba(245,240,232,0.03);
+  border: 1px solid var(--gold-border);
+  border-radius: 16px;
+  margin: 0 auto 28px;
+  max-width: 860px;
+  overflow: hidden;
+  position: relative;
+}
+.card__header {
+  padding: 24px 28px 16px;
+  border-bottom: 1px solid rgba(245,240,232,0.06);
+}
+.card__label {
+  font-size: 0.72rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--gold); margin-bottom: 4px;
+}
+.card__title {
+  font-family: var(--serif); font-size: 1.35rem; font-weight: 700; color: var(--white);
+}
+.card__body { padding: 24px 28px; }
+
+/* Data Row */
+.data-row {
+  display: flex; gap: 12px; padding: 10px 0;
+  border-bottom: 1px solid rgba(245,240,232,0.05);
+}
+.data-row:last-child { border-bottom: none; }
+.data-row__key {
+  min-width: 160px; font-size: 0.85rem; font-weight: 600; color: var(--gold);
+}
+.data-row__val {
+  font-size: 0.92rem; color: var(--white-dim); flex: 1;
+}
+
+/* Catalog Item */
+.catalog-item {
+  background: rgba(245,240,232,0.03);
+  border: 1px solid var(--gold-border);
+  border-radius: 14px;
+  padding: 24px 28px;
+  margin-bottom: 20px;
+  max-width: 860px;
+  margin-left: auto; margin-right: auto;
+  position: relative;
+}
+.catalog-item__number {
+  position: absolute; top: -12px; left: 24px;
+  background: var(--gold); color: var(--bg);
+  font-size: 0.75rem; font-weight: 700; padding: 3px 12px;
+  border-radius: 10px;
+}
+.catalog-item__name {
+  font-family: var(--serif); font-size: 1.2rem; font-weight: 700;
+  color: var(--white); margin-bottom: 6px;
+}
+.catalog-item__desc {
+  font-size: 0.92rem; color: var(--white-dim); margin-bottom: 10px;
+}
+.catalog-item__price {
+  display: inline-block; padding: 4px 14px; border-radius: 10px;
+  background: var(--gold-dim); color: var(--gold);
+  font-size: 0.82rem; font-weight: 600;
+}
+
+/* Quick Reply */
+.quick-reply {
+  background: var(--wa-green-dim);
+  border: 1px solid var(--wa-green-border);
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin-bottom: 14px;
+  max-width: 860px;
+  margin-left: auto; margin-right: auto;
+  position: relative;
+}
+.quick-reply__num {
+  font-size: 0.72rem; font-weight: 700; color: var(--wa-green);
+  letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 6px;
+}
+.quick-reply__text {
+  font-size: 0.92rem; color: var(--white-dim); line-height: 1.6;
+}
+
+/* Auto Greeting */
+.greeting-box {
+  background: rgba(37,211,102,0.08);
+  border: 2px solid var(--wa-green-border);
+  border-radius: 16px;
+  padding: 28px 28px;
+  max-width: 860px;
+  margin: 20px auto 40px;
+  position: relative;
+}
+.greeting-box__label {
+  font-size: 0.75rem; font-weight: 700; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--wa-green); margin-bottom: 12px;
+}
+.greeting-box__text {
+  font-size: 1rem; color: var(--white); line-height: 1.7;
+}
+
+/* Copy Button */
+.copy-btn {
+  position: absolute; top: 12px; right: 12px;
+  background: var(--gold-dim); color: var(--gold); border: 1px solid var(--gold-border);
+  padding: 4px 12px; border-radius: 8px; font-size: 0.72rem; font-weight: 600;
+  cursor: pointer; transition: all 0.2s; font-family: var(--sans);
+}
+.copy-btn:hover { background: var(--gold); color: var(--bg); }
+.copy-btn.copied { background: var(--green); color: #fff; border-color: var(--green); }
+.copy-btn.wa { background: var(--wa-green-dim); color: var(--wa-green); border-color: var(--wa-green-border); }
+.copy-btn.wa:hover { background: var(--wa-green); color: var(--bg); }
+
+.copy-all-wrap { text-align: center; padding: 20px 0 60px; }
+.copy-all-btn {
+  background: var(--gold); color: var(--bg); border: none;
+  padding: 14px 36px; border-radius: 12px; font-size: 0.95rem; font-weight: 700;
+  cursor: pointer; transition: all 0.2s; font-family: var(--sans);
+}
+.copy-all-btn:hover { filter: brightness(1.15); transform: translateY(-1px); }
+
+@media (max-width: 640px) {
+  .header h1 { font-size: 1.8rem; }
+  .data-row { flex-direction: column; gap: 4px; }
+  .data-row__key { min-width: auto; }
+  .card__header, .card__body { padding: 18px 20px; }
+}
+</style>
+</head>
+<body>
+
+<header class="header">
+  <h1>WhatsApp Business Katalog</h1>
+  <p>Komplett-Setup fuer das WhatsApp Business Profil von Alltagsengel. Business-Profil, Katalog-Eintraege, Quick Replies und Auto-Greeting.</p>
+  <div class="wa-badge">WhatsApp Business: +49 155 10445517</div>
+</header>
+
+<nav class="toc">
+  <a href="#profil">Business-Profil</a>
+  <a href="#katalog">Katalog (6 Services)</a>
+  <a href="#replies">Quick Replies</a>
+  <a href="#greeting">Auto-Greeting</a>
+</nav>
+
+<!-- ═══════════════════════════════════ -->
+<!-- BUSINESS PROFIL                     -->
+<!-- ═══════════════════════════════════ -->
+<div id="profil">
+<div class="section-header">
+  <h2>Business-Profil</h2>
+  <p class="subtitle">Einstellungen fuer WhatsApp Business</p>
+</div>
+
+<div class="container">
+  <div class="card">
+    <button class="copy-btn" onclick="copyCard(this)">Kopieren</button>
+    <div class="card__header">
+      <div class="card__label">WhatsApp Business Profil</div>
+      <div class="card__title">Alltagsengel</div>
+    </div>
+    <div class="card__body">
+      <div class="data-row">
+        <div class="data-row__key">Name</div>
+        <div class="data-row__val">Alltagsengel</div>
+      </div>
+      <div class="data-row">
+        <div class="data-row__key">Kategorie</div>
+        <div class="data-row__val">Gesundheit &amp; Pflege</div>
+      </div>
+      <div class="data-row">
+        <div class="data-row__key">Beschreibung</div>
+        <div class="data-row__val">Digitale Plattform fuer Alltagsbegleitung. Einkaufshilfe, Arztbegleitung, Haushaltshilfe &mdash; ab 0&euro; mit Pflegekasse. Frankfurt &amp; deutschlandweit.</div>
+      </div>
+      <div class="data-row">
+        <div class="data-row__key">Adresse</div>
+        <div class="data-row__val">Frankfurt am Main</div>
+      </div>
+      <div class="data-row">
+        <div class="data-row__key">Website</div>
+        <div class="data-row__val">www.alltagsengel.com</div>
+      </div>
+      <div class="data-row">
+        <div class="data-row__key">Telefon</div>
+        <div class="data-row__val">+49 155 10445517</div>
+      </div>
+      <div class="data-row">
+        <div class="data-row__key">Oeffnungszeiten</div>
+        <div class="data-row__val">Mo-Fr 8:00-18:00, Sa 9:00-14:00</div>
+      </div>
+      <div class="data-row">
+        <div class="data-row__key">E-Mail</div>
+        <div class="data-row__val">info@alltagsengel.com</div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════ -->
+<!-- KATALOG                             -->
+<!-- ═══════════════════════════════════ -->
+<div id="katalog">
+<div class="section-header">
+  <h2>Katalog-Eintraege</h2>
+  <p class="subtitle">6 Services fuer den WhatsApp Business Katalog</p>
+</div>
+
+<div class="container">
+
+  <div class="catalog-item">
+    <div class="catalog-item__number">1</div>
+    <button class="copy-btn" onclick="copyCatalogItem(this)">Kopieren</button>
+    <div class="catalog-item__name">Einkaufshilfe</div>
+    <div class="catalog-item__desc">Wocheneinkauf, Apothekengang, Botengaenge &mdash; Ihr Alltagsengel erledigt den Einkauf oder begleitet Sie. Regelmaessig oder einmalig buchbar. Abrechnung ueber die Pflegekasse moeglich (Entlastungsbetrag nach &sect;45b SGB XI).</div>
+    <div class="catalog-item__price">Ab 0&euro; mit &sect;45b</div>
+  </div>
+
+  <div class="catalog-item">
+    <div class="catalog-item__number">2</div>
+    <button class="copy-btn" onclick="copyCatalogItem(this)">Kopieren</button>
+    <div class="catalog-item__name">Arztbegleitung</div>
+    <div class="catalog-item__desc">Begleitung zu Arzt, Klinik, Therapie oder Reha. Ihr Alltagsengel faehrt mit, wartet und bringt Sie sicher zurueck. Dokumentation der Arztbesuche moeglich. Abrechenbar ueber die Pflegekasse.</div>
+    <div class="catalog-item__price">Ab 0&euro; mit &sect;45b</div>
+  </div>
+
+  <div class="catalog-item">
+    <div class="catalog-item__number">3</div>
+    <button class="copy-btn" onclick="copyCatalogItem(this)">Kopieren</button>
+    <div class="catalog-item__name">Haushaltshilfe</div>
+    <div class="catalog-item__desc">Kochen, Putzen, Waesche, Aufraeuemen &mdash; Ihr Alltagsengel unterstuetzt im Haushalt, damit Sie sich auf das Wesentliche konzentrieren koennen. Regelmaessig oder nach Bedarf. Abrechenbar ueber den Entlastungsbetrag.</div>
+    <div class="catalog-item__price">Ab 0&euro; mit &sect;45b</div>
+  </div>
+
+  <div class="catalog-item">
+    <div class="catalog-item__number">4</div>
+    <button class="copy-btn" onclick="copyCatalogItem(this)">Kopieren</button>
+    <div class="catalog-item__name">Gesellschaft &amp; Betreuung</div>
+    <div class="catalog-item__desc">Gespraeche fuehren, Vorlesen, Brettspiele, Spaziergaenge, gemeinsame Ausfluege &mdash; Ihr Alltagsengel ist da, wenn Sie Gesellschaft brauchen. Gegen Einsamkeit und fuer mehr Lebensfreude. Abrechenbar ueber die Pflegekasse.</div>
+    <div class="catalog-item__price">Ab 0&euro; mit &sect;45b</div>
+  </div>
+
+  <div class="catalog-item">
+    <div class="catalog-item__number">5</div>
+    <button class="copy-btn" onclick="copyCatalogItem(this)">Kopieren</button>
+    <div class="catalog-item__name">Pflegebox</div>
+    <div class="catalog-item__desc">Kostenlose Pflegehilfsmittel im Wert von 42&euro; pro Monat &mdash; direkt nach Hause geliefert. Handschuhe, Desinfektionsmittel, Bettschutzeinlagen und mehr. Ab Pflegegrad 1 &mdash; wir uebernehmen den Antrag bei der Kasse.</div>
+    <div class="catalog-item__price">0&euro; (42&euro;/Monat von der Kasse)</div>
+  </div>
+
+  <div class="catalog-item">
+    <div class="catalog-item__number">6</div>
+    <button class="copy-btn" onclick="copyCatalogItem(this)">Kopieren</button>
+    <div class="catalog-item__name">Krankenfahrt</div>
+    <div class="catalog-item__desc">Fahrt zu Arzt, Klinik, Dialyse oder Therapie &mdash; bequem und sicher. Ueber die Krankenkasse abrechenbar (bei aerztlicher Verordnung). Wir organisieren alles: Termin, Fahrt und Abrechnung.</div>
+    <div class="catalog-item__price">Ueber Krankenkasse abrechenbar</div>
+  </div>
+
+</div>
+</div>
+
+<!-- ═══════════════════════════════════ -->
+<!-- QUICK REPLIES                       -->
+<!-- ═══════════════════════════════════ -->
+<div id="replies">
+<div class="section-header">
+  <h2>Quick Replies</h2>
+  <p class="subtitle">5 vorgefertigte Schnellantworten fuer WhatsApp Business</p>
+</div>
+
+<div class="container">
+
+  <div class="quick-reply">
+    <button class="copy-btn wa" onclick="copyQuickReply(this)">Kopieren</button>
+    <div class="quick-reply__num">Quick Reply #1 &mdash; Begruessung</div>
+    <div class="quick-reply__text">Willkommen bei Alltagsengel! Wie koennen wir Ihnen helfen?</div>
+  </div>
+
+  <div class="quick-reply">
+    <button class="copy-btn wa" onclick="copyQuickReply(this)">Kopieren</button>
+    <div class="quick-reply__num">Quick Reply #2 &mdash; Pflegegrad-Abfrage</div>
+    <div class="quick-reply__text">Haben Sie einen Pflegegrad? Damit koennen wir pruefen, welche Leistungen die Pflegekasse uebernimmt.</div>
+  </div>
+
+  <div class="quick-reply">
+    <button class="copy-btn wa" onclick="copyQuickReply(this)">Kopieren</button>
+    <div class="quick-reply__num">Quick Reply #3 &mdash; PLZ-Abfrage</div>
+    <div class="quick-reply__text">Gerne vermitteln wir Ihnen einen Engel in Ihrer Naehe. Wie ist Ihre PLZ?</div>
+  </div>
+
+  <div class="quick-reply">
+    <button class="copy-btn wa" onclick="copyQuickReply(this)">Kopieren</button>
+    <div class="quick-reply__num">Quick Reply #4 &mdash; Rueckmeldung</div>
+    <div class="quick-reply__text">Unser Team meldet sich innerhalb von 24 Stunden bei Ihnen. Herzliche Gruesse, Ihr Team von Alltagsengel</div>
+  </div>
+
+  <div class="quick-reply">
+    <button class="copy-btn wa" onclick="copyQuickReply(this)">Kopieren</button>
+    <div class="quick-reply__num">Quick Reply #5 &mdash; Engel werden</div>
+    <div class="quick-reply__text">Moechten Sie Alltagsengel werden? Besuchen Sie: www.alltagsengel.com/engel-werden</div>
+  </div>
+
+</div>
+</div>
+
+<!-- ═══════════════════════════════════ -->
+<!-- AUTO-GREETING                       -->
+<!-- ═══════════════════════════════════ -->
+<div id="greeting">
+<div class="section-header">
+  <h2>Auto-Greeting</h2>
+  <p class="subtitle">Automatische Begruessung fuer neue Chats</p>
+</div>
+
+<div class="container">
+  <div class="greeting-box">
+    <button class="copy-btn wa" onclick="copyGreeting(this)">Kopieren</button>
+    <div class="greeting-box__label">Automatische Begruessung</div>
+    <div class="greeting-box__text">Hallo! Willkommen bei Alltagsengel. Wie koennen wir Ihnen helfen?<br><br>Antworten Sie mit:<br><strong>1</strong> &mdash; Hilfe buchen<br><strong>2</strong> &mdash; Engel werden<br><br>Oder schreiben Sie uns direkt Ihr Anliegen.</div>
+  </div>
+</div>
+</div>
+
+<!-- Copy All -->
+<div class="copy-all-wrap">
+  <button class="copy-all-btn" onclick="copyAll()">Alles kopieren</button>
+</div>
+
+<footer style="text-align:center; padding:40px 24px 60px; border-top:1px solid rgba(245,240,232,0.08);">
+  <p style="color:var(--white-muted); font-size:0.85rem;">Alltagsengel &mdash; WhatsApp Business Katalog &mdash; Erstellt Juni 2026</p>
+</footer>
+
+<script>
+function copyText(btn, text) {
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = 'Kopiert!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Kopieren'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+
+function copyCard(btn) {
+  const card = btn.closest('.card');
+  const rows = card.querySelectorAll('.data-row');
+  let text = '';
+  rows.forEach(r => {
+    const key = r.querySelector('.data-row__key')?.innerText || '';
+    const val = r.querySelector('.data-row__val')?.innerText || '';
+    text += key + ': ' + val + '\n';
+  });
+  copyText(btn, text.trim());
+}
+
+function copyCatalogItem(btn) {
+  const item = btn.closest('.catalog-item');
+  const name = item.querySelector('.catalog-item__name')?.innerText || '';
+  const desc = item.querySelector('.catalog-item__desc')?.innerText || '';
+  const price = item.querySelector('.catalog-item__price')?.innerText || '';
+  copyText(btn, name + '\n' + desc + '\nPreis: ' + price);
+}
+
+function copyQuickReply(btn) {
+  const text = btn.parentElement.querySelector('.quick-reply__text')?.innerText || '';
+  copyText(btn, text);
+}
+
+function copyGreeting(btn) {
+  const text = btn.parentElement.querySelector('.greeting-box__text')?.innerText || '';
+  copyText(btn, text);
+}
+
+function copyAll() {
+  let all = 'WHATSAPP BUSINESS KATALOG — ALLTAGSENGEL\n==========================================\n\n';
+
+  // Profile
+  all += '--- BUSINESS-PROFIL ---\n';
+  document.querySelectorAll('.data-row').forEach(r => {
+    const key = r.querySelector('.data-row__key')?.innerText || '';
+    const val = r.querySelector('.data-row__val')?.innerText || '';
+    all += key + ': ' + val + '\n';
+  });
+  all += '\n';
+
+  // Catalog
+  all += '--- KATALOG ---\n';
+  document.querySelectorAll('.catalog-item').forEach((item, i) => {
+    const name = item.querySelector('.catalog-item__name')?.innerText || '';
+    const desc = item.querySelector('.catalog-item__desc')?.innerText || '';
+    const price = item.querySelector('.catalog-item__price')?.innerText || '';
+    all += (i+1) + '. ' + name + '\n' + desc + '\nPreis: ' + price + '\n\n';
+  });
+
+  // Quick Replies
+  all += '--- QUICK REPLIES ---\n';
+  document.querySelectorAll('.quick-reply__text').forEach((qr, i) => {
+    all += (i+1) + '. ' + qr.innerText + '\n';
+  });
+  all += '\n';
+
+  // Greeting
+  all += '--- AUTO-GREETING ---\n';
+  const greeting = document.querySelector('.greeting-box__text')?.innerText || '';
+  all += greeting + '\n';
+
+  navigator.clipboard.writeText(all).then(() => {
+    const btn = document.querySelector('.copy-all-btn');
+    btn.textContent = 'Alles kopiert!';
+    setTimeout(() => { btn.textContent = 'Alles kopieren'; }, 2000);
+  });
+}
+</script>
+
+</body>
+</html>

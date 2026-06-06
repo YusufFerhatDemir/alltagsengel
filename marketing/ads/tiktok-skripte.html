@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TikTok & Reels Skripte — Alltagsengel & ChairMatch</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0A0A0A;
+  --gold: #C9963C;
+  --gold-dim: rgba(201,150,60,0.12);
+  --gold-border: rgba(201,150,60,0.25);
+  --white: #F5F0E8;
+  --white-dim: rgba(245,240,232,0.55);
+  --white-muted: rgba(245,240,232,0.35);
+  --green: #5B8A72;
+  --peach: #E8A87C;
+  --peach-dim: rgba(232,168,124,0.12);
+  --peach-border: rgba(232,168,124,0.25);
+  --cm-dark: #0D0D0D;
+  --cm-cream: #F8F4F0;
+  --serif: 'Cormorant Garamond', Georgia, serif;
+  --sans: 'Inter', system-ui, -apple-system, sans-serif;
+}
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; font-size: 16px; }
+body { background: var(--bg); color: var(--white); font-family: var(--sans); line-height: 1.7; -webkit-font-smoothing: antialiased; }
+
+.container { max-width: 900px; margin: 0 auto; padding: 0 24px; }
+
+/* Header */
+.header {
+  text-align: center; padding: 80px 24px 40px;
+  border-bottom: 1px solid var(--gold-border);
+}
+.header h1 {
+  font-family: var(--serif); font-size: 2.6rem; font-weight: 700;
+  color: var(--gold); margin-bottom: 12px;
+}
+.header p { color: var(--white-dim); font-size: 1.05rem; max-width: 600px; margin: 0 auto; }
+
+/* Navigation */
+.toc {
+  display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;
+  padding: 32px 24px; border-bottom: 1px solid rgba(245,240,232,0.08);
+}
+.toc a {
+  color: var(--gold); text-decoration: none; font-size: 0.85rem; font-weight: 500;
+  padding: 6px 16px; border: 1px solid var(--gold-border); border-radius: 20px;
+  transition: all 0.2s;
+}
+.toc a:hover { background: var(--gold-dim); }
+.toc a.cm { color: var(--peach); border-color: var(--peach-border); }
+.toc a.cm:hover { background: var(--peach-dim); }
+
+/* Section Header */
+.section-header {
+  text-align: center; padding: 64px 24px 32px;
+}
+.section-header h2 {
+  font-family: var(--serif); font-size: 2rem; font-weight: 600;
+  margin-bottom: 8px;
+}
+.section-header h2.ae { color: var(--gold); }
+.section-header h2.cm { color: var(--peach); }
+.section-header .subtitle { color: var(--white-muted); font-size: 0.95rem; }
+
+/* Script Card */
+.script-card {
+  background: rgba(245,240,232,0.03);
+  border: 1px solid var(--gold-border);
+  border-radius: 16px;
+  margin: 0 auto 40px;
+  max-width: 860px;
+  overflow: hidden;
+}
+.script-card.cm {
+  border-color: var(--peach-border);
+}
+.script-card__header {
+  padding: 28px 32px 20px;
+  border-bottom: 1px solid rgba(245,240,232,0.06);
+  display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px;
+}
+.script-card__number {
+  font-size: 0.75rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--gold); margin-bottom: 6px;
+}
+.script-card.cm .script-card__number { color: var(--peach); }
+.script-card__title {
+  font-family: var(--serif); font-size: 1.5rem; font-weight: 700; color: var(--white);
+}
+.script-card__meta {
+  display: flex; gap: 16px; flex-wrap: wrap; align-items: center;
+}
+.meta-tag {
+  font-size: 0.78rem; padding: 4px 12px; border-radius: 12px;
+  background: var(--gold-dim); color: var(--gold); font-weight: 500;
+}
+.script-card.cm .meta-tag {
+  background: var(--peach-dim); color: var(--peach);
+}
+
+.script-card__body { padding: 28px 32px; }
+
+.script-section {
+  margin-bottom: 28px;
+}
+.script-section:last-child { margin-bottom: 0; }
+.script-section__label {
+  font-size: 0.78rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--gold); margin-bottom: 10px;
+  display: flex; align-items: center; gap: 8px;
+}
+.script-card.cm .script-section__label { color: var(--peach); }
+.script-section__label::before {
+  content: ''; display: inline-block; width: 8px; height: 8px;
+  border-radius: 50%; background: currentColor;
+}
+.script-section__content {
+  color: var(--white-dim); font-size: 0.95rem; line-height: 1.8;
+}
+.script-section__content p { margin-bottom: 8px; }
+.script-section__content strong { color: var(--white); font-weight: 600; }
+.script-section__content em { color: var(--white-muted); font-style: italic; }
+
+/* Visuals box */
+.visuals-box {
+  background: rgba(201,150,60,0.06);
+  border: 1px dashed var(--gold-border);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin-top: 12px;
+}
+.script-card.cm .visuals-box {
+  background: rgba(232,168,124,0.06);
+  border-color: var(--peach-border);
+}
+.visuals-box__title {
+  font-size: 0.75rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--gold); margin-bottom: 8px;
+}
+.script-card.cm .visuals-box__title { color: var(--peach); }
+.visuals-box ul {
+  list-style: none; padding: 0;
+}
+.visuals-box li {
+  color: var(--white-muted); font-size: 0.88rem; padding: 3px 0;
+  padding-left: 20px; position: relative;
+}
+.visuals-box li::before {
+  content: '\25B8'; position: absolute; left: 0; color: var(--gold);
+}
+.script-card.cm .visuals-box li::before { color: var(--peach); }
+
+/* Hashtags & Caption */
+.hashtags {
+  margin-top: 20px; padding-top: 20px;
+  border-top: 1px solid rgba(245,240,232,0.06);
+}
+.hashtags__label {
+  font-size: 0.72rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--white-muted); margin-bottom: 8px;
+}
+.hashtags__text {
+  font-size: 0.88rem; color: var(--gold); word-break: break-word;
+}
+.script-card.cm .hashtags__text { color: var(--peach); }
+
+.caption-box {
+  margin-top: 16px; padding: 16px 20px;
+  background: rgba(245,240,232,0.04); border-radius: 10px;
+  position: relative;
+}
+.caption-box__label {
+  font-size: 0.72rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--white-muted); margin-bottom: 8px;
+}
+.caption-box__text {
+  color: var(--white-dim); font-size: 0.9rem; line-height: 1.7;
+}
+
+/* Copy Button */
+.copy-btn {
+  position: absolute; top: 12px; right: 12px;
+  background: var(--gold-dim); color: var(--gold); border: 1px solid var(--gold-border);
+  padding: 5px 14px; border-radius: 8px; font-size: 0.75rem; font-weight: 600;
+  cursor: pointer; transition: all 0.2s; font-family: var(--sans);
+}
+.copy-btn:hover { background: var(--gold); color: var(--bg); }
+.copy-btn.copied { background: var(--green); color: #fff; border-color: var(--green); }
+.script-card.cm .copy-btn {
+  background: var(--peach-dim); color: var(--peach); border-color: var(--peach-border);
+}
+.script-card.cm .copy-btn:hover { background: var(--peach); color: var(--bg); }
+
+/* Copy All Button */
+.copy-all-wrap { text-align: center; padding: 20px 0 60px; }
+.copy-all-btn {
+  background: var(--gold); color: var(--bg); border: none;
+  padding: 14px 36px; border-radius: 12px; font-size: 0.95rem; font-weight: 700;
+  cursor: pointer; transition: all 0.2s; font-family: var(--sans);
+}
+.copy-all-btn:hover { filter: brightness(1.15); transform: translateY(-1px); }
+.copy-all-btn.cm { background: var(--peach); }
+
+/* Divider */
+.brand-divider {
+  text-align: center; padding: 60px 24px;
+  border-top: 2px solid var(--gold-border);
+}
+.brand-divider.cm { border-color: var(--peach-border); }
+
+@media (max-width: 640px) {
+  .header h1 { font-size: 1.8rem; }
+  .script-card__header { padding: 20px; }
+  .script-card__body { padding: 20px; }
+  .script-card__title { font-size: 1.2rem; }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- HEADER                                      -->
+<!-- ═══════════════════════════════════════════ -->
+<header class="header">
+  <h1>TikTok & Reels Skripte</h1>
+  <p>Video-Skripte fuer Social Media Kurzvideos. Jedes Skript mit Hook, Body, CTA, Visuellen Hinweisen, Hashtags und Caption.</p>
+</header>
+
+<!-- Navigation -->
+<nav class="toc">
+  <a href="#ae-engel">Engel-Rekrutierung</a>
+  <a href="#ae-kunden">Kunden-Akquise</a>
+  <a href="#cm-tiktok" class="cm">ChairMatch</a>
+</nav>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- ALLTAGSENGEL — ENGEL-REKRUTIERUNG           -->
+<!-- ═══════════════════════════════════════════ -->
+<div id="ae-engel">
+<div class="section-header">
+  <h2 class="ae">Engel-Rekrutierung</h2>
+  <p class="subtitle">3 Skripte zur Gewinnung neuer Alltagsbegleiter</p>
+</div>
+
+<div class="container">
+
+<!-- SKRIPT 1 -->
+<div class="script-card" id="skript-1">
+  <div class="script-card__header">
+    <div>
+      <div class="script-card__number">Skript #1 &mdash; Engel-Rekrutierung</div>
+      <div class="script-card__title">&laquo;POV: Du verdienst 25&euro;/Std und hilfst dabei Omas&raquo;</div>
+    </div>
+    <div class="script-card__meta">
+      <span class="meta-tag">30-45 Sek</span>
+      <span class="meta-tag">Gen-Z Tone</span>
+    </div>
+  </div>
+  <div class="script-card__body">
+
+    <div class="script-section">
+      <div class="script-section__label">Hook (erste 3 Sekunden)</div>
+      <div class="script-section__content">
+        <p><strong>&laquo;POV: Du verdienst 25 Euro die Stunde und hilfst dabei Omas beim Einkaufen.&raquo;</strong></p>
+        <p><em>Text-Overlay: &laquo;Bester Nebenjob 2026? &raquo;</em></p>
+      </div>
+    </div>
+
+    <div class="script-section">
+      <div class="script-section__label">Body (15-30 Sekunden)</div>
+      <div class="script-section__content">
+        <p><strong>Szene 1:</strong> &laquo;Morgens aufstehen, wann ICH will. Kein Buero, kein Chef im Nacken.&raquo;</p>
+        <p><em>(B-Roll: Wecker ausmachen, gemuetlich Kaffee machen)</em></p>
+        <p><strong>Szene 2:</strong> &laquo;10 Uhr: Ich hol Frau Mueller ab. Wir gehen zusammen einkaufen. Sie erzaehlt mir von frueher &mdash; ehrlich, bessere Stories als jeder Podcast.&raquo;</p>
+        <p><em>(B-Roll: Spaziergang mit aelterer Dame, Supermarkt, Lachen)</em></p>
+        <p><strong>Szene 3:</strong> &laquo;13 Uhr: Naechster Termin. Herr Schmidt braucht jemanden zum Arzt. Easy, eine Stunde, 25 Euro.&raquo;</p>
+        <p><em>(B-Roll: Autofahrt, Wartezimmer, entspannt auf dem Handy)</em></p>
+        <p><strong>Szene 4:</strong> &laquo;15 Uhr: Feierabend. 100 Euro verdient. Und das Beste? Ich brauch KEINE Pflege-Ausbildung.&raquo;</p>
+        <p><em>(B-Roll: Geld-zaehlen-Gestik, zufriedener Blick)</em></p>
+      </div>
+    </div>
+
+    <div class="script-section">
+      <div class="script-section__label">CTA</div>
+      <div class="script-section__content">
+        <p><strong>&laquo;Link in Bio &mdash; oder schreib uns auf WhatsApp. Alltagsengel sucht Leute wie dich.&raquo;</strong></p>
+        <p><em>Text-Overlay: &laquo;Link in Bio | WhatsApp: +49 155 10445517&raquo;</em></p>
+      </div>
+    </div>
+
+    <div class="visuals-box">
+      <div class="visuals-box__title">Visuelle Hinweise / B-Roll</div>
+      <ul>
+        <li>Smartphone-Selfie-Style, vertikal (9:16)</li>
+        <li>Warme, natuerliche Beleuchtung &mdash; kein Studio-Look</li>
+        <li>Untertitel/Captions IMMER einblenden (80% schauen ohne Ton)</li>
+        <li>Trendy Hintergrundmusik (z.B. lofi, chill beats)</li>
+        <li>Text-Overlays in Gold (#C9963C) auf dunklem Hintergrund</li>
+        <li>Quick-Cuts alle 3-5 Sekunden</li>
+      </ul>
+    </div>
+
+    <div class="hashtags">
+      <div class="hashtags__label">Hashtags</div>
+      <div class="hashtags__text">#Nebenjob #GeldVerdienen #Alltagsengel #Alltagsbegleitung #SeniorenHilfe #FlexiblerJob #StudentenJob #Frankfurt #JobTikTok #25EuroDieStunde #SinnvollerJob</div>
+    </div>
+
+    <div class="caption-box">
+      <button class="copy-btn" onclick="copyCaption(this)">Kopieren</button>
+      <div class="caption-box__label">Caption</div>
+      <div class="caption-box__text">POV: Dein Nebenjob ist gleichzeitig der sinnvollste Job der Welt. Als Alltagsengel hilfst du Senioren im Alltag &mdash; Einkaufen, Arztbegleitung, einfach da sein. Keine Pflege-Ausbildung noetig, flexible Zeiten, 18-25&euro;/Std. Link in Bio oder WhatsApp: +49 155 10445517</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- SKRIPT 2 -->
+<div class="script-card" id="skript-2">
+  <div class="script-card__header">
+    <div>
+      <div class="script-card__number">Skript #2 &mdash; Engel-Rekrutierung</div>
+      <div class="script-card__title">&laquo;Diesen Job kennt NIEMAND&raquo;</div>
+    </div>
+    <div class="script-card__meta">
+      <span class="meta-tag">30-45 Sek</span>
+      <span class="meta-tag">Mystery Hook</span>
+    </div>
+  </div>
+  <div class="script-card__body">
+
+    <div class="script-section">
+      <div class="script-section__label">Hook (erste 3 Sekunden)</div>
+      <div class="script-section__content">
+        <p><strong>&laquo;Ich verdiene 3.000 Euro im Monat mit einem Job, den NIEMAND kennt.&raquo;</strong></p>
+        <p><em>Text-Overlay: &laquo;Geheimer Job?! &raquo; &mdash; neugierig machende Musik</em></p>
+      </div>
+    </div>
+
+    <div class="script-section">
+      <div class="script-section__label">Body (15-30 Sekunden)</div>
+      <div class="script-section__content">
+        <p>&laquo;Nein, kein Dropshipping. Nein, kein MLM. Nein, kein OnlyFans.&raquo;</p>
+        <p><em>(Schnelle Schnitte mit jedem &laquo;Nein&raquo;, Emojis einblenden)</em></p>
+        <p>&laquo;Ich bin Alltagsbegleiter. Noch nie gehoert? Genau darum verdien ich so gut.&raquo;</p>
+        <p>&laquo;Ich helfe aelteren Menschen bei ganz normalen Sachen: Einkaufen, Arzttermine, Spazierengehen, mal einfach nur reden.&raquo;</p>
+        <p><em>(B-Roll: Einkaufswagen schieben, Parkszene, Gespraech am Tisch)</em></p>
+        <p>&laquo;Und jetzt kommt's: Du brauchst KEINE Ausbildung. Keinen Abschluss. Nur ein gutes Herz und etwas Zeit.&raquo;</p>
+        <p>&laquo;Die Pflegekasse zahlt das! Die Kunden zahlen oft NICHTS aus eigener Tasche.&raquo;</p>
+      </div>
+    </div>
+
+    <div class="script-section">
+      <div class="script-section__label">CTA</div>
+      <div class="script-section__content">
+        <p><strong>&laquo;Schreib mir oder check den Link in Bio &mdash; Alltagsengel. Meld dich, bevor es alle wissen.&raquo;</strong></p>
+        <p><em>Text-Overlay: &laquo;alltagsengel.com/engel-werden&raquo;</em></p>
+      </div>
+    </div>
+
+    <div class="visuals-box">
+      <div class="visuals-box__title">Visuelle Hinweise / B-Roll</div>
+      <ul>
+        <li>Start: Gesicht nah an der Kamera, mysterioeser Blick</li>
+        <li>Uebergangseffekte bei jedem &laquo;Nein&raquo; (Swipe, Zoom)</li>
+        <li>Reveal-Moment: Bildschirm wird kurz schwarz, dann &laquo;Alltagsbegleiter&raquo; einblenden</li>
+        <li>Echtheit betonen: keine perfekte Inszenierung</li>
+        <li>Sound: Spannungsmusik am Anfang, dann upbeat</li>
+      </ul>
+    </div>
+
+    <div class="hashtags">
+      <div class="hashtags__label">Hashtags</div>
+      <div class="hashtags__text">#GeheimTipp #GeldVerdienen #Nebenjob2026 #Alltagsbegleiter #Alltagsengel #KeineAusbildung #FlexibelArbeiten #JobHack #Frankfurt #SinnvollerJob #StudentenJob #KeinMLM</div>
+    </div>
+
+    <div class="caption-box">
+      <button class="copy-btn" onclick="copyCaption(this)">Kopieren</button>
+      <div class="caption-box__label">Caption</div>
+      <div class="caption-box__text">Diesen Job kennt wirklich NIEMAND &mdash; und genau deshalb lohnt er sich. Als Alltagsbegleiter hilfst du Senioren im Alltag und verdienst 18-25&euro;/Std. Keine Ausbildung. Flexible Zeiten. Bezahlt durch die Pflegekasse. Bewirb dich jetzt als Alltagsengel &mdash; Link in Bio!</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- SKRIPT 3 -->
+<div class="script-card" id="skript-3">
+  <div class="script-card__header">
+    <div>
+      <div class="script-card__number">Skript #3 &mdash; Engel-Rekrutierung</div>
+      <div class="script-card__title">&laquo;3 Gruende warum ich meinen Buerojob gekuendigt habe&raquo;</div>
+    </div>
+    <div class="script-card__meta">
+      <span class="meta-tag">45-60 Sek</span>
+      <span class="meta-tag">Storytelling</span>
+    </div>
+  </div>
+  <div class="script-card__body">
+
+    <div class="script-section">
+      <div class="script-section__label">Hook (erste 3 Sekunden)</div>
+      <div class="script-section__content">
+        <p><strong>&laquo;Ich hab meinen 9-to-5 Buerojob gekuendigt. Und NEIN, ich hab keinen reichen Freund.&raquo;</strong></p>
+        <p><em>Text-Overlay: &laquo;Ich hab gekuendigt. Hier ist warum.&raquo;</em></p>
+      </div>
+    </div>
+
+    <div class="script-section">
+      <div class="script-section__label">Body (20-40 Sekunden)</div>
+      <div class="script-section__content">
+        <p><strong>Grund 1 &mdash; Freiheit:</strong></p>
+        <p>&laquo;Im Buero: 8 Stunden absitzen, 3 davon produktiv. Jetzt arbeite ich wann und wie viel ICH will. Montag frei? Klar. Freitag doppelt? Auch klar.&raquo;</p>
+        <p><em>(B-Roll: Frustriertes Buero vs. entspannter Kalender auf dem Handy)</em></p>
+        <p><strong>Grund 2 &mdash; Sinn:</strong></p>
+        <p>&laquo;Im Buero hab ich Excel-Tabellen gefuellt. Jetzt hoer ich Geschichten aus dem Krieg, helfe beim Einkaufen und seh, wie jemand sich RICHTIG freut, dass ich da bin.&raquo;</p>
+        <p><em>(B-Roll: Laechelnde aeltere Person, gemeinsamer Spaziergang)</em></p>
+        <p><strong>Grund 3 &mdash; Faire Bezahlung:</strong></p>
+        <p>&laquo;18 bis 25 Euro die Stunde. Keine Verhandlung, kein Betteln um Gehaltserhoehung. Und die Pflegekasse zahlt &mdash; nicht der Kunde aus eigener Tasche.&raquo;</p>
+        <p><em>(B-Roll: Handy-Benachrichtigung &laquo;Zahlung eingegangen&raquo;, zufriedener Blick)</em></p>
+      </div>
+    </div>
+
+    <div class="script-section">
+      <div class="script-section__label">CTA</div>
+      <div class="script-section__content">
+        <p><strong>&laquo;Wenn du genug vom Buero hast &mdash; oder einfach einen sinnvollen Nebenjob willst: Alltagsengel. Link in Bio.&raquo;</strong></p>
+        <p><em>Text-Overlay: &laquo;Werde Alltagsengel &mdash; Link in Bio&raquo;</em></p>
+      </div>
+    </div>
+
+    <div class="visuals-box">
+      <div class="visuals-box__title">Visuelle Hinweise / B-Roll</div>
+      <ul>
+        <li>Split-Screen-Effekt: Buero-Alltag (grau, trist) vs. Engel-Alltag (warm, draussen)</li>
+        <li>Countdown-Zahlen 3, 2, 1 einblenden</li>
+        <li>Authentisch, echte Person, keine Models</li>
+        <li>Warme Farbtoene (Gold-Filter)</li>
+        <li>Emotionale Hintergrundmusik (inspirierend, nicht kitschig)</li>
+      </ul>
+    </div>
+
+    <div class="hashtags">
+      <div class="hashtags__label">Hashtags</div>
+      <div class="hashtags__text">#IchHabGekuendigt #BuerojobAde #Alltagsengel #SinnvollerJob #FlexibelArbeiten #Alltagsbegleitung #FairBezahlt #NewWork #JobWechsel #SelbstBestimmt #FrankfurtJobs</div>
+    </div>
+
+    <div class="caption-box">
+      <button class="copy-btn" onclick="copyCaption(this)">Kopieren</button>
+      <div class="caption-box__label">Caption</div>
+      <div class="caption-box__text">3 Gruende warum der Buerojob nicht mehr fuer mich war: Freiheit, Sinn und faire Bezahlung. Als Alltagsengel begleite ich Senioren im Alltag &mdash; und verdiene dabei 18-25&euro;/Std. Keine Pflege-Ausbildung noetig. Jetzt bewerben: Link in Bio oder WhatsApp +49 155 10445517</div>
+    </div>
+
+  </div>
+</div>
+
+</div><!-- container -->
+</div><!-- ae-engel -->
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- ALLTAGSENGEL — KUNDEN-AKQUISE               -->
+<!-- ═══════════════════════════════════════════ -->
+<div id="ae-kunden">
+<div class="section-header">
+  <h2 class="ae">Kunden-Akquise</h2>
+  <p class="subtitle">3 Skripte zur Gewinnung von Familien und Pflegebeduerftige</p>
+</div>
+
+<div class="container">
+
+<!-- SKRIPT 4 -->
+<div class="script-card" id="skript-4">
+  <div class="script-card__header">
+    <div>
+      <div class="script-card__number">Skript #4 &mdash; Kunden-Akquise</div>
+      <div class="script-card__title">&laquo;131&euro; pro Monat verfallen bei deiner Oma&raquo;</div>
+    </div>
+    <div class="script-card__meta">
+      <span class="meta-tag">30-45 Sek</span>
+      <span class="meta-tag">Shock Value</span>
+    </div>
+  </div>
+  <div class="script-card__body">
+
+    <div class="script-section">
+      <div class="script-section__label">Hook (erste 3 Sekunden)</div>
+      <div class="script-section__content">
+        <p><strong>&laquo;131 Euro pro Monat. Die bekommt deine Oma von der Pflegekasse. Und sie NUTZT sie nicht.&raquo;</strong></p>
+        <p><em>Text-Overlay: &laquo;131&euro;/Monat verfallen! &raquo; &mdash; roter Warneffekt</em></p>
+      </div>
+    </div>
+
+    <div class="script-section">
+      <div class="script-section__label">Body (15-30 Sekunden)</div>
+      <div class="script-section__content">
+        <p>&laquo;Das ist der sogenannte Entlastungsbetrag. 131 Euro JEDEN Monat. Fuer Hilfe im Alltag: Einkaufen, Arztbegleitung, Haushalt.&raquo;</p>
+        <p>&laquo;Jeder mit Pflegegrad 1 bis 5 hat Anspruch. Aber 80% der Familien wissen es nicht oder nutzen es nicht.&raquo;</p>
+        <p><em>(B-Roll: Geldscheine die &laquo;verschwinden&raquo;, Kalender mit Monaten, Zahl hochrechnen: 131 x 12 = 1.572&euro;/Jahr)</em></p>
+        <p>&laquo;1.572 Euro im Jahr &mdash; einfach weg. Fuer NICHTS.&raquo;</p>
+        <p>&laquo;Wir von Alltagsengel kuemmern uns um alles: Den Antrag, die Abrechnung mit der Kasse, und natuerlich die Hilfe selbst.&raquo;</p>
+      </div>
+    </div>
+
+    <div class="script-section">
+      <div class="script-section__label">CTA</div>
+      <div class="script-section__content">
+        <p><strong>&laquo;Schreib uns auf WhatsApp oder check den Link in Bio. Wir pruefen kostenlos, ob ihr Anspruch habt.&raquo;</strong></p>
+        <p><em>Text-Overlay: &laquo;Jetzt pruefen lassen &mdash; WhatsApp: +49 155 10445517&raquo;</em></p>
+      </div>
+    </div>
+
+    <div class="visuals-box">
+      <div class="visuals-box__title">Visuelle Hinweise / B-Roll</div>
+      <ul>
+        <li>Start: Close-up Gesicht, ernster Blick &mdash; &laquo;Breaking News&raquo;-Vibe</li>
+        <li>Zahlen gross einblenden: 131&euro;, 1.572&euro;/Jahr</li>
+        <li>Geld-Animation (Scheine fliegen weg)</li>
+        <li>Vorher/Nachher: Oma allein vs. Oma mit Begleitung</li>
+        <li>Am Ende: WhatsApp-QR-Code einblenden</li>
+      </ul>
+    </div>
+
+    <div class="hashtags">
+      <div class="hashtags__label">Hashtags</div>
+      <div class="hashtags__text">#Entlastungsbetrag #Pflegekasse #131Euro #Pflegegrad #Alltagsengel #SeniorenHilfe #Alltagsbegleitung #KostenlosHilfe #FamilienHilfe #PflegeTipps #WusstestDu #GeldZurueck</div>
+    </div>
+
+    <div class="caption-box">
+      <button class="copy-btn" onclick="copyCaption(this)">Kopieren</button>
+      <div class="caption-box__label">Caption</div>
+      <div class="caption-box__text">131&euro; pro Monat. Jeden Monat. Von der Pflegekasse. Fuer Hilfe im Alltag. Und deine Familie nutzt es wahrscheinlich NICHT. Der Entlastungsbetrag steht jedem mit Pflegegrad zu &mdash; fuer Einkaufshilfe, Arztbegleitung, Haushalt und mehr. Wir pruefen kostenlos euren Anspruch. WhatsApp: +49 155 10445517 oder Link in Bio.</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- SKRIPT 5 -->
+<div class="script-card" id="skript-5">
+  <div class="script-card__header">
+    <div>
+      <div class="script-card__number">Skript #5 &mdash; Kunden-Akquise</div>
+      <div class="script-card__title">&laquo;Deine Eltern brauchen Hilfe aber kein Pflegeheim&raquo;</div>
+    </div>
+    <div class="script-card__meta">
+      <span class="meta-tag">30-45 Sek</span>
+      <span class="meta-tag">Emotional</span>
+    </div>
+  </div>
+  <div class="script-card__body">
+
+    <div class="script-section">
+      <div class="script-section__label">Hook (erste 3 Sekunden)</div>
+      <div class="script-section__content">
+        <p><strong>&laquo;Deine Mama ruft dich an. Nicht weil sie krank ist. Sondern weil sie einsam ist.&raquo;</strong></p>
+        <p><em>Text-Overlay: &laquo;Das geht unter die Haut&raquo; &mdash; langsam einblenden, ruhige Musik</em></p>
+      </div>
+    </div>
+
+    <div class="script-section">
+      <div class="script-section__label">Body (15-30 Sekunden)</div>
+      <div class="script-section__content">
+        <p>&laquo;Du willst helfen. Aber du hast selbst nen Job. Kinder. Eigenes Leben.&raquo;</p>
+        <p>&laquo;Und ein Pflegeheim? Das braucht sie nicht. Sie braucht jemanden, der mit ihr einkaufen geht. Der zuehoert. Der mal den Haushalt macht.&raquo;</p>
+        <p><em>(B-Roll: Aeltere Frau allein am Fenster, dann: gemeinsam kochen, spazieren, lachen)</em></p>
+        <p>&laquo;Genau dafuer gibt es Alltagsbegleitung. Keine Pflege. Keine Windeln. Einfach Mensch fuer Mensch.&raquo;</p>
+        <p>&laquo;Und das Beste: Die Pflegekasse uebernimmt die Kosten. Ab Pflegegrad 1.&raquo;</p>
+      </div>
+    </div>
+
+    <div class="script-section">
+      <div class="script-section__label">CTA</div>
+      <div class="script-section__content">
+        <p><strong>&laquo;Gib deinen Eltern das, was sie verdienen: jemanden, der da ist. Alltagsengel &mdash; Link in Bio.&raquo;</strong></p>
+        <p><em>Text-Overlay: &laquo;alltagsengel.com | WhatsApp: +49 155 10445517&raquo;</em></p>
+      </div>
+    </div>
+
+    <div class="visuals-box">
+      <div class="visuals-box__title">Visuelle Hinweise / B-Roll</div>
+      <ul>
+        <li>Emotionale Filmmusik (Piano, langsam)</li>
+        <li>Langsame Schnitte, keine hektischen Uebergaenge</li>
+        <li>Kontrast: Einsamkeit (blau/grau) vs. Begleitung (warm/gold)</li>
+        <li>Echte Emotionen, nicht gestellt</li>
+        <li>Abschluss: Warmes Bild, Oma und Engel zusammen</li>
+      </ul>
+    </div>
+
+    <div class="hashtags">
+      <div class="hashtags__label">Hashtags</div>
+      <div class="hashtags__text">#FuerMama #FuerPapa #Alltagsbegleitung #KeinPflegeheim #Alltagsengel #SeniorenHilfe #Pflegekasse #FamilienZusammenhalt #EinsamkeitImAlter #WirSindFuerEuchDa #ElternHilfe</div>
+    </div>
+
+    <div class="caption-box">
+      <button class="copy-btn" onclick="copyCaption(this)">Kopieren</button>
+      <div class="caption-box__label">Caption</div>
+      <div class="caption-box__text">Sie braucht kein Pflegeheim. Sie braucht jemanden, der da ist. Alltagsbegleitung fuer Senioren &mdash; Einkaufen, Arztbegleitung, Gesellschaft. Bezahlt durch die Pflegekasse (ab Pflegegrad 1). Wir kuemmern uns um alles. Schreib uns: +49 155 10445517 oder Link in Bio.</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- SKRIPT 6 -->
+<div class="script-card" id="skript-6">
+  <div class="script-card__header">
+    <div>
+      <div class="script-card__number">Skript #6 &mdash; Kunden-Akquise</div>
+      <div class="script-card__title">&laquo;So bekommst du KOSTENLOS Hilfe fuer deine Grosseltern&raquo;</div>
+    </div>
+    <div class="script-card__meta">
+      <span class="meta-tag">45-60 Sek</span>
+      <span class="meta-tag">How-To</span>
+    </div>
+  </div>
+  <div class="script-card__body">
+
+    <div class="script-section">
+      <div class="script-section__label">Hook (erste 3 Sekunden)</div>
+      <div class="script-section__content">
+        <p><strong>&laquo;Kostenlose Hilfe fuer deine Grosseltern? Ja, das geht. Und ich zeig dir wie.&raquo;</strong></p>
+        <p><em>Text-Overlay: &laquo;KOSTENLOS Hilfe bekommen &mdash; so geht's&raquo;</em></p>
+      </div>
+    </div>
+
+    <div class="script-section">
+      <div class="script-section__label">Body (25-40 Sekunden)</div>
+      <div class="script-section__content">
+        <p><strong>Schritt 1:</strong> &laquo;Pflegegrad checken. Hat deine Oma oder dein Opa einen Pflegegrad? Egal ob 1, 2, 3, 4 oder 5 &mdash; dann hat sie Anspruch auf den Entlastungsbetrag nach Paragraph 45b.&raquo;</p>
+        <p><em>(Text-Overlay: &laquo;Schritt 1: Pflegegrad?&raquo; mit Checklisten-Icon)</em></p>
+        <p><strong>Schritt 2:</strong> &laquo;131 Euro pro Monat. Die kriegt sie von der Pflegekasse. JEDEN Monat. Fuer Hilfe im Alltag. Nicht fuer Pflege &mdash; fuer ganz normale Sachen.&raquo;</p>
+        <p><em>(Text-Overlay: &laquo;131&euro;/Monat = 1.572&euro;/Jahr&raquo;)</em></p>
+        <p><strong>Schritt 3:</strong> &laquo;Bei uns melden. Wir finden einen Alltagsengel in eurer Naehe. Der geht mit einkaufen, begleitet zum Arzt, hilft im Haushalt.&raquo;</p>
+        <p><em>(B-Roll: App/Website, Engel bei der Arbeit)</em></p>
+        <p><strong>Schritt 4:</strong> &laquo;Abrechnung? Machen WIR. Komplett. Ihr zahlt null Euro aus eigener Tasche.&raquo;</p>
+        <p><em>(Text-Overlay: &laquo;0&euro; Eigenanteil&raquo; gross einblenden)</em></p>
+      </div>
+    </div>
+
+    <div class="script-section">
+      <div class="script-section__label">CTA</div>
+      <div class="script-section__content">
+        <p><strong>&laquo;Speicher das Video, schick es an deine Familie. Und schreib uns &mdash; wir pruefen kostenlos euren Anspruch. Link in Bio.&raquo;</strong></p>
+        <p><em>Text-Overlay: &laquo;Speichern + Teilen! | alltagsengel.com&raquo;</em></p>
+      </div>
+    </div>
+
+    <div class="visuals-box">
+      <div class="visuals-box__title">Visuelle Hinweise / B-Roll</div>
+      <ul>
+        <li>Tutorial-Style: Person erklaert direkt in die Kamera</li>
+        <li>Nummerierte Schritte gross einblenden (1, 2, 3, 4)</li>
+        <li>Infografik-Elemente: Geldbetraege, Pfeile, Checklisten</li>
+        <li>Am Ende: &laquo;Speichern&raquo;-Button-Animation (erinnert an Speichern)</li>
+        <li>Helle, vertrauenswuerdige Atmosphaere</li>
+      </ul>
+    </div>
+
+    <div class="hashtags">
+      <div class="hashtags__label">Hashtags</div>
+      <div class="hashtags__text">#KostenlosHilfe #Entlastungsbetrag #45bSGBXI #Pflegegrad #Alltagsengel #HowTo #Pflegekasse #SeniorenHilfe #Alltagsbegleitung #GeldSparen #PflegeTipps #WichtigesVideo</div>
+    </div>
+
+    <div class="caption-box">
+      <button class="copy-btn" onclick="copyCaption(this)">Kopieren</button>
+      <div class="caption-box__label">Caption</div>
+      <div class="caption-box__text">SPEICHERN &amp; TEILEN! So bekommt deine Familie KOSTENLOS Hilfe im Alltag: Einkaufen, Arztbegleitung, Haushalt. Paragraph 45b = 131&euro;/Monat von der Pflegekasse. Wir kuemmern uns um Antrag + Abrechnung. 0&euro; Eigenanteil. Jetzt pruefen lassen: Link in Bio oder WhatsApp +49 155 10445517</div>
+    </div>
+
+  </div>
+</div>
+
+</div><!-- container -->
+</div><!-- ae-kunden -->
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- CHAIRMATCH — TIKTOK                         -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="brand-divider cm">
+  <h2 style="font-family:var(--serif);font-size:2rem;color:var(--peach);">ChairMatch</h2>
+</div>
+
+<div id="cm-tiktok">
+<div class="section-header">
+  <h2 class="cm">ChairMatch TikTok</h2>
+  <p class="subtitle">3 Skripte fuer die Beauty-Branche</p>
+</div>
+
+<div class="container">
+
+<!-- SKRIPT 7 -->
+<div class="script-card cm" id="skript-7">
+  <div class="script-card__header">
+    <div>
+      <div class="script-card__number">Skript #7 &mdash; ChairMatch</div>
+      <div class="script-card__title">&laquo;Friseure aufgepasst: Eigener Salon fuer 30&euro;/Tag&raquo;</div>
+    </div>
+    <div class="script-card__meta">
+      <span class="meta-tag">30-45 Sek</span>
+      <span class="meta-tag">Chair Rental Pitch</span>
+    </div>
+  </div>
+  <div class="script-card__body">
+
+    <div class="script-section">
+      <div class="script-section__label">Hook (erste 3 Sekunden)</div>
+      <div class="script-section__content">
+        <p><strong>&laquo;Friseure aufgepasst: Ab 30 Euro am Tag hast du deinen EIGENEN Platz im Salon. Ohne Mietvertrag.&raquo;</strong></p>
+        <p><em>Text-Overlay: &laquo;30&euro;/Tag = Dein Stuhl &raquo;</em></p>
+      </div>
+    </div>
+
+    <div class="script-section">
+      <div class="script-section__label">Body (15-30 Sekunden)</div>
+      <div class="script-section__content">
+        <p>&laquo;Stell dir vor: Du bist Friseurin, Nail-Designerin oder Kosmetikerin. Du willst selbststaendig arbeiten, aber ein eigener Salon? Zu teuer. Zu viel Risiko.&raquo;</p>
+        <p><em>(B-Roll: Leerer Salon, Preisschilder, frustrierter Blick)</em></p>
+        <p>&laquo;Mit ChairMatch mietest du einen Stuhl &mdash; tageweise, wochenweise oder monatlich. In einem fertigen Salon. Mit Ausstattung, Kunden in der Naehe, ohne Stress.&raquo;</p>
+        <p><em>(B-Roll: Schoener Salon, Stuhl, glueckliche Stylistin bei der Arbeit)</em></p>
+        <p>&laquo;Ab 30 Euro am Tag. Du bestimmst deine Preise, deine Zeiten, deine Kunden.&raquo;</p>
+      </div>
+    </div>
+
+    <div class="script-section">
+      <div class="script-section__label">CTA</div>
+      <div class="script-section__content">
+        <p><strong>&laquo;Check ChairMatch &mdash; Link in Bio. Finde deinen Stuhl in deiner Stadt.&raquo;</strong></p>
+        <p><em>Text-Overlay: &laquo;chairmatch.de | Link in Bio&raquo;</em></p>
+      </div>
+    </div>
+
+    <div class="visuals-box">
+      <div class="visuals-box__title">Visuelle Hinweise / B-Roll</div>
+      <ul>
+        <li>Aesthetischer Salon-Look: gute Beleuchtung, saubere Raeume</li>
+        <li>Farbtoenung: Peach/Warmtoeene passend zur ChairMatch-Brand</li>
+        <li>Reale Salon-Umgebung, keine Stock-Fotos</li>
+        <li>Schnelle Montage: verschiedene Salontypen</li>
+        <li>Trendige Beauty-Musik</li>
+      </ul>
+    </div>
+
+    <div class="hashtags">
+      <div class="hashtags__label">Hashtags</div>
+      <div class="hashtags__text">#ChairMatch #Stuhlvermietung #FriseurSelbststaendig #BeautyBusiness #SalonMieten #FreelanceFriseur #NailDesign #Kosmetik #EigenerStuhl #BeautyTikTok #SelbststaendigArbeiten</div>
+    </div>
+
+    <div class="caption-box">
+      <button class="copy-btn" onclick="copyCaption(this)">Kopieren</button>
+      <div class="caption-box__label">Caption</div>
+      <div class="caption-box__text">Eigener Salon? Zu teuer. Angestellt bleiben? Kein Bock. Die Loesung: Stuhl mieten ab 30&euro;/Tag. ChairMatch verbindet Freelancer mit Salons &mdash; flexibel, fair, ohne Risiko. Finde deinen Stuhl: Link in Bio oder WhatsApp +49 155 10445517</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- SKRIPT 8 -->
+<div class="script-card cm" id="skript-8">
+  <div class="script-card__header">
+    <div>
+      <div class="script-card__number">Skript #8 &mdash; ChairMatch</div>
+      <div class="script-card__title">&laquo;Salonbesitzer: So verdienst du an leeren Stuehlen&raquo;</div>
+    </div>
+    <div class="script-card__meta">
+      <span class="meta-tag">30-45 Sek</span>
+      <span class="meta-tag">Passive Income</span>
+    </div>
+  </div>
+  <div class="script-card__body">
+
+    <div class="script-section">
+      <div class="script-section__label">Hook (erste 3 Sekunden)</div>
+      <div class="script-section__content">
+        <p><strong>&laquo;Du hast einen Salon mit leeren Stuehlen? Die kosten dich GELD. Jeden Tag.&raquo;</strong></p>
+        <p><em>Text-Overlay: &laquo;Leere Stuehle = Verlorenes Geld &raquo;</em></p>
+      </div>
+    </div>
+
+    <div class="script-section">
+      <div class="script-section__label">Body (15-30 Sekunden)</div>
+      <div class="script-section__content">
+        <p>&laquo;Miete laeuft. Strom laeuft. Versicherung laeuft. Aber der zweite und dritte Stuhl? Steht leer.&raquo;</p>
+        <p><em>(B-Roll: Leerer Salon, Rechnungen, leere Stuehle)</em></p>
+        <p>&laquo;Stell dir vor, du verdienst 500 bis 1.500 Euro im Monat EXTRA. Ohne neuen Mitarbeiter. Ohne Risiko.&raquo;</p>
+        <p>&laquo;Einfach deinen Stuhl auf ChairMatch listen. Freelancer mieten ihn &mdash; tageweise, wochenweise oder monatlich. Du bestimmst den Preis.&raquo;</p>
+        <p><em>(B-Roll: Handy-App, Buchungsbestaetigungen, Geld eingehend)</em></p>
+        <p>&laquo;Listen ist KOSTENLOS. Du verdienst erst, wenn jemand bucht.&raquo;</p>
+      </div>
+    </div>
+
+    <div class="script-section">
+      <div class="script-section__label">CTA</div>
+      <div class="script-section__content">
+        <p><strong>&laquo;Liste deinen Salon jetzt kostenlos auf ChairMatch. Link in Bio.&raquo;</strong></p>
+        <p><em>Text-Overlay: &laquo;Kostenlos listen &mdash; chairmatch.de&raquo;</em></p>
+      </div>
+    </div>
+
+    <div class="visuals-box">
+      <div class="visuals-box__title">Visuelle Hinweise / B-Roll</div>
+      <ul>
+        <li>Vorher/Nachher: Leerer Stuhl vs. belegter Stuhl</li>
+        <li>Geld-Zahlen einblenden: 500&euro;, 1.000&euro;, 1.500&euro;</li>
+        <li>Business-Look: professionell aber nahbar</li>
+        <li>Echte Salonbesitzer als Testimonial-Style</li>
+        <li>ChairMatch-Branding: Peach-Akzente</li>
+      </ul>
+    </div>
+
+    <div class="hashtags">
+      <div class="hashtags__label">Hashtags</div>
+      <div class="hashtags__text">#ChairMatch #Salonbesitzer #PassiveIncome #Stuhlvermietung #BeautyBusiness #SalonManagement #ExtraEinkommen #FreelancerWillkommen #SalonTipps #FriseurBusiness #KostenlosListen</div>
+    </div>
+
+    <div class="caption-box">
+      <button class="copy-btn" onclick="copyCaption(this)">Kopieren</button>
+      <div class="caption-box__label">Caption</div>
+      <div class="caption-box__text">Leere Stuehle in deinem Salon kosten dich Geld. Mach sie zur Einnahmequelle! Auf ChairMatch listen Salonbesitzer ihre freien Plaetze &mdash; kostenlos. Freelancer mieten sie. Du verdienst 500-1.500&euro;/Monat extra. Jetzt kostenlos listen: Link in Bio</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- SKRIPT 9 -->
+<div class="script-card cm" id="skript-9">
+  <div class="script-card__header">
+    <div>
+      <div class="script-card__number">Skript #9 &mdash; ChairMatch</div>
+      <div class="script-card__title">&laquo;Warum ich keinen eigenen Salon mehr will&raquo;</div>
+    </div>
+    <div class="script-card__meta">
+      <span class="meta-tag">30-45 Sek</span>
+      <span class="meta-tag">Freelancer POV</span>
+    </div>
+  </div>
+  <div class="script-card__body">
+
+    <div class="script-section">
+      <div class="script-section__label">Hook (erste 3 Sekunden)</div>
+      <div class="script-section__content">
+        <p><strong>&laquo;Alle sagen: Mach deinen eigenen Salon auf! Aber ich sag: Nee. Und hier ist warum.&raquo;</strong></p>
+        <p><em>Text-Overlay: &laquo;Eigener Salon? Nein danke. &raquo;</em></p>
+      </div>
+    </div>
+
+    <div class="script-section">
+      <div class="script-section__label">Body (15-30 Sekunden)</div>
+      <div class="script-section__content">
+        <p>&laquo;Eigener Salon heisst: 3.000 Euro Miete. Angestellte managen. Buchhaltung. Kaputte Klimaanlage.&raquo;</p>
+        <p><em>(B-Roll: Rechnungen-Stapel, Stress-Szenen, kaputte Geraete)</em></p>
+        <p>&laquo;Stuhl mieten heisst: Ich komm morgens, mach meine Kunden, geh nachmittags. Fertig.&raquo;</p>
+        <p><em>(B-Roll: Entspannt reinkommen, Kunden bedienen, frueh Feierabend)</em></p>
+        <p>&laquo;Ich zahl 30 bis 50 Euro am Tag fuer den Stuhl. Der Rest? Bleibt bei MIR. Keine Prozente. Kein Chef.&raquo;</p>
+        <p>&laquo;Montag frei? Klar. Nur Donnerstag bis Samstag? Auch gut. Ich entscheide.&raquo;</p>
+      </div>
+    </div>
+
+    <div class="script-section">
+      <div class="script-section__label">CTA</div>
+      <div class="script-section__content">
+        <p><strong>&laquo;Wenn du auch Bock auf echte Freiheit hast &mdash; ChairMatch. Finde deinen Stuhl. Link in Bio.&raquo;</strong></p>
+        <p><em>Text-Overlay: &laquo;chairmatch.de &mdash; Dein Stuhl wartet&raquo;</em></p>
+      </div>
+    </div>
+
+    <div class="visuals-box">
+      <div class="visuals-box__title">Visuelle Hinweise / B-Roll</div>
+      <ul>
+        <li>Kontrast-Editing: Stressiger Salonbesitz (hektisch) vs. Freelancer-Life (relaxed)</li>
+        <li>POV-Kamera: Zuschauer fuehlt sich als Freelancer</li>
+        <li>Split-Screen fuer Vergleich</li>
+        <li>Trendy Beauty-Content-Aesthetik</li>
+        <li>Sound: Erst stressig, dann chill &mdash; passend zum Mood-Switch</li>
+      </ul>
+    </div>
+
+    <div class="hashtags">
+      <div class="hashtags__label">Hashtags</div>
+      <div class="hashtags__text">#ChairMatch #FreelanceFriseur #KeinEigenerSalon #BeautyFreelancer #Stuhlmiete #SelbststaendigOhneRisiko #Friseur2026 #NailTech #Kosmetikerin #WorkLifeBalance #BeautyBusiness</div>
+    </div>
+
+    <div class="caption-box">
+      <button class="copy-btn" onclick="copyCaption(this)">Kopieren</button>
+      <div class="caption-box__label">Caption</div>
+      <div class="caption-box__text">Eigener Salon war gestern. Stuhl mieten ist die Zukunft. Ab 30&euro;/Tag arbeite ich in einem top Salon &mdash; ohne Mietvertrag, ohne Personal, ohne Stress. Meine Kunden, meine Preise, meine Zeiten. ChairMatch macht's moeglich. Link in Bio oder WhatsApp +49 155 10445517</div>
+    </div>
+
+  </div>
+</div>
+
+</div><!-- container -->
+</div><!-- cm-tiktok -->
+
+<!-- Copy All -->
+<div class="copy-all-wrap">
+  <button class="copy-all-btn" onclick="copyAllScripts()">Alle Skripte kopieren</button>
+</div>
+
+<!-- Footer -->
+<footer style="text-align:center; padding:40px 24px 60px; border-top:1px solid rgba(245,240,232,0.08);">
+  <p style="color:var(--white-muted); font-size:0.85rem;">Alltagsengel &amp; ChairMatch &mdash; TikTok/Reels Skripte &mdash; Erstellt Juni 2026</p>
+</footer>
+
+<script>
+function copyCaption(btn) {
+  const text = btn.parentElement.querySelector('.caption-box__text').innerText;
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = 'Kopiert!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Kopieren'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+
+function copyScriptCard(card) {
+  const sections = card.querySelectorAll('.script-section');
+  let text = '';
+  const title = card.querySelector('.script-card__title')?.innerText || '';
+  text += title + '\n\n';
+  sections.forEach(s => {
+    const label = s.querySelector('.script-section__label')?.innerText || '';
+    const content = s.querySelector('.script-section__content')?.innerText || '';
+    text += label + '\n' + content + '\n\n';
+  });
+  const hashtags = card.querySelector('.hashtags__text')?.innerText || '';
+  if (hashtags) text += 'Hashtags: ' + hashtags + '\n\n';
+  const caption = card.querySelector('.caption-box__text')?.innerText || '';
+  if (caption) text += 'Caption: ' + caption + '\n';
+  return text;
+}
+
+function copyAllScripts() {
+  const cards = document.querySelectorAll('.script-card');
+  let allText = 'TIKTOK & REELS SKRIPTE\n========================\n\n';
+  cards.forEach((card, i) => {
+    allText += '--- Skript ' + (i+1) + ' ---\n';
+    allText += copyScriptCard(card) + '\n\n';
+  });
+  navigator.clipboard.writeText(allText).then(() => {
+    const btn = document.querySelector('.copy-all-btn');
+    btn.textContent = 'Alle kopiert!';
+    setTimeout(() => { btn.textContent = 'Alle Skripte kopieren'; }, 2000);
+  });
+}
+</script>
+
+</body>
+</html>

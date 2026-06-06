@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Google My Business — Alltagsengel Setup-Guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0A0A0A;
+  --gold: #C9963C;
+  --gold-dim: rgba(201,150,60,0.12);
+  --gold-border: rgba(201,150,60,0.25);
+  --white: #F5F0E8;
+  --white-dim: rgba(245,240,232,0.55);
+  --white-muted: rgba(245,240,232,0.35);
+  --green: #5B8A72;
+  --green-dim: rgba(91,138,114,0.12);
+  --blue: #4285F4;
+  --blue-dim: rgba(66,133,244,0.12);
+  --blue-border: rgba(66,133,244,0.25);
+  --red: #EA4335;
+  --yellow: #FBBC04;
+  --g-green: #34A853;
+  --serif: 'Cormorant Garamond', Georgia, serif;
+  --sans: 'Inter', system-ui, -apple-system, sans-serif;
+}
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; font-size: 16px; }
+body { background: var(--bg); color: var(--white); font-family: var(--sans); line-height: 1.7; -webkit-font-smoothing: antialiased; }
+
+.container { max-width: 900px; margin: 0 auto; padding: 0 24px; }
+
+.header {
+  text-align: center; padding: 80px 24px 40px;
+  border-bottom: 1px solid var(--gold-border);
+}
+.header h1 {
+  font-family: var(--serif); font-size: 2.4rem; font-weight: 700;
+  color: var(--gold); margin-bottom: 12px;
+}
+.header p { color: var(--white-dim); font-size: 1.05rem; max-width: 650px; margin: 0 auto; }
+.header .google-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  margin-top: 16px; padding: 8px 20px; border-radius: 20px;
+  background: var(--blue-dim); color: var(--blue);
+  font-size: 0.85rem; font-weight: 600;
+}
+
+.toc {
+  display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;
+  padding: 32px 24px; border-bottom: 1px solid rgba(245,240,232,0.08);
+}
+.toc a {
+  color: var(--gold); text-decoration: none; font-size: 0.85rem; font-weight: 500;
+  padding: 6px 16px; border: 1px solid var(--gold-border); border-radius: 20px;
+  transition: all 0.2s;
+}
+.toc a:hover { background: var(--gold-dim); }
+
+.section-header {
+  text-align: center; padding: 60px 24px 28px;
+}
+.section-header h2 {
+  font-family: var(--serif); font-size: 1.8rem; font-weight: 600;
+  color: var(--gold); margin-bottom: 6px;
+}
+.section-header .subtitle { color: var(--white-muted); font-size: 0.9rem; }
+
+/* Card */
+.card {
+  background: rgba(245,240,232,0.03);
+  border: 1px solid var(--gold-border);
+  border-radius: 16px;
+  margin: 0 auto 28px;
+  max-width: 860px;
+  overflow: hidden;
+  position: relative;
+}
+.card__header {
+  padding: 24px 28px 16px;
+  border-bottom: 1px solid rgba(245,240,232,0.06);
+}
+.card__label {
+  font-size: 0.72rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--gold); margin-bottom: 4px;
+}
+.card__title {
+  font-family: var(--serif); font-size: 1.35rem; font-weight: 700; color: var(--white);
+}
+.card__body { padding: 24px 28px; }
+
+.data-row {
+  display: flex; gap: 12px; padding: 10px 0;
+  border-bottom: 1px solid rgba(245,240,232,0.05);
+}
+.data-row:last-child { border-bottom: none; }
+.data-row__key {
+  min-width: 180px; font-size: 0.85rem; font-weight: 600; color: var(--gold);
+}
+.data-row__val {
+  font-size: 0.92rem; color: var(--white-dim); flex: 1;
+}
+
+/* Description Box */
+.desc-box {
+  background: rgba(201,150,60,0.06);
+  border: 1px solid var(--gold-border);
+  border-radius: 12px;
+  padding: 24px 28px;
+  margin: 20px auto;
+  max-width: 860px;
+  position: relative;
+}
+.desc-box__label {
+  font-size: 0.72rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--gold); margin-bottom: 10px;
+}
+.desc-box__text {
+  font-size: 0.95rem; color: var(--white-dim); line-height: 1.7;
+}
+.desc-box__chars {
+  margin-top: 8px; font-size: 0.78rem; color: var(--white-muted);
+}
+
+/* Service Item */
+.service-item {
+  background: rgba(245,240,232,0.03);
+  border: 1px solid var(--gold-border);
+  border-radius: 14px;
+  padding: 20px 24px;
+  margin-bottom: 16px;
+  max-width: 860px;
+  margin-left: auto; margin-right: auto;
+  position: relative;
+}
+.service-item__name {
+  font-weight: 700; color: var(--white); font-size: 1rem; margin-bottom: 4px;
+}
+.service-item__desc {
+  font-size: 0.88rem; color: var(--white-dim);
+}
+
+/* Google Post */
+.gpost {
+  background: rgba(66,133,244,0.06);
+  border: 1px solid var(--blue-border);
+  border-radius: 14px;
+  padding: 24px 28px;
+  margin-bottom: 20px;
+  max-width: 860px;
+  margin-left: auto; margin-right: auto;
+  position: relative;
+}
+.gpost__number {
+  position: absolute; top: -10px; left: 24px;
+  background: var(--blue); color: #fff;
+  font-size: 0.72rem; font-weight: 700; padding: 3px 12px;
+  border-radius: 10px;
+}
+.gpost__type {
+  font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--blue); margin-bottom: 6px;
+}
+.gpost__title {
+  font-family: var(--serif); font-size: 1.15rem; font-weight: 700;
+  color: var(--white); margin-bottom: 8px;
+}
+.gpost__text {
+  font-size: 0.92rem; color: var(--white-dim); line-height: 1.7;
+}
+.gpost__cta {
+  margin-top: 12px; display: inline-block; padding: 6px 18px;
+  background: var(--blue-dim); color: var(--blue); border-radius: 10px;
+  font-size: 0.82rem; font-weight: 600;
+}
+
+/* Q&A */
+.qa-item {
+  background: rgba(245,240,232,0.03);
+  border: 1px solid var(--gold-border);
+  border-radius: 14px;
+  padding: 24px 28px;
+  margin-bottom: 16px;
+  max-width: 860px;
+  margin-left: auto; margin-right: auto;
+  position: relative;
+}
+.qa-item__q {
+  font-weight: 700; color: var(--white); font-size: 1rem; margin-bottom: 10px;
+  padding-left: 24px; position: relative;
+}
+.qa-item__q::before {
+  content: 'F'; position: absolute; left: 0; color: var(--gold);
+  font-weight: 700; font-size: 0.85rem;
+}
+.qa-item__a {
+  font-size: 0.92rem; color: var(--white-dim); line-height: 1.7;
+  padding-left: 24px; position: relative;
+}
+.qa-item__a::before {
+  content: 'A'; position: absolute; left: 0; color: var(--green);
+  font-weight: 700; font-size: 0.85rem;
+}
+
+/* Setup Guide Step */
+.step {
+  background: rgba(245,240,232,0.03);
+  border: 1px solid var(--gold-border);
+  border-radius: 14px;
+  padding: 24px 28px;
+  margin-bottom: 20px;
+  max-width: 860px;
+  margin-left: auto; margin-right: auto;
+  position: relative;
+}
+.step__number {
+  position: absolute; top: -12px; left: 24px;
+  background: var(--gold); color: var(--bg);
+  font-size: 0.82rem; font-weight: 700; padding: 4px 14px;
+  border-radius: 10px;
+}
+.step__title {
+  font-family: var(--serif); font-size: 1.15rem; font-weight: 700;
+  color: var(--white); margin-bottom: 10px;
+}
+.step__content {
+  font-size: 0.92rem; color: var(--white-dim); line-height: 1.8;
+}
+.step__content p { margin-bottom: 8px; }
+.step__content strong { color: var(--white); }
+.step__content code {
+  background: rgba(201,150,60,0.1); color: var(--gold); padding: 2px 8px;
+  border-radius: 4px; font-size: 0.85rem;
+}
+.step__screenshot {
+  margin-top: 12px; padding: 12px 16px;
+  background: rgba(245,240,232,0.05); border-radius: 8px;
+  font-size: 0.85rem; color: var(--white-muted); font-style: italic;
+}
+
+/* Copy Button */
+.copy-btn {
+  position: absolute; top: 12px; right: 12px;
+  background: var(--gold-dim); color: var(--gold); border: 1px solid var(--gold-border);
+  padding: 4px 12px; border-radius: 8px; font-size: 0.72rem; font-weight: 600;
+  cursor: pointer; transition: all 0.2s; font-family: var(--sans);
+}
+.copy-btn:hover { background: var(--gold); color: var(--bg); }
+.copy-btn.copied { background: var(--green); color: #fff; border-color: var(--green); }
+.copy-btn.blue { background: var(--blue-dim); color: var(--blue); border-color: var(--blue-border); }
+.copy-btn.blue:hover { background: var(--blue); color: #fff; }
+
+.copy-all-wrap { text-align: center; padding: 20px 0 60px; }
+.copy-all-btn {
+  background: var(--gold); color: var(--bg); border: none;
+  padding: 14px 36px; border-radius: 12px; font-size: 0.95rem; font-weight: 700;
+  cursor: pointer; transition: all 0.2s; font-family: var(--sans);
+}
+.copy-all-btn:hover { filter: brightness(1.15); transform: translateY(-1px); }
+
+@media (max-width: 640px) {
+  .header h1 { font-size: 1.8rem; }
+  .data-row { flex-direction: column; gap: 4px; }
+  .data-row__key { min-width: auto; }
+  .card__header, .card__body { padding: 18px 20px; }
+}
+</style>
+</head>
+<body>
+
+<header class="header">
+  <h1>Google My Business</h1>
+  <p>Komplett-Listing fuer Alltagsengel auf Google Business. Profil-Daten, Services, Google Posts, Q&amp;A und Schritt-fuer-Schritt Setup-Anleitung.</p>
+  <div class="google-badge">Google Business Profile &mdash; Kostenlos</div>
+</header>
+
+<nav class="toc">
+  <a href="#listing">Listing-Details</a>
+  <a href="#beschreibung">Beschreibung</a>
+  <a href="#services">Services</a>
+  <a href="#posts">Google Posts (5)</a>
+  <a href="#qa">Q&amp;A (5)</a>
+  <a href="#setup">Setup-Anleitung</a>
+</nav>
+
+<!-- ═══════════════════════════════════ -->
+<!-- LISTING DETAILS                     -->
+<!-- ═══════════════════════════════════ -->
+<div id="listing">
+<div class="section-header">
+  <h2>Listing-Details</h2>
+  <p class="subtitle">Grunddaten fuer das Google Business Profil</p>
+</div>
+
+<div class="container">
+  <div class="card">
+    <button class="copy-btn" onclick="copyCard(this)">Kopieren</button>
+    <div class="card__header">
+      <div class="card__label">Google Business Profile</div>
+      <div class="card__title">Alltagsengel</div>
+    </div>
+    <div class="card__body">
+      <div class="data-row">
+        <div class="data-row__key">Business Name</div>
+        <div class="data-row__val">Alltagsengel</div>
+      </div>
+      <div class="data-row">
+        <div class="data-row__key">Primaere Kategorie</div>
+        <div class="data-row__val">Home Health Care Service (Pflegedienst)</div>
+      </div>
+      <div class="data-row">
+        <div class="data-row__key">Sekundaere Kategorie</div>
+        <div class="data-row__val">Seniorenbetreuung / Senior Citizen Center</div>
+      </div>
+      <div class="data-row">
+        <div class="data-row__key">Business-Typ</div>
+        <div class="data-row__val">Service Area Business (SAB) &mdash; kein physisches Buero noetig, Kunden werden vor Ort bedient</div>
+      </div>
+      <div class="data-row">
+        <div class="data-row__key">Adresse</div>
+        <div class="data-row__val">Frankfurt am Main (wird nicht oeffentlich angezeigt bei SAB)</div>
+      </div>
+      <div class="data-row">
+        <div class="data-row__key">Einzugsgebiete</div>
+        <div class="data-row__val">Frankfurt am Main, Offenbach, Darmstadt, Wiesbaden, Mainz, Hanau, Bad Homburg</div>
+      </div>
+      <div class="data-row">
+        <div class="data-row__key">Telefon</div>
+        <div class="data-row__val">+49 155 10445517</div>
+      </div>
+      <div class="data-row">
+        <div class="data-row__key">Website</div>
+        <div class="data-row__val">www.alltagsengel.com</div>
+      </div>
+      <div class="data-row">
+        <div class="data-row__key">Oeffnungszeiten</div>
+        <div class="data-row__val">Mo-Fr 08:00-18:00, Sa 09:00-14:00</div>
+      </div>
+      <div class="data-row">
+        <div class="data-row__key">Termin-URL</div>
+        <div class="data-row__val">https://wa.me/4915510445517</div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════ -->
+<!-- BESCHREIBUNG                        -->
+<!-- ═══════════════════════════════════ -->
+<div id="beschreibung">
+<div class="section-header">
+  <h2>Business-Beschreibung</h2>
+  <p class="subtitle">Max. 750 Zeichen &mdash; wird in der Google-Suche angezeigt</p>
+</div>
+
+<div class="container">
+  <div class="desc-box">
+    <button class="copy-btn" onclick="copyDesc(this)">Kopieren</button>
+    <div class="desc-box__label">Beschreibung (Google Business)</div>
+    <div class="desc-box__text" id="gmb-desc">Alltagsengel vermittelt zuverlaessige Alltagsbegleiter fuer Senioren in Frankfurt und Umgebung. Unsere Engel unterstuetzen bei Einkauf, Arztbegleitung, Haushalt und Gesellschaft &mdash; damit Ihre Angehoerigen selbstbestimmt zu Hause leben koennen. Keine Pflege, sondern menschliche Begleitung im Alltag. Der Entlastungsbetrag (131 Euro/Monat nach Paragraph 45b SGB XI) deckt die Kosten ab Pflegegrad 1. Wir uebernehmen die komplette Abrechnung mit der Pflegekasse. Kostenlose Beratung per WhatsApp oder Telefon. Jetzt unverbindlich anfragen und Engel in Ihrer Naehe finden.</div>
+    <div class="desc-box__chars" id="char-count"></div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════ -->
+<!-- SERVICES                            -->
+<!-- ═══════════════════════════════════ -->
+<div id="services">
+<div class="section-header">
+  <h2>Services</h2>
+  <p class="subtitle">Services die im Google-Profil angezeigt werden</p>
+</div>
+
+<div class="container">
+
+  <div class="service-item">
+    <button class="copy-btn" onclick="copyService(this)">Kopieren</button>
+    <div class="service-item__name">Einkaufshilfe</div>
+    <div class="service-item__desc">Begleitung beim Wocheneinkauf, Apothekengang und Botengaenge. Regelmaessig oder einmalig. Ab 0 Euro mit Entlastungsbetrag.</div>
+  </div>
+
+  <div class="service-item">
+    <button class="copy-btn" onclick="copyService(this)">Kopieren</button>
+    <div class="service-item__name">Arztbegleitung</div>
+    <div class="service-item__desc">Sichere Begleitung zu Arzt, Klinik oder Therapie. Hin- und Rueckfahrt, Wartezeit inklusive. Abrechenbar ueber die Pflegekasse.</div>
+  </div>
+
+  <div class="service-item">
+    <button class="copy-btn" onclick="copyService(this)">Kopieren</button>
+    <div class="service-item__name">Haushaltshilfe</div>
+    <div class="service-item__desc">Unterstuetzung beim Kochen, Putzen, Waesche und Aufraeuemen. Regelmässig oder nach Bedarf buchbar. Abrechenbar ueber Paragraph 45b.</div>
+  </div>
+
+  <div class="service-item">
+    <button class="copy-btn" onclick="copyService(this)">Kopieren</button>
+    <div class="service-item__name">Gesellschaft &amp; Betreuung</div>
+    <div class="service-item__desc">Gespraeche, Vorlesen, Spiele, Spaziergaenge und Ausfluege. Gegen Einsamkeit, fuer mehr Lebensqualitaet. Abrechenbar ueber die Pflegekasse.</div>
+  </div>
+
+  <div class="service-item">
+    <button class="copy-btn" onclick="copyService(this)">Kopieren</button>
+    <div class="service-item__name">Kostenlose Pflegebox</div>
+    <div class="service-item__desc">Pflegehilfsmittel im Wert von 42 Euro pro Monat, direkt nach Hause geliefert. Handschuhe, Desinfektion, Bettschutzeinlagen. Ab Pflegegrad 1.</div>
+  </div>
+
+  <div class="service-item">
+    <button class="copy-btn" onclick="copyService(this)">Kopieren</button>
+    <div class="service-item__name">Krankenfahrt</div>
+    <div class="service-item__desc">Transport zu Arzt, Klinik oder Dialyse. Ueber die Krankenkasse abrechenbar bei aerztlicher Verordnung. Organisation und Abrechnung inklusive.</div>
+  </div>
+
+  <div class="service-item">
+    <button class="copy-btn" onclick="copyService(this)">Kopieren</button>
+    <div class="service-item__name">Kostenlose Beratung</div>
+    <div class="service-item__desc">Unverbindliche Beratung zu Leistungsanspruechen, Pflegegrad-Beantragung und Entlastungsbetrag. Per Telefon, WhatsApp oder vor Ort.</div>
+  </div>
+
+</div>
+</div>
+
+<!-- ═══════════════════════════════════ -->
+<!-- GOOGLE POSTS                        -->
+<!-- ═══════════════════════════════════ -->
+<div id="posts">
+<div class="section-header">
+  <h2>Google Posts</h2>
+  <p class="subtitle">5 fertige Beitraege fuer das Google Business Profil</p>
+</div>
+
+<div class="container">
+
+  <div class="gpost">
+    <div class="gpost__number">1</div>
+    <button class="copy-btn blue" onclick="copyPost(this)">Kopieren</button>
+    <div class="gpost__type">Angebot</div>
+    <div class="gpost__title">131&euro;/Monat fuer Alltagshilfe &mdash; nutzen Sie Ihren Entlastungsbetrag!</div>
+    <div class="gpost__text">Wussten Sie, dass Ihnen mit Pflegegrad 131 Euro pro Monat fuer Alltagsbegleitung zustehen? Der Entlastungsbetrag nach Paragraph 45b SGB XI deckt Einkaufshilfe, Arztbegleitung, Haushalt und Gesellschaft ab. Viele Familien wissen nicht, dass sie Anspruch haben &mdash; oder nutzen das Geld nicht. Alltagsengel kuemmert sich um alles: Vermittlung, Begleitung und Abrechnung. Sie zahlen 0 Euro aus eigener Tasche. Jetzt kostenlos pruefen lassen!</div>
+    <div class="gpost__cta">Button: Jetzt anrufen</div>
+  </div>
+
+  <div class="gpost">
+    <div class="gpost__number">2</div>
+    <button class="copy-btn blue" onclick="copyPost(this)">Kopieren</button>
+    <div class="gpost__type">Update</div>
+    <div class="gpost__title">Alltagsengel jetzt in Frankfurt, Offenbach, Darmstadt &amp; Wiesbaden</div>
+    <div class="gpost__text">Gute Nachrichten fuer Familien in der Rhein-Main-Region! Alltagsengel vermittelt jetzt zuverlaessige Alltagsbegleiter in Frankfurt, Offenbach, Darmstadt, Wiesbaden, Mainz, Hanau und Bad Homburg. Ob Einkaufshilfe, Arztbegleitung oder einfach jemand zum Reden &mdash; unsere Engel sind fuer Ihre Angehoerigen da. Abrechnung ueber die Pflegekasse moeglich. Jetzt unverbindlich anfragen.</div>
+    <div class="gpost__cta">Button: Mehr erfahren &rarr; alltagsengel.com</div>
+  </div>
+
+  <div class="gpost">
+    <div class="gpost__number">3</div>
+    <button class="copy-btn blue" onclick="copyPost(this)">Kopieren</button>
+    <div class="gpost__type">Angebot</div>
+    <div class="gpost__title">Kostenlose Pflegebox &mdash; 42&euro;/Monat an Pflegehilfsmitteln</div>
+    <div class="gpost__text">Ab Pflegegrad 1 haben Sie Anspruch auf eine monatliche Pflegebox im Wert von 42 Euro &mdash; komplett kostenlos. Inhalt: Einmalhandschuhe, Desinfektionsmittel, Bettschutzeinlagen und mehr. Wir uebernehmen den Antrag bei der Pflegekasse und liefern direkt nach Hause. Kein Papierkram, keine Kosten. Jetzt Pflegebox bestellen!</div>
+    <div class="gpost__cta">Button: Jetzt anrufen</div>
+  </div>
+
+  <div class="gpost">
+    <div class="gpost__number">4</div>
+    <button class="copy-btn blue" onclick="copyPost(this)">Kopieren</button>
+    <div class="gpost__type">Update</div>
+    <div class="gpost__title">Werde Alltagsengel &mdash; flexibler Job mit Sinn</div>
+    <div class="gpost__text">Sie moechten Menschen helfen und flexibel arbeiten? Alltagsengel sucht zuverlaessige Alltagsbegleiter in Frankfurt und Umgebung. Keine Pflege-Ausbildung erforderlich. Faire Verguetung von 18 bis 25 Euro pro Stunde. Flexible Zeiten &mdash; Sie bestimmen, wann und wie viel Sie arbeiten. Bewerben Sie sich jetzt und machen Sie einen Unterschied im Leben aelterer Menschen.</div>
+    <div class="gpost__cta">Button: Mehr erfahren &rarr; alltagsengel.com/engel-werden</div>
+  </div>
+
+  <div class="gpost">
+    <div class="gpost__number">5</div>
+    <button class="copy-btn blue" onclick="copyPost(this)">Kopieren</button>
+    <div class="gpost__type">Angebot</div>
+    <div class="gpost__title">Kostenlose Beratung: Welche Leistungen stehen Ihnen zu?</div>
+    <div class="gpost__text">Viele Familien verschenken Leistungen, die ihnen zustehen. Der Entlastungsbetrag, Pflegebox, Krankenfahrten &mdash; die Pflegekasse uebernimmt mehr als die meisten denken. Wir beraten Sie kostenlos und unverbindlich: Welche Leistungen koennen Sie nutzen? Was uebernimmt die Kasse? Wie funktioniert die Abrechnung? Rufen Sie uns an oder schreiben Sie uns auf WhatsApp &mdash; wir helfen gerne.</div>
+    <div class="gpost__cta">Button: Jetzt anrufen</div>
+  </div>
+
+</div>
+</div>
+
+<!-- ═══════════════════════════════════ -->
+<!-- Q&A                                 -->
+<!-- ═══════════════════════════════════ -->
+<div id="qa">
+<div class="section-header">
+  <h2>Fragen &amp; Antworten</h2>
+  <p class="subtitle">5 vorgefertigte Q&amp;A fuer das Google-Profil (self-seeding)</p>
+</div>
+
+<div class="container">
+
+  <div class="qa-item">
+    <button class="copy-btn" onclick="copyQA(this)">Kopieren</button>
+    <div class="qa-item__q">Was ist Alltagsbegleitung und wie unterscheidet sie sich von Pflege?</div>
+    <div class="qa-item__a">Alltagsbegleitung ist Unterstuetzung bei alltaeglichen Aufgaben wie Einkaufen, Arztbesuchen, Kochen oder Gesellschaft leisten. Anders als Pflege geht es nicht um medizinische Versorgung, sondern um menschliche Begleitung, die aelteren Menschen hilft, selbststaendig zu Hause zu leben. Keine Pflege-Ausbildung erforderlich &mdash; unsere Engel werden geschult und versichert.</div>
+  </div>
+
+  <div class="qa-item">
+    <button class="copy-btn" onclick="copyQA(this)">Kopieren</button>
+    <div class="qa-item__q">Ist Alltagsbegleitung wirklich kostenlos?</div>
+    <div class="qa-item__a">Mit dem Entlastungsbetrag nach Paragraph 45b SGB XI stehen jedem mit Pflegegrad 1 bis 5 monatlich 131 Euro zu &mdash; speziell fuer Alltagsbegleitung, Haushaltshilfe und Betreuung. Wir rechnen direkt mit der Pflegekasse ab, sodass in der Regel 0 Euro Eigenanteil anfallen. Wir pruefen kostenlos Ihren Anspruch.</div>
+  </div>
+
+  <div class="qa-item">
+    <button class="copy-btn" onclick="copyQA(this)">Kopieren</button>
+    <div class="qa-item__q">In welchen Staedten ist Alltagsengel verfuegbar?</div>
+    <div class="qa-item__a">Aktuell vermitteln wir Alltagsbegleiter in Frankfurt am Main, Offenbach, Darmstadt, Wiesbaden, Mainz, Hanau und Bad Homburg. Wir expandieren laufend &mdash; kontaktieren Sie uns gerne, wenn Sie ausserhalb dieser Gebiete wohnen. Wir pruefen, ob wir bereits einen Engel in Ihrer Naehe haben.</div>
+  </div>
+
+  <div class="qa-item">
+    <button class="copy-btn" onclick="copyQA(this)">Kopieren</button>
+    <div class="qa-item__q">Wie schnell kann ein Alltagsbegleiter starten?</div>
+    <div class="qa-item__a">In der Regel vermitteln wir innerhalb von 48 Stunden einen passenden Engel. Nach Ihrer Anfrage per Telefon oder WhatsApp pruefen wir Ihre Beduerfnisse, finden den richtigen Begleiter und organisieren ein Kennenlernen. Akute Faelle priorisieren wir.</div>
+  </div>
+
+  <div class="qa-item">
+    <button class="copy-btn" onclick="copyQA(this)">Kopieren</button>
+    <div class="qa-item__q">Wie wird man Alltagsengel? Braucht man eine Ausbildung?</div>
+    <div class="qa-item__a">Nein, Sie brauchen keine Pflege-Ausbildung. Wichtig sind Zuverlaessigkeit, Empathie und Freude am Umgang mit aelteren Menschen. Wir bieten faire Verguetung (18-25 Euro/Std.), flexible Arbeitszeiten und schulen Sie fuer den Einsatz. Bewerben Sie sich auf alltagsengel.com/engel-werden oder schreiben Sie uns auf WhatsApp.</div>
+  </div>
+
+</div>
+</div>
+
+<!-- ═══════════════════════════════════ -->
+<!-- SETUP-ANLEITUNG                     -->
+<!-- ═══════════════════════════════════ -->
+<div id="setup">
+<div class="section-header">
+  <h2>Setup-Anleitung</h2>
+  <p class="subtitle">Schritt-fuer-Schritt: Google Business Profil einrichten</p>
+</div>
+
+<div class="container">
+
+  <div class="step">
+    <div class="step__number">Schritt 1</div>
+    <div class="step__title">Google Business Profil erstellen</div>
+    <div class="step__content">
+      <p>1. Gehe zu <code>business.google.com</code></p>
+      <p>2. Melde dich mit deinem Google-Konto an (am besten <code>y.cilcioglu@googlemail.com</code>)</p>
+      <p>3. Klicke auf <strong>&laquo;Unternehmen hinzufuegen&raquo;</strong> &rarr; <strong>&laquo;Einzelnes Unternehmen hinzufuegen&raquo;</strong></p>
+      <p>4. Gib als Business-Name <strong>&laquo;Alltagsengel&raquo;</strong> ein</p>
+    </div>
+    <div class="step__screenshot">Screenshot-Hinweis: Startseite von business.google.com mit &laquo;Unternehmen hinzufuegen&raquo;-Button</div>
+  </div>
+
+  <div class="step">
+    <div class="step__number">Schritt 2</div>
+    <div class="step__title">Kategorie waehlen</div>
+    <div class="step__content">
+      <p>1. Primaere Kategorie: Tippe <strong>&laquo;Home Health Care Service&raquo;</strong> ein und waehle es aus</p>
+      <p>2. Nach dem Erstellen: Unter &laquo;Info bearbeiten&raquo; eine sekundaere Kategorie hinzufuegen: <strong>&laquo;Senior Citizen Center&raquo;</strong> oder <strong>&laquo;Seniorenbetreuung&raquo;</strong></p>
+    </div>
+    <div class="step__screenshot">Screenshot-Hinweis: Kategorie-Suchfeld mit &laquo;Home Health Care Service&raquo; ausgewaehlt</div>
+  </div>
+
+  <div class="step">
+    <div class="step__number">Schritt 3</div>
+    <div class="step__title">Standort konfigurieren (Service Area Business)</div>
+    <div class="step__content">
+      <p>1. Bei der Frage &laquo;Moechten Sie einen Standort hinzufuegen?&raquo; waehle <strong>&laquo;Nein&raquo;</strong></p>
+      <p>2. Waehle stattdessen <strong>&laquo;Ja, ich bediene Kunden ausserhalb meines Standorts&raquo;</strong></p>
+      <p>3. Fuege die Einzugsgebiete hinzu: <strong>Frankfurt am Main, Offenbach, Darmstadt, Wiesbaden, Mainz, Hanau, Bad Homburg</strong></p>
+      <p><em>Hinweis: Bei einem SAB wird keine Adresse oeffentlich angezeigt &mdash; nur das Einzugsgebiet.</em></p>
+    </div>
+    <div class="step__screenshot">Screenshot-Hinweis: Einzugsgebiet-Eingabe mit den Staedten in der Liste</div>
+  </div>
+
+  <div class="step">
+    <div class="step__number">Schritt 4</div>
+    <div class="step__title">Kontaktdaten eintragen</div>
+    <div class="step__content">
+      <p>1. Telefon: <strong>+49 155 10445517</strong></p>
+      <p>2. Website: <strong>www.alltagsengel.com</strong></p>
+      <p>3. Optional: Messaging aktivieren (wird ueber Google Messages beantwortet)</p>
+    </div>
+    <div class="step__screenshot">Screenshot-Hinweis: Kontaktdaten-Formular mit Telefon und Website ausgefuellt</div>
+  </div>
+
+  <div class="step">
+    <div class="step__number">Schritt 5</div>
+    <div class="step__title">Verifizierung</div>
+    <div class="step__content">
+      <p>1. Google bietet verschiedene Verifizierungsmethoden an: <strong>Postkarte, Telefon, E-Mail oder Video</strong></p>
+      <p>2. Fuer SAB ohne physische Adresse: Waehle <strong>Video-Verifizierung</strong> (am schnellsten)</p>
+      <p>3. Zeige im Video: Dass du das Unternehmen betreibst (Handy mit Website, Visitenkarte o.ae.)</p>
+      <p>4. Verifizierung dauert 3-7 Werktage</p>
+      <p><em>Bis zur Verifizierung ist das Profil eingeschraenkt sichtbar. Posts und Fotos koennen trotzdem schon hinzugefuegt werden.</em></p>
+    </div>
+    <div class="step__screenshot">Screenshot-Hinweis: Verifizierungsmethoden-Auswahl</div>
+  </div>
+
+  <div class="step">
+    <div class="step__number">Schritt 6</div>
+    <div class="step__title">Profil vervollstaendigen</div>
+    <div class="step__content">
+      <p>1. <strong>Beschreibung:</strong> Kopiere den Text aus dem Abschnitt &laquo;Business-Beschreibung&raquo; oben (max. 750 Zeichen)</p>
+      <p>2. <strong>Oeffnungszeiten:</strong> Mo-Fr 08:00-18:00, Sa 09:00-14:00, So geschlossen</p>
+      <p>3. <strong>Services:</strong> Unter &laquo;Services bearbeiten&raquo; alle 7 Services aus dem Abschnitt oben eintragen</p>
+      <p>4. <strong>Termin-URL:</strong> <code>https://wa.me/4915510445517</code> (leitet direkt zu WhatsApp)</p>
+      <p>5. <strong>Fotos:</strong> Profilbild (Alltagsengel-Logo), Titelbild (Engel bei der Arbeit), 5-10 weitere Fotos</p>
+    </div>
+    <div class="step__screenshot">Screenshot-Hinweis: Profil-Editor mit Beschreibungs- und Services-Feldern</div>
+  </div>
+
+  <div class="step">
+    <div class="step__number">Schritt 7</div>
+    <div class="step__title">Google Posts veroeffentlichen</div>
+    <div class="step__content">
+      <p>1. Gehe zum Dashboard &rarr; <strong>&laquo;Beitraege&raquo;</strong></p>
+      <p>2. Klicke auf <strong>&laquo;Beitrag erstellen&raquo;</strong></p>
+      <p>3. Waehle Typ: <strong>&laquo;Angebot&raquo;</strong> oder <strong>&laquo;Neuigkeit&raquo;</strong></p>
+      <p>4. Kopiere die 5 fertigen Posts aus dem Abschnitt oben und poste sie nacheinander</p>
+      <p>5. Fuer jeden Post ein passendes Bild hochladen (min. 1200x900px)</p>
+      <p><em>Tipp: Posts alle 7 Tage erneuern fuer maximale Sichtbarkeit.</em></p>
+    </div>
+    <div class="step__screenshot">Screenshot-Hinweis: Beitrags-Editor mit Textfeld und Bild-Upload</div>
+  </div>
+
+  <div class="step">
+    <div class="step__number">Schritt 8</div>
+    <div class="step__title">Q&amp;A selbst befuellen (Self-Seeding)</div>
+    <div class="step__content">
+      <p>1. Suche &laquo;Alltagsengel&raquo; in Google Maps (nach Verifizierung)</p>
+      <p>2. Scrolle zum Bereich <strong>&laquo;Fragen und Antworten&raquo;</strong></p>
+      <p>3. Klicke auf <strong>&laquo;Frage stellen&raquo;</strong></p>
+      <p>4. Stelle die 5 Fragen aus dem Q&amp;A-Abschnitt oben (mit deinem persoenlichen Google-Konto)</p>
+      <p>5. Beantworte sie sofort mit dem Business-Konto (als &laquo;Inhaber&raquo;-Antwort)</p>
+      <p><em>Hinweis: Self-Seeding ist erlaubt und von Google empfohlen. Die Inhaber-Antwort wird prominent angezeigt.</em></p>
+    </div>
+    <div class="step__screenshot">Screenshot-Hinweis: Google Maps Q&amp;A-Bereich mit &laquo;Frage stellen&raquo;-Button</div>
+  </div>
+
+  <div class="step">
+    <div class="step__number">Schritt 9</div>
+    <div class="step__title">Fotos &amp; Logo hochladen</div>
+    <div class="step__content">
+      <p>1. <strong>Logo:</strong> Alltagsengel-Logo als Profilbild (mind. 250x250px, quadratisch)</p>
+      <p>2. <strong>Titelbild:</strong> Stimmungsbild &mdash; Engel mit aelterer Person beim Spaziergang (1024x576px)</p>
+      <p>3. <strong>Weitere Fotos:</strong> 5-10 authentische Bilder:</p>
+      <p>&mdash; Engel beim Einkaufen mit Seniorin</p>
+      <p>&mdash; Gemeinsamer Spaziergang im Park</p>
+      <p>&mdash; Arztbegleitung (im Auto, vor der Praxis)</p>
+      <p>&mdash; Gemeinsames Kochen</p>
+      <p>&mdash; Gesellschaft: Kaffeetrinken, Brettspiel, Vorlesen</p>
+      <p><em>Tipp: Echte Fotos performen 3x besser als Stock-Fotos. Am besten mit Einverstaendnis der abgebildeten Personen.</em></p>
+    </div>
+    <div class="step__screenshot">Screenshot-Hinweis: Foto-Manager im Google Business Dashboard</div>
+  </div>
+
+  <div class="step">
+    <div class="step__number">Schritt 10</div>
+    <div class="step__title">Bewertungen sammeln &amp; laufende Pflege</div>
+    <div class="step__content">
+      <p><strong>Bewertungen sammeln:</strong></p>
+      <p>&mdash; Nach jedem erfolgreichen Einsatz: Kunden/Angehoerige um Google-Bewertung bitten</p>
+      <p>&mdash; Kurz-Link erstellen: Im Dashboard &rarr; &laquo;Bewertungen&raquo; &rarr; &laquo;Kurz-Link teilen&raquo;</p>
+      <p>&mdash; Link per WhatsApp an zufriedene Kunden senden</p>
+      <p><strong>Laufende Pflege:</strong></p>
+      <p>&mdash; 1x pro Woche: Neuen Google Post veroeffentlichen</p>
+      <p>&mdash; Auf jede Bewertung antworten (positiv UND negativ)</p>
+      <p>&mdash; Fotos regelmaessig aktualisieren</p>
+      <p>&mdash; Oeffnungszeiten an Feiertagen anpassen</p>
+    </div>
+    <div class="step__screenshot">Screenshot-Hinweis: Bewertungs-Bereich mit Antwort-Funktion</div>
+  </div>
+
+</div>
+</div>
+
+<!-- Copy All -->
+<div class="copy-all-wrap">
+  <button class="copy-all-btn" onclick="copyAll()">Alles kopieren</button>
+</div>
+
+<footer style="text-align:center; padding:40px 24px 60px; border-top:1px solid rgba(245,240,232,0.08);">
+  <p style="color:var(--white-muted); font-size:0.85rem;">Alltagsengel &mdash; Google My Business Setup-Guide &mdash; Erstellt Juni 2026</p>
+</footer>
+
+<script>
+// Character count
+(function() {
+  const desc = document.getElementById('gmb-desc');
+  const counter = document.getElementById('char-count');
+  if (desc && counter) {
+    const len = desc.innerText.length;
+    counter.textContent = len + ' / 750 Zeichen' + (len <= 750 ? ' (OK)' : ' (ZU LANG!)');
+    counter.style.color = len <= 750 ? 'var(--green)' : 'var(--red, #EA4335)';
+  }
+})();
+
+function copyText(btn, text) {
+  navigator.clipboard.writeText(text).then(() => {
+    const orig = btn.textContent;
+    btn.textContent = 'Kopiert!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = orig; btn.classList.remove('copied'); }, 2000);
+  });
+}
+
+function copyCard(btn) {
+  const card = btn.closest('.card');
+  const rows = card.querySelectorAll('.data-row');
+  let text = '';
+  rows.forEach(r => {
+    text += r.querySelector('.data-row__key')?.innerText + ': ' + r.querySelector('.data-row__val')?.innerText + '\n';
+  });
+  copyText(btn, text.trim());
+}
+
+function copyDesc(btn) {
+  const text = document.getElementById('gmb-desc')?.innerText || '';
+  copyText(btn, text);
+}
+
+function copyService(btn) {
+  const item = btn.closest('.service-item');
+  const name = item.querySelector('.service-item__name')?.innerText || '';
+  const desc = item.querySelector('.service-item__desc')?.innerText || '';
+  copyText(btn, name + '\n' + desc);
+}
+
+function copyPost(btn) {
+  const post = btn.closest('.gpost');
+  const title = post.querySelector('.gpost__title')?.innerText || '';
+  const text = post.querySelector('.gpost__text')?.innerText || '';
+  const cta = post.querySelector('.gpost__cta')?.innerText || '';
+  copyText(btn, title + '\n\n' + text + '\n\n' + cta);
+}
+
+function copyQA(btn) {
+  const qa = btn.closest('.qa-item');
+  const q = qa.querySelector('.qa-item__q')?.innerText || '';
+  const a = qa.querySelector('.qa-item__a')?.innerText || '';
+  copyText(btn, 'Frage: ' + q + '\nAntwort: ' + a);
+}
+
+function copyAll() {
+  let all = 'GOOGLE MY BUSINESS — ALLTAGSENGEL\n===================================\n\n';
+
+  all += '--- LISTING-DETAILS ---\n';
+  document.querySelectorAll('#listing .data-row').forEach(r => {
+    all += r.querySelector('.data-row__key')?.innerText + ': ' + r.querySelector('.data-row__val')?.innerText + '\n';
+  });
+  all += '\n--- BESCHREIBUNG ---\n';
+  all += (document.getElementById('gmb-desc')?.innerText || '') + '\n\n';
+
+  all += '--- SERVICES ---\n';
+  document.querySelectorAll('.service-item').forEach(item => {
+    all += item.querySelector('.service-item__name')?.innerText + ': ' + item.querySelector('.service-item__desc')?.innerText + '\n';
+  });
+  all += '\n--- GOOGLE POSTS ---\n';
+  document.querySelectorAll('.gpost').forEach((post, i) => {
+    all += '\nPost ' + (i+1) + ': ' + post.querySelector('.gpost__title')?.innerText + '\n';
+    all += post.querySelector('.gpost__text')?.innerText + '\n';
+    all += post.querySelector('.gpost__cta')?.innerText + '\n';
+  });
+  all += '\n--- Q&A ---\n';
+  document.querySelectorAll('.qa-item').forEach((qa, i) => {
+    all += '\n' + (i+1) + '. F: ' + qa.querySelector('.qa-item__q')?.innerText + '\n';
+    all += '   A: ' + qa.querySelector('.qa-item__a')?.innerText + '\n';
+  });
+
+  navigator.clipboard.writeText(all).then(() => {
+    const btn = document.querySelector('.copy-all-btn');
+    btn.textContent = 'Alles kopiert!';
+    setTimeout(() => { btn.textContent = 'Alles kopieren'; }, 2000);
+  });
+}
+</script>
+
+</body>
+</html>
