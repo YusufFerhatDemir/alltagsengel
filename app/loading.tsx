@@ -1,23 +1,32 @@
+/**
+ * Root Loading — minimaler Indikator statt Full-Screen-Spinner.
+ *
+ * Der alte Full-Screen-Spinner (min-height:100dvh, opaker Hintergrund)
+ * hat den FCP blockiert: Erst wurde der Spinner gemalt, dann ~13s
+ * gewartet bis Hydration + JS fertig war. Für SEO und Web-UX muss
+ * Content sofort sichtbar sein.
+ *
+ * Jetzt: dünner Progress-Bar oben — blockiert keinen Content.
+ */
 export default function Loading() {
   return (
     <div style={{
-      minHeight: '100dvh',
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      background: '#1A1612',
-      fontFamily: "'Jost', sans-serif",
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      height: 3,
+      zIndex: 9999,
+      overflow: 'hidden',
+      background: 'rgba(201,150,60,.15)',
     }}>
       <div style={{
-        width: 44,
-        height: 44,
-        border: '3px solid rgba(201,150,60,.2)',
-        borderTopColor: '#C9963C',
-        borderRadius: '50%',
-        animation: 'spin 0.8s linear infinite',
+        width: '40%',
+        height: '100%',
+        background: 'linear-gradient(90deg, transparent, #C9963C, transparent)',
+        animation: 'loadBar 1.2s ease-in-out infinite',
       }} />
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      <style>{`@keyframes loadBar { 0% { transform: translateX(-100%); } 100% { transform: translateX(350%); } }`}</style>
     </div>
   )
 }

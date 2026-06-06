@@ -31,6 +31,7 @@ const STATIC_ROUTES: Omit<RouteEntry, 'lastModified'>[] = [
   { url: '/faq', changeFrequency: 'monthly', priority: 0.8 },
   { url: '/kontakt', changeFrequency: 'monthly', priority: 0.7 },
   // City-Landingpages (Rhein-Main)
+  { url: '/alltagsbegleitung/frankfurt', changeFrequency: 'weekly', priority: 0.9 },
   { url: '/alltagsbegleitung/offenbach', changeFrequency: 'weekly', priority: 0.85 },
   { url: '/alltagsbegleitung/wiesbaden', changeFrequency: 'weekly', priority: 0.85 },
   { url: '/alltagsbegleitung/darmstadt', changeFrequency: 'weekly', priority: 0.85 },
@@ -39,6 +40,7 @@ const STATIC_ROUTES: Omit<RouteEntry, 'lastModified'>[] = [
   { url: '/alltagsbegleitung/mainz', changeFrequency: 'weekly', priority: 0.85 },
   { url: '/alltagsbegleitung/aschaffenburg', changeFrequency: 'weekly', priority: 0.85 },
   // City-Landingpages Krankenfahrten
+  { url: '/krankenfahrten/frankfurt', changeFrequency: 'weekly', priority: 0.9 },
   { url: '/krankenfahrten/offenbach', changeFrequency: 'weekly', priority: 0.85 },
   { url: '/krankenfahrten/wiesbaden', changeFrequency: 'weekly', priority: 0.85 },
   { url: '/krankenfahrten/darmstadt', changeFrequency: 'weekly', priority: 0.85 },
@@ -50,6 +52,7 @@ const STATIC_ROUTES: Omit<RouteEntry, 'lastModified'>[] = [
   { url: '/krankenfahrten/neu-isenburg', changeFrequency: 'weekly', priority: 0.85 },
   { url: '/krankenfahrten/friedberg-wetterau', changeFrequency: 'weekly', priority: 0.85 },
   // City-Landingpages Pflegebox
+  { url: '/hygienebox/frankfurt', changeFrequency: 'weekly', priority: 0.9 },
   { url: '/hygienebox/offenbach', changeFrequency: 'weekly', priority: 0.85 },
   { url: '/hygienebox/wiesbaden', changeFrequency: 'weekly', priority: 0.85 },
   { url: '/hygienebox/darmstadt', changeFrequency: 'weekly', priority: 0.85 },
