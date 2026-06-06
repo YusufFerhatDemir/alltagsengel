@@ -175,6 +175,19 @@ export default function AlltagsbegleitungPage() {
         </div>
 
         <section className="info-card">
+          <h3>Alltagsbegleitung in Ihrer Stadt</h3>
+          <ul className="info-list">
+            <li><Link href="/alltagsbegleitung/offenbach">Alltagsbegleitung Offenbach am Main</Link></li>
+            <li><Link href="/alltagsbegleitung/wiesbaden">Alltagsbegleitung Wiesbaden</Link></li>
+            <li><Link href="/alltagsbegleitung/darmstadt">Alltagsbegleitung Darmstadt</Link></li>
+            <li><Link href="/alltagsbegleitung/hanau">Alltagsbegleitung Hanau</Link></li>
+            <li><Link href="/alltagsbegleitung/bad-homburg">Alltagsbegleitung Bad Homburg</Link></li>
+            <li><Link href="/alltagsbegleitung/mainz">Alltagsbegleitung Mainz</Link></li>
+            <li><Link href="/alltagsbegleitung/aschaffenburg">Alltagsbegleitung Aschaffenburg</Link></li>
+          </ul>
+        </section>
+
+        <section className="info-card">
           <h3>Weitere Leistungen</h3>
           <ul className="info-list">
             <li><Link href="/hygienebox">Pflegebox — kostenlose Pflegehilfsmittel (42€/Monat)</Link></li>
