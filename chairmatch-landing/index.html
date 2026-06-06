@@ -129,6 +129,33 @@ footer .f-links a:hover{color:var(--accent)}
         "priceCurrency": "EUR",
         "description": "Kostenlose Registrierung, 0 % Provision"
       }
+    },
+    {
+      "@type": "Service",
+      "@id": "https://chairmatch.de/#service-stuhlvermietung",
+      "name": "Stuhlvermietung für Beauty-Profis",
+      "description": "ChairMatch vermittelt Stuhlmiete, Raumvermietung und Kabinenvermietung in Friseursalons, Barbershops, Kosmetikstudios, Nagelstudios und Massagepraxen — deutschlandweit, 0 % Provision.",
+      "provider": { "@id": "https://chairmatch.de/#organization" },
+      "serviceType": "Stuhlvermietung / Chair Rental",
+      "areaServed": { "@type": "Country", "name": "Deutschland" },
+      "offers": {
+        "@type": "AggregateOffer",
+        "lowPrice": "30",
+        "highPrice": "900",
+        "priceCurrency": "EUR",
+        "description": "Tagesmiete ab 30 €, Wochenmiete ab 150 €, Monatsmiete ab 500 €"
+      }
+    },
+    {
+      "@type": "FAQPage",
+      "@id": "https://chairmatch.de/#faq",
+      "mainEntity": [
+        { "@type": "Question", "name": "Was ist Stuhlvermietung in der Beauty-Branche?", "acceptedAnswer": { "@type": "Answer", "text": "Stuhlvermietung (auch Chair Rental oder Stuhlmiete) ist ein Geschäftsmodell, bei dem Salonbesitzer einzelne Arbeitsplätze an selbstständige Beauty-Profis vermieten. Der Mieter bringt eigene Kunden mit, setzt eigene Preise und zahlt dem Salonbesitzer eine feste Miete." } },
+        { "@type": "Question", "name": "Was kostet Stuhlvermietung in Deutschland?", "acceptedAnswer": { "@type": "Answer", "text": "Die Kosten variieren je nach Stadt und Ausstattung. Richtwerte: Tagesmiete 30–60 €, Wochenmiete 150–250 €, Monatsmiete 500–900 €. In Großstädten wie München oder Frankfurt liegen die Preise am oberen Ende." } },
+        { "@type": "Question", "name": "Was kostet die Nutzung von ChairMatch?", "acceptedAnswer": { "@type": "Answer", "text": "Das Listing ist kostenlos. Keine Grundgebühr, keine Vertragsbindung, 0 % Provision. Von jeder Buchung fließt 1 € an Kinder und Familien in Not." } },
+        { "@type": "Question", "name": "Brauche ich einen Gewerbeschein?", "acceptedAnswer": { "@type": "Answer", "text": "Ja. Als selbstständiger Beauty-Profi benötigst du einen Gewerbeschein. Für Friseure ist in vielen Bundesländern ein Meisterbrief erforderlich. Für Kosmetik, Nails und Massage gelten andere Regelungen." } },
+        { "@type": "Question", "name": "In welchen Städten ist ChairMatch verfügbar?", "acceptedAnswer": { "@type": "Answer", "text": "ChairMatch ist deutschlandweit verfügbar mit Fokus auf Frankfurt, Berlin, Hamburg, München, Köln, Düsseldorf und über 20 weitere Städte." } }
+      ]
     }
   ]
 }

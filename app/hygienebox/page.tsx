@@ -41,14 +41,14 @@ export default function HygieneboxPage() {
         <div className="info-hero">
           <div className="info-hero-icon">📦</div>
           <h2 className="info-hero-title">Hygienebox für Pflegebedürftige</h2>
-          <p className="info-hero-sub">Monatliche Lieferung von Pflegehilfsmitteln — bis zu 40 € von der Kasse erstattet</p>
+          <p className="info-hero-sub">Monatliche Lieferung von Pflegehilfsmitteln — bis zu 42 € von der Kasse erstattet</p>
         </div>
 
         <section className="info-card">
           <h3>Was ist die Hygienebox?</h3>
           <p>
             Die Hygienebox ist ein monatliches Paket mit Pflegehilfsmitteln zum Verbrauch. Pflegebedürftige
-            Personen ab Pflegegrad 1 haben Anspruch auf bis zu 40 € monatlich für diese Hilfsmittel — die
+            Personen ab Pflegegrad 1 haben Anspruch auf bis zu 42 € monatlich für diese Hilfsmittel — die
             Kosten übernimmt Ihre Pflegekasse.
           </p>
         </section>
@@ -78,7 +78,7 @@ export default function HygieneboxPage() {
             <p>Vollständige Versorgung — maximale Kassenerstattung ausgeschöpft</p>
           </div>
           <p className="info-price-note">
-            Bei Pflegegrad 1–5 werden bis zu 40 € monatlich von der Pflegekasse übernommen.
+            Bei Pflegegrad 1–5 werden bis zu 42 € monatlich von der Pflegekasse übernommen.
             Ihre Zuzahlung: 0 €.
           </p>
         </section>
