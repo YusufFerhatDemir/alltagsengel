@@ -3,13 +3,29 @@ import Link from 'next/link'
 
 export const metadata: Metadata = {
   alternates: { canonical: 'https://alltagsengel.care/faq' },
-  title: 'Häufige Fragen (FAQ) — AlltagsEngel',
-  description: 'Antworten auf häufige Fragen zu AlltagsEngel, Entlastungsbetrag, Pflegegrad, Abrechnung und Alltagsbegleitung.',
-  keywords: ['FAQ', 'Alltagsbegleitung', 'Entlastungsbetrag', 'Pflegegrad', 'Fragen', 'Hilfe'],
+  title: 'Häufige Fragen (FAQ) zu Alltagsbegleitung, Entlastungsbetrag & Pflegegrad — AlltagsEngel',
+  description: 'Antworten auf häufige Fragen: Was ist der Entlastungsbetrag (131€/Monat)? Wer bekommt Pflegehilfsmittel (42€/Monat)? Wie beantrage ich einen Pflegegrad? Alltagsbegleitung nach §45b SGB XI erklärt.',
+  keywords: [
+    'FAQ Alltagsbegleitung',
+    'Entlastungsbetrag §45b',
+    '131 Euro Entlastungsbetrag',
+    'Pflegehilfsmittel §40',
+    '42 Euro Pflegehilfsmittel',
+    'Pflegegrad beantragen',
+    'Alltagsbegleitung Kosten',
+    'Krankenfahrten §60',
+    'Entlastungsbetrag beantragen',
+    'Pflegekasse Leistungen',
+    'Alltagsbegleiter finden',
+    'Entlastungsbetrag Verfall',
+    'Pflegegrad 1 2 3 4 5',
+  ],
   openGraph: {
-    title: 'Häufige Fragen (FAQ) — AlltagsEngel',
-    description: 'Antworten auf häufige Fragen zu Alltagsbegleitung und Entlastungsbetrag.',
+    title: 'FAQ — Alltagsbegleitung, Entlastungsbetrag & Pflegegrad | AlltagsEngel',
+    description: 'Alle Antworten rund um Entlastungsbetrag (131€/Monat), Pflegehilfsmittel (42€/Monat), Pflegegrad und Alltagsbegleitung.',
     url: 'https://alltagsengel.care/faq',
+    siteName: 'Alltagsengel',
+    locale: 'de_DE',
     type: 'website',
   },
 }
@@ -21,116 +37,213 @@ interface FAQItem {
 }
 
 const faqs: FAQItem[] = [
-  // Allgemein
+  // ──── Entlastungsbetrag §45b ────
   {
-    category: 'Allgemein',
-    question: 'Was ist AlltagsEngel?',
-    answer: 'AlltagsEngel ist eine Plattform, die Senioren und Pflegebedürftige mit zertifizierten Alltagsbegleitern in ihrer Nähe verbindet. Wir bieten Einkaufsbegleitung, Arztbesuche, Haushaltshilfe, Gesellschaft und vieles mehr — finanziert über den Entlastungsbetrag der Pflegekasse.',
+    category: 'Entlastungsbetrag (§ 45b SGB XI)',
+    question: 'Was ist der Entlastungsbetrag nach § 45b SGB XI?',
+    answer: 'Der Entlastungsbetrag ist eine monatliche Leistung der Pflegekasse in Höhe von 131 € für alle Personen mit Pflegegrad 1 bis 5. Er dient der Finanzierung von anerkannten Entlastungsangeboten im Alltag, zum Beispiel Alltagsbegleitung, Haushaltshilfe oder Betreuungsgruppen. Der Anspruch besteht unabhängig davon, ob weitere Pflegeleistungen bezogen werden.',
   },
   {
-    category: 'Allgemein',
-    question: 'Für wen ist AlltagsEngel gedacht?',
-    answer: 'AlltagsEngel richtet sich an Menschen mit anerkanntem Pflegegrad (1-5), die Unterstützung im Alltag benötigen, sowie an deren Angehörige. Auch ohne Pflegegrad können Sie unsere Dienste als Selbstzahler nutzen.',
+    category: 'Entlastungsbetrag (§ 45b SGB XI)',
+    question: 'Wie hoch ist der Entlastungsbetrag 2025/2026?',
+    answer: 'Seit der Pflegereform 2025 beträgt der Entlastungsbetrag 131 € pro Monat (zuvor 125 €). Pro Jahr stehen damit 1.572 € zur Verfügung. Nicht genutztes Budget wird in das Folgejahr übertragen und verfällt am 30. Juni des Folgejahres.',
   },
   {
-    category: 'Allgemein',
-    question: 'In welchen Regionen ist AlltagsEngel verfügbar?',
-    answer: 'Aktuell sind wir in Frankfurt am Main und dem gesamten Rhein-Main-Gebiet verfügbar. Wir expandieren kontinuierlich in weitere Regionen in Deutschland.',
-  },
-
-  // Kosten & Finanzierung
-  {
-    category: 'Kosten & Finanzierung',
-    question: 'Was kostet AlltagsEngel?',
-    answer: 'Für Personen mit Pflegegrad ist AlltagsEngel komplett kostenlos. Die Abrechnung erfolgt direkt über den Entlastungsbetrag (§45b SGB XI) — 131€ pro Monat von der Pflegekasse. Sie zahlen keinen Cent aus eigener Tasche.',
+    category: 'Entlastungsbetrag (§ 45b SGB XI)',
+    question: 'Wer hat Anspruch auf den Entlastungsbetrag?',
+    answer: 'Jede Person mit anerkanntem Pflegegrad 1, 2, 3, 4 oder 5 hat Anspruch auf den Entlastungsbetrag von 131 € pro Monat. Ein gesonderter Antrag ist in der Regel nicht nötig — der Anspruch besteht automatisch ab Feststellung des Pflegegrads. Die Abrechnung erfolgt über zugelassene Anbieter wie Alltagsengel.',
   },
   {
-    category: 'Kosten & Finanzierung',
-    question: 'Was ist der Entlastungsbetrag nach §45b SGB XI?',
-    answer: 'Der Entlastungsbetrag ist eine monatliche Leistung der Pflegekasse in Höhe von 131€ für alle Personen mit Pflegegrad 1-5. Das Geld ist zweckgebunden für anerkannte Entlastungsangebote wie Alltagsbegleitung. Nicht genutztes Budget verfällt am 30. Juni des Folgejahres.',
+    category: 'Entlastungsbetrag (§ 45b SGB XI)',
+    question: 'Wie beantrage ich den Entlastungsbetrag?',
+    answer: 'Der Entlastungsbetrag muss nicht separat beantragt werden. Sobald ein Pflegegrad vorliegt, besteht der Anspruch. Sie nutzen einfach einen nach Landesrecht anerkannten Anbieter wie Alltagsengel und reichen die Rechnungen bei der Pflegekasse ein. Alltagsengel übernimmt die komplette Abrechnung für Sie.',
   },
   {
-    category: 'Kosten & Finanzierung',
+    category: 'Entlastungsbetrag (§ 45b SGB XI)',
+    question: 'Wann verfällt der Entlastungsbetrag?',
+    answer: 'Nicht genutzte Beträge des Entlastungsbetrags werden automatisch ins nächste Kalenderjahr übertragen. Sie verfallen am 30. Juni des Folgejahres. Beispiel: Nicht genutzter Entlastungsbetrag aus 2025 verfällt am 30. Juni 2026. Es können maximal 24 Monate angespart werden (bis zu 3.144 €).',
+  },
+  {
+    category: 'Entlastungsbetrag (§ 45b SGB XI)',
+    question: 'Wofür darf der Entlastungsbetrag verwendet werden?',
+    answer: 'Der Entlastungsbetrag ist zweckgebunden für nach Landesrecht anerkannte Entlastungsangebote: Alltagsbegleitung und Betreuungsangebote (§ 45a SGB XI), Haushaltshilfe und haushaltsnahe Dienstleistungen, Tages- und Nachtpflege (als Eigenanteil-Zuschuss), Kurzzeitpflege (als Eigenanteil-Zuschuss) sowie anerkannte Betreuungsgruppen. Er darf nicht für medizinische Pflege oder beliebige Privatleistungen genutzt werden.',
+  },
+  {
+    category: 'Entlastungsbetrag (§ 45b SGB XI)',
     question: 'Kann ich den Entlastungsbetrag rückwirkend nutzen?',
-    answer: 'Ja! Nicht genutzter Entlastungsbetrag kann bis zum 30. Juni des Folgejahres übertragen werden. Das bedeutet, Sie können theoretisch bis zu 3.144€ ansammeln (24 Monate × 131€).',
-  },
-  {
-    category: 'Kosten & Finanzierung',
-    question: 'Wie funktioniert die Abrechnung mit der Pflegekasse?',
-    answer: 'Wir übernehmen die komplette Abrechnung für Sie. Nach jedem Einsatz erstellen wir automatisch eine Rechnung, die direkt an Ihre Pflegekasse gesendet wird. Sie müssen sich um nichts kümmern.',
+    answer: 'Ja. Nicht genutzter Entlastungsbetrag wird ins Folgejahr übertragen und kann bis zum 30. Juni des Folgejahres eingesetzt werden. Beispiel: Wer 2025 keinen Entlastungsbetrag genutzt hat, kann die gesamten 1.572 € (12 × 131 €) noch bis zum 30. Juni 2026 abrufen — zusätzlich zum laufenden Entlastungsbetrag 2026.',
   },
 
-  // Buchung & Service
+  // ──── Pflegehilfsmittel §40 ────
   {
-    category: 'Buchung & Service',
-    question: 'Wie buche ich einen Alltagsbegleiter?',
-    answer: 'Ganz einfach: 1) Registrieren Sie sich kostenlos in der App, 2) Wählen Sie den gewünschten Service (Einkauf, Arzt, Gesellschaft...), 3) Wählen Sie Datum und Uhrzeit, 4) Ein passender Engel wird Ihnen zugewiesen. Die Buchung dauert nur 2 Minuten.',
+    category: 'Pflegehilfsmittel (§ 40 SGB XI)',
+    question: 'Was sind Pflegehilfsmittel zum Verbrauch?',
+    answer: 'Pflegehilfsmittel zum Verbrauch sind Produkte, die im Rahmen der häuslichen Pflege regelmäßig benötigt und verbraucht werden. Dazu gehören Einmalhandschuhe, Bettschutzeinlagen, Desinfektionsmittel, Mundschutz, Schutzschürzen und Fingerlinge. Die Pflegekasse übernimmt die Kosten bis zu 42 € pro Monat.',
   },
   {
-    category: 'Buchung & Service',
-    question: 'Welche Services bietet AlltagsEngel an?',
-    answer: 'Unsere Leistungen umfassen: Einkaufsbegleitung, Arztbegleitung, Haushaltshilfe, Gesellschaft & Spaziergänge, Behördengänge, Postservice, Apothekenbesuche, Gedächtnistraining, Freizeitaktivitäten und Krankenfahrten.',
+    category: 'Pflegehilfsmittel (§ 40 SGB XI)',
+    question: 'Wie hoch ist der Zuschuss für Pflegehilfsmittel?',
+    answer: 'Die Pflegekasse übernimmt monatlich bis zu 42 € für Pflegehilfsmittel zum Verbrauch. Dieser Betrag gilt für alle Pflegegrade (1–5). Der Anspruch besteht zusätzlich zum Entlastungsbetrag und muss separat beantragt werden. Alltagsengel hilft Ihnen beim Antrag und bei der Bestellung einer kostenlosen Pflegebox.',
   },
   {
-    category: 'Buchung & Service',
-    question: 'Kann ich meinen Engel selbst wählen?',
-    answer: 'Ja! Sie können aus verfügbaren Alltagsbegleitern in Ihrer Nähe wählen, basierend auf Bewertungen, Entfernung und Verfügbarkeit. Wenn Ihnen ein Engel besonders gut gefällt, können Sie ihn für zukünftige Buchungen als Favorit markieren.',
-  },
-  {
-    category: 'Buchung & Service',
-    question: 'Was passiert bei einer Stornierung?',
-    answer: 'Buchungen können bis zu 24 Stunden vorher kostenlos storniert werden. Bei kurzfristigen Absagen helfen wir, schnell einen Ersatz zu finden.',
+    category: 'Pflegehilfsmittel (§ 40 SGB XI)',
+    question: 'Wie beantrage ich Pflegehilfsmittel?',
+    answer: 'Sie stellen einen formlosen Antrag bei Ihrer Pflegekasse oder nutzen das Antragsformular Ihres Pflegehilfsmittel-Anbieters. Alternativ können Sie über Alltagsengel eine kostenlose Pflegebox bestellen — wir übernehmen den Antrag und die monatliche Lieferung direkt zu Ihnen nach Hause.',
   },
 
-  // Für Alltagsbegleiter
+  // ──── Pflegegrad ────
   {
-    category: 'Für Alltagsbegleiter',
-    question: 'Wie werde ich Alltagsbegleiter bei AlltagsEngel?',
-    answer: 'Registrieren Sie sich als Engel in der App und laden Sie Ihre Qualifikationsnachweise hoch (§45a SGB XI Zertifikat, erweitertes Führungszeugnis). Nach der Prüfung werden Sie freigeschaltet und können Anfragen annehmen.',
+    category: 'Pflegegrad',
+    question: 'Was ist ein Pflegegrad?',
+    answer: 'Der Pflegegrad (1 bis 5) beschreibt den Grad der Pflegebedürftigkeit eines Menschen. Er wird vom Medizinischen Dienst (MD, ehemals MDK) durch ein Begutachtungsverfahren festgestellt. Je höher der Pflegegrad, desto umfangreicher sind die Leistungsansprüche gegenüber der Pflegekasse. Bereits ab Pflegegrad 1 besteht Anspruch auf den Entlastungsbetrag von 131 € pro Monat.',
   },
-  {
-    category: 'Für Alltagsbegleiter',
-    question: 'Welche Qualifikation brauche ich?',
-    answer: 'Sie benötigen eine Qualifikation nach §45a SGB XI (Alltagsbegleiter-Kurs, mind. 40 Stunden). Zusätzlich benötigen wir ein erweitertes Führungszeugnis und einen Nachweis über eine Haftpflichtversicherung.',
-  },
-  {
-    category: 'Für Alltagsbegleiter',
-    question: 'Wie flexibel sind die Arbeitszeiten?',
-    answer: 'Vollkommen flexibel! Sie entscheiden selbst, wann und wo Sie arbeiten. Sie können Anfragen annehmen oder ablehnen und Ihre Verfügbarkeit jederzeit in der App einstellen.',
-  },
-  {
-    category: 'Für Alltagsbegleiter',
-    question: 'Wie viel verdient man als Alltagsbegleiter?',
-    answer: 'Die Vergütung liegt zwischen 15-25€ pro Stunde, je nach Service und Region. Die Auszahlung erfolgt automatisch nach jedem abgeschlossenen Einsatz.',
-  },
-
-  // Sicherheit
-  {
-    category: 'Sicherheit & Datenschutz',
-    question: 'Sind die Alltagsbegleiter geprüft?',
-    answer: 'Ja, alle Engel durchlaufen eine gründliche Prüfung: Qualifikationsnachweis nach §45a SGB XI, erweitertes Führungszeugnis, persönliches Gespräch und fortlaufende Bewertung durch Kunden.',
-  },
-  {
-    category: 'Sicherheit & Datenschutz',
-    question: 'Wie schützt AlltagsEngel meine Daten?',
-    answer: 'Wir arbeiten vollständig DSGVO-konform. Alle Daten werden verschlüsselt gespeichert, in EU-Rechenzentren gehostet und nur für die Serviceerbringung genutzt. Wir verkaufen keine Daten an Dritte.',
-  },
-
-  // Pflegegrad
   {
     category: 'Pflegegrad',
     question: 'Wie beantrage ich einen Pflegegrad?',
-    answer: 'Stellen Sie einen formlosen Antrag bei Ihrer Pflegekasse. Ein Gutachter des MDK wird einen Hausbesuch machen und den Pflegebedarf einschätzen. Die Einstufung erfolgt in Pflegegrad 1-5. Wir helfen Ihnen gerne bei der Antragstellung.',
+    answer: 'Stellen Sie einen formlosen Antrag bei Ihrer Pflegekasse (telefonisch, schriftlich oder online). Die Pflegekasse beauftragt dann den Medizinischen Dienst (MD) mit einem Hausbesuch. Der Gutachter bewertet sechs Lebensbereiche (Mobilität, kognitive Fähigkeiten, Selbstversorgung etc.) und vergibt Punkte. Anhand der Gesamtpunktzahl wird der Pflegegrad 1–5 festgelegt. Alltagsengel unterstützt Sie kostenlos bei der Antragstellung.',
+  },
+  {
+    category: 'Pflegegrad',
+    question: 'Welche Leistungen stehen mir mit welchem Pflegegrad zu?',
+    answer: 'Ab Pflegegrad 1: Entlastungsbetrag 131 €/Monat, Pflegehilfsmittel 42 €/Monat, Wohnraumanpassung bis 4.000 €. Ab Pflegegrad 2: zusätzlich Pflegegeld (332 €), Pflegesachleistungen (761 €), Tages-/Nachtpflege (689 €), Verhinderungspflege (1.612 €/Jahr), Kurzzeitpflege (1.774 €/Jahr). Die Leistungen steigen mit höherem Pflegegrad. Alltagsengel hilft Ihnen, alle Ansprüche optimal zu nutzen.',
+  },
+  {
+    category: 'Pflegegrad',
+    question: 'Wie kann ich einen bestehenden Pflegegrad erhöhen lassen?',
+    answer: 'Wenn sich Ihr Gesundheitszustand verschlechtert hat, können Sie bei Ihrer Pflegekasse einen Höherstufungsantrag stellen. Es erfolgt eine erneute Begutachtung durch den Medizinischen Dienst. Tipp: Führen Sie vorab ein Pflegetagebuch, um den erhöhten Pflegebedarf zu dokumentieren. Alltagsengel berät Sie gerne kostenlos zum Höherstufungsantrag.',
   },
   {
     category: 'Pflegegrad',
     question: 'Brauche ich einen Pflegegrad, um AlltagsEngel zu nutzen?',
-    answer: 'Nein! AlltagsEngel kann auch ohne Pflegegrad genutzt werden — dann als Selbstzahler. Mit Pflegegrad übernimmt allerdings die Pflegekasse die Kosten über den Entlastungsbetrag.',
+    answer: 'Nein. AlltagsEngel kann auch ohne Pflegegrad genutzt werden — dann als Selbstzahler zum regulären Stundensatz von 32 €. Mit anerkanntem Pflegegrad übernimmt die Pflegekasse die Kosten jedoch über den Entlastungsbetrag (131 €/Monat), sodass für Sie keine Kosten entstehen.',
+  },
+
+  // ──── Alltagsbegleitung ────
+  {
+    category: 'Alltagsbegleitung',
+    question: 'Was ist Alltagsbegleitung?',
+    answer: 'Alltagsbegleitung ist eine Unterstützungsleistung für pflegebedürftige Menschen und Senioren im Alltag. Zertifizierte Alltagsbegleiter (nach § 45a SGB XI) helfen bei Einkäufen, Arztbegleitung, Haushaltshilfe, Spaziergängen, Behördengängen und leisten Gesellschaft. Alltagsbegleitung ist keine medizinische Pflege, sondern eine Entlastung im täglichen Leben — finanziert über den Entlastungsbetrag der Pflegekasse.',
+  },
+  {
+    category: 'Alltagsbegleitung',
+    question: 'Was kostet Alltagsbegleitung bei AlltagsEngel?',
+    answer: 'Für Personen mit Pflegegrad ist Alltagsbegleitung über AlltagsEngel ohne eigene Zuzahlung möglich. Die Kosten werden direkt über den Entlastungsbetrag (§ 45b, 131 €/Monat) mit der Pflegekasse abgerechnet. Der reguläre Stundensatz beträgt ab 32 €. Selbstzahler ohne Pflegegrad zahlen den Stundensatz privat.',
+  },
+  {
+    category: 'Alltagsbegleitung',
+    question: 'Was ist AlltagsEngel?',
+    answer: 'AlltagsEngel ist eine Plattform, die Senioren und Pflegebedürftige mit zertifizierten Alltagsbegleitern in ihrer Nähe verbindet. Wir bieten Einkaufsbegleitung, Arztbesuche, Haushaltshilfe, Gesellschaft und vieles mehr — finanziert über den Entlastungsbetrag der Pflegekasse. Aktuell sind wir in Frankfurt am Main und dem gesamten Rhein-Main-Gebiet verfügbar.',
+  },
+  {
+    category: 'Alltagsbegleitung',
+    question: 'Welche Leistungen bietet AlltagsEngel an?',
+    answer: 'Unsere Alltagsbegleitung umfasst: Einkaufsbegleitung und Besorgungen, Arztbegleitung und Apothekenbesuche, Haushaltshilfe (Kochen, Putzen, Wäsche), Spaziergänge und Freizeitgestaltung, Behördengänge und Postservice, psychosoziale Betreuung und Gespräche, Gedächtnistraining und geistige Aktivierung, Unterstützung bei der Tagesstrukturierung sowie Antragshilfen bei Pflegekasse und Behörden.',
+  },
+  {
+    category: 'Alltagsbegleitung',
+    question: 'In welchen Regionen ist AlltagsEngel verfügbar?',
+    answer: 'AlltagsEngel ist aktuell in Frankfurt am Main und dem gesamten Rhein-Main-Gebiet verfügbar, darunter Offenbach, Wiesbaden, Darmstadt, Hanau, Bad Homburg, Mainz und Aschaffenburg. Wir expandieren kontinuierlich in weitere Regionen in Deutschland.',
+  },
+  {
+    category: 'Alltagsbegleitung',
+    question: 'Wie buche ich einen Alltagsbegleiter?',
+    answer: 'Die Buchung ist einfach: 1. Registrieren Sie sich kostenlos in der App oder auf der Website. 2. Wählen Sie den gewünschten Service (Einkauf, Arztbegleitung, Haushaltshilfe etc.). 3. Wählen Sie Datum und Uhrzeit. 4. Ein passender, zertifizierter Engel wird Ihnen zugewiesen. Die Buchung dauert nur 2 Minuten und ist kostenlos.',
+  },
+  {
+    category: 'Alltagsbegleitung',
+    question: 'Kann ich meinen Alltagsbegleiter selbst wählen?',
+    answer: 'Ja. Sie können aus verfügbaren Alltagsbegleitern in Ihrer Nähe wählen, basierend auf Bewertungen, Entfernung und Verfügbarkeit. Wenn Ihnen ein Engel besonders gut gefällt, können Sie ihn als Favorit markieren und für zukünftige Buchungen bevorzugen.',
+  },
+
+  // ──── Krankenfahrten §60 ────
+  {
+    category: 'Krankenfahrten (§ 60 SGB V)',
+    question: 'Was sind Krankenfahrten nach § 60 SGB V?',
+    answer: 'Krankenfahrten sind medizinisch notwendige Fahrten zu Ärzten, Krankenhäusern oder Therapieeinrichtungen. Die Krankenkasse übernimmt die Kosten, wenn eine ärztliche Verordnung vorliegt. Voraussetzungen: anerkannter Pflegegrad 3 oder höher, Schwerbehindertenausweis mit Merkzeichen „aG", „Bl" oder „H", oder eine Verordnung für eine dauerhafte Behandlung (z. B. Dialyse, Chemotherapie).',
+  },
+  {
+    category: 'Krankenfahrten (§ 60 SGB V)',
+    question: 'Wie beantrage ich eine Krankenfahrt?',
+    answer: 'Für eine Krankenfahrt benötigen Sie eine ärztliche Verordnung (Transportschein). Ihr Arzt stellt diese aus, wenn die Fahrt medizinisch notwendig ist. Ab Pflegegrad 3 ist die Verordnung oft eine Formsache. Die Krankenkasse muss die Fahrt vorab genehmigen (bei Serienbehandlungen reicht eine einmalige Genehmigung). Alltagsengel bietet Krankenfahrten an und hilft Ihnen beim gesamten Ablauf.',
+  },
+  {
+    category: 'Krankenfahrten (§ 60 SGB V)',
+    question: 'Muss ich bei Krankenfahrten zuzahlen?',
+    answer: 'In der Regel fällt eine gesetzliche Zuzahlung von 10 % der Fahrtkosten an, mindestens 5 € und maximal 10 € pro Fahrt. Personen mit einer Befreiung von der Zuzahlung (Belastungsgrenze erreicht) zahlen nichts. Kinder unter 18 Jahren sind generell von der Zuzahlung befreit.',
+  },
+
+  // ──── Kosten & Abrechnung ────
+  {
+    category: 'Kosten & Abrechnung',
+    question: 'Was kostet AlltagsEngel?',
+    answer: 'Für Personen mit Pflegegrad ist AlltagsEngel in der Regel komplett kostenlos. Die Abrechnung erfolgt direkt über den Entlastungsbetrag (§ 45b SGB XI) — 131 € pro Monat von der Pflegekasse. Sie zahlen keinen Cent aus eigener Tasche. Selbstzahler ohne Pflegegrad zahlen den regulären Stundensatz ab 32 €.',
+  },
+  {
+    category: 'Kosten & Abrechnung',
+    question: 'Wie funktioniert die Abrechnung mit der Pflegekasse?',
+    answer: 'Alltagsengel übernimmt die komplette Abrechnung für Sie. Nach jedem Einsatz erstellen wir automatisch eine Rechnung, die direkt an Ihre Pflegekasse gesendet wird. Sie müssen sich um nichts kümmern — kein Papierkram, keine Vorkasse, keine Formulare.',
+  },
+
+  // ──── Für Alltagsbegleiter ────
+  {
+    category: 'Für Alltagsbegleiter (Engel)',
+    question: 'Wie werde ich Alltagsbegleiter bei AlltagsEngel?',
+    answer: 'Registrieren Sie sich als Engel in der App und laden Sie Ihre Qualifikationsnachweise hoch: Zertifikat nach § 45a SGB XI (mindestens 40 Stunden Qualifikation) und ein erweitertes Führungszeugnis. Nach der Prüfung werden Sie freigeschaltet und können Anfragen in Ihrer Region annehmen.',
+  },
+  {
+    category: 'Für Alltagsbegleiter (Engel)',
+    question: 'Welche Qualifikation brauche ich als Alltagsbegleiter?',
+    answer: 'Sie benötigen eine Qualifikation nach § 45a SGB XI (Alltagsbegleiter-Kurs mit mindestens 40 Stunden Schulung). Zusätzlich benötigen wir ein aktuelles erweitertes Führungszeugnis und einen Nachweis über eine Haftpflichtversicherung. Bei AlltagsEngel sind Sie automatisch über unsere Plattform versichert.',
+  },
+  {
+    category: 'Für Alltagsbegleiter (Engel)',
+    question: 'Wie viel verdient man als Alltagsbegleiter?',
+    answer: 'Die Vergütung liegt zwischen 15 und 25 € pro Stunde, je nach Service und Region. Die Auszahlung erfolgt automatisch nach jedem abgeschlossenen Einsatz. Arbeitszeiten und Einsatzorte bestimmen Sie völlig flexibel selbst.',
+  },
+
+  // ──── Sicherheit & Datenschutz ────
+  {
+    category: 'Sicherheit & Datenschutz',
+    question: 'Sind die Alltagsbegleiter geprüft?',
+    answer: 'Ja, alle Engel durchlaufen eine gründliche Prüfung: Qualifikationsnachweis nach § 45a SGB XI, erweitertes Führungszeugnis, persönliches Gespräch und fortlaufende Bewertung durch Kunden. Zudem sind alle Engel über Alltagsengel versichert.',
+  },
+  {
+    category: 'Sicherheit & Datenschutz',
+    question: 'Wie schützt AlltagsEngel meine Daten?',
+    answer: 'AlltagsEngel arbeitet vollständig DSGVO-konform. Alle Daten werden verschlüsselt gespeichert und in EU-Rechenzentren gehostet. Wir nutzen Ihre Daten ausschließlich für die Serviceerbringung und verkaufen keine Daten an Dritte.',
   },
 ]
 
 export default function FAQPage() {
   const categories = [...new Set(faqs.map(f => f.category))]
+
+  const faqJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    name: 'Häufige Fragen zu Alltagsbegleitung, Entlastungsbetrag und Pflegegrad',
+    description: 'Antworten auf die wichtigsten Fragen rund um Alltagsbegleitung, Entlastungsbetrag (131€/Monat), Pflegehilfsmittel (42€/Monat), Pflegegrad und Krankenfahrten.',
+    mainEntity: faqs.map(faq => ({
+      '@type': 'Question',
+      name: faq.question,
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: faq.answer,
+      },
+    })),
+  }
+
+  const orgJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: 'Alltagsengel',
+    url: 'https://alltagsengel.care',
+    description: 'Zertifizierte Alltagsbegleitung im Rhein-Main-Gebiet. Abrechnung über den Entlastungsbetrag §45b SGB XI.',
+    areaServed: {
+      '@type': 'GeoCircle',
+      geoMidpoint: { '@type': 'GeoCoordinates', latitude: 50.1109, longitude: 8.6821 },
+      geoRadius: '50000',
+    },
+  }
 
   return (
     <main style={{
@@ -138,6 +251,9 @@ export default function FAQPage() {
       background: 'linear-gradient(180deg, #1A1612 0%, #2A2420 100%)',
       padding: '0 16px 60px',
     }}>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(orgJsonLd) }} />
+
       {/* Hero */}
       <section style={{
         textAlign: 'center',
@@ -159,8 +275,37 @@ export default function FAQPage() {
           Häufige Fragen
         </h1>
         <p style={{ color: '#B8B0A4', fontSize: 16, lineHeight: 1.6, maxWidth: 520, margin: '0 auto' }}>
-          Finden Sie Antworten auf die wichtigsten Fragen rund um AlltagsEngel, Entlastungsbetrag und Alltagsbegleitung.
+          Antworten auf die wichtigsten Fragen rund um Alltagsbegleitung,
+          Entlastungsbetrag (131 €/Monat), Pflegehilfsmittel (42 €/Monat),
+          Pflegegrad und Krankenfahrten.
         </p>
+      </section>
+
+      {/* Quick Facts */}
+      <section style={{
+        maxWidth: 700,
+        margin: '0 auto 40px',
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+        gap: 12,
+      }}>
+        {[
+          { label: 'Entlastungsbetrag', value: '131 €/Monat', detail: '§ 45b SGB XI' },
+          { label: 'Pflegehilfsmittel', value: '42 €/Monat', detail: '§ 40 SGB XI' },
+          { label: 'Stundensatz', value: 'ab 32 €', detail: 'Alltagsbegleitung' },
+        ].map(item => (
+          <div key={item.label} style={{
+            background: 'rgba(201, 150, 60, 0.08)',
+            border: '1px solid rgba(201, 150, 60, 0.2)',
+            borderRadius: 14,
+            padding: '16px 20px',
+            textAlign: 'center',
+          }}>
+            <div style={{ color: '#C9963C', fontSize: 22, fontWeight: 700 }}>{item.value}</div>
+            <div style={{ color: '#F5F0E8', fontSize: 14, fontWeight: 600, marginTop: 4 }}>{item.label}</div>
+            <div style={{ color: '#B8B0A4', fontSize: 12, marginTop: 2 }}>{item.detail}</div>
+          </div>
+        ))}
       </section>
 
       {/* FAQ Sections */}
@@ -232,7 +377,7 @@ export default function FAQPage() {
           Noch Fragen? Wir helfen gerne!
         </h2>
         <p style={{ color: '#B8B0A4', fontSize: 14, marginBottom: 20 }}>
-          Schreiben Sie uns auf WhatsApp oder rufen Sie an.
+          Schreiben Sie uns auf WhatsApp oder rufen Sie an — kostenlos und unverbindlich.
         </p>
         <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
           <Link href="/auth/register" style={{
@@ -263,19 +408,26 @@ export default function FAQPage() {
         </div>
       </section>
 
-      {/* Schema.org FAQ structured data */}
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
-        '@context': 'https://schema.org',
-        '@type': 'FAQPage',
-        mainEntity: faqs.map(faq => ({
-          '@type': 'Question',
-          name: faq.question,
-          acceptedAnswer: {
-            '@type': 'Answer',
-            text: faq.answer,
-          },
-        })),
-      })}} />
+      {/* Footer Navigation */}
+      <nav style={{
+        maxWidth: 700,
+        margin: '40px auto 0',
+        display: 'flex',
+        justifyContent: 'center',
+        gap: 20,
+        flexWrap: 'wrap',
+      }}>
+        {[
+          { href: '/alltagsbegleitung', label: 'Alltagsbegleitung' },
+          { href: '/impressum', label: 'Impressum' },
+          { href: '/datenschutz', label: 'Datenschutz' },
+          { href: '/agb', label: 'AGB' },
+        ].map(link => (
+          <Link key={link.href} href={link.href} style={{ color: '#B8B0A4', fontSize: 13, textDecoration: 'none' }}>
+            {link.label}
+          </Link>
+        ))}
+      </nav>
     </main>
   )
 }
