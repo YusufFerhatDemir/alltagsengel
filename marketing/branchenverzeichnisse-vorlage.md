@@ -48,18 +48,18 @@ Alltagsbegleitung, Alltagsbegleiter, Entlastungsbetrag, Pflegekasse, Pflegegrad,
 
 | Verzeichnis | Link | Status |
 |---|---|---|
-| Hotfrog | https://www.hotfrog.de/add | Offen |
-| Branchenbuch.de | https://www.branchenbuch.de/firmeneintrag/ | Offen |
-| GoLocal | https://www.golocal.de/registrierung/ | Offen |
-| Firmenwissen | https://www.firmenwissen.de/ | Offen |
-| Das Telefonbuch | https://www.dastelefonbuch.de | Offen |
-| Gelbe Seiten | https://www.gelbeseiten.de | Offen |
-| 11880 | https://www.11880.com | Offen |
-| Cylex | https://www.cylex.de | Offen |
-| Stadtbranchenbuch | https://www.stadtbranchenbuch.com | Offen |
-| Yalwa | https://www.yalwa.de | Offen |
-| Yelp | https://biz.yelp.de | Offen |
-| Kennst du einen | https://www.kennstdueinen.de | Offen |
+| Hotfrog | https://www.hotfrog.de/add | ✅ Erledigt (07.06.2026) |
+| Branchenbuch.de | https://www.branchenbuch.de/firmeneintrag/ | ⛔ SKIP — Website down |
+| GoLocal | https://www.golocal.de/registrierung/ | ✅ Eingereicht (07.06.2026) — Daten übermittelt, Claiming braucht Account |
+| Firmenwissen | https://www.firmenwissen.de/ | ⛔ SKIP — Read-only Handelsregister, kein manueller Eintrag |
+| Das Telefonbuch | https://www.dastelefonbuch.de | ⛔ SKIP — Kein kostenloser Eintrag, Partner von Gelbe Seiten (automatische Übernahme) |
+| Gelbe Seiten | https://www.gelbeseiten.de | ✅ Eingereicht (07.06.2026) — Grundeintrag komplett, Bestätigungs-E-Mail an info@alltagsengel.care |
+| 11880 | https://www.11880.com | ✅ Erledigt (07.06.2026) — Erfolgreich registriert + werkenntdenBESTEN.de |
+| Cylex | https://www.cylex.de | ✅ Erledigt (07.06.2026) — Profil 81%, Logo+Beschreibung+Keywords+Social+Öffnungszeiten+Produkte+Links+Zahlungsmethoden+Dienstleistungen+Marken+Bilder+Kartenposition+Sonderangebot (Max Free Tier) |
+| Stadtbranchenbuch | https://www.stadtbranchenbuch.com | ⛔ SKIP — Abo-Falle |
+| Yalwa | https://www.yalwa.de | ⛔ SKIP — Weiterleitung zu Locanto |
+| Yelp | https://biz.yelp.de | ⛔ Blocked — Braucht Account-Erstellung |
+| Kennst du einen | https://www.kennstdueinen.de | ✅ Eingereicht (07.06.2026) — Aktivierung innerhalb 2 Werktage |
 
 ---
 
