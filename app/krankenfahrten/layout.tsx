@@ -38,6 +38,7 @@ const serviceJsonLd = {
   name: 'Krankenfahrt-Vermittlung (Frankfurt & Rhein-Main)',
   description:
     'Sichere Krankenfahrten zu Arzt, Klinik, Dialyse und Therapie in Frankfurt am Main und dem Rhein-Main-Gebiet. Mit ärztlicher Verordnung über die Krankenkasse abrechenbar (§60 SGB V) oder als Selbstzahler buchbar.',
+  image: 'https://alltagsengel.care/og-image.png',
   provider: {
     '@type': 'Organization',
     '@id': 'https://alltagsengel.care/#organization',

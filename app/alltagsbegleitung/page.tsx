@@ -24,6 +24,7 @@ const jsonLd = {
   '@type': 'Service',
   name: 'Alltagsbegleitung Frankfurt',
   description: 'Zertifizierte Alltagsbegleitung nach §45a SGB XI in Frankfurt am Main. Haushaltshilfe, Arztbegleitung, Einkaufshilfe und psychosoziale Betreuung.',
+  image: 'https://alltagsengel.care/og-image.png',
   provider: {
     '@type': 'Organization',
     name: 'Alltagsengel',

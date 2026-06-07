@@ -47,6 +47,7 @@ const jsonLdServices = [
     '@id': 'https://alltagsengel.care/#service-pflegebox',
     name: 'Pflege-Box (Pflegehilfsmittel-Box nach §40 SGB XI)',
     description: 'Monatliche Lieferung von Pflegehilfsmitteln zum Verbrauch (Handschuhe, Desinfektion, Bettschutz, Masken, Schürzen). Bis zu 42 € pro Monat von der Pflegekasse übernommen — 0 € Eigenanteil bei anerkanntem Pflegegrad.',
+    image: 'https://alltagsengel.care/og-image.png',
     provider: { '@id': 'https://alltagsengel.care/#organization' },
     serviceType: 'Pflegehilfsmittel-Box',
     areaServed: [
@@ -66,6 +67,7 @@ const jsonLdServices = [
     '@id': 'https://alltagsengel.care/#service-krankenfahrt',
     name: 'Krankenfahrt-Vermittlung (Frankfurt & Rhein-Main)',
     description: 'Sichere Krankenfahrten zu Arzt, Klinik, Dialyse und Therapie — mit ärztlicher Verordnung über die Krankenkasse abrechenbar (§60 SGB V) oder als Selbstzahler buchbar.',
+    image: 'https://alltagsengel.care/og-image.png',
     provider: { '@id': 'https://alltagsengel.care/#organization' },
     serviceType: 'Krankenfahrt / Patientenfahrdienst',
     areaServed: [
@@ -79,6 +81,7 @@ const jsonLdServices = [
     '@id': 'https://alltagsengel.care/#service-alltagsbegleitung',
     name: 'Alltagsbegleitung (nach §45a SGB XI)',
     description: 'Zertifizierte Alltagsbegleitung für Senioren und Pflegebedürftige in Frankfurt und dem Rhein-Main-Gebiet. Einkaufshilfe, Arztbegleitung, Haushaltshilfe, psychosoziale Betreuung — abrechenbar über den Entlastungsbetrag (131 €/Monat nach §45b SGB XI).',
+    image: 'https://alltagsengel.care/og-image.png',
     provider: { '@id': 'https://alltagsengel.care/#organization' },
     serviceType: 'Alltagsbegleitung / Entlastungsangebot',
     areaServed: [
