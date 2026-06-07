@@ -148,6 +148,7 @@ function buildJsonLd(city: CityData) {
         '@type': 'Service',
         name: `Alltagsbegleitung ${city.name}`,
         description: `Zertifizierte Alltagsbegleitung nach §45a SGB XI in ${city.name}. Haushaltshilfe, Arztbegleitung, Einkaufshilfe und psychosoziale Betreuung.`,
+        image: 'https://alltagsengel.care/og-image.png',
         provider: {
           '@type': 'LocalBusiness',
           '@id': 'https://alltagsengel.care/#organization',

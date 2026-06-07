@@ -141,6 +141,10 @@ function buildJsonLd(city: CityData) {
         '@type': 'Product',
         name: `Pflegebox ${city.name}`,
         description: `Monatliche Pflegehilfsmittel-Box nach §40 SGB XI, direkt nach ${city.name} geliefert. Enthält Einmalhandschuhe, Desinfektionsmittel, Bettschutzeinlagen, Mundschutz und Schutzschürzen.`,
+        image: [
+          'https://alltagsengel.care/og-image.png',
+          'https://alltagsengel.care/icon-512x512.png',
+        ],
         brand: { '@type': 'Brand', name: 'Alltagsengel' },
         offers: [
           {
@@ -150,7 +154,24 @@ function buildJsonLd(city: CityData) {
             priceCurrency: 'EUR',
             description: 'Grundversorgung mit Pflegehilfsmitteln',
             availability: 'https://schema.org/InStock',
+            url: `https://alltagsengel.care/hygienebox/${city.slug}`,
             areaServed: { '@type': 'City', name: city.name },
+            hasMerchantReturnPolicy: {
+              '@type': 'MerchantReturnPolicy',
+              applicableCountry: 'DE',
+              returnPolicyCategory: 'https://schema.org/MerchantReturnNotPermitted',
+              merchantReturnDays: 0,
+            },
+            shippingDetails: {
+              '@type': 'OfferShippingDetails',
+              shippingRate: { '@type': 'MonetaryAmount', value: '0', currency: 'EUR' },
+              shippingDestination: { '@type': 'DefinedRegion', addressCountry: 'DE' },
+              deliveryTime: {
+                '@type': 'ShippingDeliveryTime',
+                handlingTime: { '@type': 'QuantitativeValue', minValue: 1, maxValue: 3, unitCode: 'DAY' },
+                transitTime: { '@type': 'QuantitativeValue', minValue: 1, maxValue: 5, unitCode: 'DAY' },
+              },
+            },
           },
           {
             '@type': 'Offer',
@@ -159,7 +180,24 @@ function buildJsonLd(city: CityData) {
             priceCurrency: 'EUR',
             description: 'Vollständige Versorgung — maximale Kassenerstattung (42€)',
             availability: 'https://schema.org/InStock',
+            url: `https://alltagsengel.care/hygienebox/${city.slug}`,
             areaServed: { '@type': 'City', name: city.name },
+            hasMerchantReturnPolicy: {
+              '@type': 'MerchantReturnPolicy',
+              applicableCountry: 'DE',
+              returnPolicyCategory: 'https://schema.org/MerchantReturnNotPermitted',
+              merchantReturnDays: 0,
+            },
+            shippingDetails: {
+              '@type': 'OfferShippingDetails',
+              shippingRate: { '@type': 'MonetaryAmount', value: '0', currency: 'EUR' },
+              shippingDestination: { '@type': 'DefinedRegion', addressCountry: 'DE' },
+              deliveryTime: {
+                '@type': 'ShippingDeliveryTime',
+                handlingTime: { '@type': 'QuantitativeValue', minValue: 1, maxValue: 3, unitCode: 'DAY' },
+                transitTime: { '@type': 'QuantitativeValue', minValue: 1, maxValue: 5, unitCode: 'DAY' },
+              },
+            },
           },
         ],
         areaServed: { '@type': 'City', name: city.name },

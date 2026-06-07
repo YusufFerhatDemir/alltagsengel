@@ -153,6 +153,7 @@ function buildJsonLd(city: CityData) {
         '@type': 'Service',
         name: `Krankenfahrt ${city.name}`,
         description: `Krankenfahrten in ${city.name}. Sichere und pünktliche Fahrten zu Arzt, Klinik, Dialyse und Therapie. Mit ärztlicher Verordnung über die Krankenkasse abrechenbar (§60 SGB V).`,
+        image: 'https://alltagsengel.care/og-image.png',
         provider: {
           '@type': 'LocalBusiness',
           '@id': 'https://alltagsengel.care/#organization',
