@@ -1,0 +1,29 @@
+{
+  "manifest_version": 3,
+  "name": "Meeting Notizen",
+  "version": "1.0.0",
+  "description": "Live-Transkription und Notizen für Meetings — Side Panel",
+  "permissions": [
+    "sidePanel",
+    "activeTab"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "side_panel": {
+    "default_path": "sidepanel.html"
+  },
+  "icons": {
+    "16": "icon16.png",
+    "48": "icon48.png",
+    "128": "icon128.png"
+  },
+  "action": {
+    "default_title": "Meeting Notizen öffnen",
+    "default_icon": {
+      "16": "icon16.png",
+      "48": "icon48.png",
+      "128": "icon128.png"
+    }
+  }
+}

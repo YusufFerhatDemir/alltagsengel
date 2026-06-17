@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Meeting Notizen</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f8f9fa;
+      color: #1a1a2e;
+      font-size: 14px;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Header */
+    .header {
+      background: linear-gradient(135deg, #2d3436, #636e72);
+      color: white;
+      padding: 16px;
+      flex-shrink: 0;
+    }
+
+    .header h1 {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .header .subtitle {
+      font-size: 12px;
+      opacity: 0.8;
+    }
+
+    .header .meeting-time {
+      font-size: 12px;
+      opacity: 0.7;
+      margin-top: 4px;
+    }
+
+    /* Controls */
+    .controls {
+      display: flex;
+      gap: 8px;
+      padding: 12px 16px;
+      background: white;
+      border-bottom: 1px solid #e9ecef;
+      flex-shrink: 0;
+    }
+
+    .btn {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-record {
+      background: #00b894;
+      color: white;
+      flex: 1;
+    }
+
+    .btn-record:hover {
+      background: #00a381;
+    }
+
+    .btn-record.recording {
+      background: #e17055;
+      animation: pulse 1.5s infinite;
+    }
+
+    .btn-record.recording:hover {
+      background: #d35940;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.8; }
+    }
+
+    .btn-export {
+      background: #0984e3;
+      color: white;
+    }
+
+    .btn-export:hover {
+      background: #0773c5;
+    }
+
+    .btn-clear {
+      background: #dfe6e9;
+      color: #636e72;
+    }
+
+    .btn-clear:hover {
+      background: #b2bec3;
+    }
+
+    /* Status */
+    .status-bar {
+      padding: 6px 16px;
+      font-size: 11px;
+      color: #636e72;
+      background: #f1f3f5;
+      border-bottom: 1px solid #e9ecef;
+      display: flex;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+
+    .status-bar .recording-indicator {
+      color: #e17055;
+      font-weight: 600;
+      display: none;
+    }
+
+    .status-bar .recording-indicator.active {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .recording-dot {
+      width: 8px;
+      height: 8px;
+      background: #e17055;
+      border-radius: 50%;
+      animation: blink 1s infinite;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    /* Main content — scrollable */
+    .content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0;
+    }
+
+    /* Sections */
+    .section {
+      margin: 12px;
+      background: white;
+      border-radius: 10px;
+      border: 1px solid #e9ecef;
+      overflow: hidden;
+    }
+
+    .section-header {
+      padding: 10px 14px;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #636e72;
+      background: #f8f9fa;
+      border-bottom: 1px solid #e9ecef;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      user-select: none;
+    }
+
+    .section-header:hover {
+      background: #f1f3f5;
+    }
+
+    .section-header .toggle {
+      font-size: 10px;
+      transition: transform 0.2s;
+    }
+
+    .section-header .toggle.collapsed {
+      transform: rotate(-90deg);
+    }
+
+    .section-body {
+      padding: 12px 14px;
+      max-height: 500px;
+      overflow-y: auto;
+      transition: max-height 0.3s ease;
+    }
+
+    .section-body.collapsed {
+      max-height: 0;
+      padding: 0 14px;
+      overflow: hidden;
+    }
+
+    /* Agenda */
+    .agenda-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      padding: 6px 0;
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    .agenda-item input[type="checkbox"] {
+      margin-top: 2px;
+      accent-color: #00b894;
+    }
+
+    .agenda-item.checked label {
+      text-decoration: line-through;
+      color: #b2bec3;
+    }
+
+    /* Transcript */
+    .transcript-entry {
+      padding: 8px 0;
+      border-bottom: 1px solid #f1f3f5;
+    }
+
+    .transcript-entry:last-child {
+      border-bottom: none;
+    }
+
+    .transcript-time {
+      font-size: 11px;
+      color: #0984e3;
+      font-weight: 500;
+      margin-bottom: 2px;
+    }
+
+    .transcript-text {
+      font-size: 13px;
+      line-height: 1.5;
+      color: #2d3436;
+    }
+
+    .transcript-text.interim {
+      color: #b2bec3;
+      font-style: italic;
+    }
+
+    .transcript-empty {
+      color: #b2bec3;
+      font-style: italic;
+      font-size: 13px;
+      text-align: center;
+      padding: 20px 0;
+    }
+
+    /* Notes */
+    .notes-textarea {
+      width: 100%;
+      min-height: 120px;
+      border: none;
+      outline: none;
+      resize: vertical;
+      font-family: inherit;
+      font-size: 13px;
+      line-height: 1.6;
+      color: #2d3436;
+      background: transparent;
+    }
+
+    .notes-textarea::placeholder {
+      color: #b2bec3;
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: #2d3436;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 13px;
+      transition: transform 0.3s ease;
+      z-index: 1000;
+    }
+
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* Error banner */
+    .error-banner {
+      display: none;
+      padding: 10px 16px;
+      background: #ffeaa7;
+      color: #636e72;
+      font-size: 12px;
+      border-bottom: 1px solid #fdcb6e;
+      flex-shrink: 0;
+    }
+
+    .error-banner.show {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h1>🎙️ Meeting Notizen</h1>
+    <div class="subtitle">PROCARE — Kooperationsgespräch</div>
+    <div class="meeting-time" id="meetingTime"></div>
+  </div>
+
+  <div class="error-banner" id="errorBanner"></div>
+
+  <div class="controls">
+    <button class="btn btn-record" id="btnRecord" onclick="toggleRecording()">
+      <span id="recordIcon">⏺</span>
+      <span id="recordLabel">Aufnahme starten</span>
+    </button>
+    <button class="btn btn-export" onclick="exportAll()">📋 Export</button>
+    <button class="btn btn-clear" onclick="clearTranscript()">🗑️</button>
+  </div>
+
+  <div class="status-bar">
+    <span id="statusText">Bereit</span>
+    <span class="recording-indicator" id="recordingIndicator">
+      <span class="recording-dot"></span>
+      Aufnahme läuft
+    </span>
+  </div>
+
+  <div class="content">
+
+    <!-- Agenda -->
+    <div class="section">
+      <div class="section-header" onclick="toggleSection('agenda')">
+        📋 Agenda
+        <span class="toggle" id="toggle-agenda">▼</span>
+      </div>
+      <div class="section-body" id="section-agenda">
+        <div class="agenda-item" id="agenda-1">
+          <input type="checkbox" id="check-1" onchange="toggleAgenda(1)">
+          <label for="check-1">10% Provision für vermittelte Pflegehilfsmittel schriftlich festhalten</label>
+        </div>
+        <div class="agenda-item" id="agenda-2">
+          <input type="checkbox" id="check-2" onchange="toggleAgenda(2)">
+          <label for="check-2">Gegenseitige Landing-Page-Präsenz klären</label>
+        </div>
+        <div class="agenda-item" id="agenda-3">
+          <input type="checkbox" id="check-3" onchange="toggleAgenda(3)">
+          <label for="check-3">Nächste Schritte vereinbaren</label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Transkript -->
+    <div class="section">
+      <div class="section-header" onclick="toggleSection('transcript')">
+        🎤 Live-Transkript
+        <span class="toggle" id="toggle-transcript">▼</span>
+      </div>
+      <div class="section-body" id="section-transcript">
+        <div id="transcriptContent">
+          <div class="transcript-empty">Transkription starten um Aufnahme zu beginnen...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Notizen -->
+    <div class="section">
+      <div class="section-header" onclick="toggleSection('notes')">
+        📝 Notizen
+        <span class="toggle" id="toggle-notes">▼</span>
+      </div>
+      <div class="section-body" id="section-notes">
+        <textarea class="notes-textarea" id="notesArea" placeholder="Notizen hier eingeben...&#10;&#10;Tipp: Wichtige Punkte, Action Items, Entscheidungen festhalten"></textarea>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+<script>
+  // --- State ---
+  let isRecording = false;
+  let recognition = null;
+  let transcriptEntries = [];
+  let startTime = null;
+
+  // --- Init ---
+  document.getElementById('meetingTime').textContent =
+    new Date().toLocaleDateString('de-DE', {
+      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+    }) + ' — ' + new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+
+  // --- Speech Recognition ---
+  function initRecognition() {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      showError('Speech Recognition wird von diesem Browser nicht unterstützt. Bitte Chrome verwenden.');
+      return null;
+    }
+
+    const rec = new SpeechRecognition();
+    rec.lang = 'de-DE';
+    rec.continuous = true;
+    rec.interimResults = true;
+    rec.maxAlternatives = 1;
+
+    let interimDiv = null;
+
+    rec.onresult = (event) => {
+      let finalTranscript = '';
+      let interimTranscript = '';
+
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const result = event.results[i];
+        if (result.isFinal) {
+          finalTranscript += result[0].transcript;
+        } else {
+          interimTranscript += result[0].transcript;
+        }
+      }
+
+      // Final result → add entry
+      if (finalTranscript.trim()) {
+        if (interimDiv) {
+          interimDiv.remove();
+          interimDiv = null;
+        }
+        addTranscriptEntry(finalTranscript.trim());
+      }
+
+      // Interim result → show preview
+      if (interimTranscript.trim()) {
+        if (!interimDiv) {
+          interimDiv = document.createElement('div');
+          interimDiv.className = 'transcript-entry';
+          interimDiv.innerHTML = `
+            <div class="transcript-time">${getTimestamp()}</div>
+            <div class="transcript-text interim"></div>
+          `;
+          document.getElementById('transcriptContent').appendChild(interimDiv);
+        }
+        interimDiv.querySelector('.transcript-text').textContent = interimTranscript.trim();
+        scrollTranscript();
+      }
+    };
+
+    rec.onerror = (event) => {
+      console.error('Speech Recognition Fehler:', event.error);
+      if (event.error === 'not-allowed') {
+        showError('Mikrofon-Zugriff wurde verweigert. Bitte in den Chrome-Einstellungen erlauben.');
+      } else if (event.error === 'no-speech') {
+        // Stille — kein Fehler anzeigen, einfach weitermachen
+      } else {
+        showError(`Fehler: ${event.error}. Aufnahme wird neu gestartet...`);
+      }
+    };
+
+    rec.onend = () => {
+      // Auto-restart falls noch aktiv
+      if (isRecording) {
+        try {
+          rec.start();
+        } catch (e) {
+          console.log('Neustart-Versuch:', e);
+        }
+      }
+    };
+
+    return rec;
+  }
+
+  function toggleRecording() {
+    if (isRecording) {
+      stopRecording();
+    } else {
+      startRecording();
+    }
+  }
+
+  function startRecording() {
+    recognition = initRecognition();
+    if (!recognition) return;
+
+    try {
+      recognition.start();
+      isRecording = true;
+      startTime = new Date();
+
+      // Clear empty state
+      const empty = document.querySelector('.transcript-empty');
+      if (empty) empty.remove();
+
+      // UI Updates
+      const btn = document.getElementById('btnRecord');
+      btn.classList.add('recording');
+      document.getElementById('recordIcon').textContent = '⏹';
+      document.getElementById('recordLabel').textContent = 'Aufnahme stoppen';
+      document.getElementById('recordingIndicator').classList.add('active');
+      document.getElementById('statusText').textContent = 'Aufnahme aktiv seit ' + new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+
+      hideError();
+    } catch (e) {
+      showError('Aufnahme konnte nicht gestartet werden: ' + e.message);
+    }
+  }
+
+  function stopRecording() {
+    if (recognition) {
+      isRecording = false;
+      recognition.stop();
+      recognition = null;
+    }
+
+    const btn = document.getElementById('btnRecord');
+    btn.classList.remove('recording');
+    document.getElementById('recordIcon').textContent = '⏺';
+    document.getElementById('recordLabel').textContent = 'Aufnahme starten';
+    document.getElementById('recordingIndicator').classList.remove('active');
+    document.getElementById('statusText').textContent = `Gestoppt — ${transcriptEntries.length} Einträge`;
+  }
+
+  // --- Transcript ---
+  function addTranscriptEntry(text) {
+    const timestamp = getTimestamp();
+    transcriptEntries.push({ time: timestamp, text: text });
+
+    const container = document.getElementById('transcriptContent');
+    const entry = document.createElement('div');
+    entry.className = 'transcript-entry';
+    entry.innerHTML = `
+      <div class="transcript-time">${timestamp}</div>
+      <div class="transcript-text">${escapeHtml(text)}</div>
+    `;
+    container.appendChild(entry);
+    scrollTranscript();
+  }
+
+  function getTimestamp() {
+    return new Date().toLocaleTimeString('de-DE', {
+      hour: '2-digit', minute: '2-digit', second: '2-digit'
+    });
+  }
+
+  function scrollTranscript() {
+    const section = document.getElementById('section-transcript');
+    section.scrollTop = section.scrollHeight;
+  }
+
+  function clearTranscript() {
+    if (transcriptEntries.length === 0) return;
+    if (!confirm('Transkript wirklich löschen?')) return;
+
+    transcriptEntries = [];
+    document.getElementById('transcriptContent').innerHTML =
+      '<div class="transcript-empty">Transkription starten um Aufnahme zu beginnen...</div>';
+    document.getElementById('statusText').textContent = 'Bereit';
+    showToast('Transkript gelöscht');
+  }
+
+  // --- Export ---
+  function exportAll() {
+    const now = new Date().toLocaleDateString('de-DE', {
+      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+    });
+
+    let output = `MEETING NOTIZEN — ${now}\n`;
+    output += `PROCARE — Kooperationsgespräch\n`;
+    output += '═'.repeat(50) + '\n\n';
+
+    // Agenda
+    output += '📋 AGENDA\n';
+    output += '─'.repeat(30) + '\n';
+    for (let i = 1; i <= 3; i++) {
+      const checkbox = document.getElementById(`check-${i}`);
+      const label = document.querySelector(`#agenda-${i} label`).textContent;
+      output += `${checkbox.checked ? '✅' : '⬜'} ${label}\n`;
+    }
+    output += '\n';
+
+    // Transkript
+    output += '🎤 TRANSKRIPT\n';
+    output += '─'.repeat(30) + '\n';
+    if (transcriptEntries.length > 0) {
+      transcriptEntries.forEach(entry => {
+        output += `[${entry.time}] ${entry.text}\n`;
+      });
+    } else {
+      output += '(Kein Transkript vorhanden)\n';
+    }
+    output += '\n';
+
+    // Notizen
+    output += '📝 NOTIZEN\n';
+    output += '─'.repeat(30) + '\n';
+    const notes = document.getElementById('notesArea').value.trim();
+    output += notes ? notes + '\n' : '(Keine Notizen)\n';
+
+    navigator.clipboard.writeText(output).then(() => {
+      showToast('In Zwischenablage kopiert!');
+    }).catch(() => {
+      showToast('Kopieren fehlgeschlagen');
+    });
+  }
+
+  // --- UI Helpers ---
+  function toggleSection(id) {
+    const body = document.getElementById(`section-${id}`);
+    const toggle = document.getElementById(`toggle-${id}`);
+    body.classList.toggle('collapsed');
+    toggle.classList.toggle('collapsed');
+  }
+
+  function toggleAgenda(num) {
+    const item = document.getElementById(`agenda-${num}`);
+    const checkbox = document.getElementById(`check-${num}`);
+    if (checkbox.checked) {
+      item.classList.add('checked');
+    } else {
+      item.classList.remove('checked');
+    }
+  }
+
+  function showToast(message) {
+    const toast = document.getElementById('toast');
+    toast.textContent = message;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 2000);
+  }
+
+  function showError(message) {
+    const banner = document.getElementById('errorBanner');
+    banner.textContent = '⚠️ ' + message;
+    banner.classList.add('show');
+  }
+
+  function hideError() {
+    document.getElementById('errorBanner').classList.remove('show');
+  }
+
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+</script>
+
+</body>
+</html>
