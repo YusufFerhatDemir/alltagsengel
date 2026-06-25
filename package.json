@@ -45,9 +45,9 @@
     "docx": "^9.6.1",
     "google-auth-library": "^10.6.2",
     "next": "^16.2.0",
-    "pptxgenjs": "^4.0.1",
-    "react": "^19.2.3",
-    "react-dom": "^19.2.3",
+    "pptxgenjs": "^3.12.0",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
     "react-icons": "^5.6.0",
     "resend": "^6.9.4",
     "sharp": "^0.34.5",
@@ -64,5 +64,23 @@
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
     "typescript": "^5.9.3"
-  }
+  },
+  "description": "> Marktplatz-App: zertifizierte Alltagsbegleiter ↔ Senioren/Pflegebedürftige > Slogan: **„Mit Herz für dich da\"**",
+  "main": "create_pitch_deck.js",
+  "directories": {
+    "doc": "docs",
+    "lib": "lib"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/YusufFerhatDemir/alltagsengel.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/YusufFerhatDemir/alltagsengel/issues"
+  },
+  "homepage": "https://github.com/YusufFerhatDemir/alltagsengel#readme"
 }
