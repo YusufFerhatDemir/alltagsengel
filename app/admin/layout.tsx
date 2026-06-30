@@ -110,6 +110,10 @@ const opsNavItems = [
   { href: '/admin/budgets', label: 'Budgets', icon: <IconChart size={18} /> },
   { href: '/admin/invoices', label: 'Rechnungen', icon: <IconDocument size={18} /> },
   { href: '/admin/caregivers', label: 'Betreuungskräfte', icon: <IconUsers size={18} /> },
+  { href: '/admin/applications', label: 'Bewerbungen', icon: <IconClipboard size={18} /> },
+  { href: '/admin/schedule', label: 'Einsatzplanung', icon: <IconHome size={18} /> },
+  { href: '/admin/quality', label: 'Qualität', icon: <IconHeart size={18} /> },
+  { href: '/admin/bonuses', label: 'Mitarbeiterbindung', icon: <IconTarget size={18} /> },
   { href: '/admin/partners', label: 'Kooperationspartner', icon: <IconHandshake size={18} /> },
 ]
 

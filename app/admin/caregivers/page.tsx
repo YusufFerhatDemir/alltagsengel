@@ -1,5 +1,6 @@
 'use client'
 import { Fragment, useEffect, useMemo, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import {
   formatDate, fullName, statusMeta, daysUntil,
@@ -44,6 +45,7 @@ function qualAmpel(validUntil: string | null): { ampel: Qualification['ampel']; 
 }
 
 export default function AdminCaregiversPage() {
+  const router = useRouter()
   const [rows, setRows] = useState<CaregiverRow[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState('all')
@@ -159,7 +161,13 @@ export default function AdminCaregiversPage() {
                   <Fragment key={c.id}>
                     <tr onClick={() => setExpanded(isOpen ? null : c.id)} style={{ cursor: 'pointer' }}>
                       <td style={{ fontWeight: 600 }}>
-                        {c.name}
+                        <span
+                          onClick={(e) => { e.stopPropagation(); router.push(`/admin/caregivers/${c.id}`) }}
+                          style={{ color: 'var(--gold2)', cursor: 'pointer' }}
+                          title="Akte öffnen"
+                        >
+                          {c.name}
+                        </span>
                         {c.emergency_pool && <span title="Notfall-Pool" style={{ marginLeft: 6 }}>🚨</span>}
                       </td>
                       <td>
