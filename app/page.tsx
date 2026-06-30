@@ -198,7 +198,7 @@ export default function SplashPage() {
                 borderRadius: 16, padding: '28px 22px', border: '1px solid rgba(201,150,60,0.25)',
                 textAlign: 'center', transition: 'transform 0.2s, border-color 0.3s',
               }}>
-                <div style={{ marginBottom: 12, display: 'flex', justifyContent: 'center' }}><img src="/assets/alltagsbegleitung-icon.svg" alt="Alltagsbegleitung" width={72} height={72} style={{ borderRadius: 14 }} /></div>
+                <div style={{ marginBottom: 12, display: 'flex', justifyContent: 'center' }}><img src="/assets/hilfe-icon.svg" alt="Alltagsbegleitung" width={72} height={72} style={{ borderRadius: 14 }} /></div>
                 <div style={{ color: '#C9963C', fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 6 }}>§45a SGB XI</div>
                 <h3 style={{ color: '#F5F0E8', fontSize: 19, fontWeight: 700, margin: '0 0 8px' }}>Alltagsbegleitung</h3>
                 <p style={{ color: '#B8AFA4', fontSize: 14, lineHeight: 1.5, margin: 0 }}>Einkaufshilfe, Arztbegleitung, Haushalt &amp; Betreuung</p>
@@ -213,7 +213,7 @@ export default function SplashPage() {
                 borderRadius: 16, padding: '28px 22px', border: '1px solid rgba(201,150,60,0.25)',
                 textAlign: 'center', transition: 'transform 0.2s, border-color 0.3s',
               }}>
-                <div style={{ marginBottom: 12, display: 'flex', justifyContent: 'center' }}><img src="/assets/pflegehilfsmittel-icon.svg" alt="Pflegehilfsmittel" width={72} height={72} style={{ borderRadius: 14 }} /></div>
+                <div style={{ marginBottom: 12, display: 'flex', justifyContent: 'center' }}><img src="/assets/pflegehilfsmittel-icon.png" alt="Pflegehilfsmittel" width={72} height={72} style={{ borderRadius: 14 }} /></div>
                 <div style={{ color: '#C9963C', fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 6 }}>§40 SGB XI</div>
                 <h3 style={{ color: '#F5F0E8', fontSize: 19, fontWeight: 700, margin: '0 0 8px' }}>Pflegehilfsmittel</h3>
                 <p style={{ color: '#B8AFA4', fontSize: 14, lineHeight: 1.5, margin: 0 }}>Handschuhe, Desinfektion, Bettschutz &amp; mehr — monatlich geliefert</p>
@@ -228,7 +228,7 @@ export default function SplashPage() {
                 borderRadius: 16, padding: '28px 22px', border: '1px solid rgba(201,150,60,0.25)',
                 textAlign: 'center', transition: 'transform 0.2s, border-color 0.3s',
               }}>
-                <div style={{ marginBottom: 12, display: 'flex', justifyContent: 'center' }}><img src="/assets/krankenfahrt-icon-v2.svg" alt="Krankenfahrten" width={72} height={72} style={{ borderRadius: 14 }} /></div>
+                <div style={{ marginBottom: 12, display: 'flex', justifyContent: 'center' }}><img src="/assets/krankenfahrt-icon.png" alt="Krankenfahrten" width={72} height={72} style={{ borderRadius: 14 }} /></div>
                 <div style={{ color: '#C9963C', fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 6 }}>§60 SGB V</div>
                 <h3 style={{ color: '#F5F0E8', fontSize: 19, fontWeight: 700, margin: '0 0 8px' }}>Krankenfahrten</h3>
                 <p style={{ color: '#B8AFA4', fontSize: 14, lineHeight: 1.5, margin: 0 }}>Arzt, Therapie, Dialyse &amp; Klinik — sicher &amp; pünktlich</p>
