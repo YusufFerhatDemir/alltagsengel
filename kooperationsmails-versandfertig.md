@@ -205,36 +205,6 @@ info@alltagsengel.care
 
 ---
 
-## Mail 7: DRK Frankfurt — Hausnotruf & Essen auf Rädern
-
-| Feld | Inhalt |
-|------|--------|
-| **An** | info@drkfrankfurt.de |
-| **Von** | info@alltagsengel.care |
-| **Betreff** | Kooperationsanfrage — Alltagsbegleitung × DRK Hausnotruf & Menüservice |
-
-**Text (kopieren ab hier):**
-
-Sehr geehrte Damen und Herren,
-
-als Alltagsbegleitungsdienst mit Sitz in Frankfurt betreuen wir Senioren regelmäßig im häuslichen Umfeld. Dabei sehen wir zwei Bereiche, in denen das DRK Frankfurt und Alltagsengel sich ideal ergänzen: Ihren Hausnotruf und Ihren Menüservice.
-
-Warum das zusammenpasst: Unsere Alltagsbegleiter sind wöchentlich bei den Senioren vor Ort — sie bemerken, wenn ein Hausnotrufsystem Sicherheit bieten würde oder wenn die Ernährungssituation Unterstützung braucht. Diese Empfehlung kommt von einer vertrauten Bezugsperson und hat daher eine ganz andere Wirkung als klassische Werbung.
-
-Unser Vorschlag: Wir vermitteln Ihnen gezielt Kunden für beide Bereiche — Hausnotruf und Mahlzeitendienst. Dafür streben wir ein Provisionsmodell an: eine laufende monatliche Beteiligung pro aktivem Vertrag bzw. pro beliefertem Kunden. So entsteht für beide Seiten ein nachhaltiges Modell.
-
-Als zwei Frankfurter Organisationen, die sich dem Wohl älterer Menschen verschrieben haben, sehen wir hier eine natürliche Partnerschaft. Wir freuen uns auf Ihre Rückmeldung.
-
-Herzliche Grüße
-Ihr Team von Alltagsengel
-
-Alltagsengel UG
-Neue Mainzer Straße 66-68
-60311 Frankfurt am Main
-info@alltagsengel.care
-
----
-
 ## Zusammenfassung: Empfänger-Übersicht
 
 | # | Empfänger | E-Mail | Kanal |
@@ -246,6 +216,5 @@ info@alltagsengel.care
 | 5a | ASB Frankfurt | info@asb-frankfurt.de | E-Mail |
 | 5b | ASB Westhessen | info@asb-westhessen.de | E-Mail |
 | 6 | Frankfurter Verband | zentrale@frankfurter-verband.de | E-Mail |
-| 7 | DRK Frankfurt | info@drkfrankfurt.de | E-Mail |
 
-**Gesamt: 8 Mails (7 per E-Mail, 1 per Kontaktformular)**
+**Gesamt: 7 Mails (6 per E-Mail, 1 per Kontaktformular)**
