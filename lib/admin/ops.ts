@@ -182,6 +182,125 @@ export const BUDGET_TYPE: Record<string, string> = {
   private: 'Privat',
 }
 
+// ── Digitale Mitarbeiterakte ────────────────────────────────────
+// Pflicht-Dokumente einer Betreuungskraft (Soll-Liste für die Akte)
+export const DOCUMENT_TYPE: Record<string, { label: string; color: string }> = {
+  arbeitsvertrag: { label: 'Arbeitsvertrag', color: '#2196F3' },
+  personalausweis: { label: 'Personalausweis', color: '#26A69A' },
+  steuer_id: { label: 'Steuer-ID', color: '#9C27B0' },
+  sozialversicherung: { label: 'Sozialversicherungsausweis', color: '#5C6BC0' },
+  krankenkasse: { label: 'Krankenkassen-Nachweis', color: '#E8A000' },
+  gesundheitszeugnis: { label: 'Gesundheitszeugnis', color: '#26A69A' },
+  fuehrungszeugnis: { label: 'Führungszeugnis', color: '#FF7043' },
+  erste_hilfe: { label: 'Erste-Hilfe-Kurs', color: '#D04B3B' },
+  bankverbindung: { label: 'Bankverbindung', color: '#5CB882' },
+  arbeitserlaubnis: { label: 'Arbeitserlaubnis', color: '#7E57C2' },
+  sonstige: { label: 'Sonstiges Dokument', color: '#999' },
+}
+
+// Soll-Bestand der Akte — diese Dokumente werden in der Checkliste erwartet
+export const REQUIRED_DOCUMENTS: string[] = [
+  'arbeitsvertrag', 'personalausweis', 'steuer_id', 'sozialversicherung',
+  'gesundheitszeugnis', 'fuehrungszeugnis', 'erste_hilfe', 'bankverbindung',
+]
+
+// ── Bewerbungen ─────────────────────────────────────────────────
+export const APPLICATION_STATUS: Record<string, { label: string; color: string }> = {
+  new: { label: 'Neu', color: '#2196F3' },
+  reviewed: { label: 'Gesichtet', color: '#26A69A' },
+  invited: { label: 'Eingeladen', color: '#9C27B0' },
+  interview: { label: 'Vorstellungsgespräch', color: '#E8A000' },
+  accepted: { label: 'Angenommen', color: '#5CB882' },
+  rejected: { label: 'Abgelehnt', color: '#D04B3B' },
+}
+
+// Reihenfolge des Bewerbungs-Trichters (für Pipeline-Logik)
+export const APPLICATION_FLOW = ['new', 'reviewed', 'invited', 'interview', 'accepted', 'rejected']
+
+export const APPLICATION_SOURCE: Record<string, { label: string; emoji: string }> = {
+  indeed: { label: 'Indeed', emoji: '🔎' },
+  instagram: { label: 'Instagram', emoji: '📸' },
+  facebook: { label: 'Facebook', emoji: '👍' },
+  kleinanzeigen: { label: 'Kleinanzeigen', emoji: '🏷️' },
+  arbeitsagentur: { label: 'Arbeitsagentur', emoji: '🏛️' },
+  website: { label: 'Website', emoji: '🌐' },
+  empfehlung: { label: 'Empfehlung', emoji: '🤝' },
+  sonstige: { label: 'Sonstige', emoji: '•' },
+}
+
+// ── Bonus-System / Mitarbeiterbindung ───────────────────────────
+export const BONUS_TYPE: Record<string, { label: string; color: string; emoji: string }> = {
+  punctuality: { label: 'Pünktlichkeit', color: '#2196F3', emoji: '⏰' },
+  reliability: { label: 'Zuverlässigkeit', color: '#5CB882', emoji: '🛡️' },
+  customer_rating: { label: 'Kundenbewertung', color: '#E8A000', emoji: '⭐' },
+  documentation: { label: 'Dokumentation', color: '#9C27B0', emoji: '📋' },
+  training: { label: 'Fortbildung', color: '#26A69A', emoji: '🎓' },
+  emergency: { label: 'Notfall-Einsatz', color: '#FF7043', emoji: '🚨' },
+  other: { label: 'Sonstige', color: '#999', emoji: '✨' },
+}
+
+export const REWARD_TYPE: Record<string, { label: string; emoji: string }> = {
+  tankgutschein: { label: 'Tankgutschein', emoji: '⛽' },
+  shopping: { label: 'Shopping-Gutschein', emoji: '🛍️' },
+  vacation_day: { label: 'Urlaubstag', emoji: '🏖️' },
+  bonus_payment: { label: 'Bonuszahlung', emoji: '💶' },
+  other: { label: 'Sonstige Prämie', emoji: '🎁' },
+}
+
+// ── Einsatzplanung & Vertretung ─────────────────────────────────
+export const SUBSTITUTION_STATUS: Record<string, { label: string; color: string }> = {
+  open: { label: 'Offen', color: '#E8A000' },
+  searching: { label: 'Suche läuft', color: '#2196F3' },
+  proposed: { label: 'Vorgeschlagen', color: '#7E57C2' },
+  filled: { label: 'Besetzt', color: '#5CB882' },
+  escalated: { label: 'Eskaliert', color: '#FF7043' },
+  external: { label: 'Extern besetzt', color: '#9C27B0' },
+  failed: { label: 'Nicht besetzt', color: '#D04B3B' },
+  cancelled: { label: 'Storniert', color: '#999' },
+}
+
+// Eskalationsstufen: 0 Automatik · 1 Disposition · 2 Externe Suche
+export const ESCALATION_LEVELS: Record<number, { label: string; color: string; emoji: string }> = {
+  0: { label: 'Automatik', color: '#5CB882', emoji: '🤖' },
+  1: { label: 'Disposition', color: '#E8A000', emoji: '☎️' },
+  2: { label: 'Externe Suche', color: '#D04B3B', emoji: '🌍' },
+}
+
+// ── Qualitätsmanagement: Zufriedenheitsanrufe ───────────────────
+export const CALL_TYPE: Record<string, { label: string; color: string; offsetDays: number | null }> = {
+  day7: { label: '7-Tage-Anruf', color: '#2196F3', offsetDays: 7 },
+  day30: { label: '30-Tage-Anruf', color: '#26A69A', offsetDays: 30 },
+  day90: { label: '90-Tage-Anruf', color: '#9C27B0', offsetDays: 90 },
+  recurring: { label: 'Halbjährlich', color: '#5CB882', offsetDays: 182 },
+}
+
+// Reihenfolge der Anruf-Kadenz (7 → 30 → 90 → dann alle 6 Monate)
+export const CALL_SEQUENCE = ['day7', 'day30', 'day90', 'recurring']
+
+// ── Wochentage (assignments.weekday) ────────────────────────────
+// Mo=1 … Sa=6, So=0 (JS getDay-Konvention). Anzeige-Reihenfolge Mo→So.
+export const WEEKDAYS: { n: number; short: string; long: string }[] = [
+  { n: 1, short: 'Mo', long: 'Montag' },
+  { n: 2, short: 'Di', long: 'Dienstag' },
+  { n: 3, short: 'Mi', long: 'Mittwoch' },
+  { n: 4, short: 'Do', long: 'Donnerstag' },
+  { n: 5, short: 'Fr', long: 'Freitag' },
+  { n: 6, short: 'Sa', long: 'Samstag' },
+  { n: 0, short: 'So', long: 'Sonntag' },
+]
+
+// Normalisiert eine weekday-Zahl auf JS-Konvention (7 → 0 für Sonntag)
+export function normalizeWeekday(w: number | null | undefined): number | null {
+  if (w == null) return null
+  return w === 7 ? 0 : w
+}
+
+// Sterne-Darstellung für Zufriedenheits-Rating (1..5)
+export function stars(rating: number | null | undefined): string {
+  const r = Math.max(0, Math.min(5, Math.round(rating ?? 0)))
+  return '★'.repeat(r) + '☆'.repeat(5 - r)
+}
+
 // Generisches Status-Lookup mit Fallback
 export function statusMeta(
   map: Record<string, { label: string; color: string }>,
