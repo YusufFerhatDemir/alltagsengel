@@ -2502,6 +2502,7 @@ body:has(.admin-layout) {
 
   /* Admin grid'ler */
   .admin-stats-grid { grid-template-columns: repeat(2, 1fr) !important; }
+  .client-detail-grid { grid-template-columns: 1fr !important; }
 
   /* Admin tablolar */
   .admin-table-wrap { max-width: 100% !important; }

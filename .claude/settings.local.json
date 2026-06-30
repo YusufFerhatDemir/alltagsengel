@@ -6,7 +6,15 @@
       "Bash(ls -la \"/Users/work/Library/Application Support/Claude/local-agent-mode-sessions/c8e8c52e-c874-41a7-bcc6-4b00b3a082ff/6893907d-5870-4082-a770-fe7fd2fc5048/agent/local_ditto_6893907d-5870-4082-a770-fe7fd2fc5048/uploads/8f6158f2-312D1DD8EEFE44298A93725BFC610FAB.PNG\" && ls -la /Users/work/alltagsengel/public/assets/ | grep -i icon)",
       "Bash(cp \"/Users/work/Library/Application Support/Claude/local-agent-mode-sessions/c8e8c52e-c874-41a7-bcc6-4b00b3a082ff/6893907d-5870-4082-a770-fe7fd2fc5048/agent/local_ditto_6893907d-5870-4082-a770-fe7fd2fc5048/uploads/8f6158f2-312D1DD8EEFE44298A93725BFC610FAB.PNG\" /Users/work/alltagsengel/public/assets/hilfe-icon.png && rm /Users/work/alltagsengel/public/assets/hilfe-icon.svg /Users/work/alltagsengel/public/assets/krankenfahrt-icon.svg && echo \"--- result ---\" && ls -la /Users/work/alltagsengel/public/assets/ | grep -i icon)",
       "Bash(echo \"exit: $?\")",
-      "Bash(./deploy.sh \"Neues Hilfe-Icon ersetzt, alte SVGs gelöscht\")"
+      "Bash(./deploy.sh \"Neues Hilfe-Icon ersetzt, alte SVGs gelöscht\")",
+      "Bash(awk '{print $NF}')",
+      "Bash(supabase --version)",
+      "Read(//Users/work/.supabase/**)",
+      "Bash(security find-generic-password *)",
+      "Bash(timeout 60 npx --yes supabase@latest --version)",
+      "Bash(npx tsc *)",
+      "Bash(./node_modules/.bin/tsc --noEmit -p tsconfig.json)",
+      "Bash(./deploy.sh \"Betriebssystem: Nav, Dashboard-Übersicht und Klienten-Verwaltung \\(Liste + Detail mit Budgetampel\\)\")"
     ]
   }
 }
