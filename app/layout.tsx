@@ -20,29 +20,29 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   title: {
-    default: 'Alltagsengel — Alltagsbegleitung · Pflegehilfsmittel · Krankenfahrten · Frankfurt / Rhein-Main',
+    default: 'Alltagsengel — Pflegebox beantragen & Krankenfahrt buchen · Frankfurt / Rhein-Main',
     template: '%s | Alltagsengel.care',
   },
-  description: 'Alltagsbegleitung nach §45a SGB XI (131 €/Monat Entlastungsbetrag), Pflegehilfsmittel kostenlos über die Pflegekasse (§40, bis 42 €/Monat) und Krankenfahrten (§60 SGB V) in Frankfurt & Rhein-Main. Alles in einer App.',
+  description: 'Pflegebox kostenlos über die Pflegekasse (§40 SGB XI, bis 42 €/Monat, 0 € Eigenanteil) und Krankenfahrten in Frankfurt & Rhein-Main — mit Verordnung von der Krankenkasse gezahlt oder als Selbstzahler. Alles bequem in der App.',
   keywords: [
-    'Alltagsbegleitung Frankfurt',
-    'Alltagsbegleitung §45a SGB XI',
-    'Entlastungsbetrag 131 Euro',
-    'Pflegehilfsmittel kostenlos',
     'Pflegebox beantragen',
+    'Pflegehilfsmittel Box kostenlos',
     'Pflegebox Frankfurt',
+    'Pflege-Box §40 SGB XI',
     'Krankenfahrt buchen Frankfurt',
     'Krankenfahrt Rhein-Main',
     'Patientenfahrdienst Frankfurt',
-    'Pflegehilfsmittel Box kostenlos',
+    'Krankenfahrt Verordnung',
+    'Krankenkasse §60 SGB V',
     '42 Euro Pflegekasse',
+    'Pflegehilfsmittel kostenlos',
   ],
   metadataBase: new URL('https://alltagsengel.care'),
   // canonical bewusst NICHT global setzen — Sub-Pages müssen eigenes
   // alternates.canonical liefern, sonst würde jede URL auf "/" zeigen.
   openGraph: {
-    title: 'Alltagsengel — Alltagsbegleitung · Pflegehilfsmittel · Krankenfahrten · Frankfurt & Rhein-Main',
-    description: 'Alltagsbegleitung (131 €/Monat Entlastungsbetrag) · Pflegehilfsmittel 0 € Eigenanteil · Krankenfahrten über die Krankenkasse — alles in einer App.',
+    title: 'Alltagsengel — Pflegebox & Krankenfahrt für Frankfurt & Rhein-Main',
+    description: 'Pflegebox 0 € Eigenanteil über die Pflegekasse · Krankenfahrt mit Verordnung oder als Selbstzahler · alles in der App.',
     url: 'https://alltagsengel.care',
     siteName: 'Alltagsengel.care',
     locale: 'de_DE',
