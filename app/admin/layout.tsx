@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useState, useEffect, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { IconChart, IconUsers, IconClipboard, IconWings, IconLogout, IconTarget } from '@/components/Icons'
+import { IconChart, IconUsers, IconClipboard, IconWings, IconLogout, IconTarget, IconHeart, IconMoney, IconDocument, IconHandshake, IconHome } from '@/components/Icons'
 import NotificationBell from '@/components/NotificationBell'
 import { ReactNode } from 'react'
 
@@ -102,6 +102,17 @@ const navItems = [
   { href: '/admin/settings', label: 'Einstellungen', icon: <IconSettings size={18} /> },
 ]
 
+// ═══ Betriebssystem — operative Pflege-/Abrechnungsverwaltung ═══
+const opsNavItems = [
+  { href: '/admin/dashboard', label: 'Übersicht', icon: <IconHome size={18} /> },
+  { href: '/admin/clients', label: 'Klienten', icon: <IconHeart size={18} /> },
+  { href: '/admin/records', label: 'Leistungsnachweise', icon: <IconClipboard size={18} /> },
+  { href: '/admin/budgets', label: 'Budgets', icon: <IconChart size={18} /> },
+  { href: '/admin/invoices', label: 'Rechnungen', icon: <IconDocument size={18} /> },
+  { href: '/admin/caregivers', label: 'Betreuungskräfte', icon: <IconUsers size={18} /> },
+  { href: '/admin/partners', label: 'Kooperationspartner', icon: <IconHandshake size={18} /> },
+]
+
 export default function AdminLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname()
   const router = useRouter()
@@ -172,6 +183,24 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
               <span>{item.label}</span>
             </Link>
           ))}
+
+          {/* ═══ Betriebssystem ═══ */}
+          <div style={{ borderTop: '1px solid var(--border)', margin: '8px 0 4px', paddingTop: 10 }}>
+            <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.8px', textTransform: 'uppercase', color: 'var(--ink5)', padding: '0 12px 6px' }}>
+              Betriebssystem
+            </div>
+            {opsNavItems.map(item => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`admin-nav-item ${pathname === item.href || pathname.startsWith(item.href + '/') ? 'active' : ''}`}
+                onClick={() => setMobileOpen(false)}
+              >
+                <span>{item.icon}</span>
+                <span>{item.label}</span>
+              </Link>
+            ))}
+          </div>
 
           {/* MIS Portal Link */}
           <div style={{ borderTop: '1px solid var(--border)', margin: '8px 0', paddingTop: 8 }}>
