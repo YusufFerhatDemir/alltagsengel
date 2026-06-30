@@ -198,7 +198,7 @@ export default function SplashPage() {
                 borderRadius: 16, padding: '28px 22px', border: '1px solid rgba(201,150,60,0.25)',
                 textAlign: 'center', transition: 'transform 0.2s, border-color 0.3s',
               }}>
-                <div style={{ marginBottom: 12, display: 'flex', justifyContent: 'center', height: 80, alignItems: 'center' }}><img src="/assets/alltagsbegleitung-original.png" alt="Alltagsbegleitung" style={{ height: '100%', objectFit: 'contain' }} /></div>
+                <div style={{ marginBottom: 12, display: 'flex', justifyContent: 'center' }}><img src="/assets/alltagsbegleitung-icon.svg" alt="Alltagsbegleitung" width={72} height={72} style={{ borderRadius: 14 }} /></div>
                 <div style={{ color: '#C9963C', fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 6 }}>§45a SGB XI</div>
                 <h3 style={{ color: '#F5F0E8', fontSize: 19, fontWeight: 700, margin: '0 0 8px' }}>Alltagsbegleitung</h3>
                 <p style={{ color: '#B8AFA4', fontSize: 14, lineHeight: 1.5, margin: 0 }}>Einkaufshilfe, Arztbegleitung, Haushalt &amp; Betreuung</p>
@@ -213,7 +213,7 @@ export default function SplashPage() {
                 borderRadius: 16, padding: '28px 22px', border: '1px solid rgba(201,150,60,0.25)',
                 textAlign: 'center', transition: 'transform 0.2s, border-color 0.3s',
               }}>
-                <div style={{ marginBottom: 12, display: 'flex', justifyContent: 'center', height: 80, alignItems: 'center' }}><img src="/assets/pflegehilfsmittel-original.png" alt="Pflegehilfsmittel" style={{ height: '100%', objectFit: 'contain' }} /></div>
+                <div style={{ marginBottom: 12, display: 'flex', justifyContent: 'center' }}><img src="/assets/pflegehilfsmittel-icon.svg" alt="Pflegehilfsmittel" width={72} height={72} style={{ borderRadius: 14 }} /></div>
                 <div style={{ color: '#C9963C', fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 6 }}>§40 SGB XI</div>
                 <h3 style={{ color: '#F5F0E8', fontSize: 19, fontWeight: 700, margin: '0 0 8px' }}>Pflegehilfsmittel</h3>
                 <p style={{ color: '#B8AFA4', fontSize: 14, lineHeight: 1.5, margin: 0 }}>Handschuhe, Desinfektion, Bettschutz &amp; mehr — monatlich geliefert</p>
@@ -228,7 +228,7 @@ export default function SplashPage() {
                 borderRadius: 16, padding: '28px 22px', border: '1px solid rgba(201,150,60,0.25)',
                 textAlign: 'center', transition: 'transform 0.2s, border-color 0.3s',
               }}>
-                <div style={{ marginBottom: 12, display: 'flex', justifyContent: 'center', height: 80, alignItems: 'center' }}><img src="/assets/krankenfahrt-original.png" alt="Krankenfahrten" style={{ height: '100%', objectFit: 'contain' }} /></div>
+                <div style={{ marginBottom: 12, display: 'flex', justifyContent: 'center' }}><img src="/assets/krankenfahrt-icon-v2.svg" alt="Krankenfahrten" width={72} height={72} style={{ borderRadius: 14 }} /></div>
                 <div style={{ color: '#C9963C', fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 6 }}>§60 SGB V</div>
                 <h3 style={{ color: '#F5F0E8', fontSize: 19, fontWeight: 700, margin: '0 0 8px' }}>Krankenfahrten</h3>
                 <p style={{ color: '#B8AFA4', fontSize: 14, lineHeight: 1.5, margin: 0 }}>Arzt, Therapie, Dialyse &amp; Klinik — sicher &amp; pünktlich</p>
@@ -357,21 +357,30 @@ export default function SplashPage() {
           <div className="lp-values">
             <div className="lp-value-item">
               <div className="lp-value-icon">
-                <img src="/assets/alltagsbegleitung-original.png" alt="" style={{ height: 48, objectFit: 'contain' }} />
+                <svg viewBox="0 0 40 40" width="40" height="40" style={{ fill: 'none', stroke: '#C9963C', strokeWidth: 1.5, strokeLinecap: 'round', strokeLinejoin: 'round' }}>
+                  <path d="M20 4c-7 4-12 4-14 4 0 12 4 22 14 28 10-6 14-16 14-28-2 0-7 0-14-4z" />
+                  <path d="M15 20l4 4 7-8" />
+                </svg>
               </div>
               <h4>§45a SGB XI · Alltagsbegleitung</h4>
               <p>131 € Entlastungsbetrag pro Monat — zertifizierte Begleitung im Alltag.</p>
             </div>
             <div className="lp-value-item">
               <div className="lp-value-icon">
-                <img src="/assets/pflegehilfsmittel-original.png" alt="" style={{ height: 48, objectFit: 'contain' }} />
+                <svg viewBox="0 0 40 40" width="40" height="40" style={{ fill: 'none', stroke: '#C9963C', strokeWidth: 1.5, strokeLinecap: 'round', strokeLinejoin: 'round' }}>
+                  <rect x="6" y="6" width="28" height="28" rx="2" />
+                  <path d="M13 14h14M13 20h14M13 26h10" />
+                </svg>
               </div>
               <h4>§40 SGB XI · Pflege-Box</h4>
               <p>Pflegehilfsmittel zum Verbrauch — bis 42 € pro Monat von der Pflegekasse.</p>
             </div>
             <div className="lp-value-item">
               <div className="lp-value-icon">
-                <img src="/assets/krankenfahrt-original.png" alt="" style={{ height: 48, objectFit: 'contain' }} />
+                <svg viewBox="0 0 40 40" width="40" height="40" style={{ fill: 'none', stroke: '#C9963C', strokeWidth: 1.5, strokeLinecap: 'round', strokeLinejoin: 'round' }}>
+                  <rect x="4" y="12" width="32" height="16" rx="2" />
+                  <path d="M8 28v3c0 1 .5 2 2 2h2c1.5 0 2-1 2-2v-3m12 3v3c0 1 .5 2 2 2h2c1.5 0 2-1 2-2v-3M4 18h32" />
+                </svg>
               </div>
               <h4>§60 SGB V · Krankenfahrt</h4>
               <p>Mit ärztlicher Verordnung übernimmt die Krankenkasse die Fahrtkosten.</p>
@@ -406,8 +415,8 @@ export default function SplashPage() {
           <div className="lp-values" style={{ marginTop: 20 }}>
             <div className="lp-value-item">
               <div className="lp-value-icon">
-                <svg viewBox="0 0 48 48" width="48" height="48" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M24 42C24 42 4 28 4 15C4 8 9 4 15 4C19 4 22 7 24 10C26 7 29 4 33 4C39 4 44 8 44 15C44 28 24 42 24 42Z" fill="#C9963C"/>
+                <svg viewBox="0 0 40 40" width="40" height="40" style={{ fill: 'none', stroke: '#C9963C', strokeWidth: 1.5, strokeLinecap: 'round', strokeLinejoin: 'round' }}>
+                  <path d="M20 35s-13-8-13-18a7 7 0 0 1 13-4 7 7 0 0 1 13 4c0 10-13 18-13 18z" />
                 </svg>
               </div>
               <h4>1 € pro Buchung</h4>
@@ -415,13 +424,11 @@ export default function SplashPage() {
             </div>
             <div className="lp-value-item">
               <div className="lp-value-icon">
-                <svg viewBox="0 0 48 48" width="48" height="48" xmlns="http://www.w3.org/2000/svg">
-                  <circle cx="24" cy="12" r="7" fill="#C9963C"/>
-                  <path d="M12 36C12 28 17 22 24 22C31 22 36 28 36 36V40H12V36Z" fill="#C9963C"/>
-                  <circle cx="10" cy="16" r="5" fill="#C9963C" opacity="0.5"/>
-                  <path d="M2 36C2 30 5 26 10 26C12 26 13.5 26.5 14.8 27.5C13 30 12 33 12 36V40H2V36Z" fill="#C9963C" opacity="0.4"/>
-                  <circle cx="38" cy="16" r="5" fill="#C9963C" opacity="0.5"/>
-                  <path d="M46 36C46 30 43 26 38 26C36 26 34.5 26.5 33.2 27.5C35 30 36 33 36 36V40H46V36Z" fill="#C9963C" opacity="0.4"/>
+                <svg viewBox="0 0 40 40" width="40" height="40" style={{ fill: 'none', stroke: '#C9963C', strokeWidth: 1.5, strokeLinecap: 'round', strokeLinejoin: 'round' }}>
+                  <circle cx="14" cy="14" r="5" />
+                  <circle cx="26" cy="14" r="5" />
+                  <circle cx="20" cy="26" r="5" />
+                  <path d="M14 19v2M26 19v2M17 24h6" />
                 </svg>
               </div>
               <h4>Direkt vor Ort</h4>
@@ -429,10 +436,10 @@ export default function SplashPage() {
             </div>
             <div className="lp-value-item">
               <div className="lp-value-icon">
-                <svg viewBox="0 0 48 48" width="48" height="48" xmlns="http://www.w3.org/2000/svg">
-                  <circle cx="20" cy="20" r="14" fill="none" stroke="#C9963C" strokeWidth="3.5"/>
-                  <line x1="30" y1="30" x2="44" y2="44" stroke="#C9963C" strokeWidth="4.5" strokeLinecap="round"/>
-                  <path d="M13 20L18 25L28 15" fill="none" stroke="#C9963C" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
+                <svg viewBox="0 0 40 40" width="40" height="40" style={{ fill: 'none', stroke: '#C9963C', strokeWidth: 1.5, strokeLinecap: 'round', strokeLinejoin: 'round' }}>
+                  <path d="M20 4v8M4 20h8M28 20h8M20 28v8" />
+                  <circle cx="20" cy="20" r="8" />
+                  <path d="M17 20l2 2 4-4" />
                 </svg>
               </div>
               <h4>100 % transparent</h4>
