@@ -7,6 +7,14 @@ import LeadForm from '@/components/LeadForm'
 
 const FAQS = [
   {
+    q: 'Was ist Alltagsbegleitung?',
+    a: 'Zertifizierte Alltagsbegleiter unterstützen Senioren und pflegebedürftige Menschen im Alltag — Einkaufshilfe, Arztbegleitung, Spaziergänge, Haushaltshilfe und psychosoziale Betreuung. Alles nach §45a SGB XI.',
+  },
+  {
+    q: 'Was kostet mich die Alltagsbegleitung?',
+    a: 'In der Regel nichts. Ab Pflegegrad 1 steht Ihnen der Entlastungsbetrag nach §45b SGB XI zu — 131 € pro Monat (1.572 € pro Jahr). Die Kosten werden direkt mit der Pflegekasse abgerechnet. Ihr Eigenanteil: 0 €.',
+  },
+  {
     q: 'Was kostet mich die Pflege-Box?',
     a: 'Nichts. Bei anerkanntem Pflegegrad (1–5) übernimmt die Pflegekasse nach §40 SGB XI bis zu 42 € pro Monat. Ihr Eigenanteil: 0 €. Bestellt wird bequem über die App, die Abrechnung läuft direkt mit der Kasse.',
   },
@@ -157,7 +165,7 @@ export default function SplashPage() {
           <Icon3D size={140} float />
         </div>
         <h1 className="sp-word">ALLTAGSENGEL</h1>
-        <p className="sp-tag">Pflege-Box &amp; Krankenfahrt</p>
+        <p className="sp-tag">Alltagsbegleitung · Pflege-Box · Krankenfahrt</p>
         <p className="sp-ug">Frankfurt · Rhein-Main · über die App</p>
         <div className="gold-div"></div>
         <div className="sp-btns">
@@ -181,18 +189,46 @@ export default function SplashPage() {
         {/* ─── Klar in 5 Sekunden: Was Alltagsengel ist ─── */}
         <section className="lp-section" style={{ textAlign: 'center' }}>
           <div className="lp-badge">Alltagsengel auf einen Blick</div>
-          <h2 className="lp-h2">Zwei Dinge, einfach geregelt</h2>
+          <h2 className="lp-h2">Drei Leistungen, einfach geregelt</h2>
           <p className="lp-text">
-            Alltagsengel ist kein medizinischer Dienst. Wir kümmern uns um zwei Dinge,
-            die pflegebedürftige Menschen und ihre Angehörigen wirklich entlasten:
-            die monatliche Pflege-Box und sichere Krankenfahrten — beides direkt in der App,
-            beides über die Kasse abrechenbar.
+            Alltagsbegleitung, Pflege-Box und Krankenfahrten — drei Leistungen,
+            die pflegebedürftige Menschen und ihre Angehörigen wirklich entlasten.
+            Alles direkt in der App, alles über die Kasse abrechenbar.
           </p>
         </section>
 
-        {/* ─── ANGEBOT 1: Pflege-Box ─── */}
+        {/* ─── ANGEBOT 1: Alltagsbegleitung ─── */}
         <section className="lp-section">
-          <div className="lp-badge">Angebot 1 · Pflege-Box</div>
+          <div className="lp-badge">Angebot 1 · Alltagsbegleitung</div>
+          <h2 className="lp-h2">Zertifizierte Alltagsbegleitung nach §45a SGB XI</h2>
+          <p className="lp-text">
+            Unsere zertifizierten Alltagsbegleiter unterstützen Senioren und pflegebedürftige
+            Menschen dort, wo es im Alltag zählt: Einkaufshilfe, Arztbegleitung, gemeinsame
+            Spaziergänge, Haushaltshilfe und psychosoziale Betreuung. Ab Pflegegrad 1 wird die
+            Leistung über den <strong>Entlastungsbetrag nach §45b SGB XI</strong> finanziert —
+            <strong> 131 € pro Monat</strong> (1.572 € pro Jahr), direkt mit der Pflegekasse abgerechnet.
+          </p>
+          <div className="lp-price-cards">
+            <div className="lp-price-card featured">
+              <div className="lp-pc-name">Entlastungsbetrag</div>
+              <div className="lp-pc-val">131 €</div>
+              <div className="lp-pc-per">pro Monat · ab Pflegegrad 1</div>
+              <p>Ihr Eigenanteil: 0 € — direkte Abrechnung mit der Pflegekasse.</p>
+            </div>
+            <div className="lp-price-card">
+              <div className="lp-pc-name">Unsere Leistungen</div>
+              <div className="lp-pc-val" style={{ fontSize: 22 }}>Einkaufshilfe · Arztbegleitung · Spaziergänge · Haushalt · Betreuung</div>
+              <div className="lp-pc-per" style={{ marginTop: 10 }}>flexibel buchbar über die App</div>
+            </div>
+          </div>
+          <div className="sp-btns" style={{ marginTop: 22 }}>
+            <Link href="/alltagsbegleitung"><button className="btn-ghost">Alltagsbegleitung im Detail ansehen</button></Link>
+          </div>
+        </section>
+
+        {/* ─── ANGEBOT 2: Pflege-Box ─── */}
+        <section className="lp-section">
+          <div className="lp-badge">Angebot 2 · Pflege-Box</div>
           <h2 className="lp-h2">Pflegehilfsmittel kostenlos von der Pflegekasse</h2>
           <p className="lp-text">
             Bei Pflegegrad 1–5 zahlt Ihre Pflegekasse nach <strong>§40 SGB XI</strong> bis zu
@@ -218,9 +254,9 @@ export default function SplashPage() {
           </div>
         </section>
 
-        {/* ─── ANGEBOT 2: Krankenfahrten ─── */}
+        {/* ─── ANGEBOT 3: Krankenfahrten ─── */}
         <section className="lp-section">
-          <div className="lp-badge">Angebot 2 · Krankenfahrt</div>
+          <div className="lp-badge">Angebot 3 · Krankenfahrt</div>
           <h2 className="lp-h2">Sicher zu Arzt, Therapie &amp; Klinik</h2>
           <p className="lp-text">
             Mit ärztlicher Verordnung übernimmt die Krankenkasse nach <strong>§60 SGB V</strong> die Kosten
@@ -251,10 +287,10 @@ export default function SplashPage() {
         {/* ─── So funktioniert die App ─── */}
         <section className="lp-section" style={{ textAlign: 'center' }}>
           <div className="lp-badge">So funktioniert&apos;s</div>
-          <h2 className="lp-h2">Eine App. Zwei Lösungen.</h2>
+          <h2 className="lp-h2">Eine App. Drei Leistungen.</h2>
           <p className="lp-text">
-            Pflege-Box bestellen, Krankenfahrt buchen, Verordnung hochladen, mit der Kasse abrechnen —
-            alles in einer App. Ohne Papierkram, ohne Telefon-Schleifen.
+            Alltagsbegleitung buchen, Pflege-Box bestellen, Krankenfahrt planen — alles in einer
+            App. Direkt mit der Pflegekasse abgerechnet, ohne Papierkram, ohne Telefon-Schleifen.
           </p>
           <div style={{ display: 'flex', justifyContent: 'center', margin: '24px 0 8px' }}>
             <AppMockup size={260} />
@@ -266,7 +302,7 @@ export default function SplashPage() {
           <div className="lp-badge">Persönliche Beratung</div>
           <h2 className="lp-h2">Jetzt kostenlos beraten lassen</h2>
           <p className="lp-text" style={{ marginBottom: 24 }}>
-            Sie haben Fragen zur Pflege-Box oder zu Krankenfahrten?
+            Sie haben Fragen zu Alltagsbegleitung, Pflege-Box oder Krankenfahrten?
             Hinterlassen Sie Ihre Nummer — wir rufen Sie zurück, kostenlos und unverbindlich.
           </p>
           <LeadForm source="homepage" />
@@ -277,6 +313,16 @@ export default function SplashPage() {
           <div className="lp-badge">Warum Alltagsengel</div>
           <h2 className="lp-h2">Klare gesetzliche Grundlage</h2>
           <div className="lp-values">
+            <div className="lp-value-item">
+              <div className="lp-value-icon">
+                <svg viewBox="0 0 40 40" width="40" height="40" style={{ fill: 'none', stroke: '#C9963C', strokeWidth: 1.5, strokeLinecap: 'round', strokeLinejoin: 'round' }}>
+                  <path d="M20 6c-5 3-9 3-11 3 0 9 3 17 11 22 8-5 11-13 11-22-2 0-6 0-11-3z" />
+                  <path d="M15 20l4 4 7-8" />
+                </svg>
+              </div>
+              <h4>§45a SGB XI · Alltagsbegleitung</h4>
+              <p>131 € Entlastungsbetrag pro Monat — zertifizierte Begleitung im Alltag.</p>
+            </div>
             <div className="lp-value-item">
               <div className="lp-value-icon">
                 <svg viewBox="0 0 40 40" width="40" height="40" style={{ fill: 'none', stroke: '#C9963C', strokeWidth: 1.5, strokeLinecap: 'round', strokeLinejoin: 'round' }}>
@@ -415,10 +461,11 @@ export default function SplashPage() {
 
         {/* ─── CTA ─── */}
         <section className="lp-section lp-cta-section">
-          <h2 className="lp-h2">Pflege-Box sichern. Fahrt buchen. In 2 Minuten.</h2>
+          <h2 className="lp-h2">Alltagsbegleitung · Pflege-Box · Krankenfahrt. In 2 Minuten.</h2>
           <p className="lp-text">
             Registrierung kostenlos &amp; unverbindlich. Keine Vorauszahlung, keine Bindung.
-            Bestellen Sie Ihre Pflege-Box oder buchen Sie eine Fahrt direkt in der App.
+            Buchen Sie Ihre Alltagsbegleitung, bestellen Sie Pflegehilfsmittel oder planen Sie
+            eine Krankenfahrt — alles direkt in der App.
           </p>
           <div className="sp-btns" style={{ marginTop: 20 }}>
             <Link href="/choose"><button className="btn-gold">JETZT KOSTENLOS REGISTRIEREN</button></Link>
@@ -431,7 +478,7 @@ export default function SplashPage() {
         {/* ─── Footer ─── */}
         <footer className="lp-footer">
           <div className="lp-footer-brand">ALLTAGSENGEL</div>
-          <div className="lp-footer-sub">Pflege-Box &amp; Krankenfahrt · Frankfurt &amp; Rhein-Main</div>
+          <div className="lp-footer-sub">Alltagsbegleitung · Pflege-Box · Krankenfahrt · Frankfurt &amp; Rhein-Main</div>
           <div className="lp-footer-links">
             <Link href="/hygienebox">Pflege-Box</Link>
             <Link href="/krankenfahrten">Krankenfahrt</Link>
