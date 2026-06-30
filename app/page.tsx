@@ -141,7 +141,7 @@ export default function SplashPage() {
         padding: '20px 16px 24px', textAlign: 'center',
       }}>
         <div style={{ fontSize: 13, color: '#C9963C', fontWeight: 600, marginBottom: 8 }}>
-          Alltagsbegleitung · Pflegehilfsmittel · Krankenfahrt — 0 € Eigenanteil
+          Alltagsbegleitung &amp; Pflege-Box: 0 € Eigenanteil über die Pflegekasse
         </div>
         <Link href="/choose">
           <button className="btn-gold" style={{ width: '100%', maxWidth: 340, fontSize: 16, padding: '14px 0' }}>
@@ -157,7 +157,7 @@ export default function SplashPage() {
           <Icon3D size={140} float />
         </div>
         <h1 className="sp-word">ALLTAGSENGEL</h1>
-        <p className="sp-tag">Alltagsbegleitung · Pflegehilfsmittel · Krankenfahrten</p>
+        <p className="sp-tag">Alltagsbegleitung · Pflege-Box · Krankenfahrt</p>
         <p className="sp-ug">Frankfurt · Rhein-Main · über die App</p>
         <div className="gold-div"></div>
         <div className="sp-btns">
@@ -178,65 +178,16 @@ export default function SplashPage() {
       {/* ── Scroll-Bereich ── */}
       <div className="lp-sections">
 
-        {/* ─── Sofort sichtbar: Alle 3 Leistungen ─── */}
+        {/* ─── Klar in 5 Sekunden: Was Alltagsengel ist ─── */}
         <section className="lp-section" style={{ textAlign: 'center' }}>
-          <div className="lp-badge">Unsere 3 Leistungen</div>
-          <h2 className="lp-h2">Alltagsbegleitung · Pflegehilfsmittel · Krankenfahrten</h2>
-          <p className="lp-text" style={{ marginBottom: 24 }}>
-            Drei Leistungen, die Senioren und Pflegebedürftige im Alltag brauchen —
-            alle über die Kasse abrechenbar, alle in einer App.
+          <div className="lp-badge">Alltagsengel auf einen Blick</div>
+          <h2 className="lp-h2">Alltagsbegleitung, Pflege-Box &amp; Krankenfahrt</h2>
+          <p className="lp-text">
+            Unser Kern: zertifizierte Alltagsbegleitung nach §45a SGB XI — Einkaufshilfe,
+            Arztbegleitung, Spaziergänge und Haushaltshilfe für Senioren und Pflegebedürftige.
+            Dazu die kostenlose Pflege-Box und sichere Krankenfahrten — alles über die App,
+            alles über die Kasse abrechenbar. 131 € Entlastungsbetrag pro Monat nutzen.
           </p>
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 260px), 1fr))',
-            gap: 16,
-          }}>
-            {/* Karte 1: Alltagsbegleitung */}
-            <Link href="/alltagsbegleitung" style={{ textDecoration: 'none' }}>
-              <div style={{
-                background: 'linear-gradient(135deg, rgba(201,150,60,0.15) 0%, rgba(201,150,60,0.05) 100%)',
-                borderRadius: 16, padding: '28px 22px', border: '1px solid rgba(201,150,60,0.25)',
-                textAlign: 'center', transition: 'transform 0.2s, border-color 0.3s',
-              }}>
-                <div style={{ fontSize: 36, marginBottom: 12 }}>🤝</div>
-                <div style={{ color: '#C9963C', fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 6 }}>§45a SGB XI</div>
-                <h3 style={{ color: '#F5F0E8', fontSize: 19, fontWeight: 700, margin: '0 0 8px' }}>Alltagsbegleitung</h3>
-                <p style={{ color: '#B8AFA4', fontSize: 14, lineHeight: 1.5, margin: 0 }}>Einkaufshilfe, Arztbegleitung, Haushalt &amp; Betreuung</p>
-                <div style={{ marginTop: 14, color: '#C9963C', fontSize: 22, fontWeight: 700 }}>131 €<span style={{ fontSize: 13, fontWeight: 400 }}>/Monat</span></div>
-                <div style={{ color: '#8A8278', fontSize: 12, marginTop: 2 }}>Entlastungsbetrag · 0 € Eigenanteil</div>
-              </div>
-            </Link>
-            {/* Karte 2: Pflegehilfsmittel */}
-            <Link href="/hygienebox" style={{ textDecoration: 'none' }}>
-              <div style={{
-                background: 'linear-gradient(135deg, rgba(201,150,60,0.15) 0%, rgba(201,150,60,0.05) 100%)',
-                borderRadius: 16, padding: '28px 22px', border: '1px solid rgba(201,150,60,0.25)',
-                textAlign: 'center', transition: 'transform 0.2s, border-color 0.3s',
-              }}>
-                <div style={{ fontSize: 36, marginBottom: 12 }}>📦</div>
-                <div style={{ color: '#C9963C', fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 6 }}>§40 SGB XI</div>
-                <h3 style={{ color: '#F5F0E8', fontSize: 19, fontWeight: 700, margin: '0 0 8px' }}>Pflegehilfsmittel</h3>
-                <p style={{ color: '#B8AFA4', fontSize: 14, lineHeight: 1.5, margin: 0 }}>Handschuhe, Desinfektion, Bettschutz &amp; mehr — monatlich geliefert</p>
-                <div style={{ marginTop: 14, color: '#C9963C', fontSize: 22, fontWeight: 700 }}>0 €<span style={{ fontSize: 13, fontWeight: 400 }}> Eigenanteil</span></div>
-                <div style={{ color: '#8A8278', fontSize: 12, marginTop: 2 }}>bis 42 €/Monat von der Pflegekasse</div>
-              </div>
-            </Link>
-            {/* Karte 3: Krankenfahrten */}
-            <Link href="/krankenfahrten" style={{ textDecoration: 'none' }}>
-              <div style={{
-                background: 'linear-gradient(135deg, rgba(201,150,60,0.15) 0%, rgba(201,150,60,0.05) 100%)',
-                borderRadius: 16, padding: '28px 22px', border: '1px solid rgba(201,150,60,0.25)',
-                textAlign: 'center', transition: 'transform 0.2s, border-color 0.3s',
-              }}>
-                <div style={{ fontSize: 36, marginBottom: 12 }}>🚗</div>
-                <div style={{ color: '#C9963C', fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 6 }}>§60 SGB V</div>
-                <h3 style={{ color: '#F5F0E8', fontSize: 19, fontWeight: 700, margin: '0 0 8px' }}>Krankenfahrten</h3>
-                <p style={{ color: '#B8AFA4', fontSize: 14, lineHeight: 1.5, margin: 0 }}>Arzt, Therapie, Dialyse &amp; Klinik — sicher &amp; pünktlich</p>
-                <div style={{ marginTop: 14, color: '#C9963C', fontSize: 22, fontWeight: 700 }}>Kasse zahlt</div>
-                <div style={{ color: '#8A8278', fontSize: 12, marginTop: 2 }}>mit ärztlicher Verordnung nach §60 SGB V</div>
-              </div>
-            </Link>
-          </div>
         </section>
 
         {/* ─── ANGEBOT 1: Alltagsbegleitung ─── */}
@@ -270,8 +221,8 @@ export default function SplashPage() {
 
         {/* ─── ANGEBOT 2: Pflege-Box ─── */}
         <section className="lp-section">
-          <div className="lp-badge">Angebot 2 · Pflegehilfsmittel</div>
-          <h2 className="lp-h2">Pflegehilfsmittel — kostenlos von der Pflegekasse</h2>
+          <div className="lp-badge">Angebot 2 · Pflege-Box</div>
+          <h2 className="lp-h2">Pflegehilfsmittel kostenlos von der Pflegekasse</h2>
           <p className="lp-text">
             Bei Pflegegrad 1–5 zahlt Ihre Pflegekasse nach <strong>§40 SGB XI</strong> bis zu
             <strong> 42 €</strong> pro Monat für Pflegehilfsmittel zum Verbrauch.
@@ -292,14 +243,14 @@ export default function SplashPage() {
             </div>
           </div>
           <div className="sp-btns" style={{ marginTop: 22 }}>
-            <Link href="/hygienebox"><button className="btn-ghost">Pflegehilfsmittel im Detail ansehen</button></Link>
+            <Link href="/hygienebox"><button className="btn-ghost">Pflege-Box im Detail ansehen</button></Link>
           </div>
         </section>
 
         {/* ─── ANGEBOT 3: Krankenfahrten ─── */}
         <section className="lp-section">
-          <div className="lp-badge">Angebot 3 · Krankenfahrten</div>
-          <h2 className="lp-h2">Krankenfahrten — sicher zu Arzt, Therapie &amp; Klinik</h2>
+          <div className="lp-badge">Angebot 3 · Krankenfahrt</div>
+          <h2 className="lp-h2">Sicher zu Arzt, Therapie &amp; Klinik</h2>
           <p className="lp-text">
             Mit ärztlicher Verordnung übernimmt die Krankenkasse nach <strong>§60 SGB V</strong> die Kosten
             (gesetzliche Zuzahlung von 10 %, mindestens 5 €, höchstens 10 € pro Fahrt möglich).
@@ -329,9 +280,9 @@ export default function SplashPage() {
         {/* ─── So funktioniert die App ─── */}
         <section className="lp-section" style={{ textAlign: 'center' }}>
           <div className="lp-badge">So funktioniert&apos;s</div>
-          <h2 className="lp-h2">Eine App. Drei Leistungen.</h2>
+          <h2 className="lp-h2">Eine App. Drei Lösungen.</h2>
           <p className="lp-text">
-            Alltagsbegleitung buchen, Pflegehilfsmittel bestellen, Krankenfahrt planen — alles in einer App.
+            Alltagsbegleitung buchen, Pflege-Box bestellen, Krankenfahrt planen — alles in einer App.
             Direkt mit der Pflegekasse abgerechnet, ohne Papierkram, ohne Telefon-Schleifen.
           </p>
           <div style={{ display: 'flex', justifyContent: 'center', margin: '24px 0 8px' }}>
@@ -344,7 +295,7 @@ export default function SplashPage() {
           <div className="lp-badge">Persönliche Beratung</div>
           <h2 className="lp-h2">Jetzt kostenlos beraten lassen</h2>
           <p className="lp-text" style={{ marginBottom: 24 }}>
-            Sie haben Fragen zu Alltagsbegleitung, Pflegehilfsmitteln oder Krankenfahrten?
+            Sie haben Fragen zu Alltagsbegleitung, Pflege-Box oder Krankenfahrten?
             Hinterlassen Sie Ihre Nummer — wir rufen Sie zurück, kostenlos und unverbindlich.
           </p>
           <LeadForm source="homepage" />
@@ -493,10 +444,10 @@ export default function SplashPage() {
 
         {/* ─── CTA ─── */}
         <section className="lp-section lp-cta-section">
-          <h2 className="lp-h2">Alltagsbegleitung · Pflegehilfsmittel · Krankenfahrt. In 2 Minuten.</h2>
+          <h2 className="lp-h2">Alltagsbegleitung buchen. Pflege-Box sichern. In 2 Minuten.</h2>
           <p className="lp-text">
             Registrierung kostenlos &amp; unverbindlich. Keine Vorauszahlung, keine Bindung.
-            Buchen Sie Ihre Alltagsbegleitung, bestellen Sie Pflegehilfsmittel oder planen Sie eine Krankenfahrt — alles direkt in der App.
+            Buchen Sie Ihre Alltagsbegleitung, bestellen Sie die Pflege-Box oder planen Sie eine Fahrt — alles direkt in der App.
           </p>
           <div className="sp-btns" style={{ marginTop: 20 }}>
             <Link href="/choose"><button className="btn-gold">JETZT KOSTENLOS REGISTRIEREN</button></Link>
@@ -509,10 +460,10 @@ export default function SplashPage() {
         {/* ─── Footer ─── */}
         <footer className="lp-footer">
           <div className="lp-footer-brand">ALLTAGSENGEL</div>
-          <div className="lp-footer-sub">Alltagsbegleitung · Pflegehilfsmittel · Krankenfahrten · Frankfurt &amp; Rhein-Main</div>
+          <div className="lp-footer-sub">Alltagsbegleitung · Pflege-Box · Krankenfahrt · Frankfurt &amp; Rhein-Main</div>
           <div className="lp-footer-links">
-            <Link href="/hygienebox">Pflegehilfsmittel</Link>
-            <Link href="/krankenfahrten">Krankenfahrten</Link>
+            <Link href="/hygienebox">Pflege-Box</Link>
+            <Link href="/krankenfahrten">Krankenfahrt</Link>
             <Link href="/alltagsbegleitung">Alltagsbegleitung</Link>
             <Link href="/engel-werden">Engel werden</Link>
             <Link href="/blog">Ratgeber</Link>
