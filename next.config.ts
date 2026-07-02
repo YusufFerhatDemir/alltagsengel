@@ -13,9 +13,8 @@ const withBundleAnalyzer = require("@next/bundle-analyzer")({
 const nextConfig: NextConfig = {
   // Hinweis (Apr 2026): `eslint` als next.config-Key ist seit Next 16 entfernt.
   // ESLint laeuft unabhaengig vom Build (siehe `npm run lint`).
-  typescript: {
-    ignoreBuildErrors: true,
-  },
+  // Typecheck ist seit Jul 2026 clean — Build blockt wieder bei Type-Fehlern.
+  // (deploy.sh typechecked zusätzlich warn-only vor jedem Push.)
   async headers() {
     return [
       {
@@ -28,10 +27,6 @@ const nextConfig: NextConfig = {
           {
             key: 'X-Content-Type-Options',
             value: 'nosniff',
-          },
-          {
-            key: 'X-XSS-Protection',
-            value: '1; mode=block',
           },
           {
             key: 'Referrer-Policy',

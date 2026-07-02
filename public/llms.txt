@@ -21,10 +21,16 @@ Alltagsengel ist KEIN medizinischer Anbieter, KEIN Pflegedienst und KEIN Notfall
 - [Startseite](https://alltagsengel.care/): Übersicht, Registrierung.
 - [Alltagsbegleitung](https://alltagsengel.care/alltagsbegleitung): Leistungsbeschreibung und Abrechnung über die Pflegekasse.
 - [Krankenfahrten](https://alltagsengel.care/krankenfahrten): Ablauf, Genehmigung und Kostenübernahme.
-- [Pflege-Box / Hygienebox](https://alltagsengel.care/hygienebox): 40 €/Monat Pflegehilfsmittel-Pauschale §40 SGB XI.
+- [Pflege-Box / Hygienebox](https://alltagsengel.care/hygienebox): bis 42 €/Monat Pflegehilfsmittel-Pauschale nach §40 SGB XI, 0 € Eigenanteil bei Pflegegrad 1–5.
 - [Ratgeber-Blog](https://alltagsengel.care/blog): Artikel zu Pflegegrad, Entlastungsbetrag, Verhinderungspflege, Pflegehilfsmitteln.
 - [FAQ](https://alltagsengel.care/faq): Häufige Fragen.
 - [Kontakt](https://alltagsengel.care/kontakt): Beratung.
+- [Engel werden](https://alltagsengel.care/engel-werden): Bewerbung als Alltagsbegleiter:in (Nebenjob/Teilzeit im Rhein-Main-Gebiet).
+- [Karriere](https://alltagsengel.care/karriere): Offene Stellen bei Alltagsengel.
+
+## Einsatzgebiet
+
+Frankfurt am Main und das Rhein-Main-Gebiet, u. a. Offenbach, Wiesbaden, Darmstadt, Mainz, Hanau, Bad Homburg, Oberursel, Neu-Isenburg, Rodgau, Friedberg (Wetterau) und Aschaffenburg. Stadt-Seiten: https://alltagsengel.care/alltagsbegleitung/frankfurt (analog für weitere Städte und für /krankenfahrten/… und /hygienebox/…).
 
 ## Crawler-Policy
 
