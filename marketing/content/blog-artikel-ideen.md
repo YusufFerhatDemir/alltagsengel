@@ -6,9 +6,9 @@
 
 ## Kategorie 1: Entlastungsbetrag
 
-### 1. Entlastungsbetrag 2026: So sichern Sie sich 125 Euro monatlich
+### 1. Entlastungsbetrag 2026: So sichern Sie sich 131 Euro monatlich
 - **Kurzbeschreibung:** Vollständiger Ratgeber zum Entlastungsbetrag nach §45b SGB XI. Erklärt Anspruch, Antragstellung und sinnvolle Verwendung — verständlich für pflegende Angehörige ohne Vorkenntnisse.
-- **Ziel-Keyword:** Entlastungsbetrag 2026
+- **Ziel-Keyword:** Entlastungsbetrag 2026 (131 Euro)
 - **Content-Typ:** Ratgeber
 - **Geschätzter Umfang:** 1.500 Wörter
 - **Priorität:** hoch
