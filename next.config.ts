@@ -15,6 +15,12 @@ const nextConfig: NextConfig = {
   // ESLint laeuft unabhaengig vom Build (siehe `npm run lint`).
   // Typecheck ist seit Jul 2026 clean — Build blockt wieder bei Type-Fehlern.
   // (deploy.sh typechecked zusätzlich warn-only vor jedem Push.)
+  // Workspace-Root festnageln: in ~/ liegt ein weiteres package-lock.json —
+  // ohne diese Zeile rät Turbopack den falschen Root (Module-Format-Fehler,
+  // wenn der Dev-Server nicht direkt aus dem Projektordner gestartet wird).
+  turbopack: {
+    root: __dirname,
+  },
   async headers() {
     return [
       {
