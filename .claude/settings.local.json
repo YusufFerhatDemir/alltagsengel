@@ -14,7 +14,14 @@
       "Bash(timeout 60 npx --yes supabase@latest --version)",
       "Bash(npx tsc *)",
       "Bash(./node_modules/.bin/tsc --noEmit -p tsconfig.json)",
-      "Bash(./deploy.sh \"Betriebssystem: Nav, Dashboard-Übersicht und Klienten-Verwaltung \\(Liste + Detail mit Budgetampel\\)\")"
+      "Bash(./deploy.sh \"Betriebssystem: Nav, Dashboard-Übersicht und Klienten-Verwaltung \\(Liste + Detail mit Budgetampel\\)\")",
+      "Bash(xargs ls -la)",
+      "Bash(awk '{print $5, $9}')",
+      "Bash(echo \"EXIT:$?\")",
+      "Bash(echo \"TSC_EXIT:$?\")",
+      "Bash(echo \"TSC_EXIT_CODE=$?\")",
+      "Bash(npm run *)",
+      "Bash(./deploy.sh \"SEO/Qualität Block 1: robots.txt-Duplikat + Icon-Transfer-Reste aus public/ entfernt, robots.ts Disallow-Liste vervollständigt, llms.txt aktualisiert \\(42€ §40, Städte, Karriere-Links\\), Pinch-Zoom erlaubt \\(WCAG 1.4.4 Senioren\\), dataLayer-Typkonflikt behoben, ignoreBuildErrors entfernt \\(Typecheck clean\\), deprecated X-XSS-Protection Header entfernt\")"
     ]
   }
 }

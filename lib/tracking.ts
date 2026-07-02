@@ -12,7 +12,7 @@
 
 declare global {
   interface Window {
-    dataLayer: Array<Record<string, any>>
+    // dataLayer wird bereits von @next/third-parties (optional) deklariert
     gtag: (...args: any[]) => void
     fbq: (...args: any[]) => void
     ttq: { track: (...args: any[]) => void }

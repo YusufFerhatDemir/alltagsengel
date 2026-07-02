@@ -12,8 +12,9 @@ const cormorant = Cormorant_Garamond({ subsets: ['latin'], variable: '--font-cor
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
+  // Zoom erlaubt (WCAG 1.4.4): Zielgruppe Senioren — Pinch-Zoom muss möglich sein.
+  maximumScale: 5,
+  userScalable: true,
   themeColor: '#1A1612',
   colorScheme: 'only dark' as any,
 }
