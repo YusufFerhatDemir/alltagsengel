@@ -39,7 +39,20 @@
       "Bash(./deploy.sh \"KI-Beratungs-Chatbot: Öffentlicher Pflegeberater auf allen Public-Seiten — /api/beratung-chat \\(Gemini→OpenAI→regelbasierter Fallback, IP-Rate-Limit, keine internen Daten\\) + Floating-Widget mit Schnellfragen; seo-strategie.md: Literal-Pattern durch Config-Verweis ersetzt\")",
       "Bash(git -C /Users/work/alltagsengel pull --rebase origin main)",
       "Bash(git -C /Users/work/alltagsengel log --oneline -4)",
-      "Bash(git -C /Users/work/alltagsengel ls-tree HEAD app/api/beratung-chat/ components/BeratungsChat.tsx)"
+      "Bash(git -C /Users/work/alltagsengel ls-tree HEAD app/api/beratung-chat/ components/BeratungsChat.tsx)",
+      "Bash(git -C /Users/work/alltagsengel log --oneline -3)",
+      "Bash(git -C /Users/work/alltagsengel status -sb)",
+      "Bash(git -C /Users/work/alltagsengel push origin main)",
+      "Bash(git -C /Users/work/alltagsengel show --stat e787252)",
+      "Bash(echo \"BUILD_EXIT=$?\")",
+      "Bash(/usr/bin/curl -s --max-time 20 https://alltagsengel.care/ueber-uns)",
+      "Bash(/usr/bin/curl -s --max-time 20 https://alltagsengel.care/krankenfahrten)",
+      "Bash(/usr/bin/curl -s --max-time 20 https://alltagsengel.care/)",
+      "Bash(/usr/bin/curl -s --max-time 20 https://alltagsengel.care/sitemap.xml)",
+      "Bash(/usr/bin/curl -s --max-time 20 https://alltagsengel.care/blog)",
+      "Bash(/usr/bin/curl -s --max-time 20 https://alltagsengel.care/kontakt)",
+      "Bash(./deploy.sh \"SEO: Title-Doppel-Branding auf /krankenfahrten und /kontakt entfernt \\(Template hängt bereits '| Alltagsengel.care' an\\) + EinzugsgebietKarte-Komponente \\(noch nicht eingebunden\\)\")",
+      "Bash(./deploy.sh \"Einzugsgebiet-Karte + PLZ-Sofort-Check: Stilisierte Rhein-Main-SVG-Karte \\(DSGVO-frei, ohne externe Tiles\\) mit 12 klickbaren Städten, PLZ-Prüfung mit Regions-Erkennung und Termin-CTA — neue Landing-Sektion\")"
     ]
   }
 }

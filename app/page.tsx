@@ -4,6 +4,7 @@ import Icon3D from '@/components/Icon3D'
 import AppMockup from '@/components/AppMockup'
 import VisitTracker from '@/components/VisitTracker'
 import LeadForm from '@/components/LeadForm'
+import EinzugsgebietKarte from '@/components/EinzugsgebietKarte'
 import CookieSettingsLink from '@/components/CookieSettingsLink'
 
 const FAQS = [
@@ -308,6 +309,17 @@ export default function SplashPage() {
             Hinterlassen Sie Ihre Nummer — wir rufen Sie zurück, kostenlos und unverbindlich.
           </p>
           <LeadForm source="homepage" />
+        </section>
+
+        {/* ─── Einzugsgebiet + PLZ-Check ─── */}
+        <section className="lp-section">
+          <div className="lp-badge">Einzugsgebiet</div>
+          <h2 className="lp-h2">Sind wir schon bei Ihnen vor Ort?</h2>
+          <p className="lp-text">
+            Frankfurt am Main und das gesamte Rhein-Main-Gebiet — geben Sie Ihre Postleitzahl
+            ein und sehen Sie sofort, ob wir zu Ihnen kommen.
+          </p>
+          <EinzugsgebietKarte />
         </section>
 
         {/* ─── Trust / Fakten (keine erfundenen Testimonials) ─── */}

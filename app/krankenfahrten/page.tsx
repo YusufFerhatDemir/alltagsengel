@@ -3,7 +3,7 @@ import KrankenfahrtenContent from './KrankenfahrtenContent'
 import BreadcrumbSchema from '@/components/BreadcrumbSchema'
 
 export const metadata: Metadata = {
-  title: 'Krankenfahrten Frankfurt & Rhein-Main | Mit Verordnung oder Selbstzahler — Alltagsengel',
+  title: 'Krankenfahrten Frankfurt & Rhein-Main — mit Verordnung oder als Selbstzahler',
   description:
     'Krankenfahrt buchen in Frankfurt & Rhein-Main: Fahrten zu Arzt, Dialyse, Klinik und Therapie. Mit ärztlicher Verordnung zahlt die Krankenkasse (§60 SGB V) — oder einfach als Selbstzahler. Pünktliche Abholung, Begleitung bis zur Tür.',
   keywords: [
