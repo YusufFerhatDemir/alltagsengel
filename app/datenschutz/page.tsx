@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import BreadcrumbSchema from '@/components/BreadcrumbSchema'
+import CookieSettingsLink from '@/components/CookieSettingsLink'
 
 export const metadata: Metadata = {
   title: 'Datenschutzerklärung | Alltagsengel',
@@ -77,6 +78,10 @@ export default function DatenschutzPage() {
             Viele Datenverarbeitungsvorgänge sind nur mit Ihrer ausdrücklichen Einwilligung möglich. Sie können eine
             bereits erteilte Einwilligung jederzeit widerrufen. Die Rechtmäßigkeit der bis zum Widerruf erfolgten
             Datenverarbeitung bleibt vom Widerruf unberührt.
+          </p>
+          <p>
+            Ihre Cookie-Einwilligung können Sie hier direkt anpassen oder widerrufen:{' '}
+            <CookieSettingsLink style={{ color: '#C9963C', textDecoration: 'underline' }} />
           </p>
           <h3>Recht auf Datenübertragbarkeit</h3>
           <p>

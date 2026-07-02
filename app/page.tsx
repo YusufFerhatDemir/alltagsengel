@@ -4,6 +4,7 @@ import Icon3D from '@/components/Icon3D'
 import AppMockup from '@/components/AppMockup'
 import VisitTracker from '@/components/VisitTracker'
 import LeadForm from '@/components/LeadForm'
+import CookieSettingsLink from '@/components/CookieSettingsLink'
 
 const FAQS = [
   {
@@ -493,6 +494,7 @@ export default function SplashPage() {
             <Link href="/impressum">Impressum</Link>
             <Link href="/datenschutz">Datenschutz</Link>
             <Link href="/agb">AGB</Link>
+            <CookieSettingsLink />
           </div>
           <div className="lp-footer-copy">
             © 2026 Alltagsengel UG (haftungsbeschränkt) — Frankfurt am Main

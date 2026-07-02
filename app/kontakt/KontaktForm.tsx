@@ -4,6 +4,7 @@ import { useState } from 'react'
 export default function KontaktForm() {
   const [form, setForm] = useState({ name: '', email: '', phone: '', message: '', type: 'kunde' })
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
+  const [errorMsg, setErrorMsg] = useState('')
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -19,9 +20,12 @@ export default function KontaktForm() {
         setStatus('sent')
         setForm({ name: '', email: '', phone: '', message: '', type: 'kunde' })
       } else {
+        const data = await res.json().catch(() => null)
+        setErrorMsg(data?.error || '')
         setStatus('error')
       }
     } catch {
+      setErrorMsg('')
       setStatus('error')
     }
   }
@@ -107,7 +111,7 @@ export default function KontaktForm() {
 
       {status === 'error' && (
         <p style={{ color: '#E74C3C', fontSize: 13, marginTop: 8 }}>
-          Fehler beim Senden. Bitte versuchen Sie es erneut.
+          {errorMsg || 'Fehler beim Senden. Bitte versuchen Sie es erneut.'}
         </p>
       )}
 
@@ -122,6 +126,11 @@ export default function KontaktForm() {
       >
         {status === 'sending' ? 'Wird gesendet...' : 'Nachricht senden'}
       </button>
+
+      <p style={{ color: '#6A6259', fontSize: 11, textAlign: 'center', marginTop: 12 }}>
+        Ihre Daten werden nur zur Bearbeitung Ihrer Anfrage verwendet — Details in der{' '}
+        <a href="/datenschutz" style={{ color: '#8A8279', textDecoration: 'underline' }}>Datenschutzerklärung</a>.
+      </p>
     </form>
   )
 }

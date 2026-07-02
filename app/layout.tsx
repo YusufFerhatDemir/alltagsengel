@@ -174,6 +174,31 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   'https://www.instagram.com/alltagsengel_ug',
                   'https://www.tiktok.com/@alltagsengel_ug',
                 ],
+                founder: {
+                  '@type': 'Person',
+                  name: 'Yusuf Ferhat Demir',
+                  jobTitle: 'Geschäftsführer',
+                },
+                foundingLocation: {
+                  '@type': 'City',
+                  name: 'Frankfurt am Main',
+                },
+                // Handelsregister als eindeutiger Identifier (Knowledge Graph / Wikidata)
+                identifier: {
+                  '@type': 'PropertyValue',
+                  propertyID: 'Handelsregister',
+                  value: 'Amtsgericht Frankfurt am Main, HRB 140351',
+                },
+                knowsAbout: [
+                  'Entlastungsbetrag §45b SGB XI',
+                  'Alltagsbegleitung nach §45a SGB XI',
+                  'Pflegehilfsmittel zum Verbrauch §40 SGB XI',
+                  'Krankenfahrten und Fahrkostenübernahme §60 SGB V',
+                  'Pflegegrade und Begutachtung (NBA)',
+                  'Verhinderungspflege',
+                  'Seniorenbetreuung zu Hause',
+                ],
+                slogan: 'Alltagsbegleitung, Pflegebox und Krankenfahrten — über die Pflegekasse finanziert.',
               },
               {
                 '@type': 'LocalBusiness',

@@ -1,6 +1,9 @@
 // AlltagsEngel Service Worker
-const CACHE_NAME = 'alltagsengel-v1'
+// Version bei relevanten Änderungen bumpen — activate löscht dann alte Caches
+// (gecachte Next.js-Chunks aus früheren Deploys würden sonst unbegrenzt anwachsen).
+const CACHE_NAME = 'alltagsengel-v2'
 const OFFLINE_URL = '/offline.html'
+const MAX_RUNTIME_ENTRIES = 200
 
 // Assets to pre-cache
 const PRECACHE_ASSETS = [
@@ -10,10 +13,17 @@ const PRECACHE_ASSETS = [
   '/apple-touch-icon.png',
 ]
 
-// Install — pre-cache offline page
+// Install — pre-cache offline page (einzeln, damit ein 404 nicht die
+// ganze Installation kippt und die Offline-Seite nie funktioniert)
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(PRECACHE_ASSETS))
+    caches.open(CACHE_NAME).then((cache) =>
+      Promise.all(
+        PRECACHE_ASSETS.map((asset) =>
+          cache.add(asset).catch(() => { /* Asset fehlt → Rest trotzdem cachen */ })
+        )
+      )
+    )
   )
   self.skipWaiting()
 })
@@ -28,11 +38,21 @@ self.addEventListener('activate', (event) => {
   self.clients.claim()
 })
 
+// Cache grob begrenzen: älteste Einträge löschen, wenn Limit überschritten
+async function trimCache() {
+  const cache = await caches.open(CACHE_NAME)
+  const keys = await cache.keys()
+  if (keys.length <= MAX_RUNTIME_ENTRIES) return
+  // FIFO: die ältesten (zuerst eingefügten) Einträge entfernen
+  await Promise.all(keys.slice(0, keys.length - MAX_RUNTIME_ENTRIES).map((k) => cache.delete(k)))
+}
+
 // Fetch — network first, fallback to cache/offline
 self.addEventListener('fetch', (event) => {
-  // Skip non-GET, chrome-extension, API calls
+  // Skip non-GET, chrome-extension, same-origin API calls
   if (event.request.method !== 'GET') return
-  if (event.request.url.includes('/api/')) return
+  const url = new URL(event.request.url)
+  if (url.origin === self.location.origin && url.pathname.startsWith('/api/')) return
   if (event.request.url.startsWith('chrome-extension://')) return
 
   event.respondWith(
@@ -40,11 +60,14 @@ self.addEventListener('fetch', (event) => {
       .then((response) => {
         // Cache successful responses for static assets
         if (response.ok && (
-          event.request.url.match(/\.(js|css|png|jpg|svg|ico|woff2?)$/) ||
+          url.pathname.match(/\.(js|css|png|jpg|svg|ico|woff2?)$/) ||
           event.request.destination === 'image'
         )) {
           const clone = response.clone()
-          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone))
+          caches.open(CACHE_NAME)
+            .then((cache) => cache.put(event.request, clone))
+            .then(() => trimCache())
+            .catch(() => { /* Quota voll o. ä. — nicht kritisch */ })
         }
         return response
       })
@@ -52,9 +75,11 @@ self.addEventListener('fetch', (event) => {
         // Try cache first
         return caches.match(event.request).then((cached) => {
           if (cached) return cached
-          // Navigation requests → offline page
+          // Navigation requests → offline page (Fallback, falls Precache fehlschlug)
           if (event.request.mode === 'navigate') {
-            return caches.match(OFFLINE_URL)
+            return caches.match(OFFLINE_URL).then(
+              (offline) => offline ?? new Response('Offline', { status: 503, statusText: 'Offline' })
+            )
           }
           return new Response('', { status: 503, statusText: 'Offline' })
         })
@@ -87,10 +112,12 @@ self.addEventListener('notificationclick', (event) => {
   const url = event.notification.data?.url || '/'
   event.waitUntil(
     self.clients.matchAll({ type: 'window' }).then((clients) => {
-      const client = clients.find((c) => c.url.includes('alltagsengel.care'))
+      // origin-basiert statt hardcoded Domain → funktioniert auch auf Preview/localhost
+      const client = clients.find((c) => c.url.startsWith(self.location.origin))
       if (client) {
-        client.navigate(url)
-        return client.focus()
+        return Promise.resolve(client.navigate(url))
+          .catch(() => { /* uncontrolled client — navigate kann fehlschlagen */ })
+          .then(() => client.focus())
       }
       return self.clients.openWindow(url)
     })

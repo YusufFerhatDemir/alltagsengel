@@ -235,6 +235,29 @@ const categoryColors: Record<string, string> = {
   'Ratgeber': '#A05A5A',
 }
 
+// CollectionPage + ItemList: macht die Ratgeber-Übersicht für Google und
+// KI-Suchsysteme als kuratierte Artikelsammlung lesbar.
+const collectionJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  '@id': 'https://alltagsengel.care/blog#collection',
+  name: 'Alltagsengel Ratgeber — Pflege, Alltagsbegleitung & Entlastungsbetrag',
+  url: 'https://alltagsengel.care/blog',
+  inLanguage: 'de-DE',
+  isPartOf: { '@id': 'https://alltagsengel.care/#website' },
+  publisher: { '@id': 'https://alltagsengel.care/#organization' },
+  mainEntity: {
+    '@type': 'ItemList',
+    numberOfItems: articles.length,
+    itemListElement: articles.map((a, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      url: `https://alltagsengel.care/blog/${a.slug}`,
+      name: a.title,
+    })),
+  },
+}
+
 export default function BlogIndexPage() {
   const categories = [...new Set(articles.map(a => a.category))]
 
@@ -244,6 +267,10 @@ export default function BlogIndexPage() {
       background: 'linear-gradient(180deg, #1A1612 0%, #2A2420 100%)',
       padding: '0 16px 60px',
     }}>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionJsonLd) }}
+      />
       <BreadcrumbSchema items={[{ name: 'Ratgeber' }]} />
       {/* Hero */}
       <section style={{
