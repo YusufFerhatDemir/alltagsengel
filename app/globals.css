@@ -145,7 +145,13 @@ body {
 #splash {
   background:var(--coal); min-height:852px;
   align-items:center; justify-content:flex-start;
-  position:relative; overflow-y:auto; overflow-x:hidden;
+  /* overflow:visible statt overflow-y:auto — sonst wird #splash zum eigenen
+     Scroll-Container, der über dem Hero das Mausrad "schluckt" (chained nicht
+     zum Dokument). Horizontales Überlaufen klippt weiterhin der .phone-Rahmen
+     (overflow:hidden) + body (overflow-x:hidden).
+     Hinweis: overflow-y:visible ALLEIN reicht nicht — kombiniert mit
+     overflow-x:hidden rechnet der Browser overflow-y wieder zu auto. */
+  position:relative; overflow:visible;
   padding-top:0;
 }
 #splash > .sp-glow,
