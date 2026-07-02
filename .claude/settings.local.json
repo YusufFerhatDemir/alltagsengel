@@ -21,7 +21,11 @@
       "Bash(echo \"TSC_EXIT:$?\")",
       "Bash(echo \"TSC_EXIT_CODE=$?\")",
       "Bash(npm run *)",
-      "Bash(./deploy.sh \"SEO/Qualität Block 1: robots.txt-Duplikat + Icon-Transfer-Reste aus public/ entfernt, robots.ts Disallow-Liste vervollständigt, llms.txt aktualisiert \\(42€ §40, Städte, Karriere-Links\\), Pinch-Zoom erlaubt \\(WCAG 1.4.4 Senioren\\), dataLayer-Typkonflikt behoben, ignoreBuildErrors entfernt \\(Typecheck clean\\), deprecated X-XSS-Protection Header entfernt\")"
+      "Bash(./deploy.sh \"SEO/Qualität Block 1: robots.txt-Duplikat + Icon-Transfer-Reste aus public/ entfernt, robots.ts Disallow-Liste vervollständigt, llms.txt aktualisiert \\(42€ §40, Städte, Karriere-Links\\), Pinch-Zoom erlaubt \\(WCAG 1.4.4 Senioren\\), dataLayer-Typkonflikt behoben, ignoreBuildErrors entfernt \\(Typecheck clean\\), deprecated X-XSS-Protection Header entfernt\")",
+      "Bash(echo \"exit:$?\")",
+      "Bash(curl -s http://localhost:8080/blog/feed.xml)",
+      "Bash(awk -F: '{print $1}')",
+      "Bash(./deploy.sh \"Budgetrechner: Interaktiver Entlastungsbetrag-Rechner \\(/budgetrechner\\) mit Restbudget-Visualisierung, Übertrags-Logik \\(30.06.\\), Umwandlungsanspruch §45a Abs. 4, FAQ-Schema + Lead-CTA; Landing-CTA + Sitemap\")"
     ]
   }
 }

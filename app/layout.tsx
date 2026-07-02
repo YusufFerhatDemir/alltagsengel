@@ -41,6 +41,11 @@ export const metadata: Metadata = {
   metadataBase: new URL('https://alltagsengel.care'),
   // canonical bewusst NICHT global setzen — Sub-Pages müssen eigenes
   // alternates.canonical liefern, sonst würde jede URL auf "/" zeigen.
+  alternates: {
+    types: {
+      'application/rss+xml': [{ url: '/blog/feed.xml', title: 'Alltagsengel Ratgeber' }],
+    },
+  },
   openGraph: {
     title: 'Alltagsengel — Pflegebox & Krankenfahrt für Frankfurt & Rhein-Main',
     description: 'Pflegebox 0 € Eigenanteil über die Pflegekasse · Krankenfahrt mit Verordnung oder als Selbstzahler · alles in der App.',
