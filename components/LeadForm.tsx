@@ -20,6 +20,8 @@ interface LeadFormProps {
 export default function LeadForm({ defaultService, source }: LeadFormProps) {
   const [form, setForm] = useState({ name: '', phone: '', plz: '', service: defaultService || '', message: '' })
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
+  const [errorMsg, setErrorMsg] = useState('')
+  const [honeypot, setHoneypot] = useState('')
   const [utmSource, setUtmSource] = useState('')
 
   useEffect(() => {
@@ -39,18 +41,23 @@ export default function LeadForm({ defaultService, source }: LeadFormProps) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...form,
+          website: honeypot,
           source: source || 'website',
           utm_source: utmSource,
         }),
       })
       if (res.ok) {
         setStatus('sent')
-        setForm({ name: '', phone: '', plz: '', service: '', message: '' })
+        setForm({ name: '', phone: '', plz: '', service: defaultService || '', message: '' })
         trackContactRequest(source || 'lead-form')
       } else {
+        // Server-Fehlermeldung anzeigen (z. B. "Ungültige Postleitzahl")
+        const data = await res.json().catch(() => null)
+        setErrorMsg(data?.error || '')
         setStatus('error')
       }
     } catch {
+      setErrorMsg('')
       setStatus('error')
     }
   }
@@ -100,10 +107,22 @@ export default function LeadForm({ defaultService, source }: LeadFormProps) {
       </p>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        {/* Honeypot — für Menschen unsichtbar, Bots füllen es aus */}
+        <input
+          type="text"
+          name="website"
+          value={honeypot}
+          onChange={e => setHoneypot(e.target.value)}
+          tabIndex={-1}
+          autoComplete="off"
+          aria-hidden="true"
+          style={{ position: 'absolute', left: '-9999px', height: 0, width: 0, opacity: 0 }}
+        />
         <input
           type="text"
           required
           placeholder="Ihr Name *"
+          aria-label="Ihr Name"
           value={form.name}
           onChange={e => setForm({ ...form, name: e.target.value })}
           style={inputStyle}
@@ -113,8 +132,11 @@ export default function LeadForm({ defaultService, source }: LeadFormProps) {
             type="tel"
             required
             placeholder="Telefonnummer *"
+            aria-label="Telefonnummer"
             value={form.phone}
             onChange={e => setForm({ ...form, phone: e.target.value })}
+            pattern="[0-9+\s()\/-]{6,}"
+            title="Bitte eine gültige Telefonnummer eingeben (mindestens 6 Ziffern)"
             style={{ ...inputStyle, flex: 2 }}
           />
           <input
@@ -150,7 +172,7 @@ export default function LeadForm({ defaultService, source }: LeadFormProps) {
 
       {status === 'error' && (
         <p style={{ color: '#E74C3C', fontSize: 13, marginTop: 8 }}>
-          Fehler beim Senden. Bitte versuchen Sie es erneut.
+          {errorMsg || 'Fehler beim Senden. Bitte versuchen Sie es erneut.'}
         </p>
       )}
 

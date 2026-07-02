@@ -16,16 +16,29 @@ export function getCookieConsent(): ConsentStatus {
   return localStorage.getItem(CONSENT_KEY) as ConsentStatus
 }
 
+/** Öffnet den Consent-Banner erneut — z. B. über „Cookie-Einstellungen" im Footer. */
+export function openCookieSettings() {
+  if (typeof window === 'undefined') return
+  window.dispatchEvent(new CustomEvent('ae_open_cookie_settings'))
+}
+
 export default function CookieConsent() {
   const [visible, setVisible] = useState(false)
   const [showDetails, setShowDetails] = useState(false)
 
   useEffect(() => {
     const consent = localStorage.getItem(CONSENT_KEY)
+    let timer: ReturnType<typeof setTimeout> | undefined
     if (!consent) {
       // Small delay so it doesn't flash on load
-      const timer = setTimeout(() => setVisible(true), 800)
-      return () => clearTimeout(timer)
+      timer = setTimeout(() => setVisible(true), 800)
+    }
+    // „Cookie-Einstellungen"-Link (Footer/Datenschutz) öffnet den Banner erneut
+    const onOpen = () => setVisible(true)
+    window.addEventListener('ae_open_cookie_settings', onOpen)
+    return () => {
+      if (timer) clearTimeout(timer)
+      window.removeEventListener('ae_open_cookie_settings', onOpen)
     }
   }, [])
 
@@ -49,7 +62,15 @@ export default function CookieConsent() {
     localStorage.setItem(CONSENT_KEY, 'rejected')
     setVisible(false)
     window.dispatchEvent(new CustomEvent('ae_consent_change', { detail: 'rejected' }))
-    // Consent bleibt auf denied (Default aus GoogleTagManager.tsx)
+    // Consent aktiv auf denied setzen — wichtig beim Widerruf nach vorheriger Zustimmung
+    if (typeof window !== 'undefined' && typeof window.gtag === 'function') {
+      window.gtag('consent', 'update', {
+        'ad_storage': 'denied',
+        'ad_user_data': 'denied',
+        'ad_personalization': 'denied',
+        'analytics_storage': 'denied',
+      })
+    }
   }
 
   if (!visible) return null

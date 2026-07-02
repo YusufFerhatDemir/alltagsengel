@@ -1,10 +1,12 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
+import { rateLimit, getClientIp } from '@/lib/rate-limit'
 
 // ═══════════════════════════════════════════════════════════
 // LEAD INQUIRY API — Beratungsanfrage speichern
 // ═══════════════════════════════════════════════════════════
 // Speichert Anfragen vom Lead-Formular in Supabase.
+// Schutz: Rate-Limit pro IP, Honeypot, Längen-Caps.
 // ═══════════════════════════════════════════════════════════
 
 const supabaseAdmin = createClient(
@@ -12,13 +14,49 @@ const supabaseAdmin = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
+const MAX_LEN = { name: 120, phone: 40, message: 2000, service: 60, source: 60, utm_source: 120 }
+
 export async function POST(request: Request) {
   try {
-    const { name, phone, plz, message, service, source, utm_source } = await request.json()
+    const ip = getClientIp(request)
+    if (!rateLimit(`lead:${ip}`, 5, 10 * 60 * 1000)) {
+      return NextResponse.json(
+        { error: 'Zu viele Anfragen — bitte versuchen Sie es in einigen Minuten erneut.' },
+        { status: 429 }
+      )
+    }
+
+    const body = await request.json()
+    const { name, phone, plz, message, service, source, utm_source } = body
+
+    // Honeypot: unsichtbares Feld — wenn befüllt, ist es ein Bot.
+    // Bewusst 201 zurückgeben, damit der Bot nichts merkt.
+    if (body.website) {
+      return NextResponse.json({ success: true }, { status: 201 })
+    }
 
     if (!name || !phone || !plz) {
       return NextResponse.json(
         { error: 'Pflichtfelder fehlen (Name, Telefon, PLZ)' },
+        { status: 400 }
+      )
+    }
+
+    if (
+      typeof name !== 'string' || typeof phone !== 'string' ||
+      name.length > MAX_LEN.name || phone.length > MAX_LEN.phone ||
+      (message && String(message).length > MAX_LEN.message) ||
+      (service && String(service).length > MAX_LEN.service) ||
+      (source && String(source).length > MAX_LEN.source) ||
+      (utm_source && String(utm_source).length > MAX_LEN.utm_source)
+    ) {
+      return NextResponse.json({ error: 'Eingabe zu lang' }, { status: 400 })
+    }
+
+    // Telefon plausibel? (mind. 6 Ziffern — sonst ist der Lead nicht anrufbar)
+    if ((phone.match(/[0-9]/g) || []).length < 6) {
+      return NextResponse.json(
+        { error: 'Bitte geben Sie eine gültige Telefonnummer an' },
         { status: 400 }
       )
     }
