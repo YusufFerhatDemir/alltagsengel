@@ -488,6 +488,7 @@ export default function SplashPage() {
             <Link href="/engel-werden">Engel werden</Link>
             <Link href="/blog">Ratgeber</Link>
             <Link href="/faq">FAQ</Link>
+            <Link href="/ueber-uns">Über uns</Link>
             <Link href="/kontakt">Kontakt</Link>
           </div>
           <div className="lp-footer-links" style={{ marginTop: 4 }}>
