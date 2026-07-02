@@ -1,20 +1,34 @@
 'use client'
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useUserLocation } from '@/hooks/useUserLocation'
+import { getCookieConsent } from '@/components/CookieConsent'
 
 type Portal = 'kunde' | 'engel' | 'fahrer' | 'investor' | 'landing'
 
 /**
  * Trackt Besucher-Standorte für die MIS-Analyse.
- * Wird einmal pro Session und Portal aufgerufen.
+ * Wird einmal pro Mount und Portal aufgerufen.
  * Speichert: Stadt, Land, Region, Koordinaten, Quelle (GPS/IP/Fallback)
+ *
+ * DSGVO: läuft NUR bei Cookie-Consent 'accepted' — der Banner kündigt
+ * IP-/Standort-Erfassung ausdrücklich als zustimmungspflichtig an.
  */
 export function useTrackVisit(portal: Portal) {
   const userLocation = useUserLocation()
   const tracked = useRef(false)
+  const [consent, setConsent] = useState<string | null>(null)
+
+  // Consent lesen + auf spätere Zustimmung (Banner-Klick) reagieren
+  useEffect(() => {
+    setConsent(getCookieConsent())
+    const onChange = (e: Event) => setConsent((e as CustomEvent).detail ?? getCookieConsent())
+    window.addEventListener('ae_consent_change', onChange)
+    return () => window.removeEventListener('ae_consent_change', onChange)
+  }, [])
 
   useEffect(() => {
+    if (consent !== 'accepted') return
     if (tracked.current || userLocation.loading) return
     tracked.current = true
 
@@ -59,5 +73,5 @@ export function useTrackVisit(portal: Portal) {
     }
 
     track()
-  }, [userLocation.loading, userLocation.city, userLocation.lat, userLocation.lng, userLocation.source, portal])
+  }, [consent, userLocation.loading, userLocation.city, userLocation.lat, userLocation.lng, userLocation.source, portal])
 }

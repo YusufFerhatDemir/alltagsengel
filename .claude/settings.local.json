@@ -25,7 +25,9 @@
       "Bash(echo \"exit:$?\")",
       "Bash(curl -s http://localhost:8080/blog/feed.xml)",
       "Bash(awk -F: '{print $1}')",
-      "Bash(./deploy.sh \"Budgetrechner: Interaktiver Entlastungsbetrag-Rechner \\(/budgetrechner\\) mit Restbudget-Visualisierung, Übertrags-Logik \\(30.06.\\), Umwandlungsanspruch §45a Abs. 4, FAQ-Schema + Lead-CTA; Landing-CTA + Sitemap\")"
+      "Bash(./deploy.sh \"Budgetrechner: Interaktiver Entlastungsbetrag-Rechner \\(/budgetrechner\\) mit Restbudget-Visualisierung, Übertrags-Logik \\(30.06.\\), Umwandlungsanspruch §45a Abs. 4, FAQ-Schema + Lead-CTA; Landing-CTA + Sitemap\")",
+      "Bash(./deploy.sh \"Rate-Limiting für Kontakt-/Lead-Endpoints \\(in-memory sliding window\\) + PflegegradCheck-Komponente \\(NBA-Selbsteinschätzung, noch nicht eingebunden\\)\")",
+      "Bash(./deploy.sh \"Pflegegrad-Check: Kostenloser Selbsttest \\(/pflegegrad-check\\) nach NBA-Systematik — 6 Module mit offizieller Gewichtung, Sofort-Ergebnis mit Leistungsübersicht \\(Entlastungsbetrag/Pflegegeld/Pflege-Box\\), FAQ-Schema + Lead-CTA\")"
     ]
   }
 }
