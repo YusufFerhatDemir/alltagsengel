@@ -80,7 +80,10 @@
       "Bash(curl -s \"https://alltagsengel.care/sitemap.xml\")",
       "Bash(curl -s \"https://alltagsengel.care/datenschutz\")",
       "Bash(curl -s \"https://alltagsengel.care/\")",
-      "Bash(./deploy.sh \"Session-Settings aktualisiert \\(Killer-Features-Session\\)\")"
+      "Bash(./deploy.sh \"Session-Settings aktualisiert \\(Killer-Features-Session\\)\")",
+      "Bash(git add *)",
+      "Bash(SKIP_TYPECHECK=1 DEPLOY_CO_AUTHOR=\"Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>\" ./deploy.sh \"Native iOS App: Expo/React-Native-Projekt unter native/ \\(Tabs: Home, Budgetrechner 131€, Pflegegrad-Check, PLZ-Einzugsgebiet, Kontakt; Supabase-Auth, Push vorbereitet, Branding Gold/Coal, EAS-Build-Config\\)\")",
+      "Bash(npx expo *)"
     ]
   }
 }
