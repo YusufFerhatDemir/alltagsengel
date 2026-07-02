@@ -137,7 +137,7 @@ export default function InstallPrompt() {
             </div>
             {platform === 'ios' ? (
               <div style={{ color: '#8A8279', fontSize: 12, lineHeight: 1.4 }}>
-                Tippen Sie auf <span style={{ color: '#C9963C' }}>Teilen</span> ↗ dann <span style={{ color: '#C9963C' }}>&quot;App installieren&quot;</span>
+                Tippen Sie auf <span style={{ color: '#C9963C' }}>Teilen</span> ↗ dann <span style={{ color: '#C9963C' }}>&quot;Zum Home-Bildschirm&quot;</span>
               </div>
             ) : (
               <div style={{ color: '#8A8279', fontSize: 12, lineHeight: 1.4 }}>

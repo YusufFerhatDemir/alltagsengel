@@ -17,6 +17,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
+import { createHmac, timingSafeEqual } from 'node:crypto'
 import { createClient } from '@supabase/supabase-js'
 import { getBotReply, WaMessage } from '@/lib/whatsapp/ai'
 import {
@@ -28,6 +29,37 @@ import {
 import { isRateLimited, RATE_LIMIT_REPLY } from '@/lib/whatsapp/rate-limit'
 import { sendWhatsAppMessage } from '@/lib/whatsapp/send'
 import { isLowConfidenceReply, sanitizeNames, HOLDING_REPLY } from '@/lib/whatsapp/confidence'
+
+/**
+ * Meta-Signaturprüfung (x-hub-signature-256).
+ *
+ * Meta signiert JEDEN Webhook-POST mit HMAC-SHA256 über den ROHEN Request-Body,
+ * Schlüssel = App-Secret. Header-Format: "sha256=<hex>".
+ * Ohne diese Prüfung könnte jeder gefälschte Nachrichten an den Bot schicken
+ * (Spoofing → Bot antwortet / eskaliert / verschickt Mails).
+ * Doku: https://developers.facebook.com/docs/graph-api/webhooks/getting-started#validating-payloads
+ *
+ * WICHTIG: Über den ROH-Body verifizieren, NICHT über neu-serialisiertes JSON
+ * (Whitespace/Key-Reihenfolge würden die Signatur brechen).
+ */
+function verifyMetaSignature(rawBody: string, signatureHeader: string | null): boolean {
+  const appSecret = process.env.WHATSAPP_APP_SECRET
+  if (!appSecret) {
+    // Secret (noch) nicht gesetzt → Prüfung inaktiv, damit der Webhook nicht
+    // komplett ausfällt. Sobald WHATSAPP_APP_SECRET gesetzt ist, greift die
+    // Signaturprüfung automatisch (fail-closed).
+    // eslint-disable-next-line no-console
+    console.warn('[wa-webhook] WHATSAPP_APP_SECRET fehlt — Signaturprüfung ÜBERSPRUNGEN. App-Secret in den Env-Vars setzen!')
+    return true
+  }
+  if (!signatureHeader || !signatureHeader.startsWith('sha256=')) return false
+  const expected = 'sha256=' + createHmac('sha256', appSecret).update(rawBody, 'utf8').digest('hex')
+  const received = Buffer.from(signatureHeader)
+  const computed = Buffer.from(expected)
+  // Längen-Check vor timingSafeEqual (wirft sonst bei ungleicher Länge)
+  if (received.length !== computed.length) return false
+  return timingSafeEqual(received, computed)
+}
 
 // Service-Role-Client (bypasst RLS, weil Webhook anonym aufgerufen wird)
 function getServiceClient() {
@@ -74,9 +106,20 @@ export async function GET(req: NextRequest) {
  * }
  */
 export async function POST(req: NextRequest) {
+  // ROH-Body zuerst lesen — für die Signaturprüfung zwingend nötig.
+  const rawBody = await req.text()
+
+  // ═══ Meta-Signatur verifizieren (x-hub-signature-256) ═══
+  const signature = req.headers.get('x-hub-signature-256')
+  if (!verifyMetaSignature(rawBody, signature)) {
+    // eslint-disable-next-line no-console
+    console.warn('[wa-webhook] Ungültige/fehlende Meta-Signatur — Request abgelehnt')
+    return NextResponse.json({ ok: false, error: 'invalid_signature' }, { status: 401 })
+  }
+
   let body: unknown
   try {
-    body = await req.json()
+    body = JSON.parse(rawBody)
   } catch {
     return NextResponse.json({ ok: false, error: 'invalid_json' }, { status: 400 })
   }

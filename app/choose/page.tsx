@@ -21,7 +21,7 @@ export default function ChoosePage() {
         <Link href="/auth/register?role=kunde" style={{ textDecoration: 'none' }}>
           <div className="role-card">
             <div className="role-icon-3d">
-              <img src="/assets/hilfe-icon.png" alt="Hilfe" />
+              <img src="/assets/hilfe-icon.webp" alt="Hilfe" />
             </div>
             <div className="role-text">
               <h3>Ich suche Hilfe</h3>
