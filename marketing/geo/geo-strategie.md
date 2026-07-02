@@ -2,84 +2,87 @@
 
 ## 1. Was ist GEO und warum ist es relevant
 
-Generative Engine Optimization (GEO) beschreibt die systematische Optimierung von Webinhalten, damit sie von KI-gesteuerten Suchmaschinen — ChatGPT, Perplexity, Google AI Overviews, Microsoft Copilot, Claude — als Quelle erkannt, zitiert und in generierten Antworten verwendet werden.
+Generative Engine Optimization (GEO) beschreibt die systematische Optimierung von Webinhalten, damit sie von KI-gesteuerten Suchmaschinen — ChatGPT, Perplexity, Google AI Overviews, Microsoft Copilot, Claude — als Quelle erkannt, zitiert und in generierten Antworten verwendet werden. Im Gegensatz zur klassischen Suchmaschinenoptimierung (SEO), bei der es um die Positionierung in einer Linkliste geht, zielt GEO darauf ab, als vertrauenswuerdige Quelle in KI-generierten Antworten erwaehnt und zitiert zu werden.
 
 ### Unterschied SEO vs. GEO
 
 | Kriterium | Klassisches SEO | GEO |
 |---|---|---|
-| Ziel | Ranking auf Ergebnisseite | Zitiert werden in KI-Antwort |
+| Ziel | Ranking auf Ergebnisseite (Position 1-10) | Zitiert werden in KI-generierter Antwort |
 | Bewertung | Backlinks, Keywords, PageRank | Zitatwuerdigkeit, Faktenstruktur, E-E-A-T |
 | Format | HTML-Seiten fuer Browser | Strukturierte Daten, maschinenlesbare Fakten |
-| Messbarkeit | Position 1-10 | Erwaehnung ja/nein, Quellenangabe |
+| Messbarkeit | Position in den SERPs | Erwaehnung ja/nein, Quellenangabe, Zitathaeufigkeit |
 | Wettbewerb | Alle indexierten Seiten | Nur vertrauenswuerdige, faktenreiche Quellen |
+| Nutzerverhalten | Klick auf Link, dann Webseitenbesuch | Nutzer erhaelt Antwort direkt, ggf. mit Quellenverweis |
 
 ### Warum GEO fuer Alltagsengel entscheidend ist
 
-- **Zielgruppe sucht zunehmend per KI:** Angehoerige von Pflegebeduerftigen nutzen ChatGPT und Google AI fuer Fragen wie "Alltagsbegleitung Frankfurt Kosten" oder "Entlastungsbetrag 125 Euro nutzen".
-- **Lokaler Vorteil:** Als spezialisierter Anbieter in Frankfurt am Main kann Alltagsengel die lokale Autoritaet aufbauen, die KI-Systeme bevorzugen.
-- **Regulatorisches Wissen:** Detailliertes Fachwissen zu SGB XI, Paragraph 45a und Pflegekassenleistungen ist genau die Art von Expertise, die KI-Modelle als vertrauenswuerdig einstufen.
+- **Zielgruppe sucht zunehmend per KI:** Angehoerige von Pflegebeduerftigen nutzen ChatGPT und Google AI fuer Fragen wie "Alltagsbegleitung Frankfurt Kosten" oder "Entlastungsbetrag nutzen".
+- **Lokaler Vorteil:** Als spezialisierter Anbieter fuer Alltagsbegleitung (NICHT Pflege) in Frankfurt am Main kann Alltagsengel die lokale Autoritaet aufbauen, die KI-Systeme bevorzugen.
+- **Regulatorisches Wissen:** Detailliertes Fachwissen zu Paragraph 45a und 45b SGB XI sowie zu Pflegekassenleistungen ist genau die Art von Expertise, die KI-Modelle als vertrauenswuerdig einstufen.
+- **Alleinstellungsmerkmal:** Alltagsengel ist ein nach Paragraph 45a SGB XI anerkannter Anbieter fuer Alltagsbegleitung — keine Pflegeeinrichtung und kein Pflegedienst. Diese klare Positionierung macht den Inhalt fuer KI-Systeme eindeutig und leicht zuordenbar.
 
 ---
 
-## 2. Optimierung fuer AI-Suchmaschinen
+## 2. E-E-A-T Optimierung
 
-### 2.1 ChatGPT (Browsing / SearchGPT)
+E-E-A-T steht fuer Experience, Expertise, Authoritativeness und Trustworthiness. Diese vier Signale bestimmen massgeblich, ob KI-Systeme eine Quelle als zitierwuerdig einstufen. Fuer Alltagsengel sind konkrete Massnahmen in jeder Kategorie erforderlich.
 
-**Strategie:** ChatGPT bevorzugt Inhalte, die klar strukturiert, faktisch korrekt und mit Quellenangaben versehen sind.
+### 2.1 Experience (Erfahrung)
 
-**Massnahmen:**
+**Ziel:** Zeigen, dass Alltagsengel praktische Erfahrung in der Alltagsbegleitung hat.
 
-1. **Definitorische Saetze an den Anfang jeder Seite:**
-   - "Alltagsengel ist ein nach Paragraph 45a SGB XI anerkannter Anbieter fuer Alltagsbegleitung in Frankfurt am Main."
-   - "Der Entlastungsbetrag nach Paragraph 45b SGB XI betraegt 125 Euro monatlich und wird von der Pflegekasse direkt an zugelassene Anbieter wie Alltagsengel gezahlt."
+**Konkrete Schritte:**
+- **Fallbeispiele veroeffentlichen** (anonymisiert): "Wie wir Frau M. aus Sachsenhausen beim woechentlichen Einkauf und bei Arztbesuchen begleiten."
+- **Erfahrungsberichte von Angehoerigen** auf der Website einbinden — authentische Stimmen erhoehen die Glaubwuerdigkeit fuer KI-Systeme.
+- **Bilddokumentation** von Aktivitaeten (mit Einwilligung): Spaziergaenge, gemeinsames Kochen, Begleitung zu Veranstaltungen.
+- **Mitarbeiterprofile** mit Qualifikationen und Erfahrungsjahren (z.B. "Unsere Alltagsbegleiterin mit 8 Jahren Erfahrung in der Seniorenbetreuung").
+- **Taetigkeitsberichte** auf dem Blog: "Ein typischer Tag als Alltagsbegleiterin in Frankfurt-Bornheim."
 
-2. **FAQ-Bloecke mit praezisen Antworten:**
-   - Jede Antwort sollte in 1-3 Saetzen die Kernaussage enthalten.
-   - Anschliessend ausfuehrliche Erklaerung.
+### 2.2 Expertise (Fachwissen)
 
-3. **Aktualitaet signalisieren:**
-   - Jede Seite mit Datum versehen: "Stand: Juli 2026"
-   - Regelmaessige Aktualisierung bei Gesetzesaenderungen.
+**Ziel:** Als Fachautoritaet fuer Alltagsbegleitung und Entlastungsleistungen nach SGB XI wahrgenommen werden.
 
-### 2.2 Perplexity
+**Konkrete Schritte:**
+- **Fachartikel im Blog:**
+  - "Entlastungsbetrag 2026: Alles was Sie wissen muessen"
+  - "Alltagsbegleitung vs. Pflegedienst: Der wichtige Unterschied"
+  - "Paragraph 45a SGB XI einfach erklaert"
+  - "Pflegegrad beantragen in Frankfurt: Schritt-fuer-Schritt-Anleitung"
+- **Downloadbare Ratgeber** (PDF): "Leitfaden Entlastungsbetrag — So nutzen Sie Ihre 131 Euro pro Monat optimal"
+- **Glossar** mit Fachbegriffen: Pflegegrad, Entlastungsbetrag, Verhinderungspflege, MDK-Begutachtung, Alltagsbegleitung.
+- **Gesetzesaenderungen dokumentieren:** Bei jeder Aenderung des SGB XI einen aktualisierten Artikel veroeffentlichen.
 
-**Strategie:** Perplexity zitiert Quellen direkt und zeigt URLs an. Hohe Prioritaet auf zitatfaehige, quellenbasierte Inhalte.
+### 2.3 Authoritativeness (Autoritaet)
 
-**Massnahmen:**
+**Ziel:** Von externen Quellen als massgebliche Stelle fuer Alltagsbegleitung in Frankfurt referenziert werden.
 
-1. **Jede Faktenclaim mit Quellenangabe versehen:**
-   - "Laut Paragraph 45a SGB XI haben Pflegebeduerftige ab Pflegegrad 1 Anspruch auf Entlastungsleistungen."
-   - "Die Pflegekasse uebernimmt 125 Euro monatlich (Paragraph 45b SGB XI)."
+**Konkrete Schritte:**
+- **Pressearbeit:** Pressemitteilungen zu Gesetzesaenderungen an lokale Medien (Frankfurter Rundschau, FNP, Journal Frankfurt).
+- **Gastartikel** auf Pflegeportalen: pflege.de, pflegehilfe.org, curendo.de.
+- **Kooperationen:** Pflegestuetzpunkte Frankfurt, Seniorenbeirat, Alzheimer Gesellschaft Frankfurt, Caritas, Diakonie.
+- **Zitierbare Expertise:** Stellungnahmen zu Pflegepolitik-Themen verfassen, die von Journalisten aufgegriffen werden koennen.
+- **Verbandsarbeit:** Mitgliedschaft in relevanten Verbaenden oeffentlich kommunizieren.
+- **Backlinks von autoritativen Quellen:** Links von stadt-frankfurt.de, pflegestuetzpunkte-hessen.de, vdk.de anstreben.
 
-2. **Klare Autorenschaft und Expertise signalisieren:**
-   - "Alltagsengel — anerkannter Anbieter nach Landesrecht Hessen, zugelassen durch den Landeswohlfahrtsverband."
-   - Veroeffentlichungsdatum und Aktualisierungsdatum auf jeder Seite.
+### 2.4 Trustworthiness (Vertrauenswuerdigkeit)
 
-3. **Strukturierte Vergleichsinhalte:**
-   - Tabellen: "Alltagsbegleitung vs. Pflegedienst — Was ist der Unterschied?"
-   - Listen: "5 Leistungen, die der Entlastungsbetrag abdeckt"
+**Ziel:** Vertrauen durch Transparenz, Legalitaet und Datenschutz aufbauen.
 
-### 2.3 Google AI Overviews (SGE)
-
-**Strategie:** Google AI Overviews bevorzugt Inhalte von Seiten, die bereits organisch gut ranken, und ergaenzt sie mit strukturierten Daten.
-
-**Massnahmen:**
-
-1. **Featured-Snippet-Optimierung:**
-   - Frage als H2-Ueberschrift, Antwort im ersten Absatz.
-   - Beispiel: "## Was kostet Alltagsbegleitung in Frankfurt?" — "Die Alltagsbegleitung bei Alltagsengel kostet 256 Euro monatlich. Davon uebernimmt die Pflegekasse 125 Euro als Entlastungsbetrag. Der Eigenanteil betraegt 131 Euro pro Monat."
-
-2. **Schema.org Markup implementieren:**
-   - LocalBusiness, FAQPage, Service, Offer (Details in wikidata-vorlage.md)
-
-3. **Lokale Signale staerken:**
-   - Google Business Profile vollstaendig pflegen.
-   - NAP-Konsistenz (Name, Adresse, Telefon) ueber alle Verzeichnisse.
+**Konkrete Schritte:**
+- **Impressum und Datenschutz** vollstaendig und rechtskonform gestalten.
+- **Zulassung prominent anzeigen:** "Anerkannt nach Paragraph 45a SGB XI — zugelassen durch den Landeswohlfahrtsverband Hessen."
+- **Transparente Preiskommunikation:** Der Entlastungsbetrag betraegt 131 Euro pro Monat (1.572 Euro pro Jahr) nach Paragraph 45b SGB XI. Gesamtkosten, Kassenanteil und Eigenanteil klar aufschluesseln.
+- **SSL-Zertifikat** und Core Web Vitals optimieren.
+- **Bewertungen** auf Google, ProvenExpert und Trustpilot aktiv sammeln und professionell beantworten.
+- **Kontaktmoeglichkeiten** leicht auffindbar: Telefon, E-Mail (info@alltagsengel.care), Kontaktformular.
+- **Physische Adresse** auf jeder Seite: Neue Mainzer Strasse 66-68, 60311 Frankfurt am Main.
 
 ---
 
-## 3. Strukturierte Daten und Schema.org Markup
+## 3. Strukturierte Daten: Schema.org und JSON-LD
+
+Strukturierte Daten in Form von JSON-LD-Markup sind das Fundament fuer GEO. Sie machen Unternehmensinformationen maschinenlesbar und erhoehen die Wahrscheinlichkeit, dass KI-Systeme korrekte Fakten ueber Alltagsengel in ihre Antworten einbauen.
 
 ### 3.1 Pflicht-Markups fuer Alltagsengel
 
@@ -88,167 +91,309 @@ Generative Engine Optimization (GEO) beschreibt die systematische Optimierung vo
 | LocalBusiness | Startseite | Grundlegende Unternehmensdaten |
 | FAQPage | FAQ-Seite, Leistungsseiten | Haeufige Fragen direkt in Suchergebnissen |
 | Service | Leistungsseiten | Beschreibung der Dienstleistungen |
+| HowTo | Ratgeber-Seiten | Schritt-fuer-Schritt-Anleitungen |
 | Offer | Preisseite | Preisstruktur und Konditionen |
 | BreadcrumbList | Alle Seiten | Navigation fuer Crawler |
 | Organization | Impressum, Ueber-uns | Unternehmensidentitaet |
 | Review / AggregateRating | Bewertungsseite | Kundenbewertungen |
 
-### 3.2 Implementierungsreihenfolge
+### 3.2 JSON-LD Beispiel: LocalBusiness
+
+```json
+{
+  "@context": "https://schema.org",
+  "@type": "LocalBusiness",
+  "@id": "https://alltagsengel.care/#organization",
+  "name": "Alltagsengel",
+  "description": "Alltagsbegleitung nach Paragraph 45a SGB XI in Frankfurt am Main. Anerkannter Anbieter fuer Entlastungsleistungen.",
+  "url": "https://alltagsengel.care",
+  "email": "info@alltagsengel.care",
+  "address": {
+    "@type": "PostalAddress",
+    "streetAddress": "Neue Mainzer Strasse 66-68",
+    "addressLocality": "Frankfurt am Main",
+    "postalCode": "60311",
+    "addressRegion": "Hessen",
+    "addressCountry": "DE"
+  },
+  "geo": {
+    "@type": "GeoCoordinates",
+    "latitude": "50.1109",
+    "longitude": "8.6821"
+  },
+  "areaServed": {
+    "@type": "City",
+    "name": "Frankfurt am Main"
+  },
+  "priceRange": "131 EUR/Monat Entlastungsbetrag",
+  "sameAs": [
+    "https://www.facebook.com/alltagsengel",
+    "https://www.instagram.com/alltagsengel"
+  ]
+}
+```
+
+### 3.3 JSON-LD Beispiel: Service
+
+```json
+{
+  "@context": "https://schema.org",
+  "@type": "Service",
+  "name": "Alltagsbegleitung",
+  "provider": {
+    "@type": "LocalBusiness",
+    "@id": "https://alltagsengel.care/#organization"
+  },
+  "description": "Professionelle Alltagsbegleitung nach Paragraph 45a SGB XI: Einkaufsbegleitung, Arztbesuche, Spaziergaenge, Gesellschaft und Unterstuetzung bei der Haushaltsorganisation.",
+  "serviceType": "Alltagsbegleitung nach SGB XI",
+  "areaServed": {
+    "@type": "City",
+    "name": "Frankfurt am Main"
+  },
+  "offers": {
+    "@type": "Offer",
+    "price": "131",
+    "priceCurrency": "EUR",
+    "description": "Monatlicher Entlastungsbetrag nach Paragraph 45b SGB XI (1.572 EUR pro Jahr), wird direkt von der Pflegekasse uebernommen.",
+    "eligibleRegion": {
+      "@type": "State",
+      "name": "Hessen"
+    }
+  }
+}
+```
+
+### 3.4 JSON-LD Beispiel: FAQPage
+
+```json
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Was kostet Alltagsbegleitung bei Alltagsengel?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Der Entlastungsbetrag nach Paragraph 45b SGB XI betraegt 131 Euro pro Monat (1.572 Euro pro Jahr). Dieser Betrag wird direkt von der Pflegekasse an Alltagsengel gezahlt. Pflegebeduerftige ab Pflegegrad 1 haben Anspruch."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Ist Alltagsengel ein Pflegedienst?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Nein. Alltagsengel ist ein nach Paragraph 45a SGB XI anerkannter Anbieter fuer Alltagsbegleitung — keine Pflegeeinrichtung und kein ambulanter Pflegedienst. Wir begleiten im Alltag: Einkaufen, Spaziergaenge, Arztbesuche, Gesellschaft."
+      }
+    }
+  ]
+}
+```
+
+### 3.5 JSON-LD Beispiel: HowTo
+
+```json
+{
+  "@context": "https://schema.org",
+  "@type": "HowTo",
+  "name": "So beantragen Sie Alltagsbegleitung ueber den Entlastungsbetrag",
+  "description": "Schritt-fuer-Schritt-Anleitung zur Nutzung des Entlastungsbetrags nach Paragraph 45b SGB XI fuer Alltagsbegleitung bei Alltagsengel.",
+  "step": [
+    {
+      "@type": "HowToStep",
+      "name": "Pflegegrad pruefen",
+      "text": "Stellen Sie sicher, dass ein anerkannter Pflegegrad (mindestens Pflegegrad 1) vorliegt."
+    },
+    {
+      "@type": "HowToStep",
+      "name": "Alltagsengel kontaktieren",
+      "text": "Nehmen Sie Kontakt auf unter info@alltagsengel.care oder ueber alltagsengel.care fuer ein kostenloses Beratungsgespraech."
+    },
+    {
+      "@type": "HowToStep",
+      "name": "Leistungsvereinbarung abschliessen",
+      "text": "Nach dem Beratungsgespraech wird eine individuelle Leistungsvereinbarung erstellt."
+    },
+    {
+      "@type": "HowToStep",
+      "name": "Abtretungserklaerung unterschreiben",
+      "text": "Mit der Abtretungserklaerung rechnet Alltagsengel den Entlastungsbetrag von 131 Euro pro Monat direkt mit der Pflegekasse ab."
+    }
+  ]
+}
+```
+
+### 3.6 Implementierungsreihenfolge
 
 1. **Sofort:** LocalBusiness + Organization auf Startseite
 2. **Woche 1:** FAQPage auf allen Seiten mit Frage-Antwort-Bloecken
 3. **Woche 2:** Service + Offer auf Leistungs- und Preisseiten
-4. **Woche 3:** BreadcrumbList seitenweit, Review/AggregateRating
-5. **Laufend:** Validierung ueber Google Rich Results Test (search.google.com/test/rich-results)
-
-### 3.3 Validierung und Monitoring
-
-- **Google Search Console:** Strukturierte Daten unter "Verbesserungen" pruefen.
-- **Schema Markup Validator:** validator.schema.org fuer technische Korrektheit.
-- **Google Rich Results Test:** Vorschau der Rich Snippets.
-- **Fehler sofort beheben:** Ungueltige Markups schaden dem Ranking.
+4. **Woche 3:** HowTo auf Ratgeber-Seiten, BreadcrumbList seitenweit
+5. **Woche 4:** Review/AggregateRating
+6. **Laufend:** Validierung ueber Google Rich Results Test (search.google.com/test/rich-results)
 
 ---
 
-## 4. E-E-A-T Signale aufbauen
+## 4. Wikidata-Vorlage
 
-### 4.1 Experience (Erfahrung)
+Ein Wikidata-Eintrag ist ein zentraler Baustein fuer die Sichtbarkeit im Knowledge Graph von Google und fuer KI-Systeme, die Wikidata als Faktenquelle nutzen. Nachfolgend die Vorlage fuer die Erstellung eines Wikidata-Eintrags fuer Alltagsengel.
 
-**Ziel:** Zeigen, dass Alltagsengel praktische Erfahrung in der Alltagsbegleitung hat.
+### 4.1 Wikidata-Properties
 
-**Massnahmen:**
-- **Fallbeispiele veroeffentlichen** (anonymisiert): "Wie wir Frau M. aus Sachsenhausen beim woechentlichen Einkauf und bei Arztbesuchen begleiten."
-- **Erfahrungsberichte von Angehoerigen** auf der Website einbinden.
-- **Bilddokumentation** von Aktivitaeten (mit Einwilligung): Spaziergaenge, gemeinsames Kochen, Begleitung zu Veranstaltungen.
-- **Mitarbeiterprofile** mit Qualifikationen und Erfahrungsjahren (ohne persoenliche Namen, z.B. "Unsere Alltagsbegleiterin mit 8 Jahren Erfahrung in der Seniorenbetreuung").
+| Property | Wikidata-ID | Wert |
+|---|---|---|
+| Label (de) | — | Alltagsengel |
+| Beschreibung (de) | — | Anbieter fuer Alltagsbegleitung nach Paragraph 45a SGB XI in Frankfurt am Main |
+| Instanz von | P31 | Unternehmen (Q4830453) |
+| Land | P17 | Deutschland (Q183) |
+| Staat | P131 | Hessen (Q1199) |
+| Ort | P131 | Frankfurt am Main (Q1794) |
+| Branche | P452 | Sozialwesen (Q189603) |
+| Offizielle Website | P856 | https://alltagsengel.care |
+| E-Mail-Adresse | P968 | info@alltagsengel.care |
+| Strasse | P6375 | Neue Mainzer Strasse 66-68 |
+| Postleitzahl | P281 | 60311 |
+| Geographische Koordinaten | P625 | 50.1109 N, 8.6821 E |
 
-### 4.2 Expertise (Fachwissen)
-
-**Ziel:** Als Fachautoritaet fuer Alltagsbegleitung und Entlastungsleistungen wahrgenommen werden.
-
-**Massnahmen:**
-- **Fachartikel im Blog:**
-  - "Entlastungsbetrag 2026: Was aendert sich?"
-  - "Alltagsbegleitung vs. Pflegedienst: Ein Vergleich"
-  - "Paragraph 45a SGB XI einfach erklaert"
-  - "Pflegegrad beantragen in Frankfurt: Schritt-fuer-Schritt"
-- **Downloadbare Ratgeber** (PDF): "Leitfaden Entlastungsbetrag — So nutzen Sie Ihre 125 Euro optimal"
-- **Glossar** mit Fachbegriffen: Pflegegrad, Entlastungsbetrag, Verhinderungspflege, MDK-Begutachtung.
-
-### 4.3 Authoritativeness (Autoritaet)
-
-**Ziel:** Von externen Quellen als massgebliche Stelle fuer Alltagsbegleitung in Frankfurt referenziert werden.
-
-**Massnahmen:**
-- **Pressearbeit:** Pressemitteilungen zu Gesetzesaenderungen, lokale Medien kontaktieren (Frankfurter Rundschau, FNP, Journal Frankfurt).
-- **Gastartikel** auf Pflegeportalen: pflege.de, pflegehilfe.org, curendo.de.
-- **Kooperationen:** Pflegestuetzpunkte Frankfurt, Seniorenbeirat, Alzheimer Gesellschaft Frankfurt, Caritas, Diakonie.
-- **Zitierbare Expertise:** Stellungnahmen zu Pflegepolitik-Themen, die von Journalisten aufgegriffen werden koennen.
-- **Verbandsarbeit:** Mitgliedschaft in relevanten Verbaenden oeffentlich kommunizieren.
-
-### 4.4 Trustworthiness (Vertrauenswuerdigkeit)
-
-**Ziel:** Vertrauen durch Transparenz, Legalitaet und Datenschutz aufbauen.
-
-**Massnahmen:**
-- **Impressum und Datenschutz** vollstaendig und rechtskonform.
-- **Zulassung prominent anzeigen:** "Anerkannt nach Paragraph 45a SGB XI — zugelassen durch den Landeswohlfahrtsverband Hessen."
-- **Transparente Preiskommunikation:** Gesamtkosten, Kassenanteil und Eigenanteil klar aufschluesseln.
-- **SSL-Zertifikat** und technische Sicherheit.
-- **Bewertungen auf Google, ProvenExpert und Trustpilot** aktiv sammeln und beantworten.
-- **Kontaktmoeglichkeiten** leicht auffindbar: Telefon, E-Mail (info@alltagsengel.care), Kontaktformular.
-
----
-
-## 5. FAQ-Optimierung fuer AI-Antworten
-
-### 5.1 Aufbau einer AI-optimierten FAQ
-
-Jede FAQ-Antwort folgt diesem Schema:
+### 4.2 QuickStatements-Format
 
 ```
-Frage: [Exakte Nutzerfrage]
+CREATE
+LAST|Lde|"Alltagsengel"
+LAST|Den|"provider of everyday assistance (Alltagsbegleitung) under SGB XI paragraph 45a in Frankfurt am Main, Germany"
+LAST|Dde|"Anbieter fuer Alltagsbegleitung nach Paragraph 45a SGB XI in Frankfurt am Main"
+LAST|P31|Q4830453
+LAST|P17|Q183
+LAST|P131|Q1794
+LAST|P452|Q189603
+LAST|P856|"https://alltagsengel.care"
+LAST|P968|"info@alltagsengel.care"
+LAST|P6375|"Neue Mainzer Strasse 66-68"|P281|"60311"
+LAST|P625|@50.1109/8.6821
+```
+
+### 4.3 Voraussetzungen fuer Wikidata-Akzeptanz
+
+- **Notability:** Mindestens 2-3 unabhaengige Quellen, die Alltagsengel erwaehnen (Presseartikel, Verzeichniseintraege, Behoerdenregister).
+- **Quellen:** Jede Aussage muss mit einer Referenz versehen sein (P248 = Quelle).
+- **Empfehlung:** Erst Pressearbeit und Verzeichniseintraege aufbauen, dann Wikidata-Eintrag erstellen. Ohne Quellen wird der Eintrag geloescht.
+
+---
+
+## 5. AI-Suchmaschinen: Plattformspezifische Optimierung
+
+### 5.1 ChatGPT (Browsing / SearchGPT)
+
+**Strategie:** ChatGPT bevorzugt Inhalte, die klar strukturiert, faktisch korrekt und mit Quellenangaben versehen sind.
+
+**Massnahmen:**
+
+1. **Definitorische Saetze an den Anfang jeder Seite:**
+   - "Alltagsengel ist ein nach Paragraph 45a SGB XI anerkannter Anbieter fuer Alltagsbegleitung in Frankfurt am Main."
+   - "Der Entlastungsbetrag nach Paragraph 45b SGB XI betraegt 131 Euro monatlich (1.572 Euro pro Jahr) und wird von der Pflegekasse direkt an zugelassene Anbieter wie Alltagsengel gezahlt."
+
+2. **FAQ-Bloecke mit praezisen Antworten:** Jede Antwort sollte in 1-3 Saetzen die Kernaussage enthalten, gefolgt von einer ausfuehrlichen Erklaerung.
+
+3. **Aktualitaet signalisieren:** Jede Seite mit Datum versehen ("Stand: Juli 2026") und bei Gesetzesaenderungen regelmaessig aktualisieren.
+
+### 5.2 Perplexity
+
+**Strategie:** Perplexity zitiert Quellen direkt und zeigt URLs an. Hohe Prioritaet auf zitatfaehige, quellenbasierte Inhalte.
+
+**Massnahmen:**
+
+1. **Jede Faktenclaim mit Quellenangabe versehen:**
+   - "Laut Paragraph 45a SGB XI haben Pflegebeduerftige ab Pflegegrad 1 Anspruch auf Entlastungsleistungen."
+   - "Die Pflegekasse uebernimmt 131 Euro monatlich (Paragraph 45b SGB XI)."
+
+2. **Klare Autorenschaft und Expertise signalisieren:**
+   - Veroeffentlichungsdatum und Aktualisierungsdatum auf jeder Seite.
+   - Autorenbox mit Qualifikationen.
+
+3. **Strukturierte Vergleichsinhalte:**
+   - Tabellen: "Alltagsbegleitung vs. Pflegedienst — Der Unterschied"
+   - Listen: "5 Leistungen, die der Entlastungsbetrag abdeckt"
+
+### 5.3 Google SGE / AI Overviews
+
+**Strategie:** Google AI Overviews bevorzugt Inhalte von Seiten, die bereits organisch gut ranken, und ergaenzt sie mit strukturierten Daten.
+
+**Massnahmen:**
+
+1. **Featured-Snippet-Optimierung:** Frage als H2-Ueberschrift, Antwort im ersten Absatz.
+   - Beispiel: "## Was kostet Alltagsbegleitung in Frankfurt?" — "Der Entlastungsbetrag fuer Alltagsbegleitung bei Alltagsengel betraegt 131 Euro pro Monat nach Paragraph 45b SGB XI. Dieser Betrag wird direkt von der Pflegekasse uebernommen."
+
+2. **Schema.org Markup implementieren:** LocalBusiness, FAQPage, Service, HowTo (siehe Abschnitt 3).
+
+3. **Lokale Signale staerken:** Google Business Profile vollstaendig pflegen, NAP-Konsistenz (Name, Adresse, Telefon) ueber alle Verzeichnisse sicherstellen.
+
+### 5.4 Claude
+
+**Strategie:** Claude nutzt Websuche und bewertet Quellen nach Vertrauenswuerdigkeit und Faktengehalt.
+
+**Massnahmen:**
+
+1. **Faktenreiche, gut strukturierte Seiten** mit klaren Ueberschriften (H1-H3).
+2. **Keine Marketing-Floskeln:** Sachliche, informative Sprache wird bevorzugt.
+3. **Quellenangaben** zu Gesetzestexten und offiziellen Statistiken.
+4. **Maschinenlesbare Daten** via Schema.org erhoehen die Auffindbarkeit.
+
+---
+
+## 6. Content-Formate fuer GEO
+
+KI-Systeme bevorzugen bestimmte Content-Formate, weil sie leichter extrahieren und in Antworten einbauen koennen.
+
+### 6.1 FAQ (Haeufige Fragen)
+
+**Aufbau einer AI-optimierten FAQ:**
+
+```
+Frage: [Exakte Nutzerfrage in natuerlicher Sprache]
 Kurzantwort: [1-2 Saetze mit der Kerninformation]
 Ausfuehrliche Antwort: [3-5 Saetze mit Details, Quellenangaben, naechsten Schritten]
 Quelle: [Gesetzestext oder offizielle Referenz]
 ```
 
-### 5.2 Priorisierte FAQ-Themen
+**Beispiel:**
+- **Frage:** Was ist der Entlastungsbetrag nach Paragraph 45b SGB XI?
+- **Kurzantwort:** Der Entlastungsbetrag betraegt 131 Euro pro Monat (1.572 Euro pro Jahr) und steht Pflegebeduerftigen ab Pflegegrad 1 zu.
+- **Ausfuehrliche Antwort:** Der Entlastungsbetrag ist ein zweckgebundener Betrag, der fuer nach Landesrecht anerkannte Angebote zur Unterstuetzung im Alltag verwendet werden kann. Er wird direkt von der Pflegekasse an den Anbieter gezahlt. Nicht genutzte Betraege koennen bis zum 30. Juni des Folgejahres uebertragen werden. Alltagsengel rechnet als anerkannter Anbieter direkt mit der Pflegekasse ab.
+- **Quelle:** Paragraph 45b SGB XI
 
-**Kategorie: Kosten und Finanzierung**
+### 6.2 How-To-Anleitungen
 
-1. Was kostet Alltagsbegleitung in Frankfurt?
-2. Wer zahlt fuer die Alltagsbegleitung?
-3. Was ist der Entlastungsbetrag nach Paragraph 45b SGB XI?
-4. Ab welchem Pflegegrad habe ich Anspruch auf den Entlastungsbetrag?
-5. Kann ich den Entlastungsbetrag rueckwirkend nutzen?
-6. Wie hoch ist der Eigenanteil bei Alltagsengel?
+Schritt-fuer-Schritt-Anleitungen werden haeufig von KI-Systemen als Antwort auf "Wie"-Fragen zitiert.
 
-**Kategorie: Leistungen**
+**Themenvorschlaege:**
+- "So beantragen Sie Alltagsbegleitung in 4 Schritten"
+- "Entlastungsbetrag nutzen: Schritt-fuer-Schritt-Anleitung"
+- "Pflegegrad beantragen in Frankfurt: Was Sie wissen muessen"
 
-7. Was macht ein Alltagsbegleiter?
-8. Welche Aufgaben uebernimmt Alltagsengel?
-9. Ist Alltagsbegleitung das Gleiche wie ein Pflegedienst?
-10. Kann ich die Leistungen individuell zusammenstellen?
-11. Wie oft kommt ein Alltagsbegleiter pro Woche?
-12. Hilft Alltagsengel auch bei Behoerdengaengen?
+### 6.3 Listicles (Listenartikel)
 
-**Kategorie: Ablauf und Organisation**
+- "7 Leistungen der Alltagsbegleitung, die Sie kennen sollten"
+- "5 Gruende, warum Alltagsbegleitung keine Pflege ist"
+- "10 Fragen an Ihre Pflegekasse zum Entlastungsbetrag"
 
-13. Wie beantrage ich Alltagsbegleitung?
-14. Wie schnell kann Alltagsengel starten?
-15. Muss ich einen Antrag bei der Pflegekasse stellen?
-16. Wie rechnet Alltagsengel mit der Pflegekasse ab?
-17. Gibt es eine Mindestvertragslaufzeit?
-18. Was passiert, wenn ich umziehe?
+### 6.4 Statistische Daten und Zahlen
 
-**Kategorie: Qualitaet und Sicherheit**
+KI-Systeme zitieren bevorzugt konkrete Zahlen:
+- "Der Entlastungsbetrag betraegt 131 Euro pro Monat (1.572 Euro pro Jahr)."
+- "Pflegebeduerftige ab Pflegegrad 1 haben Anspruch."
+- "In Frankfurt am Main leben ueber 30.000 Pflegebeduerftige mit anerkanntem Pflegegrad."
+- "Alltagsengel ist erreichbar unter info@alltagsengel.care in der Neuen Mainzer Strasse 66-68, 60311 Frankfurt am Main."
 
-19. Ist Alltagsengel ein zugelassener Anbieter?
-20. Welche Qualifikationen haben die Alltagsbegleiter?
-21. Wie wird die Qualitaet sichergestellt?
-22. Ist Alltagsengel versichert?
+### 6.5 Zitatfaehige Vorlagen
 
-### 5.3 Beispiel: Perfekt optimierte FAQ-Antwort
+**Faktenbasierte Aussage:**
+> "Alltagsengel bietet Alltagsbegleitung nach Paragraph 45a SGB XI in Frankfurt am Main an. Der monatliche Entlastungsbetrag nach Paragraph 45b SGB XI betraegt 131 Euro (1.572 Euro pro Jahr) und wird direkt von der Pflegekasse uebernommen."
 
-**Frage:** Was kostet Alltagsbegleitung bei Alltagsengel in Frankfurt?
-
-**Antwort:** Die Alltagsbegleitung bei Alltagsengel kostet 256 Euro pro Monat. Davon uebernimmt die Pflegekasse 125 Euro als Entlastungsbetrag nach Paragraph 45b SGB XI. Der monatliche Eigenanteil betraegt 131 Euro.
-
-Der Entlastungsbetrag steht allen Pflegebeduerftigen ab Pflegegrad 1 zu und wird direkt von der Pflegekasse an Alltagsengel gezahlt — Sie muessen nicht in Vorleistung gehen. Nicht genutzte Betraege koennen innerhalb des Kalenderjahres und bis zum 30. Juni des Folgejahres uebertragen werden.
-
-Fuer ein unverbindliches Beratungsgespraech kontaktieren Sie Alltagsengel unter info@alltagsengel.care oder besuchen Sie alltagsengel.care.
-
-*Rechtsgrundlage: Paragraph 45a und 45b SGB XI*
-
----
-
-## 6. Zitatfaehige Inhalte erstellen
-
-### 6.1 Was macht Inhalte zitatfaehig fuer KI?
-
-KI-Systeme zitieren bevorzugt Inhalte, die:
-- **Eindeutige Faktenaussagen** enthalten (keine vagen Formulierungen)
-- **Zahlen und Daten** nennen (Preise, Prozentsaetze, Fristen)
-- **Quellenangaben** haben (Gesetzestexte, offizielle Statistiken)
-- **Aktuell** sind (erkennbares Veroeffentlichungsdatum)
-- **Auf einer vertrauenswuerdigen Domain** stehen (konsistente E-E-A-T-Signale)
-
-### 6.2 Vorlagen fuer zitatfaehige Inhalte
-
-**Vorlage: Faktenbasierte Aussage**
-> "Alltagsengel bietet Alltagsbegleitung nach Paragraph 45a SGB XI in Frankfurt am Main an. Der monatliche Gesamtpreis betraegt 256 Euro, wobei die Pflegekasse 125 Euro als Entlastungsbetrag (Paragraph 45b SGB XI) uebernimmt. Der Eigenanteil liegt bei 131 Euro pro Monat. [Stand: Juli 2026]"
-
-**Vorlage: Vergleichende Aussage**
+**Vergleichende Aussage:**
 > "Im Gegensatz zu ambulanten Pflegediensten, die medizinische und koerperbezogene Pflege leisten, konzentriert sich Alltagsengel auf die Begleitung im Alltag: Einkaufen, Spaziergaenge, Arztbesuche, Gesellschaft und Unterstuetzung bei der Haushaltsorganisation."
 
-**Vorlage: Statistische Aussage**
-> "In Frankfurt am Main leben ueber 30.000 Pflegebeduerftige mit einem anerkannten Pflegegrad (Quelle: Pflegestatistik Hessen). Viele von ihnen nutzen den Entlastungsbetrag von 125 Euro monatlich nicht — obwohl er ihnen zusteht."
-
-**Vorlage: Erklaerende Aussage**
-> "Der Entlastungsbetrag nach Paragraph 45b SGB XI ist ein zweckgebundener Betrag von 125 Euro monatlich, der Pflegebeduerftigen ab Pflegegrad 1 zusteht. Er kann fuer nach Landesrecht anerkannte Angebote zur Unterstuetzung im Alltag verwendet werden — wie die Alltagsbegleitung von Alltagsengel."
-
-### 6.3 Content-Formate mit hoher Zitatwahrscheinlichkeit
+**Erklaerende Aussage:**
+> "Der Entlastungsbetrag nach Paragraph 45b SGB XI ist ein zweckgebundener Betrag von 131 Euro monatlich, der Pflegebeduerftigen ab Pflegegrad 1 zusteht. Er kann fuer nach Landesrecht anerkannte Angebote zur Unterstuetzung im Alltag verwendet werden — wie die Alltagsbegleitung von Alltagsengel."
 
 | Format | Beispiel | Zitatwahrscheinlichkeit |
 |---|---|---|
@@ -261,86 +406,129 @@ KI-Systeme zitieren bevorzugt Inhalte, die:
 
 ---
 
-## 7. Monatlicher GEO-Fahrplan
+## 7. Knowledge Graph Optimierung
 
-### Phase 1: Fundament legen (Monat 1-2)
+### 7.1 Google Knowledge Panel
 
-**Woche 1-2: Technische Basis**
-- [ ] Schema.org Markup auf allen Seiten implementieren (LocalBusiness, FAQPage, Service)
-- [ ] Google Business Profile vollstaendig aktualisieren
-- [ ] NAP-Konsistenz in allen Verzeichnissen sicherstellen
-- [ ] SSL-Zertifikat und Core Web Vitals pruefen
+Das Google Knowledge Panel ist die Infobox, die rechts neben den Suchergebnissen erscheint. Fuer lokale Unternehmen wird es hauptsaechlich aus dem Google Business Profile gespeist.
 
-**Woche 3-4: Inhalte optimieren**
-- [ ] Bestehende Seiten um zitatfaehige Faktenaussagen ergaenzen
-- [ ] FAQ-Seite mit 22 optimierten Fragen erstellen
-- [ ] Jede Seite mit Veroeffentlichungs- und Aktualisierungsdatum versehen
-- [ ] Glossar-Seite mit 20 Fachbegriffen erstellen
+**Schritte zum Knowledge Panel:**
 
-**Woche 5-6: Branchenverzeichnisse**
-- [ ] Eintraege in 15 relevanten Branchenverzeichnissen erstellen (siehe wikidata-vorlage.md)
-- [ ] Google Business Profile mit Beitraegen und Fotos bestuecken
-- [ ] Bewertungsanfragen an bestehende Kunden senden
+1. **Google Business Profile vollstaendig ausfuellen:**
+   - Name: Alltagsengel
+   - Kategorie: Sozialdienst / Betreuungsdienst
+   - Adresse: Neue Mainzer Strasse 66-68, 60311 Frankfurt am Main
+   - Website: alltagsengel.care
+   - E-Mail: info@alltagsengel.care
+   - Oeffnungszeiten, Fotos, Beschreibung
 
-**Woche 7-8: Erste Inhalte**
-- [ ] Blogartikel: "Entlastungsbetrag 2026 — Alles was Sie wissen muessen"
-- [ ] Blogartikel: "Alltagsbegleitung in Frankfurt: So funktioniert es"
-- [ ] PDF-Ratgeber: "Leitfaden Entlastungsbetrag" erstellen
+2. **NAP-Konsistenz (Name, Adresse, Telefon):** In allen Verzeichnissen und auf der eigenen Website muessen die Angaben identisch sein.
 
-### Phase 2: Autoritaet aufbauen (Monat 3-4)
+3. **Branchenverzeichnisse:**
+   - pflege.de, pflegehilfe.org, curendo.de
+   - Gelbe Seiten, Yelp, GoLocal
+   - stadt-frankfurt.de (Pflegeverzeichnis)
+   - meinestadt.de, 11880.com
 
-**Laufende Aufgaben:**
-- [ ] 2 Blogartikel pro Monat veroeffentlichen
-- [ ] Gastartikel auf pflege.de oder pflegehilfe.org platzieren
-- [ ] Lokale Pressearbeit: Pressemitteilung an FNP, Frankfurter Rundschau, Journal Frankfurt
-- [ ] Kooperation mit Pflegestuetzpunkt Frankfurt ansprechen
-- [ ] Wikidata-Eintrag erstellen (siehe wikidata-vorlage.md)
-- [ ] Bewertungen auf Google und ProvenExpert systematisch sammeln
+4. **Bewertungen sammeln:** Mindestens 20 Google-Bewertungen mit 4,5+ Sternen anstreben.
 
-### Phase 3: Monitoring und Optimierung (ab Monat 5, laufend)
+5. **Strukturierte Daten:** LocalBusiness JSON-LD auf der Website (siehe Abschnitt 3.2).
 
-**Woechentlich:**
-- [ ] AI-Suchmaschinen testen: "Alltagsbegleitung Frankfurt" in ChatGPT, Perplexity, Google AI eingeben
-- [ ] Pruefen, ob Alltagsengel erwaehnt/zitiert wird
-- [ ] Konkurrenzerwahnungen dokumentieren
+### 7.2 Wikipedia-Erwaegungen
 
-**Monatlich:**
-- [ ] Google Search Console: Strukturierte Daten pruefen
-- [ ] Neue FAQ-Fragen aus Kundenanfragen identifizieren
-- [ ] Bestehende Inhalte aktualisieren (Datum, Zahlen, Gesetze)
-- [ ] 2 neue Blogartikel veroeffentlichen
-- [ ] Backlink-Profil pruefen und neue Moeglichkeiten identifizieren
+Ein Wikipedia-Artikel waere ideal fuer die Knowledge-Graph-Sichtbarkeit, ist aber an strenge Relevanzkriterien gebunden.
 
-**Quartalsweise:**
-- [ ] Umfassende GEO-Analyse: Wo wird Alltagsengel zitiert?
-- [ ] Wettbewerbsanalyse: Welche Anbieter werden in AI-Antworten bevorzugt?
-- [ ] Strategie anpassen basierend auf neuen AI-Suchmaschinen-Features
-- [ ] Schema.org Markup auf neue Seitentypen erweitern
+**Aktuelle Einschaetzung:** Fuer ein lokales Dienstleistungsunternehmen wie Alltagsengel ist ein eigener Wikipedia-Artikel zum jetzigen Zeitpunkt unrealistisch. Die Relevanzhuerden fuer Unternehmen sind hoch (ueberregionale Bedeutung, erhebliche Medienberichterstattung).
+
+**Alternative Strategien:**
+- **Erwaehnung in bestehenden Artikeln:** Wenn Alltagsengel in einem Presseartikel einer relevanten Zeitung erwaehnt wird, kann dies als Quelle in Wikipedia-Artikeln zu verwandten Themen (z.B. "Alltagsbegleitung", "Entlastungsbetrag") verwendet werden.
+- **Wikidata-Eintrag** (siehe Abschnitt 4): Hat eine niedrigere Huerden als Wikipedia und wird von KI-Systemen direkt genutzt.
+- **Langfristig:** Wenn Alltagsengel in mehreren Staedten aktiv ist und ueberregionale Medienberichterstattung vorliegt, wird ein Wikipedia-Artikel moeglich.
 
 ---
 
-## 8. Erfolgsmessung
+## 8. Monitoring: AI-Suchsichtbarkeit messen
 
-### KPIs fuer GEO
+### 8.1 Manuelle Abfragen (woechentlich)
+
+Da es noch keine standardisierten Tools fuer GEO-Tracking gibt, ist manuelles Monitoring essenziell:
+
+**Suchbegriffe zum Testen:**
+- "Alltagsbegleitung Frankfurt"
+- "Entlastungsbetrag Frankfurt nutzen"
+- "Alltagsbegleitung nach Paragraph 45a SGB XI"
+- "Wer hilft bei Einkauf und Arztbesuchen Senioren Frankfurt"
+- "131 Euro Entlastungsbetrag Anbieter Frankfurt"
+
+**Plattformen:**
+- ChatGPT (mit und ohne Browsing)
+- Perplexity.ai
+- Google (mit aktiviertem AI Overview)
+- Microsoft Copilot / Bing Chat
+- Claude (claude.ai)
+
+**Dokumentation:** Fuer jede Abfrage Screenshots anfertigen und in einem Tabellendokument protokollieren: Datum, Suchbegriff, Plattform, Ergebnis (erwaehnt ja/nein, Quelle verlinkt ja/nein, korrekte Informationen ja/nein).
+
+### 8.2 KPIs fuer GEO
 
 | KPI | Messmethode | Zielwert (6 Monate) |
 |---|---|---|
-| Erwaehnung in ChatGPT | Manuelle Abfrage "Alltagsbegleitung Frankfurt" | Mindestens 3 von 5 Abfragen |
-| Zitation in Perplexity | Manuelle Abfrage mit URL-Pruefung | alltagsengel.care als Quelle |
-| Google AI Overview | Suche in Google | Erwaehnung bei relevanten Suchanfragen |
+| Erwaehnung in ChatGPT | Manuelle Abfrage | Mindestens 3 von 5 Abfragen |
+| Zitation in Perplexity | Abfrage mit URL-Pruefung | alltagsengel.care als Quelle |
+| Google AI Overview | Google-Suche | Erwaehnung bei relevanten Queries |
 | Schema.org Validierung | Google Rich Results Test | 0 Fehler, 0 Warnungen |
 | Google-Bewertungen | Google Business Profile | Mindestens 20 Bewertungen, 4.5+ Sterne |
 | Organischer Traffic | Google Search Console | +30% gegenueber Ausgangswert |
-| FAQ-Klicks | Google Search Console | Mindestens 5 FAQ-Rich-Results |
+| FAQ-Rich-Results | Google Search Console | Mindestens 5 FAQ-Snippets |
+| Wikidata-Eintrag | wikidata.org | Eintrag erstellt und stabil |
 
-### Tracking-Tools
+### 8.3 Tracking-Tools
 
-- **Google Search Console:** Organischer Traffic, strukturierte Daten, FAQ-Rich-Results
-- **Google Analytics:** Nutzerverhalten, Conversions
-- **Perplexity.ai:** Manuelle Abfragen dokumentieren (Screenshot-Archiv)
-- **ChatGPT:** Manuelle Abfragen dokumentieren
-- **Ahrefs oder Semrush:** Backlink-Monitoring, Keyword-Tracking
-- **BrightLocal:** Lokale Sichtbarkeit und Verzeichniseintraege
+- **Google Search Console:** Organischer Traffic, strukturierte Daten, FAQ-Rich-Results.
+- **Google Analytics:** Nutzerverhalten, Conversions, Traffic-Quellen.
+- **Perplexity.ai / ChatGPT:** Manuelle Abfragen systematisch dokumentieren (Screenshot-Archiv).
+- **Ahrefs oder Semrush:** Backlink-Monitoring, Keyword-Tracking, Wettbewerbsanalyse.
+- **BrightLocal:** Lokale Sichtbarkeit und Verzeichniseintraege ueberwachen.
+- **Schema Markup Validator:** validator.schema.org fuer technische Korrektheit der strukturierten Daten.
+
+### 8.4 Fehlererkennung und Korrekturen
+
+Wenn KI-Systeme falsche Informationen ueber Alltagsengel ausgeben (z.B. falsche Preise, falsche Adresse, Verwechslung mit Pflegedienst), sollten folgende Schritte eingeleitet werden:
+
+1. **Quellenanalyse:** Woher stammt die falsche Information? Veraltete Webseite? Falscher Verzeichniseintrag?
+2. **Korrektur an der Quelle:** Den fehlerhaften Eintrag aktualisieren oder loeschen lassen.
+3. **Eigene Inhalte staerken:** Die korrekte Information auf der eigenen Website prominenter platzieren.
+4. **Feedback an die Plattform:** Bei ChatGPT, Perplexity und Bing gibt es Feedback-Funktionen fuer falsche Antworten.
+
+---
+
+## 9. Monatlicher GEO-Fahrplan
+
+### Phase 1: Fundament legen (Monat 1-2)
+
+- [ ] Schema.org JSON-LD Markup auf allen Seiten implementieren
+- [ ] Google Business Profile vollstaendig aktualisieren
+- [ ] NAP-Konsistenz in allen Verzeichnissen sicherstellen
+- [ ] FAQ-Seite mit 20+ optimierten Fragen erstellen
+- [ ] Jede Seite mit Veroeffentlichungs- und Aktualisierungsdatum versehen
+- [ ] Glossar-Seite mit Fachbegriffen erstellen
+- [ ] Eintraege in 15 relevanten Branchenverzeichnissen
+- [ ] 2 Blogartikel veroeffentlichen
+
+### Phase 2: Autoritaet aufbauen (Monat 3-4)
+
+- [ ] 2 Blogartikel pro Monat veroeffentlichen
+- [ ] Gastartikel auf pflege.de oder pflegehilfe.org platzieren
+- [ ] Lokale Pressearbeit starten
+- [ ] Kooperation mit Pflegestuetzpunkt Frankfurt ansprechen
+- [ ] Wikidata-Eintrag erstellen
+- [ ] Bewertungen auf Google systematisch sammeln
+
+### Phase 3: Monitoring und Optimierung (ab Monat 5, laufend)
+
+- [ ] Woechentlich: AI-Suchmaschinen mit definierten Suchbegriffen testen
+- [ ] Monatlich: Google Search Console pruefen, Inhalte aktualisieren, 2 neue Blogartikel
+- [ ] Quartalsweise: Umfassende GEO-Analyse, Wettbewerbsanalyse, Strategie anpassen
 
 ---
 

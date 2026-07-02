@@ -1,333 +1,124 @@
-# SEO-Strategie Alltagsengel
+# SEO-Strategie: alltagsengel.care
 
-> Alltagsbegleitung nach §45a SGB XI | Frankfurt am Main
-> Stand: Juli 2026
+**Stand:** Juli 2026  
+**Verantwortlich:** Alltagsengel  
+**Domain:** alltagsengel.care  
+**Ziel:** Organische Sichtbarkeit als führender Anbieter für Alltagsbegleitung nach §45b SGB XI im Raum Frankfurt am Main
 
 ---
 
-## 1. Zielgruppenanalyse
+## 1. Keyword-Recherche
 
-### 1.1 Primaere Zielgruppe: Angehoerige (40-65 Jahre)
+### 1.1 Primäre Keywords (Fokus-Keywords)
 
-**Demografisches Profil:**
-- Alter: 40-65 Jahre, ueberwiegend weiblich (ca. 65%)
-- Berufstaetig, haeufig in Sandwich-Position (eigene Kinder + pflegebeduerftige Eltern)
-- Wohnort: Frankfurt am Main und Rhein-Main-Gebiet (Offenbach, Hanau, Darmstadt, Wiesbaden, Mainz)
-- Mittleres bis hohes Einkommen, internetaffin
+| Keyword | Suchintention | Priorität |
+|---|---|---|
+| Alltagsbegleitung Frankfurt | Lokal + transaktional | Sehr hoch |
+| Entlastungsbetrag 131 Euro | Informational | Sehr hoch |
+| §45b SGB XI | Informational / navigational | Hoch |
+| Alltagshilfe Senioren Frankfurt | Lokal + transaktional | Sehr hoch |
+| Alltagsbegleiter Frankfurt am Main | Lokal + transaktional | Hoch |
+| Betreuungsleistungen Frankfurt | Lokal + transaktional | Hoch |
 
-**Suchverhalten:**
-- Suchen abends und am Wochenende (18-22 Uhr Hauptzeit)
-- Nutzen Smartphone (ca. 70%) und Desktop (ca. 30%)
-- Informationssuche beginnt oft nach Arztbesuch, Krankenhausaufenthalt oder akutem Ereignis
-- Vergleichen mehrere Anbieter, lesen Bewertungen
-- Typische Suchphrasen: "Hilfe fuer meine Mutter Frankfurt", "Entlastungsbetrag nutzen", "Alltagsbegleitung in der Naehe"
+### 1.2 Sekundäre Keywords
 
-**Pain Points:**
-- Schlechtes Gewissen, weil eigene Zeit fuer die Eltern fehlt
-- Ueberforderung mit Buerokratie (Pflegekasse, Antraege)
-- Angst vor unseriosen Anbietern
-- Wunsch nach zuverlaessiger, warmherziger Betreuung
-- Kosten-Unsicherheit ("Was zahlt die Kasse?")
+- Entlastungsleistungen Pflegegrad Frankfurt
+- Seniorenbetreuung Frankfurt
+- Haushaltshilfe Senioren Frankfurt
+- Begleitung im Alltag Frankfurt
+- Entlastungsbetrag beantragen
+- Unterstützung im Alltag Frankfurt
+- Alltagsbegleitung Pflegegrad 1
+- Seniorenhilfe Frankfurt Innenstadt
+- Betreuungsdienst Frankfurt
 
-### 1.2 Sekundaere Zielgruppe: Senioren selbst (70+)
+### 1.3 Long-Tail Keywords
 
-- Suchen seltener selbst, werden aber von Aerzten, Sozialdiensten oder Nachbarn empfohlen
-- Wenn sie suchen: einfache, grosse Schrift, klare Sprache
-- Wichtig: Vertrauen, Naehe, persoenlicher Kontakt
+- „Wer hat Anspruch auf den Entlastungsbetrag von 131 Euro pro Monat"
+- „Alltagsbegleitung nach §45b SGB XI in Frankfurt buchen"
+- „Entlastungsbetrag 1.572 Euro im Jahr nutzen"
+- „Alltagsbegleiter für Senioren in Frankfurt am Main finden"
+- „Haushaltshilfe für pflegebedürftige Angehörige Frankfurt"
+- „Unterschied Alltagsbegleitung und Pflegedienst"
+- „Entlastungsbetrag verfällt — was tun"
+- „Betreuungsangebote für Senioren mit Pflegegrad in Frankfurt"
+- „Alltagsbegleitung ohne Pflegegrad — geht das"
+- „Wie beantrage ich den Entlastungsbetrag bei der Pflegekasse"
 
-### 1.3 Tertiäre Zielgruppe: Multiplikatoren
+### 1.4 Keyword-Mapping
 
-- Hausaerzte, Sozialdienste, Pflegestuetzpunkte, Krankenhaeuser
-- Suchen nach Kooperationspartnern und Entlastungsangeboten fuer ihre Patienten/Klienten
+Jedes Primär-Keyword wird einer eigenen Landingpage oder einem Hauptinhalt zugeordnet. Kein Keyword-Kannibalismus: Jede Seite rankt für ein klar definiertes Keyword-Cluster.
 
 ---
 
 ## 2. On-Page SEO
 
-### 2.1 Title Tags (Empfehlungen je Seite)
+### 2.1 Title Tags
 
-| Seite | Title Tag (max. 60 Zeichen) |
-|---|---|
-| Startseite | Alltagsengel - Alltagsbegleitung Frankfurt | ab 6 EUR/Std. |
-| Leistungen | Alltagsbegleitung nach §45a SGB XI | Alltagsengel Frankfurt |
-| Kosten | Entlastungsbetrag nutzen: nur 131 EUR/Monat Eigenanteil |
-| Ueber uns | Ihr Alltagsbegleiter in Frankfurt | Alltagsengel |
-| Kontakt | Kontakt & Beratung | Alltagsengel Frankfurt am Main |
-| FAQ | Haeufige Fragen zur Alltagsbegleitung | Alltagsengel |
-| Blog | Ratgeber Pflege & Betreuung | Alltagsengel Blog |
-| Stellenangebote | Jobs als Alltagsbegleiter/in in Frankfurt | Alltagsengel |
+- **Startseite:** „Alltagsbegleitung Frankfurt | 131€ Entlastungsbetrag nutzen | Alltagsengel"
+- **Leistungsseiten:** „[Leistung] in Frankfurt am Main — Alltagsengel | §45b SGB XI"
+- **Blog-Artikel:** „[Thema] — Ratgeber von Alltagsengel"
 
-### 2.2 Meta Descriptions (max. 155 Zeichen)
+Regeln: Maximal 60 Zeichen, Primär-Keyword möglichst am Anfang, Markenname am Ende.
 
-| Seite | Meta Description |
-|---|---|
-| Startseite | Alltagsbegleitung in Frankfurt: Einkaufen, Spaziergaenge, Gesellschaft. Pflegekasse zahlt 125 EUR - Ihr Eigenanteil nur 131 EUR/Monat. Jetzt beraten lassen! |
-| Leistungen | Professionelle Alltagsbegleitung nach §45a SGB XI in Frankfurt. Begleitung, Haushaltshilfe, Gesellschaft - individuell und zuverlaessig. |
-| Kosten | Transparente Kosten: Die Pflegekasse uebernimmt 125 EUR Entlastungsbetrag. Ihr Eigenanteil: nur 131 EUR/Monat. Kostenlose Beratung! |
-| FAQ | Antworten auf alle Fragen zur Alltagsbegleitung: Kosten, Leistungen, Antraege, Pflegegrad. Verstaendlich erklaert von Alltagsengel. |
+### 2.2 Meta Descriptions
 
-### 2.3 H1-Struktur (eine H1 pro Seite)
+- Maximal 155 Zeichen
+- Klarer Call-to-Action (z. B. „Jetzt unverbindlich beraten lassen")
+- Primär-Keyword und Alleinstellungsmerkmal integrieren
+- Beispiel Startseite: „Alltagsbegleitung in Frankfurt nach §45b SGB XI. Nutzen Sie Ihren Entlastungsbetrag von 131€/Monat. Kostenlose Beratung — jetzt anfragen!"
 
-- **Startseite:** "Alltagsbegleitung in Frankfurt am Main - Damit Ihre Liebsten gut versorgt sind"
-- **Leistungen:** "Unsere Leistungen: Alltagsbegleitung nach §45a SGB XI"
-- **Kosten:** "Kosten und Finanzierung: So nutzen Sie den Entlastungsbetrag"
-- **Ueber uns:** "Alltagsengel - Ihr Partner fuer Alltagsbegleitung in Frankfurt"
-- **FAQ:** "Haeufige Fragen zur Alltagsbegleitung und zum Entlastungsbetrag"
+### 2.3 Überschriften-Struktur (H1–H6)
 
-### 2.4 Content-Richtlinien
+- **H1:** Nur eine pro Seite, enthält das Primär-Keyword
+- **H2:** Thematische Hauptabschnitte (z. B. „Unsere Leistungen", „So funktioniert der Entlastungsbetrag")
+- **H3–H4:** Unterabschnitte, sekundäre Keywords einbauen
+- Natürliche Sprache, keine Keyword-Überladung
 
-- **Textlaenge:** Mindestens 800 Woerter pro Hauptseite, 1.200+ fuer Ratgeber-Artikel
-- **Keyword-Dichte:** Primaeres Keyword 1-2% im Text, natuerlich eingebaut
-- **Bilder:** Alt-Tags mit Keywords ("Alltagsbegleitung-Spaziergang-Frankfurt-Palmengarten")
-- **Zwischenueberschriften:** H2/H3 mit Variationen des Hauptkeywords
-- **Fettdruck:** Wichtige Begriffe und USPs hervorheben
-- **Bullet Points:** Leistungen und Vorteile in Listen darstellen
+### 2.4 Interne Verlinkung
 
-### 2.5 Interne Verlinkung
+- Jede Seite verlinkt auf mindestens 2–3 andere relevante Seiten
+- Kontextbezogene Ankertexte mit Keywords (nicht „hier klicken")
+- Pillar-Cluster-Modell: Eine zentrale Pillar Page (z. B. „Alltagsbegleitung Frankfurt") verlinkt auf Cluster-Seiten (Leistungen, FAQ, Ratgeber)
+- Breadcrumb-Navigation implementieren
 
-**Strategie: Pillar-Cluster-Modell**
+### 2.5 URL-Struktur
 
-```
-Pillar: Alltagsbegleitung Frankfurt (Startseite)
-  |
-  +-- Cluster: Leistungen im Detail
-  |     +-- Einkaufsbegleitung
-  |     +-- Spaziergaenge & Mobilität
-  |     +-- Gesellschaft & Gespraechspartner
-  |     +-- Haushaltshilfe
-  |     +-- Behoerdenbegleitung
-  |
-  +-- Cluster: Kosten & Finanzierung
-  |     +-- Entlastungsbetrag erklaert
-  |     +-- Pflegegrad beantragen
-  |     +-- Kostenuebernahme durch die Pflegekasse
-  |
-  +-- Cluster: Ratgeber
-        +-- Was ist Alltagsbegleitung?
-        +-- Entlastungsbetrag beantragen Schritt fuer Schritt
-        +-- Pflegegrad: Alles was Sie wissen muessen
-        +-- Tipps fuer pflegende Angehoerige
-```
+- Kurze, sprechende URLs: `alltagsengel.care/alltagsbegleitung-frankfurt`
+- Keine Sonderzeichen, keine Umlaute in URLs (ae statt ä)
+- Hierarchisch: `/leistungen/einkaufsbegleitung`, `/ratgeber/entlastungsbetrag-beantragen`
+- Keine Parameter oder Session-IDs in URLs
 
-**Regeln:**
-- Jede Seite verlinkt auf mindestens 3 andere interne Seiten
-- Ankertext variieren (nicht immer "hier klicken")
-- Breadcrumb-Navigation auf allen Seiten
-- CTA-Buttons auf jeder Seite: "Kostenlose Beratung" → Kontaktseite
+### 2.6 Schema.org Markup (Strukturierte Daten)
 
----
+**LocalBusiness:**
 
-## 3. Local SEO
-
-### 3.1 Google Business Profile (GBP)
-
-**Einrichtung/Optimierung:**
-- **Primaere Kategorie:** "Seniorenbetreuung" oder "Haeusliche Pflegedienstleistung"
-- **Sekundaere Kategorien:** "Pflegedienst", "Beratungsstelle"
-- **Firmenbeschreibung (750 Zeichen):**
-  "Alltagsengel bietet professionelle Alltagsbegleitung nach §45a SGB XI in Frankfurt am Main. Wir unterstuetzen Senioren bei Einkauf, Spaziergaengen, Arztbesuchen und im Haushalt. Die Pflegekasse uebernimmt 125 EUR monatlich (Entlastungsbetrag) - Ihr Eigenanteil betraegt nur 131 EUR/Monat. Rufen Sie uns an fuer eine kostenlose Beratung!"
-- **Attribute:** Rollstuhlgerecht, Termine nach Vereinbarung, Kostenlose Beratung
-- **Oeffnungszeiten:** Mo-Fr 08:00-18:00, Sa 09:00-13:00 (telefonisch), So geschlossen
-- **Fotos:** Mindestens 10 professionelle Fotos (Team, Buero, Begleitsituationen)
-- **Beitraege:** Woechentlich 1 Google-Beitrag (Tipps, Neuigkeiten, Angebote)
-- **FAQ:** Mindestens 10 Fragen im GBP hinterlegen
-
-**Bewertungs-Strategie:**
-- Nach jedem erfolgreichen Einsatz um Google-Bewertung bitten (per E-Mail/WhatsApp mit Direktlink)
-- Ziel: 50+ Bewertungen mit 4,8+ Sternen innerhalb von 12 Monaten
-- Auf jede Bewertung innerhalb von 24 Stunden antworten
-- Negative Bewertungen professionell und loesungsorientiert beantworten
-
-### 3.2 NAP-Konsistenz (Name, Address, Phone)
-
-**Exakte Schreibweise auf ALLEN Plattformen:**
-```
-Alltagsengel
-Neue Mainzer Strasse 66-68
-60311 Frankfurt am Main
-Deutschland
-```
-E-Mail: info@alltagsengel.care
-Website: https://alltagsengel.care
-
-**Wichtig:** Keine Abweichungen bei Firmierung und Ortsangabe — immer exakt wie im Impressum (UG, haftungsbeschränkt). Verbotene Schreibweisen sind zentral in `scripts/forbidden-strings.json` gepflegt.
-
-### 3.3 Lokale Verzeichnisse und Portale
-
-**Pflicht-Eintraege (kostenlos):**
-
-| Verzeichnis | URL | Prioritaet |
-|---|---|---|
-| Google Business Profile | business.google.com | Kritisch |
-| Bing Places | bingplaces.com | Hoch |
-| Apple Maps | mapsconnect.apple.com | Hoch |
-| Gelbe Seiten | gelbeseiten.de | Hoch |
-| Das Oertliche | dasoertliche.de | Hoch |
-| Golocal | golocal.de | Mittel |
-| Branchenbuch | branchenbuch.meinestadt.de | Mittel |
-| Yelp | yelp.de | Mittel |
-| Cylex | cylex.de | Mittel |
-
-**Branchenspezifische Portale:**
-
-| Portal | Relevanz |
-|---|---|
-| Pflegelotse (vdek) | Sehr hoch |
-| Weisse Liste | Sehr hoch |
-| pflege.de | Hoch |
-| pflegemarktplatz.de | Hoch |
-| betreut.de | Mittel |
-| seniorenportal.de | Mittel |
-| frankfurt.de (Seniorenratgeber) | Hoch |
-| Pflegestuetzpunkt Frankfurt | Hoch |
-
-### 3.4 Lokale Content-Strategie
-
-- Blog-Artikel mit Frankfurt-Bezug: "Die schoensten Spazierwege fuer Senioren in Frankfurt"
-- Stadtteile gezielt ansprechen: Sachsenhausen, Bornheim, Nordend, Bockenheim, etc.
-- Lokale Events und Veranstaltungen erwaehnen
-- Kooperationen mit lokalen Organisationen hervorheben
-
----
-
-## 4. Content-Strategie fuer organisches Ranking
-
-### 4.1 Content-Kalender (Themen fuer 12 Monate)
-
-**Monat 1-3: Grundlagen-Content (Pillar Pages)**
-1. "Was ist Alltagsbegleitung? Der komplette Ratgeber"
-2. "Entlastungsbetrag nach §45b SGB XI: So beantragen Sie ihn"
-3. "Pflegegrad beantragen: Schritt-fuer-Schritt-Anleitung"
-4. "Alltagsbegleitung vs. Pflegedienst: Was ist der Unterschied?"
-5. "125 EUR Entlastungsbetrag: Was wird bezahlt?"
-
-**Monat 4-6: Zielgruppen-Content**
-6. "Entlastung fuer pflegende Angehoerige: 10 praktische Tipps"
-7. "Demenz im Alltag: So unterstuetzt Alltagsbegleitung"
-8. "Einsamkeit im Alter: Warum Gesellschaft so wichtig ist"
-9. "Sturzpraevention: Sicher durch den Alltag"
-10. "Kochen und Ernaehrung im Alter: Worauf achten?"
-
-**Monat 7-9: Lokaler Content**
-11. "Seniorenfreundliche Ausflugsziele in Frankfurt am Main"
-12. "Barrierefreie Spazierwege am Mainufer"
-13. "Seniorenberatung in Frankfurt: Alle Anlaufstellen im Ueberblick"
-14. "Pflegestuetzpunkte Frankfurt: Adressen und Oeffnungszeiten"
-15. "Ehrenamtliche Hilfe vs. professionelle Alltagsbegleitung"
-
-**Monat 10-12: Vertiefung und Saisonales**
-16. "Verhinderungspflege: So nutzen Sie Ihre Ansprueche"
-17. "Weihnachten allein? So bringen Sie Freude in den Seniorenalltag"
-18. "Pflegereform 2026: Was aendert sich?"
-19. "Checkliste: Braucht mein Angehoeriger Alltagsbegleitung?"
-20. "Erfahrungsbericht: So hat Alltagsbegleitung unser Leben veraendert"
-
-### 4.2 Content-Formate
-
-- **Ratgeber-Artikel:** 1.500-2.500 Woerter, SEO-optimiert, mit Inhaltsverzeichnis
-- **FAQ-Seiten:** Strukturierte Frage-Antwort-Formate (fuer Featured Snippets)
-- **Checklisten:** Downloadbare PDFs (Lead-Generierung)
-- **Infografiken:** Visuelle Darstellung von Prozessen (Antragstellung, Kostenuebernahme)
-- **Erfahrungsberichte:** Anonymisierte Fallbeispiele mit emotionalem Storytelling
-- **Video-Content:** Kurze Erklaervideos (2-3 Min.) fuer YouTube und Website
-
-### 4.3 Featured-Snippet-Optimierung
-
-Fuer folgende Fragen gezielt Position 0 anstreben:
-- "Was kostet Alltagsbegleitung?" → Tabelle mit Kostenaufstellung
-- "Wer zahlt Alltagsbegleitung?" → Kurze Absaetze mit Aufzaehlung
-- "Was ist der Unterschied zwischen Alltagsbegleitung und Pflegedienst?" → Vergleichstabelle
-- "Wie beantrage ich den Entlastungsbetrag?" → Nummerierte Schritte
-
----
-
-## 5. Technisches SEO
-
-### 5.1 Core Web Vitals Zielwerte
-
-| Metrik | Zielwert | Massnahme |
-|---|---|---|
-| LCP (Largest Contentful Paint) | unter 2,5s | Bilder komprimieren (WebP), Lazy Loading, CDN |
-| FID (First Input Delay) / INP | unter 100ms | JavaScript minimieren, kritisches CSS inline |
-| CLS (Cumulative Layout Shift) | unter 0,1 | Bildgroessen definieren, Schriften vorladen |
-
-### 5.2 Mobile-First-Optimierung
-
-- **Responsive Design:** Alle Seiten auf Mobile getestet (320px bis 768px)
-- **Touch-freundlich:** Buttons mindestens 44x44px, ausreichend Abstand
-- **Schriftgroesse:** Mindestens 16px fuer Fliesstexte
-- **Ladezeit Mobile:** Unter 3 Sekunden bei 3G-Verbindung
-- **Click-to-Call:** Telefonnummer als klickbarer Link auf Mobile
-- **Hamburger-Menu:** Klar erkennbar, maximal 7 Menuepunkte
-
-### 5.3 Schema Markup (JSON-LD)
-
-**LocalBusiness Schema:**
 ```json
 {
   "@context": "https://schema.org",
   "@type": "LocalBusiness",
   "name": "Alltagsengel",
-  "description": "Professionelle Alltagsbegleitung nach §45a SGB XI in Frankfurt am Main",
+  "description": "Alltagsbegleitung nach §45b SGB XI in Frankfurt am Main",
   "url": "https://alltagsengel.care",
-  "telephone": "+49-XXX-XXXXXXX",
+  "telephone": "+49-Telefonnummer",
   "email": "info@alltagsengel.care",
   "address": {
     "@type": "PostalAddress",
-    "streetAddress": "Neue Mainzer Strasse 66-68",
+    "streetAddress": "Neue Mainzer Straße 66-68",
     "addressLocality": "Frankfurt am Main",
     "postalCode": "60311",
     "addressCountry": "DE"
-  },
-  "geo": {
-    "@type": "GeoCoordinates",
-    "latitude": 50.1109,
-    "longitude": 8.6821
   },
   "areaServed": {
     "@type": "City",
     "name": "Frankfurt am Main"
   },
-  "priceRange": "ab 131 EUR/Monat Eigenanteil",
-  "openingHoursSpecification": [
-    {
-      "@type": "OpeningHoursSpecification",
-      "dayOfWeek": ["Monday","Tuesday","Wednesday","Thursday","Friday"],
-      "opens": "08:00",
-      "closes": "18:00"
-    }
-  ],
-  "sameAs": []
+  "priceRange": "Über Entlastungsbetrag §45b SGB XI abrechenbar"
 }
 ```
 
-**FAQ Schema (auf FAQ-Seite):**
-```json
-{
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  "mainEntity": [
-    {
-      "@type": "Question",
-      "name": "Was kostet Alltagsbegleitung bei Alltagsengel?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "Die Pflegekasse uebernimmt 125 EUR monatlich als Entlastungsbetrag. Ihr Eigenanteil betraegt nur 131 EUR pro Monat."
-      }
-    },
-    {
-      "@type": "Question",
-      "name": "Was ist Alltagsbegleitung nach §45a SGB XI?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "Alltagsbegleitung ist eine anerkannte Unterstuetzungsleistung fuer pflegebeduerftige Menschen. Sie umfasst Begleitung bei Einkauf, Spaziergaengen, Arztbesuchen, Haushaltshilfe und Gesellschaft."
-      }
-    }
-  ]
-}
-```
+**Service:**
 
-**Service Schema:**
 ```json
 {
   "@context": "https://schema.org",
@@ -337,181 +128,269 @@ Fuer folgende Fragen gezielt Position 0 anstreben:
     "@type": "LocalBusiness",
     "name": "Alltagsengel"
   },
-  "areaServed": {
-    "@type": "City",
-    "name": "Frankfurt am Main"
-  },
-  "description": "Professionelle Alltagsbegleitung fuer Senioren: Einkauf, Spaziergaenge, Arztbegleitung, Haushaltshilfe, Gesellschaft.",
-  "offers": {
-    "@type": "Offer",
-    "price": "131",
-    "priceCurrency": "EUR",
-    "priceSpecification": {
-      "@type": "UnitPriceSpecification",
-      "price": "131",
-      "priceCurrency": "EUR",
-      "unitText": "Monat",
-      "description": "Eigenanteil nach Abzug des Entlastungsbetrags (125 EUR/Monat)"
-    }
-  }
+  "areaServed": "Frankfurt am Main",
+  "description": "Professionelle Alltagsbegleitung nach §45b SGB XI — Einkaufsbegleitung, Spaziergänge, Behördengänge, Gesellschaft und mehr."
 }
 ```
 
-### 5.4 Weitere technische Massnahmen
-
-- **XML-Sitemap:** Automatisch generiert, bei Google Search Console eingereicht
-- **robots.txt:** Korrekt konfiguriert, keine wichtigen Seiten blockiert
-- **Canonical Tags:** Auf allen Seiten, um Duplicate Content zu vermeiden
-- **HTTPS:** SSL-Zertifikat aktiv, HTTP → HTTPS Weiterleitung
-- **404-Seite:** Individuelle 404-Seite mit Suchfunktion und Links
-- **Ladezeit:** Google PageSpeed Score mindestens 90/100
-- **Hreflang:** Nicht noetig (nur deutsche Inhalte)
-- **Crawl-Budget:** Parameterseiten blockieren, Pagination mit rel=next/prev
+Zusätzlich empfohlen: **FAQPage**-Markup für die häufig gestellten Fragen, **BreadcrumbList** für die Navigation, **Article**-Markup für Blog-Beiträge.
 
 ---
 
-## 6. Link-Building-Strategie
+## 3. Off-Page SEO
 
-### 6.1 Lokale Backlinks (Prioritaet: Hoch)
+### 3.1 Backlink-Strategie
 
-| Quelle | Massnahme | Erwartete Backlinks |
+Fokus auf qualitative, themenrelevante Backlinks aus dem regionalen und sozialen Umfeld:
+
+**Lokale Verzeichnisse und Branchenbücher:**
+- Das Örtliche, Gelbe Seiten, GoLocal, Yelp, Cylex, Branchenbuch.de
+- Stadtportal frankfurt.de, Seniorenratgeber Frankfurt
+- Pflegenavigator der Pflegekassen
+
+**Partnerschaften und Kooperationen:**
+- Pflegestützpunkte Frankfurt — gegenseitige Verlinkung als empfohlener Dienstleister
+- Seniorenbeirat Frankfurt am Main
+- Lokale Wohlfahrtsverbände und Sozialstationen
+- Hausarztpraxen und geriatrische Praxen mit Webseite
+- Apotheken-Netzwerke mit lokaler Webpräsenz
+
+**Gastbeiträge und Fachbeiträge:**
+- Fachartikel zum Thema Entlastungsbetrag auf Pflege- und Seniorenportalen
+- Gastbeiträge auf lokalen Blogs und Stadtmagazin-Websites (z. B. Journal Frankfurt)
+- Beiträge auf Plattformen wie pflege.de, curendo.de oder ähnlichen Ratgeberseiten
+
+**Pressemitteilungen:**
+- Lokale Pressemeldungen bei Meilensteinen (z. B. Eröffnung, neue Leistungen)
+- Veröffentlichung über Presseportale mit Backlink
+
+### 3.2 Citations (NAP-Konsistenz)
+
+**NAP-Daten (Name, Address, Phone) müssen überall identisch sein:**
+
+- **Name:** Alltagsengel
+- **Adresse:** Neue Mainzer Straße 66-68, 60311 Frankfurt am Main
+- **E-Mail:** info@alltagsengel.care
+
+Regelmäßige Überprüfung aller Einträge auf Konsistenz. Abweichungen (z. B. „Neue Mainzer Str." vs. „Neue Mainzer Straße") schaden dem lokalen Ranking.
+
+---
+
+## 4. Lokale SEO Frankfurt
+
+### 4.1 Google Business Profile (GBP)
+
+- Vollständiges Profil mit allen Kategorien: Hauptkategorie „Soziale Einrichtung" oder „Betreuungsdienst"
+- Sekundärkategorien: Seniorenbetreuung, Sozialer Dienst
+- Beschreibung mit Primär-Keywords, Entlastungsbetrag 131€/Monat erwähnen
+- Öffnungszeiten, Kontaktdaten, Website-Link
+- Fotos: Team (ohne persönliche Namen), Büro, Alltagssituationen
+- Regelmäßige Google Posts: Mindestens 1x pro Woche (Tipps, Neuigkeiten, Leistungsvorstellungen)
+- Fragen und Antworten aktiv pflegen
+
+### 4.2 Bewertungs-Strategie
+
+- Zufriedene Kunden und Angehörige aktiv um Google-Bewertungen bitten
+- Einfacher Bewertungslink per E-Mail oder Karte bereitstellen
+- Alle Bewertungen innerhalb von 24 Stunden beantworten — professionell, freundlich, im Namen von Alltagsengel
+- Negative Bewertungen sachlich und lösungsorientiert beantworten
+- Ziel: Mindestens 4,5 Sterne bei 50+ Bewertungen innerhalb von 12 Monaten
+
+### 4.3 Lokale Verzeichnisse
+
+| Verzeichnis | Status | Priorität |
 |---|---|---|
-| IHK Frankfurt | Mitgliedsprofil mit Link | 1 |
-| Stadt Frankfurt Seniorenportal | Eintrag als Dienstleister | 1 |
-| Frankfurter Seniorenbeirat | Kooperation und Verlinkung | 1 |
-| Lokale Kirchengemeinden | Flyer und Webverlinkung | 3-5 |
-| Frankfurter Pflegestuetzpunkte | Empfehlungsliste | 1 |
-| Lokale Arztpraxen | Empfehlung auf Praxis-Website | 2-5 |
-| Frankfurter Rundschau / FNP | Gastartikel zum Thema Pflege | 1-2 |
-| Stadtteil-Portale | Eintraege und Vorstellung | 3-5 |
+| Google Business Profile | Pflicht | Sehr hoch |
+| Das Örtliche | Eintragen | Hoch |
+| Gelbe Seiten | Eintragen | Hoch |
+| GoLocal | Eintragen | Hoch |
+| Yelp | Eintragen | Mittel |
+| Cylex | Eintragen | Mittel |
+| Branchenbuch.de | Eintragen | Mittel |
+| 11880.com | Eintragen | Mittel |
+| Pflegelotse (vdek) | Eintragen | Hoch |
+| Pflegenavigator (AOK) | Eintragen | Hoch |
+| Stadtportal Frankfurt | Prüfen | Mittel |
 
-### 6.2 Branchen-Backlinks
+### 4.4 Lokale Landing Pages
 
-| Quelle | Massnahme |
-|---|---|
-| pflege.de | Anbieterprofil erstellen |
-| pflegelotse.de | Eintrag und Bewertungen |
-| betreut.de | Profil anlegen |
-| seniorenportal.de | Firmeneintrag |
-| Pflegewegweiser (BMG) | Registrierung als Anbieter |
-
-### 6.3 Content-basiertes Link-Building
-
-- **Gastbeitraege:** Ratgeber-Artikel fuer Seniorenmagazine, lokale Blogs
-- **Infografiken:** Teilbare Grafiken (z.B. "Der Weg zum Entlastungsbetrag") mit Einbettungscode
-- **Studien/Statistiken:** Eigene Umfragen oder Auswertungen veroeffentlichen
-- **Pressearbeit:** Pressemitteilungen bei Neuigkeiten (Eroeffnung, Jubilaeum, neue Leistungen)
-- **Kooperationen:** Gemeinsame Projekte mit Seniorenorganisationen, Sportvereinen, Volkshochschulen
-
-### 6.4 Link-Building-Regeln
-
-- Keine gekauften Links
-- Keine Link-Tausch-Netzwerke
-- Nur thematisch relevante Backlinks
-- Ankertext-Variation (nicht immer "Alltagsbegleitung Frankfurt")
-- Ziel: 5-10 neue qualitative Backlinks pro Monat
+- Eine optimierte Seite pro Stadtteil (z. B. „Alltagsbegleitung Frankfurt Sachsenhausen", „Seniorenhilfe Frankfurt Bornheim")
+- Einzigartiger Content pro Seite, kein Duplicate Content
+- Lokale Bezüge einbauen (ÖPNV-Anbindung, lokale Gegebenheiten)
 
 ---
 
-## 7. Monatlicher SEO-Fahrplan
+## 5. Technisches SEO
 
-### Monat 1-2: Foundation
+### 5.1 Page Speed
 
-- [ ] Google Business Profile einrichten und vollstaendig ausfuellen
-- [ ] Google Search Console und Analytics einrichten
-- [ ] Technisches SEO-Audit durchfuehren
-- [ ] XML-Sitemap erstellen und einreichen
-- [ ] Schema Markup (LocalBusiness, FAQ) implementieren
-- [ ] Title Tags und Meta Descriptions fuer alle bestehenden Seiten optimieren
-- [ ] NAP-Konsistenz in den 5 wichtigsten Verzeichnissen sicherstellen
-- [ ] Keyword-Tracking einrichten (20-30 Hauptkeywords)
+- Ziel: Ladezeit unter 2,5 Sekunden (LCP)
+- Bilder in WebP-Format, komprimiert und mit Lazy Loading
+- CSS und JavaScript minifizieren und zusammenfassen
+- Caching-Header korrekt setzen (Browser- und Server-Caching)
+- CDN-Einsatz prüfen (z. B. Cloudflare Free)
 
-### Monat 3-4: Content-Aufbau
+### 5.2 Mobile-First
 
-- [ ] 3 Pillar Pages erstellen (Alltagsbegleitung, Entlastungsbetrag, Pflegegrad)
-- [ ] FAQ-Seite mit 20+ Fragen aufbauen
-- [ ] Blog starten mit 2 Artikeln pro Monat
-- [ ] Interne Verlinkungsstruktur aufbauen
-- [ ] Erste Gastbeitraege platzieren
-- [ ] In 10 weiteren lokalen Verzeichnissen eintragen
+- Responsive Design als Standard — keine separate Mobile-Seite
+- Touch-freundliche Buttons (Mindestgröße 48x48 Pixel)
+- Keine horizontalen Scrollbalken
+- Lesbare Schriftgröße ohne Zoom (mindestens 16px Fließtext)
+- Click-to-Call-Button prominent platzieren
 
-### Monat 5-6: Lokale Praesenz
+### 5.3 Core Web Vitals
 
-- [ ] Google-Bewertungen aktiv sammeln (Ziel: 20+)
-- [ ] Lokale Stadtteil-Seiten erstellen (Sachsenhausen, Bornheim, etc.)
-- [ ] Kooperationen mit 3+ lokalen Partnern aufbauen
-- [ ] Google Posts woechentlich veroeffentlichen
-- [ ] Erste Infografik erstellen und verteilen
-- [ ] Branchenportal-Eintraege vervollstaendigen
-
-### Monat 7-9: Wachstum
-
-- [ ] Content-Produktion auf 4 Artikel/Monat erhoehen
-- [ ] Video-Content starten (Erklaervideos, Erfahrungsberichte)
-- [ ] Lokale Pressearbeit intensivieren
-- [ ] Long-Tail-Keywords gezielt abdecken
-- [ ] A/B-Tests fuer Title Tags und Meta Descriptions
-- [ ] Core Web Vitals optimieren
-
-### Monat 10-12: Optimierung und Skalierung
-
-- [ ] Content-Audit: unterperformende Seiten ueberarbeiten
-- [ ] Keyword-Kannibalisierung pruefen und bereinigen
-- [ ] Backlink-Profil analysieren und schaedliche Links abwehren
-- [ ] Conversion-Rate-Optimierung (CTA-Platzierung, Formulare)
-- [ ] Erfolgsauswertung und Strategie-Anpassung fuer das Folgejahr
-- [ ] Ziel-Check: Top 3 fuer "Alltagsbegleitung Frankfurt"
-
-### Laufende Massnahmen (jeden Monat)
-
-- Keyword-Rankings tracken und dokumentieren
-- Google Search Console auf Fehler pruefen
-- 2-4 neue Blog-Artikel veroeffentlichen
-- Google-Bewertungen beantworten
-- 1-2 Google Posts veroeffentlichen
-- Backlink-Aufbau (5-10 neue Links)
-- Wettbewerber-Monitoring
-
----
-
-## 8. KPIs und Erfolgsmessung
-
-| KPI | Ausgangswert | Ziel 6 Monate | Ziel 12 Monate |
-|---|---|---|---|
-| Organischer Traffic | Baseline messen | +100% | +300% |
-| Keyword "Alltagsbegleitung Frankfurt" | Nicht gerankt | Top 10 | Top 3 |
-| Google-Bewertungen | 0 | 20+ (4,8 Sterne) | 50+ (4,8 Sterne) |
-| Backlinks (Domain Rating) | Baseline | DR 15+ | DR 25+ |
-| Organische Anfragen/Monat | Baseline | 20+ | 50+ |
-| Seiten mit Top-10-Ranking | 0 | 10 | 30 |
-| Core Web Vitals | Audit | Alle gruen | Alle gruen |
-| Bounce Rate | Baseline | unter 50% | unter 40% |
-
----
-
-## 9. Tools und Budget
-
-### Empfohlene Tools
-
-| Tool | Zweck | Kosten/Monat |
+| Metrik | Zielwert | Bedeutung |
 |---|---|---|
-| Google Search Console | Ranking, Indexierung | Kostenlos |
-| Google Analytics 4 | Traffic-Analyse | Kostenlos |
-| Google Business Profile | Lokale Praesenz | Kostenlos |
-| Ubersuggest / SE Ranking | Keyword-Tracking | ca. 30-50 EUR |
-| Screaming Frog (Free) | Technisches Audit | Kostenlos (bis 500 URLs) |
-| Canva | Infografiken, Social Media | ca. 12 EUR |
+| LCP (Largest Contentful Paint) | ≤ 2,5 Sekunden | Ladegeschwindigkeit |
+| INP (Interaction to Next Paint) | ≤ 200 Millisekunden | Interaktivität |
+| CLS (Cumulative Layout Shift) | ≤ 0,1 | Visuelle Stabilität |
 
-### Geschaetztes Monatsbudget
+Monatliche Überprüfung über Google Search Console und PageSpeed Insights.
 
-| Posten | Kosten |
-|---|---|
-| SEO-Tools | 50 EUR |
-| Content-Erstellung (intern/KI-unterstuetzt) | 0-200 EUR |
-| Lokale Verzeichnisse (Premium optional) | 0-50 EUR |
-| Pressearbeit/Gastartikel | 0-100 EUR |
-| **Gesamt** | **50-400 EUR/Monat** |
+### 5.4 Sitemap und Robots.txt
+
+**XML-Sitemap:**
+- Automatische Generierung, alle indexierbaren Seiten enthalten
+- In Google Search Console einreichen
+- Regelmäßig auf Fehler prüfen
+
+**Robots.txt:**
+```
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+Sitemap: https://alltagsengel.care/sitemap.xml
+```
+
+### 5.5 Weitere technische Maßnahmen
+
+- HTTPS überall (SSL-Zertifikat aktiv, kein Mixed Content)
+- Canonical Tags setzen, um Duplicate Content zu vermeiden
+- Hreflang nicht erforderlich (nur deutschsprachig)
+- 404-Fehlerseite mit Suchfunktion und Navigation
+- Redirect-Ketten vermeiden (maximal ein 301-Redirect)
+- Strukturierte Daten mit Google Rich Results Test validieren
 
 ---
 
-*Erstellt von Alltagsengel | Kontakt: info@alltagsengel.care*
+## 6. Content-Strategie für SEO
+
+### 6.1 Pillar Content (Kernseiten)
+
+1. **„Alltagsbegleitung in Frankfurt am Main"** — Zentrale Leistungsseite, 1.500+ Wörter, alle Leistungen im Überblick
+2. **„Der Entlastungsbetrag: 131€ pro Monat richtig nutzen"** — Ratgeber-Pillar, erklärt §45b SGB XI umfassend
+3. **„Für Angehörige: Entlastung im Pflegealltag"** — Emotionale Ansprache, Entscheidungshilfe
+
+### 6.2 Blog-Themen (Content-Kalender)
+
+| Monat | Thema | Ziel-Keyword |
+|---|---|---|
+| Q3 2026 | „Entlastungsbetrag 2026: Was Sie wissen müssen" | Entlastungsbetrag 131 Euro |
+| Q3 2026 | „Alltagsbegleitung vs. Pflegedienst — der Unterschied" | Unterschied Alltagsbegleitung Pflege |
+| Q3 2026 | „Einkaufsbegleitung für Senioren in Frankfurt" | Einkaufsbegleitung Senioren Frankfurt |
+| Q4 2026 | „Entlastungsbetrag verfällt: So nutzen Sie Ihr Guthaben" | Entlastungsbetrag verfällt |
+| Q4 2026 | „Spaziergänge und Mobilität im Alter" | Spaziergang Begleitung Senioren |
+| Q4 2026 | „Behördengänge: Unterstützung für Senioren" | Behördenbegleitung Frankfurt |
+| Q1 2027 | „Pflegegrad beantragen — Schritt für Schritt" | Pflegegrad beantragen Anleitung |
+| Q1 2027 | „Gesellschaft leisten: Warum soziale Kontakte im Alter so wichtig sind" | Seniorenbetreuung Gesellschaft |
+
+**Veröffentlichungsfrequenz:** Mindestens 2 Blog-Artikel pro Monat, jeweils 800–1.200 Wörter.
+
+### 6.3 FAQ-Seiten
+
+Eine zentrale FAQ-Seite mit den häufigsten Fragen, optimiert mit FAQPage-Schema:
+
+- Was ist Alltagsbegleitung nach §45b SGB XI?
+- Wie hoch ist der Entlastungsbetrag 2026? (131€/Monat bzw. 1.572€/Jahr)
+- Wer hat Anspruch auf den Entlastungsbetrag?
+- Wie kann ich Alltagsbegleitung bei Alltagsengel buchen?
+- Welche Leistungen bietet Alltagsengel an?
+- Muss ich den Entlastungsbetrag beantragen?
+- Kann ich den Entlastungsbetrag auch rückwirkend nutzen?
+- Was ist der Unterschied zwischen Alltagsbegleitung und Pflege?
+- In welchen Frankfurter Stadtteilen ist Alltagsengel tätig?
+
+### 6.4 Content-Regeln
+
+- Kein Duplicate Content — jede Seite hat einzigartigen Inhalt
+- Bilder mit beschreibenden Alt-Texten versehen (z. B. „Alltagsbegleiterin beim Einkauf mit Seniorin in Frankfurt")
+- Interne Verlinkung in jedem Artikel zu relevanten Leistungs- und Ratgeberseiten
+- Regelmäßige Content-Audits: Veraltete Inhalte aktualisieren, schwache Seiten verbessern oder zusammenführen
+
+---
+
+## 7. KPIs und Monitoring
+
+### 7.1 Primäre KPIs
+
+| KPI | Zielwert (12 Monate) | Messintervall |
+|---|---|---|
+| Top-10-Rankings für Primär-Keywords | Mindestens 4 von 6 | Wöchentlich |
+| Organischer Traffic | +200% gegenüber Vorjahr | Monatlich |
+| Organische Conversions (Anfragen) | 20+ pro Monat | Monatlich |
+| Click-Through-Rate (CTR) in der Suche | > 5% | Monatlich |
+| Google Business Profile Aufrufe | +150% gegenüber Vorjahr | Monatlich |
+| Anzahl Google-Bewertungen | 50+ (≥ 4,5 Sterne) | Quartalsweise |
+
+### 7.2 Sekundäre KPIs
+
+- Anzahl indexierter Seiten
+- Durchschnittliche Position in der Google Search Console
+- Verweildauer und Absprungrate
+- Seiten pro Sitzung
+- Backlink-Profil (Anzahl und Qualität der verweisenden Domains)
+- Core Web Vitals Scores
+
+### 7.3 Tools und Monitoring
+
+| Tool | Zweck | Kosten |
+|---|---|---|
+| Google Search Console | Rankings, Indexierung, technische Fehler | Kostenlos |
+| Google Analytics 4 | Traffic, Nutzerverhalten, Conversions | Kostenlos |
+| Google Business Profile | Lokale Sichtbarkeit, Bewertungen | Kostenlos |
+| Google PageSpeed Insights | Core Web Vitals, Ladezeiten | Kostenlos |
+| Ubersuggest (Freemium) | Keyword-Tracking, Wettbewerbsanalyse | Kostenlos (Basisfunktionen) |
+| Google Trends | Saisonale Keyword-Trends | Kostenlos |
+| Schema Markup Validator | Strukturierte Daten prüfen | Kostenlos |
+
+### 7.4 Reporting-Rhythmus
+
+- **Wöchentlich:** Ranking-Check für Primär-Keywords
+- **Monatlich:** Traffic-Report, Conversion-Report, technischer Statusbericht
+- **Quartalsweise:** Umfassender SEO-Bericht mit Handlungsempfehlungen, Content-Audit, Backlink-Analyse
+
+---
+
+## 8. Zeitplan und Priorisierung
+
+### Phase 1: Fundament (Monat 1–2)
+- Technisches SEO: Sitemap, Robots.txt, Schema.org, Page Speed
+- Google Business Profile einrichten und optimieren
+- NAP-Konsistenz in allen Verzeichnissen herstellen
+- On-Page-Optimierung der Startseite und Hauptleistungsseiten
+
+### Phase 2: Content-Aufbau (Monat 3–6)
+- Pillar Pages erstellen und veröffentlichen
+- Blog-Produktion starten (2 Artikel/Monat)
+- FAQ-Seite mit Schema-Markup live schalten
+- Lokale Verzeichniseinträge vervollständigen
+- Erste Backlinks über Partnerschaften aufbauen
+
+### Phase 3: Wachstum (Monat 7–12)
+- Stadtteil-Landing-Pages erstellen
+- Gastbeiträge und Pressemitteilungen platzieren
+- Bewertungs-Strategie intensivieren
+- Content-Audit und Optimierung bestehender Inhalte
+- Kontinuierliche Keyword-Erweiterung anhand neuer Suchtrends
+
+---
+
+## Grundsätze
+
+- **Nur organische Maßnahmen** — kein Budget für bezahlte Anzeigen oder Lead-Käufe
+- **Keine persönlichen Namen** in jeglicher Kommunikation — immer „Alltagsengel"
+- **Korrekte Angaben:** Entlastungsbetrag beträgt 131€/Monat (1.572€/Jahr) — nicht 125€
+- **Alltagsbegleitung ≠ Pflege** — in allen Texten klar abgrenzen, dass es sich um Angebote nach §45b SGB XI handelt, nicht um Pflegeleistungen
+- **Kontakt:** info@alltagsengel.care | Neue Mainzer Straße 66-68, 60311 Frankfurt am Main
