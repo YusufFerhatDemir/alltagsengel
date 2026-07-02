@@ -72,7 +72,15 @@
       "Bash(npx next *)",
       "Bash(grep -E \"budgetrechner|beratung-chat|google-reviews|termin$|pflegegrad|Compiled|error|Error|✓|✗\")",
       "Bash(./deploy.sh \"Killer-Features: PLZ-Check, Reviews, Wikidata\")",
-      "Bash(rm -f .git/HEAD.lock && ./deploy.sh \"Killer-Features: PLZ-Check, Reviews, Wikidata\" 2>&1 | tail -20)"
+      "Bash(rm -f .git/HEAD.lock && ./deploy.sh \"Killer-Features: PLZ-Check, Reviews, Wikidata\" 2>&1 | tail -20)",
+      "Bash(curl -s -o /dev/null -w \"einzugsgebiet:%{http_code}\\\\n\" --retry 15 --retry-delay 20 --retry-all-errors -f \"https://alltagsengel.care/einzugsgebiet\")",
+      "Bash(curl -s -o /dev/null -w \"bewertungen:%{http_code}\\\\n\" --retry 5 --retry-delay 15 --retry-all-errors -f \"https://alltagsengel.care/bewertungen\")",
+      "Bash(curl -s \"https://alltagsengel.care/einzugsgebiet\")",
+      "Bash(curl -s \"https://alltagsengel.care/bewertungen\")",
+      "Bash(curl -s \"https://alltagsengel.care/sitemap.xml\")",
+      "Bash(curl -s \"https://alltagsengel.care/datenschutz\")",
+      "Bash(curl -s \"https://alltagsengel.care/\")",
+      "Bash(./deploy.sh \"Session-Settings aktualisiert \\(Killer-Features-Session\\)\")"
     ]
   }
 }
