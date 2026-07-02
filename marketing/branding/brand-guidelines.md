@@ -1,317 +1,483 @@
 # Alltagsengel — Markenrichtlinien (Brand Guidelines)
 
-> Version 1.0 | Stand: Juli 2026
-> Gültig für: Alle Kommunikationskanäle, Print, Digital, Social Media, App
+> Version 2.0 | Stand: Juli 2026
+> Gueltig fuer: Alle Kommunikationskanaele, Print, Digital, Social Media, App
+> Kontakt: info@alltagsengel.care
+> Adresse: Neue Mainzer Strasse 66-68, 60311 Frankfurt am Main
 
 ---
 
-## 1. Markenwerte
+## 1. Markenkern
 
-Alltagsengel steht für vier zentrale Werte, die in jeder visuellen und sprachlichen Kommunikation spürbar sein müssen:
+### 1.1 Mission
 
-| Wert | Bedeutung | Wie es sich zeigt |
+Alltagsengel macht qualitaetsgesicherte Alltagsbegleitung nach Paragraph 45b SGB XI fuer jeden zugaenglich — einfach, digital und menschlich. Wir ueberbruecken die Luecke zwischen dem gesetzlichen Anspruch auf den Entlastungsbetrag und der tatsaechlichen Nutzung, die heute bei weniger als 40 Prozent liegt. Jeder Mensch mit Pflegegrad verdient eine verlaessliche Begleitung im Alltag — unabhaengig davon, wie digital-affin oder mobil er ist.
+
+### 1.2 Vision
+
+Eine Welt, in der kein Mensch den Alltag alleine bewaeltigen muss. Alltagsengel wird zur fuehrenden Plattform fuer Alltagsbegleitung in Deutschland — der erste Gedanke fuer Familien, wenn es um Unterstuetzung im taeglichen Leben geht.
+
+### 1.3 Werte
+
+Drei Kernwerte bilden das Fundament unserer Marke. Sie muessen in jeder Kommunikation, jedem Design und jeder Interaktion spuerbar sein:
+
+| Wert | Bedeutung | Wie er sich zeigt |
 |------|-----------|-------------------|
-| **Vertrauen** | Pflegekassen-zertifiziert nach §45a SGB XI, versichert, geprüft | Klare Sprache, seriöse Gestaltung, Zertifizierungshinweise |
-| **Wärme** | Menschliche Nähe statt anonymer Dienstleistung | Warme Farbpalette, echte Bilder, persönliche Ansprache |
-| **Zuverlässigkeit** | Immer da, wenn man uns braucht — pünktlich, verbindlich | Konsistentes Design, strukturierte Layouts, keine Überraschungen |
-| **Menschlichkeit** | Jeder Mensch verdient Begleitung mit Würde | Respektvolle Bildsprache, inklusive Formulierungen, Augenhöhe |
+| **Wuerde** | Jeder Mensch verdient Respekt und Augenhoehenbehandlung, unabhaengig von Alter oder Pflegegrad. Wir stellen Senioren niemals als hilflos dar, sondern als selbstbestimmte Menschen, die Unterstuetzung annehmen. | Bildsprache auf Augenhoehe, keine Darstellung von Passivitaet, kein Mitleidsframing |
+| **Selbstbestimmung** | Alltagsbegleitung ist kein Eingriff in die Autonomie — sie erweitert die Moeglichkeiten. Der Senior entscheidet, was gemacht wird, wann und wie. | Kommunikation betont Wahlfreiheit, Texte nutzen Formulierungen wie „so, wie Sie es moechten" |
+| **Vertrauen** | Vertrauen ist die Waehrung unserer Marke. Es entsteht durch Transparenz, Zuverlaessigkeit und echte menschliche Verbindung. Jeder Engel ist zertifiziert, versichert und persoenlich geprueft. | Zertifizierungshinweise, transparente Preiskommunikation, keine versteckten Kosten, Bewertungssystem |
+
+**Ergaenzende Werte:**
+
+- **Naehe:** Wir sind kein anonymer Konzern, sondern ein lokaler Partner in Frankfurt, der die Nachbarschaften kennt.
+- **Einfachheit:** Alles, was wir tun, soll den Zugang erleichtern — nicht verkomplizieren.
+- **Waerme:** Unsere Kommunikation fuehlt sich an wie ein Gespraech mit einem fuersorglichen Nachbarn, nicht wie ein Behoerdenbrief.
+
+### 1.4 Wichtige Abgrenzung
+
+Alltagsengel ist **keine Pflege**. Wir leisten Alltagsbegleitung nach Paragraph 45b SGB XI — das umfasst Einkaufsbegleitung, Arztbegleitung, Spaziergaenge, Gesellschaft, Haushaltshilfe und aehnliche alltaegliche Unterstuetzung. Medizinische oder koerperliche Pflege gehoert nicht zu unserem Angebot. Diese Abgrenzung muss in jeder Kommunikation deutlich werden.
 
 ---
 
-## 2. Logo
+## 2. Farbpalette
 
-### 2.1 Primärlogo
-
-Das Alltagsengel-Logo besteht aus dem Wortmarke „AlltagsEngel" mit dem stilisierten Engel-Symbol. Es wird in zwei Varianten verwendet:
-
-- **Positiv (Gold auf Dunkel):** Für dunkle Hintergründe — Logo in Gold (#C9963C) auf Coal (#1A1612)
-- **Negativ (Dunkel auf Hell):** Für helle Hintergründe — Logo in Coal (#1A1612) auf Creme (#F7F2EA) oder Weiß
-
-### 2.2 Mindestgrößen
-
-| Medium | Mindestbreite | Mindesthöhe |
-|--------|--------------|-------------|
-| Print (Visitenkarte, Flyer) | 25 mm | 8 mm |
-| Digital (Web, App) | 120 px | 40 px |
-| Social Media Profilbild | 110 px × 110 px | — |
-| Favicon / App-Icon | 32 px × 32 px | — |
-
-### 2.3 Freiraum (Clear Space)
-
-Das Logo benötigt einen Mindestfreiraum von **50 % der Logohöhe** auf allen vier Seiten. In diesem Bereich dürfen keine Texte, Bilder oder grafische Elemente platziert werden.
-
-```
-Beispiel bei 40 px Logohöhe:
-→ 20 px Abstand oben, unten, links, rechts
-
-┌─────────────────────────┐
-│         20 px           │
-│   ┌───────────────┐     │
-│20 │   LOGO        │ 20  │
-│   └───────────────┘     │
-│         20 px           │
-└─────────────────────────┘
-```
-
-### 2.4 Do's & Don'ts
-
-**Do's:**
-- Logo immer in den definierten Farbkombinationen verwenden
-- Logo auf kontrastreichem Hintergrund platzieren
-- Logo horizontal ausrichten
-- Datei aus dem offiziellen Medienpaket verwenden (SVG für Digital, EPS/PDF für Print)
-- Im Social-Media-Profilbild das Engel-Symbol alleinstehend verwenden
-
-**Don'ts:**
-- Logo nicht strecken, stauchen oder verzerren
-- Logo nicht drehen oder spiegeln
-- Logo nicht auf unruhigen Bildhintergründen ohne Farbfläche platzieren
-- Logo nicht in nicht-definierten Farben verwenden (kein Rot, kein Grün, kein Neon)
-- Logo nicht mit Effekten versehen (kein Schatten, kein Glow, keine 3D-Effekte)
-- Logo nicht kleiner als die Mindestgröße verwenden
-- Logo nicht in den Freiraum anderer Logos oder Texte setzen
-- Logo niemals mit persönlichen Namen kombinieren (immer nur „Alltagsengel")
-
----
-
-## 3. Farbpalette
-
-### 3.1 Primärfarben
+### 2.1 Primaerfarben
 
 | Farbe | Name | HEX | RGB | Verwendung |
 |-------|------|-----|-----|------------|
-| ██ | **Gold** | `#C9963C` | 201, 150, 60 | Akzente, CTAs, Logo, Highlights, Buttons |
-| ██ | **Coal** | `#1A1612` | 26, 22, 18 | Hintergründe, Sidebar, dunkle Flächen |
-| ██ | **Creme** | `#F7F2EA` | 247, 242, 234 | Fließtext auf Dunkel, helle Hintergründe |
+| Gold | **Gold (Primaer)** | `#D4A843` | 212, 168, 67 | Akzente, CTAs, Logo-Highlights, Buttons, Premium-Elemente |
+| Weiss | **Weiss** | `#FFFFFF` | 255, 255, 255 | Hintergrundflaechan (Print, heller Modus), Textfarbe auf dunklen Flaechen |
+| Schwarz | **Schwarz** | `#000000` | 0, 0, 0 | Fliesstextfarbe, Ueberschriften, starke Kontraste |
 
-### 3.2 Sekundärfarben
+Das Dreieck aus Gold, Weiss und Schwarz bildet die Basis jeder Gestaltung. Gold ist dabei stets der Akzent — nie die dominante Flaechenfarbe.
 
-| Farbe | Name | HEX | RGB | Verwendung |
-|-------|------|-----|-----|------------|
-| ██ | **Gold Hell** | `#DBA84A` | 219, 168, 74 | Hover-States, Gold-Variante |
-| ██ | **Warm Gold** | `#D4A843` | 212, 168, 67 | Print-Akzente, Premium-Elemente |
-| ██ | **Coal Mittel** | `#252118` | 37, 33, 24 | Card-Hintergründe, sekundäre Flächen |
-| ██ | **Warm White** | `#FFF8F0` | 255, 248, 240 | Helle Hintergründe (Print, Landing Pages) |
-
-### 3.3 Akzentfarben
+### 2.2 Sekundaerfarben
 
 | Farbe | Name | HEX | RGB | Verwendung |
 |-------|------|-----|-----|------------|
-| ██ | **Trust Blue** | `#2B5F8A` | 43, 95, 138 | Vertrauenselemente, Zertifizierungs-Badges |
-| ██ | **Soft Gray** | `#6B7B8D` | 107, 123, 141 | Metadaten, Footer, dezente Texte |
-| ██ | **Ink Sekundär** | `#D4C8B8` | 212, 200, 184 | Sekundärer Text auf dunklem Hintergrund |
-| ██ | **Ink Tertiär** | `#A89C8C` | 168, 156, 140 | Metadaten, Footer-Text, Platzhalter |
+| Coal | **Coal** | `#1A1612` | 26, 22, 18 | Dunkle Hintergruende, Sidebar, App-Dark-Mode |
+| Creme | **Creme** | `#F7F2EA` | 247, 242, 234 | Warme helle Hintergruende, Kartenflaechen |
+| Warm White | **Warm White** | `#FFF8F0` | 255, 248, 240 | Print-Hintergruende, Landing Pages |
+| Gold Hell | **Gold Hell** | `#DBA84A` | 219, 168, 74 | Hover-States, interaktive Elemente |
+| Trust Blue | **Trust Blue** | `#2B5F8A` | 43, 95, 138 | Vertrauenselemente, Zertifizierungs-Badges, Daten |
+| Soft Gray | **Soft Gray** | `#6B7B8D` | 107, 123, 141 | Metadaten, Footer, dezente Texte |
 
-### 3.4 Funktionsfarben
+### 2.3 Funktionsfarben
 
 | Farbe | Name | HEX | Verwendung |
 |-------|------|-----|------------|
-| ██ | **Erfolg** | `#22C55E` | Bestätigungen, Erfolgs-Badges |
-| ██ | **Warnung** | `#F59E0B` | Warnhinweise, Aufmerksamkeit |
-| ██ | **Fehler** | `#EF4444` | Fehlermeldungen, kritische Hinweise |
-| ██ | **Info** | `#3B82F6` | Informationshinweise, Links |
+| Erfolg | **Erfolg** | `#22C55E` | Bestaetigungen, Erfolgs-Badges |
+| Warnung | **Warnung** | `#F59E0B` | Warnhinweise |
+| Fehler | **Fehler** | `#EF4444` | Fehlermeldungen |
+| Info | **Info** | `#3B82F6` | Informationshinweise, Links |
 
-### 3.5 Farbverhältnisse
+### 2.4 Farbverhaeltnisse und Regeln
 
-- **Dunkler Modus (App, E-Mails, Website):** Coal (#1A1612) als Haupthintergrund, Creme (#F7F2EA) als Text, Gold (#C9963C) als Akzent
-- **Heller Modus (Print, Flyer, Plakate):** Warm White (#FFF8F0) als Hintergrund, Coal (#1A1612) als Text, Gold (#C9963C) als Akzent
-- **Gold-Anteil:** Maximal 20 % der Gesamtfläche — Gold ist Akzent, nicht Hauptfarbe
-- **Kontrastverhältnis:** Mindestens 4,5:1 für Fließtext (WCAG AA), 3:1 für große Überschriften
+- **Gold-Anteil:** Maximal 20 Prozent der Gesamtflaeche. Gold ist Akzent, nicht Hauptfarbe.
+- **Dunkler Modus:** Coal (#1A1612) als Haupthintergrund, Weiss oder Creme als Text, Gold (#D4A843) als Akzent.
+- **Heller Modus:** Weiss (#FFFFFF) oder Warm White (#FFF8F0) als Hintergrund, Schwarz (#000000) als Text, Gold (#D4A843) als Akzent.
+- **Verboten:** Neonfarben, Rot als Primaerfarbe, Regenbogen-Verlaeufe, mehr als drei Farben in einem Layout.
+
+### 2.5 Barrierefreiheit und Kontrastverhaeltnisse (WCAG)
+
+| Kombination | Kontrastverhaeltnis | WCAG-Level |
+|-------------|---------------------|------------|
+| Schwarz (#000000) auf Weiss (#FFFFFF) | 21:1 | AAA (alle Groessen) |
+| Coal (#1A1612) auf Creme (#F7F2EA) | 14,8:1 | AAA (alle Groessen) |
+| Gold (#D4A843) auf Schwarz (#000000) | 7,2:1 | AAA (normaler Text) |
+| Gold (#D4A843) auf Coal (#1A1612) | 6,5:1 | AA (normaler Text), AAA (grosse Ueberschriften) |
+| Gold (#D4A843) auf Weiss (#FFFFFF) | 2,9:1 | Nicht fuer Text verwenden — nur dekorative Elemente |
+| Weiss (#FFFFFF) auf Trust Blue (#2B5F8A) | 5,6:1 | AA (normaler Text), AAA (grosse Ueberschriften) |
+
+**Regel:** Fliesstext muss immer mindestens 4,5:1 Kontrast aufweisen (WCAG AA). Grosse Ueberschriften (ab 18 pt / 24 px) mindestens 3:1. Gold auf Weiss ist ausschliesslich fuer dekorative Linien, Icons oder Hintergrundflaechen zulaessig — niemals fuer lesbaren Text.
 
 ---
 
-## 4. Typografie
+## 3. Typografie
 
-### 4.1 Primärschrift — Überschriften
+### 3.1 Primaerschrift — Ueberschriften
 
 **Schrift:** Inter (alternativ: Geist Sans)
-**Gewichte:** Semibold (600) für H1, Medium (500) für H2–H4
+**Gewichte:** Semibold (600) fuer H1, Medium (500) fuer H2 bis H4
 
-| Ebene | Größe (Web) | Größe (Print) | Zeilenabstand | Tracking |
-|-------|-------------|---------------|---------------|----------|
+| Ebene | Groesse (Web) | Groesse (Print) | Zeilenabstand | Tracking |
+|-------|---------------|-----------------|---------------|----------|
 | H1 | 40 px | 28 pt | 1,2 | -2,4 px |
 | H2 | 28 px | 20 pt | 1,3 | -1,2 px |
 | H3 | 22 px | 16 pt | 1,3 | -0,5 px |
 | H4 | 18 px | 13 pt | 1,4 | 0 |
 
-### 4.2 Sekundärschrift — Fließtext
+### 3.2 Sekundaerschrift — Fliesstext
 
 **Schrift:** Inter (alternativ: Geist Sans)
-**Gewichte:** Regular (400) für Fließtext, Medium (500) für Hervorhebungen
+**Gewichte:** Regular (400) fuer Fliesstext, Medium (500) fuer Hervorhebungen
 
-| Ebene | Größe (Web) | Größe (Print) | Zeilenabstand |
-|-------|-------------|---------------|---------------|
+| Ebene | Groesse (Web) | Groesse (Print) | Zeilenabstand |
+|-------|---------------|-----------------|---------------|
 | Body | 16 px | 11 pt | 1,6 |
 | Body klein | 14 px | 10 pt | 1,5 |
 | Caption | 12 px | 8 pt | 1,4 |
 | Overline | 11 px | 7 pt | 1,3 |
 
-### 4.3 Spezielle Anwendungen
+### 3.3 Hierarchie und Anwendung
 
-- **CTA-Buttons:** Inter Semibold, 15 px, Versalien vermeiden, Sentence Case verwenden
+- **CTA-Buttons:** Inter Semibold, 15 px, Sentence Case (kein VERSALIEN)
 - **Navigation:** Inter Medium, 14 px
-- **Zitate / Testimonials:** Inter Regular Italic, 18 px, Gold (#C9963C) als Anführungszeichen
-- **Zahlen & Statistiken:** Inter Bold (700), 32–48 px, Gold (#C9963C)
+- **Zitate und Testimonials:** Inter Regular Italic, 18 px, Gold (#D4A843) fuer Anfuehrungszeichen
+- **Zahlen und Statistiken:** Inter Bold (700), 32 bis 48 px, Gold (#D4A843) als Farbe
+- **Print fuer Senioren:** Mindestschriftgroesse 11 pt fuer Fliesstext — unsere Zielgruppe braucht gute Lesbarkeit
+- **Web Fallback:** system-ui, sans-serif
+- **Print Fallback:** Arial, Helvetica
+- **Maximale Zeichenbreite pro Zeile:** 75 Zeichen (Web), 65 Zeichen (Print)
 
-### 4.4 Web vs. Print
+### 3.4 Web vs. Print
 
 | Aspekt | Web | Print |
 |--------|-----|-------|
-| Primärschrift | Inter / Geist Sans | Inter / alternativ Lora für Serife |
+| Primaerschrift | Inter / Geist Sans | Inter / alternativ Lora (Serife) |
 | Fallback | system-ui, sans-serif | Arial, Helvetica |
-| Mindestgröße | 12 px | 8 pt |
-| Zeilenabstand Fließtext | 1,6 | 1,5 |
-| Zeichenbreite pro Zeile | max. 75 Zeichen | max. 65 Zeichen |
+| Mindestgroesse | 12 px | 8 pt (11 pt bei seniorengerechtem Material) |
+| Zeilenabstand Fliesstext | 1,6 | 1,5 |
 
 ---
 
-## 5. Bildsprache
+## 4. Logo-Nutzung
 
-### 5.1 Grundsätze
+### 4.1 Primaerlogo
 
-- **Echte Menschen:** Keine gestellten Stock-Fotos. Bilder zeigen authentische Situationen zwischen Alltagsbegleitern und Senioren — beim Spaziergang, beim Einkauf, beim Kaffeetrinken, bei der Arztbegleitung.
-- **Warme Farbstimmung:** Bilder haben eine warme, goldene Grundstimmung. Kühle, klinische Bilder vermeiden.
-- **Augenhöhe:** Senioren werden als aktive, selbstbestimmte Menschen gezeigt — niemals hilflos, bemitleidenswert oder passiv.
-- **Nähe & Verbindung:** Bilder zeigen Interaktion, Blickkontakt, gemeinsame Aktivitäten.
-- **Frankfurter Stadtbild:** Wo möglich, Frankfurt als Hintergrund nutzen — die Skyline, den Palmengarten, die Kleinmarkthalle, das Mainufer.
+Das Alltagsengel-Logo besteht aus der Wortmarke „AlltagsEngel" mit dem stilisierten Engel-Symbol. Es wird in zwei Hauptvarianten verwendet:
 
-### 5.2 Bildkategorien
+- **Positiv (Gold auf Dunkel):** Logo in Gold (#D4A843) auf Coal (#1A1612) oder Schwarz (#000000). Fuer dunkle Hintergruende.
+- **Negativ (Dunkel auf Hell):** Logo in Schwarz (#000000) oder Coal (#1A1612) auf Weiss (#FFFFFF) oder Creme (#F7F2EA). Fuer helle Hintergruende.
 
-| Kategorie | Beschreibung | Beispielszenen |
-|-----------|-------------|----------------|
-| **Begleitung** | Engel und Senior gemeinsam unterwegs | Spaziergang am Main, Einkauf auf dem Wochenmarkt |
-| **Zuhause** | Hilfe im häuslichen Umfeld | Gemeinsames Kochen, Gesellschaft leisten, Vorlesen |
-| **Gesundheit** | Medizinische Begleitung | Arztbesuch, Apotheke, Therapie-Termine |
-| **Freizeit** | Gemeinsame Aktivitäten | Café-Besuch, Museumsbesuch, Gartenarbeit |
-| **Vertrauen** | Emotionale Momente | Lächeln, Händedruck, Gespräch bei Kaffee |
+### 4.2 Mindestgroessen
 
-### 5.3 Bildbearbeitung
+| Medium | Mindestbreite | Mindesthoehe |
+|--------|---------------|-------------|
+| Print (Visitenkarte, Flyer) | 25 mm | 8 mm |
+| Digital (Web, App) | 120 px | 40 px |
+| Social Media Profilbild | 110 px mal 110 px | — |
+| Favicon / App-Icon | 32 px mal 32 px | — |
 
-- **Filter:** Leicht warmer Farbton, Kontrast moderat, keine übersättigten Farben
-- **Overlay:** Bei Bedarf dezentes Gold-Gradient-Overlay (10–20 % Deckkraft)
-- **Format Social Media:** 1:1 (Feed), 4:5 (Instagram Portrait), 9:16 (Stories/Reels), 16:9 (LinkedIn/Blog)
-- **Auflösung:** Mindestens 1080 px Breite für Digital, 300 dpi für Print
+### 4.3 Schutzzone (Clear Space)
 
-### 5.4 Bild-Don'ts
-
-- Keine klinisch-sterilen Umgebungen (Krankenhaus-Ästhetik)
-- Keine traurigen, einsamen Darstellungen von Senioren
-- Keine gestellten „Daumen hoch"-Posen
-- Keine Bilder, die Pflegebedürftigkeit als Schwäche darstellen
-- Keine Bilder mit erkennbaren Marken oder Werbung im Hintergrund
-
----
-
-## 6. Anwendungsbeispiele
-
-### 6.1 Visitenkarte
+Das Logo benoetigt einen Mindestfreiraum von **50 Prozent der Logohoehe** auf allen vier Seiten. Innerhalb dieser Zone duerfen keine Texte, Bilder oder grafische Elemente platziert werden.
 
 ```
-Vorderseite:
-┌─────────────────────────────────┐
-│                                 │
-│     [Logo Gold auf Coal]        │
-│                                 │
-│     "Mit Herz für dich da"      │
-│       (Inter Light, Creme)      │
-│                                 │
-│   Hintergrund: Coal (#1A1612)   │
-└─────────────────────────────────┘
+Beispiel bei 40 px Logohoehe:
+→ 20 px Abstand oben, unten, links, rechts
 
-Rückseite:
-┌─────────────────────────────────┐
-│                                 │
-│  Alltagsengel                   │
-│  Alltagsbegleitung §45a SGB XI │
-│                                 │
-│  Neue Mainzer Straße 66-68      │
-│  60311 Frankfurt am Main        │
-│                                 │
-│  info@alltagsengel.care         │
-│  alltagsengel.care              │
-│                                 │
-│  Hintergrund: Warm White        │
-│  Text: Coal, Akzent: Gold       │
-└─────────────────────────────────┘
-
-Format: 85 × 55 mm, 350 g/m² Karton, matte Veredelung
+┌─────────────────────────────┐
+│           20 px             │
+│   ┌─────────────────┐       │
+│20 │     LOGO         │ 20   │
+│   └─────────────────┘       │
+│           20 px             │
+└─────────────────────────────┘
 ```
 
-### 6.2 Flyer (DIN lang, 6-Seiter)
+### 4.4 Verbotene Modifikationen
 
-- **Seite 1 (Titel):** Logo, Claim „Mit Herz für dich da", warmes Foto mit Frankfurter Hintergrund, Coal-Hintergrund
-- **Seite 2–3 (Innen):** Leistungen (Begleitung, Haushalt, Einkauf, Arztbesuche), Warm White Hintergrund, Gold-Akzente
-- **Seite 4 (Innen):** „So funktioniert's" — 3 Schritte mit Icons, Trust Blue (#2B5F8A) für Nummerierung
-- **Seite 5 (Innen):** Preisinfo (131 €/Monat Eigenanteil, Pflegekasse zahlt 125 €), Gold-Highlight-Box
-- **Seite 6 (Rückseite):** Kontakt, QR-Code zur App, §45a-Zertifizierungshinweis
+Folgende Aenderungen am Logo sind unter keinen Umstaenden erlaubt:
 
-### 6.3 Social Media
+- Logo strecken, stauchen oder verzerren
+- Logo drehen oder spiegeln
+- Logo auf unruhigen Bildhintergruenden ohne Farbflaeche platzieren
+- Logo in nicht-definierten Farben verwenden (kein Rot, kein Gruen, kein Neon)
+- Logo mit Effekten versehen (kein Schatten, kein Glow, keine 3D-Effekte)
+- Logo kleiner als die Mindestgroesse verwenden
+- Logo in den Freiraum anderer Logos oder Texte setzen
+- Logo mit persoenlichen Namen kombinieren — es steht immer nur „Alltagsengel"
+- Elemente aus dem Logo entfernen oder hinzufuegen
+- Logo auf Hintergruenden mit weniger als 3:1 Kontrast platzieren
 
-**Instagram Feed-Post (1080 × 1080 px):**
-- Hintergrund: Coal (#1A1612)
-- Überschrift: Creme (#F7F2EA), Inter Semibold, 36 px
-- Akzentlinie: Gold (#C9963C), 3 px
-- Logo: unten rechts, Gold auf Coal, min. 80 px breit
-- Textbereich: max. 60 % der Fläche, Rest für Bild oder Freiraum
-
-**Instagram Story (1080 × 1920 px):**
-- Vollbild-Foto mit warmem Overlay
-- Text-Container: Coal mit 85 % Deckkraft, abgerundete Ecken (16 px)
-- CTA-Button: Gold (#C9963C) Hintergrund, Coal (#1A1612) Text
-
-**LinkedIn-Post (1200 × 627 px):**
-- Professioneller, aufgeräumter Look
-- Hintergrund: Warm White (#FFF8F0)
-- Überschrift: Coal (#1A1612), Inter Semibold
-- Akzent: Trust Blue (#2B5F8A) für Daten und Fakten
-- Logo: unten links oder rechts, Coal auf Warm White
-
-### 6.4 E-Mail-Newsletter
-
-- **Header:** Logo zentriert, Gold (#C9963C) Trennlinie darunter
-- **Body:** Coal (#1A1612) Hintergrund, Card-Bereiche in Coal Mittel (#252118)
-- **Text:** Creme (#F7F2EA), Inter Regular, 16 px
-- **CTA-Buttons:** Gold (#C9963C) Hintergrund, Coal (#1A1612) Text, 48 px Höhe, 24 px Rundung
-- **Footer:** Ink Tertiär (#A89C8C), 12 px, Abmeldelink, Impressum, Datenschutz
-- **Absender:** Immer „Alltagsengel" — niemals ein persönlicher Name
-
----
-
-## 7. Markenschutz & Konsistenz
-
-### 7.1 Namensschreibweise
-
-- **Korrekt:** Alltagsengel (ein Wort, großes A)
-- **Auch korrekt:** AlltagsEngel (CamelCase, für Logo und digitale Kanäle)
-- **Falsch:** Alltags Engel, alltags engel, ALLTAGSENGEL, Alltags-Engel
-
-### 7.2 Claim / Slogan
-
-- **Primärer Claim:** „Mit Herz für dich da"
-- **Verwendung:** Unter dem Logo, in der E-Mail-Signatur, auf Drucksachen
-- **Nie verändern:** Der Claim wird nicht abgewandelt, gekürzt oder übersetzt
-
-### 7.3 Absenderidentität
-
-- **Jede Kommunikation** erfolgt im Namen von „Alltagsengel" — niemals unter einem persönlichen Namen
-- **E-Mail-Signatur:** „Herzliche Grüße — Ihr Team von Alltagsengel"
-- **Social Media:** Profilname „Alltagsengel", kein persönlicher Account
-- **Anrede in Kundenkorrespondenz:** „Hallo Frau/Herr [Nachname],"
-
----
-
-## 8. Dateiformat-Übersicht
+### 4.5 Dateiformate
 
 | Anwendung | Format | Farbraum |
 |-----------|--------|----------|
 | Logo Digital | SVG, PNG (transparent) | sRGB |
 | Logo Print | EPS, PDF | CMYK |
-| Social Media Bilder | PNG, JPG (min. 1080 px) | sRGB |
+| Social Media | PNG (min. 1080 px) | sRGB |
 | Drucksachen | PDF/X-4, TIFF | CMYK, ISO Coated v2 |
-| Präsentationen | PPTX mit eingebetteten Schriften | sRGB |
 | App-Assets | SVG, PNG @1x @2x @3x | sRGB |
 
 ---
 
+## 5. Tonalitaet
+
+### 5.1 Grundcharakter
+
+Die Stimme von Alltagsengel ist **warm, respektvoll, kompetent und nahbar**. Wir klingen wie ein fuersorglicher Nachbar, der zufaellig auch Profi ist. Nicht wie eine Behoerde. Nicht wie ein Krankenhaus. Nicht wie eine aggressive Werbeanzeige.
+
+**Alltagsengel ist KEINE Pflege.** Unsere Sprache meidet daher klinische und medizinische Begriffe. Wir sprechen von Alltagsbegleitung, von Gesellschaft, von Unterstuetzung im Alltag. Nicht von Patienten, nicht von Versorgung, nicht von Pflegebeduerftig.
+
+### 5.2 Sprachprinzipien
+
+1. **Einfach schreiben.** Jeder Satz muss beim ersten Lesen verstanden werden.
+2. **Aktiv formulieren.** „Wir begleiten Sie" statt „Sie werden begleitet".
+3. **Konkret bleiben.** „Wir helfen beim Einkauf auf dem Wochenmarkt" statt „Wir unterstuetzen im Alltag".
+4. **Positiv rahmen.** „Damit Sie sich auf die schoenen Dinge konzentrieren koennen" statt „Damit Sie sich nicht mehr sorgen muessen".
+5. **Auf Augenhoehe bleiben.** Senioren sind selbstbestimmte Menschen, keine Hilflosen.
+
+### 5.3 Wortwahl — Gut vs. Schlecht
+
+| So schreiben wir (GUT) | So schreiben wir NICHT (SCHLECHT) |
+|-------------------------|-----------------------------------|
+| Alltagsbegleitung | Betreuungsdienstleistung |
+| Engel (unsere Begleiter) | Dienstleister, Personal, Arbeitskraefte |
+| Pflegekasse uebernimmt | Kostenuebernahme durch den Leistungstraeger |
+| Einfach buchen | Einen Buchungsvorgang initiieren |
+| Wir sind fuer Sie da | Wir stehen Ihnen zur Verfuegung |
+| Gemeinsam den Alltag meistern | Alltagsbewaeltigungsstrategien |
+| Ihre Familie kann aufatmen | Entlastung der pflegenden Angehoerigen |
+| So funktioniert es | Verfahrensbeschreibung |
+| Fragen? Rufen Sie an | Bei Rueckfragen kontaktieren Sie uns |
+| Menschen mit Demenz | Demenzkranke, Demenzpatienten |
+| Unterstuetzung im Alltag | Pflegefall, hilfsbeduerftiger Mensch |
+
+### 5.4 Beispiele fuer gute Formulierungen
+
+> „Alltagsbegleitung heisst: Jemand ist da. Nicht um zu pflegen, sondern um den Tag ein bisschen schoener zu machen."
+
+> „Ihr Vater braucht keine Krankenschwester — er braucht jemanden, der mit ihm einkaufen geht und beim Kaffee zuhoert."
+
+> „Manchmal braucht es einfach jemanden, der mit anpackt. Dafuer sind wir da."
+
+### 5.5 Beispiele fuer schlechte Formulierungen
+
+> ~~„Gemaess Paragraph 45b SGB XI sind wir als anerkannter Anbieter von Entlastungsleistungen im Sinne der Pflegeversicherung taetig."~~ (zu buerokratisch)
+
+> ~~„Aeltere Menschen brauchen besondere Fuersorge, weil sie vieles nicht mehr alleine koennen."~~ (herablassend)
+
+> ~~„JETZT SOFORT BUCHEN! Nur noch 3 Plaetze frei!"~~ (reisserisch, marktschreierisch)
+
+> ~~„Das revolutionaere Pflege-Startup, das die Branche auf den Kopf stellt!"~~ (werblich uebertrieben, und wir sind KEINE Pflege)
+
+> ~~„Die Einsamkeits-Epidemie bedroht Millionen von Senioren. Handeln Sie, bevor es zu spaet ist!"~~ (dramatisierend, angsterzeugend)
+
+---
+
+## 6. Bildsprache
+
+### 6.1 Grundsaetze
+
+- **Echte Menschen:** Keine gestellten Stock-Fotos mit uebertriebenen Laecheln. Bilder zeigen authentische Situationen zwischen Alltagsbegleitern und Senioren — beim Spaziergang, beim Einkauf, beim Kaffeetrinken, bei der Arztbegleitung.
+- **Warme Farbstimmung:** Bilder haben eine warme, goldene Grundstimmung. Kuehle, klinische Bilder sind verboten.
+- **Augenhoehe:** Senioren werden als aktive, selbstbestimmte Menschen gezeigt — niemals hilflos, bemitleidenswert oder passiv.
+- **Naehe und Verbindung:** Bilder zeigen Interaktion, Blickkontakt, gemeinsame Aktivitaeten.
+- **Frankfurter Stadtbild:** Wo moeglich, Frankfurt als Hintergrund nutzen — die Skyline, den Palmengarten, die Kleinmarkthalle, das Mainufer.
+- **Natuerliches Licht:** Warmes, weiches Licht bevorzugen. Kein Blitzlicht, keine harten Schatten.
+
+### 6.2 Bildkategorien
+
+| Kategorie | Beschreibung | Beispielszenen |
+|-----------|-------------|----------------|
+| Begleitung | Engel und Senior gemeinsam unterwegs | Spaziergang am Main, Einkauf auf dem Wochenmarkt |
+| Zuhause | Hilfe im haeuslichen Umfeld | Gemeinsames Kochen, Gesellschaft leisten, Vorlesen |
+| Gesundheit | Begleitung zu Terminen | Arztbesuch, Apotheke (kein Krankenhaussetting) |
+| Freizeit | Gemeinsame Aktivitaeten | Cafe-Besuch, Museumsbesuch, Gartenarbeit |
+| Vertrauen | Emotionale Momente | Laecheln, Haendedruck, Gespraech bei Kaffee |
+
+### 6.3 Stock-Foto Regeln
+
+**Erlaubt:**
+- Authentisch wirkende Szenen mit echtem Kontakt zwischen Menschen
+- Warme Farbtone, natuerliches Licht, Outdoor-Szenen
+- Senioren in aktiven, selbstbestimmten Rollen
+- Diverse Darstellungen (verschiedene Ethnien, Geschlechter)
+
+**Verboten:**
+- Klinisch-sterile Umgebungen (Krankenhaeuser, Pflegeheime, medizinische Geraete)
+- Traurige, einsame Darstellungen von Senioren
+- Gestellte „Daumen hoch"-Posen oder uebertriebenes Stock-Laecheln
+- Bilder, die Pflegebeduerftigkeit als Schwaeche darstellen (Rollstuhl in Nahaufnahme, Gehhilfe im Fokus)
+- Bilder mit erkennbaren Marken oder Werbung im Hintergrund
+- Bilder mit ausschliesslich jungen Menschen (Senior muss zentral sein)
+- Bilder aus dem US-amerikanischen Kontext (andere Architektur, andere Atmosphaere)
+
+### 6.4 Bildbearbeitung
+
+- **Filter:** Leicht warmer Farbton, Kontrast moderat, keine uebersaettigten Farben
+- **Overlay:** Bei Bedarf dezentes Gold-Gradient-Overlay (10 bis 20 Prozent Deckkraft)
+- **Aufloesung:** Mindestens 1080 px Breite fuer Digital, 300 dpi fuer Print
+
+---
+
+## 7. Do's und Don'ts
+
+### 7.1 Do's — Das macht Alltagsengel richtig
+
+- **Immer „Alltagsengel" als Absender verwenden** — niemals persoenliche Namen
+- **Warm und nahbar kommunizieren** — wie ein guter Nachbar, nicht wie eine Behoerde
+- **Senioren auf Augenhoehe darstellen** — aktiv, selbstbestimmt, wuerdevoll
+- **Konkreten Nutzen hervorheben** — „Begleitung zum Arzt" statt „Unterstuetzungsleistung"
+- **Preise transparent kommunizieren** — 125 Euro Pflegekasse, 131 Euro Eigenanteil, keine versteckten Kosten
+- **Gold als Akzentfarbe einsetzen** — maximal 20 Prozent der Flaeche
+- **Logo mit ausreichend Schutzzone verwenden** — 50 Prozent der Logohoehe
+- **WCAG-Kontrastverhaeltnisse einhalten** — mindestens 4,5:1 fuer Fliesstext
+- **Einfache Sprache verwenden** — auch fuer komplexe Themen wie Pflegekasse und Paragraph 45b
+- **Frankfurt als Standort betonen** — lokale Verwurzelung zeigt Naehe
+- **Paragraph 45b SGB XI korrekt referenzieren** — das ist die gesetzliche Grundlage fuer den Entlastungsbetrag
+- **Zwischen Alltagsbegleitung und Pflege unterscheiden** — konsequent, in jeder Kommunikation
+
+### 7.2 Don'ts — Das vermeidet Alltagsengel
+
+- **Niemals persoenliche Namen in der Kundenkommunikation** — kein Vorname, kein Nachname, kein Mitarbeitername
+- **Niemals klinische oder medizinische Sprache** — kein „Patient", kein „Versorgung", kein „Pflegefall"
+- **Niemals herablassend ueber Senioren schreiben** — kein „die koennen nicht mehr", kein Mitleid
+- **Niemals aggressive Verkaufssprache** — kein „Jetzt oder nie", kein kuenstlicher Zeitdruck
+- **Niemals Neonfarben oder nicht-definierte Farben** — keine Abweichung von der Farbpalette
+- **Niemals Logo verzerren, drehen oder mit Effekten versehen**
+- **Niemals Gold auf Weiss als Textfarbe** — Kontrast reicht nicht aus
+- **Niemals Krankenhausbilder oder klinische Settings** — weder in Fotos noch in Illustrationen
+- **Niemals Alltagsengel als Pflegedienst bezeichnen** — wir sind Alltagsbegleitung
+- **Niemals Emojis in formeller Kundenkommunikation** — sparsamer Einsatz nur in Social Media
+- **Niemals den Claim abaendern** — „Mit Herz fuer dich da" bleibt unveraendert
+- **Niemals Senioren allein und traurig darstellen** — unsere Bilder zeigen Gemeinschaft
+
+---
+
+## 8. Kommunikationsregeln
+
+### 8.1 Absenderidentitaet
+
+**Jede Kommunikation erfolgt ausschliesslich im Namen von „Alltagsengel".** Persoenliche Namen von Mitarbeitern, Gruendern oder Teamleitern duerfen in keinem Kanal als Absender erscheinen. Diese Regel gilt ohne Ausnahme fuer:
+
+- E-Mails (transaktional und Marketing)
+- WhatsApp-Nachrichten
+- SMS-Benachrichtigungen
+- In-App-Chat
+- Social-Media-Posts und -Kommentare
+- Pressetexte und Medienmitteilungen
+- Briefe und Postsendungen
+- Automatisierte Systemnachrichten
+
+### 8.2 Anrede und Verabschiedung
+
+**Anrede:**
+- Formell: „Hallo Frau [Nachname]," oder „Hallo Herr [Nachname],"
+- Wenn Name unbekannt: „Hallo,"
+- Auf Social Media (Kommentare): „Hallo," oder Direktansprache ohne Anrede
+
+**Verabschiedung:**
+- Standard: „Herzliche Gruesse" gefolgt von „Ihr Team von Alltagsengel"
+- Kurzform (WhatsApp, Chat): „Herzliche Gruesse, Ihr Team von Alltagsengel"
+- Formal (Briefe, Vertraege): „Mit freundlichen Gruessen" gefolgt von „Alltagsengel"
+
+### 8.3 E-Mail-Signatur (Vorlage)
+
+```
+Herzliche Gruesse
+Ihr Team von Alltagsengel
+
+Alltagsengel
+Alltagsbegleitung nach Paragraph 45b SGB XI
+Neue Mainzer Strasse 66-68
+60311 Frankfurt am Main
+
+info@alltagsengel.care
+alltagsengel.care
+```
+
+### 8.4 Namensschreibweise
+
+- **Korrekt:** Alltagsengel (ein Wort, grosses A)
+- **Auch korrekt:** AlltagsEngel (CamelCase, fuer Logo und digitale Kanaele)
+- **Falsch:** Alltags Engel, alltags engel, ALLTAGSENGEL, Alltags-Engel
+
+### 8.5 Claim
+
+- **Primaerer Claim:** „Mit Herz fuer dich da"
+- **Verwendung:** Unter dem Logo, in der E-Mail-Signatur, auf Drucksachen
+- **Nie veraendern:** Der Claim wird nicht abgewandelt, gekuerzt oder uebersetzt
+
+---
+
+## 9. Anwendungsbeispiele
+
+### 9.1 Social-Media-Post (Instagram)
+
+**Bild:** Warmes Foto einer Alltagsbegleiterin und einer Seniorin auf dem Frankfurter Wochenmarkt, natuerliches Licht, beide lachen.
+
+**Text:**
+> Gemeinsam ueber den Wochenmarkt schlendern, frisches Obst aussuchen und dabei ins Gespraech kommen — das ist Alltagsbegleitung mit Alltagsengel.
+>
+> Die Pflegekasse uebernimmt 125 Euro im Monat. Der Eigenanteil liegt bei nur 131 Euro. Kein Papierkram, kein Stress — einfach ueber die App buchen.
+>
+> Alltagsbegleitung nach Paragraph 45b SGB XI. Fuer Frankfurt. Fuer Ihre Familie.
+>
+> #Alltagsengel #Alltagsbegleitung #Frankfurt #Entlastungsbetrag #Pflegegrad
+
+### 9.2 E-Mail (Willkommensnachricht)
+
+**Betreff:** Willkommen bei Alltagsengel — so geht es weiter
+
+**Inhalt:**
+> Hallo Frau Mueller,
+>
+> schoen, dass Sie sich fuer Alltagsengel entschieden haben. Ab jetzt wird der Alltag ein Stueck leichter — fuer Ihre Familie und fuer Sie.
+>
+> In den naechsten 24 Stunden meldet sich Ihr persoenlicher Engel bei Ihnen. Sie koennen sich in Ruhe kennenlernen und gemeinsam besprechen, wie die Begleitung aussehen soll. Ohne Druck, ohne Verpflichtung.
+>
+> Alle Termine und Berichte finden Sie jederzeit in der App. Und wenn Sie Fragen haben, sind wir fuer Sie da — einfach auf diese E-Mail antworten oder anrufen.
+>
+> Herzliche Gruesse
+> Ihr Team von Alltagsengel
+
+### 9.3 Flyer (DIN lang, 6-Seiter)
+
+**Seite 1 (Titel):**
+- Hintergrund: Coal (#1A1612)
+- Logo in Gold (#D4A843), zentriert
+- Claim: „Mit Herz fuer dich da" in Creme (#F7F2EA), Inter Light
+- Warmes Foto: Senior und Engel beim Spaziergang am Mainufer
+
+**Seite 2-3 (Innen):**
+- Ueberschrift: „So begleiten wir Ihren Alltag"
+- Leistungsuebersicht mit Icons: Einkaufsbegleitung, Arztbegleitung, Spaziergaenge, Gesellschaft, Haushaltshilfe
+- Hintergrund: Warm White (#FFF8F0), Text: Schwarz (#000000), Akzente: Gold (#D4A843)
+
+**Seite 4 (Innen):**
+- Ueberschrift: „In drei Schritten zu Ihrem Engel"
+- Schritt 1: App herunterladen. Schritt 2: Engel auswaehlen. Schritt 3: Termin buchen.
+- Trust Blue (#2B5F8A) fuer Nummerierung
+
+**Seite 5 (Innen):**
+- Ueberschrift: „Bezahlbar dank Pflegekasse"
+- Gold-Highlight-Box: „125 Euro zahlt die Pflegekasse. Ihr Eigenanteil: 131 Euro im Monat."
+- Hinweis: „Alltagsbegleitung nach Paragraph 45b SGB XI. Jeder Pflegegrad hat Anspruch."
+
+**Seite 6 (Rueckseite):**
+- Kontaktdaten: Neue Mainzer Strasse 66-68, 60311 Frankfurt am Main
+- E-Mail: info@alltagsengel.care
+- Website: alltagsengel.care
+- QR-Code zur App
+- Zertifizierungshinweis: „Anerkannter Anbieter von Alltagsbegleitung nach Paragraph 45b SGB XI"
+- Logo in Gold auf Coal
+
+---
+
+## 10. Markenschutz und Konsistenz
+
+### 10.1 Qualitaetskontrolle
+
+Vor jeder Veroeffentlichung pruefen:
+
+- Klingt der Text warm und nahbar — oder wie ein Behoerdenbrief?
+- Ist der Absender „Alltagsengel" — kein persoenlicher Name?
+- Ist die Anrede korrekt — „Hallo Frau/Herr [Nachname]"?
+- Wird Alltagsbegleitung klar von Pflege abgegrenzt?
+- Stimmen die Fakten (131 Euro Eigenanteil, 125 Euro Entlastungsbetrag, Paragraph 45b SGB XI)?
+- Werden Senioren wuerdevoll und auf Augenhoehe dargestellt?
+- Sind die Farben aus der definierten Palette?
+- Ist der Kontrast ausreichend (WCAG AA mindestens)?
+- Endet die Verabschiedung mit „Herzliche Gruesse, Ihr Team von Alltagsengel"?
+
+### 10.2 Medienpaket
+
+Alle freigegebenen Dateien (Logo, Farben, Schriften, Vorlagen) befinden sich im offiziellen Medienpaket. Eigenstaendige Nachbildungen oder Abwandlungen sind nicht gestattet. Bei Unsicherheiten: info@alltagsengel.care.
+
+---
+
 *Bei Fragen zur Markenverwendung: info@alltagsengel.care*
-*Alltagsengel — Neue Mainzer Straße 66-68, 60311 Frankfurt am Main*
+*Alltagsengel — Neue Mainzer Strasse 66-68, 60311 Frankfurt am Main*
