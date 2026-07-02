@@ -25,8 +25,16 @@ Ticket 9-0872000040936, seit 28+ Tagen keine Antwort.
 
 ## Offen — Mittelfristig
 
-### Betriebssystem Phase 1
-Digitale Leistungsnachweise, Budgetverwaltung (131€/Monat), Abrechnungs-Workflow. Plan steht, Umsetzung nicht gestartet.
+### Betriebssystem Phase 1 — GEBAUT & LIVE (ein manueller Schritt offen)
+Digitale Leistungsnachweise, Budgetverwaltung (131€/Monat §45b), Abrechnungs-Workflow sind
+gebaut, deployed und unter `/admin` (Übersicht/Klienten/Leistungsnachweise/Budgets/Rechnungen)
+live. Tabellen in Supabase mit realistischen Testdaten befüllt (3 Klienten PG2–3, Betreuungskraft,
+28 Leistungsnachweise, Budgets mit Ampel 🟢🟡🔴, 3 Rechnungen + Streitfall via
+`scripts/seed-betriebssystem.mjs`). Budget-Automatik: DB-Trigger pflegt `used_amount` automatisch
+(verifiziert). Frontend-Bug (generierte Spalte `duration_minutes`) behoben.
+**Offen (1 manueller Schritt):** Constraint-Migration `supabase/migrations/20260702_fix_service_records_check_constraints.sql`
+im Supabase SQL-Editor ausführen — erst danach speichert das Leistungsnachweis-Formular
+Status `signed`/`complete` (aktuell blockiert eine falsch angelegte CHECK-Constraint das).
 
 ### ChairMatch App Store
 Neuen App-Eintrag in App Store Connect anlegen.
