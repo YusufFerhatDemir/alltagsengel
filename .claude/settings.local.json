@@ -107,7 +107,14 @@
       "Bash(./deploy.sh \"iOS Fix: supportsTablet true \\(Apple 90101 - iPad-Support wie v1.0.1 wiederherstellen\\)\")",
       "Bash(rm -f /Users/work/alltagsengel/.git/HEAD.lock && ./deploy.sh \"iOS Fix: supportsTablet true \\(Apple 90101 - iPad-Support wie v1.0.1 wiederherstellen\\)\")",
       "Bash(EXPO_TOKEN=6vXIUA65c84OscEJGP2lGgd1bmIjsk8fZo479qxl npx eas-cli build --platform ios --profile production --non-interactive)",
-      "Bash(echo \"=== shell profiles ===\" *)"
+      "Bash(echo \"=== shell profiles ===\" *)",
+      "Bash(python3 -c ' *)",
+      "Bash(node scripts/seed-betriebssystem.mjs)",
+      "Bash(xcodebuild -version)",
+      "Bash(ruby -v)",
+      "Read(//Users/work/Downloads/**)",
+      "Bash(cd /Users/work/chairmatch && echo \"=== ios signing config ===\"; grep -E \"DEVELOPMENT_TEAM|PRODUCT_BUNDLE_IDENTIFIER|CODE_SIGN_STYLE|PROVISIONING_PROFILE|MARKETING_VERSION|CURRENT_PROJECT_VERSION\" ios/App/App.xcodeproj/project.pbxproj | sort -u; echo \"=== Pods installed? ===\"; ls ios/App/Pods >/dev/null 2>&1 && echo \"Pods present\" || echo \"No Pods dir\"; echo \"=== public/ build output exists? ===\"; ls public/index.html 2>/dev/null && echo \"public index present\" || echo \"no public/index.html\"; echo \"=== Info.plist version keys ===\"; grep -A1 -E \"CFBundleShortVersionString|CFBundleVersion\" ios/App/App/Info.plist)",
+      "Bash(./deploy.sh \"Betriebssystem Phase 1: Realistische Testdaten \\(3 Klienten PG2-3, Betreuungskraft, 28 Leistungsnachweise, Budgets mit Ampel 🟢🟡🔴, 3 Rechnungen + Streitfall\\) via scripts/seed-betriebssystem.mjs. Befund: used_amount-Trigger existiert bereits \\(verifiziert\\). Bugfix-Migration für service_records status/budget_type Check-Constraints \\(waren mit falschem Werte-Set angelegt → blockierten die App\\).\")"
     ]
   }
 }
