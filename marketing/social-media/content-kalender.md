@@ -1,6 +1,6 @@
 # Social-Media Content-Kalender Juli–September 2026
 
-**Alltagsengel — Alltagsbegleitung nach §45a SGB XI, Frankfurt am Main**
+**Alltagsengel — Alltagsbegleitung nach §45b SGB XI, Frankfurt am Main**
 
 ---
 
@@ -8,7 +8,7 @@
 
 | Säule | Beschreibung | Farbe/Kürzel |
 |-------|-------------|--------------|
-| **Aufklärung** | §45a, Entlastungsbetrag, Kostenübernahme erklären | AUF |
+| **Aufklärung** | §45b, Entlastungsbetrag, Kostenübernahme erklären | AUF |
 | **Emotionale Stories** | Echte Geschichten, die berühren und Vertrauen schaffen | EMO |
 | **Tipps für Angehörige** | Praktische Ratschläge für pflegende Angehörige | TIPP |
 | **Behind the Scenes** | Einblicke in den Alltag bei Alltagsengel | BTS |
@@ -36,8 +36,8 @@
 
 | Datum | Plattform | Säule | Thema | Beschreibung | Hashtags |
 |-------|-----------|-------|-------|-------------|----------|
-| 01.07. Mi | Instagram | AUF | Entlastungsbetrag: 125€ jeden Monat | Infografik: „Wussten Sie, dass Ihnen 125€ pro Monat zustehen? Viele Familien lassen dieses Geld verfallen." Schritt-für-Schritt Erklärung. | #Entlastungsbetrag #Pflegekasse #SGB11 #Paragraph45a #Alltagsbegleitung #FrankfurtAmMain #Seniorenbetreuung #PflegendeAngehörige #Alltagsengel |
-| 01.07. Mi | LinkedIn | AUF | Halbjahresbilanz: Alltagsbegleitung im Wandel | Fachbeitrag über die Entwicklung der Alltagsbegleitung nach §45a im ersten Halbjahr 2026. Zahlen, Trends und Ausblick. | #Alltagsbegleitung #Pflege #SGB11 #Paragraph45a #Seniorenbetreuung #Frankfurt #Pflegebranche #Fachkräfte |
+| 01.07. Mi | Instagram | AUF | Entlastungsbetrag: 131€ jeden Monat | Infografik: „Wussten Sie, dass Ihnen 131€ pro Monat zustehen? Viele Familien lassen dieses Geld verfallen." Schritt-für-Schritt Erklärung. | #Entlastungsbetrag #Pflegekasse #SGB11 #Paragraph45b #Alltagsbegleitung #FrankfurtAmMain #Seniorenbetreuung #PflegendeAngehörige #Alltagsengel |
+| 01.07. Mi | LinkedIn | AUF | Halbjahresbilanz: Alltagsbegleitung im Wandel | Fachbeitrag über die Entwicklung der Alltagsbegleitung nach §45b im ersten Halbjahr 2026. Zahlen, Trends und Ausblick. | #Alltagsbegleitung #Pflege #SGB11 #Paragraph45b #Seniorenbetreuung #Frankfurt #Pflegebranche #Fachkräfte |
 | 01.07. Mi | Facebook | EMO | Sommer beginnt — gemeinsam statt einsam | Emotionaler Post: „Der Sommer ist die schönste Jahreszeit — wenn man ihn teilen kann." Bild von einem Spaziergang im Grünen. | #Senioren #Frankfurt #Sommer #Alltagsbegleitung #GemeinsamStattEinsam #Alltagsengel #Lebensfreude |
 | 03.07. Fr | Instagram | TIPP | 5 Sommer-Tipps für Senioren | Karussell-Post: Ausreichend trinken, Schatten suchen, leichte Kleidung, Mittagshitze meiden, Sonnenschutz. | #SommerTipps #Senioren #Hitze #Gesundheit #Frankfurt #Alltagsengel #SeniorenGesundheit #HitzeTipps |
 | 03.07. Fr | Facebook | TIPP | Hitze-Warnung: So schützen Sie Ihre Eltern | Ausführlicher Ratgeber-Post mit konkreten Maßnahmen gegen Hitzebelastung bei älteren Menschen. | #Hitze #Senioren #Sommer #Gesundheit #PflegendeAngehörige #Frankfurt #Alltagsengel |
@@ -47,11 +47,11 @@
 | Datum | Plattform | Säule | Thema | Beschreibung | Hashtags |
 |-------|-----------|-------|-------|-------------|----------|
 | 06.07. Mo | Instagram | EMO | „Mama hat heute zum ersten Mal wieder gelacht" | Emotionaler Erfahrungsbericht (anonymisiert): Eine Tochter erzählt, wie ihre Mutter durch regelmäßige Begleitung wieder aufblüht. | #PflegendeAngehörige #Alltagsbegleitung #Frankfurt #Seniorenbetreuung #Alltagsengel #Lebensfreude #GemeinsamStattEinsam |
-| 07.07. Di | Facebook | AUF | Was ist Alltagsbegleitung nach §45a? | Erklärvideo oder Infografik: Unterschied zwischen Pflege und Alltagsbegleitung. Was dürfen Alltagsbegleiter? Was nicht? | #Paragraph45a #Alltagsbegleitung #Pflege #SGB11 #Seniorenbetreuung #Frankfurt #Alltagsengel |
+| 07.07. Di | Facebook | AUF | Was ist Alltagsbegleitung nach §45b? | Erklärvideo oder Infografik: Unterschied zwischen Pflege und Alltagsbegleitung. Was dürfen Alltagsbegleiter? Was nicht? | #Paragraph45b #Alltagsbegleitung #Pflege #SGB11 #Seniorenbetreuung #Frankfurt #Alltagsengel |
 | 08.07. Mi | Instagram | BTS | Ein Tag bei Alltagsengel | Bildserie: Morgens Büro, Engel unterwegs, gemeinsamer Einkauf, Nachmittagskaffee. Einblick in den Arbeitsalltag. | #BehindTheScenes #Alltagsengel #Alltagsbegleitung #Frankfurt #Teamwork #Seniorenbetreuung |
 | 08.07. Mi | LinkedIn | TIPP | Pflegende Angehörige: 5 Warnsignale für Überlastung | Fachartikel: Wann wird die Pflege zu viel? Konkrete Anzeichen und Handlungsoptionen. | #PflegendeAngehörige #Burnout #Pflege #Gesundheit #Alltagsbegleitung #Entlastung #Frankfurt |
 | 09.07. Do | Facebook | TEST | Kundenstimme: Familie M. aus Sachsenhausen | Testimonial mit Zitat: „Seit Alltagsengel da ist, kann ich endlich wieder ruhig schlafen." | #Kundenstimme #Erfahrungsbericht #Alltagsengel #Frankfurt #Sachsenhausen #Seniorenbetreuung |
-| 10.07. Fr | Instagram | AUF | Nur 131€ Eigenanteil — der Rest kommt von der Pflegekasse | Reel: Taschenrechner-Animation. 256€ Gesamtkosten – 125€ Entlastungsbetrag = 131€. So einfach ist das. | #Entlastungsbetrag #Pflegekasse #131Euro #Alltagsbegleitung #Frankfurt #Alltagsengel #Kostenübernahme |
+| 10.07. Fr | Instagram | AUF | 0€ Eigenanteil — die Pflegekasse zahlt | Reel: Taschenrechner-Animation. Entlastungsbetrag 131€/Monat deckt die Alltagsbegleitung — direkte Abrechnung mit der Pflegekasse, für Sie 0€ Eigenkosten. So einfach ist das. | #Entlastungsbetrag #Pflegekasse #131Euro #Alltagsbegleitung #Frankfurt #Alltagsengel #Kostenübernahme |
 
 ### KW 29 (13.–19. Juli)
 
@@ -94,10 +94,10 @@
 
 | Datum | Plattform | Säule | Thema | Beschreibung | Hashtags |
 |-------|-----------|-------|-------|-------------|----------|
-| 03.08. Mo | Instagram | AUF | Alltagsbegleitung vs. Pflegedienst: Der Unterschied | Karussell-Post: Tabellarischer Vergleich — was macht wer? Wann brauche ich was? | #Alltagsbegleitung #Pflegedienst #Unterschied #Paragraph45a #Alltagsengel #Frankfurt #Pflege |
+| 03.08. Mo | Instagram | AUF | Alltagsbegleitung vs. Pflegedienst: Der Unterschied | Karussell-Post: Tabellarischer Vergleich — was macht wer? Wann brauche ich was? | #Alltagsbegleitung #Pflegedienst #Unterschied #Paragraph45b #Alltagsengel #Frankfurt #Pflege |
 | 04.08. Di | Facebook | EMO | „Oma freut sich jetzt auf Dienstag" | Emotionaler Post: Eine Enkelin erzählt, wie ihre Großmutter durch die regelmäßige Begleitung einen festen Termin hat, auf den sie sich freut. | #Freude #Routine #Senioren #Alltagsengel #Frankfurt #Alltagsbegleitung #Familie |
 | 05.08. Mi | Instagram | TIPP | Demenz verstehen: 7 Tipps für den Umgang | Karussell: Geduld, Routine, klare Sprache, Validation, Erinnerungshilfen, Musik, Bewegung. | #Demenz #Alzheimer #Tipps #Umgang #PflegendeAngehörige #Alltagsengel #Frankfurt |
-| 05.08. Mi | LinkedIn | AUF | Fachkräftemangel in der Pflege: §45a als Teil der Lösung | Analyse: Wie qualifizierte Alltagsbegleiter nach §45a das Pflegesystem entlasten können. | #Fachkräftemangel #Pflege #Paragraph45a #Alltagsbegleitung #Lösung #Frankfurt #Pflegepolitik |
+| 05.08. Mi | LinkedIn | AUF | Fachkräftemangel in der Pflege: §45b als Teil der Lösung | Analyse: Wie qualifizierte Alltagsbegleiter nach §45b das Pflegesystem entlasten können. | #Fachkräftemangel #Pflege #Paragraph45b #Alltagsbegleitung #Lösung #Frankfurt #Pflegepolitik |
 | 07.08. Do | Facebook | TEST | Google-Bewertung des Monats | Screenshot einer echten 5-Sterne-Bewertung (anonymisiert) mit Dankeswort. | #Bewertung #GoogleReview #5Sterne #Alltagsengel #Frankfurt #Vertrauen #Qualität |
 | 07.08. Fr | Instagram | BTS | Unsere Lieblingsorte in Frankfurt | Bildserie: Orte, die unsere Engel gerne mit Senioren besuchen — Kleinmarkthalle, Eiserner Steg, Palmengarten. | #Frankfurt #Lieblingsorte #Senioren #Alltagsengel #Alltagsbegleitung #Freizeit |
 
@@ -109,7 +109,7 @@
 | 11.08. Di | Facebook | AUF | Entlastungsbetrag: Diese Fehler sollten Sie vermeiden | Top-5-Fehler bei der Nutzung des Entlastungsbetrags und wie man sie vermeidet. | #Entlastungsbetrag #Fehler #Tipps #Pflegekasse #Alltagsengel #Frankfurt #Beratung |
 | 12.08. Mi | Instagram | TIPP | Einkaufshilfe: Mehr als nur Tüten tragen | Reel: Was alles zur Einkaufshilfe gehört — Einkaufsliste schreiben, gemeinsam einkaufen, Preise vergleichen, Kühlschrank einräumen. | #Einkaufshilfe #Alltagsbegleitung #Senioren #Alltag #Alltagsengel #Frankfurt #Unterstützung |
 | 12.08. Mi | LinkedIn | TIPP | Digitalisierung in der Alltagsbegleitung | Fachbeitrag: Wie digitale Tools die Organisation von Alltagsbegleitung verbessern — von der App-basierten Buchung bis zur Dokumentation. | #Digitalisierung #Pflege #Innovation #Alltagsbegleitung #Frankfurt #Alltagsengel #PflegeTech |
-| 13.08. Do | Facebook | BTS | So werden unsere Engel geschult | Einblick in die Schulung und Qualifizierung der Alltagsbegleiter nach §45a. | #Schulung #Qualifizierung #Paragraph45a #Alltagsengel #Frankfurt #Qualität #Team |
+| 13.08. Do | Facebook | BTS | So werden unsere Engel geschult | Einblick in die Schulung und Qualifizierung der Alltagsbegleiter nach §45b. | #Schulung #Qualifizierung #Paragraph45b #Alltagsengel #Frankfurt #Qualität #Team |
 | 14.08. Fr | Instagram | AUF | Wussten Sie? Der Entlastungsbetrag verfällt! | Dringlichkeits-Post: „Nicht genutzte Beträge aus dem Vorjahr verfallen am 30. Juni des Folgejahres!" | #Entlastungsbetrag #Frist #Pflegekasse #DringendNutzen #Alltagsengel #Frankfurt |
 
 ### KW 34 (17.–23. August)
@@ -130,7 +130,7 @@
 | 24.08. Mo | Instagram | BTS | Was unsere Engel am meisten lieben | Zitate von Alltagsbegleitern (anonym): „Das Schönste ist das Vertrauen, das mir entgegengebracht wird." | #TeamStimmen #Alltagsengel #Motivation #Alltagsbegleitung #Frankfurt #Berufung |
 | 25.08. Di | Facebook | AUF | Pflegegrad beantragen: So geht's | Schritt-für-Schritt Anleitung: MDK-Begutachtung, Antrag bei der Pflegekasse, Bescheid. | #Pflegegrad #Antrag #MDK #Pflegekasse #Alltagsengel #Frankfurt #Beratung |
 | 26.08. Mi | Instagram | TIPP | 5 Aktivitäten für regnerische Sommertage | Karussell: Gesellschaftsspiele, gemeinsam kochen, Fotoalben anschauen, Vorlesen, Handarbeiten. | #Aktivitäten #Senioren #Regen #Sommer #Alltagsengel #Frankfurt #Freizeit #Ideen |
-| 26.08. Mi | LinkedIn | AUF | §45a SGB XI: Was Kommunen und Pflegekassen wissen sollten | Fachlicher Deep-Dive: Anerkennung, Qualitätsstandards und Refinanzierung von Alltagsbegleitung. | #Paragraph45a #SGBXI #Pflege #Kommunen #Pflegekassen #Alltagsbegleitung #Frankfurt |
+| 26.08. Mi | LinkedIn | AUF | §45b SGB XI: Was Kommunen und Pflegekassen wissen sollten | Fachlicher Deep-Dive: Anerkennung, Qualitätsstandards und Refinanzierung von Alltagsbegleitung. | #Paragraph45b #SGBXI #Pflege #Kommunen #Pflegekassen #Alltagsbegleitung #Frankfurt |
 | 27.08. Do | Facebook | TEST | Familie K. empfiehlt Alltagsengel | Ausführlicher Erfahrungsbericht: Wie Alltagsengel Familie K. entlastet hat. | #Empfehlung #Erfahrungsbericht #Alltagsengel #Frankfurt #Vertrauen #Familie |
 | 28.08. Fr | Instagram | EMO | Monatsrückblick August | Community-Highlights, Danke-Post, Vorschau September. | #Monatsrückblick #August #Alltagsengel #Frankfurt #Community #Danke |
 
@@ -158,7 +158,7 @@
 | 09.09. Mi | Instagram | BTS | So sieht ein typischer Einsatz aus | Reel: Timeline eines Alltagsbegleiter-Einsatzes — Ankunft, Begrüßung, gemeinsame Aktivität, Verabschiedung. | #EinTagBei #Alltagsengel #BehindTheScenes #Alltagsbegleitung #Frankfurt #Seniorenbetreuung |
 | 09.09. Mi | LinkedIn | AUF | Qualitätsstandards in der Alltagsbegleitung: Ein Branchenvergleich | Fachbeitrag: Welche Standards gelten? Wo gibt es Lücken? Was macht Alltagsengel anders? | #Qualität #Standards #Alltagsbegleitung #Pflege #Frankfurt #Vergleich #Alltagsengel |
 | 11.09. Do | Facebook | BTS | Unser Büro in der Neuen Mainzer Straße | Fotos vom Büro im Herzen Frankfurts: „Hier planen wir die Betreuung für Ihre Liebsten." | #Frankfurt #NeuMainzerStraße #Büro #Alltagsengel #Team #Alltagsbegleitung |
-| 11.09. Fr | Instagram | AUF | Wer bezahlt Alltagsbegleitung? Kostenübernahme erklärt | Infografik: Pflegekasse 125€ + Eigenanteil 131€ = professionelle Betreuung. So einfach. | #Kosten #Pflegekasse #Entlastungsbetrag #131Euro #Alltagsengel #Frankfurt #Transparent |
+| 11.09. Fr | Instagram | AUF | Wer bezahlt Alltagsbegleitung? Kostenübernahme erklärt | Infografik: Pflegekasse zahlt 131€/Monat Entlastungsbetrag (§45b) = professionelle Betreuung, 0€ Eigenanteil. So einfach. | #Kosten #Pflegekasse #Entlastungsbetrag #131Euro #Alltagsengel #Frankfurt #Transparent |
 
 ### KW 38 (14.–20. September)
 
@@ -166,7 +166,7 @@
 |-------|-----------|-------|-------|-------------|----------|
 | 14.09. Mo | Instagram | EMO | Weltalzheimertag — 21. September | Vorankündigung: Sensibilisierungskampagne zum Weltalzheimertag. Fakten und Botschaften. | #Weltalzheimertag #Alzheimer #Demenz #Sensibilisierung #Alltagsengel #Frankfurt #21September |
 | 15.09. Di | Facebook | TIPP | Herbstdepression vorbeugen: So helfen Sie Ihren Eltern | Tipps: Tageslicht, Bewegung, soziale Kontakte, Routine, professionelle Hilfe. | #Herbstdepression #Prävention #Senioren #Tipps #Alltagsengel #Frankfurt #Gesundheit |
-| 16.09. Mi | Instagram | AUF | Alltagsbegleitung: Das dürfen wir — das dürfen wir nicht | Aufklärungs-Karussell: Klare Abgrenzung — Gesellschaft, Einkauf, Spaziergang JA / Medikamentengabe, Wundversorgung NEIN. | #Aufklärung #Alltagsbegleitung #Abgrenzung #Paragraph45a #Alltagsengel #Frankfurt |
+| 16.09. Mi | Instagram | AUF | Alltagsbegleitung: Das dürfen wir — das dürfen wir nicht | Aufklärungs-Karussell: Klare Abgrenzung — Gesellschaft, Einkauf, Spaziergang JA / Medikamentengabe, Wundversorgung NEIN. | #Aufklärung #Alltagsbegleitung #Abgrenzung #Paragraph45b #Alltagsengel #Frankfurt |
 | 16.09. Mi | LinkedIn | TIPP | Pflege und Beruf vereinbaren: Wie Arbeitgeber helfen können | Fachbeitrag für HR-Verantwortliche: Wie Unternehmen pflegende Angehörige unterstützen können — inklusive Verweis auf Alltagsbegleitung. | #PflegeUndBeruf #HR #Arbeitgeber #PflegendeAngehörige #Alltagsbegleitung #Frankfurt |
 | 17.09. Do | Facebook | TEST | Video-Testimonial: Frau S. erzählt | Kurzes Video (anonymisiert): Eine Kundin erzählt, wie Alltagsengel ihren Alltag verändert hat. | #VideoTestimonial #Kundenstimme #Alltagsengel #Frankfurt #Erfahrung #Alltagsbegleitung |
 | 18.09. Fr | Instagram | TIPP | 5 Spiele für gemeinsame Nachmittage | Karussell: Mensch-ärgere-dich-nicht, Rommé, Memory, Wortspiele, gemeinsam puzzeln. | #Spiele #Senioren #GemeinsamSpielen #Freizeit #Alltagsengel #Frankfurt #Nachmittag |
@@ -190,6 +190,50 @@
 | 29.09. Di | Facebook | TIPP | Ernährung im Alter: Worauf es ankommt | Tipps: Ausreichend Eiweiß, Calcium, Vitamin D, kleine Mahlzeiten, gemeinsam kochen. | #Ernährung #Senioren #Gesundheit #Tipps #Alltagsengel #Frankfurt #GesundEssen |
 | 30.09. Mi | Instagram | EMO | Monatsrückblick September | Highlights, Weltalzheimertag-Kampagne, Danke an die Community, Ausblick Oktober. | #Monatsrückblick #September #Alltagsengel #Frankfurt #Community #Danke #Rückblick |
 | 30.09. Mi | LinkedIn | AUF | Ausblick Q4: Alltagsbegleitung im Winter — besondere Herausforderungen | Fachbeitrag: Was ändert sich in der dunklen Jahreszeit? Erhöhter Bedarf, Sturzrisiko, Einsamkeit. | #Q4 #Winter #Alltagsbegleitung #Herausforderungen #Pflege #Frankfurt #Alltagsengel |
+
+---
+
+## Oktober 2026
+
+### KW 41 (5.–11. Oktober)
+
+| Datum | Plattform | Säule | Thema | Beschreibung | Hashtags |
+|-------|-----------|-------|-------|-------------|----------|
+| 05.10. Mo | Instagram | AUF | Entlastungsbetrag: Jetzt Restguthaben 2026 sichern | Erinnerung: Nicht genutzte 131€/Monat verfallen — bis 30.06.2027 nutzbar. Jetzt Anspruch prüfen. | #Entlastungsbetrag #131Euro #Pflegekasse #§45b #Alltagsengel #Frankfurt #NichtVerfallen |
+| 06.10. Di | Facebook | TIPP | Goldener Oktober: Spaziergänge, die guttun | Tipps für sichere Herbstspaziergänge mit Senioren — festes Schuhwerk, kürzere Runden, Lieblingsorte. | #Herbst #Spaziergang #Senioren #Frankfurt #Alltagsengel #Bewegung |
+| 08.10. Mi | Instagram | EMO | Ein Nachmittag, der bleibt | Emotionale Kurzgeschichte (anonymisiert): gemeinsamer Kastanien-Spaziergang, ein Lächeln, das trägt. | #Herbst #Lebensfreude #Alltagsbegleitung #Alltagsengel #Frankfurt #GemeinsamStattEinsam |
+| 08.10. Mi | LinkedIn | AUF | Welttag der seelischen Gesundheit (10.10.) | Fachbeitrag: Soziale Teilhabe als Schutzfaktor — welche Rolle Alltagsbegleitung spielt. | #SeelischeGesundheit #Prävention #Alltagsbegleitung #Pflege #Frankfurt #Alltagsengel |
+| 10.10. Fr | Instagram | TIPP | Welttag der seelischen Gesundheit | Karussell: 5 kleine Dinge gegen Einsamkeit im Alter — fester Termin, Gespräch, Bewegung, Aufgabe, Nähe. | #WelttagSeelischeGesundheit #Einsamkeit #Senioren #Alltagsengel #Frankfurt #Prävention |
+
+### KW 42 (12.–18. Oktober)
+
+| Datum | Plattform | Säule | Thema | Beschreibung | Hashtags |
+|-------|-----------|-------|-------|-------------|----------|
+| 12.10. Mo | Instagram | AUF | Alltagsbegleitung ≠ Pflege | Aufklärungs-Karussell: Was unsere Engel tun (Einkauf, Arzt, Gesellschaft) — und was Sache des Pflegedienstes bleibt. | #Aufklärung #Alltagsbegleitung #§45b #Alltagsengel #Frankfurt #Pflege |
+| 13.10. Di | Facebook | TEST | „Endlich jemand, dem ich vertraue" | Kundenstimme (anonymisiert) als Zitatgrafik. CTA: unverbindlich anfragen. | #Kundenstimme #Vertrauen #Alltagsengel #Frankfurt #Seniorenbetreuung |
+| 15.10. Mi | Instagram | BTS | So finden wir den passenden Engel | Einblick: Matching-Prozess — Wünsche, Kennenlernen, Chemie stimmt. | #BehindTheScenes #Matching #Alltagsengel #Frankfurt #Alltagsbegleitung |
+| 15.10. Mi | LinkedIn | TIPP | Pflege & Beruf: Herbst-Check für Angehörige | Fachbeitrag für Berufstätige: Entlastungsoptionen im Überblick, inkl. §45b. | #PflegeUndBeruf #PflegendeAngehörige #Entlastung #Alltagsbegleitung #Frankfurt |
+| 17.10. Fr | Instagram | TIPP | Grippeimpfung & Vitamin D: Herbst-Basics | Praxisnaher Reel: Was jetzt für Senioren wichtig ist — mit Erinnerung zur Arztbegleitung. | #Herbst #Gesundheit #Senioren #Prävention #Alltagsengel #Frankfurt |
+
+### KW 43 (19.–25. Oktober)
+
+| Datum | Plattform | Säule | Thema | Beschreibung | Hashtags |
+|-------|-----------|-------|-------|-------------|----------|
+| 19.10. Mo | Instagram | EMO | Wenn Tage kürzer werden | Emotionaler Post zur dunklen Jahreszeit: Gesellschaft gegen die Herbstschwere. | #Herbst #Einsamkeit #Alltagsbegleitung #Alltagsengel #Frankfurt #GemeinsamStattEinsam |
+| 20.10. Di | Facebook | AUF | Verhinderungspflege einfach erklärt | Zusätzliche Entlastung neben dem Entlastungsbetrag — wer Anspruch hat und wie es geht. | #Verhinderungspflege #Pflegekasse #Entlastung #Alltagsengel #Frankfurt #Angehörige |
+| 22.10. Mi | Instagram | BTS | Unser Büro in der Neuen Mainzer Straße | Foto-Post aus dem Herzen Frankfurts: „Hier planen wir Betreuung für Ihre Liebsten." | #Frankfurt #NeueMainzerStraße #Team #Alltagsengel #Alltagsbegleitung |
+| 22.10. Mi | LinkedIn | BTS | Qualität in der Alltagsbegleitung | Fachbeitrag: Auswahl, Schulung, Feedback — wie wir Verlässlichkeit sichern. | #Qualität #Alltagsbegleitung #Pflege #Frankfurt #Alltagsengel #Standards |
+| 24.10. Fr | Instagram | TIPP | Wohnung herbst- und winterfest machen | Karussell: Stolperfallen weg, gute Beleuchtung, Handläufe, warme Ecken. | #Sturzprävention #Sicherheit #Senioren #ZuHause #Alltagsengel #Frankfurt |
+
+### KW 44 (26. Oktober – 1. November)
+
+| Datum | Plattform | Säule | Thema | Beschreibung | Hashtags |
+|-------|-----------|-------|-------|-------------|----------|
+| 26.10. Mo | Instagram | AUF | 131€/Monat: Rechenbeispiel | Infografik: Was 131€ Alltagsbegleitung konkret bedeuten — mehrere Einsätze, 0€ Eigenanteil. | #Entlastungsbetrag #131Euro #§45b #Alltagsengel #Frankfurt #Transparent |
+| 27.10. Di | Facebook | EMO | Die kleinen Momente zählen | Emotionaler Post: „Manchmal reicht ein Kaffee zu zweit." | #Lebensfreude #Senioren #Alltagsengel #Frankfurt #GemeinsamStattEinsam |
+| 29.10. Mi | Instagram | TEST | Vorher/Nachher: Wie Begleitung wirkt | Gegenüberstellung: allein vs. begleitet, leerer Kühlschrank vs. gemeinsamer Einkauf. | #VorherNachher #Wirkung #Alltagsbegleitung #Alltagsengel #Frankfurt |
+| 29.10. Mi | LinkedIn | AUF | Rückblick Oktober & Ausblick Winterbedarf | Fachbeitrag: steigender Bedarf in der kalten Jahreszeit, Kooperationsaufruf. | #Pflege #Alltagsbegleitung #Winter #Kooperation #Frankfurt #Alltagsengel |
+| 31.10. Fr | Instagram | EMO | Monatsrückblick Oktober | Best-of, Danke an die Community, Vorschau November. | #Monatsrückblick #Oktober #Alltagsengel #Frankfurt #Community #Danke |
 
 ---
 
@@ -218,7 +262,7 @@
 ## Hinweise zur Umsetzung
 
 - **Bildmaterial:** Authentische Fotos bevorzugen, keine Stock-Fotos. Wenn Stock-Fotos, dann diverse, warme, natürliche Bilder.
-- **Branding:** Alle Posts im Alltagsengel-Design — Logo, Farben (Grün/Weiß), Schriftart konsistent.
+- **Branding:** Alle Posts im Alltagsengel-Design — Logo, Farben Gold #C9963C / Coal #1A1612 / Creme #F5F0E8, Schriftart Jost konsistent.
 - **CTA:** Jeder Post endet mit einem Call-to-Action (Link in Bio, Website, Telefonnummer oder E-Mail).
 - **Interaktion:** Auf alle Kommentare innerhalb von 24 Stunden antworten. DMs innerhalb von 4 Stunden.
 - **Stories:** Zu jedem Feed-Post eine passende Story erstellen (Umfrage, Quiz, Countdown, Swipe-Up).
