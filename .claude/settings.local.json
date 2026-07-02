@@ -57,7 +57,8 @@
       "Bash(git -C /Users/work/alltagsengel log --oneline -1)",
       "Bash(git -C /Users/work/alltagsengel diff --stat)",
       "Bash(./deploy.sh \"Session-Settings aktualisiert; Verifikation: Build grün \\(188 Seiten\\), RSS-Feed /blog/feed.xml mit 24 Artikeln, robots.txt konsolidiert, Typecheck clean\")",
-      "Bash(./deploy.sh \"Google-Reviews-Widget: /api/google-reviews \\(Places API New, 6h-Cache, env-gesteuert über GOOGLE_PLACE_ID\\) + Landing-Sektion mit echten Rezensionen, AggregateRating-Schema und Bewertungs-CTA-Fallback — keine erfundenen Bewertungen\")"
+      "Bash(./deploy.sh \"Google-Reviews-Widget: /api/google-reviews \\(Places API New, 6h-Cache, env-gesteuert über GOOGLE_PLACE_ID\\) + Landing-Sektion mit echten Rezensionen, AggregateRating-Schema und Bewertungs-CTA-Fallback — keine erfundenen Bewertungen\")",
+      "Bash(./deploy.sh \"Wikidata: QuickStatements-Batch \\(V1, mit Referenzen auf Impressum\\) für 1-Klick-Anlage des Alltagsengel-Items + Anleitung inkl. sameAs-Rückverknüpfung in wikidata-vorlage.md\")"
     ]
   }
 }

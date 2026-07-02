@@ -719,3 +719,18 @@ Falls die Relevanzkriterien (noch) nicht erfuellt sind, gibt es Alternativen:
 
 *Dokument erstellt fuer Alltagsengel | alltagsengel.care | Stand: Juli 2026*
 *Kontakt: info@alltagsengel.care | Neue Mainzer Strasse 66-68, 60311 Frankfurt am Main*
+
+---
+
+## 5. QuickStatements-Batch (Schnellste Methode)
+
+Statt die Claims einzeln anzulegen (Abschnitt 1.4), kann der komplette Eintrag in einem
+Durchgang erstellt werden:
+
+1. Wikidata-Konto anlegen und einloggen (frische Konten müssen ggf. erst 4 Tage alt sein / 50 Edits haben, sonst die Claims manuell anlegen).
+2. https://quickstatements.toolforge.org öffnen → "New batch".
+3. Inhalt von `marketing/geo/wikidata-quickstatements.txt` einfügen (Tab-getrennt, Format V1) → "Import V1 commands" → "Run".
+4. Die neue Q-Nummer notieren und hier dokumentieren: **Q-Nummer: ___________**
+5. Danach die Q-Nummer als `sameAs` ("https://www.wikidata.org/wiki/Q…") in das Organization-JSON-LD in `app/layout.tsx` eintragen — damit ist der Kreis Website ↔ Wikidata ↔ Knowledge Graph geschlossen.
+
+Noch offen im Batch (bewusst weggelassen, erst Werte klären): Gründungsdatum (P571).
