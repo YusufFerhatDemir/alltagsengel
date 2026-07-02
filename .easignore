@@ -1,0 +1,19 @@
+# Exclude everything by default
+*
+
+# Include native app directory
+!native
+!native/
+!native/**
+
+# Re-exclude heavy stuff inside native
+native/node_modules
+native/node_modules/**
+native/dist
+native/dist/**
+native/.expo
+native/.expo/**
+
+# Include root package.json (needed for monorepo resolution)
+!package.json
+!package-lock.json
