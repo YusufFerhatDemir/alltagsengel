@@ -5,7 +5,7 @@ import BreadcrumbSchema from '@/components/BreadcrumbSchema'
 
 export const metadata: Metadata = {
   alternates: { canonical: 'https://alltagsengel.care/kontakt' },
-  title: 'Kontakt — Kostenlose Pflegeberatung Frankfurt & Rhein-Main | Alltagsengel',
+  title: 'Kontakt — Kostenlose Pflegeberatung Frankfurt & Rhein-Main',
   description:
     'Kontakt zu Alltagsengel in Frankfurt: Kostenlose Beratung zu Entlastungsbetrag (131 €/Monat, §45b SGB XI), Pflegebox, Alltagsbegleitung und Krankenfahrten. Telefon, WhatsApp oder Kontaktformular — wir melden uns werktags innerhalb von 24 Stunden.',
   openGraph: {
