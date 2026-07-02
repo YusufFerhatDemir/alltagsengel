@@ -15,6 +15,9 @@ export type AnalyticsEventName =
   | 'pflegebox_order'
   | 'krankenfahrt_booking'
   | 'contact_request'
+  | 'phone_click'
+  | 'whatsapp_click'
+  | 'email_click'
   | 'chat_message_sent'
   | 'page_view_app'
   | 'web_vital'
@@ -73,6 +76,15 @@ export const Analytics = {
   },
   contact(source: string): void {
     trackEvent('contact_request', { source })
+  },
+  phoneClick(source: string): void {
+    trackEvent('phone_click', { source })
+  },
+  whatsappClick(source: string): void {
+    trackEvent('whatsapp_click', { source })
+  },
+  emailClick(source: string): void {
+    trackEvent('email_click', { source })
   },
   chat(role: 'user' | 'assistant', topic?: string): void {
     trackEvent('chat_message_sent', { role, topic: topic ?? null })

@@ -394,7 +394,7 @@ export default function BlogIndexPage() {
                 {article.description}
               </p>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ color: '#666', fontSize: 12 }}>{article.readTime} Lesezeit</span>
+                <span style={{ color: '#8F887B', fontSize: 12 }}>{article.readTime} Lesezeit</span>
                 <span style={{ color: '#C9963C', fontSize: 13, fontWeight: 600 }}>Lesen →</span>
               </div>
             </article>

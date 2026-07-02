@@ -6,7 +6,8 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: '*',
         allow: '/',
-        disallow: ['/admin/', '/mis/', '/api/', '/engel/', '/kunde/', '/fahrer/', '/auth/', '/investor/', '/notfall/', '/choose', '/sentry-example'],
+        // /lp/ = noindex-Werbe-Redirects (Tracking) — nicht crawlen
+        disallow: ['/admin/', '/mis/', '/api/', '/engel/', '/kunde/', '/fahrer/', '/auth/', '/investor/', '/notfall/', '/choose', '/sentry-example', '/lp/'],
       },
     ],
     sitemap: 'https://alltagsengel.care/sitemap.xml',

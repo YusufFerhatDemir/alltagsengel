@@ -83,7 +83,14 @@
       "Bash(./deploy.sh \"Session-Settings aktualisiert \\(Killer-Features-Session\\)\")",
       "Bash(git add *)",
       "Bash(SKIP_TYPECHECK=1 DEPLOY_CO_AUTHOR=\"Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>\" ./deploy.sh \"Native iOS App: Expo/React-Native-Projekt unter native/ \\(Tabs: Home, Budgetrechner 131€, Pflegegrad-Check, PLZ-Einzugsgebiet, Kontakt; Supabase-Auth, Push vorbereitet, Branding Gold/Coal, EAS-Build-Config\\)\")",
-      "Bash(npx expo *)"
+      "Bash(npx expo *)",
+      "Bash(git stash *)",
+      "Bash(git checkout *)",
+      "Bash(git rm *)",
+      "Bash(git reset *)",
+      "Bash(awk '{print $1}')",
+      "Bash(export DEPLOY_CO_AUTHOR=\"Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>\")",
+      "Bash(./deploy.sh \"Feinschliff-Optimierung: Tracking-Merge \\(ipGeo dedupliziert\\), Telefon/WhatsApp/E-Mail-Click-Tracking auf /kontakt, CSS-Split \\(blog+admin-analytics aus globals.css\\), Sitemap +4 Städte, robots /lp/ disallow, 404/500-Seiten verbessert, WCAG-Kontraste, Duplikat-JSON-LD entfernt, tsconfig native-Exclude\")"
     ]
   }
 }

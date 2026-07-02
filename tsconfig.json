@@ -42,6 +42,7 @@
     "constants/**",
     "hooks/**",
     "archive/**",
+    "native/**",
     "supabase/functions/**"
   ]
 }

@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect } from 'react'
+import { getIpGeo } from '@/lib/ipGeo'
 
 interface LocationResult {
   /** Vollständige Adresse (Straße + Stadt) oder nur Stadt */
@@ -112,28 +113,21 @@ export function useUserLocation(skipGps = false): LocationResult {
         }
       }
 
-      // 2) IP-Geolocation Fallback
+      // 2) IP-Geolocation Fallback — gecacht via lib/ipGeo
       if (!cancelled) {
-        try {
-          const res = await fetch('https://ipapi.co/json/', { signal: AbortSignal.timeout(4000) })
-          if (res.ok) {
-            const data = await res.json()
-            if (!cancelled && data.city) {
-              setLocation({
-                address: data.city === 'Frankfurt am Main' || data.city === 'Frankfurt'
-                  ? 'Frankfurt am Main'
-                  : data.city,
-                city: data.city,
-                lat: data.latitude || null,
-                lng: data.longitude || null,
-                source: 'ip',
-                loading: false,
-              })
-              return
-            }
-          }
-        } catch {
-          // IP API fehlgeschlagen
+        const geo = await getIpGeo()
+        if (!cancelled && geo?.city) {
+          setLocation({
+            address: geo.city === 'Frankfurt am Main' || geo.city === 'Frankfurt'
+              ? 'Frankfurt am Main'
+              : geo.city,
+            city: geo.city,
+            lat: geo.latitude,
+            lng: geo.longitude,
+            source: 'ip',
+            loading: false,
+          })
+          return
         }
       }
 

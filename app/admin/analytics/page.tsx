@@ -1,4 +1,5 @@
 'use client'
+import './analytics.css'
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { IconUser, IconClock, IconTarget, IconChart } from '@/components/Icons'

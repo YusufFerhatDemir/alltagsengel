@@ -3,8 +3,9 @@ import { useEffect, useRef, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useUserLocation } from '@/hooks/useUserLocation'
 import { getCookieConsent } from '@/components/CookieConsent'
+import { getIpGeo } from '@/lib/ipGeo'
 
-type Portal = 'kunde' | 'engel' | 'fahrer' | 'investor' | 'landing'
+export type Portal = 'kunde' | 'engel' | 'fahrer' | 'investor' | 'landing'
 
 /**
  * Trackt Besucher-Standorte für die MIS-Analyse.
@@ -37,22 +38,11 @@ export function useTrackVisit(portal: Portal) {
         const supabase = createClient()
         const { data: { user } } = await supabase.auth.getUser()
 
-        // IP + Geo-Details holen (Land, Region)
-        let country = ''
-        let region = ''
-        let ipAddress = ''
-
-        try {
-          const res = await fetch('https://ipapi.co/json/', { signal: AbortSignal.timeout(4000) })
-          if (res.ok) {
-            const data = await res.json()
-            country = data.country_name || ''
-            region = data.region || ''
-            ipAddress = data.ip || ''
-          }
-        } catch {
-          // IP API nicht erreichbar
-        }
+        // IP + Geo-Details holen (Land, Region) — gecacht via lib/ipGeo
+        const geo = await getIpGeo()
+        const country = geo?.country_name || ''
+        const region = geo?.region || ''
+        const ipAddress = geo?.ip || ''
 
         await supabase.from('visitor_locations').insert({
           user_id: user?.id || null,

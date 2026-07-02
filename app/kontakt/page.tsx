@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import KontaktForm from './KontaktForm'
 import BreadcrumbSchema from '@/components/BreadcrumbSchema'
+import ContactClickTracker from '@/components/ContactClickTracker'
 
 export const metadata: Metadata = {
   alternates: { canonical: 'https://alltagsengel.care/kontakt' },
@@ -51,6 +52,7 @@ export default function KontaktPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(contactPageJsonLd) }}
       />
       <BreadcrumbSchema items={[{ name: 'Kontakt' }]} />
+      <ContactClickTracker source="kontakt" />
       {/* Navigation */}
       <nav style={{ maxWidth: 700, margin: '0 auto', padding: '16px 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
@@ -89,7 +91,7 @@ export default function KontaktPage() {
             <div>
               <div style={{ color: '#F5F0E8', fontSize: 15, fontWeight: 600, marginBottom: 2 }}>Telefon</div>
               <div style={{ color: '#C9963C', fontSize: 14 }}>+49 178 338 28 25</div>
-              <div style={{ color: '#666', fontSize: 12, marginTop: 2 }}>Mo–Fr, 8:00–18:00 Uhr</div>
+              <div style={{ color: '#8F887B', fontSize: 12, marginTop: 2 }}>Mo–Fr, 8:00–18:00 Uhr</div>
             </div>
           </a>
 
@@ -109,7 +111,7 @@ export default function KontaktPage() {
             <div>
               <div style={{ color: '#F5F0E8', fontSize: 15, fontWeight: 600, marginBottom: 2 }}>WhatsApp</div>
               <div style={{ color: '#25D366', fontSize: 14 }}>Direkt schreiben</div>
-              <div style={{ color: '#666', fontSize: 12, marginTop: 2 }}>Antwort innerhalb von 1 Stunde</div>
+              <div style={{ color: '#8F887B', fontSize: 12, marginTop: 2 }}>Antwort innerhalb von 1 Stunde</div>
             </div>
           </a>
 
@@ -125,7 +127,7 @@ export default function KontaktPage() {
             <div>
               <div style={{ color: '#F5F0E8', fontSize: 15, fontWeight: 600, marginBottom: 2 }}>E-Mail</div>
               <div style={{ color: '#C9963C', fontSize: 14 }}>info@alltagsengel.care</div>
-              <div style={{ color: '#666', fontSize: 12, marginTop: 2 }}>Antwort innerhalb von 24 Stunden</div>
+              <div style={{ color: '#8F887B', fontSize: 12, marginTop: 2 }}>Antwort innerhalb von 24 Stunden</div>
             </div>
           </a>
 
@@ -151,26 +153,7 @@ export default function KontaktPage() {
         <KontaktForm />
       </div>
 
-      {/* Schema.org */}
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
-        '@context': 'https://schema.org',
-        '@type': 'ContactPage',
-        name: 'AlltagsEngel Kontakt',
-        url: 'https://alltagsengel.care/kontakt',
-        mainEntity: {
-          '@type': 'Organization',
-          name: 'AlltagsEngel',
-          telephone: '+491783382825',
-          email: 'info@alltagsengel.care',
-          address: {
-            '@type': 'PostalAddress',
-            streetAddress: 'Neue Mainzer Str. 66-68',
-            addressLocality: 'Frankfurt am Main',
-            postalCode: '60311',
-            addressCountry: 'DE',
-          },
-        },
-      })}} />
+      {/* ContactPage-JSON-LD steht bereits oben (contactPageJsonLd) — Duplikat entfernt */}
     </main>
   )
 }

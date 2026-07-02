@@ -44,6 +44,10 @@ const STATIC_ROUTES: Omit<RouteEntry, 'lastModified'>[] = [
   { url: '/alltagsbegleitung/bad-homburg', changeFrequency: 'weekly', priority: 0.85 },
   { url: '/alltagsbegleitung/mainz', changeFrequency: 'weekly', priority: 0.85 },
   { url: '/alltagsbegleitung/aschaffenburg', changeFrequency: 'weekly', priority: 0.85 },
+  { url: '/alltagsbegleitung/frankfurt-hoechst', changeFrequency: 'weekly', priority: 0.85 },
+  { url: '/alltagsbegleitung/neu-isenburg', changeFrequency: 'weekly', priority: 0.85 },
+  { url: '/alltagsbegleitung/friedberg-wetterau', changeFrequency: 'weekly', priority: 0.85 },
+  { url: '/alltagsbegleitung/rodgau', changeFrequency: 'weekly', priority: 0.85 },
   // City-Landingpages Krankenfahrten
   { url: '/krankenfahrten/frankfurt', changeFrequency: 'weekly', priority: 0.9 },
   { url: '/krankenfahrten/offenbach', changeFrequency: 'weekly', priority: 0.85 },
