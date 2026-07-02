@@ -118,7 +118,10 @@ function NewRecordInner() {
         date,
         start_time: startTime || null,
         end_time: endTime || null,
-        duration_minutes: duration || null,
+        // duration_minutes ist in der DB eine GENERIERTE Spalte (aus start_time/end_time).
+        // Sie darf NICHT mitgeschickt werden — sonst lehnt Postgres den Insert ab
+        // ("cannot insert a non-DEFAULT value into column duration_minutes"). Für die
+        // Anzeige wird `duration` weiterhin lokal berechnet.
         service_type: serviceType,
         budget_type: budgetType,
         amount: amount ? Number(amount) : null,
