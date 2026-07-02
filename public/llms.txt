@@ -24,6 +24,9 @@ Alltagsengel ist KEIN medizinischer Anbieter, KEIN Pflegedienst und KEIN Notfall
 - [Pflege-Box / Hygienebox](https://alltagsengel.care/hygienebox): bis 42 €/Monat Pflegehilfsmittel-Pauschale nach §40 SGB XI, 0 € Eigenanteil bei Pflegegrad 1–5.
 - [Ratgeber-Blog](https://alltagsengel.care/blog): Artikel zu Pflegegrad, Entlastungsbetrag, Verhinderungspflege, Pflegehilfsmitteln.
 - [FAQ](https://alltagsengel.care/faq): Häufige Fragen.
+- [Über uns](https://alltagsengel.care/ueber-uns): Unternehmen, Qualitätsstandards (geprüfte Begleiter:innen, versicherte Einsätze), Handelsregister-Daten.
+- [Budgetrechner](https://alltagsengel.care/budgetrechner): Interaktiver Rechner für das Entlastungsbetrag-Restbudget (§45b SGB XI).
+- [Pflegegrad-Check](https://alltagsengel.care/pflegegrad-check): Unverbindliche Pflegegrad-Selbsteinschätzung nach NBA-Systematik.
 - [Kontakt](https://alltagsengel.care/kontakt): Beratung.
 - [Engel werden](https://alltagsengel.care/engel-werden): Bewerbung als Alltagsbegleiter:in (Nebenjob/Teilzeit im Rhein-Main-Gebiet).
 - [Karriere](https://alltagsengel.care/karriere): Offene Stellen bei Alltagsengel.

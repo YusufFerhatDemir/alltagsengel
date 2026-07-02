@@ -36,7 +36,10 @@
       "Bash(git mv *)",
       "Bash(./deploy.sh \"KI-Beratungs-Chatbot: Öffentlicher Pflegeberater auf allen Public-Seiten — /api/beratung-chat \\(Gemini→OpenAI→regelbasierter Fallback, IP-Rate-Limit, keine internen Daten\\) + Floating-Widget mit Schnellfragen, Link-Rendering und Alltagsengel-Absender\")",
       "Bash(python3 -)",
-      "Bash(./deploy.sh \"KI-Beratungs-Chatbot: Öffentlicher Pflegeberater auf allen Public-Seiten — /api/beratung-chat \\(Gemini→OpenAI→regelbasierter Fallback, IP-Rate-Limit, keine internen Daten\\) + Floating-Widget mit Schnellfragen; seo-strategie.md: Literal-Pattern durch Config-Verweis ersetzt\")"
+      "Bash(./deploy.sh \"KI-Beratungs-Chatbot: Öffentlicher Pflegeberater auf allen Public-Seiten — /api/beratung-chat \\(Gemini→OpenAI→regelbasierter Fallback, IP-Rate-Limit, keine internen Daten\\) + Floating-Widget mit Schnellfragen; seo-strategie.md: Literal-Pattern durch Config-Verweis ersetzt\")",
+      "Bash(git -C /Users/work/alltagsengel pull --rebase origin main)",
+      "Bash(git -C /Users/work/alltagsengel log --oneline -4)",
+      "Bash(git -C /Users/work/alltagsengel ls-tree HEAD app/api/beratung-chat/ components/BeratungsChat.tsx)"
     ]
   }
 }
