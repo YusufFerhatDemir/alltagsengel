@@ -66,3 +66,6 @@ supabase/.temp/
 /archive/video-generation/
 .tmp_organizer.png
 xcode-state.png
+
+# graphify knowledge graph (lokal, wird bei Bedarf neu generiert)
+graphify-out/
