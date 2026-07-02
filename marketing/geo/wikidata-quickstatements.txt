@@ -1,0 +1,21 @@
+CREATE
+LAST	Lde	"Alltagsengel"
+LAST	Len	"Alltagsengel"
+LAST	Dde	"Anbieter für Alltagsbegleitung nach § 45a SGB XI in Frankfurt am Main"
+LAST	Den	"Provider of daily assistance services under German Social Code XI in Frankfurt am Main"
+LAST	Ade	"Alltagsengel Frankfurt"
+LAST	Ade	"Alltagsengel UG"
+LAST	Aen	"Alltagsengel Frankfurt"
+LAST	P31	Q4830453	S854	"https://alltagsengel.care/impressum"
+LAST	P17	Q183
+LAST	P131	Q1794
+LAST	P159	Q1794	S854	"https://alltagsengel.care/impressum"
+LAST	P856	"https://alltagsengel.care"	P407	Q188
+LAST	P968	"mailto:info@alltagsengel.care"	S854	"https://alltagsengel.care/impressum"
+LAST	P6375	de:"Neue Mainzer Straße 66-68, 60311 Frankfurt am Main"	S854	"https://alltagsengel.care/impressum"
+LAST	P281	"60311"
+LAST	P625	@50.1109/8.6821
+LAST	P1454	Q2624520	S854	"https://alltagsengel.care/impressum"
+LAST	P8828	"HRB 140351"	S854	"https://alltagsengel.care/impressum"
+LAST	P2003	"alltagsengel_ug"
+LAST	P7085	"alltagsengel_ug"
