@@ -21,6 +21,15 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: __dirname,
   },
+  async redirects() {
+    return [
+      // Gesuchte URL /pflegebox → bestehende Pflegebox-Seite (/hygienebox).
+      // 301 (permanent), damit kein Duplicate Content entsteht und externe
+      // Links auf die kanonische Seite weitergereicht werden.
+      { source: '/pflegebox', destination: '/hygienebox', permanent: true },
+      { source: '/pflegebox/:stadt', destination: '/hygienebox/:stadt', permanent: true },
+    ]
+  },
   async headers() {
     return [
       {
