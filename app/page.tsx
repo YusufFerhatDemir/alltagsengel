@@ -5,6 +5,7 @@ import AppMockup from '@/components/AppMockup'
 import VisitTracker from '@/components/VisitTracker'
 import LeadForm from '@/components/LeadForm'
 import EinzugsgebietKarte from '@/components/EinzugsgebietKarte'
+import GoogleReviews from '@/components/GoogleReviews'
 import CookieSettingsLink from '@/components/CookieSettingsLink'
 
 const FAQS = [
@@ -368,6 +369,13 @@ export default function SplashPage() {
               <p>Sitz in Frankfurt am Main · Auslieferung &amp; Fahrten im gesamten Rhein-Main-Gebiet.</p>
             </div>
           </div>
+        </section>
+
+        {/* ─── Google-Bewertungen (echte Reviews, sobald Business-Profil verknüpft) ─── */}
+        <section className="lp-section">
+          <div className="lp-badge">Bewertungen</div>
+          <h2 className="lp-h2">Das sagen Familien über uns</h2>
+          <GoogleReviews />
         </section>
 
         {/* ─── FAQ ─── */}
