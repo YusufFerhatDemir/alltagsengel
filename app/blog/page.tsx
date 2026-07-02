@@ -33,6 +33,30 @@ interface BlogArticle {
 
 const articles: BlogArticle[] = [
   {
+    slug: 'senioren-hitze-sommer',
+    title: 'Senioren & Hitze: 7 Tipps für den Sommer',
+    description: 'So schützen Sie ältere Angehörige bei Hitze — 7 praktische Tipps gegen Dehydration und Kreislaufprobleme. Plus: wie Alltagsbegleitung im Sommer entlastet.',
+    category: 'Ratgeber',
+    readTime: '7 min',
+    date: '2. Juli 2026',
+  },
+  {
+    slug: 'pflegereform-2027',
+    title: 'Pflegereform 2027 — Was ändert sich für Alltagsbegleitung?',
+    description: 'Das geplante Pflegeneuordnungsgesetz (PNOG): Was bereits gilt, was geplant ist und was das für Entlastungsbetrag und Alltagsbegleitung bedeutet.',
+    category: 'Finanzierung',
+    readTime: '8 min',
+    date: '2. Juli 2026',
+  },
+  {
+    slug: 'wer-zahlt-alltagsbegleitung',
+    title: 'Wer zahlt die Alltagsbegleitung? Pflegekasse, Entlastungsbetrag & Co.',
+    description: 'Pflegekasse (131€ Entlastungsbetrag), Verhinderungspflege, Sozialamt oder Selbstzahler — alle Finanzierungswege für Alltagsbegleitung übersichtlich erklärt.',
+    category: 'Finanzierung',
+    readTime: '7 min',
+    date: '2. Juli 2026',
+  },
+  {
     slug: 'entlastungsbetrag-45b',
     title: 'Entlastungsbetrag §45b SGB XI — 131€/Monat für Alltagsbegleitung',
     description: 'Erfahren Sie, wie Sie den Entlastungsbetrag nach §45b SGB XI nutzen können. 131€ monatlich für zertifizierte Alltagsbegleitung.',
