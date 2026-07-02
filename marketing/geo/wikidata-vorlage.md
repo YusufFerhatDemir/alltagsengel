@@ -28,7 +28,10 @@ Ein Wikidata-Eintrag (Item) erhoet die Wahrscheinlichkeit, dass KI-Systeme Allta
 | Postleitzahl | P281 | 60311 | |
 | Koordinaten | P625 | 50.1109 N, 8.6821 E | Koordinaten Neue Mainzer Strasse 66-68 |
 | Beschaeftigt sich mit | P101 | Alltagsbegleitung, Betreuung, Entlastungsleistungen | |
-| Rechtsform | P1454 | Je nach Rechtsform eintragen | GmbH, UG, Einzelunternehmen etc. |
+| Rechtsform | P1454 | Unternehmergesellschaft (haftungsbeschraenkt) (Q2624520) | |
+| Handelsregisternummer (Deutschland) | P8828 | HRB 140351 | Qualifikator: Registergericht = Amtsgericht Frankfurt am Main. Staerkster Identifier fuer Firmen-Items — unbedingt setzen. |
+| Instagram-Benutzername | P2003 | alltagsengel_ug | |
+| TikTok-Benutzername | P7085 | alltagsengel_ug | |
 | Grundungsdatum | P571 | [Gruendungsdatum eintragen] | |
 | Dienstleistung | P1056 | Alltagsbegleitung (evtl. neues Item erstellen) | |
 
