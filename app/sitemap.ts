@@ -28,6 +28,7 @@ const STATIC_ROUTES: Omit<RouteEntry, 'lastModified'>[] = [
   { url: '/alltagsbegleitung', changeFrequency: 'weekly', priority: 0.9 },
   { url: '/engel-werden', changeFrequency: 'weekly', priority: 0.9 },
   { url: '/blog', changeFrequency: 'daily', priority: 0.9 },
+  { url: '/budgetrechner', changeFrequency: 'weekly', priority: 0.9 },
   { url: '/faq', changeFrequency: 'monthly', priority: 0.8 },
   { url: '/kontakt', changeFrequency: 'monthly', priority: 0.7 },
   // City-Landingpages (Rhein-Main)
@@ -78,7 +79,7 @@ function listBlogSlugs(): { slug: string; lastModified: string }[] {
     const dir = join(process.cwd(), 'app', 'blog')
     const entries = readdirSync(dir, { withFileTypes: true })
     return entries
-      .filter((e) => e.isDirectory())
+      .filter((e) => e.isDirectory() && e.name !== 'feed.xml')
       .map((e) => {
         const pagePath = join(dir, e.name, 'page.tsx')
         let lastModified = new Date().toISOString()

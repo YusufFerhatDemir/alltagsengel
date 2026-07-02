@@ -222,6 +222,7 @@ export default function SplashPage() {
             </div>
           </div>
           <div className="sp-btns" style={{ marginTop: 22 }}>
+            <Link href="/budgetrechner"><button className="btn-gold">Restbudget in 10 Sekunden berechnen</button></Link>
             <Link href="/alltagsbegleitung"><button className="btn-ghost">Alltagsbegleitung im Detail ansehen</button></Link>
           </div>
         </section>

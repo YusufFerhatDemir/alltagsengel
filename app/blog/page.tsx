@@ -7,7 +7,12 @@ export const metadata: Metadata = {
   title: 'Ratgeber — Pflege, Alltagsbegleitung & Entlastungsbetrag',
   description: 'Hilfreiche Artikel rund um Pflegegrad, Entlastungsbetrag, Alltagsbegleitung und Seniorenbetreuung. Kostenlose Tipps von AlltagsEngel.',
   keywords: ['Pflege Ratgeber', 'Entlastungsbetrag', 'Pflegegrad', 'Alltagsbegleitung', 'Seniorenbetreuung', 'Pflegehilfsmittel'],
-  alternates: { canonical: 'https://alltagsengel.care/blog' },
+  alternates: {
+    canonical: 'https://alltagsengel.care/blog',
+    types: {
+      'application/rss+xml': [{ url: '/blog/feed.xml', title: 'Alltagsengel Ratgeber' }],
+    },
+  },
   openGraph: {
     title: 'Ratgeber — Pflege, Alltagsbegleitung & Entlastungsbetrag',
     description: 'Hilfreiche Artikel rund um Pflegegrad, Entlastungsbetrag und Seniorenbetreuung.',
