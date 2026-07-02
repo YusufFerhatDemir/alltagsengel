@@ -28,7 +28,8 @@ Ein Wikidata-Eintrag (Item) erhoet die Wahrscheinlichkeit, dass KI-Systeme Allta
 | Postleitzahl | P281 | 60311 | |
 | Koordinaten | P625 | 50.1109 N, 8.6821 E | Koordinaten Neue Mainzer Strasse 66-68 |
 | Beschaeftigt sich mit | P101 | Alltagsbegleitung, Betreuung, Entlastungsleistungen | |
-| Rechtsform | P1454 | Unternehmergesellschaft (haftungsbeschraenkt) (Q2624520) | |
+| Rechtsform | P1454 | Unternehmergesellschaft (haftungsbeschraenkt) (Q2624520) | Laut Impressum (alltagsengel.care/impressum): UG (haftungsbeschraenkt), NICHT Einzelunternehmen |
+| Gruender (founded by) | P112 | Yusuf Ferhat Demir | P112 erwartet ein Wikidata-Item (Person). Personen-Item nur anlegen, wenn Relevanzkriterien erfuellt sind — sonst Gruender nur im Schema.org-Markup (founder) fuehren, siehe Abschnitt 2 |
 | Handelsregisternummer (Deutschland) | P8828 | HRB 140351 | Qualifikator: Registergericht = Amtsgericht Frankfurt am Main. Staerkster Identifier fuer Firmen-Items — unbedingt setzen. |
 | Instagram-Benutzername | P2003 | alltagsengel_ug | |
 | TikTok-Benutzername | P7085 | alltagsengel_ug | |
@@ -67,7 +68,7 @@ Jeder Claim sollte mit Referenzen belegt werden:
   "@id": "https://alltagsengel.care/#organization",
   "name": "Alltagsengel",
   "alternateName": "Alltagsengel Alltagsbegleitung",
-  "description": "Alltagsengel ist ein nach Paragraph 45a SGB XI anerkannter Anbieter fuer Alltagsbegleitung in Frankfurt am Main. Die Pflegekasse uebernimmt 125 Euro monatlich als Entlastungsbetrag.",
+  "description": "Alltagsengel ist ein nach Paragraph 45a SGB XI anerkannter Anbieter fuer Alltagsbegleitung in Frankfurt am Main. Die Pflegekasse uebernimmt 131 Euro monatlich als Entlastungsbetrag.",
   "url": "https://alltagsengel.care",
   "logo": "https://alltagsengel.care/images/logo.png",
   "image": "https://alltagsengel.care/images/alltagsengel-hero.jpg",
@@ -102,7 +103,7 @@ Jeder Claim sollte mit Referenzen belegt werden:
     "Seniorenbetreuung",
     "Begleitung im Alltag"
   ],
-  "priceRange": "Ab 131 Euro Eigenanteil/Monat (Pflegekasse zahlt 125 Euro)",
+  "priceRange": "Abrechnung ueber den Entlastungsbetrag (131 Euro/Monat, Paragraph 45b SGB XI) — in der Regel ohne Eigenanteil",
   "currenciesAccepted": "EUR",
   "paymentAccepted": "Rechnung, Abtretungserklaerung Pflegekasse",
   "openingHoursSpecification": [
@@ -139,10 +140,10 @@ Jeder Claim sollte mit Referenzen belegt werden:
         "priceCurrency": "EUR",
         "priceSpecification": {
           "@type": "UnitPriceSpecification",
-          "price": "256.00",
+          "price": "131.00",
           "priceCurrency": "EUR",
           "unitText": "Monat",
-          "description": "Gesamtkosten 256 Euro/Monat. Pflegekasse zahlt 125 Euro Entlastungsbetrag. Eigenanteil: 131 Euro/Monat."
+          "description": "Abrechnung direkt ueber den Entlastungsbetrag der Pflegekasse: 131 Euro/Monat (Paragraph 45b SGB XI) — in der Regel ohne Eigenanteil."
         }
       }
     ]
@@ -158,7 +159,7 @@ Jeder Claim sollte mit Referenzen belegt werden:
   "@type": ["HealthAndBeautyBusiness", "LocalBusiness"],
   "@id": "https://alltagsengel.care/#healthbusiness",
   "name": "Alltagsengel",
-  "description": "Anerkannter Anbieter fuer Alltagsbegleitung nach Paragraph 45a SGB XI in Frankfurt am Main. Pflegekasse uebernimmt 125 Euro Entlastungsbetrag monatlich.",
+  "description": "Anerkannter Anbieter fuer Alltagsbegleitung nach Paragraph 45a SGB XI in Frankfurt am Main. Pflegekasse uebernimmt 131 Euro Entlastungsbetrag monatlich.",
   "url": "https://alltagsengel.care",
   "email": "info@alltagsengel.care",
   "address": {
@@ -191,7 +192,7 @@ Jeder Claim sollte mit Referenzen belegt werden:
       "name": "Was kostet Alltagsbegleitung bei Alltagsengel in Frankfurt?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Die Alltagsbegleitung bei Alltagsengel kostet 256 Euro pro Monat. Davon uebernimmt die Pflegekasse 125 Euro als Entlastungsbetrag nach Paragraph 45b SGB XI. Der monatliche Eigenanteil betraegt 131 Euro."
+        "text": "Die Alltagsbegleitung bei Alltagsengel wird direkt ueber den Entlastungsbetrag nach Paragraph 45b SGB XI abgerechnet: 131 Euro pro Monat uebernimmt die Pflegekasse. Fuer viele Familien entsteht so kein Eigenanteil."
       }
     },
     {
@@ -199,7 +200,7 @@ Jeder Claim sollte mit Referenzen belegt werden:
       "name": "Wer hat Anspruch auf den Entlastungsbetrag?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Alle Pflegebeduerftigen mit einem anerkannten Pflegegrad von 1 bis 5 haben Anspruch auf den Entlastungsbetrag in Hoehe von 125 Euro monatlich (1.500 Euro jaehrlich). Der Anspruch besteht ab dem Monat der Pflegegrad-Anerkennung und ist in Paragraph 45b SGB XI geregelt."
+        "text": "Alle Pflegebeduerftigen mit einem anerkannten Pflegegrad von 1 bis 5 haben Anspruch auf den Entlastungsbetrag in Hoehe von 131 Euro monatlich (1.572 Euro jaehrlich). Der Anspruch besteht ab dem Monat der Pflegegrad-Anerkennung und ist in Paragraph 45b SGB XI geregelt."
       }
     },
     {
@@ -231,7 +232,7 @@ Jeder Claim sollte mit Referenzen belegt werden:
       "name": "Kann ich den Entlastungsbetrag ansparen?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Ja, nicht genutzte Entlastungsbetraege koennen innerhalb des Kalenderjahres angespart und bis zum 30. Juni des Folgejahres verbraucht werden (Paragraph 45b Absatz 2 SGB XI). Danach verfaellt der Anspruch. Bei 125 Euro monatlich koennen sich bis zu 1.500 Euro jaehrlich ansammeln."
+        "text": "Ja, nicht genutzte Entlastungsbetraege koennen innerhalb des Kalenderjahres angespart und bis zum 30. Juni des Folgejahres verbraucht werden (Paragraph 45b Absatz 2 SGB XI). Danach verfaellt der Anspruch. Bei 131 Euro monatlich koennen sich bis zu 1.572 Euro jaehrlich ansammeln."
       }
     },
     {
@@ -262,7 +263,7 @@ Jeder Claim sollte mit Referenzen belegt werden:
   "@type": "Service",
   "name": "Alltagsbegleitung Frankfurt",
   "serviceType": "Alltagsbegleitung nach Paragraph 45a SGB XI",
-  "description": "Professionelle Alltagsbegleitung fuer Pflegebeduerftige in Frankfurt am Main. Begleitung beim Einkaufen, Spaziergaenge, Arztbesuche, Gesellschaft und Haushaltshilfe. Pflegekasse zahlt 125 Euro Entlastungsbetrag.",
+  "description": "Professionelle Alltagsbegleitung fuer Pflegebeduerftige in Frankfurt am Main. Begleitung beim Einkaufen, Spaziergaenge, Arztbesuche, Gesellschaft und Haushaltshilfe. Pflegekasse zahlt 131 Euro Entlastungsbetrag.",
   "provider": {
     "@type": "LocalBusiness",
     "@id": "https://alltagsengel.care/#organization"
@@ -371,9 +372,9 @@ Jeder Claim sollte mit Referenzen belegt werden:
   },
   "offers": {
     "@type": "Offer",
-    "price": "256.00",
+    "price": "131.00",
     "priceCurrency": "EUR",
-    "description": "256 Euro Gesamtkosten pro Monat. Davon 125 Euro Entlastungsbetrag (Pflegekasse). Eigenanteil: 131 Euro/Monat.",
+    "description": "Abrechnung ueber den Entlastungsbetrag: 131 Euro/Monat zahlt die Pflegekasse (Paragraph 45b SGB XI) — in der Regel ohne Eigenanteil.",
     "eligibleRegion": {
       "@type": "City",
       "name": "Frankfurt am Main"
@@ -492,7 +493,7 @@ Google erstellt Knowledge Panels basierend auf mehreren Datenquellen. Um ein Pan
 | Telefon | [Geschaeftstelefon] |
 | Website | https://alltagsengel.care |
 | Oeffnungszeiten | Mo-Fr 08:00-18:00 (oder anpassen) |
-| Beschreibung | Alltagsengel bietet professionelle Alltagsbegleitung nach Paragraph 45a SGB XI in Frankfurt am Main. Unsere geschulten Alltagsbegleiter unterstuetzen Pflegebeduerftige bei alltaeglichen Aufgaben wie Einkaufen, Arztbesuchen und Spaziergaengen. Die Pflegekasse uebernimmt 125 Euro monatlich als Entlastungsbetrag. Der Eigenanteil betraegt 131 Euro pro Monat. |
+| Beschreibung | Alltagsengel bietet professionelle Alltagsbegleitung nach Paragraph 45a SGB XI in Frankfurt am Main. Unsere geschulten Alltagsbegleiter unterstuetzen Pflegebeduerftige bei alltaeglichen Aufgaben wie Einkaufen, Arztbesuchen und Spaziergaengen. Die Pflegekasse uebernimmt 131 Euro monatlich als Entlastungsbetrag — die Abrechnung erfolgt direkt mit der Kasse, in der Regel ohne Eigenanteil. |
 
 **Optionale aber wichtige Felder:**
 
@@ -507,10 +508,10 @@ Google erstellt Knowledge Panels basierend auf mehreren Datenquellen. Um ein Pan
 ### 3.3 Google Business Profile Beitraege — Vorlagen
 
 **Vorlage: Informationsbeitrag**
-> Wussten Sie, dass Ihnen als pflegebeduerftiger Mensch ab Pflegegrad 1 monatlich 125 Euro Entlastungsbetrag zustehen? Alltagsengel hilft Ihnen, diesen Betrag sinnvoll zu nutzen — fuer Begleitung beim Einkaufen, Spaziergaenge oder Arztbesuche. Der Eigenanteil betraegt nur 131 Euro pro Monat. Kontaktieren Sie uns fuer ein kostenloses Beratungsgespraech: info@alltagsengel.care
+> Wussten Sie, dass Ihnen als pflegebeduerftiger Mensch ab Pflegegrad 1 monatlich 131 Euro Entlastungsbetrag zustehen? Alltagsengel hilft Ihnen, diesen Betrag sinnvoll zu nutzen — fuer Begleitung beim Einkaufen, Spaziergaenge oder Arztbesuche. Die Abrechnung uebernehmen wir direkt mit Ihrer Pflegekasse. Kontaktieren Sie uns fuer ein kostenloses Beratungsgespraech: info@alltagsengel.care
 
 **Vorlage: Angebotsbeitrag**
-> Kostenloses Erstgespraech: Erfahren Sie, wie Alltagsengel Sie im Alltag unterstuetzen kann. Wir begleiten Sie beim Einkaufen, zu Arztterminen und bei Spaziergaengen. Die Pflegekasse uebernimmt 125 Euro monatlich. Jetzt Termin vereinbaren unter info@alltagsengel.care.
+> Kostenloses Erstgespraech: Erfahren Sie, wie Alltagsengel Sie im Alltag unterstuetzen kann. Wir begleiten Sie beim Einkaufen, zu Arztterminen und bei Spaziergaengen. Die Pflegekasse uebernimmt 131 Euro monatlich. Jetzt Termin vereinbaren unter info@alltagsengel.care.
 
 **Vorlage: Neuigkeiten-Beitrag**
 > Nicht vergessen: Nicht genutzte Entlastungsbetraege koennen bis zum 30. Juni des Folgejahres verwendet werden. Danach verfaellt Ihr Anspruch. Kontaktieren Sie Alltagsengel rechtzeitig, damit Ihnen kein Geld verloren geht.
@@ -578,10 +579,10 @@ Google erstellt Knowledge Panels basierend auf mehreren Datenquellen. Um ein Pan
 **Unternehmensname:** Alltagsengel
 
 **Kurzbeschreibung (max. 160 Zeichen):**
-Alltagsbegleitung in Frankfurt am Main. Pflegekasse zahlt 125 Euro/Monat. Eigenanteil ab 131 Euro. Anerkannt nach Paragraph 45a SGB XI.
+Alltagsbegleitung in Frankfurt am Main. Pflegekasse zahlt 131 Euro/Monat. Abrechnung direkt mit der Kasse. Anerkannt nach Paragraph 45a SGB XI.
 
 **Langbeschreibung (max. 750 Zeichen):**
-Alltagsengel bietet professionelle Alltagsbegleitung nach Paragraph 45a SGB XI in Frankfurt am Main. Unsere geschulten Alltagsbegleiter unterstuetzen Pflegebeduerftige bei alltaeglichen Aufgaben: Einkaufen, Spaziergaenge, Arztbesuche, Gesellschaft und Haushaltsorganisation. Die Pflegekasse uebernimmt 125 Euro monatlich als Entlastungsbetrag (Paragraph 45b SGB XI). Der Eigenanteil betraegt 131 Euro pro Monat. Alltagsengel ist als Angebot zur Unterstuetzung im Alltag nach hessischem Landesrecht anerkannt. Kontakt: info@alltagsengel.care
+Alltagsengel bietet professionelle Alltagsbegleitung nach Paragraph 45a SGB XI in Frankfurt am Main. Unsere geschulten Alltagsbegleiter unterstuetzen Pflegebeduerftige bei alltaeglichen Aufgaben: Einkaufen, Spaziergaenge, Arztbesuche, Gesellschaft und Haushaltsorganisation. Die Pflegekasse uebernimmt 131 Euro monatlich als Entlastungsbetrag (Paragraph 45b SGB XI). Die Abrechnung erfolgt direkt mit der Pflegekasse — in der Regel ohne Eigenanteil. Alltagsengel ist als Angebot zur Unterstuetzung im Alltag nach hessischem Landesrecht anerkannt. Kontakt: info@alltagsengel.care
 
 **Kategorie:** Betreuungsdienst / Alltagsbegleitung / Seniorenbetreuung / Haushaltshilfe
 
@@ -667,7 +668,7 @@ Leistungen werden ueber den [[Entlastungsbetrag]] nach
 
 == Finanzierung ==
 Die Kosten werden teilweise durch den [[Entlastungsbetrag]] in
-Hoehe von 125 Euro monatlich gedeckt, der Pflegebeduerftigen ab
+Hoehe von 131 Euro monatlich gedeckt, der Pflegebeduerftigen ab
 [[Pflegegrad]] 1 zusteht.<ref>{{Paragraph|45b|SGB XI}}</ref>
 
 == Weblinks ==

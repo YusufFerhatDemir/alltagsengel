@@ -61,7 +61,18 @@
       "Bash(./deploy.sh \"Wikidata: QuickStatements-Batch \\(V1, mit Referenzen auf Impressum\\) für 1-Klick-Anlage des Alltagsengel-Items + Anleitung inkl. sameAs-Rückverknüpfung in wikidata-vorlage.md\")",
       "Bash(/usr/bin/curl -s --max-time 15 https://alltagsengel.care/kontakt)",
       "Bash(PORT=3457 npx next dev -p 3457)",
-      "Bash(curl -s -o /dev/null http://localhost:3457/)"
+      "Bash(curl -s -o /dev/null http://localhost:3457/)",
+      "Bash(curl -s -o /dev/null -w '%{http_code}' http://localhost:3457/)",
+      "Bash(echo \"TSC_EXIT=$?\")",
+      "Bash(git -C /Users/work/alltagsengel log --oneline -6)",
+      "Bash(npm install *)",
+      "Bash(curl -s -m 10 -o /dev/null -w '%{http_code}\\\\n' http://localhost:3457/budgetrechner)",
+      "Bash(lsof -ti:3457)",
+      "Bash(xargs kill)",
+      "Bash(npx next *)",
+      "Bash(grep -E \"budgetrechner|beratung-chat|google-reviews|termin$|pflegegrad|Compiled|error|Error|✓|✗\")",
+      "Bash(./deploy.sh \"Killer-Features: PLZ-Check, Reviews, Wikidata\")",
+      "Bash(rm -f .git/HEAD.lock && ./deploy.sh \"Killer-Features: PLZ-Check, Reviews, Wikidata\" 2>&1 | tail -20)"
     ]
   }
 }
