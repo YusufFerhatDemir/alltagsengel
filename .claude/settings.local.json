@@ -103,7 +103,9 @@
       "Bash(EXPO_TOKEN=6vXIUA65c84OscEJGP2lGgd1bmIjsk8fZo479qxl npx eas-cli@latest whoami)",
       "Bash(EXPO_TOKEN=6vXIUA65c84OscEJGP2lGgd1bmIjsk8fZo479qxl npx eas-cli@latest config --profile production --platform ios --non-interactive)",
       "Bash(./deploy.sh \"EAS Setup für Alltagsengel native App\")",
-      "Bash(./deploy.sh \"Marketing kostenlos 2026: GBP-Texte \\(Beschreibungen/12 Posts/12 Q&A/Services\\), Branchenverzeichnis-Einträge, 3 SEO-Artikel \\(Alltagsbegleitung FFM/131€ Entlastungsbetrag/§45b\\), Kooperations-Anschreiben \\(Pflegestützpunkte/Kliniken/Sozialdienste\\)+Partnerliste FFM, Newsletter-Template+Ausgabe 1; Fixes: content-kalender 125€→131€ / §45a→§45b / Gold-Branding + Oktober-Wochen, blog-ideen 125€→131€\")"
+      "Bash(./deploy.sh \"Marketing kostenlos 2026: GBP-Texte \\(Beschreibungen/12 Posts/12 Q&A/Services\\), Branchenverzeichnis-Einträge, 3 SEO-Artikel \\(Alltagsbegleitung FFM/131€ Entlastungsbetrag/§45b\\), Kooperations-Anschreiben \\(Pflegestützpunkte/Kliniken/Sozialdienste\\)+Partnerliste FFM, Newsletter-Template+Ausgabe 1; Fixes: content-kalender 125€→131€ / §45a→§45b / Gold-Branding + Oktober-Wochen, blog-ideen 125€→131€\")",
+      "Bash(./deploy.sh \"iOS Fix: supportsTablet true \\(Apple 90101 - iPad-Support wie v1.0.1 wiederherstellen\\)\")",
+      "Bash(rm -f /Users/work/alltagsengel/.git/HEAD.lock && ./deploy.sh \"iOS Fix: supportsTablet true \\(Apple 90101 - iPad-Support wie v1.0.1 wiederherstellen\\)\")"
     ]
   }
 }
