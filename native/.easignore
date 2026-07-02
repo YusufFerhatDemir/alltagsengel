@@ -1,12 +1,5 @@
-node_modules/
-.expo/
-dist/
-web-build/
-*.orig.*
-*.jks
+node_modules
+dist
+web-build
+.expo
 .DS_Store
-*.tsbuildinfo
-/ios/
-/android/
-.env
-.env*.local

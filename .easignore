@@ -1,19 +1,40 @@
-# Exclude everything by default
-*
+# Large directories (exclude everything not needed for native build)
+.git
+.next
+admin-screenshots
+android
+app
+archive
+assets
+chairmatch-landing
+chrome-meeting-notes
+components
+constants
+docs
+e2e
+graphify-out
+hooks
+investor
+ios
+lib
+marketing
+memory
+out
+public
+scripts
+supabase
+types
+node_modules
 
-# Include native app directory
-!native
-!native/
-!native/**
+# Build artifacts
+dist
+web-build
+.expo
 
-# Re-exclude heavy stuff inside native
-native/node_modules
-native/node_modules/**
-native/dist
-native/dist/**
-native/.expo
-native/.expo/**
-
-# Include root package.json (needed for monorepo resolution)
-!package.json
-!package-lock.json
+# Misc large files
+*.mp4
+*.aab
+*.apk
+*.tsbuildinfo
+.DS_Store
+.vercel
