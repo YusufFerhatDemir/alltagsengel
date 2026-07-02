@@ -98,7 +98,11 @@
       "Bash(curl -s -o /dev/null -w \"%{http_code}\" https://alltagsengel.care/)",
       "Bash(eas --version)",
       "Bash(eas whoami *)",
-      "Bash(./deploy.sh \"EAS-Setup native App: eas-cli installiert, eas.json environment-Zuordnung \\(preview/production\\), README mit geprüftem Setup-Stand + Einmal-Schritten \\(eas login/init/env:push/build\\)\")"
+      "Bash(./deploy.sh \"EAS-Setup native App: eas-cli installiert, eas.json environment-Zuordnung \\(preview/production\\), README mit geprüftem Setup-Stand + Einmal-Schritten \\(eas login/init/env:push/build\\)\")",
+      "Bash(EXPO_TOKEN=6vXIUA65c84OscEJGP2lGgd1bmIjsk8fZo479qxl npx eas-cli@latest init --id 31ccfd24-7d4b-4e85-a0e8-f485bbe6baea --non-interactive)",
+      "Bash(EXPO_TOKEN=6vXIUA65c84OscEJGP2lGgd1bmIjsk8fZo479qxl npx eas-cli@latest whoami)",
+      "Bash(EXPO_TOKEN=6vXIUA65c84OscEJGP2lGgd1bmIjsk8fZo479qxl npx eas-cli@latest config --profile production --platform ios --non-interactive)",
+      "Bash(./deploy.sh \"EAS Setup für Alltagsengel native App\")"
     ]
   }
 }

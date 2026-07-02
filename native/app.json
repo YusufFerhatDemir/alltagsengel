@@ -2,6 +2,7 @@
   "expo": {
     "name": "Alltagsengel",
     "slug": "alltagsengel",
+    "owner": "yusufferhatdemirs-team",
     "version": "2.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -52,6 +53,17 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "updates": {
+      "url": "https://u.expo.dev/31ccfd24-7d4b-4e85-a0e8-f485bbe6baea"
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "31ccfd24-7d4b-4e85-a0e8-f485bbe6baea"
+      }
     }
   }
 }
