@@ -128,6 +128,17 @@ export default function DatenschutzPage() {
             Für das Hosting nutzen wir Vercel Inc. Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse
             an einer zuverlässigen Darstellung unserer Website).
           </p>
+          <h3>OpenStreetMap</h3>
+          <p>
+            Auf der Seite „Einzugsgebiet" binden wir Kartenmaterial von OpenStreetMap ein (OpenStreetMap Foundation,
+            St John's Innovation Centre, Cowley Road, Cambridge, CB4 0WS, Großbritannien). Beim Laden der Karte wird
+            Ihre IP-Adresse an Server der OpenStreetMap Foundation übertragen; wir haben keinen Einfluss auf diese
+            Datenverarbeitung. Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse an einer
+            ansprechenden Darstellung unseres Einzugsgebiets). Weitere Informationen:{' '}
+            <a href="https://wiki.osmfoundation.org/wiki/Privacy_Policy" target="_blank" rel="noopener noreferrer" style={{ color: '#C9963C', textDecoration: 'underline' }}>
+              Datenschutzerklärung der OSMF
+            </a>.
+          </p>
         </section>
 
         <section className="legal-section">
@@ -138,7 +149,7 @@ export default function DatenschutzPage() {
           </p>
         </section>
 
-        <p className="legal-date">Stand: März 2026</p>
+        <p className="legal-date">Stand: Juli 2026</p>
 
         <div className="legal-footer-nav">
           <Link href="/impressum">Impressum</Link>

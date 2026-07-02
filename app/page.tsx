@@ -321,6 +321,11 @@ export default function SplashPage() {
             ein und sehen Sie sofort, ob wir zu Ihnen kommen.
           </p>
           <EinzugsgebietKarte />
+          <p className="lp-text" style={{ marginTop: 14, textAlign: 'center' }}>
+            <Link href="/einzugsgebiet" style={{ color: '#E8C87E', textDecoration: 'underline' }}>
+              Zur interaktiven Karte mit allen Orten →
+            </Link>
+          </p>
         </section>
 
         {/* ─── Trust / Fakten (keine erfundenen Testimonials) ─── */}
@@ -376,6 +381,11 @@ export default function SplashPage() {
           <div className="lp-badge">Bewertungen</div>
           <h2 className="lp-h2">Das sagen Familien über uns</h2>
           <GoogleReviews />
+          <p className="lp-text" style={{ marginTop: 14, textAlign: 'center' }}>
+            <Link href="/bewertungen" style={{ color: '#E8C87E', textDecoration: 'underline' }}>
+              Alle Bewertungen &amp; unsere Qualitätsversprechen →
+            </Link>
+          </p>
         </section>
 
         {/* ─── FAQ ─── */}
