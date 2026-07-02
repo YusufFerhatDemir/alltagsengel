@@ -13,7 +13,7 @@
     "ios": {
       "bundleIdentifier": "care.alltagsengel.app",
       "buildNumber": "1",
-      "supportsTablet": false,
+      "supportsTablet": true,
       "infoPlist": {
         "CFBundleDevelopmentRegion": "de",
         "ITSAppUsesNonExemptEncryption": false
