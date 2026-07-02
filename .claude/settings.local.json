@@ -90,7 +90,15 @@
       "Bash(git reset *)",
       "Bash(awk '{print $1}')",
       "Bash(export DEPLOY_CO_AUTHOR=\"Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>\")",
-      "Bash(./deploy.sh \"Feinschliff-Optimierung: Tracking-Merge \\(ipGeo dedupliziert\\), Telefon/WhatsApp/E-Mail-Click-Tracking auf /kontakt, CSS-Split \\(blog+admin-analytics aus globals.css\\), Sitemap +4 Städte, robots /lp/ disallow, 404/500-Seiten verbessert, WCAG-Kontraste, Duplikat-JSON-LD entfernt, tsconfig native-Exclude\")"
+      "Bash(./deploy.sh \"Feinschliff-Optimierung: Tracking-Merge \\(ipGeo dedupliziert\\), Telefon/WhatsApp/E-Mail-Click-Tracking auf /kontakt, CSS-Split \\(blog+admin-analytics aus globals.css\\), Sitemap +4 Städte, robots /lp/ disallow, 404/500-Seiten verbessert, WCAG-Kontraste, Duplikat-JSON-LD entfernt, tsconfig native-Exclude\")",
+      "Bash(curl -s https://alltagsengel.care/robots.txt)",
+      "Bash(curl -s https://alltagsengel.care/sitemap.xml)",
+      "Bash(curl -s https://alltagsengel.care/gibt-es-nicht)",
+      "Bash(curl -s https://alltagsengel.care/kontakt)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" https://alltagsengel.care/)",
+      "Bash(eas --version)",
+      "Bash(eas whoami *)",
+      "Bash(./deploy.sh \"EAS-Setup native App: eas-cli installiert, eas.json environment-Zuordnung \\(preview/production\\), README mit geprüftem Setup-Stand + Einmal-Schritten \\(eas login/init/env:push/build\\)\")"
     ]
   }
 }

@@ -33,23 +33,21 @@ npx expo start          # QR-Code für Expo Go / Dev-Client
 npx expo run:ios        # nativer iOS-Build (Xcode nötig)
 ```
 
-Für EAS-Cloud-Builds die beiden `EXPO_PUBLIC_SUPABASE_*`-Variablen einmalig per
-`npx eas env:create` im Expo-Projekt hinterlegen (`.env` wird nicht committet).
-
 ## iOS-Build & App Store (EAS)
 
-Einmalig (verknüpft das Projekt mit dem Expo-Account und trägt die `projectId` in app.json ein —
-nötig auch für Push-Tokens):
+Setup-Stand (geprüft): `eas-cli` global installiert, `eas.json` (Profile development/preview/production,
+`appVersionSource: remote`, `autoIncrement`), `app.json` (bundleIdentifier, version, buildNumber),
+`.env` mit Supabase-Werten identisch zur Web-App, `npx expo export --platform ios` läuft lokal durch.
+
+Einmalig nötig (interaktiv, Expo- + Apple-Login):
 
 ```bash
-npx eas init
-npx eas credentials     # Apple Developer Account verknüpfen
-```
-
-Danach:
-
-```bash
-npx eas build --platform ios --profile production
+cd native
+npx eas login                            # Expo-Account
+npx eas init                             # legt Projekt an, trägt projectId in app.json ein (nötig auch für Push-Tokens)
+npx eas env:push production --path .env  # Supabase-Variablen hochladen (.env wird nicht committet/hochgeladen)
+npx eas env:push preview --path .env
+npx eas build --platform ios --profile production   # fragt beim ersten Mal nach dem Apple-Developer-Login
 npx eas submit --platform ios
 ```
 
