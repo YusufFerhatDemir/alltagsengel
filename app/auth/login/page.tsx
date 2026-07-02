@@ -27,7 +27,7 @@ function LoginForm() {
   const [lockoutUntil, setLockoutUntil] = useState<number>(0)
   const [lockoutMessage, setLockoutMessage] = useState('')
   const [attemptsWarning, setAttemptsWarning] = useState('')
-  const lockoutTimerRef = useRef<NodeJS.Timeout | null>(null)
+  const lockoutTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   // Client-side Lockout aus localStorage laden
   useEffect(() => {

@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import BlogPostJsonLd from '@/components/BlogPostJsonLd'
+import './blog.css'
 
 export default function BlogLayout({ children }: { children: React.ReactNode }) {
   return (

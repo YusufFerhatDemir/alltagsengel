@@ -2,6 +2,18 @@
 import { useEffect } from 'react'
 import { usePathname } from 'next/navigation'
 import { getCookieConsent } from '@/components/CookieConsent'
+import { getIpGeo } from '@/lib/ipGeo'
+import { useTrackVisit, type Portal } from '@/hooks/useTrackVisit'
+
+/**
+ * Portal-Standort-Tracking (visitor_locations) für Server Components.
+ * Ehemals eigene Datei VisitTracker.tsx — mit VisitorTracker zusammengeführt,
+ * damit alles Besucher-Tracking an einem Ort liegt.
+ */
+export function VisitTracker({ portal }: { portal: Portal }) {
+  useTrackVisit(portal)
+  return null
+}
 
 export default function VisitorTracker() {
   const pathname = usePathname()
@@ -73,16 +85,16 @@ export default function VisitorTracker() {
     // Visitor Alert — IP-basierte Überwachung (nur 1x pro Session)
     if (!sessionStorage.getItem('alert_checked')) {
       sessionStorage.setItem('alert_checked', '1')
-      fetch('https://ipapi.co/json/', { signal: AbortSignal.timeout(2000) })
-        .then(r => r.json())
+      getIpGeo(2000)
         .then(geo => {
+          if (!geo) return
           fetch('/api/visitor-alert', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              ip: geo.ip || '',
-              city: geo.city || '',
-              region: geo.region || '',
+              ip: geo.ip,
+              city: geo.city,
+              region: geo.region,
               page: pathname,
               userAgent: navigator.userAgent || '',
             }),
