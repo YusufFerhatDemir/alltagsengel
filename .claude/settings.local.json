@@ -52,7 +52,11 @@
       "Bash(/usr/bin/curl -s --max-time 20 https://alltagsengel.care/blog)",
       "Bash(/usr/bin/curl -s --max-time 20 https://alltagsengel.care/kontakt)",
       "Bash(./deploy.sh \"SEO: Title-Doppel-Branding auf /krankenfahrten und /kontakt entfernt \\(Template hängt bereits '| Alltagsengel.care' an\\) + EinzugsgebietKarte-Komponente \\(noch nicht eingebunden\\)\")",
-      "Bash(./deploy.sh \"Einzugsgebiet-Karte + PLZ-Sofort-Check: Stilisierte Rhein-Main-SVG-Karte \\(DSGVO-frei, ohne externe Tiles\\) mit 12 klickbaren Städten, PLZ-Prüfung mit Regions-Erkennung und Termin-CTA — neue Landing-Sektion\")"
+      "Bash(./deploy.sh \"Einzugsgebiet-Karte + PLZ-Sofort-Check: Stilisierte Rhein-Main-SVG-Karte \\(DSGVO-frei, ohne externe Tiles\\) mit 12 klickbaren Städten, PLZ-Prüfung mit Regions-Erkennung und Termin-CTA — neue Landing-Sektion\")",
+      "Bash(git -C /Users/work/alltagsengel ls-tree HEAD components/EinzugsgebietKarte.tsx)",
+      "Bash(git -C /Users/work/alltagsengel log --oneline -1)",
+      "Bash(git -C /Users/work/alltagsengel diff --stat)",
+      "Bash(./deploy.sh \"Session-Settings aktualisiert; Verifikation: Build grün \\(188 Seiten\\), RSS-Feed /blog/feed.xml mit 24 Artikeln, robots.txt konsolidiert, Typecheck clean\")"
     ]
   }
 }
