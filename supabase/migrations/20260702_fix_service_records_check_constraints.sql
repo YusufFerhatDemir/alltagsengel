@@ -36,8 +36,30 @@
 BEGIN;
 
 -- ── (2) service_records: status-Constraint auf App-Set ──────────────
+-- Zuerst die alte (falsche) Constraint entfernen, DAMIT die folgende
+-- Datenmigration überhaupt auf das neue Werte-Set schreiben darf.
 ALTER TABLE public.service_records
   DROP CONSTRAINT IF EXISTS service_records_status_check;
+
+-- ── (2a) BESTANDSDATEN-MIGRATION (Pflicht, sonst schlägt ADD CONSTRAINT fehl) ──
+-- Die Seed-/Bestandsdaten liegen im ALTEN Werte-Set vor (live: 'paid'/'draft',
+-- generell 'billed'/'disputed' möglich). Diese Alt-Werte sind im neuen App-Set
+-- NICHT erlaubt → ADD CONSTRAINT würde an ihnen scheitern. Wir bilden die
+-- Alt-Werte fachlich korrekt auf das neue Set ab (Budget-Trigger bleibt korrekt,
+-- da alle Ziel-Status weiterhin NICHT-'draft' sind → used_amount unverändert):
+--   • Einsatz hängt an einer Rechnung  → 'invoiced'
+--   • sonstiger Nicht-draft-Alt-Wert   → 'signed'   (erfasst & unterschrieben)
+--   • 'draft'                          → bleibt 'draft'
+UPDATE public.service_records
+   SET status = 'invoiced'
+ WHERE status NOT IN ('draft', 'incomplete', 'complete', 'signed', 'invoiced')
+   AND id IN (SELECT service_record_id FROM public.invoice_items WHERE service_record_id IS NOT NULL);
+
+UPDATE public.service_records
+   SET status = 'signed'
+ WHERE status NOT IN ('draft', 'incomplete', 'complete', 'signed', 'invoiced');
+
+-- Jetzt sind alle Zeilen im neuen Set → Constraint kann gesetzt werden.
 ALTER TABLE public.service_records
   ADD CONSTRAINT service_records_status_check
   CHECK (status IN ('draft', 'incomplete', 'complete', 'signed', 'invoiced'));
