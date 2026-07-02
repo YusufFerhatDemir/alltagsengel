@@ -65,11 +65,9 @@ const STATIC_ROUTES: Omit<RouteEntry, 'lastModified'>[] = [
   { url: '/hygienebox/neu-isenburg', changeFrequency: 'weekly', priority: 0.85 },
   { url: '/hygienebox/friedberg-wetterau', changeFrequency: 'weekly', priority: 0.85 },
   { url: '/hygienebox/rodgau', changeFrequency: 'weekly', priority: 0.85 },
-  // Landing pages
-  { url: '/lp/google', changeFrequency: 'monthly', priority: 0.7 },
-  { url: '/lp/facebook', changeFrequency: 'monthly', priority: 0.7 },
-  { url: '/lp/instagram', changeFrequency: 'monthly', priority: 0.7 },
-  { url: '/lp/tiktok', changeFrequency: 'monthly', priority: 0.7 },
+  // /lp/* sind noindex-Redirects (Werbe-Tracking) — gehören NICHT in die Sitemap.
+  { url: '/karriere', changeFrequency: 'weekly', priority: 0.8 },
+  { url: '/ueber-uns', changeFrequency: 'monthly', priority: 0.8 },
   { url: '/impressum', changeFrequency: 'yearly', priority: 0.3 },
   { url: '/datenschutz', changeFrequency: 'yearly', priority: 0.3 },
   { url: '/agb', changeFrequency: 'yearly', priority: 0.3 },

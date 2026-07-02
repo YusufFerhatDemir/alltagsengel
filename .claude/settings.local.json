@@ -27,7 +27,16 @@
       "Bash(awk -F: '{print $1}')",
       "Bash(./deploy.sh \"Budgetrechner: Interaktiver Entlastungsbetrag-Rechner \\(/budgetrechner\\) mit Restbudget-Visualisierung, Übertrags-Logik \\(30.06.\\), Umwandlungsanspruch §45a Abs. 4, FAQ-Schema + Lead-CTA; Landing-CTA + Sitemap\")",
       "Bash(./deploy.sh \"Rate-Limiting für Kontakt-/Lead-Endpoints \\(in-memory sliding window\\) + PflegegradCheck-Komponente \\(NBA-Selbsteinschätzung, noch nicht eingebunden\\)\")",
-      "Bash(./deploy.sh \"Pflegegrad-Check: Kostenloser Selbsttest \\(/pflegegrad-check\\) nach NBA-Systematik — 6 Module mit offizieller Gewichtung, Sofort-Ergebnis mit Leistungsübersicht \\(Entlastungsbetrag/Pflegegeld/Pflege-Box\\), FAQ-Schema + Lead-CTA\")"
+      "Bash(./deploy.sh \"Pflegegrad-Check: Kostenloser Selbsttest \\(/pflegegrad-check\\) nach NBA-Systematik — 6 Module mit offizieller Gewichtung, Sofort-Ergebnis mit Leistungsübersicht \\(Entlastungsbetrag/Pflegegeld/Pflege-Box\\), FAQ-Schema + Lead-CTA\")",
+      "Bash(git -C /Users/work/alltagsengel log --oneline -5)",
+      "Bash(git -C /Users/work/alltagsengel log --oneline -3 -- app/pflegegrad-check components/PflegegradCheck.tsx)",
+      "Bash(git -C /Users/work/alltagsengel show --stat HEAD)",
+      "Bash(git -C /Users/work/alltagsengel ls-tree HEAD app/pflegegrad-check/)",
+      "Bash(git -C /Users/work/alltagsengel status --short)",
+      "Bash(git mv *)",
+      "Bash(./deploy.sh \"KI-Beratungs-Chatbot: Öffentlicher Pflegeberater auf allen Public-Seiten — /api/beratung-chat \\(Gemini→OpenAI→regelbasierter Fallback, IP-Rate-Limit, keine internen Daten\\) + Floating-Widget mit Schnellfragen, Link-Rendering und Alltagsengel-Absender\")",
+      "Bash(python3 -)",
+      "Bash(./deploy.sh \"KI-Beratungs-Chatbot: Öffentlicher Pflegeberater auf allen Public-Seiten — /api/beratung-chat \\(Gemini→OpenAI→regelbasierter Fallback, IP-Rate-Limit, keine internen Daten\\) + Floating-Widget mit Schnellfragen; seo-strategie.md: Literal-Pattern durch Config-Verweis ersetzt\")"
     ]
   }
 }

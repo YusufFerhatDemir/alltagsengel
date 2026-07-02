@@ -98,10 +98,11 @@ export default function GoogleTagManager() {
  * Consent auf "granted" aktualisieren — wird aufgerufen wenn der Nutzer
  * Cookies akzeptiert. Erlaubt Google Ads Conversion-Tracking und Analytics.
  */
-function updateConsentToGranted() {
+function updateConsentToGranted(attempt = 0) {
   if (typeof window === 'undefined' || typeof window.gtag !== 'function') {
-    // gtag noch nicht geladen — warte kurz
-    setTimeout(() => updateConsentToGranted(), 500)
+    // gtag noch nicht geladen — max. 20 Versuche (10 s), sonst aufgeben
+    // (z. B. AdBlocker: gtag kommt nie, Endlos-Timer wäre sinnlos)
+    if (attempt < 20) setTimeout(() => updateConsentToGranted(attempt + 1), 500)
     return
   }
 
@@ -111,5 +112,4 @@ function updateConsentToGranted() {
     'ad_personalization': 'granted',
     'analytics_storage': 'granted',
   })
-  console.log('[GTM] Consent aktualisiert → granted (Nutzer hat Cookies akzeptiert)')
 }

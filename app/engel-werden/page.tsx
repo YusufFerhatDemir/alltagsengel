@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import CookieSettingsLink from '@/components/CookieSettingsLink'
 import EngelBewerbungForm from '@/components/EngelBewerbungForm'
 import BreadcrumbSchema from '@/components/BreadcrumbSchema'
 
@@ -486,6 +487,7 @@ export default function EngelWerdenPage() {
             <Link href="/impressum">Impressum</Link>
             <Link href="/datenschutz">Datenschutz</Link>
             <Link href="/agb">AGB</Link>
+            <CookieSettingsLink />
           </div>
           <div className="lp-footer-copy">
             © 2026 Alltagsengel UG (haftungsbeschränkt) — Frankfurt am Main

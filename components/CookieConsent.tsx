@@ -148,7 +148,7 @@ export default function CookieConsent() {
                   <strong style={{ color: '#C9963C' }}>Marketing:</strong> Meta (Facebook/Instagram) und TikTok Pixel zur Messung von Kampagnen-Erfolg und Retargeting.
                 </p>
                 <p style={{ margin: 0 }}>
-                  Sie können Ihre Zustimmung jederzeit über den Link „Cookie-Einstellungen" im Footer widerrufen. Details in unserer{' '}
+                  Sie können Ihre Zustimmung jederzeit über den Link „Cookie-Einstellungen" im Footer oder in unserer Datenschutzerklärung widerrufen. Details in unserer{' '}
                   <a href="/datenschutz" style={{ color: '#C9963C', textDecoration: 'underline' }}>Datenschutzerklärung</a>.
                 </p>
               </div>

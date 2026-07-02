@@ -5,12 +5,37 @@ import BreadcrumbSchema from '@/components/BreadcrumbSchema'
 
 export const metadata: Metadata = {
   alternates: { canonical: 'https://alltagsengel.care/kontakt' },
-  title: 'Kontakt — AlltagsEngel',
-  description: 'Nehmen Sie Kontakt mit AlltagsEngel auf. Kostenlose Beratung zu Alltagsbegleitung, Entlastungsbetrag und Pflegehilfe.',
+  title: 'Kontakt — Kostenlose Pflegeberatung Frankfurt & Rhein-Main | Alltagsengel',
+  description:
+    'Kontakt zu Alltagsengel in Frankfurt: Kostenlose Beratung zu Entlastungsbetrag (131 €/Monat, §45b SGB XI), Pflegebox, Alltagsbegleitung und Krankenfahrten. Telefon, WhatsApp oder Kontaktformular — wir melden uns werktags innerhalb von 24 Stunden.',
   openGraph: {
-    title: 'Kontakt — AlltagsEngel',
-    description: 'Kostenlose Beratung zu Alltagsbegleitung und Entlastungsbetrag.',
+    title: 'Kontakt — Kostenlose Pflegeberatung | Alltagsengel',
+    description:
+      'Kostenlose Beratung zu Entlastungsbetrag, Pflegebox, Alltagsbegleitung und Krankenfahrten in Frankfurt & Rhein-Main.',
     url: 'https://alltagsengel.care/kontakt',
+  },
+}
+
+const contactPageJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'ContactPage',
+  '@id': 'https://alltagsengel.care/kontakt#contactpage',
+  name: 'Kontakt — Alltagsengel',
+  url: 'https://alltagsengel.care/kontakt',
+  about: { '@id': 'https://alltagsengel.care/#organization' },
+  mainEntity: {
+    '@type': 'Organization',
+    '@id': 'https://alltagsengel.care/#organization',
+    contactPoint: [
+      {
+        '@type': 'ContactPoint',
+        contactType: 'customer service',
+        telephone: '+491783382825',
+        email: 'info@alltagsengel.care',
+        availableLanguage: ['de'],
+        areaServed: 'DE',
+      },
+    ],
   },
 }
 
@@ -21,6 +46,10 @@ export default function KontaktPage() {
       background: 'linear-gradient(180deg, #1A1612 0%, #2A2420 100%)',
       padding: '0 16px 60px',
     }}>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(contactPageJsonLd) }}
+      />
       <BreadcrumbSchema items={[{ name: 'Kontakt' }]} />
       {/* Navigation */}
       <nav style={{ maxWidth: 700, margin: '0 auto', padding: '16px 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
