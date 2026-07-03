@@ -17,6 +17,7 @@ const SessionKeepAlive = dynamic(() => import('@/components/SessionKeepAlive'), 
 const SplashController = dynamic(() => import('@/components/SplashController'), { ssr: false })
 const CapacitorLinkInterceptor = dynamic(() => import('@/components/CapacitorLinkInterceptor'), { ssr: false })
 const WhatsAppButton = dynamic(() => import('@/components/WhatsAppButton'), { ssr: false })
+const CallbackWidget = dynamic(() => import('@/components/CallbackWidget'), { ssr: false })
 const BeratungsChat = dynamic(() => import('@/components/BeratungsChat'), { ssr: false })
 const InstallPrompt = dynamic(() => import('@/components/InstallPrompt'), { ssr: false })
 
@@ -31,6 +32,7 @@ export default function ClientSideProviders() {
       <SplashController />
       <CapacitorLinkInterceptor />
       <WhatsAppButton />
+      <CallbackWidget />
       <BeratungsChat />
       <InstallPrompt />
       <CookieConsent />
