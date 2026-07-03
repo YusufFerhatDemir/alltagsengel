@@ -14,7 +14,7 @@ import { usePathname } from 'next/navigation'
 const PUBLIC_PREFIXES = [
   '/alltagsbegleitung', '/hygienebox', '/krankenfahrten', '/blog', '/faq',
   '/kontakt', '/budgetrechner', '/pflegegrad-check', '/termin',
-  '/engel-werden', '/karriere', '/lp',
+  '/engel-werden', '/karriere', '/jobs', '/team', '/finanzierung', '/lp',
 ]
 
 const QUICK_FRAGEN = [

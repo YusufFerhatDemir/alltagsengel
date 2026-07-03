@@ -35,9 +35,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: true }, { status: 201 })
     }
 
-    if (!name || !phone || !plz) {
+    // PLZ ist optional: Der niedrigschwellige Rückrufservice fragt nur
+    // Name + Telefon + Wunschzeit ab. Das Haupt-Lead-Formular sendet die
+    // PLZ weiterhin mit und wird unten weiter validiert.
+    if (!name || !phone) {
       return NextResponse.json(
-        { error: 'Pflichtfelder fehlen (Name, Telefon, PLZ)' },
+        { error: 'Pflichtfelder fehlen (Name, Telefon)' },
         { status: 400 }
       )
     }
@@ -61,8 +64,8 @@ export async function POST(request: Request) {
       )
     }
 
-    // PLZ-Format prüfen (5-stellig, nur Ziffern)
-    if (!/^[0-9]{5}$/.test(plz)) {
+    // PLZ-Format prüfen (5-stellig, nur Ziffern) — nur wenn angegeben.
+    if (plz && !/^[0-9]{5}$/.test(plz)) {
       return NextResponse.json(
         { error: 'Ungültige Postleitzahl' },
         { status: 400 }
@@ -74,7 +77,7 @@ export async function POST(request: Request) {
       .insert({
         name: name.trim(),
         phone: phone.trim(),
-        plz: plz.trim(),
+        plz: plz?.trim() || '',
         message: message?.trim() || null,
         service: service?.trim() || null,
         source: source || 'website',
