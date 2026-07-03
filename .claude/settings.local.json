@@ -149,7 +149,8 @@
       "Bash(sips -g pixelWidth -g pixelHeight public/assets/hilfe-icon.png)",
       "Bash(node -e \"const p=require\\('./package.json'\\); console.log\\(JSON.stringify\\(p.scripts,null,1\\)\\); console.log\\('type:', p.type\\)\")",
       "Bash(grep -n \"\\\\.phone[ {,]\" app/globals.css)",
-      "Bash(./deploy.sh \"Security: Admin-Auth + Quickfixes\")"
+      "Bash(./deploy.sh \"Security: Admin-Auth + Quickfixes\")",
+      "Bash(./deploy.sh \"SBG-Konkurrenzanalyse: 5 kostenlose Sofort-Maßnahmen umgesetzt — \\(1\\) globaler Header mit goldenem 'Jetzt bewerben'-Button + 'Beratung' auf allen öffentlichen Seiten, \\(2\\) neue /jobs-Seite mit konkreten Benefits \\(flexibel, kein Wochenenddienst, Dienstwagen, Wunschfrei, 20/30/40 Std., Weiterbildung, WhatsApp-Bewerbung\\), \\(3\\) Rückrufservice-Widget \\(floating, Name/Telefon/Wunschzeit → lead-inquiry, PLZ jetzt optional\\), \\(4\\) neue /team-Seite mit Placeholder-Avataren, \\(5\\) neue /finanzierung-Seite \\(131€/Monat §45b, 3.539€/Jahr Verhinderungspflege, Steuervorteil §35a, Unfallversicherung; nach Pflegegrad PG1/PG2-5/Selbstzahler\\). Build \\(webpack\\) grün.\")"
     ]
   }
 }
