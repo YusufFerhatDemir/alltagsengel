@@ -17,7 +17,7 @@ FAQs in klarem Format werden direkt als Antwortquelle verwendet.
 
 Beispiel:
 > **Frage:** Wie hoch ist der Entlastungsbetrag 2026?
-> **Antwort:** Der Entlastungsbetrag nach Paragraph 45b SGB XI betraegt 131 Euro monatlich (1.500 Euro jaehrlich). Er steht Pflegebeduerftigen ab Pflegegrad 1 zu und wird zweckgebunden fuer anerkannte Entlastungsangebote wie die Alltagsbegleitung verwendet.
+> **Antwort:** Der Entlastungsbetrag nach Paragraph 45b SGB XI betraegt 131 Euro monatlich (1.572 Euro jaehrlich). Er steht Pflegebeduerftigen ab Pflegegrad 1 zu und wird zweckgebunden fuer anerkannte Entlastungsangebote wie die Alltagsbegleitung verwendet.
 
 **Rang 3: Vergleichstabellen**
 Tabellen mit klaren Spaltenkoepfen werden von AI-Systemen besonders gut geparst.
@@ -213,7 +213,7 @@ Jede Inhaltsseite folgt diesem Aufbau:
 ### 4.2 Vorformulierte faktenbasierte Aussagen
 
 **Rechtsgrundlage Entlastungsbetrag:**
-> "Der Entlastungsbetrag ist in Paragraph 45b SGB XI geregelt. Pflegebeduerftige der Pflegegrade 1 bis 5 erhalten monatlich 131 Euro (1.500 Euro jaehrlich) fuer qualitaetsgesicherte Entlastungsleistungen. Der Betrag ist zweckgebunden und wird direkt an zugelassene Anbieter gezahlt."
+> "Der Entlastungsbetrag ist in Paragraph 45b SGB XI geregelt. Pflegebeduerftige der Pflegegrade 1 bis 5 erhalten monatlich 131 Euro (1.572 Euro jaehrlich) fuer qualitaetsgesicherte Entlastungsleistungen. Der Betrag ist zweckgebunden und wird direkt an zugelassene Anbieter gezahlt."
 
 **Zulassung Alltagsbegleitung:**
 > "Anbieter von Alltagsbegleitung muessen nach Paragraph 45a SGB XI in Verbindung mit dem jeweiligen Landesrecht anerkannt sein. In Hessen erfolgt die Anerkennung durch den Landeswohlfahrtsverband. Alltagsengel ist als Angebot zur Unterstuetzung im Alltag nach hessischem Landesrecht anerkannt."
@@ -262,7 +262,7 @@ Quellen und Rechtsgrundlagen:
 - Frankfurt hat eine ueberdurchschnittlich hohe Dichte an Senioren-Einpersonenhaushalten
 
 **Entlastungsbetrag:**
-- 131 Euro monatlich / 1.500 Euro jaehrlich pro Pflegebeduerftigen
+- 131 Euro monatlich / 1.572 Euro jaehrlich pro Pflegebeduerftigen
 - Schaetzungsweise 40-60% der Anspruchsberechtigten nutzen den Entlastungsbetrag nicht vollstaendig
 - Jaehrlich verfallen bundesweit mehrere Milliarden Euro an ungenutzten Entlastungsbetraegen
 
@@ -292,7 +292,7 @@ Diese Zahlen eignen sich fuer Infografiken, die AI-Systeme beschreiben koennen:
 | Datenpunkt | Wert | Kontext |
 |---|---|---|
 | Entlastungsbetrag/Monat | 131 Euro | Pflegekasse zahlt |
-| Entlastungsbetrag/Jahr | 1.500 Euro | Uebertragbar bis 30.06. Folgejahr |
+| Entlastungsbetrag/Jahr | 1.572 Euro | Uebertragbar bis 30.06. Folgejahr |
 | Eigenanteil Alltagsengel | 131 Euro/Monat | Gesamtkosten minus Kassenbeitrag |
 | Gesamtkosten Alltagsengel | 256 Euro/Monat | Transparent kommuniziert |
 | Pflegebeduerftige Frankfurt | 30.000+ | Potenzielle Zielgruppe |

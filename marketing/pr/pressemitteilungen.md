@@ -63,7 +63,7 @@ Alltagsengel setzt mit der Kampagne auf mehrere Massnahmen: kostenlose Informati
 
 "Es ist nicht hinnehmbar, dass Pflegebeduerftige auf Leistungen verzichten, die ihnen gesetzlich zustehen -- oft nur, weil sie nicht darueber informiert sind. Mit unserer Kampagne wollen wir das aendern und moeglichst viele Frankfurterinnen und Frankfurter erreichen", so Alltagsengel.
 
-Konkret bedeutet die Nichtnutzung fuer Betroffene: Pro Jahr gehen bis zu 1.500 Euro an Unterstuetzungsleistungen verloren. Das entspricht beispielsweise woechentlichen Begleitungen zu Arztterminen, regelmaessiger Unterstuetzung beim Einkaufen oder woechentlichen Spaziergaengen und Gespraechsangeboten. Fuer pflegende Angehoerige bedeutet der ungenutzte Entlastungsbetrag eine vermeidbare Mehrbelastung.
+Konkret bedeutet die Nichtnutzung fuer Betroffene: Pro Jahr gehen bis zu 1.572 Euro an Unterstuetzungsleistungen verloren. Das entspricht beispielsweise woechentlichen Begleitungen zu Arztterminen, regelmaessiger Unterstuetzung beim Einkaufen oder woechentlichen Spaziergaengen und Gespraechsangeboten. Fuer pflegende Angehoerige bedeutet der ungenutzte Entlastungsbetrag eine vermeidbare Mehrbelastung.
 
 **Ueber Alltagsengel**
 
