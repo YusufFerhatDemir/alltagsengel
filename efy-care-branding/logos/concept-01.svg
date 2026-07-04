@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 310" width="300" height="310">
+<title>efy care – Concept 01: Heart Container</title>
+
+  <path d="M150,72 C150,48 128,28 105,28 C78,28 55,50 55,78
+           C55,118 95,152 150,198 C205,152 245,118 245,78
+           C245,50 222,28 195,28 C172,28 150,48 150,72Z"
+        fill="none" stroke="#0F5E57" stroke-width="3.5" stroke-linejoin="round"/>
+  <line x1="150" y1="178" x2="150" y2="108" stroke="#2D7A63" stroke-width="3.5" stroke-linecap="round"/>
+  <path d="M150,135 C138,122 118,108 105,92" fill="none" stroke="#2D7A63" stroke-width="2.8" stroke-linecap="round"/>
+  <path d="M150,135 C162,122 182,108 195,92" fill="none" stroke="#2D7A63" stroke-width="2.8" stroke-linecap="round"/>
+  <path d="M150,115 L150,72" fill="none" stroke="#2D7A63" stroke-width="2.8" stroke-linecap="round"/>
+  <circle cx="102" cy="86" r="9" fill="#A9CBB5"/>
+  <circle cx="198" cy="86" r="9" fill="#A9CBB5"/>
+  <circle cx="150" cy="65" r="9" fill="#A9CBB5"/>
+  <text x="150" y="262" text-anchor="middle" font-family="'Avenir Next','Inter','SF Pro Display',sans-serif" fill="#2D3135"><tspan font-size="22" font-weight="300" letter-spacing="1">efy</tspan><tspan font-size="22" font-weight="300"> </tspan><tspan font-size="22" font-weight="700" letter-spacing="3.5">care</tspan></text>
+
+</svg>

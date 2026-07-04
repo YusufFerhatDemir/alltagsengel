@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 310" width="300" height="310">
+<title>efy care – Concept 09: Calligraphic Mark</title>
+
+  <!-- Left curve: trunk up → out → back to center (heart) -->
+  <path d="M150,200 C150,180 148,165 142,150
+           C132,125 108,105 92,82
+           C80,65 78,48 88,36
+           C98,24 115,28 128,38
+           C140,48 148,62 150,75"
+        fill="none" stroke="#0F5E57" stroke-width="4" stroke-linecap="round"/>
+  <!-- Right curve (mirror) -->
+  <path d="M150,200 C150,180 152,165 158,150
+           C168,125 192,105 208,82
+           C220,65 222,48 212,36
+           C202,24 185,28 172,38
+           C160,48 152,62 150,75"
+        fill="none" stroke="#0F5E57" stroke-width="4" stroke-linecap="round"/>
+  <!-- Accent dot at convergence -->
+  <circle cx="150" cy="72" r="5" fill="#D8C29D"/>
+  <!-- Tiny leaf suggestions -->
+  <circle cx="85" cy="62" r="4" fill="#A9CBB5" opacity="0.5"/>
+  <circle cx="215" cy="62" r="4" fill="#A9CBB5" opacity="0.5"/>
+  <text x="150" y="268" text-anchor="middle" font-family="'Avenir Next','Inter','SF Pro Display',sans-serif" fill="#2D3135"><tspan font-size="22" font-weight="300" letter-spacing="1">efy</tspan><tspan font-size="22" font-weight="300"> </tspan><tspan font-size="22" font-weight="700" letter-spacing="3.5">care</tspan></text>
+
+</svg>

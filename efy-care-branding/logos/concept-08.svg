@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 310" width="300" height="310">
+<title>efy care – Concept 08: Circle Badge</title>
+
+  <!-- Outer circle -->
+  <circle cx="150" cy="118" r="78" fill="none" stroke="#0F5E57" stroke-width="3.5"/>
+  <!-- Heart accent at 12 o'clock, overlapping circle border -->
+  <path d="M150,46 C150,40 145,34 139,34 C131,34 125,40 125,48
+           C125,58 139,68 150,78 C161,68 175,58 175,48
+           C175,40 169,34 161,34 C155,34 150,40 150,46Z"
+        fill="#0F5E57"/>
+  <!-- Tree inside -->
+  <line x1="150" y1="172" x2="150" y2="105" stroke="#2D7A63" stroke-width="3.5" stroke-linecap="round"/>
+  <path d="M150,132 C138,120 118,108 105,98" fill="none" stroke="#2D7A63" stroke-width="2.5" stroke-linecap="round"/>
+  <path d="M150,132 C162,120 182,108 195,98" fill="none" stroke="#2D7A63" stroke-width="2.5" stroke-linecap="round"/>
+  <circle cx="102" cy="94" r="7" fill="#A9CBB5"/>
+  <circle cx="198" cy="94" r="7" fill="#A9CBB5"/>
+  <circle cx="150" cy="98" r="7" fill="#A9CBB5"/>
+  <text x="150" y="260" text-anchor="middle" font-family="'Avenir Next','Inter','SF Pro Display',sans-serif" fill="#2D3135"><tspan font-size="22" font-weight="300" letter-spacing="1">efy</tspan><tspan font-size="22" font-weight="300"> </tspan><tspan font-size="22" font-weight="700" letter-spacing="3.5">care</tspan></text>
+
+</svg>

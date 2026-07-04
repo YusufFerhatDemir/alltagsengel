@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=320">
+  <title>efy care - Profilbild Template</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      width: 320px;
+      height: 320px;
+      overflow: hidden;
+      font-family: 'Inter', sans-serif;
+      background: transparent;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .profile-container {
+      width: 320px;
+      height: 320px;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Outer champagner ring */
+    .outer-ring {
+      position: absolute;
+      width: 310px;
+      height: 310px;
+      border-radius: 50%;
+      border: 3px solid #D8C29D;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      box-shadow:
+        0 0 20px rgba(216, 194, 157, 0.15),
+        inset 0 0 20px rgba(216, 194, 157, 0.05);
+    }
+
+    /* Secondary ring */
+    .mid-ring {
+      position: absolute;
+      width: 296px;
+      height: 296px;
+      border-radius: 50%;
+      border: 1px solid rgba(216, 194, 157, 0.25);
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    /* Main circle */
+    .main-circle {
+      width: 286px;
+      height: 286px;
+      border-radius: 50%;
+      background: linear-gradient(145deg, #0F5E57, #0d534c 40%, #0b4a44 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+      box-shadow: inset 0 -4px 20px rgba(0,0,0,0.15);
+    }
+
+    /* Background decorations inside circle */
+    .inner-glow {
+      position: absolute;
+      top: -20px;
+      right: -20px;
+      width: 140px;
+      height: 140px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(45, 122, 99, 0.3) 0%, transparent 70%);
+    }
+
+    .inner-ring {
+      position: absolute;
+      width: 220px;
+      height: 220px;
+      border-radius: 50%;
+      border: 1px solid rgba(169, 203, 181, 0.06);
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    .inner-ring-2 {
+      position: absolute;
+      width: 180px;
+      height: 180px;
+      border-radius: 50%;
+      border: 1px solid rgba(169, 203, 181, 0.04);
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    /* Small decorative dots */
+    .dec-dot {
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(216, 194, 157, 0.2);
+    }
+    .dd-1 { width: 3px; height: 3px; top: 55px; right: 70px; }
+    .dd-2 { width: 2px; height: 2px; bottom: 65px; left: 75px; }
+    .dd-3 { width: 4px; height: 4px; top: 80px; left: 60px; background: rgba(169, 203, 181, 0.1); }
+
+    /* Logo content */
+    .logo-group {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+    }
+
+    .logo-main {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+    }
+
+    .logo-efy {
+      font-family: 'Manrope', sans-serif;
+      font-weight: 700;
+      font-size: 42px;
+      color: #F8F6F2;
+      letter-spacing: -0.5px;
+    }
+
+    .logo-heart-wrap {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 2px;
+      padding-top: 2px;
+    }
+
+    .logo-heart-wrap svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    .logo-care {
+      font-family: 'Manrope', sans-serif;
+      font-weight: 700;
+      font-size: 42px;
+      color: #A9CBB5;
+      letter-spacing: -0.5px;
+    }
+
+    .logo-line {
+      width: 30px;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(216, 194, 157, 0.4), transparent);
+      margin: 6px 0;
+    }
+
+    .logo-slogan {
+      font-family: 'Inter', sans-serif;
+      font-size: 9px;
+      font-weight: 500;
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      color: rgba(216, 194, 157, 0.6);
+    }
+
+    /* Champagner accent marks at cardinal points */
+    .cardinal-mark {
+      position: absolute;
+      background: #D8C29D;
+      border-radius: 2px;
+    }
+    .cm-top { width: 12px; height: 2px; top: 1px; left: 50%; transform: translateX(-50%); opacity: 0.5; }
+    .cm-bottom { width: 12px; height: 2px; bottom: 1px; left: 50%; transform: translateX(-50%); opacity: 0.5; }
+    .cm-left { width: 2px; height: 12px; left: 1px; top: 50%; transform: translateY(-50%); opacity: 0.5; }
+    .cm-right { width: 2px; height: 12px; right: 1px; top: 50%; transform: translateY(-50%); opacity: 0.5; }
+  </style>
+</head>
+<body>
+  <div class="profile-container">
+    <!-- Rings -->
+    <div class="outer-ring">
+      <div class="cardinal-mark cm-top"></div>
+      <div class="cardinal-mark cm-bottom"></div>
+      <div class="cardinal-mark cm-left"></div>
+      <div class="cardinal-mark cm-right"></div>
+    </div>
+    <div class="mid-ring"></div>
+
+    <!-- Main circle -->
+    <div class="main-circle">
+      <!-- Background decorations -->
+      <div class="inner-glow"></div>
+      <div class="inner-ring"></div>
+      <div class="inner-ring-2"></div>
+      <div class="dec-dot dd-1"></div>
+      <div class="dec-dot dd-2"></div>
+      <div class="dec-dot dd-3"></div>
+
+      <!-- Logo -->
+      <div class="logo-group">
+        <div class="logo-main">
+          <span class="logo-efy">efy</span>
+          <span class="logo-heart-wrap">
+            <svg viewBox="0 0 24 24" fill="#D8C29D" xmlns="http://www.w3.org/2000/svg">
+              <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
+            </svg>
+          </span>
+          <span class="logo-care">care</span>
+        </div>
+        <div class="logo-line"></div>
+        <div class="logo-slogan">Mit Herz. Für Menschen.</div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

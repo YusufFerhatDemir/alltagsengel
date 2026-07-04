@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=360">
+<title>efy care – Facebook Profilbild</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    width: 360px;
+    height: 360px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+  }
+
+  .profile {
+    position: relative;
+    width: 360px;
+    height: 360px;
+    border-radius: 50%;
+    overflow: hidden;
+    background: linear-gradient(145deg, #0F5E57 0%, #0d534d 40%, #0a4a44 100%);
+  }
+
+  /* Champagner border ring */
+  .border-ring {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    border: 5px solid #D8C29D;
+    z-index: 10;
+  }
+
+  /* Inner subtle ring */
+  .inner-ring {
+    position: absolute;
+    inset: 10px;
+    border-radius: 50%;
+    border: 1px solid rgba(216,194,157,0.2);
+    z-index: 5;
+  }
+
+  /* Subtle radial glow */
+  .profile::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: radial-gradient(circle at 40% 35%, rgba(169,203,181,0.1) 0%, transparent 60%);
+    z-index: 2;
+  }
+
+  /* Decorative organic shapes */
+  .deco-circle-top {
+    position: absolute;
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(169,203,181,0.08) 0%, transparent 70%);
+    top: -20px;
+    right: -10px;
+    z-index: 2;
+  }
+
+  .deco-circle-bottom {
+    position: absolute;
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(216,194,157,0.06) 0%, transparent 70%);
+    bottom: 10px;
+    left: -10px;
+    z-index: 2;
+  }
+
+  /* Leaf accent */
+  .leaf-accent {
+    position: absolute;
+    width: 60px;
+    height: 80px;
+    border-radius: 0 80% 0 80%;
+    background: linear-gradient(135deg, rgba(45,122,99,0.15) 0%, transparent 100%);
+    bottom: 40px;
+    right: 20px;
+    transform: rotate(-30deg);
+    z-index: 2;
+  }
+
+  /* Logo container */
+  .logo-container {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 8;
+  }
+
+  .logo {
+    font-family: 'Manrope', sans-serif;
+    font-weight: 800;
+    font-size: 52px;
+    letter-spacing: -1px;
+    line-height: 1;
+    display: flex;
+    align-items: baseline;
+    gap: 3px;
+    margin-bottom: 4px;
+  }
+
+  .logo-efy {
+    color: #F8F6F2;
+  }
+
+  .logo-heart {
+    color: #D8C29D;
+    font-size: 28px;
+    margin: 0 1px;
+    position: relative;
+    top: -2px;
+  }
+
+  .logo-care {
+    color: #A9CBB5;
+  }
+
+  /* Small tagline underneath */
+  .tagline {
+    font-family: 'Manrope', sans-serif;
+    font-weight: 500;
+    font-size: 13px;
+    color: rgba(248,246,242,0.45);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-top: 8px;
+  }
+
+  /* Subtle accent dot below logo */
+  .accent-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: #D8C29D;
+    opacity: 0.4;
+    margin-top: 14px;
+  }
+</style>
+</head>
+<body>
+<div class="profile">
+  <!-- Champagner border -->
+  <div class="border-ring"></div>
+  <div class="inner-ring"></div>
+
+  <!-- Decorative shapes -->
+  <div class="deco-circle-top"></div>
+  <div class="deco-circle-bottom"></div>
+  <div class="leaf-accent"></div>
+
+  <!-- Logo -->
+  <div class="logo-container">
+    <div class="logo">
+      <span class="logo-efy">efy</span>
+      <span class="logo-heart">&#9829;</span>
+      <span class="logo-care">care</span>
+    </div>
+    <div class="tagline">pflege</div>
+    <div class="accent-dot"></div>
+  </div>
+</div>
+</body>
+</html>

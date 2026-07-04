@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 310" width="300" height="310">
+<title>efy care – Concept 03: Negative Space Heart</title>
+
+  <defs>
+    <clipPath id="c3clip">
+      <rect width="300" height="310"/>
+    </clipPath>
+  </defs>
+  <!-- Canopy with heart hole (using even-odd fill rule) -->
+  <path fill-rule="evenodd" fill="#0F5E57" d="
+    M150,28 C90,28 42,62 42,108 C42,154 90,185 150,185 C210,185 258,154 258,108 C258,62 210,28 150,28Z
+    M150,88 C150,78 143,70 135,70 C125,70 118,78 118,90
+    C118,105 135,118 150,132 C165,118 182,105 182,90
+    C182,78 175,70 165,70 C157,70 150,78 150,88Z"/>
+  <!-- Trunk -->
+  <rect x="144" y="182" width="12" height="28" rx="6" fill="#2D7A63"/>
+  <text x="150" y="265" text-anchor="middle" font-family="'Avenir Next','Inter','SF Pro Display',sans-serif" fill="#2D3135"><tspan font-size="22" font-weight="300" letter-spacing="1">efy</tspan><tspan font-size="22" font-weight="300"> </tspan><tspan font-size="22" font-weight="700" letter-spacing="3.5">care</tspan></text>
+
+</svg>

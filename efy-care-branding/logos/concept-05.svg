@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 310" width="300" height="310">
+<title>efy care – Concept 05: Leaf Heart</title>
+
+  <path d="M150,198 C98,158 58,122 58,82
+           C58,52 80,30 108,30 C130,30 148,44 150,56
+           C152,44 170,30 192,30 C220,30 242,52 242,82
+           C242,122 202,158 150,198Z"
+        fill="#0F5E57"/>
+  <!-- Central vein -->
+  <line x1="150" y1="56" x2="150" y2="188" stroke="#F8F6F2" stroke-width="2.5" stroke-linecap="round" opacity="0.85"/>
+  <!-- Side veins (tree branches) -->
+  <path d="M150,85 C138,75 118,68 95,65" fill="none" stroke="#F8F6F2" stroke-width="1.8" stroke-linecap="round" opacity="0.65"/>
+  <path d="M150,85 C162,75 182,68 205,65" fill="none" stroke="#F8F6F2" stroke-width="1.8" stroke-linecap="round" opacity="0.65"/>
+  <path d="M150,112 C140,102 122,95 100,92" fill="none" stroke="#F8F6F2" stroke-width="1.6" stroke-linecap="round" opacity="0.55"/>
+  <path d="M150,112 C160,102 178,95 200,92" fill="none" stroke="#F8F6F2" stroke-width="1.6" stroke-linecap="round" opacity="0.55"/>
+  <path d="M150,140 C142,132 128,126 110,124" fill="none" stroke="#F8F6F2" stroke-width="1.4" stroke-linecap="round" opacity="0.45"/>
+  <path d="M150,140 C158,132 172,126 190,124" fill="none" stroke="#F8F6F2" stroke-width="1.4" stroke-linecap="round" opacity="0.45"/>
+  <path d="M150,164 C145,158 138,153 128,150" fill="none" stroke="#F8F6F2" stroke-width="1.2" stroke-linecap="round" opacity="0.35"/>
+  <path d="M150,164 C155,158 162,153 172,150" fill="none" stroke="#F8F6F2" stroke-width="1.2" stroke-linecap="round" opacity="0.35"/>
+  <!-- Stem -->
+  <path d="M150,32 C150,22 156,14 164,8" fill="none" stroke="#2D7A63" stroke-width="2.5" stroke-linecap="round"/>
+  <text x="150" y="260" text-anchor="middle" font-family="'Avenir Next','Inter','SF Pro Display',sans-serif" fill="#2D3135"><tspan font-size="22" font-weight="300" letter-spacing="1">efy</tspan><tspan font-size="22" font-weight="300"> </tspan><tspan font-size="22" font-weight="700" letter-spacing="3.5">care</tspan></text>
+
+</svg>

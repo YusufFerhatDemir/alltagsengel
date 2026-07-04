@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 310" width="300" height="310">
+<title>efy care – Concept 06: Geometric Tree</title>
+
+  <!-- Top chevron -->
+  <polygon points="150,25 118,72 182,72" fill="#0F5E57" opacity="1"/>
+  <!-- Middle chevron -->
+  <polygon points="150,52 105,115 195,115" fill="#2D7A63" opacity="0.85"/>
+  <!-- Bottom chevron -->
+  <polygon points="150,82 88,158 212,158" fill="#A9CBB5" opacity="0.7"/>
+  <!-- Heart at geometric center -->
+  <path d="M150,95 C150,88 145,82 139,82 C132,82 126,88 126,96
+           C126,108 139,118 150,128 C161,118 174,108 174,96
+           C174,88 168,82 161,82 C155,82 150,88 150,95Z"
+        fill="#F8F6F2"/>
+  <!-- Trunk -->
+  <rect x="145" y="158" width="10" height="28" rx="2" fill="#2D7A63"/>
+  <text x="150" y="245" text-anchor="middle" font-family="'Avenir Next','Inter','SF Pro Display',sans-serif" fill="#2D3135"><tspan font-size="22" font-weight="300" letter-spacing="1">efy</tspan><tspan font-size="22" font-weight="300"> </tspan><tspan font-size="22" font-weight="700" letter-spacing="3.5">care</tspan></text>
+
+</svg>

@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 310" width="300" height="310">
+<title>efy care – Concept 07: Continuous Line</title>
+
+  <path d="M150,210 L150,145
+           C150,145 138,128 122,112
+           C102,92 82,72 82,54
+           C82,36 96,25 112,25
+           C130,25 144,38 150,55
+           C156,38 170,25 188,25
+           C204,25 218,36 218,54
+           C218,72 198,92 178,112
+           C162,128 150,145 150,145"
+        fill="none" stroke="#0F5E57" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Side branches -->
+  <path d="M150,170 C136,160 114,152 98,148" fill="none" stroke="#2D7A63" stroke-width="2" stroke-linecap="round"/>
+  <path d="M150,170 C164,160 186,152 202,148" fill="none" stroke="#2D7A63" stroke-width="2" stroke-linecap="round"/>
+  <path d="M150,188 C140,182 125,176 112,174" fill="none" stroke="#2D7A63" stroke-width="1.5" stroke-linecap="round" opacity="0.7"/>
+  <path d="M150,188 C160,182 175,176 188,174" fill="none" stroke="#2D7A63" stroke-width="1.5" stroke-linecap="round" opacity="0.7"/>
+  <circle cx="95" cy="146" r="4.5" fill="#A9CBB5"/>
+  <circle cx="205" cy="146" r="4.5" fill="#A9CBB5"/>
+  <circle cx="110" cy="172" r="3.5" fill="#A9CBB5" opacity="0.6"/>
+  <circle cx="190" cy="172" r="3.5" fill="#A9CBB5" opacity="0.6"/>
+  <text x="150" y="272" text-anchor="middle" font-family="'Avenir Next','Inter','SF Pro Display',sans-serif" fill="#2D3135"><tspan font-size="22" font-weight="300" letter-spacing="1">efy</tspan><tspan font-size="22" font-weight="300"> </tspan><tspan font-size="22" font-weight="700" letter-spacing="3.5">care</tspan></text>
+
+</svg>

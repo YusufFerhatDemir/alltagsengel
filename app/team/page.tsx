@@ -34,10 +34,10 @@ type Member = { name: string; role: string; bio: string; initials: string }
 
 const LEITUNG: Member[] = [
   {
-    name: 'Yusuf Ferhat Demir',
-    role: 'Geschäftsführung',
-    bio: 'Gründer von Alltagsengel. Verantwortlich für Strategie, Partnerschaften und die Vision, pflegebedürftigen Menschen ihre gesetzlichen Leistungen ohne Papierkrieg zugänglich zu machen.',
-    initials: 'YD',
+    name: 'Geschäftsführung',
+    role: 'Strategie, Partnerschaften & Vision',
+    bio: 'Verantwortlich für Strategie, Partnerschaften und die Vision, pflegebedürftigen Menschen ihre gesetzlichen Leistungen ohne Papierkrieg zugänglich zu machen.',
+    initials: 'AE',
   },
 ]
 
