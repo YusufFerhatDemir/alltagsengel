@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>efy care — Logo Concepts Overview</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --emerald: #0F5E57;
+    --forest: #2D7A63;
+    --sage: #A9CBB5;
+    --ivory: #F8F6F2;
+    --charcoal: #2D3135;
+    --champagne: #D8C29D;
+  }
+
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: var(--ivory);
+    color: var(--charcoal);
+    line-height: 1.6;
+    padding: 40px 20px;
+  }
+
+  .header {
+    max-width: 1200px;
+    margin: 0 auto 48px;
+    text-align: center;
+  }
+
+  .header h1 {
+    font-size: 32px;
+    font-weight: 300;
+    color: var(--emerald);
+    letter-spacing: 2px;
+    margin-bottom: 8px;
+  }
+
+  .header h1 span { font-weight: 700; letter-spacing: 4px; }
+
+  .header p {
+    font-size: 14px;
+    color: #888;
+    font-weight: 400;
+  }
+
+  .legend {
+    max-width: 1200px;
+    margin: 0 auto 32px;
+    display: flex;
+    gap: 24px;
+    justify-content: center;
+    flex-wrap: wrap;
+    font-size: 13px;
+    color: #666;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+  }
+
+  .grid {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 28px;
+  }
+
+  .card {
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.04);
+    transition: transform 0.2s, box-shadow 0.2s;
+    position: relative;
+  }
+
+  .card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+  }
+
+  .card.top3 {
+    border: 2px solid var(--emerald);
+  }
+
+  .top-badge {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: var(--emerald);
+    color: white;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 20px;
+    letter-spacing: 1px;
+    z-index: 2;
+  }
+
+  .card-preview {
+    background: var(--ivory);
+    padding: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 260px;
+  }
+
+  .card-preview img {
+    max-width: 220px;
+    max-height: 220px;
+    width: auto;
+    height: auto;
+  }
+
+  .card-body {
+    padding: 20px 24px 24px;
+  }
+
+  .card-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--charcoal);
+    margin-bottom: 4px;
+  }
+
+  .card-num {
+    font-size: 11px;
+    color: #aaa;
+    font-weight: 500;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .card-desc {
+    font-size: 13px;
+    color: #777;
+    margin-bottom: 16px;
+    line-height: 1.5;
+  }
+
+  .scores {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 6px 12px;
+    font-size: 13px;
+  }
+
+  .score-label { color: #666; }
+
+  .score-bar-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .score-bar {
+    flex: 1;
+    height: 6px;
+    background: #eee;
+    border-radius: 3px;
+    overflow: hidden;
+    min-width: 80px;
+  }
+
+  .score-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.4s ease;
+  }
+
+  .score-val {
+    font-weight: 600;
+    font-size: 12px;
+    color: var(--charcoal);
+    min-width: 22px;
+    text-align: right;
+  }
+
+  .total-row {
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .total-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .total-score {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--emerald);
+  }
+
+  .footer {
+    max-width: 1200px;
+    margin: 48px auto 0;
+    text-align: center;
+    font-size: 12px;
+    color: #aaa;
+    padding-top: 24px;
+    border-top: 1px solid #e0e0e0;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>efy <span>care</span></h1>
+  <p>10 Logo-Konzepte — Bewertung &amp; Vergleich</p>
+</div>
+
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot" style="background:var(--emerald)"></div> 8–10 Exzellent</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--forest)"></div> 6–7 Gut</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--sage)"></div> 4–5 Durchschnitt</div>
+</div>
+
+<div class="grid" id="grid"></div>
+
+<div class="footer">
+  efy care Brand Identity — Logo Concepts v1.0 — Erstellt Juli 2026
+</div>
+
+<script>
+const concepts = [
+  {
+    id: "01", file: "concept-01.svg",
+    title: "Heart Container",
+    desc: "Elegante Herzkontur mit minimalistischem Lebensbaum im Inneren. Klare Trennung von Herz und Baum.",
+    scores: { "Wiedererkennungswert": 7, "Skalierbarkeit": 8, "Druckfaehigkeit": 8, "App-Icon-Eignung": 7, "Emotionale Wirkung": 7 },
+    top3: false
+  },
+  {
+    id: "02", file: "concept-02.svg",
+    title: "Branching Heart",
+    desc: "Baumstamm spaltet sich nach oben und formt organisch die Herzsilhouette. Baum IST das Herz — keine Trennung.",
+    scores: { "Wiedererkennungswert": 9, "Skalierbarkeit": 9, "Druckfaehigkeit": 9, "App-Icon-Eignung": 9, "Emotionale Wirkung": 9 },
+    top3: true, rank: 2
+  },
+  {
+    id: "03", file: "concept-03.svg",
+    title: "Negative Space Heart",
+    desc: "Massiver Baumkronen-Umriss mit Herz als Negativraum-Ausschnitt. Mutig, modern, sofort einpragsam.",
+    scores: { "Wiedererkennungswert": 9, "Skalierbarkeit": 8, "Druckfaehigkeit": 9, "App-Icon-Eignung": 9, "Emotionale Wirkung": 8 },
+    top3: true, rank: 3
+  },
+  {
+    id: "04", file: "concept-04.svg",
+    title: "Root Heart",
+    desc: "Baum ueber der Erde, Herzfoermiges Wurzelsystem darunter. Ober-/Unterirdisch-Metapher fuer sichtbare und unsichtbare Fuersorge.",
+    scores: { "Wiedererkennungswert": 7, "Skalierbarkeit": 6, "Druckfaehigkeit": 7, "App-Icon-Eignung": 6, "Emotionale Wirkung": 8 },
+    top3: false
+  },
+  {
+    id: "05", file: "concept-05.svg",
+    title: "Leaf Heart",
+    desc: "Ein gefuelltes Herz, das gleichzeitig als Blatt lesbar ist. Innere Adern bilden Baum-Verzweigungen. Doppeldeutigkeit auf hoechstem Niveau.",
+    scores: { "Wiedererkennungswert": 9, "Skalierbarkeit": 10, "Druckfaehigkeit": 9, "App-Icon-Eignung": 10, "Emotionale Wirkung": 9 },
+    top3: true, rank: 1
+  },
+  {
+    id: "06", file: "concept-06.svg",
+    title: "Geometric Tree",
+    desc: "Drei gestapelte Chevrons bilden einen geometrischen Baum. Herz-Form als Negativraum im Zentrum. Skandinavisch-klar.",
+    scores: { "Wiedererkennungswert": 7, "Skalierbarkeit": 9, "Druckfaehigkeit": 9, "App-Icon-Eignung": 8, "Emotionale Wirkung": 6 },
+    top3: false
+  },
+  {
+    id: "07", file: "concept-07.svg",
+    title: "Continuous Line",
+    desc: "Ein durchgehender Strich zeichnet Stamm + Herzkrone. Kuenstlerisch, ausdrucksstark, eigenstaendig.",
+    scores: { "Wiedererkennungswert": 8, "Skalierbarkeit": 7, "Druckfaehigkeit": 8, "App-Icon-Eignung": 7, "Emotionale Wirkung": 8 },
+    top3: false
+  },
+  {
+    id: "08", file: "concept-08.svg",
+    title: "Circle Badge",
+    desc: "Kreisfoermiges Emblem mit Baum im Inneren und Herz-Akzent an der 12-Uhr-Position. Klassisch, zuverlaessig.",
+    scores: { "Wiedererkennungswert": 7, "Skalierbarkeit": 8, "Druckfaehigkeit": 8, "App-Icon-Eignung": 8, "Emotionale Wirkung": 7 },
+    top3: false
+  },
+  {
+    id: "09", file: "concept-09.svg",
+    title: "Calligraphic Mark",
+    desc: "Zwei gespiegelte S-Kurven: unten Stamm, oben Herz. Fast typografisch, sehr abstrakt und elegant.",
+    scores: { "Wiedererkennungswert": 8, "Skalierbarkeit": 8, "Druckfaehigkeit": 8, "App-Icon-Eignung": 7, "Emotionale Wirkung": 8 },
+    top3: false
+  },
+  {
+    id: "10", file: "concept-10.svg",
+    title: "Dot Composition",
+    desc: "Kreise verschiedener Groessen formen sowohl Baum- als auch Herz-Silhouette. Modern, verspielt, digital.",
+    scores: { "Wiedererkennungswert": 7, "Skalierbarkeit": 5, "Druckfaehigkeit": 6, "App-Icon-Eignung": 5, "Emotionale Wirkung": 7 },
+    top3: false
+  }
+];
+
+const scoreColors = (v) => v >= 8 ? '#0F5E57' : v >= 6 ? '#2D7A63' : '#A9CBB5';
+const scoreLabels = {
+  "Wiedererkennungswert": "Wiedererkennungswert",
+  "Skalierbarkeit": "Skalierbarkeit",
+  "Druckfaehigkeit": "Druckfähigkeit",
+  "App-Icon-Eignung": "App-Icon-Eignung",
+  "Emotionale Wirkung": "Emotionale Wirkung"
+};
+
+const grid = document.getElementById('grid');
+
+// Sort: top3 first by rank, then rest by total score descending
+const sorted = [...concepts].sort((a, b) => {
+  if (a.top3 && b.top3) return a.rank - b.rank;
+  if (a.top3) return -1;
+  if (b.top3) return 1;
+  const ta = Object.values(a.scores).reduce((s, v) => s + v, 0);
+  const tb = Object.values(b.scores).reduce((s, v) => s + v, 0);
+  return tb - ta;
+});
+
+sorted.forEach(c => {
+  const total = Object.values(c.scores).reduce((s, v) => s + v, 0);
+  const card = document.createElement('div');
+  card.className = 'card' + (c.top3 ? ' top3' : '');
+
+  let badgeHtml = '';
+  if (c.top3) {
+    badgeHtml = `<div class="top-badge">TOP ${c.rank}</div>`;
+  }
+
+  let scoresHtml = '';
+  for (const [key, val] of Object.entries(c.scores)) {
+    const label = scoreLabels[key] || key;
+    scoresHtml += `
+      <div class="score-label">${label}</div>
+      <div class="score-bar-wrap">
+        <div class="score-bar"><div class="score-bar-fill" style="width:${val * 10}%;background:${scoreColors(val)}"></div></div>
+        <div class="score-val">${val}</div>
+      </div>`;
+  }
+
+  card.innerHTML = `
+    ${badgeHtml}
+    <div class="card-preview">
+      <img src="${c.file}" alt="Concept ${c.id}" loading="lazy"/>
+    </div>
+    <div class="card-body">
+      <div class="card-num">Concept ${c.id}</div>
+      <div class="card-title">${c.title}</div>
+      <div class="card-desc">${c.desc}</div>
+      <div class="scores">${scoresHtml}</div>
+      <div class="total-row">
+        <span class="total-label">Gesamt</span>
+        <span class="total-score">${total}/50</span>
+      </div>
+    </div>`;
+
+  grid.appendChild(card);
+});
+</script>
+</body>
+</html>

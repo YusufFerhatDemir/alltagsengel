@@ -7,13 +7,6 @@
       "runtimeArgs": ["dev"],
       "port": 8080,
       "autoPort": true
-    },
-    {
-      "name": "velora-web",
-      "runtimeExecutable": "python3",
-      "runtimeArgs": ["-m", "http.server", "8091", "--directory", "/Users/work/alltagsengel/velora/app/dist"],
-      "port": 8091,
-      "autoPort": false
     }
   ]
 }
