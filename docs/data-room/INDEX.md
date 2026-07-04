@@ -102,7 +102,7 @@ data-room/
 - **Segment C - Companions**: 50-100K certified providers
 
 ### Business Model
-- **Customer Revenue**: €125/month (covered by §45b insurance benefit)
+- **Customer Revenue**: €131/month (covered by §45b insurance benefit)
 - **Platform Commission**: 18%
 - **Companion Subscription**: €9.99/month (optional)
 - **Gross Margins**: 60-65%

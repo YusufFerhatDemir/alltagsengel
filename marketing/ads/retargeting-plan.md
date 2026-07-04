@@ -209,7 +209,7 @@ GTM Container: alltagsengel.care
 
 **Anzeigen-Inhalte:**
 - Detaillierte Leistungsübersicht (Carousel: Einkauf, Arzt, Spaziergang, Gesellschaft, Behörden)
-- Preistransparenz: „131 € zahlt die Pflegekasse — nur 131 € Eigenanteil"
+- Preistransparenz: „131 €/Monat zahlt die Pflegekasse — für Sie kein Eigenanteil"
 - Vertrauenselemente: §45a-Zertifizierung, Erfahrungsberichte
 - Vergleich: „Alltagsbegleitung vs. Pflegedienst — was passt zu Ihnen?"
 - FAQ-Beantwortung: „Die 5 häufigsten Fragen zur Alltagsbegleitung"
