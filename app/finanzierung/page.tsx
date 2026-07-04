@@ -125,36 +125,40 @@ const WUSSTEN_SIE = [
   },
 ]
 
-// Aufteilung nach Pflegegrad
-const PFLEGEGRADE = [
+// Vollständige Leistungs-Übersicht nach Pflegegrad — Beträge 2026.
+// `relevant: true` markiert die Töpfe, über die Alltagsengel abrechnet.
+const GRADE = ['PG 1', 'PG 2', 'PG 3', 'PG 4', 'PG 5']
+
+const LEISTUNGEN = [
   {
-    label: 'Pflegegrad 1',
-    farbe: '#7FB77E',
-    punkte: [
-      'Entlastungsbetrag 131 €/Monat (1.572 €/Jahr) für Alltagsbegleitung',
-      'Pflegebox: Pflegehilfsmittel bis 42 €/Monat (§40 SGB XI)',
-      'Steuerliche Absetzbarkeit haushaltsnaher Dienstleistungen',
-    ],
+    name: 'Entlastungsbetrag',
+    detail: '§45b SGB XI · pro Monat',
+    werte: ['131 €', '131 €', '131 €', '131 €', '131 €'],
+    relevant: true,
   },
   {
-    label: 'Pflegegrad 2–5',
-    farbe: '#C9963C',
-    punkte: [
-      'Alles aus Pflegegrad 1 (Entlastungsbetrag 131 €/Monat, Pflegebox 42 €/Monat)',
-      'Zusätzlich: gemeinsamer Jahresbetrag Verhinderungs-/Kurzzeitpflege 3.539 €/Jahr',
-      'Krankenfahrten mit Verordnung über die Krankenkasse (§60 SGB V)',
-      'Steuervorteil und ggf. Unfallversicherung',
-    ],
+    name: 'Verhinderungs- + Kurzzeitpflege',
+    detail: 'gemeinsamer Jahresbetrag · pro Jahr',
+    werte: ['—', '3.539 €', '3.539 €', '3.539 €', '3.539 €'],
+    relevant: true,
   },
   {
-    label: 'Selbstzahler',
-    farbe: '#9AA0A6',
-    punkte: [
-      'Alle Leistungen ohne Pflegegrad direkt buchbar',
-      'Transparente Stundensätze — keine versteckten Kosten',
-      '20 % der Kosten über §35a EStG steuerlich absetzbar',
-      'Krankenfahrten jederzeit als Selbstzahler möglich',
-    ],
+    name: 'Pflegegeld',
+    detail: '§37 SGB XI · pro Monat',
+    werte: ['—', '347 €', '599 €', '800 €', '990 €'],
+    relevant: false,
+  },
+  {
+    name: 'Pflegesachleistungen',
+    detail: '§36 SGB XI · pro Monat',
+    werte: ['—', '796 €', '1.497 €', '1.859 €', '2.299 €'],
+    relevant: false,
+  },
+  {
+    name: 'Tages- / Nachtpflege',
+    detail: '§41 SGB XI · pro Monat',
+    werte: ['—', '724 €', '1.363 €', '1.693 €', '2.095 €'],
+    relevant: false,
   },
 ]
 
@@ -302,28 +306,100 @@ export default function FinanzierungPage() {
           </div>
         </section>
 
-        {/* Aufteilung nach Pflegegrad */}
+        {/* Vollständige Beträge nach Pflegegrad — Tabelle 2026 */}
         <section>
           <h2 style={{ color: '#F5F0E8', fontSize: 22, fontWeight: 700, marginBottom: 6, textAlign: 'center' }}>
-            Was steht Ihnen zu?
+            Was steht Ihnen zu? — Beträge 2026 nach Pflegegrad
           </h2>
-          <p style={{ color: '#B8B0A4', fontSize: 14, lineHeight: 1.6, textAlign: 'center', marginBottom: 18 }}>
-            Ihre Ansprüche hängen vom Pflegegrad ab. So sieht es konkret aus:
+          <p style={{ color: '#B8B0A4', fontSize: 14, lineHeight: 1.6, textAlign: 'center', marginBottom: 18, maxWidth: 560, marginLeft: 'auto', marginRight: 'auto' }}>
+            Diese gesetzlichen Leistungen stehen Ihnen je nach Pflegegrad zu.
+            <strong style={{ color: '#E0B860' }}> Golden hervorgehoben</strong> sind die Töpfe, über die Alltagsengel Ihre Alltagsbegleitung abrechnet.
           </p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            {PFLEGEGRADE.map(pg => (
-              <div key={pg.label} style={{ ...cardStyle, borderLeft: `4px solid ${pg.farbe}` }}>
-                <h3 style={{ color: pg.farbe, fontSize: 18, fontWeight: 700, marginBottom: 12 }}>{pg.label}</h3>
-                <ul style={{ margin: 0, paddingLeft: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  {pg.punkte.map((p, i) => (
-                    <li key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', color: '#D8D0C4', fontSize: 14, lineHeight: 1.55 }}>
-                      <span style={{ color: pg.farbe, flexShrink: 0, fontWeight: 700 }}>✓</span>
-                      <span>{p}</span>
-                    </li>
+
+          <div style={{ ...cardStyle, padding: 0, overflowX: 'auto' }}>
+            <table style={{ borderCollapse: 'collapse', width: '100%', minWidth: 580 }}>
+              <thead>
+                <tr>
+                  <th style={{
+                    textAlign: 'left', padding: '14px 16px', color: '#B8B0A4', fontSize: 12.5,
+                    fontWeight: 600, borderBottom: '1px solid rgba(255,255,255,0.1)', whiteSpace: 'nowrap',
+                  }}>
+                    Leistung
+                  </th>
+                  {GRADE.map(g => (
+                    <th key={g} style={{
+                      textAlign: 'center', padding: '14px 12px', color: '#F5F0E8', fontSize: 13,
+                      fontWeight: 700, borderBottom: '1px solid rgba(255,255,255,0.1)', whiteSpace: 'nowrap',
+                    }}>
+                      {g}
+                    </th>
                   ))}
-                </ul>
-              </div>
-            ))}
+                </tr>
+              </thead>
+              <tbody>
+                {LEISTUNGEN.map(l => (
+                  <tr key={l.name} style={{ background: l.relevant ? 'rgba(201,150,60,0.09)' : 'transparent' }}>
+                    <td style={{
+                      padding: '13px 16px', borderBottom: '1px solid rgba(255,255,255,0.05)',
+                      borderLeft: l.relevant ? '3px solid #C9963C' : '3px solid transparent',
+                    }}>
+                      <div style={{ color: l.relevant ? '#E0B860' : '#F5F0E8', fontSize: 14, fontWeight: 700, lineHeight: 1.3 }}>
+                        {l.name}
+                      </div>
+                      <div style={{ color: '#8A8278', fontSize: 11.5, marginTop: 2 }}>{l.detail}</div>
+                    </td>
+                    {l.werte.map((w, i) => (
+                      <td key={i} style={{
+                        textAlign: 'center', padding: '13px 12px', whiteSpace: 'nowrap',
+                        borderBottom: '1px solid rgba(255,255,255,0.05)',
+                        color: w === '—' ? '#6A6259' : (l.relevant ? '#E0B860' : '#D8D0C4'),
+                        fontSize: 13.5, fontWeight: w === '—' ? 400 : 700,
+                      }}>
+                        {w}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p style={{ color: '#6A6259', fontSize: 11.5, lineHeight: 1.5, marginTop: 8, textAlign: 'center' }}>
+            „—" bedeutet: für diesen Pflegegrad kein Anspruch. Entlastungsbetrag 131 €/Monat = 1.572 €/Jahr. Stand 2026.
+          </p>
+
+          {/* Was heißt das für Alltagsengel-Kunden? */}
+          <div style={{
+            ...cardStyle,
+            marginTop: 16,
+            background: 'linear-gradient(150deg, rgba(201,150,60,0.14) 0%, rgba(201,150,60,0.04) 100%)',
+            border: '1px solid rgba(201,150,60,0.28)',
+          }}>
+            <h3 style={{ color: '#C9963C', fontSize: 17, fontWeight: 700, marginBottom: 10 }}>
+              Was heißt das für Sie als Alltagsengel-Kunde?
+            </h3>
+            <p style={{ color: '#D8D0C4', fontSize: 14, lineHeight: 1.7, marginTop: 0, marginBottom: 12 }}>
+              Alltagsengel ist <strong style={{ color: '#F5F0E8' }}>kein Pflegedienst</strong> — wir bieten
+              Alltagsbegleitung und Hauswirtschaft. Bezahlt werden diese Leistungen vor allem über zwei Töpfe:
+            </p>
+            <ul style={{ margin: 0, paddingLeft: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {[
+                ['Entlastungsbetrag §45b', 'Der Haupttopf: 131 €/Monat (1.572 €/Jahr) — schon ab Pflegegrad 1. Wir rechnen direkt mit der Pflegekasse ab, 0 € Eigenanteil.'],
+                ['Verhinderungspflege', 'Ist die Hauptpflegeperson verhindert, finanzieren wir unsere Begleitung aus dem gemeinsamen Jahresbetrag von 3.539 € (ab Pflegegrad 2).'],
+                ['Steuerliche Entlastung §35a', 'Selbst getragene Kosten für haushaltsnahe Dienstleistungen sind zu 20 % (bis 4.000 €/Jahr) direkt von der Steuer absetzbar.'],
+              ].map(([t, txt]) => (
+                <li key={t} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+                  <span style={{ color: '#C9963C', flexShrink: 0, fontWeight: 700, fontSize: 14 }}>✓</span>
+                  <span style={{ color: '#D8D0C4', fontSize: 14, lineHeight: 1.55 }}>
+                    <strong style={{ color: '#F5F0E8' }}>{t}:</strong> {txt}
+                  </span>
+                </li>
+              ))}
+            </ul>
+            <p style={{ color: '#B8B0A4', fontSize: 13, lineHeight: 1.6, marginTop: 12, marginBottom: 0 }}>
+              Gut zu wissen: Pflegegeld, Pflegesachleistungen und Tages-/Nachtpflege stehen Ihnen je nach
+              Pflegegrad ebenfalls zu — sie sind für Pflege durch Angehörige oder einen ambulanten
+              Pflegedienst gedacht und werden nicht über Alltagsengel abgerechnet.
+            </p>
           </div>
         </section>
 
@@ -351,23 +427,6 @@ export default function FinanzierungPage() {
           <p style={{ color: '#6A6259', fontSize: 12, lineHeight: 1.6, marginTop: 16, marginBottom: 0 }}>
             Angaben nach bestem Wissen, Stand 2026. Sie ersetzen keine individuelle Beratung durch
             Pflegekasse oder Steuerberatung.
-          </p>
-        </section>
-
-        {/* Beratungskompetenz — Vertrauen, ohne persönliche Namen */}
-        <section style={{
-          ...cardStyle,
-          background: 'linear-gradient(150deg, rgba(224,184,96,0.1) 0%, rgba(201,150,60,0.04) 100%)',
-          border: '1px solid rgba(201,150,60,0.22)',
-        }}>
-          <h2 style={{ color: '#C9963C', fontSize: 20, fontWeight: 700, marginBottom: 12 }}>
-            Warum unsere Beratung den Unterschied macht
-          </h2>
-          <p style={{ color: '#D8D0C4', fontSize: 15, lineHeight: 1.7, margin: 0 }}>
-            Unser Beratungsteam verfügt über <strong style={{ color: '#F5F0E8' }}>25 Jahre Branchenerfahrung</strong> in
-            der Alltagsbegleitung und hat den Aufbau von Unternehmen mit <strong style={{ color: '#F5F0E8' }}>über 1.000 Mitarbeitern</strong> begleitet.
-            Diese Erfahrung nutzen wir für Sie: Wir kennen jeden Finanzierungstopf, wissen genau,
-            welche Leistungen sich kombinieren lassen, und holen für Sie das Maximum heraus — verständlich erklärt und ohne Fachchinesisch.
           </p>
         </section>
 

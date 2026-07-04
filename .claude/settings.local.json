@@ -154,7 +154,8 @@
       "Bash(curl -s https://alltagsengel.care/alltagsbegleitung)",
       "Bash(curl -s https://alltagsengel.care/finanzierung)",
       "Bash(curl -s https://alltagsengel.care/jobs)",
-      "Bash(./deploy.sh \"Finanzierung: Kurzzeitpflege, Budget-Kombination 5.111€, Beratungskompetenz\")"
+      "Bash(./deploy.sh \"Finanzierung: Kurzzeitpflege, Budget-Kombination 5.111€, Beratungskompetenz\")",
+      "Bash(./deploy.sh \"Finanzierung: Beratungstext entfernt, Pflegegrad-Tabelle mit allen Beträgen 2026\")"
     ]
   }
 }
