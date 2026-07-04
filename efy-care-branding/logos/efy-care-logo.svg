@@ -1,0 +1,106 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 440">
+  <defs>
+    <linearGradient id="g1" x1="0" y1="1" x2="0.3" y2="0">
+      <stop offset="0%" stop-color="#0F5E57"/>
+      <stop offset="45%" stop-color="#2D7A63"/>
+      <stop offset="100%" stop-color="#A9CBB5"/>
+    </linearGradient>
+    <linearGradient id="g2" x1="0.7" y1="1" x2="0.5" y2="0">
+      <stop offset="0%" stop-color="#2D7A63"/>
+      <stop offset="60%" stop-color="#6B9E82"/>
+      <stop offset="100%" stop-color="#A9CBB5"/>
+    </linearGradient>
+    <linearGradient id="g3" x1="0.5" y1="1" x2="0.5" y2="0">
+      <stop offset="0%" stop-color="#0F5E57"/>
+      <stop offset="100%" stop-color="#2D7A63"/>
+    </linearGradient>
+    <linearGradient id="leafGrad" x1="0" y1="1" x2="1" y2="0">
+      <stop offset="0%" stop-color="#2D7A63"/>
+      <stop offset="100%" stop-color="#8FBB9E"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- Left side of heart (adult figure integrated) -->
+  <path d="M200,340 
+    C200,340 180,310 150,280 
+    C110,240 60,200 50,155 
+    C38,100 60,55 110,45 
+    C145,38 170,55 185,75 
+    C192,85 197,100 200,115"
+    fill="url(#g1)" opacity="0.95"/>
+  
+  <!-- Right side of heart -->
+  <path d="M200,340 
+    C200,340 220,310 250,280 
+    C290,240 340,200 350,155 
+    C362,100 340,55 290,45 
+    C255,38 230,55 215,75 
+    C208,85 203,100 200,115"
+    fill="url(#g2)" opacity="0.9"/>
+  
+  <!-- Tree trunk -->
+  <path d="M192,340 C190,300 188,260 190,220 C192,195 195,175 200,155 
+    C205,175 208,195 210,220 C212,260 210,300 208,340 Z"
+    fill="url(#g3)" opacity="0.85"/>
+  
+  <!-- Left branch -->
+  <path d="M195,200 C180,185 155,175 130,170 C140,165 165,168 195,190"
+    fill="url(#g1)" opacity="0.7"/>
+  
+  <!-- Right branch -->
+  <path d="M205,200 C220,185 245,175 270,170 C260,165 235,168 205,190"
+    fill="url(#g2)" opacity="0.7"/>
+  
+  <!-- Upper left branch -->
+  <path d="M193,165 C178,148 155,130 130,120 C145,115 168,125 193,155"
+    fill="url(#g1)" opacity="0.6"/>
+  
+  <!-- Upper right branch -->
+  <path d="M207,165 C222,148 245,130 270,120 C255,115 232,125 207,155"
+    fill="url(#g2)" opacity="0.6"/>
+  
+  <!-- Adult figure (left) - head -->
+  <circle cx="140" cy="125" r="18" fill="url(#g1)" opacity="0.8"/>
+  
+  <!-- Adult figure - body curve -->
+  <path d="M130,143 C125,165 125,190 135,210 
+    C145,200 148,180 148,160 
+    C148,152 144,145 140,143 Z"
+    fill="url(#g1)" opacity="0.65"/>
+  
+  <!-- Child figure (right) - head -->
+  <circle cx="250" cy="140" r="14" fill="url(#g2)" opacity="0.75"/>
+  
+  <!-- Child figure - body -->
+  <path d="M243,154 C240,170 240,185 245,198 
+    C252,192 254,178 254,165 
+    C254,160 250,155 247,154 Z"
+    fill="url(#g2)" opacity="0.6"/>
+  
+  <!-- Leaves cluster top -->
+  <ellipse cx="175" cy="85" rx="12" ry="7" transform="rotate(-30 175 85)" fill="url(#leafGrad)" opacity="0.75"/>
+  <ellipse cx="200" cy="70" rx="10" ry="6" transform="rotate(0 200 70)" fill="url(#leafGrad)" opacity="0.8"/>
+  <ellipse cx="225" cy="85" rx="12" ry="7" transform="rotate(30 225 85)" fill="url(#leafGrad)" opacity="0.75"/>
+  
+  <!-- Leaves mid -->
+  <ellipse cx="150" cy="155" rx="10" ry="6" transform="rotate(-40 150 155)" fill="url(#leafGrad)" opacity="0.55"/>
+  <ellipse cx="250" cy="160" rx="10" ry="6" transform="rotate(40 250 160)" fill="url(#leafGrad)" opacity="0.55"/>
+  
+  <!-- Leaves lower -->
+  <ellipse cx="165" cy="190" rx="8" ry="5" transform="rotate(-25 165 190)" fill="url(#leafGrad)" opacity="0.5"/>
+  <ellipse cx="235" cy="192" rx="8" ry="5" transform="rotate(25 235 192)" fill="url(#leafGrad)" opacity="0.5"/>
+  
+  <!-- Top leaves -->
+  <ellipse cx="160" cy="72" rx="9" ry="5" transform="rotate(-50 160 72)" fill="url(#leafGrad)" opacity="0.65"/>
+  <ellipse cx="240" cy="72" rx="9" ry="5" transform="rotate(50 240 72)" fill="url(#leafGrad)" opacity="0.65"/>
+  <ellipse cx="200" cy="58" rx="8" ry="5" transform="rotate(0 200 58)" fill="url(#leafGrad)" opacity="0.7"/>
+  
+  <!-- Text: efy care -->
+  <text x="200" y="395" text-anchor="middle" font-family="'Avenir Next','SF Pro Display',Inter,Helvetica,sans-serif" font-size="52" fill="#2D3135" font-weight="300" letter-spacing="4">efy <tspan font-weight="700">care</tspan></text>
+  
+  <!-- Slogan -->
+  <text x="200" y="425" text-anchor="middle" font-family="'Avenir Next','SF Pro Display',Inter,Helvetica,sans-serif" font-size="16" fill="#4A5859" letter-spacing="3" font-weight="400">MIT HERZ. FÜR MENSCHEN.</text>
+  
+  <!-- Small heart below slogan -->
+  <path d="M200,438 C198,436 194,433 194,430.5 C194,429 195,428 196.5,428 C197.5,428 198.5,428.8 200,430 C201.5,428.8 202.5,428 203.5,428 C205,428 206,429 206,430.5 C206,433 202,436 200,438Z" fill="#2D7A63"/>
+</svg>
