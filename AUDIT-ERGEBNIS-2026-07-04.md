@@ -29,10 +29,20 @@
 
 17. **Organization-Umstellung beantragt** — Formular bei Apple eingereicht (developer.apple.com/contact/request/migrate-individual-account), D-U-N-S 316856461, Antwort innerhalb 1 Werktag
 
+## Google Business Profil (eingerichtet)
+
+18. **Google Business Profil erstellt** — Alltagsengel, Neue Mainzer Straße 66-68, 60311 Frankfurt am Main
+    - Kategorie: Pflegedienst
+    - Telefon: 069 87000857
+    - Website: alltagsengel.care
+    - Einzugsgebiet: Frankfurt am Main
+    - Öffnungszeiten: Mo-Fr 09:00-17:00
+    - Beschreibung: Alltagsbegleitung §45a SGB XI, Entlastungsbetrag 131€/Monat
+    - Status: NICHT ÖFFENTLICH SICHTBAR — Video-Verifizierung vom Büro aus erforderlich
+
 ## Noch offen / nicht möglich ohne Konto-Erstellung
 
-- **Kleinanzeigen.de**: Erfordert Konto-Registrierung
+- **Kleinanzeigen.de**: Registrierungsformular vorbereitet, wartet auf Passwort-Eingabe
 - **Jobbörse Arbeitsagentur**: Erfordert Arbeitgeber-Konto
-- **Google Business Profile**: Erfordert Verifizierung (Postkarte)
 - **openPR.de**: Erfordert Registrierung
 - **Indeed**: Kostenpflichtiges Modell für Arbeitgeber in Deutschland
