@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Velora App — Interaktives Mockup</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons-webfont/3.3.0/tabler-icons.min.css">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f5f5f5;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:24px}
+h1{font-size:24px;font-weight:700;margin-bottom:4px;color:#222}
+.subtitle{font-size:14px;color:#888;margin-bottom:24px}
+.controls{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;justify-content:center;align-items:center}
+.controls label{font-size:13px;color:#888;margin-right:4px}
+.pill{padding:8px 20px;border-radius:99px;font-size:13px;cursor:pointer;border:2px solid #ddd;background:#fff;color:#666;transition:all .2s;font-weight:500}
+.pill.active{font-weight:600}
+.tabs{display:flex;gap:0;margin-bottom:20px;border-bottom:1px solid #ddd}
+.tab{padding:8px 18px;font-size:13px;cursor:pointer;border:none;background:none;color:#888;border-bottom:2.5px solid transparent;transition:all .15s;font-weight:500}
+.tab.active{font-weight:600}
+.phone{width:390px;min-height:720px;border-radius:44px;border:3px solid #333;overflow:hidden;position:relative;box-shadow:0 20px 60px rgba(0,0,0,.15)}
+.notch{width:170px;height:30px;background:#000;border-radius:0 0 22px 22px;margin:0 auto;position:relative;z-index:2}
+.screen{padding:20px 24px 100px;overflow-y:auto;max-height:660px}
+.tabbar{position:absolute;bottom:0;left:0;right:0;height:84px;border-top:0.5px solid;display:flex;align-items:center;justify-content:space-around;padding:0 12px 20px}
+.tabbar-item{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10px;cursor:pointer;transition:color .15s}
+.tabbar-item i{font-size:22px}
+.card{border-radius:14px;padding:16px;margin-bottom:12px;border:0.5px solid}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:12px 20px;border-radius:12px;font-size:14px;font-weight:500;border:none;cursor:pointer;transition:transform .1s}
+.btn:active{transform:scale(.97)}
+.input{width:100%;padding:13px 14px;border-radius:10px;border:0.5px solid;font-size:14px;margin-bottom:10px}
+.badge{display:inline-block;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:500}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}
+.qa{border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:4px;cursor:pointer;transition:transform .1s}
+.qa:hover{transform:scale(1.02)}
+.qa i{font-size:22px}
+.qa span{font-size:12px;font-weight:600}
+.qa small{font-size:10px;opacity:.7}
+.progress{height:7px;border-radius:99px;overflow:hidden;margin:10px 0 6px}
+.swatch-row{display:flex;gap:10px;justify-content:center;margin-top:14px}
+.swatch-opt{flex:1;border:2.5px solid;border-radius:14px;padding:12px 8px;text-align:center;cursor:pointer;transition:all .2s}
+.swatch-opt:hover{transform:scale(1.03)}
+.swatch-dots{display:flex;justify-content:center;gap:0}
+.swatch-dots span{width:16px;height:16px;border-radius:50%;border:2px solid #fff;margin:0 -2px;box-shadow:0 1px 3px rgba(0,0,0,.15)}
+.swatch-label{font-size:11px;margin-top:8px;font-weight:600}
+.swatch-desc{font-size:9px;opacity:.6}
+.avatar{width:50px;height:50px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:600;color:#fff;flex-shrink:0}
+.settings-row{display:flex;align-items:center;gap:12px;padding:13px 0}
+.settings-row + .settings-row{border-top:0.5px solid}
+.settings-row i{font-size:18px}
+.settings-row span{flex:1;font-size:13px}
+.info-box{background:rgba(0,0,0,.03);border-radius:12px;padding:16px;margin-top:24px;text-align:center}
+.info-box p{font-size:12px;color:#666;line-height:1.6}
+</style>
+</head>
+<body>
+<h1>Velora App — Interaktives Mockup</h1>
+<p class="subtitle">Klicke durch die Screens und wechsle zwischen den drei Farbpaletten</p>
+
+<div class="controls">
+  <label>Palette:</label>
+  <button class="pill active" onclick="setPalette('salbei')">A · Salbeigrün</button>
+  <button class="pill" onclick="setPalette('teal')">B · Teal</button>
+  <button class="pill" onclick="setPalette('lav')">C · Lavendel</button>
+</div>
+<div class="tabs" id="topTabs">
+  <button class="tab active" onclick="showScreen('login')">Login</button>
+  <button class="tab" onclick="showScreen('home')">Home</button>
+  <button class="tab" onclick="showScreen('profil')">Profil</button>
+  <button class="tab" onclick="showScreen('kalender')">Kalender</button>
+  <button class="tab" onclick="showScreen('nachrichten')">Nachrichten</button>
+  <button class="tab" onclick="showScreen('suche')">Suche</button>
+</div>
+<div class="phone" id="phone">
+  <div class="notch"></div>
+  <div class="screen" id="screen"></div>
+  <div class="tabbar" id="tabbar" style="display:none">
+    <div class="tabbar-item active" onclick="showScreen('home')"><i class="ti ti-home"></i>Home</div>
+    <div class="tabbar-item" onclick="showScreen('suche')"><i class="ti ti-search"></i>Suche</div>
+    <div class="tabbar-item" onclick="showScreen('kalender')"><i class="ti ti-calendar"></i>Kalender</div>
+    <div class="tabbar-item" onclick="showScreen('nachrichten')"><i class="ti ti-message"></i>Chat</div>
+    <div class="tabbar-item" onclick="showScreen('profil')"><i class="ti ti-user"></i>Profil</div>
+  </div>
+</div>
+
+<div class="info-box">
+  <p>Dies ist ein interaktives Mockup des echten Velora-Codes.<br>
+  27 Source-Dateien · React Native / Expo SDK 57 · 3 semantische Farbpaletten<br>
+  Entscheide dich mit deiner Frau für A, B oder C!</p>
+</div>
+
+<script>
+const P={
+  salbei:{primary:'#3d6b4e',primaryDark:'#2c523c',secondary:'#6b9e7a',secondarySoft:'#e4efe7',accent:'#e8c87a',bg:'#faf6ee',surface:'#ffffff',surfaceAlt:'#f2ede2',text:'#22302a',textMuted:'#6a7871',border:'#e3ddd0',success:'#3d8b5f',info:'#3d6b8b'},
+  teal:{primary:'#1a7a7a',primaryDark:'#125c5c',secondary:'#4db8b8',secondarySoft:'#dcf0f0',accent:'#d4956a',bg:'#f7fbfb',surface:'#ffffff',surfaceAlt:'#ebf4f4',text:'#12313a',textMuted:'#5c7a80',border:'#d5e6e6',success:'#1f8f6b',info:'#1a7a7a'},
+  lav:{primary:'#5c4a8a',primaryDark:'#453768',secondary:'#8b7ab8',secondarySoft:'#e9e4f2',accent:'#e8a87a',bg:'#faf8fc',surface:'#ffffff',surfaceAlt:'#f0ecf6',text:'#2c2440',textMuted:'#726a86',border:'#e2dcee',success:'#4b9d6f',info:'#5c4a8a'}
+};
+let curP='salbei',curS='login';
+
+function applyPalette(id){
+  const p=P[id],ph=document.getElementById('phone');
+  ph.style.background=p.bg;
+  document.querySelectorAll('.pill').forEach((b,i)=>{
+    const pid=['salbei','teal','lav'][i];
+    b.classList.toggle('active',pid===id);
+    if(pid===id){b.style.borderColor=p.primary;b.style.background=p.secondarySoft;b.style.color=p.primary}
+    else{b.style.borderColor='#ddd';b.style.background='#fff';b.style.color='#666'}
+  });
+  document.querySelectorAll('.tab').forEach(t=>{
+    if(t.classList.contains('active')){t.style.borderBottomColor=p.primary;t.style.color=p.primary}
+    else{t.style.borderBottomColor='transparent';t.style.color='#888'}
+  });
+  const tb=document.getElementById('tabbar');
+  tb.style.background=p.surface;tb.style.borderTopColor=p.border;
+}
+
+function setPalette(id){curP=id;applyPalette(id);showScreen(curS)}
+
+function showScreen(s){
+  curS=s;
+  const sc=document.getElementById('screen'),tb=document.getElementById('tabbar'),p=P[curP];
+  document.querySelectorAll('.tab').forEach(t=>{
+    t.classList.remove('active');t.style.borderBottomColor='transparent';t.style.color='#888';
+  });
+  const tabNames={login:'Login',home:'Home',profil:'Profil',kalender:'Kalender',nachrichten:'Nachrichten',suche:'Suche'};
+  document.querySelectorAll('.tab').forEach(t=>{if(t.textContent===tabNames[s]){t.classList.add('active');t.style.borderBottomColor=p.primary;t.style.color=p.primary}});
+  tb.style.display=s==='login'?'none':'flex';
+  const tabMap={home:0,suche:1,kalender:2,nachrichten:3,profil:4};
+  document.querySelectorAll('.tabbar-item').forEach((i,idx)=>{i.style.color=tabMap[s]===idx?p.primary:p.textMuted;i.classList.toggle('active',tabMap[s]===idx)});
+
+  if(s==='login')sc.innerHTML=loginHTML(p);
+  else if(s==='home')sc.innerHTML=homeHTML(p);
+  else if(s==='profil')sc.innerHTML=profilHTML(p);
+  else if(s==='kalender')sc.innerHTML=kalenderHTML(p);
+  else if(s==='nachrichten')sc.innerHTML=nachrichtenHTML(p);
+  else if(s==='suche')sc.innerHTML=sucheHTML(p);
+  sc.scrollTop=0;
+}
+
+function loginHTML(p){return`
+<div style="text-align:center;margin:24px 0 28px">
+  <div style="display:flex;justify-content:center;margin-bottom:10px">
+    <div style="position:relative;width:64px;height:64px">
+      <div style="position:absolute;width:13px;height:52px;border-radius:13px;background:${p.secondary};transform:rotate(-20deg);left:10px;top:6px"></div>
+      <div style="position:absolute;width:13px;height:52px;border-radius:13px;background:${p.primary};transform:rotate(20deg);right:10px;top:6px"></div>
+    </div>
+  </div>
+  <div style="font-size:32px;font-weight:700;color:${p.text};letter-spacing:.3px">Velora</div>
+  <div style="font-size:13px;color:${p.textMuted};margin-top:3px">Für Menschen. Mit Herz.</div>
+</div>
+<div style="font-size:22px;font-weight:600;color:${p.text};margin-bottom:6px">Willkommen zurück</div>
+<div style="font-size:13px;color:${p.textMuted};margin-bottom:24px;line-height:1.5">Melde dich an, um Begleitung zu organisieren.</div>
+<div style="font-size:12px;color:${p.textMuted};margin-bottom:5px;font-weight:500">E-Mail</div>
+<input class="input" placeholder="name@beispiel.de" readonly style="background:${p.surfaceAlt};border-color:${p.border};color:${p.text}">
+<div style="font-size:12px;color:${p.textMuted};margin-bottom:5px;font-weight:500">Passwort</div>
+<input class="input" type="password" placeholder="••••••••" readonly style="background:${p.surfaceAlt};border-color:${p.border};color:${p.text}">
+<div style="text-align:right;margin-bottom:18px"><span style="font-size:12px;color:${p.primary};cursor:pointer;font-weight:500">Passwort vergessen?</span></div>
+<button class="btn" style="width:100%;justify-content:center;background:${p.primary};color:#fff;font-size:15px;padding:14px 20px"><i class="ti ti-login" style="font-size:18px"></i> Anmelden</button>
+<div style="text-align:center;margin-top:24px;padding-top:18px;border-top:0.5px solid ${p.border}">
+  <span style="font-size:13px;color:${p.textMuted}">Noch kein Konto? </span><span style="font-size:13px;font-weight:600;color:${p.primary};cursor:pointer">Jetzt registrieren</span>
+</div>`}
+
+function homeHTML(p){return`
+<div style="display:flex;align-items:center;margin-bottom:22px">
+  <div style="flex:1"><div style="font-size:13px;color:${p.textMuted}">Guten Tag</div><div style="font-size:24px;font-weight:600;color:${p.text}">Maria 👋</div></div>
+  <div style="width:44px;height:44px;border-radius:50%;border:0.5px solid ${p.border};background:${p.surface};display:flex;align-items:center;justify-content:center;position:relative">
+    <i class="ti ti-bell" style="font-size:22px;color:${p.text}"></i>
+    <span style="position:absolute;top:10px;right:11px;width:9px;height:9px;border-radius:50%;background:${p.accent}"></span>
+  </div>
+</div>
+<div class="card" style="background:${p.primary};border-color:${p.primary}">
+  <div style="display:flex;justify-content:space-between;align-items:center">
+    <span style="font-size:12px;color:${p.secondarySoft}">Dein nächster Termin</span>
+    <span class="badge" style="background:rgba(255,255,255,.18);color:#fff">Heute</span>
+  </div>
+  <div style="font-size:18px;font-weight:600;color:#fff;margin-top:8px">Alltagsbegleitung</div>
+  <div style="display:flex;align-items:center;gap:5px;margin-top:10px"><i class="ti ti-clock" style="font-size:15px;color:${p.secondarySoft}"></i><span style="font-size:13px;color:${p.secondarySoft}">14:30 – 16:30 Uhr · mit Sophie M.</span></div>
+  <button class="btn" style="background:#fff;color:${p.primary};margin-top:14px;padding:10px 18px;font-size:13px">Details ansehen</button>
+</div>
+<div style="font-size:15px;font-weight:600;color:${p.text};margin:20px 0 10px">Schnellzugriff</div>
+<div class="grid">
+  <div class="qa" style="background:${p.secondarySoft}"><i class="ti ti-search" style="color:${p.primary}"></i><span style="color:${p.text}">Begleitung finden</span><small style="color:${p.textMuted}">Passende Engel</small></div>
+  <div class="qa" style="background:${p.secondarySoft}"><i class="ti ti-calendar" style="color:${p.secondary}"></i><span style="color:${p.text}">Termine</span><small style="color:${p.textMuted}">Planen & buchen</small></div>
+  <div class="qa" style="background:${p.secondarySoft}"><i class="ti ti-pill" style="color:${p.accent}"></i><span style="color:${p.text}">Medikamente</span><small style="color:${p.textMuted}">Erinnerungen</small></div>
+  <div class="qa" style="background:${p.secondarySoft}"><i class="ti ti-message" style="color:${p.info}"></i><span style="color:${p.text}">Nachrichten</span><small style="color:${p.textMuted}">Im Austausch</small></div>
+</div>
+<div style="font-size:15px;font-weight:600;color:${p.text};margin:10px 0 10px">Dein Budget</div>
+<div class="card" style="background:${p.surface};border-color:${p.border}">
+  <div style="display:flex;align-items:center;margin-bottom:12px">
+    <div style="flex:1"><div style="font-size:14px;font-weight:500;color:${p.text}">Entlastungsbetrag §45b</div><div style="font-size:11px;color:${p.textMuted}">Verfügbar diesen Monat</div></div>
+    <div style="font-size:24px;font-weight:700;color:${p.primary}">131 €</div>
+  </div>
+  <div class="progress" style="background:${p.surfaceAlt}"><div style="width:35%;height:100%;border-radius:99px;background:${p.secondary}"></div></div>
+  <div style="font-size:11px;color:${p.textMuted}">46 € genutzt · Abrechnung mit der Pflegekasse</div>
+</div>
+<div class="card" style="background:${p.secondarySoft};border-color:${p.secondarySoft}">
+  <div style="display:flex;align-items:center;gap:12px">
+    <div style="width:44px;height:44px;border-radius:12px;background:${p.surface};display:flex;align-items:center;justify-content:center"><i class="ti ti-bell" style="font-size:20px;color:${p.primary}"></i></div>
+    <div style="flex:1"><div style="font-size:14px;font-weight:500;color:${p.text}">Medikamenten-Erinnerung</div><div style="font-size:11px;color:${p.textMuted}">Bald verfügbar</div></div>
+    <i class="ti ti-chevron-right" style="color:${p.textMuted}"></i>
+  </div>
+</div>`}
+
+function profilHTML(p){return`
+<div style="font-size:22px;font-weight:600;color:${p.text};margin-bottom:18px">Profil</div>
+<div class="card" style="display:flex;align-items:center;gap:14px;background:${p.surface};border-color:${p.border}">
+  <div class="avatar" style="background:${p.primary}">M</div>
+  <div style="flex:1"><div style="font-size:15px;font-weight:500;color:${p.text}">Maria</div><div style="font-size:12px;color:${p.textMuted}">maria@beispiel.de</div></div>
+  <i class="ti ti-chevron-right" style="color:${p.textMuted}"></i>
+</div>
+<div style="font-size:15px;font-weight:600;color:${p.text};margin:24px 0 10px">Design</div>
+<div class="card" style="background:${p.surface};border-color:${p.border}">
+  <div style="font-size:11px;color:${p.textMuted};margin-bottom:12px">Wähle die Farbwelt der App</div>
+  <div class="swatch-row">
+    <div class="swatch-opt" onclick="setPalette('salbei')" style="border-color:${curP==='salbei'?p.primary:p.border};background:${p.surface}">
+      <div class="swatch-dots"><span style="background:#3d6b4e"></span><span style="background:#6b9e7a"></span><span style="background:#e8c87a"></span></div>
+      <div class="swatch-label" style="color:${p.text}">Salbeigrün</div><div class="swatch-desc" style="color:${p.textMuted}">Ruhig & natürlich</div>
+    </div>
+    <div class="swatch-opt" onclick="setPalette('teal')" style="border-color:${curP==='teal'?p.primary:p.border};background:${p.surface}">
+      <div class="swatch-dots"><span style="background:#1a7a7a"></span><span style="background:#4db8b8"></span><span style="background:#d4956a"></span></div>
+      <div class="swatch-label" style="color:${p.text}">Teal</div><div class="swatch-desc" style="color:${p.textMuted}">Frisch & modern</div>
+    </div>
+    <div class="swatch-opt" onclick="setPalette('lav')" style="border-color:${curP==='lav'?p.primary:p.border};background:${p.surface}">
+      <div class="swatch-dots"><span style="background:#5c4a8a"></span><span style="background:#8b7ab8"></span><span style="background:#e8a87a"></span></div>
+      <div class="swatch-label" style="color:${p.text}">Lavendel</div><div class="swatch-desc" style="color:${p.textMuted}">Sanft & würdevoll</div>
+    </div>
+  </div>
+</div>
+<div style="font-size:15px;font-weight:600;color:${p.text};margin:20px 0 10px">Einstellungen</div>
+<div class="card" style="padding:0 16px;background:${p.surface};border-color:${p.border}">
+  <div class="settings-row" style="border-color:${p.border}"><i class="ti ti-bell" style="color:${p.primary}"></i><span style="color:${p.text}">Benachrichtigungen</span><i class="ti ti-chevron-right" style="color:${p.textMuted}"></i></div>
+  <div class="settings-row" style="border-color:${p.border}"><i class="ti ti-shield-check" style="color:${p.primary}"></i><span style="color:${p.text}">Datenschutz & Sicherheit</span><i class="ti ti-chevron-right" style="color:${p.textMuted}"></i></div>
+  <div class="settings-row" style="border-color:${p.border}"><i class="ti ti-credit-card" style="color:${p.primary}"></i><span style="color:${p.text}">Abrechnung & Pflegekasse</span><i class="ti ti-chevron-right" style="color:${p.textMuted}"></i></div>
+  <div class="settings-row" style="border-color:${p.border}"><i class="ti ti-help" style="color:${p.primary}"></i><span style="color:${p.text}">Hilfe & Support</span><i class="ti ti-chevron-right" style="color:${p.textMuted}"></i></div>
+</div>
+<div style="text-align:center;margin-top:20px"><button class="btn" style="color:${p.textMuted};border:1px solid ${p.border};background:transparent;font-size:13px"><i class="ti ti-logout" style="font-size:16px"></i> Abmelden</button></div>
+<div style="text-align:center;margin-top:20px;font-size:11px;color:${p.textMuted};line-height:1.5">Velora · Für Menschen. Mit Herz.<br>Velora Care UG (haftungsbeschränkt)</div>`}
+
+function kalenderHTML(p){return`
+<div style="font-size:22px;font-weight:600;color:${p.text};margin-bottom:18px">Kalender</div>
+<div style="display:flex;gap:6px;margin-bottom:18px;overflow-x:auto">
+  ${['Mo 30','Di 1','Mi 2','Do 3','Fr 4','Sa 5','So 6'].map((d,i)=>`<div style="min-width:46px;padding:10px 6px;border-radius:12px;text-align:center;cursor:pointer;${i===4?'background:'+p.primary+';color:#fff':'background:'+p.surfaceAlt+';color:'+p.text}"><div style="font-size:10px;opacity:.7">${d.split(' ')[0]}</div><div style="font-size:17px;font-weight:500">${d.split(' ')[1]}</div></div>`).join('')}
+</div>
+<div style="font-size:13px;font-weight:500;color:${p.textMuted};margin-bottom:12px">Heute, 4. Juli</div>
+<div class="card" style="border-left:3px solid ${p.primary};background:${p.surface};border-color:${p.border};border-left-color:${p.primary}">
+  <div style="font-size:15px;font-weight:500;color:${p.text}">Alltagsbegleitung</div>
+  <div style="font-size:12px;color:${p.textMuted};margin-top:5px"><i class="ti ti-clock" style="font-size:13px"></i> 14:30 – 16:30 · Sophie M.</div>
+</div>
+<div class="card" style="border-left:3px solid ${p.accent};background:${p.surface};border-color:${p.border};border-left-color:${p.accent}">
+  <div style="font-size:15px;font-weight:500;color:${p.text}">Einkaufsbegleitung</div>
+  <div style="font-size:12px;color:${p.textMuted};margin-top:5px"><i class="ti ti-clock" style="font-size:13px"></i> 17:00 – 18:00 · Lena K.</div>
+</div>
+<div style="font-size:13px;font-weight:500;color:${p.textMuted};margin:20px 0 12px">Morgen, 5. Juli</div>
+<div class="card" style="border-left:3px solid ${p.secondary};background:${p.surface};border-color:${p.border};border-left-color:${p.secondary}">
+  <div style="font-size:15px;font-weight:500;color:${p.text}">Arztbegleitung</div>
+  <div style="font-size:12px;color:${p.textMuted};margin-top:5px"><i class="ti ti-clock" style="font-size:13px"></i> 10:00 – 12:00 · Jonas R.</div>
+</div>
+<div class="card" style="border-left:3px solid ${p.info};background:${p.surface};border-color:${p.border};border-left-color:${p.info}">
+  <div style="font-size:15px;font-weight:500;color:${p.text}">Pflegebox-Lieferung</div>
+  <div style="font-size:12px;color:${p.textMuted};margin-top:5px"><i class="ti ti-truck-delivery" style="font-size:13px"></i> Voraussichtlich nachmittags</div>
+</div>`}
+
+function nachrichtenHTML(p){return`
+<div style="font-size:22px;font-weight:600;color:${p.text};margin-bottom:18px">Nachrichten</div>
+<div class="card" style="display:flex;align-items:center;gap:12px;cursor:pointer;background:${p.surface};border-color:${p.border}">
+  <div class="avatar" style="background:${p.secondary};font-size:14px">SM</div>
+  <div style="flex:1"><div style="display:flex;justify-content:space-between"><span style="font-size:14px;font-weight:500;color:${p.text}">Sophie M.</span><span style="font-size:10px;color:${p.textMuted}">14:22</span></div><div style="font-size:12px;color:${p.textMuted};margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Bin um 14:30 bei Ihnen, bis gleich!</div></div>
+  <span style="width:20px;height:20px;border-radius:50%;background:${p.primary};color:#fff;font-size:10px;display:flex;align-items:center;justify-content:center;font-weight:600">1</span>
+</div>
+<div class="card" style="display:flex;align-items:center;gap:12px;cursor:pointer;background:${p.surface};border-color:${p.border}">
+  <div class="avatar" style="background:${p.accent};font-size:14px;color:#fff">LK</div>
+  <div style="flex:1"><div style="display:flex;justify-content:space-between"><span style="font-size:14px;font-weight:500;color:${p.text}">Lena K.</span><span style="font-size:10px;color:${p.textMuted}">Gestern</span></div><div style="font-size:12px;color:${p.textMuted};margin-top:3px">Danke für den schönen Nachmittag!</div></div>
+</div>
+<div class="card" style="display:flex;align-items:center;gap:12px;cursor:pointer;background:${p.surface};border-color:${p.border}">
+  <div class="avatar" style="background:${p.info};font-size:14px;color:#fff">VT</div>
+  <div style="flex:1"><div style="display:flex;justify-content:space-between"><span style="font-size:14px;font-weight:500;color:${p.text}">Velora Team</span><span style="font-size:10px;color:${p.textMuted}">01.07.</span></div><div style="font-size:12px;color:${p.textMuted};margin-top:3px">Willkommen bei Velora! Wir freuen uns…</div></div>
+</div>
+<div style="text-align:center;margin-top:28px;color:${p.textMuted};font-size:12px">Alle Nachrichten geladen</div>`}
+
+function sucheHTML(p){return`
+<div style="font-size:22px;font-weight:600;color:${p.text};margin-bottom:18px">Begleitung finden</div>
+<div style="position:relative;margin-bottom:18px"><input class="input" placeholder="PLZ oder Ort eingeben..." readonly style="padding-left:38px;margin:0;background:${p.surfaceAlt};border-color:${p.border};color:${p.text}"><i class="ti ti-search" style="position:absolute;left:13px;top:13px;font-size:17px;color:${p.textMuted}"></i></div>
+<div style="display:flex;gap:6px;margin-bottom:18px;flex-wrap:wrap">
+  <span class="badge" style="background:${p.secondarySoft};color:${p.primary};padding:7px 14px;border-radius:99px;font-size:12px;cursor:pointer;font-weight:500">Alltagsbegleitung</span>
+  <span class="badge" style="background:${p.surfaceAlt};color:${p.text};padding:7px 14px;border-radius:99px;font-size:12px;cursor:pointer">Einkaufshilfe</span>
+  <span class="badge" style="background:${p.surfaceAlt};color:${p.text};padding:7px 14px;border-radius:99px;font-size:12px;cursor:pointer">Arztbegleitung</span>
+</div>
+<div class="card" style="display:flex;gap:12px;cursor:pointer;background:${p.surface};border-color:${p.border}">
+  <div class="avatar" style="background:${p.primary};font-size:14px">SM</div>
+  <div style="flex:1"><div style="font-size:15px;font-weight:500;color:${p.text}">Sophie M.</div><div style="font-size:11px;color:${p.textMuted}">Frankfurt · 2.3 km</div><div style="display:flex;gap:4px;margin-top:7px;align-items:center"><i class="ti ti-star-filled" style="font-size:14px;color:${p.accent}"></i><span style="font-size:13px;color:${p.text};font-weight:500">4.9</span><span style="font-size:11px;color:${p.textMuted}">(47 Bewertungen)</span></div></div>
+</div>
+<div class="card" style="display:flex;gap:12px;cursor:pointer;background:${p.surface};border-color:${p.border}">
+  <div class="avatar" style="background:${p.secondary};font-size:14px;color:#fff">JR</div>
+  <div style="flex:1"><div style="font-size:15px;font-weight:500;color:${p.text}">Jonas R.</div><div style="font-size:11px;color:${p.textMuted}">Offenbach · 5.1 km</div><div style="display:flex;gap:4px;margin-top:7px;align-items:center"><i class="ti ti-star-filled" style="font-size:14px;color:${p.accent}"></i><span style="font-size:13px;color:${p.text};font-weight:500">4.8</span><span style="font-size:11px;color:${p.textMuted}">(32 Bewertungen)</span></div></div>
+</div>
+<div class="card" style="display:flex;gap:12px;cursor:pointer;background:${p.surface};border-color:${p.border}">
+  <div class="avatar" style="background:${p.accent};font-size:14px;color:#fff">LK</div>
+  <div style="flex:1"><div style="font-size:15px;font-weight:500;color:${p.text}">Lena K.</div><div style="font-size:11px;color:${p.textMuted}">Sachsenhausen · 1.8 km</div><div style="display:flex;gap:4px;margin-top:7px;align-items:center"><i class="ti ti-star-filled" style="font-size:14px;color:${p.accent}"></i><span style="font-size:13px;color:${p.text};font-weight:500">5.0</span><span style="font-size:11px;color:${p.textMuted}">(61 Bewertungen)</span></div></div>
+</div>`}
+
+applyPalette('salbei');showScreen('login');
+</script>
+</body>
+</html>
