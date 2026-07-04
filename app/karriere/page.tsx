@@ -75,11 +75,11 @@ const FAQS = [
 const jsonLdJobPosting = {
   '@context': 'https://schema.org',
   '@type': 'JobPosting',
-  title: 'Alltagsbegleiter (m/w/d) — Flexibler Nebenjob mit 20 €/Stunde',
-  description: 'Werde Alltagsengel: Unterstütze Menschen mit Pflegegrad bei Alltagsaufgaben wie Einkaufen, Arztbegleitung, Spaziergängen und Behördengängen. Flexible Zeiteinteilung, 20 €/Stunde, keine Pflegeausbildung nötig. Studierende, Quereinsteiger und Berufserfahrene willkommen.',
-  datePosted: '2026-06-01',
+  title: 'Alltagsbegleiter/in (m/w/d) — 20 €/Stunde, flexible Zeiten',
+  description: '<p><strong>Alltagsengel sucht Alltagsbegleiter/innen (§45a SGB XI) in Frankfurt am Main und Umgebung.</strong></p><p>Du unterstützt Menschen mit Pflegegrad bei alltäglichen Aufgaben: Einkaufen, Arztbesuche, Spaziergänge, Behördengänge und Gesellschaft leisten. Keine medizinische Pflege — sondern menschliche Nähe und praktische Hilfe.</p><p><strong>Wir bieten:</strong> 20 €/Stunde, flexible Zeiteinteilung, eigene App, Versicherungsschutz, familiäres Team.</p><p><strong>Anforderungen:</strong> Empathie, Zuverlässigkeit, Deutschkenntnisse (B2), erweitertes Führungszeugnis. Keine Pflegeausbildung nötig. §45a-Qualifikation von Vorteil.</p><p>Bewirb dich jetzt: info@alltagsengel.care oder WhatsApp +49 155 10445517</p>',
+  datePosted: '2026-07-04',
   validThrough: '2026-12-31',
-  employmentType: ['PART_TIME', 'TEMPORARY'],
+  employmentType: ['PART_TIME', 'FULL_TIME', 'TEMPORARY'],
   hiringOrganization: {
     '@type': 'Organization',
     name: 'Alltagsengel',
@@ -90,10 +90,21 @@ const jsonLdJobPosting = {
     '@type': 'Place',
     address: {
       '@type': 'PostalAddress',
+      streetAddress: 'Neue Mainzer Straße 66-68',
       addressLocality: 'Frankfurt am Main',
+      postalCode: '60311',
       addressRegion: 'Hessen',
       addressCountry: 'DE',
     },
+  },
+  applicantLocationRequirements: {
+    '@type': 'GeoCircle',
+    geoMidpoint: {
+      '@type': 'GeoCoordinates',
+      latitude: 50.1109,
+      longitude: 8.6821,
+    },
+    geoRadius: '30 km',
   },
   baseSalary: {
     '@type': 'MonetaryAmount',
@@ -104,7 +115,7 @@ const jsonLdJobPosting = {
   responsibilities: 'Alltagsbegleitung: Einkaufsbegleitung, Arztbegleitung, Spaziergänge, Behördengänge, Gesellschaft leisten.',
   skills: 'Empathie, Zuverlässigkeit, Deutschkenntnisse, Führungszeugnis',
   industry: 'Sozialwesen / Alltagsbegleitung',
-  applicantLocationRequirements: { '@type': 'Country', name: 'Germany' },
+  directApply: true,
 }
 
 const jsonLdFAQ = {
