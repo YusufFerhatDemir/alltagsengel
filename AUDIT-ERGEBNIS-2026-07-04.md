@@ -18,6 +18,21 @@
 11. **app_settings demo_password** — RLS-Policy geaendert: demo_password nur noch fuer Admins sichtbar
 12. **Werbematerial erstellt** — Facebook-Posts, Indeed, openPR, Google Business, Pflegestuetzpunkte, Jobcenter (alles in marketing/sofort-werbung/)
 
-## Noch offen
+## Facebook Mitarbeiter-Werbung (gepostet)
 
-- **Apple Developer Account**: Mit D-U-N-S 316856461 auf Organization umstellen (developer.apple.com → Account)
+13. **JOBS in FRANKFURT AM MAIN** (78.843 Mitglieder) — gepostet, live
+14. **Jobs Frankfurt am Main (Jobbörse)** (70.643 Mitglieder) — gepostet, live
+15. **Jobs in Frankfurt** (60.637 Mitglieder) — gepostet, wartet auf Admin-Freigabe
+16. **Arbeit Jobs Stellenangebote in Deutschland** (112.738 Mitglieder) — gepostet, live
+
+## Apple Developer Account
+
+17. **Organization-Umstellung beantragt** — Formular bei Apple eingereicht (developer.apple.com/contact/request/migrate-individual-account), D-U-N-S 316856461, Antwort innerhalb 1 Werktag
+
+## Noch offen / nicht möglich ohne Konto-Erstellung
+
+- **Kleinanzeigen.de**: Erfordert Konto-Registrierung
+- **Jobbörse Arbeitsagentur**: Erfordert Arbeitgeber-Konto
+- **Google Business Profile**: Erfordert Verifizierung (Postkarte)
+- **openPR.de**: Erfordert Registrierung
+- **Indeed**: Kostenpflichtiges Modell für Arbeitgeber in Deutschland
