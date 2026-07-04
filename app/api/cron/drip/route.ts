@@ -20,7 +20,11 @@ export async function GET(request: Request) {
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://alltagsengel.care'
     const response = await fetch(`${baseUrl}/api/drip`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        // CRON_SECRET weiterreichen — /api/drip ist jetzt fail-closed geschützt.
+        Authorization: `Bearer ${process.env.CRON_SECRET}`,
+      },
     })
 
     const result = await response.json()

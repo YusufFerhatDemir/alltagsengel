@@ -129,32 +129,35 @@ export async function middleware(request: NextRequest) {
       return supabaseResponse
     }
 
-    // Admin & MIS routes - check admin role via JWT metadata (no DB query needed)
+    // ═══ Admin & MIS routes — Rolle AUTORITATIV prüfen ═══
+    // SICHERHEIT: user_metadata ist vom User selbst editierbar
+    // (supabase.auth.updateUser({ data: { role: 'admin' } })) und darf
+    // NIEMALS für Autorisierung genutzt werden — sonst macht sich jeder
+    // Nutzer selbst zum Admin. Wir prüfen daher ausschließlich:
+    //   1) app_metadata.role — nur serverseitig (Admin-API) setzbar → vertrauenswürdig
+    //   2) Fallback: profiles.role in der DB (autoritativ, gegen Self-Escalation
+    //      durch Trigger prevent_role_escalation geschützt).
     if (user && (pathname.startsWith('/admin') || pathname.startsWith('/mis'))) {
-      const metaRole = user.user_metadata?.role || ''
-      const isAdmin = metaRole === 'admin' || metaRole === 'superadmin'
+      const appRole = (user.app_metadata?.role as string | undefined) || ''
+      let isAdmin = appRole === 'admin' || appRole === 'superadmin'
 
       if (!isAdmin) {
-        // Fallback: check profiles table
         try {
           const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
-          if (!profile || !['admin', 'superadmin'].includes(profile.role)) {
-            const url = request.nextUrl.clone()
-            url.pathname = '/auth/login'
-            url.searchParams.set('error', 'admin_required')
-            return NextResponse.redirect(url)
-          }
+          isAdmin = !!profile && ['admin', 'superadmin'].includes(profile.role)
         } catch (dbError) {
-          // FAIL-CLOSED: If DB check fails, DENY access (don't allow through)
+          // FAIL-CLOSED: DB-Check fehlgeschlagen → Zugriff verweigern.
           console.error('Admin DB check failed:', dbError)
-          const url = request.nextUrl.clone()
-          url.pathname = '/auth/login'
-          url.searchParams.set('error', 'admin_required')
-          return NextResponse.redirect(url)
+          isAdmin = false
         }
       }
 
-
+      if (!isAdmin) {
+        const url = request.nextUrl.clone()
+        url.pathname = '/auth/login'
+        url.searchParams.set('error', 'admin_required')
+        return NextResponse.redirect(url)
+      }
     }
 
     return supabaseResponse

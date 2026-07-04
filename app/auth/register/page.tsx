@@ -232,15 +232,16 @@ function RegisterForm() {
           body: JSON.stringify({ email, firstName, role }),
         }).catch(() => {})
 
-        // Referral-Code einlösen (fire-and-forget)
-        if (refCode && data.user) {
+        // Referral-Code einlösen (fire-and-forget) — nur mit gültiger Session,
+        // da /api/referral jetzt authentifiziert ist (referred_user_id = Token-User).
+        if (refCode && data.user && data.session) {
           fetch('/api/referral', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              referral_code: refCode,
-              referred_user_id: data.user.id,
-            }),
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${data.session.access_token}`,
+            },
+            body: JSON.stringify({ referral_code: refCode }),
           }).catch(() => {})
         }
 

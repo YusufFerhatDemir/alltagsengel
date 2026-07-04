@@ -45,12 +45,13 @@ import { isLowConfidenceReply, sanitizeNames, HOLDING_REPLY } from '@/lib/whatsa
 function verifyMetaSignature(rawBody: string, signatureHeader: string | null): boolean {
   const appSecret = process.env.WHATSAPP_APP_SECRET
   if (!appSecret) {
-    // Secret (noch) nicht gesetzt → Prüfung inaktiv, damit der Webhook nicht
-    // komplett ausfällt. Sobald WHATSAPP_APP_SECRET gesetzt ist, greift die
-    // Signaturprüfung automatisch (fail-closed).
+    // FAIL-CLOSED: Ohne App-Secret kann die Meta-Signatur nicht verifiziert
+    // werden. Früher wurde hier `true` zurückgegeben (FAIL-OPEN) — das erlaubte
+    // JEDEM, gefälschte Webhook-Payloads einzuschleusen (Bot antwortet, eskaliert,
+    // verschickt Mails, schreibt in die DB). Jetzt: ablehnen, bis das Secret gesetzt ist.
     // eslint-disable-next-line no-console
-    console.warn('[wa-webhook] WHATSAPP_APP_SECRET fehlt — Signaturprüfung ÜBERSPRUNGEN. App-Secret in den Env-Vars setzen!')
-    return true
+    console.error('[wa-webhook] WHATSAPP_APP_SECRET fehlt — Webhook FAIL-CLOSED, Request abgelehnt. App-Secret in den Env-Vars setzen!')
+    return false
   }
   if (!signatureHeader || !signatureHeader.startsWith('sha256=')) return false
   const expected = 'sha256=' + createHmac('sha256', appSecret).update(rawBody, 'utf8').digest('hex')

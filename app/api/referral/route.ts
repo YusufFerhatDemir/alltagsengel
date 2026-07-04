@@ -61,11 +61,26 @@ export async function GET(request: NextRequest) {
 // ═══ POST: Referral-Code bei Registrierung einlösen ═══
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
-    const { referral_code, referred_user_id } = body
+    // ═══ AUTH: nur der eingeloggte, GEWORBENE User darf einen Code einlösen ═══
+    // Vorher: KEIN Auth-Check + referred_user_id aus dem Body → jeder konnte
+    // beliebige User als "geworben" markieren und 20 €-Boni an fremde Konten
+    // schieben (Referral-Fraud). Jetzt kommt die User-ID AUS DEM TOKEN.
+    const authHeader = request.headers.get('authorization')
+    if (!authHeader) {
+      return NextResponse.json({ error: 'Nicht autorisiert' }, { status: 401 })
+    }
+    const token = authHeader.replace('Bearer ', '')
+    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token)
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Nicht autorisiert' }, { status: 401 })
+    }
 
-    if (!referral_code || !referred_user_id) {
-      return NextResponse.json({ error: 'Code und User-ID erforderlich' }, { status: 400 })
+    const body = await request.json()
+    const { referral_code } = body
+    const referred_user_id = user.id
+
+    if (!referral_code) {
+      return NextResponse.json({ error: 'Code erforderlich' }, { status: 400 })
     }
 
     // Referrer finden
