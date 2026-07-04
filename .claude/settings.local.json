@@ -193,7 +193,14 @@
       "Bash(eas build:view 77fe8598-3f32-4fed-94d4-92a2cacdcad3)",
       "Bash(./deploy.sh \"Velora EAS: buildNumber \\(remote versioning\\) + inaktive Channels entfernt — warnungsfreie Build-Pipeline\")",
       "Bash(eas build:view 77fe8598-3f32-4fed-94d4-92a2cacdcad3 --json)",
-      "Bash(./deploy.sh \"Velora EAS-Fix: .easignore schloss velora/app/** aus \\(unanchored 'app'/'lib'/... Muster\\) → package.json fehlte im Build-Archiv; velora/ gezielt wieder eingeschlossen\")"
+      "Bash(./deploy.sh \"Velora EAS-Fix: .easignore schloss velora/app/** aus \\(unanchored 'app'/'lib'/... Muster\\) → package.json fehlte im Build-Archiv; velora/ gezielt wieder eingeschlossen\")",
+      "Bash(eas build:view 46423904-04be-4d52-9a3c-917ee502216e --json)",
+      "Bash(eas build:list --platform ios --limit 6 --json --non-interactive)",
+      "Bash(node -e \"const p=require\\('./package.json'\\); console.log\\('next:', \\(p.dependencies||{}\\).next||\\(p.devDependencies||{}\\).next\\); console.log\\('has overrides:', JSON.stringify\\(p.overrides||null\\)\\); console.log\\('postcss direct:', \\(p.dependencies||{}\\).postcss||\\(p.devDependencies||{}\\).postcss||'\\(transitive only\\)'\\)\")",
+      "Bash(node -e \"console.log\\(require\\('next/package.json'\\).version\\)\")",
+      "Bash(node -e \"console.log\\(require\\('postcss/package.json'\\).version\\)\")",
+      "Bash(node -e \"console.log\\('next still at', require\\('next/package.json'\\).version\\)\")",
+      "Bash(./deploy.sh \"Security: postcss ^8.5.10 override \\(behebt XSS-Advisory ohne katastrophalen next@9-Downgrade\\) + AppMockup neutraler Demo-Name statt Personenname — 131€/1.572€/DDG/Impressum bereits live \\(8297eb2\\)\")"
     ]
   }
 }

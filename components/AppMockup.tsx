@@ -83,7 +83,7 @@ const AppMockup: React.FC<AppMockupProps> = ({ size = 300 }) => {
         fill="#DBA84A"
         fontFamily="system-ui, -apple-system, sans-serif"
       >
-        Hallo, Yusuf
+        Hallo, Maria
       </text>
 
       {/* Search Bar Background */}
