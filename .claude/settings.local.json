@@ -221,7 +221,16 @@
       "Bash(./deploy.sh \"efy care: velora-Ordner in eigenständiges Repo /Users/work/efy-care ausgegliedert + Cleanup im Alltagsengel-Repo \\(.easignore entfernt, velora-mockup-Route + public/velora-mockup.html gelöscht, launch.json velora-web entfernt\\) — enthält zusätzlich efy-care-branding/ Assets \\(Logo-Konzepte + Social-Media-Templates, parallel erstellt\\)\")",
       "Bash(curl -s -D - -o /tmp/body-xyz.html -A \"Googlebot\" \"https://www.chairmatch.de/this-path-does-not-exist-xyz\")",
       "Bash(curl -s -o /dev/null -w \"/foo/bar -> %{http_code}\\\\n\" -A Googlebot \"https://www.chairmatch.de/foo/bar\")",
-      "Bash(curl -s -D - -o /dev/null -A \"Googlebot\" \"https://www.chairmatch.de/zzz-random-99\")"
+      "Bash(curl -s -D - -o /dev/null -A \"Googlebot\" \"https://www.chairmatch.de/zzz-random-99\")",
+      "Bash(gh --version)",
+      "Bash(gh auth *)",
+      "Bash(gh repo *)",
+      "Bash(curl -sL -w '%{http_code}' -o faq.html 'https://alltagsengel.care/faq')",
+      "Bash(curl -sL -w '%{http_code}' -o seite.html 'https://alltagsengel.care/blog/entlastungsbetrag-nutzen')",
+      "Bash(curl -sL -w '%{http_code}' -o ueberuns.html 'https://alltagsengel.care/ueber-uns')",
+      "Bash(curl -sL -o impressum.html -w '%{http_code}' 'https://alltagsengel.care/impressum')",
+      "Bash(curl -sL -o seite.html -w '%{http_code}' 'https://alltagsengel.care/')",
+      "Bash(curl -sL -o ds.html -w '%{http_code}\\\\n' 'https://alltagsengel.care/datenschutz')"
     ]
   }
 }
