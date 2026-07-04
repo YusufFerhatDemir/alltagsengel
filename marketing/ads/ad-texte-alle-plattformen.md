@@ -6,7 +6,7 @@
 
 ### Video 1: Emotionaler Hook
 **Hook (erste 2 Sek):** "Deine Oma sitzt alleine zu Hause? 😢"
-**Text:** "Mit Alltagsengel bekommt sie einen persönlichen Begleiter — für Arztbesuche, Einkäufe oder einfach Gesellschaft. 125€/Monat übernimmt die Pflegekasse! 💛"
+**Text:** "Mit Alltagsengel bekommt sie einen persönlichen Begleiter — für Arztbesuche, Einkäufe oder einfach Gesellschaft. 131€/Monat übernimmt die Pflegekasse! 💛"
 **CTA:** "Link in Bio → alltagsengel.care"
 **Hashtags:** #Alltagsengel #Pflege #Seniorenhilfe #45b #Frankfurt #Alltagsbegleitung #Pflegekasse #Familie
 
@@ -15,7 +15,7 @@
 **1.** Einkaufsbegleitung
 **2.** Krankenfahrten
 **3.** Alltagsbegleitung
-**Text:** "125€ pro Monat. Nutzt kaum jemand. Alltagsengel macht's einfach."
+**Text:** "131€ pro Monat. Nutzt kaum jemand. Alltagsengel macht's einfach."
 **CTA:** "Jetzt App laden 👼"
 
 ### Video 3: Problem-Lösung
@@ -27,7 +27,7 @@
 ## Instagram Feed / Stories
 
 ### Post 1: Karussell
-**Slide 1:** "125€ pro Monat von der Pflegekasse — nutzt du sie?" (Goldener Text auf Schwarz)
+**Slide 1:** "131€ pro Monat von der Pflegekasse — nutzt du sie?" (Goldener Text auf Schwarz)
 **Slide 2:** "§45b SGB XI: Jeder mit Pflegegrad hat Anspruch auf Entlastungsleistungen"
 **Slide 3:** "Alltagsengel macht's einfach: Begleitung buchen, Kasse zahlt"
 **Slide 4:** "Krankenfahrten • Einkaufshilfe • Behördengänge • Gesellschaft"
@@ -39,7 +39,7 @@
 Alltagsengel verbindet Senioren mit geprüften Begleitern — für Arztbesuche, Einkäufe, Behördengänge oder einfach ein gutes Gespräch.
 
 ✅ 100% versichert
-✅ §45b abrechenbar (125€/Monat von der Kasse)
+✅ §45b abrechenbar (131€/Monat von der Kasse)
 ✅ 24/7 buchbar
 ✅ Frankfurt & Rhein-Main
 
@@ -64,7 +64,7 @@ Jetzt kostenlos starten 👉 alltagsengel.care
 ### Responsive Search Ad Vorschläge
 **Überschriften:**
 1. Alltagsbegleitung ab 0€ mit §45b
-2. 125€/Monat von der Pflegekasse
+2. 131€/Monat von der Pflegekasse
 3. Geprüfte Begleiter in Frankfurt
 4. Jetzt Alltagsengel buchen
 5. Krankenfahrten & Einkaufshilfe
@@ -72,7 +72,7 @@ Jetzt kostenlos starten 👉 alltagsengel.care
 
 **Beschreibungen:**
 1. Alltagsengel verbindet Senioren mit liebevollen Begleitern. Arztbesuche, Einkäufe, Behördengänge. Jetzt kostenlos starten!
-2. §45b Entlastungsleistungen einfach nutzen. 125€/Monat von der Pflegekasse. Versichert & geprüft. Frankfurt & Rhein-Main.
+2. §45b Entlastungsleistungen einfach nutzen. 131€/Monat von der Pflegekasse. Versichert & geprüft. Frankfurt & Rhein-Main.
 
 ---
 
@@ -83,7 +83,7 @@ Jetzt kostenlos starten 👉 alltagsengel.care
 
 Alltagsengel ist die App für liebevolle Alltagsbegleitung: Arztbesuche, Einkäufe, Behördengänge oder einfach Gesellschaft. Alle Begleiter sind geprüft und versichert.
 
-Das Beste: 125€/Monat übernimmt die Pflegekasse (§45b SGB XI)!
+Das Beste: 131€/Monat übernimmt die Pflegekasse (§45b SGB XI)!
 
 👉 Jetzt kostenlos starten"
 
@@ -95,7 +95,7 @@ Das Beste: 125€/Monat übernimmt die Pflegekasse (§45b SGB XI)!
 
 Alltagsengel ist Ihr persönlicher Begleiter — freundlich, zuverlässig und versichert. Buchen Sie ganz einfach über die App oder rufen Sie uns an.
 
-Mit Pflegegrad zahlt Ihre Kasse bis zu 125€/Monat!
+Mit Pflegegrad zahlt Ihre Kasse bis zu 131€/Monat!
 
 👉 Jetzt informieren"
 
@@ -119,7 +119,7 @@ Mit Pflegegrad zahlt Ihre Kasse bis zu 125€/Monat!
 
 | Tag | Plattform | Inhalt |
 |-----|-----------|--------|
-| Mo | Instagram | Karussell: "125€ die du nicht nutzt" |
+| Mo | Instagram | Karussell: "131€ die du nicht nutzt" |
 | Di | TikTok | Reel: Emotionaler Hook Video 1 |
 | Mi | Facebook | Ad Set 1: Angehörige |
 | Do | Instagram | Story: App-Demo Walkthrough |

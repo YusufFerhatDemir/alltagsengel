@@ -282,7 +282,7 @@
 - Seite 1: „Alltagsbegleitung für Senioren in Frankfurt — Alltagsengel"
 - Seite 2: Was ist Alltagsbegleitung nach §45a SGB XI?
 - Seite 3: Unsere Leistungen (Einkaufsbegleitung, Arztbegleitung, Behördengänge, Freizeitgestaltung, Haushaltshilfe)
-- Seite 4: So funktioniert die Kostenübernahme (125 € Entlastungsbetrag + 131 € Eigenanteil)
+- Seite 4: So funktioniert die Kostenübernahme (131 € Entlastungsbetrag + 131 € Eigenanteil)
 - Seite 5: So einfach geht's — in 3 Schritten zur Alltagsbegleitung
 - Seite 6: Kontakt, QR-Code zur Website, App-Download
 

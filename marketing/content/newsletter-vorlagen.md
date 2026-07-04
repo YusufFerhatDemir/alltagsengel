@@ -34,7 +34,7 @@ Unsere Begleiter übernehmen keine medizinische Pflege — dafür gibt es Pflege
 
 ### Das Beste: Die Pflegekasse zahlt mit
 
-Wenn ein Pflegegrad vorliegt (Pflegegrad 1 bis 5), übernimmt die Pflegekasse **125 Euro monatlich** über den sogenannten Entlastungsbetrag. Als anerkannter Anbieter rechnen wir direkt mit Ihrer Kasse ab.
+Wenn ein Pflegegrad vorliegt (Pflegegrad 1 bis 5), übernimmt die Pflegekasse **131 Euro monatlich** über den sogenannten Entlastungsbetrag. Als anerkannter Anbieter rechnen wir direkt mit Ihrer Kasse ab.
 
 **Ihr monatlicher Eigenanteil: ab 131 Euro.**
 
@@ -136,7 +136,7 @@ willkommen zum Alltagsengel Monatsbrief für [MONAT JAHR]. Heute mit diesen Them
 ---
 
 **Sie nutzen den Entlastungsbetrag noch nicht?**
-Jeder Mensch mit Pflegegrad hat Anspruch auf 125 Euro monatlich für Alltagsbegleitung. Wir helfen Ihnen, diesen Anspruch zu nutzen — unkompliziert und ohne Papierkram.
+Jeder Mensch mit Pflegegrad hat Anspruch auf 131 Euro monatlich für Alltagsbegleitung. Wir helfen Ihnen, diesen Anspruch zu nutzen — unkompliziert und ohne Papierkram.
 
 **[Jetzt informieren und Erstgespräch vereinbaren]**
 *(Button/Link zu: alltagsengel.care/kontakt)*
@@ -248,7 +248,7 @@ Gerne begleiten wir Sie zu einem dieser Orte — oder zu Ihrem persönlichen Lie
 ---
 
 **Unser Angebot für den Sommer:**
-Nutzen Sie den Entlastungsbetrag Ihrer Pflegekasse (125 Euro/Monat) für regelmäßige Alltagsbegleitung. Gerade im Sommer ist es wichtig, dass jemand nach dem Rechten sieht — ob Ihr Angehöriger genug trinkt, die Wohnung kühl bleibt und der Alltag reibungslos läuft.
+Nutzen Sie den Entlastungsbetrag Ihrer Pflegekasse (131 Euro/Monat) für regelmäßige Alltagsbegleitung. Gerade im Sommer ist es wichtig, dass jemand nach dem Rechten sieht — ob Ihr Angehöriger genug trinkt, die Wohnung kühl bleibt und der Alltag reibungslos läuft.
 
 **Ihr Eigenanteil: ab 131 Euro monatlich.** Die Pflegekasse übernimmt den Rest.
 

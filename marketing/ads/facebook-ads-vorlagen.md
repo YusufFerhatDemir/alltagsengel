@@ -44,16 +44,16 @@ Brand Awareness / Reach
 
 Mama geht nicht mehr gerne allein einkaufen. Papa traut sich den Arztbesuch nicht mehr allein zu.
 
-Das kennen viele Familien. Aber wussten Sie, dass die Pflegekasse 125 € pro Monat für Alltagsbegleitung zahlt?
+Das kennen viele Familien. Aber wussten Sie, dass die Pflegekasse 131 € pro Monat für Alltagsbegleitung zahlt?
 
 Alltagsengel bringt liebevolle Begleiter zu Ihren Eltern — für Einkäufe, Arztbesuche, Spaziergänge und Gesellschaft. Zertifiziert nach §45a SGB XI. In Frankfurt am Main und Umgebung.
 
 **Headline:** Alltagsbegleitung ab 131 €/Monat
 
-**Description:** Pflegekasse zahlt 125 €. Zertifiziert nach §45a. Jetzt kostenlos beraten lassen.
+**Description:** Pflegekasse zahlt 131 €. Zertifiziert nach §45a. Jetzt kostenlos beraten lassen.
 
 **Creative-Beschreibung:**
-Video (15–30 Sek.): Ältere Dame sitzt allein am Küchentisch, schaut aus dem Fenster. Türklingel. Alltagsbegleiterin (ca. 35 J.) mit Alltagsengel-Tasche kommt rein, beide lächeln. Schnitt: gemeinsam im Supermarkt, Obst aussuchen. Schnitt: gemeinsam auf einer Parkbank, lachen. Endcard: Alltagsengel-Logo + „125 € zahlt die Pflegekasse. Nur 131 € Eigenanteil." + CTA.
+Video (15–30 Sek.): Ältere Dame sitzt allein am Küchentisch, schaut aus dem Fenster. Türklingel. Alltagsbegleiterin (ca. 35 J.) mit Alltagsengel-Tasche kommt rein, beide lächeln. Schnitt: gemeinsam im Supermarkt, Obst aussuchen. Schnitt: gemeinsam auf einer Parkbank, lachen. Endcard: Alltagsengel-Logo + „131 € zahlt die Pflegekasse. Nur 131 € Eigenanteil." + CTA.
 
 **CTA-Button:** Mehr dazu
 
@@ -67,20 +67,20 @@ Video (15–30 Sek.): Ältere Dame sitzt allein am Küchentisch, schaut aus dem 
 
 Wussten Sie, dass über 2 Millionen Deutsche ihren Entlastungsbetrag nicht nutzen?
 
-125 € pro Monat stehen jedem Menschen mit Pflegegrad zu — für Alltagsbegleitung wie Einkäufe, Arztbesuche oder einfach Gesellschaft.
+131 € pro Monat stehen jedem Menschen mit Pflegegrad zu — für Alltagsbegleitung wie Einkäufe, Arztbesuche oder einfach Gesellschaft.
 
 Alltagsengel macht es einfach: Wir kümmern uns um alles, auch um die Abrechnung mit der Pflegekasse.
 
-**Headline:** 125 € pro Monat verschenkt?
+**Headline:** 131 € pro Monat verschenkt?
 
 **Description:** Entlastungsbetrag jetzt für Alltagsbegleitung nutzen. Alltagsengel Frankfurt.
 
 **Creative-Beschreibung:**
 Carousel (5 Karten):
-1. „125 €/Monat stehen Ihnen zu" — Grafik mit Euro-Symbol und Pflegekassen-Logo
+1. „131 €/Monat stehen Ihnen zu" — Grafik mit Euro-Symbol und Pflegekassen-Logo
 2. „Für Alltagsbegleitung nutzen" — Icons: Einkaufswagen, Stethoskop, Baum, Sprechblase
 3. „So einfach geht's" — 3 Schritte: Anfragen → Engel kennenlernen → Loslegen
-4. „Nur 131 € Eigenanteil" — Preisvergleich-Grafik (Pflegekasse 125 € + Eigenanteil 131 €)
+4. „Nur 131 € Eigenanteil" — Preisvergleich-Grafik (Pflegekasse 131 € + Eigenanteil 131 €)
 5. „Jetzt kostenlos beraten lassen" — CTA mit Kontaktinfo
 
 **CTA-Button:** Jetzt anfragen
@@ -109,7 +109,7 @@ Traffic (auf Landing Page /entlastungsbetrag)
 
 **Primary Text:**
 
-Jeder Mensch mit Pflegegrad hat Anspruch auf 125 € Entlastungsbetrag pro Monat. Dieses Geld ist zweckgebunden — und verfällt, wenn es nicht genutzt wird.
+Jeder Mensch mit Pflegegrad hat Anspruch auf 131 € Entlastungsbetrag pro Monat. Dieses Geld ist zweckgebunden — und verfällt, wenn es nicht genutzt wird.
 
 Bei Alltagsengel können Sie den Entlastungsbetrag für Alltagsbegleitung einsetzen: Einkaufsbegleitung, Arztbegleitung, Spaziergänge oder einfach nette Gesellschaft.
 
@@ -119,10 +119,10 @@ Mehr Informationen auf alltagsengel.care
 
 **Headline:** Entlastungsbetrag richtig nutzen
 
-**Description:** 125 €/Monat für Alltagsbegleitung. Direkte Abrechnung. Zertifiziert nach §45a SGB XI.
+**Description:** 131 €/Monat für Alltagsbegleitung. Direkte Abrechnung. Zertifiziert nach §45a SGB XI.
 
 **Creative-Beschreibung:**
-Einzelbild: Helle, freundliche Grafik. Links: Großes „125 €" in Alltagsengel-Markenfarben. Rechts: Checkliste „Einkauf ✓ Arzt ✓ Spaziergang ✓ Gesellschaft ✓". Unten: Alltagsengel-Logo + „Wir rechnen direkt mit der Pflegekasse ab."
+Einzelbild: Helle, freundliche Grafik. Links: Großes „131 €" in Alltagsengel-Markenfarben. Rechts: Checkliste „Einkauf ✓ Arzt ✓ Spaziergang ✓ Gesellschaft ✓". Unten: Alltagsengel-Logo + „Wir rechnen direkt mit der Pflegekasse ab."
 
 **CTA-Button:** Mehr dazu
 
@@ -138,18 +138,18 @@ Achtung: Ihr Entlastungsbetrag verfällt am 30. Juni!
 
 Nicht genutzte Beträge aus dem Vorjahr können bis zum 30.06. des Folgejahres übertragen werden — danach sind sie weg.
 
-Das bedeutet: Bis zu 1.500 € (12 × 125 €) können verfallen, wenn Sie jetzt nicht handeln.
+Das bedeutet: Bis zu 1.572 € (12 × 131 €) können verfallen, wenn Sie jetzt nicht handeln.
 
 Alltagsengel hilft Ihnen, den Entlastungsbetrag sinnvoll einzusetzen — für Begleitung beim Einkauf, Arztbesuche, Spaziergänge und mehr.
 
 Jetzt informieren: info@alltagsengel.care
 
-**Headline:** Bis zu 1.500 € verfallen bald!
+**Headline:** Bis zu 1.572 € verfallen bald!
 
 **Description:** Entlastungsbetrag bis 30.06. nutzen. Alltagsengel rechnet direkt mit der Pflegekasse ab.
 
 **Creative-Beschreibung:**
-Einzelbild mit Dringlichkeit: Roter Akzent oben „Frist: 30.06." Großes „Bis zu 1.500 €" durchgestrichen. Darunter: „Nicht verfallen lassen — jetzt für Alltagsbegleitung nutzen." Alltagsengel-Logo. Farben: Warnrot + Alltagsengel-Markenfarben.
+Einzelbild mit Dringlichkeit: Roter Akzent oben „Frist: 30.06." Großes „Bis zu 1.572 €" durchgestrichen. Darunter: „Nicht verfallen lassen — jetzt für Alltagsbegleitung nutzen." Alltagsengel-Logo. Farben: Warnrot + Alltagsengel-Markenfarben.
 
 **CTA-Button:** Jetzt informieren
 
@@ -218,7 +218,7 @@ Haben Sie Fragen zur Alltagsbegleitung? Schreiben Sie uns einfach eine Nachricht
 
 Alltagsengel bietet liebevolle Begleitung für Senioren in Frankfurt: Einkäufe, Arztbesuche, Spaziergänge und Gesellschaft.
 
-Die Pflegekasse übernimmt 125 € pro Monat. Ihr Eigenanteil beträgt nur 131 €.
+Die Pflegekasse übernimmt 131 € pro Monat. Ihr Eigenanteil beträgt nur 131 €.
 
 **Headline:** Fragen? Einfach schreiben!
 
@@ -265,13 +265,13 @@ Conversions (optimiert auf Kontaktformular-Absendung oder App-Download)
 
 So wie dieser Familie geht es vielen unserer Kunden. Alltagsbegleitung verändert Leben — nicht nur für die Senioren, sondern auch für die Angehörigen.
 
-Die Pflegekasse übernimmt 125 €/Monat. Ihr Eigenanteil beträgt nur 131 €/Monat.
+Die Pflegekasse übernimmt 131 €/Monat. Ihr Eigenanteil beträgt nur 131 €/Monat.
 
 Starten Sie jetzt — kostenlose Erstberatung bei Alltagsengel.
 
 **Headline:** Alltagsbegleitung, die Leben verändert
 
-**Description:** Zertifiziert nach §45a. Pflegekasse zahlt 125 €/Monat. Jetzt kostenlos anfragen.
+**Description:** Zertifiziert nach §45a. Pflegekasse zahlt 131 €/Monat. Jetzt kostenlos anfragen.
 
 **Creative-Beschreibung:**
 Video (20 Sek.): Testimonial-Format. Tochter (ca. 50 J.) erzählt in die Kamera: „Seit Mama ihren Alltagsengel hat..." Zwischenschnitte: Seniorin mit Begleiterin beim Einkauf, beim Spaziergang. Am Ende: Beide winken in die Kamera. Endcard: Logo + Preis + CTA. (Alternative: Statisches Bild mit Zitat und Sternebewertung)
@@ -286,7 +286,7 @@ Video (20 Sek.): Testimonial-Format. Tochter (ca. 50 J.) erzählt in die Kamera:
 
 **Primary Text:**
 
-Ihr Entlastungsbetrag wartet auf Sie — jeden Monat 125 € von der Pflegekasse.
+Ihr Entlastungsbetrag wartet auf Sie — jeden Monat 131 € von der Pflegekasse.
 
 Sie haben bereits auf unserer Website nach Alltagsbegleitung geschaut. Warum noch warten?
 

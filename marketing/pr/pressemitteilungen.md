@@ -18,7 +18,7 @@ Frankfurt am Main, 02. Juli 2026
 
 **Frankfurt am Main** -- Mit Alltagsengel startet ein neuer Anbieter fuer Alltagsbegleitung nach Paragraph 45a SGB XI in Frankfurt am Main. Das Angebot richtet sich an pflegebeduerftige Menschen und deren Angehoerige, die Unterstuetzung bei alltaeglichen Aufgaben benoetigen -- von Behoerdenbesuchen ueber Einkaufsbegleitung bis hin zu gemeinsamen Spaziergaengen und Gesellschaft im Alltag.
 
-Alltagsbegleitung ist eine anerkannte Leistung der Pflegeversicherung. Jeder Versicherte mit einem Pflegegrad hat Anspruch auf den monatlichen Entlastungsbetrag von 125 Euro, der direkt mit der Pflegekasse abgerechnet wird. Der monatliche Eigenanteil fuer die Leistungen von Alltagsengel betraegt lediglich 131 Euro. Damit erhalten Betroffene und ihre Familien eine bezahlbare, professionelle Betreuung, die den Verbleib in der eigenen Wohnung foerdert und pflegende Angehoerige spuerbar entlastet.
+Alltagsbegleitung ist eine anerkannte Leistung der Pflegeversicherung. Jeder Versicherte mit einem Pflegegrad hat Anspruch auf den monatlichen Entlastungsbetrag von 131 Euro, der direkt mit der Pflegekasse abgerechnet wird. Der monatliche Eigenanteil fuer die Leistungen von Alltagsengel betraegt lediglich 131 Euro. Damit erhalten Betroffene und ihre Familien eine bezahlbare, professionelle Betreuung, die den Verbleib in der eigenen Wohnung foerdert und pflegende Angehoerige spuerbar entlastet.
 
 Das Angebot von Alltagsengel umfasst unter anderem: Begleitung zu Arztterminen und Behoerden, Unterstuetzung beim Einkaufen, gemeinsame Freizeitgestaltung, Gespraechsbegleitung und soziale Aktivierung, Hilfe bei der Alltagsorganisation sowie Entlastung pflegender Angehoeriger. Alle Alltagsbegleiterinnen und Alltagsbegleiter sind nach Paragraph 45a SGB XI qualifiziert und werden regelmaessig weitergebildet.
 
@@ -28,7 +28,7 @@ Die Nachfrage nach Alltagsbegleitung waechst stetig. In Frankfurt leben ueber 30
 
 **Ueber Alltagsengel**
 
-Alltagsengel ist ein Anbieter fuer Alltagsbegleitung nach Paragraph 45a SGB XI mit Sitz in Frankfurt am Main. Das Unternehmen unterstuetzt pflegebeduerftige Menschen bei der Bewaeltigung ihres Alltags und entlastet pflegende Angehoerige. Die Leistungen werden ueber den Entlastungsbetrag der Pflegekasse (125 Euro/Monat) finanziert. Der monatliche Eigenanteil betraegt 131 Euro.
+Alltagsengel ist ein Anbieter fuer Alltagsbegleitung nach Paragraph 45a SGB XI mit Sitz in Frankfurt am Main. Das Unternehmen unterstuetzt pflegebeduerftige Menschen bei der Bewaeltigung ihres Alltags und entlastet pflegende Angehoerige. Die Leistungen werden ueber den Entlastungsbetrag der Pflegekasse (131 Euro/Monat) finanziert. Der monatliche Eigenanteil betraegt 131 Euro.
 
 **Pressekontakt:**
 Alltagsengel
@@ -55,7 +55,7 @@ Frankfurt am Main, 02. Juli 2026
 
 **Frankfurt am Main** -- Rund 60 Prozent der Pflegebeduerftigen in Frankfurt und Umgebung nutzen den ihnen zustehenden Entlastungsbetrag der Pflegeversicherung nicht oder nur teilweise. Das entspricht nach Schaetzungen mehreren Millionen Euro pro Jahr, die Betroffenen und ihren Familien entgehen. Alltagsengel startet deshalb eine breit angelegte Aufklaerungskampagne, um Pflegebeduerftige und Angehoerige ueber ihre Ansprueche zu informieren.
 
-Der Entlastungsbetrag nach Paragraph 45b SGB XI steht jedem Versicherten mit einem anerkannten Pflegegrad zu -- unabhaengig davon, ob Pflegegrad 1, 2, 3, 4 oder 5 vorliegt. Monatlich stehen 125 Euro zur Verfuegung, die fuer anerkannte Angebote zur Unterstuetzung im Alltag eingesetzt werden koennen. Nicht genutzte Betraege koennen bis zum 30. Juni des Folgejahres uebertragen werden, danach verfallen sie ersatzlos.
+Der Entlastungsbetrag nach Paragraph 45b SGB XI steht jedem Versicherten mit einem anerkannten Pflegegrad zu -- unabhaengig davon, ob Pflegegrad 1, 2, 3, 4 oder 5 vorliegt. Monatlich stehen 131 Euro zur Verfuegung, die fuer anerkannte Angebote zur Unterstuetzung im Alltag eingesetzt werden koennen. Nicht genutzte Betraege koennen bis zum 30. Juni des Folgejahres uebertragen werden, danach verfallen sie ersatzlos.
 
 Die Gruende fuer die geringe Nutzung sind vielfaeltig: Viele Betroffene wissen schlicht nicht, dass ihnen der Betrag zusteht. Andere scheuen den vermeintlichen buerokratischen Aufwand oder kennen keine geeigneten Anbieter in ihrer Naehe. Hinzu kommt, dass die Beantragung eines Pflegegrades oft als Stigma empfunden wird, obwohl bereits leichte Einschraenkungen im Alltag einen Anspruch begruenden koennen.
 
@@ -67,7 +67,7 @@ Konkret bedeutet die Nichtnutzung fuer Betroffene: Pro Jahr gehen bis zu 1.500 E
 
 **Ueber Alltagsengel**
 
-Alltagsengel ist ein Anbieter fuer Alltagsbegleitung nach Paragraph 45a SGB XI mit Sitz in Frankfurt am Main. Das Unternehmen unterstuetzt pflegebeduerftige Menschen bei der Bewaeltigung ihres Alltags und entlastet pflegende Angehoerige. Die Leistungen werden ueber den Entlastungsbetrag der Pflegekasse (125 Euro/Monat) finanziert. Der monatliche Eigenanteil betraegt 131 Euro.
+Alltagsengel ist ein Anbieter fuer Alltagsbegleitung nach Paragraph 45a SGB XI mit Sitz in Frankfurt am Main. Das Unternehmen unterstuetzt pflegebeduerftige Menschen bei der Bewaeltigung ihres Alltags und entlastet pflegende Angehoerige. Die Leistungen werden ueber den Entlastungsbetrag der Pflegekasse (131 Euro/Monat) finanziert. Der monatliche Eigenanteil betraegt 131 Euro.
 
 **Pressekontakt:**
 Alltagsengel
@@ -102,13 +102,13 @@ Alle Alltagsbegleiter im Demenzbereich verfuegen ueber eine Zusatzqualifikation,
 
 "Demenz veraendert den Alltag einer ganzen Familie. Unsere spezialisierten Alltagsbegleiterinnen und Alltagsbegleiter geben Betroffenen Sicherheit und Struktur im Alltag und schenken Angehoerigen dringend benoetigte Auszeiten. Dabei bleibt unser Angebot bezahlbar -- der Entlastungsbetrag der Pflegekasse deckt einen Grossteil der Kosten", erklaert Alltagsengel.
 
-Die Finanzierung erfolgt wie bei allen Leistungen von Alltagsengel ueber den Entlastungsbetrag der Pflegekasse in Hoehe von 125 Euro monatlich. Der Eigenanteil betraegt 131 Euro pro Monat. Die Abrechnung mit der Pflegekasse uebernimmt Alltagsengel vollstaendig.
+Die Finanzierung erfolgt wie bei allen Leistungen von Alltagsengel ueber den Entlastungsbetrag der Pflegekasse in Hoehe von 131 Euro monatlich. Der Eigenanteil betraegt 131 Euro pro Monat. Die Abrechnung mit der Pflegekasse uebernimmt Alltagsengel vollstaendig.
 
 Interessierte Familien koennen sich telefonisch oder per E-Mail an Alltagsengel wenden, um ein kostenloses Erstgespraech zu vereinbaren. Dabei wird der individuelle Betreuungsbedarf ermittelt und ein passgenauer Betreuungsplan erstellt.
 
 **Ueber Alltagsengel**
 
-Alltagsengel ist ein Anbieter fuer Alltagsbegleitung nach Paragraph 45a SGB XI mit Sitz in Frankfurt am Main. Das Unternehmen unterstuetzt pflegebeduerftige Menschen bei der Bewaeltigung ihres Alltags und entlastet pflegende Angehoerige. Die Leistungen werden ueber den Entlastungsbetrag der Pflegekasse (125 Euro/Monat) finanziert. Der monatliche Eigenanteil betraegt 131 Euro.
+Alltagsengel ist ein Anbieter fuer Alltagsbegleitung nach Paragraph 45a SGB XI mit Sitz in Frankfurt am Main. Das Unternehmen unterstuetzt pflegebeduerftige Menschen bei der Bewaeltigung ihres Alltags und entlastet pflegende Angehoerige. Die Leistungen werden ueber den Entlastungsbetrag der Pflegekasse (131 Euro/Monat) finanziert. Der monatliche Eigenanteil betraegt 131 Euro.
 
 **Pressekontakt:**
 Alltagsengel

@@ -16,7 +16,7 @@
 | Liste kostenloser Kanäle (10 Kategorien) | ✅ sehr gut | `marketing/ads/kostenlose-kanaele.md` |
 | Google-My-Business-Guide (HTML) | ✅ vorhanden (veraltete Daten, s. u.) | `marketing/ads/google-my-business.html` |
 | Blog auf Website (23 Artikel live) | ✅ stark | `app/blog/*`, `lib/blog-posts.ts` |
-| Blog-Artikel-Ideen (25 Themen) | ✅ vorhanden (1 Fehler: „125 Euro") | `marketing/content/blog-artikel-ideen.md` |
+| Blog-Artikel-Ideen (25 Themen) | ✅ vorhanden (1 Fehler: „131 Euro") | `marketing/content/blog-artikel-ideen.md` |
 | Social-Grafiken + Reels | ✅ umfangreich | `marketing/social-media-grafiken/` |
 
 **Fazit:** Die Strategie-Grundlage ist stark. Es fehlt vor allem an **fertig ausformulierten, sofort einsetzbaren Texten** für die kostenlosen Kanäle — und es gibt **Konsistenz-Fehler**, die vor dem Ausrollen korrigiert werden müssen.
@@ -27,7 +27,7 @@
 
 | # | Fehler | Wo | Korrekt | Status |
 |---|--------|-----|---------|--------|
-| 1 | **„125€"** statt **131€** Entlastungsbetrag | `content-kalender.md` (3×), `blog-artikel-ideen.md` (1×) | **131 €/Monat** | ✅ in diesem Durchlauf korrigiert |
+| 1 | **„131€"** statt **131€** Entlastungsbetrag | `content-kalender.md` (3×), `blog-artikel-ideen.md` (1×) | **131 €/Monat** | ✅ in diesem Durchlauf korrigiert |
 | 2 | **„131€ Eigenanteil"** — Widerspruch (131€ ist der Zuschuss, NICHT der Eigenanteil) | `content-kalender.md` (Z. 54, 161) | Entlastungsbetrag = 131€ Zuschuss → **0€ Eigenanteil** | ✅ korrigiert |
 | 3 | **§45a** statt **§45b** durchgängig | `content-kalender.md`, div. Social-Vorlagen | Kundenkommunikation: **§45b SGB XI** (Entlastungsbetrag). Rechtlicher Hinweis s. u. | ✅ im Kalender korrigiert |
 | 4 | Branding **„Grün/Weiß"** | `content-kalender.md` (Z. 221) | **Gold #C9963C / Coal #1A1612 / Creme #F5F0E8** | ✅ korrigiert |

@@ -311,7 +311,7 @@ Die Stimme von Alltagsengel ist **warm, respektvoll, kompetent und nahbar**. Wir
 - **Warm und nahbar kommunizieren** — wie ein guter Nachbar, nicht wie eine Behoerde
 - **Senioren auf Augenhoehe darstellen** — aktiv, selbstbestimmt, wuerdevoll
 - **Konkreten Nutzen hervorheben** — „Begleitung zum Arzt" statt „Unterstuetzungsleistung"
-- **Preise transparent kommunizieren** — 125 Euro Pflegekasse, 131 Euro Eigenanteil, keine versteckten Kosten
+- **Preise transparent kommunizieren** — 131 Euro Pflegekasse, 131 Euro Eigenanteil, keine versteckten Kosten
 - **Gold als Akzentfarbe einsetzen** — maximal 20 Prozent der Flaeche
 - **Logo mit ausreichend Schutzzone verwenden** — 50 Prozent der Logohoehe
 - **WCAG-Kontrastverhaeltnisse einhalten** — mindestens 4,5:1 fuer Fliesstext
@@ -402,7 +402,7 @@ alltagsengel.care
 **Text:**
 > Gemeinsam ueber den Wochenmarkt schlendern, frisches Obst aussuchen und dabei ins Gespraech kommen — das ist Alltagsbegleitung mit Alltagsengel.
 >
-> Die Pflegekasse uebernimmt 125 Euro im Monat. Der Eigenanteil liegt bei nur 131 Euro. Kein Papierkram, kein Stress — einfach ueber die App buchen.
+> Die Pflegekasse uebernimmt 131 Euro im Monat. Der Eigenanteil liegt bei nur 131 Euro. Kein Papierkram, kein Stress — einfach ueber die App buchen.
 >
 > Alltagsbegleitung nach Paragraph 45b SGB XI. Fuer Frankfurt. Fuer Ihre Familie.
 >
@@ -444,7 +444,7 @@ alltagsengel.care
 
 **Seite 5 (Innen):**
 - Ueberschrift: „Bezahlbar dank Pflegekasse"
-- Gold-Highlight-Box: „125 Euro zahlt die Pflegekasse. Ihr Eigenanteil: 131 Euro im Monat."
+- Gold-Highlight-Box: „131 Euro zahlt die Pflegekasse. Ihr Eigenanteil: 131 Euro im Monat."
 - Hinweis: „Alltagsbegleitung nach Paragraph 45b SGB XI. Jeder Pflegegrad hat Anspruch."
 
 **Seite 6 (Rueckseite):**
@@ -467,7 +467,7 @@ Vor jeder Veroeffentlichung pruefen:
 - Ist der Absender „Alltagsengel" — kein persoenlicher Name?
 - Ist die Anrede korrekt — „Hallo Frau/Herr [Nachname]"?
 - Wird Alltagsbegleitung klar von Pflege abgegrenzt?
-- Stimmen die Fakten (131 Euro Eigenanteil, 125 Euro Entlastungsbetrag, Paragraph 45b SGB XI)?
+- Stimmen die Fakten (131 Euro Eigenanteil, 131 Euro Entlastungsbetrag, Paragraph 45b SGB XI)?
 - Werden Senioren wuerdevoll und auf Augenhoehe dargestellt?
 - Sind die Farben aus der definierten Palette?
 - Ist der Kontrast ausreichend (WCAG AA mindestens)?

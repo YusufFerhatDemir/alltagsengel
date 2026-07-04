@@ -10,7 +10,7 @@
 
 ## Podcast-Beschreibung für Plattformen
 
-Was ist §45b SGB XI und wie kann es Ihnen 125€ pro Monat für Entlastungsleistungen bringen? In dieser Episode erklären wir komplexe Vorschriften verständlich und praktisch. Erfahren Sie, ob Sie anspruchsberechtigt sind, wie Sie die Leistung beantragen und wie AlltagsEngel Sie dabei unterstützt.
+Was ist §45b SGB XI und wie kann es Ihnen 131€ pro Monat für Entlastungsleistungen bringen? In dieser Episode erklären wir komplexe Vorschriften verständlich und praktisch. Erfahren Sie, ob Sie anspruchsberechtigt sind, wie Sie die Leistung beantragen und wie AlltagsEngel Sie dabei unterstützt.
 
 **Länge:** 20 Min. | **Format:** Solo + Expert/in | **Kategorien:** Recht, Pflege, Finanzierung
 
@@ -110,7 +110,7 @@ Was ist §45b SGB XI und wie kann es Ihnen 125€ pro Monat für Entlastungsleis
 - Sie zahlen nichts (falls Leistung komplett von §45b gedeckt)
 
 **Schritt 5: Kontinuierliche Nutzung**
-- 125€ pro Monat stehen Ihnen zur Verfügung
+- 131€ pro Monat stehen Ihnen zur Verfügung
 - Flexible Buchung nach Bedarf
 - Regelmäßige Überprüfung durch Krankenkasse (alle 2-3 Jahre)
 
@@ -175,7 +175,7 @@ Was ist §45b SGB XI und wie kann es Ihnen 125€ pro Monat für Entlastungsleis
 
 - Sprechen Sie klar und deutlich (technische Inhalte!)
 - Wiederholung wichtiger Begriffe verwenden
-- Zahlen (125€, Pflegegrad 1-5) deutlich aussprechen
+- Zahlen (131€, Pflegegrad 1-5) deutlich aussprechen
 - Kontaktinformationen am Anfang und Ende wiederholen
 
 ---

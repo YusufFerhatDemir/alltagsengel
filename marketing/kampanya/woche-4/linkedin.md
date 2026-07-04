@@ -47,7 +47,7 @@ Als wir AlltagsEngel gegründet haben, war die Frage nicht "Braucht es das?" —
 
 **Die Fakten sind einfach:**
 → 5 Millionen Menschen brauchen Pflege in Deutschland
-→ Der Entlastungsbetrag nach §45b ist da (125€/Monat) — wird aber kaum genutzt
+→ Der Entlastungsbetrag nach §45b ist da (131€/Monat) — wird aber kaum genutzt
 → Warum? Weil es zu kompliziert ist, zertifizierte Begleiter zu finden
 → Die Lösung existierte nicht. Bis jetzt.
 

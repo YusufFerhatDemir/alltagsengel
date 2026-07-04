@@ -81,7 +81,7 @@ Willkommen zur ersten Folge des AlltagsEngel Podcasts! In dieser Episode erzähl
 
 1. **Problem:** Ältere Menschen und Care-Bedürftige brauchen alltägliche Unterstützung
 2. **Lösung:** Zertifizierte Alltagsbegleiter, flexibel und herzlich
-3. **Finanzierung:** §45b SGB XI bietet 125€/Monat für Entlastungsleistungen
+3. **Finanzierung:** §45b SGB XI bietet 131€/Monat für Entlastungsleistungen
 4. **Vision:** Eine Gesellschaft, in der niemand allein ist
 5. **Versprechen:** Mit Herz für dich da
 
