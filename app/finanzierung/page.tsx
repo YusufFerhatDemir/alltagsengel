@@ -3,14 +3,14 @@ import Link from 'next/link'
 import BreadcrumbSchema from '@/components/BreadcrumbSchema'
 
 export const metadata: Metadata = {
-  title: 'Finanzierung — Wer zahlt Alltagsbegleitung, Pflegebox & Krankenfahrt?',
+  title: 'Finanzierung — bis zu 5.111 €/Jahr für Ihre Alltagsbegleitung',
   description:
-    'Transparent erklärt: Entlastungsbetrag 131 €/Monat (1.572 €/Jahr, §45b SGB XI), gemeinsamer Jahresbetrag Verhinderungs-/Kurzzeitpflege 3.539 €/Jahr (ab 01.07.2025), steuerliche Absetzbarkeit haushaltsnaher Dienstleistungen und Erstattung über die Unfallversicherung — aufgeteilt nach Pflegegrad.',
+    'Transparent erklärt: Entlastungsbetrag 131 €/Monat (1.572 €/Jahr, §45b SGB XI) plus gemeinsamer Jahresbetrag Verhinderungs-/Kurzzeitpflege 3.539 €/Jahr (ab 01.07.2025) = bis zu 5.111 €/Jahr kombinierbar. Dazu steuerliche Absetzbarkeit haushaltsnaher Dienstleistungen und Erstattung über die Unfallversicherung — aufgeteilt nach Pflegegrad.',
   alternates: { canonical: 'https://alltagsengel.care/finanzierung' },
   openGraph: {
-    title: 'Finanzierung — So bezahlen Sie Alltagsengel-Leistungen',
+    title: 'Finanzierung — bis zu 5.111 €/Jahr für Alltagsengel-Leistungen',
     description:
-      'Entlastungsbetrag 131 €/Monat, Verhinderungspflege 3.539 €/Jahr, Steuervorteil und Unfallversicherung — klar nach Pflegegrad erklärt.',
+      'Entlastungsbetrag 131 €/Monat plus Verhinderungs-/Kurzzeitpflege 3.539 €/Jahr = bis zu 5.111 €/Jahr kombinierbar. Steuervorteil und Unfallversicherung — klar nach Pflegegrad erklärt.',
     url: 'https://alltagsengel.care/finanzierung',
     type: 'website',
   },
@@ -24,6 +24,18 @@ const FAQS = [
   {
     q: 'Wie hoch ist das Budget für die Verhinderungspflege?',
     a: 'Seit dem 01.07.2025 gibt es einen gemeinsamen Jahresbetrag für Verhinderungs- und Kurzzeitpflege von 3.539 € pro Jahr (ab Pflegegrad 2). Dieses Budget kann flexibel eingesetzt werden, wenn die reguläre Pflegeperson verhindert ist.',
+  },
+  {
+    q: 'Was ist die Kurzzeitpflege und wie hängt sie mit der Verhinderungspflege zusammen?',
+    a: 'Seit dem 01.07.2025 sind Verhinderungspflege und Kurzzeitpflege zu einem gemeinsamen Jahresbetrag von 3.539 € zusammengelegt. Sie können dieses Budget flexibel für beides einsetzen — jeweils bis zu 8 Wochen pro Jahr, ab Pflegegrad 2. Die frühere Vorpflegezeit (sechs Monate häusliche Pflege vor der ersten Verhinderungspflege) ist komplett entfallen. Sie können das Budget also sofort nutzen.',
+  },
+  {
+    q: 'Wie viel Geld steht mir insgesamt pro Jahr zu?',
+    a: 'Sie können mehrere Töpfe gleichzeitig nutzen: Entlastungsbetrag 1.572 €/Jahr (§45b, ab PG1) plus gemeinsamer Jahresbetrag Verhinderungs-/Kurzzeitpflege 3.539 €/Jahr (ab PG2) ergeben zusammen bis zu 5.111 € pro Jahr. Dazu kommen die steuerliche Absetzbarkeit haushaltsnaher Dienstleistungen und ggf. eine Erstattung der Unfallversicherung.',
+  },
+  {
+    q: 'Verfällt der Entlastungsbetrag, wenn ich ihn nicht nutze?',
+    a: 'Nein. Nicht verbrauchte Entlastungsbeträge (§45b) können ins Folgejahr übertragen werden. Restbeträge eines Kalenderjahres bleiben grundsätzlich bis zum 30. Juni des Folgejahres nutzbar. Es lohnt sich also, den Anspruch rechtzeitig einzusetzen — wir helfen bei der Planung.',
   },
   {
     q: 'Kann ich die Kosten von der Steuer absetzen?',
@@ -73,6 +85,43 @@ const BAUSTEINE = [
     zahl: 'Erstattung',
     titel: 'Unfallversicherung',
     text: 'Ist der Bedarf Folge eines Unfalls, kann die gesetzliche oder private Unfallversicherung Betreuungs- und Haushaltskosten übernehmen.',
+  },
+]
+
+// Gesamt-Budget: die beiden großen Pflegekassen-Töpfe, die sich kombinieren lassen.
+const BUDGET_TOEPFE = [
+  {
+    titel: 'Entlastungsbetrag §45b',
+    betrag: 1572,
+    zusatz: '131 €/Monat · ab Pflegegrad 1',
+    farbe: '#E0B860',
+  },
+  {
+    titel: 'Verhinderungs- + Kurzzeitpflege',
+    betrag: 3539,
+    zusatz: 'gemeinsamer Jahresbetrag · ab Pflegegrad 2',
+    farbe: '#C9963C',
+  },
+]
+const BUDGET_GESAMT = BUDGET_TOEPFE.reduce((s, t) => s + t.betrag, 0) // 5.111 €
+
+// „Wussten Sie schon?" — Punkte, die viele Familien nicht auf dem Schirm haben.
+const WUSSTEN_SIE = [
+  {
+    titel: 'Sie dürfen mehrere Töpfe gleichzeitig nutzen',
+    text: 'Entlastungsbetrag und Verhinderungs-/Kurzzeitpflege schließen sich nicht aus — kombiniert stehen Ihnen bis zu 5.111 € pro Jahr zur Verfügung.',
+  },
+  {
+    titel: 'Die Vorpflegezeit ist weggefallen',
+    text: 'Seit 01.07.2025 müssen Sie nicht mehr sechs Monate häuslich gepflegt haben, bevor die Verhinderungspflege startet. Der Anspruch gilt sofort.',
+  },
+  {
+    titel: 'Nicht genutzte Beträge verfallen nicht sofort',
+    text: 'Restbeträge des Entlastungsbetrags (§45b) können ins Folgejahr übertragen werden — bis zum 30. Juni bleiben sie nutzbar.',
+  },
+  {
+    titel: 'Alltagsbegleitung aus dem Verhinderungspflege-Budget',
+    text: 'Ist die Hauptpflegeperson verhindert, kann unsere Alltagsbegleitung aus dem gemeinsamen Jahresbetrag von 3.539 € bezahlt werden.',
   },
 ]
 
@@ -133,6 +182,69 @@ export default function FinanzierungPage() {
 
       <div style={{ maxWidth: 700, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 24 }}>
 
+        {/* Gesamt-Budget — der Wow-Effekt: bis zu 5.111 €/Jahr */}
+        <section style={{
+          ...cardStyle,
+          background: 'linear-gradient(150deg, rgba(201,150,60,0.16) 0%, rgba(201,150,60,0.05) 100%)',
+          border: '1px solid rgba(201,150,60,0.3)',
+          textAlign: 'center',
+        }}>
+          <div style={{ color: '#B8B0A4', fontSize: 14, fontWeight: 600, letterSpacing: 0.3, marginBottom: 4 }}>
+            Ihnen stehen zusammen zu
+          </div>
+          <div style={{ color: '#E0B860', fontSize: 'clamp(44px, 11vw, 64px)', fontWeight: 800, lineHeight: 1.05 }}>
+            bis zu 5.111 €
+          </div>
+          <div style={{ color: '#F5F0E8', fontSize: 16, fontWeight: 600, marginBottom: 22 }}>
+            pro Jahr für Ihre Alltagsbegleitung <span style={{ color: '#B8B0A4', fontWeight: 400 }}>(bei Pflegegrad 2–5)</span>
+          </div>
+
+          {/* Gestapelter Balken: zwei kombinierbare Töpfe */}
+          <div style={{ display: 'flex', height: 46, borderRadius: 12, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.08)' }}>
+            {BUDGET_TOEPFE.map(t => (
+              <div key={t.titel} style={{
+                flexGrow: t.betrag,
+                flexBasis: 0,
+                background: t.farbe,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#1A1612',
+                fontSize: 'clamp(12px, 3.2vw, 15px)',
+                fontWeight: 800,
+                whiteSpace: 'nowrap',
+              }}>
+                {t.betrag.toLocaleString('de-DE')} €
+              </div>
+            ))}
+          </div>
+
+          {/* Legende zu den Töpfen */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 16, textAlign: 'left' }}>
+            {BUDGET_TOEPFE.map(t => (
+              <div key={t.titel} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <span style={{ width: 14, height: 14, borderRadius: 4, background: t.farbe, flexShrink: 0 }} />
+                <span style={{ color: '#F5F0E8', fontSize: 14, fontWeight: 600 }}>{t.titel}</span>
+                <span style={{ color: '#B8B0A4', fontSize: 13 }}>· {t.zusatz}</span>
+                <span style={{ color: '#E0B860', fontSize: 14, fontWeight: 700, marginLeft: 'auto', whiteSpace: 'nowrap' }}>
+                  {t.betrag.toLocaleString('de-DE')} €
+                </span>
+              </div>
+            ))}
+            <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', marginTop: 4, paddingTop: 10, display: 'flex', alignItems: 'center' }}>
+              <span style={{ color: '#F5F0E8', fontSize: 15, fontWeight: 700 }}>Gesamt pro Jahr</span>
+              <span style={{ color: '#E0B860', fontSize: 18, fontWeight: 800, marginLeft: 'auto' }}>
+                {BUDGET_GESAMT.toLocaleString('de-DE')} €
+              </span>
+            </div>
+          </div>
+
+          <p style={{ color: '#B8B0A4', fontSize: 13, lineHeight: 1.6, marginTop: 16, marginBottom: 0 }}>
+            Beide Töpfe lassen sich kombinieren — plus Steuervorteil und ggf. Unfallversicherung.
+            Wir rechnen direkt mit Ihrer Pflegekasse ab.
+          </p>
+        </section>
+
         {/* Bausteine der Finanzierung */}
         <section style={cardStyle}>
           <h2 style={{ color: '#C9963C', fontSize: 20, fontWeight: 700, marginBottom: 16 }}>Ihre Finanzierungs-Bausteine</h2>
@@ -142,6 +254,49 @@ export default function FinanzierungPage() {
                 <div style={{ color: '#C9963C', fontSize: 22, fontWeight: 700, marginBottom: 4 }}>{b.zahl}</div>
                 <div style={{ color: '#F5F0E8', fontSize: 15, fontWeight: 600, marginBottom: 6 }}>{b.titel}</div>
                 <div style={{ color: '#D8D0C4', fontSize: 13.5, lineHeight: 1.55 }}>{b.text}</div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Kurzzeitpflege — eigener Abschnitt */}
+        <section style={cardStyle}>
+          <h2 style={{ color: '#C9963C', fontSize: 20, fontWeight: 700, marginBottom: 12 }}>
+            Kurzzeitpflege — flexibel mit der Verhinderungspflege
+          </h2>
+          <p style={{ color: '#D8D0C4', fontSize: 15, lineHeight: 1.7, marginTop: 0, marginBottom: 14 }}>
+            Seit dem <strong style={{ color: '#F5F0E8' }}>01.07.2025</strong> sind Verhinderungs- und
+            Kurzzeitpflege zu einem <strong style={{ color: '#F5F0E8' }}>gemeinsamen Jahresbetrag von 3.539 €</strong> zusammengelegt.
+            Sie entscheiden, wofür Sie das Budget einsetzen — beides ist aus demselben Topf finanzierbar.
+          </p>
+          <ul style={{ margin: 0, paddingLeft: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {[
+              'Ein gemeinsames Budget von 3.539 €/Jahr — flexibel für Verhinderungs- oder Kurzzeitpflege',
+              'Jeweils bis zu 8 Wochen pro Jahr möglich',
+              'Ab Pflegegrad 2',
+              'Vorpflegezeit komplett entfallen — der Anspruch gilt sofort, ohne Wartezeit',
+            ].map((p, i) => (
+              <li key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', color: '#D8D0C4', fontSize: 14, lineHeight: 1.55 }}>
+                <span style={{ color: '#C9963C', flexShrink: 0, fontWeight: 700 }}>✓</span>
+                <span>{p}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        {/* Wussten Sie schon? */}
+        <section>
+          <h2 style={{ color: '#F5F0E8', fontSize: 22, fontWeight: 700, marginBottom: 6, textAlign: 'center' }}>
+            Wussten Sie schon?
+          </h2>
+          <p style={{ color: '#B8B0A4', fontSize: 14, lineHeight: 1.6, textAlign: 'center', marginBottom: 18 }}>
+            Vier Punkte, die viele Familien Geld liegen lassen — dabei stehen sie Ihnen zu:
+          </p>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))', gap: 14 }}>
+            {WUSSTEN_SIE.map(w => (
+              <div key={w.titel} style={{ ...cardStyle, padding: '18px 20px' }}>
+                <div style={{ color: '#E0B860', fontSize: 15, fontWeight: 700, marginBottom: 6, lineHeight: 1.4 }}>{w.titel}</div>
+                <div style={{ color: '#D8D0C4', fontSize: 13.5, lineHeight: 1.6 }}>{w.text}</div>
               </div>
             ))}
           </div>
@@ -196,6 +351,23 @@ export default function FinanzierungPage() {
           <p style={{ color: '#6A6259', fontSize: 12, lineHeight: 1.6, marginTop: 16, marginBottom: 0 }}>
             Angaben nach bestem Wissen, Stand 2026. Sie ersetzen keine individuelle Beratung durch
             Pflegekasse oder Steuerberatung.
+          </p>
+        </section>
+
+        {/* Beratungskompetenz — Vertrauen, ohne persönliche Namen */}
+        <section style={{
+          ...cardStyle,
+          background: 'linear-gradient(150deg, rgba(224,184,96,0.1) 0%, rgba(201,150,60,0.04) 100%)',
+          border: '1px solid rgba(201,150,60,0.22)',
+        }}>
+          <h2 style={{ color: '#C9963C', fontSize: 20, fontWeight: 700, marginBottom: 12 }}>
+            Warum unsere Beratung den Unterschied macht
+          </h2>
+          <p style={{ color: '#D8D0C4', fontSize: 15, lineHeight: 1.7, margin: 0 }}>
+            Unser Beratungsteam verfügt über <strong style={{ color: '#F5F0E8' }}>25 Jahre Branchenerfahrung</strong> in
+            der Alltagsbegleitung und hat den Aufbau von Unternehmen mit <strong style={{ color: '#F5F0E8' }}>über 1.000 Mitarbeitern</strong> begleitet.
+            Diese Erfahrung nutzen wir für Sie: Wir kennen jeden Finanzierungstopf, wissen genau,
+            welche Leistungen sich kombinieren lassen, und holen für Sie das Maximum heraus — verständlich erklärt und ohne Fachchinesisch.
           </p>
         </section>
 
