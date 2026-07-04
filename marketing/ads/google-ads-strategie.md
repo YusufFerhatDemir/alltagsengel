@@ -167,7 +167,7 @@
 2. Senioren-Begleitung ab 131€
 3. Einkauf, Arzt & Spaziergang
 4. Ihr persönlicher Alltagsengel
-5. Pflegekasse zahlt 125€/Monat
+5. Pflegekasse zahlt 131€/Monat
 6. Zertifiziert nach §45a SGB XI
 7. Jetzt kostenlos anfragen
 8. Begleitung im Alltag buchen
@@ -182,7 +182,7 @@
 **Descriptions (max. 90 Zeichen):**
 
 1. Alltagsbegleitung in Frankfurt — Einkauf, Arztbesuche, Spaziergänge & Gesellschaft. Jetzt anfragen!
-2. Nur 131€ Eigenanteil pro Monat. Die Pflegekasse übernimmt 125€. Zertifiziert nach §45a SGB XI.
+2. Nur 131€ Eigenanteil pro Monat. Die Pflegekasse übernimmt 131€. Zertifiziert nach §45a SGB XI.
 3. Geprüfte Alltagsbegleiter für Senioren in Frankfurt. Persönlich, zuverlässig und mit Herz.
 4. Entlasten Sie sich und Ihre Angehörigen. Kostenlose Beratung unter info@alltagsengel.care.
 
@@ -192,10 +192,10 @@
 
 **Headlines (max. 30 Zeichen):**
 
-1. 125€ Entlastungsbetrag nutzen
+1. 131€ Entlastungsbetrag nutzen
 2. Pflegekasse zahlt — Sie auch?
 3. Entlastungsbetrag verfällt!
-4. 125€/Monat nicht verschenken
+4. 131€/Monat nicht verschenken
 5. Geld der Pflegekasse nutzen
 6. Anspruch jetzt einlösen
 7. Entlastungsbetrag Frankfurt
@@ -210,9 +210,9 @@
 
 **Descriptions (max. 90 Zeichen):**
 
-1. Ihr Entlastungsbetrag von 125€/Monat verfällt ungenutzt? Alltagsengel hilft beim Einlösen.
+1. Ihr Entlastungsbetrag von 131€/Monat verfällt ungenutzt? Alltagsengel hilft beim Einlösen.
 2. Wir rechnen direkt mit der Pflegekasse ab. Eigenanteil nur 131€/Monat. Jetzt informieren!
-3. Ab Pflegegrad 1 haben Sie Anspruch auf 125€ monatlich. Nutzen Sie ihn für Alltagsbegleitung.
+3. Ab Pflegegrad 1 haben Sie Anspruch auf 131€ monatlich. Nutzen Sie ihn für Alltagsbegleitung.
 4. Zertifiziert nach §45a SGB XI. Direkte Abrechnung mit der Pflegekasse. Keine Vorkasse nötig.
 
 ---
@@ -298,7 +298,7 @@
 **Descriptions (max. 90 Zeichen):**
 
 1. Einkauf, Arztbesuche, Spaziergänge, Behördengänge und Gesellschaft. Alles aus einer Hand.
-2. Transparente Preise: 125€ zahlt die Pflegekasse, nur 131€ Eigenanteil. Keine versteckten Kosten.
+2. Transparente Preise: 131€ zahlt die Pflegekasse, nur 131€ Eigenanteil. Keine versteckten Kosten.
 3. Flexible Buchung ohne Mindestlaufzeit. Geprüfte Alltagsbegleiter mit Herz. Jetzt testen!
 4. Zertifiziert nach §45a SGB XI. Wir rechnen direkt mit Ihrer Pflegekasse ab. Einfach und sicher.
 
@@ -360,7 +360,7 @@
 
 **Above the Fold:**
 - Headline: „Alltagsbegleitung in Frankfurt — liebevoll, zuverlässig, von der Pflegekasse gefördert"
-- Sub-Headline: „Nur 131 €/Monat Eigenanteil. Die Pflegekasse übernimmt 125 € für Sie."
+- Sub-Headline: „Nur 131 €/Monat Eigenanteil. Die Pflegekasse übernimmt 131 € für Sie."
 - Primärer CTA-Button: „Jetzt kostenlos beraten lassen"
 - Sekundärer CTA: „Direkt in der App buchen"
 - Trust-Elemente: §45a-Zertifizierung, Kundenbewertungen, Partnerlogos
@@ -368,7 +368,7 @@
 **Seiteninhalt:**
 - Leistungsübersicht mit Icons (Einkauf, Arzt, Spaziergang, Gesellschaft, Behörden)
 - So funktioniert's (3 Schritte: Anfragen → Engel kennenlernen → Begleitung starten)
-- Preistransparenz-Box (125€ Pflegekasse + 131€ Eigenanteil = Gesamtleistung)
+- Preistransparenz-Box (131€ Pflegekasse + 131€ Eigenanteil = Gesamtleistung)
 - Kundenstimmen / Testimonials (mit Foto, Name nur Vorname + Anfangsbuchstabe)
 - FAQ-Bereich (Entlastungsbetrag, Pflegegrad, Abrechnung)
 - Kontaktformular (Name, Telefon, E-Mail, Pflegegrad, Nachricht)
@@ -505,7 +505,7 @@ Google Tag Manager Container einrichten:
 | Sitelink | URL | Beschreibung |
 |---|---|---|
 | Unsere Leistungen | /leistungen | Einkauf, Arzt, Spaziergang & mehr |
-| Entlastungsbetrag nutzen | /entlastungsbetrag | 125€/Monat von der Pflegekasse |
+| Entlastungsbetrag nutzen | /entlastungsbetrag | 131€/Monat von der Pflegekasse |
 | So funktioniert's | /so-funktionierts | In 3 Schritten zur Begleitung |
 | Über uns | /ueber-uns | Ihr Team in Frankfurt am Main |
 | Kostenlose Beratung | /kontakt | Jetzt unverbindlich anfragen |
@@ -545,7 +545,7 @@ Google Tag Manager Container einrichten:
 | Leistung | Preis | Einheit |
 |---|---|---|
 | Alltagsbegleitung | ab 131 € | pro Monat (Eigenanteil) |
-| Entlastungsbetrag | 125 € | übernimmt Pflegekasse |
+| Entlastungsbetrag | 131 € | übernimmt Pflegekasse |
 | Erstberatung | 0 € | kostenlos |
 
 ---

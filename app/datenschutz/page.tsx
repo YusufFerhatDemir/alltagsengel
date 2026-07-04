@@ -139,6 +139,41 @@ export default function DatenschutzPage() {
               Datenschutzerklärung der OSMF
             </a>.
           </p>
+          <h3>Resend (E-Mail-Versand)</h3>
+          <p>
+            Für den Versand von E-Mails (Registrierungsbestätigung, Passwort-Reset, Newsletter, Drip-Kampagnen)
+            nutzen wir den Dienst Resend (Resend Inc., USA). Dabei werden Ihre E-Mail-Adresse und ggf. Ihr Name
+            an Resend übermittelt. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO (Vertragserfüllung) bzw. Art. 6
+            Abs. 1 lit. a DSGVO (Einwilligung bei Newsletter). Weitere Informationen:{' '}
+            <a href="https://resend.com/legal/privacy-policy" target="_blank" rel="noopener noreferrer" style={{ color: '#C9963C', textDecoration: 'underline' }}>
+              Datenschutzerklärung von Resend
+            </a>.
+          </p>
+          <h3>Google Gemini AI (KI-gestützter Chat)</h3>
+          <p>
+            Für den KI-gestützten Beratungschat und die WhatsApp-Assistenzfunktion nutzen wir Google Gemini AI
+            (Google LLC, 1600 Amphitheatre Parkway, Mountain View, CA 94043, USA). Dabei werden Ihre Chatnachrichten
+            an Google-Server übermittelt, um Ihnen passende Antworten zu generieren. Es werden keine personenbezogenen
+            Daten dauerhaft bei Google gespeichert. Rechtsgrundlage ist Art. 6 Abs. 1 lit. a DSGVO (Einwilligung)
+            bzw. Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse an einem hilfreichen Beratungsangebot).
+          </p>
+          <h3>WhatsApp Business API (Meta)</h3>
+          <p>
+            Wir bieten Kundenkommunikation über WhatsApp an. Dabei wird die WhatsApp Business API von Meta Platforms
+            Ireland Ltd. (4 Grand Canal Square, Dublin 2, Irland) genutzt. Wenn Sie uns über WhatsApp kontaktieren,
+            werden Ihre Telefonnummer, Nachrichteninhalte und ggf. Medien von Meta verarbeitet. Rechtsgrundlage ist
+            Art. 6 Abs. 1 lit. a DSGVO (Einwilligung durch Ihre Kontaktaufnahme). Weitere Informationen:{' '}
+            <a href="https://www.whatsapp.com/legal/privacy-policy" target="_blank" rel="noopener noreferrer" style={{ color: '#C9963C', textDecoration: 'underline' }}>
+              Datenschutzerklärung von WhatsApp
+            </a>.
+          </p>
+          <h3>Expo Push Notifications (Mobile App)</h3>
+          <p>
+            In unserer mobilen App nutzen wir den Push-Notification-Service von Expo (650 Industries Inc., USA).
+            Dabei wird ein gerätegebundenes Push-Token an Expo-Server übermittelt, um Ihnen Benachrichtigungen
+            zuzustellen. Rechtsgrundlage ist Art. 6 Abs. 1 lit. a DSGVO (Einwilligung durch Aktivierung der
+            Push-Benachrichtigungen auf Ihrem Gerät).
+          </p>
         </section>
 
         <section className="legal-section">

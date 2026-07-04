@@ -25,7 +25,7 @@ Was Alltagsbegleiter leisten:
 
 Diese Aufgaben binden heute Pflegefachkräfte, die eigentlich für medizinisch-pflegerische Tätigkeiten qualifiziert sind. Jede Stunde, die eine examinierte Kraft mit Einkaufsbegleitung verbringt, fehlt bei der Wundversorgung oder Medikamentenmanagement.
 
-Bei Alltagsengel setzen wir genau hier an. Wir bilden Alltagsbegleiter nach den Vorgaben des §45a SGB XI aus und vermitteln sie an Familien in Frankfurt am Main — finanziert über den Entlastungsbetrag der Pflegekasse (125€/Monat nach §45b SGB XI).
+Bei Alltagsengel setzen wir genau hier an. Wir bilden Alltagsbegleiter nach den Vorgaben des §45a SGB XI aus und vermitteln sie an Familien in Frankfurt am Main — finanziert über den Entlastungsbetrag der Pflegekasse (131€/Monat nach §45b SGB XI).
 
 Die Zahlen sprechen für sich: 90% der Familien, die den Entlastungsbetrag nutzen, berichten von einer spürbaren Entlastung. Gleichzeitig werden Pflegefachkräfte entlastet und können sich auf ihre Kernkompetenzen konzentrieren.
 
@@ -48,7 +48,7 @@ Frankfurt am Main | alltagsengel.care | info@alltagsengel.care
 
 **Post-Text:**
 
-125€ pro Monat. 1.500€ pro Jahr. Für jeden Menschen mit Pflegegrad 1–5.
+131€ pro Monat. 1.572€ pro Jahr. Für jeden Menschen mit Pflegegrad 1–5.
 
 Der Entlastungsbetrag nach §45b SGB XI ist eine der am wenigsten genutzten Leistungen der Pflegeversicherung. Schätzungen zufolge werden jährlich über 2 Milliarden Euro an Entlastungsleistungen nicht abgerufen.
 
@@ -62,7 +62,7 @@ Die drei häufigsten Irrtümer:
 
 2. „Der Antrag ist zu kompliziert." — Es gibt keinen separaten Antrag. Anerkannte Anbieter wie Alltagsengel rechnen direkt mit der Pflegekasse ab.
 
-3. „Das lohnt sich nicht." — 125€ pro Monat bedeuten bei Alltagsengel professionelle Alltagsbegleitung: Spaziergänge, Einkaufshilfe, Gesellschaft und Entlastung für pflegende Angehörige.
+3. „Das lohnt sich nicht." — 131€ pro Monat bedeuten bei Alltagsengel professionelle Alltagsbegleitung: Spaziergänge, Einkaufshilfe, Gesellschaft und Entlastung für pflegende Angehörige.
 
 Als Branche haben wir eine Verantwortung, diese Information aktiv zu den Familien zu bringen — nicht darauf zu warten, dass sie zu uns kommen.
 

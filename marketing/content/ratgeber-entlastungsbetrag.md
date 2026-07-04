@@ -4,7 +4,7 @@
 
 ---
 
-Viele pflegebedürftige Menschen und ihre Angehörigen lassen jeden Monat bares Geld liegen — ohne es zu wissen. Der **Entlastungsbetrag** in Höhe von **125 Euro monatlich** steht allen Versicherten mit einem anerkannten Pflegegrad zu, wird aber erschreckend selten abgerufen. Dabei kann er den Alltag spürbar erleichtern: durch professionelle Alltagsbegleitung, Haushaltshilfe oder Betreuungsangebote.
+Viele pflegebedürftige Menschen und ihre Angehörigen lassen jeden Monat bares Geld liegen — ohne es zu wissen. Der **Entlastungsbetrag** in Höhe von **131 Euro monatlich** steht allen Versicherten mit einem anerkannten Pflegegrad zu, wird aber erschreckend selten abgerufen. Dabei kann er den Alltag spürbar erleichtern: durch professionelle Alltagsbegleitung, Haushaltshilfe oder Betreuungsangebote.
 
 In diesem Ratgeber erfahren Sie alles, was Sie über den Entlastungsbetrag wissen müssen — von der Anspruchsprüfung über die Beantragung bis hin zu cleveren Spartipps.
 
@@ -46,14 +46,14 @@ Der Anspruch besteht für **alle Pflegegrade** — also Pflegegrad 1 bis 5. Das 
 
 ## Wie hoch ist der Entlastungsbetrag?
 
-Der Entlastungsbetrag beträgt **125 Euro pro Monat** — das sind **1.500 Euro im Jahr**. Dieser Betrag ist für alle Pflegegrade gleich.
+Der Entlastungsbetrag beträgt **131 Euro pro Monat** — das sind **1.500 Euro im Jahr**. Dieser Betrag ist für alle Pflegegrade gleich.
 
 ### Kostenbeispiel mit Alltagsengel
 
 | Position | Betrag |
 |---|---|
 | Monatliche Kosten Alltagsbegleitung (Beispiel) | 256 Euro |
-| Abzüglich Entlastungsbetrag der Pflegekasse | -125 Euro |
+| Abzüglich Entlastungsbetrag der Pflegekasse | -131 Euro |
 | **Verbleibender Eigenanteil** | **131 Euro** |
 
 Bei Alltagsengel beträgt der monatliche Eigenanteil ab **131 Euro** — die Pflegekasse übernimmt den Rest direkt über den Entlastungsbetrag.
@@ -109,7 +109,7 @@ Nach Inanspruchnahme der Leistung erhalten Sie eine Rechnung, die Sie bei Ihrer 
 
 ### Schritt 5: Erstattung erhalten
 
-Die Pflegekasse erstattet den Entlastungsbetrag bis zu 125 Euro monatlich. Der Restbetrag wird Ihnen in Rechnung gestellt.
+Die Pflegekasse erstattet den Entlastungsbetrag bis zu 131 Euro monatlich. Der Restbetrag wird Ihnen in Rechnung gestellt.
 
 > **Tipp:** Es ist kein gesonderter Antrag für den Entlastungsbetrag nötig. Der Anspruch besteht automatisch mit dem Pflegegrad. Sie müssen lediglich die Rechnungen einreichen — oder einen Anbieter wählen, der direkt abrechnet.
 
@@ -161,7 +161,7 @@ Nein. Der Entlastungsbetrag ist eine eigenständige Leistung und wird nicht auf 
 ### Kann ich den Entlastungsbetrag auch rückwirkend geltend machen?
 Ja, sofern die Rechnungen nicht älter als vier Jahre sind (Verjährungsfrist). Allerdings muss der Pflegegrad zum Zeitpunkt der Leistung bereits bestanden haben.
 
-### Was passiert, wenn die monatlichen Kosten unter 125 Euro liegen?
+### Was passiert, wenn die monatlichen Kosten unter 131 Euro liegen?
 Der nicht genutzte Restbetrag wird automatisch angespart und steht Ihnen in den Folgemonaten zur Verfügung.
 
 ### Ich habe Pflegegrad 1 — bekomme ich auch den Entlastungsbetrag?
@@ -174,7 +174,7 @@ Ja. Als zugelassener Anbieter übernimmt Alltagsengel die Abrechnung mit Ihrer P
 
 ## Fazit: Nutzen Sie Ihren Anspruch
 
-Der Entlastungsbetrag ist eine wertvolle Leistung, die vielen Familien den Pflegealltag erleichtert — vorausgesetzt, sie wird auch genutzt. Mit 125 Euro monatlich können Sie professionelle Alltagsbegleitung finanzieren und gleichzeitig pflegende Angehörige spürbar entlasten.
+Der Entlastungsbetrag ist eine wertvolle Leistung, die vielen Familien den Pflegealltag erleichtert — vorausgesetzt, sie wird auch genutzt. Mit 131 Euro monatlich können Sie professionelle Alltagsbegleitung finanzieren und gleichzeitig pflegende Angehörige spürbar entlasten.
 
 Lassen Sie kein Geld verfallen. Kontaktieren Sie Alltagsengel für ein kostenloses Erstgespräch und erfahren Sie, wie wir Sie unterstützen können.
 

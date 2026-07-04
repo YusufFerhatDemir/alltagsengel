@@ -6,17 +6,17 @@
 
 ## Post 1: Entlastungsbetrag erklärt
 
-**Thema:** Aufklärung — 125€ Entlastungsbetrag der Pflegekasse
+**Thema:** Aufklärung — 131€ Entlastungsbetrag der Pflegekasse
 
 **Caption:**
-Wussten Sie, dass Ihnen 125€ pro Monat zustehen? 💶
+Wussten Sie, dass Ihnen 131€ pro Monat zustehen? 💶
 
-Jeder Mensch mit einem anerkannten Pflegegrad (1–5) hat Anspruch auf den sogenannten Entlastungsbetrag nach §45b SGB XI — das sind 125€ monatlich, die die Pflegekasse zahlt.
+Jeder Mensch mit einem anerkannten Pflegegrad (1–5) hat Anspruch auf den sogenannten Entlastungsbetrag nach §45b SGB XI — das sind 131€ monatlich, die die Pflegekasse zahlt.
 
 Das Problem? Viele Familien wissen das nicht und lassen dieses Geld einfach verfallen. 😔
 
 So funktioniert es:
-✅ 125€ zahlt die Pflegekasse
+✅ 131€ zahlt die Pflegekasse
 ✅ Nur 131€ Eigenanteil pro Monat
 ✅ Kein komplizierter Antrag nötig
 ✅ Wir helfen bei der Abwicklung
@@ -30,10 +30,10 @@ Ihr Angehöriger hat einen Pflegegrad? Dann lassen Sie sich diesen Vorteil nicht
 📍 Frankfurt am Main
 
 **Hashtags:**
-#Entlastungsbetrag #Pflegekasse #Pflegegrad #SGB11 #Paragraph45b #Alltagsbegleitung #Seniorenbetreuung #PflegendeAngehörige #FrankfurtAmMain #Alltagsengel #Pflege #Entlastung #125Euro #Pflegegeld #Seniorenhilfe #AlteEltern #Angehörige #Betreuung #Hilfe #Unterstützung #SozialesDeutschland #Pflegeleistungen #Kostenübernahme #GesetzlicheLeistung #Pflegeversicherung #SeniorenFrankfurt #ElternPflegen #FamiliePflege #Gesundheit #Vorsorge
+#Entlastungsbetrag #Pflegekasse #Pflegegrad #SGB11 #Paragraph45b #Alltagsbegleitung #Seniorenbetreuung #PflegendeAngehörige #FrankfurtAmMain #Alltagsengel #Pflege #Entlastung #131Euro #Pflegegeld #Seniorenhilfe #AlteEltern #Angehörige #Betreuung #Hilfe #Unterstützung #SozialesDeutschland #Pflegeleistungen #Kostenübernahme #GesetzlicheLeistung #Pflegeversicherung #SeniorenFrankfurt #ElternPflegen #FamiliePflege #Gesundheit #Vorsorge
 
 **Bild-/Reel-Beschreibung:**
-Infografik im Alltagsengel-Design (Grün/Weiß). Großer Titel: „125€ pro Monat — Ihr Recht!" Darunter eine einfache Rechnung: Gesamtkosten – 125€ Pflegekasse = 131€ Eigenanteil. Icons für Spaziergang, Einkauf und Gesellschaft am unteren Rand. Alltagsengel-Logo in der Ecke.
+Infografik im Alltagsengel-Design (Grün/Weiß). Großer Titel: „131€ pro Monat — Ihr Recht!" Darunter eine einfache Rechnung: Gesamtkosten – 131€ Pflegekasse = 131€ Eigenanteil. Icons für Spaziergang, Einkauf und Gesellschaft am unteren Rand. Alltagsengel-Logo in der Ecke.
 
 **Posting-Zeitpunkt:** Mittwoch, 11:30 Uhr
 
@@ -41,7 +41,7 @@ Infografik im Alltagsengel-Design (Grün/Weiß). Großer Titel: „125€ pro Mo
 - Umfrage: „Wussten Sie vom Entlastungsbetrag?" (Ja/Nein)
 - Countdown-Sticker: „Jetzt beraten lassen!"
 - Swipe-Up zu alltagsengel.care
-- Quiz: „Wie viel zahlt die Pflegekasse monatlich?" (50€ / 125€ / 200€)
+- Quiz: „Wie viel zahlt die Pflegekasse monatlich?" (50€ / 131€ / 200€)
 
 ---
 
@@ -120,7 +120,7 @@ Bei Alltagsengel begleiten unsere geschulten Alltagsbegleiter Ihre Angehörigen 
 🏞️ Grüneburgpark
 🌺 Bethmannpark
 
-Ab 131€/Monat Eigenanteil. Die Pflegekasse zahlt 125€ dazu.
+Ab 131€/Monat Eigenanteil. Die Pflegekasse zahlt 131€ dazu.
 
 Schenken Sie Ihren Eltern frische Luft und Gesellschaft! 💚
 
@@ -167,7 +167,7 @@ Bei Alltagsengel machen wir aus dem Einkauf ein gemeinsames Erlebnis:
 
 Es geht nicht nur um die Tüten — es geht um Selbstständigkeit, Würde und Gesellschaft.
 
-Alles ab 131€/Monat Eigenanteil. 125€ übernimmt die Pflegekasse.
+Alles ab 131€/Monat Eigenanteil. 131€ übernimmt die Pflegekasse.
 
 👉 Link in Bio für eine kostenlose Beratung
 📧 info@alltagsengel.care
@@ -217,7 +217,7 @@ Unsere Alltagsbegleiter sind da, wenn Sie nicht da sein können:
 
 Es braucht keine große Geste. Manchmal reicht es, einfach da zu sein.
 
-Ab 131€/Monat. Die Pflegekasse zahlt 125€.
+Ab 131€/Monat. Die Pflegekasse zahlt 131€.
 
 Schenken Sie Ihren Eltern Gesellschaft. 🤝
 
@@ -249,7 +249,7 @@ Reel: Split-Screen. Links: Einsamer Senior sitzt allein am Tisch, leere Tasse, s
 
 Das ist der häufigste Einwand, den wir hören. Aber die Wahrheit ist:
 
-💶 **125€ zahlt die Pflegekasse** (Entlastungsbetrag nach §45b)
+💶 **131€ zahlt die Pflegekasse** (Entlastungsbetrag nach §45b)
 💶 **131€ Eigenanteil** — das ist alles!
 
 Und so funktioniert es — ganz ohne Bürokratie-Stress:
@@ -271,7 +271,7 @@ Noch Fragen? Wir beraten Sie gerne — kostenlos und unverbindlich! 📞
 📍 Neue Mainzer Straße 66-68, Frankfurt
 
 **Hashtags:**
-#Kosten #Pflegekasse #Entlastungsbetrag #131Euro #Transparent #Alltagsbegleitung #FrankfurtAmMain #Alltagsengel #KeineBürokratie #Einfach #PflegendeAngehörige #Pflegegrad #Abrechnung #KostenÜbernahme #Seniorenbetreuung #SGB11 #Paragraph45b #HilfeImAlltag #Beratung #Kostenlos #Unverbindlich #GesetzlicherAnspruch #125Euro #Pflege #Familie #Entlastung #Senioren #Frankfurt #FinanziellEntlastet #Vorsorge
+#Kosten #Pflegekasse #Entlastungsbetrag #131Euro #Transparent #Alltagsbegleitung #FrankfurtAmMain #Alltagsengel #KeineBürokratie #Einfach #PflegendeAngehörige #Pflegegrad #Abrechnung #KostenÜbernahme #Seniorenbetreuung #SGB11 #Paragraph45b #HilfeImAlltag #Beratung #Kostenlos #Unverbindlich #GesetzlicherAnspruch #131Euro #Pflege #Familie #Entlastung #Senioren #Frankfurt #FinanziellEntlastet #Vorsorge
 
 **Bild-/Reel-Beschreibung:**
 Infografik/Karussell (3 Slides):
@@ -310,7 +310,7 @@ Alltagsengel ist Ihre Entlastung:
 ✅ Regelmäßige Betreuung für Ihre Angehörigen
 ✅ Feste Termine, auf die Sie sich verlassen können
 ✅ Zeit für sich — ohne schlechtes Gewissen
-✅ Ab 131€/Monat (Pflegekasse zahlt 125€ dazu)
+✅ Ab 131€/Monat (Pflegekasse zahlt 131€ dazu)
 
 Pflegen Sie sich selbst. Wir pflegen die Beziehung zu Ihren Liebsten. 💚
 
@@ -410,7 +410,7 @@ Unsere Engel kennen Frankfurt wie ihre Westentasche — und sind immer in der N�
 Mitten in Frankfurt, mitten im Leben:
 🏢 Neue Mainzer Straße 66-68, 60311 Frankfurt
 
-Ab 131€/Monat Eigenanteil. 125€ zahlt die Pflegekasse.
+Ab 131€/Monat Eigenanteil. 131€ zahlt die Pflegekasse.
 
 Wo in Frankfurt brauchen Sie uns? 👇
 

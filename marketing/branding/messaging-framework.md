@@ -7,7 +7,7 @@
 
 ## 1. Elevator Pitch (30 Sekunden)
 
-> **„Alltagsengel vermittelt zertifizierte Alltagsbegleiter an Senioren in Frankfurt — per App, in unter drei Minuten. Wir sind nach §45a SGB XI anerkannt, das heißt: Die Pflegekasse übernimmt 125 Euro im Monat. Für Familien bedeutet das echte Entlastung — ein verlässlicher Mensch, der mit Oma einkaufen geht, Papa zum Arzt begleitet oder einfach mal da ist. Über 60 Prozent der Familien nutzen den Entlastungsbetrag heute gar nicht. Wir machen den Zugang so einfach, dass sich das ändert."**
+> **„Alltagsengel vermittelt zertifizierte Alltagsbegleiter an Senioren in Frankfurt — per App, in unter drei Minuten. Wir sind nach §45a SGB XI anerkannt, das heißt: Die Pflegekasse übernimmt 131 Euro im Monat. Für Familien bedeutet das echte Entlastung — ein verlässlicher Mensch, der mit Oma einkaufen geht, Papa zum Arzt begleitet oder einfach mal da ist. Über 60 Prozent der Familien nutzen den Entlastungsbetrag heute gar nicht. Wir machen den Zugang so einfach, dass sich das ändert."**
 
 ### Kurzversion (10 Sekunden, für Networking)
 
@@ -15,7 +15,7 @@
 
 ### Version für Angehörige (emotional, 20 Sekunden)
 
-> **„Sie können nicht jeden Tag bei Ihren Eltern sein — und das ist in Ordnung. Alltagsengel vermittelt Ihnen eine vertrauensvolle Begleitung, die Ihre Mutter zum Arzt bringt, mit ihr einkauft oder einfach Gesellschaft leistet. 125 Euro zahlt die Pflegekasse, der Rest sind 131 Euro im Monat. Alles über eine App."**
+> **„Sie können nicht jeden Tag bei Ihren Eltern sein — und das ist in Ordnung. Alltagsengel vermittelt Ihnen eine vertrauensvolle Begleitung, die Ihre Mutter zum Arzt bringt, mit ihr einkauft oder einfach Gesellschaft leistet. 131 Euro zahlt die Pflegekasse, der Rest sind 131 Euro im Monat. Alles über eine App."**
 
 ---
 
@@ -43,7 +43,7 @@ Unterstützende Punkte:
 
 ### Kernbotschaft 3: Bezahlbarkeit
 
-**„125 Euro zahlt die Pflegekasse — jeden Monat. Ihr Eigenanteil: 131 Euro."**
+**„131 Euro zahlt die Pflegekasse — jeden Monat. Ihr Eigenanteil: 131 Euro."**
 
 Unterstützende Punkte:
 - Entlastungsbetrag nach §45b SGB XI steht jedem Pflegegrad zu (Grad 1–5)
@@ -82,7 +82,7 @@ Unterstützende Punkte:
 | **Schuldgefühle** | „Sie sind eine gute Tochter/ein guter Sohn. Hilfe zu organisieren ist Fürsorge — nicht Aufgeben." |
 | **Zeitmangel** | „In drei Minuten gebucht. Kein Papierkram, keine Warteliste." |
 | **Vertrauen** | „Jeder Engel ist zertifiziert und versichert. Sie lernen ihn vorher kennen." |
-| **Kosten** | „Die Pflegekasse zahlt 125 €. Ihr Eigenanteil liegt bei 131 € im Monat." |
+| **Kosten** | „Die Pflegekasse zahlt 131 €. Ihr Eigenanteil liegt bei 131 € im Monat." |
 | **Kontrolle** | „Über die App sehen Sie Termine, Berichte und können jederzeit mit dem Engel chatten." |
 | **Qualität** | „Alle Begleiter sind nach §45a SGB XI qualifiziert — das ist gesetzlich geregelt." |
 
@@ -168,7 +168,7 @@ Alltagsengel ist kein anonymer bundesweiter Vermittler. Wir kennen Frankfurt —
 | Fakt | Zahl |
 |------|------|
 | Pflegebedürftige in Deutschland | 4,96 Millionen |
-| Entlastungsbetrag pro Monat | 125 € (§45b SGB XI, ab 2025: 131 €) |
+| Entlastungsbetrag pro Monat | 131 € (§45b SGB XI, ab 2025: 131 €) |
 | Ungenutzter Entlastungsbetrag | ca. 60 % — rund 4,68 Mrd. € jährlich |
 | Marktvolumen Alltagsbegleitung (SAM) | 7,80 Mrd. € |
 | Krankentransport-Vermittlungsmarkt | 3,00 Mrd. € |
@@ -178,7 +178,7 @@ Alltagsengel ist kein anonymer bundesweiter Vermittler. Wir kennen Frankfurt —
 | Kennzahl | Wert |
 |----------|------|
 | Eigenanteil für Kunden | 131 € / Monat |
-| Pflegekassen-Erstattung | 125 € / Monat Entlastungsbetrag |
+| Pflegekassen-Erstattung | 131 € / Monat Entlastungsbetrag |
 | Vergütung für Engel | 20 € / Stunde (fest) |
 | Bruttomarge | ca. 43 % |
 | Customer Acquisition Cost (CAC) | 35 € |
@@ -204,7 +204,7 @@ Alltagsengel ist kein anonymer bundesweiter Vermittler. Wir kennen Frankfurt —
 |---------|---------|
 | **„Das können wir selbst."** | „Natürlich. Und genau deshalb ist es umso wichtiger, sich Unterstützung zu holen, bevor die eigene Kraft nachlässt. Alltagsbegleitung ist keine Schwäche — sondern vorausschauende Fürsorge." |
 | **„Mein Vater will keine Fremden."** | „Das verstehen wir gut. Deshalb gibt es ein unverbindliches Kennenlernen. Die meisten Senioren sind nach dem ersten Treffen positiv überrascht — weil es eben kein Pflegedienst ist, sondern ein netter Mensch." |
-| **„Das ist zu teuer."** | „Die Pflegekasse zahlt 125 € Entlastungsbetrag pro Monat. Der Eigenanteil liegt bei 131 €. Wenn man den Entlastungsbetrag nicht nutzt, verfällt er — das wäre verschenktes Geld." |
+| **„Das ist zu teuer."** | „Die Pflegekasse zahlt 131 € Entlastungsbetrag pro Monat. Der Eigenanteil liegt bei 131 €. Wenn man den Entlastungsbetrag nicht nutzt, verfällt er — das wäre verschenktes Geld." |
 | **„Ich weiß nicht, ob die Qualität stimmt."** | „Alle Engel sind nach §45a SGB XI zertifiziert, versichert und von uns persönlich geprüft. Über die App sehen Sie Bewertungen und Einsatzberichte — volle Transparenz." |
 | **„Wir haben schon einen Pflegedienst."** | „Alltagsbegleitung ersetzt keinen Pflegedienst. Es ergänzt ihn — für alles, was keine medizinische Pflege ist: Einkauf, Spaziergänge, Arztbegleitung, Gesellschaft." |
 | **„Ich schaue mir das mal an."** | „Gerne. Laden Sie die App herunter und sehen Sie sich die Engel in Ihrer Nähe an. Alles unverbindlich. Wenn Sie Fragen haben, rufen Sie uns an." |
@@ -215,7 +215,7 @@ Alltagsengel ist kein anonymer bundesweiter Vermittler. Wir kennen Frankfurt —
 |---------|---------|
 | **„Ich brauche das nicht."** | „Es geht nicht um Brauchen. Es geht darum, den Alltag ein bisschen angenehmer zu machen. Jemand zum Reden, jemand, der mitkommt zum Einkauf — das ist kein Zeichen von Schwäche." |
 | **„Ich will keine Pflege."** | „Das ist auch keine Pflege. Ein Alltagsengel ist wie ein guter Nachbar, der Zeit hat. Keine Medizin, keine Katheter, keine Krankenschwester." |
-| **„Das kann ich mir nicht leisten."** | „Die Pflegekasse übernimmt 125 € im Monat. Der Eigenanteil ist gering, und wenn Sie das Budget nicht nutzen, verfällt es leider." |
+| **„Das kann ich mir nicht leisten."** | „Die Pflegekasse übernimmt 131 € im Monat. Der Eigenanteil ist gering, und wenn Sie das Budget nicht nutzen, verfällt es leider." |
 | **„Ich kenne die Person nicht."** | „Genau deshalb gibt es ein Kennenlernen vorab. Ihr Engel stellt sich vor, und Sie entscheiden, ob es passt. Ohne Druck." |
 
 ### 6.3 Einwände von B2B-Partnern
@@ -306,7 +306,7 @@ bezahlt von der Pflegekasse."
         └── Ebene 3 — Beweispunkte (wie wir liefern):
             - §45a-Anerkennung, versicherte Begleiter
             - App-Buchung in 3 Minuten
-            - 125 € Pflegekassen-Erstattung
+            - 131 € Pflegekassen-Erstattung
             - Feste Bezugsperson aus der Nachbarschaft
             - Echtzeit-Transparenz über die App
 

@@ -73,7 +73,7 @@ Wir sind nicht die kalte Pflegeinstitution. Wir sind nicht die übertrieben frö
 > „Wir wissen, dass es nicht leicht ist, Hilfe anzunehmen. Deshalb machen wir den ersten Schritt so einfach wie möglich."
 
 **Fachlich korrekt, aber verständlich:**
-> „Die Pflegekasse zahlt jeden Monat 125 € Entlastungsbetrag — und mit nur 131 € Eigenanteil bekommen Sie regelmäßige Begleitung im Alltag."
+> „Die Pflegekasse zahlt jeden Monat 131 € Entlastungsbetrag — und mit nur 131 € Eigenanteil bekommen Sie regelmäßige Begleitung im Alltag."
 
 **Ermutigend und positiv:**
 > „Ein Spaziergang im Palmengarten, ein Besuch auf dem Wochenmarkt oder einfach mal jemand zum Reden — das ist Alltagsbegleitung."
@@ -261,7 +261,7 @@ Wir sind nicht die kalte Pflegeinstitution. Wir sind nicht die übertrieben frö
 - **Nie:** Armut thematisieren, finanzielle Scham auslösen, Preise verstecken
 - **Stattdessen:** Transparent, sachlich, lösungsorientiert
 - **Fokus:** Auf den Entlastungsbetrag als Anspruch, nicht als Almosen
-- **Beispiel:** „Die Pflegekasse zahlt 125 € Entlastungsbetrag pro Monat. Mit einem Eigenanteil von nur 131 € bekommen Sie regelmäßige Begleitung — ohne versteckte Kosten."
+- **Beispiel:** „Die Pflegekasse zahlt 131 € Entlastungsbetrag pro Monat. Mit einem Eigenanteil von nur 131 € bekommen Sie regelmäßige Begleitung — ohne versteckte Kosten."
 
 ### 6.5 Tod und Trauer
 
@@ -309,7 +309,7 @@ Vor jeder Veröffentlichung prüfen:
 - [ ] Wird niemand herablassend oder bemitleidend angesprochen?
 - [ ] Ist der Absender „Alltagsengel" (kein persönlicher Name)?
 - [ ] Ist die Anrede korrekt (Frau/Herr Nachname)?
-- [ ] Stimmen die Fakten (131 €, 125 € Entlastungsbetrag, §45a)?
+- [ ] Stimmen die Fakten (131 €, 131 € Entlastungsbetrag, §45a)?
 - [ ] Hat der Text einen klaren CTA oder nächsten Schritt?
 - [ ] Passt der Ton zum Kanal (LinkedIn ≠ TikTok ≠ E-Mail)?
 

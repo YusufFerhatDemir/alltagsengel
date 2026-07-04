@@ -93,7 +93,7 @@
 
 Sehr geehrte Damen und Herren,
 
-wussten Sie, dass ueber 60 Prozent der pflegebeduerftigen Frankfurterinnen und Frankfurter ihren gesetzlichen Entlastungsbetrag von 125 Euro monatlich nicht nutzen? Das sind jaehrlich bis zu 1.500 Euro pro Person, die einfach verfallen.
+wussten Sie, dass ueber 60 Prozent der pflegebeduerftigen Frankfurterinnen und Frankfurter ihren gesetzlichen Entlastungsbetrag von 131 Euro monatlich nicht nutzen? Das sind jaehrlich bis zu 1.500 Euro pro Person, die einfach verfallen.
 
 Alltagsengel, ein neuer Frankfurter Anbieter fuer Alltagsbegleitung nach Paragraph 45a SGB XI, moechte das aendern. Das Unternehmen bietet professionelle Alltagsbegleitung an -- von der Arztbegleitung ueber Einkaufshilfe bis zur Gesellschaft fuer einsame Seniorinnen und Senioren.
 
@@ -140,7 +140,7 @@ info@alltagsengel.care
 
 Sehr geehrte Redaktion,
 
-125 Euro im Monat fuer professionelle Alltagsbegleitung -- das steht jedem Pflegebeduerftigen zu. Doch die Mehrheit der Betroffenen in Frankfurt weiss das nicht. Die Folge: Senioren bleiben allein, Angehoerige sind ueberfordert, und oeffentliche Gelder verfallen ungenutzt.
+131 Euro im Monat fuer professionelle Alltagsbegleitung -- das steht jedem Pflegebeduerftigen zu. Doch die Mehrheit der Betroffenen in Frankfurt weiss das nicht. Die Folge: Senioren bleiben allein, Angehoerige sind ueberfordert, und oeffentliche Gelder verfallen ungenutzt.
 
 Wir bieten Ihnen eine drehfertige Geschichte an:
 - **Protagonisten:** Betroffene Familien, die ueber den Alltag mit Pflegebeduerftigkeit sprechen (Einverstaendnis liegt vor)

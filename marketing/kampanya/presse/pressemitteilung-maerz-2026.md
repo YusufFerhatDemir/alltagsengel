@@ -142,7 +142,7 @@ Das Unternehmen bietet:
 | Aspekt | Details |
 |--------|---------|
 | **Leistungsumfang** | Einkaufen, Haushalt, Begleitung, Gesellschaft, Freizeitgestaltung |
-| **Finanzierung** | §45b SGB XI (125€/Monat), Privatzahlung, Arbeitgeber-Zuschüsse |
+| **Finanzierung** | §45b SGB XI (131€/Monat), Privatzahlung, Arbeitgeber-Zuschüsse |
 | **Verfügbarkeit** | Bundesweit, Fokus auf urbane und semi-urbane Gebiete |
 | **Finanzierung** | §45b (131€/Monat); Private: 18-25€/Stunde |
 | **Geprüfung** | 100% der Begleiter zertifiziert, regelmäßige Audits |

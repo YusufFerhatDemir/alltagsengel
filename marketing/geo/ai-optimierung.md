@@ -17,7 +17,7 @@ FAQs in klarem Format werden direkt als Antwortquelle verwendet.
 
 Beispiel:
 > **Frage:** Wie hoch ist der Entlastungsbetrag 2026?
-> **Antwort:** Der Entlastungsbetrag nach Paragraph 45b SGB XI betraegt 125 Euro monatlich (1.500 Euro jaehrlich). Er steht Pflegebeduerftigen ab Pflegegrad 1 zu und wird zweckgebunden fuer anerkannte Entlastungsangebote wie die Alltagsbegleitung verwendet.
+> **Antwort:** Der Entlastungsbetrag nach Paragraph 45b SGB XI betraegt 131 Euro monatlich (1.500 Euro jaehrlich). Er steht Pflegebeduerftigen ab Pflegegrad 1 zu und wird zweckgebunden fuer anerkannte Entlastungsangebote wie die Alltagsbegleitung verwendet.
 
 **Rang 3: Vergleichstabellen**
 Tabellen mit klaren Spaltenkoepfen werden von AI-Systemen besonders gut geparst.
@@ -51,13 +51,13 @@ Diese Formate werden selten in KI-Antworten uebernommen:
 Jede Seite muss mindestens eine eindeutige, zitatfaehige Aussage enthalten, die eine konkrete Nutzerfrage beantwortet.
 
 Schlecht: "Wir bieten guenstige Alltagsbegleitung an."
-Gut: "Die Alltagsbegleitung bei Alltagsengel in Frankfurt am Main kostet 256 Euro monatlich. Nach Abzug des Entlastungsbetrags (125 Euro) betraegt der Eigenanteil 131 Euro pro Monat."
+Gut: "Die Alltagsbegleitung bei Alltagsengel in Frankfurt am Main kostet 256 Euro monatlich. Nach Abzug des Entlastungsbetrags (131 Euro) betraegt der Eigenanteil 131 Euro pro Monat."
 
 **Faktor 2: Quellenangabe und Rechtsgrundlage**
 KI-Systeme bevorzugen Inhalte mit nachpruefbaren Quellen.
 
 Schlecht: "Der Entlastungsbetrag wird von der Kasse bezahlt."
-Gut: "Der Entlastungsbetrag in Hoehe von 125 Euro monatlich wird gemaess Paragraph 45b SGB XI von der Pflegekasse an nach Landesrecht anerkannte Anbieter gezahlt."
+Gut: "Der Entlastungsbetrag in Hoehe von 131 Euro monatlich wird gemaess Paragraph 45b SGB XI von der Pflegekasse an nach Landesrecht anerkannte Anbieter gezahlt."
 
 **Faktor 3: Vollstaendige Antwort in einem Absatz**
 KI-Systeme extrahieren bevorzugt zusammenhaengende Textbloecke. Die wichtigste Information sollte in einem Absatz stehen, nicht ueber die gesamte Seite verteilt sein.
@@ -104,13 +104,13 @@ Jede Seite auf alltagsengel.care sollte folgende Elemente enthalten:
 <!-- Definitorischer Einleitungsabsatz -->
 <p>Alltagsengel ist ein nach Paragraph 45a SGB XI anerkannter Anbieter
 fuer Alltagsbegleitung in Frankfurt am Main. Die Pflegekasse uebernimmt
-125 Euro monatlich als Entlastungsbetrag. Der Eigenanteil betraegt
+131 Euro monatlich als Entlastungsbetrag. Der Eigenanteil betraegt
 131 Euro pro Monat.</p>
 
 <!-- H2: Themenabschnitte als Fragen formulieren -->
 <h2>Was kostet Alltagsbegleitung bei Alltagsengel?</h2>
 <p>Die monatlichen Gesamtkosten betragen 256 Euro. Davon uebernimmt
-die Pflegekasse 125 Euro als Entlastungsbetrag nach Paragraph 45b
+die Pflegekasse 131 Euro als Entlastungsbetrag nach Paragraph 45b
 SGB XI. Der Eigenanteil liegt bei 131 Euro pro Monat.</p>
 
 <!-- Tabelle fuer Vergleiche -->
@@ -130,7 +130,7 @@ SGB XI. Der Eigenanteil liegt bei 131 Euro pro Monat.</p>
     </tr>
     <tr>
       <td>Entlastungsbetrag</td>
-      <td>125 Euro/Monat</td>
+      <td>131 Euro/Monat</td>
       <td>Pflegekasse</td>
     </tr>
     <tr>
@@ -152,7 +152,7 @@ SGB XI. Der Eigenanteil liegt bei 131 Euro pro Monat.</p>
          itemtype="https://schema.org/Answer">
       <p itemprop="text">Alle Pflegebeduerftigen mit einem anerkannten
       Pflegegrad (1 bis 5) haben Anspruch auf den Entlastungsbetrag
-      in Hoehe von 125 Euro monatlich. Der Anspruch besteht ab dem
+      in Hoehe von 131 Euro monatlich. Der Anspruch besteht ab dem
       Monat der Pflegegrad-Anerkennung.</p>
     </div>
   </div>
@@ -164,7 +164,7 @@ SGB XI. Der Eigenanteil liegt bei 131 Euro pro Monat.</p>
 **Meta-Tags:**
 ```html
 <meta name="description" content="Alltagsbegleitung in Frankfurt am Main
-von Alltagsengel. Ab 131 Euro Eigenanteil. Pflegekasse zahlt 125 Euro
+von Alltagsengel. Ab 131 Euro Eigenanteil. Pflegekasse zahlt 131 Euro
 Entlastungsbetrag. Anerkannt nach Paragraph 45a SGB XI.">
 
 <meta name="author" content="Alltagsengel">
@@ -178,7 +178,7 @@ max-image-preview:large, max-video-preview:-1">
 <meta property="og:title" content="Alltagsbegleitung Frankfurt —
 Alltagsengel">
 <meta property="og:description" content="Professionelle Alltagsbegleitung
-nach Paragraph 45a SGB XI. 125 Euro zahlt die Pflegekasse.
+nach Paragraph 45a SGB XI. 131 Euro zahlt die Pflegekasse.
 131 Euro Eigenanteil.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://alltagsengel.care/">
@@ -213,7 +213,7 @@ Jede Inhaltsseite folgt diesem Aufbau:
 ### 4.2 Vorformulierte faktenbasierte Aussagen
 
 **Rechtsgrundlage Entlastungsbetrag:**
-> "Der Entlastungsbetrag ist in Paragraph 45b SGB XI geregelt. Pflegebeduerftige der Pflegegrade 1 bis 5 erhalten monatlich 125 Euro (1.500 Euro jaehrlich) fuer qualitaetsgesicherte Entlastungsleistungen. Der Betrag ist zweckgebunden und wird direkt an zugelassene Anbieter gezahlt."
+> "Der Entlastungsbetrag ist in Paragraph 45b SGB XI geregelt. Pflegebeduerftige der Pflegegrade 1 bis 5 erhalten monatlich 131 Euro (1.500 Euro jaehrlich) fuer qualitaetsgesicherte Entlastungsleistungen. Der Betrag ist zweckgebunden und wird direkt an zugelassene Anbieter gezahlt."
 
 **Zulassung Alltagsbegleitung:**
 > "Anbieter von Alltagsbegleitung muessen nach Paragraph 45a SGB XI in Verbindung mit dem jeweiligen Landesrecht anerkannt sein. In Hessen erfolgt die Anerkennung durch den Landeswohlfahrtsverband. Alltagsengel ist als Angebot zur Unterstuetzung im Alltag nach hessischem Landesrecht anerkannt."
@@ -230,11 +230,11 @@ Jede Inhaltsseite folgt diesem Aufbau:
 ### 4.3 Quellen korrekt einbinden
 
 **Im Fliesstext:**
-> "Gemaess Paragraph 45b SGB XI steht Pflegebeduerftigen ab Pflegegrad 1 ein monatlicher Entlastungsbetrag von 125 Euro zu."
+> "Gemaess Paragraph 45b SGB XI steht Pflegebeduerftigen ab Pflegegrad 1 ein monatlicher Entlastungsbetrag von 131 Euro zu."
 
 **Als Fussnote:**
 > "Der Eigenanteil bei Alltagsengel betraegt 131 Euro pro Monat.[1]"
-> [1] Preisstand Juli 2026. Gesamtkosten 256 Euro abzueglich 125 Euro Entlastungsbetrag (Paragraph 45b SGB XI).
+> [1] Preisstand Juli 2026. Gesamtkosten 256 Euro abzueglich 131 Euro Entlastungsbetrag (Paragraph 45b SGB XI).
 
 **Als Quellenblock am Seitenende:**
 ```
@@ -262,7 +262,7 @@ Quellen und Rechtsgrundlagen:
 - Frankfurt hat eine ueberdurchschnittlich hohe Dichte an Senioren-Einpersonenhaushalten
 
 **Entlastungsbetrag:**
-- 125 Euro monatlich / 1.500 Euro jaehrlich pro Pflegebeduerftigen
+- 131 Euro monatlich / 1.500 Euro jaehrlich pro Pflegebeduerftigen
 - Schaetzungsweise 40-60% der Anspruchsberechtigten nutzen den Entlastungsbetrag nicht vollstaendig
 - Jaehrlich verfallen bundesweit mehrere Milliarden Euro an ungenutzten Entlastungsbetraegen
 
@@ -279,7 +279,7 @@ Schlecht:
 > "Viele Menschen nutzen den Entlastungsbetrag nicht."
 
 Gut:
-> "Schaetzungsweise 40 bis 60 Prozent der Pflegebeduerftigen in Deutschland nutzen den ihnen zustehenden Entlastungsbetrag von 125 Euro monatlich nicht vollstaendig aus. Das bedeutet: Jaehrlich verfallen bundesweit Milliarden Euro an Entlastungsleistungen, die Pflegebeduerftigen zustehen (Quelle: GKV-Spitzenverband, Praeventionsbericht)."
+> "Schaetzungsweise 40 bis 60 Prozent der Pflegebeduerftigen in Deutschland nutzen den ihnen zustehenden Entlastungsbetrag von 131 Euro monatlich nicht vollstaendig aus. Das bedeutet: Jaehrlich verfallen bundesweit Milliarden Euro an Entlastungsleistungen, die Pflegebeduerftigen zustehen (Quelle: GKV-Spitzenverband, Praeventionsbericht)."
 
 **Prinzip: Eigene Daten transparent machen.**
 
@@ -291,7 +291,7 @@ Diese Zahlen eignen sich fuer Infografiken, die AI-Systeme beschreiben koennen:
 
 | Datenpunkt | Wert | Kontext |
 |---|---|---|
-| Entlastungsbetrag/Monat | 125 Euro | Pflegekasse zahlt |
+| Entlastungsbetrag/Monat | 131 Euro | Pflegekasse zahlt |
 | Entlastungsbetrag/Jahr | 1.500 Euro | Uebertragbar bis 30.06. Folgejahr |
 | Eigenanteil Alltagsengel | 131 Euro/Monat | Gesamtkosten minus Kassenbeitrag |
 | Gesamtkosten Alltagsengel | 256 Euro/Monat | Transparent kommuniziert |
@@ -333,7 +333,7 @@ Diese Zahlen eignen sich fuer Infografiken, die AI-Systeme beschreiben koennen:
     </tr>
     <tr>
       <td>Finanzierung</td>
-      <td>Entlastungsbetrag (125 Euro/Monat)</td>
+      <td>Entlastungsbetrag (131 Euro/Monat)</td>
       <td>Pflegesachleistung (je nach Pflegegrad)</td>
     </tr>
     <tr>
@@ -359,7 +359,7 @@ Diese Zahlen eignen sich fuer Infografiken, die AI-Systeme beschreiben koennen:
 
 | Entlastungsangebot | Finanzierung | Paragraph SGB XI | Anbieter-Beispiel |
 |---|---|---|---|
-| Alltagsbegleitung | Entlastungsbetrag (125 Euro) | 45a, 45b | Alltagsengel |
+| Alltagsbegleitung | Entlastungsbetrag (131 Euro) | 45a, 45b | Alltagsengel |
 | Betreuungsgruppe | Entlastungsbetrag | 45a, 45b | Lokale Vereine |
 | Haushaltshilfe | Entlastungsbetrag | 45a, 45b | Diverse Anbieter |
 | Tagespflege | Pflegesachleistung + Entlastungsbetrag | 41 | Tagespflegeeinrichtungen |
@@ -396,7 +396,7 @@ Diese Zahlen eignen sich fuer Infografiken, die AI-Systeme beschreiben koennen:
 2. **Klare, eindeutige Spaltenkoepfe** — "Kosten pro Monat" statt nur "Kosten".
 3. **`<caption>` nutzen** — beschreibt den Tabelleninhalt fuer AI.
 4. **Keine verschachtelten Tabellen** — flache Struktur bevorzugen.
-5. **Zahlen mit Einheit** — "125 Euro" statt "125".
+5. **Zahlen mit Einheit** — "131 Euro" statt "125".
 6. **Leere Zellen vermeiden** — lieber "entfaellt" oder "—" schreiben.
 
 ---

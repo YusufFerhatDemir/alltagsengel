@@ -14,7 +14,7 @@ Wir wenden uns an Sie, weil wir wissen: In Ihrer Praxis begegnen Ihnen regelmä�
 
 **Genau hier setzen wir an.**
 
-Alltagsengel bietet professionelle Alltagsbegleitung, die über die Pflegekasse abgerechnet wird. Jeder Versicherte mit Pflegegrad 1 bis 5 hat Anspruch auf den Entlastungsbetrag von 125 € monatlich nach §45b SGB XI. Der verbleibende Eigenanteil beträgt 131 € pro Monat. Für Ihre Patienten bedeutet das: qualifizierte, regelmäßige Begleitung im Alltag — ohne bürokratischen Aufwand.
+Alltagsengel bietet professionelle Alltagsbegleitung, die über die Pflegekasse abgerechnet wird. Jeder Versicherte mit Pflegegrad 1 bis 5 hat Anspruch auf den Entlastungsbetrag von 131 € monatlich nach §45b SGB XI. Der verbleibende Eigenanteil beträgt 131 € pro Monat. Für Ihre Patienten bedeutet das: qualifizierte, regelmäßige Begleitung im Alltag — ohne bürokratischen Aufwand.
 
 **Was bedeutet das für Ihre Praxis?**
 - Ihre Patienten erhalten eine konkrete Hilfe, die Sie direkt empfehlen können.
@@ -48,7 +48,7 @@ Sehr geehrte Damen und Herren,
 
 Sie kennen Ihre Stammkunden persönlich. Sie wissen, wer alleine kommt und wer Hilfe braucht. Vielleicht fällt Ihnen bei manchen Kunden auf, dass der Weg zur Apotheke immer beschwerlicher wird, dass Rezepte seltener eingelöst werden oder dass jemand wirkt, als bräuchte er im Alltag mehr Unterstützung.
 
-Alltagsengel ist ein anerkannter Alltagsbegleitungsdienst nach §45a SGB XI in Frankfurt am Main. Wir unterstützen Senioren bei alltäglichen Aufgaben: Einkaufsbegleitung, Arztbesuche, Spaziergänge, Behördengänge und vieles mehr. Unsere Leistungen werden über den Entlastungsbetrag der Pflegekasse (125 € monatlich, §45b SGB XI) mitfinanziert. Der monatliche Eigenanteil beträgt 131 €.
+Alltagsengel ist ein anerkannter Alltagsbegleitungsdienst nach §45a SGB XI in Frankfurt am Main. Wir unterstützen Senioren bei alltäglichen Aufgaben: Einkaufsbegleitung, Arztbesuche, Spaziergänge, Behördengänge und vieles mehr. Unsere Leistungen werden über den Entlastungsbetrag der Pflegekasse (131 € monatlich, §45b SGB XI) mitfinanziert. Der monatliche Eigenanteil beträgt 131 €.
 
 **Was bringt Ihnen eine Zusammenarbeit mit uns?**
 - Sie können Ihren Kunden eine konkrete Empfehlung geben, wenn Sie merken, dass jemand Hilfe braucht — statt nur zuzuschauen.
@@ -92,7 +92,7 @@ Alltagsengel ist ein nach §45a SGB XI durch das Land Hessen anerkannter Alltags
 - Haushaltshilfe
 
 **Kostenstruktur:**
-Der Entlastungsbetrag der Pflegekasse (125 € monatlich) wird direkt mit der Kasse abgerechnet. Der verbleibende Eigenanteil für die Versicherten beträgt 131 € monatlich. Die Abwicklung mit der Pflegekasse übernehmen wir vollständig.
+Der Entlastungsbetrag der Pflegekasse (131 € monatlich) wird direkt mit der Kasse abgerechnet. Der verbleibende Eigenanteil für die Versicherten beträgt 131 € monatlich. Die Abwicklung mit der Pflegekasse übernehmen wir vollständig.
 
 **Was wir uns von einer Zusammenarbeit erhoffen:**
 - Aufnahme in Ihre Empfehlungsliste als anerkannter Anbieter nach §45a SGB XI.
@@ -138,7 +138,7 @@ Alltagsengel ist ein nach §45a SGB XI anerkannter Alltagsbegleitungsdienst in F
 - Haushaltshilfe und Alltagsorganisation
 
 **Warum das für Ihr Entlassmanagement relevant ist:**
-- Patienten mit Pflegegrad 1-5 können unsere Leistungen über den Entlastungsbetrag (125 €/Monat, §45b SGB XI) mitfinanzieren. Der Eigenanteil beträgt 131 €/Monat.
+- Patienten mit Pflegegrad 1-5 können unsere Leistungen über den Entlastungsbetrag (131 €/Monat, §45b SGB XI) mitfinanzieren. Der Eigenanteil beträgt 131 €/Monat.
 - Wir können innerhalb von 48 Stunden nach Anfrage einen qualifizierten Alltagsbegleiter bereitstellen.
 - Die Abrechnung mit der Pflegekasse übernehmen wir komplett — Ihre Patienten müssen sich um nichts kümmern.
 - Patienten, die nach der Entlassung Alltagsunterstützung erhalten, werden seltener wegen vermeidbarer Komplikationen wiederaufgenommen.
@@ -181,7 +181,7 @@ Alltagsengel ist ein Alltagsbegleitungsdienst in Frankfurt am Main, anerkannt na
 - Gesellschaft und Gespräche gegen die Einsamkeit
 - Unterstützung bei der Alltagsorganisation
 
-Unsere Leistungen werden teilweise von der Pflegekasse übernommen: Der gesetzliche Entlastungsbetrag von 125 € monatlich (§45b SGB XI) wird direkt mit der Kasse abgerechnet. Der monatliche Eigenanteil beträgt 131 €. Voraussetzung ist ein anerkannter Pflegegrad (1-5).
+Unsere Leistungen werden teilweise von der Pflegekasse übernommen: Der gesetzliche Entlastungsbetrag von 131 € monatlich (§45b SGB XI) wird direkt mit der Kasse abgerechnet. Der monatliche Eigenanteil beträgt 131 €. Voraussetzung ist ein anerkannter Pflegegrad (1-5).
 
 **Warum wir uns an Sie wenden:**
 

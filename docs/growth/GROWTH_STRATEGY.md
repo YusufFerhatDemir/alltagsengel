@@ -31,12 +31,12 @@ Ohne Engel keine Buchungen. Starte hier.
 - Lokale Facebook-Gruppen: "Pflege Angehörige [Stadt]", "Senioren [Stadt]"
 - Pflegestützpunkte & Seniorenbüros: Flyer auslegen, persönlich vorstellen
 - Hausärzte & Apotheken: Visitenkarten & Flyer hinterlassen
-- Kirchengemeinden & Seniorentreffs: Vorträge anbieten "Ihre 125€ Entlastung — so nutzen Sie sie"
+- Kirchengemeinden & Seniorentreffs: Vorträge anbieten "Ihre 131€ Entlastung — so nutzen Sie sie"
 
 **Bezahlte Kanäle (kleines Budget):**
 - Google Ads: "Alltagsbegleiter finden", "Entlastungsleistung nutzen", "§45b SGB XI" → 5-10€/Tag
 - Facebook/Instagram Ads: Zielgruppe 35-60 (Angehörige!), nicht Senioren direkt → 5€/Tag
-- Lokale Zeitungsanzeige: "Kennen Sie Ihre 125€ Entlastung?" mit QR-Code
+- Lokale Zeitungsanzeige: "Kennen Sie Ihre 131€ Entlastung?" mit QR-Code
 
 **Die Killer-Botschaft:**
 > "131€ monatlich für Alltagsbegleitung — von der Pflegekasse bezahlt. Die meisten wissen das nicht."
@@ -54,7 +54,7 @@ Diese Botschaft funktioniert, weil:
 
 | Position | Betrag |
 |----------|--------|
-| Entlastungsbetrag §45b | 125€/Monat pro Pflegebedürftigem |
+| Entlastungsbetrag §45b | 131€/Monat pro Pflegebedürftigem |
 | AlltagsEngel Provision | 15-20% = 18,75-25€/Monat pro Nutzer |
 | Engel-Vergütung | 80-85% = 100-106€/Monat pro Nutzer |
 

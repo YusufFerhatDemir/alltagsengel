@@ -58,7 +58,7 @@ Der Betrag gilt für Personen, die in Deutschland versichert sind.
 
 ### Achtung: Gilt für alle Pflegegrade
 
-Ein wichtiger Punkt: Der Entlastungsbetrag steht **ausnahmslos allen Pflegegraden zu** – auch Pflegegrad 1, der oft übersehen wird. Selbst wenn Sie nur geringfügig pflegebedürftig sind, haben Sie Anspruch auf die 125 Euro monatlich.
+Ein wichtiger Punkt: Der Entlastungsbetrag steht **ausnahmslos allen Pflegegraden zu** – auch Pflegegrad 1, der oft übersehen wird. Selbst wenn Sie nur geringfügig pflegebedürftig sind, haben Sie Anspruch auf die 131 Euro monatlich.
 
 ---
 
@@ -79,7 +79,7 @@ Schritt-für-Schritt:
 1. **Leistung in Anspruch nehmen**: Sie buchen einen zertifizierten Alltagsbegleiter durch die AlltagsEngel-App
 2. **Rechnungsstellung**: Der Begleiter stellt eine Rechnung aus
 3. **Abrechnungsmitteilung**: Sie reichen die Rechnung bei der AlltagsEngel-App ein (oder direkt bei der Pflegekasse)
-4. **Erstattung**: Die Pflegekasse erstattet den Betrag (bis maximal 125 Euro pro Monat)
+4. **Erstattung**: Die Pflegekasse erstattet den Betrag (bis maximal 131 Euro pro Monat)
 
 ---
 
@@ -133,7 +133,7 @@ Die **AlltagsEngel-App** macht es besonders einfach:
 
 ---
 
-## Beispiele: Wie 125 Euro pro Monat sinnvoll genutzt werden
+## Beispiele: Wie 131 Euro pro Monat sinnvoll genutzt werden
 
 ### Beispiel 1: Regelmäßige Alltagsbegleitung
 **Situation**: Maria ist 78 Jahre alt und lebt allein. Sie hat Pflegegrad 2.
@@ -203,7 +203,7 @@ Die App macht die Buchung und Abrechnung so einfach wie möglich. Mit ein paar K
 
 ---
 
-## Fazit: Ihr Recht auf 125 Euro Entlastung
+## Fazit: Ihr Recht auf 131 Euro Entlastung
 
 Der Entlastungsbetrag nach §45b ist **Ihr Anrecht**. Es ist Geld, das die Gesellschaft bereitstellt, damit Sie oder Ihre Angehörigen ein würdevolles Leben führen können – mit Unterstützung, Gesellschaft und Entlastung.
 

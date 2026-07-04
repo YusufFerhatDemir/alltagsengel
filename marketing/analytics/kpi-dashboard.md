@@ -27,7 +27,7 @@ Dieses Dokument definiert alle relevanten Marketing-KPIs fuer Alltagsengel (Allt
 
 - Startseite (alltagsengel.care)
 - Leistungen-Seite
-- Kosten-Seite (131 Euro Eigenanteil, 125 Euro Entlastungsbetrag)
+- Kosten-Seite (131 Euro Eigenanteil, 131 Euro Entlastungsbetrag)
 - Kontaktseite / Anfrageformular
 - Blog / Ratgeber-Bereich
 

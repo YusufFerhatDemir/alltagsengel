@@ -161,7 +161,13 @@
       "Bash(echo \"build started pid $!\")",
       "Bash(./deploy.sh \"Security: RLS + Admin-Bypass + API-Auth fixes\")",
       "Bash(rm -f .git/HEAD.lock)",
-      "Bash(rm -f .git/index.lock)"
+      "Bash(rm -f .git/index.lock)",
+      "Bash(curl -s -o /dev/null -w \"HTTP %{http_code}\\\\n\" -X POST https://alltagsengel.care/api/referral -H \"Content-Type: application/json\" -d '{\"referral_code\":\"TEST\",\"referred_user_id\":\"00000000-0000-0000-0000-000000000000\"}' --max-time 15)",
+      "Bash(curl -s -o /dev/null -w \"HTTP %{http_code}\\\\n\" -X POST https://alltagsengel.care/api/whatsapp/webhook -H \"Content-Type: application/json\" -d '{\"entry\":[]}' --max-time 15)",
+      "Bash(curl -s -o /dev/null -w \"HTTP %{http_code}\\\\n\" \"https://alltagsengel.care/api/whatsapp/webhook?hub.mode=subscribe&hub.verify_token=wrong&hub.challenge=123\" --max-time 15)",
+      "Bash(curl -s -o /dev/null -w \"HTTP %{http_code}\\\\n\" -X POST https://alltagsengel.care/api/drip -H \"Authorization: Bearer bogus\" --max-time 15)",
+      "Bash(node -e \"const p=require\\('./package.json'\\); console.log\\(Object.keys\\({...p.dependencies,...p.devDependencies}\\).join\\('\\\\n'\\)\\)\")",
+      "Bash(python3 \"/private/tmp/claude-502/-Users-work-alltagsengel/8584feb8-c425-4df3-9e89-f785fa0f5693/scratchpad/fix125.py\")"
     ]
   }
 }
