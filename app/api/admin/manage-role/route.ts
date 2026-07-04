@@ -64,8 +64,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    // 7. Auch user_metadata aktualisieren (für JWT-Check in Middleware)
+    // 7. app_metadata (serverseitig, NICHT vom User editierbar) setzen — das ist
+    //    die vertrauenswürdige Quelle für den Middleware-Fast-Path. user_metadata
+    //    zusätzlich nur für UI-Anzeige; es ist NICHT autoritativ (siehe middleware.ts).
     await adminSupabase.auth.admin.updateUserById(userId, {
+      app_metadata: { role: newRole },
       user_metadata: { role: newRole },
     })
 

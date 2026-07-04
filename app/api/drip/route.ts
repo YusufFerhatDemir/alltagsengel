@@ -130,7 +130,16 @@ const templates = {
   },
 }
 
-export async function POST() {
+export async function POST(request: Request) {
+  // ═══ AUTH: Massen-Mail-Versand nur mit CRON_SECRET auslösbar ═══
+  // Vorher: KEIN Auth-Check → jeder Anonyme konnte die komplette Drip-Kampagne
+  // (alle Kunden) auslösen + Namen/Registrierungsdaten/Referral-Codes abgreifen.
+  const authHeader = request.headers.get('authorization')
+  const cronSecret = process.env.CRON_SECRET
+  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
   try {
     const resend = getResend()
     if (!resend) {

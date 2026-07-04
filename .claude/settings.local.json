@@ -155,7 +155,13 @@
       "Bash(curl -s https://alltagsengel.care/finanzierung)",
       "Bash(curl -s https://alltagsengel.care/jobs)",
       "Bash(./deploy.sh \"Finanzierung: Kurzzeitpflege, Budget-Kombination 5.111€, Beratungskompetenz\")",
-      "Bash(./deploy.sh \"Finanzierung: Beratungstext entfernt, Pflegegrad-Tabelle mit allen Beträgen 2026\")"
+      "Bash(./deploy.sh \"Finanzierung: Beratungstext entfernt, Pflegegrad-Tabelle mit allen Beträgen 2026\")",
+      "Bash(npx tsx *)",
+      "Bash(sed -n '/=== SELECT\\\\/ALL policies that are broad/,/=== Policies referencing user_metadata/p' scratchpad_rls_full.txt)",
+      "Bash(echo \"build started pid $!\")",
+      "Bash(./deploy.sh \"Security: RLS + Admin-Bypass + API-Auth fixes\")",
+      "Bash(rm -f .git/HEAD.lock)",
+      "Bash(rm -f .git/index.lock)"
     ]
   }
 }
