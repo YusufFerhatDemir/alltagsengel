@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="ad.size" content="width=160,height=600">
+<title>efy care – Skyscraper (160x600)</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  .ad-container {
+    width: 160px;
+    height: 600px;
+    background: linear-gradient(180deg, #0F5E57 0%, #1A6B5F 40%, #2D7A63 100%);
+    border: 1px solid #A9CBB5;
+    font-family: 'Inter', sans-serif;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Decorative shapes */
+  .deco-circle-top {
+    position: absolute;
+    top: -40px;
+    right: -40px;
+    width: 100px;
+    height: 100px;
+    border: 1.5px solid rgba(248, 246, 242, 0.1);
+    border-radius: 50%;
+  }
+
+  .deco-circle-mid {
+    position: absolute;
+    top: 260px;
+    left: -30px;
+    width: 70px;
+    height: 70px;
+    border: 1.5px solid rgba(248, 246, 242, 0.08);
+    border-radius: 50%;
+  }
+
+  .deco-line {
+    position: absolute;
+    top: 180px;
+    right: 16px;
+    width: 1px;
+    height: 60px;
+    background: linear-gradient(180deg, rgba(216, 194, 157, 0.4) 0%, transparent 100%);
+  }
+
+  .deco-line-bottom {
+    position: absolute;
+    bottom: 120px;
+    left: 16px;
+    width: 1px;
+    height: 40px;
+    background: linear-gradient(180deg, transparent 0%, rgba(216, 194, 157, 0.3) 100%);
+  }
+
+  /* Top: Logo */
+  .logo-section {
+    padding: 20px 16px 16px 16px;
+    position: relative;
+    z-index: 1;
+    text-align: center;
+  }
+
+  .logo {
+    font-family: 'Manrope', sans-serif;
+    font-weight: 700;
+    font-size: 16px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0;
+    line-height: 1;
+  }
+
+  .logo-efy {
+    color: #F8F6F2;
+  }
+
+  .logo-heart {
+    color: #D8C29D;
+    margin: 0 2px;
+    font-size: 12px;
+  }
+
+  .logo-care {
+    color: #A9CBB5;
+  }
+
+  .logo-divider {
+    width: 30px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, #D8C29D, transparent);
+    margin: 12px auto 0;
+  }
+
+  /* Slogan */
+  .slogan {
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 9px;
+    color: #D8C29D;
+    text-align: center;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-top: 10px;
+    opacity: 0.8;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Headline section */
+  .headline-section {
+    padding: 30px 16px 16px 16px;
+    position: relative;
+    z-index: 1;
+    flex: 0 0 auto;
+  }
+
+  .headline {
+    font-family: 'Manrope', sans-serif;
+    font-weight: 800;
+    font-size: 20px;
+    line-height: 1.2;
+    color: #F8F6F2;
+    text-align: center;
+    letter-spacing: -0.3px;
+  }
+
+  /* Heart icon between sections */
+  .section-heart {
+    text-align: center;
+    font-size: 18px;
+    color: #D8C29D;
+    opacity: 0.5;
+    padding: 8px 0;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Body text section */
+  .body-section {
+    flex: 1;
+    padding: 8px 16px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    position: relative;
+    z-index: 1;
+  }
+
+  .body-text {
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 12px;
+    line-height: 1.55;
+    color: #F8F6F2;
+    text-align: center;
+    opacity: 0.85;
+  }
+
+  /* Visual area */
+  .visual-area {
+    margin: 20px 16px;
+    height: 90px;
+    background: rgba(248, 246, 242, 0.06);
+    border: 1px solid rgba(248, 246, 242, 0.1);
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    z-index: 1;
+  }
+
+  .visual-heart {
+    font-size: 24px;
+    color: #D8C29D;
+    opacity: 0.6;
+    margin-bottom: 6px;
+  }
+
+  .visual-label {
+    font-family: 'Inter', sans-serif;
+    font-size: 8px;
+    color: #F8F6F2;
+    opacity: 0.4;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+  }
+
+  /* Decorative dots */
+  .deco-dots {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    padding: 6px 0;
+    position: relative;
+    z-index: 1;
+  }
+
+  .deco-dots span {
+    width: 3px;
+    height: 3px;
+    background: #D8C29D;
+    border-radius: 50%;
+    opacity: 0.35;
+  }
+
+  /* Bottom: CTA */
+  .cta-section {
+    padding: 16px 16px 22px 16px;
+    text-align: center;
+    position: relative;
+    z-index: 1;
+  }
+
+  .cta-button {
+    display: block;
+    width: 100%;
+    background: #D8C29D;
+    color: #0F5E57;
+    font-family: 'Manrope', sans-serif;
+    font-weight: 700;
+    font-size: 12px;
+    padding: 10px 8px;
+    border-radius: 6px;
+    text-decoration: none;
+    letter-spacing: 0.3px;
+    cursor: pointer;
+    border: none;
+    transition: background 0.2s ease;
+  }
+
+  .cta-button:hover {
+    background: #F8F6F2;
+  }
+</style>
+</head>
+<body>
+<div class="ad-container">
+
+  <div class="deco-circle-top"></div>
+  <div class="deco-circle-mid"></div>
+  <div class="deco-line"></div>
+  <div class="deco-line-bottom"></div>
+
+  <div class="logo-section">
+    <div class="logo">
+      <span class="logo-efy">efy</span>
+      <span class="logo-heart">♥</span>
+      <span class="logo-care">care</span>
+    </div>
+    <div class="logo-divider"></div>
+  </div>
+
+  <p class="slogan">Mit Herz. Für Menschen.</p>
+
+  <div class="headline-section">
+    <h1 class="headline">Ihre Überschrift</h1>
+  </div>
+
+  <div class="section-heart">♥</div>
+
+  <div class="body-section">
+    <p class="body-text">Beschreibung Ihrer Dienstleistung hier einfügen</p>
+  </div>
+
+  <div class="visual-area">
+    <span class="visual-heart">♥</span>
+    <span class="visual-label">Bild / Inhalt</span>
+  </div>
+
+  <div class="deco-dots">
+    <span></span><span></span><span></span>
+  </div>
+
+  <div class="cta-section">
+    <a class="cta-button" href="#">Jetzt anfragen</a>
+  </div>
+
+</div>
+</body>
+</html>
