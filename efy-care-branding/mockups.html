@@ -1,0 +1,1647 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>efy care — Corporate Design Mockups</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap');
+
+:root {
+  --deep-emerald: #0F5E57;
+  --forest-green: #2D7A63;
+  --sage-green: #A9CBB5;
+  --warm-ivory: #F8F6F2;
+  --charcoal: #2D3135;
+  --champagner: #D8C29D;
+  --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
+  --shadow-md: 0 8px 30px rgba(0,0,0,0.12);
+  --shadow-lg: 0 20px 60px rgba(0,0,0,0.18);
+  --shadow-xl: 0 30px 80px rgba(0,0,0,0.22);
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  font-family: 'Inter', -apple-system, sans-serif;
+  background: #f0eeea;
+  color: var(--charcoal);
+  overflow-x: hidden;
+}
+
+/* ─── NAV ─── */
+.top-bar {
+  position: fixed; top:0; left:0; right:0; z-index:1000;
+  background: rgba(255,255,255,0.92);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(0,0,0,0.06);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 40px; height: 64px;
+}
+.top-bar .brand { display:flex; align-items:center; gap:12px; }
+.top-bar .brand svg { width:32px; height:32px; }
+.top-bar .brand span { font-family:'Playfair Display',serif; font-size:20px; font-weight:600; color:var(--deep-emerald); }
+
+.nav-pills {
+  display: flex; gap: 4px; padding: 4px;
+  background: rgba(0,0,0,0.04); border-radius: 12px;
+}
+.nav-pills button {
+  padding: 8px 18px; border:none; border-radius:10px;
+  background: transparent; cursor:pointer;
+  font-family:'Inter',sans-serif; font-size:13px; font-weight:500;
+  color: var(--charcoal); transition: all 0.25s;
+}
+.nav-pills button.active,
+.nav-pills button:hover {
+  background: var(--deep-emerald); color: white;
+}
+
+/* ─── LAYOUT ─── */
+.hero {
+  margin-top: 64px; padding: 80px 40px 60px;
+  text-align: center;
+  background: linear-gradient(160deg, var(--deep-emerald) 0%, var(--forest-green) 50%, var(--sage-green) 100%);
+  color: white;
+}
+.hero h1 { font-family:'Playfair Display',serif; font-size:48px; font-weight:600; margin-bottom:12px; }
+.hero p { font-size:18px; opacity:0.85; font-weight:300; max-width:600px; margin:0 auto; }
+.hero .logo-hero { margin: 0 auto 30px; }
+
+.section {
+  display: none; padding: 60px 40px 100px;
+  max-width: 1400px; margin: 0 auto;
+}
+.section.active { display: block; }
+.section-title {
+  font-family:'Playfair Display',serif; font-size:32px; font-weight:600;
+  color: var(--deep-emerald); margin-bottom:8px;
+}
+.section-sub { font-size:15px; color:#888; margin-bottom:48px; }
+
+.grid {
+  display: grid; gap: 48px;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+}
+.grid-3 { grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); }
+
+.mockup-card {
+  background: white; border-radius: 20px; padding: 40px;
+  box-shadow: var(--shadow-md);
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+.mockup-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+}
+.mockup-card h3 {
+  font-family:'Playfair Display',serif; font-size:20px; font-weight:600;
+  color: var(--deep-emerald); margin-bottom:24px;
+  padding-bottom:12px; border-bottom:2px solid var(--sage-green);
+}
+.mockup-card .label {
+  display:inline-block; font-size:11px; font-weight:600; text-transform:uppercase;
+  letter-spacing:1.5px; color:var(--forest-green); margin-bottom:16px;
+}
+
+/* ─── COLOR PALETTE ─── */
+.palette {
+  display:flex; gap:12px; margin-top:32px; flex-wrap:wrap; justify-content:center;
+}
+.palette .swatch {
+  width:80px; height:80px; border-radius:16px;
+  box-shadow: var(--shadow-sm);
+  display:flex; flex-direction:column; align-items:center; justify-content:flex-end;
+  padding-bottom:6px; font-size:9px; font-weight:600; letter-spacing:0.5px;
+  transition: transform 0.2s;
+}
+.palette .swatch:hover { transform:scale(1.08); }
+
+/* ─── MOCKUP SPECIFIC ─── */
+.perspective-wrap {
+  perspective: 1200px;
+}
+.card-flip {
+  display:flex; gap:32px; justify-content:center; align-items:center; flex-wrap:wrap;
+}
+
+/* iPhone */
+.iphone-frame {
+  width:260px; height:530px; background:#1a1a1a;
+  border-radius:40px; padding:12px; margin:0 auto;
+  box-shadow: var(--shadow-xl), inset 0 0 0 2px #333;
+  position:relative;
+}
+.iphone-screen {
+  width:100%; height:100%; border-radius:30px; overflow:hidden;
+  background: var(--warm-ivory); position:relative;
+}
+.iphone-notch {
+  position:absolute; top:0; left:50%; transform:translateX(-50%);
+  width:120px; height:28px; background:#1a1a1a;
+  border-radius:0 0 18px 18px; z-index:2;
+}
+.iphone-home {
+  position:absolute; bottom:6px; left:50%; transform:translateX(-50%);
+  width:100px; height:4px; background:rgba(0,0,0,0.3);
+  border-radius:2px;
+}
+
+/* Watch */
+.watch-frame {
+  width:180px; height:220px; margin:0 auto; position:relative;
+}
+.watch-body {
+  width:156px; height:190px; background:linear-gradient(145deg,#e8e8e8,#c0c0c0);
+  border-radius:38px; position:absolute; top:15px; left:12px;
+  box-shadow: var(--shadow-lg), inset 0 1px 0 rgba(255,255,255,0.4);
+  padding:16px;
+}
+.watch-screen {
+  width:100%; height:100%; border-radius:24px; overflow:hidden;
+  background: var(--deep-emerald);
+}
+.watch-crown {
+  position:absolute; right:-6px; top:60px;
+  width:8px; height:24px; background:linear-gradient(to bottom,#ddd,#aaa);
+  border-radius:3px;
+  box-shadow: 1px 0 3px rgba(0,0,0,0.2);
+}
+.watch-band-top, .watch-band-bottom {
+  position:absolute; left:50%; transform:translateX(-50%);
+  width:120px; background:linear-gradient(to right,#888,#999,#888);
+  border-radius:4px;
+}
+.watch-band-top { top:-10px; height:30px; border-radius:4px 4px 0 0; }
+.watch-band-bottom { bottom:-10px; height:30px; border-radius:0 0 4px 4px; }
+
+/* Visitenkarte */
+.bcard {
+  width:320px; height:185px; border-radius:8px;
+  box-shadow: var(--shadow-lg);
+  position:relative; overflow:hidden;
+}
+
+/* Briefpapier */
+.letterhead {
+  width:340px; height:460px; background:white;
+  border-radius:4px; box-shadow: var(--shadow-lg);
+  padding:24px; position:relative; margin:0 auto;
+}
+
+/* Rechnung */
+.invoice-mock {
+  width:340px; background:white;
+  border-radius:4px; box-shadow: var(--shadow-lg);
+  padding:24px; position:relative; margin:0 auto;
+}
+
+/* Umschlag */
+.envelope {
+  width:380px; height:175px; background:white;
+  border-radius:3px; box-shadow: var(--shadow-lg);
+  position:relative; overflow:hidden; margin:0 auto;
+}
+
+/* Flyer */
+.flyer-mock {
+  width:280px; height:400px; border-radius:6px;
+  box-shadow: var(--shadow-xl);
+  overflow:hidden; margin:0 auto; position:relative;
+}
+
+/* Broschüre */
+.brochure-mock {
+  width:300px; height:410px; border-radius:4px;
+  box-shadow: var(--shadow-xl);
+  overflow:hidden; margin:0 auto; position:relative;
+}
+
+/* Kugelschreiber */
+.pen-mock {
+  width:300px; height:40px; margin:40px auto;
+  position:relative;
+}
+
+/* Notizbuch */
+.notebook-mock {
+  width:240px; height:320px; border-radius:6px;
+  box-shadow: var(--shadow-xl);
+  margin:0 auto; position:relative; overflow:hidden;
+}
+
+/* Tragetasche */
+.tote-mock {
+  width:260px; height:300px; margin:0 auto; position:relative;
+}
+
+/* T-Shirt */
+.tshirt-mock {
+  width:280px; height:320px; margin:0 auto; position:relative;
+}
+
+/* Fahrzeug */
+.vehicle-mock {
+  width:100%; max-width:600px; height:200px;
+  margin:0 auto; position:relative;
+}
+
+/* Gebäude */
+.building-mock {
+  width:100%; max-width:500px; height:350px;
+  margin:0 auto; position:relative;
+}
+
+/* Rollup */
+.rollup-mock {
+  width:160px; height:420px; margin:0 auto;
+  position:relative;
+}
+
+/* Messestand */
+.booth-mock {
+  width:100%; max-width:600px; height:380px;
+  margin:0 auto; position:relative;
+}
+
+/* App Icon */
+.app-icon {
+  width:120px; height:120px; border-radius:26px;
+  box-shadow: var(--shadow-lg);
+  margin:0 auto; overflow:hidden;
+  background: linear-gradient(135deg, var(--deep-emerald), var(--forest-green));
+  display:flex; align-items:center; justify-content:center;
+}
+
+/* Email Sig */
+.email-sig {
+  max-width:460px; background:white; padding:24px;
+  border-radius:8px; box-shadow:var(--shadow-md);
+  margin:0 auto; border-top:3px solid var(--deep-emerald);
+}
+
+/* Namensschild */
+.name-badge {
+  width:240px; height:160px; background:white;
+  border-radius:10px; box-shadow:var(--shadow-lg);
+  margin:0 auto; overflow:hidden; position:relative;
+}
+
+/* Responsive */
+@media (max-width:768px) {
+  .grid, .grid-3 { grid-template-columns:1fr; }
+  .hero h1 { font-size:32px; }
+  .top-bar { padding:0 16px; }
+  .nav-pills { display:none; }
+  .section { padding:40px 16px 60px; }
+}
+
+/* Animations */
+@keyframes fadeIn { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+.mockup-card { animation: fadeIn 0.5s ease both; }
+.mockup-card:nth-child(2) { animation-delay:0.1s; }
+.mockup-card:nth-child(3) { animation-delay:0.2s; }
+.mockup-card:nth-child(4) { animation-delay:0.3s; }
+
+/* Night glow */
+@keyframes glow {
+  0%,100% { filter: drop-shadow(0 0 20px rgba(15,94,87,0.6)); }
+  50% { filter: drop-shadow(0 0 40px rgba(15,94,87,0.9)); }
+}
+.glow-effect { animation: glow 3s ease-in-out infinite; }
+
+/* Helper text for mockups */
+.mock-text { 
+  height:6px; background:rgba(0,0,0,0.08); border-radius:3px; margin:4px 0;
+}
+.mock-text.short { width:60%; }
+.mock-text.medium { width:80%; }
+.mock-text.long { width:95%; }
+.mock-text.dark { background:rgba(255,255,255,0.15); }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════ TOP BAR ═══════════════ -->
+<div class="top-bar">
+  <div class="brand">
+    <svg viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M30 55 C30 55 5 38 5 22 C5 14 11 8 18 8 C22 8 26 10 30 15 C34 10 38 8 42 8 C49 8 55 14 55 22 C55 38 30 55 30 55Z" fill="#0F5E57"/>
+      <path d="M30 50 L30 28" stroke="#A9CBB5" stroke-width="2.5" stroke-linecap="round"/>
+      <path d="M30 38 C26 35 22 36 20 34" stroke="#A9CBB5" stroke-width="2" stroke-linecap="round" fill="none"/>
+      <path d="M30 33 C34 30 38 31 40 29" stroke="#A9CBB5" stroke-width="2" stroke-linecap="round" fill="none"/>
+      <path d="M30 28 C27 25 24 26 22 24" stroke="#A9CBB5" stroke-width="2" stroke-linecap="round" fill="none"/>
+      <path d="M30 28 C33 25 36 26 38 24" stroke="#A9CBB5" stroke-width="2" stroke-linecap="round" fill="none"/>
+      <circle cx="19" cy="33" r="4" fill="#2D7A63" opacity="0.7"/>
+      <circle cx="41" cy="28" r="4" fill="#2D7A63" opacity="0.7"/>
+      <circle cx="21" cy="23" r="3.5" fill="#A9CBB5" opacity="0.6"/>
+      <circle cx="39" cy="23" r="3.5" fill="#A9CBB5" opacity="0.6"/>
+      <circle cx="30" cy="20" r="5" fill="#2D7A63" opacity="0.8"/>
+      <circle cx="25" cy="28" r="3" fill="#A9CBB5" opacity="0.5"/>
+      <circle cx="35" cy="33" r="3" fill="#A9CBB5" opacity="0.5"/>
+    </svg>
+    <span>efy care</span>
+  </div>
+  <div class="nav-pills">
+    <button class="active" onclick="showSection('overview')">Übersicht</button>
+    <button onclick="showSection('digital')">Digital</button>
+    <button onclick="showSection('print')">Print</button>
+    <button onclick="showSection('merch')">Werbemittel</button>
+    <button onclick="showSection('vehicles')">Fahrzeuge</button>
+    <button onclick="showSection('building')">Gebäude</button>
+    <button onclick="showSection('expo')">Messe</button>
+  </div>
+</div>
+
+<!-- ═══════════════ HERO ═══════════════ -->
+<div class="hero">
+  <div class="logo-hero">
+    <svg width="100" height="100" viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M30 55 C30 55 5 38 5 22 C5 14 11 8 18 8 C22 8 26 10 30 15 C34 10 38 8 42 8 C49 8 55 14 55 22 C55 38 30 55 30 55Z" fill="rgba(255,255,255,0.15)" stroke="white" stroke-width="1.5"/>
+      <path d="M30 50 L30 28" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+      <path d="M30 38 C26 35 22 36 20 34" stroke="rgba(255,255,255,0.7)" stroke-width="2" stroke-linecap="round" fill="none"/>
+      <path d="M30 33 C34 30 38 31 40 29" stroke="rgba(255,255,255,0.7)" stroke-width="2" stroke-linecap="round" fill="none"/>
+      <path d="M30 28 C27 25 24 26 22 24" stroke="rgba(255,255,255,0.7)" stroke-width="2" stroke-linecap="round" fill="none"/>
+      <path d="M30 28 C33 25 36 26 38 24" stroke="rgba(255,255,255,0.7)" stroke-width="2" stroke-linecap="round" fill="none"/>
+      <circle cx="19" cy="33" r="4" fill="rgba(255,255,255,0.3)"/>
+      <circle cx="41" cy="28" r="4" fill="rgba(255,255,255,0.3)"/>
+      <circle cx="21" cy="23" r="3.5" fill="rgba(255,255,255,0.25)"/>
+      <circle cx="39" cy="23" r="3.5" fill="rgba(255,255,255,0.25)"/>
+      <circle cx="30" cy="20" r="5" fill="rgba(255,255,255,0.35)"/>
+      <circle cx="25" cy="28" r="3" fill="rgba(255,255,255,0.2)"/>
+      <circle cx="35" cy="33" r="3" fill="rgba(255,255,255,0.2)"/>
+    </svg>
+  </div>
+  <h1>efy care</h1>
+  <p>Corporate Design & Brand Identity — Mockup Präsentation</p>
+  <div class="palette">
+    <div class="swatch" style="background:var(--deep-emerald);color:white">Deep Emerald<br>#0F5E57</div>
+    <div class="swatch" style="background:var(--forest-green);color:white">Forest Green<br>#2D7A63</div>
+    <div class="swatch" style="background:var(--sage-green);color:var(--charcoal)">Sage Green<br>#A9CBB5</div>
+    <div class="swatch" style="background:var(--warm-ivory);color:var(--charcoal);border:1px solid #e0ddd8">Warm Ivory<br>#F8F6F2</div>
+    <div class="swatch" style="background:var(--charcoal);color:white">Charcoal<br>#2D3135</div>
+    <div class="swatch" style="background:var(--champagner);color:var(--charcoal)">Champagner<br>#D8C29D</div>
+  </div>
+</div>
+
+<!-- ═══════════════ OVERVIEW ═══════════════ -->
+<div class="section active" id="sec-overview">
+  <h2 class="section-title">Brand Übersicht</h2>
+  <p class="section-sub">Typografie, Logo-Varianten und Markenwerte</p>
+  <div class="grid">
+
+    <!-- Logo Variants -->
+    <div class="mockup-card">
+      <span class="label">Logo</span>
+      <h3>Logo-Varianten</h3>
+      <div style="display:flex;gap:32px;align-items:center;justify-content:center;flex-wrap:wrap;padding:20px 0">
+        <!-- Primary -->
+        <div style="text-align:center">
+          <svg width="80" height="80" viewBox="0 0 60 60" fill="none">
+            <path d="M30 55 C30 55 5 38 5 22 C5 14 11 8 18 8 C22 8 26 10 30 15 C34 10 38 8 42 8 C49 8 55 14 55 22 C55 38 30 55 30 55Z" fill="#0F5E57"/>
+            <path d="M30 50 L30 28" stroke="#A9CBB5" stroke-width="2.5" stroke-linecap="round"/>
+            <path d="M30 38 C26 35 22 36 20 34" stroke="#A9CBB5" stroke-width="2" stroke-linecap="round" fill="none"/>
+            <path d="M30 33 C34 30 38 31 40 29" stroke="#A9CBB5" stroke-width="2" stroke-linecap="round" fill="none"/>
+            <path d="M30 28 C27 25 24 26 22 24" stroke="#A9CBB5" stroke-width="2" stroke-linecap="round" fill="none"/>
+            <path d="M30 28 C33 25 36 26 38 24" stroke="#A9CBB5" stroke-width="2" stroke-linecap="round" fill="none"/>
+            <circle cx="19" cy="33" r="4" fill="#2D7A63" opacity="0.7"/>
+            <circle cx="41" cy="28" r="4" fill="#2D7A63" opacity="0.7"/>
+            <circle cx="21" cy="23" r="3.5" fill="#A9CBB5" opacity="0.6"/>
+            <circle cx="39" cy="23" r="3.5" fill="#A9CBB5" opacity="0.6"/>
+            <circle cx="30" cy="20" r="5" fill="#2D7A63" opacity="0.8"/>
+            <circle cx="25" cy="28" r="3" fill="#A9CBB5" opacity="0.5"/>
+            <circle cx="35" cy="33" r="3" fill="#A9CBB5" opacity="0.5"/>
+          </svg>
+          <div style="font-family:'Playfair Display',serif;font-size:16px;color:#0F5E57;margin-top:6px">efy care</div>
+          <div style="font-size:10px;color:#999;margin-top:2px">Primär</div>
+        </div>
+        <!-- White on Dark -->
+        <div style="text-align:center;background:#0F5E57;padding:20px 28px;border-radius:12px">
+          <svg width="80" height="80" viewBox="0 0 60 60" fill="none">
+            <path d="M30 55 C30 55 5 38 5 22 C5 14 11 8 18 8 C22 8 26 10 30 15 C34 10 38 8 42 8 C49 8 55 14 55 22 C55 38 30 55 30 55Z" fill="white" opacity="0.9"/>
+            <path d="M30 50 L30 28" stroke="#0F5E57" stroke-width="2.5" stroke-linecap="round"/>
+            <path d="M30 38 C26 35 22 36 20 34" stroke="#0F5E57" stroke-width="2" stroke-linecap="round" fill="none"/>
+            <path d="M30 33 C34 30 38 31 40 29" stroke="#0F5E57" stroke-width="2" stroke-linecap="round" fill="none"/>
+            <path d="M30 28 C27 25 24 26 22 24" stroke="#0F5E57" stroke-width="2" stroke-linecap="round" fill="none"/>
+            <path d="M30 28 C33 25 36 26 38 24" stroke="#0F5E57" stroke-width="2" stroke-linecap="round" fill="none"/>
+            <circle cx="19" cy="33" r="4" fill="#0F5E57" opacity="0.5"/>
+            <circle cx="41" cy="28" r="4" fill="#0F5E57" opacity="0.5"/>
+            <circle cx="21" cy="23" r="3.5" fill="#0F5E57" opacity="0.4"/>
+            <circle cx="39" cy="23" r="3.5" fill="#0F5E57" opacity="0.4"/>
+            <circle cx="30" cy="20" r="5" fill="#0F5E57" opacity="0.5"/>
+          </svg>
+          <div style="font-family:'Playfair Display',serif;font-size:16px;color:white;margin-top:6px">efy care</div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.6);margin-top:2px">Invers</div>
+        </div>
+        <!-- Monochrome -->
+        <div style="text-align:center">
+          <svg width="80" height="80" viewBox="0 0 60 60" fill="none">
+            <path d="M30 55 C30 55 5 38 5 22 C5 14 11 8 18 8 C22 8 26 10 30 15 C34 10 38 8 42 8 C49 8 55 14 55 22 C55 38 30 55 30 55Z" fill="#2D3135"/>
+            <path d="M30 50 L30 28" stroke="#999" stroke-width="2.5" stroke-linecap="round"/>
+            <path d="M30 38 C26 35 22 36 20 34" stroke="#999" stroke-width="2" stroke-linecap="round" fill="none"/>
+            <path d="M30 33 C34 30 38 31 40 29" stroke="#999" stroke-width="2" stroke-linecap="round" fill="none"/>
+            <path d="M30 28 C27 25 24 26 22 24" stroke="#999" stroke-width="2" stroke-linecap="round" fill="none"/>
+            <path d="M30 28 C33 25 36 26 38 24" stroke="#999" stroke-width="2" stroke-linecap="round" fill="none"/>
+            <circle cx="19" cy="33" r="4" fill="#666" opacity="0.5"/>
+            <circle cx="41" cy="28" r="4" fill="#666" opacity="0.5"/>
+            <circle cx="30" cy="20" r="5" fill="#666" opacity="0.5"/>
+          </svg>
+          <div style="font-family:'Playfair Display',serif;font-size:16px;color:#2D3135;margin-top:6px">efy care</div>
+          <div style="font-size:10px;color:#999;margin-top:2px">Monochrom</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Typography -->
+    <div class="mockup-card">
+      <span class="label">Typografie</span>
+      <h3>Schriftarten</h3>
+      <div style="padding:20px 0">
+        <div style="margin-bottom:24px">
+          <div style="font-size:11px;color:var(--forest-green);font-weight:600;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px">Headline</div>
+          <div style="font-family:'Playfair Display',serif;font-size:36px;color:var(--deep-emerald)">Playfair Display</div>
+          <div style="font-family:'Playfair Display',serif;font-size:14px;color:#888;margin-top:4px">Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm</div>
+        </div>
+        <div>
+          <div style="font-size:11px;color:var(--forest-green);font-weight:600;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px">Body</div>
+          <div style="font-family:'Inter',sans-serif;font-size:28px;font-weight:300;color:var(--charcoal)">Inter Light</div>
+          <div style="font-family:'Inter',sans-serif;font-size:14px;color:#888;margin-top:4px;font-weight:300">Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════ DIGITAL ═══════════════ -->
+<div class="section" id="sec-digital">
+  <h2 class="section-title">Digital</h2>
+  <p class="section-sub">App, Watch, Web und E-Mail</p>
+  <div class="grid">
+
+    <!-- App Icon -->
+    <div class="mockup-card">
+      <span class="label">iOS</span>
+      <h3>App Icon</h3>
+      <div style="padding:20px 0;text-align:center">
+        <div class="app-icon">
+          <svg width="64" height="64" viewBox="0 0 60 60" fill="none">
+            <path d="M30 55 C30 55 5 38 5 22 C5 14 11 8 18 8 C22 8 26 10 30 15 C34 10 38 8 42 8 C49 8 55 14 55 22 C55 38 30 55 30 55Z" fill="rgba(255,255,255,0.95)"/>
+            <path d="M30 50 L30 28" stroke="#0F5E57" stroke-width="2.5" stroke-linecap="round"/>
+            <path d="M30 38 C26 35 22 36 20 34" stroke="#2D7A63" stroke-width="2" stroke-linecap="round" fill="none"/>
+            <path d="M30 33 C34 30 38 31 40 29" stroke="#2D7A63" stroke-width="2" stroke-linecap="round" fill="none"/>
+            <path d="M30 28 C27 25 24 26 22 24" stroke="#2D7A63" stroke-width="2" stroke-linecap="round" fill="none"/>
+            <path d="M30 28 C33 25 36 26 38 24" stroke="#2D7A63" stroke-width="2" stroke-linecap="round" fill="none"/>
+            <circle cx="19" cy="33" r="4" fill="#A9CBB5" opacity="0.8"/>
+            <circle cx="41" cy="28" r="4" fill="#A9CBB5" opacity="0.8"/>
+            <circle cx="21" cy="23" r="3.5" fill="#D8C29D" opacity="0.6"/>
+            <circle cx="39" cy="23" r="3.5" fill="#D8C29D" opacity="0.6"/>
+            <circle cx="30" cy="20" r="5" fill="#A9CBB5"/>
+          </svg>
+        </div>
+        <div style="font-family:'Playfair Display',serif;font-size:13px;color:#888;margin-top:12px">efy care</div>
+      </div>
+    </div>
+
+    <!-- iPhone App -->
+    <div class="mockup-card">
+      <span class="label">Mobile App</span>
+      <h3>iPhone App — Login & Home</h3>
+      <div style="display:flex;gap:24px;justify-content:center;flex-wrap:wrap;padding:10px 0">
+        <!-- Login -->
+        <div class="iphone-frame" style="transform:scale(0.85)">
+          <div class="iphone-screen">
+            <div class="iphone-notch"></div>
+            <div style="padding:60px 24px 20px;text-align:center;height:100%;display:flex;flex-direction:column;justify-content:center;background:linear-gradient(180deg,var(--warm-ivory) 0%,white 100%)">
+              <svg width="60" height="60" viewBox="0 0 60 60" fill="none" style="margin:0 auto 16px">
+                <path d="M30 55 C30 55 5 38 5 22 C5 14 11 8 18 8 C22 8 26 10 30 15 C34 10 38 8 42 8 C49 8 55 14 55 22 C55 38 30 55 30 55Z" fill="#0F5E57"/>
+                <path d="M30 50 L30 28" stroke="#A9CBB5" stroke-width="2.5" stroke-linecap="round"/>
+                <circle cx="19" cy="33" r="4" fill="#2D7A63" opacity="0.7"/>
+                <circle cx="41" cy="28" r="4" fill="#2D7A63" opacity="0.7"/>
+                <circle cx="30" cy="20" r="5" fill="#2D7A63" opacity="0.8"/>
+              </svg>
+              <div style="font-family:'Playfair Display',serif;font-size:22px;color:var(--deep-emerald)">efy care</div>
+              <div style="font-size:11px;color:#999;margin:4px 0 28px">Pflege. Vertrauen. Nähe.</div>
+              <div style="background:var(--warm-ivory);border:1px solid #e0ddd8;border-radius:12px;padding:12px 16px;margin-bottom:10px;text-align:left">
+                <div style="font-size:10px;color:#999">E-Mail</div>
+              </div>
+              <div style="background:var(--warm-ivory);border:1px solid #e0ddd8;border-radius:12px;padding:12px 16px;margin-bottom:20px;text-align:left">
+                <div style="font-size:10px;color:#999">Passwort</div>
+              </div>
+              <div style="background:var(--deep-emerald);color:white;border-radius:12px;padding:14px;font-size:14px;font-weight:600">Anmelden</div>
+              <div style="font-size:11px;color:var(--forest-green);margin-top:12px">Konto erstellen</div>
+            </div>
+            <div class="iphone-home"></div>
+          </div>
+        </div>
+        <!-- Home -->
+        <div class="iphone-frame" style="transform:scale(0.85)">
+          <div class="iphone-screen">
+            <div class="iphone-notch"></div>
+            <div style="height:100%;background:var(--warm-ivory)">
+              <!-- Status bar area -->
+              <div style="padding:36px 20px 16px;background:var(--deep-emerald);border-radius:0 0 24px 24px">
+                <div style="display:flex;justify-content:space-between;align-items:center">
+                  <div>
+                    <div style="font-size:11px;color:rgba(255,255,255,0.6)">Guten Morgen</div>
+                    <div style="font-size:16px;color:white;font-weight:600">Maria S.</div>
+                  </div>
+                  <div style="width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center">
+                    <div style="width:18px;height:18px;border-radius:50%;background:rgba(255,255,255,0.4)"></div>
+                  </div>
+                </div>
+              </div>
+              <div style="padding:16px 16px 0">
+                <div style="font-size:12px;font-weight:600;color:var(--charcoal);margin-bottom:10px">Nächster Termin</div>
+                <div style="background:white;border-radius:14px;padding:14px;box-shadow:0 2px 8px rgba(0,0,0,0.05)">
+                  <div style="display:flex;gap:10px;align-items:center">
+                    <div style="width:40px;height:40px;background:var(--sage-green);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:var(--deep-emerald)">14</div>
+                    <div>
+                      <div style="font-size:12px;font-weight:600;color:var(--charcoal)">Frau Müller</div>
+                      <div style="font-size:10px;color:#999">09:00 — Grundpflege</div>
+                    </div>
+                  </div>
+                </div>
+                <div style="font-size:12px;font-weight:600;color:var(--charcoal);margin:16px 0 10px">Quick Actions</div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+                  <div style="background:white;border-radius:12px;padding:14px 10px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,0.04)">
+                    <div style="font-size:18px;margin-bottom:4px">📋</div>
+                    <div style="font-size:10px;color:var(--charcoal);font-weight:500">Dokumentation</div>
+                  </div>
+                  <div style="background:white;border-radius:12px;padding:14px 10px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,0.04)">
+                    <div style="font-size:18px;margin-bottom:4px">💊</div>
+                    <div style="font-size:10px;color:var(--charcoal);font-weight:500">Medikation</div>
+                  </div>
+                  <div style="background:white;border-radius:12px;padding:14px 10px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,0.04)">
+                    <div style="font-size:18px;margin-bottom:4px">📞</div>
+                    <div style="font-size:10px;color:var(--charcoal);font-weight:500">Kontakte</div>
+                  </div>
+                  <div style="background:white;border-radius:12px;padding:14px 10px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,0.04)">
+                    <div style="font-size:18px;margin-bottom:4px">📊</div>
+                    <div style="font-size:10px;color:var(--charcoal);font-weight:500">Berichte</div>
+                  </div>
+                </div>
+              </div>
+              <!-- Tab bar -->
+              <div style="position:absolute;bottom:20px;left:16px;right:16px;background:white;border-radius:16px;padding:10px 0;display:flex;justify-content:space-around;box-shadow:0 4px 20px rgba(0,0,0,0.08)">
+                <div style="text-align:center">
+                  <div style="width:20px;height:20px;background:var(--deep-emerald);border-radius:5px;margin:0 auto 2px"></div>
+                  <div style="font-size:8px;color:var(--deep-emerald);font-weight:600">Home</div>
+                </div>
+                <div style="text-align:center">
+                  <div style="width:20px;height:20px;background:#ddd;border-radius:5px;margin:0 auto 2px"></div>
+                  <div style="font-size:8px;color:#999">Termine</div>
+                </div>
+                <div style="text-align:center">
+                  <div style="width:20px;height:20px;background:#ddd;border-radius:5px;margin:0 auto 2px"></div>
+                  <div style="font-size:8px;color:#999">Chat</div>
+                </div>
+                <div style="text-align:center">
+                  <div style="width:20px;height:20px;background:#ddd;border-radius:5px;margin:0 auto 2px"></div>
+                  <div style="font-size:8px;color:#999">Profil</div>
+                </div>
+              </div>
+            </div>
+            <div class="iphone-home"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Apple Watch -->
+    <div class="mockup-card">
+      <span class="label">Wearable</span>
+      <h3>Apple Watch</h3>
+      <div style="padding:20px 0;text-align:center">
+        <div class="watch-frame">
+          <div class="watch-band-top"></div>
+          <div class="watch-body">
+            <div class="watch-screen" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px;text-align:center">
+              <svg width="30" height="30" viewBox="0 0 60 60" fill="none">
+                <path d="M30 55 C30 55 5 38 5 22 C5 14 11 8 18 8 C22 8 26 10 30 15 C34 10 38 8 42 8 C49 8 55 14 55 22 C55 38 30 55 30 55Z" fill="rgba(255,255,255,0.9)"/>
+                <path d="M30 50 L30 28" stroke="#0F5E57" stroke-width="3" stroke-linecap="round"/>
+                <circle cx="30" cy="20" r="5" fill="#A9CBB5"/>
+              </svg>
+              <div style="font-size:9px;color:white;margin-top:6px;font-weight:300">Nächster Einsatz</div>
+              <div style="font-size:16px;color:white;font-weight:700;margin:2px 0">09:00</div>
+              <div style="font-size:8px;color:var(--sage-green)">Fr. Müller · Grundpflege</div>
+              <div style="display:flex;gap:4px;margin-top:8px">
+                <div style="width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;font-size:10px">📞</div>
+                <div style="width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;font-size:10px">🗺</div>
+              </div>
+            </div>
+          </div>
+          <div class="watch-crown"></div>
+          <div class="watch-band-bottom"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Website Header -->
+    <div class="mockup-card" style="grid-column:1/-1">
+      <span class="label">Web</span>
+      <h3>Website Header</h3>
+      <div style="border-radius:12px;overflow:hidden;box-shadow:var(--shadow-md)">
+        <div style="background:white;padding:16px 32px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #eee">
+          <div style="display:flex;align-items:center;gap:10px">
+            <svg width="28" height="28" viewBox="0 0 60 60" fill="none">
+              <path d="M30 55 C30 55 5 38 5 22 C5 14 11 8 18 8 C22 8 26 10 30 15 C34 10 38 8 42 8 C49 8 55 14 55 22 C55 38 30 55 30 55Z" fill="#0F5E57"/>
+              <path d="M30 50 L30 28" stroke="#A9CBB5" stroke-width="2.5" stroke-linecap="round"/>
+              <circle cx="19" cy="33" r="4" fill="#2D7A63" opacity="0.7"/>
+              <circle cx="41" cy="28" r="4" fill="#2D7A63" opacity="0.7"/>
+              <circle cx="30" cy="20" r="5" fill="#2D7A63" opacity="0.8"/>
+            </svg>
+            <span style="font-family:'Playfair Display',serif;font-size:18px;color:var(--deep-emerald);font-weight:600">efy care</span>
+          </div>
+          <div style="display:flex;gap:28px;font-size:13px;color:var(--charcoal);font-weight:500">
+            <span>Leistungen</span><span>Über uns</span><span>Karriere</span><span>Kontakt</span>
+          </div>
+          <div style="background:var(--deep-emerald);color:white;padding:10px 22px;border-radius:8px;font-size:12px;font-weight:600">Beratung anfragen</div>
+        </div>
+        <div style="background:linear-gradient(135deg,var(--deep-emerald),var(--forest-green));padding:60px 48px;display:flex;align-items:center;gap:40px">
+          <div style="flex:1">
+            <div style="font-family:'Playfair Display',serif;font-size:32px;color:white;line-height:1.3;margin-bottom:12px">Pflege mit Herz<br>und Verstand</div>
+            <div style="font-size:14px;color:rgba(255,255,255,0.7);line-height:1.6;margin-bottom:24px">Professionelle ambulante Pflege für ein selbstbestimmtes Leben in den eigenen vier Wänden.</div>
+            <div style="display:flex;gap:12px">
+              <div style="background:white;color:var(--deep-emerald);padding:12px 24px;border-radius:8px;font-size:13px;font-weight:600">Jetzt beraten lassen</div>
+              <div style="border:1px solid rgba(255,255,255,0.4);color:white;padding:12px 24px;border-radius:8px;font-size:13px;font-weight:500">Mehr erfahren</div>
+            </div>
+          </div>
+          <div style="width:200px;height:160px;background:rgba(255,255,255,0.1);border-radius:16px;display:flex;align-items:center;justify-content:center">
+            <svg width="80" height="80" viewBox="0 0 60 60" fill="none" style="opacity:0.6">
+              <path d="M30 55 C30 55 5 38 5 22 C5 14 11 8 18 8 C22 8 26 10 30 15 C34 10 38 8 42 8 C49 8 55 14 55 22 C55 38 30 55 30 55Z" fill="white" opacity="0.3"/>
+              <path d="M30 50 L30 28" stroke="white" stroke-width="2" stroke-linecap="round"/>
+              <circle cx="30" cy="20" r="5" fill="white" opacity="0.4"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Email Signatur -->
+    <div class="mockup-card">
+      <span class="label">E-Mail</span>
+      <h3>E-Mail Signatur</h3>
+      <div style="padding:16px 0">
+        <div class="email-sig">
+          <div style="display:flex;gap:16px;align-items:flex-start">
+            <svg width="52" height="52" viewBox="0 0 60 60" fill="none" style="flex-shrink:0">
+              <path d="M30 55 C30 55 5 38 5 22 C5 14 11 8 18 8 C22 8 26 10 30 15 C34 10 38 8 42 8 C49 8 55 14 55 22 C55 38 30 55 30 55Z" fill="#0F5E57"/>
+              <path d="M30 50 L30 28" stroke="#A9CBB5" stroke-width="2.5" stroke-linecap="round"/>
+              <circle cx="30" cy="20" r="5" fill="#2D7A63" opacity="0.8"/>
+              <circle cx="19" cy="33" r="4" fill="#2D7A63" opacity="0.7"/>
+              <circle cx="41" cy="28" r="4" fill="#2D7A63" opacity="0.7"/>
+            </svg>
+            <div>
+              <div style="font-family:'Playfair Display',serif;font-size:16px;font-weight:600;color:var(--deep-emerald)">Maria Schmidt</div>
+              <div style="font-size:12px;color:var(--forest-green);margin:2px 0">Pflegedienstleitung</div>
+              <div style="width:40px;height:2px;background:var(--champagner);margin:8px 0"></div>
+              <div style="font-size:11px;color:#666;line-height:1.8">
+                <strong style="color:var(--deep-emerald)">efy care</strong> GmbH<br>
+                T: +49 (0)30 123 456 78<br>
+                M: m.schmidt@efycare.de<br>
+                W: www.efycare.de
+              </div>
+            </div>
+          </div>
+          <div style="margin-top:12px;padding-top:10px;border-top:1px solid #eee;font-size:9px;color:#aaa;font-style:italic">
+            Pflege. Vertrauen. Nähe. — Diese Nachricht ist vertraulich.
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════ PRINT ═══════════════ -->
+<div class="section" id="sec-print">
+  <h2 class="section-title">Print</h2>
+  <p class="section-sub">Geschäftsausstattung und Werbematerial</p>
+  <div class="grid">
+
+    <!-- Visitenkarte -->
+    <div class="mockup-card">
+      <span class="label">Geschäftsausstattung</span>
+      <h3>Visitenkarte</h3>
+      <div class="card-flip">
+        <!-- Front -->
+        <div class="bcard" style="background:white">
+          <div style="position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(to right,var(--deep-emerald),var(--forest-green),var(--sage-green))"></div>
+          <div style="padding:28px 24px;height:100%;display:flex;flex-direction:column;justify-content:space-between">
+            <div style="display:flex;align-items:center;gap:8px">
+              <svg width="28" height="28" viewBox="0 0 60 60" fill="none">
+                <path d="M30 55 C30 55 5 38 5 22 C5 14 11 8 18 8 C22 8 26 10 30 15 C34 10 38 8 42 8 C49 8 55 14 55 22 C55 38 30 55 30 55Z" fill="#0F5E57"/>
+                <path d="M30 50 L30 28" stroke="#A9CBB5" stroke-width="2.5" stroke-linecap="round"/>
+                <circle cx="30" cy="20" r="5" fill="#2D7A63" opacity="0.8"/>
+              </svg>
+              <span style="font-family:'Playfair Display',serif;font-size:14px;color:var(--deep-emerald)">efy care</span>
+            </div>
+            <div>
+              <div style="font-family:'Playfair Display',serif;font-size:15px;font-weight:600;color:var(--charcoal)">Maria Schmidt</div>
+              <div style="font-size:10px;color:var(--forest-green);margin-top:2px">Pflegedienstleitung</div>
+              <div style="margin-top:10px;font-size:9px;color:#888;line-height:1.6">
+                T: +49 (0)30 123 456 78<br>
+                m.schmidt@efycare.de<br>
+                www.efycare.de
+              </div>
+            </div>
+          </div>
+          <div style="font-size:8px;position:absolute;bottom:6px;right:8px;color:#ccc">Vorderseite</div>
+        </div>
+        <!-- Back -->
+        <div class="bcard" style="background:var(--deep-emerald)">
+          <div style="height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px">
+            <svg width="60" height="60" viewBox="0 0 60 60" fill="none">
+              <path d="M30 55 C30 55 5 38 5 22 C5 14 11 8 18 8 C22 8 26 10 30 15 C34 10 38 8 42 8 C49 8 55 14 55 22 C55 38 30 55 30 55Z" fill="rgba(255,255,255,0.9)"/>
+              <path d="M30 50 L30 28" stroke="#0F5E57" stroke-width="2.5" stroke-linecap="round"/>
+              <circle cx="19" cy="33" r="4" fill="#0F5E57" opacity="0.5"/>
+              <circle cx="41" cy="28" r="4" fill="#0F5E57" opacity="0.5"/>
+              <circle cx="30" cy="20" r="5" fill="#0F5E57" opacity="0.5"/>
+            </svg>
+            <div style="font-family:'Playfair Display',serif;font-size:18px;color:white;margin-top:10px">efy care</div>
+            <div style="font-size:9px;color:var(--sage-green);margin-top:4px;letter-spacing:2px;text-transform:uppercase">Pflege · Vertrauen · Nähe</div>
+          </div>
+          <div style="font-size:8px;position:absolute;bottom:6px;right:8px;color:rgba(255,255,255,0.3)">Rückseite</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Briefpapier -->
+    <div class="mockup-card">
+      <span class="label">Korrespondenz</span>
+      <h3>Briefpapier</h3>
+      <div class="letterhead">
+        <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(to right,var(--deep-emerald),var(--sage-green))"></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;padding-bottom:12px;border-bottom:1px solid #eee">
+          <div style="display:flex;align-items:center;gap:8px">
+            <svg width="24" height="24" viewBox="0 0 60 60" fill="none">
+              <path d="M30 55 C30 55 5 38 5 22 C5 14 11 8 18 8 C22 8 26 10 30 15 C34 10 38 8 42 8 C49 8 55 14 55 22 C55 38 30 55 30 55Z" fill="#0F5E57"/>
+              <path d="M30 50 L30 28" stroke="#A9CBB5" stroke-width="2.5" stroke-linecap="round"/>
+              <circle cx="30" cy="20" r="5" fill="#2D7A63" opacity="0.8"/>
+            </svg>
+            <span style="font-family:'Playfair Display',serif;font-size:13px;color:var(--deep-emerald)">efy care</span>
+          </div>
+          <div style="font-size:7px;color:#aaa;text-align:right;line-height:1.5">
+            efy care GmbH · Musterstraße 12<br>10115 Berlin · T: +49 30 123 456 78
+          </div>
+        </div>
+        <div style="font-size:8px;color:#888;margin-bottom:20px">Berlin, 04. Juli 2026</div>
+        <div style="font-size:9px;color:var(--charcoal);font-weight:600;margin-bottom:12px">Betreff: Pflegevertrag</div>
+        <div style="font-size:8px;color:#666;margin-bottom:8px">Sehr geehrte Frau Müller,</div>
+        <div class="mock-text long" style="margin:6px 0"></div>
+        <div class="mock-text long"></div>
+        <div class="mock-text medium"></div>
+        <div class="mock-text long" style="margin-top:10px"></div>
+        <div class="mock-text long"></div>
+        <div class="mock-text short"></div>
+        <div style="font-size:8px;color:#666;margin-top:20px">Herzliche Grüße</div>
+        <div style="font-size:8px;color:var(--deep-emerald);font-weight:600;margin-top:8px">Ihr Team von efy care</div>
+        <div style="position:absolute;bottom:16px;left:24px;right:24px;border-top:1px solid #eee;padding-top:8px;font-size:6px;color:#bbb;text-align:center">
+          efy care GmbH · Musterstraße 12 · 10115 Berlin · HRB 12345 · GF: Max Mustermann · USt-IdNr.: DE123456789
+        </div>
+      </div>
+    </div>
+
+    <!-- Rechnung -->
+    <div class="mockup-card">
+      <span class="label">Buchhaltung</span>
+      <h3>Rechnung</h3>
+      <div class="invoice-mock">
+        <div style="position:absolute;top:0;left:0;right:0;height:3px;background:var(--deep-emerald)"></div>
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px">
+          <div style="display:flex;align-items:center;gap:6px">
+            <svg width="20" height="20" viewBox="0 0 60 60" fill="none">
+              <path d="M30 55 C30 55 5 38 5 22 C5 14 11 8 18 8 C22 8 26 10 30 15 C34 10 38 8 42 8 C49 8 55 14 55 22 C55 38 30 55 30 55Z" fill="#0F5E57"/>
+              <path d="M30 50 L30 28" stroke="#A9CBB5" stroke-width="2.5" stroke-linecap="round"/>
+            </svg>
+            <span style="font-family:'Playfair Display',serif;font-size:12px;color:var(--deep-emerald)">efy care</span>
+          </div>
+          <div style="font-size:16px;font-weight:700;color:var(--deep-emerald);font-family:'Playfair Display',serif">RECHNUNG</div>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:7px;color:#888;margin-bottom:16px">
+          <div>
+            <div style="font-weight:600;color:var(--charcoal);font-size:8px">Frau Anna Müller</div>
+            Beispielweg 5<br>10115 Berlin
+          </div>
+          <div style="text-align:right">
+            Nr: 2026-0847<br>Datum: 04.07.2026<br>Fällig: 18.07.2026
+          </div>
+        </div>
+        <table style="width:100%;font-size:7px;border-collapse:collapse;margin-bottom:12px">
+          <thead>
+            <tr style="background:var(--warm-ivory)">
+              <th style="padding:6px 4px;text-align:left;color:var(--deep-emerald);font-size:7px;border-bottom:1px solid #e0ddd8">Leistung</th>
+              <th style="padding:6px 4px;text-align:right;color:var(--deep-emerald);font-size:7px;border-bottom:1px solid #e0ddd8">Betrag</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td style="padding:5px 4px;border-bottom:1px solid #f0f0f0">Grundpflege SGB XI (14 Tage)</td><td style="padding:5px 4px;text-align:right;border-bottom:1px solid #f0f0f0">840,00 €</td></tr>
+            <tr><td style="padding:5px 4px;border-bottom:1px solid #f0f0f0">Behandlungspflege SGB V</td><td style="padding:5px 4px;text-align:right;border-bottom:1px solid #f0f0f0">360,00 €</td></tr>
+            <tr><td style="padding:5px 4px;border-bottom:1px solid #f0f0f0">Hauswirtschaftliche Versorgung</td><td style="padding:5px 4px;text-align:right;border-bottom:1px solid #f0f0f0">180,00 €</td></tr>
+          </tbody>
+        </table>
+        <div style="display:flex;justify-content:flex-end;gap:16px;font-size:7px;color:#888">
+          <div>Netto:</div><div>1.380,00 €</div>
+        </div>
+        <div style="display:flex;justify-content:flex-end;gap:16px;font-size:7px;color:#888">
+          <div>USt. 19%:</div><div>262,20 €</div>
+        </div>
+        <div style="display:flex;justify-content:flex-end;gap:16px;font-size:9px;font-weight:700;color:var(--deep-emerald);margin-top:4px;padding-top:6px;border-top:2px solid var(--deep-emerald)">
+          <div>Gesamt:</div><div>1.642,20 €</div>
+        </div>
+        <div style="margin-top:16px;padding:10px;background:var(--warm-ivory);border-radius:6px;font-size:7px;color:#888">
+          <div style="font-weight:600;color:var(--charcoal);font-size:7px;margin-bottom:3px">Bankverbindung</div>
+          efy care GmbH · IBAN: DE89 3704 0044 0532 0130 00 · BIC: COBADEFFXXX
+        </div>
+      </div>
+    </div>
+
+    <!-- Umschlag -->
+    <div class="mockup-card">
+      <span class="label">Korrespondenz</span>
+      <h3>Umschlag DIN lang</h3>
+      <div style="padding:20px 0">
+        <div class="envelope">
+          <div style="position:absolute;left:0;top:0;bottom:0;width:4px;background:linear-gradient(to bottom,var(--deep-emerald),var(--sage-green))"></div>
+          <div style="padding:20px 28px;height:100%;display:flex;flex-direction:column;justify-content:space-between">
+            <div style="display:flex;align-items:center;gap:8px">
+              <svg width="20" height="20" viewBox="0 0 60 60" fill="none">
+                <path d="M30 55 C30 55 5 38 5 22 C5 14 11 8 18 8 C22 8 26 10 30 15 C34 10 38 8 42 8 C49 8 55 14 55 22 C55 38 30 55 30 55Z" fill="#0F5E57"/>
+                <path d="M30 50 L30 28" stroke="#A9CBB5" stroke-width="2.5" stroke-linecap="round"/>
+              </svg>
+              <div>
+                <span style="font-family:'Playfair Display',serif;font-size:10px;color:var(--deep-emerald)">efy care</span>
+                <span style="font-size:7px;color:#aaa;margin-left:4px">GmbH</span>
+              </div>
+            </div>
+            <div style="margin-left:140px">
+              <div style="font-size:6px;color:#bbb;margin-bottom:3px">efy care GmbH · Musterstraße 12 · 10115 Berlin</div>
+              <div style="font-size:9px;color:var(--charcoal);font-weight:500">Frau Anna Müller</div>
+              <div style="font-size:8px;color:#888">Beispielweg 5</div>
+              <div style="font-size:8px;color:#888">10115 Berlin</div>
+            </div>
+          </div>
+          <div style="position:absolute;bottom:14px;right:20px;width:50px;height:50px;border:1px solid #ddd;border-radius:2px;display:flex;align-items:center;justify-content:center;font-size:7px;color:#ccc">Briefmarke</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Flyer -->
+    <div class="mockup-card">
+      <span class="label">Werbematerial</span>
+      <h3>Flyer DIN A5</h3>
+      <div style="padding:10px 0">
+        <div class="flyer-mock" style="background:linear-gradient(180deg,var(--deep-emerald) 0%,var(--forest-green) 55%,var(--sage-green) 100%)">
+          <div style="padding:32px 24px;height:100%;display:flex;flex-direction:column;justify-content:space-between;text-align:center">
+            <div>
+              <svg width="50" height="50" viewBox="0 0 60 60" fill="none">
+                <path d="M30 55 C30 55 5 38 5 22 C5 14 11 8 18 8 C22 8 26 10 30 15 C34 10 38 8 42 8 C49 8 55 14 55 22 C55 38 30 55 30 55Z" fill="rgba(255,255,255,0.9)"/>
+                <path d="M30 50 L30 28" stroke="#0F5E57" stroke-width="2.5" stroke-linecap="round"/>
+                <circle cx="30" cy="20" r="5" fill="#A9CBB5"/>
+              </svg>
+              <div style="font-family:'Playfair Display',serif;font-size:14px;color:white;margin-top:8px">efy care</div>
+            </div>
+            <div>
+              <div style="font-family:'Playfair Display',serif;font-size:22px;color:white;line-height:1.3;margin-bottom:10px">Pflege, die<br>ankommt.</div>
+              <div style="font-size:10px;color:rgba(255,255,255,0.7);line-height:1.6;margin-bottom:20px">Professionelle ambulante Pflege<br>in Ihrer vertrauten Umgebung.</div>
+              <div style="display:flex;flex-direction:column;gap:6px;text-align:left;margin:0 auto;max-width:180px">
+                <div style="display:flex;align-items:center;gap:6px;font-size:9px;color:white">
+                  <div style="width:16px;height:16px;background:rgba(255,255,255,0.2);border-radius:50%;flex-shrink:0"></div>
+                  Grundpflege & Behandlungspflege
+                </div>
+                <div style="display:flex;align-items:center;gap:6px;font-size:9px;color:white">
+                  <div style="width:16px;height:16px;background:rgba(255,255,255,0.2);border-radius:50%;flex-shrink:0"></div>
+                  Verhinderungspflege
+                </div>
+                <div style="display:flex;align-items:center;gap:6px;font-size:9px;color:white">
+                  <div style="width:16px;height:16px;background:rgba(255,255,255,0.2);border-radius:50%;flex-shrink:0"></div>
+                  Hauswirtschaftliche Hilfe
+                </div>
+              </div>
+            </div>
+            <div>
+              <div style="background:white;color:var(--deep-emerald);padding:10px 20px;border-radius:8px;font-size:11px;font-weight:600;margin-bottom:10px">Jetzt beraten lassen</div>
+              <div style="font-size:8px;color:var(--sage-green)">T: +49 30 123 456 78 · www.efycare.de</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Broschüre -->
+    <div class="mockup-card">
+      <span class="label">Werbematerial</span>
+      <h3>Broschüre Cover</h3>
+      <div style="padding:10px 0">
+        <div class="brochure-mock" style="background:var(--warm-ivory)">
+          <div style="height:55%;background:linear-gradient(160deg,var(--deep-emerald),var(--forest-green));display:flex;align-items:flex-end;padding:24px;position:relative">
+            <div style="position:absolute;top:20px;left:20px;display:flex;align-items:center;gap:6px">
+              <svg width="20" height="20" viewBox="0 0 60 60" fill="none">
+                <path d="M30 55 C30 55 5 38 5 22 C5 14 11 8 18 8 C22 8 26 10 30 15 C34 10 38 8 42 8 C49 8 55 14 55 22 C55 38 30 55 30 55Z" fill="white" opacity="0.9"/>
+                <path d="M30 50 L30 28" stroke="#0F5E57" stroke-width="3" stroke-linecap="round"/>
+              </svg>
+              <span style="font-family:'Playfair Display',serif;font-size:11px;color:white">efy care</span>
+            </div>
+            <div>
+              <div style="font-family:'Playfair Display',serif;font-size:24px;color:white;line-height:1.2">Gemeinsam<br>für Ihr<br>Wohlbefinden</div>
+            </div>
+            <!-- Decorative circles -->
+            <div style="position:absolute;top:30px;right:-20px;width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,0.06)"></div>
+            <div style="position:absolute;bottom:-30px;right:30px;width:100px;height:100px;border-radius:50%;background:rgba(255,255,255,0.04)"></div>
+          </div>
+          <div style="padding:24px;display:flex;flex-direction:column;justify-content:space-between;height:45%">
+            <div>
+              <div style="font-size:10px;color:var(--forest-green);font-weight:600;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px">Informationsbroschüre</div>
+              <div style="font-size:9px;color:#888;line-height:1.6">Erfahren Sie mehr über unsere Leistungen, unser Team und unsere Philosophie der menschlichen Pflege.</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div style="width:30px;height:2px;background:var(--champagner)"></div>
+              <div style="font-size:8px;color:var(--champagner);font-weight:600">www.efycare.de</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════ MERCH ═══════════════ -->
+<div class="section" id="sec-merch">
+  <h2 class="section-title">Werbemittel</h2>
+  <p class="section-sub">Merchandise und Arbeitskleidung</p>
+  <div class="grid grid-3">
+
+    <!-- Kugelschreiber -->
+    <div class="mockup-card">
+      <span class="label">Büro</span>
+      <h3>Kugelschreiber</h3>
+      <div style="padding:40px 0;text-align:center">
+        <svg width="300" height="50" viewBox="0 0 300 50">
+          <!-- Pen body -->
+          <defs>
+            <linearGradient id="penGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#1a7a6f"/>
+              <stop offset="30%" stop-color="#0F5E57"/>
+              <stop offset="70%" stop-color="#0F5E57"/>
+              <stop offset="100%" stop-color="#094a44"/>
+            </linearGradient>
+            <linearGradient id="metalGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#e8e8e8"/>
+              <stop offset="50%" stop-color="#c0c0c0"/>
+              <stop offset="100%" stop-color="#aaa"/>
+            </linearGradient>
+          </defs>
+          <rect x="30" y="18" width="220" height="14" rx="2" fill="url(#penGrad)"/>
+          <rect x="250" y="20" width="30" height="10" rx="1" fill="url(#metalGrad)"/>
+          <polygon points="280,20 295,25 280,30" fill="url(#metalGrad)"/>
+          <rect x="20" y="19" width="12" height="12" rx="2" fill="url(#metalGrad)"/>
+          <!-- Clip -->
+          <rect x="115" y="12" width="2" height="26" rx="1" fill="url(#metalGrad)"/>
+          <!-- Text -->
+          <text x="140" y="28" font-family="Playfair Display,serif" font-size="7" fill="white" font-weight="600">efy care</text>
+          <!-- Shadow -->
+          <ellipse cx="160" cy="45" rx="120" ry="3" fill="rgba(0,0,0,0.06)"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Notizbuch -->
+    <div class="mockup-card">
+      <span class="label">Büro</span>
+      <h3>Notizbuch</h3>
+      <div style="padding:10px 0">
+        <div class="notebook-mock" style="background:var(--deep-emerald)">
+          <div style="position:absolute;left:0;top:0;bottom:0;width:16px;background:linear-gradient(to right,rgba(0,0,0,0.15),transparent)"></div>
+          <!-- Elastic band -->
+          <div style="position:absolute;right:20px;top:0;bottom:0;width:2px;background:var(--champagner)"></div>
+          <div style="height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;text-align:center">
+            <svg width="60" height="60" viewBox="0 0 60 60" fill="none">
+              <path d="M30 55 C30 55 5 38 5 22 C5 14 11 8 18 8 C22 8 26 10 30 15 C34 10 38 8 42 8 C49 8 55 14 55 22 C55 38 30 55 30 55Z" fill="rgba(255,255,255,0.85)"/>
+              <path d="M30 50 L30 28" stroke="#0F5E57" stroke-width="2.5" stroke-linecap="round"/>
+              <circle cx="19" cy="33" r="4" fill="#0F5E57" opacity="0.4"/>
+              <circle cx="41" cy="28" r="4" fill="#0F5E57" opacity="0.4"/>
+              <circle cx="30" cy="20" r="5" fill="#0F5E57" opacity="0.5"/>
+            </svg>
+            <div style="font-family:'Playfair Display',serif;font-size:18px;color:white;margin-top:12px">efy care</div>
+            <div style="font-size:8px;color:var(--sage-green);margin-top:4px;letter-spacing:3px;text-transform:uppercase">Pflege · Vertrauen · Nähe</div>
+          </div>
+          <!-- Bottom emboss -->
+          <div style="position:absolute;bottom:16px;left:50%;transform:translateX(-50%);font-size:6px;color:rgba(255,255,255,0.2);letter-spacing:1px">www.efycare.de</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tragetasche -->
+    <div class="mockup-card">
+      <span class="label">Textil</span>
+      <h3>Tragetasche</h3>
+      <div style="padding:10px 0;text-align:center">
+        <svg width="240" height="290" viewBox="0 0 240 290">
+          <!-- Handles -->
+          <path d="M75 50 C75 20 85 10 95 10 L145 10 C155 10 165 20 165 50" stroke="#c0b89e" stroke-width="4" fill="none" stroke-linecap="round"/>
+          <!-- Bag body -->
+          <rect x="40" y="45" width="160" height="200" rx="4" fill="#F8F6F2" stroke="#e0ddd8" stroke-width="1"/>
+          <!-- Fold shadow -->
+          <rect x="40" y="45" width="160" height="8" fill="rgba(0,0,0,0.03)"/>
+          <!-- Logo -->
+          <svg x="70" y="100" width="100" height="100" viewBox="0 0 60 60" fill="none">
+            <path d="M30 55 C30 55 5 38 5 22 C5 14 11 8 18 8 C22 8 26 10 30 15 C34 10 38 8 42 8 C49 8 55 14 55 22 C55 38 30 55 30 55Z" fill="#0F5E57"/>
+            <path d="M30 50 L30 28" stroke="#A9CBB5" stroke-width="2.5" stroke-linecap="round"/>
+            <circle cx="19" cy="33" r="4" fill="#2D7A63" opacity="0.7"/>
+            <circle cx="41" cy="28" r="4" fill="#2D7A63" opacity="0.7"/>
+            <circle cx="30" cy="20" r="5" fill="#2D7A63" opacity="0.8"/>
+          </svg>
+          <text x="120" y="215" text-anchor="middle" font-family="Playfair Display,serif" font-size="16" fill="#0F5E57" font-weight="600">efy care</text>
+          <!-- Shadow -->
+          <ellipse cx="120" cy="254" rx="70" ry="6" fill="rgba(0,0,0,0.05)"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- T-Shirt -->
+    <div class="mockup-card">
+      <span class="label">Arbeitskleidung</span>
+      <h3>T-Shirt</h3>
+      <div style="padding:10px 0;text-align:center">
+        <svg width="240" height="280" viewBox="0 0 240 280">
+          <defs>
+            <linearGradient id="shirtGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#F8F6F2"/>
+              <stop offset="100%" stop-color="#ece9e2"/>
+            </linearGradient>
+          </defs>
+          <!-- T-Shirt shape -->
+          <path d="M65 45 L30 65 L45 110 L75 95 L75 250 L165 250 L165 95 L195 110 L210 65 L175 45 C170 30 155 20 120 20 C85 20 70 30 65 45Z" fill="url(#shirtGrad)" stroke="#d5d0c8" stroke-width="1.5"/>
+          <!-- Collar -->
+          <path d="M85 25 C95 40 105 45 120 45 C135 45 145 40 155 25" stroke="#d5d0c8" stroke-width="1.5" fill="none"/>
+          <!-- Logo on chest -->
+          <svg x="85" y="75" width="70" height="70" viewBox="0 0 60 60" fill="none">
+            <path d="M30 55 C30 55 5 38 5 22 C5 14 11 8 18 8 C22 8 26 10 30 15 C34 10 38 8 42 8 C49 8 55 14 55 22 C55 38 30 55 30 55Z" fill="#0F5E57"/>
+            <path d="M30 50 L30 28" stroke="#A9CBB5" stroke-width="2.5" stroke-linecap="round"/>
+            <circle cx="19" cy="33" r="4" fill="#2D7A63" opacity="0.7"/>
+            <circle cx="41" cy="28" r="4" fill="#2D7A63" opacity="0.7"/>
+            <circle cx="30" cy="20" r="5" fill="#2D7A63" opacity="0.8"/>
+          </svg>
+          <text x="120" y="162" text-anchor="middle" font-family="Playfair Display,serif" font-size="12" fill="#0F5E57" font-weight="600">efy care</text>
+          <!-- Shadow -->
+          <ellipse cx="120" cy="260" rx="60" ry="5" fill="rgba(0,0,0,0.04)"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Polo -->
+    <div class="mockup-card">
+      <span class="label">Arbeitskleidung</span>
+      <h3>Polo-Shirt</h3>
+      <div style="padding:10px 0;text-align:center">
+        <svg width="240" height="280" viewBox="0 0 240 280">
+          <defs>
+            <linearGradient id="poloGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#157a6e"/>
+              <stop offset="100%" stop-color="#0F5E57"/>
+            </linearGradient>
+          </defs>
+          <!-- Polo shape -->
+          <path d="M65 45 L30 65 L45 110 L75 95 L75 250 L165 250 L165 95 L195 110 L210 65 L175 45 C170 30 155 20 120 20 C85 20 70 30 65 45Z" fill="url(#poloGrad)" stroke="#0a4a44" stroke-width="1"/>
+          <!-- Collar -->
+          <path d="M80 22 L80 48 L120 58 L160 48 L160 22" fill="#0a4a44" stroke="#094a44" stroke-width="1"/>
+          <path d="M85 25 C95 40 105 45 120 45 C135 45 145 40 155 25" stroke="#094a44" stroke-width="1" fill="#0F5E57"/>
+          <!-- Button placket -->
+          <rect x="117" y="45" width="6" height="30" fill="#0a4a44" rx="1"/>
+          <circle cx="120" cy="52" r="2" fill="#157a6e"/>
+          <circle cx="120" cy="62" r="2" fill="#157a6e"/>
+          <!-- Logo on chest -->
+          <svg x="130" y="68" width="35" height="35" viewBox="0 0 60 60" fill="none">
+            <path d="M30 55 C30 55 5 38 5 22 C5 14 11 8 18 8 C22 8 26 10 30 15 C34 10 38 8 42 8 C49 8 55 14 55 22 C55 38 30 55 30 55Z" fill="white" opacity="0.9"/>
+            <path d="M30 50 L30 28" stroke="#0F5E57" stroke-width="3" stroke-linecap="round"/>
+            <circle cx="30" cy="20" r="5" fill="#A9CBB5" opacity="0.6"/>
+          </svg>
+          <text x="148" y="110" text-anchor="middle" font-family="Playfair Display,serif" font-size="7" fill="rgba(255,255,255,0.8)">efy care</text>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Hoodie -->
+    <div class="mockup-card">
+      <span class="label">Arbeitskleidung</span>
+      <h3>Hoodie</h3>
+      <div style="padding:10px 0;text-align:center">
+        <svg width="260" height="300" viewBox="0 0 260 300">
+          <defs>
+            <linearGradient id="hoodieGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#35847a"/>
+              <stop offset="100%" stop-color="#0F5E57"/>
+            </linearGradient>
+          </defs>
+          <!-- Hood -->
+          <path d="M80 50 C80 25 95 10 130 10 C165 10 180 25 180 50" fill="#0a5249" stroke="#094a44" stroke-width="1"/>
+          <!-- Body -->
+          <path d="M55 50 L25 75 L40 130 L65 110 L65 270 L195 270 L195 110 L220 130 L235 75 L205 50 C200 40 175 35 130 35 C85 35 60 40 55 50Z" fill="url(#hoodieGrad)" stroke="#0a4a44" stroke-width="1"/>
+          <!-- Hood opening -->
+          <path d="M90 38 C100 55 110 62 130 62 C150 62 160 55 170 38" fill="#0a5249" stroke="#094a44" stroke-width="1"/>
+          <!-- Strings -->
+          <line x1="110" y1="62" x2="108" y2="90" stroke="#A9CBB5" stroke-width="1.5"/>
+          <line x1="150" y1="62" x2="152" y2="90" stroke="#A9CBB5" stroke-width="1.5"/>
+          <!-- Front pocket -->
+          <path d="M85 175 L175 175 L175 220 C175 225 170 230 165 230 L95 230 C90 230 85 225 85 220Z" fill="rgba(0,0,0,0.08)" stroke="rgba(0,0,0,0.05)" stroke-width="1"/>
+          <!-- Logo -->
+          <svg x="95" y="90" width="70" height="70" viewBox="0 0 60 60" fill="none">
+            <path d="M30 55 C30 55 5 38 5 22 C5 14 11 8 18 8 C22 8 26 10 30 15 C34 10 38 8 42 8 C49 8 55 14 55 22 C55 38 30 55 30 55Z" fill="white" opacity="0.9"/>
+            <path d="M30 50 L30 28" stroke="#0F5E57" stroke-width="2.5" stroke-linecap="round"/>
+            <circle cx="19" cy="33" r="4" fill="#0F5E57" opacity="0.4"/>
+            <circle cx="41" cy="28" r="4" fill="#0F5E57" opacity="0.4"/>
+            <circle cx="30" cy="20" r="5" fill="#0F5E57" opacity="0.5"/>
+          </svg>
+          <text x="130" y="172" text-anchor="middle" font-family="Playfair Display,serif" font-size="12" fill="rgba(255,255,255,0.9)" font-weight="600">efy care</text>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Namensschild -->
+    <div class="mockup-card">
+      <span class="label">Identifikation</span>
+      <h3>Namensschild</h3>
+      <div style="padding:20px 0;text-align:center">
+        <!-- Lanyard -->
+        <div style="width:2px;height:30px;background:var(--deep-emerald);margin:0 auto"></div>
+        <div class="name-badge">
+          <div style="height:6px;background:linear-gradient(to right,var(--deep-emerald),var(--forest-green),var(--sage-green))"></div>
+          <div style="padding:14px 16px;display:flex;gap:12px;align-items:center">
+            <svg width="36" height="36" viewBox="0 0 60 60" fill="none">
+              <path d="M30 55 C30 55 5 38 5 22 C5 14 11 8 18 8 C22 8 26 10 30 15 C34 10 38 8 42 8 C49 8 55 14 55 22 C55 38 30 55 30 55Z" fill="#0F5E57"/>
+              <path d="M30 50 L30 28" stroke="#A9CBB5" stroke-width="2.5" stroke-linecap="round"/>
+              <circle cx="30" cy="20" r="5" fill="#2D7A63" opacity="0.8"/>
+            </svg>
+            <div style="text-align:left">
+              <div style="font-family:'Playfair Display',serif;font-size:16px;font-weight:600;color:var(--charcoal)">Maria Schmidt</div>
+              <div style="font-size:10px;color:var(--forest-green)">Pflegedienstleitung</div>
+              <div style="font-family:'Playfair Display',serif;font-size:9px;color:var(--deep-emerald);margin-top:4px">efy care</div>
+            </div>
+          </div>
+          <div style="position:absolute;bottom:12px;right:16px;width:40px;height:40px;background:var(--warm-ivory);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:6px;color:#ccc">QR</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════ VEHICLES ═══════════════ -->
+<div class="section" id="sec-vehicles">
+  <h2 class="section-title">Fahrzeuge</h2>
+  <p class="section-sub">Flottenbranding für den Außendienst</p>
+  <div class="grid" style="grid-template-columns:1fr">
+
+    <!-- Mercedes V-Klasse -->
+    <div class="mockup-card">
+      <span class="label">Flottenfahrzeug</span>
+      <h3>Mercedes V-Klasse — Seitenansicht</h3>
+      <div style="padding:20px 0;text-align:center">
+        <svg width="620" height="220" viewBox="0 0 620 220" style="max-width:100%">
+          <!-- Ground shadow -->
+          <ellipse cx="310" cy="195" rx="260" ry="12" fill="rgba(0,0,0,0.06)"/>
+          <!-- Body -->
+          <path d="M80 160 L80 80 C80 72 85 65 100 60 L200 50 C210 48 220 48 230 48 L420 48 C440 48 460 52 470 60 L520 80 L540 80 C548 80 555 85 555 93 L555 145 C555 152 550 157 543 158 L80 160Z" fill="#F8F6F2" stroke="#d5d0c8" stroke-width="1.5"/>
+          <!-- Roof -->
+          <path d="M130 60 L200 42 C210 40 220 39 230 39 L400 39 C410 39 420 40 425 42 L470 60" fill="#ece9e2" stroke="#d5d0c8" stroke-width="1"/>
+          <!-- Windows -->
+          <rect x="140" y="52" width="70" height="48" rx="4" fill="#a8d4e6" opacity="0.6" stroke="#c5c0b8" stroke-width="0.5"/>
+          <rect x="218" y="50" width="75" height="50" rx="3" fill="#a8d4e6" opacity="0.6" stroke="#c5c0b8" stroke-width="0.5"/>
+          <rect x="300" y="50" width="75" height="50" rx="3" fill="#a8d4e6" opacity="0.6" stroke="#c5c0b8" stroke-width="0.5"/>
+          <rect x="382" y="50" width="70" height="50" rx="3" fill="#a8d4e6" opacity="0.6" stroke="#c5c0b8" stroke-width="0.5"/>
+          <!-- Branding strip -->
+          <rect x="120" y="108" width="380" height="42" rx="2" fill="#0F5E57"/>
+          <!-- Logo on side -->
+          <svg x="140" y="112" width="34" height="34" viewBox="0 0 60 60" fill="none">
+            <path d="M30 55 C30 55 5 38 5 22 C5 14 11 8 18 8 C22 8 26 10 30 15 C34 10 38 8 42 8 C49 8 55 14 55 22 C55 38 30 55 30 55Z" fill="white" opacity="0.9"/>
+            <path d="M30 50 L30 28" stroke="#0F5E57" stroke-width="3" stroke-linecap="round"/>
+            <circle cx="30" cy="20" r="5" fill="#A9CBB5"/>
+          </svg>
+          <text x="185" y="133" font-family="Playfair Display,serif" font-size="20" fill="white" font-weight="600">efy care</text>
+          <text x="185" y="146" font-family="Inter,sans-serif" font-size="8" fill="#A9CBB5" letter-spacing="1.5">PFLEGE · VERTRAUEN · NÄHE</text>
+          <text x="390" y="133" font-family="Inter,sans-serif" font-size="12" fill="white" font-weight="600">030 123 456 78</text>
+          <text x="390" y="146" font-family="Inter,sans-serif" font-size="8" fill="#A9CBB5">www.efycare.de</text>
+          <!-- Wheels -->
+          <circle cx="155" cy="165" r="28" fill="#333" stroke="#222" stroke-width="2"/>
+          <circle cx="155" cy="165" r="18" fill="#666"/>
+          <circle cx="155" cy="165" r="10" fill="#888"/>
+          <circle cx="155" cy="165" r="4" fill="#aaa"/>
+          <circle cx="460" cy="165" r="28" fill="#333" stroke="#222" stroke-width="2"/>
+          <circle cx="460" cy="165" r="18" fill="#666"/>
+          <circle cx="460" cy="165" r="10" fill="#888"/>
+          <circle cx="460" cy="165" r="4" fill="#aaa"/>
+          <!-- Headlight -->
+          <rect x="545" y="88" width="12" height="28" rx="4" fill="#e8e4d8"/>
+          <!-- Taillight -->
+          <rect x="80" y="100" width="6" height="24" rx="2" fill="#cc3333"/>
+          <!-- Mirror -->
+          <rect x="128" y="72" width="10" height="8" rx="2" fill="#d5d0c8"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- VW Caddy -->
+    <div class="mockup-card">
+      <span class="label">Pflegefahrzeug</span>
+      <h3>VW Caddy — Seitenansicht</h3>
+      <div style="padding:20px 0;text-align:center">
+        <svg width="520" height="210" viewBox="0 0 520 210" style="max-width:100%">
+          <ellipse cx="260" cy="185" rx="210" ry="10" fill="rgba(0,0,0,0.06)"/>
+          <!-- Body -->
+          <path d="M70 155 L70 75 C70 68 75 62 85 58 L170 48 C180 46 190 46 200 46 L370 46 C385 46 400 50 410 58 L445 75 L460 75 C466 75 470 80 470 86 L470 140 C470 148 466 152 460 153 L70 155Z" fill="white" stroke="#ddd" stroke-width="1.5"/>
+          <!-- Roof -->
+          <path d="M110 55 L170 42 C178 40 186 39 195 39 L350 39 C358 39 366 40 370 42 L410 55" fill="#f5f5f5" stroke="#ddd" stroke-width="1"/>
+          <!-- Windows -->
+          <rect x="120" y="49" width="65" height="45" rx="4" fill="#a8d4e6" opacity="0.5" stroke="#ccc" stroke-width="0.5"/>
+          <rect x="192" y="48" width="85" height="46" rx="3" fill="#a8d4e6" opacity="0.5" stroke="#ccc" stroke-width="0.5"/>
+          <rect x="284" y="48" width="80" height="46" rx="3" fill="#a8d4e6" opacity="0.5" stroke="#ccc" stroke-width="0.5"/>
+          <!-- Branding -->
+          <rect x="100" y="102" width="320" height="38" rx="2" fill="#0F5E57"/>
+          <svg x="115" y="106" width="30" height="30" viewBox="0 0 60 60" fill="none">
+            <path d="M30 55 C30 55 5 38 5 22 C5 14 11 8 18 8 C22 8 26 10 30 15 C34 10 38 8 42 8 C49 8 55 14 55 22 C55 38 30 55 30 55Z" fill="white" opacity="0.9"/>
+            <path d="M30 50 L30 28" stroke="#0F5E57" stroke-width="3" stroke-linecap="round"/>
+          </svg>
+          <text x="155" y="125" font-family="Playfair Display,serif" font-size="17" fill="white" font-weight="600">efy care</text>
+          <text x="155" y="137" font-family="Inter,sans-serif" font-size="7" fill="#A9CBB5" letter-spacing="1">Ambulante Pflege</text>
+          <text x="340" y="125" font-family="Inter,sans-serif" font-size="11" fill="white" font-weight="600">030 123 456 78</text>
+          <!-- Wheels -->
+          <circle cx="135" cy="158" r="24" fill="#333" stroke="#222" stroke-width="2"/>
+          <circle cx="135" cy="158" r="15" fill="#666"/>
+          <circle cx="135" cy="158" r="8" fill="#888"/>
+          <circle cx="390" cy="158" r="24" fill="#333" stroke="#222" stroke-width="2"/>
+          <circle cx="390" cy="158" r="15" fill="#666"/>
+          <circle cx="390" cy="158" r="8" fill="#888"/>
+          <rect x="456" y="82" width="10" height="24" rx="3" fill="#e8e4d8"/>
+          <rect x="70" y="95" width="5" height="20" rx="2" fill="#cc3333"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Tesla Model Y -->
+    <div class="mockup-card">
+      <span class="label">Elektrofahrzeug</span>
+      <h3>Tesla Model Y — Seitenansicht</h3>
+      <div style="padding:20px 0;text-align:center">
+        <svg width="560" height="200" viewBox="0 0 560 200" style="max-width:100%">
+          <ellipse cx="280" cy="178" rx="230" ry="10" fill="rgba(0,0,0,0.06)"/>
+          <!-- Body - sleek SUV shape -->
+          <path d="M70 148 L70 90 C80 70 110 52 150 45 L380 40 C410 40 440 48 460 60 L500 85 L510 85 C516 85 520 90 520 96 L520 135 C520 142 516 146 510 147 L70 148Z" fill="white" stroke="#ddd" stroke-width="1.5"/>
+          <!-- Roof curve -->
+          <path d="M130 48 C160 34 200 28 260 28 C320 28 370 32 410 42 L460 60" fill="#f0f0f0" stroke="#ddd" stroke-width="1" fill-opacity="0.5"/>
+          <!-- Panoramic glass roof look -->
+          <path d="M155 44 C180 32 220 27 280 27 C340 27 380 32 400 40" stroke="#b0d0e0" stroke-width="2" fill="none" opacity="0.4"/>
+          <!-- Windows -->
+          <path d="M140 50 L140 88 L210 88 L210 46 C195 44 175 44 155 46Z" rx="4" fill="#a8d4e6" opacity="0.5" stroke="#ccc" stroke-width="0.5"/>
+          <rect x="216" y="44" width="80" height="46" rx="3" fill="#a8d4e6" opacity="0.5" stroke="#ccc" stroke-width="0.5"/>
+          <path d="M302 44 L382 44 C395 48 405 55 410 62 L410 90 L302 90Z" fill="#a8d4e6" opacity="0.5" stroke="#ccc" stroke-width="0.5"/>
+          <!-- Branding -->
+          <rect x="115" y="96" width="340" height="36" rx="2" fill="#0F5E57"/>
+          <svg x="130" y="100" width="28" height="28" viewBox="0 0 60 60" fill="none">
+            <path d="M30 55 C30 55 5 38 5 22 C5 14 11 8 18 8 C22 8 26 10 30 15 C34 10 38 8 42 8 C49 8 55 14 55 22 C55 38 30 55 30 55Z" fill="white" opacity="0.9"/>
+            <path d="M30 50 L30 28" stroke="#0F5E57" stroke-width="3" stroke-linecap="round"/>
+          </svg>
+          <text x="167" y="118" font-family="Playfair Display,serif" font-size="16" fill="white" font-weight="600">efy care</text>
+          <text x="167" y="129" font-family="Inter,sans-serif" font-size="7" fill="#A9CBB5" letter-spacing="1">100% elektrisch · 100% Pflege</text>
+          <text x="370" y="118" font-family="Inter,sans-serif" font-size="10" fill="white" font-weight="600">www.efycare.de</text>
+          <!-- Wheels -->
+          <circle cx="155" cy="152" r="26" fill="#333" stroke="#222" stroke-width="2"/>
+          <circle cx="155" cy="152" r="17" fill="#555"/>
+          <circle cx="155" cy="152" r="9" fill="#777"/>
+          <circle cx="155" cy="152" r="3" fill="#999"/>
+          <circle cx="420" cy="152" r="26" fill="#333" stroke="#222" stroke-width="2"/>
+          <circle cx="420" cy="152" r="17" fill="#555"/>
+          <circle cx="420" cy="152" r="9" fill="#777"/>
+          <circle cx="420" cy="152" r="3" fill="#999"/>
+          <!-- LED headlight -->
+          <path d="M505 90 L518 96 L518 108 L505 112" fill="#e8e8e8" stroke="#ddd" stroke-width="0.5"/>
+          <rect x="70" y="98" width="4" height="18" rx="2" fill="#cc3333"/>
+        </svg>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════ BUILDING ═══════════════ -->
+<div class="section" id="sec-building">
+  <h2 class="section-title">Gebäude & Büro</h2>
+  <p class="section-sub">Außen- und Innenraumbranding</p>
+  <div class="grid">
+
+    <!-- Fassade -->
+    <div class="mockup-card" style="grid-column:1/-1">
+      <span class="label">Außenbereich</span>
+      <h3>Gebäudefassade / Eingangsbereich</h3>
+      <div style="padding:10px 0;text-align:center">
+        <svg width="600" height="360" viewBox="0 0 600 360" style="max-width:100%">
+          <!-- Sky gradient -->
+          <rect width="600" height="360" fill="#e8eef2"/>
+          <!-- Building -->
+          <rect x="100" y="60" width="400" height="260" fill="#f0ede8" stroke="#d5d0c8" stroke-width="1"/>
+          <!-- Floor lines -->
+          <line x1="100" y1="140" x2="500" y2="140" stroke="#ddd8d0" stroke-width="0.5"/>
+          <line x1="100" y1="200" x2="500" y2="200" stroke="#ddd8d0" stroke-width="0.5"/>
+          <!-- Windows -->
+          <rect x="130" y="75" width="45" height="50" rx="2" fill="#b8d0dc" opacity="0.6" stroke="#c5c0b8" stroke-width="0.5"/>
+          <rect x="195" y="75" width="45" height="50" rx="2" fill="#b8d0dc" opacity="0.6" stroke="#c5c0b8" stroke-width="0.5"/>
+          <rect x="360" y="75" width="45" height="50" rx="2" fill="#b8d0dc" opacity="0.6" stroke="#c5c0b8" stroke-width="0.5"/>
+          <rect x="425" y="75" width="45" height="50" rx="2" fill="#b8d0dc" opacity="0.6" stroke="#c5c0b8" stroke-width="0.5"/>
+          <rect x="130" y="150" width="45" height="40" rx="2" fill="#b8d0dc" opacity="0.6" stroke="#c5c0b8" stroke-width="0.5"/>
+          <rect x="195" y="150" width="45" height="40" rx="2" fill="#b8d0dc" opacity="0.6" stroke="#c5c0b8" stroke-width="0.5"/>
+          <rect x="360" y="150" width="45" height="40" rx="2" fill="#b8d0dc" opacity="0.6" stroke="#c5c0b8" stroke-width="0.5"/>
+          <rect x="425" y="150" width="45" height="40" rx="2" fill="#b8d0dc" opacity="0.6" stroke="#c5c0b8" stroke-width="0.5"/>
+          <!-- Entrance area -->
+          <rect x="255" y="60" width="90" height="260" fill="#e8e4dd" stroke="#d5d0c8" stroke-width="1"/>
+          <!-- Entrance canopy -->
+          <rect x="240" y="200" width="120" height="8" fill="var(--deep-emerald)" rx="1"/>
+          <!-- Door -->
+          <rect x="265" y="220" width="70" height="100" rx="3" fill="#a8d4e6" opacity="0.5" stroke="#c5c0b8"/>
+          <line x1="300" y1="220" x2="300" y2="320" stroke="#c5c0b8" stroke-width="1"/>
+          <circle cx="290" cy="270" r="2" fill="#c5c0b8"/>
+          <circle cx="310" cy="270" r="2" fill="#c5c0b8"/>
+          <!-- Logo above entrance -->
+          <svg x="262" y="70" width="76" height="76" viewBox="0 0 60 60" fill="none">
+            <path d="M30 55 C30 55 5 38 5 22 C5 14 11 8 18 8 C22 8 26 10 30 15 C34 10 38 8 42 8 C49 8 55 14 55 22 C55 38 30 55 30 55Z" fill="#0F5E57"/>
+            <path d="M30 50 L30 28" stroke="#A9CBB5" stroke-width="2.5" stroke-linecap="round"/>
+            <circle cx="19" cy="33" r="4" fill="#2D7A63" opacity="0.7"/>
+            <circle cx="41" cy="28" r="4" fill="#2D7A63" opacity="0.7"/>
+            <circle cx="30" cy="20" r="5" fill="#2D7A63" opacity="0.8"/>
+          </svg>
+          <text x="300" y="165" text-anchor="middle" font-family="Playfair Display,serif" font-size="20" fill="#0F5E57" font-weight="600">efy care</text>
+          <text x="300" y="180" text-anchor="middle" font-family="Inter,sans-serif" font-size="7" fill="#2D7A63" letter-spacing="2">AMBULANTE PFLEGE</text>
+          <!-- Sign on canopy -->
+          <rect x="250" y="202" width="100" height="14" fill="#0F5E57" rx="1"/>
+          <text x="300" y="212" text-anchor="middle" font-family="Playfair Display,serif" font-size="9" fill="white">efy care</text>
+          <!-- Ground -->
+          <rect x="0" y="320" width="600" height="40" fill="#d5d0c8"/>
+          <!-- Plants -->
+          <circle cx="240" cy="310" r="12" fill="#2D7A63" opacity="0.4"/>
+          <circle cx="360" cy="310" r="12" fill="#2D7A63" opacity="0.4"/>
+          <rect x="235" y="310" width="10" height="12" fill="#8B6C5C" opacity="0.3"/>
+          <rect x="355" y="310" width="10" height="12" fill="#8B6C5C" opacity="0.3"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Empfangstheke -->
+    <div class="mockup-card">
+      <span class="label">Innenbereich</span>
+      <h3>Empfangstheke</h3>
+      <div style="padding:10px 0;text-align:center">
+        <svg width="440" height="280" viewBox="0 0 440 280" style="max-width:100%">
+          <!-- Wall -->
+          <rect width="440" height="280" fill="#F8F6F2"/>
+          <!-- Accent wall behind -->
+          <rect x="80" y="0" width="280" height="200" fill="#0F5E57" rx="0"/>
+          <!-- Logo on wall -->
+          <svg x="155" y="20" width="130" height="100" viewBox="0 0 60 60" fill="none">
+            <path d="M30 55 C30 55 5 38 5 22 C5 14 11 8 18 8 C22 8 26 10 30 15 C34 10 38 8 42 8 C49 8 55 14 55 22 C55 38 30 55 30 55Z" fill="rgba(255,255,255,0.15)" stroke="white" stroke-width="0.8"/>
+            <path d="M30 50 L30 28" stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.6"/>
+            <circle cx="19" cy="33" r="4" fill="white" opacity="0.2"/>
+            <circle cx="41" cy="28" r="4" fill="white" opacity="0.2"/>
+            <circle cx="30" cy="20" r="5" fill="white" opacity="0.25"/>
+          </svg>
+          <text x="220" y="140" text-anchor="middle" font-family="Playfair Display,serif" font-size="28" fill="white" font-weight="600">efy care</text>
+          <text x="220" y="158" text-anchor="middle" font-family="Inter,sans-serif" font-size="8" fill="rgba(255,255,255,0.5)" letter-spacing="3">AMBULANTE PFLEGE</text>
+          <!-- Counter -->
+          <rect x="60" y="180" width="320" height="70" rx="8" fill="white" stroke="#e0ddd8" stroke-width="1"/>
+          <!-- Counter top accent -->
+          <rect x="60" y="180" width="320" height="4" rx="2" fill="#D8C29D"/>
+          <!-- Counter front panel -->
+          <rect x="80" y="188" width="280" height="58" rx="4" fill="#faf8f4"/>
+          <!-- Small logo on counter -->
+          <svg x="195" y="198" width="50" height="40" viewBox="0 0 60 60" fill="none">
+            <path d="M30 55 C30 55 5 38 5 22 C5 14 11 8 18 8 C22 8 26 10 30 15 C34 10 38 8 42 8 C49 8 55 14 55 22 C55 38 30 55 30 55Z" fill="#0F5E57" opacity="0.15"/>
+            <path d="M30 50 L30 28" stroke="#0F5E57" stroke-width="2.5" stroke-linecap="round" opacity="0.3"/>
+          </svg>
+          <!-- Floor -->
+          <rect x="0" y="250" width="440" height="30" fill="#e8e4dd"/>
+          <!-- Plant -->
+          <circle cx="410" cy="200" r="20" fill="#2D7A63" opacity="0.3"/>
+          <circle cx="400" cy="190" r="15" fill="#A9CBB5" opacity="0.3"/>
+          <rect x="405" y="215" width="8" height="35" fill="#8B6C5C" opacity="0.2"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Glaswand -->
+    <div class="mockup-card">
+      <span class="label">Innenbereich</span>
+      <h3>Glaswand mit Logo</h3>
+      <div style="padding:10px 0;text-align:center">
+        <svg width="380" height="280" viewBox="0 0 380 280" style="max-width:100%">
+          <!-- Room behind glass -->
+          <rect width="380" height="280" fill="#e8eef2"/>
+          <!-- Glass panels -->
+          <rect x="20" y="20" width="160" height="220" fill="rgba(180,210,225,0.25)" stroke="#c5d5dd" stroke-width="1"/>
+          <rect x="185" y="20" width="175" height="220" fill="rgba(180,210,225,0.25)" stroke="#c5d5dd" stroke-width="1"/>
+          <!-- Frosted logo area -->
+          <rect x="110" y="60" width="160" height="140" rx="4" fill="rgba(255,255,255,0.5)"/>
+          <!-- Logo -->
+          <svg x="145" y="70" width="90" height="70" viewBox="0 0 60 60" fill="none">
+            <path d="M30 55 C30 55 5 38 5 22 C5 14 11 8 18 8 C22 8 26 10 30 15 C34 10 38 8 42 8 C49 8 55 14 55 22 C55 38 30 55 30 55Z" fill="#0F5E57" opacity="0.7"/>
+            <path d="M30 50 L30 28" stroke="#A9CBB5" stroke-width="2.5" stroke-linecap="round"/>
+            <circle cx="19" cy="33" r="4" fill="#2D7A63" opacity="0.5"/>
+            <circle cx="41" cy="28" r="4" fill="#2D7A63" opacity="0.5"/>
+            <circle cx="30" cy="20" r="5" fill="#2D7A63" opacity="0.6"/>
+          </svg>
+          <text x="190" y="158" text-anchor="middle" font-family="Playfair Display,serif" font-size="22" fill="#0F5E57" font-weight="600" opacity="0.8">efy care</text>
+          <text x="190" y="176" text-anchor="middle" font-family="Inter,sans-serif" font-size="7" fill="#2D7A63" letter-spacing="2" opacity="0.6">PFLEGE · VERTRAUEN · NÄHE</text>
+          <!-- Floor -->
+          <rect x="0" y="240" width="380" height="40" fill="#d5d0c8"/>
+          <!-- Reflections -->
+          <line x1="40" y1="20" x2="40" y2="240" stroke="rgba(255,255,255,0.3)" stroke-width="1"/>
+          <line x1="200" y1="20" x2="200" y2="240" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Leuchtreklame -->
+    <div class="mockup-card">
+      <span class="label">Nacht</span>
+      <h3>Leuchtreklame bei Nacht</h3>
+      <div style="padding:10px 0;text-align:center;background:#1a1e22;border-radius:12px;margin:-20px;padding:30px 20px">
+        <svg width="400" height="240" viewBox="0 0 400 240" style="max-width:100%">
+          <!-- Dark building facade -->
+          <rect width="400" height="240" fill="#1a1e22"/>
+          <rect x="50" y="40" width="300" height="180" fill="#222630" stroke="#2a2e35" stroke-width="1"/>
+          <!-- Dark windows -->
+          <rect x="70" y="55" width="30" height="35" rx="1" fill="#1e2228" stroke="#2a2e35" stroke-width="0.5"/>
+          <rect x="115" y="55" width="30" height="35" rx="1" fill="#2a3040" stroke="#2a2e35" stroke-width="0.5"/>
+          <rect x="255" y="55" width="30" height="35" rx="1" fill="#1e2228" stroke="#2a2e35" stroke-width="0.5"/>
+          <rect x="300" y="55" width="30" height="35" rx="1" fill="#2a3040" stroke="#2a2e35" stroke-width="0.5"/>
+          <!-- Glowing logo -->
+          <defs>
+            <filter id="glowFilter" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur in="SourceGraphic" stdDeviation="6" result="blur"/>
+              <feMerge>
+                <feMergeNode in="blur"/>
+                <feMergeNode in="blur"/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+            <filter id="glowText" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="blur"/>
+              <feMerge>
+                <feMergeNode in="blur"/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+          </defs>
+          <!-- Glow background -->
+          <ellipse cx="200" cy="140" rx="120" ry="50" fill="#0F5E57" opacity="0.1"/>
+          <!-- Logo glowing -->
+          <g filter="url(#glowFilter)">
+            <svg x="155" y="95" width="90" height="60" viewBox="0 0 60 60" fill="none">
+              <path d="M30 55 C30 55 5 38 5 22 C5 14 11 8 18 8 C22 8 26 10 30 15 C34 10 38 8 42 8 C49 8 55 14 55 22 C55 38 30 55 30 55Z" fill="#2D7A63"/>
+              <path d="M30 50 L30 28" stroke="#A9CBB5" stroke-width="2.5" stroke-linecap="round"/>
+              <circle cx="30" cy="20" r="5" fill="#A9CBB5"/>
+            </svg>
+          </g>
+          <g filter="url(#glowText)">
+            <text x="200" y="175" text-anchor="middle" font-family="Playfair Display,serif" font-size="26" fill="#4aaa96" font-weight="600">efy care</text>
+          </g>
+          <text x="200" y="192" text-anchor="middle" font-family="Inter,sans-serif" font-size="7" fill="#3a8a78" letter-spacing="2" opacity="0.8">AMBULANTE PFLEGE</text>
+          <!-- Light reflections on ground -->
+          <ellipse cx="200" cy="225" rx="80" ry="8" fill="#0F5E57" opacity="0.08"/>
+        </svg>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════ EXPO ═══════════════ -->
+<div class="section" id="sec-expo">
+  <h2 class="section-title">Messe</h2>
+  <p class="section-sub">Messepräsenz und Aufsteller</p>
+  <div class="grid">
+
+    <!-- Rollup -->
+    <div class="mockup-card">
+      <span class="label">Aufsteller</span>
+      <h3>Rollup Banner</h3>
+      <div style="padding:10px 0;text-align:center">
+        <svg width="180" height="460" viewBox="0 0 180 460" style="max-width:100%">
+          <!-- Stand base -->
+          <rect x="50" y="430" width="80" height="6" rx="3" fill="#aaa"/>
+          <!-- Pole -->
+          <rect x="88" y="20" width="4" height="415" fill="#bbb"/>
+          <!-- Banner -->
+          <rect x="20" y="10" width="140" height="410" fill="white" stroke="#e0ddd8" stroke-width="1" rx="2"/>
+          <!-- Top section -->
+          <rect x="20" y="10" width="140" height="160" fill="linear-gradient(to bottom,#0F5E57,#2D7A63)" rx="2 2 0 0"/>
+          <rect x="20" y="10" width="140" height="160" rx="2" fill="#0F5E57"/>
+          <!-- Logo area -->
+          <svg x="45" y="25" width="90" height="70" viewBox="0 0 60 60" fill="none">
+            <path d="M30 55 C30 55 5 38 5 22 C5 14 11 8 18 8 C22 8 26 10 30 15 C34 10 38 8 42 8 C49 8 55 14 55 22 C55 38 30 55 30 55Z" fill="white" opacity="0.9"/>
+            <path d="M30 50 L30 28" stroke="#0F5E57" stroke-width="2.5" stroke-linecap="round"/>
+            <circle cx="19" cy="33" r="4" fill="#A9CBB5" opacity="0.6"/>
+            <circle cx="41" cy="28" r="4" fill="#A9CBB5" opacity="0.6"/>
+            <circle cx="30" cy="20" r="5" fill="#A9CBB5"/>
+          </svg>
+          <text x="90" y="112" text-anchor="middle" font-family="Playfair Display,serif" font-size="20" fill="white" font-weight="600">efy care</text>
+          <text x="90" y="130" text-anchor="middle" font-family="Inter,sans-serif" font-size="6" fill="#A9CBB5" letter-spacing="2">AMBULANTE PFLEGE</text>
+          <rect x="70" y="142" width="40" height="1" fill="var(--champagner)" opacity="0.6"/>
+          <text x="90" y="158" text-anchor="middle" font-family="Playfair Display,serif" font-size="10" fill="white" font-style="italic" opacity="0.8">Pflege mit Herz</text>
+          <!-- Content area -->
+          <text x="90" y="195" text-anchor="middle" font-family="Playfair Display,serif" font-size="14" fill="#0F5E57" font-weight="600">Unsere</text>
+          <text x="90" y="212" text-anchor="middle" font-family="Playfair Display,serif" font-size="14" fill="#0F5E57" font-weight="600">Leistungen</text>
+          <!-- Service items -->
+          <circle cx="42" cy="238" r="4" fill="#A9CBB5"/>
+          <text x="52" y="241" font-family="Inter,sans-serif" font-size="7" fill="#2D3135">Grundpflege</text>
+          <circle cx="42" cy="258" r="4" fill="#A9CBB5"/>
+          <text x="52" y="261" font-family="Inter,sans-serif" font-size="7" fill="#2D3135">Behandlungspflege</text>
+          <circle cx="42" cy="278" r="4" fill="#A9CBB5"/>
+          <text x="52" y="281" font-family="Inter,sans-serif" font-size="7" fill="#2D3135">Verhinderungspflege</text>
+          <circle cx="42" cy="298" r="4" fill="#A9CBB5"/>
+          <text x="52" y="301" font-family="Inter,sans-serif" font-size="7" fill="#2D3135">Hauswirtschaft</text>
+          <circle cx="42" cy="318" r="4" fill="#A9CBB5"/>
+          <text x="52" y="321" font-family="Inter,sans-serif" font-size="7" fill="#2D3135">Beratung & Schulung</text>
+          <!-- Bottom CTA -->
+          <rect x="20" y="350" width="140" height="70" fill="#0F5E57"/>
+          <text x="90" y="372" text-anchor="middle" font-family="Inter,sans-serif" font-size="8" fill="#A9CBB5" letter-spacing="1">KONTAKTIEREN SIE UNS</text>
+          <text x="90" y="390" text-anchor="middle" font-family="Inter,sans-serif" font-size="12" fill="white" font-weight="700">030 123 456 78</text>
+          <text x="90" y="406" text-anchor="middle" font-family="Inter,sans-serif" font-size="7" fill="#A9CBB5">www.efycare.de</text>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Messestand -->
+    <div class="mockup-card" style="grid-column:1/-1;max-width:none">
+      <span class="label">Messepräsenz</span>
+      <h3>Messestand — Frontansicht</h3>
+      <div style="padding:10px 0;text-align:center">
+        <svg width="700" height="380" viewBox="0 0 700 380" style="max-width:100%">
+          <!-- Floor -->
+          <rect x="50" y="310" width="600" height="50" fill="#e8e4dd" rx="2"/>
+          <!-- Back wall -->
+          <rect x="80" y="30" width="540" height="280" fill="#0F5E57" rx="4"/>
+          <!-- Side panels -->
+          <rect x="80" y="30" width="120" height="280" fill="#0a4a44" rx="4 0 0 4"/>
+          <rect x="500" y="30" width="120" height="280" fill="#0a4a44" rx="0 4 4 0"/>
+          <!-- Main logo area -->
+          <svg x="250" y="40" width="200" height="120" viewBox="0 0 60 60" fill="none">
+            <path d="M30 55 C30 55 5 38 5 22 C5 14 11 8 18 8 C22 8 26 10 30 15 C34 10 38 8 42 8 C49 8 55 14 55 22 C55 38 30 55 30 55Z" fill="rgba(255,255,255,0.9)"/>
+            <path d="M30 50 L30 28" stroke="#0F5E57" stroke-width="2" stroke-linecap="round"/>
+            <circle cx="19" cy="33" r="4" fill="#A9CBB5" opacity="0.6"/>
+            <circle cx="41" cy="28" r="4" fill="#A9CBB5" opacity="0.6"/>
+            <circle cx="30" cy="20" r="5" fill="#A9CBB5"/>
+          </svg>
+          <text x="350" y="185" text-anchor="middle" font-family="Playfair Display,serif" font-size="36" fill="white" font-weight="600">efy care</text>
+          <text x="350" y="210" text-anchor="middle" font-family="Inter,sans-serif" font-size="10" fill="#A9CBB5" letter-spacing="4">AMBULANTE PFLEGE</text>
+          <!-- Tagline -->
+          <rect x="250" y="225" width="200" height="1" fill="#D8C29D" opacity="0.4"/>
+          <text x="350" y="250" text-anchor="middle" font-family="Playfair Display,serif" font-size="16" fill="white" font-style="italic" opacity="0.8">Pflege. Vertrauen. Nähe.</text>
+          <!-- Contact bar -->
+          <rect x="200" y="270" width="300" height="30" rx="4" fill="rgba(255,255,255,0.1)"/>
+          <text x="350" y="289" text-anchor="middle" font-family="Inter,sans-serif" font-size="10" fill="white">030 123 456 78 · info@efycare.de · www.efycare.de</text>
+          <!-- Side panel content -->
+          <text x="140" y="80" text-anchor="middle" font-family="Playfair Display,serif" font-size="11" fill="white" font-weight="600">Leistungen</text>
+          <line x1="110" y1="90" x2="170" y2="90" stroke="#D8C29D" stroke-width="1" opacity="0.4"/>
+          <text x="140" y="115" text-anchor="middle" font-family="Inter,sans-serif" font-size="8" fill="rgba(255,255,255,0.7)">Grundpflege</text>
+          <text x="140" y="135" text-anchor="middle" font-family="Inter,sans-serif" font-size="8" fill="rgba(255,255,255,0.7)">Behandlungspflege</text>
+          <text x="140" y="155" text-anchor="middle" font-family="Inter,sans-serif" font-size="8" fill="rgba(255,255,255,0.7)">Verhinderungspflege</text>
+          <text x="140" y="175" text-anchor="middle" font-family="Inter,sans-serif" font-size="8" fill="rgba(255,255,255,0.7)">Hauswirtschaft</text>
+          <text x="140" y="195" text-anchor="middle" font-family="Inter,sans-serif" font-size="8" fill="rgba(255,255,255,0.7)">Beratung</text>
+          <text x="560" y="80" text-anchor="middle" font-family="Playfair Display,serif" font-size="11" fill="white" font-weight="600">Warum efy?</text>
+          <line x1="530" y1="90" x2="590" y2="90" stroke="#D8C29D" stroke-width="1" opacity="0.4"/>
+          <text x="560" y="115" text-anchor="middle" font-family="Inter,sans-serif" font-size="8" fill="rgba(255,255,255,0.7)">24/7 Erreichbar</text>
+          <text x="560" y="135" text-anchor="middle" font-family="Inter,sans-serif" font-size="8" fill="rgba(255,255,255,0.7)">Examiniertes Team</text>
+          <text x="560" y="155" text-anchor="middle" font-family="Inter,sans-serif" font-size="8" fill="rgba(255,255,255,0.7)">Alle Kassen</text>
+          <text x="560" y="175" text-anchor="middle" font-family="Inter,sans-serif" font-size="8" fill="rgba(255,255,255,0.7)">Kostenlose Beratung</text>
+          <text x="560" y="195" text-anchor="middle" font-family="Inter,sans-serif" font-size="8" fill="rgba(255,255,255,0.7)">Mehrsprachig</text>
+          <!-- Counter -->
+          <rect x="200" y="295" width="300" height="35" rx="4" fill="white" stroke="#e0ddd8"/>
+          <rect x="200" y="295" width="300" height="4" rx="2" fill="#D8C29D"/>
+          <!-- Screens on sides -->
+          <rect x="100" y="220" width="80" height="60" rx="3" fill="#1a1e22" stroke="#333" stroke-width="1"/>
+          <text x="140" y="255" text-anchor="middle" font-family="Inter,sans-serif" font-size="7" fill="#4aaa96">Live Demo</text>
+          <rect x="520" y="220" width="80" height="60" rx="3" fill="#1a1e22" stroke="#333" stroke-width="1"/>
+          <text x="560" y="255" text-anchor="middle" font-family="Inter,sans-serif" font-size="7" fill="#4aaa96">Referenzen</text>
+          <!-- Spotlights -->
+          <circle cx="200" cy="22" r="6" fill="#D8C29D" opacity="0.3"/>
+          <circle cx="350" cy="22" r="6" fill="#D8C29D" opacity="0.3"/>
+          <circle cx="500" cy="22" r="6" fill="#D8C29D" opacity="0.3"/>
+        </svg>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════ SCRIPT ═══════════════ -->
+<script>
+function showSection(id) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-pills button').forEach(b => b.classList.remove('active'));
+  document.getElementById('sec-' + id).classList.add('active');
+  event.target.classList.add('active');
+  window.scrollTo({top: document.querySelector('.hero').offsetHeight + 64, behavior:'smooth'});
+}
+</script>
+
+</body>
+</html>

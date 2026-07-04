@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080, initial-scale=1.0">
+<title>efy care – WhatsApp Status</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  /* === Reset === */
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  /* === Brand Colors === */
+  :root {
+    --deep-emerald: #0F5E57;
+    --forest-green: #2D7A63;
+    --sage-green: #A9CBB5;
+    --warm-ivory: #F8F6F2;
+    --charcoal: #2D3135;
+    --champagner: #D8C29D;
+  }
+
+  /* === Canvas === */
+  body {
+    width: 1080px;
+    height: 1920px;
+    overflow: hidden;
+    font-family: 'Inter', sans-serif;
+    color: var(--charcoal);
+    background: linear-gradient(168deg, var(--sage-green) 0%, var(--warm-ivory) 55%, #faf9f5 100%);
+    position: relative;
+  }
+
+  /* === Organic Botanical Decorations === */
+
+  /* Top-left leaf cluster */
+  .botanical-top-left {
+    position: absolute;
+    top: -30px;
+    left: -40px;
+    width: 320px;
+    height: 320px;
+    opacity: 0.12;
+  }
+  .botanical-top-left .leaf {
+    position: absolute;
+    border-radius: 0 80% 0 80%;
+    background: var(--deep-emerald);
+  }
+  .botanical-top-left .leaf:nth-child(1) {
+    width: 180px; height: 90px;
+    top: 40px; left: 20px;
+    transform: rotate(-25deg);
+  }
+  .botanical-top-left .leaf:nth-child(2) {
+    width: 140px; height: 70px;
+    top: 100px; left: 80px;
+    transform: rotate(-50deg);
+    opacity: 0.7;
+  }
+  .botanical-top-left .leaf:nth-child(3) {
+    width: 120px; height: 55px;
+    top: 20px; left: 120px;
+    transform: rotate(10deg);
+    opacity: 0.5;
+  }
+  .botanical-top-left .leaf:nth-child(4) {
+    width: 100px; height: 48px;
+    top: 150px; left: 30px;
+    transform: rotate(-70deg);
+    opacity: 0.6;
+  }
+  .botanical-top-left .stem {
+    position: absolute;
+    width: 3px;
+    height: 160px;
+    background: var(--forest-green);
+    top: 50px;
+    left: 100px;
+    transform: rotate(-30deg);
+    transform-origin: bottom center;
+    border-radius: 2px;
+    opacity: 0.5;
+  }
+
+  /* Bottom-right leaf cluster */
+  .botanical-bottom-right {
+    position: absolute;
+    bottom: -40px;
+    right: -50px;
+    width: 350px;
+    height: 350px;
+    opacity: 0.10;
+    transform: rotate(180deg);
+  }
+  .botanical-bottom-right .leaf {
+    position: absolute;
+    border-radius: 0 80% 0 80%;
+    background: var(--deep-emerald);
+  }
+  .botanical-bottom-right .leaf:nth-child(1) {
+    width: 200px; height: 100px;
+    top: 50px; left: 30px;
+    transform: rotate(-20deg);
+  }
+  .botanical-bottom-right .leaf:nth-child(2) {
+    width: 160px; height: 75px;
+    top: 120px; left: 90px;
+    transform: rotate(-45deg);
+    opacity: 0.7;
+  }
+  .botanical-bottom-right .leaf:nth-child(3) {
+    width: 130px; height: 60px;
+    top: 30px; left: 140px;
+    transform: rotate(15deg);
+    opacity: 0.5;
+  }
+
+  /* Scattered small leaves */
+  .leaf-accent {
+    position: absolute;
+    border-radius: 0 70% 0 70%;
+    background: var(--sage-green);
+    opacity: 0.08;
+  }
+  .leaf-accent-1 {
+    width: 80px; height: 38px;
+    top: 280px; right: 60px;
+    transform: rotate(35deg);
+  }
+  .leaf-accent-2 {
+    width: 60px; height: 28px;
+    top: 1400px; left: 80px;
+    transform: rotate(-20deg);
+  }
+  .leaf-accent-3 {
+    width: 70px; height: 32px;
+    top: 800px; right: 40px;
+    transform: rotate(55deg);
+    opacity: 0.06;
+  }
+
+  /* === Subtle circle ornaments === */
+  .circle-ornament {
+    position: absolute;
+    border-radius: 50%;
+    border: 2px solid var(--champagner);
+    opacity: 0.08;
+  }
+  .circle-ornament-1 {
+    width: 400px; height: 400px;
+    top: 120px; right: -180px;
+  }
+  .circle-ornament-2 {
+    width: 300px; height: 300px;
+    bottom: 300px; left: -140px;
+  }
+  .circle-ornament-3 {
+    width: 180px; height: 180px;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    opacity: 0.05;
+    border-width: 1px;
+  }
+
+  /* === Main Content Container === */
+  .content {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 80px 70px;
+    position: relative;
+    z-index: 2;
+  }
+
+  /* === Decorative Frame === */
+  .frame {
+    position: relative;
+    width: 100%;
+    max-width: 900px;
+    padding: 100px 60px 80px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  /* Corner ornaments */
+  .frame::before,
+  .frame::after {
+    content: '';
+    position: absolute;
+    width: 120px;
+    height: 120px;
+    border-color: var(--champagner);
+    border-style: solid;
+    opacity: 0.35;
+  }
+  .frame::before {
+    top: 0; left: 0;
+    border-width: 3px 0 0 3px;
+    border-radius: 12px 0 0 0;
+  }
+  .frame::after {
+    bottom: 0; right: 0;
+    border-width: 0 3px 3px 0;
+    border-radius: 0 0 12px 0;
+  }
+
+  .frame-extra::before,
+  .frame-extra::after {
+    content: '';
+    position: absolute;
+    width: 120px;
+    height: 120px;
+    border-color: var(--champagner);
+    border-style: solid;
+    opacity: 0.35;
+  }
+  .frame-extra::before {
+    top: 0; right: 0;
+    border-width: 3px 3px 0 0;
+    border-radius: 0 12px 0 0;
+  }
+  .frame-extra::after {
+    bottom: 0; left: 0;
+    border-width: 0 0 3px 3px;
+    border-radius: 0 0 0 12px;
+  }
+
+  /* === Quote Marks === */
+  .quote-open,
+  .quote-close {
+    font-family: 'Manrope', sans-serif;
+    font-weight: 800;
+    color: var(--champagner);
+    line-height: 1;
+    opacity: 0.45;
+    user-select: none;
+  }
+  .quote-open {
+    font-size: 200px;
+    align-self: flex-start;
+    margin-left: 20px;
+    margin-bottom: -50px;
+    position: relative;
+    top: 20px;
+  }
+  .quote-close {
+    font-size: 200px;
+    align-self: flex-end;
+    margin-right: 20px;
+    margin-top: -50px;
+    position: relative;
+    bottom: 10px;
+  }
+
+  /* === Message Area === */
+  .message {
+    font-family: 'Inter', sans-serif;
+    font-weight: 300;
+    font-size: 52px;
+    line-height: 1.55;
+    color: var(--charcoal);
+    text-align: center;
+    padding: 30px 20px;
+    letter-spacing: -0.01em;
+    max-width: 780px;
+  }
+
+  /* === Divider === */
+  .divider {
+    width: 100px;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--champagner), transparent);
+    margin: 50px 0 40px;
+    opacity: 0.6;
+  }
+
+  /* === Slogan === */
+  .slogan {
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 28px;
+    color: var(--forest-green);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    opacity: 0.7;
+  }
+
+  /* === Bottom Section === */
+  .bottom-section {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 0 70px 80px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 30px;
+  }
+
+  /* === Logo === */
+  .logo {
+    font-family: 'Manrope', sans-serif;
+    font-weight: 700;
+    font-size: 58px;
+    letter-spacing: 0.02em;
+    display: flex;
+    align-items: baseline;
+    gap: 2px;
+  }
+  .logo-efy {
+    color: var(--deep-emerald);
+  }
+  .logo-heart {
+    color: var(--champagner);
+    font-size: 42px;
+    margin: 0 6px;
+    position: relative;
+    top: -2px;
+  }
+  .logo-care {
+    color: var(--forest-green);
+  }
+
+  /* === Contact === */
+  .contact {
+    display: flex;
+    align-items: center;
+    gap: 40px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 24px;
+    color: var(--charcoal);
+    opacity: 0.55;
+  }
+  .contact-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .contact-icon {
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  /* Phone icon (CSS-only) */
+  .icon-phone {
+    width: 18px;
+    height: 18px;
+    border: 2px solid var(--forest-green);
+    border-radius: 4px;
+    position: relative;
+    opacity: 0.6;
+  }
+  .icon-phone::before {
+    content: '';
+    position: absolute;
+    width: 8px;
+    height: 3px;
+    background: var(--forest-green);
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    border-radius: 1px;
+  }
+  /* Web icon (CSS-only) */
+  .icon-web {
+    width: 18px;
+    height: 18px;
+    border: 2px solid var(--forest-green);
+    border-radius: 50%;
+    position: relative;
+    opacity: 0.6;
+  }
+  .icon-web::before {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 2px;
+    background: var(--forest-green);
+    top: 50%;
+    left: 0;
+    transform: translateY(-50%);
+  }
+  .icon-web::after {
+    content: '';
+    position: absolute;
+    width: 2px;
+    height: 100%;
+    background: var(--forest-green);
+    left: 50%;
+    top: 0;
+    transform: translateX(-50%);
+  }
+
+  /* === Thin top accent line === */
+  .top-accent {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 6px;
+    background: linear-gradient(90deg,
+      transparent 5%,
+      var(--champagner) 30%,
+      var(--deep-emerald) 50%,
+      var(--champagner) 70%,
+      transparent 95%
+    );
+    opacity: 0.3;
+  }
+
+  /* === Soft inner glow === */
+  .inner-glow {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 700px;
+    height: 700px;
+    transform: translate(-50%, -60%);
+    background: radial-gradient(ellipse, rgba(248,246,242,0.6) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 1;
+  }
+</style>
+</head>
+<body>
+
+  <!-- Decorative Elements -->
+  <div class="top-accent"></div>
+  <div class="inner-glow"></div>
+
+  <!-- Botanical Decorations -->
+  <div class="botanical-top-left">
+    <div class="stem"></div>
+    <div class="leaf"></div>
+    <div class="leaf"></div>
+    <div class="leaf"></div>
+    <div class="leaf"></div>
+  </div>
+  <div class="botanical-bottom-right">
+    <div class="leaf"></div>
+    <div class="leaf"></div>
+    <div class="leaf"></div>
+  </div>
+  <div class="leaf-accent leaf-accent-1"></div>
+  <div class="leaf-accent leaf-accent-2"></div>
+  <div class="leaf-accent leaf-accent-3"></div>
+
+  <!-- Circle Ornaments -->
+  <div class="circle-ornament circle-ornament-1"></div>
+  <div class="circle-ornament circle-ornament-2"></div>
+  <div class="circle-ornament circle-ornament-3"></div>
+
+  <!-- Main Content -->
+  <div class="content">
+    <div class="frame frame-extra">
+
+      <!-- Opening Quote Mark -->
+      <span class="quote-open">&ldquo;</span>
+
+      <!-- Message Placeholder -->
+      <p class="message">Ihre Nachricht hier</p>
+
+      <!-- Closing Quote Mark -->
+      <span class="quote-close">&rdquo;</span>
+
+      <!-- Divider -->
+      <div class="divider"></div>
+
+      <!-- Slogan -->
+      <p class="slogan">Mit Herz. F&uuml;r Menschen.</p>
+
+    </div>
+  </div>
+
+  <!-- Bottom Section -->
+  <div class="bottom-section">
+
+    <!-- Logo -->
+    <div class="logo">
+      <span class="logo-efy">efy</span>
+      <span class="logo-heart">&hearts;</span>
+      <span class="logo-care">care</span>
+    </div>
+
+    <!-- Contact Info -->
+    <div class="contact">
+      <div class="contact-item">
+        <div class="contact-icon"><div class="icon-phone"></div></div>
+        <span>0800 123 4567</span>
+      </div>
+      <div class="contact-item">
+        <div class="contact-icon"><div class="icon-web"></div></div>
+        <span>www.efycare.de</span>
+      </div>
+    </div>
+
+  </div>
+
+</body>
+</html>

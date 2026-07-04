@@ -1,0 +1,2443 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>efy care — Brand Guidelines</title>
+<style>
+/* ══════════════════════════════════════════════════════════════
+   efy care — Corporate Design Manual
+   Version 1.0 · Juli 2026
+   ══════════════════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&family=Manrope:wght@200;300;400;500;600;700;800&display=swap');
+
+/* ── Tokens ────────────────────────────────────────────────── */
+:root {
+  --deep-emerald: #0F5E57;
+  --forest-green: #2D7A63;
+  --sage-green: #A9CBB5;
+  --warm-ivory: #F8F6F2;
+  --charcoal: #2D3135;
+  --champagner: #D8C29D;
+  --white: #FFFFFF;
+  --light-border: #E8E4DE;
+  --font-primary: 'Inter', 'Manrope', -apple-system, sans-serif;
+  --font-display: 'Manrope', 'Inter', sans-serif;
+}
+
+/* ── Reset & Base ──────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--font-primary);
+  color: var(--charcoal);
+  background: var(--white);
+  line-height: 1.7;
+}
+
+/* ── Print ─────────────────────────────────────────────────── */
+@media print {
+  .toc-nav, .page-break-avoid { break-inside: avoid; }
+  section { page-break-before: always; }
+  .hero-section { page-break-before: avoid; }
+  body { font-size: 11pt; }
+  .sidebar { display: none; }
+}
+
+/* ── Layout ────────────────────────────────────────────────── */
+.sidebar {
+  position: fixed;
+  top: 0; left: 0;
+  width: 280px;
+  height: 100vh;
+  background: var(--charcoal);
+  color: var(--white);
+  padding: 40px 0;
+  overflow-y: auto;
+  z-index: 100;
+  transition: transform 0.3s ease;
+}
+
+.sidebar-logo {
+  padding: 0 32px 32px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  margin-bottom: 24px;
+}
+
+.sidebar-logo .efy { font-family: var(--font-display); font-weight: 200; font-size: 28px; letter-spacing: 0.02em; color: var(--sage-green); }
+.sidebar-logo .care { font-family: var(--font-display); font-weight: 700; font-size: 28px; letter-spacing: 0.12em; color: var(--white); }
+.sidebar-logo .subtitle { font-size: 10px; text-transform: uppercase; letter-spacing: 0.3em; color: rgba(255,255,255,0.35); margin-top: 8px; display: block; }
+
+.sidebar nav { padding: 0 20px; }
+.sidebar nav a {
+  display: block;
+  padding: 10px 12px;
+  color: rgba(255,255,255,0.5);
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  border-radius: 8px;
+  transition: all 0.2s;
+  margin-bottom: 2px;
+}
+.sidebar nav a:hover, .sidebar nav a.active {
+  color: var(--white);
+  background: rgba(255,255,255,0.06);
+}
+.sidebar nav a .nav-num {
+  display: inline-block;
+  width: 24px;
+  font-size: 11px;
+  color: var(--sage-green);
+  font-weight: 600;
+}
+
+.main-content {
+  margin-left: 280px;
+  min-height: 100vh;
+}
+
+/* ── Sections ──────────────────────────────────────────────── */
+section {
+  padding: 80px 80px 100px;
+  max-width: 1200px;
+}
+
+section + section {
+  border-top: 1px solid var(--light-border);
+}
+
+.section-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.25em;
+  color: var(--forest-green);
+  margin-bottom: 12px;
+}
+
+.section-title {
+  font-family: var(--font-display);
+  font-size: 42px;
+  font-weight: 800;
+  color: var(--charcoal);
+  line-height: 1.15;
+  margin-bottom: 24px;
+  letter-spacing: -0.02em;
+}
+
+.section-intro {
+  font-size: 18px;
+  color: #5A5F65;
+  max-width: 680px;
+  line-height: 1.8;
+  margin-bottom: 56px;
+}
+
+/* ── Hero ──────────────────────────────────────────────────── */
+.hero-section {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  background: var(--deep-emerald);
+  color: var(--white);
+  padding: 80px 40px;
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-section::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -30%;
+  width: 800px;
+  height: 800px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(169,203,181,0.08) 0%, transparent 70%);
+}
+
+.hero-section::after {
+  content: '';
+  position: absolute;
+  bottom: -40%;
+  left: -20%;
+  width: 600px;
+  height: 600px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(216,194,157,0.06) 0%, transparent 70%);
+}
+
+.hero-logo {
+  position: relative;
+  z-index: 1;
+  margin-bottom: 32px;
+}
+
+.hero-logo .efy {
+  font-family: var(--font-display);
+  font-weight: 200;
+  font-size: 96px;
+  letter-spacing: 0.02em;
+  color: var(--white);
+}
+
+.hero-logo .care {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 96px;
+  letter-spacing: 0.18em;
+  color: var(--sage-green);
+  margin-left: 16px;
+}
+
+.hero-slogan {
+  position: relative;
+  z-index: 1;
+  font-size: 20px;
+  font-weight: 300;
+  letter-spacing: 0.25em;
+  text-transform: lowercase;
+  color: var(--champagner);
+  margin-bottom: 64px;
+}
+
+.hero-meta {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  gap: 48px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: rgba(255,255,255,0.35);
+}
+
+.hero-divider {
+  width: 48px;
+  height: 1px;
+  background: var(--champagner);
+  margin: 0 auto 64px;
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Subsections ───────────────────────────────────────────── */
+.subsection {
+  margin-bottom: 64px;
+}
+
+.subsection-title {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--charcoal);
+  margin-bottom: 20px;
+  letter-spacing: -0.01em;
+}
+
+.subsection p, .subsection li {
+  font-size: 15px;
+  color: #5A5F65;
+  line-height: 1.8;
+}
+
+/* ── Cards / Grids ─────────────────────────────────────────── */
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; }
+.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px; }
+.grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 20px; }
+
+.card {
+  background: var(--warm-ivory);
+  border-radius: 16px;
+  padding: 32px;
+  border: 1px solid var(--light-border);
+}
+
+.card-alt {
+  background: var(--white);
+  border: 1px solid var(--light-border);
+  border-radius: 16px;
+  padding: 32px;
+}
+
+.card-dark {
+  background: var(--charcoal);
+  border-radius: 16px;
+  padding: 32px;
+  color: var(--white);
+}
+
+.card-emerald {
+  background: var(--deep-emerald);
+  border-radius: 16px;
+  padding: 32px;
+  color: var(--white);
+}
+
+/* ── Value Cards ───────────────────────────────────────────── */
+.value-card {
+  background: var(--white);
+  border: 1px solid var(--light-border);
+  border-radius: 16px;
+  padding: 28px;
+  text-align: center;
+  transition: all 0.3s;
+}
+
+.value-card:hover {
+  border-color: var(--sage-green);
+  box-shadow: 0 8px 32px rgba(15,94,87,0.08);
+  transform: translateY(-2px);
+}
+
+.value-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--deep-emerald), var(--forest-green));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 16px;
+  font-size: 20px;
+}
+
+.value-card h4 {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--charcoal);
+  margin-bottom: 8px;
+  letter-spacing: 0.01em;
+}
+
+.value-card p {
+  font-size: 13px;
+  color: #7A7F85;
+  line-height: 1.6;
+}
+
+/* ── Color Swatches ────────────────────────────────────────── */
+.swatch-group {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  margin-bottom: 48px;
+}
+
+.swatch {
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid var(--light-border);
+  background: var(--white);
+}
+
+.swatch-color {
+  height: 140px;
+  display: flex;
+  align-items: flex-end;
+  padding: 16px 20px;
+}
+
+.swatch-color span {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+
+.swatch-info {
+  padding: 20px;
+}
+
+.swatch-info h4 {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--charcoal);
+  margin-bottom: 12px;
+}
+
+.swatch-info .color-values {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.swatch-info .color-val {
+  font-size: 12px;
+  color: #7A7F85;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  display: flex;
+  justify-content: space-between;
+}
+
+.swatch-info .color-val span:first-child {
+  font-weight: 600;
+  color: #5A5F65;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-family: var(--font-primary);
+  font-size: 10px;
+}
+
+/* ── Logo Display ──────────────────────────────────────────── */
+.logo-display {
+  border-radius: 20px;
+  padding: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 32px;
+  position: relative;
+}
+
+.logo-display .logo-text {
+  font-family: var(--font-display);
+  font-size: 56px;
+  user-select: none;
+}
+
+.logo-display .logo-text .efy {
+  font-weight: 200;
+  letter-spacing: 0.02em;
+}
+
+.logo-display .logo-text .care {
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  margin-left: 12px;
+}
+
+/* ── Clearspace / Safety Zone ──────────────────────────────── */
+.clearspace-demo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 80px;
+  background: var(--warm-ivory);
+  border-radius: 20px;
+  position: relative;
+  margin-bottom: 32px;
+}
+
+.clearspace-box {
+  border: 2px dashed var(--sage-green);
+  padding: 48px 64px;
+  position: relative;
+}
+
+.clearspace-box .logo-text {
+  font-family: var(--font-display);
+  font-size: 40px;
+}
+
+.clearspace-box .logo-text .efy { font-weight: 200; color: var(--deep-emerald); }
+.clearspace-box .logo-text .care { font-weight: 700; letter-spacing: 0.15em; margin-left: 10px; color: var(--deep-emerald); }
+
+.clearspace-marker {
+  position: absolute;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--forest-green);
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+}
+
+.clearspace-marker.top { top: 14px; left: 50%; transform: translateX(-50%); }
+.clearspace-marker.bottom { bottom: 14px; left: 50%; transform: translateX(-50%); }
+.clearspace-marker.left { left: 14px; top: 50%; transform: translateY(-50%) rotate(-90deg); }
+.clearspace-marker.right { right: 14px; top: 50%; transform: translateY(-50%) rotate(90deg); }
+
+/* ── Do / Don't ────────────────────────────────────────────── */
+.dos-donts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-top: 32px;
+}
+
+.do-item, .dont-item {
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid var(--light-border);
+}
+
+.do-item .example-display, .dont-item .example-display {
+  height: 180px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.do-item .example-display { background: var(--warm-ivory); }
+.dont-item .example-display { background: #FBF5F5; }
+
+.do-item .example-label, .dont-item .example-label {
+  padding: 16px 20px;
+  font-size: 13px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.do-item .example-label {
+  color: var(--forest-green);
+  border-top: 2px solid var(--forest-green);
+}
+
+.dont-item .example-label {
+  color: #C0392B;
+  border-top: 2px solid #C0392B;
+}
+
+.check-icon { color: var(--forest-green); font-size: 18px; }
+.cross-icon { color: #C0392B; font-size: 18px; }
+
+.dont-item .example-display::after {
+  content: '';
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  bottom: 12px;
+  left: 12px;
+  border: 2px solid rgba(192,57,43,0.15);
+  border-radius: 8px;
+}
+
+/* ── Typography Specimens ──────────────────────────────────── */
+.type-specimen {
+  padding: 40px;
+  background: var(--warm-ivory);
+  border-radius: 16px;
+  margin-bottom: 16px;
+}
+
+.type-specimen .specimen-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: var(--forest-green);
+  margin-bottom: 12px;
+}
+
+.type-hierarchy {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.type-row {
+  display: grid;
+  grid-template-columns: 100px 1fr 200px;
+  align-items: baseline;
+  padding: 20px 0;
+  border-bottom: 1px solid var(--light-border);
+}
+
+.type-row:last-child { border-bottom: none; }
+
+.type-row .level {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--forest-green);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.type-row .specs {
+  font-size: 11px;
+  color: #999;
+  text-align: right;
+  font-family: 'SF Mono', monospace;
+}
+
+/* ── Application Mockups ───────────────────────────────────── */
+.mockup-frame {
+  background: var(--warm-ivory);
+  border-radius: 20px;
+  padding: 48px;
+  margin-bottom: 32px;
+  border: 1px solid var(--light-border);
+}
+
+.business-card {
+  width: 380px;
+  height: 220px;
+  background: var(--white);
+  border-radius: 12px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+  overflow: hidden;
+  margin: 0 auto;
+}
+
+.business-card::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--deep-emerald), var(--forest-green), var(--sage-green));
+}
+
+.business-card .bc-logo .efy { font-family: var(--font-display); font-weight: 200; font-size: 22px; color: var(--deep-emerald); }
+.business-card .bc-logo .care { font-family: var(--font-display); font-weight: 700; font-size: 22px; letter-spacing: 0.12em; color: var(--deep-emerald); margin-left: 6px; }
+
+.business-card .bc-info { font-size: 11px; color: #7A7F85; line-height: 1.7; }
+.business-card .bc-name { font-size: 14px; font-weight: 600; color: var(--charcoal); margin-bottom: 2px; }
+.business-card .bc-role { font-size: 11px; color: var(--forest-green); font-weight: 500; margin-bottom: 12px; }
+
+.business-card-back {
+  width: 380px;
+  height: 220px;
+  background: var(--deep-emerald);
+  border-radius: 12px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+}
+
+.business-card-back .efy { font-family: var(--font-display); font-weight: 200; font-size: 32px; color: var(--white); }
+.business-card-back .care { font-family: var(--font-display); font-weight: 700; font-size: 32px; letter-spacing: 0.15em; color: var(--sage-green); margin-left: 10px; }
+
+/* ── Letterhead ────────────────────────────────────────────── */
+.letterhead-mockup {
+  width: 480px;
+  min-height: 640px;
+  background: var(--white);
+  border-radius: 4px;
+  box-shadow: 0 4px 32px rgba(0,0,0,0.08);
+  padding: 48px 48px 32px;
+  margin: 0 auto;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.letterhead-mockup::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--deep-emerald), var(--forest-green));
+}
+
+.letterhead-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 48px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--light-border);
+}
+
+.letterhead-header .efy { font-family: var(--font-display); font-weight: 200; font-size: 24px; color: var(--deep-emerald); }
+.letterhead-header .care { font-family: var(--font-display); font-weight: 700; font-size: 24px; letter-spacing: 0.12em; color: var(--deep-emerald); margin-left: 6px; }
+.letterhead-address { font-size: 9px; color: #999; line-height: 1.7; text-align: right; }
+
+.letterhead-body {
+  flex: 1;
+}
+
+.letterhead-body .placeholder-line {
+  height: 8px;
+  background: #E8E4DE;
+  border-radius: 4px;
+  margin-bottom: 10px;
+}
+
+.letterhead-body .placeholder-line:nth-child(3n) { width: 75%; }
+.letterhead-body .placeholder-line:nth-child(5n) { width: 60%; }
+.letterhead-body .placeholder-line:last-child { width: 40%; }
+
+.letterhead-footer {
+  margin-top: 48px;
+  padding-top: 16px;
+  border-top: 1px solid var(--light-border);
+  font-size: 8px;
+  color: #BBB;
+  display: flex;
+  justify-content: space-between;
+}
+
+/* ── Email Signature ───────────────────────────────────────── */
+.email-sig {
+  max-width: 440px;
+  padding: 20px 0;
+  border-top: 2px solid var(--deep-emerald);
+  margin: 0 auto;
+}
+
+.email-sig .sig-name { font-size: 15px; font-weight: 700; color: var(--charcoal); margin-bottom: 2px; }
+.email-sig .sig-role { font-size: 12px; color: var(--forest-green); font-weight: 500; margin-bottom: 12px; }
+.email-sig .sig-logo { margin-bottom: 12px; }
+.email-sig .sig-logo .efy { font-family: var(--font-display); font-weight: 200; font-size: 18px; color: var(--deep-emerald); }
+.email-sig .sig-logo .care { font-family: var(--font-display); font-weight: 700; font-size: 18px; letter-spacing: 0.1em; color: var(--deep-emerald); margin-left: 4px; }
+.email-sig .sig-contact { font-size: 11px; color: #7A7F85; line-height: 1.8; }
+.email-sig .sig-slogan { font-size: 10px; color: var(--champagner); font-style: italic; margin-top: 8px; letter-spacing: 0.05em; }
+
+/* ── Social Media ──────────────────────────────────────────── */
+.social-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+
+.social-mockup {
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid var(--light-border);
+  background: var(--white);
+}
+
+.social-mockup .social-header {
+  height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.social-mockup .social-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--deep-emerald);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 20px;
+  color: var(--white);
+  margin: -32px auto 0;
+  position: relative;
+  z-index: 1;
+  border: 3px solid var(--white);
+}
+
+.social-mockup .social-info {
+  text-align: center;
+  padding: 16px 20px 24px;
+}
+
+.social-mockup .social-info h4 { font-size: 14px; font-weight: 700; color: var(--charcoal); margin-top: 8px; }
+.social-mockup .social-info p { font-size: 11px; color: #999; }
+
+/* ── App Icon ──────────────────────────────────────────────── */
+.app-icons { display: flex; gap: 32px; align-items: flex-end; }
+
+.app-icon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.app-icon-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(145deg, var(--deep-emerald) 0%, var(--forest-green) 100%);
+  color: var(--white);
+  font-family: var(--font-display);
+}
+
+.app-icon-box.xl { width: 120px; height: 120px; border-radius: 28px; font-size: 36px; box-shadow: 0 8px 32px rgba(15,94,87,0.25); }
+.app-icon-box.lg { width: 80px; height: 80px; border-radius: 18px; font-size: 24px; box-shadow: 0 4px 16px rgba(15,94,87,0.2); }
+.app-icon-box.md { width: 56px; height: 56px; border-radius: 14px; font-size: 18px; }
+.app-icon-box.sm { width: 40px; height: 40px; border-radius: 10px; font-size: 14px; }
+
+.app-icon-box .efy { font-weight: 200; }
+.app-icon-box .care { font-weight: 700; letter-spacing: 0.08em; margin-left: 3px; }
+
+.app-icon-label { font-size: 11px; color: #999; }
+
+/* ── Vehicle ───────────────────────────────────────────────── */
+.vehicle-mockup {
+  background: #F0F0F0;
+  border-radius: 20px;
+  padding: 48px;
+  position: relative;
+  overflow: hidden;
+}
+
+.vehicle-body {
+  width: 600px;
+  height: 200px;
+  background: var(--white);
+  border-radius: 8px 60px 8px 8px;
+  margin: 0 auto;
+  position: relative;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.vehicle-body .efy { font-family: var(--font-display); font-weight: 200; font-size: 48px; color: var(--deep-emerald); }
+.vehicle-body .care { font-family: var(--font-display); font-weight: 700; font-size: 48px; letter-spacing: 0.15em; color: var(--deep-emerald); }
+.vehicle-body .slogan { position: absolute; bottom: 32px; font-size: 14px; color: var(--forest-green); letter-spacing: 0.15em; font-weight: 300; }
+.vehicle-body .web { position: absolute; bottom: 16px; right: 32px; font-size: 10px; color: #999; }
+
+.vehicle-wheel {
+  width: 48px;
+  height: 48px;
+  background: var(--charcoal);
+  border-radius: 50%;
+  position: absolute;
+  bottom: -24px;
+  border: 6px solid #888;
+}
+
+.vehicle-wheel.left { left: 80px; }
+.vehicle-wheel.right { right: 120px; }
+
+/* ── Tables ────────────────────────────────────────────────── */
+.spec-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 24px 0;
+}
+
+.spec-table th {
+  text-align: left;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--forest-green);
+  padding: 12px 16px;
+  border-bottom: 2px solid var(--deep-emerald);
+}
+
+.spec-table td {
+  padding: 14px 16px;
+  font-size: 14px;
+  color: #5A5F65;
+  border-bottom: 1px solid var(--light-border);
+}
+
+.spec-table td:first-child { font-weight: 600; color: var(--charcoal); }
+
+/* ── Proportion Bar ────────────────────────────────────────── */
+.proportion-bar {
+  display: flex;
+  height: 48px;
+  border-radius: 12px;
+  overflow: hidden;
+  margin: 24px 0;
+}
+
+.proportion-bar .seg {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
+/* ── Icon Grid ─────────────────────────────────────────────── */
+.icon-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 24px;
+  margin: 32px 0;
+}
+
+.icon-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 24px 16px;
+  background: var(--warm-ivory);
+  border-radius: 12px;
+}
+
+.icon-item svg {
+  width: 32px;
+  height: 32px;
+  stroke: var(--deep-emerald);
+  stroke-width: 2;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.icon-item span {
+  font-size: 11px;
+  color: #7A7F85;
+  text-align: center;
+}
+
+/* ── Tone of Voice ─────────────────────────────────────────── */
+.tone-comparison {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+.tone-do, .tone-dont {
+  border-radius: 16px;
+  padding: 28px;
+}
+
+.tone-do {
+  background: rgba(45,122,99,0.04);
+  border: 1px solid rgba(45,122,99,0.15);
+}
+
+.tone-dont {
+  background: rgba(192,57,43,0.03);
+  border: 1px solid rgba(192,57,43,0.12);
+}
+
+.tone-do h4, .tone-dont h4 {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  margin-bottom: 16px;
+}
+
+.tone-do h4 { color: var(--forest-green); }
+.tone-dont h4 { color: #C0392B; }
+
+.tone-do blockquote, .tone-dont blockquote {
+  font-size: 14px;
+  line-height: 1.8;
+  font-style: italic;
+  color: #5A5F65;
+  padding-left: 16px;
+  border-left: 3px solid;
+  margin: 12px 0;
+}
+
+.tone-do blockquote { border-color: var(--forest-green); }
+.tone-dont blockquote { border-color: #C0392B; }
+
+/* ── WCAG Contrast ─────────────────────────────────────────── */
+.contrast-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin: 24px 0;
+}
+
+.contrast-cell {
+  border-radius: 12px;
+  padding: 24px;
+  text-align: center;
+}
+
+.contrast-cell .ratio {
+  font-size: 24px;
+  font-weight: 800;
+  margin-bottom: 4px;
+}
+
+.contrast-cell .result {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 8px;
+}
+
+.contrast-cell .combo {
+  font-size: 10px;
+  opacity: 0.7;
+}
+
+.pass { color: var(--forest-green); }
+.fail { color: #C0392B; }
+
+/* ── Forbidden Colors ──────────────────────────────────────── */
+.forbidden-colors {
+  display: flex;
+  gap: 16px;
+  margin: 20px 0;
+}
+
+.forbidden-swatch {
+  width: 56px;
+  height: 56px;
+  border-radius: 12px;
+  position: relative;
+  border: 1px solid var(--light-border);
+}
+
+.forbidden-swatch::after {
+  content: '✕';
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  color: #C0392B;
+  font-weight: 700;
+}
+
+/* ── Photo Style ───────────────────────────────────────────── */
+.photo-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  grid-template-rows: 200px 200px;
+  gap: 16px;
+  margin: 32px 0;
+}
+
+.photo-placeholder {
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--white);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  position: relative;
+  overflow: hidden;
+}
+
+.photo-placeholder::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0.15;
+  background: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,0.1) 10px, rgba(255,255,255,0.1) 20px);
+}
+
+.photo-placeholder:nth-child(1) { grid-row: 1 / 3; background: var(--deep-emerald); }
+.photo-placeholder:nth-child(2) { background: var(--forest-green); }
+.photo-placeholder:nth-child(3) { background: var(--sage-green); color: var(--charcoal); }
+.photo-placeholder:nth-child(4) { background: var(--champagner); color: var(--charcoal); }
+.photo-placeholder:nth-child(5) { background: var(--charcoal); }
+
+/* ── Utilities ─────────────────────────────────────────────── */
+.mt-0 { margin-top: 0; }
+.mt-16 { margin-top: 16px; }
+.mt-24 { margin-top: 24px; }
+.mt-32 { margin-top: 32px; }
+.mt-48 { margin-top: 48px; }
+.mb-0 { margin-bottom: 0; }
+.mb-8 { margin-bottom: 8px; }
+.mb-16 { margin-bottom: 16px; }
+.mb-24 { margin-bottom: 24px; }
+.mb-32 { margin-bottom: 32px; }
+.mb-48 { margin-bottom: 48px; }
+.text-center { text-align: center; }
+.text-small { font-size: 13px; color: #7A7F85; }
+.text-mono { font-family: 'SF Mono', 'Fira Code', monospace; }
+.flex-center { display: flex; align-items: center; justify-content: center; }
+.gap-16 { gap: 16px; }
+.gap-24 { gap: 24px; }
+
+.tag {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+
+.tag-emerald { background: rgba(15,94,87,0.08); color: var(--deep-emerald); }
+.tag-champagner { background: rgba(216,194,157,0.2); color: #8B7340; }
+
+.note-box {
+  background: rgba(15,94,87,0.04);
+  border-left: 3px solid var(--deep-emerald);
+  padding: 20px 24px;
+  border-radius: 0 12px 12px 0;
+  font-size: 14px;
+  color: #5A5F65;
+  margin: 24px 0;
+  line-height: 1.7;
+}
+
+.note-box strong { color: var(--deep-emerald); }
+
+.divider {
+  height: 1px;
+  background: var(--light-border);
+  margin: 48px 0;
+}
+
+/* ── Responsive ────────────────────────────────────────────── */
+@media (max-width: 1024px) {
+  .sidebar { transform: translateX(-100%); }
+  .main-content { margin-left: 0; }
+  section { padding: 48px 32px 64px; }
+  .grid-3 { grid-template-columns: 1fr 1fr; }
+  .grid-4 { grid-template-columns: 1fr 1fr; }
+  .swatch-group { grid-template-columns: 1fr 1fr; }
+  .hero-logo .efy, .hero-logo .care { font-size: 56px; }
+}
+
+/* ── Footer ────────────────────────────────────────────────── */
+.doc-footer {
+  padding: 48px 80px;
+  background: var(--charcoal);
+  color: rgba(255,255,255,0.4);
+  font-size: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.doc-footer .footer-logo .efy { font-family: var(--font-display); font-weight: 200; color: rgba(255,255,255,0.5); }
+.doc-footer .footer-logo .care { font-family: var(--font-display); font-weight: 700; letter-spacing: 0.1em; color: rgba(255,255,255,0.5); margin-left: 4px; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════
+     SIDEBAR NAVIGATION
+     ═══════════════════════════════════════════════════════════ -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <span class="efy">efy</span><span class="care"> care</span>
+    <span class="subtitle">Brand Guidelines</span>
+  </div>
+  <nav>
+    <a href="#hero"><span class="nav-num">00</span> Cover</a>
+    <a href="#identity"><span class="nav-num">01</span> Markenidentität</a>
+    <a href="#logo"><span class="nav-num">02</span> Logo</a>
+    <a href="#colors"><span class="nav-num">03</span> Farben</a>
+    <a href="#typography"><span class="nav-num">04</span> Typografie</a>
+    <a href="#imagery"><span class="nav-num">05</span> Bildsprache</a>
+    <a href="#applications"><span class="nav-num">06</span> Anwendungen</a>
+    <a href="#tone"><span class="nav-num">07</span> Sprache &amp; Ton</a>
+    <a href="#dos-donts"><span class="nav-num">08</span> Do's &amp; Don'ts</a>
+  </nav>
+</aside>
+
+<!-- ═══════════════════════════════════════════════════════════
+     MAIN CONTENT
+     ═══════════════════════════════════════════════════════════ -->
+<div class="main-content">
+
+  <!-- ── HERO / COVER ──────────────────────────────────────── -->
+  <section class="hero-section" id="hero">
+    <div class="hero-logo">
+      <span class="efy">efy</span><span class="care">care</span>
+    </div>
+    <div class="hero-divider"></div>
+    <div class="hero-slogan">mit herz. für menschen.</div>
+    <div class="hero-meta">
+      <span>Brand Guidelines</span>
+      <span>Version 1.0</span>
+      <span>Juli 2026</span>
+    </div>
+  </section>
+
+  <!-- ── 01 MARKENIDENTITÄT ────────────────────────────────── -->
+  <section id="identity">
+    <div class="section-label">01 — Markenidentität</div>
+    <h2 class="section-title">Wer wir sind</h2>
+    <p class="section-intro">
+      efy care steht für eine neue Generation der Alltagsbegleitung und Pflege —
+      menschlich, modern und mit dem Anspruch, jedem Menschen ein würdevolles
+      und selbstbestimmtes Leben zu ermöglichen.
+    </p>
+
+    <!-- Vision & Mission -->
+    <div class="subsection">
+      <div class="grid-2">
+        <div class="card-emerald">
+          <h3 style="font-size:12px;text-transform:uppercase;letter-spacing:0.2em;opacity:0.6;margin-bottom:16px;">Vision</h3>
+          <p style="font-size:20px;font-weight:300;line-height:1.6;color:var(--white);">
+            Eine Welt, in der jeder Mensch — unabhängig von Alter oder Gesundheitszustand —
+            mit Würde, Liebe und Geborgenheit begleitet wird.
+          </p>
+        </div>
+        <div class="card-emerald" style="background:var(--forest-green);">
+          <h3 style="font-size:12px;text-transform:uppercase;letter-spacing:0.2em;opacity:0.6;margin-bottom:16px;">Mission</h3>
+          <p style="font-size:20px;font-weight:300;line-height:1.6;color:var(--white);">
+            Wir verbinden Fürsorge mit Innovation und schaffen Alltagsbegleitung,
+            die sich wie Familie anfühlt — verlässlich, warmherzig und auf Augenhöhe.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Markenwerte -->
+    <div class="subsection">
+      <h3 class="subsection-title">Markenwerte</h3>
+      <p class="text-small mb-24">Die Werte von efy care bilden das Fundament jeder Entscheidung — von der Kommunikation bis zur Dienstleistung.</p>
+      <div class="grid-4">
+        <div class="value-card">
+          <div class="value-icon">♡</div>
+          <h4>Vertrauen</h4>
+          <p>Zuverlässigkeit als Grundpfeiler jeder Beziehung</p>
+        </div>
+        <div class="value-card">
+          <div class="value-icon">🏠</div>
+          <h4>Geborgenheit</h4>
+          <p>Sicherheit und Wärme in jeder Begegnung</p>
+        </div>
+        <div class="value-card">
+          <div class="value-icon">👨‍👩‍👧</div>
+          <h4>Familie</h4>
+          <p>Betreuung, die sich wie Zuhause anfühlt</p>
+        </div>
+        <div class="value-card">
+          <div class="value-icon">❤</div>
+          <h4>Liebe</h4>
+          <p>Herzlichkeit in allem was wir tun</p>
+        </div>
+        <div class="value-card">
+          <div class="value-icon">✦</div>
+          <h4>Würde</h4>
+          <p>Respekt und Selbstbestimmung bewahren</p>
+        </div>
+        <div class="value-card">
+          <div class="value-icon">☀</div>
+          <h4>Hoffnung</h4>
+          <p>Zuversicht schenken und Perspektiven eröffnen</p>
+        </div>
+        <div class="value-card">
+          <div class="value-icon">+</div>
+          <h4>Gesundheit</h4>
+          <p>Ganzheitliches Wohlbefinden fördern</p>
+        </div>
+        <div class="value-card">
+          <div class="value-icon">◎</div>
+          <h4>Fürsorge</h4>
+          <p>Aufmerksame und einfühlsame Begleitung</p>
+        </div>
+        <div class="value-card">
+          <div class="value-icon">∞</div>
+          <h4>Menschlichkeit</h4>
+          <p>Der Mensch steht immer im Mittelpunkt</p>
+        </div>
+        <div class="value-card">
+          <div class="value-icon">◆</div>
+          <h4>Premium</h4>
+          <p>Höchste Qualität in Service und Auftreten</p>
+        </div>
+        <div class="value-card">
+          <div class="value-icon">△</div>
+          <h4>Modern</h4>
+          <p>Innovation trifft Tradition</p>
+        </div>
+        <div class="value-card">
+          <div class="value-icon">⬡</div>
+          <h4>Zeitlos</h4>
+          <p>Beständige Werte, zeitgemäßer Ausdruck</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Zielgruppen -->
+    <div class="subsection">
+      <h3 class="subsection-title">Zielgruppen</h3>
+      <div class="grid-3">
+        <div class="card">
+          <h4 style="font-size:13px;font-weight:700;color:var(--deep-emerald);margin-bottom:12px;text-transform:uppercase;letter-spacing:0.1em;">Primär</h4>
+          <p class="text-small">Senioren und pflegebedürftige Menschen, die eine würdevolle und liebevolle Alltagsbegleitung suchen.</p>
+        </div>
+        <div class="card">
+          <h4 style="font-size:13px;font-weight:700;color:var(--deep-emerald);margin-bottom:12px;text-transform:uppercase;letter-spacing:0.1em;">Angehörige</h4>
+          <p class="text-small">Familien und Angehörige, die professionelle Unterstützung für ihre Liebsten benötigen und Entlastung suchen.</p>
+        </div>
+        <div class="card">
+          <h4 style="font-size:13px;font-weight:700;color:var(--deep-emerald);margin-bottom:12px;text-transform:uppercase;letter-spacing:0.1em;">B2B-Partner</h4>
+          <p class="text-small">Krankenhäuser, Ärzte, Pflegekräfte, Betreuungsdienste und Krankenkassen als Kooperationspartner.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 02 LOGO ───────────────────────────────────────────── -->
+  <section id="logo">
+    <div class="section-label">02 — Logo</div>
+    <h2 class="section-title">Unser Zeichen</h2>
+    <p class="section-intro">
+      Das Wortzeichen von efy care ist die zentrale visuelle Identität der Marke.
+      Es vereint Leichtigkeit und Stärke — „efy" in einem dünnen Schriftschnitt symbolisiert
+      Sanftheit und Zugänglichkeit, „care" in fettem Schnitt steht für Verlässlichkeit und Kompetenz.
+    </p>
+
+    <!-- Primary Logo -->
+    <div class="subsection">
+      <h3 class="subsection-title">Primäre Logoversion</h3>
+      <div class="logo-display" style="background:var(--warm-ivory);">
+        <div class="logo-text">
+          <span class="efy" style="color:var(--deep-emerald);">efy</span>
+          <span class="care" style="color:var(--deep-emerald);">care</span>
+        </div>
+      </div>
+      <div class="note-box">
+        <strong>Logo-Aufbau:</strong> Das Logo besteht ausschließlich aus dem Wortzeichen in Kleinschreibung.
+        „efy" wird in Manrope Light (200) gesetzt, „care" in Manrope Bold (700) mit erweiterter Laufweite (0.15em).
+        Der Abstand zwischen den Wortteilen beträgt genau die Breite des Buchstabens „e".
+      </div>
+    </div>
+
+    <!-- Logo Variants -->
+    <div class="subsection">
+      <h3 class="subsection-title">Logovarianten</h3>
+      <div class="grid-3 mb-32">
+        <!-- Positive on light -->
+        <div>
+          <div class="logo-display" style="background:var(--warm-ivory);padding:40px;border:1px solid var(--light-border);">
+            <div class="logo-text" style="font-size:32px;">
+              <span class="efy" style="color:var(--deep-emerald);">efy</span>
+              <span class="care" style="color:var(--deep-emerald);">care</span>
+            </div>
+          </div>
+          <p class="text-small text-center mt-16">Positiv auf hellem Grund</p>
+        </div>
+        <!-- Negative on dark -->
+        <div>
+          <div class="logo-display" style="background:var(--deep-emerald);padding:40px;">
+            <div class="logo-text" style="font-size:32px;">
+              <span class="efy" style="color:var(--white);">efy</span>
+              <span class="care" style="color:var(--sage-green);">care</span>
+            </div>
+          </div>
+          <p class="text-small text-center mt-16">Negativ auf dunklem Grund</p>
+        </div>
+        <!-- Monochrome -->
+        <div>
+          <div class="logo-display" style="background:var(--white);padding:40px;border:1px solid var(--light-border);">
+            <div class="logo-text" style="font-size:32px;">
+              <span class="efy" style="color:var(--charcoal);">efy</span>
+              <span class="care" style="color:var(--charcoal);">care</span>
+            </div>
+          </div>
+          <p class="text-small text-center mt-16">Monochrom</p>
+        </div>
+      </div>
+      <div class="grid-3">
+        <!-- White on charcoal -->
+        <div>
+          <div class="logo-display" style="background:var(--charcoal);padding:40px;">
+            <div class="logo-text" style="font-size:32px;">
+              <span class="efy" style="color:var(--white);">efy</span>
+              <span class="care" style="color:var(--white);">care</span>
+            </div>
+          </div>
+          <p class="text-small text-center mt-16">Weiß auf Charcoal</p>
+        </div>
+        <!-- Forest Green -->
+        <div>
+          <div class="logo-display" style="background:var(--sage-green);padding:40px;">
+            <div class="logo-text" style="font-size:32px;">
+              <span class="efy" style="color:var(--deep-emerald);">efy</span>
+              <span class="care" style="color:var(--deep-emerald);">care</span>
+            </div>
+          </div>
+          <p class="text-small text-center mt-16">Auf Sage Green</p>
+        </div>
+        <!-- With slogan -->
+        <div>
+          <div class="logo-display" style="background:var(--warm-ivory);padding:40px;border:1px solid var(--light-border);flex-direction:column;gap:8px;">
+            <div class="logo-text" style="font-size:32px;">
+              <span class="efy" style="color:var(--deep-emerald);">efy</span>
+              <span class="care" style="color:var(--deep-emerald);">care</span>
+            </div>
+            <div style="font-size:10px;letter-spacing:0.2em;color:var(--champagner);font-weight:300;">mit herz. für menschen.</div>
+          </div>
+          <p class="text-small text-center mt-16">Mit Slogan</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Clearspace -->
+    <div class="subsection">
+      <h3 class="subsection-title">Schutzraum (Clearspace)</h3>
+      <p class="text-small mb-24">
+        Der Mindestabstand um das Logo entspricht der Höhe des Buchstabens „e"
+        in der jeweiligen Logo-Größe. Dieser Schutzraum muss zu allen Seiten eingehalten werden.
+      </p>
+      <div class="clearspace-demo">
+        <div class="clearspace-box">
+          <span class="clearspace-marker top">1×e</span>
+          <span class="clearspace-marker bottom">1×e</span>
+          <span class="clearspace-marker left">1×e</span>
+          <span class="clearspace-marker right">1×e</span>
+          <div class="logo-text">
+            <span class="efy">efy</span>
+            <span class="care">care</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Minimum Size -->
+    <div class="subsection">
+      <h3 class="subsection-title">Minimalgröße</h3>
+      <div class="grid-2">
+        <div class="card">
+          <h4 style="font-size:12px;font-weight:700;color:var(--deep-emerald);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:16px;">Digital</h4>
+          <div style="display:flex;align-items:flex-end;gap:24px;">
+            <div>
+              <div style="font-family:var(--font-display);font-size:16px;color:var(--deep-emerald);">
+                <span style="font-weight:200;">efy</span><span style="font-weight:700;letter-spacing:0.12em;margin-left:4px;">care</span>
+              </div>
+              <p class="text-small mt-16">Mindestbreite: 80px</p>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <h4 style="font-size:12px;font-weight:700;color:var(--deep-emerald);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:16px;">Print</h4>
+          <div style="display:flex;align-items:flex-end;gap:24px;">
+            <div>
+              <div style="font-family:var(--font-display);font-size:16px;color:var(--deep-emerald);">
+                <span style="font-weight:200;">efy</span><span style="font-weight:700;letter-spacing:0.12em;margin-left:4px;">care</span>
+              </div>
+              <p class="text-small mt-16">Mindestbreite: 25mm</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Do's & Don'ts -->
+    <div class="subsection">
+      <h3 class="subsection-title">Logo — Do's &amp; Don'ts</h3>
+      <div class="dos-donts">
+        <div class="do-item">
+          <div class="example-display">
+            <div style="font-family:var(--font-display);font-size:28px;">
+              <span style="font-weight:200;color:var(--deep-emerald);">efy</span>
+              <span style="font-weight:700;letter-spacing:0.12em;margin-left:8px;color:var(--deep-emerald);">care</span>
+            </div>
+          </div>
+          <div class="example-label"><span class="check-icon">✓</span> Offizielle Farben verwenden</div>
+        </div>
+        <div class="dont-item">
+          <div class="example-display">
+            <div style="font-family:var(--font-display);font-size:28px;">
+              <span style="font-weight:200;color:#E74C3C;">efy</span>
+              <span style="font-weight:700;letter-spacing:0.12em;margin-left:8px;color:#3498DB;">care</span>
+            </div>
+          </div>
+          <div class="example-label"><span class="cross-icon">✕</span> Keine fremden Farben verwenden</div>
+        </div>
+        <div class="do-item">
+          <div class="example-display">
+            <div style="font-family:var(--font-display);font-size:28px;">
+              <span style="font-weight:200;color:var(--deep-emerald);">efy</span>
+              <span style="font-weight:700;letter-spacing:0.12em;margin-left:8px;color:var(--deep-emerald);">care</span>
+            </div>
+          </div>
+          <div class="example-label"><span class="check-icon">✓</span> Proportionen beibehalten</div>
+        </div>
+        <div class="dont-item">
+          <div class="example-display">
+            <div style="font-family:var(--font-display);font-size:28px;">
+              <span style="font-weight:200;color:var(--deep-emerald);transform:scaleX(1.5);display:inline-block;">efy</span>
+              <span style="font-weight:700;letter-spacing:0.12em;margin-left:8px;color:var(--deep-emerald);transform:scaleY(0.7);display:inline-block;">care</span>
+            </div>
+          </div>
+          <div class="example-label"><span class="cross-icon">✕</span> Nicht verzerren oder strecken</div>
+        </div>
+        <div class="do-item">
+          <div class="example-display">
+            <div style="font-family:var(--font-display);font-size:28px;">
+              <span style="font-weight:200;color:var(--deep-emerald);">efy</span>
+              <span style="font-weight:700;letter-spacing:0.12em;margin-left:8px;color:var(--deep-emerald);">care</span>
+            </div>
+          </div>
+          <div class="example-label"><span class="check-icon">✓</span> Immer komplett klein schreiben</div>
+        </div>
+        <div class="dont-item">
+          <div class="example-display">
+            <div style="font-family:var(--font-display);font-size:28px;">
+              <span style="font-weight:200;color:var(--deep-emerald);">Efy</span>
+              <span style="font-weight:700;letter-spacing:0.12em;margin-left:8px;color:var(--deep-emerald);">CARE</span>
+            </div>
+          </div>
+          <div class="example-label"><span class="cross-icon">✕</span> Niemals Großbuchstaben</div>
+        </div>
+        <div class="do-item">
+          <div class="example-display" style="background:var(--deep-emerald);">
+            <div style="font-family:var(--font-display);font-size:28px;">
+              <span style="font-weight:200;color:var(--white);">efy</span>
+              <span style="font-weight:700;letter-spacing:0.12em;margin-left:8px;color:var(--sage-green);">care</span>
+            </div>
+          </div>
+          <div class="example-label"><span class="check-icon">✓</span> Genügend Kontrast sicherstellen</div>
+        </div>
+        <div class="dont-item">
+          <div class="example-display" style="background:linear-gradient(135deg,#E74C3C,#8E44AD);">
+            <div style="font-family:var(--font-display);font-size:28px;">
+              <span style="font-weight:200;color:var(--white);">efy</span>
+              <span style="font-weight:700;letter-spacing:0.12em;margin-left:8px;color:var(--white);">care</span>
+            </div>
+          </div>
+          <div class="example-label"><span class="cross-icon">✕</span> Nicht auf unruhigen Hintergründen</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 03 FARBEN ─────────────────────────────────────────── -->
+  <section id="colors">
+    <div class="section-label">03 — Farbpalette</div>
+    <h2 class="section-title">Unsere Farben</h2>
+    <p class="section-intro">
+      Die Farbpalette von efy care verbindet die Ruhe und Verlässlichkeit der Natur
+      mit warmem, einladendem Licht. Die Farben schaffen Vertrauen, ohne klinisch zu wirken.
+    </p>
+
+    <!-- Primary Colors -->
+    <div class="subsection">
+      <h3 class="subsection-title">Hauptfarben</h3>
+      <div class="swatch-group">
+        <div class="swatch">
+          <div class="swatch-color" style="background:#0F5E57;">
+            <span style="color:var(--white);">Primär</span>
+          </div>
+          <div class="swatch-info">
+            <h4>Deep Emerald</h4>
+            <div class="color-values">
+              <div class="color-val"><span>Hex</span><span>#0F5E57</span></div>
+              <div class="color-val"><span>RGB</span><span>15, 94, 87</span></div>
+              <div class="color-val"><span>CMYK</span><span>84, 0, 7, 63</span></div>
+              <div class="color-val"><span>Pantone</span><span>3302 C</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="swatch">
+          <div class="swatch-color" style="background:#2D7A63;">
+            <span style="color:var(--white);">Sekundär</span>
+          </div>
+          <div class="swatch-info">
+            <h4>Forest Green</h4>
+            <div class="color-values">
+              <div class="color-val"><span>Hex</span><span>#2D7A63</span></div>
+              <div class="color-val"><span>RGB</span><span>45, 122, 99</span></div>
+              <div class="color-val"><span>CMYK</span><span>63, 0, 19, 52</span></div>
+              <div class="color-val"><span>Pantone</span><span>341 C</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="swatch">
+          <div class="swatch-color" style="background:#A9CBB5;">
+            <span style="color:var(--charcoal);">Tertiär</span>
+          </div>
+          <div class="swatch-info">
+            <h4>Sage Green</h4>
+            <div class="color-values">
+              <div class="color-val"><span>Hex</span><span>#A9CBB5</span></div>
+              <div class="color-val"><span>RGB</span><span>169, 203, 181</span></div>
+              <div class="color-val"><span>CMYK</span><span>17, 0, 11, 20</span></div>
+              <div class="color-val"><span>Pantone</span><span>558 C</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="swatch-group">
+        <div class="swatch">
+          <div class="swatch-color" style="background:#F8F6F2;">
+            <span style="color:var(--charcoal);">Hintergrund</span>
+          </div>
+          <div class="swatch-info">
+            <h4>Warm Ivory</h4>
+            <div class="color-values">
+              <div class="color-val"><span>Hex</span><span>#F8F6F2</span></div>
+              <div class="color-val"><span>RGB</span><span>248, 246, 242</span></div>
+              <div class="color-val"><span>CMYK</span><span>0, 1, 2, 3</span></div>
+              <div class="color-val"><span>Pantone</span><span>7527 C</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="swatch">
+          <div class="swatch-color" style="background:#2D3135;">
+            <span style="color:var(--white);">Text</span>
+          </div>
+          <div class="swatch-info">
+            <h4>Charcoal</h4>
+            <div class="color-values">
+              <div class="color-val"><span>Hex</span><span>#2D3135</span></div>
+              <div class="color-val"><span>RGB</span><span>45, 49, 53</span></div>
+              <div class="color-val"><span>CMYK</span><span>15, 8, 0, 79</span></div>
+              <div class="color-val"><span>Pantone</span><span>Black 7 C</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="swatch">
+          <div class="swatch-color" style="background:#D8C29D;">
+            <span style="color:var(--charcoal);">Akzent</span>
+          </div>
+          <div class="swatch-info">
+            <h4>Champagner</h4>
+            <div class="color-values">
+              <div class="color-val"><span>Hex</span><span>#D8C29D</span></div>
+              <div class="color-val"><span>RGB</span><span>216, 194, 157</span></div>
+              <div class="color-val"><span>CMYK</span><span>0, 10, 27, 15</span></div>
+              <div class="color-val"><span>Pantone</span><span>467 C</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Color Proportions -->
+    <div class="subsection">
+      <h3 class="subsection-title">Farbverhältnisse</h3>
+      <p class="text-small mb-24">Die Farben werden in einem definierten Verhältnis eingesetzt, um ein konsistentes Markenbild zu gewährleisten.</p>
+      <div class="proportion-bar">
+        <div class="seg" style="flex:35;background:var(--deep-emerald);color:var(--white);">35%</div>
+        <div class="seg" style="flex:25;background:var(--forest-green);color:var(--white);">25%</div>
+        <div class="seg" style="flex:15;background:var(--sage-green);color:var(--charcoal);">15%</div>
+        <div class="seg" style="flex:15;background:var(--warm-ivory);color:var(--charcoal);">15%</div>
+        <div class="seg" style="flex:10;background:var(--champagner);color:var(--charcoal);">≤10%</div>
+      </div>
+      <div class="note-box">
+        <strong>Champagner-Regel:</strong> Die Akzentfarbe Champagner (#D8C29D) darf maximal 10% der Gesamtfläche eines Layouts einnehmen.
+        Sie wird ausschließlich für feine Details, Akzentlinien und subtile Hervorhebungen verwendet.
+      </div>
+    </div>
+
+    <!-- WCAG Contrast -->
+    <div class="subsection">
+      <h3 class="subsection-title">Kontrast-Guidelines (WCAG AA)</h3>
+      <div class="contrast-grid">
+        <div class="contrast-cell" style="background:var(--deep-emerald);color:var(--white);">
+          <div class="ratio">8.5:1</div>
+          <div class="result pass">AA ✓ AAA ✓</div>
+          <div class="combo">Deep Emerald + Weiß</div>
+        </div>
+        <div class="contrast-cell" style="background:var(--warm-ivory);color:var(--charcoal);">
+          <div class="ratio">14.2:1</div>
+          <div class="result pass">AA ✓ AAA ✓</div>
+          <div class="combo">Charcoal + Warm Ivory</div>
+        </div>
+        <div class="contrast-cell" style="background:var(--deep-emerald);color:var(--sage-green);">
+          <div class="ratio">5.8:1</div>
+          <div class="result pass">AA ✓</div>
+          <div class="combo">Deep Emerald + Sage Green</div>
+        </div>
+        <div class="contrast-cell" style="background:var(--white);color:var(--deep-emerald);border:1px solid var(--light-border);">
+          <div class="ratio">8.2:1</div>
+          <div class="result pass">AA ✓ AAA ✓</div>
+          <div class="combo">Deep Emerald + Weiß</div>
+        </div>
+        <div class="contrast-cell" style="background:var(--sage-green);color:var(--charcoal);">
+          <div class="ratio">7.1:1</div>
+          <div class="result pass">AA ✓ AAA ✓</div>
+          <div class="combo">Charcoal + Sage Green</div>
+        </div>
+        <div class="contrast-cell" style="background:var(--champagner);color:var(--charcoal);">
+          <div class="ratio">6.9:1</div>
+          <div class="result pass">AA ✓</div>
+          <div class="combo">Charcoal + Champagner</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Forbidden Colors -->
+    <div class="subsection">
+      <h3 class="subsection-title">Verbotene Farben</h3>
+      <p class="text-small mb-16">Folgende Farbfamilien dürfen nicht in Verbindung mit der Marke efy care verwendet werden:</p>
+      <div class="forbidden-colors">
+        <div class="forbidden-swatch" style="background:#E74C3C;" title="Knallrot"></div>
+        <div class="forbidden-swatch" style="background:#FF6B00;" title="Orange"></div>
+        <div class="forbidden-swatch" style="background:#FF1493;" title="Pink/Magenta"></div>
+        <div class="forbidden-swatch" style="background:#7B00FF;" title="Lila"></div>
+        <div class="forbidden-swatch" style="background:#00BFFF;" title="Cyan"></div>
+        <div class="forbidden-swatch" style="background:#FFFF00;" title="Gelb"></div>
+        <div class="forbidden-swatch" style="background:#39FF14;" title="Neongrün"></div>
+      </div>
+      <p class="text-small mt-16">
+        Keine Neonfarben, keine gesättigten Primärfarben, keine klinisch wirkenden Blautöne.
+        Die Farbwelt von efy care bleibt natürlich, gedeckt und warm.
+      </p>
+    </div>
+  </section>
+
+  <!-- ── 04 TYPOGRAFIE ─────────────────────────────────────── -->
+  <section id="typography">
+    <div class="section-label">04 — Typografie</div>
+    <h2 class="section-title">Unsere Schrift</h2>
+    <p class="section-intro">
+      Die typografische Identität von efy care basiert auf der Schriftfamilie Inter (Primär)
+      und Manrope (Display). Beide sind offen, geometrisch und vermitteln Modernität bei gleichzeitiger
+      menschlicher Wärme — wie ein vertrautes Gespräch in einem modernen Raum.
+    </p>
+
+    <!-- Font Families -->
+    <div class="subsection">
+      <h3 class="subsection-title">Schriftfamilien</h3>
+      <div class="grid-2 mb-32">
+        <div class="card">
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.15em;color:var(--forest-green);margin-bottom:20px;">Primärschrift</div>
+          <div style="font-family:Inter,sans-serif;font-size:40px;font-weight:400;color:var(--charcoal);margin-bottom:8px;">Inter</div>
+          <div style="font-family:Inter,sans-serif;font-size:14px;color:#999;margin-bottom:20px;">
+            ABCDEFGHIJKLMNOPQRSTUVWXYZ<br>
+            abcdefghijklmnopqrstuvwxyz<br>
+            0123456789 !@#$%&amp;
+          </div>
+          <p class="text-small">Verwendet für Fließtext, UI-Elemente, Formulare und alle digitalen Anwendungen.</p>
+        </div>
+        <div class="card">
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.15em;color:var(--forest-green);margin-bottom:20px;">Display-Schrift</div>
+          <div style="font-family:Manrope,sans-serif;font-size:40px;font-weight:400;color:var(--charcoal);margin-bottom:8px;">Manrope</div>
+          <div style="font-family:Manrope,sans-serif;font-size:14px;color:#999;margin-bottom:20px;">
+            ABCDEFGHIJKLMNOPQRSTUVWXYZ<br>
+            abcdefghijklmnopqrstuvwxyz<br>
+            0123456789 !@#$%&amp;
+          </div>
+          <p class="text-small">Verwendet für Logo, Überschriften, Headlines und markante Elemente.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Logo Typography -->
+    <div class="subsection">
+      <h3 class="subsection-title">Logo-Typografie</h3>
+      <div class="type-specimen">
+        <div class="specimen-label">Wortzeichen — Aufbau</div>
+        <div style="display:flex;align-items:baseline;gap:24px;margin-bottom:24px;">
+          <span style="font-family:Manrope,sans-serif;font-weight:200;font-size:64px;color:var(--deep-emerald);">efy</span>
+          <span style="font-family:Manrope,sans-serif;font-weight:700;font-size:64px;letter-spacing:0.15em;color:var(--deep-emerald);">care</span>
+        </div>
+        <div class="grid-2" style="gap:16px;">
+          <div style="padding:16px;background:var(--white);border-radius:8px;border:1px solid var(--light-border);">
+            <span class="tag tag-emerald" style="margin-bottom:8px;display:inline-block;">efy</span>
+            <p class="text-small">Manrope Light (200) · Letter-Spacing: 0.02em · Symbolisiert Leichtigkeit und Zugänglichkeit</p>
+          </div>
+          <div style="padding:16px;background:var(--white);border-radius:8px;border:1px solid var(--light-border);">
+            <span class="tag tag-emerald" style="margin-bottom:8px;display:inline-block;">care</span>
+            <p class="text-small">Manrope Bold (700) · Letter-Spacing: 0.15em · Steht für Stärke und Verlässlichkeit</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Type Hierarchy -->
+    <div class="subsection">
+      <h3 class="subsection-title">Typografische Hierarchie</h3>
+      <div class="type-hierarchy" style="background:var(--warm-ivory);border-radius:16px;padding:32px;">
+        <div class="type-row">
+          <div class="level">H1</div>
+          <div style="font-family:Manrope,sans-serif;font-size:42px;font-weight:800;color:var(--charcoal);letter-spacing:-0.02em;">Überschrift Eins</div>
+          <div class="specs">Manrope 800 / 42px / 1.15</div>
+        </div>
+        <div class="type-row">
+          <div class="level">H2</div>
+          <div style="font-family:Manrope,sans-serif;font-size:32px;font-weight:700;color:var(--charcoal);letter-spacing:-0.01em;">Überschrift Zwei</div>
+          <div class="specs">Manrope 700 / 32px / 1.25</div>
+        </div>
+        <div class="type-row">
+          <div class="level">H3</div>
+          <div style="font-family:Manrope,sans-serif;font-size:24px;font-weight:700;color:var(--charcoal);">Überschrift Drei</div>
+          <div class="specs">Manrope 700 / 24px / 1.3</div>
+        </div>
+        <div class="type-row">
+          <div class="level">H4</div>
+          <div style="font-family:Inter,sans-serif;font-size:18px;font-weight:600;color:var(--charcoal);">Überschrift Vier</div>
+          <div class="specs">Inter 600 / 18px / 1.4</div>
+        </div>
+        <div class="type-row">
+          <div class="level">H5</div>
+          <div style="font-family:Inter,sans-serif;font-size:15px;font-weight:600;color:var(--charcoal);text-transform:uppercase;letter-spacing:0.08em;">Überschrift Fünf</div>
+          <div class="specs">Inter 600 / 15px / 1.4 / Caps</div>
+        </div>
+        <div class="type-row">
+          <div class="level">H6</div>
+          <div style="font-family:Inter,sans-serif;font-size:12px;font-weight:700;color:var(--forest-green);text-transform:uppercase;letter-spacing:0.15em;">Überschrift Sechs</div>
+          <div class="specs">Inter 700 / 12px / 1.5 / Caps</div>
+        </div>
+        <div class="type-row">
+          <div class="level">Body</div>
+          <div style="font-family:Inter,sans-serif;font-size:16px;font-weight:400;color:#5A5F65;line-height:1.7;">Fließtext für Absätze und längere Texte. Wir begleiten Sie im Alltag — mit Herz und Kompetenz.</div>
+          <div class="specs">Inter 400 / 16px / 1.7</div>
+        </div>
+        <div class="type-row">
+          <div class="level">Caption</div>
+          <div style="font-family:Inter,sans-serif;font-size:12px;font-weight:400;color:#999;">Bildunterschrift oder ergänzende Hinweise</div>
+          <div class="specs">Inter 400 / 12px / 1.5</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Spacing Rules -->
+    <div class="subsection">
+      <h3 class="subsection-title">Abstände &amp; Laufweiten</h3>
+      <table class="spec-table">
+        <thead>
+          <tr>
+            <th>Element</th>
+            <th>Zeilenabstand</th>
+            <th>Laufweite</th>
+            <th>Absatzabstand</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>H1 – H3</td><td>1.15 – 1.3</td><td>-0.02em bis 0</td><td>24px</td></tr>
+          <tr><td>H4 – H6</td><td>1.4 – 1.5</td><td>0 bis 0.15em</td><td>16px</td></tr>
+          <tr><td>Body</td><td>1.7</td><td>Normal</td><td>16px</td></tr>
+          <tr><td>Caption / Label</td><td>1.5</td><td>0.02em</td><td>8px</td></tr>
+          <tr><td>Button</td><td>1.0</td><td>0.05em</td><td>—</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ── 05 BILDSPRACHE ────────────────────────────────────── -->
+  <section id="imagery">
+    <div class="section-label">05 — Bildsprache</div>
+    <h2 class="section-title">Unsere Bilder</h2>
+    <p class="section-intro">
+      Die Bildsprache von efy care zeigt echte Menschen in echten Momenten.
+      Keine gestellten Szenen, keine übertriebene Perfektion — sondern authentische
+      Wärme, die Vertrauen schafft.
+    </p>
+
+    <!-- Photo Style -->
+    <div class="subsection">
+      <h3 class="subsection-title">Fotostil</h3>
+      <div class="photo-grid">
+        <div class="photo-placeholder">Natürliches Licht<br>Echte Emotionen</div>
+        <div class="photo-placeholder">Warme Farben</div>
+        <div class="photo-placeholder">Nähe zeigen</div>
+        <div class="photo-placeholder">Augenhöhe</div>
+        <div class="photo-placeholder">Im Alltag</div>
+      </div>
+
+      <div class="grid-2 mt-32">
+        <div class="card">
+          <h4 style="font-size:12px;font-weight:700;color:var(--forest-green);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:16px;">Bildsprache — Ja</h4>
+          <ul style="list-style:none;font-size:14px;color:#5A5F65;line-height:2;">
+            <li>✓ &nbsp;Natürliches, weiches Licht (Golden Hour bevorzugt)</li>
+            <li>✓ &nbsp;Echte Menschen, echte Emotionen</li>
+            <li>✓ &nbsp;Warme Farbtemperatur (leichter Warmfilter)</li>
+            <li>✓ &nbsp;Begegnungen auf Augenhöhe</li>
+            <li>✓ &nbsp;Hände, die helfen — nicht klinisch, sondern liebevoll</li>
+            <li>✓ &nbsp;Alltägliche Situationen zu Hause</li>
+            <li>✓ &nbsp;Generationsübergreifende Momente</li>
+            <li>✓ &nbsp;Geringe Tiefenschärfe für emotionale Nähe</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h4 style="font-size:12px;font-weight:700;color:#C0392B;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:16px;">Bildsprache — Nein</h4>
+          <ul style="list-style:none;font-size:14px;color:#5A5F65;line-height:2;">
+            <li>✕ &nbsp;Gestellte Stock-Fotos</li>
+            <li>✕ &nbsp;Klinische Umgebungen / Krankenhaus-Ästhetik</li>
+            <li>✕ &nbsp;Kaltes, bläuliches Licht</li>
+            <li>✕ &nbsp;Übertriebene Fröhlichkeit</li>
+            <li>✕ &nbsp;Mitleid oder Hilflosigkeit darstellen</li>
+            <li>✕ &nbsp;Kitschige Sonnenuntergangs-Motive</li>
+            <li>✕ &nbsp;Hände in Gummihandschuhen als Hauptmotiv</li>
+            <li>✕ &nbsp;Isolierte, einsame Darstellungen</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Illustration Style -->
+    <div class="subsection">
+      <h3 class="subsection-title">Illustrationsstil</h3>
+      <div class="card" style="padding:40px;">
+        <div class="grid-2">
+          <div>
+            <p style="font-size:15px;color:#5A5F65;line-height:1.8;margin-bottom:20px;">
+              Illustrationen ergänzen die Fotografie in Bereichen, wo echte Fotos nicht passend
+              oder verfügbar sind. Der Stil ist reduziert, geometrisch und menschlich.
+            </p>
+            <table class="spec-table" style="margin:0;">
+              <tbody>
+                <tr><td>Strichstärke</td><td>2px konsistent</td></tr>
+                <tr><td>Ecken</td><td>Abgerundet (4px Radius)</td></tr>
+                <tr><td>Farben</td><td>Max. 3 aus der Palette</td></tr>
+                <tr><td>Stil</td><td>Line-Art, flächig, keine Schatten</td></tr>
+                <tr><td>Figuren</td><td>Abstrakt-menschlich, inklusiv</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:center;">
+            <svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <!-- Simple line illustration example -->
+              <circle cx="100" cy="60" r="25" stroke="#0F5E57" stroke-width="2"/>
+              <path d="M65 120 Q100 95 135 120" stroke="#0F5E57" stroke-width="2" fill="none"/>
+              <path d="M65 120 L55 170" stroke="#0F5E57" stroke-width="2" stroke-linecap="round"/>
+              <path d="M135 120 L145 170" stroke="#0F5E57" stroke-width="2" stroke-linecap="round"/>
+              <path d="M80 130 L80 175" stroke="#0F5E57" stroke-width="2" stroke-linecap="round"/>
+              <path d="M120 130 L120 175" stroke="#0F5E57" stroke-width="2" stroke-linecap="round"/>
+              <!-- Heart -->
+              <path d="M92 50 C88 42 76 42 76 52 C76 62 92 72 92 72 C92 72 108 62 108 52 C108 42 96 42 92 50Z" stroke="#A9CBB5" stroke-width="1.5" fill="rgba(169,203,181,0.2)"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Icon System -->
+    <div class="subsection">
+      <h3 class="subsection-title">Icon System</h3>
+      <p class="text-small mb-24">
+        Icons folgen dem Line-Stil mit 2px Strichstärke, abgerundeten Ecken und Enden.
+        Die Größe beträgt standardmäßig 24×24px mit einem optionalen Raster von 32×32px.
+      </p>
+      <div class="icon-grid">
+        <div class="icon-item">
+          <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+          <span>Herz / Fürsorge</span>
+        </div>
+        <div class="icon-item">
+          <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          <span>Menschen</span>
+        </div>
+        <div class="icon-item">
+          <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>
+          <span>Zuhause</span>
+        </div>
+        <div class="icon-item">
+          <svg viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+          <span>Gesundheit</span>
+        </div>
+        <div class="icon-item">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>
+          <span>Zeit / Termin</span>
+        </div>
+        <div class="icon-item">
+          <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          <span>Kontakt</span>
+        </div>
+        <div class="icon-item">
+          <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          <span>Schutz</span>
+        </div>
+        <div class="icon-item">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <span>Info</span>
+        </div>
+        <div class="icon-item">
+          <svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>
+          <span>Bestätigung</span>
+        </div>
+        <div class="icon-item">
+          <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          <span>Beratung</span>
+        </div>
+        <div class="icon-item">
+          <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          <span>Kalender</span>
+        </div>
+        <div class="icon-item">
+          <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+          <span>Telefon</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 06 ANWENDUNGEN ────────────────────────────────────── -->
+  <section id="applications">
+    <div class="section-label">06 — Anwendungen</div>
+    <h2 class="section-title">In der Praxis</h2>
+    <p class="section-intro">
+      Die folgenden Beispiele zeigen, wie die Markenelemente von efy care
+      in verschiedenen Medien und Formaten konsistent angewendet werden.
+    </p>
+
+    <!-- Business Cards -->
+    <div class="subsection">
+      <h3 class="subsection-title">Visitenkarten</h3>
+      <div class="mockup-frame">
+        <div class="grid-2" style="gap:48px;">
+          <div>
+            <p class="text-small mb-16" style="text-align:center;">Vorderseite</p>
+            <div class="business-card">
+              <div>
+                <div class="bc-logo">
+                  <span class="efy">efy</span><span class="care">care</span>
+                </div>
+              </div>
+              <div>
+                <div class="bc-name">Max Mustermann</div>
+                <div class="bc-role">Pflegeberater</div>
+                <div class="bc-info">
+                  +49 123 456 789 0<br>
+                  max@efycare.de<br>
+                  www.efycare.de
+                </div>
+              </div>
+            </div>
+          </div>
+          <div>
+            <p class="text-small mb-16" style="text-align:center;">Rückseite</p>
+            <div class="business-card-back">
+              <span class="efy">efy</span><span class="care">care</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <table class="spec-table">
+        <tbody>
+          <tr><td>Format</td><td>85 × 55 mm (Standard EU)</td></tr>
+          <tr><td>Papier</td><td>350g/m² Baumwollpapier, matt</td></tr>
+          <tr><td>Veredelung</td><td>Heißfolienprägung Logo (optional), Farbschnitt Deep Emerald</td></tr>
+          <tr><td>Ecken</td><td>Abgerundet, 3mm Radius</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Letterhead -->
+    <div class="subsection">
+      <h3 class="subsection-title">Briefpapier / Briefkopf</h3>
+      <div class="mockup-frame">
+        <div class="letterhead-mockup">
+          <div class="letterhead-header">
+            <div>
+              <span class="efy">efy</span><span class="care">care</span>
+            </div>
+            <div class="letterhead-address">
+              efy care GmbH<br>
+              Musterstraße 1<br>
+              10115 Berlin<br>
+              +49 30 123 456 0<br>
+              info@efycare.de
+            </div>
+          </div>
+          <div class="letterhead-body">
+            <div style="height:12px;background:transparent;margin-bottom:32px;font-size:12px;color:#999;">Hallo Frau Müller,</div>
+            <div class="placeholder-line" style="width:100%;"></div>
+            <div class="placeholder-line" style="width:100%;"></div>
+            <div class="placeholder-line" style="width:85%;"></div>
+            <div class="placeholder-line" style="width:100%;"></div>
+            <div class="placeholder-line" style="width:70%;"></div>
+            <div style="height:32px;"></div>
+            <div class="placeholder-line" style="width:100%;"></div>
+            <div class="placeholder-line" style="width:95%;"></div>
+            <div class="placeholder-line" style="width:60%;"></div>
+            <div style="height:32px;"></div>
+            <div style="font-size:12px;color:#999;">Herzliche Grüße<br>Ihr Team von efy care</div>
+          </div>
+          <div class="letterhead-footer">
+            <span>efy care GmbH · HRB 123456 · AG Berlin</span>
+            <span>IBAN: DE89 3704 0044 0532 0130 00</span>
+          </div>
+        </div>
+      </div>
+      <table class="spec-table">
+        <tbody>
+          <tr><td>Format</td><td>DIN A4 (210 × 297 mm)</td></tr>
+          <tr><td>Ränder</td><td>Oben: 20mm · Seiten: 25mm · Unten: 15mm</td></tr>
+          <tr><td>Papier</td><td>120g/m² Naturpapier, leicht cremefarben</td></tr>
+          <tr><td>Akzentlinie</td><td>3px Verlauf Deep Emerald → Forest Green (oberer Rand)</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Email Signature -->
+    <div class="subsection">
+      <h3 class="subsection-title">E-Mail-Signatur</h3>
+      <div class="mockup-frame">
+        <div class="email-sig">
+          <div class="sig-logo">
+            <span class="efy">efy</span><span class="care">care</span>
+          </div>
+          <div class="sig-name">Max Mustermann</div>
+          <div class="sig-role">Pflegeberater · Alltagsbegleitung</div>
+          <div class="sig-contact">
+            +49 123 456 789 0<br>
+            max@efycare.de · www.efycare.de<br>
+            Musterstraße 1 · 10115 Berlin
+          </div>
+          <div class="sig-slogan">mit herz. für menschen.</div>
+        </div>
+      </div>
+      <div class="note-box">
+        <strong>Hinweis:</strong> Die E-Mail-Signatur wird als HTML formatiert.
+        Inline-Styles verwenden, keine externen Stylesheets. Maximale Breite: 440px.
+        Schrift-Fallback: Arial, Helvetica, sans-serif.
+      </div>
+    </div>
+
+    <!-- Social Media -->
+    <div class="subsection">
+      <h3 class="subsection-title">Social Media Profile</h3>
+      <div class="social-grid">
+        <div class="social-mockup">
+          <div class="social-header" style="background:linear-gradient(135deg,var(--deep-emerald),var(--forest-green));"></div>
+          <div class="social-avatar">ec</div>
+          <div class="social-info">
+            <h4>efy care</h4>
+            <p>Alltagsbegleitung mit Herz</p>
+          </div>
+        </div>
+        <div class="social-mockup">
+          <div class="social-header" style="background:var(--deep-emerald);"></div>
+          <div class="social-avatar" style="background:var(--forest-green);">ec</div>
+          <div class="social-info">
+            <h4>efy care</h4>
+            <p>@efycare</p>
+          </div>
+        </div>
+        <div class="social-mockup">
+          <div class="social-header" style="background:linear-gradient(135deg,var(--forest-green),var(--sage-green));"></div>
+          <div class="social-avatar" style="background:var(--deep-emerald);">ec</div>
+          <div class="social-info">
+            <h4>efy care</h4>
+            <p>mit herz. für menschen.</p>
+          </div>
+        </div>
+      </div>
+      <table class="spec-table mt-24">
+        <thead>
+          <tr><th>Plattform</th><th>Profilbild</th><th>Header/Banner</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Instagram</td><td>320 × 320px</td><td>—</td></tr>
+          <tr><td>Facebook</td><td>180 × 180px</td><td>820 × 312px</td></tr>
+          <tr><td>LinkedIn</td><td>400 × 400px</td><td>1584 × 396px</td></tr>
+          <tr><td>TikTok</td><td>200 × 200px</td><td>—</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- App Icon -->
+    <div class="subsection">
+      <h3 class="subsection-title">App Icon</h3>
+      <div class="mockup-frame">
+        <div class="app-icons" style="justify-content:center;">
+          <div class="app-icon">
+            <div class="app-icon-box xl">
+              <span class="efy">e</span><span class="care">c</span>
+            </div>
+            <span class="app-icon-label">1024px (Store)</span>
+          </div>
+          <div class="app-icon">
+            <div class="app-icon-box lg">
+              <span class="efy">e</span><span class="care">c</span>
+            </div>
+            <span class="app-icon-label">180px (iOS)</span>
+          </div>
+          <div class="app-icon">
+            <div class="app-icon-box md">
+              <span class="efy">e</span><span class="care">c</span>
+            </div>
+            <span class="app-icon-label">120px</span>
+          </div>
+          <div class="app-icon">
+            <div class="app-icon-box sm">
+              <span class="efy">e</span><span class="care">c</span>
+            </div>
+            <span class="app-icon-label">60px</span>
+          </div>
+        </div>
+      </div>
+      <div class="note-box">
+        <strong>App Icon:</strong> Das Icon verwendet die Initialen „ec" im Gradient von Deep Emerald zu Forest Green.
+        Das „e" in Manrope Light, das „c" in Manrope Bold.
+        Radius: iOS 23.44% (automatisch), Android frei wählbar. Kein Slogan im Icon.
+      </div>
+    </div>
+
+    <!-- Vehicle -->
+    <div class="subsection">
+      <h3 class="subsection-title">Fahrzeugbeschriftung</h3>
+      <div class="vehicle-mockup">
+        <div class="vehicle-body">
+          <span class="efy">efy</span>
+          <span class="care">care</span>
+          <span class="slogan">mit herz. für menschen.</span>
+          <span class="web">www.efycare.de</span>
+          <div class="vehicle-wheel left"></div>
+          <div class="vehicle-wheel right"></div>
+        </div>
+      </div>
+      <table class="spec-table mt-24">
+        <tbody>
+          <tr><td>Logo</td><td>Mittig oder leicht links auf beiden Seiten, Mindesthöhe 15cm</td></tr>
+          <tr><td>Slogan</td><td>Unterhalb des Logos, in Champagner oder Forest Green</td></tr>
+          <tr><td>Website</td><td>Rechts unten, dezent in Charcoal</td></tr>
+          <tr><td>Grundfarbe</td><td>Weiß (RAL 9016) oder Deep Emerald (Vollfolierung)</td></tr>
+          <tr><td>Folie</td><td>Hochwertige Gussfolie, matt oder seidenmatt</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ── 07 SPRACHE & TONALITÄT ────────────────────────────── -->
+  <section id="tone">
+    <div class="section-label">07 — Sprache &amp; Tonalität</div>
+    <h2 class="section-title">Wie wir sprechen</h2>
+    <p class="section-intro">
+      Die Sprache von efy care ist warm, klar und respektvoll.
+      Wir sprechen mit Menschen, nicht über sie. Unsere Worte schaffen Nähe,
+      ohne Grenzen zu überschreiten.
+    </p>
+
+    <!-- Communication Principles -->
+    <div class="subsection">
+      <h3 class="subsection-title">Kommunikationsprinzipien</h3>
+      <div class="grid-3">
+        <div class="card-emerald">
+          <h4 style="font-size:12px;text-transform:uppercase;letter-spacing:0.15em;color:var(--sage-green);margin-bottom:12px;">Nahbar</h4>
+          <p style="font-size:14px;color:var(--white);opacity:0.85;line-height:1.7;">
+            Wir sprechen auf Augenhöhe — freundlich und verständlich, nie belehrend oder von oben herab.
+          </p>
+        </div>
+        <div class="card-emerald" style="background:var(--forest-green);">
+          <h4 style="font-size:12px;text-transform:uppercase;letter-spacing:0.15em;color:var(--sage-green);margin-bottom:12px;">Klar</h4>
+          <p style="font-size:14px;color:var(--white);opacity:0.85;line-height:1.7;">
+            Wir vermeiden Fachjargon. Komplexes erklären wir einfach — ohne dabei die Kompetenz zu verlieren.
+          </p>
+        </div>
+        <div class="card-emerald" style="background:var(--charcoal);">
+          <h4 style="font-size:12px;text-transform:uppercase;letter-spacing:0.15em;color:var(--champagner);margin-bottom:12px;">Empathisch</h4>
+          <p style="font-size:14px;color:var(--white);opacity:0.85;line-height:1.7;">
+            Wir hören zu, bevor wir sprechen. Unsere Kommunikation zeigt echtes Verständnis für die Situation.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tone Examples -->
+    <div class="subsection">
+      <h3 class="subsection-title">Beispieltexte</h3>
+      <div class="tone-comparison mb-24">
+        <div class="tone-do">
+          <h4>So sprechen wir</h4>
+          <blockquote>„Wir begleiten Sie im Alltag — damit Sie sich auf das konzentrieren können, was Ihnen wichtig ist."</blockquote>
+          <blockquote>„Gemeinsam finden wir die Unterstützung, die zu Ihrem Leben passt."</blockquote>
+          <blockquote>„Bei efy care steht der Mensch im Mittelpunkt — nicht die Diagnose."</blockquote>
+        </div>
+        <div class="tone-dont">
+          <h4>So sprechen wir nicht</h4>
+          <blockquote>„Unsere innovativen Pflegelösungen optimieren Ihren Care-Workflow."</blockquote>
+          <blockquote>„Wir sind der führende Anbieter für bedarfsgerechte Versorgungskonzepte."</blockquote>
+          <blockquote>„Profitieren Sie von unserer langjährigen Expertise im Gesundheitssektor."</blockquote>
+        </div>
+      </div>
+    </div>
+
+    <!-- Forbidden Terms -->
+    <div class="subsection">
+      <h3 class="subsection-title">Verbotene Begriffe &amp; Formulierungen</h3>
+      <div class="grid-2">
+        <div>
+          <table class="spec-table">
+            <thead>
+              <tr><th>Nicht verwenden</th><th>Stattdessen</th></tr>
+            </thead>
+            <tbody>
+              <tr><td style="color:#C0392B;">Patient</td><td>Mensch, Person, Klient</td></tr>
+              <tr><td style="color:#C0392B;">Pflegefall</td><td>Mensch mit Unterstützungsbedarf</td></tr>
+              <tr><td style="color:#C0392B;">Demenzkranker</td><td>Mensch mit Demenz</td></tr>
+              <tr><td style="color:#C0392B;">betreuen</td><td>begleiten, unterstützen</td></tr>
+              <tr><td style="color:#C0392B;">Insasse / Bewohner</td><td>Gast, Mitbewohner</td></tr>
+              <tr><td style="color:#C0392B;">leidet an …</td><td>lebt mit …</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div>
+          <table class="spec-table">
+            <thead>
+              <tr><th>Nicht verwenden</th><th>Stattdessen</th></tr>
+            </thead>
+            <tbody>
+              <tr><td style="color:#C0392B;">Synergie, Workflow</td><td>Zusammenarbeit</td></tr>
+              <tr><td style="color:#C0392B;">Disruption</td><td>Veränderung, Neudenken</td></tr>
+              <tr><td style="color:#C0392B;">Stakeholder</td><td>Beteiligte, Partner</td></tr>
+              <tr><td style="color:#C0392B;">Onboarding</td><td>Einführung, Kennenlernen</td></tr>
+              <tr><td style="color:#C0392B;">Pain Points</td><td>Herausforderungen</td></tr>
+              <tr><td style="color:#C0392B;">Best Practice</td><td>Bewährtes Vorgehen</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="note-box mt-24">
+        <strong>Grundregel:</strong> Wenn ein Wort erklärt werden muss, ist es das falsche Wort.
+        Unsere Sprache soll von jedem Menschen verstanden werden — ob 25 oder 85 Jahre alt.
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 08 DO'S & DON'TS ──────────────────────────────────── -->
+  <section id="dos-donts">
+    <div class="section-label">08 — Do's &amp; Don'ts</div>
+    <h2 class="section-title">Regeln auf einen Blick</h2>
+    <p class="section-intro">
+      Ein starkes Markenbild entsteht durch Konsistenz.
+      Diese Übersicht zeigt die wichtigsten Regeln für den Umgang mit der Marke efy care.
+    </p>
+
+    <!-- Visual Do's & Don'ts -->
+    <div class="subsection">
+      <h3 class="subsection-title">Visuelle Identität</h3>
+      <div class="dos-donts">
+        <div class="do-item">
+          <div class="example-display" style="flex-direction:column;gap:4px;">
+            <div style="font-family:var(--font-display);font-size:24px;">
+              <span style="font-weight:200;color:var(--deep-emerald);">efy</span>
+              <span style="font-weight:700;letter-spacing:0.12em;margin-left:6px;color:var(--deep-emerald);">care</span>
+            </div>
+            <span style="font-size:9px;letter-spacing:0.15em;color:var(--champagner);">mit herz. für menschen.</span>
+          </div>
+          <div class="example-label"><span class="check-icon">✓</span> Slogan unter dem Logo, zentriert</div>
+        </div>
+        <div class="dont-item">
+          <div class="example-display" style="flex-direction:column;gap:4px;">
+            <div style="font-family:var(--font-display);font-size:24px;">
+              <span style="font-weight:200;color:var(--deep-emerald);">efy</span>
+              <span style="font-weight:700;letter-spacing:0.12em;margin-left:6px;color:var(--deep-emerald);">care</span>
+              <span style="font-size:10px;color:var(--champagner);vertical-align:super;"> mit herz.</span>
+            </div>
+          </div>
+          <div class="example-label"><span class="cross-icon">✕</span> Slogan nicht neben das Logo setzen</div>
+        </div>
+        <div class="do-item">
+          <div class="example-display">
+            <div style="padding:20px 28px;border:1px solid var(--sage-green);border-radius:8px;font-family:Inter,sans-serif;font-size:13px;font-weight:600;color:var(--deep-emerald);letter-spacing:0.05em;">
+              Jetzt beraten lassen
+            </div>
+          </div>
+          <div class="example-label"><span class="check-icon">✓</span> Buttons: dezent, klar, markentreu</div>
+        </div>
+        <div class="dont-item">
+          <div class="example-display">
+            <div style="padding:20px 28px;background:linear-gradient(135deg,#E74C3C,#FF6B00);border-radius:30px;font-size:16px;font-weight:800;color:white;text-transform:uppercase;letter-spacing:0.2em;box-shadow:0 4px 12px rgba(231,76,60,0.4);">
+              JETZT KLICKEN!!!
+            </div>
+          </div>
+          <div class="example-label"><span class="cross-icon">✕</span> Keine aggressiven CTAs oder Neonfarben</div>
+        </div>
+        <div class="do-item">
+          <div class="example-display" style="gap:12px;">
+            <div style="width:32px;height:32px;border-radius:8px;background:var(--warm-ivory);display:flex;align-items:center;justify-content:center;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0F5E57" stroke-width="2" stroke-linecap="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+            </div>
+            <div style="width:32px;height:32px;border-radius:8px;background:var(--warm-ivory);display:flex;align-items:center;justify-content:center;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0F5E57" stroke-width="2" stroke-linecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+            </div>
+            <div style="width:32px;height:32px;border-radius:8px;background:var(--warm-ivory);display:flex;align-items:center;justify-content:center;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0F5E57" stroke-width="2" stroke-linecap="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+            </div>
+          </div>
+          <div class="example-label"><span class="check-icon">✓</span> Konsistente Line-Icons (2px)</div>
+        </div>
+        <div class="dont-item">
+          <div class="example-display" style="gap:12px;">
+            <div style="font-size:28px;">❤️</div>
+            <div style="font-size:28px;">🏠</div>
+            <div style="font-size:28px;">💊</div>
+          </div>
+          <div class="example-label"><span class="cross-icon">✕</span> Keine Emojis als UI-Icons verwenden</div>
+        </div>
+        <div class="do-item">
+          <div class="example-display" style="background:var(--deep-emerald);">
+            <div style="text-align:center;color:var(--white);">
+              <div style="font-size:11px;letter-spacing:0.15em;text-transform:uppercase;color:var(--sage-green);margin-bottom:4px;">Alltagsbegleitung</div>
+              <div style="font-family:var(--font-display);font-size:20px;font-weight:300;">mit herz. für menschen.</div>
+            </div>
+          </div>
+          <div class="example-label"><span class="check-icon">✓</span> Markenfarben als Hintergrund</div>
+        </div>
+        <div class="dont-item">
+          <div class="example-display" style="background:url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect fill=%22%23F0F0F0%22 width=%22100%22 height=%22100%22/><text x=%2250%22 y=%2255%22 text-anchor=%22middle%22 fill=%22%23DDD%22 font-size=%2210%22>FOTO</text></svg>') center/cover;">
+            <div style="text-align:center;color:var(--charcoal);text-shadow:0 0 20px white;">
+              <div style="font-size:20px;font-weight:800;text-transform:uppercase;">ALLTAGSBEGLEITUNG</div>
+            </div>
+          </div>
+          <div class="example-label"><span class="cross-icon">✕</span> Keine schwer lesbare Schrift auf Fotos</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Summary Rules -->
+    <div class="subsection">
+      <h3 class="subsection-title">Zusammenfassung der Regeln</h3>
+      <div class="grid-2">
+        <div class="card" style="border-left:3px solid var(--forest-green);">
+          <h4 style="font-size:14px;font-weight:700;color:var(--forest-green);margin-bottom:16px;">✓ Immer</h4>
+          <ul style="list-style:none;font-size:14px;color:#5A5F65;line-height:2.2;">
+            <li>Logo komplett in Kleinbuchstaben</li>
+            <li>Offizielle Farbpalette verwenden</li>
+            <li>Schutzraum um das Logo einhalten</li>
+            <li>Manrope für Logo und Headlines</li>
+            <li>Inter für Fließtext und UI</li>
+            <li>Warme, natürliche Bildsprache</li>
+            <li>Respektvolle, einfache Sprache</li>
+            <li>Champagner maximal 10% Flächenanteil</li>
+            <li>WCAG AA Kontrast-Anforderungen erfüllen</li>
+            <li>Konsistente 2px Line-Icons</li>
+          </ul>
+        </div>
+        <div class="card" style="border-left:3px solid #C0392B;">
+          <h4 style="font-size:14px;font-weight:700;color:#C0392B;margin-bottom:16px;">✕ Niemals</h4>
+          <ul style="list-style:none;font-size:14px;color:#5A5F65;line-height:2.2;">
+            <li>Logo in Großbuchstaben schreiben</li>
+            <li>Logo verzerren oder rotieren</li>
+            <li>Nicht-autorisierte Farben verwenden</li>
+            <li>Neonfarben oder grelle Akzente</li>
+            <li>Stock-Foto-Ästhetik</li>
+            <li>Medizinischen Fachjargon nutzen</li>
+            <li>Logo auf unruhigen Hintergründen</li>
+            <li>Schriftart ändern oder ersetzen</li>
+            <li>Emojis als professionelle Icons</li>
+            <li>Aggressive Verkaufssprache</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── FOOTER ────────────────────────────────────────────── -->
+  <footer class="doc-footer">
+    <div class="footer-logo">
+      <span class="efy">efy</span><span class="care">care</span>
+    </div>
+    <div>
+      Brand Guidelines · Version 1.0 · Juli 2026 · Vertraulich
+    </div>
+  </footer>
+
+</div><!-- /main-content -->
+
+<!-- ═══════════════════════════════════════════════════════════
+     SCRIPTS
+     ═══════════════════════════════════════════════════════════ -->
+<script>
+// Active nav highlighting on scroll
+document.addEventListener('DOMContentLoaded', () => {
+  const sections = document.querySelectorAll('section[id]');
+  const navLinks = document.querySelectorAll('.sidebar nav a');
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        navLinks.forEach(link => link.classList.remove('active'));
+        const activeLink = document.querySelector(`.sidebar nav a[href="#${entry.target.id}"]`);
+        if (activeLink) activeLink.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-20% 0px -60% 0px' });
+
+  sections.forEach(section => observer.observe(section));
+});
+</script>
+
+</body>
+</html>
