@@ -36,10 +36,10 @@ export default function MarketAnalysisPage() {
           <strong>Benefit Amount:</strong> €131/month per care-dependent person (€1,572/year)
         </BulletItem>
         <BulletItem icon="💰">
-          <strong>Total Annual Pool:</strong> €7.79B (4.96M beneficiaries × €131/month × 12 months)
+          <strong>Total Annual Pool:</strong> €7.80B (4.96M beneficiaries × €131/month × 12 months)
         </BulletItem>
         <BulletItem icon="📊">
-          <strong>Utilization Rate:</strong> 60% of benefits go unused -- €4.46B in annual unused volume represents massive untapped demand
+          <strong>Utilization Rate:</strong> 60% of benefits go unused -- €4.68B in annual unused volume represents massive untapped demand
         </BulletItem>
         <BulletItem icon="✅">
           <strong>Eligible Activities:</strong> Companionship, household help, transportation, hobbies, social activities
@@ -60,7 +60,7 @@ export default function MarketAnalysisPage() {
         />
         <StatBox
           label="SAM (Serviceable)"
-          value="€7.79B"
+          value="€7.80B"
           subLabel="Alltagsbegleitung addressable market (§45b benefits)"
         />
         <StatBox
@@ -224,7 +224,7 @@ export default function MarketAnalysisPage() {
       {/* Market Opportunity Summary */}
       <Card style={{ marginTop: '40px', backgroundColor: 'rgba(201, 150, 60, 0.1)', borderLeft: '4px solid #C9963C', padding: '24px' }}>
         <Paragraph style={{ margin: 0, color: '#F7F2EA' }}>
-          <strong>Germany's care market is massive (€50B+), with €4.46B in unused §45b Entlastungsbetrag (60% unused rate) and 4.96M Pflegebed&uuml;rftige.</strong> AlltagsEngel's direct billing model (Direktabrechnung) with Pflegekassen yields ~50% gross margin and exceptional unit economics (44x LTV/CAC). Combined with a €3B Krankentransport mediation opportunity, we target €400M in revenue within 5 years. The digital gap is real -- competitors still operate offline or without automated billing integration.
+          <strong>Germany's care market is massive (€50B+), with €4.68B in unused §45b Entlastungsbetrag (60% unused rate) and 4.96M Pflegebed&uuml;rftige.</strong> AlltagsEngel's direct billing model (Direktabrechnung) with Pflegekassen yields ~50% gross margin and exceptional unit economics (44x LTV/CAC). Combined with a €3B Krankentransport mediation opportunity, we target €400M in revenue within 5 years. The digital gap is real -- competitors still operate offline or without automated billing integration.
         </Paragraph>
       </Card>
     </DocPageLayout>

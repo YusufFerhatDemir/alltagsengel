@@ -151,7 +151,7 @@ Business Model Strength:
 Market Opportunity:
   ✓ Germany: ~5 million care-dependent elderly people
   ✓ Severe shortage of affordable, quality care companions
-  ✓ §45b care insurance covers €125/month per user
+  ✓ §45b care insurance covers €131/month per user
   ✓ 75K users by Y5 = only 1.5% market penetration (conservative)
 
 Financial Performance:

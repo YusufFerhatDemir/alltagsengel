@@ -55,16 +55,16 @@ Diese Botschaft funktioniert, weil:
 | Position | Betrag |
 |----------|--------|
 | Entlastungsbetrag §45b | 131€/Monat pro Pflegebedürftigem |
-| AlltagsEngel Provision | 15-20% = 18,75-25€/Monat pro Nutzer |
-| Engel-Vergütung | 80-85% = 100-106€/Monat pro Nutzer |
+| AlltagsEngel Provision | 15-20% = 19,65-26,20€/Monat pro Nutzer |
+| Engel-Vergütung | 80-85% = 105-111€/Monat pro Nutzer |
 
 **Break-Even Rechnung:**
 - Serverkosten: ~50€/Monat
 - Domain + E-Mail: ~10€/Monat
 - Bei 20% Provision: 4 aktive Nutzer = Break-Even
-- 50 Nutzer = 937-1.250€/Monat Provision
-- 200 Nutzer = 3.750-5.000€/Monat Provision
-- 1.000 Nutzer = 18.750-25.000€/Monat Provision
+- 50 Nutzer = 982-1.310€/Monat Provision
+- 200 Nutzer = 3.930-5.240€/Monat Provision
+- 1.000 Nutzer = 19.650-26.200€/Monat Provision
 
 ### Erste Fahrt ermöglichen
 

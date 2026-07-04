@@ -52,14 +52,14 @@ Links: 3 Feature-Reihen mit Icon-Kreisen
 Rechts: App-Interface Mockup mit 3 Key Features
 
 ### Slide 4: Marktpotenzial
-- TAM/SAM/SOM Karten: €50B+ / €7,44B / €150M
+- TAM/SAM/SOM Karten: €50B+ / €7,80B / €150M
 - Growth-Balkendiagramm 2024-2028
 - Market Note: 4,96 Mio. Pflegebedürftige
 
 ### Slide 5: Geschäftsmodell
 - 18% Provision (Pro Buchung)
 - €9,99/Monat Premium (Für Engel)
-- Ø €125/Monat pro Kunde durch §45b
+- Ø €131/Monat pro Kunde durch §45b
 
 ### Slide 6: Produkt & Technologie
 - Split-Layout: Für Patienten | Für Engel

@@ -295,7 +295,7 @@ addTitle(slide, 'Der Pflegemarkt braucht\ndigitale Innovation', 0.3, 0.95);
 
 // Problem Card 1
 addCard(slide, { x: 0.3, y: 2.0, w: 3.0, h: 2.2 });
-addGoldBadge(slide, '€4,4B', 0.7, 2.15);
+addGoldBadge(slide, '€4,7B', 0.7, 2.15);
 slide.addText('Ungenutzte Mittel', {
   x: 0.3,
   y: 2.95,
@@ -307,7 +307,7 @@ slide.addText('Ungenutzte Mittel', {
   color: colors.ink,
   align: 'center',
 });
-slide.addText('€7,44B §45b Budget, nur 40% wird abgerufen', {
+slide.addText('€7,80B §45b Budget, nur 40% wird abgerufen', {
   x: 0.5,
   y: 3.35,
   w: 2.6,
@@ -517,7 +517,7 @@ addTitle(slide, 'Ein Markt mit €50 Mrd.+ Potenzial', 0.3, 0.95);
 // Three stat callouts in a row
 const stats = [
   { label: 'TAM', value: '€50B+', desc: 'Deutscher Pflegemarkt' },
-  { label: 'SAM', value: '€7,44B', desc: '§45b jährliches Budget' },
+  { label: 'SAM', value: '€7,80B', desc: '§45b jährliches Budget' },
   { label: 'SOM', value: '€150M', desc: '5-Jahres Ziel' },
 ];
 
@@ -724,7 +724,7 @@ slide.addText('→ Starke Retention & Upsell', {
 });
 
 // Key metric
-slide.addText('Ø €125/Monat pro Kunde durch §45b Zuschuss', {
+slide.addText('Ø €131/Monat pro Kunde durch §45b Zuschuss', {
   x: 0.3,
   y: 4.6,
   w: 9.4,

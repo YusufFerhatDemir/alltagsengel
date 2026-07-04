@@ -13,13 +13,13 @@ Professional investor-ready document analyzing AlltagsEngel's market opportunity
 
 ## Executive Summary
 
-AlltagsEngel addresses a **€7.44 billion regulatory-driven market opportunity** in German elderly care, with **€4.5 billion currently unutilized** due to structural market inefficiencies.
+AlltagsEngel addresses a **€7.80 billion regulatory-driven market opportunity** in German elderly care, with **€4.7 billion currently unutilized** due to structural market inefficiencies.
 
 ### Key Metrics
-- **Addressable Market**: €7.44B (§45b SGB XI benefit budget)
-- **Current Utilization**: 40% (€2.98B active)
-- **Untapped Opportunity**: €4.5B (60% latent demand)
-- **Year 5 Revenue Target**: €500M (6.7% penetration)
+- **Addressable Market**: €7.80B (§45b SGB XI benefit budget)
+- **Current Utilization**: 40% (€3.12B active)
+- **Untapped Opportunity**: €4.7B (60% latent demand)
+- **Year 5 Revenue Target**: €500M (6.4% penetration)
 - **Business Model**: 18% platform commission + €9.99/month companion subscriptions
 - **Gross Margins**: 60-65%
 
@@ -71,11 +71,11 @@ AlltagsEngel addresses a **€7.44 billion regulatory-driven market opportunity*
   - Net revenue: €3.06
   - Gross margin: 60-65%
 - Platform flywheel effect
-- Pricing strategy (€125/month insurance-covered customer cost)
+- Pricing strategy (€131/month insurance-covered customer cost)
 
 ### 7. Market Sizing (TAM / SAM / SOM)
 - **TAM**: €50B+ German elder care
-- **SAM**: €7.44B §45b addressable budget
+- **SAM**: €7.80B §45b addressable budget
 - **SOM (Year 5)**: €500M revenue
 - **Growth projections table** (Years 1-5):
   - Active customers: 5K → 150K

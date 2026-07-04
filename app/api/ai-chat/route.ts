@@ -100,7 +100,7 @@ const SYSTEM_PROMPT = `Du bist der KI-Assistent von AlltagsEngel — einer digit
 
 ÜBER ALLTAGSENGEL:
 - Digitale Plattform, die zertifizierte Alltagsbegleiter (genannt "Engel") mit pflegebedürftigen Senioren (Kunden) verbindet
-- Abrechnung über §45b SGB XI Entlastungsbetrag (€131/Monat pro Person, seit 2026)
+- Abrechnung über §45b SGB XI Entlastungsbetrag (€131/Monat pro Person, seit Pflegereform 2025)
 - Sitz: Frankfurt am Main
 - Status: Seed-Phase / Early Stage Startup
 

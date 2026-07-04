@@ -153,7 +153,7 @@ slide2.addText("Herausforderungen im Pflegemarkt:", {
 
 const problems = [
   "4,96 Millionen pflegebedürftige Menschen in Deutschland",
-  "§45b-Budget wird nur zu 40% ausgeschöpft (€7,44B vorhanden, nur €3B genutzt)",
+  "§45b-Budget wird nur zu 40% ausgeschöpft (€7,80B vorhanden, nur ~€3,1B genutzt)",
   "Mangel an zugänglichen Plattformen für Alltagsbegleiter",
   "Traditionelle Agenturen sind teuer und ineffizient",
   "Digitale Lücke zwischen Senioren und Betreuungsangeboten",
@@ -196,7 +196,7 @@ slide2.addShape(prs.ShapeType.roundRect, {
   shadow: getShadow(),
 });
 
-slide2.addText("€7,44B", {
+slide2.addText("€7,80B", {
   x: 5.7,
   y: 3.95,
   w: 3.6,
@@ -327,7 +327,7 @@ const slide4 = addContentSlide(prs, "Marktpotenzial", "Gigantischer Wachstumsmar
 // Market sizing boxes
 const marketData = [
   { label: "TAM", value: "€50B+", desc: "Gesamtmarkt Altenpflege" },
-  { label: "SAM", value: "€7,44B", desc: "§45b-Budget" },
+  { label: "SAM", value: "€7,80B", desc: "§45b-Budget" },
   { label: "SOM", value: "€150M", desc: "Realistisches Jahr 5 Ziel" },
 ];
 

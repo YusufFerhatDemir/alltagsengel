@@ -25,9 +25,9 @@ const doc = new Document({
 
       // §45b
       new Paragraph({ text: '§45b ENTLASTUNGSBETRAG — DAS HERZ DES GESCHÄFTSMODELLS', bold: true, size: 56 * 2, color: 'C9963C', spacing: { line: 360, before: 240, after: 120 } }),
-      new Paragraph({ text: '§45b SGB XI: €125/Monat pro Pflegebedürftigem ab Pflegegrad 1', size: 22 * 2, spacing: { after: 80 } }),
-      new Paragraph({ text: 'Gesamtvolumen: 4,96 Mio. × €125 × 12 = €7,44 Mrd./Jahr', size: 22 * 2, bold: true, spacing: { after: 80 } }),
-      new Paragraph({ text: 'Aktuell nur ~40% ausgeschöpft → €4,46 Mrd. ungenutzt', size: 22 * 2, spacing: { after: 80 } }),
+      new Paragraph({ text: '§45b SGB XI: €131/Monat pro Pflegebedürftigem ab Pflegegrad 1', size: 22 * 2, spacing: { after: 80 } }),
+      new Paragraph({ text: 'Gesamtvolumen: 4,96 Mio. × €131 × 12 = €7,80 Mrd./Jahr', size: 22 * 2, bold: true, spacing: { after: 80 } }),
+      new Paragraph({ text: 'Aktuell nur ~40% ausgeschöpft → €4,68 Mrd. ungenutzt', size: 22 * 2, spacing: { after: 80 } }),
       new Paragraph({ text: '• Warum? Mangel an bekannten, zugänglichen Anbietern', size: 22 * 2, spacing: { after: 80 } }),
       new Paragraph({ text: '• AlltagsEngel macht dieses Budget digital zugänglich', size: 22 * 2, spacing: { after: 240 } }),
 

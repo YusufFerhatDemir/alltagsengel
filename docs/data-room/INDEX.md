@@ -51,10 +51,10 @@ data-room/
 **Size**: 18 KB
 
 **Key Content**:
-- Market opportunity: €7.44B §45b addressable budget
-- Untapped opportunity: €4.5B (60% of market)
+- Market opportunity: €7.80B §45b addressable budget
+- Untapped opportunity: €4.7B (60% of market)
 - Revenue model: 18% commission + €9.99/month subscriptions
-- Year 5 projection: €500M revenue (6.7% penetration)
+- Year 5 projection: €500M revenue (6.4% penetration)
 - Demographic tailwind: 4.96M → 6.5M care-dependent (2023→2035)
 - Regulatory support: §45b SGB XI (stable, politically backed)
 
@@ -92,9 +92,9 @@ data-room/
 
 ### Market Opportunity
 - **Total Addressable Market (TAM)**: €50B+ German elder care
-- **Serviceable Addressable Market (SAM)**: €7.44B §45b budget
-- **Current Utilization**: €2.98B (40%)
-- **Untapped Opportunity**: €4.46B (60%)
+- **Serviceable Addressable Market (SAM)**: €7.80B §45b budget
+- **Current Utilization**: €3.12B (40%)
+- **Untapped Opportunity**: €4.68B (60%)
 
 ### Target Customer Base
 - **Segment A - Families**: 2.5M German families with elderly relatives
@@ -112,7 +112,7 @@ data-room/
 - **Active Companions**: 5,000
 - **Monthly Bookings**: 6.0 million
 - **Annual Revenue**: €1.3B (commission) + €300M (subscriptions)
-- **Market Penetration**: 6.7% of SAM
+- **Market Penetration**: 6.4% of SAM
 
 ---
 

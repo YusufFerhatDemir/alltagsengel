@@ -134,7 +134,7 @@ function buildSlides(): Slide[] {
       id: 'problem', label: 'Problem', title: 'Der Pflegemarkt braucht digitale Innovation',
       content: (
         <div className="grid-3" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(220px, 100%), 1fr))', gap: 16, marginTop: 24 }}>
-          <Card><StatBox value="€4,4 Mrd." label="Ungenutzte §45b-Mittel" sub="Von €7,79 Mrd. werden nur 40% abgerufen" /></Card>
+          <Card><StatBox value="€4,68 Mrd." label="Ungenutzte §45b-Mittel" sub="Von €7,80 Mrd. werden nur 40% abgerufen" /></Card>
           <Card><StatBox value="0" label="Digitale Plattform" sub="Analoge Vermittlung, lange Wartezeiten" /></Card>
           <Card><StatBox value="Ø 14 Tage" label="Wartezeit" sub="Keine standardisierte Qualitätssicherung" /></Card>
         </div>
@@ -174,7 +174,7 @@ function buildSlides(): Slide[] {
             </Card>
             <Card style={{ textAlign: 'center', borderColor: 'rgba(201,150,60,0.15)' }}>
               <div style={{ fontSize: 11, color: C.ink4, fontWeight: 700, letterSpacing: '0.1em', marginBottom: 8 }}>SAM</div>
-              <StatBox value="€7,79 Mrd." label="§45b Jahresbudget" />
+              <StatBox value="€7,80 Mrd." label="§45b Jahresbudget" />
             </Card>
             <Card style={{ textAlign: 'center' }}>
               <div style={{ fontSize: 11, color: C.ink4, fontWeight: 700, letterSpacing: '0.1em', marginBottom: 8 }}>SOM</div>
@@ -183,7 +183,7 @@ function buildSlides(): Slide[] {
           </div>
           <Card style={{ marginTop: 16 }}>
             <div style={{ fontSize: 13, color: C.ink3, lineHeight: 1.6 }}>
-              <strong style={{ color: C.ink }}>4,96 Mio.</strong> Pflegebedürftige in Deutschland — Tendenz steigend (+3% p.a.). Nur <strong style={{ color: C.gold }}>40%</strong> der verfügbaren §45b-Mittel werden aktuell abgerufen. Das sind <strong style={{ color: C.gold }}>€4,4 Mrd.</strong> ungenutztes Potenzial jedes Jahr.
+              <strong style={{ color: C.ink }}>4,96 Mio.</strong> Pflegebedürftige in Deutschland — Tendenz steigend (+3% p.a.). Nur <strong style={{ color: C.gold }}>40%</strong> der verfügbaren §45b-Mittel werden aktuell abgerufen. Das sind <strong style={{ color: C.gold }}>€4,68 Mrd.</strong> ungenutztes Potenzial jedes Jahr.
             </div>
           </Card>
         </div>

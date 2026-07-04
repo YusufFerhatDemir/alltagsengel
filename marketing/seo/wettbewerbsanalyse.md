@@ -20,7 +20,7 @@
 
 - Steigende Nachfrage durch demografischen Wandel
 - Hohe Dichte an Doppelverdienerhaushalten → Angehoerige haben wenig Zeit
-- Entlastungsbetrag (125 EUR/Monat) wird von vielen Berechtigten nicht genutzt (geschaetzt 40-50% Nichtnutzung)
+- Entlastungsbetrag (131 EUR/Monat) wird von vielen Berechtigten nicht genutzt (geschaetzt 40-50% Nichtnutzung)
 - Markt ist fragmentiert: viele kleine Anbieter, wenige spezialisierte Marken
 - Digitale Praesenz der meisten Anbieter ist schwach
 
@@ -268,7 +268,7 @@ Fuer folgende Fragen gibt es kaum gute lokale Inhalte:
 
 | USP | Beschreibung | SEO-Umsetzung |
 |---|---|---|
-| **Transparente Preise** | 131 EUR/Monat Eigenanteil klar kommuniziert | Preis prominent auf Kosten-Seite, in Meta Description, Schema Markup |
+| **Transparente Preise** | 131 EUR/Monat von der Pflegekasse getragen - ohne Eigenanteil - klar kommuniziert | Preis prominent auf Kosten-Seite, in Meta Description, Schema Markup |
 | **Spezialisierung** | 100% Fokus auf Alltagsbegleitung (kein Pflegedienst) | In Title Tags, H1, About-Seite hervorheben |
 | **Einfache Abrechnung** | Direkte Abrechnung mit der Pflegekasse | Als Key-Feature auf Startseite und Leistungen |
 | **Lokale Naehe** | Frankfurt am Main, alle Stadtteile | Stadtteil-Landingpages, lokaler Content |
@@ -281,7 +281,7 @@ Fuer folgende Fragen gibt es kaum gute lokale Inhalte:
 
 **Fuer SEO und Marketing-Texte:**
 
-"Alltagsengel ist der spezialisierte Anbieter fuer Alltagsbegleitung nach §45a SGB XI in Frankfurt am Main. Waehrend Pflegedienste Alltagsbegleitung nur als Nebenleistung anbieten und Wohlfahrtsverbaende lange Wartezeiten haben, konzentriert sich Alltagsengel zu 100% auf individuelle Alltagsbegleitung - zuverlaessig, persoenlich und mit transparenten Kosten. Die Pflegekasse uebernimmt 125 EUR monatlich, der Eigenanteil betraegt nur 131 EUR."
+"Alltagsengel ist der spezialisierte Anbieter fuer Alltagsbegleitung nach §45a SGB XI in Frankfurt am Main. Waehrend Pflegedienste Alltagsbegleitung nur als Nebenleistung anbieten und Wohlfahrtsverbaende lange Wartezeiten haben, konzentriert sich Alltagsengel zu 100% auf individuelle Alltagsbegleitung - zuverlaessig, persoenlich und mit transparenten Kosten. Die Pflegekasse uebernimmt 131 EUR monatlich - fuer Versicherte mit Pflegegrad in der Regel ohne Eigenanteil."
 
 ### 6.3 Differenzierung in der Suchmaschine
 
@@ -305,7 +305,7 @@ Fuer folgende Fragen gibt es kaum gute lokale Inhalte:
 | Google Business Profile vollstaendig einrichten | Niedrig | Sehr hoch | Kritisch |
 | Schema Markup (LocalBusiness, FAQ) implementieren | Niedrig | Mittel | Hoch |
 | NAP in Top-10-Verzeichnisse eintragen | Niedrig | Mittel | Hoch |
-| Kosten-Seite mit "131 EUR Eigenanteil" erstellen | Mittel | Hoch | Kritisch |
+| Kosten-Seite mit "131 EUR von der Pflegekasse - ohne Eigenanteil" erstellen | Mittel | Hoch | Kritisch |
 | Mobile-Optimierung sicherstellen | Mittel | Hoch | Kritisch |
 
 ### 7.2 Kurzfristige Massnahmen (Monat 3-4)
@@ -379,7 +379,7 @@ Der Markt fuer Alltagsbegleitung in Frankfurt am Main ist **digital unterentwick
 
 3. **Spezialisierung als Staerke nutzen:** Waehrend Pflegedienste Alltagsbegleitung als Randthema behandeln, kann Alltagsengel als Spezialist die thematische Autoritaet aufbauen.
 
-4. **Preis-Transparenz als Conversion-Hebel:** Der klare Eigenanteil von 131 EUR/Monat (mit Entlastungsbetrag) ist ein starkes Argument, das in den Suchergebnissen sofort auffaellt.
+4. **Preis-Transparenz als Conversion-Hebel:** Der von der Pflegekasse getragene Entlastungsbetrag von 131 EUR/Monat (ohne Eigenanteil) ist ein starkes Argument, das in den Suchergebnissen sofort auffaellt.
 
 5. **Schnelligkeit vor Perfektion:** Lieber schnell guten Content veroeffentlichen als monatelang am perfekten Text arbeiten. Google belohnt Konsistenz und Frische.
 

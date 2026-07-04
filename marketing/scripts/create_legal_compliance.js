@@ -210,7 +210,7 @@ function createDocument() {
       new Paragraph({ text: '', spacing: { after: 100 } }),
       
       goldHeader('§45b SGB XI - Entlastungsleistungen (Relief Services)', 3),
-      bulletPoint('Statutory Funding: €125 per month per care-dependent person for relief services'),
+      bulletPoint('Statutory Funding: €131 per month per care-dependent person for relief services'),
       bulletPoint('Service Provider Recognition: AlltagsEngel must obtain "Anerkennung" (formal recognition) from competent state authorities'),
       bulletPoint('Scope: Services must be approved activities under the social care code'),
       bulletPoint('Implementation Timeline: Recognition applications planned for pilot state prior to full market launch'),

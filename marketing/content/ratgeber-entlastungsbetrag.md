@@ -54,9 +54,9 @@ Der Entlastungsbetrag beträgt **131 Euro pro Monat** — das sind **1.572 Euro 
 |---|---|
 | Monatliche Kosten Alltagsbegleitung (Beispiel) | 256 Euro |
 | Abzüglich Entlastungsbetrag der Pflegekasse | -131 Euro |
-| **Verbleibender Eigenanteil** | **131 Euro** |
+| **Verbleibender Eigenanteil** | **125 Euro** |
 
-Bei Alltagsengel beträgt der monatliche Eigenanteil ab **131 Euro** — die Pflegekasse übernimmt den Rest direkt über den Entlastungsbetrag.
+Bei Alltagsengel übernimmt die Pflegekasse **131 Euro monatlich** direkt über den Entlastungsbetrag — nur der darüber hinausgehende Betrag wird Ihnen als Eigenanteil in Rechnung gestellt. Liegen die monatlichen Kosten bei höchstens 131 Euro, zahlen Sie keinen Eigenanteil.
 
 ---
 
@@ -136,7 +136,7 @@ Alltagsengel ist ein nach § 45a SGB XI zugelassener Anbieter für Alltagsbeglei
 - **Direkte Abrechnung** mit Ihrer Pflegekasse — kein Papierkrieg für Sie
 - **Geschulte Alltagsbegleiter**, die individuell auf Ihre Bedürfnisse eingehen
 - **Flexible Einsatzzeiten**, abgestimmt auf Ihren Alltag
-- **Geringer Eigenanteil** ab 131 Euro monatlich
+- **Geringer Eigenanteil** — die Pflegekasse übernimmt 131 Euro monatlich direkt über den Entlastungsbetrag
 
 ### So starten Sie mit Alltagsengel
 

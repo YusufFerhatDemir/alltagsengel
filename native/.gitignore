@@ -43,3 +43,10 @@ example
 /ios
 /android
 .env
+
+# Apple-Zertifikate/Keys — NIE committen
+*.p12
+*.p12.backup
+dist_modern.p12
+*.mobileprovision
+*_key.pem

@@ -65,6 +65,14 @@ export default function DatenschutzPage() {
             Verantwortliche Stelle ist die natürliche oder juristische Person, die allein oder gemeinsam mit anderen
             über die Zwecke und Mittel der Verarbeitung personenbezogener Daten entscheidet.
           </p>
+          <p>
+            Die verantwortliche Stelle für die Datenverarbeitung auf dieser Website ist:<br/>
+            Alltagsengel UG (haftungsbeschränkt)<br/>
+            Neue Mainzer Straße 66-68<br/>
+            60311 Frankfurt am Main<br/>
+            Geschäftsführer: Yusuf Ferhat Demir<br/>
+            E-Mail: info@alltagsengel.care
+          </p>
           <h3>Speicherdauer</h3>
           <p>
             Soweit innerhalb dieser Datenschutzerklärung keine speziellere Speicherdauer genannt wurde, verbleiben
