@@ -174,11 +174,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   'https://www.instagram.com/alltagsengel_ug',
                   'https://www.tiktok.com/@alltagsengel_ug',
                 ],
-                founder: {
-                  '@type': 'Person',
-                  name: 'Yusuf Ferhat Demir',
-                  jobTitle: 'Geschäftsführer',
-                },
                 foundingLocation: {
                   '@type': 'City',
                   name: 'Frankfurt am Main',

@@ -230,7 +230,15 @@
       "Bash(curl -sL -w '%{http_code}' -o ueberuns.html 'https://alltagsengel.care/ueber-uns')",
       "Bash(curl -sL -o impressum.html -w '%{http_code}' 'https://alltagsengel.care/impressum')",
       "Bash(curl -sL -o seite.html -w '%{http_code}' 'https://alltagsengel.care/')",
-      "Bash(curl -sL -o ds.html -w '%{http_code}\\\\n' 'https://alltagsengel.care/datenschutz')"
+      "Bash(curl -sL -o ds.html -w '%{http_code}\\\\n' 'https://alltagsengel.care/datenschutz')",
+      "Bash(grep -iE \"marketing/|docs/|scripts/|\\\\.md$\")",
+      "Bash(grep -viE \"\\\\$125K|125K|früher|vorher|zuvor|veraltet|alte\")",
+      "Bash(rg -n -e '€\\\\s*125' -e '125\\\\s*€' -e '125\\\\s*EUR' -e '€125' -e '125\\\\s*Euro\\(?![a-z]\\)' --pcre2 --glob '!node_modules/**' --glob '!velora/**' --glob '!app/**' --glob '!package-lock.json' --glob '!*.lock')",
+      "mcp__7c09e07f-544f-41ef-bcda-a58d99377851__list_projects",
+      "mcp__7c09e07f-544f-41ef-bcda-a58d99377851__execute_sql",
+      "Bash(curl -s -w \"\\\\nHTTP %{http_code}\\\\n\" https://www.chairmatch.de/api/indexnow/key)",
+      "mcp__7c09e07f-544f-41ef-bcda-a58d99377851__get_advisors",
+      "Bash(openssl rand *)"
     ]
   }
 }

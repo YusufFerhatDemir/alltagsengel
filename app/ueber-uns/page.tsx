@@ -177,8 +177,6 @@ export default function UeberUnsPage() {
             <dd style={{ margin: 0 }}>Neue Mainzer Straße 66-68, 60311 Frankfurt am Main</dd>
             <dt style={{ color: '#B8B0A4' }}>Handelsregister</dt>
             <dd style={{ margin: 0 }}>Amtsgericht Frankfurt am Main, HRB 140351</dd>
-            <dt style={{ color: '#B8B0A4' }}>Geschäftsführung</dt>
-            <dd style={{ margin: 0 }}>Yusuf Ferhat Demir</dd>
             <dt style={{ color: '#B8B0A4' }}>Einsatzgebiet</dt>
             <dd style={{ margin: 0 }}>Frankfurt am Main und das Rhein-Main-Gebiet (u.&nbsp;a. Offenbach, Wiesbaden, Darmstadt, Mainz, Hanau, Bad Homburg, Aschaffenburg)</dd>
           </dl>

@@ -36,7 +36,7 @@
 - 31% growth projected over 12 years
 
 **3.3 Regulatory Tailwind: §45b SGB XI**
-- €125/month benefit for non-medical companion services
+- €131/month benefit for non-medical companion services
 - €7.44B annual addressable budget
 - Only ~40% utilized = €4.5B untapped market
 - Barriers: Provider fragmentation, admin burden, quality uncertainty, geographic gaps, digital gap
@@ -94,8 +94,8 @@
 - Reduced CAC and improved LTV at scale
 
 **6.4 Pricing Strategy**
-- Customer cost: €125/month (insurance-covered)
-- Companion earning: €102.50/month (82% of €125)
+- Customer cost: €131/month (insurance-covered)
+- Companion earning: €107.42/month (82% of €131)
 - Premium tiers for accelerated bookings
 
 ### 7. MARKET SIZING (TAM / SAM / SOM)
