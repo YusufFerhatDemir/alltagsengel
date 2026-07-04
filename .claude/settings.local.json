@@ -189,7 +189,9 @@
       "Bash(git -C /Users/work/alltagsengel status --short velora/)",
       "Bash(./deploy.sh \"Velora App-Grundgerüst: Expo/RN/TS Scaffold mit Tab-Navigation, 3 Farbpaletten \\(Salbeigrün/Teal/Lavendel\\), Login/Registrierung, Home-Screen + eigenes Branding\")",
       "Bash(eas init *)",
-      "Bash(./deploy.sh \"Velora: EAS Build-Pipeline für iOS \\(eas.json + Bundle-ID com.velora.care + EAS-Projekt verknüpft\\)\")"
+      "Bash(./deploy.sh \"Velora: EAS Build-Pipeline für iOS \\(eas.json + Bundle-ID com.velora.care + EAS-Projekt verknüpft\\)\")",
+      "Bash(eas build:view 77fe8598-3f32-4fed-94d4-92a2cacdcad3)",
+      "Bash(./deploy.sh \"Velora EAS: buildNumber \\(remote versioning\\) + inaktive Channels entfernt — warnungsfreie Build-Pipeline\")"
     ]
   }
 }
