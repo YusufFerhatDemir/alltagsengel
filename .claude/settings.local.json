@@ -191,7 +191,9 @@
       "Bash(eas init *)",
       "Bash(./deploy.sh \"Velora: EAS Build-Pipeline für iOS \\(eas.json + Bundle-ID com.velora.care + EAS-Projekt verknüpft\\)\")",
       "Bash(eas build:view 77fe8598-3f32-4fed-94d4-92a2cacdcad3)",
-      "Bash(./deploy.sh \"Velora EAS: buildNumber \\(remote versioning\\) + inaktive Channels entfernt — warnungsfreie Build-Pipeline\")"
+      "Bash(./deploy.sh \"Velora EAS: buildNumber \\(remote versioning\\) + inaktive Channels entfernt — warnungsfreie Build-Pipeline\")",
+      "Bash(eas build:view 77fe8598-3f32-4fed-94d4-92a2cacdcad3 --json)",
+      "Bash(./deploy.sh \"Velora EAS-Fix: .easignore schloss velora/app/** aus \\(unanchored 'app'/'lib'/... Muster\\) → package.json fehlte im Build-Archiv; velora/ gezielt wieder eingeschlossen\")"
     ]
   }
 }

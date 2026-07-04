@@ -38,3 +38,15 @@ web-build
 *.tsbuildinfo
 .DS_Store
 .vercel
+
+# ── Velora native App (velora/app) ──────────────────────────────────────────
+# Die obigen Next.js-Ausschlüsse (app, components, constants, lib, hooks, types,
+# scripts …) sind UNANCHORED und greifen sonst auch in velora/app/** — dadurch
+# fehlte im EAS-Build-Archiv u.a. velora/app/package.json (PRE_INSTALL_HOOK-Fehler).
+# velora/ vollständig wieder einschließen, nur Build-Artefakte weiterhin ausschließen.
+!/velora
+!/velora/**
+/velora/app/node_modules
+/velora/app/.expo
+/velora/app/dist
+/velora/app/web-build
