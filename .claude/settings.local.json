@@ -217,7 +217,8 @@
       "Bash(python3 -c \"import PIL; print\\('Pillow OK', PIL.__version__\\)\")",
       "Bash(node -e \"require.resolve\\('sharp'\\); console.log\\('sharp OK'\\)\")",
       "Bash(sips -g pixelWidth -g pixelHeight /Users/work/efy-care/app/assets/images/icon.png)",
-      "Bash(node /private/tmp/claude-502/-Users-work-alltagsengel/f4e279a1-a079-4f18-be41-1ea5e09dfdab/scratchpad/gen-icons.js)"
+      "Bash(node /private/tmp/claude-502/-Users-work-alltagsengel/f4e279a1-a079-4f18-be41-1ea5e09dfdab/scratchpad/gen-icons.js)",
+      "Bash(./deploy.sh \"efy care: velora-Ordner in eigenständiges Repo /Users/work/efy-care ausgegliedert + Cleanup im Alltagsengel-Repo \\(.easignore entfernt, velora-mockup-Route + public/velora-mockup.html gelöscht, launch.json velora-web entfernt\\) — enthält zusätzlich efy-care-branding/ Assets \\(Logo-Konzepte + Social-Media-Templates, parallel erstellt\\)\")"
     ]
   }
 }
