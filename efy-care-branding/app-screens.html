@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>efy care — App Screens</title>
+<style>
+:root{--emerald:#0F5E57;--forest:#2D7A63;--sage:#A9CBB5;--ivory:#F8F6F2;--charcoal:#2D3135;--champagne:#D8C29D;--white:#FFFFFF}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'SF Pro Display','Inter','Avenir Next',system-ui,sans-serif;background:#e8e8e8;padding:40px 20px;color:var(--charcoal)}
+h1{text-align:center;font-size:28px;font-weight:300;letter-spacing:2px;margin-bottom:4px}
+h1 b{font-weight:700;letter-spacing:4px}
+.sub{text-align:center;font-size:13px;color:var(--forest);margin-bottom:30px;letter-spacing:1.5px}
+.row{display:flex;gap:24px;justify-content:center;flex-wrap:wrap;margin-bottom:32px}
+.screen-wrap{text-align:center}
+.screen-label{font-size:12px;font-weight:600;color:var(--emerald);margin-bottom:8px;letter-spacing:0.5px}
+.phone{width:280px;height:560px;background:var(--white);border-radius:32px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,0.15);position:relative;border:3px solid #1a1a1a}
+.notch{width:100px;height:20px;background:#1a1a1a;border-radius:0 0 14px 14px;position:absolute;top:0;left:50%;transform:translateX(-50%);z-index:10}
+.status-bar{height:36px;background:var(--white);display:flex;align-items:center;justify-content:space-between;padding:8px 20px 0;font-size:10px;font-weight:600}
+.status-bar .time{font-size:13px;font-weight:700}
+.status-bar .icons{display:flex;gap:3px;align-items:center}
+.content{height:440px;overflow:hidden;position:relative}
+.tab-bar{height:56px;background:var(--white);border-top:1px solid #eee;display:flex;align-items:center;justify-content:space-around;padding:0 4px}
+.tab-item{text-align:center;font-size:8px;color:#999;display:flex;flex-direction:column;align-items:center;gap:2px;width:48px}
+.tab-item.active{color:var(--emerald)}
+.tab-item svg{width:20px;height:20px}
+.tab-item.active svg{stroke:var(--emerald);fill:none}
+.ic{stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+
+/* SVG icon helpers */
+svg.icon{width:16px;height:16px;vertical-align:middle}
+svg.icon-sm{width:14px;height:14px;vertical-align:middle}
+svg.icon-lg{width:22px;height:22px}
+svg.icon-xl{width:28px;height:28px}
+
+/* Screen 1: Login */
+.login-screen{height:100%;background:linear-gradient(180deg,var(--emerald) 0%,#0a4a44 100%);display:flex;flex-direction:column;align-items:center;padding:28px 24px 16px}
+.login-logo{width:70px;height:70px;margin-bottom:10px}
+.login-logo svg{width:100%;height:100%}
+.login-title{color:var(--white);font-size:26px;font-weight:300;letter-spacing:3px;margin-bottom:2px}
+.login-title b{font-weight:700}
+.login-slogan{color:var(--sage);font-size:10px;letter-spacing:1.5px;margin-bottom:20px}
+.login-field{width:100%;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.25);border-radius:10px;padding:11px 14px;color:rgba(255,255,255,0.5);font-size:12px;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.login-field svg{width:14px;height:14px;stroke:rgba(255,255,255,0.5);fill:none;stroke-width:1.5;flex-shrink:0}
+.login-btn{width:100%;background:var(--sage);color:var(--emerald);border:none;border-radius:10px;padding:12px;font-size:14px;font-weight:600;margin-top:6px;text-align:center}
+.login-divider{color:rgba(255,255,255,0.4);font-size:10px;margin:12px 0 8px;text-align:center;display:flex;align-items:center;gap:10px}
+.login-divider::before,.login-divider::after{content:'';flex:1;height:1px;background:rgba(255,255,255,0.2)}
+.login-social{display:flex;gap:12px;justify-content:center}
+.login-social div{width:42px;height:42px;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);border-radius:10px;display:flex;align-items:center;justify-content:center}
+.login-social svg{width:18px;height:18px;fill:rgba(255,255,255,0.8)}
+.login-register{color:rgba(255,255,255,0.6);font-size:10px;margin-top:12px;text-align:center}
+.login-register a{color:var(--sage);text-decoration:none;font-weight:600}
+.forgot{text-align:right;width:100%;color:var(--sage);font-size:10px;margin-top:-2px;margin-bottom:2px}
+
+/* Screen 2: Home */
+.home-screen{height:100%;background:var(--ivory);padding:16px;overflow:hidden}
+.home-greeting{font-size:18px;font-weight:600;margin-bottom:2px}
+.home-sub{font-size:11px;color:#888;margin-bottom:12px}
+.home-next{background:var(--emerald);border-radius:12px;padding:12px 14px;margin-bottom:12px}
+.home-next .label{font-size:8px;color:var(--sage);font-weight:600;letter-spacing:1.5px;text-transform:uppercase}
+.home-next .info{font-size:12px;color:var(--white);margin-top:4px;line-height:1.4}
+.home-quick{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
+.home-quick-item{background:var(--white);border-radius:12px;padding:12px 4px 10px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,0.06)}
+.home-quick-item svg{width:24px;height:24px;stroke:var(--emerald);fill:none;stroke-width:1.5;margin-bottom:4px}
+.home-quick-item .qt{font-size:8px;color:#666;line-height:1.2}
+.home-for-you{background:var(--white);border-radius:12px;padding:12px 14px;box-shadow:0 1px 4px rgba(0,0,0,0.06)}
+.home-for-you .title{font-size:11px;font-weight:600;margin-bottom:4px}
+.home-for-you .text{font-size:10px;color:#666;line-height:1.4}
+.home-for-you .more{color:var(--forest);font-size:10px;font-weight:600;margin-top:6px;display:inline-block}
+
+/* Screen 3: Search */
+.search-screen{height:100%;background:var(--ivory);padding:14px 14px 8px}
+.search-header{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.search-header svg{width:18px;height:18px;stroke:var(--emerald);fill:none;stroke-width:2}
+.search-header .title{font-size:16px;font-weight:600}
+.search-bar{background:var(--white);border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:8px;margin-bottom:8px;box-shadow:0 1px 4px rgba(0,0,0,0.06)}
+.search-bar svg{width:14px;height:14px;stroke:#999;fill:none;stroke-width:1.5;flex-shrink:0}
+.search-bar .text{color:#999;font-size:12px;flex:1}
+.search-tags{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
+.search-tag{padding:5px 10px;border-radius:20px;font-size:10px;font-weight:500;background:var(--white);color:#666;border:1px solid #e8e8e8}
+.search-tag.active{background:var(--emerald);color:var(--white);border-color:var(--emerald)}
+.search-result{background:var(--white);border-radius:10px;padding:10px;margin-bottom:6px;display:flex;gap:10px;align-items:center;box-shadow:0 1px 3px rgba(0,0,0,0.04)}
+.search-avatar{width:36px;height:36px;border-radius:50%;background:var(--sage);display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--emerald);font-weight:700;flex-shrink:0}
+.search-info{flex:1;min-width:0}
+.search-info .name{font-size:12px;font-weight:600}
+.search-info .role{font-size:9px;color:#888;margin-top:1px}
+.search-info .dist{font-size:9px;color:var(--forest);margin-top:2px;display:flex;align-items:center;gap:3px}
+.search-info .dist svg{width:10px;height:10px;stroke:var(--forest);fill:none;stroke-width:2}
+.search-rating{font-size:10px;color:var(--champagne);white-space:nowrap;display:flex;align-items:center;gap:2px}
+.search-heart{margin-left:4px}
+.search-heart svg{width:16px;height:16px;stroke:#ccc;fill:none;stroke-width:1.5}
+.map-btn{background:var(--emerald);color:var(--white);border:none;border-radius:10px;padding:9px;font-size:11px;font-weight:600;width:100%;text-align:center;margin-top:4px;display:flex;align-items:center;justify-content:center;gap:6px}
+.map-btn svg{width:14px;height:14px;stroke:var(--white);fill:none;stroke-width:2}
+
+/* Screen 4: Booking */
+.booking-screen{height:100%;background:var(--ivory);padding:14px}
+.booking-engel{background:var(--white);border-radius:12px;padding:10px;display:flex;gap:10px;align-items:center;margin-bottom:10px;box-shadow:0 1px 3px rgba(0,0,0,0.05)}
+.booking-engel .av{width:40px;height:40px;border-radius:50%;background:var(--sage);display:flex;align-items:center;justify-content:center}
+.booking-engel .av svg{width:20px;height:20px;stroke:var(--emerald);fill:none;stroke-width:1.5}
+.booking-engel .name{font-size:13px;font-weight:600}
+.booking-engel .rating{font-size:10px;color:var(--champagne)}
+.booking-engel .dist{font-size:9px;color:#888}
+.booking-section{margin-bottom:8px}
+.booking-section .label{font-size:10px;font-weight:600;color:#888;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px}
+.booking-select{background:var(--white);border-radius:8px;padding:9px 10px;font-size:11px;border:1px solid #eee;display:flex;justify-content:space-between;align-items:center}
+.booking-select svg{width:12px;height:12px;stroke:#888;fill:none;stroke-width:2}
+.booking-date{background:var(--white);border-radius:8px;padding:9px 10px;font-size:11px;border:1px solid #eee;display:flex;align-items:center;gap:6px}
+.booking-date svg{width:14px;height:14px;stroke:var(--emerald);fill:none;stroke-width:1.5;flex-shrink:0}
+.booking-freq{display:flex;gap:6px;margin-top:4px}
+.booking-freq div{padding:5px 10px;border-radius:16px;font-size:10px;border:1px solid #eee;background:var(--white)}
+.booking-freq div.active{background:var(--sage);color:var(--emerald);border-color:var(--sage);font-weight:600}
+.booking-note{background:var(--white);border-radius:8px;padding:8px 10px;font-size:10px;color:#bbb;border:1px solid #eee;height:44px}
+.booking-btn{background:var(--emerald);color:var(--white);border:none;border-radius:10px;padding:11px;font-size:13px;font-weight:600;width:100%;text-align:center;margin-top:4px}
+
+/* Screen 5: Calendar */
+.cal-screen{height:100%;background:var(--ivory);padding:14px}
+.cal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.cal-header .title{font-size:16px;font-weight:600}
+.cal-header .add{width:26px;height:26px;background:var(--emerald);color:var(--white);border-radius:50%;display:flex;align-items:center;justify-content:center}
+.cal-header .add svg{width:14px;height:14px;stroke:var(--white);fill:none;stroke-width:2.5}
+.cal-month{font-size:12px;font-weight:600;margin-bottom:4px;display:flex;align-items:center;gap:6px}
+.cal-month svg{width:12px;height:12px;stroke:var(--emerald);fill:none;stroke-width:2}
+.cal-days{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;text-align:center;margin-bottom:8px}
+.cal-day{font-size:9px;padding:5px 2px;border-radius:6px}
+.cal-day.header{font-weight:600;color:#888;font-size:8px}
+.cal-day.today{background:var(--emerald);color:var(--white);border-radius:50%;font-weight:600}
+.cal-day.has-event{color:var(--emerald);font-weight:600;position:relative}
+.cal-day.has-event::after{content:'';width:3px;height:3px;background:var(--emerald);border-radius:50%;position:absolute;bottom:1px;left:50%;transform:translateX(-50%)}
+.cal-event{background:var(--white);border-radius:8px;padding:8px 10px;margin-bottom:5px;border-left:3px solid var(--emerald);box-shadow:0 1px 3px rgba(0,0,0,0.04)}
+.cal-event .time{font-size:9px;color:#888}
+.cal-event .name{font-size:11px;font-weight:600;margin-top:1px}
+.cal-event .engel{font-size:9px;color:var(--forest);margin-top:1px}
+.cal-event .badge{font-size:7px;padding:2px 6px;border-radius:4px;display:inline-block;font-weight:600;letter-spacing:0.3px}
+.cal-event .badge.confirmed{background:#e8f5e9;color:#2e7d32}
+.cal-event .badge.planned{background:#fff3e0;color:#ef6c00}
+.cal-event-row{display:flex;justify-content:space-between;align-items:center}
+.cal-date-label{font-size:10px;font-weight:600;color:#888;margin:6px 0 3px}
+
+/* Screen 6: Leistungsnachweis */
+.proof-screen{height:100%;background:var(--ivory);padding:14px}
+.proof-card{background:var(--white);border-radius:12px;padding:12px;box-shadow:0 1px 4px rgba(0,0,0,0.06);margin-bottom:8px}
+.proof-date{font-size:10px;color:#888;display:flex;align-items:center;gap:4px}
+.proof-date svg{width:12px;height:12px;stroke:#888;fill:none;stroke-width:1.5}
+.proof-time{font-size:12px;font-weight:600;margin-top:2px}
+.proof-items{margin-top:6px}
+.proof-item{font-size:11px;display:flex;align-items:center;gap:6px;margin-bottom:4px}
+.proof-item svg{width:16px;height:16px;stroke:var(--emerald);fill:none;stroke-width:2;flex-shrink:0}
+.proof-hint{font-size:10px;color:#888;margin:6px 0;background:var(--ivory);padding:8px;border-radius:6px;line-height:1.4;display:flex;align-items:flex-start;gap:6px}
+.proof-hint svg{width:14px;height:14px;stroke:#888;fill:none;stroke-width:1.5;flex-shrink:0;margin-top:1px}
+.proof-sig{border:2px dashed var(--sage);border-radius:8px;padding:14px;text-align:center;margin-bottom:8px;background:rgba(169,203,181,0.08)}
+.proof-sig .sig-text{font-family:'Brush Script MT',cursive;font-size:26px;color:var(--emerald)}
+.proof-sig .sig-action{font-size:9px;color:var(--forest);margin-top:3px}
+.proof-btn{background:var(--emerald);color:var(--white);border:none;border-radius:10px;padding:11px;font-size:12px;font-weight:600;width:100%;text-align:center;display:flex;align-items:center;justify-content:center;gap:6px}
+.proof-btn svg{width:14px;height:14px;stroke:var(--white);fill:none;stroke-width:2}
+.proof-dsgvo{font-size:8px;color:#999;text-align:center;margin-top:6px;display:flex;align-items:center;justify-content:center;gap:4px}
+.proof-dsgvo svg{width:10px;height:10px;stroke:#999;fill:none;stroke-width:2}
+
+/* Screen 7: Profile */
+.profile-screen{height:100%;background:var(--ivory)}
+.profile-banner{height:80px;background:linear-gradient(135deg,var(--emerald),var(--forest));position:relative}
+.profile-avatar{width:56px;height:56px;border-radius:50%;background:var(--sage);border:3px solid var(--white);position:absolute;bottom:-28px;left:50%;transform:translateX(-50%);display:flex;align-items:center;justify-content:center;overflow:hidden}
+.profile-avatar svg{width:28px;height:28px;stroke:var(--emerald);fill:none;stroke-width:1.5}
+.profile-badge{position:absolute;bottom:-18px;left:calc(50% + 22px);background:var(--champagne);color:var(--white);font-size:7px;padding:2px 5px;border-radius:4px;font-weight:700;letter-spacing:0.3px}
+.profile-info{text-align:center;padding:34px 16px 6px}
+.profile-name{font-size:15px;font-weight:600}
+.profile-stars{font-size:10px;color:var(--champagne);margin-top:2px;display:flex;align-items:center;justify-content:center;gap:2px}
+.profile-stats{display:flex;justify-content:center;gap:16px;margin-top:8px}
+.profile-stat{text-align:center}
+.profile-stat .val{font-size:12px;font-weight:600;color:var(--emerald)}
+.profile-stat .lbl{font-size:8px;color:#888}
+.profile-about{padding:0 16px;margin-top:6px}
+.profile-about .title{font-size:10px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:3px}
+.profile-about .text{font-size:10px;color:#666;line-height:1.4}
+.profile-tags{display:flex;gap:4px;flex-wrap:wrap;padding:6px 16px}
+.profile-tag{padding:4px 8px;background:var(--sage);color:var(--emerald);border-radius:12px;font-size:9px;font-weight:500}
+.profile-btn{margin:6px 16px;background:var(--emerald);color:var(--white);border:none;border-radius:10px;padding:10px;font-size:12px;font-weight:600;width:calc(100% - 32px);text-align:center;display:flex;align-items:center;justify-content:center;gap:6px}
+.profile-btn svg{width:14px;height:14px;stroke:var(--white);fill:none;stroke-width:2}
+
+/* Screen 8: Messages */
+.msg-screen{height:100%;background:var(--ivory);padding:14px}
+.msg-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.msg-header .title{font-size:16px;font-weight:600}
+.msg-header svg{width:18px;height:18px;stroke:var(--emerald);fill:none;stroke-width:1.5}
+.msg-item{background:var(--white);border-radius:10px;padding:10px;margin-bottom:6px;display:flex;gap:10px;align-items:center;box-shadow:0 1px 3px rgba(0,0,0,0.04)}
+.msg-avatar{width:36px;height:36px;border-radius:50%;background:var(--sage);display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--emerald);font-weight:700;flex-shrink:0}
+.msg-info{flex:1;min-width:0}
+.msg-name{font-size:12px;font-weight:600}
+.msg-preview{font-size:10px;color:#888;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
+.msg-meta{text-align:right;flex-shrink:0}
+.msg-time{font-size:9px;color:#888}
+.msg-badge{width:16px;height:16px;background:var(--emerald);color:var(--white);border-radius:50%;font-size:8px;display:flex;align-items:center;justify-content:center;margin-top:4px;margin-left:auto;font-weight:600}
+
+/* Screen 9: SOS */
+.sos-screen{height:100%;background:var(--ivory);display:flex;flex-direction:column;align-items:center;padding:14px}
+.sos-header{font-size:15px;font-weight:600;margin-bottom:14px;display:flex;align-items:center;gap:6px}
+.sos-header svg{width:18px;height:18px;stroke:var(--charcoal);fill:none;stroke-width:2}
+.sos-circle{width:130px;height:130px;border-radius:50%;background:linear-gradient(135deg,#c0392b,#e74c3c);display:flex;flex-direction:column;align-items:center;justify-content:center;margin-bottom:14px;box-shadow:0 4px 24px rgba(231,76,60,0.35)}
+.sos-circle .sos-text{color:var(--white);font-size:34px;font-weight:800;letter-spacing:4px}
+.sos-circle .sos-sub{color:rgba(255,255,255,0.8);font-size:9px;margin-top:2px}
+.sos-desc{text-align:center;font-size:11px;color:#666;line-height:1.5;margin-bottom:14px;padding:0 12px}
+.sos-actions{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;width:100%;margin-bottom:10px}
+.sos-action{background:var(--white);border-radius:10px;padding:12px 6px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,0.06)}
+.sos-action svg{width:24px;height:24px;stroke:var(--emerald);fill:none;stroke-width:1.5;margin-bottom:4px}
+.sos-action .label{font-size:8px;color:#666;line-height:1.2}
+.sos-warning{font-size:8px;color:#999;text-align:center;line-height:1.4;padding:0 16px}
+
+/* Screen 10: Dashboard */
+.dash-screen{height:100%;background:var(--ivory);padding:12px}
+.dash-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.dash-header .title{font-size:16px;font-weight:600}
+.dash-header svg{width:18px;height:18px;stroke:#888;fill:none;stroke-width:1.5}
+.dash-period{background:var(--white);border-radius:6px;padding:4px 8px;font-size:9px;display:flex;align-items:center;gap:4px;margin-bottom:8px;width:fit-content;border:1px solid #eee}
+.dash-period svg{width:10px;height:10px;stroke:#888;fill:none;stroke-width:2}
+.dash-stats{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px}
+.dash-stat{background:var(--white);border-radius:10px;padding:10px;box-shadow:0 1px 3px rgba(0,0,0,0.04)}
+.dash-stat .val{font-size:20px;font-weight:700;color:var(--emerald)}
+.dash-stat .lbl{font-size:8px;color:#888;margin-top:1px}
+.dash-stat .change{font-size:8px;color:var(--forest);margin-top:2px;display:flex;align-items:center;gap:2px}
+.dash-stat .change svg{width:8px;height:8px;stroke:var(--forest);fill:none;stroke-width:2.5}
+.dash-tasks{margin-top:4px}
+.dash-tasks .title{font-size:11px;font-weight:600;margin-bottom:4px}
+.dash-task{background:var(--white);border-radius:6px;padding:7px 8px;margin-bottom:4px;display:flex;justify-content:space-between;align-items:center;font-size:10px;box-shadow:0 1px 2px rgba(0,0,0,0.03)}
+.dash-task .badge{padding:2px 6px;border-radius:4px;font-size:8px;font-weight:600}
+.dash-task .badge.red{background:#ffebee;color:#c62828}
+.dash-task .badge.orange{background:#fff3e0;color:#ef6c00}
+.dash-task .badge.green{background:#e8f5e9;color:#2e7d32}
+</style>
+</head>
+<body>
+<h1>efy <b>care</b></h1>
+<div class="sub">App Screens — Neues Design</div>
+
+<!-- REUSABLE SVG ICON DEFS (hidden) -->
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none">
+<symbol id="i-home" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" class="ic"/><polyline points="9 22 9 12 15 12 15 22" class="ic"/></symbol>
+<symbol id="i-chat" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" class="ic"/></symbol>
+<symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8" class="ic"/><line x1="21" y1="21" x2="16.65" y2="16.65" class="ic"/></symbol>
+<symbol id="i-user" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" class="ic"/><circle cx="12" cy="7" r="4" class="ic"/></symbol>
+<symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2" class="ic"/><line x1="16" y1="2" x2="16" y2="6" class="ic"/><line x1="8" y1="2" x2="8" y2="6" class="ic"/><line x1="3" y1="10" x2="21" y2="10" class="ic"/></symbol>
+<symbol id="i-heart" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" class="ic"/></symbol>
+<symbol id="i-bell" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" class="ic"/><path d="M13.73 21a2 2 0 0 1-3.46 0" class="ic"/></symbol>
+<symbol id="i-mail" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" class="ic"/><polyline points="22,6 12,13 2,6" class="ic"/></symbol>
+<symbol id="i-lock" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2" class="ic"/><path d="M7 11V7a5 5 0 0 1 10 0v4" class="ic"/></symbol>
+<symbol id="i-eye" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" class="ic"/><circle cx="12" cy="12" r="3" class="ic"/></symbol>
+<symbol id="i-arrow-left" viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12" class="ic"/><polyline points="12 19 5 12 12 5" class="ic"/></symbol>
+<symbol id="i-chevron-down" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9" class="ic"/></symbol>
+<symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" class="ic"/><polyline points="12 6 12 12 16 14" class="ic"/></symbol>
+<symbol id="i-map-pin" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" class="ic"/><circle cx="12" cy="10" r="3" class="ic"/></symbol>
+<symbol id="i-star" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" fill="currentColor" stroke="none"/></symbol>
+<symbol id="i-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" class="ic"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" class="ic"/></symbol>
+<symbol id="i-check" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12" class="ic"/></symbol>
+<symbol id="i-check-circle" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" class="ic"/><polyline points="22 4 12 14.01 9 11.01" class="ic"/></symbol>
+<symbol id="i-edit" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" class="ic"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" class="ic"/></symbol>
+<symbol id="i-phone" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" class="ic"/></symbol>
+<symbol id="i-alert" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" class="ic"/><line x1="12" y1="8" x2="12" y2="12" class="ic"/><line x1="12" y1="16" x2="12.01" y2="16" class="ic"/></symbol>
+<symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" class="ic"/></symbol>
+<symbol id="i-send" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13" class="ic"/><polygon points="22 2 15 22 11 13 2 9 22 2" class="ic"/></symbol>
+<symbol id="i-plus" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19" class="ic"/><line x1="5" y1="12" x2="19" y2="12" class="ic"/></symbol>
+<symbol id="i-more" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1" class="ic" fill="currentColor"/><circle cx="19" cy="12" r="1" class="ic" fill="currentColor"/><circle cx="5" cy="12" r="1" class="ic" fill="currentColor"/></symbol>
+<symbol id="i-bar-chart" viewBox="0 0 24 24"><line x1="12" y1="20" x2="12" y2="10" class="ic"/><line x1="18" y1="20" x2="18" y2="4" class="ic"/><line x1="6" y1="20" x2="6" y2="16" class="ic"/></symbol>
+<symbol id="i-users" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" class="ic"/><circle cx="9" cy="7" r="4" class="ic"/><path d="M23 21v-2a4 4 0 0 0-3-3.87" class="ic"/><path d="M16 3.13a4 4 0 0 1 0 7.75" class="ic"/></symbol>
+<symbol id="i-trending-up" viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18" class="ic"/><polyline points="17 6 23 6 23 12" class="ic"/></symbol>
+<!-- Leaf Heart Logo symbol -->
+<symbol id="logo-leaf-heart" viewBox="0 0 200 200"><path d="M100,170 C60,138 28,108 28,72 C28,48 46,30 68,30 C86,30 98,42 100,52 C102,42 114,30 132,30 C154,30 172,48 172,72 C172,108 140,138 100,170Z" fill="#F8F6F2"/><line x1="100" y1="52" x2="100" y2="162" stroke="rgba(15,94,87,0.3)" stroke-width="2" stroke-linecap="round"/><path d="M100,78 C90,70 74,64 56,62" fill="none" stroke="rgba(15,94,87,0.25)" stroke-width="1.5" stroke-linecap="round"/><path d="M100,78 C110,70 126,64 144,62" fill="none" stroke="rgba(15,94,87,0.25)" stroke-width="1.5" stroke-linecap="round"/><path d="M100,102 C92,94 78,88 62,86" fill="none" stroke="rgba(15,94,87,0.2)" stroke-width="1.3" stroke-linecap="round"/><path d="M100,102 C108,94 122,88 138,86" fill="none" stroke="rgba(15,94,87,0.2)" stroke-width="1.3" stroke-linecap="round"/><path d="M100,126 C94,120 84,115 72,112" fill="none" stroke="rgba(15,94,87,0.15)" stroke-width="1.1" stroke-linecap="round"/><path d="M100,126 C106,120 116,115 128,112" fill="none" stroke="rgba(15,94,87,0.15)" stroke-width="1.1" stroke-linecap="round"/></symbol>
+</svg>
+
+<!-- Row 1: Screens 1-5 -->
+<div class="row">
+
+<!-- 1. Login -->
+<div class="screen-wrap">
+<div class="screen-label">1. Login / Registrierung</div>
+<div class="phone">
+<div class="notch"></div>
+<div class="status-bar" style="background:transparent;color:white"><span class="time">9:41</span><span class="icons"><svg width="14" height="10" viewBox="0 0 14 10"><rect x="0" y="3" width="2" height="7" rx="0.5" fill="rgba(255,255,255,0.7)"/><rect x="3" y="2" width="2" height="8" rx="0.5" fill="rgba(255,255,255,0.7)"/><rect x="6" y="1" width="2" height="9" rx="0.5" fill="rgba(255,255,255,0.85)"/><rect x="9" y="0" width="2" height="10" rx="0.5" fill="white"/></svg><svg width="20" height="10" viewBox="0 0 20 10"><rect x="0" y="0" width="17" height="10" rx="2" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="1"/><rect x="1.5" y="1.5" width="11" height="7" rx="1" fill="white"/><rect x="17.5" y="3" width="2" height="4" rx="1" fill="rgba(255,255,255,0.4)"/></svg></span></div>
+<div class="content">
+<div class="login-screen">
+<div class="login-logo"><svg viewBox="0 0 200 200"><use href="#logo-leaf-heart"/></svg></div>
+<div class="login-title">efy <b>care</b></div>
+<div class="login-slogan">Mit Herz. Für Menschen.</div>
+<div class="login-field"><svg viewBox="0 0 24 24"><use href="#i-mail"/></svg> E-Mail-Adresse</div>
+<div class="login-field"><svg viewBox="0 0 24 24"><use href="#i-lock"/></svg> Passwort <span style="margin-left:auto"><svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:rgba(255,255,255,0.4);fill:none;stroke-width:1.5"><use href="#i-eye"/></svg></span></div>
+<div class="forgot">Passwort vergessen?</div>
+<div class="login-btn">Anmelden</div>
+<div class="login-divider">oder weiter mit</div>
+<div class="login-social"><div><svg viewBox="0 0 24 24"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z" fill="rgba(255,255,255,0.8)" stroke="none"/></svg></div><div><svg viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4" stroke="none"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" stroke="none"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" stroke="none"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" stroke="none"/></svg></div><div><svg viewBox="0 0 24 24" style="stroke:rgba(255,255,255,0.8);fill:none;stroke-width:1.5"><use href="#i-mail"/></svg></div></div>
+<div class="login-register">Neu hier? <a href="#">Konto erstellen</a></div>
+</div>
+</div>
+<div class="tab-bar" style="visibility:hidden;height:28px"></div>
+</div>
+</div>
+
+<!-- 2. Home -->
+<div class="screen-wrap">
+<div class="screen-label">2. Startseite Kunde</div>
+<div class="phone">
+<div class="notch"></div>
+<div class="status-bar"><span class="time">9:41</span><span class="icons"><svg width="14" height="10" viewBox="0 0 14 10"><rect x="0" y="3" width="2" height="7" rx="0.5" fill="#999"/><rect x="3" y="2" width="2" height="8" rx="0.5" fill="#999"/><rect x="6" y="1" width="2" height="9" rx="0.5" fill="#666"/><rect x="9" y="0" width="2" height="10" rx="0.5" fill="#333"/></svg><svg width="20" height="10" viewBox="0 0 20 10"><rect x="0" y="0" width="17" height="10" rx="2" fill="none" stroke="#999" stroke-width="1"/><rect x="1.5" y="1.5" width="11" height="7" rx="1" fill="#333"/><rect x="17.5" y="3" width="2" height="4" rx="1" fill="#999"/></svg></span></div>
+<div class="content">
+<div class="home-screen">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><div class="home-greeting">Hallo Anna</div><svg width="20" height="20" viewBox="0 0 24 24" style="stroke:var(--charcoal);fill:none;stroke-width:1.5"><use href="#i-bell"/></svg></div>
+<div class="home-sub">Schön, dass Sie da sind.</div>
+<div class="home-next">
+<div class="label">Nächster Termin</div>
+<div class="info">Heute · 14:00 – 16:00<br><span style="font-size:10px;opacity:0.7">Betreuung durch Maria S.</span></div>
+</div>
+<div class="home-quick">
+<div class="home-quick-item"><svg viewBox="0 0 24 24"><use href="#i-search"/></svg><div class="qt">Hilfe suchen</div></div>
+<div class="home-quick-item"><svg viewBox="0 0 24 24"><use href="#i-calendar"/></svg><div class="qt">Betreuung buchen</div></div>
+<div class="home-quick-item"><svg viewBox="0 0 24 24"><use href="#i-clock"/></svg><div class="qt">Meine Termine</div></div>
+<div class="home-quick-item"><svg viewBox="0 0 24 24"><use href="#i-chat"/></svg><div class="qt">Nachrichten</div></div>
+</div>
+<div class="home-for-you">
+<div class="title">Für Sie</div>
+<div class="text">Wir sind mit Herz für Sie und Ihre Liebsten da. Entdecken Sie unsere Leistungen.</div>
+<div class="more">Mehr erfahren →</div>
+</div>
+</div>
+</div>
+<div class="tab-bar">
+<div class="tab-item active"><svg viewBox="0 0 24 24"><use href="#i-home"/></svg>Start</div>
+<div class="tab-item"><svg viewBox="0 0 24 24"><use href="#i-chat"/></svg>Chat</div>
+<div class="tab-item" style="color:var(--emerald)"><svg viewBox="0 0 24 24" style="width:24px;height:24px;stroke:var(--emerald);fill:var(--sage);stroke-width:1.5"><use href="#i-heart"/></svg></div>
+<div class="tab-item"><svg viewBox="0 0 24 24"><use href="#i-search"/></svg>Hilfe</div>
+<div class="tab-item"><svg viewBox="0 0 24 24"><use href="#i-user"/></svg>Profil</div>
+</div>
+</div>
+</div>
+
+<!-- 3. Hilfe suchen -->
+<div class="screen-wrap">
+<div class="screen-label">3. Hilfe suchen</div>
+<div class="phone">
+<div class="notch"></div>
+<div class="status-bar"><span class="time">9:41</span><span class="icons"><svg width="14" height="10" viewBox="0 0 14 10"><rect x="0" y="3" width="2" height="7" rx="0.5" fill="#999"/><rect x="3" y="2" width="2" height="8" rx="0.5" fill="#999"/><rect x="6" y="1" width="2" height="9" rx="0.5" fill="#666"/><rect x="9" y="0" width="2" height="10" rx="0.5" fill="#333"/></svg><svg width="20" height="10" viewBox="0 0 20 10"><rect x="0" y="0" width="17" height="10" rx="2" fill="none" stroke="#999" stroke-width="1"/><rect x="1.5" y="1.5" width="11" height="7" rx="1" fill="#333"/><rect x="17.5" y="3" width="2" height="4" rx="1" fill="#999"/></svg></span></div>
+<div class="content">
+<div class="search-screen">
+<div class="search-header"><svg viewBox="0 0 24 24"><use href="#i-arrow-left"/></svg><span class="title">Hilfe suchen</span></div>
+<div class="search-bar"><svg viewBox="0 0 24 24"><use href="#i-search"/></svg><span class="text">Ort, PLZ oder Name</span><svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:#888;fill:none;stroke-width:1.5;margin-left:auto"><use href="#i-settings"/></svg></div>
+<div class="search-tags"><div class="search-tag active">Alle</div><div class="search-tag">Grundpflege</div><div class="search-tag">Haushalt</div><div class="search-tag">Begleitung</div></div>
+<div style="font-size:10px;font-weight:600;margin-bottom:6px;color:#888;text-transform:uppercase;letter-spacing:0.5px">Empfohlene Engel</div>
+<div class="search-result"><div class="search-avatar">MS</div><div class="search-info"><div class="name">Maria S.</div><div class="role">Grundpflege, Demenzbetreuung</div><div class="dist"><svg viewBox="0 0 24 24"><use href="#i-map-pin"/></svg> 2,3 km</div></div><div class="search-rating"><svg width="10" height="10" viewBox="0 0 24 24" style="fill:var(--champagne);stroke:none"><use href="#i-star"/></svg> 4,9</div><div class="search-heart"><svg viewBox="0 0 24 24"><use href="#i-heart"/></svg></div></div>
+<div class="search-result"><div class="search-avatar">SK</div><div class="search-info"><div class="name">Sabine K.</div><div class="role">Haushalt, Begleitung</div><div class="dist"><svg viewBox="0 0 24 24"><use href="#i-map-pin"/></svg> 3,1 km</div></div><div class="search-rating"><svg width="10" height="10" viewBox="0 0 24 24" style="fill:var(--champagne);stroke:none"><use href="#i-star"/></svg> 4,8</div><div class="search-heart"><svg viewBox="0 0 24 24"><use href="#i-heart"/></svg></div></div>
+<div class="search-result"><div class="search-avatar">TH</div><div class="search-info"><div class="name">Thomas H.</div><div class="role">Alltagsbegleitung, Fahrdienste</div><div class="dist"><svg viewBox="0 0 24 24"><use href="#i-map-pin"/></svg> 4,5 km</div></div><div class="search-rating"><svg width="10" height="10" viewBox="0 0 24 24" style="fill:var(--champagne);stroke:none"><use href="#i-star"/></svg> 4,9</div><div class="search-heart"><svg viewBox="0 0 24 24"><use href="#i-heart"/></svg></div></div>
+<div class="map-btn"><svg viewBox="0 0 24 24"><use href="#i-map-pin"/></svg> Karte anzeigen</div>
+</div>
+</div>
+<div class="tab-bar">
+<div class="tab-item"><svg viewBox="0 0 24 24"><use href="#i-home"/></svg>Start</div>
+<div class="tab-item"><svg viewBox="0 0 24 24"><use href="#i-chat"/></svg>Chat</div>
+<div class="tab-item" style="color:var(--emerald)"><svg viewBox="0 0 24 24" style="width:24px;height:24px;stroke:var(--emerald);fill:var(--sage);stroke-width:1.5"><use href="#i-heart"/></svg></div>
+<div class="tab-item active"><svg viewBox="0 0 24 24"><use href="#i-search"/></svg>Hilfe</div>
+<div class="tab-item"><svg viewBox="0 0 24 24"><use href="#i-user"/></svg>Profil</div>
+</div>
+</div>
+</div>
+
+<!-- 4. Betreuung buchen -->
+<div class="screen-wrap">
+<div class="screen-label">4. Betreuung buchen</div>
+<div class="phone">
+<div class="notch"></div>
+<div class="status-bar"><span class="time">9:41</span><span class="icons"><svg width="14" height="10" viewBox="0 0 14 10"><rect x="0" y="3" width="2" height="7" rx="0.5" fill="#999"/><rect x="3" y="2" width="2" height="8" rx="0.5" fill="#999"/><rect x="6" y="1" width="2" height="9" rx="0.5" fill="#666"/><rect x="9" y="0" width="2" height="10" rx="0.5" fill="#333"/></svg><svg width="20" height="10" viewBox="0 0 20 10"><rect x="0" y="0" width="17" height="10" rx="2" fill="none" stroke="#999" stroke-width="1"/><rect x="1.5" y="1.5" width="11" height="7" rx="1" fill="#333"/><rect x="17.5" y="3" width="2" height="4" rx="1" fill="#999"/></svg></span></div>
+<div class="content">
+<div class="booking-screen">
+<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><svg width="18" height="18" viewBox="0 0 24 24" style="stroke:var(--emerald);fill:none;stroke-width:2"><use href="#i-arrow-left"/></svg><span style="font-size:15px;font-weight:600">Betreuung buchen</span></div>
+<div class="booking-engel"><div class="av"><svg viewBox="0 0 24 24"><use href="#i-user"/></svg></div><div><div class="name">Maria S.</div><div class="rating"><svg width="10" height="10" viewBox="0 0 24 24" style="fill:var(--champagne);stroke:none"><use href="#i-star"/></svg> 4,9 (128)</div><div class="dist">2,3 km entfernt</div></div></div>
+<div class="booking-section"><div class="label">Leistung</div><div class="booking-select">Grundpflege · 32,50€/Std <svg viewBox="0 0 24 24"><use href="#i-chevron-down"/></svg></div></div>
+<div class="booking-section"><div class="label">Datum & Uhrzeit</div><div class="booking-date"><svg viewBox="0 0 24 24"><use href="#i-calendar"/></svg> Di, 21. Mai 2024 <svg viewBox="0 0 24 24"><use href="#i-clock"/></svg> 14:00 – 16:00</div></div>
+<div class="booking-section"><div class="label">Häufigkeit</div><div class="booking-freq"><div class="active">Einmalig</div><div>Wöchentlich</div><div>Individuell</div></div></div>
+<div class="booking-section"><div class="label">Hinweis (optional)</div><div class="booking-note">z. B. Besonderheiten, Wünsche...</div></div>
+<div class="booking-btn">Buchung prüfen</div>
+</div>
+</div>
+<div class="tab-bar">
+<div class="tab-item"><svg viewBox="0 0 24 24"><use href="#i-home"/></svg>Start</div>
+<div class="tab-item"><svg viewBox="0 0 24 24"><use href="#i-chat"/></svg>Chat</div>
+<div class="tab-item" style="color:var(--emerald)"><svg viewBox="0 0 24 24" style="width:24px;height:24px;stroke:var(--emerald);fill:var(--sage);stroke-width:1.5"><use href="#i-heart"/></svg></div>
+<div class="tab-item"><svg viewBox="0 0 24 24"><use href="#i-search"/></svg>Hilfe</div>
+<div class="tab-item"><svg viewBox="0 0 24 24"><use href="#i-user"/></svg>Profil</div>
+</div>
+</div>
+</div>
+
+<!-- 5. Kalender -->
+<div class="screen-wrap">
+<div class="screen-label">5. Kalender / Termine</div>
+<div class="phone">
+<div class="notch"></div>
+<div class="status-bar"><span class="time">9:41</span><span class="icons"><svg width="14" height="10" viewBox="0 0 14 10"><rect x="0" y="3" width="2" height="7" rx="0.5" fill="#999"/><rect x="3" y="2" width="2" height="8" rx="0.5" fill="#999"/><rect x="6" y="1" width="2" height="9" rx="0.5" fill="#666"/><rect x="9" y="0" width="2" height="10" rx="0.5" fill="#333"/></svg><svg width="20" height="10" viewBox="0 0 20 10"><rect x="0" y="0" width="17" height="10" rx="2" fill="none" stroke="#999" stroke-width="1"/><rect x="1.5" y="1.5" width="11" height="7" rx="1" fill="#333"/><rect x="17.5" y="3" width="2" height="4" rx="1" fill="#999"/></svg></span></div>
+<div class="content">
+<div class="cal-screen">
+<div class="cal-header"><div class="title">Meine Termine</div><div class="add"><svg viewBox="0 0 24 24"><use href="#i-plus"/></svg></div></div>
+<div class="cal-month"><svg viewBox="0 0 24 24"><use href="#i-arrow-left"/></svg> Mai 2024 <svg viewBox="0 0 24 24" style="transform:rotate(180deg)"><use href="#i-arrow-left"/></svg></div>
+<div class="cal-days">
+<div class="cal-day header">Mo</div><div class="cal-day header">Di</div><div class="cal-day header">Mi</div><div class="cal-day header">Do</div><div class="cal-day header">Fr</div><div class="cal-day header">Sa</div><div class="cal-day header">So</div>
+<div class="cal-day"></div><div class="cal-day"></div><div class="cal-day">1</div><div class="cal-day">2</div><div class="cal-day">3</div><div class="cal-day">4</div><div class="cal-day">5</div>
+<div class="cal-day">6</div><div class="cal-day">7</div><div class="cal-day">8</div><div class="cal-day">9</div><div class="cal-day">10</div><div class="cal-day">11</div><div class="cal-day">12</div>
+<div class="cal-day">13</div><div class="cal-day">14</div><div class="cal-day">15</div><div class="cal-day">16</div><div class="cal-day">17</div><div class="cal-day">18</div><div class="cal-day">19</div>
+<div class="cal-day">20</div><div class="cal-day today">21</div><div class="cal-day has-event">22</div><div class="cal-day has-event">23</div><div class="cal-day has-event">24</div><div class="cal-day">25</div><div class="cal-day">26</div>
+</div>
+<div class="cal-date-label">Dienstag, 21. Mai</div>
+<div class="cal-event"><div class="cal-event-row"><div><div class="time">14:00 – 16:00</div><div class="name">Betreuung</div><div class="engel">Maria S.</div></div><div class="badge confirmed">Bestätigt</div></div></div>
+<div class="cal-date-label">Donnerstag, 23. Mai</div>
+<div class="cal-event"><div class="cal-event-row"><div><div class="time">10:00 – 12:00</div><div class="name">Hauswirtschaft</div><div class="engel">Sabine K.</div></div><div class="badge planned">Geplant</div></div></div>
+<div class="cal-date-label">Freitag, 24. Mai</div>
+<div class="cal-event"><div class="cal-event-row"><div><div class="time">09:00 – 11:00</div><div class="name">Begleitung Arztbesuch</div><div class="engel">Thomas H.</div></div><div class="badge planned">Geplant</div></div></div>
+</div>
+</div>
+<div class="tab-bar">
+<div class="tab-item"><svg viewBox="0 0 24 24"><use href="#i-home"/></svg>Start</div>
+<div class="tab-item"><svg viewBox="0 0 24 24"><use href="#i-chat"/></svg>Chat</div>
+<div class="tab-item" style="color:var(--emerald)"><svg viewBox="0 0 24 24" style="width:24px;height:24px;stroke:var(--emerald);fill:var(--sage);stroke-width:1.5"><use href="#i-heart"/></svg></div>
+<div class="tab-item"><svg viewBox="0 0 24 24"><use href="#i-search"/></svg>Hilfe</div>
+<div class="tab-item active"><svg viewBox="0 0 24 24"><use href="#i-calendar"/></svg>Termine</div>
+</div>
+</div>
+</div>
+
+</div>
+
+<!-- Row 2: Screens 6-10 -->
+<div class="row">
+
+<!-- 6. Leistungsnachweis -->
+<div class="screen-wrap">
+<div class="screen-label">6. Leistungsnachweis</div>
+<div class="phone">
+<div class="notch"></div>
+<div class="status-bar"><span class="time">9:41</span><span class="icons"><svg width="14" height="10" viewBox="0 0 14 10"><rect x="0" y="3" width="2" height="7" rx="0.5" fill="#999"/><rect x="3" y="2" width="2" height="8" rx="0.5" fill="#999"/><rect x="6" y="1" width="2" height="9" rx="0.5" fill="#666"/><rect x="9" y="0" width="2" height="10" rx="0.5" fill="#333"/></svg><svg width="20" height="10" viewBox="0 0 20 10"><rect x="0" y="0" width="17" height="10" rx="2" fill="none" stroke="#999" stroke-width="1"/><rect x="1.5" y="1.5" width="11" height="7" rx="1" fill="#333"/><rect x="17.5" y="3" width="2" height="4" rx="1" fill="#999"/></svg></span></div>
+<div class="content">
+<div class="proof-screen">
+<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><svg width="18" height="18" viewBox="0 0 24 24" style="stroke:var(--emerald);fill:none;stroke-width:2"><use href="#i-arrow-left"/></svg><span style="font-size:15px;font-weight:600">Leistungsnachweis</span></div>
+<div class="proof-card">
+<div class="proof-date"><svg viewBox="0 0 24 24"><use href="#i-calendar"/></svg> Dienstag, 21. Mai 2024</div>
+<div class="proof-time">14:00 – 16:00 · 2 Std.<br><span style="font-size:10px;color:#888">Maria S.</span></div>
+</div>
+<div style="font-size:10px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px">Erbrachte Leistungen</div>
+<div class="proof-items">
+<div class="proof-item"><svg viewBox="0 0 24 24"><use href="#i-check-circle"/></svg> Grundpflege</div>
+<div class="proof-item"><svg viewBox="0 0 24 24"><use href="#i-check-circle"/></svg> Unterstützung im Alltag</div>
+<div class="proof-item"><svg viewBox="0 0 24 24"><use href="#i-check-circle"/></svg> Demenzbetreuung</div>
+</div>
+<div class="proof-hint"><svg viewBox="0 0 24 24"><use href="#i-alert"/></svg> Bitte prüfen und unterschreiben Sie den Nachweis.</div>
+<div class="proof-sig"><div class="sig-text" style="font-style:italic">Anna Müller</div><div class="sig-action">Unterschrift · Löschen</div></div>
+<div class="proof-btn"><svg viewBox="0 0 24 24"><use href="#i-edit"/></svg> Jetzt unterschreiben</div>
+<div class="proof-dsgvo"><svg viewBox="0 0 24 24"><use href="#i-shield"/></svg> Sicher & DSGVO-konform</div>
+</div>
+</div>
+<div class="tab-bar" style="visibility:hidden;height:28px"></div>
+</div>
+</div>
+
+<!-- 7. Engel-Profil -->
+<div class="screen-wrap">
+<div class="screen-label">7. Engel-Profil</div>
+<div class="phone">
+<div class="notch"></div>
+<div class="status-bar" style="background:transparent;position:absolute;z-index:2;width:calc(100% - 6px);color:white"><span class="time">9:41</span><span class="icons"><svg width="14" height="10" viewBox="0 0 14 10"><rect x="0" y="3" width="2" height="7" rx="0.5" fill="rgba(255,255,255,0.7)"/><rect x="3" y="2" width="2" height="8" rx="0.5" fill="rgba(255,255,255,0.7)"/><rect x="6" y="1" width="2" height="9" rx="0.5" fill="rgba(255,255,255,0.85)"/><rect x="9" y="0" width="2" height="10" rx="0.5" fill="white"/></svg><svg width="20" height="10" viewBox="0 0 20 10"><rect x="0" y="0" width="17" height="10" rx="2" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="1"/><rect x="1.5" y="1.5" width="11" height="7" rx="1" fill="white"/><rect x="17.5" y="3" width="2" height="4" rx="1" fill="rgba(255,255,255,0.4)"/></svg></span></div>
+<div class="content">
+<div class="profile-screen">
+<div class="profile-banner">
+<div style="position:absolute;top:10px;left:12px"><svg width="18" height="18" viewBox="0 0 24 24" style="stroke:white;fill:none;stroke-width:2"><use href="#i-arrow-left"/></svg></div>
+<div style="position:absolute;top:10px;right:12px"><svg width="18" height="18" viewBox="0 0 24 24" style="stroke:white;fill:none;stroke-width:2"><use href="#i-more"/></svg></div>
+<div class="profile-avatar"><svg viewBox="0 0 24 24"><use href="#i-user"/></svg></div>
+<div class="profile-badge">TOP</div>
+</div>
+<div class="profile-info">
+<div class="profile-name">Maria Schmidt</div>
+<div class="profile-stars"><svg width="12" height="12" viewBox="0 0 24 24" style="fill:var(--champagne);stroke:none"><use href="#i-star"/></svg> 4,9 (128 Bewertungen)</div>
+<div class="profile-stats">
+<div class="profile-stat"><div class="val">2,3 km</div><div class="lbl">Entfernung</div></div>
+<div class="profile-stat"><div class="val">5 Jahre</div><div class="lbl">Erfahrung</div></div>
+<div class="profile-stat"><div class="val">Geprüft</div><div class="lbl">Zertifiziert</div></div>
+</div>
+</div>
+<div class="profile-about"><div class="title">Über mich</div><div class="text">Mit Herz und Erfahrung unterstütze ich Sie im Alltag, in der Grundpflege und bei allem, was Ihnen wichtig ist.</div></div>
+<div style="padding:4px 16px 0;font-size:10px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:0.5px">Leistungen</div>
+<div class="profile-tags"><div class="profile-tag">Grundpflege</div><div class="profile-tag">Haushalt</div><div class="profile-tag">Begleitung</div><div class="profile-tag">Demenz</div></div>
+<div class="profile-btn"><svg viewBox="0 0 24 24"><use href="#i-calendar"/></svg> Betreuung buchen</div>
+</div>
+</div>
+<div class="tab-bar">
+<div class="tab-item"><svg viewBox="0 0 24 24"><use href="#i-home"/></svg>Start</div>
+<div class="tab-item"><svg viewBox="0 0 24 24"><use href="#i-chat"/></svg>Chat</div>
+<div class="tab-item" style="color:var(--emerald)"><svg viewBox="0 0 24 24" style="width:24px;height:24px;stroke:var(--emerald);fill:var(--sage);stroke-width:1.5"><use href="#i-heart"/></svg></div>
+<div class="tab-item"><svg viewBox="0 0 24 24"><use href="#i-search"/></svg>Hilfe</div>
+<div class="tab-item active"><svg viewBox="0 0 24 24"><use href="#i-user"/></svg>Profil</div>
+</div>
+</div>
+</div>
+
+<!-- 8. Nachrichten -->
+<div class="screen-wrap">
+<div class="screen-label">8. Nachrichten</div>
+<div class="phone">
+<div class="notch"></div>
+<div class="status-bar"><span class="time">9:41</span><span class="icons"><svg width="14" height="10" viewBox="0 0 14 10"><rect x="0" y="3" width="2" height="7" rx="0.5" fill="#999"/><rect x="3" y="2" width="2" height="8" rx="0.5" fill="#999"/><rect x="6" y="1" width="2" height="9" rx="0.5" fill="#666"/><rect x="9" y="0" width="2" height="10" rx="0.5" fill="#333"/></svg><svg width="20" height="10" viewBox="0 0 20 10"><rect x="0" y="0" width="17" height="10" rx="2" fill="none" stroke="#999" stroke-width="1"/><rect x="1.5" y="1.5" width="11" height="7" rx="1" fill="#333"/><rect x="17.5" y="3" width="2" height="4" rx="1" fill="#999"/></svg></span></div>
+<div class="content">
+<div class="msg-screen">
+<div class="msg-header"><div class="title">Nachrichten</div><svg viewBox="0 0 24 24"><use href="#i-edit"/></svg></div>
+<div class="msg-item"><div class="msg-avatar">MS</div><div class="msg-info"><div class="msg-name">Maria Schmidt</div><div class="msg-preview">Vielen Dank, bis morgen!</div></div><div class="msg-meta"><div class="msg-time">09:30</div><div class="msg-badge">2</div></div></div>
+<div class="msg-item"><div class="msg-avatar" style="background:var(--emerald);color:white;font-size:9px;font-weight:700">efy</div><div class="msg-info"><div class="msg-name">efy care Team</div><div class="msg-preview">Ihr Termin morgen wurde bestätigt.</div></div><div class="msg-meta"><div class="msg-time">Gestern</div></div></div>
+<div class="msg-item"><div class="msg-avatar">SK</div><div class="msg-info"><div class="msg-name">Sabine Keller</div><div class="msg-preview">Können wir den Termin verschieben?</div></div><div class="msg-meta"><div class="msg-time">Mo</div></div></div>
+<div class="msg-item"><div class="msg-avatar" style="background:var(--forest);color:white;font-size:9px;font-weight:700">efy</div><div class="msg-info"><div class="msg-name">efy care Info</div><div class="msg-preview">Neue Leistungen in Ihrer Nähe.</div></div><div class="msg-meta"><div class="msg-time">10. Mai</div></div></div>
+<div class="msg-item"><div class="msg-avatar">TH</div><div class="msg-info"><div class="msg-name">Thomas Huber</div><div class="msg-preview">Danke für die tolle Betreuung!</div></div><div class="msg-meta"><div class="msg-time">8. Mai</div></div></div>
+</div>
+</div>
+<div class="tab-bar">
+<div class="tab-item"><svg viewBox="0 0 24 24"><use href="#i-home"/></svg>Start</div>
+<div class="tab-item active"><svg viewBox="0 0 24 24"><use href="#i-chat"/></svg>Chat</div>
+<div class="tab-item" style="color:var(--emerald)"><svg viewBox="0 0 24 24" style="width:24px;height:24px;stroke:var(--emerald);fill:var(--sage);stroke-width:1.5"><use href="#i-heart"/></svg></div>
+<div class="tab-item"><svg viewBox="0 0 24 24"><use href="#i-search"/></svg>Hilfe</div>
+<div class="tab-item"><svg viewBox="0 0 24 24"><use href="#i-user"/></svg>Profil</div>
+</div>
+</div>
+</div>
+
+<!-- 9. Notfall -->
+<div class="screen-wrap">
+<div class="screen-label">9. Notfall / Soforthilfe</div>
+<div class="phone">
+<div class="notch"></div>
+<div class="status-bar"><span class="time">9:41</span><span class="icons"><svg width="14" height="10" viewBox="0 0 14 10"><rect x="0" y="3" width="2" height="7" rx="0.5" fill="#999"/><rect x="3" y="2" width="2" height="8" rx="0.5" fill="#999"/><rect x="6" y="1" width="2" height="9" rx="0.5" fill="#666"/><rect x="9" y="0" width="2" height="10" rx="0.5" fill="#333"/></svg><svg width="20" height="10" viewBox="0 0 20 10"><rect x="0" y="0" width="17" height="10" rx="2" fill="none" stroke="#999" stroke-width="1"/><rect x="1.5" y="1.5" width="11" height="7" rx="1" fill="#333"/><rect x="17.5" y="3" width="2" height="4" rx="1" fill="#999"/></svg></span></div>
+<div class="content">
+<div class="sos-screen">
+<div class="sos-header"><svg viewBox="0 0 24 24"><use href="#i-shield"/></svg> Notfall / Soforthilfe</div>
+<div class="sos-circle"><div class="sos-text">SOS</div><div class="sos-sub">Jetzt Hilfe rufen</div></div>
+<div class="sos-desc">Sie benötigen sofort Unterstützung?<br>Wir sind rund um die Uhr für Sie da.</div>
+<div class="sos-actions">
+<div class="sos-action"><svg viewBox="0 0 24 24"><use href="#i-phone"/></svg><div class="label">Anrufen</div></div>
+<div class="sos-action"><svg viewBox="0 0 24 24"><use href="#i-bell"/></svg><div class="label">Notfallkontakt</div></div>
+<div class="sos-action"><svg viewBox="0 0 24 24"><use href="#i-map-pin"/></svg><div class="label">Standort teilen</div></div>
+</div>
+<div class="sos-warning">Dies ist kein Ersatz für den Notruf 112.<br>In lebensbedrohlichen Situationen rufen Sie 112.</div>
+</div>
+</div>
+<div class="tab-bar">
+<div class="tab-item"><svg viewBox="0 0 24 24"><use href="#i-home"/></svg>Start</div>
+<div class="tab-item"><svg viewBox="0 0 24 24"><use href="#i-chat"/></svg>Chat</div>
+<div class="tab-item" style="color:var(--emerald)"><svg viewBox="0 0 24 24" style="width:24px;height:24px;stroke:var(--emerald);fill:var(--sage);stroke-width:1.5"><use href="#i-heart"/></svg></div>
+<div class="tab-item"><svg viewBox="0 0 24 24"><use href="#i-search"/></svg>Hilfe</div>
+<div class="tab-item" style="color:#c0392b"><svg viewBox="0 0 24 24" style="stroke:#c0392b"><use href="#i-shield"/></svg>Notfall</div>
+</div>
+</div>
+</div>
+
+<!-- 10. Dashboard -->
+<div class="screen-wrap">
+<div class="screen-label">10. Admin Dashboard</div>
+<div class="phone">
+<div class="notch"></div>
+<div class="status-bar"><span class="time">9:41</span><span class="icons"><svg width="14" height="10" viewBox="0 0 14 10"><rect x="0" y="3" width="2" height="7" rx="0.5" fill="#999"/><rect x="3" y="2" width="2" height="8" rx="0.5" fill="#999"/><rect x="6" y="1" width="2" height="9" rx="0.5" fill="#666"/><rect x="9" y="0" width="2" height="10" rx="0.5" fill="#333"/></svg><svg width="20" height="10" viewBox="0 0 20 10"><rect x="0" y="0" width="17" height="10" rx="2" fill="none" stroke="#999" stroke-width="1"/><rect x="1.5" y="1.5" width="11" height="7" rx="1" fill="#333"/><rect x="17.5" y="3" width="2" height="4" rx="1" fill="#999"/></svg></span></div>
+<div class="content">
+<div class="dash-screen">
+<div class="dash-header"><div class="title">Dashboard</div><svg viewBox="0 0 24 24"><use href="#i-more"/></svg></div>
+<div class="dash-period"><svg viewBox="0 0 24 24"><use href="#i-calendar"/></svg> Diese Woche <svg viewBox="0 0 24 24"><use href="#i-chevron-down"/></svg></div>
+<div class="dash-stats">
+<div class="dash-stat"><div class="val">128</div><div class="lbl">Einsätze</div><div class="change"><svg viewBox="0 0 24 24"><use href="#i-trending-up"/></svg> +12%</div></div>
+<div class="dash-stat"><div class="val">12.450 €</div><div class="lbl">Umsatz</div><div class="change"><svg viewBox="0 0 24 24"><use href="#i-trending-up"/></svg> +8%</div></div>
+<div class="dash-stat"><div class="val">34</div><div class="lbl">Engel aktiv</div><div class="change"><svg viewBox="0 0 24 24"><use href="#i-trending-up"/></svg> +6%</div></div>
+<div class="dash-stat"><div class="val">87%</div><div class="lbl">Auslastung</div><div class="change"><svg viewBox="0 0 24 24"><use href="#i-trending-up"/></svg> +5%</div></div>
+</div>
+<div class="dash-tasks">
+<div class="title">Aktuelle Aufgaben</div>
+<div class="dash-task"><span>3 neue Buchungsanfragen</span><span class="badge red">Dringend</span></div>
+<div class="dash-task"><span>2 Rückmeldungen offen</span><span class="badge orange">Offen</span></div>
+<div class="dash-task"><span>1 Qualitätsprüfung fällig</span><span class="badge green">Normal</span></div>
+</div>
+</div>
+</div>
+<div class="tab-bar">
+<div class="tab-item active"><svg viewBox="0 0 24 24"><use href="#i-bar-chart"/></svg>Dashboard</div>
+<div class="tab-item"><svg viewBox="0 0 24 24"><use href="#i-users"/></svg>Engel</div>
+<div class="tab-item"><svg viewBox="0 0 24 24"><use href="#i-user"/></svg>Kunden</div>
+<div class="tab-item"><svg viewBox="0 0 24 24"><use href="#i-more"/></svg>Mehr</div>
+</div>
+</div>
+</div>
+
+</div>
+
+</body>
+</html>
