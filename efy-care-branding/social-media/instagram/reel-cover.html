@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1080">
+  <title>efy care - Reel Cover Template</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      width: 1080px;
+      height: 1920px;
+      overflow: hidden;
+      font-family: 'Inter', sans-serif;
+      background: #2D3135;
+      position: relative;
+    }
+
+    .canvas {
+      width: 1080px;
+      height: 1920px;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Dramatic background */
+    .bg-gradient {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse at 50% 30%, rgba(15, 94, 87, 0.3) 0%, transparent 60%),
+        radial-gradient(ellipse at 20% 80%, rgba(45, 122, 99, 0.15) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 70%, rgba(15, 94, 87, 0.1) 0%, transparent 40%);
+    }
+
+    /* Accent lines */
+    .accent-line {
+      position: absolute;
+      background: linear-gradient(90deg, transparent, #0F5E57, transparent);
+      height: 1px;
+    }
+    .al-1 { top: 280px; left: 0; right: 0; opacity: 0.3; }
+    .al-2 { bottom: 400px; left: 0; right: 0; opacity: 0.2; }
+
+    .accent-line-v {
+      position: absolute;
+      background: linear-gradient(180deg, transparent, rgba(15, 94, 87, 0.3), transparent);
+      width: 1px;
+    }
+    .alv-1 { left: 120px; top: 200px; height: 500px; }
+    .alv-2 { right: 120px; bottom: 300px; height: 400px; }
+
+    /* Corner accents */
+    .corner {
+      position: absolute;
+      width: 60px;
+      height: 60px;
+    }
+    .corner-tl { top: 60px; left: 60px; border-top: 2px solid rgba(15, 94, 87, 0.4); border-left: 2px solid rgba(15, 94, 87, 0.4); }
+    .corner-tr { top: 60px; right: 60px; border-top: 2px solid rgba(15, 94, 87, 0.4); border-right: 2px solid rgba(15, 94, 87, 0.4); }
+    .corner-bl { bottom: 60px; left: 60px; border-bottom: 2px solid rgba(15, 94, 87, 0.4); border-left: 2px solid rgba(15, 94, 87, 0.4); }
+    .corner-br { bottom: 60px; right: 60px; border-bottom: 2px solid rgba(15, 94, 87, 0.4); border-right: 2px solid rgba(15, 94, 87, 0.4); }
+
+    /* Emerald glow circles */
+    .glow-circle {
+      position: absolute;
+      border-radius: 50%;
+      border: 1px solid rgba(15, 94, 87, 0.15);
+    }
+    .gc-1 { width: 500px; height: 500px; top: 50%; left: 50%; transform: translate(-50%, -50%); }
+    .gc-2 { width: 350px; height: 350px; top: 50%; left: 50%; transform: translate(-50%, -50%); border-color: rgba(15, 94, 87, 0.1); }
+    .gc-3 { width: 700px; height: 700px; top: 50%; left: 50%; transform: translate(-50%, -50%); border-color: rgba(15, 94, 87, 0.06); }
+
+    /* Dot grid pattern */
+    .dot-grid {
+      position: absolute;
+      top: 340px;
+      right: 100px;
+      display: grid;
+      grid-template-columns: repeat(4, 12px);
+      grid-template-rows: repeat(4, 12px);
+      gap: 8px;
+      opacity: 0.15;
+    }
+    .dot-grid span {
+      width: 3px;
+      height: 3px;
+      border-radius: 50%;
+      background: #0F5E57;
+    }
+
+    .dot-grid-2 {
+      position: absolute;
+      bottom: 500px;
+      left: 100px;
+      display: grid;
+      grid-template-columns: repeat(3, 12px);
+      grid-template-rows: repeat(3, 12px);
+      gap: 8px;
+      opacity: 0.12;
+    }
+    .dot-grid-2 span {
+      width: 3px;
+      height: 3px;
+      border-radius: 50%;
+      background: #D8C29D;
+    }
+
+    /* Content */
+    .content {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      width: 100%;
+      height: 100%;
+      padding: 120px 80px;
+    }
+
+    /* Category tag */
+    .category-tag {
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: #0F5E57;
+      background: rgba(15, 94, 87, 0.15);
+      border: 1px solid rgba(15, 94, 87, 0.25);
+      padding: 10px 24px;
+      border-radius: 30px;
+      margin-bottom: 60px;
+    }
+
+    /* Spacer */
+    .spacer { flex: 1; }
+
+    /* Title */
+    .reel-title {
+      font-family: 'Manrope', sans-serif;
+      font-size: 78px;
+      font-weight: 800;
+      color: #F8F6F2;
+      line-height: 1.1;
+      max-width: 850px;
+      margin-bottom: 30px;
+      text-shadow: 0 4px 30px rgba(0,0,0,0.3);
+    }
+
+    .reel-subtitle {
+      font-family: 'Inter', sans-serif;
+      font-size: 22px;
+      font-weight: 300;
+      color: rgba(248, 246, 242, 0.5);
+      max-width: 600px;
+      line-height: 1.5;
+      margin-bottom: 60px;
+    }
+
+    /* Play button */
+    .play-button {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #0F5E57, #2D7A63);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      box-shadow: 0 8px 40px rgba(15, 94, 87, 0.4), 0 0 0 8px rgba(15, 94, 87, 0.1);
+    }
+
+    .play-button::before {
+      content: '';
+      position: absolute;
+      inset: -16px;
+      border-radius: 50%;
+      border: 1px solid rgba(15, 94, 87, 0.2);
+    }
+
+    .play-button svg {
+      width: 40px;
+      height: 40px;
+      fill: #F8F6F2;
+      margin-left: 6px;
+    }
+
+    /* Duration badge */
+    .duration-badge {
+      margin-top: 24px;
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      color: rgba(248, 246, 242, 0.4);
+      letter-spacing: 1px;
+    }
+
+    /* Bottom branding */
+    .bottom-branding {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .brand-line {
+      width: 40px;
+      height: 1px;
+      background: rgba(216, 194, 157, 0.3);
+      margin-bottom: 8px;
+    }
+
+    .logo {
+      font-family: 'Manrope', sans-serif;
+      font-weight: 700;
+      font-size: 26px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .logo-efy { color: #F8F6F2; }
+    .logo-heart { color: #D8C29D; font-size: 15px; margin: 0 3px; }
+    .logo-care { color: #A9CBB5; }
+
+    .slogan {
+      font-family: 'Inter', sans-serif;
+      font-size: 12px;
+      font-weight: 400;
+      color: rgba(248, 246, 242, 0.3);
+      letter-spacing: 1.5px;
+    }
+
+    /* Side emerald bars */
+    .side-bar {
+      position: absolute;
+      width: 4px;
+      background: linear-gradient(180deg, transparent, #0F5E57, transparent);
+    }
+    .sb-left { left: 0; top: 30%; height: 40%; }
+    .sb-right { right: 0; top: 40%; height: 30%; }
+  </style>
+</head>
+<body>
+  <div class="canvas">
+    <!-- Background -->
+    <div class="bg-gradient"></div>
+    <div class="accent-line al-1"></div>
+    <div class="accent-line al-2"></div>
+    <div class="accent-line-v alv-1"></div>
+    <div class="accent-line-v alv-2"></div>
+    <div class="corner corner-tl"></div>
+    <div class="corner corner-tr"></div>
+    <div class="corner corner-bl"></div>
+    <div class="corner corner-br"></div>
+    <div class="glow-circle gc-1"></div>
+    <div class="glow-circle gc-2"></div>
+    <div class="glow-circle gc-3"></div>
+    <div class="side-bar sb-left"></div>
+    <div class="side-bar sb-right"></div>
+
+    <div class="dot-grid">
+      <span></span><span></span><span></span><span></span>
+      <span></span><span></span><span></span><span></span>
+      <span></span><span></span><span></span><span></span>
+      <span></span><span></span><span></span><span></span>
+    </div>
+    <div class="dot-grid-2">
+      <span></span><span></span><span></span>
+      <span></span><span></span><span></span>
+      <span></span><span></span><span></span>
+    </div>
+
+    <!-- Content -->
+    <div class="content">
+      <div class="category-tag">Kategorie / Thema</div>
+
+      <div class="spacer"></div>
+
+      <h1 class="reel-title">Reel Titel</h1>
+      <p class="reel-subtitle">Kurzbeschreibung oder Teaser-Text für Ihr Reel</p>
+
+      <div class="play-button">
+        <svg viewBox="0 0 24 24">
+          <polygon points="8,5 19,12 8,19"/>
+        </svg>
+      </div>
+      <div class="duration-badge">0:30 &bull; Reel</div>
+
+      <div class="spacer"></div>
+
+      <div class="bottom-branding">
+        <div class="brand-line"></div>
+        <div class="logo">
+          <span class="logo-efy">efy</span>
+          <span class="logo-heart">&#9829;</span>
+          <span class="logo-care">care</span>
+        </div>
+        <div class="slogan">Mit Herz. Für Menschen.</div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

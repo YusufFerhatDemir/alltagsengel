@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=400, initial-scale=1.0">
+<title>efy care — TikTok Profilbild</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --deep-emerald: #0F5E57;
+    --forest-green: #2D7A63;
+    --sage-green: #A9CBB5;
+    --warm-ivory: #F8F6F2;
+    --charcoal: #2D3135;
+    --champagner: #D8C29D;
+  }
+
+  body {
+    width: 400px;
+    height: 400px;
+    overflow: hidden;
+    font-family: 'Manrope', sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #e0e0e0;
+  }
+
+  .container {
+    width: 400px;
+    height: 400px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Outer champagner ring */
+  .outer-ring {
+    width: 380px;
+    height: 380px;
+    border-radius: 50%;
+    border: 4px solid var(--champagner);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+
+  /* Secondary subtle ring */
+  .outer-ring::before {
+    content: '';
+    position: absolute;
+    inset: -12px;
+    border-radius: 50%;
+    border: 1px solid rgba(216,194,157,0.3);
+  }
+
+  /* Inner circle with gradient */
+  .inner-circle {
+    width: 356px;
+    height: 356px;
+    border-radius: 50%;
+    background: linear-gradient(145deg, var(--deep-emerald) 0%, #0a4a44 60%, #083e39 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Subtle radial glow */
+  .inner-circle::before {
+    content: '';
+    position: absolute;
+    top: -40px;
+    left: -40px;
+    width: 250px;
+    height: 250px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(45,122,99,0.35) 0%, transparent 70%);
+  }
+
+  /* Bottom subtle glow */
+  .inner-circle::after {
+    content: '';
+    position: absolute;
+    bottom: -20px;
+    right: -20px;
+    width: 180px;
+    height: 180px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(216,194,157,0.08) 0%, transparent 70%);
+  }
+
+  /* Logo text */
+  .logo {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+  }
+
+  .logo-main {
+    font-family: 'Manrope', sans-serif;
+    font-size: 72px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    line-height: 1;
+    margin-bottom: 2px;
+  }
+
+  .logo-main .efy { color: var(--warm-ivory); }
+  .logo-main .heart {
+    color: var(--champagner);
+    font-size: 44px;
+    vertical-align: middle;
+    margin: 0 2px;
+  }
+
+  .logo-sub {
+    font-family: 'Manrope', sans-serif;
+    font-size: 56px;
+    font-weight: 700;
+    color: var(--sage-green);
+    letter-spacing: 8px;
+    line-height: 1;
+    margin-top: 4px;
+  }
+
+  /* Thin decorative line under logo */
+  .logo-line {
+    width: 60px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--champagner), transparent);
+    margin-top: 16px;
+    opacity: 0.5;
+    position: relative;
+    z-index: 2;
+  }
+</style>
+</head>
+<body>
+  <div class="container">
+    <div class="outer-ring">
+      <div class="inner-circle">
+        <div class="logo">
+          <div class="logo-main">
+            <span class="efy">efy</span>
+          </div>
+          <div class="logo-sub">care</div>
+        </div>
+        <div class="logo-line"></div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

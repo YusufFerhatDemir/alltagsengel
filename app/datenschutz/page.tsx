@@ -195,6 +195,19 @@ export default function DatenschutzPage() {
               Datenschutzerklärung von Sentry
             </a>.
           </p>
+          <h3>Google Tag Manager & Google Ads (Consent Mode v2)</h3>
+          <p>
+            Zur Auslieferung von Marketing-Tags und zur Messung von Werbe-Conversions nutzen wir den Google Tag
+            Manager sowie Google Ads (Google Ireland Ltd., Gordon House, Barrow Street, Dublin 4, Irland). Diese
+            Dienste laden erst nach Ihrer ausdrücklichen Einwilligung Cookies bzw. übertragen Daten wie IP-Adresse,
+            aufgerufene Seiten und Geräteinformationen an Google. Standardmäßig ist das Tracking über den Google
+            Consent Mode v2 deaktiviert („denied") und wird erst nach Ihrer Zustimmung im Cookie-Banner aktiviert.
+            Ihre Einwilligung können Sie jederzeit über die Cookie-Einstellungen widerrufen. Rechtsgrundlage ist
+            Art. 6 Abs. 1 lit. a DSGVO (Einwilligung). Weitere Informationen:{' '}
+            <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer" style={{ color: '#C9963C', textDecoration: 'underline' }}>
+              Datenschutzerklärung von Google
+            </a>.
+          </p>
         </section>
 
         <section className="legal-section">

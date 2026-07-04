@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=2560">
+  <title>efy care - YouTube Channel Banner</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      width: 2560px;
+      height: 1440px;
+      overflow: hidden;
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(135deg, #0F5E57 0%, #1A6B5E 30%, #2D7A63 70%, #246E5B 100%);
+      position: relative;
+    }
+
+    .canvas {
+      width: 2560px;
+      height: 1440px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* ===== SAFE ZONE INDICATOR ===== */
+    /* Center 1546x423 — visible on all devices */
+    .safe-zone {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 1546px;
+      height: 423px;
+      border: 1px dashed rgba(248, 246, 242, 0.08);
+      border-radius: 4px;
+      z-index: 50;
+      pointer-events: none;
+    }
+
+    /* ===== ORGANIC BACKGROUND SHAPES ===== */
+
+    /* Large leaf shape — top-left */
+    .leaf-tl {
+      position: absolute;
+      top: -80px;
+      left: -60px;
+      width: 600px;
+      height: 600px;
+      opacity: 0.06;
+      z-index: 1;
+    }
+    .leaf-tl::before {
+      content: '';
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(ellipse at 30% 40%, #A9CBB5 0%, transparent 70%);
+      border-radius: 80% 20% 60% 40% / 60% 30% 70% 40%;
+      transform: rotate(-25deg);
+    }
+    .leaf-tl::after {
+      content: '';
+      position: absolute;
+      top: 120px;
+      left: 180px;
+      width: 200px;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(216, 194, 157, 0.5), transparent);
+      transform: rotate(-25deg);
+    }
+
+    /* Large leaf shape — bottom-right */
+    .leaf-br {
+      position: absolute;
+      bottom: -120px;
+      right: -80px;
+      width: 700px;
+      height: 700px;
+      opacity: 0.05;
+      z-index: 1;
+    }
+    .leaf-br::before {
+      content: '';
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(ellipse at 60% 50%, #2D7A63 0%, transparent 65%);
+      border-radius: 40% 60% 30% 70% / 50% 40% 60% 50%;
+      transform: rotate(15deg);
+    }
+    .leaf-br::after {
+      content: '';
+      position: absolute;
+      bottom: 200px;
+      right: 160px;
+      width: 250px;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(169, 203, 181, 0.4), transparent);
+      transform: rotate(15deg);
+    }
+
+    /* Wave shape — top-right */
+    .wave-tr {
+      position: absolute;
+      top: -200px;
+      right: 200px;
+      width: 800px;
+      height: 500px;
+      opacity: 0.04;
+      z-index: 1;
+    }
+    .wave-tr::before {
+      content: '';
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background: #A9CBB5;
+      border-radius: 60% 40% 50% 50% / 70% 30% 70% 30%;
+      transform: rotate(20deg);
+    }
+
+    /* Wave shape — bottom-left */
+    .wave-bl {
+      position: absolute;
+      bottom: -250px;
+      left: 100px;
+      width: 900px;
+      height: 500px;
+      opacity: 0.04;
+      z-index: 1;
+    }
+    .wave-bl::before {
+      content: '';
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background: #D8C29D;
+      border-radius: 50% 50% 40% 60% / 40% 60% 40% 60%;
+      transform: rotate(-10deg);
+    }
+
+    /* Small organic blob — mid-left */
+    .blob-ml {
+      position: absolute;
+      top: 300px;
+      left: 80px;
+      width: 200px;
+      height: 200px;
+      opacity: 0.06;
+      z-index: 1;
+    }
+    .blob-ml::before {
+      content: '';
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle, #A9CBB5 0%, transparent 70%);
+      border-radius: 60% 40% 50% 50%;
+    }
+
+    /* Small organic blob — mid-right */
+    .blob-mr {
+      position: absolute;
+      top: 400px;
+      right: 120px;
+      width: 180px;
+      height: 180px;
+      opacity: 0.05;
+      z-index: 1;
+    }
+    .blob-mr::before {
+      content: '';
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle, #D8C29D 0%, transparent 70%);
+      border-radius: 50% 50% 40% 60%;
+    }
+
+    /* ===== DECORATIVE CIRCLES ===== */
+    .circle-deco {
+      position: absolute;
+      border-radius: 50%;
+      border: 1px solid rgba(169, 203, 181, 0.08);
+      z-index: 1;
+    }
+    .circle-1 {
+      top: 100px;
+      left: 300px;
+      width: 400px;
+      height: 400px;
+    }
+    .circle-2 {
+      bottom: 50px;
+      right: 250px;
+      width: 350px;
+      height: 350px;
+    }
+    .circle-3 {
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 900px;
+      height: 900px;
+      border-color: rgba(169, 203, 181, 0.04);
+    }
+    .circle-4 {
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 1200px;
+      height: 1200px;
+      border-color: rgba(169, 203, 181, 0.03);
+    }
+
+    /* ===== DECORATIVE LINES ===== */
+    .deco-line {
+      position: absolute;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(216, 194, 157, 0.25), transparent);
+      z-index: 1;
+    }
+    .line-1 {
+      top: 180px;
+      left: 120px;
+      width: 100px;
+    }
+    .line-2 {
+      bottom: 220px;
+      right: 140px;
+      width: 120px;
+    }
+    .line-3 {
+      top: 50%;
+      left: 80px;
+      width: 60px;
+      transform: translateY(-50%);
+    }
+    .line-4 {
+      top: 50%;
+      right: 80px;
+      width: 60px;
+      transform: translateY(-50%);
+    }
+
+    /* ===== DECORATIVE DOTS ===== */
+    .dot {
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(216, 194, 157, 0.3);
+      z-index: 1;
+    }
+    .dot-1 { top: 175px; left: 230px; width: 6px; height: 6px; }
+    .dot-2 { bottom: 215px; right: 270px; width: 5px; height: 5px; }
+    .dot-3 { top: 350px; left: 500px; width: 4px; height: 4px; opacity: 0.6; }
+    .dot-4 { top: 280px; right: 450px; width: 4px; height: 4px; opacity: 0.5; }
+    .dot-5 { bottom: 320px; left: 400px; width: 3px; height: 3px; opacity: 0.4; }
+    .dot-6 { bottom: 350px; right: 380px; width: 5px; height: 5px; opacity: 0.5; }
+
+    /* ===== LEAF SVG DECORATIONS ===== */
+    .svg-leaf {
+      position: absolute;
+      z-index: 1;
+    }
+    .svg-leaf-1 {
+      top: 60px;
+      right: 100px;
+      width: 220px;
+      height: 220px;
+      opacity: 0.04;
+      transform: rotate(30deg);
+    }
+    .svg-leaf-2 {
+      bottom: 80px;
+      left: 60px;
+      width: 200px;
+      height: 200px;
+      opacity: 0.05;
+      transform: rotate(-20deg) scaleX(-1);
+    }
+    .svg-leaf-3 {
+      top: 200px;
+      left: 650px;
+      width: 120px;
+      height: 120px;
+      opacity: 0.03;
+      transform: rotate(60deg);
+    }
+    .svg-leaf-4 {
+      bottom: 180px;
+      right: 600px;
+      width: 100px;
+      height: 100px;
+      opacity: 0.03;
+      transform: rotate(-45deg);
+    }
+
+    /* ===== GRADIENT OVERLAY FOR DEPTH ===== */
+    .gradient-overlay {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse at 50% 50%, rgba(15, 94, 87, 0.0) 0%, rgba(15, 94, 87, 0.3) 100%),
+        radial-gradient(circle at 20% 30%, rgba(45, 122, 99, 0.15) 0%, transparent 50%),
+        radial-gradient(circle at 80% 70%, rgba(15, 94, 87, 0.2) 0%, transparent 50%);
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    /* ===== MAIN CONTENT ===== */
+    .content {
+      position: absolute;
+      inset: 0;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Top tagline */
+    .tagline-top {
+      font-family: 'Inter', sans-serif;
+      font-size: 16px;
+      font-weight: 500;
+      letter-spacing: 5px;
+      text-transform: uppercase;
+      color: #D8C29D;
+      margin-bottom: 36px;
+      opacity: 0.9;
+    }
+
+    /* Logo section */
+    .logo-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 28px;
+    }
+
+    .logo {
+      font-family: 'Manrope', sans-serif;
+      font-weight: 700;
+      font-size: 96px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      line-height: 1;
+    }
+    .logo-efy {
+      color: #F8F6F2;
+      text-shadow: 0 2px 20px rgba(15, 94, 87, 0.4);
+    }
+    .logo-heart {
+      color: #D8C29D;
+      font-size: 52px;
+      margin: 0 8px;
+      display: inline-flex;
+      align-items: center;
+      filter: drop-shadow(0 2px 8px rgba(216, 194, 157, 0.3));
+    }
+    .logo-care {
+      color: #A9CBB5;
+      text-shadow: 0 2px 20px rgba(45, 122, 99, 0.4);
+    }
+
+    /* Thin separator line under logo */
+    .separator {
+      width: 120px;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, #D8C29D, transparent);
+      margin-bottom: 28px;
+    }
+
+    /* Slogan */
+    .slogan {
+      font-family: 'Inter', sans-serif;
+      font-size: 28px;
+      font-weight: 300;
+      color: #F8F6F2;
+      letter-spacing: 4px;
+      margin-bottom: 40px;
+      opacity: 0.85;
+    }
+
+    /* Sub-descriptor */
+    .descriptor {
+      font-family: 'Inter', sans-serif;
+      font-size: 15px;
+      font-weight: 400;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: #A9CBB5;
+      opacity: 0.7;
+      margin-bottom: 48px;
+    }
+
+    /* Social handles area */
+    .social-handles {
+      display: flex;
+      align-items: center;
+      gap: 40px;
+    }
+
+    .social-handle {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: 'Inter', sans-serif;
+      font-size: 15px;
+      font-weight: 400;
+      color: rgba(248, 246, 242, 0.5);
+      letter-spacing: 0.5px;
+    }
+
+    .social-icon {
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .social-icon svg {
+      width: 18px;
+      height: 18px;
+      fill: rgba(216, 194, 157, 0.5);
+    }
+
+    .social-divider {
+      width: 1px;
+      height: 16px;
+      background: rgba(248, 246, 242, 0.15);
+    }
+
+    /* ===== BOTTOM ACCENT BAR ===== */
+    .bottom-accent {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #0F5E57, #D8C29D 35%, #A9CBB5 50%, #D8C29D 65%, #2D7A63);
+      z-index: 20;
+    }
+
+    /* ===== TOP ACCENT BAR ===== */
+    .top-accent {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, #2D7A63, #D8C29D 40%, #A9CBB5 50%, #D8C29D 60%, #0F5E57);
+      z-index: 20;
+      opacity: 0.6;
+    }
+
+    /* ===== CORNER FLOURISHES ===== */
+    .corner {
+      position: absolute;
+      width: 80px;
+      height: 80px;
+      z-index: 5;
+      opacity: 0.15;
+    }
+    .corner-tl {
+      top: 40px;
+      left: 40px;
+      border-top: 1px solid #D8C29D;
+      border-left: 1px solid #D8C29D;
+      border-radius: 4px 0 0 0;
+    }
+    .corner-tr {
+      top: 40px;
+      right: 40px;
+      border-top: 1px solid #D8C29D;
+      border-right: 1px solid #D8C29D;
+      border-radius: 0 4px 0 0;
+    }
+    .corner-bl {
+      bottom: 40px;
+      left: 40px;
+      border-bottom: 1px solid #D8C29D;
+      border-left: 1px solid #D8C29D;
+      border-radius: 0 0 0 4px;
+    }
+    .corner-br {
+      bottom: 40px;
+      right: 40px;
+      border-bottom: 1px solid #D8C29D;
+      border-right: 1px solid #D8C29D;
+      border-radius: 0 0 4px 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="canvas">
+
+    <!-- Background organic shapes -->
+    <div class="leaf-tl"></div>
+    <div class="leaf-br"></div>
+    <div class="wave-tr"></div>
+    <div class="wave-bl"></div>
+    <div class="blob-ml"></div>
+    <div class="blob-mr"></div>
+
+    <!-- Decorative circles -->
+    <div class="circle-deco circle-1"></div>
+    <div class="circle-deco circle-2"></div>
+    <div class="circle-deco circle-3"></div>
+    <div class="circle-deco circle-4"></div>
+
+    <!-- Decorative lines -->
+    <div class="deco-line line-1"></div>
+    <div class="deco-line line-2"></div>
+    <div class="deco-line line-3"></div>
+    <div class="deco-line line-4"></div>
+
+    <!-- Decorative dots -->
+    <div class="dot dot-1"></div>
+    <div class="dot dot-2"></div>
+    <div class="dot dot-3"></div>
+    <div class="dot dot-4"></div>
+    <div class="dot dot-5"></div>
+    <div class="dot dot-6"></div>
+
+    <!-- SVG leaf decorations -->
+    <svg class="svg-leaf svg-leaf-1" viewBox="0 0 200 200">
+      <path d="M100,10 C50,10 10,50 10,100 C10,150 40,190 100,190 C120,190 140,170 150,140 C160,110 190,80 190,50 C190,30 170,10 140,10 C125,10 110,15 100,10Z" fill="#A9CBB5"/>
+      <path d="M100,30 C100,30 100,180 100,180" stroke="rgba(248,246,242,0.15)" stroke-width="1" fill="none"/>
+      <path d="M60,60 C60,60 100,100 100,100" stroke="rgba(248,246,242,0.1)" stroke-width="0.5" fill="none"/>
+      <path d="M140,60 C140,60 100,100 100,100" stroke="rgba(248,246,242,0.1)" stroke-width="0.5" fill="none"/>
+      <path d="M50,100 C50,100 100,130 100,130" stroke="rgba(248,246,242,0.08)" stroke-width="0.5" fill="none"/>
+      <path d="M150,100 C150,100 100,130 100,130" stroke="rgba(248,246,242,0.08)" stroke-width="0.5" fill="none"/>
+    </svg>
+
+    <svg class="svg-leaf svg-leaf-2" viewBox="0 0 200 200">
+      <path d="M100,10 C50,10 10,50 10,100 C10,150 40,190 100,190 C120,190 140,170 150,140 C160,110 190,80 190,50 C190,30 170,10 140,10 C125,10 110,15 100,10Z" fill="#A9CBB5"/>
+      <path d="M100,30 C100,30 100,180 100,180" stroke="rgba(248,246,242,0.15)" stroke-width="1" fill="none"/>
+      <path d="M60,60 C60,60 100,100 100,100" stroke="rgba(248,246,242,0.1)" stroke-width="0.5" fill="none"/>
+      <path d="M140,60 C140,60 100,100 100,100" stroke="rgba(248,246,242,0.1)" stroke-width="0.5" fill="none"/>
+    </svg>
+
+    <svg class="svg-leaf svg-leaf-3" viewBox="0 0 200 200">
+      <path d="M100,20 C60,20 20,60 20,100 C20,140 50,180 100,180 C130,180 160,150 170,120 C180,90 190,50 170,30 C150,10 130,20 100,20Z" fill="#D8C29D"/>
+    </svg>
+
+    <svg class="svg-leaf svg-leaf-4" viewBox="0 0 200 200">
+      <path d="M100,20 C60,20 20,60 20,100 C20,140 50,180 100,180 C130,180 160,150 170,120 C180,90 190,50 170,30 C150,10 130,20 100,20Z" fill="#A9CBB5"/>
+    </svg>
+
+    <!-- Gradient overlay for depth -->
+    <div class="gradient-overlay"></div>
+
+    <!-- Corner flourishes -->
+    <div class="corner corner-tl"></div>
+    <div class="corner corner-tr"></div>
+    <div class="corner corner-bl"></div>
+    <div class="corner corner-br"></div>
+
+    <!-- Top accent -->
+    <div class="top-accent"></div>
+
+    <!-- Safe zone indicator -->
+    <div class="safe-zone"></div>
+
+    <!-- Main content (centered in safe zone) -->
+    <div class="content">
+      <div class="tagline-top">Pflege &bull; Betreuung &bull; Lebensqualit&auml;t</div>
+
+      <div class="logo-container">
+        <div class="logo">
+          <span class="logo-efy">efy</span>
+          <span class="logo-heart">&#9829;</span>
+          <span class="logo-care">care</span>
+        </div>
+      </div>
+
+      <div class="separator"></div>
+
+      <div class="slogan">Mit Herz. F&uuml;r Menschen.</div>
+
+      <div class="descriptor">Ihr Partner f&uuml;r Alltagsbegleitung &amp; Betreuung</div>
+
+      <div class="social-handles">
+        <div class="social-handle">
+          <!-- YouTube icon -->
+          <div class="social-icon">
+            <svg viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+          </div>
+          <span>@efycare</span>
+        </div>
+
+        <div class="social-divider"></div>
+
+        <div class="social-handle">
+          <!-- Instagram icon -->
+          <div class="social-icon">
+            <svg viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z"/></svg>
+          </div>
+          <span>@efycare</span>
+        </div>
+
+        <div class="social-divider"></div>
+
+        <div class="social-handle">
+          <!-- Globe/Web icon -->
+          <div class="social-icon">
+            <svg viewBox="0 0 24 24"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm-.5 2.05A9.96 9.96 0 0 1 16.79 4.5H9.5V2.27c.64-.13 1.3-.2 2-.22zm-3.5.5V4.5H3.21A9.97 9.97 0 0 1 8 2.55zM2.05 6.5h5.45v4H2.27a9.9 9.9 0 0 1-.22-4zm0 6h5.23a14.1 14.1 0 0 0 .22 4H2.27a9.9 9.9 0 0 1-.22-4zm1.16 6h4.79v1.95A9.97 9.97 0 0 1 3.21 18.5zm8.29 3.45c-.7-.02-1.36-.09-2-.22V18.5h5.29a9.96 9.96 0 0 1-3.29 3.45zM9.5 16.5v-4h5v4h-5zm0-6v-4h5v4h-5zm6.5 6h4.79a9.97 9.97 0 0 1-4.79 1.95V16.5zm5.23-4H16.5v-4h5.23a9.9 9.9 0 0 1 .22 4h-.72zm-.44-6H16.5V4.55a9.97 9.97 0 0 1 4.79 1.95h-.5z"/></svg>
+          </div>
+          <span>www.efycare.de</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom accent -->
+    <div class="bottom-accent"></div>
+  </div>
+</body>
+</html>

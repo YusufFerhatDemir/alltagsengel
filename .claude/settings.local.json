@@ -200,7 +200,24 @@
       "Bash(node -e \"console.log\\(require\\('next/package.json'\\).version\\)\")",
       "Bash(node -e \"console.log\\(require\\('postcss/package.json'\\).version\\)\")",
       "Bash(node -e \"console.log\\('next still at', require\\('next/package.json'\\).version\\)\")",
-      "Bash(./deploy.sh \"Security: postcss ^8.5.10 override \\(behebt XSS-Advisory ohne katastrophalen next@9-Downgrade\\) + AppMockup neutraler Demo-Name statt Personenname — 131€/1.572€/DDG/Impressum bereits live \\(8297eb2\\)\")"
+      "Bash(./deploy.sh \"Security: postcss ^8.5.10 override \\(behebt XSS-Advisory ohne katastrophalen next@9-Downgrade\\) + AppMockup neutraler Demo-Name statt Personenname — 131€/1.572€/DDG/Impressum bereits live \\(8297eb2\\)\")",
+      "Bash(cat .easignore)",
+      "Bash(cat .claude/launch.json)",
+      "Bash(echo \"=== target free? ===\" && ls -la /Users/work/efy-care 2>/dev/null && echo \"EXISTS\" || echo \"free\"; echo \"=== same filesystem? ===\" && df /Users/work/alltagsengel | tail -1 | awk '{print $1}' && df /Users/work | tail -1 | awk '{print $1}'; echo \"=== full git status short ===\" && git status --short | head -40)",
+      "Bash(set -e)",
+      "Bash(mv /Users/work/alltagsengel/velora /Users/work/efy-care)",
+      "Bash(mkdir -p /Users/work/efy-care/design)",
+      "Bash(mv /Users/work/alltagsengel/velora-mockup.html /Users/work/efy-care/design/efy-care-mockup.html)",
+      "Bash(mv /Users/work/alltagsengel/efy-care-logos.html /Users/work/efy-care/design/efy-care-logos.html)",
+      "Bash(ls -la /Users/work/efy-care/ 2>/dev/null && echo \"---EFY-CARE EXISTS---\"; echo \"===VELORA===\"; ls -la /Users/work/alltagsengel/velora/ 2>/dev/null; echo \"===VELORA/APP===\"; ls -la /Users/work/alltagsengel/velora/app/ 2>/dev/null)",
+      "Bash(cd /Users/work/chairmatch && echo \"=== middleware files ===\" && find . -path ./node_modules -prune -o -name \"middleware.*\" -print 2>/dev/null && echo \"=== callbackUrl refs ===\" && grep -rn \"callbackUrl\" --include=*.ts --include=*.tsx src 2>/dev/null | grep -v node_modules | head -20 && echo \"=== /auth redirect refs ===\" && grep -rn \"redirect\\(.*auth\\\\|/auth\" --include=*.ts --include=*.tsx src 2>/dev/null | grep -iv node_modules | head -30)",
+      "Bash(ls src/app)",
+      "Bash(find src/app -type d \\\\\\( -iname \"blog\" -o -iname \"ads\" -o -iname \"magazin\" \\\\\\))",
+      "Bash(python3 -c \"import cairosvg; print\\('cairosvg OK'\\)\")",
+      "Bash(python3 -c \"import PIL; print\\('Pillow OK', PIL.__version__\\)\")",
+      "Bash(node -e \"require.resolve\\('sharp'\\); console.log\\('sharp OK'\\)\")",
+      "Bash(sips -g pixelWidth -g pixelHeight /Users/work/efy-care/app/assets/images/icon.png)",
+      "Bash(node /private/tmp/claude-502/-Users-work-alltagsengel/f4e279a1-a079-4f18-be41-1ea5e09dfdab/scratchpad/gen-icons.js)"
     ]
   }
 }

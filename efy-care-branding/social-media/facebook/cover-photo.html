@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=820">
+<title>efy care – Facebook Cover Photo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    width: 820px;
+    height: 312px;
+    overflow: hidden;
+    font-family: 'Inter', 'Manrope', sans-serif;
+  }
+
+  .cover {
+    position: relative;
+    width: 820px;
+    height: 312px;
+    background: linear-gradient(135deg, #0F5E57 0%, #1a6b5f 30%, #2D7A63 70%, #3a8a70 100%);
+    overflow: hidden;
+  }
+
+  /* Subtle noise overlay */
+  .cover::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 20% 50%, rgba(255,255,255,0.03) 0%, transparent 70%);
+    z-index: 1;
+  }
+
+  /* Large organic circle top-right */
+  .deco-circle-1 {
+    position: absolute;
+    width: 320px;
+    height: 320px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(169,203,181,0.12) 0%, rgba(169,203,181,0.04) 60%, transparent 100%);
+    top: -80px;
+    right: -40px;
+    z-index: 1;
+  }
+
+  /* Smaller circle mid-right */
+  .deco-circle-2 {
+    position: absolute;
+    width: 180px;
+    height: 180px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(216,194,157,0.1) 0%, transparent 70%);
+    top: 120px;
+    right: 80px;
+    z-index: 1;
+  }
+
+  /* Organic blob shape */
+  .deco-blob {
+    position: absolute;
+    width: 200px;
+    height: 160px;
+    border-radius: 60% 40% 55% 45% / 50% 60% 40% 50%;
+    background: linear-gradient(135deg, rgba(169,203,181,0.08) 0%, rgba(45,122,99,0.12) 100%);
+    top: 30px;
+    right: 160px;
+    z-index: 1;
+    transform: rotate(-15deg);
+  }
+
+  /* Leaf-inspired curve */
+  .deco-leaf {
+    position: absolute;
+    width: 100px;
+    height: 200px;
+    border-radius: 0 100% 0 100%;
+    background: linear-gradient(180deg, rgba(216,194,157,0.08) 0%, transparent 100%);
+    bottom: -40px;
+    right: 300px;
+    z-index: 1;
+    transform: rotate(25deg);
+  }
+
+  /* Wave decoration bottom */
+  .deco-wave {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 60px;
+    z-index: 1;
+  }
+
+  .deco-wave svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  /* Thin accent line */
+  .accent-line {
+    position: absolute;
+    top: 50%;
+    left: 240px;
+    width: 1px;
+    height: 120px;
+    background: linear-gradient(180deg, transparent, rgba(216,194,157,0.3), transparent);
+    transform: translateY(-50%);
+    z-index: 2;
+  }
+
+  /* Safe zone indicator (profile pic area ~176x176 at bottom-left) */
+  .safe-zone {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 196px;
+    height: 80px;
+    z-index: 3;
+    /* Keep this area mostly clear */
+  }
+
+  /* Logo area */
+  .logo-area {
+    position: absolute;
+    top: 50%;
+    left: 50px;
+    transform: translateY(-60%);
+    z-index: 5;
+  }
+
+  .logo {
+    font-family: 'Manrope', sans-serif;
+    font-weight: 800;
+    font-size: 52px;
+    letter-spacing: -1px;
+    line-height: 1;
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+  }
+
+  .logo-efy {
+    color: #F8F6F2;
+  }
+
+  .logo-heart {
+    color: #D8C29D;
+    font-size: 28px;
+    margin: 0 2px;
+    position: relative;
+    top: -2px;
+  }
+
+  .logo-care {
+    color: #A9CBB5;
+  }
+
+  /* Slogan */
+  .slogan {
+    position: absolute;
+    top: 50%;
+    left: 290px;
+    transform: translateY(-50%);
+    z-index: 5;
+  }
+
+  .slogan-text {
+    font-family: 'Inter', sans-serif;
+    font-weight: 300;
+    font-size: 26px;
+    color: #F8F6F2;
+    letter-spacing: 1.5px;
+    line-height: 1.5;
+    opacity: 0.95;
+  }
+
+  .slogan-text em {
+    font-style: normal;
+    color: #D8C29D;
+  }
+
+  /* Contact info */
+  .contact {
+    position: absolute;
+    bottom: 18px;
+    right: 28px;
+    z-index: 5;
+    text-align: right;
+  }
+
+  .contact span {
+    display: block;
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 11px;
+    color: rgba(248,246,242,0.6);
+    letter-spacing: 0.5px;
+    line-height: 1.7;
+  }
+
+  /* Small decorative dots */
+  .dots {
+    position: absolute;
+    top: 35px;
+    right: 35px;
+    z-index: 2;
+    display: grid;
+    grid-template-columns: repeat(3, 6px);
+    gap: 8px;
+  }
+
+  .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: rgba(216,194,157,0.2);
+  }
+
+  .dot:nth-child(5) {
+    background: rgba(216,194,157,0.35);
+  }
+</style>
+</head>
+<body>
+<div class="cover">
+  <!-- Decorative elements -->
+  <div class="deco-circle-1"></div>
+  <div class="deco-circle-2"></div>
+  <div class="deco-blob"></div>
+  <div class="deco-leaf"></div>
+  <div class="accent-line"></div>
+
+  <div class="dots">
+    <div class="dot"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+  </div>
+
+  <!-- Wave bottom decoration -->
+  <div class="deco-wave">
+    <svg viewBox="0 0 820 60" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M0,40 C150,15 300,55 450,35 C600,15 750,50 820,30 L820,60 L0,60 Z"
+            fill="rgba(15,94,87,0.3)"/>
+      <path d="M0,50 C200,30 400,55 600,40 C700,35 780,48 820,42 L820,60 L0,60 Z"
+            fill="rgba(45,49,53,0.15)"/>
+    </svg>
+  </div>
+
+  <!-- Logo -->
+  <div class="logo-area">
+    <div class="logo">
+      <span class="logo-efy">efy</span>
+      <span class="logo-heart">&#9829;</span>
+      <span class="logo-care">care</span>
+    </div>
+  </div>
+
+  <!-- Slogan -->
+  <div class="slogan">
+    <div class="slogan-text">
+      <em>Mit Herz.</em> Für Menschen.
+    </div>
+  </div>
+
+  <!-- Contact -->
+  <div class="contact">
+    <span>www.efycare.de</span>
+    <span>info@efycare.de | +49 123 456 789</span>
+  </div>
+</div>
+</body>
+</html>

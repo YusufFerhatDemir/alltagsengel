@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1080">
+  <title>efy care - Story Template</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      width: 1080px;
+      height: 1920px;
+      overflow: hidden;
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(175deg, #0F5E57 0%, #1a6b5e 30%, #2D7A63 70%, #1e6855 100%);
+      position: relative;
+    }
+
+    .canvas {
+      width: 1080px;
+      height: 1920px;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* Background elements */
+    .bg-glow {
+      position: absolute;
+      top: 300px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 800px;
+      height: 800px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(169, 203, 181, 0.08) 0%, transparent 70%);
+    }
+
+    .bg-ring {
+      position: absolute;
+      border-radius: 50%;
+      border: 1px solid rgba(169, 203, 181, 0.06);
+    }
+    .bg-ring-1 { width: 600px; height: 600px; top: 250px; left: -100px; }
+    .bg-ring-2 { width: 400px; height: 400px; bottom: 300px; right: -80px; }
+    .bg-ring-3 { width: 200px; height: 200px; top: 120px; right: 60px; border-color: rgba(216, 194, 157, 0.1); }
+
+    .vertical-line {
+      position: absolute;
+      width: 1px;
+      background: linear-gradient(180deg, transparent, rgba(216, 194, 157, 0.15), transparent);
+    }
+    .vline-1 { left: 80px; top: 200px; height: 400px; }
+    .vline-2 { right: 80px; top: 600px; height: 300px; }
+
+    .horizontal-line {
+      position: absolute;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(216, 194, 157, 0.15), transparent);
+    }
+    .hline-1 { top: 380px; left: 60px; width: 120px; }
+    .hline-2 { bottom: 500px; right: 60px; width: 100px; }
+
+    .dot-dec {
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(216, 194, 157, 0.25);
+    }
+    .dot-d1 { width: 6px; height: 6px; top: 200px; left: 78px; }
+    .dot-d2 { width: 4px; height: 4px; top: 380px; left: 180px; }
+    .dot-d3 { width: 5px; height: 5px; bottom: 498px; right: 160px; }
+    .dot-d4 { width: 8px; height: 8px; top: 120px; right: 158px; background: rgba(216, 194, 157, 0.15); }
+
+    /* Top section - Logo */
+    .top-section {
+      width: 100%;
+      padding: 80px 80px 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: relative;
+      z-index: 2;
+    }
+
+    .logo {
+      font-family: 'Manrope', sans-serif;
+      font-weight: 700;
+      font-size: 32px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .logo-efy { color: #F8F6F2; }
+    .logo-heart { color: #D8C29D; font-size: 18px; margin: 0 3px; }
+    .logo-care { color: #A9CBB5; }
+
+    .top-tag {
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: rgba(216, 194, 157, 0.6);
+      border: 1px solid rgba(216, 194, 157, 0.2);
+      padding: 8px 18px;
+      border-radius: 30px;
+    }
+
+    /* Middle content */
+    .middle-section {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 60px 80px;
+      position: relative;
+      z-index: 2;
+      gap: 50px;
+    }
+
+    .story-label {
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      color: #D8C29D;
+    }
+
+    .story-text {
+      font-family: 'Manrope', sans-serif;
+      font-size: 62px;
+      font-weight: 700;
+      color: #F8F6F2;
+      text-align: center;
+      line-height: 1.15;
+      max-width: 850px;
+    }
+
+    .story-subtitle {
+      font-family: 'Inter', sans-serif;
+      font-size: 22px;
+      font-weight: 300;
+      color: #A9CBB5;
+      text-align: center;
+      line-height: 1.6;
+      max-width: 700px;
+    }
+
+    /* Image placeholder */
+    .image-placeholder {
+      width: 820px;
+      height: 400px;
+      border-radius: 24px;
+      background: linear-gradient(135deg, rgba(15, 94, 87, 0.6), rgba(169, 203, 181, 0.15));
+      border: 1px solid rgba(169, 203, 181, 0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 16px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .image-placeholder::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse at 20% 30%, rgba(169, 203, 181, 0.12) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 70%, rgba(45, 122, 99, 0.15) 0%, transparent 50%);
+    }
+
+    .image-placeholder::after {
+      content: '';
+      position: absolute;
+      inset: 8px;
+      border-radius: 18px;
+      border: 1px dashed rgba(248, 246, 242, 0.1);
+    }
+
+    .img-icon {
+      position: relative;
+      z-index: 1;
+    }
+    .img-icon svg {
+      width: 48px;
+      height: 48px;
+      fill: none;
+      stroke: rgba(248, 246, 242, 0.35);
+      stroke-width: 1.5;
+    }
+
+    .img-label {
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      color: rgba(248, 246, 242, 0.3);
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Bottom section - CTA */
+    .bottom-section {
+      width: 100%;
+      padding: 0 80px 100px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 24px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .cta-line {
+      width: 1px;
+      height: 60px;
+      background: linear-gradient(180deg, transparent, #D8C29D);
+    }
+
+    .cta-arrow {
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: float 2s ease-in-out infinite;
+    }
+    .cta-arrow svg {
+      width: 24px;
+      height: 24px;
+      stroke: #D8C29D;
+      fill: none;
+      stroke-width: 2;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+
+    .cta-text {
+      font-family: 'Manrope', sans-serif;
+      font-size: 18px;
+      font-weight: 600;
+      color: #D8C29D;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    .slogan-bottom {
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      font-weight: 400;
+      color: rgba(248, 246, 242, 0.3);
+      letter-spacing: 1.5px;
+      margin-top: 10px;
+    }
+
+    /* Top gradient overlay */
+    .top-gradient {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 200px;
+      background: linear-gradient(180deg, rgba(15, 94, 87, 0.5) 0%, transparent 100%);
+      z-index: 1;
+    }
+
+    /* Bottom gradient overlay */
+    .bottom-gradient {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 300px;
+      background: linear-gradient(0deg, rgba(15, 94, 87, 0.6) 0%, transparent 100%);
+      z-index: 1;
+    }
+  </style>
+</head>
+<body>
+  <div class="canvas">
+    <!-- Background decorations -->
+    <div class="bg-glow"></div>
+    <div class="bg-ring bg-ring-1"></div>
+    <div class="bg-ring bg-ring-2"></div>
+    <div class="bg-ring bg-ring-3"></div>
+    <div class="vertical-line vline-1"></div>
+    <div class="vertical-line vline-2"></div>
+    <div class="horizontal-line hline-1"></div>
+    <div class="horizontal-line hline-2"></div>
+    <div class="dot-dec dot-d1"></div>
+    <div class="dot-dec dot-d2"></div>
+    <div class="dot-dec dot-d3"></div>
+    <div class="dot-dec dot-d4"></div>
+    <div class="top-gradient"></div>
+    <div class="bottom-gradient"></div>
+
+    <!-- Top: Logo -->
+    <div class="top-section">
+      <div class="logo">
+        <span class="logo-efy">efy</span>
+        <span class="logo-heart">&#9829;</span>
+        <span class="logo-care">care</span>
+      </div>
+      <div class="top-tag">Instagram Story</div>
+    </div>
+
+    <!-- Middle: Text + Image -->
+    <div class="middle-section">
+      <div class="story-label">Thema / Kategorie</div>
+
+      <h1 class="story-text">Story Text hier</h1>
+
+      <p class="story-subtitle">Beschreiben Sie Ihre Botschaft mit ein bis zwei aussagekräftigen Sätzen.</p>
+
+      <div class="image-placeholder">
+        <div class="img-icon">
+          <svg viewBox="0 0 24 24">
+            <rect x="3" y="3" width="18" height="18" rx="3"/>
+            <circle cx="8.5" cy="8.5" r="1.5"/>
+            <path d="M21 15l-5-5L5 21"/>
+          </svg>
+        </div>
+        <span class="img-label">Bild oder Grafik einsetzen</span>
+      </div>
+    </div>
+
+    <!-- Bottom: CTA -->
+    <div class="bottom-section">
+      <div class="cta-arrow">
+        <svg viewBox="0 0 24 24">
+          <path d="M12 19V5M5 12l7-7 7 7"/>
+        </svg>
+      </div>
+      <div class="cta-text">Mehr erfahren</div>
+      <div class="cta-line"></div>
+      <div class="slogan-bottom">Mit Herz. Für Menschen.</div>
+    </div>
+  </div>
+</body>
+</html>
