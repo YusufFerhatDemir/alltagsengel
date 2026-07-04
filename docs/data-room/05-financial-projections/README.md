@@ -136,7 +136,7 @@ To create alternative scenarios:
 
 ### Market Context
 - Target: Germany's ~5 million care-dependent population
-- §45b care insurance budget (€125/month per user) supports premium pricing
+- §45b care insurance budget (€131/month per user) supports premium pricing
 - 75K users by Year 5 = 1.5% market penetration (conservative)
 
 ---

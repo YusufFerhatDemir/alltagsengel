@@ -29,7 +29,7 @@ export default function UnternehmensprofiltPage() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(250px, 100%), 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
           <StatBox value="4,96 Mio" label="Pflegebedürftige in Deutschland" />
           <StatBox value="€131/Monat" label="§45b Entlastungsbetrag pro Person" />
-          <StatBox value="€7,79 Mrd" label="Jährliches Gesamtbudget" />
+          <StatBox value="€7,80 Mrd" label="Jährliches Gesamtbudget" />
           <StatBox value="Nur 40%" label="Aktuell genutzter Budget-Anteil" />
         </div>
         <BulletItem>Fragmentierter Markt mit vielen ungleichen Anbietern</BulletItem>

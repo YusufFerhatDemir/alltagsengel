@@ -195,7 +195,7 @@ const doc = new Document({
         new Paragraph({ text: 'Long waiting times for care services', spacing: { after: 300 }, bullet: { level: 0 } }),
         
         new Paragraph({ text: 'Unused §45b Relief Benefit', heading: HeadingLevel.HEADING_2, spacing: { before: 200, after: 150 } }),
-        new Paragraph({ text: 'Each care-dependent person receives €125/month relief benefit (§45b SGB XI)', spacing: { after: 100 }, bullet: { level: 0 } }),
+        new Paragraph({ text: 'Each care-dependent person receives €131/month relief benefit (§45b SGB XI)', spacing: { after: 100 }, bullet: { level: 0 } }),
         new Paragraph({ text: 'Many recipients cannot access services or struggle to find willing providers', spacing: { after: 100 }, bullet: { level: 0 } }),
         new Paragraph({ text: 'Significant portion of monthly budgets remain unspent', spacing: { after: 300 }, bullet: { level: 0 } }),
         
@@ -219,7 +219,7 @@ const doc = new Document({
         new Paragraph({ text: 'Seamless matching between customers and certified companions via intelligent algorithm', spacing: { after: 150 }, bullet: { level: 1 } }),
         
         new Paragraph({ text: '§45b Billing Integration', spacing: { after: 100 }, bullet: { level: 0 }, run: { bold: true } }),
-        new Paragraph({ text: 'Direct integration with care insurance systems enabling automatic €125/month benefit utilization', spacing: { after: 150 }, bullet: { level: 1 } }),
+        new Paragraph({ text: 'Direct integration with care insurance systems enabling automatic €131/month benefit utilization', spacing: { after: 150 }, bullet: { level: 1 } }),
         
         new Paragraph({ text: 'Quality Assurance', spacing: { after: 100 }, bullet: { level: 0 }, run: { bold: true } }),
         new Paragraph({ text: '100% insured companions with background checks and certification verification', spacing: { after: 150 }, bullet: { level: 1 } }),
@@ -287,8 +287,8 @@ const doc = new Document({
             new TableRow({
               children: [
                 new TableCell({ width: { size: 2000, type: WidthType.DXA }, children: [new Paragraph({ text: '§45b Annual Budget', run: { bold: true } })], shading: { fill: LIGHT_GRAY } }),
-                new TableCell({ width: { size: 2500, type: WidthType.DXA }, children: [new Paragraph({ text: '€7.45B+', run: { bold: true } })] }),
-                new TableCell({ width: { size: 2000, type: WidthType.DXA }, children: [new Paragraph({ text: '€125/month total', run: { size: 10 } })] }),
+                new TableCell({ width: { size: 2500, type: WidthType.DXA }, children: [new Paragraph({ text: '€7.80B+', run: { bold: true } })] }),
+                new TableCell({ width: { size: 2000, type: WidthType.DXA }, children: [new Paragraph({ text: '€131/month total', run: { size: 10 } })] }),
               ],
             }),
           ],

@@ -51,7 +51,7 @@ Diese Formate werden selten in KI-Antworten uebernommen:
 Jede Seite muss mindestens eine eindeutige, zitatfaehige Aussage enthalten, die eine konkrete Nutzerfrage beantwortet.
 
 Schlecht: "Wir bieten guenstige Alltagsbegleitung an."
-Gut: "Die Alltagsbegleitung bei Alltagsengel in Frankfurt am Main kostet 256 Euro monatlich. Nach Abzug des Entlastungsbetrags (131 Euro) betraegt der Eigenanteil 131 Euro pro Monat."
+Gut: "Die Alltagsbegleitung bei Alltagsengel in Frankfurt am Main kostet 256 Euro monatlich. Nach Abzug des Entlastungsbetrags (131 Euro) betraegt der Eigenanteil 125 Euro pro Monat."
 
 **Faktor 2: Quellenangabe und Rechtsgrundlage**
 KI-Systeme bevorzugen Inhalte mit nachpruefbaren Quellen.
@@ -105,13 +105,13 @@ Jede Seite auf alltagsengel.care sollte folgende Elemente enthalten:
 <p>Alltagsengel ist ein nach Paragraph 45a SGB XI anerkannter Anbieter
 fuer Alltagsbegleitung in Frankfurt am Main. Die Pflegekasse uebernimmt
 131 Euro monatlich als Entlastungsbetrag. Der Eigenanteil betraegt
-131 Euro pro Monat.</p>
+125 Euro pro Monat.</p>
 
 <!-- H2: Themenabschnitte als Fragen formulieren -->
 <h2>Was kostet Alltagsbegleitung bei Alltagsengel?</h2>
 <p>Die monatlichen Gesamtkosten betragen 256 Euro. Davon uebernimmt
 die Pflegekasse 131 Euro als Entlastungsbetrag nach Paragraph 45b
-SGB XI. Der Eigenanteil liegt bei 131 Euro pro Monat.</p>
+SGB XI. Der Eigenanteil liegt bei 125 Euro pro Monat.</p>
 
 <!-- Tabelle fuer Vergleiche -->
 <table>
@@ -135,7 +135,7 @@ SGB XI. Der Eigenanteil liegt bei 131 Euro pro Monat.</p>
     </tr>
     <tr>
       <td>Eigenanteil</td>
-      <td>131 Euro/Monat</td>
+      <td>125 Euro/Monat</td>
       <td>Pflegebeduerftiger</td>
     </tr>
   </tbody>
@@ -164,7 +164,7 @@ SGB XI. Der Eigenanteil liegt bei 131 Euro pro Monat.</p>
 **Meta-Tags:**
 ```html
 <meta name="description" content="Alltagsbegleitung in Frankfurt am Main
-von Alltagsengel. Ab 131 Euro Eigenanteil. Pflegekasse zahlt 131 Euro
+von Alltagsengel. Ab 125 Euro Eigenanteil. Pflegekasse zahlt 131 Euro
 Entlastungsbetrag. Anerkannt nach Paragraph 45a SGB XI.">
 
 <meta name="author" content="Alltagsengel">
@@ -179,7 +179,7 @@ max-image-preview:large, max-video-preview:-1">
 Alltagsengel">
 <meta property="og:description" content="Professionelle Alltagsbegleitung
 nach Paragraph 45a SGB XI. 131 Euro zahlt die Pflegekasse.
-131 Euro Eigenanteil.">
+125 Euro Eigenanteil.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://alltagsengel.care/">
 <meta property="og:locale" content="de_DE">
@@ -233,7 +233,7 @@ Jede Inhaltsseite folgt diesem Aufbau:
 > "Gemaess Paragraph 45b SGB XI steht Pflegebeduerftigen ab Pflegegrad 1 ein monatlicher Entlastungsbetrag von 131 Euro zu."
 
 **Als Fussnote:**
-> "Der Eigenanteil bei Alltagsengel betraegt 131 Euro pro Monat.[1]"
+> "Der Eigenanteil bei Alltagsengel betraegt 125 Euro pro Monat.[1]"
 > [1] Preisstand Juli 2026. Gesamtkosten 256 Euro abzueglich 131 Euro Entlastungsbetrag (Paragraph 45b SGB XI).
 
 **Als Quellenblock am Seitenende:**
@@ -293,7 +293,7 @@ Diese Zahlen eignen sich fuer Infografiken, die AI-Systeme beschreiben koennen:
 |---|---|---|
 | Entlastungsbetrag/Monat | 131 Euro | Pflegekasse zahlt |
 | Entlastungsbetrag/Jahr | 1.572 Euro | Uebertragbar bis 30.06. Folgejahr |
-| Eigenanteil Alltagsengel | 131 Euro/Monat | Gesamtkosten minus Kassenbeitrag |
+| Eigenanteil Alltagsengel | 125 Euro/Monat | Gesamtkosten minus Kassenbeitrag |
 | Gesamtkosten Alltagsengel | 256 Euro/Monat | Transparent kommuniziert |
 | Pflegebeduerftige Frankfurt | 30.000+ | Potenzielle Zielgruppe |
 | Anspruchsberechtigt ab | Pflegegrad 1 | Niedrigste Einstiegsschwelle |

@@ -14,7 +14,7 @@
   - Germany's care gap statistics
   - 4.96 million care-dependent people
   - €50B+ elder care market
-  - €125/month unused care benefits
+  - €131/month unused care benefits
   - Dark background with premium typography
 
 - [x] **Slide 3: Our Solution**

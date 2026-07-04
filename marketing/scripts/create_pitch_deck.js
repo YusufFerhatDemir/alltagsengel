@@ -70,7 +70,7 @@ slide2.addText([
   { text: "€50 Billion+ Elder Care Market", options: { fontSize: 36, bold: true, color: colors.lightGold, breakLine: true } },
   { text: "Annual spending across Germany", options: { fontSize: 16, color: colors.cream, breakLine: true } },
   { text: "\n" },
-  { text: "€125/Month Unused Care Benefit", options: { fontSize: 36, bold: true, color: colors.lightGold, breakLine: true } },
+  { text: "€131/Month Unused Care Benefit", options: { fontSize: 36, bold: true, color: colors.lightGold, breakLine: true } },
   { text: "Average care insurance benefit (§45b SGB XI)", options: { fontSize: 16, color: colors.cream } }
 ], {
   x: 0.5, y: 1.5, w: 9, h: 3.8,

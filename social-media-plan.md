@@ -145,7 +145,7 @@
 **Format:** Split-Screen: links Gesetzestext (§45b), rechts echte Szenen von Alltagsbegleitung (Spaziergang, Einkauf, Gesellschaft)
 **Hook:** Text-Overlay: „Die Pflegekasse gibt dir 131€/Monat. Nutzt du sie?"
 **Caption:**
-> §45b SGB XI = 131€ Entlastungsbetrag (+ Aufstockung auf 131€ möglich).
+> §45b SGB XI = 131€ Entlastungsbetrag/Monat (1.572€/Jahr).
 >
 > Damit bezahlst du z.B. unsere Alltagsbegleitung:
 > 🚶 Spaziergänge

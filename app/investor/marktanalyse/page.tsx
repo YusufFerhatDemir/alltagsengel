@@ -35,7 +35,7 @@ export default function MarktanalysePage() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(250px, 100%), 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
           <StatBox value="€131" label="Pro Pflegebedürftiger/Monat" />
           <StatBox value="€1.572" label="Pro Pflegebedürftiger/Jahr" />
-          <StatBox value="€7,79 Mrd" label="Gesamtbudget/Jahr" />
+          <StatBox value="€7,80 Mrd" label="Gesamtbudget/Jahr" />
           <StatBox value="Nur 40%" label="Aktuell genutzter Anteil" />
         </div>
         <Paragraph>
@@ -44,9 +44,9 @@ export default function MarktanalysePage() {
         <Paragraph>
           <strong style={{color:'#C9963C'}}>Die entscheidende Erkenntnis:</strong> Diese €131/Monat sind bereits von den Krankenkassen budgetiert und fließen automatisch – es ist keine private Zahlung. Das Geld wird nur nicht genutzt, weil der Markt fragmentiert ist.
         </Paragraph>
-        <BulletItem>Gesamtbudget pro Jahr: 4,96 Mio Menschen × €131 × 12 = €7,79 Mrd</BulletItem>
-        <BulletItem>Aktuell genutzter Anteil: ~40% = €2,98 Mrd/Jahr</BulletItem>
-        <BulletItem>Ungenutztes Potenzial: €4,46 Mrd/Jahr (60%)</BulletItem>
+        <BulletItem>Gesamtbudget pro Jahr: 4,96 Mio Menschen × €131 × 12 = €7,80 Mrd</BulletItem>
+        <BulletItem>Aktuell genutzter Anteil: ~40% = €3,12 Mrd/Jahr</BulletItem>
+        <BulletItem>Ungenutztes Potenzial: €4,68 Mrd/Jahr (60%)</BulletItem>
         <BulletItem>AlltagsEngel adressiert diesen Markt mit digitaler Effizienz</BulletItem>
       </Card>
 
@@ -269,7 +269,7 @@ export default function MarktanalysePage() {
           Der Markt für Alltagsbegleitung in Deutschland ist:
         </Paragraph>
         <BulletItem><strong style={{color:'#C9963C'}}>Groß:</strong> €50+ Mrd TAM mit 4,96 Mio potenziellen Kunden</BulletItem>
-        <BulletItem><strong style={{color:'#C9963C'}}>Staatlich finanziert:</strong> €7,79 Mrd/Jahr durch §45b, 60% ungenutztes Potenzial</BulletItem>
+        <BulletItem><strong style={{color:'#C9963C'}}>Staatlich finanziert:</strong> €7,80 Mrd/Jahr durch §45b, 60% ungenutztes Potenzial</BulletItem>
         <BulletItem><strong style={{color:'#C9963C'}}>Wachsend:</strong> 3–5% jährlich durch demografische Verschiebung</BulletItem>
         <BulletItem><strong style={{color:'#C9963C'}}>Fragmentiert:</strong> Keine etablierte digitale Lösung</BulletItem>
         <BulletItem><strong style={{color:'#C9963C'}}>Erste-Mover-Chance:</strong> AlltagsEngel kann den Markt mit digitalem Marketplace transformieren</BulletItem>

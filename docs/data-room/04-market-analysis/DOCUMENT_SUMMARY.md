@@ -20,10 +20,10 @@
 
 ### 2. EXECUTIVE SUMMARY
 - Overview of regulatory opportunity (§45b SGB XI)
-- €7.44B addressable market with €4.5B untapped opportunity
+- €7.80B addressable market with €4.7B untapped opportunity
 - Two-sided marketplace model
 - Revenue model: 18% commission + €9.99/month companion subscriptions
-- Year 5 projection: €500M revenue (6.7% market penetration)
+- Year 5 projection: €500M revenue (6.4% market penetration)
 
 ### 3. MARKET OVERVIEW
 **3.1 Market Size & Structure**
@@ -37,8 +37,8 @@
 
 **3.3 Regulatory Tailwind: §45b SGB XI**
 - €131/month benefit for non-medical companion services
-- €7.44B annual addressable budget
-- Only ~40% utilized = €4.5B untapped market
+- €7.80B annual addressable budget
+- Only ~40% utilized = €4.7B untapped market
 - Barriers: Provider fragmentation, admin burden, quality uncertainty, geographic gaps, digital gap
 
 **3.4 Market Gaps & Opportunities**
@@ -103,13 +103,13 @@
 - €50+ billion: Total German elder care
 
 **7.2 SAM (Serviceable Addressable Market)**
-- €7.44 billion: §45b companion care budget
-- Current utilization: 40% (€2.98B active)
-- Untapped opportunity: 60% (€4.46B latent demand)
+- €7.80 billion: §45b companion care budget
+- Current utilization: 40% (€3.12B active)
+- Untapped opportunity: 60% (€4.68B latent demand)
 
 **7.3 SOM (Serviceable Obtainable Market) - Year 5**
 - €500 million annual revenue
-- 6.7% market penetration
+- 6.4% market penetration
 - Based on 150K active customers and 5K companions
 
 **7.4 Growth Projections Table (Year 1-5)**
@@ -166,10 +166,10 @@
 - Mitigations: quality screening, enterprise infrastructure, partnerships
 
 ### 10. CONCLUSION
-- €7.44B regulatory-driven opportunity
-- €4.5B currently unutilized (market failure)
+- €7.80B regulatory-driven opportunity
+- €4.7B currently unutilized (market failure)
 - Digital-first platform uniquely positioned
-- Year 5 target: €500M revenue (achievable 6.7% penetration)
+- Year 5 target: €500M revenue (achievable 6.4% penetration)
 - Strategic imperatives: network expansion, awareness campaigns, insurance partnerships, continuous innovation
 
 ---

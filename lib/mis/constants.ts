@@ -94,7 +94,7 @@ export const MARKET_DATA = {
   sam: 7.80e9,                  // 4,96M × €131 × 12
   som5yr: 400e6,
   pflegebeduerftige: 4.96e6,
-  entlastungsbetrag: 131,       // §45b 2026
+  entlastungsbetrag: 131,       // §45b seit Pflegereform 2025
   unusedRate: 0.60,
   unusedVolume: 4.68e9,         // 7,80 Mrd × 60%
   krankentransportMarket: 3e9,  // Krankentransport-Vermittlung Markt

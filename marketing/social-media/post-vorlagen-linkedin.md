@@ -54,7 +54,7 @@ Der Entlastungsbetrag nach §45b SGB XI ist eine der am wenigsten genutzten Leis
 
 Das ist kein technisches Problem. Es ist ein Informationsproblem.
 
-In unserer täglichen Arbeit bei Alltagsengel erleben wir es immer wieder: Familien, die seit Jahren einen Pflegegrad haben, aber nie vom Entlastungsbetrag gehört haben. Familien, die glauben, professionelle Alltagsbegleitung sei unbezahlbar — und dann erfahren, dass sie nur 131€ Eigenanteil pro Monat zahlen.
+In unserer täglichen Arbeit bei Alltagsengel erleben wir es immer wieder: Familien, die seit Jahren einen Pflegegrad haben, aber nie vom Entlastungsbetrag gehört haben. Familien, die glauben, professionelle Alltagsbegleitung sei unbezahlbar — und dann erfahren, dass die Pflegekasse 131€ pro Monat übernimmt, ganz ohne Eigenanteil.
 
 Die drei häufigsten Irrtümer:
 

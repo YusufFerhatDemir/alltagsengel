@@ -145,13 +145,13 @@ export default function FinancePage() {
           <Card title="Entlastungsbetrag §45b" icon="banknote">
             <div style={{ padding: 20, textAlign: 'center', background: `${BRAND.gold}10`, borderRadius: 12, marginBottom: 16 }}>
               <div style={{ fontSize: 42, fontWeight: 700, color: BRAND.gold, fontFamily: 'var(--font-cormorant), serif' }}>€{UE.entlastungsbetrag}</div>
-              <div style={{ fontSize: 13, color: BRAND.muted }}>pro Monat / pro Person (seit 2026)</div>
+              <div style={{ fontSize: 13, color: BRAND.muted }}>pro Monat / pro Person (seit 2025)</div>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
               <StatRow label="Jährlich pro Person" value={`€${(UE.entlastungsbetrag * 12).toLocaleString('de-DE')}`} />
               <StatRow label="Anspruchsberechtigte" value="4,96 Mio." />
-              <StatRow label="Gesamtvolumen/Jahr" value="€7,84 Mrd." />
-              <StatRow label="Davon ungenutzt (60%)" value="€4,46 Mrd." />
+              <StatRow label="Gesamtvolumen/Jahr" value="€7,80 Mrd." />
+              <StatRow label="Davon ungenutzt (60%)" value="€4,68 Mrd." />
             </div>
           </Card>
         </div>

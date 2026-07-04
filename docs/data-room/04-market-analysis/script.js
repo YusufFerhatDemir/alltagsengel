@@ -7,7 +7,7 @@ const DARK_GRAY = '333333';
 const LIGHT_GRAY = 'F5F5F5';
 
 // Market calculations for €131/month
-// Previous: €131/month × 4.96M people × 12 months = €7.44B
+// Previous: €125/month × 4.96M people × 12 months = €7.44B
 // Updated: €131/month × 4.96M people × 12 months = €7.80B
 const MONTHLY_BENEFIT = 131; // Updated from 125
 const CARE_DEPENDENT_POPULATION = 4.96; // millions
@@ -402,7 +402,7 @@ const doc = new Document({
       
       new Paragraph({ text: '', spacing: { after: 200 } }),
       
-      createBodyParagraph('By Year 5, AlltagsEngel captures 6.4% of available §45b budget (€500M of €7.44B), representing significant but achievable market penetration given network effects and first-mover advantages.'),
+      createBodyParagraph('By Year 5, AlltagsEngel captures 6.4% of available §45b budget (€500M of €7.80B), representing significant but achievable market penetration given network effects and first-mover advantages.'),
       
       // Page break
       new Paragraph({

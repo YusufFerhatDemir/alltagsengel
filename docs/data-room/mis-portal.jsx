@@ -139,8 +139,8 @@ function DashboardPage() {
       <SectionHeader title="Executive Dashboard" sub="AlltagsEngel Management Information System" />
       <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 24 }}>
         <KpiCard label="TAM" value="€50 Mrd.+" sub="Dt. Altenpflegemarkt" />
-        <KpiCard label="SAM" value="€7,84 Mrd." sub="§45b Budget" accent />
-        <KpiCard label="Ungenutzt" value="60%" sub="€4,5 Mrd./Jahr" />
+        <KpiCard label="SAM" value="€7,80 Mrd." sub="§45b Budget" accent />
+        <KpiCard label="Ungenutzt" value="60%" sub="€4,7 Mrd./Jahr" />
         <KpiCard label="Entlastung" value="€131/Mo." sub="Ab 2026" accent />
       </div>
 
@@ -272,7 +272,7 @@ function PitchDeckPage() {
         headers={["Nr.", "Slide", "Kerninhalt"]}
         rows={[
           ["1", "Titel", "AlltagsEngel — Mit Herz verbunden"],
-          ["2", "Das Problem", "4,96 Mio. / €4,5 Mrd. ungenutzt / 60%"],
+          ["2", "Das Problem", "4,96 Mio. / €4,7 Mrd. ungenutzt / 60%"],
           ["3", "Unsere Lösung", "Zweiseitiger Marktplatz"],
           ["4", "So funktioniert's", "4 Schritte: Download → Betreuen"],
           ["5", "Marktchance", "TAM/SAM/SOM Pyramide"],
@@ -346,8 +346,8 @@ function MarketPage() {
 
       <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 20 }}>
         <KpiCard label="TAM" value="€50 Mrd.+" sub="Gesamter Pflegemarkt" />
-        <KpiCard label="SAM" value="€7,84 Mrd." sub="§45b Budget" accent />
-        <KpiCard label="SOM (J5)" value="€500 Mio." sub="6,7% Durchdringung" />
+        <KpiCard label="SAM" value="€7,80 Mrd." sub="§45b Budget" accent />
+        <KpiCard label="SOM (J5)" value="€500 Mio." sub="6,4% Durchdringung" />
       </div>
 
       <h3 style={{ color: GOLD, fontSize: 15, margin: "20px 0 12px", fontFamily: "'Cormorant Garamond', Georgia, serif" }}>Dokumentabschnitte</h3>
@@ -534,8 +534,8 @@ function MetricsPage() {
         headers={["Kategorie", "Kennzahl", "Wert"]}
         rows={[
           ["Markt", "TAM (Gesamtmarkt)", "€50+ Mrd."],
-          ["Markt", "SAM (§45b Budget)", "€7,84 Mrd."],
-          ["Markt", "Ungenutztes Budget", "~60% (€4,5 Mrd.)"],
+          ["Markt", "SAM (§45b Budget)", "€7,80 Mrd."],
+          ["Markt", "Ungenutztes Budget", "~60% (€4,7 Mrd.)"],
           ["Markt", "Entlastungsbetrag 2026", "€131/Monat"],
           ["Demografie", "Pflegebedürftige (2023)", "4,96 Mio."],
           ["Demografie", "Prognose 2035", "6,5 Mio. (+31%)"],
