@@ -173,7 +173,21 @@
       "Bash(perl -i -pe 's/1\\\\.500 Euro/1.572 Euro/g' marketing/geo/ai-optimierung.md marketing/pr/medien-kontakte.md marketing/pr/pressemitteilungen.md)",
       "Bash(perl -i -pe 's/1\\\\.500 Euro/1.572 Euro/g; s/3\\\\.000 Euro/3.144 Euro/g' marketing/content/ratgeber-entlastungsbetrag.md)",
       "Bash(npm audit *)",
-      "Bash(./deploy.sh \"Datenschutz: OpenAI \\(KI-Fallback\\), Sentry \\(Fehler-Monitoring\\) und Firebase Cloud Messaging ergaenzt; KI-Chatbot ohne persoenlichen Namen; restliche 1.500->1.572 Euro \\(Entlastungsbetrag\\) in Marketing-Texten; npm audit fix \\(16 von 18 Vulnerabilities behoben, next/postcss bewusst ohne --force\\)\")"
+      "Bash(./deploy.sh \"Datenschutz: OpenAI \\(KI-Fallback\\), Sentry \\(Fehler-Monitoring\\) und Firebase Cloud Messaging ergaenzt; KI-Chatbot ohne persoenlichen Namen; restliche 1.500->1.572 Euro \\(Entlastungsbetrag\\) in Marketing-Texten; npm audit fix \\(16 von 18 Vulnerabilities behoben, next/postcss bewusst ohne --force\\)\")",
+      "Bash(npm --version)",
+      "Bash(security cms *)",
+      "Bash(npx --yes create-expo-app@latest app --template default --no-install)",
+      "Bash(timeout 60 npx eas build:list --platform ios --limit 10 --non-interactive)",
+      "Bash(timeout 60 npx eas submit:list --platform ios --limit 5 --non-interactive)",
+      "Bash(npx eas *)",
+      "Bash(python3 -c \"import PIL; print\\('PIL', PIL.__version__\\)\")",
+      "Bash(python3 -c \"import cairosvg; print\\('cairosvg ok'\\)\")",
+      "Bash(python3 /private/tmp/claude-502/-Users-work-alltagsengel/99d50173-f12e-4fd9-8ca6-fd1c5d66201b/scratchpad/gen_icons.py)",
+      "Bash(git push *)",
+      "Bash(git ls-remote *)",
+      "Bash(yes)",
+      "Bash(git -C /Users/work/alltagsengel status --short velora/)",
+      "Bash(./deploy.sh \"Velora App-Grundgerüst: Expo/RN/TS Scaffold mit Tab-Navigation, 3 Farbpaletten \\(Salbeigrün/Teal/Lavendel\\), Login/Registrierung, Home-Screen + eigenes Branding\")"
     ]
   }
 }
