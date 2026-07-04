@@ -10,10 +10,14 @@
     "backgroundColor": "#faf6ee",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "care.alltagsengel.velora"
+      "bundleIdentifier": "com.velora.care",
+      "buildNumber": "1",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
-      "package": "care.alltagsengel.velora",
+      "package": "com.velora.care",
       "adaptiveIcon": {
         "backgroundColor": "#3d6b4e",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -40,6 +44,13 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "f9ec84c5-e426-4127-bf9e-790b7b46377e"
+      }
+    },
+    "owner": "yusufferhatdemir"
   }
 }
