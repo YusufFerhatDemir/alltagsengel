@@ -157,6 +157,14 @@ export default function DatenschutzPage() {
             Daten dauerhaft bei Google gespeichert. Rechtsgrundlage ist Art. 6 Abs. 1 lit. a DSGVO (Einwilligung)
             bzw. Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse an einem hilfreichen Beratungsangebot).
           </p>
+          <h3>OpenAI (KI-Fallback)</h3>
+          <p>
+            Ist Google Gemini nicht verfügbar, greift unser Chat ersatzweise auf die API von OpenAI (OpenAI, L.L.C.,
+            3180 18th Street, San Francisco, CA 94110, USA) zurück. In diesem Fall werden Ihre Chatnachrichten an
+            OpenAI-Server übermittelt, um eine Antwort zu erzeugen. Die Daten werden von OpenAI nicht zum Training
+            der Modelle verwendet. Rechtsgrundlage ist Art. 6 Abs. 1 lit. a DSGVO (Einwilligung) bzw. Art. 6 Abs. 1
+            lit. f DSGVO (berechtigtes Interesse an einem hilfreichen Beratungsangebot).
+          </p>
           <h3>WhatsApp Business API (Meta)</h3>
           <p>
             Wir bieten Kundenkommunikation über WhatsApp an. Dabei wird die WhatsApp Business API von Meta Platforms
@@ -171,8 +179,21 @@ export default function DatenschutzPage() {
           <p>
             In unserer mobilen App nutzen wir den Push-Notification-Service von Expo (650 Industries Inc., USA).
             Dabei wird ein gerätegebundenes Push-Token an Expo-Server übermittelt, um Ihnen Benachrichtigungen
-            zuzustellen. Rechtsgrundlage ist Art. 6 Abs. 1 lit. a DSGVO (Einwilligung durch Aktivierung der
+            zuzustellen. Zur technischen Zustellung wird zusätzlich Firebase Cloud Messaging (Google LLC, USA)
+            eingesetzt. Rechtsgrundlage ist Art. 6 Abs. 1 lit. a DSGVO (Einwilligung durch Aktivierung der
             Push-Benachrichtigungen auf Ihrem Gerät).
+          </p>
+          <h3>Sentry (Fehler-Monitoring)</h3>
+          <p>
+            Zur Erkennung und Behebung von technischen Fehlern nutzen wir Sentry (Functional Software Inc.,
+            132 Hawthorne Street, San Francisco, CA 94107, USA). Tritt in der App oder auf der Website ein Fehler
+            auf, werden technische Daten wie Fehlermeldung, aufgerufene Seite, Browser-/Gerätetyp und IP-Adresse an
+            Sentry übermittelt. Diese Daten dienen ausschließlich der Stabilität und Sicherheit unseres Angebots.
+            Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse an einem fehlerfreien und sicheren
+            Betrieb). Weitere Informationen:{' '}
+            <a href="https://sentry.io/privacy/" target="_blank" rel="noopener noreferrer" style={{ color: '#C9963C', textDecoration: 'underline' }}>
+              Datenschutzerklärung von Sentry
+            </a>.
           </p>
         </section>
 

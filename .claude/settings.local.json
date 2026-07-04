@@ -167,7 +167,13 @@
       "Bash(curl -s -o /dev/null -w \"HTTP %{http_code}\\\\n\" \"https://alltagsengel.care/api/whatsapp/webhook?hub.mode=subscribe&hub.verify_token=wrong&hub.challenge=123\" --max-time 15)",
       "Bash(curl -s -o /dev/null -w \"HTTP %{http_code}\\\\n\" -X POST https://alltagsengel.care/api/drip -H \"Authorization: Bearer bogus\" --max-time 15)",
       "Bash(node -e \"const p=require\\('./package.json'\\); console.log\\(Object.keys\\({...p.dependencies,...p.devDependencies}\\).join\\('\\\\n'\\)\\)\")",
-      "Bash(python3 \"/private/tmp/claude-502/-Users-work-alltagsengel/8584feb8-c425-4df3-9e89-f785fa0f5693/scratchpad/fix125.py\")"
+      "Bash(python3 \"/private/tmp/claude-502/-Users-work-alltagsengel/8584feb8-c425-4df3-9e89-f785fa0f5693/scratchpad/fix125.py\")",
+      "Bash(perl -i -pe 's/1\\\\.500 €/1.572 €/g' marketing/ads/facebook-ads-vorlagen.md)",
+      "Bash(perl -i -pe 's/1\\\\.500€/1.572€/g' marketing/social-media/post-vorlagen-linkedin.md)",
+      "Bash(perl -i -pe 's/1\\\\.500 Euro/1.572 Euro/g' marketing/geo/ai-optimierung.md marketing/pr/medien-kontakte.md marketing/pr/pressemitteilungen.md)",
+      "Bash(perl -i -pe 's/1\\\\.500 Euro/1.572 Euro/g; s/3\\\\.000 Euro/3.144 Euro/g' marketing/content/ratgeber-entlastungsbetrag.md)",
+      "Bash(npm audit *)",
+      "Bash(./deploy.sh \"Datenschutz: OpenAI \\(KI-Fallback\\), Sentry \\(Fehler-Monitoring\\) und Firebase Cloud Messaging ergaenzt; KI-Chatbot ohne persoenlichen Namen; restliche 1.500->1.572 Euro \\(Entlastungsbetrag\\) in Marketing-Texten; npm audit fix \\(16 von 18 Vulnerabilities behoben, next/postcss bewusst ohne --force\\)\")"
     ]
   }
 }

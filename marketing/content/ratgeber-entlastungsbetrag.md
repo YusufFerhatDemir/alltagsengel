@@ -46,7 +46,7 @@ Der Anspruch besteht für **alle Pflegegrade** — also Pflegegrad 1 bis 5. Das 
 
 ## Wie hoch ist der Entlastungsbetrag?
 
-Der Entlastungsbetrag beträgt **131 Euro pro Monat** — das sind **1.500 Euro im Jahr**. Dieser Betrag ist für alle Pflegegrade gleich.
+Der Entlastungsbetrag beträgt **131 Euro pro Monat** — das sind **1.572 Euro im Jahr**. Dieser Betrag ist für alle Pflegegrade gleich.
 
 ### Kostenbeispiel mit Alltagsengel
 
@@ -121,7 +121,7 @@ Die Pflegekasse erstattet den Entlastungsbetrag bis zu 131 Euro monatlich. Der R
 
 - Nicht abgerufene monatliche Beträge werden automatisch auf die Folgemonate übertragen.
 - Angesparte Beträge aus dem Vorjahr können **bis zum 30. Juni des Folgejahres** genutzt werden.
-- **Beispiel:** Wenn Sie 2025 keinen Entlastungsbetrag genutzt haben, stehen Ihnen bis zum 30. Juni 2026 insgesamt **3.000 Euro** zur Verfügung (1.500 Euro aus 2025 + 1.500 Euro aus 2026).
+- **Beispiel:** Wenn Sie 2025 keinen Entlastungsbetrag genutzt haben, stehen Ihnen bis zum 30. Juni 2026 insgesamt **3.144 Euro** zur Verfügung (1.572 Euro aus 2025 + 1.572 Euro aus 2026).
 
 ### Achtung: Verfallsdatum beachten
 

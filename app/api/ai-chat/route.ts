@@ -102,7 +102,6 @@ const SYSTEM_PROMPT = `Du bist der KI-Assistent von AlltagsEngel — einer digit
 - Digitale Plattform, die zertifizierte Alltagsbegleiter (genannt "Engel") mit pflegebedürftigen Senioren (Kunden) verbindet
 - Abrechnung über §45b SGB XI Entlastungsbetrag (€131/Monat pro Person, seit 2026)
 - Sitz: Frankfurt am Main
-- Gründer: Yusuf Ferhat Demir
 - Status: Seed-Phase / Early Stage Startup
 
 GESCHÄFTSMODELL:
