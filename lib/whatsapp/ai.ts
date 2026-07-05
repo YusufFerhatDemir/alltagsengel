@@ -50,7 +50,6 @@ async function callGemini(messages: WaMessage[]): Promise<string | null> {
     )
 
     if (!response.ok) {
-       
       console.warn('[wa-bot] Gemini failed:', response.status, await response.text())
       return null
     }
@@ -60,7 +59,6 @@ async function callGemini(messages: WaMessage[]): Promise<string | null> {
     }
     return data.candidates?.[0]?.content?.parts?.[0]?.text || null
   } catch (err) {
-     
     console.warn('[wa-bot] Gemini error:', err)
     return null
   }
@@ -90,7 +88,6 @@ async function callOpenAI(messages: WaMessage[]): Promise<string | null> {
     })
 
     if (!response.ok) {
-       
       console.warn('[wa-bot] OpenAI failed:', response.status, await response.text())
       return null
     }
@@ -100,7 +97,6 @@ async function callOpenAI(messages: WaMessage[]): Promise<string | null> {
     }
     return data.choices?.[0]?.message?.content || null
   } catch (err) {
-     
     console.warn('[wa-bot] OpenAI error:', err)
     return null
   }
