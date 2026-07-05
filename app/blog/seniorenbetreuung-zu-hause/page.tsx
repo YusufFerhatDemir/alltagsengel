@@ -8,6 +8,7 @@ export const metadata: Metadata = {
   keywords: 'Seniorenbetreuung, Heimbetreuung, Pflegehilfe, Haushaltshilfe, häusliche Betreuung',
   alternates: { canonical: 'https://alltagsengel.care/blog/seniorenbetreuung-zu-hause' },
   openGraph: {
+    images: [{ url: '/og-image.png', width: 1200, height: 630 }],
     title: 'Seniorenbetreuung zu Hause — Kosten, Möglichkeiten & Tipps',
     description: 'Erfahren Sie alles über Seniorenbetreuung zu Hause, verfügbare Optionen und Kostenübernahmen.',
   },
@@ -80,9 +81,9 @@ export default function SeniorenbetreuungZuHause() {
           <h4>Pflegekasse (bei Pflegegrad)</h4>
           <p>Wenn Sie einen Pflegegrad haben, übernimmt die Pflegekasse:</p>
           <ul>
-            <li>Pflegeleistungen (Körperpflege, Wundversorgung): bis zu 2.200-3.700 Euro/Monat je nach Pflegegrad</li>
+            <li>Pflegeleistungen (Körperpflege, Wundversorgung): Pflegesachleistung bis zu 2.299 Euro/Monat je nach Pflegegrad</li>
             <li>Entlastungsbetrag (Alltagsbegleiter, Haushaltshilfe): 131 Euro/Monat</li>
-            <li>Haushaltsnahe Dienstleistungen: bis 40 Euro/Monat</li>
+            <li><strong>Pflegehilfsmittel zum Verbrauch (§40 SGB XI):</strong> bis 42 Euro/Monat</li>
           </ul>
 
           <h4>Krankenkasse</h4>

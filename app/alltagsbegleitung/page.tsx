@@ -9,6 +9,7 @@ export const metadata: Metadata = {
   description: 'Zertifizierte Alltagsbegleitung in Frankfurt am Main. 131€/Monat über den Entlastungsbetrag (§45b SGB XI). Einkaufshilfe, Arztbegleitung, Haushaltshilfe — jetzt kostenlos buchen.',
   keywords: ['Alltagsbegleitung Frankfurt', 'Entlastungsbetrag', '§45b SGB XI', 'Alltagsbegleiter', 'Pflegegrad', 'Betreuung Frankfurt', 'Haushaltshilfe Frankfurt', '131 Euro Pflegekasse'],
   openGraph: {
+    images: [{ url: '/og-image.png', width: 1200, height: 630 }],
     title: 'Alltagsbegleitung Frankfurt — 131€/Monat von der Pflegekasse',
     description: 'Professionelle Alltagsbegleitung in Frankfurt. Abrechnung direkt über den Entlastungsbetrag §45b. Versichert und zertifiziert.',
     url: 'https://alltagsengel.care/alltagsbegleitung',
@@ -178,6 +179,7 @@ export default function AlltagsbegleitungPage() {
         <section className="info-card">
           <h3>Alltagsbegleitung in Ihrer Stadt</h3>
           <ul className="info-list">
+            <li><Link href="/alltagsbegleitung/frankfurt">Alltagsbegleitung Frankfurt am Main</Link></li>
             <li><Link href="/alltagsbegleitung/offenbach">Alltagsbegleitung Offenbach am Main</Link></li>
             <li><Link href="/alltagsbegleitung/wiesbaden">Alltagsbegleitung Wiesbaden</Link></li>
             <li><Link href="/alltagsbegleitung/darmstadt">Alltagsbegleitung Darmstadt</Link></li>
@@ -185,6 +187,10 @@ export default function AlltagsbegleitungPage() {
             <li><Link href="/alltagsbegleitung/bad-homburg">Alltagsbegleitung Bad Homburg</Link></li>
             <li><Link href="/alltagsbegleitung/mainz">Alltagsbegleitung Mainz</Link></li>
             <li><Link href="/alltagsbegleitung/aschaffenburg">Alltagsbegleitung Aschaffenburg</Link></li>
+            <li><Link href="/alltagsbegleitung/frankfurt-hoechst">Alltagsbegleitung Frankfurt-Höchst</Link></li>
+            <li><Link href="/alltagsbegleitung/neu-isenburg">Alltagsbegleitung Neu-Isenburg</Link></li>
+            <li><Link href="/alltagsbegleitung/friedberg-wetterau">Alltagsbegleitung Friedberg (Wetterau)</Link></li>
+            <li><Link href="/alltagsbegleitung/rodgau">Alltagsbegleitung Rodgau</Link></li>
           </ul>
         </section>
 

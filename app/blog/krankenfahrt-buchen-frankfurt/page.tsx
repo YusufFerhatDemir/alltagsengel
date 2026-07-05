@@ -93,7 +93,9 @@ export default function KrankenfahrtFrankfurtPage() {
           <p>
             Wir vermitteln Krankenfahrten in <strong>Frankfurt am Main</strong> und dem gesamten
             <strong> Rhein-Main-Gebiet</strong>: Offenbach, Darmstadt, Wiesbaden, Mainz, Hanau,
-            Bad Homburg, Oberursel, Friedberg und alle Gemeinden im Umkreis.
+            Bad Homburg, Oberursel, Friedberg und alle Gemeinden im Umkreis. Alle Details zu
+            Ablauf, Kostenübernahme und Buchung vor Ort finden Sie auf unserer Seite{' '}
+            <Link href="/krankenfahrten/frankfurt">Krankenfahrt Frankfurt</Link>.
           </p>
 
           <h2>Warum Krankenfahrt über Alltagsengel?</h2>

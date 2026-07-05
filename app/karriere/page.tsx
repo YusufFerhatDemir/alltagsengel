@@ -1,6 +1,5 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import CookieSettingsLink from '@/components/CookieSettingsLink'
 import EngelBewerbungForm from '@/components/EngelBewerbungForm'
 import BreadcrumbSchema from '@/components/BreadcrumbSchema'
 
@@ -72,51 +71,10 @@ const FAQS = [
   },
 ]
 
-const jsonLdJobPosting = {
-  '@context': 'https://schema.org',
-  '@type': 'JobPosting',
-  title: 'Alltagsbegleiter/in (m/w/d) — 20 €/Stunde, flexible Zeiten',
-  description: '<p><strong>Alltagsengel sucht Alltagsbegleiter/innen (§45a SGB XI) in Frankfurt am Main und Umgebung.</strong></p><p>Du unterstützt Menschen mit Pflegegrad bei alltäglichen Aufgaben: Einkaufen, Arztbesuche, Spaziergänge, Behördengänge und Gesellschaft leisten. Keine medizinische Pflege — sondern menschliche Nähe und praktische Hilfe.</p><p><strong>Wir bieten:</strong> 20 €/Stunde, flexible Zeiteinteilung, eigene App, Versicherungsschutz, familiäres Team.</p><p><strong>Anforderungen:</strong> Empathie, Zuverlässigkeit, Deutschkenntnisse (B2), erweitertes Führungszeugnis. Keine Pflegeausbildung nötig. §45a-Qualifikation von Vorteil.</p><p>Bewirb dich jetzt: info@alltagsengel.care oder WhatsApp +49 155 10445517</p>',
-  datePosted: '2026-07-04',
-  validThrough: '2026-12-31',
-  employmentType: ['PART_TIME', 'FULL_TIME', 'TEMPORARY'],
-  hiringOrganization: {
-    '@type': 'Organization',
-    name: 'Alltagsengel',
-    sameAs: 'https://alltagsengel.care',
-    logo: 'https://alltagsengel.care/icon-512x512.png',
-  },
-  jobLocation: {
-    '@type': 'Place',
-    address: {
-      '@type': 'PostalAddress',
-      streetAddress: 'Neue Mainzer Straße 66-68',
-      addressLocality: 'Frankfurt am Main',
-      postalCode: '60311',
-      addressRegion: 'Hessen',
-      addressCountry: 'DE',
-    },
-  },
-  applicantLocationRequirements: {
-    '@type': 'GeoCircle',
-    geoMidpoint: {
-      '@type': 'GeoCoordinates',
-      latitude: 50.1109,
-      longitude: 8.6821,
-    },
-    geoRadius: '30 km',
-  },
-  baseSalary: {
-    '@type': 'MonetaryAmount',
-    currency: 'EUR',
-    value: { '@type': 'QuantitativeValue', value: 20, unitText: 'HOUR' },
-  },
-  qualifications: 'Keine Pflegeausbildung erforderlich. §45a-Qualifikation von Vorteil, aber nicht Pflicht. Zuverlässigkeit, Empathie und Deutschkenntnisse (mind. B2) werden vorausgesetzt.',
-  responsibilities: 'Alltagsbegleitung: Einkaufsbegleitung, Arztbegleitung, Spaziergänge, Behördengänge, Gesellschaft leisten.',
-  skills: 'Empathie, Zuverlässigkeit, Deutschkenntnisse, Führungszeugnis',
-  industry: 'Sozialwesen / Alltagsbegleitung',
-  directApply: true,
-}
+// HINWEIS: Das JobPosting-JSON-LD wurde entfernt — dieselbe Stelle ist bereits
+// auf /jobs (app/jobs/page.tsx) ausgezeichnet. Google-Jobs-Richtlinie verbietet
+// mehrfache Postings derselben Stelle unter verschiedenen URLs; /jobs ist die
+// kanonische Job-Seite (in SiteHeader + Footer verlinkt). FAQ-Schema bleibt.
 
 const jsonLdFAQ = {
   '@context': 'https://schema.org',
@@ -131,7 +89,6 @@ const jsonLdFAQ = {
 export default function KarrierePage() {
   return (
     <div className="screen" id="engel-werden">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdJobPosting) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdFAQ) }} />
       <BreadcrumbSchema items={[{ name: 'Karriere' }]} />
 
@@ -492,28 +449,7 @@ export default function KarrierePage() {
         <div style={{ height: 100 }} />
 
         {/* ─── Footer ─── */}
-        <footer className="lp-footer">
-          <div className="lp-footer-brand">ALLTAGSENGEL</div>
-          <div className="lp-footer-sub">Pflege-Box &amp; Krankenfahrt &amp; Alltagsbegleitung · Frankfurt &amp; Rhein-Main</div>
-          <div className="lp-footer-links">
-            <Link href="/hygienebox">Pflege-Box</Link>
-            <Link href="/krankenfahrten">Krankenfahrt</Link>
-            <Link href="/alltagsbegleitung">Alltagsbegleitung</Link>
-            <Link href="/karriere">Karriere</Link>
-            <Link href="/blog">Ratgeber</Link>
-            <Link href="/faq">FAQ</Link>
-            <Link href="/kontakt">Kontakt</Link>
-          </div>
-          <div className="lp-footer-links" style={{ marginTop: 4 }}>
-            <Link href="/impressum">Impressum</Link>
-            <Link href="/datenschutz">Datenschutz</Link>
-            <Link href="/agb">AGB</Link>
-            <CookieSettingsLink />
-          </div>
-          <div className="lp-footer-copy">
-            © 2026 Alltagsengel UG (haftungsbeschränkt) — Frankfurt am Main
-          </div>
-        </footer>
+        {/* Footer kommt global aus components/SiteFooter.tsx (LayoutWrapper) */}
       </div>
     </div>
   )

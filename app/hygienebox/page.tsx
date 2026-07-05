@@ -8,6 +8,7 @@ export const metadata: Metadata = {
   description: 'Kostenlose Pflegebox mit Pflegehilfsmitteln nach §40 SGB XI. Handschuhe, Desinfektionsmittel, Bettschutz — monatlich geliefert. 0€ Zuzahlung bei Pflegegrad 1-5.',
   keywords: ['Pflegebox', 'Pflegehilfsmittel', 'Hygienebox', '§40 SGB XI', 'kostenlose Pflegehilfsmittel', 'Pflegebox bestellen', 'Pflegebox Frankfurt', '42 Euro Pflegekasse'],
   openGraph: {
+    images: [{ url: '/og-image.png', width: 1200, height: 630 }],
     title: 'Kostenlose Pflegebox — Pflegehilfsmittel monatlich geliefert',
     description: 'Pflegebox mit Handschuhen, Desinfektionsmittel & mehr. Bis 42€/Monat von der Pflegekasse. 0€ Zuzahlung.',
     url: 'https://alltagsengel.care/hygienebox',
@@ -185,6 +186,7 @@ export default function HygieneboxPage() {
         <section className="info-card">
           <h3>Pflegebox in Ihrer Stadt</h3>
           <ul className="info-list">
+            <li><Link href="/hygienebox/frankfurt">Pflegebox Frankfurt am Main</Link></li>
             <li><Link href="/hygienebox/offenbach">Pflegebox Offenbach am Main</Link></li>
             <li><Link href="/hygienebox/wiesbaden">Pflegebox Wiesbaden</Link></li>
             <li><Link href="/hygienebox/darmstadt">Pflegebox Darmstadt</Link></li>

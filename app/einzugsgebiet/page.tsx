@@ -6,9 +6,10 @@ import BreadcrumbSchema from '@/components/BreadcrumbSchema'
 
 export const metadata: Metadata = {
   title: 'Einzugsgebiet & PLZ-Check — Frankfurt + 30 km Umkreis',
-  description: 'Sind wir bei Ihnen verfügbar? PLZ eingeben und sofort prüfen: Alltagsengel bietet Alltagsbegleitung (§45b SGB XI) in Frankfurt am Main und 30 km Umkreis — Offenbach, Hanau, Bad Homburg, Darmstadt u. v. m.',
+  description: 'Sind wir bei Ihnen verfügbar? PLZ eingeben und sofort prüfen: Alltagsengel bietet Alltagsbegleitung (§45a SGB XI, Abrechnung über §45b) in Frankfurt am Main und 30 km Umkreis — Offenbach, Hanau, Bad Homburg, Darmstadt u. v. m.',
   keywords: ['Alltagsbegleitung Frankfurt Einzugsgebiet', 'Alltagsbegleitung PLZ prüfen', 'Betreuungsdienst Rhein-Main', 'Alltagshilfe Frankfurt Umkreis', '§45b SGB XI Frankfurt'],
   openGraph: {
+    images: [{ url: '/og-image.png', width: 1200, height: 630 }],
     title: 'Einzugsgebiet-Check: Ist Alltagsengel bei Ihnen verfügbar?',
     description: 'PLZ eingeben und sofort sehen, ob wir zu Ihnen kommen — Frankfurt am Main + 30 km Umkreis.',
     url: 'https://alltagsengel.care/einzugsgebiet',
@@ -22,7 +23,7 @@ export const metadata: Metadata = {
 const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'Service',
-  name: 'Alltagsbegleitung nach §45b SGB XI',
+  name: 'Alltagsbegleitung nach §45a SGB XI (Abrechnung über §45b)',
   serviceType: 'Alltagsbegleitung / häusliche Betreuung',
   provider: {
     '@type': 'Organization',

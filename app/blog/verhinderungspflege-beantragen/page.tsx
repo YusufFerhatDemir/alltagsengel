@@ -3,12 +3,13 @@ import Link from 'next/link';
 import BreadcrumbSchema from '@/components/BreadcrumbSchema'
 
 export const metadata: Metadata = {
-  title: 'Verhinderungspflege beantragen: 1.612€ pro Jahr nutzen',
-  description: 'Leitfaden zur Beantragung von Verhinderungspflege. Erfahren Sie, wer berechtigt ist, wie Sie die Leistung beantragen und wie Sie diese mit §45b kombinieren.',
-  keywords: 'Verhinderungspflege, Verhinderungspflege beantragen, 1612 Euro, Pflegegeld, Pflegeleistung',
+  title: 'Verhinderungspflege beantragen: 3.539€ pro Jahr nutzen',
+  description: 'Leitfaden zur Beantragung von Verhinderungspflege. Erfahren Sie, wer berechtigt ist, wie Sie den gemeinsamen Jahresbetrag beantragen und parallel zum Entlastungsbetrag (§45b) nutzen.',
+  keywords: 'Verhinderungspflege, Verhinderungspflege beantragen, 3539 Euro, gemeinsamer Jahresbetrag, Pflegegeld, Pflegeleistung',
   alternates: { canonical: 'https://alltagsengel.care/blog/verhinderungspflege-beantragen' },
   openGraph: {
-    title: 'Verhinderungspflege beantragen: 1.612€ pro Jahr nutzen',
+    images: [{ url: '/og-image.png', width: 1200, height: 630 }],
+    title: 'Verhinderungspflege beantragen: 3.539€ pro Jahr nutzen',
     description: 'Vollständiger Leitfaden zur Beantragung von Verhinderungspflege in Deutschland.',
     type: 'article',
     publishedTime: '2026-03-15',
@@ -19,8 +20,8 @@ export const metadata: Metadata = {
 const articleJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'Article',
-  headline: 'Verhinderungspflege beantragen: 1.612€ pro Jahr nutzen',
-  description: 'Leitfaden zur Beantragung von Verhinderungspflege. Erfahren Sie, wer berechtigt ist, wie Sie die Leistung beantragen und wie Sie diese mit §45b kombinieren.',
+  headline: 'Verhinderungspflege beantragen: 3.539€ pro Jahr nutzen',
+  description: 'Leitfaden zur Beantragung von Verhinderungspflege. Erfahren Sie, wer berechtigt ist, wie Sie den gemeinsamen Jahresbetrag beantragen und parallel zum Entlastungsbetrag (§45b) nutzen.',
   author: { '@type': 'Organization', name: 'Alltagsengel', url: 'https://alltagsengel.care' },
   publisher: { '@type': 'Organization', name: 'Alltagsengel', url: 'https://alltagsengel.care', logo: { '@type': 'ImageObject', url: 'https://alltagsengel.care/icon-512x512.png' } },
   datePublished: '2026-03-19',
@@ -33,11 +34,11 @@ const articleJsonLd = {
 export default function VerhinderungspflegePage() {
   return (
     <main className="blog-container">
-      <BreadcrumbSchema items={[{ name: 'Ratgeber', url: '/blog' }, { name: 'Verhinderungspflege beantragen: 1.612€ pro Jahr nutzen' }]} />
+      <BreadcrumbSchema items={[{ name: 'Ratgeber', url: '/blog' }, { name: 'Verhinderungspflege beantragen: 3.539€ pro Jahr nutzen' }]} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }} />
       <article className="blog-article">
         <header className="blog-header">
-          <h1>Verhinderungspflege beantragen: 1.612€ pro Jahr nutzen</h1>
+          <h1>Verhinderungspflege beantragen: 3.539€ pro Jahr nutzen</h1>
           <div className="blog-meta">
             <span className="date">15. März 2026</span>
             <span className="reading-time">5 Min. Lesezeit</span>
@@ -46,14 +47,14 @@ export default function VerhinderungspflegePage() {
 
         <div className="blog-intro">
           <p>
-            Pflegende Angehörige brauchen Pausen. Genau dafür gibt es Verhinderungspflege – eine Leistung der Pflegekasse, die bis zu 1.612€ pro Jahr bereitstellt. Doch viele Pflegefamilien wissen gar nicht, dass sie Anspruch darauf haben. Dieser Leitfaden zeigt Ihnen, wie Sie Verhinderungspflege beantragen und optimal nutzen.
+            Pflegende Angehörige brauchen Pausen. Genau dafür gibt es Verhinderungspflege – eine Leistung der Pflegekasse, für die seit dem 01.07.2025 ein gemeinsamer Jahresbetrag mit der Kurzzeitpflege von bis zu 3.539€ pro Jahr bereitsteht. Doch viele Pflegefamilien wissen gar nicht, dass sie Anspruch darauf haben. Dieser Leitfaden zeigt Ihnen, wie Sie Verhinderungspflege beantragen und optimal nutzen.
           </p>
         </div>
 
         <div className="blog-content">
           <h2>Was ist Verhinderungspflege?</h2>
           <p>
-            Verhinderungspflege ist eine Leistung der Pflegekasse für Menschen mit Pflegebedarf (ab Pflegegrad 2). Wenn Ihr privater Pflegeperson (z. B. ein Familienmitglied) wegen Urlaub, Krankheit oder Erschöpfung nicht pflegen kann, zahlt die Krankenkasse einen Ersatzpfleger. So entlastet die Verhinderungspflege pflegende Angehörige und sichert die Betreuung des Pflegebedürftigen.
+            Verhinderungspflege ist eine Leistung der Pflegekasse für Menschen mit Pflegebedarf (ab Pflegegrad 2). Wenn Ihre private Pflegeperson (z. B. ein Familienmitglied) wegen Urlaub, Krankheit oder Erschöpfung nicht pflegen kann, zahlt die Pflegekasse einen Ersatzpfleger. So entlastet die Verhinderungspflege pflegende Angehörige und sichert die Betreuung des Pflegebedürftigen.
           </p>
 
           <h2>Wer hat Anspruch?</h2>
@@ -64,16 +65,17 @@ export default function VerhinderungspflegePage() {
             <li>Sie haben einen anerkannten Pflegegrad (2–5)</li>
             <li>Sie werden zu Hause von einer Privatperson gepflegt</li>
             <li>Die Pflegeperson muss die Pflege zeitweilig unterbrechen (Urlaub, Krankheit, Erschöpfung)</li>
-            <li>Sie nehmen seit mindestens 6 Monaten Leistungen von dieser Pflegeperson in Anspruch</li>
           </ul>
+          <p>
+            Gut zu wissen: Die früher geforderte Vorpflegezeit von 6 Monaten ist seit dem 01.07.2025 entfallen – Verhinderungspflege kann sofort ab Pflegegrad 2 genutzt werden.
+          </p>
 
           <h2>Wie viel Geld gibt es?</h2>
           <p>
-            Die Pflegekasse zahlt bis zu <strong>1.612€ pro Jahr</strong> für Verhinderungspflege. Das sind etwa 134€ pro Monat oder rund 38€ pro Tag. Die genaue Höhe hängt von Ihrem Pflegegrad ab:
+            Seit dem 01.07.2025 gibt es einen <strong>gemeinsamen Jahresbetrag für Verhinderungs- und Kurzzeitpflege von bis zu 3.539€ pro Jahr</strong>. Das sind rechnerisch rund 295€ pro Monat:
           </p>
           <ul>
-            <li><strong>Pflegegrad 2–3:</strong> bis zu 1.612€</li>
-            <li><strong>Pflegegrad 4–5:</strong> bis zu 1.612€</li>
+            <li><strong>Pflegegrad 2–5:</strong> 3.539€ gemeinsamer Jahresbetrag – flexibel für Verhinderungs- und Kurzzeitpflege einsetzbar</li>
           </ul>
 
           <h2>So beantragen Sie Verhinderungspflege</h2>
@@ -90,21 +92,21 @@ export default function VerhinderungspflegePage() {
           <p>
             <strong>Schritt 3: Reichen Sie die Rechnung ein</strong>
             <br />
-            Nach der Betreuung reichen Sie die Rechnung und eine Bescheinigung der Pflegeperson bei Ihrer Krankenkasse ein.
+            Nach der Betreuung reichen Sie die Rechnung und eine Bescheinigung der Pflegeperson bei Ihrer Pflegekasse ein.
           </p>
 
-          <h2>Kombination mit §45b – Der Kniff für mehr Geld</h2>
+          <h2>Verhinderungspflege und §45b – zwei getrennte Töpfe</h2>
           <p>
-            Hier ist der entscheidende Trick: Sie können Verhinderungspflege und die <strong>§45b-Leistung</strong> kombinieren. Mit §45b bekommen Sie zusätzliche 131€ pro Monat für Betreuungsleistungen. Diese können Sie auch für Verhinderungspflege einsetzen.
+            Wichtig zu wissen: Verhinderungspflege und der <strong>Entlastungsbetrag nach §45b</strong> (131€ pro Monat) sind getrennte Budgets mit getrennten Zwecken. Die Verhinderungspflege bezahlt die Ersatzpflege, wenn Ihre Pflegeperson ausfällt. Der §45b-Entlastungsbetrag ist zweckgebunden für anerkannte Angebote zur Unterstützung im Alltag (z. B. Alltagsbegleitung oder Haushaltshilfe) sowie Tages-, Nacht- und Kurzzeitpflege – für Verhinderungspflege darf er <strong>nicht</strong> eingesetzt werden.
           </p>
           <p>
-            Praktisch bedeutet das: Nutzen Sie zuerst Ihre monatliche Verhinderungspflege (1.612€ pro Jahr), und wenn Sie mehr Unterstützung brauchen, greifen Sie auf §45b-Mittel zurück.
+            Praktisch bedeutet das: Sie können beide Töpfe parallel nutzen – die Verhinderungspflege (3.539€ pro Jahr, gemeinsamer Jahresbetrag mit der Kurzzeitpflege) für die Vertretung Ihrer Pflegeperson und zusätzlich jeden Monat den §45b-Entlastungsbetrag für Alltagsunterstützung.
           </p>
 
           <h2>Tipps für die Praxis</h2>
           <ul>
             <li><strong>Planen Sie rechtzeitig:</strong> Beantragen Sie Verhinderungspflege 2–3 Monate vorher.</li>
-            <li><strong>Nutzen Sie Ihre Ansprüche:</strong> Viele Pflegefamilien schöpfen ihre 1.612€ nicht aus – vergeben Sie Geld!</li>
+            <li><strong>Nutzen Sie Ihre Ansprüche:</strong> Viele Pflegefamilien schöpfen ihre 3.539€ nicht aus – verschenken Sie kein Geld!</li>
             <li><strong>Digitale Lösungen nutzen:</strong> Apps wie AlltagsEngel vermitteln schnell geprüfte Betreuungskräfte, die Verhinderungspflege abrechnen können.</li>
             <li><strong>Kombinieren Sie mit anderen Leistungen:</strong> Häusliche Krankenpflege und Verhinderungspflege können kombiniert werden.</li>
           </ul>
@@ -113,7 +115,7 @@ export default function VerhinderungspflegePage() {
           <p>
             <strong>Kann ich Verhinderungspflege mehrmals im Jahr nutzen?</strong>
             <br />
-            Ja, solange die Gesamtsumme von 1.612€ im Jahr nicht überschritten wird.
+            Ja, solange der gemeinsame Jahresbetrag von 3.539€ (Verhinderungs- und Kurzzeitpflege zusammen) nicht überschritten wird.
           </p>
           <p>
             <strong>Ist Verhinderungspflege steuerfrei?</strong>

@@ -114,7 +114,9 @@ export default function HaushaltshilfeFrankfurtPage() {
           <p>
             Wir vermitteln Haushaltshilfen in Frankfurt am Main und dem gesamten Rhein-Main-Gebiet,
             darunter Offenbach, Darmstadt, Wiesbaden, Mainz, Hanau, Bad Homburg, Friedberg,
-            Oberursel und alle umliegenden Gemeinden im Umkreis von ca. 40 km.
+            Oberursel und alle umliegenden Gemeinden im Umkreis von ca. 40 km. Alle Details zu
+            Leistungen, Ablauf und Kostenübernahme vor Ort finden Sie auf unserer Seite{' '}
+            <Link href="/alltagsbegleitung/frankfurt">Alltagsbegleitung Frankfurt</Link>.
           </p>
 
           <h2>Häufige Fragen zur Haushaltshilfe</h2>

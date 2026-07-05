@@ -3,6 +3,8 @@ import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import 'leaflet/dist/leaflet.css'
 import type { Map as LeafletMap } from 'leaflet'
+import { pruefePlz, type Zone } from '@/lib/einzugsgebiet-plz'
+import { getCookieConsent } from './CookieConsent'
 
 // ═══════════════════════════════════════════════════════════
 // EINZUGSGEBIET: LEAFLET-KARTE (OpenStreetMap) + PLZ-CHECK
@@ -10,6 +12,14 @@ import type { Map as LeafletMap } from 'leaflet'
 // Interaktive Karte mit 30-km-Radius um Frankfurt (PLZ 60313)
 // und Sofort-Check: "Sind wir bei Ihnen verfügbar?"
 // Kartendaten: © OpenStreetMap-Mitwirkende (Hinweis in /datenschutz)
+//
+// DSGVO/§25 TDDDG — Zwei-Klick-Lösung: OSM-Tiles werden NICHT
+// beim Seitenaufruf geladen (IP-Übertragung an die OSM
+// Foundation, UK). Stattdessen Platzhalter mit „Karte laden"-
+// Button; nur bei bereits erteiltem Cookie-Consent
+// (localStorage 'ae_cookie_consent' = 'accepted') lädt die
+// Karte direkt. PLZ-Logik: lib/einzugsgebiet-plz.ts (geteilt
+// mit EinzugsgebietKarte.tsx).
 // ═══════════════════════════════════════════════════════════
 
 // Zentrum: Frankfurt am Main, PLZ 60313 (Innenstadt)
@@ -46,62 +56,26 @@ const STAEDTE: Stadt[] = [
   { name: 'Friedberg', lat: 50.3374, lng: 8.7563 },
 ]
 
-// ── PLZ-Zonen ──────────────────────────────────────────────
-// Kerngebiet: Frankfurt + ca. 30 km Umkreis (PLZ-Präfixe)
-const KERN: { praefix: string; region: string }[] = [
-  { praefix: '60', region: 'Frankfurt am Main' },
-  { praefix: '659', region: 'Frankfurt am Main (West)' },
-  { praefix: '611', region: 'Bad Vilbel / Karben / Wetterau' },
-  { praefix: '613', region: 'Bad Homburg / Hochtaunus' },
-  { praefix: '614', region: 'Oberursel / Königstein / Kronberg' },
-  { praefix: '630', region: 'Offenbach am Main' },
-  { praefix: '631', region: 'Rodgau / Dietzenbach / Kreis Offenbach' },
-  { praefix: '632', region: 'Langen / Neu-Isenburg' },
-  { praefix: '633', region: 'Dreieich / Rödermark' },
-  { praefix: '634', region: 'Hanau / Maintal / Bruchköbel' },
-  { praefix: '6350', region: 'Seligenstadt' },
-  { praefix: '6351', region: 'Hainburg' },
-  { praefix: '642', region: 'Darmstadt' },
-  { praefix: '643', region: 'Weiterstadt / Griesheim' },
-  { praefix: '645', region: 'Groß-Gerau / Mörfelden-Walldorf' },
-  { praefix: '654', region: 'Rüsselsheim / Kelsterbach' },
-  { praefix: '657', region: 'Hofheim / Eschborn / Main-Taunus' },
-  { praefix: '658', region: 'Bad Soden / Schwalbach / Main-Taunus' },
-]
-
-// Randgebiet: knapp außerhalb der 30 km — Anfrage lohnt sich
-const RAND: { praefix: string; region: string }[] = [
-  { praefix: '612', region: 'Bad Nauheim / Usingen' },
-  { praefix: '635', region: 'Main-Kinzig-Kreis' },
-  { praefix: '637', region: 'Aschaffenburg / Alzenau' },
-  { praefix: '648', region: 'Dieburg / Darmstadt-Dieburg' },
-  { praefix: '651', region: 'Wiesbaden' },
-  { praefix: '652', region: 'Wiesbaden' },
-  { praefix: '655', region: 'Idstein / Untertaunus' },
-  { praefix: '551', region: 'Mainz' },
-]
-
-type Zone = 'kern' | 'rand' | null
-
-function pruefePlz(plz: string): { zone: Zone; region: string } {
-  const alle = [
-    ...KERN.map(k => ({ ...k, zone: 'kern' as const })),
-    ...RAND.map(r => ({ ...r, zone: 'rand' as const })),
-  ].sort((a, b) => b.praefix.length - a.praefix.length)
-  for (const e of alle) {
-    if (plz.startsWith(e.praefix)) return { zone: e.zone, region: e.region }
-  }
-  return { zone: null, region: '' }
-}
-
 export default function EinzugsgebietLeaflet() {
   const mapRef = useRef<HTMLDivElement>(null)
   const mapInstanz = useRef<LeafletMap | null>(null)
   const [plz, setPlz] = useState('')
   const [ergebnis, setErgebnis] = useState<{ zone: Zone; region: string } | 'idle'>('idle')
+  // DSGVO-Zwei-Klick: Karte erst nach Klick bzw. bei vorhandenem Consent laden
+  const [karteAktiv, setKarteAktiv] = useState(false)
+
+  // Bereits erteilter Cookie-Consent → Karte direkt laden (kein zweiter Klick nötig)
+  useEffect(() => {
+    if (getCookieConsent() === 'accepted') setKarteAktiv(true)
+    const onConsent = (e: Event) => {
+      if ((e as CustomEvent).detail === 'accepted') setKarteAktiv(true)
+    }
+    window.addEventListener('ae_consent_change', onConsent)
+    return () => window.removeEventListener('ae_consent_change', onConsent)
+  }, [])
 
   useEffect(() => {
-    if (!mapRef.current || mapInstanz.current) return
+    if (!karteAktiv || !mapRef.current || mapInstanz.current) return
     let aktiv = true
 
     import('leaflet').then(({ default: L }) => {
@@ -153,7 +127,7 @@ export default function EinzugsgebietLeaflet() {
       mapInstanz.current?.remove()
       mapInstanz.current = null
     }
-  }, [])
+  }, [karteAktiv])
 
   function checken(e: React.FormEvent) {
     e.preventDefault()
@@ -214,13 +188,54 @@ export default function EinzugsgebietLeaflet() {
         )}
       </div>
 
-      {/* ── Karte ── */}
-      <div
-        ref={mapRef}
-        role="application"
-        aria-label="Interaktive Karte des Einzugsgebiets: Frankfurt am Main und 30 Kilometer Umkreis"
-        style={{ height: 'clamp(320px, 55vw, 460px)', borderRadius: 16, overflow: 'hidden', marginTop: 16, border: '1px solid rgba(255,255,255,0.1)', background: '#2a2a2a', zIndex: 0, position: 'relative' }}
-      />
+      {/* ── Karte (DSGVO-Zwei-Klick: Tiles erst nach Klick/Consent) ── */}
+      {karteAktiv ? (
+        <div
+          ref={mapRef}
+          role="application"
+          aria-label="Interaktive Karte des Einzugsgebiets: Frankfurt am Main und 30 Kilometer Umkreis"
+          style={{ height: 'clamp(320px, 55vw, 460px)', borderRadius: 16, overflow: 'hidden', marginTop: 16, border: '1px solid rgba(255,255,255,0.1)', background: '#2a2a2a', zIndex: 0, position: 'relative' }}
+        />
+      ) : (
+        <div
+          style={{
+            height: 'clamp(320px, 55vw, 460px)',
+            borderRadius: 16,
+            overflow: 'hidden',
+            marginTop: 16,
+            border: '1px solid rgba(201,150,60,0.2)',
+            background: 'radial-gradient(circle at 50% 42%, rgba(201,150,60,0.1) 0%, rgba(201,150,60,0.03) 34%, transparent 62%), #1A1612',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 14,
+            padding: '24px 20px',
+            textAlign: 'center',
+          }}
+        >
+          {/* Stilisierter Karten-Pin als dezenter Hinweis auf die Karte */}
+          <svg width="44" height="44" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M12 21s-7-5.6-7-11a7 7 0 1 1 14 0c0 5.4-7 11-7 11Z" stroke="#C9963C" strokeWidth="1.5" fill="rgba(201,150,60,0.12)" />
+            <circle cx="12" cy="10" r="2.6" stroke="#E8C87E" strokeWidth="1.5" fill="none" />
+          </svg>
+          <div style={{ color: '#F5F0E8', fontSize: 15, fontWeight: 700 }}>
+            Interaktive Karte (OpenStreetMap)
+          </div>
+          <button
+            type="button"
+            onClick={() => setKarteAktiv(true)}
+            className="btn-gold"
+            style={{ fontSize: 14, padding: '12px 22px' }}
+          >
+            Karte laden
+          </button>
+          <p style={{ color: '#8A8279', fontSize: 12, lineHeight: 1.5, maxWidth: 360, margin: 0 }}>
+            Beim Laden wird Ihre IP-Adresse an OpenStreetMap (UK) übertragen.{' '}
+            <Link href="/datenschutz" style={{ color: '#C9963C', textDecoration: 'underline' }}>Datenschutzerklärung</Link>
+          </p>
+        </div>
+      )}
       <p style={{ color: '#6A6259', fontSize: 11, textAlign: 'center', marginTop: 6 }}>
         Kerngebiet: Frankfurt am Main (PLZ 60313) + 30 km Umkreis · Städte antippen für lokale Infos
       </p>

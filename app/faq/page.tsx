@@ -22,6 +22,7 @@ export const metadata: Metadata = {
     'Pflegegrad 1 2 3 4 5',
   ],
   openGraph: {
+    images: [{ url: '/og-image.png', width: 1200, height: 630 }],
     title: 'FAQ — Alltagsbegleitung, Entlastungsbetrag & Pflegegrad | AlltagsEngel',
     description: 'Alle Antworten rund um Entlastungsbetrag (131€/Monat), Pflegehilfsmittel (42€/Monat), Pflegegrad und Alltagsbegleitung.',
     url: 'https://alltagsengel.care/faq',
@@ -106,7 +107,7 @@ const faqs: FAQItem[] = [
   {
     category: 'Pflegegrad',
     question: 'Welche Leistungen stehen mir mit welchem Pflegegrad zu?',
-    answer: 'Ab Pflegegrad 1: Entlastungsbetrag 131 €/Monat, Pflegehilfsmittel 42 €/Monat, Wohnraumanpassung bis 4.000 €. Ab Pflegegrad 2: zusätzlich Pflegegeld (332 €), Pflegesachleistungen (761 €), Tages-/Nachtpflege (689 €), Verhinderungspflege (1.612 €/Jahr), Kurzzeitpflege (1.774 €/Jahr). Die Leistungen steigen mit höherem Pflegegrad. Alltagsengel hilft Ihnen, alle Ansprüche optimal zu nutzen.',
+    answer: 'Ab Pflegegrad 1: Entlastungsbetrag 131 €/Monat, Pflegehilfsmittel 42 €/Monat, Wohnraumanpassung bis 4.000 €. Ab Pflegegrad 2: zusätzlich Pflegegeld (347 €), Pflegesachleistungen (796 €), Tages-/Nachtpflege (721 €) sowie der gemeinsame Jahresbetrag für Verhinderungs- und Kurzzeitpflege (3.539 €/Jahr, seit 01.07.2025). Die Leistungen steigen mit höherem Pflegegrad. Alltagsengel hilft Ihnen, alle Ansprüche optimal zu nutzen.',
   },
   {
     category: 'Pflegegrad',

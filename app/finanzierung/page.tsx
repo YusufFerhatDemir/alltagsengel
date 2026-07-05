@@ -8,6 +8,7 @@ export const metadata: Metadata = {
     'Transparent erklärt: Entlastungsbetrag 131 €/Monat (1.572 €/Jahr, §45b SGB XI) plus gemeinsamer Jahresbetrag Verhinderungs-/Kurzzeitpflege 3.539 €/Jahr (ab 01.07.2025) = bis zu 5.111 €/Jahr kombinierbar. Dazu steuerliche Absetzbarkeit haushaltsnaher Dienstleistungen und Erstattung über die Unfallversicherung — aufgeteilt nach Pflegegrad.',
   alternates: { canonical: 'https://alltagsengel.care/finanzierung' },
   openGraph: {
+    images: [{ url: '/og-image.png', width: 1200, height: 630 }],
     title: 'Finanzierung — bis zu 5.111 €/Jahr für Alltagsengel-Leistungen',
     description:
       'Entlastungsbetrag 131 €/Monat plus Verhinderungs-/Kurzzeitpflege 3.539 €/Jahr = bis zu 5.111 €/Jahr kombinierbar. Steuervorteil und Unfallversicherung — klar nach Pflegegrad erklärt.',

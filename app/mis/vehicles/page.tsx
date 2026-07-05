@@ -252,7 +252,7 @@ export default function VehiclesPage() {
 
       {/* Create Modal */}
       {createOpen && (
-        <Modal title="Neues Fahrzeug" onClose={() => setCreateOpen(false)} width={540}>
+        <Modal open title="Neues Fahrzeug" onClose={() => setCreateOpen(false)} width={540}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               <div>
@@ -320,7 +320,7 @@ export default function VehiclesPage() {
 
       {/* Detail Modal */}
       {selectedVehicle && (
-        <Modal title={`${selectedVehicle.plate} — ${selectedVehicle.brand} ${selectedVehicle.model}`} onClose={() => setSelectedVehicle(null)} width={600}>
+        <Modal open title={`${selectedVehicle.plate} — ${selectedVehicle.brand} ${selectedVehicle.model}`} onClose={() => setSelectedVehicle(null)} width={600}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
               <div>
@@ -384,7 +384,7 @@ export default function VehiclesPage() {
                 {selectedVehicle.status === 'in_use' && <MisButton icon="check" onClick={() => { handleStatusChange(selectedVehicle.id, 'available'); setSelectedVehicle(null) }}>Freigeben</MisButton>}
                 {selectedVehicle.status !== 'maintenance' && <MisButton variant="secondary" icon="settings" onClick={() => { handleStatusChange(selectedVehicle.id, 'maintenance'); setSelectedVehicle(null) }}>Zur Wartung</MisButton>}
               </div>
-              <MisButton variant="secondary" icon="trash" onClick={() => handleDelete(selectedVehicle.id)} style={{ color: BRAND.error }}>Löschen</MisButton>
+              <MisButton variant="danger" icon="trash" onClick={() => handleDelete(selectedVehicle.id)}>Löschen</MisButton>
             </div>
           </div>
         </Modal>

@@ -82,8 +82,8 @@ const articles: BlogArticle[] = [
   },
   {
     slug: 'verhinderungspflege-beantragen',
-    title: 'Verhinderungspflege beantragen — bis zu 1.612€/Jahr',
-    description: 'So nutzen Sie die Verhinderungspflege richtig: Antrag, Voraussetzungen und Kombination mit Kurzzeitpflege.',
+    title: 'Verhinderungspflege beantragen — bis zu 3.539€/Jahr',
+    description: 'So nutzen Sie die Verhinderungspflege richtig: Antrag, Voraussetzungen und der gemeinsame Jahresbetrag mit der Kurzzeitpflege.',
     category: 'Finanzierung',
     readTime: '6 min',
     date: '22. März 2026',

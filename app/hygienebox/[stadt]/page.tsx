@@ -122,6 +122,7 @@ export async function generateMetadata({ params }: { params: Promise<{ stadt: st
       'Einmalhandschuhe Pflege',
     ],
     openGraph: {
+      images: [{ url: '/og-image.png', width: 1200, height: 630 }],
       title: `Kostenlose Pflegebox ${city.name} — 42€/Monat | Alltagsengel`,
       description: `Pflegehilfsmittel monatlich nach ${city.name} geliefert. 0€ Zuzahlung bei Pflegegrad 1-5. Handschuhe, Desinfektion, Bettschutz.`,
       url: `https://alltagsengel.care/hygienebox/${city.slug}`,
@@ -394,6 +395,18 @@ export default async function PflegeboxStadtPage({ params }: { params: Promise<{
           <ul className="info-list">
             <li><Link href="/alltagsbegleitung">Alltagsbegleitung</Link> — 131 €/Monat über Entlastungsbetrag</li>
             <li><Link href="/krankenfahrten">Krankenfahrten</Link> — Mit Verordnung zahlt die Kasse</li>
+          </ul>
+        </section>
+
+        <section className="info-card">
+          <h3>Auch in Ihrer Nähe</h3>
+          <p>Die Pflegebox liefern wir auch in diese Städte:</p>
+          <ul className="info-list">
+            {Object.values(cities)
+              .filter((c) => c.slug !== city.slug)
+              .map((c) => (
+                <li key={c.slug}><Link href={`/hygienebox/${c.slug}`}>Pflegebox {c.name}</Link></li>
+              ))}
           </ul>
         </section>
       </div>

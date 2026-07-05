@@ -471,28 +471,7 @@ export default function EngelWerdenPage() {
         <div style={{ height: 100 }} />
 
         {/* ─── Footer ─── */}
-        <footer className="lp-footer">
-          <div className="lp-footer-brand">ALLTAGSENGEL</div>
-          <div className="lp-footer-sub">Pflege-Box &amp; Krankenfahrt &amp; Alltagsbegleitung · Frankfurt &amp; Rhein-Main</div>
-          <div className="lp-footer-links">
-            <Link href="/hygienebox">Pflege-Box</Link>
-            <Link href="/krankenfahrten">Krankenfahrt</Link>
-            <Link href="/alltagsbegleitung">Alltagsbegleitung</Link>
-            <Link href="/engel-werden">Engel werden</Link>
-            <Link href="/blog">Ratgeber</Link>
-            <Link href="/faq">FAQ</Link>
-            <Link href="/kontakt">Kontakt</Link>
-          </div>
-          <div className="lp-footer-links" style={{ marginTop: 4 }}>
-            <Link href="/impressum">Impressum</Link>
-            <Link href="/datenschutz">Datenschutz</Link>
-            <Link href="/agb">AGB</Link>
-            <CookieSettingsLink />
-          </div>
-          <div className="lp-footer-copy">
-            © 2026 Alltagsengel UG (haftungsbeschränkt) — Frankfurt am Main
-          </div>
-        </footer>
+        {/* Footer kommt global aus components/SiteFooter.tsx (LayoutWrapper) */}
       </div>
     </div>
   )

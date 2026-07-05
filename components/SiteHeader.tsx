@@ -1,18 +1,23 @@
 'use client'
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 
 // ═══════════════════════════════════════════════════════════
 // SITE HEADER — Globale Marketing-Navigation (öffentliche Seiten)
 // ═══════════════════════════════════════════════════════════
 // Slim In-Flow-Leiste innerhalb des Phone-Frames, direkt unter der
-// StatusBar. Zeigt Marke + zwei CTAs:
-//   • "Beratung"       (Ghost) → /kontakt  (kostenfreie Erstberatung)
-//   • "Jetzt bewerben" (Gold)  → /jobs     (Recruiting, auffällig)
+// StatusBar. Zeigt Marke + zwei CTAs — kontextabhängig:
+//   • Kunden-Seiten:     "Beratung" (Ghost) + "Termin buchen" (Gold → /termin)
+//   • Recruiting-Seiten: "Beratung" (Ghost) + "Jetzt bewerben" (Gold → /jobs)
 // Bewusst KEIN position:fixed — verändert das #splash-Scrollverhalten
 // der Startseite nicht. Sichtbarkeit steuert der LayoutWrapper.
 // ═══════════════════════════════════════════════════════════
 
+const RECRUITING_PREFIXES = ['/jobs', '/karriere', '/engel-werden', '/team']
+
 export default function SiteHeader() {
+  const pathname = usePathname()
+  const isRecruiting = RECRUITING_PREFIXES.some((p) => pathname?.startsWith(p))
   return (
     <header
       style={{
@@ -83,7 +88,7 @@ export default function SiteHeader() {
           Beratung
         </Link>
         <Link
-          href="/jobs"
+          href={isRecruiting ? '/jobs' : '/termin'}
           style={{
             display: 'inline-flex',
             alignItems: 'center',
@@ -98,7 +103,7 @@ export default function SiteHeader() {
             boxShadow: '0 2px 10px rgba(201,150,60,0.35)',
           }}
         >
-          Jetzt bewerben
+          {isRecruiting ? 'Jetzt bewerben' : 'Termin buchen'}
         </Link>
       </nav>
     </header>

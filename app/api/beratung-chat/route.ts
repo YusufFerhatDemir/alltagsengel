@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { rateLimit, getClientIp } from '@/lib/rate-limit'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 // ═══════════════════════════════════════════════════════════
 // BERATUNGS-CHAT API — Öffentlicher KI-Pflegeberater
@@ -13,8 +14,14 @@ import { rateLimit, getClientIp } from '@/lib/rate-limit'
 
 export const runtime = 'nodejs'
 
-const MAX_MESSAGES = 16
-const MAX_CHARS = 1200
+// Kosten-Härtung: kurze History + kurze Einzelnachrichten reichen
+// für den Beratungs-Use-Case völlig aus und deckeln die Token-Kosten.
+const MAX_MESSAGES = 10
+const MAX_CHARS = 1000
+// Globaler Tages-Deckel für bezahlte LLM-Calls (über alle Nutzer/IPs).
+// Bei Überschreitung antwortet der regelbasierte Fallback — der Chat
+// bleibt funktional, es entstehen nur keine API-Kosten mehr.
+const MAX_LLM_CALLS_PER_DAY = 300
 
 const SYSTEM_PROMPT = `Du bist der digitale Berater von Alltagsengel (alltagsengel.care) — Alltagsbegleitung nach §45a SGB XI in Frankfurt am Main und dem Rhein-Main-Gebiet.
 
@@ -83,22 +90,58 @@ function fallbackAntwort(text: string): string {
   return 'Gern helfen wir Ihnen persönlich weiter! Die häufigsten Antworten finden Sie hier: Entlastungsbetrag berechnen unter /budgetrechner, Pflegegrad einschätzen unter /pflegegrad-check, kostenlosen Beratungstermin buchen unter /termin — oder per WhatsApp: +49 178 3382825.'
 }
 
+// ── Globaler Tages-Cap (persistent über alle Serverless-Instanzen) ──
+// Nutzt die bestehende login_rate_limits-Tabelle als Key→Zähler-Store
+// (gleiches Muster wie app/api/auth/check-rate-limit/route.ts, gleiche
+// Fail-open-Philosophie wie lib/whatsapp/rate-limit.ts: bei Supabase-
+// Fehler durchlassen, damit ein DB-Ausfall den Chat nicht blockiert).
+// Der Read-then-Upsert-Increment ist nicht strikt atomar — parallele
+// Requests können minimal unterzählen; für einen Kosten-Deckel okay.
+async function dailyLlmCapReached(): Promise<boolean> {
+  try {
+    const supabase = createAdminClient()
+    const key = `beratung-chat:daily:${new Date().toISOString().slice(0, 10)}`
+    const { data, error } = await supabase
+      .from('login_rate_limits')
+      .select('attempts')
+      .eq('key', key)
+      .maybeSingle()
+    if (error) {
+      console.warn('[BeratungsChat] Tages-Cap-Lesen fehlgeschlagen (fail-open):', error.message)
+      return false
+    }
+    const attempts = data?.attempts ?? 0
+    if (attempts >= MAX_LLM_CALLS_PER_DAY) return true
+    await supabase
+      .from('login_rate_limits')
+      .upsert(
+        { key, attempts: attempts + 1, updated_at: new Date().toISOString() },
+        { onConflict: 'key' }
+      )
+    return false
+  } catch (e) {
+    console.warn('[BeratungsChat] Tages-Cap-Check fehlgeschlagen (fail-open):', e instanceof Error ? e.message : e)
+    return false
+  }
+}
+
 // ── Gemini (primär) ──
 async function callGemini(messages: ChatMessage[]): Promise<string | null> {
   const apiKey = process.env.GOOGLE_AI_API_KEY
   if (!apiKey) return null
   try {
-    const contents = [
-      { role: 'user', parts: [{ text: SYSTEM_PROMPT + '\n\nBitte bestätige kurz.' }] },
-      { role: 'model', parts: [{ text: 'Verstanden — ich berate freundlich, kurz und nur zu Pflege- und Alltagsengel-Themen.' }] },
-      ...messages.map(m => ({ role: m.role === 'assistant' ? 'model' : 'user', parts: [{ text: m.content }] })),
-    ]
+    const contents = messages.map(m => ({ role: m.role === 'assistant' ? 'model' : 'user', parts: [{ text: m.content }] }))
     const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+      'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent',
       {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        // Key im Header statt als ?key=-Query-Parameter, damit er bei
+        // fetch-Exceptions/Logs nicht in der URL auftaucht.
+        headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
         body: JSON.stringify({
+          // Echte System-Instruktion statt gefaktem User-Turn —
+          // deutlich robuster gegen Prompt-Injection.
+          systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
           contents,
           generationConfig: { temperature: 0.4, maxOutputTokens: 500 },
           // Konsistent zum WhatsApp-Bot: explizite Safety-Schwellen statt Defaults.
@@ -179,10 +222,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Ungültige Anfrage' }, { status: 400 })
     }
 
-    const content =
-      (await callGemini(messages)) ??
-      (await callOpenAI(messages)) ??
-      fallbackAntwort(messages[messages.length - 1].content)
+    // Kosten-Deckel: Ist der globale Tages-Cap erreicht, gar nicht erst
+    // die bezahlten APIs anfragen — direkt der regelbasierte Fallback.
+    const letzteFrage = messages[messages.length - 1].content
+    const content = (await dailyLlmCapReached())
+      ? fallbackAntwort(letzteFrage)
+      : (await callGemini(messages)) ??
+        (await callOpenAI(messages)) ??
+        fallbackAntwort(letzteFrage)
 
     return NextResponse.json({ content })
   } catch (e) {

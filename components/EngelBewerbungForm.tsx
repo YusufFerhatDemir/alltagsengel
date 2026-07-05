@@ -12,6 +12,8 @@ import { trackContactRequest } from '@/lib/tracking'
 export default function EngelBewerbungForm() {
   const [form, setForm] = useState({ name: '', phone: '', plz: '', qualification: '', message: '' })
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
+  const [errorMsg, setErrorMsg] = useState('')
+  const [honeypot, setHoneypot] = useState('')
   const [utmSource, setUtmSource] = useState('')
 
   useEffect(() => {
@@ -32,6 +34,7 @@ export default function EngelBewerbungForm() {
           name: form.name,
           phone: form.phone,
           plz: form.plz,
+          website: honeypot,
           service: form.qualification ? `Engel-Bewerbung (${form.qualification})` : 'Engel-Bewerbung',
           message: form.message,
           source: 'engel-bewerbung',
@@ -43,9 +46,13 @@ export default function EngelBewerbungForm() {
         setForm({ name: '', phone: '', plz: '', qualification: '', message: '' })
         trackContactRequest('engel-bewerbung')
       } else {
+        // Server-Fehlermeldung anzeigen (z. B. "Ungültige Telefonnummer")
+        const data = await res.json().catch(() => null)
+        setErrorMsg(data?.error || '')
         setStatus('error')
       }
     } catch {
+      setErrorMsg('')
       setStatus('error')
     }
   }
@@ -96,6 +103,17 @@ export default function EngelBewerbungForm() {
       </p>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        {/* Honeypot — für Menschen unsichtbar, Bots füllen es aus */}
+        <input
+          type="text"
+          name="website"
+          value={honeypot}
+          onChange={e => setHoneypot(e.target.value)}
+          tabIndex={-1}
+          autoComplete="off"
+          aria-hidden="true"
+          style={{ position: 'absolute', left: '-9999px', height: 0, width: 0, opacity: 0 }}
+        />
         <input
           type="text"
           required
@@ -111,6 +129,8 @@ export default function EngelBewerbungForm() {
             placeholder="Telefonnummer *"
             value={form.phone}
             onChange={e => setForm({ ...form, phone: e.target.value })}
+            pattern="[0-9+\s\(\)\/\-]{6,}"
+            title="Bitte gib eine gültige Telefonnummer an (mindestens 6 Ziffern)"
             style={{ ...inputStyle, flex: 2 }}
           />
           <input
@@ -148,7 +168,7 @@ export default function EngelBewerbungForm() {
 
       {status === 'error' && (
         <p style={{ color: '#E74C3C', fontSize: 13, marginTop: 8 }}>
-          Fehler beim Senden. Bitte versuche es erneut.
+          {errorMsg || 'Fehler beim Senden. Bitte versuche es erneut.'}
         </p>
       )}
 

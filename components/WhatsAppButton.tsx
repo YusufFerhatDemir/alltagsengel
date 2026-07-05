@@ -19,20 +19,30 @@ export default function WhatsAppButton() {
   const [showTooltip, setShowTooltip] = useState(false)
   const [modalOpen, setModalOpen] = useState(false)
 
+  // Seiten mit fixer Sticky-CTA-Bar am unteren Rand (Landing, Jobs, Karriere,
+  // Engel-werden) → Button MUSS über die Bar, sonst verdeckt er auf Mobile die
+  // rechte Kante des Haupt-CTAs (zIndex 9998 > 999). Hat Vorrang vor Bottom-Nav
+  // ('/engel-werden' würde sonst in den startsWith('/engel')-Zweig fallen).
+  const hasStickyBar = pathname === '/' || ['/jobs', '/karriere', '/engel-werden'].includes(pathname || '')
+
   // Seiten mit Bottom-Nav → Button hoeher positionieren, damit er den Profil-Tab nicht verdeckt
-  const hasBottomNav = (
+  const hasBottomNav = !hasStickyBar && (
     pathname?.startsWith('/kunde') ||
     pathname?.startsWith('/engel') ||
     pathname?.startsWith('/fahrer')
   ) && !pathname.includes('/register') && !pathname.includes('/buchen/')
 
-  // Positionen: wenn Bottom-Nav da ist, 92px Abstand (Nav ~76px + 16px Luft) + Safe-Area
-  const buttonBottom = hasBottomNav
-    ? 'calc(92px + env(safe-area-inset-bottom))'
-    : 'calc(24px + env(safe-area-inset-bottom))'
-  const tooltipBottom = hasBottomNav
-    ? 'calc(158px + env(safe-area-inset-bottom))'
-    : 'calc(90px + env(safe-area-inset-bottom))'
+  // Positionen: Sticky-Bar 150px, Bottom-Nav 92px (Nav ~76px + 16px Luft), sonst 24px + Safe-Area
+  const buttonBottom = hasStickyBar
+    ? 'calc(150px + env(safe-area-inset-bottom))'
+    : hasBottomNav
+      ? 'calc(92px + env(safe-area-inset-bottom))'
+      : 'calc(24px + env(safe-area-inset-bottom))'
+  const tooltipBottom = hasStickyBar
+    ? 'calc(216px + env(safe-area-inset-bottom))'
+    : hasBottomNav
+      ? 'calc(158px + env(safe-area-inset-bottom))'
+      : 'calc(90px + env(safe-area-inset-bottom))'
 
   useEffect(() => {
     // Auch in Capacitor (native App) anzeigen — WhatsApp-Kontakt soll immer verfügbar sein

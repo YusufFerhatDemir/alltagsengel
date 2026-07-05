@@ -8,6 +8,7 @@ export const metadata: Metadata = {
   keywords: 'Pflegegrad, Beantragung, MDK, Pflegekasse, Pflegeeinstufung',
   alternates: { canonical: 'https://alltagsengel.care/blog/pflegegrad-beantragen' },
   openGraph: {
+    images: [{ url: '/og-image.png', width: 1200, height: 630 }],
     title: 'Pflegegrad beantragen: So bekommen Sie den richtigen Pflegegrad',
     description: 'Schritt-für-Schritt Anleitung zur Beantragung und Erlangung des passenden Pflegegrades.',
   },
@@ -69,29 +70,29 @@ export default function PflegegradBeantragen() {
 
           <h3>Pflegegrad 2</h3>
           <ul>
-            <li>Pflegegeld: 332 Euro/Monat (wenn Angehörige pflegen)</li>
-            <li>Pflegesachleistung: 693 Euro/Monat (professionelle Pflegedienste)</li>
+            <li>Pflegegeld: 347 Euro/Monat (wenn Angehörige pflegen)</li>
+            <li>Pflegesachleistung: 796 Euro/Monat (professionelle Pflegedienste)</li>
             <li>Entlastungsbetrag: 131 Euro/Monat</li>
           </ul>
 
           <h3>Pflegegrad 3</h3>
           <ul>
-            <li>Pflegegeld: 573 Euro/Monat</li>
-            <li>Pflegesachleistung: 1.298 Euro/Monat</li>
+            <li>Pflegegeld: 599 Euro/Monat</li>
+            <li>Pflegesachleistung: 1.497 Euro/Monat</li>
             <li>Entlastungsbetrag: 131 Euro/Monat</li>
           </ul>
 
           <h3>Pflegegrad 4</h3>
           <ul>
-            <li>Pflegegeld: 765 Euro/Monat</li>
-            <li>Pflegesachleistung: 1.612 Euro/Monat</li>
+            <li>Pflegegeld: 800 Euro/Monat</li>
+            <li>Pflegesachleistung: 1.859 Euro/Monat</li>
             <li>Entlastungsbetrag: 131 Euro/Monat</li>
           </ul>
 
           <h3>Pflegegrad 5</h3>
           <ul>
-            <li>Pflegegeld: 946 Euro/Monat</li>
-            <li>Pflegesachleistung: 2.095 Euro/Monat</li>
+            <li>Pflegegeld: 990 Euro/Monat</li>
+            <li>Pflegesachleistung: 2.299 Euro/Monat</li>
             <li>Entlastungsbetrag: 131 Euro/Monat</li>
             <li>Zusatz für besondere Anforderungen möglich</li>
           </ul>

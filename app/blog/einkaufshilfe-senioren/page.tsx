@@ -8,6 +8,7 @@ export const metadata: Metadata = {
   keywords: 'Einkaufshilfe Senioren, Einkaufsbegleitung, Einkaufsdienst, Begleitperson, Pflege',
   alternates: { canonical: 'https://alltagsengel.care/blog/einkaufshilfe-senioren' },
   openGraph: {
+    images: [{ url: '/og-image.png', width: 1200, height: 630 }],
     title: 'Einkaufshilfe für Senioren: So klappt der Einkauf mit Begleitung',
     description: 'Finden Sie die richtige Einkaufshilfe für Ihre Senioren im Alter.',
     type: 'article',
@@ -85,13 +86,13 @@ export default function EinkaufshilfePage() {
             <strong>Private Bezahlung:</strong> 15–25€ pro Stunde, je nach Region und Qualifikation
           </p>
           <p>
-            <strong>Über Pflegekasse (§45b):</strong> Viele Krankenkassen zahlen bis zu 131€ pro Monat für Betreuungsleistungen, unter die auch Einkaufshilfen fallen.
+            <strong>Über Pflegekasse (§45b):</strong> Viele Pflegekassen zahlen bis zu 131€ pro Monat für Betreuungsleistungen, unter die auch Einkaufshilfen fallen.
           </p>
           <p>
-            <strong>Über Verhinderungspflege:</strong> Falls Sie bereits Verhinderungspflege in Anspruch nehmen, können Sie diese auch für Einkaufshilfen nutzen (bis 1.612€ pro Jahr).
+            <strong>Über Verhinderungspflege:</strong> Falls Sie bereits Verhinderungspflege in Anspruch nehmen, können Sie diese auch für Einkaufshilfen nutzen (gemeinsamer Jahresbetrag Verhinderungs-/Kurzzeitpflege: bis 3.539€ pro Jahr, seit 01.07.2025).
           </p>
           <p>
-            <strong>Stundensatz bei AlltagsEngel:</strong> Durchschnittlich 18–22€ pro Stunde – darin ist oft bereits eine Gewinnbeteiligung für den Helfer und Versicherung enthalten.
+            <strong>Stundensatz bei AlltagsEngel:</strong> ab 32 € pro Stunde – mit anerkanntem Pflegegrad rechnet AlltagsEngel direkt über den Entlastungsbetrag (§ 45b, 131 €/Monat) mit der Pflegekasse ab, sodass für Sie keine Kosten entstehen.
           </p>
 
           <h2>Wie buchen Sie eine Einkaufshilfe über AlltagsEngel?</h2>

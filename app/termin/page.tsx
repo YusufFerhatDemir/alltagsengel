@@ -8,6 +8,7 @@ export const metadata: Metadata = {
   description: 'Beratungstermin in 1 Minute online buchen: Alltagsbegleitung, Pflege-Box oder Krankenfahrt in Frankfurt & Rhein-Main. Wunschtag wählen, wir rufen zurück — kostenlos.',
   keywords: ['Termin buchen Pflege', 'Pflegeberatung Termin', 'Alltagsbegleitung Termin', 'Beratungstermin Pflegekasse', 'Online Terminbuchung Pflege Frankfurt'],
   openGraph: {
+    images: [{ url: '/og-image.png', width: 1200, height: 630 }],
     title: 'Termin online buchen — kostenlose Pflege-Beratung',
     description: 'Wunschtag und Zeitfenster wählen, wir rufen zurück. Alltagsbegleitung, Pflege-Box, Krankenfahrten — Frankfurt & Rhein-Main.',
     url: 'https://alltagsengel.care/termin',

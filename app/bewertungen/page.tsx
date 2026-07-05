@@ -8,6 +8,7 @@ export const metadata: Metadata = {
   description: 'Google-Bewertungen und Erfahrungen mit Alltagsengel: Alltagsbegleitung nach §45b SGB XI in Frankfurt am Main und Umgebung. Transparent, geprüft, ohne Eigenanteil über den Entlastungsbetrag (131 €/Monat).',
   keywords: ['Alltagsengel Bewertungen', 'Alltagsengel Erfahrungen', 'Alltagsbegleitung Frankfurt Bewertung', 'Betreuungsdienst Frankfurt Erfahrungen'],
   openGraph: {
+    images: [{ url: '/og-image.png', width: 1200, height: 630 }],
     title: 'Bewertungen — Das sagen Familien über Alltagsengel',
     description: 'Echte Google-Bewertungen und Erfahrungen mit unserer Alltagsbegleitung in Frankfurt und Rhein-Main.',
     url: 'https://alltagsengel.care/bewertungen',
@@ -88,7 +89,7 @@ export default function BewertungenPage() {
             <button className="btn-gold" style={{ fontSize: 15, padding: '13px 26px' }}>Jetzt Alltagsbegleitung anfragen</button>
           </Link>
           <p style={{ color: '#8A8279', fontSize: 12.5, marginTop: 12 }}>
-            Oder rufen Sie uns an — wir beraten Sie gern zu Entlastungsbetrag, Pflegegrad und Ablauf.
+            Oder rufen Sie uns an: <a href="tel:+491783382825" style={{ color: '#C9963C', textDecoration: 'none' }}>+49 178 338 28 25</a> — wir beraten Sie gern zu Entlastungsbetrag, Pflegegrad und Ablauf.
           </p>
         </section>
 
