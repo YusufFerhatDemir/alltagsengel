@@ -17,12 +17,106 @@
       "reason": "Rechtsform ist UG (haftungsbeschränkt), NICHT GmbH. Siehe Impressum / HRB 140351.",
       "caseSensitive": false,
       "allowedReplacements": ["Alltagsengel UG (haftungsbeschränkt)"]
+    },
+    {
+      "id": "stale-entlastungsbetrag-monat-en",
+      "pattern": "€125/month",
+      "reason": "Entlastungsbetrag ist seit Pflegereform 2025: 131 €/Monat. Historische Erwähnungen bitte als Fließtext formulieren (z. B. 'zuvor 125 €'), nicht in dieser Schreibweise.",
+      "caseSensitive": false,
+      "allowedReplacements": ["€131/month"]
+    },
+    {
+      "id": "stale-entlastungsbetrag-monat-de",
+      "pattern": "€125/Monat",
+      "reason": "Entlastungsbetrag ist seit Pflegereform 2025: 131 €/Monat.",
+      "caseSensitive": false,
+      "allowedReplacements": ["€131/Monat"]
+    },
+    {
+      "id": "stale-sam-de",
+      "pattern": "7,44 Mrd",
+      "reason": "SAM basiert auf altem 125-€-Betrag. Korrekt: 4,96 Mio × 131 € × 12 = 7,80 Mrd €.",
+      "caseSensitive": false,
+      "allowedReplacements": ["7,80 Mrd"]
+    },
+    {
+      "id": "stale-sam-en",
+      "pattern": "€7.44B",
+      "reason": "SAM basiert auf altem 125-€-Betrag. Korrekt: €7.80B (4.96M × €131 × 12).",
+      "caseSensitive": false,
+      "allowedReplacements": ["€7.80B"]
+    },
+    {
+      "id": "stale-sam-en-billion",
+      "pattern": "7.44 billion",
+      "reason": "SAM basiert auf altem 125-€-Betrag. Korrekt: €7.80 billion.",
+      "caseSensitive": false,
+      "allowedReplacements": ["7.80 billion"]
+    },
+    {
+      "id": "wrong-sam-784",
+      "pattern": "7,84 Mrd",
+      "reason": "Rechenfehler: 4,96 Mio × 131 € × 12 = 7,80 Mrd €, nicht 7,84.",
+      "caseSensitive": false,
+      "allowedReplacements": ["7,80 Mrd"]
+    },
+    {
+      "id": "truncated-sam-779-de",
+      "pattern": "€7,79 Mrd",
+      "reason": "Abschneiden statt kaufmännisch Runden: 7.797,12 Mio → 7,80 Mrd. Einheitlich €7,80 Mrd verwenden.",
+      "caseSensitive": false,
+      "allowedReplacements": ["€7,80 Mrd"]
+    },
+    {
+      "id": "truncated-sam-779-en",
+      "pattern": "€7.79B",
+      "reason": "Abschneiden statt Runden. Einheitlich €7.80B verwenden.",
+      "caseSensitive": false,
+      "allowedReplacements": ["€7.80B"]
+    },
+    {
+      "id": "stale-unused-budget-de",
+      "pattern": "4,46 Mrd",
+      "reason": "Ungenutztes §45b-Budget auf alter 7,44-Basis. Korrekt: 60 % von 7,80 Mrd = 4,68 Mrd €.",
+      "caseSensitive": false,
+      "allowedReplacements": ["4,68 Mrd"]
+    },
+    {
+      "id": "stale-unused-budget-en",
+      "pattern": "€4.46B",
+      "reason": "Ungenutztes §45b-Budget auf alter Basis. Korrekt: €4.68B.",
+      "caseSensitive": false,
+      "allowedReplacements": ["€4.68B"]
+    },
+    {
+      "id": "stale-used-budget-de",
+      "pattern": "2,98 Mrd",
+      "reason": "Genutztes §45b-Budget auf alter 7,44-Basis. Korrekt: 40 % von 7,80 Mrd = 3,12 Mrd €.",
+      "caseSensitive": false,
+      "allowedReplacements": ["3,12 Mrd"]
+    },
+    {
+      "id": "stale-used-budget-en",
+      "pattern": "€2.98B",
+      "reason": "Genutztes §45b-Budget auf alter Basis. Korrekt: €3.12B.",
+      "caseSensitive": false,
+      "allowedReplacements": ["€3.12B"]
+    },
+    {
+      "id": "stale-companion-share",
+      "pattern": "€102.50",
+      "reason": "Companion-Anteil (82 %) auf alter 125-€-Basis. Korrekt: 82 % von 131 € = €107.42.",
+      "caseSensitive": false,
+      "allowedReplacements": ["€107.42"]
     }
   ],
   "excludeGlobs": [
     "node_modules/**",
     ".next/**",
     ".git/**",
+    ".claude/**",
+    "graphify-out/**",
+    "velora/**",
     "archive/**",
     "ios/**",
     "android/**",
@@ -36,6 +130,11 @@
     "pnpm-lock.yaml",
     "scripts/forbidden-strings.json",
     "scripts/lint-forbidden.ts",
-    ".git/hooks/pre-commit"
+    ".git/hooks/pre-commit",
+    "*.pdf",
+    "*.png",
+    "*.jpg",
+    "*.p12",
+    "*b64*"
   ]
 }

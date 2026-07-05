@@ -216,6 +216,31 @@ export default function DatenschutzPage() {
               Datenschutzerklärung von Google
             </a>.
           </p>
+          <h3>Meta Pixel (Facebook/Instagram)</h3>
+          <p>
+            Zur Messung der Wirksamkeit unserer Werbeanzeigen auf Facebook und Instagram nutzen wir das Meta Pixel
+            (Meta Platforms Ireland Ltd., 4 Grand Canal Square, Dublin 2, Irland). Das Pixel wird erst nach Ihrer
+            ausdrücklichen Einwilligung im Cookie-Banner geladen. Nach Einwilligung werden Daten wie IP-Adresse,
+            besuchte Seiten und Geräteinformationen an Meta übertragen und können dort mit Ihrem Meta-Konto
+            verknüpft werden. Dabei können Daten in die USA übermittelt werden (Meta ist nach dem EU-US Data
+            Privacy Framework zertifiziert). Ihre Einwilligung können Sie jederzeit über die Cookie-Einstellungen
+            widerrufen. Rechtsgrundlage ist Art. 6 Abs. 1 lit. a DSGVO (Einwilligung). Weitere Informationen:{' '}
+            <a href="https://www.facebook.com/privacy/policy/" target="_blank" rel="noopener noreferrer" style={{ color: '#C9963C', textDecoration: 'underline' }}>
+              Datenschutzerklärung von Meta
+            </a>.
+          </p>
+          <h3>TikTok Pixel</h3>
+          <p>
+            Zur Messung der Wirksamkeit unserer Werbeanzeigen auf TikTok nutzen wir das TikTok Pixel (TikTok
+            Technology Ltd., 10 Earlsfort Terrace, Dublin 2, Irland). Das Pixel wird erst nach Ihrer ausdrücklichen
+            Einwilligung im Cookie-Banner geladen. Nach Einwilligung werden Daten wie IP-Adresse, besuchte Seiten
+            und Geräteinformationen an TikTok übertragen; eine Übermittlung in Drittländer (u. a. USA, Singapur)
+            ist dabei möglich. Ihre Einwilligung können Sie jederzeit über die Cookie-Einstellungen widerrufen.
+            Rechtsgrundlage ist Art. 6 Abs. 1 lit. a DSGVO (Einwilligung). Weitere Informationen:{' '}
+            <a href="https://www.tiktok.com/legal/privacy-policy" target="_blank" rel="noopener noreferrer" style={{ color: '#C9963C', textDecoration: 'underline' }}>
+              Datenschutzerklärung von TikTok
+            </a>.
+          </p>
         </section>
 
         <section className="legal-section">

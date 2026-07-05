@@ -6,9 +6,9 @@ const GOLD = 'C9963C';
 const DARK_GRAY = '333333';
 const LIGHT_GRAY = 'F5F5F5';
 
-// Market calculations for €131/month
-// Previous: €125/month × 4.96M people × 12 months = €7.44B
-// Updated: €131/month × 4.96M people × 12 months = €7.80B
+// Market calculations for €131/month (Pflegereform 2025; alter 125er-Wert: siehe Git-History)
+
+// Formel: €131/month × 4.96M people × 12 months = €7.80B
 const MONTHLY_BENEFIT = 131; // Updated from 125
 const CARE_DEPENDENT_POPULATION = 4.96; // millions
 const ANNUAL_MARKET = MONTHLY_BENEFIT * CARE_DEPENDENT_POPULATION * 12; // €7.80B

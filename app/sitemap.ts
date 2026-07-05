@@ -74,6 +74,9 @@ const STATIC_ROUTES: Omit<RouteEntry, 'lastModified'>[] = [
   { url: '/hygienebox/rodgau', changeFrequency: 'weekly', priority: 0.85 },
   // /lp/* sind noindex-Redirects (Werbe-Tracking) — gehören NICHT in die Sitemap.
   { url: '/karriere', changeFrequency: 'weekly', priority: 0.8 },
+  { url: '/jobs', changeFrequency: 'weekly', priority: 0.9 },
+  { url: '/finanzierung', changeFrequency: 'monthly', priority: 0.9 },
+  { url: '/team', changeFrequency: 'monthly', priority: 0.7 },
   { url: '/ueber-uns', changeFrequency: 'monthly', priority: 0.8 },
   { url: '/impressum', changeFrequency: 'yearly', priority: 0.3 },
   { url: '/datenschutz', changeFrequency: 'yearly', priority: 0.3 },
