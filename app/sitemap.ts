@@ -83,6 +83,27 @@ const STATIC_ROUTES: Omit<RouteEntry, 'lastModified'>[] = [
   { url: '/agb', changeFrequency: 'yearly', priority: 0.3 },
 ]
 
+// Dynamische Stadt-Segmente teilen sich eine Template-Datei — deren mtime
+// gilt für alle Städte darunter (inhaltlich korrekt, da gleiche Vorlage).
+const DYNAMIC_SECTIONS = ['alltagsbegleitung', 'krankenfahrten', 'hygienebox']
+
+function resolvePagePath(url: string): string {
+  if (url === '/') return join('app', 'page.tsx')
+  const segments = url.split('/').filter(Boolean)
+  if (segments.length === 2 && DYNAMIC_SECTIONS.includes(segments[0])) {
+    return join('app', segments[0], '[stadt]', 'page.tsx')
+  }
+  return join('app', ...segments, 'page.tsx')
+}
+
+function lastModifiedFor(url: string, fallback: string): string {
+  try {
+    return statSync(join(process.cwd(), resolvePagePath(url))).mtime.toISOString()
+  } catch {
+    return fallback
+  }
+}
+
 function listBlogSlugs(): { slug: string; lastModified: string }[] {
   try {
     const dir = join(process.cwd(), 'app', 'blog')
@@ -109,7 +130,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
   const staticEntries: RouteEntry[] = STATIC_ROUTES.map((r) => ({
     ...r,
-    lastModified: now,
+    lastModified: lastModifiedFor(r.url, now),
   }))
 
   const blogEntries: RouteEntry[] = listBlogSlugs().map(({ slug, lastModified }) => ({
