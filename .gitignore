@@ -69,3 +69,4 @@ xcode-state.png
 
 # graphify knowledge graph (lokal, wird bei Bedarf neu generiert)
 graphify-out/
+.github/workflows/deploy-chairmatch.yml
