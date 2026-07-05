@@ -67,7 +67,7 @@ export async function sendEscalationEmail(params: {
 }): Promise<boolean> {
   const apiKey = process.env.RESEND_API_KEY
   if (!apiKey) {
-    // eslint-disable-next-line no-console
+     
     console.warn('[wa-bot escalation] RESEND_API_KEY missing — no escalation mail sent')
     return false
   }
@@ -109,13 +109,13 @@ export async function sendEscalationEmail(params: {
       }),
     })
     if (!response.ok) {
-      // eslint-disable-next-line no-console
+       
       console.warn('[wa-bot escalation] Resend failed:', response.status, await response.text())
       return false
     }
     return true
   } catch (err) {
-    // eslint-disable-next-line no-console
+     
     console.warn('[wa-bot escalation] Resend error:', err)
     return false
   }
@@ -133,7 +133,7 @@ export async function sendDraftNotificationEmail(params: {
 }): Promise<boolean> {
   const apiKey = process.env.RESEND_API_KEY
   if (!apiKey) {
-    // eslint-disable-next-line no-console
+     
     console.warn('[wa-bot draft] RESEND_API_KEY missing — no draft mail sent')
     return false
   }
@@ -178,13 +178,13 @@ export async function sendDraftNotificationEmail(params: {
       }),
     })
     if (!response.ok) {
-      // eslint-disable-next-line no-console
+       
       console.warn('[wa-bot draft] Resend failed:', response.status, await response.text())
       return false
     }
     return true
   } catch (err) {
-    // eslint-disable-next-line no-console
+     
     console.warn('[wa-bot draft] Resend error:', err)
     return false
   }

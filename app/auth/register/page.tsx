@@ -138,7 +138,7 @@ function RegisterForm() {
           setError('Registrierung fehlgeschlagen. Bitte versuchen Sie es später erneut.')
         } else {
           // AUTH-005: Keine rohen Supabase-Messages leaken, aber Code mitloggen für Debug
-          // eslint-disable-next-line no-console
+           
           console.warn('[register] unmapped supabase error:', authError.message, (authError as { code?: string }).code)
           setError('Registrierung fehlgeschlagen. Bitte prüfen Sie Ihre Angaben oder versuchen Sie es später erneut.')
         }

@@ -18,11 +18,11 @@ export type Portal = 'kunde' | 'engel' | 'fahrer' | 'investor' | 'landing'
 export function useTrackVisit(portal: Portal) {
   const userLocation = useUserLocation()
   const tracked = useRef(false)
-  const [consent, setConsent] = useState<string | null>(null)
+  const [consent, setConsent] = useState<string | null>(() => getCookieConsent())
 
-  // Consent lesen + auf spätere Zustimmung (Banner-Klick) reagieren
+  // Auf spätere Zustimmung (Banner-Klick) reagieren — initialer Wert kommt
+  // bereits aus dem lazy useState-Initializer, kein setState-in-effect nötig.
   useEffect(() => {
-    setConsent(getCookieConsent())
     const onChange = (e: Event) => setConsent((e as CustomEvent).detail ?? getCookieConsent())
     window.addEventListener('ae_consent_change', onChange)
     return () => window.removeEventListener('ae_consent_change', onChange)

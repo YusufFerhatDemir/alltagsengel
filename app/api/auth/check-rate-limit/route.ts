@@ -85,7 +85,7 @@ export async function POST(req: NextRequest) {
 
     if (action === 'fail') {
       for (const key of [keyByIP, keyByEmail]) {
-        let entry = await getEntry(supabase, key)
+        const entry = await getEntry(supabase, key)
 
         let attempts = 0
         let firstAttempt = now.toISOString()

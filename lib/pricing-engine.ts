@@ -108,7 +108,7 @@ export async function calculatePrice(req: PricingRequest): Promise<PricingBreakd
   const wait_cost = round2(waitMin * tier.wait_per_min)
   const tier_surcharge = tier.surcharge_amount
 
-  let subtotal = round2(base_price + distance_cost + wait_cost + tier_surcharge)
+  const subtotal = round2(base_price + distance_cost + wait_cost + tier_surcharge)
 
   // Apply extra surcharges (stair_assistance, companion, etc.)
   const appliedSurcharges: SurchargeDetail[] = []

@@ -57,9 +57,7 @@ export default function GoogleReviews() {
           Sie sind bereits Kunde bei Alltagsengel? Mit Ihrer Google-Bewertung helfen Sie anderen
           Familien, uns zu finden — und uns, noch besser zu werden.
         </p>
-        <a href={REVIEW_URL} target="_blank" rel="noopener noreferrer">
-          <button className="btn-ghost" style={{ fontSize: 14 }}>Auf Google bewerten</button>
-        </a>
+        <a href={REVIEW_URL} target="_blank" rel="noopener noreferrer" className="btn-ghost" style={{ fontSize: 14 }}>Auf Google bewerten</a>
       </div>
     )
   }

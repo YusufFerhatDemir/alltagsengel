@@ -126,10 +126,8 @@ export default function JobsPage() {
         <div style={{ fontSize: 13, color: '#C9963C', fontWeight: 600, marginBottom: 8 }}>
           Flexibel · Kein Wochenenddienst · Bewerbung in 2 Minuten
         </div>
-        <a href={WA_BEWERBUNG} target="_blank" rel="noopener noreferrer">
-          <button className="btn-gold" style={{ width: '100%', maxWidth: 340, fontSize: 16, padding: '14px 0' }}>
-            JETZT PER WHATSAPP BEWERBEN
-          </button>
+        <a href={WA_BEWERBUNG} target="_blank" rel="noopener noreferrer" className="btn-gold" style={{ width: '100%', maxWidth: 340, fontSize: 16, padding: '14px 0' }}>
+          JETZT PER WHATSAPP BEWERBEN
         </a>
       </div>
 
@@ -155,12 +153,8 @@ export default function JobsPage() {
         <p className="sp-ug">Frankfurt · Rhein-Main · flexibel</p>
         <div className="gold-div"></div>
         <div className="sp-btns">
-          <a href={WA_BEWERBUNG} target="_blank" rel="noopener noreferrer">
-            <button className="btn-gold">IN 2 MINUTEN BEWERBEN</button>
-          </a>
-          <Link href="#formular">
-            <button className="btn-ghost">Lieber per Formular bewerben</button>
-          </Link>
+          <a href={WA_BEWERBUNG} target="_blank" rel="noopener noreferrer" className="btn-gold">IN 2 MINUTEN BEWERBEN</a>
+          <Link href="#formular" className="btn-ghost">Lieber per Formular bewerben</Link>
         </div>
       </div>
 
@@ -314,9 +308,7 @@ export default function JobsPage() {
             bei Alltagsengel bist du willkommen. Wir freuen uns auf dich.
           </p>
           <div className="sp-btns" style={{ marginTop: 20 }}>
-            <a href={WA_BEWERBUNG} target="_blank" rel="noopener noreferrer">
-              <button className="btn-gold">JETZT PER WHATSAPP BEWERBEN</button>
-            </a>
+            <a href={WA_BEWERBUNG} target="_blank" rel="noopener noreferrer" className="btn-gold">JETZT PER WHATSAPP BEWERBEN</a>
           </div>
         </section>
 

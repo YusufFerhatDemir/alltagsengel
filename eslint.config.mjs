@@ -12,6 +12,17 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Nicht Teil der Next.js-App — eigenständige Node/CommonJS-Skripte
+    // bzw. separates Expo-Projekt. tsconfig.json exkludiert sie bereits
+    // vom Typecheck; ESLint sollte sie aus demselben Grund nicht mit den
+    // Next/TS-Regeln der App bewerten (require()-Imports dort sind korrekt,
+    // package.json ist "type": "commonjs").
+    "archive/**",
+    "native/**",
+    "investor/**/*.js",
+    "marketing/scripts/**",
+    "scripts/*.js",
+    "docs/**/*.js",
   ]),
 ]);
 
