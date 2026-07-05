@@ -98,7 +98,17 @@ async function callGemini(messages: ChatMessage[]): Promise<string | null> {
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contents, generationConfig: { temperature: 0.4, maxOutputTokens: 500 } }),
+        body: JSON.stringify({
+          contents,
+          generationConfig: { temperature: 0.4, maxOutputTokens: 500 },
+          // Konsistent zum WhatsApp-Bot: explizite Safety-Schwellen statt Defaults.
+          safetySettings: [
+            { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
+            { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
+            { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
+            { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
+          ],
+        }),
       }
     )
     if (!res.ok) {

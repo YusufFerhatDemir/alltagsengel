@@ -175,7 +175,12 @@ export async function POST(request: Request) {
         (now.getTime() - new Date(customer.created_at).getTime()) / (1000 * 60 * 60 * 24)
       )
 
-      const firstName = customer.first_name || 'Kunde'
+      // first_name ist vom User bei der Registrierung frei wählbar → für den
+      // Subject nur Zeilenumbrüche/Länge kappen (Header-Injection), für den
+      // HTML-Body zusätzlich HTML-escapen (Output-Encoding).
+      const firstNameSubject = (customer.first_name || 'Kunde').replace(/[\r\n]+/g, ' ').slice(0, 80)
+      const firstName = escapeHtml(firstNameSubject)
+      const referralCode = escapeHtml((customer.referral_code || 'ANGEL').replace(/[\r\n]+/g, ' ').slice(0, 40))
 
       try {
         // Tag 3 Mail
@@ -194,7 +199,7 @@ export async function POST(request: Request) {
           await resend.emails.send({
             from: 'AlltagsEngel <info@alltagsengel.care>',
             to: customer.email,
-            subject: templates.day7.subject.replace('${firstName}', firstName),
+            subject: templates.day7.subject.replace('${firstName}', firstNameSubject),
             html: templates.day7.html(firstName),
           })
           sent.day7++
@@ -205,8 +210,8 @@ export async function POST(request: Request) {
           await resend.emails.send({
             from: 'AlltagsEngel <info@alltagsengel.care>',
             to: customer.email,
-            subject: templates.day14.subject.replace('${firstName}', firstName),
-            html: templates.day14.html(firstName, customer.referral_code || 'ANGEL'),
+            subject: templates.day14.subject.replace('${firstName}', firstNameSubject),
+            html: templates.day14.html(firstName, referralCode),
           })
           sent.day14++
         }

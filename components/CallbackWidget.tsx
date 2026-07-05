@@ -34,9 +34,9 @@ export default function CallbackWidget() {
   const isPortal = PORTAL_ROOTS.has(firstSegment)
   if (isPortal || !visible) return null
 
-  // Startseite hat eine Sticky-CTA-Bar am unteren Rand → Button höher setzen.
-  const isHome = pathname === '/'
-  const buttonBottom = isHome
+  // Seiten mit Sticky-CTA-Bar am unteren Rand → Button über die Bar heben.
+  const hasStickyBar = pathname === '/' || ['/jobs', '/karriere', '/engel-werden'].includes(pathname || '')
+  const buttonBottom = hasStickyBar
     ? 'calc(150px + env(safe-area-inset-bottom))'
     : 'calc(92px + env(safe-area-inset-bottom))'
 

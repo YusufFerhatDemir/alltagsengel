@@ -333,7 +333,10 @@
       "Bash(/usr/bin/curl -s -o /dev/null -w \"%{http_code}\\\\n\" https://alltagsengel.care/faq)",
       "Bash(grep -o 'href=\"/[^\"]*\"\\\\|href={`[^`]*`}' app/alltagsbegleitung/\\\\[stadt\\\\]/page.tsx)",
       "Bash(grep -o 'href=\"/[^\"]*\"\\\\|href={`[^`]*`}' app/krankenfahrten/\\\\[stadt\\\\]/page.tsx)",
-      "Bash(grep -o 'href=\"/[^\"]*\"\\\\|href={`[^`]*`}' app/hygienebox/\\\\[stadt\\\\]/page.tsx)"
+      "Bash(grep -o 'href=\"/[^\"]*\"\\\\|href={`[^`]*`}' app/hygienebox/\\\\[stadt\\\\]/page.tsx)",
+      "Bash(/usr/bin/curl -s https://alltagsengel.care/blog/pflegehilfsmittel-40-euro)",
+      "Bash(/usr/bin/curl -s https://alltagsengel.care/blog/pflegegrad-beantragen)",
+      "Bash(/usr/bin/curl -s https://alltagsengel.care/impressum -o impressum.html)"
     ]
   }
 }
