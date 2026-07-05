@@ -8,6 +8,7 @@ export const metadata: Metadata = {
     'Lernen Sie das Team von Alltagsengel kennen: Geschäftsführung, Kundenbetreuung, Tourenplanung, Qualität und Pflegeberatung. Echte Ansprechpartner für Alltagsbegleitung, Pflegebox und Krankenfahrten im Rhein-Main-Gebiet.',
   alternates: { canonical: 'https://alltagsengel.care/team' },
   openGraph: {
+    images: [{ url: '/og-image.png', width: 1200, height: 630 }],
     title: 'Unser Team — Alltagsengel',
     description:
       'Die Menschen hinter Alltagsengel: Geschäftsführung, Kundenbetreuung, Tourenplanung, Qualität und Pflegeberatung.',

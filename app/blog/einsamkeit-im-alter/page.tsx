@@ -8,6 +8,7 @@ export const metadata: Metadata = {
   keywords: 'Einsamkeit im Alter, Isolation, Seniorenhilfe, Alltagsbegleiter, Seniorenbetreuung',
   alternates: { canonical: 'https://alltagsengel.care/blog/einsamkeit-im-alter' },
   openGraph: {
+    images: [{ url: '/og-image.png', width: 1200, height: 630 }],
     title: 'Einsamkeit im Alter: So helfen Alltagsbegleiter gegen Isolation',
     description: 'Wie Alltagsbegleiter Einsamkeit im Alter bekämpfen.',
     type: 'article',

@@ -44,6 +44,8 @@ export default function TerminBuchung() {
   const [fenster, setFenster] = useState('')
   const [form, setForm] = useState({ name: '', phone: '', plz: '' })
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
+  const [errorMsg, setErrorMsg] = useState('')
+  const [honeypot, setHoneypot] = useState('')
 
   const tage = useMemo(() => naechsteTage(12), [])
 
@@ -64,6 +66,7 @@ export default function TerminBuchung() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...form,
+          website: honeypot,
           service: leistung,
           source: 'terminbuchung',
           message: `ONLINE-TERMINWUNSCH: ${leistung} — ${datum}, ${fenster} (${ZEITFENSTER.find(z => z.id === fenster)?.zeit}). Bitte zur Bestätigung zurückrufen.`,
@@ -72,8 +75,14 @@ export default function TerminBuchung() {
       if (res.ok) {
         setStatus('sent')
         trackContactRequest('terminbuchung')
-      } else setStatus('error')
+      } else {
+        // Server-Fehlermeldung anzeigen (z. B. "Ungültige Telefonnummer")
+        const data = await res.json().catch(() => null)
+        setErrorMsg(data?.error || '')
+        setStatus('error')
+      }
     } catch {
+      setErrorMsg('')
       setStatus('error')
     }
   }
@@ -196,12 +205,23 @@ export default function TerminBuchung() {
             {leistung} — {tag && <>{WOCHENTAGE[tag.getDay()]}, {tag.getDate()}. {MONATE_KURZ[tag.getMonth()]}</>}, {ZEITFENSTER.find(z => z.id === fenster)?.zeit}. Wir rufen zur Bestätigung an.
           </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {/* Honeypot — für Menschen unsichtbar, Bots füllen es aus */}
+            <input
+              type="text"
+              name="website"
+              value={honeypot}
+              onChange={e => setHoneypot(e.target.value)}
+              tabIndex={-1}
+              autoComplete="off"
+              aria-hidden="true"
+              style={{ position: 'absolute', left: '-9999px', height: 0, width: 0, opacity: 0 }}
+            />
             <input type="text" required placeholder="Ihr Name *" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} style={inputStyle} />
-            <input type="tel" required placeholder="Telefonnummer *" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} style={inputStyle} />
+            <input type="tel" required placeholder="Telefonnummer *" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} pattern="[0-9+\s\(\)\/\-]{6,}" title="Bitte geben Sie eine gültige Telefonnummer an (mindestens 6 Ziffern)" style={inputStyle} />
             <input type="text" required placeholder="PLZ *" value={form.plz} onChange={e => setForm({ ...form, plz: e.target.value })} pattern="[0-9]{5}" maxLength={5} style={inputStyle} />
           </div>
           {status === 'error' && (
-            <p style={{ color: '#E74C3C', fontSize: 13, marginTop: 8 }}>Fehler beim Senden. Bitte versuchen Sie es erneut.</p>
+            <p style={{ color: '#E74C3C', fontSize: 13, marginTop: 8 }}>{errorMsg || 'Fehler beim Senden. Bitte versuchen Sie es erneut.'}</p>
           )}
           <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
             <button type="button" onClick={() => setSchritt(2)} style={{ flex: 1, padding: '13px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.12)', background: 'transparent', color: '#B8B0A4', fontSize: 15, fontWeight: 600, cursor: 'pointer' }}>Zurück</button>

@@ -19,6 +19,7 @@ export const metadata: Metadata = {
   ],
   alternates: { canonical: 'https://alltagsengel.care/blog/entlastungsbetrag-rueckwirkend' },
   openGraph: {
+    images: [{ url: '/og-image.png', width: 1200, height: 630 }],
     title: 'Entlastungsbetrag rückwirkend nutzen — bis zu 3.144€ sichern',
     description: 'So holen Sie nicht genutzten Entlastungsbetrag nach. Fristen, Berechnung und Beantragung erklärt.',
     url: 'https://alltagsengel.care/blog/entlastungsbetrag-rueckwirkend',

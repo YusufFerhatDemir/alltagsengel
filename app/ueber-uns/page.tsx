@@ -8,6 +8,7 @@ export const metadata: Metadata = {
     'Alltagsengel ist ein Frankfurter Unternehmen für Alltagsbegleitung (§45a SGB XI), Pflegebox und Krankenfahrten im Rhein-Main-Gebiet. Geprüfte Begleiter:innen, versicherte Einsätze, Abrechnung direkt mit der Pflegekasse — lernen Sie uns kennen.',
   alternates: { canonical: 'https://alltagsengel.care/ueber-uns' },
   openGraph: {
+    images: [{ url: '/og-image.png', width: 1200, height: 630 }],
     title: 'Über uns — Alltagsengel',
     description:
       'Frankfurter Unternehmen für Alltagsbegleitung, Pflegebox und Krankenfahrten im Rhein-Main-Gebiet. Geprüfte Begleiter:innen, versicherte Einsätze.',

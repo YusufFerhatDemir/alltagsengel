@@ -8,6 +8,7 @@ export const metadata: Metadata = {
   keywords: 'Krankenfahrt, Krankenkasse, Kostenübernahme, Fahrttransport, medizinische Transporte',
   alternates: { canonical: 'https://alltagsengel.care/blog/krankenfahrt-kostenuebernahme' },
   openGraph: {
+    images: [{ url: '/og-image.png', width: 1200, height: 630 }],
     title: 'Krankenfahrt: Wann zahlt die Krankenkasse?',
     description: 'Vollständiger Überblick über Krankenfahrten und deren Kostenübernahme durch die Krankenkasse.',
   },

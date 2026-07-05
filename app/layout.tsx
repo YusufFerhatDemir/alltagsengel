@@ -151,9 +151,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   },
                   {
                     '@type': 'ContactPoint',
-                    telephone: '+4915510445517',
+                    telephone: '+491783382825',
                     contactType: 'customer service',
-                    contactOption: 'https://wa.me/4915510445517',
+                    url: 'https://wa.me/491783382825',
                     description: 'WhatsApp',
                   },
                 ],

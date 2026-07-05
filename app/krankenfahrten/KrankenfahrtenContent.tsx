@@ -154,6 +154,7 @@ export default function KrankenfahrtenContent() {
         <section className="info-card">
           <h3>Krankenfahrten in Ihrer Stadt</h3>
           <ul className="info-list">
+            <li><Link href="/krankenfahrten/frankfurt">Krankenfahrt Frankfurt am Main</Link></li>
             <li><Link href="/krankenfahrten/offenbach">Krankenfahrt Offenbach am Main</Link></li>
             <li><Link href="/krankenfahrten/wiesbaden">Krankenfahrt Wiesbaden</Link></li>
             <li><Link href="/krankenfahrten/darmstadt">Krankenfahrt Darmstadt</Link></li>

@@ -18,6 +18,7 @@ export const metadata: Metadata = {
   ],
   alternates: { canonical: 'https://alltagsengel.care/krankenfahrten' },
   openGraph: {
+    images: [{ url: '/og-image.png', width: 1200, height: 630 }],
     title: 'Krankenfahrten Frankfurt & Rhein-Main — Alltagsengel',
     description:
       'Fahrten zu Arzt, Dialyse und Klinik — mit Verordnung von der Krankenkasse gezahlt (§60 SGB V) oder als Selbstzahler. Pünktlich, versichert, mit Begleitung bis zur Tür.',

@@ -9,6 +9,7 @@ export const metadata: Metadata = {
   description: 'Kostenloser Budgetrechner: Wie viel Entlastungsbetrag (131€/Monat, §45b SGB XI) steht Ihnen noch zu? Restbudget, Übertrag und Umwandlungsanspruch in 10 Sekunden berechnen.',
   keywords: ['Entlastungsbetrag Rechner', 'Entlastungsbetrag 2026', '131 Euro Pflegekasse', 'Restbudget Entlastungsbetrag', '§45b SGB XI Rechner', 'Umwandlungsanspruch', 'Pflegegrad Budget'],
   openGraph: {
+    images: [{ url: '/og-image.png', width: 1200, height: 630 }],
     title: 'Entlastungsbetrag-Rechner — Ihr ungenutztes Pflegebudget in 10 Sekunden',
     description: 'Berechnen Sie sofort, wie viel von Ihren 131€/Monat Entlastungsbetrag noch ungenutzt ist — inkl. Übertrag und Umwandlungsanspruch.',
     url: 'https://alltagsengel.care/budgetrechner',

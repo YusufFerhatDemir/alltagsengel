@@ -8,6 +8,7 @@ export const metadata: Metadata = {
   keywords: 'Alltagsbegleiter, Verdienst, Bewerbung, Qualifizierung, Arbeit als Helfer',
   alternates: { canonical: 'https://alltagsengel.care/blog/alltagsbegleiter-werden' },
   openGraph: {
+    images: [{ url: '/og-image.png', width: 1200, height: 630 }],
     title: 'Alltagsbegleiter werden: Verdienst, Voraussetzungen & Bewerbung',
     description: 'Erfahren Sie, wie Sie Alltagsbegleiter werden, welche Anforderungen es gibt und wie viel Sie verdienen können.',
   },

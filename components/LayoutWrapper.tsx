@@ -3,6 +3,7 @@ import { usePathname } from 'next/navigation'
 import StatusBar from '@/components/StatusBar'
 import PageTracker from '@/components/PageTracker'
 import SiteHeader from '@/components/SiteHeader'
+import SiteFooter from '@/components/SiteFooter'
 
 // Erste Pfad-Segmente, die zu eingeloggten Portal-/App-Bereichen gehören.
 // Auf diesen Seiten wird KEIN Marketing-Header gezeigt.
@@ -31,6 +32,8 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
       {showHeader && <SiteHeader />}
       <PageTracker />
       {children}
+      {/* Globaler Footer auf allen Marketing-Seiten (gleiches Gate wie Header) */}
+      {showHeader && <SiteFooter />}
     </div>
   )
 }

@@ -1,6 +1,7 @@
 'use client'
 import { useState } from 'react'
 import Link from 'next/link'
+import { pruefePlz } from '@/lib/einzugsgebiet-plz'
 
 // ═══════════════════════════════════════════════════════════
 // EINZUGSGEBIET-KARTE + PLZ-SOFORT-CHECK
@@ -8,6 +9,9 @@ import Link from 'next/link'
 // Stilisierte Rhein-Main-Karte (SVG, keine externen Tiles —
 // schnell & DSGVO-frei) mit klickbaren Städten und einem
 // PLZ-Check: "Sind wir bei Ihnen vor Ort?"
+// PLZ-Logik: lib/einzugsgebiet-plz.ts (geteilt mit
+// EinzugsgebietLeaflet.tsx auf /einzugsgebiet) — Kerngebiet
+// → „drin", Rand-/Nicht-Gebiet → „draussen" (Anfrage-Hinweis).
 // ═══════════════════════════════════════════════════════════
 
 interface Stadt {
@@ -34,34 +38,6 @@ const STAEDTE: Stadt[] = [
   { name: 'Aschaffenburg', slug: 'aschaffenburg', x: 354, y: 201 },
 ]
 
-// PLZ-Bereiche des Einzugsgebiets (Präfix → Region)
-const PLZ_REGIONEN: { praefix: string; region: string }[] = [
-  { praefix: '60', region: 'Frankfurt am Main' },
-  { praefix: '65929', region: 'Frankfurt-Höchst' },
-  { praefix: '6593', region: 'Frankfurt (West)' },
-  { praefix: '611', region: 'Bad Vilbel / Wetterau' },
-  { praefix: '613', region: 'Bad Homburg / Hochtaunus' },
-  { praefix: '614', region: 'Oberursel / Hochtaunus' },
-  { praefix: '630', region: 'Offenbach am Main' },
-  { praefix: '631', region: 'Rodgau / Kreis Offenbach' },
-  { praefix: '632', region: 'Neu-Isenburg / Kreis Offenbach' },
-  { praefix: '634', region: 'Hanau' },
-  { praefix: '635', region: 'Main-Kinzig-Kreis' },
-  { praefix: '637', region: 'Aschaffenburg' },
-  { praefix: '64', region: 'Darmstadt / Südhessen' },
-  { praefix: '65', region: 'Wiesbaden / Main-Taunus' },
-  { praefix: '551', region: 'Mainz' },
-]
-
-function pruefePlz(plz: string): string | null {
-  // Längste Präfixe zuerst prüfen (spezifischste Region gewinnt)
-  const sortiert = [...PLZ_REGIONEN].sort((a, b) => b.praefix.length - a.praefix.length)
-  for (const r of sortiert) {
-    if (plz.startsWith(r.praefix)) return r.region
-  }
-  return null
-}
-
 export default function EinzugsgebietKarte() {
   const [plz, setPlz] = useState('')
   const [ergebnis, setErgebnis] = useState<'idle' | 'drin' | 'draussen'>('idle')
@@ -71,11 +47,12 @@ export default function EinzugsgebietKarte() {
   function checken(e: React.FormEvent) {
     e.preventDefault()
     if (!/^[0-9]{5}$/.test(plz)) return
-    const r = pruefePlz(plz)
-    if (r) {
+    const { zone, region: r } = pruefePlz(plz)
+    if (zone === 'kern') {
       setRegion(r)
       setErgebnis('drin')
     } else {
+      // 'rand' und null → gleicher Zustand: Anfrage lohnt sich trotzdem
       setErgebnis('draussen')
     }
   }

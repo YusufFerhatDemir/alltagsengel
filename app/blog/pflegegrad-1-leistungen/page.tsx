@@ -19,6 +19,7 @@ export const metadata: Metadata = {
   ],
   alternates: { canonical: 'https://alltagsengel.care/blog/pflegegrad-1-leistungen' },
   openGraph: {
+    images: [{ url: '/og-image.png', width: 1200, height: 630 }],
     title: 'Pflegegrad 1 — alle Leistungen 2026 im Überblick',
     description: 'Entlastungsbetrag, Pflegehilfsmittel, Wohnraumanpassung: Ihre Rechte bei Pflegegrad 1 erklärt.',
     url: 'https://alltagsengel.care/blog/pflegegrad-1-leistungen',

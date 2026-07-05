@@ -8,6 +8,7 @@ export const metadata: Metadata = {
   keywords: 'Arztbegleitung Senioren, Arzt Begleitung, Alltagsbegleiter, Pflege, Seniorenbetreuung',
   alternates: { canonical: 'https://alltagsengel.care/blog/arztbegleitung-senioren' },
   openGraph: {
+    images: [{ url: '/og-image.png', width: 1200, height: 630 }],
     title: 'Arztbegleitung für Senioren: Sicher zum Termin und zurück',
     description: 'Vollständiger Leitfaden zur Arztbegleitung für ältere Menschen.',
     type: 'article',
@@ -118,10 +119,10 @@ export default function ArztbegleitungPage() {
             <strong>Über Pflegekasse (§45b):</strong> Bis zu 131€ monatlich für Betreuungsleistungen (darin enthalten: Arztbegleitung, Einkaufen, Spaziergänge, etc.)
           </p>
           <p>
-            <strong>Über Verhinderungspflege:</strong> Bis zu 1.612€ pro Jahr
+            <strong>Über Verhinderungspflege:</strong> Bis zu 3.539€ pro Jahr (gemeinsamer Jahresbetrag Verhinderungs-/Kurzzeitpflege, seit 01.07.2025)
           </p>
           <p>
-            <strong>Tipp:</strong> Viele Krankenkassen zahlen regelmäßige Arztbegleitungen aus der §45b-Quote. Fragen Sie Ihre Kasse!
+            <strong>Tipp:</strong> Viele Pflegekassen zahlen regelmäßige Arztbegleitungen aus der §45b-Quote. Fragen Sie Ihre Pflegekasse!
           </p>
 
           <h2>Wie finden Sie die richtige Arztbegleitperson?</h2>

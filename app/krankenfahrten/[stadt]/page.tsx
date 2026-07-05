@@ -134,6 +134,7 @@ export async function generateMetadata({ params }: { params: Promise<{ stadt: st
       `Fahrdienst ${city.name}`,
     ],
     openGraph: {
+      images: [{ url: '/og-image.png', width: 1200, height: 630 }],
       title: `Krankenfahrt ${city.name} — zuverlässig zum Arzt | Alltagsengel`,
       description: `Krankenfahrten in ${city.name} buchen. Mit Kassenverordnung (§60 SGB V) oder als Selbstzahler. Pünktlich, sicher, freundlich.`,
       url: `https://alltagsengel.care/krankenfahrten/${city.slug}`,
@@ -384,6 +385,18 @@ export default async function KrankenfahrtStadtPage({ params }: { params: Promis
           <ul className="info-list">
             <li><Link href="/alltagsbegleitung">Alltagsbegleitung</Link> — 131 €/Monat über Entlastungsbetrag</li>
             <li><Link href="/hygienebox">Pflegebox</Link> — Kostenlose Pflegehilfsmittel (42 €/Monat)</li>
+          </ul>
+        </section>
+
+        <section className="info-card">
+          <h3>Auch in Ihrer Nähe</h3>
+          <p>Krankenfahrten bieten wir auch in diesen Städten an:</p>
+          <ul className="info-list">
+            {Object.values(cities)
+              .filter((c) => c.slug !== city.slug)
+              .map((c) => (
+                <li key={c.slug}><Link href={`/krankenfahrten/${c.slug}`}>Krankenfahrt {c.name}</Link></li>
+              ))}
           </ul>
         </section>
       </div>

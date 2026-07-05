@@ -19,6 +19,7 @@ export const metadata: Metadata = {
   ],
   alternates: { canonical: 'https://alltagsengel.care/blog/krankenfahrt-verordnung-erhalten' },
   openGraph: {
+    images: [{ url: '/og-image.png', width: 1200, height: 630 }],
     title: 'Krankenfahrt Verordnung — wer hat Anspruch & wie beantragen?',
     description: 'Alles zur Verordnung für Krankenfahrten: Voraussetzungen, Antrag beim Arzt, Genehmigung der Kasse. Inkl. Muster-Formulierung.',
     url: 'https://alltagsengel.care/blog/krankenfahrt-verordnung-erhalten',

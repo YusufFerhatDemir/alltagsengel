@@ -209,7 +209,7 @@ export default function SignaturesPage() {
 
       {/* Create Modal */}
       {createOpen && (
-        <Modal title="Neue Unterschriftsanfrage" onClose={() => setCreateOpen(false)} width={500}>
+        <Modal open title="Neue Unterschriftsanfrage" onClose={() => setCreateOpen(false)} width={500}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             <div>
               <label style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Dokumentbezeichnung *</label>
@@ -249,7 +249,7 @@ export default function SignaturesPage() {
 
       {/* Detail Modal */}
       {selectedReq && (
-        <Modal title={selectedReq.document_title} onClose={() => setSelectedReq(null)} width={540}>
+        <Modal open title={selectedReq.document_title} onClose={() => setSelectedReq(null)} width={540}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
               <div>
@@ -294,7 +294,7 @@ export default function SignaturesPage() {
                   <MisButton variant="secondary" icon="x" onClick={() => handleStatusUpdate(selectedReq.id, 'declined')}>Ablehnen</MisButton>
                 )}
               </div>
-              <MisButton variant="secondary" icon="trash" onClick={() => handleDelete(selectedReq.id)} style={{ color: BRAND.error }}>Löschen</MisButton>
+              <MisButton variant="danger" icon="trash" onClick={() => handleDelete(selectedReq.id)}>Löschen</MisButton>
             </div>
           </div>
         </Modal>

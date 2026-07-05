@@ -8,6 +8,7 @@ export const metadata: Metadata = {
   keywords: 'Alltagshilfe, Seniorenhilfe, Hauswirtschaftshilfe, Kostenübernahme, Pflegekasse',
   alternates: { canonical: 'https://alltagsengel.care/blog/alltagshilfe-senioren' },
   openGraph: {
+    images: [{ url: '/og-image.png', width: 1200, height: 630 }],
     title: 'Alltagshilfe für Senioren: Was ist möglich und wer zahlt?',
     description: 'Erfahren Sie alles über verfügbare Alltagshilfen für Senioren und welche Kosten übernommen werden.',
   },
@@ -106,9 +107,6 @@ export default function AlltagshilfeSenioren() {
             <li>Kleine Reparaturen und Wartungsarbeiten</li>
           </ul>
           <p>Der Anbieter muss zugelassen sein (z.B. als Alltagsbegleiter nach § 45a oder als anerkannter Dienst).</p>
-
-          <h4>Haushaltsnahe Dienstleistungen</h4>
-          <p>Zusätzlich zum Entlastungsbetrag können 40 Euro pro Monat für Reinigungshilfen beantragt werden.</p>
 
           <h3>Krankenkasse</h3>
           <p>Unter bestimmten Bedingungen übernimmt die Krankenkasse Haushaltshilfen nach Operationen oder bei schweren Erkrankungen (wenn Angehörige nicht helfen können). Dies ist nicht automatisch – Sie müssen beantragen und es muss medizinisch begründet sein.</p>

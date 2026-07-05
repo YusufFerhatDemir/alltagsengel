@@ -69,8 +69,8 @@ export default function SeniorenbetreuungFrankfurtPage() {
 
           <h3>1. Alltagsbegleitung nach § 45a SGB XI</h3>
           <p>
-            <Link href="/alltagsbegleitung">Alltagsbegleitung</Link> ist die häufigste Form der
-            Seniorenbetreuung in Frankfurt. Zertifizierte Alltagsbegleiter unterstützen bei:
+            <Link href="/alltagsbegleitung/frankfurt">Alltagsbegleitung in Frankfurt</Link> ist die häufigste Form der
+            Seniorenbetreuung. Zertifizierte Alltagsbegleiter unterstützen bei:
           </p>
           <ul className="blog-list">
             <li>Einkäufen und Besorgungen in der Nachbarschaft</li>

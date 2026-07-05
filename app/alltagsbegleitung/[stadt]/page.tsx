@@ -129,6 +129,7 @@ export async function generateMetadata({ params }: { params: Promise<{ stadt: st
       `Pflegedienst ${city.name}`,
     ],
     openGraph: {
+      images: [{ url: '/og-image.png', width: 1200, height: 630 }],
       title: `Alltagsbegleitung ${city.name} — 131€/Monat von der Pflegekasse`,
       description: `Professionelle Alltagsbegleitung in ${city.name}. Abrechnung direkt über den Entlastungsbetrag §45b. Versichert und zertifiziert.`,
       url: `https://alltagsengel.care/alltagsbegleitung/${city.slug}`,

@@ -12,9 +12,12 @@ export default function ChoosePage() {
   return (
     <div className="screen" id="choose">
       <div className="ch-wrap">
-        <div className="ch-logo">
-          <Icon3D size={64} />
-        </div>
+        {/* Logo verlinkt zurück zur Startseite — /choose hat keinen Site-Header */}
+        <Link href="/" aria-label="Zur Startseite" style={{ textDecoration: 'none' }}>
+          <div className="ch-logo">
+            <Icon3D size={64} />
+          </div>
+        </Link>
         <div className="ch-title">Wie möchten Sie<br/>Alltagsengel nutzen?</div>
         <div className="ch-sub">Wählen Sie Ihre Rolle, um<br/>die passende Erfahrung zu erhalten.</div>
 
@@ -54,6 +57,13 @@ export default function ChoosePage() {
             <div className="role-arr">›</div>
           </div>
         </Link>
+
+        {/* Fallback für Unentschlossene: Beratung ohne Registrierung */}
+        <div style={{ textAlign: 'center', marginTop: 18 }}>
+          <Link href="/termin" style={{ color: '#C9963C', fontSize: 14, textDecoration: 'underline' }}>
+            Noch unsicher? Kostenlosen Beratungstermin buchen — ohne Registrierung →
+          </Link>
+        </div>
 
         <div className="ch-legal">
           Mit Nutzung stimmen Sie den <Link href="/agb">AGB</Link> &amp; <Link href="/datenschutz">Datenschutzerklärung</Link> zu.

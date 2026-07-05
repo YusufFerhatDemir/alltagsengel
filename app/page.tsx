@@ -6,7 +6,6 @@ import { VisitTracker } from '@/components/VisitorTracker'
 import LeadForm from '@/components/LeadForm'
 import EinzugsgebietKarte from '@/components/EinzugsgebietKarte'
 import GoogleReviews from '@/components/GoogleReviews'
-import CookieSettingsLink from '@/components/CookieSettingsLink'
 
 const FAQS = [
   {
@@ -507,48 +506,7 @@ export default function SplashPage() {
         {/* Spacer für Sticky CTA Bar */}
         <div style={{ height: 100 }} />
 
-        {/* ─── Footer ─── */}
-        <footer className="lp-footer">
-          <div className="lp-footer-brand">ALLTAGSENGEL</div>
-          <div className="lp-footer-sub">Alltagsbegleitung · Pflege-Box · Krankenfahrt · Frankfurt &amp; Rhein-Main</div>
-          <div className="lp-footer-links">
-            <Link href="/hygienebox">Pflege-Box</Link>
-            <Link href="/krankenfahrten">Krankenfahrt</Link>
-            <Link href="/alltagsbegleitung">Alltagsbegleitung</Link>
-            <Link href="/termin">Termin buchen</Link>
-            <Link href="/budgetrechner">Budgetrechner</Link>
-            <Link href="/pflegegrad-check">Pflegegrad-Check</Link>
-            <Link href="/finanzierung">Finanzierung</Link>
-            <Link href="/jobs">Jobs</Link>
-            <Link href="/blog">Ratgeber</Link>
-            <Link href="/faq">FAQ</Link>
-            <Link href="/bewertungen">Bewertungen</Link>
-            <Link href="/team">Team</Link>
-            <Link href="/ueber-uns">Über uns</Link>
-            <Link href="/kontakt">Kontakt</Link>
-          </div>
-          {/* Städte-Links: Stadt-Landingpages intern verlinken (Indexierung —
-              vorher waren sie nur über die Sitemap erreichbar = Orphan-Pages) */}
-          <div className="lp-footer-links" style={{ marginTop: 4 }}>
-            <Link href="/alltagsbegleitung/frankfurt">Frankfurt</Link>
-            <Link href="/alltagsbegleitung/offenbach">Offenbach</Link>
-            <Link href="/alltagsbegleitung/wiesbaden">Wiesbaden</Link>
-            <Link href="/alltagsbegleitung/darmstadt">Darmstadt</Link>
-            <Link href="/alltagsbegleitung/mainz">Mainz</Link>
-            <Link href="/alltagsbegleitung/hanau">Hanau</Link>
-            <Link href="/alltagsbegleitung/bad-homburg">Bad Homburg</Link>
-            <Link href="/einzugsgebiet">Alle Einsatzorte →</Link>
-          </div>
-          <div className="lp-footer-links" style={{ marginTop: 4 }}>
-            <Link href="/impressum">Impressum</Link>
-            <Link href="/datenschutz">Datenschutz</Link>
-            <Link href="/agb">AGB</Link>
-            <CookieSettingsLink />
-          </div>
-          <div className="lp-footer-copy">
-            © 2026 Alltagsengel UG (haftungsbeschränkt) — Frankfurt am Main
-          </div>
-        </footer>
+        {/* Footer kommt global aus components/SiteFooter.tsx (LayoutWrapper) */}
       </div>
     </div>
   )

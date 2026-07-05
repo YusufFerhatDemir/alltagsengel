@@ -217,7 +217,7 @@ export default function ContractsPage() {
 
       {/* Create Modal */}
       {createOpen && (
-        <Modal title="Neuer Vertrag" onClose={() => setCreateOpen(false)} width={540}>
+        <Modal open title="Neuer Vertrag" onClose={() => setCreateOpen(false)} width={540}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             <div>
               <label style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, marginBottom: 4, display: 'block' }}>Vertragsbezeichnung *</label>
@@ -279,7 +279,7 @@ export default function ContractsPage() {
 
       {/* Detail Modal */}
       {selectedContract && (
-        <Modal title={selectedContract.title} onClose={() => setSelectedContract(null)} width={600}>
+        <Modal open title={selectedContract.title} onClose={() => setSelectedContract(null)} width={600}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
               <div>
@@ -326,7 +326,7 @@ export default function ContractsPage() {
                 {selectedContract.status === 'draft' && <MisButton icon="check" onClick={() => { handleStatusChange(selectedContract.id, 'active'); setSelectedContract(null) }}>Aktivieren</MisButton>}
                 {selectedContract.status === 'active' && <MisButton icon="clock" variant="secondary" onClick={() => { handleStatusChange(selectedContract.id, 'terminated'); setSelectedContract(null) }}>Kündigen</MisButton>}
               </div>
-              <MisButton variant="secondary" icon="trash" onClick={() => handleDelete(selectedContract.id)} style={{ color: BRAND.error }}>Löschen</MisButton>
+              <MisButton variant="danger" icon="trash" onClick={() => handleDelete(selectedContract.id)}>Löschen</MisButton>
             </div>
           </div>
         </Modal>

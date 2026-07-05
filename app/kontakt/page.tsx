@@ -10,6 +10,7 @@ export const metadata: Metadata = {
   description:
     'Kontakt zu Alltagsengel in Frankfurt: Kostenlose Beratung zu Entlastungsbetrag (131 €/Monat, §45b SGB XI), Pflegebox, Alltagsbegleitung und Krankenfahrten. Telefon, WhatsApp oder Kontaktformular — wir melden uns werktags innerhalb von 24 Stunden.',
   openGraph: {
+    images: [{ url: '/og-image.png', width: 1200, height: 630 }],
     title: 'Kontakt — Kostenlose Pflegeberatung | Alltagsengel',
     description:
       'Kostenlose Beratung zu Entlastungsbetrag, Pflegebox, Alltagsbegleitung und Krankenfahrten in Frankfurt & Rhein-Main.',

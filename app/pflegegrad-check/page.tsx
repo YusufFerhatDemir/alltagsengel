@@ -8,6 +8,7 @@ export const metadata: Metadata = {
   description: 'Welcher Pflegegrad steht Ihnen zu? Kostenloser Selbsttest nach dem offiziellen Begutachtungsverfahren (NBA): 6 Module, sofortiges Ergebnis inkl. Leistungsübersicht.',
   keywords: ['Pflegegrad Check', 'Pflegegrad Test', 'Pflegegrad berechnen', 'Pflegegrad Rechner 2026', 'NBA Begutachtung', 'Pflegegrad beantragen', 'Pflegegrad Einschätzung'],
   openGraph: {
+    images: [{ url: '/og-image.png', width: 1200, height: 630 }],
     title: 'Pflegegrad-Check — kostenlose Einschätzung in 2 Minuten',
     description: 'Selbsttest nach dem offiziellen Begutachtungsverfahren: 6 Module, sofortiges Ergebnis, Leistungsübersicht (Entlastungsbetrag, Pflegegeld, Pflege-Box).',
     url: 'https://alltagsengel.care/pflegegrad-check',
