@@ -57,7 +57,7 @@ export function SectionHeader({ title, subtitle, icon, actions }: {
 
 // ===== Button =====
 export function MisButton({ children, variant = 'primary', icon, onClick, disabled, size = 'md' }: {
-  children: React.ReactNode; variant?: 'primary' | 'secondary' | 'ghost' | 'danger';
+  children?: React.ReactNode; variant?: 'primary' | 'secondary' | 'ghost' | 'danger';
   icon?: string; onClick?: () => void; disabled?: boolean; size?: 'sm' | 'md'
 }) {
   const styles: Record<string, React.CSSProperties> = {
