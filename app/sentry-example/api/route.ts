@@ -15,7 +15,7 @@ export async function POST() {
   // Server-Log + Sentry-Issue auftaucht. Wir `throw`en bewusst, damit
   // der Next.js-Runtime die Exception an unseren Sentry-Handler weiterleitet.
   const notDefined: any = undefined
-  // eslint-disable-next-line no-unused-expressions
+   
   notDefined.das_feld_existiert_nicht // ← TypeError
 
   // Unerreichbar, aber für TypeScript-Return-Type sauber.

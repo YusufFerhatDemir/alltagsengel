@@ -165,8 +165,8 @@ export function useChatPagination(opts: ChatPaginationOptions): ChatPaginationRe
   // Reset state when filterValue changes (z.B. anderer Chat geoeffnet).
   // Bewusstes Reset-Pattern bei Schluessel-Wechsel — alternative Loesung waere
   // <ChatList key={chatId} />, aber das ist Aufgabe des Parent-Components.
-  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- bewusster Reset bei Key-Wechsel, siehe Kommentar oben
     setMessages([])
     setHasMore(false)
     oldestCursorRef.current = null

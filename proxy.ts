@@ -23,7 +23,7 @@ function encodeSessionCookie(name: string, value: string): string {
   return value
 }
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })
 
   // ═══ Referral-Code in Cookie speichern ═══

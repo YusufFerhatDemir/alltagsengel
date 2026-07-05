@@ -114,10 +114,8 @@ export default function EngelWerdenPage() {
         <div style={{ fontSize: 13, color: '#C9963C', fontWeight: 600, marginBottom: 8 }}>
           20 €/Stunde · Flexible Zeiten · Sinnvolle Arbeit
         </div>
-        <Link href="/engel/register">
-          <button className="btn-gold" style={{ width: '100%', maxWidth: 340, fontSize: 16, padding: '14px 0' }}>
-            JETZT BEWERBEN
-          </button>
+        <Link href="/engel/register" className="btn-gold" style={{ width: '100%', maxWidth: 340, fontSize: 16, padding: '14px 0' }}>
+          JETZT BEWERBEN
         </Link>
       </div>
 

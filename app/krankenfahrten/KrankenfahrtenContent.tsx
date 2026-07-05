@@ -146,9 +146,7 @@ export default function KrankenfahrtenContent() {
         </section>
 
         <div className="info-cta">
-          <Link href="/choose">
-            <button className="btn-gold" style={{ width: '100%' }}>JETZT FAHRT BUCHEN</button>
-          </Link>
+          <Link href="/choose" className="btn-gold" style={{ width: '100%' }}>JETZT FAHRT BUCHEN</Link>
         </div>
 
         <section className="info-card">

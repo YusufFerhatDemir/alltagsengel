@@ -148,7 +148,7 @@ export async function POST(request: Request) {
     }
 
     const now = new Date()
-    let sent = { day3: 0, day7: 0, day14: 0 }
+    const sent = { day3: 0, day7: 0, day14: 0 }
 
     // Alle Kunden ohne Buchung laden
     const { data: customers } = await supabaseAdmin

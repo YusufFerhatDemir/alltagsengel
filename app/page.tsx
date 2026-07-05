@@ -153,10 +153,8 @@ export default function SplashPage() {
         <div style={{ fontSize: 13, color: '#C9963C', fontWeight: 600, marginBottom: 8 }}>
           Pflege-Box: 0 € Eigenanteil über die Pflegekasse
         </div>
-        <Link href="/choose">
-          <button className="btn-gold" style={{ width: '100%', maxWidth: 340, fontSize: 16, padding: '14px 0' }}>
-            KOSTENLOS REGISTRIEREN
-          </button>
+        <Link href="/choose" className="btn-gold" style={{ width: '100%', maxWidth: 340, fontSize: 16, padding: '14px 0' }}>
+          KOSTENLOS REGISTRIEREN
         </Link>
       </div>
 

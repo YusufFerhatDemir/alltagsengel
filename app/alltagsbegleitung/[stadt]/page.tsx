@@ -396,16 +396,12 @@ export default async function StadtPage({ params }: { params: Promise<{ stadt: s
             selbstständig, erhalten Aufträge in Ihrer Region und sind über unsere Plattform versichert.
           </p>
           <div style={{ marginTop: 16 }}>
-            <Link href="/engel-werden">
-              <button className="btn-ghost" style={{ width: '100%' }}>ALS ENGEL REGISTRIEREN</button>
-            </Link>
+            <Link href="/engel-werden" className="btn-ghost" style={{ width: '100%' }}>ALS ENGEL REGISTRIEREN</Link>
           </div>
         </section>
 
         <div className="info-cta">
-          <Link href="/choose">
-            <button className="btn-gold" style={{ width: '100%' }}>JETZT ENGEL IN {city.name.toUpperCase()} FINDEN</button>
-          </Link>
+          <Link href="/choose" className="btn-gold" style={{ width: '100%' }}>JETZT ENGEL IN {city.name.toUpperCase()} FINDEN</Link>
         </div>
 
         <div className="legal-footer-nav">

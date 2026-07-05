@@ -67,17 +67,17 @@ interface TableRlsRow {
 // ---- Output helpers -------------------------------------------------------
 
 function fail(msg: string): void {
-  // eslint-disable-next-line no-console
+   
   console.error(`❌ ${msg}`)
 }
 
 function warn(msg: string): void {
-  // eslint-disable-next-line no-console
+   
   console.warn(`⚠️  ${msg}`)
 }
 
 function ok(msg: string): void {
-  // eslint-disable-next-line no-console
+   
   console.log(`✅ ${msg}`)
 }
 
@@ -189,7 +189,7 @@ async function main(): Promise<number> {
 main()
   .then((code) => process.exit(code))
   .catch((err) => {
-    // eslint-disable-next-line no-console
+     
     console.error('audit-rls: Unerwarteter Fehler', err)
     process.exit(2)
   })

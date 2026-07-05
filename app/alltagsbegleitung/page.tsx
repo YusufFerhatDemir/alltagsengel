@@ -155,9 +155,7 @@ export default function AlltagsbegleitungPage() {
             erhalten bundesweit Aufträge und sind über unsere Plattform versichert.
           </p>
           <div style={{ marginTop: 16 }}>
-            <Link href="/auth/register?role=engel">
-              <button className="btn-ghost" style={{ width: '100%' }}>ALS ENGEL REGISTRIEREN</button>
-            </Link>
+            <Link href="/auth/register?role=engel" className="btn-ghost" style={{ width: '100%' }}>ALS ENGEL REGISTRIEREN</Link>
           </div>
         </section>
 
@@ -171,9 +169,7 @@ export default function AlltagsbegleitungPage() {
         </section>
 
         <div className="info-cta">
-          <Link href="/choose">
-            <button className="btn-gold" style={{ width: '100%' }}>JETZT ENGEL FINDEN</button>
-          </Link>
+          <Link href="/choose" className="btn-gold" style={{ width: '100%' }}>JETZT ENGEL FINDEN</Link>
         </div>
 
         <section className="info-card">

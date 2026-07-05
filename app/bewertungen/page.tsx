@@ -85,9 +85,7 @@ export default function BewertungenPage() {
             Die beste Bewertung ist Ihre eigene Erfahrung: Lernen Sie Ihren Alltagsengel
             in einem kostenlosen, unverbindlichen Erstgespräch kennen.
           </p>
-          <Link href="/termin">
-            <button className="btn-gold" style={{ fontSize: 15, padding: '13px 26px' }}>Jetzt Alltagsbegleitung anfragen</button>
-          </Link>
+          <Link href="/termin" className="btn-gold" style={{ fontSize: 15, padding: '13px 26px' }}>Jetzt Alltagsbegleitung anfragen</Link>
           <p style={{ color: '#8A8279', fontSize: 12.5, marginTop: 12 }}>
             Oder rufen Sie uns an: <a href="tel:+491783382825" style={{ color: '#C9963C', textDecoration: 'none' }}>+49 178 338 28 25</a> — wir beraten Sie gern zu Entlastungsbetrag, Pflegegrad und Ablauf.
           </p>
