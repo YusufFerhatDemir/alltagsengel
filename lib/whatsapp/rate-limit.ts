@@ -23,7 +23,7 @@ export async function isRateLimited(
 
   if (error) {
     // Bei Fehler: durchlassen (lieber falsch positiv als Service-Blockade)
-     
+
     console.warn('[wa-bot rate-limit] supabase error:', error.message)
     return { limited: false, count: 0 }
   }

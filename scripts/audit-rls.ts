@@ -67,17 +67,17 @@ interface TableRlsRow {
 // ---- Output helpers -------------------------------------------------------
 
 function fail(msg: string): void {
-   
+
   console.error(`❌ ${msg}`)
 }
 
 function warn(msg: string): void {
-   
+
   console.warn(`⚠️  ${msg}`)
 }
 
 function ok(msg: string): void {
-   
+
   console.log(`✅ ${msg}`)
 }
 
@@ -189,7 +189,7 @@ async function main(): Promise<number> {
 main()
   .then((code) => process.exit(code))
   .catch((err) => {
-     
+
     console.error('audit-rls: Unerwarteter Fehler', err)
     process.exit(2)
   })
