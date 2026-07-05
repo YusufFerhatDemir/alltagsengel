@@ -81,47 +81,10 @@ const FAQS = [
   },
 ]
 
-const jsonLdJobPosting = {
-  '@context': 'https://schema.org',
-  '@type': 'JobPosting',
-  title: 'Alltagsbegleiter (m/w/d) — Flexibler Nebenjob mit 20€/Stunde',
-  description: 'Werde Alltagsengel: Unterstütze ältere Menschen bei Alltagsaufgaben wie Einkaufen, Arztbegleitung und Gesellschaft leisten. Flexible Zeiteinteilung, 20€/Stunde, keine Pflegeausbildung nötig.',
-  datePosted: '2026-06-01',
-  validThrough: '2026-12-31',
-  employmentType: ['PART_TIME', 'TEMPORARY'],
-  hiringOrganization: {
-    '@type': 'Organization',
-    name: 'Alltagsengel',
-    sameAs: 'https://alltagsengel.care',
-    logo: 'https://alltagsengel.care/icon-512x512.png',
-  },
-  jobLocation: {
-    '@type': 'Place',
-    address: {
-      '@type': 'PostalAddress',
-      addressLocality: 'Frankfurt am Main',
-      addressRegion: 'Hessen',
-      addressCountry: 'DE',
-    },
-  },
-  baseSalary: {
-    '@type': 'MonetaryAmount',
-    currency: 'EUR',
-    value: {
-      '@type': 'QuantitativeValue',
-      value: 20,
-      unitText: 'HOUR',
-    },
-  },
-  qualifications: 'Keine Pflegeausbildung erforderlich. Zuverlässigkeit, Empathie und Deutschkenntnisse (mind. B2) werden vorausgesetzt.',
-  responsibilities: 'Alltagsbegleitung: Einkaufshilfe, Arztbegleitung, Gesellschaft leisten, Haushaltshilfe, Freizeitgestaltung mit Senioren.',
-  skills: 'Empathie, Zuverlässigkeit, Deutschkenntnisse, Führungszeugnis',
-  industry: 'Sozialwesen / Alltagsbegleitung',
-  applicantLocationRequirements: {
-    '@type': 'Country',
-    name: 'Germany',
-  },
-}
+// HINWEIS: Das JobPosting-JSON-LD wurde entfernt — dieselbe Stelle ist bereits
+// auf /jobs (app/jobs/page.tsx) ausgezeichnet. Google-Jobs-Richtlinie verbietet
+// mehrfache Postings derselben Stelle unter verschiedenen URLs; /jobs ist die
+// kanonische Job-Seite. Gleiches Vorgehen wie auf /karriere. FAQ-Schema bleibt.
 
 const jsonLdFAQ = {
   '@context': 'https://schema.org',
@@ -136,10 +99,6 @@ const jsonLdFAQ = {
 export default function EngelWerdenPage() {
   return (
     <div className="screen" id="engel-werden">
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdJobPosting) }}
-      />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdFAQ) }}
@@ -185,8 +144,8 @@ export default function EngelWerdenPage() {
         <p className="sp-ug">Frankfurt · Rhein-Main · 20 €/Stunde</p>
         <div className="gold-div"></div>
         <div className="sp-btns">
-          <Link href="/engel/register"><button className="btn-gold">JETZT BEWERBEN</button></Link>
-          <Link href="/blog/alltagsbegleiter-werden"><button className="btn-ghost">Mehr erfahren</button></Link>
+          <Link href="/engel/register" className="btn-gold">JETZT BEWERBEN</Link>
+          <Link href="/blog/alltagsbegleiter-werden" className="btn-ghost">Mehr erfahren</Link>
         </div>
       </div>
 
@@ -429,7 +388,7 @@ export default function EngelWerdenPage() {
             als Alltagsbegleiter in Frankfurt und dem Rhein-Main-Gebiet.
           </p>
           <div className="sp-btns" style={{ marginTop: 20 }}>
-            <Link href="/engel/register"><button className="btn-gold">JETZT BEWERBEN</button></Link>
+            <Link href="/engel/register" className="btn-gold">JETZT BEWERBEN</Link>
           </div>
         </section>
 
