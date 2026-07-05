@@ -103,10 +103,10 @@ export default function SignaturesPage() {
 
   // Filter
   const tabs = [
-    { key: 'all', label: `Alle (${requests.length})` },
-    { key: 'pending', label: `Ausstehend (${requests.filter(r => r.status === 'pending').length})` },
-    { key: 'sent', label: `Gesendet (${requests.filter(r => r.status === 'sent').length})` },
-    { key: 'signed', label: `Unterschrieben (${requests.filter(r => r.status === 'signed').length})` },
+    { id: 'all', label: `Alle (${requests.length})` },
+    { id: 'pending', label: `Ausstehend (${requests.filter(r => r.status === 'pending').length})` },
+    { id: 'sent', label: `Gesendet (${requests.filter(r => r.status === 'sent').length})` },
+    { id: 'signed', label: `Unterschrieben (${requests.filter(r => r.status === 'signed').length})` },
   ]
 
   const filtered = requests.filter(r => {
