@@ -22,12 +22,10 @@ export default function KarteSeite() {
       if (!user) return
       const { data: p } = await supabase.from('profiles').select('*').eq('id', user.id).single()
       setProfile(p)
-      // Test-Engel (is_test=true) ausschließen — dürfen NIEMALS Kunden gematcht werden
-      const { data: a } = await supabase
-        .from('angels')
-        .select('*, profiles!inner(*)')
-        .eq('is_online', true)
-        .eq('profiles.is_test', false)
+      // Engel über die sichere RPC laden (nur nicht-sensible Felder; kein
+      // email/phone/postal_code). Test-Engel + Offline werden serverseitig
+      // ausgeschlossen (p_only_online=true).
+      const { data: a } = await supabase.rpc('get_engel_cards', { p_only_online: true })
       setAngels(a || [])
     }
     load()

@@ -69,13 +69,10 @@ function BuchenServiceInner() {
       setLoading(true)
       const supabase = createClient()
       const serviceLabel = serviceOptions.find(s => s.key === selectedService)?.label || selectedService
-      // Test-Engel (is_test=true) ausschließen — dürfen NIEMALS Kunden gematcht werden
-      const { data } = await supabase
-        .from('angels')
-        .select('*, profiles!inner(*)')
-        .eq('is_online', true)
-        .eq('profiles.is_test', false)
-        .order('rating', { ascending: false })
+      // Engel über die sichere RPC laden (nur nicht-sensible Felder; kein
+      // email/phone/postal_code). Test-Engel + Offline serverseitig raus,
+      // Sortierung nach rating erfolgt in der RPC.
+      const { data } = await supabase.rpc('get_engel_cards', { p_only_online: true })
 
       // Filtere nach Service
       const filtered = (data || []).filter((a: any) =>
