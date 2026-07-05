@@ -132,7 +132,7 @@ export default function HaushaltshilfeFrankfurtPage() {
           <div className="blog-cta">
             <h2>Jetzt Haushaltshilfe buchen</h2>
             <p>Registrierung kostenlos, keine Vorauszahlung, keine Bindung.</p>
-            <Link href="/choose"><button className="btn-gold">KOSTENLOS REGISTRIEREN</button></Link>
+            <Link href="/choose" className="btn-gold">KOSTENLOS REGISTRIEREN</Link>
           </div>
         </div>
       </article>

@@ -27,11 +27,16 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
   const showHeader = !PORTAL_ROOTS.has(firstSegment)
 
   return (
-    <div className="phone" role="main" aria-label="Hauptinhaltsbereich">
+    <div className="phone">
+      <a href="#main-content" className="skip-link">Zum Hauptinhalt springen</a>
       <StatusBar />
       {showHeader && <SiteHeader />}
       <PageTracker />
-      {children}
+      {/* role=main NUR um den eigentlichen Inhalt, nicht um Header/Footer —
+          sonst zählt die Landmark Navigation und Footer mit zum "Hauptinhalt". */}
+      <main id="main-content" aria-label="Hauptinhaltsbereich">
+        {children}
+      </main>
       {/* Globaler Footer auf allen Marketing-Seiten (gleiches Gate wie Header) */}
       {showHeader && <SiteFooter />}
     </div>

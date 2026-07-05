@@ -1,16 +1,27 @@
 # RLS-Policy-Matrix
 
-> Auto-generiert von `scripts/rls-matrix.ts` am 2026-04-19T22:00:19.880Z.
+> Auto-generiert von `scripts/rls-matrix.ts` am 2026-07-05T21:57:06.419Z.
 > NICHT manuell bearbeiten — Aenderungen werden ueberschrieben.
 
-Status: 59 Tabellen, 156 Policies.
+Status: 96 Tabellen, 213 Policies.
 
-## ✅ Alle Tabellen haben RLS aktiviert
+## ⚠️ Tabellen ohne RLS (rowsecurity=false)
+
+- `mis_crm_activities`
+
+## ⚠️ Tabellen ohne jegliche Policy
+
+Diese Tabellen haben RLS-Status, aber KEINE Policy — d.h. niemand
+ausser service_role darf zugreifen. Pruefen, ob beabsichtigt:
+
+- `mis_crm_activities`
 
 ## Vollstaendige Policy-Liste
 
 | Tabelle | RLS | Policy | Rolle(n) | CMD | USING | WITH CHECK |
 |---------|-----|--------|----------|-----|-------|------------|
+| absences | ✅ | absences_admin_all | public | ALL | `is_admin()` | `is_admin()` |
+| absences | ✅ | absences_service_all | service_role | ALL | `true` | `true` |
 | angel_reviews | ✅ | Admin kann alle Bewertungen verwalten | public | ALL | `(EXISTS ( SELECT 1    FROM profiles   WHERE ((profiles.id = auth.uid()) AND (profiles.role = ANY (ARRAY['admin'::text, 'superadmin'::text])))))` | `` |
 | angel_reviews | ✅ | Jeder kann Bewertungen lesen | public | SELECT | `true` | `` |
 | angel_reviews | ✅ | Kunde kann eigene Bewertung bearbeiten | public | UPDATE | `(auth.uid() = customer_id)` | `` |
@@ -19,8 +30,12 @@ Status: 59 Tabellen, 156 Policies.
 | angels | ✅ | Angels can update own record | public | UPDATE | `(auth.uid() = id)` | `` |
 | angels | ✅ | Angels can upsert own record | public | INSERT | `` | `(auth.uid() = id)` |
 | angels | ✅ | Herkes engelleri okuyabilir | public | SELECT | `true` | `` |
-| app_settings | ✅ | app_settings_read | public | SELECT | `true` | `` |
+| app_settings | ✅ | app_settings_read | public | SELECT | `((key <> 'demo_password'::text) OR is_admin())` | `` |
 | app_settings | ✅ | app_settings_update | public | UPDATE | `(EXISTS ( SELECT 1    FROM profiles   WHERE ((profiles.id = auth.uid()) AND (profiles.role = 'superadmin'::text))))` | `` |
+| applications | ✅ | applications_admin_all | public | ALL | `is_admin()` | `is_admin()` |
+| applications | ✅ | applications_service_all | service_role | ALL | `true` | `true` |
+| assignments | ✅ | assignments_admin_all | public | ALL | `is_admin()` | `is_admin()` |
+| assignments | ✅ | assignments_service_all | service_role | ALL | `true` | `true` |
 | bookings | ✅ | Admin bookingleri yönetebilir | public | ALL | `is_admin()` | `` |
 | bookings | ✅ | Admins can read all bookings | public | SELECT | `is_admin()` | `` |
 | bookings | ✅ | Admins can update all bookings | public | UPDATE | `is_admin()` | `` |
@@ -33,17 +48,37 @@ Status: 59 Tabellen, 156 Policies.
 | bookings | ✅ | bookings_select | public | SELECT | `((auth.uid() = customer_id) OR (auth.uid() = angel_id))` | `` |
 | bookings | ✅ | bookings_update | public | UPDATE | `((auth.uid() = customer_id) OR (auth.uid() = angel_id))` | `` |
 | bookings | ✅ | İlgili kişi bookingi güncelleyebilir | public | UPDATE | `((auth.uid() = customer_id) OR (auth.uid() = angel_id))` | `` |
+| budget_transactions | ✅ | budget_tx_admin_all | public | ALL | `is_admin()` | `is_admin()` |
+| budget_transactions | ✅ | budget_tx_service_all | service_role | ALL | `true` | `true` |
 | care_recipients | ✅ | Users can delete own care recipients | public | DELETE | `(auth.uid() = profile_id)` | `` |
 | care_recipients | ✅ | Users can insert own care recipients | public | INSERT | `` | `(auth.uid() = profile_id)` |
 | care_recipients | ✅ | Users can update own care recipients | public | UPDATE | `(auth.uid() = profile_id)` | `` |
 | care_recipients | ✅ | Users can view own care recipients | public | SELECT | `(auth.uid() = profile_id)` | `` |
 | care_recipients | ✅ | care_recipients_admin | public | ALL | `(EXISTS ( SELECT 1    FROM profiles   WHERE ((profiles.id = auth.uid()) AND (profiles.role = ANY (ARRAY['admin'::text, 'superadmin'::text])))))` | `` |
 | care_recipients | ✅ | care_recipients_owner | public | ALL | `(profile_id = auth.uid())` | `` |
+| caregiver_bonuses | ✅ | cg_bonuses_admin_all | public | ALL | `is_admin()` | `is_admin()` |
+| caregiver_bonuses | ✅ | cg_bonuses_service_all | service_role | ALL | `true` | `true` |
+| caregiver_documents | ✅ | cg_docs_admin_all | public | ALL | `is_admin()` | `is_admin()` |
+| caregiver_documents | ✅ | cg_docs_service_all | service_role | ALL | `true` | `true` |
+| caregiver_initials_history | ✅ | cg_initials_admin_all | public | ALL | `is_admin()` | `is_admin()` |
+| caregiver_initials_history | ✅ | cg_initials_service_all | service_role | ALL | `true` | `true` |
+| caregiver_qualifications | ✅ | caregiver_quals_admin_all | public | ALL | `is_admin()` | `is_admin()` |
+| caregiver_qualifications | ✅ | caregiver_quals_service_all | service_role | ALL | `true` | `true` |
+| caregivers | ✅ | caregivers_admin_all | public | ALL | `is_admin()` | `is_admin()` |
+| caregivers | ✅ | caregivers_service_all | service_role | ALL | `true` | `true` |
 | chat_messages | ✅ | Users can read their ride messages | public | SELECT | `(EXISTS ( SELECT 1    FROM krankenfahrten k   WHERE ((k.id = chat_messages.ride_id) AND ((k.customer_id = auth.uid()) OR (k.provider_id IN ( SELECT kp.id            FROM krankenfahrt_providers kp     ` | `` |
 | chat_messages | ✅ | Users can send messages to their rides | public | INSERT | `` | `((sender_id = auth.uid()) AND (EXISTS ( SELECT 1    FROM krankenfahrten k   WHERE ((k.id = chat_messages.ride_id) AND ((k.customer_id = auth.uid()) OR (k.provider_id IN ( SELECT kp.id            FROM ` |
+| client_budgets | ✅ | client_budgets_admin_all | public | ALL | `is_admin()` | `is_admin()` |
+| client_budgets | ✅ | client_budgets_service_all | service_role | ALL | `true` | `true` |
+| client_preferred_substitutes | ✅ | preferred_subs_admin_all | public | ALL | `is_admin()` | `is_admin()` |
+| client_preferred_substitutes | ✅ | preferred_subs_service_all | service_role | ALL | `true` | `true` |
+| clients | ✅ | clients_admin_all | public | ALL | `is_admin()` | `is_admin()` |
+| clients | ✅ | clients_service_all | service_role | ALL | `true` | `true` |
 | content_blocks | ✅ | Admin manages all content | public | ALL | `is_admin()` | `` |
 | content_blocks | ✅ | Public can read active content | public | SELECT | `((status = 'active'::text) AND (context = 'public'::text))` | `` |
 | conversions | ✅ | Service role full access | service_role | ALL | `true` | `true` |
+| cooperation_partners | ✅ | coop_partners_admin_all | public | ALL | `is_admin()` | `is_admin()` |
+| cooperation_partners | ✅ | coop_partners_service_all | service_role | ALL | `true` | `true` |
 | fahrzeuge | ✅ | Customers can view active vehicles | public | SELECT | `(is_active = true)` | `` |
 | fahrzeuge | ✅ | Providers can manage own vehicles | public | ALL | `(provider_id IN ( SELECT krankenfahrt_providers.id    FROM krankenfahrt_providers   WHERE (krankenfahrt_providers.user_id = auth.uid())))` | `` |
 | fcm_tokens | ✅ | Service role can read all fcm tokens | public | SELECT | `(auth.role() = 'service_role'::text)` | `` |
@@ -51,6 +86,12 @@ Status: 59 Tabellen, 156 Policies.
 | hygienebox_orders | ✅ | Users can insert own hygienebox orders | public | INSERT | `` | `(auth.uid() = user_id)` |
 | hygienebox_orders | ✅ | Users can update own hygienebox orders | public | UPDATE | `(auth.uid() = user_id)` | `` |
 | hygienebox_orders | ✅ | Users can view own hygienebox orders | public | SELECT | `(auth.uid() = user_id)` | `` |
+| invoice_disputes | ✅ | invoice_disputes_admin_all | public | ALL | `is_admin()` | `is_admin()` |
+| invoice_disputes | ✅ | invoice_disputes_service_all | service_role | ALL | `true` | `true` |
+| invoice_items | ✅ | invoice_items_admin_all | public | ALL | `is_admin()` | `is_admin()` |
+| invoice_items | ✅ | invoice_items_service_all | service_role | ALL | `true` | `true` |
+| invoices | ✅ | invoices_admin_all | public | ALL | `is_admin()` | `is_admin()` |
+| invoices | ✅ | invoices_service_all | service_role | ALL | `true` | `true` |
 | kf_booking_reviews | ✅ | Admin manages booking reviews | public | ALL | `is_admin()` | `` |
 | kf_feature_flags | ✅ | Admin manages feature flags | public | ALL | `is_admin()` | `` |
 | kf_feature_flags | ✅ | Auth can read feature flags | public | SELECT | `true` | `` |
@@ -93,6 +134,8 @@ Status: 59 Tabellen, 156 Policies.
 | krankenfahrten | ✅ | Users can insert own krankenfahrten | public | INSERT | `` | `(auth.uid() = customer_id)` |
 | krankenfahrten | ✅ | Users can update own krankenfahrten | public | UPDATE | `(auth.uid() = customer_id)` | `` |
 | krankenfahrten | ✅ | Users can view own krankenfahrten | public | SELECT | `(auth.uid() = customer_id)` | `` |
+| lead_inquiries | ✅ | Admin full access lead_inquiries | public | ALL | `(EXISTS ( SELECT 1    FROM profiles   WHERE ((profiles.id = auth.uid()) AND (profiles.role = 'admin'::text))))` | `` |
+| lead_inquiries | ✅ | Anyone can submit lead inquiry | public | INSERT | `` | `true` |
 | login_rate_limits | ✅ | service_role only | service_role | ALL | `true` | `true` |
 | medikamentenplan | ✅ | Admins can view all medikamentenplan | public | SELECT | `is_admin()` | `` |
 | medikamentenplan | ✅ | Users can delete own medikamentenplan | public | DELETE | `(auth.uid() = user_id)` | `` |
@@ -102,35 +145,50 @@ Status: 59 Tabellen, 156 Policies.
 | messages | ✅ | Receiver can mark as read | public | UPDATE | `(auth.uid() = receiver_id)` | `` |
 | messages | ✅ | Users can send messages | public | INSERT | `` | `(auth.uid() = sender_id)` |
 | messages | ✅ | Users can view own messages | public | SELECT | `((auth.uid() = sender_id) OR (auth.uid() = receiver_id))` | `` |
-| mis_ai_conversations | ✅ | Authenticated users can read mis_ai_conversations | public | SELECT | `(auth.role() = 'authenticated'::text)` | `` |
+| mis_ai_conversations | ✅ | mis_ai_conversations_admin_select | public | SELECT | `is_admin()` | `` |
+| mis_applicants | ✅ | Allow all for authenticated users | authenticated | ALL | `true` | `true` |
 | mis_audit_log | ✅ | audit_select_admin | public | SELECT | `(EXISTS ( SELECT 1    FROM profiles   WHERE ((profiles.id = auth.uid()) AND (profiles.role = ANY (ARRAY['admin'::text, 'superadmin'::text])))))` | `` |
 | mis_auth_log | ✅ | Admin can read auth log | public | SELECT | `is_admin()` | `` |
 | mis_auth_log | ✅ | Users can insert own auth_log | anon, authenticated | INSERT | `` | `((user_id IS NULL) OR (user_id = auth.uid()))` |
-| mis_budget_items | ✅ | Authenticated users can read mis_budget_items | public | SELECT | `(auth.role() = 'authenticated'::text)` | `` |
+| mis_availability | ✅ | mis_availability_all | public | ALL | `true` | `true` |
+| mis_budget_items | ✅ | mis_budget_items_admin_select | public | SELECT | `is_admin()` | `` |
 | mis_capa | ✅ | Admin can delete mis_capa | public | DELETE | `is_admin()` | `` |
 | mis_capa | ✅ | Admin can insert mis_capa | public | INSERT | `` | `is_admin()` |
 | mis_capa | ✅ | Admin can update mis_capa | public | UPDATE | `is_admin()` | `` |
-| mis_capa | ✅ | Authenticated users can read mis_capa | public | SELECT | `(auth.role() = 'authenticated'::text)` | `` |
-| mis_dataroom_access | ✅ | Authenticated users can read mis_dataroom_access | public | SELECT | `(auth.role() = 'authenticated'::text)` | `` |
-| mis_dataroom_sections | ✅ | Authenticated users can read mis_dataroom_sections | public | SELECT | `(auth.role() = 'authenticated'::text)` | `` |
-| mis_document_categories | ✅ | Authenticated users can read mis_document_categories | public | SELECT | `(auth.role() = 'authenticated'::text)` | `` |
-| mis_document_versions | ✅ | Authenticated users can read mis_document_versions | public | SELECT | `(auth.role() = 'authenticated'::text)` | `` |
+| mis_capa | ✅ | mis_capa_admin_select | public | SELECT | `is_admin()` | `` |
+| mis_complaints | ✅ | Allow all for authenticated users | authenticated | ALL | `true` | `true` |
+| mis_contracts | ✅ | mis_contracts_all | public | ALL | `true` | `true` |
+| mis_crm_activities | ❌ | — (keine Policy) |  |  | `` | `` |
+| mis_dataroom_access | ✅ | mis_dataroom_access_admin_select | public | SELECT | `is_admin()` | `` |
+| mis_dataroom_sections | ✅ | mis_dataroom_sections_admin_select | public | SELECT | `is_admin()` | `` |
+| mis_document_categories | ✅ | mis_document_categories_admin_select | public | SELECT | `is_admin()` | `` |
+| mis_document_versions | ✅ | mis_document_versions_admin_select | public | SELECT | `is_admin()` | `` |
 | mis_documents | ✅ | Admin full access on mis_documents | public | ALL | `is_admin()` | `` |
-| mis_financial_reports | ✅ | Authenticated users can read mis_financial_reports | public | SELECT | `(auth.role() = 'authenticated'::text)` | `` |
+| mis_financial_reports | ✅ | mis_financial_reports_admin_select | public | SELECT | `is_admin()` | `` |
+| mis_job_postings | ✅ | Allow all for authenticated users | authenticated | ALL | `true` | `true` |
 | mis_kpis | ✅ | Admin full access on mis_kpis | public | ALL | `is_admin()` | `` |
 | mis_notifications | ✅ | Users see own notifications | public | SELECT | `(user_id = auth.uid())` | `` |
-| mis_purchase_orders | ✅ | Authenticated users can read mis_purchase_orders | public | SELECT | `(auth.role() = 'authenticated'::text)` | `` |
+| mis_privacy_audit_log | ✅ | privacy_audit_log_all | public | ALL | `true` | `true` |
+| mis_privacy_consents | ✅ | privacy_consents_all | public | ALL | `true` | `true` |
+| mis_privacy_records | ✅ | privacy_records_all | public | ALL | `true` | `true` |
+| mis_privacy_requests | ✅ | privacy_requests_all | public | ALL | `true` | `true` |
+| mis_purchase_orders | ✅ | mis_purchase_orders_admin_select | public | SELECT | `is_admin()` | `` |
 | mis_quality_audits | ✅ | Admin can delete mis_quality_audits | public | DELETE | `is_admin()` | `` |
 | mis_quality_audits | ✅ | Admin can insert mis_quality_audits | public | INSERT | `` | `is_admin()` |
 | mis_quality_audits | ✅ | Admin can update mis_quality_audits | public | UPDATE | `is_admin()` | `` |
-| mis_quality_audits | ✅ | Authenticated users can read mis_quality_audits | public | SELECT | `(auth.role() = 'authenticated'::text)` | `` |
-| mis_quality_processes | ✅ | Authenticated users can read mis_quality_processes | public | SELECT | `(auth.role() = 'authenticated'::text)` | `` |
+| mis_quality_audits | ✅ | mis_quality_audits_admin_select | public | SELECT | `is_admin()` | `` |
+| mis_quality_processes | ✅ | mis_quality_processes_admin_select | public | SELECT | `is_admin()` | `` |
+| mis_shifts | ✅ | mis_shifts_all | public | ALL | `true` | `true` |
+| mis_signature_requests | ✅ | mis_signatures_all | public | ALL | `true` | `true` |
 | mis_suppliers | ✅ | Admin can delete mis_suppliers | public | DELETE | `is_admin()` | `` |
 | mis_suppliers | ✅ | Admin can insert mis_suppliers | public | INSERT | `` | `is_admin()` |
 | mis_suppliers | ✅ | Admin can update mis_suppliers | public | UPDATE | `is_admin()` | `` |
-| mis_suppliers | ✅ | Authenticated users can read mis_suppliers | public | SELECT | `(auth.role() = 'authenticated'::text)` | `` |
+| mis_suppliers | ✅ | mis_suppliers_admin_select | public | SELECT | `is_admin()` | `` |
 | mis_tasks | ✅ | Admin full access on mis_tasks | public | ALL | `is_admin()` | `is_admin()` |
-| mis_tasks | ✅ | Authenticated users can read mis_tasks | public | SELECT | `(auth.role() = 'authenticated'::text)` | `` |
+| mis_tasks | ✅ | mis_tasks_admin_select | public | SELECT | `is_admin()` | `` |
+| mis_training_catalog | ✅ | mis_training_catalog_all | public | ALL | `true` | `true` |
+| mis_training_records | ✅ | mis_training_records_all | public | ALL | `true` | `true` |
+| mis_vehicles | ✅ | mis_vehicles_all | public | ALL | `true` | `true` |
 | newsletter_subscribers | ✅ | Admin full access newsletter | public | ALL | `(EXISTS ( SELECT 1    FROM profiles   WHERE ((profiles.id = auth.uid()) AND (profiles.role = 'admin'::text))))` | `` |
 | notfall_access_attempts | ✅ | Admins can view notfall_access_attempts | public | SELECT | `is_admin()` | `` |
 | notfall_info | ✅ | Admins can view all notfall_info | public | SELECT | `is_admin()` | `` |
@@ -142,6 +200,8 @@ Status: 59 Tabellen, 156 Policies.
 | notifications | ✅ | Users can view own notifications | public | SELECT | `(auth.uid() = user_id)` | `` |
 | page_views | ✅ | Admins can read page_views | public | SELECT | `(EXISTS ( SELECT 1    FROM profiles   WHERE ((profiles.id = auth.uid()) AND (profiles.role = ANY (ARRAY['admin'::text, 'superadmin'::text])))))` | `` |
 | page_views | ✅ | Anyone can insert page_views | public | INSERT | `` | `true` |
+| partner_visits | ✅ | partner_visits_admin_all | public | ALL | `is_admin()` | `is_admin()` |
+| partner_visits | ✅ | partner_visits_service_all | service_role | ALL | `true` | `true` |
 | profiles | ✅ | Admin can delete profiles | public | DELETE | `is_admin()` | `` |
 | profiles | ✅ | Admin can update all profiles | public | UPDATE | `((auth.uid() = id) OR is_admin())` | `` |
 | profiles | ✅ | Kullanıcı kendi profilini güncelleyebilir | public | UPDATE | `(auth.uid() = id)` | `` |
@@ -163,7 +223,14 @@ Status: 59 Tabellen, 156 Policies.
 | reviews | ✅ | Müşteri review yazabilir | public | INSERT | `` | `(auth.uid() = reviewer_id)` |
 | reviews | ✅ | reviews_insert | public | INSERT | `` | `(auth.uid() = reviewer_id)` |
 | reviews | ✅ | reviews_select | public | SELECT | `true` | `` |
+| satisfaction_calls | ✅ | satisfaction_calls_admin_all | public | ALL | `is_admin()` | `is_admin()` |
+| satisfaction_calls | ✅ | satisfaction_calls_service_all | service_role | ALL | `true` | `true` |
+| service_records | ✅ | service_records_admin_all | public | ALL | `is_admin()` | `is_admin()` |
+| service_records | ✅ | service_records_service_all | service_role | ALL | `true` | `true` |
+| substitution_requests | ✅ | sub_requests_admin_all | public | ALL | `is_admin()` | `is_admin()` |
+| substitution_requests | ✅ | sub_requests_service_all | service_role | ALL | `true` | `true` |
 | visitor_locations | ✅ | Admin can read all visits | public | SELECT | `is_admin()` | `` |
 | visitor_locations | ✅ | Anyone can insert visitor_locations | public | INSERT | `` | `true` |
 | visitors | ✅ | Admin can read visits | public | SELECT | `is_admin()` | `` |
 | visitors | ✅ | Anyone can insert visitors | public | INSERT | `` | `true` |
+| whatsapp_conversations | ✅ | whatsapp_admin_read | public | SELECT | `(EXISTS ( SELECT 1    FROM profiles p   WHERE ((p.id = auth.uid()) AND (p.role = ANY (ARRAY['admin'::text, 'superadmin'::text])))))` | `` |
