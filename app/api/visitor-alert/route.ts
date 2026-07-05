@@ -1,5 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { escapeHtml } from '@/lib/rate-limit'
+
+// Einzeiler + Längen-Cap für Felder, die in E-Mail-HTML landen.
+// Verhindert HTML-/Link-Injection (der Endpunkt ist bewusst anonym aufrufbar,
+// daher MUSS jedes vom Client kommende Feld escaped werden) sowie CR/LF im Subject.
+function safeField(v: unknown, max = 120): string {
+  return escapeHtml(String(v ?? '').replace(/[\r\n]+/g, ' ').slice(0, max))
+}
 
 // Überwachte Stadtteile & PLZ
 const WATCHED_CITIES = [

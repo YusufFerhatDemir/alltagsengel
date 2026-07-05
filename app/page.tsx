@@ -515,13 +515,29 @@ export default function SplashPage() {
             <Link href="/hygienebox">Pflege-Box</Link>
             <Link href="/krankenfahrten">Krankenfahrt</Link>
             <Link href="/alltagsbegleitung">Alltagsbegleitung</Link>
+            <Link href="/termin">Termin buchen</Link>
+            <Link href="/budgetrechner">Budgetrechner</Link>
+            <Link href="/pflegegrad-check">Pflegegrad-Check</Link>
             <Link href="/finanzierung">Finanzierung</Link>
             <Link href="/jobs">Jobs</Link>
             <Link href="/blog">Ratgeber</Link>
             <Link href="/faq">FAQ</Link>
+            <Link href="/bewertungen">Bewertungen</Link>
             <Link href="/team">Team</Link>
             <Link href="/ueber-uns">Über uns</Link>
             <Link href="/kontakt">Kontakt</Link>
+          </div>
+          {/* Städte-Links: Stadt-Landingpages intern verlinken (Indexierung —
+              vorher waren sie nur über die Sitemap erreichbar = Orphan-Pages) */}
+          <div className="lp-footer-links" style={{ marginTop: 4 }}>
+            <Link href="/alltagsbegleitung/frankfurt">Frankfurt</Link>
+            <Link href="/alltagsbegleitung/offenbach">Offenbach</Link>
+            <Link href="/alltagsbegleitung/wiesbaden">Wiesbaden</Link>
+            <Link href="/alltagsbegleitung/darmstadt">Darmstadt</Link>
+            <Link href="/alltagsbegleitung/mainz">Mainz</Link>
+            <Link href="/alltagsbegleitung/hanau">Hanau</Link>
+            <Link href="/alltagsbegleitung/bad-homburg">Bad Homburg</Link>
+            <Link href="/einzugsgebiet">Alle Einsatzorte →</Link>
           </div>
           <div className="lp-footer-links" style={{ marginTop: 4 }}>
             <Link href="/impressum">Impressum</Link>

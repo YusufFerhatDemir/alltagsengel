@@ -29,7 +29,7 @@ Ein Wikidata-Eintrag (Item) erhoet die Wahrscheinlichkeit, dass KI-Systeme Allta
 | Koordinaten | P625 | 50.1109 N, 8.6821 E | Koordinaten Neue Mainzer Strasse 66-68 |
 | Beschaeftigt sich mit | P101 | Alltagsbegleitung, Betreuung, Entlastungsleistungen | |
 | Rechtsform | P1454 | Unternehmergesellschaft (haftungsbeschraenkt) (Q2624520) | Laut Impressum (alltagsengel.care/impressum): UG (haftungsbeschraenkt), NICHT Einzelunternehmen |
-| Gruender (founded by) | P112 | Yusuf Ferhat Demir | P112 erwartet ein Wikidata-Item (Person). Personen-Item nur anlegen, wenn Relevanzkriterien erfuellt sind — sonst Gruender nur im Schema.org-Markup (founder) fuehren, siehe Abschnitt 2 |
+| Gruender (founded by) | P112 | — (optional weglassen) | P112 erwartet ein Wikidata-Item (Person). Personen-Item nur anlegen, wenn Relevanzkriterien erfuellt sind. WICHTIG (Namensregel): Der Gruendername wird NICHT ins Schema.org-Markup der Website uebernommen — in Kundenrichtung tritt ausschliesslich "Alltagsengel" auf; der Name steht nur im Impressum/Datenschutz (gesetzliche Pflicht) und im Handelsregister. |
 | Handelsregisternummer (Deutschland) | P8828 | HRB 140351 | Qualifikator: Registergericht = Amtsgericht Frankfurt am Main. Staerkster Identifier fuer Firmen-Items — unbedingt setzen. |
 | Instagram-Benutzername | P2003 | alltagsengel_ug | |
 | TikTok-Benutzername | P7085 | alltagsengel_ug | |
