@@ -546,7 +546,7 @@ export default function SchedulingPage() {
                               <Badge label={a.wiederholend ? 'Ja' : 'Nein'} color={a.wiederholend ? BRAND.success : BRAND.muted} />
                             </td>
                             <td style={tdStyle}>
-                              <MisButton variant="danger" icon="trash" onClick={() => handleDeleteAvail(a.id)} />
+                              <MisButton variant="danger" icon="trash" onClick={() => handleDeleteAvail(a.id)}>{''}</MisButton>
                             </td>
                           </tr>
                         ))}
@@ -594,7 +594,7 @@ export default function SchedulingPage() {
                               <Badge label={SHIFT_STATUS[s.status]?.label || s.status} color={SHIFT_STATUS[s.status]?.color || BRAND.muted} />
                             </td>
                             <td style={tdStyle}>
-                              <MisButton variant="secondary" icon="eye" onClick={() => setDetailShift(s)} />
+                              <MisButton variant="secondary" icon="eye" onClick={() => setDetailShift(s)}>{''}</MisButton>
                             </td>
                           </tr>
                         ))}
