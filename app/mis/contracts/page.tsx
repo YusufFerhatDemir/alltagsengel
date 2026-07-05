@@ -170,7 +170,7 @@ export default function ContractsPage() {
       </div>
 
       <Tabs
-        tabs={CONTRACT_TYPES.map(t => ({ key: t, label: t }))}
+        tabs={CONTRACT_TYPES.map(t => ({ id: t, label: t }))}
         active={activeTab}
         onChange={setActiveTab}
       />

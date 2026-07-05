@@ -113,10 +113,10 @@ export default function VehiclesPage() {
 
   // Filter
   const tabs = [
-    { key: 'all', label: `Alle (${vehicles.length})` },
-    { key: 'available', label: `Verfügbar (${vehicles.filter(v => v.status === 'available').length})` },
-    { key: 'in_use', label: `Im Einsatz (${vehicles.filter(v => v.status === 'in_use').length})` },
-    { key: 'maintenance', label: `Wartung (${vehicles.filter(v => v.status === 'maintenance' || v.status === 'defect').length})` },
+    { id: 'all', label: `Alle (${vehicles.length})` },
+    { id: 'available', label: `Verfügbar (${vehicles.filter(v => v.status === 'available').length})` },
+    { id: 'in_use', label: `Im Einsatz (${vehicles.filter(v => v.status === 'in_use').length})` },
+    { id: 'maintenance', label: `Wartung (${vehicles.filter(v => v.status === 'maintenance' || v.status === 'defect').length})` },
   ]
 
   const filtered = vehicles.filter(v => {
