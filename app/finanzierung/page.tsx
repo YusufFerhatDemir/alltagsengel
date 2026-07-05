@@ -157,7 +157,7 @@ const LEISTUNGEN = [
   {
     name: 'Tages- / Nachtpflege',
     detail: '§41 SGB XI · pro Monat',
-    werte: ['—', '724 €', '1.363 €', '1.693 €', '2.095 €'],
+    werte: ['—', '721 €', '1.357 €', '1.685 €', '2.085 €'],
     relevant: false,
   },
 ]

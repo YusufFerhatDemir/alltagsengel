@@ -92,10 +92,20 @@ export async function POST(req: NextRequest) {
       .limit(10)
 
     const visitHistory = (recentVisits || [])
-      .map(v => `• ${new Date(v.created_at).toLocaleString('de-DE', { timeZone: 'Europe/Berlin' })} → ${v.page_path}`)
+      .map(v => `• ${new Date(v.created_at).toLocaleString('de-DE', { timeZone: 'Europe/Berlin' })} → ${safeField(v.page_path, 200)}`)
       .join('\n')
 
     const totalVisits = recentVisits?.length || 0
+
+    // ═══ Alle client-gelieferten Felder für E-Mail-HTML escapen (Anti-Injection) ═══
+    const sCity = safeField(city || 'Unbekannt')
+    const sDistrict = district ? ' — ' + safeField(district) : ''
+    const sRegion = region ? ', ' + safeField(region) : ''
+    const sPage = safeField(page || '/', 200)
+    const sPostal = safeField(postalCode || '—', 20)
+    const sIsp = safeField(isp)
+    const sIp = safeField(ip, 60)
+    const sDevice = safeField(device, 40) + (iosVersion ? ' (iOS ' + safeField(iosVersion, 12) + ')' : '')
 
     // E-Mail senden via Resend
     const resendKey = process.env.RESEND_API_KEY
@@ -111,19 +121,19 @@ export async function POST(req: NextRequest) {
         body: JSON.stringify({
           from: 'AlltagsEngel Alert <alert@alltagsengel.care>',
           to: [ALERT_EMAIL],
-          subject: `🚨 Visitor Alert: ${city || 'Unbekannt'} — ${device}`,
+          subject: `🚨 Visitor Alert: ${sCity} — ${sDevice}`,
           html: `
             <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#1A1612;color:#F7F2EA;padding:24px;border-radius:16px;">
               <h2 style="color:#C9963C;margin:0 0 16px;">🚨 Überwachter Besucher ist online!</h2>
 
               <table style="width:100%;border-collapse:collapse;margin:16px 0;">
                 <tr><td style="padding:8px;color:#A89C8C;border-bottom:1px solid #332E24;">Zeitpunkt</td><td style="padding:8px;border-bottom:1px solid #332E24;font-weight:bold;">${now}</td></tr>
-                <tr><td style="padding:8px;color:#A89C8C;border-bottom:1px solid #332E24;">Aktuelle Seite</td><td style="padding:8px;border-bottom:1px solid #332E24;font-weight:bold;">${page || '/'}</td></tr>
-                <tr><td style="padding:8px;color:#A89C8C;border-bottom:1px solid #332E24;">Ort / Stadtteil</td><td style="padding:8px;border-bottom:1px solid #332E24;font-weight:bold;">${city || 'Unbekannt'}${district ? ' — ' + district : ''}${region ? ', ' + region : ''}</td></tr>
-                <tr><td style="padding:8px;color:#A89C8C;border-bottom:1px solid #332E24;">PLZ</td><td style="padding:8px;border-bottom:1px solid #332E24;font-weight:bold;">${postalCode || '—'}</td></tr>
-                <tr><td style="padding:8px;color:#A89C8C;border-bottom:1px solid #332E24;">Gerät</td><td style="padding:8px;border-bottom:1px solid #332E24;font-weight:bold;">${device}${iosVersion ? ' (iOS ' + iosVersion + ')' : ''}</td></tr>
-                <tr><td style="padding:8px;color:#A89C8C;border-bottom:1px solid #332E24;">Internet-Anbieter</td><td style="padding:8px;border-bottom:1px solid #332E24;font-weight:bold;">${isp}</td></tr>
-                <tr><td style="padding:8px;color:#A89C8C;border-bottom:1px solid #332E24;">IP-Adresse</td><td style="padding:8px;border-bottom:1px solid #332E24;font-size:12px;">${ip}</td></tr>
+                <tr><td style="padding:8px;color:#A89C8C;border-bottom:1px solid #332E24;">Aktuelle Seite</td><td style="padding:8px;border-bottom:1px solid #332E24;font-weight:bold;">${sPage}</td></tr>
+                <tr><td style="padding:8px;color:#A89C8C;border-bottom:1px solid #332E24;">Ort / Stadtteil</td><td style="padding:8px;border-bottom:1px solid #332E24;font-weight:bold;">${sCity}${sDistrict}${sRegion}</td></tr>
+                <tr><td style="padding:8px;color:#A89C8C;border-bottom:1px solid #332E24;">PLZ</td><td style="padding:8px;border-bottom:1px solid #332E24;font-weight:bold;">${sPostal}</td></tr>
+                <tr><td style="padding:8px;color:#A89C8C;border-bottom:1px solid #332E24;">Gerät</td><td style="padding:8px;border-bottom:1px solid #332E24;font-weight:bold;">${sDevice}</td></tr>
+                <tr><td style="padding:8px;color:#A89C8C;border-bottom:1px solid #332E24;">Internet-Anbieter</td><td style="padding:8px;border-bottom:1px solid #332E24;font-weight:bold;">${sIsp}</td></tr>
+                <tr><td style="padding:8px;color:#A89C8C;border-bottom:1px solid #332E24;">IP-Adresse</td><td style="padding:8px;border-bottom:1px solid #332E24;font-size:12px;">${sIp}</td></tr>
                 <tr><td style="padding:8px;color:#A89C8C;border-bottom:1px solid #332E24;">Bisherige Besuche</td><td style="padding:8px;border-bottom:1px solid #332E24;font-weight:bold;">${totalVisits}</td></tr>
                 <tr><td style="padding:8px;color:#A89C8C;border-bottom:1px solid #332E24;">Registriert?</td><td style="padding:8px;border-bottom:1px solid #332E24;color:#D04B3B;font-weight:bold;">❌ Nein</td></tr>
               </table>
