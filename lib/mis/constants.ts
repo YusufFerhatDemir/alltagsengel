@@ -20,6 +20,9 @@ export const BRAND = {
 export const NAV_ITEMS = [
   { href: '/mis', label: 'Dashboard', icon: 'gauge', module: 'dashboard' },
   { href: '/mis/documents', label: 'Dokumente', icon: 'files', module: 'documents' },
+  { href: '/mis/contracts', label: 'Verträge', icon: 'files', module: 'contracts' },
+  { href: '/mis/signatures', label: 'Unterschriften', icon: 'pen', module: 'signatures' },
+  { href: '/mis/vehicles', label: 'Fahrzeuge', icon: 'truck', module: 'vehicles' },
   { href: '/mis/dataroom', label: 'Data Room', icon: 'lock', module: 'dataroom' },
   { href: '/mis/finance', label: 'Finanzen', icon: 'banknote', module: 'finance' },
   { href: '/mis/supply-chain', label: 'Lieferkette', icon: 'truck', module: 'supply-chain' },

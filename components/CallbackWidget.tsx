@@ -30,6 +30,14 @@ export default function CallbackWidget() {
     return () => clearTimeout(t)
   }, [])
 
+  // Escape schließt das Modal (Tastatur-Bedienung).
+  useEffect(() => {
+    if (!open) return
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false) }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [open])
+
   const firstSegment = (pathname?.split('/')[1]) || ''
   const isPortal = PORTAL_ROOTS.has(firstSegment)
   if (isPortal || !visible) return null

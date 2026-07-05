@@ -203,6 +203,7 @@ export default function HygieneboxPage() {
           <ul className="info-list">
             <li><Link href="/alltagsbegleitung">Alltagsbegleitung — 131€/Monat über Entlastungsbetrag</Link></li>
             <li><Link href="/krankenfahrten">Krankenfahrten — mit Verordnung oder als Selbstzahler</Link></li>
+            <li><Link href="/finanzierung">Finanzierung — bis zu 5.111 €/Jahr, nach Pflegegrad erklärt</Link></li>
             <li><Link href="/blog/pflegehilfsmittel-40-euro">Ratgeber: Pflegehilfsmittel §40 SGB XI erklärt</Link></li>
             <li><Link href="/faq">Häufige Fragen zu Pflegeleistungen</Link></li>
           </ul>

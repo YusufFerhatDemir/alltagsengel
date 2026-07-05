@@ -336,7 +336,21 @@
       "Bash(grep -o 'href=\"/[^\"]*\"\\\\|href={`[^`]*`}' app/hygienebox/\\\\[stadt\\\\]/page.tsx)",
       "Bash(/usr/bin/curl -s https://alltagsengel.care/blog/pflegehilfsmittel-40-euro)",
       "Bash(/usr/bin/curl -s https://alltagsengel.care/blog/pflegegrad-beantragen)",
-      "Bash(/usr/bin/curl -s https://alltagsengel.care/impressum -o impressum.html)"
+      "Bash(/usr/bin/curl -s https://alltagsengel.care/impressum -o impressum.html)",
+      "Bash(/usr/bin/curl -s -D - -o /private/tmp/claude-502/-Users-work-alltagsengel/9f60e7e8-0f82-41df-8602-f18ac1204eb2/scratchpad/feed.xml https://alltagsengel.care/blog/feed.xml)",
+      "Bash(xmllint --noout /private/tmp/claude-502/-Users-work-alltagsengel/9f60e7e8-0f82-41df-8602-f18ac1204eb2/scratchpad/feed.xml)",
+      "Bash(/usr/bin/curl -sI https://alltagsengel.care/sitemap.xml)",
+      "Bash(/usr/bin/curl -s -o /dev/null -w \"robots-www: %{http_code}\\\\n\" https://www.alltagsengel.care/robots.txt)",
+      "Bash(/usr/bin/curl -s -o /dev/null -w \"sitemap-www: %{http_code}\\\\n\" https://www.alltagsengel.care/sitemap.xml)",
+      "Bash(/usr/bin/curl -s https://alltagsengel.care/)",
+      "Bash(/usr/bin/curl -sI https://alltagsengel.care/)",
+      "Bash(/usr/bin/curl -s https://alltagsengel.care/blog/entlastungsbetrag-45b)",
+      "Bash(grep -oE '\"date\\(Modified|Published\\)\":\"[^\"]*\"|Stand[^a-zA-Z][^<\"]{0,40}|Aktualisiert[^<]{0,40}')",
+      "Bash(grep -oE 'href=\"[^\"]*\"|href=\\\\{`[^`]*`' /Users/work/alltagsengel/app/blog/page.tsx)",
+      "Bash(grep -E '/\\(admin|mis|api|engel|kunde|fahrer|auth|investor|notfall|choose|sentry-example|lp\\)\\(/|$\\)' /private/tmp/claude-502/-Users-work-alltagsengel/9f60e7e8-0f82-41df-8602-f18ac1204eb2/scratchpad/status.txt)",
+      "Bash(/usr/bin/curl -s -o /dev/null -w \"%{http_code}\\\\n\" -I https://alltagsengel.care/engel-werden)",
+      "Bash(/usr/bin/curl -s -o /dev/null -w \"%{http_code} -> %{redirect_url}\\\\n\" -I \"https://alltagsengel.care/alltagsbegleitung/frankfurt/\")",
+      "Bash(git -C /Users/work/alltagsengel log -1 --format='%h %ad %s' --date=short -S 'Link href=\"/termin\">Termin buchen' -- app/page.tsx)"
     ]
   }
 }
