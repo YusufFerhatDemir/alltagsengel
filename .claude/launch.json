@@ -4,7 +4,7 @@
     {
       "name": "alltagsengel-dev",
       "runtimeExecutable": "/Users/work/alltagsengel/node_modules/.bin/next",
-      "runtimeArgs": ["dev"],
+      "runtimeArgs": ["dev", "--webpack"],
       "port": 8080,
       "autoPort": true
     }
