@@ -164,15 +164,15 @@ export default function SplashPage() {
       <div className="sp-glow"></div>
       <div className="sp-inner">
         <div style={{ marginBottom: 26 }}>
-          <Icon3D size={140} float />
+          <Icon3D size={140} float priority />
         </div>
         <h1 className="sp-word">ALLTAGSENGEL</h1>
         <p className="sp-tag">Alltagsbegleitung · Pflege-Box · Krankenfahrt</p>
         <p className="sp-ug">Frankfurt · Rhein-Main · über die App</p>
         <div className="gold-div"></div>
         <div className="sp-btns">
-          <Link href="/choose"><button className="btn-gold">JETZT STARTEN</button></Link>
-          <Link href="/auth/login"><button className="btn-ghost">Ich habe bereits ein Konto</button></Link>
+          <Link href="/choose" className="btn-gold">JETZT STARTEN</Link>
+          <Link href="/auth/login" className="btn-ghost">Ich habe bereits ein Konto</Link>
         </div>
       </div>
       <div className="sp-trust">
@@ -224,8 +224,8 @@ export default function SplashPage() {
             </div>
           </div>
           <div className="sp-btns" style={{ marginTop: 22 }}>
-            <Link href="/budgetrechner"><button className="btn-gold">Restbudget in 10 Sekunden berechnen</button></Link>
-            <Link href="/alltagsbegleitung"><button className="btn-ghost">Alltagsbegleitung im Detail ansehen</button></Link>
+            <Link href="/budgetrechner" className="btn-gold">Restbudget in 10 Sekunden berechnen</Link>
+            <Link href="/alltagsbegleitung" className="btn-ghost">Alltagsbegleitung im Detail ansehen</Link>
           </div>
         </section>
 
@@ -253,7 +253,7 @@ export default function SplashPage() {
             </div>
           </div>
           <div className="sp-btns" style={{ marginTop: 22 }}>
-            <Link href="/hygienebox"><button className="btn-ghost">Pflege-Box im Detail ansehen</button></Link>
+            <Link href="/hygienebox" className="btn-ghost">Pflege-Box im Detail ansehen</Link>
           </div>
         </section>
 
@@ -283,7 +283,7 @@ export default function SplashPage() {
             </div>
           </div>
           <div className="sp-btns" style={{ marginTop: 22 }}>
-            <Link href="/krankenfahrten"><button className="btn-ghost">Krankenfahrt im Detail ansehen</button></Link>
+            <Link href="/krankenfahrten" className="btn-ghost">Krankenfahrt im Detail ansehen</Link>
           </div>
         </section>
 
@@ -486,7 +486,7 @@ export default function SplashPage() {
             ))}
           </div>
           <div className="sp-btns" style={{ marginTop: 22 }}>
-            <Link href="/blog"><button className="btn-ghost">Alle Ratgeber-Artikel ansehen →</button></Link>
+            <Link href="/blog" className="btn-ghost">Alle Ratgeber-Artikel ansehen →</Link>
           </div>
         </section>
 
@@ -499,7 +499,7 @@ export default function SplashPage() {
             eine Krankenfahrt — alles direkt in der App.
           </p>
           <div className="sp-btns" style={{ marginTop: 20 }}>
-            <Link href="/choose"><button className="btn-gold">JETZT KOSTENLOS REGISTRIEREN</button></Link>
+            <Link href="/choose" className="btn-gold">JETZT KOSTENLOS REGISTRIEREN</Link>
           </div>
         </section>
 

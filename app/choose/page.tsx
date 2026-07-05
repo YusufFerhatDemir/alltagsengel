@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import Image from 'next/image'
 import Icon3D from '@/components/Icon3D'
 
 export const metadata: Metadata = {
@@ -24,7 +25,7 @@ export default function ChoosePage() {
         <Link href="/auth/register?role=kunde" style={{ textDecoration: 'none' }}>
           <div className="role-card">
             <div className="role-icon-3d">
-              <img src="/assets/hilfe-icon.webp" alt="Hilfe" />
+              <Image src="/assets/hilfe-icon.webp" alt="Hilfe" fill sizes="52px" />
             </div>
             <div className="role-text">
               <h3>Ich suche Hilfe</h3>
@@ -48,7 +49,7 @@ export default function ChoosePage() {
         <Link href="/fahrer/register" style={{ textDecoration: 'none' }}>
           <div className="role-card">
             <div className="role-icon-3d">
-              <img src="/assets/krankenfahrt-icon.png" alt="Krankenfahrt" />
+              <Image src="/assets/krankenfahrt-icon.png" alt="Krankenfahrt" fill sizes="52px" />
             </div>
             <div className="role-text">
               <h3>Krankenfahrt-Dienstleister</h3>

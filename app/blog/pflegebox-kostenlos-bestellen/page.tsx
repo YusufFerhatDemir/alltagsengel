@@ -120,7 +120,7 @@ export default function PflegeboxBestellenPage() {
           <div className="blog-cta">
             <h2>Pflegebox jetzt kostenlos bestellen</h2>
             <p>0 € Eigenanteil. Keine Bindung. Monatlich automatisch geliefert.</p>
-            <Link href="/choose"><button className="btn-gold">JETZT BESTELLEN</button></Link>
+            <Link href="/choose" className="btn-gold">JETZT BESTELLEN</Link>
           </div>
         </div>
       </article>

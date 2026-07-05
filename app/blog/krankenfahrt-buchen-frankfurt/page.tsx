@@ -120,7 +120,7 @@ export default function KrankenfahrtFrankfurtPage() {
           <div className="blog-cta">
             <h2>Krankenfahrt jetzt buchen</h2>
             <p>Kostenlos registrieren. Mit oder ohne Verordnung.</p>
-            <Link href="/choose"><button className="btn-gold">JETZT BUCHEN</button></Link>
+            <Link href="/choose" className="btn-gold">JETZT BUCHEN</Link>
           </div>
         </div>
       </article>

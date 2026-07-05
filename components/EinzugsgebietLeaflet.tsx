@@ -166,7 +166,7 @@ export default function EinzugsgebietLeaflet() {
           <div style={{ background: 'rgba(45,106,79,0.15)', border: '1px solid rgba(45,106,79,0.35)', borderRadius: 12, padding: '12px 14px', marginTop: 10 }}>
             <div style={{ color: '#7DBE9C', fontSize: 14, fontWeight: 700 }}>✓ Ja, wir sind bei Ihnen verfügbar! ({erg.region})</div>
             <div style={{ marginTop: 8 }}>
-              <Link href="/termin"><button className="btn-gold" style={{ fontSize: 14, padding: '10px 18px' }}>Jetzt kostenlosen Termin buchen</button></Link>
+              <Link href="/termin" className="btn-gold" style={{ fontSize: 14, padding: '10px 18px' }}>Jetzt kostenlosen Termin buchen</Link>
             </div>
           </div>
         )}
