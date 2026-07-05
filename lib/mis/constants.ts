@@ -31,11 +31,14 @@ export const NAV_ITEMS = [
   { href: '/mis/training', label: 'Schulungen', icon: 'award', module: 'training' },
   { href: '/mis/market', label: 'Marktanalyse', icon: 'trending', module: 'market' },
   { href: '/mis/crm', label: 'CRM', icon: 'users', module: 'crm' },
+  { href: '/mis/recruiting', label: 'Bewerbungen', icon: 'userPlus', module: 'recruiting' },
+  { href: '/mis/scheduling', label: 'Schichtplan', icon: 'calendar', module: 'scheduling' },
   { href: '/mis/team', label: 'Team', icon: 'users', module: 'team' },
   { href: '/mis/krankenfahrten', label: 'KF-Aufträge', icon: 'truck', module: 'krankenfahrten' },
   { href: '/mis/krankenfahrt-pricing', label: 'KF-Preise', icon: 'banknote', module: 'krankenfahrt-pricing' },
   { href: '/mis/analytics', label: 'Analytics', icon: 'activity', module: 'analytics' },
   { href: '/mis/ai-assistant', label: 'KI-Assistent', icon: 'sparkles', module: 'ai-assistant' },
+  { href: '/mis/privacy', label: 'Datenschutz', icon: 'shield', module: 'privacy' },
   { href: '/mis/settings', label: 'Einstellungen', icon: 'settings', module: 'settings' },
 ] as const
 
