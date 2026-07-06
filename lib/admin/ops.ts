@@ -182,6 +182,50 @@ export const BUDGET_TYPE: Record<string, string> = {
   private: 'Privat',
 }
 
+// ── KI-Leistungsnachweis-Prüfzentrale (ocr_results.status) ───────
+export const OCR_STATUS: Record<string, { label: string; color: string }> = {
+  pending: { label: 'Ausstehend', color: '#999' },
+  processed: { label: 'Verarbeitet', color: '#5CB882' },
+  failed: { label: 'Fehlgeschlagen', color: '#D04B3B' },
+  needs_review: { label: 'Prüfung nötig', color: '#E8A000' },
+}
+
+// ── Monatsabschluss-Assistent (monthly_closings.status) ─────────
+export const CLOSING_STATUS: Record<string, { label: string; color: string }> = {
+  open: { label: 'Offen', color: '#999' },
+  in_review: { label: 'In Prüfung', color: '#E8A000' },
+  ready: { label: 'Bereit', color: '#2196F3' },
+  closed: { label: 'Abgeschlossen', color: '#5CB882' },
+  sent: { label: 'Versendet', color: '#9C27B0' },
+}
+
+// ── Prüfprotokoll (review_errors.severity) ───────────────────────
+export const REVIEW_SEVERITY: Record<string, { label: string; color: string }> = {
+  info: { label: 'Info', color: '#999' },
+  warning: { label: 'Warnung', color: '#E8A000' },
+  critical: { label: 'Kritisch', color: '#D04B3B' },
+}
+
+export const REVIEW_ERROR_TYPE: Record<string, string> = {
+  signature_missing: 'Unterschrift fehlt',
+  time_mismatch: 'Zeit-Abweichung',
+  duplicate: 'Duplikat',
+  geo_mismatch: 'Geo-Abweichung',
+  amount_mismatch: 'Betrags-Abweichung',
+  budget_exceeded: 'Budget überschritten',
+  ocr_low_confidence: 'OCR unsicher',
+  other: 'Sonstige',
+}
+
+// ── Zahlungskontrolle (payment_status.status) ────────────────────
+export const PAYMENT_STATUS: Record<string, { label: string; color: string }> = {
+  offen: { label: 'Offen', color: '#999' },
+  teilbezahlt: { label: 'Teilbezahlt', color: '#E8A000' },
+  bezahlt: { label: 'Bezahlt', color: '#5CB882' },
+  ueberfaellig: { label: 'Überfällig', color: '#D04B3B' },
+  storniert: { label: 'Storniert', color: '#777' },
+}
+
 // ── Digitale Mitarbeiterakte ────────────────────────────────────
 // Pflicht-Dokumente einer Betreuungskraft (Soll-Liste für die Akte)
 export const DOCUMENT_TYPE: Record<string, { label: string; color: string }> = {
