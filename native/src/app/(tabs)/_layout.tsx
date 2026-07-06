@@ -41,6 +41,10 @@ export default function TabsLayout() {
         name="kontakt"
         options={{ title: 'Kontakt', tabBarIcon: ({ color }) => <TabIcon symbol="✉" color={color} /> }}
       />
+      <Tabs.Screen
+        name="einsatz"
+        options={{ title: 'Einsatz', tabBarIcon: ({ color }) => <TabIcon symbol="🛡" color={color} /> }}
+      />
     </Tabs>
   )
 }

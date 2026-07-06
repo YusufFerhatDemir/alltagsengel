@@ -46,6 +46,9 @@ export default function RootLayout() {
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="auth/login" options={{ presentation: 'modal' }} />
         <Stack.Screen name="auth/register" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="einsatz/check-in" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="einsatz/leistungsnachweis-scan" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="einsatz/unterschrift" options={{ presentation: 'modal' }} />
       </Stack>
     </AuthProvider>
   )

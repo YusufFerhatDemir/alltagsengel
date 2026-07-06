@@ -16,7 +16,10 @@
       "supportsTablet": true,
       "infoPlist": {
         "CFBundleDevelopmentRegion": "de",
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSCameraUsageDescription": "Alltagsengel benötigt Zugriff auf die Kamera, um Leistungsnachweise zu fotografieren.",
+        "NSPhotoLibraryUsageDescription": "Alltagsengel benötigt Zugriff auf Ihre Fotos, um Leistungsnachweise aus der Galerie hochzuladen.",
+        "NSLocationWhenInUseUsageDescription": "Alltagsengel benötigt Ihren Standort, um den Einsatzort beim Check-in/Check-out zu bestätigen."
       }
     },
     "android": {
@@ -27,7 +30,12 @@
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION"
+      ]
     },
     "web": {
       "output": "static",
@@ -47,6 +55,25 @@
         "expo-notifications",
         {
           "color": "#C9963C"
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Alltagsengel benötigt Zugriff auf die Kamera, um Leistungsnachweise zu fotografieren."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Alltagsengel benötigt Zugriff auf Ihre Fotos, um Leistungsnachweise aus der Galerie hochzuladen.",
+          "cameraPermission": "Alltagsengel benötigt Zugriff auf die Kamera, um Leistungsnachweise zu fotografieren."
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Alltagsengel benötigt Ihren Standort, um den Einsatzort beim Check-in/Check-out zu bestätigen."
         }
       ]
     ],
