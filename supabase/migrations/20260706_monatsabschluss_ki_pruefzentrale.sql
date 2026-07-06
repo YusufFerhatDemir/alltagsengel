@@ -513,3 +513,18 @@ COMMIT;
 INSERT INTO storage.buckets (id, name, public)
 VALUES ('service-proofs', 'service-proofs', false)
 ON CONFLICT (id) DO NOTHING;
+
+-- storage.objects RLS für den service-proofs-Bucket: Bucket ist privat,
+-- storage.objects hat RLS standardmäßig aktiv → ohne Policy kein Zugriff.
+-- Admin-Web-Upload (lib/upload-service-proof.ts) läuft über den Browser
+-- mit Anon-Key + eingeloggter Admin-Session → braucht is_admin()-Policy.
+-- Native-App-Uploads laufen ausschließlich über Server-API-Routen mit
+-- service_role (siehe app/api/native/leistungsnachweis-upload/route.ts).
+CREATE POLICY service_proofs_admin_all ON storage.objects
+  FOR ALL USING (bucket_id = 'service-proofs' AND public.is_admin())
+  WITH CHECK (bucket_id = 'service-proofs' AND public.is_admin());
+
+CREATE POLICY service_proofs_service_all ON storage.objects
+  FOR ALL TO service_role
+  USING (bucket_id = 'service-proofs')
+  WITH CHECK (bucket_id = 'service-proofs');
