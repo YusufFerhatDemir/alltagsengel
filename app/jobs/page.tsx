@@ -83,6 +83,13 @@ const jsonLdJobPosting = {
   title: 'Alltagsbegleiter / Betreuungskraft (m/w/d) — flexibel, kein Wochenenddienst',
   description:
     'Werde Teil des Alltagsengel-Teams: Begleite Menschen mit Pflegegrad im Alltag — Einkaufen, Arztbegleitung, Spaziergänge, Gesellschaft. Flexible Arbeitszeiten, kein Wochenenddienst, eigener Dienstwagen möglich, Wunschfrei-Tag, 20/30/40 Std./Woche wählbar, Fort- und Weiterbildungen. Quereinsteiger willkommen.',
+  // identifier: von Google empfohlen — stabile Kennung, bei inhaltlich neuer
+  // Ausschreibung (nicht bei Textkosmetik) hochzählen.
+  identifier: {
+    '@type': 'PropertyValue',
+    name: 'Alltagsengel',
+    value: 'alltagsengel-betreuungskraft-ffm-001',
+  },
   datePosted: '2026-07-03',
   validThrough: '2026-12-31',
   employmentType: ['PART_TIME', 'FULL_TIME'],
@@ -96,6 +103,8 @@ const jsonLdJobPosting = {
     '@type': 'Place',
     address: {
       '@type': 'PostalAddress',
+      streetAddress: 'Neue Mainzer Straße 66-68',
+      postalCode: '60311',
       addressLocality: 'Frankfurt am Main',
       addressRegion: 'Hessen',
       addressCountry: 'DE',
@@ -106,9 +115,20 @@ const jsonLdJobPosting = {
     currency: 'EUR',
     value: { '@type': 'QuantitativeValue', value: 20, unitText: 'HOUR' },
   },
+  // directApply: Bewerbung direkt auf dieser Seite möglich (WhatsApp + Formular)
+  directApply: true,
+  experienceRequirements: {
+    '@type': 'OccupationalExperienceRequirements',
+    monthsOfExperience: 0,
+  },
+  educationRequirements: {
+    '@type': 'EducationalOccupationalCredential',
+    credentialCategory: 'no requirements',
+  },
   qualifications:
     'Keine Ausbildung erforderlich, Quereinsteiger willkommen. Zuverlässigkeit, Empathie und Deutschkenntnisse (ca. B2). Führerschein von Vorteil.',
   industry: 'Sozialwesen / Alltagsbegleitung',
+  workHours: 'Flexibel, 20/30/40 Std./Woche, Montag bis Freitag',
 }
 
 export default function JobsPage() {

@@ -89,8 +89,14 @@ export default withSentryConfig(withBundleAnalyzer(nextConfig), {
   // Tunnel-Route umgeht AdBlocker (client events gehen über eigene Domain)
   tunnelRoute: '/monitoring',
 
-  // Hinweis (Apr 2026): Die fruehre Sentry-Optionen `disableLogger` und
-  // `automaticVercelMonitors` sind deprecated. Beide haben in Turbopack-Builds
-  // ohnehin keinen Effekt. Bei Wechsel auf Webpack stattdessen:
-  //   webpack: { treeshake: { removeDebugLogging: true }, automaticVercelMonitors: true }
+  // Bundle-Size-Optimierung (Perf 2026-07): Replay ist in
+  // instrumentation-client.ts deaktiviert — diese Flags shaken Replay-Code
+  // und Debug-Logging zusätzlich aus allen Sentry-Chunks heraus.
+  // Wird Replay je reaktiviert, müssen die excludeReplay*-Flags weg.
+  bundleSizeOptimizations: {
+    excludeDebugStatements: true,
+    excludeReplayShadowDom: true,
+    excludeReplayIframe: true,
+    excludeReplayWorker: true,
+  },
 });

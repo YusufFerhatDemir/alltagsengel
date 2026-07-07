@@ -86,6 +86,13 @@ export const metadata: Metadata = {
   formatDetection: {
     telephone: false,
   },
+  // Lokale Geo-Signale (Bing/legacy Crawler; Google nutzt primär JSON-LD)
+  other: {
+    'geo.region': 'DE-HE',
+    'geo.placename': 'Frankfurt am Main',
+    'geo.position': '50.1109;8.6821',
+    ICBM: '50.1109, 8.6821',
+  },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
