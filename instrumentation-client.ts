@@ -4,19 +4,16 @@ import * as Sentry from '@sentry/nextjs'
 Sentry.init({
   dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
   tracesSampleRate: process.env.NODE_ENV === 'production' ? 0.1 : 1.0,
-  replaysSessionSampleRate: 0, // keine Session-Replays (PII-Schutz für Pflege-Daten)
-  replaysOnErrorSampleRate: 0.1, // nur bei Errors
+  // Session Replay komplett entfernt (Perf 2026-07): das Replay-Modul wog
+  // ~70 KB gzip im First-Load-JS und zeichnete ALLE Sessions im Puffer-Modus
+  // mit (MutationObserver-Dauerlast auf alten Geräten der Zielgruppe).
+  // Session-Replays waren ohnehin 0 (PII-Schutz), Error-Replays voll maskiert
+  // → kaum Diagnose-Wert. Bei Bedarf: replayIntegration wieder eintragen UND
+  // excludeReplay*-Flags in next.config.ts entfernen.
   debug: false,
   environment: process.env.NODE_ENV,
   release: process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA,
   sendDefaultPii: false,
-  integrations: [
-    Sentry.replayIntegration({
-      maskAllText: true,
-      maskAllInputs: true,
-      blockAllMedia: true,
-    }),
-  ],
   ignoreErrors: [
     'Non-Error exception captured',
     'ResizeObserver loop limit exceeded',
