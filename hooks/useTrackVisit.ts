@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
+// Kein statischer Supabase-Import: der Hook steckt via VisitTracker auf
+// Landing-/Marketing-Seiten — Supabase-JS (~46 KB gzip) erst beim Tracken laden.
 import { useUserLocation } from '@/hooks/useUserLocation'
 import { getCookieConsent } from '@/components/CookieConsent'
 import { getIpGeo } from '@/lib/ipGeo'
@@ -35,6 +36,7 @@ export function useTrackVisit(portal: Portal) {
 
     async function track() {
       try {
+        const { createClient } = await import('@/lib/supabase/client')
         const supabase = createClient()
         const { data: { user } } = await supabase.auth.getUser()
 

@@ -1,7 +1,9 @@
 'use client'
 import { useEffect, useRef } from 'react'
 import { usePathname } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
+// Kein statischer Supabase-Import: PageTracker hängt im Root-Layout und würde
+// sonst ~46 KB gzip Supabase-JS ins First-Load-JS JEDER Seite ziehen (auch
+// Marketing/SEO). Der Client wird erst im Track-Effect nachgeladen.
 
 const PAGE_LABELS: Record<string, string> = {
   '/': 'Splash',
@@ -62,6 +64,7 @@ export default function PageTracker() {
 
     async function track() {
       try {
+        const { createClient } = await import('@/lib/supabase/client')
         const supabase = createClient()
 
         // IP + user bilgisi paralel al
