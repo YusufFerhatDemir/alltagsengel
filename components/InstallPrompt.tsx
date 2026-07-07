@@ -11,7 +11,7 @@ import { useState, useEffect, useRef } from 'react'
 // Wird nur einmal gezeigt (localStorage).
 // ═══════════════════════════════════════════════════════════
 
-const APP_STORE_URL = 'https://apps.apple.com/app/alltagsengel/id6743440789'
+const APP_STORE_URL = 'https://apps.apple.com/app/alltagsengel/id6761319222'
 const PLAY_STORE_URL = 'https://play.google.com/store/apps/details?id=care.alltagsengel.app'
 
 export default function InstallPrompt() {
