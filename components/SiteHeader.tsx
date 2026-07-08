@@ -13,7 +13,7 @@ import { usePathname } from 'next/navigation'
 // der Startseite nicht. Sichtbarkeit steuert der LayoutWrapper.
 // ═══════════════════════════════════════════════════════════
 
-const RECRUITING_PREFIXES = ['/jobs', '/karriere', '/engel-werden', '/team']
+const RECRUITING_PREFIXES = ['/jobs', '/engel-werden', '/team']
 
 export default function SiteHeader() {
   const pathname = usePathname()

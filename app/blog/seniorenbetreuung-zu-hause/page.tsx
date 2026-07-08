@@ -1,10 +1,11 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import BreadcrumbSchema from '@/components/BreadcrumbSchema'
+import RelatedPosts from '@/components/RelatedPosts'
 
 export const metadata: Metadata = {
-  title: 'Seniorenbetreuung zu Hause — Kosten, Möglichkeiten & Tipps',
-  description: 'Vollständiger Überblick über Seniorenbetreuung im eigenen Zuhause: Kosten, verschiedene Betreuungsmodelle und wie AlltagsEngel helfen kann.',
+  title: 'Seniorenbetreuung zu Hause: Kosten & Tipps',
+  description: 'Vollständiger Überblick über Seniorenbetreuung im eigenen Zuhause: Kosten, Betreuungsmodelle und Finanzierung durch die Pflegekasse. Jetzt informieren!',
   keywords: 'Seniorenbetreuung, Heimbetreuung, Pflegehilfe, Haushaltshilfe, häusliche Betreuung',
   alternates: { canonical: 'https://alltagsengel.care/blog/seniorenbetreuung-zu-hause' },
   openGraph: {
@@ -19,11 +20,11 @@ const articleJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'Article',
   headline: 'Seniorenbetreuung zu Hause — Kosten, Möglichkeiten & Tipps',
-  description: 'Vollständiger Überblick über Seniorenbetreuung im eigenen Zuhause: Kosten, verschiedene Betreuungsmodelle und wie AlltagsEngel helfen kann.',
+  description: 'Vollständiger Überblick über Seniorenbetreuung im eigenen Zuhause: Kosten, Betreuungsmodelle und Finanzierung durch die Pflegekasse. Jetzt informieren!',
   author: { '@type': 'Organization', name: 'Alltagsengel', url: 'https://alltagsengel.care' },
   publisher: { '@type': 'Organization', name: 'Alltagsengel', url: 'https://alltagsengel.care', logo: { '@type': 'ImageObject', url: 'https://alltagsengel.care/icon-512x512.png' } },
-  datePublished: '2026-03-19',
-  dateModified: '2026-03-19',
+  datePublished: '2026-04-05',
+  dateModified: '2026-04-05',
   mainEntityOfPage: 'https://alltagsengel.care/blog/seniorenbetreuung-zu-hause',
   image: 'https://alltagsengel.care/og-image.png',
   inLanguage: 'de-DE',
@@ -108,8 +109,8 @@ export default function SeniorenbetreuungZuHause() {
           <h3>Option 2: Private Haushalte und Aushilfen</h3>
           <p>Oftmals finden sich zuverlässige Betreuer durch Mundpropaganda oder lokale Anzeigen. Günstiger, aber Sie müssen selbst Versicherung und Abrechnungen regeln.</p>
 
-          <h3>Option 3: AlltagsEngel</h3>
-          <p>AlltagsEngel bietet direkten Zugang zu geprüften Alltagsbegleitern und Haushaltshilfen in Ihrer Region. Die Plattform eliminiert lange Suche und Abstimmung – Sie können schnell die richtige Person für Ihre Bedürfnisse finden, mit transparenten Preisen und zuverlässigen, geprüften Helfern. Dies ist ideal für flexible, stundenweise Unterstützung im Haushalt und zur Alltagsbegleitung.</p>
+          <h3>Option 3: Alltagsengel</h3>
+          <p>Alltagsengel bietet direkten Zugang zu geprüften Alltagsbegleitern und Haushaltshilfen in Ihrer Region. Die Plattform eliminiert lange Suche und Abstimmung – Sie können schnell die richtige Person für Ihre Bedürfnisse finden, mit transparenten Preisen und zuverlässigen, geprüften Helfern. Dies ist ideal für flexible, stundenweise Unterstützung im Haushalt und zur Alltagsbegleitung.</p>
 
           <h2>Tipps für die Auswahl der richtigen Betreuung</h2>
 
@@ -152,14 +153,16 @@ export default function SeniorenbetreuungZuHause() {
           </ul>
 
           <h2>Fazit</h2>
-          <p>Seniorenbetreuung zu Hause ist eine vielfältige Landschaft mit vielen Optionen für verschiedene Bedürfnisse und Budgets. Mit der richtigen Planung, einer klaren Bedarfsanalyse und der Nutzung von Finanzierungsmöglichkeiten können die meisten älteren Menschen sicher und würdevoll zu Hause betreut werden. AlltagsEngel kann dabei helfen, die Suche zu vereinfachen und schnell die richtige Unterstützung zu finden.</p>
+          <p>Seniorenbetreuung zu Hause ist eine vielfältige Landschaft mit vielen Optionen für verschiedene Bedürfnisse und Budgets. Mit der richtigen Planung, einer klaren Bedarfsanalyse und der Nutzung von Finanzierungsmöglichkeiten können die meisten älteren Menschen sicher und würdevoll zu Hause betreut werden. Alltagsengel kann dabei helfen, die Suche zu vereinfachen und schnell die richtige Unterstützung zu finden.</p>
         </div>
 
         <div className="blog-cta">
-          <h3>Jetzt AlltagsEngel testen</h3>
-          <p>Registriere dich kostenlos und finde geprüfte Betreuungskräfte für deine individuellen Bedürfnisse.</p>
-          <Link href="/choose" className="btn-gold">Kostenlos registrieren</Link>
+          <h3>Jetzt Alltagsengel testen</h3>
+          <p>Vereinbaren Sie kostenlos einen Termin und finden Sie geprüfte Betreuungskräfte für Ihre individuellen Bedürfnisse.</p>
+          <Link href="/termin" className="btn-gold">Jetzt Termin vereinbaren</Link>
         </div>
+
+        <RelatedPosts slug="seniorenbetreuung-zu-hause" />
       </article>
     </main>
   );

@@ -1,10 +1,11 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import BreadcrumbSchema from '@/components/BreadcrumbSchema'
+import RelatedPosts from '@/components/RelatedPosts'
 
 export const metadata: Metadata = {
-  title: 'Einkaufshilfe für Senioren: So klappt der Einkauf mit Begleitung',
-  description: 'Praktischer Leitfaden für Einkaufshilfen bei Senioren. Erfahren Sie, wie Begleitungsdienste funktionieren, welche Kosten entstehen und wie Sie über AlltagsEngel buchen.',
+  title: 'Einkaufshilfe für Senioren: Kosten & Ablauf',
+  description: 'Einkaufshilfe für Senioren: So funktionieren Begleitdienste, was sie kosten und wie Sie über den Entlastungsbetrag (131 €/Monat) kostenfrei buchen.',
   keywords: 'Einkaufshilfe Senioren, Einkaufsbegleitung, Einkaufsdienst, Begleitperson, Pflege',
   alternates: { canonical: 'https://alltagsengel.care/blog/einkaufshilfe-senioren' },
   openGraph: {
@@ -21,11 +22,11 @@ const articleJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'Article',
   headline: 'Einkaufshilfe für Senioren: So klappt der Einkauf mit Begleitung',
-  description: 'Praktischer Leitfaden für Einkaufshilfen bei Senioren. Erfahren Sie, wie Begleitungsdienste funktionieren, welche Kosten entstehen und wie Sie über AlltagsEngel',
+  description: 'Einkaufshilfe für Senioren: So funktionieren Begleitdienste, was sie kosten und wie Sie über den Entlastungsbetrag (131 €/Monat) kostenfrei buchen.',
   author: { '@type': 'Organization', name: 'Alltagsengel', url: 'https://alltagsengel.care' },
   publisher: { '@type': 'Organization', name: 'Alltagsengel', url: 'https://alltagsengel.care', logo: { '@type': 'ImageObject', url: 'https://alltagsengel.care/icon-512x512.png' } },
-  datePublished: '2026-03-19',
-  dateModified: '2026-03-19',
+  datePublished: '2026-03-20',
+  dateModified: '2026-03-20',
   mainEntityOfPage: 'https://alltagsengel.care/blog/einkaufshilfe-senioren',
   image: 'https://alltagsengel.care/og-image.png',
   inLanguage: 'de-DE',
@@ -34,7 +35,7 @@ const articleJsonLd = {
 export default function EinkaufshilfePage() {
   return (
     <main className="blog-container">
-      <BreadcrumbSchema items={[{ name: 'Ratgeber', url: '/blog' }, { name: 'Einkaufshilfe für Senioren: So klappt der Einkauf mit Begle' }]} />
+      <BreadcrumbSchema items={[{ name: 'Ratgeber', url: '/blog' }, { name: 'Einkaufshilfe für Senioren' }]} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }} />
       <article className="blog-article">
         <header className="blog-header">
@@ -92,14 +93,14 @@ export default function EinkaufshilfePage() {
             <strong>Über Verhinderungspflege:</strong> Falls Sie bereits Verhinderungspflege in Anspruch nehmen, können Sie diese auch für Einkaufshilfen nutzen (gemeinsamer Jahresbetrag Verhinderungs-/Kurzzeitpflege: bis 3.539€ pro Jahr, seit 01.07.2025).
           </p>
           <p>
-            <strong>Stundensatz bei AlltagsEngel:</strong> ab 32 € pro Stunde – mit anerkanntem Pflegegrad rechnet AlltagsEngel direkt über den Entlastungsbetrag (§ 45b, 131 €/Monat) mit der Pflegekasse ab, sodass für Sie keine Kosten entstehen.
+            <strong>Stundensatz bei Alltagsengel:</strong> ab 32 € pro Stunde – mit anerkanntem Pflegegrad rechnet Alltagsengel direkt über den Entlastungsbetrag (§ 45b, 131 €/Monat) mit der Pflegekasse ab, sodass für Sie keine Kosten entstehen.
           </p>
 
-          <h2>Wie buchen Sie eine Einkaufshilfe über AlltagsEngel?</h2>
+          <h2>Wie buchen Sie eine Einkaufshilfe über Alltagsengel?</h2>
           <p>
             <strong>Schritt 1: Registrieren</strong>
             <br />
-            Melden Sie sich auf AlltagsEngel an. Das geht kostenlos und dauert 2 Minuten.
+            Melden Sie sich auf Alltagsengel an. Das geht kostenlos und dauert 2 Minuten.
           </p>
           <p>
             <strong>Schritt 2: Anfrage erstellen</strong>
@@ -137,27 +138,28 @@ export default function EinkaufshilfePage() {
 
           <h2>Häufig gestellte Fragen</h2>
           <p>
-            <strong>Wird Einkaufshilfe von der Krankenkasse bezahlt?</strong>
+            <strong>Wird Einkaufshilfe von der Pflegekasse bezahlt?</strong>
             <br />
             Ja, über §45b-Leistungen bis zu 131€ monatlich oder über Verhinderungspflege.
           </p>
           <p>
             <strong>Kann ich eine feste Begleitperson haben?</strong>
             <br />
-            Ja, auf AlltagsEngel können Sie mit erfahrenen Begleitern eine regelmäßige Zusammenarbeit aufbauen.
+            Ja, auf Alltagsengel können Sie mit erfahrenen Begleitern eine regelmäßige Zusammenarbeit aufbauen.
           </p>
           <p>
             <strong>Was ist, wenn ich kurzfristig Hilfe brauche?</strong>
             <br />
-            AlltagsEngel hat auch Notfall-Anfragen möglich, je nach Verfügbarkeit in Ihrer Region.
+            Bei Alltagsengel sind auch kurzfristige Anfragen möglich, je nach Verfügbarkeit in Ihrer Region.
           </p>
 
           <div className="blog-cta">
-            <h3>Jetzt AlltagsEngel testen</h3>
-            <p>Registrieren Sie sich kostenlos und finden Sie sofort Unterstützung in Ihrer Region.</p>
-            <Link href="/choose" className="btn-gold">Kostenlos registrieren</Link>
+            <h3>Jetzt Alltagsengel testen</h3>
+            <p>Vereinbaren Sie kostenlos einen Termin und finden Sie Unterstützung in Ihrer Region.</p>
+            <Link href="/termin" className="btn-gold">Jetzt kostenlos anfragen</Link>
           </div>
         </div>
+        <RelatedPosts slug="einkaufshilfe-senioren" />
       </article>
     </main>
   );

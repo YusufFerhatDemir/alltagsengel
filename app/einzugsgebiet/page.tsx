@@ -5,8 +5,8 @@ import LeadForm from '@/components/LeadForm'
 import BreadcrumbSchema from '@/components/BreadcrumbSchema'
 
 export const metadata: Metadata = {
-  title: 'Einzugsgebiet & PLZ-Check — Frankfurt + 30 km Umkreis',
-  description: 'Sind wir bei Ihnen verfügbar? PLZ eingeben und sofort prüfen: Alltagsengel bietet Alltagsbegleitung (§45a SGB XI, Abrechnung über §45b) in Frankfurt am Main und 30 km Umkreis — Offenbach, Hanau, Bad Homburg, Darmstadt u. v. m.',
+  title: 'Einzugsgebiet & PLZ-Check — Frankfurt + 30 km',
+  description: 'PLZ eingeben und sofort prüfen, ob Alltagsengel zu Ihnen kommt: Alltagsbegleitung in Frankfurt am Main und 30 km Umkreis — Offenbach, Hanau, Bad Homburg u.v.m.',
   keywords: ['Alltagsbegleitung Frankfurt Einzugsgebiet', 'Alltagsbegleitung PLZ prüfen', 'Betreuungsdienst Rhein-Main', 'Alltagshilfe Frankfurt Umkreis', '§45b SGB XI Frankfurt'],
   openGraph: {
     images: [{ url: '/og-image.png', width: 1200, height: 630 }],
@@ -45,26 +45,30 @@ const jsonLd = {
   url: 'https://alltagsengel.care/einzugsgebiet',
 }
 
+// FAQ-Inhalte: speisen sowohl das FAQPage-JSON-LD als auch die sichtbare FAQ-Sektion unten
+const faqItems = [
+  {
+    frage: 'In welchen Städten ist Alltagsengel verfügbar?',
+    antwort: 'Alltagsengel ist in Frankfurt am Main und im Umkreis von 30 Kilometern verfügbar — u. a. Offenbach, Hanau, Bad Homburg, Oberursel, Neu-Isenburg, Dreieich, Langen, Rodgau, Eschborn, Hofheim, Rüsselsheim und Darmstadt.',
+  },
+  {
+    frage: 'Was passiert, wenn meine PLZ außerhalb des Einzugsgebiets liegt?',
+    antwort: 'Im Randgebiet (z. B. Wiesbaden, Mainz, Aschaffenburg) helfen wir oft trotzdem — fragen Sie einfach unverbindlich an. Außerhalb davon nehmen wir Ihre Kontaktdaten auf und melden uns, sobald wir Ihre Region erreichen.',
+  },
+  {
+    frage: 'Kostet die Anfahrt extra?',
+    antwort: 'Nein. Innerhalb unseres Einzugsgebiets (Frankfurt + 30 km) fallen keine zusätzlichen Anfahrtskosten an. Die Alltagsbegleitung rechnen wir direkt über den Entlastungsbetrag (131 €/Monat, §45b SGB XI) mit Ihrer Pflegekasse ab.',
+  },
+]
+
 const faqJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'FAQPage',
-  mainEntity: [
-    {
-      '@type': 'Question',
-      name: 'In welchen Städten ist Alltagsengel verfügbar?',
-      acceptedAnswer: { '@type': 'Answer', text: 'Alltagsengel ist in Frankfurt am Main und im Umkreis von 30 Kilometern verfügbar — u. a. Offenbach, Hanau, Bad Homburg, Oberursel, Neu-Isenburg, Dreieich, Langen, Rodgau, Eschborn, Hofheim, Rüsselsheim und Darmstadt.' },
-    },
-    {
-      '@type': 'Question',
-      name: 'Was passiert, wenn meine PLZ außerhalb des Einzugsgebiets liegt?',
-      acceptedAnswer: { '@type': 'Answer', text: 'Im Randgebiet (z. B. Wiesbaden, Mainz, Aschaffenburg) helfen wir oft trotzdem — fragen Sie einfach unverbindlich an. Außerhalb davon nehmen wir Ihre Kontaktdaten auf und melden uns, sobald wir Ihre Region erreichen.' },
-    },
-    {
-      '@type': 'Question',
-      name: 'Kostet die Anfahrt extra?',
-      acceptedAnswer: { '@type': 'Answer', text: 'Nein. Innerhalb unseres Einzugsgebiets (Frankfurt + 30 km) fallen keine zusätzlichen Anfahrtskosten an. Die Alltagsbegleitung rechnen wir direkt über den Entlastungsbetrag (131 €/Monat, §45b SGB XI) mit Ihrer Pflegekasse ab.' },
-    },
-  ],
+  mainEntity: faqItems.map((item) => ({
+    '@type': 'Question',
+    name: item.frage,
+    acceptedAnswer: { '@type': 'Answer', text: item.antwort },
+  })),
 }
 
 export default function EinzugsgebietPage() {
@@ -108,6 +112,16 @@ export default function EinzugsgebietPage() {
             <li>Rüsselsheim, Kelsterbach, Mörfelden-Walldorf und Groß-Gerau</li>
             <li><Link href="/alltagsbegleitung/darmstadt">Darmstadt</Link> und Bad Vilbel / Wetterau (Süd)</li>
           </ul>
+        </section>
+
+        <section className="info-card">
+          <h3>Häufige Fragen zum Einzugsgebiet</h3>
+          {faqItems.map((item, i) => (
+            <details key={i} className="info-faq">
+              <summary>{item.frage}</summary>
+              <p>{item.antwort}</p>
+            </details>
+          ))}
         </section>
 
         <section className="info-card">

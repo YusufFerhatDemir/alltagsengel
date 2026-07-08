@@ -23,11 +23,24 @@ const nextConfig: NextConfig = {
   },
   async redirects() {
     return [
+      // Host-Kanonisierung: www spiegelt sonst die komplette Site als
+      // 200-Duplikat (Canonical-Tag allein ist nur ein Hint für Crawler).
+      {
+        source: '/:path*',
+        has: [{ type: 'host', value: 'www.alltagsengel.care' }],
+        destination: 'https://alltagsengel.care/:path*',
+        permanent: true,
+      },
       // Gesuchte URL /pflegebox → bestehende Pflegebox-Seite (/hygienebox).
       // 301 (permanent), damit kein Duplicate Content entsteht und externe
       // Links auf die kanonische Seite weitergereicht werden.
       { source: '/pflegebox', destination: '/hygienebox', permanent: true },
       { source: '/pflegebox/:stadt', destination: '/hygienebox/:stadt', permanent: true },
+      // /index liefert sonst die Startseite als 200-Duplikat von /.
+      { source: '/index', destination: '/', permanent: true },
+      // Recruiting-Konsolidierung: /karriere war Near-Duplicate von
+      // /engel-werden (gleiche Keywords/FAQ/Formular) — Keyword-Kannibalisierung.
+      { source: '/karriere', destination: '/engel-werden', permanent: true },
     ]
   },
   async headers() {
@@ -64,6 +77,19 @@ const nextConfig: NextConfig = {
             value: 'on',
           },
         ],
+      },
+      // noindex per Header statt robots.txt-Disallow: Disallow blockt nur das
+      // Crawlen — die URL kann trotzdem (URL-only) indexiert werden, und Google
+      // sieht dann nie ein noindex. Header wirkt auch bei 'use client'-Pages
+      // ohne metadata-Export. Die beiden Routen sind dafür in robots.ts
+      // NICHT mehr disallowed, damit der Header überhaupt gelesen wird.
+      {
+        source: '/sentry-example',
+        headers: [{ key: 'X-Robots-Tag', value: 'noindex, nofollow' }],
+      },
+      {
+        source: '/choose',
+        headers: [{ key: 'X-Robots-Tag', value: 'noindex, nofollow' }],
       },
     ]
   },

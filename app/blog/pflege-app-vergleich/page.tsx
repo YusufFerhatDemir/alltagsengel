@@ -1,10 +1,11 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import BreadcrumbSchema from '@/components/BreadcrumbSchema'
+import RelatedPosts from '@/components/RelatedPosts'
 
 export const metadata: Metadata = {
-  title: 'Pflege-App Vergleich 2026: Die besten Apps für Pflegebedürftige',
-  description: 'Welche Pflege-Apps gibt es? Vergleich der besten Angebote 2026 für Seniorenhilfe, Alltagsbegleitung und Pflegeleistungen. AlltagsEngel im Fokus.',
+  title: 'Pflege-App Vergleich 2026: Die besten Apps',
+  description: 'Welche Pflege-Apps gibt es? Vergleich der besten Angebote 2026 für Seniorenhilfe und Alltagsbegleitung. Jetzt informieren und passende Hilfe finden.',
   keywords: 'Pflege App, Pflege Apps, Seniorenapp, Alltagsbegleiter App, Pflegeapp Vergleich',
   alternates: { canonical: 'https://alltagsengel.care/blog/pflege-app-vergleich' },
   openGraph: {
@@ -21,11 +22,11 @@ const articleJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'Article',
   headline: 'Pflege-App Vergleich 2026: Die besten Apps für Pflegebedürftige',
-  description: 'Welche Pflege-Apps gibt es? Vergleich der besten Angebote 2026 für Seniorenhilfe, Alltagsbegleitung und Pflegeleistungen. AlltagsEngel im Fokus.',
+  description: 'Welche Pflege-Apps gibt es? Vergleich der besten Angebote 2026 für Seniorenhilfe und Alltagsbegleitung. Jetzt informieren und passende Hilfe finden.',
   author: { '@type': 'Organization', name: 'Alltagsengel', url: 'https://alltagsengel.care' },
   publisher: { '@type': 'Organization', name: 'Alltagsengel', url: 'https://alltagsengel.care', logo: { '@type': 'ImageObject', url: 'https://alltagsengel.care/icon-512x512.png' } },
-  datePublished: '2026-03-19',
-  dateModified: '2026-03-19',
+  datePublished: '2026-03-28',
+  dateModified: '2026-03-28',
   mainEntityOfPage: 'https://alltagsengel.care/blog/pflege-app-vergleich',
   image: 'https://alltagsengel.care/og-image.png',
   inLanguage: 'de-DE',
@@ -34,7 +35,7 @@ const articleJsonLd = {
 export default function PflegeAppVergleichPage() {
   return (
     <main className="blog-container">
-      <BreadcrumbSchema items={[{ name: 'Ratgeber', url: '/blog' }, { name: 'Pflege-App Vergleich 2026: Die besten Apps für Pflegebedür' }]} />
+      <BreadcrumbSchema items={[{ name: 'Ratgeber', url: '/blog' }, { name: 'Pflege-App Vergleich' }]} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }} />
       <article className="blog-article">
         <header className="blog-header">
@@ -47,7 +48,7 @@ export default function PflegeAppVergleichPage() {
 
         <div className="blog-intro">
           <p>
-            Die digitale Pflege revolutioniert die Betreuung von Senioren. Apps vermitteln Alltagsbegleiter, organisieren Pflegeleistungen und verbinden Familien. Aber welche App passt zu Ihnen? Wir vergleichen die besten Pflege-Apps 2026 und zeigen, warum AlltagsEngel die beste Wahl ist.
+            Die digitale Pflege revolutioniert die Betreuung von Senioren. Apps vermitteln Alltagsbegleiter, organisieren Pflegeleistungen und verbinden Familien. Aber welche App passt zu Ihnen? Wir vergleichen die besten Pflege-Apps 2026 und zeigen, warum Alltagsengel die beste Wahl ist.
           </p>
         </div>
 
@@ -66,12 +67,12 @@ export default function PflegeAppVergleichPage() {
 
           <h2>Die besten Pflege-Apps 2026</h2>
 
-          <h3>1. AlltagsEngel</h3>
+          <h3>1. Alltagsengel</h3>
           <p>
             <strong>Fokus:</strong> Alltagsbegleitung, Einkaufshilfe, Arztbegleitung
           </p>
           <p>
-            <strong>Was macht AlltagsEngel besonders:</strong>
+            <strong>Was macht Alltagsengel besonders:</strong>
           </p>
           <ul>
             <li>Spezialisiert auf niedrigschwellige Alltagshilfen – nicht nur medizinische Pflege</li>
@@ -142,7 +143,7 @@ export default function PflegeAppVergleichPage() {
             </thead>
             <tbody>
               <tr>
-                <td><strong>AlltagsEngel</strong></td>
+                <td><strong>Alltagsengel</strong></td>
                 <td>★★★★★</td>
                 <td>★★☆☆☆</td>
                 <td>★★☆☆☆</td>
@@ -181,12 +182,12 @@ export default function PflegeAppVergleichPage() {
           <p>
             <strong>Sie brauchen Alltagshilfe, Einkaufen, Arztbegleitung?</strong>
             <br />
-            ➜ AlltagsEngel ist die beste Wahl. Spezialisiert, günstig, kassenabrechenbar.
+            ➜ Alltagsengel ist die beste Wahl. Spezialisiert, günstig, kassenabrechenbar.
           </p>
           <p>
             <strong>Sie brauchen intensive medizinische Pflege 24 Stunden?</strong>
             <br />
-            ➜ Pflegix oder ein klassischer Pflegedienst. AlltagsEngel ist hier zu grundlegend.
+            ➜ Pflegix oder ein klassischer Pflegedienst. Alltagsengel ist hier zu grundlegend.
           </p>
           <p>
             <strong>Sie sind TK-Versichert und mögen Einfachheit?</strong>
@@ -208,9 +209,9 @@ export default function PflegeAppVergleichPage() {
             <li><strong>Kundenservice testen:</strong> Rufen Sie an, bevor Sie sich anmelden. Ein guter Service ist wichtig!</li>
           </ul>
 
-          <h2>AlltagsEngel: Die beste Wahl für Alltagshilfen</h2>
+          <h2>Alltagsengel: Die beste Wahl für Alltagshilfen</h2>
           <p>
-            AlltagsEngel unterscheidet sich von anderen Apps durch seinen Fokus auf echte Alltagshilfe – nicht komplexe Medizin, sondern unterstützende Präsenz. Das macht es zur perfekten Lösung für:
+            Alltagsengel unterscheidet sich von anderen Apps durch seinen Fokus auf echte Alltagshilfe – nicht komplexe Medizin, sondern unterstützende Präsenz. Das macht es zur perfekten Lösung für:
           </p>
           <ul>
             <li>Senioren, die noch relativ mobil sind</li>
@@ -221,15 +222,16 @@ export default function PflegeAppVergleichPage() {
 
           <h2>Fazit</h2>
           <p>
-            Für <strong>Alltagshilfen, Einkaufen und Begleitung</strong> ist AlltagsEngel 2026 die beste Wahl. Die App ist spezialisiert, kassenabrechenbar, fair bezahlt und hat ein starkes Qualitätskontroll-System.
+            Für <strong>Alltagshilfen, Einkaufen und Begleitung</strong> ist Alltagsengel 2026 die beste Wahl. Die App ist spezialisiert, kassenabrechenbar, fair bezahlt und hat ein starkes Qualitätskontroll-System.
           </p>
 
           <div className="blog-cta">
-            <h3>Jetzt AlltagsEngel testen</h3>
+            <h3>Jetzt Alltagsengel testen</h3>
             <p>Registrieren Sie sich kostenlos und finden Sie sofort Unterstützung in Ihrer Region.</p>
-            <Link href="/choose" className="btn-gold">Kostenlos registrieren</Link>
+            <Link href="/termin" className="btn-gold">Kostenlos registrieren</Link>
           </div>
         </div>
+        <RelatedPosts slug="pflege-app-vergleich" />
       </article>
     </main>
   );

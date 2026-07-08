@@ -10,8 +10,8 @@ import { usePathname } from 'next/navigation'
 // Wird NICHT in der nativen App (Capacitor) angezeigt.
 // ═══════════════════════════════════════════════════════════
 
-const WHATSAPP_NUMBER = '491783382825' // AlltagsEngel Nummer
-const DEFAULT_MESSAGE = 'Hallo! Ich interessiere mich für AlltagsEngel und hätte gerne mehr Informationen.'
+const WHATSAPP_NUMBER = '491783382825' // Alltagsengel Nummer
+const DEFAULT_MESSAGE = 'Hallo! Ich interessiere mich für Alltagsengel und hätte gerne mehr Informationen.'
 
 export default function WhatsAppButton() {
   const pathname = usePathname()
@@ -19,11 +19,11 @@ export default function WhatsAppButton() {
   const [showTooltip, setShowTooltip] = useState(false)
   const [modalOpen, setModalOpen] = useState(false)
 
-  // Seiten mit fixer Sticky-CTA-Bar am unteren Rand (Landing, Jobs, Karriere,
-  // Engel-werden) → Button MUSS über die Bar, sonst verdeckt er auf Mobile die
+  // Seiten mit fixer Sticky-CTA-Bar am unteren Rand (Landing, Jobs, Engel-werden)
+  // → Button MUSS über die Bar, sonst verdeckt er auf Mobile die
   // rechte Kante des Haupt-CTAs (zIndex 9998 > 999). Hat Vorrang vor Bottom-Nav
   // ('/engel-werden' würde sonst in den startsWith('/engel')-Zweig fallen).
-  const hasStickyBar = pathname === '/' || ['/jobs', '/karriere', '/engel-werden'].includes(pathname || '')
+  const hasStickyBar = pathname === '/' || ['/jobs', '/engel-werden'].includes(pathname || '')
 
   // Seiten mit Bottom-Nav → Button hoeher positionieren, damit er den Profil-Tab nicht verdeckt
   const hasBottomNav = !hasStickyBar && (

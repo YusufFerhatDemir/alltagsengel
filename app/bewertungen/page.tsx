@@ -4,8 +4,8 @@ import GoogleReviews from '@/components/GoogleReviews'
 import BreadcrumbSchema from '@/components/BreadcrumbSchema'
 
 export const metadata: Metadata = {
-  title: 'Bewertungen & Erfahrungen — Das sagen Familien über uns',
-  description: 'Google-Bewertungen und Erfahrungen mit Alltagsengel: Alltagsbegleitung nach §45b SGB XI in Frankfurt am Main und Umgebung. Transparent, geprüft, ohne Eigenanteil über den Entlastungsbetrag (131 €/Monat).',
+  title: 'Bewertungen & Erfahrungen — Familien berichten',
+  description: 'Echte Google-Bewertungen zu Alltagsengel: Alltagsbegleitung nach §45b SGB XI in Frankfurt & Rhein-Main, 0 € Eigenanteil möglich. Überzeugen Sie sich selbst!',
   keywords: ['Alltagsengel Bewertungen', 'Alltagsengel Erfahrungen', 'Alltagsbegleitung Frankfurt Bewertung', 'Betreuungsdienst Frankfurt Erfahrungen'],
   openGraph: {
     images: [{ url: '/og-image.png', width: 1200, height: 630 }],

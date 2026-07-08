@@ -4,8 +4,8 @@ import BreadcrumbSchema from '@/components/BreadcrumbSchema'
 
 export const metadata: Metadata = {
   alternates: { canonical: 'https://alltagsengel.care/faq' },
-  title: 'Häufige Fragen (FAQ) zu Alltagsbegleitung, Entlastungsbetrag & Pflegegrad — AlltagsEngel',
-  description: 'Antworten auf häufige Fragen: Was ist der Entlastungsbetrag (131€/Monat)? Wer bekommt Pflegehilfsmittel (42€/Monat)? Wie beantrage ich einen Pflegegrad? Alltagsbegleitung nach §45b SGB XI erklärt.',
+  title: 'FAQ: Entlastungsbetrag, Pflegegrad & Alltagsbegleitung',
+  description: 'Antworten auf häufige Fragen zu Entlastungsbetrag (131 €/Monat), Pflegehilfsmitteln (42 €/Monat), Pflegegrad und Alltagsbegleitung. Jetzt informieren!',
   keywords: [
     'FAQ Alltagsbegleitung',
     'Entlastungsbetrag §45b',
@@ -23,7 +23,7 @@ export const metadata: Metadata = {
   ],
   openGraph: {
     images: [{ url: '/og-image.png', width: 1200, height: 630 }],
-    title: 'FAQ — Alltagsbegleitung, Entlastungsbetrag & Pflegegrad | AlltagsEngel',
+    title: 'FAQ — Alltagsbegleitung, Entlastungsbetrag & Pflegegrad | Alltagsengel',
     description: 'Alle Antworten rund um Entlastungsbetrag (131€/Monat), Pflegehilfsmittel (42€/Monat), Pflegegrad und Alltagsbegleitung.',
     url: 'https://alltagsengel.care/faq',
     siteName: 'Alltagsengel',
@@ -116,8 +116,8 @@ const faqs: FAQItem[] = [
   },
   {
     category: 'Pflegegrad',
-    question: 'Brauche ich einen Pflegegrad, um AlltagsEngel zu nutzen?',
-    answer: 'Nein. AlltagsEngel kann auch ohne Pflegegrad genutzt werden — dann als Selbstzahler zum regulären Stundensatz von 32 €. Mit anerkanntem Pflegegrad übernimmt die Pflegekasse die Kosten jedoch über den Entlastungsbetrag (131 €/Monat), sodass für Sie keine Kosten entstehen.',
+    question: 'Brauche ich einen Pflegegrad, um Alltagsengel zu nutzen?',
+    answer: 'Nein. Alltagsengel kann auch ohne Pflegegrad genutzt werden — dann als Selbstzahler zum regulären Stundensatz von 32 €. Mit anerkanntem Pflegegrad übernimmt die Pflegekasse die Kosten jedoch über den Entlastungsbetrag (131 €/Monat), sodass für Sie keine Kosten entstehen.',
   },
 
   // ──── Alltagsbegleitung ────
@@ -128,23 +128,23 @@ const faqs: FAQItem[] = [
   },
   {
     category: 'Alltagsbegleitung',
-    question: 'Was kostet Alltagsbegleitung bei AlltagsEngel?',
-    answer: 'Für Personen mit Pflegegrad ist Alltagsbegleitung über AlltagsEngel ohne eigene Zuzahlung möglich. Die Kosten werden direkt über den Entlastungsbetrag (§ 45b, 131 €/Monat) mit der Pflegekasse abgerechnet. Der reguläre Stundensatz beträgt ab 32 €. Selbstzahler ohne Pflegegrad zahlen den Stundensatz privat.',
+    question: 'Was kostet Alltagsbegleitung bei Alltagsengel?',
+    answer: 'Für Personen mit Pflegegrad ist Alltagsbegleitung über Alltagsengel ohne eigene Zuzahlung möglich. Die Kosten werden direkt über den Entlastungsbetrag (§ 45b, 131 €/Monat) mit der Pflegekasse abgerechnet. Der reguläre Stundensatz beträgt ab 32 €. Selbstzahler ohne Pflegegrad zahlen den Stundensatz privat.',
   },
   {
     category: 'Alltagsbegleitung',
-    question: 'Was ist AlltagsEngel?',
-    answer: 'AlltagsEngel ist eine Plattform, die Senioren und Pflegebedürftige mit zertifizierten Alltagsbegleitern in ihrer Nähe verbindet. Wir bieten Einkaufsbegleitung, Arztbesuche, Haushaltshilfe, Gesellschaft und vieles mehr — finanziert über den Entlastungsbetrag der Pflegekasse. Aktuell sind wir in Frankfurt am Main und dem gesamten Rhein-Main-Gebiet verfügbar.',
+    question: 'Was ist Alltagsengel?',
+    answer: 'Alltagsengel ist eine Plattform, die Senioren und Pflegebedürftige mit zertifizierten Alltagsbegleitern in ihrer Nähe verbindet. Wir bieten Einkaufsbegleitung, Arztbesuche, Haushaltshilfe, Gesellschaft und vieles mehr — finanziert über den Entlastungsbetrag der Pflegekasse. Aktuell sind wir in Frankfurt am Main und dem gesamten Rhein-Main-Gebiet verfügbar.',
   },
   {
     category: 'Alltagsbegleitung',
-    question: 'Welche Leistungen bietet AlltagsEngel an?',
+    question: 'Welche Leistungen bietet Alltagsengel an?',
     answer: 'Unsere Alltagsbegleitung umfasst: Einkaufsbegleitung und Besorgungen, Arztbegleitung und Apothekenbesuche, Haushaltshilfe (Kochen, Putzen, Wäsche), Spaziergänge und Freizeitgestaltung, Behördengänge und Postservice, psychosoziale Betreuung und Gespräche, Gedächtnistraining und geistige Aktivierung, Unterstützung bei der Tagesstrukturierung sowie Antragshilfen bei Pflegekasse und Behörden.',
   },
   {
     category: 'Alltagsbegleitung',
-    question: 'In welchen Regionen ist AlltagsEngel verfügbar?',
-    answer: 'AlltagsEngel ist aktuell in Frankfurt am Main und dem gesamten Rhein-Main-Gebiet verfügbar, darunter Offenbach, Wiesbaden, Darmstadt, Hanau, Bad Homburg, Mainz und Aschaffenburg. Wir expandieren kontinuierlich in weitere Regionen in Deutschland.',
+    question: 'In welchen Regionen ist Alltagsengel verfügbar?',
+    answer: 'Alltagsengel ist aktuell in Frankfurt am Main und dem gesamten Rhein-Main-Gebiet verfügbar, darunter Offenbach, Wiesbaden, Darmstadt, Hanau, Bad Homburg, Mainz und Aschaffenburg. Wir expandieren kontinuierlich in weitere Regionen in Deutschland.',
   },
   {
     category: 'Alltagsbegleitung',
@@ -177,8 +177,8 @@ const faqs: FAQItem[] = [
   // ──── Kosten & Abrechnung ────
   {
     category: 'Kosten & Abrechnung',
-    question: 'Was kostet AlltagsEngel?',
-    answer: 'Für Personen mit Pflegegrad ist AlltagsEngel in der Regel komplett kostenlos. Die Abrechnung erfolgt direkt über den Entlastungsbetrag (§ 45b SGB XI) — 131 € pro Monat von der Pflegekasse. Sie zahlen keinen Cent aus eigener Tasche. Selbstzahler ohne Pflegegrad zahlen den regulären Stundensatz ab 32 €.',
+    question: 'Was kostet Alltagsengel?',
+    answer: 'Für Personen mit Pflegegrad ist Alltagsengel in der Regel komplett kostenlos. Die Abrechnung erfolgt direkt über den Entlastungsbetrag (§ 45b SGB XI) — 131 € pro Monat von der Pflegekasse. Sie zahlen keinen Cent aus eigener Tasche. Selbstzahler ohne Pflegegrad zahlen den regulären Stundensatz ab 32 €.',
   },
   {
     category: 'Kosten & Abrechnung',
@@ -189,13 +189,13 @@ const faqs: FAQItem[] = [
   // ──── Für Alltagsbegleiter ────
   {
     category: 'Für Alltagsbegleiter (Engel)',
-    question: 'Wie werde ich Alltagsbegleiter bei AlltagsEngel?',
+    question: 'Wie werde ich Alltagsbegleiter bei Alltagsengel?',
     answer: 'Registrieren Sie sich als Engel in der App und laden Sie Ihre Qualifikationsnachweise hoch: Zertifikat nach § 45a SGB XI (mindestens 40 Stunden Qualifikation) und ein erweitertes Führungszeugnis. Nach der Prüfung werden Sie freigeschaltet und können Anfragen in Ihrer Region annehmen.',
   },
   {
     category: 'Für Alltagsbegleiter (Engel)',
     question: 'Welche Qualifikation brauche ich als Alltagsbegleiter?',
-    answer: 'Sie benötigen eine Qualifikation nach § 45a SGB XI (Alltagsbegleiter-Kurs mit mindestens 40 Stunden Schulung). Zusätzlich benötigen wir ein aktuelles erweitertes Führungszeugnis und einen Nachweis über eine Haftpflichtversicherung. Bei AlltagsEngel sind Sie automatisch über unsere Plattform versichert.',
+    answer: 'Sie benötigen eine Qualifikation nach § 45a SGB XI (Alltagsbegleiter-Kurs mit mindestens 40 Stunden Schulung). Zusätzlich benötigen wir ein aktuelles erweitertes Führungszeugnis und einen Nachweis über eine Haftpflichtversicherung. Bei Alltagsengel sind Sie automatisch über unsere Plattform versichert.',
   },
   {
     category: 'Für Alltagsbegleiter (Engel)',
@@ -211,8 +211,8 @@ const faqs: FAQItem[] = [
   },
   {
     category: 'Sicherheit & Datenschutz',
-    question: 'Wie schützt AlltagsEngel meine Daten?',
-    answer: 'AlltagsEngel arbeitet vollständig DSGVO-konform. Alle Daten werden verschlüsselt gespeichert und in EU-Rechenzentren gehostet. Wir nutzen Ihre Daten ausschließlich für die Serviceerbringung und verkaufen keine Daten an Dritte.',
+    question: 'Wie schützt Alltagsengel meine Daten?',
+    answer: 'Alltagsengel arbeitet vollständig DSGVO-konform. Alle Daten werden verschlüsselt gespeichert und in EU-Rechenzentren gehostet. Wir nutzen Ihre Daten ausschließlich für die Serviceerbringung und verkaufen keine Daten an Dritte.',
   },
 ]
 
@@ -265,8 +265,8 @@ export default function FAQPage() {
         margin: '0 auto',
       }}>
         <Link href="/" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 10, marginBottom: 32 }}>
-          <img src="/icon-192x192.png" alt="AlltagsEngel" width={40} height={40} style={{ borderRadius: 10 }} />
-          <span style={{ color: '#C9963C', fontWeight: 700, fontSize: 16 }}>AlltagsEngel</span>
+          <img src="/icon-192x192.png" alt="Alltagsengel" width={40} height={40} style={{ borderRadius: 10 }} />
+          <span style={{ color: '#C9963C', fontWeight: 700, fontSize: 16 }}>Alltagsengel</span>
         </Link>
         <h1 style={{
           fontSize: 'clamp(28px, 5vw, 38px)',

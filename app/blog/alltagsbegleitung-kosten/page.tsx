@@ -1,10 +1,11 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import BreadcrumbSchema from '@/components/BreadcrumbSchema'
+import RelatedPosts from '@/components/RelatedPosts'
 
 export const metadata: Metadata = {
-  title: 'Was kostet Alltagsbegleitung? Kosten, Finanzierung & Tipps 2026',
-  description: 'Was kostet Alltagsbegleitung? Stundensätze von 25–45€, Finanzierung über den Entlastungsbetrag (131€/Monat) und praktische Tipps zur Kostenübernahme durch die Pflegekasse.',
+  title: 'Was kostet Alltagsbegleitung? Preise 2026',
+  description: 'Was kostet Alltagsbegleitung? Stundensätze von 25–45€, Finanzierung über den Entlastungsbetrag (131€/Monat) und Tipps zur Kostenübernahme. Jetzt informieren!',
   keywords: ['Alltagsbegleitung Kosten', 'was kostet Alltagsbegleitung', 'Alltagsbegleitung Preise', 'Alltagsbegleiter Stundensatz', 'Entlastungsbetrag Kosten'],
   alternates: { canonical: 'https://alltagsengel.care/blog/alltagsbegleitung-kosten' },
   openGraph: {
@@ -20,8 +21,8 @@ export const metadata: Metadata = {
 const articleJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'Article',
-  headline: 'Was kostet Alltagsbegleitung? Kosten, Finanzierung & Tipps 2026',
-  description: 'Was kostet Alltagsbegleitung? Stundensätze von 25–45€, Finanzierung über den Entlastungsbetrag (131€/Monat) und praktische Tipps zur Kostenübernahme durch die P',
+  headline: 'Was kostet Alltagsbegleitung? Kosten, Finanzierung & Tipps',
+  description: 'Was kostet Alltagsbegleitung? Stundensätze von 25–45€, Finanzierung über den Entlastungsbetrag (131€/Monat) und Tipps zur Kostenübernahme. Jetzt informieren!',
   author: { '@type': 'Organization', name: 'Alltagsengel', url: 'https://alltagsengel.care' },
   publisher: { '@type': 'Organization', name: 'Alltagsengel', url: 'https://alltagsengel.care', logo: { '@type': 'ImageObject', url: 'https://alltagsengel.care/icon-512x512.png' } },
   datePublished: '2026-06-06',
@@ -34,7 +35,7 @@ const articleJsonLd = {
 export default function AlltagsbegleitungKostenPage() {
   return (
     <main className="blog-container">
-      <BreadcrumbSchema items={[{ name: 'Ratgeber', url: '/blog' }, { name: 'Was kostet Alltagsbegleitung? Kosten, Finanzierung & Tipps 2' }]} />
+      <BreadcrumbSchema items={[{ name: 'Ratgeber', url: '/blog' }, { name: 'Alltagsbegleitung Kosten' }]} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }} />
       <article className="blog-article">
         <header className="blog-header">
@@ -287,6 +288,8 @@ export default function AlltagsbegleitungKostenPage() {
             </p>
           </div>
         </div>
+
+        <RelatedPosts slug="alltagsbegleitung-kosten" />
 
         <footer className="blog-footer">
           <Link href="/blog" className="blog-back">← Zurück zum Ratgeber</Link>

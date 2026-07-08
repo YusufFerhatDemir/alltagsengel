@@ -5,20 +5,17 @@ import EngelBewerbungForm from '@/components/EngelBewerbungForm'
 import BreadcrumbSchema from '@/components/BreadcrumbSchema'
 
 export const metadata: Metadata = {
-  title: 'Werde Alltagsengel — Flexibler Nebenjob mit Sinn | 20€/Stunde',
+  title: 'Werde Alltagsengel — Flexibler Nebenjob mit Sinn',
   description: 'Werde Alltagsengel in Frankfurt & Rhein-Main: 20€/Stunde, flexible Zeiteinteilung, sinnvolle Arbeit mit Senioren. Keine Pflegeausbildung nötig. Jetzt bewerben!',
+  // Keyword-Fokus: flexibler Nebenjob/Minijob — Festanstellungs-Keywords gehören auf /jobs
   keywords: [
     'nebenjob pflege frankfurt',
     'alltagsbegleiter werden',
-    'seniorenbetreuung job',
     'nebenjob senioren',
-    'alltagsbegleiter job frankfurt',
     'minijob pflege',
     'nebenjob mit sinn',
     '20 euro stunde nebenjob',
-    'alltagsbegleitung job',
-    'haushaltshilfe job frankfurt',
-    'job seniorenbetreuung',
+    'nebenjob seniorenbetreuung',
     'flexible arbeit pflege',
   ],
   openGraph: {
@@ -84,7 +81,9 @@ const FAQS = [
 // HINWEIS: Das JobPosting-JSON-LD wurde entfernt — dieselbe Stelle ist bereits
 // auf /jobs (app/jobs/page.tsx) ausgezeichnet. Google-Jobs-Richtlinie verbietet
 // mehrfache Postings derselben Stelle unter verschiedenen URLs; /jobs ist die
-// kanonische Job-Seite. Gleiches Vorgehen wie auf /karriere. FAQ-Schema bleibt.
+// kanonische Job-Seite. (/karriere wurde gelöscht und leitet per 301 hierher.)
+// FAQ-Schema bleibt — mainEntity speist sich aus demselben FAQS-Array wie die
+// sichtbare FAQ-Sektion unten.
 
 const jsonLdFAQ = {
   '@context': 'https://schema.org',

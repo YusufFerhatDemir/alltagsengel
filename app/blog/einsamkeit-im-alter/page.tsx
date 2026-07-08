@@ -1,10 +1,11 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import BreadcrumbSchema from '@/components/BreadcrumbSchema'
+import RelatedPosts from '@/components/RelatedPosts'
 
 export const metadata: Metadata = {
-  title: 'Einsamkeit im Alter: So helfen Alltagsbegleiter gegen Isolation',
-  description: 'Einsamkeit im Alter ist ein wachsendes Problem mit ernsten Folgen. Erfahren Sie, wie professionelle Alltagsbegleiter helfen und was wissenschaftliche Studien zeigen.',
+  title: 'Einsamkeit im Alter: So helfen Alltagsbegleiter',
+  description: 'Einsamkeit im Alter schadet der Gesundheit wie Rauchen. Erfahren Sie, wie Alltagsbegleiter helfen – über §45b oft ohne Zusatzkosten. Jetzt informieren.',
   keywords: 'Einsamkeit im Alter, Isolation, Seniorenhilfe, Alltagsbegleiter, Seniorenbetreuung',
   alternates: { canonical: 'https://alltagsengel.care/blog/einsamkeit-im-alter' },
   openGraph: {
@@ -21,11 +22,11 @@ const articleJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'Article',
   headline: 'Einsamkeit im Alter: So helfen Alltagsbegleiter gegen Isolation',
-  description: 'Einsamkeit im Alter ist ein wachsendes Problem mit ernsten Folgen. Erfahren Sie, wie professionelle Alltagsbegleiter helfen und was wissenschaftliche Studien ze',
+  description: 'Einsamkeit im Alter schadet der Gesundheit wie Rauchen. Erfahren Sie, wie Alltagsbegleiter helfen – über §45b oft ohne Zusatzkosten. Jetzt informieren.',
   author: { '@type': 'Organization', name: 'Alltagsengel', url: 'https://alltagsengel.care' },
   publisher: { '@type': 'Organization', name: 'Alltagsengel', url: 'https://alltagsengel.care', logo: { '@type': 'ImageObject', url: 'https://alltagsengel.care/icon-512x512.png' } },
-  datePublished: '2026-03-19',
-  dateModified: '2026-03-19',
+  datePublished: '2026-04-01',
+  dateModified: '2026-04-01',
   mainEntityOfPage: 'https://alltagsengel.care/blog/einsamkeit-im-alter',
   image: 'https://alltagsengel.care/og-image.png',
   inLanguage: 'de-DE',
@@ -34,7 +35,7 @@ const articleJsonLd = {
 export default function EinsamkeitImAlterPage() {
   return (
     <main className="blog-container">
-      <BreadcrumbSchema items={[{ name: 'Ratgeber', url: '/blog' }, { name: 'Einsamkeit im Alter: So helfen Alltagsbegleiter gegen Isolat' }]} />
+      <BreadcrumbSchema items={[{ name: 'Ratgeber', url: '/blog' }, { name: 'Einsamkeit im Alter' }]} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }} />
       <article className="blog-article">
         <header className="blog-header">
@@ -197,9 +198,9 @@ export default function EinsamkeitImAlterPage() {
           </p>
 
           <div className="blog-cta">
-            <h3>Jetzt AlltagsEngel testen</h3>
+            <h3>Jetzt Alltagsengel testen</h3>
             <p>Registrieren Sie sich kostenlos und finden Sie sofort Unterstützung in Ihrer Region.</p>
-            <Link href="/choose" className="btn-gold">Kostenlos registrieren</Link>
+            <Link href="/termin" className="btn-gold">Kostenlos registrieren</Link>
           </div>
         </div>
       
@@ -211,6 +212,8 @@ export default function EinsamkeitImAlterPage() {
             <li><Link href="/blog/seniorenbetreuung-zu-hause" style={{ color: '#F5F0E8', textDecoration: 'underline', textUnderlineOffset: 3, fontSize: 14 }}>Seniorenbetreuung zu Hause</Link></li>
           </ul>
         </section>
+
+        <RelatedPosts slug="einsamkeit-im-alter" />
       </article>
     </main>
   );

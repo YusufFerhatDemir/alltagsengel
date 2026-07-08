@@ -45,7 +45,7 @@ export default function CallbackWidget() {
   // Seiten mit Sticky-CTA-Bar am unteren Rand → Button über die Bar heben.
   // 218px = WhatsApp-Button (150px) + 56px Kreis + 12px Luft — gleicher Abstand
   // wie das Paar auf Seiten ohne Sticky-Bar (24/92) hat.
-  const hasStickyBar = pathname === '/' || ['/jobs', '/karriere', '/engel-werden'].includes(pathname || '')
+  const hasStickyBar = pathname === '/' || ['/jobs', '/engel-werden'].includes(pathname || '')
   const buttonBottom = hasStickyBar
     ? 'calc(218px + env(safe-area-inset-bottom))'
     : 'calc(92px + env(safe-area-inset-bottom))'

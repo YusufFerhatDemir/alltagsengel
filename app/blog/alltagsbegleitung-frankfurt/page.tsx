@@ -1,9 +1,10 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import BreadcrumbSchema from '@/components/BreadcrumbSchema'
+import RelatedPosts from '@/components/RelatedPosts'
 
 export const metadata: Metadata = {
-  title: 'Alltagsbegleitung in Frankfurt — Zertifizierte Alltagsbegleiter finden',
+  title: 'Alltagsbegleitung Frankfurt: Begleiter finden',
   description: 'Finden Sie zertifizierte Alltagsbegleiter in Frankfurt. §45a qualifiziert, versichert & abrechenbar über §45b. Schnell, diskret, professionell.',
   keywords: ['Alltagsbegleitung Frankfurt', 'Alltagsbegleiter', 'Seniorenbetreuung Frankfurt', 'Pflege Frankfurt', 'Altenbetreuung', '§45a'],
   alternates: { canonical: 'https://alltagsengel.care/blog/alltagsbegleitung-frankfurt' },
@@ -72,7 +73,7 @@ export default function AlltagsbegleitungFrankfurtPage() {
             Alle erfüllen die strengen Anforderungen nach <strong>§45a SGB XI</strong>:
           </p>
           <ul className="blog-list">
-            <li>✓ Mindestens 40 Stunden Schulungsschulung</li>
+            <li>✓ Mindestens 40 Stunden Schulung</li>
             <li>✓ Polizeiliches Führungszeugnis ohne Einträge</li>
             <li>✓ Erste-Hilfe-Kurs</li>
             <li>✓ Grundkenntnisse in Pflege und Betreuung</li>
@@ -140,8 +141,8 @@ export default function AlltagsbegleitungFrankfurtPage() {
           </p>
           <p>
             <strong>Was ist wenn ich mit einem Begleiter nicht zufrieden bin?</strong><br />
-            Sie können jederzeit einen anderen Engel wählen. Kundenzufriedenheit ist unser höchstes Gut — 
-            wir haben 4,9 Sterne Bewertung, weil unsere Engel echte Profis sind.
+            Sie können jederzeit einen anderen Engel wählen. Kundenzufriedenheit ist unser höchstes Gut —
+            unsere Engel sind geprüfte und zertifizierte Profis.
           </p>
           <p>
             <strong>Gibt es auch Begleiter für Menschen mit Demenz?</strong><br />
@@ -167,22 +168,16 @@ export default function AlltagsbegleitungFrankfurtPage() {
               Registrieren Sie sich kostenlos und entdecken Sie 150+ zertifizierte Begleiter in Ihrer Nähe. 
               Buchen Sie schnell, diskret und transparent.
             </p>
-            <Link href="https://alltagsengel.care/choose" className="cta-button">
+            <Link href="/termin" className="cta-button">
               Engel finden in Frankfurt →
             </Link>
           </div>
         </div>
 
+        <RelatedPosts slug="alltagsbegleitung-frankfurt" />
+
         <footer className="blog-footer">
           <Link href="/" className="blog-back">← Zurück zur Startseite</Link>
-          <div className="blog-share">
-            <p>Teilen Sie diesen Artikel:</p>
-            <div className="share-links">
-              <a href="#" className="share-btn">Facebook</a>
-              <a href="#" className="share-btn">Twitter</a>
-              <a href="#" className="share-btn">WhatsApp</a>
-            </div>
-          </div>
         </footer>
       
         <section className="blog-related" style={{ marginTop: 40, padding: '24px 20px', background: 'rgba(201,150,60,0.06)', borderRadius: 12, border: '1px solid rgba(201,150,60,0.15)' }}>

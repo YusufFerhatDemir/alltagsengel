@@ -3,9 +3,15 @@ import type { Metadata } from 'next'
 import BreadcrumbSchema from '@/components/BreadcrumbSchema'
 
 export const metadata: Metadata = {
-  title: 'AGB — Allgemeine Geschäftsbedingungen | Alltagsengel',
+  title: 'AGB — Allgemeine Geschäftsbedingungen',
   description: 'Allgemeine Geschäftsbedingungen der Alltagsengel UG (haftungsbeschränkt) für die Nutzung der Plattform alltagsengel.care.',
   alternates: { canonical: 'https://alltagsengel.care/agb' },
+  openGraph: {
+    images: [{ url: '/og-image.png', width: 1200, height: 630 }],
+    title: 'AGB — Alltagsengel',
+    description: 'Allgemeine Geschäftsbedingungen der Alltagsengel UG (haftungsbeschränkt).',
+    url: 'https://alltagsengel.care/agb',
+  },
 }
 
 export default function AGBPage() {

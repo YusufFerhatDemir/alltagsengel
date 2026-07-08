@@ -1,10 +1,12 @@
 import type { Metadata } from 'next'
+import { Fragment } from 'react'
 import Link from 'next/link'
 import BreadcrumbSchema from '@/components/BreadcrumbSchema'
+import RelatedPosts from '@/components/RelatedPosts'
 
 export const metadata: Metadata = {
-  title: 'Senioren & Hitze: 7 Tipps, wie Sie Ihre Angehörigen im Sommer schützen',
-  description: 'Hitze ist für ältere Menschen gefährlich. 7 konkrete Tipps gegen Dehydration und Hitzschlag — plus wie Alltagsbegleitung im Sommer entlastet. 131€/Monat über die Pflegekasse.',
+  title: 'Senioren & Hitze: 7 Tipps für den Sommer',
+  description: 'Hitze ist für Senioren gefährlich: 7 praktische Tipps gegen Dehydration und Hitzschlag. Plus: Alltagsbegleitung für 131 €/Monat über die Pflegekasse sichern.',
   keywords: ['Senioren Hitze', 'Senioren Hitze Tipps', 'Pflege im Sommer', 'Hitze ältere Menschen', 'Dehydration Senioren', 'Hitzschlag Vorbeugung', 'Alltagsbegleitung Sommer'],
   alternates: { canonical: 'https://alltagsengel.care/blog/senioren-hitze-sommer' },
   openGraph: {
@@ -20,7 +22,7 @@ const articleJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'Article',
   headline: 'Senioren & Hitze: 7 Tipps, wie Sie Ihre Angehörigen im Sommer schützen',
-  description: 'Hitze ist für ältere Menschen gefährlich. 7 konkrete Tipps gegen Dehydration und Hitzschlag — plus wie Alltagsbegleitung im Sommer entlastet.',
+  description: 'Hitze ist für Senioren gefährlich: 7 praktische Tipps gegen Dehydration und Hitzschlag. Plus: Alltagsbegleitung für 131 €/Monat über die Pflegekasse sichern.',
   author: { '@type': 'Organization', name: 'Alltagsengel', url: 'https://alltagsengel.care' },
   publisher: { '@type': 'Organization', name: 'Alltagsengel', url: 'https://alltagsengel.care', logo: { '@type': 'ImageObject', url: 'https://alltagsengel.care/icon-512x512.png' } },
   datePublished: '2026-07-02',
@@ -30,41 +32,36 @@ const articleJsonLd = {
   inLanguage: 'de-DE',
 }
 
+// Ein Array für sichtbare FAQ-Sektion UND FAQPage-JSON-LD (Google-Richtlinie: kein unsichtbares FAQ-Markup)
+const faqs = [
+  {
+    q: 'Wie viel sollten Senioren bei Hitze trinken?',
+    a: 'Mindestens 1,5 Liter am Tag, bei großer Hitze eher 2 Liter — sofern keine ärztliche Trinkmengenbegrenzung (z. B. bei Herz- oder Nierenerkrankung) besteht. Da das Durstgefühl im Alter nachlässt, helfen feste Trinkzeiten und Getränke in Sichtweite.',
+  },
+  {
+    q: 'Welche Getränke sind bei Hitze am besten?',
+    a: 'Ideal sind Wasser, ungesüßte Kräuter- und Früchtetees sowie stark verdünnte Fruchtsaftschorlen. Auf Alkohol und stark gezuckerte Getränke sollte verzichtet werden, da sie dem Körper zusätzlich Flüssigkeit entziehen.',
+  },
+  {
+    q: 'Kann ich die Betreuung im Sommer über die Pflegekasse finanzieren?',
+    a: 'Ja. Der Entlastungsbetrag von 131 €/Monat steht ab Pflegegrad 1 nach §45b SGB XI zur Verfügung und kann für Alltagsbegleitung genutzt werden. Nicht genutzte Beträge verfallen erst am 30. Juni des Folgejahres — der Sommer ist also ein guter Zeitpunkt, das Budget sinnvoll einzusetzen.',
+  },
+]
+
 const faqJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'FAQPage',
-  mainEntity: [
-    {
-      '@type': 'Question',
-      name: 'Wie viel sollten Senioren bei Hitze trinken?',
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: 'Ältere Menschen sollten mindestens 1,5 Liter am Tag trinken, bei großer Hitze eher 2 Liter — sofern keine ärztliche Trinkmengenbegrenzung (z. B. bei Herz- oder Nierenerkrankung) besteht. Da das Durstgefühl im Alter nachlässt, hilft es, Getränke in Sichtweite zu stellen und feste Trinkzeiten einzuplanen.',
-      },
-    },
-    {
-      '@type': 'Question',
-      name: 'Woran erkenne ich einen Hitzschlag bei älteren Menschen?',
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: 'Warnzeichen sind hohe Körpertemperatur, heiße trockene Haut, Verwirrtheit, Kopfschmerzen, Schwindel, Übelkeit und ein schneller Puls. Bei diesen Symptomen sofort für Kühlung sorgen, Flüssigkeit geben und im Zweifel den Notruf 112 wählen.',
-      },
-    },
-    {
-      '@type': 'Question',
-      name: 'Kann Alltagsbegleitung im Sommer über die Pflegekasse bezahlt werden?',
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: 'Ja. Ab Pflegegrad 1 stehen 131 € monatlich als Entlastungsbetrag nach §45b SGB XI zur Verfügung. Damit lässt sich Alltagsbegleitung finanzieren — auch für regelmäßige Besuche, die im Sommer besonders wichtig sind. Die Abrechnung übernimmt Alltagsengel direkt mit der Pflegekasse.',
-      },
-    },
-  ],
+  mainEntity: faqs.map((f) => ({
+    '@type': 'Question',
+    name: f.q,
+    acceptedAnswer: { '@type': 'Answer', text: f.a },
+  })),
 }
 
 export default function SeniorenHitzeSommerPage() {
   return (
     <main className="blog-container">
-      <BreadcrumbSchema items={[{ name: 'Ratgeber', url: '/blog' }, { name: 'Senioren & Hitze: 7 Tipps für den Sommer' }]} />
+      <BreadcrumbSchema items={[{ name: 'Ratgeber', url: '/blog' }, { name: 'Senioren & Hitze' }]} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
       <article className="blog-article">
@@ -184,26 +181,12 @@ export default function SeniorenHitzeSommerPage() {
 
           <h2>Häufige Fragen zu Senioren und Hitze</h2>
 
-          <h3>Wie viel sollten Senioren bei Hitze trinken?</h3>
-          <p>
-            Mindestens 1,5 Liter am Tag, bei großer Hitze eher 2 Liter — sofern keine ärztliche
-            Trinkmengenbegrenzung besteht. Feste Trinkzeiten und Getränke in Sichtweite helfen, weil das
-            Durstgefühl im Alter nachlässt.
-          </p>
-
-          <h3>Welche Getränke sind bei Hitze am besten?</h3>
-          <p>
-            Ideal sind Wasser, ungesüßte Kräuter- und Früchtetees sowie stark verdünnte Fruchtsaftschorlen.
-            Auf Alkohol und stark gezuckerte Getränke sollte verzichtet werden, da sie dem Körper zusätzlich
-            Flüssigkeit entziehen.
-          </p>
-
-          <h3>Kann ich die Betreuung im Sommer über die Pflegekasse finanzieren?</h3>
-          <p>
-            Ja. Der Entlastungsbetrag von 131 €/Monat steht ab Pflegegrad 1 zur Verfügung und kann für
-            Alltagsbegleitung genutzt werden. Nicht genutzte Beträge verfallen erst am 30. Juni des Folgejahres —
-            der Sommer ist also ein guter Zeitpunkt, das Budget sinnvoll einzusetzen.
-          </p>
+          {faqs.map((f) => (
+            <Fragment key={f.q}>
+              <h3>{f.q}</h3>
+              <p>{f.a}</p>
+            </Fragment>
+          ))}
 
           <div className="blog-cta">
             <h3>Jetzt Alltagsbegleitung für den Sommer sichern</h3>
@@ -222,6 +205,8 @@ export default function SeniorenHitzeSommerPage() {
             </p>
           </div>
         </div>
+
+        <RelatedPosts slug="senioren-hitze-sommer" />
 
         <footer className="blog-footer">
           <Link href="/blog" className="blog-back">← Zurück zum Ratgeber</Link>

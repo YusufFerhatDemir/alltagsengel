@@ -1,10 +1,11 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import BreadcrumbSchema from '@/components/BreadcrumbSchema'
+import RelatedPosts from '@/components/RelatedPosts'
 
 export const metadata: Metadata = {
-  title: 'Alltagshilfe für Senioren: Was ist möglich und wer zahlt?',
-  description: 'Umfassender Überblick über Alltagshilfe für ältere Menschen: Möglichkeiten, Kostenübernahme, Finanzierungsmöglichkeiten und AlltagsEngel als Lösung.',
+  title: 'Alltagshilfe für Senioren: Wer zahlt?',
+  description: 'Alltagshilfe für Senioren: Welche Hilfen es gibt, was sie kosten und wie Pflegekasse & Entlastungsbetrag (131 €/Monat) zahlen. Jetzt informieren!',
   keywords: 'Alltagshilfe, Seniorenhilfe, Hauswirtschaftshilfe, Kostenübernahme, Pflegekasse',
   alternates: { canonical: 'https://alltagsengel.care/blog/alltagshilfe-senioren' },
   openGraph: {
@@ -19,11 +20,11 @@ const articleJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'Article',
   headline: 'Alltagshilfe für Senioren: Was ist möglich und wer zahlt?',
-  description: 'Umfassender Überblick über Alltagshilfe für ältere Menschen: Möglichkeiten, Kostenübernahme, Finanzierungsmöglichkeiten und AlltagsEngel als Lösung.',
+  description: 'Alltagshilfe für Senioren: Welche Hilfen es gibt, was sie kosten und wie Pflegekasse & Entlastungsbetrag (131 €/Monat) zahlen. Jetzt informieren!',
   author: { '@type': 'Organization', name: 'Alltagsengel', url: 'https://alltagsengel.care' },
   publisher: { '@type': 'Organization', name: 'Alltagsengel', url: 'https://alltagsengel.care', logo: { '@type': 'ImageObject', url: 'https://alltagsengel.care/icon-512x512.png' } },
-  datePublished: '2026-03-19',
-  dateModified: '2026-03-19',
+  datePublished: '2026-04-01',
+  dateModified: '2026-04-01',
   mainEntityOfPage: 'https://alltagsengel.care/blog/alltagshilfe-senioren',
   image: 'https://alltagsengel.care/og-image.png',
   inLanguage: 'de-DE',
@@ -32,7 +33,7 @@ const articleJsonLd = {
 export default function AlltagshilfeSenioren() {
   return (
     <main className="blog-container">
-      <BreadcrumbSchema items={[{ name: 'Ratgeber', url: '/blog' }, { name: 'Alltagshilfe für Senioren: Was ist möglich und wer zahlt?' }]} />
+      <BreadcrumbSchema items={[{ name: 'Ratgeber', url: '/blog' }, { name: 'Alltagshilfe für Senioren' }]} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }} />
       <article className="blog-article">
         <div className="blog-header">
@@ -145,21 +146,21 @@ export default function AlltagshilfeSenioren() {
             <li><strong>Pflegedienste:</strong> Professionelle Anbieter mit umfassendem Leistungsspektrum (finden Sie über Pflegekasse)</li>
             <li><strong>Soziale Dienste:</strong> Organisationen wie Caritas, Diakonie, AWO bieten oft günstigere Dienste</li>
             <li><strong>Private Haushaltshilfen:</strong> Oft über Kleinanzeigen oder Mundpropaganda</li>
-            <li><strong>AlltagsEngel:</strong> Platform für flexible, geprüfte Alltagsbegleiter und Haushaltshilfen mit sofortigen Buchungsmöglichkeiten</li>
+            <li><strong>Alltagsengel:</strong> Plattform für flexible, geprüfte Alltagsbegleiter und Haushaltshilfen mit sofortigen Buchungsmöglichkeiten</li>
           </ul>
 
           <h3>Schritt 4: Probephase</h3>
-          <p>Vereinbaren Sie mit dem Helfer oder der Helfe ein paar Termine zum Ausprobieren, bevor Sie sich langfristig binden.</p>
+          <p>Vereinbaren Sie mit dem Helfer oder der Helferin ein paar Termine zum Ausprobieren, bevor Sie sich langfristig binden.</p>
 
-          <h2>AlltagsEngel als Lösung für Alltagshilfe</h2>
-          <p>AlltagsEngel vereinfacht die Suche nach Alltagshilfe erheblich. Auf der Plattform finden Sie:</p>
+          <h2>Alltagsengel als Lösung für Alltagshilfe</h2>
+          <p>Alltagsengel vereinfacht die Suche nach Alltagshilfe erheblich. Auf der Plattform finden Sie:</p>
           <ul>
             <li><strong>Geprüfte Helfer:</strong> Alle registrierten Alltagsbegleiter werden überprüft</li>
             <li><strong>Transparente Preise:</strong> Sie sehen sofort, was Hilfe kostet</li>
             <li><strong>Flexible Buchung:</strong> Buchen Sie einzelne Stunden oder regelmäßige Einsätze</li>
-            <li><strong>Anbieter für Entlastungsbetrag:</strong> Viele AlltagsEngel-Helfer sind zugelassen und nehmen den Entlastungsbetrag an</li>
+            <li><strong>Anbieter für Entlastungsbetrag:</strong> Viele Alltagsengel-Helfer sind zugelassen und nehmen den Entlastungsbetrag an</li>
             <li><strong>Schnelle Vermittlung:</strong> Keine langen Wartelisten – finden Sie zeitnah Hilfe</li>
-            <li><strong>Einfache Abwicklung:</strong> AlltagsEngel kümmert sich um die Verwaltung, Sie zahlen einfach über die App</li>
+            <li><strong>Einfache Abwicklung:</strong> Alltagsengel kümmert sich um die Verwaltung, Sie zahlen einfach über die App</li>
           </ul>
 
           <h2>Qualität und Sicherheit</h2>
@@ -175,7 +176,7 @@ export default function AlltagshilfeSenioren() {
           <h2>Häufig gestellte Fragen</h2>
 
           <h3>Kann ich meinen Entlastungsbetrag sparen?</h3>
-          <p>Ja, aber mit Einschränkungen. Unter bestimmten Bedingungen können ungenutzzte Beträge ins nächste Jahr übertragen werden. Erkundigen Sie sich bei Ihrer Pflegekasse.</p>
+          <p>Ja, aber mit Einschränkungen. Unter bestimmten Bedingungen können ungenutzte Beträge ins nächste Jahr übertragen werden. Erkundigen Sie sich bei Ihrer Pflegekasse.</p>
 
           <h3>Kann ich mehrere Helfer gleichzeitig haben?</h3>
           <p>Ja. Sie können verschiedene Dienstleistungen von verschiedenen Helfern nutzen. Der Entlastungsbetrag reicht oft aus für mehrere Einsätze.</p>
@@ -184,17 +185,19 @@ export default function AlltagshilfeSenioren() {
           <p>Genau dafür gibt es Alltagshilfe und professionelle Dienste. Mit Entlastungsbetrag, Selbstzahlung oder Sozialamt können Sie Hilfe organisieren.</p>
 
           <h3>Wie finde ich bezahlbare Hilfe?</h3>
-          <p>Der Entlastungsbetrag ist eine große Hilfe. Zusätzlich können Sie private Helfer günstiger finden. AlltagsEngel bietet auch hier transparente Preise und faire Bedingungen.</p>
+          <p>Der Entlastungsbetrag ist eine große Hilfe. Zusätzlich können Sie private Helfer günstiger finden. Alltagsengel bietet auch hier transparente Preise und faire Bedingungen.</p>
 
           <h2>Fazit</h2>
-          <p>Alltagshilfe ist für viele ältere Menschen eine wichtige Ressource, um unabhängig und mit Lebensqualität älter zu werden. Mit verschiedenen Finanzierungsquellen – insbesondere dem Entlastungsbetrag – können die meisten Senioren angemessene Hilfe erhalten. AlltagsEngel macht es einfach, die richtige Unterstützung zu finden, ohne sich in bürokratischen Prozessen verlaufen zu müssen. Zögern Sie nicht, Hilfe zu suchen – es ist Teil eines selbstbestimmten und würdevollen Alters.</p>
+          <p>Alltagshilfe ist für viele ältere Menschen eine wichtige Ressource, um unabhängig und mit Lebensqualität älter zu werden. Mit verschiedenen Finanzierungsquellen – insbesondere dem Entlastungsbetrag – können die meisten Senioren angemessene Hilfe erhalten. Alltagsengel macht es einfach, die richtige Unterstützung zu finden, ohne sich in bürokratischen Prozessen verlaufen zu müssen. Zögern Sie nicht, Hilfe zu suchen – es ist Teil eines selbstbestimmten und würdevollen Alters.</p>
         </div>
 
         <div className="blog-cta">
-          <h3>Jetzt AlltagsEngel testen</h3>
-          <p>Registriere dich kostenlos und finde sofort Alltagshilfe, die zu dir passt und deinen Entlastungsbetrag nutzt.</p>
-          <Link href="/choose" className="btn-gold">Kostenlos registrieren</Link>
+          <h3>Jetzt Alltagsengel testen</h3>
+          <p>Vereinbaren Sie jetzt einen kostenlosen Termin und finden Sie Alltagshilfe, die zu Ihnen passt und Ihren Entlastungsbetrag nutzt.</p>
+          <Link href="/termin" className="btn-gold">Jetzt Termin vereinbaren</Link>
         </div>
+
+        <RelatedPosts slug="alltagshilfe-senioren" />
       </article>
     </main>
   );

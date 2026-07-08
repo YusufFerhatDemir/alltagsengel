@@ -21,10 +21,10 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   title: {
-    default: 'Alltagsengel — Pflegebox beantragen & Krankenfahrt buchen · Frankfurt / Rhein-Main',
-    template: '%s | Alltagsengel.care',
+    default: 'Alltagsengel Frankfurt — Begleitung, Pflegebox, Krankenfahrt',
+    template: '%s | Alltagsengel',
   },
-  description: 'Pflegebox kostenlos über die Pflegekasse (§40 SGB XI, bis 42 €/Monat, 0 € Eigenanteil) und Krankenfahrten in Frankfurt & Rhein-Main — mit Verordnung von der Krankenkasse gezahlt oder als Selbstzahler. Alles bequem in der App.',
+  description: 'Alltagsbegleitung (§45b, 131 €/Monat), Pflegebox (0 € Eigenanteil) & Krankenfahrten in Frankfurt & Rhein-Main. Jetzt kostenlos in der App starten.',
   keywords: [
     'Pflegebox beantragen',
     'Pflegehilfsmittel Box kostenlos',
@@ -47,8 +47,8 @@ export const metadata: Metadata = {
     },
   },
   openGraph: {
-    title: 'Alltagsengel — Pflegebox & Krankenfahrt für Frankfurt & Rhein-Main',
-    description: 'Pflegebox 0 € Eigenanteil über die Pflegekasse · Krankenfahrt mit Verordnung oder als Selbstzahler · alles in der App.',
+    title: 'Alltagsengel — Alltagsbegleitung, Pflegebox & Krankenfahrt',
+    description: 'Alltagsbegleitung über den Entlastungsbetrag (131 €/Monat) · Pflegebox 0 € Eigenanteil · Krankenfahrten — alles in der App.',
     url: 'https://alltagsengel.care',
     siteName: 'Alltagsengel.care',
     locale: 'de_DE',
@@ -64,8 +64,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Alltagsengel — Pflegebox & Krankenfahrt für Frankfurt & Rhein-Main',
-    description: 'Pflegebox 0 € Eigenanteil über die Pflegekasse · Krankenfahrt mit Verordnung oder als Selbstzahler.',
+    title: 'Alltagsengel — Alltagsbegleitung, Pflegebox & Krankenfahrt',
+    description: 'Alltagsbegleitung über den Entlastungsbetrag (131 €/Monat) · Pflegebox 0 € Eigenanteil · Krankenfahrten — alles in der App.',
     images: ['/og-image.png'],
   },
   robots: {
@@ -81,7 +81,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
-    title: 'AlltagsEngel',
+    title: 'Alltagsengel',
   },
   formatDetection: {
     telephone: false,
@@ -180,6 +180,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 sameAs: [
                   'https://www.instagram.com/alltagsengel_ug',
                   'https://www.tiktok.com/@alltagsengel_ug',
+                  'https://apps.apple.com/de/app/alltagsengel/id6761319222',
                 ],
                 foundingLocation: {
                   '@type': 'City',
@@ -228,15 +229,33 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 openingHoursSpecification: [
                   {
                     '@type': 'OpeningHoursSpecification',
-                    dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
-                    opens: '00:00',
-                    closes: '23:59',
+                    dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
+                    opens: '08:00',
+                    closes: '18:00',
                   },
                 ],
+                currenciesAccepted: 'EUR',
+                paymentAccepted: 'Rechnung, Überweisung, Abrechnung über die Pflegekasse',
                 sameAs: [
                   'https://www.instagram.com/alltagsengel_ug',
                   'https://www.tiktok.com/@alltagsengel_ug',
+                  'https://apps.apple.com/de/app/alltagsengel/id6761319222',
                 ],
+              },
+              {
+                // iOS-App im App Store (kein Play-Store-Eintrag — Android-App nicht live)
+                '@type': 'MobileApplication',
+                '@id': 'https://alltagsengel.care/#app',
+                name: 'Alltagsengel',
+                operatingSystem: 'iOS',
+                applicationCategory: 'HealthApplication',
+                installUrl: 'https://apps.apple.com/de/app/alltagsengel/id6761319222',
+                offers: {
+                  '@type': 'Offer',
+                  price: '0',
+                  priceCurrency: 'EUR',
+                },
+                publisher: { '@id': 'https://alltagsengel.care/#organization' },
               },
               {
                 '@type': 'WebSite',

@@ -23,18 +23,21 @@ Alltagsengel ist KEIN medizinischer Anbieter, KEIN Pflegedienst und KEIN Notfall
 - [Alltagsbegleitung](https://alltagsengel.care/alltagsbegleitung): Leistungsbeschreibung und Abrechnung über die Pflegekasse.
 - [Krankenfahrten](https://alltagsengel.care/krankenfahrten): Ablauf, Genehmigung und Kostenübernahme.
 - [Pflege-Box / Hygienebox](https://alltagsengel.care/hygienebox): bis 42 €/Monat Pflegehilfsmittel-Pauschale nach §40 SGB XI, 0 € Eigenanteil bei Pflegegrad 1–5.
+- [Finanzierung](https://alltagsengel.care/finanzierung): Alle Finanzierungswege im Überblick — Entlastungsbetrag (§45b SGB XI, 131 €/Monat = 1.572 €/Jahr), Verhinderungs-/Kurzzeitpflege (gemeinsamer Jahresbetrag 3.539 € seit 07/2025), steuerliche Absetzbarkeit.
 - [Ratgeber-Blog](https://alltagsengel.care/blog): Artikel zu Pflegegrad, Entlastungsbetrag, Verhinderungspflege, Pflegehilfsmitteln.
+- [Einzugsgebiet](https://alltagsengel.care/einzugsgebiet): Alle Einsatzorte im Rhein-Main-Gebiet mit Ortsteilen.
+- [Bewertungen](https://alltagsengel.care/bewertungen): Kundenstimmen und Erfahrungen.
 - [FAQ](https://alltagsengel.care/faq): Häufige Fragen.
 - [Über uns](https://alltagsengel.care/ueber-uns): Unternehmen, Qualitätsstandards (geprüfte Begleiter:innen, versicherte Einsätze), Handelsregister-Daten.
 - [Budgetrechner](https://alltagsengel.care/budgetrechner): Interaktiver Rechner für das Entlastungsbetrag-Restbudget (§45b SGB XI).
 - [Pflegegrad-Check](https://alltagsengel.care/pflegegrad-check): Unverbindliche Pflegegrad-Selbsteinschätzung nach NBA-Systematik.
 - [Kontakt](https://alltagsengel.care/kontakt): Beratung.
 - [Engel werden](https://alltagsengel.care/engel-werden): Bewerbung als Alltagsbegleiter:in (Nebenjob/Teilzeit im Rhein-Main-Gebiet).
-- [Karriere](https://alltagsengel.care/karriere): Offene Stellen bei Alltagsengel.
+- [Jobs](https://alltagsengel.care/jobs): Offene Stellen bei Alltagsengel (Festanstellung, 20/30/40 Std.).
 
 ## Einsatzgebiet
 
-Frankfurt am Main und das Rhein-Main-Gebiet, u. a. Offenbach, Wiesbaden, Darmstadt, Mainz, Hanau, Bad Homburg, Oberursel, Neu-Isenburg, Rodgau, Friedberg (Wetterau) und Aschaffenburg. Stadt-Seiten: https://alltagsengel.care/alltagsbegleitung/frankfurt (analog für weitere Städte und für /krankenfahrten/… und /hygienebox/…).
+Frankfurt am Main und das Rhein-Main-Gebiet, u. a. Offenbach, Wiesbaden, Darmstadt, Mainz, Hanau, Bad Homburg, Oberursel, Neu-Isenburg, Rodgau, Friedberg (Wetterau) und Aschaffenburg. Stadt-Seiten: https://alltagsengel.care/alltagsbegleitung/offenbach (analog für weitere Städte und für /krankenfahrten/… und /hygienebox/…; Frankfurt wird direkt auf den Hauptseiten behandelt).
 
 ## Crawler-Policy
 

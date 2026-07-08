@@ -3,9 +3,9 @@ import Link from 'next/link'
 import BreadcrumbSchema from '@/components/BreadcrumbSchema'
 
 export const metadata: Metadata = {
-  title: 'Unser Team — Die Menschen hinter Alltagsengel | Frankfurt',
+  title: 'Unser Team — Die Menschen hinter Alltagsengel',
   description:
-    'Lernen Sie das Team von Alltagsengel kennen: Geschäftsführung, Kundenbetreuung, Tourenplanung, Qualität und Pflegeberatung. Echte Ansprechpartner für Alltagsbegleitung, Pflegebox und Krankenfahrten im Rhein-Main-Gebiet.',
+    'Lernen Sie das Team von Alltagsengel kennen: Kundenbetreuung, Tourenplanung, Qualität und Pflegeberatung — echte Ansprechpartner im Rhein-Main-Gebiet.',
   alternates: { canonical: 'https://alltagsengel.care/team' },
   openGraph: {
     images: [{ url: '/og-image.png', width: 1200, height: 630 }],

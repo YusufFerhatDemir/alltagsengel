@@ -6,9 +6,9 @@ import ContactClickTracker from '@/components/ContactClickTracker'
 
 export const metadata: Metadata = {
   alternates: { canonical: 'https://alltagsengel.care/kontakt' },
-  title: 'Kontakt — Kostenlose Pflegeberatung Frankfurt & Rhein-Main',
+  title: 'Kontakt — Kostenlose Pflegeberatung Frankfurt',
   description:
-    'Kontakt zu Alltagsengel in Frankfurt: Kostenlose Beratung zu Entlastungsbetrag (131 €/Monat, §45b SGB XI), Pflegebox, Alltagsbegleitung und Krankenfahrten. Telefon, WhatsApp oder Kontaktformular — wir melden uns werktags innerhalb von 24 Stunden.',
+    'Kostenlose Pflegeberatung in Frankfurt & Rhein-Main: Entlastungsbetrag (131 €/Monat), Pflegebox, Krankenfahrten. Jetzt anrufen oder schreiben — Antwort in 24 h.',
   openGraph: {
     images: [{ url: '/og-image.png', width: 1200, height: 630 }],
     title: 'Kontakt — Kostenlose Pflegeberatung | Alltagsengel',
@@ -57,8 +57,8 @@ export default function KontaktPage() {
       {/* Navigation */}
       <nav style={{ maxWidth: 700, margin: '0 auto', padding: '16px 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
-          <img src="/icon-192x192.png" alt="AlltagsEngel" width={36} height={36} style={{ borderRadius: 8 }} />
-          <span style={{ color: '#C9963C', fontWeight: 700, fontSize: 16 }}>AlltagsEngel</span>
+          <img src="/icon-192x192.png" alt="Alltagsengel" width={36} height={36} style={{ borderRadius: 8 }} />
+          <span style={{ color: '#C9963C', fontWeight: 700, fontSize: 16 }}>Alltagsengel</span>
         </Link>
         <Link href="/auth/register" style={{
           background: '#C9963C', color: '#1A1612', padding: '8px 20px', borderRadius: 8, fontWeight: 600, fontSize: 13, textDecoration: 'none',
@@ -97,7 +97,7 @@ export default function KontaktPage() {
           </a>
 
           {/* WhatsApp */}
-          <a href="https://wa.me/491783382825?text=Hallo!%20Ich%20interessiere%20mich%20f%C3%BCr%20AlltagsEngel." target="_blank" rel="noopener noreferrer" style={{
+          <a href="https://wa.me/491783382825?text=Hallo!%20Ich%20interessiere%20mich%20f%C3%BCr%20Alltagsengel." target="_blank" rel="noopener noreferrer" style={{
             background: 'rgba(37, 211, 102, 0.06)', borderRadius: 18, padding: 24, border: '1px solid rgba(37, 211, 102, 0.15)',
             textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 16,
           }}>
@@ -144,7 +144,7 @@ export default function KontaktPage() {
             <div>
               <div style={{ color: '#F5F0E8', fontSize: 15, fontWeight: 600, marginBottom: 2 }}>Adresse</div>
               <div style={{ color: '#B8B0A4', fontSize: 14, lineHeight: 1.5 }}>
-                Neue Mainzer Str. 66-68<br />60311 Frankfurt am Main
+                Neue Mainzer Straße 66-68<br />60311 Frankfurt am Main
               </div>
             </div>
           </div>

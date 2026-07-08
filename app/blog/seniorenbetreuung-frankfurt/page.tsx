@@ -1,10 +1,11 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import BreadcrumbSchema from '@/components/BreadcrumbSchema'
+import RelatedPosts from '@/components/RelatedPosts'
 
 export const metadata: Metadata = {
-  title: 'Seniorenbetreuung in Frankfurt: Angebote, Kosten & Anbieter 2026',
-  description: 'Seniorenbetreuung in Frankfurt am Main: Alle Angebote, Kosten und Anbieter im Überblick. Alltagsbegleitung, Haushaltshilfe & Demenzbetreuung im Rhein-Main-Gebiet.',
+  title: 'Seniorenbetreuung Frankfurt: Angebote & Kosten',
+  description: 'Seniorenbetreuung in Frankfurt: Angebote, Kosten & Anbieter im Überblick — von Alltagsbegleitung bis Demenzbetreuung. Jetzt passende Betreuung finden!',
   keywords: ['Seniorenbetreuung Frankfurt', 'Seniorenhilfe Frankfurt', 'Betreuung Senioren Frankfurt', 'Alltagsbegleitung Frankfurt', 'Seniorenbetreuung Rhein-Main'],
   alternates: { canonical: 'https://alltagsengel.care/blog/seniorenbetreuung-frankfurt' },
   openGraph: {
@@ -20,12 +21,12 @@ export const metadata: Metadata = {
 const articleJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'Article',
-  headline: 'Seniorenbetreuung in Frankfurt: Angebote, Kosten & Anbieter 2026',
-  description: 'Seniorenbetreuung in Frankfurt am Main: Alle Angebote, Kosten und Anbieter im Überblick. Alltagsbegleitung, Haushaltshilfe & Demenzbetreuung im Rhein-Main-Gebie',
+  headline: 'Seniorenbetreuung in Frankfurt: Angebote, Kosten & Anbieter',
+  description: 'Seniorenbetreuung in Frankfurt: Angebote, Kosten & Anbieter im Überblick — von Alltagsbegleitung bis Demenzbetreuung. Jetzt passende Betreuung finden!',
   author: { '@type': 'Organization', name: 'Alltagsengel', url: 'https://alltagsengel.care' },
   publisher: { '@type': 'Organization', name: 'Alltagsengel', url: 'https://alltagsengel.care', logo: { '@type': 'ImageObject', url: 'https://alltagsengel.care/icon-512x512.png' } },
   datePublished: '2026-06-06',
-  dateModified: '2026-06-06',
+  dateModified: '2026-07-08',
   mainEntityOfPage: 'https://alltagsengel.care/blog/seniorenbetreuung-frankfurt',
   image: 'https://alltagsengel.care/og-image.png',
   inLanguage: 'de-DE',
@@ -34,12 +35,12 @@ const articleJsonLd = {
 export default function SeniorenbetreuungFrankfurtPage() {
   return (
     <main className="blog-container">
-      <BreadcrumbSchema items={[{ name: 'Ratgeber', url: '/blog' }, { name: 'Seniorenbetreuung in Frankfurt: Angebote, Kosten & Anbieter ' }]} />
+      <BreadcrumbSchema items={[{ name: 'Ratgeber', url: '/blog' }, { name: 'Seniorenbetreuung Frankfurt' }]} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }} />
       <article className="blog-article">
         <header className="blog-header">
           <h1>Seniorenbetreuung in Frankfurt: Angebote, Kosten & Anbieter</h1>
-          <p className="blog-meta">Veröffentlicht am 6. Juni 2026 | 9 min Lesezeit</p>
+          <p className="blog-meta">Veröffentlicht am 6. Juni 2026 | Aktualisiert am 8. Juli 2026 | 9 min Lesezeit</p>
         </header>
 
         <div className="blog-content">
@@ -165,11 +166,12 @@ export default function SeniorenbetreuungFrankfurtPage() {
             Betreuungsleistungen genutzt werden.
           </p>
 
-          <h3>Verhinderungspflege — bis zu 1.612 €/Jahr</h3>
+          <h3>Verhinderungspflege — bis zu 3.539 €/Jahr</h3>
           <p>
             Die <Link href="/blog/verhinderungspflege-beantragen">Verhinderungspflege</Link> ist
             eine zusätzliche Finanzierungsquelle, wenn pflegende Angehörige vorübergehend
-            verhindert sind. Bis zu 1.612 € pro Jahr stehen dafür zur Verfügung.
+            verhindert sind. Seit Juli 2025 gilt ein gemeinsamer Jahresbetrag von bis zu
+            3.539 € für Verhinderungs- und Kurzzeitpflege, der flexibel eingesetzt werden kann.
           </p>
 
           <h2>Seniorenbetreuung in Frankfurter Stadtteilen</h2>
@@ -304,6 +306,8 @@ export default function SeniorenbetreuungFrankfurtPage() {
             </p>
           </div>
         </div>
+
+        <RelatedPosts slug="seniorenbetreuung-frankfurt" />
 
         <footer className="blog-footer">
           <Link href="/blog" className="blog-back">← Zurück zum Ratgeber</Link>

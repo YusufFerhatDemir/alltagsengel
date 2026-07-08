@@ -1,10 +1,11 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import BreadcrumbSchema from '@/components/BreadcrumbSchema'
+import RelatedPosts from '@/components/RelatedPosts'
 
 export const metadata: Metadata = {
-  title: 'Arztbegleitung für Senioren: Sicher zum Termin und zurück',
-  description: 'Warum Arztbegleitung für Senioren wichtig ist. Erfahren Sie, was ein Begleiter beim Arzttermin macht und wie Sie über AlltagsEngel eine geeignete Begleitperson finden.',
+  title: 'Arztbegleitung für Senioren: Sicher zum Termin',
+  description: 'Arztbegleitung für Senioren: Was ein Begleiter beim Arzttermin übernimmt, was es kostet und wie die Pflegekasse zahlt. Jetzt Begleitung finden!',
   keywords: 'Arztbegleitung Senioren, Arzt Begleitung, Alltagsbegleiter, Pflege, Seniorenbetreuung',
   alternates: { canonical: 'https://alltagsengel.care/blog/arztbegleitung-senioren' },
   openGraph: {
@@ -21,11 +22,11 @@ const articleJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'Article',
   headline: 'Arztbegleitung für Senioren: Sicher zum Termin und zurück',
-  description: 'Warum Arztbegleitung für Senioren wichtig ist. Erfahren Sie, was ein Begleiter beim Arzttermin macht und wie Sie über AlltagsEngel eine geeignete Begleitperson ',
+  description: 'Arztbegleitung für Senioren: Was ein Begleiter beim Arzttermin übernimmt, was es kostet und wie die Pflegekasse zahlt. Jetzt Begleitung finden!',
   author: { '@type': 'Organization', name: 'Alltagsengel', url: 'https://alltagsengel.care' },
   publisher: { '@type': 'Organization', name: 'Alltagsengel', url: 'https://alltagsengel.care', logo: { '@type': 'ImageObject', url: 'https://alltagsengel.care/icon-512x512.png' } },
-  datePublished: '2026-03-19',
-  dateModified: '2026-03-19',
+  datePublished: '2026-03-25',
+  dateModified: '2026-03-25',
   mainEntityOfPage: 'https://alltagsengel.care/blog/arztbegleitung-senioren',
   image: 'https://alltagsengel.care/og-image.png',
   inLanguage: 'de-DE',
@@ -34,7 +35,7 @@ const articleJsonLd = {
 export default function ArztbegleitungPage() {
   return (
     <main className="blog-container">
-      <BreadcrumbSchema items={[{ name: 'Ratgeber', url: '/blog' }, { name: 'Arztbegleitung für Senioren: Sicher zum Termin und zurück' }]} />
+      <BreadcrumbSchema items={[{ name: 'Ratgeber', url: '/blog' }, { name: 'Arztbegleitung für Senioren' }]} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }} />
       <article className="blog-article">
         <header className="blog-header">
@@ -127,7 +128,7 @@ export default function ArztbegleitungPage() {
 
           <h2>Wie finden Sie die richtige Arztbegleitperson?</h2>
           <p>
-            <strong>Über AlltagsEngel:</strong>
+            <strong>Über Alltagsengel:</strong>
           </p>
           <ol>
             <li>Registrieren Sie sich (kostenlos)</li>
@@ -173,11 +174,12 @@ export default function ArztbegleitungPage() {
           </p>
 
           <div className="blog-cta">
-            <h3>Jetzt AlltagsEngel testen</h3>
-            <p>Registrieren Sie sich kostenlos und finden Sie sofort Unterstützung in Ihrer Region.</p>
-            <Link href="/choose" className="btn-gold">Kostenlos registrieren</Link>
+            <h3>Jetzt Alltagsengel testen</h3>
+            <p>Vereinbaren Sie einen kostenlosen Termin und finden Sie sofort Unterstützung in Ihrer Region.</p>
+            <Link href="/termin" className="btn-gold">Jetzt Termin vereinbaren</Link>
           </div>
         </div>
+        <RelatedPosts slug="arztbegleitung-senioren" />
       </article>
     </main>
   );

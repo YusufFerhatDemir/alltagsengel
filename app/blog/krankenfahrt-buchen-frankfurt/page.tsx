@@ -1,9 +1,10 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import BreadcrumbSchema from '@/components/BreadcrumbSchema'
+import RelatedPosts from '@/components/RelatedPosts'
 
 export const metadata: Metadata = {
-  title: 'Krankenfahrt buchen Frankfurt — Fahrt zum Arzt über die Krankenkasse',
+  title: 'Krankenfahrt buchen Frankfurt — Kasse zahlt',
   description: 'Krankenfahrt in Frankfurt buchen: Fahrten zu Arzt, Klinik, Dialyse und Therapie. Mit Verordnung über die Krankenkasse abrechenbar. Jetzt in der App buchen.',
   keywords: ['Krankenfahrt Frankfurt', 'Krankenfahrt buchen', 'Patientenfahrdienst Frankfurt', 'Krankenfahrt Krankenkasse', 'Fahrt zum Arzt Frankfurt', 'Krankentransport Frankfurt'],
   alternates: { canonical: 'https://alltagsengel.care/blog/krankenfahrt-buchen-frankfurt' },
@@ -20,10 +21,16 @@ const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'Article',
   headline: 'Krankenfahrt buchen Frankfurt — Fahrt zum Arzt über die Krankenkasse',
-  description: 'Krankenfahrt in Frankfurt buchen: zu Arzt, Klinik, Dialyse. Kostenübernahme möglich.',
+  description: 'Krankenfahrt in Frankfurt buchen: Fahrten zu Arzt, Klinik, Dialyse und Therapie. Mit Verordnung über die Krankenkasse abrechenbar. Jetzt in der App buchen.',
   author: { '@type': 'Organization', name: 'Alltagsengel' },
-  publisher: { '@type': 'Organization', name: 'Alltagsengel', url: 'https://alltagsengel.care' },
+  publisher: {
+    '@type': 'Organization',
+    name: 'Alltagsengel',
+    url: 'https://alltagsengel.care',
+    logo: { '@type': 'ImageObject', url: 'https://alltagsengel.care/icon-512x512.png' },
+  },
   datePublished: '2026-06-04',
+  dateModified: '2026-06-04',
   mainEntityOfPage: 'https://alltagsengel.care/blog/krankenfahrt-buchen-frankfurt',
 }
 
@@ -120,9 +127,11 @@ export default function KrankenfahrtFrankfurtPage() {
           <div className="blog-cta">
             <h2>Krankenfahrt jetzt buchen</h2>
             <p>Kostenlos registrieren. Mit oder ohne Verordnung.</p>
-            <Link href="/choose" className="btn-gold">JETZT BUCHEN</Link>
+            <Link href="/krankenfahrten" className="btn-gold">JETZT BUCHEN</Link>
           </div>
         </div>
+
+        <RelatedPosts slug="krankenfahrt-buchen-frankfurt" />
       </article>
     </main>
   )

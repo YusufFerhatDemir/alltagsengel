@@ -4,8 +4,8 @@ import BreadcrumbSchema from '@/components/BreadcrumbSchema'
 import HowToSchema from '@/components/HowToSchema'
 
 export const metadata: Metadata = {
-  title: 'Pflegebox Frankfurt | Kostenlose Pflegehilfsmittel — 42€/Monat von der Kasse',
-  description: 'Kostenlose Pflegebox mit Pflegehilfsmitteln nach §40 SGB XI. Handschuhe, Desinfektionsmittel, Bettschutz — monatlich geliefert. 0€ Zuzahlung bei Pflegegrad 1-5.',
+  title: 'Pflegebox Frankfurt — kostenlos, 42 €/Monat',
+  description: 'Kostenlose Pflegebox nach §40 SGB XI: Handschuhe, Desinfektion, Bettschutz — monatlich geliefert, 0 € Zuzahlung bei Pflegegrad 1–5. Jetzt bestellen!',
   keywords: ['Pflegebox', 'Pflegehilfsmittel', 'Hygienebox', '§40 SGB XI', 'kostenlose Pflegehilfsmittel', 'Pflegebox bestellen', 'Pflegebox Frankfurt', '42 Euro Pflegekasse'],
   openGraph: {
     images: [{ url: '/og-image.png', width: 1200, height: 630 }],
@@ -93,10 +93,45 @@ const jsonLd = {
   ],
 }
 
+// Ein gemeinsames Array speist das sichtbare FAQ UND das FAQPage-JSON-LD
+const faqItems = [
+  {
+    frage: 'Ist die Pflegebox wirklich kostenlos?',
+    antwort: 'Ja. Nach §40 SGB XI übernimmt die Pflegekasse bis zu 42 € pro Monat für Pflegehilfsmittel zum Verbrauch. Alltagsengel rechnet direkt mit Ihrer Kasse ab — Ihr Eigenanteil beträgt 0 €.',
+  },
+  {
+    frage: 'Wer hat Anspruch auf die Pflegebox?',
+    antwort: 'Jede Person mit anerkanntem Pflegegrad (1–5), die zu Hause gepflegt wird — von Angehörigen, Freunden oder einem Pflegedienst. Ein Rezept ist nicht nötig.',
+  },
+  {
+    frage: 'Wie oft wird die Pflegebox geliefert?',
+    antwort: 'Die Pflegebox wird monatlich direkt zu Ihnen nach Hause geliefert — automatisch und versandkostenfrei.',
+  },
+  {
+    frage: 'Kann ich die Pflegebox jederzeit kündigen?',
+    antwort: 'Ja. Sie können die monatliche Lieferung jederzeit pausieren oder abbestellen — ohne Vertragsbindung und ohne Kündigungsfrist.',
+  },
+  {
+    frage: 'Wie beantrage ich die Pflegebox?',
+    antwort: 'Sie wählen Ihre Wunsch-Box aus, wir übernehmen den kompletten Antrag bei Ihrer Pflegekasse. Sie unterschreiben nur einmalig eine Vollmacht — den Rest erledigt Alltagsengel.',
+  },
+]
+
+const faqJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqItems.map((f) => ({
+    '@type': 'Question',
+    name: f.frage,
+    acceptedAnswer: { '@type': 'Answer', text: f.antwort },
+  })),
+}
+
 export default function HygieneboxPage() {
   return (
     <div className="screen info-screen">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
       <BreadcrumbSchema items={[{ name: 'Pflegebox' }]} />
       <HowToSchema
         name="Pflegebox kostenlos beantragen"
@@ -180,6 +215,16 @@ export default function HygieneboxPage() {
         <div className="info-cta">
           <Link href="/choose" className="btn-gold" style={{ width: '100%' }}>HYGIENEBOX BESTELLEN</Link>
         </div>
+
+        <section className="info-card">
+          <h3>Häufige Fragen zur Pflegebox</h3>
+          {faqItems.map((f) => (
+            <details className="info-faq" key={f.frage}>
+              <summary>{f.frage}</summary>
+              <p>{f.antwort}</p>
+            </details>
+          ))}
+        </section>
 
         <section className="info-card">
           <h3>Pflegebox in Ihrer Stadt</h3>

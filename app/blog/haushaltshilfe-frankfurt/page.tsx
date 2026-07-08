@@ -1,9 +1,10 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import BreadcrumbSchema from '@/components/BreadcrumbSchema'
+import RelatedPosts from '@/components/RelatedPosts'
 
 export const metadata: Metadata = {
-  title: 'Haushaltshilfe Frankfurt — Jetzt über die Pflegekasse buchen',
+  title: 'Haushaltshilfe Frankfurt über die Pflegekasse',
   description: 'Haushaltshilfe in Frankfurt am Main und Rhein-Main-Gebiet: Einkaufen, Kochen, Putzen, Begleitung. Kostenübernahme über Pflegekasse möglich. Jetzt buchen.',
   keywords: ['Haushaltshilfe Frankfurt', 'Haushaltshilfe Rhein-Main', 'Alltagshilfe Frankfurt', 'Haushaltshilfe Pflegekasse', 'Entlastungsleistung Frankfurt', 'Alltagsbegleitung Frankfurt'],
   alternates: { canonical: 'https://alltagsengel.care/blog/haushaltshilfe-frankfurt' },
@@ -20,10 +21,16 @@ const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'Article',
   headline: 'Haushaltshilfe Frankfurt — Jetzt über die Pflegekasse buchen',
-  description: 'Haushaltshilfe in Frankfurt am Main: Einkaufen, Kochen, Putzen, Begleitung. Kostenübernahme über Pflegekasse möglich.',
+  description: 'Haushaltshilfe in Frankfurt am Main und Rhein-Main-Gebiet: Einkaufen, Kochen, Putzen, Begleitung. Kostenübernahme über Pflegekasse möglich. Jetzt buchen.',
   author: { '@type': 'Organization', name: 'Alltagsengel' },
-  publisher: { '@type': 'Organization', name: 'Alltagsengel', url: 'https://alltagsengel.care' },
+  publisher: {
+    '@type': 'Organization',
+    name: 'Alltagsengel',
+    url: 'https://alltagsengel.care',
+    logo: { '@type': 'ImageObject', url: 'https://alltagsengel.care/icon-512x512.png' },
+  },
   datePublished: '2026-06-04',
+  dateModified: '2026-06-04',
   mainEntityOfPage: 'https://alltagsengel.care/blog/haushaltshilfe-frankfurt',
 }
 
@@ -132,9 +139,11 @@ export default function HaushaltshilfeFrankfurtPage() {
           <div className="blog-cta">
             <h2>Jetzt Haushaltshilfe buchen</h2>
             <p>Registrierung kostenlos, keine Vorauszahlung, keine Bindung.</p>
-            <Link href="/choose" className="btn-gold">KOSTENLOS REGISTRIEREN</Link>
+            <Link href="/termin" className="btn-gold">KOSTENLOS REGISTRIEREN</Link>
           </div>
         </div>
+
+        <RelatedPosts slug="haushaltshilfe-frankfurt" />
       </article>
     </main>
   )

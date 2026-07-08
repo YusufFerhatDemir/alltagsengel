@@ -13,6 +13,11 @@ import { useState, useEffect, useRef } from 'react'
 
 const APP_STORE_URL = 'https://apps.apple.com/app/alltagsengel/id6761319222'
 const PLAY_STORE_URL = 'https://play.google.com/store/apps/details?id=care.alltagsengel.app'
+// Play-Store-Listing ist noch NICHT veröffentlicht — die PLAY_STORE_URL liefert aktuell 404.
+// Solange bleibt der Android-Fallback-Banner deaktiviert, sonst schicken wir Nutzer ins Leere.
+// Reaktivierung: `curl -sI "$PLAY_STORE_URL"` → HTTP 200, dann PLAY_STORE_LIVE auf true setzen.
+// (Der PWA-Zweig über beforeinstallprompt bleibt davon unberührt.)
+const PLAY_STORE_LIVE = false
 
 export default function InstallPrompt() {
   const [show, setShow] = useState(false)
@@ -62,8 +67,9 @@ export default function InstallPrompt() {
           setShow(true)
         }, 5000)
       }
-    } else if (isAndroid) {
+    } else if (isAndroid && PLAY_STORE_LIVE) {
       // Android: Falls kein beforeinstallprompt nach 6s, Play Store zeigen
+      // (nur wenn das Listing live ist — siehe PLAY_STORE_LIVE oben)
       setTimeout(() => {
         if (!deferredPrompt.current) {
           setPlatform('android')
@@ -90,6 +96,7 @@ export default function InstallPrompt() {
     } else if (platform === 'ios') {
       // Anleitung anzeigen (kann nicht automatisch installieren)
     } else if (platform === 'android') {
+      if (!PLAY_STORE_LIVE) return // Listing noch nicht live (404) — kein Store-Link
       window.open(PLAY_STORE_URL, '_blank')
       dismiss()
     }
@@ -124,7 +131,7 @@ export default function InstallPrompt() {
           {/* App Icon */}
           <img
             src="/icon-192x192.png"
-            alt="AlltagsEngel"
+            alt="Alltagsengel"
             width={52}
             height={52}
             style={{ borderRadius: 14, flexShrink: 0 }}
@@ -133,7 +140,7 @@ export default function InstallPrompt() {
           {/* Text */}
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ color: '#F5F0E8', fontSize: 15, fontWeight: 700, marginBottom: 2 }}>
-              AlltagsEngel App
+              Alltagsengel App
             </div>
             {platform === 'ios' ? (
               <div style={{ color: '#8A8279', fontSize: 12, lineHeight: 1.4 }}>

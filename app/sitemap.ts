@@ -1,6 +1,10 @@
 import type { MetadataRoute } from 'next'
-import { readdirSync, statSync } from 'fs'
+import { readdirSync } from 'fs'
 import { join } from 'path'
+// Echte Git-Commit-Daten pro Seite (scripts/generate-lastmod.ts, npm prebuild).
+// Datei-mtime wäre auf Vercel immer der Deploy-Zeitpunkt — 82× dasselbe Datum
+// trainiert Google, unser lastmod komplett zu ignorieren.
+import lastmodMap from '@/lib/generated/lastmod.json'
 
 export const dynamic = 'force-static'
 export const revalidate = 3600
@@ -9,7 +13,7 @@ const BASE_URL = 'https://alltagsengel.care'
 
 interface RouteEntry {
   url: string
-  lastModified: string
+  lastModified?: string
   changeFrequency:
     | 'always'
     | 'hourly'
@@ -36,7 +40,9 @@ const STATIC_ROUTES: Omit<RouteEntry, 'lastModified'>[] = [
   { url: '/faq', changeFrequency: 'monthly', priority: 0.8 },
   { url: '/kontakt', changeFrequency: 'monthly', priority: 0.7 },
   // City-Landingpages (Rhein-Main)
-  { url: '/alltagsbegleitung/frankfurt', changeFrequency: 'weekly', priority: 0.9 },
+  // HINWEIS: /{service}/frankfurt fehlt hier BEWUSST — die Frankfurt-City-Seiten
+  // kanonisieren auf die Root-Service-Seiten (Keyword-Kannibalisierung auf
+  // "… Frankfurt"; die Root-Seiten targeten bereits Frankfurt).
   { url: '/alltagsbegleitung/offenbach', changeFrequency: 'weekly', priority: 0.85 },
   { url: '/alltagsbegleitung/wiesbaden', changeFrequency: 'weekly', priority: 0.85 },
   { url: '/alltagsbegleitung/darmstadt', changeFrequency: 'weekly', priority: 0.85 },
@@ -48,8 +54,7 @@ const STATIC_ROUTES: Omit<RouteEntry, 'lastModified'>[] = [
   { url: '/alltagsbegleitung/neu-isenburg', changeFrequency: 'weekly', priority: 0.85 },
   { url: '/alltagsbegleitung/friedberg-wetterau', changeFrequency: 'weekly', priority: 0.85 },
   { url: '/alltagsbegleitung/rodgau', changeFrequency: 'weekly', priority: 0.85 },
-  // City-Landingpages Krankenfahrten
-  { url: '/krankenfahrten/frankfurt', changeFrequency: 'weekly', priority: 0.9 },
+  // City-Landingpages Krankenfahrten (frankfurt: siehe Hinweis oben)
   { url: '/krankenfahrten/offenbach', changeFrequency: 'weekly', priority: 0.85 },
   { url: '/krankenfahrten/wiesbaden', changeFrequency: 'weekly', priority: 0.85 },
   { url: '/krankenfahrten/darmstadt', changeFrequency: 'weekly', priority: 0.85 },
@@ -60,8 +65,7 @@ const STATIC_ROUTES: Omit<RouteEntry, 'lastModified'>[] = [
   { url: '/krankenfahrten/frankfurt-hoechst', changeFrequency: 'weekly', priority: 0.85 },
   { url: '/krankenfahrten/neu-isenburg', changeFrequency: 'weekly', priority: 0.85 },
   { url: '/krankenfahrten/friedberg-wetterau', changeFrequency: 'weekly', priority: 0.85 },
-  // City-Landingpages Pflegebox
-  { url: '/hygienebox/frankfurt', changeFrequency: 'weekly', priority: 0.9 },
+  // City-Landingpages Pflegebox (frankfurt: siehe Hinweis oben)
   { url: '/hygienebox/offenbach', changeFrequency: 'weekly', priority: 0.85 },
   { url: '/hygienebox/wiesbaden', changeFrequency: 'weekly', priority: 0.85 },
   { url: '/hygienebox/darmstadt', changeFrequency: 'weekly', priority: 0.85 },
@@ -73,7 +77,7 @@ const STATIC_ROUTES: Omit<RouteEntry, 'lastModified'>[] = [
   { url: '/hygienebox/friedberg-wetterau', changeFrequency: 'weekly', priority: 0.85 },
   { url: '/hygienebox/rodgau', changeFrequency: 'weekly', priority: 0.85 },
   // /lp/* sind noindex-Redirects (Werbe-Tracking) — gehören NICHT in die Sitemap.
-  { url: '/karriere', changeFrequency: 'weekly', priority: 0.8 },
+  // /karriere ist 301 → /engel-werden (Recruiting-Konsolidierung, next.config.ts).
   { url: '/jobs', changeFrequency: 'weekly', priority: 0.9 },
   { url: '/finanzierung', changeFrequency: 'monthly', priority: 0.9 },
   { url: '/team', changeFrequency: 'monthly', priority: 0.7 },
@@ -96,41 +100,32 @@ function resolvePagePath(url: string): string {
   return join('app', ...segments, 'page.tsx')
 }
 
-function lastModifiedFor(url: string, fallback: string): string {
-  try {
-    return statSync(join(process.cwd(), resolvePagePath(url))).mtime.toISOString()
-  } catch {
-    return fallback
-  }
+// Echtes Git-Datum oder undefined — lieber KEIN lastmod als 82× dasselbe.
+function lastModifiedFor(url: string): string | undefined {
+  return (lastmodMap as Record<string, string>)[resolvePagePath(url)]
 }
 
-function listBlogSlugs(): { slug: string; lastModified: string }[] {
+function listBlogSlugs(): { slug: string; lastModified?: string }[] {
   try {
     const dir = join(process.cwd(), 'app', 'blog')
     const entries = readdirSync(dir, { withFileTypes: true })
     return entries
       .filter((e) => e.isDirectory() && e.name !== 'feed.xml')
-      .map((e) => {
-        const pagePath = join(dir, e.name, 'page.tsx')
-        let lastModified = new Date().toISOString()
-        try {
-          lastModified = statSync(pagePath).mtime.toISOString()
-        } catch {
-          // page.tsx fehlt → trotzdem listen, mit "jetzt"
-        }
-        return { slug: e.name, lastModified }
-      })
+      .map((e) => ({
+        slug: e.name,
+        lastModified: (lastmodMap as Record<string, string>)[
+          join('app', 'blog', e.name, 'page.tsx')
+        ],
+      }))
   } catch {
     return []
   }
 }
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const now = new Date().toISOString()
-
   const staticEntries: RouteEntry[] = STATIC_ROUTES.map((r) => ({
     ...r,
-    lastModified: lastModifiedFor(r.url, now),
+    lastModified: lastModifiedFor(r.url),
   }))
 
   const blogEntries: RouteEntry[] = listBlogSlugs().map(({ slug, lastModified }) => ({
@@ -142,7 +137,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
   return [...staticEntries, ...blogEntries].map((e) => ({
     url: `${BASE_URL}${e.url}`,
-    lastModified: e.lastModified,
+    ...(e.lastModified ? { lastModified: e.lastModified } : {}),
     changeFrequency: e.changeFrequency,
     priority: e.priority,
   }))

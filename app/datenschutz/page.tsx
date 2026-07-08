@@ -4,9 +4,15 @@ import BreadcrumbSchema from '@/components/BreadcrumbSchema'
 import CookieSettingsLink from '@/components/CookieSettingsLink'
 
 export const metadata: Metadata = {
-  title: 'Datenschutzerklärung | Alltagsengel',
+  title: 'Datenschutzerklärung',
   description: 'Datenschutzerklärung der Alltagsengel UG (haftungsbeschränkt). Informationen zu Datenverarbeitung, Cookies und Ihren Rechten.',
   alternates: { canonical: 'https://alltagsengel.care/datenschutz' },
+  openGraph: {
+    images: [{ url: '/og-image.png', width: 1200, height: 630 }],
+    title: 'Datenschutzerklärung — Alltagsengel',
+    description: 'Informationen zu Datenverarbeitung, Cookies und Ihren Rechten bei Alltagsengel.',
+    url: 'https://alltagsengel.care/datenschutz',
+  },
 }
 
 export default function DatenschutzPage() {

@@ -1,10 +1,11 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import BreadcrumbSchema from '@/components/BreadcrumbSchema'
+import RelatedPosts from '@/components/RelatedPosts'
 
 export const metadata: Metadata = {
-  title: 'Entlastungsbetrag beantragen: Schritt-für-Schritt Anleitung 2026',
-  description: 'Erfahren Sie, wie Sie den Entlastungsbetrag nach § 45b beantragen. Vollständige Anleitung mit erforderlichen Dokumenten und Tipps für eine schnelle Genehmigung.',
+  title: 'Entlastungsbetrag beantragen: Anleitung 2026',
+  description: 'Erfahren Sie, wie Sie den Entlastungsbetrag nach § 45b beantragen. Anleitung mit allen Dokumenten und Tipps für die schnelle Genehmigung – jetzt lesen.',
   keywords: 'Entlastungsbetrag, § 45b, Pflegekasse, Pflegegrad, Beantragung 2026',
   alternates: { canonical: 'https://alltagsengel.care/blog/entlastungsbetrag-beantragen' },
   openGraph: {
@@ -19,11 +20,11 @@ const articleJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'Article',
   headline: 'Entlastungsbetrag beantragen: Schritt-für-Schritt Anleitung 2026',
-  description: 'Erfahren Sie, wie Sie den Entlastungsbetrag nach § 45b beantragen. Vollständige Anleitung mit erforderlichen Dokumenten und Tipps für eine schnelle Genehmigung.',
+  description: 'Erfahren Sie, wie Sie den Entlastungsbetrag nach § 45b beantragen. Anleitung mit allen Dokumenten und Tipps für die schnelle Genehmigung – jetzt lesen.',
   author: { '@type': 'Organization', name: 'Alltagsengel', url: 'https://alltagsengel.care' },
   publisher: { '@type': 'Organization', name: 'Alltagsengel', url: 'https://alltagsengel.care', logo: { '@type': 'ImageObject', url: 'https://alltagsengel.care/icon-512x512.png' } },
-  datePublished: '2026-03-19',
-  dateModified: '2026-03-19',
+  datePublished: '2026-04-12',
+  dateModified: '2026-04-12',
   mainEntityOfPage: 'https://alltagsengel.care/blog/entlastungsbetrag-beantragen',
   image: 'https://alltagsengel.care/og-image.png',
   inLanguage: 'de-DE',
@@ -32,7 +33,7 @@ const articleJsonLd = {
 export default function EntlastungsbetragBeantragen() {
   return (
     <main className="blog-container">
-      <BreadcrumbSchema items={[{ name: 'Ratgeber', url: '/blog' }, { name: 'Entlastungsbetrag beantragen: Schritt-für-Schritt Anleitung' }]} />
+      <BreadcrumbSchema items={[{ name: 'Ratgeber', url: '/blog' }, { name: 'Entlastungsbetrag beantragen' }]} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }} />
       <article className="blog-article">
         <div className="blog-header">
@@ -92,27 +93,20 @@ export default function EntlastungsbetragBeantragen() {
             <li><strong>Fehlerhafte Kontodaten:</strong> Überprüfen Sie Ihre Bankverbindung für die Rückerstattung</li>
           </ul>
 
-          <h2>Wie AlltagsEngel Ihnen hilft</h2>
-          <p>Die Beantragung des Entlastungsbetrags kann kompliziert wirken, besonders wenn Sie bereits Pflegeverantwortungen haben. AlltagsEngel verfügt über umfangreiche Erfahrung mit den aktuellen Vorgaben und Anforderungen der Pflegekassen. Über AlltagsEngel können Sie direkt zugelassene Alltagsbegleiter und Helfer finden, die den Entlastungsbetrag annehmen. Unsere Helfer sind bereits korrekt registriert und Sie müssen sich keine Sorgen um die Abrechnungsformalitäten machen. So können Sie Ihre monatlichen 131 Euro sicher nutzen, ohne sich mit bürokratischen Details belastet zu fühlen.</p>
+          <h2>Wie Alltagsengel Ihnen hilft</h2>
+          <p>Die Beantragung des Entlastungsbetrags kann kompliziert wirken, besonders wenn Sie bereits Pflegeverantwortungen haben. Alltagsengel verfügt über umfangreiche Erfahrung mit den aktuellen Vorgaben und Anforderungen der Pflegekassen. Über Alltagsengel können Sie direkt zugelassene Alltagsbegleiter und Helfer finden, die den Entlastungsbetrag annehmen. Unsere Helfer sind bereits korrekt registriert und Sie müssen sich keine Sorgen um die Abrechnungsformalitäten machen. So können Sie Ihre monatlichen 131 Euro sicher nutzen, ohne sich mit bürokratischen Details belastet zu fühlen.</p>
 
           <h2>Wichtige Fristen beachten</h2>
           <p>Der Entlastungsbetrag wird pro Kalenderjahr gewährt. Noch nicht verbrauchte Beträge können unter bestimmten Bedingungen ins nächste Jahr übertragen werden. Informieren Sie sich bei Ihrer Pflegekasse über die genauen Regelungen.</p>
         </div>
 
         <div className="blog-cta">
-          <h3>Jetzt AlltagsEngel testen</h3>
-          <p>Registriere dich kostenlos und finde geprüfte Alltagsbegleiter, die deinen Entlastungsbetrag annehmen.</p>
-          <Link href="/choose" className="btn-gold">Kostenlos registrieren</Link>
+          <h3>Jetzt Alltagsengel testen</h3>
+          <p>Vereinbaren Sie einen kostenlosen Termin und finden Sie geprüfte Alltagsbegleiter, die Ihren Entlastungsbetrag annehmen.</p>
+          <Link href="/termin" className="btn-gold">Jetzt kostenlos starten</Link>
         </div>
-      
-        <section className="blog-related" style={{ marginTop: 40, padding: '24px 20px', background: 'rgba(201,150,60,0.06)', borderRadius: 12, border: '1px solid rgba(201,150,60,0.15)' }}>
-          <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 12, color: '#C9963C' }}>Weiterführende Informationen</h3>
-          <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <li><Link href="/alltagsbegleitung" style={{ color: '#F5F0E8', textDecoration: 'underline', textUnderlineOffset: 3, fontSize: 14 }}>Alltagsbegleitung über den Entlastungsbetrag buchen</Link></li>
-            <li><Link href="/blog/entlastungsbetrag-45b" style={{ color: '#F5F0E8', textDecoration: 'underline', textUnderlineOffset: 3, fontSize: 14 }}>Alles zum Entlastungsbetrag nach 45b</Link></li>
-            <li><Link href="/blog/pflegegrad-beantragen" style={{ color: '#F5F0E8', textDecoration: 'underline', textUnderlineOffset: 3, fontSize: 14 }}>Pflegegrad beantragen: Schritt für Schritt</Link></li>
-          </ul>
-        </section>
+
+        <RelatedPosts slug="entlastungsbetrag-beantragen" />
       </article>
     </main>
   );

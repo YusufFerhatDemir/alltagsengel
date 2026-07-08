@@ -1,10 +1,11 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import BreadcrumbSchema from '@/components/BreadcrumbSchema'
+import RelatedPosts from '@/components/RelatedPosts'
 
 export const metadata: Metadata = {
-  title: 'Wer zahlt die Alltagsbegleitung? Pflegekasse, Entlastungsbetrag & Co.',
-  description: 'Wer zahlt die Alltagsbegleitung? Pflegekasse (131€ Entlastungsbetrag), Verhinderungspflege, Sozialamt oder Selbstzahler — alle Finanzierungswege übersichtlich erklärt.',
+  title: 'Wer zahlt die Alltagsbegleitung?',
+  description: 'Wer zahlt die Alltagsbegleitung? Pflegekasse (131 € Entlastungsbetrag), Verhinderungspflege, Sozialamt oder privat — alle Finanzierungswege im Überblick.',
   keywords: ['wer zahlt Alltagsbegleitung', 'Alltagsbegleitung Kostenübernahme', 'Alltagsbegleitung Pflegekasse', 'Entlastungsbetrag Alltagsbegleitung', 'Alltagsbegleitung wer bezahlt'],
   alternates: { canonical: 'https://alltagsengel.care/blog/wer-zahlt-alltagsbegleitung' },
   openGraph: {
@@ -19,8 +20,8 @@ export const metadata: Metadata = {
 const articleJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'Article',
-  headline: 'Wer zahlt die Alltagsbegleitung? Pflegekasse, Entlastungsbetrag & Co.',
-  description: 'Wer zahlt die Alltagsbegleitung? Pflegekasse, Verhinderungspflege, Sozialamt oder Selbstzahler — alle Finanzierungswege erklärt.',
+  headline: 'Wer zahlt die Alltagsbegleitung?',
+  description: 'Wer zahlt die Alltagsbegleitung? Pflegekasse (131 € Entlastungsbetrag), Verhinderungspflege, Sozialamt oder privat — alle Finanzierungswege im Überblick.',
   author: { '@type': 'Organization', name: 'Alltagsengel', url: 'https://alltagsengel.care' },
   publisher: { '@type': 'Organization', name: 'Alltagsengel', url: 'https://alltagsengel.care', logo: { '@type': 'ImageObject', url: 'https://alltagsengel.care/icon-512x512.png' } },
   datePublished: '2026-07-02',
@@ -64,7 +65,7 @@ const faqJsonLd = {
 export default function WerZahltAlltagsbegleitungPage() {
   return (
     <main className="blog-container">
-      <BreadcrumbSchema items={[{ name: 'Ratgeber', url: '/blog' }, { name: 'Wer zahlt die Alltagsbegleitung?' }]} />
+      <BreadcrumbSchema items={[{ name: 'Ratgeber', url: '/blog' }, { name: 'Wer zahlt Alltagsbegleitung?' }]} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
       <article className="blog-article">
@@ -190,18 +191,11 @@ export default function WerZahltAlltagsbegleitungPage() {
           </div>
         </div>
 
+        <RelatedPosts slug="wer-zahlt-alltagsbegleitung" />
+
         <footer className="blog-footer">
           <Link href="/blog" className="blog-back">← Zurück zum Ratgeber</Link>
         </footer>
-
-        <section className="blog-related" style={{ marginTop: 40, padding: '24px 20px', background: 'rgba(201,150,60,0.06)', borderRadius: 12, border: '1px solid rgba(201,150,60,0.15)' }}>
-          <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 12, color: '#C9963C' }}>Weiterführende Informationen</h3>
-          <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <li><Link href="/blog/alltagsbegleitung-kosten" style={{ color: '#F5F0E8', textDecoration: 'underline', textUnderlineOffset: 3, fontSize: 14 }}>Was kostet Alltagsbegleitung?</Link></li>
-            <li><Link href="/blog/entlastungsbetrag-45b" style={{ color: '#F5F0E8', textDecoration: 'underline', textUnderlineOffset: 3, fontSize: 14 }}>Entlastungsbetrag §45b — 131 €/Monat</Link></li>
-            <li><Link href="/alltagsbegleitung" style={{ color: '#F5F0E8', textDecoration: 'underline', textUnderlineOffset: 3, fontSize: 14 }}>Alltagsbegleitung jetzt buchen</Link></li>
-          </ul>
-        </section>
       </article>
     </main>
   )
