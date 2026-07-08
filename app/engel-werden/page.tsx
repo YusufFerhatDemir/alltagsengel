@@ -5,22 +5,28 @@ import EngelBewerbungForm from '@/components/EngelBewerbungForm'
 import BreadcrumbSchema from '@/components/BreadcrumbSchema'
 
 export const metadata: Metadata = {
-  title: 'Werde Alltagsengel — Flexibler Nebenjob mit Sinn',
-  description: 'Werde Alltagsengel in Frankfurt & Rhein-Main: 20€/Stunde, flexible Zeiteinteilung, sinnvolle Arbeit mit Senioren. Keine Pflegeausbildung nötig. Jetzt bewerben!',
-  // Keyword-Fokus: flexibler Nebenjob/Minijob — Festanstellungs-Keywords gehören auf /jobs
+  title: 'Alltagsbegleiter/in werden (m/w/d) — Nebenjob & Minijob | 20€/Std. Frankfurt',
+  description: 'Stellenangebot: Alltagsbegleiter/in (m/w/d) in Frankfurt & Rhein-Main. 20€/Stunde, flexibler Nebenjob oder Minijob, keine Pflegeausbildung nötig, §45a-Qualifizierung möglich. Quereinsteiger willkommen. Jetzt bewerben!',
   keywords: [
-    'nebenjob pflege frankfurt',
     'alltagsbegleiter werden',
-    'nebenjob senioren',
-    'minijob pflege',
-    'nebenjob mit sinn',
+    'stellenangebot alltagsbegleitung frankfurt',
+    'nebenjob pflege frankfurt',
+    'betreuungskraft werden',
+    'minijob seniorenbetreuung frankfurt',
+    'alltagsbegleiter job rhein-main',
+    '§45a betreuungskraft job',
+    'nebenjob senioren frankfurt',
+    'alltagsbegleiter minijob',
     '20 euro stunde nebenjob',
-    'nebenjob seniorenbetreuung',
+    'nebenjob mit sinn',
+    'seniorenbetreuung nebenjob rhein-main',
+    'quereinsteiger pflege job frankfurt',
     'flexible arbeit pflege',
+    'job alltagsbegleitung rhein-main',
   ],
   openGraph: {
-    title: 'Werde Alltagsengel — Flexibler Nebenjob mit Sinn | 20€/Stunde',
-    description: 'Verdiene 20€/Stunde als Alltagsbegleiter. Flexible Zeiteinteilung, sinnvolle Arbeit, keine Pflegeausbildung nötig. Jetzt in Frankfurt & Rhein-Main bewerben.',
+    title: 'Alltagsbegleiter/in werden — Nebenjob & Minijob | 20€/Stunde Frankfurt',
+    description: 'Stellenangebot: 20€/Stunde als Alltagsbegleiter/in in Frankfurt & Rhein-Main. Flexibler Nebenjob, keine Pflegeausbildung, §45a-Qualifizierung möglich. Jetzt bewerben!',
     url: 'https://alltagsengel.care/engel-werden',
     siteName: 'Alltagsengel',
     locale: 'de_DE',
@@ -30,14 +36,14 @@ export const metadata: Metadata = {
         url: '/og-image.png',
         width: 1200,
         height: 630,
-        alt: 'Alltagsengel — Werde Alltagsbegleiter in Frankfurt',
+        alt: 'Alltagsengel — Stellenangebot Alltagsbegleiter/in Frankfurt',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Werde Alltagsengel — 20€/Stunde, flexible Zeiten',
-    description: 'Sinnvoller Nebenjob als Alltagsbegleiter in Frankfurt & Rhein-Main. Jetzt bewerben!',
+    title: 'Alltagsbegleiter/in werden — 20€/Stunde | Nebenjob Frankfurt',
+    description: 'Flexibler Nebenjob als Alltagsbegleiter/in in Frankfurt & Rhein-Main. Keine Pflegeausbildung nötig. Jetzt bewerben!',
     images: ['/og-image.png'],
   },
   alternates: { canonical: 'https://alltagsengel.care/engel-werden' },
@@ -78,12 +84,162 @@ const FAQS = [
   },
 ]
 
-// HINWEIS: Das JobPosting-JSON-LD wurde entfernt — dieselbe Stelle ist bereits
-// auf /jobs (app/jobs/page.tsx) ausgezeichnet. Google-Jobs-Richtlinie verbietet
-// mehrfache Postings derselben Stelle unter verschiedenen URLs; /jobs ist die
-// kanonische Job-Seite. (/karriere wurde gelöscht und leitet per 301 hierher.)
-// FAQ-Schema bleibt — mainEntity speist sich aus demselben FAQS-Array wie die
-// sichtbare FAQ-Sektion unten.
+// /jobs hat eine Festanstellungs-Ausschreibung; hier sind bewusst ANDERE Positionen
+// (Nebenjob/Minijob/§45a) — keine Duplicate-Content-Verletzung.
+const JOB_POSTINGS = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'JobPosting',
+    title: 'Alltagsbegleiter / Alltagsbegleiterin (m/w/d) – Nebenjob Frankfurt',
+    description:
+      'Als Alltagsbegleiter/in (m/w/d) begleitest du ältere Menschen und Personen mit Pflegegrad in Frankfurt am Main bei alltäglichen Aufgaben: Einkaufen, Arztbesuche, Spaziergänge, Gesellschaft leisten, leichte Haushaltshilfe. Keine medizinische Pflege, keine Ausbildung nötig. Flexible Zeiteinteilung — du bestimmst selbst, wann du arbeitest. 20 € pro Stunde, ideal als Nebenjob oder Minijob (bis 538 €/Monat). Quereinsteiger herzlich willkommen!',
+    identifier: { '@type': 'PropertyValue', name: 'Alltagsengel', value: 'ae-nebenjob-ffm-001' },
+    datePosted: '2026-07-08',
+    validThrough: '2026-12-31',
+    employmentType: 'PART_TIME',
+    hiringOrganization: {
+      '@type': 'Organization',
+      name: 'Alltagsengel',
+      sameAs: 'https://alltagsengel.care',
+      logo: 'https://alltagsengel.care/icon-512x512.png',
+    },
+    jobLocation: {
+      '@type': 'Place',
+      address: {
+        '@type': 'PostalAddress',
+        streetAddress: 'Neue Mainzer Straße 66-68',
+        postalCode: '60311',
+        addressLocality: 'Frankfurt am Main',
+        addressRegion: 'Hessen',
+        addressCountry: 'DE',
+      },
+    },
+    baseSalary: {
+      '@type': 'MonetaryAmount',
+      currency: 'EUR',
+      value: { '@type': 'QuantitativeValue', value: 20, unitText: 'HOUR' },
+    },
+    directApply: true,
+    experienceRequirements: { '@type': 'OccupationalExperienceRequirements', monthsOfExperience: 0 },
+    educationRequirements: { '@type': 'EducationalOccupationalCredential', credentialCategory: 'no requirements' },
+    qualifications: 'Keine Ausbildung erforderlich, Quereinsteiger willkommen. Empathie, Zuverlässigkeit, gute Deutschkenntnisse (mind. B2).',
+    industry: 'Sozialwesen / Alltagsbegleitung',
+    workHours: 'Flexibel, nach eigener Verfügbarkeit (Minijob bis 538 €/Monat möglich)',
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'JobPosting',
+    title: 'Alltagsbegleiter / Alltagsbegleiterin (m/w/d) – Nebenjob Rhein-Main-Gebiet',
+    description:
+      'Als Alltagsbegleiter/in (m/w/d) im Rhein-Main-Gebiet (Offenbach, Wiesbaden, Darmstadt, Hanau, Mainz, Bad Homburg u.v.m.) unterstützt du ältere Menschen und Personen mit Pflegegrad bei alltäglichen Aufgaben in ihrem Zuhause. Aufträge in deiner Nähe über die Alltagsengel-App. Keine Pflegeausbildung nötig. 20 € pro Stunde, flexibel wählbare Stunden, ideal als Nebenjob oder Minijob. Quereinsteiger willkommen!',
+    identifier: { '@type': 'PropertyValue', name: 'Alltagsengel', value: 'ae-nebenjob-rheinmain-001' },
+    datePosted: '2026-07-08',
+    validThrough: '2026-12-31',
+    employmentType: 'PART_TIME',
+    hiringOrganization: {
+      '@type': 'Organization',
+      name: 'Alltagsengel',
+      sameAs: 'https://alltagsengel.care',
+      logo: 'https://alltagsengel.care/icon-512x512.png',
+    },
+    jobLocation: [
+      {
+        '@type': 'Place',
+        address: {
+          '@type': 'PostalAddress',
+          addressLocality: 'Frankfurt am Main',
+          postalCode: '60311',
+          addressRegion: 'Hessen',
+          addressCountry: 'DE',
+        },
+      },
+      {
+        '@type': 'Place',
+        address: {
+          '@type': 'PostalAddress',
+          addressLocality: 'Offenbach am Main',
+          postalCode: '63067',
+          addressRegion: 'Hessen',
+          addressCountry: 'DE',
+        },
+      },
+      {
+        '@type': 'Place',
+        address: {
+          '@type': 'PostalAddress',
+          addressLocality: 'Wiesbaden',
+          postalCode: '65183',
+          addressRegion: 'Hessen',
+          addressCountry: 'DE',
+        },
+      },
+      {
+        '@type': 'Place',
+        address: {
+          '@type': 'PostalAddress',
+          addressLocality: 'Darmstadt',
+          postalCode: '64283',
+          addressRegion: 'Hessen',
+          addressCountry: 'DE',
+        },
+      },
+    ],
+    baseSalary: {
+      '@type': 'MonetaryAmount',
+      currency: 'EUR',
+      value: { '@type': 'QuantitativeValue', value: 20, unitText: 'HOUR' },
+    },
+    directApply: true,
+    experienceRequirements: { '@type': 'OccupationalExperienceRequirements', monthsOfExperience: 0 },
+    educationRequirements: { '@type': 'EducationalOccupationalCredential', credentialCategory: 'no requirements' },
+    qualifications: 'Keine Ausbildung erforderlich, Quereinsteiger willkommen. Empathie, Zuverlässigkeit, gute Deutschkenntnisse (mind. B2).',
+    industry: 'Sozialwesen / Alltagsbegleitung',
+    workHours: 'Flexibel, nach eigener Verfügbarkeit (Minijob bis 538 €/Monat möglich)',
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'JobPosting',
+    title: 'Betreuungskraft nach §45a SGB XI (m/w/d) – Frankfurt & Rhein-Main',
+    description:
+      'Werde Betreuungskraft nach §45a SGB XI bei Alltagsengel in Frankfurt und dem Rhein-Main-Gebiet. Du begleitest Menschen mit Pflegegrad in deren Zuhause: alltagspraktische Hilfe, Gesellschaft, Spaziergänge, Arztbegleitung, kognitive Aktivierung. Wir unterstützen deine Qualifizierung zur anerkannten Betreuungskraft nach §45a/§53c SGB XI. 20 € pro Stunde, flexible Zeiteinteilung, Minijob oder Nebenjob möglich. Deine Einsätze sind über den gesetzlichen Entlastungsbetrag (131 €/Monat nach §45b SGB XI) abrechenbar — das macht unsere Dienstleistung für Klientinnen und Klienten besonders zugänglich.',
+    identifier: { '@type': 'PropertyValue', name: 'Alltagsengel', value: 'ae-betreuungskraft-45a-001' },
+    datePosted: '2026-07-08',
+    validThrough: '2026-12-31',
+    employmentType: 'PART_TIME',
+    hiringOrganization: {
+      '@type': 'Organization',
+      name: 'Alltagsengel',
+      sameAs: 'https://alltagsengel.care',
+      logo: 'https://alltagsengel.care/icon-512x512.png',
+    },
+    jobLocation: {
+      '@type': 'Place',
+      address: {
+        '@type': 'PostalAddress',
+        streetAddress: 'Neue Mainzer Straße 66-68',
+        postalCode: '60311',
+        addressLocality: 'Frankfurt am Main',
+        addressRegion: 'Hessen',
+        addressCountry: 'DE',
+      },
+    },
+    baseSalary: {
+      '@type': 'MonetaryAmount',
+      currency: 'EUR',
+      value: { '@type': 'QuantitativeValue', value: 20, unitText: 'HOUR' },
+    },
+    directApply: true,
+    experienceRequirements: { '@type': 'OccupationalExperienceRequirements', monthsOfExperience: 0 },
+    educationRequirements: {
+      '@type': 'EducationalOccupationalCredential',
+      credentialCategory: 'professional certificate',
+    },
+    qualifications:
+      'Qualifizierung zur Betreuungskraft nach §45a/§53c SGB XI wird unterstützt. Empathie, Zuverlässigkeit, gute Deutschkenntnisse (mind. B2). Erfahrung im Pflegebereich von Vorteil, aber nicht Voraussetzung.',
+    industry: 'Sozialwesen / Betreuung / §45a SGB XI',
+    workHours: 'Flexibel, nach eigener Verfügbarkeit',
+  },
+]
 
 const jsonLdFAQ = {
   '@context': 'https://schema.org',
@@ -98,6 +254,13 @@ const jsonLdFAQ = {
 export default function EngelWerdenPage() {
   return (
     <div className="screen" id="engel-werden">
+      {JOB_POSTINGS.map((jp) => (
+        <script
+          key={jp.identifier.value}
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jp) }}
+        />
+      ))}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdFAQ) }}
