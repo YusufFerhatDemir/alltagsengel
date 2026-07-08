@@ -1,14 +1,15 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import BreadcrumbSchema from '@/components/BreadcrumbSchema'
+import RelatedPosts from '@/components/RelatedPosts'
 
 export const metadata: Metadata = {
-  title: 'Pflegehilfsmittel: 42€/Monat kostenlos — Hygienebox bestellen',
-  description: 'Pflegehilfsmittel kostenlos erhalten: Bis zu 42€ monatlich von der Pflegekasse. Hygienebox mit Windeln, Bettschutz & mehr. §40 SGB XI.',
-  keywords: ['Pflegehilfsmittel', 'Hygienebox', '§40 SGB XI', '40 Euro', 'Pflegekasse', 'Windeln', 'Bettschutz', 'kostenlos'],
+  title: 'Pflegehilfsmittel: 42€/Monat kostenlos',
+  description: 'Pflegehilfsmittel kostenlos: Bis zu 42 € monatlich von der Pflegekasse (§40 SGB XI). Hygienebox mit Windeln & Bettschutz — jetzt bestellen.',
+  keywords: ['Pflegehilfsmittel', 'Hygienebox', '§40 SGB XI', '42 Euro', 'Pflegekasse', 'Windeln', 'Bettschutz', 'kostenlos'],
   alternates: { canonical: 'https://alltagsengel.care/blog/pflegehilfsmittel-40-euro' },
   openGraph: {
-    title: 'Pflegehilfsmittel: 40€/Monat kostenlos — Hygienebox',
+    title: 'Pflegehilfsmittel: 42€/Monat kostenlos — Hygienebox',
     description: 'Bestellen Sie monatlich Pflegehilfsmittel kostenlos. Die Pflegekasse zahlt bis 42€.',
     url: 'https://alltagsengel.care/blog/pflegehilfsmittel-40-euro',
     type: 'article',
@@ -21,7 +22,7 @@ const articleJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'Article',
   headline: 'Pflegehilfsmittel: 42€/Monat kostenlos — Hygienebox bestellen',
-  description: 'Pflegehilfsmittel kostenlos erhalten: Bis zu 42€ monatlich von der Pflegekasse. Hygienebox mit Windeln, Bettschutz & mehr. §40 SGB XI.',
+  description: 'Pflegehilfsmittel kostenlos: Bis zu 42 € monatlich von der Pflegekasse (§40 SGB XI). Hygienebox mit Windeln & Bettschutz — jetzt bestellen.',
   author: { '@type': 'Organization', name: 'Alltagsengel', url: 'https://alltagsengel.care' },
   publisher: { '@type': 'Organization', name: 'Alltagsengel', url: 'https://alltagsengel.care', logo: { '@type': 'ImageObject', url: 'https://alltagsengel.care/icon-512x512.png' } },
   datePublished: '2026-03-19',
@@ -34,7 +35,7 @@ const articleJsonLd = {
 export default function PflegehilfsmittelPage() {
   return (
     <main className="blog-container">
-      <BreadcrumbSchema items={[{ name: 'Ratgeber', url: '/blog' }, { name: 'Pflegehilfsmittel: 42€/Monat kostenlos' }]} />
+      <BreadcrumbSchema items={[{ name: 'Ratgeber', url: '/blog' }, { name: 'Pflegehilfsmittel kostenlos' }]} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }} />
       <article className="blog-article">
         <header className="blog-header">
@@ -82,8 +83,8 @@ export default function PflegehilfsmittelPage() {
 
           <h2>§40 SGB XI — Das ist Ihre Leistung</h2>
           <p>
-            Die Leistung für Pflegehilfsmittel ist im <strong>Sozialgesetzbuch XI (Pflegeversicherungsgesetz)</strong> verankert. 
-            Jede Krankenkasse muss diese Leistung uneingeschränkt erbringen.
+            Die Leistung für Pflegehilfsmittel ist im <strong>Sozialgesetzbuch XI (Pflegeversicherungsgesetz)</strong> verankert.
+            Jede Pflegekasse muss diese Leistung uneingeschränkt erbringen.
           </p>
           <p>
             <strong>Das Wichtigste:</strong> Sie zahlen keinen Eigenanteil. Die kompletten 42€ bezahlt die Pflegekasse. 
@@ -124,8 +125,8 @@ export default function PflegehilfsmittelPage() {
           </p>
           <p>
             <strong>Was passiert mit ungenutztem Budget?</strong><br />
-            Anders als beim Entlastungsbetrag: Ungenutztes Budget verfällt <strong>nicht</strong>. 
-            Es wird ins nächste Monat übertragen — aber maximal 2 × 40€ (80€) Sparbetrag.
+            Der Betrag gilt <strong>pro Monat</strong>: Nicht genutztes Budget wird nicht in den Folgemonat übertragen.
+            Deshalb lohnt sich die regelmäßige monatliche Lieferung.
           </p>
 
           <h2>Weitere Pflegehilfsmittel — Das sollten Sie kennen</h2>
@@ -141,8 +142,8 @@ export default function PflegehilfsmittelPage() {
 
           <h2>Worauf Sie achten sollten</h2>
           <p>
-            <strong>Vergessen Sie nicht:</strong> Der Leistungsanspruch für Pflegehilfsmittel gilt das <strong>ganze Jahr</strong>. 
-            Viele Menschen verschenken ihr Jahresbudget von 480€, weil sie nicht wissen, dass sie automatisch Anspruch haben.
+            <strong>Vergessen Sie nicht:</strong> Der Leistungsanspruch für Pflegehilfsmittel gilt das <strong>ganze Jahr</strong>.
+            Viele Menschen verschenken ihr Jahresbudget von 504€, weil sie nicht wissen, dass sie automatisch Anspruch haben.
           </p>
           <p>
             Melden Sie sich noch heute an und sichern Sie sich die kostenlose monatliche Lieferung!
@@ -151,35 +152,20 @@ export default function PflegehilfsmittelPage() {
           <div className="blog-cta">
             <h3>Jetzt kostenlose Hygienebox bestellen</h3>
             <p>
-              Registrieren Sie sich jetzt und erhalten Sie jeden Monat bis zu 40€ an Pflegehilfsmitteln — 
+              Registrieren Sie sich jetzt und erhalten Sie jeden Monat bis zu 42€ an Pflegehilfsmitteln —
               kostenlos direkt nach Hause geliefert.
             </p>
-            <Link href="https://alltagsengel.care/kunde/hygienebox" className="cta-button">
+            <Link href="/hygienebox" className="cta-button">
               Hygienebox bestellen →
             </Link>
           </div>
         </div>
 
+        <RelatedPosts slug="pflegehilfsmittel-40-euro" />
+
         <footer className="blog-footer">
           <Link href="/" className="blog-back">← Zurück zur Startseite</Link>
-          <div className="blog-share">
-            <p>Teilen Sie diesen Artikel:</p>
-            <div className="share-links">
-              <a href="#" className="share-btn">Facebook</a>
-              <a href="#" className="share-btn">Twitter</a>
-              <a href="#" className="share-btn">WhatsApp</a>
-            </div>
-          </div>
         </footer>
-      
-        <section className="blog-related" style={{ marginTop: 40, padding: '24px 20px', background: 'rgba(201,150,60,0.06)', borderRadius: 12, border: '1px solid rgba(201,150,60,0.15)' }}>
-          <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 12, color: '#C9963C' }}>Weiterführende Informationen</h3>
-          <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <li><Link href="/hygienebox" style={{ color: '#F5F0E8', textDecoration: 'underline', textUnderlineOffset: 3, fontSize: 14 }}>Pflegebox bestellen — 0 Euro Eigenanteil</Link></li>
-            <li><Link href="/blog/pflegebox-kostenlos-bestellen" style={{ color: '#F5F0E8', textDecoration: 'underline', textUnderlineOffset: 3, fontSize: 14 }}>Pflegebox kostenlos bestellen</Link></li>
-            <li><Link href="/alltagsbegleitung" style={{ color: '#F5F0E8', textDecoration: 'underline', textUnderlineOffset: 3, fontSize: 14 }}>Alltagsbegleitung — weitere Pflegeleistungen nutzen</Link></li>
-          </ul>
-        </section>
       </article>
     </main>
   )

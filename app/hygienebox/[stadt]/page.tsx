@@ -13,6 +13,8 @@ interface CityData {
   slug: string
   plz: string
   description: string
+  stadtteile: string[] // reale Stadtteile fürs Liefergebiet (sichtbar + FAQ)
+  geo: { lat: number; lng: number } // Stadtzentrum für GeoCoordinates im JSON-LD
 }
 
 export const dynamicParams = true
@@ -24,6 +26,8 @@ const cities: Record<string, CityData> = {
     slug: 'frankfurt',
     plz: '60311',
     description: 'Frankfurt am Main und dem gesamten Stadtgebiet',
+    stadtteile: ['Bockenheim', 'Bornheim', 'Sachsenhausen', 'Nordend', 'Gallus', 'Höchst'],
+    geo: { lat: 50.1109, lng: 8.6821 },
   },
   offenbach: {
     name: 'Offenbach am Main',
@@ -31,6 +35,8 @@ const cities: Record<string, CityData> = {
     slug: 'offenbach',
     plz: '63065',
     description: 'Offenbach am Main und Umgebung',
+    stadtteile: ['Bieber', 'Bürgel', 'Rumpenheim', 'Lauterborn', 'Tempelsee'],
+    geo: { lat: 50.0956, lng: 8.7761 },
   },
   wiesbaden: {
     name: 'Wiesbaden',
@@ -38,6 +44,8 @@ const cities: Record<string, CityData> = {
     slug: 'wiesbaden',
     plz: '65183',
     description: 'Wiesbaden und dem Rheingau',
+    stadtteile: ['Biebrich', 'Dotzheim', 'Schierstein', 'Sonnenberg', 'Bierstadt'],
+    geo: { lat: 50.0782, lng: 8.2398 },
   },
   darmstadt: {
     name: 'Darmstadt',
@@ -45,6 +53,8 @@ const cities: Record<string, CityData> = {
     slug: 'darmstadt',
     plz: '64283',
     description: 'Darmstadt und Südhessen',
+    stadtteile: ['Arheilgen', 'Eberstadt', 'Bessungen', 'Kranichstein', 'Wixhausen'],
+    geo: { lat: 49.8728, lng: 8.6512 },
   },
   hanau: {
     name: 'Hanau',
@@ -52,6 +62,8 @@ const cities: Record<string, CityData> = {
     slug: 'hanau',
     plz: '63450',
     description: 'Hanau und dem Main-Kinzig-Kreis',
+    stadtteile: ['Steinheim', 'Großauheim', 'Kesselstadt', 'Klein-Auheim', 'Mittelbuchen'],
+    geo: { lat: 50.1264, lng: 8.928 },
   },
   'bad-homburg': {
     name: 'Bad Homburg',
@@ -59,6 +71,8 @@ const cities: Record<string, CityData> = {
     slug: 'bad-homburg',
     plz: '61348',
     description: 'Bad Homburg und dem Hochtaunuskreis',
+    stadtteile: ['Gonzenheim', 'Kirdorf', 'Ober-Erlenbach', 'Ober-Eschbach', 'Dornholzhausen'],
+    geo: { lat: 50.2268, lng: 8.6182 },
   },
   mainz: {
     name: 'Mainz',
@@ -66,6 +80,8 @@ const cities: Record<string, CityData> = {
     slug: 'mainz',
     plz: '55116',
     description: 'Mainz und Rheinhessen',
+    stadtteile: ['Gonsenheim', 'Bretzenheim', 'Mombach', 'Hechtsheim', 'Weisenau'],
+    geo: { lat: 49.9929, lng: 8.2473 },
   },
   aschaffenburg: {
     name: 'Aschaffenburg',
@@ -73,6 +89,8 @@ const cities: Record<string, CityData> = {
     slug: 'aschaffenburg',
     plz: '63739',
     description: 'Aschaffenburg und dem Bayerischen Untermain',
+    stadtteile: ['Damm', 'Leider', 'Nilkheim', 'Schweinheim', 'Obernau'],
+    geo: { lat: 49.9769, lng: 9.1582 },
   },
   'neu-isenburg': {
     name: 'Neu-Isenburg',
@@ -80,6 +98,8 @@ const cities: Record<string, CityData> = {
     slug: 'neu-isenburg',
     plz: '63263',
     description: 'Neu-Isenburg und Dreieich',
+    stadtteile: ['Stadtmitte', 'Gravenbruch', 'Zeppelinheim'],
+    geo: { lat: 50.0483, lng: 8.6942 },
   },
   'friedberg-wetterau': {
     name: 'Friedberg (Wetterau)',
@@ -87,6 +107,8 @@ const cities: Record<string, CityData> = {
     slug: 'friedberg-wetterau',
     plz: '61169',
     description: 'Friedberg und der Wetterau',
+    stadtteile: ['Bauernheim', 'Bruchenbrücken', 'Dorheim', 'Ockstadt', 'Ossenheim'],
+    geo: { lat: 50.3353, lng: 8.7548 },
   },
   rodgau: {
     name: 'Rodgau',
@@ -94,6 +116,8 @@ const cities: Record<string, CityData> = {
     slug: 'rodgau',
     plz: '63110',
     description: 'Rodgau und dem Kreis Offenbach',
+    stadtteile: ['Jügesheim', 'Nieder-Roden', 'Dudenhofen', 'Hainhausen', 'Weiskirchen'],
+    geo: { lat: 50.0247, lng: 8.8853 },
   },
 }
 
@@ -106,9 +130,14 @@ export async function generateMetadata({ params }: { params: Promise<{ stadt: st
   const city = cities[stadt]
   if (!city) return {}
 
+  // Frankfurt kanonisiert auf die Hauptseite /hygienebox — vermeidet Keyword-Kannibalisierung
+  const canonical = city.slug === 'frankfurt'
+    ? 'https://alltagsengel.care/hygienebox'
+    : `https://alltagsengel.care/hygienebox/${city.slug}`
+
   return {
-    title: `Pflegebox ${city.name} | Kostenlose Pflegehilfsmittel 42€/Monat — Alltagsengel`,
-    description: `Pflegebox in ${city.name} kostenlos bestellen. Pflegehilfsmittel nach §40 SGB XI — Handschuhe, Desinfektionsmittel, Bettschutz. 42€/Monat von der Pflegekasse, 0€ Zuzahlung.`,
+    title: `Pflegebox ${city.name} — 0 € Zuzahlung`,
+    description: `Kostenlose Pflegebox nach ${city.name}: Handschuhe, Desinfektion, Bettschutz (§40 SGB XI). Bis 42 €/Monat von der Kasse, 0 € Zuzahlung. Jetzt bestellen!`,
     keywords: [
       `Pflegebox ${city.name}`,
       `Pflegehilfsmittel ${city.name}`,
@@ -130,11 +159,49 @@ export async function generateMetadata({ params }: { params: Promise<{ stadt: st
       locale: 'de_DE',
       type: 'website',
     },
-    alternates: { canonical: `https://alltagsengel.care/hygienebox/${city.slug}` },
+    alternates: { canonical },
   }
 }
 
-function buildJsonLd(city: CityData) {
+// Ein gemeinsames FAQ-Array pro Stadt — speist das sichtbare FAQ UND das FAQPage-JSON-LD
+function buildFaqItems(city: CityData) {
+  return [
+    {
+      frage: `Kann ich eine Pflegebox nach ${city.name} liefern lassen?`,
+      antwort: `Ja! Alltagsengel liefert die Pflegebox direkt zu Ihnen nach ${city.name} — auch nach ${city.stadtteile.join(', ')}. Monatlich, kostenlos und ohne Zuzahlung bei anerkanntem Pflegegrad.`,
+    },
+    {
+      frage: 'Wer hat Anspruch auf eine Pflegebox?',
+      antwort: 'Jede Person mit anerkanntem Pflegegrad (1–5), die zu Hause gepflegt wird, hat Anspruch auf Pflegehilfsmittel zum Verbrauch im Wert von bis zu 42 € pro Monat nach §40 SGB XI.',
+    },
+    {
+      frage: 'Muss ich für die Pflegebox etwas bezahlen?',
+      antwort: 'Nein. Die Pflegekasse übernimmt bis zu 42 € pro Monat für Pflegehilfsmittel zum Verbrauch. Bei Alltagsengel zahlen Sie 0 € Eigenanteil — wir rechnen direkt mit Ihrer Kasse ab.',
+    },
+    {
+      frage: 'Was ist in der Pflegebox enthalten?',
+      antwort: 'Die Pflegebox enthält Einmalhandschuhe, Händedesinfektionsmittel, Flächendesinfektionsmittel, Bettschutzeinlagen, Mundschutz und Schutzschürzen — je nach gewählter Box-Variante.',
+    },
+    {
+      frage: 'Wie lange dauert die Lieferung?',
+      antwort: `Nach Genehmigung durch die Pflegekasse erhalten Sie Ihre erste Box innerhalb von 3–5 Werktagen nach ${city.name}.`,
+    },
+    {
+      frage: 'Kann ich die Box jederzeit abbestellen?',
+      antwort: 'Ja, Sie können die monatliche Lieferung jederzeit pausieren oder abbestellen — ohne Vertragsbindung.',
+    },
+    {
+      frage: 'Was passiert, wenn mein Pflegegrad sich ändert?',
+      antwort: 'Der Anspruch besteht bei jedem Pflegegrad (1–5). Nur wenn der Pflegegrad komplett entfällt, endet der Anspruch.',
+    },
+    {
+      frage: 'Muss ich den Antrag selbst stellen?',
+      antwort: 'Nein! Alltagsengel übernimmt die komplette Antragstellung bei Ihrer Pflegekasse. Sie müssen nur einmalig eine Vollmacht unterschreiben.',
+    },
+  ]
+}
+
+function buildJsonLd(city: CityData, faqItems: ReturnType<typeof buildFaqItems>) {
   return {
     '@context': 'https://schema.org',
     '@graph': [
@@ -201,44 +268,26 @@ function buildJsonLd(city: CityData) {
             },
           },
         ],
-        areaServed: { '@type': 'City', name: city.name },
+        areaServed: {
+          '@type': 'City',
+          name: city.name,
+          address: {
+            '@type': 'PostalAddress',
+            addressLocality: city.name,
+            postalCode: city.plz,
+            addressRegion: city.region,
+            addressCountry: 'DE',
+          },
+          geo: { '@type': 'GeoCoordinates', latitude: city.geo.lat, longitude: city.geo.lng },
+        },
       },
       {
         '@type': 'FAQPage',
-        mainEntity: [
-          {
-            '@type': 'Question',
-            name: `Kann ich eine Pflegebox nach ${city.name} liefern lassen?`,
-            acceptedAnswer: {
-              '@type': 'Answer',
-              text: `Ja! Alltagsengel liefert die Pflegebox direkt zu Ihnen nach ${city.name} — monatlich, kostenlos und ohne Zuzahlung bei anerkanntem Pflegegrad.`,
-            },
-          },
-          {
-            '@type': 'Question',
-            name: 'Wer hat Anspruch auf eine Pflegebox?',
-            acceptedAnswer: {
-              '@type': 'Answer',
-              text: 'Jede Person mit anerkanntem Pflegegrad (1-5), die zu Hause gepflegt wird, hat Anspruch auf Pflegehilfsmittel zum Verbrauch im Wert von bis zu 42€ pro Monat nach §40 SGB XI.',
-            },
-          },
-          {
-            '@type': 'Question',
-            name: 'Muss ich für die Pflegebox etwas bezahlen?',
-            acceptedAnswer: {
-              '@type': 'Answer',
-              text: 'Nein. Die Pflegekasse übernimmt bis zu 42€ pro Monat für Pflegehilfsmittel zum Verbrauch. Bei Alltagsengel zahlen Sie 0€ Eigenanteil — wir rechnen direkt mit Ihrer Kasse ab.',
-            },
-          },
-          {
-            '@type': 'Question',
-            name: 'Was ist in der Pflegebox enthalten?',
-            acceptedAnswer: {
-              '@type': 'Answer',
-              text: 'Die Pflegebox enthält Einmalhandschuhe, Händedesinfektionsmittel, Flächendesinfektionsmittel, Bettschutzeinlagen, Mundschutz und Schutzschürzen — je nach gewählter Box-Variante.',
-            },
-          },
-        ],
+        mainEntity: faqItems.map((f) => ({
+          '@type': 'Question',
+          name: f.frage,
+          acceptedAnswer: { '@type': 'Answer', text: f.antwort },
+        })),
       },
       {
         '@type': 'BreadcrumbList',
@@ -257,7 +306,8 @@ export default async function PflegeboxStadtPage({ params }: { params: Promise<{
   const city = cities[stadt]
   if (!city) notFound()
 
-  const jsonLd = buildJsonLd(city)
+  const faqItems = buildFaqItems(city)
+  const jsonLd = buildJsonLd(city, faqItems)
 
   return (
     <div className="screen info-screen">
@@ -361,23 +411,21 @@ export default async function PflegeboxStadtPage({ params }: { params: Promise<{
         </section>
 
         <section className="info-card">
+          <h3>Lieferung nach {city.name} — auch in Ihren Stadtteil</h3>
+          <p>
+            Wir liefern die Pflegebox nach {city.description} — auch nach {city.stadtteile.join(', ')}.
+            Die Lieferung erfolgt monatlich, versandkostenfrei und direkt an Ihre Haustür.
+          </p>
+        </section>
+
+        <section className="info-card">
           <h3>Häufige Fragen zur Pflegebox in {city.name}</h3>
-          <details className="info-faq">
-            <summary>Wie lange dauert die Lieferung?</summary>
-            <p>Nach Genehmigung durch die Pflegekasse erhalten Sie Ihre erste Box innerhalb von 3–5 Werktagen nach {city.name}.</p>
-          </details>
-          <details className="info-faq">
-            <summary>Kann ich die Box jederzeit abbestellen?</summary>
-            <p>Ja, Sie können die monatliche Lieferung jederzeit pausieren oder abbestellen — ohne Vertragsbindung.</p>
-          </details>
-          <details className="info-faq">
-            <summary>Was passiert, wenn mein Pflegegrad sich ändert?</summary>
-            <p>Der Anspruch besteht bei jedem Pflegegrad (1–5). Nur wenn der Pflegegrad komplett entfällt, endet der Anspruch.</p>
-          </details>
-          <details className="info-faq">
-            <summary>Muss ich den Antrag selbst stellen?</summary>
-            <p>Nein! Alltagsengel übernimmt die komplette Antragstellung bei Ihrer Pflegekasse. Sie müssen nur einmalig eine Vollmacht unterschreiben.</p>
-          </details>
+          {faqItems.map((f) => (
+            <details className="info-faq" key={f.frage}>
+              <summary>{f.frage}</summary>
+              <p>{f.antwort}</p>
+            </details>
+          ))}
         </section>
 
         <section className="info-card">

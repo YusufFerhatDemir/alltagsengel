@@ -1,10 +1,11 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import BreadcrumbSchema from '@/components/BreadcrumbSchema'
+import RelatedPosts from '@/components/RelatedPosts'
 
 export const metadata: Metadata = {
   title: 'Krankenfahrt: Wann zahlt die Krankenkasse?',
-  description: 'Erfahren Sie, wann die Krankenkasse Krankenfahrten übernimmt, welche Bedingungen gelten und wie Sie diese buchen können.',
+  description: 'Wann zahlt die Krankenkasse Ihre Krankenfahrt? Voraussetzungen, Zuzahlung und Antrag einfach erklärt – jetzt informieren und Fahrt sicher planen.',
   keywords: 'Krankenfahrt, Krankenkasse, Kostenübernahme, Fahrttransport, medizinische Transporte',
   alternates: { canonical: 'https://alltagsengel.care/blog/krankenfahrt-kostenuebernahme' },
   openGraph: {
@@ -19,11 +20,11 @@ const articleJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'Article',
   headline: 'Krankenfahrt: Wann zahlt die Krankenkasse?',
-  description: 'Erfahren Sie, wann die Krankenkasse Krankenfahrten übernimmt, welche Bedingungen gelten und wie Sie diese buchen können.',
+  description: 'Wann zahlt die Krankenkasse Ihre Krankenfahrt? Voraussetzungen, Zuzahlung und Antrag einfach erklärt – jetzt informieren und Fahrt sicher planen.',
   author: { '@type': 'Organization', name: 'Alltagsengel', url: 'https://alltagsengel.care' },
   publisher: { '@type': 'Organization', name: 'Alltagsengel', url: 'https://alltagsengel.care', logo: { '@type': 'ImageObject', url: 'https://alltagsengel.care/icon-512x512.png' } },
-  datePublished: '2026-03-19',
-  dateModified: '2026-03-19',
+  datePublished: '2026-04-10',
+  dateModified: '2026-04-10',
   mainEntityOfPage: 'https://alltagsengel.care/blog/krankenfahrt-kostenuebernahme',
   image: 'https://alltagsengel.care/og-image.png',
   inLanguage: 'de-DE',
@@ -32,7 +33,7 @@ const articleJsonLd = {
 export default function KrankenfahrtKostenuebernahme() {
   return (
     <main className="blog-container">
-      <BreadcrumbSchema items={[{ name: 'Ratgeber', url: '/blog' }, { name: 'Krankenfahrt: Wann zahlt die Krankenkasse?' }]} />
+      <BreadcrumbSchema items={[{ name: 'Ratgeber', url: '/blog' }, { name: 'Krankenfahrt Kostenübernahme' }]} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }} />
       <article className="blog-article">
         <div className="blog-header">
@@ -111,8 +112,8 @@ export default function KrankenfahrtKostenuebernahme() {
           <h3>Schritt 4: Fahrt buchen und durchführen</h3>
           <p>Nach Genehmigung können Sie die Fahrt buchen. Der Fahrtdienst rechnet direkt mit der Krankenkasse ab; Sie zahlen nur die Zuzahlung.</p>
 
-          <h2>Alternative: AlltagsEngel Fahrtdienste</h2>
-          <p>Wenn Sie eine Fahrt benötigen, die von der Krankenkasse nicht übernommen wird, oder wenn Sie sich durch den Genehmigungsprozess belastet fühlen, bietet AlltagsEngel flexible Fahrtoptionen. Über AlltagsEngel können Sie schnell einen zuverlässigen Fahrtdienst buchen – ohne lange Genehmigungsprozesse. Besonders für regelmäßige Fahrten außerhalb der Krankenkassenleistungen oder für Fahrten mit zusätzlichen Betreuungsbedürfnissen ist AlltagsEngel eine praktische Lösung.</p>
+          <h2>Alternative: Alltagsengel Fahrtdienste</h2>
+          <p>Wenn Sie eine Fahrt benötigen, die von der Krankenkasse nicht übernommen wird, oder wenn Sie sich durch den Genehmigungsprozess belastet fühlen, bietet Alltagsengel flexible Fahrtoptionen. Über Alltagsengel können Sie schnell einen zuverlässigen Fahrtdienst buchen – ohne lange Genehmigungsprozesse. Besonders für regelmäßige Fahrten außerhalb der Krankenkassenleistungen oder für Fahrten mit zusätzlichen Betreuungsbedürfnissen ist Alltagsengel eine praktische Lösung.</p>
 
           <h2>Häufig gestellte Fragen</h2>
 
@@ -127,9 +128,9 @@ export default function KrankenfahrtKostenuebernahme() {
         </div>
 
         <div className="blog-cta">
-          <h3>Jetzt AlltagsEngel testen</h3>
+          <h3>Jetzt Alltagsengel testen</h3>
           <p>Registriere dich kostenlos und buche zuverlässige Fahrtdienste für deine medizinischen Termine.</p>
-          <Link href="/choose" className="btn-gold">Kostenlos registrieren</Link>
+          <Link href="/krankenfahrten" className="btn-gold">Krankenfahrt jetzt anfragen</Link>
         </div>
       
         <section className="blog-related" style={{ marginTop: 40, padding: '24px 20px', background: 'rgba(201,150,60,0.06)', borderRadius: 12, border: '1px solid rgba(201,150,60,0.15)' }}>
@@ -140,6 +141,8 @@ export default function KrankenfahrtKostenuebernahme() {
             <li><Link href="/faq" style={{ color: '#F5F0E8', textDecoration: 'underline', textUnderlineOffset: 3, fontSize: 14 }}>FAQ: Krankenfahrten und Kostenübernahme</Link></li>
           </ul>
         </section>
+
+        <RelatedPosts slug="krankenfahrt-kostenuebernahme" />
       </article>
     </main>
   );

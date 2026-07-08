@@ -1,9 +1,10 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import BreadcrumbSchema from '@/components/BreadcrumbSchema'
+import RelatedPosts from '@/components/RelatedPosts'
 
 export const metadata: Metadata = {
-  title: 'Pflegegrad 1 Leistungen 2026: Was steht Ihnen zu? (Komplette Übersicht)',
+  title: 'Pflegegrad 1 Leistungen 2026: Was steht Ihnen zu?',
   description: 'Alle Leistungen bei Pflegegrad 1: Entlastungsbetrag 131€, Pflegehilfsmittel 42€, Wohnraumanpassung, Beratung. Was die Pflegekasse wirklich zahlt.',
   keywords: [
     'Pflegegrad 1 Leistungen',
@@ -32,8 +33,8 @@ export const metadata: Metadata = {
 const articleJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'Article',
-  headline: 'Pflegegrad 1 Leistungen 2026: Was steht Ihnen zu? (Komplette Übersicht)',
-  description: 'Alle Leistungen bei Pflegegrad 1: Entlastungsbetrag, Pflegehilfsmittel, Wohnraumanpassung, Beratung.',
+  headline: 'Pflegegrad 1 Leistungen 2026: Was steht Ihnen zu?',
+  description: 'Alle Leistungen bei Pflegegrad 1: Entlastungsbetrag 131€, Pflegehilfsmittel 42€, Wohnraumanpassung, Beratung. Was die Pflegekasse wirklich zahlt.',
   author: { '@type': 'Organization', name: 'Alltagsengel', url: 'https://alltagsengel.care' },
   publisher: { '@type': 'Organization', name: 'Alltagsengel', url: 'https://alltagsengel.care', logo: { '@type': 'ImageObject', url: 'https://alltagsengel.care/icon-512x512.png' } },
   datePublished: '2026-06-06',
@@ -43,43 +44,22 @@ const articleJsonLd = {
   inLanguage: 'de-DE',
 }
 
+// Eine Quelle für sichtbare FAQ-Sektion UND FAQPage-Schema (Google-Richtlinie)
+const faqData = [
+  { q: 'Bekomme ich mit Pflegegrad 1 Pflegegeld?', a: 'Nein, Pflegegeld gibt es erst ab Pflegegrad 2. Bei Pflegegrad 1 erhalten Sie aber den Entlastungsbetrag von 131€/Monat, Pflegehilfsmittel (42€/Monat), Pflegeberatung und Wohnraumanpassung (bis 4.000€).' },
+  { q: 'Was bekomme ich mit Pflegegrad 1 monatlich?', a: 'Mit Pflegegrad 1 erhalten Sie monatlich: 131€ Entlastungsbetrag (§45b) für Alltagsbegleitung/Haushaltshilfe und bis zu 42€ für Pflegehilfsmittel zum Verbrauch (§40). Zusammen bis zu 173€ monatlich.' },
+  { q: 'Kann ich mit Pflegegrad 1 Alltagsbegleitung buchen?', a: 'Ja! Der Entlastungsbetrag von 131€/Monat kann für Alltagsbegleitung, Haushaltshilfe oder Betreuung bei einem anerkannten Anbieter wie Alltagsengel genutzt werden.' },
+  { q: 'Welche Pflegehilfsmittel stehen mir bei Pflegegrad 1 zu?', a: 'Bei Pflegegrad 1 haben Sie Anspruch auf Pflegehilfsmittel zum Verbrauch im Wert von bis zu 42€/Monat: Einmalhandschuhe, Desinfektionsmittel, Bettschutzeinlagen, Mundschutz und Schutzschürzen.' },
+]
+
 const faqJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'FAQPage',
-  mainEntity: [
-    {
-      '@type': 'Question',
-      name: 'Bekomme ich mit Pflegegrad 1 Pflegegeld?',
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: 'Nein, Pflegegeld gibt es erst ab Pflegegrad 2. Bei Pflegegrad 1 erhalten Sie aber den Entlastungsbetrag von 131€/Monat, Pflegehilfsmittel (42€/Monat), Pflegeberatung und Wohnraumanpassung (bis 4.000€).',
-      },
-    },
-    {
-      '@type': 'Question',
-      name: 'Was bekomme ich mit Pflegegrad 1 monatlich?',
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: 'Mit Pflegegrad 1 erhalten Sie monatlich: 131€ Entlastungsbetrag (§45b) für Alltagsbegleitung/Haushaltshilfe und bis zu 42€ für Pflegehilfsmittel zum Verbrauch (§40). Zusammen bis zu 173€ monatlich.',
-      },
-    },
-    {
-      '@type': 'Question',
-      name: 'Kann ich mit Pflegegrad 1 Alltagsbegleitung buchen?',
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: 'Ja! Der Entlastungsbetrag von 131€/Monat kann für Alltagsbegleitung, Haushaltshilfe oder Betreuung bei einem anerkannten Anbieter wie Alltagsengel genutzt werden.',
-      },
-    },
-    {
-      '@type': 'Question',
-      name: 'Welche Pflegehilfsmittel stehen mir bei Pflegegrad 1 zu?',
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: 'Bei Pflegegrad 1 haben Sie Anspruch auf Pflegehilfsmittel zum Verbrauch im Wert von bis zu 42€/Monat: Einmalhandschuhe, Desinfektionsmittel, Bettschutzeinlagen, Mundschutz und Schutzschürzen.',
-      },
-    },
-  ],
+  mainEntity: faqData.map(f => ({
+    '@type': 'Question',
+    name: f.q,
+    acceptedAnswer: { '@type': 'Answer', text: f.a },
+  })),
 }
 
 export default function Pflegegrad1Leistungen() {
@@ -228,6 +208,16 @@ export default function Pflegegrad1Leistungen() {
             Registrieren Sie sich kostenlos, und wir kümmern uns um alles — von der Antragstellung
             bis zur monatlichen Abrechnung.
           </p>
+
+          <h2>Häufige Fragen zu Pflegegrad 1</h2>
+          <div className="blog-faq">
+            {faqData.map((f, i) => (
+              <details key={i} className="lp-faq-item">
+                <summary>{f.q}</summary>
+                <p>{f.a}</p>
+              </details>
+            ))}
+          </div>
         </div>
 
         <div className="blog-cta">
@@ -236,16 +226,7 @@ export default function Pflegegrad1Leistungen() {
           <Link href="/alltagsbegleitung" className="btn-gold">Alltagsbegleitung buchen</Link>
         </div>
 
-        <div className="blog-related">
-          <h3>Weiterlesen</h3>
-          <ul>
-            <li><Link href="/blog/pflegegrad-beantragen">Pflegegrad beantragen — Schritt für Schritt</Link></li>
-            <li><Link href="/blog/entlastungsbetrag-beantragen">Entlastungsbetrag beantragen</Link></li>
-            <li><Link href="/blog/entlastungsbetrag-rueckwirkend">Entlastungsbetrag rückwirkend nutzen</Link></li>
-            <li><Link href="/blog/pflegehilfsmittel-40-euro">Pflegehilfsmittel §40 erklärt</Link></li>
-            <li><Link href="/blog/pflegebox-kostenlos-bestellen">Pflegebox kostenlos bestellen</Link></li>
-          </ul>
-        </div>
+        <RelatedPosts slug="pflegegrad-1-leistungen" />
       </article>
     </main>
   )

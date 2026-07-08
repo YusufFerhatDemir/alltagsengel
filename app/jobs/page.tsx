@@ -10,7 +10,7 @@ const WA_BEWERBUNG =
 export const metadata: Metadata = {
   title: 'Jobs — Werde Teil des Alltagsengel-Teams | Frankfurt & Rhein-Main',
   description:
-    'Jobs bei Alltagsengel: flexible Arbeitszeiten, kein Wochenenddienst, eigener Dienstwagen möglich, Wunschfrei-Tag, 20/30/40 Std. wählbar, Fort- und Weiterbildungen. Bewirb dich in 2 Minuten per WhatsApp.',
+    'Jobs bei Alltagsengel: flexible Arbeitszeiten, kein Wochenenddienst, Dienstwagen möglich, 20/30/40 Std. wählbar. Bewirb dich in 2 Minuten per WhatsApp!',
   keywords: [
     'jobs alltagsbegleitung frankfurt',
     'stellenangebot seniorenbetreuung',

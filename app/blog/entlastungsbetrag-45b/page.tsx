@@ -1,9 +1,10 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import BreadcrumbSchema from '@/components/BreadcrumbSchema'
+import RelatedPosts from '@/components/RelatedPosts'
 
 export const metadata: Metadata = {
-  title: 'Entlastungsbetrag §45b SGB XI — 131€/Monat für Alltagsbegleitung',
+  title: 'Entlastungsbetrag §45b SGB XI — 131€/Monat',
   description: 'Erfahren Sie wie Sie den Entlastungsbetrag nach §45b SGB XI nutzen können. 131€ monatlich für zertifizierte Alltagsbegleitung. Abrechnung mit der Pflegekasse.',
   keywords: ['Entlastungsbetrag', '§45b', '§45b SGB XI', 'Alltagsbegleitung', 'Pflegekasse', 'Pflegegrad', '131 Euro'],
   alternates: { canonical: 'https://alltagsengel.care/blog/entlastungsbetrag-45b' },
@@ -107,7 +108,6 @@ export default function EntlastungsbetragPage() {
             <li>✓ <strong>§45a zertifiziert:</strong> Alle Begleiter erfüllen die hohen Anforderungen</li>
             <li>✓ <strong>Sofort buchbar:</strong> Engel in Ihrer Nähe finden, Termin wählen, fertig</li>
             <li>✓ <strong>Transparente Abrechnung:</strong> Wir übernehmen alles — Sie zahlen nichts</li>
-            <li>✓ <strong>Vertrauenswürdigkeit:</strong> 500+ Begleiter, 4,9★ Bewertung</li>
           </ul>
 
           <h2>Beispiel: So sieht der Ablauf aus</h2>
@@ -146,22 +146,16 @@ export default function EntlastungsbetragPage() {
               Finden Sie noch heute einen zertifizierten Alltagsbegleiter und nehmen Sie sich die Unterstützung, 
               die Sie verdienen. Kostenlose Registrierung, sofort buchbar.
             </p>
-            <Link href="https://alltagsengel.care/choose" className="cta-button">
+            <Link href="/termin" className="cta-button">
               Jetzt Engel finden →
             </Link>
           </div>
         </div>
 
+        <RelatedPosts slug="entlastungsbetrag-45b" />
+
         <footer className="blog-footer">
           <Link href="/" className="blog-back">← Zurück zur Startseite</Link>
-          <div className="blog-share">
-            <p>Teilen Sie diesen Artikel:</p>
-            <div className="share-links">
-              <a href="#" className="share-btn">Facebook</a>
-              <a href="#" className="share-btn">Twitter</a>
-              <a href="#" className="share-btn">WhatsApp</a>
-            </div>
-          </div>
         </footer>
       
         <section className="blog-related" style={{ marginTop: 40, padding: '24px 20px', background: 'rgba(201,150,60,0.06)', borderRadius: 12, border: '1px solid rgba(201,150,60,0.15)' }}>

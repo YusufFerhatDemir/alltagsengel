@@ -4,8 +4,8 @@ import PflegegradCheck from '@/components/PflegegradCheck'
 import BreadcrumbSchema from '@/components/BreadcrumbSchema'
 
 export const metadata: Metadata = {
-  title: 'Pflegegrad-Check 2026 | Kostenlose Einschätzung in 2 Minuten — Alltagsengel',
-  description: 'Welcher Pflegegrad steht Ihnen zu? Kostenloser Selbsttest nach dem offiziellen Begutachtungsverfahren (NBA): 6 Module, sofortiges Ergebnis inkl. Leistungsübersicht.',
+  title: 'Pflegegrad-Check 2026 — kostenloser Selbsttest',
+  description: 'Welcher Pflegegrad steht Ihnen zu? Kostenloser Selbsttest nach dem offiziellen Begutachtungsverfahren (NBA) mit sofortigem Ergebnis. Jetzt prüfen!',
   keywords: ['Pflegegrad Check', 'Pflegegrad Test', 'Pflegegrad berechnen', 'Pflegegrad Rechner 2026', 'NBA Begutachtung', 'Pflegegrad beantragen', 'Pflegegrad Einschätzung'],
   openGraph: {
     images: [{ url: '/og-image.png', width: 1200, height: 630 }],
@@ -31,31 +31,34 @@ const jsonLd = {
   provider: { '@type': 'Organization', name: 'Alltagsengel', url: 'https://alltagsengel.care' },
 }
 
+// FAQ-Inhalte: speisen sowohl das FAQPage-JSON-LD als auch die sichtbare FAQ-Sektion unten
+const faqItems = [
+  {
+    frage: 'Wie wird der Pflegegrad berechnet?',
+    antwort: 'Der Medizinische Dienst bewertet sechs Lebensbereiche (Module) mit unterschiedlicher Gewichtung: Mobilität 10 %, kognitive/kommunikative Fähigkeiten bzw. Verhaltensweisen 15 %, Selbstversorgung 40 %, Umgang mit krankheitsbedingten Anforderungen 20 %, Alltagsleben 15 %. Ab 12,5 Punkten gibt es Pflegegrad 1, ab 27 Pflegegrad 2, ab 47,5 Pflegegrad 3, ab 70 Pflegegrad 4 und ab 90 Pflegegrad 5.',
+  },
+  {
+    frage: 'Welche Leistungen gibt es ab Pflegegrad 1?',
+    antwort: 'Bereits ab Pflegegrad 1: 131 € Entlastungsbetrag pro Monat (§45b SGB XI), bis zu 42 € monatlich für Pflegehilfsmittel (§40), Zuschüsse für Wohnraumanpassung und den Hausnotruf. Ab Pflegegrad 2 kommen Pflegegeld und Pflegesachleistungen hinzu.',
+  },
+  {
+    frage: 'Wie beantrage ich einen Pflegegrad?',
+    antwort: 'Formlos bei der Pflegekasse (Krankenkasse) anrufen oder schreiben und einen Antrag auf Pflegeleistungen stellen. Danach begutachtet der Medizinische Dienst zu Hause. Alltagsengel unterstützt Sie kostenlos bei Antrag und Vorbereitung.',
+  },
+  {
+    frage: 'Ist der Pflegegrad-Check verbindlich?',
+    antwort: 'Nein. Der Check ist eine kostenlose Ersteinschätzung auf Basis Ihrer Angaben. Verbindlich entscheidet die Pflegekasse nach Begutachtung durch den Medizinischen Dienst.',
+  },
+]
+
 const faqJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'FAQPage',
-  mainEntity: [
-    {
-      '@type': 'Question',
-      name: 'Wie wird der Pflegegrad berechnet?',
-      acceptedAnswer: { '@type': 'Answer', text: 'Der Medizinische Dienst bewertet sechs Lebensbereiche (Module) mit unterschiedlicher Gewichtung: Mobilität 10 %, kognitive/kommunikative Fähigkeiten bzw. Verhaltensweisen 15 %, Selbstversorgung 40 %, Umgang mit krankheitsbedingten Anforderungen 20 %, Alltagsleben 15 %. Ab 12,5 Punkten gibt es Pflegegrad 1, ab 27 Pflegegrad 2, ab 47,5 Pflegegrad 3, ab 70 Pflegegrad 4 und ab 90 Pflegegrad 5.' },
-    },
-    {
-      '@type': 'Question',
-      name: 'Welche Leistungen gibt es ab Pflegegrad 1?',
-      acceptedAnswer: { '@type': 'Answer', text: 'Bereits ab Pflegegrad 1: 131 € Entlastungsbetrag pro Monat (§45b SGB XI), bis zu 42 € monatlich für Pflegehilfsmittel (§40), Zuschüsse für Wohnraumanpassung und den Hausnotruf. Ab Pflegegrad 2 kommen Pflegegeld und Pflegesachleistungen hinzu.' },
-    },
-    {
-      '@type': 'Question',
-      name: 'Wie beantrage ich einen Pflegegrad?',
-      acceptedAnswer: { '@type': 'Answer', text: 'Formlos bei der Pflegekasse (Krankenkasse) anrufen oder schreiben und einen Antrag auf Pflegeleistungen stellen. Danach begutachtet der Medizinische Dienst zu Hause. Alltagsengel unterstützt Sie kostenlos bei Antrag und Vorbereitung.' },
-    },
-    {
-      '@type': 'Question',
-      name: 'Ist der Pflegegrad-Check verbindlich?',
-      acceptedAnswer: { '@type': 'Answer', text: 'Nein. Der Check ist eine kostenlose Ersteinschätzung auf Basis Ihrer Angaben. Verbindlich entscheidet die Pflegekasse nach Begutachtung durch den Medizinischen Dienst.' },
-    },
-  ],
+  mainEntity: faqItems.map((item) => ({
+    '@type': 'Question',
+    name: item.frage,
+    acceptedAnswer: { '@type': 'Answer', text: item.antwort },
+  })),
 }
 
 export default function PflegegradCheckPage() {
@@ -90,6 +93,16 @@ export default function PflegegradCheckPage() {
             <li>Leistungen gelten ab dem Monat der Antragstellung — früh stellen lohnt sich</li>
             <li>Bei Ablehnung ist ein Widerspruch innerhalb eines Monats möglich</li>
           </ul>
+        </section>
+
+        <section className="info-card">
+          <h3>Häufige Fragen zum Pflegegrad-Check</h3>
+          {faqItems.map((item, i) => (
+            <details key={i} className="info-faq">
+              <summary>{item.frage}</summary>
+              <p>{item.antwort}</p>
+            </details>
+          ))}
         </section>
 
         <section className="info-card">

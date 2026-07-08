@@ -1,10 +1,11 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import BreadcrumbSchema from '@/components/BreadcrumbSchema'
+import RelatedPosts from '@/components/RelatedPosts'
 
 export const metadata: Metadata = {
-  title: 'Krankenfahrt Verordnung: Wer bekommt sie & wie beantragen? (2026)',
-  description: 'Wie Sie eine Verordnung für Krankenfahrten erhalten: Voraussetzungen (Pflegegrad, Merkzeichen), Arztgespräch, Genehmigung durch die Krankenkasse. Schritt-für-Schritt erklärt.',
+  title: 'Krankenfahrt Verordnung: Wer bekommt sie? (2026)',
+  description: 'Verordnung für Krankenfahrten erhalten: Anspruch bei Pflegegrad & Merkzeichen, Arztgespräch, Genehmigung der Kasse. Jetzt Schritt für Schritt informieren.',
   keywords: [
     'Krankenfahrt Verordnung',
     'Verordnung Krankenfahrt bekommen',
@@ -32,8 +33,8 @@ export const metadata: Metadata = {
 const articleJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'Article',
-  headline: 'Krankenfahrt Verordnung: Wer bekommt sie & wie beantragen? (2026)',
-  description: 'Wie Sie eine Verordnung für Krankenfahrten erhalten: Voraussetzungen, Arztgespräch, Genehmigung durch die Krankenkasse.',
+  headline: 'Krankenfahrt Verordnung: Wer bekommt sie & wie beantragen?',
+  description: 'Verordnung für Krankenfahrten erhalten: Anspruch bei Pflegegrad & Merkzeichen, Arztgespräch, Genehmigung der Kasse. Jetzt Schritt für Schritt informieren.',
   author: { '@type': 'Organization', name: 'Alltagsengel', url: 'https://alltagsengel.care' },
   publisher: { '@type': 'Organization', name: 'Alltagsengel', url: 'https://alltagsengel.care', logo: { '@type': 'ImageObject', url: 'https://alltagsengel.care/icon-512x512.png' } },
   datePublished: '2026-06-06',
@@ -43,43 +44,34 @@ const articleJsonLd = {
   inLanguage: 'de-DE',
 }
 
+// Sichtbare FAQ-Sektion und FAQPage-Schema speisen sich aus demselben Array
+const faqData = [
+  {
+    q: 'Wer hat Anspruch auf eine Verordnung für Krankenfahrten?',
+    a: 'Personen mit Pflegegrad 4 oder 5 erhalten die Verordnung generell. Pflegegrad 3 bei Serienbehandlung (Dialyse, Chemotherapie, Bestrahlung) ebenfalls. Schwerbehinderte mit Merkzeichen aG, Bl oder H haben grundsätzlich Anspruch.',
+  },
+  {
+    q: 'Kann der Arzt die Verordnung ablehnen?',
+    a: 'Ja, der Arzt kann die Verordnung ablehnen, wenn die medizinischen Voraussetzungen nicht gegeben sind. In diesem Fall können Sie einen anderen Arzt aufsuchen oder Widerspruch bei der Kasse einlegen.',
+  },
+  {
+    q: 'Wie hoch ist die Zuzahlung bei Krankenfahrten?',
+    a: 'Die gesetzliche Zuzahlung beträgt 10% der Fahrtkosten, mindestens 5€ und maximal 10€ pro Fahrt. Von der Zuzahlung befreit sind Personen mit Befreiungsausweis (Belastungsgrenze erreicht).',
+  },
+  {
+    q: 'Muss die Krankenkasse die Verordnung genehmigen?',
+    a: 'Bei Pflegegrad 4/5 und Schwerbehinderten (aG, Bl, H) gilt die Genehmigung als erteilt. Bei Pflegegrad 3 mit Serienbehandlung muss die Kasse vorab genehmigen — dies dauert meist 3-5 Werktage.',
+  },
+]
+
 const faqJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'FAQPage',
-  mainEntity: [
-    {
-      '@type': 'Question',
-      name: 'Wer hat Anspruch auf eine Verordnung für Krankenfahrten?',
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: 'Personen mit Pflegegrad 4 oder 5 erhalten die Verordnung generell. Pflegegrad 3 bei Serienbehandlung (Dialyse, Chemotherapie, Bestrahlung) ebenfalls. Schwerbehinderte mit Merkzeichen aG, Bl oder H haben grundsätzlich Anspruch.',
-      },
-    },
-    {
-      '@type': 'Question',
-      name: 'Kann der Arzt die Verordnung ablehnen?',
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: 'Ja, der Arzt kann die Verordnung ablehnen, wenn die medizinischen Voraussetzungen nicht gegeben sind. In diesem Fall können Sie einen anderen Arzt aufsuchen oder Widerspruch bei der Kasse einlegen.',
-      },
-    },
-    {
-      '@type': 'Question',
-      name: 'Wie hoch ist die Zuzahlung bei Krankenfahrten?',
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: 'Die gesetzliche Zuzahlung beträgt 10% der Fahrtkosten, mindestens 5€ und maximal 10€ pro Fahrt. Von der Zuzahlung befreit sind Personen mit Befreiungsausweis (Belastungsgrenze erreicht).',
-      },
-    },
-    {
-      '@type': 'Question',
-      name: 'Muss die Krankenkasse die Verordnung genehmigen?',
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: 'Bei Pflegegrad 4/5 und Schwerbehinderten (aG, Bl, H) gilt die Genehmigung als erteilt. Bei Pflegegrad 3 mit Serienbehandlung muss die Kasse vorab genehmigen — dies dauert meist 3-5 Werktage.',
-      },
-    },
-  ],
+  mainEntity: faqData.map(f => ({
+    '@type': 'Question',
+    name: f.q,
+    acceptedAnswer: { '@type': 'Answer', text: f.a },
+  })),
 }
 
 export default function KrankenfahrtVerordnung() {
@@ -220,6 +212,16 @@ export default function KrankenfahrtVerordnung() {
             Bei Alltagsengel helfen wir Ihnen gerne weiter: Wir erklären Ihnen Ihre Optionen und
             übernehmen die komplette Abrechnung mit Ihrer Krankenkasse.
           </p>
+
+          <h2>Häufige Fragen zur Verordnung</h2>
+          <div className="blog-faq">
+            {faqData.map((f, i) => (
+              <details key={i} className="lp-faq-item">
+                <summary>{f.q}</summary>
+                <p>{f.a}</p>
+              </details>
+            ))}
+          </div>
         </div>
 
         <div className="blog-cta">
@@ -228,15 +230,7 @@ export default function KrankenfahrtVerordnung() {
           <Link href="/krankenfahrten" className="btn-gold">Krankenfahrten ansehen</Link>
         </div>
 
-        <div className="blog-related">
-          <h3>Weiterlesen</h3>
-          <ul>
-            <li><Link href="/blog/krankenfahrt-kostenuebernahme">Krankenfahrt: Wann zahlt die Krankenkasse?</Link></li>
-            <li><Link href="/blog/krankenfahrt-buchen-frankfurt">Krankenfahrt buchen in Frankfurt</Link></li>
-            <li><Link href="/blog/pflegegrad-beantragen">Pflegegrad beantragen — Schritt für Schritt</Link></li>
-            <li><Link href="/krankenfahrten">Unsere Krankenfahrten-Vermittlung</Link></li>
-          </ul>
-        </div>
+        <RelatedPosts slug="krankenfahrt-verordnung-erhalten" />
       </article>
     </main>
   )

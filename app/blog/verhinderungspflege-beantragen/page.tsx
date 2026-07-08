@@ -1,10 +1,11 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import BreadcrumbSchema from '@/components/BreadcrumbSchema'
+import RelatedPosts from '@/components/RelatedPosts'
 
 export const metadata: Metadata = {
-  title: 'Verhinderungspflege beantragen: 3.539€ pro Jahr nutzen',
-  description: 'Leitfaden zur Beantragung von Verhinderungspflege. Erfahren Sie, wer berechtigt ist, wie Sie den gemeinsamen Jahresbetrag beantragen und parallel zum Entlastungsbetrag (§45b) nutzen.',
+  title: 'Verhinderungspflege beantragen: 3.539€ pro Jahr',
+  description: 'Verhinderungspflege beantragen: bis zu 3.539 € pro Jahr für Ersatzpflege. So stellen Sie den Antrag bei der Pflegekasse – jetzt Anspruch sichern.',
   keywords: 'Verhinderungspflege, Verhinderungspflege beantragen, 3539 Euro, gemeinsamer Jahresbetrag, Pflegegeld, Pflegeleistung',
   alternates: { canonical: 'https://alltagsengel.care/blog/verhinderungspflege-beantragen' },
   openGraph: {
@@ -21,11 +22,11 @@ const articleJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'Article',
   headline: 'Verhinderungspflege beantragen: 3.539€ pro Jahr nutzen',
-  description: 'Leitfaden zur Beantragung von Verhinderungspflege. Erfahren Sie, wer berechtigt ist, wie Sie den gemeinsamen Jahresbetrag beantragen und parallel zum Entlastungsbetrag (§45b) nutzen.',
+  description: 'Verhinderungspflege beantragen: bis zu 3.539 € pro Jahr für Ersatzpflege. So stellen Sie den Antrag bei der Pflegekasse – jetzt Anspruch sichern.',
   author: { '@type': 'Organization', name: 'Alltagsengel', url: 'https://alltagsengel.care' },
   publisher: { '@type': 'Organization', name: 'Alltagsengel', url: 'https://alltagsengel.care', logo: { '@type': 'ImageObject', url: 'https://alltagsengel.care/icon-512x512.png' } },
-  datePublished: '2026-03-19',
-  dateModified: '2026-03-19',
+  datePublished: '2026-03-15',
+  dateModified: '2026-07-08',
   mainEntityOfPage: 'https://alltagsengel.care/blog/verhinderungspflege-beantragen',
   image: 'https://alltagsengel.care/og-image.png',
   inLanguage: 'de-DE',
@@ -34,13 +35,14 @@ const articleJsonLd = {
 export default function VerhinderungspflegePage() {
   return (
     <main className="blog-container">
-      <BreadcrumbSchema items={[{ name: 'Ratgeber', url: '/blog' }, { name: 'Verhinderungspflege beantragen: 3.539€ pro Jahr nutzen' }]} />
+      <BreadcrumbSchema items={[{ name: 'Ratgeber', url: '/blog' }, { name: 'Verhinderungspflege beantragen' }]} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }} />
       <article className="blog-article">
         <header className="blog-header">
           <h1>Verhinderungspflege beantragen: 3.539€ pro Jahr nutzen</h1>
           <div className="blog-meta">
             <span className="date">15. März 2026</span>
+            <span className="date">Aktualisiert am 8. Juli 2026</span>
             <span className="reading-time">5 Min. Lesezeit</span>
           </div>
         </header>
@@ -107,7 +109,7 @@ export default function VerhinderungspflegePage() {
           <ul>
             <li><strong>Planen Sie rechtzeitig:</strong> Beantragen Sie Verhinderungspflege 2–3 Monate vorher.</li>
             <li><strong>Nutzen Sie Ihre Ansprüche:</strong> Viele Pflegefamilien schöpfen ihre 3.539€ nicht aus – verschenken Sie kein Geld!</li>
-            <li><strong>Digitale Lösungen nutzen:</strong> Apps wie AlltagsEngel vermitteln schnell geprüfte Betreuungskräfte, die Verhinderungspflege abrechnen können.</li>
+            <li><strong>Digitale Lösungen nutzen:</strong> Apps wie Alltagsengel vermitteln schnell geprüfte Betreuungskräfte, die Verhinderungspflege abrechnen können.</li>
             <li><strong>Kombinieren Sie mit anderen Leistungen:</strong> Häusliche Krankenpflege und Verhinderungspflege können kombiniert werden.</li>
           </ul>
 
@@ -129,9 +131,9 @@ export default function VerhinderungspflegePage() {
           </p>
 
           <div className="blog-cta">
-            <h3>Jetzt AlltagsEngel testen</h3>
-            <p>Registrieren Sie sich kostenlos und finden Sie sofort Unterstützung in Ihrer Region.</p>
-            <Link href="/choose" className="btn-gold">Kostenlos registrieren</Link>
+            <h3>Jetzt Alltagsengel testen</h3>
+            <p>Vereinbaren Sie einen kostenlosen Beratungstermin und finden Sie sofort Unterstützung in Ihrer Region.</p>
+            <Link href="/termin" className="btn-gold">Jetzt Termin vereinbaren</Link>
           </div>
         </div>
       
@@ -143,6 +145,8 @@ export default function VerhinderungspflegePage() {
             <li><Link href="/blog/pflegegrad-beantragen" style={{ color: '#F5F0E8', textDecoration: 'underline', textUnderlineOffset: 3, fontSize: 14 }}>Pflegegrad beantragen</Link></li>
           </ul>
         </section>
+
+        <RelatedPosts slug="verhinderungspflege-beantragen" />
       </article>
     </main>
   );

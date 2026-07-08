@@ -5,7 +5,7 @@ import BreadcrumbSchema from '@/components/BreadcrumbSchema'
 import HowToSchema from '@/components/HowToSchema'
 
 export const metadata: Metadata = {
-  title: 'Alltagsbegleitung Frankfurt | 131€ Entlastungsbetrag nutzen — Alltagsengel',
+  title: 'Alltagsbegleitung Frankfurt | Entlastungsbetrag',
   description: 'Zertifizierte Alltagsbegleitung in Frankfurt am Main. 131€/Monat über den Entlastungsbetrag (§45b SGB XI). Einkaufshilfe, Arztbegleitung, Haushaltshilfe — jetzt kostenlos buchen.',
   keywords: ['Alltagsbegleitung Frankfurt', 'Entlastungsbetrag', '§45b SGB XI', 'Alltagsbegleiter', 'Pflegegrad', 'Betreuung Frankfurt', 'Haushaltshilfe Frankfurt', '131 Euro Pflegekasse'],
   openGraph: {

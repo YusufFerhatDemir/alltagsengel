@@ -119,6 +119,9 @@ const jsonLdFAQ = {
 }
 
 export const metadata: Metadata = {
+  // absolute: Homepage-Titel ohne Template-Suffix (Marke steckt im Keyword-Set, ≤60 Zeichen)
+  title: { absolute: 'Alltagsbegleitung, Pflegebox & Krankenfahrten Frankfurt' },
+  description: 'Entlastungsbetrag nutzen: 131 €/Monat für Alltagsbegleitung (§45b), Pflegebox mit 0 € Eigenanteil & Krankenfahrten in Frankfurt. Jetzt kostenlos starten.',
   alternates: { canonical: 'https://alltagsengel.care/' },
 }
 

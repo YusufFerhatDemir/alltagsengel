@@ -1,10 +1,11 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import BreadcrumbSchema from '@/components/BreadcrumbSchema'
+import RelatedPosts from '@/components/RelatedPosts'
 
 export const metadata: Metadata = {
-  title: 'Nebenjob in der Pflege: Flexibel 20€/Stunde als Alltagsbegleiter',
-  description: 'Arbeiten Sie flexibel als Alltagsbegleiter und verdienen 20€/Stunde. Perfekt für Studenten und Nebeneinsteiger. So funktioniert AlltagsEngel als Helfer.',
+  title: 'Nebenjob Pflege: 20€/Stunde als Alltagsbegleiter',
+  description: 'Flexibler Nebenjob als Alltagsbegleiter: 18–22 € pro Stunde, freie Zeiteinteilung, keine Ausbildung nötig. Jetzt bei Alltagsengel als Helfer starten!',
   keywords: 'Nebenjob Pflege, Alltagsbegleiter, 20 Euro Stunde, Flexibler Job, Studentenjob',
   alternates: { canonical: 'https://alltagsengel.care/blog/nebenjob-pflege' },
   openGraph: {
@@ -21,11 +22,11 @@ const articleJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'Article',
   headline: 'Nebenjob in der Pflege: Flexibel 20€/Stunde als Alltagsbegleiter',
-  description: 'Arbeiten Sie flexibel als Alltagsbegleiter und verdienen 20€/Stunde. Perfekt für Studenten und Nebeneinsteiger. So funktioniert AlltagsEngel als Helfer.',
+  description: 'Flexibler Nebenjob als Alltagsbegleiter: 18–22 € pro Stunde, freie Zeiteinteilung, keine Ausbildung nötig. Jetzt bei Alltagsengel als Helfer starten!',
   author: { '@type': 'Organization', name: 'Alltagsengel', url: 'https://alltagsengel.care' },
   publisher: { '@type': 'Organization', name: 'Alltagsengel', url: 'https://alltagsengel.care', logo: { '@type': 'ImageObject', url: 'https://alltagsengel.care/icon-512x512.png' } },
-  datePublished: '2026-03-19',
-  dateModified: '2026-03-19',
+  datePublished: '2026-04-05',
+  dateModified: '2026-04-05',
   mainEntityOfPage: 'https://alltagsengel.care/blog/nebenjob-pflege',
   image: 'https://alltagsengel.care/og-image.png',
   inLanguage: 'de-DE',
@@ -34,7 +35,7 @@ const articleJsonLd = {
 export default function NebenjobPflegePage() {
   return (
     <main className="blog-container">
-      <BreadcrumbSchema items={[{ name: 'Ratgeber', url: '/blog' }, { name: 'Nebenjob in der Pflege: Flexibel 20€/Stunde als Alltagsbeg' }]} />
+      <BreadcrumbSchema items={[{ name: 'Ratgeber', url: '/blog' }, { name: 'Nebenjob in der Pflege' }]} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }} />
       <article className="blog-article">
         <header className="blog-header">
@@ -47,7 +48,7 @@ export default function NebenjobPflegePage() {
 
         <div className="blog-intro">
           <p>
-            Sie suchen einen flexiblen Nebenjob mit gutem Verdienst? Alltagsbegleiter zu sein könnte perfekt für Sie sein. Flexibel, sinnvoll und mit 18–22€ pro Stunde besser bezahlt als viele andere Nebenjobs. Erfahren Sie, wie Sie bei AlltagsEngel als Helfer starten.
+            Sie suchen einen flexiblen Nebenjob mit gutem Verdienst? Alltagsbegleiter zu sein könnte perfekt für Sie sein. Flexibel, sinnvoll und mit 18–22€ pro Stunde besser bezahlt als viele andere Nebenjobs. Erfahren Sie, wie Sie bei Alltagsengel als Helfer starten.
           </p>
         </div>
 
@@ -61,7 +62,7 @@ export default function NebenjobPflegePage() {
             <li><strong>Guter Verdienst:</strong> 18–22€ pro Stunde – deutlich über Mindestlohn (12,41€)</li>
             <li><strong>Sinnvolle Arbeit:</strong> Sie helfen echten Menschen, nicht nur Geld zu verdienen</li>
             <li><strong>Keine Qualifikation nötig:</strong> Sie brauchen keine Ausbildung – nur Empathie und Zuverlässigkeit</li>
-            <li><strong>Versichert:</strong> AlltagsEngel kümmert sich um Haftung und Unfallversicherung</li>
+            <li><strong>Versichert:</strong> Alltagsengel kümmert sich um Haftung und Unfallversicherung</li>
             <li><strong>Abwechslung:</strong> Jeder Senior ist anders, jeder Tag ist neu</li>
             <li><strong>Soziale Kontakte:</strong> Sie treffen interessante Menschen, nicht nur eine Supermarkt-Kundschaft</li>
           </ul>
@@ -126,16 +127,16 @@ export default function NebenjobPflegePage() {
             <li>Datenschutz ernst nehmen (vertrauliche Informationen für sich behalten)</li>
           </ul>
 
-          <h2>Wie Sie bei AlltagsEngel als Helfer starten</h2>
+          <h2>Wie Sie bei Alltagsengel als Helfer starten</h2>
           <p>
             <strong>Schritt 1: Registrierung</strong>
             <br />
-            Gehen Sie auf AlltagsEngel.de, wählen Sie „Als Helfer registrieren". Füllen Sie kurz Ihre Daten aus.
+            Gehen Sie auf alltagsengel.care, wählen Sie „Als Helfer registrieren". Füllen Sie kurz Ihre Daten aus.
           </p>
           <p>
             <strong>Schritt 2: Verifizierung</strong>
             <br />
-            AlltagsEngel führt ein kurzes Gespräch mit Ihnen (telefonisch oder Video) – ca. 15 Minuten. Das Team prüft, ob Sie geeignet sind.
+            Alltagsengel führt ein kurzes Gespräch mit Ihnen (telefonisch oder Video) – ca. 15 Minuten. Das Team prüft, ob Sie geeignet sind.
           </p>
           <p>
             <strong>Schritt 3: Dokumente hochladen</strong>
@@ -155,14 +156,14 @@ export default function NebenjobPflegePage() {
 
           <h2>Kosten für Sie als Helfer?</h2>
           <p>
-            <strong>Keine Gebühren beim Start!</strong> AlltagsEngel verdient nur, wenn Sie verdienen.
+            <strong>Keine Gebühren beim Start!</strong> Alltagsengel verdient nur, wenn Sie verdienen.
           </p>
           <p>
             <strong>Abrechnung:</strong>
           </p>
           <ul>
             <li>Sie berechnen Ihre Arbeitszeit (Stundensätze 18–22€ je nach Region/Qualifikation)</li>
-            <li>AlltagsEngel nimmt eine kleine Vermittlungsgebühr (ca. 10–15% von Ihrem Verdienst)</li>
+            <li>Alltagsengel nimmt eine kleine Vermittlungsgebühr (ca. 10–15% von Ihrem Verdienst)</li>
             <li>Sie erhalten den Rest per Überweisung</li>
             <li>Auszahlung 1x pro Monat</li>
           </ul>
@@ -184,7 +185,7 @@ export default function NebenjobPflegePage() {
             30 Std. × 20€ = 600€/Woche = ca. 2.400€/Monat (nach Gebühr: ca. 2.040€)
           </p>
           <p>
-            <strong>Wichtig:</strong> Denken Sie an Fahrtkosten (Auto, Öpnv) und ggf. Einkommensteuer. Bei 450€/Monat sind Sie „geringfügig beschäftigt" – solange kostenlos. Darüber müssen Sie es eventuell versteuern.
+            <strong>Wichtig:</strong> Denken Sie an Fahrtkosten (Auto, ÖPNV) und ggf. Einkommensteuer. Bei 450€/Monat sind Sie „geringfügig beschäftigt" – solange kostenlos. Darüber müssen Sie es eventuell versteuern.
           </p>
 
           <h2>Tipps für erfolgreiche Helfer</h2>
@@ -201,7 +202,7 @@ export default function NebenjobPflegePage() {
           <p>
             <strong>Brauche ich eine Versicherung?</strong>
             <br />
-            Nein, AlltagsEngel versichert Sie haftpflicht- und unfallversichert während der Einsätze.
+            Nein, Alltagsengel versichert Sie haftpflicht- und unfallversichert während der Einsätze.
           </p>
           <p>
             <strong>Was ist, wenn ich einen Termin absagen muss?</strong>
@@ -225,9 +226,9 @@ export default function NebenjobPflegePage() {
           </p>
 
           <div className="blog-cta">
-            <h3>Jetzt AlltagsEngel testen</h3>
-            <p>Registrieren Sie sich kostenlos und finden Sie sofort Unterstützung in Ihrer Region.</p>
-            <Link href="/choose" className="btn-gold">Kostenlos registrieren</Link>
+            <h3>Jetzt Alltagsengel werden</h3>
+            <p>Bewerben Sie sich kostenlos und starten Sie flexibel als Alltagsbegleiter in Ihrer Region.</p>
+            <Link href="/engel-werden" className="btn-gold">Kostenlos registrieren</Link>
           </div>
         </div>
       
@@ -239,6 +240,8 @@ export default function NebenjobPflegePage() {
             <li><Link href="/blog/alltagsbegleiter-werden" style={{ color: '#F5F0E8', textDecoration: 'underline', textUnderlineOffset: 3, fontSize: 14 }}>Alltagsbegleiter werden: Voraussetzungen</Link></li>
           </ul>
         </section>
+
+        <RelatedPosts slug="nebenjob-pflege" />
       </article>
     </main>
   );

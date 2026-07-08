@@ -5,8 +5,8 @@ import LeadForm from '@/components/LeadForm'
 import BreadcrumbSchema from '@/components/BreadcrumbSchema'
 
 export const metadata: Metadata = {
-  title: 'Entlastungsbetrag-Rechner 2026 | Restbudget sofort berechnen — Alltagsengel',
-  description: 'Kostenloser Budgetrechner: Wie viel Entlastungsbetrag (131€/Monat, §45b SGB XI) steht Ihnen noch zu? Restbudget, Übertrag und Umwandlungsanspruch in 10 Sekunden berechnen.',
+  title: 'Entlastungsbetrag-Rechner 2026 — Restbudget',
+  description: 'Wie viel Entlastungsbetrag (131 €/Monat, §45b SGB XI) steht Ihnen noch zu? Restbudget, Übertrag und Umwandlungsanspruch in 10 Sekunden berechnen.',
   keywords: ['Entlastungsbetrag Rechner', 'Entlastungsbetrag 2026', '131 Euro Pflegekasse', 'Restbudget Entlastungsbetrag', '§45b SGB XI Rechner', 'Umwandlungsanspruch', 'Pflegegrad Budget'],
   openGraph: {
     images: [{ url: '/og-image.png', width: 1200, height: 630 }],
@@ -32,31 +32,34 @@ const jsonLd = {
   provider: { '@type': 'Organization', name: 'Alltagsengel', url: 'https://alltagsengel.care' },
 }
 
+// FAQ-Inhalte: speisen sowohl das FAQPage-JSON-LD als auch die sichtbare FAQ-Sektion unten
+const faqItems = [
+  {
+    frage: 'Wie hoch ist der Entlastungsbetrag 2026?',
+    antwort: 'Der Entlastungsbetrag nach §45b SGB XI beträgt 131 € pro Monat (1.572 € pro Jahr) und steht allen Pflegebedürftigen mit Pflegegrad 1 bis 5 zu.',
+  },
+  {
+    frage: 'Verfällt der Entlastungsbetrag?',
+    antwort: 'Nicht genutzte Beträge sammeln sich innerhalb des Kalenderjahres an und können ins Folgejahr übertragen werden. Der Übertrag verfällt jedoch am 30. Juni des Folgejahres.',
+  },
+  {
+    frage: 'Was ist der Umwandlungsanspruch?',
+    antwort: 'Bei Pflegegrad 2 bis 5 können bis zu 40 % der Pflegesachleistung zusätzlich für anerkannte Angebote zur Unterstützung im Alltag eingesetzt werden (§45a Abs. 4 SGB XI) — je nach Pflegegrad bis zu 919 € pro Monat zusätzlich.',
+  },
+  {
+    frage: 'Muss ich den Entlastungsbetrag beantragen?',
+    antwort: 'Nein, ein Antrag ist nicht nötig. Sie reichen die Rechnungen anerkannter Anbieter wie Alltagsengel bei Ihrer Pflegekasse ein — oder wir rechnen per Abtretungserklärung direkt mit der Kasse ab.',
+  },
+]
+
 const faqJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'FAQPage',
-  mainEntity: [
-    {
-      '@type': 'Question',
-      name: 'Wie hoch ist der Entlastungsbetrag 2026?',
-      acceptedAnswer: { '@type': 'Answer', text: 'Der Entlastungsbetrag nach §45b SGB XI beträgt 131 € pro Monat (1.572 € pro Jahr) und steht allen Pflegebedürftigen mit Pflegegrad 1 bis 5 zu.' },
-    },
-    {
-      '@type': 'Question',
-      name: 'Verfällt der Entlastungsbetrag?',
-      acceptedAnswer: { '@type': 'Answer', text: 'Nicht genutzte Beträge sammeln sich innerhalb des Kalenderjahres an und können ins Folgejahr übertragen werden. Der Übertrag verfällt jedoch am 30. Juni des Folgejahres.' },
-    },
-    {
-      '@type': 'Question',
-      name: 'Was ist der Umwandlungsanspruch?',
-      acceptedAnswer: { '@type': 'Answer', text: 'Bei Pflegegrad 2 bis 5 können bis zu 40 % der Pflegesachleistung zusätzlich für anerkannte Angebote zur Unterstützung im Alltag eingesetzt werden (§45a Abs. 4 SGB XI) — je nach Pflegegrad bis zu 919 € pro Monat zusätzlich.' },
-    },
-    {
-      '@type': 'Question',
-      name: 'Muss ich den Entlastungsbetrag beantragen?',
-      acceptedAnswer: { '@type': 'Answer', text: 'Nein, ein Antrag ist nicht nötig. Sie reichen die Rechnungen anerkannter Anbieter wie Alltagsengel bei Ihrer Pflegekasse ein — oder wir rechnen per Abtretungserklärung direkt mit der Kasse ab.' },
-    },
-  ],
+  mainEntity: faqItems.map((item) => ({
+    '@type': 'Question',
+    name: item.frage,
+    acceptedAnswer: { '@type': 'Answer', text: item.antwort },
+  })),
 }
 
 export default function BudgetrechnerPage() {
@@ -99,6 +102,16 @@ export default function BudgetrechnerPage() {
               <div className="info-step-text">Ihr Engel kommt: Einkauf, Haushalt, Arztbegleitung, Gesellschaft — 0 € Eigenanteil</div>
             </div>
           </div>
+        </section>
+
+        <section className="info-card">
+          <h3>Häufige Fragen zum Entlastungsbetrag</h3>
+          {faqItems.map((item, i) => (
+            <details key={i} className="info-faq">
+              <summary>{item.frage}</summary>
+              <p>{item.antwort}</p>
+            </details>
+          ))}
         </section>
 
         <section className="info-card">

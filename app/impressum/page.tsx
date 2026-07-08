@@ -3,9 +3,15 @@ import type { Metadata } from 'next'
 import BreadcrumbSchema from '@/components/BreadcrumbSchema'
 
 export const metadata: Metadata = {
-  title: 'Impressum | Alltagsengel',
+  title: 'Impressum',
   description: 'Impressum der Alltagsengel UG (haftungsbeschränkt), Neue Mainzer Straße 66-68, 60311 Frankfurt am Main.',
   alternates: { canonical: 'https://alltagsengel.care/impressum' },
+  openGraph: {
+    images: [{ url: '/og-image.png', width: 1200, height: 630 }],
+    title: 'Impressum — Alltagsengel',
+    description: 'Impressum der Alltagsengel UG (haftungsbeschränkt), Frankfurt am Main.',
+    url: 'https://alltagsengel.care/impressum',
+  },
 }
 
 export default function ImpressumPage() {

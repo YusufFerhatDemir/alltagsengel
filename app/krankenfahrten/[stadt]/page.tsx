@@ -14,6 +14,7 @@ interface CityData {
   plz: string
   description: string
   landmarks: string[]
+  geo: { latitude: number; longitude: number }
 }
 
 export const dynamicParams = true
@@ -26,6 +27,7 @@ const cities: Record<string, CityData> = {
     plz: '60311',
     description: 'Frankfurt am Main und dem gesamten Stadtgebiet',
     landmarks: ['Universitätsklinikum Frankfurt', 'Bürgerhospital Frankfurt', 'Krankenhaus Nordwest', 'Klinikum Frankfurt Höchst', 'Hospital zum Heiligen Geist'],
+    geo: { latitude: 50.1109, longitude: 8.6821 },
   },
   offenbach: {
     name: 'Offenbach am Main',
@@ -34,6 +36,7 @@ const cities: Record<string, CityData> = {
     plz: '63065',
     description: 'Offenbach am Main und Umgebung',
     landmarks: ['Sana Klinikum Offenbach', 'Klinikum Offenbach', 'MVZ Offenbach'],
+    geo: { latitude: 50.0956, longitude: 8.7761 },
   },
   wiesbaden: {
     name: 'Wiesbaden',
@@ -42,6 +45,7 @@ const cities: Record<string, CityData> = {
     plz: '65183',
     description: 'Wiesbaden und dem Rheingau',
     landmarks: ['HSK Wiesbaden', 'St. Josefs-Hospital', 'Asklepios Paulinen Klinik'],
+    geo: { latitude: 50.0782, longitude: 8.2398 },
   },
   darmstadt: {
     name: 'Darmstadt',
@@ -50,6 +54,7 @@ const cities: Record<string, CityData> = {
     plz: '64283',
     description: 'Darmstadt und Südhessen',
     landmarks: ['Klinikum Darmstadt', 'Alice-Hospital', 'Elisabethenstift'],
+    geo: { latitude: 49.8728, longitude: 8.6512 },
   },
   hanau: {
     name: 'Hanau',
@@ -58,6 +63,7 @@ const cities: Record<string, CityData> = {
     plz: '63450',
     description: 'Hanau und dem Main-Kinzig-Kreis',
     landmarks: ['Klinikum Hanau', 'St. Vinzenz-Krankenhaus', 'Main-Kinzig-Kliniken'],
+    geo: { latitude: 50.1328, longitude: 8.9169 },
   },
   'bad-homburg': {
     name: 'Bad Homburg',
@@ -66,6 +72,7 @@ const cities: Record<string, CityData> = {
     plz: '61348',
     description: 'Bad Homburg und dem Hochtaunuskreis',
     landmarks: ['Hochtaunus-Kliniken', 'Kerckhoff-Klinik', 'Kurpark-Klinik'],
+    geo: { latitude: 50.2268, longitude: 8.6182 },
   },
   mainz: {
     name: 'Mainz',
@@ -74,6 +81,7 @@ const cities: Record<string, CityData> = {
     plz: '55116',
     description: 'Mainz und Rheinhessen',
     landmarks: ['Universitätsmedizin Mainz', 'Katholisches Klinikum Mainz', 'GPR Klinikum Rüsselsheim'],
+    geo: { latitude: 49.9929, longitude: 8.2473 },
   },
   aschaffenburg: {
     name: 'Aschaffenburg',
@@ -82,6 +90,7 @@ const cities: Record<string, CityData> = {
     plz: '63739',
     description: 'Aschaffenburg und dem Bayerischen Untermain',
     landmarks: ['Klinikum Aschaffenburg-Alzenau', 'Hofgartenklinik', 'Frauenklinik am Hasenkopf'],
+    geo: { latitude: 49.9769, longitude: 9.1582 },
   },
   'frankfurt-hoechst': {
     name: 'Frankfurt-Höchst',
@@ -90,6 +99,7 @@ const cities: Record<string, CityData> = {
     plz: '65929',
     description: 'Frankfurt-Höchst und dem Frankfurter Westen',
     landmarks: ['Klinikum Frankfurt Höchst', 'Bürgerhospital', 'Uniklinik Frankfurt'],
+    geo: { latitude: 50.1006, longitude: 8.5455 },
   },
   'neu-isenburg': {
     name: 'Neu-Isenburg',
@@ -98,6 +108,7 @@ const cities: Record<string, CityData> = {
     plz: '63263',
     description: 'Neu-Isenburg und Dreieich',
     landmarks: ['Asklepios Klinik Langen', 'Bürgerhospital Dreieich', 'Klinikum Frankfurt Sachsenhausen'],
+    geo: { latitude: 50.0483, longitude: 8.6942 },
   },
   'friedberg-wetterau': {
     name: 'Friedberg (Wetterau)',
@@ -106,6 +117,7 @@ const cities: Record<string, CityData> = {
     plz: '61169',
     description: 'Friedberg und der Wetterau',
     landmarks: ['Bürgerhospital Friedberg', 'Hochwaldkrankenhaus Bad Nauheim', 'Kerckhoff-Klinik Bad Nauheim'],
+    geo: { latitude: 50.3378, longitude: 8.7554 },
   },
 }
 
@@ -119,8 +131,8 @@ export async function generateMetadata({ params }: { params: Promise<{ stadt: st
   if (!city) return {}
 
   return {
-    title: `Krankenfahrt ${city.name} buchen | Mit Verordnung oder Selbstzahler — Alltagsengel`,
-    description: `Krankenfahrt in ${city.name} buchen. Mit ärztlicher Verordnung zahlt die Krankenkasse (§60 SGB V). Arztfahrten, Dialysefahrten, Klinikfahrten — zuverlässig und pünktlich.`,
+    title: `Krankenfahrt ${city.name} buchen`,
+    description: `Krankenfahrt ${city.name}: Arzt-, Dialyse- & Klinikfahrten. Mit Verordnung zahlt die Kasse (§60 SGB V). Jetzt pünktliche Fahrt buchen!`,
     keywords: [
       `Krankenfahrt ${city.name}`,
       `Krankenfahrt buchen ${city.name}`,
@@ -142,11 +154,57 @@ export async function generateMetadata({ params }: { params: Promise<{ stadt: st
       locale: 'de_DE',
       type: 'website',
     },
-    alternates: { canonical: `https://alltagsengel.care/krankenfahrten/${city.slug}` },
+    // Frankfurt kanonisiert auf die Hauptseite (Kannibalisierung vermeiden);
+    // alle anderen Städte (inkl. frankfurt-hoechst) bleiben self-canonical.
+    alternates: {
+      canonical:
+        city.slug === 'frankfurt'
+          ? 'https://alltagsengel.care/krankenfahrten'
+          : `https://alltagsengel.care/krankenfahrten/${city.slug}`,
+    },
   }
 }
 
-function buildJsonLd(city: CityData) {
+// EIN Array pro Stadt für sichtbare FAQ-Sektion UND FAQPage-Schema — beides muss aus
+// derselben Quelle kommen (Google-Richtlinie: nur sichtbar gerenderte FAQs auszeichnen).
+function buildFaqs(city: CityData): { q: string; a: string }[] {
+  return [
+    {
+      q: `Wie buche ich eine Krankenfahrt in ${city.name}?`,
+      a: `Registrieren Sie sich bei Alltagsengel, wählen Sie "Krankenfahrt" und geben Sie Start- und Zieladresse in ${city.name} ein. Sie erhalten sofort ein Angebot.`,
+    },
+    {
+      q: 'Wer zahlt die Krankenfahrt?',
+      a: 'Mit einer ärztlichen Verordnung übernimmt die Krankenkasse die Kosten nach §60 SGB V. Ohne Verordnung können Sie als Selbstzahler buchen.',
+    },
+    {
+      q: `Welche Kliniken in ${city.name} werden angefahren?`,
+      a: `Wir fahren alle Kliniken und Arztpraxen in ${city.name} an, darunter ${city.landmarks.join(', ')}.`,
+    },
+    {
+      q: 'Brauche ich eine Verordnung für die Krankenfahrt?',
+      a: 'Für die Kostenübernahme durch die Krankenkasse ja. Bei Serienbehandlungen (Dialyse, Chemotherapie, Bestrahlung) mit Pflegegrad 3+ wird die Verordnung oft genehmigt. Ohne Verordnung fahren wir Sie gerne als Selbstzahler.',
+    },
+    {
+      q: 'Wie schnell kann ich eine Fahrt buchen?',
+      a: 'In der Regel können wir Fahrten innerhalb von 24 Stunden vermitteln. Für regelmäßige Fahrten (z.B. Dialyse) legen wir einen Serienplan an.',
+    },
+    {
+      q: 'Fahren Sie auch am Wochenende?',
+      a: `Ja, wir vermitteln Krankenfahrten in ${city.name} auch samstags und an Feiertagen — mit geringem Zuschlag.`,
+    },
+    {
+      q: 'Kann eine Begleitperson mitfahren?',
+      a: 'Ja, eine Begleitperson kann in den meisten Fällen kostenlos mitfahren. Bitte geben Sie dies bei der Buchung an.',
+    },
+    {
+      q: 'Brauche ich die Verordnung vor der Buchung?',
+      a: 'Idealerweise ja. Sie können aber auch vorab buchen und die Verordnung nachreichen. Ohne Verordnung fahren wir als Selbstzahler.',
+    },
+  ]
+}
+
+function buildJsonLd(city: CityData, faqs: { q: string; a: string }[]) {
   return {
     '@context': 'https://schema.org',
     '@graph': [
@@ -155,28 +213,16 @@ function buildJsonLd(city: CityData) {
         name: `Krankenfahrt ${city.name}`,
         description: `Krankenfahrten in ${city.name}. Sichere und pünktliche Fahrten zu Arzt, Klinik, Dialyse und Therapie. Mit ärztlicher Verordnung über die Krankenkasse abrechenbar (§60 SGB V).`,
         image: 'https://alltagsengel.care/og-image.png',
-        provider: {
-          '@type': 'LocalBusiness',
-          '@id': 'https://alltagsengel.care/#organization',
-          name: 'Alltagsengel',
-          url: 'https://alltagsengel.care',
-          telephone: '+4969348757690',
-          address: {
-            '@type': 'PostalAddress',
-            streetAddress: 'Neue Mainzer Straße 66-68',
-            postalCode: '60311',
-            addressLocality: 'Frankfurt am Main',
-            addressRegion: 'Hessen',
-            addressCountry: 'DE',
+        provider: { '@id': 'https://alltagsengel.care/#localbusiness' },
+        areaServed: {
+          '@type': 'City',
+          name: city.name,
+          geo: {
+            '@type': 'GeoCoordinates',
+            latitude: city.geo.latitude,
+            longitude: city.geo.longitude,
           },
-          geo: { '@type': 'GeoCoordinates', latitude: 50.1109, longitude: 8.6821 },
-          areaServed: [
-            { '@type': 'City', name: city.name },
-            { '@type': 'City', name: 'Frankfurt am Main' },
-          ],
-          priceRange: '€€',
         },
-        areaServed: { '@type': 'City', name: city.name },
         serviceType: 'Krankenfahrt / Patientenfahrdienst',
         offers: {
           '@type': 'Offer',
@@ -193,40 +239,11 @@ function buildJsonLd(city: CityData) {
       },
       {
         '@type': 'FAQPage',
-        mainEntity: [
-          {
-            '@type': 'Question',
-            name: `Wie buche ich eine Krankenfahrt in ${city.name}?`,
-            acceptedAnswer: {
-              '@type': 'Answer',
-              text: `Registrieren Sie sich bei Alltagsengel, wählen Sie "Krankenfahrt" und geben Sie Start- und Zieladresse in ${city.name} ein. Sie erhalten sofort ein Angebot.`,
-            },
-          },
-          {
-            '@type': 'Question',
-            name: 'Wer zahlt die Krankenfahrt?',
-            acceptedAnswer: {
-              '@type': 'Answer',
-              text: 'Mit einer ärztlichen Verordnung übernimmt die Krankenkasse die Kosten nach §60 SGB V. Ohne Verordnung können Sie als Selbstzahler buchen.',
-            },
-          },
-          {
-            '@type': 'Question',
-            name: `Welche Kliniken in ${city.name} werden angefahren?`,
-            acceptedAnswer: {
-              '@type': 'Answer',
-              text: `Wir fahren alle Kliniken und Arztpraxen in ${city.name} an, darunter ${city.landmarks.join(', ')}.`,
-            },
-          },
-          {
-            '@type': 'Question',
-            name: 'Brauche ich eine Verordnung für die Krankenfahrt?',
-            acceptedAnswer: {
-              '@type': 'Answer',
-              text: 'Für die Kostenübernahme durch die Krankenkasse ja. Bei Serienbehandlungen (Dialyse, Chemotherapie, Bestrahlung) mit Pflegegrad 3+ wird die Verordnung oft genehmigt. Ohne Verordnung fahren wir Sie gerne als Selbstzahler.',
-            },
-          },
-        ],
+        mainEntity: faqs.map((f) => ({
+          '@type': 'Question',
+          name: f.q,
+          acceptedAnswer: { '@type': 'Answer', text: f.a },
+        })),
       },
       {
         '@type': 'BreadcrumbList',
@@ -245,7 +262,8 @@ export default async function KrankenfahrtStadtPage({ params }: { params: Promis
   const city = cities[stadt]
   if (!city) notFound()
 
-  const jsonLd = buildJsonLd(city)
+  const faqs = buildFaqs(city)
+  const jsonLd = buildJsonLd(city, faqs)
 
   return (
     <div className="screen info-screen">
@@ -361,22 +379,12 @@ export default async function KrankenfahrtStadtPage({ params }: { params: Promis
 
         <section className="info-card">
           <h3>Häufige Fragen zu Krankenfahrten in {city.name}</h3>
-          <details className="info-faq">
-            <summary>Wie schnell kann ich eine Fahrt buchen?</summary>
-            <p>In der Regel können wir Fahrten innerhalb von 24 Stunden vermitteln. Für regelmäßige Fahrten (z.B. Dialyse) legen wir einen Serienplan an.</p>
-          </details>
-          <details className="info-faq">
-            <summary>Fahren Sie auch am Wochenende?</summary>
-            <p>Ja, wir vermitteln Krankenfahrten in {city.name} auch samstags und an Feiertagen — mit geringem Zuschlag.</p>
-          </details>
-          <details className="info-faq">
-            <summary>Kann eine Begleitperson mitfahren?</summary>
-            <p>Ja, eine Begleitperson kann in den meisten Fällen kostenlos mitfahren. Bitte geben Sie dies bei der Buchung an.</p>
-          </details>
-          <details className="info-faq">
-            <summary>Brauche ich die Verordnung vor der Buchung?</summary>
-            <p>Idealerweise ja. Sie können aber auch vorab buchen und die Verordnung nachreichen. Ohne Verordnung fahren wir als Selbstzahler.</p>
-          </details>
+          {faqs.map((f) => (
+            <details key={f.q} className="info-faq">
+              <summary>{f.q}</summary>
+              <p>{f.a}</p>
+            </details>
+          ))}
         </section>
 
         <section className="info-card">

@@ -33,13 +33,13 @@ function wrapEmail(content: string) {
 <body style="margin:0;padding:0;background:#F7F2EA;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">
 <div style="max-width:580px;margin:0 auto;padding:24px">
   <div style="text-align:center;padding:20px 0">
-    <img src="https://alltagsengel.care/icon-192x192.png" width="60" height="60" alt="AlltagsEngel" style="border-radius:12px">
+    <img src="https://alltagsengel.care/icon-192x192.png" width="60" height="60" alt="Alltagsengel" style="border-radius:12px">
   </div>
   <div style="background:white;border-radius:16px;padding:32px 28px;box-shadow:0 2px 12px rgba(0,0,0,0.06)">
     ${content}
   </div>
   <div style="text-align:center;padding:20px 0;font-size:12px;color:#999">
-    AlltagsEngel · Neue Mainzer Str. 66-68 · 60311 Frankfurt am Main<br>
+    Alltagsengel · Neue Mainzer Straße 66-68 · 60311 Frankfurt am Main<br>
     <a href="https://alltagsengel.care/datenschutz" style="color:#C9963C">Datenschutz</a>
   </div>
 </div>
@@ -57,7 +57,7 @@ const templates = {
         Das ist der sogenannte <strong>Entlastungsbetrag nach §45b SGB XI</strong> — und viele Menschen nutzen ihn nicht.
       </p>
       <p style="color:#444;line-height:1.6;font-size:15px">
-        Mit AlltagsEngel können Sie dieses Geld ganz einfach einsetzen: für Einkaufsbegleitung,
+        Mit Alltagsengel können Sie dieses Geld ganz einfach einsetzen: für Einkaufsbegleitung,
         Arztbesuche, Gesellschaft oder Haushaltshilfe. <strong>Sie zahlen nichts aus eigener Tasche.</strong>
       </p>
       <div style="text-align:center;margin:28px 0">
@@ -65,7 +65,7 @@ const templates = {
           Jetzt Engel finden
         </a>
       </div>
-      <p style="color:#888;font-size:13px">Liebe Grüße,<br>Ihr AlltagsEngel Team</p>
+      <p style="color:#888;font-size:13px">Liebe Grüße,<br>Ihr Alltagsengel Team</p>
     `),
   },
 
@@ -74,7 +74,7 @@ const templates = {
     html: (firstName: string) => wrapEmail(`
       <h2 style="color:#1A1612;font-size:22px;margin:0 0 16px">Hallo ${firstName},</h2>
       <p style="color:#444;line-height:1.6;font-size:15px">
-        Sie haben sich vor einer Woche bei AlltagsEngel registriert — großartig!
+        Sie haben sich vor einer Woche bei Alltagsengel registriert — großartig!
         Aber wir haben bemerkt, dass Sie noch keine Buchung gemacht haben.
       </p>
       <p style="color:#444;line-height:1.6;font-size:15px">
@@ -94,7 +94,7 @@ const templates = {
           Erste Buchung starten
         </a>
       </div>
-      <p style="color:#888;font-size:13px">Liebe Grüße,<br>Ihr AlltagsEngel Team</p>
+      <p style="color:#888;font-size:13px">Liebe Grüße,<br>Ihr Alltagsengel Team</p>
     `),
   },
 
@@ -109,7 +109,7 @@ const templates = {
       </p>
       <div style="background:#F7F2EA;border-radius:12px;padding:20px;margin:20px 0;border-left:4px solid #C9963C">
         <p style="margin:0;color:#1A1612;font-size:15px;font-weight:600">
-          🎁 Bonus: Empfehlen Sie AlltagsEngel weiter!
+          🎁 Bonus: Empfehlen Sie Alltagsengel weiter!
         </p>
         <p style="margin:8px 0 0;color:#444;font-size:14px">
           Teilen Sie Ihren persönlichen Empfehlungslink und Sie erhalten <strong>20 € Guthaben</strong>,
@@ -126,7 +126,7 @@ const templates = {
           Jetzt Buchung starten
         </a>
       </div>
-      <p style="color:#888;font-size:13px">Liebe Grüße,<br>Ihr AlltagsEngel Team</p>
+      <p style="color:#888;font-size:13px">Liebe Grüße,<br>Ihr Alltagsengel Team</p>
     `),
   },
 }
@@ -187,7 +187,7 @@ export async function POST(request: Request) {
         // Tag 3 Mail
         if (daysSinceRegistration >= 3 && daysSinceRegistration < 5) {
           await resend.emails.send({
-            from: 'AlltagsEngel <info@alltagsengel.care>',
+            from: 'Alltagsengel <info@alltagsengel.care>',
             to: customer.email,
             subject: templates.day3.subject,
             html: templates.day3.html(firstName),
@@ -198,7 +198,7 @@ export async function POST(request: Request) {
         // Tag 7 Mail
         if (daysSinceRegistration >= 7 && daysSinceRegistration < 9) {
           await resend.emails.send({
-            from: 'AlltagsEngel <info@alltagsengel.care>',
+            from: 'Alltagsengel <info@alltagsengel.care>',
             to: customer.email,
             subject: templates.day7.subject.replace('${firstName}', firstNameSubject),
             html: templates.day7.html(firstName),
@@ -209,7 +209,7 @@ export async function POST(request: Request) {
         // Tag 14 Mail (mit Referral-Link)
         if (daysSinceRegistration >= 14 && daysSinceRegistration < 16) {
           await resend.emails.send({
-            from: 'AlltagsEngel <info@alltagsengel.care>',
+            from: 'Alltagsengel <info@alltagsengel.care>',
             to: customer.email,
             subject: templates.day14.subject.replace('${firstName}', firstNameSubject),
             html: templates.day14.html(firstName, referralCode),

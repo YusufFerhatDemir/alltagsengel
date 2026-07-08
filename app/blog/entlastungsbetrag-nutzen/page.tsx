@@ -1,10 +1,11 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import BreadcrumbSchema from '@/components/BreadcrumbSchema'
+import RelatedPosts from '@/components/RelatedPosts'
 
 export const metadata: Metadata = {
-  title: 'Entlastungsbetrag richtig nutzen: So schöpfen Sie 131€ monatlich voll aus',
-  description: 'Entlastungsbetrag richtig nutzen: Praktische Tipps, welche Leistungen abgedeckt sind, häufige Fehler vermeiden und die 131€/Monat optimal einsetzen. Mit Checkliste.',
+  title: 'Entlastungsbetrag richtig nutzen: 131 €/Monat',
+  description: 'Entlastungsbetrag richtig nutzen: welche Leistungen abgedeckt sind, häufige Fehler vermeiden und die 131 €/Monat optimal einsetzen. Mit Checkliste.',
   keywords: ['Entlastungsbetrag nutzen', 'Entlastungsbetrag ausgeben', '125 Euro Entlastungsleistung nutzen', 'Entlastungsbetrag wofür', 'Entlastungsbetrag Leistungen', '131 Euro Entlastungsbetrag'],
   alternates: { canonical: 'https://alltagsengel.care/blog/entlastungsbetrag-nutzen' },
   openGraph: {
@@ -20,8 +21,8 @@ export const metadata: Metadata = {
 const articleJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'Article',
-  headline: 'Entlastungsbetrag richtig nutzen: So schöpfen Sie 131€ monatlich voll aus',
-  description: 'Entlastungsbetrag richtig nutzen: Praktische Tipps, welche Leistungen abgedeckt sind, häufige Fehler vermeiden und die 131€/Monat optimal einsetzen. Mit Checkli',
+  headline: 'Entlastungsbetrag richtig nutzen: So schöpfen Sie 131 € monatlich voll aus',
+  description: 'Entlastungsbetrag richtig nutzen: welche Leistungen abgedeckt sind, häufige Fehler vermeiden und die 131 €/Monat optimal einsetzen. Mit Checkliste.',
   author: { '@type': 'Organization', name: 'Alltagsengel', url: 'https://alltagsengel.care' },
   publisher: { '@type': 'Organization', name: 'Alltagsengel', url: 'https://alltagsengel.care', logo: { '@type': 'ImageObject', url: 'https://alltagsengel.care/icon-512x512.png' } },
   datePublished: '2026-06-06',
@@ -34,7 +35,7 @@ const articleJsonLd = {
 export default function EntlastungsbetragNutzenPage() {
   return (
     <main className="blog-container">
-      <BreadcrumbSchema items={[{ name: 'Ratgeber', url: '/blog' }, { name: 'Entlastungsbetrag richtig nutzen: So schöpfen Sie 131€ mo' }]} />
+      <BreadcrumbSchema items={[{ name: 'Ratgeber', url: '/blog' }, { name: 'Entlastungsbetrag nutzen' }]} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }} />
       <article className="blog-article">
         <header className="blog-header">
@@ -343,6 +344,8 @@ export default function EntlastungsbetragNutzenPage() {
             </Link>
           </div>
         </div>
+
+        <RelatedPosts slug="entlastungsbetrag-nutzen" />
 
         <footer className="blog-footer">
           <Link href="/blog" className="blog-back">← Zurück zum Ratgeber</Link>

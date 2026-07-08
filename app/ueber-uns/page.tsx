@@ -3,9 +3,9 @@ import Link from 'next/link'
 import BreadcrumbSchema from '@/components/BreadcrumbSchema'
 
 export const metadata: Metadata = {
-  title: 'Über uns — Wer hinter Alltagsengel steht | Frankfurt am Main',
+  title: 'Über uns — Wer hinter Alltagsengel steht',
   description:
-    'Alltagsengel ist ein Frankfurter Unternehmen für Alltagsbegleitung (§45a SGB XI), Pflegebox und Krankenfahrten im Rhein-Main-Gebiet. Geprüfte Begleiter:innen, versicherte Einsätze, Abrechnung direkt mit der Pflegekasse — lernen Sie uns kennen.',
+    'Alltagsengel aus Frankfurt: Alltagsbegleitung (§45a SGB XI), Pflegebox und Krankenfahrten im Rhein-Main-Gebiet. Geprüfte Begleiter — lernen Sie uns kennen!',
   alternates: { canonical: 'https://alltagsengel.care/ueber-uns' },
   openGraph: {
     images: [{ url: '/og-image.png', width: 1200, height: 630 }],
@@ -91,8 +91,8 @@ export default function UeberUnsPage() {
       {/* Navigation */}
       <nav style={{ maxWidth: 700, margin: '0 auto', padding: '16px 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
-          <img src="/icon-192x192.png" alt="AlltagsEngel" width={36} height={36} style={{ borderRadius: 8 }} />
-          <span style={{ color: '#C9963C', fontWeight: 700, fontSize: 16 }}>AlltagsEngel</span>
+          <img src="/icon-192x192.png" alt="Alltagsengel" width={36} height={36} style={{ borderRadius: 8 }} />
+          <span style={{ color: '#C9963C', fontWeight: 700, fontSize: 16 }}>Alltagsengel</span>
         </Link>
         <Link href="/kontakt" style={{
           background: '#C9963C', color: '#1A1612', padding: '8px 20px', borderRadius: 8, fontWeight: 600, fontSize: 13, textDecoration: 'none',

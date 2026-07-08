@@ -14,7 +14,7 @@ import { usePathname } from 'next/navigation'
 const PUBLIC_PREFIXES = [
   '/alltagsbegleitung', '/hygienebox', '/krankenfahrten', '/blog', '/faq',
   '/kontakt', '/budgetrechner', '/pflegegrad-check', '/termin',
-  '/engel-werden', '/karriere', '/jobs', '/team', '/finanzierung', '/lp',
+  '/engel-werden', '/jobs', '/team', '/finanzierung', '/lp',
   '/einzugsgebiet', '/bewertungen', '/ueber-uns',
 ]
 
@@ -71,9 +71,9 @@ export default function BeratungsChat() {
   const istPublic = pathname === '/' || PUBLIC_PREFIXES.some(p => pathname?.startsWith(p))
   if (!istPublic || !sichtbar) return null
 
-  // Seiten mit Sticky-CTA-Leiste unten (Landing, Jobs, Karriere, Engel-werden)
+  // Seiten mit Sticky-CTA-Leiste unten (Landing, Jobs, Engel-werden)
   // → Button höher setzen, sonst verdeckt er den Haupt-CTA
-  const hasStickyBar = pathname === '/' || ['/jobs', '/karriere', '/engel-werden'].includes(pathname || '')
+  const hasStickyBar = pathname === '/' || ['/jobs', '/engel-werden'].includes(pathname || '')
   const bottom = hasStickyBar ? 'calc(118px + env(safe-area-inset-bottom))' : 'calc(24px + env(safe-area-inset-bottom))'
 
   async function senden(text: string) {

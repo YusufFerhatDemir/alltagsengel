@@ -4,8 +4,8 @@ import TerminBuchung from '@/components/TerminBuchung'
 import BreadcrumbSchema from '@/components/BreadcrumbSchema'
 
 export const metadata: Metadata = {
-  title: 'Termin online buchen | Kostenlose Pflege-Beratung — Alltagsengel',
-  description: 'Beratungstermin in 1 Minute online buchen: Alltagsbegleitung, Pflege-Box oder Krankenfahrt in Frankfurt & Rhein-Main. Wunschtag wählen, wir rufen zurück — kostenlos.',
+  title: 'Termin online buchen — Kostenlose Pflegeberatung',
+  description: 'Beratungstermin in 1 Minute buchen: Alltagsbegleitung, Pflege-Box oder Krankenfahrt in Frankfurt & Rhein-Main. Wunschtag wählen, wir rufen zurück — kostenlos.',
   keywords: ['Termin buchen Pflege', 'Pflegeberatung Termin', 'Alltagsbegleitung Termin', 'Beratungstermin Pflegekasse', 'Online Terminbuchung Pflege Frankfurt'],
   openGraph: {
     images: [{ url: '/og-image.png', width: 1200, height: 630 }],

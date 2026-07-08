@@ -3,7 +3,14 @@ import Link from 'next/link'
 import { useState, useEffect } from 'react'
 import type { PricingTier, PricingSurcharge } from '@/lib/types/pricing'
 
-export default function KrankenfahrtenContent() {
+interface FaqItem {
+  q: string
+  a: string
+}
+
+// faqs kommt aus page.tsx — dasselbe Array speist dort das FAQPage-Schema
+// (Google-Richtlinie: nur sichtbar gerenderte FAQs auszeichnen).
+export default function KrankenfahrtenContent({ faqs = [] }: { faqs?: FaqItem[] }) {
   const [tiers, setTiers] = useState<PricingTier[]>([])
   const [surcharges, setSurcharges] = useState<PricingSurcharge[]>([])
   const [loading, setLoading] = useState(true)
@@ -165,6 +172,18 @@ export default function KrankenfahrtenContent() {
             <li><Link href="/krankenfahrten/friedberg-wetterau">Krankenfahrt Friedberg (Wetterau)</Link></li>
           </ul>
         </section>
+
+        {faqs.length > 0 && (
+          <section className="info-card">
+            <h3>Häufige Fragen zu Krankenfahrten</h3>
+            {faqs.map((f) => (
+              <details key={f.q} className="info-faq">
+                <summary>{f.q}</summary>
+                <p>{f.a}</p>
+              </details>
+            ))}
+          </section>
+        )}
 
         <section className="info-card">
           <h3>Weitere Leistungen</h3>

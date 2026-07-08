@@ -1,10 +1,11 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import BreadcrumbSchema from '@/components/BreadcrumbSchema'
+import RelatedPosts from '@/components/RelatedPosts'
 
 export const metadata: Metadata = {
-  title: 'Pflegebox kostenlos bestellen — 42€/Monat von der Pflegekasse',
-  description: 'Pflegebox kostenlos bestellen: Bis zu 42€ monatlich für Pflegehilfsmittel von der Pflegekasse. Handschuhe, Desinfektion, Bettschutz — alles in einer Box. Jetzt bestellen.',
+  title: 'Pflegebox kostenlos bestellen — 42€/Monat',
+  description: 'Pflegebox kostenlos bestellen: Bis zu 42 € monatlich für Pflegehilfsmittel von der Pflegekasse. 0 € Eigenanteil. Jetzt kostenlos bestellen.',
   keywords: ['Pflegebox bestellen', 'Pflegebox kostenlos', 'Pflegehilfsmittel bestellen', 'Pflegebox Pflegekasse', 'Pflegebox 42 Euro', 'Hygienebox bestellen', 'Pflegehilfsmittel kostenlos'],
   alternates: { canonical: 'https://alltagsengel.care/blog/pflegebox-kostenlos-bestellen' },
   openGraph: {
@@ -20,10 +21,16 @@ const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'Article',
   headline: 'Pflegebox kostenlos bestellen — 42€/Monat von der Pflegekasse',
-  description: 'Pflegebox kostenlos bestellen: Pflegehilfsmittel von der Pflegekasse.',
+  description: 'Pflegebox kostenlos bestellen: Bis zu 42 € monatlich für Pflegehilfsmittel von der Pflegekasse. 0 € Eigenanteil. Jetzt kostenlos bestellen.',
   author: { '@type': 'Organization', name: 'Alltagsengel' },
-  publisher: { '@type': 'Organization', name: 'Alltagsengel', url: 'https://alltagsengel.care' },
+  publisher: {
+    '@type': 'Organization',
+    name: 'Alltagsengel',
+    url: 'https://alltagsengel.care',
+    logo: { '@type': 'ImageObject', url: 'https://alltagsengel.care/icon-512x512.png' },
+  },
   datePublished: '2026-06-04',
+  dateModified: '2026-06-04',
   mainEntityOfPage: 'https://alltagsengel.care/blog/pflegebox-kostenlos-bestellen',
 }
 
@@ -120,8 +127,10 @@ export default function PflegeboxBestellenPage() {
           <div className="blog-cta">
             <h2>Pflegebox jetzt kostenlos bestellen</h2>
             <p>0 € Eigenanteil. Keine Bindung. Monatlich automatisch geliefert.</p>
-            <Link href="/choose" className="btn-gold">JETZT BESTELLEN</Link>
+            <Link href="/hygienebox" className="btn-gold">JETZT BESTELLEN</Link>
           </div>
+
+          <RelatedPosts slug="pflegebox-kostenlos-bestellen" />
         </div>
       </article>
     </main>

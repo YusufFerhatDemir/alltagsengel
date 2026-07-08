@@ -17,7 +17,7 @@ export default function SiteFooter() {
   const pathname = usePathname()
   // Seiten mit fixer Sticky-CTA-Bar: Footer braucht Luft nach unten,
   // sonst liegt die letzte Link-Zeile dauerhaft unter der Bar.
-  const hasStickyBar = pathname === '/' || ['/jobs', '/karriere', '/engel-werden'].includes(pathname || '')
+  const hasStickyBar = pathname === '/' || ['/jobs', '/engel-werden'].includes(pathname || '')
   return (
     <footer className="lp-footer" style={hasStickyBar ? { paddingBottom: 'calc(130px + env(safe-area-inset-bottom))' } : undefined}>
       <div className="lp-footer-brand">ALLTAGSENGEL</div>
@@ -32,6 +32,11 @@ export default function SiteFooter() {
         · Mo–Fr 8–18 Uhr
       </div>
 
+      {/* Adresse — vollständige NAP (Name/Adresse/Telefon) crawlbar auf jeder Seite (Local SEO) */}
+      <div className="lp-footer-sub" style={{ marginTop: 4 }}>
+        Neue Mainzer Straße 66-68 · 60311 Frankfurt am Main
+      </div>
+
       <div className="lp-footer-links">
         <Link href="/hygienebox">Pflege-Box</Link>
         <Link href="/krankenfahrten">Krankenfahrt</Link>
@@ -41,7 +46,6 @@ export default function SiteFooter() {
         <Link href="/pflegegrad-check">Pflegegrad-Check</Link>
         <Link href="/finanzierung">Finanzierung</Link>
         <Link href="/jobs">Jobs</Link>
-        <Link href="/karriere">Karriere</Link>
         <Link href="/engel-werden">Engel werden</Link>
         <Link href="/blog">Ratgeber</Link>
         <Link href="/faq">FAQ</Link>

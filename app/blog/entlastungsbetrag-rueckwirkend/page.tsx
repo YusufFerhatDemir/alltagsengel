@@ -1,9 +1,10 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import BreadcrumbSchema from '@/components/BreadcrumbSchema'
+import RelatedPosts from '@/components/RelatedPosts'
 
 export const metadata: Metadata = {
-  title: 'Entlastungsbetrag rückwirkend nutzen: Bis zu 3.144€ sichern (2026)',
+  title: 'Entlastungsbetrag rückwirkend: 3.144 € sichern',
   description: 'Nicht genutzten Entlastungsbetrag rückwirkend einsetzen: Fristen, Beantragung und wie Sie bis zu 3.144€ aus 2 Jahren nachholen. Aktuell: 131€/Monat seit 2025.',
   keywords: [
     'Entlastungsbetrag rückwirkend',
@@ -32,8 +33,8 @@ export const metadata: Metadata = {
 const articleJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'Article',
-  headline: 'Entlastungsbetrag rückwirkend nutzen: Bis zu 3.144€ sichern (2026)',
-  description: 'Nicht genutzten Entlastungsbetrag rückwirkend einsetzen: Fristen, Beantragung und wie Sie bis zu 3.144€ nachholen.',
+  headline: 'Entlastungsbetrag rückwirkend nutzen: Bis zu 3.144 € sichern',
+  description: 'Nicht genutzten Entlastungsbetrag rückwirkend einsetzen: Fristen, Beantragung und wie Sie bis zu 3.144€ aus 2 Jahren nachholen. Aktuell: 131€/Monat seit 2025.',
   author: { '@type': 'Organization', name: 'Alltagsengel', url: 'https://alltagsengel.care' },
   publisher: { '@type': 'Organization', name: 'Alltagsengel', url: 'https://alltagsengel.care', logo: { '@type': 'ImageObject', url: 'https://alltagsengel.care/icon-512x512.png' } },
   datePublished: '2026-06-06',
@@ -43,43 +44,34 @@ const articleJsonLd = {
   inLanguage: 'de-DE',
 }
 
+// FAQ-Daten: steuern sowohl das sichtbare FAQ als auch das FAQPage-Schema
+const faqItems = [
+  {
+    question: 'Wie lange kann ich den Entlastungsbetrag rückwirkend nutzen?',
+    answer: 'Nicht genutzte Beträge eines Kalenderjahres können bis zum 30. Juni des Folgejahres eingesetzt werden. Beispiel: Der Entlastungsbetrag aus 2025 verfällt am 30. Juni 2026.',
+  },
+  {
+    question: 'Wie viel Entlastungsbetrag kann ich maximal ansparen?',
+    answer: 'Im Jahr 2026 beträgt der Entlastungsbetrag 131€/Monat = 1.572€/Jahr. Zusammen mit den nicht verbrauchten Beträgen aus 2025 (die bis 30.06.2026 gelten) können bis zu 3.144€ verfügbar sein.',
+  },
+  {
+    question: 'Was passiert mit nicht genutztem Entlastungsbetrag?',
+    answer: 'Nicht genutzte Beträge verfallen am 30. Juni des Folgejahres unwiderruflich. Es gibt keine Auszahlung — der Betrag kann nur für zugelassene Entlastungsleistungen verwendet werden.',
+  },
+  {
+    question: 'Kann ich den Entlastungsbetrag auch ohne Pflegedienst nutzen?',
+    answer: 'Der Entlastungsbetrag muss für Leistungen nach §45a SGB XI verwendet werden — z.B. Alltagsbegleitung, Haushaltshilfe oder Tagesbetreuung. Der Anbieter muss nach Landesrecht anerkannt sein, wie Alltagsengel.',
+  },
+]
+
 const faqJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'FAQPage',
-  mainEntity: [
-    {
-      '@type': 'Question',
-      name: 'Wie lange kann ich den Entlastungsbetrag rückwirkend nutzen?',
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: 'Nicht genutzte Beträge eines Kalenderjahres können bis zum 30. Juni des Folgejahres eingesetzt werden. Beispiel: Der Entlastungsbetrag aus 2025 verfällt am 30. Juni 2026.',
-      },
-    },
-    {
-      '@type': 'Question',
-      name: 'Wie viel Entlastungsbetrag kann ich maximal ansparen?',
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: 'Im Jahr 2026 beträgt der Entlastungsbetrag 131€/Monat = 1.572€/Jahr. Zusammen mit den nicht verbrauchten Beträgen aus 2025 (die bis 30.06.2026 gelten) können bis zu 3.144€ verfügbar sein.',
-      },
-    },
-    {
-      '@type': 'Question',
-      name: 'Was passiert mit nicht genutztem Entlastungsbetrag?',
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: 'Nicht genutzte Beträge verfallen am 30. Juni des Folgejahres unwiderruflich. Es gibt keine Auszahlung — der Betrag kann nur für zugelassene Entlastungsleistungen verwendet werden.',
-      },
-    },
-    {
-      '@type': 'Question',
-      name: 'Kann ich den Entlastungsbetrag auch ohne Pflegedienst nutzen?',
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: 'Der Entlastungsbetrag muss für Leistungen nach §45a SGB XI verwendet werden — z.B. Alltagsbegleitung, Haushaltshilfe oder Tagesbetreuung. Der Anbieter muss nach Landesrecht anerkannt sein, wie Alltagsengel.',
-      },
-    },
-  ],
+  mainEntity: faqItems.map((item) => ({
+    '@type': 'Question',
+    name: item.question,
+    acceptedAnswer: { '@type': 'Answer', text: item.answer },
+  })),
 }
 
 export default function EntlastungsbetragRueckwirkend() {
@@ -203,6 +195,14 @@ export default function EntlastungsbetragRueckwirkend() {
             <li><strong>Keine Quittung:</strong> Bewahren Sie alle Leistungsnachweise auf, falls die Kasse nachfragt.</li>
           </ul>
 
+          <h2>Häufige Fragen</h2>
+          {faqItems.map((item) => (
+            <details key={item.question} style={{ marginBottom: '12px' }}>
+              <summary style={{ cursor: 'pointer', fontWeight: 600 }}>{item.question}</summary>
+              <p style={{ marginTop: '8px' }}>{item.answer}</p>
+            </details>
+          ))}
+
           <h2>Fazit: Entlastungsbetrag jetzt nutzen — nicht verfallen lassen</h2>
           <p>
             Der Entlastungsbetrag ist eine wertvolle Leistung, die vielen Pflegebedürftigen und
@@ -219,15 +219,7 @@ export default function EntlastungsbetragRueckwirkend() {
           <Link href="/alltagsbegleitung" className="btn-gold">Alltagsbegleitung buchen</Link>
         </div>
 
-        <div className="blog-related">
-          <h3>Weiterlesen</h3>
-          <ul>
-            <li><Link href="/blog/entlastungsbetrag-beantragen">Entlastungsbetrag beantragen — Anleitung</Link></li>
-            <li><Link href="/blog/entlastungsbetrag-45b">Entlastungsbetrag §45b erklärt</Link></li>
-            <li><Link href="/blog/entlastungsbetrag-nutzen">Entlastungsbetrag sinnvoll nutzen</Link></li>
-            <li><Link href="/blog/alltagsbegleitung-kosten">Was kostet Alltagsbegleitung?</Link></li>
-          </ul>
-        </div>
+        <RelatedPosts slug="entlastungsbetrag-rueckwirkend" />
       </article>
     </main>
   )

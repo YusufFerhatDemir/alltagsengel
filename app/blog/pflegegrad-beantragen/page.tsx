@@ -1,10 +1,11 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import BreadcrumbSchema from '@/components/BreadcrumbSchema'
+import RelatedPosts from '@/components/RelatedPosts'
 
 export const metadata: Metadata = {
-  title: 'Pflegegrad beantragen: So bekommen Sie den richtigen Pflegegrad',
-  description: 'Vollständige Anleitung zur Beantragung eines Pflegegrades: MDK-Bewertung, Vorbereitung und wie Sie einen erfolgreichen Antrag stellen.',
+  title: 'Pflegegrad beantragen: Anleitung & MDK-Tipps',
+  description: 'Pflegegrad beantragen: Anleitung mit MDK-Vorbereitung, Tipps zur Begutachtung und Widerspruch. Jetzt lesen und Antrag erfolgreich stellen.',
   keywords: 'Pflegegrad, Beantragung, MDK, Pflegekasse, Pflegeeinstufung',
   alternates: { canonical: 'https://alltagsengel.care/blog/pflegegrad-beantragen' },
   openGraph: {
@@ -19,11 +20,11 @@ const articleJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'Article',
   headline: 'Pflegegrad beantragen: So bekommen Sie den richtigen Pflegegrad',
-  description: 'Vollständige Anleitung zur Beantragung eines Pflegegrades: MDK-Bewertung, Vorbereitung und wie Sie einen erfolgreichen Antrag stellen.',
+  description: 'Pflegegrad beantragen: Anleitung mit MDK-Vorbereitung, Tipps zur Begutachtung und Widerspruch. Jetzt lesen und Antrag erfolgreich stellen.',
   author: { '@type': 'Organization', name: 'Alltagsengel', url: 'https://alltagsengel.care' },
   publisher: { '@type': 'Organization', name: 'Alltagsengel', url: 'https://alltagsengel.care', logo: { '@type': 'ImageObject', url: 'https://alltagsengel.care/icon-512x512.png' } },
-  datePublished: '2026-03-19',
-  dateModified: '2026-03-19',
+  datePublished: '2026-04-03',
+  dateModified: '2026-04-03',
   mainEntityOfPage: 'https://alltagsengel.care/blog/pflegegrad-beantragen',
   image: 'https://alltagsengel.care/og-image.png',
   inLanguage: 'de-DE',
@@ -32,7 +33,7 @@ const articleJsonLd = {
 export default function PflegegradBeantragen() {
   return (
     <main className="blog-container">
-      <BreadcrumbSchema items={[{ name: 'Ratgeber', url: '/blog' }, { name: 'Pflegegrad beantragen: So bekommen Sie den richtigen Pflegeg' }]} />
+      <BreadcrumbSchema items={[{ name: 'Ratgeber', url: '/blog' }, { name: 'Pflegegrad beantragen' }]} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }} />
       <article className="blog-article">
         <div className="blog-header">
@@ -218,9 +219,9 @@ export default function PflegegradBeantragen() {
         </div>
 
         <div className="blog-cta">
-          <h3>Jetzt AlltagsEngel testen</h3>
-          <p>Mit einem Pflegegrad kannst du über AlltagsEngel Helfer für Alltagsaufgaben finden und den Entlastungsbetrag nutzen.</p>
-          <Link href="/choose" className="btn-gold">Kostenlos registrieren</Link>
+          <h3>Jetzt Alltagsengel testen</h3>
+          <p>Mit einem Pflegegrad kannst du über Alltagsengel Helfer für Alltagsaufgaben finden und den Entlastungsbetrag nutzen.</p>
+          <Link href="/termin" className="btn-gold">Kostenlos registrieren</Link>
         </div>
       
         <section className="blog-related" style={{ marginTop: 40, padding: '24px 20px', background: 'rgba(201,150,60,0.06)', borderRadius: 12, border: '1px solid rgba(201,150,60,0.15)' }}>
@@ -231,6 +232,8 @@ export default function PflegegradBeantragen() {
             <li><Link href="/blog/entlastungsbetrag-45b" style={{ color: '#F5F0E8', textDecoration: 'underline', textUnderlineOffset: 3, fontSize: 14 }}>Entlastungsbetrag: Was steht Ihnen zu?</Link></li>
           </ul>
         </section>
+
+        <RelatedPosts slug="pflegegrad-beantragen" />
       </article>
     </main>
   );

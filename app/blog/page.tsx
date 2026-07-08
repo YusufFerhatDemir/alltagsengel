@@ -2,10 +2,11 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import NewsletterSignup from '@/components/NewsletterSignup'
 import BreadcrumbSchema from '@/components/BreadcrumbSchema'
+import { BLOG_POSTS } from '@/lib/blog-posts'
 
 export const metadata: Metadata = {
-  title: 'Ratgeber — Pflege, Alltagsbegleitung & Entlastungsbetrag',
-  description: 'Hilfreiche Artikel rund um Pflegegrad, Entlastungsbetrag, Alltagsbegleitung und Seniorenbetreuung. Kostenlose Tipps von AlltagsEngel.',
+  title: 'Pflege-Ratgeber — Entlastungsbetrag & Pflegegrad',
+  description: 'Hilfreiche Ratgeber-Artikel zu Pflegegrad, Entlastungsbetrag, Alltagsbegleitung und Seniorenbetreuung. Jetzt kostenlos lesen und Ansprüche sichern.',
   keywords: ['Pflege Ratgeber', 'Entlastungsbetrag', 'Pflegegrad', 'Alltagsbegleitung', 'Seniorenbetreuung', 'Pflegehilfsmittel'],
   alternates: {
     canonical: 'https://alltagsengel.care/blog',
@@ -22,233 +23,16 @@ export const metadata: Metadata = {
   },
 }
 
-interface BlogArticle {
-  slug: string
-  title: string
-  description: string
-  category: string
-  readTime: string
-  date: string
-}
+// Alle Artikel-Daten kommen aus der zentralen Registry (lib/blog-posts.ts) —
+// sortiert nach Veröffentlichungsdatum, neueste zuerst.
+const articles = [...BLOG_POSTS].sort((a, b) =>
+  b.datePublished.localeCompare(a.datePublished)
+)
 
-const articles: BlogArticle[] = [
-  {
-    slug: 'senioren-hitze-sommer',
-    title: 'Senioren & Hitze: 7 Tipps für den Sommer',
-    description: 'So schützen Sie ältere Angehörige bei Hitze — 7 praktische Tipps gegen Dehydration und Kreislaufprobleme. Plus: wie Alltagsbegleitung im Sommer entlastet.',
-    category: 'Ratgeber',
-    readTime: '7 min',
-    date: '2. Juli 2026',
-  },
-  {
-    slug: 'pflegereform-2027',
-    title: 'Pflegereform 2027 — Was ändert sich für Alltagsbegleitung?',
-    description: 'Das geplante Pflegeneuordnungsgesetz (PNOG): Was bereits gilt, was geplant ist und was das für Entlastungsbetrag und Alltagsbegleitung bedeutet.',
-    category: 'Finanzierung',
-    readTime: '8 min',
-    date: '2. Juli 2026',
-  },
-  {
-    slug: 'wer-zahlt-alltagsbegleitung',
-    title: 'Wer zahlt die Alltagsbegleitung? Pflegekasse, Entlastungsbetrag & Co.',
-    description: 'Pflegekasse (131€ Entlastungsbetrag), Verhinderungspflege, Sozialamt oder Selbstzahler — alle Finanzierungswege für Alltagsbegleitung übersichtlich erklärt.',
-    category: 'Finanzierung',
-    readTime: '7 min',
-    date: '2. Juli 2026',
-  },
-  {
-    slug: 'entlastungsbetrag-45b',
-    title: 'Entlastungsbetrag §45b SGB XI — 131€/Monat für Alltagsbegleitung',
-    description: 'Erfahren Sie, wie Sie den Entlastungsbetrag nach §45b SGB XI nutzen können. 131€ monatlich für zertifizierte Alltagsbegleitung.',
-    category: 'Finanzierung',
-    readTime: '6 min',
-    date: '19. März 2026',
-  },
-  {
-    slug: 'entlastungsbetrag-beantragen',
-    title: 'Entlastungsbetrag beantragen — Schritt für Schritt Anleitung',
-    description: 'So beantragen Sie den Entlastungsbetrag richtig. Vollständige Anleitung mit Tipps zur schnellen Bewilligung.',
-    category: 'Finanzierung',
-    readTime: '5 min',
-    date: '20. März 2026',
-  },
-  {
-    slug: 'pflegegrad-beantragen',
-    title: 'Pflegegrad beantragen — Antrag, MDK-Begutachtung & Tipps',
-    description: 'Alles zum Pflegegrad-Antrag: Von der Antragstellung über den MDK-Besuch bis zur Einstufung.',
-    category: 'Pflegegrad',
-    readTime: '8 min',
-    date: '21. März 2026',
-  },
-  {
-    slug: 'verhinderungspflege-beantragen',
-    title: 'Verhinderungspflege beantragen — bis zu 3.539€/Jahr',
-    description: 'So nutzen Sie die Verhinderungspflege richtig: Antrag, Voraussetzungen und der gemeinsame Jahresbetrag mit der Kurzzeitpflege.',
-    category: 'Finanzierung',
-    readTime: '6 min',
-    date: '22. März 2026',
-  },
-  {
-    slug: 'pflegehilfsmittel-40-euro',
-    title: 'Pflegehilfsmittel — 42€/Monat kostenlos von der Kasse',
-    description: 'Diese Pflegehilfsmittel stehen Ihnen monatlich zu: Einmalhandschuhe, Desinfektionsmittel, Bettschutz und mehr. Bis zu 42€/Monat nach §40 SGB XI.',
-    category: 'Finanzierung',
-    readTime: '4 min',
-    date: '23. März 2026',
-  },
-  {
-    slug: 'alltagsbegleitung-frankfurt',
-    title: 'Alltagsbegleitung in Frankfurt — Angebote & Kosten',
-    description: 'Finden Sie die beste Alltagsbegleitung in Frankfurt am Main. Überblick über Angebote, Kosten und Kassenabrechnung.',
-    category: 'Alltagsbegleitung',
-    readTime: '5 min',
-    date: '24. März 2026',
-  },
-  {
-    slug: 'seniorenbetreuung-zu-hause',
-    title: 'Seniorenbetreuung zu Hause — Angebote, Kosten & Finanzierung',
-    description: 'Professionelle Seniorenbetreuung in den eigenen vier Wänden. Welche Möglichkeiten gibt es und was bezahlt die Kasse?',
-    category: 'Alltagsbegleitung',
-    readTime: '7 min',
-    date: '25. März 2026',
-  },
-  {
-    slug: 'alltagshilfe-senioren',
-    title: 'Alltagshilfe für Senioren — Was wird angeboten?',
-    description: 'Von Einkaufsbegleitung bis Haushaltshilfe: Diese Alltagshilfen unterstützen Senioren im täglichen Leben.',
-    category: 'Alltagsbegleitung',
-    readTime: '5 min',
-    date: '26. März 2026',
-  },
-  {
-    slug: 'einkaufshilfe-senioren',
-    title: 'Einkaufshilfe für Senioren — Unterstützung beim Einkaufen',
-    description: 'Professionelle Einkaufshilfe für ältere Menschen. So funktioniert die Begleitung und Abrechnung über die Pflegekasse.',
-    category: 'Services',
-    readTime: '4 min',
-    date: '27. März 2026',
-  },
-  {
-    slug: 'arztbegleitung-senioren',
-    title: 'Arztbegleitung für Senioren — Sicher zum Arzttermin',
-    description: 'Professionelle Begleitung zum Arzt: Ablauf, Kosten und Kassenabrechnung für Seniorenbegleitung.',
-    category: 'Services',
-    readTime: '4 min',
-    date: '28. März 2026',
-  },
-  {
-    slug: 'krankenfahrt-kostenuebernahme',
-    title: 'Krankenfahrt Kostenübernahme — Wer zahlt die Fahrt zum Arzt?',
-    description: 'Wann übernimmt die Krankenkasse die Fahrtkosten? Alles zu Krankenfahrten, Genehmigung und Erstattung.',
-    category: 'Services',
-    readTime: '5 min',
-    date: '29. März 2026',
-  },
-  {
-    slug: 'alltagsbegleiter-werden',
-    title: 'Alltagsbegleiter werden — Ausbildung, Gehalt & Einstieg',
-    description: 'So werden Sie zertifizierter Alltagsbegleiter nach §45a SGB XI. Qualifikation, Verdienstmöglichkeiten und Bewerbung.',
-    category: 'Karriere',
-    readTime: '6 min',
-    date: '30. März 2026',
-  },
-  {
-    slug: 'nebenjob-pflege',
-    title: 'Nebenjob in der Pflege — Flexibel als Alltagsbegleiter arbeiten',
-    description: 'Nebenjob als Alltagsbegleiter: Flexible Arbeitszeiten, faire Bezahlung und sinnvolle Tätigkeit.',
-    category: 'Karriere',
-    readTime: '5 min',
-    date: '31. März 2026',
-  },
-  {
-    slug: 'einsamkeit-im-alter',
-    title: 'Einsamkeit im Alter — Ursachen, Folgen & Hilfsangebote',
-    description: 'Einsamkeit betrifft viele Senioren. Erfahren Sie, welche Hilfsangebote es gibt und wie Alltagsbegleitung helfen kann.',
-    category: 'Ratgeber',
-    readTime: '7 min',
-    date: '1. April 2026',
-  },
-  {
-    slug: 'pflege-app-vergleich',
-    title: 'Pflege-App Vergleich 2026 — Die besten Apps für pflegende Angehörige',
-    description: 'Welche Pflege-Apps helfen wirklich? Vergleich der besten digitalen Helfer für Pflegebedürftige und Angehörige.',
-    category: 'Ratgeber',
-    readTime: '8 min',
-    date: '2. April 2026',
-  },
-  {
-    slug: 'haushaltshilfe-frankfurt',
-    title: 'Haushaltshilfe Frankfurt — Jetzt über die Pflegekasse buchen',
-    description: 'Haushaltshilfe in Frankfurt am Main und Rhein-Main-Gebiet: Einkaufen, Kochen, Putzen, Begleitung. Kostenübernahme über Pflegekasse möglich.',
-    category: 'Services',
-    readTime: '6 min',
-    date: '4. Juni 2026',
-  },
-  {
-    slug: 'pflegebox-kostenlos-bestellen',
-    title: 'Pflegebox kostenlos bestellen — 42€/Monat von der Pflegekasse',
-    description: 'Bis zu 42€ monatlich für Pflegehilfsmittel von der Pflegekasse. Handschuhe, Desinfektion, Bettschutz — alles in einer Box.',
-    category: 'Finanzierung',
-    readTime: '4 min',
-    date: '4. Juni 2026',
-  },
-  {
-    slug: 'krankenfahrt-buchen-frankfurt',
-    title: 'Krankenfahrt buchen Frankfurt — Fahrt zum Arzt über die Krankenkasse',
-    description: 'Krankenfahrt in Frankfurt buchen: Fahrten zu Arzt, Klinik, Dialyse und Therapie. Mit Verordnung über die Krankenkasse abrechenbar.',
-    category: 'Services',
-    readTime: '5 min',
-    date: '4. Juni 2026',
-  },
-  {
-    slug: 'alltagsbegleitung-kosten',
-    title: 'Was kostet Alltagsbegleitung? Kosten, Finanzierung & Tipps',
-    description: 'Stundensätze von 25–45€, Finanzierung über den Entlastungsbetrag (131€/Monat) und praktische Tipps zur Kostenübernahme durch die Pflegekasse.',
-    category: 'Finanzierung',
-    readTime: '8 min',
-    date: '6. Juni 2026',
-  },
-  {
-    slug: 'seniorenbetreuung-frankfurt',
-    title: 'Seniorenbetreuung in Frankfurt: Angebote, Kosten & Anbieter',
-    description: 'Alle Angebote für Seniorenbetreuung in Frankfurt: Alltagsbegleitung, Haushaltshilfe, Demenzbetreuung und mehr im Rhein-Main-Gebiet.',
-    category: 'Alltagsbegleitung',
-    readTime: '9 min',
-    date: '6. Juni 2026',
-  },
-  {
-    slug: 'entlastungsbetrag-nutzen',
-    title: 'Entlastungsbetrag richtig nutzen — 131€/Monat voll ausschöpfen',
-    description: 'Praktischer Ratgeber: So nutzen Sie den Entlastungsbetrag optimal. Welche Leistungen sind abgedeckt, häufige Fehler und Checkliste.',
-    category: 'Finanzierung',
-    readTime: '10 min',
-    date: '6. Juni 2026',
-  },
-  {
-    slug: 'krankenfahrt-verordnung-erhalten',
-    title: 'Krankenfahrt Verordnung: Wer bekommt sie & wie beantragen?',
-    description: 'Wie Sie eine Verordnung für Krankenfahrten erhalten: Voraussetzungen (Pflegegrad, Merkzeichen), Arztgespräch, Genehmigung durch die Krankenkasse.',
-    category: 'Services',
-    readTime: '7 min',
-    date: '6. Juni 2026',
-  },
-  {
-    slug: 'entlastungsbetrag-rueckwirkend',
-    title: 'Entlastungsbetrag rückwirkend nutzen — bis zu 3.144€ sichern',
-    description: 'Nicht genutzten Entlastungsbetrag nachholen: Fristen, Berechnung und wie Sie bis zu 3.144€ aus 2 Jahren vor dem Verfall retten.',
-    category: 'Finanzierung',
-    readTime: '6 min',
-    date: '6. Juni 2026',
-  },
-  {
-    slug: 'pflegegrad-1-leistungen',
-    title: 'Pflegegrad 1 Leistungen 2026 — Was steht Ihnen zu?',
-    description: 'Alle Leistungen bei Pflegegrad 1: Entlastungsbetrag 131€, Pflegehilfsmittel 42€, Wohnraumanpassung bis 4.000€ und mehr.',
-    category: 'Pflegegrad',
-    readTime: '8 min',
-    date: '6. Juni 2026',
-  },
-]
+// ISO-Datum → deutsches Anzeigeformat (z.B. "2. Juli 2026")
+function formatDate(iso: string): string {
+  return new Date(iso).toLocaleDateString('de-DE', { day: 'numeric', month: 'long', year: 'numeric' })
+}
 
 const categoryColors: Record<string, string> = {
   'Finanzierung': '#C9963C',
@@ -277,7 +61,7 @@ const collectionJsonLd = {
       '@type': 'ListItem',
       position: i + 1,
       url: `https://alltagsengel.care/blog/${a.slug}`,
-      name: a.title,
+      name: a.headline,
     })),
   },
 }
@@ -345,15 +129,15 @@ export default function BlogIndexPage() {
               Top-Artikel
             </span>
             <h2 style={{ color: '#F5F0E8', fontSize: 'clamp(20px, 3.5vw, 28px)', fontWeight: 700, marginBottom: 12, lineHeight: 1.3 }}>
-              {articles[0].title}
+              {articles[0].headline}
             </h2>
             <p style={{ color: '#B8B0A4', fontSize: 15, lineHeight: 1.6, marginBottom: 16 }}>
               {articles[0].description}
             </p>
             <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
               <span style={{ color: '#C9963C', fontSize: 13, fontWeight: 600 }}>{articles[0].category}</span>
-              <span style={{ color: '#777', fontSize: 13 }}>{articles[0].readTime} Lesezeit</span>
-              <span style={{ color: '#777', fontSize: 13 }}>{articles[0].date}</span>
+              <span style={{ color: '#777', fontSize: 13 }}>{articles[0].readTimeMin} min Lesezeit</span>
+              <span style={{ color: '#777', fontSize: 13 }}>{formatDate(articles[0].datePublished)}</span>
             </div>
           </div>
         </Link>
@@ -412,13 +196,13 @@ export default function BlogIndexPage() {
                 </span>
               </div>
               <h3 style={{ color: '#F5F0E8', fontSize: 17, fontWeight: 600, marginBottom: 8, lineHeight: 1.4 }}>
-                {article.title}
+                {article.headline}
               </h3>
               <p style={{ color: '#8A8279', fontSize: 14, lineHeight: 1.5, marginBottom: 16, flex: 1 }}>
                 {article.description}
               </p>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ color: '#8F887B', fontSize: 12 }}>{article.readTime} Lesezeit</span>
+                <span style={{ color: '#8F887B', fontSize: 12 }}>{article.readTimeMin} min Lesezeit · {formatDate(article.datePublished)}</span>
                 <span style={{ color: '#C9963C', fontSize: 13, fontWeight: 600 }}>Lesen →</span>
               </div>
             </article>
@@ -465,22 +249,19 @@ export default function BlogIndexPage() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
         '@context': 'https://schema.org',
         '@type': 'Blog',
-        name: 'AlltagsEngel Ratgeber',
+        name: 'Alltagsengel Ratgeber',
         description: 'Ratgeber-Artikel rund um Pflege, Entlastungsbetrag und Alltagsbegleitung.',
         url: 'https://alltagsengel.care/blog',
-        publisher: {
-          '@type': 'Organization',
-          name: 'AlltagsEngel',
-          url: 'https://alltagsengel.care',
-          logo: { '@type': 'ImageObject', url: 'https://alltagsengel.care/icon-512x512.jpg' },
-        },
+        inLanguage: 'de-DE',
+        publisher: { '@id': 'https://alltagsengel.care/#organization' },
         blogPost: articles.map(a => ({
           '@type': 'BlogPosting',
-          headline: a.title,
+          headline: a.headline,
           description: a.description,
           url: `https://alltagsengel.care/blog/${a.slug}`,
-          datePublished: a.date,
-          author: { '@type': 'Organization', name: 'AlltagsEngel' },
+          datePublished: a.datePublished,
+          ...(a.dateModified ? { dateModified: a.dateModified } : {}),
+          author: { '@type': 'Organization', name: 'Alltagsengel' },
         })),
       })}} />
     </main>

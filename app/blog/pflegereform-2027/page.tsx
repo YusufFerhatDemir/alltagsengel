@@ -1,10 +1,11 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import BreadcrumbSchema from '@/components/BreadcrumbSchema'
+import RelatedPosts from '@/components/RelatedPosts'
 
 export const metadata: Metadata = {
-  title: 'Pflegereform 2027: Was sich für Alltagsbegleitung & Entlastungsbetrag ändert',
-  description: 'Pflegereform 2027 (PNOG): Das ist bisher bekannt, das ist geplant und das bedeutet es für Alltagsbegleitung, Entlastungsbetrag und pflegende Angehörige. Verständlich erklärt.',
+  title: 'Pflegereform 2027: Was sich ändert (PNOG)',
+  description: 'Pflegereform 2027 (PNOG): Was für Entlastungsbetrag und Alltagsbegleitung geplant ist — und was Angehörige jetzt tun sollten. Verständlich erklärt.',
   keywords: ['Pflegereform 2027', 'Pflegereform 2027 Änderungen', 'PNOG', 'Pflegeneuordnungsgesetz', 'Entlastungsbetrag 2027', 'gemeinsamer Jahresbetrag', 'Pflege Reform Alltagsbegleitung'],
   alternates: { canonical: 'https://alltagsengel.care/blog/pflegereform-2027' },
   openGraph: {
@@ -20,7 +21,7 @@ const articleJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'Article',
   headline: 'Pflegereform 2027: Was sich für Alltagsbegleitung & Entlastungsbetrag ändert',
-  description: 'Pflegereform 2027 (PNOG): Das ist bisher bekannt, das ist geplant und das bedeutet es für Alltagsbegleitung und pflegende Angehörige.',
+  description: 'Pflegereform 2027 (PNOG): Was für Entlastungsbetrag und Alltagsbegleitung geplant ist — und was Angehörige jetzt tun sollten. Verständlich erklärt.',
   author: { '@type': 'Organization', name: 'Alltagsengel', url: 'https://alltagsengel.care' },
   publisher: { '@type': 'Organization', name: 'Alltagsengel', url: 'https://alltagsengel.care', logo: { '@type': 'ImageObject', url: 'https://alltagsengel.care/icon-512x512.png' } },
   datePublished: '2026-07-02',
@@ -155,18 +156,11 @@ export default function Pflegereform2027Page() {
           </div>
         </div>
 
+        <RelatedPosts slug="pflegereform-2027" />
+
         <footer className="blog-footer">
           <Link href="/blog" className="blog-back">← Zurück zum Ratgeber</Link>
         </footer>
-
-        <section className="blog-related" style={{ marginTop: 40, padding: '24px 20px', background: 'rgba(201,150,60,0.06)', borderRadius: 12, border: '1px solid rgba(201,150,60,0.15)' }}>
-          <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 12, color: '#C9963C' }}>Weiterführende Informationen</h3>
-          <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <li><Link href="/blog/entlastungsbetrag-45b" style={{ color: '#F5F0E8', textDecoration: 'underline', textUnderlineOffset: 3, fontSize: 14 }}>Entlastungsbetrag §45b — 131 €/Monat verstehen</Link></li>
-            <li><Link href="/blog/verhinderungspflege-beantragen" style={{ color: '#F5F0E8', textDecoration: 'underline', textUnderlineOffset: 3, fontSize: 14 }}>Verhinderungspflege beantragen</Link></li>
-            <li><Link href="/blog/pflegegrad-1-leistungen" style={{ color: '#F5F0E8', textDecoration: 'underline', textUnderlineOffset: 3, fontSize: 14 }}>Pflegegrad 1: Welche Leistungen stehen mir zu?</Link></li>
-          </ul>
-        </section>
       </article>
     </main>
   )

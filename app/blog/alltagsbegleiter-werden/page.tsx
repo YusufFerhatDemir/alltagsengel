@@ -1,10 +1,11 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import BreadcrumbSchema from '@/components/BreadcrumbSchema'
+import RelatedPosts from '@/components/RelatedPosts'
 
 export const metadata: Metadata = {
-  title: 'Alltagsbegleiter werden: Verdienst, Voraussetzungen & Bewerbung',
-  description: 'Alles über den Beruf des Alltagsbegleiters: Verdienst (ca. 20€/Stunde), Anforderungen und wie Sie über AlltagsEngel direkt als Helfer arbeiten können.',
+  title: 'Alltagsbegleiter werden: Verdienst & Bewerbung',
+  description: 'Alles über den Beruf des Alltagsbegleiters: Verdienst von ca. 20 €/Stunde, Voraussetzungen und Bewerbung. Jetzt bei Alltagsengel als Helfer starten.',
   keywords: 'Alltagsbegleiter, Verdienst, Bewerbung, Qualifizierung, Arbeit als Helfer',
   alternates: { canonical: 'https://alltagsengel.care/blog/alltagsbegleiter-werden' },
   openGraph: {
@@ -19,11 +20,11 @@ const articleJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'Article',
   headline: 'Alltagsbegleiter werden: Verdienst, Voraussetzungen & Bewerbung',
-  description: 'Alles über den Beruf des Alltagsbegleiters: Verdienst (ca. 20€/Stunde), Anforderungen und wie Sie über AlltagsEngel direkt als Helfer arbeiten können.',
+  description: 'Alles über den Beruf des Alltagsbegleiters: Verdienst von ca. 20 €/Stunde, Voraussetzungen und Bewerbung. Jetzt bei Alltagsengel als Helfer starten.',
   author: { '@type': 'Organization', name: 'Alltagsengel', url: 'https://alltagsengel.care' },
   publisher: { '@type': 'Organization', name: 'Alltagsengel', url: 'https://alltagsengel.care', logo: { '@type': 'ImageObject', url: 'https://alltagsengel.care/icon-512x512.png' } },
-  datePublished: '2026-03-19',
-  dateModified: '2026-03-19',
+  datePublished: '2026-04-08',
+  dateModified: '2026-04-08',
   mainEntityOfPage: 'https://alltagsengel.care/blog/alltagsbegleiter-werden',
   image: 'https://alltagsengel.care/og-image.png',
   inLanguage: 'de-DE',
@@ -32,7 +33,7 @@ const articleJsonLd = {
 export default function AlltagsbegleiterWerden() {
   return (
     <main className="blog-container">
-      <BreadcrumbSchema items={[{ name: 'Ratgeber', url: '/blog' }, { name: 'Alltagsbegleiter werden: Verdienst, Voraussetzungen & Bewerb' }]} />
+      <BreadcrumbSchema items={[{ name: 'Ratgeber', url: '/blog' }, { name: 'Alltagsbegleiter werden' }]} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }} />
       <article className="blog-article">
         <div className="blog-header">
@@ -97,7 +98,7 @@ export default function AlltagsbegleiterWerden() {
             <li><strong>Minijob (450 Euro):</strong> Direkt bei Privathaushalt oder über Anbieter</li>
             <li><strong>Vollzeitstelle:</strong> Bei etablierten Pflegediensten oder Sozialunternehmen</li>
             <li><strong>Stundenhonorar:</strong> Freiberufliche Tätigkeit, oft mit höherem Stundensatz aber ohne Sicherheitsleistungen</li>
-            <li><strong>Flexible Arbeitshilfe:</strong> Über Plattformen wie AlltagsEngel, bei flexiblem Einsatz</li>
+            <li><strong>Flexible Arbeitshilfe:</strong> Über Plattformen wie Alltagsengel, bei flexiblem Einsatz</li>
           </ul>
 
           <h2>Anforderungen und Voraussetzungen</h2>
@@ -155,14 +156,14 @@ export default function AlltagsbegleiterWerden() {
           <ul>
             <li>Etablierte Pflegedienste und Sozialunternehmen</li>
             <li>Private Haushalte (über Mundpropaganda)</li>
-            <li>Online-Plattformen wie AlltagsEngel</li>
+            <li>Online-Plattformen wie Alltagsengel</li>
           </ul>
 
           <h3>Schritt 4: Registrierung und Einsatz</h3>
           <p>Nach erfolgreicher Bewerbung werden Sie registriert und erhalten Ihre ersten Einsätze. Beginnen Sie oft mit einem Probeeinsatz.</p>
 
-          <h2>Chancen mit AlltagsEngel</h2>
-          <p>AlltagsEngel bietet Alltagsbegleitern flexible Möglichkeiten, direkt mit Klienten in Kontakt zu treten. Nach einer kurzen Registrierung und Überprüfung Ihrer Qualifikationen können Sie:</p>
+          <h2>Chancen mit Alltagsengel</h2>
+          <p>Alltagsengel bietet Alltagsbegleitern flexible Möglichkeiten, direkt mit Klienten in Kontakt zu treten. Nach einer kurzen Registrierung und Überprüfung Ihrer Qualifikationen können Sie:</p>
           <ul>
             <li>Ihre Verfügbarkeit selbst bestimmen</li>
             <li>Klienten auswählen, die zu Ihnen passen</li>
@@ -180,7 +181,7 @@ export default function AlltagsbegleiterWerden() {
           </ul>
 
           <h2>Fazit</h2>
-          <p>Ein Beruf als Alltagsbegleiter ist erfüllend, flexibel und wirtschaftlich fair entlohnt. Mit einer Schulung und den richtigen Qualifikationen können Sie direkt mit älteren Menschen arbeiten und ihnen bei alltäglichen Herausforderungen helfen. AlltagsEngel macht den Einstieg einfacher – registrieren Sie sich heute und beginnen Sie, Menschen in Ihrer Nähe zu unterstützen.</p>
+          <p>Ein Beruf als Alltagsbegleiter ist erfüllend, flexibel und wirtschaftlich fair entlohnt. Mit einer Schulung und den richtigen Qualifikationen können Sie direkt mit älteren Menschen arbeiten und ihnen bei alltäglichen Herausforderungen helfen. Alltagsengel macht den Einstieg einfacher – registrieren Sie sich heute und beginnen Sie, Menschen in Ihrer Nähe zu unterstützen.</p>
         </div>
 
         <div className="blog-cta">
@@ -188,15 +189,8 @@ export default function AlltagsbegleiterWerden() {
           <p>20 €/Stunde, flexible Zeiteinteilung, sinnvolle Arbeit. Registriere dich kostenlos als Alltagsbegleiter und starte in Frankfurt &amp; Rhein-Main.</p>
           <Link href="/engel-werden" className="btn-gold">Jetzt bewerben</Link>
         </div>
-      
-        <section className="blog-related" style={{ marginTop: 40, padding: '24px 20px', background: 'rgba(201,150,60,0.06)', borderRadius: 12, border: '1px solid rgba(201,150,60,0.15)' }}>
-          <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 12, color: '#C9963C' }}>Weiterführende Informationen</h3>
-          <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <li><Link href="/engel-werden" style={{ color: '#F5F0E8', textDecoration: 'underline', textUnderlineOffset: 3, fontSize: 14 }}>Jetzt als Alltagsengel bewerben</Link></li>
-            <li><Link href="/alltagsbegleitung" style={{ color: '#F5F0E8', textDecoration: 'underline', textUnderlineOffset: 3, fontSize: 14 }}>Unsere Alltagsbegleitung für Kunden</Link></li>
-            <li><Link href="/blog/nebenjob-pflege" style={{ color: '#F5F0E8', textDecoration: 'underline', textUnderlineOffset: 3, fontSize: 14 }}>Nebenjob in der Pflege: Alle Infos</Link></li>
-          </ul>
-        </section>
+
+        <RelatedPosts slug="alltagsbegleiter-werden" />
       </article>
     </main>
   );
