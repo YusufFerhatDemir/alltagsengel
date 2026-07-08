@@ -119,7 +119,7 @@ export async function POST(req: NextRequest) {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          from: 'AlltagsEngel Alert <alert@alltagsengel.care>',
+          from: 'Alltagsengel Alert <alert@alltagsengel.care>',
           to: [ALERT_EMAIL],
           subject: `🚨 Visitor Alert: ${sCity} — ${sDevice}`,
           html: `

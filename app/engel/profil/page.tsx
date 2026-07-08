@@ -142,7 +142,7 @@ export default function MeinProfilPage() {
           <Link href="/engel/info" className="setting-row" style={{ textDecoration: 'none', color: 'inherit', cursor: 'pointer' }}>
             <div>
               <div className="setting-main"><IconInfo size={14} /> Ablauf &amp; Vergütung</div>
-              <div className="setting-sub">Wie funktioniert AlltagsEngel für dich?</div>
+              <div className="setting-sub">Wie funktioniert Alltagsengel für dich?</div>
             </div>
             <div style={{ color: 'var(--ink4)', fontSize: 18 }}>›</div>
           </Link>

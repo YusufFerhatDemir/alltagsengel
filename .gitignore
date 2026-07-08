@@ -71,3 +71,6 @@ xcode-state.png
 graphify-out/
 .github/workflows/deploy-chairmatch.yml
 sim-screenshot.png
+
+# Lokale Maschinen-Analyse (gehört nicht ins Repo)
+MAC_SPEICHER_ANALYSE.md

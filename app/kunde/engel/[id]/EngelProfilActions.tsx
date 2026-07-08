@@ -15,7 +15,7 @@ export default function EngelProfilActions({ angelId, angelName }: { angelId: st
     const url = `https://alltagsengel.care/kunde/engel/${angelId}`
     if (navigator.share) {
       try {
-        await navigator.share({ title: `AlltagsEngel - ${angelName}`, url })
+        await navigator.share({ title: `Alltagsengel - ${angelName}`, url })
       } catch {}
     } else {
       await navigator.clipboard.writeText(url)

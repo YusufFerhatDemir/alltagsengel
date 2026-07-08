@@ -349,7 +349,7 @@ export default function KundeHomePage() {
             </div>
             <div style={{ fontSize: 13, color: 'var(--ink4)', lineHeight: 1.6, marginBottom: 16 }}>
               Wir bitten vielmals um Entschuldigung — in Ihrer Region sind aktuell noch
-              keine AlltagsEngel verfügbar. Aber keine Sorge: Wir wachsen schnell und
+              keine Alltagsengel verfügbar. Aber keine Sorge: Wir wachsen schnell und
               sind bald auch bei Ihnen!
             </div>
             <div style={{

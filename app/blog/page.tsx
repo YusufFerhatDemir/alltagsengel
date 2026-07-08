@@ -245,25 +245,8 @@ export default function BlogIndexPage() {
         <NewsletterSignup />
       </section>
 
-      {/* Schema.org structured data */}
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
-        '@context': 'https://schema.org',
-        '@type': 'Blog',
-        name: 'Alltagsengel Ratgeber',
-        description: 'Ratgeber-Artikel rund um Pflege, Entlastungsbetrag und Alltagsbegleitung.',
-        url: 'https://alltagsengel.care/blog',
-        inLanguage: 'de-DE',
-        publisher: { '@id': 'https://alltagsengel.care/#organization' },
-        blogPost: articles.map(a => ({
-          '@type': 'BlogPosting',
-          headline: a.headline,
-          description: a.description,
-          url: `https://alltagsengel.care/blog/${a.slug}`,
-          datePublished: a.datePublished,
-          ...(a.dateModified ? { dateModified: a.dateModified } : {}),
-          author: { '@type': 'Organization', name: 'Alltagsengel' },
-        })),
-      })}} />
+      {/* Kollektions-Schema kommt aus collectionJsonLd (oben) — ein zweiter
+          Blog-Block mit denselben 27 Posts wäre redundantes Doppel-Markup. */}
     </main>
   )
 }

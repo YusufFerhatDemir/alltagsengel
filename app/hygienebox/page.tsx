@@ -81,16 +81,8 @@ const jsonLd = {
       },
     },
   ],
-  areaServed: [
-    { '@type': 'City', name: 'Frankfurt am Main' },
-    { '@type': 'City', name: 'Offenbach am Main' },
-    { '@type': 'City', name: 'Darmstadt' },
-    { '@type': 'City', name: 'Wiesbaden' },
-    { '@type': 'City', name: 'Mainz' },
-    { '@type': 'City', name: 'Hanau' },
-    { '@type': 'AdministrativeArea', name: 'Rhein-Main-Gebiet' },
-    { '@type': 'Country', name: 'Deutschland' },
-  ],
+  // KEIN areaServed hier: ist keine gültige Product-Property (nur
+  // Organization/Service/Offer) — Liefergebiet steht an den Offers + im Text.
 }
 
 // Ein gemeinsames Array speist das sichtbare FAQ UND das FAQPage-JSON-LD

@@ -78,7 +78,7 @@ export async function GET(request: Request) {
 
       try {
         await resend.emails.send({
-          from: 'AlltagsEngel <info@alltagsengel.care>',
+          from: 'Alltagsengel <info@alltagsengel.care>',
           to: customer.email,
           subject: `Wie war Ihr Termin mit ${angelName}?`,
           html: `<!DOCTYPE html>
@@ -86,7 +86,7 @@ export async function GET(request: Request) {
 <body style="margin:0;padding:0;background:#F7F2EA;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">
 <div style="max-width:560px;margin:0 auto;padding:24px">
   <div style="text-align:center;padding:16px 0">
-    <img src="https://alltagsengel.care/icon-192x192.png" width="50" height="50" alt="AlltagsEngel" style="border-radius:10px">
+    <img src="https://alltagsengel.care/icon-192x192.png" width="50" height="50" alt="Alltagsengel" style="border-radius:10px">
   </div>
   <div style="background:white;border-radius:16px;padding:28px;box-shadow:0 2px 8px rgba(0,0,0,0.05)">
     <h2 style="color:#1A1612;font-size:20px;margin:0 0 12px">Hallo ${customerName},</h2>
@@ -109,7 +109,7 @@ export async function GET(request: Request) {
     </p>
   </div>
   <div style="text-align:center;padding:16px 0;font-size:12px;color:#999">
-    AlltagsEngel · Frankfurt am Main<br>
+    Alltagsengel · Frankfurt am Main<br>
     <a href="https://alltagsengel.care/datenschutz" style="color:#C9963C">Datenschutz</a>
   </div>
 </div>

@@ -44,25 +44,25 @@ export async function POST(request: Request) {
     if (key) {
       const resend = new Resend(key)
       await resend.emails.send({
-        from: 'AlltagsEngel <info@alltagsengel.care>',
+        from: 'Alltagsengel <info@alltagsengel.care>',
         to: email,
-        subject: 'Willkommen beim AlltagsEngel Newsletter!',
+        subject: 'Willkommen beim Alltagsengel Newsletter!',
         html: `<!DOCTYPE html>
 <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"></head>
 <body style="margin:0;padding:0;background:#F7F2EA;font-family:-apple-system,sans-serif">
 <div style="max-width:560px;margin:0 auto;padding:24px">
   <div style="text-align:center;padding:16px 0">
-    <img src="https://alltagsengel.care/icon-192x192.png" width="50" height="50" alt="AlltagsEngel" style="border-radius:10px">
+    <img src="https://alltagsengel.care/icon-192x192.png" width="50" height="50" alt="Alltagsengel" style="border-radius:10px">
   </div>
   <div style="background:white;border-radius:16px;padding:28px;box-shadow:0 2px 8px rgba(0,0,0,0.05)">
     <h2 style="color:#1A1612;font-size:22px;margin:0 0 12px">Willkommen!</h2>
     <p style="color:#444;font-size:15px;line-height:1.6">
-      Vielen Dank für Ihre Anmeldung zum AlltagsEngel Newsletter. Ab jetzt erhalten Sie:
+      Vielen Dank für Ihre Anmeldung zum Alltagsengel Newsletter. Ab jetzt erhalten Sie:
     </p>
     <ul style="color:#444;font-size:15px;line-height:1.8;padding-left:20px">
       <li>Praktische Pflege-Tipps & Ratgeber</li>
       <li>Infos zu Entlastungsbetrag & Pflegegrad</li>
-      <li>Neuigkeiten rund um AlltagsEngel</li>
+      <li>Neuigkeiten rund um Alltagsengel</li>
       <li>Exklusive Angebote & Aktionen</li>
     </ul>
     <div style="text-align:center;margin:24px 0">
@@ -70,7 +70,7 @@ export async function POST(request: Request) {
         Ratgeber lesen
       </a>
     </div>
-    <p style="color:#888;font-size:13px">Herzliche Grüße,<br>Ihr AlltagsEngel Team</p>
+    <p style="color:#888;font-size:13px">Herzliche Grüße,<br>Ihr Alltagsengel Team</p>
   </div>
   <div style="text-align:center;padding:16px 0;font-size:11px;color:#999">
     <a href="https://alltagsengel.care/api/newsletter/unsubscribe?email=${encodeURIComponent(email)}" style="color:#999">Abmelden</a>

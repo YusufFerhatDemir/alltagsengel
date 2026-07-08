@@ -365,7 +365,7 @@ function BuchenServiceInner() {
                 </div>
                 <div style={{ fontSize: 14, color: 'var(--ink4)', lineHeight: 1.6, marginBottom: 20 }}>
                   Wir bitten vielmals um Entschuldigung — in Ihrer Region sind aktuell noch
-                  keine AlltagsEngel für <strong>{serviceLabel}</strong> verfügbar.
+                  keine Alltagsengel für <strong>{serviceLabel}</strong> verfügbar.
                 </div>
                 <div style={{
                   background: 'rgba(201,150,60,0.08)', border: '1px solid rgba(201,150,60,0.2)',

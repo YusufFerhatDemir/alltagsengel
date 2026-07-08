@@ -188,7 +188,10 @@ export async function generateMetadata({ params }: { params: Promise<{ stadt: st
       images: [{ url: '/og-image.png', width: 1200, height: 630 }],
       title: `Alltagsbegleitung ${city.name} — 131€/Monat von der Pflegekasse`,
       description: `Professionelle Alltagsbegleitung in ${city.name}. Abrechnung direkt über den Entlastungsbetrag §45b. Versichert und zertifiziert.`,
-      url: `https://alltagsengel.care/alltagsbegleitung/${city.slug}`,
+      // og:url muss dem Canonical entsprechen (Frankfurt → Hauptseite)
+      url: city.slug === 'frankfurt'
+        ? 'https://alltagsengel.care/alltagsbegleitung'
+        : `https://alltagsengel.care/alltagsbegleitung/${city.slug}`,
       siteName: 'Alltagsengel',
       locale: 'de_DE',
       type: 'website',

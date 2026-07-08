@@ -101,7 +101,7 @@ export default function OnboardingFlow() {
 
   const allSteps: OnboardingStep[] = [
     {
-      title: 'Willkommen bei AlltagsEngel',
+      title: 'Willkommen bei Alltagsengel',
       subtitle: 'Schön, dass Sie da sind!',
       content: (
         <div style={{ textAlign: 'center', padding: '20px 0' }}>
@@ -116,7 +116,7 @@ export default function OnboardingFlow() {
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/icon-512x512.png"
-              alt="AlltagsEngel"
+              alt="Alltagsengel"
               style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
             />
           </div>
@@ -135,7 +135,7 @@ export default function OnboardingFlow() {
         <div style={{ padding: '16px 0' }}>
           <p style={{ color: '#B8B0A4', fontSize: 14, lineHeight: 1.6, marginBottom: 20 }}>
             Mit einem Pflegegrad (1-5) stehen Ihnen <strong style={{ color: '#C9963C' }}>131€ monatlich</strong> für
-            Alltagsbegleitung zu. Keine Sorge — auch ohne Pflegegrad können Sie AlltagsEngel nutzen.
+            Alltagsbegleitung zu. Keine Sorge — auch ohne Pflegegrad können Sie Alltagsengel nutzen.
           </p>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
             {['1', '2', '3', '4', '5', '0'].map(g => (
@@ -240,7 +240,7 @@ export default function OnboardingFlow() {
     },
     {
       title: 'Alles bereit!',
-      subtitle: 'Ihr AlltagsEngel wartet',
+      subtitle: 'Ihr Alltagsengel wartet',
       content: (
         <div style={{ textAlign: 'center', padding: '20px 0' }}>
           <div style={{
@@ -258,7 +258,7 @@ export default function OnboardingFlow() {
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src="/icon-512x512.png"
-                alt="AlltagsEngel"
+                alt="Alltagsengel"
                 style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
               />
             </div>

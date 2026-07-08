@@ -66,7 +66,7 @@ export async function POST(request: Request) {
       await sendEmailNotification(
         email,
         userName,
-        'Passwort zurücksetzen — AlltagsEngel',
+        'Passwort zurücksetzen — Alltagsengel',
         `
           <p>Sie haben angefordert, Ihr Passwort zurückzusetzen.</p>
           <p>Klicken Sie auf den folgenden Button, um ein neues Passwort festzulegen:</p>

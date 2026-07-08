@@ -154,7 +154,7 @@ export async function generateMetadata({ params }: { params: Promise<{ stadt: st
       images: [{ url: '/og-image.png', width: 1200, height: 630 }],
       title: `Kostenlose Pflegebox ${city.name} — 42€/Monat | Alltagsengel`,
       description: `Pflegehilfsmittel monatlich nach ${city.name} geliefert. 0€ Zuzahlung bei Pflegegrad 1-5. Handschuhe, Desinfektion, Bettschutz.`,
-      url: `https://alltagsengel.care/hygienebox/${city.slug}`,
+      url: canonical,
       siteName: 'Alltagsengel',
       locale: 'de_DE',
       type: 'website',
@@ -268,18 +268,8 @@ function buildJsonLd(city: CityData, faqItems: ReturnType<typeof buildFaqItems>)
             },
           },
         ],
-        areaServed: {
-          '@type': 'City',
-          name: city.name,
-          address: {
-            '@type': 'PostalAddress',
-            addressLocality: city.name,
-            postalCode: city.plz,
-            addressRegion: city.region,
-            addressCountry: 'DE',
-          },
-          geo: { '@type': 'GeoCoordinates', latitude: city.geo.lat, longitude: city.geo.lng },
-        },
+        // areaServed ist keine gültige Product-Property — das Liefergebiet
+        // (Stadt + Geo) hängt an den Offers und steht sichtbar im Text.
       },
       {
         '@type': 'FAQPage',

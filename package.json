@@ -25,8 +25,8 @@
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:install": "playwright install --with-deps",
-    "lastmod:generate": "tsx scripts/generate-lastmod.ts",
-    "prebuild": "tsx scripts/generate-lastmod.ts"
+    "lastmod:generate": "node scripts/generate-lastmod.mjs",
+    "prebuild": "node scripts/generate-lastmod.mjs"
   },
   "dependencies": {
     "@capacitor/android": "^8.2.0",

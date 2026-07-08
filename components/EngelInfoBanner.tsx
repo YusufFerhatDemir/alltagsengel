@@ -60,7 +60,7 @@ export default function EngelInfoBanner() {
           <IconInfo size={18} />
         </div>
         <div className="engel-info-banner-title">
-          So läuft&#39;s bei AlltagsEngel
+          So läuft&#39;s bei Alltagsengel
         </div>
       </div>
 
