@@ -28,9 +28,9 @@ export default function EngelInfoPage() {
       <div className="legal-body">
         {/* Intro */}
         <section className="legal-section">
-          <h2>Willkommen bei AlltagsEngel</h2>
+          <h2>Willkommen bei Alltagsengel</h2>
           <p>
-            AlltagsEngel ist die Vermittlungs­plattform, die dich als Alltags­begleiter:in
+            Alltagsengel ist die Vermittlungs­plattform, die dich als Alltags­begleiter:in
             mit Menschen zusammenbringt, die Unterstützung im Alltag brauchen. Wir sind
             <strong> kein Arbeitgeber</strong> — du bleibst selbständig und entscheidest,
             welche Aufträge du annimmst. Wir kümmern uns um das Drumherum: Verifizierung,
@@ -155,7 +155,7 @@ export default function EngelInfoPage() {
             <IconShield size={18} /> Versicherung während der Einsätze
           </h2>
           <p>
-            AlltagsEngel schließt für alle verifizierten Engel eine{' '}
+            Alltagsengel schließt für alle verifizierten Engel eine{' '}
             <strong>Berufshaftpflicht­versicherung</strong> ab, die während
             vermittelter Einsätze greift. Damit bist du abgesichert, wenn im
             Rahmen deiner Tätigkeit versehentlich Sach- oder Personenschäden
@@ -163,7 +163,7 @@ export default function EngelInfoPage() {
           </p>
           <p style={{ color: 'var(--ink4)', fontSize: 12 }}>
             Hinweis: Die Versicherung deckt <strong>keine vorsätzlichen
-            Handlungen</strong> und greift nur für über AlltagsEngel vermittelte
+            Handlungen</strong> und greift nur für über Alltagsengel vermittelte
             Einsätze. Details in deiner Versicherungs­bestätigung, die du nach
             Freischaltung per E-Mail erhältst.
           </p>

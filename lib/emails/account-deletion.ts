@@ -9,7 +9,7 @@
 //      geloescht." Nur als Compliance-Beweis fuer DSGVO Art. 17.
 //
 // Wir nutzen den existierenden sendEmailNotification() Helper, der
-// das wrapEmailTemplate() Layout mit AlltagsEngel-Branding anwendet.
+// das wrapEmailTemplate() Layout mit Alltagsengel-Branding anwendet.
 // ════════════════════════════════════════════════════════════════════
 
 import { sendEmailNotification } from '@/lib/notifications'
@@ -46,7 +46,7 @@ export async function sendAccountDeletionEmail(
       Dein Konto wurde deaktiviert
     </h2>
     <p style="color:#444;font-size:14px;line-height:1.6;margin:0 0 16px;">
-      Du hast die Loeschung deines AlltagsEngel-Kontos beantragt. Wir haben
+      Du hast die Loeschung deines Alltagsengel-Kontos beantragt. Wir haben
       dein Konto sofort deaktiviert — du wirst nicht mehr in Suchergebnissen,
       Buchungen oder Chats angezeigt.
     </p>
@@ -92,7 +92,7 @@ export async function sendAccountHardDeletedEmail(
   email: string,
   firstName: string
 ): Promise<boolean> {
-  const subject = 'Dein AlltagsEngel-Konto wurde endgueltig geloescht'
+  const subject = 'Dein Alltagsengel-Konto wurde endgueltig geloescht'
 
   const html = `
     <h2 style="color:#1A1612;font-size:20px;margin:8px 0 12px;">

@@ -30,7 +30,7 @@ export async function POST(request: Request) {
     const name = firstName || 'Nutzer'
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://alltagsengel.care'
 
-    let subject = 'Willkommen bei AlltagsEngel!'
+    let subject = 'Willkommen bei Alltagsengel!'
     let bodyHtml = ''
 
     if (role === 'engel') {
@@ -40,7 +40,7 @@ export async function POST(request: Request) {
         <p>Schön, dass Sie Teil unseres Teams werden möchten. Als Alltagsengel begleiten Sie Senioren und Pflegebedürftige in ihrem Alltag — eine wertvolle und sinnstiftende Tätigkeit.</p>
 
         <div style="background:rgba(201,150,60,0.08);border-radius:12px;padding:18px 20px;margin:20px 0;">
-          <p style="font-weight:600;color:#C9963C;margin:0 0 12px;">So funktioniert AlltagsEngel für Sie:</p>
+          <p style="font-weight:600;color:#C9963C;margin:0 0 12px;">So funktioniert Alltagsengel für Sie:</p>
           <table style="width:100%;border-collapse:collapse;">
             <tr><td style="padding:8px 0;vertical-align:top;width:32px;font-size:18px;">1️⃣</td><td style="padding:8px 0 8px 8px;"><strong>Profil vervollständigen</strong><br/><span style="color:#555;font-size:13px;">Laden Sie Ihre Qualifikationen hoch (§45a-Zertifikat, Erste-Hilfe-Nachweis) und beschreiben Sie Ihre Erfahrung.</span></td></tr>
             <tr><td style="padding:8px 0;vertical-align:top;font-size:18px;">2️⃣</td><td style="padding:8px 0 8px 8px;"><strong>Freischaltung abwarten</strong><br/><span style="color:#555;font-size:13px;">Unser Team prüft Ihre Unterlagen und schaltet Sie frei. Sie werden per E-Mail benachrichtigt.</span></td></tr>
@@ -71,13 +71,13 @@ export async function POST(request: Request) {
       `
     } else {
       // Kunde (default)
-      subject = 'Willkommen bei AlltagsEngel!'
+      subject = 'Willkommen bei Alltagsengel!'
       bodyHtml = `
-        <p style="font-size:16px;font-weight:600;color:#C9963C;margin-bottom:4px;">Herzlich willkommen bei AlltagsEngel!</p>
-        <p>Schön, dass Sie sich für AlltagsEngel entschieden haben. Wir helfen Ihnen, den passenden Alltagsbegleiter für sich oder Ihre Angehörigen zu finden.</p>
+        <p style="font-size:16px;font-weight:600;color:#C9963C;margin-bottom:4px;">Herzlich willkommen bei Alltagsengel!</p>
+        <p>Schön, dass Sie sich für Alltagsengel entschieden haben. Wir helfen Ihnen, den passenden Alltagsbegleiter für sich oder Ihre Angehörigen zu finden.</p>
 
         <div style="background:rgba(201,150,60,0.08);border-radius:12px;padding:18px 20px;margin:20px 0;">
-          <p style="font-weight:600;color:#C9963C;margin:0 0 12px;">So funktioniert AlltagsEngel für Sie:</p>
+          <p style="font-weight:600;color:#C9963C;margin:0 0 12px;">So funktioniert Alltagsengel für Sie:</p>
           <table style="width:100%;border-collapse:collapse;">
             <tr><td style="padding:8px 0;vertical-align:top;width:32px;font-size:18px;">1️⃣</td><td style="padding:8px 0 8px 8px;"><strong>Engel in der Nähe finden</strong><br/><span style="color:#555;font-size:13px;">Durchsuchen Sie zertifizierte Alltagsbegleiter in Ihrer Region. Alle Engel sind geprüft und qualifiziert.</span></td></tr>
             <tr><td style="padding:8px 0;vertical-align:top;font-size:18px;">2️⃣</td><td style="padding:8px 0 8px 8px;"><strong>Termin buchen</strong><br/><span style="color:#555;font-size:13px;">Wählen Sie eine Leistung, Datum und Uhrzeit — die Buchung dauert nur 2 Minuten.</span></td></tr>

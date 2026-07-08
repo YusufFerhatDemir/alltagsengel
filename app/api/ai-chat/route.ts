@@ -96,7 +96,7 @@ ${users.map(u => `- ${u.full_name || 'Unbekannt'} (${u.role}, ${u.city || 'Ort u
   }
 }
 
-const SYSTEM_PROMPT = `Du bist der KI-Assistent von AlltagsEngel — einer digitalen Plattform für Premium-Alltagsbegleitung für Senioren und Pflegebedürftige in Deutschland.
+const SYSTEM_PROMPT = `Du bist der KI-Assistent von Alltagsengel — einer digitalen Plattform für Premium-Alltagsbegleitung für Senioren und Pflegebedürftige in Deutschland.
 
 ÜBER ALLTAGSENGEL:
 - Digitale Plattform, die zertifizierte Alltagsbegleiter (genannt "Engel") mit pflegebedürftigen Senioren (Kunden) verbindet
@@ -165,7 +165,7 @@ async function callGemini(systemPrompt: string, messages: Array<{ role: string; 
   })
   contents.push({
     role: 'model',
-    parts: [{ text: 'Verstanden! Ich bin der AlltagsEngel KI-Assistent und habe Zugriff auf die aktuellen Live-Daten. Ich antworte auf Deutsch, professionell und freundlich. Wie kann ich helfen?' }]
+    parts: [{ text: 'Verstanden! Ich bin der Alltagsengel KI-Assistent und habe Zugriff auf die aktuellen Live-Daten. Ich antworte auf Deutsch, professionell und freundlich. Wie kann ich helfen?' }]
   })
 
   // Chat-Verlauf konvertieren

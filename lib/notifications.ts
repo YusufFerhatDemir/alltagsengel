@@ -69,7 +69,7 @@ export async function sendEmailNotification(
   }
   try {
     const { error } = await resend.emails.send({
-      from: 'AlltagsEngel <info@alltagsengel.care>',
+      from: 'Alltagsengel <info@alltagsengel.care>',
       to,
       subject,
       html: wrapEmailTemplate(recipientName, subject, bodyHtml),

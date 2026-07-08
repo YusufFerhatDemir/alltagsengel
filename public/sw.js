@@ -1,4 +1,4 @@
-// AlltagsEngel Service Worker
+// Alltagsengel Service Worker
 // Version bei relevanten Änderungen bumpen — activate löscht dann alte Caches
 // (gecachte Next.js-Chunks aus früheren Deploys würden sonst unbegrenzt anwachsen).
 const CACHE_NAME = 'alltagsengel-v2'
@@ -93,7 +93,7 @@ self.addEventListener('push', (event) => {
   let data = {}
   try { data = event.data.json() } catch { data = { body: event.data.text() } }
   event.waitUntil(
-    self.registration.showNotification(data.title || 'AlltagsEngel', {
+    self.registration.showNotification(data.title || 'Alltagsengel', {
       body: data.body || '',
       icon: '/icon-192x192.png',
       badge: '/icon-192x192.png',

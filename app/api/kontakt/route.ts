@@ -57,7 +57,7 @@ export async function POST(request: Request) {
 
     // E-Mail an das Team — muss erfolgreich sein
     await resend.emails.send({
-      from: 'AlltagsEngel <info@alltagsengel.care>',
+      from: 'Alltagsengel <info@alltagsengel.care>',
       to: adminEmail,
       subject: `Neue Kontaktanfrage von ${name.trim().slice(0, 80)} (${typeLabel})`,
       html: `
@@ -76,13 +76,13 @@ export async function POST(request: Request) {
     // (Team-Mail ist schon raus; sonst sähe der User "Fehler" und schickt doppelt)
     try {
       await resend.emails.send({
-        from: 'AlltagsEngel <info@alltagsengel.care>',
+        from: 'Alltagsengel <info@alltagsengel.care>',
         to: email.trim(),
-        subject: 'Ihre Anfrage bei AlltagsEngel — Bestätigung',
+        subject: 'Ihre Anfrage bei Alltagsengel — Bestätigung',
         html: `
           <div style="max-width:560px;margin:0 auto;font-family:-apple-system,sans-serif;background:#F7F2EA;padding:24px">
             <div style="text-align:center;padding:16px 0">
-              <img src="https://alltagsengel.care/icon-192x192.png" width="50" height="50" alt="AlltagsEngel" style="border-radius:10px">
+              <img src="https://alltagsengel.care/icon-192x192.png" width="50" height="50" alt="Alltagsengel" style="border-radius:10px">
             </div>
             <div style="background:white;border-radius:16px;padding:28px;box-shadow:0 2px 8px rgba(0,0,0,0.05)">
               <h2 style="color:#1A1612;margin:0 0 12px">Vielen Dank, ${safeName}!</h2>

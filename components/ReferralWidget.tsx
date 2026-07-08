@@ -54,12 +54,12 @@ export default function ReferralWidget() {
 
   async function handleShare() {
     if (!data?.referral_link) return
-    const shareText = `Ich nutze AlltagsEngel für Alltagshilfe — 131 €/Monat zahlt die Pflegekasse! Registriere dich über meinen Link und wir bekommen beide 20 € Bonus: ${data.referral_link}`
+    const shareText = `Ich nutze Alltagsengel für Alltagshilfe — 131 €/Monat zahlt die Pflegekasse! Registriere dich über meinen Link und wir bekommen beide 20 € Bonus: ${data.referral_link}`
 
     if (navigator.share) {
       try {
         await navigator.share({
-          title: 'AlltagsEngel — Freunde einladen',
+          title: 'Alltagsengel — Freunde einladen',
           text: shareText,
           url: data.referral_link,
         })

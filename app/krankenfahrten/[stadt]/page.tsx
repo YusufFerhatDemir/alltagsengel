@@ -149,7 +149,11 @@ export async function generateMetadata({ params }: { params: Promise<{ stadt: st
       images: [{ url: '/og-image.png', width: 1200, height: 630 }],
       title: `Krankenfahrt ${city.name} — zuverlässig zum Arzt | Alltagsengel`,
       description: `Krankenfahrten in ${city.name} buchen. Mit Kassenverordnung (§60 SGB V) oder als Selbstzahler. Pünktlich, sicher, freundlich.`,
-      url: `https://alltagsengel.care/krankenfahrten/${city.slug}`,
+      // og:url muss dem Canonical entsprechen (Frankfurt → Hauptseite)
+      url:
+        city.slug === 'frankfurt'
+          ? 'https://alltagsengel.care/krankenfahrten'
+          : `https://alltagsengel.care/krankenfahrten/${city.slug}`,
       siteName: 'Alltagsengel',
       locale: 'de_DE',
       type: 'website',

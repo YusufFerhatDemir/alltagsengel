@@ -126,7 +126,7 @@ export async function POST(request: NextRequest) {
         await sendEmailNotification(
           targetProfile.email,
           targetProfile.first_name || 'Nutzer',
-          'Ihr Passwort wurde zurückgesetzt — AlltagsEngel',
+          'Ihr Passwort wurde zurückgesetzt — Alltagsengel',
           `
             <p>Ihr Passwort wurde auf Ihre Anfrage hin von unserem Team zurückgesetzt.</p>
             <p>Aus Sicherheitsgründen senden wir Ihnen <strong>kein Klartext-Passwort</strong> per E-Mail.

@@ -31,35 +31,46 @@ const articleJsonLd = {
   inLanguage: 'de-DE',
 }
 
+// Ein gemeinsames Array speist das sichtbare FAQ UND das FAQPage-JSON-LD
+// (Google-Richtlinie: FAQ-Markup muss sichtbarem Seiteninhalt entsprechen).
+const faqItems = [
+  {
+    frage: 'Wer zahlt die Alltagsbegleitung?',
+    antwort:
+      'In den meisten Fällen die Pflegekasse: Ab Pflegegrad 1 stehen 131 € monatlich als Entlastungsbetrag nach §45b SGB XI zur Verfügung. Zusätzlich können Verhinderungspflege, bei geringem Einkommen das Sozialamt (Hilfe zur Pflege) oder eine private Selbstzahlung die Kosten decken.',
+  },
+  {
+    frage: 'Zahlt die Pflegekasse Alltagsbegleitung auch bei Pflegegrad 1?',
+    antwort:
+      'Ja. Der Entlastungsbetrag von 131 € pro Monat steht bereits ab Pflegegrad 1 zu und kann für zertifizierte Alltagsbegleitung eingesetzt werden. Die Abrechnung übernimmt Alltagsengel direkt mit der Pflegekasse.',
+  },
+  {
+    frage: 'Zahlt die Krankenkasse die Alltagsbegleitung?',
+    antwort:
+      'Nein, zuständig ist die Pflegekasse (nicht die Krankenkasse), und zwar über den Entlastungsbetrag. Die Krankenkasse übernimmt dagegen andere Leistungen wie Krankenfahrten zum Arzt bei entsprechender Verordnung.',
+    link: { href: '/krankenfahrten', label: 'Mehr zu Krankenfahrten →' },
+  },
+  {
+    frage: 'Muss ich die Kosten vorstrecken?',
+    antwort:
+      'Bei Alltagsengel nicht. Wir rechnen die Alltagsbegleitung direkt mit Ihrer Pflegekasse über den Entlastungsbetrag ab — Sie müssen weder in Vorleistung gehen noch Belege einreichen.',
+  },
+  {
+    frage: 'Was, wenn ich noch keinen Pflegegrad habe?',
+    antwort:
+      'Dann lohnt sich die Beantragung — schon ab Pflegegrad 1 gibt es den Entlastungsbetrag. Bis dahin können Sie Alltagsbegleitung als Selbstzahler nutzen.',
+    link: { href: '/blog/pflegegrad-beantragen', label: 'So beantragen Sie den Pflegegrad →' },
+  },
+]
+
 const faqJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'FAQPage',
-  mainEntity: [
-    {
-      '@type': 'Question',
-      name: 'Wer zahlt die Alltagsbegleitung?',
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: 'In den meisten Fällen die Pflegekasse: Ab Pflegegrad 1 stehen 131 € monatlich als Entlastungsbetrag nach §45b SGB XI zur Verfügung. Zusätzlich können Verhinderungspflege, bei geringem Einkommen das Sozialamt (Hilfe zur Pflege) oder eine private Selbstzahlung die Kosten decken.',
-      },
-    },
-    {
-      '@type': 'Question',
-      name: 'Zahlt die Pflegekasse Alltagsbegleitung auch bei Pflegegrad 1?',
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: 'Ja. Der Entlastungsbetrag von 131 € pro Monat steht bereits ab Pflegegrad 1 zu und kann für zertifizierte Alltagsbegleitung eingesetzt werden. Die Abrechnung übernimmt Alltagsengel direkt mit der Pflegekasse.',
-      },
-    },
-    {
-      '@type': 'Question',
-      name: 'Muss ich in Vorleistung gehen?',
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: 'Bei Alltagsengel nicht: Wir rechnen die Alltagsbegleitung direkt mit Ihrer Pflegekasse über den Entlastungsbetrag ab. Sie müssen die Kosten nicht vorstrecken und keine Belege einreichen.',
-      },
-    },
-  ],
+  mainEntity: faqItems.map((f) => ({
+    '@type': 'Question',
+    name: f.frage,
+    acceptedAnswer: { '@type': 'Answer', text: f.antwort },
+  })),
 }
 
 export default function WerZahltAlltagsbegleitungPage() {
@@ -153,25 +164,20 @@ export default function WerZahltAlltagsbegleitungPage() {
 
           <h2>Häufige Fragen</h2>
 
-          <h3>Zahlt die Krankenkasse die Alltagsbegleitung?</h3>
-          <p>
-            Nein, zuständig ist die <strong>Pflegekasse</strong> (nicht die Krankenkasse), und zwar über den
-            Entlastungsbetrag. Die Krankenkasse übernimmt dagegen andere Leistungen wie
-            <Link href="/krankenfahrten"> Krankenfahrten</Link> zum Arzt bei entsprechender Verordnung.
-          </p>
-
-          <h3>Muss ich die Kosten vorstrecken?</h3>
-          <p>
-            Bei Alltagsengel nicht. Wir rechnen die Alltagsbegleitung direkt mit Ihrer Pflegekasse ab — Sie
-            müssen weder in Vorleistung gehen noch Belege einreichen.
-          </p>
-
-          <h3>Was, wenn ich noch keinen Pflegegrad habe?</h3>
-          <p>
-            Dann lohnt sich die Beantragung — schon ab Pflegegrad 1 gibt es den Entlastungsbetrag. Bis dahin
-            können Sie Alltagsbegleitung als Selbstzahler nutzen. Wie der Antrag funktioniert, lesen Sie unter
-            <Link href="/blog/pflegegrad-beantragen"> Pflegegrad beantragen</Link>.
-          </p>
+          {faqItems.map((f) => (
+            <div key={f.frage}>
+              <h3>{f.frage}</h3>
+              <p>
+                {f.antwort}
+                {f.link && (
+                  <>
+                    {' '}
+                    <Link href={f.link.href}>{f.link.label}</Link>
+                  </>
+                )}
+              </p>
+            </div>
+          ))}
 
           <div className="blog-cta">
             <h3>Kostenlose Alltagsbegleitung über die Pflegekasse</h3>
