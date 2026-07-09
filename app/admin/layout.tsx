@@ -14,6 +14,18 @@ import { ReactNode } from 'react'
 // bevor es den User zum Login schickt. Maximal 4 Sekunden
 // Geduld, dann Redirect.
 // ═══════════════════════════════════════════════════════════════
+// ═══ Rolle AUTORITATIV bestimmen (spiegelt proxy.ts) ═══
+// user_metadata ist vom Nutzer selbst editierbar und darf NICHT allein für
+// Autorisierung genutzt werden. Primär gilt app_metadata.role (nur serverseitig
+// via Admin-API setzbar). Die eigentliche Absicherung erfolgt serverseitig in
+// der Middleware (proxy.ts) — dieser Client-Check ist nur UX/Defense-in-Depth.
+function extractRole(user: { app_metadata?: Record<string, unknown>; user_metadata?: Record<string, unknown> } | null): string {
+  const appRole = user?.app_metadata?.role
+  if (typeof appRole === 'string' && appRole) return appRole
+  const metaRole = user?.user_metadata?.role
+  return typeof metaRole === 'string' ? metaRole : ''
+}
+
 function useAdminAuth() {
   const router = useRouter()
   const [authState, setAuthState] = useState<'loading' | 'authenticated' | 'unauthenticated'>('loading')
@@ -26,7 +38,7 @@ function useAdminAuth() {
     if (session) {
       // Prüfe Admin-Rolle
       const { data: { user } } = await supabase.auth.getUser()
-      const role = user?.user_metadata?.role || ''
+      const role = extractRole(user)
       if (role === 'admin' || role === 'superadmin') {
         setAuthState('authenticated')
         return
@@ -54,7 +66,7 @@ function useAdminAuth() {
       if (retrySession) {
         clearInterval(retryInterval)
         const { data: { user } } = await supabase.auth.getUser()
-        const role = user?.user_metadata?.role || ''
+        const role = extractRole(user)
         if (role === 'admin' || role === 'superadmin') {
           setAuthState('authenticated')
           return
