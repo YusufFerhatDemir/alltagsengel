@@ -210,10 +210,11 @@ export async function POST(req: NextRequest) {
     }
 
     // Nur die letzten Nachrichten, Länge kappen, Rollen erzwingen
-    const messages: ChatMessage[] = raw
+    const messages: ChatMessage[] = (raw as unknown[])
       .slice(-MAX_MESSAGES)
-      .filter((m: any) => m && typeof m.content === 'string' && m.content.trim())
-      .map((m: any) => ({
+      .filter((m): m is { role?: unknown; content: string } =>
+        !!m && typeof (m as { content?: unknown }).content === 'string' && !!(m as { content: string }).content.trim())
+      .map((m): ChatMessage => ({
         role: m.role === 'assistant' ? 'assistant' : 'user',
         content: String(m.content).slice(0, MAX_CHARS),
       }))

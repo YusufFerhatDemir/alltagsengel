@@ -1,5 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
+import type { SupabaseClient } from '@supabase/supabase-js'
 import { createAdminClient } from '@/lib/supabase/admin'
+
+interface RateLimitEntry {
+  key: string
+  attempts: number
+  first_attempt: string
+  locked_until: string
+  updated_at?: string
+}
 
 // ═══════════════════════════════════════════════════════════
 // Server-Side Login Rate Limiter (Persistent via Supabase)
@@ -31,16 +40,16 @@ function formatLockMessage(remainingMs: number): string {
     : `Zu viele Fehlversuche. Bitte warten Sie ${remainingMin} Minuten.`
 }
 
-async function getEntry(supabase: any, key: string) {
+async function getEntry(supabase: SupabaseClient, key: string): Promise<RateLimitEntry | null> {
   const { data } = await supabase
     .from('login_rate_limits')
     .select('*')
     .eq('key', key)
     .single()
-  return data
+  return (data as RateLimitEntry | null) ?? null
 }
 
-async function upsertEntry(supabase: any, key: string, attempts: number, firstAttempt: string, lockedUntil: string) {
+async function upsertEntry(supabase: SupabaseClient, key: string, attempts: number, firstAttempt: string, lockedUntil: string) {
   await supabase
     .from('login_rate_limits')
     .upsert({
@@ -183,9 +192,10 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({ error: 'Invalid action' }, { status: 400 })
-  } catch (err: any) {
+  } catch (err: unknown) {
     // AUTH-002-Pattern: niemals rohes err-Objekt loggen
-    console.error('Rate limit error:', { code: err?.code, name: err?.name })
+    const e = err as { code?: string; name?: string } | undefined
+    console.error('Rate limit error:', { code: e?.code, name: e?.name })
     // FAIL-OPEN bei Rate Limiter Fehler (Login nicht blockieren)
     return NextResponse.json({ allowed: true })
   }

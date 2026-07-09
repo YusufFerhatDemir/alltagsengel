@@ -25,9 +25,22 @@ interface Review {
   relativeTime: string
 }
 
+// ─── Shape der Google Places API (New) Antwort ───
+interface PlacesApiReview {
+  rating?: number
+  text?: { text?: string }
+  authorAttribution?: { displayName?: string }
+  relativePublishTimeDescription?: string
+}
+interface PlacesApiResponse {
+  rating?: number
+  userRatingCount?: number
+  reviews?: PlacesApiReview[]
+}
+
 interface Cached {
   at: number
-  data: { configured: boolean; rating?: number; count?: number; reviews?: Review[] }
+  data: { configured: boolean; rating?: number | null; count?: number; reviews?: Review[] }
 }
 
 let cache: Cached | null = null
@@ -60,14 +73,14 @@ export async function GET() {
       return NextResponse.json({ configured: false })
     }
 
-    const place = await res.json()
+    const place = (await res.json()) as PlacesApiResponse
     const reviews: Review[] = (place.reviews || [])
-      .filter((r: any) => r.rating >= 4 && r.text?.text) // nur gute, aussagekräftige Rezensionen zeigen
+      .filter((r) => (r.rating ?? 0) >= 4 && r.text?.text) // nur gute, aussagekräftige Rezensionen zeigen
       .slice(0, 5)
-      .map((r: any) => ({
+      .map((r): Review => ({
         author: r.authorAttribution?.displayName || 'Google-Nutzer',
-        rating: r.rating,
-        text: String(r.text.text).slice(0, 320),
+        rating: r.rating ?? 0,
+        text: String(r.text?.text ?? '').slice(0, 320),
         relativeTime: r.relativePublishTimeDescription || '',
       }))
 

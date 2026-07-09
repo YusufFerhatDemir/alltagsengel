@@ -1,4 +1,5 @@
 import { Resend } from 'resend'
+import type { SupabaseClient } from '@supabase/supabase-js'
 import { sendPushToUser } from '@/lib/push'
 import { sendFCMToUser } from '@/lib/fcm'
 
@@ -9,7 +10,7 @@ export interface NotifyPayload {
   title: string
   body: string
   link?: string
-  data?: Record<string, any>
+  data?: Record<string, unknown>
 }
 
 export interface BookingNotifyData {
@@ -32,7 +33,7 @@ function getResend(): Resend | null {
 
 // ─── In-App Notification ───
 export async function createNotification(
-  supabase: any,
+  supabase: SupabaseClient,
   payload: NotifyPayload
 ): Promise<boolean> {
   try {
@@ -87,7 +88,7 @@ export async function sendEmailNotification(
 
 // ─── Booking: Neue Buchung → Engel benachrichtigen ───
 export async function notifyAngelNewBooking(
-  supabase: any,
+  supabase: SupabaseClient,
   angelUserId: string,
   data: BookingNotifyData
 ): Promise<void> {
@@ -160,7 +161,7 @@ export async function notifyAngelNewBooking(
 
 // ─── Booking: Engel hat angenommen → Kunde benachrichtigen ───
 export async function notifyCustomerBookingAccepted(
-  supabase: any,
+  supabase: SupabaseClient,
   customerId: string,
   data: BookingNotifyData
 ): Promise<void> {
