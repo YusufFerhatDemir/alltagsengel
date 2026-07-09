@@ -17,20 +17,25 @@ import { createClient } from './supabase/client'
 //   3. Keine Dateigrößen-Prüfung → Senior wählt 30 MB HEIC-Foto aus,
 //      keine Rückmeldung warum es ewig dauert.
 //   4. Fehler nicht sichtbar → nur console.error, User weiß nichts.
-//   5. Public URL für sensible Dokumente (Personalausweis!) → DSGVO.
-//      → TODO: auf Signed-URL umstellen, siehe docs/security/DSGVO_TODO.md
+//   5. Sensible Dokumente (Personalausweis!) dürfen NIEMALS über eine
+//      öffentliche URL erreichbar sein (DSGVO). Der `documents`-Bucket ist
+//      privat; Zugriff ausschließlich über signierte, ablaufende URLs
+//      (createSignedUrl, analog `service-proofs`) — nie getPublicUrl().
 //
 // ═══════════════════════════════════════════════════════════════
 
 export const MAX_FILE_SIZE_MB = 15
 const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024
 const UPLOAD_TIMEOUT_MS = 60_000 // 60 Sekunden
+const SIGNED_URL_TTL_SECONDS = 60 * 60 * 24 * 7 // 7 Tage (analog service-proofs)
 
 const ALLOWED_MIME_PREFIXES = ['image/', 'application/pdf']
 
 export interface UploadResult {
   ok: boolean
   url?: string
+  /** Storage-Pfad im privaten Bucket — für spätere On-Demand-Signierung. */
+  path?: string
   errorMessage?: string
   errorCode?:
     | 'no_user'
@@ -104,8 +109,8 @@ export async function uploadDocument(
           'Upload fehlgeschlagen. Bitte prüfe deine Internetverbindung und versuche es erneut.',
       }
     }
-  } catch (err: any) {
-    if (err?.message === 'TIMEOUT') {
+  } catch (err: unknown) {
+    if (err instanceof Error && err.message === 'TIMEOUT') {
       return {
         ok: false,
         errorCode: 'timeout',
@@ -122,17 +127,38 @@ export async function uploadDocument(
     }
   }
 
-  // ═══ 4. Public URL holen ═══
-  // TODO (DSGVO): Auf createSignedUrl umstellen — Personalausweis sollte
-  //               nicht öffentlich abrufbar sein. Bucket auf private setzen.
-  const { data: urlData } = supabase.storage.from('documents').getPublicUrl(filePath)
+  // ═══ 4. Signierte URL (7 Tage) statt öffentlicher URL ═══
+  // SICHERHEIT/DSGVO: `documents` enthält hochsensible Nachweise
+  // (Personalausweis, Führungszeugnis, Versicherung). Der Bucket ist privat;
+  // Zugriff ausschließlich über signierte, ablaufende URLs — niemals
+  // getPublicUrl(). Gespeichert wird zusätzlich der Pfad, damit die URL bei
+  // Ablauf serverseitig neu signiert werden kann (getSignedDocumentUrl).
+  const { data: signedData, error: signErr } = await supabase.storage
+    .from('documents')
+    .createSignedUrl(filePath, SIGNED_URL_TTL_SECONDS)
+
+  if (signErr || !signedData?.signedUrl) {
+    console.error('[uploadDocument] Signed URL error:', signErr)
+    try {
+      await supabase.storage.from('documents').remove([filePath])
+    } catch {
+      // Rollback-Fehler ignorieren, Haupt-Fehler ist wichtiger
+    }
+    return {
+      ok: false,
+      errorCode: 'storage_error',
+      errorMessage:
+        'Datei hochgeladen, aber der Zugriffslink konnte nicht erstellt werden. Bitte erneut versuchen.',
+    }
+  }
 
   // ═══ 5. DB-Eintrag — mit Rollback falls Insert scheitert ═══
   const { error: insertErr } = await supabase.from('documents').insert({
     user_id: userId,
     type: docType,
     file_name: file.name,
-    file_url: urlData.publicUrl,
+    file_path: filePath,
+    file_url: signedData.signedUrl,
     status: 'pending',
   })
 
@@ -152,7 +178,28 @@ export async function uploadDocument(
     }
   }
 
-  return { ok: true, url: urlData.publicUrl }
+  return { ok: true, url: signedData.signedUrl, path: filePath }
+}
+
+/**
+ * Erzeugt on-demand eine frische signierte URL für ein bereits hochgeladenes
+ * Dokument (der `documents`-Bucket ist privat). Nutzen, wenn eine in der DB
+ * gespeicherte `file_url` abgelaufen ist — signiert über den gespeicherten
+ * `file_path`.
+ */
+export async function getSignedDocumentUrl(
+  filePath: string,
+  expiresInSeconds: number = SIGNED_URL_TTL_SECONDS
+): Promise<string | null> {
+  const supabase = createClient()
+  const { data, error } = await supabase.storage
+    .from('documents')
+    .createSignedUrl(filePath, expiresInSeconds)
+  if (error || !data?.signedUrl) {
+    console.error('[getSignedDocumentUrl] Signed URL error:', error)
+    return null
+  }
+  return data.signedUrl
 }
 
 /**
