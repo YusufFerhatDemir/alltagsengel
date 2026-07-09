@@ -3,6 +3,36 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { notifyAngelNewBooking, notifyCustomerBookingAccepted, type BookingNotifyData } from '@/lib/notifications'
 
+// ─── Row-Formen des bookings-Selects (inkl. eingebetteter Joins) ───
+interface BookingProfile {
+  id: string
+  first_name: string | null
+  last_name: string | null
+  email: string | null
+}
+interface BookingAngel {
+  id: string
+  profiles: BookingProfile | BookingProfile[] | null
+}
+interface BookingRow {
+  id: string
+  customer_id: string | null
+  angel_id: string | null
+  service: string | null
+  date: string
+  time: string | null
+  duration_hours: number | null
+  total_amount: number | string | null
+  status: string | null
+  customer: BookingProfile | BookingProfile[] | null
+  angel: BookingAngel | BookingAngel[] | null
+}
+
+function firstOrSelf<T>(v: T | T[] | null | undefined): T | null {
+  if (!v) return null
+  return Array.isArray(v) ? (v[0] ?? null) : v
+}
+
 /**
  * POST /api/bookings/notify
  * Body: { bookingId: string, event: 'created' | 'accepted' }
@@ -23,7 +53,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Booking mit allen nötigen Daten laden
-    const { data: booking, error: bookErr } = await supabase
+    const { data: bookingRaw, error: bookErr } = await supabase
       .from('bookings')
       .select(`
         id, customer_id, angel_id, service, date, time, duration_hours, total_amount, status,
@@ -33,9 +63,11 @@ export async function POST(req: NextRequest) {
       .eq('id', bookingId)
       .single()
 
-    if (bookErr || !booking) {
+    if (bookErr || !bookingRaw) {
       return NextResponse.json({ error: 'Buchung nicht gefunden' }, { status: 404 })
     }
+
+    const booking = bookingRaw as unknown as BookingRow
 
     // Sicherheit: Nur Beteiligte der Buchung oder Admins dürfen Notifications auslösen
     const isBookingParticipant = booking.customer_id === user.id || (booking.angel_id && booking.angel_id === user.id)
@@ -46,12 +78,12 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const cust: any = Array.isArray(booking.customer) ? booking.customer[0] : booking.customer
+    const cust = firstOrSelf(booking.customer)
     const customerName = cust
       ? `${cust.first_name} ${cust.last_name?.[0] || ''}.`
       : 'Kunde'
-    const angel: any = booking.angel
-    const ap: any = angel?.profiles ? (Array.isArray(angel.profiles) ? angel.profiles[0] : angel.profiles) : null
+    const angel = firstOrSelf(booking.angel)
+    const ap = firstOrSelf(angel?.profiles)
     const angelName = ap
       ? `${ap.first_name} ${ap.last_name?.[0] || ''}.`
       : 'Engel'
@@ -60,11 +92,11 @@ export async function POST(req: NextRequest) {
       bookingId: booking.id,
       customerName,
       angelName,
-      service: (booking as any).service || 'Alltagsbegleitung',
-      date: (booking as any).date,
-      time: (booking as any).time?.slice(0, 5) || '—',
-      duration: (booking as any).duration_hours || 2,
-      amount: Number((booking as any).total_amount) || 0,
+      service: booking.service || 'Alltagsbegleitung',
+      date: booking.date,
+      time: booking.time?.slice(0, 5) || '—',
+      duration: booking.duration_hours || 2,
+      amount: Number(booking.total_amount) || 0,
     }
 
     // Notifications werden über den Service-Role-Client geschrieben,
@@ -90,8 +122,9 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({ error: 'Unbekanntes Event' }, { status: 400 })
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Booking notify error:', err)
-    return NextResponse.json({ error: err.message || 'Serverfehler' }, { status: 500 })
+    const message = err instanceof Error ? err.message : 'Serverfehler'
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }

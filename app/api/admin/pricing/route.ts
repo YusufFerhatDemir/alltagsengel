@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import type { SupabaseClient } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/server'
 import { invalidatePricingCache } from '@/lib/pricing-engine'
 
@@ -23,12 +24,12 @@ async function checkAdmin() {
 
 // Audit log helper
 async function logAudit(
-  supabase: any,
+  supabase: SupabaseClient,
   entityType: string,
   entityId: string | null,
   action: 'create' | 'update' | 'delete',
-  oldValues: any,
-  newValues: any,
+  oldValues: Record<string, unknown> | null,
+  newValues: Record<string, unknown> | null,
   actorId: string
 ) {
   await supabase.from('kf_pricing_audit').insert({
