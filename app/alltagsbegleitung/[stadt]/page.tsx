@@ -188,19 +188,17 @@ export async function generateMetadata({ params }: { params: Promise<{ stadt: st
       images: [{ url: '/og-image.png', width: 1200, height: 630 }],
       title: `Alltagsbegleitung ${city.name} — 131€/Monat von der Pflegekasse`,
       description: `Professionelle Alltagsbegleitung in ${city.name}. Abrechnung direkt über den Entlastungsbetrag §45b. Versichert und zertifiziert.`,
-      // og:url muss dem Canonical entsprechen (Frankfurt → Hauptseite)
-      url: city.slug === 'frankfurt'
-        ? 'https://alltagsengel.care/alltagsbegleitung'
-        : `https://alltagsengel.care/alltagsbegleitung/${city.slug}`,
+      // og:url muss dem Canonical entsprechen — jede Stadtseite (inkl. Frankfurt)
+      // zeigt auf sich selbst. Die Hauptseite /alltagsbegleitung ist die
+      // regionsweite Pillar-Seite, die Stadtseite die lokale Landing-Page.
+      url: `https://alltagsengel.care/alltagsbegleitung/${city.slug}`,
       siteName: 'Alltagsengel',
       locale: 'de_DE',
       type: 'website',
     },
     alternates: {
-      // Frankfurt kanibalisiert die Hauptseite /alltagsbegleitung → Canonical dorthin
-      canonical: city.slug === 'frankfurt'
-        ? 'https://alltagsengel.care/alltagsbegleitung'
-        : `https://alltagsengel.care/alltagsbegleitung/${city.slug}`,
+      // Jede Stadtseite self-canonical — auch Frankfurt hat eine eigene URL.
+      canonical: `https://alltagsengel.care/alltagsbegleitung/${city.slug}`,
     },
   }
 }
