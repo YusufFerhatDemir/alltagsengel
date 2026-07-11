@@ -167,7 +167,7 @@ export default function SplashPage() {
         <div style={{ marginBottom: 26 }}>
           <Icon3D size={140} float priority />
         </div>
-        <h1 className="sp-word">ALLTAGSENGEL</h1>
+        <h1 className="sp-word"><span className="sp-word-lead">Alltagsbegleitung — Ihr</span>ALLTAGSENGEL</h1>
         <p className="sp-tag">Alltagsbegleitung · Pflege-Box · Krankenfahrt</p>
         <p className="sp-ug">Frankfurt · Rhein-Main · über die App</p>
         <div className="gold-div"></div>

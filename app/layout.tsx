@@ -26,6 +26,12 @@ export const metadata: Metadata = {
   },
   description: 'Alltagsbegleitung (§45b, 131 €/Monat), Pflegebox (0 € Eigenanteil) & Krankenfahrten in Frankfurt & Rhein-Main. Jetzt kostenlos in der App starten.',
   keywords: [
+    'Alltagsbegleitung',
+    'Alltagsbegleitung Frankfurt',
+    'Alltagsbegleiter finden',
+    'Alltagsbegleitung App',
+    'Alltagsbegleitung Senioren',
+    'Alltagsbegleitung buchen',
     'Pflegebox beantragen',
     'Pflegehilfsmittel Box kostenlos',
     'Pflegebox Frankfurt',
