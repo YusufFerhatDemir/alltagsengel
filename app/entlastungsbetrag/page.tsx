@@ -1,6 +1,8 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import LeadForm from '@/components/LeadForm'
+import HowToSchema from '@/components/HowToSchema'
+import SpeakableSchema from '@/components/SpeakableSchema'
 
 // ═══════════════════════════════════════════════════════════
 // Pillar-Landing-Page Entlastungsbetrag (§45b SGB XI)
@@ -80,6 +82,21 @@ const faqs = [
     antwort:
       'Registrieren Sie sich kostenlos, wählen Sie einen Alltagsbegleiter (Engel) in Ihrer Stadt und buchen Sie Termine. Die Abrechnung über §45b übernehmen wir komplett — Ihr Eigenanteil: 0 €.',
   },
+  {
+    frage: 'Wird der Entlastungsbetrag bar ausgezahlt?',
+    antwort:
+      'Nein. Der Entlastungsbetrag ist zweckgebunden und wird nur gegen Leistungsnachweis erstattet oder direkt mit einem anerkannten Anbieter abgerechnet. Eine Auszahlung aufs eigene Konto ohne Nachweis ist gesetzlich ausgeschlossen.',
+  },
+  {
+    frage: 'Mindert der Entlastungsbetrag mein Pflegegeld?',
+    antwort:
+      'Nein. Der Entlastungsbetrag wird zusätzlich zu Pflegegeld und Pflegesachleistungen gewährt und auf keine andere Leistung der Pflegeversicherung angerechnet.',
+  },
+  {
+    frage: 'Welche Anbieter darf ich mit dem Entlastungsbetrag bezahlen?',
+    antwort:
+      'Nur nach Landesrecht anerkannte Angebote zur Unterstützung im Alltag (§45a SGB XI), zugelassene ambulante Pflegedienste sowie Einrichtungen der Tages-, Nacht- und Kurzzeitpflege. Privatpersonen oder Nachbarn ohne Anerkennung können nicht abgerechnet werden. Die Alltagsbegleiter von Alltagsengel erfüllen diese Anforderungen und sind versichert.',
+  },
 ]
 
 const jsonLd = {
@@ -139,6 +156,18 @@ export default function EntlastungsbetragPage() {
   return (
     <div className="screen info-screen">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <SpeakableSchema url="/entlastungsbetrag" />
+      <HowToSchema
+        name="Entlastungsbetrag beantragen und nutzen"
+        description="So rufen Sie den Entlastungsbetrag nach §45b SGB XI (131 €/Monat) Schritt für Schritt ab — von der Pflegegrad-Prüfung bis zur Direktabrechnung mit der Pflegekasse."
+        totalTime="PT10M"
+        steps={[
+          { name: 'Pflegegrad prüfen oder beantragen', text: 'Voraussetzung ist ein anerkannter Pflegegrad 1–5. Noch kein Pflegegrad? Stellen Sie einen formlosen Antrag bei Ihrer Pflegekasse — der kostenlose Pflegegrad-Check hilft bei der Einschätzung.', url: '/pflegegrad-check' },
+          { name: 'Anerkannten Anbieter wählen', text: 'Der Entlastungsbetrag darf nur bei anerkannten Angeboten zur Unterstützung im Alltag eingesetzt werden — zum Beispiel für Alltagsbegleitung über Alltagsengel.', url: '/alltagsbegleitung' },
+          { name: 'Abtretungserklärung unterschreiben', text: 'Mit einer einmaligen Abtretungserklärung rechnet der Anbieter direkt mit Ihrer Pflegekasse ab. Sie gehen nicht in Vorleistung und reichen keine Belege ein.' },
+          { name: 'Leistungen buchen und abrechnen lassen', text: 'Buchen Sie Termine nach Bedarf. Die geleisteten Stunden werden dokumentiert und automatisch über den Entlastungsbetrag §45b abgerechnet — bis 131 € pro Monat ohne Eigenanteil.', url: '/choose' },
+        ]}
+      />
       <div className="legal-header">
         <Link href="/" className="legal-back">&#8249;</Link>
         <h1 className="legal-title">Entlastungsbetrag §45b</h1>
@@ -211,6 +240,53 @@ export default function EntlastungsbetragPage() {
         </section>
 
         <section className="info-card">
+          <h3>Entlastungsbetrag „beantragen": zwei Wege zur Abrechnung</h3>
+          <p>
+            Einen klassischen Antrag auf den Entlastungsbetrag gibt es nicht — der Anspruch
+            entsteht <strong>automatisch mit dem Pflegegrad</strong>. Sie müssen den Betrag nur
+            abrufen. Dafür gibt es zwei Wege:
+          </p>
+          <ul className="info-list" style={{ marginTop: 12 }}>
+            <li>
+              <strong>Kostenerstattung:</strong> Sie bezahlen die Leistung zunächst selbst und
+              reichen die Rechnung des anerkannten Anbieters bei Ihrer Pflegekasse ein. Die Kasse
+              erstattet bis zu 131 € pro Monat. Nachteil: Vorleistung und Belege verwalten.
+            </li>
+            <li>
+              <strong>Direktabrechnung per Abtretungserklärung:</strong> Sie unterschreiben
+              einmalig eine Abtretungserklärung, danach rechnet der Anbieter direkt mit der
+              Pflegekasse ab — kein Papierkram, keine Vorleistung. Diesen Weg nutzt Alltagsengel.
+            </li>
+          </ul>
+          <p style={{ marginTop: 12 }}>
+            Tipp: Informieren Sie Ihre Pflegekasse formlos, dass Sie den Entlastungsbetrag nutzen
+            möchten — viele Kassen senden dann automatisch die passenden Formulare zu. Eine
+            Schritt-für-Schritt-Anleitung finden Sie im Ratgeber
+            <Link href="/blog/entlastungsbetrag-beantragen"> Entlastungsbetrag beantragen</Link>.
+          </p>
+        </section>
+
+        <section className="info-card">
+          <h3>Ansparen und Fristen: So verfällt kein Euro</h3>
+          <p>
+            Der Entlastungsbetrag verfällt nicht am Monatsende. Nicht genutzte Beträge werden
+            <strong> automatisch angespart</strong>: Alle Monatsbeträge seit Januar (bzw. seit
+            Anerkennung des Pflegegrads) summieren sich im Kalenderjahr. Restguthaben aus dem
+            Vorjahr bleibt bis zum <strong>30. Juni des Folgejahres</strong> nutzbar — erst danach
+            verfällt es unwiderruflich.
+          </p>
+          <p style={{ marginTop: 12 }}>
+            Ein Rechenbeispiel: Frau Müller erhält im März ihren Pflegegrad 2, nutzt den
+            Entlastungsbetrag aber erst ab September. Ihr stehen dann die angesparten Beträge von
+            März bis September zur Verfügung — 7 × 131 € = 917 €. Was sie bis Jahresende nicht
+            verbraucht, kann sie noch bis zum 30. Juni des Folgejahres einsetzen. Wie Sie
+            angesparte Beträge optimal abrufen, zeigt der Ratgeber
+            <Link href="/blog/entlastungsbetrag-rueckwirkend"> Entlastungsbetrag rückwirkend
+            nutzen</Link>.
+          </p>
+        </section>
+
+        <section className="info-card">
           <h3>So nutzen Sie den Entlastungsbetrag — in 3 Schritten</h3>
           <div className="info-steps">
             <div className="info-step">
@@ -259,6 +335,11 @@ export default function EntlastungsbetragPage() {
             <li>
               <Link href="/verhinderungspflege">Verhinderungspflege</Link> — gemeinsamer Jahresbetrag
               von 3.539 €/Jahr (ab Pflegegrad 2), zusammen bis zu 5.111 €/Jahr
+            </li>
+            <li>
+              <strong>Umwandlungsanspruch (§45a Abs. 4 SGB XI)</strong> — bis zu 40 % der
+              ambulanten Pflegesachleistungen lassen sich zusätzlich für Angebote zur
+              Unterstützung im Alltag umwidmen, je nach Pflegegrad mehrere hundert Euro monatlich
             </li>
             <li>
               <Link href="/hygienebox">Pflegebox</Link> — kostenlose Pflegehilfsmittel für bis zu

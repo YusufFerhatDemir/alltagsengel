@@ -226,6 +226,11 @@ export default function Pflegegrad1Leistungen() {
           <Link href="/alltagsbegleitung" className="btn-gold">Alltagsbegleitung buchen</Link>
         </div>
 
+        <p style={{ marginTop: 32, fontSize: 15 }}>
+          <strong>Alles Wichtige auf einen Blick:</strong>{' '}
+          <Link href="/entlastungsbetrag">Zum großen Entlastungsbetrag-Ratgeber — 131 €/Monat schon ab Pflegegrad 1</Link>
+        </p>
+
         <RelatedPosts slug="pflegegrad-1-leistungen" />
       </article>
     </main>

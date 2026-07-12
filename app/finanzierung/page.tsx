@@ -429,6 +429,12 @@ export default function FinanzierungPage() {
             Angaben nach bestem Wissen, Stand 2026. Sie ersetzen keine individuelle Beratung durch
             Pflegekasse oder Steuerberatung.
           </p>
+          <p style={{ color: '#B8B0A4', fontSize: 14, lineHeight: 1.7, marginTop: 16, marginBottom: 0 }}>
+            Vertiefende Ratgeber zu den beiden wichtigsten Budgets:{' '}
+            <Link href="/entlastungsbetrag" style={{ color: '#C9963C', textDecoration: 'underline', textUnderlineOffset: 3 }}>Entlastungsbetrag §45b — 131 €/Monat</Link>{' '}
+            und{' '}
+            <Link href="/verhinderungspflege" style={{ color: '#C9963C', textDecoration: 'underline', textUnderlineOffset: 3 }}>Verhinderungspflege — 3.539 €/Jahr</Link>.
+          </p>
         </section>
 
         {/* CTA */}

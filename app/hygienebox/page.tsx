@@ -2,6 +2,7 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 import BreadcrumbSchema from '@/components/BreadcrumbSchema'
 import HowToSchema from '@/components/HowToSchema'
+import SpeakableSchema from '@/components/SpeakableSchema'
 
 export const metadata: Metadata = {
   title: 'Pflegebox Frankfurt — kostenlos, 42 €/Monat',
@@ -107,6 +108,14 @@ const faqItems = [
     frage: 'Wie beantrage ich die Pflegebox?',
     antwort: 'Sie wählen Ihre Wunsch-Box aus, wir übernehmen den kompletten Antrag bei Ihrer Pflegekasse. Sie unterschreiben nur einmalig eine Vollmacht — den Rest erledigt Alltagsengel.',
   },
+  {
+    frage: 'Was ist der Unterschied zwischen Pflegebox und technischen Hilfsmitteln?',
+    antwort: 'Die Pflegebox enthält Verbrauchsprodukte (Handschuhe, Desinfektion, Bettschutz), die über die 42-€-Pauschale nach §40 SGB XI laufen. Technische Hilfsmittel wie Pflegebetten oder Hausnotruf werden separat beantragt und mindern die Pauschale nicht — beides ist parallel nutzbar.',
+  },
+  {
+    frage: 'Mindert die Pflegebox mein Pflegegeld oder den Entlastungsbetrag?',
+    antwort: 'Nein. Die 42 € für Pflegehilfsmittel sind ein eigener Anspruch nach §40 SGB XI und werden auf keine andere Leistung angerechnet — weder auf das Pflegegeld noch auf den Entlastungsbetrag von 131 €/Monat.',
+  },
 ]
 
 const faqJsonLd = {
@@ -125,6 +134,7 @@ export default function HygieneboxPage() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
       <BreadcrumbSchema items={[{ name: 'Pflegebox' }]} />
+      <SpeakableSchema url="/hygienebox" />
       <HowToSchema
         name="Pflegebox kostenlos beantragen"
         description="So erhalten Sie eine kostenlose Pflegebox (Pflegehilfsmittel nach §40 SGB XI, bis 42€/Monat) über Alltagsengel — ohne Eigenanteil."
@@ -148,11 +158,63 @@ export default function HygieneboxPage() {
         </div>
 
         <section className="info-card">
-          <h3>Was ist die Hygienebox?</h3>
+          <h3>Was ist die Hygienebox (Pflegebox)?</h3>
           <p>
-            Die Hygienebox ist ein monatliches Paket mit Pflegehilfsmitteln zum Verbrauch. Pflegebedürftige
-            Personen ab Pflegegrad 1 haben Anspruch auf bis zu 42 € monatlich für diese Hilfsmittel — die
-            Kosten übernimmt Ihre Pflegekasse.
+            Die Hygienebox — oft auch Pflegebox genannt — ist ein monatliches Paket mit
+            <strong> Pflegehilfsmitteln zum Verbrauch</strong> nach <strong>§40 SGB XI</strong>:
+            Einmalhandschuhe, Desinfektionsmittel, Bettschutzeinlagen, Mundschutz und
+            Schutzschürzen. Diese Produkte schützen Pflegebedürftige und pflegende Angehörige
+            gleichermaßen vor Infektionen und erleichtern die tägliche Pflege zu Hause.
+          </p>
+          <p style={{ marginTop: 12 }}>
+            Das Beste daran: Die Pflegekasse übernimmt die Kosten bis zu <strong>42 € pro
+            Monat</strong> — das sind bis zu <strong>504 € pro Jahr</strong>, die vielen
+            Pflegehaushalten entgehen, weil der Anspruch schlicht unbekannt ist. Ein Rezept ist
+            nicht nötig, eine Zuzahlung fällt nicht an. Alltagsengel übernimmt den Antrag bei
+            Ihrer Pflegekasse und liefert die Box monatlich versandkostenfrei nach Hause.
+          </p>
+        </section>
+
+        <section className="info-card">
+          <h3>Wer hat Anspruch auf die kostenlose Pflegebox?</h3>
+          <p>
+            Der Anspruch nach §40 SGB XI ist an drei Bedingungen geknüpft — alle drei sind
+            bewusst niedrigschwellig:
+          </p>
+          <ul className="info-list" style={{ marginTop: 12 }}>
+            <li>Ein anerkannter <strong>Pflegegrad 1 bis 5</strong> — schon der niedrigste
+              Pflegegrad genügt</li>
+            <li>Pflege in <strong>häuslicher Umgebung</strong> — zu Hause, bei Angehörigen oder
+              in einer Wohngemeinschaft (nicht im Pflegeheim)</li>
+            <li>Pflege durch <strong>Angehörige, Freunde, Nachbarn oder einen ambulanten
+              Dienst</strong> — mindestens teilweise nicht-professionell</li>
+          </ul>
+          <p style={{ marginTop: 12 }}>
+            Damit steht die Pflegebox praktisch jedem Pflegehaushalt zu — auch bei
+            <strong> Pflegegrad 1</strong>, bei dem es weder Pflegegeld noch Pflegesachleistungen
+            gibt. Zusammen mit dem <Link href="/entlastungsbetrag">Entlastungsbetrag
+            (131 €/Monat)</Link> ist sie eine der beiden Leistungen, die ab dem ersten Pflegegrad
+            voll ausgeschöpft werden können. Mehr dazu im Ratgeber
+            <Link href="/blog/pflegegrad-1-leistungen"> Pflegegrad 1: Diese Leistungen stehen
+            Ihnen zu</Link>.
+          </p>
+        </section>
+
+        <section className="info-card">
+          <h3>Pflegehilfsmittel zum Verbrauch vs. technische Hilfsmittel</h3>
+          <p>
+            §40 SGB XI unterscheidet zwei Arten von Pflegehilfsmitteln. Die
+            <strong> Hilfsmittel zum Verbrauch</strong> (Handschuhe, Desinfektion, Bettschutz …)
+            deckt die monatliche Pauschale von 42 € ab — sie werden verbraucht und jeden Monat
+            neu geliefert. Davon zu unterscheiden sind <strong>technische Pflegehilfsmittel</strong>
+            wie Pflegebetten, Hausnotruf oder Toilettensitzerhöhungen: Diese werden separat
+            beantragt, meist leihweise gestellt und mindern Ihre 42-€-Pauschale <em>nicht</em>.
+            Sie können also beides parallel nutzen.
+          </p>
+          <p style={{ marginTop: 12 }}>
+            Die Pauschale wurde zum 01.01.2025 von 40 € auf 42 € erhöht. Was im Detail
+            erstattungsfähig ist, erklärt der Ratgeber
+            <Link href="/blog/pflegehilfsmittel-40-euro"> Pflegehilfsmittel nach §40 SGB XI</Link>.
           </p>
         </section>
 

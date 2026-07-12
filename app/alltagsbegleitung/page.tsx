@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 import LeadForm from '@/components/LeadForm'
 import BreadcrumbSchema from '@/components/BreadcrumbSchema'
 import HowToSchema from '@/components/HowToSchema'
+import SpeakableSchema from '@/components/SpeakableSchema'
 
 export const metadata: Metadata = {
   title: 'Alltagsbegleitung — Frankfurt & Rhein-Main | Entlastungsbetrag',
@@ -101,6 +102,7 @@ export default function AlltagsbegleitungPage() {
     <div className="screen info-screen">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <BreadcrumbSchema items={[{ name: 'Alltagsbegleitung' }]} />
+      <SpeakableSchema url="/alltagsbegleitung" />
       <HowToSchema
         name="Alltagsbegleitung über Alltagsengel buchen"
         description="So buchen Sie eine zertifizierte Alltagsbegleitung über den Entlastungsbetrag (§45b SGB XI, 131€/Monat) bei Alltagsengel in Frankfurt & Rhein-Main."

@@ -50,10 +50,84 @@ export default function KrankenfahrtenContent({ faqs = [] }: { faqs?: FaqItem[] 
         <section className="info-card">
           <h3>Was sind Krankenfahrten?</h3>
           <p>
-            Krankenfahrten sind Fahrten zu medizinischen Behandlungen, die von der Krankenkasse
-            genehmigt oder verordnet werden. Wir vermitteln qualifizierte Fahrer, die Sie sicher
-            und pünktlich zu Ihren Arztterminen bringen.
+            Krankenfahrten sind Fahrten zu ambulanten medizinischen Behandlungen — zum Hausarzt,
+            Facharzt, ins Krankenhaus, zur Dialyse, Chemo- oder Strahlentherapie. Anders als beim
+            qualifizierten Krankentransport ist während der Fahrt keine medizinisch-fachliche
+            Betreuung nötig: Gefahren wird sitzend im Pkw, bei Bedarf mit Tragestuhl oder im
+            Rollstuhl. Alltagsengel vermittelt qualifizierte Fahrer in Frankfurt und dem gesamten
+            Rhein-Main-Gebiet, die Sie pünktlich abholen, bis zur Tür begleiten und sicher wieder
+            nach Hause bringen.
           </p>
+          <p style={{ marginTop: 12 }}>
+            Der entscheidende Unterschied zur normalen Taxifahrt: Mit einer ärztlichen
+            <strong> Verordnung einer Krankenbeförderung (Muster 4)</strong> übernimmt die
+            gesetzliche Krankenkasse die Kosten nach <strong>§60 SGB V</strong> — Sie zahlen nur
+            die gesetzliche Zuzahlung von 10 % (mindestens 5 €, höchstens 10 € pro Fahrt).
+          </p>
+        </section>
+
+        <section className="info-card">
+          <h3>Wann zahlt die Krankenkasse die Krankenfahrt?</h3>
+          <p>
+            Die Kostenübernahme nach §60 SGB V ist an klare Voraussetzungen geknüpft. Fahrten zu
+            <strong> stationären Behandlungen</strong> (Einweisung und Entlassung) übernimmt die
+            Kasse grundsätzlich. Bei Fahrten zu <strong>ambulanten Behandlungen</strong> gilt: Sie
+            werden nur in besonderen Fällen bezahlt — dafür dann aber zuverlässig:
+          </p>
+          <ul className="info-list" style={{ marginTop: 12 }}>
+            <li><strong>Pflegegrad 4 oder 5:</strong> Fahrten zu ambulanten Behandlungen gelten
+              ohne Einzelgenehmigung als genehmigt — die Verordnung genügt.</li>
+            <li><strong>Pflegegrad 3 mit dauerhafter Mobilitätsbeeinträchtigung:</strong> ebenfalls
+              genehmigungsfrei.</li>
+            <li><strong>Schwerbehindertenausweis mit Merkzeichen aG, Bl oder H:</strong>
+              genehmigungsfrei.</li>
+            <li><strong>Serienfahrten:</strong> Dialyse, Chemotherapie, Strahlentherapie und
+              vergleichbare Behandlungsserien mit hoher Frequenz — mit vorheriger Genehmigung
+              der Kasse.</li>
+            <li><strong>Vergleichbare Härtefälle:</strong> wenn der Arzt eine zwingende medizinische
+              Notwendigkeit bescheinigt und die Kasse vorher genehmigt.</li>
+          </ul>
+          <p style={{ marginTop: 12 }}>
+            Wichtig: Die Verordnung stellt Ihr behandelnder Arzt <strong>vor der Fahrt</strong> aus.
+            Wie Sie die Verordnung bekommen und was darauf stehen muss, erklärt unser Ratgeber
+            <Link href="/blog/krankenfahrt-verordnung-erhalten"> Krankenfahrt-Verordnung erhalten</Link>.
+            Alle Details zur Abrechnung finden Sie im Ratgeber
+            <Link href="/blog/krankenfahrt-kostenuebernahme"> Kostenübernahme bei Krankenfahrten</Link>.
+          </p>
+        </section>
+
+        <section className="info-card">
+          <h3>Zuzahlung: Das zahlen Sie selbst</h3>
+          <p>
+            Übernimmt die Krankenkasse die Fahrt, bleibt eine gesetzliche Zuzahlung von
+            <strong> 10 % des Fahrpreises, mindestens 5 € und höchstens 10 € pro Fahrt</strong> —
+            Hin- und Rückfahrt zählen als zwei Fahrten. Kinder und Jugendliche unter 18 Jahren
+            sind von der Zuzahlung befreit. Wer die <strong>Belastungsgrenze</strong> von 2 %
+            des Bruttoeinkommens (1 % bei chronisch Kranken) erreicht, kann sich für den Rest
+            des Jahres von allen Zuzahlungen befreien lassen — der Befreiungsausweis der
+            Krankenkasse gilt dann auch für Krankenfahrten.
+          </p>
+          <p style={{ marginTop: 12 }}>
+            Ohne Verordnung fahren Sie als <strong>Selbstzahler</strong>. Die Preise richten sich
+            nach Region, Fahrtart und Hilfebedarf — transparent kalkuliert, ohne versteckte
+            Kosten. Viele Kunden kombinieren Krankenfahrten mit einer
+            <Link href="/alltagsbegleitung"> Alltagsbegleitung</Link>: Der Engel begleitet Sie dann
+            auch in die Praxis, wartet während der Behandlung und hilft anschließend beim Einkauf.
+            Die Begleitung ist über den <Link href="/entlastungsbetrag">Entlastungsbetrag
+            (131 €/Monat)</Link> abrechenbar.
+          </p>
+        </section>
+
+        <section className="info-card">
+          <h3>Typische Fahrtziele</h3>
+          <ul className="info-list">
+            <li><strong>Dialysefahrten</strong> — regelmäßige Serienfahrten, meist 3× pro Woche, mit Dauergenehmigung der Kasse</li>
+            <li><strong>Onkologie</strong> — Chemo- und Strahlentherapie, planbare Behandlungszyklen</li>
+            <li><strong>Facharzttermine</strong> — Kardiologie, Orthopädie, Augenarzt, Zahnarzt</li>
+            <li><strong>Krankenhaus</strong> — Aufnahme, Entlassung, ambulante OPs, Nachsorge</li>
+            <li><strong>Therapien</strong> — Physiotherapie, Ergotherapie, Reha-Nachsorge</li>
+            <li><strong>Sanitätshaus &amp; Apotheke</strong> — als Selbstzahler oder kombiniert mit Alltagsbegleitung</li>
+          </ul>
         </section>
 
         <section className="info-card">
@@ -194,7 +268,10 @@ export default function KrankenfahrtenContent({ faqs = [] }: { faqs?: FaqItem[] 
             <li><Link href="/entlastungsbetrag">Entlastungsbetrag — 131 €/Monat ab Pflegegrad 1 (§45b)</Link></li>
             <li><Link href="/verhinderungspflege">Verhinderungspflege — Ersatzpflege bis 3.539 €/Jahr (§39)</Link></li>
             <li><Link href="/finanzierung">Finanzierung — bis zu 5.111 €/Jahr, nach Pflegegrad erklärt</Link></li>
+            <li><Link href="/entlastungsbetrag">Entlastungsbetrag — 131 €/Monat für Begleitung nutzen</Link></li>
             <li><Link href="/blog/krankenfahrt-kostenuebernahme">Ratgeber: Krankenfahrt Kostenübernahme</Link></li>
+            <li><Link href="/blog/krankenfahrt-verordnung-erhalten">Ratgeber: Verordnung (Muster 4) erhalten</Link></li>
+            <li><Link href="/blog/krankenfahrt-buchen-frankfurt">Ratgeber: Krankenfahrt in Frankfurt buchen</Link></li>
             <li><Link href="/faq">Häufige Fragen zu Pflegeleistungen</Link></li>
           </ul>
         </section>

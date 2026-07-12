@@ -106,6 +106,11 @@ export default function EntlastungsbetragBeantragen() {
           <Link href="/termin" className="btn-gold">Jetzt kostenlos starten</Link>
         </div>
 
+        <p style={{ marginTop: 32, fontSize: 15 }}>
+          <strong>Alles Wichtige auf einen Blick:</strong>{' '}
+          <Link href="/entlastungsbetrag">Zum großen Entlastungsbetrag-Ratgeber — 131 €/Monat nutzen</Link>
+        </p>
+
         <RelatedPosts slug="entlastungsbetrag-beantragen" />
       </article>
     </main>

@@ -152,6 +152,11 @@ export default function EntlastungsbetragPage() {
           </div>
         </div>
 
+        <p style={{ marginTop: 32, fontSize: 15 }}>
+          <strong>Alles Wichtige auf einen Blick:</strong>{' '}
+          <Link href="/entlastungsbetrag">Zum großen Entlastungsbetrag-Ratgeber — 131 €/Monat nutzen</Link>
+        </p>
+
         <RelatedPosts slug="entlastungsbetrag-45b" />
 
         <footer className="blog-footer">
