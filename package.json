@@ -13,7 +13,7 @@
     "rls:matrix:check": "tsx scripts/rls-matrix.ts --check",
     "lint:forbidden": "tsx scripts/lint-forbidden.ts",
     "lint:forbidden:staged": "tsx scripts/lint-forbidden.ts --staged",
-    "indexnow:ping": "tsx scripts/indexnow-ping.ts",
+    "indexnow:ping": "node scripts/indexnow-ping.mjs",
     "setup:hooks": "bash scripts/hooks/install.sh",
     "cap:sync": "npx cap sync ios",
     "cap:open": "npx cap open ios",
