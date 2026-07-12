@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import KrankenfahrtenContent from './KrankenfahrtenContent'
 import BreadcrumbSchema from '@/components/BreadcrumbSchema'
 import HowToSchema from '@/components/HowToSchema'
+import SpeakableSchema from '@/components/SpeakableSchema'
 
 export const metadata: Metadata = {
   title: 'Krankenfahrten Frankfurt & Rhein-Main buchen',
@@ -46,6 +47,18 @@ const faqItems = [
   {
     q: 'Wie buche ich eine Krankenfahrt bei Alltagsengel?',
     a: 'Registrieren Sie sich kostenlos bei Alltagsengel, wählen Sie Datum und Zielort, und ein qualifizierter Fahrer wird Ihnen zugeteilt. Die Buchung dauert nur 2 Minuten — direkt in der App.',
+  },
+  {
+    q: 'Übernimmt die Kasse auch Fahrten zur Dialyse oder Chemotherapie?',
+    a: 'Ja. Serienfahrten zu Dialyse, Chemo- oder Strahlentherapie gehören zu den anerkannten Ausnahmefällen nach §60 SGB V. Mit Verordnung und Genehmigung der Kasse werden alle Fahrten der Behandlungsserie übernommen — oft per Dauergenehmigung.',
+  },
+  {
+    q: 'Kann ich mich von der Zuzahlung befreien lassen?',
+    a: 'Ja. Wer die Belastungsgrenze von 2 % des Bruttoeinkommens (1 % bei chronisch Kranken) erreicht, erhält von der Krankenkasse einen Befreiungsausweis — dann entfällt auch die Zuzahlung von 5–10 € pro Krankenfahrt. Kinder unter 18 sind generell befreit.',
+  },
+  {
+    q: 'Sind auch Fahrten im Rollstuhl möglich?',
+    a: 'Ja. Neben der sitzenden Beförderung im Pkw vermitteln wir auch Fahrten mit Rollstuhl-Transport. Geben Sie Ihren Hilfebedarf einfach bei der Buchung an — der passende Fahrzeugtyp wird automatisch ausgewählt.',
   },
 ]
 
@@ -123,6 +136,7 @@ export default function KrankenfahrtenPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
       />
       <BreadcrumbSchema items={[{ name: 'Krankenfahrten' }]} />
+      <SpeakableSchema url="/krankenfahrten" />
       <HowToSchema
         name="Krankenfahrt bei Alltagsengel buchen"
         description="So buchen Sie eine Krankenfahrt in Frankfurt & Rhein-Main über die Alltagsengel-App — mit Verordnung (Krankenkasse zahlt) oder als Selbstzahler."

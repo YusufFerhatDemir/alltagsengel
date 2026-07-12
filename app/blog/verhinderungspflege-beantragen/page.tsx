@@ -146,6 +146,11 @@ export default function VerhinderungspflegePage() {
           </ul>
         </section>
 
+        <p style={{ marginTop: 32, fontSize: 15 }}>
+          <strong>Alles Wichtige auf einen Blick:</strong>{' '}
+          <Link href="/verhinderungspflege">Zum großen Verhinderungspflege-Ratgeber — 3.539 €/Jahr nutzen</Link>
+        </p>
+
         <RelatedPosts slug="verhinderungspflege-beantragen" />
       </article>
     </main>

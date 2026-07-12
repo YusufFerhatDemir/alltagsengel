@@ -1,6 +1,8 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import LeadForm from '@/components/LeadForm'
+import HowToSchema from '@/components/HowToSchema'
+import SpeakableSchema from '@/components/SpeakableSchema'
 
 // ═══════════════════════════════════════════════════════════
 // Pillar-Landing-Page Verhinderungspflege (§39 SGB XI)
@@ -139,6 +141,18 @@ export default function VerhinderungspflegePage() {
   return (
     <div className="screen info-screen">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <SpeakableSchema url="/verhinderungspflege" />
+      <HowToSchema
+        name="Verhinderungspflege beantragen"
+        description="So beantragen Sie Verhinderungspflege nach §39 SGB XI (gemeinsamer Jahresbetrag 3.539 €/Jahr) — von der Voraussetzungsprüfung bis zur Erstattung durch die Pflegekasse."
+        totalTime="PT15M"
+        steps={[
+          { name: 'Voraussetzungen prüfen', text: 'Sie benötigen Pflegegrad 2–5 und eine private Pflegeperson, die vorübergehend verhindert ist. Eine Vorpflegezeit ist seit dem 01.07.2025 nicht mehr erforderlich.' },
+          { name: 'Ersatzpflege organisieren', text: 'Wählen Sie eine geprüfte Betreuungskraft — stundenweise (unter 8 Stunden/Tag, ohne Pflegegeld-Kürzung) oder tageweise. Alltagsengel vermittelt versicherte Betreuungskräfte im Rhein-Main-Gebiet.', url: '/choose' },
+          { name: 'Pflegekasse informieren', text: 'Melden Sie den Einsatz idealerweise vorab formlos bei Ihrer Pflegekasse an — das sichert die Kostenübernahme. Eine nachträgliche Beantragung ist ebenfalls möglich.' },
+          { name: 'Antrag und Nachweise einreichen', text: 'Reichen Sie das Antragsformular Ihrer Kasse mit den Einsatz-Nachweisen ein. Die Kasse erstattet bis zu 3.539 € pro Jahr aus dem gemeinsamen Jahresbetrag. Alltagsengel hilft bei Formularen und Abrechnung.' },
+        ]}
+      />
       <div className="legal-header">
         <Link href="/" className="legal-back">&#8249;</Link>
         <h1 className="legal-title">Verhinderungspflege</h1>
@@ -209,6 +223,45 @@ export default function VerhinderungspflegePage() {
             Unsere geprüften und versicherten Alltagsbegleiter übernehmen währenddessen die Betreuung:
             Gesellschaft leisten, Spazierengehen, Kochen, Vorlesen, Sicherheit geben — genau so, wie es
             die Pflegeperson sonst tut.
+          </p>
+        </section>
+
+        <section className="info-card">
+          <h3>Tageweise Verhinderungspflege: Das passiert mit dem Pflegegeld</h3>
+          <p>
+            Dauert die Vertretung <strong>8 Stunden oder länger</strong> am Tag, gilt sie als
+            tageweise Verhinderungspflege. Das Pflegegeld wird dann für den ersten und letzten
+            Tag in voller Höhe gezahlt, für die Tage dazwischen zur Hälfte — seit der Reform
+            2025 für <strong>bis zu 8 Wochen pro Kalenderjahr</strong>. Wer die Kürzung vermeiden
+            will, plant Einsätze unter 8 Stunden: Bei der stundenweisen Variante läuft das
+            Pflegegeld ungekürzt weiter, und die Höchstdauer wird nicht angerechnet.
+          </p>
+          <p style={{ marginTop: 8 }}>
+            Übrigens: Aus demselben gemeinsamen Jahresbetrag wird auch die
+            <strong> Kurzzeitpflege</strong> (§42 SGB XI) bezahlt — die vorübergehende
+            vollstationäre Unterbringung, etwa nach einem Krankenhausaufenthalt. Sie entscheiden
+            flexibel, wie Sie die 3.539 € zwischen beiden Leistungen aufteilen.
+          </p>
+        </section>
+
+        <section className="info-card">
+          <h3>Wer darf die Ersatzpflege übernehmen?</h3>
+          <p>
+            Grundsätzlich sind Sie frei in der Wahl: professionelle Betreuungskräfte, ambulante
+            Pflegedienste, Nachbarn, Freunde oder Verwandte. Es gibt aber einen wichtigen
+            Unterschied bei der Erstattung:
+          </p>
+          <ul className="info-list" style={{ marginTop: 12 }}>
+            <li><strong>Professionelle Kräfte & nicht verwandte Personen:</strong> Erstattung
+              der tatsächlichen Kosten bis zum vollen Jahresbetrag von 3.539 €.</li>
+            <li><strong>Nahe Angehörige (bis 2. Grad) und Personen im selben Haushalt:</strong>
+              Erstattung begrenzt auf das 1,5-fache des monatlichen Pflegegeldes; nachgewiesene
+              Aufwendungen wie Fahrtkosten oder Verdienstausfall können zusätzlich bis zum
+              Jahresbetrag geltend gemacht werden.</li>
+          </ul>
+          <p style={{ marginTop: 8 }}>
+            Mit einer professionellen Betreuungskraft von Alltagsengel schöpfen Sie das Budget
+            also ohne Deckelung aus — und die Einsätze sind versichert und dokumentiert.
           </p>
         </section>
 

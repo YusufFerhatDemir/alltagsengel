@@ -219,6 +219,11 @@ export default function EntlastungsbetragRueckwirkend() {
           <Link href="/alltagsbegleitung" className="btn-gold">Alltagsbegleitung buchen</Link>
         </div>
 
+        <p style={{ marginTop: 32, fontSize: 15 }}>
+          <strong>Alles Wichtige auf einen Blick:</strong>{' '}
+          <Link href="/entlastungsbetrag">Zum großen Entlastungsbetrag-Ratgeber — 131 €/Monat nutzen</Link>
+        </p>
+
         <RelatedPosts slug="entlastungsbetrag-rueckwirkend" />
       </article>
     </main>

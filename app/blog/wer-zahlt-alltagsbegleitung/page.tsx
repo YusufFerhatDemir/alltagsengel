@@ -197,6 +197,12 @@ export default function WerZahltAlltagsbegleitungPage() {
           </div>
         </div>
 
+        <p style={{ marginTop: 32, fontSize: 15 }}>
+          <strong>Alles Wichtige auf einen Blick:</strong>{' '}
+          <Link href="/entlastungsbetrag">Zum großen Entlastungsbetrag-Ratgeber (131 €/Monat)</Link>{' '}
+          und <Link href="/finanzierung">zur Finanzierungs-Übersicht nach Pflegegrad</Link>
+        </p>
+
         <RelatedPosts slug="wer-zahlt-alltagsbegleitung" />
 
         <footer className="blog-footer">
