@@ -105,6 +105,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="de" data-theme="dark" style={{ colorScheme: 'only dark' } as any}>
       <head>
+        {/* ═══ RESOURCE HINTS (CWV) ═══ */}
+        {/* GTM/gtag lädt auf jeder Seite afterInteractive → Preconnect spart
+            DNS+TLS-Roundtrip auf dem kritischen Third-Party-Pfad. Für die
+            übrigen Tracker reicht dns-prefetch (laden später/consent-abhängig,
+            volle Sockets wären hier Verschwendung). */}
+        <link rel="preconnect" href="https://www.googletagmanager.com" />
+        <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
+        <link rel="dns-prefetch" href="https://www.google-analytics.com" />
+        <link rel="dns-prefetch" href="https://connect.facebook.net" />
+        <link rel="dns-prefetch" href="https://analytics.tiktok.com" />
         {/* ═══ ANDROID AUTO-DARK / AKKU-SPARMODUS SCHUTZ ═══ */}
         {/* Chrome Auto Dark Theme opt-out (offizielle Methode) */}
         <meta name="color-scheme" content="only dark" />

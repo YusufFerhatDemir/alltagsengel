@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import BreadcrumbSchema from '@/components/BreadcrumbSchema'
+import RelatedContent from '@/components/RelatedContent'
 
 export const metadata: Metadata = {
   title: 'Finanzierung: Alltagsbegleitung bis 5.111 €/Jahr',
@@ -453,6 +454,8 @@ export default function FinanzierungPage() {
             </Link>
           </div>
         </section>
+
+        <RelatedContent page="finanzierung" />
 
         {/* Footer-Nav */}
         <div style={{ display: 'flex', gap: 18, justifyContent: 'center', padding: '10px 0', flexWrap: 'wrap' }}>

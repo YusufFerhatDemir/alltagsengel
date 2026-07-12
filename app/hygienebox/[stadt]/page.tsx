@@ -2,6 +2,8 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import LeadForm from '@/components/LeadForm'
+import BreadcrumbSchema from '@/components/BreadcrumbSchema'
+import SpeakableSchema from '@/components/SpeakableSchema'
 
 // ═══════════════════════════════════════════════════════════
 // City-specific Pflegebox pages for Rhein-Main area
@@ -15,6 +17,8 @@ interface CityData {
   description: string
   stadtteile: string[] // reale Stadtteile fürs Liefergebiet (sichtbar + FAQ)
   geo: { lat: number; lng: number } // Stadtzentrum für GeoCoordinates im JSON-LD
+  // Lokale, trägerneutrale Pflegeberatung — mit Präposition („beim/bei der …")
+  beratung: string
 }
 
 export const dynamicParams = true
@@ -28,6 +32,7 @@ const cities: Record<string, CityData> = {
     description: 'Frankfurt am Main und dem gesamten Stadtgebiet',
     stadtteile: ['Bockenheim', 'Bornheim', 'Sachsenhausen', 'Nordend', 'Gallus', 'Höchst'],
     geo: { lat: 50.1109, lng: 8.6821 },
+    beratung: 'beim Pflegestützpunkt Frankfurt am Main',
   },
   offenbach: {
     name: 'Offenbach am Main',
@@ -37,6 +42,7 @@ const cities: Record<string, CityData> = {
     description: 'Offenbach am Main und Umgebung',
     stadtteile: ['Bieber', 'Bürgel', 'Rumpenheim', 'Lauterborn', 'Tempelsee'],
     geo: { lat: 50.0956, lng: 8.7761 },
+    beratung: 'beim Pflegestützpunkt Offenbach',
   },
   wiesbaden: {
     name: 'Wiesbaden',
@@ -46,6 +52,7 @@ const cities: Record<string, CityData> = {
     description: 'Wiesbaden und dem Rheingau',
     stadtteile: ['Biebrich', 'Dotzheim', 'Schierstein', 'Sonnenberg', 'Bierstadt'],
     geo: { lat: 50.0782, lng: 8.2398 },
+    beratung: 'beim Pflegestützpunkt Wiesbaden',
   },
   darmstadt: {
     name: 'Darmstadt',
@@ -55,6 +62,7 @@ const cities: Record<string, CityData> = {
     description: 'Darmstadt und Südhessen',
     stadtteile: ['Arheilgen', 'Eberstadt', 'Bessungen', 'Kranichstein', 'Wixhausen'],
     geo: { lat: 49.8728, lng: 8.6512 },
+    beratung: 'beim Pflegestützpunkt Darmstadt',
   },
   hanau: {
     name: 'Hanau',
@@ -64,6 +72,7 @@ const cities: Record<string, CityData> = {
     description: 'Hanau und dem Main-Kinzig-Kreis',
     stadtteile: ['Steinheim', 'Großauheim', 'Kesselstadt', 'Klein-Auheim', 'Mittelbuchen'],
     geo: { lat: 50.1264, lng: 8.928 },
+    beratung: 'beim Pflegestützpunkt des Main-Kinzig-Kreises',
   },
   'bad-homburg': {
     name: 'Bad Homburg',
@@ -73,6 +82,7 @@ const cities: Record<string, CityData> = {
     description: 'Bad Homburg und dem Hochtaunuskreis',
     stadtteile: ['Gonzenheim', 'Kirdorf', 'Ober-Erlenbach', 'Ober-Eschbach', 'Dornholzhausen'],
     geo: { lat: 50.2268, lng: 8.6182 },
+    beratung: 'beim Pflegestützpunkt Hochtaunuskreis in Bad Homburg',
   },
   mainz: {
     name: 'Mainz',
@@ -82,6 +92,7 @@ const cities: Record<string, CityData> = {
     description: 'Mainz und Rheinhessen',
     stadtteile: ['Gonsenheim', 'Bretzenheim', 'Mombach', 'Hechtsheim', 'Weisenau'],
     geo: { lat: 49.9929, lng: 8.2473 },
+    beratung: 'bei den Pflegestützpunkten in Mainz',
   },
   aschaffenburg: {
     name: 'Aschaffenburg',
@@ -91,6 +102,7 @@ const cities: Record<string, CityData> = {
     description: 'Aschaffenburg und dem Bayerischen Untermain',
     stadtteile: ['Damm', 'Leider', 'Nilkheim', 'Schweinheim', 'Obernau'],
     geo: { lat: 49.9769, lng: 9.1582 },
+    beratung: 'beim Pflegestützpunkt für Stadt und Landkreis Aschaffenburg',
   },
   'neu-isenburg': {
     name: 'Neu-Isenburg',
@@ -100,6 +112,7 @@ const cities: Record<string, CityData> = {
     description: 'Neu-Isenburg und Dreieich',
     stadtteile: ['Stadtmitte', 'Gravenbruch', 'Zeppelinheim'],
     geo: { lat: 50.0483, lng: 8.6942 },
+    beratung: 'beim Pflegestützpunkt Kreis Offenbach',
   },
   'friedberg-wetterau': {
     name: 'Friedberg (Wetterau)',
@@ -109,6 +122,7 @@ const cities: Record<string, CityData> = {
     description: 'Friedberg und der Wetterau',
     stadtteile: ['Bauernheim', 'Bruchenbrücken', 'Dorheim', 'Ockstadt', 'Ossenheim'],
     geo: { lat: 50.3353, lng: 8.7548 },
+    beratung: 'beim Pflegestützpunkt Wetteraukreis in Friedberg',
   },
   'frankfurt-hoechst': {
     name: 'Frankfurt-Höchst',
@@ -118,6 +132,7 @@ const cities: Record<string, CityData> = {
     description: 'Frankfurt-Höchst und dem Frankfurter Westen',
     stadtteile: ['Nied', 'Sindlingen', 'Unterliederbach', 'Zeilsheim', 'Sossenheim'],
     geo: { lat: 50.0996, lng: 8.543 },
+    beratung: 'beim Pflegestützpunkt Frankfurt am Main',
   },
   rodgau: {
     name: 'Rodgau',
@@ -127,6 +142,107 @@ const cities: Record<string, CityData> = {
     description: 'Rodgau und dem Kreis Offenbach',
     stadtteile: ['Jügesheim', 'Nieder-Roden', 'Dudenhofen', 'Hainhausen', 'Weiskirchen'],
     geo: { lat: 50.0247, lng: 8.8853 },
+    beratung: 'beim Pflegestützpunkt Kreis Offenbach',
+  },
+  giessen: {
+    name: 'Gießen',
+    region: 'Hessen',
+    slug: 'giessen',
+    plz: '35390',
+    description: 'Gießen und Mittelhessen',
+    stadtteile: ['Wieseck', 'Klein-Linden', 'Rödgen', 'Lützellinden', 'Allendorf'],
+    geo: { lat: 50.5841, lng: 8.6784 },
+    beratung: 'beim Pflegestützpunkt Gießen für Stadt und Landkreis',
+  },
+  marburg: {
+    name: 'Marburg',
+    region: 'Hessen',
+    slug: 'marburg',
+    plz: '35037',
+    description: 'Marburg und dem Landkreis Marburg-Biedenkopf',
+    stadtteile: ['Wehrda', 'Cappel', 'Marbach', 'Ockershausen', 'Richtsberg'],
+    geo: { lat: 50.809, lng: 8.771 },
+    beratung: 'beim Pflegestützpunkt Marburg-Biedenkopf',
+  },
+  kassel: {
+    name: 'Kassel',
+    region: 'Hessen',
+    slug: 'kassel',
+    plz: '34117',
+    description: 'Kassel und Nordhessen',
+    stadtteile: ['Wehlheiden', 'Kirchditmold', 'Bad Wilhelmshöhe', 'Bettenhausen', 'Harleshausen', 'Niederzwehren'],
+    geo: { lat: 51.3127, lng: 9.4797 },
+    beratung: 'beim Pflegestützpunkt Region Kassel',
+  },
+  fulda: {
+    name: 'Fulda',
+    region: 'Hessen',
+    slug: 'fulda',
+    plz: '36037',
+    description: 'Fulda und Osthessen',
+    stadtteile: ['Horas', 'Neuenberg', 'Aschenberg', 'Kohlhaus', 'Lehnerz'],
+    geo: { lat: 50.5558, lng: 9.6808 },
+    beratung: 'beim Pflegestützpunkt Fulda',
+  },
+  limburg: {
+    name: 'Limburg an der Lahn',
+    region: 'Hessen',
+    slug: 'limburg',
+    plz: '65549',
+    description: 'Limburg an der Lahn und dem Landkreis Limburg-Weilburg',
+    stadtteile: ['Blumenrod', 'Staffel', 'Lindenholzhausen', 'Eschhofen', 'Offheim'],
+    geo: { lat: 50.3836, lng: 8.0503 },
+    beratung: 'beim Pflegestützpunkt Limburg-Weilburg',
+  },
+  koeln: {
+    name: 'Köln',
+    region: 'Nordrhein-Westfalen',
+    slug: 'koeln',
+    plz: '50667',
+    description: 'Köln und dem gesamten Stadtgebiet',
+    stadtteile: ['Ehrenfeld', 'Nippes', 'Lindenthal', 'Mülheim', 'Rodenkirchen', 'Porz'],
+    geo: { lat: 50.9375, lng: 6.9603 },
+    beratung: 'bei der Pflegeberatung der Stadt Köln',
+  },
+  duesseldorf: {
+    name: 'Düsseldorf',
+    region: 'Nordrhein-Westfalen',
+    slug: 'duesseldorf',
+    plz: '40213',
+    description: 'Düsseldorf und dem gesamten Stadtgebiet',
+    stadtteile: ['Bilk', 'Derendorf', 'Benrath', 'Gerresheim', 'Oberkassel', 'Eller'],
+    geo: { lat: 51.2277, lng: 6.7735 },
+    beratung: 'bei den Pflegebüros der Landeshauptstadt Düsseldorf',
+  },
+  essen: {
+    name: 'Essen',
+    region: 'Nordrhein-Westfalen',
+    slug: 'essen',
+    plz: '45127',
+    description: 'Essen und dem mittleren Ruhrgebiet',
+    stadtteile: ['Rüttenscheid', 'Borbeck', 'Steele', 'Altenessen', 'Werden', 'Kettwig'],
+    geo: { lat: 51.4556, lng: 7.0116 },
+    beratung: 'bei der Pflegeberatung der Stadt Essen',
+  },
+  dortmund: {
+    name: 'Dortmund',
+    region: 'Nordrhein-Westfalen',
+    slug: 'dortmund',
+    plz: '44135',
+    description: 'Dortmund und dem östlichen Ruhrgebiet',
+    stadtteile: ['Hörde', 'Hombruch', 'Aplerbeck', 'Brackel', 'Eving', 'Mengede'],
+    geo: { lat: 51.5136, lng: 7.4653 },
+    beratung: 'bei der Pflege- und Wohnberatung Dortmund',
+  },
+  bonn: {
+    name: 'Bonn',
+    region: 'Nordrhein-Westfalen',
+    slug: 'bonn',
+    plz: '53111',
+    description: 'Bonn und dem Rhein-Sieg-Kreis',
+    stadtteile: ['Bad Godesberg', 'Beuel', 'Poppelsdorf', 'Duisdorf', 'Endenich'],
+    geo: { lat: 50.7374, lng: 7.0982 },
+    beratung: 'bei der Pflegeberatung der Bundesstadt Bonn',
   },
 }
 
@@ -210,6 +326,10 @@ function buildFaqItems(city: CityData) {
     {
       frage: 'Muss ich den Antrag selbst stellen?',
       antwort: 'Nein! Alltagsengel übernimmt die komplette Antragstellung bei Ihrer Pflegekasse. Sie müssen nur einmalig eine Vollmacht unterschreiben.',
+    },
+    {
+      frage: `Wo finde ich unabhängige Pflegeberatung in ${city.name}?`,
+      antwort: `Trägerneutrale und kostenlose Beratung zu Pflegehilfsmitteln, Pflegegrad und allen weiteren Leistungen erhalten Sie ${city.beratung} sowie bei Ihrer Pflegekasse. Auch wir beraten Sie kostenlos und übernehmen den kompletten Antrag nach §40 SGB XI.`,
     },
     {
       frage: 'Kann ich die Pflegebox mit Entlastungsbetrag und Verhinderungspflege kombinieren?',
@@ -343,6 +463,8 @@ export default async function PflegeboxStadtPage({ params }: { params: Promise<{
   return (
     <div className="screen info-screen">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <SpeakableSchema url={city.slug === 'frankfurt' ? '/hygienebox' : `/hygienebox/${city.slug}`} />
+      <BreadcrumbSchema items={[{ name: 'Pflegebox', url: '/hygienebox' }, { name: city.name }]} />
       <div className="legal-header">
         <Link href="/hygienebox" className="legal-back">&#8249;</Link>
         <h1 className="legal-title">Pflegebox {city.name}</h1>
@@ -353,6 +475,27 @@ export default async function PflegeboxStadtPage({ params }: { params: Promise<{
           <h2 className="info-hero-title">Kostenlose Pflegebox für {city.name}</h2>
           <p className="info-hero-sub">
             Pflegehilfsmittel monatlich nach {city.description} geliefert — 42 €/Monat von der Pflegekasse, 0 € Eigenanteil
+          </p>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'center', marginTop: 14 }}>
+            {['✓ 0 € Eigenanteil', '✓ Kostenlos ab Pflegegrad 1', '✓ Antrag übernehmen wir', '✓ Jederzeit kündbar'].map((chip) => (
+              <span
+                key={chip}
+                style={{
+                  fontSize: 12, fontWeight: 600, color: '#E8C87E',
+                  background: 'rgba(201,150,60,.1)', border: '1px solid rgba(201,150,60,.25)',
+                  borderRadius: 999, padding: '6px 12px',
+                }}
+              >
+                {chip}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        <div className="info-cta" style={{ marginTop: 4 }}>
+          <a href="#bestellen" className="btn-gold" style={{ width: '100%' }}>JETZT PFLEGEBOX BESTELLEN</a>
+          <p style={{ textAlign: 'center', fontSize: 12, color: 'rgba(255,255,255,.35)', marginTop: 8 }}>
+            In 2 Minuten angefragt — ohne Registrierung, ohne Vertragsbindung
           </p>
         </div>
 
@@ -411,11 +554,11 @@ export default async function PflegeboxStadtPage({ params }: { params: Promise<{
           <div className="info-steps">
             <div className="info-step">
               <div className="info-step-num">1</div>
-              <div className="info-step-text">Registrieren Sie sich kostenlos bei Alltagsengel</div>
+              <div className="info-step-text">Anfrage senden — unten im Formular oder im Pflegebox-Konfigurator, ohne Registrierung</div>
             </div>
             <div className="info-step">
               <div className="info-step-num">2</div>
-              <div className="info-step-text">Wählen Sie Ihre gewünschte Box-Zusammenstellung</div>
+              <div className="info-step-text">Wir rufen zurück und bestätigen Ihre Box-Zusammenstellung</div>
             </div>
             <div className="info-step">
               <div className="info-step-num">3</div>
@@ -469,6 +612,33 @@ export default async function PflegeboxStadtPage({ params }: { params: Promise<{
         </section>
 
         <section className="info-card">
+          <h3>Pflegeberatung vor Ort in {city.name}</h3>
+          <p>
+            Sie sind unsicher, welche Pflegehilfsmittel Ihnen zustehen oder ob ein Pflegegrad
+            vorliegt? Trägerneutrale und kostenlose Beratung erhalten Sie {city.beratung} sowie
+            direkt bei Ihrer Pflegekasse. Dort bekommen Sie auch Hilfe beim Erstantrag auf einen
+            Pflegegrad — die Voraussetzung für die kostenlose Pflegebox.
+          </p>
+          <p style={{ marginTop: 8 }}>
+            Ergänzend beraten wir Sie jederzeit unverbindlich: Wir prüfen, welche Box-Variante zu
+            Ihrer Pflegesituation in {city.name} passt, und zeigen Ihnen, welche weiteren Budgets
+            Sie kombinieren können — vom Entlastungsbetrag (131 €/Monat) bis zur
+            Verhinderungspflege (bis 3.539 €/Jahr).
+          </p>
+        </section>
+
+        <section className="info-card">
+          <h3>Tipps: So holen Familien in {city.name} das Maximum aus der Pflegebox</h3>
+          <ul className="info-list">
+            <li>Verbrauch realistisch planen: Bei täglicher Körperpflege sind mehr Handschuhe sinnvoll, bei Inkontinenz mehr Bettschutzeinlagen</li>
+            <li>Box-Inhalt saisonal anpassen — in Infektionswellen mehr Desinfektionsmittel und Masken</li>
+            <li>Anspruch nicht verschenken: Die 42 €-Pauschale gilt pro Monat und lässt sich nicht ansparen</li>
+            <li>Bei Krankenhausaufenthalt Lieferung einfach pausieren — ein Anruf genügt</li>
+            <li>Auch Angehörige können bestellen: Die Box läuft auf die pflegebedürftige Person, geliefert wird an jede Wunschadresse in {city.name}</li>
+          </ul>
+        </section>
+
+        <section className="info-card">
           <h3>Ihre Vorteile bei Alltagsengel</h3>
           <ul className="info-list">
             <li>0 € Eigenanteil — wir rechnen die volle Pauschale direkt mit der Pflegekasse ab</li>
@@ -489,11 +659,12 @@ export default async function PflegeboxStadtPage({ params }: { params: Promise<{
           ))}
         </section>
 
-        <section className="info-card">
+        <section className="info-card" id="bestellen">
           <h3>Jetzt Pflegebox bestellen</h3>
           <p style={{ marginBottom: 16 }}>
             Lassen Sie sich kostenlos beraten — wir helfen Ihnen, die Pflegebox für {city.name}
-            schnell und unkompliziert zu erhalten.
+            schnell und unkompliziert zu erhalten. Sie möchten die Box selbst zusammenstellen?
+            Dann direkt zum <Link href="/pflegebox">Pflegebox-Konfigurator</Link>.
           </p>
           <LeadForm defaultService="Pflegebox" source={`pflegebox-${city.slug}`} />
         </section>

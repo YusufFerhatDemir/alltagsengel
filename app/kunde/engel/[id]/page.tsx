@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import Image from 'next/image'
 import { createClient } from '@/lib/supabase/server'
 import { safeSingleQuery, logError } from '@/lib/safe-query'
 import { NotFoundState, ErrorState } from '@/components/UIStates'
@@ -50,7 +51,9 @@ export default async function EngelProfilPage({ params }: { params: Promise<{ id
           <EngelProfilActions angelId={id} angelName={`${angel?.profiles?.first_name || ''} ${angel?.profiles?.last_name?.[0] || ''}.`} />
         </div>
         <div className="ep-main">
-          <div className="ep-avatar icon3d" style={{ '--sz': '80px' } as any}><img src="/assets/icon.jpg" alt="Engel-Profilbild" /></div>
+          {/* next/image statt <img>: liefert das 68-KB-JPG als ~80px-AVIF/WebP
+              aus (gleiches Pattern wie Icon3D — Gold-Optik kommt aus .icon3d-CSS) */}
+          <div className="ep-avatar icon3d" style={{ '--sz': '80px' } as any}><Image src="/assets/icon.jpg" alt="Engel-Profilbild" fill sizes="80px" /></div>
           <div>
             <div className="ep-name">{name}</div>
             <div className="ep-role">{angel.qualification || 'Alltagsbegleiter/in'}</div>

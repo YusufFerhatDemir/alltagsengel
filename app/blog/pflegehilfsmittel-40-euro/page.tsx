@@ -155,7 +155,7 @@ export default function PflegehilfsmittelPage() {
               Registrieren Sie sich jetzt und erhalten Sie jeden Monat bis zu 42€ an Pflegehilfsmitteln —
               kostenlos direkt nach Hause geliefert.
             </p>
-            <Link href="/hygienebox" className="cta-button">
+            <Link href="/pflegebox" className="cta-button">
               Hygienebox bestellen →
             </Link>
           </div>

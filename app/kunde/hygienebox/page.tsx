@@ -155,7 +155,7 @@ export default function HygieneboBoxPage() {
               </div>
               <div style={{ fontSize: 13, color: 'var(--ink3)', lineHeight: 1.6 }}>
                 <div style={{ marginBottom: 6 }}>
-                  Ab Pflegegrad 1 erhalten Sie monatlich bis zu 40 € für Pflegehilfsmittel.
+                  Ab Pflegegrad 1 erhalten Sie monatlich bis zu 42 € für Pflegehilfsmittel.
                 </div>
                 <div style={{ color: 'var(--green)', fontWeight: 600 }}>
                   Die Kosten übernimmt Ihre Pflegekasse — 0 € Eigenanteil

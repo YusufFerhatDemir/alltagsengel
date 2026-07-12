@@ -8,6 +8,7 @@
 #   4. git add -A → git commit (skip wenn nichts staged)
 #   5. git push  origin <current-branch>  ODER  <claude-branch>:main
 #   6. verify-push.sh (vergleicht HEAD mit Remote-Wahrheit)
+#   7. IndexNow-Ping im Hintergrund (~5 Min nach main-Push; SKIP_INDEXNOW=1 deaktiviert)
 #
 # Nutzung:
 #   ./deploy.sh                              # nimmt vorhandene Staged/Unstaged + Default-Msg
@@ -38,7 +39,7 @@ cd "$(dirname "$0")"
 COMMIT_MSG="${1:-chore: deploy via deploy.sh}"
 
 # ──────────────────────────────────────────────────────────────────────
-step "1/6  Stale-Lock-Cleanup"
+step "1/7  Stale-Lock-Cleanup"
 # Excel/LibreOffice .~lock.*.xlsx# Dateien
 locks=$(find . -maxdepth 3 -name '.~lock.*.xlsx#' 2>/dev/null || true)
 if [ -n "$locks" ]; then
@@ -63,7 +64,7 @@ shopt -u nullglob
 ok "Cleanup ok"
 
 # ──────────────────────────────────────────────────────────────────────
-step "2/6  Typecheck (warn-only)"
+step "2/7  Typecheck (warn-only)"
 if [ "${SKIP_TYPECHECK:-0}" = "1" ]; then
   warn "SKIP_TYPECHECK=1 — übersprungen"
 elif [ -f tsconfig.json ] && [ -d node_modules/typescript ]; then
@@ -77,13 +78,13 @@ else
 fi
 
 # ──────────────────────────────────────────────────────────────────────
-step "3/6  Precommit-Guard"
+step "3/7  Precommit-Guard"
 # erst alles stagen, damit der Guard auch noch ungetrackte Files sieht
 git add -A
 bash scripts/precommit-guard.sh || die "Guard hat Commit blockiert. Fix oder GUARD_BYPASS=1 als Override."
 
 # ──────────────────────────────────────────────────────────────────────
-step "4/6  Commit"
+step "4/7  Commit"
 if git diff --cached --quiet; then
   warn "Nichts zu committen (working tree clean)"
   SKIP_COMMIT=1
@@ -100,7 +101,7 @@ EOF
 fi
 
 # ──────────────────────────────────────────────────────────────────────
-step "5/6  Push"
+step "5/7  Push"
 branch="$(git rev-parse --abbrev-ref HEAD)"
 [ -z "$branch" ] || [ "$branch" = "HEAD" ] && die "Detached HEAD — kein Push möglich."
 
@@ -141,8 +142,23 @@ git push "${push_args[@]}" 2>&1 | tail -5 || die "git push fehlgeschlagen"
 ok "Push abgeschickt"
 
 # ──────────────────────────────────────────────────────────────────────
-step "6/6  Verify-Push"
+step "6/7  Verify-Push"
 DEPLOY_REMOTE_REF="$remote_ref" bash scripts/verify-push.sh || die "Push nicht angekommen — siehe oben."
+
+# ──────────────────────────────────────────────────────────────────────
+step "7/7  IndexNow-Ping (Hintergrund)"
+# Nach jedem main-Deploy die Sitemap-URLs bei IndexNow einreichen (Bing & Co).
+# 5 Min Verzögerung = Puffer für den Vercel-Build, damit die NEUE Sitemap
+# gepingt wird. Läuft detached weiter, blockiert den Deploy nicht; Fehler
+# sind unkritisch (täglicher Cron /api/cron/indexnow pingt ohnehin).
+if [ "$remote_branch_short" = "main" ] && [ "${SKIP_INDEXNOW:-0}" != "1" ]; then
+  nohup bash -c 'sleep 300 && npm run --silent indexnow:ping' \
+    >> .indexnow-ping.log 2>&1 &
+  disown || true
+  ok "Ping geplant (in ~5 Min, Log: .indexnow-ping.log)"
+else
+  warn "Kein main-Deploy oder SKIP_INDEXNOW=1 — übersprungen"
+fi
 
 echo ""
 echo "${GREEN}${BOLD}✓ deploy.sh erfolgreich.${RESET}"

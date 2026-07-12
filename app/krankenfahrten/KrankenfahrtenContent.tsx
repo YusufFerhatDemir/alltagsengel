@@ -131,25 +131,77 @@ export default function KrankenfahrtenContent({ faqs = [] }: { faqs?: FaqItem[] 
         </section>
 
         <section className="info-card">
-          <h3>Krankenfahrt, Krankentransport oder Rettungswagen?</h3>
+          <h3>Krankenfahrt, Krankentransport oder Rettungsfahrt? Der Vergleich</h3>
           <p>
             Die drei Begriffe werden oft verwechselt — für die Abrechnung ist der Unterschied aber
             entscheidend. Die <strong>Krankenfahrt</strong> ist die einfachste Stufe: Sie sind
             gehfähig oder sitzend transportierbar und brauchen unterwegs keine medizinische
             Betreuung. Gefahren wird im Pkw oder Taxi — genau das vermittelt Alltagsengel.
           </p>
+          <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch', margin: '14px 0', border: '1px solid var(--border)', borderRadius: 10 }}>
+            <table style={{ width: '100%', minWidth: 560, borderCollapse: 'collapse', fontSize: 13 }}>
+              <thead>
+                <tr>
+                  <th style={{ textAlign: 'left', padding: '10px 12px', color: 'var(--gray)', fontWeight: 600, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap' }}></th>
+                  <th style={{ textAlign: 'left', padding: '10px 12px', color: 'var(--gold)', fontWeight: 700, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap' }}>Krankenfahrt</th>
+                  <th style={{ textAlign: 'left', padding: '10px 12px', color: 'var(--ink)', fontWeight: 700, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap' }}>Krankentransport (KTW)</th>
+                  <th style={{ textAlign: 'left', padding: '10px 12px', color: 'var(--ink)', fontWeight: 700, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap' }}>Rettungsfahrt (RTW)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[
+                  ['Fahrzeug', 'Pkw, Taxi, Mietwagen', 'Krankentransportwagen', 'Rettungswagen'],
+                  ['Betreuung unterwegs', 'Keine nötig', 'Medizinisch-fachliche Betreuung', 'Notfallmedizinische Versorgung'],
+                  ['Beförderung', 'Sitzend, Rollstuhl, Tragestuhl', 'Liegend oder betreuungspflichtig', 'Notfallpatient, liegend'],
+                  ['Anordnung', 'Verordnung Muster 4 („Taxi/Mietwagen")', 'Verordnung Muster 4 („KTW")', 'Notruf 112 — nie per Verordnung'],
+                  ['Typische Anlässe', 'Dialyse, Chemo, Arzttermin, Entlassung', 'Nach OP, schwere Erkrankung', 'Unfall, Herzinfarkt, Schlaganfall'],
+                  ['Kostenübernahme', '§60 SGB V, Zuzahlung 5–10 €', '§60 SGB V, Zuzahlung 5–10 €', 'Krankenkasse, Zuzahlung 5–10 €'],
+                  ['Buchbar über Alltagsengel', 'Ja — unser Kernservice', 'Nein (Transportdienste)', 'Nein (Notruf 112)'],
+                ].map(([label, kf, ktw, rtw]) => (
+                  <tr key={label}>
+                    <td style={{ padding: '10px 12px', borderBottom: '1px solid var(--border)', color: 'var(--gray)', fontWeight: 600, whiteSpace: 'nowrap' }}>{label}</td>
+                    <td style={{ padding: '10px 12px', borderBottom: '1px solid var(--border)', color: 'var(--gold)', fontWeight: 600 }}>{kf}</td>
+                    <td style={{ padding: '10px 12px', borderBottom: '1px solid var(--border)', color: 'var(--ink)' }}>{ktw}</td>
+                    <td style={{ padding: '10px 12px', borderBottom: '1px solid var(--border)', color: 'var(--ink)' }}>{rtw}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
           <p style={{ marginTop: 12 }}>
             Der <strong>qualifizierte Krankentransport</strong> (KTW) kommt zum Einsatz, wenn
             während der Fahrt eine fachliche Betreuung oder eine liegende Beförderung medizinisch
             notwendig ist — etwa nach Operationen oder bei schweren Erkrankungen. Ihn führen
             Transportdienste mit speziell ausgestatteten Fahrzeugen durch; der Arzt kreuzt das auf
-            der Verordnung entsprechend an. Der <strong>Rettungswagen</strong> schließlich ist
-            ausschließlich für Notfälle da und wird über die 112 alarmiert — nie über eine
-            Verordnung.
+            der Verordnung entsprechend an. Die <strong>Rettungsfahrt</strong> im Rettungswagen
+            schließlich ist ausschließlich für Notfälle da und wird über die 112 alarmiert — nie
+            über eine Verordnung. Bei der Kostenübernahme gilt für alle drei §60 SGB V; der
+            Unterschied liegt im verordneten Beförderungsmittel.
           </p>
           <p style={{ marginTop: 12 }}>
             Faustregel: Wer im normalen Auto sitzen kann, braucht eine Krankenfahrt — die
             günstigste und flexibelste Variante, mit Verordnung von der Kasse bezahlt.
+          </p>
+        </section>
+
+        <section className="info-card">
+          <h3>Arztfahrt für Senioren: mehr als nur ein Taxi</h3>
+          <p>
+            Für ältere Menschen ist der Weg zum Arzt oft die größte Hürde der Behandlung: Treppen,
+            Rollator, ungeduldige Taxifahrer, das Warten am Straßenrand. Unsere Fahrer sind auf
+            <strong> Arztfahrten für Senioren</strong> eingestellt — sie klingeln an der
+            Wohnungstür, helfen beim Anziehen der Jacke, verstauen den Rollator, begleiten bis zur
+            Praxisanmeldung und bringen Sie nach der Behandlung zurück bis in die Wohnung. Kein
+            gehetzter Taxameter-Blick, keine fremden Abkürzungen: Zeit und Ruhe gehören zur Fahrt
+            dazu.
+          </p>
+          <p style={{ marginTop: 12 }}>
+            Wenn Ihre Angehörigen im Wartezimmer nicht allein sein sollen oder beim Arztgespräch
+            eine zweite Person gebraucht wird, kombinieren Sie die Arztfahrt mit einer
+            <Link href="/alltagsbegleitung"> Alltagsbegleitung (Arztbegleitung)</Link>: Der Engel
+            bleibt die ganze Zeit dabei, notiert die Anweisungen des Arztes und löst danach das
+            Rezept in der Apotheke ein — finanzierbar über den
+            <Link href="/entlastungsbetrag"> Entlastungsbetrag (131 €/Monat)</Link>.
           </p>
         </section>
 
@@ -338,7 +390,7 @@ export default function KrankenfahrtenContent({ faqs = [] }: { faqs?: FaqItem[] 
         </section>
 
         <section className="info-card">
-          <h3>So funktioniert&apos;s</h3>
+          <h3>Krankenfahrt bestellen: So funktioniert&apos;s</h3>
           <div className="info-steps">
             <div className="info-step">
               <div className="info-step-num">1</div>
@@ -397,8 +449,9 @@ export default function KrankenfahrtenContent({ faqs = [] }: { faqs?: FaqItem[] 
             <li><Link href="/entlastungsbetrag">Entlastungsbetrag — 131 €/Monat ab Pflegegrad 1 (§45b)</Link></li>
             <li><Link href="/verhinderungspflege">Verhinderungspflege — Ersatzpflege bis 3.539 €/Jahr (§39)</Link></li>
             <li><Link href="/finanzierung">Finanzierung — bis zu 5.111 €/Jahr, nach Pflegegrad erklärt</Link></li>
-            <li><Link href="/entlastungsbetrag">Entlastungsbetrag — 131 €/Monat für Begleitung nutzen</Link></li>
             <li><Link href="/blog/krankenfahrt-kostenuebernahme">Ratgeber: Krankenfahrt Kostenübernahme</Link></li>
+            <li><Link href="/blog/krankenfahrt-beantragen">Ratgeber: Krankenfahrt beantragen — Schritt für Schritt</Link></li>
+            <li><Link href="/blog/zuzahlung-krankenfahrt">Ratgeber: Zuzahlung Krankenfahrt — was muss ich zahlen?</Link></li>
             <li><Link href="/blog/krankenfahrt-verordnung-erhalten">Ratgeber: Verordnung (Muster 4) erhalten</Link></li>
             <li><Link href="/blog/krankenfahrt-buchen-frankfurt">Ratgeber: Krankenfahrt in Frankfurt buchen</Link></li>
             <li><Link href="/faq">Häufige Fragen zu Pflegeleistungen</Link></li>

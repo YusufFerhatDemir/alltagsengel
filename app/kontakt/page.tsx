@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import Image from 'next/image'
 import KontaktForm from './KontaktForm'
 import BreadcrumbSchema from '@/components/BreadcrumbSchema'
 import ContactClickTracker from '@/components/ContactClickTracker'
@@ -57,7 +58,7 @@ export default function KontaktPage() {
       {/* Navigation */}
       <nav style={{ maxWidth: 700, margin: '0 auto', padding: '16px 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
-          <img src="/icon-192x192.png" alt="Alltagsengel" width={36} height={36} style={{ borderRadius: 8 }} />
+          <Image src="/icon-192x192.png" alt="Alltagsengel" width={36} height={36} style={{ borderRadius: 8 }} />
           <span style={{ color: '#C9963C', fontWeight: 700, fontSize: 16 }}>Alltagsengel</span>
         </Link>
         <Link href="/auth/register" style={{

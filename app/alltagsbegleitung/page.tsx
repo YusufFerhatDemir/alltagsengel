@@ -238,13 +238,16 @@ export default function AlltagsbegleitungPage() {
               Haushalt oder Terminen Unterstützung brauchen, um selbstständig zu bleiben.</li>
             <li><strong>Menschen mit Demenz,</strong> die von vertrauten Bezugspersonen,
               Tagesstruktur und geduldiger Aktivierung profitieren — und deren Angehörige von
-              verlässlicher Entlastung.</li>
+              verlässlicher Entlastung. Ausführlich im Ratgeber
+              <Link href="/blog/alltagsbegleitung-demenz"> Alltagsbegleitung bei Demenz</Link>.</li>
             <li><strong>Menschen nach Operation oder Krankenhausaufenthalt,</strong> die
               vorübergehend Hilfe brauchen, bis der Alltag wieder allein funktioniert.</li>
             <li><strong>Pflegende Angehörige,</strong> die regelmäßige Freiräume brauchen —
               die Begleitung übernimmt stundenweise, was sonst an ihnen hängen bleibt.</li>
-            <li><strong>Menschen mit Behinderung oder chronischer Erkrankung,</strong> die im
-              Alltag punktuell praktische Unterstützung und Gesellschaft wünschen.</li>
+            <li><strong>Menschen mit Behinderung, chronischer oder psychischer Erkrankung,</strong> die
+              im Alltag punktuell praktische Unterstützung und Gesellschaft wünschen — mehr dazu im
+              Ratgeber <Link href="/blog/alltagsbegleitung-psychische-erkrankungen">Alltagsbegleitung
+              bei psychischen Erkrankungen</Link>.</li>
           </ul>
           <p style={{ marginTop: 12 }}>
             Auch gegen <strong>Einsamkeit</strong> ist Alltagsbegleitung eines der wirksamsten
@@ -394,6 +397,26 @@ export default function AlltagsbegleitungPage() {
               <p>{faq.antwort}</p>
             </details>
           ))}
+        </section>
+
+        <section className="info-card">
+          <h3>Ratgeber: Alltagsbegleitung im Detail</h3>
+          <p style={{ marginBottom: 12 }}>
+            Alles Wissenswerte rund um Alltagsbegleitung — von der Definition über Kosten bis zu
+            Spezialthemen wie Demenz — haben wir in ausführlichen Ratgebern zusammengestellt:
+          </p>
+          <ul className="info-list">
+            <li><Link href="/blog/was-ist-alltagsbegleitung">Was ist Alltagsbegleitung? Der komplette Guide 2026</Link></li>
+            <li><Link href="/blog/alltagsbegleitung-vs-pflegedienst">Alltagsbegleitung vs. Pflegedienst — die Unterschiede</Link></li>
+            <li><Link href="/blog/alltagsbegleitung-kosten">Was kostet Alltagsbegleitung? Kosten &amp; Finanzierung</Link></li>
+            <li><Link href="/blog/wer-zahlt-alltagsbegleitung">Wer zahlt die Alltagsbegleitung?</Link></li>
+            <li><Link href="/blog/alltagsbegleitung-demenz">Alltagsbegleitung für Demenz-Patienten</Link></li>
+            <li><Link href="/blog/alltagsbegleitung-psychische-erkrankungen">Alltagsbegleitung bei psychischen Erkrankungen</Link></li>
+            <li><Link href="/blog/alltagsbegleiter-werden">Alltagsbegleiter werden — Ausbildung, Gehalt &amp; Voraussetzungen</Link></li>
+            <li><Link href="/blog/einsamkeit-im-alter">Einsamkeit im Alter: So helfen Alltagsbegleiter</Link></li>
+            <li><Link href="/blog/arztbegleitung-senioren">Arztbegleitung für Senioren</Link></li>
+            <li><Link href="/blog/einkaufshilfe-senioren">Einkaufshilfe für Senioren</Link></li>
+          </ul>
         </section>
 
         <section className="info-card">

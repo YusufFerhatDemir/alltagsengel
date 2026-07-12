@@ -403,3 +403,45 @@
   font-weight: 300;
 }
 
+
+/* Vergleichstabellen in Blog-Artikeln (z. B. Krankenfahrt vs. Krankentransport) */
+.blog-table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin: 24px 0;
+  border: 1px solid rgba(201, 150, 60, 0.25);
+  border-radius: 12px;
+}
+.blog-content table,
+.blog-comparison-table {
+  width: 100%;
+  min-width: 520px;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+.blog-content table th,
+.blog-comparison-table th {
+  background: rgba(201, 150, 60, 0.12);
+  color: #e0b860;
+  text-align: left;
+  padding: 12px 14px;
+  font-weight: 600;
+  border-bottom: 1px solid rgba(201, 150, 60, 0.25);
+  white-space: nowrap;
+}
+.blog-content table td,
+.blog-comparison-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  color: #d8d0c4;
+  line-height: 1.5;
+  vertical-align: top;
+}
+.blog-content table tr:last-child td,
+.blog-comparison-table tr:last-child td {
+  border-bottom: none;
+}
+.blog-content table td:first-child {
+  color: #f5f0e8;
+  font-weight: 600;
+}

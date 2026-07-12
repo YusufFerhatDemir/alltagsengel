@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
+import Image from 'next/image'
 
 // ═══════════════════════════════════════════════════════════
 // PWA INSTALL PROMPT + APP STORE SMART BANNER
@@ -129,7 +130,7 @@ export default function InstallPrompt() {
           gap: 14,
         }}>
           {/* App Icon */}
-          <img
+          <Image
             src="/icon-192x192.png"
             alt="Alltagsengel"
             width={52}
