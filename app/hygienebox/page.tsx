@@ -116,6 +116,18 @@ const faqItems = [
     frage: 'Mindert die Pflegebox mein Pflegegeld oder den Entlastungsbetrag?',
     antwort: 'Nein. Die 42 € für Pflegehilfsmittel sind ein eigener Anspruch nach §40 SGB XI und werden auf keine andere Leistung angerechnet — weder auf das Pflegegeld noch auf den Entlastungsbetrag von 131 €/Monat.',
   },
+  {
+    frage: 'Kann ich die Zusammenstellung der Pflegebox ändern?',
+    antwort: 'Ja, jederzeit. Sie können Produkte tauschen, Mengen anpassen oder Größen ändern — zum Beispiel mehr Bettschutzeinlagen und weniger Handschuhe. Die Anpassung gilt ab der nächsten Monatslieferung.',
+  },
+  {
+    frage: 'Brauche ich ein Rezept vom Arzt für die Pflegebox?',
+    antwort: 'Nein. Anders als bei Medikamenten oder technischen Hilfsmitteln genügt für Pflegehilfsmittel zum Verbrauch der anerkannte Pflegegrad. Der Antrag geht direkt an die Pflegekasse — ohne Arztbesuch.',
+  },
+  {
+    frage: 'Was passiert bei einem Krankenkassen- oder Pflegekassenwechsel?',
+    antwort: 'Die Genehmigung muss bei der neuen Pflegekasse neu beantragt werden. Alltagsengel übernimmt das für Sie — die Lieferung läuft in der Regel ohne Unterbrechung weiter.',
+  },
 ]
 
 const faqJsonLd = {
@@ -231,6 +243,30 @@ export default function HygieneboxPage() {
         </section>
 
         <section className="info-card">
+          <h3>Wofür Sie die einzelnen Produkte brauchen</h3>
+          <p>
+            <strong>Einmalhandschuhe</strong> sind das meistgebrauchte Hilfsmittel in der häuslichen
+            Pflege: bei der Körperpflege, beim Wechseln von Inkontinenzmaterial, beim Umgang mit
+            Wunden oder Salben. Sie schützen beide Seiten — die pflegende und die gepflegte Person —
+            vor Keimübertragung. Je nach Pflegeintensität werden schnell 100 bis 200 Handschuhe im
+            Monat verbraucht.
+          </p>
+          <p style={{ marginTop: 12 }}>
+            <strong>Händedesinfektionsmittel</strong> gehört vor und nach jeder pflegerischen
+            Tätigkeit auf die Hände; <strong>Flächendesinfektionsmittel</strong> hält Pflegebett,
+            Nachttisch, Toilettensitz und Türgriffe keimarm — gerade bei immungeschwächten Menschen
+            ein wirksamer Schutz vor Infekten, die schnell zu Krankenhausaufenthalten führen können.
+          </p>
+          <p style={{ marginTop: 12 }}>
+            <strong>Bettschutzeinlagen</strong> halten Matratze und Bettwäsche bei Inkontinenz
+            trocken und ersparen tägliches Großwaschen. <strong>Mundschutz und FFP2-Masken</strong>
+            schützen in Erkältungs- und Grippezeiten, <strong>Schutzschürzen</strong> die Kleidung
+            der Pflegeperson bei der Körperpflege. Alle Produkte sind als Verbrauchsmaterial
+            konzipiert — die Box stellt sicher, dass nie etwas ausgeht.
+          </p>
+        </section>
+
+        <section className="info-card">
           <h3>Unsere Pakete</h3>
           <div className="info-price-box">
             <div className="info-price-box-title">Basis-Box</div>
@@ -245,6 +281,72 @@ export default function HygieneboxPage() {
           <p className="info-price-note">
             Bei Pflegegrad 1–5 werden bis zu 42 € monatlich von der Pflegekasse übernommen.
             Ihre Zuzahlung: 0 €.
+          </p>
+        </section>
+
+        <section className="info-card">
+          <h3>Warum Hygiene in der häuslichen Pflege entscheidend ist</h3>
+          <p>
+            Rund vier von fünf Pflegebedürftigen in Deutschland werden zu Hause versorgt — meist
+            von Angehörigen ohne pflegerische Ausbildung. Anders als im Krankenhaus gibt es dort
+            keine Hygienestandards, die automatisch eingehalten werden. Dabei ist das
+            Infektionsrisiko hoch: Ältere und pflegebedürftige Menschen haben oft ein geschwächtes
+            Immunsystem, Harnwegsinfekte, Atemwegsinfekte oder infizierte Hautstellen können bei
+            ihnen schnell schwerwiegend verlaufen.
+          </p>
+          <p style={{ marginTop: 12 }}>
+            Konsequente Händehygiene, Einmalhandschuhe und desinfizierte Kontaktflächen senken
+            dieses Risiko messbar — und schützen zugleich die pflegenden Angehörigen selbst.
+            Genau deshalb hat der Gesetzgeber den Anspruch auf Pflegehilfsmittel zum Verbrauch
+            geschaffen: Hygiene in der häuslichen Pflege soll nicht am Geld scheitern. Die
+            monatliche Box stellt sicher, dass das Material immer griffbereit ist, bevor es
+            ausgeht.
+          </p>
+        </section>
+
+        <section className="info-card">
+          <h3>Antrag und Genehmigung im Detail</h3>
+          <p>
+            Pflegehilfsmittel zum Verbrauch müssen einmalig bei der Pflegekasse beantragt werden.
+            Der Antrag besteht aus einem kurzen Formular mit Ihren Versichertendaten, dem
+            Pflegegrad und der gewünschten Produktzusammenstellung. Ein ärztliches Rezept ist
+            <strong> nicht</strong> erforderlich — der Pflegegrad genügt als Nachweis.
+          </p>
+          <p style={{ marginTop: 12 }}>
+            Bei Alltagsengel unterschreiben Sie dafür nur eine einmalige Vollmacht: Wir füllen den
+            Antrag aus, reichen ihn bei Ihrer Pflegekasse ein und übernehmen die gesamte
+            Kommunikation. Die Genehmigung dauert in der Regel wenige Tage bis zwei Wochen und
+            gilt dauerhaft — solange der Pflegegrad besteht, läuft die monatliche Lieferung
+            automatisch weiter. Auch bei einem Kassenwechsel kümmern wir uns um die Umstellung.
+          </p>
+          <p style={{ marginTop: 12 }}>
+            Gut zu wissen: Die Zusammenstellung Ihrer Box können Sie jederzeit anpassen — mehr
+            Bettschutzeinlagen, weniger Handschuhe, andere Größen. So schöpfen Sie die
+            42-€-Pauschale jeden Monat optimal aus, ohne Produkte zu horten, die Sie nicht
+            brauchen.
+          </p>
+        </section>
+
+        <section className="info-card">
+          <h3>Pflegebox mit anderen Leistungen kombinieren</h3>
+          <p>
+            Die 42 € für Pflegehilfsmittel sind ein eigenständiger Anspruch — er wird auf keine
+            andere Leistung angerechnet. Ein typischer Pflegehaushalt kombiniert deshalb:
+          </p>
+          <ul className="info-list" style={{ marginTop: 12 }}>
+            <li><Link href="/entlastungsbetrag">Entlastungsbetrag (§45b)</Link> — 131 €/Monat für
+              Alltagsbegleitung und Haushaltshilfe, schon ab Pflegegrad 1</li>
+            <li><Link href="/verhinderungspflege">Verhinderungspflege (§39)</Link> — bis zu
+              3.539 €/Jahr für Ersatzpflege, ab Pflegegrad 2</li>
+            <li><Link href="/krankenfahrten">Krankenfahrten (§60 SGB V)</Link> — mit ärztlicher
+              Verordnung zahlt die Krankenkasse</li>
+            <li>Pflegegeld bzw. Pflegesachleistungen — je nach Pflegegrad und Versorgungsform</li>
+          </ul>
+          <p style={{ marginTop: 12 }}>
+            Zusammen mit Pflegebox und Entlastungsbetrag stehen so selbst bei Pflegegrad 1 schon
+            <strong> 173 € pro Monat</strong> an konkreten Leistungen bereit. Welche Budgets Ihnen
+            insgesamt zustehen, zeigt die <Link href="/finanzierung">Finanzierungs-Übersicht</Link>{' '}
+            oder unser <Link href="/budgetrechner">Budgetrechner</Link>.
           </p>
         </section>
 

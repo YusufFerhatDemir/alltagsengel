@@ -131,6 +131,78 @@ export default function KrankenfahrtenContent({ faqs = [] }: { faqs?: FaqItem[] 
         </section>
 
         <section className="info-card">
+          <h3>Krankenfahrt, Krankentransport oder Rettungswagen?</h3>
+          <p>
+            Die drei Begriffe werden oft verwechselt — für die Abrechnung ist der Unterschied aber
+            entscheidend. Die <strong>Krankenfahrt</strong> ist die einfachste Stufe: Sie sind
+            gehfähig oder sitzend transportierbar und brauchen unterwegs keine medizinische
+            Betreuung. Gefahren wird im Pkw oder Taxi — genau das vermittelt Alltagsengel.
+          </p>
+          <p style={{ marginTop: 12 }}>
+            Der <strong>qualifizierte Krankentransport</strong> (KTW) kommt zum Einsatz, wenn
+            während der Fahrt eine fachliche Betreuung oder eine liegende Beförderung medizinisch
+            notwendig ist — etwa nach Operationen oder bei schweren Erkrankungen. Ihn führen
+            Transportdienste mit speziell ausgestatteten Fahrzeugen durch; der Arzt kreuzt das auf
+            der Verordnung entsprechend an. Der <strong>Rettungswagen</strong> schließlich ist
+            ausschließlich für Notfälle da und wird über die 112 alarmiert — nie über eine
+            Verordnung.
+          </p>
+          <p style={{ marginTop: 12 }}>
+            Faustregel: Wer im normalen Auto sitzen kann, braucht eine Krankenfahrt — die
+            günstigste und flexibelste Variante, mit Verordnung von der Kasse bezahlt.
+          </p>
+        </section>
+
+        <section className="info-card">
+          <h3>So läuft Ihre Fahrt mit Alltagsengel ab</h3>
+          <p>
+            Nach der Buchung erhalten Sie eine Bestätigung mit allen Details. Am Fahrttag gilt:
+          </p>
+          <ul className="info-list" style={{ marginTop: 12 }}>
+            <li><strong>Pünktliche Abholung an der Haustür:</strong> Der Fahrer klingelt, hilft
+              beim Anziehen der Jacke, trägt die Tasche und begleitet Sie zum Fahrzeug — kein
+              Warten am Straßenrand.</li>
+            <li><strong>Sichere Fahrt:</strong> Hilfe beim Ein- und Aussteigen, Anschnallen und
+              Verstauen von Gehhilfen oder Rollator sind selbstverständlich.</li>
+            <li><strong>Begleitung bis zur Anmeldung:</strong> Auf Wunsch begleitet Sie der Fahrer
+              bis in die Praxis oder Klinik und meldet Sie an.</li>
+            <li><strong>Rückfahrt nach Vereinbarung:</strong> Entweder wartet der Fahrer, oder Sie
+              melden sich nach der Behandlung — die Rückfahrt ist Teil der Buchung.</li>
+          </ul>
+          <p style={{ marginTop: 12 }}>
+            Wer mehr Unterstützung braucht — etwa jemanden, der während der Behandlung dabei
+            bleibt, mit dem Arzt spricht und danach noch den Einkauf erledigt — kombiniert die
+            Krankenfahrt mit einer <Link href="/alltagsbegleitung">Alltagsbegleitung</Link>. Die
+            Begleitung läuft über den <Link href="/entlastungsbetrag">Entlastungsbetrag</Link>,
+            die Fahrt über die Verordnung: zwei Töpfe, ein Termin.
+          </p>
+        </section>
+
+        <section className="info-card">
+          <h3>Häufige Fehler bei der Verordnung — und wie Sie sie vermeiden</h3>
+          <ul className="info-list">
+            <li><strong>Verordnung erst nach der Fahrt geholt:</strong> Die Verordnung muss
+              grundsätzlich <em>vor</em> der Fahrt ausgestellt werden. Fragen Sie beim
+              Terminvereinbaren in der Praxis direkt danach.</li>
+            <li><strong>Genehmigung vergessen:</strong> Serienfahrten (z. B. Dialyse) und
+              Härtefälle müssen vor Fahrtantritt von der Kasse genehmigt werden — bei Pflegegrad
+              4/5, Pflegegrad 3 mit Mobilitätsbeeinträchtigung und Merkzeichen aG/Bl/H entfällt
+              dieser Schritt.</li>
+            <li><strong>Falsches Transportmittel angekreuzt:</strong> Für die sitzende Beförderung
+              genügt „Taxi/Mietwagen" — ein unnötig verordneter KTW kann zu Rückfragen der Kasse
+              führen.</li>
+            <li><strong>Quittungen weggeworfen:</strong> Wenn Sie in Vorleistung gehen, brauchen
+              Sie Verordnung und Fahrtbelege für die Erstattung. In der Alltagsengel-App sind alle
+              Fahrten automatisch dokumentiert.</li>
+          </ul>
+          <p style={{ marginTop: 12 }}>
+            Privat Versicherte und Beihilfeberechtigte reichen die Rechnung je nach Tarif bei
+            ihrer Versicherung ein — die Erstattungsregeln entsprechen meist denen der
+            gesetzlichen Kassen. Im Zweifel klären wir das vorab in einer kostenlosen Beratung.
+          </p>
+        </section>
+
+        <section className="info-card">
           <h3>Unsere Leistungen</h3>
           <ul className="info-list">
             <li>Fahrten zu Ärzten, Kliniken und Therapien</li>
