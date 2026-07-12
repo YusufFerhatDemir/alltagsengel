@@ -415,6 +415,31 @@ export default function VerhinderungspflegePage() {
         </section>
 
         <section className="info-card">
+          <h3>Checkliste: Verhinderungspflege gut vorbereiten</h3>
+          <ul className="info-list">
+            <li><strong>Budget prüfen:</strong> Fragen Sie bei der Pflegekasse nach, wie viel vom
+              gemeinsamen Jahresbetrag noch verfügbar ist — besonders, wenn im Jahr schon
+              Kurzzeitpflege genutzt wurde.</li>
+            <li><strong>Frühzeitig planen:</strong> Für geplante Auszeiten (Urlaub, Kur) die
+              Ersatzpflege 4–6 Wochen vorher organisieren und die Kasse formlos informieren.</li>
+            <li><strong>Übergabe vorbereiten:</strong> Ein kurzer Zettel mit Tagesablauf,
+              Medikamentenzeiten (Erinnerung, keine Gabe), Vorlieben und Notfallnummern hilft der
+              Ersatzkraft enorm — und beruhigt alle Beteiligten.</li>
+            <li><strong>Kennenlerntermin einplanen:</strong> Ein erster gemeinsamer Termin, bei dem
+              die Pflegeperson noch dabei ist, schafft Vertrauen — gerade bei Demenz wichtig.</li>
+            <li><strong>Belege sammeln:</strong> Einsatznachweise und Rechnungen aufbewahren; bei
+              Alltagsengel sind alle Einsätze automatisch in der App dokumentiert.</li>
+          </ul>
+          <p style={{ marginTop: 12 }}>
+            Übrigens: Ansprüche verjähren erst nach vier Jahren. Wer in den vergangenen Jahren
+            Ersatzpflege aus eigener Tasche bezahlt hat und die Belege noch besitzt, kann die
+            Erstattung auch <strong>rückwirkend</strong> bei der Pflegekasse beantragen. Wie das
+            geht, zeigt der Ratgeber
+            <Link href="/blog/verhinderungspflege-beantragen"> Verhinderungspflege beantragen</Link>.
+          </p>
+        </section>
+
+        <section className="info-card">
           <h3>Kostenlose Beratung anfragen</h3>
           <p style={{ marginBottom: 16 }}>
             Sie planen Urlaub oder brauchen kurzfristig eine Vertretung? Hinterlassen Sie Ihre

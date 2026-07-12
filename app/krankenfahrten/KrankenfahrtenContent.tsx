@@ -179,6 +179,44 @@ export default function KrankenfahrtenContent({ faqs = [] }: { faqs?: FaqItem[] 
         </section>
 
         <section className="info-card">
+          <h3>Die Verordnung (Muster 4) verstehen</h3>
+          <p>
+            Die „Verordnung einer Krankenbeförderung" — das rosafarbene <strong>Muster 4</strong> —
+            ist das zentrale Dokument für die Kostenübernahme. Ihr Arzt trägt darauf drei Dinge
+            ein: den <strong>Grund der Beförderung</strong> (z. B. hochfrequente Behandlung wie
+            Dialyse, dauerhafte Mobilitätsbeeinträchtigung, stationäre Behandlung), das
+            <strong> Beförderungsmittel</strong> (für Krankenfahrten: „Taxi/Mietwagen") und den
+            <strong> Behandlungsort</strong> mit Hin- und/oder Rückfahrt.
+          </p>
+          <p style={{ marginTop: 12 }}>
+            Prüfen Sie vor der Fahrt kurz, ob alle Felder ausgefüllt und unterschrieben sind —
+            unvollständige Verordnungen sind der häufigste Grund für Rückfragen der Kasse. Bei
+            Serienbehandlungen kann der Arzt gleich die gesamte Behandlungsserie verordnen, dann
+            genügt ein einziges Formular für alle Fahrten. In der Alltagsengel-App laden Sie die
+            Verordnung einmal als Foto hoch; sie wird automatisch jeder Fahrt der Serie
+            zugeordnet.
+          </p>
+        </section>
+
+        <section className="info-card">
+          <h3>Beispielrechnung: Das kostet eine Krankenfahrt</h3>
+          <p>
+            <strong>Mit Verordnung:</strong> Frau B. fährt von Offenbach zur Dialyse nach
+            Frankfurt, dreimal pro Woche. Die Krankenkasse übernimmt die Fahrtkosten vollständig;
+            Frau B. zahlt pro Fahrt nur die gesetzliche Zuzahlung zwischen 5 und 10 €. Da sie
+            chronisch krank ist, erreicht sie früh im Jahr die Belastungsgrenze von 1 % ihres
+            Bruttoeinkommens — ab dann fährt sie komplett zuzahlungsfrei.
+          </p>
+          <p style={{ marginTop: 12 }}>
+            <strong>Als Selbstzahler:</strong> Herr T. möchte ohne Verordnung zum Zahnarzt in
+            der Nachbarstadt. Er zahlt den Grundpreis plus Kilometerpauschale seiner Region —
+            transparent vor der Buchung angezeigt, ohne Nacht- oder Wartezuschläge tagsüber.
+            Für die Begleitung in die Praxis nutzt er zusätzlich seinen
+            <Link href="/entlastungsbetrag"> Entlastungsbetrag</Link>.
+          </p>
+        </section>
+
+        <section className="info-card">
           <h3>Häufige Fehler bei der Verordnung — und wie Sie sie vermeiden</h3>
           <ul className="info-list">
             <li><strong>Verordnung erst nach der Fahrt geholt:</strong> Die Verordnung muss

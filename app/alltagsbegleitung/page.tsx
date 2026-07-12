@@ -335,6 +335,26 @@ export default function AlltagsbegleitungPage() {
         </section>
 
         <section className="info-card">
+          <h3>Tipps für den Start: Das erste Kennenlernen</h3>
+          <p>
+            Der Einstieg in die Alltagsbegleitung fällt vielen Familien leichter, wenn der erste
+            Termin bewusst als <strong>Kennenlernen</strong> geplant wird: zwei Stunden, bei denen
+            ein Angehöriger dabei ist, gemeinsam Kaffee getrunken und besprochen wird, welche
+            Unterstützung wirklich gebraucht wird. So entsteht Vertrauen, bevor der Engel zum
+            ersten Mal allein kommt.
+          </p>
+          <p style={{ marginTop: 12 }}>
+            Bewährt hat sich außerdem ein <strong>fester Wochenrhythmus</strong> — derselbe Tag,
+            dieselbe Uhrzeit, derselbe Engel. Gerade für Menschen mit beginnender Demenz ist diese
+            Verlässlichkeit wertvoller als jede einzelne Leistung. Und sollte die Chemie einmal
+            nicht stimmen: Sie können den Engel jederzeit wechseln, ohne Begründung. Mit dem
+            <Link href="/entlastungsbetrag"> Entlastungsbetrag von 131 €/Monat</Link> sind je nach
+            Stundensatz etwa vier Begleitstunden monatlich dauerhaft finanziert — genug für einen
+            festen wöchentlichen Besuch.
+          </p>
+        </section>
+
+        <section className="info-card">
           <h3>Für Alltagsbegleiter (Engel)</h3>
           <p>
             Sie möchten als Alltagsbegleiter tätig werden? Bei Alltagsengel arbeiten Sie selbstständig,

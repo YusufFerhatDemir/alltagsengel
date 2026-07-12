@@ -285,6 +285,49 @@ export default function HygieneboxPage() {
         </section>
 
         <section className="info-card">
+          <h3>Rechtsgrundlage: §40 SGB XI verständlich erklärt</h3>
+          <p>
+            Der Anspruch auf Pflegehilfsmittel steht in §40 Absatz 2 SGB XI: Pflegebedürftige
+            haben Anspruch auf „zum Verbrauch bestimmte Pflegehilfsmittel", wenn diese die Pflege
+            erleichtern, Beschwerden lindern oder eine selbstständigere Lebensführung ermöglichen.
+            Die Pflegekasse übernimmt die Kosten bis zur monatlichen Höchstgrenze — seit dem
+            01.01.2025 sind das 42 €.
+          </p>
+          <p style={{ marginTop: 12 }}>
+            Welche Produkte konkret erstattungsfähig sind, regelt das Pflegehilfsmittelverzeichnis
+            der Pflegekassen (Produktgruppe 54): saugende Bettschutzeinlagen zum Einmalgebrauch,
+            Fingerlinge, Einmalhandschuhe, Mundschutz, Schutzschürzen sowie Hände- und
+            Flächendesinfektionsmittel. Alltagsengel stellt die Boxen ausschließlich aus gelisteten
+            Produkten zusammen — so ist die Erstattung gesichert und es entsteht nie ein
+            Eigenanteil.
+          </p>
+          <p style={{ marginTop: 12 }}>
+            Wichtig für die Praxis: Der Anspruch ist eine <strong>Monatspauschale</strong>. Nicht
+            genutzte Beträge lassen sich — anders als beim
+            <Link href="/entlastungsbetrag"> Entlastungsbetrag</Link> — nicht ins Folgejahr
+            übertragen. Umso wichtiger ist eine laufende monatliche Lieferung, die das Budget
+            automatisch ausschöpft.
+          </p>
+        </section>
+
+        <section className="info-card">
+          <h3>Tipps für Angehörige: Größen, Mengen, Lagerung</h3>
+          <ul className="info-list">
+            <li><strong>Handschuhgröße richtig wählen:</strong> Zu große Handschuhe rutschen, zu
+              kleine reißen. Messen Sie die Handbreite der pflegenden Person — meist passt S/M
+              für Frauen, M/L für Männer. Bei Latexallergie: Nitril wählen.</li>
+            <li><strong>Bettschutz nach Bedarf dosieren:</strong> Bei leichter Inkontinenz genügen
+              wenige Einlagen pro Woche, bei stärkerer lohnt der tägliche Wechsel — passen Sie
+              die Boxmenge entsprechend an.</li>
+            <li><strong>Desinfektionsmittel griffbereit platzieren:</strong> Ein Spender am
+              Pflegebett und einer im Bad senken die Hürde, ihn wirklich zu benutzen.</li>
+            <li><strong>Kühl und trocken lagern:</strong> Desinfektionsmittel und Handschuhe
+              halten sich am besten außerhalb des Badezimmers — Hitze und Feuchtigkeit lassen
+              Material altern.</li>
+          </ul>
+        </section>
+
+        <section className="info-card">
           <h3>Warum Hygiene in der häuslichen Pflege entscheidend ist</h3>
           <p>
             Rund vier von fünf Pflegebedürftigen in Deutschland werden zu Hause versorgt — meist
