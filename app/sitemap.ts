@@ -82,6 +82,20 @@ const STATIC_ROUTES: Omit<RouteEntry, 'lastModified'>[] = [
   { url: '/hygienebox/neu-isenburg', changeFrequency: 'weekly', priority: 0.85 },
   { url: '/hygienebox/friedberg-wetterau', changeFrequency: 'weekly', priority: 0.85 },
   { url: '/hygienebox/rodgau', changeFrequency: 'weekly', priority: 0.85 },
+  // Recruiting-Stadtseiten "Alltagsbegleiter Job [Stadt]"
+  // HINWEIS: /engel-werden/frankfurt fehlt BEWUSST — kanonisiert auf
+  // /engel-werden (die Hauptseite zielt bereits auf "… Frankfurt"-Keywords).
+  { url: '/engel-werden/offenbach', changeFrequency: 'weekly', priority: 0.8 },
+  { url: '/engel-werden/wiesbaden', changeFrequency: 'weekly', priority: 0.8 },
+  { url: '/engel-werden/darmstadt', changeFrequency: 'weekly', priority: 0.8 },
+  { url: '/engel-werden/hanau', changeFrequency: 'weekly', priority: 0.8 },
+  { url: '/engel-werden/bad-homburg', changeFrequency: 'weekly', priority: 0.8 },
+  { url: '/engel-werden/mainz', changeFrequency: 'weekly', priority: 0.8 },
+  { url: '/engel-werden/aschaffenburg', changeFrequency: 'weekly', priority: 0.8 },
+  { url: '/engel-werden/frankfurt-hoechst', changeFrequency: 'weekly', priority: 0.8 },
+  { url: '/engel-werden/neu-isenburg', changeFrequency: 'weekly', priority: 0.8 },
+  { url: '/engel-werden/friedberg-wetterau', changeFrequency: 'weekly', priority: 0.8 },
+  { url: '/engel-werden/rodgau', changeFrequency: 'weekly', priority: 0.8 },
   // /lp/* sind noindex-Redirects (Werbe-Tracking) — gehören NICHT in die Sitemap.
   // /karriere ist 301 → /engel-werden (Recruiting-Konsolidierung, next.config.ts).
   { url: '/jobs', changeFrequency: 'weekly', priority: 0.9 },
@@ -95,7 +109,7 @@ const STATIC_ROUTES: Omit<RouteEntry, 'lastModified'>[] = [
 
 // Dynamische Stadt-Segmente teilen sich eine Template-Datei — deren mtime
 // gilt für alle Städte darunter (inhaltlich korrekt, da gleiche Vorlage).
-const DYNAMIC_SECTIONS = ['alltagsbegleitung', 'krankenfahrten', 'hygienebox']
+const DYNAMIC_SECTIONS = ['alltagsbegleitung', 'krankenfahrten', 'hygienebox', 'engel-werden']
 
 function resolvePagePath(url: string): string {
   if (url === '/') return join('app', 'page.tsx')

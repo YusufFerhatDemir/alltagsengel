@@ -13,6 +13,9 @@ export const metadata: Metadata = {
     'Jobs bei Alltagsengel: flexible Arbeitszeiten, kein Wochenenddienst, Dienstwagen möglich, 20/30/40 Std. wählbar. Bewirb dich in 2 Minuten per WhatsApp!',
   keywords: [
     'jobs alltagsbegleitung frankfurt',
+    'betreuungskraft stellenangebot',
+    'minijob alltagsbegleitung',
+    'alltagsbegleiter job frankfurt',
     'stellenangebot seniorenbetreuung',
     'hauswirtschaftskraft job rhein-main',
     'betreuungskraft gesucht frankfurt',
@@ -318,6 +321,26 @@ export default function JobsPage() {
             Kein Anschreiben, kein Lebenslauf, keine Verpflichtung.
           </p>
           <EngelBewerbungForm />
+        </section>
+
+        {/* ─── Städte (Recruiting-Landingpages) ─── */}
+        <section className="lp-section" style={{ textAlign: 'center' }}>
+          <div className="lp-badge">Dein Einsatzgebiet</div>
+          <h2 className="lp-h2">Jobs im gesamten Rhein-Main-Gebiet</h2>
+          <p className="lp-text" style={{ marginBottom: 16 }}>
+            Einsätze gibt es nicht nur in Frankfurt — alle Infos zum Alltagsbegleiter-Job in deiner Stadt:{' '}
+            <Link href="/engel-werden/offenbach">Offenbach</Link>,{' '}
+            <Link href="/engel-werden/wiesbaden">Wiesbaden</Link>,{' '}
+            <Link href="/engel-werden/darmstadt">Darmstadt</Link>,{' '}
+            <Link href="/engel-werden/hanau">Hanau</Link>,{' '}
+            <Link href="/engel-werden/bad-homburg">Bad Homburg</Link>,{' '}
+            <Link href="/engel-werden/mainz">Mainz</Link>,{' '}
+            <Link href="/engel-werden/aschaffenburg">Aschaffenburg</Link>,{' '}
+            <Link href="/engel-werden/frankfurt-hoechst">Frankfurt-Höchst</Link>,{' '}
+            <Link href="/engel-werden/neu-isenburg">Neu-Isenburg</Link>,{' '}
+            <Link href="/engel-werden/friedberg-wetterau">Friedberg</Link> und{' '}
+            <Link href="/engel-werden/rodgau">Rodgau</Link>.
+          </p>
         </section>
 
         {/* ─── CTA ─── */}
