@@ -128,6 +128,14 @@ const faqItems = [
     frage: 'Was passiert bei einem Krankenkassen- oder Pflegekassenwechsel?',
     antwort: 'Die Genehmigung muss bei der neuen Pflegekasse neu beantragt werden. Alltagsengel übernimmt das für Sie — die Lieferung läuft in der Regel ohne Unterbrechung weiter.',
   },
+  {
+    frage: 'Gilt der Anspruch auch bei privater Pflegeversicherung?',
+    antwort: 'Ja. Privat Pflegeversicherte haben denselben Anspruch auf Pflegehilfsmittel zum Verbrauch. Die Abwicklung läuft je nach Versicherer über Kostenerstattung — wir stellen die nötigen Unterlagen bereit.',
+  },
+  {
+    frage: 'Kann ich nicht genutzte Monatsbeträge ansparen?',
+    antwort: 'Nein. Die 42 € sind eine Monatspauschale und verfallen am Monatsende — anders als der Entlastungsbetrag, der bis zum 30. Juni des Folgejahres angespart werden kann. Eine laufende monatliche Lieferung schöpft das Budget deshalb am besten aus.',
+  },
 ]
 
 const faqJsonLd = {

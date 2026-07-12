@@ -415,6 +415,24 @@ export default function VerhinderungspflegePage() {
         </section>
 
         <section className="info-card">
+          <h3>Sonderfälle und Kombinationen</h3>
+          <ul className="info-list">
+            <li><strong>Tagespflege parallel:</strong> Besucht die pflegebedürftige Person
+              tagsüber eine Tagespflege-Einrichtung, bleibt der Anspruch auf Verhinderungspflege
+              unberührt — beide Leistungen haben eigene Budgets.</li>
+            <li><strong>Mehrere Pflegepersonen:</strong> Teilen sich z. B. zwei Geschwister die
+              Pflege, greift die Verhinderungspflege, sobald eine der Pflegepersonen ausfällt —
+              es muss nicht die „Hauptpflegeperson" sein.</li>
+            <li><strong>Verhinderungspflege im Ausland:</strong> Innerhalb der EU kann die
+              Ersatzpflege sogar während eines gemeinsamen Urlaubs erbracht werden — etwa wenn
+              die Betreuungskraft mitreist.</li>
+            <li><strong>Kein Pflegegeld-Antrag nötig:</strong> Verhinderungspflege setzt nicht
+              voraus, dass Pflegegeld bezogen wird — entscheidend sind Pflegegrad 2–5 und die
+              häusliche Pflege durch eine Privatperson.</li>
+          </ul>
+        </section>
+
+        <section className="info-card">
           <h3>Checkliste: Verhinderungspflege gut vorbereiten</h3>
           <ul className="info-list">
             <li><strong>Budget prüfen:</strong> Fragen Sie bei der Pflegekasse nach, wie viel vom
