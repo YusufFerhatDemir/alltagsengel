@@ -303,6 +303,70 @@ export default function VerhinderungspflegePage() {
         </section>
 
         <section className="info-card">
+          <h3>Verhinderungspflege oder Kurzzeitpflege — was passt wann?</h3>
+          <p>
+            Beide Leistungen teilen sich seit dem 01.07.2025 den gemeinsamen Jahresbetrag von
+            3.539 € — sie lösen aber unterschiedliche Situationen:
+          </p>
+          <ul className="info-list" style={{ marginTop: 12 }}>
+            <li><strong>Verhinderungspflege (§39):</strong> Die Ersatzpflege kommt <em>nach
+              Hause</em> — die pflegebedürftige Person bleibt in ihrer gewohnten Umgebung.
+              Ideal bei Urlaub, Krankheit oder regelmäßigen Auszeiten der Pflegeperson.</li>
+            <li><strong>Kurzzeitpflege (§42):</strong> Die pflegebedürftige Person zieht
+              <em> vorübergehend in eine stationäre Einrichtung</em> — typisch nach einem
+              Krankenhausaufenthalt, wenn die Versorgung zu Hause noch nicht wieder steht,
+              oder wenn rund um die Uhr Betreuung nötig ist.</li>
+          </ul>
+          <p style={{ marginTop: 12 }}>
+            Die Flexibilisierung bedeutet: Sie müssen sich nicht mehr im Voraus festlegen, wie
+            viel Budget in welchen Topf fließt. Eine Familie kann im Frühjahr zwei Wochen
+            Kurzzeitpflege nutzen und im Sommer den Rest für stundenweise Verhinderungspflege
+            einsetzen — solange die Summe 3.539 € nicht übersteigt.
+          </p>
+        </section>
+
+        <section className="info-card">
+          <h3>Beispielrechnung: So weit reicht das Budget</h3>
+          <p>
+            <strong>Szenario 1 — regelmäßige Auszeit:</strong> Eine Betreuungskraft kommt jeden
+            Freitag für 4 Stunden (stundenweise Verhinderungspflege). Bei rund 35 € pro Stunde
+            sind das etwa 140 € pro Woche bzw. 560–600 € im Monat. Das Jahresbudget von 3.539 €
+            trägt damit rund ein halbes Jahr wöchentlicher Entlastung — und weil zusätzlich der
+            <Link href="/entlastungsbetrag"> Entlastungsbetrag (131 €/Monat)</Link> für
+            Alltagsbegleitung genutzt werden kann, lässt sich die Betreuung ganzjährig
+            durchfinanzieren.
+          </p>
+          <p style={{ marginTop: 12 }}>
+            <strong>Szenario 2 — zwei Wochen Urlaub:</strong> Während der Reise der Pflegeperson
+            kommt die Ersatzkraft täglich 5 Stunden. 14 Tage × 5 Stunden × 35 € ergeben 2.450 € —
+            das Budget deckt den kompletten Urlaub, und es bleiben noch über 1.000 € für den Rest
+            des Jahres. Das Pflegegeld läuft während der stundenweisen Einsätze in voller Höhe
+            weiter.
+          </p>
+          <p style={{ marginTop: 12 }}>
+            Wie viel Budget in Ihrer Konstellation verfügbar ist, rechnet der
+            <Link href="/budgetrechner"> Budgetrechner</Link> in zwei Minuten aus.
+          </p>
+        </section>
+
+        <section className="info-card">
+          <h3>Warum Pausen für pflegende Angehörige so wichtig sind</h3>
+          <p>
+            Wer einen Menschen pflegt, arbeitet oft sieben Tage die Woche — ohne Urlaub, ohne
+            Feierabend, häufig neben Beruf und Familie. Studien zeigen, dass pflegende Angehörige
+            überdurchschnittlich oft an Erschöpfung, Rückenleiden und depressiven Verstimmungen
+            erkranken. Wer sich keine Auszeiten nimmt, riskiert den eigenen Zusammenbruch — und
+            damit auch die Versorgung des pflegebedürftigen Menschen.
+          </p>
+          <p style={{ marginTop: 8 }}>
+            Genau dafür hat der Gesetzgeber die Verhinderungspflege geschaffen: Sie ist kein
+            Luxus, sondern eine Vorsorgeleistung. Regelmäßige stundenweise Entlastung — ein freier
+            Nachmittag pro Woche, ein Wochenende im Monat — wirkt nachweislich besser als eine
+            einzige lange Pause im Jahr. Nutzen Sie das Budget, es ist für Sie da.
+          </p>
+        </section>
+
+        <section className="info-card">
           <h3>Typische Situationen aus der Praxis</h3>
           <p>
             <strong>Der Jahresurlaub:</strong> Eine Tochter pflegt ihre Mutter in Hanau und möchte

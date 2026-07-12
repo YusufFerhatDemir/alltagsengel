@@ -305,6 +305,50 @@ export default function EntlastungsbetragPage() {
         </section>
 
         <section className="info-card">
+          <h3>Die 5 häufigsten Fehler beim Entlastungsbetrag</h3>
+          <ul className="info-list">
+            <li><strong>Den Anspruch gar nicht kennen:</strong> Ein Großteil der Berechtigten ruft
+              die 131 € nie ab — nach Schätzungen bleiben jedes Jahr Milliardenbeträge ungenutzt
+              bei den Pflegekassen liegen. Der Anspruch besteht automatisch mit dem Pflegegrad.</li>
+            <li><strong>Die Juni-Frist verpassen:</strong> Restguthaben aus dem Vorjahr verfällt
+              am 30. Juni. Wer im Frühjahr angespartes Budget hat, sollte es gezielt bis dahin
+              einsetzen — zum Beispiel für zusätzliche Betreuungsstunden.</li>
+            <li><strong>Nicht anerkannte Helfer bezahlen:</strong> Rechnungen von Privatpersonen
+              ohne Anerkennung nach Landesrecht erstattet die Kasse nicht — auch nicht rückwirkend.
+              Achten Sie darauf, dass der Anbieter als Angebot zur Unterstützung im Alltag
+              anerkannt ist.</li>
+            <li><strong>Belege verlieren:</strong> Beim Kostenerstattungsweg gilt: keine Rechnung,
+              keine Erstattung. Die Direktabrechnung per Abtretungserklärung umgeht das Problem
+              komplett.</li>
+            <li><strong>Mit der Verhinderungspflege verwechseln:</strong> Der Entlastungsbetrag
+              darf nicht für Verhinderungspflege eingesetzt werden — das ist ein
+              <Link href="/verhinderungspflege"> eigener Topf mit 3.539 €/Jahr</Link>. Wer beide
+              kennt, schöpft bis zu 5.111 €/Jahr aus.</li>
+          </ul>
+        </section>
+
+        <section className="info-card">
+          <h3>Entlastungsbetrag nach Pflegegrad</h3>
+          <p>
+            Die Höhe des Entlastungsbetrags ist bei allen Pflegegraden gleich — 131 € pro Monat.
+            Was sich unterscheidet, ist die Rolle, die er im Gesamtbudget spielt:
+          </p>
+          <ul className="info-list" style={{ marginTop: 12 }}>
+            <li><strong>Pflegegrad 1:</strong> Der Entlastungsbetrag ist hier die zentrale
+              Geldleistung — Pflegegeld und Pflegesachleistungen gibt es noch nicht. Zusammen mit
+              der <Link href="/hygienebox">Pflegebox (42 €/Monat)</Link> stehen 173 €/Monat bereit.</li>
+            <li><strong>Pflegegrad 2 und 3:</strong> Der Entlastungsbetrag ergänzt Pflegegeld oder
+              Pflegesachleistungen und finanziert typischerweise die wöchentliche
+              Alltagsbegleitung oder Haushaltshilfe. Zusätzlich greift jetzt die
+              Verhinderungspflege.</li>
+            <li><strong>Pflegegrad 4 und 5:</strong> Bei hohem Pflegebedarf entlastet der Betrag
+              vor allem die pflegenden Angehörigen — etwa durch Betreuungsstunden, die Freiräume
+              schaffen. Auch der Umwandlungsanspruch aus den (hohen) Sachleistungen bringt hier
+              am meisten zusätzliches Budget.</li>
+          </ul>
+        </section>
+
+        <section className="info-card">
           <h3>Typische Beispiele aus der Praxis</h3>
           <p>
             <strong>Frau K., Pflegegrad 1, Frankfurt-Bornheim:</strong> Nutzt die 131 € für eine

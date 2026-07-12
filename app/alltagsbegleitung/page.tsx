@@ -220,6 +220,50 @@ export default function AlltagsbegleitungPage() {
         </section>
 
         <section className="info-card">
+          <h3>Für wen eignet sich Alltagsbegleitung?</h3>
+          <p>
+            Alltagsbegleitung ist keine Leistung nur für hochbetagte Menschen — sie hilft in ganz
+            unterschiedlichen Lebenslagen:
+          </p>
+          <ul className="info-list" style={{ marginTop: 12 }}>
+            <li><strong>Seniorinnen und Senioren,</strong> die allein leben und bei Einkauf,
+              Haushalt oder Terminen Unterstützung brauchen, um selbstständig zu bleiben.</li>
+            <li><strong>Menschen mit Demenz,</strong> die von vertrauten Bezugspersonen,
+              Tagesstruktur und geduldiger Aktivierung profitieren — und deren Angehörige von
+              verlässlicher Entlastung.</li>
+            <li><strong>Menschen nach Operation oder Krankenhausaufenthalt,</strong> die
+              vorübergehend Hilfe brauchen, bis der Alltag wieder allein funktioniert.</li>
+            <li><strong>Pflegende Angehörige,</strong> die regelmäßige Freiräume brauchen —
+              die Begleitung übernimmt stundenweise, was sonst an ihnen hängen bleibt.</li>
+            <li><strong>Menschen mit Behinderung oder chronischer Erkrankung,</strong> die im
+              Alltag punktuell praktische Unterstützung und Gesellschaft wünschen.</li>
+          </ul>
+          <p style={{ marginTop: 12 }}>
+            Auch gegen <strong>Einsamkeit</strong> ist Alltagsbegleitung eines der wirksamsten
+            Mittel: Ein fester wöchentlicher Besuch, ein Gespräch, ein gemeinsamer Spaziergang
+            geben Struktur und Halt. Mehr dazu im Ratgeber
+            <Link href="/blog/einsamkeit-im-alter"> Einsamkeit im Alter</Link>.
+          </p>
+        </section>
+
+        <section className="info-card">
+          <h3>Qualität und Sicherheit: So prüfen wir unsere Engel</h3>
+          <p>
+            Wer ins eigene Zuhause kommt, muss vertrauenswürdig sein. Deshalb durchläuft jeder
+            Alltagsbegleiter bei Alltagsengel einen mehrstufigen Prüfprozess: persönliches
+            Kennenlernen, Identitätsprüfung, polizeiliches Führungszeugnis und eine Schulung nach
+            den landesrechtlichen Vorgaben für Angebote zur Unterstützung im Alltag (§45a SGB XI).
+          </p>
+          <p style={{ marginTop: 12 }}>
+            Während der Einsätze sind alle Engel über die Plattform
+            <strong> haftpflichtversichert</strong>. Jeder Termin wird in der App dokumentiert —
+            Angehörige können auf Wunsch nachvollziehen, wann welche Leistung erbracht wurde.
+            Und weil die Chemie stimmen muss: Sie wählen Ihren Engel selbst aus und können
+            jederzeit wechseln, ohne Begründung und ohne Kündigungsfrist.
+          </p>
+        </section>
+
+        <section className="info-card">
           <h3>So läuft eine Alltagsbegleitung typischerweise ab</h3>
           <p>
             Jede Begleitung richtet sich nach Ihren individuellen Bedürfnissen — kein Tag gleicht
