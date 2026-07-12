@@ -319,6 +319,25 @@ export default function KrankenfahrtenContent({ faqs = [] }: { faqs?: FaqItem[] 
         </section>
 
         <section className="info-card">
+          <h3>Für Angehörige: Fahrten aus der Ferne organisieren</h3>
+          <p>
+            Viele Krankenfahrten werden nicht von den Patienten selbst gebucht, sondern von
+            Töchtern, Söhnen oder Enkeln — oft aus einer anderen Stadt. Genau dafür ist die
+            Alltagsengel-App gebaut: Sie legen das Profil für Ihre Eltern an, hinterlegen die
+            Verordnung und buchen die Fahrten von überall. Bei Serienterminen wie Dialyse oder
+            Physiotherapie planen Sie einmal den ganzen Zyklus, und jede Fahrt wird automatisch
+            bestätigt.
+          </p>
+          <p style={{ marginTop: 12 }}>
+            Sie sehen in der App, wann der Fahrer abgeholt hat und wann Ihre Angehörigen wieder
+            sicher zu Hause sind — ohne nachtelefonieren zu müssen. Und wenn mehr als eine Fahrt
+            gebraucht wird, etwa jemand, der mit in die Sprechstunde geht, kombinieren Sie die
+            Fahrt mit einer <Link href="/alltagsbegleitung">Alltagsbegleitung</Link> über den
+            <Link href="/entlastungsbetrag"> Entlastungsbetrag</Link>.
+          </p>
+        </section>
+
+        <section className="info-card">
           <h3>So funktioniert&apos;s</h3>
           <div className="info-steps">
             <div className="info-step">

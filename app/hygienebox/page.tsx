@@ -402,6 +402,25 @@ export default function HygieneboxPage() {
         </section>
 
         <section className="info-card">
+          <h3>Warum die Pflegebox statt Einzelkauf in Apotheke oder Drogerie?</h3>
+          <p>
+            Handschuhe und Desinfektionsmittel gibt es natürlich auch einzeln zu kaufen — aber
+            dann zahlen Sie selbst, obwohl Ihnen die Kasse 42 € monatlich erstattet. Die
+            Kostenerstattung für Einzelkäufe ist zwar theoretisch möglich, scheitert in der
+            Praxis aber oft: Jede Quittung muss eingereicht werden, nicht gelistete Produkte
+            werden abgelehnt, und wer einen Monat vergisst, verliert die Pauschale ersatzlos.
+          </p>
+          <p style={{ marginTop: 12 }}>
+            Die Pflegebox löst alle drei Probleme auf einmal: Es kommen ausschließlich
+            erstattungsfähige Produkte aus dem Hilfsmittelverzeichnis, die Abrechnung läuft
+            direkt zwischen Alltagsengel und Ihrer Pflegekasse, und die monatliche Lieferung
+            stellt sicher, dass kein Anspruch verfällt. Dazu kommt der praktische Vorteil:
+            keine schweren Einkäufe, kein Vergessen, kein Vergleichen von Packungsgrößen —
+            das Material ist einfach da, wenn es gebraucht wird.
+          </p>
+        </section>
+
+        <section className="info-card">
           <h3>So funktioniert&apos;s</h3>
           <div className="info-steps">
             <div className="info-step">
