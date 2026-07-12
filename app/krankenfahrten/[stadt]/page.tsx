@@ -119,6 +119,15 @@ const cities: Record<string, CityData> = {
     landmarks: ['Bürgerhospital Friedberg', 'Hochwaldkrankenhaus Bad Nauheim', 'Kerckhoff-Klinik Bad Nauheim'],
     geo: { latitude: 50.3378, longitude: 8.7554 },
   },
+  rodgau: {
+    name: 'Rodgau',
+    region: 'Hessen',
+    slug: 'rodgau',
+    plz: '63110',
+    description: 'Rodgau und dem Kreis Offenbach',
+    landmarks: ['Asklepios Klinik Seligenstadt', 'Sana Klinikum Offenbach', 'Klinikum Hanau'],
+    geo: { latitude: 50.0333, longitude: 8.8833 },
+  },
 }
 
 export function generateStaticParams() {
@@ -144,6 +153,10 @@ export async function generateMetadata({ params }: { params: Promise<{ stadt: st
       `Arztfahrt ${city.name}`,
       'Krankenfahrt Krankenkasse',
       `Fahrdienst ${city.name}`,
+      `Alltagsbegleitung ${city.name}`,
+      `Pflegebox ${city.name}`,
+      'Entlastungsbetrag',
+      'Arztbegleitung Senioren',
     ],
     openGraph: {
       images: [{ url: '/og-image.png', width: 1200, height: 630 }],
@@ -204,6 +217,10 @@ function buildFaqs(city: CityData): { q: string; a: string }[] {
     {
       q: 'Brauche ich die Verordnung vor der Buchung?',
       a: 'Idealerweise ja. Sie können aber auch vorab buchen und die Verordnung nachreichen. Ohne Verordnung fahren wir als Selbstzahler.',
+    },
+    {
+      q: `Kann mich ein Alltagsbegleiter zum Arzt in ${city.name} begleiten?`,
+      a: `Ja. Unsere Alltagsbegleiter in ${city.name} begleiten Sie in die Praxis, warten mit Ihnen und helfen beim Gespräch mit dem Arzt. Diese Arztbegleitung können Sie über den Entlastungsbetrag (131 €/Monat nach §45b SGB XI) finanzieren — die Fahrt selbst läuft mit Verordnung über die Krankenkasse.`,
     },
   ]
 }
@@ -268,6 +285,10 @@ export default async function KrankenfahrtStadtPage({ params }: { params: Promis
 
   const faqs = buildFaqs(city)
   const jsonLd = buildJsonLd(city, faqs)
+  // Frankfurt kanonisiert bei Alltagsbegleitung NICHT (self-canonical), bei
+  // Pflegebox auf die Root-Seite — interne Links folgen dem jeweiligen Canonical.
+  const alltagsbegleitungHref = `/alltagsbegleitung/${city.slug}`
+  const pflegeboxHref = city.slug === 'frankfurt' ? '/hygienebox' : `/hygienebox/${city.slug}`
 
   return (
     <div className="screen info-screen">
@@ -373,6 +394,60 @@ export default async function KrankenfahrtStadtPage({ params }: { params: Promis
         </section>
 
         <section className="info-card">
+          <h3>So kommen Sie an die Verordnung (Muster 4)</h3>
+          <p>
+            Die Verordnung einer Krankenbeförderung — das sogenannte <strong>Muster 4</strong> —
+            stellt Ihr behandelnder Arzt aus. Sprechen Sie ihn direkt beim Termin darauf an oder
+            lassen Sie sich das Formular von der Praxis vorbereiten. Bei Serienbehandlungen wie
+            Dialyse, Chemotherapie oder Bestrahlung gilt eine Verordnung für die gesamte
+            Behandlungsserie; mit Pflegegrad 4 oder 5 sowie den Merkzeichen aG, Bl oder H gelten
+            Fahrten zu ambulanten Behandlungen generell als genehmigt. Bei Pflegegrad 3 muss
+            zusätzlich eine dauerhafte Mobilitätseinschränkung vorliegen.
+          </p>
+          <p style={{ marginTop: 8 }}>
+            Unsicher, ob Ihre Fahrt in {city.name} verordnungsfähig ist? Rufen Sie uns an — wir
+            klären das vorab kostenlos mit Ihnen und erklären den Weg zur Genehmigung durch die
+            Krankenkasse.
+          </p>
+        </section>
+
+        <section className="info-card">
+          <h3>Serienfahrten: Dialyse, Chemo &amp; Reha in {city.name}</h3>
+          <p>
+            Wer regelmäßig behandelt wird, braucht Verlässlichkeit: Für Dialyse-Patienten und
+            onkologische Behandlungen legen wir in {city.name} feste Serienpläne an — gleiche
+            Abholzeit, möglichst derselbe Fahrer, automatische Terminverwaltung. Verschiebt sich
+            ein Behandlungstermin, passen wir die Fahrt einfach an. So müssen weder Sie noch Ihre
+            Angehörigen jede einzelne Fahrt neu organisieren, und die Abrechnung mit der
+            Krankenkasse läuft für die gesamte Serie über uns.
+          </p>
+        </section>
+
+        <section className="info-card">
+          <h3>Arztbegleitung statt nur Fahrt: Alltagsbegleitung in {city.name}</h3>
+          <p>
+            Viele unserer Kunden in {city.name} kombinieren die Krankenfahrt mit einer
+            <strong> Arztbegleitung durch einen Alltagsbegleiter</strong>: Der Engel holt Sie zu Hause
+            ab, begleitet Sie in die Praxis, wartet mit Ihnen und bringt Sie sicher zurück. Diese
+            Begleitung finanzieren Sie über den <Link href="/entlastungsbetrag">Entlastungsbetrag</Link> —
+            131 €/Monat, die jeder Person mit Pflegegrad 1–5 nach §45b SGB XI zustehen. Fällt Ihre
+            pflegende Person aus, greift zusätzlich die{' '}
+            <Link href="/verhinderungspflege">Verhinderungspflege</Link> mit bis zu 3.539 €/Jahr.
+          </p>
+        </section>
+
+        <section className="info-card">
+          <h3>Darauf können Sie sich verlassen</h3>
+          <ul className="info-list">
+            <li>Pünktliche Abholung an der Haustür — inklusive Hilfe beim Ein- und Aussteigen</li>
+            <li>Geprüfte, freundliche Fahrer mit Erfahrung im Patiententransport</li>
+            <li>Begleitung bis zur Anmeldung in Praxis oder Klinik auf Wunsch</li>
+            <li>Rückfahrt flexibel — wir warten oder holen Sie nach der Behandlung wieder ab</li>
+            <li>Transparente Preise ohne versteckte Kosten, Abrechnung direkt mit der Kasse</li>
+          </ul>
+        </section>
+
+        <section className="info-card">
           <h3>Kostenlose Beratung anfragen</h3>
           <p style={{ marginBottom: 16 }}>
             Fragen zur Krankenfahrt in {city.name}? Wir beraten Sie kostenlos — hinterlassen Sie
@@ -395,8 +470,10 @@ export default async function KrankenfahrtStadtPage({ params }: { params: Promis
           <h3>Weitere Dienste in {city.name}</h3>
           <p>Neben Krankenfahrten bieten wir in {city.name} auch:</p>
           <ul className="info-list">
-            <li><Link href="/alltagsbegleitung">Alltagsbegleitung</Link> — 131 €/Monat über Entlastungsbetrag</li>
-            <li><Link href="/hygienebox">Pflegebox</Link> — Kostenlose Pflegehilfsmittel (42 €/Monat)</li>
+            <li><Link href={alltagsbegleitungHref}>Alltagsbegleitung in {city.name}</Link> — 131 €/Monat über Entlastungsbetrag</li>
+            <li><Link href={pflegeboxHref}>Pflegebox für {city.name}</Link> — Kostenlose Pflegehilfsmittel (42 €/Monat)</li>
+            <li><Link href="/verhinderungspflege">Verhinderungspflege</Link> — Ersatzpflege bis 3.539 €/Jahr (§39 SGB XI)</li>
+            <li><Link href="/entlastungsbetrag">Entlastungsbetrag</Link> — 131 €/Monat ab Pflegegrad 1 (§45b SGB XI)</li>
           </ul>
         </section>
 
