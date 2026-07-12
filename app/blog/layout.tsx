@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import Image from 'next/image'
 import './blog.css'
 
 // KEIN zentrales Article-JSON-LD mehr hier: BlogPostJsonLd emittierte auf
@@ -23,7 +24,7 @@ export default function BlogLayout({ children }: { children: React.ReactNode }) 
           gap: 10,
           textDecoration: 'none',
         }}>
-          <img
+          <Image
             src="/icon-192x192.png"
             alt="Alltagsengel"
             width={36}

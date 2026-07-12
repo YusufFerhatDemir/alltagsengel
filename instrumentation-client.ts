@@ -3,7 +3,13 @@ import * as Sentry from '@sentry/nextjs'
 
 Sentry.init({
   dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
-  tracesSampleRate: process.env.NODE_ENV === 'production' ? 0.1 : 1.0,
+  // Browser-Tracing entfernt (Perf 2026-07, CWV-Runde): das Tracing-Modul
+  // lag mit im ~145-KB-gzip-Sentry-Chunk, der auf JEDER Seite im First-Load
+  // hängt — für 10 % gesampelte Perf-Traces, die niemand auswertet.
+  // Web-Vitals-Monitoring läuft unabhängig über WebVitalsReporter →
+  // /api/analytics/vitals. Error-Tracking bleibt vollständig aktiv.
+  // Reaktivierung: tracesSampleRate wieder setzen UND excludeTracing
+  // in next.config.ts entfernen.
   // Session Replay komplett entfernt (Perf 2026-07): das Replay-Modul wog
   // ~70 KB gzip im First-Load-JS und zeichnete ALLE Sessions im Puffer-Modus
   // mit (MutationObserver-Dauerlast auf alten Geräten der Zielgruppe).
@@ -43,5 +49,6 @@ Sentry.init({
   },
 })
 
-// Navigation-Tracking für Next.js Router
+// Navigation-Tracking für Next.js Router (no-op ohne Tracing, aber der
+// Export muss existieren — Next.js erwartet ihn aus instrumentation-client)
 export const onRouterTransitionStart = Sentry.captureRouterTransitionStart

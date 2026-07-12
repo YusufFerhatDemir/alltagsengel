@@ -74,3 +74,6 @@ sim-screenshot.png
 
 # Lokale Maschinen-Analyse (gehört nicht ins Repo)
 MAC_SPEICHER_ANALYSE.md
+
+# deploy.sh IndexNow-Ping-Log
+.indexnow-ping.log

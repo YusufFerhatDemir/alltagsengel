@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import Image from 'next/image'
 import BreadcrumbSchema from '@/components/BreadcrumbSchema'
+import RelatedContent from '@/components/RelatedContent'
 
 export const metadata: Metadata = {
   alternates: { canonical: 'https://alltagsengel.care/faq' },
@@ -265,7 +267,7 @@ export default function FAQPage() {
         margin: '0 auto',
       }}>
         <Link href="/" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 10, marginBottom: 32 }}>
-          <img src="/icon-192x192.png" alt="Alltagsengel" width={40} height={40} style={{ borderRadius: 10 }} />
+          <Image src="/icon-192x192.png" alt="Alltagsengel" width={40} height={40} style={{ borderRadius: 10 }} />
           <span style={{ color: '#C9963C', fontWeight: 700, fontSize: 16 }}>Alltagsengel</span>
         </Link>
         <h1 style={{
@@ -410,6 +412,10 @@ export default function FAQPage() {
           </Link>
         </div>
       </section>
+
+      <div style={{ maxWidth: 700, margin: '0 auto' }}>
+        <RelatedContent page="faq" />
+      </div>
 
       {/* Footer Navigation */}
       <nav style={{

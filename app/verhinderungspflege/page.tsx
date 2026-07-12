@@ -1,6 +1,8 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import LeadForm from '@/components/LeadForm'
+import BreadcrumbSchema from '@/components/BreadcrumbSchema'
+import RelatedContent from '@/components/RelatedContent'
 import HowToSchema from '@/components/HowToSchema'
 import SpeakableSchema from '@/components/SpeakableSchema'
 
@@ -151,6 +153,7 @@ export default function VerhinderungspflegePage() {
   return (
     <div className="screen info-screen">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <BreadcrumbSchema items={[{ name: 'Verhinderungspflege' }]} />
       <SpeakableSchema url="/verhinderungspflege" />
       <HowToSchema
         name="Verhinderungspflege beantragen"
@@ -509,6 +512,8 @@ export default function VerhinderungspflegePage() {
             <li><Link href="/blog/wer-zahlt-alltagsbegleitung">Wer zahlt die Alltagsbegleitung?</Link></li>
           </ul>
         </section>
+
+        <RelatedContent page="verhinderungspflege" />
 
         <div className="legal-footer-nav">
           <Link href="/alltagsbegleitung">Alltagsbegleitung</Link>

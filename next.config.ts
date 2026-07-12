@@ -21,6 +21,15 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: __dirname,
   },
+  // Bild-Pipeline (CWV): AVIF zuerst (30–50 % kleiner als WebP), WebP als
+  // Fallback. Betrifft nur das Auslieferungsformat via next/image — die
+  // Quelldateien (z. B. die goldenen 3D-Icons) bleiben unverändert.
+  // minimumCacheTTL: optimierte Varianten 31 Tage cachen — Brand-Assets
+  // ändern sich praktisch nie, Re-Optimierung pro Miss ist verschenkt.
+  images: {
+    formats: ['image/avif', 'image/webp'],
+    minimumCacheTTL: 2678400,
+  },
   async redirects() {
     return [
       // Host-Kanonisierung: www spiegelt sonst die komplette Site als
@@ -31,10 +40,10 @@ const nextConfig: NextConfig = {
         destination: 'https://alltagsengel.care/:path*',
         permanent: true,
       },
-      // Gesuchte URL /pflegebox → bestehende Pflegebox-Seite (/hygienebox).
-      // 301 (permanent), damit kein Duplicate Content entsteht und externe
-      // Links auf die kanonische Seite weitergereicht werden.
-      { source: '/pflegebox', destination: '/hygienebox', permanent: true },
+      // /pflegebox ist seit Jul 2026 eine EIGENE Seite (app/pflegebox,
+      // self-canonical, in der Sitemap) — der frühere 301 auf /hygienebox
+      // würde sie unerreichbar machen. Nur die Stadt-Varianten leiten
+      // weiterhin auf /hygienebox/:stadt um (keine /pflegebox/[stadt]-Routen).
       { source: '/pflegebox/:stadt', destination: '/hygienebox/:stadt', permanent: true },
       // /index liefert sonst die Startseite als 200-Duplikat von /.
       { source: '/index', destination: '/', permanent: true },
@@ -83,6 +92,19 @@ const nextConfig: NextConfig = {
       // sieht dann nie ein noindex. Header wirkt auch bei 'use client'-Pages
       // ohne metadata-Export. Die beiden Routen sind dafür in robots.ts
       // NICHT mehr disallowed, damit der Header überhaupt gelesen wird.
+      // Langzeit-Cache für unveränderliche statische Assets (Brand-Icons,
+      // OG-Image): public/-Dateien kommen sonst mit max-age=0 — jeder
+      // Seitenwechsel re-validiert das Logo. 30 Tage + SWR deckt
+      // Repeat-Visits aus dem Browser-Cache ab; bei Asset-Tausch Dateinamen
+      // versionieren (z. B. icon-v2.jpg), nicht in-place überschreiben.
+      {
+        source: '/assets/:path*',
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=2592000, stale-while-revalidate=86400' }],
+      },
+      {
+        source: '/:file(icon\\-192x192\\.png|icon\\-512x512\\.png|icon\\-180x180\\.png|apple\\-touch\\-icon\\.png|og\\-image\\.png|favicon\\.ico)',
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=2592000, stale-while-revalidate=86400' }],
+      },
       {
         source: '/sentry-example',
         headers: [{ key: 'X-Robots-Tag', value: 'noindex, nofollow' }],
@@ -121,6 +143,10 @@ export default withSentryConfig(withBundleAnalyzer(nextConfig), {
   // Wird Replay je reaktiviert, müssen die excludeReplay*-Flags weg.
   bundleSizeOptimizations: {
     excludeDebugStatements: true,
+    // Tracing aus dem Client-Bundle shaken (CWV 2026-07): Client nutzt kein
+    // tracesSampleRate mehr (siehe instrumentation-client.ts). Wird Tracing
+    // reaktiviert, muss dieses Flag weg.
+    excludeTracing: true,
     excludeReplayShadowDom: true,
     excludeReplayIframe: true,
     excludeReplayWorker: true,

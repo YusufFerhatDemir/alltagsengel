@@ -67,10 +67,16 @@ export default function SiteFooter() {
         <Link href="/alltagsbegleitung/mainz">Mainz</Link>
         <Link href="/alltagsbegleitung/hanau">Hanau</Link>
         <Link href="/alltagsbegleitung/bad-homburg">Bad Homburg</Link>
+        <Link href="/alltagsbegleitung/aschaffenburg">Aschaffenburg</Link>
+        <Link href="/alltagsbegleitung/frankfurt-hoechst">Frankfurt-Höchst</Link>
+        <Link href="/alltagsbegleitung/neu-isenburg">Neu-Isenburg</Link>
+        <Link href="/alltagsbegleitung/friedberg-wetterau">Friedberg</Link>
+        <Link href="/alltagsbegleitung/rodgau">Rodgau</Link>
         <Link href="/einzugsgebiet">Alle Einsatzorte →</Link>
       </div>
 
       <div className="lp-footer-links" style={{ marginTop: 4 }}>
+        <Link href="/seitenuebersicht">Seitenübersicht</Link>
         <Link href="/impressum">Impressum</Link>
         <Link href="/datenschutz">Datenschutz</Link>
         <Link href="/agb">AGB</Link>

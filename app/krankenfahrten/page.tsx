@@ -7,10 +7,14 @@ import SpeakableSchema from '@/components/SpeakableSchema'
 export const metadata: Metadata = {
   title: 'Krankenfahrten Frankfurt & Rhein-Main buchen',
   description:
-    'Krankenfahrten in Frankfurt & Rhein-Main: zu Arzt, Dialyse, Klinik und Therapie. Mit Verordnung zahlt die Krankenkasse (§60 SGB V). Jetzt Fahrt buchen!',
+    'Krankenfahrten Frankfurt & Rhein-Main: Krankenfahrt bestellen zu Arzt, Dialyse & Klinik. Kostenübernahme durch die Krankenkasse (§60 SGB V). Jetzt buchen!',
   keywords: [
+    'Krankenfahrten Frankfurt',
     'Krankenfahrt Frankfurt',
+    'Krankenfahrt bestellen',
     'Krankenfahrt buchen',
+    'Krankentransport Kostenübernahme',
+    'Arztfahrt Senioren',
     'Krankenfahrt Verordnung',
     'Krankentransport sitzend',
     'Fahrdienst Arzt Frankfurt',
@@ -67,6 +71,14 @@ const faqItems = [
   {
     q: 'Was passiert, wenn sich mein Arzttermin verschiebt?',
     a: 'Kein Problem: Fahrten lassen sich in der App bis kurz vor dem Termin kostenlos verschieben oder stornieren. Bei Serienfahrten passen wir den gesamten Fahrplan an.',
+  },
+  {
+    q: 'Wird beim Krankentransport die Kostenübernahme anders geregelt als bei der Krankenfahrt?',
+    a: 'Die Rechtsgrundlage ist dieselbe (§60 SGB V), aber der qualifizierte Krankentransport (KTW) setzt voraus, dass während der Fahrt eine medizinisch-fachliche Betreuung oder liegende Beförderung nötig ist — das kreuzt der Arzt auf dem Muster 4 an. Für die einfache sitzende Krankenfahrt im Pkw genügt „Taxi/Mietwagen" auf der Verordnung; sie ist die günstigste Variante.',
+  },
+  {
+    q: 'Gibt es Arztfahrten speziell für Senioren?',
+    a: 'Ja. Unsere Fahrer sind auf Arztfahrten für Senioren eingestellt: Abholung an der Wohnungstür, Hilfe beim Ein- und Aussteigen, Rollator-Verstauung und auf Wunsch Begleitung bis zur Praxisanmeldung. Wer zusätzlich jemanden im Wartezimmer und beim Arztgespräch braucht, kombiniert die Fahrt mit einer Alltagsbegleitung über den Entlastungsbetrag (131 €/Monat).',
   },
 ]
 

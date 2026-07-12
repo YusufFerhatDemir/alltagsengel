@@ -2,6 +2,7 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import EngelBewerbungForm from '@/components/EngelBewerbungForm'
+import BreadcrumbSchema from '@/components/BreadcrumbSchema'
 
 // ═══════════════════════════════════════════════════════════
 // Recruiting-Stadtseiten: "Alltagsbegleiter Job [Stadt]"
@@ -274,6 +275,7 @@ export default async function EngelWerdenStadtPage({ params }: { params: Promise
   return (
     <div className="screen info-screen">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <BreadcrumbSchema items={[{ name: 'Engel werden', url: '/engel-werden' }, { name: city.name }]} />
       <div className="legal-header">
         <Link href="/engel-werden" className="legal-back">&#8249;</Link>
         <h1 className="legal-title">Alltagsbegleiter Job {city.name}</h1>

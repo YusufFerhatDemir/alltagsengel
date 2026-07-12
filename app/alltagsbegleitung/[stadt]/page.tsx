@@ -2,6 +2,8 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import LeadForm from '@/components/LeadForm'
+import BreadcrumbSchema from '@/components/BreadcrumbSchema'
+import SpeakableSchema from '@/components/SpeakableSchema'
 
 // ═══════════════════════════════════════════════════════════
 // City-specific Alltagsbegleitung pages for Rhein-Main area
@@ -21,6 +23,9 @@ interface CityData {
   lokal: string
   // Slugs benachbarter Städte für „Auch in Ihrer Nähe"
   nachbarn: string[]
+  // Lokale, trägerneutrale Pflegeberatung (Pflegestützpunkt bzw. kommunale
+  // Beratungsstelle) — mit Präposition, z.B. „beim Pflegestützpunkt X"
+  beratung: string
 }
 
 export const dynamicParams = true
@@ -36,6 +41,7 @@ const cities: Record<string, CityData> = {
     stadtteile: ['Bornheim', 'Nordend', 'Sachsenhausen', 'Bockenheim', 'Rödelheim', 'Niederrad'],
     lokal: 'Unsere Alltagsbegleiter sind beiderseits des Mains im gesamten Frankfurter Stadtgebiet unterwegs — mit kurzen Anfahrtswegen und flexiblen Terminen.',
     nachbarn: ['offenbach', 'bad-homburg', 'neu-isenburg', 'frankfurt-hoechst'],
+    beratung: 'beim Pflegestützpunkt Frankfurt am Main',
   },
   offenbach: {
     name: 'Offenbach am Main',
@@ -47,6 +53,7 @@ const cities: Record<string, CityData> = {
     stadtteile: ['Bürgel', 'Bieber', 'Rumpenheim', 'Lauterborn', 'Tempelsee'],
     lokal: 'In Offenbach sind wir vom Kaiserlei im Westen bis Bürgel und Rumpenheim am Mainufer im Einsatz.',
     nachbarn: ['frankfurt', 'neu-isenburg', 'rodgau', 'hanau'],
+    beratung: 'beim Pflegestützpunkt Offenbach',
   },
   wiesbaden: {
     name: 'Wiesbaden',
@@ -58,6 +65,7 @@ const cities: Record<string, CityData> = {
     stadtteile: ['Biebrich', 'Dotzheim', 'Sonnenberg', 'Bierstadt', 'Schierstein'],
     lokal: 'In der Landeshauptstadt Wiesbaden begleiten wir Sie von Biebrich am Rhein bis hinauf nach Sonnenberg.',
     nachbarn: ['mainz', 'frankfurt-hoechst', 'frankfurt'],
+    beratung: 'beim Pflegestützpunkt Wiesbaden',
   },
   darmstadt: {
     name: 'Darmstadt',
@@ -69,6 +77,7 @@ const cities: Record<string, CityData> = {
     stadtteile: ['Bessungen', 'Arheilgen', 'Eberstadt', 'Kranichstein', 'Wixhausen'],
     lokal: 'In der Wissenschaftsstadt Darmstadt sind unsere Engel von Arheilgen im Norden bis Eberstadt im Süden unterwegs.',
     nachbarn: ['frankfurt', 'neu-isenburg', 'rodgau'],
+    beratung: 'beim Pflegestützpunkt Darmstadt',
   },
   hanau: {
     name: 'Hanau',
@@ -80,6 +89,7 @@ const cities: Record<string, CityData> = {
     stadtteile: ['Steinheim', 'Kesselstadt', 'Großauheim', 'Klein-Auheim', 'Mittelbuchen'],
     lokal: 'In der Brüder-Grimm-Stadt Hanau kommen wir zu Ihnen — von Kesselstadt bis Steinheim und Großauheim südlich des Mains.',
     nachbarn: ['offenbach', 'rodgau', 'frankfurt', 'aschaffenburg'],
+    beratung: 'beim Pflegestützpunkt des Main-Kinzig-Kreises',
   },
   'bad-homburg': {
     name: 'Bad Homburg',
@@ -91,6 +101,7 @@ const cities: Record<string, CityData> = {
     stadtteile: ['Kirdorf', 'Gonzenheim', 'Dornholzhausen', 'Ober-Erlenbach', 'Ober-Eschbach'],
     lokal: 'In der Kurstadt Bad Homburg vor der Höhe sind wir von Kirdorf bis Ober-Erlenbach für Sie im Einsatz.',
     nachbarn: ['frankfurt', 'friedberg-wetterau', 'frankfurt-hoechst'],
+    beratung: 'beim Pflegestützpunkt Hochtaunuskreis in Bad Homburg',
   },
   mainz: {
     name: 'Mainz',
@@ -102,6 +113,7 @@ const cities: Record<string, CityData> = {
     stadtteile: ['Gonsenheim', 'Mombach', 'Bretzenheim', 'Hechtsheim', 'Neustadt', 'Oberstadt'],
     lokal: 'In der rheinland-pfälzischen Landeshauptstadt Mainz begleiten wir Sie von der Neustadt bis Gonsenheim und Hechtsheim.',
     nachbarn: ['wiesbaden', 'frankfurt', 'frankfurt-hoechst'],
+    beratung: 'bei den Pflegestützpunkten in Mainz',
   },
   aschaffenburg: {
     name: 'Aschaffenburg',
@@ -113,6 +125,7 @@ const cities: Record<string, CityData> = {
     stadtteile: ['Damm', 'Nilkheim', 'Schweinheim', 'Obernau', 'Leider'],
     lokal: 'In Aschaffenburg am Bayerischen Untermain sind wir von Damm bis Schweinheim und Obernau unterwegs.',
     nachbarn: ['hanau', 'rodgau', 'offenbach'],
+    beratung: 'beim Pflegestützpunkt für Stadt und Landkreis Aschaffenburg',
   },
   'frankfurt-hoechst': {
     name: 'Frankfurt-Höchst',
@@ -124,6 +137,7 @@ const cities: Record<string, CityData> = {
     stadtteile: ['Nied', 'Sindlingen', 'Unterliederbach', 'Zeilsheim', 'Sossenheim'],
     lokal: 'Im Frankfurter Westen sind wir rund um die Höchster Altstadt sowie in den Nachbarstadtteilen im Einsatz.',
     nachbarn: ['frankfurt', 'wiesbaden', 'mainz'],
+    beratung: 'beim Pflegestützpunkt Frankfurt am Main',
   },
   'neu-isenburg': {
     name: 'Neu-Isenburg',
@@ -135,6 +149,7 @@ const cities: Record<string, CityData> = {
     stadtteile: ['Stadtmitte', 'Gravenbruch', 'Zeppelinheim'],
     lokal: 'In Neu-Isenburg erreichen unsere Engel Sie schnell — von der Stadtmitte bis Gravenbruch und Zeppelinheim.',
     nachbarn: ['frankfurt', 'offenbach', 'darmstadt', 'rodgau'],
+    beratung: 'beim Pflegestützpunkt Kreis Offenbach',
   },
   'friedberg-wetterau': {
     name: 'Friedberg (Wetterau)',
@@ -146,6 +161,7 @@ const cities: Record<string, CityData> = {
     stadtteile: ['Ockstadt', 'Dorheim', 'Bauernheim', 'Bruchenbrücken', 'Ossenheim'],
     lokal: 'In der Kreisstadt Friedberg (Wetterau) sind wir in der Kernstadt und allen Ortsteilen bis Ockstadt und Dorheim im Einsatz.',
     nachbarn: ['bad-homburg', 'frankfurt', 'hanau'],
+    beratung: 'beim Pflegestützpunkt Wetteraukreis in Friedberg',
   },
   rodgau: {
     name: 'Rodgau',
@@ -157,6 +173,127 @@ const cities: Record<string, CityData> = {
     stadtteile: ['Jügesheim', 'Dudenhofen', 'Weiskirchen', 'Hainhausen', 'Nieder-Roden'],
     lokal: 'In Rodgau sind wir in allen fünf Stadtteilen unterwegs — von Weiskirchen bis Nieder-Roden.',
     nachbarn: ['offenbach', 'hanau', 'neu-isenburg'],
+    beratung: 'beim Pflegestützpunkt Kreis Offenbach',
+  },
+  giessen: {
+    name: 'Gießen',
+    region: 'Hessen',
+    slug: 'giessen',
+    description: 'Gießen und Mittelhessen',
+    lat: 50.5841,
+    lng: 8.6784,
+    stadtteile: ['Wieseck', 'Klein-Linden', 'Rödgen', 'Lützellinden', 'Allendorf'],
+    lokal: 'In der Universitätsstadt Gießen sind unsere Alltagsbegleiter von Wieseck im Norden bis Klein-Linden und Allendorf im Süden unterwegs — in der Kernstadt ebenso wie in den Lahn-nahen Stadtteilen.',
+    nachbarn: ['marburg', 'friedberg-wetterau', 'bad-homburg', 'frankfurt'],
+    beratung: 'beim Pflegestützpunkt Gießen für Stadt und Landkreis',
+  },
+  marburg: {
+    name: 'Marburg',
+    region: 'Hessen',
+    slug: 'marburg',
+    description: 'Marburg und dem Landkreis Marburg-Biedenkopf',
+    lat: 50.8090,
+    lng: 8.7710,
+    stadtteile: ['Wehrda', 'Cappel', 'Marbach', 'Ockershausen', 'Richtsberg'],
+    lokal: 'In der Universitätsstadt Marburg an der Lahn begleiten wir Sie von der Oberstadt über Ockershausen bis Cappel und Wehrda — auch dort, wo es steil und verwinkelt wird.',
+    nachbarn: ['giessen', 'friedberg-wetterau', 'kassel'],
+    beratung: 'beim Pflegestützpunkt Marburg-Biedenkopf',
+  },
+  kassel: {
+    name: 'Kassel',
+    region: 'Hessen',
+    slug: 'kassel',
+    description: 'Kassel und Nordhessen',
+    lat: 51.3127,
+    lng: 9.4797,
+    stadtteile: ['Wehlheiden', 'Kirchditmold', 'Bad Wilhelmshöhe', 'Bettenhausen', 'Harleshausen', 'Niederzwehren'],
+    lokal: 'In der documenta-Stadt Kassel sind unsere Engel im gesamten Stadtgebiet im Einsatz — von Bad Wilhelmshöhe und Kirchditmold im Westen bis Bettenhausen im Osten.',
+    nachbarn: ['giessen', 'marburg', 'fulda'],
+    beratung: 'beim Pflegestützpunkt Region Kassel',
+  },
+  fulda: {
+    name: 'Fulda',
+    region: 'Hessen',
+    slug: 'fulda',
+    description: 'Fulda und Osthessen',
+    lat: 50.5558,
+    lng: 9.6808,
+    stadtteile: ['Horas', 'Neuenberg', 'Aschenberg', 'Kohlhaus', 'Lehnerz'],
+    lokal: 'In der Barockstadt Fulda sind unsere Alltagsbegleiter von der Innenstadt rund um den Dom bis Aschenberg, Neuenberg und Horas unterwegs.',
+    nachbarn: ['kassel', 'giessen', 'hanau'],
+    beratung: 'beim Pflegestützpunkt Fulda',
+  },
+  limburg: {
+    name: 'Limburg an der Lahn',
+    region: 'Hessen',
+    slug: 'limburg',
+    description: 'Limburg an der Lahn und dem Landkreis Limburg-Weilburg',
+    lat: 50.3836,
+    lng: 8.0503,
+    stadtteile: ['Blumenrod', 'Staffel', 'Lindenholzhausen', 'Eschhofen', 'Offheim'],
+    lokal: 'In der Domstadt Limburg an der Lahn sind wir in der Kernstadt und allen Stadtteilen im Einsatz — von Blumenrod über Staffel bis Lindenholzhausen und Offheim.',
+    nachbarn: ['wiesbaden', 'bad-homburg', 'frankfurt'],
+    beratung: 'beim Pflegestützpunkt Limburg-Weilburg',
+  },
+  koeln: {
+    name: 'Köln',
+    region: 'Nordrhein-Westfalen',
+    slug: 'koeln',
+    description: 'Köln und dem gesamten Stadtgebiet',
+    lat: 50.9375,
+    lng: 6.9603,
+    stadtteile: ['Ehrenfeld', 'Nippes', 'Lindenthal', 'Mülheim', 'Rodenkirchen', 'Porz'],
+    lokal: 'In Köln sind unsere Alltagsbegleiter linksrheinisch wie rechtsrheinisch unterwegs — von Ehrenfeld, Nippes und Lindenthal bis Mülheim, Rodenkirchen und Porz.',
+    nachbarn: ['bonn', 'duesseldorf', 'essen'],
+    beratung: 'bei der Pflegeberatung der Stadt Köln',
+  },
+  duesseldorf: {
+    name: 'Düsseldorf',
+    region: 'Nordrhein-Westfalen',
+    slug: 'duesseldorf',
+    description: 'Düsseldorf und dem gesamten Stadtgebiet',
+    lat: 51.2277,
+    lng: 6.7735,
+    stadtteile: ['Bilk', 'Derendorf', 'Benrath', 'Gerresheim', 'Oberkassel', 'Eller'],
+    lokal: 'In der Landeshauptstadt Düsseldorf begleiten wir Sie auf beiden Rheinseiten — von Bilk und Derendorf über Oberkassel bis Benrath, Gerresheim und Eller.',
+    nachbarn: ['koeln', 'essen', 'dortmund'],
+    beratung: 'bei den Pflegebüros der Landeshauptstadt Düsseldorf',
+  },
+  essen: {
+    name: 'Essen',
+    region: 'Nordrhein-Westfalen',
+    slug: 'essen',
+    description: 'Essen und dem mittleren Ruhrgebiet',
+    lat: 51.4556,
+    lng: 7.0116,
+    stadtteile: ['Rüttenscheid', 'Borbeck', 'Steele', 'Altenessen', 'Werden', 'Kettwig'],
+    lokal: 'In Essen sind unsere Engel vom Norden bis ins Ruhrtal unterwegs — von Altenessen und Borbeck über Rüttenscheid und Steele bis Werden und Kettwig.',
+    nachbarn: ['duesseldorf', 'dortmund', 'koeln'],
+    beratung: 'bei der Pflegeberatung der Stadt Essen',
+  },
+  dortmund: {
+    name: 'Dortmund',
+    region: 'Nordrhein-Westfalen',
+    slug: 'dortmund',
+    description: 'Dortmund und dem östlichen Ruhrgebiet',
+    lat: 51.5136,
+    lng: 7.4653,
+    stadtteile: ['Hörde', 'Hombruch', 'Aplerbeck', 'Brackel', 'Eving', 'Mengede'],
+    lokal: 'In Dortmund sind unsere Alltagsbegleiter in allen Stadtbezirken im Einsatz — von Hörde am Phoenix-See über Hombruch und Aplerbeck bis Eving und Mengede im Norden.',
+    nachbarn: ['essen', 'duesseldorf', 'koeln'],
+    beratung: 'bei der Pflege- und Wohnberatung Dortmund',
+  },
+  bonn: {
+    name: 'Bonn',
+    region: 'Nordrhein-Westfalen',
+    slug: 'bonn',
+    description: 'Bonn und dem Rhein-Sieg-Kreis',
+    lat: 50.7374,
+    lng: 7.0982,
+    stadtteile: ['Bad Godesberg', 'Beuel', 'Poppelsdorf', 'Duisdorf', 'Endenich'],
+    lokal: 'In der Bundesstadt Bonn begleiten wir Sie von der Innenstadt über Poppelsdorf und Endenich bis Beuel und Bad Godesberg.',
+    nachbarn: ['koeln', 'duesseldorf', 'essen'],
+    beratung: 'bei der Pflegeberatung der Bundesstadt Bonn',
   },
 }
 
@@ -243,6 +380,10 @@ function buildFaqs(city: CityData): { frage: string; antwort: string }[] {
       frage: `Bieten Sie in ${city.name} auch Pflegebox und Krankenfahrten an?`,
       antwort: `Ja. Neben der Alltagsbegleitung liefern wir die kostenlose Pflegebox (Pflegehilfsmittel bis 42 €/Monat nach §40 SGB XI) nach ${city.name} und vermitteln Krankenfahrten zu Arzt, Klinik und Dialyse — mit Verordnung zahlt die Krankenkasse (§60 SGB V).`,
     },
+    {
+      frage: `Wo finde ich unabhängige Pflegeberatung in ${city.name}?`,
+      antwort: `Trägerneutrale und kostenlose Beratung zu allen Pflegeleistungen erhalten Sie ${city.beratung} sowie bei Ihrer Pflegekasse. Und natürlich beraten auch wir Sie kostenlos zum Entlastungsbetrag, zur Verhinderungspflege und zur Pflegebox — telefonisch oder per Rückruf.`,
+    },
   ]
 }
 
@@ -312,6 +453,8 @@ export default async function StadtPage({ params }: { params: Promise<{ stadt: s
   return (
     <div className="screen info-screen">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <SpeakableSchema url={`/alltagsbegleitung/${city.slug}`} />
+      <BreadcrumbSchema items={[{ name: 'Alltagsbegleitung', url: '/alltagsbegleitung' }, { name: city.name }]} />
       <div className="legal-header">
         <Link href="/" className="legal-back">&#8249;</Link>
         <h1 className="legal-title">Alltagsbegleitung {city.name}</h1>
@@ -444,6 +587,41 @@ export default async function StadtPage({ params }: { params: Promise<{ stadt: s
             stehen Ihnen so bis zu 5.111 € pro Jahr zur Verfügung — mehr dazu auf unserer Seite zur{' '}
             <Link href="/verhinderungspflege">Verhinderungspflege</Link> und im{' '}
             <Link href="/budgetrechner">Budgetrechner</Link>.
+          </p>
+        </section>
+
+        <section className="info-card">
+          <h3>So läuft Ihr erster Einsatz in {city.name} ab</h3>
+          <p>
+            Nach Ihrer Anfrage melden wir uns innerhalb eines Werktags und besprechen, welche
+            Unterstützung Sie sich wünschen — vom wöchentlichen Einkauf über Arztbegleitung bis
+            zur mehrstündigen Betreuung. Anschließend schlagen wir Ihnen einen Engel aus {city.name}
+            {' '}oder der direkten Umgebung vor, der zu Ihren Bedürfnissen passt. Beim ersten Termin
+            lernen Sie sich in Ruhe kennen: Ihr Alltagsbegleiter verschafft sich einen Überblick,
+            klärt Abläufe und Schlüsselfragen und nimmt sich Zeit für Ihre Wünsche.
+          </p>
+          <p style={{ marginTop: 8 }}>
+            Danach kommen die Termine in dem Rhythmus, den Sie festlegen — wöchentlich, mehrmals
+            pro Woche oder flexibel nach Bedarf. Sie behalten immer dieselbe Bezugsperson, und
+            wenn einmal etwas dazwischenkommt, lassen sich Termine unkompliziert verschieben.
+            Die Abrechnung mit der Pflegekasse läuft im Hintergrund vollständig über uns — Sie
+            erhalten keine Rechnung, solange der Entlastungsbetrag den Einsatz deckt.
+          </p>
+        </section>
+
+        <section className="info-card">
+          <h3>Pflegeberatung vor Ort in {city.name}</h3>
+          <p>
+            Sie sind unsicher, welche Leistungen Ihnen zustehen? Trägerneutrale und kostenlose
+            Beratung zu Pflegegrad, Entlastungsbetrag und allen weiteren Pflegeleistungen erhalten
+            Sie {city.beratung} sowie direkt bei Ihrer Pflege- und Krankenkasse. Dort bekommen Sie
+            auch Unterstützung bei Anträgen und beim Widerspruch gegen eine Pflegegrad-Einstufung.
+          </p>
+          <p style={{ marginTop: 8 }}>
+            Ergänzend beraten wir Sie jederzeit kostenlos und unverbindlich: Wir prüfen mit Ihnen,
+            ob der Entlastungsbetrag (131 €/Monat), die Verhinderungspflege (bis 3.539 €/Jahr) oder
+            die Pflegebox (42 €/Monat) für Ihre Situation in {city.name} passen — und übernehmen
+            anschließend die komplette Abwicklung mit der Kasse.
           </p>
         </section>
 

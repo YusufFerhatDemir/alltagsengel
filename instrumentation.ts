@@ -6,7 +6,10 @@ export async function register() {
   if (process.env.NEXT_RUNTIME === 'nodejs') {
     Sentry.init({
       dsn: process.env.SENTRY_DSN,
-      tracesSampleRate: process.env.NODE_ENV === 'production' ? 0.1 : 1.0,
+      // Kein tracesSampleRate mehr: Tracing ist per excludeTracing in
+      // next.config.ts aus ALLEN Bundles geshaked (CWV 2026-07) — das Flag
+      // wirkt global (Client+Server+Edge), ein serverseitiges Sample-Rate
+      // wäre toter Config-Code. Error-Tracking bleibt vollständig aktiv.
       debug: false,
       environment: process.env.NODE_ENV,
       release: process.env.VERCEL_GIT_COMMIT_SHA,
@@ -32,7 +35,7 @@ export async function register() {
   if (process.env.NEXT_RUNTIME === 'edge') {
     Sentry.init({
       dsn: process.env.SENTRY_DSN,
-      tracesSampleRate: process.env.NODE_ENV === 'production' ? 0.1 : 1.0,
+      // Tracing global deaktiviert (excludeTracing, s. o.)
       debug: false,
       environment: process.env.NODE_ENV,
       release: process.env.VERCEL_GIT_COMMIT_SHA,

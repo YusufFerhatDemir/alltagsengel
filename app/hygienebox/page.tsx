@@ -160,7 +160,7 @@ export default function HygieneboxPage() {
         description="So erhalten Sie eine kostenlose Pflegebox (Pflegehilfsmittel nach §40 SGB XI, bis 42€/Monat) über Alltagsengel — ohne Eigenanteil."
         totalTime="PT3M"
         steps={[
-          { name: 'Wunsch-Box auswählen', text: 'Wählen Sie die Basis-Box oder Komfort-Box in der Alltagsengel-App aus. Inhalt: Handschuhe, Desinfektion, Bettschutz, Mundschutz, Schürzen.' },
+          { name: 'Wunsch-Box auswählen', text: 'Stellen Sie Ihre Box im Pflegebox-Konfigurator zusammen. Inhalt: Handschuhe, Desinfektion, Bettschutz, Mundschutz, Schürzen.', url: '/pflegebox' },
           { name: 'Pflegegrad angeben', text: 'Geben Sie Ihren Pflegegrad (1–5) und Ihre Pflegekasse an. Wir kümmern uns um den Antrag.' },
           { name: 'Genehmigung abwarten', text: 'Alltagsengel übernimmt die Antragstellung und Kommunikation mit Ihrer Pflegekasse. Genehmigung dauert meist wenige Tage.' },
           { name: 'Monatliche Lieferung erhalten', text: 'Nach Genehmigung erhalten Sie Ihre Pflegebox jeden Monat automatisch nach Hause — 0€ Eigenanteil.' },
@@ -175,6 +175,27 @@ export default function HygieneboxPage() {
           <div className="info-hero-icon">📦</div>
           <h2 className="info-hero-title">Hygienebox für Pflegebedürftige</h2>
           <p className="info-hero-sub">Monatliche Lieferung von Pflegehilfsmitteln — bis zu 42 € von der Kasse erstattet</p>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'center', marginTop: 14 }}>
+            {['✓ 0 € Eigenanteil', '✓ Kostenlos ab Pflegegrad 1', '✓ Antrag übernehmen wir', '✓ Jederzeit kündbar'].map((chip) => (
+              <span
+                key={chip}
+                style={{
+                  fontSize: 12, fontWeight: 600, color: '#E8C87E',
+                  background: 'rgba(201,150,60,.1)', border: '1px solid rgba(201,150,60,.25)',
+                  borderRadius: 999, padding: '6px 12px',
+                }}
+              >
+                {chip}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        <div className="info-cta" style={{ marginTop: 4 }}>
+          <Link href="/pflegebox" className="btn-gold" style={{ width: '100%' }}>PFLEGEBOX KOSTENLOS BESTELLEN</Link>
+          <p style={{ textAlign: 'center', fontSize: 12, color: 'rgba(255,255,255,.35)', marginTop: 8 }}>
+            In 2 Minuten zusammengestellt — ohne Registrierung, ohne Vertragsbindung
+          </p>
         </div>
 
         <section className="info-card">
@@ -289,6 +310,12 @@ export default function HygieneboxPage() {
           <p className="info-price-note">
             Bei Pflegegrad 1–5 werden bis zu 42 € monatlich von der Pflegekasse übernommen.
             Ihre Zuzahlung: 0 €.
+          </p>
+          <p style={{ marginTop: 12 }}>
+            Sie möchten lieber selbst wählen, was in die Box kommt? Im{' '}
+            <Link href="/pflegebox">Pflegebox-Konfigurator</Link> stellen Sie Ihre
+            Wunsch-Box in 2 Minuten zusammen — Handschuhgrößen, Mengen und Produkte
+            ganz nach Ihrer Pflegesituation.
           </p>
         </section>
 
@@ -439,7 +466,10 @@ export default function HygieneboxPage() {
         </section>
 
         <div className="info-cta">
-          <Link href="/choose" className="btn-gold" style={{ width: '100%' }}>HYGIENEBOX BESTELLEN</Link>
+          <Link href="/pflegebox" className="btn-gold" style={{ width: '100%' }}>HYGIENEBOX BESTELLEN</Link>
+          <p style={{ textAlign: 'center', fontSize: 12, color: 'rgba(255,255,255,.35)', marginTop: 8 }}>
+            0 € Eigenanteil · Antrag inklusive · jederzeit kündbar
+          </p>
         </div>
 
         <section className="info-card">
@@ -467,6 +497,16 @@ export default function HygieneboxPage() {
             <li><Link href="/hygienebox/neu-isenburg">Pflegebox Neu-Isenburg</Link></li>
             <li><Link href="/hygienebox/friedberg-wetterau">Pflegebox Friedberg (Wetterau)</Link></li>
             <li><Link href="/hygienebox/rodgau">Pflegebox Rodgau</Link></li>
+          </ul>
+        </section>
+
+        <section className="info-card">
+          <h3>Mehr zum Thema Pflegebox</h3>
+          <ul className="info-list">
+            <li><Link href="/pflegebox">Pflegebox bestellen — Konfigurator: Box in 2 Minuten zusammenstellen</Link></li>
+            <li><Link href="/blog/pflegebox-bestellen-anleitung">Pflegebox bestellen — Komplettanleitung 2026</Link></li>
+            <li><Link href="/blog/welche-pflegehilfsmittel-stehen-mir-zu">Welche Pflegehilfsmittel stehen mir zu?</Link></li>
+            <li><Link href="/bewertungen">Bewertungen &amp; Erfahrungen — das sagen Familien über uns</Link></li>
           </ul>
         </section>
 

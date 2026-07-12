@@ -22,6 +22,116 @@ export interface BlogPostMeta {
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    slug: 'was-ist-alltagsbegleitung',
+    headline: 'Was ist Alltagsbegleitung? Der komplette Guide 2026',
+    description:
+      'Was ist Alltagsbegleitung? Definition, Aufgaben, Kosten & Anspruch einfach erklärt. Plus: Alltagsbegleitung beantragen und über 131 €/Monat (§45b) finanzieren.',
+    category: 'Alltagsbegleitung',
+    datePublished: '2026-07-12',
+    dateModified: '2026-07-12',
+    readTimeMin: 12,
+  },
+  {
+    slug: 'alltagsbegleitung-demenz',
+    headline: 'Alltagsbegleitung für Demenz-Patienten: Struktur, Entlastung & Finanzierung',
+    description:
+      'Alltagsbegleitung bei Demenz: Wie geschulte Begleiter Struktur, Aktivierung und Entlastung bringen — Aufgaben, Kosten und Finanzierung über 131 €/Monat (§45b).',
+    category: 'Alltagsbegleitung',
+    datePublished: '2026-07-12',
+    dateModified: '2026-07-12',
+    readTimeMin: 11,
+  },
+  {
+    slug: 'alltagsbegleitung-psychische-erkrankungen',
+    headline: 'Alltagsbegleitung bei psychischen Erkrankungen: Halt im Alltag',
+    description:
+      'Alltagsbegleitung bei Depression, Angststörung & Co.: Was Begleiter leisten, wo die Grenzen zur Therapie liegen und wie die Pflegekasse mit 131 €/Monat zahlt.',
+    category: 'Alltagsbegleitung',
+    datePublished: '2026-07-12',
+    dateModified: '2026-07-12',
+    readTimeMin: 11,
+  },
+  {
+    slug: 'alltagsbegleitung-vs-pflegedienst',
+    headline: 'Alltagsbegleitung vs. Pflegedienst — Was ist der Unterschied?',
+    description:
+      'Alltagsbegleitung oder Pflegedienst? Aufgaben, Kosten und Finanzierung im Vergleich — wann Sie was brauchen und wie sich beide Leistungen kombinieren lassen.',
+    category: 'Alltagsbegleitung',
+    datePublished: '2026-07-12',
+    dateModified: '2026-07-12',
+    readTimeMin: 8,
+  },
+  {
+    slug: 'tipps-fuer-pflegende-angehoerige',
+    headline: '10 Tipps für Angehörige von Pflegebedürftigen',
+    description:
+      '10 praktische Tipps für pflegende Angehörige: Entlastungsbetrag 131 €/Monat, Verhinderungspflege, Pflegebox, Selbstfürsorge und rechtliche Vorsorge.',
+    category: 'Ratgeber',
+    datePublished: '2026-07-12',
+    dateModified: '2026-07-12',
+    readTimeMin: 9,
+  },
+  {
+    slug: 'demenzbetreuung-zu-hause',
+    headline: 'Demenzbetreuung zu Hause — Unterstützung für Familien',
+    description:
+      'Demenzbetreuung zu Hause: Wie Familien den Alltag mit Demenz meistern — Tipps zu Kommunikation, Alltagsstruktur und Finanzierung über 131 € Entlastungsbetrag.',
+    category: 'Ratgeber',
+    datePublished: '2026-07-12',
+    dateModified: '2026-07-12',
+    readTimeMin: 10,
+  },
+  {
+    slug: 'kurzzeitpflege-verhinderungspflege-kombinieren',
+    headline: 'Kurzzeitpflege und Verhinderungspflege kombinieren — So sparen Sie',
+    description:
+      'Kurzzeitpflege und Verhinderungspflege kombinieren: Seit 01.07.2025 gilt der gemeinsame Jahresbetrag von 3.539 €. So teilen Sie das Budget klug auf.',
+    category: 'Finanzierung',
+    datePublished: '2026-07-12',
+    dateModified: '2026-07-12',
+    readTimeMin: 9,
+  },
+  {
+    slug: 'pflegebox-bestellen-anleitung',
+    headline: 'Pflegebox bestellen — Komplettanleitung 2026',
+    description:
+      'Pflegebox bestellen in 5 Schritten: Anspruch prüfen, Anbieter wählen, Antrag stellen, Genehmigung, Lieferung. Mit Checkliste, Fristen und typischen Fehlern.',
+    category: 'Services',
+    datePublished: '2026-07-12',
+    dateModified: '2026-07-12',
+    readTimeMin: 9,
+  },
+  {
+    slug: 'welche-pflegehilfsmittel-stehen-mir-zu',
+    headline: 'Welche Pflegehilfsmittel stehen mir zu?',
+    description:
+      'Pflegehilfsmittel im Überblick: 42 €/Monat zum Verbrauch (§40 SGB XI), technische Hilfsmittel wie Pflegebett & Hausnotruf, Zuständigkeit Pflegekasse vs. Krankenkasse.',
+    category: 'Services',
+    datePublished: '2026-07-12',
+    dateModified: '2026-07-12',
+    readTimeMin: 8,
+  },
+  {
+    slug: 'krankenfahrt-beantragen',
+    headline: 'Krankenfahrt beantragen: Schritt-für-Schritt-Anleitung',
+    description:
+      'Krankenfahrt beantragen leicht gemacht: Muster-4-Verordnung vom Arzt, Genehmigung der Krankenkasse, Fahrt buchen. Schritt-für-Schritt-Anleitung 2026.',
+    category: 'Services',
+    datePublished: '2026-07-12',
+    dateModified: '2026-07-12',
+    readTimeMin: 7,
+  },
+  {
+    slug: 'zuzahlung-krankenfahrt',
+    headline: 'Zuzahlung Krankenfahrt — was muss ich zahlen?',
+    description:
+      'Zuzahlung bei Krankenfahrten: 10 % des Fahrpreises, mindestens 5 €, höchstens 10 € pro Fahrt. Mit Beispielrechnungen, Belastungsgrenze und Befreiung.',
+    category: 'Services',
+    datePublished: '2026-07-12',
+    dateModified: '2026-07-12',
+    readTimeMin: 6,
+  },
+  {
     slug: 'erfahrungsbericht-alltagsengel',
     headline: 'Erfahrungsbericht: Mein Alltag als Alltagsengel',
     description:
@@ -63,13 +173,13 @@ export const BLOG_POSTS: BlogPostMeta[] = [
   },
   {
     slug: 'alltagsbegleitung-kosten',
-    headline: 'Was kostet Alltagsbegleitung? Kosten, Finanzierung & Tipps',
+    headline: 'Was kostet Alltagsbegleitung? Preise & Finanzierung 2026',
     description:
-      'Was kostet Alltagsbegleitung? Stundensätze von 25–45€, Finanzierung über den Entlastungsbetrag (131€/Monat) und Tipps zur Kostenübernahme. Jetzt informieren!',
+      'Alltagsbegleitung kostet 25–45 €/Stunde. Alle Finanzierungswege 2026: Entlastungsbetrag 131 €/Monat, Verhinderungspflege 3.539 €/Jahr, Steuerbonus §35a.',
     category: 'Alltagsbegleitung',
     datePublished: '2026-06-06',
-    dateModified: '2026-06-06',
-    readTimeMin: 8,
+    dateModified: '2026-07-12',
+    readTimeMin: 11,
   },
   {
     slug: 'entlastungsbetrag-nutzen',
@@ -143,43 +253,43 @@ export const BLOG_POSTS: BlogPostMeta[] = [
   },
   {
     slug: 'pflegebox-kostenlos-bestellen',
-    headline: 'Pflegebox kostenlos bestellen — 42€/Monat von der Pflegekasse',
+    headline: 'Pflegebox kostenlos bestellen: Schritt-für-Schritt-Anleitung',
     description:
-      'Pflegebox kostenlos bestellen: Bis zu 42 € monatlich für Pflegehilfsmittel von der Pflegekasse. 0 € Eigenanteil. Jetzt kostenlos bestellen.',
+      'Pflegebox kostenlos bestellen — Schritt für Schritt: Anspruch bei Pflegegrad 1–5 prüfen, Antrag stellen, monatlich bis zu 42 € Pflegehilfsmittel erhalten.',
     category: 'Services',
     datePublished: '2026-06-04',
-    dateModified: '2026-06-04',
-    readTimeMin: 4,
+    dateModified: '2026-07-12',
+    readTimeMin: 9,
   },
   {
     slug: 'entlastungsbetrag-beantragen',
-    headline: 'Entlastungsbetrag beantragen: Schritt-für-Schritt Anleitung 2026',
+    headline: 'Entlastungsbetrag 2026: Anspruch, Antrag & Nutzung (131 €/Monat)',
     description:
-      'Erfahren Sie, wie Sie den Entlastungsbetrag nach § 45b beantragen. Anleitung mit allen Dokumenten und Tipps für die schnelle Genehmigung – jetzt lesen.',
+      'Entlastungsbetrag 2026: 131 €/Monat ab Pflegegrad 1 nach §45b SGB XI. Der Praxis-Guide zu Anspruch, Abrechnung, Fristen, Beispielrechnungen und Fehlern.',
     category: 'Finanzierung',
     datePublished: '2026-04-12',
-    dateModified: '2026-04-12',
-    readTimeMin: 5,
+    dateModified: '2026-07-12',
+    readTimeMin: 10,
   },
   {
     slug: 'krankenfahrt-kostenuebernahme',
-    headline: 'Krankenfahrt: Wann zahlt die Krankenkasse?',
+    headline: 'Krankenfahrt zum Arzt: Wann zahlt die Krankenkasse?',
     description:
-      'Wann zahlt die Krankenkasse Ihre Krankenfahrt? Voraussetzungen, Zuzahlung und Antrag einfach erklärt – jetzt informieren und Fahrt sicher planen.',
+      'Wann zahlt die Krankenkasse Ihre Krankenfahrt? §60 SGB V, Muster-4-Verordnung, Genehmigung und Zuzahlung ausführlich erklärt — mit Vergleichstabelle.',
     category: 'Services',
     datePublished: '2026-04-10',
-    dateModified: '2026-04-10',
-    readTimeMin: 6,
+    dateModified: '2026-07-12',
+    readTimeMin: 9,
   },
   {
     slug: 'alltagsbegleiter-werden',
-    headline: 'Alltagsbegleiter werden: Verdienst, Voraussetzungen & Bewerbung',
+    headline: 'Alltagsbegleiter werden: Ausbildung, Gehalt & Voraussetzungen',
     description:
-      'Alles über den Beruf des Alltagsbegleiters: Verdienst von ca. 20 €/Stunde, Voraussetzungen und Bewerbung. Jetzt bei Alltagsengel als Helfer starten.',
+      'Alltagsbegleiter werden 2026: Qualifizierung nach §45a SGB XI, Gehalt von 18–24 €/Stunde, Voraussetzungen und Bewerbung — der komplette Weg in den Beruf.',
     category: 'Karriere',
     datePublished: '2026-04-08',
-    dateModified: '2026-04-08',
-    readTimeMin: 7,
+    dateModified: '2026-07-12',
+    readTimeMin: 12,
   },
   {
     slug: 'nebenjob-pflege',
@@ -203,13 +313,13 @@ export const BLOG_POSTS: BlogPostMeta[] = [
   },
   {
     slug: 'pflegegrad-beantragen',
-    headline: 'Pflegegrad beantragen: So bekommen Sie den richtigen Pflegegrad',
+    headline: 'Pflegegrad beantragen: Komplette Anleitung 2026',
     description:
-      'Pflegegrad beantragen: Anleitung mit MDK-Vorbereitung, Tipps zur Begutachtung und Widerspruch. Jetzt lesen und Antrag erfolgreich stellen.',
+      'Pflegegrad beantragen 2026: Antrag bei der Pflegekasse, MD-Begutachtung mit Punktesystem, Pflegetagebuch, Fristen und Widerspruch — die komplette Anleitung.',
     category: 'Pflegegrad',
     datePublished: '2026-04-03',
-    dateModified: '2026-04-03',
-    readTimeMin: 8,
+    dateModified: '2026-07-12',
+    readTimeMin: 11,
   },
   {
     slug: 'alltagshilfe-senioren',
@@ -293,13 +403,13 @@ export const BLOG_POSTS: BlogPostMeta[] = [
   },
   {
     slug: 'verhinderungspflege-beantragen',
-    headline: 'Verhinderungspflege beantragen: 3.539€ pro Jahr nutzen',
+    headline: "Verhinderungspflege beantragen: So geht's richtig",
     description:
-      'Verhinderungspflege beantragen: bis zu 3.539 € pro Jahr für Ersatzpflege. So stellen Sie den Antrag bei der Pflegekasse – jetzt Anspruch sichern.',
+      'Verhinderungspflege beantragen: Formular, Nachweise, Fristen und Beispielrechnung. Schritt für Schritt zur Erstattung – bis zu 3.539 € pro Jahr sichern.',
     category: 'Finanzierung',
     datePublished: '2026-03-15',
-    dateModified: '2026-07-08',
-    readTimeMin: 5,
+    dateModified: '2026-07-12',
+    readTimeMin: 10,
   },
 ]
 
