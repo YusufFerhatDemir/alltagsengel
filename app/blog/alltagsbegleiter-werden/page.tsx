@@ -16,6 +16,42 @@ export const metadata: Metadata = {
 };
 
 
+// HowTo-Schema für die sichtbare Schritt-für-Schritt-Anleitung
+// (h2 "Schritte zum Alltagsbegleiter" — Inhalte müssen sichtbar bleiben)
+const howToJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'HowTo',
+  name: 'Alltagsbegleiter werden — Schritt für Schritt',
+  description: 'In vier Schritten zum Alltagsbegleiter: Schulung, Unterlagen, Bewerbung, erste Einsätze.',
+  totalTime: 'P30D',
+  step: [
+    {
+      '@type': 'HowToStep',
+      position: 1,
+      name: 'Schulung absolvieren',
+      text: 'Erkundigen Sie sich bei Volkshochschulen, Sozialverbänden oder Anbietern wie Alltagsengel nach einer Qualifizierung nach §45a/§53c SGB XI (80–120 Stunden, oft kostenlos oder subventioniert).',
+    },
+    {
+      '@type': 'HowToStep',
+      position: 2,
+      name: 'Unterlagen sammeln',
+      text: 'Besorgen Sie polizeiliches Führungszeugnis, Gesundheitszeugnis, ggf. Impfnachweis sowie Lebenslauf und Zeugnisse.',
+    },
+    {
+      '@type': 'HowToStep',
+      position: 3,
+      name: 'Bei Anbieter bewerben',
+      text: 'Bewerben Sie sich bei Pflegediensten, Sozialunternehmen oder Online-Plattformen wie Alltagsengel — dort genügt ein Profil in der App.',
+    },
+    {
+      '@type': 'HowToStep',
+      position: 4,
+      name: 'Registrierung und erste Einsätze',
+      text: 'Nach erfolgreicher Bewerbung werden Sie registriert und erhalten Ihre ersten Einsätze, oft beginnend mit einem Probeeinsatz.',
+    },
+  ],
+}
+
 const articleJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'Article',
@@ -35,6 +71,7 @@ export default function AlltagsbegleiterWerden() {
     <main className="blog-container">
       <BreadcrumbSchema items={[{ name: 'Ratgeber', url: '/blog' }, { name: 'Alltagsbegleiter werden' }]} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(howToJsonLd) }} />
       <article className="blog-article">
         <div className="blog-header">
           <h1>Alltagsbegleiter werden: Verdienst, Voraussetzungen & Bewerbung</h1>
@@ -90,12 +127,12 @@ export default function AlltagsbegleiterWerden() {
           <p>Der durchschnittliche Stundensatz für Alltagsbegleiter liegt zwischen 18 und 22 Euro brutto pro Stunde, je nach Region, Erfahrung und Anbieter. In urbanen Gegenden kann es auch etwas höher sein (bis 24 Euro).</p>
 
           <h3>Arbeitsvolumen</h3>
-          <p>Dies ist sehr variabel. Viele Alltagsbegleiter arbeiten auf Basis von Minijobs (bis 538 Euro monatlich) oder auf 450-Euro-Basis. Andere sind ganztägig beschäftigt. Mit durchschnittlichen 20-25 Stunden pro Woche können Sie mit etwa 1.600-2.000 Euro monatlich rechnen.</p>
+          <p>Dies ist sehr variabel. Viele Alltagsbegleiter arbeiten auf Minijob-Basis (bis 603 Euro monatlich, Stand 2026). Andere sind ganztägig beschäftigt. Mit durchschnittlichen 20-25 Stunden pro Woche können Sie mit etwa 1.600-2.000 Euro monatlich rechnen.</p>
 
           <h3>Abrechnungsmodelle</h3>
           <p>Je nach Arbeitgeber gibt es unterschiedliche Modelle:</p>
           <ul>
-            <li><strong>Minijob (450 Euro):</strong> Direkt bei Privathaushalt oder über Anbieter</li>
+            <li><strong>Minijob (bis 603 Euro):</strong> Direkt bei Privathaushalt oder über Anbieter</li>
             <li><strong>Vollzeitstelle:</strong> Bei etablierten Pflegediensten oder Sozialunternehmen</li>
             <li><strong>Stundenhonorar:</strong> Freiberufliche Tätigkeit, oft mit höherem Stundensatz aber ohne Sicherheitsleistungen</li>
             <li><strong>Flexible Arbeitshilfe:</strong> Über Plattformen wie Alltagsengel, bei flexiblem Einsatz</li>
@@ -182,6 +219,7 @@ export default function AlltagsbegleiterWerden() {
 
           <h2>Fazit</h2>
           <p>Ein Beruf als Alltagsbegleiter ist erfüllend, flexibel und wirtschaftlich fair entlohnt. Mit einer Schulung und den richtigen Qualifikationen können Sie direkt mit älteren Menschen arbeiten und ihnen bei alltäglichen Herausforderungen helfen. Alltagsengel macht den Einstieg einfacher – registrieren Sie sich heute und beginnen Sie, Menschen in Ihrer Nähe zu unterstützen.</p>
+          <p>Wie sich der Job im Alltag anfühlt, lesen Sie im <Link href="/blog/erfahrungsbericht-alltagsengel">Erfahrungsbericht: Mein Alltag als Alltagsengel</Link>. Sie wohnen außerhalb Frankfurts? Alle Infos zum Einstieg in Ihrer Stadt: <Link href="/engel-werden/offenbach">Offenbach</Link>, <Link href="/engel-werden/wiesbaden">Wiesbaden</Link>, <Link href="/engel-werden/darmstadt">Darmstadt</Link>, <Link href="/engel-werden/hanau">Hanau</Link>, <Link href="/engel-werden/mainz">Mainz</Link> und <Link href="/engel-werden/bad-homburg">Bad Homburg</Link>.</p>
         </div>
 
         <div className="blog-cta">

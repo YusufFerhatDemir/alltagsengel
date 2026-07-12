@@ -185,7 +185,7 @@ export default function NebenjobPflegePage() {
             30 Std. × 20€ = 600€/Woche = ca. 2.400€/Monat (nach Gebühr: ca. 2.040€)
           </p>
           <p>
-            <strong>Wichtig:</strong> Denken Sie an Fahrtkosten (Auto, ÖPNV) und ggf. Einkommensteuer. Bei 450€/Monat sind Sie „geringfügig beschäftigt" – solange kostenlos. Darüber müssen Sie es eventuell versteuern.
+            <strong>Wichtig:</strong> Denken Sie an Fahrtkosten (Auto, ÖPNV) und ggf. Einkommensteuer. Bis 603 €/Monat (Minijob-Grenze 2026) sind Sie „geringfügig beschäftigt" – solange steuerfrei. Darüber müssen Sie es eventuell versteuern.
           </p>
 
           <h2>Tipps für erfolgreiche Helfer</h2>

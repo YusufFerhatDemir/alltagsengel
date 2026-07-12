@@ -9,6 +9,9 @@ export const metadata: Metadata = {
   description: 'Stellenangebot: Alltagsbegleiter/in (m/w/d) in Frankfurt & Rhein-Main. 20€/Stunde, flexibler Nebenjob oder Minijob, keine Pflegeausbildung nötig, §45a-Qualifizierung möglich. Quereinsteiger willkommen. Jetzt bewerben!',
   keywords: [
     'alltagsbegleiter werden',
+    'alltagsbegleiter job frankfurt',
+    'betreuungskraft stellenangebot',
+    'minijob alltagsbegleitung',
     'stellenangebot alltagsbegleitung frankfurt',
     'nebenjob pflege frankfurt',
     'betreuungskraft werden',
@@ -51,12 +54,16 @@ export const metadata: Metadata = {
 
 const FAQS = [
   {
+    q: 'Wie werde ich Alltagsbegleiter?',
+    a: 'In drei Schritten: Online bewerben (Profil in der App anlegen oder Kontaktdaten hinterlassen), kurzes Kennenlerngespräch mit unserem Team, erweitertes Führungszeugnis einreichen — dann kannst du direkt Aufträge in deiner Nähe übernehmen. Der gesamte Einstieg dauert meist nur wenige Tage.',
+  },
+  {
     q: 'Brauche ich eine Pflegeausbildung?',
     a: 'Nein. Alltagsbegleitung ist keine medizinische Pflege. Sie helfen bei alltäglichen Aufgaben wie Einkaufen, Arztbegleitung oder Gesellschaft leisten. Empathie und Zuverlässigkeit sind wichtiger als Zertifikate.',
   },
   {
-    q: 'Wie viel verdiene ich als Alltagsengel?',
-    a: 'Sie erhalten 20 € pro Stunde. Die Abrechnung erfolgt transparent über die Alltagsengel-App. Sie bestimmen selbst, wie viele Stunden pro Woche Sie arbeiten möchten.',
+    q: 'Was verdient ein Alltagsbegleiter?',
+    a: 'Bei Alltagsengel erhalten Sie 20 € pro Stunde. Die Abrechnung erfolgt transparent über die Alltagsengel-App. Sie bestimmen selbst, wie viele Stunden pro Woche Sie arbeiten möchten.',
   },
   {
     q: 'Kann ich mir die Zeiten selbst einteilen?',
@@ -64,7 +71,7 @@ const FAQS = [
   },
   {
     q: 'Ist das ein Minijob oder eine Festanstellung?',
-    a: 'Beides ist möglich. Viele Engel starten als Minijobber (bis 538 €/Monat). Je nach Verfügbarkeit können Sie auch mehr Stunden übernehmen.',
+    a: 'Beides ist möglich. Viele Engel starten als Minijobber (bis 603 €/Monat). Je nach Verfügbarkeit können Sie auch mehr Stunden übernehmen.',
   },
   {
     q: 'Was mache ich als Alltagsbegleiter genau?',
@@ -92,7 +99,7 @@ const JOB_POSTINGS = [
     '@type': 'JobPosting',
     title: 'Alltagsbegleiter / Alltagsbegleiterin (m/w/d) – Nebenjob Frankfurt',
     description:
-      'Als Alltagsbegleiter/in (m/w/d) begleitest du ältere Menschen und Personen mit Pflegegrad in Frankfurt am Main bei alltäglichen Aufgaben: Einkaufen, Arztbesuche, Spaziergänge, Gesellschaft leisten, leichte Haushaltshilfe. Keine medizinische Pflege, keine Ausbildung nötig. Flexible Zeiteinteilung — du bestimmst selbst, wann du arbeitest. 20 € pro Stunde, ideal als Nebenjob oder Minijob (bis 538 €/Monat). Quereinsteiger herzlich willkommen!',
+      'Als Alltagsbegleiter/in (m/w/d) begleitest du ältere Menschen und Personen mit Pflegegrad in Frankfurt am Main bei alltäglichen Aufgaben: Einkaufen, Arztbesuche, Spaziergänge, Gesellschaft leisten, leichte Haushaltshilfe. Keine medizinische Pflege, keine Ausbildung nötig. Flexible Zeiteinteilung — du bestimmst selbst, wann du arbeitest. 20 € pro Stunde, ideal als Nebenjob oder Minijob (bis 603 €/Monat). Quereinsteiger herzlich willkommen!',
     identifier: { '@type': 'PropertyValue', name: 'Alltagsengel', value: 'ae-nebenjob-ffm-001' },
     datePosted: '2026-07-08',
     validThrough: '2026-12-31',
@@ -124,7 +131,7 @@ const JOB_POSTINGS = [
     educationRequirements: { '@type': 'EducationalOccupationalCredential', credentialCategory: 'no requirements' },
     qualifications: 'Keine Ausbildung erforderlich, Quereinsteiger willkommen. Empathie, Zuverlässigkeit, gute Deutschkenntnisse (mind. B2).',
     industry: 'Sozialwesen / Alltagsbegleitung',
-    workHours: 'Flexibel, nach eigener Verfügbarkeit (Minijob bis 538 €/Monat möglich)',
+    workHours: 'Flexibel, nach eigener Verfügbarkeit (Minijob bis 603 €/Monat möglich)',
   },
   {
     '@context': 'https://schema.org',
@@ -194,7 +201,7 @@ const JOB_POSTINGS = [
     educationRequirements: { '@type': 'EducationalOccupationalCredential', credentialCategory: 'no requirements' },
     qualifications: 'Keine Ausbildung erforderlich, Quereinsteiger willkommen. Empathie, Zuverlässigkeit, gute Deutschkenntnisse (mind. B2).',
     industry: 'Sozialwesen / Alltagsbegleitung',
-    workHours: 'Flexibel, nach eigener Verfügbarkeit (Minijob bis 538 €/Monat möglich)',
+    workHours: 'Flexibel, nach eigener Verfügbarkeit (Minijob bis 603 €/Monat möglich)',
   },
   {
     '@context': 'https://schema.org',
@@ -552,6 +559,44 @@ export default function EngelWerdenPage() {
           </div>
         </section>
 
+        {/* ─── Städte (Recruiting-Landingpages) ─── */}
+        <section className="lp-section">
+          <div className="lp-badge">Dein Einsatzgebiet</div>
+          <h2 className="lp-h2">Alltagsbegleiter Job in deiner Stadt</h2>
+          <p className="lp-text" style={{ marginBottom: 20 }}>
+            Wir vermitteln Aufträge im gesamten Rhein-Main-Gebiet — du übernimmst Einsätze in deiner Nähe.
+            Alle Infos zum Alltagsbegleiter-Job in deiner Stadt:
+          </p>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 200px), 1fr))',
+            gap: 10,
+          }}>
+            {[
+              { slug: 'offenbach', name: 'Offenbach' },
+              { slug: 'wiesbaden', name: 'Wiesbaden' },
+              { slug: 'darmstadt', name: 'Darmstadt' },
+              { slug: 'hanau', name: 'Hanau' },
+              { slug: 'bad-homburg', name: 'Bad Homburg' },
+              { slug: 'mainz', name: 'Mainz' },
+              { slug: 'aschaffenburg', name: 'Aschaffenburg' },
+              { slug: 'frankfurt-hoechst', name: 'Frankfurt-Höchst' },
+              { slug: 'neu-isenburg', name: 'Neu-Isenburg' },
+              { slug: 'friedberg-wetterau', name: 'Friedberg (Wetterau)' },
+              { slug: 'rodgau', name: 'Rodgau' },
+            ].map(c => (
+              <Link key={c.slug} href={`/engel-werden/${c.slug}`} style={{
+                display: 'block', textAlign: 'center', textDecoration: 'none',
+                background: 'rgba(255,255,255,0.04)', borderRadius: 12,
+                padding: '12px 14px', border: '1px solid rgba(255,255,255,0.06)',
+                color: '#F5F0E8', fontSize: 14, fontWeight: 600,
+              }}>
+                Job in {c.name}
+              </Link>
+            ))}
+          </div>
+        </section>
+
         {/* ─── Ratgeber ─── */}
         <section className="lp-section">
           <div className="lp-badge">Weiterlesen</div>
@@ -564,6 +609,7 @@ export default function EngelWerdenPage() {
           }}>
             {[
               { slug: 'alltagsbegleiter-werden', title: 'Alltagsbegleiter werden: Verdienst & Voraussetzungen', cat: 'Karriere' },
+              { slug: 'erfahrungsbericht-alltagsengel', title: 'Erfahrungsbericht: Mein Alltag als Alltagsengel', cat: 'Karriere' },
               { slug: 'nebenjob-pflege', title: 'Nebenjob in der Pflege: 20€/Stunde', cat: 'Karriere' },
             ].map(a => (
               <Link key={a.slug} href={`/blog/${a.slug}`} style={{ textDecoration: 'none' }}>

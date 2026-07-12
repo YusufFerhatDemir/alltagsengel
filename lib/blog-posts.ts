@@ -22,6 +22,16 @@ export interface BlogPostMeta {
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    slug: 'erfahrungsbericht-alltagsengel',
+    headline: 'Erfahrungsbericht: Mein Alltag als Alltagsengel',
+    description:
+      'Wie sieht der Arbeitsalltag als Alltagsbegleiterin wirklich aus? Ein Tag zwischen Einkauf, Arztbegleitung und Kaffeeklatsch — ehrlich erzählt, mit allen Zahlen.',
+    category: 'Karriere',
+    datePublished: '2026-07-12',
+    dateModified: '2026-07-12',
+    readTimeMin: 6,
+  },
+  {
     slug: 'pflegereform-2027',
     headline: 'Pflegereform 2027: Was sich für Alltagsbegleitung & Entlastungsbetrag ändert',
     description:
