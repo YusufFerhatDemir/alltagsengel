@@ -401,6 +401,30 @@ export default function EntlastungsbetragPage() {
         </section>
 
         <section className="info-card">
+          <h3>Checkliste: In 10 Minuten startklar</h3>
+          <ul className="info-list">
+            <li><strong>Pflegegrad-Bescheid bereitlegen</strong> — darauf stehen Pflegegrad und
+              Pflegekasse, mehr brauchen wir nicht.</li>
+            <li><strong>Ungenutztes Guthaben überschlagen:</strong> Monate seit
+              Pflegegrad-Anerkennung × 131 € — plus eventuelles Restguthaben aus dem Vorjahr
+              (nutzbar bis 30. Juni). Im Zweifel fragen wir für Sie bei der Kasse nach.</li>
+            <li><strong>Bedarf notieren:</strong> Was würde am meisten entlasten — Einkauf,
+              Haushalt, Begleitung zu Terminen, Gesellschaft? Das hilft bei der Wahl des
+              passenden Engels.</li>
+            <li><strong>Abtretungserklärung unterschreiben</strong> — einmalig, digital in der
+              App. Ab dann läuft die Abrechnung automatisch.</li>
+            <li><strong>Ersten Termin buchen</strong> — viele Kunden starten mit einem
+              Kennenlerntermin von zwei Stunden.</li>
+          </ul>
+          <p style={{ marginTop: 12 }}>
+            Sie sind unsicher beim Pflegegrad? Der kostenlose
+            <Link href="/pflegegrad-check"> Pflegegrad-Check</Link> gibt eine erste Einschätzung,
+            und der Ratgeber <Link href="/blog/pflegegrad-beantragen">Pflegegrad beantragen</Link>{' '}
+            führt durch das Antragsverfahren beim Medizinischen Dienst.
+          </p>
+        </section>
+
+        <section className="info-card">
           <h3>Kostenlose Beratung anfragen</h3>
           <p style={{ marginBottom: 16 }}>
             Unsicher, wie viel Budget Ihnen zusteht oder wie die Abrechnung funktioniert?
