@@ -436,14 +436,8 @@ function buildJsonLd(city: CityData, faqItems: ReturnType<typeof buildFaqItems>)
           acceptedAnswer: { '@type': 'Answer', text: f.antwort },
         })),
       },
-      {
-        '@type': 'BreadcrumbList',
-        itemListElement: [
-          { '@type': 'ListItem', position: 1, name: 'Startseite', item: 'https://alltagsengel.care' },
-          { '@type': 'ListItem', position: 2, name: 'Pflegebox', item: 'https://alltagsengel.care/hygienebox' },
-          { '@type': 'ListItem', position: 3, name: `Pflegebox ${city.name}`, item: `https://alltagsengel.care/hygienebox/${city.slug}` },
-        ],
-      },
+      // BreadcrumbList kommt aus <BreadcrumbSchema> (Schema + sichtbare Nav) —
+      // hier NICHT duplizieren, sonst zwei widersprüchliche Markups pro Seite.
     ],
   }
 }
