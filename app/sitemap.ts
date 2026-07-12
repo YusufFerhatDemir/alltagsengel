@@ -30,6 +30,8 @@ const STATIC_ROUTES: Omit<RouteEntry, 'lastModified'>[] = [
   { url: '/hygienebox', changeFrequency: 'weekly', priority: 0.9 },
   { url: '/krankenfahrten', changeFrequency: 'weekly', priority: 0.9 },
   { url: '/alltagsbegleitung', changeFrequency: 'weekly', priority: 0.9 },
+  { url: '/entlastungsbetrag', changeFrequency: 'weekly', priority: 0.9 },
+  { url: '/verhinderungspflege', changeFrequency: 'weekly', priority: 0.9 },
   { url: '/engel-werden', changeFrequency: 'weekly', priority: 0.9 },
   { url: '/blog', changeFrequency: 'daily', priority: 0.9 },
   { url: '/budgetrechner', changeFrequency: 'weekly', priority: 0.9 },
@@ -40,9 +42,11 @@ const STATIC_ROUTES: Omit<RouteEntry, 'lastModified'>[] = [
   { url: '/faq', changeFrequency: 'monthly', priority: 0.8 },
   { url: '/kontakt', changeFrequency: 'monthly', priority: 0.7 },
   // City-Landingpages (Rhein-Main)
-  // HINWEIS: /{service}/frankfurt fehlt hier BEWUSST — die Frankfurt-City-Seiten
-  // kanonisieren auf die Root-Service-Seiten (Keyword-Kannibalisierung auf
-  // "… Frankfurt"; die Root-Seiten targeten bereits Frankfurt).
+  // HINWEIS: /krankenfahrten/frankfurt und /hygienebox/frankfurt fehlen BEWUSST —
+  // sie kanonisieren auf die Root-Service-Seiten (Keyword-Kannibalisierung auf
+  // "… Frankfurt"). /alltagsbegleitung/frankfurt ist dagegen self-canonical
+  // und gehört deshalb in die Sitemap.
+  { url: '/alltagsbegleitung/frankfurt', changeFrequency: 'weekly', priority: 0.85 },
   { url: '/alltagsbegleitung/offenbach', changeFrequency: 'weekly', priority: 0.85 },
   { url: '/alltagsbegleitung/wiesbaden', changeFrequency: 'weekly', priority: 0.85 },
   { url: '/alltagsbegleitung/darmstadt', changeFrequency: 'weekly', priority: 0.85 },
@@ -65,6 +69,7 @@ const STATIC_ROUTES: Omit<RouteEntry, 'lastModified'>[] = [
   { url: '/krankenfahrten/frankfurt-hoechst', changeFrequency: 'weekly', priority: 0.85 },
   { url: '/krankenfahrten/neu-isenburg', changeFrequency: 'weekly', priority: 0.85 },
   { url: '/krankenfahrten/friedberg-wetterau', changeFrequency: 'weekly', priority: 0.85 },
+  { url: '/krankenfahrten/rodgau', changeFrequency: 'weekly', priority: 0.85 },
   // City-Landingpages Pflegebox (frankfurt: siehe Hinweis oben)
   { url: '/hygienebox/offenbach', changeFrequency: 'weekly', priority: 0.85 },
   { url: '/hygienebox/wiesbaden', changeFrequency: 'weekly', priority: 0.85 },
@@ -73,6 +78,7 @@ const STATIC_ROUTES: Omit<RouteEntry, 'lastModified'>[] = [
   { url: '/hygienebox/bad-homburg', changeFrequency: 'weekly', priority: 0.85 },
   { url: '/hygienebox/mainz', changeFrequency: 'weekly', priority: 0.85 },
   { url: '/hygienebox/aschaffenburg', changeFrequency: 'weekly', priority: 0.85 },
+  { url: '/hygienebox/frankfurt-hoechst', changeFrequency: 'weekly', priority: 0.85 },
   { url: '/hygienebox/neu-isenburg', changeFrequency: 'weekly', priority: 0.85 },
   { url: '/hygienebox/friedberg-wetterau', changeFrequency: 'weekly', priority: 0.85 },
   { url: '/hygienebox/rodgau', changeFrequency: 'weekly', priority: 0.85 },

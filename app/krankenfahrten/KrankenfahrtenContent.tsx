@@ -170,6 +170,7 @@ export default function KrankenfahrtenContent({ faqs = [] }: { faqs?: FaqItem[] 
             <li><Link href="/krankenfahrten/frankfurt-hoechst">Krankenfahrt Frankfurt-Höchst</Link></li>
             <li><Link href="/krankenfahrten/neu-isenburg">Krankenfahrt Neu-Isenburg</Link></li>
             <li><Link href="/krankenfahrten/friedberg-wetterau">Krankenfahrt Friedberg (Wetterau)</Link></li>
+            <li><Link href="/krankenfahrten/rodgau">Krankenfahrt Rodgau</Link></li>
           </ul>
         </section>
 
@@ -190,6 +191,8 @@ export default function KrankenfahrtenContent({ faqs = [] }: { faqs?: FaqItem[] 
           <ul className="info-list">
             <li><Link href="/alltagsbegleitung">Alltagsbegleitung — 131€/Monat über Entlastungsbetrag</Link></li>
             <li><Link href="/hygienebox">Pflegebox — kostenlose Pflegehilfsmittel (42€/Monat)</Link></li>
+            <li><Link href="/entlastungsbetrag">Entlastungsbetrag — 131 €/Monat ab Pflegegrad 1 (§45b)</Link></li>
+            <li><Link href="/verhinderungspflege">Verhinderungspflege — Ersatzpflege bis 3.539 €/Jahr (§39)</Link></li>
             <li><Link href="/finanzierung">Finanzierung — bis zu 5.111 €/Jahr, nach Pflegegrad erklärt</Link></li>
             <li><Link href="/blog/krankenfahrt-kostenuebernahme">Ratgeber: Krankenfahrt Kostenübernahme</Link></li>
             <li><Link href="/faq">Häufige Fragen zu Pflegeleistungen</Link></li>

@@ -183,6 +183,10 @@ export async function generateMetadata({ params }: { params: Promise<{ stadt: st
       '131 Euro Pflegekasse',
       `Seniorenhilfe ${city.name}`,
       `Pflegedienst ${city.name}`,
+      `Seniorenbetreuung ${city.name}`,
+      `Verhinderungspflege ${city.name}`,
+      `Pflegebox ${city.name}`,
+      `Krankenfahrt ${city.name}`,
     ],
     openGraph: {
       images: [{ url: '/og-image.png', width: 1200, height: 630 }],
@@ -230,6 +234,14 @@ function buildFaqs(city: CityData): { frage: string; antwort: string }[] {
     {
       frage: `Kommen die Alltagsbegleiter auch in meinen Stadtteil von ${city.name}?`,
       antwort: `Ja. ${city.lokal} Zu unseren Einsatzgebieten zählen unter anderem ${city.stadtteile.join(', ')} — und auf Wunsch auch die nähere Umgebung.`,
+    },
+    {
+      frage: `Übernehmen Sie in ${city.name} auch Verhinderungspflege?`,
+      antwort: `Ja. Unsere Betreuungskräfte in ${city.name} übernehmen auch stundenweise Verhinderungspflege (§39 SGB XI), wenn Ihre private Pflegeperson ausfällt oder eine Pause braucht. Dafür steht ab Pflegegrad 2 der gemeinsame Jahresbetrag von bis zu 3.539 € pro Jahr bereit — zusätzlich zum Entlastungsbetrag.`,
+    },
+    {
+      frage: `Bieten Sie in ${city.name} auch Pflegebox und Krankenfahrten an?`,
+      antwort: `Ja. Neben der Alltagsbegleitung liefern wir die kostenlose Pflegebox (Pflegehilfsmittel bis 42 €/Monat nach §40 SGB XI) nach ${city.name} und vermitteln Krankenfahrten zu Arzt, Klinik und Dialyse — mit Verordnung zahlt die Krankenkasse (§60 SGB V).`,
     },
   ]
 }
@@ -292,6 +304,10 @@ export default async function StadtPage({ params }: { params: Promise<{ stadt: s
 
   const faqs = buildFaqs(city)
   const jsonLd = buildJsonLd(city, faqs)
+  // Frankfurt kanonisiert bei Krankenfahrten & Pflegebox auf die Root-Seiten —
+  // interne Links folgen dem Canonical, alle anderen Städte verlinken die Stadtseite.
+  const krankenfahrtHref = city.slug === 'frankfurt' ? '/krankenfahrten' : `/krankenfahrten/${city.slug}`
+  const pflegeboxHref = city.slug === 'frankfurt' ? '/hygienebox' : `/hygienebox/${city.slug}`
 
   return (
     <div className="screen info-screen">
@@ -396,6 +412,42 @@ export default async function StadtPage({ params }: { params: Promise<{ stadt: s
         </section>
 
         <section className="info-card">
+          <h3>Für wen ist Alltagsbegleitung in {city.name} gedacht?</h3>
+          <p>
+            Unsere Kunden in {city.name} sind so unterschiedlich wie ihre Lebenssituationen: Senioren,
+            die nach einem Krankenhausaufenthalt vorübergehend Unterstützung brauchen. Menschen mit
+            beginnender Demenz, deren Angehörige tagsüber arbeiten. Alleinstehende, denen vor allem
+            die Gesellschaft fehlt — ein Gesprächspartner beim Kaffee, eine Begleitung beim
+            Spaziergang. Und pflegende Angehörige, die sich regelmäßige Entlastung wünschen, um
+            selbst gesund zu bleiben.
+          </p>
+          <p style={{ marginTop: 8 }}>
+            Alle unsere Engel sind nach § 45a SGB XI geschult, unterliegen einer
+            Qualitätsprüfung und sind während jedes Einsatzes versichert. Sie erhalten feste
+            Bezugspersonen statt wechselnder Kräfte — gerade bei Demenz ist diese Kontinuität
+            entscheidend.
+          </p>
+        </section>
+
+        <section className="info-card">
+          <h3>Verhinderungspflege in {city.name} — wenn Angehörige eine Pause brauchen</h3>
+          <p>
+            Sie pflegen ein Familienmitglied in {city.name} und brauchen Urlaub, einen freien
+            Nachmittag oder fallen krankheitsbedingt aus? Unsere Betreuungskräfte übernehmen die
+            <strong> stundenweise Verhinderungspflege</strong> (§39 SGB XI). Ab Pflegegrad 2 stellt
+            die Pflegekasse dafür den gemeinsamen Jahresbetrag von bis zu <strong>3.539 € pro Jahr </strong>
+            bereit — seit dem 01.07.2025 ohne Vorpflegezeit und flexibel mit der Kurzzeitpflege
+            kombinierbar. Bei Einsätzen unter 8 Stunden am Tag läuft Ihr Pflegegeld ungekürzt weiter.
+          </p>
+          <p style={{ marginTop: 8 }}>
+            Zusammen mit dem <Link href="/entlastungsbetrag">Entlastungsbetrag</Link> (131 €/Monat)
+            stehen Ihnen so bis zu 5.111 € pro Jahr zur Verfügung — mehr dazu auf unserer Seite zur{' '}
+            <Link href="/verhinderungspflege">Verhinderungspflege</Link> und im{' '}
+            <Link href="/budgetrechner">Budgetrechner</Link>.
+          </p>
+        </section>
+
+        <section className="info-card">
           <h3>Kostenlose Beratung anfragen</h3>
           <p style={{ marginBottom: 16 }}>
             Sie haben Fragen zur Alltagsbegleitung in {city.name} oder zum Entlastungsbetrag?
@@ -418,8 +470,10 @@ export default async function StadtPage({ params }: { params: Promise<{ stadt: s
           <h3>Weitere Dienste in {city.name}</h3>
           <p>Neben Alltagsbegleitung bieten wir in {city.name} auch:</p>
           <ul className="info-list">
-            <li><Link href="/krankenfahrten">Krankenfahrten</Link> — Mit Verordnung zahlt die Krankenkasse (§60 SGB V)</li>
-            <li><Link href="/hygienebox">Pflegebox</Link> — Kostenlose Pflegehilfsmittel (42 €/Monat nach §40 SGB XI)</li>
+            <li><Link href={krankenfahrtHref}>Krankenfahrten in {city.name}</Link> — Mit Verordnung zahlt die Krankenkasse (§60 SGB V)</li>
+            <li><Link href={pflegeboxHref}>Pflegebox für {city.name}</Link> — Kostenlose Pflegehilfsmittel (42 €/Monat nach §40 SGB XI)</li>
+            <li><Link href="/verhinderungspflege">Verhinderungspflege</Link> — Ersatzpflege bis 3.539 €/Jahr (§39 SGB XI)</li>
+            <li><Link href="/entlastungsbetrag">Entlastungsbetrag</Link> — 131 €/Monat ab Pflegegrad 1 (§45b SGB XI)</li>
           </ul>
         </section>
 
@@ -452,6 +506,9 @@ export default async function StadtPage({ params }: { params: Promise<{ stadt: s
           <Link href="/alltagsbegleitung">Alltagsbegleitung</Link>
           <Link href="/krankenfahrten">Krankenfahrten</Link>
           <Link href="/hygienebox">Pflegebox</Link>
+          <Link href="/entlastungsbetrag">Entlastungsbetrag</Link>
+          <Link href="/verhinderungspflege">Verhinderungspflege</Link>
+          <Link href="/finanzierung">Finanzierung</Link>
           <Link href="/faq">FAQ</Link>
           <Link href="/impressum">Impressum</Link>
           <Link href="/datenschutz">Datenschutz</Link>

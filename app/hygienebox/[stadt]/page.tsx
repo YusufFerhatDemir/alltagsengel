@@ -110,6 +110,15 @@ const cities: Record<string, CityData> = {
     stadtteile: ['Bauernheim', 'Bruchenbrücken', 'Dorheim', 'Ockstadt', 'Ossenheim'],
     geo: { lat: 50.3353, lng: 8.7548 },
   },
+  'frankfurt-hoechst': {
+    name: 'Frankfurt-Höchst',
+    region: 'Hessen',
+    slug: 'frankfurt-hoechst',
+    plz: '65929',
+    description: 'Frankfurt-Höchst und dem Frankfurter Westen',
+    stadtteile: ['Nied', 'Sindlingen', 'Unterliederbach', 'Zeilsheim', 'Sossenheim'],
+    geo: { lat: 50.0996, lng: 8.543 },
+  },
   rodgau: {
     name: 'Rodgau',
     region: 'Hessen',
@@ -149,6 +158,10 @@ export async function generateMetadata({ params }: { params: Promise<{ stadt: st
       'Pflegehilfsmittel zum Verbrauch',
       `Pflegebox Lieferung ${city.name}`,
       'Einmalhandschuhe Pflege',
+      `Alltagsbegleitung ${city.name}`,
+      `Krankenfahrt ${city.name}`,
+      'Entlastungsbetrag',
+      'Pflegeboxen',
     ],
     openGraph: {
       images: [{ url: '/og-image.png', width: 1200, height: 630 }],
@@ -197,6 +210,10 @@ function buildFaqItems(city: CityData) {
     {
       frage: 'Muss ich den Antrag selbst stellen?',
       antwort: 'Nein! Alltagsengel übernimmt die komplette Antragstellung bei Ihrer Pflegekasse. Sie müssen nur einmalig eine Vollmacht unterschreiben.',
+    },
+    {
+      frage: 'Kann ich die Pflegebox mit Entlastungsbetrag und Verhinderungspflege kombinieren?',
+      antwort: `Ja — es sind getrennte Budgets. Die Pflegebox läuft über §40 SGB XI (42 €/Monat), der Entlastungsbetrag über §45b (131 €/Monat für Alltagsbegleitung, ab Pflegegrad 1) und die Verhinderungspflege über §39 (bis 3.539 €/Jahr ab Pflegegrad 2). Alle drei können Sie in ${city.name} parallel über Alltagsengel nutzen.`,
     },
   ]
 }
@@ -272,6 +289,26 @@ function buildJsonLd(city: CityData, faqItems: ReturnType<typeof buildFaqItems>)
         // (Stadt + Geo) hängt an den Offers und steht sichtbar im Text.
       },
       {
+        '@type': 'Service',
+        name: `Pflegebox-Versorgung ${city.name}`,
+        description: `Monatliche Versorgung mit Pflegehilfsmitteln zum Verbrauch nach §40 SGB XI in ${city.name} — inklusive Antragstellung und Direktabrechnung mit der Pflegekasse.`,
+        image: 'https://alltagsengel.care/og-image.png',
+        provider: { '@id': 'https://alltagsengel.care/#localbusiness' },
+        areaServed: {
+          '@type': 'City',
+          name: city.name,
+          containedInPlace: { '@type': 'AdministrativeArea', name: city.region },
+          geo: { '@type': 'GeoCoordinates', latitude: city.geo.lat, longitude: city.geo.lng },
+        },
+        serviceType: 'Pflegehilfsmittel-Versorgung §40 SGB XI',
+        offers: {
+          '@type': 'Offer',
+          price: '0.00',
+          priceCurrency: 'EUR',
+          description: 'Bis 42 €/Monat übernimmt die Pflegekasse (§40 SGB XI) — 0 € Eigenanteil',
+        },
+      },
+      {
         '@type': 'FAQPage',
         mainEntity: faqItems.map((f) => ({
           '@type': 'Question',
@@ -298,6 +335,10 @@ export default async function PflegeboxStadtPage({ params }: { params: Promise<{
 
   const faqItems = buildFaqItems(city)
   const jsonLd = buildJsonLd(city, faqItems)
+  // Frankfurt kanonisiert bei Krankenfahrten auf die Root-Seite; Alltagsbegleitung
+  // ist überall self-canonical — interne Links folgen dem jeweiligen Canonical.
+  const alltagsbegleitungHref = `/alltagsbegleitung/${city.slug}`
+  const krankenfahrtHref = city.slug === 'frankfurt' ? '/krankenfahrten' : `/krankenfahrten/${city.slug}`
 
   return (
     <div className="screen info-screen">
@@ -401,11 +442,41 @@ export default async function PflegeboxStadtPage({ params }: { params: Promise<{
         </section>
 
         <section className="info-card">
+          <h3>Warum Pflegehilfsmittel zum Verbrauch so wichtig sind</h3>
+          <p>
+            Wer zu Hause pflegt, verbraucht laufend Material: Einmalhandschuhe schützen bei der
+            Körperpflege vor Keimen — in beide Richtungen. Händedesinfektion senkt das
+            Infektionsrisiko für Pflegebedürftige, deren Immunsystem oft geschwächt ist.
+            Bettschutzeinlagen halten Matratzen hygienisch und ersparen tägliches
+            Wäschewaschen. Diese Kosten summieren sich schnell auf 40–50 € im Monat — Geld, das
+            die Pflegekasse über die Pauschale nach § 40 SGB XI vollständig übernimmt.
+          </p>
+          <p style={{ marginTop: 8 }}>
+            Trotzdem rufen viele Familien in {city.name} diese Leistung nie ab — oft, weil der
+            Antragsweg unbekannt ist oder zu bürokratisch wirkt. Genau das nehmen wir Ihnen ab:
+            einmalig Vollmacht unterschreiben, alles Weitere (Antrag, Genehmigung, monatliche
+            Abrechnung) übernimmt Alltagsengel. Die Box-Zusammenstellung können Sie jederzeit an
+            die aktuelle Pflegesituation anpassen — etwa mehr Bettschutzeinlagen, weniger Masken.
+          </p>
+        </section>
+
+        <section className="info-card">
           <h3>Lieferung nach {city.name} — auch in Ihren Stadtteil</h3>
           <p>
             Wir liefern die Pflegebox nach {city.description} — auch nach {city.stadtteile.join(', ')}.
             Die Lieferung erfolgt monatlich, versandkostenfrei und direkt an Ihre Haustür.
           </p>
+        </section>
+
+        <section className="info-card">
+          <h3>Ihre Vorteile bei Alltagsengel</h3>
+          <ul className="info-list">
+            <li>0 € Eigenanteil — wir rechnen die volle Pauschale direkt mit der Pflegekasse ab</li>
+            <li>Antragstellung und Genehmigung übernehmen wir komplett für Sie</li>
+            <li>Monatliche Lieferung pünktlich und versandkostenfrei an Ihre Haustür</li>
+            <li>Box-Inhalt jederzeit anpassbar — je nach aktueller Pflegesituation</li>
+            <li>Keine Vertragsbindung: pausieren oder kündigen Sie jederzeit</li>
+          </ul>
         </section>
 
         <section className="info-card">
@@ -428,11 +499,27 @@ export default async function PflegeboxStadtPage({ params }: { params: Promise<{
         </section>
 
         <section className="info-card">
+          <h3>Mehr als die Pflegebox: Ihre Budgets in {city.name} voll ausschöpfen</h3>
+          <p>
+            Die Pflegebox (42 €/Monat nach §40 SGB XI) ist nur eines von mehreren Budgets, die
+            Ihnen zustehen. Zusätzlich können Sie in {city.name} den{' '}
+            <Link href="/entlastungsbetrag">Entlastungsbetrag</Link> nutzen — 131 €/Monat ab
+            Pflegegrad 1 für <Link href={alltagsbegleitungHref}>Alltagsbegleitung in {city.name}</Link>:
+            Einkaufshilfe, Arztbegleitung, Haushalt und Gesellschaft. Fällt Ihre pflegende Person
+            aus, übernimmt die <Link href="/verhinderungspflege">Verhinderungspflege</Link> mit bis
+            zu 3.539 €/Jahr die Ersatzbetreuung. Alle Töpfe sind kombinierbar — unser{' '}
+            <Link href="/budgetrechner">Budgetrechner</Link> zeigt Ihnen Ihren Gesamtanspruch.
+          </p>
+        </section>
+
+        <section className="info-card">
           <h3>Weitere Dienste in {city.name}</h3>
           <p>Neben der Pflegebox bieten wir in {city.name} auch:</p>
           <ul className="info-list">
-            <li><Link href="/alltagsbegleitung">Alltagsbegleitung</Link> — 131 €/Monat über Entlastungsbetrag</li>
-            <li><Link href="/krankenfahrten">Krankenfahrten</Link> — Mit Verordnung zahlt die Kasse</li>
+            <li><Link href={alltagsbegleitungHref}>Alltagsbegleitung in {city.name}</Link> — 131 €/Monat über Entlastungsbetrag</li>
+            <li><Link href={krankenfahrtHref}>Krankenfahrten in {city.name}</Link> — Mit Verordnung zahlt die Kasse</li>
+            <li><Link href="/verhinderungspflege">Verhinderungspflege</Link> — Ersatzpflege bis 3.539 €/Jahr (§39 SGB XI)</li>
+            <li><Link href="/entlastungsbetrag">Entlastungsbetrag</Link> — 131 €/Monat ab Pflegegrad 1 (§45b SGB XI)</li>
           </ul>
         </section>
 

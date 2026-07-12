@@ -229,6 +229,7 @@ export default function HygieneboxPage() {
             <li><Link href="/hygienebox/bad-homburg">Pflegebox Bad Homburg</Link></li>
             <li><Link href="/hygienebox/mainz">Pflegebox Mainz</Link></li>
             <li><Link href="/hygienebox/aschaffenburg">Pflegebox Aschaffenburg</Link></li>
+            <li><Link href="/hygienebox/frankfurt-hoechst">Pflegebox Frankfurt-Höchst</Link></li>
             <li><Link href="/hygienebox/neu-isenburg">Pflegebox Neu-Isenburg</Link></li>
             <li><Link href="/hygienebox/friedberg-wetterau">Pflegebox Friedberg (Wetterau)</Link></li>
             <li><Link href="/hygienebox/rodgau">Pflegebox Rodgau</Link></li>
@@ -240,6 +241,8 @@ export default function HygieneboxPage() {
           <ul className="info-list">
             <li><Link href="/alltagsbegleitung">Alltagsbegleitung — 131€/Monat über Entlastungsbetrag</Link></li>
             <li><Link href="/krankenfahrten">Krankenfahrten — mit Verordnung oder als Selbstzahler</Link></li>
+            <li><Link href="/entlastungsbetrag">Entlastungsbetrag — 131 €/Monat ab Pflegegrad 1 (§45b)</Link></li>
+            <li><Link href="/verhinderungspflege">Verhinderungspflege — Ersatzpflege bis 3.539 €/Jahr (§39)</Link></li>
             <li><Link href="/finanzierung">Finanzierung — bis zu 5.111 €/Jahr, nach Pflegegrad erklärt</Link></li>
             <li><Link href="/blog/pflegehilfsmittel-40-euro">Ratgeber: Pflegehilfsmittel §40 SGB XI erklärt</Link></li>
             <li><Link href="/faq">Häufige Fragen zu Pflegeleistungen</Link></li>

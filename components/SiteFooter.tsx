@@ -41,6 +41,8 @@ export default function SiteFooter() {
         <Link href="/hygienebox">Pflege-Box</Link>
         <Link href="/krankenfahrten">Krankenfahrt</Link>
         <Link href="/alltagsbegleitung">Alltagsbegleitung</Link>
+        <Link href="/entlastungsbetrag">Entlastungsbetrag</Link>
+        <Link href="/verhinderungspflege">Verhinderungspflege</Link>
         <Link href="/termin">Termin buchen</Link>
         <Link href="/budgetrechner">Budgetrechner</Link>
         <Link href="/pflegegrad-check">Pflegegrad-Check</Link>
