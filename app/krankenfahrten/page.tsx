@@ -60,6 +60,14 @@ const faqItems = [
     q: 'Sind auch Fahrten im Rollstuhl möglich?',
     a: 'Ja. Neben der sitzenden Beförderung im Pkw vermitteln wir auch Fahrten mit Rollstuhl-Transport. Geben Sie Ihren Hilfebedarf einfach bei der Buchung an — der passende Fahrzeugtyp wird automatisch ausgewählt.',
   },
+  {
+    q: 'Darf eine Begleitperson mitfahren?',
+    a: 'Ja. Eine Begleitperson fährt bei uns grundsätzlich mit — bei medizinischer Notwendigkeit (vom Arzt bescheinigt) übernimmt die Krankenkasse auch deren Fahrtkosten. Alternativ begleitet Sie ein Alltagsengel-Engel über den Entlastungsbetrag.',
+  },
+  {
+    q: 'Was passiert, wenn sich mein Arzttermin verschiebt?',
+    a: 'Kein Problem: Fahrten lassen sich in der App bis kurz vor dem Termin kostenlos verschieben oder stornieren. Bei Serienfahrten passen wir den gesamten Fahrplan an.',
+  },
 ]
 
 const serviceJsonLd = {

@@ -56,6 +56,14 @@ const faqs: { frage: string; antwort: string }[] = [
     frage: 'Verfällt der Entlastungsbetrag, wenn ich ihn nicht nutze?',
     antwort: 'Nicht genutzte Entlastungsbeträge werden zunächst angespart. Beträge aus dem laufenden Jahr können noch bis zum 30. Juni des Folgejahres verwendet werden. Danach verfällt der Restbetrag. Es lohnt sich daher, die 131 € pro Monat regelmäßig für Alltagsbegleitung einzusetzen.',
   },
+  {
+    frage: 'Wie schnell kann eine Alltagsbegleitung starten?',
+    antwort: 'In der Regel innerhalb weniger Tage: Nach der kostenlosen Registrierung sehen Sie sofort verfügbare Engel in Ihrer Nähe und können direkt einen ersten Termin buchen. Auch kurzfristige Einsätze — etwa wenn eine Betreuung ausfällt — sind je nach Verfügbarkeit möglich.',
+  },
+  {
+    frage: 'Kommt immer derselbe Alltagsbegleiter?',
+    antwort: 'Ja, das ist das Ziel: Sie wählen Ihren Engel selbst aus und behalten ihn als feste Bezugsperson. Nur bei Urlaub oder Krankheit schlagen wir eine Vertretung vor — und Sie entscheiden, ob sie kommen soll.',
+  },
 ]
 
 const jsonLd = {

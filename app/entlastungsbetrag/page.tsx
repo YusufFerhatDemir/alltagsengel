@@ -401,6 +401,25 @@ export default function EntlastungsbetragPage() {
         </section>
 
         <section className="info-card">
+          <h3>Gut zu wissen: Sonderfälle</h3>
+          <ul className="info-list">
+            <li><strong>Pflege-Wohngemeinschaft:</strong> Auch in ambulant betreuten
+              Wohngruppen besteht der volle Anspruch auf 131 €/Monat — die Bewohner können ihre
+              Beträge sogar für gemeinsame Betreuungsangebote bündeln.</li>
+            <li><strong>Umzug ins Pflegeheim:</strong> Bei vollstationärer Pflege endet der
+              Anspruch, denn der Entlastungsbetrag ist an die häusliche Versorgung gebunden.
+              Angespartes Guthaben aus der häuslichen Zeit kann aber noch fristgerecht
+              abgerechnet werden.</li>
+            <li><strong>Höherstufung des Pflegegrads:</strong> Am Entlastungsbetrag ändert sich
+              nichts — er bleibt bei 131 €. Es lohnt sich aber, die übrigen Budgets neu zu
+              prüfen, vor allem den Umwandlungsanspruch aus den gestiegenen Sachleistungen.</li>
+            <li><strong>Wechsel der Pflegekasse:</strong> Der Anspruch läuft nahtlos weiter;
+              nur die Abtretungserklärung muss bei der neuen Kasse neu hinterlegt werden —
+              das übernehmen wir.</li>
+          </ul>
+        </section>
+
+        <section className="info-card">
           <h3>Checkliste: In 10 Minuten startklar</h3>
           <ul className="info-list">
             <li><strong>Pflegegrad-Bescheid bereitlegen</strong> — darauf stehen Pflegegrad und
