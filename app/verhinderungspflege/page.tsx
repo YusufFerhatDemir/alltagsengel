@@ -82,6 +82,16 @@ const faqs = [
     antwort:
       'Bei stundenweiser Verhinderungspflege (unter 8 Stunden/Tag) läuft das Pflegegeld ungekürzt weiter. Bei tageweiser Vertretung wird es für den ersten und letzten Tag voll, dazwischen zur Hälfte gezahlt.',
   },
+  {
+    frage: 'Gilt Verhinderungspflege auch abends und am Wochenende?',
+    antwort:
+      'Ja. Die Verhinderungspflege ist nicht an Werktage oder Tageszeiten gebunden — auch ein Abendeinsatz, damit die Pflegeperson ins Theater kann, oder eine Wochenendbetreuung sind erstattungsfähig.',
+  },
+  {
+    frage: 'Kann ich Verhinderungspflege rückwirkend abrechnen?',
+    antwort:
+      'Ja. Wenn die Voraussetzungen erfüllt waren und Belege vorliegen, erstattet die Pflegekasse auch nachträglich — Ansprüche verjähren erst nach vier Jahren. Prüfen Sie also alte Rechnungen für Ersatzpflege-Einsätze.',
+  },
 ]
 
 const jsonLd = {
