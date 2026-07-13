@@ -7,6 +7,7 @@ import { NotFoundState, ErrorState, LoadingState } from '@/components/UIStates'
 import { IconWingsGold, IconStarFilled, IconCard, IconShield, IconMedical, IconLock, IconInfo } from '@/components/Icons'
 import Icon3D from '@/components/Icon3D'
 import { trackBooking } from '@/lib/tracking'
+import { isHessenPlz, normalizePlz, resolvePlz } from '@/lib/hessen-plz'
 
 export default function BuchenPage() {
   const router = useRouter()
@@ -27,6 +28,12 @@ export default function BuchenPage() {
   // Angehörigen-Auswahl
   const [careRecipients, setCareRecipients] = useState<any[]>([])
   const [selectedCareRecipient, setSelectedCareRecipient] = useState<string>('')
+  // Kassenleistung nur in Hessen: PLZ des Kunden (bzw. des Angehörigen,
+  // für den gebucht wird) entscheidet über die erlaubten Zahlungsarten.
+  const [customerPlz, setCustomerPlz] = useState<string | null>(null)
+  const [plzLoaded, setPlzLoaded] = useState(false)
+  const [plzInput, setPlzInput] = useState('')
+  const [savingPlz, setSavingPlz] = useState(false)
 
   const loadAngel = async () => {
     setError('')
@@ -63,15 +70,24 @@ export default function BuchenPage() {
 
   useEffect(() => {
     loadAngel()
-    // Angehörige laden
+    // Angehörige + eigene PLZ laden
     const loadCareRecipients = async () => {
       const supabase = createClient()
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
-      const { data } = await supabase
-        .from('care_recipients')
-        .select('id, first_name, last_name, relationship, pflegegrad')
-        .eq('profile_id', user.id)
+      const [{ data }, { data: me }] = await Promise.all([
+        supabase
+          .from('care_recipients')
+          .select('id, first_name, last_name, relationship, pflegegrad, postal_code')
+          .eq('profile_id', user.id),
+        supabase
+          .from('profiles')
+          .select('postal_code, location')
+          .eq('id', user.id)
+          .single(),
+      ])
+      setCustomerPlz(resolvePlz(me?.postal_code, me?.location))
+      setPlzLoaded(true)
       if (data && data.length > 0) {
         setCareRecipients(data)
         setSelectedCareRecipient(data[0].id) // Standardmäßig den ersten Angehörigen auswählen
@@ -79,6 +95,38 @@ export default function BuchenPage() {
     }
     loadCareRecipients()
   }, [angelId])
+
+  // Maßgebliche PLZ: die des ausgewählten Angehörigen (dort findet der
+  // Einsatz statt), sonst die eigene Profil-PLZ.
+  const selectedCr = careRecipients.find(cr => cr.id === selectedCareRecipient)
+  const effectivePlz = normalizePlz(selectedCr?.postal_code) || customerPlz
+  const kasseAllowed = isHessenPlz(effectivePlz)
+
+  // Außerhalb Hessens (oder ohne PLZ) ist nur Privatzahlung zulässig —
+  // eine evtl. gewählte Kassen-Option wird zurückgesetzt.
+  useEffect(() => {
+    if (plzLoaded && !kasseAllowed && payMethod !== 'privat') {
+      setPayMethod('privat')
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [plzLoaded, kasseAllowed])
+
+  // PLZ nachtragen (Kunde ohne hinterlegte PLZ): speichert ins Profil
+  const handleSavePlz = async () => {
+    const plz = normalizePlz(plzInput)
+    if (!plz) return
+    setSavingPlz(true)
+    try {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        await supabase.from('profiles').update({ postal_code: plz }).eq('id', user.id)
+        setCustomerPlz(plz)
+      }
+    } finally {
+      setSavingPlz(false)
+    }
+  }
 
   if (pageStatus === 'loading') return <LoadingState />
   if (pageStatus === 'not_found') return <NotFoundState homeHref="/kunde/home" />
@@ -104,6 +152,11 @@ export default function BuchenPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { setError('Nicht eingeloggt'); setSubmitting(false); return }
 
+      // Fail-safe: Kassenabrechnung nur mit hessischer PLZ — selbst wenn
+      // im UI-State noch 'kasse' stehen sollte, wird privat gebucht.
+      const finalPayMethod = kasseAllowed ? payMethod : 'privat'
+      const withKasse = finalPayMethod === 'kasse' || finalPayMethod === 'kombi'
+
       const { data: booking, error: bookErr } = await supabase
         .from('bookings')
         .insert({
@@ -114,9 +167,9 @@ export default function BuchenPage() {
           time,
           duration_hours: duration,
           status: 'pending',
-          payment_method: payMethod,
-          insurance_type: (payMethod === 'kasse' || payMethod === 'kombi') ? kkType : null,
-          insurance_provider: (payMethod === 'kasse' || payMethod === 'kombi') ? selectedKK : null,
+          payment_method: finalPayMethod,
+          insurance_type: withKasse ? kkType : null,
+          insurance_provider: withKasse ? selectedKK : null,
           total_amount: total,
           platform_fee: platformFee,
           notes: notes || null,
@@ -219,7 +272,10 @@ export default function BuchenPage() {
         <div className="form-card">
           <div className="form-card-h">Zahlungsart</div>
           <div className="pay-row">
-            {[{key:'kasse',label:'§45b Kasse',sub:'Direkte Abrechnung'},{key:'privat',label:'Privat',sub:'Selbstzahler'},{key:'kombi',label:'Kombi',sub:'Kasse + Privat'}].map(p => (
+            {(kasseAllowed
+              ? [{key:'kasse',label:'§45b Kasse',sub:'Direkte Abrechnung'},{key:'privat',label:'Privat',sub:'Selbstzahler'},{key:'kombi',label:'Kombi',sub:'Kasse + Privat'}]
+              : [{key:'privat',label:'Privat',sub:'Selbstzahler'}]
+            ).map(p => (
               <div key={p.key} className={`pay-opt${payMethod===p.key?' on':''}`} onClick={() => setPayMethod(p.key)}>
                 <div className="pay-ic"><IconCard size={16} /></div>
                 <div className="pay-lbl">{p.label}</div>
@@ -228,7 +284,56 @@ export default function BuchenPage() {
             ))}
           </div>
 
-          {(payMethod === 'kasse' || payMethod === 'kombi') && (
+          {plzLoaded && !kasseAllowed && effectivePlz && (
+            <div style={{
+              background: 'rgba(201,150,60,0.08)', border: '1px solid rgba(201,150,60,0.2)',
+              borderRadius: 10, padding: '10px 14px', marginTop: 10,
+              fontSize: 13, color: 'var(--ink3)', lineHeight: 1.5,
+            }}>
+              Eine Abrechnung über die Pflegekasse (§45a/§45b) ist derzeit nur in
+              <strong> Hessen</strong> möglich. In Ihrer Region (PLZ {effectivePlz}) bieten wir
+              unsere Leistungen als <strong>Privatleistung</strong> an.
+            </div>
+          )}
+
+          {plzLoaded && !effectivePlz && (
+            <div style={{
+              background: 'rgba(201,150,60,0.08)', border: '1px solid rgba(201,150,60,0.2)',
+              borderRadius: 10, padding: '10px 14px', marginTop: 10,
+              fontSize: 13, color: 'var(--ink3)', lineHeight: 1.5,
+            }}>
+              <div style={{ marginBottom: 8 }}>
+                Für eine Abrechnung über die Pflegekasse benötigen wir Ihre Postleitzahl
+                (Kassenleistung ist derzeit nur in Hessen möglich).
+              </div>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <input
+                  className="input"
+                  style={{ flex: 1, margin: 0 }}
+                  inputMode="numeric"
+                  maxLength={5}
+                  placeholder="Ihre PLZ, z.B. 60311"
+                  value={plzInput}
+                  onChange={e => setPlzInput(e.target.value.replace(/\D/g, '').slice(0, 5))}
+                />
+                <button
+                  type="button"
+                  onClick={handleSavePlz}
+                  disabled={savingPlz || plzInput.length !== 5}
+                  style={{
+                    padding: '0 18px', borderRadius: 10, border: 'none',
+                    background: plzInput.length === 5 ? 'var(--gold)' : 'var(--cream3)',
+                    color: plzInput.length === 5 ? '#fff' : 'var(--ink4)',
+                    fontWeight: 600, fontSize: 14, cursor: 'pointer',
+                  }}
+                >
+                  {savingPlz ? '…' : 'Speichern'}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {kasseAllowed && (payMethod === 'kasse' || payMethod === 'kombi') && (
             <div className="kk-panel show">
               <div className="kk-type-row">
                 {['gesetzlich','privat'].map(t => (

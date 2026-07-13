@@ -7,6 +7,7 @@ import { logError } from '@/lib/safe-query'
 import { trackKrankenfahrt } from '@/lib/tracking'
 import { useUserLocation } from '@/hooks/useUserLocation'
 import type { PricingTier, PricingSurcharge, PricingBreakdown } from '@/lib/types/pricing'
+import { isHessenPlz, resolvePlz } from '@/lib/hessen-plz'
 
 export default function KrankenfahrtPage() {
   const router = useRouter()
@@ -26,6 +27,9 @@ export default function KrankenfahrtPage() {
   const [payMethod, setPayMethod] = useState('kasse')
   const [kkType, setKkType] = useState('gesetzlich')
   const [selectedKK, setSelectedKK] = useState('AOK')
+  // Kassenleistung nur in Hessen — PLZ des Kunden entscheidet
+  const [customerPlz, setCustomerPlz] = useState<string | null>(null)
+  const [plzLoaded, setPlzLoaded] = useState(false)
 
   // Pricing data from API
   const [tiers, setTiers] = useState<PricingTier[]>([])
@@ -53,12 +57,14 @@ export default function KrankenfahrtPage() {
       // Load default address from profile
       const { data: profile } = await supabase
         .from('profiles')
-        .select('location')
+        .select('location, postal_code')
         .eq('id', user.id)
         .single()
       if (profile?.location) {
         setFormData(prev => ({ ...prev, abholadresse: profile.location }))
       }
+      setCustomerPlz(resolvePlz(profile?.postal_code, profile?.location))
+      setPlzLoaded(true)
       // Falls kein Profil-Standort → GPS/IP wird per useEffect unten gesetzt
 
       // Load tiers + surcharges from API
@@ -89,6 +95,17 @@ export default function KrankenfahrtPage() {
       })
     }
   }, [userLocation.loading, userLocation.address, userLocation.source])
+
+  // Kassenleistung nur mit hessischer PLZ (fail-safe: unbekannt → privat)
+  const kasseAllowed = isHessenPlz(customerPlz)
+
+  // Außerhalb Hessens evtl. vorgewählte Kassen-Option zurücksetzen
+  useEffect(() => {
+    if (plzLoaded && !kasseAllowed && payMethod !== 'privat') {
+      setPayMethod('privat')
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [plzLoaded, kasseAllowed])
 
   // Detect night hours
   function isNightTime(time: string): boolean {
@@ -160,6 +177,10 @@ export default function KrankenfahrtPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { setError('Sie sind nicht eingeloggt'); setSubmitting(false); return }
 
+      // Fail-safe: Kassenabrechnung nur mit hessischer PLZ
+      const finalPayMethod = kasseAllowed ? payMethod : 'privat'
+      const withKasse = finalPayMethod === 'kasse' || finalPayMethod === 'kombi'
+
       const { data: booking, error: bookErr } = await supabase
         .from('krankenfahrten')
         .insert({
@@ -172,9 +193,9 @@ export default function KrankenfahrtPage() {
           rollstuhl_benoetig: selectedTier === 'rollstuhl',
           tragestuhl_benoetig: selectedTier === 'tragestuhl',
           hinweise: formData.hinweise || null,
-          payment_method: payMethod,
-          insurance_type: (payMethod === 'kasse' || payMethod === 'kombi') ? kkType : null,
-          insurance_provider: (payMethod === 'kasse' || payMethod === 'kombi') ? selectedKK : null,
+          payment_method: finalPayMethod,
+          insurance_type: withKasse ? kkType : null,
+          insurance_provider: withKasse ? selectedKK : null,
           total_amount: breakdown?.total || 0,
           pricing_snapshot: breakdown || null,
           status: 'pending',
@@ -356,11 +377,14 @@ export default function KrankenfahrtPage() {
         <div className="form-card">
           <div className="form-card-h">Zahlungsart</div>
           <div className="pay-row">
-            {[
-              { key: 'kasse', label: '§45b Kasse', sub: 'Direkte Abrechnung' },
-              { key: 'privat', label: 'Privat', sub: 'Selbstzahler' },
-              { key: 'kombi', label: 'Kombi', sub: 'Kasse + Privat' },
-            ].map((p) => (
+            {(kasseAllowed
+              ? [
+                  { key: 'kasse', label: '§45b Kasse', sub: 'Direkte Abrechnung' },
+                  { key: 'privat', label: 'Privat', sub: 'Selbstzahler' },
+                  { key: 'kombi', label: 'Kombi', sub: 'Kasse + Privat' },
+                ]
+              : [{ key: 'privat', label: 'Privat', sub: 'Selbstzahler' }]
+            ).map((p) => (
               <div key={p.key} className={`pay-opt${payMethod === p.key ? ' on' : ''}`} onClick={() => setPayMethod(p.key)}>
                 <div className="pay-ic"><IconCard size={16} /></div>
                 <div className="pay-lbl">{p.label}</div>
@@ -369,7 +393,20 @@ export default function KrankenfahrtPage() {
             ))}
           </div>
 
-          {(payMethod === 'kasse' || payMethod === 'kombi') && (
+          {plzLoaded && !kasseAllowed && (
+            <div style={{
+              background: 'rgba(201,150,60,0.08)', border: '1px solid rgba(201,150,60,0.2)',
+              borderRadius: 10, padding: '10px 14px', marginTop: 10,
+              fontSize: 13, color: 'var(--ink3)', lineHeight: 1.5,
+            }}>
+              Eine Abrechnung über die Kasse ist derzeit nur in <strong>Hessen</strong> möglich.
+              {customerPlz
+                ? <> In Ihrer Region (PLZ {customerPlz}) bieten wir die Fahrt als <strong>Privatleistung</strong> an.</>
+                : <> Ohne Postleitzahl in Ihrem Profil bieten wir die Fahrt als <strong>Privatleistung</strong> an.</>}
+            </div>
+          )}
+
+          {kasseAllowed && (payMethod === 'kasse' || payMethod === 'kombi') && (
             <div className="kk-panel show">
               <div className="kk-type-row">
                 {['gesetzlich', 'privat'].map((t) => (
@@ -408,7 +445,8 @@ export default function KrankenfahrtPage() {
           </div>
         </div>
 
-        {/* Info Banner */}
+        {/* Info Banner — nur wenn Kassenabrechnung möglich (Hessen) */}
+        {kasseAllowed && (
         <div style={{
           backgroundColor: 'rgba(76, 175, 80, 0.08)', border: '1px solid rgba(76, 175, 80, 0.2)',
           borderRadius: '8px', padding: '12px 14px', marginBottom: '20px', display: 'flex', gap: '12px', alignItems: 'flex-start',
@@ -418,6 +456,7 @@ export default function KrankenfahrtPage() {
             <strong>Kostenübernahme möglich</strong> — Mit einer Verordnung vom Arzt kann die Krankenkasse die Kosten übernehmen
           </div>
         </div>
+        )}
 
         {/* Dynamic Preisberechnung */}
         <div className="total-card">
