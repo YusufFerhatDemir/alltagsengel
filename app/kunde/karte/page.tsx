@@ -22,11 +22,15 @@ export default function KarteSeite() {
       if (!user) return
       const { data: p } = await supabase.from('profiles').select('*').eq('id', user.id).single()
       setProfile(p)
-      // Engel über die sichere RPC laden (nur nicht-sensible Felder; kein
-      // email/phone/postal_code). Test-Engel + Offline werden serverseitig
-      // ausgeschlossen (p_only_online=true).
-      const { data: a } = await supabase.rpc('get_engel_cards', { p_only_online: true })
-      setAngels(a || [])
+      // Engel über /api/engel/match laden: wie die RPC ohne PII, zusätzlich
+      // serverseitig nach PLZ-Nähe zum Kunden gefiltert.
+      try {
+        const res = await fetch('/api/engel/match')
+        if (res.ok) {
+          const json = await res.json()
+          setAngels(json.engel || [])
+        }
+      } catch { /* Netzwerkfehler → keine Marker */ }
     }
     load()
   }, [])

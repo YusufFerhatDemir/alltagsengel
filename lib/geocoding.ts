@@ -3,16 +3,25 @@
  * zippopotam.us API (ücretsiz, API key gerektirmez)
  */
 
+// Plausibilitäts-Grenzen für Deutschland. Der zippopotam-DE-Datensatz ist
+// teilweise korrupt (latitude enthält z.B. einen Gemeindeschlüssel wie
+// "06412", longitude den Breitengrad) — solche Einträge NIEMALS verwenden,
+// sonst landen kaputte Koordinaten in profiles.latitude/longitude.
+function isPlausibleGermany(lat: number, lng: number): boolean {
+  return Number.isFinite(lat) && Number.isFinite(lng) &&
+    lat >= 47 && lat <= 55.2 && lng >= 5.5 && lng <= 15.5
+}
+
 export async function geocodePLZ(plz: string): Promise<{ lat: number; lng: number } | null> {
   try {
     const res = await fetch(`https://api.zippopotam.us/de/${plz}`)
     if (!res.ok) return null
     const data = await res.json()
     if (data.places && data.places.length > 0) {
-      return {
-        lat: parseFloat(data.places[0].latitude),
-        lng: parseFloat(data.places[0].longitude),
-      }
+      const lat = parseFloat(data.places[0].latitude)
+      const lng = parseFloat(data.places[0].longitude)
+      if (!isPlausibleGermany(lat, lng)) return null
+      return { lat, lng }
     }
     return null
   } catch {

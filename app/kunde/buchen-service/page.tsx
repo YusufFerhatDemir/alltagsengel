@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { IconWingsGold, IconStarFilled, IconCheck, IconCard } from '@/components/Icons'
 import Icon3D from '@/components/Icon3D'
 import { UNIT_ECONOMICS } from '@/lib/mis/constants'
+import { isHessenPlz, resolvePlz } from '@/lib/hessen-plz'
 
 const serviceOptions: { key: string; label: string; desc: string }[] = [
   { key: 'begleitung', label: 'Begleitung', desc: 'Alltägliche Begleitung und Unterstützung' },
@@ -41,6 +42,8 @@ function BuchenServiceInner() {
   const [submitting, setSubmitting] = useState(false)
   const [selectedAngel, setSelectedAngel] = useState<any>(null)
   const [profile, setProfile] = useState<any>(null)
+  // false = Kunde hat keine PLZ hinterlegt → Standort-Filter nicht möglich
+  const [regionFiltered, setRegionFiltered] = useState(true)
 
   // Default-Datum = morgen
   useEffect(() => {
@@ -67,15 +70,22 @@ function BuchenServiceInner() {
     if (step !== 4) return
     async function loadAngels() {
       setLoading(true)
-      const supabase = createClient()
       const serviceLabel = serviceOptions.find(s => s.key === selectedService)?.label || selectedService
-      // Engel über die sichere RPC laden (nur nicht-sensible Felder; kein
-      // email/phone/postal_code). Test-Engel + Offline serverseitig raus,
-      // Sortierung nach rating erfolgt in der RPC.
-      const { data } = await supabase.rpc('get_engel_cards', { p_only_online: true })
+      // Engel über /api/engel/match laden: serverseitig nach PLZ-Nähe
+      // gefiltert (Kunden sehen nur Engel in ihrer Region; Engel-PLZ
+      // bleibt auf dem Server — kein PII im Browser).
+      let data: any[] = []
+      try {
+        const res = await fetch('/api/engel/match')
+        if (res.ok) {
+          const json = await res.json()
+          data = json.engel || []
+          setRegionFiltered(json.filtered !== false)
+        }
+      } catch { /* Netzwerkfehler → leere Liste, UI zeigt Empty-State */ }
 
       // Filtere nach Service
-      const filtered = (data || []).filter((a: any) =>
+      const filtered = data.filter((a: any) =>
         (a.services || []).some((s: string) =>
           s.toLowerCase().includes(serviceLabel.toLowerCase()) ||
           s.toLowerCase().includes(selectedService.toLowerCase())
@@ -88,6 +98,10 @@ function BuchenServiceInner() {
   }, [step, selectedService])
 
   const serviceLabel = serviceOptions.find(s => s.key === selectedService)?.label || selectedService
+  // Kassenleistung (§45a/§45b) nur mit hessischer PLZ — außerhalb
+  // Hessens (oder ohne PLZ) läuft die Buchung als Privatleistung.
+  const kundenPlz = resolvePlz(profile?.postal_code, profile?.location)
+  const kasseMoeglich = isHessenPlz(kundenPlz)
   const rate = 32 // Kundenpreis immer 32€/h
   const subtotal = rate * duration
   const platformFee = Math.round(subtotal * 0.085 * 100) / 100
@@ -115,6 +129,9 @@ function BuchenServiceInner() {
       total_amount: total,
       is_flexible: isFlexible,
       status: 'pending',
+      // Explizit setzen (DB-Default wäre 'kasse'): Kassenabrechnung
+      // nur mit hessischer PLZ — sonst immer Privatleistung.
+      payment_method: kasseMoeglich ? 'kasse' : 'privat',
       notes: notes || null,
     }).select().single()
 
@@ -355,6 +372,17 @@ function BuchenServiceInner() {
               {serviceLabel} · {formatDate(selectedDate)} · {selectedTime} · {isFlexible ? `ab ${duration}h (flexibel)` : `${duration}h`}
             </div>
 
+            {!loading && !regionFiltered && (
+              <div style={{
+                background: 'rgba(201,150,60,0.08)', border: '1px solid rgba(201,150,60,0.2)',
+                borderRadius: 12, padding: '10px 14px', marginBottom: 14,
+                fontSize: 13, color: 'var(--ink4)', lineHeight: 1.5,
+              }}>
+                Hinweis: Ohne Postleitzahl in Ihrem Profil können wir Engel nicht
+                nach Nähe filtern — Sie sehen daher alle verfügbaren Engel.
+              </div>
+            )}
+
             {loading ? (
               <div style={{ textAlign: 'center', padding: 40, color: 'var(--ink4)' }}>Suche verfügbare Engel...</div>
             ) : angels.length === 0 ? (
@@ -407,7 +435,7 @@ function BuchenServiceInner() {
                       </div>
                       <div style={{ fontSize: 13, color: 'var(--ink4)', display: 'flex', alignItems: 'center', gap: 4 }}>
                         <IconStarFilled size={12} /> {angel.rating} · {angel.total_jobs} Einsätze
-                        {angel.is_45b_capable && <span style={{ color: 'var(--gold)' }}> · §45b</span>}
+                        {angel.is_45b_capable && kasseMoeglich && <span style={{ color: 'var(--gold)' }}> · §45b</span>}
                       </div>
                     </div>
                     <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--ink)' }}>
@@ -490,7 +518,7 @@ function BuchenServiceInner() {
               </div>
             </div>
 
-            {selectedAngel.is_45b_capable && (
+            {selectedAngel.is_45b_capable && kasseMoeglich && (
               <div style={{
                 background: 'var(--gold-pale)', borderRadius: 12, padding: '12px 16px',
                 marginBottom: 16, fontSize: 13, color: 'var(--ink3)',
@@ -498,6 +526,20 @@ function BuchenServiceInner() {
               }}>
                 <IconCard size={16} />
                 <span>Dieser Engel ist §45b-berechtigt. Abrechnung über die Pflegekasse möglich.</span>
+              </div>
+            )}
+
+            {!kasseMoeglich && (
+              <div style={{
+                background: 'var(--cream2, rgba(0,0,0,0.04))', borderRadius: 12, padding: '12px 16px',
+                marginBottom: 16, fontSize: 13, color: 'var(--ink3)',
+                display: 'flex', alignItems: 'center', gap: 8,
+              }}>
+                <IconCard size={16} />
+                <span>
+                  Diese Buchung erfolgt als <strong>Privatleistung</strong>. Eine Abrechnung über
+                  die Pflegekasse (§45a/§45b) ist derzeit nur in Hessen möglich.
+                </span>
               </div>
             )}
 
