@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { buildRecoveryLink } from '@/lib/supabase/recovery-link'
 import { sendEmailNotification } from '@/lib/notifications'
 import { validatePasswordAsync } from '@/lib/password-validation'
 import { logAuditEvent } from '@/lib/audit-log'
@@ -119,10 +120,13 @@ export async function POST(request: NextRequest) {
         },
       })
 
-      if (linkError || !linkData?.properties?.action_link) {
+      if (linkError || !linkData?.properties?.hashed_token) {
         console.error('generateLink error in admin reset:', { code: (linkError as any)?.code, name: linkError?.name })
         // Wir sagen dem Admin Success, weil das PW bereits gesetzt wurde — User kann sich manuell mitteilen lassen
       } else {
+        // FIX (2026-07-15): eigener Link statt properties.action_link — siehe
+        // lib/supabase/recovery-link.ts (Implicit-Hash vs. flowType 'pkce').
+        const resetLink = buildRecoveryLink(siteUrl, linkData.properties.hashed_token)
         await sendEmailNotification(
           targetProfile.email,
           targetProfile.first_name || 'Nutzer',
@@ -131,7 +135,7 @@ export async function POST(request: NextRequest) {
             <p>Ihr Passwort wurde auf Ihre Anfrage hin von unserem Team zurückgesetzt.</p>
             <p>Aus Sicherheitsgründen senden wir Ihnen <strong>kein Klartext-Passwort</strong> per E-Mail.
                Klicken Sie stattdessen auf den folgenden Button, um Ihr neues Passwort direkt in der App selbst zu setzen:</p>
-            <a href="${linkData.properties.action_link}" style="display:inline-block;padding:14px 32px;background:#C9963C;color:#1A1612;text-decoration:none;border-radius:10px;font-weight:600;margin:16px 0;">PASSWORT JETZT FESTLEGEN</a>
+            <a href="${resetLink}" style="display:inline-block;padding:14px 32px;background:#C9963C;color:#1A1612;text-decoration:none;border-radius:10px;font-weight:600;margin:16px 0;">PASSWORT JETZT FESTLEGEN</a>
             <p style="color:#888;font-size:12px;margin-top:16px;">Dieser Link ist aus Sicherheitsgründen nur begrenzt gültig.
                Wenn Sie keine Passwort-Änderung angefordert haben, wenden Sie sich bitte umgehend an unseren Support.</p>
             <p style="margin-top:20px;color:#888;">Liebe Grüße,<br/><strong style="color:#C9963C;">Ihr Alltagsengel Team</strong></p>
