@@ -48,11 +48,27 @@ export async function POST(request: NextRequest) {
 
   const adminSupabase = createAdminClient()
 
-  // Wenn email statt userId übergeben wurde → userId per E-Mail finden
+  // Wenn email statt userId übergeben wurde → userId per E-Mail finden.
+  // Lookup läuft über profiles, NICHT über auth.admin.listUsers(): listUsers()
+  // scheitert an einzelnen defekten auth.users-Zeilen mit "Database error finding
+  // users" und riss damit den kompletten Lookup mit (siehe docs/AUTH-LISTUSERS.md).
+  // profiles.id == auth.users.id, der Umweg ist also verlustfrei.
   let targetUserId = userId
   if (!targetUserId && email) {
-    const { data: users } = await adminSupabase.auth.admin.listUsers()
-    const found = users?.users?.find((u: any) => u.email === email)
+    // ilike für Case-Insensitivity (auth speichert lowercase, profiles nicht immer).
+    // % und _ escapen, damit die E-Mail nicht als Pattern interpretiert wird.
+    const emailPattern = email.replace(/[%_\\]/g, '\\$&')
+    const { data: found, error: lookupError } = await adminSupabase
+      .from('profiles')
+      .select('id')
+      .ilike('email', emailPattern)
+      .limit(1)
+      .maybeSingle()
+
+    if (lookupError) {
+      console.error('profile lookup error:', { code: lookupError.code, message: lookupError.message })
+      return NextResponse.json({ error: 'Benutzer konnte nicht gesucht werden' }, { status: 500 })
+    }
     if (!found) {
       return NextResponse.json({ error: 'Benutzer nicht gefunden: ' + email }, { status: 404 })
     }

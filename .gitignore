@@ -39,6 +39,8 @@ npm-debug.log*
 # Personal/sensitive files
 ausweis_*.jpg
 fuehrerschein*.pdf
+# Ausgefüllte Behörden-Anträge mit personenbezogenen Daten
+/Bayern-45a-Antrag/
 *.aab
 *.apk
 *.mobileprovision
