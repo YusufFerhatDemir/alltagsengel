@@ -16,41 +16,76 @@ export default function ResetPasswordPage() {
 
   useEffect(() => {
     const supabase = createClient()
+    let cancelled = false
 
-    // 1) Check if we already have a valid session (e.g. came through /auth/callback)
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        setSessionReady(true)
-        setChecking(false)
-      }
-    })
-
-    // 2) Listen for PASSWORD_RECOVERY event (fallback for implicit/hash flow)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event === 'PASSWORD_RECOVERY' || event === 'SIGNED_IN') {
-        setSessionReady(true)
-        setChecking(false)
-      }
-    })
-
-    // 3) Try to exchange code from URL if present (handles PKCE when verifier is available)
-    const params = new URLSearchParams(window.location.search)
-    const code = params.get('code')
-    if (code) {
-      supabase.auth.exchangeCodeForSession(code).then(({ error: exchangeError }) => {
-        if (!exchangeError) {
-          setSessionReady(true)
-          // Clean up URL
-          window.history.replaceState({}, '', window.location.pathname)
-        }
-        setChecking(false)
-      })
-    } else {
-      // No code in URL — give a moment for session check / auth state change
-      setTimeout(() => setChecking(false), 1500)
+    const ready = () => {
+      if (cancelled) return
+      setSessionReady(true)
+      setChecking(false)
+    }
+    const fail = () => {
+      if (cancelled) return
+      setChecking(false)
     }
 
-    return () => subscription.unsubscribe()
+    // PASSWORD_RECOVERY/SIGNED_IN kann auch aus einer parallelen Quelle kommen
+    // (z. B. bereits laufende Session-Wiederherstellung) — dann sind wir fertig.
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'PASSWORD_RECOVERY' || event === 'SIGNED_IN') ready()
+    })
+
+    async function establishSession() {
+      const { pathname, search, hash } = window.location
+      const query = new URLSearchParams(search)
+      const hashParams = new URLSearchParams(hash.replace(/^#/, ''))
+      const cleanUrl = () => window.history.replaceState({}, '', pathname)
+
+      // 1) Aktueller Flow: token_hash aus unserer eigenen Reset-Mail.
+      //    verifyOtp ist unabhängig vom flowType des Clients und braucht
+      //    keinen code_verifier. Siehe lib/supabase/recovery-link.ts
+      const tokenHash = query.get('token_hash')
+      if (tokenHash) {
+        const { error: otpError } = await supabase.auth.verifyOtp({
+          type: 'recovery',
+          token_hash: tokenHash,
+        })
+        cleanUrl()
+        return otpError ? fail() : ready()
+      }
+
+      // 2) Alt-Links, die noch in Postfächern liegen: Supabase /verify leitet mit
+      //    Implicit-Tokens im Fragment weiter. supabase-js ignoriert die wegen
+      //    flowType 'pkce' ("Not a valid PKCE flow url") — also selbst setzen.
+      const accessToken = hashParams.get('access_token')
+      const refreshToken = hashParams.get('refresh_token')
+      if (accessToken && refreshToken) {
+        const { error: sessionError } = await supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken,
+        })
+        cleanUrl()
+        return sessionError ? fail() : ready()
+      }
+
+      // 3) PKCE-Code — greift nur, wenn der Flow im selben Browser gestartet wurde.
+      const code = query.get('code')
+      if (code) {
+        const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
+        cleanUrl()
+        return exchangeError ? fail() : ready()
+      }
+
+      // 4) Kein Token in der URL — evtl. besteht bereits eine Session.
+      const { data: { session } } = await supabase.auth.getSession()
+      return session ? ready() : fail()
+    }
+
+    establishSession()
+
+    return () => {
+      cancelled = true
+      subscription.unsubscribe()
+    }
   }, [])
 
   async function handleSubmit(e: React.FormEvent) {

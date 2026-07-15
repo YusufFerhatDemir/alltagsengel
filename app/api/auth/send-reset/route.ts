@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { buildRecoveryLink } from '@/lib/supabase/recovery-link'
 import { sendEmailNotification } from '@/lib/notifications'
 
 /**
@@ -61,8 +62,13 @@ export async function POST(request: Request) {
     }
 
     // Send branded email via Resend
-    if (data?.properties?.action_link) {
-      const resetLink = data.properties.action_link
+    // FIX (2026-07-15): NICHT `properties.action_link` verlinken. Der Supabase-
+    // /verify-Endpoint leitet mit Implicit-Tokens im URL-Fragment weiter, was
+    // unser Browser-Client (flowType 'pkce') ablehnt → "Link abgelaufen" sofort
+    // beim Klicken. Wir verlinken direkt auf unsere Seite und lösen das Token
+    // dort per verifyOtp ein. Details: lib/supabase/recovery-link.ts
+    if (data?.properties?.hashed_token) {
+      const resetLink = buildRecoveryLink(siteUrl, data.properties.hashed_token)
       await sendEmailNotification(
         email,
         userName,
