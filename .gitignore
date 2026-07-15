@@ -82,3 +82,6 @@ MAC_SPEICHER_ANALYSE.md
 # deploy.sh IndexNow-Ping-Log
 .indexnow-ping.log
 marketing/.footer-preview-tmp.png
+
+# Temp-Previews aus Bild-Editing (Loeschung auf Mount blockiert)
+marketing/_tmp*.png
