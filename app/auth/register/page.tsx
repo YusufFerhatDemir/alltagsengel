@@ -45,6 +45,7 @@ function RegisterForm() {
   const [crCity, setCrCity] = useState('')
   const [crRelationship, setCrRelationship] = useState('')
   const [crNotes, setCrNotes] = useState('')
+  const [agbAccepted, setAgbAccepted] = useState(false)
   const [error, setError] = useState('')
   const [passwordErrors, setPasswordErrors] = useState<string[]>([])
   const [passwordStrength, setPasswordStrength] = useState<'weak' | 'medium' | 'strong'>('weak')
@@ -163,6 +164,8 @@ function RegisterForm() {
             first_name: firstName,
             last_name: lastName,
             email,
+            agb_accepted_at: new Date().toISOString(),
+            agb_version: '3.0',
           }
           if (plz || stadt) {
             profileData.location = [plz, stadt].filter(Boolean).join(' ')
@@ -415,8 +418,45 @@ function RegisterForm() {
               )}
             </>
           )}
+          {/* AGB + Vertragsbedingungen Akzeptanz */}
+          <div className="reg-section" style={{ marginTop: 12 }}>
+            <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, cursor: 'pointer', fontSize: 13, lineHeight: 1.5, color: '#c5b99a' }}>
+              <input
+                type="checkbox"
+                checked={agbAccepted}
+                onChange={e => setAgbAccepted(e.target.checked)}
+                required
+                style={{ marginTop: 3, accentColor: '#D4AF37', minWidth: 18, minHeight: 18 }}
+              />
+              <span>
+                Ich akzeptiere die{' '}
+                <a href="/agb" target="_blank" rel="noopener noreferrer" style={{ color: '#D4AF37', textDecoration: 'underline' }}>
+                  Allgemeinen Geschäftsbedingungen (AGB)
+                </a>{' '}
+                und die{' '}
+                <a href="/datenschutz" target="_blank" rel="noopener noreferrer" style={{ color: '#D4AF37', textDecoration: 'underline' }}>
+                  Datenschutzerklärung
+                </a>.
+                {role === 'kunde' && (
+                  <span style={{ display: 'block', marginTop: 6, fontSize: 12, color: '#8a8070' }}>
+                    Mir ist bekannt, dass durch Alltagsengel vermittelte Dienstleister (z. B. Krankenfahrten,
+                    Pflegeboxen, Hausnotruf) nicht direkt und unter Umgehung von Alltagsengel beauftragt werden
+                    dürfen (§ 6 AGB). Bei Verstoß behält sich Alltagsengel das Recht auf fristlose Kündigung
+                    und Schadensersatz vor (§ 7 AGB).
+                  </span>
+                )}
+                {(role === 'engel' || role === 'fahrer') && (
+                  <span style={{ display: 'block', marginTop: 6, fontSize: 12, color: '#8a8070' }}>
+                    Ich verpflichte mich, durch Alltagsengel vermittelte Kunden nicht direkt oder unter Umgehung
+                    von Alltagsengel zu betreuen (§ 6 AGB). Das Wettbewerbsverbot gilt 12 Monate nach Ende der
+                    Zusammenarbeit. Bei Verstoß: 5.000 € Vertragsstrafe, bei Wiederholung 10.000 € (§ 7 AGB).
+                  </span>
+                )}
+              </span>
+            </label>
+          </div>
           {error && <div className="auth-error">{error}</div>}
-          <button className="btn-gold" type="submit" disabled={loading} style={{ width: '100%', marginTop: 8 }}>
+          <button className="btn-gold" type="submit" disabled={loading || !agbAccepted} style={{ width: '100%', marginTop: 8, opacity: agbAccepted ? 1 : 0.5 }}>
             {loading ? 'Wird erstellt...' : 'REGISTRIEREN'}
           </button>
         </form>

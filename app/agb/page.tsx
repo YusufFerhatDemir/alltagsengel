@@ -48,9 +48,12 @@ export default function AGBPage() {
             <li>Vermittlung von Alltagsbegleitern (§ 45a SGB XI)</li>
             <li>Buchungssystem für Termine</li>
             <li>Chat-Kommunikation zwischen Kunden und Engeln</li>
-            <li>Abrechnung über § 45b Entlastungsbetrag</li>
-            <li>Vermittlung von Krankenfahrten</li>
-            <li>Vertrieb von Hygieneboxen</li>
+            <li>Abrechnung über § 45b Entlastungsbetrag (131 €/Monat)</li>
+            <li>Vermittlung von Krankenfahrten und Patiententransporten</li>
+            <li>Vermittlung von Pflegeboxen (zum Verbrauch bestimmte Pflegehilfsmittel gemäß § 40 Abs. 2 SGB XI)</li>
+            <li>Vermittlung von Hausnotrufsystemen</li>
+            <li>Vermittlung von Pflegehilfsmitteln (z. B. Pflegebetten, Rollstühle)</li>
+            <li>Weitere Pflege- und Gesundheitsdienstleistungen, die der Betreiber künftig in sein Angebot aufnimmt</li>
           </ul>
         </section>
 
@@ -88,7 +91,55 @@ export default function AGBPage() {
         </section>
 
         <section className="legal-section">
-          <h2>§ 6 Preise und Abrechnung</h2>
+          <h2>§ 6 Vermittlung von Partnerleistungen und Direktkontaktverbot</h2>
+          <p>
+            Alltagsengel vermittelt Kunden bei Bedarf ergänzende Leistungen über qualifizierte
+            Kooperationspartner, insbesondere Krankenfahrten, Pflegeboxen (zum Verbrauch bestimmte
+            Pflegehilfsmittel gemäß § 40 Abs. 2 SGB XI), Hausnotruf, Pflegebetten und weitere
+            Pflegeleistungen.
+          </p>
+          <p>
+            <strong>Für Kunden:</strong> Der Kunde verpflichtet sich, Kooperationspartner, die durch
+            Alltagsengel vermittelt wurden, nicht direkt und unter Umgehung von Alltagsengel zu
+            beauftragen. Dies gilt während der Vertragslaufzeit und für 12 Monate nach Vertragsende.
+            Bei Verstoß behält sich Alltagsengel das Recht auf fristlose Kündigung und Schadensersatz vor.
+          </p>
+          <p>
+            <strong>Für Alltagsbegleiter und Dienstleister (Engel, Fahrer):</strong> Der Dienstleister
+            verpflichtet sich, durch Alltagsengel vermittelte Kunden nicht direkt oder unter Umgehung von
+            Alltagsengel zu betreuen, zu kontaktieren oder ihnen Leistungen anzubieten. Das Wettbewerbsverbot
+            gilt während der Zusammenarbeit und 12 Monate nach deren Beendigung.
+          </p>
+        </section>
+
+        <section className="legal-section">
+          <h2>§ 7 Vertragsstrafe bei Verstößen</h2>
+          <p>
+            Bei einem erstmaligen Verstoß gegen das Direktkontaktverbot oder Wettbewerbsverbot
+            gemäß § 6 wird eine Vertragsstrafe in Höhe von <strong>5.000,00 €</strong> je Einzelfall fällig.
+            Bei wiederholtem Verstoß erhöht sich die Vertragsstrafe auf <strong>10.000,00 €</strong> je
+            weiterem Einzelfall.
+          </p>
+          <p>
+            Die Geltendmachung eines darüber hinausgehenden Schadensersatzanspruchs bleibt
+            ausdrücklich vorbehalten. Die Vertragsstrafe setzt voraus, dass der Verstoß vorsätzlich
+            oder fahrlässig begangen wurde.
+          </p>
+        </section>
+
+        <section className="legal-section">
+          <h2>§ 8 Vertraulichkeit</h2>
+          <p>
+            Alle Nutzer verpflichten sich, sämtliche im Rahmen der Plattformnutzung erlangten
+            Informationen vertraulich zu behandeln. Als vertraulich gelten insbesondere:
+            Kundendaten und Kontaktinformationen, Preis- und Konditionslisten, Vertragsinhalte,
+            interne Prozesse und CRM-Daten. Die Vertraulichkeitspflicht gilt unbefristet über
+            das Vertragsende hinaus.
+          </p>
+        </section>
+
+        <section className="legal-section">
+          <h2>§ 9 Preise und Abrechnung</h2>
           <p>
             Die aktuellen Preise der vermittelten Leistungen sind auf der Plattform einsehbar. Der Betreiber
             erhält eine Vermittlungsgebühr, die in den angezeigten Preisen enthalten ist.
@@ -100,7 +151,7 @@ export default function AGBPage() {
         </section>
 
         <section className="legal-section">
-          <h2>§ 7 Versicherungsschutz</h2>
+          <h2>§ 10 Versicherungsschutz</h2>
           <p>
             Alle über die Plattform vermittelten Einsätze sind durch eine Haftpflichtversicherung abgesichert.
             Der Versicherungsschutz besteht während der vereinbarten Einsatzzeiten.
@@ -108,7 +159,7 @@ export default function AGBPage() {
         </section>
 
         <section className="legal-section">
-          <h2>§ 8 Haftung</h2>
+          <h2>§ 11 Haftung</h2>
           <p>
             Der Betreiber haftet nur für Schäden, die auf vorsätzlichem oder grob fahrlässigem Verhalten beruhen.
             Für die Qualität der durch die Alltagsbegleiter erbrachten Leistungen haftet der Betreiber nicht,
@@ -117,7 +168,7 @@ export default function AGBPage() {
         </section>
 
         <section className="legal-section">
-          <h2>§ 9 Widerrufsrecht für Verbraucher</h2>
+          <h2>§ 12 Widerrufsrecht für Verbraucher</h2>
           <p>
             Verbrauchern (§ 13 BGB) steht bei Verträgen im Fernabsatz ein Widerrufsrecht nach §§ 312g, 355 BGB zu.
           </p>
@@ -145,7 +196,7 @@ export default function AGBPage() {
         </section>
 
         <section className="legal-section">
-          <h2>§ 10 Kündigung</h2>
+          <h2>§ 13 Kündigung</h2>
           <p>
             Beide Parteien können das Nutzungsverhältnis jederzeit ohne Angabe von Gründen kündigen. Bereits
             gebuchte und bestätigte Termine bleiben von der Kündigung unberührt.
@@ -159,7 +210,7 @@ export default function AGBPage() {
         </section>
 
         <section className="legal-section">
-          <h2>§ 11 Abgrenzung der Leistungen</h2>
+          <h2>§ 14 Abgrenzung der Leistungen</h2>
           <p>
             Die über die Plattform vermittelten Alltagsbegleiter erbringen ausschließlich Leistungen zur Unterstützung
             im Alltag gemäß § 45a SGB XI. <strong>Ausdrücklich nicht</strong> umfasst sind:
@@ -178,7 +229,7 @@ export default function AGBPage() {
         </section>
 
         <section className="legal-section">
-          <h2>§ 12 Datenschutz und Auftragsverarbeitung</h2>
+          <h2>§ 15 Datenschutz und Auftragsverarbeitung</h2>
           <p>
             Die Verarbeitung personenbezogener Daten erfolgt nach den Vorgaben der DSGVO und des BDSG. Details
             zur Verarbeitung finden Sie in unserer <Link href="/datenschutz" className="legal-link">Datenschutzerklärung</Link>.
@@ -191,7 +242,7 @@ export default function AGBPage() {
         </section>
 
         <section className="legal-section">
-          <h2>§ 13 Schlussbestimmungen</h2>
+          <h2>§ 16 Schlussbestimmungen</h2>
           <p>
             Es gilt das Recht der Bundesrepublik Deutschland unter Ausschluss des UN-Kaufrechts. Die gesetzlichen
             Vorschriften zur Beschränkung der Rechtswahl und zur Anwendbarkeit zwingender Vorschriften, insbesondere
@@ -214,7 +265,7 @@ export default function AGBPage() {
           </p>
         </section>
 
-        <p className="legal-date">Stand: 17. April 2026 (Version 2.0)</p>
+        <p className="legal-date">Stand: 17. Juli 2026 (Version 3.0)</p>
 
         <div className="legal-footer-nav">
           <Link href="/impressum">Impressum</Link>
