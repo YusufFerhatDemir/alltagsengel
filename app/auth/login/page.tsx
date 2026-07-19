@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import Icon3D from '@/components/Icon3D'
+import { flushPendingProfile } from '@/lib/pending-profile'
 
 // ═══ Brute-Force Schutz: Konstanten ═══
 const MAX_CLIENT_ATTEMPTS = 5
@@ -239,6 +240,10 @@ function LoginForm() {
         status: 'success',
       }).then(() => {})
     })
+
+    // Bei der Registrierung geparkte Profildaten (u.a. PLZ) nachtragen —
+    // relevant, wenn signUp wegen E-Mail-Bestätigung keine Session hatte.
+    await flushPendingProfile(supabase, signInData.user.id)
 
     // Redirect
     if (role === 'admin' || role === 'superadmin') {

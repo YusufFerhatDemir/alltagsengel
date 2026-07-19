@@ -6,6 +6,7 @@ import { requireUser } from '@/lib/supabase/require-session'
 import Link from 'next/link'
 import { IconDocument, IconNav, IconCalendar, IconMoney, IconClipboard, IconChat, IconCard } from '@/components/Icons'
 import { AvatarKunde } from '@/components/AvatarGlow'
+import { normalizePlz, resolvePlz } from '@/lib/hessen-plz'
 
 // KASSEN-Liste entfernt (gehoerte zur Pflegedaten-UI, deaktiviert Phase 5)
 
@@ -18,6 +19,31 @@ export default function KundeProfilPage() {
   const [deleting, setDeleting] = useState(false)
   const [deletePassword, setDeletePassword] = useState('')
   const [deleteError, setDeleteError] = useState('')
+  const [plzInput, setPlzInput] = useState('')
+  const [plzStatus, setPlzStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
+
+  async function savePlz() {
+    const plz = normalizePlz(plzInput)
+    if (!plz) { setPlzStatus('error'); return }
+    setPlzStatus('saving')
+    try {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) { setPlzStatus('error'); return }
+      // location bleibt der Freitext für die Anzeige; postal_code ist das
+      // Feld, das die Umkreis-Suche und die Hessen-Prüfung auswerten.
+      const { error } = await supabase
+        .from('profiles')
+        .update({ postal_code: plz })
+        .eq('id', user.id)
+      if (error) throw error
+      setProfile((prev: any) => (prev ? { ...prev, postal_code: plz } : prev))
+      setPlzStatus('saved')
+    } catch (err) {
+      console.error('PLZ speichern:', err)
+      setPlzStatus('error')
+    }
+  }
 
   // ═══════════════════════════════════════════════════════════════
   // Pflegedaten-Block entfernt (Phase 5 Architektur-Empfehlung):
@@ -44,6 +70,7 @@ export default function KundeProfilPage() {
 
       const { data: p } = await supabase.from('profiles').select('*').eq('id', user.id).single()
       setProfile(p)
+      setPlzInput(resolvePlz(p?.postal_code, p?.location) || '')
 
       // Pflegedaten-Load entfernt: Tabelle care_eligibility existiert nicht in DB
       // (Phase 5 Architektur-Empfehlung, Pflegebox-Feature deaktiviert). Wenn das
@@ -90,6 +117,51 @@ export default function KundeProfilPage() {
             <div>
               <div className="setting-main">E-Mail</div>
               <div className="setting-sub">{profile?.email || '—'}</div>
+            </div>
+          </div>
+          {/* Die PLZ steuert, welche Engel gefunden werden (Umkreis-Suche)
+              und ob Kassenleistung möglich ist — deshalb hier direkt
+              editierbar statt nur als Anzeige. */}
+          <div className="setting-row" style={{ display: 'block' }}>
+            <div className="setting-main">Postleitzahl</div>
+            <div className="setting-sub" style={{ marginBottom: 8 }}>
+              Wir zeigen Ihnen nur Engel in Ihrer Nähe
+            </div>
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              <input
+                inputMode="numeric"
+                maxLength={5}
+                value={plzInput}
+                onChange={e => { setPlzInput(e.target.value.replace(/\D/g, '').slice(0, 5)); setPlzStatus('idle') }}
+                placeholder="z.B. 60311"
+                aria-label="Postleitzahl"
+                style={{
+                  width: 110, padding: '10px 12px', borderRadius: 10,
+                  border: '1px solid var(--border2)', background: 'var(--coal)',
+                  color: 'var(--ink)', fontSize: 14, outline: 'none',
+                }}
+              />
+              <button
+                onClick={savePlz}
+                disabled={plzInput.length !== 5 || plzStatus === 'saving'}
+                style={{
+                  padding: '10px 16px', borderRadius: 10, border: 'none',
+                  background: plzInput.length === 5
+                    ? 'linear-gradient(135deg,var(--gold),var(--gold2))'
+                    : 'var(--coal4)',
+                  color: plzInput.length === 5 ? 'var(--coal)' : 'var(--ink5)',
+                  fontSize: 13, fontWeight: 600,
+                  cursor: plzInput.length === 5 ? 'pointer' : 'not-allowed',
+                }}
+              >
+                {plzStatus === 'saving' ? 'Speichern…' : 'Speichern'}
+              </button>
+              {plzStatus === 'saved' && (
+                <span style={{ fontSize: 12.5, color: 'var(--green)' }}>Gespeichert</span>
+              )}
+              {plzStatus === 'error' && (
+                <span style={{ fontSize: 12.5, color: '#ff6b6b' }}>Fehlgeschlagen</span>
+              )}
             </div>
           </div>
           <div className="setting-row">

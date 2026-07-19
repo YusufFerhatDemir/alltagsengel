@@ -1,5 +1,6 @@
 // ═══════════════════════════════════════════════════════════
-// GET /api/engel/match — Engel-Discovery MIT Standort-Filter
+// GET /api/engel/match — Engel-Discovery mit Standort- UND
+//                        Verfügbarkeits-Filter
 // ═══════════════════════════════════════════════════════════
 // Warum serverseitig? Die PLZ der Engel ist PII und wird bewusst
 // NICHT an den Browser geliefert (siehe Migration
@@ -9,21 +10,31 @@
 //      (User-Session, kein PII im Payload).
 //   2. Engel-PLZ nur serverseitig per Service-Role lesen und mit
 //      der Kunden-PLZ abgleichen (Distanz, s. lib/plz-match.ts).
-//   3. Nur die gematchten Karten zurückgeben — Response-Form ist
-//      identisch zur RPC, plus Meta-Flag `filtered`.
+//      Nach außen geht nur die gerundete Distanz in km, nie die PLZ.
+//   3. Optional: Zeitfenster aus angel_availability gegen den
+//      Wunschtermin prüfen (s. lib/availability.ts).
+//
+// Query-Parameter (alle optional):
+//   radius   Umkreis in km (Standard ENGEL_MATCH_RADIUS_KM)
+//   date     Wunschtermin "YYYY-MM-DD"
+//   time     Wunsch-Startzeit "HH:MM"
+//   duration Dauer in Stunden (Standard 1)
+// Nur wenn date UND time gesetzt sind, wird auf Verfügbarkeit gefiltert.
 //
 // Edge Cases:
 //   - Kunde ohne PLZ  → kein Filter möglich → alle Engel + filtered:false
 //   - Engel ohne PLZ  → wird beim Filtern ausgeschlossen (fail-safe)
-//   - Zone unbekannt + Geocoding down → Leitregions-Fallback
+//   - Engel ohne gepflegte Zeitfenster → Fallback auf Wochentags-Array,
+//     sonst nicht ausgeschlossen (fail-open, s. lib/availability.ts)
 // ═══════════════════════════════════════════════════════════
 
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { geocodePLZ } from '@/lib/geocoding'
+import { geocodePLZ, haversineDistance } from '@/lib/geocoding'
 import { resolvePlz } from '@/lib/hessen-plz'
-import { matchPlz } from '@/lib/plz-match'
+import { ENGEL_MATCH_RADIUS_KM, plzDistanceKm } from '@/lib/plz-match'
+import { istVerfuegbar, type Zeitfenster } from '@/lib/availability'
 
 export const dynamic = 'force-dynamic'
 
@@ -45,12 +56,33 @@ async function geocodeCached(plz: string): Promise<{ lat: number; lng: number } 
   return result
 }
 
-export async function GET() {
+/** Distanz in km — offline zuerst, Geocoding nur als Notnagel. */
+async function distanzKm(plzA: string, plzB: string): Promise<number | null> {
+  const offline = plzDistanceKm(plzA, plzB)
+  if (offline !== null) return offline
+  const [a, b] = await Promise.all([geocodeCached(plzA), geocodeCached(plzB)])
+  if (a && b) return haversineDistance(a.lat, a.lng, b.lat, b.lng)
+  // Letzter Fallback: gleiche Leitregion → als "im Umkreis" werten
+  return plzA.slice(0, 2) === plzB.slice(0, 2) ? 0 : null
+}
+
+export async function GET(request: NextRequest) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) {
     return NextResponse.json({ error: 'Nicht angemeldet' }, { status: 401 })
   }
+
+  const params = request.nextUrl.searchParams
+  const radiusRoh = Number(params.get('radius'))
+  const radiusKm = Number.isFinite(radiusRoh) && radiusRoh > 0
+    ? Math.min(radiusRoh, 500)
+    : ENGEL_MATCH_RADIUS_KM
+  const datum = params.get('date')
+  const uhrzeit = params.get('time')
+  const dauerRoh = Number(params.get('duration'))
+  const dauerStunden = Number.isFinite(dauerRoh) && dauerRoh > 0 ? dauerRoh : 1
+  const pruefeZeit = Boolean(datum && uhrzeit)
 
   // Sichere Karten mit der Session des Users laden (RPC filtert
   // Test-Engel + Offline-Engel bereits serverseitig raus)
@@ -61,6 +93,7 @@ export async function GET() {
     return NextResponse.json({ error: 'Engel konnten nicht geladen werden' }, { status: 500 })
   }
   const allCards: any[] = cards || []
+  const engelIds = allCards.map(c => c.id).filter(Boolean)
 
   const admin = createAdminClient()
 
@@ -72,14 +105,43 @@ export async function GET() {
     .single()
   const customerPlz = resolvePlz(me?.postal_code, me?.location)
 
+  // Zeitfenster aller Engel in einem Rutsch laden (nur wenn gebraucht)
+  const fensterById = new Map<string, Zeitfenster[]>()
+  if (pruefeZeit && engelIds.length > 0) {
+    const { data: slots } = await admin
+      .from('angel_availability')
+      .select('angel_id, weekday, start_time, end_time')
+      .in('angel_id', engelIds)
+    for (const slot of slots || []) {
+      const liste = fensterById.get(slot.angel_id) || []
+      liste.push(slot as Zeitfenster)
+      fensterById.set(slot.angel_id, liste)
+    }
+  }
+
+  const zeitPasst = (card: any) =>
+    !pruefeZeit ||
+    istVerfuegbar(
+      fensterById.get(card.id) || [],
+      card.availability,
+      datum!,
+      uhrzeit!,
+      dauerStunden
+    )
+
   // Ohne Kunden-PLZ ist kein Standort-Filter möglich → alle zeigen,
   // das Frontend weist den Kunden auf die fehlende PLZ hin.
   if (!customerPlz) {
-    return NextResponse.json({ engel: allCards, filtered: false, customerPlz: null })
+    return NextResponse.json({
+      engel: allCards.filter(zeitPasst),
+      filtered: false,
+      timeFiltered: pruefeZeit,
+      radiusKm,
+      customerPlz: null,
+    })
   }
 
   // Engel-PLZ NUR serverseitig lesen — verlässt den Server nicht
-  const engelIds = allCards.map(c => c.id).filter(Boolean)
   const plzById = new Map<string, string | null>()
   if (engelIds.length > 0) {
     const { data: engelRows } = await admin
@@ -94,13 +156,26 @@ export async function GET() {
   const matched = (
     await Promise.all(
       allCards.map(async card => {
+        if (!zeitPasst(card)) return null
         const engelPlz = plzById.get(card.id)
         // Engel ohne hinterlegte PLZ: Standort unbekannt → nicht anzeigen
         if (!engelPlz) return null
-        return (await matchPlz(customerPlz, engelPlz, geocodeCached)) ? card : null
+        const distanz = await distanzKm(customerPlz, engelPlz)
+        if (distanz === null || distanz > radiusKm) return null
+        // Gerundete Distanz ist unkritisch — die PLZ selbst bleibt intern
+        return { ...card, distance_km: Math.round(distanz) }
       })
     )
-  ).filter(Boolean)
+  ).filter(Boolean) as any[]
 
-  return NextResponse.json({ engel: matched, filtered: true, customerPlz })
+  // Nächstgelegene Engel zuerst
+  matched.sort((a, b) => (a.distance_km ?? 0) - (b.distance_km ?? 0))
+
+  return NextResponse.json({
+    engel: matched,
+    filtered: true,
+    timeFiltered: pruefeZeit,
+    radiusKm,
+    customerPlz,
+  })
 }

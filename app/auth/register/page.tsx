@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { Suspense } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { geocodePLZ } from '@/lib/geocoding'
+import { stashPendingProfile } from '@/lib/pending-profile'
 import { validatePassword, validatePasswordAsync } from '@/lib/password-validation'
 import Link from 'next/link'
 import Icon3D from '@/components/Icon3D'
@@ -156,23 +157,32 @@ function RegisterForm() {
 
       // User created successfully
       if (data.user) {
+        const profileData: Record<string, string> = {
+          id: data.user.id,
+          role,
+          first_name: firstName,
+          last_name: lastName,
+          email,
+          agb_accepted_at: new Date().toISOString(),
+          agb_version: '3.0',
+        }
+        if (plz || stadt) {
+          profileData.location = [plz, stadt].filter(Boolean).join(' ')
+        }
+        if (plz && plz.length === 5) {
+          (profileData as any).postal_code = plz
+        }
+
+        // Ohne Session (E-Mail-Bestätigung aktiv) kann das Profil jetzt
+        // nicht geschrieben werden — sonst ginge vor allem die PLZ
+        // verloren und der Umkreis-Filter liefe ins Leere. Daten parken,
+        // der erste Login trägt sie nach (lib/pending-profile.ts).
+        if (!data.session) {
+          stashPendingProfile(profileData as any)
+        }
+
         // Try to create/update profile (may already exist via auth trigger)
         if (data.session) {
-          const profileData: Record<string, string> = {
-            id: data.user.id,
-            role,
-            first_name: firstName,
-            last_name: lastName,
-            email,
-            agb_accepted_at: new Date().toISOString(),
-            agb_version: '3.0',
-          }
-          if (plz || stadt) {
-            profileData.location = [plz, stadt].filter(Boolean).join(' ')
-          }
-          if (plz && plz.length === 5) {
-            (profileData as any).postal_code = plz
-          }
           if (plz && plz.length === 5) {
             const coords = await geocodePLZ(plz)
             if (coords) {

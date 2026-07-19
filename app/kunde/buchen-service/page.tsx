@@ -7,6 +7,7 @@ import { IconWingsGold, IconStarFilled, IconCheck, IconCard } from '@/components
 import Icon3D from '@/components/Icon3D'
 import { UNIT_ECONOMICS } from '@/lib/mis/constants'
 import { isHessenPlz, resolvePlz } from '@/lib/hessen-plz'
+import { ENGEL_MATCH_RADIUS_KM, RADIUS_OPTIONEN } from '@/lib/plz-radius'
 
 const serviceOptions: { key: string; label: string; desc: string }[] = [
   { key: 'begleitung', label: 'Begleitung', desc: 'Alltägliche Begleitung und Unterstützung' },
@@ -44,6 +45,9 @@ function BuchenServiceInner() {
   const [profile, setProfile] = useState<any>(null)
   // false = Kunde hat keine PLZ hinterlegt → Standort-Filter nicht möglich
   const [regionFiltered, setRegionFiltered] = useState(true)
+  // true = Liste ist zusätzlich auf den Wunschtermin eingegrenzt
+  const [zeitGefiltert, setZeitGefiltert] = useState(false)
+  const [radiusKm, setRadiusKm] = useState<number>(ENGEL_MATCH_RADIUS_KM)
 
   // Default-Datum = morgen
   useEffect(() => {
@@ -73,14 +77,24 @@ function BuchenServiceInner() {
       const serviceLabel = serviceOptions.find(s => s.key === selectedService)?.label || selectedService
       // Engel über /api/engel/match laden: serverseitig nach PLZ-Nähe
       // gefiltert (Kunden sehen nur Engel in ihrer Region; Engel-PLZ
-      // bleibt auf dem Server — kein PII im Browser).
+      // bleibt auf dem Server — kein PII im Browser) UND nach den
+      // Zeitfenstern aus dem Verfügbarkeitskalender. Bei "zeitlich
+      // flexibel" wird der Termin bewusst NICHT mitgeschickt, damit
+      // die Auswahl nicht unnötig eingeschränkt wird.
       let data: any[] = []
       try {
-        const res = await fetch('/api/engel/match')
+        const query = new URLSearchParams({ radius: String(radiusKm) })
+        if (!isFlexible && selectedDate && selectedTime) {
+          query.set('date', selectedDate)
+          query.set('time', selectedTime)
+          query.set('duration', String(duration))
+        }
+        const res = await fetch(`/api/engel/match?${query.toString()}`)
         if (res.ok) {
           const json = await res.json()
           data = json.engel || []
           setRegionFiltered(json.filtered !== false)
+          setZeitGefiltert(json.timeFiltered === true)
         }
       } catch { /* Netzwerkfehler → leere Liste, UI zeigt Empty-State */ }
 
@@ -95,7 +109,7 @@ function BuchenServiceInner() {
       setLoading(false)
     }
     loadAngels()
-  }, [step, selectedService])
+  }, [step, selectedService, selectedDate, selectedTime, duration, isFlexible, radiusKm])
 
   const serviceLabel = serviceOptions.find(s => s.key === selectedService)?.label || selectedService
   // Kassenleistung (§45a/§45b) nur mit hessischer PLZ — außerhalb
@@ -387,7 +401,35 @@ function BuchenServiceInner() {
                 fontSize: 13, color: 'var(--ink4)', lineHeight: 1.5,
               }}>
                 Hinweis: Ohne Postleitzahl in Ihrem Profil können wir Engel nicht
-                nach Nähe filtern — Sie sehen daher alle verfügbaren Engel.
+                nach Nähe filtern — Sie sehen daher alle verfügbaren Engel.{' '}
+                <Link href="/kunde/profil" style={{ color: 'var(--gold2)', fontWeight: 600 }}>
+                  Postleitzahl ergänzen
+                </Link>
+              </div>
+            )}
+
+            {/* Umkreis: in dünn besetzten Regionen ist die Standard-Suche
+                schnell leer — der Kunde soll selbst erweitern können. */}
+            {regionFiltered && (
+              <div style={{ marginBottom: 14 }}>
+                <div style={{ fontSize: 13, color: 'var(--ink4)', marginBottom: 8 }}>
+                  Umkreis
+                </div>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  {RADIUS_OPTIONEN.map(km => (
+                    <button
+                      key={km}
+                      onClick={() => setRadiusKm(km)}
+                      style={{
+                        padding: '8px 14px', borderRadius: 10,
+                        border: radiusKm === km ? '2px solid var(--gold)' : '1.5px solid var(--cream3)',
+                        background: radiusKm === km ? 'var(--gold-pale)' : 'var(--white)',
+                        fontSize: 13, fontWeight: radiusKm === km ? 600 : 500,
+                        cursor: 'pointer',
+                      }}
+                    >{km} km</button>
+                  ))}
+                </div>
               </div>
             )}
 
@@ -397,12 +439,32 @@ function BuchenServiceInner() {
               <div style={{ textAlign: 'center', padding: '40px 20px' }}>
                 <div style={{ fontSize: 48, marginBottom: 16 }}>🙏</div>
                 <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--ink)', marginBottom: 8 }}>
-                  Noch keine Engel in Ihrer Nähe
+                  {zeitGefiltert ? 'Kein Engel zu diesem Termin frei' : 'Noch keine Engel in Ihrer Nähe'}
                 </div>
                 <div style={{ fontSize: 14, color: 'var(--ink4)', lineHeight: 1.6, marginBottom: 20 }}>
-                  Wir bitten vielmals um Entschuldigung — in Ihrer Region sind aktuell noch
-                  keine Alltagsengel für <strong>{serviceLabel}</strong> verfügbar.
+                  {zeitGefiltert ? (
+                    <>
+                      Im Umkreis von {radiusKm} km hat aktuell kein Engel am{' '}
+                      <strong>{formatDate(selectedDate)} um {selectedTime}</strong> für{' '}
+                      <strong>{duration} Stunden</strong> Zeit.
+                    </>
+                  ) : (
+                    <>
+                      Wir bitten vielmals um Entschuldigung — im Umkreis von {radiusKm} km sind
+                      aktuell noch keine Alltagsengel für <strong>{serviceLabel}</strong> verfügbar.
+                    </>
+                  )}
                 </div>
+                {zeitGefiltert && (
+                  <button
+                    onClick={() => setStep(3)}
+                    style={{
+                      padding: '11px 20px', borderRadius: 12, border: '1.5px solid var(--cream3)',
+                      background: 'var(--white)', fontSize: 14, fontWeight: 600,
+                      cursor: 'pointer', marginBottom: 20,
+                    }}
+                  >Anderen Termin wählen</button>
+                )}
                 <div style={{
                   background: 'rgba(201,150,60,0.08)', border: '1px solid rgba(201,150,60,0.2)',
                   borderRadius: 12, padding: '16px 20px', marginBottom: 20, textAlign: 'left',
@@ -443,6 +505,9 @@ function BuchenServiceInner() {
                       </div>
                       <div style={{ fontSize: 13, color: 'var(--ink4)', display: 'flex', alignItems: 'center', gap: 4 }}>
                         <IconStarFilled size={12} /> {angel.rating} · {angel.total_jobs} Einsätze
+                        {typeof angel.distance_km === 'number' && (
+                          <span> · ca. {angel.distance_km} km</span>
+                        )}
                         {angel.is_45b_capable && kasseMoeglich && <span style={{ color: 'var(--gold)' }}> · §45b</span>}
                       </div>
                     </div>

@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
-import { IconWingsGold, IconDocument, IconCheck, IconClock, IconInfo, IconShield } from '@/components/Icons'
+import { IconWingsGold, IconDocument, IconCheck, IconClock, IconInfo, IconShield, IconCalendar } from '@/components/Icons'
 import { UNIT_ECONOMICS } from '@/lib/mis/constants'
 import { AvatarEngel } from '@/components/AvatarGlow'
 
@@ -111,6 +111,17 @@ export default function MeinProfilPage() {
             </div>
             <div className="earn-btn">Auszahlen</div>
           </div>
+        </div>
+
+        <div className="section-label">Verfügbarkeit</div>
+        <div className="settings-card">
+          <Link href="/engel/verfuegbarkeit" className="setting-row" style={{ textDecoration: 'none', color: 'inherit', cursor: 'pointer' }}>
+            <div>
+              <div className="setting-main"><IconCalendar size={14} /> Meine Zeiten</div>
+              <div className="setting-sub">Wochentage und Uhrzeiten festlegen</div>
+            </div>
+            <div style={{ color: 'var(--ink4)', fontSize: 18 }}>›</div>
+          </Link>
         </div>
 
         <div className="section-label">Einstellungen</div>
