@@ -49,6 +49,10 @@ export default function RootLayout() {
         <Stack.Screen name="einsatz/check-in" options={{ presentation: 'modal' }} />
         <Stack.Screen name="einsatz/leistungsnachweis-scan" options={{ presentation: 'modal' }} />
         <Stack.Screen name="einsatz/unterschrift" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="einsatz/leistung-erfassen" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="einsatz/zeiterfassung" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="einsatz/notizen" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="einsatz/klient" options={{ presentation: 'modal' }} />
       </Stack>
     </AuthProvider>
   )

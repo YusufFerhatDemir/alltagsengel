@@ -21,6 +21,7 @@ interface OpenRecord {
   id: string
   date: string
   status: string
+  client_id: string | null
   client_name: string
 }
 
@@ -36,7 +37,7 @@ export default function EinsatzScreen() {
     setLoadingRecords(true)
     const { data } = await supabase
       .from('service_records')
-      .select('id, date, status, client:clients(first_name, last_name)')
+      .select('id, date, status, client_id, client:clients(first_name, last_name)')
       .eq('caregiver_id', caregiverId)
       .in('status', ['draft', 'incomplete', 'complete'])
       .order('date', { ascending: false })
@@ -47,6 +48,7 @@ export default function EinsatzScreen() {
         id: r.id,
         date: r.date,
         status: r.status,
+        client_id: r.client_id ?? null,
         client_name: [r.client?.first_name, r.client?.last_name].filter(Boolean).join(' ') || 'Unbekannt',
       }))
     )
@@ -109,6 +111,16 @@ export default function EinsatzScreen() {
           Offene Leistungsnachweise — Foto, Unterschrift und Standort direkt am Einsatzort erfassen.
         </MutedText>
 
+        {/* Schnellaktionen: neue Leistung + Notizen */}
+        <View style={styles.quickRow}>
+          <GoldButton onPress={() => router.push('/einsatz/leistung-erfassen')} style={styles.quickBtn}>
+            Leistung erfassen
+          </GoldButton>
+          <GhostButton onPress={() => router.push('/einsatz/notizen')} style={styles.quickBtn}>
+            Notizen
+          </GhostButton>
+        </View>
+
         {loadingRecords ? (
           <ActivityIndicator color={Colors.gold} style={styles.loadingSpinner} />
         ) : records.length === 0 ? (
@@ -123,6 +135,12 @@ export default function EinsatzScreen() {
                 {new Date(r.date).toLocaleDateString('de-DE')} · Status: {r.status}
               </Text>
               <View style={styles.actionRow}>
+                <GhostButton
+                  onPress={() => router.push({ pathname: '/einsatz/zeiterfassung', params: { serviceRecordId: r.id } })}
+                  style={styles.actionBtn}
+                >
+                  Timer
+                </GhostButton>
                 <GhostButton
                   onPress={() => router.push({ pathname: '/einsatz/check-in', params: { serviceRecordId: r.id } })}
                   style={styles.actionBtn}
@@ -143,6 +161,14 @@ export default function EinsatzScreen() {
                 >
                   Unterschrift
                 </GhostButton>
+                {r.client_id && (
+                  <GhostButton
+                    onPress={() => router.push({ pathname: '/einsatz/klient', params: { clientId: r.client_id } })}
+                    style={styles.actionBtn}
+                  >
+                    Klienten-Info
+                  </GhostButton>
+                )}
               </View>
             </Card>
           ))
@@ -160,6 +186,8 @@ const styles = StyleSheet.create({
   hint: { textAlign: 'center' },
   loginBtn: { marginTop: 12, minWidth: 200 },
   intro: { marginBottom: 4 },
+  quickRow: { flexDirection: 'row', gap: 10 },
+  quickBtn: { flex: 1 },
   loadingSpinner: { marginTop: 20 },
   recordCard: { gap: 6 },
   recordClient: { color: Colors.ink, fontFamily: Fonts.semibold, fontSize: 16 },

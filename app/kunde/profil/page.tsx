@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { requireUser } from '@/lib/supabase/require-session'
 import Link from 'next/link'
-import { IconDocument, IconNav, IconCalendar } from '@/components/Icons'
+import { IconDocument, IconNav, IconCalendar, IconMoney, IconClipboard, IconChat, IconCard } from '@/components/Icons'
 import { AvatarKunde } from '@/components/AvatarGlow'
 
 // KASSEN-Liste entfernt (gehoerte zur Pflegedaten-UI, deaktiviert Phase 5)
@@ -114,6 +114,50 @@ export default function KundeProfilPage() {
             </div>
           </Link>
           {/* Pflegebox-Link entfernt: Feature deaktiviert (Phase 5). */}
+          <Link href="/kunde/budget" style={{ textDecoration: 'none' }}>
+            <div className="setting-row" style={{ cursor: 'pointer' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <IconMoney size={18} color="var(--gold2)" />
+                <div>
+                  <div className="setting-main">Mein Budget</div>
+                  <div className="setting-sub">Entlastungsbetrag und Verhinderungspflege im Blick</div>
+                </div>
+              </div>
+            </div>
+          </Link>
+          <Link href="/kunde/rechnungen" style={{ textDecoration: 'none' }}>
+            <div className="setting-row" style={{ cursor: 'pointer' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <IconCard size={18} color="var(--gold2)" />
+                <div>
+                  <div className="setting-main">Meine Rechnungen</div>
+                  <div className="setting-sub">Alle Rechnungen mit Einzelpositionen</div>
+                </div>
+              </div>
+            </div>
+          </Link>
+          <Link href="/kunde/leistungsnachweis" style={{ textDecoration: 'none' }}>
+            <div className="setting-row" style={{ cursor: 'pointer' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <IconClipboard size={18} color="var(--gold2)" />
+                <div>
+                  <div className="setting-main">Leistungsnachweis</div>
+                  <div className="setting-sub">Alle Einsätze nach Monaten sortiert</div>
+                </div>
+              </div>
+            </div>
+          </Link>
+          <Link href="/kunde/nachrichten" style={{ textDecoration: 'none' }}>
+            <div className="setting-row" style={{ cursor: 'pointer' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <IconChat size={18} color="var(--gold2)" />
+                <div>
+                  <div className="setting-main">Nachrichten an Alltagsengel</div>
+                  <div className="setting-sub">Direkter Draht zu unserem Team</div>
+                </div>
+              </div>
+            </div>
+          </Link>
           <Link href="/kunde/dokumente" style={{ textDecoration: 'none' }}>
             <div className="setting-row" style={{ cursor: 'pointer' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>

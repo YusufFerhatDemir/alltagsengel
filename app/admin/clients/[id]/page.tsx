@@ -5,9 +5,10 @@ import { createClient } from '@/lib/supabase/client'
 import { isValidUUID } from '@/lib/safe-query'
 import {
   euro, formatDate, formatTime, fullName, statusMeta, summarizeBudget,
-  CLIENT_STATUS, RECORD_STATUS, BUDGET_TYPE, type BudgetSummary,
+  CLIENT_STATUS, RECORD_STATUS, BUDGET_TYPE, MOBILITY_STATUS, type BudgetSummary,
 } from '@/lib/admin/ops'
 import { AmpelDot, BudgetBar, StatusBadge, Banner, EmptyRow } from '@/components/admin/OpsUI'
+import { CareNotesPanel } from '@/components/admin/CareNotesPanel'
 
 interface ClientDetail {
   id: string
@@ -26,6 +27,24 @@ interface ClientDetail {
   insurance_number: string | null
   notes: string | null
   status: string
+  // Gesundheitsdaten & Notfallkontakte
+  allergies: string | null
+  medications: string | null
+  mobility_status: string | null
+  dietary_restrictions: string | null
+  medical_conditions: string | null
+  emergency_contact_name: string | null
+  emergency_contact_phone: string | null
+  emergency_contact_relationship: string | null
+  next_of_kin_name: string | null
+  next_of_kin_phone: string | null
+  next_of_kin_email: string | null
+  next_of_kin_relationship: string | null
+  hausarzt_name: string | null
+  hausarzt_phone: string | null
+  versichertennummer: string | null
+  pflegekasse_name: string | null
+  pflegekasse_ik: string | null
 }
 
 interface RecordRow {
@@ -51,6 +70,7 @@ export default function ClientDetailPage() {
   const [records, setRecords] = useState<RecordRow[]>([])
   const [loading, setLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
+  const [tab, setTab] = useState<'uebersicht' | 'gesundheit' | 'notizen'>('uebersicht')
 
   useEffect(() => {
     async function load() {
@@ -119,6 +139,30 @@ export default function ClientDetailPage() {
         </div>
       </div>
 
+      {/* ═══ Tabs ═══ */}
+      <div className="admin-filters" style={{ marginBottom: 20 }}>
+        {([
+          ['uebersicht', 'Übersicht'],
+          ['gesundheit', 'Gesundheitsdaten'],
+          ['notizen', 'Notizen'],
+        ] as const).map(([key, label]) => (
+          <button
+            key={key}
+            className={`admin-filter-btn ${tab === key ? 'active' : ''}`}
+            onClick={() => setTab(key)}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {tab === 'gesundheit' && (
+        <HealthSection client={client} onSaved={updated => setClient({ ...client, ...updated })} />
+      )}
+
+      {tab === 'notizen' && <CareNotesPanel clientId={client.id} />}
+
+      {tab === 'uebersicht' && (<>
       {/* Stammdaten + Budget nebeneinander */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, alignItems: 'start' }} className="client-detail-grid">
         {/* Stammdaten */}
@@ -201,8 +245,234 @@ export default function ClientDetailPage() {
           </tbody>
         </table>
       </div>
+      </>)}
     </div>
   )
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Gesundheitsdaten & Notfallkontakte — Ansicht + Bearbeitung
+// ═══════════════════════════════════════════════════════════════
+type HealthPayload = Pick<ClientDetail,
+  'allergies' | 'medications' | 'mobility_status' | 'dietary_restrictions' | 'medical_conditions' |
+  'emergency_contact_name' | 'emergency_contact_phone' | 'emergency_contact_relationship' |
+  'next_of_kin_name' | 'next_of_kin_phone' | 'next_of_kin_email' | 'next_of_kin_relationship' |
+  'hausarzt_name' | 'hausarzt_phone' | 'versichertennummer' | 'pflegekasse_name' | 'pflegekasse_ik'
+>
+
+function healthFormFromClient(c: ClientDetail): Record<string, string> {
+  return {
+    allergies: c.allergies || '',
+    medications: c.medications || '',
+    mobility_status: c.mobility_status || '',
+    dietary_restrictions: c.dietary_restrictions || '',
+    medical_conditions: c.medical_conditions || '',
+    emergency_contact_name: c.emergency_contact_name || '',
+    emergency_contact_phone: c.emergency_contact_phone || '',
+    emergency_contact_relationship: c.emergency_contact_relationship || '',
+    next_of_kin_name: c.next_of_kin_name || '',
+    next_of_kin_phone: c.next_of_kin_phone || '',
+    next_of_kin_email: c.next_of_kin_email || '',
+    next_of_kin_relationship: c.next_of_kin_relationship || '',
+    hausarzt_name: c.hausarzt_name || '',
+    hausarzt_phone: c.hausarzt_phone || '',
+    versichertennummer: c.versichertennummer || '',
+    pflegekasse_name: c.pflegekasse_name || '',
+    pflegekasse_ik: c.pflegekasse_ik || '',
+  }
+}
+
+function HealthSection({ client, onSaved }: { client: ClientDetail; onSaved: (u: HealthPayload) => void }) {
+  const [editing, setEditing] = useState(false)
+  const [form, setForm] = useState<Record<string, string>>(() => healthFormFromClient(client))
+  const [saving, setSaving] = useState(false)
+  const [err, setErr] = useState<string | null>(null)
+  const [savedOk, setSavedOk] = useState(false)
+
+  const set = (key: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
+    setForm(f => ({ ...f, [key]: e.target.value }))
+
+  function startEdit() {
+    setForm(healthFormFromClient(client))
+    setErr(null); setSavedOk(false); setEditing(true)
+  }
+
+  async function save() {
+    setErr(null); setSaving(true)
+    try {
+      const t = (k: string) => form[k].trim() || null
+      const payload: HealthPayload = {
+        allergies: t('allergies'),
+        medications: t('medications'),
+        mobility_status: form.mobility_status || null,
+        dietary_restrictions: t('dietary_restrictions'),
+        medical_conditions: t('medical_conditions'),
+        emergency_contact_name: t('emergency_contact_name'),
+        emergency_contact_phone: t('emergency_contact_phone'),
+        emergency_contact_relationship: t('emergency_contact_relationship'),
+        next_of_kin_name: t('next_of_kin_name'),
+        next_of_kin_phone: t('next_of_kin_phone'),
+        next_of_kin_email: t('next_of_kin_email'),
+        next_of_kin_relationship: t('next_of_kin_relationship'),
+        hausarzt_name: t('hausarzt_name'),
+        hausarzt_phone: t('hausarzt_phone'),
+        versichertennummer: t('versichertennummer'),
+        pflegekasse_name: t('pflegekasse_name'),
+        pflegekasse_ik: t('pflegekasse_ik'),
+      }
+      const supabase = createClient()
+      const { error } = await supabase.from('clients').update(payload).eq('id', client.id)
+      if (error) { setErr(error.message); setSaving(false); return }
+      onSaved(payload)
+      setEditing(false)
+      setSavedOk(true)
+    } catch (e: any) {
+      setErr(e?.message || 'Speichern fehlgeschlagen.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const mob = client.mobility_status ? statusMeta(MOBILITY_STATUS, client.mobility_status) : null
+
+  return (
+    <div>
+      <h2 style={{ marginTop: 8, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
+        Gesundheitsdaten &amp; Notfallkontakte
+        {!editing && <button onClick={startEdit} style={addBtn}>Bearbeiten</button>}
+      </h2>
+
+      {err && <Banner tone="danger">{err}</Banner>}
+      {savedOk && !editing && <Banner tone="info">✅ Gesundheitsdaten gespeichert.</Banner>}
+
+      {!editing ? (
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, alignItems: 'start' }} className="client-detail-grid">
+          {/* Gesundheit */}
+          <div className="admin-stat-card" style={{ padding: 20 }}>
+            <h2 style={{ marginBottom: 12 }}>Gesundheit</h2>
+            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16, padding: '6px 0', borderBottom: '1px solid var(--border)', fontSize: 14 }}>
+              <span style={{ color: 'var(--ink4)' }}>Mobilität</span>
+              {mob ? <StatusBadge label={mob.label} color={mob.color} /> : <span style={{ color: 'var(--ink2)' }}>—</span>}
+            </div>
+            <InfoBlock label="Allergien" value={client.allergies} />
+            <InfoBlock label="Medikamente" value={client.medications} />
+            <InfoBlock label="Ernährungseinschränkungen" value={client.dietary_restrictions} />
+            <InfoBlock label="Medizinische Vorerkrankungen" value={client.medical_conditions} />
+          </div>
+
+          {/* Kontakte & Versicherung */}
+          <div className="admin-stat-card" style={{ padding: 20 }}>
+            <h2 style={{ marginBottom: 12 }}>Notfallkontakte &amp; Versicherung</h2>
+            <InfoRow label="Notfallkontakt" value={[client.emergency_contact_name, client.emergency_contact_relationship ? `(${client.emergency_contact_relationship})` : ''].filter(Boolean).join(' ') || '—'} />
+            <InfoRow label="Notfall-Telefon" value={client.emergency_contact_phone || '—'} />
+            <InfoRow label="Angehörige/r" value={[client.next_of_kin_name, client.next_of_kin_relationship ? `(${client.next_of_kin_relationship})` : ''].filter(Boolean).join(' ') || '—'} />
+            <InfoRow label="Angehörige/r Telefon" value={client.next_of_kin_phone || '—'} />
+            <InfoRow label="Angehörige/r E-Mail" value={client.next_of_kin_email || '—'} />
+            <InfoRow label="Hausarzt" value={client.hausarzt_name || '—'} />
+            <InfoRow label="Hausarzt Telefon" value={client.hausarzt_phone || '—'} />
+            <InfoRow label="Versichertennummer" value={client.versichertennummer || '—'} />
+            <InfoRow label="Pflegekasse" value={client.pflegekasse_name || '—'} />
+            <InfoRow label="Pflegekasse IK-Nummer" value={client.pflegekasse_ik || '—'} />
+          </div>
+        </div>
+      ) : (
+        <div className="admin-stat-card" style={{ padding: 20 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, alignItems: 'start' }} className="client-detail-grid">
+            {/* Spalte 1: Gesundheit */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <FormField label="Mobilität">
+                <select value={form.mobility_status} onChange={set('mobility_status')} style={fieldInput}>
+                  <option value="">— nicht erfasst —</option>
+                  <option value="mobil">Mobil</option>
+                  <option value="eingeschraenkt">Eingeschränkt</option>
+                  <option value="rollstuhl">Rollstuhl</option>
+                  <option value="bettlaegerig">Bettlägerig</option>
+                </select>
+              </FormField>
+              <FormField label="Allergien">
+                <textarea value={form.allergies} onChange={set('allergies')} rows={3} placeholder="z. B. Penicillin, Nüsse…" style={fieldArea} />
+              </FormField>
+              <FormField label="Medikamente">
+                <textarea value={form.medications} onChange={set('medications')} rows={3} placeholder="z. B. Marcumar 1-0-0…" style={fieldArea} />
+              </FormField>
+              <FormField label="Ernährungseinschränkungen">
+                <textarea value={form.dietary_restrictions} onChange={set('dietary_restrictions')} rows={3} placeholder="z. B. Diabetiker-Kost, laktosefrei…" style={fieldArea} />
+              </FormField>
+              <FormField label="Medizinische Vorerkrankungen">
+                <textarea value={form.medical_conditions} onChange={set('medical_conditions')} rows={3} placeholder="z. B. Demenz, Herzinsuffizienz…" style={fieldArea} />
+              </FormField>
+            </div>
+
+            {/* Spalte 2: Kontakte & Versicherung */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <div style={groupLabel}>Notfallkontakt</div>
+              <FormField label="Name"><input value={form.emergency_contact_name} onChange={set('emergency_contact_name')} style={fieldInput} /></FormField>
+              <div style={{ display: 'flex', gap: 10 }}>
+                <FormField label="Telefon"><input value={form.emergency_contact_phone} onChange={set('emergency_contact_phone')} style={fieldInput} /></FormField>
+                <FormField label="Beziehung"><input value={form.emergency_contact_relationship} onChange={set('emergency_contact_relationship')} placeholder="z. B. Tochter" style={fieldInput} /></FormField>
+              </div>
+
+              <div style={groupLabel}>Angehörige</div>
+              <FormField label="Name"><input value={form.next_of_kin_name} onChange={set('next_of_kin_name')} style={fieldInput} /></FormField>
+              <div style={{ display: 'flex', gap: 10 }}>
+                <FormField label="Telefon"><input value={form.next_of_kin_phone} onChange={set('next_of_kin_phone')} style={fieldInput} /></FormField>
+                <FormField label="Beziehung"><input value={form.next_of_kin_relationship} onChange={set('next_of_kin_relationship')} placeholder="z. B. Sohn" style={fieldInput} /></FormField>
+              </div>
+              <FormField label="E-Mail"><input type="email" value={form.next_of_kin_email} onChange={set('next_of_kin_email')} style={fieldInput} /></FormField>
+
+              <div style={groupLabel}>Hausarzt</div>
+              <div style={{ display: 'flex', gap: 10 }}>
+                <FormField label="Name"><input value={form.hausarzt_name} onChange={set('hausarzt_name')} style={fieldInput} /></FormField>
+                <FormField label="Telefon"><input value={form.hausarzt_phone} onChange={set('hausarzt_phone')} style={fieldInput} /></FormField>
+              </div>
+
+              <div style={groupLabel}>Versicherung</div>
+              <FormField label="Versichertennummer"><input value={form.versichertennummer} onChange={set('versichertennummer')} style={fieldInput} /></FormField>
+              <div style={{ display: 'flex', gap: 10 }}>
+                <FormField label="Pflegekasse"><input value={form.pflegekasse_name} onChange={set('pflegekasse_name')} placeholder="z. B. AOK Hessen" style={fieldInput} /></FormField>
+                <FormField label="IK-Nummer"><input value={form.pflegekasse_ik} onChange={set('pflegekasse_ik')} style={fieldInput} /></FormField>
+              </div>
+            </div>
+          </div>
+
+          <div className="admin-modal-btns" style={{ marginTop: 18 }}>
+            <button className="btn-cancel" onClick={() => setEditing(false)} disabled={saving}>Abbrechen</button>
+            <button className="btn-confirm" onClick={save} disabled={saving}>{saving ? 'Speichern…' : 'Speichern'}</button>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// Mehrzeiliger Info-Block (für Freitexte wie Allergien/Medikamente)
+function InfoBlock({ label, value }: { label: string; value: string | null }) {
+  return (
+    <div style={{ padding: '8px 0', borderBottom: '1px solid var(--border)', fontSize: 14 }}>
+      <div style={{ color: 'var(--ink4)', marginBottom: 2 }}>{label}</div>
+      <div style={{ fontWeight: 500, color: 'var(--ink2)', whiteSpace: 'pre-wrap' }}>{value || '—'}</div>
+    </div>
+  )
+}
+
+function FormField({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div style={{ flex: 1, minWidth: 0 }}>
+      <span style={{ fontSize: 12, color: 'var(--ink3)', fontWeight: 600 }}>{label}</span>
+      <div style={{ marginTop: 3 }}>{children}</div>
+    </div>
+  )
+}
+
+const fieldInput: React.CSSProperties = {
+  width: '100%', padding: '9px 12px', border: '1px solid var(--border)', borderRadius: 10,
+  fontSize: 14, background: 'var(--coal3)', color: 'var(--ink)', fontFamily: "'Jost',sans-serif",
+  outline: 'none', boxSizing: 'border-box', marginBottom: 0,
+}
+const fieldArea: React.CSSProperties = { ...fieldInput, resize: 'vertical' }
+const groupLabel: React.CSSProperties = {
+  fontSize: 11, fontWeight: 700, letterSpacing: '.8px', textTransform: 'uppercase',
+  color: 'var(--ink5)', marginTop: 6,
 }
 
 function InfoRow({ label, value, strong, color }: { label: string; value: string; strong?: boolean; color?: string }) {
