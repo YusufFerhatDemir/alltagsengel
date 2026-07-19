@@ -182,6 +182,40 @@ export const BUDGET_TYPE: Record<string, string> = {
   private: 'Privat',
 }
 
+// ── Leistungsarten (service_records.service_type) ────────────────
+// Gemeinsame Liste für alle Erfassungs-Masken (Admin /admin/records/new und
+// Personal-Bereich /mis/team). service_type ist eine freie Textspalte — die
+// Auswahl hier hält die Schreibweise über alle Eingabewege hinweg identisch,
+// damit Auswertungen und der Leistungsnachweis-PDF sauber gruppieren.
+export const SERVICE_TYPES = [
+  'Alltagsbegleitung',
+  'Haushaltshilfe',
+  'Einkaufshilfe',
+  'Arztbegleitung',
+  'Betreuung / Gesellschaft',
+  'Spaziergang / Mobilität',
+  'Demenzbetreuung',
+  'Sonstige',
+] as const
+
+// Minuten zwischen zwei "HH:MM"-Zeiten (über Mitternacht hinweg robust).
+export function diffMinutes(start: string, end: string): number {
+  if (!start || !end) return 0
+  const [sh, sm] = start.split(':').map(Number)
+  const [eh, em] = end.split(':').map(Number)
+  let mins = (eh * 60 + em) - (sh * 60 + sm)
+  if (mins < 0) mins += 24 * 60
+  return mins
+}
+
+// "95" → "1 h 35 min"
+export function formatDuration(mins: number): string {
+  if (!mins || mins <= 0) return '—'
+  const h = Math.floor(mins / 60)
+  const m = mins % 60
+  return h > 0 ? `${h} h ${m} min` : `${m} min`
+}
+
 // Ausführliche Budget-Topf-Labels für offizielle Dokumente (Leistungsnachweis,
 // Rechnung an die Pflegekasse) — vollständige Paragraphen-Angabe Pflicht!
 export const BUDGET_TYPE_PDF: Record<string, string> = {
