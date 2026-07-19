@@ -7,34 +7,34 @@
 // Wiesbaden!), Frankfurt-Mitte 60xxx — ein 65er-Engel in Griesheim
 // gehört zu Frankfurt, nicht zu Wiesbaden.
 //
-// Deshalb: Distanz zwischen PLZ-Koordinaten.
-//   1. Primär: 3-Steller-Zonen-Zentroide aus PLZ_ZONE_CENTROIDS
-//      (kuratiert, offline, deterministisch — deckt das komplette
-//      Servicegebiet ab). Der zippopotam-DE-Datensatz ist für viele
-//      PLZ korrupt (u.a. Frankfurt!), darum ist die API bewusst
-//      NICHT primär.
-//   2. Fallback (Zone unbekannt): geocodePLZ für beide PLZ — nur
-//      plausible Deutschland-Koordinaten werden akzeptiert
-//      (Guard in lib/geocoding.ts).
-//   3. Letzter Fallback: gleiche PLZ-Leitregion (erste 2 Stellen).
+// Deshalb: Luftlinien-Distanz (Haversine) zwischen PLZ-Koordinaten.
+//   1. Primär: exakte 5-steller-Koordinaten aus lib/plz-coords
+//      (vollständiger DE-Datensatz, offline, deterministisch).
+//   2. Fallback: 3-Steller-Zonen-Zentroide (grob, deckt PLZ ab,
+//      die im amtlichen Datensatz fehlen — z.B. Großkunden-PLZ).
+//   3. Fallback: geocodePLZ-API. Der zippopotam-DE-Datensatz ist
+//      für viele PLZ korrupt (u.a. Frankfurt!), darum bewusst
+//      nur als letzte Koordinatenquelle.
+//   4. Letzter Fallback: gleiche PLZ-Leitregion (erste 2 Stellen).
 //
 // Die Matching-Distanz ist bewusst KEINE Rechts-/Bundesland-Logik —
 // dafür gibt es lib/hessen-plz.ts (Kassenleistung nur Hessen).
 // ═══════════════════════════════════════════════════════════
 
 import { haversineDistance } from './geocoding'
+import { plzCoords } from './plz-coords'
+import { ENGEL_MATCH_RADIUS_KM } from './plz-radius'
 
-/** Maximale Luftlinien-Distanz Kunde↔Engel in km. 15 km trennt
- *  Frankfurt und Wiesbaden sauber (West-FFM ↔ Ost-WI ≈ 20 km),
- *  hält aber Stadtgebiete + direkte Nachbarstädte zusammen. */
-export const ENGEL_MATCH_RADIUS_KM = 15
+// Client-Komponenten importieren die Radius-Konstanten direkt aus
+// lib/plz-radius — dieses Modul zieht den PLZ-Datensatz nach und
+// gehört nicht ins Browser-Bundle.
+export { ENGEL_MATCH_RADIUS_KM, RADIUS_OPTIONEN } from './plz-radius'
 
-/** Unschärfe-Puffer für den Zentroid-Fallback (Zonen sind grob). */
+/** Unschärfe-Puffer, wenn nur ein grober Zonen-Zentroid vorliegt. */
 const ZONE_UNSCHAERFE_KM = 5
 
 // Grobe Mittelpunkte der 3-stelligen PLZ-Zonen (Näherungswerte).
-// Fokus: Rhein-Main + Hessen + Zonen, die im Datenbestand vorkommen.
-// Primäre Matching-Quelle (s. Kopfkommentar).
+// Nur noch Fallback für PLZ, die nicht im amtlichen Datensatz stehen.
 export const PLZ_ZONE_CENTROIDS: Record<string, [number, number]> = {
   // Nordhessen
   '340': [51.31, 9.49], '341': [51.32, 9.50], '342': [51.27, 9.42],
@@ -84,41 +84,70 @@ export function zoneCentroid(plz: string): [number, number] | null {
 }
 
 /**
- * Offline-Matching ohne Geocoding-API:
- * Zonen-Zentroide vergleichen; wenn eine Zone unbekannt ist,
- * auf gleiche PLZ-Leitregion (erste 2 Stellen) zurückfallen.
+ * Beste offline verfügbare Koordinate einer PLZ.
+ * `exact: false` heißt: nur Zonen-Näherung, Distanz mit Puffer werten.
  */
-export function matchPlzOffline(plzA: string, plzB: string): boolean {
-  const a = zoneCentroid(plzA)
-  const b = zoneCentroid(plzB)
-  if (a && b) {
-    return haversineDistance(a[0], a[1], b[0], b[1]) <= ENGEL_MATCH_RADIUS_KM + ZONE_UNSCHAERFE_KM
-  }
-  return plzA.slice(0, 2) === plzB.slice(0, 2)
+export function plzPosition(
+  plz: string
+): { lat: number; lng: number; exact: boolean } | null {
+  const precise = plzCoords(plz)
+  if (precise) return { lat: precise[0], lng: precise[1], exact: true }
+  const zone = zoneCentroid(plz)
+  if (zone) return { lat: zone[0], lng: zone[1], exact: false }
+  return null
+}
+
+/**
+ * Luftlinien-Distanz zweier PLZ in km — offline, ohne Netzwerk.
+ * null, wenn für mindestens eine PLZ keine Koordinate bekannt ist.
+ */
+export function plzDistanceKm(plzA: string, plzB: string): number | null {
+  if (plzA === plzB) return 0
+  const a = plzPosition(plzA)
+  const b = plzPosition(plzB)
+  if (!a || !b) return null
+  return haversineDistance(a.lat, a.lng, b.lat, b.lng)
+}
+
+/** Puffer auf den Radius, wenn mindestens eine Koordinate nur genähert ist. */
+function toleranz(plzA: string, plzB: string): number {
+  const a = plzPosition(plzA)
+  const b = plzPosition(plzB)
+  return a?.exact && b?.exact ? 0 : ZONE_UNSCHAERFE_KM
+}
+
+/** Offline-Matching ohne Geocoding-API. */
+export function matchPlzOffline(
+  plzA: string,
+  plzB: string,
+  radiusKm: number = ENGEL_MATCH_RADIUS_KM
+): boolean {
+  const distanz = plzDistanceKm(plzA, plzB)
+  if (distanz === null) return plzA.slice(0, 2) === plzB.slice(0, 2)
+  return distanz <= radiusKm + toleranz(plzA, plzB)
 }
 
 /**
  * Vollständiges Matching Kunde↔Engel:
  *   1. identische PLZ → match
- *   2. beide Zonen bekannt → Zentroid-Distanz (offline, primär)
+ *   2. beide Koordinaten offline bekannt → Haversine-Distanz
  *   3. sonst: Geocoding beider PLZ (Injektion, damit der Aufrufer
- *      cachen kann) → exakte Distanz
+ *      cachen kann) → Distanz
  *   4. sonst: gleiche PLZ-Leitregion (erste 2 Stellen)
  */
 export async function matchPlz(
   plzA: string,
   plzB: string,
-  geocode: (plz: string) => Promise<{ lat: number; lng: number } | null>
+  geocode: (plz: string) => Promise<{ lat: number; lng: number } | null>,
+  radiusKm: number = ENGEL_MATCH_RADIUS_KM
 ): Promise<boolean> {
   if (plzA === plzB) return true
-  const a = zoneCentroid(plzA)
-  const b = zoneCentroid(plzB)
-  if (a && b) {
-    return haversineDistance(a[0], a[1], b[0], b[1]) <= ENGEL_MATCH_RADIUS_KM + ZONE_UNSCHAERFE_KM
-  }
+  const distanz = plzDistanceKm(plzA, plzB)
+  if (distanz !== null) return distanz <= radiusKm + toleranz(plzA, plzB)
+
   const [ga, gb] = await Promise.all([geocode(plzA), geocode(plzB)])
   if (ga && gb) {
-    return haversineDistance(ga.lat, ga.lng, gb.lat, gb.lng) <= ENGEL_MATCH_RADIUS_KM
+    return haversineDistance(ga.lat, ga.lng, gb.lat, gb.lng) <= radiusKm
   }
   return plzA.slice(0, 2) === plzB.slice(0, 2)
 }

@@ -8,6 +8,14 @@ import { IconWingsGold, IconStarFilled, IconCard, IconShield, IconMedical, IconL
 import Icon3D from '@/components/Icon3D'
 import { trackBooking } from '@/lib/tracking'
 import { isHessenPlz, normalizePlz, resolvePlz } from '@/lib/hessen-plz'
+import {
+  istVerfuegbar,
+  isoWochentag,
+  fensterProTag,
+  fensterText,
+  WOCHENTAGE,
+  type Zeitfenster,
+} from '@/lib/availability'
 
 export default function BuchenPage() {
   const router = useRouter()
@@ -34,6 +42,8 @@ export default function BuchenPage() {
   const [plzLoaded, setPlzLoaded] = useState(false)
   const [plzInput, setPlzInput] = useState('')
   const [savingPlz, setSavingPlz] = useState(false)
+  // Verfügbarkeits-Zeitfenster des Engels
+  const [slots, setSlots] = useState<Zeitfenster[]>([])
 
   const loadAngel = async () => {
     setError('')
@@ -60,6 +70,14 @@ export default function BuchenPage() {
         return
       }
       setAngel(data)
+      // Zeitfenster des Engels — Grundlage für die Verfügbarkeitsprüfung
+      // unten. Fehler hier dürfen die Buchungsseite nicht blockieren:
+      // ohne Zeitfenster greift der Fallback in lib/availability.
+      const { data: slotRows } = await supabase
+        .from('angel_availability')
+        .select('weekday, start_time, end_time')
+        .eq('angel_id', angelId)
+      setSlots((slotRows || []) as Zeitfenster[])
       setPageStatus('ok')
     } catch (err) {
       logError('BuchenPage:loadAngel', err)
@@ -111,6 +129,14 @@ export default function BuchenPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [plzLoaded, kasseAllowed])
 
+  // Passt der Wunschtermin in ein Zeitfenster des Engels? Engel ohne
+  // gepflegten Kalender fallen auf ihre Wochentags-Angabe zurück
+  // (siehe lib/availability.ts) — dann bleibt terminPasst true.
+  const terminPasst = istVerfuegbar(slots, angel?.availability, date, time, duration)
+  const gewaehlterWochentag = isoWochentag(date)
+  const fensterAmTag = gewaehlterWochentag ? fensterProTag(slots, gewaehlterWochentag) : []
+  const wochentagName = WOCHENTAGE.find(t => t.nr === gewaehlterWochentag)?.lang || ''
+
   // PLZ nachtragen (Kunde ohne hinterlegte PLZ): speichert ins Profil
   const handleSavePlz = async () => {
     const plz = normalizePlz(plzInput)
@@ -145,6 +171,12 @@ export default function BuchenPage() {
   const angelName = angel?.profiles ? `${angel.profiles.first_name} ${angel.profiles.last_name?.[0]}.` : 'Engel'
 
   const handleSubmit = async () => {
+    // Zu einer Zeit buchen, die der Engel geblockt hat, führt fast immer
+    // zur Absage — deshalb hier abfangen statt hinterher enttäuschen.
+    if (!terminPasst) {
+      setError('Zu diesem Zeitpunkt ist der Engel nicht verfügbar. Bitte wählen Sie eine andere Uhrzeit.')
+      return
+    }
     setSubmitting(true)
     setError('')
     try {
@@ -259,6 +291,28 @@ export default function BuchenPage() {
               <option value={2}>2 Stunden</option><option value={3}>3 Stunden</option><option value={4}>4 Stunden</option><option value={8}>Ganzer Tag</option>
             </select>
           </div>
+
+          {/* Verfügbarkeit nur anzeigen, wenn der Engel Zeitfenster
+              gepflegt hat — sonst wäre die Aussage nicht belastbar. */}
+          {slots.length > 0 && (
+            <div style={{
+              marginTop: 12, padding: '10px 12px', borderRadius: 10, fontSize: 13, lineHeight: 1.5,
+              background: terminPasst ? 'rgba(80,190,120,.09)' : 'rgba(201,150,60,.09)',
+              border: `1px solid ${terminPasst ? 'rgba(80,190,120,.28)' : 'rgba(201,150,60,.28)'}`,
+              color: 'var(--ink4)',
+            }}>
+              {terminPasst ? (
+                <>✓ Der Engel ist zu diesem Termin verfügbar.</>
+              ) : fensterAmTag.length > 0 ? (
+                <>
+                  Zu dieser Uhrzeit ist der Engel nicht verfügbar.
+                  Am {wochentagName} hat er Zeit von: {fensterAmTag.map(fensterText).join(', ')}.
+                </>
+              ) : (
+                <>Am {wochentagName} bietet dieser Engel keine Einsätze an. Bitte wählen Sie einen anderen Tag.</>
+              )}
+            </div>
+          )}
         </div>
 
         <div className="form-card">
@@ -377,8 +431,8 @@ export default function BuchenPage() {
       </div>
 
       <div className="submit-bar">
-        <button className="btn-submit" onClick={handleSubmit} disabled={submitting}>
-          {submitting ? 'Wird gebucht...' : 'VERBINDLICH BUCHEN'}
+        <button className="btn-submit" onClick={handleSubmit} disabled={submitting || !terminPasst}>
+          {submitting ? 'Wird gebucht...' : !terminPasst ? 'ZEITPUNKT NICHT VERFÜGBAR' : 'VERBINDLICH BUCHEN'}
         </button>
       </div>
     </div>

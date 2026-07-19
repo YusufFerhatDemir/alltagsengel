@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect } from 'react'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { IconClock, IconUser } from '@/components/Icons'
 
@@ -47,8 +48,17 @@ export default function EngelKalenderPage() {
 
   return (
     <div className="screen" id="kalender">
-      <div className="topbar" style={{ paddingTop: 14 }}>
+      <div className="topbar" style={{ paddingTop: 14, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div className="topbar-title">Kalender</div>
+        {/* Der Monatsraster zeigt gebuchte Einsätze — die eigenen
+            Verfügbarkeitszeiten werden separat gepflegt. */}
+        <Link
+          href="/engel/verfuegbarkeit"
+          style={{
+            padding: '7px 12px', borderRadius: 9, border: '1px solid var(--border2)',
+            color: 'var(--gold)', fontSize: 12, fontWeight: 600, textDecoration: 'none',
+          }}
+        >Meine Zeiten</Link>
       </div>
 
       <div className="kal-body">

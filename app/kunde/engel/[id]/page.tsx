@@ -5,6 +5,13 @@ import { safeSingleQuery, logError } from '@/lib/safe-query'
 import { NotFoundState, ErrorState } from '@/components/UIStates'
 import { IconWingsGold, IconStar, IconStarFilled, IconHeart, IconMore, IconUser, IconCheck } from '@/components/Icons'
 import EngelProfilActions from './EngelProfilActions'
+import {
+  WOCHENTAGE,
+  fensterProTag,
+  fensterText,
+  kuerzelZuWochentag,
+  type Zeitfenster,
+} from '@/lib/availability'
 
 export default async function EngelProfilPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -40,8 +47,29 @@ export default async function EngelProfilPage({ params }: { params: Promise<{ id
     logError('EngelProfil:reviews', err)
   }
 
+  // Verfügbarkeit: gepflegte Zeitfenster haben Vorrang, sonst greift
+  // die alte Wochentags-Liste aus angels.availability.
+  let zeitfenster: Zeitfenster[] = []
+  try {
+    const { data, error } = await supabase
+      .from('angel_availability')
+      .select('weekday, start_time, end_time')
+      .eq('angel_id', id)
+    if (error) logError('EngelProfil:availability', error.message)
+    zeitfenster = (data || []) as Zeitfenster[]
+  } catch (err) {
+    logError('EngelProfil:availability', err)
+  }
+
+  const verfuegbareTage = new Set<number>(
+    zeitfenster.length > 0
+      ? zeitfenster.map(f => f.weekday)
+      : (angel.availability || [])
+          .map((kuerzel: string) => kuerzelZuWochentag(kuerzel))
+          .filter((nr: number | null): nr is number => nr !== null)
+  )
+
   const name = `${angel.profiles?.first_name || ''} ${angel.profiles?.last_name?.[0] || ''}.`
-  const dayMap = ['Mo','Di','Mi','Do','Fr','Sa','So']
 
   return (
     <div className="screen" id="eprofil">
@@ -96,13 +124,25 @@ export default async function EngelProfilPage({ params }: { params: Promise<{ id
         <div className="prof-section">
           <div className="prof-section-hdr">Verfügbarkeit</div>
           <div className="avail-row">
-            {dayMap.map(day => (
-              <div key={day} className={`avail-day${(angel.availability || []).includes(day) ? ' on' : ''}`}>
-                <div className="day-name">{day}</div>
+            {WOCHENTAGE.map(tag => (
+              <div key={tag.nr} className={`avail-day${verfuegbareTage.has(tag.nr) ? ' on' : ''}`}>
+                <div className="day-name">{tag.kurz}</div>
                 <div className="day-dot"></div>
               </div>
             ))}
           </div>
+          {/* Konkrete Zeitfenster, sofern der Engel sie gepflegt hat —
+              die reine Wochentags-Ansicht sagt nichts über Uhrzeiten. */}
+          {zeitfenster.length > 0 && (
+            <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 6 }}>
+              {WOCHENTAGE.filter(tag => fensterProTag(zeitfenster, tag.nr).length > 0).map(tag => (
+                <div key={tag.nr} style={{ display: 'flex', gap: 10, fontSize: 13, color: 'var(--ink4)' }}>
+                  <span style={{ minWidth: 84, fontWeight: 600, color: 'var(--ink3)' }}>{tag.lang}</span>
+                  <span>{fensterProTag(zeitfenster, tag.nr).map(fensterText).join(', ')}</span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {reviews.length > 0 && (
