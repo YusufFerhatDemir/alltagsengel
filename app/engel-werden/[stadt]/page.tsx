@@ -235,8 +235,7 @@ function buildJsonLd(city: CityData, faqs: { frage: string; antwort: string }[])
           value: { '@type': 'QuantitativeValue', value: 20, unitText: 'HOUR' },
         },
         directApply: true,
-        experienceRequirements: { '@type': 'OccupationalExperienceRequirements', monthsOfExperience: 0 },
-        educationRequirements: { '@type': 'EducationalOccupationalCredential', credentialCategory: 'no requirements' },
+        experienceRequirements: 'Keine Erfahrung erforderlich – Quereinsteiger willkommen',
         qualifications:
           'Keine Ausbildung erforderlich, Quereinsteiger willkommen. Empathie, Zuverlässigkeit, gute Deutschkenntnisse (mind. B2).',
         industry: 'Sozialwesen / Alltagsbegleitung',
