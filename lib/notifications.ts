@@ -234,6 +234,78 @@ export async function notifyCustomerBookingAccepted(
   }).catch((err) => console.error('FCM to customer error:', err))
 }
 
+// ─── Booking: Engel hat abgelehnt → Kunde benachrichtigen ───
+export async function notifyCustomerBookingDeclined(
+  supabase: SupabaseClient,
+  customerId: string,
+  data: BookingNotifyData,
+  reason?: string | null
+): Promise<void> {
+  const dateStr = new Date(data.date).toLocaleDateString('de-DE', { day: '2-digit', month: 'long', year: 'numeric' })
+  const reasonText = reason ? ` Grund: ${reason}` : ''
+
+  // 1. In-App Notification
+  await createNotification(supabase, {
+    userId: customerId,
+    type: 'booking',
+    title: 'Anfrage abgelehnt',
+    body: `${data.angelName} kann Ihre Anfrage für ${data.service} am ${dateStr} leider nicht annehmen.${reasonText} Wir finden gerne einen anderen Engel für Sie.`,
+    link: `/kunde/home`,
+    data: { bookingId: data.bookingId },
+  })
+
+  // 2. E-Mail
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('email, first_name')
+    .eq('id', customerId)
+    .single()
+
+  if (profile?.email) {
+    await sendEmailNotification(
+      profile.email,
+      profile.first_name || 'Kunde',
+      `Ihre Anfrage vom ${dateStr} konnte nicht angenommen werden`,
+      `
+        <p>leider kann ${data.angelName} Ihre Anfrage nicht annehmen:</p>
+        <table style="width:100%;border-collapse:collapse;margin:16px 0;">
+          <tr><td style="padding:8px 12px;border-bottom:1px solid #eee;color:#888;width:120px;">Leistung</td><td style="padding:8px 12px;border-bottom:1px solid #eee;">${data.service}</td></tr>
+          <tr><td style="padding:8px 12px;border-bottom:1px solid #eee;color:#888;">Datum</td><td style="padding:8px 12px;border-bottom:1px solid #eee;">${dateStr}</td></tr>
+          <tr><td style="padding:8px 12px;color:#888;">Uhrzeit</td><td style="padding:8px 12px;">${data.time} Uhr</td></tr>
+        </table>
+        ${reason ? `<p style="color:#666;">Begründung: ${reason}</p>` : ''}
+        <p>Das ist kein Problem — es stehen weitere Engel in Ihrer Nähe zur Verfügung. Suchen Sie einfach einen neuen Termin aus.</p>
+        <a href="https://alltagsengel.care/kunde/home" style="display:inline-block;padding:12px 28px;background:#C9963C;color:#1A1612;text-decoration:none;border-radius:10px;font-weight:600;margin-top:8px;">Anderen Engel finden</a>
+      `
+    )
+
+    await supabase.from('notifications')
+      .update({ email_sent: true })
+      .eq('user_id', customerId)
+      .eq('data->>bookingId', data.bookingId)
+      .eq('title', 'Anfrage abgelehnt')
+  }
+
+  // 3. Web Push Notification
+  await sendPushToUser(customerId, {
+    title: 'Anfrage abgelehnt',
+    body: `${data.angelName} kann Ihre Anfrage für ${dateStr} leider nicht annehmen. Jetzt anderen Engel finden.`,
+    tag: `booking-declined-${data.bookingId}`,
+    url: '/kunde/home',
+    actions: [
+      { action: 'open', title: 'Anderen Engel finden' },
+    ],
+  }).catch((err) => console.error('Web Push to customer error:', err))
+
+  // 4. Native Push (FCM) Notification
+  await sendFCMToUser(customerId, {
+    title: 'Anfrage abgelehnt',
+    body: `${data.angelName} kann Ihre Anfrage für ${dateStr} leider nicht annehmen.`,
+    tag: `booking-declined-${data.bookingId}`,
+    url: '/kunde/home',
+  }).catch((err) => console.error('FCM to customer error:', err))
+}
+
 // ─── Email Template Wrapper ───
 function wrapEmailTemplate(name: string, subject: string, content: string): string {
   return `

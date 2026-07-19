@@ -136,6 +136,14 @@ function BuchenServiceInner() {
     }).select().single()
 
     if (error) { setSubmitting(false); return }
+
+    // Engel über die neue Anfrage benachrichtigen (in-app + E-Mail + Push)
+    fetch('/api/bookings/notify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ bookingId: data.id, event: 'created' }),
+    }).catch(() => {})
+
     router.push(`/kunde/warten/${data.id}`)
   }
 

@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { IconCalendar, IconClock, IconWings, IconCheck, IconMoney, IconTruck } from '@/components/Icons'
 
 const statusLabels: Record<string, { label: string; color: string }> = {
-  pending: { label: 'Ausstehend', color: 'var(--gold2)' },
+  pending: { label: 'Warten auf Bestätigung', color: 'var(--gold2)' },
   accepted: { label: 'Bestätigt', color: 'var(--green)' },
   confirmed: { label: 'Bestätigt', color: 'var(--green)' },
   in_progress: { label: 'Unterwegs', color: '#2196F3' },
@@ -113,7 +113,7 @@ export default function KundeBuchungenPage() {
           <div className="buch-filters">
               {[
                 { key: 'all', label: 'Alle' },
-                { key: 'pending', label: 'Offen' },
+                { key: 'pending', label: 'Angefragt' },
                 { key: 'accepted', label: 'Bestätigt' },
                 { key: 'completed', label: 'Fertig' },
               ].map(f => (
@@ -141,7 +141,13 @@ export default function KundeBuchungenPage() {
               ? (b._ride?.abholadresse ? `${b._ride.abholadresse.substring(0, 25)}...` : 'Krankenfahrt')
               : (angel?.profiles ? `${angel.profiles.first_name} ${angel.profiles.last_name?.[0]}.` : 'Engel')
             const st = statusLabels[b.status] || statusLabels.pending
-            const linkHref = isRide ? '/kunde/krankenfahrt/fahrten' : `/kunde/bestaetigt/${b.id}`
+            // Offene bzw. abgelehnte Anfragen zeigen den Anfrage-Status,
+            // erst bestätigte Buchungen führen zur Detailansicht.
+            const linkHref = isRide
+              ? '/kunde/krankenfahrt/fahrten'
+              : ['pending', 'declined'].includes(b.status)
+                ? `/kunde/warten/${b.id}`
+                : `/kunde/bestaetigt/${b.id}`
             return (
               <Link key={b.id} href={linkHref} style={{ textDecoration: 'none' }}>
                 <div className="buch-card">
