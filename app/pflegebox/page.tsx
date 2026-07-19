@@ -38,19 +38,24 @@ const productJsonLd = {
     'https://alltagsengel.care/icon-512x512.png',
   ],
   brand: { '@type': 'Brand', name: 'Alltagsengel' },
+  // sku: Pflicht-Identifier für Google Merchant Listings (gtin/mpn/sku)
+  sku: 'AE-PFLEGEBOX-001',
   offers: {
     '@type': 'Offer',
     name: 'Individuelle Pflegebox (§40 SGB XI)',
+    sku: 'AE-PFLEGEBOX-001',
     price: '0.00',
     priceCurrency: 'EUR',
+    priceValidUntil: '2027-12-31',
     description: 'Bis 42 €/Monat übernimmt die Pflegekasse — 0 € Eigenanteil, versandkostenfrei',
     availability: 'https://schema.org/InStock',
     url: 'https://alltagsengel.care/pflegebox',
     hasMerchantReturnPolicy: {
       '@type': 'MerchantReturnPolicy',
       applicableCountry: 'DE',
+      // merchantReturnDays nur bei FiniteReturnWindow zulässig — bei
+      // MerchantReturnNotPermitted weglassen (sonst ungültiger Wert).
       returnPolicyCategory: 'https://schema.org/MerchantReturnNotPermitted',
-      merchantReturnDays: 0,
     },
     shippingDetails: {
       '@type': 'OfferShippingDetails',
