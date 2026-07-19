@@ -50,6 +50,18 @@ const nextConfig: NextConfig = {
       // Recruiting-Konsolidierung: /karriere war Near-Duplicate von
       // /engel-werden (gleiche Keywords/FAQ/Formular) — Keyword-Kannibalisierung.
       { source: '/karriere', destination: '/engel-werden', permanent: true },
+      // GSC-404-Fix (Jul 2026): Google hatte eine Font-Datei aus einem alten
+      // Build gecrawlt (Hash existiert seit dem Re-Deploy nicht mehr, Suffix
+      // "~c~egv" war zudem verstümmelt — die URL hat so nie existiert).
+      // 301 auf die Startseite: stabiler als ein Redirect auf den aktuellen
+      // Font-Hash (der beim nächsten Font-Update wieder brechen würde). GSC
+      // stuft die URL damit als "Seite mit Weiterleitung" ein statt als
+      // 404-Fehler. Neue Fälle verhindert der X-Robots-Tag-Header unten.
+      {
+        source: '/_next/static/media/81cef6a21128489e-s.p.0rb1wy2~c~egv.woff2',
+        destination: '/',
+        permanent: true,
+      },
     ]
   },
   async headers() {
@@ -104,6 +116,18 @@ const nextConfig: NextConfig = {
       {
         source: '/:file(icon\\-192x192\\.png|icon\\-512x512\\.png|icon\\-180x180\\.png|apple\\-touch\\-icon\\.png|og\\-image\\.png|favicon\\.ico)',
         headers: [{ key: 'Cache-Control', value: 'public, max-age=2592000, stale-while-revalidate=86400' }],
+      },
+      // GSC-Prävention (Jul 2026): Build-Assets (Fonts/JS/CSS unter
+      // /_next/static) sind fingerprinted und sterben mit jedem Deploy —
+      // ohne noindex tauchen veraltete Hashes nach Re-Deploys als
+      // 404-"Seiten" im GSC-Indexierungsbericht auf. noindex hält die
+      // Asset-URLs komplett aus der Index-Pipeline (Crawlen fürs Rendering
+      // bleibt erlaubt — noindex blockt nur die Indexierung als Dokument).
+      // Verifiziert: Custom-Header greifen auf Vercel auch für /_next/static
+      // (X-Frame-Options kommt dort bereits an).
+      {
+        source: '/_next/static/:path*',
+        headers: [{ key: 'X-Robots-Tag', value: 'noindex' }],
       },
       {
         source: '/sentry-example',
