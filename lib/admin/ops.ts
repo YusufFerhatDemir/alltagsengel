@@ -182,6 +182,45 @@ export const BUDGET_TYPE: Record<string, string> = {
   private: 'Privat',
 }
 
+// Ausführliche Budget-Topf-Labels für offizielle Dokumente (Leistungsnachweis,
+// Rechnung an die Pflegekasse) — vollständige Paragraphen-Angabe Pflicht!
+export const BUDGET_TYPE_PDF: Record<string, string> = {
+  entlastung: 'Entlastungsbetrag gem. §45b SGB XI',
+  verhinderung: 'Verhinderungspflege gem. §39 SGB XI',
+  carryover: 'Übertrag aus Vorjahr (§45b)',
+  private: 'Privatleistung',
+}
+
+// ── Verordnungen (verordnungen.verordnung_type) ─────────────────
+export const VERORDNUNG_TYPE: Record<string, { label: string; color: string }> = {
+  entlastung_45b: { label: 'Entlastungsbetrag §45b', color: '#5CB882' },
+  verhinderung_39: { label: 'Verhinderungspflege §39', color: '#2196F3' },
+  behandlungspflege_37: { label: 'Behandlungspflege §37', color: '#9C27B0' },
+  haeusliche_pflege_36: { label: 'Häusliche Pflege §36', color: '#FF7043' },
+  sonstige: { label: 'Sonstige', color: '#999' },
+}
+
+// ── Genehmigungen der Pflegekasse (verordnungen.genehmigung_status) ─
+export const GENEHMIGUNG_STATUS: Record<string, { label: string; color: string }> = {
+  ausstehend: { label: 'Ausstehend', color: '#999' },
+  beantragt: { label: 'Beantragt', color: '#2196F3' },
+  genehmigt: { label: 'Genehmigt', color: '#5CB882' },
+  abgelehnt: { label: 'Abgelehnt', color: '#D04B3B' },
+  abgelaufen: { label: 'Abgelaufen', color: '#E8A000' },
+  widerspruch: { label: 'Widerspruch', color: '#FF7043' },
+}
+
+// NOTE_CATEGORY und QUALIFICATION_LEVEL: siehe weiter unten
+// (Care Notes / Qualifikationsstufe — dort mit NOTE_AUTHOR_ROLE gebündelt)
+
+// ── Abrechnungseinheiten (service_pricing.billing_unit) ─────────
+export const BILLING_UNIT: Record<string, string> = {
+  stunde: 'pro Stunde',
+  einsatz: 'pro Einsatz',
+  pauschal: 'Pauschale',
+  kilometer: 'pro Kilometer',
+}
+
 // ── KI-Leistungsnachweis-Prüfzentrale (ocr_results.status) ───────
 export const OCR_STATUS: Record<string, { label: string; color: string }> = {
   pending: { label: 'Ausstehend', color: '#999' },
@@ -343,6 +382,45 @@ export function normalizeWeekday(w: number | null | undefined): number | null {
 export function stars(rating: number | null | undefined): string {
   const r = Math.max(0, Math.min(5, Math.round(rating ?? 0)))
   return '★'.repeat(r) + '☆'.repeat(5 - r)
+}
+
+// ── Care Notes — rollenübergreifendes Notizsystem ───────────────
+export const NOTE_CATEGORY: Record<string, { label: string; color: string; emoji: string }> = {
+  allgemein: { label: 'Allgemein', color: '#999', emoji: '📝' },
+  gesundheit: { label: 'Gesundheit', color: '#5CB882', emoji: '🩺' },
+  verhalten: { label: 'Verhalten', color: '#7E57C2', emoji: '🧠' },
+  medikamente: { label: 'Medikamente', color: '#2196F3', emoji: '💊' },
+  vorfall: { label: 'Vorfall', color: '#D04B3B', emoji: '⚠️' },
+  uebergabe: { label: 'Übergabe', color: '#26A69A', emoji: '🔄' },
+  wunsch: { label: 'Wunsch', color: '#E8A000', emoji: '⭐' },
+  beschwerde: { label: 'Beschwerde', color: '#FF7043', emoji: '📣' },
+}
+
+// Autor-Rollen einer Notiz (care_notes.author_role)
+export const NOTE_AUTHOR_ROLE: Record<string, { label: string; color: string }> = {
+  engel: { label: 'Engel', color: '#C9963C' },
+  kunde: { label: 'Kunde', color: '#2196F3' },
+  buero: { label: 'Büro', color: '#26A69A' },
+  pdl: { label: 'PDL', color: '#7E57C2' },
+  admin: { label: 'Admin', color: '#D04B3B' },
+}
+
+// ── Mobilitätsstatus (clients.mobility_status) ──────────────────
+export const MOBILITY_STATUS: Record<string, { label: string; color: string }> = {
+  mobil: { label: 'Mobil', color: '#5CB882' },
+  eingeschraenkt: { label: 'Eingeschränkt', color: '#E8A000' },
+  rollstuhl: { label: 'Rollstuhl', color: '#2196F3' },
+  bettlaegerig: { label: 'Bettlägerig', color: '#D04B3B' },
+}
+
+// ── Qualifikationsstufe (caregivers.qualification_level) ────────
+export const QUALIFICATION_LEVEL: Record<string, { label: string; color: string }> = {
+  betreuungskraft_45a: { label: 'Betreuungskraft §45a', color: '#C9963C' },
+  pflegehelferin: { label: 'Pflegehelfer/in', color: '#26A69A' },
+  pflegefachkraft: { label: 'Pflegefachkraft', color: '#7E57C2' },
+  hauswirtschafterin: { label: 'Hauswirtschafter/in', color: '#2196F3' },
+  alltagsbegleiterin: { label: 'Alltagsbegleiter/in', color: '#5CB882' },
+  sonstige: { label: 'Sonstige', color: '#999' },
 }
 
 // Generisches Status-Lookup mit Fallback

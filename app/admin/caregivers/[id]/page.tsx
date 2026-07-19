@@ -6,7 +6,7 @@ import { isValidUUID } from '@/lib/safe-query'
 import {
   euro, formatDate, fullName, statusMeta, daysUntil,
   CAREGIVER_STATUS, QUALIFICATION_STATUS, DOCUMENT_TYPE, REQUIRED_DOCUMENTS,
-  BONUS_TYPE, REWARD_TYPE,
+  BONUS_TYPE, REWARD_TYPE, QUALIFICATION_LEVEL,
 } from '@/lib/admin/ops'
 import { StatusBadge, Banner, EmptyRow } from '@/components/admin/OpsUI'
 
@@ -30,6 +30,9 @@ interface Caregiver {
   nurse_title: string | null
   nurse_registration_number: string | null
   nurse_certificate_url: string | null
+  lifetime_registration_number: string | null
+  ik_nummer: string | null
+  qualification_level: string | null
 }
 
 interface DocRow {
@@ -101,7 +104,7 @@ export default function CaregiverDetailPage() {
   const [bonuses, setBonuses] = useState<BonusRow[]>([])
   const [loading, setLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
-  const [modal, setModal] = useState<null | 'doc' | 'qual' | 'initials' | 'bonus'>(null)
+  const [modal, setModal] = useState<null | 'doc' | 'qual' | 'initials' | 'bonus' | 'regnr'>(null)
 
   const load = useCallback(async () => {
     if (!isValidUUID(id)) { setNotFound(true); setLoading(false); return }
@@ -125,6 +128,9 @@ export default function CaregiverDetailPage() {
         emergency_pool_bonus_rate: c.emergency_pool_bonus_rate ?? null,
         is_nurse: !!c.is_nurse, nurse_title: c.nurse_title,
         nurse_registration_number: c.nurse_registration_number, nurse_certificate_url: c.nurse_certificate_url,
+        lifetime_registration_number: c.lifetime_registration_number ?? null,
+        ik_nummer: c.ik_nummer ?? null,
+        qualification_level: c.qualification_level ?? null,
       })
       setDocs((docRes.data || []) as DocRow[])
       setQuals((qualRes.data || []) as QualRow[])
@@ -233,6 +239,27 @@ export default function CaregiverDetailPage() {
             </>
           ) : (
             <p style={{ color: 'var(--ink4)', fontSize: 14 }}>Keine Pflegefachkraft — als Betreuungskraft im Alltag tätig.</p>
+          )}
+        </div>
+
+        {/* Registrierung & Abrechnung */}
+        <div className="admin-stat-card" style={{ padding: 20 }}>
+          <h2 style={{ marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
+            Registrierung &amp; Abrechnung
+            <button onClick={() => setModal('regnr')} style={addBtn}>Bearbeiten</button>
+          </h2>
+          <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16, padding: '6px 0', borderBottom: '1px solid var(--border)', fontSize: 14 }}>
+            <span style={{ color: 'var(--ink4)' }}>Qualifikationsstufe</span>
+            {cg.qualification_level
+              ? <StatusBadge label={statusMeta(QUALIFICATION_LEVEL, cg.qualification_level).label} color={statusMeta(QUALIFICATION_LEVEL, cg.qualification_level).color} />
+              : <span style={{ color: 'var(--ink2)' }}>—</span>}
+          </div>
+          <InfoRow label="Lebenslange Pflegekraft-Nr." value={cg.lifetime_registration_number || '—'} />
+          <InfoRow label="IK-Nummer" value={cg.ik_nummer || '—'} />
+          {(!cg.lifetime_registration_number || !cg.ik_nummer) && (
+            <p style={{ fontSize: 12, color: 'var(--ink5)', margin: '10px 0 0' }}>
+              Für die Abrechnung mit der Pflegekasse werden beide Nummern benötigt.
+            </p>
           )}
         </div>
       </div>
@@ -362,6 +389,7 @@ export default function CaregiverDetailPage() {
       {modal === 'qual' && <QualModal caregiverId={cg.id} onClose={() => setModal(null)} onSaved={() => { setModal(null); load() }} />}
       {modal === 'initials' && <InitialsModal caregiverId={cg.id} current={cg.initials} onClose={() => setModal(null)} onSaved={() => { setModal(null); load() }} />}
       {modal === 'bonus' && <BonusModal caregiverId={cg.id} onClose={() => setModal(null)} onSaved={() => { setModal(null); load() }} />}
+      {modal === 'regnr' && <RegNrModal caregiver={cg} onClose={() => setModal(null)} onSaved={() => { setModal(null); load() }} />}
     </div>
   )
 }
@@ -517,6 +545,42 @@ function BonusModal({ caregiverId, onClose, onSaved }: { caregiverId: string; on
         </ModalField>
         <ModalField label="Wert (€, optional)"><input type="number" step="0.01" value={rewardValue} onChange={e => setRewardValue(e.target.value)} placeholder="0,00" style={modalInput} /></ModalField>
       </div>
+    </ModalShell>
+  )
+}
+
+function RegNrModal({ caregiver, onClose, onSaved }: { caregiver: Caregiver; onClose: () => void; onSaved: () => void }) {
+  const [lifetimeNr, setLifetimeNr] = useState(caregiver.lifetime_registration_number || '')
+  const [ikNummer, setIkNummer] = useState(caregiver.ik_nummer || '')
+  const [level, setLevel] = useState(caregiver.qualification_level || 'betreuungskraft_45a')
+  const [saving, setSaving] = useState(false)
+  const [err, setErr] = useState<string | null>(null)
+
+  async function save() {
+    setErr(null); setSaving(true)
+    const supabase = createClient()
+    const { error } = await supabase.from('caregivers').update({
+      lifetime_registration_number: lifetimeNr.trim() || null,
+      ik_nummer: ikNummer.trim() || null,
+      qualification_level: level,
+    }).eq('id', caregiver.id)
+    if (error) { setErr(error.message); setSaving(false); return }
+    onSaved()
+  }
+
+  return (
+    <ModalShell title="Registrierung & Abrechnung" onClose={onClose} err={err} saving={saving} onSave={save} saveLabel="Speichern">
+      <ModalField label="Lebenslange Pflegekraft-Nummer">
+        <input value={lifetimeNr} onChange={e => setLifetimeNr(e.target.value)} placeholder="vom Landesamt vergeben" style={modalInput} />
+      </ModalField>
+      <ModalField label="IK-Nummer">
+        <input value={ikNummer} onChange={e => setIkNummer(e.target.value)} placeholder="Institutionskennzeichen für Abrechnung" style={modalInput} />
+      </ModalField>
+      <ModalField label="Qualifikationsstufe">
+        <select value={level} onChange={e => setLevel(e.target.value)} style={modalSelect}>
+          {Object.entries(QUALIFICATION_LEVEL).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
+        </select>
+      </ModalField>
     </ModalShell>
   )
 }
