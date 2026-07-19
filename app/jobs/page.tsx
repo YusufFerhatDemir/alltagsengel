@@ -120,14 +120,7 @@ const jsonLdJobPosting = {
   },
   // directApply: Bewerbung direkt auf dieser Seite möglich (WhatsApp + Formular)
   directApply: true,
-  experienceRequirements: {
-    '@type': 'OccupationalExperienceRequirements',
-    monthsOfExperience: 0,
-  },
-  educationRequirements: {
-    '@type': 'EducationalOccupationalCredential',
-    credentialCategory: 'no requirements',
-  },
+  experienceRequirements: 'Keine Erfahrung erforderlich – Quereinsteiger willkommen',
   qualifications:
     'Keine Ausbildung erforderlich, Quereinsteiger willkommen. Zuverlässigkeit, Empathie und Deutschkenntnisse (ca. B2). Führerschein von Vorteil.',
   industry: 'Sozialwesen / Alltagsbegleitung',
