@@ -2,32 +2,12 @@
 import { Suspense, useEffect, useMemo, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { BUDGET_TYPE } from '@/lib/admin/ops'
+import { BUDGET_TYPE, SERVICE_TYPES, diffMinutes } from '@/lib/admin/ops'
+import { saveServiceRecord } from '@/lib/admin/service-records'
 import { Banner } from '@/components/admin/OpsUI'
 import SignaturePad from '@/components/admin/SignaturePad'
 
 interface Option { id: string; label: string }
-
-// Minuten zwischen zwei "HH:MM"-Zeiten (über Mitternacht hinweg robust)
-function diffMinutes(start: string, end: string): number {
-  if (!start || !end) return 0
-  const [sh, sm] = start.split(':').map(Number)
-  const [eh, em] = end.split(':').map(Number)
-  let mins = (eh * 60 + em) - (sh * 60 + sm)
-  if (mins < 0) mins += 24 * 60
-  return mins
-}
-
-const SERVICE_TYPES = [
-  'Alltagsbegleitung',
-  'Haushaltshilfe',
-  'Einkaufshilfe',
-  'Arztbegleitung',
-  'Betreuung / Gesellschaft',
-  'Spaziergang / Mobilität',
-  'Demenzbetreuung',
-  'Sonstige',
-]
 
 function NewRecordInner() {
   const router = useRouter()
@@ -111,31 +91,33 @@ function NewRecordInner() {
     setSaving(true)
     try {
       const supabase = createClient()
-      const status = isComplete ? 'signed' : 'complete'
-      const { data, error: insErr } = await supabase.from('service_records').insert({
+      // saveServiceRecord kapselt zwei Fallstricke: die generierte Spalte
+      // duration_minutes darf nicht mitgeschickt werden, und die Live-DB hat
+      // noch die alten status/budget_type-Check-Constraints (siehe
+      // lib/admin/service-records.ts).
+      const { id, error: insErr } = await saveServiceRecord(supabase, {
         client_id: clientId,
         caregiver_id: caregiverId,
         date,
-        start_time: startTime || null,
-        end_time: endTime || null,
-        // duration_minutes ist in der DB eine GENERIERTE Spalte (aus start_time/end_time).
-        // Sie darf NICHT mitgeschickt werden — sonst lehnt Postgres den Insert ab
-        // ("cannot insert a non-DEFAULT value into column duration_minutes"). Für die
-        // Anzeige wird `duration` weiterhin lokal berechnet.
+        start_time: startTime,
+        end_time: endTime,
         service_type: serviceType,
         budget_type: budgetType,
+        caregiver_initials: initials.trim(),
         amount: amount ? Number(amount) : null,
         client_signature: signature,
-        caregiver_initials: initials.trim() || null,
-        gps_lat: gps?.lat ?? null,
-        gps_lng: gps?.lng ?? null,
         notes: notes.trim() || null,
-        status,
+        status: isComplete ? 'signed' : 'complete',
         completeness_check: { ...checks, complete: isComplete, checked_at: new Date().toISOString() },
-      }).select('id').single()
+      })
 
-      if (insErr) { setError(`Fehler beim Speichern: ${insErr.message}`); setSaving(false); return }
-      router.push(`/admin/records?focus=${data?.id || ''}`)
+      if (insErr) { setError(`Fehler beim Speichern: ${insErr}`); setSaving(false); return }
+
+      // GPS nachtragen, falls erfasst — nicht Teil des Pflicht-Inserts.
+      if (id && gps) {
+        await supabase.from('service_records').update({ gps_lat: gps.lat, gps_lng: gps.lng }).eq('id', id)
+      }
+      router.push(`/admin/records?focus=${id || ''}`)
     } catch (err: any) {
       setError(`Unerwarteter Fehler: ${err.message}`)
       setSaving(false)

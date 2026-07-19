@@ -4,6 +4,8 @@ import { createClient } from '@/lib/supabase/client'
 import { BRAND } from '@/lib/mis/constants'
 import { SectionHeader, Card, KpiCard, DataTable, MisButton, Badge, Tabs, Modal, EmptyState } from '@/components/mis/MisComponents'
 import { useMis } from '@/lib/mis/MisContext'
+import { SERVICE_TYPES, BUDGET_TYPE, RECORD_STATUS, diffMinutes, formatDuration, statusMeta } from '@/lib/admin/ops'
+import { saveServiceRecord } from '@/lib/admin/service-records'
 
 export default function TeamPage() {
   const { isMobile } = useMis()
@@ -15,6 +17,21 @@ export default function TeamPage() {
   const [editOpen, setEditOpen] = useState(false)
   const [editUser, setEditUser] = useState<Record<string,unknown> | null>(null)
   const [editForm, setEditForm] = useState({ first_name: '', last_name: '', email: '', phone: '', location: '', role: 'kunde' })
+
+  // ── Leistungserfassung ──
+  const [records, setRecords] = useState<Record<string,unknown>[]>([])
+  const [caregivers, setCaregivers] = useState<{ id: string; label: string; initials: string }[]>([])
+  const [clients, setClients] = useState<{ id: string; label: string }[]>([])
+  const [recOpen, setRecOpen] = useState(false)
+  const [recSaving, setRecSaving] = useState(false)
+  const [recError, setRecError] = useState<string | null>(null)
+  const [recForm, setRecForm] = useState({
+    caregiver_id: '', client_id: '',
+    date: new Date().toISOString().slice(0, 10),
+    start_time: '', end_time: '',
+    service_type: '', budget_type: 'entlastung',
+    caregiver_initials: '', notes: '',
+  })
 
   useEffect(() => {
     (async () => {
@@ -30,7 +47,92 @@ export default function TeamPage() {
         setTasks(t || [])
       } catch (err) { console.error('Team loadData error:', err) }
     })()
+    loadLeistungen()
   }, [])
+
+  async function loadLeistungen() {
+    try {
+      const supabase = createClient()
+      const [{ data: r, error: e1 }, { data: cg, error: e2 }, { data: cl, error: e3 }] = await Promise.all([
+        supabase.from('service_records')
+          .select('*, caregivers(first_name, last_name), clients(first_name, last_name)')
+          .order('date', { ascending: false }).limit(100),
+        supabase.from('caregivers').select('id, first_name, last_name, initials').order('last_name'),
+        supabase.from('clients').select('id, first_name, last_name').order('last_name'),
+      ])
+      if (e1) console.error('Service records error:', e1)
+      if (e2) console.error('Caregivers error:', e2)
+      if (e3) console.error('Clients error:', e3)
+      setRecords(r || [])
+      setCaregivers((cg || []).map((c: Record<string,unknown>) => ({
+        id: c.id as string,
+        label: `${c.first_name || ''} ${c.last_name || ''}`.trim() || '—',
+        initials: (c.initials as string) || '',
+      })))
+      setClients((cl || []).map((c: Record<string,unknown>) => ({
+        id: c.id as string,
+        label: `${c.first_name || ''} ${c.last_name || ''}`.trim() || '—',
+      })))
+    } catch (err) { console.error('Leistungen loadData error:', err) }
+  }
+
+  // Handzeichen aus der gewählten Betreuungskraft vorbelegen — überschreibt
+  // eine bereits getippte Eingabe nicht.
+  function pickCaregiver(id: string) {
+    const cg = caregivers.find(c => c.id === id)
+    setRecForm(f => ({
+      ...f,
+      caregiver_id: id,
+      caregiver_initials: f.caregiver_initials || cg?.initials || '',
+    }))
+  }
+
+  const recDuration = diffMinutes(recForm.start_time, recForm.end_time)
+  const recValid = !!(recForm.caregiver_id && recForm.client_id && recForm.date
+    && recForm.start_time && recForm.end_time && recDuration > 0
+    && recForm.service_type && recForm.caregiver_initials.trim())
+
+  async function handleSaveRecord() {
+    if (!recValid) return
+    setRecSaving(true)
+    setRecError(null)
+    try {
+      const supabase = createClient()
+      const { error, degraded } = await saveServiceRecord(supabase, {
+        client_id: recForm.client_id,
+        caregiver_id: recForm.caregiver_id,
+        date: recForm.date,
+        start_time: recForm.start_time,
+        end_time: recForm.end_time,
+        service_type: recForm.service_type,
+        budget_type: recForm.budget_type,
+        caregiver_initials: recForm.caregiver_initials.trim(),
+        notes: recForm.notes.trim() || null,
+        status: 'complete',
+        completeness_check: {
+          date: true, time: true, service: true, initials: true,
+          signature: false, checked_at: new Date().toISOString(),
+        },
+      })
+      if (error) { setRecError(error); setRecSaving(false); return }
+      if (degraded) {
+        setRecError('Gespeichert — Status musste auf „Entwurf" gesetzt werden (Datenbank-Migration steht noch aus).')
+      }
+      setRecOpen(false)
+      setRecForm({
+        caregiver_id: '', client_id: '',
+        date: new Date().toISOString().slice(0, 10),
+        start_time: '', end_time: '',
+        service_type: '', budget_type: 'entlastung',
+        caregiver_initials: '', notes: '',
+      })
+      await loadLeistungen()
+    } catch (err) {
+      setRecError(err instanceof Error ? err.message : 'Speichern fehlgeschlagen')
+    } finally {
+      setRecSaving(false)
+    }
+  }
 
   const admins = users.filter(u => u.role === 'admin' || u.role === 'superadmin')
   const angels = users.filter(u => u.role === 'engel')
@@ -97,6 +199,7 @@ export default function TeamPage() {
       <Tabs tabs={[
         { id: 'members', label: 'Mitglieder', icon: 'users', count: users.length },
         { id: 'tasks', label: 'Aufgaben', icon: 'check', count: tasks.filter(t => t.status !== 'done').length },
+        { id: 'leistungen', label: 'Leistungserfassung', icon: 'clock', count: records.length },
       ]} active={tab} onChange={setTab} />
 
       {tab === 'members' && (
@@ -181,6 +284,155 @@ export default function TeamPage() {
         </>
       )}
 
+      {tab === 'leistungen' && (
+        <>
+          <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+            <MisButton icon="plus" onClick={() => { setRecError(null); setRecOpen(true) }}>Leistung erfassen</MisButton>
+          </div>
+          {recError && !recOpen && (
+            <div style={{ padding: '10px 14px', borderRadius: 10, fontSize: 13, background: 'rgba(245,158,11,0.12)', color: BRAND.warning }}>
+              {recError}
+            </div>
+          )}
+          <Card noPad>
+            <DataTable
+              columns={[
+                { key: 'date', label: 'Datum', render: (r) => (
+                  <span style={{ fontWeight: 600 }}>
+                    {r.date ? new Date(r.date as string).toLocaleDateString('de-DE') : '—'}
+                  </span>
+                )},
+                { key: 'time', label: 'Uhrzeit', render: (r) => (
+                  r.start_time && r.end_time
+                    ? `${String(r.start_time).slice(0, 5)} – ${String(r.end_time).slice(0, 5)}`
+                    : '—'
+                )},
+                { key: 'duration_minutes', label: 'Dauer', render: (r) => formatDuration(Number(r.duration_minutes) || 0) },
+                { key: 'service_type', label: 'Leistung', render: (r) => (r.service_type as string) || '—' },
+                ...(!isMobile ? [
+                  { key: 'caregiver', label: 'Betreuungskraft', render: (r: Record<string,unknown>) => {
+                    const cg = r.caregivers as { first_name?: string; last_name?: string } | null
+                    return cg ? `${cg.first_name || ''} ${cg.last_name || ''}`.trim() || '—' : '—'
+                  }},
+                  { key: 'client', label: 'Klient', render: (r: Record<string,unknown>) => {
+                    const cl = r.clients as { first_name?: string; last_name?: string } | null
+                    return cl ? `${cl.first_name || ''} ${cl.last_name || ''}`.trim() || '—' : '—'
+                  }},
+                ] : []),
+                { key: 'caregiver_initials', label: 'Handzeichen', render: (r) => (
+                  <span style={{ fontWeight: 700, letterSpacing: '0.05em' }}>{(r.caregiver_initials as string) || '—'}</span>
+                )},
+                { key: 'status', label: 'Status', render: (r) => {
+                  const meta = statusMeta(RECORD_STATUS, r.status as string)
+                  return <Badge label={meta.label} color={meta.color} size="sm" />
+                }},
+              ]}
+              data={records}
+              emptyMessage="Noch keine Leistungen erfasst"
+            />
+          </Card>
+        </>
+      )}
+
+      {/* Leistungserfassung Modal */}
+      <Modal open={recOpen} onClose={() => setRecOpen(false)} title="Leistung erfassen" width={620}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {recError && (
+            <div style={{ padding: '10px 12px', borderRadius: 8, fontSize: 13, background: 'rgba(239,68,68,0.12)', color: BRAND.error }}>
+              {recError}
+            </div>
+          )}
+
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 12 }}>
+            <div>
+              <div style={labelStyle}>Betreuungskraft *</div>
+              <select value={recForm.caregiver_id} onChange={e => pickCaregiver(e.target.value)} style={inputStyle}>
+                <option value="">— wählen —</option>
+                {caregivers.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
+              </select>
+            </div>
+            <div>
+              <div style={labelStyle}>Klient *</div>
+              <select value={recForm.client_id} onChange={e => setRecForm({ ...recForm, client_id: e.target.value })} style={inputStyle}>
+                <option value="">— wählen —</option>
+                {clients.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
+              </select>
+            </div>
+          </div>
+
+          {/* 1. Datum + 2. Uhrzeit */}
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr 1fr', gap: 12 }}>
+            <div>
+              <div style={labelStyle}>Datum *</div>
+              <input type="date" value={recForm.date} onChange={e => setRecForm({ ...recForm, date: e.target.value })} style={inputStyle} />
+            </div>
+            <div>
+              <div style={labelStyle}>Von *</div>
+              <input type="time" value={recForm.start_time} onChange={e => setRecForm({ ...recForm, start_time: e.target.value })} style={inputStyle} />
+            </div>
+            <div>
+              <div style={labelStyle}>Bis *</div>
+              <input type="time" value={recForm.end_time} onChange={e => setRecForm({ ...recForm, end_time: e.target.value })} style={inputStyle} />
+            </div>
+          </div>
+
+          {/* 3. Dauer — automatisch aus Von/Bis, in der DB eine generierte Spalte */}
+          <div>
+            <div style={labelStyle}>Dauer</div>
+            <div style={{ ...inputStyle, display: 'flex', alignItems: 'center', color: recDuration > 0 ? BRAND.gold : BRAND.muted, fontWeight: 600 }}>
+              {recDuration > 0 ? `${formatDuration(recDuration)} (${recDuration} Minuten)` : 'Wird aus Von/Bis berechnet'}
+            </div>
+          </div>
+
+          {/* 4. Leistung */}
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 12 }}>
+            <div>
+              <div style={labelStyle}>Leistung *</div>
+              <select value={recForm.service_type} onChange={e => setRecForm({ ...recForm, service_type: e.target.value })} style={inputStyle}>
+                <option value="">— wählen —</option>
+                {SERVICE_TYPES.map(s => <option key={s} value={s}>{s}</option>)}
+              </select>
+            </div>
+            <div>
+              <div style={labelStyle}>Budget-Topf</div>
+              <select value={recForm.budget_type} onChange={e => setRecForm({ ...recForm, budget_type: e.target.value })} style={inputStyle}>
+                {Object.entries(BUDGET_TYPE).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+              </select>
+            </div>
+          </div>
+
+          {/* 5. Handzeichen */}
+          <div>
+            <div style={labelStyle}>Handzeichen *</div>
+            <input
+              type="text" value={recForm.caregiver_initials} maxLength={10}
+              onChange={e => setRecForm({ ...recForm, caregiver_initials: e.target.value })}
+              placeholder="z. B. M.S." style={inputStyle}
+            />
+            <div style={{ fontSize: 11, color: BRAND.muted, marginTop: 4 }}>
+              Kürzel der Betreuungskraft — bestätigt die erbrachte Leistung.
+            </div>
+          </div>
+
+          <div>
+            <div style={labelStyle}>Notizen</div>
+            <textarea
+              value={recForm.notes} rows={2}
+              onChange={e => setRecForm({ ...recForm, notes: e.target.value })}
+              placeholder="Optionale Anmerkungen zum Einsatz…"
+              style={{ ...inputStyle, resize: 'vertical' }}
+            />
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 8 }}>
+            <MisButton variant="secondary" onClick={() => setRecOpen(false)}>Abbrechen</MisButton>
+            <MisButton onClick={handleSaveRecord} disabled={!recValid || recSaving}>
+              {recSaving ? 'Speichern…' : 'Leistung speichern'}
+            </MisButton>
+          </div>
+        </div>
+      </Modal>
+
       {/* Edit User Modal */}
       <Modal open={editOpen} onClose={() => { setEditOpen(false); setEditUser(null) }} title="Mitglied bearbeiten">
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -258,3 +510,4 @@ export default function TeamPage() {
 }
 
 const inputStyle: React.CSSProperties = { width: '100%', padding: '8px 12px', borderRadius: 8, border: `1px solid ${BRAND.border}`, fontSize: 13, fontFamily: 'inherit', outline: 'none', background: BRAND.light, color: BRAND.text, boxSizing: 'border-box' }
+const labelStyle: React.CSSProperties = { fontSize: 11, fontWeight: 600, color: BRAND.muted, marginBottom: 2 }
