@@ -20,6 +20,8 @@ export default function EngelHomePage() {
   const [pendingBookings, setPendingBookings] = useState<any[]>([])
   const [upcomingBookings, setUpcomingBookings] = useState<any[]>([])
   const [monthEarnings, setMonthEarnings] = useState(0)
+  const [respondingId, setRespondingId] = useState<string | null>(null)
+  const [respondError, setRespondError] = useState('')
   const userLocation = useUserLocation()
 
   const loadData = async () => {
@@ -106,12 +108,41 @@ export default function EngelHomePage() {
     }
   }
 
-  async function handleBooking(bookingId: string, action: 'accepted' | 'declined') {
-    const supabase = createClient()
-    await supabase.from('bookings').update({ status: action }).eq('id', bookingId)
-    setPendingBookings(prev => prev.filter(b => b.id !== bookingId))
-    if (action === 'accepted') {
-      router.push(`/engel/bestaetigt/${bookingId}`)
+  async function handleBooking(bookingId: string, action: 'accept' | 'decline') {
+    if (respondingId) return
+    setRespondingId(bookingId)
+    setRespondError('')
+    try {
+      // Statuswechsel + Kunden-Benachrichtigung server-autoritativ
+      const res = await fetch('/api/bookings/respond', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bookingId, action }),
+      })
+      const body = await res.json().catch(() => ({}))
+
+      if (!res.ok) {
+        if (res.status === 409) {
+          // Anfrage wurde zwischenzeitlich schon beantwortet (z.B. zweites Gerät)
+          setPendingBookings(prev => prev.filter(b => b.id !== bookingId))
+          setRespondError('Diese Anfrage wurde bereits beantwortet.')
+          loadData()
+          return
+        }
+        setRespondError(body?.error || 'Anfrage konnte nicht beantwortet werden. Bitte erneut versuchen.')
+        return
+      }
+
+      setPendingBookings(prev => prev.filter(b => b.id !== bookingId))
+      if (action === 'accept') {
+        router.push(`/engel/bestaetigt/${bookingId}`)
+      } else {
+        loadData()
+      }
+    } catch {
+      setRespondError('Netzwerkfehler — Anfrage konnte nicht beantwortet werden.')
+    } finally {
+      setRespondingId(null)
     }
   }
 
@@ -175,7 +206,12 @@ export default function EngelHomePage() {
       </div>
 
       <div className="ed-body">
-        <div className="section-label">Neue Anfragen</div>
+        <div className="section-label">Neue Anfragen{pendingBookings.length > 0 ? ` (${pendingBookings.length})` : ''}</div>
+        {respondError && (
+          <div style={{ margin: '0 0 10px', padding: '10px 14px', borderRadius: 10, background: 'rgba(200,60,60,.08)', color: 'var(--red-w)', fontSize: 13 }}>
+            {respondError}
+          </div>
+        )}
         {pendingBookings.length === 0 ? (
           <div style={{ padding: '20px 16px', textAlign: 'center', color: 'var(--ink4)', fontSize: 14 }}>
             Keine neuen Anfragen
@@ -200,8 +236,20 @@ export default function EngelHomePage() {
               <div className="req-note"><IconCard size={13} /> <strong>§45b-Buchung</strong> — Abrechnung direkt über Pflegekasse{b.insurance_provider ? ` (${b.insurance_provider})` : ''}.</div>
             )}
             <div className="req-btns">
-              <button className="req-btn decline" onClick={() => handleBooking(b.id, 'declined')} aria-label={`Anfrage von ${b.customer?.first_name} ablehnen`}>Ablehnen</button>
-              <button className="req-btn accept" onClick={() => handleBooking(b.id, 'accepted')} aria-label={`Anfrage von ${b.customer?.first_name} annehmen`}>Annehmen</button>
+              <button
+                className="req-btn decline"
+                disabled={respondingId !== null}
+                style={{ opacity: respondingId !== null ? .5 : 1 }}
+                onClick={() => handleBooking(b.id, 'decline')}
+                aria-label={`Anfrage von ${b.customer?.first_name} ablehnen`}
+              >{respondingId === b.id ? '...' : 'Ablehnen'}</button>
+              <button
+                className="req-btn accept"
+                disabled={respondingId !== null}
+                style={{ opacity: respondingId !== null ? .5 : 1 }}
+                onClick={() => handleBooking(b.id, 'accept')}
+                aria-label={`Anfrage von ${b.customer?.first_name} annehmen`}
+              >{respondingId === b.id ? '...' : 'Annehmen'}</button>
             </div>
           </div>
         ))}

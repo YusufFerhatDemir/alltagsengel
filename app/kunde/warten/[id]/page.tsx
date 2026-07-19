@@ -5,21 +5,19 @@ import { createClient } from '@/lib/supabase/client'
 import { isValidUUID, logError } from '@/lib/safe-query'
 import { NotFoundState, ErrorState, LoadingState } from '@/components/UIStates'
 import Link from 'next/link'
-import { IconWingsGold, IconCheck } from '@/components/Icons'
+import { IconCheck } from '@/components/Icons'
 import Icon3D from '@/components/Icon3D'
 
 export default function WartenPage() {
   const router = useRouter()
   const params = useParams()
   const bookingId = params.id as string
-  const [confirmed, setConfirmed] = useState(false)
   const [booking, setBooking] = useState<any>(null)
   const [pageStatus, setPageStatus] = useState<'loading' | 'ok' | 'not_found' | 'error'>('loading')
   const [error, setError] = useState('')
 
-  const loadBooking = async () => {
-    setError('')
-    setPageStatus('loading')
+  const loadBooking = async (silent = false) => {
+    if (!silent) { setError(''); setPageStatus('loading') }
     try {
       if (!isValidUUID(bookingId)) { setPageStatus('not_found'); return }
       const supabase = createClient()
@@ -29,18 +27,21 @@ export default function WartenPage() {
         .eq('id', bookingId)
         .maybeSingle()
       if (queryErr) {
+        if (silent) return
         logError('WartenPage:load', queryErr.message)
         setPageStatus('error')
-        setError('Buchung konnte nicht geladen werden')
+        setError('Anfrage konnte nicht geladen werden')
         return
       }
       if (!data) {
+        if (silent) return
         setPageStatus('not_found')
         return
       }
       setBooking(data)
       setPageStatus('ok')
     } catch (err) {
+      if (silent) return
       logError('WartenPage:load', err)
       setPageStatus('error')
       setError('Ein unerwarteter Fehler ist aufgetreten')
@@ -51,31 +52,18 @@ export default function WartenPage() {
     loadBooking()
   }, [bookingId])
 
+  // Auf die Antwort des Engels warten: solange die Anfrage offen ist, alle
+  // 5 Sekunden nachsehen, ob angenommen oder abgelehnt wurde. Der Status wird
+  // ausschließlich vom Engel über /api/bookings/respond gesetzt.
   useEffect(() => {
     if (pageStatus !== 'ok') return
-    const timer = setTimeout(async () => {
-      try {
-        const supabase = createClient()
-        const { error: updateErr } = await supabase.from('bookings').update({ status: 'accepted' }).eq('id', bookingId)
-        if (updateErr) throw updateErr
-        setConfirmed(true)
-
-        // Kunde benachrichtigen: Buchung bestätigt (in-app + email)
-        fetch('/api/bookings/notify', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ bookingId, event: 'accepted' }),
-        }).catch(() => {})
-      } catch (err) {
-        logError('WartenPage:confirm', err)
-        setError('Buchung konnte nicht bestätigt werden')
-      }
-    }, 4000)
-    return () => clearTimeout(timer)
-  }, [bookingId, pageStatus])
+    if (booking?.status !== 'pending') return
+    const interval = setInterval(() => { loadBooking(true) }, 5000)
+    return () => clearInterval(interval)
+  }, [bookingId, pageStatus, booking?.status])
 
   if (pageStatus === 'loading') return <LoadingState />
-  if (pageStatus === 'not_found') return <NotFoundState title="Buchung nicht gefunden" subtitle="Diese Buchung existiert nicht oder wurde bereits storniert." homeHref="/kunde/home" />
+  if (pageStatus === 'not_found') return <NotFoundState title="Anfrage nicht gefunden" subtitle="Diese Anfrage existiert nicht oder wurde bereits storniert." homeHref="/kunde/home" />
   if (pageStatus === 'error') return (
     <div className="screen" style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'40px 24px',textAlign:'center'}}>
       <div style={{fontSize:40,marginBottom:12}}>⚠️</div>
@@ -88,21 +76,35 @@ export default function WartenPage() {
   const dateStr = booking?.date ? new Date(booking.date).toLocaleDateString('de-DE') : '...'
   const timeStr = booking?.time ? `${booking.time.slice(0,5)} Uhr` : '...'
 
+  const accepted = booking?.status === 'accepted'
+  const declined = booking?.status === 'declined'
+  const cancelled = booking?.status === 'cancelled'
+
+  const title = accepted
+    ? 'Anfrage angenommen!'
+    : declined
+      ? 'Anfrage abgelehnt'
+      : cancelled
+        ? 'Anfrage storniert'
+        : 'Anfrage gesendet'
+
+  const subtitle = accepted
+    ? `${angelName} hat Ihre Anfrage angenommen. Ihr Termin steht fest.`
+    : declined
+      ? `${angelName} kann Ihre Anfrage leider nicht annehmen. Kein Problem — es stehen weitere Engel in Ihrer Nähe zur Verfügung.`
+      : cancelled
+        ? 'Diese Anfrage wurde storniert.'
+        : `${angelName} wurde benachrichtigt und antwortet in der Regel innerhalb weniger Stunden. Sie erhalten sofort eine Benachrichtigung, sobald die Anfrage beantwortet wurde.`
+
   return (
     <div className="screen" id="bwarten">
       <div className="wait-body">
         <div className="wait-pulse">
-          <div className="wait-ring"></div>
-          <div className="wait-ring"></div>
+          {!accepted && !declined && !cancelled && <><div className="wait-ring"></div><div className="wait-ring"></div></>}
           <div className="wait-core" style={{ overflow: 'visible' }}><Icon3D size={80} /></div>
         </div>
-        <div className="wait-title">{confirmed ? 'Buchung bestätigt!' : 'Anfrage wird gesendet...'}</div>
-        <div className="wait-sub">
-          {confirmed
-            ? `${angelName} hat Ihre Anfrage angenommen. Sie können jetzt die Details einsehen.`
-            : `Wir verbinden Sie mit ${angelName}. Dies dauert in der Regel nur wenige Augenblicke.`
-          }
-        </div>
+        <div className="wait-title">{title}</div>
+        <div className="wait-sub">{subtitle}</div>
 
         <div className="wait-card">
           <div className="wait-row"><div className="wait-lbl">Engel</div><div className="wait-val">{angelName}</div></div>
@@ -110,16 +112,31 @@ export default function WartenPage() {
           <div className="wait-row"><div className="wait-lbl">Uhrzeit</div><div className="wait-val">{timeStr}</div></div>
           <div className="wait-row"><div className="wait-lbl">Dauer</div><div className="wait-val">{booking?.duration_hours || '...'} Stunden</div></div>
           <div className="wait-row"><div className="wait-lbl">Betrag</div><div className="wait-val">{booking?.total_amount?.toFixed(2) || '...'}€</div></div>
+          <div className="wait-row">
+            <div className="wait-lbl">Status</div>
+            <div className="wait-val" style={{ color: accepted ? 'var(--green)' : declined || cancelled ? 'var(--red-w)' : 'var(--gold2)' }}>
+              {accepted ? 'Angenommen' : declined ? 'Abgelehnt' : cancelled ? 'Storniert' : 'Warten auf Bestätigung'}
+            </div>
+          </div>
         </div>
 
-        <div className="wait-bar"><div className="wait-fill"></div></div>
+        {!accepted && !declined && !cancelled && <div className="wait-bar"><div className="wait-fill"></div></div>}
 
-        {confirmed && (
+        {accepted && (
           <button className="btn-done" onClick={() => router.push(`/kunde/bestaetigt/${bookingId}`)} style={{ animation: 'screenIn .28s cubic-bezier(.4,0,.2,1) both' }}>
             BUCHUNG BESTÄTIGT <IconCheck size={16} />
           </button>
         )}
-        <Link href="/kunde/home" className="btn-cancel">Abbrechen</Link>
+
+        {declined && (
+          <button className="btn-done" onClick={() => router.push('/kunde/home')} style={{ animation: 'screenIn .28s cubic-bezier(.4,0,.2,1) both' }}>
+            ANDEREN ENGEL FINDEN
+          </button>
+        )}
+
+        <Link href={accepted || declined ? '/kunde/buchungen' : '/kunde/home'} className="btn-cancel">
+          {accepted || declined ? 'Zu meinen Buchungen' : 'Später ansehen'}
+        </Link>
       </div>
     </div>
   )
