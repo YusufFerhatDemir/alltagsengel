@@ -351,12 +351,17 @@ function buildJsonLd(city: CityData, faqItems: ReturnType<typeof buildFaqItems>)
           'https://alltagsengel.care/icon-512x512.png',
         ],
         brand: { '@type': 'Brand', name: 'Alltagsengel' },
+        // sku: Pflicht-Identifier für Google Merchant Listings (gtin/mpn/sku) —
+        // identisch zur Root-Seite /hygienebox (gleiches Produkt, alle Städte).
+        sku: 'AE-HYGIENEBOX-001',
         offers: [
           {
             '@type': 'Offer',
             name: 'Basis-Box',
+            sku: 'AE-HYGIENEBOX-BASIS-001',
             price: '29.90',
             priceCurrency: 'EUR',
+            priceValidUntil: '2027-12-31',
             description: 'Grundversorgung mit Pflegehilfsmitteln',
             availability: 'https://schema.org/InStock',
             url: `https://alltagsengel.care/hygienebox/${city.slug}`,
@@ -364,8 +369,8 @@ function buildJsonLd(city: CityData, faqItems: ReturnType<typeof buildFaqItems>)
             hasMerchantReturnPolicy: {
               '@type': 'MerchantReturnPolicy',
               applicableCountry: 'DE',
+              // merchantReturnDays nur bei FiniteReturnWindow zulässig
               returnPolicyCategory: 'https://schema.org/MerchantReturnNotPermitted',
-              merchantReturnDays: 0,
             },
             shippingDetails: {
               '@type': 'OfferShippingDetails',
@@ -381,8 +386,10 @@ function buildJsonLd(city: CityData, faqItems: ReturnType<typeof buildFaqItems>)
           {
             '@type': 'Offer',
             name: 'Komfort-Box',
+            sku: 'AE-HYGIENEBOX-KOMFORT-001',
             price: '40.00',
             priceCurrency: 'EUR',
+            priceValidUntil: '2027-12-31',
             description: 'Vollständige Versorgung — maximale Kassenerstattung (42€)',
             availability: 'https://schema.org/InStock',
             url: `https://alltagsengel.care/hygienebox/${city.slug}`,
@@ -390,8 +397,8 @@ function buildJsonLd(city: CityData, faqItems: ReturnType<typeof buildFaqItems>)
             hasMerchantReturnPolicy: {
               '@type': 'MerchantReturnPolicy',
               applicableCountry: 'DE',
+              // merchantReturnDays nur bei FiniteReturnWindow zulässig
               returnPolicyCategory: 'https://schema.org/MerchantReturnNotPermitted',
-              merchantReturnDays: 0,
             },
             shippingDetails: {
               '@type': 'OfferShippingDetails',

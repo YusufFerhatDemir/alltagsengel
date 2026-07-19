@@ -30,20 +30,24 @@ const jsonLd = {
     'https://alltagsengel.care/icon-512x512.png',
   ],
   brand: { '@type': 'Brand', name: 'Alltagsengel' },
+  // sku: Pflicht-Identifier für Google Merchant Listings (gtin/mpn/sku)
+  sku: 'AE-HYGIENEBOX-001',
   offers: [
     {
       '@type': 'Offer',
       name: 'Basis-Box',
+      sku: 'AE-HYGIENEBOX-BASIS-001',
       price: '29.90',
       priceCurrency: 'EUR',
+      priceValidUntil: '2027-12-31',
       description: 'Grundversorgung mit Pflegehilfsmitteln',
       availability: 'https://schema.org/InStock',
       url: 'https://alltagsengel.care/hygienebox',
       hasMerchantReturnPolicy: {
         '@type': 'MerchantReturnPolicy',
         applicableCountry: 'DE',
+        // merchantReturnDays nur bei FiniteReturnWindow zulässig
         returnPolicyCategory: 'https://schema.org/MerchantReturnNotPermitted',
-        merchantReturnDays: 0,
       },
       shippingDetails: {
         '@type': 'OfferShippingDetails',
@@ -59,16 +63,18 @@ const jsonLd = {
     {
       '@type': 'Offer',
       name: 'Komfort-Box',
+      sku: 'AE-HYGIENEBOX-KOMFORT-001',
       price: '40.00',
       priceCurrency: 'EUR',
+      priceValidUntil: '2027-12-31',
       description: 'Vollständige Versorgung — maximale Kassenerstattung',
       availability: 'https://schema.org/InStock',
       url: 'https://alltagsengel.care/hygienebox',
       hasMerchantReturnPolicy: {
         '@type': 'MerchantReturnPolicy',
         applicableCountry: 'DE',
+        // merchantReturnDays nur bei FiniteReturnWindow zulässig
         returnPolicyCategory: 'https://schema.org/MerchantReturnNotPermitted',
-        merchantReturnDays: 0,
       },
       shippingDetails: {
         '@type': 'OfferShippingDetails',
