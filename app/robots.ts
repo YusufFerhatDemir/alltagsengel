@@ -5,12 +5,13 @@ export default function robots(): MetadataRoute.Robots {
     rules: [
       {
         userAgent: '*',
-        allow: '/',
-        // /lp/ = noindex-Werbe-Redirects (Tracking) — nicht crawlen.
-        // /choose + /sentry-example bewusst NICHT disallowed: sie tragen
-        // X-Robots-Tag noindex (next.config.ts) — Disallow würde verhindern,
-        // dass Crawler das noindex überhaupt sehen.
-        disallow: ['/admin/', '/mis/', '/api/', '/engel/', '/kunde/', '/fahrer/', '/auth/', '/investor/', '/notfall/', '/lp/'],
+        allow: ['/', '/fahrer/register', '/auth/register'],
+        // /lp/ entfernt: Seiten haben noindex-Metadaten + 301-Redirect.
+        // Disallow verhindert, dass Crawler den noindex-Tag sehen — schlimmer
+        // als erlauben. Gleiches Prinzip wie bei /choose und /sentry-example.
+        // /fahrer/register + /auth/register: Registrierungsseiten sollen
+        // indexiert werden (SEO für "Engel werden" / "Konto erstellen").
+        disallow: ['/admin/', '/mis/', '/api/', '/engel/', '/kunde/', '/fahrer/', '/auth/', '/investor/', '/notfall/'],
       },
     ],
     sitemap: 'https://alltagsengel.care/sitemap.xml',
