@@ -244,6 +244,34 @@ export const GENEHMIGUNG_STATUS: Record<string, { label: string; color: string }
   widerspruch: { label: 'Widerspruch', color: '#FF7043' },
 }
 
+// ── Leistungsarten nach §37 SGB V (verordnungen.leistungsart) ───
+// Grundpflege-Kategorien der häuslichen Krankenpflege
+export const LEISTUNGSART_LABELS: Record<string, { label: string; color: string }> = {
+  grosse_koerperpflege: { label: 'Große Körperpflege', color: '#2196F3' },
+  kleine_koerperpflege: { label: 'Kleine Körperpflege', color: '#26A69A' },
+  hilfe_ausscheiden: { label: 'Hilfe beim Ausscheiden', color: '#7E57C2' },
+  hauswirtschaft: { label: 'Hauswirtschaftliche Versorgung', color: '#5CB882' },
+  behandlungspflege: { label: 'Behandlungspflege', color: '#9C27B0' },
+  sonstige: { label: 'Sonstige', color: '#999' },
+}
+
+// ── Abrechnungsstatus je Verordnung (verordnungen.abrechnungs_status) ─
+export const ABRECHNUNGS_STATUS: Record<string, { label: string; color: string }> = {
+  offen: { label: 'Offen', color: '#999' },
+  teilweise_abgerechnet: { label: 'Teilweise abgerechnet', color: '#E8A000' },
+  vollstaendig_abgerechnet: { label: 'Vollständig abgerechnet', color: '#5CB882' },
+}
+
+// Gültigkeits-Ampel für Verordnungen/Genehmigungen:
+// 🔴 ≤14 Tage (oder abgelaufen) · 🟡 ≤30 Tage · 🟢 sonst
+export function gueltigkeitsAmpel(bis: string | null | undefined): Ampel | null {
+  const d = daysUntil(bis)
+  if (d === null) return null
+  if (d <= 14) return 'rot'
+  if (d <= 30) return 'gelb'
+  return 'gruen'
+}
+
 // NOTE_CATEGORY und QUALIFICATION_LEVEL: siehe weiter unten
 // (Care Notes / Qualifikationsstufe — dort mit NOTE_AUTHOR_ROLE gebündelt)
 
