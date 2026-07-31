@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Alltagsengel — Investor Brief</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,500;0,600;0,700;1,400;1,500&family=Jost:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --gold:#C9963C;
+    --gold-light:#E3BE7B;
+    --gold-pale:#F0D9A8;
+    --coal:#1A1612;
+    --coal-deep:#120F0C;
+    --ink:#F7F2EA;
+    --ink-dim:rgba(247,242,234,.62);
+    --ink-faint:rgba(247,242,234,.38);
+    --hair:rgba(201,150,60,.22);
+    --glass:rgba(247,242,234,.035);
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  @page{size:A4;margin:0;}
+  html{background:#0c0a08;}
+  body{
+    font-family:'Jost','DejaVu Sans',sans-serif;
+    color:var(--ink);
+    -webkit-font-smoothing:antialiased;
+  }
+  .page{
+    width:210mm;height:297mm;
+    margin:0 auto;
+    position:relative;
+    overflow:hidden;
+    background:
+      radial-gradient(ellipse 120mm 90mm at 88% -4%, rgba(201,150,60,.16), transparent 65%),
+      radial-gradient(ellipse 110mm 80mm at -8% 104%, rgba(201,150,60,.10), transparent 60%),
+      linear-gradient(160deg,#1E1913 0%, var(--coal) 42%, var(--coal-deep) 100%);
+    padding:11mm 13mm 10mm;
+    display:flex;flex-direction:column;
+  }
+  /* ── fine gold frame ── */
+  .frame{
+    position:absolute;inset:5mm;
+    border:.35pt solid var(--hair);
+    pointer-events:none;
+  }
+  .frame::before,.frame::after{
+    content:'';position:absolute;width:9mm;height:9mm;
+  }
+  .frame::before{top:-1px;left:-1px;border-top:1.1pt solid var(--gold);border-left:1.1pt solid var(--gold);}
+  .frame::after{bottom:-1px;right:-1px;border-bottom:1.1pt solid var(--gold);border-right:1.1pt solid var(--gold);}
+
+  /* ── header ── */
+  header{
+    display:flex;align-items:center;justify-content:space-between;
+    padding-bottom:4.5mm;
+    border-bottom:.4pt solid var(--hair);
+  }
+  .brand{display:flex;align-items:center;gap:4mm;}
+  .brand img{width:12.5mm;height:12.5mm;object-fit:contain;}
+  .brand .name{
+    font-size:14.5pt;font-weight:500;letter-spacing:.32em;text-transform:uppercase;
+    color:var(--ink);line-height:1;
+  }
+  .brand .sub{
+    font-size:6.4pt;font-weight:400;letter-spacing:.30em;text-transform:uppercase;
+    color:var(--gold);margin-top:1.6mm;
+  }
+  .doc-meta{text-align:right;}
+  .doc-meta .kind{
+    display:inline-block;
+    font-size:7pt;font-weight:600;letter-spacing:.26em;text-transform:uppercase;
+    color:var(--coal);
+    background:linear-gradient(100deg,var(--gold-light),var(--gold));
+    padding:1.6mm 4mm 1.4mm;border-radius:99px;
+  }
+  .doc-meta .place{font-size:7pt;letter-spacing:.14em;color:var(--ink-faint);margin-top:2mm;text-transform:uppercase;}
+
+  /* ── hero ── */
+  .hero{padding:7.5mm 0 6mm;}
+  .hero h1{
+    font-family:'Cormorant Garamond','DejaVu Serif',serif;
+    font-weight:500;
+    font-size:29.5pt;line-height:1.12;
+    letter-spacing:.01em;
+    max-width:165mm;
+  }
+  .hero h1 em{
+    font-style:italic;font-weight:500;color:var(--gold-light);
+  }
+  .hero p{
+    margin-top:3.6mm;
+    font-size:9.6pt;font-weight:300;line-height:1.55;
+    color:var(--ink-dim);
+    max-width:158mm;
+  }
+  .hero p strong{font-weight:500;color:var(--ink);}
+
+  /* ── stats band ── */
+  .stats{
+    display:flex;
+    border-top:.4pt solid var(--hair);
+    border-bottom:.4pt solid var(--hair);
+    padding:4.6mm 0;
+  }
+  .stat{flex:1;padding:0 5mm;border-left:.4pt solid var(--hair);}
+  .stat:first-child{border-left:none;padding-left:1mm;}
+  .stat .num{
+    font-family:'Cormorant Garamond','DejaVu Serif',serif;
+    font-weight:600;font-size:23pt;line-height:1;
+    color:var(--gold-light);
+    white-space:nowrap;
+  }
+  .stat .num small{font-size:12.5pt;font-weight:500;}
+  .stat .lbl{
+    margin-top:2.2mm;
+    font-size:6.3pt;font-weight:500;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--ink-faint);line-height:1.5;
+  }
+
+  /* ── section label ── */
+  .overline{
+    display:flex;align-items:center;gap:3mm;
+    font-size:7pt;font-weight:600;letter-spacing:.30em;text-transform:uppercase;
+    color:var(--gold);
+    margin-bottom:3.2mm;
+  }
+  .overline::after{content:'';flex:0 0 12mm;height:.5pt;background:linear-gradient(90deg,var(--gold),transparent);}
+
+  /* ── two column: problem / lösung ── */
+  .duo{display:flex;gap:6mm;margin-top:6.5mm;}
+  .card{
+    flex:1;
+    background:var(--glass);
+    border:.4pt solid var(--hair);
+    border-radius:4.5mm;
+    padding:5.5mm 6mm 5mm;
+    position:relative;
+  }
+  .card.solution{
+    background:linear-gradient(150deg, rgba(201,150,60,.10), rgba(201,150,60,.03) 55%);
+    border-color:rgba(201,150,60,.42);
+  }
+  .card ul{list-style:none;}
+  .card li{
+    font-size:8.6pt;font-weight:300;line-height:1.42;
+    color:var(--ink-dim);
+    padding-left:5mm;position:relative;
+    margin-top:2.4mm;
+  }
+  .card li:first-child{margin-top:0;}
+  .card li::before{
+    content:'';position:absolute;left:0;top:.42em;
+    width:2.8mm;height:.6pt;background:var(--gold);
+  }
+  .card li strong{font-weight:500;color:var(--ink);}
+
+  /* ── produkte ── */
+  .products{display:flex;gap:6mm;margin-top:6.5mm;}
+  .product{
+    flex:1;
+    background:var(--glass);
+    border:.4pt solid var(--hair);
+    border-radius:4.5mm;
+    padding:5.5mm 6mm 5mm;
+  }
+  .product .p-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:2.6mm;}
+  .product .p-name{
+    font-family:'Cormorant Garamond','DejaVu Serif',serif;
+    font-size:15.5pt;font-weight:600;color:var(--ink);letter-spacing:.02em;
+  }
+  .product .p-name span{color:var(--gold-light);}
+  .product .p-tag{
+    font-size:6.6pt;font-weight:600;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--gold);
+    border:.5pt solid rgba(201,150,60,.45);
+    border-radius:99px;padding:1.1mm 3mm .9mm;
+    white-space:nowrap;
+  }
+  .product p{font-size:8.4pt;font-weight:300;line-height:1.5;color:var(--ink-dim);}
+  .product p strong{font-weight:500;color:var(--ink);}
+
+  /* ── USP band ── */
+  .usp{
+    margin-top:6.5mm;
+    border-radius:4.5mm;
+    padding:.55mm;
+    background:linear-gradient(110deg, var(--gold) 0%, rgba(201,150,60,.25) 35%, rgba(201,150,60,.15) 65%, var(--gold-light) 100%);
+  }
+  .usp-inner{
+    border-radius:4.1mm;
+    background:linear-gradient(115deg,#221B12 0%, #1A1612 60%, #16120E 100%);
+    padding:5.5mm 7mm 5.2mm;
+    display:flex;align-items:center;gap:8mm;
+  }
+  .usp-text{flex:1.55;}
+  .usp-text .overline{margin-bottom:2.4mm;}
+  .usp-text h3{
+    font-family:'Cormorant Garamond','DejaVu Serif',serif;
+    font-size:15.5pt;font-weight:600;line-height:1.18;color:var(--ink);
+  }
+  .usp-text h3 em{font-style:italic;color:var(--gold-light);}
+  .usp-text p{margin-top:2.2mm;font-size:8.4pt;font-weight:300;line-height:1.5;color:var(--ink-dim);}
+  .usp-text p strong{font-weight:500;color:var(--ink);}
+  .usp-chain{
+    flex:1;display:flex;flex-direction:column;gap:1.8mm;
+    border-left:.4pt solid var(--hair);padding-left:7mm;
+  }
+  .chain-step{display:flex;align-items:center;gap:3mm;}
+  .chain-step .dot{
+    width:2.2mm;height:2.2mm;border-radius:50%;
+    background:var(--gold);flex:0 0 auto;
+  }
+  .chain-step.dim .dot{background:transparent;border:.6pt solid var(--gold);}
+  .chain-step .t{font-size:7.6pt;font-weight:400;letter-spacing:.05em;color:var(--ink-dim);}
+  .chain-step .t strong{color:var(--ink);font-weight:500;}
+
+  /* ── footer ── */
+  footer{
+    margin-top:auto;
+    padding-top:4.5mm;
+    border-top:.4pt solid var(--hair);
+    display:flex;gap:8mm;align-items:flex-start;
+  }
+  .foot-block{flex:1;}
+  .foot-block .fb-label{
+    font-size:6.4pt;font-weight:600;letter-spacing:.26em;text-transform:uppercase;
+    color:var(--gold);margin-bottom:1.8mm;
+  }
+  .foot-block p{font-size:8pt;font-weight:300;line-height:1.5;color:var(--ink-dim);}
+  .foot-block p strong{font-weight:500;color:var(--ink);}
+  .contact{text-align:right;flex:0 0 62mm;}
+  .contact .mail{
+    font-family:'Cormorant Garamond','DejaVu Serif',serif;
+    font-size:12.5pt;font-weight:600;color:var(--gold-light);
+  }
+  .contact p{font-size:7.4pt;font-weight:300;line-height:1.55;color:var(--ink-faint);margin-top:1.4mm;}
+
+  /* ── screen-only polish ── */
+  @media screen{
+    body{padding:28px 0;background:#0c0a08;}
+    .page{box-shadow:0 40px 120px rgba(0,0,0,.6);border-radius:6px;}
+    .hero h1 em{
+      background:linear-gradient(100deg,var(--gold-pale),var(--gold) 60%,var(--gold-light));
+      -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+    }
+    @keyframes rise{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:none;}}
+    header{animation:rise .7s .05s cubic-bezier(.2,.7,.2,1) both;}
+    .hero{animation:rise .7s .15s cubic-bezier(.2,.7,.2,1) both;}
+    .stats{animation:rise .7s .28s cubic-bezier(.2,.7,.2,1) both;}
+    .duo{animation:rise .7s .40s cubic-bezier(.2,.7,.2,1) both;}
+    .products{animation:rise .7s .52s cubic-bezier(.2,.7,.2,1) both;}
+    .usp{animation:rise .7s .64s cubic-bezier(.2,.7,.2,1) both;}
+    footer{animation:rise .7s .76s cubic-bezier(.2,.7,.2,1) both;}
+    .card,.product{backdrop-filter:blur(6px);}
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="frame"></div>
+
+  <header>
+    <div class="brand">
+      <img src="data:image/png;base64,__LOGO_B64__" alt="Alltagsengel">
+      <div>
+        <div class="name">Alltagsengel</div>
+        <div class="sub">Pflege &amp; Betreuung · Digital gedacht</div>
+      </div>
+    </div>
+    <div class="doc-meta">
+      <span class="kind">Investor Brief</span>
+      <div class="place">Frankfurt am Main · 2026</div>
+    </div>
+  </header>
+
+  <section class="hero">
+    <h1>Die digitale Plattform für <em>Pflege &amp; Betreuung</em> — vom ersten Besuch bis zur Abrechnung.</h1>
+    <p>Alltagsengel verbindet operative Exzellenz in der Alltagsbegleitung mit einer eigenen Software-Plattform: <strong>App für Klienten und Mitarbeiter, KI-gestützte Prozesse und ein eigenes Abrechnungssystem</strong> — gebaut von Betreibern, nicht am Reißbrett.</p>
+  </section>
+
+  <section class="stats">
+    <div class="stat">
+      <div class="num">€50<small>&nbsp;Mrd+</small></div>
+      <div class="lbl">Pflegemarkt Deutschland — wachsend durch Demografie</div>
+    </div>
+    <div class="stat">
+      <div class="num">14.000<small>+</small></div>
+      <div class="lbl">Pflegedienste arbeiten mit veralteter Software</div>
+    </div>
+    <div class="stat">
+      <div class="num">2</div>
+      <div class="lbl">Produkte — §45a SGB XI &amp; §37 SGB V, eine Plattform</div>
+    </div>
+    <div class="stat">
+      <div class="num">25<small>+ Jahre</small></div>
+      <div class="lbl">Branchenerfahrung im Gründungsteam</div>
+    </div>
+  </section>
+
+  <section class="duo">
+    <div class="card">
+      <div class="overline">Das Problem</div>
+      <ul>
+        <li><strong>14.000+ Pflegedienste</strong> verwalten Verordnungen, Touren und Nachweise mit Papier, Fax und Insellösungen.</li>
+        <li>Abrechnung läuft über <strong>teure Drittanbieter</strong> (Dakota, DMRZ) — langsam, fehleranfällig, ohne Transparenz.</li>
+        <li>Fehlerhafte Leistungsnachweise bedeuten <strong>Absetzungen, Liquiditätslücken und Wochen an Nacharbeit</strong>.</li>
+      </ul>
+    </div>
+    <div class="card solution">
+      <div class="overline">Unsere Lösung</div>
+      <ul>
+        <li><strong>Eine Plattform für den gesamten Kreislauf:</strong> Verordnung → Genehmigung → Einsatzplanung → Nachweis → Abrechnung.</li>
+        <li><strong>Apps für Klienten und Mitarbeiter</strong> — Echtzeit-Status, digitale Signatur, lückenlose Dokumentation.</li>
+        <li><strong>KI-gestützte Fehlererkennung</strong> prüft jede Abrechnung, bevor sie die Kasse erreicht.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="products">
+    <div class="product">
+      <div class="p-head">
+        <div class="p-name">Alltagsengel</div>
+        <div class="p-tag">§45a SGB XI</div>
+      </div>
+      <p><strong>Alltagsbegleitung &amp; Betreuung.</strong> Haushaltshilfe, Begleitung und Entlastung pflegender Angehöriger — direkt über den Entlastungsbetrag der Pflegekasse abgerechnet. Operativ aktiv in Frankfurt am Main, digital skalierbar auf jede Region.</p>
+    </div>
+    <div class="product">
+      <div class="p-head">
+        <div class="p-name">efy <span>care</span></div>
+        <div class="p-tag">§37 SGB V</div>
+      </div>
+      <p><strong>Die App für ambulante Pflege.</strong> Verordnungsverwaltung, Tourenplanung, mobile Leistungserfassung und automatische Abrechnung — als Multi-Mandanten-SaaS für Pflegedienste in ganz Deutschland.</p>
+    </div>
+  </section>
+
+  <section class="usp">
+    <div class="usp-inner">
+      <div class="usp-text">
+        <div class="overline">Der strukturelle Vorteil</div>
+        <h3>Ein eigenes Abrechnungssystem — <em>kein Drittanbieter mehr.</em></h3>
+        <p>Während der Markt Abrechnungen an Dakota oder DMRZ auslagert, rechnet unsere Plattform <strong>direkt mit den Kostenträgern</strong> ab. Das macht uns unabhängig, margenstark — und zur <strong>SaaS-Infrastruktur für alle 14.000+ Pflegedienste</strong> in Deutschland.</p>
+      </div>
+      <div class="usp-chain">
+        <div class="chain-step"><span class="dot"></span><span class="t"><strong>Heute:</strong> Eigener Betrieb als Proof of Concept</span></div>
+        <div class="chain-step"><span class="dot"></span><span class="t"><strong>Morgen:</strong> Plattform für Partnerdienste</span></div>
+        <div class="chain-step dim"><span class="dot"></span><span class="t"><strong>Ziel:</strong> Abrechnungs-Standard der Branche</span></div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="foot-block">
+      <div class="fb-label">Team</div>
+      <p><strong>Branchenerfahrung von über 25 Jahren</strong> in Aufbau und Führung von Betreuungsstrukturen mit über 1.000 Mitarbeitenden — kombiniert mit eigenem Produkt- und Technologie-Know-how. Wir kennen jede Verordnung, jeden Nachweis und jede Absetzung aus der Praxis.</p>
+    </div>
+    <div class="foot-block contact">
+      <div class="fb-label">Kontakt</div>
+      <div class="mail">info@alltagsengel.care</div>
+      <p>Alltagsengel UG · Neue Mainzer Straße 66–68<br>60311 Frankfurt am Main · alltagsengel.care</p>
+    </div>
+  </footer>
+</div>
+</body>
+</html>
