@@ -16,6 +16,7 @@ import {
   gueltigkeitsAmpel, euro, centToEuro, euroToCent,
   VERORDNUNG_TYPE, GENEHMIGUNG_STATUS, LEISTUNGSART_LABELS, ABRECHNUNGS_STATUS,
   WEEKDAYS, KOSTENTRAEGER_TYP, ABSAGE_VON, HAEUFIGKEIT_LABELS,
+  istVerordnungPflicht, KEINE_VERORDNUNG_HINWEIS, BUDGET_DEFAULT_CENT,
 } from '@/lib/admin/ops'
 import { StatusBadge, SearchInput, EmptyRow, Banner, AmpelDot } from '@/components/admin/OpsUI'
 
@@ -55,6 +56,14 @@ interface Verordnung {
   abtretungserklaerung_vorhanden: boolean
   abtretungserklaerung_datum: string | null
   abtretungserklaerung_document_url: string | null
+  // Eylems Korrektur: Verordnung (§37) vs. Bewilligung/Zusage (§36/§45b/§39/§45a/§40)
+  ist_verordnung: boolean
+  kombinationsleistung: boolean
+  kombi_zusage_vorhanden: boolean
+  kombi_zusage_datum: string | null
+  kombi_zusage_aktenzeichen: string | null
+  monatliches_budget_cent: number | null
+  budget_verbraucht_cent: number | null
   clientName: string
 }
 
@@ -167,6 +176,11 @@ const EMPTY_FORM = {
   kostentraeger_ik_nummer: '',
   abtretungserklaerung_vorhanden: false,
   abtretungserklaerung_datum: '',
+  kombi_zusage_vorhanden: false,
+  kombi_zusage_datum: '',
+  kombi_zusage_aktenzeichen: '',
+  monatliches_budget_euro: '',
+  budget_verbraucht_euro: '',
 }
 type FormState = typeof EMPTY_FORM
 
@@ -252,7 +266,7 @@ export default function AdminVerordnungenPage() {
       const [vRes, cRes, gRes, aRes, rRes, iRes, absRes, allAssignRes, lRes] = await Promise.all([
         supabase
           .from('verordnungen')
-          .select('id, client_id, verordnung_type, leistungsart, verordnung_nummer, ausstellungsdatum, gueltig_von, gueltig_bis, arzt_name, arzt_praxis, diagnose, leistung_beschreibung, verordnung_document_url, genehmigung_status, genehmigung_datum, genehmigung_bis, genehmigung_aktenzeichen, kassengenehmigung_beantragt_am, kassengenehmigung_antwort_am, abrechnungs_status, genehmigte_stunden_gesamt, genehmigte_stunden_pro_woche, neuantrag_erforderlich, neuantrag_gestellt_am, notes, kostentraeger_typ, kostentraeger_name, kostentraeger_ik_nummer, genehmigte_leistungsart, genehmigung_abgleich_ok, genehmigung_abweichung, abtretungserklaerung_vorhanden, abtretungserklaerung_datum, abtretungserklaerung_document_url, client:clients(first_name, last_name)')
+          .select('id, client_id, verordnung_type, leistungsart, verordnung_nummer, ausstellungsdatum, gueltig_von, gueltig_bis, arzt_name, arzt_praxis, diagnose, leistung_beschreibung, verordnung_document_url, genehmigung_status, genehmigung_datum, genehmigung_bis, genehmigung_aktenzeichen, kassengenehmigung_beantragt_am, kassengenehmigung_antwort_am, abrechnungs_status, genehmigte_stunden_gesamt, genehmigte_stunden_pro_woche, neuantrag_erforderlich, neuantrag_gestellt_am, notes, kostentraeger_typ, kostentraeger_name, kostentraeger_ik_nummer, genehmigte_leistungsart, genehmigung_abgleich_ok, genehmigung_abweichung, abtretungserklaerung_vorhanden, abtretungserklaerung_datum, abtretungserklaerung_document_url, ist_verordnung, kombinationsleistung, kombi_zusage_vorhanden, kombi_zusage_datum, kombi_zusage_aktenzeichen, monatliches_budget_cent, budget_verbraucht_cent, client:clients(first_name, last_name)')
           .is('deleted_at', null) // Soft-Delete: gelöschte Verordnungen ausblenden (Revisionssicherheit)
           .order('genehmigung_bis', { ascending: true, nullsFirst: false }),
         supabase.from('clients').select('id, first_name, last_name').order('last_name'),
@@ -445,6 +459,11 @@ export default function AdminVerordnungenPage() {
       kostentraeger_ik_nummer: v.kostentraeger_ik_nummer || '',
       abtretungserklaerung_vorhanden: !!v.abtretungserklaerung_vorhanden,
       abtretungserklaerung_datum: v.abtretungserklaerung_datum || '',
+      kombi_zusage_vorhanden: !!v.kombi_zusage_vorhanden,
+      kombi_zusage_datum: v.kombi_zusage_datum || '',
+      kombi_zusage_aktenzeichen: v.kombi_zusage_aktenzeichen || '',
+      monatliches_budget_euro: v.monatliches_budget_cent != null ? String(v.monatliches_budget_cent / 100) : '',
+      budget_verbraucht_euro: v.budget_verbraucht_cent != null ? String(v.budget_verbraucht_cent / 100) : '',
     })
     setShowForm(true)
     setTab('erfassung')
@@ -514,6 +533,14 @@ export default function AdminVerordnungenPage() {
         kostentraeger_ik_nummer: form.kostentraeger_ik_nummer || null,
         abtretungserklaerung_vorhanden: form.abtretungserklaerung_vorhanden,
         abtretungserklaerung_datum: form.abtretungserklaerung_datum || null,
+        // Eylems Korrektur: §37 = ärztliche Verordnung, sonst Bewilligung/Zusage
+        ist_verordnung: istVerordnungPflicht(form.verordnung_type),
+        kombinationsleistung: form.verordnung_type === 'kombinationsleistung_38',
+        kombi_zusage_vorhanden: form.kombi_zusage_vorhanden,
+        kombi_zusage_datum: form.kombi_zusage_datum || null,
+        kombi_zusage_aktenzeichen: form.kombi_zusage_aktenzeichen || null,
+        monatliches_budget_cent: euroToCent(form.monatliches_budget_euro),
+        budget_verbraucht_cent: euroToCent(form.budget_verbraucht_euro) ?? 0,
       }
       if (documentPath !== undefined) payload.verordnung_document_url = documentPath
       if (abtretungPath !== undefined) payload.abtretungserklaerung_document_url = abtretungPath
@@ -1026,6 +1053,22 @@ function ErfassungTab(props: {
     setPositionen(positionen.map((p, i) => i === idx ? { ...p, ...patch } : p))
   }
 
+  // Eylems Korrektur: §37 = echte ärztliche Verordnung, sonst Bewilligung/Zusage
+  const brauchtVerordnung = istVerordnungPflicht(form.verordnung_type)
+  const bewilligungsHinweis = KEINE_VERORDNUNG_HINWEIS[form.verordnung_type]
+  const zeigeKombi = form.verordnung_type === 'kombinationsleistung_38' || form.verordnung_type === 'haeusliche_pflege_36'
+  const zeigeBudget = ['entlastung_45b', 'pflegebox_40', 'verhinderung_39'].includes(form.verordnung_type)
+
+  // Typ wechseln + Monatsbudget automatisch setzen (§45b → 131 €, §40 → 40 €)
+  function changeType(t: string) {
+    const def = BUDGET_DEFAULT_CENT[t]
+    setForm({
+      ...form,
+      verordnung_type: t,
+      monatliches_budget_euro: def != null ? String(def / 100) : form.monatliches_budget_euro,
+    })
+  }
+
   return (
     <>
       <div style={{ marginBottom: 16 }}>
@@ -1057,6 +1100,18 @@ function ErfassungTab(props: {
           <p style={{ margin: '0 0 14px', fontSize: 12, color: 'var(--ink4)' }}>
             Gilt für Pflegedienst + Betreuung, NICHT Intensivpflege.
           </p>
+          {bewilligungsHinweis && (
+            <div style={{
+              marginBottom: 14, padding: '10px 14px', borderRadius: 8,
+              background: 'rgba(92,184,130,.12)', border: '1px solid rgba(92,184,130,.4)',
+              fontSize: 13, color: 'var(--ink)',
+            }}>
+              <strong style={{ color: '#5CB882' }}>
+                {brauchtVerordnung ? 'Hinweis: ' : 'Keine ärztliche Verordnung nötig: '}
+              </strong>
+              {bewilligungsHinweis}
+            </div>
+          )}
           <div style={formGrid}>
             <label style={fieldLabel}>
               Klient *
@@ -1067,7 +1122,7 @@ function ErfassungTab(props: {
             </label>
             <label style={fieldLabel}>
               Verordnungstyp
-              <select value={form.verordnung_type} onChange={e => setForm({ ...form, verordnung_type: e.target.value })} style={input}>
+              <select value={form.verordnung_type} onChange={e => changeType(e.target.value)} style={input}>
                 {Object.entries(VERORDNUNG_TYPE).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
               </select>
             </label>
@@ -1093,11 +1148,11 @@ function ErfassungTab(props: {
               <input value={form.kostentraeger_ik_nummer} onChange={e => setForm({ ...form, kostentraeger_ik_nummer: e.target.value })} style={input} placeholder="Institutionskennzeichen" />
             </label>
             <label style={fieldLabel}>
-              Verordnungs-Nr.
-              <input value={form.verordnung_nummer} onChange={e => setForm({ ...form, verordnung_nummer: e.target.value })} style={input} placeholder="Nummer vom Arzt" />
+              {brauchtVerordnung ? 'Verordnungs-Nr.' : 'Zusage/Bewilligungs-Nr.'}
+              <input value={form.verordnung_nummer} onChange={e => setForm({ ...form, verordnung_nummer: e.target.value })} style={input} placeholder={brauchtVerordnung ? 'Nummer vom Arzt' : 'Aktenzeichen des Bescheids'} />
             </label>
             <label style={fieldLabel}>
-              Ausstellungsdatum *
+              {brauchtVerordnung ? 'Ausstellungsdatum *' : 'Datum Bescheid/Antrag *'}
               <input type="date" value={form.ausstellungsdatum} onChange={e => setForm({ ...form, ausstellungsdatum: e.target.value })} style={input} />
             </label>
             <label style={fieldLabel}>
@@ -1108,22 +1163,45 @@ function ErfassungTab(props: {
               Gültig bis
               <input type="date" value={form.gueltig_bis} onChange={e => setForm({ ...form, gueltig_bis: e.target.value })} style={input} />
             </label>
+            {brauchtVerordnung && (
+              <>
+                <label style={fieldLabel}>
+                  Arzt
+                  <input value={form.arzt_name} onChange={e => setForm({ ...form, arzt_name: e.target.value })} style={input} placeholder="Dr. …" />
+                </label>
+                <label style={fieldLabel}>
+                  Praxis
+                  <input value={form.arzt_praxis} onChange={e => setForm({ ...form, arzt_praxis: e.target.value })} style={input} />
+                </label>
+                <label style={fieldLabel}>
+                  Diagnose
+                  <input value={form.diagnose} onChange={e => setForm({ ...form, diagnose: e.target.value })} style={input} />
+                </label>
+              </>
+            )}
             <label style={fieldLabel}>
-              Arzt
-              <input value={form.arzt_name} onChange={e => setForm({ ...form, arzt_name: e.target.value })} style={input} placeholder="Dr. …" />
-            </label>
-            <label style={fieldLabel}>
-              Praxis
-              <input value={form.arzt_praxis} onChange={e => setForm({ ...form, arzt_praxis: e.target.value })} style={input} />
-            </label>
-            <label style={fieldLabel}>
-              Diagnose
-              <input value={form.diagnose} onChange={e => setForm({ ...form, diagnose: e.target.value })} style={input} />
-            </label>
-            <label style={fieldLabel}>
-              Verordnete Leistung
+              {brauchtVerordnung ? 'Verordnete Leistung' : 'Bewilligte Leistung'}
               <input value={form.leistung_beschreibung} onChange={e => setForm({ ...form, leistung_beschreibung: e.target.value })} style={input} />
             </label>
+            {zeigeBudget && (
+              <>
+                <label style={fieldLabel}>
+                  Monatsbudget (€)
+                  <input type="number" min="0" step="0.01" value={form.monatliches_budget_euro} onChange={e => setForm({ ...form, monatliches_budget_euro: e.target.value })} style={input} placeholder={form.verordnung_type === 'entlastung_45b' ? '131' : form.verordnung_type === 'pflegebox_40' ? '40' : 'laut Bescheid'} />
+                  <span style={{ fontSize: 11, color: 'var(--ink4)' }}>
+                    {form.verordnung_type === 'entlastung_45b'
+                      ? '§45b: 131 €/Monat automatisch'
+                      : form.verordnung_type === 'pflegebox_40'
+                        ? '§40: bis 40 €/Monat Pflegehilfsmittel'
+                        : '§39: individuell laut Bescheid'}
+                  </span>
+                </label>
+                <label style={fieldLabel}>
+                  Davon verbraucht (€)
+                  <input type="number" min="0" step="0.01" value={form.budget_verbraucht_euro} onChange={e => setForm({ ...form, budget_verbraucht_euro: e.target.value })} style={input} placeholder="0" />
+                </label>
+              </>
+            )}
             <label style={fieldLabel}>
               Genehmigte Stunden (gesamt)
               <input type="number" min="0" step="0.5" value={form.genehmigte_stunden_gesamt} onChange={e => setForm({ ...form, genehmigte_stunden_gesamt: e.target.value })} style={input} />
@@ -1151,7 +1229,7 @@ function ErfassungTab(props: {
               <input value={form.genehmigung_aktenzeichen} onChange={e => setForm({ ...form, genehmigung_aktenzeichen: e.target.value })} style={input} />
             </label>
             <label style={fieldLabel}>
-              Scan der Verordnung (PDF/Foto)
+              {brauchtVerordnung ? 'Scan der Verordnung (PDF/Foto)' : 'Scan des Bescheids (PDF/Foto)'}
               <input
                 ref={fileInputRef}
                 type="file"
@@ -1220,6 +1298,43 @@ function ErfassungTab(props: {
               + Weitere Leistungsposition
             </button>
           </div>
+
+          {/* ── §38/§36: Kombi-Zusage der Pflegekasse (Sachleistung + Pflegegeld) ── */}
+          {zeigeKombi && (
+            <div style={{ marginTop: 14, padding: 14, background: 'var(--coal)', border: '1px solid var(--border)', borderRadius: 10 }}>
+              <h4 style={{ margin: '0 0 4px', fontSize: 14 }}>Kombinationsleistung (§38)</h4>
+              <p style={{ margin: '0 0 12px', fontSize: 12, color: 'var(--ink4)' }}>
+                Bestätigung der Pflegekasse, dass die Kombi-Leistung (Sachleistung + Pflegegeld) abgerechnet werden darf.
+              </p>
+              <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', alignItems: 'flex-end' }}>
+                <label style={{ ...fieldLabel, flexDirection: 'row', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={form.kombi_zusage_vorhanden}
+                    onChange={e => setForm({ ...form, kombi_zusage_vorhanden: e.target.checked })}
+                  />
+                  Kombi-Zusage vorhanden
+                </label>
+                {form.kombi_zusage_vorhanden && (
+                  <>
+                    <label style={fieldLabel}>
+                      Datum der Zusage
+                      <input type="date" value={form.kombi_zusage_datum} onChange={e => setForm({ ...form, kombi_zusage_datum: e.target.value })} style={input} />
+                    </label>
+                    <label style={fieldLabel}>
+                      Aktenzeichen der Zusage
+                      <input value={form.kombi_zusage_aktenzeichen} onChange={e => setForm({ ...form, kombi_zusage_aktenzeichen: e.target.value })} style={input} placeholder="z. B. KZ-4711/2026" />
+                    </label>
+                  </>
+                )}
+              </div>
+              {!form.kombi_zusage_vorhanden && (
+                <p style={{ margin: '10px 0 0', fontSize: 12, color: '#E8A000' }}>
+                  Ohne Kombi-Zusage der Pflegekasse darf die Kombinationsleistung nicht abgerechnet werden.
+                </p>
+              )}
+            </div>
+          )}
 
           {/* ── Abtretungserklärung: Klient tritt Erstattungsanspruch an uns ab ── */}
           <div style={{ marginTop: 14, padding: 14, background: 'var(--coal)', border: '1px solid var(--border)', borderRadius: 10 }}>
@@ -1302,7 +1417,23 @@ function ErfassungTab(props: {
                       : undefined
                   return (
                     <tr key={v.id} style={rowBg ? { background: rowBg } : undefined}>
-                      <td><StatusBadge label={tm.label} color={tm.color} /></td>
+                      <td>
+                        <StatusBadge label={tm.label} color={tm.color} />
+                        <div style={{ fontSize: 11, marginTop: 2, color: 'var(--ink4)' }}>
+                          {v.ist_verordnung === false ? 'Bewilligung/Zusage' : 'Ärztl. Verordnung'}
+                        </div>
+                        {v.monatliches_budget_cent != null && (
+                          <div style={{
+                            fontSize: 11, marginTop: 2, fontWeight: 600,
+                            color: (v.budget_verbraucht_cent ?? 0) > v.monatliches_budget_cent ? '#D04B3B' : '#5CB882',
+                          }}>
+                            Budget {centToEuro(v.budget_verbraucht_cent ?? 0)} / {centToEuro(v.monatliches_budget_cent)}
+                          </div>
+                        )}
+                        {v.kombinationsleistung && !v.kombi_zusage_vorhanden && (
+                          <div style={{ fontSize: 11, marginTop: 2, color: '#E8A000' }}>Kombi-Zusage fehlt</div>
+                        )}
+                      </td>
                       <td style={{ fontSize: 13 }}>
                         {vLeistungen.length > 0 ? (
                           <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
