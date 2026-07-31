@@ -1,0 +1,11 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": { "noEmit": true, "incremental": false },
+  "include": [
+    "lib/abrechnung/*.ts",
+    "app/api/admin/abrechnung/**/*.ts",
+    "app/admin/abrechnung/einstellungen/page.tsx",
+    "next-env.d.ts"
+  ],
+  "exclude": ["node_modules"]
+}

@@ -284,7 +284,7 @@ export async function erstelleMonatsabschluss(
     const pos = positionen.filter(p => p.verordnung_id === v.id)
     if (pos.length === 0) continue
     const key = `${v.kostentraeger_typ}|${v.kostentraeger_name || 'Unbekannt'}|${v.kostentraeger_ik_nummer || ''}`
-    const gruppe = gruppenMap.get(key) || {
+    const gruppe: KostentraegerGruppe = gruppenMap.get(key) || {
       kostentraeger_name: v.kostentraeger_name || 'Unbekannter Kostenträger',
       kostentraeger_typ: v.kostentraeger_typ || 'krankenkasse',
       ik_nummer: v.kostentraeger_ik_nummer || null,

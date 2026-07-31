@@ -12,7 +12,7 @@
 // SECON-Spezifikation (PKCS#7, ITSG-Trust-Center-Zertifikat) ver-
 // schlüsselt werden — s. lib/abrechnung/edifact-generator.ts (Phase 2).
 // ═══════════════════════════════════════════════════════════════
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState, type CSSProperties } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { euro } from '@/lib/admin/ops'
 import { StatusBadge, EmptyRow, Banner } from '@/components/admin/OpsUI'
@@ -107,6 +107,28 @@ const LAUF_STATUS: Record<string, { label: string; color: string }> = {
 
 // abrechenbare Leistungsnachweis-Status
 const ABRECHENBARE_STATUS = ['complete', 'signed', 'invoiced']
+
+// ── Styles (Dark Gold Theme, wie übrige Betriebssystem-Seiten) ──
+const cardStyle: CSSProperties = {
+  background: 'var(--coal2)', border: '1px solid var(--border)', borderRadius: 12,
+}
+
+const primaryBtn: CSSProperties = {
+  fontSize: 14, color: 'var(--coal)', fontWeight: 600,
+  background: 'linear-gradient(135deg,var(--gold2),var(--gold))', border: 'none',
+  borderRadius: 8, padding: '8px 16px', cursor: 'pointer', fontFamily: 'inherit',
+}
+
+const miniBtn: CSSProperties = {
+  fontSize: 12, fontWeight: 600, color: 'var(--ink)',
+  background: 'transparent', border: '1px solid var(--border)',
+  borderRadius: 6, padding: '5px 10px', cursor: 'pointer', fontFamily: 'inherit',
+}
+
+const miniGoldBtn: CSSProperties = {
+  ...miniBtn, color: 'var(--coal)', border: 'none',
+  background: 'linear-gradient(135deg,var(--gold2),var(--gold))',
+}
 
 // ── Hilfen ──────────────────────────────────────────────────────
 function monatsOptionen(): { value: string; label: string }[] {
@@ -394,7 +416,7 @@ export default function AbrechnungPage() {
         >
           {optionen.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
         </select>
-        <button className="btn btn-gold" onClick={pruefeAlle} disabled={laden || gruppen.length === 0}>
+        <button style={{ ...primaryBtn, opacity: laden || gruppen.length === 0 ? 0.5 : 1 }} onClick={pruefeAlle} disabled={laden || gruppen.length === 0}>
           Abrechnung prüfen
         </button>
         {gesamtSumme > 0 && (
@@ -427,7 +449,7 @@ export default function AbrechnungPage() {
         const ampelFarbe = !ergebnis ? '#999' : anzahlFehler > 0 ? '#D04B3B' : anzahlWarnungen > 0 ? '#E8A000' : '#5CB882'
 
         return (
-          <div key={gruppe.kostentraeger_ik || 'ohne-ik'} className="admin-card" style={{ marginBottom: 16, padding: 20, borderLeft: `4px solid ${ampelFarbe}` }}>
+          <div key={gruppe.kostentraeger_ik || 'ohne-ik'} style={{ ...cardStyle, marginBottom: 16, padding: 20, borderLeft: `4px solid ${ampelFarbe}` }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
               <div>
                 <div style={{ fontWeight: 700, fontSize: 16 }}>{gruppe.kostentraeger_name}</div>
@@ -444,10 +466,10 @@ export default function AbrechnungPage() {
                 {ergebnis && anzahlFehler === 0 && anzahlWarnungen === 0 && <StatusBadge label="OK" color="#5CB882" />}
                 {ergebnis?.datei && (
                   <>
-                    <button className="btn btn-sm" onClick={() => setVorschauIK(vorschauIK === gruppe.kostentraeger_ik ? null : gruppe.kostentraeger_ik)}>
+                    <button style={miniBtn} onClick={() => setVorschauIK(vorschauIK === gruppe.kostentraeger_ik ? null : gruppe.kostentraeger_ik)}>
                       {vorschauIK === gruppe.kostentraeger_ik ? 'Vorschau schließen' : 'Vorschau'}
                     </button>
-                    <button className="btn btn-gold btn-sm" onClick={() => exportiere(gruppe)}>
+                    <button style={miniGoldBtn} onClick={() => exportiere(gruppe)}>
                       EDIFACT exportieren
                     </button>
                   </>

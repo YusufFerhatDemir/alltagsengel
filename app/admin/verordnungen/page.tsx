@@ -1900,6 +1900,12 @@ function AbrechnungTab(props: {
                   {Object.entries(ABRECHNUNGS_STATUS).map(([k, s]) => <option key={k} value={k}>{s.label}</option>)}
                 </select>
                 <a
+                  href={`/admin/leistungsnachweis/${v.id}`}
+                  style={{ ...primaryBtnSmall, textDecoration: 'none', display: 'inline-block' }}
+                >
+                  Leistungsnachweis (PDF) →
+                </a>
+                <a
                   href={`/admin/invoices?client=${v.client_id}&verordnung=${v.id}`}
                   style={{ ...primaryBtnSmall, textDecoration: 'none', display: 'inline-block' }}
                 >

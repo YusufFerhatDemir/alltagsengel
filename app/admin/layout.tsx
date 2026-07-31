@@ -130,6 +130,7 @@ const opsNavItems = [
   { href: '/admin/invoices', label: 'Rechnungen', icon: <IconDocument size={18} /> },
   { href: '/admin/rechnungserstellung', label: 'Rechnungserstellung', icon: <IconDocument size={18} /> },
   { href: '/admin/zahlungskontrolle', label: 'Zahlungskontrolle', icon: <IconMoney size={18} /> },
+  { href: '/admin/abrechnung', label: 'Abrechnung (EDIFACT)', icon: <IconMoney size={18} /> },
   { href: '/admin/abrechnung/einstellungen', label: 'Abrechnung (SECON)', icon: <IconTarget size={18} /> },
   { href: '/admin/caregivers', label: 'Betreuungskräfte', icon: <IconUsers size={18} /> },
   { href: '/admin/applications', label: 'Bewerbungen', icon: <IconClipboard size={18} /> },
