@@ -1,0 +1,7 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Basis-Berechtigungen des Hauptfensters (Kern-APIs + Link-Öffner).",
+  "windows": ["main"],
+  "permissions": ["core:default", "opener:default"]
+}
