@@ -244,15 +244,42 @@ export const GENEHMIGUNG_STATUS: Record<string, { label: string; color: string }
   widerspruch: { label: 'Widerspruch', color: '#FF7043' },
 }
 
-// ── Leistungsarten nach §37 SGB V (verordnungen.leistungsart) ───
-// Grundpflege-Kategorien der häuslichen Krankenpflege
+// ── Leistungsarten (verordnungen.leistungsart, verordnung_leistungen.leistungsart) ─
+// Grundpflege §37 SGB V + Behandlungspflege-Unterkategorien
+// + Alltagsbegleitung/Entlastung/Verhinderungspflege nach SGB XI.
+// Alltagsengel deckt BEIDES ab: Alltagsbegleitung §45a UND ambulante Pflege §37.
 export const LEISTUNGSART_LABELS: Record<string, { label: string; color: string }> = {
   grosse_koerperpflege: { label: 'Große Körperpflege', color: '#2196F3' },
   kleine_koerperpflege: { label: 'Kleine Körperpflege', color: '#26A69A' },
   hilfe_ausscheiden: { label: 'Hilfe beim Ausscheiden', color: '#7E57C2' },
   hauswirtschaft: { label: 'Hauswirtschaftliche Versorgung', color: '#5CB882' },
-  behandlungspflege: { label: 'Behandlungspflege', color: '#9C27B0' },
+  behandlungspflege: { label: 'Behandlungspflege (allgemein)', color: '#9C27B0' },
+  medikamentengabe: { label: 'Medikamentengabe', color: '#5C6BC0' },
+  injektionen: { label: 'Injektionen', color: '#EC407A' },
+  wundversorgung: { label: 'Wundversorgung', color: '#D04B3B' },
+  kompressionsstruempfe: { label: 'Kompressionsstrümpfe an/aus', color: '#8D6E63' },
+  blutzuckermessung: { label: 'Blutzuckermessung', color: '#FF7043' },
+  katheter: { label: 'Katheterversorgung', color: '#26C6DA' },
+  stomaversorgung: { label: 'Stomaversorgung', color: '#AB47BC' },
+  alltagsbegleitung_45a: { label: 'Alltagsbegleitung §45a', color: '#C9963C' },
+  verhinderungspflege_39: { label: 'Verhinderungspflege §39', color: '#42A5F5' },
+  entlastung_45b: { label: 'Entlastungsleistung §45b', color: '#66BB6A' },
   sonstige: { label: 'Sonstige', color: '#999' },
+}
+
+// ── Häufigkeit einer Leistungsposition (verordnung_leistungen.haeufigkeit) ─
+export const HAEUFIGKEIT_LABELS: Record<string, { label: string; color: string }> = {
+  taeglich: { label: 'Täglich', color: '#D04B3B' },
+  '2x_taeglich': { label: '2x täglich', color: '#C2185B' },
+  '3x_taeglich': { label: '3x täglich', color: '#880E4F' },
+  '1x_woche': { label: '1x pro Woche', color: '#5CB882' },
+  '2x_woche': { label: '2x pro Woche', color: '#26A69A' },
+  '3x_woche': { label: '3x pro Woche', color: '#2196F3' },
+  '4x_woche': { label: '4x pro Woche', color: '#5C6BC0' },
+  '5x_woche': { label: '5x pro Woche', color: '#7E57C2' },
+  '1x_monat': { label: '1x pro Monat', color: '#8D6E63' },
+  '2x_monat': { label: '2x pro Monat', color: '#E8A000' },
+  nach_bedarf: { label: 'Nach Bedarf', color: '#999' },
 }
 
 // ── Abrechnungsstatus je Verordnung (verordnungen.abrechnungs_status) ─
@@ -276,9 +303,12 @@ export function gueltigkeitsAmpel(bis: string | null | undefined): Ampel | null 
 // Gilt für Pflegedienst + Betreuung, NICHT Intensivpflege.
 export const KOSTENTRAEGER_TYP: Record<string, { label: string; color: string }> = {
   krankenkasse: { label: 'Krankenkasse', color: '#2196F3' },
+  pflegekasse: { label: 'Pflegekasse', color: '#C9963C' },
   sozialamt: { label: 'Sozialamt', color: '#9C27B0' },
   privat: { label: 'Privat', color: '#5CB882' },
   berufsgenossenschaft: { label: 'Berufsgenossenschaft', color: '#E8A000' },
+  beihilfe: { label: 'Beihilfe', color: '#26A69A' },
+  pkv: { label: 'Private Krankenversicherung (PKV)', color: '#7E57C2' },
 }
 
 // ── Bundesländer (leistungspreise.bundesland, kostentraeger_kontakte.bundesland) ─
