@@ -15,7 +15,7 @@ import {
   formatDate, formatDuration, formatTime, fullName, statusMeta, daysUntil,
   gueltigkeitsAmpel, euro, centToEuro, euroToCent,
   VERORDNUNG_TYPE, GENEHMIGUNG_STATUS, LEISTUNGSART_LABELS, ABRECHNUNGS_STATUS,
-  WEEKDAYS, KOSTENTRAEGER_TYP, ABSAGE_VON,
+  WEEKDAYS, KOSTENTRAEGER_TYP, ABSAGE_VON, HAEUFIGKEIT_LABELS,
 } from '@/lib/admin/ops'
 import { StatusBadge, SearchInput, EmptyRow, Banner, AmpelDot } from '@/components/admin/OpsUI'
 
@@ -52,10 +52,42 @@ interface Verordnung {
   genehmigte_leistungsart: string | null
   genehmigung_abgleich_ok: boolean | null
   genehmigung_abweichung: string | null
+  abtretungserklaerung_vorhanden: boolean
+  abtretungserklaerung_datum: string | null
+  abtretungserklaerung_document_url: string | null
   clientName: string
 }
 
 interface PersonOption { id: string; name: string }
+
+// Leistungsposition einer Verordnung (verordnung_leistungen) — ein Rezept
+// kann mehrere Leistungsarten enthalten (z. B. Körperpflege 2x/Woche +
+// Medikamentengabe täglich)
+interface LeistungRow {
+  id: string
+  verordnung_id: string
+  leistungsart: string
+  haeufigkeit: string | null
+  menge: number | null
+  dauer_minuten: number | null
+  leistungskomplex: string | null
+  preis_cent: number | null
+  bemerkung: string | null
+}
+
+// Formular-Zustand einer Leistungsposition (alles Strings für Inputs)
+interface LeistungPos {
+  leistungsart: string
+  haeufigkeit: string
+  menge: string
+  dauer_minuten: string
+  leistungskomplex: string
+  bemerkung: string
+}
+
+const EMPTY_POS: LeistungPos = {
+  leistungsart: '', haeufigkeit: '', menge: '1', dauer_minuten: '', leistungskomplex: '', bemerkung: '',
+}
 
 interface AssignmentRow {
   id: string
@@ -133,6 +165,8 @@ const EMPTY_FORM = {
   kostentraeger_typ: 'krankenkasse',
   kostentraeger_name: '',
   kostentraeger_ik_nummer: '',
+  abtretungserklaerung_vorhanden: false,
+  abtretungserklaerung_datum: '',
 }
 type FormState = typeof EMPTY_FORM
 
@@ -189,6 +223,10 @@ export default function AdminVerordnungenPage() {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [form, setForm] = useState<FormState>(EMPTY_FORM)
   const [scanFile, setScanFile] = useState<File | null>(null)
+  const [abtretungFile, setAbtretungFile] = useState<File | null>(null)
+  // Leistungspositionen der Verordnung (Mehrfach-Leistungsarten pro Rezept)
+  const [leistungen, setLeistungen] = useState<LeistungRow[]>([])
+  const [positionen, setPositionen] = useState<LeistungPos[]>([{ ...EMPTY_POS }])
   const [saving, setSaving] = useState(false)
   const [busyId, setBusyId] = useState<string | null>(null)
   // Genehmigung: Antwort-Erfassung
@@ -211,10 +249,11 @@ export default function AdminVerordnungenPage() {
     setError(null)
     try {
       const supabase = createClient()
-      const [vRes, cRes, gRes, aRes, rRes, iRes, absRes, allAssignRes] = await Promise.all([
+      const [vRes, cRes, gRes, aRes, rRes, iRes, absRes, allAssignRes, lRes] = await Promise.all([
         supabase
           .from('verordnungen')
-          .select('id, client_id, verordnung_type, leistungsart, verordnung_nummer, ausstellungsdatum, gueltig_von, gueltig_bis, arzt_name, arzt_praxis, diagnose, leistung_beschreibung, verordnung_document_url, genehmigung_status, genehmigung_datum, genehmigung_bis, genehmigung_aktenzeichen, kassengenehmigung_beantragt_am, kassengenehmigung_antwort_am, abrechnungs_status, genehmigte_stunden_gesamt, genehmigte_stunden_pro_woche, neuantrag_erforderlich, neuantrag_gestellt_am, notes, kostentraeger_typ, kostentraeger_name, kostentraeger_ik_nummer, genehmigte_leistungsart, genehmigung_abgleich_ok, genehmigung_abweichung, client:clients(first_name, last_name)')
+          .select('id, client_id, verordnung_type, leistungsart, verordnung_nummer, ausstellungsdatum, gueltig_von, gueltig_bis, arzt_name, arzt_praxis, diagnose, leistung_beschreibung, verordnung_document_url, genehmigung_status, genehmigung_datum, genehmigung_bis, genehmigung_aktenzeichen, kassengenehmigung_beantragt_am, kassengenehmigung_antwort_am, abrechnungs_status, genehmigte_stunden_gesamt, genehmigte_stunden_pro_woche, neuantrag_erforderlich, neuantrag_gestellt_am, notes, kostentraeger_typ, kostentraeger_name, kostentraeger_ik_nummer, genehmigte_leistungsart, genehmigung_abgleich_ok, genehmigung_abweichung, abtretungserklaerung_vorhanden, abtretungserklaerung_datum, abtretungserklaerung_document_url, client:clients(first_name, last_name)')
+          .is('deleted_at', null) // Soft-Delete: gelöschte Verordnungen ausblenden (Revisionssicherheit)
           .order('genehmigung_bis', { ascending: true, nullsFirst: false }),
         supabase.from('clients').select('id, first_name, last_name').order('last_name'),
         supabase.from('caregivers').select('id, first_name, last_name').order('last_name'),
@@ -238,6 +277,10 @@ export default function AdminVerordnungenPage() {
           .from('assignments')
           .select('id, weekday, client:clients(first_name,last_name), caregiver:caregivers(first_name,last_name)')
           .order('weekday'),
+        supabase
+          .from('verordnung_leistungen')
+          .select('id, verordnung_id, leistungsart, haeufigkeit, menge, dauer_minuten, leistungskomplex, preis_cent, bemerkung')
+          .order('created_at'),
       ])
       if (vRes.error) { setError(vRes.error.message); setLoading(false); return }
       setVerordnungen((vRes.data || []).map((v: any) => ({ ...v, clientName: fullName(v.client) })))
@@ -256,6 +299,7 @@ export default function AdminVerordnungenPage() {
         id: a.id,
         label: `${fullName(a.client)} — ${fullName(a.caregiver)} (${WEEKDAYS.find(w => w.n === a.weekday)?.short || a.weekday})`,
       })))
+      setLeistungen((lRes.data || []) as LeistungRow[])
     } catch (err: any) {
       console.error('Verordnungen Ladefehler:', err)
       setError('Unerwarteter Fehler beim Laden.')
@@ -325,6 +369,15 @@ export default function AdminVerordnungenPage() {
     return map
   }, [records])
 
+  const leistungenByVerordnung = useMemo(() => {
+    const map = new Map<string, LeistungRow[]>()
+    for (const l of leistungen) {
+      if (!map.has(l.verordnung_id)) map.set(l.verordnung_id, [])
+      map.get(l.verordnung_id)!.push(l)
+    }
+    return map
+  }, [leistungen])
+
   const invoicesByVerordnung = useMemo(() => {
     const map = new Map<string, InvoiceRow[]>()
     for (const i of invoices) {
@@ -347,6 +400,8 @@ export default function AdminVerordnungenPage() {
   function openCreate() {
     setEditingId(null)
     setScanFile(null)
+    setAbtretungFile(null)
+    setPositionen([{ ...EMPTY_POS }])
     setForm({ ...EMPTY_FORM, ausstellungsdatum: new Date().toISOString().slice(0, 10) })
     setShowForm(true)
   }
@@ -354,6 +409,18 @@ export default function AdminVerordnungenPage() {
   function openEdit(v: Verordnung) {
     setEditingId(v.id)
     setScanFile(null)
+    setAbtretungFile(null)
+    const vorhandene = leistungenByVerordnung.get(v.id) || []
+    setPositionen(vorhandene.length > 0
+      ? vorhandene.map(l => ({
+          leistungsart: l.leistungsart,
+          haeufigkeit: l.haeufigkeit || '',
+          menge: l.menge != null ? String(l.menge) : '1',
+          dauer_minuten: l.dauer_minuten != null ? String(l.dauer_minuten) : '',
+          leistungskomplex: l.leistungskomplex || '',
+          bemerkung: l.bemerkung || '',
+        }))
+      : [{ ...EMPTY_POS }])
     setForm({
       client_id: v.client_id,
       verordnung_type: v.verordnung_type,
@@ -376,6 +443,8 @@ export default function AdminVerordnungenPage() {
       kostentraeger_typ: v.kostentraeger_typ || 'krankenkasse',
       kostentraeger_name: v.kostentraeger_name || '',
       kostentraeger_ik_nummer: v.kostentraeger_ik_nummer || '',
+      abtretungserklaerung_vorhanden: !!v.abtretungserklaerung_vorhanden,
+      abtretungserklaerung_datum: v.abtretungserklaerung_datum || '',
     })
     setShowForm(true)
     setTab('erfassung')
@@ -406,6 +475,21 @@ export default function AdminVerordnungenPage() {
         documentPath = path
       }
 
+      // Abtretungserklärung hochladen (gleicher privater Bucket)
+      let abtretungPath: string | null | undefined = undefined
+      if (abtretungFile) {
+        const path = `${form.client_id}/abtretung/${Date.now()}-${sanitizeFileName(abtretungFile.name)}`
+        const { error: upErr } = await supabase.storage
+          .from('verordnungen')
+          .upload(path, abtretungFile, { cacheControl: '3600', upsert: false })
+        if (upErr) {
+          setError(`Abtretungserklärung-Upload fehlgeschlagen: ${upErr.message}`)
+          setSaving(false)
+          return
+        }
+        abtretungPath = path
+      }
+
       const payload: Record<string, unknown> = {
         client_id: form.client_id,
         verordnung_type: form.verordnung_type,
@@ -428,15 +512,54 @@ export default function AdminVerordnungenPage() {
         kostentraeger_typ: form.kostentraeger_typ || 'krankenkasse',
         kostentraeger_name: form.kostentraeger_name || null,
         kostentraeger_ik_nummer: form.kostentraeger_ik_nummer || null,
+        abtretungserklaerung_vorhanden: form.abtretungserklaerung_vorhanden,
+        abtretungserklaerung_datum: form.abtretungserklaerung_datum || null,
       }
       if (documentPath !== undefined) payload.verordnung_document_url = documentPath
+      if (abtretungPath !== undefined) payload.abtretungserklaerung_document_url = abtretungPath
 
-      const { error: e } = editingId
-        ? await supabase.from('verordnungen').update(payload).eq('id', editingId)
-        : await supabase.from('verordnungen').insert(payload)
-      if (e) { setError(`Speichern fehlgeschlagen: ${e.message}`); setSaving(false); return }
+      let verordnungId = editingId
+      if (editingId) {
+        const { error: e } = await supabase.from('verordnungen').update(payload).eq('id', editingId)
+        if (e) { setError(`Speichern fehlgeschlagen: ${e.message}`); setSaving(false); return }
+      } else {
+        const { data: inserted, error: e } = await supabase
+          .from('verordnungen')
+          .insert(payload)
+          .select('id')
+          .single()
+        if (e || !inserted) { setError(`Speichern fehlgeschlagen: ${e?.message || 'Kein Datensatz zurückgegeben'}`); setSaving(false); return }
+        verordnungId = inserted.id
+      }
+
+      // Leistungspositionen synchronisieren (mehrere Leistungsarten pro Rezept):
+      // alte Positionen ersetzen, nur ausgefüllte Zeilen speichern
+      if (verordnungId) {
+        const gueltige = positionen.filter(p => p.leistungsart)
+        const { error: delErr } = await supabase
+          .from('verordnung_leistungen')
+          .delete()
+          .eq('verordnung_id', verordnungId)
+        if (delErr) { setError(`Leistungspositionen aktualisieren fehlgeschlagen: ${delErr.message}`); setSaving(false); return }
+        if (gueltige.length > 0) {
+          const { error: posErr } = await supabase.from('verordnung_leistungen').insert(
+            gueltige.map(p => ({
+              verordnung_id: verordnungId,
+              leistungsart: p.leistungsart,
+              haeufigkeit: p.haeufigkeit || null,
+              menge: p.menge ? Number(p.menge) : 1,
+              dauer_minuten: p.dauer_minuten ? Number(p.dauer_minuten) : null,
+              leistungskomplex: p.leistungskomplex || null,
+              bemerkung: p.bemerkung || null,
+            }))
+          )
+          if (posErr) { setError(`Leistungspositionen speichern fehlgeschlagen: ${posErr.message}`); setSaving(false); return }
+        }
+      }
+
       setShowForm(false)
       setScanFile(null)
+      setAbtretungFile(null)
       await load()
     } catch (err: any) {
       setError(`Unerwarteter Fehler: ${err.message}`)
@@ -445,12 +568,18 @@ export default function AdminVerordnungenPage() {
     }
   }
 
+  // Soft-Delete (Revisionssicherheit): Verordnung wird nie hart gelöscht,
+  // nur als gelöscht markiert — deleted_at/deleted_by bleiben nachvollziehbar.
   async function remove(id: string) {
-    if (!window.confirm('Verordnung wirklich löschen?')) return
+    if (!window.confirm('Verordnung wirklich löschen? (Sie wird nur ausgeblendet, nicht endgültig entfernt — Revisionssicherheit)')) return
     setBusyId(id)
     try {
       const supabase = createClient()
-      const { error: e } = await supabase.from('verordnungen').delete().eq('id', id)
+      const { data: userData } = await supabase.auth.getUser()
+      const { error: e } = await supabase
+        .from('verordnungen')
+        .update({ deleted_at: new Date().toISOString(), deleted_by: userData?.user?.id || null })
+        .eq('id', id)
       if (e) { setError(`Löschen fehlgeschlagen: ${e.message}`); return }
       await load()
     } finally {
@@ -800,6 +929,9 @@ export default function AdminVerordnungenPage() {
               editingId={editingId} form={form} setForm={setForm}
               clients={clients} saving={saving} busyId={busyId}
               scanFile={scanFile} setScanFile={setScanFile} fileInputRef={fileInputRef}
+              abtretungFile={abtretungFile} setAbtretungFile={setAbtretungFile}
+              positionen={positionen} setPositionen={setPositionen}
+              leistungenByVerordnung={leistungenByVerordnung}
               save={save} openEdit={openEdit} remove={remove}
               markNeuantrag={markNeuantrag} openScan={openScan}
             />
@@ -873,6 +1005,9 @@ function ErfassungTab(props: {
   saving: boolean; busyId: string | null
   scanFile: File | null; setScanFile: (f: File | null) => void
   fileInputRef: React.RefObject<HTMLInputElement | null>
+  abtretungFile: File | null; setAbtretungFile: (f: File | null) => void
+  positionen: LeistungPos[]; setPositionen: (p: LeistungPos[]) => void
+  leistungenByVerordnung: Map<string, LeistungRow[]>
   save: () => void
   openEdit: (v: Verordnung) => void
   remove: (id: string) => void
@@ -882,8 +1017,14 @@ function ErfassungTab(props: {
   const {
     grouped, verordnungen, search, setSearch, filter, setFilter, expiringCount, neuantragCount,
     showForm, setShowForm, editingId, form, setForm, clients, saving, busyId,
-    scanFile, setScanFile, fileInputRef, save, openEdit, remove, markNeuantrag, openScan,
+    scanFile, setScanFile, fileInputRef, abtretungFile, setAbtretungFile,
+    positionen, setPositionen, leistungenByVerordnung,
+    save, openEdit, remove, markNeuantrag, openScan,
   } = props
+
+  function updatePos(idx: number, patch: Partial<LeistungPos>) {
+    setPositionen(positionen.map((p, i) => i === idx ? { ...p, ...patch } : p))
+  }
 
   return (
     <>
@@ -931,7 +1072,7 @@ function ErfassungTab(props: {
               </select>
             </label>
             <label style={fieldLabel}>
-              Leistungsart (§37 SGB V)
+              Haupt-Leistungsart
               <select value={form.leistungsart} onChange={e => setForm({ ...form, leistungsart: e.target.value })} style={input}>
                 <option value="">— wählen —</option>
                 {Object.entries(LEISTUNGSART_LABELS).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
@@ -1025,6 +1166,94 @@ function ErfassungTab(props: {
               <textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} style={{ ...input, minHeight: 60, resize: 'vertical' }} />
             </label>
           </div>
+
+          {/* ── Leistungspositionen: mehrere Leistungsarten pro Rezept ──
+              z. B. Große Körperpflege 2x/Woche + Medikamentengabe täglich */}
+          <div style={{ marginTop: 18, padding: 14, background: 'var(--coal)', border: '1px solid var(--border)', borderRadius: 10 }}>
+            <h4 style={{ margin: '0 0 4px', fontSize: 14 }}>Leistungspositionen</h4>
+            <p style={{ margin: '0 0 12px', fontSize: 12, color: 'var(--ink4)' }}>
+              Eine Verordnung kann mehrere Leistungen enthalten (z. B. Große Körperpflege 2x/Woche + Medikamentengabe täglich).
+              LK-Nummer = Leistungskomplex nach §89 SGB XI (LK1–LK35).
+            </p>
+            {positionen.map((p, idx) => (
+              <div key={idx} style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'flex-end', marginBottom: 10, paddingBottom: 10, borderBottom: idx < positionen.length - 1 ? '1px solid var(--border)' : 'none' }}>
+                <label style={{ ...fieldLabel, minWidth: 200 }}>
+                  Leistungsart {idx === 0 ? '' : ''}
+                  <select value={p.leistungsart} onChange={e => updatePos(idx, { leistungsart: e.target.value })} style={input}>
+                    <option value="">— wählen —</option>
+                    {Object.entries(LEISTUNGSART_LABELS).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
+                  </select>
+                </label>
+                <label style={{ ...fieldLabel, minWidth: 150 }}>
+                  Häufigkeit
+                  <select value={p.haeufigkeit} onChange={e => updatePos(idx, { haeufigkeit: e.target.value })} style={input}>
+                    <option value="">— wählen —</option>
+                    {Object.entries(HAEUFIGKEIT_LABELS).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
+                  </select>
+                </label>
+                <label style={{ ...fieldLabel, width: 80 }}>
+                  Menge
+                  <input type="number" min="1" value={p.menge} onChange={e => updatePos(idx, { menge: e.target.value })} style={input} />
+                </label>
+                <label style={{ ...fieldLabel, width: 110 }}>
+                  Dauer (Min.)
+                  <input type="number" min="0" step="5" value={p.dauer_minuten} onChange={e => updatePos(idx, { dauer_minuten: e.target.value })} style={input} placeholder="pro Einsatz" />
+                </label>
+                <label style={{ ...fieldLabel, width: 110 }}>
+                  LK-Nr. (§89)
+                  <input value={p.leistungskomplex} onChange={e => updatePos(idx, { leistungskomplex: e.target.value })} style={input} placeholder="z. B. LK4" />
+                </label>
+                <label style={{ ...fieldLabel, flex: 1, minWidth: 140 }}>
+                  Bemerkung
+                  <input value={p.bemerkung} onChange={e => updatePos(idx, { bemerkung: e.target.value })} style={input} />
+                </label>
+                <button
+                  onClick={() => setPositionen(positionen.length > 1 ? positionen.filter((_, i) => i !== idx) : [{ ...EMPTY_POS }])}
+                  style={{ ...miniBtn, color: '#D04B3B', marginBottom: 4 }}
+                  title="Position entfernen"
+                >
+                  ✕
+                </button>
+              </div>
+            ))}
+            <button onClick={() => setPositionen([...positionen, { ...EMPTY_POS }])} style={secondaryBtnSmall}>
+              + Weitere Leistungsposition
+            </button>
+          </div>
+
+          {/* ── Abtretungserklärung: Klient tritt Erstattungsanspruch an uns ab ── */}
+          <div style={{ marginTop: 14, padding: 14, background: 'var(--coal)', border: '1px solid var(--border)', borderRadius: 10 }}>
+            <h4 style={{ margin: '0 0 10px', fontSize: 14 }}>Abtretungserklärung</h4>
+            <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', alignItems: 'flex-end' }}>
+              <label style={{ ...fieldLabel, flexDirection: 'row', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={form.abtretungserklaerung_vorhanden}
+                  onChange={e => setForm({ ...form, abtretungserklaerung_vorhanden: e.target.checked })}
+                />
+                Abtretungserklärung liegt vor
+              </label>
+              <label style={fieldLabel}>
+                Datum der Abtretung
+                <input
+                  type="date"
+                  value={form.abtretungserklaerung_datum}
+                  onChange={e => setForm({ ...form, abtretungserklaerung_datum: e.target.value })}
+                  style={input}
+                />
+              </label>
+              <label style={fieldLabel}>
+                Scan der Abtretungserklärung (PDF/Foto)
+                <input
+                  type="file"
+                  accept="image/*,application/pdf"
+                  onChange={e => setAbtretungFile(e.target.files?.[0] || null)}
+                  style={{ ...input, padding: '6px 10px' }}
+                />
+                {abtretungFile && <span style={{ fontSize: 11, color: 'var(--ink4)' }}>{abtretungFile.name}</span>}
+              </label>
+            </div>
+          </div>
           <div style={{ display: 'flex', gap: 10, marginTop: 14 }}>
             <button onClick={save} disabled={saving} style={primaryBtn}>
               {saving ? 'Speichern…' : (editingId ? 'Änderungen speichern' : 'Verordnung anlegen')}
@@ -1062,6 +1291,7 @@ function ErfassungTab(props: {
                 {group.items.map(v => {
                   const tm = statusMeta(VERORDNUNG_TYPE, v.verordnung_type)
                   const gm = statusMeta(GENEHMIGUNG_STATUS, v.genehmigung_status)
+                  const vLeistungen = leistungenByVerordnung.get(v.id) || []
                   const tone = expiryTone(v)
                   const days = daysUntil(v.genehmigung_bis)
                   const ampel = gueltigkeitsAmpel(v.gueltig_bis)
@@ -1074,7 +1304,17 @@ function ErfassungTab(props: {
                     <tr key={v.id} style={rowBg ? { background: rowBg } : undefined}>
                       <td><StatusBadge label={tm.label} color={tm.color} /></td>
                       <td style={{ fontSize: 13 }}>
-                        {v.leistungsart ? statusMeta(LEISTUNGSART_LABELS, v.leistungsart).label : '—'}
+                        {vLeistungen.length > 0 ? (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                            {vLeistungen.map(l => (
+                              <span key={l.id} style={{ whiteSpace: 'nowrap' }}>
+                                {statusMeta(LEISTUNGSART_LABELS, l.leistungsart).label}
+                                {l.haeufigkeit && <span style={{ color: 'var(--ink4)' }}> · {statusMeta(HAEUFIGKEIT_LABELS, l.haeufigkeit).label}</span>}
+                                {l.leistungskomplex && <span style={{ color: 'var(--ink4)' }}> · {l.leistungskomplex}</span>}
+                              </span>
+                            ))}
+                          </div>
+                        ) : (v.leistungsart ? statusMeta(LEISTUNGSART_LABELS, v.leistungsart).label : '—')}
                       </td>
                       <td style={{ fontSize: 13 }}>
                         <StatusBadge label={statusMeta(KOSTENTRAEGER_TYP, v.kostentraeger_typ).label} color={statusMeta(KOSTENTRAEGER_TYP, v.kostentraeger_typ).color} />
@@ -1106,6 +1346,11 @@ function ErfassungTab(props: {
                         {v.verordnung_document_url
                           ? <button onClick={() => openScan(v)} style={miniBtn}>📄 Anzeigen</button>
                           : <span style={{ color: 'var(--ink4)', fontSize: 12 }}>fehlt</span>}
+                        <div style={{ fontSize: 11, marginTop: 2 }}>
+                          {v.abtretungserklaerung_vorhanden
+                            ? <span style={{ color: '#5CB882' }}>Abtretung ✓{v.abtretungserklaerung_datum ? ` (${formatDate(v.abtretungserklaerung_datum)})` : ''}</span>
+                            : <span style={{ color: '#E8A000' }}>Abtretung fehlt</span>}
+                        </div>
                       </td>
                       <td style={{ whiteSpace: 'nowrap' }}>
                         <button onClick={() => openEdit(v)} style={miniBtn}>Bearbeiten</button>
