@@ -5,6 +5,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { IconChart, IconUsers, IconClipboard, IconWings, IconLogout, IconTarget, IconHeart, IconMoney, IconDocument, IconHandshake, IconHome } from '@/components/Icons'
 import NotificationBell from '@/components/NotificationBell'
+import OrgSwitcher from '@/components/OrgSwitcher'
 import { ReactNode } from 'react'
 
 // ═══════════════════════════════════════════════════════════════
@@ -198,6 +199,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
           <span>Admin Panel</span>
           <div style={{ marginLeft: 'auto' }}><NotificationBell /></div>
         </div>
+        <OrgSwitcher />
         <nav className="admin-nav">
           {navItems.map(item => (
             <Link
