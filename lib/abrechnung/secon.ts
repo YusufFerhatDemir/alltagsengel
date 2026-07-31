@@ -451,7 +451,7 @@ function parseSignedData(signedData: forge.asn1.Asn1): SignedDataInhalt {
   // version, digestAlgorithms, encapContentInfo, [0] certs, [1] crls, signerInfos
   const encap = parts[2] as forge.asn1.Asn1
   const encapParts = encap.value as forge.asn1.Asn1[]
-  let inhalt = Buffer.alloc(0)
+  let inhalt: Buffer = Buffer.alloc(0)
   if (encapParts.length > 1) {
     const explicit = encapParts[1] as forge.asn1.Asn1
     const octetNode = (explicit.value as forge.asn1.Asn1[])[0] as forge.asn1.Asn1
@@ -569,7 +569,7 @@ export async function entschluesseln(
 ): Promise<Buffer> {
   const ident = ladeIdentitaet(config.absender_zertifikat, config.absender_passwort)
 
-  let aktuell = verschluesselt
+  let aktuell: Buffer = verschluesselt
   // Bis zu 4 Schichten abtragen: EnvelopedData → CompressedData → SignedData → Data
   for (let schicht = 0; schicht < 4; schicht++) {
     const { contentType, content } = parseContentInfo(aktuell)
