@@ -13,9 +13,9 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import {
   formatDate, formatDuration, formatTime, fullName, statusMeta, daysUntil,
-  gueltigkeitsAmpel, euro,
+  gueltigkeitsAmpel, euro, centToEuro, euroToCent,
   VERORDNUNG_TYPE, GENEHMIGUNG_STATUS, LEISTUNGSART_LABELS, ABRECHNUNGS_STATUS,
-  WEEKDAYS,
+  WEEKDAYS, KOSTENTRAEGER_TYP, ABSAGE_VON,
 } from '@/lib/admin/ops'
 import { StatusBadge, SearchInput, EmptyRow, Banner, AmpelDot } from '@/components/admin/OpsUI'
 
@@ -46,6 +46,12 @@ interface Verordnung {
   neuantrag_erforderlich: boolean
   neuantrag_gestellt_am: string | null
   notes: string | null
+  kostentraeger_typ: string
+  kostentraeger_name: string | null
+  kostentraeger_ik_nummer: string | null
+  genehmigte_leistungsart: string | null
+  genehmigung_abgleich_ok: boolean | null
+  genehmigung_abweichung: string | null
   clientName: string
 }
 
@@ -77,6 +83,32 @@ interface InvoiceRow {
   invoice_number: string
   total_amount: number | null
   status: string
+  soll_betrag_cent: number | null
+  ist_betrag_cent: number | null
+  kuerzung_cent: number | null
+  kuerzung_grund: string | null
+  bezahlt: boolean
+  bezahlt_am: string | null
+  versand_elektronisch: boolean
+  versand_post: boolean
+}
+
+interface AbsageRow {
+  id: string
+  assignment_id: string | null
+  abgesagt_von: string
+  abgesagt_am: string
+  grund: string | null
+  ersatz_mitarbeiterin_id: string | null
+  ersatz_gefunden: boolean
+  clientName: string
+  caregiverName: string
+  weekday: number | null
+}
+
+interface AssignmentOption {
+  id: string
+  label: string
 }
 
 const EMPTY_FORM = {
@@ -98,13 +130,18 @@ const EMPTY_FORM = {
   genehmigung_bis: '',
   genehmigung_aktenzeichen: '',
   notes: '',
+  kostentraeger_typ: 'krankenkasse',
+  kostentraeger_name: '',
+  kostentraeger_ik_nummer: '',
 }
 type FormState = typeof EMPTY_FORM
 
-const EMPTY_ANTWORT = { aktenzeichen: '', datum: '', bis: '', ergebnis: 'genehmigt' }
+const EMPTY_ANTWORT = { aktenzeichen: '', datum: '', bis: '', ergebnis: 'genehmigt', genehmigte_leistungsart: '' }
 const EMPTY_ASSIGN = { caregiver_id: '', weekday: '1', start_time: '13:00', end_time: '15:00' }
+const EMPTY_ABSAGE = { assignment_id: '', abgesagt_von: 'klient', grund: '', ersatz_mitarbeiterin_id: '' }
+const EMPTY_INVOICE_EDIT = { soll: '', ist: '', kuerzung: '', kuerzung_grund: '' }
 
-type Tab = 'erfassung' | 'genehmigung' | 'verplanung' | 'abrechnung'
+type Tab = 'erfassung' | 'genehmigung' | 'verplanung' | 'abrechnung' | 'absagen'
 
 // Ablauf-Ampel: ≤14 Tage rot, ≤30 Tage gelb — nur bei genehmigten
 function expiryTone(v: Verordnung): 'red' | 'yellow' | null {
@@ -142,6 +179,8 @@ export default function AdminVerordnungenPage() {
   const [assignments, setAssignments] = useState<AssignmentRow[]>([])
   const [records, setRecords] = useState<RecordRow[]>([])
   const [invoices, setInvoices] = useState<InvoiceRow[]>([])
+  const [absagen, setAbsagen] = useState<AbsageRow[]>([])
+  const [assignmentOptions, setAssignmentOptions] = useState<AssignmentOption[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [filter, setFilter] = useState('all')
@@ -158,6 +197,13 @@ export default function AdminVerordnungenPage() {
   // Verplanung: Quick-Assign
   const [assignId, setAssignId] = useState<string | null>(null)
   const [assign, setAssign] = useState(EMPTY_ASSIGN)
+  // Abrechnung: Inline-Edit SOLL/IST/Kürzung
+  const [invoiceEditId, setInvoiceEditId] = useState<string | null>(null)
+  const [invoiceForm, setInvoiceForm] = useState(EMPTY_INVOICE_EDIT)
+  // Absagen: Erfassung + Filter
+  const [showAbsageForm, setShowAbsageForm] = useState(false)
+  const [absageForm, setAbsageForm] = useState(EMPTY_ABSAGE)
+  const [absageFilterDate, setAbsageFilterDate] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   async function load() {
@@ -165,10 +211,10 @@ export default function AdminVerordnungenPage() {
     setError(null)
     try {
       const supabase = createClient()
-      const [vRes, cRes, gRes, aRes, rRes, iRes] = await Promise.all([
+      const [vRes, cRes, gRes, aRes, rRes, iRes, absRes, allAssignRes] = await Promise.all([
         supabase
           .from('verordnungen')
-          .select('id, client_id, verordnung_type, leistungsart, verordnung_nummer, ausstellungsdatum, gueltig_von, gueltig_bis, arzt_name, arzt_praxis, diagnose, leistung_beschreibung, verordnung_document_url, genehmigung_status, genehmigung_datum, genehmigung_bis, genehmigung_aktenzeichen, kassengenehmigung_beantragt_am, kassengenehmigung_antwort_am, abrechnungs_status, genehmigte_stunden_gesamt, genehmigte_stunden_pro_woche, neuantrag_erforderlich, neuantrag_gestellt_am, notes, client:clients(first_name, last_name)')
+          .select('id, client_id, verordnung_type, leistungsart, verordnung_nummer, ausstellungsdatum, gueltig_von, gueltig_bis, arzt_name, arzt_praxis, diagnose, leistung_beschreibung, verordnung_document_url, genehmigung_status, genehmigung_datum, genehmigung_bis, genehmigung_aktenzeichen, kassengenehmigung_beantragt_am, kassengenehmigung_antwort_am, abrechnungs_status, genehmigte_stunden_gesamt, genehmigte_stunden_pro_woche, neuantrag_erforderlich, neuantrag_gestellt_am, notes, kostentraeger_typ, kostentraeger_name, kostentraeger_ik_nummer, genehmigte_leistungsart, genehmigung_abgleich_ok, genehmigung_abweichung, client:clients(first_name, last_name)')
           .order('genehmigung_bis', { ascending: true, nullsFirst: false }),
         supabase.from('clients').select('id, first_name, last_name').order('last_name'),
         supabase.from('caregivers').select('id, first_name, last_name').order('last_name'),
@@ -182,8 +228,16 @@ export default function AdminVerordnungenPage() {
           .not('verordnung_id', 'is', null),
         supabase
           .from('invoices')
-          .select('id, verordnung_id, invoice_number, total_amount, status')
+          .select('id, verordnung_id, invoice_number, total_amount, status, soll_betrag_cent, ist_betrag_cent, kuerzung_cent, kuerzung_grund, bezahlt, bezahlt_am, versand_elektronisch, versand_post')
           .not('verordnung_id', 'is', null),
+        supabase
+          .from('einsatz_absagen')
+          .select('id, assignment_id, abgesagt_von, abgesagt_am, grund, ersatz_mitarbeiterin_id, ersatz_gefunden, assignment:assignments(id, weekday, client:clients(first_name,last_name), caregiver:caregivers(first_name,last_name))')
+          .order('abgesagt_am', { ascending: false }),
+        supabase
+          .from('assignments')
+          .select('id, weekday, client:clients(first_name,last_name), caregiver:caregivers(first_name,last_name)')
+          .order('weekday'),
       ])
       if (vRes.error) { setError(vRes.error.message); setLoading(false); return }
       setVerordnungen((vRes.data || []).map((v: any) => ({ ...v, clientName: fullName(v.client) })))
@@ -192,6 +246,16 @@ export default function AdminVerordnungenPage() {
       setAssignments((aRes.data || []).map((a: any) => ({ ...a, caregiverName: fullName(a.caregiver) })))
       setRecords((rRes.data || []) as RecordRow[])
       setInvoices((iRes.data || []) as InvoiceRow[])
+      setAbsagen((absRes.data || []).map((a: any) => ({
+        ...a,
+        clientName: fullName(a.assignment?.client),
+        caregiverName: fullName(a.assignment?.caregiver),
+        weekday: a.assignment?.weekday ?? null,
+      })))
+      setAssignmentOptions((allAssignRes.data || []).map((a: any) => ({
+        id: a.id,
+        label: `${fullName(a.client)} — ${fullName(a.caregiver)} (${WEEKDAYS.find(w => w.n === a.weekday)?.short || a.weekday})`,
+      })))
     } catch (err: any) {
       console.error('Verordnungen Ladefehler:', err)
       setError('Unerwarteter Fehler beim Laden.')
@@ -309,6 +373,9 @@ export default function AdminVerordnungenPage() {
       genehmigung_bis: v.genehmigung_bis || '',
       genehmigung_aktenzeichen: v.genehmigung_aktenzeichen || '',
       notes: v.notes || '',
+      kostentraeger_typ: v.kostentraeger_typ || 'krankenkasse',
+      kostentraeger_name: v.kostentraeger_name || '',
+      kostentraeger_ik_nummer: v.kostentraeger_ik_nummer || '',
     })
     setShowForm(true)
     setTab('erfassung')
@@ -358,6 +425,9 @@ export default function AdminVerordnungenPage() {
         genehmigung_bis: form.genehmigung_bis || null,
         genehmigung_aktenzeichen: form.genehmigung_aktenzeichen || null,
         notes: form.notes || null,
+        kostentraeger_typ: form.kostentraeger_typ || 'krankenkasse',
+        kostentraeger_name: form.kostentraeger_name || null,
+        kostentraeger_ik_nummer: form.kostentraeger_ik_nummer || null,
       }
       if (documentPath !== undefined) payload.verordnung_document_url = documentPath
 
@@ -444,6 +514,7 @@ export default function AdminVerordnungenPage() {
       datum: new Date().toISOString().slice(0, 10),
       bis: v.gueltig_bis || '',
       ergebnis: 'genehmigt',
+      genehmigte_leistungsart: v.leistungsart || '',
     })
   }
 
@@ -456,6 +527,16 @@ export default function AdminVerordnungenPage() {
     setBusyId(antwortId)
     try {
       const supabase = createClient()
+      const original = verordnungen.find(x => x.id === antwortId)
+      // Abgleich: beantragte vs. genehmigte Leistungsart — bei Abweichung Warnung im UI
+      let abgleichOk: boolean | null = null
+      let abweichung: string | null = null
+      if (antwort.ergebnis === 'genehmigt' && original?.leistungsart && antwort.genehmigte_leistungsart) {
+        abgleichOk = original.leistungsart === antwort.genehmigte_leistungsart
+        if (!abgleichOk) {
+          abweichung = `Beantragt: ${statusMeta(LEISTUNGSART_LABELS, original.leistungsart).label} — Genehmigt: ${statusMeta(LEISTUNGSART_LABELS, antwort.genehmigte_leistungsart).label}`
+        }
+      }
       const { error: e } = await supabase
         .from('verordnungen')
         .update({
@@ -464,6 +545,9 @@ export default function AdminVerordnungenPage() {
           genehmigung_datum: antwort.datum || null,
           genehmigung_bis: antwort.ergebnis === 'genehmigt' ? (antwort.bis || null) : null,
           kassengenehmigung_antwort_am: new Date().toISOString(),
+          genehmigte_leistungsart: antwort.genehmigte_leistungsart || null,
+          genehmigung_abgleich_ok: abgleichOk,
+          genehmigung_abweichung: abweichung,
         })
         .eq('id', antwortId)
       if (e) { setError(`Speichern fehlgeschlagen: ${e.message}`); return }
@@ -537,12 +621,128 @@ export default function AdminVerordnungenPage() {
     }
   }
 
+  function openInvoiceEdit(inv: InvoiceRow) {
+    setInvoiceEditId(inv.id)
+    setInvoiceForm({
+      soll: inv.soll_betrag_cent != null ? String(inv.soll_betrag_cent / 100) : '',
+      ist: inv.ist_betrag_cent != null ? String(inv.ist_betrag_cent / 100) : '',
+      kuerzung: inv.kuerzung_cent != null ? String(inv.kuerzung_cent / 100) : '',
+      kuerzung_grund: inv.kuerzung_grund || '',
+    })
+  }
+
+  async function saveInvoiceEdit() {
+    if (!invoiceEditId) return
+    setBusyId(invoiceEditId)
+    try {
+      const supabase = createClient()
+      const { error: e } = await supabase
+        .from('invoices')
+        .update({
+          soll_betrag_cent: euroToCent(invoiceForm.soll),
+          ist_betrag_cent: euroToCent(invoiceForm.ist),
+          kuerzung_cent: euroToCent(invoiceForm.kuerzung) ?? 0,
+          kuerzung_grund: invoiceForm.kuerzung_grund || null,
+        })
+        .eq('id', invoiceEditId)
+      if (e) { setError(`Speichern fehlgeschlagen: ${e.message}`); return }
+      setInvoiceEditId(null)
+      await load()
+    } finally {
+      setBusyId(null)
+    }
+  }
+
+  async function toggleBezahlt(inv: InvoiceRow) {
+    setBusyId(inv.id)
+    try {
+      const supabase = createClient()
+      const { error: e } = await supabase
+        .from('invoices')
+        .update({
+          bezahlt: !inv.bezahlt,
+          bezahlt_am: !inv.bezahlt ? new Date().toISOString().slice(0, 10) : null,
+        })
+        .eq('id', inv.id)
+      if (e) { setError(`Update fehlgeschlagen: ${e.message}`); return }
+      await load()
+    } finally {
+      setBusyId(null)
+    }
+  }
+
+  async function toggleVersand(inv: InvoiceRow, field: 'versand_elektronisch' | 'versand_post') {
+    setBusyId(inv.id)
+    try {
+      const supabase = createClient()
+      const { error: e } = await supabase
+        .from('invoices')
+        .update({ [field]: !inv[field] })
+        .eq('id', inv.id)
+      if (e) { setError(`Update fehlgeschlagen: ${e.message}`); return }
+      await load()
+    } finally {
+      setBusyId(null)
+    }
+  }
+
+  // ── Tab 5: Absagen ────────────────────────────────────────────
+  async function saveAbsage() {
+    if (!absageForm.assignment_id) { setError('Bitte einen Einsatz auswählen.'); return }
+    setSaving(true)
+    try {
+      const supabase = createClient()
+      const { error: e } = await supabase.from('einsatz_absagen').insert({
+        assignment_id: absageForm.assignment_id,
+        abgesagt_von: absageForm.abgesagt_von,
+        grund: absageForm.grund || null,
+        ersatz_mitarbeiterin_id: absageForm.ersatz_mitarbeiterin_id || null,
+        ersatz_gefunden: !!absageForm.ersatz_mitarbeiterin_id,
+      })
+      if (e) { setError(`Speichern fehlgeschlagen: ${e.message}`); return }
+      setShowAbsageForm(false)
+      setAbsageForm(EMPTY_ABSAGE)
+      await load()
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  async function setErsatz(a: AbsageRow, caregiverId: string) {
+    setBusyId(a.id)
+    try {
+      const supabase = createClient()
+      const { error: e } = await supabase
+        .from('einsatz_absagen')
+        .update({ ersatz_mitarbeiterin_id: caregiverId || null, ersatz_gefunden: !!caregiverId })
+        .eq('id', a.id)
+      if (e) { setError(`Update fehlgeschlagen: ${e.message}`); return }
+      await load()
+    } finally {
+      setBusyId(null)
+    }
+  }
+
+  async function removeAbsage(id: string) {
+    if (!window.confirm('Absage wirklich löschen?')) return
+    setBusyId(id)
+    try {
+      const supabase = createClient()
+      const { error: e } = await supabase.from('einsatz_absagen').delete().eq('id', id)
+      if (e) { setError(`Löschen fehlgeschlagen: ${e.message}`); return }
+      await load()
+    } finally {
+      setBusyId(null)
+    }
+  }
+
   // ── Render ────────────────────────────────────────────────────
   const TABS: { key: Tab; label: string; count: number }[] = [
     { key: 'erfassung', label: '1 · Erfassen', count: verordnungen.length },
     { key: 'genehmigung', label: '2 · Kassengenehmigung', count: ausstehend.length + beantragt.length },
     { key: 'verplanung', label: '3 · Verplanung', count: unverplant.length },
     { key: 'abrechnung', label: '4 · Abrechnung', count: offeneAbrechnung.length },
+    { key: 'absagen', label: '5 · Absagen', count: absagen.filter(a => !a.ersatz_gefunden).length },
   ]
 
   return (
@@ -632,6 +832,23 @@ export default function AdminVerordnungenPage() {
               recordsByVerordnung={recordsByVerordnung}
               invoicesByVerordnung={invoicesByVerordnung}
               busyId={busyId} setAbrechnungsStatus={setAbrechnungsStatus}
+              invoiceEditId={invoiceEditId} invoiceForm={invoiceForm} setInvoiceForm={setInvoiceForm}
+              openInvoiceEdit={openInvoiceEdit} saveInvoiceEdit={saveInvoiceEdit}
+              cancelInvoiceEdit={() => setInvoiceEditId(null)}
+              toggleBezahlt={toggleBezahlt} toggleVersand={toggleVersand}
+            />
+          )}
+
+          {tab === 'absagen' && (
+            <AbsagenTab
+              absagen={absagen}
+              caregivers={caregivers}
+              assignmentOptions={assignmentOptions}
+              busyId={busyId} saving={saving}
+              showForm={showAbsageForm} setShowForm={setShowAbsageForm}
+              form={absageForm} setForm={setAbsageForm}
+              filterDate={absageFilterDate} setFilterDate={setAbsageFilterDate}
+              save={saveAbsage} setErsatz={setErsatz} remove={removeAbsage}
             />
           )}
         </>
@@ -696,6 +913,9 @@ function ErfassungTab(props: {
           <h3 style={{ margin: '0 0 14px', fontSize: 16 }}>
             {editingId ? 'Verordnung bearbeiten' : 'Neue Verordnung erfassen'}
           </h3>
+          <p style={{ margin: '0 0 14px', fontSize: 12, color: 'var(--ink4)' }}>
+            Gilt für Pflegedienst + Betreuung, NICHT Intensivpflege.
+          </p>
           <div style={formGrid}>
             <label style={fieldLabel}>
               Klient *
@@ -716,6 +936,20 @@ function ErfassungTab(props: {
                 <option value="">— wählen —</option>
                 {Object.entries(LEISTUNGSART_LABELS).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
               </select>
+            </label>
+            <label style={fieldLabel}>
+              Kostenträger-Typ
+              <select value={form.kostentraeger_typ} onChange={e => setForm({ ...form, kostentraeger_typ: e.target.value })} style={input}>
+                {Object.entries(KOSTENTRAEGER_TYP).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
+              </select>
+            </label>
+            <label style={fieldLabel}>
+              Kostenträger-Name
+              <input value={form.kostentraeger_name} onChange={e => setForm({ ...form, kostentraeger_name: e.target.value })} style={input} placeholder="z. B. AOK Hessen" />
+            </label>
+            <label style={fieldLabel}>
+              Kostenträger IK-Nummer
+              <input value={form.kostentraeger_ik_nummer} onChange={e => setForm({ ...form, kostentraeger_ik_nummer: e.target.value })} style={input} placeholder="Institutionskennzeichen" />
             </label>
             <label style={fieldLabel}>
               Verordnungs-Nr.
@@ -804,7 +1038,7 @@ function ErfassungTab(props: {
         <div className="admin-table-wrap">
           <table className="admin-table">
             <tbody>
-              <EmptyRow colSpan={9}>
+              <EmptyRow colSpan={10}>
                 {search || filter !== 'all' ? 'Keine Treffer' : 'Noch keine Verordnungen erfasst'}
               </EmptyRow>
             </tbody>
@@ -820,7 +1054,7 @@ function ErfassungTab(props: {
             <table className="admin-table">
               <thead>
                 <tr>
-                  <th>Typ</th><th>Leistungsart</th><th>Nr.</th><th>Gültigkeit</th>
+                  <th>Typ</th><th>Leistungsart</th><th>Kostenträger</th><th>Nr.</th><th>Gültigkeit</th>
                   <th>Status</th><th>Genehmigt bis</th><th>Aktenzeichen</th><th>Scan</th><th>Aktionen</th>
                 </tr>
               </thead>
@@ -841,6 +1075,10 @@ function ErfassungTab(props: {
                       <td><StatusBadge label={tm.label} color={tm.color} /></td>
                       <td style={{ fontSize: 13 }}>
                         {v.leistungsart ? statusMeta(LEISTUNGSART_LABELS, v.leistungsart).label : '—'}
+                      </td>
+                      <td style={{ fontSize: 13 }}>
+                        <StatusBadge label={statusMeta(KOSTENTRAEGER_TYP, v.kostentraeger_typ).label} color={statusMeta(KOSTENTRAEGER_TYP, v.kostentraeger_typ).color} />
+                        {v.kostentraeger_name && <span style={{ marginLeft: 6, color: 'var(--ink4)' }}>{v.kostentraeger_name}</span>}
                       </td>
                       <td style={{ fontSize: 13 }}>{v.verordnung_nummer || '—'}</td>
                       <td style={{ whiteSpace: 'nowrap', fontSize: 13 }}>
@@ -921,6 +1159,12 @@ function GenehmigungTab(props: {
     <>
       {ausstehend.length === 0 && beantragt.length === 0 && (
         <Banner tone="info">✅ Keine Verordnungen warten auf Genehmigung.</Banner>
+      )}
+
+      {entschieden.some(v => v.genehmigung_abgleich_ok === false) && (
+        <Banner tone="danger">
+          ⚠ Abweichung bei {entschieden.filter(v => v.genehmigung_abgleich_ok === false).length} Verordnung(en): Genehmigte Leistungsart weicht von der beantragten ab — bitte prüfen!
+        </Banner>
       )}
 
       {/* Schritt A: Noch nicht beantragt */}
@@ -1022,6 +1266,15 @@ function GenehmigungTab(props: {
                 <input type="date" value={antwort.bis} onChange={e => setAntwort({ ...antwort, bis: e.target.value })} style={input} />
               </label>
             )}
+            {antwort.ergebnis === 'genehmigt' && (
+              <label style={fieldLabel}>
+                Genehmigte Leistungsart
+                <select value={antwort.genehmigte_leistungsart} onChange={e => setAntwort({ ...antwort, genehmigte_leistungsart: e.target.value })} style={input}>
+                  <option value="">— wählen —</option>
+                  {Object.entries(LEISTUNGSART_LABELS).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
+                </select>
+              </label>
+            )}
           </div>
           <div style={{ display: 'flex', gap: 10, marginTop: 14 }}>
             <button onClick={saveAntwort} style={primaryBtn}>Antwort speichern</button>
@@ -1035,11 +1288,11 @@ function GenehmigungTab(props: {
       <div className="admin-table-wrap">
         <table className="admin-table">
           <thead>
-            <tr><th>Klient</th><th>Status</th><th>Aktenzeichen</th><th>Entschieden</th><th>Genehmigt bis</th><th>Dauer Antrag→Antwort</th></tr>
+            <tr><th>Klient</th><th>Status</th><th>Aktenzeichen</th><th>Entschieden</th><th>Genehmigt bis</th><th>Dauer Antrag→Antwort</th><th>Abgleich</th></tr>
           </thead>
           <tbody>
             {entschieden.length === 0
-              ? <EmptyRow colSpan={6}>Noch keine Entscheidungen der Kasse.</EmptyRow>
+              ? <EmptyRow colSpan={7}>Noch keine Entscheidungen der Kasse.</EmptyRow>
               : entschieden.map(v => {
                 const gm = statusMeta(GENEHMIGUNG_STATUS, v.genehmigung_status)
                 const dur = v.kassengenehmigung_beantragt_am && v.kassengenehmigung_antwort_am
@@ -1053,11 +1306,27 @@ function GenehmigungTab(props: {
                     <td style={{ whiteSpace: 'nowrap' }}>{formatDate(v.kassengenehmigung_antwort_am || v.genehmigung_datum)}</td>
                     <td style={{ whiteSpace: 'nowrap' }}>{formatDate(v.genehmigung_bis)}</td>
                     <td style={{ fontSize: 13 }}>{dur !== null ? `${dur} Tage` : '—'}</td>
+                    <td style={{ fontSize: 12 }}>
+                      {v.genehmigung_abgleich_ok === false
+                        ? <span style={{ color: '#D04B3B', fontWeight: 700 }} title={v.genehmigung_abweichung || ''}>⚠ Abweichung</span>
+                        : v.genehmigung_abgleich_ok === true
+                          ? <span style={{ color: '#5CB882', fontWeight: 700 }}>✓ Passt</span>
+                          : <span style={{ color: 'var(--ink4)' }}>—</span>}
+                    </td>
                   </tr>
                 )
               })}
           </tbody>
         </table>
+        {entschieden.some(v => v.genehmigung_abgleich_ok === false) && (
+          <div style={{ marginTop: 10, fontSize: 12, color: 'var(--ink4)' }}>
+            {entschieden.filter(v => v.genehmigung_abgleich_ok === false).map(v => (
+              <p key={v.id} style={{ margin: '2px 0' }}>
+                <strong style={{ color: 'var(--ink)' }}>{v.clientName}:</strong> {v.genehmigung_abweichung}
+              </p>
+            ))}
+          </div>
+        )}
       </div>
     </>
   )
@@ -1200,8 +1469,20 @@ function AbrechnungTab(props: {
   invoicesByVerordnung: Map<string, InvoiceRow[]>
   busyId: string | null
   setAbrechnungsStatus: (v: Verordnung, status: string) => void
+  invoiceEditId: string | null
+  invoiceForm: typeof EMPTY_INVOICE_EDIT
+  setInvoiceForm: (f: typeof EMPTY_INVOICE_EDIT) => void
+  openInvoiceEdit: (inv: InvoiceRow) => void
+  saveInvoiceEdit: () => void
+  cancelInvoiceEdit: () => void
+  toggleBezahlt: (inv: InvoiceRow) => void
+  toggleVersand: (inv: InvoiceRow, field: 'versand_elektronisch' | 'versand_post') => void
 }) {
-  const { genehmigt, recordsByVerordnung, invoicesByVerordnung, busyId, setAbrechnungsStatus } = props
+  const {
+    genehmigt, recordsByVerordnung, invoicesByVerordnung, busyId, setAbrechnungsStatus,
+    invoiceEditId, invoiceForm, setInvoiceForm, openInvoiceEdit, saveInvoiceEdit, cancelInvoiceEdit,
+    toggleBezahlt, toggleVersand,
+  } = props
 
   if (genehmigt.length === 0) {
     return <Banner tone="info">Noch keine genehmigten Verordnungen — Abrechnung ist erst nach der Kassengenehmigung möglich.</Banner>
@@ -1307,15 +1588,211 @@ function AbrechnungTab(props: {
               </p>
             )}
 
-            {/* Verknüpfte Rechnungen */}
+            {/* Verknüpfte Rechnungen — SOLL/IST, Kürzung, Bezahlt, Versand */}
             {invs.length > 0 && (
-              <p style={{ margin: '10px 0 0', fontSize: 13, color: 'var(--ink4)' }}>
-                Rechnungen: {invs.map(i => `${i.invoice_number} (${i.total_amount != null ? euro(Number(i.total_amount)) : '—'})`).join(' · ')}
-              </p>
+              <div style={{ marginTop: 14 }}>
+                <h4 style={{ margin: '0 0 8px', fontSize: 13, color: 'var(--ink4)' }}>Rechnungen</h4>
+                <table className="admin-table">
+                  <thead>
+                    <tr>
+                      <th>Nr.</th><th>SOLL</th><th>IST</th><th>Kürzung</th><th>Bezahlt</th><th>Versand</th><th>Aktion</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {invs.map(i => (
+                      <tr key={i.id}>
+                        <td style={{ fontWeight: 600 }}>{i.invoice_number}</td>
+                        <td>{centToEuro(i.soll_betrag_cent)}</td>
+                        <td>{centToEuro(i.ist_betrag_cent)}</td>
+                        <td>
+                          {i.kuerzung_cent ? (
+                            <span style={{ color: '#D04B3B' }} title={i.kuerzung_grund || ''}>
+                              -{centToEuro(i.kuerzung_cent)}
+                            </span>
+                          ) : '—'}
+                        </td>
+                        <td>
+                          <button
+                            onClick={() => toggleBezahlt(i)}
+                            disabled={busyId === i.id}
+                            style={{ ...miniBtn, color: i.bezahlt ? '#5CB882' : '#E8A000' }}
+                          >
+                            {i.bezahlt ? `✓ Bezahlt${i.bezahlt_am ? ` (${formatDate(i.bezahlt_am)})` : ''}` : 'Offen'}
+                          </button>
+                        </td>
+                        <td style={{ fontSize: 12 }}>
+                          <label style={{ marginRight: 8, cursor: 'pointer' }}>
+                            <input type="checkbox" checked={i.versand_elektronisch} onChange={() => toggleVersand(i, 'versand_elektronisch')} disabled={busyId === i.id} /> elektr.
+                          </label>
+                          <label style={{ cursor: 'pointer' }}>
+                            <input type="checkbox" checked={i.versand_post} onChange={() => toggleVersand(i, 'versand_post')} disabled={busyId === i.id} /> Post
+                          </label>
+                        </td>
+                        <td>
+                          <button onClick={() => openInvoiceEdit(i)} style={miniBtn}>SOLL/IST/Kürzung</button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+
+                {invoiceEditId && invs.some(i => i.id === invoiceEditId) && (
+                  <div style={{ marginTop: 10, padding: 12, background: 'var(--coal)', border: '1px solid var(--border)', borderRadius: 10 }}>
+                    <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'flex-end' }}>
+                      <label style={fieldLabel}>
+                        SOLL-Betrag (€)
+                        <input type="number" min="0" step="0.01" value={invoiceForm.soll} onChange={e => setInvoiceForm({ ...invoiceForm, soll: e.target.value })} style={input} />
+                      </label>
+                      <label style={fieldLabel}>
+                        IST-Betrag (€)
+                        <input type="number" min="0" step="0.01" value={invoiceForm.ist} onChange={e => setInvoiceForm({ ...invoiceForm, ist: e.target.value })} style={input} />
+                      </label>
+                      <label style={fieldLabel}>
+                        Kürzung (€)
+                        <input type="number" min="0" step="0.01" value={invoiceForm.kuerzung} onChange={e => setInvoiceForm({ ...invoiceForm, kuerzung: e.target.value })} style={input} />
+                      </label>
+                      <label style={fieldLabel}>
+                        Kürzungsgrund
+                        <input value={invoiceForm.kuerzung_grund} onChange={e => setInvoiceForm({ ...invoiceForm, kuerzung_grund: e.target.value })} style={input} placeholder="z. B. Kasse akzeptiert nur…" />
+                      </label>
+                      <button onClick={saveInvoiceEdit} disabled={busyId === invoiceEditId} style={primaryBtnSmall}>Speichern</button>
+                      <button onClick={cancelInvoiceEdit} style={secondaryBtnSmall}>Abbrechen</button>
+                    </div>
+                  </div>
+                )}
+              </div>
             )}
           </div>
         )
       })}
+    </>
+  )
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Tab 5: Absagen — Klient/Mitarbeiterin sagt Einsatz ab, Ersatz suchen
+// ═══════════════════════════════════════════════════════════════
+function AbsagenTab(props: {
+  absagen: AbsageRow[]
+  caregivers: PersonOption[]
+  assignmentOptions: AssignmentOption[]
+  busyId: string | null
+  saving: boolean
+  showForm: boolean; setShowForm: (v: boolean) => void
+  form: typeof EMPTY_ABSAGE; setForm: (f: typeof EMPTY_ABSAGE) => void
+  filterDate: string; setFilterDate: (v: string) => void
+  save: () => void
+  setErsatz: (a: AbsageRow, caregiverId: string) => void
+  remove: (id: string) => void
+}) {
+  const {
+    absagen, caregivers, assignmentOptions, busyId, saving,
+    showForm, setShowForm, form, setForm, filterDate, setFilterDate,
+    save, setErsatz, remove,
+  } = props
+
+  const weekdayLabel = (n: number | null) => n === null ? '—' : (WEEKDAYS.find(w => w.n === n)?.long || `Tag ${n}`)
+
+  const filtered = filterDate
+    ? absagen.filter(a => (a.abgesagt_am || '').slice(0, 10) === filterDate)
+    : absagen
+
+  return (
+    <>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10, marginBottom: 16 }}>
+        <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+          <label style={{ ...fieldLabel, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            Datum filtern
+            <input type="date" value={filterDate} onChange={e => setFilterDate(e.target.value)} style={input} />
+          </label>
+          {filterDate && <button onClick={() => setFilterDate('')} style={secondaryBtnSmall}>Zurücksetzen</button>}
+        </div>
+        <button onClick={() => { setForm(EMPTY_ABSAGE); setShowForm(true) }} style={primaryBtn}>+ Absage erfassen</button>
+      </div>
+
+      {absagen.filter(a => !a.ersatz_gefunden).length > 0 && (
+        <Banner tone="warn">
+          ⚠ {absagen.filter(a => !a.ersatz_gefunden).length} Absage(n) ohne Ersatz — Vertretung organisieren!
+        </Banner>
+      )}
+
+      {showForm && (
+        <div style={formCard}>
+          <h3 style={{ margin: '0 0 14px', fontSize: 16 }}>Absage erfassen</h3>
+          <div style={formGrid}>
+            <label style={fieldLabel}>
+              Einsatz *
+              <select value={form.assignment_id} onChange={e => setForm({ ...form, assignment_id: e.target.value })} style={input}>
+                <option value="">— wählen —</option>
+                {assignmentOptions.map(a => <option key={a.id} value={a.id}>{a.label}</option>)}
+              </select>
+            </label>
+            <label style={fieldLabel}>
+              Abgesagt von
+              <select value={form.abgesagt_von} onChange={e => setForm({ ...form, abgesagt_von: e.target.value })} style={input}>
+                {Object.entries(ABSAGE_VON).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
+              </select>
+            </label>
+            <label style={fieldLabel}>
+              Ersatz-Mitarbeiterin (optional)
+              <select value={form.ersatz_mitarbeiterin_id} onChange={e => setForm({ ...form, ersatz_mitarbeiterin_id: e.target.value })} style={input}>
+                <option value="">— noch keine —</option>
+                {caregivers.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+              </select>
+            </label>
+            <label style={{ ...fieldLabel, gridColumn: '1 / -1' }}>
+              Grund
+              <textarea value={form.grund} onChange={e => setForm({ ...form, grund: e.target.value })} style={{ ...input, minHeight: 60, resize: 'vertical' }} />
+            </label>
+          </div>
+          <div style={{ display: 'flex', gap: 10, marginTop: 14 }}>
+            <button onClick={save} disabled={saving} style={primaryBtn}>{saving ? 'Speichern…' : 'Absage speichern'}</button>
+            <button onClick={() => setShowForm(false)} style={secondaryBtn}>Abbrechen</button>
+          </div>
+        </div>
+      )}
+
+      <div className="admin-table-wrap">
+        <table className="admin-table">
+          <thead>
+            <tr>
+              <th>Klient</th><th>Mitarbeiterin</th><th>Wochentag</th><th>Abgesagt von</th>
+              <th>Abgesagt am</th><th>Grund</th><th>Ersatz</th><th>Aktion</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filtered.length === 0
+              ? <EmptyRow colSpan={8}>{filterDate ? 'Keine Absagen an diesem Tag.' : 'Noch keine Absagen erfasst.'}</EmptyRow>
+              : filtered.map(a => {
+                const vm = statusMeta(ABSAGE_VON, a.abgesagt_von)
+                return (
+                  <tr key={a.id}>
+                    <td style={{ fontWeight: 600 }}>{a.clientName}</td>
+                    <td>{a.caregiverName}</td>
+                    <td>{weekdayLabel(a.weekday)}</td>
+                    <td><StatusBadge label={vm.label} color={vm.color} /></td>
+                    <td style={{ whiteSpace: 'nowrap' }}>{formatDate(a.abgesagt_am)}</td>
+                    <td style={{ fontSize: 13 }}>{a.grund || '—'}</td>
+                    <td>
+                      <select
+                        value={a.ersatz_mitarbeiterin_id || ''}
+                        onChange={e => setErsatz(a, e.target.value)}
+                        disabled={busyId === a.id}
+                        style={{ ...input, padding: '4px 8px', fontSize: 12 }}
+                      >
+                        <option value="">— kein Ersatz —</option>
+                        {caregivers.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                      </select>
+                    </td>
+                    <td>
+                      <button onClick={() => remove(a.id)} disabled={busyId === a.id} style={{ ...miniBtn, color: '#D04B3B' }}>Löschen</button>
+                    </td>
+                  </tr>
+                )
+              })}
+          </tbody>
+        </table>
+      </div>
     </>
   )
 }
