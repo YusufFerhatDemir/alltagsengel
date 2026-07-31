@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Alltagsengel &amp; efy care — Digitale Verordnungsverwaltung</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gold: #C9963C;
+    --gold-light: #E5C078;
+    --gold-dim: rgba(201,150,60,.35);
+    --coal: #1A1612;
+    --coal2: #241F19;
+    --coal3: #2E2820;
+    --ink: #F7F2EA;
+    --ink2: rgba(247,242,234,.72);
+    --ink3: rgba(247,242,234,.5);
+    --green: #5CB882;
+    --red: #D04B3B;
+    --yellow: #E8A000;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--coal);
+    color: var(--ink);
+    font-family: 'Jost', sans-serif;
+    overflow-x: hidden;
+  }
+  h1, h2, h3.serif { font-family: 'Cormorant Garamond', serif; }
+
+  /* ── Slides ─────────────────────────────── */
+  .deck { scroll-snap-type: y proximity; }
+  .slide {
+    min-height: 100vh;
+    scroll-snap-align: start;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 72px 6vw;
+    position: relative;
+    border-bottom: 1px solid rgba(201,150,60,.12);
+  }
+  .slide-inner { width: 100%; max-width: 1100px; }
+  .kicker {
+    font-size: 13px; letter-spacing: .32em; text-transform: uppercase;
+    color: var(--gold); font-weight: 600; margin-bottom: 18px;
+  }
+  .slide h2 {
+    font-size: clamp(34px, 4.6vw, 54px);
+    font-weight: 600; line-height: 1.1; margin-bottom: 16px;
+  }
+  .lead { font-size: clamp(16px, 1.6vw, 19px); color: var(--ink2); max-width: 720px; line-height: 1.6; font-weight: 300; }
+  .goldline { width: 64px; height: 2px; background: linear-gradient(90deg, var(--gold), transparent); margin: 26px 0 34px; }
+
+  /* Reveal animation */
+  .rv { opacity: 0; transform: translateY(26px); transition: opacity .7s ease, transform .7s ease; }
+  .rv.on { opacity: 1; transform: none; }
+  .rv.d1 { transition-delay: .12s; } .rv.d2 { transition-delay: .24s; }
+  .rv.d3 { transition-delay: .36s; } .rv.d4 { transition-delay: .48s; } .rv.d5 { transition-delay: .6s; }
+
+  /* ── Slide 1: Title ─────────────────────── */
+  .title-slide { text-align: center; background:
+    radial-gradient(ellipse 70% 50% at 50% -10%, rgba(201,150,60,.14), transparent),
+    radial-gradient(ellipse 50% 40% at 50% 110%, rgba(201,150,60,.08), transparent), var(--coal); }
+  .title-slide img.logo { width: 130px; height: auto; margin-bottom: 30px; filter: drop-shadow(0 8px 30px rgba(201,150,60,.35)); }
+  .title-slide h1 { font-size: clamp(40px, 6vw, 74px); font-weight: 600; line-height: 1.08; }
+  .title-slide h1 .amp { color: var(--gold); font-style: italic; }
+  .title-slide .sub { font-size: clamp(16px, 1.9vw, 22px); color: var(--ink2); font-weight: 300; margin-top: 22px; letter-spacing: .02em; }
+  .brand-pills { display: flex; gap: 14px; justify-content: center; margin-top: 44px; flex-wrap: wrap; }
+  .pill {
+    border: 1px solid var(--gold-dim); border-radius: 999px; padding: 10px 26px;
+    font-size: 14px; letter-spacing: .12em; text-transform: uppercase; color: var(--gold-light);
+    background: rgba(201,150,60,.06);
+  }
+  .scroll-hint { position: absolute; bottom: 26px; left: 50%; transform: translateX(-50%);
+    color: var(--ink3); font-size: 12px; letter-spacing: .28em; text-transform: uppercase; animation: bob 2.4s ease-in-out infinite; }
+  @keyframes bob { 0%,100% { transform: translate(-50%,0); } 50% { transform: translate(-50%,8px); } }
+
+  /* ── Slide 2: Problem ───────────────────── */
+  .prob-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 22px; margin-top: 10px; }
+  .prob-card {
+    background: var(--coal2); border: 1px solid rgba(201,150,60,.16); border-radius: 16px;
+    padding: 32px 28px; position: relative; overflow: hidden;
+  }
+  .prob-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, var(--red), transparent); opacity: .7; }
+  .prob-card .num { font-family: 'Cormorant Garamond', serif; font-size: 46px; color: var(--red); font-weight: 600; line-height: 1; }
+  .prob-card h3 { font-size: 19px; margin: 14px 0 10px; font-weight: 600; }
+  .prob-card p { font-size: 14.5px; color: var(--ink2); line-height: 1.6; font-weight: 300; }
+
+  /* ── Slide 3: Flow ──────────────────────── */
+  .flow { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0; margin-top: 14px; }
+  .flow-step { text-align: center; padding: 0 10px; position: relative; }
+  .flow-step:not(:last-child)::after {
+    content: ''; position: absolute; top: 37px; left: calc(50% + 44px); width: calc(100% - 88px); height: 2px;
+    background: linear-gradient(90deg, var(--gold), var(--gold-dim));
+  }
+  .flow-icon {
+    width: 74px; height: 74px; margin: 0 auto 18px; border-radius: 50%;
+    background: radial-gradient(circle at 32% 28%, #E5C078, #C9963C 58%, #8f6a24);
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 10px 28px rgba(201,150,60,.35), inset 0 1px 2px rgba(255,255,255,.45);
+  }
+  .flow-icon svg { width: 32px; height: 32px; stroke: var(--coal); fill: none; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+  .flow-step .step-n { font-size: 11px; letter-spacing: .26em; color: var(--gold); font-weight: 600; margin-bottom: 6px; }
+  .flow-step h3 { font-size: 17px; font-weight: 600; margin-bottom: 8px; }
+  .flow-step p { font-size: 13px; color: var(--ink2); line-height: 1.55; font-weight: 300; }
+  .flow-note {
+    margin-top: 44px; background: rgba(201,150,60,.07); border: 1px solid var(--gold-dim);
+    border-radius: 14px; padding: 18px 24px; font-size: 14.5px; color: var(--ink2); font-weight: 300;
+  }
+  .flow-note strong { color: var(--gold-light); font-weight: 600; }
+
+  /* ── Slide 4: Features ──────────────────── */
+  .feat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+  .feat {
+    background: var(--coal2); border: 1px solid rgba(201,150,60,.16); border-radius: 16px;
+    padding: 26px 26px 24px; transition: border-color .3s, transform .3s;
+  }
+  .feat:hover { border-color: var(--gold); transform: translateY(-4px); }
+  .feat .fi { width: 44px; height: 44px; border-radius: 12px; background: rgba(201,150,60,.12);
+    border: 1px solid var(--gold-dim); display: flex; align-items: center; justify-content: center; margin-bottom: 16px; }
+  .feat .fi svg { width: 22px; height: 22px; stroke: var(--gold); fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .feat h3 { font-size: 17px; font-weight: 600; margin-bottom: 8px; }
+  .feat p { font-size: 14px; color: var(--ink2); line-height: 1.6; font-weight: 300; }
+  .ampel { display: inline-flex; gap: 5px; margin-left: 8px; vertical-align: middle; }
+  .ampel i { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+  .ampel .g { background: var(--green); } .ampel .y { background: var(--yellow); } .ampel .r { background: var(--red); }
+
+  /* ── Slide 5: Product mockup ────────────── */
+  .mock {
+    background: #14110d; border: 1px solid rgba(201,150,60,.28); border-radius: 18px;
+    box-shadow: 0 30px 80px rgba(0,0,0,.55), 0 0 0 1px rgba(0,0,0,.4);
+    overflow: hidden; margin-top: 8px; font-size: 13px;
+  }
+  .mock-bar { display: flex; align-items: center; gap: 8px; padding: 12px 18px; background: #0f0d0a; border-bottom: 1px solid rgba(201,150,60,.15); }
+  .mock-bar i { width: 10px; height: 10px; border-radius: 50%; background: #3a332a; display: inline-block; }
+  .mock-bar .url { margin-left: 14px; background: #1c1813; border-radius: 8px; padding: 4px 16px; font-size: 11.5px; color: var(--ink3); letter-spacing: .03em; }
+  .mock-body { padding: 22px 26px 26px; }
+  .mock-h { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+  .mock-h .t { font-family: 'Cormorant Garamond', serif; font-size: 24px; font-weight: 600; }
+  .mock-h .sub { font-size: 11.5px; color: var(--ink3); margin-top: 2px; }
+  .mock-btn { background: linear-gradient(135deg, var(--gold-light), var(--gold)); color: var(--coal);
+    font-weight: 600; font-size: 12px; border-radius: 9px; padding: 8px 16px; font-family: 'Jost', sans-serif; }
+  .mock-warn { background: rgba(232,160,0,.1); border: 1px solid rgba(232,160,0,.35); color: #f0c667;
+    border-radius: 10px; padding: 8px 14px; font-size: 12px; margin: 12px 0; }
+  .mock-tabs { display: flex; gap: 7px; margin: 14px 0 16px; flex-wrap: wrap; }
+  .mtab { border: 1px solid rgba(201,150,60,.25); border-radius: 999px; padding: 6px 14px; color: var(--ink2); font-size: 12px; background: var(--coal2); }
+  .mtab.on { background: linear-gradient(135deg, var(--gold-light), var(--gold)); color: var(--coal); font-weight: 600; border-color: transparent; }
+  .mtab span { opacity: .65; font-size: 11px; margin-left: 5px; }
+  .mock table { width: 100%; border-collapse: collapse; }
+  .mock th { text-align: left; font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink3);
+    padding: 8px 10px; border-bottom: 1px solid rgba(201,150,60,.2); font-weight: 500; }
+  .mock td { padding: 9px 10px; border-bottom: 1px solid rgba(247,242,234,.06); color: var(--ink2); }
+  .badge { display: inline-block; border-radius: 999px; padding: 2px 10px; font-size: 11px; font-weight: 600; }
+  .b-green { background: rgba(92,184,130,.15); color: var(--green); border: 1px solid rgba(92,184,130,.4); }
+  .b-gold { background: rgba(201,150,60,.15); color: var(--gold-light); border: 1px solid var(--gold-dim); }
+  .b-red { background: rgba(208,75,59,.14); color: #e0766a; border: 1px solid rgba(208,75,59,.4); }
+  .b-yellow { background: rgba(232,160,0,.13); color: #f0c667; border: 1px solid rgba(232,160,0,.4); }
+  .row-warn { background: rgba(232,160,0,.06); }
+  .mock-caption { text-align: center; font-size: 13px; color: var(--ink3); margin-top: 18px; font-weight: 300; }
+
+  /* ── Slide 6: Kassen ────────────────────── */
+  .kassen-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; }
+  .kassen-card { border: 1px solid rgba(201,150,60,.2); border-radius: 16px; padding: 30px 26px;
+    background: linear-gradient(180deg, rgba(201,150,60,.07), transparent); }
+  .kassen-card .big { font-family: 'Cormorant Garamond', serif; font-size: 30px; color: var(--gold-light); font-weight: 600; margin-bottom: 10px; }
+  .kassen-card p { font-size: 14px; color: var(--ink2); line-height: 1.6; font-weight: 300; }
+  .kassen-quote { margin-top: 40px; border-left: 3px solid var(--gold); padding: 6px 0 6px 24px; }
+  .kassen-quote p { font-family: 'Cormorant Garamond', serif; font-size: clamp(20px, 2.4vw, 26px); font-style: italic; color: var(--ink); line-height: 1.45; }
+
+  /* ── Slide 7: Two apps ──────────────────── */
+  .apps { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 26px; }
+  .app-card { background: var(--coal2); border: 1px solid rgba(201,150,60,.2); border-radius: 18px; padding: 36px 32px; position: relative; overflow: hidden; }
+  .app-card::before { content: ''; position: absolute; inset: 0 0 auto 0; height: 3px; background: linear-gradient(90deg, var(--gold), transparent); }
+  .app-card .app-name { font-family: 'Cormorant Garamond', serif; font-size: 30px; font-weight: 600; }
+  .app-card .app-tag { color: var(--gold); font-size: 12.5px; letter-spacing: .2em; text-transform: uppercase; margin: 6px 0 16px; font-weight: 600; }
+  .app-card p { font-size: 14.5px; color: var(--ink2); line-height: 1.65; font-weight: 300; }
+  .app-card ul { margin-top: 14px; list-style: none; }
+  .app-card li { font-size: 14px; color: var(--ink2); padding: 5px 0 5px 24px; position: relative; font-weight: 300; }
+  .app-card li::before { content: '✓'; position: absolute; left: 0; color: var(--gold); font-weight: 600; }
+  .shared { text-align: center; border: 1px dashed var(--gold-dim); border-radius: 16px; padding: 26px; background: rgba(201,150,60,.04); }
+  .shared h3 { font-size: 16px; letter-spacing: .18em; text-transform: uppercase; color: var(--gold-light); margin-bottom: 10px; font-weight: 600; }
+  .shared p { font-size: 14.5px; color: var(--ink2); font-weight: 300; max-width: 760px; margin: 0 auto; line-height: 1.6; }
+
+  /* ── Slide 8: Contact ───────────────────── */
+  .contact-slide { text-align: center; background:
+    radial-gradient(ellipse 60% 50% at 50% 110%, rgba(201,150,60,.13), transparent), var(--coal); }
+  .contact-slide img.logo { width: 96px; margin-bottom: 26px; filter: drop-shadow(0 8px 24px rgba(201,150,60,.3)); }
+  .contact-lines { margin-top: 30px; font-size: clamp(16px, 1.8vw, 20px); font-weight: 300; color: var(--ink2); line-height: 2; }
+  .contact-lines .co { font-family: 'Cormorant Garamond', serif; font-size: clamp(24px, 2.8vw, 32px); color: var(--ink); font-weight: 600; }
+  .contact-lines a { color: var(--gold-light); text-decoration: none; border-bottom: 1px solid var(--gold-dim); }
+
+  /* ── Nav dots ───────────────────────────── */
+  .dots { position: fixed; right: 22px; top: 50%; transform: translateY(-50%); z-index: 50; display: flex; flex-direction: column; gap: 12px; }
+  .dots a { width: 9px; height: 9px; border-radius: 50%; background: rgba(247,242,234,.22); transition: all .3s; display: block; }
+  .dots a.on { background: var(--gold); transform: scale(1.35); box-shadow: 0 0 10px rgba(201,150,60,.6); }
+
+  .page-tag { position: absolute; bottom: 22px; right: 6vw; font-size: 11px; letter-spacing: .24em; text-transform: uppercase; color: var(--ink3); }
+
+  @media (max-width: 900px) {
+    .flow { grid-template-columns: 1fr; gap: 26px; }
+    .flow-step:not(:last-child)::after { display: none; }
+    .apps { grid-template-columns: 1fr; }
+    .dots { display: none; }
+  }
+  @media print {
+    .slide { min-height: auto; page-break-after: always; padding: 40px; }
+    .dots, .scroll-hint { display: none; }
+    .rv { opacity: 1; transform: none; }
+  }
+</style>
+</head>
+<body>
+<nav class="dots" id="dots"></nav>
+
+<main class="deck">
+
+  <!-- ── 1 · Titel ─────────────────────────────────────────── -->
+  <section class="slide title-slide" id="s1">
+    <div class="slide-inner">
+      <img class="logo rv on" src="logo.png" alt="Alltagsengel Logo">
+      <h1 class="rv on">Alltagsengel <span class="amp">&amp;</span> efy care</h1>
+      <p class="sub rv on d1">Digitale Verordnungsverwaltung</p>
+      <p class="sub rv on d2" style="font-size:15px; color:var(--ink3); margin-top:10px;">
+        Vollständig digitaler Workflow — von der ärztlichen Verordnung bis zur Kassenabrechnung
+      </p>
+      <div class="brand-pills rv on d3">
+        <span class="pill">Alltagsbegleitung · §45a SGB XI</span>
+        <span class="pill">Ambulante Pflege · §37 SGB V</span>
+      </div>
+    </div>
+    <div class="scroll-hint">Scrollen</div>
+  </section>
+
+  <!-- ── 2 · Problem ───────────────────────────────────────── -->
+  <section class="slide" id="s2">
+    <div class="slide-inner">
+      <p class="kicker rv">Das Problem</p>
+      <h2 class="rv">Die Branche arbeitet analog —<br>und zahlt dafür jeden Tag.</h2>
+      <div class="goldline rv d1"></div>
+      <div class="prob-grid">
+        <div class="prob-card rv d1">
+          <div class="num">01</div>
+          <h3>Papier, Fax &amp; Excel</h3>
+          <p>Verordnungen liegen in Aktenordnern, Genehmigungen kommen per Fax, Stunden werden in Excel-Listen gepflegt. Medienbrüche an jeder Stelle des Prozesses — nichts ist verknüpft, nichts ist auswertbar.</p>
+        </div>
+        <div class="prob-card rv d2">
+          <div class="num">02</div>
+          <h3>Fehler in der Abrechnung</h3>
+          <p>Manuelle Übertragung bedeutet Zahlendreher, vergessene Einsätze und Abrechnungen ohne gültige Genehmigung. Die Folge: Kürzungen, Rückläufer und unbezahlt geleistete Arbeit.</p>
+        </div>
+        <div class="prob-card rv d3">
+          <div class="num">03</div>
+          <h3>Genehmigungen laufen ab</h3>
+          <p>Ohne systematische Überwachung werden Ablaufdaten übersehen und Neuanträge zu spät gestellt. Klienten werden ohne gültige Genehmigung betreut — die Kasse zahlt nicht, der Dienst bleibt auf den Kosten sitzen.</p>
+        </div>
+      </div>
+    </div>
+    <span class="page-tag">02 · Problem</span>
+  </section>
+
+  <!-- ── 3 · Lösung / Flow ─────────────────────────────────── -->
+  <section class="slide" id="s3">
+    <div class="slide-inner">
+      <p class="kicker rv">Unsere Lösung</p>
+      <h2 class="rv">Ein durchgängig digitaler Workflow.</h2>
+      <p class="lead rv d1">Jede Verordnung durchläuft fünf klar definierte Schritte — lückenlos dokumentiert, jederzeit nachvollziehbar, ohne Medienbruch.</p>
+      <div class="goldline rv d1"></div>
+      <div class="flow">
+        <div class="flow-step rv d1">
+          <div class="flow-icon"><svg viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h4"/></svg></div>
+          <div class="step-n">Schritt 1</div>
+          <h3>Verordnung</h3>
+          <p>Ärztliche Verordnung digital erfassen — mit Scan, Gültigkeit, Diagnose und Kostenträger.</p>
+        </div>
+        <div class="flow-step rv d2">
+          <div class="flow-icon"><svg viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.5-3 8.5-7 10-4-1.5-7-5.5-7-10V6z"/><path d="M9 12l2 2 4-4"/></svg></div>
+          <div class="step-n">Schritt 2</div>
+          <h3>Kassengenehmigung</h3>
+          <p>Antrag an die Kasse stellen, Wartezeit überwachen, Bescheid mit Aktenzeichen erfassen.</p>
+        </div>
+        <div class="flow-step rv d3">
+          <div class="flow-icon"><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M4 10h16M8 3v4M16 3v4"/><path d="M10 15l1.5 1.5L15 13"/></svg></div>
+          <div class="step-n">Schritt 3</div>
+          <h3>Verplanung</h3>
+          <p>Genehmigte Stunden direkt in wiederkehrende Einsätze mit festen Mitarbeiterinnen umsetzen.</p>
+        </div>
+        <div class="flow-step rv d4">
+          <div class="flow-icon"><svg viewBox="0 0 24 24"><path d="M9 5h6M9 5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2"/><path d="M9.5 12l1.7 1.7L15 10.5"/><path d="M9.5 17h5"/></svg></div>
+          <div class="step-n">Schritt 4</div>
+          <h3>Leistungsnachweis</h3>
+          <p>Jeder Einsatz wird dokumentiert und der Genehmigungsnummer zugeordnet — prüffähig für die Kasse.</p>
+        </div>
+        <div class="flow-step rv d5">
+          <div class="flow-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M15 8.5a4 4 0 1 0 0 7"/><path d="M8.5 10.8h5M8.5 13.2h5"/></svg></div>
+          <div class="step-n">Schritt 5</div>
+          <h3>Abrechnung</h3>
+          <p>SOLL/IST-Abgleich je Rechnung, Kürzungen mit Grund, Versand- und Zahlungsstatus.</p>
+        </div>
+      </div>
+      <div class="flow-note rv d5">
+        <strong>Plus: Absagen-Management.</strong> Fällt ein Einsatz aus, wird die Absage erfasst, eine Ersatz-Mitarbeiterin zugewiesen und der Vorgang dokumentiert — kein genehmigter Einsatz geht verloren.
+      </div>
+    </div>
+    <span class="page-tag">03 · Workflow</span>
+  </section>
+
+  <!-- ── 4 · Features ──────────────────────────────────────── -->
+  <section class="slide" id="s4">
+    <div class="slide-inner">
+      <p class="kicker rv">Features im Detail</p>
+      <h2 class="rv">Gebaut aus der Praxis, für die Praxis.</h2>
+      <div class="goldline rv d1"></div>
+      <div class="feat-grid">
+        <div class="feat rv d1">
+          <div class="fi"><svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5"/><path d="M9 2h6"/></svg></div>
+          <h3>Automatische Ablauf-Erinnerungen <span class="ampel"><i class="g"></i><i class="y"></i><i class="r"></i></span></h3>
+          <p>Jede Genehmigung wird überwacht: 30 Tage vor Ablauf gelb, 14 Tage vorher rot. Neuanträge werden rechtzeitig angestoßen — kein Klient wird ohne gültige Genehmigung betreut.</p>
+        </div>
+        <div class="feat rv d2">
+          <div class="fi"><svg viewBox="0 0 24 24"><path d="M3 21V8l9-5 9 5v13"/><path d="M3 21h18"/><path d="M9 21v-6h6v6"/><path d="M9 11h.01M15 11h.01"/></svg></div>
+          <h3>Kostenträger-Datenbank</h3>
+          <p>Krankenkassen, Pflegekassen, Sozialämter und Berufsgenossenschaften zentral verwaltet — mit IK-Nummern, Ansprechpartnern und bevorzugtem Übermittlungsweg (elektronisch/Post).</p>
+        </div>
+        <div class="feat rv d3">
+          <div class="fi"><svg viewBox="0 0 24 24"><path d="M4 19V5M4 19h16"/><path d="M8 15v-4M12 15V8M16 15v-6"/></svg></div>
+          <h3>Bundesland-spezifische Preistabellen</h3>
+          <p>Vergütungssätze je Bundesland und Leistungsart, mit Gültigkeitszeiträumen. Preisanpassungen der Kassen werden versioniert hinterlegt — die Abrechnung nutzt immer den korrekten Satz.</p>
+        </div>
+        <div class="feat rv d1">
+          <div class="fi"><svg viewBox="0 0 24 24"><path d="M9 11l3 3 8-8"/><path d="M20 12v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h9"/></svg></div>
+          <h3>SOLL/IST-Tracking bei Kürzungen</h3>
+          <p>Jede Rechnung führt SOLL-Betrag, IST-Zahlung und Kürzung mit Begründung. Abweichungen der Kasse werden sichtbar und können gezielt beanstandet werden — auf den Cent genau.</p>
+        </div>
+        <div class="feat rv d2">
+          <div class="fi"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 20c.5-3.5 2.8-5.5 5.5-5.5S14 16.5 14.5 20"/><path d="M17 8l2 2 3.5-3.5"/></svg></div>
+          <h3>Absagen-Management mit Ersatz</h3>
+          <p>Absagen von Klient oder Mitarbeiterin werden mit Grund erfasst. Offene Absagen ohne Ersatz sind sofort sichtbar, Ersatzkräfte werden direkt aus dem Team zugewiesen.</p>
+        </div>
+        <div class="feat rv d3">
+          <div class="fi"><svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg></div>
+          <h3>Genehmigungs-Abgleich</h3>
+          <p>Beantragte und genehmigte Leistungsart werden automatisch abgeglichen. Weicht der Bescheid der Kasse vom Antrag ab, warnt das System — bevor falsch geleistet oder abgerechnet wird.</p>
+        </div>
+      </div>
+    </div>
+    <span class="page-tag">04 · Features</span>
+  </section>
+
+  <!-- ── 5 · Produkt-Einblick ──────────────────────────────── -->
+  <section class="slide" id="s5">
+    <div class="slide-inner">
+      <p class="kicker rv">Produkt-Einblick</p>
+      <h2 class="rv">Der Workflow im Admin-Portal.</h2>
+      <div class="goldline rv d1"></div>
+      <div class="mock rv d1">
+        <div class="mock-bar"><i></i><i></i><i></i><span class="url">alltagsengel.care/admin/verordnungen</span></div>
+        <div class="mock-body">
+          <div class="mock-h">
+            <div>
+              <div class="t">Verordnungen</div>
+              <div class="sub">24 Verordnungen · 2 laufen bald ab · 1 Neuantrag offen</div>
+            </div>
+            <span class="mock-btn">+ Neue Verordnung</span>
+          </div>
+          <div class="mock-warn">⏳ 2 Genehmigungen laufen innerhalb der nächsten 30 Tage ab — Neuantrag rechtzeitig stellen!</div>
+          <div class="mock-tabs">
+            <span class="mtab on">1 · Erfassen <span>24</span></span>
+            <span class="mtab">2 · Kassengenehmigung <span>3</span></span>
+            <span class="mtab">3 · Verplanung <span>1</span></span>
+            <span class="mtab">4 · Abrechnung <span>5</span></span>
+            <span class="mtab">5 · Absagen <span>0</span></span>
+          </div>
+          <table>
+            <thead><tr><th>Typ</th><th>Leistungsart</th><th>Kostenträger</th><th>Gültigkeit</th><th>Status</th><th>Genehmigt bis</th><th>Aktenzeichen</th></tr></thead>
+            <tbody>
+              <tr>
+                <td><span class="badge b-gold">Betreuung §45a</span></td>
+                <td>Alltagsbegleitung</td>
+                <td>Pflegekasse · AOK Hessen</td>
+                <td>01.07.2026 – 30.06.2027</td>
+                <td><span class="badge b-green">Genehmigt</span></td>
+                <td>30.06.2027</td>
+                <td>PK-2026-04711</td>
+              </tr>
+              <tr class="row-warn">
+                <td><span class="badge b-gold">Behandlungspflege §37</span></td>
+                <td>Grundpflege</td>
+                <td>Krankenkasse · TK</td>
+                <td>01.03.2026 – 31.08.2026</td>
+                <td><span class="badge b-green">Genehmigt</span></td>
+                <td>31.08.2026 <span style="color:#f0c667;font-weight:600">noch 31 Tg</span></td>
+                <td>KK-2026-11832</td>
+              </tr>
+              <tr>
+                <td><span class="badge b-gold">Betreuung §45a</span></td>
+                <td>Entlastungsleistung</td>
+                <td>Pflegekasse · Barmer</td>
+                <td>15.07.2026 – 14.01.2027</td>
+                <td><span class="badge b-yellow">Beantragt</span></td>
+                <td>—</td>
+                <td>—</td>
+              </tr>
+              <tr>
+                <td><span class="badge b-gold">Behandlungspflege §37</span></td>
+                <td>Häusliche Krankenpflege</td>
+                <td>Krankenkasse · DAK</td>
+                <td>01.02.2026 – 31.07.2026</td>
+                <td><span class="badge b-red">Neuantrag nötig</span></td>
+                <td>31.07.2026 <span style="color:#e0766a;font-weight:600">läuft heute ab!</span></td>
+                <td>KK-2026-09277</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <p class="mock-caption rv d2">Darstellung mit Beispieldaten — echte Klientendaten bleiben geschützt (DSGVO, Row-Level-Security).</p>
+    </div>
+    <span class="page-tag">05 · Produkt</span>
+  </section>
+
+  <!-- ── 6 · Für die Kassen ────────────────────────────────── -->
+  <section class="slide" id="s6">
+    <div class="slide-inner">
+      <p class="kicker rv">Für die Kassen</p>
+      <h2 class="rv">Weniger Aufwand auf beiden Seiten.</h2>
+      <div class="goldline rv d1"></div>
+      <div class="kassen-grid">
+        <div class="kassen-card rv d1">
+          <div class="big">Weniger Fehler</div>
+          <p>Abrechnungen entstehen direkt aus genehmigten Verordnungen und dokumentierten Einsätzen — keine manuelle Übertragung, keine Abrechnung ohne gültige Genehmigungsnummer.</p>
+        </div>
+        <div class="kassen-card rv d2">
+          <div class="big">Schnellere Prozesse</div>
+          <p>Anträge sind vollständig, mit Scan und allen Pflichtangaben. Wartezeiten werden systemseitig verfolgt — Rückfragen und Nachreichungen entfallen weitgehend.</p>
+        </div>
+        <div class="kassen-card rv d3">
+          <div class="big">Transparente Nachweise</div>
+          <p>Jeder Leistungsnachweis ist einer Genehmigungsnummer zugeordnet und einzeln prüffähig — inklusive Datum, Dauer und eingesetzter Mitarbeiterin.</p>
+        </div>
+        <div class="kassen-card rv d4">
+          <div class="big">Digital-first</div>
+          <p>Papierlos vom Antrag bis zur Rechnung. Elektronische Übermittlung wird je Kostenträger hinterlegt — bereit für die digitale Zukunft der Abrechnung.</p>
+        </div>
+      </div>
+      <div class="kassen-quote rv d4">
+        <p>Software, die den kompletten Weg einer Verordnung kennt — vom Rezeptblock des Arztes bis zur bezahlten Rechnung.</p>
+      </div>
+    </div>
+    <span class="page-tag">06 · Kassen</span>
+  </section>
+
+  <!-- ── 7 · Zwei Apps ─────────────────────────────────────── -->
+  <section class="slide" id="s7">
+    <div class="slide-inner">
+      <p class="kicker rv">Zwei Apps, ein System</p>
+      <h2 class="rv">Eine Plattform für zwei Leistungswelten.</h2>
+      <div class="goldline rv d1"></div>
+      <div class="apps">
+        <div class="app-card rv d1">
+          <div class="app-name">Alltagsengel</div>
+          <div class="app-tag">Alltagsbegleitung · §45a SGB XI</div>
+          <p>Anerkanntes Angebot zur Unterstützung im Alltag: Begleitung, Entlastung pflegender Angehöriger, Haushaltshilfe — abgerechnet über den Entlastungsbetrag und die Pflegekasse.</p>
+          <ul>
+            <li>Entlastungsbetrag-Abrechnung (131&nbsp;€/Monat)</li>
+            <li>Wiederkehrende Einsatzplanung mit festen Bezugspersonen</li>
+            <li>Klienten-Portal &amp; Admin-Dashboard</li>
+          </ul>
+        </div>
+        <div class="app-card rv d2">
+          <div class="app-name">efy care</div>
+          <div class="app-tag">Ambulante Pflege · §37 SGB V</div>
+          <p>Häusliche Krankenpflege und Behandlungspflege nach ärztlicher Verordnung — mit Genehmigungsworkflow gegenüber der Krankenkasse und prüffähiger Leistungsdokumentation.</p>
+          <ul>
+            <li>Verordnungs- und Genehmigungsmanagement §37</li>
+            <li>Tourenplanung &amp; mobile Leistungserfassung</li>
+            <li>Kassenabrechnung mit SOLL/IST-Abgleich</li>
+          </ul>
+        </div>
+      </div>
+      <div class="shared rv d3">
+        <h3>Gemeinsame Backend-Infrastruktur</h3>
+        <p>Beide Apps laufen auf derselben Plattform: eine Kostenträger-Datenbank, ein Preismodell je Bundesland, ein Abrechnungskern, eine Sicherheitsarchitektur. Neue Features erreichen beide Produkte gleichzeitig — bei einem Bruchteil der Entwicklungskosten.</p>
+      </div>
+    </div>
+    <span class="page-tag">07 · Plattform</span>
+  </section>
+
+  <!-- ── 8 · Kontakt ───────────────────────────────────────── -->
+  <section class="slide contact-slide" id="s8">
+    <div class="slide-inner">
+      <img class="logo rv" src="logo.png" alt="Alltagsengel Logo">
+      <h2 class="rv">Sprechen wir darüber.</h2>
+      <div class="goldline rv d1" style="margin-left:auto; margin-right:auto; background: linear-gradient(90deg, transparent, var(--gold), transparent);"></div>
+      <div class="contact-lines rv d2">
+        <div class="co">Alltagsengel UG</div>
+        <div>Neue Mainzer Straße 66–68 · 60311 Frankfurt am Main</div>
+        <div><a href="mailto:info@alltagsengel.care">info@alltagsengel.care</a> · <a href="https://alltagsengel.care">alltagsengel.care</a></div>
+      </div>
+    </div>
+    <span class="page-tag">08 · Kontakt</span>
+  </section>
+
+</main>
+
+<script>
+  // Nav dots
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  const dotsNav = document.getElementById('dots');
+  slides.forEach((s) => {
+    const a = document.createElement('a');
+    a.href = '#' + s.id;
+    dotsNav.appendChild(a);
+  });
+  const dots = Array.from(dotsNav.children);
+
+  // Reveal + active dot
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.querySelectorAll('.rv').forEach(el => el.classList.add('on'));
+        const i = slides.indexOf(e.target);
+        dots.forEach((d, j) => d.classList.toggle('on', i === j));
+      }
+    });
+  }, { threshold: 0.35 });
+  slides.forEach(s => io.observe(s));
+
+  // Keyboard navigation
+  let current = 0;
+  const io2 = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) current = slides.indexOf(e.target); });
+  }, { threshold: 0.55 });
+  slides.forEach(s => io2.observe(s));
+  document.addEventListener('keydown', (ev) => {
+    if (['ArrowDown', 'PageDown', ' '].includes(ev.key)) {
+      ev.preventDefault();
+      slides[Math.min(current + 1, slides.length - 1)].scrollIntoView({ behavior: 'smooth' });
+    } else if (['ArrowUp', 'PageUp'].includes(ev.key)) {
+      ev.preventDefault();
+      slides[Math.max(current - 1, 0)].scrollIntoView({ behavior: 'smooth' });
+    }
+  });
+</script>
+</body>
+</html>
