@@ -231,7 +231,36 @@ export const VERORDNUNG_TYPE: Record<string, { label: string; color: string }> =
   verhinderung_39: { label: 'Verhinderungspflege §39', color: '#2196F3' },
   behandlungspflege_37: { label: 'Behandlungspflege §37', color: '#9C27B0' },
   haeusliche_pflege_36: { label: 'Häusliche Pflege §36', color: '#FF7043' },
+  alltagsbegleitung_45a: { label: 'Alltagsbegleitung §45a', color: '#C9963C' },
+  pflegebox_40: { label: 'Pflegebox §40', color: '#26A69A' },
+  fahrdienst: { label: 'Fahrdienst', color: '#5C6BC0' },
+  kombinationsleistung_38: { label: 'Kombinationsleistung §38', color: '#E8A000' },
   sonstige: { label: 'Sonstige', color: '#999' },
+}
+
+// ── Verordnung vs. Bewilligung (Eylems Korrektur) ────────────────
+// Nur §37 SGB V (Behandlungspflege) braucht eine echte ärztliche Verordnung
+// (Muster 12). Alle anderen Typen sind Bewilligungen/Zusagen/Ansprüche —
+// dort gibt es keinen Arzt und keine Verordnungsnummer.
+export function istVerordnungPflicht(type: string): boolean {
+  return type === 'behandlungspflege_37' || type === 'sonstige'
+}
+
+// Hinweistext „Keine ärztliche Verordnung nötig" je Bewilligungs-Typ
+export const KEINE_VERORDNUNG_HINWEIS: Record<string, string> = {
+  haeusliche_pflege_36: 'Keine ärztliche Verordnung nötig — Pflegesachleistung §36 SGB XI. Kommt aus der Kombinationsleistung und braucht die Zusage der Pflegekasse.',
+  entlastung_45b: 'Keine ärztliche Verordnung nötig — Entlastungsbetrag §45b SGB XI: 131 €/Monat automatischer Anspruch ab Pflegegrad 1.',
+  verhinderung_39: 'Keine ärztliche Verordnung nötig — Verhinderungspflege §39 SGB XI: Antrag bei der Pflegekasse.',
+  alltagsbegleitung_45a: 'Keine ärztliche Verordnung nötig — Alltagsbegleitung §45a SGB XI: Anerkennung nach Landesrecht.',
+  pflegebox_40: 'Keine ärztliche Verordnung nötig — Pflegehilfsmittel §40 SGB XI: bis 40 €/Monat, Antrag bei der Pflegekasse.',
+  fahrdienst: 'Keine ärztliche Verordnung nötig — Fahrdienst wird je nach Kostenträger bewilligt oder privat abgerechnet.',
+  kombinationsleistung_38: 'Kombinationsleistung §38 SGB XI (Sachleistung + Pflegegeld) — Kombi-Zusage der Pflegekasse erforderlich.',
+}
+
+// Automatisches Monatsbudget je Typ (Cent): §45b = 131 €, §40 = 40 €
+export const BUDGET_DEFAULT_CENT: Record<string, number> = {
+  entlastung_45b: 13100,
+  pflegebox_40: 4000,
 }
 
 // ── Genehmigungen der Pflegekasse (verordnungen.genehmigung_status) ─
@@ -264,6 +293,10 @@ export const LEISTUNGSART_LABELS: Record<string, { label: string; color: string 
   alltagsbegleitung_45a: { label: 'Alltagsbegleitung §45a', color: '#C9963C' },
   verhinderungspflege_39: { label: 'Verhinderungspflege §39', color: '#42A5F5' },
   entlastung_45b: { label: 'Entlastungsleistung §45b', color: '#66BB6A' },
+  pflegebox: { label: 'Pflegebox §40', color: '#26A69A' },
+  fahrdienst_begleitung: { label: 'Fahrdienst mit Begleitung', color: '#5C6BC0' },
+  fahrdienst_transport: { label: 'Fahrdienst Transport', color: '#7986CB' },
+  kombinationsleistung: { label: 'Kombinationsleistung §38', color: '#E8A000' },
   sonstige: { label: 'Sonstige', color: '#999' },
 }
 
