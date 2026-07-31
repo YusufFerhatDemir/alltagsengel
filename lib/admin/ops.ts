@@ -272,6 +272,81 @@ export function gueltigkeitsAmpel(bis: string | null | undefined): Ampel | null 
   return 'gruen'
 }
 
+// ── Kostenträger (verordnungen.kostentraeger_typ, kostentraeger_kontakte.typ) ─
+// Gilt für Pflegedienst + Betreuung, NICHT Intensivpflege.
+export const KOSTENTRAEGER_TYP: Record<string, { label: string; color: string }> = {
+  krankenkasse: { label: 'Krankenkasse', color: '#2196F3' },
+  sozialamt: { label: 'Sozialamt', color: '#9C27B0' },
+  privat: { label: 'Privat', color: '#5CB882' },
+  berufsgenossenschaft: { label: 'Berufsgenossenschaft', color: '#E8A000' },
+}
+
+// ── Bundesländer (leistungspreise.bundesland, kostentraeger_kontakte.bundesland) ─
+export const BUNDESLAND_LABELS: Record<string, string> = {
+  baden_wuerttemberg: 'Baden-Württemberg',
+  bayern: 'Bayern',
+  berlin: 'Berlin',
+  brandenburg: 'Brandenburg',
+  bremen: 'Bremen',
+  hamburg: 'Hamburg',
+  hessen: 'Hessen',
+  mecklenburg_vorpommern: 'Mecklenburg-Vorpommern',
+  niedersachsen: 'Niedersachsen',
+  nordrhein_westfalen: 'Nordrhein-Westfalen',
+  rheinland_pfalz: 'Rheinland-Pfalz',
+  saarland: 'Saarland',
+  sachsen: 'Sachsen',
+  sachsen_anhalt: 'Sachsen-Anhalt',
+  schleswig_holstein: 'Schleswig-Holstein',
+  thueringen: 'Thüringen',
+}
+
+// ── Absagen (einsatz_absagen.abgesagt_von) ──────────────────────
+export const ABSAGE_VON: Record<string, { label: string; color: string }> = {
+  klient: { label: 'Klient', color: '#2196F3' },
+  mitarbeiterin: { label: 'Mitarbeiterin', color: '#E8A000' },
+}
+
+// Cent-Beträge <-> Euro-Anzeige (für preis_cent, soll/ist/kuerzung_cent)
+export function centToEuro(cent: number | null | undefined): string {
+  if (cent == null) return '—'
+  return euro(cent / 100)
+}
+
+export function euroToCent(value: string | number | null | undefined): number | null {
+  if (value === '' || value === null || value === undefined) return null
+  const n = typeof value === 'number' ? value : Number(String(value).replace(',', '.'))
+  if (isNaN(n)) return null
+  return Math.round(n * 100)
+}
+
+export interface LeistungspreisRow {
+  bundesland: string
+  leistungsart: string
+  preis_cent: number
+  gueltig_ab: string
+  gueltig_bis: string | null
+}
+
+// Findet den aktuell gültigen Preis für Bundesland + Leistungsart (Stichtag optional, sonst heute)
+export function findLeistungspreis(
+  preise: LeistungspreisRow[],
+  bundesland: string | null | undefined,
+  leistungsart: string | null | undefined,
+  stichtag?: string
+): LeistungspreisRow | null {
+  if (!bundesland || !leistungsart) return null
+  const ref = stichtag ? new Date(stichtag) : new Date()
+  const matches = preise.filter(p =>
+    p.bundesland === bundesland
+    && p.leistungsart === leistungsart
+    && new Date(p.gueltig_ab) <= ref
+    && (!p.gueltig_bis || new Date(p.gueltig_bis) >= ref)
+  )
+  if (matches.length === 0) return null
+  return matches.sort((a, b) => b.gueltig_ab.localeCompare(a.gueltig_ab))[0]
+}
+
 // NOTE_CATEGORY und QUALIFICATION_LEVEL: siehe weiter unten
 // (Care Notes / Qualifikationsstufe — dort mit NOTE_AUTHOR_ROLE gebündelt)
 
