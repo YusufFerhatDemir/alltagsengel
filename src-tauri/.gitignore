@@ -1,0 +1,4 @@
+# Rust-Build-Artefakte (mehrere GB) — nie committen.
+/target/
+/gen/schemas/
+Cargo.lock.orig

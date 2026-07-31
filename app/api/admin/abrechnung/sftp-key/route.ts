@@ -1,0 +1,58 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { requireAdmin } from '@/lib/abrechnung/require-admin'
+import { createAdminClient } from '@/lib/supabase/admin'
+import { ZERTIFIKAT_BUCKET } from '@/lib/abrechnung/zertifikate'
+
+export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
+
+/**
+ * POST /api/admin/abrechnung/sftp-key
+ * multipart/form-data: das_id, datei (SSH Private Key, PEM/OpenSSH)
+ * Speichert den Key im privaten Bucket und verknüpft ihn mit der
+ * Datenannahmestelle. Keys landen NIE in der Datenbank.
+ */
+export async function POST(req: NextRequest) {
+  const auth = await requireAdmin()
+  if (!auth.ok) return auth.response
+  try {
+    const form = await req.formData()
+    const dasId = String(form.get('das_id') || '')
+    const datei = form.get('datei') as File | null
+    if (!dasId || !datei) return NextResponse.json({ error: 'das_id oder Datei fehlt' }, { status: 400 })
+    if (datei.size > 100_000) return NextResponse.json({ error: 'Key-Datei zu groß' }, { status: 400 })
+
+    const buf = Buffer.from(await datei.arrayBuffer())
+    const text = buf.toString('utf8')
+    if (!text.includes('PRIVATE KEY')) {
+      return NextResponse.json(
+        { error: 'Datei sieht nicht wie ein SSH Private Key aus (PEM/OpenSSH erwartet)' },
+        { status: 400 }
+      )
+    }
+
+    const supabase = createAdminClient()
+    const { data: das, error: dasErr } = await supabase
+      .from('datenannahmestellen')
+      .select('id, name')
+      .eq('id', dasId)
+      .single()
+    if (dasErr || !das) return NextResponse.json({ error: 'Datenannahmestelle nicht gefunden' }, { status: 404 })
+
+    const pfad = `sftp-keys/${das.id}.key`
+    const { error: upErr } = await supabase.storage
+      .from(ZERTIFIKAT_BUCKET)
+      .upload(pfad, buf, { contentType: 'application/x-pem-file', upsert: true })
+    if (upErr) return NextResponse.json({ error: `Upload fehlgeschlagen: ${upErr.message}` }, { status: 500 })
+
+    const { error: updErr } = await supabase
+      .from('datenannahmestellen')
+      .update({ sftp_key_url: pfad })
+      .eq('id', das.id)
+    if (updErr) return NextResponse.json({ error: updErr.message }, { status: 500 })
+
+    return NextResponse.json({ erfolg: true, pfad })
+  } catch (e: any) {
+    return NextResponse.json({ error: e?.message || String(e) }, { status: 500 })
+  }
+}

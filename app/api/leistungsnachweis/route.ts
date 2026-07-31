@@ -39,7 +39,7 @@ const COMPANY = {
   address: 'Neue Mainzer Str. 66-68',
   city: '60311 Frankfurt am Main',
   email: 'info@alltagsengel.care',
-  ik: process.env.ALLTAGSENGEL_IK_NUMMER || 'IK folgt (beantragt)',
+  ik: process.env.ALLTAGSENGEL_IK_NUMMER || '460629986',
 }
 
 const GOLD = rgb(0.79, 0.59, 0.24)
@@ -73,12 +73,13 @@ function timeFmt(t: string | null | undefined): string {
 export async function GET(request: Request) {
   try {
     const url = new URL(request.url)
-    const clientId = url.searchParams.get('client_id')
-    const month = url.searchParams.get('month') // YYYY-MM
+    let clientId = url.searchParams.get('client_id')
+    const verordnungId = url.searchParams.get('verordnung_id')
+    const month = url.searchParams.get('month') || url.searchParams.get('monat') // YYYY-MM
 
-    if (!clientId || !month || !/^\d{4}-\d{2}$/.test(month)) {
+    if ((!clientId && !verordnungId) || !month || !/^\d{4}-\d{2}$/.test(month)) {
       return NextResponse.json(
-        { error: 'client_id und month (Format YYYY-MM) erforderlich' },
+        { error: 'client_id ODER verordnung_id sowie month (Format YYYY-MM) erforderlich' },
         { status: 400 }
       )
     }
@@ -97,6 +98,31 @@ export async function GET(request: Request) {
     const isAdmin = !!profile && ['admin', 'superadmin'].includes(profile.role)
 
     const admin = createAdminClient()
+
+    // ── Optional: Verordnung laden (liefert Genehmigungsnummer + Klient) ──
+    let verordnung: {
+      id: string
+      client_id: string
+      genehmigung_aktenzeichen: string | null
+      genehmigung_bis: string | null
+      kostentraeger_name: string | null
+      kostentraeger_ik_nummer: string | null
+    } | null = null
+    if (verordnungId) {
+      const { data: vo, error: voErr } = await admin
+        .from('verordnungen')
+        .select('id, client_id, genehmigung_aktenzeichen, genehmigung_bis, kostentraeger_name, kostentraeger_ik_nummer')
+        .eq('id', verordnungId)
+        .single()
+      if (voErr || !vo) {
+        return NextResponse.json({ error: 'Verordnung nicht gefunden' }, { status: 404 })
+      }
+      verordnung = vo
+      if (!clientId) clientId = vo.client_id
+      if (clientId !== vo.client_id) {
+        return NextResponse.json({ error: 'Verordnung gehört zu einem anderen Klienten' }, { status: 400 })
+      }
+    }
 
     // ── Klient laden (alle Pflegekassen-relevanten Felder) ──
     const { data: client, error: clientErr } = await admin
@@ -123,10 +149,11 @@ export async function GET(request: Request) {
       .toLocaleDateString('de-DE', { month: 'long', year: 'numeric' }))
 
     // ── Einsätze des Monats (erfasst/unterschrieben/abgerechnet) ──
-    const { data: records, error: recErr } = await admin
+    const baseQuery = admin
       .from('service_records')
       .select('id, date, start_time, end_time, duration_minutes, service_type, budget_type, amount, status, client_signature, caregiver_initials, caregiver_id, caregiver:caregivers(id, first_name, last_name, lifetime_registration_number, ik_nummer, qualification_level)')
       .eq('client_id', clientId)
+    const { data: records, error: recErr } = await (verordnung ? baseQuery.eq('verordnung_id', verordnung.id) : baseQuery)
       .gte('date', periodStart)
       .lte('date', periodEnd)
       .in('status', ['complete', 'signed', 'invoiced'])
@@ -231,6 +258,18 @@ export async function GET(request: Request) {
       ['Pflegekasse:', txt(`${kasse}${client.pflegekasse_ik ? ` (IK ${client.pflegekasse_ik})` : ''}`)],
       ['Pflegegrad:', client.care_level ? `Pflegegrad ${client.care_level}` : '—'],
     ]
+    if (verordnung) {
+      clientLines.push(['Genehmigungsnummer:', verordnung.genehmigung_aktenzeichen || '—'])
+      if (verordnung.kostentraeger_name) {
+        clientLines.push([
+          'Kostenträger:',
+          txt(`${verordnung.kostentraeger_name}${verordnung.kostentraeger_ik_nummer ? ` (IK ${verordnung.kostentraeger_ik_nummer})` : ''}`),
+        ])
+      }
+      if (verordnung.genehmigung_bis) {
+        clientLines.push(['Genehmigt bis:', dateFmt(verordnung.genehmigung_bis)])
+      }
+    }
     for (const [k, v] of clientLines) {
       page.drawText(txt(k), { x: MARGIN, y, size: 10, font: fontBold, color: GREY })
       page.drawText(txt(String(v)), { x: MARGIN + 130, y, size: 10, font: fontRegular, color: COAL })
