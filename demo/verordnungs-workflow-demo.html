@@ -532,6 +532,17 @@
   }, { threshold: 0.35 });
   slides.forEach(s => io.observe(s));
 
+  // Direktlink/Export: ?slide=N zeigt nur diese Folie (ohne Animationen)
+  const slideParam = new URLSearchParams(location.search).get('slide');
+  if (slideParam) {
+    const n = Math.min(Math.max(1, +slideParam), slides.length) - 1;
+    document.querySelectorAll('.rv').forEach(el => { el.style.transition = 'none'; el.classList.add('on'); });
+    slides.forEach((s, i) => { if (i !== n) s.style.display = 'none'; });
+    dotsNav.style.display = 'none';
+    const hint = document.querySelector('.scroll-hint');
+    if (hint) hint.style.display = 'none';
+  }
+
   // Keyboard navigation
   let current = 0;
   const io2 = new IntersectionObserver((entries) => {
