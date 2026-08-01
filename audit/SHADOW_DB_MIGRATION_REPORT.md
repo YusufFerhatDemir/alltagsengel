@@ -219,3 +219,15 @@ COMMIT;
 - ✅ `audit/SHADOW_DB_MIGRATION_REPORT.md` (dieser Report)
 - ❌ Keine Änderungen an bestehenden Migrationen oder an Produktions-/Live-Daten.
 - ❌ Kein Docker-/Supabase-CLI-Setup wurde installiert (außerhalb des Auftragsumfangs, würde System-Software-Installation erfordern).
+
+**Commit:** `a1a18cd` „phase3: Shadow-DB Migrationstest + Tenant-Isolation-Tests" (lokal, 3 Dateien, 794 Zeilen).
+
+**Push steht aus** — schlägt wie im Auftrag erwartet fehl:
+```
+! [remote rejected] audit/phase3-production-readiness -> audit/phase3-production-readiness
+  (refusing to allow an OAuth App to create or update workflow `.github/workflows/ci.yml`
+   without `workflow` scope)
+```
+Ursache: Ein früherer Commit auf diesem Branch (`47dd8f1`, „Hessen-PLZ-Tests + CI/CD-Pipeline") hat `.github/workflows/ci.yml` verändert; das aktuelle GitHub-Token/OAuth-App hat keinen `workflow`-Scope. Betrifft den gesamten Branch, nicht nur diesen Commit — ein manueller Push mit einem Token mit `workflow`-Scope (oder ein PAT mit diesem Scope hinterlegt) ist nötig.
+
+**Nebenfund (nicht committet):** Während der Session waren `package.json`/`package-lock.json` mit einer Next.js-/sharp-Versionsänderung modifiziert (`next` → `^16.2.12` in `package.json`, aber inkonsistent `^14.2.35` im Lockfile — sieht nach einem unterbrochenen `npm install` aus einer parallelen Session aus). Diese Änderung wurde bewusst **nicht** in den Shadow-DB-Commit übernommen (out of scope), per `git stash` beiseitegelegt und danach unverändert in den Arbeitsbaum zurückgegeben — sie steht weiterhin als unstaged Änderung aus und sollte von der Session/Person geprüft werden, die sie verursacht hat, bevor sie committet wird.
