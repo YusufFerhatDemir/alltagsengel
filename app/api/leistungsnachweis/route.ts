@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { PDFDocument, StandardFonts, rgb, type PDFPage, type PDFFont } from 'pdf-lib'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { getOrgIK } from '@/lib/config/org-config'
 import { BUDGET_TYPE_PDF, QUALIFICATION_LEVEL } from '@/lib/admin/ops'
 
 // ═══════════════════════════════════════════════════════════════
@@ -31,15 +32,14 @@ const PAGE_WIDTH = 595.28 // A4 @ 72dpi
 const PAGE_HEIGHT = 841.89
 const MARGIN = 50
 
-// Leistungserbringer-Stammdaten. IK-Nummer über ENV konfigurierbar,
-// bis eine company_settings-Tabelle existiert.
+// Leistungserbringer-Stammdaten. IK-Nummer kommt über getOrgIK() (P0-5) —
+// organizations-Tabelle bzw. ALLTAGSENGEL_IK, kein hartcodierter Default mehr.
 const COMPANY = {
   name: 'Alltagsengel UG (haftungsbeschränkt)',
   short: 'Alltagsengel',
   address: 'Neue Mainzer Str. 66-68',
   city: '60311 Frankfurt am Main',
   email: 'info@alltagsengel.care',
-  ik: process.env.ALLTAGSENGEL_IK_NUMMER || '460629986',
 }
 
 const GOLD = rgb(0.79, 0.59, 0.24)
@@ -98,6 +98,7 @@ export async function GET(request: Request) {
     const isAdmin = !!profile && ['admin', 'superadmin'].includes(profile.role)
 
     const admin = createAdminClient()
+    const companyIk = await getOrgIK(admin)
 
     // ── Optional: Verordnung laden (liefert Genehmigungsnummer + Klient) ──
     let verordnung: {
@@ -232,7 +233,7 @@ export async function GET(request: Request) {
     page.drawText(COMPANY.address, { x: rightX, y, size: 9, font: fontRegular, color: GREY })
     page.drawText(COMPANY.city, { x: rightX, y: y - 12, size: 9, font: fontRegular, color: GREY })
     page.drawText(COMPANY.email, { x: rightX, y: y - 24, size: 9, font: fontRegular, color: GREY })
-    page.drawText(txt(`IK-Nummer: ${COMPANY.ik}`), { x: rightX, y: y - 36, size: 9, font: fontBold, color: COAL })
+    page.drawText(txt(`IK-Nummer: ${companyIk}`), { x: rightX, y: y - 36, size: 9, font: fontBold, color: COAL })
     y -= 52
     // Goldene Linie (Standard-Briefkopf)
     page.drawLine({ start: { x: MARGIN, y }, end: { x: PAGE_WIDTH - MARGIN, y }, thickness: 1.5, color: GOLD })

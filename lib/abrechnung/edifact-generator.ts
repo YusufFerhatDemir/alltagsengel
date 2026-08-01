@@ -38,8 +38,11 @@ import {
   type Kassenart,
 } from './schluesselverzeichnis'
 
-/** IK der Alltagsengel UG (gültig ab 16.07.2026). */
-export const ALLTAGSENGEL_IK = '460629986'
+// IK-Nummer ist NICHT mehr hier hartcodiert (P0-5) — Aufrufer holen sie via
+// getOrgIK() aus lib/config/org-config.ts und übergeben sie explizit an
+// generateEDIFACT()/generateAlleDateien() (kein Default-Parameter mehr,
+// damit ein Vergessen des Werts sofort zu einem Typfehler statt zu einer
+// falschen Absender-IK führt).
 export const ALLTAGSENGEL_NAME = 'Alltagsengel UG'
 
 // ── Eingabedaten ────────────────────────────────────────────────
@@ -93,7 +96,8 @@ export interface AbrechnungsFall {
 }
 
 export interface GeneratorOptionen {
-  /** IK des Absenders/Rechnungsstellers (Default: Alltagsengel) */
+  /** ungenutzt — die IK wird als Pflichtparameter an generateEDIFACT()/
+   *  generateAlleDateien() übergeben, nicht über die Optionen. */
   absender_ik?: string
   /** Firmenname für das NAM-Segment */
   absender_name?: string
@@ -208,7 +212,7 @@ export function gruppiereNachKostentraeger(faelle: AbrechnungsFall[]): Map<strin
  */
 export function generateEDIFACT(
   faelle: AbrechnungsFall[],
-  absender_ik: string = ALLTAGSENGEL_IK,
+  absender_ik: string,
   optionen: GeneratorOptionen = {},
 ): EdifactDatei {
   if (faelle.length === 0) throw new Error('Keine Abrechnungsfälle übergeben')
@@ -389,7 +393,7 @@ export function generateEDIFACT(
  */
 export function generateAlleDateien(
   faelle: AbrechnungsFall[],
-  absender_ik: string = ALLTAGSENGEL_IK,
+  absender_ik: string,
   optionen: GeneratorOptionen = {},
 ): EdifactDatei[] {
   const nachAnnahmestelle = new Map<string, AbrechnungsFall[]>()

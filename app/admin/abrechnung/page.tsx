@@ -14,10 +14,11 @@
 // ═══════════════════════════════════════════════════════════════
 import { useCallback, useEffect, useMemo, useState, type CSSProperties } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { getOrgIK } from '@/lib/config/org-config'
 import { euro } from '@/lib/admin/ops'
 import { StatusBadge, EmptyRow, Banner } from '@/components/admin/OpsUI'
 import {
-  generateEDIFACT, ALLTAGSENGEL_IK, ALLTAGSENGEL_NAME,
+  generateEDIFACT, ALLTAGSENGEL_NAME,
   type AbrechnungsFall, type AbrechnungsLeistung, type EdifactDatei,
 } from '@/lib/abrechnung/edifact-generator'
 import { validateEDIFACT, validateIK, type ValidationIssue } from '@/lib/abrechnung/edifact-validator'
@@ -163,6 +164,14 @@ export default function AbrechnungPage() {
   const [pruefung, setPruefung] = useState<Record<string, PruefErgebnis>>({})
   const [vorschauIK, setVorschauIK] = useState<string | null>(null)
   const [meldung, setMeldung] = useState<string | null>(null)
+  const [orgIk, setOrgIk] = useState('')
+
+  // ── Absender-IK laden (organizations-Tabelle bzw. ALLTAGSENGEL_IK-Env) ──
+  useEffect(() => {
+    getOrgIK(createClient())
+      .then(setOrgIk)
+      .catch(e => setMeldung(`Absender-IK konnte nicht geladen werden: ${e instanceof Error ? e.message : String(e)}`))
+  }, [])
 
   // ── Daten laden und zu Abrechnungsfällen aufbereiten ──────────
   const ladeDaten = useCallback(async () => {
@@ -308,6 +317,7 @@ export default function AbrechnungPage() {
 
   // ── Prüflauf: EDIFACT generieren + validieren (ohne Speichern) ─
   function pruefeAlle() {
+    if (!orgIk) { setMeldung('Absender-IK wird noch geladen — bitte kurz warten und erneut versuchen.'); return }
     const ergebnisse: Record<string, PruefErgebnis> = {}
     let lfd = 1
     for (const gruppe of gruppen) {
@@ -316,7 +326,7 @@ export default function AbrechnungPage() {
         continue
       }
       try {
-        const datei = generateEDIFACT(gruppe.faelle, ALLTAGSENGEL_IK, {
+        const datei = generateEDIFACT(gruppe.faelle, orgIk, {
           absender_name: ALLTAGSENGEL_NAME,
           laufende_nummer: lfd,
           rechnungsnummer_praefix: `AE-${monat}`,
@@ -356,7 +366,7 @@ export default function AbrechnungPage() {
     download(datei.physikalischer_dateiname, datei.inhalt)
     // 2) Auftragsdatei (Begleitzettel, 348 Byte fix)
     const auf = generateAuftragsdatei({
-      absender_ik: ALLTAGSENGEL_IK,
+      absender_ik: orgIk,
       datenannahmestelle_ik: datei.datenannahmestelle.ik,
       dateiname: datei.logischer_dateiname,
       dateigroesse_nutzdaten: new Blob([datei.inhalt]).size,
@@ -427,7 +437,7 @@ export default function AbrechnungPage() {
       </div>
 
       <Banner tone="info">
-        Absender-IK Alltagsengel: <strong>{ALLTAGSENGEL_IK}</strong> — je Kostenträger wird eine eigene
+        Absender-IK Alltagsengel: <strong>{orgIk || '…'}</strong> — je Kostenträger wird eine eigene
         Nutzdatendatei (PLGA + PLAA) plus Auftragsdatei (.AUF) erzeugt. Vor dem Versand ist die
         SECON-Verschlüsselung (ITSG-Zertifikat) erforderlich.
       </Banner>
