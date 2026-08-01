@@ -1,0 +1,84 @@
+# CI — Pflichtprüfungen vor jedem Merge.
+#
+# Deployment läuft weiterhin über Vercel (nicht Teil dieser Pipeline).
+# Diese Pipeline ist ein reines Qualitäts-Gate: sie deployt nichts,
+# sie verifiziert nur, dass main/PR-Branches den Mindeststandard halten.
+#
+# Siehe audit/CI_CD_PIPELINE.md für Details zu jedem Schritt.
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Platzhalter-Werte für den Production-Build. Next.js liest diese ENVs
+  # nur lazy zur Laufzeit von Route-Handlern/Server-Components — keine
+  # der statisch generierten Seiten (generateStaticParams) macht zur
+  # Build-Zeit einen echten Supabase-Call. Reale Secrets gehören NICHT
+  # in dieses Workflow-File, sondern (falls für einen späteren
+  # Deploy-Schritt nötig) in Repository/Environment Secrets.
+  NEXT_PUBLIC_SUPABASE_URL: https://ci-placeholder.supabase.co
+  NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-placeholder-anon-key
+  SUPABASE_SERVICE_ROLE_KEY: ci-placeholder-service-role-key
+
+jobs:
+  verify:
+    name: Typecheck, Lint, Tests, Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies (npm ci)
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Lint (informativ — blockiert nicht)
+        # ~1.100 bestehende no-explicit-any-Fehler, v. a. weil es keine
+        # generierten Supabase-DB-Typen gibt (kein `supabase gen types`
+        # im Workflow). Ein Voll-Fix ist riskant für den Vercel-Build
+        # (siehe Projekt-Memory) und nicht Teil dieses Branches — Lint
+        # bleibt sichtbar, blockiert Merges aber bewusst nicht, bis das
+        # geklärt ist. Neue Lint-Fehler in eigenen PRs sollten trotzdem
+        # im Log auffallen und im Review angesprochen werden.
+        run: npm run lint || true
+
+      - name: Unit tests (vitest)
+        run: npx vitest run
+
+      - name: Unit tests (node:test)
+        run: npm run test:unit
+
+      - name: Secret scan
+        run: bash scripts/ci-secret-scan.sh
+
+      - name: IK-Hardcoding-Check
+        run: bash scripts/ci-ik-check.sh
+
+      - name: Forbidden-strings lint
+        run: npm run lint:forbidden
+
+      - name: Production build
+        env:
+          # Next.js Production-Builds dieses Repos sind speicherhungrig
+          # (großer PLZ-Datensatz, viele statische Städte-Seiten). Default-
+          # V8-Heap reicht knapp nicht — mit mehr Headroom auf GH-Runnern.
+          NODE_OPTIONS: '--max-old-space-size=4096'
+        run: npm run build

@@ -103,10 +103,25 @@ test('Frankfurt-Kunde sieht Frankfurter Engel (auch 65er-West!)', () => {
   assert.equal(matchPlzOffline('60385', '60311'), true)
 })
 
-test('Wiesbaden ↔ Frankfurt matcht NICHT — auch nicht 65er↔65er', () => {
+test('Wiesbaden-Zentrum ↔ Frankfurt matcht NICHT — auch nicht 65er↔65er', () => {
+  // Seit c4195df (25-km-Radius + exakte PLZ-Koordinaten statt grober
+  // Zonen-Zentroide): 65183 (Wiesbaden-Zentrum) ↔ 65933 (FFM-Griesheim)
+  // liegt exakt bei 25,16 km — knapp über dem 25-km-Radius, matcht also
+  // weiterhin NICHT (Toleranz-Puffer entfällt, weil beide PLZ exakte
+  // Koordinaten haben).
   assert.equal(matchPlzOffline('65183', '60311'), false) // WI ↔ FFM Mitte
-  assert.equal(matchPlzOffline('65207', '65933'), false) // WI ↔ FFM-Griesheim (beide 65!)
+  assert.equal(matchPlzOffline('65183', '65933'), false) // WI-Zentrum ↔ FFM-Griesheim (beide 65!)
   assert.equal(matchPlzOffline('60311', '65183'), false) // umgekehrt
+})
+
+test('Wiesbaden-Randgebiet ↔ Frankfurt-Griesheim matcht — 21 km Luftlinie', () => {
+  // 65207 liegt im Nordosten Wiesbadens, deutlich näher an FFM-Griesheim
+  // als das Wiesbadener Zentrum (65183). Mit exakten PLZ-Koordinaten
+  // (statt der alten Zonen-Näherung) beträgt die reale Distanz ~21 km —
+  // innerhalb des 25-km-Radius. Das ist kein Bug: der alte Test erwartete
+  // "false", weil die alte Zonen-Zentroid-Logik (15-km-Radius + 5-km-
+  // Unschärfe-Puffer) hier ungenauer war. Siehe c4195df.
+  assert.equal(matchPlzOffline('65207', '65933'), true)
 })
 
 test('Sinnvolle Nachbarschaften matchen', () => {
@@ -140,7 +155,8 @@ test('matchPlz: bekannte Zonen nutzen NICHT die Geocoding-API', async () => {
   let called = 0
   const spy = async () => { called++; return null }
   assert.equal(await matchPlz('60311', '65933', spy), true)   // FFM ↔ Griesheim
-  assert.equal(await matchPlz('65207', '65933', spy), false)  // WI ↔ Griesheim
+  assert.equal(await matchPlz('65183', '65933', spy), false)  // WI-Zentrum ↔ Griesheim (25,16 km, knapp über Radius)
+  assert.equal(await matchPlz('65207', '65933', spy), true)   // WI-Randgebiet ↔ Griesheim (21 km, s. hessen-plz.test.ts oben)
   assert.equal(called, 0)
 })
 
