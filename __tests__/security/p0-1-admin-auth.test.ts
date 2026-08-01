@@ -262,7 +262,7 @@ describe('P0-1: CSRF-Schutz', () => {
 
     expect(res.type).toBe('json')
     expect(res.status).toBe(403)
-    expect(res.body.error).toContain('CSRF')
+    expect((res as any).body.error).toContain('CSRF')
   })
 
   it('Same-Origin POST → erlaubt', async () => {
