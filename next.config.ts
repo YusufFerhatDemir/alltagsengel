@@ -21,6 +21,10 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: __dirname,
   },
+  // ssh2 bringt ein natives Binary (sshcrypto.node) mit, das webpack nicht
+  // bundeln kann → Build-Abbruch. Als extern markiert wird es zur Laufzeit
+  // per require() geladen (Vercel packt es via File-Tracing mit ein).
+  serverExternalPackages: ['ssh2', 'ssh2-sftp-client'],
   // Bild-Pipeline (CWV): AVIF zuerst (30–50 % kleiner als WebP), WebP als
   // Fallback. Betrifft nur das Auslieferungsformat via next/image — die
   // Quelldateien (z. B. die goldenen 3D-Icons) bleiben unverändert.
