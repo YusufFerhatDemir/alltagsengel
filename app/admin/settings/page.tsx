@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import BillingSection from '@/components/admin/BillingSection'
 
 export default function AdminSettings() {
   const [currentUser, setCurrentUser] = useState<any>(null)
@@ -272,7 +273,7 @@ export default function AdminSettings() {
   })
 
   return (
-    <div style={{ maxWidth: 700 }}>
+    <div style={{ maxWidth: 900 }}>
       <h1 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 28, fontWeight: 700, color: 'var(--ink)', marginBottom: 8 }}>
         Einstellungen
       </h1>
@@ -283,6 +284,9 @@ export default function AdminSettings() {
           {currentRole}
         </span>
       </p>
+
+      {/* ═══ Abo & Tarif ═══ */}
+      <BillingSection />
 
       {/* ═══ Demo-Zugang steuern ═══ */}
       {isSuperadmin && (
