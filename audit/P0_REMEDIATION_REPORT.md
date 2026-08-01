@@ -215,3 +215,28 @@ nicht Teil dieser P0-Liste, zur Vollständigkeit):
   (`20260801_phase3_multi_mandant_saas.sql`) ist ebenfalls noch nicht live.
 - SECON-Übermittlungs-Endpunkt für efy care (s. Architekturentscheidung)
   ist noch nicht gebaut — aktuell rein manueller EDIFACT-Export.
+
+---
+
+## Abnahme (2026-08-01)
+
+Unabhängige Abnahme-Session durchgeführt — vollständige Beweisführung in
+**`audit/P0_ABNAHME_ALLTAGSENGEL.md`**. Ergebnis: **GO für Phase 3.**
+
+Kernpunkte der Abnahme:
+
+- Alle P0-Commits (`6f41d87`, `329a806`, `5b1e767`, `51ab34e`) sind auf
+  `origin/audit/production-hardening` gepusht (lokal = remote, verifiziert).
+- Test-Nachlauf 2026-08-01 14:32: `npx vitest run` → 21/21 grün, Exit 0
+  (P0-1: 13/13, P0-5: 8/8, jeweils `--reporter=verbose` dokumentiert).
+- **Test-Widerspruch „61 grün vs. hessen-plz rot" geklärt:** Die 61 sind
+  21 Alltagsengel-Vitest + 40 efy-care-Vitest; `lib/hessen-plz.test.ts` läuft
+  im separaten node:test-Runner (26/28 grün, Exit 1). Die 2 Fehler sind
+  veraltete Assertions: Commit `c4195df` erhöhte `ENGEL_MATCH_RADIUS_KM`
+  bewusst von 15 auf 25 km, die Distanz 65207↔65933 beträgt 21,05 km — bei
+  25 km zurecht Match. Kein Produktfehler, kein P0-Bezug, vorbestehend.
+- Neue Nebenbefunde (P1/P2): `/api/admin/*`-Routen ohne `requireAdmin()`
+  einzeln reviewen; `tsx` fehlt in devDependencies (`npm run test:unit`
+  bricht in frischen Clones); `validateIkNummer()` in `getOrgIK()` nachziehen;
+  vor erstem Abrechnungslauf `ALLTAGSENGEL_IK`-Env setzen oder Phase-3-
+  Migration anwenden.
