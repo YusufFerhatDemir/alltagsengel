@@ -120,7 +120,11 @@ push_args=(origin "${branch}:${remote_branch_short}")
 
 # Falls Remote vorgewandert: erst rebasen, dann push (kein force).
 git fetch origin "$remote_branch_short" --quiet 2>/dev/null || true
-remote_sha="$(git rev-parse "origin/${remote_branch_short}" 2>/dev/null || echo "")"
+# --verify ist Pflicht: ohne sie echot `git rev-parse` einen nicht
+# auflösbaren Ref (z. B. weil der Branch noch nie gepusht wurde) als
+# Literal-String statt zu fehlschlagen — das täuschte hier fälschlich
+# einen divergierenden Remote vor und blockierte jeden Erstpush.
+remote_sha="$(git rev-parse --verify -q "origin/${remote_branch_short}" 2>/dev/null || echo "")"
 local_sha="$(git rev-parse HEAD)"
 
 if [ -n "$remote_sha" ] && [ "$remote_sha" != "$local_sha" ]; then
