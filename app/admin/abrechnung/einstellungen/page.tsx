@@ -9,9 +9,8 @@
 // ═══════════════════════════════════════════════════════════════
 import { useEffect, useRef, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { getOrgIK } from '@/lib/config/org-config'
 import { Banner, EmptyRow } from '@/components/admin/OpsUI'
-
-const EIGENE_IK = '460629986'
 
 interface ZertifikatRow {
   id: string
@@ -64,6 +63,7 @@ export default function AbrechnungEinstellungenPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [info, setInfo] = useState<string | null>(null)
+  const [eigeneIk, setEigeneIk] = useState('')
 
   // Upload eigenes Zertifikat
   const p12Ref = useRef<HTMLInputElement>(null)
@@ -107,6 +107,13 @@ export default function AbrechnungEinstellungenPage() {
   }
 
   useEffect(() => { load() }, [])
+
+  // Absender-IK (organizations-Tabelle bzw. ALLTAGSENGEL_IK-Env, s. P0-5)
+  useEffect(() => {
+    getOrgIK(createClient())
+      .then(setEigeneIk)
+      .catch(e => setError(`Absender-IK konnte nicht geladen werden: ${e instanceof Error ? e.message : String(e)}`))
+  }, [])
 
   const absender = zertifikate.find(z => z.typ === 'absender')
   const empfaenger = zertifikate.filter(z => z.typ === 'empfaenger')
@@ -294,7 +301,7 @@ export default function AbrechnungEinstellungenPage() {
 
       {/* ── Eigenes Zertifikat ─────────────────────────────── */}
       <div style={card}>
-        <h3 style={cardTitle}>Eigenes ITSG-Zertifikat (Absender, IK {EIGENE_IK})</h3>
+        <h3 style={cardTitle}>Eigenes ITSG-Zertifikat (Absender, IK {eigeneIk || "…"})</h3>
         {absender ? (
           <p style={{ fontSize: 13, color: 'var(--ink4)', margin: '0 0 12px' }}>
             Hinterlegt für IK <strong>{absender.ik_nummer}</strong> · gültig{' '}
@@ -305,7 +312,7 @@ export default function AbrechnungEinstellungenPage() {
           </p>
         ) : (
           <p style={{ fontSize: 13, color: 'var(--ink4)', margin: '0 0 12px' }}>
-            Noch kein Zertifikat hinterlegt. Das Zertifikat wird beim ITSG Trust Center (itsg.de → Trust Center → Zertifikat beantragen) für die IK {EIGENE_IK} beantragt und kommt als PKCS#12-Datei (.p12).
+            Noch kein Zertifikat hinterlegt. Das Zertifikat wird beim ITSG Trust Center (itsg.de → Trust Center → Zertifikat beantragen) für die IK {eigeneIk || "…"} beantragt und kommt als PKCS#12-Datei (.p12).
           </p>
         )}
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'flex-end' }}>

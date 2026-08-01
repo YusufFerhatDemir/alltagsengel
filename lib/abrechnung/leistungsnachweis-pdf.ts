@@ -25,14 +25,18 @@
 // ═══════════════════════════════════════════════════════════════
 import type { SupabaseClient } from '@supabase/supabase-js'
 
+import { getOrgIK } from '@/lib/config/org-config'
+
 // ── Leistungserbringer-Stammdaten (Pflichtfeld Kasse) ───────────
+// IK-Nummer ist NICHT mehr hier hartcodiert (P0-5) — sie wird in
+// loadLeistungsnachweis() via getOrgIK() geladen und auf
+// LeistungsnachweisData.leistungserbringer_ik abgelegt.
 export const LEISTUNGSERBRINGER = {
   name: 'Alltagsengel UG (haftungsbeschränkt)',
   kurz: 'Alltagsengel',
   strasse: 'Neue Mainzer Straße 66-68',
   ort: '60311 Frankfurt am Main',
   email: 'info@alltagsengel.care',
-  ik: '460629986',
 } as const
 
 const GOLD = '#C9963C'
@@ -56,6 +60,7 @@ export interface LeistungsnachweisData {
   monat: string // YYYY-MM
   monat_label: string
   erstellt_am: string
+  leistungserbringer_ik: string
   verordnung: {
     id: string
     typ: string
@@ -219,6 +224,7 @@ export async function loadLeistungsnachweis(params: {
     monat,
     monat_label: monatLabel,
     erstellt_am: new Date().toLocaleDateString('de-DE'),
+    leistungserbringer_ik: await getOrgIK(supabase),
     verordnung: {
       id: verordnung.id,
       typ: verordnung.verordnung_type,
@@ -333,7 +339,7 @@ export function buildLeistungsnachweisHtml(data: LeistungsnachweisData): string 
     <div class="firma">
       <b>${LEISTUNGSERBRINGER.name}</b><br/>
       Alltagsbegleitung &amp; Entlastung<br/>
-      <b>IK-Nummer: ${LEISTUNGSERBRINGER.ik}</b>
+      <b>IK-Nummer: ${data.leistungserbringer_ik}</b>
     </div>
     <div class="adresse">
       ${LEISTUNGSERBRINGER.strasse}<br/>
@@ -414,7 +420,7 @@ export function buildLeistungsnachweisHtml(data: LeistungsnachweisData): string 
 
   <div class="fuss">
     ${LEISTUNGSERBRINGER.name} · ${LEISTUNGSERBRINGER.strasse}, ${LEISTUNGSERBRINGER.ort} ·
-    IK ${LEISTUNGSERBRINGER.ik} · ${LEISTUNGSERBRINGER.email}<br/>
+    IK ${data.leistungserbringer_ik} · ${LEISTUNGSERBRINGER.email}<br/>
     Leistungsnachweis ${esc(data.monat)} · Verordnung/Bewilligung ${esc(v.genehmigungsnummer || v.id)}
   </div>
 </body>
