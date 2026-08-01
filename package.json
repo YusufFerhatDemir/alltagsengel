@@ -27,6 +27,9 @@
     "test:e2e:install": "playwright install --with-deps",
     "lastmod:generate": "node scripts/generate-lastmod.mjs",
     "prebuild": "node scripts/generate-lastmod.mjs",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "verify": "tsc --noEmit && next lint && vitest run",
     "tauri": "tauri",
     "tauri:dev": "tauri dev",
     "tauri:build": "tauri build",
@@ -83,7 +86,8 @@
     "@types/ssh2-sftp-client": "^9.0.5",
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.10"
   },
   "description": "> Marktplatz-App: zertifizierte Alltagsbegleiter ↔ Senioren/Pflegebedürftige > Slogan: **„Mit Herz für dich da\"**",
   "main": "create_pitch_deck.js",
