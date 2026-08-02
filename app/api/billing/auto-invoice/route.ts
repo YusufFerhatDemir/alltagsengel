@@ -29,11 +29,23 @@ import { requireCaregiverSession } from '@/lib/native-auth'
 // service_role, da Betreuungskräfte laut RLS keine invoices anlegen
 // dürfen — die Prüfung "alles unterschrieben" ersetzt die manuelle
 // Freigabe.
+//
+// Betreuungskräfte dürfen NUR für Klienten auslösen, denen sie
+// zugeordnet sind: bei service_record_id muss der Record ihnen
+// gehören; bei client_id+month muss eine assignments-Zuordnung
+// oder ein eigener Einsatz beim Klienten im Monat existieren.
+// organization_id wird auf allen Inserts explizit vom Klienten
+// übernommen (service_role umgeht RLS + current_org_id()-Default).
 // ═══════════════════════════════════════════════════════════════
 
 export const dynamic = 'force-dynamic'
 
-async function authorize(request: Request): Promise<{ ok: true; actor: string } | { ok: false; status: number; error: string }> {
+type AuthContext =
+  | { ok: true; role: 'admin'; actor: string }
+  | { ok: true; role: 'caregiver'; actor: string; caregiverId: string }
+  | { ok: false; status: number; error: string }
+
+async function authorize(request: Request): Promise<AuthContext> {
   // 1) Admin über Cookie-Session
   try {
     const supabase = await createClient()
@@ -45,7 +57,7 @@ async function authorize(request: Request): Promise<{ ok: true; actor: string } 
         .eq('id', user.id)
         .single()
       if (profile && ['admin', 'superadmin'].includes(profile.role)) {
-        return { ok: true, actor: `admin:${user.id}` }
+        return { ok: true, role: 'admin', actor: `admin:${user.id}` }
       }
     }
   } catch {
@@ -55,7 +67,12 @@ async function authorize(request: Request): Promise<{ ok: true; actor: string } 
   // 2) Betreuungskraft über Bearer-Token (Native App)
   const native = await requireCaregiverSession(request)
   if (native.ok) {
-    return { ok: true, actor: `caregiver:${native.caregiverId}` }
+    return {
+      ok: true,
+      role: 'caregiver',
+      actor: `caregiver:${native.caregiverId}`,
+      caregiverId: native.caregiverId,
+    }
   }
 
   return { ok: false, status: 401, error: 'Nicht autorisiert' }
@@ -80,15 +97,23 @@ export async function POST(request: Request) {
     // ── Klient + Monat auflösen ──
     let resolvedClientId = client_id || null
     let resolvedMonth = month || null
+    // Zuordnung bereits über den eigenen Record belegt?
+    let assignmentVerified = false
 
     if (service_record_id) {
       const { data: rec, error: recErr } = await admin
         .from('service_records')
-        .select('id, client_id, date')
+        .select('id, client_id, caregiver_id, date')
         .eq('id', service_record_id)
         .single()
       if (recErr || !rec) {
         return NextResponse.json({ error: 'Leistungsnachweis nicht gefunden' }, { status: 404 })
+      }
+      if (auth.role === 'caregiver') {
+        if (rec.caregiver_id !== auth.caregiverId) {
+          return NextResponse.json({ error: 'Kein Zugriff auf diesen Leistungsnachweis' }, { status: 403 })
+        }
+        assignmentVerified = true
       }
       resolvedClientId = rec.client_id
       resolvedMonth = String(rec.date).slice(0, 7)
@@ -107,6 +132,44 @@ export async function POST(request: Request) {
     const periodStart = `${resolvedMonth}-01`
     const lastDay = new Date(year, monthNum, 0).getDate()
     const periodEnd = `${resolvedMonth}-${String(lastDay).padStart(2, '0')}`
+
+    // ── Zuordnung Betreuungskraft↔Klient erzwingen (P0 B-1) ──
+    // Vor JEDEM Datenzugriff: eine Betreuungskraft darf nur für
+    // Klienten auslösen, denen sie zugeordnet ist. Sonst 403 —
+    // auch bei unbekannter client_id (kein Existenz-Orakel).
+    if (auth.role === 'caregiver' && !assignmentVerified) {
+      const { data: assignment } = await admin
+        .from('assignments')
+        .select('id')
+        .eq('caregiver_id', auth.caregiverId)
+        .eq('client_id', resolvedClientId)
+        .limit(1)
+        .maybeSingle()
+      if (!assignment) {
+        const { data: ownRecord } = await admin
+          .from('service_records')
+          .select('id')
+          .eq('caregiver_id', auth.caregiverId)
+          .eq('client_id', resolvedClientId)
+          .gte('date', periodStart)
+          .lte('date', periodEnd)
+          .limit(1)
+          .maybeSingle()
+        if (!ownRecord) {
+          return NextResponse.json({ error: 'Kein Zugriff auf diesen Klienten' }, { status: 403 })
+        }
+      }
+    }
+
+    // ── Klient (Versicherungsdaten + organization_id) ──
+    const { data: client, error: clientErr } = await admin
+      .from('clients')
+      .select('id, organization_id, insurance_name, insurance_number, pflegekasse_name, versichertennummer')
+      .eq('id', resolvedClientId)
+      .single()
+    if (clientErr || !client) {
+      return NextResponse.json({ error: 'Klient nicht gefunden' }, { status: 404 })
+    }
 
     // ── Alle Einsätze des Klienten im Monat ──
     const { data: records, error: monthErr } = await admin
@@ -163,13 +226,6 @@ export async function POST(request: Request) {
       })
     }
 
-    // ── Klient für Versicherungsdaten ──
-    const { data: client } = await admin
-      .from('clients')
-      .select('id, insurance_name, insurance_number, pflegekasse_name, versichertennummer')
-      .eq('id', resolvedClientId)
-      .single()
-
     // ── Rechnung anlegen ──
     const totalAmount = billable.reduce((s, r) => s + (Number(r.amount) || 0), 0)
     const budgetAmount = billable
@@ -184,6 +240,7 @@ export async function POST(request: Request) {
       .insert({
         invoice_number: invoiceNumber,
         client_id: resolvedClientId,
+        organization_id: client.organization_id,
         insurance_name: client?.pflegekasse_name || client?.insurance_name || null,
         insurance_number: client?.versichertennummer || client?.insurance_number || null,
         period_start: periodStart,
@@ -204,6 +261,7 @@ export async function POST(request: Request) {
     const items = billable.map(r => ({
       invoice_id: invoice.id,
       service_record_id: r.id,
+      organization_id: client.organization_id,
       description: r.service_type || 'Leistung',
       date: r.date,
       duration_minutes: r.duration_minutes,
