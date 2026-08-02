@@ -81,25 +81,65 @@ CREATE POLICY "Anyone can view public profiles" ON public.profiles
 
 -- Admins sehen weiterhin ALLES (inkl. soft-deleted) — wichtig fuer
 -- Recovery-Support.
+--
+-- WICHTIG (Fix 2026-08-03): Die Admin-Pruefung darf profiles NICHT
+-- direkt in der eigenen Policy abfragen — das ergibt "infinite
+-- recursion detected in policy for relation profiles" (42P17) bei
+-- JEDEM authenticated/anon SELECT auf profiles (auf der Shadow-DB
+-- real nachgewiesen; live nur durch Policy-Drift maskiert). Stattdessen
+-- laeuft der Check ueber is_admin() (SECURITY DEFINER, seit 20260414
+-- vorhanden — umgeht RLS und bricht damit die Rekursion). Wir ziehen
+-- die Soft-Delete-Semantik in die Funktion: ein soft-deleted Admin
+-- verliert ueberall seine Admin-Rechte.
+CREATE OR REPLACE FUNCTION public.is_admin()
+RETURNS boolean
+LANGUAGE sql
+STABLE SECURITY DEFINER
+SET search_path TO 'public'
+AS $$
+  SELECT EXISTS (
+    SELECT 1
+    FROM public.profiles
+    WHERE id = auth.uid()
+      AND role = ANY (ARRAY['admin','superadmin'])
+      AND deleted_at IS NULL
+  );
+$$;
+
 DROP POLICY IF EXISTS "Admins can manage all profiles" ON public.profiles;
 CREATE POLICY "Admins can manage all profiles" ON public.profiles
-  FOR ALL USING (
-    EXISTS (SELECT 1 FROM public.profiles
-            WHERE id = auth.uid()
-              AND role IN ('admin', 'superadmin')
-              AND deleted_at IS NULL)
-  );
+  FOR ALL USING (public.is_admin());
 
--- 4) RLS-Update: Angels-Tabelle
---    Wenn das verknuepfte Profil soft-deleted ist, soll der Engel
---    nicht mehr im Directory auftauchen.
+-- 4) Helper fuer die Policies 5-9 (Fix 2026-08-03): Ein direktes
+--    Sub-SELECT auf profiles in Policies anderer Tabellen bildet mit
+--    profiles_select_booking_partner (20260414: profiles → bookings)
+--    einen Zyklus (bookings → profiles → bookings → …) und wirft
+--    42P17 "infinite recursion" — auf der Shadow-DB nachgewiesen:
+--    JEDER authenticated SELECT auf profiles UND bookings schlug fehl.
+--    SECURITY DEFINER umgeht RLS im Funktions-Body und bricht den
+--    Zyklus. Boolean-Rueckgabe pro UUID, keine Datenpreisgabe.
+CREATE OR REPLACE FUNCTION public.is_profile_soft_deleted(uid uuid)
+RETURNS boolean
+LANGUAGE sql
+STABLE SECURITY DEFINER
+SET search_path TO 'public'
+AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM public.profiles
+    WHERE id = uid AND deleted_at IS NOT NULL
+  );
+$$;
+REVOKE ALL ON FUNCTION public.is_profile_soft_deleted(uuid) FROM public;
+-- anon braucht EXECUTE, weil "Anyone can view angels" (Directory ist
+-- oeffentlich) die Funktion in der Policy auswertet.
+GRANT EXECUTE ON FUNCTION public.is_profile_soft_deleted(uuid) TO authenticated, anon, service_role;
+
+--    Angels: Wenn das verknuepfte Profil soft-deleted ist, soll der
+--    Engel nicht mehr im Directory auftauchen.
 DROP POLICY IF EXISTS "Anyone can view angels" ON public.angels;
 CREATE POLICY "Anyone can view angels" ON public.angels
   FOR SELECT USING (
-    NOT EXISTS (
-      SELECT 1 FROM public.profiles p
-      WHERE p.id = angels.id AND p.deleted_at IS NOT NULL
-    )
+    NOT public.is_profile_soft_deleted(angels.id)
   );
 
 -- 5) Bookings: Soft-deleted User soll keine seiner Buchungen mehr sehen.
@@ -109,10 +149,7 @@ DROP POLICY IF EXISTS "Users can view own bookings" ON public.bookings;
 CREATE POLICY "Users can view own bookings" ON public.bookings
   FOR SELECT USING (
     (auth.uid() = customer_id OR auth.uid() = angel_id)
-    AND NOT EXISTS (
-      SELECT 1 FROM public.profiles p
-      WHERE p.id = auth.uid() AND p.deleted_at IS NOT NULL
-    )
+    AND NOT public.is_profile_soft_deleted(auth.uid())
   );
 
 -- 6) Messages: gleiche Logik
@@ -120,10 +157,7 @@ DROP POLICY IF EXISTS "Users can view own messages" ON public.messages;
 CREATE POLICY "Users can view own messages" ON public.messages
   FOR SELECT USING (
     (auth.uid() = sender_id OR auth.uid() = receiver_id)
-    AND NOT EXISTS (
-      SELECT 1 FROM public.profiles p
-      WHERE p.id = auth.uid() AND p.deleted_at IS NOT NULL
-    )
+    AND NOT public.is_profile_soft_deleted(auth.uid())
   );
 
 -- 7) Documents: gleiche Logik (DSGVO — gesperrte Daten nicht mehr lesen)
@@ -131,10 +165,7 @@ DROP POLICY IF EXISTS "Users can view own documents" ON public.documents;
 CREATE POLICY "Users can view own documents" ON public.documents
   FOR SELECT USING (
     auth.uid() = user_id
-    AND NOT EXISTS (
-      SELECT 1 FROM public.profiles p
-      WHERE p.id = auth.uid() AND p.deleted_at IS NOT NULL
-    )
+    AND NOT public.is_profile_soft_deleted(auth.uid())
   );
 
 -- 8) Notifications: gleiche Logik
@@ -142,10 +173,7 @@ DROP POLICY IF EXISTS "Users can view own notifications" ON public.notifications
 CREATE POLICY "Users can view own notifications" ON public.notifications
   FOR SELECT USING (
     auth.uid() = user_id
-    AND NOT EXISTS (
-      SELECT 1 FROM public.profiles p
-      WHERE p.id = auth.uid() AND p.deleted_at IS NOT NULL
-    )
+    AND NOT public.is_profile_soft_deleted(auth.uid())
   );
 
 -- 9) Care-Eligibility: gleiche Logik
@@ -153,10 +181,7 @@ DROP POLICY IF EXISTS "Users can view own eligibility" ON public.care_eligibilit
 CREATE POLICY "Users can view own eligibility" ON public.care_eligibility
   FOR SELECT USING (
     auth.uid() = user_id
-    AND NOT EXISTS (
-      SELECT 1 FROM public.profiles p
-      WHERE p.id = auth.uid() AND p.deleted_at IS NOT NULL
-    )
+    AND NOT public.is_profile_soft_deleted(auth.uid())
   );
 
 -- 10) Audit-Log: neue Action-Typen zulassen (Soft-Delete + Undelete + Cron-Hard-Delete)
@@ -187,9 +212,90 @@ COMMIT;
 
 -- ════════════════════════════════════════════════════════════════════
 -- ROLLBACK-Plan (falls Migration ein Problem macht):
+--
+-- Reihenfolge ist wichtig:
+--   1. Die 6 Policies, die is_profile_soft_deleted() aufrufen, per
+--      DROP+CREATE auf ihre Vor-Soft-Delete-Definition (Stand
+--      20260319000000_fix_rls_policies.sql) zurücksetzen. Sie hängen
+--      NICHT via CASCADE an der Spalte (Funktions-Body wird erst zur
+--      Laufzeit geparst) und würden nach dem DROP COLUMN bei jedem
+--      Query fehlschlagen.
+--   2. is_admin() auf den 20260414-Stand zurücksetzen und
+--      is_profile_soft_deleted() droppen — beide referenzieren
+--      deleted_at im Body.
+--   3. Erst DANN Spalte + Tabelle droppen (CASCADE räumt nur noch
+--      "Anyone can view public profiles" ab → neu anlegen).
+--
+-- NICHT die ganze fix_rls_policies.sql erneut ausführen — die würde
+-- ~60 weitere Policies auf einen veralteten Stand zurückdrehen.
+-- "Admins can manage all profiles" bleibt auf USING (public.is_admin())
+-- stehen — die alte Selbstreferenz-Variante wirft 42P17 (s.o.).
+--
+-- Der mis_audit_log-Check-Constraint bleibt absichtlich stehen: er ist
+-- additiv, und ein Zurückdrehen würde vorhandene Audit-Zeilen mit den
+-- neuen Action-Werten verletzen (Datenverlust-Risiko).
+--
+-- Getestet auf der Shadow-DB am 2026-08-03 (kein Zeilenverlust in
+-- profiles/bookings/messages; Re-Apply dieser Migration stellt das
+-- Feature danach vollständig wieder her).
+--
 --   BEGIN;
---   ALTER TABLE public.profiles DROP COLUMN IF EXISTS deleted_at;
+--   DROP POLICY IF EXISTS "Anyone can view angels" ON public.angels;
+--   CREATE POLICY "Anyone can view angels" ON public.angels
+--     FOR SELECT USING (true);
+--   DROP POLICY IF EXISTS "Users can view own bookings" ON public.bookings;
+--   CREATE POLICY "Users can view own bookings" ON public.bookings
+--     FOR SELECT USING (auth.uid() = customer_id OR auth.uid() = angel_id);
+--   DROP POLICY IF EXISTS "Users can view own messages" ON public.messages;
+--   CREATE POLICY "Users can view own messages" ON public.messages
+--     FOR SELECT USING (auth.uid() = sender_id OR auth.uid() = receiver_id);
+--   DROP POLICY IF EXISTS "Users can view own documents" ON public.documents;
+--   CREATE POLICY "Users can view own documents" ON public.documents
+--     FOR SELECT USING (auth.uid() = user_id);
+--   DROP POLICY IF EXISTS "Users can view own notifications" ON public.notifications;
+--   CREATE POLICY "Users can view own notifications" ON public.notifications
+--     FOR SELECT USING (auth.uid() = user_id);
+--   DROP POLICY IF EXISTS "Users can view own eligibility" ON public.care_eligibility;
+--   CREATE POLICY "Users can view own eligibility" ON public.care_eligibility
+--     FOR SELECT USING (auth.uid() = user_id);
+--   CREATE OR REPLACE FUNCTION public.is_admin()
+--   RETURNS boolean LANGUAGE sql STABLE SECURITY DEFINER
+--   SET search_path TO 'public'
+--   AS $fn$
+--     SELECT EXISTS (
+--       SELECT 1 FROM public.profiles
+--       WHERE id = auth.uid() AND role = ANY (ARRAY['admin','superadmin'])
+--     );
+--   $fn$;
+--   DROP FUNCTION IF EXISTS public.is_profile_soft_deleted(uuid);
+--   -- CASCADE räumt alle Policies mit direktem deleted_at-Bezug ab:
+--   -- "Anyone can view public profiles" sowie profiles_select_engels
+--   -- und profiles_select_booking_partner (deleted_at-Filter aus
+--   -- 20260803000000) — die drei danach im Vor-Soft-Delete-Stand
+--   -- (20260319 bzw. 20260414) neu anlegen:
+--   ALTER TABLE public.profiles DROP COLUMN IF EXISTS deleted_at CASCADE;
 --   DROP TABLE IF EXISTS public.account_deletion_tokens;
---   -- Policies aus fix_rls_policies.sql neu anwenden
+--   CREATE POLICY "Anyone can view public profiles" ON public.profiles
+--     FOR SELECT USING (true);
+--   CREATE POLICY "profiles_select_engels" ON public.profiles
+--     FOR SELECT USING (auth.role() = 'authenticated' AND role = 'engel');
+--   CREATE POLICY "profiles_select_booking_partner" ON public.profiles
+--     FOR SELECT USING (
+--       auth.role() = 'authenticated' AND (
+--         EXISTS (
+--           SELECT 1 FROM public.bookings b
+--           WHERE (b.customer_id = profiles.id AND b.angel_id = auth.uid())
+--              OR (b.angel_id = profiles.id AND b.customer_id = auth.uid())
+--         )
+--         OR EXISTS (
+--           SELECT 1 FROM public.krankenfahrten k
+--           WHERE k.customer_id = profiles.id
+--             AND k.provider_id IN (
+--               SELECT id FROM public.krankenfahrt_providers
+--               WHERE user_id = auth.uid()
+--             )
+--         )
+--       )
+--     );
 --   COMMIT;
 -- ════════════════════════════════════════════════════════════════════
