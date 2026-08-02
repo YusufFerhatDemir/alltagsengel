@@ -58,6 +58,7 @@ CREATE INDEX IF NOT EXISTS idx_care_notes_service_record_id ON public.care_notes
 CREATE INDEX IF NOT EXISTS idx_care_notes_author_id ON public.care_notes(author_id);
 CREATE INDEX IF NOT EXISTS idx_care_notes_created_at ON public.care_notes(created_at DESC);
 
+DROP TRIGGER IF EXISTS trg_care_notes_updated_at ON public.care_notes;
 CREATE TRIGGER trg_care_notes_updated_at
     BEFORE UPDATE ON public.care_notes
     FOR EACH ROW EXECUTE FUNCTION public.update_updated_at();
@@ -65,16 +66,21 @@ CREATE TRIGGER trg_care_notes_updated_at
 ALTER TABLE public.care_notes ENABLE ROW LEVEL SECURITY;
 
 -- Admin/Büro sehen alles
+DROP POLICY IF EXISTS care_notes_admin_all ON public.care_notes;
 CREATE POLICY care_notes_admin_all ON public.care_notes
     FOR ALL USING (public.is_admin()) WITH CHECK (public.is_admin());
+DROP POLICY IF EXISTS care_notes_staff_read ON public.care_notes;
 CREATE POLICY care_notes_staff_read ON public.care_notes
     FOR SELECT USING (public.is_internal_staff());
+DROP POLICY IF EXISTS care_notes_staff_write ON public.care_notes;
 CREATE POLICY care_notes_staff_write ON public.care_notes
     FOR INSERT WITH CHECK (public.is_internal_staff());
 -- Service Role (API)
+DROP POLICY IF EXISTS care_notes_service_all ON public.care_notes;
 CREATE POLICY care_notes_service_all ON public.care_notes
     FOR ALL TO service_role USING (true) WITH CHECK (true);
 -- Betreuungskraft: eigene Notizen lesen + neue erstellen
+DROP POLICY IF EXISTS care_notes_caregiver_read ON public.care_notes;
 CREATE POLICY care_notes_caregiver_read ON public.care_notes
     FOR SELECT USING (
         author_id = auth.uid()
@@ -92,12 +98,14 @@ CREATE POLICY care_notes_caregiver_read ON public.care_notes
             )
         )
     );
+DROP POLICY IF EXISTS care_notes_caregiver_insert ON public.care_notes;
 CREATE POLICY care_notes_caregiver_insert ON public.care_notes
     FOR INSERT WITH CHECK (
         author_id = auth.uid()
         AND author_role = 'engel'
     );
 -- Klient: eigene nicht-interne Notizen lesen + eigene erstellen
+DROP POLICY IF EXISTS care_notes_client_read ON public.care_notes;
 CREATE POLICY care_notes_client_read ON public.care_notes
     FOR SELECT USING (
         is_internal = false
@@ -107,6 +115,7 @@ CREATE POLICY care_notes_client_read ON public.care_notes
             AND cl.user_id = auth.uid()
         )
     );
+DROP POLICY IF EXISTS care_notes_client_insert ON public.care_notes;
 CREATE POLICY care_notes_client_insert ON public.care_notes
     FOR INSERT WITH CHECK (
         author_id = auth.uid()
@@ -159,18 +168,23 @@ CREATE INDEX IF NOT EXISTS idx_verordnungen_client_id ON public.verordnungen(cli
 CREATE INDEX IF NOT EXISTS idx_verordnungen_genehmigung_bis ON public.verordnungen(genehmigung_bis);
 CREATE INDEX IF NOT EXISTS idx_verordnungen_status ON public.verordnungen(genehmigung_status);
 
+DROP TRIGGER IF EXISTS trg_verordnungen_updated_at ON public.verordnungen;
 CREATE TRIGGER trg_verordnungen_updated_at
     BEFORE UPDATE ON public.verordnungen
     FOR EACH ROW EXECUTE FUNCTION public.update_updated_at();
 
 ALTER TABLE public.verordnungen ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS verordnungen_admin_all ON public.verordnungen;
 CREATE POLICY verordnungen_admin_all ON public.verordnungen
     FOR ALL USING (public.is_admin()) WITH CHECK (public.is_admin());
+DROP POLICY IF EXISTS verordnungen_staff_read ON public.verordnungen;
 CREATE POLICY verordnungen_staff_read ON public.verordnungen
     FOR SELECT USING (public.is_internal_staff());
+DROP POLICY IF EXISTS verordnungen_service_all ON public.verordnungen;
 CREATE POLICY verordnungen_service_all ON public.verordnungen
     FOR ALL TO service_role USING (true) WITH CHECK (true);
 -- Klient sieht eigene Verordnungen
+DROP POLICY IF EXISTS verordnungen_client_read ON public.verordnungen;
 CREATE POLICY verordnungen_client_read ON public.verordnungen
     FOR SELECT USING (
         EXISTS (
@@ -215,18 +229,23 @@ CREATE TABLE IF NOT EXISTS public.service_pricing (
 CREATE INDEX IF NOT EXISTS idx_service_pricing_type ON public.service_pricing(service_type, budget_type);
 CREATE INDEX IF NOT EXISTS idx_service_pricing_active ON public.service_pricing(is_active, valid_from);
 
+DROP TRIGGER IF EXISTS trg_service_pricing_updated_at ON public.service_pricing;
 CREATE TRIGGER trg_service_pricing_updated_at
     BEFORE UPDATE ON public.service_pricing
     FOR EACH ROW EXECUTE FUNCTION public.update_updated_at();
 
 ALTER TABLE public.service_pricing ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS service_pricing_admin_all ON public.service_pricing;
 CREATE POLICY service_pricing_admin_all ON public.service_pricing
     FOR ALL USING (public.is_admin()) WITH CHECK (public.is_admin());
+DROP POLICY IF EXISTS service_pricing_staff_read ON public.service_pricing;
 CREATE POLICY service_pricing_staff_read ON public.service_pricing
     FOR SELECT USING (public.is_internal_staff());
+DROP POLICY IF EXISTS service_pricing_service_all ON public.service_pricing;
 CREATE POLICY service_pricing_service_all ON public.service_pricing
     FOR ALL TO service_role USING (true) WITH CHECK (true);
 -- Alle authentifizierten User dürfen Preise lesen (für Angebots-Anzeige)
+DROP POLICY IF EXISTS service_pricing_auth_read ON public.service_pricing;
 CREATE POLICY service_pricing_auth_read ON public.service_pricing
     FOR SELECT TO authenticated USING (is_active = true);
 
@@ -306,7 +325,8 @@ BEGIN
         WHERE tablename = 'service_records'
         AND policyname = 'service_records_caregiver_read'
     ) THEN
-        EXECUTE 'CREATE POLICY service_records_caregiver_read ON public.service_records
+        EXECUTE 'DROP POLICY IF EXISTS service_records_caregiver_read ON public.service_records;
+CREATE POLICY service_records_caregiver_read ON public.service_records
             FOR SELECT USING (
                 EXISTS (
                     SELECT 1 FROM public.caregivers c
@@ -321,7 +341,8 @@ BEGIN
         WHERE tablename = 'service_records'
         AND policyname = 'service_records_caregiver_insert'
     ) THEN
-        EXECUTE 'CREATE POLICY service_records_caregiver_insert ON public.service_records
+        EXECUTE 'DROP POLICY IF EXISTS service_records_caregiver_insert ON public.service_records;
+CREATE POLICY service_records_caregiver_insert ON public.service_records
             FOR INSERT WITH CHECK (
                 EXISTS (
                     SELECT 1 FROM public.caregivers c
@@ -337,7 +358,8 @@ BEGIN
         WHERE tablename = 'service_records'
         AND policyname = 'service_records_caregiver_update'
     ) THEN
-        EXECUTE 'CREATE POLICY service_records_caregiver_update ON public.service_records
+        EXECUTE 'DROP POLICY IF EXISTS service_records_caregiver_update ON public.service_records;
+CREATE POLICY service_records_caregiver_update ON public.service_records
             FOR UPDATE USING (
                 EXISTS (
                     SELECT 1 FROM public.caregivers c
@@ -357,7 +379,8 @@ BEGIN
         WHERE tablename = 'service_records'
         AND policyname = 'service_records_client_read'
     ) THEN
-        EXECUTE 'CREATE POLICY service_records_client_read ON public.service_records
+        EXECUTE 'DROP POLICY IF EXISTS service_records_client_read ON public.service_records;
+CREATE POLICY service_records_client_read ON public.service_records
             FOR SELECT USING (
                 EXISTS (
                     SELECT 1 FROM public.clients cl
@@ -376,7 +399,8 @@ BEGIN
         WHERE tablename = 'invoices'
         AND policyname = 'invoices_client_read'
     ) THEN
-        EXECUTE 'CREATE POLICY invoices_client_read ON public.invoices
+        EXECUTE 'DROP POLICY IF EXISTS invoices_client_read ON public.invoices;
+CREATE POLICY invoices_client_read ON public.invoices
             FOR SELECT USING (
                 EXISTS (
                     SELECT 1 FROM public.clients cl
@@ -395,7 +419,8 @@ BEGIN
         WHERE tablename = 'invoice_items'
         AND policyname = 'invoice_items_client_read'
     ) THEN
-        EXECUTE 'CREATE POLICY invoice_items_client_read ON public.invoice_items
+        EXECUTE 'DROP POLICY IF EXISTS invoice_items_client_read ON public.invoice_items;
+CREATE POLICY invoice_items_client_read ON public.invoice_items
             FOR SELECT USING (
                 EXISTS (
                     SELECT 1 FROM public.invoices inv
@@ -415,7 +440,8 @@ BEGIN
         WHERE tablename = 'client_budgets'
         AND policyname = 'client_budgets_client_read'
     ) THEN
-        EXECUTE 'CREATE POLICY client_budgets_client_read ON public.client_budgets
+        EXECUTE 'DROP POLICY IF EXISTS client_budgets_client_read ON public.client_budgets;
+CREATE POLICY client_budgets_client_read ON public.client_budgets
             FOR SELECT USING (
                 EXISTS (
                     SELECT 1 FROM public.clients cl
@@ -434,7 +460,8 @@ BEGIN
         WHERE tablename = 'clients'
         AND policyname = 'clients_caregiver_read'
     ) THEN
-        EXECUTE 'CREATE POLICY clients_caregiver_read ON public.clients
+        EXECUTE 'DROP POLICY IF EXISTS clients_caregiver_read ON public.clients;
+CREATE POLICY clients_caregiver_read ON public.clients
             FOR SELECT USING (
                 EXISTS (
                     SELECT 1 FROM public.caregivers c

@@ -12,16 +12,20 @@ CREATE TABLE IF NOT EXISTS public.angel_reviews (
   created_at TIMESTAMPTZ DEFAULT now()
 );
 
-CREATE INDEX idx_angel_reviews_angel_id ON public.angel_reviews(angel_id);
-CREATE INDEX idx_angel_reviews_booking_id ON public.angel_reviews(booking_id);
-CREATE INDEX idx_angel_reviews_customer_id ON public.angel_reviews(customer_id);
-CREATE UNIQUE INDEX idx_angel_reviews_unique_booking ON public.angel_reviews(booking_id);
+CREATE INDEX IF NOT EXISTS idx_angel_reviews_angel_id ON public.angel_reviews(angel_id);
+CREATE INDEX IF NOT EXISTS idx_angel_reviews_booking_id ON public.angel_reviews(booking_id);
+CREATE INDEX IF NOT EXISTS idx_angel_reviews_customer_id ON public.angel_reviews(customer_id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_angel_reviews_unique_booking ON public.angel_reviews(booking_id);
 
 ALTER TABLE public.angel_reviews ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Jeder kann Bewertungen lesen" ON public.angel_reviews;
 CREATE POLICY "Jeder kann Bewertungen lesen" ON public.angel_reviews FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Kunde kann eigene Bewertung erstellen" ON public.angel_reviews;
 CREATE POLICY "Kunde kann eigene Bewertung erstellen" ON public.angel_reviews FOR INSERT WITH CHECK (auth.uid() = customer_id);
+DROP POLICY IF EXISTS "Kunde kann eigene Bewertung bearbeiten" ON public.angel_reviews;
 CREATE POLICY "Kunde kann eigene Bewertung bearbeiten" ON public.angel_reviews FOR UPDATE USING (auth.uid() = customer_id);
+DROP POLICY IF EXISTS "Admin kann alle Bewertungen verwalten" ON public.angel_reviews;
 CREATE POLICY "Admin kann alle Bewertungen verwalten" ON public.angel_reviews FOR ALL USING (
   EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('admin', 'superadmin'))
 );

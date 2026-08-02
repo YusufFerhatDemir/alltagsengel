@@ -19,13 +19,17 @@
  *       fehlen — siehe audit/SHADOW_DB_MIGRATION_REPORT.md, warum das
  *       aktuell der Fall ist (kein Supabase-Access-Token, kein Docker).
  *
- *  Aktivierung der dynamischen Tests (z.B. gegen eine Supabase-Branch):
+ *  Aktivierung der dynamischen Tests — lokal via Shadow-DB-Stack:
+ *    ./scripts/shadow-db.sh test          (baut DB + Seed von null)
+ *    ./scripts/shadow-db-http.sh          (startet PostgREST + Auth-Shim,
+ *                                          gibt die drei Env-Variablen aus)
+ *  oder gegen eine Supabase-Branch:
  *    SHADOW_SUPABASE_URL=https://<branch-ref>.supabase.co \
  *    SHADOW_SUPABASE_ANON_KEY=... \
  *    SHADOW_SUPABASE_SERVICE_ROLE_KEY=... \
  *    npx vitest run __tests__/shadow-db/tenant-isolation.test.ts
- *  Voraussetzung: supabase/seed-shadow.sql wurde vorher gegen dieselbe
- *  Shadow-DB ausgeführt (legt die Test-User/-Orgs/-Klienten an).
+ *  Voraussetzung: supabase/shadow/10_seed_two_orgs.sql wurde vorher gegen
+ *  dieselbe Shadow-DB ausgeführt (legt die Test-User/-Orgs/-Klienten an).
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest'
@@ -112,11 +116,10 @@ describe('Statisch: Phase-3 Migration — RLS-Fence-Struktur', () => {
 //    Siehe audit/SHADOW_DB_MIGRATION_REPORT.md, Abschnitt "Kritischer Befund".
 // ═══════════════════════════════════════════════════════════════════
 describe('Statisch: Live-only-Tabellen (Schema existiert NICHT in supabase/migrations/)', () => {
-  // Stand der Prüfung: 2026-08-01. Wenn eine dieser Tabellen künftig per
-  // Migration angelegt wird, hier entfernen. Wenn eine NEUE Tabelle im
-  // tenant_tables-Array aus 20260801 auftaucht, die weder hier noch per
-  // CREATE TABLE in den Migrationen existiert, MUSS sie hier ergänzt
-  // werden (der Test unten erzwingt das).
+  // Diese Tabellen existierten bis 2026-08-01 NUR live in Supabase und
+  // werden seit 20260101000000_baseline_live_only_tables.sql per Migration
+  // angelegt. Die Liste bleibt als Regressions-Anker: fällt eine davon
+  // wieder aus den Migrationen heraus, schlägt der Test unten an.
   const KNOWN_LIVE_ONLY_TABLES = new Set([
     'clients', 'caregivers', 'applications', 'assignments', 'absences',
     'bookings', 'medikamentenplan', 'notfall_info', 'substitution_requests',
@@ -131,10 +134,17 @@ describe('Statisch: Live-only-Tabellen (Schema existiert NICHT in supabase/migra
 
   function tablesCreatedByMigrations(): Set<string> {
     const created = new Set<string>()
-    for (const file of allMigrationFiles()) {
-      const sql = readMigration(path.join('supabase', 'migrations', file))
-      for (const m of sql.matchAll(/CREATE TABLE (?:IF NOT EXISTS )?(?:public\.)?"?(\w+)"?/g)) {
-        created.add(m[1])
+    // initial-setup.sql läuft im kanonischen Aufbau (scripts/shadow-db.sh)
+    // VOR den Migrationen und legt u.a. bookings/profiles an — gehört
+    // deshalb mit in die Menge der repo-definierten Tabellen.
+    const sources = [
+      'supabase/initial-setup.sql',
+      ...allMigrationFiles().map(f => path.join('supabase', 'migrations', f)),
+    ]
+    for (const file of sources) {
+      const sql = readMigration(file)
+      for (const m of sql.matchAll(/CREATE TABLE (?:IF NOT EXISTS )?(?:public\.)?"?(\w+)"?/gi)) {
+        created.add(m[1].toLowerCase())
       }
     }
     return created
@@ -146,23 +156,26 @@ describe('Statisch: Live-only-Tabellen (Schema existiert NICHT in supabase/migra
     return [...arr.matchAll(/'(\w+)'/g)].map(m => m[1])
   }
 
-  it('jede tenant_tables-Tabelle ist entweder per Migration erstellt ODER als bekannte Live-only-Tabelle dokumentiert', () => {
+  it('JEDE tenant_tables-Tabelle wird inzwischen per Migration erstellt (Baseline 20260101000000 schließt die Live-only-Lücke)', () => {
     const created = tablesCreatedByMigrations()
-    const undocumented = tenantTables().filter(t => !created.has(t) && !KNOWN_LIVE_ONLY_TABLES.has(t))
+    const missing = tenantTables().filter(t => !created.has(t))
     expect(
-      undocumented,
-      `Neue, undokumentierte Live-only-Tabelle(n) gefunden: ${undocumented.join(', ')}. ` +
-      `Entweder Migration ergänzen oder in KNOWN_LIVE_ONLY_TABLES aufnehmen (Report aktualisieren!).`
+      missing,
+      `Tabelle(n) ohne CREATE TABLE in supabase/migrations/: ${missing.join(', ')}. ` +
+      `Ein Replay auf leerer DB würde brechen — Migration ergänzen (siehe audit/DATABASE_SCHEMA_GAP_REPORT.md).`
     ).toEqual([])
   })
 
-  it('"clients" wird von anderen Migrationen referenziert, obwohl es nirgends per CREATE TABLE angelegt wird', () => {
-    // Konkreter Reproduktionsfall für den Report: ein reiner Migrations-Replay
-    // auf einer leeren DB bricht hier mit "relation public.clients does not exist".
+  it('die früheren Live-only-Tabellen (u.a. "clients") sind jetzt alle per Baseline-Migration angelegt', () => {
+    // Bis 2026-08-01 brach ein Migrations-Replay auf leerer DB mit
+    // "relation public.clients does not exist" (siehe audit/SHADOW_DB_MIGRATION_REPORT.md).
+    // Seit 20260101000000_baseline_live_only_tables.sql ist die Lücke zu —
+    // dieser Test hält sie zu.
     const eylem = readMigration('supabase/migrations/20260719_eylem_audit_complete_features.sql')
     expect(eylem).toMatch(/REFERENCES public\.clients\(id\)/)
     const created = tablesCreatedByMigrations()
-    expect(created.has('clients')).toBe(false)
+    const stillMissing = [...KNOWN_LIVE_ONLY_TABLES].filter(t => !created.has(t))
+    expect(stillMissing).toEqual([])
   })
 
   it('keine Migration enthält destruktive DROP TABLE / TRUNCATE außerhalb von Kommentaren', () => {
@@ -264,10 +277,12 @@ const SHADOW_ANON_KEY = process.env.SHADOW_SUPABASE_ANON_KEY
 const SHADOW_SERVICE_KEY = process.env.SHADOW_SUPABASE_SERVICE_ROLE_KEY
 const hasShadowDb = Boolean(SHADOW_URL && SHADOW_ANON_KEY && SHADOW_SERVICE_KEY)
 
+// IDs entsprechen supabase/shadow/10_seed_two_orgs.sql (Quelle der Wahrheit
+// für die lokale Shadow-DB via scripts/shadow-db.sh).
 const ORG_A = 'aaaaaaaa-0000-4000-8000-000000000001'
-const ORG_B = 'bbbbbbbb-0000-4000-8000-000000000001'
-const ORG_B_CLIENT = 'bbbbbbbb-0002-4000-8000-000000000001'
-const ORG_A_STAFF_EMAIL = 'begleiter.ffm@shadow-test.invalid'
+const ORG_B = 'bbbbbbbb-0000-4000-8000-000000000002'
+const ORG_B_CLIENT = 'c1b00000-0000-4000-8000-000000000003'
+const ORG_A_STAFF_EMAIL = 'admin-a@shadow.test'
 const TEST_PASSWORD = 'ShadowTest123!'
 
 describe.skipIf(!hasShadowDb)('Dynamisch: RLS-Isolation gegen echte Shadow-DB', () => {

@@ -14,11 +14,13 @@ DROP POLICY IF EXISTS "Herkes profilleri okuyabilir" ON profiles;
 DROP POLICY IF EXISTS "profiles_select" ON profiles;
 
 -- 1) Eigenes Profil lesen
+DROP POLICY IF EXISTS "profiles_select_own" ON profiles;
 CREATE POLICY "profiles_select_own" ON profiles
   FOR SELECT
   USING (auth.uid() = id);
 
 -- 2) Admin/Superadmin darf alle Profile lesen
+DROP POLICY IF EXISTS "profiles_select_admin" ON profiles;
 CREATE POLICY "profiles_select_admin" ON profiles
   FOR SELECT
   USING (
@@ -26,6 +28,7 @@ CREATE POLICY "profiles_select_admin" ON profiles
   );
 
 -- 3) Angemeldete Nutzer koennen Profile von Engeln lesen (Marktplatz-Discovery)
+DROP POLICY IF EXISTS "profiles_select_engels" ON profiles;
 CREATE POLICY "profiles_select_engels" ON profiles
   FOR SELECT
   USING (
@@ -33,6 +36,7 @@ CREATE POLICY "profiles_select_engels" ON profiles
   );
 
 -- 4) Booking-Partner sichtbar (Engel sieht Kunde / Kunde sieht Engel an eigenen Buchungen)
+DROP POLICY IF EXISTS "profiles_select_booking_partner" ON profiles;
 CREATE POLICY "profiles_select_booking_partner" ON profiles
   FOR SELECT
   USING (

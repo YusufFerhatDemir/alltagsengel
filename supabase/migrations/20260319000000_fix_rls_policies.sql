@@ -18,19 +18,23 @@ DROP POLICY IF EXISTS "Admin profilleri yönetebilir" ON public.profiles;
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 
 -- Public profiles can be read by anyone (for angel directory)
+DROP POLICY IF EXISTS "Anyone can view public profiles" ON public.profiles;
 CREATE POLICY "Anyone can view public profiles" ON public.profiles
   FOR SELECT USING (true);
 
 -- Users can update only their own profile
+DROP POLICY IF EXISTS "Users can update own profile" ON public.profiles;
 CREATE POLICY "Users can update own profile" ON public.profiles
   FOR UPDATE USING (auth.uid() = id)
   WITH CHECK (auth.uid() = id);
 
 -- Users can insert only their own profile
+DROP POLICY IF EXISTS "Users can create own profile" ON public.profiles;
 CREATE POLICY "Users can create own profile" ON public.profiles
   FOR INSERT WITH CHECK (auth.uid() = id);
 
 -- Admins can do anything with profiles
+DROP POLICY IF EXISTS "Admins can manage all profiles" ON public.profiles;
 CREATE POLICY "Admins can manage all profiles" ON public.profiles
   FOR ALL USING (
     EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('admin', 'superadmin'))
@@ -48,19 +52,23 @@ DROP POLICY IF EXISTS "Admin engelleri yönetebilir" ON public.angels;
 ALTER TABLE public.angels ENABLE ROW LEVEL SECURITY;
 
 -- Anyone can view publicly listed angels
+DROP POLICY IF EXISTS "Anyone can view angels" ON public.angels;
 CREATE POLICY "Anyone can view angels" ON public.angels
   FOR SELECT USING (true);
 
 -- Angels can only update their own profile
+DROP POLICY IF EXISTS "Angels can update own profile" ON public.angels;
 CREATE POLICY "Angels can update own profile" ON public.angels
   FOR UPDATE USING (auth.uid() = id)
   WITH CHECK (auth.uid() = id);
 
 -- Angels can only create their own profile
+DROP POLICY IF EXISTS "Angels can create own profile" ON public.angels;
 CREATE POLICY "Angels can create own profile" ON public.angels
   FOR INSERT WITH CHECK (auth.uid() = id);
 
 -- Admins can manage all angel profiles
+DROP POLICY IF EXISTS "Admins can manage all angels" ON public.angels;
 CREATE POLICY "Admins can manage all angels" ON public.angels
   FOR ALL USING (
     EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('admin', 'superadmin'))
@@ -78,27 +86,32 @@ DROP POLICY IF EXISTS "Admin bookingleri yönetebilir" ON public.bookings;
 ALTER TABLE public.bookings ENABLE ROW LEVEL SECURITY;
 
 -- Users can only view their own bookings (as customer or angel)
+DROP POLICY IF EXISTS "Users can view own bookings" ON public.bookings;
 CREATE POLICY "Users can view own bookings" ON public.bookings
   FOR SELECT USING (
     auth.uid() = customer_id OR auth.uid() = angel_id
   );
 
 -- Only customers can create bookings with themselves as customer
+DROP POLICY IF EXISTS "Customers can create bookings" ON public.bookings;
 CREATE POLICY "Customers can create bookings" ON public.bookings
   FOR INSERT WITH CHECK (auth.uid() = customer_id);
 
 -- Only involved parties (customer or angel) can update bookings
+DROP POLICY IF EXISTS "Involved parties can update bookings" ON public.bookings;
 CREATE POLICY "Involved parties can update bookings" ON public.bookings
   FOR UPDATE USING (auth.uid() = customer_id OR auth.uid() = angel_id)
   WITH CHECK (auth.uid() = customer_id OR auth.uid() = angel_id);
 
 -- Customers or angels can delete their own bookings if pending
+DROP POLICY IF EXISTS "Involved parties can delete pending bookings" ON public.bookings;
 CREATE POLICY "Involved parties can delete pending bookings" ON public.bookings
   FOR DELETE USING (
     (auth.uid() = customer_id OR auth.uid() = angel_id) AND status = 'pending'
   );
 
 -- Admins can manage all bookings
+DROP POLICY IF EXISTS "Admins can manage all bookings" ON public.bookings;
 CREATE POLICY "Admins can manage all bookings" ON public.bookings
   FOR ALL USING (
     EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('admin', 'superadmin'))
@@ -114,19 +127,23 @@ DROP POLICY IF EXISTS "Müşteri review yazabilir" ON public.reviews;
 ALTER TABLE public.reviews ENABLE ROW LEVEL SECURITY;
 
 -- Anyone can read reviews
+DROP POLICY IF EXISTS "Anyone can view reviews" ON public.reviews;
 CREATE POLICY "Anyone can view reviews" ON public.reviews
   FOR SELECT USING (true);
 
 -- Only reviewers can create their own reviews
+DROP POLICY IF EXISTS "Users can create own reviews" ON public.reviews;
 CREATE POLICY "Users can create own reviews" ON public.reviews
   FOR INSERT WITH CHECK (auth.uid() = reviewer_id);
 
 -- Only reviewers can update their own reviews
+DROP POLICY IF EXISTS "Users can update own reviews" ON public.reviews;
 CREATE POLICY "Users can update own reviews" ON public.reviews
   FOR UPDATE USING (auth.uid() = reviewer_id)
   WITH CHECK (auth.uid() = reviewer_id);
 
 -- Admins can manage all reviews
+DROP POLICY IF EXISTS "Admins can manage all reviews" ON public.reviews;
 CREATE POLICY "Admins can manage all reviews" ON public.reviews
   FOR ALL USING (
     EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('admin', 'superadmin'))
@@ -143,23 +160,27 @@ DROP POLICY IF EXISTS "Kullanıcı kendi mesajlarını güncelleyebilir" ON publ
 ALTER TABLE public.messages ENABLE ROW LEVEL SECURITY;
 
 -- Users can only read messages where they are sender or receiver
+DROP POLICY IF EXISTS "Users can view own messages" ON public.messages;
 CREATE POLICY "Users can view own messages" ON public.messages
   FOR SELECT USING (
     auth.uid() = sender_id OR auth.uid() = receiver_id
   );
 
 -- Only authenticated users can send messages with themselves as sender
+DROP POLICY IF EXISTS "Authenticated users can send messages" ON public.messages;
 CREATE POLICY "Authenticated users can send messages" ON public.messages
   FOR INSERT WITH CHECK (
     auth.uid() IS NOT NULL AND auth.uid() = sender_id
   );
 
 -- Only receiver can mark messages as read
+DROP POLICY IF EXISTS "Receiver can update messages" ON public.messages;
 CREATE POLICY "Receiver can update messages" ON public.messages
   FOR UPDATE USING (auth.uid() = receiver_id)
   WITH CHECK (auth.uid() = receiver_id);
 
 -- Admins can manage all messages
+DROP POLICY IF EXISTS "Admins can manage all messages" ON public.messages;
 CREATE POLICY "Admins can manage all messages" ON public.messages
   FOR ALL USING (
     EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('admin', 'superadmin'))
@@ -176,23 +197,28 @@ DROP POLICY IF EXISTS "Admin belgeleri yönetebilir" ON public.documents;
 ALTER TABLE public.documents ENABLE ROW LEVEL SECURITY;
 
 -- Users can only view their own documents
+DROP POLICY IF EXISTS "Users can view own documents" ON public.documents;
 CREATE POLICY "Users can view own documents" ON public.documents
   FOR SELECT USING (auth.uid() = user_id);
 
 -- Users can only upload documents for themselves
+DROP POLICY IF EXISTS "Users can upload documents" ON public.documents;
 CREATE POLICY "Users can upload documents" ON public.documents
   FOR INSERT WITH CHECK (auth.uid() = user_id);
 
 -- Users can only update their own documents
+DROP POLICY IF EXISTS "Users can update own documents" ON public.documents;
 CREATE POLICY "Users can update own documents" ON public.documents
   FOR UPDATE USING (auth.uid() = user_id)
   WITH CHECK (auth.uid() = user_id);
 
 -- Users can only delete their own documents
+DROP POLICY IF EXISTS "Users can delete own documents" ON public.documents;
 CREATE POLICY "Users can delete own documents" ON public.documents
   FOR DELETE USING (auth.uid() = user_id);
 
 -- Admins can manage all documents
+DROP POLICY IF EXISTS "Admins can manage all documents" ON public.documents;
 CREATE POLICY "Admins can manage all documents" ON public.documents
   FOR ALL USING (
     EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('admin', 'superadmin'))
@@ -208,11 +234,13 @@ DROP POLICY IF EXISTS "Admin ödemeleri yönetebilir" ON public.payments;
 ALTER TABLE public.payments ENABLE ROW LEVEL SECURITY;
 
 -- Users can only view their own payments
+DROP POLICY IF EXISTS "Users can view own payments" ON public.payments;
 CREATE POLICY "Users can view own payments" ON public.payments
   FOR SELECT USING (auth.uid() = user_id);
 
 -- Users cannot directly create payments (should go through service)
 -- Admins can manage all payments
+DROP POLICY IF EXISTS "Admins can manage all payments" ON public.payments;
 CREATE POLICY "Admins can manage all payments" ON public.payments
   FOR ALL USING (
     EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('admin', 'superadmin'))
@@ -232,15 +260,18 @@ DROP POLICY IF EXISTS "Authenticated users can create notifications" ON public.n
 ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
 
 -- Users can only view their own notifications
+DROP POLICY IF EXISTS "Users can view own notifications" ON public.notifications;
 CREATE POLICY "Users can view own notifications" ON public.notifications
   FOR SELECT USING (auth.uid() = user_id);
 
 -- Users can only update their own notifications
+DROP POLICY IF EXISTS "Users can update own notifications" ON public.notifications;
 CREATE POLICY "Users can update own notifications" ON public.notifications
   FOR UPDATE USING (auth.uid() = user_id)
   WITH CHECK (auth.uid() = user_id);
 
 -- Admins can manage all notifications
+DROP POLICY IF EXISTS "Admins can manage all notifications" ON public.notifications;
 CREATE POLICY "Admins can manage all notifications" ON public.notifications
   FOR ALL USING (
     EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('admin', 'superadmin'))
@@ -258,19 +289,23 @@ DROP POLICY IF EXISTS "Admin eligibility yönetebilir" ON public.care_eligibilit
 ALTER TABLE public.care_eligibility ENABLE ROW LEVEL SECURITY;
 
 -- Users can only view their own eligibility
+DROP POLICY IF EXISTS "Users can view own eligibility" ON public.care_eligibility;
 CREATE POLICY "Users can view own eligibility" ON public.care_eligibility
   FOR SELECT USING (auth.uid() = user_id);
 
 -- Users can only create their own eligibility
+DROP POLICY IF EXISTS "Users can create own eligibility" ON public.care_eligibility;
 CREATE POLICY "Users can create own eligibility" ON public.care_eligibility
   FOR INSERT WITH CHECK (auth.uid() = user_id);
 
 -- Users can only update their own eligibility
+DROP POLICY IF EXISTS "Users can update own eligibility" ON public.care_eligibility;
 CREATE POLICY "Users can update own eligibility" ON public.care_eligibility
   FOR UPDATE USING (auth.uid() = user_id)
   WITH CHECK (auth.uid() = user_id);
 
 -- Admins can manage all eligibility records
+DROP POLICY IF EXISTS "Admins can manage all eligibility" ON public.care_eligibility;
 CREATE POLICY "Admins can manage all eligibility" ON public.care_eligibility
   FOR ALL USING (
     EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('admin', 'superadmin'))
@@ -288,19 +323,23 @@ DROP POLICY IF EXISTS "Admin cart yönetebilir" ON public.carebox_cart;
 ALTER TABLE public.carebox_cart ENABLE ROW LEVEL SECURITY;
 
 -- Users can only view their own cart
+DROP POLICY IF EXISTS "Users can view own cart" ON public.carebox_cart;
 CREATE POLICY "Users can view own cart" ON public.carebox_cart
   FOR SELECT USING (auth.uid() = user_id);
 
 -- Users can only create their own cart
+DROP POLICY IF EXISTS "Users can create own cart" ON public.carebox_cart;
 CREATE POLICY "Users can create own cart" ON public.carebox_cart
   FOR INSERT WITH CHECK (auth.uid() = user_id);
 
 -- Users can only update their own cart
+DROP POLICY IF EXISTS "Users can update own cart" ON public.carebox_cart;
 CREATE POLICY "Users can update own cart" ON public.carebox_cart
   FOR UPDATE USING (auth.uid() = user_id)
   WITH CHECK (auth.uid() = user_id);
 
 -- Admins can manage all carts
+DROP POLICY IF EXISTS "Admins can manage all carts" ON public.carebox_cart;
 CREATE POLICY "Admins can manage all carts" ON public.carebox_cart
   FOR ALL USING (
     EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('admin', 'superadmin'))
@@ -318,19 +357,23 @@ DROP POLICY IF EXISTS "Admin order yönetebilir" ON public.carebox_order_request
 ALTER TABLE public.carebox_order_requests ENABLE ROW LEVEL SECURITY;
 
 -- Users can only view their own orders
+DROP POLICY IF EXISTS "Users can view own orders" ON public.carebox_order_requests;
 CREATE POLICY "Users can view own orders" ON public.carebox_order_requests
   FOR SELECT USING (auth.uid() = user_id);
 
 -- Users can only create their own orders
+DROP POLICY IF EXISTS "Users can create own orders" ON public.carebox_order_requests;
 CREATE POLICY "Users can create own orders" ON public.carebox_order_requests
   FOR INSERT WITH CHECK (auth.uid() = user_id);
 
 -- Users can only update their own orders
+DROP POLICY IF EXISTS "Users can update own orders" ON public.carebox_order_requests;
 CREATE POLICY "Users can update own orders" ON public.carebox_order_requests
   FOR UPDATE USING (auth.uid() = user_id)
   WITH CHECK (auth.uid() = user_id);
 
 -- Admins can manage all orders
+DROP POLICY IF EXISTS "Admins can manage all orders" ON public.carebox_order_requests;
 CREATE POLICY "Admins can manage all orders" ON public.carebox_order_requests
   FOR ALL USING (
     EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('admin', 'superadmin'))
@@ -346,10 +389,12 @@ DROP POLICY IF EXISTS "Admin Katalog yönetebilir" ON public.carebox_catalog_ite
 ALTER TABLE public.carebox_catalog_items ENABLE ROW LEVEL SECURITY;
 
 -- Anyone can view the public catalog
+DROP POLICY IF EXISTS "Anyone can view catalog" ON public.carebox_catalog_items;
 CREATE POLICY "Anyone can view catalog" ON public.carebox_catalog_items
   FOR SELECT USING (true);
 
 -- Admins can manage the catalog
+DROP POLICY IF EXISTS "Admins can manage catalog" ON public.carebox_catalog_items;
 CREATE POLICY "Admins can manage catalog" ON public.carebox_catalog_items
   FOR ALL USING (
     EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('admin', 'superadmin'))
@@ -367,19 +412,23 @@ DROP POLICY IF EXISTS "Admin kann alle Bewertungen verwalten" ON public.angel_re
 ALTER TABLE public.angel_reviews ENABLE ROW LEVEL SECURITY;
 
 -- Anyone can view reviews
+DROP POLICY IF EXISTS "Anyone can view reviews" ON public.angel_reviews;
 CREATE POLICY "Anyone can view reviews" ON public.angel_reviews
   FOR SELECT USING (true);
 
 -- Only customers can create their own reviews
+DROP POLICY IF EXISTS "Customers can create own reviews" ON public.angel_reviews;
 CREATE POLICY "Customers can create own reviews" ON public.angel_reviews
   FOR INSERT WITH CHECK (auth.uid() = customer_id);
 
 -- Only customers can update their own reviews
+DROP POLICY IF EXISTS "Customers can update own reviews" ON public.angel_reviews;
 CREATE POLICY "Customers can update own reviews" ON public.angel_reviews
   FOR UPDATE USING (auth.uid() = customer_id)
   WITH CHECK (auth.uid() = customer_id);
 
 -- Admins can manage all reviews
+DROP POLICY IF EXISTS "Admins can manage all reviews" ON public.angel_reviews;
 CREATE POLICY "Admins can manage all reviews" ON public.angel_reviews
   FOR ALL USING (
     EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('admin', 'superadmin'))
@@ -397,16 +446,19 @@ DROP POLICY IF EXISTS "Admin read visitor_locations" ON public.visitor_locations
 ALTER TABLE public.visitor_locations ENABLE ROW LEVEL SECURITY;
 
 -- Anyone (including anonymous) can write to visitor_locations
+DROP POLICY IF EXISTS "Anyone can insert visitor data" ON public.visitor_locations;
 CREATE POLICY "Anyone can insert visitor data" ON public.visitor_locations
   FOR INSERT WITH CHECK (true);
 
 -- Only admins can read visitor data
+DROP POLICY IF EXISTS "Admins can read visitor data" ON public.visitor_locations;
 CREATE POLICY "Admins can read visitor data" ON public.visitor_locations
   FOR SELECT USING (
     EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('admin', 'superadmin'))
   );
 
 -- Admins can update visitor data
+DROP POLICY IF EXISTS "Admins can update visitor data" ON public.visitor_locations;
 CREATE POLICY "Admins can update visitor data" ON public.visitor_locations
   FOR UPDATE USING (
     EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('admin', 'superadmin'))
@@ -419,10 +471,12 @@ DROP POLICY IF EXISTS "Admin read visitors" ON public.visitors;
 ALTER TABLE public.visitors ENABLE ROW LEVEL SECURITY;
 
 -- Anyone (including anonymous) can write to visitors
+DROP POLICY IF EXISTS "Anyone can insert visitor tracking" ON public.visitors;
 CREATE POLICY "Anyone can insert visitor tracking" ON public.visitors
   FOR INSERT WITH CHECK (true);
 
 -- Only admins can read visitors
+DROP POLICY IF EXISTS "Admins can read visitor tracking" ON public.visitors;
 CREATE POLICY "Admins can read visitor tracking" ON public.visitors
   FOR SELECT USING (
     EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('admin', 'superadmin'))
@@ -435,10 +489,12 @@ DROP POLICY IF EXISTS "Admin read auth_log" ON public.mis_auth_log;
 ALTER TABLE public.mis_auth_log ENABLE ROW LEVEL SECURITY;
 
 -- Anyone can write auth logs
+DROP POLICY IF EXISTS "Anyone can insert auth logs" ON public.mis_auth_log;
 CREATE POLICY "Anyone can insert auth logs" ON public.mis_auth_log
   FOR INSERT WITH CHECK (true);
 
 -- Only admins can read auth logs
+DROP POLICY IF EXISTS "Admins can read auth logs" ON public.mis_auth_log;
 CREATE POLICY "Admins can read auth logs" ON public.mis_auth_log
   FOR SELECT USING (
     EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('admin', 'superadmin'))
@@ -451,10 +507,12 @@ DROP POLICY IF EXISTS "Admins can read all page views" ON public.page_views;
 ALTER TABLE public.page_views ENABLE ROW LEVEL SECURITY;
 
 -- Anyone can write page views
+DROP POLICY IF EXISTS "Anyone can insert page views" ON public.page_views;
 CREATE POLICY "Anyone can insert page views" ON public.page_views
   FOR INSERT WITH CHECK (true);
 
 -- Only admins can read page views
+DROP POLICY IF EXISTS "Admins can read page views" ON public.page_views;
 CREATE POLICY "Admins can read page views" ON public.page_views
   FOR SELECT USING (
     EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('admin', 'superadmin'))
@@ -469,6 +527,7 @@ ALTER TABLE public.mis_documents ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Anyone can view mis_documents" ON public.mis_documents;
 DROP POLICY IF EXISTS "Only admins can manage documents" ON public.mis_documents;
 
+DROP POLICY IF EXISTS "Admins can manage all documents" ON public.mis_documents;
 CREATE POLICY "Admins can manage all documents" ON public.mis_documents
   FOR ALL USING (
     EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('admin', 'superadmin'))
@@ -479,6 +538,7 @@ ALTER TABLE public.mis_document_categories ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Anyone can view categories" ON public.mis_document_categories;
 DROP POLICY IF EXISTS "Only admins can manage categories" ON public.mis_document_categories;
 
+DROP POLICY IF EXISTS "Admins can manage all categories" ON public.mis_document_categories;
 CREATE POLICY "Admins can manage all categories" ON public.mis_document_categories
   FOR ALL USING (
     EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('admin', 'superadmin'))
@@ -488,6 +548,7 @@ CREATE POLICY "Admins can manage all categories" ON public.mis_document_categori
 ALTER TABLE public.mis_document_versions ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Only admins can manage versions" ON public.mis_document_versions;
 
+DROP POLICY IF EXISTS "Admins can manage all versions" ON public.mis_document_versions;
 CREATE POLICY "Admins can manage all versions" ON public.mis_document_versions
   FOR ALL USING (
     EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('admin', 'superadmin'))
@@ -497,6 +558,7 @@ CREATE POLICY "Admins can manage all versions" ON public.mis_document_versions
 ALTER TABLE public.mis_audit_log ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Only admins can read audit log" ON public.mis_audit_log;
 
+DROP POLICY IF EXISTS "Admins can read audit log" ON public.mis_audit_log;
 CREATE POLICY "Admins can read audit log" ON public.mis_audit_log
   FOR SELECT USING (
     EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('admin', 'superadmin'))
@@ -506,6 +568,7 @@ CREATE POLICY "Admins can read audit log" ON public.mis_audit_log
 ALTER TABLE public.mis_dataroom_sections ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Only admins can manage dataroom sections" ON public.mis_dataroom_sections;
 
+DROP POLICY IF EXISTS "Admins can manage dataroom sections" ON public.mis_dataroom_sections;
 CREATE POLICY "Admins can manage dataroom sections" ON public.mis_dataroom_sections
   FOR ALL USING (
     EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('admin', 'superadmin'))
@@ -515,6 +578,7 @@ CREATE POLICY "Admins can manage dataroom sections" ON public.mis_dataroom_secti
 ALTER TABLE public.mis_dataroom_access ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Only admins can manage dataroom access" ON public.mis_dataroom_access;
 
+DROP POLICY IF EXISTS "Admins can manage dataroom access" ON public.mis_dataroom_access;
 CREATE POLICY "Admins can manage dataroom access" ON public.mis_dataroom_access
   FOR ALL USING (
     EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('admin', 'superadmin'))
@@ -524,6 +588,7 @@ CREATE POLICY "Admins can manage dataroom access" ON public.mis_dataroom_access
 ALTER TABLE public.mis_kpis ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Only admins can manage kpis" ON public.mis_kpis;
 
+DROP POLICY IF EXISTS "Admins can manage KPIs" ON public.mis_kpis;
 CREATE POLICY "Admins can manage KPIs" ON public.mis_kpis
   FOR ALL USING (
     EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('admin', 'superadmin'))
@@ -533,6 +598,7 @@ CREATE POLICY "Admins can manage KPIs" ON public.mis_kpis
 ALTER TABLE public.mis_quality_processes ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Only admins can manage processes" ON public.mis_quality_processes;
 
+DROP POLICY IF EXISTS "Admins can manage processes" ON public.mis_quality_processes;
 CREATE POLICY "Admins can manage processes" ON public.mis_quality_processes
   FOR ALL USING (
     EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('admin', 'superadmin'))
@@ -542,6 +608,7 @@ CREATE POLICY "Admins can manage processes" ON public.mis_quality_processes
 ALTER TABLE public.mis_quality_audits ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Only admins can manage audits" ON public.mis_quality_audits;
 
+DROP POLICY IF EXISTS "Admins can manage audits" ON public.mis_quality_audits;
 CREATE POLICY "Admins can manage audits" ON public.mis_quality_audits
   FOR ALL USING (
     EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('admin', 'superadmin'))

@@ -22,6 +22,7 @@ CREATE TABLE IF NOT EXISTS mis_contracts (
 
 ALTER TABLE mis_contracts ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "mis_contracts_all" ON mis_contracts;
 CREATE POLICY "mis_contracts_all" ON mis_contracts
   FOR ALL USING (true) WITH CHECK (true);
 
@@ -43,6 +44,7 @@ CREATE TABLE IF NOT EXISTS mis_signature_requests (
 
 ALTER TABLE mis_signature_requests ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "mis_signatures_all" ON mis_signature_requests;
 CREATE POLICY "mis_signatures_all" ON mis_signature_requests
   FOR ALL USING (true) WITH CHECK (true);
 
@@ -67,6 +69,7 @@ CREATE TABLE IF NOT EXISTS mis_vehicles (
 
 ALTER TABLE mis_vehicles ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "mis_vehicles_all" ON mis_vehicles;
 CREATE POLICY "mis_vehicles_all" ON mis_vehicles
   FOR ALL USING (true) WITH CHECK (true);
 
