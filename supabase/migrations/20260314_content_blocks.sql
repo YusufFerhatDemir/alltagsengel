@@ -18,9 +18,11 @@ CREATE INDEX IF NOT EXISTS idx_content_blocks_context ON public.content_blocks(c
 
 ALTER TABLE public.content_blocks ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Public can read active content" ON public.content_blocks;
 CREATE POLICY "Public can read active content" ON public.content_blocks
   FOR SELECT USING (status = 'active' AND context = 'public');
 
+DROP POLICY IF EXISTS "Admin manages all content" ON public.content_blocks;
 CREATE POLICY "Admin manages all content" ON public.content_blocks
   FOR ALL USING (
     EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('admin','superadmin'))

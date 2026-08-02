@@ -13,10 +13,12 @@ CREATE TABLE IF NOT EXISTS newsletter_subscribers (
 
 ALTER TABLE newsletter_subscribers ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Admin full access newsletter" ON newsletter_subscribers;
 CREATE POLICY "Admin full access newsletter" ON newsletter_subscribers
   FOR ALL USING (
     EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
   );
 
+DROP POLICY IF EXISTS "Anyone can subscribe" ON newsletter_subscribers;
 CREATE POLICY "Anyone can subscribe" ON newsletter_subscribers
   FOR INSERT WITH CHECK (true);

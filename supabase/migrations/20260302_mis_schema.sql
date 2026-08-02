@@ -67,9 +67,9 @@ CREATE TABLE IF NOT EXISTS public.mis_audit_log (
   created_at timestamptz DEFAULT now()
 );
 
-CREATE INDEX idx_audit_entity ON public.mis_audit_log(entity_type, entity_id);
-CREATE INDEX idx_audit_actor ON public.mis_audit_log(actor_id);
-CREATE INDEX idx_audit_date ON public.mis_audit_log(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_audit_entity ON public.mis_audit_log(entity_type, entity_id);
+CREATE INDEX IF NOT EXISTS idx_audit_actor ON public.mis_audit_log(actor_id);
+CREATE INDEX IF NOT EXISTS idx_audit_date ON public.mis_audit_log(created_at DESC);
 
 -- ====== DATA ROOM ======
 
@@ -291,22 +291,27 @@ ALTER TABLE public.mis_tasks ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.mis_notifications ENABLE ROW LEVEL SECURITY;
 
 -- Admin full access policies
+DROP POLICY IF EXISTS "Admin full access on mis_documents" ON public.mis_documents;
 CREATE POLICY "Admin full access on mis_documents" ON public.mis_documents FOR ALL USING (
   EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin')
 );
 
+DROP POLICY IF EXISTS "Admin full access on mis_audit_log" ON public.mis_audit_log;
 CREATE POLICY "Admin full access on mis_audit_log" ON public.mis_audit_log FOR ALL USING (
   EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin')
 );
 
+DROP POLICY IF EXISTS "Admin full access on mis_kpis" ON public.mis_kpis;
 CREATE POLICY "Admin full access on mis_kpis" ON public.mis_kpis FOR ALL USING (
   EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin')
 );
 
+DROP POLICY IF EXISTS "Admin full access on mis_tasks" ON public.mis_tasks;
 CREATE POLICY "Admin full access on mis_tasks" ON public.mis_tasks FOR ALL USING (
   EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin')
 );
 
+DROP POLICY IF EXISTS "Users see own notifications" ON public.mis_notifications;
 CREATE POLICY "Users see own notifications" ON public.mis_notifications FOR SELECT USING (
   user_id = auth.uid()
 );

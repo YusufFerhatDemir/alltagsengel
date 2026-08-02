@@ -87,3 +87,6 @@ marketing/.footer-preview-tmp.png
 
 # Temp-Previews aus Bild-Editing (Loeschung auf Mount blockiert)
 marketing/_tmp*.png
+
+# Lokale Shadow-DB (scripts/shadow-db.sh) — kompletter Postgres-Cluster, nie committen
+.shadow-db/

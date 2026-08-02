@@ -90,13 +90,15 @@ VALUES ('verordnungen', 'verordnungen', false)
 ON CONFLICT (id) DO NOTHING;
 
 DO $$ BEGIN
-    CREATE POLICY verordnungen_scans_admin_all ON storage.objects
+    DROP POLICY IF EXISTS verordnungen_scans_admin_all ON storage.objects;
+CREATE POLICY verordnungen_scans_admin_all ON storage.objects
         FOR ALL USING (bucket_id = 'verordnungen' AND public.is_admin())
         WITH CHECK (bucket_id = 'verordnungen' AND public.is_admin());
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 DO $$ BEGIN
-    CREATE POLICY verordnungen_scans_service_all ON storage.objects
+    DROP POLICY IF EXISTS verordnungen_scans_service_all ON storage.objects;
+CREATE POLICY verordnungen_scans_service_all ON storage.objects
         FOR ALL TO service_role
         USING (bucket_id = 'verordnungen')
         WITH CHECK (bucket_id = 'verordnungen');

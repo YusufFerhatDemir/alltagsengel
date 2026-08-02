@@ -58,6 +58,7 @@ ALTER TABLE public.account_deletion_tokens ENABLE ROW LEVEL SECURITY;
 -- Token-Tabelle: Nur Service-Role darf direkt rein. Nutzer haben keinen
 -- direkten Zugriff — die Validierung passiert serverseitig in der
 -- /api/user/delete/undo Route.
+DROP POLICY IF EXISTS "Service role only on deletion tokens" ON public.account_deletion_tokens;
 CREATE POLICY "Service role only on deletion tokens"
   ON public.account_deletion_tokens
   FOR ALL

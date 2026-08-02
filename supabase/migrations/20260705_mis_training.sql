@@ -20,6 +20,7 @@ CREATE TABLE IF NOT EXISTS mis_training_catalog (
 
 ALTER TABLE mis_training_catalog ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "mis_training_catalog_all" ON mis_training_catalog;
 CREATE POLICY "mis_training_catalog_all" ON mis_training_catalog
   FOR ALL USING (true) WITH CHECK (true);
 
@@ -39,6 +40,7 @@ CREATE TABLE IF NOT EXISTS mis_training_records (
 
 ALTER TABLE mis_training_records ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "mis_training_records_all" ON mis_training_records;
 CREATE POLICY "mis_training_records_all" ON mis_training_records
   FOR ALL USING (true) WITH CHECK (true);
 

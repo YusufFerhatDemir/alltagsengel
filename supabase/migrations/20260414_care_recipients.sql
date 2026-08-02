@@ -16,9 +16,11 @@ CREATE TABLE IF NOT EXISTS care_recipients (
 );
 ALTER TABLE care_recipients ENABLE ROW LEVEL SECURITY;
 -- Nur der eigene Angehörige sichtbar
+DROP POLICY IF EXISTS "care_recipients_owner" ON care_recipients;
 CREATE POLICY "care_recipients_owner" ON care_recipients
   FOR ALL USING (profile_id = auth.uid());
 -- Admins sehen alles
+DROP POLICY IF EXISTS "care_recipients_admin" ON care_recipients;
 CREATE POLICY "care_recipients_admin" ON care_recipients
   FOR ALL USING (
     EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('admin', 'superadmin'))

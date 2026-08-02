@@ -397,17 +397,23 @@ ALTER TABLE public.sync_conflicts       ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.action_fingerprints  ENABLE ROW LEVEL SECURITY;
 
 -- Admin-Panel voller Zugriff (Admin/Superadmin) + interne Mitarbeiter lesend
+DROP POLICY IF EXISTS service_record_items_admin_all ON public.service_record_items;
 CREATE POLICY service_record_items_admin_all ON public.service_record_items
   FOR ALL USING (public.is_admin()) WITH CHECK (public.is_admin());
+DROP POLICY IF EXISTS service_record_items_staff_read ON public.service_record_items;
 CREATE POLICY service_record_items_staff_read ON public.service_record_items
   FOR SELECT USING (public.is_internal_staff());
+DROP POLICY IF EXISTS service_record_items_service_all ON public.service_record_items;
 CREATE POLICY service_record_items_service_all ON public.service_record_items
   FOR ALL TO service_role USING (true) WITH CHECK (true);
 
+DROP POLICY IF EXISTS service_signatures_admin_all ON public.service_signatures;
 CREATE POLICY service_signatures_admin_all ON public.service_signatures
   FOR ALL USING (public.is_admin()) WITH CHECK (public.is_admin());
+DROP POLICY IF EXISTS service_signatures_staff_read ON public.service_signatures;
 CREATE POLICY service_signatures_staff_read ON public.service_signatures
   FOR SELECT USING (public.is_internal_staff());
+DROP POLICY IF EXISTS service_signatures_caregiver_read ON public.service_signatures;
 CREATE POLICY service_signatures_caregiver_read ON public.service_signatures
   FOR SELECT USING (
     EXISTS (
@@ -416,91 +422,128 @@ CREATE POLICY service_signatures_caregiver_read ON public.service_signatures
         AND public.is_own_caregiver(sr.caregiver_id)
     )
   );
+DROP POLICY IF EXISTS service_signatures_service_all ON public.service_signatures;
 CREATE POLICY service_signatures_service_all ON public.service_signatures
   FOR ALL TO service_role USING (true) WITH CHECK (true);
 
+DROP POLICY IF EXISTS geo_events_admin_all ON public.geo_events;
 CREATE POLICY geo_events_admin_all ON public.geo_events
   FOR ALL USING (public.is_admin()) WITH CHECK (public.is_admin());
+DROP POLICY IF EXISTS geo_events_staff_read ON public.geo_events;
 CREATE POLICY geo_events_staff_read ON public.geo_events
   FOR SELECT USING (public.is_internal_staff());
+DROP POLICY IF EXISTS geo_events_caregiver_read ON public.geo_events;
 CREATE POLICY geo_events_caregiver_read ON public.geo_events
   FOR SELECT USING (public.is_own_caregiver(caregiver_id));
+DROP POLICY IF EXISTS geo_events_service_all ON public.geo_events;
 CREATE POLICY geo_events_service_all ON public.geo_events
   FOR ALL TO service_role USING (true) WITH CHECK (true);
 
+DROP POLICY IF EXISTS approved_locations_admin_all ON public.approved_locations;
 CREATE POLICY approved_locations_admin_all ON public.approved_locations
   FOR ALL USING (public.is_admin()) WITH CHECK (public.is_admin());
+DROP POLICY IF EXISTS approved_locations_staff_read ON public.approved_locations;
 CREATE POLICY approved_locations_staff_read ON public.approved_locations
   FOR SELECT USING (public.is_internal_staff());
+DROP POLICY IF EXISTS approved_locations_service_all ON public.approved_locations;
 CREATE POLICY approved_locations_service_all ON public.approved_locations
   FOR ALL TO service_role USING (true) WITH CHECK (true);
 
+DROP POLICY IF EXISTS ocr_results_admin_all ON public.ocr_results;
 CREATE POLICY ocr_results_admin_all ON public.ocr_results
   FOR ALL USING (public.is_admin()) WITH CHECK (public.is_admin());
+DROP POLICY IF EXISTS ocr_results_staff_read ON public.ocr_results;
 CREATE POLICY ocr_results_staff_read ON public.ocr_results
   FOR SELECT USING (public.is_internal_staff());
+DROP POLICY IF EXISTS ocr_results_service_all ON public.ocr_results;
 CREATE POLICY ocr_results_service_all ON public.ocr_results
   FOR ALL TO service_role USING (true) WITH CHECK (true);
 
+DROP POLICY IF EXISTS review_errors_admin_all ON public.review_errors;
 CREATE POLICY review_errors_admin_all ON public.review_errors
   FOR ALL USING (public.is_admin()) WITH CHECK (public.is_admin());
+DROP POLICY IF EXISTS review_errors_staff_read ON public.review_errors;
 CREATE POLICY review_errors_staff_read ON public.review_errors
   FOR SELECT USING (public.is_internal_staff());
+DROP POLICY IF EXISTS review_errors_service_all ON public.review_errors;
 CREATE POLICY review_errors_service_all ON public.review_errors
   FOR ALL TO service_role USING (true) WITH CHECK (true);
 
+DROP POLICY IF EXISTS monthly_closings_admin_all ON public.monthly_closings;
 CREATE POLICY monthly_closings_admin_all ON public.monthly_closings
   FOR ALL USING (public.is_admin()) WITH CHECK (public.is_admin());
+DROP POLICY IF EXISTS monthly_closings_staff_read ON public.monthly_closings;
 CREATE POLICY monthly_closings_staff_read ON public.monthly_closings
   FOR SELECT USING (public.is_internal_staff());
+DROP POLICY IF EXISTS monthly_closings_client_read ON public.monthly_closings;
 CREATE POLICY monthly_closings_client_read ON public.monthly_closings
   FOR SELECT USING (public.is_own_client(client_id));
+DROP POLICY IF EXISTS monthly_closings_service_all ON public.monthly_closings;
 CREATE POLICY monthly_closings_service_all ON public.monthly_closings
   FOR ALL TO service_role USING (true) WITH CHECK (true);
 
+DROP POLICY IF EXISTS invoice_packages_admin_all ON public.invoice_packages;
 CREATE POLICY invoice_packages_admin_all ON public.invoice_packages
   FOR ALL USING (public.is_admin()) WITH CHECK (public.is_admin());
+DROP POLICY IF EXISTS invoice_packages_staff_read ON public.invoice_packages;
 CREATE POLICY invoice_packages_staff_read ON public.invoice_packages
   FOR SELECT USING (public.is_internal_staff());
+DROP POLICY IF EXISTS invoice_packages_service_all ON public.invoice_packages;
 CREATE POLICY invoice_packages_service_all ON public.invoice_packages
   FOR ALL TO service_role USING (true) WITH CHECK (true);
 
+DROP POLICY IF EXISTS payment_status_admin_all ON public.payment_status;
 CREATE POLICY payment_status_admin_all ON public.payment_status
   FOR ALL USING (public.is_admin()) WITH CHECK (public.is_admin());
+DROP POLICY IF EXISTS payment_status_staff_read ON public.payment_status;
 CREATE POLICY payment_status_staff_read ON public.payment_status
   FOR SELECT USING (public.is_internal_staff());
+DROP POLICY IF EXISTS payment_status_service_all ON public.payment_status;
 CREATE POLICY payment_status_service_all ON public.payment_status
   FOR ALL TO service_role USING (true) WITH CHECK (true);
 
+DROP POLICY IF EXISTS dispatch_status_admin_all ON public.dispatch_status;
 CREATE POLICY dispatch_status_admin_all ON public.dispatch_status
   FOR ALL USING (public.is_admin()) WITH CHECK (public.is_admin());
+DROP POLICY IF EXISTS dispatch_status_staff_read ON public.dispatch_status;
 CREATE POLICY dispatch_status_staff_read ON public.dispatch_status
   FOR SELECT USING (public.is_internal_staff());
+DROP POLICY IF EXISTS dispatch_status_service_all ON public.dispatch_status;
 CREATE POLICY dispatch_status_service_all ON public.dispatch_status
   FOR ALL TO service_role USING (true) WITH CHECK (true);
 
 -- audit_logs: nur lesen für Admin/Superadmin (sensibel), Insert nur service_role
+DROP POLICY IF EXISTS audit_logs_admin_read ON public.audit_logs;
 CREATE POLICY audit_logs_admin_read ON public.audit_logs
   FOR SELECT USING (public.is_admin());
+DROP POLICY IF EXISTS audit_logs_service_all ON public.audit_logs;
 CREATE POLICY audit_logs_service_all ON public.audit_logs
   FOR ALL TO service_role USING (true) WITH CHECK (true);
 
+DROP POLICY IF EXISTS offline_queue_admin_all ON public.offline_queue;
 CREATE POLICY offline_queue_admin_all ON public.offline_queue
   FOR ALL USING (public.is_admin()) WITH CHECK (public.is_admin());
+DROP POLICY IF EXISTS offline_queue_own_read ON public.offline_queue;
 CREATE POLICY offline_queue_own_read ON public.offline_queue
   FOR SELECT USING (user_id = auth.uid());
+DROP POLICY IF EXISTS offline_queue_service_all ON public.offline_queue;
 CREATE POLICY offline_queue_service_all ON public.offline_queue
   FOR ALL TO service_role USING (true) WITH CHECK (true);
 
+DROP POLICY IF EXISTS sync_conflicts_admin_all ON public.sync_conflicts;
 CREATE POLICY sync_conflicts_admin_all ON public.sync_conflicts
   FOR ALL USING (public.is_admin()) WITH CHECK (public.is_admin());
+DROP POLICY IF EXISTS sync_conflicts_staff_read ON public.sync_conflicts;
 CREATE POLICY sync_conflicts_staff_read ON public.sync_conflicts
   FOR SELECT USING (public.is_internal_staff());
+DROP POLICY IF EXISTS sync_conflicts_service_all ON public.sync_conflicts;
 CREATE POLICY sync_conflicts_service_all ON public.sync_conflicts
   FOR ALL TO service_role USING (true) WITH CHECK (true);
 
+DROP POLICY IF EXISTS action_fingerprints_admin_all ON public.action_fingerprints;
 CREATE POLICY action_fingerprints_admin_all ON public.action_fingerprints
   FOR ALL USING (public.is_admin()) WITH CHECK (public.is_admin());
+DROP POLICY IF EXISTS action_fingerprints_service_all ON public.action_fingerprints;
 CREATE POLICY action_fingerprints_service_all ON public.action_fingerprints
   FOR ALL TO service_role USING (true) WITH CHECK (true);
 
@@ -520,10 +563,12 @@ ON CONFLICT (id) DO NOTHING;
 -- mit Anon-Key + eingeloggter Admin-Session → braucht is_admin()-Policy.
 -- Native-App-Uploads laufen ausschließlich über Server-API-Routen mit
 -- service_role (siehe app/api/native/leistungsnachweis-upload/route.ts).
+DROP POLICY IF EXISTS service_proofs_admin_all ON storage.objects;
 CREATE POLICY service_proofs_admin_all ON storage.objects
   FOR ALL USING (bucket_id = 'service-proofs' AND public.is_admin())
   WITH CHECK (bucket_id = 'service-proofs' AND public.is_admin());
 
+DROP POLICY IF EXISTS service_proofs_service_all ON storage.objects;
 CREATE POLICY service_proofs_service_all ON storage.objects
   FOR ALL TO service_role
   USING (bucket_id = 'service-proofs')
