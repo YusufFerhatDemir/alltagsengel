@@ -465,7 +465,7 @@ describe.skipIf(!hasShadowDb)(
       // statisch, dass keine DELETE-Policy für reguläre User existiert.
       const consolidation = readMigration('20260803100000_consolidate_bookings_policies.sql')
       const deletePolicy = consolidation.match(
-        /CREATE POLICY.*FOR DELETE(?!.*is_admin)/s
+        /CREATE POLICY[\s\S]*?FOR DELETE(?![\s\S]*?is_admin)/
       )
       expect(deletePolicy).toBeNull()
     })
