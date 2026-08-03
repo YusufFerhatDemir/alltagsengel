@@ -54,13 +54,32 @@
 **Ursache:** `__tests__/security/bookings-policy-consolidation.test.ts:468` enthielt `/s`-Regex-Flag.
 **Fix:** Commit `76f1d17` — `/s` durch `[\s\S]` ersetzt.
 
-### Lauf 2: Commit `76f1d17` — IN PROGRESS
+### Lauf 2: Commit `76f1d17` — CANCELLED
+
+Abgebrochen durch Concurrency-Group (neuer Push da31648 hat den Lauf ersetzt).
+
+### Lauf 3: Commit `da31648` — ✅ SUCCESS
+
+| Step | Status |
+|---|---|
+| Set up job | ✅ success |
+| Checkout | ✅ success |
+| Setup Node.js | ✅ success |
+| Install dependencies (npm ci) | ✅ success |
+| **Typecheck** | ✅ success |
+| Lint (informativ) | ✅ success |
+| **Unit tests (vitest)** | ✅ success |
+| **Unit tests (node:test)** | ✅ success |
+| **Secret scan** | ✅ success |
+| **IK-Hardcoding-Check** | ✅ success |
+| **Forbidden-strings lint** | ✅ success |
+| **Production build** | ✅ success |
 
 | Detail | Wert |
 |---|---|
-| Run-ID | `30806492372` |
-| Head SHA | `76f1d1751c84ed9db95ac81d711a4c8dfd3b37aa` |
-| Status | `in_progress` (zum Zeitpunkt der Report-Erstellung) |
+| Run-ID | `30806631156` |
+| Head SHA | `da316485133559127b9c06bc3a8d2e098962538c` |
+| Status | ✅ **SUCCESS** — alle 12 Steps bestanden |
 
 ---
 
@@ -233,7 +252,7 @@ Alle Migrationen sind idempotent (DROP ... IF EXISTS + CREATE OR REPLACE).
 | R-2 | 13 JS-dynamische Tests noch übersprungen (brauchen `raw_sql`-RPC-Fix) | NIEDRIG | Alle 13 Szenarien durch 29 SQL-Level-Tests und 14 PGlite-Tests abgedeckt |
 | R-3 | anon-Zugriff auf `bookings` wirft `permission denied for function is_admin` | NIEDRIG | Kein Regressionsproblem (bestand schon vor Konsolidierung); anon soll nie auf bookings zugreifen |
 | R-4 | Live-Drift: Policies auf Prod können von Shadow-DB abweichen | MITTEL | Vor Prod-Apply: `SELECT policyname FROM pg_policies WHERE tablename='bookings'` vergleichen |
-| R-5 | CI Lauf 2 zum Zeitpunkt der Report-Erstellung noch in Progress | NIEDRIG | Lauf 1 scheiterte nur an Typecheck-Regex, nicht an Tests; Fix in 76f1d17 |
+| R-5 | ~~CI Lauf 2 noch in Progress~~ | ✅ GELÖST | CI Lauf 3 (da31648) → **alle 12 Steps SUCCESS** |
 
 ---
 
@@ -266,7 +285,7 @@ Alle Migrationen sind idempotent (DROP ... IF EXISTS + CREATE OR REPLACE).
 6. **Security-Review bestanden** — `is_profile_soft_deleted()` hat keine kritischen Schwachstellen.
 
 **Bedingungen für Prod-Apply:**
-1. CI-Lauf 2 (76f1d17) muss grün sein.
+1. ~~CI-Lauf muss grün sein~~ → ✅ CI Lauf 3 (da31648) ist **grün**.
 2. Vor Prod-Apply: Aktuellen Policy-Stand auf Prod mit `SELECT policyname, permissive, cmd, qual, with_check FROM pg_policies WHERE tablename = 'bookings';` prüfen und gegen erwarteten Zustand abgleichen.
 3. Backup der bestehenden Policies als SQL-Dump.
 4. Migration in einer Transaktion (BEGIN/COMMIT) ausführen — ist bereits so implementiert.
