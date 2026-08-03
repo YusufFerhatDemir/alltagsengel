@@ -62,6 +62,7 @@ DROP POLICY IF EXISTS "Involved parties can delete pending bookings" ON public.b
 -- Schneidet ALLE permissiven Policies auf die aktive Organisation zu.
 -- Identisch zu 20260801_phase3_multi_mandant_saas.sql, hier explizit
 -- re-erstellt damit die Migration idempotent ist.
+DROP POLICY IF EXISTS "bookings_org_fence"                           ON public.bookings;
 CREATE POLICY "bookings_org_fence" ON public.bookings
   AS RESTRICTIVE FOR ALL
   USING  (organization_id = public.current_org_id())
@@ -77,6 +78,7 @@ CREATE POLICY "bookings_org_fence" ON public.bookings
 -- Ersetzt: "Admin bookingleri yönetebilir", "Admins can manage all
 -- bookings", "Admins can read all bookings", "Admins can update all
 -- bookings" (4 Policies → 1).
+DROP POLICY IF EXISTS "bookings_admin"                               ON public.bookings;
 CREATE POLICY "bookings_admin" ON public.bookings
   FOR ALL
   USING (public.is_admin());
@@ -97,6 +99,7 @@ CREATE POLICY "bookings_admin" ON public.bookings
 -- Ersetzt: "bookings_select", "Kullanıcı kendi bookinglerini
 -- okuyabilir", "Users can view own bookings", "Admins can read all
 -- bookings" (4 Policies → 1 + Admin-ALL).
+DROP POLICY IF EXISTS "bookings_select_own"                          ON public.bookings;
 CREATE POLICY "bookings_select_own" ON public.bookings
   FOR SELECT
   USING (
@@ -112,6 +115,7 @@ CREATE POLICY "bookings_select_own" ON public.bookings
 -- anlegen (Session sollte eh weg sein, aber Defense-in-Depth).
 -- Ersetzt: "Customers can insert bookings", "Müşteri booking
 -- oluşturabilir", "bookings_insert" (3 Policies → 1).
+DROP POLICY IF EXISTS "bookings_insert_customer"                     ON public.bookings;
 CREATE POLICY "bookings_insert_customer" ON public.bookings
   FOR INSERT
   WITH CHECK (
@@ -128,6 +132,7 @@ CREATE POLICY "bookings_insert_customer" ON public.bookings
 -- Ersetzt: "Angels can update own bookings", "Customers can update
 -- own bookings", "bookings_update", "İlgili kişi bookingi
 -- güncelleyebilir" (4 Policies → 1 + Admin-ALL).
+DROP POLICY IF EXISTS "bookings_update_own"                          ON public.bookings;
 CREATE POLICY "bookings_update_own" ON public.bookings
   FOR UPDATE
   USING (
