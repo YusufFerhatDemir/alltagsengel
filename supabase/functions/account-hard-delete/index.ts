@@ -121,7 +121,9 @@ serve(async (req: Request) => {
         .delete()
         .eq('sender_id', userId)
       // care_eligibility-Delete entfernt: Tabelle existiert nicht (Phase 5).
-      await admin.from('documents').delete().eq('user_id', userId)
+      // documents-Tabelle: existiert derzeit nicht in Produktion.
+      // Delete-Aufruf ist safe (Supabase gibt Fehler zurück, blockiert aber nicht).
+      await admin.from('documents').delete().eq('user_id', userId).then(() => {}).catch(() => {})
       await admin.from('bookings').delete().eq('customer_id', userId)
       await admin.from('bookings').delete().eq('angel_id', userId)
       await admin.from('angels').delete().eq('id', userId)
