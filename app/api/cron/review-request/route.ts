@@ -56,6 +56,8 @@ export async function GET(request: Request) {
     let sent = 0
     for (const booking of bookings) {
       if (reviewedBookingIds.has(booking.id)) continue
+      // Profil gelöscht → customer_id = NULL → keine Bewertungs-Email
+      if (!booking.customer_id) continue
 
       // Kundenprofil laden
       const { data: customer } = await supabaseAdmin

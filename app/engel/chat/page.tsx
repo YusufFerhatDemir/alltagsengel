@@ -29,8 +29,10 @@ export default function EngelChatPage() {
 
       const chatList: any[] = []
       for (const b of bookings) {
+        // Überspringe Buchungen ohne Kunden-Profil (Profil gelöscht → customer_id = NULL)
+        if (!b.customer_id) continue
         const customer = b.profiles as any
-        const name = customer ? `${customer.first_name} ${customer.last_name?.[0] || ''}.` : 'Kunde'
+        const name = customer ? `${customer.first_name} ${customer.last_name?.[0] || ''}.` : 'Ehem. Kunde'
 
         const { data: msgs, error: msgsErr } = await supabase
           .from('messages')
