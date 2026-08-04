@@ -16,7 +16,7 @@ export const viewport: Viewport = {
   maximumScale: 5,
   userScalable: true,
   themeColor: '#1A1612',
-  colorScheme: 'only dark' as any,
+  colorScheme: 'dark',
 }
 
 export const metadata: Metadata = {
@@ -103,7 +103,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="de" data-theme="dark" style={{ colorScheme: 'only dark' } as any}>
+    <html lang="de" data-theme="dark" suppressHydrationWarning style={{ colorScheme: 'dark' }}>
       <head>
         {/* ═══ RESOURCE HINTS (CWV) ═══ */}
         {/* GTM/gtag lädt auf jeder Seite afterInteractive → Preconnect spart
