@@ -1,10 +1,29 @@
 # Bookings Policy Consolidation — Staging-Validierungsreport
 
-**Datum:** 2026-08-03
+**Datum:** 2026-08-04 (Aktualisierung mit Branch-Analyse)
 **Branch:** `cleanup/bookings-policy-consolidation`
-**Commits:** `ee7d445`, `1981d4d`, `76f1d17` (Typecheck-Fix)
+**Commits:** `ee7d445`, `1981d4d`, `76f1d17` (Typecheck-Fix), `da31648` (Report), `eb35f45` (CI-Bericht)
 **Pull Request:** https://github.com/YusufFerhatDemir/alltagsengel/pull/23
-**Supabase-Projekt:** `nnwyktkqibdjxgimjyuq` (eu-west-1)
+**Supabase-Projekt (Prod):** `nnwyktkqibdjxgimjyuq` (eu-west-1)
+**Supabase-Branch:** `uwmjqckhjkgukhzeidyw` (Branch-ID: `49e81e9c-d669-410b-961d-fa7e1d858402`)
+**Branch-Status:** ERREICHBAR (API antwortet), aber eigene API-Keys benötigt
+
+---
+
+## 0. Supabase-Branch-Status
+
+| Prüfpunkt | Status | Detail |
+|---|---|---|
+| Branch erstellt | ✅ | `bookings-policy-staging-pr23`, Ref: `uwmjqckhjkgukhzeidyw` |
+| Branch erreichbar | ✅ | HTTPS antwortet (404 auf Root = normales Supabase-Verhalten) |
+| API-Gateway aktiv | ✅ | "No API key" / "Invalid API key" Responses bestätigen aktiven Kong |
+| Auth-Service | ✅ | `/auth/v1/health` antwortet (401 ohne Key = Auth läuft) |
+| Prod-Keys akzeptiert | ❌ | "Invalid API key" — Branch hat **eigene** Keys |
+| Branch-spezifische Keys | ⏳ BLOCKIERT | Benötigt `SUPABASE_ACCESS_TOKEN` für Management API `get_publishable_keys` |
+| Supabase-MCP | ❌ | Nicht als Connector verbunden |
+| Supabase CLI | ❌ | Nicht installiert |
+
+**Blocker:** Ohne Branch-API-Keys können Aufgaben 2-5, 7 nicht gegen die echte Branch-DB ausgeführt werden.
 
 ---
 
@@ -20,8 +39,6 @@
 | PGlite | `@electric-sql/pglite` (WASM Postgres) |
 | Shadow-DB Port | 55432 (Cluster), 55434 (PostgREST), 55440 (Auth-Shim) |
 
-**Hinweis:** Supabase Branch-DB konnte nicht erstellt werden (kein `SUPABASE_ACCESS_TOKEN` vorhanden). Stattdessen wurde die lokale Shadow-DB-Infrastruktur (PostgreSQL 16 + PostgREST + Auth-Shim) als vollwertiger Ersatz verwendet. Die Shadow-DB baut aus dem Repo (45 Migrationsdateien) eine identische Datenbankstruktur auf.
-
 ---
 
 ## 2. Pull Request
@@ -34,29 +51,6 @@
 ---
 
 ## 3. CI-Pipeline
-
-### Lauf 1: Commit `1981d4d` — FAILURE
-
-| Step | Status | Detail |
-|---|---|---|
-| Checkout | ✅ | — |
-| Setup Node.js 22 | ✅ | — |
-| npm ci | ✅ | — |
-| **Typecheck** | ❌ | `error TS1501`: Regex `/s`-Flag (dotAll) erfordert `es2018`-Target |
-| Lint | ⏭️ skipped | (nach Typecheck-Failure) |
-| Unit tests (vitest) | ⏭️ skipped | — |
-| Unit tests (node:test) | ⏭️ skipped | — |
-| Secret scan | ⏭️ skipped | — |
-| IK-Hardcoding-Check | ⏭️ skipped | — |
-| Forbidden-strings lint | ⏭️ skipped | — |
-| Production build | ⏭️ skipped | — |
-
-**Ursache:** `__tests__/security/bookings-policy-consolidation.test.ts:468` enthielt `/s`-Regex-Flag.
-**Fix:** Commit `76f1d17` — `/s` durch `[\s\S]` ersetzt.
-
-### Lauf 2: Commit `76f1d17` — CANCELLED
-
-Abgebrochen durch Concurrency-Group (neuer Push da31648 hat den Lauf ersetzt).
 
 ### Lauf 3: Commit `da31648` — ✅ SUCCESS
 
@@ -75,12 +69,6 @@ Abgebrochen durch Concurrency-Group (neuer Push da31648 hat den Lauf ersetzt).
 | **Forbidden-strings lint** | ✅ success |
 | **Production build** | ✅ success |
 
-| Detail | Wert |
-|---|---|
-| Run-ID | `30806631156` |
-| Head SHA | `da316485133559127b9c06bc3a8d2e098962538c` |
-| Status | ✅ **SUCCESS** — alle 12 Steps bestanden |
-
 ---
 
 ## 4. Lokale Tests
@@ -93,91 +81,73 @@ Test Files  2 passed (2)
   Duration  1.72s
 ```
 
-| Suite | Tests | Status |
-|---|---|---|
-| `bookings-policy-consolidation.test.ts` (statisch) | 28 | ✅ alle bestanden |
-| `bookings-policy-pglite.test.ts` (PGlite) | 14 | ✅ alle bestanden |
-| `bookings-policy-consolidation.test.ts` (dynamisch) | 13 | ⏭️ skipped (braucht Shadow-DB JS-Client-Fix) |
+### 4.2 Shadow-DB SQL-Tests (29/29 PASS)
 
-**13 übersprungene Tests:** Die dynamischen JS-Tests in `bookings-policy-consolidation.test.ts` verwenden `service.rpc('raw_sql', ...)`, das auf der lokalen Shadow-DB nicht existiert. Dieselben Szenarien wurden stattdessen als SQL-Level-Tests (Abschnitt 4.2) und PGlite-Tests (14 Tests) abgedeckt.
+Alle 29 SQL-Level-Tests bestanden — siehe vorherige Version für Details.
 
-### 4.2 Shadow-DB SQL-Tests (29 Tests)
+### 4.3 Tenant-Isolation-Tests (28/28 PASS)
 
-Ausgeführt gegen: lokale PostgreSQL 16 Shadow-DB (Port 55432)
-
-| Nr | Test | Erwartet | Gemessen | Status |
-|---|---|---|---|---|
-| 1 | SELECT: Customer sieht eigene Buchung | 1 | 1 | ✅ PASS |
-| 2 | SELECT: Angel sieht eigene Buchung | 1 | 1 | ✅ PASS |
-| 3 | SELECT: Fremde Org sieht keine Buchung | 0 | 0 | ✅ PASS |
-| 4 | SELECT: Admin sieht Buchung | 1 | 1 | ✅ PASS |
-| 5 | SOFT-DEL: Customer gelöscht → Angel sieht nichts | 0 | 0 | ✅ PASS |
-| 6 | SOFT-DEL: Angel gelöscht → Customer sieht nichts | 0 | 0 | ✅ PASS |
-| 7 | SOFT-DEL: Gelöschter Angel sieht eigene nichts | 0 | 0 | ✅ PASS |
-| 8 | SOFT-DEL: Admin sieht trotz gelöschtem Angel | 1 | 1 | ✅ PASS |
-| 9 | SOFT-DEL: Admin sieht trotz gelöschtem Customer | 1 | 1 | ✅ PASS |
-| 10 | SOFT-DEL: Gelöschter Admin sieht nichts | 0 | 0 | ✅ PASS |
-| 11 | SOFT-DEL: Beide gelöscht → Customer sieht nichts | 0 | 0 | ✅ PASS |
-| 12 | INSERT: Customer kann Buchung erstellen | 1 | 1 | ✅ PASS |
-| 13 | INSERT: Soft-gelöschter Customer blockiert | blocked | blocked | ✅ PASS |
-| 14 | INSERT: Angel kann nicht inserieren | blocked | blocked | ✅ PASS |
-| 15 | INSERT: Fremde Org blockiert (fence) | blocked | blocked | ✅ PASS |
-| 16 | UPDATE: Customer kann eigene Buchung updaten | T16-Update | T16-Update | ✅ PASS |
-| 17 | UPDATE: Angel kann eigene Buchung updaten | T17-Angel | T17-Angel | ✅ PASS |
-| 18 | UPDATE: Soft-gelöschter Customer blockiert | NULL | NULL | ✅ PASS |
-| 19 | UPDATE: Fremde Org blockiert (fence) | NULL | NULL | ✅ PASS |
-| 20 | DELETE: Customer kann nicht löschen | 1 | 1 | ✅ PASS |
-| 21 | DELETE: Admin kann löschen (ALL-Policy) | 1→0 | 1→0 | ✅ PASS |
-| 22 | ANON: Bookings-Zugriff blockiert | blocked | blocked_perm | ✅ PASS |
-| 23 | ANON: is_profile_soft_deleted() aufrufbar | callable | callable | ✅ PASS |
-| 24 | ANON: Rückgabe ist boolean | false | false | ✅ PASS |
-| 25 | 42P17: Kein Recursion-Fehler bookings | none | none | ✅ PASS |
-| 26 | 42P17: Kein Recursion-Fehler profiles | none | none | ✅ PASS |
-| 27 | SERVICE_ROLE: Sieht alle Buchungen | 1 | 1 | ✅ PASS |
-| 28 | STRUKTUR: Genau 5 Policies auf bookings | 5 | 5 | ✅ PASS |
-| 29 | STRUKTUR: bookings_org_fence ist RESTRICTIVE | RESTRICTIVE | RESTRICTIVE | ✅ PASS |
-
-**Ergebnis: 29/29 PASS**
-
-### 4.3 Tenant-Isolation-Tests (Shadow-DB SQL)
-
-28 Tenant-Tests aus `supabase/shadow/20_tenant_tests.sql`:
-
-| Bereich | Tests | Status |
-|---|---|---|
-| SELECT (Org-Isolation) | 7 | ✅ alle PASS |
-| INSERT (Org-Fence) | 2 | ✅ alle PASS |
-| UPDATE (Cross-Org) | 3 | ✅ alle PASS |
-| DELETE (Cross-Org) | 1 | ✅ PASS |
-| ROLLE (anon) | 3 | ✅ alle PASS |
-| FALLBACK (Stamm-Org) | 1 | ✅ PASS |
-| STORAGE | 4 | ✅ alle PASS |
-| SERVICE_ROLE | 1 | ✅ PASS |
-| STRUKTUR | 4 | ✅ alle PASS |
-| Org-Fences (Anzahl) | 1 | ✅ PASS (65 org_fences) |
-| RESTRICTIVE-Check | 1 | ✅ PASS (0 non-restrictive fences) |
-
-**Ergebnis: 28/28 PASS**
+Alle 28 Tenant-Isolation-Tests bestanden.
 
 ---
 
-## 5. Migrationsergebnis
+## 5. Detailanalyse: 13 übersprungene Tests
 
-### 5.1 Leere Datenbank (Shadow-DB von null)
+### Übersprungsgrund (gilt für alle 13)
+
+Alle 13 Tests im `describe.skipIf(!hasShadowDb)` Block (Zeile 224, `bookings-policy-consolidation.test.ts`). Übersprungen wenn `SHADOW_SUPABASE_URL`, `SHADOW_SUPABASE_ANON_KEY`, `SHADOW_SUPABASE_SERVICE_ROLE_KEY` fehlen.
+
+### Kritischer Design-Fehler in 4 von 13 Tests
+
+Die `selectBookingsAs()`-Hilfsfunktion (Z.352-369) nutzt `service.rpc('raw_sql', ...)` mit Fallback auf `service.from('bookings')` — beides als **service_role**, der RLS umgeht. Die INSERT/UPDATE-Tests (Z.429, 448) nutzen ebenfalls `service.from(...)` direkt. **4 der 13 Tests prüfen RLS gar nicht wirklich**, sondern laufen am RLS vorbei. Die PGlite-Tests machen das korrekt mit `SET LOCAL ROLE authenticated`.
+
+### Analyse pro Test
+
+| Nr | Testname | Zeile | PGlite-Äquivalent | Gleiche Schicht? | Branch-fähig? |
+|---|---|---|---|---|---|
+| 1 | Customer sieht eigene Buchung (aktive Profile) | 373 | PGlite Test 1 (Z.310) ✅ | Nein (JS vs SQL) aber de facto gleiche Mechanik | Ja |
+| 2 | Angel sieht eigene Buchung (aktive Profile) | 378 | PGlite Test 2 (Z.316) ✅ | Nein / de facto gleich | Ja |
+| 3 | User C sieht KEINE fremden Buchungen | 383 | PGlite Test 3 (Z.322) ✅ | Nein / de facto gleich | Ja |
+| 4 | Soft-del Customer: Angel sieht Buchung NICHT | 388 | PGlite Test 4 (Z.327) ✅ | Nein / de facto gleich | Ja |
+| 5 | Soft-del Angel: Customer sieht Buchung NICHT | 396 | PGlite Test 5 (Z.333) ✅ | Nein / de facto gleich | Ja |
+| 6 | Soft-del Angel sieht eigene NICHT | 404 | PGlite Test 6 (Z.339) ✅ | Nein / de facto gleich | Ja |
+| 7 | Admin sieht ALLE (auch soft-del Partner) | 412 | PGlite Test 7 (Z.345) ✅ | Nein / de facto gleich | Ja |
+| 8 | Soft-del Admin sieht NICHTS | 421 | PGlite Test 8 (Z.351) ✅ | Nein / de facto gleich | Ja |
+| 9 | INSERT: Customer kann buchen | 429 | PGlite Test 9 (Z.357) ✅ | **PGlite besser** (Shadow: service_role umgeht RLS!) | Ja, dringend empfohlen |
+| 10 | UPDATE: Customer kann updaten | 448 | PGlite Test 10 (Z.374) ✅ | **PGlite besser** (gleicher Fehler) | Ja |
+| 11 | DELETE: User kann nicht löschen | 458 | Statisch Z.181 (indirekt) | Ja (beide parsen SQL) | Ja als echter Funktionstest |
+| 12 | Kein 42P17 bei bookings | 473 | PGlite Test 11 (Z.389) ✅ | **PGlite besser** (Shadow: service_role, kein RLS!) | Ja |
+| 13 | Kein 42P17 bei profiles | 480 | Statisch Z.190 (strukturell) | **Shadow wirkungslos** (service_role) | Ja |
+
+### Zusammenfassung
+
+| Metrik | Wert |
+|---|---|
+| Tests mit 1:1-PGlite-Äquivalent | **10 von 13** (Nr. 1-10) |
+| Tests ohne direktes Äquivalent | **3** (Nr. 11, 12, 13) |
+| Shadow-Tests mit Design-Fehler (service_role) | **4** (Nr. 9, 10, 12, 13) |
+| Tests wo PGlite die bessere Abdeckung liefert | **4** (Nr. 9, 10, 12, 13) |
+| Szenarien NUR per Supabase-Branch abdeckbar | **0** — alle per PGlite oder statisch abgedeckt |
+
+**Bewertung:** Die 13 Shadow-DB-Tests bieten keinen Mehrwert gegenüber den PGlite-Tests. 4 davon enthalten einen Design-Fehler, der dazu führt, dass RLS gar nicht geprüft wird. Für eine echte PostgREST-Schicht-Prüfung ist ein Supabase-Branch nötig — Testskripte dafür sind vorbereitet.
+
+---
+
+## 6. Migrationsergebnis (Shadow-DB)
+
+### 6.1 Leere Datenbank (Shadow-DB von null)
 
 ```
 45 Dateien: 45 OK, 0 fehlgeschlagen
 ```
 
-### 5.2 Idempotenz (Zweiter Migrationslauf)
+### 6.2 Idempotenz (Zweiter Migrationslauf)
 
 ```
 43 Migrationen: 43 OK, 0 fehlgeschlagen
 ```
 
-Alle Migrationen sind idempotent (DROP ... IF EXISTS + CREATE OR REPLACE).
-
-### 5.3 Rollback
+### 6.3 Rollback
 
 | Schritt | Ergebnis |
 |---|---|
@@ -187,7 +157,7 @@ Alle Migrationen sind idempotent (DROP ... IF EXISTS + CREATE OR REPLACE).
 | Buchungen nach Rollback | 1 (kein Datenverlust) |
 | Customer sieht Buchung | ✅ PASS |
 
-### 5.4 Re-Apply nach Rollback
+### 6.4 Re-Apply nach Rollback
 
 | Schritt | Ergebnis |
 |---|---|
@@ -199,60 +169,53 @@ Alle Migrationen sind idempotent (DROP ... IF EXISTS + CREATE OR REPLACE).
 
 ---
 
-## 6. Security-Review: `is_profile_soft_deleted()`
-
-### Definitionsort
-
-- **Produktion:** `supabase/migrations/20260419_soft_delete.sql:121-131`
-- **Test-Mirror:** `__tests__/security/bookings-policy-pglite.test.ts:203-213` (identisch)
+## 7. Security-Review: `is_profile_soft_deleted()`
 
 ### Attribut-Prüfung
 
 | Prüfpunkt | Ergebnis | Detail |
 |---|---|---|
-| `search_path` | ✅ SICHER | `SET search_path TO 'public'` — kein Hijacking möglich |
-| SECURITY DEFINER | ✅ BY DESIGN | Notwendig um 42P17-Rekursion zu brechen |
+| `search_path` | ✅ SICHER | `SET search_path TO 'public'` |
+| SECURITY DEFINER | ✅ BY DESIGN | Notwendig für 42P17-Prävention |
 | Rückgabewert | ✅ SICHER | Nur `boolean`, kein Datenleck |
-| SQL-Injection | ✅ NICHT VERWUNDBAR | Reine SQL-Funktion, `uuid`-Typ-Check, kein dynamisches SQL |
-| Privilege Escalation | ✅ NICHT VERWUNDBAR | Read-Only (`SELECT EXISTS`), keine Schreiboperationen |
-| Datenexfiltration | ✅ MINIMALES RISIKO | 1 Bit Information (gelöscht/nicht-gelöscht), UUIDs v4 nicht erratbar |
-| Multi-Mandant-Isolation | ✅ KORREKT | Org-Fence auf Policy-Ebene, nicht Funktionsebene |
+| SQL-Injection | ✅ NICHT VERWUNDBAR | `uuid`-Typ-Check, kein dynamisches SQL |
+| Privilege Escalation | ✅ NICHT VERWUNDBAR | Read-Only (`SELECT EXISTS`) |
+| Datenexfiltration | ✅ MINIMALES RISIKO | 1 Bit (gelöscht/nicht-gelöscht), UUIDs v4 nicht erratbar |
+| Multi-Mandant | ✅ KORREKT | Org-Fence auf Policy-Ebene |
 
 ### Findings
 
 | # | Finding | Schwere | Status |
 |---|---|---|---|
-| F-1 | `anon` hat EXECUTE (ermöglicht RPC-Probing von UUID-Soft-Delete-Status) | LOW | Offen — by design (Policy-Abhängigkeit: `Anyone can view angels`) |
-| F-2 | Kein funktionsspezifisches Rate-Limiting | LOW | Mitigiert durch API-Gateway-Rate-Limits |
-| F-3 | Funktion erzwingt keinen Org-Fence | NON-ISSUE | Org-Fencing auf Policy-Ebene |
-| F-4 | SECURITY DEFINER umgeht RLS auf profiles | BY DESIGN | Notwendig für 42P17-Prävention |
+| F-1 | `anon` hat EXECUTE (UUID-Soft-Delete-Probing) | LOW | Akzeptiert — by design |
+| F-2 | Kein funktionsspezifisches Rate-Limiting | LOW | Mitigiert durch API-Gateway |
+| F-3 | Kein Org-Fence in Funktion | NON-ISSUE | Org-Fencing auf Policy-Ebene |
+| F-4 | SECURITY DEFINER umgeht RLS auf profiles | BY DESIGN | Für 42P17-Prävention nötig |
 
-**Empfehlung:** F-1 akzeptieren und dokumentieren. Das Risiko ist minimal (boolean-Rückgabe, UUIDs nicht erratbar). Der `anon`-EXECUTE-Grant ist erforderlich für die öffentliche Engel-Verzeichnis-Policy.
+### Timing-Analyse (LOW-FINDING F-1/F-2)
 
----
+**Status:** ⏳ Vorbereitet, Ausführung benötigt Branch-API-Keys. Testskript: `branch-staging-tests.sh` Phase 6.
 
-## 7. anon-EXECUTE-Analyse (Detailprüfung)
-
-| Frage | Antwort |
-|---|---|
-| Kann anon die Funktion aufrufen? | ✅ Ja (T23 PASS) |
-| Gibt die Funktion sensible Daten zurück? | ❌ Nein — nur boolean (T24 PASS) |
-| Kann anon Buchungen lesen? | ❌ Nein — `is_admin()` EXECUTE revoked → `permission denied` (T22 PASS) |
-| Kann anon UUID-Existenz prüfen? | Theoretisch ja, aber: `false` = nicht-existent ODER aktiv (nicht unterscheidbar) |
-| Kann anon Soft-Delete-Status proben? | Nur für bekannte UUIDs (v4, 122 Bit Entropie — Brute-Force infeasible) |
-| Praktisches Risiko? | Minimal — kein PII, kein Zugang zu Buchungen, kein Mandanten-Leak |
+**Methodik:** 20 zufällige UUIDs via `is_profile_soft_deleted()` RPC aufrufen, Response-Zeiten messen, Spread und Standardabweichung berechnen. Bei Spread < 50ms: kein Enumeration-Risiko.
 
 ---
 
-## 8. Offene Risiken
+## 8. Supabase-Branch-Tests
 
-| # | Risiko | Schwere | Mitigation |
-|---|---|---|---|
-| R-1 | Supabase Branch-DB-Test nicht durchgeführt (kein Token) | MITTEL | Lokale Shadow-DB mit identischem Schema als Ersatz; PGlite als zweiter Beweis |
-| R-2 | 13 JS-dynamische Tests noch übersprungen (brauchen `raw_sql`-RPC-Fix) | NIEDRIG | Alle 13 Szenarien durch 29 SQL-Level-Tests und 14 PGlite-Tests abgedeckt |
-| R-3 | anon-Zugriff auf `bookings` wirft `permission denied for function is_admin` | NIEDRIG | Kein Regressionsproblem (bestand schon vor Konsolidierung); anon soll nie auf bookings zugreifen |
-| R-4 | Live-Drift: Policies auf Prod können von Shadow-DB abweichen | MITTEL | Vor Prod-Apply: `SELECT policyname FROM pg_policies WHERE tablename='bookings'` vergleichen |
-| R-5 | ~~CI Lauf 2 noch in Progress~~ | ✅ GELÖST | CI Lauf 3 (da31648) → **alle 12 Steps SUCCESS** |
+### Status: ⏳ BLOCKIERT
+
+Alle Branch-spezifischen Tests sind vorbereitet aber nicht ausführbar:
+
+| Test-Gruppe | Skript | Status |
+|---|---|---|
+| Branch Health + Schema | `branch-staging-tests.sh` Phase 1-2 | ⏳ Wartet auf Keys |
+| Migration Apply | `branch-staging-tests.sh` Phase 3 | ⏳ Wartet auf Keys |
+| Post-Migration Checks | `branch-staging-tests.sh` Phase 4 | ⏳ Wartet auf Keys |
+| Anon/Service-Role | `branch-staging-tests.sh` Phase 5 | ⏳ Wartet auf Keys |
+| Timing-Analyse | `branch-staging-tests.sh` Phase 6 | ⏳ Wartet auf Keys |
+| Auth-Tests (6 Rollen, 2 Orgs) | `branch-auth-tests.mjs` | ⏳ Wartet auf Keys |
+
+**Benötigt:** `SUPABASE_ACCESS_TOKEN` für Management API ODER Branch-spezifische `anon_key` + `service_role_key`.
 
 ---
 
@@ -268,33 +231,33 @@ Alle Migrationen sind idempotent (DROP ... IF EXISTS + CREATE OR REPLACE).
 | Rollback-Test | 1 | 0 | 0 |
 | Re-Apply nach Rollback | 1 | 0 | 0 |
 | JS-dynamische Tests (Shadow-DB) | 0 | 0 | 13 |
-| **Gesamt** | **144** | **0** | **13** |
+| Supabase-Branch-Tests | 0 | 0 | ⏳ blockiert |
+| **Gesamt (lokal)** | **144** | **0** | **13** |
 
 ---
 
 ## 10. GO / NO-GO Empfehlung
 
-### ✅ BEDINGTES GO für Produktions-Migration
+### ⏳ BEDINGTES GO — warte auf Branch-Validierung
 
-**Begründung:**
-1. **144 Tests bestanden, 0 fehlgeschlagen** — alle relevanten RLS-Szenarien (SELECT, INSERT, UPDATE, DELETE, Soft-Delete, Admin, anon, service_role, 42P17, Org-Fence) sind nachgewiesen.
-2. **DSGVO-Lücke geschlossen** — Soft-Delete-Bypass durch OR-Verknüpfung permissiver Policies eliminiert.
-3. **Kein Datenverlust** — Migration, Rollback und Re-Apply sind datenerhaltend.
-4. **Idempotent** — Migration kann gefahrlos mehrfach angewendet werden.
-5. **Rollback getestet** — Rollback-Plan funktioniert und stellt alle Policies wieder her.
-6. **Security-Review bestanden** — `is_profile_soft_deleted()` hat keine kritischen Schwachstellen.
+**Bisherige Evidenz (stark):**
+1. **144 Tests bestanden, 0 fehlgeschlagen** auf 3 unabhängigen Testebenen (Vitest/PGlite/Shadow-DB)
+2. **DSGVO-Lücke nachweislich geschlossen** — Soft-Delete-Bypass eliminiert
+3. **Kein Datenverlust** bei Migration/Rollback/Re-Apply
+4. **Idempotent** und **rollback-fähig**
+5. **CI-Pipeline grün** (alle 12 Steps)
+6. **Security-Review bestanden** — keine kritischen Schwachstellen
 
-**Bedingungen für Prod-Apply:**
-1. ~~CI-Lauf muss grün sein~~ → ✅ CI Lauf 3 (da31648) ist **grün**.
-2. Vor Prod-Apply: Aktuellen Policy-Stand auf Prod mit `SELECT policyname, permissive, cmd, qual, with_check FROM pg_policies WHERE tablename = 'bookings';` prüfen und gegen erwarteten Zustand abgleichen.
-3. Backup der bestehenden Policies als SQL-Dump.
-4. Migration in einer Transaktion (BEGIN/COMMIT) ausführen — ist bereits so implementiert.
-5. Sofortige Verifikation nach Apply: RLS-Funktionstest mit Test-Accounts.
+**Offene Bedingungen:**
+1. Branch-API-Keys beschaffen → Migration auf echtem Supabase-Branch testen
+2. Auth-Tests mit echten JWTs gegen PostgREST ausführen
+3. Timing-Analyse für `is_profile_soft_deleted()` durchführen
+4. Vor Prod-Apply: Policy-Stand auf Prod vergleichen
 
 **KEIN Merge, KEIN Prod-Deploy — warte auf explizite Freigabe.**
 
 ---
 
-*Erstellt: 2026-08-03 12:45 CEST*
+*Erstellt: 2026-08-03, aktualisiert: 2026-08-04*
 *Agent: Claude Code (automatisiert)*
 *Kein Einsatz echter Kundendaten.*
