@@ -222,7 +222,7 @@ export default function EngelHomePage() {
             <div className="req-top">
               <div className="req-av"><IconUser size={18} /></div>
               <div>
-                <div className="req-name">{b.customer?.first_name} {b.customer?.last_name?.[0]}.</div>
+                <div className="req-name">{b.customer ? `${b.customer.first_name} ${b.customer.last_name?.[0] || ''}.` : 'Ehem. Kunde'}</div>
                 <div className="req-type">{b.service}</div>
               </div>
             </div>
@@ -241,14 +241,14 @@ export default function EngelHomePage() {
                 disabled={respondingId !== null}
                 style={{ opacity: respondingId !== null ? .5 : 1 }}
                 onClick={() => handleBooking(b.id, 'decline')}
-                aria-label={`Anfrage von ${b.customer?.first_name} ablehnen`}
+                aria-label={`Anfrage von ${b.customer?.first_name || 'Ehem. Kunde'} ablehnen`}
               >{respondingId === b.id ? '...' : 'Ablehnen'}</button>
               <button
                 className="req-btn accept"
                 disabled={respondingId !== null}
                 style={{ opacity: respondingId !== null ? .5 : 1 }}
                 onClick={() => handleBooking(b.id, 'accept')}
-                aria-label={`Anfrage von ${b.customer?.first_name} annehmen`}
+                aria-label={`Anfrage von ${b.customer?.first_name || 'Ehem. Kunde'} annehmen`}
               >{respondingId === b.id ? '...' : 'Annehmen'}</button>
             </div>
           </div>
@@ -264,7 +264,7 @@ export default function EngelHomePage() {
             <div key={b.id} className="upcoming-item">
               <div className="upcoming-av" style={{ background: 'var(--gold-pale)' }}><IconUser size={18} /></div>
               <div>
-                <div className="upcoming-name">{b.customer?.first_name} {b.customer?.last_name?.[0]}.</div>
+                <div className="upcoming-name">{b.customer ? `${b.customer.first_name} ${b.customer.last_name?.[0] || ''}.` : 'Ehem. Kunde'}</div>
                 <div className="upcoming-sub">{b.service} · {new Date(b.date).toLocaleDateString('de-DE')}, {b.time?.slice(0,5)}</div>
               </div>
               <div className="upcoming-end">

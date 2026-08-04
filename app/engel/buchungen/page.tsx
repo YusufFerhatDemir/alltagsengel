@@ -127,7 +127,7 @@ export default function EngelBuchungenPage() {
           filtered.map(b => {
             const customer = b.profiles as any
             const careRecipient = b.care_recipients as any
-            const name = customer ? `${customer.first_name} ${customer.last_name?.[0] || ''}.` : 'Kunde'
+            const name = customer ? `${customer.first_name} ${customer.last_name?.[0] || ''}.` : 'Ehem. Kunde'
             const crName = careRecipient ? `${careRecipient.first_name} ${careRecipient.last_name?.[0] || ''}.` : null
             const st = statusLabels[b.status] || statusLabels.pending
             return (
