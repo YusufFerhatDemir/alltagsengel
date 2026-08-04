@@ -3,7 +3,10 @@
 **Datum:** 2026-08-04  
 **Autor:** Audit-Agent  
 **Status:** PR erstellt — wartet auf Review  
-**Branch:** `fix/dsgvo-user-delete-fk`
+**Branch:** `fix/dsgvo-user-delete-fk`  
+**PR:** [#29](https://github.com/YusufFerhatDemir/alltagsengel/pull/29)  
+**CI:** All checks passed  
+**Deployment:** Branch erfolgreich deployed (2 aktive Deployments)
 
 ---
 
