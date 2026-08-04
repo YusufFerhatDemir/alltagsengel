@@ -131,6 +131,10 @@ export function IconCheck(p: IconProps) {
   return <I {...p}><path d="M5 12l5 5L20 7" /></I>
 }
 
+export function IconTrash(p: IconProps) {
+  return <I {...p}><path d="M3 6h18" /><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6" /><path d="M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2" /></I>
+}
+
 export function IconNav(p: IconProps) {
   return <I {...p}><path d="M3 12l9-9 9 9M5 10v10h14V10" /></I>
 }
