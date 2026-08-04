@@ -165,6 +165,12 @@ export default function EngelChatConversationPage() {
       const angelUserId = (booking.angels as any)?.id || booking.angel_id
       const receiverId = userId === angelUserId ? booking.customer_id : angelUserId
 
+      if (!receiverId) {
+        // Profil des Empfängers wurde gelöscht — Nachricht kann nicht zugestellt werden
+        setSending(false)
+        return
+      }
+
       await supabase.from('messages').insert({
         booking_id: bookingId,
         sender_id: userId,
