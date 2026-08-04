@@ -69,9 +69,9 @@ export async function checkDocumentsTableExists(): Promise<boolean> {
  * @param docType     z.B. "ausweis", "versicherung", "fuehrungszeugnis"
  * @returns           UploadResult mit ok/url/errorMessage
  *
- * HINWEIS: Die `documents`-Tabelle existiert derzeit nicht in der Produktions-DB.
- * Die Funktion prüft dies vorab und gibt einen beschreibenden Fehler zurück.
- * Sobald die Tabelle per Migration angelegt wird, funktioniert der Upload automatisch.
+ * HINWEIS: Die `documents`-Tabelle wurde per Migration 20260804200000 angelegt.
+ * Der Feature-Guard (checkDocumentsTableExists) bleibt als Sicherheitsnetz,
+ * falls eine zukünftige Umgebung die Migration noch nicht ausgeführt hat.
  */
 export async function uploadDocument(
   file: File,

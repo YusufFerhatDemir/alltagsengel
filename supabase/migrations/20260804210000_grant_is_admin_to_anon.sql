@@ -1,0 +1,30 @@
+-- ═══════════════════════════════════════════════════════════════════
+-- 20260804210000: GRANT EXECUTE is_admin() TO anon
+-- ═══════════════════════════════════════════════════════════════════
+--
+-- PROBLEM:
+--   Migration 20260502 revoked EXECUTE on is_admin() from anon to prevent
+--   PostgREST RPC exposure. Side effect: ~100 RLS policies reference
+--   is_admin() — when an anon user accesses these tables (even via
+--   Next.js SSR or middleware), PostgreSQL evaluates the admin-policy,
+--   can't execute is_admin(), and logs "permission denied for function
+--   is_admin" (6+ entries per access).
+--
+-- WHY SAFE:
+--   - is_admin() returns false when auth.uid() IS NULL (always for anon)
+--   - Function has no side effects, returns only boolean
+--   - SECURITY DEFINER: internal query runs with definer privileges
+--     regardless of the caller's role
+--   - PostgREST RPC exposure: anon can call is_admin() and get false.
+--     No information leakage, no state change, no risk.
+--   - Consistent with current_org_id() and is_profile_soft_deleted()
+--     which already have anon EXECUTE grants.
+--
+-- RESULT:
+--   - RLS policy evaluation succeeds silently for anon users
+--   - No more "permission denied" log noise
+--   - Security posture unchanged (anon still can't become admin)
+--
+-- ═══════════════════════════════════════════════════════════════════
+
+GRANT EXECUTE ON FUNCTION public.is_admin() TO anon;
