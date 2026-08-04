@@ -74,14 +74,57 @@
 
 ---
 
+## Browser-E2E-Tests (Live Preview)
+
+| # | Test | Ergebnis | Details |
+|---|------|----------|---------|
+| a | Login Nutzer A | PASS | e2e_test_del_a@alltagsengel.care |
+| b | Navigation /kunde/dokumente | PASS | Seite lädt korrekt |
+| c | PDF-Upload (Personalausweis) | PASS | Test-PDF hochgeladen |
+| d | Delete-Button sichtbar | PASS | Trash-Icon per Zoom verifiziert |
+| e | Löschung mit confirm() | PASS | window.confirm überschrieben → auto-accept |
+| f | DB + Storage leer | PASS | 0 Dokumente, 0 Storage-Objekte |
+| g | Re-Upload für Isolation | PASS | Neues Dokument hochgeladen |
+| h | Login Nutzer B (2. Tab) | PASS | Separater Browser-Tab |
+| i | **RLS-Isolation** | PASS | Nutzer B sieht „Keine Dokumente" |
+| j | **16MB → Fehler** | PASS | „Datei zu groß (16.0 MB). Maximal 15 MB erlaubt." |
+| k | **MIME .txt → Fehler** | PASS | „Nur Bilder (JPG, PNG, HEIC) und PDF-Dateien sind erlaubt." |
+
+---
+
+## Smoke-Tests (Production nach Merge)
+
+| Route | Status |
+|-------|--------|
+| `alltagsengel.care/` | PASS (200) |
+| `alltagsengel.care/auth/login` | PASS (200) |
+| `alltagsengel.care/kunde/dokumente` | PASS (Redirect → Login) |
+| `alltagsengel.care/engel/dokumente` | PASS (Redirect → Login) |
+
+---
+
 ## Deployment
 
 - **Branch:** `fix/documents-delete-and-upload-e2e`
-- **Commit:** `7d77af1`
-- **Push:** Erfolgreich (verify-push synchron)
-- **Vitest:** 21/21 Tests bestanden
-- **TypeCheck:** warn-only (deploy.sh), clean
+- **PR:** #28 — merged → main (2026-08-04)
+- **CI:** 4/4 Checks passed (Typecheck, Lint, Tests, Build)
+- **Vercel:** Production-Deploy erfolgreich
+- **Branch gelöscht:** Ja (via GitHub nach Merge)
+
+---
+
+## Cleanup
+
+| Aktion | Status |
+|--------|--------|
+| Test-Dokumente (DB + Storage) | Gelöscht |
+| Test-Profile | Gelöscht |
+| Test-Organisationen | Gelöscht |
+| Test-Auth-Users (auth.users) | Gelöscht |
+| Branch auf GitHub | Gelöscht |
+
+---
 
 ## GO/NO-GO
 
-**GO** — Delete-Button implementiert, alle Tests bestanden, RLS-Policies existieren bereits, keine Breaking Changes.
+**GO** — Alle 11 Browser-E2E-Tests + 21 Unit-Tests bestanden. RLS-Isolation verifiziert. 15MB-Limit + MIME-Validierung funktionieren. Production-Deploy erfolgreich. Testdaten bereinigt.
