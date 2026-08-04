@@ -230,6 +230,65 @@ export async function getSignedDocumentUrl(
   return data.signedUrl
 }
 
+// ═══════════════════════════════════════════════════════════════
+// deleteDocument — Dokument aus Storage + DB löschen (DSGVO Art. 17)
+// ═══════════════════════════════════════════════════════════════
+
+export interface DeleteResult {
+  ok: boolean
+  errorMessage?: string
+}
+
+/**
+ * Löscht ein Dokument: zuerst die Datei aus dem Storage-Bucket,
+ * dann den DB-Eintrag. Die RLS-Policy `documents_delete_own` stellt
+ * sicher, dass nur eigene Dokumente gelöscht werden können.
+ *
+ * @param documentId  UUID des Dokuments
+ * @returns           DeleteResult mit ok/errorMessage
+ */
+export async function deleteDocument(documentId: string): Promise<DeleteResult> {
+  const supabase = createClient()
+
+  // 1. Dokument-Metadaten laden (für Storage-Pfad)
+  const { data: doc, error: fetchError } = await supabase
+    .from('documents')
+    .select('id, file_path')
+    .eq('id', documentId)
+    .single()
+
+  if (fetchError || !doc) {
+    return { ok: false, errorMessage: 'Dokument nicht gefunden.' }
+  }
+
+  // 2. Storage-Datei löschen (falls file_path existiert)
+  if (doc.file_path) {
+    const { error: storageError } = await supabase.storage
+      .from('documents')
+      .remove([doc.file_path])
+
+    if (storageError) {
+      console.error('[deleteDocument] Storage-Löschfehler:', storageError.message)
+      // Trotzdem DB-Eintrag löschen — verwaiste Dateien sind besser als unlöschbare Einträge
+    }
+  }
+
+  // 3. DB-Eintrag löschen (RLS prüft user_id === auth.uid())
+  const { error: deleteError } = await supabase
+    .from('documents')
+    .delete()
+    .eq('id', documentId)
+
+  if (deleteError) {
+    return {
+      ok: false,
+      errorMessage: 'Löschen fehlgeschlagen: ' + deleteError.message,
+    }
+  }
+
+  return { ok: true }
+}
+
 /**
  * Entfernt problematische Zeichen aus Dateinamen (Leerzeichen, Umlaute, etc.)
  * die Supabase Storage manchmal nicht verarbeitet.

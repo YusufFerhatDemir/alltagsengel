@@ -3,8 +3,8 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { requireUser } from '@/lib/supabase/require-session'
-import { uploadDocument, MAX_FILE_SIZE_MB, checkDocumentsTableExists } from '@/lib/upload-document'
-import { IconDocument, IconCheck, IconClock, IconInfo } from '@/components/Icons'
+import { uploadDocument, deleteDocument, MAX_FILE_SIZE_MB, checkDocumentsTableExists } from '@/lib/upload-document'
+import { IconDocument, IconCheck, IconClock, IconInfo, IconTrash } from '@/components/Icons'
 
 const docTypes = [
   { key: 'ausweis', label: 'Personalausweis', desc: 'Vorder- und Rückseite' },
@@ -29,6 +29,7 @@ export default function EngelDokumentePage() {
   const [uploadError, setUploadError] = useState('')
   const [uploadSuccess, setUploadSuccess] = useState(false)
   const [featureAvailable, setFeatureAvailable] = useState(true)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
 
   useEffect(() => { loadDocs() }, [])
 
@@ -52,6 +53,25 @@ export default function EngelDokumentePage() {
       .order('uploaded_at', { ascending: false })
     setDocuments(data || [])
     setLoading(false)
+  }
+
+  async function handleDelete(docId: string, fileName: string) {
+    if (!window.confirm(`„${fileName}" endgültig löschen? Diese Aktion kann nicht rückgängig gemacht werden.`)) return
+
+    setDeletingId(docId)
+    try {
+      const result = await deleteDocument(docId)
+      if (!result.ok) {
+        alert(result.errorMessage || 'Löschen fehlgeschlagen.')
+        return
+      }
+      setDocuments(prev => prev.filter(d => d.id !== docId))
+    } catch (err) {
+      console.error('[handleDelete] Unexpected error:', err)
+      alert('Ein unerwarteter Fehler ist aufgetreten.')
+    } finally {
+      setDeletingId(null)
+    }
   }
 
   async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -221,6 +241,27 @@ export default function EngelDokumentePage() {
                   {doc.status === 'verified' ? <IconCheck size={14} /> : <IconClock size={14} />}
                   {st.label}
                 </div>
+                <button
+                  type="button"
+                  title="Dokument löschen"
+                  disabled={deletingId === doc.id}
+                  onClick={() => handleDelete(doc.id, doc.file_name)}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    cursor: deletingId === doc.id ? 'wait' : 'pointer',
+                    padding: 6,
+                    borderRadius: 8,
+                    color: 'var(--ink4)',
+                    opacity: deletingId === doc.id ? 0.4 : 0.6,
+                    transition: 'opacity 0.15s, color 0.15s',
+                    flexShrink: 0,
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.color = 'var(--red-w, #dc2626)' }}
+                  onMouseLeave={e => { e.currentTarget.style.opacity = '0.6'; e.currentTarget.style.color = 'var(--ink4)' }}
+                >
+                  <IconTrash size={16} />
+                </button>
               </div>
             )
           })
