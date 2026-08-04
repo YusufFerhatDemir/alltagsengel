@@ -58,14 +58,21 @@ export default function OnboardingFlow() {
 
       const { data: profile } = await supabase
         .from('profiles')
-        .select('onboarding_completed, role, pflegegrad, postal_code')
+        .select('onboarding_completed, role, postal_code')
         .eq('id', user.id)
         .single()
 
-      // Pflegegrad aus Profil laden (falls bereits vorhanden)
-      if (profile?.pflegegrad) {
-        setExistingPflegegrad(String(profile.pflegegrad))
-        setPflegegrad(String(profile.pflegegrad))
+      // Pflegegrad aus care_recipients laden (falls bereits vorhanden)
+      const { data: cr } = await supabase
+        .from('care_recipients')
+        .select('pflegegrad')
+        .eq('profile_id', user.id)
+        .limit(1)
+        .maybeSingle()
+
+      if (cr?.pflegegrad) {
+        setExistingPflegegrad(String(cr.pflegegrad))
+        setPflegegrad(String(cr.pflegegrad))
       }
 
       // PLZ aus Profil laden
@@ -89,10 +96,38 @@ export default function OnboardingFlow() {
       if (!user) return
 
       const updates: Record<string, any> = { onboarding_completed: true }
-      if (pflegegrad) updates.pflegegrad = parseInt(pflegegrad)
       if (plz) updates.postal_code = plz
 
       await supabase.from('profiles').update(updates).eq('id', user.id)
+
+      // Pflegegrad in care_recipients speichern (nicht in profiles)
+      if (pflegegrad) {
+        const { data: existing } = await supabase
+          .from('care_recipients')
+          .select('id')
+          .eq('profile_id', user.id)
+          .limit(1)
+          .maybeSingle()
+
+        if (existing) {
+          await supabase.from('care_recipients')
+            .update({ pflegegrad: parseInt(pflegegrad) })
+            .eq('id', existing.id)
+        } else {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('first_name, last_name')
+            .eq('id', user.id)
+            .single()
+          await supabase.from('care_recipients').insert({
+            profile_id: user.id,
+            first_name: profile?.first_name || '',
+            last_name: profile?.last_name || '',
+            pflegegrad: parseInt(pflegegrad),
+            relationship: 'selbst',
+          })
+        }
+      }
     } catch (e) {
       console.error('[Onboarding] Save error:', e)
     }

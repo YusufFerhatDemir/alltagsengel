@@ -59,7 +59,7 @@ export default function EngelBuchungenPage() {
 
       const { data, error: err } = await supabase
         .from('bookings')
-        .select('*, profiles:customer_id(first_name, last_name), care_recipients:care_recipient_id(first_name, last_name, relationship, pflegegrad)')
+        .select('*, profiles:customer_id(first_name, last_name), care_recipients:care_recipient_id(first_name, last_name, relationship)')
         .eq('angel_id', user.id)
         .order('created_at', { ascending: false })
 

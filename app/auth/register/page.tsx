@@ -198,11 +198,17 @@ function RegisterForm() {
           // Angehörigen-Modus; Selbst-Modus speichert auch das Profil. Wenn Pflegebox spaeter
           // priorisiert wird, kommt eine eigene DB-Migration + Re-Insert hier dran.
           if (role === 'kunde') {
-            // Pflegegrad im Profil speichern (Selbst-Modus)
+            // Selbst-Modus: care_recipient für den Kunden selbst anlegen
+            // (profiles hat kein pflegegrad-Feld; Pflegegrad wird in care_recipients gespeichert)
             if (registerFor === 'selbst' && pflegegrad) {
-              await supabase.from('profiles').update({
+              await supabase.from('care_recipients').insert({
+                profile_id: data.user.id,
+                first_name: firstName,
+                last_name: lastName,
                 pflegegrad: parseInt(String(pflegegrad), 10) || null,
-              }).eq('id', data.user.id).then(() => {})
+                postal_code: plz || null,
+                relationship: 'selbst',
+              }).then(() => {})
             }
             // Angehörige Person speichern
             if (registerFor === 'angehoerig' && crFirstName && crLastName) {

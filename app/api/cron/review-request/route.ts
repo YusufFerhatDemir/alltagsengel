@@ -32,12 +32,13 @@ export async function GET(request: Request) {
     const threeDaysAgo = new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000).toISOString()
 
     // Abgeschlossene Buchungen von vor 2 Tagen laden
+    // Hinweis: bookings hat kein completed_at — wir verwenden das date-Feld
     const { data: bookings } = await supabaseAdmin
       .from('bookings')
-      .select('id, customer_id, angel_id, service, completed_at')
+      .select('id, customer_id, angel_id, service, date')
       .eq('status', 'completed')
-      .gte('completed_at', threeDaysAgo)
-      .lte('completed_at', twoDaysAgo)
+      .gte('date', threeDaysAgo)
+      .lte('date', twoDaysAgo)
 
     if (!bookings || bookings.length === 0) {
       return NextResponse.json({ message: 'Keine Buchungen zum Bewerten', sent: 0 })
