@@ -2,17 +2,29 @@
 -- FIX: Comprehensive RLS Policies for Alltagsengel
 -- Security Audit: Ensures users can only access their own data
 -- Administrators can access everything
+--
+-- FIX 2026-08-04:
+--   - Dead-Table-Sektionen (documents, payments, care_eligibility,
+--     carebox_cart, carebox_order_requests, carebox_catalog_items)
+--     mit IF EXISTS-Guard versehen — diese Tabellen existieren
+--     nur in initial-setup.sql und wurden nie deployed.
+--   - ASCII-Varianten aller türkischsprachigen Policy-DROPs ergänzt,
+--     da MCP/API-Aufrufe die UTF-8-Kodierung (ö→o, ü→u, ş→s, ı→i)
+--     bei der Anwendung degradieren können.
 -- ============================================
 
 -- ============================================
 -- 1. PROFILES TABLE - Enhanced RLS
 -- ============================================
 
--- Drop existing policies
+-- Drop existing policies (UTF-8 + ASCII variants)
 DROP POLICY IF EXISTS "Herkes profilleri okuyabilir" ON public.profiles;
 DROP POLICY IF EXISTS "Kullanıcı kendi profilini güncelleyebilir" ON public.profiles;
+DROP POLICY IF EXISTS "Kullanici kendi profilini guncelleyebilir" ON public.profiles;
 DROP POLICY IF EXISTS "Kullanıcı kendi profilini oluşturabilir" ON public.profiles;
+DROP POLICY IF EXISTS "Kullanici kendi profilini olusturabilir" ON public.profiles;
 DROP POLICY IF EXISTS "Admin profilleri yönetebilir" ON public.profiles;
+DROP POLICY IF EXISTS "Admin profilleri yonetebilir" ON public.profiles;
 
 -- Ensure RLS is enabled
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
@@ -46,8 +58,11 @@ CREATE POLICY "Admins can manage all profiles" ON public.profiles
 
 DROP POLICY IF EXISTS "Herkes engelleri okuyabilir" ON public.angels;
 DROP POLICY IF EXISTS "Engel kendi profilini güncelleyebilir" ON public.angels;
+DROP POLICY IF EXISTS "Engel kendi profilini guncelleyebilir" ON public.angels;
 DROP POLICY IF EXISTS "Engel kendi profilini oluşturabilir" ON public.angels;
+DROP POLICY IF EXISTS "Engel kendi profilini olusturabilir" ON public.angels;
 DROP POLICY IF EXISTS "Admin engelleri yönetebilir" ON public.angels;
+DROP POLICY IF EXISTS "Admin engelleri yonetebilir" ON public.angels;
 
 ALTER TABLE public.angels ENABLE ROW LEVEL SECURITY;
 
@@ -79,9 +94,13 @@ CREATE POLICY "Admins can manage all angels" ON public.angels
 -- ============================================
 
 DROP POLICY IF EXISTS "Kullanıcı kendi bookinglerini okuyabilir" ON public.bookings;
+DROP POLICY IF EXISTS "Kullanici kendi bookinglerini okuyabilir" ON public.bookings;
 DROP POLICY IF EXISTS "Müşteri booking oluşturabilir" ON public.bookings;
+DROP POLICY IF EXISTS "Musteri booking olusturabilir" ON public.bookings;
 DROP POLICY IF EXISTS "İlgili kişi bookingi güncelleyebilir" ON public.bookings;
+DROP POLICY IF EXISTS "Ilgili kisi bookingi guncelleyebilir" ON public.bookings;
 DROP POLICY IF EXISTS "Admin bookingleri yönetebilir" ON public.bookings;
+DROP POLICY IF EXISTS "Admin bookingleri yonetebilir" ON public.bookings;
 
 ALTER TABLE public.bookings ENABLE ROW LEVEL SECURITY;
 
@@ -123,6 +142,7 @@ CREATE POLICY "Admins can manage all bookings" ON public.bookings
 
 DROP POLICY IF EXISTS "Herkes reviewleri okuyabilir" ON public.reviews;
 DROP POLICY IF EXISTS "Müşteri review yazabilir" ON public.reviews;
+DROP POLICY IF EXISTS "Musteri review yazabilir" ON public.reviews;
 
 ALTER TABLE public.reviews ENABLE ROW LEVEL SECURITY;
 
@@ -154,8 +174,11 @@ CREATE POLICY "Admins can manage all reviews" ON public.reviews
 -- ============================================
 
 DROP POLICY IF EXISTS "Kullanıcı kendi mesajlarını okuyabilir" ON public.messages;
+DROP POLICY IF EXISTS "Kullanici kendi mesajlarini okuyabilir" ON public.messages;
 DROP POLICY IF EXISTS "Kullanıcı mesaj gönderebilir" ON public.messages;
+DROP POLICY IF EXISTS "Kullanici mesaj gonderebilir" ON public.messages;
 DROP POLICY IF EXISTS "Kullanıcı kendi mesajlarını güncelleyebilir" ON public.messages;
+DROP POLICY IF EXISTS "Kullanici kendi mesajlarini guncelleyebilir" ON public.messages;
 
 ALTER TABLE public.messages ENABLE ROW LEVEL SECURITY;
 
@@ -187,72 +210,83 @@ CREATE POLICY "Admins can manage all messages" ON public.messages
   );
 
 -- ============================================
--- 6. DOCUMENTS TABLE - Enhanced RLS
+-- 6. DOCUMENTS TABLE - Enhanced RLS (CONDITIONAL)
+-- Tabelle existiert nur in initial-setup.sql, nie in Produktion deployed.
 -- ============================================
 
-DROP POLICY IF EXISTS "Kullanıcı kendi belgelerini okuyabilir" ON public.documents;
-DROP POLICY IF EXISTS "Kullanıcı belge yükleyebilir" ON public.documents;
-DROP POLICY IF EXISTS "Admin belgeleri yönetebilir" ON public.documents;
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT FROM pg_tables WHERE schemaname='public' AND tablename='documents') THEN
+    RAISE NOTICE 'Tabelle public.documents existiert nicht — Abschnitt uebersprungen.';
+    RETURN;
+  END IF;
 
-ALTER TABLE public.documents ENABLE ROW LEVEL SECURITY;
+  EXECUTE $x$DROP POLICY IF EXISTS "Kullanıcı kendi belgelerini okuyabilir" ON public.documents$x$;
+  EXECUTE $x$DROP POLICY IF EXISTS "Kullanici kendi belgelerini okuyabilir" ON public.documents$x$;
+  EXECUTE $x$DROP POLICY IF EXISTS "Kullanıcı belge yükleyebilir" ON public.documents$x$;
+  EXECUTE $x$DROP POLICY IF EXISTS "Kullanici belge yukleyebilir" ON public.documents$x$;
+  EXECUTE $x$DROP POLICY IF EXISTS "Admin belgeleri yönetebilir" ON public.documents$x$;
+  EXECUTE $x$DROP POLICY IF EXISTS "Admin belgeleri yonetebilir" ON public.documents$x$;
 
--- Users can only view their own documents
-DROP POLICY IF EXISTS "Users can view own documents" ON public.documents;
-CREATE POLICY "Users can view own documents" ON public.documents
-  FOR SELECT USING (auth.uid() = user_id);
+  EXECUTE $x$ALTER TABLE public.documents ENABLE ROW LEVEL SECURITY$x$;
 
--- Users can only upload documents for themselves
-DROP POLICY IF EXISTS "Users can upload documents" ON public.documents;
-CREATE POLICY "Users can upload documents" ON public.documents
-  FOR INSERT WITH CHECK (auth.uid() = user_id);
+  EXECUTE $x$DROP POLICY IF EXISTS "Users can view own documents" ON public.documents$x$;
+  EXECUTE $x$CREATE POLICY "Users can view own documents" ON public.documents
+    FOR SELECT USING (auth.uid() = user_id)$x$;
 
--- Users can only update their own documents
-DROP POLICY IF EXISTS "Users can update own documents" ON public.documents;
-CREATE POLICY "Users can update own documents" ON public.documents
-  FOR UPDATE USING (auth.uid() = user_id)
-  WITH CHECK (auth.uid() = user_id);
+  EXECUTE $x$DROP POLICY IF EXISTS "Users can upload documents" ON public.documents$x$;
+  EXECUTE $x$CREATE POLICY "Users can upload documents" ON public.documents
+    FOR INSERT WITH CHECK (auth.uid() = user_id)$x$;
 
--- Users can only delete their own documents
-DROP POLICY IF EXISTS "Users can delete own documents" ON public.documents;
-CREATE POLICY "Users can delete own documents" ON public.documents
-  FOR DELETE USING (auth.uid() = user_id);
+  EXECUTE $x$DROP POLICY IF EXISTS "Users can update own documents" ON public.documents$x$;
+  EXECUTE $x$CREATE POLICY "Users can update own documents" ON public.documents
+    FOR UPDATE USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id)$x$;
 
--- Admins can manage all documents
-DROP POLICY IF EXISTS "Admins can manage all documents" ON public.documents;
-CREATE POLICY "Admins can manage all documents" ON public.documents
-  FOR ALL USING (
-    EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('admin', 'superadmin'))
-  );
+  EXECUTE $x$DROP POLICY IF EXISTS "Users can delete own documents" ON public.documents$x$;
+  EXECUTE $x$CREATE POLICY "Users can delete own documents" ON public.documents
+    FOR DELETE USING (auth.uid() = user_id)$x$;
+
+  EXECUTE $x$DROP POLICY IF EXISTS "Admins can manage all documents" ON public.documents$x$;
+  EXECUTE $x$CREATE POLICY "Admins can manage all documents" ON public.documents
+    FOR ALL USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('admin', 'superadmin')))$x$;
+END $$;
 
 -- ============================================
--- 7. PAYMENTS TABLE - Enhanced RLS
+-- 7. PAYMENTS TABLE - Enhanced RLS (CONDITIONAL)
+-- Tabelle existiert nur in initial-setup.sql, nie in Produktion deployed.
 -- ============================================
 
-DROP POLICY IF EXISTS "Kullanıcı kendi ödemelerini okuyabilir" ON public.payments;
-DROP POLICY IF EXISTS "Admin ödemeleri yönetebilir" ON public.payments;
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT FROM pg_tables WHERE schemaname='public' AND tablename='payments') THEN
+    RAISE NOTICE 'Tabelle public.payments existiert nicht — Abschnitt uebersprungen.';
+    RETURN;
+  END IF;
 
-ALTER TABLE public.payments ENABLE ROW LEVEL SECURITY;
+  EXECUTE $x$DROP POLICY IF EXISTS "Kullanıcı kendi ödemelerini okuyabilir" ON public.payments$x$;
+  EXECUTE $x$DROP POLICY IF EXISTS "Kullanici kendi odemelerini okuyabilir" ON public.payments$x$;
+  EXECUTE $x$DROP POLICY IF EXISTS "Admin ödemeleri yönetebilir" ON public.payments$x$;
+  EXECUTE $x$DROP POLICY IF EXISTS "Admin odemeleri yonetebilir" ON public.payments$x$;
 
--- Users can only view their own payments
-DROP POLICY IF EXISTS "Users can view own payments" ON public.payments;
-CREATE POLICY "Users can view own payments" ON public.payments
-  FOR SELECT USING (auth.uid() = user_id);
+  EXECUTE $x$ALTER TABLE public.payments ENABLE ROW LEVEL SECURITY$x$;
 
--- Users cannot directly create payments (should go through service)
--- Admins can manage all payments
-DROP POLICY IF EXISTS "Admins can manage all payments" ON public.payments;
-CREATE POLICY "Admins can manage all payments" ON public.payments
-  FOR ALL USING (
-    EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('admin', 'superadmin'))
-  );
+  EXECUTE $x$DROP POLICY IF EXISTS "Users can view own payments" ON public.payments$x$;
+  EXECUTE $x$CREATE POLICY "Users can view own payments" ON public.payments
+    FOR SELECT USING (auth.uid() = user_id)$x$;
+
+  EXECUTE $x$DROP POLICY IF EXISTS "Admins can manage all payments" ON public.payments$x$;
+  EXECUTE $x$CREATE POLICY "Admins can manage all payments" ON public.payments
+    FOR ALL USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('admin', 'superadmin')))$x$;
+END $$;
 
 -- ============================================
 -- 8. NOTIFICATIONS TABLE - Enhanced RLS
 -- ============================================
 
 DROP POLICY IF EXISTS "Kullanıcı kendi bildirimlerini okuyabilir" ON public.notifications;
+DROP POLICY IF EXISTS "Kullanici kendi bildirimlerini okuyabilir" ON public.notifications;
 DROP POLICY IF EXISTS "Kullanıcı bildirimlerini güncelleyebilir" ON public.notifications;
+DROP POLICY IF EXISTS "Kullanici bildirimlerini guncelleyebilir" ON public.notifications;
 DROP POLICY IF EXISTS "Admin bildirimleri yönetebilir" ON public.notifications;
+DROP POLICY IF EXISTS "Admin bildirimleri yonetebilir" ON public.notifications;
 DROP POLICY IF EXISTS "Users can view own notifications" ON public.notifications;
 DROP POLICY IF EXISTS "Users can update own notifications" ON public.notifications;
 DROP POLICY IF EXISTS "Authenticated users can create notifications" ON public.notifications;
@@ -278,127 +312,147 @@ CREATE POLICY "Admins can manage all notifications" ON public.notifications
   );
 
 -- ============================================
--- 9. CARE_ELIGIBILITY TABLE - Enhanced RLS
+-- 9. CARE_ELIGIBILITY TABLE - Enhanced RLS (CONDITIONAL)
+-- Tabelle existiert nur in initial-setup.sql, nie in Produktion deployed.
 -- ============================================
 
-DROP POLICY IF EXISTS "Kullanıcı kendi eligibility okuyabilir" ON public.care_eligibility;
-DROP POLICY IF EXISTS "Kullanıcı kendi eligibility oluşturabilir" ON public.care_eligibility;
-DROP POLICY IF EXISTS "Kullanıcı kendi eligibility güncelleyebilir" ON public.care_eligibility;
-DROP POLICY IF EXISTS "Admin eligibility yönetebilir" ON public.care_eligibility;
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT FROM pg_tables WHERE schemaname='public' AND tablename='care_eligibility') THEN
+    RAISE NOTICE 'Tabelle public.care_eligibility existiert nicht — Abschnitt uebersprungen.';
+    RETURN;
+  END IF;
 
-ALTER TABLE public.care_eligibility ENABLE ROW LEVEL SECURITY;
+  EXECUTE $x$DROP POLICY IF EXISTS "Kullanıcı kendi eligibility okuyabilir" ON public.care_eligibility$x$;
+  EXECUTE $x$DROP POLICY IF EXISTS "Kullanici kendi eligibility okuyabilir" ON public.care_eligibility$x$;
+  EXECUTE $x$DROP POLICY IF EXISTS "Kullanıcı kendi eligibility oluşturabilir" ON public.care_eligibility$x$;
+  EXECUTE $x$DROP POLICY IF EXISTS "Kullanici kendi eligibility olusturabilir" ON public.care_eligibility$x$;
+  EXECUTE $x$DROP POLICY IF EXISTS "Kullanıcı kendi eligibility güncelleyebilir" ON public.care_eligibility$x$;
+  EXECUTE $x$DROP POLICY IF EXISTS "Kullanici kendi eligibility guncelleyebilir" ON public.care_eligibility$x$;
+  EXECUTE $x$DROP POLICY IF EXISTS "Admin eligibility yönetebilir" ON public.care_eligibility$x$;
+  EXECUTE $x$DROP POLICY IF EXISTS "Admin eligibility yonetebilir" ON public.care_eligibility$x$;
 
--- Users can only view their own eligibility
-DROP POLICY IF EXISTS "Users can view own eligibility" ON public.care_eligibility;
-CREATE POLICY "Users can view own eligibility" ON public.care_eligibility
-  FOR SELECT USING (auth.uid() = user_id);
+  EXECUTE $x$ALTER TABLE public.care_eligibility ENABLE ROW LEVEL SECURITY$x$;
 
--- Users can only create their own eligibility
-DROP POLICY IF EXISTS "Users can create own eligibility" ON public.care_eligibility;
-CREATE POLICY "Users can create own eligibility" ON public.care_eligibility
-  FOR INSERT WITH CHECK (auth.uid() = user_id);
+  EXECUTE $x$DROP POLICY IF EXISTS "Users can view own eligibility" ON public.care_eligibility$x$;
+  EXECUTE $x$CREATE POLICY "Users can view own eligibility" ON public.care_eligibility
+    FOR SELECT USING (auth.uid() = user_id)$x$;
 
--- Users can only update their own eligibility
-DROP POLICY IF EXISTS "Users can update own eligibility" ON public.care_eligibility;
-CREATE POLICY "Users can update own eligibility" ON public.care_eligibility
-  FOR UPDATE USING (auth.uid() = user_id)
-  WITH CHECK (auth.uid() = user_id);
+  EXECUTE $x$DROP POLICY IF EXISTS "Users can create own eligibility" ON public.care_eligibility$x$;
+  EXECUTE $x$CREATE POLICY "Users can create own eligibility" ON public.care_eligibility
+    FOR INSERT WITH CHECK (auth.uid() = user_id)$x$;
 
--- Admins can manage all eligibility records
-DROP POLICY IF EXISTS "Admins can manage all eligibility" ON public.care_eligibility;
-CREATE POLICY "Admins can manage all eligibility" ON public.care_eligibility
-  FOR ALL USING (
-    EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('admin', 'superadmin'))
-  );
+  EXECUTE $x$DROP POLICY IF EXISTS "Users can update own eligibility" ON public.care_eligibility$x$;
+  EXECUTE $x$CREATE POLICY "Users can update own eligibility" ON public.care_eligibility
+    FOR UPDATE USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id)$x$;
 
--- ============================================
--- 10. CAREBOX_CART TABLE - Enhanced RLS
--- ============================================
-
-DROP POLICY IF EXISTS "Kullanıcı kendi cart okuyabilir" ON public.carebox_cart;
-DROP POLICY IF EXISTS "Kullanıcı kendi cart oluşturabilir" ON public.carebox_cart;
-DROP POLICY IF EXISTS "Kullanıcı kendi cart güncelleyebilir" ON public.carebox_cart;
-DROP POLICY IF EXISTS "Admin cart yönetebilir" ON public.carebox_cart;
-
-ALTER TABLE public.carebox_cart ENABLE ROW LEVEL SECURITY;
-
--- Users can only view their own cart
-DROP POLICY IF EXISTS "Users can view own cart" ON public.carebox_cart;
-CREATE POLICY "Users can view own cart" ON public.carebox_cart
-  FOR SELECT USING (auth.uid() = user_id);
-
--- Users can only create their own cart
-DROP POLICY IF EXISTS "Users can create own cart" ON public.carebox_cart;
-CREATE POLICY "Users can create own cart" ON public.carebox_cart
-  FOR INSERT WITH CHECK (auth.uid() = user_id);
-
--- Users can only update their own cart
-DROP POLICY IF EXISTS "Users can update own cart" ON public.carebox_cart;
-CREATE POLICY "Users can update own cart" ON public.carebox_cart
-  FOR UPDATE USING (auth.uid() = user_id)
-  WITH CHECK (auth.uid() = user_id);
-
--- Admins can manage all carts
-DROP POLICY IF EXISTS "Admins can manage all carts" ON public.carebox_cart;
-CREATE POLICY "Admins can manage all carts" ON public.carebox_cart
-  FOR ALL USING (
-    EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('admin', 'superadmin'))
-  );
+  EXECUTE $x$DROP POLICY IF EXISTS "Admins can manage all eligibility" ON public.care_eligibility$x$;
+  EXECUTE $x$CREATE POLICY "Admins can manage all eligibility" ON public.care_eligibility
+    FOR ALL USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('admin', 'superadmin')))$x$;
+END $$;
 
 -- ============================================
--- 11. CAREBOX_ORDER_REQUESTS TABLE - Enhanced RLS
+-- 10. CAREBOX_CART TABLE - Enhanced RLS (CONDITIONAL)
+-- Tabelle existiert nur in initial-setup.sql, nie in Produktion deployed.
 -- ============================================
 
-DROP POLICY IF EXISTS "Kullanıcı kendi order okuyabilir" ON public.carebox_order_requests;
-DROP POLICY IF EXISTS "Kullanıcı order oluşturabilir" ON public.carebox_order_requests;
-DROP POLICY IF EXISTS "Kullanıcı kendi order güncelleyebilir" ON public.carebox_order_requests;
-DROP POLICY IF EXISTS "Admin order yönetebilir" ON public.carebox_order_requests;
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT FROM pg_tables WHERE schemaname='public' AND tablename='carebox_cart') THEN
+    RAISE NOTICE 'Tabelle public.carebox_cart existiert nicht — Abschnitt uebersprungen.';
+    RETURN;
+  END IF;
 
-ALTER TABLE public.carebox_order_requests ENABLE ROW LEVEL SECURITY;
+  EXECUTE $x$DROP POLICY IF EXISTS "Kullanıcı kendi cart okuyabilir" ON public.carebox_cart$x$;
+  EXECUTE $x$DROP POLICY IF EXISTS "Kullanici kendi cart okuyabilir" ON public.carebox_cart$x$;
+  EXECUTE $x$DROP POLICY IF EXISTS "Kullanıcı kendi cart oluşturabilir" ON public.carebox_cart$x$;
+  EXECUTE $x$DROP POLICY IF EXISTS "Kullanici kendi cart olusturabilir" ON public.carebox_cart$x$;
+  EXECUTE $x$DROP POLICY IF EXISTS "Kullanıcı kendi cart güncelleyebilir" ON public.carebox_cart$x$;
+  EXECUTE $x$DROP POLICY IF EXISTS "Kullanici kendi cart guncelleyebilir" ON public.carebox_cart$x$;
+  EXECUTE $x$DROP POLICY IF EXISTS "Admin cart yönetebilir" ON public.carebox_cart$x$;
+  EXECUTE $x$DROP POLICY IF EXISTS "Admin cart yonetebilir" ON public.carebox_cart$x$;
 
--- Users can only view their own orders
-DROP POLICY IF EXISTS "Users can view own orders" ON public.carebox_order_requests;
-CREATE POLICY "Users can view own orders" ON public.carebox_order_requests
-  FOR SELECT USING (auth.uid() = user_id);
+  EXECUTE $x$ALTER TABLE public.carebox_cart ENABLE ROW LEVEL SECURITY$x$;
 
--- Users can only create their own orders
-DROP POLICY IF EXISTS "Users can create own orders" ON public.carebox_order_requests;
-CREATE POLICY "Users can create own orders" ON public.carebox_order_requests
-  FOR INSERT WITH CHECK (auth.uid() = user_id);
+  EXECUTE $x$DROP POLICY IF EXISTS "Users can view own cart" ON public.carebox_cart$x$;
+  EXECUTE $x$CREATE POLICY "Users can view own cart" ON public.carebox_cart
+    FOR SELECT USING (auth.uid() = user_id)$x$;
 
--- Users can only update their own orders
-DROP POLICY IF EXISTS "Users can update own orders" ON public.carebox_order_requests;
-CREATE POLICY "Users can update own orders" ON public.carebox_order_requests
-  FOR UPDATE USING (auth.uid() = user_id)
-  WITH CHECK (auth.uid() = user_id);
+  EXECUTE $x$DROP POLICY IF EXISTS "Users can create own cart" ON public.carebox_cart$x$;
+  EXECUTE $x$CREATE POLICY "Users can create own cart" ON public.carebox_cart
+    FOR INSERT WITH CHECK (auth.uid() = user_id)$x$;
 
--- Admins can manage all orders
-DROP POLICY IF EXISTS "Admins can manage all orders" ON public.carebox_order_requests;
-CREATE POLICY "Admins can manage all orders" ON public.carebox_order_requests
-  FOR ALL USING (
-    EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('admin', 'superadmin'))
-  );
+  EXECUTE $x$DROP POLICY IF EXISTS "Users can update own cart" ON public.carebox_cart$x$;
+  EXECUTE $x$CREATE POLICY "Users can update own cart" ON public.carebox_cart
+    FOR UPDATE USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id)$x$;
+
+  EXECUTE $x$DROP POLICY IF EXISTS "Admins can manage all carts" ON public.carebox_cart$x$;
+  EXECUTE $x$CREATE POLICY "Admins can manage all carts" ON public.carebox_cart
+    FOR ALL USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('admin', 'superadmin')))$x$;
+END $$;
 
 -- ============================================
--- 12. CAREBOX_CATALOG_ITEMS TABLE - RLS
+-- 11. CAREBOX_ORDER_REQUESTS TABLE - Enhanced RLS (CONDITIONAL)
+-- Tabelle existiert nur in initial-setup.sql, nie in Produktion deployed.
 -- ============================================
 
-DROP POLICY IF EXISTS "Jeder kann Katalog lesen" ON public.carebox_catalog_items;
-DROP POLICY IF EXISTS "Admin Katalog yönetebilir" ON public.carebox_catalog_items;
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT FROM pg_tables WHERE schemaname='public' AND tablename='carebox_order_requests') THEN
+    RAISE NOTICE 'Tabelle public.carebox_order_requests existiert nicht — Abschnitt uebersprungen.';
+    RETURN;
+  END IF;
 
-ALTER TABLE public.carebox_catalog_items ENABLE ROW LEVEL SECURITY;
+  EXECUTE $x$DROP POLICY IF EXISTS "Kullanıcı kendi order okuyabilir" ON public.carebox_order_requests$x$;
+  EXECUTE $x$DROP POLICY IF EXISTS "Kullanici kendi order okuyabilir" ON public.carebox_order_requests$x$;
+  EXECUTE $x$DROP POLICY IF EXISTS "Kullanıcı order oluşturabilir" ON public.carebox_order_requests$x$;
+  EXECUTE $x$DROP POLICY IF EXISTS "Kullanici order olusturabilir" ON public.carebox_order_requests$x$;
+  EXECUTE $x$DROP POLICY IF EXISTS "Kullanıcı kendi order güncelleyebilir" ON public.carebox_order_requests$x$;
+  EXECUTE $x$DROP POLICY IF EXISTS "Kullanici kendi order guncelleyebilir" ON public.carebox_order_requests$x$;
+  EXECUTE $x$DROP POLICY IF EXISTS "Admin order yönetebilir" ON public.carebox_order_requests$x$;
+  EXECUTE $x$DROP POLICY IF EXISTS "Admin order yonetebilir" ON public.carebox_order_requests$x$;
 
--- Anyone can view the public catalog
-DROP POLICY IF EXISTS "Anyone can view catalog" ON public.carebox_catalog_items;
-CREATE POLICY "Anyone can view catalog" ON public.carebox_catalog_items
-  FOR SELECT USING (true);
+  EXECUTE $x$ALTER TABLE public.carebox_order_requests ENABLE ROW LEVEL SECURITY$x$;
 
--- Admins can manage the catalog
-DROP POLICY IF EXISTS "Admins can manage catalog" ON public.carebox_catalog_items;
-CREATE POLICY "Admins can manage catalog" ON public.carebox_catalog_items
-  FOR ALL USING (
-    EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('admin', 'superadmin'))
-  );
+  EXECUTE $x$DROP POLICY IF EXISTS "Users can view own orders" ON public.carebox_order_requests$x$;
+  EXECUTE $x$CREATE POLICY "Users can view own orders" ON public.carebox_order_requests
+    FOR SELECT USING (auth.uid() = user_id)$x$;
+
+  EXECUTE $x$DROP POLICY IF EXISTS "Users can create own orders" ON public.carebox_order_requests$x$;
+  EXECUTE $x$CREATE POLICY "Users can create own orders" ON public.carebox_order_requests
+    FOR INSERT WITH CHECK (auth.uid() = user_id)$x$;
+
+  EXECUTE $x$DROP POLICY IF EXISTS "Users can update own orders" ON public.carebox_order_requests$x$;
+  EXECUTE $x$CREATE POLICY "Users can update own orders" ON public.carebox_order_requests
+    FOR UPDATE USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id)$x$;
+
+  EXECUTE $x$DROP POLICY IF EXISTS "Admins can manage all orders" ON public.carebox_order_requests$x$;
+  EXECUTE $x$CREATE POLICY "Admins can manage all orders" ON public.carebox_order_requests
+    FOR ALL USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('admin', 'superadmin')))$x$;
+END $$;
+
+-- ============================================
+-- 12. CAREBOX_CATALOG_ITEMS TABLE - RLS (CONDITIONAL)
+-- Tabelle existiert nur in initial-setup.sql, nie in Produktion deployed.
+-- ============================================
+
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT FROM pg_tables WHERE schemaname='public' AND tablename='carebox_catalog_items') THEN
+    RAISE NOTICE 'Tabelle public.carebox_catalog_items existiert nicht — Abschnitt uebersprungen.';
+    RETURN;
+  END IF;
+
+  EXECUTE $x$DROP POLICY IF EXISTS "Jeder kann Katalog lesen" ON public.carebox_catalog_items$x$;
+  EXECUTE $x$DROP POLICY IF EXISTS "Admin Katalog yönetebilir" ON public.carebox_catalog_items$x$;
+  EXECUTE $x$DROP POLICY IF EXISTS "Admin Katalog yonetebilir" ON public.carebox_catalog_items$x$;
+
+  EXECUTE $x$ALTER TABLE public.carebox_catalog_items ENABLE ROW LEVEL SECURITY$x$;
+
+  EXECUTE $x$DROP POLICY IF EXISTS "Anyone can view catalog" ON public.carebox_catalog_items$x$;
+  EXECUTE $x$CREATE POLICY "Anyone can view catalog" ON public.carebox_catalog_items
+    FOR SELECT USING (true)$x$;
+
+  EXECUTE $x$DROP POLICY IF EXISTS "Admins can manage catalog" ON public.carebox_catalog_items$x$;
+  EXECUTE $x$CREATE POLICY "Admins can manage catalog" ON public.carebox_catalog_items
+    FOR ALL USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('admin', 'superadmin')))$x$;
+END $$;
 
 -- ============================================
 -- 13. ANGEL_REVIEWS TABLE - Enhanced RLS
@@ -617,13 +671,15 @@ CREATE POLICY "Admins can manage audits" ON public.mis_quality_audits
 -- ============================================
 -- SUMMARY OF SECURITY CHANGES
 -- ============================================
--- ✓ All tables now have RLS enabled
--- ✓ User data (profiles, bookings, messages, documents, payments) is scoped to the authenticated user
--- ✓ Angels can only view/edit their own angel profiles
--- ✓ Customers can only see their own bookings/orders/cart
--- ✓ Admins have full access to everything
--- ✓ Analytics tables (visitors, page_views, mis_auth_log) allow public writes but admin-only reads
--- ✓ Catalog items are public read
--- ✓ Reviews are public read but customer-controlled writes
--- ✓ MIS (admin portal) tables are admin-only
+-- All tables now have RLS enabled
+-- User data (profiles, bookings, messages, documents, payments) is scoped to the authenticated user
+-- Angels can only view/edit their own angel profiles
+-- Customers can only see their own bookings/orders/cart
+-- Admins have full access to everything
+-- Analytics tables (visitors, page_views, mis_auth_log) allow public writes but admin-only reads
+-- Catalog items are public read
+-- Reviews are public read but customer-controlled writes
+-- MIS (admin portal) tables are admin-only
+-- Dead-table sections (documents, payments, care_eligibility, carebox_*) are conditional
+-- Turkish policy names are dropped with both UTF-8 and ASCII variants
 -- ============================================
