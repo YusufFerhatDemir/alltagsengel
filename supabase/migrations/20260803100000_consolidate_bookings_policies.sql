@@ -29,19 +29,22 @@
 BEGIN;
 
 -- ── 1) ALLE bestehenden Policies idempotent droppen ─────────────────
--- ALL-Policies (3)
+-- ALL-Policies (3) — UTF-8 + ASCII-Varianten für türkische Namen
 DROP POLICY IF EXISTS "Admin bookingleri yönetebilir"                ON public.bookings;
+DROP POLICY IF EXISTS "Admin bookingleri yonetebilir"                ON public.bookings;
 DROP POLICY IF EXISTS "Admins can manage all bookings"               ON public.bookings;
 DROP POLICY IF EXISTS "bookings_org_fence"                           ON public.bookings;
 
 -- INSERT-Policies (3)
 DROP POLICY IF EXISTS "Customers can insert bookings"                ON public.bookings;
 DROP POLICY IF EXISTS "Müşteri booking oluşturabilir"                ON public.bookings;
+DROP POLICY IF EXISTS "Musteri booking olusturabilir"                ON public.bookings;
 DROP POLICY IF EXISTS "bookings_insert"                              ON public.bookings;
 
 -- SELECT-Policies (4) — hier steckt die DSGVO-Lücke
 DROP POLICY IF EXISTS "Admins can read all bookings"                 ON public.bookings;
 DROP POLICY IF EXISTS "Kullanıcı kendi bookinglerini okuyabilir"     ON public.bookings;
+DROP POLICY IF EXISTS "Kullanici kendi bookinglerini okuyabilir"     ON public.bookings;
 DROP POLICY IF EXISTS "Users can view own bookings"                  ON public.bookings;
 DROP POLICY IF EXISTS "bookings_select"                              ON public.bookings;
 
@@ -51,6 +54,7 @@ DROP POLICY IF EXISTS "Angels can update own bookings"               ON public.b
 DROP POLICY IF EXISTS "Customers can update own bookings"            ON public.bookings;
 DROP POLICY IF EXISTS "bookings_update"                              ON public.bookings;
 DROP POLICY IF EXISTS "İlgili kişi bookingi güncelleyebilir"         ON public.bookings;
+DROP POLICY IF EXISTS "Ilgili kisi bookingi guncelleyebilir"         ON public.bookings;
 
 -- Sicherheitsnetz: Policies die nur live existieren könnten
 DROP POLICY IF EXISTS "Customers can create bookings"                ON public.bookings;
