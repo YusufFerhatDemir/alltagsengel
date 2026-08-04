@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { requireUser } from '@/lib/supabase/require-session'
-import { uploadDocument, MAX_FILE_SIZE_MB } from '@/lib/upload-document'
+import { uploadDocument, MAX_FILE_SIZE_MB, checkDocumentsTableExists } from '@/lib/upload-document'
 import { IconDocument, IconCheck, IconClock, IconInfo } from '@/components/Icons'
 
 const docTypes = [
@@ -26,6 +26,7 @@ export default function KundeDokumentePage() {
   const [selectedType, setSelectedType] = useState('')
   const [uploadError, setUploadError] = useState('')
   const [uploadSuccess, setUploadSuccess] = useState(false)
+  const [featureAvailable, setFeatureAvailable] = useState(true)
 
   useEffect(() => {
     loadDocs()
@@ -34,6 +35,15 @@ export default function KundeDokumentePage() {
   async function loadDocs() {
     const user = await requireUser(router, { redirectTo: '/kunde/dokumente' })
     if (!user) return
+
+    // Feature-Guard: documents-Tabelle muss existieren
+    const tableOk = await checkDocumentsTableExists()
+    if (!tableOk) {
+      setFeatureAvailable(false)
+      setLoading(false)
+      return
+    }
+
     const supabase = createClient()
     const { data } = await supabase
       .from('documents')
@@ -87,6 +97,12 @@ export default function KundeDokumentePage() {
       </div>
 
       <div className="dok-body">
+        {!featureAvailable ? (
+          <div className="dok-info" style={{ marginTop: 24 }}>
+            <IconInfo size={16} />
+            <span>Die Dokumenten-Verwaltung wird derzeit eingerichtet und ist bald verfügbar. Bei Fragen wenden Sie sich bitte an den Support.</span>
+          </div>
+        ) : <>
         <div className="dok-info">
           <IconInfo size={16} />
           <span>Lade deine Dokumente hoch für eine schnellere Abwicklung deiner Buchungen.</span>
@@ -216,6 +232,7 @@ export default function KundeDokumentePage() {
           })
         )}
         <div style={{ height: 90 }}></div>
+        </>}
       </div>
     </div>
   )
