@@ -48,18 +48,46 @@ export interface UploadResult {
 }
 
 /**
+ * Prüft, ob die `documents`-Tabelle in der DB existiert.
+ * Cacht das Ergebnis für die Session.
+ */
+let _documentsTableExists: boolean | null = null
+export async function checkDocumentsTableExists(): Promise<boolean> {
+  if (_documentsTableExists !== null) return _documentsTableExists
+  const supabase = createClient()
+  const { error } = await supabase.from('documents').select('id').limit(0)
+  // Supabase gibt 42P01 (relation does not exist) zurück wenn Tabelle fehlt
+  _documentsTableExists = !error || !error.message?.includes('does not exist')
+  return _documentsTableExists
+}
+
+/**
  * Lädt eine Datei in den `documents`-Bucket und erstellt einen DB-Eintrag.
  *
  * @param file        Datei-Objekt vom <input type="file" />
  * @param userId      Auth-UserID (vorher via requireUser() bestätigt)
  * @param docType     z.B. "ausweis", "versicherung", "fuehrungszeugnis"
  * @returns           UploadResult mit ok/url/errorMessage
+ *
+ * HINWEIS: Die `documents`-Tabelle existiert derzeit nicht in der Produktions-DB.
+ * Die Funktion prüft dies vorab und gibt einen beschreibenden Fehler zurück.
+ * Sobald die Tabelle per Migration angelegt wird, funktioniert der Upload automatisch.
  */
 export async function uploadDocument(
   file: File,
   userId: string,
   docType: string
 ): Promise<UploadResult> {
+  // ═══ 0. Feature-Guard: Tabelle muss existieren ═══
+  const tableExists = await checkDocumentsTableExists()
+  if (!tableExists) {
+    return {
+      ok: false,
+      errorCode: 'db_error',
+      errorMessage:
+        'Die Dokumenten-Verwaltung ist derzeit nicht verfügbar. Bitte kontaktieren Sie den Support.',
+    }
+  }
   // ═══ 1. Validierung: Dateigröße ═══
   if (file.size > MAX_FILE_SIZE_BYTES) {
     const mb = (file.size / 1024 / 1024).toFixed(1)

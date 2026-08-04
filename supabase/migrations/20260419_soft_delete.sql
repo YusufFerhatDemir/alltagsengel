@@ -161,12 +161,20 @@ CREATE POLICY "Users can view own messages" ON public.messages
   );
 
 -- 7) Documents: gleiche Logik (DSGVO — gesperrte Daten nicht mehr lesen)
-DROP POLICY IF EXISTS "Users can view own documents" ON public.documents;
-CREATE POLICY "Users can view own documents" ON public.documents
-  FOR SELECT USING (
-    auth.uid() = user_id
-    AND NOT public.is_profile_soft_deleted(auth.uid())
-  );
+-- GUARD: documents-Tabelle existiert derzeit nicht in Produktion.
+-- Policy wird nur angelegt, wenn die Tabelle vorhanden ist.
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM pg_tables WHERE schemaname = 'public' AND tablename = 'documents') THEN
+    EXECUTE 'DROP POLICY IF EXISTS "Users can view own documents" ON public.documents';
+    EXECUTE $pol$CREATE POLICY "Users can view own documents" ON public.documents
+      FOR SELECT USING (
+        auth.uid() = user_id
+        AND NOT public.is_profile_soft_deleted(auth.uid())
+      )$pol$;
+  END IF;
+END
+$$;
 
 -- 8) Notifications: gleiche Logik
 DROP POLICY IF EXISTS "Users can view own notifications" ON public.notifications;
