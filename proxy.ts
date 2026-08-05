@@ -1,12 +1,16 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+import { getStorageKeyFromEnv } from '@/lib/supabase/storage-key'
 
 // ═══ Cookie-Format Kompatibilität zwischen Browser-Client und Middleware ═══
-const STORAGE_KEY = 'sb-nnwyktkqibdjxgimjyuq-auth-token'
+// Key wird dynamisch aus NEXT_PUBLIC_SUPABASE_URL abgeleitet.
+// FAIL-CLOSED: Wenn die URL fehlt oder ungültig ist, ist STORAGE_KEY null
+// → alle geschützten Routen werden blockiert (Redirect zu Login).
+const STORAGE_KEY = getStorageKeyFromEnv()
 const BASE64_PREFIX = 'base64-'
 
 function decodeSessionCookie(name: string, value: string): string {
-  if (name === STORAGE_KEY && value.startsWith(BASE64_PREFIX)) {
+  if (STORAGE_KEY && name === STORAGE_KEY && value.startsWith(BASE64_PREFIX)) {
     try {
       return Buffer.from(value.substring(BASE64_PREFIX.length), 'base64').toString('utf-8')
     } catch {
@@ -17,7 +21,7 @@ function decodeSessionCookie(name: string, value: string): string {
 }
 
 function encodeSessionCookie(name: string, value: string): string {
-  if (name === STORAGE_KEY) {
+  if (STORAGE_KEY && name === STORAGE_KEY) {
     return BASE64_PREFIX + Buffer.from(value).toString('base64')
   }
   return value
@@ -107,6 +111,16 @@ export async function proxy(request: NextRequest) {
   // ═══ Nur geschützte Pfade durchlaufen den Auth-Check ═══
   if (!isProtectedPath(pathname)) {
     return supabaseResponse
+  }
+
+  // ═══ FAIL-CLOSED: Ohne gültigen Storage-Key keine Auth möglich ═══
+  if (!STORAGE_KEY) {
+    console.error('FAIL-CLOSED: NEXT_PUBLIC_SUPABASE_URL fehlt oder ungültig — alle geschützten Routen blockiert')
+    const url = request.nextUrl.clone()
+    url.pathname = '/auth/login'
+    url.searchParams.set('next', pathname)
+    url.searchParams.set('error', 'auth_required')
+    return NextResponse.redirect(url)
   }
 
   try {

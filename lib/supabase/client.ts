@@ -1,4 +1,5 @@
 import { createClient as createSupabaseClient, SupabaseClient } from '@supabase/supabase-js'
+import { getStorageKeyFromEnv } from '@/lib/supabase/storage-key'
 
 // ═══════════════════════════════════════════════════════════════
 // WhatsApp-Level Session Persistenz
@@ -12,7 +13,9 @@ import { createClient as createSupabaseClient, SupabaseClient } from '@supabase/
 // 4. Beim App-Öffnen: sofort Refresh → kein "Session expired"
 // ═══════════════════════════════════════════════════════════════
 
-const STORAGE_KEY = 'sb-nnwyktkqibdjxgimjyuq-auth-token'
+// Key wird dynamisch aus NEXT_PUBLIC_SUPABASE_URL abgeleitet.
+// Fallback auf einen Dummy-Key der garantiert nicht matcht — FAIL-CLOSED.
+const STORAGE_KEY = getStorageKeyFromEnv() ?? 'sb-INVALID-auth-token'
 const LS_BACKUP_KEY = 'sb-session-backup'
 const IDB_BACKUP_KEY = 'sb-session-idb'
 const IDB_DB_NAME = 'alltagsengel-auth'
