@@ -14,7 +14,7 @@ export default function MISLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter()
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [mobileOpen, setMobileOpen] = useState(false)
-  const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' ? window.innerWidth < 900 : false)
+  const [isMobile, setIsMobile] = useState(false) // SSR-stabiler Default
   const [search, setSearch] = useState('')
 
   // Detect mobile
