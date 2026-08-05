@@ -16,7 +16,7 @@ export const viewport: Viewport = {
   maximumScale: 5,
   userScalable: true,
   themeColor: '#1A1612',
-  colorScheme: 'only dark' as any,
+  colorScheme: 'dark',
 }
 
 export const metadata: Metadata = {
@@ -103,7 +103,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="de" data-theme="dark" style={{ colorScheme: 'only dark' } as any}>
+    <html lang="de" data-theme="dark" suppressHydrationWarning style={{ colorScheme: 'dark' }}>
       <head>
         {/* ═══ RESOURCE HINTS (CWV) ═══ */}
         {/* GTM/gtag lädt auf jeder Seite afterInteractive → Preconnect spart
@@ -116,18 +116,23 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="dns-prefetch" href="https://connect.facebook.net" />
         <link rel="dns-prefetch" href="https://analytics.tiktok.com" />
         {/* ═══ ANDROID AUTO-DARK / AKKU-SPARMODUS SCHUTZ ═══ */}
-        {/* Chrome Auto Dark Theme opt-out (offizielle Methode) */}
-        <meta name="color-scheme" content="only dark" />
+        {/* color-scheme wird über den viewport-Export (colorScheme:'dark')
+            generiert — kein manuelles Meta-Tag mehr, da "only dark" einen
+            Hydration-Mismatch mit dem generierten "dark"-Tag verursacht
+            (React #418, zwei <meta name="color-scheme"> mit unterschiedlichen
+            Werten). Die DarkReader/nightmode-Tags + das Inline-Style auf <html>
+            schützen weiterhin gegen ungewollte Browser-Helligkeits-Anpassungen. */}
         <meta name="supported-color-schemes" content="dark" />
         {/* DarkReader Browser-Extension blockieren */}
         <meta name="darkreader-lock" />
         <meta name="darkreader" content="NO" />
         {/* Samsung Internet Dark Mode blockieren */}
         <meta name="nightmode" content="disable" />
-        {/* Android Chrome Theme */}
-        <meta name="theme-color" content="#1A1612" />
+        {/* theme-color kommt über den viewport-Export (themeColor),
+            apple-mobile-web-app-status-bar-style über metadata.appleWebApp —
+            doppelte manuelle Meta-Tags entfernt, um Hydration-Konflikte
+            durch React 19 Head-Deduplication zu vermeiden. */}
         <meta name="msapplication-navbutton-color" content="#1A1612" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         {/* Frühes Script: Auto-Dark Detection und Removal */}
         {/* ═══ JSON-LD STRUCTURED DATA ═══ */}
         <script
@@ -328,7 +333,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           });
         `}} />
       </head>
-      <body className={`${jost.variable} ${cormorant.variable}`} style={{ fontFamily: "'Jost', sans-serif", backgroundColor: '#1A1612', color: '#F5F0E8' }}>
+      <body className={`${jost.variable} ${cormorant.variable}`} suppressHydrationWarning style={{ fontFamily: "'Jost', sans-serif", backgroundColor: '#1A1612', color: '#F5F0E8' }}>
         <GoogleTagManager />
         <LayoutWrapper>
           {children}
