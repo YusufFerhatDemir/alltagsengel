@@ -125,7 +125,7 @@ describe('P0-1: Admin-Routenschutz (Fail-Closed)', () => {
     expect(res.url).toContain('login')
   })
 
-  it('normaler Benutzer (rolle=kunde) → kein Admin-Zugriff', async () => {
+  it('normaler Benutzer (rolle=kunde) → kein Admin-Zugriff, Redirect zur eigenen Startseite', async () => {
     mockGetUser.mockResolvedValue({
       data: {
         user: {
@@ -143,10 +143,11 @@ describe('P0-1: Admin-Routenschutz (Fail-Closed)', () => {
     const res = await proxy(req)
 
     expect(res.type).toBe('redirect')
-    expect(res.url).toContain('admin_required')
+    // Rollenbasierter Routenschutz: Redirect zur eigenen Startseite statt Login
+    expect(res.url).toContain('/kunde/home')
   })
 
-  it('Engel-Benutzer → kein Admin-Zugriff', async () => {
+  it('Engel-Benutzer → kein Admin-Zugriff, Redirect zur eigenen Startseite', async () => {
     mockGetUser.mockResolvedValue({
       data: {
         user: {
@@ -163,7 +164,8 @@ describe('P0-1: Admin-Routenschutz (Fail-Closed)', () => {
     const res = await proxy(req)
 
     expect(res.type).toBe('redirect')
-    expect(res.url).toContain('admin_required')
+    // Rollenbasierter Routenschutz: Redirect zur eigenen Startseite statt Login
+    expect(res.url).toContain('/engel/home')
   })
 
   it('Admin-Benutzer (app_metadata) → Zugriff erlaubt', async () => {
@@ -239,7 +241,7 @@ describe('P0-1: Admin-Routenschutz (Fail-Closed)', () => {
     const res = await proxy(req)
 
     expect(res.type).toBe('redirect')
-    expect(res.url).toContain('admin_required')
+    expect(res.url).toContain('auth_required')
   })
 })
 
@@ -311,6 +313,6 @@ describe('P0-1: Middleware Error Handling', () => {
     const res = await proxy(req)
 
     expect(res.type).toBe('redirect')
-    expect(res.url).toContain('admin_required')
+    expect(res.url).toContain('auth_required')
   })
 })

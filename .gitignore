@@ -90,3 +90,7 @@ marketing/_tmp*.png
 
 # Lokale Shadow-DB (scripts/shadow-db.sh) — kompletter Postgres-Cluster, nie committen
 .shadow-db/
+
+# Next.js 16 uses proxy.ts — middleware.ts must not exist
+middleware.ts
+.next-old/
