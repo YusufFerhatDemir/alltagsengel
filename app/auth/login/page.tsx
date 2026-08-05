@@ -14,8 +14,8 @@ function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const justRegistered = searchParams.get('registered') === 'true'
-  const redirectTo = searchParams.get('redirectTo') || ''
-  const adminError = searchParams.get('error') === 'admin_required'
+  const redirectTo = searchParams.get('redirectTo') || searchParams.get('next') || ''
+  const authError = searchParams.get('error') === 'admin_required' || searchParams.get('error') === 'auth_required'
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -245,8 +245,11 @@ function LoginForm() {
     // relevant, wenn signUp wegen E-Mail-Bestätigung keine Session hatte.
     await flushPendingProfile(supabase, signInData.user.id)
 
-    // Redirect
-    if (role === 'admin' || role === 'superadmin') {
+    // Redirect — ?next= / ?redirectTo= hat Vorrang (sicherer Rücksprung nach Middleware-Redirect)
+    // Nur relative Pfade erlaubt (kein Open-Redirect via https://evil.com)
+    if (redirectTo && redirectTo.startsWith('/') && !redirectTo.startsWith('//')) {
+      window.location.href = redirectTo
+    } else if (role === 'admin' || role === 'superadmin') {
       window.location.href = '/mis'
     } else if (role === 'engel') {
       window.location.href = '/engel/home'
@@ -292,9 +295,9 @@ function LoginForm() {
           </div>
         )}
 
-        {adminError && (
+        {authError && (
           <div style={{ background: 'rgba(208, 75, 59, 0.15)', border: '1px solid rgba(208, 75, 59, 0.3)', borderRadius: 10, padding: '12px 16px', marginBottom: 12, fontSize: 13, color: '#ef9a9a', textAlign: 'center' }}>
-            Zugriff verweigert. Admin-Berechtigung erforderlich.
+            Zugriff verweigert. Bitte melden Sie sich an.
           </div>
         )}
 

@@ -1,12 +1,16 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+import { getStorageKeyFromEnv } from '@/lib/supabase/storage-key'
 
 // ═══ Cookie-Format Kompatibilität zwischen Browser-Client und Middleware ═══
-const STORAGE_KEY = 'sb-nnwyktkqibdjxgimjyuq-auth-token'
+// Key wird dynamisch aus NEXT_PUBLIC_SUPABASE_URL abgeleitet.
+// FAIL-CLOSED: Wenn die URL fehlt oder ungültig ist, ist STORAGE_KEY null
+// → alle geschützten Routen werden blockiert (Redirect zu Login).
+const STORAGE_KEY = getStorageKeyFromEnv()
 const BASE64_PREFIX = 'base64-'
 
 function decodeSessionCookie(name: string, value: string): string {
-  if (name === STORAGE_KEY && value.startsWith(BASE64_PREFIX)) {
+  if (STORAGE_KEY && name === STORAGE_KEY && value.startsWith(BASE64_PREFIX)) {
     try {
       return Buffer.from(value.substring(BASE64_PREFIX.length), 'base64').toString('utf-8')
     } catch {
@@ -17,10 +21,59 @@ function decodeSessionCookie(name: string, value: string): string {
 }
 
 function encodeSessionCookie(name: string, value: string): string {
-  if (name === STORAGE_KEY) {
+  if (STORAGE_KEY && name === STORAGE_KEY) {
     return BASE64_PREFIX + Buffer.from(value).toString('base64')
   }
   return value
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Rollenzuordnung: welche Rolle darf welche Bereiche betreten?
+// admin/superadmin dürfen ALLE geschützten Bereiche.
+// ═══════════════════════════════════════════════════════════════
+const ROLE_ACCESS: Record<string, string[]> = {
+  admin:      ['/admin', '/mis', '/kunde', '/engel', '/fahrer'],
+  superadmin: ['/admin', '/mis', '/kunde', '/engel', '/fahrer'],
+  kunde:      ['/kunde'],
+  engel:      ['/engel'],
+  fahrer:     ['/fahrer'],
+}
+
+// ═══ Startseite pro Rolle (für Redirect bei falschem Bereich) ═══
+const ROLE_HOME: Record<string, string> = {
+  admin:      '/admin/home',
+  superadmin: '/admin/home',
+  kunde:      '/kunde/home',
+  engel:      '/engel/home',
+  fahrer:     '/fahrer/home',
+}
+
+// ═══ Geschützte Pfad-Präfixe ═══
+const PROTECTED_PREFIXES = ['/admin', '/kunde', '/engel', '/fahrer', '/mis']
+
+function isProtectedPath(pathname: string): boolean {
+  return PROTECTED_PREFIXES.some(
+    (prefix) => pathname === prefix || pathname.startsWith(prefix + '/')
+  )
+}
+
+function getAreaPrefix(pathname: string): string | null {
+  for (const prefix of PROTECTED_PREFIXES) {
+    if (pathname === prefix || pathname.startsWith(prefix + '/')) {
+      return prefix
+    }
+  }
+  return null
+}
+
+// ═══ Öffentlich zugängliche Seiten unter geschützten Präfixen ═══
+// /fahrer/register ist die Fahrer-Registrierung und muss OHNE Login erreichbar sein.
+const PUBLIC_EXCEPTIONS = ['/fahrer/register']
+
+function isPublicException(pathname: string): boolean {
+  return PUBLIC_EXCEPTIONS.some(
+    (p) => pathname === p || pathname.startsWith(p + '/')
+  )
 }
 
 export async function proxy(request: NextRequest) {
@@ -46,6 +99,28 @@ export async function proxy(request: NextRequest) {
         return NextResponse.json({ error: 'CSRF: Ungültige Anfrage' }, { status: 403 })
       }
     }
+  }
+
+  const pathname = request.nextUrl.pathname
+
+  // ═══ Öffentliche Ausnahmen direkt durchlassen ═══
+  if (isPublicException(pathname)) {
+    return supabaseResponse
+  }
+
+  // ═══ Nur geschützte Pfade durchlaufen den Auth-Check ═══
+  if (!isProtectedPath(pathname)) {
+    return supabaseResponse
+  }
+
+  // ═══ FAIL-CLOSED: Ohne gültigen Storage-Key keine Auth möglich ═══
+  if (!STORAGE_KEY) {
+    console.error('FAIL-CLOSED: NEXT_PUBLIC_SUPABASE_URL fehlt oder ungültig — alle geschützten Routen blockiert')
+    const url = request.nextUrl.clone()
+    url.pathname = '/auth/login'
+    url.searchParams.set('next', pathname)
+    url.searchParams.set('error', 'auth_required')
+    return NextResponse.redirect(url)
   }
 
   try {
@@ -76,39 +151,18 @@ export async function proxy(request: NextRequest) {
     )
 
     // ═══ Session-Prüfung: getUser verifiziert den JWT serverseitig ═══
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
-    const pathname = request.nextUrl.pathname
+    const { data: { user } } = await supabase.auth.getUser()
 
-    // Protected routes - redirect to login if not authenticated
-    const isProtected = pathname.startsWith('/kunde') || pathname.startsWith('/engel') || pathname.startsWith('/admin') || pathname.startsWith('/mis') || (pathname.startsWith('/fahrer') && !pathname.startsWith('/fahrer/register'))
-
-    // ═══ AUTH-007: FAIL-CLOSED für sensible Routen ═══
-    // Die FAIL-SOFT-Strategie für /kunde + /engel ist gut für UX
-    // (WhatsApp-Style: Session im Hintergrund wiederherstellen, nicht
-    // sofort zum Login). Nur ECHTE Geheimdaten (Zahlungsinfos, Dokumente)
-    // bleiben fail-closed — dort ist das Risiko eines 3-5s Sichtbar-Fensters
-    // während Token-Refresh zu hoch.
+    // ═══ FAIL-CLOSED für ALLE geschützten Routen ═══
+    // Kein Flash-of-Content: Ohne gültige serverseitige Session wird
+    // sofort zum Login redirected. Der Zielpfad bleibt über ?next= erhalten.
     //
-    // Profil + Chat sind BEWUSST fail-soft: Der User ist ohnehin nur er
-    // selbst dort, und die Client-Seite macht einen zusaetzlichen Session-
-    // Check. Haeufiges Rauswerfen bei kleinstem Token-Hickup ist schlimmer
-    // als das theoretische Risiko eines 3-Sekunden-Screenshots.
-    const sensitivePaths = [
-      '/kunde/zahlungsdaten',
-      '/kunde/dokumente',
-      '/engel/dokumente',
-    ]
-    // ═══ AUTH-009 (P0): /mis und /admin sind IMMER fail-closed ═══
-    // Vorher: /mis lief fail-soft (UX-Reasoning für Profil/Chat). Resultat:
-    // nicht-authentifizierte Besucher konnten /mis-Seiten kurzzeitig sehen
-    // (bis Client-side AdminAuthGuard greift). Bei Admin-/MIS-Daten ist
-    // das ein KRITISCHES Sicherheits-Leak — niemals akzeptabel.
-    const adminPaths = ['/admin', '/mis']
-    const isSensitive = sensitivePaths.some(p => pathname === p || pathname.startsWith(p + '/'))
-    const isAdminPath = adminPaths.some(p => pathname === p || pathname.startsWith(p + '/'))
-
-    if (!user && (isSensitive || isAdminPath)) {
-      // FAIL-CLOSED — direkt zum Login, keine Gnade.
+    // Hinweis: Die Client-Seite (SessionKeepAlive) kann den Token ggf.
+    // via IndexedDB/localStorage refreshen — das ist aber ein Client-
+    // Mechanismus. Serverseitig gilt: kein JWT → kein Zugriff.
+    // Die bestehenden clientseitigen Guards (AdminAuthGuard, requireUser)
+    // bleiben als Defense-in-Depth erhalten.
+    if (!user) {
       const url = request.nextUrl.clone()
       url.pathname = '/auth/login'
       url.searchParams.set('next', pathname)
@@ -116,65 +170,84 @@ export async function proxy(request: NextRequest) {
       return NextResponse.redirect(url)
     }
 
-    if (!user && isProtected) {
-      // ═══ FAIL-SOFT für restliche geschützte Routen ═══
-      // Nicht sofort zum Login schicken! Der Client-Side SessionKeepAlive
-      // kann den Token noch via Refresh Token / IndexedDB / Cookie refreshen.
-      // Genau wie WhatsApp/Instagram: App öffnen → Session wird im Hintergrund
-      // wiederhergestellt, ohne dass der User erneut einloggen muss.
-      //
-      // Die Client-Seite (AdminAuthGuard / Seitenlogik) prüft nach kurzer
-      // Wartezeit ob die Session wiederhergestellt wurde. Falls nicht,
-      // redirected sie selbst zum Login.
-      return supabaseResponse
-    }
-
-    // ═══ Admin & MIS routes — Rolle AUTORITATIV prüfen ═══
+    // ═══ Rolle AUTORITATIV bestimmen ═══
     // SICHERHEIT: user_metadata ist vom User selbst editierbar
     // (supabase.auth.updateUser({ data: { role: 'admin' } })) und darf
-    // NIEMALS für Autorisierung genutzt werden — sonst macht sich jeder
-    // Nutzer selbst zum Admin. Wir prüfen daher ausschließlich:
-    //   1) app_metadata.role — nur serverseitig (Admin-API) setzbar → vertrauenswürdig
-    //   2) Fallback: profiles.role in der DB (autoritativ, gegen Self-Escalation
-    //      durch Trigger prevent_role_escalation geschützt).
-    if (user && (pathname.startsWith('/admin') || pathname.startsWith('/mis'))) {
-      const appRole = (user.app_metadata?.role as string | undefined) || ''
-      let isAdmin = appRole === 'admin' || appRole === 'superadmin'
+    // NIEMALS allein für Autorisierung genutzt werden — sonst macht sich
+    // jeder Nutzer selbst zum Admin.
+    //
+    // Hierarchie:
+    //   1) app_metadata.role — nur serverseitig (Admin-API) setzbar → tamper-proof
+    //   2) Fallback: profiles.role in der DB (autoritativ, durch DB-Trigger
+    //      prevent_role_escalation gegen Self-Escalation geschützt)
+    //   3) user_metadata.role NICHT verwendet (unsicher)
+    let role: string = ''
 
-      if (!isAdmin) {
-        try {
-          const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
-          isAdmin = !!profile && ['admin', 'superadmin'].includes(profile.role)
-        } catch (dbError) {
-          // FAIL-CLOSED: DB-Check fehlgeschlagen → Zugriff verweigern.
-          console.error('Admin DB check failed:', dbError)
-          isAdmin = false
+    const appRole = (user.app_metadata?.role as string | undefined) || ''
+    if (appRole) {
+      role = appRole
+    }
+
+    // DB-Fallback: profiles-Tabelle abfragen (mit User-Token, NICHT service_role)
+    if (!role) {
+      try {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', user.id)
+          .single()
+        if (profile?.role) {
+          role = profile.role
         }
-      }
-
-      if (!isAdmin) {
-        const url = request.nextUrl.clone()
-        url.pathname = '/auth/login'
-        url.searchParams.set('error', 'admin_required')
-        return NextResponse.redirect(url)
+      } catch (dbError) {
+        // FAIL-CLOSED: DB-Check fehlgeschlagen → Zugriff verweigern.
+        console.error('Role DB check failed:', dbError)
       }
     }
 
-    return supabaseResponse
-  } catch (err) {
-    // FAIL-CLOSED: If middleware errors on protected routes, deny access
-    console.error('Middleware error:', err)
-    const pathname = request.nextUrl.pathname
-    if (pathname.startsWith('/admin') || pathname.startsWith('/mis')) {
+    // ═══ Keine Rolle bestimmbar → Login ═══
+    if (!role) {
       const url = request.nextUrl.clone()
       url.pathname = '/auth/login'
-      url.searchParams.set('error', 'admin_required')
+      url.searchParams.set('next', pathname)
+      url.searchParams.set('error', 'auth_required')
       return NextResponse.redirect(url)
     }
+
+    // ═══ Rollen-Check: darf der User diesen Bereich betreten? ═══
+    const area = getAreaPrefix(pathname)
+    const allowedAreas = ROLE_ACCESS[role] || []
+
+    if (area && !allowedAreas.includes(area)) {
+      // User ist eingeloggt, hat aber keinen Zugriff auf diesen Bereich.
+      // → Redirect zur eigenen Startseite (keine Redirect-Loop,
+      //   weil die eigene Startseite in allowedAreas enthalten ist).
+      const homeUrl = request.nextUrl.clone()
+      homeUrl.pathname = ROLE_HOME[role] || '/auth/login'
+      homeUrl.search = '' // Keine Query-Parameter mitnehmen
+      return NextResponse.redirect(homeUrl)
+    }
+
+    // ═══ Alles OK — Request durchlassen (mit ggf. aktualisierten Cookies) ═══
     return supabaseResponse
+  } catch (err) {
+    // ═══ FAIL-CLOSED: Exception → kein Zugriff auf geschützte Routen ═══
+    console.error('Proxy auth error:', err)
+    const url = request.nextUrl.clone()
+    url.pathname = '/auth/login'
+    url.searchParams.set('next', pathname)
+    url.searchParams.set('error', 'auth_required')
+    return NextResponse.redirect(url)
   }
 }
 
 export const config = {
-  matcher: ['/kunde/:path*', '/engel/:path*', '/admin/:path*', '/mis/:path*', '/mis', '/fahrer/home', '/fahrer/fahrzeuge', '/fahrer/auftraege', '/fahrer/profil', '/fahrer/chat/:path*', '/api/:path*'],
+  matcher: [
+    '/admin/:path*',
+    '/kunde/:path*',
+    '/engel/:path*',
+    '/fahrer/:path*',
+    '/mis/:path*',
+    '/api/:path*',
+  ],
 }
