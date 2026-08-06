@@ -25,6 +25,20 @@ import {
 } from './status-machine';
 import { logBillingAction, computeSnapshotChecksum } from './audit';
 import { generateIdempotencyKey, checkIdempotency } from './idempotency';
+import { resolvePrice, calculateLineTotal, type BillingTarif } from './price-resolver';
+
+// ---------------------------------------------------------------------------
+// Budget-Typ → Rechtsgrundlage Mapping
+// (aus lib/kunde/leistungen.ts und lib/admin/ops.ts abgeleitet)
+// ---------------------------------------------------------------------------
+
+const BUDGET_RECHTSGRUNDLAGE: Record<string, string> = {
+  entlastung: '§45b SGB XI',
+  verhinderung: '§39 SGB XI',
+  carryover: '§45b SGB XI',    // Übertrag aus Vorjahr
+  haeusliche_pflege_36: '§36 SGB XI',
+  // 'private' hat keine Rechtsgrundlage (Privatrechnung)
+};
 
 // ---------------------------------------------------------------------------
 // Types
@@ -43,6 +57,8 @@ export interface CreateDraftResult {
   totalAmountCents: number;
   lineCount: number;
   alreadyExists: boolean;
+  priceSource?: 'billing_tariffs' | 'service_records';
+  priceWarnings?: string[];
 }
 
 export interface FreezeResult {
@@ -144,7 +160,7 @@ export async function createInvoiceDraft(
   // Client-Daten laden
   const { data: client, error: clientError } = await supabase
     .from('clients')
-    .select('id, first_name, last_name, insurance_name, insurance_number, organization_id')
+    .select('id, first_name, last_name, insurance_name, insurance_number, organization_id, pflegekasse_ik')
     .eq('id', clientId)
     .single();
 
@@ -155,7 +171,52 @@ export async function createInvoiceDraft(
   // Rechnungsnummer generieren
   const invoiceNumber = await generateInvoiceNumber(supabase, client.organization_id, 'RE');
 
-  // Gesamtbetrag berechnen
+  // ── Preisvalidierung ──
+  // Primär: billing_tariffs (resolvePrice) — serverseitig, nicht vom Browser
+  // Fallback: service_records.amount — aus service_pricing bei Erfassung
+  // Schutz: kein stiller Fallback auf 0, kein Vertrauen auf Browser-Preise
+  const priceWarnings: string[] = [];
+  let priceSource: 'billing_tariffs' | 'service_records' = 'service_records';
+  let resolvedTarif: BillingTarif | null = null;
+
+  const rechtsgrundlage = BUDGET_RECHTSGRUNDLAGE[budgetType];
+
+  if (rechtsgrundlage) {
+    // Versuch: Tarif aus billing_tariffs auflösen
+    try {
+      resolvedTarif = await resolvePrice(supabase, {
+        leistungsart: records[0]?.service_type || 'alltagsbegleitung',
+        rechtsgrundlage,
+        datum: periodStart,
+        kostentraegerIk: client.pflegekasse_ik || undefined,
+        bundesland: 'hessen',  // Alltagsengel = nur Hessen (lib/hessen-plz.ts)
+      });
+      priceSource = 'billing_tariffs';
+    } catch {
+      // Kein passender Tarif gefunden — Fallback auf service_records.amount
+      priceWarnings.push(
+        `Kein Tarif in billing_tariffs für ${budgetType}/${records[0]?.service_type} ` +
+        `zum ${periodStart}. Fallback: service_records.amount (service_pricing).`
+      );
+    }
+  } else if (budgetType !== 'private') {
+    priceWarnings.push(
+      `Keine Rechtsgrundlage für Budget-Typ "${budgetType}" definiert. ` +
+      `Fallback: service_records.amount.`
+    );
+  }
+
+  // Null-Preis-Schutz: keine Position mit Betrag 0 oder null
+  const zeroRecords = records.filter(r => !r.amount || Number(r.amount) === 0);
+  if (zeroRecords.length > 0) {
+    throw new Error(
+      `${zeroRecords.length} Leistungsnachweis(e) ohne Betrag (amount=0/null): ` +
+      `${zeroRecords.map(r => r.id).join(', ')}. ` +
+      `Rechnung kann nicht mit Null-Positionen erstellt werden.`
+    );
+  }
+
+  // Gesamtbetrag berechnen (aus DB, nicht vom Browser)
   const totalAmount = records.reduce((sum, r) => sum + Number(r.amount || 0), 0);
   const budgetAmount = records
     .filter(r => r.budget_type !== 'private')
@@ -163,6 +224,24 @@ export async function createInvoiceDraft(
   const privateAmount = records
     .filter(r => r.budget_type === 'private')
     .reduce((sum, r) => sum + Number(r.amount || 0), 0);
+
+  // Soll/Ist-Abgleich: Wenn Tarif vorhanden, mit service_records vergleichen
+  if (resolvedTarif) {
+    for (const r of records) {
+      const durationHours = (r.duration_minutes || 60) / 60;
+      const tarifAmount = (resolvedTarif.preis_cent / 100) * durationHours;
+      const recordAmount = Number(r.amount || 0);
+      const diff = Math.abs(tarifAmount - recordAmount);
+
+      if (diff > 0.01) {
+        priceWarnings.push(
+          `Position ${r.id} (${r.date}): service_records.amount=${recordAmount.toFixed(2)} €, ` +
+          `billing_tariffs=${tarifAmount.toFixed(2)} € (Differenz: ${diff.toFixed(2)} €). ` +
+          `Verwendet: service_records.amount (Phase 1).`
+        );
+      }
+    }
+  }
 
   // Rechnung erstellen
   const { data: invoice, error: invError } = await supabase
@@ -219,7 +298,7 @@ export async function createInvoiceDraft(
     .update({ status: 'invoiced' })
     .in('id', recordIds);
 
-  // Audit-Trail
+  // Audit-Trail (inkl. Preisquelle und Warnungen)
   await logBillingAction(supabase, {
     entityType: 'invoice',
     entityId: invoice.id,
@@ -231,6 +310,9 @@ export async function createInvoiceDraft(
       budget_type: budgetType,
       total_amount: totalAmount,
       line_count: records.length,
+      price_source: priceSource,
+      tarif_id: resolvedTarif?.id || null,
+      price_warnings: priceWarnings.length > 0 ? priceWarnings : undefined,
     },
     actorId,
   });
@@ -241,6 +323,8 @@ export async function createInvoiceDraft(
     totalAmountCents: Math.round(totalAmount * 100),
     lineCount: records.length,
     alreadyExists: false,
+    priceSource,
+    priceWarnings: priceWarnings.length > 0 ? priceWarnings : undefined,
   };
 }
 

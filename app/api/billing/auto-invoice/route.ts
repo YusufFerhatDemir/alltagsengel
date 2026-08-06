@@ -237,7 +237,7 @@ export async function POST(request: Request) {
     // Budget-Typen der abrechenbaren Records ermitteln
     const budgetTypes = [...new Set(billable.map(r => r.budget_type || 'entlastung'))]
 
-    const results = []
+    const engineResults = []
     const warnings: string[] = []
 
     for (const budgetType of budgetTypes) {
@@ -248,33 +248,56 @@ export async function POST(request: Request) {
           budgetType,
           actorId: auth.actor.split(':')[1] || 'auto-invoice',
         })
-        results.push({ ...result, budgetType })
+        engineResults.push({ ...result, budgetType })
       } catch (engineErr: any) {
         console.error(`[auto-invoice] Engine-Fehler für ${budgetType}:`, engineErr)
         warnings.push(`${budgetType}: ${engineErr.message}`)
       }
     }
 
-    if (results.length === 0) {
+    if (engineResults.length === 0) {
       return NextResponse.json({
         error: 'Rechnungserstellung fehlgeschlagen',
         warnings,
       }, { status: 500 })
     }
 
-    const primary = results[0]
-    console.log(`[auto-invoice] ${results.length} Rechnung(en) via Engine erstellt für Klient ${resolvedClientId}, Monat ${resolvedMonth} durch ${auth.actor}`)
+    // ── Rückwärtskompatible Antwort ──
+    // Altes Format: { invoice: {full obj}, items: [...], record_count }
+    // Neues Format: zusätzlich invoices[] + invoiceIds[]
+    // Bestehende Clients lesen "invoice" und "items", neue können
+    // "invoices" nutzen.
+    const primary = engineResults[0]
+
+    // Vollständiges Invoice-Objekt laden (Rückwärtskompatibilität)
+    const { data: fullInvoice } = await admin
+      .from('invoices')
+      .select()
+      .eq('id', primary.invoiceId)
+      .single()
+
+    // Items laden (Rückwärtskompatibilität)
+    const { data: invoiceItems } = await admin
+      .from('invoice_items')
+      .select()
+      .eq('invoice_id', primary.invoiceId)
+
+    console.log(`[auto-invoice] ${engineResults.length} Rechnung(en) via Engine erstellt für Klient ${resolvedClientId}, Monat ${resolvedMonth} durch ${auth.actor}`)
 
     return NextResponse.json({
       ready: true,
       created: true,
-      invoice: {
+      // Rückwärtskompatibel: einzelnes invoice-Objekt (erste/einzige Rechnung)
+      invoice: fullInvoice || {
         id: primary.invoiceId,
         invoice_number: primary.invoiceNumber,
         total_amount: primary.totalAmountCents / 100,
       },
-      invoices: results,
+      items: invoiceItems || [],
       record_count: billable.length,
+      // Neu: alle erzeugten Rechnungen (bei mehreren Budget-Typen)
+      invoices: engineResults,
+      invoiceIds: engineResults.map(r => r.invoiceId),
       warnings: warnings.length > 0 ? warnings : undefined,
     }, { status: 201 })
   } catch (err: any) {
