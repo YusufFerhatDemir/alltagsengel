@@ -24,10 +24,11 @@ const CLIENT_1 = 'client-1111'
 const ORG_1 = 'org-1111'
 
 // ── Mocks für Auth + Supabase-Clients ──
-const { mockRequireCaregiverSession, mockCreateClient, mockCreateAdminClient } = vi.hoisted(() => ({
+const { mockRequireCaregiverSession, mockCreateClient, mockCreateAdminClient, mockCreateInvoiceDraft } = vi.hoisted(() => ({
   mockRequireCaregiverSession: vi.fn(),
   mockCreateClient: vi.fn(),
   mockCreateAdminClient: vi.fn(),
+  mockCreateInvoiceDraft: vi.fn(),
 }))
 
 vi.mock('@/lib/native-auth', () => ({
@@ -38,6 +39,9 @@ vi.mock('@/lib/supabase/server', () => ({
 }))
 vi.mock('@/lib/supabase/admin', () => ({
   createAdminClient: mockCreateAdminClient,
+}))
+vi.mock('@/lib/billing/core', () => ({
+  createInvoiceDraft: (...args: unknown[]) => mockCreateInvoiceDraft(...args),
 }))
 
 // ── Generischer Query-Builder-Mock ──
@@ -233,28 +237,33 @@ describe('P0: /api/billing/auto-invoice — Cross-Client-Schutz', () => {
     expect(adminMock.queries.filter(q => q.table === 'clients')).toHaveLength(0)
   })
 
-  it('5. Caregiver A + eigener service_record → Rechnung mit organization_id des Klienten', async () => {
+  it('5. Caregiver A + eigener service_record → Engine aufgerufen (kein Direkt-Insert)', async () => {
     authAsCaregiver(CAREGIVER_A)
     const adminMock = createAdminMock(defaultHandler())
     mockCreateAdminClient.mockReturnValue(adminMock)
+    mockCreateInvoiceDraft.mockResolvedValue({
+      invoiceId: 'inv-engine-1',
+      invoiceNumber: 'RE-2026-00001',
+      totalAmountCents: 8000,
+      lineCount: 2,
+      alreadyExists: false,
+    })
 
     const res = await callRoute({ service_record_id: RECORD_OWN.id })
     expect(res.status).toBe(201)
     const json = await res.json()
     expect(json.created).toBe(true)
 
-    const [invoiceInsert] = insertsOn(adminMock, 'invoices')
-    expect(invoiceInsert.values.organization_id).toBe(ORG_1)
-    expect(invoiceInsert.values.client_id).toBe(CLIENT_1)
-
-    const [itemsInsert] = insertsOn(adminMock, 'invoice_items')
-    expect(itemsInsert.values).toHaveLength(2)
-    for (const item of itemsInsert.values) {
-      expect(item.organization_id).toBe(ORG_1)
-    }
+    // Engine wurde aufgerufen, KEINE direkten Inserts mehr
+    expect(mockCreateInvoiceDraft).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ clientId: CLIENT_1, periodMonth: '2026-07' }),
+    )
+    expect(insertsOn(adminMock, 'invoices')).toHaveLength(0)
+    expect(insertsOn(adminMock, 'invoice_items')).toHaveLength(0)
   })
 
-  it('6. Caregiver A + client_id/month mit assignments-Zuordnung → erlaubt', async () => {
+  it('6. Caregiver A + client_id/month mit assignments-Zuordnung → Engine aufgerufen', async () => {
     authAsCaregiver(CAREGIVER_A)
     const adminMock = createAdminMock(defaultHandler({
       'assignments:select': (q) =>
@@ -268,22 +277,36 @@ describe('P0: /api/billing/auto-invoice — Cross-Client-Schutz', () => {
       },
     }))
     mockCreateAdminClient.mockReturnValue(adminMock)
+    mockCreateInvoiceDraft.mockResolvedValue({
+      invoiceId: 'inv-engine-2',
+      invoiceNumber: 'RE-2026-00002',
+      totalAmountCents: 8000,
+      lineCount: 2,
+      alreadyExists: false,
+    })
 
     const res = await callRoute({ client_id: CLIENT_1, month: '2026-07' })
     expect(res.status).toBe(201)
-    const [invoiceInsert] = insertsOn(adminMock, 'invoices')
-    expect(invoiceInsert.values.organization_id).toBe(ORG_1)
+    expect(mockCreateInvoiceDraft).toHaveBeenCalled()
+    expect(insertsOn(adminMock, 'invoices')).toHaveLength(0)
   })
 
-  it('7. Admin-Pfad → erlaubt, organization_id gesetzt, kein Zuordnungs-Check nötig', async () => {
+  it('7. Admin-Pfad → Engine aufgerufen, kein Zuordnungs-Check nötig', async () => {
     authAsAdmin()
     const adminMock = createAdminMock(defaultHandler())
     mockCreateAdminClient.mockReturnValue(adminMock)
+    mockCreateInvoiceDraft.mockResolvedValue({
+      invoiceId: 'inv-engine-3',
+      invoiceNumber: 'RE-2026-00003',
+      totalAmountCents: 8000,
+      lineCount: 2,
+      alreadyExists: false,
+    })
 
     const res = await callRoute({ client_id: CLIENT_1, month: '2026-07' })
     expect(res.status).toBe(201)
-    const [invoiceInsert] = insertsOn(adminMock, 'invoices')
-    expect(invoiceInsert.values.organization_id).toBe(ORG_1)
+    expect(mockCreateInvoiceDraft).toHaveBeenCalled()
+    expect(insertsOn(adminMock, 'invoices')).toHaveLength(0)
     // Admin-Pfad fragt assignments nicht ab
     expect(adminMock.queries.filter(q => q.table === 'assignments')).toHaveLength(0)
   })
