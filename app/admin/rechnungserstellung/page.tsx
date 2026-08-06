@@ -161,49 +161,30 @@ export default function RechnungserstellungPage() {
     setCreatingFor(group.client_id)
     setError(null)
     try {
-      const supabase = createClient()
-      const { start, end } = monthBounds(year, month)
-      const budgetTotal = group.records.filter(r => r.budget_type !== 'private').reduce((s, r) => s + (Number(r.amount) || 0), 0)
-      const privateTotal = group.records.filter(r => r.budget_type === 'private').reduce((s, r) => s + (Number(r.amount) || 0), 0)
-      const shortId = Math.random().toString(36).slice(2, 8).toUpperCase()
-      const invoiceNumber = `RE-${year}${String(month).padStart(2, '0')}-${shortId}`
+      const periodMonth = `${year}-${String(month).padStart(2, '0')}`
+      const res = await fetch('/api/billing/invoices/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          clientId: group.client_id,
+          periodMonth,
+        }),
+      })
 
-      const { data: inv, error: invErr } = await supabase
-        .from('invoices')
-        .insert({
-          invoice_number: invoiceNumber,
-          client_id: group.client_id,
-          insurance_name: group.insurance_name,
-          insurance_number: group.insurance_number,
-          period_start: start,
-          period_end: end,
-          total_amount: group.sum,
-          budget_amount: budgetTotal,
-          private_amount: privateTotal,
-          status: 'entwurf',
-        })
-        .select('id')
-        .single()
+      const json = await res.json()
 
-      if (invErr || !inv) { setError(`Fehler beim Erstellen: ${invErr?.message}`); setCreatingFor(null); return }
+      if (!res.ok) {
+        const detail = json.warnings?.length
+          ? `${json.error} (${json.warnings.join('; ')})`
+          : json.error
+        setError(`Fehler beim Erstellen: ${detail}`)
+        setCreatingFor(null)
+        return
+      }
 
-      const items = group.records.map(r => ({
-        invoice_id: inv.id,
-        service_record_id: r.id,
-        description: r.service_type || 'Leistung',
-        date: r.date,
-        duration_minutes: r.duration_minutes,
-        amount: r.amount,
-        budget_type: r.budget_type,
-      }))
-      const { error: itemsErr } = await supabase.from('invoice_items').insert(items)
-      if (itemsErr) { setError(`Positionen-Fehler: ${itemsErr.message}`); setCreatingFor(null); return }
-
-      const { error: updErr } = await supabase
-        .from('service_records')
-        .update({ status: 'invoiced' })
-        .in('id', group.records.map(r => r.id))
-      if (updErr) console.error('Status-Update-Fehler:', updErr)
+      if (json.warnings?.length) {
+        console.warn('[Rechnungserstellung] Warnungen:', json.warnings)
+      }
 
       await loadBillable()
       await loadInvoices()
