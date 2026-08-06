@@ -1,22 +1,32 @@
 /**
  * Tests fuer den invoices_status_check Constraint
- * Verifiziert, dass die Reconciliation-Migration alle benoetigten
- * Statuswerte enthaelt — sowohl Legacy (englisch) als auch neue (deutsch).
+ * Verifiziert, dass alle Migrationen die korrekten Statuswerte enthalten.
  *
  * @see supabase/migrations/20260806300000_pr35_reconciliation_status_constraint.sql
+ * @see supabase/migrations/20260806400000_add_strittig_status.sql
  */
 import { describe, it, expect } from 'vitest';
 import * as fs from 'fs';
 import * as path from 'path';
 
-const MIGRATION_PATH = path.resolve(
+const RECONCILIATION_PATH = path.resolve(
   __dirname,
   '../../supabase/migrations/20260806300000_pr35_reconciliation_status_constraint.sql'
 );
 
-const ROLLBACK_PATH = path.resolve(
+const RECONCILIATION_ROLLBACK_PATH = path.resolve(
   __dirname,
   '../../supabase/migrations/20260806300001_rollback_pr35_reconciliation.sql'
+);
+
+const STRITTIG_PATH = path.resolve(
+  __dirname,
+  '../../supabase/migrations/20260806400000_add_strittig_status.sql'
+);
+
+const STRITTIG_ROLLBACK_PATH = path.resolve(
+  __dirname,
+  '../../supabase/migrations/20260806400001_rollback_add_strittig_status.sql'
 );
 
 // Alle Status, die der Constraint erlauben MUSS
@@ -30,7 +40,7 @@ const NEW_GERMAN = [
 ] as const;
 
 describe('invoices_status_check Reconciliation-Migration', () => {
-  const migrationSQL = fs.readFileSync(MIGRATION_PATH, 'utf-8');
+  const migrationSQL = fs.readFileSync(RECONCILIATION_PATH, 'utf-8');
 
   it('enthaelt alle Legacy-Statuswerte (englisch)', () => {
     for (const status of LEGACY_ENGLISH) {
@@ -62,7 +72,7 @@ describe('invoices_status_check Reconciliation-Migration', () => {
 });
 
 describe('invoices_status_check Rollback-Migration', () => {
-  const rollbackSQL = fs.readFileSync(ROLLBACK_PATH, 'utf-8');
+  const rollbackSQL = fs.readFileSync(RECONCILIATION_ROLLBACK_PATH, 'utf-8');
 
   it('entfernt den erweiterten Constraint', () => {
     expect(rollbackSQL).toContain('DROP CONSTRAINT IF EXISTS invoices_status_check');
@@ -95,5 +105,70 @@ describe('PR #35 Rollback-Migration enthaelt Constraint-Wiederherstellung', () =
     for (const status of LEGACY_ENGLISH) {
       expect(pr35Rollback).toContain(`'${status}'`);
     }
+  });
+});
+
+describe('strittig-Migration (20260806400000)', () => {
+  const migrationSQL = fs.readFileSync(STRITTIG_PATH, 'utf-8');
+
+  it('enthaelt strittig als Statuswert', () => {
+    expect(migrationSQL).toContain("'strittig'");
+  });
+
+  it('enthaelt alle 20 Statuswerte (6 EN + 13 DE + strittig)', () => {
+    const allStatus = [...LEGACY_ENGLISH, ...NEW_GERMAN, 'strittig'];
+    expect(allStatus.length).toBe(20);
+    for (const status of allStatus) {
+      expect(migrationSQL).toContain(`'${status}'`);
+    }
+  });
+
+  it('verwendet DROP IF EXISTS fuer Idempotenz', () => {
+    expect(migrationSQL).toContain('DROP CONSTRAINT IF EXISTS invoices_status_check');
+  });
+
+  it('enthaelt Trigger-Funktion mit strittig-Uebergaengen', () => {
+    expect(migrationSQL).toContain("OLD.status = 'strittig'");
+    // Erlaubte Uebergaenge aus strittig
+    expect(migrationSQL).toContain("'gekuerzt'");
+    expect(migrationSQL).toContain("'korrektur_erforderlich'");
+    expect(migrationSQL).toContain("'abgelehnt'");
+    expect(migrationSQL).toContain("'akzeptiert'");
+    expect(migrationSQL).toContain("'bezahlt'");
+    expect(migrationSQL).toContain("'storniert'");
+  });
+
+  it('erlaubt Uebergang nach strittig aus quittiert, teilweise_bezahlt, gekuerzt', () => {
+    // quittiert → strittig
+    expect(migrationSQL).toMatch(/quittiert.*strittig/s);
+    // teilweise_bezahlt → strittig
+    expect(migrationSQL).toMatch(/teilweise_bezahlt.*strittig/s);
+    // gekuerzt → strittig
+    expect(migrationSQL).toMatch(/gekuerzt.*strittig/s);
+  });
+
+  it('enthaelt frozen_at-Schutz', () => {
+    expect(migrationSQL).toContain('OLD.frozen_at IS NOT NULL');
+    expect(migrationSQL).toContain('OLD.period_end');
+  });
+});
+
+describe('strittig-Rollback-Migration (20260806400001)', () => {
+  const rollbackSQL = fs.readFileSync(STRITTIG_ROLLBACK_PATH, 'utf-8');
+
+  it('enthaelt NICHT strittig als Statuswert im Constraint', () => {
+    // Der Rollback-Constraint hat 19 Werte (ohne strittig)
+    const constraintMatch = rollbackSQL.match(/ADD CONSTRAINT invoices_status_check CHECK[\s\S]*?\)/);
+    expect(constraintMatch).toBeTruthy();
+    expect(constraintMatch![0]).not.toContain("'strittig'");
+  });
+
+  it('enthaelt KEINEN strittig-Block in der Trigger-Funktion', () => {
+    expect(rollbackSQL).not.toContain("OLD.status = 'strittig'");
+  });
+
+  it('enthaelt frozen_at-Schutz', () => {
+    expect(rollbackSQL).toContain('OLD.frozen_at IS NOT NULL');
+    expect(rollbackSQL).toContain('OLD.period_end');
   });
 });

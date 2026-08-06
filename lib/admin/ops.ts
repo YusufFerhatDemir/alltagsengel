@@ -134,6 +134,21 @@ export const INVOICE_STATUS: Record<string, { label: string; color: string }> = 
   partial: { label: 'Teilbezahlt', color: '#E8A000' },
   rejected: { label: 'Abgelehnt', color: '#D04B3B' },
   disputed: { label: 'Strittig', color: '#FF7043' },
+  // Neue deutsche Status (PR #35 Statusmaschine)
+  entwurf: { label: 'Entwurf', color: '#999' },
+  geprueft: { label: 'Geprüft', color: '#7B68EE' },
+  freigegeben: { label: 'Freigegeben', color: '#4CAF50' },
+  uebermittelt: { label: 'Übermittelt', color: '#2196F3' },
+  quittiert: { label: 'Quittiert', color: '#00BCD4' },
+  bezahlt: { label: 'Bezahlt', color: '#5CB882' },
+  teilweise_bezahlt: { label: 'Teilweise bezahlt', color: '#E8A000' },
+  gekuerzt: { label: 'Gekürzt', color: '#FF9800' },
+  abgelehnt: { label: 'Abgelehnt', color: '#D04B3B' },
+  korrektur_erforderlich: { label: 'Korrektur erforderlich', color: '#F44336' },
+  akzeptiert: { label: 'Akzeptiert', color: '#4CAF50' },
+  storniert: { label: 'Storniert', color: '#9E9E9E' },
+  erneut_eingereicht: { label: 'Erneut eingereicht', color: '#03A9F4' },
+  strittig: { label: 'Strittig', color: '#FF7043' },
 }
 
 export const CLIENT_STATUS: Record<string, { label: string; color: string }> = {
