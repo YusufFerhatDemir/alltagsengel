@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireCaregiverSession } from '@/lib/native-auth'
+import { createInvoiceDraft } from '@/lib/billing/core'
 
 // ═══════════════════════════════════════════════════════════════
 // POST /api/billing/auto-invoice
@@ -226,76 +227,55 @@ export async function POST(request: Request) {
       })
     }
 
-    // ── Rechnung anlegen ──
-    const totalAmount = billable.reduce((s, r) => s + (Number(r.amount) || 0), 0)
-    const budgetAmount = billable
-      .filter(r => r.budget_type !== 'private')
-      .reduce((s, r) => s + (Number(r.amount) || 0), 0)
-    const privateAmount = totalAmount - budgetAmount
-    const shortId = Math.random().toString(36).slice(2, 8).toUpperCase()
-    const invoiceNumber = `RE-${yearStr}${monthStr}-${shortId}`
+    // ═══ GUARD: Direkter Supabase-Insert durch Billing-Engine ersetzt ═══
+    // Alte direkte Inserts (invoices + invoice_items + service_records)
+    // sind entfernt. Stattdessen wird createInvoiceDraft() aus der
+    // Billing-Engine verwendet → Idempotenz, Audit-Trail, fortlaufende
+    // Nummern, Status-Maschine.
+    // Siehe: feature/unified-invoice-creation (PR-Guard)
 
-    const { data: invoice, error: invErr } = await admin
-      .from('invoices')
-      .insert({
-        invoice_number: invoiceNumber,
-        client_id: resolvedClientId,
-        organization_id: client.organization_id,
-        insurance_name: client?.pflegekasse_name || client?.insurance_name || null,
-        insurance_number: client?.versichertennummer || client?.insurance_number || null,
-        period_start: periodStart,
-        period_end: periodEnd,
-        total_amount: totalAmount,
-        budget_amount: budgetAmount,
-        private_amount: privateAmount,
-        status: 'entwurf',
-      })
-      .select()
-      .single()
+    // Budget-Typen der abrechenbaren Records ermitteln
+    const budgetTypes = [...new Set(billable.map(r => r.budget_type || 'entlastung'))]
 
-    if (invErr || !invoice) {
-      return NextResponse.json({ error: `Rechnung-Fehler: ${invErr?.message}` }, { status: 500 })
+    const results = []
+    const warnings: string[] = []
+
+    for (const budgetType of budgetTypes) {
+      try {
+        const result = await createInvoiceDraft(admin, {
+          clientId: resolvedClientId,
+          periodMonth: resolvedMonth,
+          budgetType,
+          actorId: auth.actor.split(':')[1] || 'auto-invoice',
+        })
+        results.push({ ...result, budgetType })
+      } catch (engineErr: any) {
+        console.error(`[auto-invoice] Engine-Fehler für ${budgetType}:`, engineErr)
+        warnings.push(`${budgetType}: ${engineErr.message}`)
+      }
     }
 
-    // ── Positionen anlegen ──
-    const items = billable.map(r => ({
-      invoice_id: invoice.id,
-      service_record_id: r.id,
-      organization_id: client.organization_id,
-      description: r.service_type || 'Leistung',
-      date: r.date,
-      duration_minutes: r.duration_minutes,
-      amount: r.amount,
-      budget_type: r.budget_type,
-    }))
-    const { data: createdItems, error: itemsErr } = await admin
-      .from('invoice_items')
-      .insert(items)
-      .select()
-
-    if (itemsErr) {
-      // Rollback der leeren Rechnung, damit kein Torso stehen bleibt
-      await admin.from('invoices').delete().eq('id', invoice.id)
-      return NextResponse.json({ error: `Positionen-Fehler: ${itemsErr.message}` }, { status: 500 })
+    if (results.length === 0) {
+      return NextResponse.json({
+        error: 'Rechnungserstellung fehlgeschlagen',
+        warnings,
+      }, { status: 500 })
     }
 
-    // ── Records auf 'invoiced' ──
-    const { error: updErr } = await admin
-      .from('service_records')
-      .update({ status: 'invoiced' })
-      .in('id', billable.map(r => r.id))
-    if (updErr) {
-      console.error('[auto-invoice] Status-Update-Fehler:', updErr)
-    }
-
-    console.log(`[auto-invoice] ${invoiceNumber} erstellt (${billable.length} Positionen, ${totalAmount.toFixed(2)} €) durch ${auth.actor}`)
+    const primary = results[0]
+    console.log(`[auto-invoice] ${results.length} Rechnung(en) via Engine erstellt für Klient ${resolvedClientId}, Monat ${resolvedMonth} durch ${auth.actor}`)
 
     return NextResponse.json({
       ready: true,
       created: true,
-      invoice,
-      items: createdItems || [],
+      invoice: {
+        id: primary.invoiceId,
+        invoice_number: primary.invoiceNumber,
+        total_amount: primary.totalAmountCents / 100,
+      },
+      invoices: results,
       record_count: billable.length,
+      warnings: warnings.length > 0 ? warnings : undefined,
     }, { status: 201 })
   } catch (err: any) {
     console.error('[api/billing/auto-invoice] Unerwarteter Fehler:', err)
