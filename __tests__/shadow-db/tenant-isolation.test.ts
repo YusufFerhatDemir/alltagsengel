@@ -179,7 +179,8 @@ describe('Statisch: Live-only-Tabellen (Schema existiert NICHT in supabase/migra
   })
 
   it('keine Migration enthält destruktive DROP TABLE / TRUNCATE außerhalb von Kommentaren', () => {
-    for (const file of allMigrationFiles()) {
+    // Rollback-Migrationen enthalten absichtlich DROP TABLE — das ist ihr Zweck
+    for (const file of allMigrationFiles().filter(f => !f.includes('rollback'))) {
       const sql = readMigration(path.join('supabase', 'migrations', file))
       const codeOnly = sql
         .split('\n')
