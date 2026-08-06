@@ -32,6 +32,68 @@ interface OpenRecord {
   budget_type: string | null
 }
 
+// ── Status-Gruppen für Filter (DE → alle matching DB-Werte) ──
+const INVOICE_FILTERS: { key: string; matches: string[] }[] = [
+  { key: 'all', matches: [] },
+  { key: 'entwurf', matches: ['draft', 'entwurf', 'geprueft', 'freigegeben'] },
+  { key: 'uebermittelt', matches: ['sent', 'uebermittelt', 'erneut_eingereicht'] },
+  { key: 'quittiert', matches: ['quittiert'] },
+  { key: 'teilweise_bezahlt', matches: ['partial', 'teilweise_bezahlt'] },
+  { key: 'bezahlt', matches: ['paid', 'bezahlt', 'akzeptiert'] },
+  { key: 'gekuerzt', matches: ['gekuerzt'] },
+  { key: 'strittig', matches: ['disputed', 'strittig'] },
+  { key: 'abgelehnt', matches: ['rejected', 'abgelehnt', 'korrektur_erforderlich'] },
+  { key: 'storniert', matches: ['storniert'] },
+]
+
+// Alle nicht-terminalen Status (für "offen"-Summe)
+const OPEN_STATUSES = new Set([
+  'draft', 'sent', 'partial', 'disputed',
+  'entwurf', 'geprueft', 'freigegeben', 'uebermittelt', 'quittiert',
+  'teilweise_bezahlt', 'gekuerzt', 'strittig',
+  'korrektur_erforderlich', 'erneut_eingereicht',
+])
+const PAID_STATUSES = new Set(['paid', 'bezahlt', 'akzeptiert'])
+
+// Status → nächster Schritt (Einzel-Klick-Aktionen)
+const SIMPLE_ADVANCES: Record<string, { to: string; extra?: Record<string, any> }> = {
+  draft: { to: 'sent' },
+  entwurf: { to: 'geprueft' },
+  geprueft: { to: 'freigegeben' },
+  freigegeben: { to: 'uebermittelt' },
+  uebermittelt: { to: 'quittiert' },
+  abgelehnt: { to: 'erneut_eingereicht' },
+  erneut_eingereicht: { to: 'uebermittelt' },
+  korrektur_erforderlich: { to: 'entwurf' },
+}
+
+// Status mit Zahlungserfassung
+const PAYMENT_STATUSES = new Set([
+  'sent', 'partial', 'disputed',
+  'quittiert', 'teilweise_bezahlt', 'strittig',
+])
+
+// Status → Button-Label
+function advanceLabel(status: string): string {
+  const labels: Record<string, string> = {
+    draft: 'Versenden →',
+    entwurf: 'Prüfen →',
+    geprueft: 'Freigeben →',
+    freigegeben: 'Übermitteln →',
+    uebermittelt: 'Quittieren →',
+    abgelehnt: 'Erneut einreichen →',
+    erneut_eingereicht: 'Übermitteln →',
+    korrektur_erforderlich: 'Zur Korrektur →',
+    gekuerzt: 'Entscheiden →',
+  }
+  return labels[status] || 'Zahlung erfassen'
+}
+
+// Hat der Status eine Aktion?
+function isActionable(status: string): boolean {
+  return status in SIMPLE_ADVANCES || PAYMENT_STATUSES.has(status) || status === 'gekuerzt'
+}
+
 export default function AdminInvoicesPage() {
   const [invoices, setInvoices] = useState<InvoiceRow[]>([])
   const [loading, setLoading] = useState(true)
@@ -58,13 +120,25 @@ export default function AdminInvoicesPage() {
 
   useEffect(() => { loadInvoices() }, [])
 
-  // Status weiterschalten: draft → sent → paid
+  // Status weiterschalten — unterstützt Legacy-EN und neuen DE-Flow
   async function advance(inv: InvoiceRow) {
     const supabase = createClient()
-    if (inv.status === 'draft') {
-      await supabase.from('invoices').update({ status: 'sent', sent_at: new Date().toISOString() }).eq('id', inv.id)
+
+    // 1. Einzel-Klick-Aktionen (entwurf→geprueft, draft→sent, …)
+    const simple = SIMPLE_ADVANCES[inv.status]
+    if (simple) {
+      const extra: Record<string, any> = {}
+      // sent_at bei Versand setzen (Legacy: draft→sent, Deutsch: freigegeben→uebermittelt, erneut→uebermittelt)
+      if (['draft', 'freigegeben', 'erneut_eingereicht'].includes(inv.status)) {
+        extra.sent_at = new Date().toISOString()
+      }
+      await supabase.from('invoices').update({ status: simple.to, ...extra }).eq('id', inv.id)
       loadInvoices()
-    } else if (inv.status === 'sent' || inv.status === 'partial' || inv.status === 'disputed') {
+      return
+    }
+
+    // 2. Zahlungserfassung (quittiert, sent, partial, disputed, teilweise_bezahlt, strittig)
+    if (PAYMENT_STATUSES.has(inv.status)) {
       const input = window.prompt(`Bezahlter Betrag für Rechnung ${inv.invoice_number || ''}?\n(Rechnungssumme: ${euro(inv.total_amount)})`, String(inv.total_amount ?? ''))
       if (input === null) return
       const paid = Number(input.replace(',', '.'))
@@ -72,8 +146,10 @@ export default function AdminInvoicesPage() {
       const total = inv.total_amount ?? 0
       const diff = total - paid
       const fullyPaid = paid >= total
+      // Zielstatus je nach Sprache des aktuellen Status
+      const isGerman = ['quittiert', 'teilweise_bezahlt', 'strittig'].includes(inv.status)
       await supabase.from('invoices').update({
-        status: fullyPaid ? 'paid' : 'partial',
+        status: fullyPaid ? (isGerman ? 'bezahlt' : 'paid') : (isGerman ? 'teilweise_bezahlt' : 'partial'),
         paid_amount: paid,
         paid_at: new Date().toISOString(),
       }).eq('id', inv.id)
@@ -86,21 +162,32 @@ export default function AdminInvoicesPage() {
         })
       }
       loadInvoices()
+      return
+    }
+
+    // 3. Gekürzt: Akzeptieren oder Korrektur anfordern
+    if (inv.status === 'gekuerzt') {
+      const choice = window.confirm('Kürzung akzeptieren?\n\nOK = Akzeptieren\nAbbrechen = Korrektur anfordern')
+      await supabase.from('invoices').update({
+        status: choice ? 'akzeptiert' : 'korrektur_erforderlich',
+      }).eq('id', inv.id)
+      loadInvoices()
     }
   }
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase()
+    const filterDef = INVOICE_FILTERS.find(f => f.key === filter)
     return invoices.filter(i => {
-      if (filter !== 'all' && i.status !== filter) return false
+      if (filterDef && filterDef.matches.length > 0 && !filterDef.matches.includes(i.status)) return false
       if (!q) return true
       return i.client.toLowerCase().includes(q) || (i.invoice_number || '').toLowerCase().includes(q) || (i.insurance_name || '').toLowerCase().includes(q)
     })
   }, [invoices, filter, search])
 
   const totals = useMemo(() => ({
-    open: invoices.filter(i => ['draft', 'sent', 'partial', 'disputed'].includes(i.status)).reduce((s, i) => s + (i.total_amount || 0), 0),
-    paid: invoices.filter(i => i.status === 'paid').reduce((s, i) => s + (i.paid_amount || i.total_amount || 0), 0),
+    open: invoices.filter(i => OPEN_STATUSES.has(i.status)).reduce((s, i) => s + (i.total_amount || 0), 0),
+    paid: invoices.filter(i => PAID_STATUSES.has(i.status)).reduce((s, i) => s + (i.paid_amount || i.total_amount || 0), 0),
   }), [invoices])
 
   return (
@@ -120,12 +207,15 @@ export default function AdminInvoicesPage() {
       </div>
 
       <div className="admin-filters">
-        {['all', 'draft', 'sent', 'partial', 'paid', 'disputed', 'rejected'].map(f => (
-          <button key={f} className={`admin-filter-btn ${filter === f ? 'active' : ''}`} onClick={() => setFilter(f)}>
-            {f === 'all' ? 'Alle' : statusMeta(INVOICE_STATUS, f).label}
-            {f !== 'all' && ` (${invoices.filter(i => i.status === f).length})`}
-          </button>
-        ))}
+        {INVOICE_FILTERS.map(f => {
+          const count = f.matches.length > 0 ? invoices.filter(i => f.matches.includes(i.status)).length : invoices.length
+          return (
+            <button key={f.key} className={`admin-filter-btn ${filter === f.key ? 'active' : ''}`} onClick={() => setFilter(f.key)}>
+              {f.key === 'all' ? 'Alle' : statusMeta(INVOICE_STATUS, f.key).label}
+              {f.key !== 'all' && ` (${count})`}
+            </button>
+          )
+        })}
       </div>
 
       {loading ? <p>Laden…</p> : (
@@ -142,7 +232,7 @@ export default function AdminInvoicesPage() {
                 <EmptyRow colSpan={8}>{search || filter !== 'all' ? 'Keine Treffer' : 'Noch keine Rechnungen'}</EmptyRow>
               ) : filtered.map(i => {
                 const sm = statusMeta(INVOICE_STATUS, i.status)
-                const reduced = i.status === 'paid' && i.paid_amount != null && i.total_amount != null && i.paid_amount < i.total_amount
+                const reduced = PAID_STATUSES.has(i.status) && i.paid_amount != null && i.total_amount != null && i.paid_amount < i.total_amount
                 return (
                   <tr key={i.id}>
                     <td style={{ fontWeight: 600 }}>{i.invoice_number || '—'}</td>
@@ -156,9 +246,9 @@ export default function AdminInvoicesPage() {
                     </td>
                     <td><StatusBadge label={sm.label} color={sm.color} /></td>
                     <td>
-                      {(i.status === 'draft' || i.status === 'sent' || i.status === 'partial' || i.status === 'disputed') ? (
+                      {isActionable(i.status) ? (
                         <button onClick={() => advance(i)} style={actionBtn}>
-                          {i.status === 'draft' ? 'Versenden →' : 'Zahlung erfassen'}
+                          {advanceLabel(i.status)}
                         </button>
                       ) : <span style={{ color: 'var(--ink5)', fontSize: 12 }}>—</span>}
                     </td>
@@ -245,7 +335,7 @@ function CreateInvoiceModal({ onClose, onCreated }: { onClose: () => void; onCre
         total_amount: total,
         budget_amount: budgetTotal,
         private_amount: privateTotal,
-        status: 'draft',
+        status: 'entwurf',
       }).select('id').single()
       if (invErr || !inv) { setErr(`Fehler: ${invErr?.message}`); setSaving(false); return }
 

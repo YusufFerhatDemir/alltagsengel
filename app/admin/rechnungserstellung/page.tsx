@@ -180,7 +180,7 @@ export default function RechnungserstellungPage() {
           total_amount: group.sum,
           budget_amount: budgetTotal,
           private_amount: privateTotal,
-          status: 'draft',
+          status: 'entwurf',
         })
         .select('id')
         .single()
