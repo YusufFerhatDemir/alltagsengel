@@ -24,8 +24,7 @@ import {
   type InvoiceStatus,
 } from './status-machine';
 import { logBillingAction, computeSnapshotChecksum } from './audit';
-import { generateIdempotencyKey, checkIdempotency } from './idempotency';
-import { resolvePrice, calculateLineTotal, type BillingTarif } from './price-resolver';
+import { resolvePrice } from './price-resolver';
 
 // ---------------------------------------------------------------------------
 // Budget-Typ → Rechtsgrundlage Mapping
@@ -102,7 +101,18 @@ export interface CreditNoteResult {
 
 /**
  * Erzeugt einen Rechnungsentwurf aus freigegebenen service_records.
- * Idempotent: Bei gleicher Kombination wird die bestehende Rechnung zurueckgegeben.
+ *
+ * ATOMARE TRANSAKTION: Alle Schritte laufen in einer PostgreSQL-Transaktion
+ * via create_invoice_draft_atomic() RPC:
+ *   1. Idempotenz-Pruefung
+ *   2. Rechnungsnummer generieren
+ *   3. Rechnung erstellen
+ *   4. Positionen erstellen
+ *   5. Service Records auf 'invoiced' setzen
+ *   6. Audit-Trail schreiben
+ *
+ * Bei Fehler in JEDEM Schritt: kompletter Rollback. Keine halbfertigen Daten.
+ * Preise kommen aus service_records.amount (DB), nicht vom Browser.
  */
 export async function createInvoiceDraft(
   supabase: SupabaseClient,
@@ -110,54 +120,7 @@ export async function createInvoiceDraft(
 ): Promise<CreateDraftResult> {
   const { clientId, periodMonth, budgetType, actorId } = params;
 
-  // Idempotenz pruefen
-  const idempKey = generateIdempotencyKey(clientId, periodMonth, budgetType);
-  const existing = await checkIdempotency(supabase, idempKey);
-  if (existing.exists && existing.invoiceId) {
-    // Bestehende Rechnung laden
-    const { data: inv } = await supabase
-      .from('invoices')
-      .select('id, invoice_number_formatted, total_amount')
-      .eq('id', existing.invoiceId)
-      .single();
-
-    return {
-      invoiceId: existing.invoiceId,
-      invoiceNumber: inv?.invoice_number_formatted ?? '',
-      totalAmountCents: Math.round((inv?.total_amount ?? 0) * 100),
-      lineCount: 0,
-      alreadyExists: true,
-    };
-  }
-
-  // Abrechnungszeitraum bestimmen
-  const [year, month] = periodMonth.split('-').map(Number);
-  const periodStart = `${periodMonth}-01`;
-  const lastDay = new Date(year, month, 0).getDate();
-  const periodEnd = `${periodMonth}-${String(lastDay).padStart(2, '0')}`;
-
-  // Service Records laden (status = signed oder complete)
-  const { data: records, error: recError } = await supabase
-    .from('service_records')
-    .select('*, caregiver:profiles!service_records_caregiver_id_fkey(first_name, last_name)')
-    .eq('client_id', clientId)
-    .eq('budget_type', budgetType)
-    .in('status', ['signed', 'complete'])
-    .gte('date', periodStart)
-    .lte('date', periodEnd);
-
-  if (recError) {
-    throw new Error(`Service Records laden fehlgeschlagen: ${recError.message}`);
-  }
-
-  if (!records || records.length === 0) {
-    throw new Error(
-      `Keine abrechenbaren Leistungen für Klient ${clientId}, ` +
-      `Zeitraum ${periodMonth}, Budget ${budgetType}.`
-    );
-  }
-
-  // Client-Daten laden
+  // Client-Daten laden (fuer Insurance-Parameter und Mandantentrennung)
   const { data: client, error: clientError } = await supabase
     .from('clients')
     .select('id, first_name, last_name, insurance_name, insurance_number, organization_id, pflegekasse_ik')
@@ -168,164 +131,124 @@ export async function createInvoiceDraft(
     throw new Error(`Klient ${clientId} nicht gefunden.`);
   }
 
-  // Rechnungsnummer generieren
-  const invoiceNumber = await generateInvoiceNumber(supabase, client.organization_id, 'RE');
+  // ── Atomare Rechnungserstellung via RPC ──────────────────────────────
+  // Alle Schritte in einer PostgreSQL-Transaktion:
+  // Idempotenz → Validierung → Nummer → Invoice → Items → Service-Records → Audit
+  // Bei Fehler in einem Schritt: vollstaendiger Rollback, keine Residualdaten.
+  const { data: rpcResult, error: rpcError } = await supabase.rpc(
+    'create_invoice_draft_atomic',
+    {
+      p_client_id: clientId,
+      p_org_id: client.organization_id,
+      p_period_month: periodMonth,
+      p_budget_type: budgetType,
+      p_actor_id: actorId,
+      p_insurance_name: client.insurance_name || null,
+      p_insurance_number: client.insurance_number || null,
+    }
+  );
 
-  // ── Preisvalidierung ──
-  // Primär: billing_tariffs (resolvePrice) — serverseitig, nicht vom Browser
-  // Fallback: service_records.amount — aus service_pricing bei Erfassung
-  // Schutz: kein stiller Fallback auf 0, kein Vertrauen auf Browser-Preise
+  if (rpcError) {
+    throw new Error(`Atomare Rechnungserstellung fehlgeschlagen: ${rpcError.message}`);
+  }
+
+  if (!rpcResult) {
+    throw new Error('RPC create_invoice_draft_atomic hat kein Ergebnis zurueckgegeben.');
+  }
+
+  // Ergebnis auswerten
+  const result: CreateDraftResult = {
+    invoiceId: rpcResult.invoice_id,
+    invoiceNumber: rpcResult.invoice_number,
+    totalAmountCents: Math.round(Number(rpcResult.total_amount) * 100),
+    lineCount: rpcResult.line_count,
+    alreadyExists: rpcResult.already_exists,
+    priceSource: 'service_records',
+  };
+
+  // Bei bestehender Rechnung: sofort zurueckgeben (keine Tarifpruefung noetig)
+  if (rpcResult.already_exists) {
+    return result;
+  }
+
+  // ── Optionale Tarif-Vergleichswarnung (informativ, nicht transaktionskritisch) ──
+  // Die Preise in der Rechnung kommen aus service_records.amount.
+  // Hier vergleichen wir optional mit billing_tariffs fuer Abweichungs-Warnungen.
   const priceWarnings: string[] = [];
-  let priceSource: 'billing_tariffs' | 'service_records' = 'service_records';
-  let resolvedTarif: BillingTarif | null = null;
-
   const rechtsgrundlage = BUDGET_RECHTSGRUNDLAGE[budgetType];
 
   if (rechtsgrundlage) {
-    // Versuch: Tarif aus billing_tariffs auflösen
     try {
-      resolvedTarif = await resolvePrice(supabase, {
-        leistungsart: records[0]?.service_type || 'alltagsbegleitung',
+      const resolvedTarif = await resolvePrice(supabase, {
+        leistungsart: 'alltagsbegleitung',
         rechtsgrundlage,
-        datum: periodStart,
+        datum: `${periodMonth}-01`,
         kostentraegerIk: client.pflegekasse_ik || undefined,
         bundesland: 'hessen',  // Alltagsengel = nur Hessen (lib/hessen-plz.ts)
       });
-      priceSource = 'billing_tariffs';
+
+      if (resolvedTarif) {
+        result.priceSource = 'billing_tariffs';
+
+        // Erstellte Positionen laden fuer Soll/Ist-Vergleich
+        const { data: items } = await supabase
+          .from('invoice_items')
+          .select('id, date, duration_minutes, amount')
+          .eq('invoice_id', rpcResult.invoice_id);
+
+        if (items) {
+          for (const item of items) {
+            const durationHours = (item.duration_minutes || 60) / 60;
+            const tarifAmount = (resolvedTarif.preis_cent / 100) * durationHours;
+            const itemAmount = Number(item.amount || 0);
+            const diff = Math.abs(tarifAmount - itemAmount);
+
+            if (diff > 0.01) {
+              priceWarnings.push(
+                `Position ${item.id} (${item.date}): service_records.amount=${itemAmount.toFixed(2)} EUR, ` +
+                `billing_tariffs=${tarifAmount.toFixed(2)} EUR (Differenz: ${diff.toFixed(2)} EUR). ` +
+                `Verwendet: service_records.amount.`
+              );
+            }
+          }
+        }
+      }
     } catch {
-      // Kein passender Tarif gefunden — Fallback auf service_records.amount
+      // Kein passender Tarif — das ist okay, Preise kommen aus service_records
       priceWarnings.push(
-        `Kein Tarif in billing_tariffs für ${budgetType}/${records[0]?.service_type} ` +
-        `zum ${periodStart}. Fallback: service_records.amount (service_pricing).`
+        `Kein Tarif in billing_tariffs fuer ${budgetType}/alltagsbegleitung ` +
+        `zum ${periodMonth}-01. Preise aus service_records verwendet.`
       );
     }
   } else if (budgetType !== 'private') {
     priceWarnings.push(
-      `Keine Rechtsgrundlage für Budget-Typ "${budgetType}" definiert. ` +
-      `Fallback: service_records.amount.`
+      `Keine Rechtsgrundlage fuer Budget-Typ "${budgetType}" definiert. ` +
+      `Preise aus service_records verwendet.`
     );
   }
 
-  // Null-Preis-Schutz: keine Position mit Betrag 0 oder null
-  const zeroRecords = records.filter(r => !r.amount || Number(r.amount) === 0);
-  if (zeroRecords.length > 0) {
-    throw new Error(
-      `${zeroRecords.length} Leistungsnachweis(e) ohne Betrag (amount=0/null): ` +
-      `${zeroRecords.map(r => r.id).join(', ')}. ` +
-      `Rechnung kann nicht mit Null-Positionen erstellt werden.`
-    );
-  }
+  if (priceWarnings.length > 0) {
+    result.priceWarnings = priceWarnings;
 
-  // Gesamtbetrag berechnen (aus DB, nicht vom Browser)
-  const totalAmount = records.reduce((sum, r) => sum + Number(r.amount || 0), 0);
-  const budgetAmount = records
-    .filter(r => r.budget_type !== 'private')
-    .reduce((sum, r) => sum + Number(r.amount || 0), 0);
-  const privateAmount = records
-    .filter(r => r.budget_type === 'private')
-    .reduce((sum, r) => sum + Number(r.amount || 0), 0);
-
-  // Soll/Ist-Abgleich: Wenn Tarif vorhanden, mit service_records vergleichen
-  if (resolvedTarif) {
-    for (const r of records) {
-      const durationHours = (r.duration_minutes || 60) / 60;
-      const tarifAmount = (resolvedTarif.preis_cent / 100) * durationHours;
-      const recordAmount = Number(r.amount || 0);
-      const diff = Math.abs(tarifAmount - recordAmount);
-
-      if (diff > 0.01) {
-        priceWarnings.push(
-          `Position ${r.id} (${r.date}): service_records.amount=${recordAmount.toFixed(2)} €, ` +
-          `billing_tariffs=${tarifAmount.toFixed(2)} € (Differenz: ${diff.toFixed(2)} €). ` +
-          `Verwendet: service_records.amount (Phase 1).`
-        );
-      }
+    // Ergaenzende Audit-Meldung fuer Tarifabweichungen (nicht transaktionskritisch)
+    try {
+      await logBillingAction(supabase, {
+        entityType: 'invoice',
+        entityId: rpcResult.invoice_id,
+        action: 'price_comparison',
+        newState: {
+          price_warnings: priceWarnings,
+          price_source: result.priceSource,
+        },
+        actorId,
+      });
+    } catch {
+      // Ergaenzende Audit-Meldung ist nicht kritisch — Hauptaudit ist in der Transaktion
+      console.warn('[billing] Ergaenzende Tarifvergleich-Audit konnte nicht geschrieben werden.');
     }
   }
 
-  // Rechnung erstellen
-  const { data: invoice, error: invError } = await supabase
-    .from('invoices')
-    .insert({
-      invoice_number: invoiceNumber,
-      invoice_number_formatted: invoiceNumber,
-      client_id: clientId,
-      insurance_name: client.insurance_name,
-      insurance_number: client.insurance_number,
-      period_start: periodStart,
-      period_end: periodEnd,
-      total_amount: totalAmount,
-      budget_amount: budgetAmount,
-      private_amount: privateAmount,
-      status: 'entwurf',
-      version: 1,
-      idempotency_key: idempKey,
-      organization_id: client.organization_id,
-    })
-    .select('id')
-    .single();
-
-  if (invError || !invoice) {
-    throw new Error(`Rechnung konnte nicht erstellt werden: ${invError?.message}`);
-  }
-
-  // Rechnungspositionen erstellen
-  const items = records.map(r => ({
-    invoice_id: invoice.id,
-    service_record_id: r.id,
-    description: `${r.service_type} am ${r.date}`,
-    date: r.date,
-    duration_minutes: r.duration_minutes,
-    amount: Number(r.amount || 0),
-    budget_type: r.budget_type,
-    organization_id: client.organization_id,
-  }));
-
-  const { error: itemsError } = await supabase
-    .from('invoice_items')
-    .insert(items);
-
-  if (itemsError) {
-    // Rollback: Rechnung loeschen
-    await supabase.from('invoices').delete().eq('id', invoice.id);
-    throw new Error(`Positionen konnten nicht erstellt werden: ${itemsError.message}`);
-  }
-
-  // Service Records als "invoiced" markieren
-  const recordIds = records.map(r => r.id);
-  await supabase
-    .from('service_records')
-    .update({ status: 'invoiced' })
-    .in('id', recordIds);
-
-  // Audit-Trail (inkl. Preisquelle und Warnungen)
-  await logBillingAction(supabase, {
-    entityType: 'invoice',
-    entityId: invoice.id,
-    action: 'created',
-    newState: {
-      invoice_number: invoiceNumber,
-      client_id: clientId,
-      period: periodMonth,
-      budget_type: budgetType,
-      total_amount: totalAmount,
-      line_count: records.length,
-      price_source: priceSource,
-      tarif_id: resolvedTarif?.id || null,
-      price_warnings: priceWarnings.length > 0 ? priceWarnings : undefined,
-    },
-    actorId,
-  });
-
-  return {
-    invoiceId: invoice.id,
-    invoiceNumber,
-    totalAmountCents: Math.round(totalAmount * 100),
-    lineCount: records.length,
-    alreadyExists: false,
-    priceSource,
-    priceWarnings: priceWarnings.length > 0 ? priceWarnings : undefined,
-  };
+  return result;
 }
 
 // ---------------------------------------------------------------------------

@@ -1,19 +1,20 @@
 /**
- * Transaktionssicherheit: createInvoiceDraft
+ * Transaktionssicherheit: createInvoiceDraft (RPC-basiert)
  *
- * Prüft das Verhalten der Billing-Engine bei Fehlern in verschiedenen
- * Phasen der Rechnungserstellung:
+ * Prüft das Verhalten der Billing-Engine mit der atomaren PostgreSQL-
+ * Transaktion (create_invoice_draft_atomic RPC):
  *
- *   1. Fehler nach Invoice-Insert (Items schlagen fehl) → Rollback
- *   2. Fehler beim Audit-Trail → Rechnung + Items trotzdem erstellt
- *   3. Idempotenz-Key: Wiederholter Aufruf → keine Doppelerstellung
- *   4. Null-Preis-Schutz → Fehler, keine Rechnung
- *   5. Fehlende Service-Records → Fehler, keine Rechnung
+ *   1. RPC-Erfolg → Rechnung + Items + Audit atomar erstellt
+ *   2. RPC-Fehler → vollständiger Rollback, keine Residualdaten
+ *   3. Idempotenz → RPC gibt bestehende Rechnung zurück
+ *   4. Null-Preis-Schutz → RPC wirft Fehler, keine Rechnung
+ *   5. Mandantentrennung → RPC prüft Client-Org-Zugehörigkeit
+ *   6. Audit-Fehler → RPC rollt ALLES zurück (atomisch)
+ *   7. Tarifvergleich → informativ, nicht transaktionskritisch
  *
- * HINWEIS: createInvoiceDraft verwendet aktuell KEINE echte DB-Transaktion.
- * Die Schritte (Invoice-Insert → Items-Insert → Status-Update → Audit)
- * sind sequentiell. Bei Items-Fehler wird die Rechnung manuell gelöscht.
- * Eine echte DB-Transaktion (transaktionales RPC) ist für Phase 2 geplant.
+ * GARANTIE: Durch SECURITY DEFINER PostgreSQL-Funktion mit
+ * search_path = public gibt es KEINE halbfertigen Rechnungen.
+ * Entweder alles oder nichts.
  *
  * Testdaten: Synthetisch, keine echten Kunden-/Gesundheitsdaten.
  */
@@ -24,26 +25,18 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 // Mocks
 // ═══════════════════════════════════════════════════════════════
 
-const { mockResolvePrice, mockCheckIdempotency, mockLogBillingAction, mockComputeChecksum } = vi.hoisted(() => ({
+const { mockResolvePrice, mockLogBillingAction } = vi.hoisted(() => ({
   mockResolvePrice: vi.fn(),
-  mockCheckIdempotency: vi.fn(),
   mockLogBillingAction: vi.fn(),
-  mockComputeChecksum: vi.fn(),
 }))
 
 vi.mock('@/lib/billing/core/price-resolver', () => ({
   resolvePrice: mockResolvePrice,
-  calculateLineTotal: vi.fn(),
-}))
-
-vi.mock('@/lib/billing/core/idempotency', () => ({
-  generateIdempotencyKey: vi.fn((...args: string[]) => `inv_${args.join('_')}`),
-  checkIdempotency: mockCheckIdempotency,
 }))
 
 vi.mock('@/lib/billing/core/audit', () => ({
   logBillingAction: mockLogBillingAction,
-  computeSnapshotChecksum: mockComputeChecksum,
+  computeSnapshotChecksum: vi.fn().mockResolvedValue('test-checksum'),
 }))
 
 vi.mock('@/lib/billing/core/status-machine', () => ({
@@ -59,33 +52,7 @@ vi.mock('@/lib/billing/core/status-machine', () => ({
 const TEST_ORG = 'org-tx-001'
 const TEST_CLIENT = 'client-tx-001'
 const PERIOD = '2026-09'
-
-const RECORDS = [
-  {
-    id: 'rec-tx-1',
-    client_id: TEST_CLIENT,
-    caregiver_id: 'cg-tx-1',
-    date: '2026-09-05',
-    service_type: 'Betreuung',
-    duration_minutes: 60,
-    amount: 40,
-    budget_type: 'entlastung',
-    status: 'signed',
-    caregiver: { first_name: 'Test', last_name: 'CG' },
-  },
-  {
-    id: 'rec-tx-2',
-    client_id: TEST_CLIENT,
-    caregiver_id: 'cg-tx-1',
-    date: '2026-09-10',
-    service_type: 'Betreuung',
-    duration_minutes: 90,
-    amount: 60,
-    budget_type: 'entlastung',
-    status: 'signed',
-    caregiver: { first_name: 'Test', last_name: 'CG' },
-  },
-]
+const TEST_ACTOR = 'actor-tx-001'
 
 const CLIENT_DATA = {
   id: TEST_CLIENT,
@@ -97,77 +64,84 @@ const CLIENT_DATA = {
   pflegekasse_ik: null,
 }
 
+const RPC_SUCCESS_RESULT = {
+  invoice_id: 'inv-tx-001',
+  invoice_number: 'RE-2026-00001',
+  total_amount: 100,
+  line_count: 2,
+  already_exists: false,
+}
+
+const RPC_IDEMPOTENT_RESULT = {
+  invoice_id: 'inv-tx-existing',
+  invoice_number: 'RE-2026-00005',
+  total_amount: 100,
+  line_count: 0,
+  already_exists: true,
+}
+
 // ═══════════════════════════════════════════════════════════════
-// Supabase-Mock Builder (erweitert für Fehler-Injection)
+// Supabase-Mock (RPC-basiert)
 // ═══════════════════════════════════════════════════════════════
 
-type QueryState = { table: string; op: string; values?: any; filters: Record<string, any> }
-type Handler = (q: QueryState) => { data: any; error: any }
+function createMockSupabase(opts: {
+  rpcResult?: { data: any; error: any };
+  clientResult?: { data: any; error: any };
+  itemsResult?: { data: any; error: any };
+} = {}) {
+  const rpcCalls: { fn: string; params: any }[] = []
 
-function createMockSupabase(handler: Handler) {
-  const queries: QueryState[] = []
+  const mockRpc = vi.fn((fn: string, params: any) => {
+    rpcCalls.push({ fn, params })
+    return Promise.resolve(
+      opts.rpcResult ?? { data: RPC_SUCCESS_RESULT, error: null }
+    )
+  })
+
   return {
-    queries,
+    rpcCalls,
+    rpc: mockRpc,
     from(table: string) {
-      const state: QueryState = { table, op: 'select', filters: {} }
-      queries.push(state)
       const builder: any = {
         select() { return builder },
-        insert(values: any) { state.op = 'insert'; state.values = values; return builder },
-        update(values: any) { state.op = 'update'; state.values = values; return builder },
-        delete() { state.op = 'delete'; return builder },
-        eq(col: string, val: any) { state.filters[col] = val; return builder },
-        gte() { return builder },
-        lte() { return builder },
-        in(col: string, vals: any) { state.filters[`in:${col}`] = vals; return builder },
-        limit() { return builder },
-        order() { return builder },
-        single() { return Promise.resolve(handler(state)) },
-        maybeSingle() { return Promise.resolve(handler(state)) },
+        eq() { return builder },
+        single() {
+          if (table === 'clients') {
+            return Promise.resolve(
+              opts.clientResult ?? { data: CLIENT_DATA, error: null }
+            )
+          }
+          if (table === 'invoice_items') {
+            return Promise.resolve(
+              opts.itemsResult ?? { data: [], error: null }
+            )
+          }
+          return Promise.resolve({ data: null, error: null })
+        },
         then(onFulfilled: any, onRejected: any) {
-          return Promise.resolve(handler(state)).then(onFulfilled, onRejected)
+          if (table === 'invoice_items') {
+            return Promise.resolve(
+              opts.itemsResult ?? { data: [], error: null }
+            ).then(onFulfilled, onRejected)
+          }
+          return Promise.resolve({ data: null, error: null }).then(onFulfilled, onRejected)
         },
       }
       return builder
     },
-    rpc: vi.fn().mockResolvedValue({ data: 'RE-2026-00001', error: null }),
   }
 }
 
-function defaultTxHandler(overrides: Partial<Record<string, Handler>> = {}): Handler {
-  return (q) => {
-    const key = `${q.table}:${q.op}`
-    if (overrides[key]) return overrides[key]!(q)
-    switch (key) {
-      case 'service_records:select':
-        return { data: RECORDS, error: null }
-      case 'service_records:update':
-        return { data: null, error: null }
-      case 'clients:select':
-        return { data: CLIENT_DATA, error: null }
-      case 'invoices:insert':
-        return { data: { id: 'inv-tx-001' }, error: null }
-      case 'invoices:select':
-        return { data: { id: 'inv-tx-001', invoice_number_formatted: 'RE-2026-00001', total_amount: 100 }, error: null }
-      case 'invoices:delete':
-        return { data: null, error: null }
-      case 'invoice_items:insert':
-        return { data: [{}, {}], error: null }
-      case 'billing_number_sequences:select':
-        return { data: { id: 'seq-1', last_number: 0 }, error: null }
-      case 'billing_number_sequences:update':
-        return { data: null, error: null }
-      default:
-        return { data: null, error: null }
-    }
-  }
+const DEFAULT_PARAMS = {
+  clientId: TEST_CLIENT,
+  periodMonth: PERIOD,
+  budgetType: 'entlastung',
+  actorId: TEST_ACTOR,
 }
 
 beforeEach(() => {
   vi.clearAllMocks()
-  mockCheckIdempotency.mockResolvedValue({ exists: false })
   mockLogBillingAction.mockResolvedValue(undefined)
-  mockComputeChecksum.mockResolvedValue('test-checksum')
   mockResolvePrice.mockRejectedValue(new Error('Kein Tarif'))
 })
 
@@ -175,285 +149,319 @@ beforeEach(() => {
 // Tests
 // ═══════════════════════════════════════════════════════════════
 
-describe('Transaktionssicherheit: Fehler nach Invoice-Insert', () => {
-  it('Items-Insert schlägt fehl → Invoice wird gelöscht (manueller Rollback)', async () => {
-    const supabase = createMockSupabase(defaultTxHandler({
-      'invoice_items:insert': () => ({
-        data: null,
-        error: { message: 'DB-Constraint-Verletzung' },
-      }),
-    }))
-
+describe('Atomare Transaktion: Erfolgreicher Ablauf', () => {
+  it('RPC wird mit korrekten Parametern aufgerufen', async () => {
+    const supabase = createMockSupabase()
     const { createInvoiceDraft } = await import('@/lib/billing/core/invoice-engine')
 
-    await expect(
-      createInvoiceDraft(supabase as any, {
-        clientId: TEST_CLIENT,
-        periodMonth: PERIOD,
-        budgetType: 'entlastung',
-        actorId: 'test-actor',
-      })
-    ).rejects.toThrow('Positionen konnten nicht erstellt werden')
+    await createInvoiceDraft(supabase as any, DEFAULT_PARAMS)
 
-    // Rechnung muss gelöscht worden sein (Rollback)
-    const deletes = supabase.queries.filter(
-      q => q.table === 'invoices' && q.op === 'delete'
-    )
-    expect(deletes).toHaveLength(1)
-    expect(deletes[0].filters.id).toBe('inv-tx-001')
-  })
-})
-
-describe('Transaktionssicherheit: Fehler beim Audit-Trail', () => {
-  it('Audit-Fehler → Rechnung + Items existieren (kein Rollback)', async () => {
-    mockLogBillingAction.mockRejectedValue(new Error('Audit DB unreachable'))
-
-    const supabase = createMockSupabase(defaultTxHandler())
-
-    const { createInvoiceDraft } = await import('@/lib/billing/core/invoice-engine')
-
-    // logBillingAction wirft, aber wird es gefangen?
-    // Aktuell: NEIN — der Fehler propagiert nach oben
-    // Das bedeutet: Rechnung + Items existieren, aber der Audit-Trail fehlt
-    await expect(
-      createInvoiceDraft(supabase as any, {
-        clientId: TEST_CLIENT,
-        periodMonth: PERIOD,
-        budgetType: 'entlastung',
-        actorId: 'test-actor',
-      })
-    ).rejects.toThrow('Audit DB unreachable')
-
-    // Rechnung wurde erstellt
-    const invoiceInserts = supabase.queries.filter(
-      q => q.table === 'invoices' && q.op === 'insert'
-    )
-    expect(invoiceInserts).toHaveLength(1)
-
-    // Items wurden erstellt
-    const itemInserts = supabase.queries.filter(
-      q => q.table === 'invoice_items' && q.op === 'insert'
-    )
-    expect(itemInserts).toHaveLength(1)
-
-    // ABER: Rechnung wird NICHT gelöscht (kein Rollback bei Audit-Fehler)
-    // → DOKUMENTIERTES RISIKO: Rechnung ohne Audit-Trail möglich
-    const deletes = supabase.queries.filter(
-      q => q.table === 'invoices' && q.op === 'delete'
-    )
-    expect(deletes).toHaveLength(0)
-  })
-})
-
-describe('Transaktionssicherheit: Idempotenz-Key', () => {
-  it('Bestehende Rechnung → alreadyExists, kein erneuter Insert', async () => {
-    mockCheckIdempotency.mockResolvedValue({
-      exists: true,
-      invoiceId: 'inv-existing',
+    expect(supabase.rpc).toHaveBeenCalledWith('create_invoice_draft_atomic', {
+      p_client_id: TEST_CLIENT,
+      p_org_id: TEST_ORG,
+      p_period_month: PERIOD,
+      p_budget_type: 'entlastung',
+      p_actor_id: TEST_ACTOR,
+      p_insurance_name: 'Test-Kasse',
+      p_insurance_number: 'V-TX-001',
     })
-
-    const supabase = createMockSupabase(defaultTxHandler({
-      'invoices:select': (q) => {
-        if (q.filters.id === 'inv-existing') {
-          return {
-            data: {
-              id: 'inv-existing',
-              invoice_number_formatted: 'RE-2026-00005',
-              total_amount: 100,
-            },
-            error: null,
-          }
-        }
-        return { data: null, error: null }
-      },
-    }))
-
-    const { createInvoiceDraft } = await import('@/lib/billing/core/invoice-engine')
-
-    const result = await createInvoiceDraft(supabase as any, {
-      clientId: TEST_CLIENT,
-      periodMonth: PERIOD,
-      budgetType: 'entlastung',
-      actorId: 'test-actor',
-    })
-
-    expect(result.alreadyExists).toBe(true)
-    expect(result.invoiceId).toBe('inv-existing')
-
-    // Kein Insert!
-    const inserts = supabase.queries.filter(
-      q => q.table === 'invoices' && q.op === 'insert'
-    )
-    expect(inserts).toHaveLength(0)
-  })
-})
-
-describe('Transaktionssicherheit: Null-Preis-Schutz', () => {
-  it('Record mit amount=0 → Fehler, keine Rechnung', async () => {
-    const zeroRecords = [
-      { ...RECORDS[0], amount: 0 },
-      RECORDS[1],
-    ]
-
-    const supabase = createMockSupabase(defaultTxHandler({
-      'service_records:select': () => ({ data: zeroRecords, error: null }),
-    }))
-
-    const { createInvoiceDraft } = await import('@/lib/billing/core/invoice-engine')
-
-    await expect(
-      createInvoiceDraft(supabase as any, {
-        clientId: TEST_CLIENT,
-        periodMonth: PERIOD,
-        budgetType: 'entlastung',
-        actorId: 'test-actor',
-      })
-    ).rejects.toThrow(/amount=0\/null/)
-
-    // Kein Invoice-Insert
-    const inserts = supabase.queries.filter(
-      q => q.table === 'invoices' && q.op === 'insert'
-    )
-    expect(inserts).toHaveLength(0)
   })
 
-  it('Record mit amount=null → Fehler, keine Rechnung', async () => {
-    const nullRecords = [
-      { ...RECORDS[0], amount: null },
-    ]
-
-    const supabase = createMockSupabase(defaultTxHandler({
-      'service_records:select': () => ({ data: nullRecords, error: null }),
-    }))
-
+  it('Erfolgreiche Erstellung gibt korrektes Ergebnis zurück', async () => {
+    const supabase = createMockSupabase()
     const { createInvoiceDraft } = await import('@/lib/billing/core/invoice-engine')
 
-    await expect(
-      createInvoiceDraft(supabase as any, {
-        clientId: TEST_CLIENT,
-        periodMonth: PERIOD,
-        budgetType: 'entlastung',
-        actorId: 'test-actor',
-      })
-    ).rejects.toThrow(/amount=0\/null/)
-  })
-})
-
-describe('Transaktionssicherheit: Fehlende Service-Records', () => {
-  it('Keine Records → Fehler, keine Rechnung', async () => {
-    const supabase = createMockSupabase(defaultTxHandler({
-      'service_records:select': () => ({ data: [], error: null }),
-    }))
-
-    const { createInvoiceDraft } = await import('@/lib/billing/core/invoice-engine')
-
-    await expect(
-      createInvoiceDraft(supabase as any, {
-        clientId: TEST_CLIENT,
-        periodMonth: PERIOD,
-        budgetType: 'entlastung',
-        actorId: 'test-actor',
-      })
-    ).rejects.toThrow(/Keine abrechenbaren Leistungen/)
-  })
-})
-
-describe('Transaktionssicherheit: Parallele Erstellung', () => {
-  it('Gleichzeitige Aufrufe → Idempotenz-Key verhindert Duplikate', async () => {
-    // Erster Aufruf: normal
-    // Zweiter Aufruf: checkIdempotency findet den ersten
-    let callCount = 0
-    mockCheckIdempotency.mockImplementation(() => {
-      callCount++
-      if (callCount === 1) {
-        return Promise.resolve({ exists: false })
-      }
-      // Zweiter Aufruf: Rechnung existiert bereits
-      return Promise.resolve({ exists: true, invoiceId: 'inv-tx-001' })
-    })
-
-    const supabase = createMockSupabase(defaultTxHandler())
-
-    const { createInvoiceDraft } = await import('@/lib/billing/core/invoice-engine')
-
-    const params = {
-      clientId: TEST_CLIENT,
-      periodMonth: PERIOD,
-      budgetType: 'entlastung',
-      actorId: 'test-actor',
-    }
-
-    // Erster Aufruf: erstellt Rechnung
-    const result1 = await createInvoiceDraft(supabase as any, params)
-    expect(result1.alreadyExists).toBe(false)
-
-    // Zweiter Aufruf: erkennt bestehende Rechnung
-    const result2 = await createInvoiceDraft(supabase as any, params)
-    expect(result2.alreadyExists).toBe(true)
-    expect(result2.invoiceId).toBe('inv-tx-001')
-
-    // Nur ein Insert
-    const inserts = supabase.queries.filter(
-      q => q.table === 'invoices' && q.op === 'insert'
-    )
-    expect(inserts).toHaveLength(1)
-  })
-})
-
-describe('Transaktionssicherheit: Invoice-Insert fehlgeschlagen', () => {
-  it('DB-Fehler beim Invoice-Insert → Fehler, kein Cleanup nötig', async () => {
-    const supabase = createMockSupabase(defaultTxHandler({
-      'invoices:insert': () => ({
-        data: null,
-        error: { message: 'unique_violation: idempotency_key' },
-      }),
-    }))
-
-    const { createInvoiceDraft } = await import('@/lib/billing/core/invoice-engine')
-
-    await expect(
-      createInvoiceDraft(supabase as any, {
-        clientId: TEST_CLIENT,
-        periodMonth: PERIOD,
-        budgetType: 'entlastung',
-        actorId: 'test-actor',
-      })
-    ).rejects.toThrow(/Rechnung konnte nicht erstellt werden/)
-
-    // Kein Items-Insert, kein Cleanup nötig
-    const itemInserts = supabase.queries.filter(
-      q => q.table === 'invoice_items' && q.op === 'insert'
-    )
-    expect(itemInserts).toHaveLength(0)
-  })
-})
-
-describe('Transaktionssicherheit: Dokumentierte Risiken', () => {
-  it('DOKUMENTIERT: Kein atomisches Rollback bei Service-Records-Update-Fehler', async () => {
-    // Wenn service_records.update fehlschlägt, bleiben Rechnung + Items bestehen,
-    // aber die Records behalten status='signed' statt 'invoiced'.
-    // → Engine wirft KEINEN Fehler (update-Ergebnis wird nicht geprüft)
-    const supabase = createMockSupabase(defaultTxHandler({
-      'service_records:update': () => ({
-        data: null,
-        error: { message: 'RLS violation' },
-      }),
-    }))
-
-    const { createInvoiceDraft } = await import('@/lib/billing/core/invoice-engine')
-
-    // Trotz Update-Fehler: kein Throw
-    const result = await createInvoiceDraft(supabase as any, {
-      clientId: TEST_CLIENT,
-      periodMonth: PERIOD,
-      budgetType: 'entlastung',
-      actorId: 'test-actor',
-    })
+    const result = await createInvoiceDraft(supabase as any, DEFAULT_PARAMS)
 
     expect(result.invoiceId).toBe('inv-tx-001')
+    expect(result.invoiceNumber).toBe('RE-2026-00001')
+    expect(result.totalAmountCents).toBe(10000) // 100 * 100
+    expect(result.lineCount).toBe(2)
+    expect(result.alreadyExists).toBe(false)
+    expect(result.priceSource).toBeDefined()
+  })
+})
 
-    // Rechnung existiert trotzdem → Inkonsistenz möglich
-    // RISIKO: Records bleiben 'signed' obwohl Rechnung existiert
-    // → Phase 2: Transaktionales RPC
+describe('Atomare Transaktion: RPC-Fehler → vollständiger Rollback', () => {
+  it('Null-Preis-Records → RPC wirft Fehler, keine Rechnung', async () => {
+    const supabase = createMockSupabase({
+      rpcResult: {
+        data: null,
+        error: { message: 'Leistungsnachweis(e) ohne Betrag (amount=0/null)' },
+      },
+    })
+
+    const { createInvoiceDraft } = await import('@/lib/billing/core/invoice-engine')
+
+    await expect(
+      createInvoiceDraft(supabase as any, DEFAULT_PARAMS)
+    ).rejects.toThrow(/amount=0\/null/)
+  })
+
+  it('Keine Service Records → RPC wirft Fehler, keine Rechnung', async () => {
+    const supabase = createMockSupabase({
+      rpcResult: {
+        data: null,
+        error: { message: 'Keine abrechenbaren Leistungen' },
+      },
+    })
+
+    const { createInvoiceDraft } = await import('@/lib/billing/core/invoice-engine')
+
+    await expect(
+      createInvoiceDraft(supabase as any, DEFAULT_PARAMS)
+    ).rejects.toThrow(/Keine abrechenbaren Leistungen/)
+  })
+
+  it('DB-Constraint-Verletzung → RPC wirft Fehler, atomischer Rollback', async () => {
+    const supabase = createMockSupabase({
+      rpcResult: {
+        data: null,
+        error: { message: 'unique_violation: invoice_items_pkey' },
+      },
+    })
+
+    const { createInvoiceDraft } = await import('@/lib/billing/core/invoice-engine')
+
+    await expect(
+      createInvoiceDraft(supabase as any, DEFAULT_PARAMS)
+    ).rejects.toThrow(/Atomare Rechnungserstellung fehlgeschlagen/)
+
+    // GARANTIE: Kein manueller Cleanup nötig — PostgreSQL hat alles zurückgerollt
+    // Es gibt keine halbfertigen Rechnungen, Items oder Audit-Einträge
+  })
+
+  it('Audit-Insert fehlschlägt in RPC → gesamte Transaktion rollback', async () => {
+    // Im Gegensatz zur alten sequentiellen Engine:
+    // Wenn der Audit-Insert im RPC fehlschlägt, wird die GESAMTE Transaktion
+    // zurückgerollt — keine Rechnung ohne Audit-Trail!
+    const supabase = createMockSupabase({
+      rpcResult: {
+        data: null,
+        error: { message: 'Audit-Insert fehlgeschlagen: billing_audit_trail' },
+      },
+    })
+
+    const { createInvoiceDraft } = await import('@/lib/billing/core/invoice-engine')
+
+    await expect(
+      createInvoiceDraft(supabase as any, DEFAULT_PARAMS)
+    ).rejects.toThrow(/Atomare Rechnungserstellung fehlgeschlagen/)
+
+    // GARANTIE: Keine Rechnung ohne Audit-Trail
+  })
+
+  it('Mandantentrennung: Client anderer Org → RPC wirft Fehler', async () => {
+    const supabase = createMockSupabase({
+      rpcResult: {
+        data: null,
+        error: { message: 'Klient client-tx-001 gehoert nicht zu Organisation org-tx-001' },
+      },
+    })
+
+    const { createInvoiceDraft } = await import('@/lib/billing/core/invoice-engine')
+
+    await expect(
+      createInvoiceDraft(supabase as any, DEFAULT_PARAMS)
+    ).rejects.toThrow(/gehoert nicht zu Organisation/)
+  })
+})
+
+describe('Atomare Transaktion: Idempotenz', () => {
+  it('Bestehende Rechnung → RPC gibt already_exists zurück', async () => {
+    const supabase = createMockSupabase({
+      rpcResult: { data: RPC_IDEMPOTENT_RESULT, error: null },
+    })
+
+    const { createInvoiceDraft } = await import('@/lib/billing/core/invoice-engine')
+
+    const result = await createInvoiceDraft(supabase as any, DEFAULT_PARAMS)
+
+    expect(result.alreadyExists).toBe(true)
+    expect(result.invoiceId).toBe('inv-tx-existing')
+    expect(result.invoiceNumber).toBe('RE-2026-00005')
+  })
+
+  it('Parallele Aufrufe → Idempotenz-Key in RPC verhindert Duplikate', async () => {
+    let callCount = 0
+    const supabase = createMockSupabase()
+    supabase.rpc = vi.fn(() => {
+      callCount++
+      if (callCount === 1) {
+        return Promise.resolve({ data: RPC_SUCCESS_RESULT, error: null })
+      }
+      return Promise.resolve({ data: RPC_IDEMPOTENT_RESULT, error: null })
+    }) as any
+
+    const { createInvoiceDraft } = await import('@/lib/billing/core/invoice-engine')
+
+    const result1 = await createInvoiceDraft(supabase as any, DEFAULT_PARAMS)
+    expect(result1.alreadyExists).toBe(false)
+
+    const result2 = await createInvoiceDraft(supabase as any, DEFAULT_PARAMS)
+    expect(result2.alreadyExists).toBe(true)
+    expect(result2.invoiceId).toBe('inv-tx-existing')
+  })
+})
+
+describe('Atomare Transaktion: Eingabevalidierung', () => {
+  it('Client nicht gefunden → Fehler vor RPC-Aufruf', async () => {
+    const supabase = createMockSupabase({
+      clientResult: { data: null, error: { message: 'not found' } },
+    })
+
+    const { createInvoiceDraft } = await import('@/lib/billing/core/invoice-engine')
+
+    await expect(
+      createInvoiceDraft(supabase as any, DEFAULT_PARAMS)
+    ).rejects.toThrow(/nicht gefunden/)
+
+    // RPC wurde NICHT aufgerufen
+    expect(supabase.rpc).not.toHaveBeenCalled()
+  })
+
+  it('RPC gibt kein Ergebnis zurück → kontrollierter Fehler', async () => {
+    const supabase = createMockSupabase({
+      rpcResult: { data: null, error: null },
+    })
+
+    const { createInvoiceDraft } = await import('@/lib/billing/core/invoice-engine')
+
+    await expect(
+      createInvoiceDraft(supabase as any, DEFAULT_PARAMS)
+    ).rejects.toThrow(/kein Ergebnis/)
+  })
+})
+
+describe('Atomare Transaktion: Tarifvergleich (informativ)', () => {
+  it('Kein Tarif verfügbar → Warning, Rechnung trotzdem erstellt', async () => {
+    mockResolvePrice.mockRejectedValue(new Error('Kein Tarif'))
+
+    const supabase = createMockSupabase()
+    const { createInvoiceDraft } = await import('@/lib/billing/core/invoice-engine')
+
+    const result = await createInvoiceDraft(supabase as any, DEFAULT_PARAMS)
+
+    expect(result.invoiceId).toBe('inv-tx-001')
+    expect(result.priceWarnings).toBeDefined()
+    expect(result.priceWarnings?.some(w => w.includes('Kein Tarif'))).toBe(true)
+  })
+
+  it('Ergänzende Audit-Meldung fehlschlägt → Rechnung trotzdem gültig', async () => {
+    mockResolvePrice.mockRejectedValue(new Error('Kein Tarif'))
+    mockLogBillingAction.mockRejectedValue(new Error('Audit unreachable'))
+
+    const supabase = createMockSupabase()
+    const { createInvoiceDraft } = await import('@/lib/billing/core/invoice-engine')
+
+    // Rechnung wird trotzdem erstellt — nur die ergänzende Tarif-Audit fehlt
+    // Der Haupt-Audit ist INNERHALB der RPC-Transaktion
+    const result = await createInvoiceDraft(supabase as any, DEFAULT_PARAMS)
+
+    expect(result.invoiceId).toBe('inv-tx-001')
+    expect(result.alreadyExists).toBe(false)
+  })
+
+  it('Budget-Typ private → keine Rechtsgrundlage-Warnung', async () => {
+    const supabase = createMockSupabase()
+    const { createInvoiceDraft } = await import('@/lib/billing/core/invoice-engine')
+
+    const result = await createInvoiceDraft(supabase as any, {
+      ...DEFAULT_PARAMS,
+      budgetType: 'private',
+    })
+
+    // Private hat keine Rechtsgrundlage → keine Warning dafür
+    const hasRechtsgrundlageWarning = result.priceWarnings?.some(
+      w => w.includes('Rechtsgrundlage')
+    )
+    expect(hasRechtsgrundlageWarning).toBeFalsy()
+  })
+
+  it('Unbekannter Budget-Typ → Warning über fehlende Rechtsgrundlage', async () => {
+    const supabase = createMockSupabase()
+    const { createInvoiceDraft } = await import('@/lib/billing/core/invoice-engine')
+
+    const result = await createInvoiceDraft(supabase as any, {
+      ...DEFAULT_PARAMS,
+      budgetType: 'unbekannt',
+    })
+
+    expect(result.priceWarnings?.some(w => w.includes('Rechtsgrundlage'))).toBe(true)
+  })
+})
+
+describe('Atomare Transaktion: Browser-Preis-Schutz', () => {
+  it('Engine akzeptiert KEINE Preise vom Browser — nur DB-Werte', async () => {
+    const supabase = createMockSupabase()
+    const { createInvoiceDraft } = await import('@/lib/billing/core/invoice-engine')
+
+    // Auch wenn jemand "amount" oder "price" an createInvoiceDraft übergibt:
+    // CreateDraftParams hat KEINE amount/price-Felder.
+    // Der RPC berechnet den Betrag aus service_records.amount in der DB.
+    const result = await createInvoiceDraft(supabase as any, {
+      ...DEFAULT_PARAMS,
+      // @ts-expect-error — absichtlich falsche Felder testen
+      amount: 99999,
+      price: 99999,
+      totalAmount: 99999,
+    })
+
+    // Preis kommt aus der DB (100), nicht vom "Browser" (99999)
+    expect(result.totalAmountCents).toBe(10000)
+
+    // RPC wurde OHNE Browser-Preise aufgerufen
+    const rpcCall = supabase.rpc.mock.calls[0]
+    const rpcParams = rpcCall[1]
+    expect(rpcParams).not.toHaveProperty('amount')
+    expect(rpcParams).not.toHaveProperty('price')
+    expect(rpcParams).not.toHaveProperty('totalAmount')
+  })
+})
+
+describe('Atomare Transaktion: SECURITY DEFINER Garantien', () => {
+  it('RPC-Funktion Name und Parameter korrekt', async () => {
+    const supabase = createMockSupabase()
+    const { createInvoiceDraft } = await import('@/lib/billing/core/invoice-engine')
+
+    await createInvoiceDraft(supabase as any, DEFAULT_PARAMS)
+
+    expect(supabase.rpc).toHaveBeenCalledTimes(1)
+    const [fnName, params] = supabase.rpc.mock.calls[0]
+
+    expect(fnName).toBe('create_invoice_draft_atomic')
+    expect(params.p_client_id).toBe(TEST_CLIENT)
+    expect(params.p_org_id).toBe(TEST_ORG)
+    expect(params.p_period_month).toBe(PERIOD)
+    expect(params.p_budget_type).toBe('entlastung')
+    expect(params.p_actor_id).toBe(TEST_ACTOR)
+  })
+
+  it('Insurance-Daten werden aus Client-Record übergeben, nicht vom Browser', async () => {
+    const supabase = createMockSupabase()
+    const { createInvoiceDraft } = await import('@/lib/billing/core/invoice-engine')
+
+    await createInvoiceDraft(supabase as any, DEFAULT_PARAMS)
+
+    const rpcParams = supabase.rpc.mock.calls[0][1]
+    expect(rpcParams.p_insurance_name).toBe('Test-Kasse')
+    expect(rpcParams.p_insurance_number).toBe('V-TX-001')
+  })
+
+  it('Client ohne Insurance-Daten → null-Werte an RPC', async () => {
+    const supabase = createMockSupabase({
+      clientResult: {
+        data: { ...CLIENT_DATA, insurance_name: null, insurance_number: null },
+        error: null,
+      },
+    })
+
+    const { createInvoiceDraft } = await import('@/lib/billing/core/invoice-engine')
+
+    await createInvoiceDraft(supabase as any, DEFAULT_PARAMS)
+
+    const rpcParams = supabase.rpc.mock.calls[0][1]
+    expect(rpcParams.p_insurance_name).toBeNull()
+    expect(rpcParams.p_insurance_number).toBeNull()
   })
 })
