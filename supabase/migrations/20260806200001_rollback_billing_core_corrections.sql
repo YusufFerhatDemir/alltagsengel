@@ -58,3 +58,10 @@ DROP TABLE IF EXISTS public.invoice_line_snapshots;
 DROP TABLE IF EXISTS public.invoice_corrections;
 DROP TABLE IF EXISTS public.invoice_snapshots;
 DROP TABLE IF EXISTS public.billing_tariffs;
+
+-- invoices_status_check auf originale englische Werte zuruecksetzen
+-- (Reconciliation-Migration 20260806300000 hat den Constraint erweitert)
+ALTER TABLE public.invoices DROP CONSTRAINT IF EXISTS invoices_status_check;
+ALTER TABLE public.invoices ADD CONSTRAINT invoices_status_check CHECK (
+  status IN ('draft', 'sent', 'paid', 'partial', 'rejected', 'disputed')
+);
