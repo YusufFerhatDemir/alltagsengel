@@ -50,6 +50,9 @@
     "hooks/**",
     "archive/**",
     "native/**",
-    "supabase/functions/**"
+    "supabase/functions/**",
+    "__tests__/**",
+    "**/*.test.ts",
+    "**/*.test.tsx"
   ]
 }
