@@ -248,7 +248,7 @@ export async function POST(request: Request) {
         total_amount: totalAmount,
         budget_amount: budgetAmount,
         private_amount: privateAmount,
-        status: 'draft',
+        status: 'entwurf',
       })
       .select()
       .single()

@@ -119,7 +119,7 @@ describe('getAllowedTransitions', () => {
     expect(getAllowedTransitions('storniert')).toEqual([]);
     expect(getAllowedTransitions('akzeptiert')).toEqual([]);
     expect(getAllowedTransitions('quittiert')).toEqual([
-      'bezahlt', 'teilweise_bezahlt', 'gekuerzt', 'storniert',
+      'bezahlt', 'teilweise_bezahlt', 'gekuerzt', 'strittig', 'storniert',
     ]);
   });
 });
