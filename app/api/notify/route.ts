@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { sendEmailNotification } from '@/lib/notifications'
 
 export async function POST(req: NextRequest) {
@@ -7,6 +8,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     const { userId, type, title, bodyText, data } = body
 
+    // Auth-Check: Nur authentifizierte User
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: 'Nicht authentifiziert' }, { status: 401 })
@@ -24,8 +26,9 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Benachrichtigung in DB speichern
-    const { data: notification, error } = await supabase
+    // Benachrichtigung in DB speichern (via Admin-Client, da INSERT-RLS blockiert)
+    const adminSupabase = createAdminClient()
+    const { data: notification, error } = await adminSupabase
       .from('notifications')
       .insert({
         user_id: userId,
@@ -40,7 +43,7 @@ export async function POST(req: NextRequest) {
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
     // E-Mail senden (mit Resend, falls konfiguriert)
-    const { data: profile } = await supabase.from('profiles').select('email, first_name').eq('id', userId).single()
+    const { data: profile } = await adminSupabase.from('profiles').select('email, first_name').eq('id', userId).single()
     if (profile?.email) {
       const emailSent = await sendEmailNotification(
         profile.email,
@@ -49,7 +52,7 @@ export async function POST(req: NextRequest) {
         `<p>${bodyText}</p>`
       )
       if (emailSent) {
-        await supabase.from('notifications').update({ email_sent: true }).eq('id', notification.id)
+        await adminSupabase.from('notifications').update({ email_sent: true }).eq('id', notification.id)
       }
     }
 
