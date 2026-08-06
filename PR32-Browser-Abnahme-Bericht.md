@@ -23,7 +23,7 @@ Die drei spezifischen Fixes der PR sind **korrekt angewendet und verifiziert**. 
 | # | Datei | Vorher | Nachher | Status |
 |---|-------|--------|---------|--------|
 | 1 | `app/layout.tsx` Z.19 | `colorScheme: 'only dark' as any` | `colorScheme: 'dark'` | ✅ |
-| 2 | `app/layout.tsx` Z.106 | `<html style={{ colorScheme: 'only dark' } as any}>` | `<html suppressHydrationWarning style={{ colorScheme: 'dark' }}>` | ✅ |
+{% raw %}| 2 | `app/layout.tsx` Z.106 | `<html style={{ colorScheme: 'only dark' } as any}>` | `<html suppressHydrationWarning style={{ colorScheme: 'dark' }}>` | ✅ |{% endraw %}
 | 3 | `app/mis/MISLayoutClient.tsx` Z.17 | `useState(window.innerWidth < 900)` | `useState(false)` | ✅ |
 
 ### Server-HTML Vergleich:
