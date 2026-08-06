@@ -7,8 +7,8 @@
  *   2. Mehrere Positionen (Items)
  *   3. Mehrere Budget-Typen
  *   4. Fehlender Preis (amount=0/null → Fehler)
- *   5. Mehrdeutiger Preis (Tarif vs. service_records → Warning)
- *   6. Ungueltiger Kostentraeger
+ *   5. Tarif-Fehler (AMBIGUOUS/MISSING → Rollback, kein Fallback)
+ *   6. Ungueltiger Kostentraeger (kein Fallback)
  *   7. Fremde Organisation (Mandantentrennung)
  *   8. Manipulierte Browser-Betraege (werden ignoriert)
  *   9. Audit-Fehler → Rollback (atomar in RPC)
@@ -30,13 +30,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 // Mocks
 // ═══════════════════════════════════════════════════════════════
 
-const { mockResolvePrice, mockLogBillingAction } = vi.hoisted(() => ({
-  mockResolvePrice: vi.fn(),
+const { mockLogBillingAction } = vi.hoisted(() => ({
   mockLogBillingAction: vi.fn(),
-}))
-
-vi.mock('@/lib/billing/core/price-resolver', () => ({
-  resolvePrice: mockResolvePrice,
 }))
 
 vi.mock('@/lib/billing/core/audit', () => ({
@@ -139,7 +134,6 @@ const BASE_PARAMS = {
 beforeEach(() => {
   vi.clearAllMocks()
   mockLogBillingAction.mockResolvedValue(undefined)
-  mockResolvePrice.mockRejectedValue(new Error('Kein Tarif'))
 })
 
 // ═══════════════════════════════════════════════════════════════
@@ -264,52 +258,45 @@ describe('4. Fehlender Preis', () => {
 })
 
 // ═══════════════════════════════════════════════════════════════
-// 5. Mehrdeutiger Preis (Tarif ≠ service_records)
+// 5. Tarif-Fehler (billing_tariffs = fuehrend, kein Fallback)
 // ═══════════════════════════════════════════════════════════════
 
-describe('5. Mehrdeutiger Preis', () => {
-  it('Tarif-Abweichung → Warning, Rechnung wird trotzdem erstellt', async () => {
-    // resolvePrice gibt einen Tarif zurueck, aber er weicht von der Rechnung ab
-    mockResolvePrice.mockResolvedValue({
-      id: 'tarif-001',
-      preis_cent: 5000, // 50 EUR/Stunde
-    })
-
+describe('5. Tarif-Fehler', () => {
+  it('AMBIGUOUS_TARIFF → RPC wirft Fehler, Rollback', async () => {
     const sb = createSupabaseMock({
-      itemsData: [
-        { id: 'item-1', date: '2026-10-05', duration_minutes: 60, amount: 40 },
-        { id: 'item-2', date: '2026-10-10', duration_minutes: 90, amount: 60 },
-      ],
+      rpcResult: {
+        data: null,
+        error: { message: 'AMBIGUOUS_TARIFF: 2 Tarife mit gleicher Spezifitaet' },
+      },
     })
     const { createInvoiceDraft } = await import('@/lib/billing/core/invoice-engine')
 
-    const result = await createInvoiceDraft(sb as any, BASE_PARAMS)
-
-    expect(result.invoiceId).toBe('inv-comp-001')
-    expect(result.priceWarnings).toBeDefined()
-    expect(result.priceWarnings!.length).toBeGreaterThan(0)
-    // Warning enthaelt die Differenz
-    expect(result.priceWarnings!.some(w => w.includes('Differenz'))).toBe(true)
+    await expect(
+      createInvoiceDraft(sb as any, BASE_PARAMS)
+    ).rejects.toThrow(/AMBIGUOUS_TARIFF/)
   })
 
-  it('Tarif stimmt exakt ueberein → keine Warning', async () => {
-    mockResolvePrice.mockResolvedValue({
-      id: 'tarif-exact',
-      preis_cent: 4000, // 40 EUR/Stunde
-    })
-
+  it('MISSING_VALID_TARIFF → RPC wirft Fehler, Rollback', async () => {
     const sb = createSupabaseMock({
-      itemsData: [
-        { id: 'item-1', date: '2026-10-05', duration_minutes: 60, amount: 40 },
-      ],
+      rpcResult: {
+        data: null,
+        error: { message: 'MISSING_VALID_TARIFF: Kein gueltiger Tarif fuer alltagsbegleitung' },
+      },
     })
+    const { createInvoiceDraft } = await import('@/lib/billing/core/invoice-engine')
+
+    await expect(
+      createInvoiceDraft(sb as any, BASE_PARAMS)
+    ).rejects.toThrow(/MISSING_VALID_TARIFF/)
+  })
+
+  it('priceSource ist immer billing_tariffs bei Erfolg', async () => {
+    const sb = createSupabaseMock()
     const { createInvoiceDraft } = await import('@/lib/billing/core/invoice-engine')
 
     const result = await createInvoiceDraft(sb as any, BASE_PARAMS)
 
-    // Keine Abweichungs-Warnings (ggf. "Kein Tarif"-Warning, aber keine Differenz-Warning)
-    const hasDiffWarning = result.priceWarnings?.some(w => w.includes('Differenz'))
-    expect(hasDiffWarning).toBeFalsy()
+    expect(result.priceSource).toBe('billing_tariffs')
   })
 })
 
@@ -330,19 +317,19 @@ describe('6. Ungueltiger Kostentraeger', () => {
     expect(result.invoiceId).toBe('inv-comp-001')
   })
 
-  it('Client mit unbekanntem IK → Tarif-Aufloesung schlaegt fehl, Fallback Warning', async () => {
-    mockResolvePrice.mockRejectedValue(new Error('Kein Tarif fuer IK 000000000'))
-
+  it('Client mit unbekanntem IK → MISSING_VALID_TARIFF (kein Fallback)', async () => {
     const sb = createSupabaseMock({
       clientData: { ...CLIENT_DATA, pflegekasse_ik: '000000000' },
+      rpcResult: {
+        data: null,
+        error: { message: 'MISSING_VALID_TARIFF: Kein gueltiger Tarif fuer IK 000000000' },
+      },
     })
     const { createInvoiceDraft } = await import('@/lib/billing/core/invoice-engine')
 
-    const result = await createInvoiceDraft(sb as any, BASE_PARAMS)
-
-    expect(result.invoiceId).toBe('inv-comp-001')
-    expect(result.priceWarnings).toBeDefined()
-    expect(result.priceWarnings!.some(w => w.includes('Kein Tarif'))).toBe(true)
+    await expect(
+      createInvoiceDraft(sb as any, BASE_PARAMS)
+    ).rejects.toThrow(/MISSING_VALID_TARIFF/)
   })
 })
 
@@ -441,8 +428,8 @@ describe('9. Audit-Fehler → Rollback (atomar)', () => {
     // Jetzt: PostgreSQL rollt alles zurueck.
   })
 
-  it('Ergaenzende Tarif-Audit (ausserhalb RPC) fehlschlaegt → Rechnung bleibt gueltig', async () => {
-    mockResolvePrice.mockRejectedValue(new Error('Kein Tarif'))
+  it('Ergaenzende Audit (ausserhalb RPC) fehlschlaegt → Rechnung bleibt gueltig', async () => {
+    // Tarif-Audit wird jetzt innerhalb der RPC behandelt, nicht mehr via resolvePrice
     mockLogBillingAction.mockRejectedValue(new Error('Audit-Service down'))
 
     const sb = createSupabaseMock()

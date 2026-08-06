@@ -24,20 +24,29 @@ import {
   type InvoiceStatus,
 } from './status-machine';
 import { logBillingAction, computeSnapshotChecksum } from './audit';
-import { resolvePrice } from './price-resolver';
+// resolvePrice wird nicht mehr als Fallback verwendet — die Tarifaufloesung
+// erfolgt vollstaendig innerhalb der atomaren RPC (billing_tariffs = fuehrend).
+// import { resolvePrice } from './price-resolver';  // ENTFERNT: kein Fallback
 
 // ---------------------------------------------------------------------------
-// Budget-Typ → Rechtsgrundlage Mapping
-// (aus lib/kunde/leistungen.ts und lib/admin/ops.ts abgeleitet)
+// Fehler-Codes fuer Tarif-Aufloesung
 // ---------------------------------------------------------------------------
 
-const BUDGET_RECHTSGRUNDLAGE: Record<string, string> = {
-  entlastung: '§45b SGB XI',
-  verhinderung: '§39 SGB XI',
-  carryover: '§45b SGB XI',    // Übertrag aus Vorjahr
-  haeusliche_pflege_36: '§36 SGB XI',
-  // 'private' hat keine Rechtsgrundlage (Privatrechnung)
-};
+export const TARIFF_ERROR_CODES = {
+  MISSING_VALID_TARIFF: 'MISSING_VALID_TARIFF',
+  AMBIGUOUS_TARIFF: 'AMBIGUOUS_TARIFF',
+} as const;
+
+export type TariffErrorCode = typeof TARIFF_ERROR_CODES[keyof typeof TARIFF_ERROR_CODES];
+
+/**
+ * Prueft ob ein RPC-Fehler ein Tarif-Fehler ist und extrahiert den Code.
+ */
+export function parseTariffError(errorMessage: string): TariffErrorCode | null {
+  if (errorMessage.includes('MISSING_VALID_TARIFF')) return TARIFF_ERROR_CODES.MISSING_VALID_TARIFF;
+  if (errorMessage.includes('AMBIGUOUS_TARIFF')) return TARIFF_ERROR_CODES.AMBIGUOUS_TARIFF;
+  return null;
+}
 
 // ---------------------------------------------------------------------------
 // Types
@@ -56,8 +65,9 @@ export interface CreateDraftResult {
   totalAmountCents: number;
   lineCount: number;
   alreadyExists: boolean;
-  priceSource?: 'billing_tariffs' | 'service_records';
-  priceWarnings?: string[];
+  priceSource: 'billing_tariffs';
+  tariffErrorCode?: TariffErrorCode;
+  tariffErrorMessage?: string;
 }
 
 export interface FreezeResult {
@@ -102,17 +112,24 @@ export interface CreditNoteResult {
 /**
  * Erzeugt einen Rechnungsentwurf aus freigegebenen service_records.
  *
- * ATOMARE TRANSAKTION: Alle Schritte laufen in einer PostgreSQL-Transaktion
- * via create_invoice_draft_atomic() RPC:
+ * TARIF-BASIERTE PREISQUELLE (fachliche Entscheidung 2026-08-07):
+ * - billing_tariffs ist die alleinige verbindliche Preisquelle
+ * - service_records.amount wird NICHT als Fallback verwendet
+ * - Kein gueltiger Tarif = kein Rechnungsentwurf (MISSING_VALID_TARIFF)
+ * - Mehrere gleichrangige Tarife = kein Rechnungsentwurf (AMBIGUOUS_TARIFF)
+ *
+ * ATOMARE TRANSAKTION via create_invoice_draft_atomic() RPC:
  *   1. Idempotenz-Pruefung
- *   2. Rechnungsnummer generieren
- *   3. Rechnung erstellen
- *   4. Positionen erstellen
- *   5. Service Records auf 'invoiced' setzen
- *   6. Audit-Trail schreiben
+ *   2. Tarif-Aufloesung aus billing_tariffs (pro Leistungsnachweis)
+ *   3. Preisberechnung (unit_price × quantity, serverseitig)
+ *   4. Rechnungsnummer generieren
+ *   5. Rechnung erstellen
+ *   6. Positionen mit Tarif-Snapshot erstellen
+ *   7. Service Records auf 'invoiced' setzen
+ *   8. Audit-Trail schreiben
  *
  * Bei Fehler in JEDEM Schritt: kompletter Rollback. Keine halbfertigen Daten.
- * Preise kommen aus service_records.amount (DB), nicht vom Browser.
+ * Preise kommen aus billing_tariffs (DB), NICHT vom Browser, NICHT aus service_records.
  */
 export async function createInvoiceDraft(
   supabase: SupabaseClient,
@@ -132,9 +149,9 @@ export async function createInvoiceDraft(
   }
 
   // ── Atomare Rechnungserstellung via RPC ──────────────────────────────
-  // Alle Schritte in einer PostgreSQL-Transaktion:
-  // Idempotenz → Validierung → Nummer → Invoice → Items → Service-Records → Audit
-  // Bei Fehler in einem Schritt: vollstaendiger Rollback, keine Residualdaten.
+  // Tarif-Aufloesung + Preisberechnung + Rechnungserstellung
+  // vollstaendig innerhalb der PostgreSQL-Transaktion.
+  // Bei fehlendem/mehrdeutigem Tarif: RAISE EXCEPTION → vollstaendiger Rollback.
   const { data: rpcResult, error: rpcError } = await supabase.rpc(
     'create_invoice_draft_atomic',
     {
@@ -149,6 +166,13 @@ export async function createInvoiceDraft(
   );
 
   if (rpcError) {
+    // Strukturierte Tarif-Fehlercodes erkennen und weiterleiten
+    const tariffError = parseTariffError(rpcError.message);
+    if (tariffError) {
+      const err = new Error(rpcError.message);
+      (err as any).tariffErrorCode = tariffError;
+      throw err;
+    }
     throw new Error(`Atomare Rechnungserstellung fehlgeschlagen: ${rpcError.message}`);
   }
 
@@ -156,99 +180,15 @@ export async function createInvoiceDraft(
     throw new Error('RPC create_invoice_draft_atomic hat kein Ergebnis zurueckgegeben.');
   }
 
-  // Ergebnis auswerten
-  const result: CreateDraftResult = {
+  // Ergebnis auswerten — Preise kommen ausschliesslich aus billing_tariffs
+  return {
     invoiceId: rpcResult.invoice_id,
     invoiceNumber: rpcResult.invoice_number,
     totalAmountCents: Math.round(Number(rpcResult.total_amount) * 100),
     lineCount: rpcResult.line_count,
     alreadyExists: rpcResult.already_exists,
-    priceSource: 'service_records',
+    priceSource: 'billing_tariffs',
   };
-
-  // Bei bestehender Rechnung: sofort zurueckgeben (keine Tarifpruefung noetig)
-  if (rpcResult.already_exists) {
-    return result;
-  }
-
-  // ── Optionale Tarif-Vergleichswarnung (informativ, nicht transaktionskritisch) ──
-  // Die Preise in der Rechnung kommen aus service_records.amount.
-  // Hier vergleichen wir optional mit billing_tariffs fuer Abweichungs-Warnungen.
-  const priceWarnings: string[] = [];
-  const rechtsgrundlage = BUDGET_RECHTSGRUNDLAGE[budgetType];
-
-  if (rechtsgrundlage) {
-    try {
-      const resolvedTarif = await resolvePrice(supabase, {
-        leistungsart: 'alltagsbegleitung',
-        rechtsgrundlage,
-        datum: `${periodMonth}-01`,
-        kostentraegerIk: client.pflegekasse_ik || undefined,
-        bundesland: 'hessen',  // Alltagsengel = nur Hessen (lib/hessen-plz.ts)
-      });
-
-      if (resolvedTarif) {
-        result.priceSource = 'billing_tariffs';
-
-        // Erstellte Positionen laden fuer Soll/Ist-Vergleich
-        const { data: items } = await supabase
-          .from('invoice_items')
-          .select('id, date, duration_minutes, amount')
-          .eq('invoice_id', rpcResult.invoice_id);
-
-        if (items) {
-          for (const item of items) {
-            const durationHours = (item.duration_minutes || 60) / 60;
-            const tarifAmount = (resolvedTarif.preis_cent / 100) * durationHours;
-            const itemAmount = Number(item.amount || 0);
-            const diff = Math.abs(tarifAmount - itemAmount);
-
-            if (diff > 0.01) {
-              priceWarnings.push(
-                `Position ${item.id} (${item.date}): service_records.amount=${itemAmount.toFixed(2)} EUR, ` +
-                `billing_tariffs=${tarifAmount.toFixed(2)} EUR (Differenz: ${diff.toFixed(2)} EUR). ` +
-                `Verwendet: service_records.amount.`
-              );
-            }
-          }
-        }
-      }
-    } catch {
-      // Kein passender Tarif — das ist okay, Preise kommen aus service_records
-      priceWarnings.push(
-        `Kein Tarif in billing_tariffs fuer ${budgetType}/alltagsbegleitung ` +
-        `zum ${periodMonth}-01. Preise aus service_records verwendet.`
-      );
-    }
-  } else if (budgetType !== 'private') {
-    priceWarnings.push(
-      `Keine Rechtsgrundlage fuer Budget-Typ "${budgetType}" definiert. ` +
-      `Preise aus service_records verwendet.`
-    );
-  }
-
-  if (priceWarnings.length > 0) {
-    result.priceWarnings = priceWarnings;
-
-    // Ergaenzende Audit-Meldung fuer Tarifabweichungen (nicht transaktionskritisch)
-    try {
-      await logBillingAction(supabase, {
-        entityType: 'invoice',
-        entityId: rpcResult.invoice_id,
-        action: 'price_comparison',
-        newState: {
-          price_warnings: priceWarnings,
-          price_source: result.priceSource,
-        },
-        actorId,
-      });
-    } catch {
-      // Ergaenzende Audit-Meldung ist nicht kritisch — Hauptaudit ist in der Transaktion
-      console.warn('[billing] Ergaenzende Tarifvergleich-Audit konnte nicht geschrieben werden.');
-    }
-  }
-
-  return result;
 }
 
 // ---------------------------------------------------------------------------
