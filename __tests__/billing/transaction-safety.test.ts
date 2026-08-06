@@ -25,14 +25,12 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 // Mocks
 // ═══════════════════════════════════════════════════════════════
 
-const { mockResolvePrice, mockLogBillingAction } = vi.hoisted(() => ({
-  mockResolvePrice: vi.fn(),
+const { mockLogBillingAction } = vi.hoisted(() => ({
   mockLogBillingAction: vi.fn(),
 }))
 
-vi.mock('@/lib/billing/core/price-resolver', () => ({
-  resolvePrice: mockResolvePrice,
-}))
+// resolvePrice wird nicht mehr gemockt — Tarif-Auflösung erfolgt komplett in der RPC
+// vi.mock('@/lib/billing/core/price-resolver') → ENTFERNT
 
 vi.mock('@/lib/billing/core/audit', () => ({
   logBillingAction: mockLogBillingAction,
@@ -142,7 +140,6 @@ const DEFAULT_PARAMS = {
 beforeEach(() => {
   vi.clearAllMocks()
   mockLogBillingAction.mockResolvedValue(undefined)
-  mockResolvePrice.mockRejectedValue(new Error('Kein Tarif'))
 })
 
 // ═══════════════════════════════════════════════════════════════
@@ -333,36 +330,57 @@ describe('Atomare Transaktion: Eingabevalidierung', () => {
   })
 })
 
-describe('Atomare Transaktion: Tarifvergleich (informativ)', () => {
-  it('Kein Tarif verfügbar → Warning, Rechnung trotzdem erstellt', async () => {
-    mockResolvePrice.mockRejectedValue(new Error('Kein Tarif'))
+describe('Atomare Transaktion: Tarif-Fehler (billing_tariffs = führend)', () => {
+  it('MISSING_VALID_TARIFF → kein Fallback, Fehler mit Code', async () => {
+    const supabase = createMockSupabase({
+      rpcResult: {
+        data: null,
+        error: { message: 'MISSING_VALID_TARIFF: Kein gueltiger Tarif fuer Leistungsart "Alltagsbegleitung"' },
+      },
+    })
 
+    const { createInvoiceDraft } = await import('@/lib/billing/core/invoice-engine')
+
+    try {
+      await createInvoiceDraft(supabase as any, DEFAULT_PARAMS)
+      expect.fail('Sollte Fehler werfen')
+    } catch (err: any) {
+      expect(err.message).toContain('MISSING_VALID_TARIFF')
+      expect(err.tariffErrorCode).toBe('MISSING_VALID_TARIFF')
+    }
+  })
+
+  it('AMBIGUOUS_TARIFF → kein willkürlicher Tarif, Fehler mit Code', async () => {
+    const supabase = createMockSupabase({
+      rpcResult: {
+        data: null,
+        error: { message: 'AMBIGUOUS_TARIFF: 2 gleichwertige Tarife' },
+      },
+    })
+
+    const { createInvoiceDraft } = await import('@/lib/billing/core/invoice-engine')
+
+    try {
+      await createInvoiceDraft(supabase as any, DEFAULT_PARAMS)
+      expect.fail('Sollte Fehler werfen')
+    } catch (err: any) {
+      expect(err.message).toContain('AMBIGUOUS_TARIFF')
+      expect(err.tariffErrorCode).toBe('AMBIGUOUS_TARIFF')
+    }
+  })
+
+  it('Erfolgreiche Rechnung → priceSource immer billing_tariffs', async () => {
     const supabase = createMockSupabase()
     const { createInvoiceDraft } = await import('@/lib/billing/core/invoice-engine')
 
     const result = await createInvoiceDraft(supabase as any, DEFAULT_PARAMS)
 
-    expect(result.invoiceId).toBe('inv-tx-001')
-    expect(result.priceWarnings).toBeDefined()
-    expect(result.priceWarnings?.some(w => w.includes('Kein Tarif'))).toBe(true)
+    expect(result.priceSource).toBe('billing_tariffs')
+    // priceWarnings existiert nicht mehr — Tarif ist Pflicht, kein Warning-Fallback
+    expect((result as any).priceWarnings).toBeUndefined()
   })
 
-  it('Ergänzende Audit-Meldung fehlschlägt → Rechnung trotzdem gültig', async () => {
-    mockResolvePrice.mockRejectedValue(new Error('Kein Tarif'))
-    mockLogBillingAction.mockRejectedValue(new Error('Audit unreachable'))
-
-    const supabase = createMockSupabase()
-    const { createInvoiceDraft } = await import('@/lib/billing/core/invoice-engine')
-
-    // Rechnung wird trotzdem erstellt — nur die ergänzende Tarif-Audit fehlt
-    // Der Haupt-Audit ist INNERHALB der RPC-Transaktion
-    const result = await createInvoiceDraft(supabase as any, DEFAULT_PARAMS)
-
-    expect(result.invoiceId).toBe('inv-tx-001')
-    expect(result.alreadyExists).toBe(false)
-  })
-
-  it('Budget-Typ private → keine Rechtsgrundlage-Warnung', async () => {
+  it('Private Budget → Tarif trotzdem aus billing_tariffs', async () => {
     const supabase = createMockSupabase()
     const { createInvoiceDraft } = await import('@/lib/billing/core/invoice-engine')
 
@@ -371,23 +389,7 @@ describe('Atomare Transaktion: Tarifvergleich (informativ)', () => {
       budgetType: 'private',
     })
 
-    // Private hat keine Rechtsgrundlage → keine Warning dafür
-    const hasRechtsgrundlageWarning = result.priceWarnings?.some(
-      w => w.includes('Rechtsgrundlage')
-    )
-    expect(hasRechtsgrundlageWarning).toBeFalsy()
-  })
-
-  it('Unbekannter Budget-Typ → Warning über fehlende Rechtsgrundlage', async () => {
-    const supabase = createMockSupabase()
-    const { createInvoiceDraft } = await import('@/lib/billing/core/invoice-engine')
-
-    const result = await createInvoiceDraft(supabase as any, {
-      ...DEFAULT_PARAMS,
-      budgetType: 'unbekannt',
-    })
-
-    expect(result.priceWarnings?.some(w => w.includes('Rechtsgrundlage'))).toBe(true)
+    expect(result.priceSource).toBe('billing_tariffs')
   })
 })
 
@@ -407,8 +409,9 @@ describe('Atomare Transaktion: Browser-Preis-Schutz', () => {
       totalAmount: 99999,
     })
 
-    // Preis kommt aus der DB (100), nicht vom "Browser" (99999)
+    // Preis kommt aus billing_tariffs (DB), nicht vom "Browser" (99999)
     expect(result.totalAmountCents).toBe(10000)
+    expect(result.priceSource).toBe('billing_tariffs')
 
     // RPC wurde OHNE Browser-Preise aufgerufen
     const rpcCall = supabase.rpc.mock.calls[0]
