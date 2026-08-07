@@ -392,14 +392,24 @@ CREATE TRIGGER trg_landesregeln_updated_at
   FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
 
 -- Nur die landesrechtliche Grundlage Hessens ist belegt (Repo-Unterlagen §45a).
+-- Kein ON CONFLICT: ein spaeterer Migrationsschritt ersetzt den UNIQUE-Constraint
+-- durch zwei partielle Indizes (mit/ohne organization_id). Bei einem
+-- Wiederholungslauf dieser Datei faende ON CONFLICT seine Zielspalten nicht mehr
+--   ERROR: there is no unique or exclusion constraint matching the ON CONFLICT specification
+-- und die Migration braeche ab. NOT EXISTS ist gegenueber beiden Schemastaenden robust.
 INSERT INTO public.billing_landesregeln
   (bundesland, regel_key, regel_wert, rechtsgrundlage, quelle, bestaetigt, gueltig_ab, beschreibung)
-VALUES
-  ('hessen', 'anerkennung_rechtsgrundlage', '"PfluV Hessen"'::jsonb, '§45b SGB XI',
-   'Angabe Geschaeftsfuehrung, Stand 08.08.2026', FALSE, DATE '2026-01-01',
-   'Landesverordnung, auf deren Grundlage die Anerkennung nach §45a SGB XI erfolgt. '
-   'Novelle in der Verbaendeanhoerung — Rechtsstand vor Scharfschaltung pruefen.')
-ON CONFLICT (bundesland, regel_key, rechtsgrundlage, gueltig_ab) DO NOTHING;
+SELECT
+  'hessen', 'anerkennung_rechtsgrundlage', '"PfluV Hessen"'::jsonb, '§45b SGB XI',
+  'Angabe Geschaeftsfuehrung, Stand 08.08.2026', FALSE, DATE '2026-01-01',
+  'Landesverordnung, auf deren Grundlage die Anerkennung nach §45a SGB XI erfolgt. '
+  'Novelle in der Verbaendeanhoerung — Rechtsstand vor Scharfschaltung pruefen.'
+WHERE NOT EXISTS (
+  SELECT 1 FROM public.billing_landesregeln
+   WHERE bundesland = 'hessen'
+     AND regel_key = 'anerkennung_rechtsgrundlage'
+     AND gueltig_ab = DATE '2026-01-01'
+);
 
 -- Lese-Helper: Regelwert mit Fallback
 CREATE OR REPLACE FUNCTION public.landesregel(
@@ -427,7 +437,8 @@ AS $fn$
    LIMIT 1;
 $fn$;
 
-COMMENT ON FUNCTION public.landesregel IS
+-- Signatur explizit: 20260808120000 legt eine Ueberladung mit p_org_id an.
+COMMENT ON FUNCTION public.landesregel(TEXT, TEXT, DATE, TEXT) IS
   'Liest einen landesspezifischen Regelwert (JSONB) fuer Bundesland/Key/Datum. '
   'Spezifischere Regel (mit Rechtsgrundlage) gewinnt. NULL, wenn nichts hinterlegt ist.';
 

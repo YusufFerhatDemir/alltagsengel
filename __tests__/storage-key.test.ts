@@ -34,6 +34,19 @@ describe('extractProjectRef', () => {
 
   it('gibt null bei Nicht-Supabase-URL zurück', () => {
     expect(extractProjectRef('https://example.com')).toBeNull()
+    expect(extractProjectRef('https://boesartig.supabase.co.angreifer.de')).toBeNull()
+    expect(extractProjectRef('http://192.168.1.10:8080')).toBeNull()
+    expect(extractProjectRef('http://staging.intern')).toBeNull()
+  })
+
+  it('erlaubt ausschließlich localhost und 127.0.0.1 als lokale Instanz', () => {
+    // Fuer die Staging-Abnahme gegen die Shadow-DB. Der Port geht in den Ref
+    // ein, damit zwei lokale Instanzen sich nicht die Sitzung teilen.
+    expect(extractProjectRef('http://127.0.0.1:55440')).toBe('local-127-0-0-1-55440')
+    expect(extractProjectRef('http://localhost:8080')).toBe('local-localhost-8080')
+    expect(extractProjectRef('http://localhost')).toBe('local-localhost')
+    expect(getSupabaseStorageKey('http://127.0.0.1:55440'))
+      .toBe('sb-local-127-0-0-1-55440-auth-token')
   })
 
   it('gibt null bei URL ohne Subdomain zurück', () => {
