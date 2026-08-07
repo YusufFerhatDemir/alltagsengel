@@ -157,6 +157,13 @@ export default function MeinProfilPage() {
             </div>
             <div style={{ color: 'var(--ink4)', fontSize: 18 }}>›</div>
           </Link>
+          <Link href="/engel/pflegedoku" className="setting-row" style={{ textDecoration: 'none', color: 'inherit', cursor: 'pointer' }}>
+            <div>
+              <div className="setting-main"><IconDocument size={14} /> Meine Pflegedoku</div>
+              <div className="setting-sub">Diagnosen, Risiken, Pläne und Verlauf</div>
+            </div>
+            <div style={{ color: 'var(--ink4)', fontSize: 18 }}>›</div>
+          </Link>
           <Link href="/engel/vertraege" className="setting-row" style={{ textDecoration: 'none', color: 'inherit', cursor: 'pointer' }}>
             <div>
               <div className="setting-main"><IconDocument size={14} /> Meine Verträge</div>

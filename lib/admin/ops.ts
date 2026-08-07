@@ -791,3 +791,180 @@ export const AKTEN_DRINGLICHKEIT: Record<string, { label: string; color: string 
   '90_tage': { label: '≤ 90 Tage', color: '#C9963C' },
   ok: { label: 'OK', color: '#5CB882' },
 }
+
+// ── Pflegedokumentation (pflege_*) ───────────────────────────────
+export const PFLEGE_AUFNAHMESTATUS: Record<string, { label: string; color: string }> = {
+  offen: { label: 'Offen', color: '#E8A000' },
+  in_bearbeitung: { label: 'In Bearbeitung', color: '#2196F3' },
+  vollstaendig: { label: 'Vollständig', color: '#5CB882' },
+  abgelehnt: { label: 'Abgelehnt', color: '#D04B3B' },
+  archiviert: { label: 'Archiviert', color: '#999' },
+}
+
+export const PFLEGE_AUFNAHME_STATUS: Record<string, { label: string; color: string }> = {
+  entwurf: { label: 'Entwurf', color: '#999' },
+  in_bearbeitung: { label: 'In Bearbeitung', color: '#2196F3' },
+  abgeschlossen: { label: 'Abgeschlossen', color: '#5CB882' },
+  storniert: { label: 'Storniert', color: '#D04B3B' },
+}
+
+export const PFLEGE_AUFNAHME_ORT: Record<string, { label: string; color: string }> = {
+  wohnung: { label: 'In der Wohnung', color: '#5CB882' },
+  buero: { label: 'Im Büro', color: '#2196F3' },
+  telefonisch: { label: 'Telefonisch', color: '#C9963C' },
+  video: { label: 'Video', color: '#7E57C2' },
+  sonstiges: { label: 'Sonstiges', color: '#999' },
+}
+
+export const PFLEGE_DRINGLICHKEIT: Record<string, { label: string; color: string }> = {
+  normal: { label: 'Normal', color: '#5CB882' },
+  dringend: { label: 'Dringend', color: '#E8A000' },
+  notfall: { label: 'Notfall', color: '#D04B3B' },
+}
+
+export const PFLEGE_ANAMNESE_TYP: Record<string, { label: string; color: string }> = {
+  erstanamnese: { label: 'Erstanamnese', color: '#C9963C' },
+  folgeanamnese: { label: 'Folgeanamnese', color: '#2196F3' },
+  uebergabe: { label: 'Übergabe', color: '#26A69A' },
+  wiederaufnahme: { label: 'Wiederaufnahme', color: '#7E57C2' },
+}
+
+export const PFLEGE_ANAMNESE_STATUS: Record<string, { label: string; color: string }> = {
+  entwurf: { label: 'Entwurf', color: '#999' },
+  abgeschlossen: { label: 'Abgeschlossen', color: '#5CB882' },
+  gesperrt: { label: 'Gesperrt', color: '#D04B3B' },
+}
+
+export const PFLEGE_STURZRISIKO: Record<string, { label: string; color: string }> = {
+  unbekannt: { label: 'Unbekannt', color: '#999' },
+  niedrig: { label: 'Niedrig', color: '#5CB882' },
+  mittel: { label: 'Mittel', color: '#E8A000' },
+  hoch: { label: 'Hoch', color: '#D04B3B' },
+}
+
+export const PFLEGE_DIAGNOSE_TYP: Record<string, { label: string; color: string }> = {
+  diagnose: { label: 'Diagnose', color: '#7E57C2' },
+  einschraenkung: { label: 'Einschränkung', color: '#E8A000' },
+  hinweis: { label: 'Hinweis', color: '#2196F3' },
+  chronisch: { label: 'Chronisch', color: '#C9963C' },
+  akut: { label: 'Akut', color: '#D04B3B' },
+}
+
+export const PFLEGE_SCHWEREGRAD: Record<string, { label: string; color: string }> = {
+  leicht: { label: 'Leicht', color: '#5CB882' },
+  niedrig: { label: 'Niedrig', color: '#5CB882' },
+  mittel: { label: 'Mittel', color: '#E8A000' },
+  schwer: { label: 'Schwer', color: '#D04B3B' },
+  hoch: { label: 'Hoch', color: '#D04B3B' },
+  kritisch: { label: 'Kritisch', color: '#D04B3B' },
+}
+
+export const PFLEGE_RISIKO_TYP: Record<string, { label: string; color: string }> = {
+  allergie: { label: 'Allergie', color: '#D04B3B' },
+  unvertraeglichkeit: { label: 'Unverträglichkeit', color: '#E8A000' },
+  sturzrisiko: { label: 'Sturzrisiko', color: '#D04B3B' },
+  dekubitusrisiko: { label: 'Dekubitusrisiko', color: '#E8A000' },
+  schluckrisiko: { label: 'Schluckrisiko', color: '#D04B3B' },
+  weglaufrisiko: { label: 'Weglaufrisiko', color: '#7E57C2' },
+  aggressionsrisiko: { label: 'Aggressionsrisiko', color: '#7E57C2' },
+  infektionsrisiko: { label: 'Infektionsrisiko', color: '#E8A000' },
+  sonstiges: { label: 'Sonstiges', color: '#999' },
+}
+
+export const PFLEGE_PRUEFSTATUS: Record<string, { label: string; color: string }> = {
+  keine_pruefung: { label: 'Keine Prüfung geplant', color: '#999' },
+  ueberfaellig: { label: 'Überfällig', color: '#D04B3B' },
+  bald_faellig: { label: 'Bald fällig', color: '#E8A000' },
+  ok: { label: 'OK', color: '#5CB882' },
+}
+
+export const PFLEGE_PLAN_TYP: Record<string, { label: string; color: string }> = {
+  versorgungsplan: { label: 'Versorgungsplan', color: '#C9963C' },
+  betreuungsplan: { label: 'Betreuungsplan', color: '#5CB882' },
+  massnahmenplan: { label: 'Maßnahmenplan', color: '#2196F3' },
+  notfallplan: { label: 'Notfallplan', color: '#D04B3B' },
+}
+
+export const PFLEGE_PLAN_STATUS: Record<string, { label: string; color: string }> = {
+  entwurf: { label: 'Entwurf', color: '#999' },
+  aktiv: { label: 'Aktiv', color: '#5CB882' },
+  abgelaufen: { label: 'Abgelaufen', color: '#E8A000' },
+  gesperrt: { label: 'Gesperrt', color: '#D04B3B' },
+  ersetzt: { label: 'Ersetzt', color: '#999' },
+}
+
+export const PFLEGE_MASSNAHME_KATEGORIE: Record<string, { label: string; color: string }> = {
+  koerperpflege: { label: 'Körperpflege', color: '#26A69A' },
+  ernaehrung: { label: 'Ernährung', color: '#5CB882' },
+  mobilitaet: { label: 'Mobilität', color: '#2196F3' },
+  hauswirtschaft: { label: 'Hauswirtschaft', color: '#C9963C' },
+  soziale_betreuung: { label: 'Soziale Betreuung', color: '#7E57C2' },
+  kognitive_foerderung: { label: 'Kognitive Förderung', color: '#7E57C2' },
+  medikation: { label: 'Medikation', color: '#D04B3B' },
+  arztbesuche: { label: 'Arztbesuche', color: '#26A69A' },
+  kommunikation: { label: 'Kommunikation', color: '#2196F3' },
+  sicherheit: { label: 'Sicherheit', color: '#E8A000' },
+  sonstiges: { label: 'Sonstiges', color: '#999' },
+}
+
+export const PFLEGE_PRIORITAET: Record<string, { label: string; color: string }> = {
+  niedrig: { label: 'Niedrig', color: '#999' },
+  normal: { label: 'Normal', color: '#5CB882' },
+  hoch: { label: 'Hoch', color: '#E8A000' },
+  dringend: { label: 'Dringend', color: '#D04B3B' },
+}
+
+export const PFLEGE_MASSNAHME_STATUS: Record<string, { label: string; color: string }> = {
+  geplant: { label: 'Geplant', color: '#999' },
+  aktiv: { label: 'Aktiv', color: '#5CB882' },
+  pausiert: { label: 'Pausiert', color: '#E8A000' },
+  abgeschlossen: { label: 'Abgeschlossen', color: '#2196F3' },
+  abgebrochen: { label: 'Abgebrochen', color: '#D04B3B' },
+}
+
+export const PFLEGE_VERLAUF_TYP: Record<string, { label: string; color: string }> = {
+  verlauf: { label: 'Verlauf', color: '#5CB882' },
+  ereignis: { label: 'Ereignis', color: '#2196F3' },
+  beobachtung: { label: 'Beobachtung', color: '#26A69A' },
+  uebergabe: { label: 'Übergabe', color: '#C9963C' },
+  telefonat: { label: 'Telefonat', color: '#2196F3' },
+  arztbesuch: { label: 'Arztbesuch', color: '#7E57C2' },
+  angehoerigenkontakt: { label: 'Angehörigenkontakt', color: '#7E57C2' },
+  besonderheit: { label: 'Besonderheit', color: '#E8A000' },
+  sturz: { label: 'Sturz', color: '#D04B3B' },
+  notfall: { label: 'Notfall', color: '#D04B3B' },
+}
+
+export const PFLEGE_VERLAUF_KATEGORIE: Record<string, { label: string; color: string }> = {
+  allgemein: { label: 'Allgemein', color: '#999' },
+  koerperpflege: { label: 'Körperpflege', color: '#26A69A' },
+  ernaehrung: { label: 'Ernährung', color: '#5CB882' },
+  mobilitaet: { label: 'Mobilität', color: '#2196F3' },
+  kognition: { label: 'Kognition', color: '#7E57C2' },
+  soziales: { label: 'Soziales', color: '#7E57C2' },
+  medikation: { label: 'Medikation', color: '#D04B3B' },
+  hauswirtschaft: { label: 'Hauswirtschaft', color: '#C9963C' },
+  kommunikation: { label: 'Kommunikation', color: '#2196F3' },
+  stimmung: { label: 'Stimmung', color: '#E8A000' },
+  schmerz: { label: 'Schmerz', color: '#D04B3B' },
+  schlaf: { label: 'Schlaf', color: '#7E57C2' },
+  sonstiges: { label: 'Sonstiges', color: '#999' },
+}
+
+export const PFLEGE_SICHTBARKEIT: Record<string, { label: string; color: string }> = {
+  intern: { label: 'Intern', color: '#999' },
+  engel: { label: 'Engel sichtbar', color: '#26A69A' },
+  kunde: { label: 'Kunde sichtbar', color: '#2196F3' },
+  alle: { label: 'Alle sichtbar', color: '#5CB882' },
+}
+
+export const PFLEGE_PERIODEN_STATUS: Record<string, { label: string; color: string }> = {
+  offen: { label: 'Offen', color: '#E8A000' },
+  abgeschlossen: { label: 'Abgeschlossen', color: '#5CB882' },
+  wiedereroeffnet: { label: 'Wiedereröffnet', color: '#2196F3' },
+}
+
+export const MONATSNAMEN = [
+  'Januar', 'Februar', 'März', 'April', 'Mai', 'Juni',
+  'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember',
+]

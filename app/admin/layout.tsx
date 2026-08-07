@@ -125,6 +125,7 @@ const opsNavItems = [
   { href: '/admin/records', label: 'Leistungsnachweise', icon: <IconClipboard size={18} /> },
   { href: '/admin/verordnungen', label: 'Verordnungen', icon: <IconDocument size={18} /> },
   { href: '/admin/dokumente', label: 'Dokumente', icon: <IconDocument size={18} /> },
+  { href: '/admin/pflegedoku', label: 'Pflegedoku', icon: <IconHeart size={18} /> },
   { href: '/admin/vertraege', label: 'Verträge', icon: <IconDocument size={18} /> },
   { href: '/admin/nachweise', label: 'Nachweise', icon: <IconClipboard size={18} /> },
   { href: '/admin/leistungspreise', label: 'Leistungspreise', icon: <IconMoney size={18} /> },
