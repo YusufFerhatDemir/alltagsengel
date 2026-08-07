@@ -30,6 +30,7 @@ import {
   TEXT_PLZ_UNBEKANNT,
   type BundeslandCode,
   type ExpansionStatus,
+  type KassenModul,
   type StateSettings,
   type StateSettingsPublic,
 } from './types'
@@ -39,10 +40,17 @@ const PUBLIC_COLUMNS =
   + 'registration_enabled, waitinglist_enabled, private_enabled, insurance_enabled, '
   + 'effective_date, ansprechpartner_name, ansprechpartner_email, ansprechpartner_telefon'
 
-// ── Prozess-Cache (60 s) ────────────────────────────────────────
+// ── Prozess-Cache (30 s) ────────────────────────────────────────
 // Die Matrix ändert sich selten (Freischaltung eines Bundeslands ist ein
 // Ereignis pro Quartal), wird aber in jeder Buchungsstrecke gelesen.
-const CACHE_TTL_MS = 60 * 1000
+//
+// WICHTIG zur Cache-Richtung: Nach einer FREISCHALTUNG ist eine veraltete
+// Antwort harmlos (es wird zu wenig angeboten). Nach einer ABSCHALTUNG wäre
+// sie es nicht. Deshalb lesen die entscheidenden Funktionen
+// (kassenabrechnungMoeglich, zahlungsartFuerPlz) bewusst am Cache vorbei.
+// invalidateStateCache() wirkt außerdem nur im eigenen Prozess — auf
+// serverless-Instanzen begrenzt allein die TTL die Abweichung.
+const CACHE_TTL_MS = 30 * 1000
 let cache: { orgId: string; rows: StateSettingsPublic[]; ts: number } | null = null
 
 /** Cache verwerfen — nach jeder Änderung über die Admin-API aufrufen. */
@@ -50,17 +58,7 @@ export function invalidateStateCache(): void {
   cache = null
 }
 
-/**
- * Alle 16 Bundesländer einer Organisation in der öffentlichen Sicht.
- * Leeres Array, wenn die Migration noch nicht angewendet ist.
- */
-export async function alleBundeslaender(
-  orgId: string = DEFAULT_ORG_ID
-): Promise<StateSettingsPublic[]> {
-  if (cache && cache.orgId === orgId && Date.now() - cache.ts < CACHE_TTL_MS) {
-    return cache.rows
-  }
-
+async function ladeAusDb(orgId: string): Promise<StateSettingsPublic[] | null> {
   try {
     const supabase = await createClient()
     const { data, error } = await supabase
@@ -68,14 +66,36 @@ export async function alleBundeslaender(
       .select(PUBLIC_COLUMNS)
       .eq('organization_id', orgId)
 
-    if (error || !data) return cache?.orgId === orgId ? cache.rows : []
-
-    const rows = data as unknown as StateSettingsPublic[]
-    cache = { orgId, rows, ts: Date.now() }
-    return rows
+    if (error || !data) return null
+    return data as unknown as StateSettingsPublic[]
   } catch {
+    return null
+  }
+}
+
+/**
+ * Alle 16 Bundesländer einer Organisation in der öffentlichen Sicht.
+ * Leeres Array, wenn die Migration noch nicht angewendet ist.
+ *
+ * @param frisch true = Cache umgehen (für Entscheidungen, nicht für Anzeige)
+ */
+export async function alleBundeslaender(
+  orgId: string = DEFAULT_ORG_ID,
+  frisch = false
+): Promise<StateSettingsPublic[]> {
+  if (!frisch && cache && cache.orgId === orgId && Date.now() - cache.ts < CACHE_TTL_MS) {
+    return cache.rows
+  }
+
+  const rows = await ladeAusDb(orgId)
+  if (rows === null) {
+    // Fehler: lieber der letzte bekannte Stand als gar nichts — die
+    // Fail-safe-Richtung sichert baueLage() ab.
     return cache?.orgId === orgId ? cache.rows : []
   }
+
+  cache = { orgId, rows, ts: Date.now() }
+  return rows
 }
 
 /**
@@ -84,9 +104,10 @@ export async function alleBundeslaender(
  */
 export async function bundeslandEinstellungen(
   bundesland: BundeslandCode,
-  orgId: string = DEFAULT_ORG_ID
+  orgId: string = DEFAULT_ORG_ID,
+  frisch = false
 ): Promise<StateSettingsPublic> {
-  const alle = await alleBundeslaender(orgId)
+  const alle = await alleBundeslaender(orgId, frisch)
   const treffer = alle.find(r => r.bundesland === bundesland)
   if (treffer) return treffer
 
@@ -186,14 +207,15 @@ function baueLage(
  */
 export async function bundeslandLage(
   plzInput: string | null | undefined,
-  orgId: string = DEFAULT_ORG_ID
+  orgId: string = DEFAULT_ORG_ID,
+  frisch = false
 ): Promise<BundeslandLage> {
   const treffer = bundeslandFuerPlz(plzInput)
   const plz = normalizePlz(plzInput)
 
   if (!treffer.code) return baueLage(treffer, plz, null)
 
-  const einstellungen = await bundeslandEinstellungen(treffer.code, orgId)
+  const einstellungen = await bundeslandEinstellungen(treffer.code, orgId, frisch)
   return baueLage(treffer, plz, einstellungen)
 }
 
@@ -219,25 +241,67 @@ export async function bundeslandLageFuerLand(
 
 /**
  * Harte Ja/Nein-Prüfung für Server-Actions und API-Routen.
- * Nutzt denselben Pfad wie die UI — keine zweite Wahrheit.
+ * Liest bewusst AM CACHE VORBEI: eine Abschaltung muss sofort wirken.
  */
 export async function kassenabrechnungMoeglich(
   plzInput: string | null | undefined,
   orgId: string = DEFAULT_ORG_ID
 ): Promise<boolean> {
-  return (await bundeslandLage(plzInput, orgId)).kassenabrechnung
+  return (await bundeslandLage(plzInput, orgId, true)).kassenabrechnung
 }
 
 /**
  * Ableitung der Zahlungsart aus der Lage.
  * Gibt niemals 'kasse' zurück, solange die Kassenabrechnung nicht
- * freigeschaltet und die PLZ nicht eindeutig ist.
+ * freigeschaltet oder die PLZ nicht eindeutig ist.
  */
 export async function zahlungsartFuerPlz(
   plzInput: string | null | undefined,
   orgId: string = DEFAULT_ORG_ID
 ): Promise<'kasse' | 'privat'> {
   return (await kassenabrechnungMoeglich(plzInput, orgId)) ? 'kasse' : 'privat'
+}
+
+/**
+ * Ist ein einzelnes Kassenmodul für dieses Bundesland freigeschaltet?
+ *
+ * Die fünf Module (Kassentarife, Budgetprüfung, Kassenrechnung, digitale
+ * Leistungsnachweise, Dakota-Export) werden von activate_insurance_billing()
+ * gemeinsam gesetzt, sind aber getrennt abfragbar — damit ein Modul im
+ * Störfall einzeln stillgelegt werden kann, ohne die ganze Kasse abzuschalten.
+ *
+ * Liest ebenfalls am Cache vorbei und ist fail-safe: unbekannt ⇒ false.
+ */
+export async function modulAktiv(
+  modul: KassenModul,
+  bundeslandInput: string | null | undefined,
+  orgId: string = DEFAULT_ORG_ID
+): Promise<boolean> {
+  const code = normalizeBundesland(bundeslandInput)
+  if (!code) return false
+
+  const admin = createAdminClient()
+  const { data, error } = await admin
+    .from('state_settings')
+    .select(modul)
+    .eq('organization_id', orgId)
+    .eq('bundesland', code)
+    .maybeSingle()
+
+  if (error || !data) return false
+  return (data as Record<string, unknown>)[modul] === true
+}
+
+/** Wie modulAktiv, aber ausgehend von einer Postleitzahl. */
+export async function modulAktivFuerPlz(
+  modul: KassenModul,
+  plzInput: string | null | undefined,
+  orgId: string = DEFAULT_ORG_ID
+): Promise<boolean> {
+  const treffer = bundeslandFuerPlz(plzInput)
+  // Grenzregion ohne eindeutige Zuordnung ⇒ kein Kassenmodul.
+  if (!treffer.code || !treffer.sicher) return false
+  return modulAktiv(modul, treffer.code, orgId)
 }
 
 // ── Admin-Sicht (volle Zeilen, inkl. Bescheid-Feldern) ──────────

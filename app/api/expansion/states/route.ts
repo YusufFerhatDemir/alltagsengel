@@ -118,6 +118,19 @@ export async function PATCH(request: NextRequest) {
   const datum = (v: unknown) =>
     typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : null
 
+  // Ein leerer String bedeutet „Feld zurücksetzen". Ohne diese Liste würde
+  // COALESCE in der RPC den alten Wert behalten und ein Tippfehler ließe sich
+  // nie wieder entfernen.
+  const LEERBAR = [
+    'effective_date', 'antrag_eingereicht_am', 'approval_document',
+    'approval_reference', 'approval_authority', 'rechtsgrundlage_land',
+    'ansprechpartner_name', 'ansprechpartner_email', 'ansprechpartner_telefon',
+    'notes',
+  ] as const
+  const felderLeeren = LEERBAR.filter(
+    feld => body[feld] === '' || body[feld] === null
+  )
+
   const admin = createAdminClient()
   const { data, error } = await admin.rpc('update_state_settings', {
     p_org_id: auth.orgId,
@@ -138,6 +151,7 @@ export async function PATCH(request: NextRequest) {
     p_ansprechpartner_email: text(body.ansprechpartner_email, 200),
     p_ansprechpartner_telefon: text(body.ansprechpartner_telefon, 40),
     p_notes: text(body.notes, 4000),
+    p_felder_leeren: felderLeeren.length > 0 ? felderLeeren : null,
   })
 
   if (error) {

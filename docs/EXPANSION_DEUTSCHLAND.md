@@ -1,9 +1,17 @@
 # Expansion Deutschland — Architektur & Betriebsanleitung
 
-**Stand:** 08.08.2026
-**Branch:** `feature/unified-invoice-creation`
-**Migrationen:** `20260808100000_expansion_deutschland.sql`, `20260808110000_tarifschichten_bundesland.sql`
+**Stand:** 08.08.2026 (nach Pre-Production-Review)
+**Branch:** `review/expansion-preproduction`
 **Production-Status:** vorbereitet, **NICHT** angewendet (Freigabe steht aus)
+**Migrationsplan:** [PRODUCTION_MIGRATION_PLAN_EXPANSION.md](./PRODUCTION_MIGRATION_PLAN_EXPANSION.md)
+
+| # | Migration | Inhalt |
+|---|---|---|
+| 1 | `20260808100000_expansion_deutschland.sql` | `state_settings`, Audit, Warteliste, RPCs, Seed 16 Länder |
+| 2 | `20260808110000_tarifschichten_bundesland.sql` | 5 Tarifschichten, Obergrenzen-Guard, Kassen-Guards |
+| 3 | `20260808120000_expansion_review_fixes.sql` | Review-Korrekturen B1–B8 |
+| 4 | `20260808120001_plz_bundesland_seed.sql` | **generiert** — PLZ→Bundesland-Regeln für SQL |
+| 5 | `20260808120002_invoice_bundesland_klient.sql` | Rechnungs-RPC v5 (Bundesland aus Klienten-PLZ) |
 
 ---
 
@@ -124,11 +132,23 @@ wenn jemand am UI vorbei schreibt.
 | `chk_insurance_requires_anerkennung` | `insurance_enabled` nur bei `status = ANERKANNT` **und** hinterlegtem Bescheid |
 | `chk_kassenmodule_require_insurance` | kein Kassenmodul ohne Hauptschalter |
 | `chk_abgelehnt_keine_kasse` | abgelehntes Land ⇒ keine Kassenabrechnung |
+| `trg_state_settings_kanal` | Kassenschalter und Status `ANERKANNT` **nur** über die RPCs — kein direktes `UPDATE` |
+| `trg_state_settings_audit_immer` | jede Änderung erzeugt einen Audit-Eintrag, auch am RPC vorbei |
+| `trg_state_settings_kein_delete` | die 16 Zeilen je Organisation sind unlöschbar |
 | `trg_state_audit_no_update` | Audit-Trail ist append-only |
+| `activate_insurance_billing` | Freischaltung verlangt Bescheid **und** ≥ 1 gültigen Kassentarif |
 | `trg_tariff_obergrenze` | Anbieterpreis ≤ bestätigte gesetzliche Obergrenze des Landes |
 | `trg_kassentarif_freigeschaltet` | `tarifquelle = ANERKENNUNGSBESCHEID` nur mit Bescheid |
-| `trg_kassenrechnung_freigeschaltet` | Rechnung mit Kassenpositionen verlässt den Entwurf nur bei freigeschaltetem Land |
-| `trg_booking_zahlungsart` | Buchung mit `payment_method = kasse` fällt ohne Freischaltung auf `privat` zurück |
+| `trg_kassenrechnung_freigeschaltet` | Rechnung mit Kassenpositionen verlässt den Entwurf nur, wenn das Bundesland **des Klienten** freigeschaltet ist |
+| `trg_booking_zahlungsart` | Buchung mit `payment_method = kasse` fällt auf `privat` zurück, wenn die **Kunden-PLZ** nicht freigeschaltet ist |
+| `sendePerSFTP(…, freigabe)` | Dakota-Übermittlung verlangt `dakota_export_enabled` als Pflichtparameter |
+
+> **Bundesland des Klienten, nicht der Organisation.** Alle Abrechnungs-Guards
+> leiten das Bundesland aus der PLZ des Klienten bzw. Kunden ab
+> (`public.eindeutiges_bundesland_fuer_plz`). Andernfalls wäre nach der
+> Freischaltung eines einzigen Bundeslands bundesweit abrechenbar gewesen.
+> Lässt sich die PLZ keinem Bundesland eindeutig zuordnen, blockiert der Guard —
+> fail-safe.
 
 ### Was bewusst NICHT blockiert wird
 
@@ -170,8 +190,24 @@ Der kuratierte Hessen-Block (Mainz-Kostheim/-Kastel, Viernheim, Lampertheim,
 Neckarsteinach, Hann. Münden, Warburg, Diez …) wurde unverändert aus
 `lib/hessen-plz.ts` übernommen und ist durch die bestehende Testsuite abgedeckt.
 
+### Dieselben Regeln in SQL
+
+Die Trigger, die die Anerkennungssperre durchsetzen, brauchen die Zuordnung
+ebenfalls — sonst könnten sie nur das Bundesland der Organisation prüfen.
+Deshalb liegt sie zusätzlich in `public.plz_bundesland_regeln`.
+
+**TypeScript ist die einzige Quelle.** Die SQL-Seite wird generiert:
+
+```
+npm run generate:plz-sql      # schreibt 20260808120001_plz_bundesland_seed.sql
+```
+
+`__tests__/expansion/plz-sql-sync.test.ts` vergleicht beide Welten über den
+**gesamten PLZ-Raum (01000–99999)** und schlägt fehl, sobald sie auseinanderlaufen.
+
 **Neue Grenzfälle pflegen:** `AUSNAHMEN_5` in `lib/expansion/plz-bundesland.ts`
-ergänzen, Testfall in `__tests__/expansion/plz-bundesland.test.ts` hinzufügen.
+ergänzen, `npm run generate:plz-sql` laufen lassen, Testfall in
+`__tests__/expansion/plz-bundesland.test.ts` hinzufügen.
 Eine 5-stellige Ausnahme gilt immer als `sicher`.
 
 `lib/hessen-plz.ts` existiert nur noch als Re-Export für Bestandsimporte.
@@ -284,8 +320,31 @@ const lage = await ladeBundeslandLage(plz)
 > entsprechend in `native/src/lib/expansion.ts` und
 > `native/src/components/BundeslandStatus.tsx` umgesetzt.
 
+**Einzelne Kassenmodule abfragen:**
+
+```ts
+import { modulAktiv, modulAktivFuerPlz } from '@/lib/expansion/state-settings'
+
+await modulAktivFuerPlz('elnw_enabled', client.zip_code)
+await modulAktiv('dakota_export_enabled', 'hessen', orgId)
+```
+
+`kassenabrechnungMoeglich`, `zahlungsartFuerPlz` und `modulAktiv*` lesen bewusst
+**am Cache vorbei**: Nach einer Abschaltung muss die Sperre sofort greifen.
+Nur die Anzeige (`bundeslandLage`, `alleBundeslaender`) nutzt den 30-Sekunden-Cache.
+
 **Verboten:** ein Bundesland im Code hart prüfen. Es gibt genau eine Wahrheit —
 `state_settings`.
+
+### Wo die fünf Kassenmodule heute wirken
+
+| Modul | Wirkort |
+|---|---|
+| `kassentarife_enabled` | `trg_kassentarif_freigeschaltet` — Tarifquelle `ANERKENNUNGSBESCHEID` |
+| `budgetpruefung_enabled` | Statusflag; die Budgetlogik läuft ohnehin nur über Kassen-Budgettöpfe, die `kassenrechnung_enabled` bereits sperrt |
+| `kassenrechnung_enabled` | `trg_kassenrechnung_freigeschaltet` — Rechnungsfreigabe |
+| `elnw_enabled` | `/api/leistungsnachweis` — ohne Freischaltung trägt das PDF „LEISTUNGSDOKUMENTATION — NICHT ZUR EINREICHUNG BEI DER PFLEGEKASSE" |
+| `dakota_export_enabled` | `sendePerSFTP()` — Pflichtparameter `freigabe`, bricht sonst ab |
 
 ---
 
@@ -376,8 +435,9 @@ Obergrenzen) vorher in `*_archiv`-Tabellen.
 |---|---|---|
 | `__tests__/expansion/plz-bundesland.test.ts` | 28 Tests: Zuordnung, Grenzfälle, Fail-safe | `npx vitest run __tests__/expansion` |
 | `__tests__/expansion/gating.test.ts` | 15 Tests: Freischaltungsregel von allen Seiten | dito |
+| `__tests__/expansion/plz-sql-sync.test.ts` | 6 Tests: TS ↔ SQL über den gesamten PLZ-Raum | dito |
 | `lib/hessen-plz.test.ts` | 16 Tests: Abwärtskompatibilität | `npm run test:unit` |
-| `tests/e2e-expansion-deutschland.sql` | 20 DB-Prüfungen inkl. Guards | `psql -f …` (Staging) |
+| `tests/e2e-expansion-deutschland.sql` | 28 DB-Prüfungen inkl. aller Guards | `psql -f …` (Staging) |
 
 ---
 
@@ -403,7 +463,8 @@ Obergrenzen) vorher in `*_archiv`-Tabellen.
 
 | Punkt | Status |
 |---|---|
-| Migrationen auf Production anwenden | wartet auf Freigabe |
+| Migrationen auf Production anwenden | wartet auf Freigabe — siehe [Migrationsplan](./PRODUCTION_MIGRATION_PLAN_EXPANSION.md) |
+| `clients.zip_code` bei Bestandsklienten füllen | **Voraussetzung** — ohne eindeutige PLZ blockiert die Rechnungsfreigabe (Preflight P4) |
 | PfluV-Obergrenzen gegen Verordnungstext prüfen (`bestaetigt`) | offen |
 | PfluV-Novelle: Rechtsstand nach Verbändeanhörung nachziehen | offen |
 | Wegepauschalen Hessen erfassen | offen — keine belegten Werte vorhanden |

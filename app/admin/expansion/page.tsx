@@ -561,7 +561,31 @@ function DetailDialog({
 
   return (
     <Dialog titel={`${land} — Stammdaten`} onSchliessen={onSchliessen}>
-      <div style={formGrid}>
+      {/* Zustand der fünf Kassenmodule — sonst sieht der Admin nur den
+          Hauptschalter und weiß nicht, was tatsächlich aktiv ist. */}
+      <div style={modulListe}>
+        <strong style={{ fontSize: 12, color: 'var(--ink4)' }}>
+          Kassenmodule ({zeile.insurance_enabled ? 'freigeschaltet' : 'gesperrt'})
+        </strong>
+        <ul style={{ margin: '6px 0 0', paddingLeft: 18, fontSize: 13, listStyle: 'none' }}>
+          {KASSEN_MODULE.map(m => (
+            <li key={m} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              <span style={{ color: zeile[m] ? '#3E8E5A' : 'var(--ink5)' }}>
+                {zeile[m] ? '☑' : '☐'}
+              </span>
+              <span style={{ color: zeile[m] ? 'var(--ink)' : 'var(--ink5)' }}>
+                {MODUL_LABELS[m]}
+              </span>
+            </li>
+          ))}
+        </ul>
+        <p style={{ ...hinweisText, margin: '8px 0 0' }}>
+          Diese Schalter werden ausschließlich von der Ein-Klick-Freischaltung gesetzt.
+          Ein direktes Ändern in der Datenbank weist der Server ab.
+        </p>
+      </div>
+
+      <div style={{ ...formGrid, marginTop: 14 }}>
         <label style={fieldLabel}>
           Antrag eingereicht am
           <input type="date" value={form.antrag_eingereicht_am} onChange={set('antrag_eingereicht_am')} style={input} />

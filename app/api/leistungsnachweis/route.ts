@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getOrgIK } from '@/lib/config/org-config'
 import { BUDGET_TYPE_PDF, QUALIFICATION_LEVEL } from '@/lib/admin/ops'
+import { modulAktivFuerPlz } from '@/lib/expansion/state-settings'
 
 // ═══════════════════════════════════════════════════════════════
 // GET /api/leistungsnachweis?client_id=…&month=YYYY-MM
@@ -213,11 +214,16 @@ export async function GET(request: Request) {
     const fontRegular = await pdfDoc.embedFont(StandardFonts.Helvetica)
     const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold)
 
+    // Darf dieser Nachweis wie ein einreichbarer Kassennachweis aussehen?
+    // Massgeblich ist das Bundesland des Klienten (PLZ) und dessen
+    // Freischaltung — nicht der Sitz der Organisation.
+    const kassenfaehig = await modulAktivFuerPlz('elnw_enabled', client.zip_code)
+
     let page = pdfDoc.addPage([PAGE_WIDTH, PAGE_HEIGHT])
     let y = PAGE_HEIGHT - MARGIN
 
     function newPage() {
-      drawFooter(page, fontRegular)
+      drawFooter(page, fontRegular, kassenfaehig)
       page = pdfDoc.addPage([PAGE_WIDTH, PAGE_HEIGHT])
       y = PAGE_HEIGHT - MARGIN
     }
@@ -418,7 +424,7 @@ export async function GET(request: Request) {
 
     y = sigTop - sigBoxH - 34
 
-    drawFooter(page, fontRegular)
+    drawFooter(page, fontRegular, kassenfaehig)
 
     const pdfBytes = await pdfDoc.save()
     const fileName = `Leistungsnachweis_${(client.last_name || 'Klient').replace(/[^a-zA-Z0-9äöüÄÖÜß-]/g, '_')}_${month}.pdf`
@@ -493,15 +499,30 @@ async function drawSignatureBox(
   }
 }
 
-function drawFooter(page: PDFPage, font: PDFFont) {
-  const lines = [
-    'Dieser Leistungsnachweis dient der Abrechnung von Betreuungs- und Entlastungsleistungen nach dem SGB XI',
-    '(insb. §45a/§45b Entlastungsbetrag und §39 Verhinderungspflege). Die aufgeführten Leistungen wurden wie',
-    `dokumentiert erbracht. ${COMPANY.name} · ${COMPANY.address}, ${COMPANY.city} · ${COMPANY.email}`,
-  ]
-  let fy = 52
-  for (const line of lines) {
-    page.drawText(line.replace(/ /g, ' '), { x: MARGIN, y: fy, size: 7, font, color: rgb(0.55, 0.55, 0.55) })
+function drawFooter(page: PDFPage, font: PDFFont, kassenfaehig: boolean) {
+  // Ist die Kassenabrechnung im Bundesland des Klienten noch nicht
+  // freigeschaltet, darf das PDF NICHT wie ein einreichbarer Kassennachweis
+  // aussehen. Der Nachweis bleibt vollstaendig erhalten — er wird nur als
+  // das gekennzeichnet, was er dann ist: eine Leistungsdokumentation.
+  const lines = kassenfaehig
+    ? [
+      'Dieser Leistungsnachweis dient der Abrechnung von Betreuungs- und Entlastungsleistungen nach dem SGB XI',
+      '(insb. §45a/§45b Entlastungsbetrag und §39 Verhinderungspflege). Die aufgeführten Leistungen wurden wie',
+      `dokumentiert erbracht. ${COMPANY.name} · ${COMPANY.address}, ${COMPANY.city} · ${COMPANY.email}`,
+    ]
+    : [
+      'LEISTUNGSDOKUMENTATION — NICHT ZUR EINREICHUNG BEI DER PFLEGEKASSE.',
+      'Die Anerkennung nach §45a SGB XI liegt für das Bundesland des Klienten derzeit nicht vor; eine Abrechnung',
+      'über die Pflegekasse ist damit nicht möglich. Die Leistungen wurden wie dokumentiert erbracht.',
+      `${COMPANY.name} · ${COMPANY.address}, ${COMPANY.city} · ${COMPANY.email}`,
+    ]
+  let fy = kassenfaehig ? 52 : 61
+  for (const [i, line] of lines.entries()) {
+    const warnzeile = !kassenfaehig && i === 0
+    page.drawText(line, {
+      x: MARGIN, y: fy, size: warnzeile ? 8 : 7, font,
+      color: warnzeile ? rgb(0.75, 0.25, 0.2) : rgb(0.55, 0.55, 0.55),
+    })
     fy -= 9
   }
 }

@@ -31,7 +31,7 @@ export default function KundeProfilPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { setPlzStatus('error'); return }
       // location bleibt der Freitext für die Anzeige; postal_code ist das
-      // Feld, das die Umkreis-Suche und die Hessen-Prüfung auswerten.
+      // Feld, das die Umkreis-Suche und die Bundesland-Freischaltung auswerten.
       const { error } = await supabase
         .from('profiles')
         .update({ postal_code: plz })
