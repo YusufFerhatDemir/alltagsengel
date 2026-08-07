@@ -89,7 +89,15 @@ export interface CorrectionLineInput {
   gesamtpreisCent: number;
   zuschlagProzent?: number;
   zuschlagGrund?: string;
+  /** Pflicht bei Preisabweichung >10% vom Tarif. Wird im Audit protokolliert. */
+  korrekturgrundPreis?: string;
 }
+
+/**
+ * Maximale Preisabweichung (in Prozent) ohne expliziten Korrekturgrund.
+ * Bei Ueberschreitung MUSS korrekturgrundPreis angegeben werden.
+ */
+const MAX_CORRECTION_DEVIATION_PERCENT = 10;
 
 export interface CorrectionResult {
   correctionId: string;
@@ -620,6 +628,42 @@ export async function correctInvoice(
     throw new Error(`Rechnung ${invoiceId} nicht gefunden.`);
   }
 
+  // ═══ NEU: Tarif-Gegenprüfung für jede Korrekturposition ═══
+  // Admin darf nicht beliebige Preise setzen — bei >10% Abweichung vom
+  // aktuellen Tarif muss ein expliziter Korrekturgrund angegeben werden.
+  for (const c of corrections) {
+    const { data: matchingTariffs } = await supabase
+      .from('billing_tariffs')
+      .select('preis_cent, verguetungsart, id')
+      .eq('leistungsart', c.leistungsart)
+      .eq('organization_id', original.organization_id)
+      .lte('gueltig_ab', c.leistungsdatum)
+      .is('deleted_at', null)
+      .order('gueltig_ab', { ascending: false })
+      .limit(5);
+
+    if (matchingTariffs && matchingTariffs.length > 0) {
+      // Besten Tarif nehmen (neuester gueltig_ab)
+      const bestTariff = matchingTariffs[0];
+      const deviation = Math.abs(c.einzelpreisCent - bestTariff.preis_cent);
+      const deviationPercent = bestTariff.preis_cent > 0
+        ? (deviation / bestTariff.preis_cent) * 100
+        : 0;
+
+      if (deviationPercent > MAX_CORRECTION_DEVIATION_PERCENT) {
+        if (!c.korrekturgrundPreis || c.korrekturgrundPreis.trim().length < 5) {
+          throw new Error(
+            `Korrektur-Preisabweichung fuer "${c.leistungsart}" am ${c.leistungsdatum}: ` +
+            `${c.einzelpreisCent} Cent vs. Tarif ${bestTariff.preis_cent} Cent ` +
+            `(${deviationPercent.toFixed(1)}% Abweichung). ` +
+            `Bei >10% Abweichung ist ein ausfuehrlicher Korrekturgrund (korrekturgrundPreis, min. 5 Zeichen) erforderlich.`
+          );
+        }
+      }
+    }
+    // Kein Tarif gefunden = kein Cross-Check moeglich (Warnung im Audit)
+  }
+
   // Korrekturnummer generieren
   const korrekturNummer = await generateInvoiceNumber(
     supabase,
@@ -719,7 +763,16 @@ export async function correctInvoice(
     organization_id: original.organization_id,
   });
 
-  // Audit-Trail
+  // Audit-Trail (erweitert: mit Preisabweichungs-Gruenden)
+  const priceDeviations = corrections
+    .filter(c => c.korrekturgrundPreis)
+    .map(c => ({
+      leistungsart: c.leistungsart,
+      datum: c.leistungsdatum,
+      einzelpreis_cent: c.einzelpreisCent,
+      korrekturgrund: c.korrekturgrundPreis,
+    }));
+
   await logBillingAction(supabase, {
     entityType: 'correction',
     entityId: correction.id,
@@ -730,6 +783,7 @@ export async function correctInvoice(
       original_amount_cents: originalAmountCents,
       corrected_amount_cents: correctedTotal,
       reason,
+      ...(priceDeviations.length > 0 ? { price_deviations: priceDeviations } : {}),
     },
     actorId,
   });
