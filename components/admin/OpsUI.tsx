@@ -76,7 +76,10 @@ export function Banner({ tone, children }: { tone: 'warn' | 'danger' | 'info'; c
       padding: '12px 16px', margin: '0 0 16px', color: tones.color, fontSize: 14,
       display: 'flex', alignItems: 'center', gap: 10,
     }}>
-      {children}
+      {/* Kinder in EINEN Flex-Item einpacken. Ohne diese Huelle wird jeder
+          Knoten — auch ein blosses <strong> mitten im Satz — zu einem eigenen
+          Flex-Item und der Text bricht in Spalten auf. */}
+      <div style={{ flex: 1, minWidth: 0, lineHeight: 1.55 }}>{children}</div>
     </div>
   )
 }

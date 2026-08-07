@@ -1,7 +1,7 @@
 // Alltagsengel Service Worker
 // Version bei relevanten Änderungen bumpen — activate löscht dann alte Caches
 // (gecachte Next.js-Chunks aus früheren Deploys würden sonst unbegrenzt anwachsen).
-const CACHE_NAME = 'alltagsengel-v2'
+const CACHE_NAME = 'alltagsengel-v3'
 const OFFLINE_URL = '/offline.html'
 const MAX_RUNTIME_ENTRIES = 200
 
@@ -49,10 +49,22 @@ async function trimCache() {
 
 // Fetch — network first, fallback to cache/offline
 self.addEventListener('fetch', (event) => {
-  // Skip non-GET, chrome-extension, same-origin API calls
   if (event.request.method !== 'GET') return
   const url = new URL(event.request.url)
-  if (url.origin === self.location.origin && url.pathname.startsWith('/api/')) return
+
+  // NUR same-origin. Fremde Origins (Supabase, Analytics, CDNs) gehen
+  // unangetastet ans Netzwerk.
+  //
+  // Vorher fing der Worker auch cross-origin-GETs ab. Schlug ein solcher
+  // fetch fehl — CORS-Preflight, Netzwerkwackler, Verbindungsabbruch —
+  // lieferte der catch-Zweig unten ein LEERES 503 zurueck. supabase-js sah
+  // dann statt des echten Fehlers eine kaputte Antwort, und der Nutzer
+  // bekam „Anmeldung fehlgeschlagen" statt eines Netzwerkhinweises.
+  // Ausserdem lief jeder Supabase-Aufruf unnoetig durch den Worker.
+  if (url.origin !== self.location.origin) return
+
+  // Eigene API-Routen nie cachen — sie sind pro Anfrage verschieden.
+  if (url.pathname.startsWith('/api/')) return
   if (event.request.url.startsWith('chrome-extension://')) return
 
   event.respondWith(

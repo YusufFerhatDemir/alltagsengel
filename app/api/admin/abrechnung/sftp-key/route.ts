@@ -53,6 +53,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ erfolg: true, pfad })
   } catch (e: any) {
-    return NextResponse.json({ error: e?.message || String(e) }, { status: 500 })
+    console.error('[api] Unerwarteter Fehler:', e)
+    return NextResponse.json({ error: 'Interner Serverfehler' }, { status: 500 })
   }
 }

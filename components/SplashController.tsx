@@ -36,7 +36,6 @@ export default function SplashController() {
       try {
         const { SplashScreen } = await import('@capacitor/splash-screen')
         await SplashScreen.hide({ fadeOutDuration: 250 })
-        console.debug('[SplashController] Splash ausgeblendet ✓')
       } catch (err) {
         console.warn('[SplashController] Hide fehlgeschlagen:', err)
       }

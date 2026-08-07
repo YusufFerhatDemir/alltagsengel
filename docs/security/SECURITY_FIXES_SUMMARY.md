@@ -75,6 +75,7 @@ try {
 **Files Created**:
 - `lib/file-upload-validation.ts` - Validation utility with full security checks
 - `lib/file-upload-example.ts` - Examples showing how to use the validation
+  (am 08.08.2026 entfernt — die Datei wurde nie importiert; `lib/file-upload-validation.ts` bleibt)
 
 **Validation Features**:
 
@@ -171,7 +172,7 @@ if (consent !== 'accepted') return  // ✅ Only tracks if explicitly accepted
 2. `next.config.ts` - Added 7 security headers
 3. `components/VisitorTracker.tsx` - Fixed DSGVO consent check
 4. `lib/file-upload-validation.ts` - **NEW** - File validation utility
-5. `lib/file-upload-example.ts` - **NEW** - Usage examples
+5. `lib/file-upload-example.ts` - **NEW** - Usage examples *(am 08.08.2026 als toter Code entfernt)*
 6. `DSGVO_TODO.md` - **NEW** - Compliance documentation
 
 ## Git Commit

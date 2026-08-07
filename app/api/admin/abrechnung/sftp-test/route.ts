@@ -72,6 +72,7 @@ export async function POST(req: NextRequest) {
     const ergebnis = await testeVerbindung(config)
     return NextResponse.json(ergebnis)
   } catch (e: any) {
-    return NextResponse.json({ error: e?.message || String(e) }, { status: 500 })
+    console.error('[api] Unerwarteter Fehler:', e)
+    return NextResponse.json({ error: 'Interner Serverfehler' }, { status: 500 })
   }
 }

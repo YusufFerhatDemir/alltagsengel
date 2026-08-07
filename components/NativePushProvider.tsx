@@ -40,7 +40,6 @@ export default function NativePushProvider() {
         const supabase = createClient()
         const { data: { user } } = await supabase.auth.getUser()
         if (!user) {
-          console.debug('[NativePush] User nicht eingeloggt — Push übersprungen')
           return
         }
 
@@ -64,7 +63,6 @@ export default function NativePushProvider() {
         }
 
         if (permResult?.receive !== 'granted') {
-          console.debug('[NativePush] Permission abgelehnt')
           return
         }
 
@@ -73,7 +71,6 @@ export default function NativePushProvider() {
           try {
             const tokenValue = token?.value
             if (!tokenValue) return
-            console.debug('[NativePush] Token erhalten:', tokenValue.slice(0, 12) + '…')
 
             const res = await fetch('/api/push/fcm-register', {
               method: 'POST',
@@ -87,7 +84,6 @@ export default function NativePushProvider() {
 
             if (res.ok) {
               registeredRef.current = true
-              console.debug('[NativePush] Token registriert ✓')
             }
           } catch (regErr) {
             console.warn('[NativePush] Token-Registrierung fehlgeschlagen:', regErr)
@@ -100,9 +96,9 @@ export default function NativePushProvider() {
           console.warn('[NativePush] Registrierung fehlgeschlagen (vermutlich fehlt APNS-Setup):', err)
         })
 
-        await PushNotifications.addListener('pushNotificationReceived', (notification: any) => {
-          console.debug('[NativePush] Push empfangen:', notification?.title || '(kein Titel)')
-        })
+        // Kein Listener auf 'pushNotificationReceived': im Vordergrund
+        // eintreffende Pushes brauchen keine eigene Behandlung. Der Tap auf
+        // die Mitteilung laeuft ueber 'pushNotificationActionPerformed'.
 
         await PushNotifications.addListener('pushNotificationActionPerformed', (action: any) => {
           const url = action?.notification?.data?.url

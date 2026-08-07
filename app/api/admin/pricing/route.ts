@@ -86,7 +86,8 @@ export async function GET(request: Request) {
     if (dbErr) throw dbErr
     return NextResponse.json({ [entity]: data })
   } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 })
+    console.error('[api] Unerwarteter Fehler:', err)
+    return NextResponse.json({ error: 'Interner Serverfehler' }, { status: 500 })
   }
 }
 
@@ -116,7 +117,8 @@ export async function POST(request: Request) {
 
     return NextResponse.json(data, { status: 201 })
   } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 })
+    console.error('[api] Unerwarteter Fehler:', err)
+    return NextResponse.json({ error: 'Interner Serverfehler' }, { status: 500 })
   }
 }
 
@@ -150,7 +152,8 @@ export async function PUT(request: Request) {
 
     return NextResponse.json(data)
   } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 })
+    console.error('[api] Unerwarteter Fehler:', err)
+    return NextResponse.json({ error: 'Interner Serverfehler' }, { status: 500 })
   }
 }
 
@@ -185,6 +188,7 @@ export async function DELETE(request: Request) {
 
     return NextResponse.json({ success: true })
   } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 })
+    console.error('[api] Unerwarteter Fehler:', err)
+    return NextResponse.json({ error: 'Interner Serverfehler' }, { status: 500 })
   }
 }

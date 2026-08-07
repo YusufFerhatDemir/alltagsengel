@@ -63,6 +63,7 @@ EOF
 
     SHIM_PORT="$SHIM_PORT" PGRST_URL="http://127.0.0.1:$PGRST_PORT" \
       SHADOW_JWT_SECRET="$JWT_SECRET" SHADOW_USERS="$USERS" \
+      SHADOW_DB_URL="postgres://postgres@127.0.0.1:$PGPORT/$DB" \
       node "$ROOT/scripts/shadow-auth-shim.mjs" > "$SHADOW_DIR/shim.log" 2>&1 &
     echo $! > "$SHADOW_DIR/shim.pid"
 

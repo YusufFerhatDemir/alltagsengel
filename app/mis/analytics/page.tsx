@@ -83,9 +83,8 @@ export default function AnalyticsPage() {
       const session = sessionData?.session
       if (session) {
         const meta = session.user?.user_metadata
-        // console.log('[MIS_DEBUG] Auth OK:', session.user?.email, 'role_meta:', meta?.role, 'expires:', new Date((session.expires_at || 0) * 1000).toISOString())
       } else {
-        console.warn('[MIS_DEBUG] NO AUTH SESSION — alle Admin-Queries werden leer sein!')
+        console.warn('[mis/analytics] NO AUTH SESSION — alle Admin-Queries werden leer sein!')
       }
 
       // Zeitfilter berechnen
@@ -103,16 +102,14 @@ export default function AnalyticsPage() {
         .gte('created_at', since.toISOString())
         .order('created_at', { ascending: false })
         .limit(200)
-      if (logsErr) console.error('[MIS_DEBUG] Auth logs error:', logsErr)
-      // console.log('[MIS_DEBUG] auth_logs:', logs?.length || 0, 'rows')
+      if (logsErr) console.error('[mis/analytics] Auth logs error:', logsErr)
 
       // Benutzer laden mit letztem Login
       const { data: profiles, error: profilesErr } = await supabase
         .from('profiles')
         .select('*')
         .order('created_at', { ascending: false })
-      if (profilesErr) console.error('[MIS_DEBUG] Profiles error:', profilesErr)
-      // console.log('[MIS_DEBUG] profiles:', profiles?.length || 0, 'rows')
+      if (profilesErr) console.error('[mis/analytics] Profiles error:', profilesErr)
 
       // Besucher-Standorte laden (ohne Join — Profile werden in JS gemappt)
       let allVisitors: any[] = []
@@ -140,12 +137,11 @@ export default function AnalyticsPage() {
         return { ...v, profile: p ? { first_name: p.first_name, last_name: p.last_name, email: p.email, role: p.role } : null }
       })
 
-      // console.log('[MIS_DEBUG] visitors:', visitorData?.length || 0, 'rows')
       setAuthLogs(logs as AuthLogEntry[] || [])
       setUsers(profiles as UserSession[] || [])
       setVisitors(visitorData as VisitorLocation[] || [])
     } catch (err) {
-      console.error('[MIS_DEBUG] Analytics loadData CATCH error:', err)
+      console.error('[mis/analytics] Analytics loadData CATCH error:', err)
     }
     setLoading(false)
   }

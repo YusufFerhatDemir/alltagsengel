@@ -33,25 +33,31 @@ export async function GET(request: NextRequest) {
     const orgParam = params.get('org')
     const orgId = orgParam && UUID_RE.test(orgParam) ? orgParam : DEFAULT_ORG_ID
 
+    // Einzelabfragen sind ENTSCHEIDUNGEN und werden nicht zwischengespeichert.
+    //
+    // Vorher stand hier 'public, max-age=60, stale-while-revalidate=300'.
+    // Nach einer ABSCHALTUNG haette der Browser — und jeder geteilte Cache —
+    // bis zu sechs Minuten weiter „Kassenabrechnung moeglich" ausgeliefert.
+    // Das ist genau die Richtung, die nie passieren darf. Serverseitig
+    // schuetzt die 30-Sekunden-Prozessablage die Datenbank; hier wird
+    // deshalb bewusst frisch gelesen (frisch = true).
     if (plz) {
-      const lage = await bundeslandLage(plz, orgId)
-      return NextResponse.json(lage, {
-        headers: { 'Cache-Control': 'public, max-age=60, stale-while-revalidate=300' },
-      })
+      const lage = await bundeslandLage(plz, orgId, true)
+      return NextResponse.json(lage, { headers: { 'Cache-Control': 'no-store' } })
     }
 
     if (bundesland) {
-      const lage = await bundeslandLageFuerLand(bundesland, orgId)
-      return NextResponse.json(lage, {
-        headers: { 'Cache-Control': 'public, max-age=60, stale-while-revalidate=300' },
-      })
+      const lage = await bundeslandLageFuerLand(bundesland, orgId, true)
+      return NextResponse.json(lage, { headers: { 'Cache-Control': 'no-store' } })
     }
 
-    // Ohne Parameter: Gesamtübersicht (für Landingpages, Karten, Native-Start)
+    // Gesamtuebersicht ohne Parameter: reine Anzeige (Landingpages, Karten,
+    // Native-Start). Hier ist eine kurze private Zwischenspeicherung
+    // unkritisch — es haengt keine Abrechnungsentscheidung daran.
     const alle = await alleBundeslaender(orgId)
     return NextResponse.json(
       { bundeslaender: alle },
-      { headers: { 'Cache-Control': 'public, max-age=60, stale-while-revalidate=300' } }
+      { headers: { 'Cache-Control': 'private, max-age=30' } }
     )
   } catch (err) {
     console.error('[expansion/status] Unerwarteter Fehler:', err)

@@ -35,6 +35,18 @@ function contentSecurityPolicy(): string {
     'https://www.facebook.com',
     'https://analytics.tiktok.com',
     'https://www.google-analytics.com',
+    // GA4 sendet je nach Region an region1..regionN.google-analytics.com.
+    'https://*.google-analytics.com',
+    // Google-Ads-Conversions (AW-18061588897, siehe lib/tracking.ts).
+    // gtag laedt aus googletagmanager, meldet die Conversion aber per
+    // fetch an die folgenden Hosts. Ohne sie blockte die CSP jede
+    // Conversion — im Browser-Test nachgewiesen, das Ads-Konto sah davon
+    // nichts. script-src erlaubt diese Tags bereits.
+    'https://www.googletagmanager.com',
+    'https://pagead2.googlesyndication.com',
+    'https://googleads.g.doubleclick.net',
+    'https://www.googleadservices.com',
+    'https://www.google.com',
   ])
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''

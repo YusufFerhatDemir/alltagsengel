@@ -12,7 +12,7 @@
 
 declare global {
   interface Window {
-    // dataLayer wird bereits von @next/third-parties (optional) deklariert
+    dataLayer: Record<string, any>[]
     gtag: (...args: any[]) => void
     fbq: (...args: any[]) => void
     ttq: { track: (...args: any[]) => void }
@@ -86,7 +86,6 @@ function gtagConversion(label: string, value?: number, currency = 'EUR', userDat
   const tryFire = () => {
     if (typeof window.gtag === 'function') {
       window.gtag('event', 'conversion', conversionData)
-      console.log(`[Tracking] ✅ gtag conversion fired: ${label} (${value} ${currency}) after ${attempts} retries`)
       return
     }
     attempts++
