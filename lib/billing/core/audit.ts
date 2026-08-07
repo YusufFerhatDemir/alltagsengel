@@ -14,7 +14,10 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 
 export interface AuditLogParams {
   entityType: 'invoice' | 'tariff' | 'correction' | 'snapshot' | 'credit_note'
-    | 'payment' | 'payment_allocation' | 'dunning' | 'payment_difference' | 'monthly_closing';
+    | 'payment' | 'payment_allocation' | 'dunning' | 'payment_difference' | 'monthly_closing'
+    | 'dta_lauf' | 'dta_export' | 'dta_validierung' | 'dta_freigabe'
+    | 'dta_uebermittlung' | 'dakota_auftrag' | 'ruecklaeufer' | 'fehlerprotokoll'
+    | 'korrekturlauf' | 'dta_abschluss';
   entityId: string;
   action: string;
   previousState?: Record<string, unknown> | null;
