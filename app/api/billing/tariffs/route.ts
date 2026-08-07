@@ -104,6 +104,43 @@ export async function POST(request: Request) {
       }
     }
 
+    // P4: Tarifquelle pruefen
+    if (body.tarifquelle) {
+      const { data: tq } = await admin
+        .from('billing_tarifquellen')
+        .select('code, ist_aktiv')
+        .eq('code', body.tarifquelle)
+        .single()
+      if (!tq) {
+        return NextResponse.json(
+          { error: `Unbekannte Tarifquelle: "${body.tarifquelle}". Erlaubte Werte: PRIVATE_PREISLISTE, ANERKENNUNGSBESCHEID, VERGUETUNGSVEREINBARUNG, KASSENVEREINBARUNG, MANUELL_FREIGEGEBEN.` },
+          { status: 400 }
+        )
+      }
+      if (!tq.ist_aktiv) {
+        return NextResponse.json(
+          { error: `Tarifquelle "${body.tarifquelle}" ist deaktiviert.` },
+          { status: 400 }
+        )
+      }
+    }
+
+    // P7: Privat/Kasse-Trennung auf API-Ebene prüfen
+    if (body.rechtsgrundlage && body.tarifquelle) {
+      if (body.rechtsgrundlage === 'privat' && !['PRIVATE_PREISLISTE', 'MANUELL_FREIGEGEBEN'].includes(body.tarifquelle)) {
+        return NextResponse.json(
+          { error: `Privattarife (rechtsgrundlage="privat") erlauben nur tarifquelle PRIVATE_PREISLISTE oder MANUELL_FREIGEGEBEN, nicht "${body.tarifquelle}".` },
+          { status: 400 }
+        )
+      }
+      if (body.rechtsgrundlage !== 'privat' && body.tarifquelle === 'PRIVATE_PREISLISTE') {
+        return NextResponse.json(
+          { error: `Kassentarife (rechtsgrundlage="${body.rechtsgrundlage}") dürfen nicht tarifquelle=PRIVATE_PREISLISTE haben.` },
+          { status: 400 }
+        )
+      }
+    }
+
     // IK-Format pruefen (Application-Level, DB-Constraint als Backup)
     if (body.kostentraeger_ik) {
       const ikCleaned = body.kostentraeger_ik.replace(/\s/g, '')
