@@ -64,11 +64,12 @@ export function EmptyRow({ colSpan, children }: { colSpan: number; children: Rea
 }
 
 // Kleines Info-Banner (z. B. Vorjahresübertrag-Warnung)
-export function Banner({ tone, children }: { tone: 'warn' | 'danger' | 'info'; children: ReactNode }) {
+export function Banner({ tone, children }: { tone: 'warn' | 'danger' | 'info' | 'success'; children: ReactNode }) {
   const tones = {
     warn: { bg: 'rgba(232,160,0,.10)', border: 'rgba(232,160,0,.35)', color: '#E8A000' },
     danger: { bg: 'rgba(208,75,59,.10)', border: 'rgba(208,75,59,.35)', color: '#D04B3B' },
     info: { bg: 'rgba(33,150,243,.10)', border: 'rgba(33,150,243,.35)', color: '#64B5F6' },
+    success: { bg: 'rgba(92,184,130,.10)', border: 'rgba(92,184,130,.35)', color: '#5CB882' },
   }[tone]
   return (
     <div style={{

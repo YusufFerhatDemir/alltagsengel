@@ -75,7 +75,10 @@ export default function InvoiceDetailPage() {
 
     setItems((itemsRes.data || []) as InvoiceItem[])
     setAudit((auditRes.data || []) as AuditEntry[])
-    setAllocations((allocRes.data || []) as Allocation[])
+    setAllocations((allocRes.data || []).map((a: any) => ({
+      ...a,
+      payment: Array.isArray(a.payment) ? a.payment[0] || null : a.payment,
+    })) as Allocation[])
     setLoading(false)
   }
 
