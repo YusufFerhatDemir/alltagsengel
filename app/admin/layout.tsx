@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useState, useEffect, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { IconChart, IconUsers, IconClipboard, IconWings, IconLogout, IconTarget, IconHeart, IconMoney, IconDocument, IconHandshake, IconHome } from '@/components/Icons'
+import { IconChart, IconUsers, IconClipboard, IconWings, IconLogout, IconTarget, IconHeart, IconMoney, IconDocument, IconHandshake, IconHome, IconCalendar, IconClock } from '@/components/Icons'
 import NotificationBell from '@/components/NotificationBell'
 import OrgSwitcher from '@/components/OrgSwitcher'
 import BundeslandSwitcher from '@/components/admin/BundeslandSwitcher'
@@ -143,6 +143,11 @@ const opsNavItems = [
   { href: '/admin/zahlungskontrolle', label: 'Zahlungskontrolle (Legacy)', icon: <IconMoney size={18} /> },
   { href: '/admin/abrechnung', label: 'Abrechnung (EDIFACT)', icon: <IconMoney size={18} /> },
   { href: '/admin/abrechnung/einstellungen', label: 'Abrechnung (SECON)', icon: <IconTarget size={18} /> },
+  { href: '/admin/personal', label: 'Personal', icon: <IconUsers size={18} /> },
+  { href: '/admin/dienstplan', label: 'Dienstplan', icon: <IconCalendar size={18} /> },
+  { href: '/admin/arbeitszeiten', label: 'Arbeitszeiten', icon: <IconClock size={18} /> },
+  { href: '/admin/urlaub', label: 'Urlaub', icon: <IconCalendar size={18} /> },
+  { href: '/admin/einsatzfreigabe', label: 'Einsatzfreigabe', icon: <IconTarget size={18} /> },
   { href: '/admin/caregivers', label: 'Betreuungskräfte', icon: <IconUsers size={18} /> },
   { href: '/admin/applications', label: 'Bewerbungen', icon: <IconClipboard size={18} /> },
   { href: '/admin/schedule', label: 'Einsatzplanung', icon: <IconHome size={18} /> },

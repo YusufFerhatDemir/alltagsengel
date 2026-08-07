@@ -16,6 +16,8 @@ interface NachweisRow {
   typ: string
   ausgestellt: string | null
   gueltig_bis: string | null
+  pflicht: boolean
+  einsatzrelevant: boolean
 }
 
 function ampelFor(gueltigBis: string | null): { farbe: string; label: string } {
@@ -42,7 +44,7 @@ export default function AdminNachweisePage() {
         const supabase = createClient()
         const [caregivers, qualifikationen] = await Promise.all([
           supabase.from('caregivers').select('id, first_name, last_name, fuehrungszeugnis_gueltig_bis, fuehrungszeugnis_datum, erste_hilfe_gueltig_bis, erste_hilfe_datum'),
-          supabase.from('caregiver_qualifications').select('id, caregiver_id, title, qualification_type, issued_date, valid_until, caregivers(first_name, last_name)'),
+          supabase.from('caregiver_qualifications').select('id, caregiver_id, title, qualification_type, issued_date, valid_until, pflicht, einsatzrelevant, caregivers(first_name, last_name)'),
         ])
 
         const acc: NachweisRow[] = []
@@ -53,15 +55,16 @@ export default function AdminNachweisePage() {
             caregiver_name: cg ? `${cg.first_name} ${cg.last_name}` : '—',
             titel: q.title, typ: q.qualification_type,
             ausgestellt: q.issued_date, gueltig_bis: q.valid_until,
+            pflicht: q.pflicht ?? false, einsatzrelevant: q.einsatzrelevant ?? false,
           })
         }
         for (const cg of (caregivers.data || []) as any[]) {
           const name = `${cg.first_name} ${cg.last_name}`
           if (cg.fuehrungszeugnis_gueltig_bis || cg.fuehrungszeugnis_datum) {
-            acc.push({ id: `fz-${cg.id}`, caregiver_id: cg.id, caregiver_name: name, titel: 'Führungszeugnis', typ: 'fuehrungszeugnis', ausgestellt: cg.fuehrungszeugnis_datum, gueltig_bis: cg.fuehrungszeugnis_gueltig_bis })
+            acc.push({ id: `fz-${cg.id}`, caregiver_id: cg.id, caregiver_name: name, titel: 'Führungszeugnis', typ: 'fuehrungszeugnis', ausgestellt: cg.fuehrungszeugnis_datum, gueltig_bis: cg.fuehrungszeugnis_gueltig_bis, pflicht: true, einsatzrelevant: true })
           }
           if (cg.erste_hilfe_gueltig_bis || cg.erste_hilfe_datum) {
-            acc.push({ id: `eh-${cg.id}`, caregiver_id: cg.id, caregiver_name: name, titel: 'Erste-Hilfe-Nachweis', typ: 'erste_hilfe', ausgestellt: cg.erste_hilfe_datum, gueltig_bis: cg.erste_hilfe_gueltig_bis })
+            acc.push({ id: `eh-${cg.id}`, caregiver_id: cg.id, caregiver_name: name, titel: 'Erste-Hilfe-Nachweis', typ: 'erste_hilfe', ausgestellt: cg.erste_hilfe_datum, gueltig_bis: cg.erste_hilfe_gueltig_bis, pflicht: true, einsatzrelevant: false })
           }
         }
         acc.sort((a, b) => (a.gueltig_bis || '9999').localeCompare(b.gueltig_bis || '9999'))
@@ -105,18 +108,24 @@ export default function AdminNachweisePage() {
 
       <div className="admin-table-wrap">
         <table className="admin-table">
-          <thead><tr><th>Mitarbeiter</th><th>Nachweis</th><th>Ausgestellt</th><th>Gültig bis</th><th>Status</th></tr></thead>
+          <thead><tr><th>Mitarbeiter</th><th>Nachweis</th><th>Flags</th><th>Ausgestellt</th><th>Gültig bis</th><th>Status</th></tr></thead>
           <tbody>
             {loading
-              ? <EmptyRow colSpan={5}>Laden…</EmptyRow>
+              ? <EmptyRow colSpan={6}>Laden…</EmptyRow>
               : filtered.length === 0
-                ? <EmptyRow colSpan={5}>Keine Nachweise gefunden</EmptyRow>
+                ? <EmptyRow colSpan={6}>Keine Nachweise gefunden</EmptyRow>
                 : filtered.map(r => {
                   const ampel = ampelFor(r.gueltig_bis)
                   return (
                     <tr key={r.id}>
                       <td style={{ fontWeight: 600 }}><Link href={`/admin/mitarbeiterakte/${r.caregiver_id}`} style={{ color: 'inherit' }}>{r.caregiver_name}</Link></td>
                       <td style={{ fontSize: 13 }}>{r.titel}</td>
+                      <td style={{ fontSize: 13 }}>
+                        <span style={{ display: 'inline-flex', gap: 4 }}>
+                          {r.pflicht && <span className="admin-status" style={{ background: '#D04B3B', fontSize: 11, padding: '1px 6px' }}>Pflicht</span>}
+                          {r.einsatzrelevant && <span className="admin-status" style={{ background: '#E8A000', fontSize: 11, padding: '1px 6px' }}>Einsatz</span>}
+                        </span>
+                      </td>
                       <td style={{ fontSize: 13 }}>{formatDate(r.ausgestellt)}</td>
                       <td style={{ fontSize: 13 }}>{formatDate(r.gueltig_bis)}</td>
                       <td>
