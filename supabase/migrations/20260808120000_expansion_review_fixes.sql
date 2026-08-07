@@ -873,7 +873,10 @@ AS $fn$
    LIMIT 1;
 $fn$;
 
-COMMENT ON FUNCTION public.landesregel IS
+-- Signatur explizit: solange die alte 4-Argument-Fassung aus 20260808110000
+-- noch existiert, waere COMMENT ON FUNCTION ohne Argumentliste mehrdeutig
+-- ("function name is not unique").
+COMMENT ON FUNCTION public.landesregel(TEXT, TEXT, DATE, TEXT, UUID) IS
   'Landesspezifischer Regelwert. Reihenfolge der Spezifitaet: organisationsspezifisch '
   'vor allgemein, mit Rechtsgrundlage vor ohne, juengste Fassung zuerst.';
 

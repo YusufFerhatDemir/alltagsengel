@@ -10,6 +10,52 @@ const withBundleAnalyzer = require("@next/bundle-analyzer")({
   openAnalyzer: false, // CI-safe: kein Browser-Auto-Open
 });
 
+/**
+ * Content-Security-Policy.
+ *
+ * connect-src wird aus NEXT_PUBLIC_SUPABASE_URL abgeleitet statt fest auf
+ * https://*.supabase.co zu stehen. In Produktion aendert das nichts — dort
+ * zeigt die Variable auf ein supabase.co-Projekt und die Regel bleibt
+ * identisch. Gegen eine lokale Staging-Instanz (Shadow-DB + PostgREST auf
+ * 127.0.0.1) blockierte der feste Wert dagegen JEDEN Aufruf, inklusive der
+ * Anmeldung — eine Browser-Abnahme war damit unmoeglich.
+ *
+ * Die Lockerung greift ausschliesslich fuer http(s)://127.0.0.1 und
+ * ://localhost. Eine fremde Domain kann so nicht in die Policy geraten.
+ */
+function contentSecurityPolicy(): string {
+  const quellen = new Set([
+    "'self'",
+    'https://*.supabase.co',
+    'wss://*.supabase.co',
+    'https://api.openai.com',
+    'https://api.resend.com',
+    'https://ipapi.co',
+    'https://generativelanguage.googleapis.com',
+    'https://www.facebook.com',
+    'https://analytics.tiktok.com',
+    'https://www.google-analytics.com',
+  ])
+
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
+  if (/^https?:\/\/(127\.0\.0\.1|localhost)(:\d+)?$/.test(supabaseUrl)) {
+    quellen.add(supabaseUrl)
+    quellen.add(supabaseUrl.replace(/^http/, 'ws'))
+  }
+
+  return [
+    "default-src 'self'",
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://connect.facebook.net https://www.googletagmanager.com https://www.google-analytics.com https://analytics.tiktok.com",
+    "style-src 'self' 'unsafe-inline'",
+    "img-src 'self' data: blob: https:",
+    "font-src 'self' data:",
+    `connect-src ${[...quellen].join(' ')}`,
+    "frame-ancestors 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
+  ].join('; ') + ';'
+}
+
 const nextConfig: NextConfig = {
   // Hinweis (Apr 2026): `eslint` als next.config-Key ist seit Next 16 entfernt.
   // ESLint laeuft unabhaengig vom Build (siehe `npm run lint`).
@@ -87,7 +133,7 @@ const nextConfig: NextConfig = {
           },
           {
             key: 'Content-Security-Policy',
-            value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://connect.facebook.net https://www.googletagmanager.com https://www.google-analytics.com https://analytics.tiktok.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.openai.com https://api.resend.com https://ipapi.co https://generativelanguage.googleapis.com https://www.facebook.com https://analytics.tiktok.com https://www.google-analytics.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self';",
+            value: contentSecurityPolicy(),
           },
           {
             key: 'Permissions-Policy',

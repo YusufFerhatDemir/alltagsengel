@@ -199,14 +199,21 @@ BEGIN;
 SET LOCAL ROLE anon;
 SELECT pg_temp.als_user('00000000-0000-0000-0000-000000000000');
 
--- Erwartet: 'verweigert' — anon darf is_admin() nicht ausführen, die
--- Policy-Auswertung bricht ab. Kein Datenabfluss, siehe Report T-3.
+-- Geprueft wird das ERGEBNIS, nicht der Mechanismus: anon darf keine Zeile
+-- sehen. Wie das zustande kommt, hat sich geaendert und darf sich aendern:
+--   bis 20260804210000  → 'verweigert' (anon fehlte EXECUTE auf is_admin(),
+--                          die Policy-Auswertung brach ab)
+--   seit 20260804210000 → '0' (anon darf is_admin() aufrufen, bekommt false,
+--                          die Policy filtert sauber alles weg)
+-- Beides ist dicht. Die alte Erwartung 'verweigert' liess den Test seit dem
+-- 04.08. rot laufen, ohne dass etwas undicht war. Rot werden muss er, sobald
+-- anon auch nur EINE Zeile sieht.
 SELECT pg_temp.check_test('ROLLE', 'anon bekommt keine clients',
-       'verweigert', pg_temp.zaehle('SELECT count(*) FROM public.clients'));
+       TRUE, pg_temp.zaehle('SELECT count(*) FROM public.clients') IN ('0', 'verweigert'));
 SELECT pg_temp.check_test('ROLLE', 'anon bekommt keine service_records',
-       'verweigert', pg_temp.zaehle('SELECT count(*) FROM public.service_records'));
+       TRUE, pg_temp.zaehle('SELECT count(*) FROM public.service_records') IN ('0', 'verweigert'));
 SELECT pg_temp.check_test('ROLLE', 'anon bekommt keine invoices',
-       'verweigert', pg_temp.zaehle('SELECT count(*) FROM public.invoices'));
+       TRUE, pg_temp.zaehle('SELECT count(*) FROM public.invoices') IN ('0', 'verweigert'));
 COMMIT;
 
 BEGIN;
@@ -266,9 +273,13 @@ COMMIT;
 -- ════════════════════════════════════════════════════════════════════
 -- 6) Strukturprüfungen
 -- ════════════════════════════════════════════════════════════════════
-SELECT pg_temp.check_test('STRUKTUR', 'org_fence-Policies vorhanden',
-       65::bigint, (SELECT count(*) FROM pg_policies
-                    WHERE schemaname='public' AND policyname LIKE '%\_org\_fence'));
+-- Untergrenze statt Momentaufnahme: jede neue mandantengebundene Tabelle
+-- bringt eine weitere org_fence-Policy mit. Eine feste Zahl (frueher 65)
+-- macht den Test bei jeder Erweiterung rot, ohne dass etwas kaputt waere.
+-- Was hier zaehlt: es duerfen nie WENIGER werden.
+SELECT pg_temp.check_test('STRUKTUR', 'org_fence-Policies vorhanden (>= 65)',
+       TRUE, (SELECT count(*) >= 65 FROM pg_policies
+              WHERE schemaname='public' AND policyname LIKE '%\_org\_fence'));
 
 SELECT pg_temp.check_test('STRUKTUR', 'alle org_fence sind RESTRICTIVE',
        0::bigint, (SELECT count(*) FROM pg_policies

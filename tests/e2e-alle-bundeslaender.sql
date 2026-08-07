@@ -85,10 +85,17 @@ BEGIN
    WHERE organization_id = v_org;
   PERFORM set_config('app.expansion_rpc', '', TRUE);
 
+  -- ALLE Kassentarife der Organisation entfernen, nicht nur die eine
+  -- Leistungsart: sonst laesst ein vom Seed hinterlassener Tarif (z. B.
+  -- hauswirtschaft fuer Hessen) die Pruefung „Freischaltung ohne Tarif muss
+  -- scheitern" durchlaufen und der Test misst am Ziel vorbei.
+  -- Privattarife bleiben unangetastet.
   DELETE FROM public.billing_tariffs
-   WHERE organization_id = v_org AND leistungsart = 'betreuung_45a'
-     AND vertrag_referenz IS NOT DISTINCT FROM NULL
-     AND rechtsgrundlage <> 'privat';
+   WHERE organization_id = v_org AND rechtsgrundlage <> 'privat';
+
+  -- Ebenso alle Landesregeln zuruecksetzen.
+  UPDATE public.billing_landesregeln SET ist_aktiv = FALSE
+   WHERE organization_id IS NULL OR organization_id = v_org;
 
   -- ══════════════════════════════════════════════════════════════════════
   FOR v_land IN

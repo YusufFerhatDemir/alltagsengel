@@ -645,7 +645,13 @@ BEGIN
 END;
 $fn$;
 
-COMMENT ON FUNCTION public.update_state_settings IS
+-- Signatur explizit: ein spaeterer Migrationsschritt legt eine Ueberladung mit
+-- zusaetzlichem p_felder_leeren an. Bei einem Wiederholungslauf dieser Datei
+-- waere COMMENT ON FUNCTION ohne Argumentliste sonst mehrdeutig
+-- ("function name is not unique") und die Migration braeche ab.
+COMMENT ON FUNCTION public.update_state_settings(
+  UUID, TEXT, UUID, TEXT, BOOLEAN, BOOLEAN, BOOLEAN, BOOLEAN, DATE, DATE,
+  TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT) IS
   'Setzt die von der Anerkennung UNABHAENGIGEN Schalter sowie Stammdaten eines Bundeslands. '
   'Kassenmodule und Status ANERKANNT sind hier bewusst gesperrt.';
 

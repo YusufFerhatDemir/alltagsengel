@@ -16,6 +16,19 @@ export function extractProjectRef(url: string | undefined | null): string | null
   try {
     const parsed = new URL(url.trim())
     const hostname = parsed.hostname // z.B. "nnwyktkqibdjxgimjyuq.supabase.co"
+
+    // Lokale Staging-Instanz (Shadow-DB + PostgREST-Shim). Ohne diesen Zweig
+    // liefert die Ableitung null, der Client faellt auf 'sb-INVALID-auth-token'
+    // zurueck und KEINE Sitzung laesst sich speichern — eine Browser-Abnahme
+    // der Admin-Oberflaeche gegen Staging war damit unmoeglich.
+    //
+    // Bewusst eng: NUR die Literale localhost und 127.0.0.1. Jeder andere Host
+    // ausserhalb von *.supabase.co bleibt fail-closed. Der Port geht in den Ref
+    // ein, damit parallele lokale Instanzen sich nicht die Sitzung teilen.
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+      return `local-${hostname.replace(/\./g, '-')}${parsed.port ? '-' + parsed.port : ''}`
+    }
+
     if (!hostname.endsWith('.supabase.co')) return null
 
     const ref = hostname.split('.')[0]

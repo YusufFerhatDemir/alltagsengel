@@ -177,10 +177,16 @@ wenn jemand am UI vorbei schreibt.
 Damit die Vorgabe „keine Features wegen fehlender Bescheide blockieren" eingehalten
 wird, sind die Guards absichtlich eng geschnitten:
 
-- **Rechnungsentwürfe** entstehen in jedem Bundesland. Berechnen, Vorschau ansehen,
-  Monatsabschluss simulieren — alles läuft. Erst die Freigabe (Statuswechsel weg von
-  `entwurf`) ist gesperrt. Nach der Anerkennung lassen sich die Entwürfe ohne
-  Neuberechnung freigeben.
+- **Privatrechnungen** sind vollständig unberührt — erstellen, freigeben, versenden
+  funktioniert in jedem Bundesland zu jeder Zeit.
+- **Kassenrechnungen**: Der Guard sperrt nur die *Freigabe* (Statuswechsel weg von
+  `entwurf`), nicht das Erstellen. In der Praxis entsteht vor der Anerkennung
+  allerdings ohnehin kein Kassen-Entwurf: Kassentarife liegen bis zum Ein-Klick
+  bewusst inaktiv, und die Rechnungs-RPC verlangt einen aktiven Tarif
+  (`MISSING_VALID_TARIFF`). Nach der Freischaltung schaltet der Klick die Tarife
+  scharf, und Entwürfe lassen sich auch rückwirkend für zurückliegende Leistungen
+  erzeugen — die Gültigkeitszeiträume der Tarife decken sie ab.
+  Nachgewiesen in `tests/regression-abrechnung.sql` (R2 → R3 → R4).
 - **Tarifpflege** läuft überall. Kassentarife dürfen angelegt und aktiv gehalten
   werden; nur die Behauptung „dieser Preis stammt aus einem Anerkennungsbescheid"
   setzt einen Bescheid voraus.

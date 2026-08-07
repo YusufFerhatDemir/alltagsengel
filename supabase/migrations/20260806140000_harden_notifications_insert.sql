@@ -18,6 +18,7 @@ DROP POLICY IF EXISTS "Users can insert own notifications" ON notifications;
 
 -- Neue INSERT-Policy: Blockiert alle Client-Inserts
 -- Service-Role/Admin-Clients umgehen RLS und sind nicht betroffen
+DROP POLICY IF EXISTS "notifications_insert_blocked" ON notifications;
 CREATE POLICY "notifications_insert_blocked"
   ON notifications FOR INSERT
   TO authenticated

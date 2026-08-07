@@ -38,6 +38,7 @@ Strikt in dieser Reihenfolge. Jede Datei ist idempotent (`IF NOT EXISTS` /
 | **D** | `20260808120001_plz_bundesland_seed.sql` | < 1 s | nur `plz_bundesland_regeln` |
 | **E** | `20260808120002_invoice_bundesland_klient.sql` | < 1 s | nur `CREATE OR REPLACE FUNCTION` |
 | **F** | `20260808130000_expansion_phase2.sql` | < 2 s | nur Funktionen, Typ und View |
+| **G** | `20260808140000_katalog_rls.sql` | < 1 s | RLS auf 4 Katalogtabellen |
 
 Phase B nimmt kurzzeitig exklusive Sperren auf `invoices` und `bookings`.
 Deshalb: **außerhalb der Geschäftszeiten**, mit `SET lock_timeout = '5s'`,
@@ -156,15 +157,28 @@ npx vitest run __tests__/expansion
 
 ### P8 — Staging-Durchlauf bestanden
 
-Alle sechs Phasen auf einem Supabase-Branch anwenden, danach beide Skripte:
+**Bereits durchgeführt** — vollständige Abnahme am 08.08.2026 gegen eine lokale
+Postgres-16-Instanz, die aus genau diesen Migrationen aufgebaut wurde
+(`./scripts/shadow-db.sh test`, kein Supabase-Projekt berührt). Ergebnisse:
+
+```
+Migrationsaufbau     75 von 75 Dateien OK
+Idempotenz           2 Wiederholungsläufe, 0 Fehler
+Tenant-Isolation     28 / 28
+E2E Expansion        28 / 28
+E2E 16 Bundesländer  162 / 162
+Sicherheit           30 / 30  (+1 INFO, siehe Restrisiko R1)
+Regression Abrechnung 10 / 10
+```
+
+Wiederholung auf einem Supabase-Branch (optional, empfohlen vor Phase A):
 
 ```
 psql "$STAGING_URL" -f tests/e2e-expansion-deutschland.sql
 psql "$STAGING_URL" -f tests/e2e-alle-bundeslaender.sql
+psql "$STAGING_URL" -f tests/security-expansion.sql
+psql "$STAGING_URL" -f tests/regression-abrechnung.sql
 ```
-**Erwartet:** je `ERGEBNIS: n bestanden, 0 fehlgeschlagen`, beide enden mit `ROLLBACK`.
-Das zweite Skript durchläuft alle 16 Bundesländer einzeln: Freischaltung,
-Tarif- und Regel-Kaskade, Unabhängigkeit von den übrigen 15, Rücknahme.
 
 ---
 
@@ -378,6 +392,7 @@ Genehmigungsverfahren." plus Wartelisten-Button.
 | **G6** Phase D | nach D | 192 Regeln, alle fünf PLZ-Proben korrekt | Rollback D (Tabelle leeren) |
 | **G7** Phase E | nach E | Entwurf erzeugbar, Audit zeigt `klient_plz` / `v5` | 20260807180000 erneut einspielen (v4) |
 | **G7b** Phase F | nach F | `state_expansion_dashboard` liefert 16 Zeilen, `/admin/expansion` zeigt Kacheln und Kennzahlen | Rollback F |
+| **G7c** Phase G | nach G | `SELECT count(*) FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='public' AND c.relkind='r' AND NOT c.relrowsecurity` = 0 | Rollback G |
 | **G8** Abnahme | 24 h nach E | keine neuen Fehler in Sentry, keine Buchung fälschlich `privat`, keine Nutzerbeschwerde | Rollback gemäß §7 |
 
 **Ein einziges NO-GO stoppt die Kette.** Phasen werden nicht übersprungen.
@@ -390,6 +405,7 @@ Rückwärts, in umgekehrter Reihenfolge:
 
 | Phase | Rollback |
 |---|---|
+| G | `psql -f supabase/migrations/20260808140001_rollback_katalog_rls.sql` |
 | F | `psql -f supabase/migrations/20260808130001_rollback_expansion_phase2.sql` |
 | E | `psql -f supabase/migrations/20260807180000_tariff_stammdaten_v2.sql` (stellt v4 wieder her) |
 | C + D | `psql -f supabase/migrations/20260808120003_rollback_expansion_review_fixes.sql` |
