@@ -21,12 +21,44 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 
 export interface PriceResolveParams {
   leistungsart: string;
-  rechtsgrundlage: string;
+  rechtsgrundlage: string;    // P7: 'privat' fuer Privatzahler, '§45b SGB XI' etc. fuer Kasse
   datum: string;              // ISO date YYYY-MM-DD
   kostentraegerIk?: string;
   bundesland?: string;
   qualifikation?: string;
   vertragReferenz?: string;
+}
+
+/**
+ * P4: Erlaubte Tarifquellen
+ */
+export type Tarifquelle =
+  | 'PRIVATE_PREISLISTE'
+  | 'ANERKENNUNGSBESCHEID'
+  | 'VERGUETUNGSVEREINBARUNG'
+  | 'KASSENVEREINBARUNG'
+  | 'MANUELL_FREIGEGEBEN';
+
+/**
+ * P7: Budget-Type zu Rechtsgrundlage Mapping.
+ * WICHTIG: private → 'privat' (NICHT null), damit nur Privattarife matchen.
+ */
+export function budgetTypeToRechtsgrundlage(budgetType: string): string {
+  const mapping: Record<string, string> = {
+    'entlastung': '§45b SGB XI',
+    'verhinderung': '§39 SGB XI',
+    'carryover': '§45b SGB XI',
+    'haeusliche_pflege_36': '§36 SGB XI',
+    'private': 'privat',
+  };
+  const result = mapping[budgetType];
+  if (!result) {
+    throw new Error(
+      `Unbekannter budget_type: "${budgetType}". ` +
+      `Erlaubt: ${Object.keys(mapping).join(', ')}`
+    );
+  }
+  return result;
 }
 
 export interface BillingTarif {
@@ -50,6 +82,7 @@ export interface BillingTarif {
   kombinations_abschlag_prozent: number;
   gueltig_ab: string;
   gueltig_bis: string | null;
+  tarifquelle: Tarifquelle | null;  // P4: Herkunft des Tarifs
 }
 
 export interface LineTotalParams {
