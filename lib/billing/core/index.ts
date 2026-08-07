@@ -66,3 +66,32 @@ export {
   correctInvoice,
   createCreditNote,
 } from './invoice-engine';
+
+// Payments
+export {
+  type PaymentMethod,
+  type PayerType,
+  type MatchingStatus,
+  type AllocationType,
+  type CreatePaymentParams,
+  type PaymentResult,
+  type AllocatePaymentParams,
+  type RecordDifferenceParams,
+  createPayment,
+  allocatePayment,
+  recordPaymentDifference,
+} from './payments';
+
+// Dunning
+export {
+  type DunningLevel,
+  type DunningOverview,
+  DUNNING_LEVEL_ORDER,
+  DUNNING_LABELS,
+  DUNNING_DAYS,
+  DUNNING_FEES_CENTS,
+  ensureDunningEntry,
+  checkDunningBlocks,
+  advanceDunning,
+  getDunningOverview,
+} from './dunning';

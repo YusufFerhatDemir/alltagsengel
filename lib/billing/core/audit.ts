@@ -13,7 +13,8 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 // ---------------------------------------------------------------------------
 
 export interface AuditLogParams {
-  entityType: 'invoice' | 'tariff' | 'correction' | 'snapshot' | 'credit_note';
+  entityType: 'invoice' | 'tariff' | 'correction' | 'snapshot' | 'credit_note'
+    | 'payment' | 'payment_allocation' | 'dunning' | 'payment_difference' | 'monthly_closing';
   entityId: string;
   action: string;
   previousState?: Record<string, unknown> | null;
