@@ -25,7 +25,7 @@ export async function POST(
       entitaetTyp: 'abwesenheit',
       entitaetId: id,
       aktion: 'genehmigt',
-      benutzer: auth.ctx.userId,
+      benutzerId: auth.ctx.userId,
       organizationId: auth.ctx.organizationId,
     })
 

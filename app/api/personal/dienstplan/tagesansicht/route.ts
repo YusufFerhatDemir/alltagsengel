@@ -13,10 +13,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'datum is required' }, { status: 400 })
   }
   try {
-    const data = await listTagesansicht(supabase, {
-      organizationId: auth.ctx.organizationId,
-      datum,
-    })
+    const data = await listTagesansicht(supabase, auth.ctx.organizationId, datum)
     return NextResponse.json(data)
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 400 })

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requirePersonalAdmin } from '@/lib/personal/api-auth'
 import { listSchulungen, createSchulung } from '@/lib/personal/schulungen'
+import type { Schulungsart } from '@/lib/personal/types'
 
 export async function GET(request: Request) {
   const auth = await requirePersonalAdmin()
@@ -14,7 +15,7 @@ export async function GET(request: Request) {
     const data = await listSchulungen(supabase, {
       organizationId: auth.ctx.organizationId,
       caregiverId: caregiverId || undefined,
-      schulungsart: schulungsart || undefined,
+      schulungsart: (schulungsart || undefined) as Schulungsart | undefined,
     })
     return NextResponse.json(data)
   } catch (e: any) {

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requirePersonalAdmin } from '@/lib/personal/api-auth'
 import { listStammdaten, getStammdaten, updateStammdaten } from '@/lib/personal/stammdaten'
+import type { Vertragsstatus } from '@/lib/personal/types'
 
 export async function GET(request: Request) {
   const auth = await requirePersonalAdmin()
@@ -18,7 +19,7 @@ export async function GET(request: Request) {
     }
     const data = await listStammdaten(supabase, {
       organizationId: auth.ctx.organizationId,
-      vertragsstatus: vertragsstatus || undefined,
+      vertragsstatus: (vertragsstatus || undefined) as Vertragsstatus | undefined,
       search: search || undefined,
     })
     return NextResponse.json(data)

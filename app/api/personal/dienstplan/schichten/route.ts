@@ -10,10 +10,7 @@ export async function GET(request: Request) {
   const url = new URL(request.url)
   const nurAktive = url.searchParams.get('nurAktive')
   try {
-    const data = await listSchichten(supabase, {
-      organizationId: auth.ctx.organizationId,
-      nurAktive: nurAktive === 'true',
-    })
+    const data = await listSchichten(supabase, auth.ctx.organizationId, nurAktive === 'true')
     return NextResponse.json(data)
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 400 })

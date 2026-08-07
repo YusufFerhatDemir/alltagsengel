@@ -14,7 +14,7 @@ export async function GET(
     const supabase = createAdminClient()
 
     const { caregiverId } = await params
-    const data = await pruefeEinsatzfreigabe(supabase, caregiverId)
+    const data = await pruefeEinsatzfreigabe(supabase, caregiverId, auth.ctx.organizationId)
     return NextResponse.json(data)
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 400 })
@@ -32,13 +32,13 @@ export async function POST(
 
     const { caregiverId } = await params
     const { freigabe } = await req.json()
-    const data = await setzeEinsatzfreigabe(supabase, caregiverId, freigabe)
+    const data = await setzeEinsatzfreigabe(supabase, caregiverId, auth.ctx.organizationId, freigabe)
 
     await writeAuditLog(supabase, {
       entitaetTyp: 'einsatzfreigabe',
       entitaetId: caregiverId,
       aktion: freigabe ? 'freigegeben' : 'gesperrt',
-      benutzer: auth.ctx.userId,
+      benutzerId: auth.ctx.userId,
       organizationId: auth.ctx.organizationId,
     })
 
