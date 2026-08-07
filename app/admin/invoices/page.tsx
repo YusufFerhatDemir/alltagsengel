@@ -316,43 +316,31 @@ function CreateInvoiceModal({ onClose, onCreated }: { onClose: () => void; onCre
   }
 
   async function create() {
+    // ═══ GUARD: Direkter Supabase-Insert durch Engine-API ersetzt ═══
+    // Alte direkte Inserts (invoices + invoice_items + service_records)
+    // sind entfernt. Stattdessen wird die Billing-Engine über die API
+    // angesprochen → Idempotenz, Audit-Trail, fortlaufende Nummern.
+    // Siehe: feature/unified-invoice-creation (PR-Guard)
     setErr(null)
     if (!clientId || chosen.length === 0) { setErr('Bitte Klient und mindestens einen Nachweis wählen.'); return }
     setSaving(true)
     try {
-      const supabase = createClient()
-      const client = clients.find(c => c.id === clientId)
       const dates = chosen.map(r => r.date).sort()
-      const invoiceNumber = `RE-${new Date().getFullYear()}-${Date.now().toString().slice(-6)}`
+      const periodMonth = dates[0].slice(0, 7) // YYYY-MM aus dem frühesten Datum
 
-      const { data: inv, error: invErr } = await supabase.from('invoices').insert({
-        invoice_number: invoiceNumber,
-        client_id: clientId,
-        insurance_name: client?.insurance_name ?? null,
-        insurance_number: client?.insurance_number ?? null,
-        period_start: dates[0],
-        period_end: dates[dates.length - 1],
-        total_amount: total,
-        budget_amount: budgetTotal,
-        private_amount: privateTotal,
-        status: 'entwurf',
-      }).select('id').single()
-      if (invErr || !inv) { setErr(`Fehler: ${invErr?.message}`); setSaving(false); return }
+      const res = await fetch('/api/billing/invoices/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ clientId, periodMonth }),
+      })
+      const json = await res.json()
 
-      const items = chosen.map(r => ({
-        invoice_id: inv.id,
-        service_record_id: r.id,
-        description: r.service_type || 'Leistung',
-        date: r.date,
-        duration_minutes: r.duration_minutes,
-        amount: r.amount,
-        budget_type: r.budget_type,
-      }))
-      const { error: itemsErr } = await supabase.from('invoice_items').insert(items)
-      if (itemsErr) { setErr(`Positionen-Fehler: ${itemsErr.message}`); setSaving(false); return }
+      if (!res.ok) {
+        setErr(json.error || `Fehler ${res.status}`)
+        setSaving(false)
+        return
+      }
 
-      // Nachweise als abgerechnet markieren
-      await supabase.from('service_records').update({ status: 'invoiced' }).in('id', chosen.map(r => r.id))
       onCreated()
     } catch (e: any) {
       setErr(`Unerwarteter Fehler: ${e.message}`)

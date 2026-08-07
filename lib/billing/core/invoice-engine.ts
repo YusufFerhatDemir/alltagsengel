@@ -24,7 +24,29 @@ import {
   type InvoiceStatus,
 } from './status-machine';
 import { logBillingAction, computeSnapshotChecksum } from './audit';
-import { generateIdempotencyKey, checkIdempotency } from './idempotency';
+// resolvePrice wird nicht mehr als Fallback verwendet — die Tarifaufloesung
+// erfolgt vollstaendig innerhalb der atomaren RPC (billing_tariffs = fuehrend).
+// import { resolvePrice } from './price-resolver';  // ENTFERNT: kein Fallback
+
+// ---------------------------------------------------------------------------
+// Fehler-Codes fuer Tarif-Aufloesung
+// ---------------------------------------------------------------------------
+
+export const TARIFF_ERROR_CODES = {
+  MISSING_VALID_TARIFF: 'MISSING_VALID_TARIFF',
+  AMBIGUOUS_TARIFF: 'AMBIGUOUS_TARIFF',
+} as const;
+
+export type TariffErrorCode = typeof TARIFF_ERROR_CODES[keyof typeof TARIFF_ERROR_CODES];
+
+/**
+ * Prueft ob ein RPC-Fehler ein Tarif-Fehler ist und extrahiert den Code.
+ */
+export function parseTariffError(errorMessage: string): TariffErrorCode | null {
+  if (errorMessage.includes('MISSING_VALID_TARIFF')) return TARIFF_ERROR_CODES.MISSING_VALID_TARIFF;
+  if (errorMessage.includes('AMBIGUOUS_TARIFF')) return TARIFF_ERROR_CODES.AMBIGUOUS_TARIFF;
+  return null;
+}
 
 // ---------------------------------------------------------------------------
 // Types
@@ -43,6 +65,9 @@ export interface CreateDraftResult {
   totalAmountCents: number;
   lineCount: number;
   alreadyExists: boolean;
+  priceSource: 'billing_tariffs';
+  tariffErrorCode?: TariffErrorCode;
+  tariffErrorMessage?: string;
 }
 
 export interface FreezeResult {
@@ -64,7 +89,15 @@ export interface CorrectionLineInput {
   gesamtpreisCent: number;
   zuschlagProzent?: number;
   zuschlagGrund?: string;
+  /** Pflicht bei Preisabweichung >10% vom Tarif. Wird im Audit protokolliert. */
+  korrekturgrundPreis?: string;
 }
+
+/**
+ * Maximale Preisabweichung (in Prozent) ohne expliziten Korrekturgrund.
+ * Bei Ueberschreitung MUSS korrekturgrundPreis angegeben werden.
+ */
+const MAX_CORRECTION_DEVIATION_PERCENT = 10;
 
 export interface CorrectionResult {
   correctionId: string;
@@ -86,7 +119,25 @@ export interface CreditNoteResult {
 
 /**
  * Erzeugt einen Rechnungsentwurf aus freigegebenen service_records.
- * Idempotent: Bei gleicher Kombination wird die bestehende Rechnung zurueckgegeben.
+ *
+ * TARIF-BASIERTE PREISQUELLE (fachliche Entscheidung 2026-08-07):
+ * - billing_tariffs ist die alleinige verbindliche Preisquelle
+ * - service_records.amount wird NICHT als Fallback verwendet
+ * - Kein gueltiger Tarif = kein Rechnungsentwurf (MISSING_VALID_TARIFF)
+ * - Mehrere gleichrangige Tarife = kein Rechnungsentwurf (AMBIGUOUS_TARIFF)
+ *
+ * ATOMARE TRANSAKTION via create_invoice_draft_atomic() RPC:
+ *   1. Idempotenz-Pruefung
+ *   2. Tarif-Aufloesung aus billing_tariffs (pro Leistungsnachweis)
+ *   3. Preisberechnung (unit_price × quantity, serverseitig)
+ *   4. Rechnungsnummer generieren
+ *   5. Rechnung erstellen
+ *   6. Positionen mit Tarif-Snapshot erstellen
+ *   7. Service Records auf 'invoiced' setzen
+ *   8. Audit-Trail schreiben
+ *
+ * Bei Fehler in JEDEM Schritt: kompletter Rollback. Keine halbfertigen Daten.
+ * Preise kommen aus billing_tariffs (DB), NICHT vom Browser, NICHT aus service_records.
  */
 export async function createInvoiceDraft(
   supabase: SupabaseClient,
@@ -94,57 +145,10 @@ export async function createInvoiceDraft(
 ): Promise<CreateDraftResult> {
   const { clientId, periodMonth, budgetType, actorId } = params;
 
-  // Idempotenz pruefen
-  const idempKey = generateIdempotencyKey(clientId, periodMonth, budgetType);
-  const existing = await checkIdempotency(supabase, idempKey);
-  if (existing.exists && existing.invoiceId) {
-    // Bestehende Rechnung laden
-    const { data: inv } = await supabase
-      .from('invoices')
-      .select('id, invoice_number_formatted, total_amount')
-      .eq('id', existing.invoiceId)
-      .single();
-
-    return {
-      invoiceId: existing.invoiceId,
-      invoiceNumber: inv?.invoice_number_formatted ?? '',
-      totalAmountCents: Math.round((inv?.total_amount ?? 0) * 100),
-      lineCount: 0,
-      alreadyExists: true,
-    };
-  }
-
-  // Abrechnungszeitraum bestimmen
-  const [year, month] = periodMonth.split('-').map(Number);
-  const periodStart = `${periodMonth}-01`;
-  const lastDay = new Date(year, month, 0).getDate();
-  const periodEnd = `${periodMonth}-${String(lastDay).padStart(2, '0')}`;
-
-  // Service Records laden (status = signed oder complete)
-  const { data: records, error: recError } = await supabase
-    .from('service_records')
-    .select('*, caregiver:profiles!service_records_caregiver_id_fkey(first_name, last_name)')
-    .eq('client_id', clientId)
-    .eq('budget_type', budgetType)
-    .in('status', ['signed', 'complete'])
-    .gte('date', periodStart)
-    .lte('date', periodEnd);
-
-  if (recError) {
-    throw new Error(`Service Records laden fehlgeschlagen: ${recError.message}`);
-  }
-
-  if (!records || records.length === 0) {
-    throw new Error(
-      `Keine abrechenbaren Leistungen für Klient ${clientId}, ` +
-      `Zeitraum ${periodMonth}, Budget ${budgetType}.`
-    );
-  }
-
-  // Client-Daten laden
+  // Client-Daten laden (fuer Insurance-Parameter und Mandantentrennung)
   const { data: client, error: clientError } = await supabase
     .from('clients')
-    .select('id, first_name, last_name, insurance_name, insurance_number, organization_id')
+    .select('id, first_name, last_name, insurance_name, insurance_number, organization_id, pflegekasse_ik')
     .eq('id', clientId)
     .single();
 
@@ -152,95 +156,46 @@ export async function createInvoiceDraft(
     throw new Error(`Klient ${clientId} nicht gefunden.`);
   }
 
-  // Rechnungsnummer generieren
-  const invoiceNumber = await generateInvoiceNumber(supabase, client.organization_id, 'RE');
+  // ── Atomare Rechnungserstellung via RPC ──────────────────────────────
+  // Tarif-Aufloesung + Preisberechnung + Rechnungserstellung
+  // vollstaendig innerhalb der PostgreSQL-Transaktion.
+  // Bei fehlendem/mehrdeutigem Tarif: RAISE EXCEPTION → vollstaendiger Rollback.
+  const { data: rpcResult, error: rpcError } = await supabase.rpc(
+    'create_invoice_draft_atomic',
+    {
+      p_client_id: clientId,
+      p_org_id: client.organization_id,
+      p_period_month: periodMonth,
+      p_budget_type: budgetType,
+      p_actor_id: actorId,
+      p_insurance_name: client.insurance_name || null,
+      p_insurance_number: client.insurance_number || null,
+    }
+  );
 
-  // Gesamtbetrag berechnen
-  const totalAmount = records.reduce((sum, r) => sum + Number(r.amount || 0), 0);
-  const budgetAmount = records
-    .filter(r => r.budget_type !== 'private')
-    .reduce((sum, r) => sum + Number(r.amount || 0), 0);
-  const privateAmount = records
-    .filter(r => r.budget_type === 'private')
-    .reduce((sum, r) => sum + Number(r.amount || 0), 0);
-
-  // Rechnung erstellen
-  const { data: invoice, error: invError } = await supabase
-    .from('invoices')
-    .insert({
-      invoice_number: invoiceNumber,
-      invoice_number_formatted: invoiceNumber,
-      client_id: clientId,
-      insurance_name: client.insurance_name,
-      insurance_number: client.insurance_number,
-      period_start: periodStart,
-      period_end: periodEnd,
-      total_amount: totalAmount,
-      budget_amount: budgetAmount,
-      private_amount: privateAmount,
-      status: 'entwurf',
-      version: 1,
-      idempotency_key: idempKey,
-      organization_id: client.organization_id,
-    })
-    .select('id')
-    .single();
-
-  if (invError || !invoice) {
-    throw new Error(`Rechnung konnte nicht erstellt werden: ${invError?.message}`);
+  if (rpcError) {
+    // Strukturierte Tarif-Fehlercodes erkennen und weiterleiten
+    const tariffError = parseTariffError(rpcError.message);
+    if (tariffError) {
+      const err = new Error(rpcError.message);
+      (err as any).tariffErrorCode = tariffError;
+      throw err;
+    }
+    throw new Error(`Atomare Rechnungserstellung fehlgeschlagen: ${rpcError.message}`);
   }
 
-  // Rechnungspositionen erstellen
-  const items = records.map(r => ({
-    invoice_id: invoice.id,
-    service_record_id: r.id,
-    description: `${r.service_type} am ${r.date}`,
-    date: r.date,
-    duration_minutes: r.duration_minutes,
-    amount: Number(r.amount || 0),
-    budget_type: r.budget_type,
-    organization_id: client.organization_id,
-  }));
-
-  const { error: itemsError } = await supabase
-    .from('invoice_items')
-    .insert(items);
-
-  if (itemsError) {
-    // Rollback: Rechnung loeschen
-    await supabase.from('invoices').delete().eq('id', invoice.id);
-    throw new Error(`Positionen konnten nicht erstellt werden: ${itemsError.message}`);
+  if (!rpcResult) {
+    throw new Error('RPC create_invoice_draft_atomic hat kein Ergebnis zurueckgegeben.');
   }
 
-  // Service Records als "invoiced" markieren
-  const recordIds = records.map(r => r.id);
-  await supabase
-    .from('service_records')
-    .update({ status: 'invoiced' })
-    .in('id', recordIds);
-
-  // Audit-Trail
-  await logBillingAction(supabase, {
-    entityType: 'invoice',
-    entityId: invoice.id,
-    action: 'created',
-    newState: {
-      invoice_number: invoiceNumber,
-      client_id: clientId,
-      period: periodMonth,
-      budget_type: budgetType,
-      total_amount: totalAmount,
-      line_count: records.length,
-    },
-    actorId,
-  });
-
+  // Ergebnis auswerten — Preise kommen ausschliesslich aus billing_tariffs
   return {
-    invoiceId: invoice.id,
-    invoiceNumber,
-    totalAmountCents: Math.round(totalAmount * 100),
-    lineCount: records.length,
-    alreadyExists: false,
+    invoiceId: rpcResult.invoice_id,
+    invoiceNumber: rpcResult.invoice_number,
+    totalAmountCents: Math.round(Number(rpcResult.total_amount) * 100),
+    lineCount: rpcResult.line_count,
+    alreadyExists: rpcResult.already_exists,
+    priceSource: 'billing_tariffs',
   };
 }
 
@@ -673,6 +628,42 @@ export async function correctInvoice(
     throw new Error(`Rechnung ${invoiceId} nicht gefunden.`);
   }
 
+  // ═══ NEU: Tarif-Gegenprüfung für jede Korrekturposition ═══
+  // Admin darf nicht beliebige Preise setzen — bei >10% Abweichung vom
+  // aktuellen Tarif muss ein expliziter Korrekturgrund angegeben werden.
+  for (const c of corrections) {
+    const { data: matchingTariffs } = await supabase
+      .from('billing_tariffs')
+      .select('preis_cent, verguetungsart, id')
+      .eq('leistungsart', c.leistungsart)
+      .eq('organization_id', original.organization_id)
+      .lte('gueltig_ab', c.leistungsdatum)
+      .is('deleted_at', null)
+      .order('gueltig_ab', { ascending: false })
+      .limit(5);
+
+    if (matchingTariffs && matchingTariffs.length > 0) {
+      // Besten Tarif nehmen (neuester gueltig_ab)
+      const bestTariff = matchingTariffs[0];
+      const deviation = Math.abs(c.einzelpreisCent - bestTariff.preis_cent);
+      const deviationPercent = bestTariff.preis_cent > 0
+        ? (deviation / bestTariff.preis_cent) * 100
+        : 0;
+
+      if (deviationPercent > MAX_CORRECTION_DEVIATION_PERCENT) {
+        if (!c.korrekturgrundPreis || c.korrekturgrundPreis.trim().length < 5) {
+          throw new Error(
+            `Korrektur-Preisabweichung fuer "${c.leistungsart}" am ${c.leistungsdatum}: ` +
+            `${c.einzelpreisCent} Cent vs. Tarif ${bestTariff.preis_cent} Cent ` +
+            `(${deviationPercent.toFixed(1)}% Abweichung). ` +
+            `Bei >10% Abweichung ist ein ausfuehrlicher Korrekturgrund (korrekturgrundPreis, min. 5 Zeichen) erforderlich.`
+          );
+        }
+      }
+    }
+    // Kein Tarif gefunden = kein Cross-Check moeglich (Warnung im Audit)
+  }
+
   // Korrekturnummer generieren
   const korrekturNummer = await generateInvoiceNumber(
     supabase,
@@ -772,7 +763,16 @@ export async function correctInvoice(
     organization_id: original.organization_id,
   });
 
-  // Audit-Trail
+  // Audit-Trail (erweitert: mit Preisabweichungs-Gruenden)
+  const priceDeviations = corrections
+    .filter(c => c.korrekturgrundPreis)
+    .map(c => ({
+      leistungsart: c.leistungsart,
+      datum: c.leistungsdatum,
+      einzelpreis_cent: c.einzelpreisCent,
+      korrekturgrund: c.korrekturgrundPreis,
+    }));
+
   await logBillingAction(supabase, {
     entityType: 'correction',
     entityId: correction.id,
@@ -783,6 +783,7 @@ export async function correctInvoice(
       original_amount_cents: originalAmountCents,
       corrected_amount_cents: correctedTotal,
       reason,
+      ...(priceDeviations.length > 0 ? { price_deviations: priceDeviations } : {}),
     },
     actorId,
   });

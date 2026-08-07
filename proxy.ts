@@ -4,13 +4,21 @@ import { getStorageKeyFromEnv } from '@/lib/supabase/storage-key'
 
 // ═══ Cookie-Format Kompatibilität zwischen Browser-Client und Middleware ═══
 // Key wird dynamisch aus NEXT_PUBLIC_SUPABASE_URL abgeleitet.
-// FAIL-CLOSED: Wenn die URL fehlt oder ungültig ist, ist STORAGE_KEY null
+// FAIL-CLOSED: Wenn die URL fehlt oder ungültig ist, ist der Key null
 // → alle geschützten Routen werden blockiert (Redirect zu Login).
-const STORAGE_KEY = getStorageKeyFromEnv()
+//
+// Lazy-Evaluation statt Modul-Konstante: getStorageKeyFromEnv() wird erst
+// beim Request-Handling aufgerufen, nicht beim Import. So können Tests
+// die Umgebungsvariablen in beforeEach setzen, ohne dass der Wert schon
+// zum Import-Zeitpunkt eingefroren ist.
+function getStorageKey(): string | null {
+  return getStorageKeyFromEnv()
+}
 const BASE64_PREFIX = 'base64-'
 
 function decodeSessionCookie(name: string, value: string): string {
-  if (STORAGE_KEY && name === STORAGE_KEY && value.startsWith(BASE64_PREFIX)) {
+  const storageKey = getStorageKey()
+  if (storageKey && name === storageKey && value.startsWith(BASE64_PREFIX)) {
     try {
       return Buffer.from(value.substring(BASE64_PREFIX.length), 'base64').toString('utf-8')
     } catch {
@@ -21,7 +29,8 @@ function decodeSessionCookie(name: string, value: string): string {
 }
 
 function encodeSessionCookie(name: string, value: string): string {
-  if (STORAGE_KEY && name === STORAGE_KEY) {
+  const storageKey = getStorageKey()
+  if (storageKey && name === storageKey) {
     return BASE64_PREFIX + Buffer.from(value).toString('base64')
   }
   return value
@@ -114,7 +123,8 @@ export async function proxy(request: NextRequest) {
   }
 
   // ═══ FAIL-CLOSED: Ohne gültigen Storage-Key keine Auth möglich ═══
-  if (!STORAGE_KEY) {
+  const storageKey = getStorageKey()
+  if (!storageKey) {
     console.error('FAIL-CLOSED: NEXT_PUBLIC_SUPABASE_URL fehlt oder ungültig — alle geschützten Routen blockiert')
     const url = request.nextUrl.clone()
     url.pathname = '/auth/login'
