@@ -7,7 +7,9 @@ import { logError } from '@/lib/safe-query'
 import { trackKrankenfahrt } from '@/lib/tracking'
 import { useUserLocation } from '@/hooks/useUserLocation'
 import type { PricingTier, PricingSurcharge, PricingBreakdown } from '@/lib/types/pricing'
-import { isHessenPlz, resolvePlz } from '@/lib/hessen-plz'
+import { resolvePlz } from '@/lib/expansion/plz-bundesland'
+import { useBundeslandLage } from '@/lib/expansion/client'
+import BundeslandHinweis from '@/components/kunde/BundeslandHinweis'
 
 export default function KrankenfahrtPage() {
   const router = useRouter()
@@ -96,10 +98,13 @@ export default function KrankenfahrtPage() {
     }
   }, [userLocation.loading, userLocation.address, userLocation.source])
 
-  // Kassenleistung nur mit hessischer PLZ (fail-safe: unbekannt → privat)
-  const kasseAllowed = isHessenPlz(customerPlz)
+  // Kassenabrechnung: Bundesland-Freischaltung entscheidet, nicht die PLZ allein.
+  // Fail-safe: solange die Antwort aussteht oder das Land nicht freigeschaltet
+  // ist, gilt „privat".
+  const { lage, laedt: lageLaedt } = useBundeslandLage(customerPlz)
+  const kasseAllowed = lage.kassenabrechnung
 
-  // Außerhalb Hessens evtl. vorgewählte Kassen-Option zurücksetzen
+  // Nicht freigeschaltete Region: evtl. vorgewählte Kassen-Option zurücksetzen
   useEffect(() => {
     if (plzLoaded && !kasseAllowed && payMethod !== 'privat') {
       setPayMethod('privat')
@@ -393,17 +398,8 @@ export default function KrankenfahrtPage() {
             ))}
           </div>
 
-          {plzLoaded && !kasseAllowed && (
-            <div style={{
-              background: 'rgba(201,150,60,0.08)', border: '1px solid rgba(201,150,60,0.2)',
-              borderRadius: 10, padding: '10px 14px', marginTop: 10,
-              fontSize: 13, color: 'var(--ink3)', lineHeight: 1.5,
-            }}>
-              Eine Abrechnung über die Kasse ist derzeit nur in <strong>Hessen</strong> möglich.
-              {customerPlz
-                ? <> In Ihrer Region (PLZ {customerPlz}) bieten wir die Fahrt als <strong>Privatleistung</strong> an.</>
-                : <> Ohne Postleitzahl in Ihrem Profil bieten wir die Fahrt als <strong>Privatleistung</strong> an.</>}
-            </div>
+          {plzLoaded && !lageLaedt && !kasseAllowed && (
+            <BundeslandHinweis lage={lage} quelle="krankenfahrt" />
           )}
 
           {kasseAllowed && (payMethod === 'kasse' || payMethod === 'kombi') && (
@@ -445,7 +441,7 @@ export default function KrankenfahrtPage() {
           </div>
         </div>
 
-        {/* Info Banner — nur wenn Kassenabrechnung möglich (Hessen) */}
+        {/* Info Banner — nur wenn die Kassenabrechnung im Bundesland freigeschaltet ist */}
         {kasseAllowed && (
         <div style={{
           backgroundColor: 'rgba(76, 175, 80, 0.08)', border: '1px solid rgba(76, 175, 80, 0.2)',

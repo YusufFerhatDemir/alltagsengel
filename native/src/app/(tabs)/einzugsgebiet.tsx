@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { ScrollView, StyleSheet, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
+import BundeslandStatus from '../../components/BundeslandStatus'
 import LeadForm from '../../components/LeadForm'
 import { BodyText, Card, GoldButton, Input, MutedText } from '../../components/ui'
 import { Colors, Fonts } from '../../constants/theme'
@@ -83,6 +84,11 @@ export default function EinzugsgebietScreen() {
               </Text>
             </View>
           )}
+
+          {/* Bundesland-Freischaltung: Kasse, Privat oder Vormerkung.
+              Quelle ist state_settings über /api/expansion/status — die
+              Anzeige folgt automatisch jeder Freischaltung im Admin. */}
+          {ergebnis !== null && <BundeslandStatus plz={plz} />}
 
           <MutedText style={styles.mapNote}>
             Kerngebiet: Frankfurt am Main (PLZ 60313) + 30 km Umkreis

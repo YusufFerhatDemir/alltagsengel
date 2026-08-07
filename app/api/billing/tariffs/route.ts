@@ -59,8 +59,100 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Ungültige Anfrage' }, { status: 400 })
     }
 
-    // Admin-Client für den Insert verwenden (RLS erfordert Admin)
+    // ═══ NEU: Katalog-Validierung ═══
     const admin = createAdminClient()
+
+    // Leistungsart pruefen
+    if (body.leistungsart) {
+      const { data: la } = await admin
+        .from('billing_leistungsarten')
+        .select('code, ist_aktiv')
+        .eq('code', body.leistungsart)
+        .single()
+      if (!la) {
+        return NextResponse.json(
+          { error: `Unbekannte Leistungsart: "${body.leistungsart}". Erlaubte Werte siehe Katalog (billing_leistungsarten).` },
+          { status: 400 }
+        )
+      }
+      if (!la.ist_aktiv) {
+        return NextResponse.json(
+          { error: `Leistungsart "${body.leistungsart}" ist deaktiviert.` },
+          { status: 400 }
+        )
+      }
+    }
+
+    // Rechtsgrundlage pruefen
+    if (body.rechtsgrundlage) {
+      const { data: rg } = await admin
+        .from('billing_rechtsgrundlagen')
+        .select('code, ist_aktiv')
+        .eq('code', body.rechtsgrundlage)
+        .single()
+      if (!rg) {
+        return NextResponse.json(
+          { error: `Unbekannte Rechtsgrundlage: "${body.rechtsgrundlage}". Erlaubte Werte siehe Katalog (billing_rechtsgrundlagen).` },
+          { status: 400 }
+        )
+      }
+      if (!rg.ist_aktiv) {
+        return NextResponse.json(
+          { error: `Rechtsgrundlage "${body.rechtsgrundlage}" ist deaktiviert.` },
+          { status: 400 }
+        )
+      }
+    }
+
+    // P4: Tarifquelle pruefen
+    if (body.tarifquelle) {
+      const { data: tq } = await admin
+        .from('billing_tarifquellen')
+        .select('code, ist_aktiv')
+        .eq('code', body.tarifquelle)
+        .single()
+      if (!tq) {
+        return NextResponse.json(
+          { error: `Unbekannte Tarifquelle: "${body.tarifquelle}". Erlaubte Werte: PRIVATE_PREISLISTE, ANERKENNUNGSBESCHEID, VERGUETUNGSVEREINBARUNG, KASSENVEREINBARUNG, MANUELL_FREIGEGEBEN.` },
+          { status: 400 }
+        )
+      }
+      if (!tq.ist_aktiv) {
+        return NextResponse.json(
+          { error: `Tarifquelle "${body.tarifquelle}" ist deaktiviert.` },
+          { status: 400 }
+        )
+      }
+    }
+
+    // P7: Privat/Kasse-Trennung auf API-Ebene prüfen
+    if (body.rechtsgrundlage && body.tarifquelle) {
+      if (body.rechtsgrundlage === 'privat' && !['PRIVATE_PREISLISTE', 'MANUELL_FREIGEGEBEN'].includes(body.tarifquelle)) {
+        return NextResponse.json(
+          { error: `Privattarife (rechtsgrundlage="privat") erlauben nur tarifquelle PRIVATE_PREISLISTE oder MANUELL_FREIGEGEBEN, nicht "${body.tarifquelle}".` },
+          { status: 400 }
+        )
+      }
+      if (body.rechtsgrundlage !== 'privat' && body.tarifquelle === 'PRIVATE_PREISLISTE') {
+        return NextResponse.json(
+          { error: `Kassentarife (rechtsgrundlage="${body.rechtsgrundlage}") dürfen nicht tarifquelle=PRIVATE_PREISLISTE haben.` },
+          { status: 400 }
+        )
+      }
+    }
+
+    // IK-Format pruefen (Application-Level, DB-Constraint als Backup)
+    if (body.kostentraeger_ik) {
+      const ikCleaned = body.kostentraeger_ik.replace(/\s/g, '')
+      if (!/^\d{9}$/.test(ikCleaned)) {
+        return NextResponse.json(
+          { error: `Kostentraeger-IK "${body.kostentraeger_ik}" muss aus exakt 9 Ziffern bestehen.` },
+          { status: 400 }
+        )
+      }
+    }
+
+    // Admin-Client für den Insert verwenden (RLS erfordert Admin)
     const { data: tariff, error } = await admin
       .from('billing_tariffs')
       .insert(body)
