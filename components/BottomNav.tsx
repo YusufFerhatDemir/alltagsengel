@@ -7,7 +7,7 @@ const engelItems = [
   { href: '/engel/home', icon: <IconHome size={20} />, label: 'Home' },
   { href: '/engel/buchungen', icon: <IconClipboard size={20} />, label: 'Aufträge' },
   { href: '/engel/chat', icon: <IconChat size={20} />, label: 'Chat' },
-  { href: '/engel/kalender', icon: <IconCalendar size={20} />, label: 'Kalender' },
+  { href: '/engel/einsaetze', icon: <IconCalendar size={20} />, label: 'Einsätze' },
   { href: '/engel/profil', icon: <IconUser size={20} />, label: 'Profil' },
 ]
 
