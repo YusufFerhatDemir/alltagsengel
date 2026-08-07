@@ -115,7 +115,7 @@ DO $$ BEGIN
       USING (client_id IN (
         SELECT a.client_id FROM assignments a
         JOIN caregivers cg ON cg.id = a.caregiver_id
-        WHERE cg.user_id = auth.uid() AND a.status = 'active'
+        WHERE cg.user_id = auth.uid() AND a.status IN ('active','GEPLANT','BESTAETIGT','UNTERWEGS','GESTARTET')
       ));
   END IF;
 END $$;
@@ -209,7 +209,7 @@ DO $$ BEGIN
       USING (client_id IN (
         SELECT a.client_id FROM assignments a
         JOIN caregivers cg ON cg.id = a.caregiver_id
-        WHERE cg.user_id = auth.uid() AND a.status = 'active'
+        WHERE cg.user_id = auth.uid() AND a.status IN ('active','GEPLANT','BESTAETIGT','UNTERWEGS','GESTARTET')
       ));
   END IF;
   IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'pflege_anamnesen' AND policyname = 'engel_pflege_anamnesen_insert') THEN
@@ -217,7 +217,7 @@ DO $$ BEGIN
       WITH CHECK (client_id IN (
         SELECT a.client_id FROM assignments a
         JOIN caregivers cg ON cg.id = a.caregiver_id
-        WHERE cg.user_id = auth.uid() AND a.status = 'active'
+        WHERE cg.user_id = auth.uid() AND a.status IN ('active','GEPLANT','BESTAETIGT','UNTERWEGS','GESTARTET')
       ));
   END IF;
 END $$;
@@ -276,7 +276,7 @@ DO $$ BEGIN
       USING (betreuungsrelevant = true AND aktiv = true AND client_id IN (
         SELECT a.client_id FROM assignments a
         JOIN caregivers cg ON cg.id = a.caregiver_id
-        WHERE cg.user_id = auth.uid() AND a.status = 'active'
+        WHERE cg.user_id = auth.uid() AND a.status IN ('active','GEPLANT','BESTAETIGT','UNTERWEGS','GESTARTET')
       ));
   END IF;
 END $$;
@@ -334,7 +334,7 @@ DO $$ BEGIN
       USING (aktiv = true AND client_id IN (
         SELECT a.client_id FROM assignments a
         JOIN caregivers cg ON cg.id = a.caregiver_id
-        WHERE cg.user_id = auth.uid() AND a.status = 'active'
+        WHERE cg.user_id = auth.uid() AND a.status IN ('active','GEPLANT','BESTAETIGT','UNTERWEGS','GESTARTET')
       ));
   END IF;
 END $$;
@@ -401,7 +401,7 @@ DO $$ BEGIN
       USING (status IN ('aktiv','abgelaufen') AND client_id IN (
         SELECT a.client_id FROM assignments a
         JOIN caregivers cg ON cg.id = a.caregiver_id
-        WHERE cg.user_id = auth.uid() AND a.status = 'active'
+        WHERE cg.user_id = auth.uid() AND a.status IN ('active','GEPLANT','BESTAETIGT','UNTERWEGS','GESTARTET')
       ));
   END IF;
   IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'pflege_massnahmenplaene' AND policyname = 'kunde_pflege_massnahmenplaene_select') THEN
@@ -469,7 +469,7 @@ DO $$ BEGIN
         SELECT mp.id FROM pflege_massnahmenplaene mp
         JOIN assignments a ON a.client_id = mp.client_id
         JOIN caregivers cg ON cg.id = a.caregiver_id
-        WHERE cg.user_id = auth.uid() AND a.status = 'active'
+        WHERE cg.user_id = auth.uid() AND a.status IN ('active','GEPLANT','BESTAETIGT','UNTERWEGS','GESTARTET')
         AND mp.status IN ('aktiv','abgelaufen')
       ));
   END IF;
@@ -545,7 +545,7 @@ DO $$ BEGIN
       USING (sichtbarkeit IN ('engel','alle') AND client_id IN (
         SELECT a.client_id FROM assignments a
         JOIN caregivers cg ON cg.id = a.caregiver_id
-        WHERE cg.user_id = auth.uid() AND a.status = 'active'
+        WHERE cg.user_id = auth.uid() AND a.status IN ('active','GEPLANT','BESTAETIGT','UNTERWEGS','GESTARTET')
       ));
   END IF;
   IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'pflege_verlauf' AND policyname = 'engel_pflege_verlauf_insert') THEN
@@ -553,7 +553,7 @@ DO $$ BEGIN
       WITH CHECK (client_id IN (
         SELECT a.client_id FROM assignments a
         JOIN caregivers cg ON cg.id = a.caregiver_id
-        WHERE cg.user_id = auth.uid() AND a.status = 'active'
+        WHERE cg.user_id = auth.uid() AND a.status IN ('active','GEPLANT','BESTAETIGT','UNTERWEGS','GESTARTET')
       ));
   END IF;
   IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'pflege_verlauf' AND policyname = 'kunde_pflege_verlauf_select') THEN
