@@ -1,0 +1,20 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { createAdminClient } from '@/lib/supabase/admin'
+import { requirePersonalAdmin } from '@/lib/personal/api-auth'
+import { listUrlaubsUebersicht } from '@/lib/personal/urlaubskonto'
+
+export async function GET(req: NextRequest) {
+  try {
+    const auth = await requirePersonalAdmin()
+    if (!auth.ok) return auth.response
+    const supabase = createAdminClient()
+
+    const sp = req.nextUrl.searchParams
+    const jahr = sp.get('jahr') ?? undefined
+
+    const data = await listUrlaubsUebersicht(supabase, { jahr })
+    return NextResponse.json(data)
+  } catch (e: any) {
+    return NextResponse.json({ error: e.message }, { status: 400 })
+  }
+}

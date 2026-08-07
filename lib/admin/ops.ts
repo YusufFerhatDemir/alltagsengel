@@ -177,7 +177,77 @@ export const ABSENCE_TYPE: Record<string, { label: string; color: string }> = {
   sick: { label: 'Krank', color: '#D04B3B' },
   vacation: { label: 'Urlaub', color: '#2196F3' },
   short_notice: { label: 'Kurzfristig', color: '#FF7043' },
+  personal: { label: 'Persönlich', color: '#7E57C2' },
   other: { label: 'Sonstige', color: '#999' },
+  fortbildung: { label: 'Fortbildung', color: '#26A69A' },
+  mutterschutz: { label: 'Mutterschutz', color: '#EC407A' },
+  elternzeit: { label: 'Elternzeit', color: '#AB47BC' },
+  sonderurlaub: { label: 'Sonderurlaub', color: '#5C6BC0' },
+  unbezahlt: { label: 'Unbezahlter Urlaub', color: '#8D6E63' },
+}
+
+export const ABSENCE_STATUS: Record<string, { label: string; color: string }> = {
+  beantragt: { label: 'Beantragt', color: '#E8A000' },
+  genehmigt: { label: 'Genehmigt', color: '#5CB882' },
+  abgelehnt: { label: 'Abgelehnt', color: '#D04B3B' },
+  storniert: { label: 'Storniert', color: '#999' },
+}
+
+export const VERTRAGSSTATUS: Record<string, { label: string; color: string }> = {
+  aktiv: { label: 'Aktiv', color: '#5CB882' },
+  gekuendigt: { label: 'Gekündigt', color: '#E8A000' },
+  ausgeschieden: { label: 'Ausgeschieden', color: '#D04B3B' },
+  ruhend: { label: 'Ruhend', color: '#999' },
+}
+
+export const SCHULUNGSART: Record<string, { label: string; color: string }> = {
+  pflichtschulung: { label: 'Pflichtschulung', color: '#D04B3B' },
+  fortbildung: { label: 'Fortbildung', color: '#2196F3' },
+  auffrischung: { label: 'Auffrischung', color: '#E8A000' },
+  einarbeitung: { label: 'Einarbeitung', color: '#26A69A' },
+  extern: { label: 'Extern', color: '#7E57C2' },
+  sonstiges: { label: 'Sonstiges', color: '#999' },
+}
+
+export const DIENSTPLAN_STATUS: Record<string, { label: string; color: string }> = {
+  geplant: { label: 'Geplant', color: '#999' },
+  bestaetigt: { label: 'Bestätigt', color: '#2196F3' },
+  in_bearbeitung: { label: 'In Bearbeitung', color: '#E8A000' },
+  abgeschlossen: { label: 'Abgeschlossen', color: '#5CB882' },
+  ausgefallen: { label: 'Ausgefallen', color: '#D04B3B' },
+  vertretung: { label: 'Vertretung', color: '#7E57C2' },
+}
+
+export const DIENSTPLAN_TYP: Record<string, { label: string; color: string }> = {
+  regulaer: { label: 'Regulär', color: '#5CB882' },
+  vertretung: { label: 'Vertretung', color: '#7E57C2' },
+  ueberstunden: { label: 'Überstunden', color: '#E8A000' },
+  bereitschaft: { label: 'Bereitschaft', color: '#2196F3' },
+  notdienst: { label: 'Notdienst', color: '#D04B3B' },
+}
+
+export const ARBEITSZEIT_STATUS: Record<string, { label: string; color: string }> = {
+  erfasst: { label: 'Erfasst', color: '#999' },
+  bestaetigt: { label: 'Bestätigt', color: '#5CB882' },
+  korrigiert: { label: 'Korrigiert', color: '#E8A000' },
+  gesperrt: { label: 'Gesperrt', color: '#D04B3B' },
+}
+
+export const ARBEITSZEIT_QUELLE: Record<string, { label: string; color: string }> = {
+  manuell: { label: 'Manuell', color: '#999' },
+  app: { label: 'App', color: '#2196F3' },
+  dienstplan: { label: 'Dienstplan', color: '#5CB882' },
+  import: { label: 'Import', color: '#7E57C2' },
+}
+
+export const WARNSTUFE: Record<string, { label: string; color: string }> = {
+  ok: { label: 'OK', color: '#5CB882' },
+  warnung_90: { label: '≤ 90 Tage', color: '#C9963C' },
+  warnung_60: { label: '≤ 60 Tage', color: '#E8A000' },
+  warnung_30: { label: '≤ 30 Tage', color: '#E8A000' },
+  kritisch_7: { label: '≤ 7 Tage', color: '#D04B3B' },
+  abgelaufen: { label: 'Abgelaufen', color: '#D04B3B' },
+  kein_datum: { label: 'Kein Datum', color: '#999' },
 }
 
 export const PARTNER_TYPE: Record<string, { label: string; color: string }> = {

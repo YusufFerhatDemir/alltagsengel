@@ -171,6 +171,34 @@ export default function MeinProfilPage() {
             </div>
             <div style={{ color: 'var(--ink4)', fontSize: 18 }}>›</div>
           </Link>
+          <Link href="/engel/arbeitszeiten" className="setting-row" style={{ textDecoration: 'none', color: 'inherit', cursor: 'pointer' }}>
+            <div>
+              <div className="setting-main"><IconClock size={14} /> Meine Arbeitszeiten</div>
+              <div className="setting-sub">Zeiten erfassen und Monatsübersicht</div>
+            </div>
+            <div style={{ color: 'var(--ink4)', fontSize: 18 }}>›</div>
+          </Link>
+          <Link href="/engel/urlaub" className="setting-row" style={{ textDecoration: 'none', color: 'inherit', cursor: 'pointer' }}>
+            <div>
+              <div className="setting-main"><IconCalendar size={14} /> Mein Urlaub</div>
+              <div className="setting-sub">Urlaub beantragen und Resturlaub</div>
+            </div>
+            <div style={{ color: 'var(--ink4)', fontSize: 18 }}>›</div>
+          </Link>
+          <Link href="/engel/dienstplan" className="setting-row" style={{ textDecoration: 'none', color: 'inherit', cursor: 'pointer' }}>
+            <div>
+              <div className="setting-main"><IconCalendar size={14} /> Mein Dienstplan</div>
+              <div className="setting-sub">Eigene Schichten und Einsätze</div>
+            </div>
+            <div style={{ color: 'var(--ink4)', fontSize: 18 }}>›</div>
+          </Link>
+          <Link href="/engel/qualifikationen" className="setting-row" style={{ textDecoration: 'none', color: 'inherit', cursor: 'pointer' }}>
+            <div>
+              <div className="setting-main"><IconDocument size={14} /> Meine Qualifikationen</div>
+              <div className="setting-sub">Nachweise, Schulungen und Ablaufdaten</div>
+            </div>
+            <div style={{ color: 'var(--ink4)', fontSize: 18 }}>›</div>
+          </Link>
           <Link href="/engel/info" className="setting-row" style={{ textDecoration: 'none', color: 'inherit', cursor: 'pointer' }}>
             <div>
               <div className="setting-main"><IconInfo size={14} /> Ablauf &amp; Vergütung</div>
