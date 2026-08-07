@@ -298,7 +298,7 @@ BEGIN
       -- Audit-Eintrag ueber den fehlgeschlagenen Versuch
       INSERT INTO public.billing_audit_trail (
         organization_id, entity_type, entity_id, action,
-        new_state, actor_id, created_at
+        new_state, actor_id, created_at, checksum
       ) VALUES (
         p_org_id, 'tariff_lookup', p_client_id, 'missing_tariff',
         jsonb_build_object(
@@ -312,7 +312,8 @@ BEGIN
           'client_id', p_client_id,
           'kostentraeger_ik', v_client_ik
         ),
-        p_actor_id, v_now
+        p_actor_id, v_now,
+        encode(extensions.digest(('missing_tariff' || v_rec.id::TEXT || v_rec.service_type || v_rec.date::TEXT || p_actor_id::TEXT || v_now::TEXT)::bytea, 'sha256'), 'hex')
       );
 
       RAISE EXCEPTION 'MISSING_VALID_TARIFF: Kein gueltiger Tarif fuer Leistungsart "%" (%), Rechtsgrundlage "%", Datum %, Kostentraeger "%". Rechnung kann nicht erstellt werden.',
@@ -358,7 +359,7 @@ BEGIN
       -- AMBIGUOUS_TARIFF: Mehrere gleichwertige Tarife
       INSERT INTO public.billing_audit_trail (
         organization_id, entity_type, entity_id, action,
-        new_state, actor_id, created_at
+        new_state, actor_id, created_at, checksum
       ) VALUES (
         p_org_id, 'tariff_lookup', p_client_id, 'ambiguous_tariff',
         jsonb_build_object(
@@ -370,7 +371,8 @@ BEGIN
           'date', v_rec.date,
           'period_month', p_period_month
         ),
-        p_actor_id, v_now
+        p_actor_id, v_now,
+        encode(extensions.digest(('ambiguous_tariff' || v_rec.id::TEXT || v_rec.service_type || v_rec.date::TEXT || p_actor_id::TEXT || v_now::TEXT)::bytea, 'sha256'), 'hex')
       );
 
       RAISE EXCEPTION 'AMBIGUOUS_TARIFF: % gleichwertige Tarife gefunden fuer Leistungsart "%", Datum %. Eindeutiger Tarif erforderlich.',
@@ -507,9 +509,9 @@ BEGIN
     p_actor_id,
     v_now,
     encode(
-      digest(
-        'invoice' || v_invoice_id::TEXT || 'created' || v_audit_payload::TEXT
-          || p_actor_id::TEXT || v_now::TEXT,
+      extensions.digest(
+        ('invoice' || v_invoice_id::TEXT || 'created' || v_audit_payload::TEXT
+          || p_actor_id::TEXT || v_now::TEXT)::bytea,
         'sha256'
       ),
       'hex'
@@ -533,14 +535,22 @@ $$;
 REVOKE ALL ON FUNCTION public.create_invoice_draft_atomic(UUID, UUID, TEXT, TEXT, UUID, TEXT, TEXT)
   FROM PUBLIC, anon, authenticated;
 
--- pgcrypto fuer digest() / SHA-256 (idempotent)
-CREATE EXTENSION IF NOT EXISTS pgcrypto;
+-- pgcrypto fuer digest() / SHA-256 (idempotent, im extensions-Schema)
+CREATE EXTENSION IF NOT EXISTS pgcrypto WITH SCHEMA extensions;
 
 COMMENT ON FUNCTION public.create_invoice_draft_atomic IS
   'Tarif-basierte atomare Rechnungserstellung v2: Preis aus billing_tariffs (fuehrend), kein Fallback auf service_records.amount. MISSING_VALID_TARIFF/AMBIGUOUS_TARIFF bei fehlenden/mehrdeutigen Tarifen. SECURITY DEFINER, nur service_role.';
 
 -- ────────────────────────────────────────────────────────────────────────────
--- 4. Overlap-Constraint: Verhindert konkurrierende aktive Tarife
+-- 4. Security: UNIQUE-Index auf idempotency_key (verhindert Duplikate auf DB-Ebene)
+--    Partial: erlaubt NULL (alte Rechnungen), prueft nur nicht-geloeschte
+-- ────────────────────────────────────────────────────────────────────────────
+CREATE UNIQUE INDEX IF NOT EXISTS idx_invoices_idempotency_key_unique
+  ON public.invoices (idempotency_key)
+  WHERE idempotency_key IS NOT NULL AND deleted_at IS NULL;
+
+-- ────────────────────────────────────────────────────────────────────────────
+-- 5. Overlap-Constraint: Verhindert konkurrierende aktive Tarife
 --    fuer dieselbe Org + Leistungsart + Rechtsgrundlage + Kostentraeger
 --    mit ueberlappenden Gueltigkeitszeitraeumen.
 -- ────────────────────────────────────────────────────────────────────────────
@@ -560,13 +570,22 @@ $fn$;
 
 -- Exclusion Constraint: keine ueberlappenden Tarife fuer gleiche Kombination
 -- Verwendet COALESCE fuer kostentraeger_ik (NULL = 'allgemein')
-ALTER TABLE public.billing_tariffs
-  ADD CONSTRAINT no_overlapping_tariffs
-  EXCLUDE USING gist (
-    organization_id WITH =,
-    leistungsart    WITH =,
-    rechtsgrundlage WITH =,
-    COALESCE(kostentraeger_ik, '__ALL__') WITH =,
-    tariff_validity_range(gueltig_ab, gueltig_bis) WITH &&
-  )
-  WHERE (deleted_at IS NULL);
+-- Idempotent: nur anlegen wenn noch nicht vorhanden
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'no_overlapping_tariffs'
+  ) THEN
+    ALTER TABLE public.billing_tariffs
+      ADD CONSTRAINT no_overlapping_tariffs
+      EXCLUDE USING gist (
+        organization_id WITH =,
+        leistungsart    WITH =,
+        rechtsgrundlage WITH =,
+        COALESCE(kostentraeger_ik, '__ALL__') WITH =,
+        tariff_validity_range(gueltig_ab, gueltig_bis) WITH &&
+      )
+      WHERE (deleted_at IS NULL);
+  END IF;
+END
+$$;
