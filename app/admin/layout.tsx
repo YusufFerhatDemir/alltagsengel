@@ -139,6 +139,7 @@ const opsNavItems = [
   { href: '/admin/quality', label: 'Qualität', icon: <IconHeart size={18} /> },
   { href: '/admin/bonuses', label: 'Mitarbeiterbindung', icon: <IconTarget size={18} /> },
   { href: '/admin/partners', label: 'Kooperationspartner', icon: <IconHandshake size={18} /> },
+  { href: '/admin/expansion', label: 'Expansion Deutschland', icon: <IconTarget size={18} /> },
 ]
 
 export default function AdminLayout({ children }: { children: ReactNode }) {

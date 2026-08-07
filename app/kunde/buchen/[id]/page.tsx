@@ -7,7 +7,9 @@ import { NotFoundState, ErrorState, LoadingState } from '@/components/UIStates'
 import { IconWingsGold, IconStarFilled, IconCard, IconShield, IconMedical, IconLock, IconInfo } from '@/components/Icons'
 import Icon3D from '@/components/Icon3D'
 import { trackBooking } from '@/lib/tracking'
-import { isHessenPlz, normalizePlz, resolvePlz } from '@/lib/hessen-plz'
+import { normalizePlz, resolvePlz } from '@/lib/expansion/plz-bundesland'
+import { useBundeslandLage } from '@/lib/expansion/client'
+import BundeslandHinweis from '@/components/kunde/BundeslandHinweis'
 import {
   istVerfuegbar,
   isoWochentag,
@@ -118,9 +120,12 @@ export default function BuchenPage() {
   // Einsatz statt), sonst die eigene Profil-PLZ.
   const selectedCr = careRecipients.find(cr => cr.id === selectedCareRecipient)
   const effectivePlz = normalizePlz(selectedCr?.postal_code) || customerPlz
-  const kasseAllowed = isHessenPlz(effectivePlz)
 
-  // Außerhalb Hessens (oder ohne PLZ) ist nur Privatzahlung zulässig —
+  // Kassenabrechnung nur, wenn das Bundesland des Einsatzortes freigeschaltet ist.
+  const { lage, laedt: lageLaedt } = useBundeslandLage(effectivePlz)
+  const kasseAllowed = lage.kassenabrechnung
+
+  // Ohne Freischaltung (oder ohne PLZ) ist nur Privatzahlung zulässig —
   // eine evtl. gewählte Kassen-Option wird zurückgesetzt.
   useEffect(() => {
     if (plzLoaded && !kasseAllowed && payMethod !== 'privat') {
@@ -338,16 +343,8 @@ export default function BuchenPage() {
             ))}
           </div>
 
-          {plzLoaded && !kasseAllowed && effectivePlz && (
-            <div style={{
-              background: 'rgba(201,150,60,0.08)', border: '1px solid rgba(201,150,60,0.2)',
-              borderRadius: 10, padding: '10px 14px', marginTop: 10,
-              fontSize: 13, color: 'var(--ink3)', lineHeight: 1.5,
-            }}>
-              Eine Abrechnung über die Pflegekasse (§45a/§45b) ist derzeit nur in
-              <strong> Hessen</strong> möglich. In Ihrer Region (PLZ {effectivePlz}) bieten wir
-              unsere Leistungen als <strong>Privatleistung</strong> an.
-            </div>
+          {plzLoaded && !lageLaedt && !kasseAllowed && effectivePlz && (
+            <BundeslandHinweis lage={lage} quelle="buchung" />
           )}
 
           {plzLoaded && !effectivePlz && (
