@@ -6,7 +6,8 @@ import { requireUser } from '@/lib/supabase/require-session'
 import Link from 'next/link'
 import { IconDocument, IconNav, IconCalendar, IconMoney, IconClipboard, IconChat, IconCard } from '@/components/Icons'
 import { AvatarKunde } from '@/components/AvatarGlow'
-import { normalizePlz, resolvePlz } from '@/lib/hessen-plz'
+import { normalizePlz, resolvePlz } from '@/lib/expansion/plz-bundesland'
+import BundeslandErkennung from '@/components/kunde/BundeslandErkennung'
 
 // KASSEN-Liste entfernt (gehoerte zur Pflegedaten-UI, deaktiviert Phase 5)
 
@@ -125,7 +126,8 @@ export default function KundeProfilPage() {
           <div className="setting-row" style={{ display: 'block' }}>
             <div className="setting-main">Postleitzahl</div>
             <div className="setting-sub" style={{ marginBottom: 8 }}>
-              Wir zeigen Ihnen nur Engel in Ihrer Nähe
+              Wir zeigen Ihnen nur Engel in Ihrer Nähe — und Ihre PLZ bestimmt,
+              welche Leistungen in Ihrem Bundesland abrechenbar sind
             </div>
             <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
               <input
@@ -163,6 +165,9 @@ export default function KundeProfilPage() {
                 <span style={{ fontSize: 12.5, color: '#ff6b6b' }}>Fehlgeschlagen</span>
               )}
             </div>
+            {/* Erkennt das Bundesland aus der eingegebenen PLZ und zeigt sofort,
+                was dort möglich ist — noch bevor gespeichert wurde. */}
+            <BundeslandErkennung plz={plzInput} ausfuehrlich />
           </div>
           <div className="setting-row">
             <div>

@@ -6,6 +6,8 @@ import {
   euro, formatDate, statusMeta, summarizeBudget, CLIENT_STATUS, type BudgetSummary,
 } from '@/lib/admin/ops'
 import { AmpelDot, BudgetBar, StatusBadge, SearchInput, EmptyRow } from '@/components/admin/OpsUI'
+import { useBundeslandFilter } from '@/components/admin/BundeslandContext'
+import BundeslandFilterHinweis from '@/components/admin/BundeslandFilterHinweis'
 
 interface ClientRow {
   id: string
@@ -67,9 +69,18 @@ export default function AdminClientsPage() {
     load()
   }, [])
 
+  // Bundesland-Umschalter aus der Seitenleiste: filtert ueber die PLZ.
+  // Klienten ohne zuordenbare PLZ bleiben sichtbar (siehe passtZuFilter).
+  const { passtZuFilter, alle: alleLaender } = useBundeslandFilter()
+
+  const imBundesland = useMemo(
+    () => clients.filter(c => passtZuFilter(c.zip_code)),
+    [clients, passtZuFilter]
+  )
+
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase()
-    return clients.filter(c => {
+    return imBundesland.filter(c => {
       if (filter !== 'all' && c.status !== filter) return false
       if (!q) return true
       return (
@@ -80,16 +91,22 @@ export default function AdminClientsPage() {
         (c.insurance_name || '').toLowerCase().includes(q)
       )
     })
-  }, [clients, search, filter])
+  }, [imBundesland, search, filter])
 
   return (
     <div className="admin-page">
       <div className="admin-page-header">
         <div>
           <h1>Klienten</h1>
-          <p className="admin-subtitle">{clients.length} Klienten insgesamt</p>
+          <p className="admin-subtitle">
+            {alleLaender
+              ? `${clients.length} Klienten insgesamt`
+              : `${imBundesland.length} von ${clients.length} Klienten in diesem Bundesland`}
+          </p>
         </div>
       </div>
+
+      <BundeslandFilterHinweis gesamt={clients.length} sichtbar={imBundesland.length} />
 
       <div style={{ marginBottom: 16 }}>
         <SearchInput value={search} onChange={setSearch} placeholder="Name, Kundennr., Ort, Kasse…" />

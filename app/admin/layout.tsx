@@ -6,6 +6,8 @@ import { createClient } from '@/lib/supabase/client'
 import { IconChart, IconUsers, IconClipboard, IconWings, IconLogout, IconTarget, IconHeart, IconMoney, IconDocument, IconHandshake, IconHome } from '@/components/Icons'
 import NotificationBell from '@/components/NotificationBell'
 import OrgSwitcher from '@/components/OrgSwitcher'
+import BundeslandSwitcher from '@/components/admin/BundeslandSwitcher'
+import { BundeslandProvider } from '@/components/admin/BundeslandContext'
 import { ReactNode } from 'react'
 
 // ═══════════════════════════════════════════════════════════════
@@ -186,6 +188,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   }
 
   return (
+    <BundeslandProvider>
     <div className="admin-layout">
       {/* Mobile overlay */}
       {isMobile && mobileOpen && (
@@ -201,6 +204,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
           <div style={{ marginLeft: 'auto' }}><NotificationBell /></div>
         </div>
         <OrgSwitcher />
+        <BundeslandSwitcher />
         <nav className="admin-nav">
           {navItems.map(item => (
             <Link
@@ -275,5 +279,6 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
         {children}
       </div>
     </div>
+    </BundeslandProvider>
   )
 }

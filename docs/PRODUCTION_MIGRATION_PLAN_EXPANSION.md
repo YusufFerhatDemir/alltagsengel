@@ -37,6 +37,7 @@ Strikt in dieser Reihenfolge. Jede Datei ist idempotent (`IF NOT EXISTS` /
 | **C** | `20260808120000_expansion_review_fixes.sql` | < 5 s | `state_settings`, `billing_landesregeln` |
 | **D** | `20260808120001_plz_bundesland_seed.sql` | < 1 s | nur `plz_bundesland_regeln` |
 | **E** | `20260808120002_invoice_bundesland_klient.sql` | < 1 s | nur `CREATE OR REPLACE FUNCTION` |
+| **F** | `20260808130000_expansion_phase2.sql` | < 2 s | nur Funktionen, Typ und View |
 
 Phase B nimmt kurzzeitig exklusive Sperren auf `invoices` und `bookings`.
 Deshalb: **außerhalb der Geschäftszeiten**, mit `SET lock_timeout = '5s'`,
@@ -155,12 +156,15 @@ npx vitest run __tests__/expansion
 
 ### P8 — Staging-Durchlauf bestanden
 
-Alle fünf Phasen auf einem Supabase-Branch anwenden, danach:
+Alle sechs Phasen auf einem Supabase-Branch anwenden, danach beide Skripte:
 
 ```
 psql "$STAGING_URL" -f tests/e2e-expansion-deutschland.sql
+psql "$STAGING_URL" -f tests/e2e-alle-bundeslaender.sql
 ```
-**Erwartet:** `ERGEBNIS: n bestanden, 0 fehlgeschlagen`, Skript endet mit `ROLLBACK`.
+**Erwartet:** je `ERGEBNIS: n bestanden, 0 fehlgeschlagen`, beide enden mit `ROLLBACK`.
+Das zweite Skript durchläuft alle 16 Bundesländer einzeln: Freischaltung,
+Tarif- und Regel-Kaskade, Unabhängigkeit von den übrigen 15, Rücknahme.
 
 ---
 
@@ -306,6 +310,32 @@ SELECT obj_description('public.create_invoice_draft_atomic'::regproc);
 -- muss "v5" enthalten
 ```
 
+### Nach F
+
+```sql
+SELECT COUNT(*) FROM public.state_expansion_dashboard
+ WHERE organization_id = '00000000-0000-4000-8000-000460629986';   -- 16
+
+SELECT bundesland, status, insurance_enabled,
+       kassentarife_gesamt, kassentarife_aktiv, freischaltbar
+  FROM public.state_expansion_dashboard
+ WHERE organization_id = '00000000-0000-4000-8000-000460629986'
+ ORDER BY sort_order;
+-- erwartet: ueberall insurance_enabled = false, freischaltbar = false
+-- (kein Bescheid, keine Tarife)
+
+-- Freischaltung ohne Tarife muss weiterhin scheitern:
+SELECT public.activate_insurance_billing(
+  '00000000-0000-4000-8000-000460629986','hessen',
+  (SELECT id FROM auth.users LIMIT 1),'smoke-test.pdf');
+-- erwartet: FREISCHALTUNG_OHNE_TARIFE
+```
+
+**Anwendung:** `/admin/expansion` öffnen — Kachelansicht zeigt 16 Länderkarten,
+jede mit „es fehlt: Anerkennungsbescheid und Kassentarife". Bundesland-Umschalter
+in der Seitenleiste auf ein Land stellen; `/admin/clients` muss den Hinweis
+„Gefiltert auf …" zeigen.
+
 **Anwendung (Kernprobe):** für einen echten Klienten mit Leistungen des
 Vormonats einen Rechnungsentwurf über `/admin/rechnungserstellung` erzeugen.
 
@@ -347,6 +377,7 @@ Genehmigungsverfahren." plus Wartelisten-Button.
 | **G5** Phase C | nach C | Bypass-UPDATE scheitert, Freischaltung ohne Tarife scheitert | Rollback C |
 | **G6** Phase D | nach D | 192 Regeln, alle fünf PLZ-Proben korrekt | Rollback D (Tabelle leeren) |
 | **G7** Phase E | nach E | Entwurf erzeugbar, Audit zeigt `klient_plz` / `v5` | 20260807180000 erneut einspielen (v4) |
+| **G7b** Phase F | nach F | `state_expansion_dashboard` liefert 16 Zeilen, `/admin/expansion` zeigt Kacheln und Kennzahlen | Rollback F |
 | **G8** Abnahme | 24 h nach E | keine neuen Fehler in Sentry, keine Buchung fälschlich `privat`, keine Nutzerbeschwerde | Rollback gemäß §7 |
 
 **Ein einziges NO-GO stoppt die Kette.** Phasen werden nicht übersprungen.
@@ -359,6 +390,7 @@ Rückwärts, in umgekehrter Reihenfolge:
 
 | Phase | Rollback |
 |---|---|
+| F | `psql -f supabase/migrations/20260808130001_rollback_expansion_phase2.sql` |
 | E | `psql -f supabase/migrations/20260807180000_tariff_stammdaten_v2.sql` (stellt v4 wieder her) |
 | C + D | `psql -f supabase/migrations/20260808120003_rollback_expansion_review_fixes.sql` |
 | B | `psql -f supabase/migrations/20260808110001_rollback_tarifschichten_bundesland.sql` |

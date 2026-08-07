@@ -99,6 +99,8 @@ export async function POST(request: NextRequest, context: RouteContext) {
       'Digitale Leistungsnachweise',
       'Export an Dakota',
     ],
+    tarife_aktiviert: ergebnis?.tarife_aktiviert ?? 0,
+    regeln_aktiviert: ergebnis?.regeln_aktiviert ?? 0,
     warteliste_offen: ergebnis?.waitlist_count ?? 0,
     hinweis: ergebnis?.already_active
       ? 'Die Kassenabrechnung war für dieses Bundesland bereits vollständig freigeschaltet.'
