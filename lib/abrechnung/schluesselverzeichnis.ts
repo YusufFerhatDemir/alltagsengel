@@ -44,8 +44,59 @@ export const TARIFBEREICH: Record<string, string> = {
   '23': 'Berlin (gesamt)',
 }
 
-/** Hessen ("06") + Sondertarif "000" (ohne Besonderheiten). */
+/**
+ * Hessen ("06") + Sondertarif "000" (ohne Besonderheiten).
+ *
+ * @deprecated Nicht mehr als Default verwenden — seit der Deutschland-Architektur
+ * ist der Tarifbereich bundeslandabhängig. `tarifkennzeichenFuerBundesland()` nutzen.
+ */
 export const TARIFKENNZEICHEN_HESSEN = '06000'
+
+/**
+ * Tarifbereichs-Schlüssel (TA3 2.2.2, Stelle 1-2) je Bundesland-Katalogcode.
+ * Werte stammen aus TARIFBEREICH oben — hier nur nach Katalogcode indiziert,
+ * damit die Abrechnung ohne Namensvergleich arbeiten kann.
+ */
+export const TARIFBEREICH_JE_BUNDESLAND: Record<string, string> = {
+  baden_wuerttemberg:     '01',
+  bayern:                 '02',
+  bremen:                 '04',
+  hamburg:                '05',
+  hessen:                 '06',
+  niedersachsen:          '07',
+  nordrhein_westfalen:    '08',
+  rheinland_pfalz:        '09',
+  saarland:               '10',
+  schleswig_holstein:     '11',
+  brandenburg:            '12',
+  sachsen:                '13',
+  sachsen_anhalt:         '14',
+  mecklenburg_vorpommern: '15',
+  thueringen:             '16',
+  berlin:                 '23',
+}
+
+/**
+ * Baut das fünfstellige Tarifkennzeichen aus Bundesland und Sondertarif.
+ * Wirft bei unbekanntem Bundesland — lieber ein Abbruch als eine Abrechnung
+ * mit dem Tarifbereich eines fremden Landes.
+ */
+export function tarifkennzeichenFuerBundesland(
+  bundesland: string,
+  sondertarif: string = '000'
+): string {
+  const bereich = TARIFBEREICH_JE_BUNDESLAND[bundesland]
+  if (!bereich) {
+    throw new Error(
+      `Kein Tarifbereich für Bundesland "${bundesland}" hinterlegt. `
+      + `Erlaubt: ${Object.keys(TARIFBEREICH_JE_BUNDESLAND).join(', ')}.`
+    )
+  }
+  if (!/^\d{3}$/.test(sondertarif)) {
+    throw new Error(`Sondertarif muss dreistellig numerisch sein, erhalten: "${sondertarif}".`)
+  }
+  return `${bereich}${sondertarif}`
+}
 
 // ── TA3 2.3 — Verarbeitungskennzeichen ──────────────────────────
 export const VERARBEITUNGSKENNZEICHEN = {
@@ -322,9 +373,20 @@ export const DATENANNAHMESTELLEN: Record<string, Datenannahmestelle> = {
 
 /**
  * Ermittelt die zuständige Datenannahmestelle anhand des Kassennamens.
- * Fallback: AOK Hessen (Haupteinzugsgebiet Frankfurt/Hessen).
+ *
+ * Für die namentlich hinterlegten Ersatz-/Betriebskassen ist die Annahmestelle
+ * bundesweit dieselbe. Nur die AOK ist landesspezifisch — hinterlegt ist bisher
+ * ausschließlich die AOK Hessen (ITSCare Schwalmstadt).
+ *
+ * Deshalb: Greift keine Namensregel, gilt der AOK-Hessen-Fallback NUR, wenn
+ * das Bundesland Hessen ist (oder gar nicht angegeben wurde — Bestandsverhalten).
+ * Für jedes andere Bundesland wird `null` geliefert, statt eine Datei an die
+ * falsche Annahmestelle zu adressieren.
  */
-export function findeDatenannahmestelle(kassenName: string): Datenannahmestelle {
+export function findeDatenannahmestelle(
+  kassenName: string,
+  bundesland?: string | null
+): Datenannahmestelle | null {
   const n = (kassenName || '').toLowerCase()
   if (n.includes('techniker') || /\btk\b/.test(n)) return DATENANNAHMESTELLEN.tk
   if (n.includes('barmer')) return DATENANNAHMESTELLEN.barmer
@@ -335,5 +397,8 @@ export function findeDatenannahmestelle(kassenName: string): Datenannahmestelle 
   if (n.includes('knappschaft')) return DATENANNAHMESTELLEN.knappschaft
   if (n.includes('ikk') || n.includes('innung')) return DATENANNAHMESTELLEN.ikk
   if (n.includes('bkk') || n.includes('betriebskrankenkasse')) return DATENANNAHMESTELLEN.bkk
-  return DATENANNAHMESTELLEN.aok_hessen
+
+  // Unbekannter Kassenname ⇒ AOK-Annahmestelle. Hinterlegt ist nur Hessen.
+  if (!bundesland || bundesland === 'hessen') return DATENANNAHMESTELLEN.aok_hessen
+  return null
 }

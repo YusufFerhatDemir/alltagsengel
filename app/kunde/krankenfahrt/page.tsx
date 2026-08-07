@@ -29,7 +29,8 @@ export default function KrankenfahrtPage() {
   const [payMethod, setPayMethod] = useState('kasse')
   const [kkType, setKkType] = useState('gesetzlich')
   const [selectedKK, setSelectedKK] = useState('AOK')
-  // Kassenleistung nur in Hessen — PLZ des Kunden entscheidet
+  // Kassenabrechnung: PLZ des Kunden bestimmt das Bundesland, dessen
+  // Freischaltung in state_settings entscheidet (lib/expansion).
   const [customerPlz, setCustomerPlz] = useState<string | null>(null)
   const [plzLoaded, setPlzLoaded] = useState(false)
 

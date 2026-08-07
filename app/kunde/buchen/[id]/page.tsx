@@ -38,8 +38,9 @@ export default function BuchenPage() {
   // Angehörigen-Auswahl
   const [careRecipients, setCareRecipients] = useState<any[]>([])
   const [selectedCareRecipient, setSelectedCareRecipient] = useState<string>('')
-  // Kassenleistung nur in Hessen: PLZ des Kunden (bzw. des Angehörigen,
-  // für den gebucht wird) entscheidet über die erlaubten Zahlungsarten.
+  // Kassenabrechnung: PLZ des Kunden (bzw. des Angehörigen, für den gebucht
+  // wird) bestimmt das Bundesland; dessen Freischaltung in state_settings
+  // entscheidet über die erlaubten Zahlungsarten (lib/expansion).
   const [customerPlz, setCustomerPlz] = useState<string | null>(null)
   const [plzLoaded, setPlzLoaded] = useState(false)
   const [plzInput, setPlzInput] = useState('')
@@ -354,8 +355,9 @@ export default function BuchenPage() {
               fontSize: 13, color: 'var(--ink3)', lineHeight: 1.5,
             }}>
               <div style={{ marginBottom: 8 }}>
-                Für eine Abrechnung über die Pflegekasse benötigen wir Ihre Postleitzahl
-                (Kassenleistung ist derzeit nur in Hessen möglich).
+                Für eine Abrechnung über die Pflegekasse benötigen wir Ihre Postleitzahl —
+                sie bestimmt Ihr Bundesland und damit, ob die Kassenabrechnung dort bereits
+                freigeschaltet ist.
               </div>
               <div style={{ display: 'flex', gap: 8 }}>
                 <input

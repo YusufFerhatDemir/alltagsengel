@@ -134,27 +134,34 @@ export async function POST(request: NextRequest, context: RouteContext) {
   }
 
   const admin = createAdminClient()
-  const { data: empfaenger, error } = await admin
-    .from('state_waitlist')
-    .select('id, email, name')
-    .eq('organization_id', auth.orgId)
-    .eq('bundesland', bundesland)
-    .eq('benachrichtigen', true)
-    .is('notified_at', null)
-    .order('created_at', { ascending: true })
-    .limit(MAX_PRO_LAUF)
 
-  if (error) {
-    console.error('[expansion/notify-waitlist] Laden fehlgeschlagen:', error.message)
-    return NextResponse.json({ error: 'Warteliste konnte nicht geladen werden' }, { status: 500 })
+  // ═══ Empfänger ATOMAR beanspruchen ═══
+  // Erst markieren, dann versenden. Zwei parallele Läufe (Doppelklick, zweiter
+  // Tab, Retry) würden sonst dieselben Adressen zweimal anschreiben: das
+  // SELECT beider Läufe sähe dieselben Zeilen mit notified_at IS NULL.
+  // Das UPDATE … RETURNING ist atomar, jede Zeile geht nur an einen Lauf.
+  const { data: ids, error: claimError } = await admin
+    .rpc('claim_waitlist_batch', {
+      p_org_id: auth.orgId,
+      p_bundesland: bundesland,
+      p_limit: MAX_PRO_LAUF,
+    })
+
+  if (claimError) {
+    console.error('[expansion/notify-waitlist] Beanspruchen fehlgeschlagen:', claimError.message)
+    return NextResponse.json(
+      { error: 'Warteliste konnte nicht geladen werden' },
+      { status: 500 }
+    )
   }
 
+  const empfaenger = (ids ?? []) as Array<{ id: string; email: string; name: string | null }>
   const land = BUNDESLAND_NAMEN[bundesland]
   const betreff = `Pflegekassenabrechnung jetzt auch in ${land} möglich`
   let versendet = 0
   const fehlgeschlagen: string[] = []
 
-  for (const e of empfaenger ?? []) {
+  for (const e of empfaenger) {
     const ok = await sendEmailNotification(
       e.email,
       e.name || 'Sie',
@@ -163,12 +170,13 @@ export async function POST(request: NextRequest, context: RouteContext) {
     )
     if (ok) {
       versendet++
-      await admin
-        .from('state_waitlist')
-        .update({ notified_at: new Date().toISOString() })
-        .eq('id', e.id)
     } else {
       fehlgeschlagen.push(e.email)
+      // Markierung zurücknehmen, damit ein späterer Lauf es erneut versucht.
+      await admin
+        .from('state_waitlist')
+        .update({ notified_at: null })
+        .eq('id', e.id)
     }
   }
 
@@ -177,7 +185,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
     bundesland,
     versendet,
     fehlgeschlagen: fehlgeschlagen.length,
-    verbleibend_hinweis: (empfaenger?.length ?? 0) === MAX_PRO_LAUF
+    verbleibend_hinweis: empfaenger.length === MAX_PRO_LAUF
       ? `Es wurden ${MAX_PRO_LAUF} Mails verschickt (Obergrenze je Lauf). `
         + 'Bitte erneut aufrufen, um die restlichen Empfänger zu benachrichtigen.'
       : null,

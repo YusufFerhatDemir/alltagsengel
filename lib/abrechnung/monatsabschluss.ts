@@ -97,16 +97,27 @@ export async function erstelleMonatsabschluss(
   monat: string, // 'YYYY-MM'
   supabase: SupabaseClient,
   options: {
-    /** Bundesland für die leistungspreise-Suche (Default: Hessen). */
-    bundesland?: string
+    /**
+     * Bundesland-Katalogcode für die leistungspreise-Suche.
+     * PFLICHT — seit der Deutschland-Architektur gibt es keinen Hessen-Default
+     * mehr: ein stiller Fallback würde in anderen Bundesländern die falschen
+     * Preise ziehen.
+     */
+    bundesland: string
     /** EDIFACT-Generator (PLGA/PLAA) — injiziert, sobald lib/abrechnung/edifact existiert. */
     edifactGenerator?: EdifactGenerator
     /** true = monthly_closings NICHT schreiben (reiner Prüf-/Vorschaulauf). */
     dryRun?: boolean
-  } = {}
+  }
 ): Promise<MonatsabschlussErgebnis> {
   if (!/^\d{4}-\d{2}$/.test(monat)) throw new Error('Monat muss das Format YYYY-MM haben.')
-  const { bundesland = 'hessen', edifactGenerator, dryRun = false } = options
+  const { bundesland, edifactGenerator, dryRun = false } = options
+  if (!bundesland) {
+    throw new Error(
+      'Bundesland fehlt: erstelleMonatsabschluss() braucht den Bundesland-Katalogcode '
+      + 'des Leistungsorts (z. B. "hessen"). Ohne ihn würden landesfremde Preise gezogen.'
+    )
+  }
 
   const [jahr, monatNum] = monat.split('-').map(Number)
   const periodStart = `${monat}-01`

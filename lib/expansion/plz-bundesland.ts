@@ -69,7 +69,7 @@ export function resolvePlz(
 // bleibt die maßgebliche Quelle für das einzige Bundesland, in dem
 // die Kassenabrechnung überhaupt kurz vor der Freischaltung steht.
 // ────────────────────────────────────────────────────────────────
-const AUSNAHMEN_5: Record<string, BundeslandCode> = {
+export const AUSNAHMEN_5: Record<string, BundeslandCode> = {
   // ── Hessen trotz fremdem Präfix ──
   '55246': 'hessen',            // Mainz-Kostheim (Stadtteil von Wiesbaden)
   '55252': 'hessen',            // Mainz-Kastel (Stadtteil von Wiesbaden)
@@ -104,9 +104,9 @@ const AUSNAHMEN_5: Record<string, BundeslandCode> = {
 // 3-stellige Präfixe — nur dort gepflegt, wo sie das 2-stellige
 // Präfix korrigieren oder eine Leitregion eine Grenze überschreitet.
 // ────────────────────────────────────────────────────────────────
-type Regel = { bl: BundeslandCode; sicher: boolean }
+export type Regel = { bl: BundeslandCode; sicher: boolean }
 
-const PRAEFIX_3: Record<string, Regel> = {
+export const PRAEFIX_3: Record<string, Regel> = {
   // ── Sachsen / Thüringen / Brandenburg-Grenzen ──
   '046': { bl: 'thueringen',   sicher: false }, // Altenburg (TH) ↔ Geithain/Frohburg (SN)
   '048': { bl: 'sachsen',      sicher: false }, // Torgau (SN) ↔ Falkenberg (BB)
@@ -212,7 +212,7 @@ const PRAEFIX_3: Record<string, Regel> = {
 // 2-stellige Präfixe — Grundraster.
 // Nicht vergebene Leitzonen (05, 11, 43, 62) fehlen bewusst.
 // ────────────────────────────────────────────────────────────────
-const PRAEFIX_2: Record<string, Regel> = {
+export const PRAEFIX_2: Record<string, Regel> = {
   '01': { bl: 'sachsen',                sicher: true },  // Dresden
   '02': { bl: 'sachsen',                sicher: true },  // Oberlausitz
   '03': { bl: 'brandenburg',            sicher: true },  // Cottbus
