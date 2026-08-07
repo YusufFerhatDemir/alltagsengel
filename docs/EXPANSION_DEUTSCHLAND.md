@@ -13,6 +13,17 @@
 | 4 | `20260808120001_plz_bundesland_seed.sql` | **generiert** — PLZ→Bundesland-Regeln für SQL |
 | 5 | `20260808120002_invoice_bundesland_klient.sql` | Rechnungs-RPC v5 (Bundesland aus Klienten-PLZ) |
 | 6 | `20260808130000_expansion_phase2.sql` | Freischaltung zieht Tarife + Landesregeln mit; Dashboard-View |
+| 7 | `20260808140000_katalog_rls.sql` | RLS auf den Katalogtabellen, `anon` verliert Schreibrechte |
+| 8 | `20260808150000_view_invoker_und_haertung.sql` | **schließt ein Kreuz-Mandanten-Leck** in den beiden Views; `search_path` für die letzte DEFINER-Funktion; Indizes für den Kassenrechnungs-Guard |
+| 9 | `20260808160000_profiles_agb_spalten.sql` | `profiles.agb_accepted_at` / `agb_version` — von der Registrierung seit jeher geschrieben, in keiner Migration angelegt |
+| 10 | `20260808170000_role_guard_insert_fix.sql` | eigener INSERT-Wächter; der alte wies **jede** Rolle ab, auch `kunde` |
+| 11 | `20260808180000_fk_indizes_operativer_kern.sql` | 20 Fremdschlüssel-Indizes im Abrechnungskern |
+| 12 | `20260808190000_fehlende_policies.sql` | Policies für fünf Tabellen, die RLS ohne jede Regel hatten |
+
+Nummern 8–12 stammen aus der Produktionsreife-Abnahme vom 08.08.2026. Sie
+gehören fachlich nicht zur Expansion, wurden aber im selben Durchlauf
+gefunden und liegen deshalb in derselben Migrationskette (Phasen H–L des
+Migrationsplans).
 
 ---
 
@@ -418,11 +429,31 @@ Ist ein Bundesland noch nicht freigeschaltet, zeigt die App:
   > Die Anerkennung für die Pflegekassenabrechnung befindet sich derzeit im
   > Genehmigungsverfahren.
 
-Betroffene Seiten: `app/kunde/buchen-service`, `app/kunde/buchen/[id]`,
-`app/kunde/krankenfahrt`, Native-Tab „Einzugsgebiet".
+Betroffene Seiten: `app/kunde/home`, `app/kunde/buchen-service`,
+`app/kunde/buchen/[id]`, `app/kunde/krankenfahrt`, `components/OnboardingFlow`,
+Native-Tab „Einzugsgebiet".
 
 **Fail-safe:** Bis die Statusantwort da ist, gilt „Kasse aus". Es gibt keine
 Millisekunde, in der ein Kassen-Button sichtbar wäre, der es nicht sein dürfte.
+Dasselbe gilt für einen Kunden ohne hinterlegte PLZ: unbekanntes Bundesland
+heißt „keine Kassenabrechnung", nicht „wahrscheinlich Hessen".
+
+### Kein Kassenversprechen ohne Freischaltung
+
+Die Zusage „wir rechnen direkt mit Ihrer Pflegekasse ab" ist an
+`kassenabrechnung` gebunden, nicht nur der Buchungsknopf. Konkret:
+
+| Ort | freigeschaltet | nicht freigeschaltet |
+|---|---|---|
+| `/kunde/home`, §45b-Banner | „Bis zu 131 €/Monat über Ihre Pflegekasse. Direkt über Alltagsengel abrechnen." | Verfahrenshinweis + Warteliste an derselben Stelle |
+| Onboarding, Abschluss-Schritt | „131 €/Monat von der Pflegekasse — 0 € Eigenanteil", Schritt 3 „Abrechnung läuft" | „131 €/Monat stehen Ihnen nach §45b SGB XI zu" + Verfahrenshinweis, Schritt 3 „Privat abrechnen" |
+
+Der gesetzliche Anspruch (131 €/Monat nach §45b SGB XI) gilt bundesweit und
+darf überall genannt werden — Werbung ist in jedem Bundesland erlaubt. Was
+an die Freischaltung gebunden ist, ist ausschließlich die Zusage, dass
+**wir** das abrechnen. Diese Trennung ist der Grund, warum die
+Marketing- und Ratgeberseiten (`/entlastungsbetrag`, `/faq`, Blog) den
+Betrag weiterhin ungefiltert nennen.
 
 ---
 
@@ -437,11 +468,23 @@ Millisekunde, in der ein Kassen-Button sichtbar wäre, der es nicht sein dürfte
 20260808120001_plz_bundesland_seed.sql        (generiert)
 20260808120002_invoice_bundesland_klient.sql
 20260808130000_expansion_phase2.sql
+20260808140000_katalog_rls.sql
+20260808150000_view_invoker_und_haertung.sql
+20260808160000_profiles_agb_spalten.sql
+20260808170000_role_guard_insert_fix.sql
+20260808180000_fk_indizes_operativer_kern.sql
+20260808190000_fehlende_policies.sql
 ```
 
 Rollback (umgekehrte Reihenfolge):
 
 ```
+20260808190001_rollback_fehlende_policies.sql
+20260808180001_rollback_fk_indizes_operativer_kern.sql
+20260808170001_rollback_role_guard_insert_fix.sql
+20260808160001_rollback_profiles_agb_spalten.sql        (vorher AGB-Nachweis sichern)
+20260808150001_rollback_view_invoker_und_haertung.sql   (setzt das Leck wieder ein)
+20260808140001_rollback_katalog_rls.sql
 20260808130001_rollback_expansion_phase2.sql
 20260808120003_rollback_expansion_review_fixes.sql
 20260808110001_rollback_tarifschichten_bundesland.sql
@@ -506,6 +549,10 @@ Obergrenzen) vorher in `*_archiv`-Tabellen.
 | `lib/hessen-plz.test.ts` | 16 Tests: Abwärtskompatibilität | `npm run test:unit` |
 | `tests/e2e-expansion-deutschland.sql` | 28 DB-Prüfungen inkl. aller Guards | `psql -f …` (Staging) |
 | `tests/e2e-alle-bundeslaender.sql` | 16 × 9 Prüfungen: Freischaltung, Tarif-/Regel-Kaskade, Unabhängigkeit, Rücknahme | `psql -f …` (Staging) |
+| `tests/security-expansion.sql` | 30 Angriffsproben als `anon`, Kunde und Admin gegen die Freischaltungslogik | `psql -f …` (Staging) |
+| `tests/regression-abrechnung.sql` | 10 Prüfungen: die bestehende Abrechnung bleibt unberührt | `psql -f …` (Staging) |
+| `tests/audit-rls-vollstaendig.sql` | Befundliste: RLS, Policies, `anon`-Rechte, `search_path`, FK-Indizes, View-Semantik | `psql -f …` (Staging) |
+| `scripts/api-audit.mjs` | fährt alle 71 API-Routen unauthentifiziert an; meldet 5xx und offene Endpunkte | `node scripts/api-audit.mjs http://127.0.0.1:8080` |
 
 ---
 

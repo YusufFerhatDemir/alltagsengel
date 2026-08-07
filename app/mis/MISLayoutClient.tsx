@@ -43,7 +43,7 @@ export default function MISLayout({ children }: { children: React.ReactNode }) {
           const { data: profile } = await supabase.from('profiles').select('first_name,last_name').eq('id', data.user.id).single()
           if (profile) setUserName(`${profile.first_name} ${profile.last_name}`.trim() || 'Admin')
         }
-      } catch (err) { console.error('[MIS_DEBUG] Layout getUser error:', err) }
+      } catch (err) { console.error('[mis] Layout getUser error:', err) }
     })()
   }, [])
 

@@ -106,9 +106,7 @@ export default function NotificationBell() {
     if (window.Notification.permission === 'default' && !permissionAsked) {
       // Kurz warten, dann Erlaubnis anfragen
       const timer = setTimeout(() => {
-        window.Notification.requestPermission().then(perm => {
-          console.log('Notification permission:', perm)
-        })
+        void window.Notification.requestPermission()
         setPermissionAsked(true)
       }, 3000)
       return () => clearTimeout(timer)

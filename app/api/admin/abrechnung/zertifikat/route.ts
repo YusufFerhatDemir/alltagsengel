@@ -20,12 +20,13 @@ export async function GET() {
       .select('id, ik_nummer, typ, gueltig_ab, gueltig_bis, fingerprint, zertifikat_url, created_at, updated_at')
       .order('typ')
       .order('ik_nummer')
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    if (error) return NextResponse.json({ error: 'Interner Serverfehler' }, { status: 500 })
 
     const passwortGesetzt = Boolean(process.env.SECON_ZERT_PASSWORT)
     return NextResponse.json({ zertifikate: data || [], passwort_env_gesetzt: passwortGesetzt })
   } catch (e: any) {
-    return NextResponse.json({ error: e?.message || String(e) }, { status: 500 })
+    console.error('[api] Unerwarteter Fehler:', e)
+    return NextResponse.json({ error: 'Interner Serverfehler' }, { status: 500 })
   }
 }
 
@@ -71,6 +72,7 @@ export async function POST(req: NextRequest) {
         : 'WICHTIG: Passwort als Env-Variable SECON_ZERT_PASSWORT in Vercel hinterlegen — es wird nicht gespeichert.',
     })
   } catch (e: any) {
-    return NextResponse.json({ error: e?.message || String(e) }, { status: 500 })
+    console.error('[api] Unerwarteter Fehler:', e)
+    return NextResponse.json({ error: 'Interner Serverfehler' }, { status: 500 })
   }
 }

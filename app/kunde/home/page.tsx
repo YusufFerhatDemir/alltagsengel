@@ -3,7 +3,7 @@ import { useState, useEffect, ReactNode } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { requireUser } from '@/lib/supabase/require-session'
 import Link from 'next/link'
-import { IconPin, IconSearch, IconUser, IconCard, IconStarFilled, IconCheck, IconStarGold, IconHandshakeGold, IconMedicalGold, IconBagGold, IconHomeGold, IconCoffeeGold, IconPillGold, IconWalkGold, IconTargetGold, IconWingsGold, IconBox, IconKrankenfahrtGold, IconHygieneboxGold } from '@/components/Icons'
+import { IconPin, IconSearch, IconUser, IconCard, IconStarFilled, IconCheck, IconStarGold, IconHandshakeGold, IconMedicalGold, IconBagGold, IconHomeGold, IconCoffeeGold, IconPillGold, IconWalkGold, IconTargetGold, IconBox, IconKrankenfahrtGold, IconHygieneboxGold } from '@/components/Icons'
 import NotificationBell from '@/components/NotificationBell'
 import Icon3D from '@/components/Icon3D'
 import { useRouter } from 'next/navigation'
@@ -12,6 +12,9 @@ import { useUserLocation } from '@/hooks/useUserLocation'
 import { useTrackVisit } from '@/hooks/useTrackVisit'
 import ReferralWidget from '@/components/ReferralWidget'
 import OnboardingFlow from '@/components/OnboardingFlow'
+import BundeslandHinweis from '@/components/kunde/BundeslandHinweis'
+import { useBundeslandLage } from '@/lib/expansion/client'
+import { resolvePlz } from '@/lib/expansion/plz-bundesland'
 
 const categories: { key: string; icon: ReactNode; label: string }[] = [
   { key: 'all', icon: <IconStarGold size={26} />, label: 'Alle' },
@@ -49,6 +52,12 @@ export default function KundeHomePage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [error, setError] = useState('')
   const userLocation = useUserLocation()
+
+  // Freischaltungsstatus des Bundeslands. Das §45b-Banner unten verspricht
+  // die Abrechnung ueber die Pflegekasse — in einem Land ohne Anerkennung
+  // waere das eine Zusage, die wir nicht halten koennen.
+  const kundenPlz = resolvePlz(profile?.postal_code, profile?.location || userLocation.city)
+  const { lage, laedt: lageLaedt } = useBundeslandLage(kundenPlz)
   useTrackVisit('kunde')
   // Note: error state already defined above
 
@@ -140,23 +149,6 @@ export default function KundeHomePage() {
       return 0
     })
 
-  const demoAngels = [
-    { id: 'demo-anna', name: 'Anna Müller', rating: 4.9, jobs: 127, services: ['Begleitung', 'Einkauf', 'Haushalt'], price: 32, online: true, bg: 'var(--gold-pale)', is45b: true },
-    { id: 'demo-thomas', name: 'Thomas Weber', rating: 4.8, jobs: 89, services: ['Arztbesuch', 'Begleitung', 'Spazieren'], price: 32, online: true, bg: 'var(--green-pale)', is45b: true },
-    { id: 'demo-lisa', name: 'Lisa Schneider', rating: 4.7, jobs: 56, services: ['Freizeit', 'Haushalt', 'Apotheke'], price: 32, online: false, bg: 'var(--cream2)', is45b: true },
-  ]
-
-  const filteredDemos = demoAngels.filter(a => {
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase()
-      if (!a.name.toLowerCase().includes(q) && !a.services.join(' ').toLowerCase().includes(q)) return false
-    }
-    if (activeCategory !== 'all') {
-      if (!a.services.some(s => s.toLowerCase().includes(serviceMap[activeCategory]?.toLowerCase() || activeCategory))) return false
-    }
-    return true
-  })
-
   return (
     <div className="screen" id="khome">
       <OnboardingFlow />
@@ -165,7 +157,9 @@ export default function KundeHomePage() {
           <div>
             <div className="kh-greet">Willkommen zurück</div>
             <div className="kh-name">Hallo, {firstName}</div>
-            <div className="kh-loc"><IconPin size={14} /> {profile?.location || 'Frankfurt am Main'} · {searchRadius} km</div>
+            {/* Kein Hessen-Fallback: einem Kunden ohne hinterlegten Standort
+                „Frankfurt am Main" anzuzeigen war schlicht falsch. */}
+            <div className="kh-loc"><IconPin size={14} /> {profile?.location || userLocation.city || 'Standort nicht hinterlegt'} · {searchRadius} km</div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <NotificationBell />
@@ -230,20 +224,33 @@ export default function KundeHomePage() {
           ))}
         </div>
 
-        <div className="banner-45b">
-          <div className="banner-row">
-            <div className="banner-icon"><IconCard size={22} /></div>
-            <div>
-              <div className="banner-title">§45b Entlastungsbetrag</div>
-              <div className="banner-sub">Bis zu <strong>131€/Monat</strong> über Ihre Pflegekasse. Direkt über Alltagsengel abrechnen.</div>
+        {/* Das Banner sagt „Direkt über Alltagsengel abrechnen" zu. Es darf
+            deshalb nur erscheinen, wenn die Kassenabrechnung im Bundesland
+            des Kunden tatsaechlich freigeschaltet ist. Sonst steht an
+            derselben Stelle der Verfahrenshinweis samt Warteliste. */}
+        {lage.kassenabrechnung ? (
+          <div className="banner-45b">
+            <div className="banner-row">
+              <div className="banner-icon"><IconCard size={22} /></div>
+              <div>
+                <div className="banner-title">§45b Entlastungsbetrag</div>
+                <div className="banner-sub">Bis zu <strong>131€/Monat</strong> über Ihre Pflegekasse. Direkt über Alltagsengel abrechnen.</div>
+              </div>
+            </div>
+            <div className="banner-pills">
+              <span className="banner-pill">Pflegegrad 1-5</span>
+              <span className="banner-pill">Direkte Abrechnung</span>
+              <span className="banner-pill">1.572€/Jahr</span>
             </div>
           </div>
-          <div className="banner-pills">
-            <span className="banner-pill">Pflegegrad 1-5</span>
-            <span className="banner-pill">Direkte Abrechnung</span>
-            <span className="banner-pill">1.572€/Jahr</span>
-          </div>
-        </div>
+        ) : !lageLaedt ? (
+          <BundeslandHinweis
+            lage={lage}
+            quelle="kunde-home"
+            email={profile?.email}
+            name={firstName || null}
+          />
+        ) : null}
 
         <Link href="/kunde/hygienebox" style={{ textDecoration: 'none' }}>
           <div className="banner-pflegebox">
@@ -307,34 +314,6 @@ export default function KundeHomePage() {
                 <div className="engel-price-row">
                   <div className="engel-price">32€ <span>/Std.</span></div>
                   {angel.is_45b_capable && <div className="badge-45b"><IconCard size={12} /> §45b</div>}
-                </div>
-              </div>
-            </div>
-          </Link>
-        ))}
-          </>
-        ) : filteredDemos.length > 0 ? (
-          <>
-          <div style={{ textAlign: 'center', padding: '12px 16px 4px', color: 'rgba(201,150,60,0.6)', fontSize: 12, fontStyle: 'italic' }}>
-            Vorschau — Diese Engel werden bald in Ihrer Nähe verfügbar sein
-          </div>
-          {filteredDemos.map(angel => (
-          <Link key={angel.id} href={`/kunde/engel/${angel.id}`} style={{ textDecoration: 'none' }} aria-label={`${angel.name}, Bewertung ${angel.rating}, ${angel.jobs} Einsätze`}>
-            <div className={`engel-card${angel.online ? ' engel-online' : ''}`}>
-              <div className={`engel-avatar${angel.online ? ' glow-available' : ''}`} style={{ background: 'transparent', padding: 0, overflow: 'visible' }} aria-label={`${angel.name} ist ${angel.online ? 'online' : 'offline'}`}>
-                <Icon3D size={62} /><div className={`online-dot${angel.online ? '' : ' away'}`}></div>
-              </div>
-              <div className="engel-info">
-                <div className="engel-row1"><div className="engel-name">{angel.name}</div><div className="engel-rating"><IconStarFilled size={13} /> {angel.rating}</div></div>
-                <div className="engel-cert"><IconCheck size={12} /> Zertifiziert · {angel.jobs} Einsätze</div>
-                <div className="engel-tags">
-                  {angel.services.slice(0, 3).map(s => (
-                    <span key={s} className="engel-tag">{s}</span>
-                  ))}
-                </div>
-                <div className="engel-price-row">
-                  <div className="engel-price">{angel.price}€ <span>/Std.</span></div>
-                  {angel.is45b && <div className="badge-45b"><IconCard size={12} /> §45b</div>}
                 </div>
               </div>
             </div>

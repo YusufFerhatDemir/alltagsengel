@@ -81,9 +81,15 @@ export default function OrgSwitcher() {
         disabled={switching}
         onChange={e => handleSwitch(e.target.value)}
         style={{
+          // Farbtoken der DUNKLEN Admin-Seitenleiste, nicht der hellen Kundenapp.
+          // Vorher: background var(--bg) + color var(--ink) — im Admin-Theme
+          // loesen beide zu #F7F2EA auf, das Feld war heller Text auf hellem
+          // Grund und damit unlesbar. Betraf jeden Admin mit mehr als einer
+          // Organisation.
           width: '100%', padding: '7px 8px', borderRadius: 8, fontSize: 13, fontWeight: 600,
-          border: '1px solid var(--border, #E5DDD0)', background: 'var(--bg, #F7F2EA)',
-          color: 'var(--ink, #2A2419)', cursor: switching ? 'wait' : 'pointer', fontFamily: 'inherit',
+          border: '1px solid var(--border, #332E24)', background: 'var(--coal, #1A1612)',
+          color: 'var(--ink, #F7F2EA)', cursor: switching ? 'wait' : 'pointer',
+          fontFamily: 'inherit', outline: 'none',
         }}
         aria-label="Aktive Organisation wechseln"
       >

@@ -225,13 +225,14 @@ export async function bundeslandLage(
  */
 export async function bundeslandLageFuerLand(
   bundeslandInput: string | null | undefined,
-  orgId: string = DEFAULT_ORG_ID
+  orgId: string = DEFAULT_ORG_ID,
+  frisch = false
 ): Promise<BundeslandLage> {
   const code = normalizeBundesland(bundeslandInput)
   if (!code) {
     return baueLage({ code: null, sicher: false, name: null, quelle: 'unbekannt' }, null, null)
   }
-  const einstellungen = await bundeslandEinstellungen(code, orgId)
+  const einstellungen = await bundeslandEinstellungen(code, orgId, frisch)
   return baueLage(
     { code, sicher: true, name: BUNDESLAND_NAMEN[code], quelle: 'ausnahme' },
     null,

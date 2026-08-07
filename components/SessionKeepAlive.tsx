@@ -44,8 +44,6 @@ export default function SessionKeepAlive() {
               if (error) {
                 console.warn('[SessionKeepAlive] IDB-Recovery Refresh fehlgeschlagen:', error.message)
                 Sentry.captureException(error, { tags: { source: 'SessionKeepAlive.idb_recovery' } })
-              } else {
-                console.debug('[SessionKeepAlive] Session aus IndexedDB wiederhergestellt')
               }
             }
           } catch (parseErr) {
@@ -69,13 +67,11 @@ export default function SessionKeepAlive() {
 
     // ═══ 2. Auth State Listener ═══
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'TOKEN_REFRESHED') {
-        console.debug('[SessionKeepAlive] Token erneuert ✓')
-      } else if (event === 'SIGNED_OUT') {
-        console.debug('[SessionKeepAlive] Abgemeldet')
+      // TOKEN_REFRESHED braucht keine Behandlung — supabase-js hat den
+      // neuen Token zu diesem Zeitpunkt bereits abgelegt.
+      if (event === 'SIGNED_OUT') {
         Sentry.setUser(null) // User-Context löschen
       } else if (event === 'SIGNED_IN') {
-        console.debug('[SessionKeepAlive] Angemeldet ✓')
         if (session?.user?.id) {
           Sentry.setUser({ id: session.user.id }) // nur UUID — kein Email/IP
         }

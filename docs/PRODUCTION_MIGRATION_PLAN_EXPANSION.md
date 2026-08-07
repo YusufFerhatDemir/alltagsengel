@@ -1,7 +1,8 @@
 # Production-Migrationsplan — Expansion Deutschland
 
 **Erstellt:** 08.08.2026
-**Branch:** `review/expansion-preproduction`
+**Zuletzt erweitert:** 08.08.2026 — Phasen H–L aus der Produktionsreife-Abnahme
+**Branch:** `staging/expansion-abnahme`
 **Ziel-Projekt:** Supabase `nnwyktkqibdjxgimjyuq`
 **Stamm-Org:** `00000000-0000-4000-8000-000460629986` (IK 460629986)
 
@@ -39,6 +40,36 @@ Strikt in dieser Reihenfolge. Jede Datei ist idempotent (`IF NOT EXISTS` /
 | **E** | `20260808120002_invoice_bundesland_klient.sql` | < 1 s | nur `CREATE OR REPLACE FUNCTION` |
 | **F** | `20260808130000_expansion_phase2.sql` | < 2 s | nur Funktionen, Typ und View |
 | **G** | `20260808140000_katalog_rls.sql` | < 1 s | RLS auf 4 Katalogtabellen |
+| **H** | `20260808150000_view_invoker_und_haertung.sql` | < 5 s | 2 Views, 1 Funktion, 3 Indizes auf `invoice_items` / `service_records` |
+| **I** | `20260808160000_profiles_agb_spalten.sql` | < 2 s | `ACCESS EXCLUSIVE` auf `profiles` (2 × `ADD COLUMN`, ohne Default → nur Katalogeintrag) |
+| **J** | `20260808170000_role_guard_insert_fix.sql` | < 1 s | Trigger-Tausch auf `profiles` |
+| **K** | `20260808180000_fk_indizes_operativer_kern.sql` | 10 s – mehrere Min. | **20 Indizes**, siehe Warnung unten |
+| **L** | `20260808190000_fehlende_policies.sql` | < 1 s | Policies auf 5 Tabellen |
+
+**Phase H schließt ein nachgewiesenes Kreuz-Mandanten-Leck** (beide Views liefen
+mit Definer-Rechten und umgingen die RLS). Sie ist der wichtigste Teil der
+Kette und darf nicht ausgelassen werden.
+
+**Phase K: `CREATE INDEX` sperrt die Tabelle gegen Schreibzugriffe.** Auf einer
+Datenbank unter Last die 20 Anweisungen NICHT als Skript fahren, sondern
+einzeln mit `CREATE INDEX CONCURRENTLY` (dann ohne Transaktionsblock, und
+`lock_timeout` vorher auf `0` — `CONCURRENTLY` verträgt kein Timeout).
+Bei den heutigen Zeilenzahlen (< 10 000 je Tabelle) ist der Skriptlauf
+unkritisch; die Regel gilt ab dem Zeitpunkt, an dem das nicht mehr stimmt.
+
+**Phase L legt Policies nur dort an, wo noch gar keine Policy existiert.**
+Trägt die Produktionsdatenbank bereits von Hand erstellte Regeln, passiert
+nichts — die Migration kann eine bestehende Absicherung nicht aufweichen.
+Vorher prüfen, was tatsächlich da ist:
+
+```sql
+SELECT tablename, count(*) AS policies
+  FROM pg_policies
+ WHERE schemaname = 'public'
+   AND tablename IN ('app_settings','datenannahmestellen','fcm_tokens',
+                     'push_subscriptions','referrals')
+ GROUP BY 1 ORDER BY 1;
+```
 
 Phase B nimmt kurzzeitig exklusive Sperren auf `invoices` und `bookings`.
 Deshalb: **außerhalb der Geschäftszeiten**, mit `SET lock_timeout = '5s'`,
@@ -162,13 +193,32 @@ Postgres-16-Instanz, die aus genau diesen Migrationen aufgebaut wurde
 (`./scripts/shadow-db.sh test`, kein Supabase-Projekt berührt). Ergebnisse:
 
 ```
-Migrationsaufbau     75 von 75 Dateien OK
-Idempotenz           2 Wiederholungsläufe, 0 Fehler
-Tenant-Isolation     28 / 28
-E2E Expansion        28 / 28
-E2E 16 Bundesländer  162 / 162
-Sicherheit           30 / 30  (+1 INFO, siehe Restrisiko R1)
+Migrationsaufbau      76 von 76 Dateien OK
+Idempotenz            2 Wiederholungsläufe, 0 Fehler
+Tenant-Isolation      28 / 28
+E2E Expansion         28 / 28
+E2E 16 Bundesländer   162 / 162
+Sicherheit            30 / 30  (+1 INFO, siehe Restrisiko R1)
 Regression Abrechnung 10 / 10
+```
+
+**Nachlauf 08.08.2026 (Produktionsreife-Abnahme, Phasen H–L).** Erneut
+komplett von null aufgebaut, jetzt mit 81 Migrationsdateien, dazu eine
+Browser-Abnahme gegen die laufende Anwendung (Next.js `next start` auf
+`127.0.0.1:8080`, Supabase-Ersatz aus PostgREST + Auth-Shim auf derselben
+Shadow-DB). Ergebnisse unverändert grün, zusätzlich:
+
+```
+Idempotenz            81 / 81 Dateien, 2. Lauf ohne Fehler
+RLS-Audit A1          0 public-Tabellen ohne RLS
+RLS-Audit A2          4 Tabellen mit RLS ohne Policy — alle bewusst gesperrt
+                      (login_rate_limits, conversions, notfall_access_attempts,
+                       whatsapp_conversations; nur über service_role angefasst)
+RLS-Audit A5          0 SECURITY DEFINER-Funktionen ohne search_path
+RLS-Audit A7          state_expansion_dashboard + billing_preisschichten_uebersicht
+                      auf invoker; state_settings_public bewusst definer
+API-Audit             71 Routen, 89 unauthentifizierte Aufrufe,
+                      0 × 5xx, 0 ungeschützte Endpunkte
 ```
 
 Wiederholung auf einem Supabase-Branch (optional, empfohlen vor Phase A):
@@ -364,6 +414,92 @@ SELECT new_state->>'bundesland', new_state->>'bundesland_quelle',
 **Abbruchkriterium:** `bundesland_quelle = organisation_fallback` bei einem
 Klienten mit gepflegter PLZ ⇒ die PLZ-Auflösung greift nicht → Phase D prüfen.
 
+### Nach H — Kreuz-Mandanten-Leck geschlossen
+
+```sql
+-- 1) Views laufen mit Aufruferrechten
+SELECT c.relname,
+       CASE WHEN 'security_invoker=true' = ANY(COALESCE(c.reloptions, '{}'))
+            THEN 'invoker' ELSE 'DEFINER — LECK' END AS modus
+  FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
+ WHERE n.nspname = 'public'
+   AND c.relname IN ('state_expansion_dashboard','billing_preisschichten_uebersicht');
+
+-- 2) Gegenprobe als gewöhnlicher Kunde: muss 0 liefern
+BEGIN;
+  SET LOCAL ROLE authenticated;
+  SET LOCAL "request.jwt.claims" = '{"sub":"<UUID eines Nicht-Admins>","role":"authenticated"}';
+  SELECT count(*) FROM public.state_expansion_dashboard;   -- erwartet: 0
+ROLLBACK;
+
+-- 3) keine SECURITY DEFINER-Funktion mehr ohne search_path
+SELECT count(*) FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
+ WHERE n.nspname = 'public' AND p.prosecdef
+   AND NOT EXISTS (SELECT 1 FROM unnest(COALESCE(p.proconfig,'{}')) c
+                    WHERE c LIKE 'search_path=%');        -- erwartet: 0
+```
+
+**Abbruchkriterium:** Punkt 2 liefert mehr als 0 Zeilen ⇒ das Leck ist offen,
+sofort Rollback H **nicht** fahren, sondern die Ursache klären.
+
+### Nach I und J — Registrierung schreibt wieder vollständig
+
+```sql
+SELECT column_name FROM information_schema.columns
+ WHERE table_name = 'profiles' AND column_name LIKE 'agb%';   -- 2 Zeilen
+
+SELECT tgname FROM pg_trigger
+ WHERE tgrelid = 'public.profiles'::regclass AND NOT tgisinternal;
+-- erwartet: trg_prevent_privileged_role_insert vorhanden,
+--           trg_prevent_role_escalation_insert NICHT mehr
+```
+
+Danach eine echte Registrierung durchspielen (Testadresse, PLZ ausfüllen) und
+prüfen, dass `postal_code` im Profil ankommt:
+
+```sql
+SELECT first_name, postal_code, location, agb_version
+  FROM public.profiles WHERE email = '<Testadresse>';
+```
+
+**Abbruchkriterium:** `postal_code` leer ⇒ die Bundesland-Erkennung fällt für
+diesen Kunden dauerhaft auf „unbekannt" zurück. Ursache klären, bevor
+weitergemacht wird.
+
+### Nach K — Indizes gültig
+
+```sql
+SELECT c.relname FROM pg_class c JOIN pg_index i ON i.indexrelid = c.oid
+ WHERE c.relname LIKE 'idx_%' AND NOT i.indisvalid;          -- 0 Zeilen
+
+SELECT count(*) FROM pg_constraint c
+  JOIN pg_class cl ON cl.oid = c.conrelid
+  JOIN pg_namespace n ON n.oid = cl.relnamespace
+ WHERE c.contype = 'f' AND n.nspname = 'public'
+   AND array_length(c.conkey,1) = 1
+   AND cl.relname IN ('invoices','invoice_items','invoice_disputes',
+                      'service_records','client_budgets','budget_transactions',
+                      'clients','assignments','caregivers','caregiver_documents',
+                      'caregiver_qualifications','caregiver_bonuses','absences',
+                      'client_preferred_substitutes')
+   AND NOT EXISTS (SELECT 1 FROM pg_index i
+                    WHERE i.indrelid = c.conrelid AND i.indkey[0] = c.conkey[1]);
+-- erwartet: 0
+```
+
+### Nach L — gesperrte Tabellen wieder benutzbar
+
+```sql
+SELECT tablename, policyname, cmd FROM pg_policies
+ WHERE schemaname = 'public'
+   AND tablename IN ('app_settings','datenannahmestellen','fcm_tokens',
+                     'push_subscriptions','referrals')
+ ORDER BY 1;
+```
+
+Dazu in der Oberfläche: `/admin/settings` öffnen (Werte müssen erscheinen, nicht
+leer bleiben) und `/admin/abrechnung/einstellungen` (Datenannahmestellen sichtbar).
+
 ### Gesamt-Abnahme
 
 ```
@@ -393,7 +529,33 @@ Genehmigungsverfahren." plus Wartelisten-Button.
 | **G7** Phase E | nach E | Entwurf erzeugbar, Audit zeigt `klient_plz` / `v5` | 20260807180000 erneut einspielen (v4) |
 | **G7b** Phase F | nach F | `state_expansion_dashboard` liefert 16 Zeilen, `/admin/expansion` zeigt Kacheln und Kennzahlen | Rollback F |
 | **G7c** Phase G | nach G | `SELECT count(*) FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='public' AND c.relkind='r' AND NOT c.relrowsecurity` = 0 | Rollback G |
+| **G7d** Phase H | nach H | beide Views auf `invoker` (Abfrage unten), ein Nicht-Admin liest 0 Zeilen aus `state_expansion_dashboard` | Rollback H |
+| **G7e** Phase I | nach I | `agb_accepted_at` und `agb_version` auf `profiles` vorhanden | Rollback I |
+| **G7f** Phase J | nach J | Selbstanlage mit `role='kunde'` geht, mit `role='admin'` scheitert | Rollback J |
+| **G7g** Phase K | nach K | alle 20 Indizes `valid`, keine `INVALID`-Reste aus abgebrochenem `CONCURRENTLY` | betroffene Indizes droppen und einzeln neu |
+| **G7h** Phase L | nach L | Admin-Einstellungen laden, Push-Registrierung schreibt | Rollback L |
 | **G8** Abnahme | 24 h nach E | keine neuen Fehler in Sentry, keine Buchung fälschlich `privat`, keine Nutzerbeschwerde | Rollback gemäß §7 |
+
+**G7d — Prüfabfrage:**
+
+```sql
+SELECT c.relname,
+       CASE WHEN 'security_invoker=true' = ANY(COALESCE(c.reloptions, '{}'))
+            THEN 'invoker' ELSE 'DEFINER — LECK' END
+  FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
+ WHERE n.nspname = 'public'
+   AND c.relname IN ('state_expansion_dashboard','billing_preisschichten_uebersicht');
+-- erwartet: beide 'invoker'
+-- state_settings_public bleibt bewusst DEFINER (öffentlicher Kundenendpunkt).
+```
+
+**G7g — Prüfabfrage:**
+
+```sql
+SELECT c.relname FROM pg_class c JOIN pg_index i ON i.indexrelid = c.oid
+ WHERE c.relname LIKE 'idx_%' AND NOT i.indisvalid;
+-- erwartet: 0 Zeilen
+```
 
 **Ein einziges NO-GO stoppt die Kette.** Phasen werden nicht übersprungen.
 
@@ -405,6 +567,11 @@ Rückwärts, in umgekehrter Reihenfolge:
 
 | Phase | Rollback |
 |---|---|
+| L | `psql -f supabase/migrations/20260808190001_rollback_fehlende_policies.sql` |
+| K | `psql -f supabase/migrations/20260808180001_rollback_fk_indizes_operativer_kern.sql` |
+| J | `psql -f supabase/migrations/20260808170001_rollback_role_guard_insert_fix.sql` |
+| I | `psql -f supabase/migrations/20260808160001_rollback_profiles_agb_spalten.sql` — **vorher sichern**, der AGB-Nachweis ist dokumentationspflichtig (Befehl steht im Skriptkopf) |
+| H | `psql -f supabase/migrations/20260808150001_rollback_view_invoker_und_haertung.sql` — **setzt das Kreuz-Mandanten-Leck wieder ein**, nur mit sofortiger Ersatzabsicherung |
 | G | `psql -f supabase/migrations/20260808140001_rollback_katalog_rls.sql` |
 | F | `psql -f supabase/migrations/20260808130001_rollback_expansion_phase2.sql` |
 | E | `psql -f supabase/migrations/20260807180000_tariff_stammdaten_v2.sql` (stellt v4 wieder her) |

@@ -51,6 +51,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, sent: admins.length })
   } catch (err: any) {
     console.error('Admin registration notify error:', err)
-    return NextResponse.json({ error: err.message }, { status: 500 })
+    return NextResponse.json({ error: 'Interner Serverfehler' }, { status: 500 })
   }
 }
