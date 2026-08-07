@@ -15,8 +15,10 @@ interface InvoiceRow {
   total_amount: number | null
   budget_amount: number | null
   private_amount: number | null
+  paid_amount: number | null
   status: string
   created_at: string
+  has_pdf: boolean
 }
 
 interface ItemRow {
@@ -48,11 +50,15 @@ export default function KundeRechnungenPage() {
       // RLS liefert nur die eigenen Rechnungen (clients.user_id = auth.uid())
       const { data, error: invErr } = await supabase
         .from('invoices')
-        .select('id, invoice_number, period_start, period_end, total_amount, budget_amount, private_amount, status, created_at')
+        .select('id, invoice_number, invoice_number_formatted, period_start, period_end, total_amount, budget_amount, private_amount, paid_amount, status, created_at, invoice_packages(pdf_url)')
         .order('period_start', { ascending: false, nullsFirst: false })
 
       if (invErr) throw new Error('Rechnungen konnten nicht geladen werden')
-      setInvoices((data || []) as InvoiceRow[])
+      setInvoices((data || []).map((d: any) => ({
+        ...d,
+        invoice_number: d.invoice_number_formatted || d.invoice_number,
+        has_pdf: !!(d.invoice_packages && d.invoice_packages.length > 0 && d.invoice_packages[0].pdf_url),
+      })) as InvoiceRow[])
     } catch (err: any) {
       setError(err?.message || 'Ein Fehler beim Laden der Rechnungen ist aufgetreten')
     } finally {
@@ -148,6 +154,9 @@ export default function KundeRechnungenPage() {
                       {Number(inv.budget_amount) > 0 && <span>Pflegekasse: {euro(Number(inv.budget_amount))}</span>}
                       {Number(inv.budget_amount) > 0 && Number(inv.private_amount) > 0 && <span> · </span>}
                       {Number(inv.private_amount) > 0 && <span>Eigenanteil: {euro(Number(inv.private_amount))}</span>}
+                      {inv.paid_amount != null && Number(inv.paid_amount) > 0 && Number(inv.paid_amount) < Number(inv.total_amount) && (
+                        <span style={{ color: '#D04B3B' }}> · Offen: {euro(Number(inv.total_amount || 0) - Number(inv.paid_amount))}</span>
+                      )}
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                       <span style={{ fontSize: 17, fontWeight: 700, color: 'var(--gold2)' }}>{euro(Number(inv.total_amount) || 0)}</span>
@@ -159,6 +168,22 @@ export default function KundeRechnungenPage() {
                 {/* Aufschlüsselung */}
                 {isOpen && (
                   <div style={{ borderTop: '1px solid var(--border)', padding: '4px 16px 14px' }}>
+                    {inv.has_pdf && (
+                      <div style={{ padding: '10px 0', borderBottom: '1px solid var(--border)' }}>
+                        <button onClick={async (e) => {
+                          e.stopPropagation()
+                          const supabase = createClient()
+                          const { data: pkg } = await supabase.from('invoice_packages').select('pdf_url').eq('invoice_id', inv.id).single()
+                          if (pkg?.pdf_url) window.open(pkg.pdf_url, '_blank')
+                        }} style={{
+                          width: '100%', padding: '10px 0', border: 'none', borderRadius: 8,
+                          background: 'linear-gradient(135deg,var(--gold),var(--gold2))', color: 'var(--coal)',
+                          fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
+                        }}>
+                          PDF herunterladen
+                        </button>
+                      </div>
+                    )}
                     {itemsLoading === inv.id ? (
                       <div style={{ padding: '16px 0', textAlign: 'center', color: 'var(--ink4)', fontSize: 13 }}>Laden...</div>
                     ) : !invItems || invItems.length === 0 ? (

@@ -480,6 +480,39 @@ export const PAYMENT_STATUS: Record<string, { label: string; color: string }> = 
   storniert: { label: 'Storniert', color: '#777' },
 }
 
+// ── Mahnstufen ────────────────────────────────────────────────────
+export const DUNNING_STATUS: Record<string, { label: string; color: string }> = {
+  offen: { label: 'Offen', color: '#999' },
+  erinnerung: { label: 'Zahlungserinnerung', color: '#E8A000' },
+  mahnung_1: { label: '1. Mahnung', color: '#FF7043' },
+  mahnung_2: { label: '2. Mahnung', color: '#E65100' },
+  letzte_mahnung: { label: 'Letzte Mahnung', color: '#D04B3B' },
+  inkasso_vorbereitung: { label: 'Inkasso-Vorbereitung', color: '#B71C1C' },
+  bezahlt: { label: 'Bezahlt', color: '#5CB882' },
+}
+
+// ── Zahlungs-Matching ─────────────────────────────────────────────
+export const MATCHING_STATUS: Record<string, { label: string; color: string }> = {
+  automatisch_zugeordnet: { label: 'Automatisch zugeordnet', color: '#5CB882' },
+  zuordnung_vorschlag: { label: 'Vorschlag', color: '#E8A000' },
+  manuell_zugeordnet: { label: 'Manuell zugeordnet', color: '#2196F3' },
+  manuelle_pruefung: { label: 'Manuelle Prüfung', color: '#FF7043' },
+  nicht_zugeordnet: { label: 'Nicht zugeordnet', color: '#D04B3B' },
+  teilweise_zugeordnet: { label: 'Teilweise zugeordnet', color: '#E8A000' },
+}
+
+// ── Differenzen / Widerspruch ─────────────────────────────────────
+export const DIFFERENCE_STATUS: Record<string, { label: string; color: string }> = {
+  offen: { label: 'Offen', color: '#999' },
+  widerspruch_eingereicht: { label: 'Widerspruch eingereicht', color: '#E8A000' },
+  widerspruch_anerkannt: { label: 'Widerspruch anerkannt', color: '#5CB882' },
+  widerspruch_abgelehnt: { label: 'Widerspruch abgelehnt', color: '#D04B3B' },
+  nachforderung: { label: 'Nachforderung', color: '#FF7043' },
+  gutschrift: { label: 'Gutschrift erstellt', color: '#2196F3' },
+  abschreibung: { label: 'Abgeschrieben', color: '#777' },
+  erledigt: { label: 'Erledigt', color: '#5CB882' },
+}
+
 // ── Digitale Mitarbeiterakte ────────────────────────────────────
 // Pflicht-Dokumente einer Betreuungskraft (Soll-Liste für die Akte)
 export const DOCUMENT_TYPE: Record<string, { label: string; color: string }> = {

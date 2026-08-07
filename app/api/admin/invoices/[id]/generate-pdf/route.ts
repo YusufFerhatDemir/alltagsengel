@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server'
 import crypto from 'crypto'
-import { PDFDocument, StandardFonts, rgb } from 'pdf-lib'
+import { PDFDocument, rgb } from 'pdf-lib'
+import fontkit from '@pdf-lib/fontkit'
+import { readFile } from 'fs/promises'
+import { join } from 'path'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 
@@ -97,10 +100,23 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       }, {})
     }
 
-    // ── PDF aufbauen ──
+    // ── PDF aufbauen (DejaVuSans für türkische/deutsche Zeichen) ──
     const pdfDoc = await PDFDocument.create()
-    const fontRegular = await pdfDoc.embedFont(StandardFonts.Helvetica)
-    const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold)
+    pdfDoc.registerFontkit(fontkit)
+
+    let fontRegular: any
+    let fontBold: any
+    try {
+      const fontsDir = join(process.cwd(), 'public', 'fonts')
+      const regularBytes = await readFile(join(fontsDir, 'DejaVuSans.ttf'))
+      const boldBytes = await readFile(join(fontsDir, 'DejaVuSans-Bold.ttf'))
+      fontRegular = await pdfDoc.embedFont(regularBytes, { subset: true })
+      fontBold = await pdfDoc.embedFont(boldBytes, { subset: true })
+    } catch {
+      const { StandardFonts } = await import('pdf-lib')
+      fontRegular = await pdfDoc.embedFont(StandardFonts.Helvetica)
+      fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold)
+    }
 
     const client = (invoice as any).client || {}
     const clientName = `${client.first_name || ''} ${client.last_name || ''}`.trim() || '—'
@@ -296,8 +312,11 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 }
 
 function drawFooter(page: any, font: any) {
-  page.drawText('Alltagsengel — automatisch erzeugtes Rechnungspaket (Leistungsnachweis + Unterschrift)', {
-    x: MARGIN, y: 30, size: 8, font, color: rgb(0.55, 0.55, 0.55),
+  page.drawText('Alltagsengel UG (haftungsbeschr.) · Amtsgericht Frankfurt am Main, HRB 140351', {
+    x: MARGIN, y: 38, size: 7, font, color: rgb(0.55, 0.55, 0.55),
+  })
+  page.drawText('Bankverbindung: Alltagsengel UG · Sparkasse · Zahlbar innerhalb von 30 Tagen', {
+    x: MARGIN, y: 28, size: 7, font, color: rgb(0.55, 0.55, 0.55),
   })
 }
 
