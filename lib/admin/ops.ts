@@ -687,3 +687,107 @@ export function daysUntil(dateStr: string | null | undefined): number | null {
   if (isNaN(d.getTime())) return null
   return Math.ceil((d.getTime() - Date.now()) / 86400000)
 }
+
+// ── Akten/Dokumentenmanagement (akten_dokumente.dokument_typ) ───
+export const AKTEN_DOKUMENT_TYP: Record<string, { label: string; color: string }> = {
+  vertrag: { label: 'Vertrag', color: '#C9963C' },
+  verordnung: { label: 'Verordnung', color: '#7E57C2' },
+  genehmigung: { label: 'Genehmigung', color: '#5CB882' },
+  vollmacht: { label: 'Vollmacht', color: '#2196F3' },
+  abtretungserklaerung: { label: 'Abtretungserklärung', color: '#26A69A' },
+  pflegegradbescheid: { label: 'Pflegegradbescheid', color: '#7E57C2' },
+  kostentraegerzusage: { label: 'Kostenträgerzusage', color: '#5CB882' },
+  ausweis: { label: 'Ausweis', color: '#999' },
+  fuehrerschein: { label: 'Führerschein', color: '#999' },
+  fuehrungszeugnis: { label: 'Führungszeugnis', color: '#D04B3B' },
+  erste_hilfe: { label: 'Erste Hilfe', color: '#D04B3B' },
+  qualifikation: { label: 'Qualifikation', color: '#26A69A' },
+  zertifikat: { label: 'Zertifikat', color: '#26A69A' },
+  schulung: { label: 'Schulung', color: '#26A69A' },
+  leistungsnachweis: { label: 'Leistungsnachweis', color: '#C9963C' },
+  rechnung: { label: 'Rechnung', color: '#C9963C' },
+  schriftverkehr: { label: 'Schriftverkehr', color: '#2196F3' },
+  bescheinigung: { label: 'Bescheinigung', color: '#5CB882' },
+  kuendigung: { label: 'Kündigung', color: '#D04B3B' },
+  arbeitsvertrag: { label: 'Arbeitsvertrag', color: '#C9963C' },
+  zusatzvereinbarung: { label: 'Zusatzvereinbarung', color: '#C9963C' },
+  datenschutzerklaerung: { label: 'Datenschutzerklärung', color: '#2196F3' },
+  einwilligung: { label: 'Einwilligung', color: '#2196F3' },
+  foto: { label: 'Foto', color: '#999' },
+  sonstiges: { label: 'Sonstiges', color: '#999' },
+}
+
+export const AKTEN_KATEGORIE: Record<string, { label: string; color: string }> = {
+  stammdaten: { label: 'Stammdaten', color: '#2196F3' },
+  vertrag: { label: 'Vertrag', color: '#C9963C' },
+  pflege: { label: 'Pflege', color: '#5CB882' },
+  abrechnung: { label: 'Abrechnung', color: '#C9963C' },
+  personal: { label: 'Personal', color: '#7E57C2' },
+  qualifikation: { label: 'Qualifikation', color: '#26A69A' },
+  genehmigung: { label: 'Genehmigung', color: '#5CB882' },
+  korrespondenz: { label: 'Korrespondenz', color: '#2196F3' },
+  allgemein: { label: 'Allgemein', color: '#999' },
+}
+
+export const AKTEN_STATUS: Record<string, { label: string; color: string }> = {
+  entwurf: { label: 'Entwurf', color: '#999' },
+  aktiv: { label: 'Aktiv', color: '#5CB882' },
+  archiviert: { label: 'Archiviert', color: '#999' },
+  gesperrt: { label: 'Gesperrt', color: '#D04B3B' },
+  abgelaufen: { label: 'Abgelaufen', color: '#D04B3B' },
+}
+
+export const AKTEN_SICHTBARKEIT: Record<string, { label: string; color: string }> = {
+  intern: { label: 'Intern', color: '#999' },
+  kunde: { label: 'Kunde sichtbar', color: '#2196F3' },
+  engel: { label: 'Engel sichtbar', color: '#26A69A' },
+  alle: { label: 'Alle sichtbar', color: '#5CB882' },
+}
+
+// ── Verträge (akten_vertraege) ───────────────────────────────────
+export const VERTRAGS_TYP: Record<string, { label: string; color: string }> = {
+  dienstleistungsvertrag: { label: 'Dienstleistungsvertrag', color: '#C9963C' },
+  arbeitsvertrag: { label: 'Arbeitsvertrag', color: '#7E57C2' },
+  freelancer_vertrag: { label: 'Freelancer-Vertrag', color: '#7E57C2' },
+  zusatzvereinbarung: { label: 'Zusatzvereinbarung', color: '#C9963C' },
+  abtretungserklaerung: { label: 'Abtretungserklärung', color: '#26A69A' },
+  vollmacht: { label: 'Vollmacht', color: '#2196F3' },
+  datenschutzerklaerung: { label: 'Datenschutzerklärung', color: '#2196F3' },
+  einwilligung: { label: 'Einwilligung', color: '#2196F3' },
+  kooperationsvertrag: { label: 'Kooperationsvertrag', color: '#5CB882' },
+  sonstiger: { label: 'Sonstiger', color: '#999' },
+}
+
+export const VERTRAGS_STATUS: Record<string, { label: string; color: string }> = {
+  entwurf: { label: 'Entwurf', color: '#999' },
+  versendet: { label: 'Versendet', color: '#2196F3' },
+  unterschrieben: { label: 'Unterschrieben', color: '#5CB882' },
+  aktiv: { label: 'Aktiv', color: '#5CB882' },
+  gekuendigt: { label: 'Gekündigt', color: '#E8A000' },
+  beendet: { label: 'Beendet', color: '#999' },
+  storniert: { label: 'Storniert', color: '#D04B3B' },
+}
+
+// ── Kontaktpersonen (akten_kontaktpersonen.rolle) ────────────────
+export const KONTAKT_ROLLE: Record<string, { label: string; color: string }> = {
+  angehoeriger: { label: 'Angehörige/r', color: '#2196F3' },
+  bevollmaechtigter: { label: 'Bevollmächtigte/r', color: '#7E57C2' },
+  betreuer: { label: 'Betreuer/in', color: '#7E57C2' },
+  notfallkontakt: { label: 'Notfallkontakt', color: '#D04B3B' },
+  hausarzt: { label: 'Hausarzt/-ärztin', color: '#26A69A' },
+  facharzt: { label: 'Facharzt/-ärztin', color: '#26A69A' },
+  pflegeberater: { label: 'Pflegeberater/in', color: '#5CB882' },
+  sozialarbeiter: { label: 'Sozialarbeiter/in', color: '#5CB882' },
+  sonstiger: { label: 'Sonstige/r', color: '#999' },
+}
+
+// Dringlichkeitsstufe (akten_ablauf_dashboard.dringlichkeit) → Ampel-Farbe/Label
+export const AKTEN_DRINGLICHKEIT: Record<string, { label: string; color: string }> = {
+  abgelaufen: { label: 'Abgelaufen', color: '#D04B3B' },
+  '7_tage': { label: '≤ 7 Tage', color: '#D04B3B' },
+  '14_tage': { label: '≤ 14 Tage', color: '#E8A000' },
+  '30_tage': { label: '≤ 30 Tage', color: '#E8A000' },
+  '60_tage': { label: '≤ 60 Tage', color: '#C9963C' },
+  '90_tage': { label: '≤ 90 Tage', color: '#C9963C' },
+  ok: { label: 'OK', color: '#5CB882' },
+}

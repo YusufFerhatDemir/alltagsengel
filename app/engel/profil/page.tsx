@@ -150,6 +150,20 @@ export default function MeinProfilPage() {
 
         <div className="section-label">Info &amp; Hilfe</div>
         <div className="settings-card">
+          <Link href="/engel/dokumente" className="setting-row" style={{ textDecoration: 'none', color: 'inherit', cursor: 'pointer' }}>
+            <div>
+              <div className="setting-main"><IconDocument size={14} /> Meine Akte</div>
+              <div className="setting-sub">Dokumente und Nachweise ansehen</div>
+            </div>
+            <div style={{ color: 'var(--ink4)', fontSize: 18 }}>›</div>
+          </Link>
+          <Link href="/engel/vertraege" className="setting-row" style={{ textDecoration: 'none', color: 'inherit', cursor: 'pointer' }}>
+            <div>
+              <div className="setting-main"><IconDocument size={14} /> Meine Verträge</div>
+              <div className="setting-sub">Vertragsstatus und Unterschriften</div>
+            </div>
+            <div style={{ color: 'var(--ink4)', fontSize: 18 }}>›</div>
+          </Link>
           <Link href="/engel/info" className="setting-row" style={{ textDecoration: 'none', color: 'inherit', cursor: 'pointer' }}>
             <div>
               <div className="setting-main"><IconInfo size={14} /> Ablauf &amp; Vergütung</div>

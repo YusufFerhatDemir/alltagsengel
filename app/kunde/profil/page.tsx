@@ -246,6 +246,17 @@ export default function KundeProfilPage() {
               </div>
             </div>
           </Link>
+          <Link href="/kunde/vertraege" style={{ textDecoration: 'none' }}>
+            <div className="setting-row" style={{ cursor: 'pointer' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <IconDocument size={18} color="var(--gold2)" />
+                <div>
+                  <div className="setting-main">Meine Verträge</div>
+                  <div className="setting-sub">Vertragsstatus und Unterschriften</div>
+                </div>
+              </div>
+            </div>
+          </Link>
           <Link href="/kunde/karte" style={{ textDecoration: 'none' }}>
             <div className="setting-row" style={{ cursor: 'pointer' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
