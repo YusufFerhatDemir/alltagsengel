@@ -15,13 +15,13 @@ export async function POST(
 
     const { id } = await params
     const { ablehnungsgrund } = await req.json()
-    const data = await ablehnenAbwesenheit(supabase, id, ablehnungsgrund)
+    const data = await ablehnenAbwesenheit(supabase, id, auth.ctx.organizationId, auth.ctx.userId, ablehnungsgrund)
 
     await writeAuditLog(supabase, {
       entitaetTyp: 'abwesenheit',
       entitaetId: id,
       aktion: 'abgelehnt',
-      benutzer: auth.ctx.userId,
+      benutzerId: auth.ctx.userId,
       organizationId: auth.ctx.organizationId,
     })
 

@@ -17,10 +17,11 @@ export async function GET(req: NextRequest) {
     const nurGesperrt = sp.get('nurGesperrt') === 'true' ? true : undefined
 
     const data = await listArbeitszeiten(supabase, {
+      organizationId: auth.ctx.organizationId,
       caregiverId,
       datumVon,
       datumBis,
-      status,
+      status: status as any,
       nurGesperrt,
     })
     return NextResponse.json(data)

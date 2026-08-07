@@ -17,10 +17,11 @@ export async function GET(req: NextRequest) {
     const limit = sp.get('limit') ? Number(sp.get('limit')) : undefined
 
     const data = await listAuditLog(supabase, {
-      entitaetTyp,
+      organizationId: auth.ctx.organizationId,
+      entitaetTyp: entitaetTyp as any,
       entitaetId,
       caregiverId,
-      aktion,
+      aktion: aktion as any,
       limit,
     })
     return NextResponse.json(data)

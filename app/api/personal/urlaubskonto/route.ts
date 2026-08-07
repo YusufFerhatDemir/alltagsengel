@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requirePersonalAdmin } from '@/lib/personal/api-auth'
-import { createUrlaubskonto, listUrlaubskonto } from '@/lib/personal/urlaubskonto'
+import { createUrlaubskonto, listUrlaubskonten } from '@/lib/personal/urlaubskonto'
 
 export async function GET(req: NextRequest) {
   try {
@@ -11,9 +11,10 @@ export async function GET(req: NextRequest) {
 
     const sp = req.nextUrl.searchParams
     const caregiverId = sp.get('caregiverId') ?? undefined
-    const jahr = sp.get('jahr') ?? undefined
+    const jahrRaw = sp.get('jahr')
+    const jahr = jahrRaw ? Number(jahrRaw) : undefined
 
-    const data = await listUrlaubskonto(supabase, { caregiverId, jahr })
+    const data = await listUrlaubskonten(supabase, { organizationId: auth.ctx.organizationId, caregiverId, jahr })
     return NextResponse.json(data)
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 400 })

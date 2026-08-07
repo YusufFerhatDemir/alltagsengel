@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requirePersonalAdmin } from '@/lib/personal/api-auth'
 import { createAbwesenheit, listAbwesenheiten } from '@/lib/personal/abwesenheiten'
+import type { AbwesenheitStatus, AbwesenheitTyp } from '@/lib/personal/types'
 
 export async function GET(req: NextRequest) {
   try {
@@ -17,9 +18,10 @@ export async function GET(req: NextRequest) {
     const datumBis = sp.get('datumBis') ?? undefined
 
     const data = await listAbwesenheiten(supabase, {
+      organizationId: auth.ctx.organizationId,
       caregiverId,
-      status,
-      absenceType,
+      status: status as AbwesenheitStatus | undefined,
+      absenceType: absenceType as AbwesenheitTyp | undefined,
       datumVon,
       datumBis,
     })

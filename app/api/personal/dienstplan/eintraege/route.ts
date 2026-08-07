@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requirePersonalAdmin } from '@/lib/personal/api-auth'
 import { listEintraege, createEintrag } from '@/lib/personal/dienstplan'
+import type { DienstplanStatus } from '@/lib/personal/types'
 
 export async function GET(request: Request) {
   const auth = await requirePersonalAdmin()
@@ -22,7 +23,7 @@ export async function GET(request: Request) {
       datumBis: datumBis || undefined,
       caregiverId: caregiverId || undefined,
       clientId: clientId || undefined,
-      status: status || undefined,
+      status: (status || undefined) as DienstplanStatus | undefined,
     })
     return NextResponse.json(data)
   } catch (e: any) {

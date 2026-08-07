@@ -15,6 +15,7 @@ export async function GET(req: NextRequest) {
     const limit = sp.get('limit') ? Number(sp.get('limit')) : undefined
 
     const data = await listZeitkorrekturen(supabase, {
+      organizationId: auth.ctx.organizationId,
       caregiverId,
       arbeitszeitId,
       limit,

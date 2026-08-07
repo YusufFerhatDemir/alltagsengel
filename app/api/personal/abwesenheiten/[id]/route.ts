@@ -14,7 +14,7 @@ export async function PATCH(
 
     const { id } = await params
     const body = await req.json()
-    const data = await updateAbwesenheit(supabase, id, body)
+    const data = await updateAbwesenheit(supabase, id, auth.ctx.organizationId, body)
     return NextResponse.json(data)
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 400 })

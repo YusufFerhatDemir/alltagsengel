@@ -11,14 +11,12 @@ export async function GET(req: NextRequest) {
 
     const sp = req.nextUrl.searchParams
     const caregiverId = sp.get('caregiverId') ?? undefined
-    const jahr = sp.get('jahr') ?? undefined
-    const monat = sp.get('monat') ?? undefined
+    const jahrRaw = sp.get('jahr')
+    const monatRaw = sp.get('monat')
+    const jahr = jahrRaw ? Number(jahrRaw) : undefined
+    const monat = monatRaw ? Number(monatRaw) : undefined
 
-    const data = await listArbeitszeitKonto(supabase, {
-      caregiverId,
-      jahr,
-      monat,
-    })
+    const data = await listArbeitszeitKonto(supabase, auth.ctx.organizationId, caregiverId, jahr, monat)
     return NextResponse.json(data)
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 400 })
