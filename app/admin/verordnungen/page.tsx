@@ -64,6 +64,10 @@ interface Verordnung {
   kombi_zusage_aktenzeichen: string | null
   monatliches_budget_cent: number | null
   budget_verbraucht_cent: number | null
+  // Kassen-Gate (Dokumentenmanagement-Migration 20260809): sperrt die
+  // Abrechnung unabhängig vom Genehmigungsstatus, z.B. bei fehlenden Nachweisen
+  abrechnung_gesperrt: boolean
+  abrechnung_sperrgrund: string | null
   clientName: string
 }
 
@@ -266,7 +270,7 @@ export default function AdminVerordnungenPage() {
       const [vRes, cRes, gRes, aRes, rRes, iRes, absRes, allAssignRes, lRes] = await Promise.all([
         supabase
           .from('verordnungen')
-          .select('id, client_id, verordnung_type, leistungsart, verordnung_nummer, ausstellungsdatum, gueltig_von, gueltig_bis, arzt_name, arzt_praxis, diagnose, leistung_beschreibung, verordnung_document_url, genehmigung_status, genehmigung_datum, genehmigung_bis, genehmigung_aktenzeichen, kassengenehmigung_beantragt_am, kassengenehmigung_antwort_am, abrechnungs_status, genehmigte_stunden_gesamt, genehmigte_stunden_pro_woche, neuantrag_erforderlich, neuantrag_gestellt_am, notes, kostentraeger_typ, kostentraeger_name, kostentraeger_ik_nummer, genehmigte_leistungsart, genehmigung_abgleich_ok, genehmigung_abweichung, abtretungserklaerung_vorhanden, abtretungserklaerung_datum, abtretungserklaerung_document_url, ist_verordnung, kombinationsleistung, kombi_zusage_vorhanden, kombi_zusage_datum, kombi_zusage_aktenzeichen, monatliches_budget_cent, budget_verbraucht_cent, client:clients(first_name, last_name)')
+          .select('id, client_id, verordnung_type, leistungsart, verordnung_nummer, ausstellungsdatum, gueltig_von, gueltig_bis, arzt_name, arzt_praxis, diagnose, leistung_beschreibung, verordnung_document_url, genehmigung_status, genehmigung_datum, genehmigung_bis, genehmigung_aktenzeichen, kassengenehmigung_beantragt_am, kassengenehmigung_antwort_am, abrechnungs_status, genehmigte_stunden_gesamt, genehmigte_stunden_pro_woche, neuantrag_erforderlich, neuantrag_gestellt_am, notes, kostentraeger_typ, kostentraeger_name, kostentraeger_ik_nummer, genehmigte_leistungsart, genehmigung_abgleich_ok, genehmigung_abweichung, abtretungserklaerung_vorhanden, abtretungserklaerung_datum, abtretungserklaerung_document_url, ist_verordnung, kombinationsleistung, kombi_zusage_vorhanden, kombi_zusage_datum, kombi_zusage_aktenzeichen, monatliches_budget_cent, budget_verbraucht_cent, abrechnung_gesperrt, abrechnung_sperrgrund, client:clients(first_name, last_name)')
           .is('deleted_at', null) // Soft-Delete: gelöschte Verordnungen ausblenden (Revisionssicherheit)
           .order('genehmigung_bis', { ascending: true, nullsFirst: false }),
         supabase.from('clients').select('id, first_name, last_name').order('last_name'),
@@ -1433,6 +1437,11 @@ function ErfassungTab(props: {
                         {v.kombinationsleistung && !v.kombi_zusage_vorhanden && (
                           <div style={{ fontSize: 11, marginTop: 2, color: '#E8A000' }}>Kombi-Zusage fehlt</div>
                         )}
+                        {v.abrechnung_gesperrt && (
+                          <div style={{ fontSize: 11, marginTop: 2, fontWeight: 700, color: '#D04B3B' }} title={v.abrechnung_sperrgrund || ''}>
+                            🔒 Abrechnung gesperrt{v.abrechnung_sperrgrund ? `: ${v.abrechnung_sperrgrund}` : ''}
+                          </div>
+                        )}
                       </td>
                       <td style={{ fontSize: 13 }}>
                         {vLeistungen.length > 0 ? (
@@ -1664,11 +1673,11 @@ function GenehmigungTab(props: {
       <div className="admin-table-wrap">
         <table className="admin-table">
           <thead>
-            <tr><th>Klient</th><th>Status</th><th>Aktenzeichen</th><th>Entschieden</th><th>Genehmigt bis</th><th>Dauer Antrag→Antwort</th><th>Abgleich</th></tr>
+            <tr><th>Klient</th><th>Status</th><th>Aktenzeichen</th><th>Entschieden</th><th>Genehmigt bis</th><th>Dauer Antrag→Antwort</th><th>Abgleich</th><th>Abrechnung</th></tr>
           </thead>
           <tbody>
             {entschieden.length === 0
-              ? <EmptyRow colSpan={7}>Noch keine Entscheidungen der Kasse.</EmptyRow>
+              ? <EmptyRow colSpan={8}>Noch keine Entscheidungen der Kasse.</EmptyRow>
               : entschieden.map(v => {
                 const gm = statusMeta(GENEHMIGUNG_STATUS, v.genehmigung_status)
                 const dur = v.kassengenehmigung_beantragt_am && v.kassengenehmigung_antwort_am
@@ -1688,6 +1697,11 @@ function GenehmigungTab(props: {
                         : v.genehmigung_abgleich_ok === true
                           ? <span style={{ color: '#5CB882', fontWeight: 700 }}>✓ Passt</span>
                           : <span style={{ color: 'var(--ink4)' }}>—</span>}
+                    </td>
+                    <td style={{ fontSize: 12 }}>
+                      {v.abrechnung_gesperrt
+                        ? <span style={{ color: '#D04B3B', fontWeight: 700 }} title={v.abrechnung_sperrgrund || ''}>🔒 Gesperrt</span>
+                        : <span style={{ color: '#5CB882', fontWeight: 700 }}>✓ Freigegeben</span>}
                     </td>
                   </tr>
                 )
