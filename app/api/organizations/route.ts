@@ -4,7 +4,9 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getUserOrganizations, getActiveOrgId } from '@/lib/organizations/server'
 import { validateIkNummer } from '@/lib/organizations/ik'
-import { ACTIVE_ORG_COOKIE, PLAN_FEATURES, BUNDESLAENDER } from '@/lib/organizations/types'
+import { ACTIVE_ORG_COOKIE, PLAN_FEATURES } from '@/lib/organizations/types'
+import { eindeutigesBundeslandFuerPlz, normalizeBundesland } from '@/lib/expansion/plz-bundesland'
+import { BUNDESLAND_NAMEN } from '@/lib/expansion/types'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -44,12 +46,17 @@ export async function POST(req: NextRequest) {
 
   const name = String(body?.name || '').trim()
   const ikNummer = String(body?.ik_nummer || '').replace(/\s/g, '')
-  const bundesland = String(body?.bundesland || '').trim()
+  // Bundesland IMMER als Katalog-Code speichern ('hessen', nicht 'Hessen').
+  // organizations.bundesland traegt seit der Deutschland-Architektur einen
+  // Fremdschluessel auf public.bundeslaender — Klartext wuerde den Insert
+  // scheitern lassen. normalizeBundesland akzeptiert beide Schreibweisen.
+  const bundeslandRoh = String(body?.bundesland || '').trim()
+  const bundesland = normalizeBundesland(bundeslandRoh)
   const address = {
     strasse: String(body?.address?.strasse || '').trim(),
     plz: String(body?.address?.plz || '').trim(),
     ort: String(body?.address?.ort || '').trim(),
-    bundesland,
+    bundesland: bundesland || '',
   }
 
   if (name.length < 3) {
@@ -59,8 +66,27 @@ export async function POST(req: NextRequest) {
   if (!ikCheck.valid) {
     return NextResponse.json({ error: ikCheck.error }, { status: 400 })
   }
-  if (bundesland && !(BUNDESLAENDER as readonly string[]).includes(bundesland)) {
-    return NextResponse.json({ error: 'Unbekanntes Bundesland.' }, { status: 400 })
+  if (bundeslandRoh && !bundesland) {
+    return NextResponse.json(
+      { error: `Unbekanntes Bundesland: "${bundeslandRoh}".` },
+      { status: 400 }
+    )
+  }
+  // Gegenprobe gegen die PLZ: eine Organisation mit Sitz-PLZ 60311 und
+  // Bundesland Bayern ist fast immer ein Tippfehler — und wuerde spaeter
+  // die Tarifauflösung verwirren.
+  if (bundesland && address.plz) {
+    const ausPlz = eindeutigesBundeslandFuerPlz(address.plz)
+    if (ausPlz && ausPlz !== bundesland) {
+      return NextResponse.json(
+        {
+          error: `Die Postleitzahl ${address.plz} liegt in `
+            + `${BUNDESLAND_NAMEN[ausPlz]}, angegeben wurde `
+            + `${BUNDESLAND_NAMEN[bundesland]}. Bitte prüfen.`,
+        },
+        { status: 400 }
+      )
+    }
   }
 
   const admin = createAdminClient()

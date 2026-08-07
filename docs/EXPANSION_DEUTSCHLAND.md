@@ -12,6 +12,7 @@
 | 3 | `20260808120000_expansion_review_fixes.sql` | Review-Korrekturen B1–B8 |
 | 4 | `20260808120001_plz_bundesland_seed.sql` | **generiert** — PLZ→Bundesland-Regeln für SQL |
 | 5 | `20260808120002_invoice_bundesland_klient.sql` | Rechnungs-RPC v5 (Bundesland aus Klienten-PLZ) |
+| 6 | `20260808130000_expansion_phase2.sql` | Freischaltung zieht Tarife + Landesregeln mit; Dashboard-View |
 
 ---
 
@@ -88,6 +89,12 @@ neu registrierte Mandanten (Trigger `trg_seed_state_settings`).
 
 **Admin → Betriebssystem → Expansion Deutschland → „Kassenabrechnung aktivieren"**
 
+Die Seite hat zwei Ansichten auf dieselben Daten: **Kacheln** (16 Länderkarten mit
+Status, Modulpunkten, Tarif- und Wartelistenzahlen) und **Tabelle** (die Matrix zum
+Bearbeiten der einzelnen Schalter). Die Kennzahlenzeile darüber zeigt unter anderem,
+wie viele Länder *startklar* sind — Bescheid und Tarife liegen vor, es fehlt nur
+noch der Klick.
+
 Der Dialog verlangt den Anerkennungsbescheid (Storage-Pfad oder Aktenzeichen).
 Ohne ihn ist der Knopf wirkungslos — das wird nicht nur in der Oberfläche, sondern
 in der Datenbank erzwungen.
@@ -104,8 +111,23 @@ elnw_enabled           → true
 dakota_export_enabled  → true
 private_enabled        → true
 anerkannt_am, effective_date, approval_*
+
+billing_tariffs.ist_aktiv      → true   (alle vorbereiteten Kassentarife des Landes)
+billing_landesregeln.ist_aktiv → true   (alle Landesregeln des Landes)
+
 + Audit-Eintrag mit SHA-256-Checksumme
 ```
+
+**Voraussetzungen** (beide werden von der Datenbank erzwungen):
+
+1. Ein hinterlegter Anerkennungsbescheid.
+2. Mindestens ein **vorbereiteter** Kassentarif für das Bundesland — aktiv oder
+   inaktiv. Tarife werden bis zur Anerkennung bewusst inaktiv gepflegt und erst
+   durch den Klick scharf geschaltet. Fehlt jeder Tarif, bricht die Freischaltung
+   mit `FREISCHALTUNG_OHNE_TARIFE` ab; sonst wäre sie eine leere Zusage, weil jede
+   Rechnung an `MISSING_VALID_TARIFF` scheitern würde.
+
+Das Dashboard zeigt je Bundesland an, welche der beiden Voraussetzungen noch fehlt.
 
 Danach ändert sich das Verhalten von Web-App, Kunden-App und Native-App sofort.
 **Kein Deployment, kein Code-Change, kein App-Store-Review.**
@@ -348,6 +370,34 @@ Nur die Anzeige (`bundeslandLage`, `alleBundeslaender`) nutzt den 30-Sekunden-Ca
 
 ---
 
+## 8a. Bundesland-Umschalter in der Admin-Oberfläche
+
+In der Seitenleiste steht unter dem Organisations-Umschalter ein
+**Bundesland-Umschalter**. Die Auswahl liegt im Cookie `ae_active_bundesland`
+und wirkt auf alle bundeslandbezogenen Admin-Listen:
+
+| Seite | Wirkung |
+|---|---|
+| Klienten | Filter über `clients.zip_code` → Bundesland; Klienten ohne zuordenbare PLZ bleiben sichtbar |
+| Leistungspreise | ersetzt das seiteneigene Auswahlfeld, solange ein Land gewählt ist |
+| Kostenträger | filtert; bundesweite Kontakte (`bundesland IS NULL`) bleiben immer sichtbar |
+| Expansion | hebt die Kachel des gewählten Landes hervor (blendet nichts aus) |
+
+Der Umschalter ist **ein Anzeigefilter, keine Sicherheitsgrenze**. Die
+Mandantentrennung läuft weiter über `organization_id` und RLS, die
+Freischaltung über `state_settings`. Ein manipuliertes Cookie kann höchstens
+die eigene Liste falsch filtern.
+
+Serverseitig: `getActiveBundesland()` / `getActiveBundeslandFilter()` aus
+`lib/expansion/active-state.ts`.
+Clientseitig: `useBundeslandFilter()` aus `components/admin/BundeslandContext`
+mit `passtZuFilter(plz)` und `passtZuLand(code)`.
+
+Jede gefilterte Liste zeigt `<BundeslandFilterHinweis />` — sonst hält jemand
+eine gefilterte Liste für den vollständigen Bestand.
+
+---
+
 ## 9. Kundenoberfläche
 
 Ist ein Bundesland noch nicht freigeschaltet, zeigt die App:
@@ -377,14 +427,24 @@ Millisekunde, in der ein Kassen-Button sichtbar wäre, der es nicht sein dürfte
 ```
 20260808100000_expansion_deutschland.sql
 20260808110000_tarifschichten_bundesland.sql
+20260808120000_expansion_review_fixes.sql
+20260808120001_plz_bundesland_seed.sql        (generiert)
+20260808120002_invoice_bundesland_klient.sql
+20260808130000_expansion_phase2.sql
 ```
 
 Rollback (umgekehrte Reihenfolge):
 
 ```
+20260808130001_rollback_expansion_phase2.sql
+20260808120003_rollback_expansion_review_fixes.sql
 20260808110001_rollback_tarifschichten_bundesland.sql
 20260808100001_rollback_expansion_deutschland.sql
 ```
+
+Der vollständige Ablauf mit Preflight-Checks, Backup, Smoke-Tests und
+GO/NO-GO-Gates steht in
+[PRODUCTION_MIGRATION_PLAN_EXPANSION.md](./PRODUCTION_MIGRATION_PLAN_EXPANSION.md).
 
 Die Rollbacks sichern fachliche Daten (Warteliste, Audit, Wegepauschalen,
 Obergrenzen) vorher in `*_archiv`-Tabellen.
@@ -436,8 +496,10 @@ Obergrenzen) vorher in `*_archiv`-Tabellen.
 | `__tests__/expansion/plz-bundesland.test.ts` | 28 Tests: Zuordnung, Grenzfälle, Fail-safe | `npx vitest run __tests__/expansion` |
 | `__tests__/expansion/gating.test.ts` | 15 Tests: Freischaltungsregel von allen Seiten | dito |
 | `__tests__/expansion/plz-sql-sync.test.ts` | 6 Tests: TS ↔ SQL über den gesamten PLZ-Raum | dito |
+| `__tests__/expansion/alle-bundeslaender.test.ts` | 101 Tests: Gating-Matrix und Unabhängigkeit für alle 16 Länder | dito |
 | `lib/hessen-plz.test.ts` | 16 Tests: Abwärtskompatibilität | `npm run test:unit` |
 | `tests/e2e-expansion-deutschland.sql` | 28 DB-Prüfungen inkl. aller Guards | `psql -f …` (Staging) |
+| `tests/e2e-alle-bundeslaender.sql` | 16 × 9 Prüfungen: Freischaltung, Tarif-/Regel-Kaskade, Unabhängigkeit, Rücknahme | `psql -f …` (Staging) |
 
 ---
 

@@ -8,7 +8,9 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { validateIkNummer } from '@/lib/organizations/ik'
-import { BUNDESLAENDER } from '@/lib/organizations/types'
+import { BUNDESLAND_NAMEN } from '@/lib/expansion/types'
+import { eindeutigesBundeslandFuerPlz } from '@/lib/expansion/plz-bundesland'
+import BundeslandErkennung from '@/components/kunde/BundeslandErkennung'
 
 type Step = 1 | 2 | 3 | 4
 
@@ -51,7 +53,15 @@ export default function OnboardingPage() {
   const [strasse, setStrasse] = useState('')
   const [plz, setPlz] = useState('')
   const [ort, setOrt] = useState('')
-  const [bundesland, setBundesland] = useState('Hessen')
+  // Katalog-Code, nicht Klartext — organizations.bundesland traegt einen
+  // Fremdschluessel auf public.bundeslaender.
+  const [bundesland, setBundesland] = useState('hessen')
+  // Sobald eine vollstaendige PLZ steht, wird das Bundesland daraus
+  // vorbelegt. Der Nutzer kann es weiterhin ueberschreiben.
+  useEffect(() => {
+    const ausPlz = eindeutigesBundeslandFuerPlz(plz)
+    if (ausPlz) setBundesland(ausPlz)
+  }, [plz])
   const [orgId, setOrgId] = useState<string | null>(null)
   const [orgName, setOrgName] = useState('')
 
@@ -218,7 +228,13 @@ export default function OnboardingPage() {
                 </div>
                 <div>
                   <label style={label}>PLZ</label>
-                  <input style={input} value={plz} onChange={e => setPlz(e.target.value)} maxLength={5} inputMode="numeric" />
+                  <input
+                    style={input}
+                    value={plz}
+                    onChange={e => setPlz(e.target.value.replace(/\D/g, '').slice(0, 5))}
+                    maxLength={5}
+                    inputMode="numeric"
+                  />
                 </div>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
@@ -229,10 +245,15 @@ export default function OnboardingPage() {
                 <div>
                   <label style={label}>Bundesland *</label>
                   <select style={input} value={bundesland} onChange={e => setBundesland(e.target.value)}>
-                    {BUNDESLAENDER.map(b => <option key={b} value={b}>{b}</option>)}
+                    {Object.entries(BUNDESLAND_NAMEN).map(([code, name]) => (
+                      <option key={code} value={code}>{name}</option>
+                    ))}
                   </select>
                 </div>
               </div>
+              {/* Zeigt sofort, was im erkannten Bundesland moeglich ist —
+                  Kassenabrechnung, nur Privatleistungen oder Vormerkung. */}
+              <BundeslandErkennung plz={plz} ausfuehrlich />
               <p style={{ fontSize: 12, color: '#8A8070', margin: 0 }}>
                 Das Bundesland bestimmt den Leistungskomplex-Katalog und die Tarifkennzeichen Ihrer Abrechnung.
               </p>

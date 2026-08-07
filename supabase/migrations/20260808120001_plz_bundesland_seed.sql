@@ -2,7 +2,7 @@
 -- GENERIERT — NICHT VON HAND BEARBEITEN
 -- Quelle:    lib/expansion/plz-bundesland.ts
 -- Generator: scripts/generate-plz-bundesland-sql.ts  (npm run generate:plz-sql)
--- Regeln:    192
+-- Regeln:    215
 --
 -- Fuellt public.plz_bundesland_regeln (angelegt in 20260808120000).
 -- Der laengste passende Praefix gewinnt.
@@ -147,14 +147,29 @@ INSERT INTO public.plz_bundesland_regeln (praefix, bundesland, sicher) VALUES
   ('371', 'niedersachsen', TRUE),
   ('372', 'hessen', TRUE),
   ('373', 'thueringen', TRUE),
+  ('374', 'niedersachsen', TRUE),
+  ('375', 'niedersachsen', TRUE),
+  ('376', 'niedersachsen', TRUE),
   ('384', 'niedersachsen', FALSE),
   ('388', 'sachsen_anhalt', TRUE),
   ('389', 'sachsen_anhalt', TRUE),
   ('484', 'nordrhein_westfalen', FALSE),
   ('495', 'nordrhein_westfalen', FALSE),
+  ('530', 'nordrhein_westfalen', TRUE),
+  ('531', 'nordrhein_westfalen', TRUE),
+  ('532', 'nordrhein_westfalen', TRUE),
+  ('533', 'nordrhein_westfalen', TRUE),
   ('534', 'rheinland_pfalz', TRUE),
   ('535', 'rheinland_pfalz', TRUE),
   ('536', 'nordrhein_westfalen', FALSE),
+  ('537', 'nordrhein_westfalen', TRUE),
+  ('538', 'nordrhein_westfalen', TRUE),
+  ('539', 'nordrhein_westfalen', TRUE),
+  ('570', 'nordrhein_westfalen', TRUE),
+  ('571', 'nordrhein_westfalen', TRUE),
+  ('572', 'nordrhein_westfalen', TRUE),
+  ('573', 'nordrhein_westfalen', TRUE),
+  ('574', 'nordrhein_westfalen', TRUE),
   ('575', 'rheinland_pfalz', TRUE),
   ('576', 'rheinland_pfalz', TRUE),
   ('630', 'hessen', TRUE),
@@ -167,6 +182,14 @@ INSERT INTO public.plz_bundesland_regeln (praefix, bundesland, sicher) VALUES
   ('637', 'bayern', TRUE),
   ('638', 'bayern', TRUE),
   ('639', 'bayern', TRUE),
+  ('660', 'saarland', TRUE),
+  ('661', 'saarland', TRUE),
+  ('662', 'saarland', TRUE),
+  ('663', 'saarland', TRUE),
+  ('664', 'saarland', TRUE),
+  ('665', 'saarland', TRUE),
+  ('666', 'saarland', TRUE),
+  ('667', 'saarland', TRUE),
   ('668', 'saarland', FALSE),
   ('669', 'rheinland_pfalz', TRUE),
   ('768', 'rheinland_pfalz', TRUE),

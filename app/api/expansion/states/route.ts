@@ -26,33 +26,31 @@ export async function GET() {
   const auth = await requireExpansionAdmin()
   if (!auth.ok) return auth.response
 
-  const matrix = await adminMatrix(auth.orgId)
+  const admin = createAdminClient()
 
-  // Wartelisten-Stand je Bundesland — die Zahl ist der wichtigste
-  // Entscheidungsindikator dafür, welches Land sich als nächstes lohnt.
-  const warteliste: Record<string, { gesamt: number; offen: number }> = {}
-  try {
-    const admin = createAdminClient()
-    const { data } = await admin
-      .from('state_waitlist')
-      .select('bundesland, notified_at')
-      .eq('organization_id', auth.orgId)
-      .limit(20000)
+  // Bevorzugt die Dashboard-View: alle Kennzahlen je Bundesland in EINER
+  // Abfrage (Status, Modulschalter, Warteliste, Tarife je Schicht, Klienten).
+  const { data: dashboard, error } = await admin
+    .from('state_expansion_dashboard')
+    .select('*')
+    .eq('organization_id', auth.orgId)
+    .order('sort_order')
 
-    for (const zeile of data ?? []) {
-      const eintrag = warteliste[zeile.bundesland] ?? { gesamt: 0, offen: 0 }
-      eintrag.gesamt++
-      if (!zeile.notified_at) eintrag.offen++
-      warteliste[zeile.bundesland] = eintrag
-    }
-  } catch {
-    // Warteliste ist eine Zusatzinformation — Ausfall darf die Matrix nicht blockieren.
+  if (!error && dashboard) {
+    return NextResponse.json({
+      organization_id: auth.orgId,
+      bundeslaender: dashboard,
+      dashboard: true,
+    })
   }
 
+  // Fallback, solange 20260808130000 noch nicht angewendet ist: nackte Matrix.
+  console.warn('[expansion/states] Dashboard-View nicht verfügbar:', error?.message)
+  const matrix = await adminMatrix(auth.orgId)
   return NextResponse.json({
     organization_id: auth.orgId,
     bundeslaender: matrix,
-    warteliste,
+    dashboard: false,
   })
 }
 

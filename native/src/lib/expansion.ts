@@ -39,7 +39,9 @@ export interface BundeslandLage {
 }
 
 export const TEXT_KASSE_IM_VERFAHREN =
-  'Die Anerkennung für die Pflegekassenabrechnung befindet sich derzeit im Genehmigungsverfahren.'
+  'Die Anerkennung für die Abrechnung mit den Pflegekassen befindet sich derzeit im ' +
+  'Genehmigungsverfahren. Sie können sich bereits registrieren und werden automatisch ' +
+  'informiert, sobald die Kassenabrechnung verfügbar ist.'
 
 /** Zustand vor der ersten Antwort und bei jedem Fehler. */
 export const FALLBACK_LAGE: BundeslandLage = {

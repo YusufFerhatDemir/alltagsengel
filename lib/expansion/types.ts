@@ -201,8 +201,47 @@ export interface StateActivationResult {
   insurance_enabled: boolean
   effective_date: string | null
   waitlist_count: number
+  /** Kassentarife, die die Freischaltung scharf geschaltet hat. */
+  tarife_aktiviert: number
+  /** Landesregeln, die die Freischaltung scharf geschaltet hat. */
+  regeln_aktiviert: number
   already_active: boolean
 }
+
+/**
+ * Eine Zeile aus public.state_expansion_dashboard — Status, alle Schalter und
+ * die Kennzahlen, die über die Freischaltbarkeit entscheiden.
+ */
+export interface StateDashboardZeile extends StateSettings {
+  bundesland_label: string
+  iso_code: string
+  sort_order: number
+
+  warteliste_gesamt: number
+  warteliste_offen: number
+
+  kassentarife_gesamt: number
+  kassentarife_aktiv: number
+  privattarife_aktiv: number
+
+  obergrenzen_gesamt: number
+  obergrenzen_bestaetigt: number
+  landesregeln_aktiv: number
+  wegepauschalen_aktiv: number
+
+  klienten: number
+  klienten_ohne_plz: number
+
+  /** Bescheid hinterlegt UND mindestens ein vorbereiteter Kassentarif. */
+  freischaltbar: boolean
+}
+
+/** Cookie, das das aktuell gewählte Bundesland im Admin trägt. */
+export const ACTIVE_BUNDESLAND_COOKIE = 'ae_active_bundesland'
+
+/** Sonderwert des Umschalters: keine Einschränkung auf ein Bundesland. */
+export const ALLE_BUNDESLAENDER = 'alle'
+export type BundeslandAuswahl = BundeslandCode | typeof ALLE_BUNDESLAENDER
 
 export interface WaitlistEintrag {
   bundesland: BundeslandCode
@@ -237,9 +276,14 @@ export const FALLBACK_STATE: Omit<StateSettingsPublic, 'organization_id' | 'bund
 
 // ── UI-Texte (Vorgabe Geschäftsführung, wörtlich) ───────────────
 
-/** Text am ausgegrauten Kassen-Button. */
+/**
+ * Text am ausgegrauten Kassen-Button.
+ * Wortlaut von der Geschäftsführung vorgegeben — nicht umformulieren.
+ */
 export const TEXT_KASSE_IM_VERFAHREN =
-  'Die Anerkennung für die Pflegekassenabrechnung befindet sich derzeit im Genehmigungsverfahren.'
+  'Die Anerkennung für die Abrechnung mit den Pflegekassen befindet sich derzeit im '
+  + 'Genehmigungsverfahren. Sie können sich bereits registrieren und werden automatisch '
+  + 'informiert, sobald die Kassenabrechnung verfügbar ist.'
 
 export const TEXT_KASSE_ABGELEHNT =
   'Für dieses Bundesland liegt derzeit keine Anerkennung für die Pflegekassenabrechnung vor. '

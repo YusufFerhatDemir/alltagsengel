@@ -155,6 +155,9 @@ export const PRAEFIX_3: Record<string, Regel> = {
   '371': { bl: 'niedersachsen', sicher: true },  // Northeim
   '372': { bl: 'hessen',        sicher: true },  // Witzenhausen, Eschwege
   '373': { bl: 'thueringen',    sicher: true },  // Heilbad Heiligenstadt, Leinefelde
+  '374': { bl: 'niedersachsen', sicher: true },  // Herzberg, Bad Sachsa, Walkenried
+  '375': { bl: 'niedersachsen', sicher: true },  // Bad Gandersheim
+  '376': { bl: 'niedersachsen', sicher: true },  // Holzminden
   '384': { bl: 'niedersachsen', sicher: false }, // Wolfsburg-Umland (NI) ↔ Klötze (ST)
   '388': { bl: 'sachsen_anhalt', sicher: true }, // Halberstadt, Wernigerode
   '389': { bl: 'sachsen_anhalt', sicher: true },
@@ -164,9 +167,24 @@ export const PRAEFIX_3: Record<string, Regel> = {
   '495': { bl: 'nordrhein_westfalen', sicher: false }, // Tecklenburger Land ↔ Rieste (NI)
 
   // ── NRW / Rheinland-Pfalz ──
+  // Die Leitregionen 53 und 57 überschreiten die Landesgrenze, ihre
+  // Teilbereiche aber nicht. Ohne diese 3-stelligen Regeln wäre der gesamte
+  // Bonner Raum „unsicher" und damit von der Kassenabrechnung ausgeschlossen.
+  '530': { bl: 'nordrhein_westfalen', sicher: true },  // Bonn
+  '531': { bl: 'nordrhein_westfalen', sicher: true },  // Bonn
+  '532': { bl: 'nordrhein_westfalen', sicher: true },  // Bonn
+  '533': { bl: 'nordrhein_westfalen', sicher: true },  // Meckenheim, Rheinbach
   '534': { bl: 'rheinland_pfalz',     sicher: true },  // Remagen, Bad Neuenahr-Ahrweiler
   '535': { bl: 'rheinland_pfalz',     sicher: true },  // Adenau, Linz, Unkel
   '536': { bl: 'nordrhein_westfalen', sicher: false }, // Bad Honnef (NW) ↔ Rheinbreitbach (RP)
+  '537': { bl: 'nordrhein_westfalen', sicher: true },  // Siegburg, Sankt Augustin, Hennef
+  '538': { bl: 'nordrhein_westfalen', sicher: true },  // Euskirchen, Mechernich
+  '539': { bl: 'nordrhein_westfalen', sicher: true },  // Bad Münstereifel, Schleiden
+  '570': { bl: 'nordrhein_westfalen', sicher: true },  // Siegen
+  '571': { bl: 'nordrhein_westfalen', sicher: true },  // Siegen-Umland
+  '572': { bl: 'nordrhein_westfalen', sicher: true },  // Kreuztal, Freudenberg
+  '573': { bl: 'nordrhein_westfalen', sicher: true },  // Bad Berleburg, Schmallenberg
+  '574': { bl: 'nordrhein_westfalen', sicher: true },  // Olpe, Lennestadt
   '575': { bl: 'rheinland_pfalz',     sicher: true },  // Betzdorf, Wissen
   '576': { bl: 'rheinland_pfalz',     sicher: true },  // Altenkirchen
 
@@ -183,6 +201,16 @@ export const PRAEFIX_3: Record<string, Regel> = {
   '639': { bl: 'bayern', sicher: true },  // Miltenberg
 
   // ── Saarland / Rheinland-Pfalz ──
+  // Ohne diese Regeln wäre das GESAMTE Saarland „unsicher" gewesen — die
+  // Kassenabrechnung hätte sich dort nie aktivieren lassen.
+  '660': { bl: 'saarland',        sicher: true },
+  '661': { bl: 'saarland',        sicher: true },  // Saarbrücken
+  '662': { bl: 'saarland',        sicher: true },  // Neunkirchen, Sankt Wendel
+  '663': { bl: 'saarland',        sicher: true },  // Völklingen, Saarlouis
+  '664': { bl: 'saarland',        sicher: true },  // Homburg, Kirkel, Blieskastel
+  '665': { bl: 'saarland',        sicher: true },  // Merzig, Losheim
+  '666': { bl: 'saarland',        sicher: true },  // Sankt Wendel, Nohfelden
+  '667': { bl: 'saarland',        sicher: true },  // Saarlouis, Dillingen
   '668': { bl: 'saarland',        sicher: false }, // Lebach/Schmelz (SL) ↔ Landstuhl (RP)
   '669': { bl: 'rheinland_pfalz', sicher: true },  // Kusel, Ramstein, Pirmasens
 
