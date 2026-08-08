@@ -28,9 +28,9 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { getOrgIK } from '@/lib/config/org-config'
 
 // ── Leistungserbringer-Stammdaten (Pflichtfeld Kasse) ───────────
-// IK-Nummer ist NICHT mehr hier hartcodiert (P0-5) — sie wird in
-// loadLeistungsnachweis() via getOrgIK() geladen und auf
-// LeistungsnachweisData.leistungserbringer_ik abgelegt.
+// IK-Nummer wird in loadLeistungsnachweis() via getOrgIK() geladen.
+// Name/Adresse kommen aus der organizations-Tabelle (Multi-Tenant).
+// LEISTUNGSERBRINGER ist der Fallback fuer die Stamm-Organisation.
 export const LEISTUNGSERBRINGER = {
   name: 'Alltagsengel UG (haftungsbeschränkt)',
   kurz: 'Alltagsengel',
@@ -38,6 +38,39 @@ export const LEISTUNGSERBRINGER = {
   ort: '60311 Frankfurt am Main',
   email: 'info@alltagsengel.care',
 } as const
+
+export interface LeistungserbringerInfo {
+  name: string
+  kurz: string
+  strasse: string
+  ort: string
+  email: string
+}
+
+export async function getLeistungserbringer(
+  supabase: SupabaseClient,
+  organizationId: string,
+): Promise<LeistungserbringerInfo> {
+  try {
+    const { data } = await supabase
+      .from('organizations')
+      .select('name, address, settings')
+      .eq('id', organizationId)
+      .single()
+    if (data?.name) {
+      const addr = (data.address as Record<string, string>) || {}
+      const settings = (data.settings as Record<string, string>) || {}
+      return {
+        name: data.name,
+        kurz: settings.kurzname || data.name.replace(/ UG.*$| GmbH.*$| e\.V\..*$/i, '').trim(),
+        strasse: addr.strasse || LEISTUNGSERBRINGER.strasse,
+        ort: addr.plz && addr.ort ? `${addr.plz} ${addr.ort}` : LEISTUNGSERBRINGER.ort,
+        email: settings.email || LEISTUNGSERBRINGER.email,
+      }
+    }
+  } catch { /* DB nicht verfuegbar, Fallback */ }
+  return { ...LEISTUNGSERBRINGER }
+}
 
 const GOLD = '#C9963C'
 const COAL = '#1A1612'
@@ -61,6 +94,7 @@ export interface LeistungsnachweisData {
   monat_label: string
   erstellt_am: string
   leistungserbringer_ik: string
+  leistungserbringer: LeistungserbringerInfo
   verordnung: {
     id: string
     typ: string
@@ -114,8 +148,9 @@ export async function loadLeistungsnachweis(params: {
   verordnung_id: string
   monat: string // 'YYYY-MM'
   supabase: SupabaseClient
+  organizationId?: string
 }): Promise<LeistungsnachweisData> {
-  const { verordnung_id, monat, supabase } = params
+  const { verordnung_id, monat, supabase, organizationId } = params
   if (!/^\d{4}-\d{2}$/.test(monat)) throw new Error('Monat muss das Format YYYY-MM haben.')
 
   // 1) Verordnung inkl. Genehmigung + Kostenträger
@@ -220,11 +255,16 @@ export async function loadLeistungsnachweis(params: {
     year: 'numeric',
   })
 
+  const le = organizationId
+    ? await getLeistungserbringer(supabase, organizationId)
+    : { ...LEISTUNGSERBRINGER }
+
   return {
     monat,
     monat_label: monatLabel,
     erstellt_am: new Date().toLocaleDateString('de-DE'),
-    leistungserbringer_ik: await getOrgIK(supabase),
+    leistungserbringer_ik: await getOrgIK(supabase, organizationId),
+    leistungserbringer: le,
     verordnung: {
       id: verordnung.id,
       typ: verordnung.verordnung_type,
@@ -335,16 +375,16 @@ export function buildLeistungsnachweisHtml(data: LeistungsnachweisData): string 
 </head>
 <body>
   <div class="kopf">
-    <div class="logo">Alltagsengel</div>
+    <div class="logo">${esc(data.leistungserbringer.kurz)}</div>
     <div class="firma">
-      <b>${LEISTUNGSERBRINGER.name}</b><br/>
+      <b>${esc(data.leistungserbringer.name)}</b><br/>
       Alltagsbegleitung &amp; Entlastung<br/>
       <b>IK-Nummer: ${data.leistungserbringer_ik}</b>
     </div>
     <div class="adresse">
-      ${LEISTUNGSERBRINGER.strasse}<br/>
-      ${LEISTUNGSERBRINGER.ort}<br/>
-      ${LEISTUNGSERBRINGER.email}
+      ${esc(data.leistungserbringer.strasse)}<br/>
+      ${esc(data.leistungserbringer.ort)}<br/>
+      ${esc(data.leistungserbringer.email)}
     </div>
   </div>
   <hr class="goldlinie" />
@@ -419,8 +459,8 @@ export function buildLeistungsnachweisHtml(data: LeistungsnachweisData): string 
   </div>
 
   <div class="fuss">
-    ${LEISTUNGSERBRINGER.name} · ${LEISTUNGSERBRINGER.strasse}, ${LEISTUNGSERBRINGER.ort} ·
-    IK ${data.leistungserbringer_ik} · ${LEISTUNGSERBRINGER.email}<br/>
+    ${esc(data.leistungserbringer.name)} · ${esc(data.leistungserbringer.strasse)}, ${esc(data.leistungserbringer.ort)} ·
+    IK ${data.leistungserbringer_ik} · ${esc(data.leistungserbringer.email)}<br/>
     Leistungsnachweis ${esc(data.monat)} · Verordnung/Bewilligung ${esc(v.genehmigungsnummer || v.id)}
   </div>
 </body>
@@ -434,6 +474,7 @@ export async function generateLeistungsnachweis(params: {
   verordnung_id: string
   monat: string // 'YYYY-MM'
   supabase: SupabaseClient
+  organizationId?: string
 }): Promise<Blob> {
   const data = await loadLeistungsnachweis(params)
   const html = buildLeistungsnachweisHtml(data)
