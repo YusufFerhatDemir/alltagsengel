@@ -11,6 +11,7 @@ export interface NativeAuthResult {
   ok: true
   userId: string
   caregiverId: string
+  organizationId: string
 }
 
 export interface NativeAuthError {
@@ -47,7 +48,7 @@ export async function requireCaregiverSession(
 
   const { data: caregiver } = await adminSupabase
     .from('caregivers')
-    .select('id')
+    .select('id, organization_id')
     .eq('user_id', user.id)
     .single()
 
@@ -55,5 +56,5 @@ export async function requireCaregiverSession(
     return { ok: false, status: 403, error: 'Kein Betreuungskraft-Konto für diesen Nutzer' }
   }
 
-  return { ok: true, userId: user.id, caregiverId: caregiver.id }
+  return { ok: true, userId: user.id, caregiverId: caregiver.id, organizationId: caregiver.organization_id }
 }
