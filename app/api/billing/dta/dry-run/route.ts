@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { NextResponse } from 'next/server'
-import { preFlightValidierung } from '@/lib/abrechnung/kassenabrechnung-engine'
+import { preFlightValidierung, monatsGrenzen, euroZuCent } from '@/lib/abrechnung/kassenabrechnung-engine'
 import { generateAlleDateien, type AbrechnungsFall, type GeneratorOptionen } from '@/lib/abrechnung/edifact-generator'
 import { validateEDIFACT } from '@/lib/abrechnung/edifact-validator'
 import { generateAuftragsdatei } from '@/lib/abrechnung/auftragsdatei'
@@ -96,9 +96,10 @@ export async function POST(request: Request) {
     const rlStart = Date.now()
     let rechnungenQuery = admin
       .from('invoices')
-      .select('id, client_id, total_amount, invoice_number_formatted, billing_type, period_month')
+      .select('id, client_id, total_amount, invoice_number_formatted, billing_type, period_start, period_end')
       .eq('organization_id', organizationId)
-      .like('period_month', abrechnungsmonat.slice(0, 7) + '%')
+      .gte('period_start', monatsGrenzen(abrechnungsmonat).von)
+      .lte('period_start', monatsGrenzen(abrechnungsmonat).bis)
       .in('status', ['freigegeben', 'erneut_eingereicht'])
       .is('deleted_at', null)
 
@@ -107,7 +108,8 @@ export async function POST(request: Request) {
     }
 
     const { data: rechnungen } = await rechnungenQuery
-    const gesamtCent = rechnungen?.reduce((s, r) => s + (r.total_amount ?? 0), 0) ?? 0
+    // total_amount steht in EURO — vor jeder Cent-Rechnung umrechnen.
+    const gesamtCent = rechnungen?.reduce((s, r) => s + euroZuCent(r.total_amount), 0) ?? 0
 
     schritte.push({
       schritt: '2. Rechnungen geladen',
@@ -203,7 +205,7 @@ export async function POST(request: Request) {
         datum: r.date,
         leistungsart: r.service_type || 'alltagsbegleitung_45a',
         menge: (r.duration_minutes ?? 60) / 60,
-        einzelpreis_cent: r.amount ?? 0,
+        einzelpreis_cent: euroZuCent(r.amount),
         uhrzeit: undefined,
         dauer_minuten: r.duration_minutes ?? 60,
         pflegekraft_name: r.caregiver
