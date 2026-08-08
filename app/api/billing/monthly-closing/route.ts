@@ -37,6 +37,7 @@ export async function GET(request: Request) {
     const [recordsRes, invoicesRes, closingsRes, paymentsRes] = await Promise.all([
       admin.from('service_records')
         .select('id, client_id, status, date, duration_minutes, amount, budget_type, service_type')
+        .eq('organization_id', organizationId)
         .gte('date', periodStart).lte('date', periodEnd),
       admin.from('invoices')
         .select('id, client_id, status, total_amount, paid_amount, billing_type, period_start, period_end')
@@ -45,6 +46,7 @@ export async function GET(request: Request) {
         .is('deleted_at', null),
       admin.from('monthly_closings')
         .select('*')
+        .eq('organization_id', organizationId)
         .eq('year', year).eq('month', monthNum),
       admin.from('payments')
         .select('id, amount_cents, matching_status, payment_date')

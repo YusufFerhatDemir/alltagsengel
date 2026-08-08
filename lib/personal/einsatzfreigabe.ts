@@ -7,6 +7,15 @@ export interface FreigabeErgebnis {
   vertragsstatus: string | null
   probleme: string[]
   abgelaufeneQualifikationen: { id: string; title: string; validUntil: string | null }[]
+  budgetWarnung: string | null
+  budgetBlockiert: boolean
+}
+
+export interface ClientFreigabeErgebnis {
+  clientId: string
+  clientName: string
+  freigegeben: boolean
+  probleme: string[]
 }
 
 export async function pruefeEinsatzfreigabe(
@@ -16,7 +25,7 @@ export async function pruefeEinsatzfreigabe(
 ): Promise<FreigabeErgebnis> {
   const { data: cg, error: cgErr } = await supabase
     .from('caregivers')
-    .select('id, first_name, last_name, einsatzfreigabe, vertragsstatus')
+    .select('id, first_name, last_name, einsatzfreigabe, vertragsstatus, deleted_at, is_active')
     .eq('id', caregiverId)
     .eq('organization_id', organizationId)
     .single()
@@ -24,6 +33,14 @@ export async function pruefeEinsatzfreigabe(
 
   const probleme: string[] = []
   const name = `${cg.first_name ?? ''} ${cg.last_name ?? ''}`.trim()
+
+  if (cg.deleted_at) {
+    probleme.push('Mitarbeiter ist deaktiviert/gelöscht')
+  }
+
+  if (cg.is_active === false) {
+    probleme.push('Mitarbeiter ist inaktiv')
+  }
 
   if (cg.vertragsstatus !== 'aktiv') {
     probleme.push(`Vertragsstatus ist "${cg.vertragsstatus}" (erwartet: aktiv)`)
@@ -60,7 +77,94 @@ export async function pruefeEinsatzfreigabe(
       title: q.title,
       validUntil: q.valid_until,
     })),
+    budgetWarnung: null,
+    budgetBlockiert: false,
   }
+}
+
+export async function pruefeClientFreigabe(
+  supabase: SupabaseClient,
+  clientId: string,
+  organizationId: string,
+  einsatzDatum?: string,
+): Promise<ClientFreigabeErgebnis> {
+  const { data: client, error: clErr } = await supabase
+    .from('clients')
+    .select('id, first_name, last_name, status, deleted_at, is_active, organization_id')
+    .eq('id', clientId)
+    .eq('organization_id', organizationId)
+    .single()
+  if (clErr || !client) throw new Error('Klient nicht gefunden oder gehört zu einer anderen Organisation.')
+
+  const probleme: string[] = []
+  const name = `${client.first_name ?? ''} ${client.last_name ?? ''}`.trim()
+
+  if (client.deleted_at) {
+    probleme.push('Klient ist deaktiviert/gelöscht')
+  }
+
+  if (client.is_active === false) {
+    probleme.push('Klient ist inaktiv')
+  }
+
+  if (client.status && !['aktiv', 'active', 'neu'].includes(client.status)) {
+    probleme.push(`Klient-Status ist "${client.status}" (erwartet: aktiv)`)
+  }
+
+  if (einsatzDatum) {
+    const { data: vertraege } = await supabase
+      .from('vertraege')
+      .select('id, status, vertragsende')
+      .eq('client_id', clientId)
+      .eq('organization_id', organizationId)
+      .in('status', ['aktiv', 'unterschrieben'])
+
+    if (!vertraege || vertraege.length === 0) {
+      probleme.push('Kein aktiver Vertrag vorhanden')
+    } else {
+      const hatGueltig = vertraege.some(v =>
+        !v.vertragsende || v.vertragsende >= einsatzDatum
+      )
+      if (!hatGueltig) {
+        probleme.push(`Alle Verträge enden vor dem Einsatzdatum (${einsatzDatum})`)
+      }
+    }
+  }
+
+  return { clientId, clientName: name, freigegeben: probleme.length === 0, probleme }
+}
+
+export async function pruefeBudget(
+  supabase: SupabaseClient,
+  clientId: string,
+  _organizationId: string,
+): Promise<{ warnung: string | null; blockiert: boolean; prozent: number }> {
+  const year = new Date().getFullYear()
+  const { data: budget } = await supabase
+    .from('client_budgets')
+    .select('annual_amount, carryover_amount, used_amount')
+    .eq('client_id', clientId)
+    .eq('year', year)
+    .maybeSingle()
+  if (!budget) return { warnung: null, blockiert: false, prozent: 0 }
+  const available = (budget.annual_amount ?? 1572) + (budget.carryover_amount ?? 0)
+  const used = budget.used_amount ?? 0
+  const pct = available > 0 ? Math.round((used / available) * 100) : 0
+  if (pct >= 100) {
+    return {
+      warnung: `Budget vollständig ausgeschöpft (${pct}%, ${((used - available) / 100).toFixed(2)} EUR über Limit)`,
+      blockiert: true,
+      prozent: pct,
+    }
+  }
+  if (pct >= 95) {
+    return {
+      warnung: `Budget zu ${pct}% ausgeschöpft (${((available - used) / 100).toFixed(2)} EUR verbleibend)`,
+      blockiert: false,
+      prozent: pct,
+    }
+  }
+  return { warnung: null, blockiert: false, prozent: pct }
 }
 
 export async function setzeEinsatzfreigabe(

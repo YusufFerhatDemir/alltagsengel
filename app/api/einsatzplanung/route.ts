@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getActiveOrgId } from '@/lib/organizations/server'
-import { pruefeEinsatzfreigabe } from '@/lib/personal/einsatzfreigabe'
+import { pruefeEinsatzfreigabe, pruefeClientFreigabe, pruefeBudget } from '@/lib/personal/einsatzfreigabe'
 
 async function requireStaff(supabase: Awaited<ReturnType<typeof createClient>>) {
   const { data: { user } } = await supabase.auth.getUser()
@@ -12,29 +12,6 @@ async function requireStaff(supabase: Awaited<ReturnType<typeof createClient>>) 
     return { ok: false as const, response: NextResponse.json({ error: 'Nur für Administratoren' }, { status: 403 }) }
   }
   return { ok: true as const, userId: user.id, role: profile.role }
-}
-
-async function checkCaregiverClearance(caregiverId: string, organizationId: string) {
-  const admin = createAdminClient()
-  const ergebnis = await pruefeEinsatzfreigabe(admin, caregiverId, organizationId)
-  return ergebnis
-}
-
-async function checkBudgetWarning(clientId: string, organizationId: string) {
-  const admin = createAdminClient()
-  const year = new Date().getFullYear()
-  const { data: budget } = await admin
-    .from('client_budgets')
-    .select('annual_amount, carryover_amount, used_amount')
-    .eq('client_id', clientId)
-    .eq('year', year)
-    .maybeSingle()
-  if (!budget) return null
-  const available = (budget.annual_amount ?? 1572) + (budget.carryover_amount ?? 0)
-  const used = budget.used_amount ?? 0
-  const pct = available > 0 ? Math.round((used / available) * 100) : 0
-  if (pct >= 95) return { warnung: `Budget zu ${pct}% ausgeschöpft (${((available - used) / 100).toFixed(2)} EUR verbleibend)` }
-  return null
 }
 
 export async function GET(req: NextRequest) {
@@ -89,7 +66,18 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Keine Organisation zugewiesen.' }, { status: 403 })
   }
 
-  const freigabe = await checkCaregiverClearance(caregiver_id, organizationId)
+  const admin = createAdminClient()
+
+  const clientCheck = await pruefeClientFreigabe(admin, client_id, organizationId, assignment_date)
+  if (!clientCheck.freigegeben && !body.force_override) {
+    return NextResponse.json({
+      error: `Klient "${clientCheck.clientName}" ist nicht für Einsätze freigegeben.`,
+      client_probleme: clientCheck.probleme,
+      hinweis: 'Mit force_override: true kann die Zuweisung erzwungen werden.',
+    }, { status: 422 })
+  }
+
+  const freigabe = await pruefeEinsatzfreigabe(admin, caregiver_id, organizationId)
   if (!freigabe.freigegeben && !body.force_override) {
     return NextResponse.json({
       error: `Mitarbeiter "${freigabe.caregiverName}" ist nicht für Einsätze freigegeben.`,
@@ -100,12 +88,21 @@ export async function POST(req: NextRequest) {
   }
 
   const warnungen: string[] = []
+  if (clientCheck.probleme.length > 0 && body.force_override) {
+    warnungen.push(`Client-Freigabe übersteuert: ${clientCheck.probleme.join('; ')}`)
+  }
   if (freigabe.probleme.length > 0 && body.force_override) {
     warnungen.push(`Einsatzfreigabe übersteuert: ${freigabe.probleme.join('; ')}`)
   }
 
-  const budgetCheck = await checkBudgetWarning(client_id, organizationId)
-  if (budgetCheck) warnungen.push(budgetCheck.warnung)
+  const budgetCheck = await pruefeBudget(admin, client_id, organizationId)
+  if (budgetCheck.blockiert && !body.force_override) {
+    return NextResponse.json({
+      error: `Budget-Blockierung: ${budgetCheck.warnung}`,
+      hinweis: 'Mit force_override: true kann die Zuweisung erzwungen werden.',
+    }, { status: 422 })
+  }
+  if (budgetCheck.warnung) warnungen.push(budgetCheck.warnung)
 
   const insertData: Record<string, unknown> = {
     client_id,
@@ -116,6 +113,7 @@ export async function POST(req: NextRequest) {
     status: assignmentStatus || 'GEPLANT',
     is_recurring: is_recurring ?? false,
     created_by: auth.userId,
+    organization_id: organizationId,
   }
   if (assignment_date) insertData.assignment_date = assignment_date
   if (weekday != null) insertData.weekday = weekday
@@ -149,10 +147,11 @@ export async function PATCH(req: NextRequest) {
 
   if (!id) return NextResponse.json({ error: 'id erforderlich' }, { status: 400 })
 
-  if (updates.caregiver_id) {
-    const organizationId = await getActiveOrgId()
-    if (organizationId) {
-      const freigabe = await checkCaregiverClearance(updates.caregiver_id, organizationId)
+  const organizationId = await getActiveOrgId()
+  if (organizationId) {
+    const admin = createAdminClient()
+    if (updates.caregiver_id) {
+      const freigabe = await pruefeEinsatzfreigabe(admin, updates.caregiver_id, organizationId)
       if (!freigabe.freigegeben && !force_override) {
         return NextResponse.json({
           error: `Mitarbeiter "${freigabe.caregiverName}" ist nicht für Einsätze freigegeben.`,
@@ -162,14 +161,26 @@ export async function PATCH(req: NextRequest) {
         }, { status: 422 })
       }
     }
+    if (updates.client_id) {
+      const clientCheck = await pruefeClientFreigabe(admin, updates.client_id, organizationId, updates.assignment_date)
+      if (!clientCheck.freigegeben && !force_override) {
+        return NextResponse.json({
+          error: `Klient "${clientCheck.clientName}" ist nicht für Einsätze freigegeben.`,
+          client_probleme: clientCheck.probleme,
+          hinweis: 'Mit force_override: true kann die Zuweisung erzwungen werden.',
+        }, { status: 422 })
+      }
+    }
   }
 
-  const { data, error } = await supabase
+  const updatePayload = { ...updates, updated_at: new Date().toISOString() }
+  delete updatePayload.force_override
+  let query = supabase
     .from('assignments')
-    .update({ ...updates, updated_at: new Date().toISOString() })
+    .update(updatePayload)
     .eq('id', id)
-    .select()
-    .single()
+  if (organizationId) query = query.eq('organization_id', organizationId)
+  const { data, error } = await query.select().single()
 
   if (error) {
     if (error.message.includes('DOPPELBELEGUNG')) {

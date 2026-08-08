@@ -728,23 +728,38 @@ export default function AdminVerordnungenPage() {
     if (!assign.caregiver_id) { setError('Bitte einen Engel auswählen.'); return }
     setBusyId(v.id)
     try {
-      const supabase = createClient()
-      const { error: e } = await supabase.from('assignments').insert({
-        client_id: v.client_id,
-        caregiver_id: assign.caregiver_id,
-        weekday: Number(assign.weekday),
-        start_time: assign.start_time,
-        end_time: assign.end_time,
-        service_type: v.leistungsart
-          ? (LEISTUNGSART_LABELS[v.leistungsart]?.label || 'Alltagsbegleitung')
-          : (v.leistung_beschreibung || 'Alltagsbegleitung'),
-        is_recurring: true,
-        valid_from: v.gueltig_von,
-        valid_until: v.gueltig_bis || v.genehmigung_bis,
-        status: 'active',
-        verordnung_id: v.id,
+      const res = await fetch('/api/einsatzplanung', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          client_id: v.client_id,
+          caregiver_id: assign.caregiver_id,
+          weekday: Number(assign.weekday),
+          start_time: assign.start_time,
+          end_time: assign.end_time,
+          service_type: v.leistungsart
+            ? (LEISTUNGSART_LABELS[v.leistungsart]?.label || 'Alltagsbegleitung')
+            : (v.leistung_beschreibung || 'Alltagsbegleitung'),
+          is_recurring: true,
+          valid_from: v.gueltig_von,
+          valid_until: v.gueltig_bis || v.genehmigung_bis,
+          status: 'active',
+          verordnung_id: v.id,
+        }),
       })
-      if (e) { setError(`Einsatz anlegen fehlgeschlagen: ${e.message}`); return }
+      const data = await res.json()
+      if (!res.ok) {
+        const msg = data.freigabe_probleme
+          ? `${data.error}\n${data.freigabe_probleme.join('\n')}`
+          : data.client_probleme
+            ? `${data.error}\n${data.client_probleme.join('\n')}`
+            : data.error
+        setError(msg || 'Einsatz anlegen fehlgeschlagen')
+        return
+      }
+      if (data.warnungen?.length) {
+        setError(`Einsatz angelegt mit Warnungen: ${data.warnungen.join('; ')}`)
+      }
       setAssignId(null)
       await load()
     } finally {

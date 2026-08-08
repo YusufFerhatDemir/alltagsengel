@@ -366,6 +366,14 @@ export async function freezeInvoice(
     actorId,
   });
 
+  // Auto-Dunning: Mahneintrag erstellen bei Festschreibung
+  try {
+    const { ensureDunningEntry } = await import('./dunning');
+    await ensureDunningEntry(supabase, invoiceId, invoice.organization_id, actorId);
+  } catch (e) {
+    console.error('[billing] Auto-Dunning bei Festschreibung fehlgeschlagen:', e);
+  }
+
   return {
     snapshotId: snapshot.id,
     invoiceNumber: formattedNumber,

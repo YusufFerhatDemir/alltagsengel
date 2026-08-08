@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { logAuditEvent } from '@/lib/audit-log'
+import { getActiveOrgId } from '@/lib/organizations/server'
 
 export async function POST(request: NextRequest) {
   try {
@@ -25,6 +26,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Nur Superadmins dürfen Rollen verwalten' }, { status: 403 })
     }
 
+    const organizationId = await getActiveOrgId()
+    if (!organizationId) {
+      return NextResponse.json({ error: 'Keine Organisation zugewiesen.' }, { status: 403 })
+    }
+
     // 3. Request-Body lesen
     const { userId, action } = await request.json()
 
@@ -41,7 +47,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Du kannst dir selbst nicht die Rolle entziehen' }, { status: 400 })
     }
 
-    // 5. Ziel-User prüfen
+    // 5. Ziel-User muss zur selben Organisation gehören
+    const { data: membership } = await adminSupabase
+      .from('organization_members')
+      .select('id')
+      .eq('user_id', userId)
+      .eq('organization_id', organizationId)
+      .maybeSingle()
+
+    if (!membership) {
+      return NextResponse.json({ error: 'Benutzer gehört nicht zu Ihrer Organisation' }, { status: 403 })
+    }
+
     const { data: targetProfile } = await adminSupabase
       .from('profiles')
       .select('role, first_name, last_name, email')
