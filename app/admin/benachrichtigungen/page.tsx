@@ -57,18 +57,25 @@ export default function BenachrichtigungenPage() {
 
   async function markAsRead(id: string) {
     try {
-      await fetch(`/api/ops/benachrichtigungen/${id}`, {
+      const res = await fetch('/api/ops/benachrichtigungen/gelesen', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ gelesen: true }),
+        body: JSON.stringify({ ids: [id] }),
       })
+      if (!res.ok) return
       setRows(prev => prev.map(r => r.id === id ? { ...r, gelesen: true } : r))
     } catch { /* ignore */ }
   }
 
   async function markAllRead() {
+    const unreadIds = rows.filter(r => !r.gelesen).map(r => r.id)
+    if (unreadIds.length === 0) return
     try {
-      const res = await fetch('/api/ops/benachrichtigungen/alle-gelesen', { method: 'POST' })
+      const res = await fetch('/api/ops/benachrichtigungen/gelesen', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids: unreadIds }),
+      })
       if (!res.ok) { setError('Fehler beim Markieren'); return }
       setRows(prev => prev.map(r => ({ ...r, gelesen: true })))
       setSuccess('Alle als gelesen markiert')

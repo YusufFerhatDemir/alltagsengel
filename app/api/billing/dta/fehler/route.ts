@@ -112,7 +112,16 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: 'Fehler nicht gefunden.' }, { status: 404 })
     }
 
-    await aktualisiereFehler(admin, { ...body, actorId: user.id })
+    await aktualisiereFehler(admin, {
+      fehlerId: body.fehlerId,
+      bearbeitungsstatus: body.bearbeitungsstatus,
+      loesung: body.loesung,
+      interneErklaerung: body.interneErklaerung,
+      korrekturLaufId: body.korrekturLaufId,
+      verantwortlicher: body.verantwortlicher,
+      wiedervorlageAm: body.wiedervorlageAm,
+      actorId: user.id,
+    })
 
     return NextResponse.json({ success: true })
   } catch (err) {

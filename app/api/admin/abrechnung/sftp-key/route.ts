@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAdmin } from '@/lib/abrechnung/require-admin'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { ZERTIFIKAT_BUCKET } from '@/lib/abrechnung/zertifikate'
+import { getActiveOrgId } from '@/lib/organizations/server'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -16,6 +17,9 @@ export async function POST(req: NextRequest) {
   const auth = await requireAdmin()
   if (!auth.ok) return auth.response
   try {
+    const organizationId = await getActiveOrgId()
+    if (!organizationId) return NextResponse.json({ error: 'Keine Organisation zugewiesen.' }, { status: 403 })
+
     const form = await req.formData()
     const dasId = String(form.get('das_id') || '')
     const datei = form.get('datei') as File | null
@@ -36,6 +40,7 @@ export async function POST(req: NextRequest) {
       .from('datenannahmestellen')
       .select('id, name')
       .eq('id', dasId)
+      .or(`organization_id.eq.${organizationId},organization_id.is.null`)
       .single()
     if (dasErr || !das) return NextResponse.json({ error: 'Datenannahmestelle nicht gefunden' }, { status: 404 })
 
