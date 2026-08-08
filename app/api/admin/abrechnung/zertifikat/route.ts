@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAdmin } from '@/lib/abrechnung/require-admin'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { getActiveOrgId } from '@/lib/organizations/server'
 import { pruefeZertifikat, speichereAbsenderZertifikat } from '@/lib/abrechnung/zertifikate'
 
 export const runtime = 'nodejs'
@@ -14,10 +15,14 @@ export async function GET() {
   const auth = await requireAdmin()
   if (!auth.ok) return auth.response
   try {
+    const orgId = await getActiveOrgId()
+    if (!orgId) return NextResponse.json({ error: 'Keine Organisation zugewiesen' }, { status: 403 })
+
     const supabase = createAdminClient()
     const { data, error } = await supabase
       .from('abrechnung_zertifikate')
       .select('id, ik_nummer, typ, gueltig_ab, gueltig_bis, fingerprint, zertifikat_url, created_at, updated_at')
+      .eq('organization_id', orgId)
       .order('typ')
       .order('ik_nummer')
     if (error) return NextResponse.json({ error: 'Interner Serverfehler' }, { status: 500 })
