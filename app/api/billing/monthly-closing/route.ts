@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { NextResponse } from 'next/server'
 import { getActiveOrgId } from '@/lib/organizations/server'
+import { erstelleMonatsabschluss } from '@/lib/abrechnung/monatsabschluss'
 
 export async function GET(request: Request) {
   try {
@@ -118,6 +119,72 @@ export async function GET(request: Request) {
       finalisiert: isFinalized,
       closings,
     })
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Interner Serverfehler'
+    return NextResponse.json({ error: message }, { status: 500 })
+  }
+}
+
+/**
+ * POST /api/billing/monthly-closing
+ *
+ * Fuehrt den Monatsabschluss aus: sammelt je genehmigter Verordnung die
+ * Leistungen des Monats, prueft Unterschrift und Abtretungserklaerung,
+ * gruppiert nach Kostentraeger und schreibt monthly_closings je Klient.
+ *
+ * Diese Route schliesst eine Luecke im operativen Kernprozess: die Engine
+ * lib/abrechnung/monatsabschluss.erstelleMonatsabschluss() existierte, hatte
+ * aber KEINEN einzigen Aufrufer. monthly_closings wird ausschliesslich dort
+ * geschrieben — der Monatsabschluss war damit ueber UI wie API gar nicht
+ * ausloesbar, und /api/billing/monthly-closing bot nur ein GET auf eine
+ * dauerhaft leere Tabelle.
+ *
+ * Body: { month: 'YYYY-MM', bundesland: string, dryRun?: boolean }
+ *
+ * dryRun=true rechnet alles durch, schreibt aber nichts — gedacht fuer die
+ * Vorschau vor dem echten Abschluss.
+ */
+export async function POST(request: Request) {
+  try {
+    const supabase = await createClient()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) return NextResponse.json({ error: 'Nicht autorisiert.' }, { status: 401 })
+
+    const { data: profile } = await supabase
+      .from('profiles').select('role').eq('id', user.id).single()
+    if (!profile || !['admin', 'superadmin'].includes(profile.role)) {
+      return NextResponse.json({ error: 'Nur für Administratoren.' }, { status: 403 })
+    }
+
+    const organizationId = await getActiveOrgId()
+    if (!organizationId) {
+      return NextResponse.json({ error: 'Keine Organisation zugewiesen.' }, { status: 403 })
+    }
+
+    const body = await request.json().catch(() => ({}))
+    const { month, bundesland, dryRun } = body as {
+      month?: string; bundesland?: string; dryRun?: boolean
+    }
+
+    if (!month || !/^\d{4}-\d{2}$/.test(month)) {
+      return NextResponse.json({ error: 'month im Format YYYY-MM erforderlich.' }, { status: 400 })
+    }
+    // Bewusst keine Vorbelegung: ohne Bundesland zoege die Preissuche
+    // landesfremde Saetze. Die Engine wirft sonst selbst.
+    if (!bundesland) {
+      return NextResponse.json(
+        { error: 'bundesland erforderlich (Katalogcode, z. B. "hessen").' },
+        { status: 400 },
+      )
+    }
+
+    const ergebnis = await erstelleMonatsabschluss(month, createAdminClient(), {
+      bundesland,
+      organizationId,
+      dryRun: dryRun === true,
+    })
+
+    return NextResponse.json({ modus: dryRun === true ? 'vorschau' : 'abschluss', ...ergebnis })
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Interner Serverfehler'
     return NextResponse.json({ error: message }, { status: 500 })
