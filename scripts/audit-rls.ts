@@ -45,8 +45,24 @@ const FORBIDDEN_POLICY_NAMES: Array<{ table: string; name: string }> = [
   { table: 'medikamentenplan', name: 'Öffentliche Medikamente für Notfall' },
 ]
 
-/** Rollen, für die keine SELECT-Policy mit USING(true) existieren darf. */
-const FORBIDDEN_ROLES_FOR_SELECT = new Set(['anon'])
+/**
+ * Rollen, für die keine ungefilterte SELECT-Policy existieren darf.
+ *
+ * `public` gehört zwingend dazu: eine Policy `TO public` gilt für JEDE
+ * DB-Rolle — anon eingeschlossen. Ohne diesen Eintrag lief der Audit an
+ * "Herkes profilleri okuyabilir" (profiles, SELECT, TO public, USING(true))
+ * vorbei, obwohl damit jeder unangemeldete Aufrufer alle Profilzeilen
+ * lesen konnte. Siehe 20260815010000_profiles_rls_rekursion_und_anon_leck.sql.
+ */
+const FORBIDDEN_ROLES_FOR_SELECT = new Set(['anon', 'public'])
+
+/**
+ * USING-Ausdrücke, die auf sensitiven Tabellen keinen echten Filter
+ * darstellen. `true` ist der offensichtliche Fall; `deleted_at is null`
+ * grenzt nur gelöschte Zeilen aus und lässt jeden Aufrufer den kompletten
+ * aktiven Bestand lesen — auf profiles ist das derselbe Vollzugriff.
+ */
+const NON_RESTRICTING_QUALS = new Set(['true', '(deleted_at is null)', 'deleted_at is null'])
 
 // ---- Types ----------------------------------------------------------------
 
@@ -147,14 +163,35 @@ async function main(): Promise<number> {
       }
     }
 
+    // 2b) Keine selbstreferenzielle Policy (42P17-Prävention) ---------------
+    // Eine Policy auf Tabelle T, die in ihrem USING/WITH CHECK erneut aus T
+    // liest, ruft die Policies von T rekursiv auf. Postgres bricht das mit
+    // 42P17 ab — die Tabelle ist dann für JEDEN Nicht-service_role-Zugriff
+    // tot, unabhängig vom JWT. Der zulässige Weg ist eine SECURITY-DEFINER-
+    // Hilfsfunktion (is_admin()), die die Policies gerade NICHT erneut auslöst.
+    for (const pol of policies) {
+      const ausdruck = `${pol.qual ?? ''} ${(pol as { with_check?: string }).with_check ?? ''}`
+      const selbstBezug = new RegExp(
+        `\\bfrom\\s+(?:public\\.)?${pol.tablename}\\b`,
+        'i',
+      ).test(ausdruck)
+      if (selbstBezug) {
+        fail(
+          `Rekursive Policy "${pol.policyname}" auf ${pol.tablename}: liest im USING/CHECK erneut aus ${pol.tablename} → 42P17. SECURITY-DEFINER-Helper (is_admin()) verwenden.`,
+        )
+        violations++
+      }
+    }
+
     // 3) Keine SELECT-Policy mit USING(true) für anon -----------------------
     for (const pol of policies) {
       if (pol.cmd !== 'SELECT') continue
-      const qualTrue = (pol.qual ?? '').trim().toLowerCase() === 'true'
+      const qual = (pol.qual ?? '').trim().toLowerCase()
+      const qualOffen = NON_RESTRICTING_QUALS.has(qual)
       const hasForbiddenRole = (pol.roles ?? []).some((r) => FORBIDDEN_ROLES_FOR_SELECT.has(r))
-      if (qualTrue && hasForbiddenRole) {
+      if (qualOffen && hasForbiddenRole) {
         fail(
-          `Unsichere SELECT-Policy "${pol.policyname}" auf ${pol.tablename}: USING(true) für Rolle(n) [${pol.roles?.join(', ')}]`,
+          `Unsichere SELECT-Policy "${pol.policyname}" auf ${pol.tablename}: USING(${pol.qual}) für Rolle(n) [${pol.roles?.join(', ')}]`,
         )
         violations++
       }
