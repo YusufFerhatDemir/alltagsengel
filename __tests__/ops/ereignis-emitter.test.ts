@@ -38,6 +38,7 @@ function createEmitterMock(tables: Record<string, MockTableConfig> = {}) {
       select: vi.fn().mockReturnThis(),
       eq: vi.fn().mockReturnThis(),
       in: vi.fn().mockReturnThis(),
+      is: vi.fn().mockReturnThis(),
       order: vi.fn().mockReturnThis(),
       limit: vi.fn().mockReturnThis(),
       single: vi.fn(() => Promise.resolve(result)),
@@ -185,6 +186,15 @@ describe('Ereignis-Emitter', () => {
               kategorie: 'aufgabe',
               aktiv: true,
             }],
+            error: null,
+          },
+        },
+        // Rollenbasierte Empfaenger werden in zwei Schritten aufgeloest:
+        // Mitglieder der Org -> davon die Profile mit passender Rolle.
+        // (Kein PostgREST-Embed: organization_members hat keinen FK auf profiles.)
+        organization_members: {
+          selectResult: {
+            data: [{ user_id: 'u-pdl-1' }, { user_id: 'u-pdl-2' }, { user_id: 'u-engel-9' }],
             error: null,
           },
         },

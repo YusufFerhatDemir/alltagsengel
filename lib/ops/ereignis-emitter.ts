@@ -94,6 +94,51 @@ export async function emitEreignis(
   }
 }
 
+/**
+ * Mitglieder einer Organisation, deren Profil-Rolle passt.
+ *
+ * Bewusst zwei Queries statt eines PostgREST-Embeds: zwischen
+ * organization_members und profiles existiert KEIN Foreign Key, ein
+ * `profiles!inner(...)`-Embed scheitert daher mit PGRST200 und liefert
+ * still eine leere Empfaengerliste — rollenbasierte Benachrichtigungen
+ * waeren dann lautlos tot. Fehler werden hier deshalb protokolliert.
+ *
+ * organization_members.role (owner/member) ist NICHT die fachliche
+ * Rolle — die steht in profiles.role (admin/superadmin/engel/...).
+ */
+async function mitgliederMitProfilrolle(
+  supabase: SupabaseClient,
+  organizationId: string,
+  rollen: string[],
+): Promise<string[]> {
+  const { data: mitglieder, error: mErr } = await supabase
+    .from('organization_members')
+    .select('user_id')
+    .eq('organization_id', organizationId)
+
+  if (mErr) {
+    console.error(`resolveEmpfaenger: organization_members fehlgeschlagen: ${mErr.message}`)
+    return []
+  }
+
+  const userIds = (mitglieder ?? []).map((m: any) => m.user_id).filter(Boolean)
+  if (userIds.length === 0) return []
+
+  const { data: profile, error: pErr } = await supabase
+    .from('profiles')
+    .select('id')
+    .in('id', userIds)
+    .in('role', rollen)
+    .is('deleted_at', null)
+
+  if (pErr) {
+    console.error(`resolveEmpfaenger: profiles fehlgeschlagen: ${pErr.message}`)
+    return []
+  }
+
+  return (profile ?? []).map((p: any) => p.id)
+}
+
 async function resolveEmpfaenger(
   supabase: SupabaseClient,
   params: {
@@ -108,22 +153,10 @@ async function resolveEmpfaenger(
   }
 
   switch (params.empfaengerRolle) {
-    case 'admin': {
-      const { data } = await supabase
-        .from('organization_members')
-        .select('user_id, profile:profiles!inner(id, role)')
-        .eq('organization_id', params.organizationId)
-        .eq('profiles.role', 'admin')
-      return (data ?? []).map((m: any) => m.user_id)
-    }
-    case 'pdl': {
-      const { data } = await supabase
-        .from('organization_members')
-        .select('user_id, profile:profiles!inner(id, role)')
-        .eq('organization_id', params.organizationId)
-        .in('profiles.role', ['admin', 'superadmin'])
-      return (data ?? []).map((m: any) => m.user_id)
-    }
+    case 'admin':
+      return mitgliederMitProfilrolle(supabase, params.organizationId, ['admin'])
+    case 'pdl':
+      return mitgliederMitProfilrolle(supabase, params.organizationId, ['admin', 'superadmin'])
     case 'engel': {
       const caregiverId = params.kontext?.caregiver_user_id as string | undefined
       return caregiverId ? [caregiverId] : []
