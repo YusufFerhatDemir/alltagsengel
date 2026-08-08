@@ -182,7 +182,7 @@ export default function AdminClientsPage() {
       </div>
 
       {success && <Banner tone="info">{success}</Banner>}
-      {error && <Banner tone="error">{error}</Banner>}
+      {error && <Banner tone="danger">{error}</Banner>}
 
       {showForm && (
         <div style={{ background: 'var(--bg2)', border: '1px solid var(--ink2)', borderRadius: 8, padding: 20, marginBottom: 20 }}>
