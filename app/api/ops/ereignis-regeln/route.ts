@@ -11,7 +11,7 @@ export async function GET(request: Request) {
   const aktiv = url.searchParams.get('aktiv')
   try {
     const data = await listEreignisRegeln(supabase, {
-      organizationId: auth.organizationId,
+      organizationId: auth.ctx.organizationId,
       aktiv: aktiv !== null ? aktiv === 'true' : undefined,
     })
     return NextResponse.json(data)
@@ -27,7 +27,7 @@ export async function POST(request: Request) {
   try {
     const body = await request.json()
     const data = await createEreignisRegel(supabase, {
-      organizationId: auth.organizationId,
+      organizationId: auth.ctx.organizationId,
       data: body,
     })
     return NextResponse.json(data)

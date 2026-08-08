@@ -13,7 +13,7 @@ export async function GET(
   const supabase = createAdminClient()
   try {
     const data = await listAnhaenge(supabase, {
-      organizationId: auth.organizationId,
+      organizationId: auth.ctx.organizationId,
       aufgabeId,
     })
     return NextResponse.json(data)
@@ -33,10 +33,10 @@ export async function POST(
   try {
     const body = await request.json()
     const data = await createAnhang(supabase, {
-      organizationId: auth.organizationId,
+      organizationId: auth.ctx.organizationId,
       aufgabeId,
       dokumentId: body.dokument_id,
-      hinzugefuegtVon: body.hinzugefuegt_von || auth.userId,
+      hinzugefuegtVon: body.hinzugefuegt_von || auth.ctx.userId,
     })
     return NextResponse.json(data)
   } catch (e: any) {
@@ -59,7 +59,7 @@ export async function DELETE(
   }
   try {
     const data = await deleteAnhang(supabase, {
-      organizationId: auth.organizationId,
+      organizationId: auth.ctx.organizationId,
       id: anhangId,
     })
     return NextResponse.json(data)

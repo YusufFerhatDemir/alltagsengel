@@ -13,7 +13,7 @@ export async function GET(
   const supabase = createAdminClient()
   try {
     const data = await listChecklisten(supabase, {
-      organizationId: auth.organizationId,
+      organizationId: auth.ctx.organizationId,
       aufgabeId,
     })
     return NextResponse.json(data)
@@ -33,7 +33,7 @@ export async function POST(
   try {
     const body = await request.json()
     const data = await createChecklistenItem(supabase, {
-      organizationId: auth.organizationId,
+      organizationId: auth.ctx.organizationId,
       aufgabeId,
       titel: body.titel,
       position: body.position,

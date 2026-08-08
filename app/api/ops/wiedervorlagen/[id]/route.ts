@@ -14,7 +14,7 @@ export async function PATCH(
   try {
     const body = await request.json()
     const data = await updateWiedervorlage(supabase, {
-      organizationId: auth.organizationId,
+      organizationId: auth.ctx.organizationId,
       id,
       data: body,
     })
