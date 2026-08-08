@@ -30,8 +30,8 @@ export async function GET() {
 
     const [orgRes, zertRes, dasRes, stateRes, laufRes] = await Promise.all([
       admin.from('organizations').select('ik_nummer, name').eq('id', organizationId).single(),
-      admin.from('abrechnung_zertifikate').select('typ, gueltig_bis, ik_nummer, fingerprint').order('gueltig_bis', { ascending: false }),
-      admin.from('datenannahmestellen').select('id, name, ik_nummer, sftp_host, sftp_user, sftp_key_url, aktiv').order('name'),
+      admin.from('abrechnung_zertifikate').select('typ, gueltig_bis, ik_nummer, fingerprint').eq('organization_id', organizationId).order('gueltig_bis', { ascending: false }),
+      admin.from('datenannahmestellen').select('id, name, ik_nummer, sftp_host, sftp_user, sftp_key_url, aktiv').or(`organization_id.eq.${organizationId},organization_id.is.null`).order('name'),
       admin.from('state_settings').select('bundesland, status, kassenrechnung_enabled, dakota_export_enabled').eq('organization_id', organizationId),
       admin.from('abrechnungslaeufe').select('id, status, abrechnungsmonat, bundesland, kostentraeger_ik, created_at').eq('organization_id', organizationId).order('created_at', { ascending: false }).limit(20),
     ])

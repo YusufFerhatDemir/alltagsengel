@@ -6,6 +6,7 @@ import { readFile } from 'fs/promises'
 import { join } from 'path'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { getActiveOrgId } from '@/lib/organizations/server'
 
 // ═══════════════════════════════════════════════════════════════
 // POST /api/admin/invoices/[id]/generate-pdf
@@ -53,11 +54,15 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       return NextResponse.json({ error: 'Nur für Administratoren' }, { status: 403 })
     }
 
-    // ── Rechnung + Klient + Positionen laden ──
-    const { data: invoice, error: invErr } = await supabase
+    const orgId = await getActiveOrgId()
+    const admin = createAdminClient()
+
+    // ── Rechnung + Klient + Positionen laden — org-fenced ──
+    const { data: invoice, error: invErr } = await admin
       .from('invoices')
       .select('id, invoice_number, client_id, period_start, period_end, total_amount, budget_amount, private_amount, status, client:clients(first_name, last_name, address, city, zip_code, insurance_name, insurance_number)')
       .eq('id', invoiceId)
+      .eq('organization_id', orgId)
       .single()
 
     if (invErr || !invoice) {
