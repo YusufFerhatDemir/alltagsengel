@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useState, useEffect, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { IconChart, IconUsers, IconClipboard, IconWings, IconLogout, IconTarget, IconHeart, IconMoney, IconDocument, IconHandshake, IconHome, IconCalendar, IconClock, IconChat, IconBell } from '@/components/Icons'
+import { IconChart, IconUsers, IconClipboard, IconWings, IconLogout, IconTarget, IconHeart, IconMoney, IconDocument, IconHandshake, IconHome, IconCalendar, IconClock, IconChat, IconBell, IconWorkflow } from '@/components/Icons'
 import NotificationBell from '@/components/NotificationBell'
 import OrgSwitcher from '@/components/OrgSwitcher'
 import BundeslandSwitcher from '@/components/admin/BundeslandSwitcher'
@@ -161,6 +161,7 @@ const opsNavItems = [
   { href: '/admin/nachrichten', label: 'Nachrichten', icon: <IconChat size={18} /> },
   { href: '/admin/wiedervorlagen', label: 'Wiedervorlagen', icon: <IconCalendar size={18} /> },
   { href: '/admin/benachrichtigungen', label: 'Benachrichtigungen', icon: <IconBell size={18} /> },
+  { href: '/admin/workflow', label: 'Workflow-Engine', icon: <IconWorkflow size={18} /> },
   { href: '/admin/eskalationen', label: 'Eskalationsregeln', icon: <IconTarget size={18} /> },
   { href: '/admin/ops-audit', label: 'Aktivitätslog', icon: <IconDocument size={18} /> },
   { href: '/admin/expansion', label: 'Expansion Deutschland', icon: <IconTarget size={18} /> },

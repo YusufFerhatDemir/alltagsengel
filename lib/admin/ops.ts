@@ -1163,3 +1163,82 @@ export const FAELLIGKEITS_STATUS: Record<string, { label: string; color: string 
   spaeter: { label: 'Später', color: '#999' },
   ohne_datum: { label: 'Ohne Datum', color: '#999' },
 }
+
+// ── Workflow-Engine ──────────────────────────────────────────────
+export const WF_MODUL: Record<string, { label: string; color: string }> = {
+  dakota: { label: 'DAKOTA', color: '#7E57C2' },
+  abrechnung: { label: 'Abrechnung', color: '#5CB882' },
+  personal: { label: 'Personal', color: '#2196F3' },
+  pflege: { label: 'Pflege', color: '#D04B3B' },
+  dokumente: { label: 'Dokumente', color: '#7E57C2' },
+  einsatz: { label: 'Einsatz', color: '#C9963C' },
+  aufgaben: { label: 'Aufgaben', color: '#E8A000' },
+  forderungen: { label: 'Forderungen', color: '#FF7043' },
+  system: { label: 'System', color: '#999' },
+}
+
+export const WF_EVENT_STATUS: Record<string, { label: string; color: string }> = {
+  neu: { label: 'Neu', color: '#2196F3' },
+  in_bearbeitung: { label: 'In Bearbeitung', color: '#E8A000' },
+  verarbeitet: { label: 'Verarbeitet', color: '#5CB882' },
+  fehlgeschlagen: { label: 'Fehlgeschlagen', color: '#D04B3B' },
+  uebersprungen: { label: 'Übersprungen', color: '#999' },
+}
+
+export const WF_EVENT_PRIORITAET: Record<string, { label: string; color: string }> = {
+  niedrig: { label: 'Niedrig', color: '#999' },
+  normal: { label: 'Normal', color: '#2196F3' },
+  hoch: { label: 'Hoch', color: '#E8A000' },
+  kritisch: { label: 'Kritisch', color: '#D04B3B' },
+}
+
+export const WF_AKTION_TYP: Record<string, { label: string; color: string }> = {
+  aufgabe_erstellen: { label: 'Aufgabe erstellen', color: '#E8A000' },
+  benachrichtigung_senden: { label: 'Benachrichtigung senden', color: '#2196F3' },
+  wiedervorlage_erstellen: { label: 'Wiedervorlage erstellen', color: '#26A69A' },
+  eskalation_ausloesen: { label: 'Eskalation auslösen', color: '#D04B3B' },
+  status_aendern: { label: 'Status ändern', color: '#7E57C2' },
+  feld_aktualisieren: { label: 'Feld aktualisieren', color: '#5CB882' },
+  webhook: { label: 'Webhook', color: '#999' },
+}
+
+export const WF_AUSFUEHRUNG_STATUS: Record<string, { label: string; color: string }> = {
+  ausstehend: { label: 'Ausstehend', color: '#999' },
+  erfolgreich: { label: 'Erfolgreich', color: '#5CB882' },
+  fehlgeschlagen: { label: 'Fehlgeschlagen', color: '#D04B3B' },
+  uebersprungen: { label: 'Übersprungen', color: '#999' },
+}
+
+export const WF_QUEUE_STATUS: Record<string, { label: string; color: string }> = {
+  wartend: { label: 'Wartend', color: '#E8A000' },
+  in_bearbeitung: { label: 'In Bearbeitung', color: '#2196F3' },
+  erledigt: { label: 'Erledigt', color: '#5CB882' },
+  fehlgeschlagen: { label: 'Fehlgeschlagen', color: '#FF7043' },
+  dead_letter: { label: 'Dead-Letter', color: '#D04B3B' },
+}
+
+export const WF_AUDIT_TYP: Record<string, { label: string; color: string }> = {
+  event_emittiert: { label: 'Event emittiert', color: '#2196F3' },
+  regel_ausgewertet: { label: 'Regel ausgewertet', color: '#7E57C2' },
+  aktion_ausgefuehrt: { label: 'Aktion ausgeführt', color: '#5CB882' },
+  retry: { label: 'Retry', color: '#E8A000' },
+  dead_letter: { label: 'Dead-Letter', color: '#D04B3B' },
+  manuell_wiederholt: { label: 'Manuell wiederholt', color: '#C9963C' },
+  regel_erstellt: { label: 'Regel erstellt', color: '#5CB882' },
+  regel_geaendert: { label: 'Regel geändert', color: '#2196F3' },
+  regel_deaktiviert: { label: 'Regel deaktiviert', color: '#999' },
+  fristen_check: { label: 'Fristen-Check', color: '#26A69A' },
+  system_fehler: { label: 'System-Fehler', color: '#D04B3B' },
+}
+
+export const WF_BEDINGUNG_OPERATOR: Record<string, string> = {
+  '=': 'ist gleich',
+  '!=': 'ist nicht gleich',
+  '>': 'größer als',
+  '<': 'kleiner als',
+  '>=': 'größer/gleich',
+  '<=': 'kleiner/gleich',
+  'enthält': 'enthält',
+  'ist_leer': 'ist leer',
+  'ist_nicht_leer': 'ist nicht leer',
+}
