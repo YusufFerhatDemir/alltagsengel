@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requirePersonalAdmin } from '@/lib/personal/api-auth'
 import { listEintraege, createEintrag } from '@/lib/personal/dienstplan'
+import { pruefeEinsatzfreigabe } from '@/lib/personal/einsatzfreigabe'
 import type { DienstplanStatus } from '@/lib/personal/types'
 
 export async function GET(request: Request) {
@@ -37,10 +38,21 @@ export async function POST(request: Request) {
   const supabase = createAdminClient()
   try {
     const body = await request.json()
+
+    if (body.caregiverId) {
+      const freigabe = await pruefeEinsatzfreigabe(supabase, body.caregiverId, auth.ctx.organizationId)
+      if (!freigabe.freigegeben && !body.forceOverride) {
+        return NextResponse.json({
+          error: `Mitarbeiter "${freigabe.caregiverName}" ist nicht für Einsätze freigegeben.`,
+          freigabe_probleme: freigabe.probleme,
+          abgelaufene_qualifikationen: freigabe.abgelaufeneQualifikationen,
+          hinweis: 'Mit forceOverride: true kann die Zuweisung erzwungen werden.',
+        }, { status: 422 })
+      }
+    }
+
     const data = await createEintrag(supabase, {
       ...body,
-      // Mandant und Urheber kommen aus dem Auth-Kontext und duerfen
-      // nicht aus dem Request-Body ueberschrieben werden.
       organizationId: auth.ctx.organizationId,
       erstelltVon: auth.ctx.userId,
     })
