@@ -13,15 +13,6 @@ import { ReactNode } from 'react'
 // ═══════════════════════════════════════════════════════════════
 // AdminAuthGuard — WhatsApp-Level Persistenz für Admin
 // ═══════════════════════════════════════════════════════════════
-// Wartet bis SessionKeepAlive den Token refreshen konnte,
-// bevor es den User zum Login schickt. Maximal 4 Sekunden
-// Geduld, dann Redirect.
-// ═══════════════════════════════════════════════════════════════
-// ═══ Rolle AUTORITATIV bestimmen (spiegelt proxy.ts) ═══
-// user_metadata ist vom Nutzer selbst editierbar und darf NICHT allein für
-// Autorisierung genutzt werden. Primär gilt app_metadata.role (nur serverseitig
-// via Admin-API setzbar). Die eigentliche Absicherung erfolgt serverseitig in
-// der Middleware (proxy.ts) — dieser Client-Check ist nur UX/Defense-in-Depth.
 function extractRole(user: { app_metadata?: Record<string, unknown>; user_metadata?: Record<string, unknown> } | null): string {
   const appRole = user?.app_metadata?.role
   if (typeof appRole === 'string' && appRole) return appRole
@@ -36,17 +27,14 @@ function useAdminAuth() {
   const checkAuth = useCallback(async () => {
     const supabase = createClient()
 
-    // Versuch 1: Sofort prüfen
     const { data: { session } } = await supabase.auth.getSession()
     if (session) {
-      // Prüfe Admin-Rolle
       const { data: { user } } = await supabase.auth.getUser()
       const role = extractRole(user)
       if (role === 'admin' || role === 'superadmin') {
         setAuthState('authenticated')
         return
       }
-      // Fallback: profiles Tabelle
       if (user) {
         const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
         if (profile && ['admin', 'superadmin'].includes(profile.role)) {
@@ -54,15 +42,12 @@ function useAdminAuth() {
           return
         }
       }
-      // User ist eingeloggt aber kein Admin
       router.replace('/auth/login?error=admin_required')
       return
     }
 
-    // Versuch 2: Warte auf SessionKeepAlive Recovery (max 3.5s)
-    // SessionKeepAlive versucht: Cookie → localStorage → IndexedDB → refreshSession
     let attempts = 0
-    const maxAttempts = 7 // 7 × 500ms = 3.5 Sekunden
+    const maxAttempts = 7
     const retryInterval = setInterval(async () => {
       attempts++
       const { data: { session: retrySession } } = await supabase.auth.getSession()
@@ -86,7 +71,6 @@ function useAdminAuth() {
       }
       if (attempts >= maxAttempts) {
         clearInterval(retryInterval)
-        // Alle Versuche gescheitert → Login
         const redirectTo = typeof window !== 'undefined' ? window.location.pathname : '/admin/home'
         router.replace(`/auth/login?redirectTo=${encodeURIComponent(redirectTo)}`)
       }
@@ -108,64 +92,144 @@ const IconSettings = ({ size = 18 }: { size?: number }) => (
   </svg>
 )
 
-const navItems = [
-  { href: '/admin/home', label: 'Dashboard', icon: <IconChart size={18} /> },
-  { href: '/admin/users', label: 'Benutzer', icon: <IconUsers size={18} /> },
-  { href: '/admin/bookings', label: 'Buchungen', icon: <IconClipboard size={18} /> },
-  // Pflegebox-Eintrag entfernt (Phase 5): Feature deaktiviert, Tabellen fehlen in DB
-  { href: '/admin/analytics', label: 'Analytik', icon: <IconTarget size={18} /> },
-  { href: '/admin/settings', label: 'Einstellungen', icon: <IconSettings size={18} /> },
+// ═══════════════════════════════════════════════════════════════
+// Gruppierte Navigation — 11 Fachbereiche + 7 bisher fehlende Seiten
+// ═══════════════════════════════════════════════════════════════
+const navGroups = [
+  {
+    key: 'uebersicht',
+    title: 'Übersicht',
+    items: [
+      { href: '/admin/dashboard', label: 'Dashboard', icon: <IconHome size={18} /> },
+    ],
+  },
+  {
+    key: 'klienten',
+    title: 'Klienten & Pflege',
+    items: [
+      { href: '/admin/clients', label: 'Klienten', icon: <IconHeart size={18} /> },
+      { href: '/admin/budgets', label: 'Budgets', icon: <IconChart size={18} /> },
+      { href: '/admin/verordnungen', label: 'Verordnungen', icon: <IconDocument size={18} /> },
+      { href: '/admin/kostentraeger', label: 'Kostenträger', icon: <IconHandshake size={18} /> },
+      { href: '/admin/pflegedoku', label: 'Pflegedokumentation', icon: <IconHeart size={18} /> },
+      { href: '/admin/vertraege', label: 'Verträge', icon: <IconDocument size={18} /> },
+      { href: '/admin/dokumente', label: 'Dokumente', icon: <IconDocument size={18} /> },
+    ],
+  },
+  {
+    key: 'personal',
+    title: 'Personal',
+    items: [
+      { href: '/admin/personal', label: 'Stammdaten', icon: <IconUsers size={18} /> },
+      { href: '/admin/caregivers', label: 'Betreuungskräfte', icon: <IconUsers size={18} /> },
+      { href: '/admin/nachweise', label: 'Qualifikationen', icon: <IconClipboard size={18} /> },
+      { href: '/admin/einsatzfreigabe', label: 'Einsatzfreigabe', icon: <IconTarget size={18} /> },
+      { href: '/admin/applications', label: 'Bewerbungen', icon: <IconClipboard size={18} /> },
+    ],
+  },
+  {
+    key: 'einsatz',
+    title: 'Einsatzplanung',
+    items: [
+      { href: '/admin/schedule', label: 'Einsatzplanung', icon: <IconHome size={18} /> },
+      { href: '/admin/dienstplan', label: 'Dienstplan', icon: <IconCalendar size={18} /> },
+      { href: '/admin/kalender', label: 'Kalender', icon: <IconClipboard size={18} /> },
+      { href: '/admin/arbeitszeiten', label: 'Arbeitszeiten', icon: <IconClock size={18} /> },
+      { href: '/admin/urlaub', label: 'Urlaub', icon: <IconCalendar size={18} /> },
+    ],
+  },
+  {
+    key: 'leistung',
+    title: 'Leistungsdoku',
+    items: [
+      { href: '/admin/records', label: 'Leistungsnachweise', icon: <IconClipboard size={18} /> },
+      { href: '/admin/leistungsnachweis-digital', label: 'Digitale Nachweise', icon: <IconDocument size={18} /> },
+      { href: '/admin/leistungsnachweis-upload', label: 'Prüfzentrale', icon: <IconClipboard size={18} /> },
+      { href: '/admin/notizen', label: 'Notizen', icon: <IconDocument size={18} /> },
+    ],
+  },
+  {
+    key: 'abrechnung',
+    title: 'Abrechnung',
+    items: [
+      { href: '/admin/rechnungserstellung', label: 'Rechnungserstellung', icon: <IconDocument size={18} /> },
+      { href: '/admin/rechnungen', label: 'Rechnungsübersicht', icon: <IconDocument size={18} /> },
+      { href: '/admin/gutschriften', label: 'Gutschriften', icon: <IconDocument size={18} /> },
+      { href: '/admin/leistungspreise', label: 'Leistungspreise', icon: <IconMoney size={18} /> },
+      { href: '/admin/monatsabschluss-vorbereitung', label: 'Monatsabschluss-Vorb.', icon: <IconChart size={18} /> },
+      { href: '/admin/monatsabschluss', label: 'Monatsabschluss', icon: <IconChart size={18} /> },
+      { href: '/admin/pruefprotokoll', label: 'Prüfprotokoll', icon: <IconTarget size={18} /> },
+    ],
+  },
+  {
+    key: 'kasse',
+    title: 'Kassenabrechnung',
+    items: [
+      { href: '/admin/dta', label: 'DTA-Dashboard', icon: <IconMoney size={18} /> },
+      { href: '/admin/kassenabrechnung', label: 'Kassenabrechnung', icon: <IconMoney size={18} /> },
+      { href: '/admin/abrechnung', label: 'EDIFACT', icon: <IconMoney size={18} /> },
+      { href: '/admin/abrechnung/einstellungen', label: 'SECON-Einstellungen', icon: <IconTarget size={18} /> },
+      { href: '/admin/dakota', label: 'Dakota-Versand', icon: <IconTarget size={18} /> },
+      { href: '/admin/annahmestellen', label: 'Annahmestellen', icon: <IconHandshake size={18} /> },
+      { href: '/admin/ruecklaeufer', label: 'Rückläufer', icon: <IconClipboard size={18} /> },
+      { href: '/admin/korrekturlaeufe', label: 'Korrekturläufe', icon: <IconClipboard size={18} /> },
+      { href: '/admin/abrechnungsfehler', label: 'Fehlermanagement', icon: <IconTarget size={18} /> },
+    ],
+  },
+  {
+    key: 'zahlung',
+    title: 'Zahlungsverkehr',
+    items: [
+      { href: '/admin/zahlungseingaenge', label: 'Zahlungseingänge', icon: <IconMoney size={18} /> },
+      { href: '/admin/forderungen', label: 'Forderungen', icon: <IconMoney size={18} /> },
+    ],
+  },
+  {
+    key: 'aufgaben',
+    title: 'Aufgaben & Kommunikation',
+    items: [
+      { href: '/admin/aufgaben', label: 'Aufgaben', icon: <IconClipboard size={18} /> },
+      { href: '/admin/wiedervorlagen', label: 'Wiedervorlagen', icon: <IconCalendar size={18} /> },
+      { href: '/admin/nachrichten', label: 'Nachrichten', icon: <IconChat size={18} /> },
+      { href: '/admin/benachrichtigungen', label: 'Benachrichtigungen', icon: <IconBell size={18} /> },
+    ],
+  },
+  {
+    key: 'auto',
+    title: 'Automatisierung',
+    items: [
+      { href: '/admin/workflow', label: 'Workflow-Engine', icon: <IconWorkflow size={18} /> },
+      { href: '/admin/eskalationen', label: 'Eskalationsregeln', icon: <IconTarget size={18} /> },
+    ],
+  },
+  {
+    key: 'system',
+    title: 'System',
+    items: [
+      { href: '/admin/users', label: 'Benutzer', icon: <IconUsers size={18} /> },
+      { href: '/admin/bookings', label: 'Buchungen', icon: <IconClipboard size={18} /> },
+      { href: '/admin/analytics', label: 'Analytik', icon: <IconTarget size={18} /> },
+      { href: '/admin/quality', label: 'Qualitätsmanagement', icon: <IconHeart size={18} /> },
+      { href: '/admin/bonuses', label: 'Mitarbeiterbindung', icon: <IconTarget size={18} /> },
+      { href: '/admin/partners', label: 'Kooperationspartner', icon: <IconHandshake size={18} /> },
+      { href: '/admin/ops-audit', label: 'Aktivitätslog', icon: <IconDocument size={18} /> },
+      { href: '/admin/expansion', label: 'Expansion', icon: <IconTarget size={18} /> },
+      { href: '/admin/settings', label: 'Einstellungen', icon: <IconSettings size={18} /> },
+    ],
+  },
 ]
 
-// ═══ Betriebssystem — operative Pflege-/Abrechnungsverwaltung ═══
-const opsNavItems = [
-  { href: '/admin/dashboard', label: 'Übersicht', icon: <IconHome size={18} /> },
-  { href: '/admin/clients', label: 'Klienten', icon: <IconHeart size={18} /> },
-  { href: '/admin/notizen', label: 'Notizen', icon: <IconDocument size={18} /> },
-  { href: '/admin/records', label: 'Leistungsnachweise', icon: <IconClipboard size={18} /> },
-  { href: '/admin/verordnungen', label: 'Verordnungen', icon: <IconDocument size={18} /> },
-  { href: '/admin/dokumente', label: 'Dokumente', icon: <IconDocument size={18} /> },
-  { href: '/admin/pflegedoku', label: 'Pflegedoku', icon: <IconHeart size={18} /> },
-  { href: '/admin/vertraege', label: 'Verträge', icon: <IconDocument size={18} /> },
-  { href: '/admin/nachweise', label: 'Nachweise', icon: <IconClipboard size={18} /> },
-  { href: '/admin/leistungspreise', label: 'Leistungspreise', icon: <IconMoney size={18} /> },
-  { href: '/admin/kostentraeger', label: 'Kostenträger', icon: <IconHandshake size={18} /> },
-  { href: '/admin/leistungsnachweis-upload', label: 'Nachweis-Prüfzentrale', icon: <IconClipboard size={18} /> },
-  { href: '/admin/monatsabschluss', label: 'Monatsabschluss', icon: <IconChart size={18} /> },
-  { href: '/admin/pruefprotokoll', label: 'Prüfprotokoll', icon: <IconTarget size={18} /> },
-  { href: '/admin/budgets', label: 'Budgets', icon: <IconChart size={18} /> },
-  { href: '/admin/rechnungen', label: 'Rechnungsübersicht', icon: <IconDocument size={18} /> },
-  { href: '/admin/rechnungserstellung', label: 'Rechnungserstellung', icon: <IconDocument size={18} /> },
-  { href: '/admin/zahlungseingaenge', label: 'Zahlungseingänge', icon: <IconMoney size={18} /> },
-  { href: '/admin/forderungen', label: 'Forderungsmanagement', icon: <IconMoney size={18} /> },
-  { href: '/admin/gutschriften', label: 'Gutschriften', icon: <IconDocument size={18} /> },
-  { href: '/admin/invoices', label: 'Rechnungen (Legacy)', icon: <IconDocument size={18} /> },
-  { href: '/admin/zahlungskontrolle', label: 'Zahlungskontrolle (Legacy)', icon: <IconMoney size={18} /> },
-  { href: '/admin/abrechnung', label: 'Abrechnung (EDIFACT)', icon: <IconMoney size={18} /> },
-  { href: '/admin/abrechnung/einstellungen', label: 'Abrechnung (SECON)', icon: <IconTarget size={18} /> },
-  { href: '/admin/personal', label: 'Personal', icon: <IconUsers size={18} /> },
-  { href: '/admin/dienstplan', label: 'Dienstplan', icon: <IconCalendar size={18} /> },
-  { href: '/admin/arbeitszeiten', label: 'Arbeitszeiten', icon: <IconClock size={18} /> },
-  { href: '/admin/urlaub', label: 'Urlaub', icon: <IconCalendar size={18} /> },
-  { href: '/admin/einsatzfreigabe', label: 'Einsatzfreigabe', icon: <IconTarget size={18} /> },
-  { href: '/admin/caregivers', label: 'Betreuungskräfte', icon: <IconUsers size={18} /> },
-  { href: '/admin/applications', label: 'Bewerbungen', icon: <IconClipboard size={18} /> },
-  { href: '/admin/schedule', label: 'Einsatzplanung', icon: <IconHome size={18} /> },
-  { href: '/admin/kalender', label: 'Kalender', icon: <IconClipboard size={18} /> },
-  { href: '/admin/leistungsnachweis-digital', label: 'Digitale Nachweise', icon: <IconDocument size={18} /> },
-  { href: '/admin/monatsabschluss-vorbereitung', label: 'Monatsabschluss-Vorb.', icon: <IconChart size={18} /> },
-  { href: '/admin/quality', label: 'Qualität', icon: <IconHeart size={18} /> },
-  { href: '/admin/bonuses', label: 'Mitarbeiterbindung', icon: <IconTarget size={18} /> },
-  { href: '/admin/partners', label: 'Kooperationspartner', icon: <IconHandshake size={18} /> },
-  { href: '/admin/aufgaben', label: 'Aufgaben', icon: <IconClipboard size={18} /> },
-  { href: '/admin/nachrichten', label: 'Nachrichten', icon: <IconChat size={18} /> },
-  { href: '/admin/wiedervorlagen', label: 'Wiedervorlagen', icon: <IconCalendar size={18} /> },
-  { href: '/admin/benachrichtigungen', label: 'Benachrichtigungen', icon: <IconBell size={18} /> },
-  { href: '/admin/workflow', label: 'Workflow-Engine', icon: <IconWorkflow size={18} /> },
-  { href: '/admin/eskalationen', label: 'Eskalationsregeln', icon: <IconTarget size={18} /> },
-  { href: '/admin/ops-audit', label: 'Aktivitätslog', icon: <IconDocument size={18} /> },
-  { href: '/admin/expansion', label: 'Expansion Deutschland', icon: <IconTarget size={18} /> },
-]
+function ChevronIcon({ open }: { open: boolean }) {
+  return (
+    <svg
+      width="12" height="12" viewBox="0 0 12 12"
+      fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"
+      style={{ transform: open ? 'rotate(90deg)' : 'none', transition: 'transform 0.15s ease' }}
+    >
+      <polyline points="4,2 8,6 4,10" />
+    </svg>
+  )
+}
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname()
@@ -174,6 +238,49 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   const [isMobile, setIsMobile] = useState(false)
   const authState = useAdminAuth()
 
+  // ═══ Collapsible Navigation State ═══
+  const [openGroups, setOpenGroups] = useState<Set<string>>(
+    () => new Set(navGroups.map(g => g.key))
+  )
+  const [navReady, setNavReady] = useState(false)
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('admin-nav-open')
+      if (saved) {
+        const parsed = JSON.parse(saved)
+        if (Array.isArray(parsed)) setOpenGroups(new Set(parsed))
+      }
+    } catch {}
+    setNavReady(true)
+  }, [])
+
+  useEffect(() => {
+    const active = navGroups.find(g =>
+      g.items.some(i => pathname === i.href || pathname.startsWith(i.href + '/'))
+    )
+    if (active) {
+      setOpenGroups(prev => {
+        if (prev.has(active.key)) return prev
+        return new Set([...prev, active.key])
+      })
+    }
+  }, [pathname])
+
+  useEffect(() => {
+    if (!navReady) return
+    try { localStorage.setItem('admin-nav-open', JSON.stringify([...openGroups])) } catch {}
+  }, [openGroups, navReady])
+
+  function toggleGroup(key: string) {
+    setOpenGroups(prev => {
+      const next = new Set(prev)
+      if (next.has(key)) next.delete(key)
+      else next.add(key)
+      return next
+    })
+  }
+
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768)
     check()
@@ -181,7 +288,6 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     return () => window.removeEventListener('resize', check)
   }, [])
 
-  // ═══ Loading Screen während Auth-Check ═══
   if (authState === 'loading') {
     return (
       <div style={{
@@ -200,7 +306,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   }
 
   if (authState === 'unauthenticated') {
-    return null // Router redirect is in progress
+    return null
   }
 
   async function handleLogout() {
@@ -212,8 +318,13 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
 
   return (
     <BundeslandProvider>
+    <style>{`
+      .admin-nav-group + .admin-nav-group { border-top: 1px solid var(--border, #e5e7eb); margin-top: 2px; padding-top: 2px; }
+      .admin-nav-group-header { display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 6px 12px; font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--ink5, #888); background: none; border: none; cursor: pointer; font-family: inherit; transition: color 0.15s; }
+      .admin-nav-group-header:hover { color: var(--ink, #333); }
+      .admin-nav-group-header.has-active { color: var(--gold2, #C9963C); }
+    `}</style>
     <div className="admin-layout">
-      {/* Mobile overlay */}
       {isMobile && mobileOpen && (
         <div onClick={() => setMobileOpen(false)} style={{
           position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 9,
@@ -229,37 +340,35 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
         <OrgSwitcher />
         <BundeslandSwitcher />
         <nav className="admin-nav">
-          {navItems.map(item => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`admin-nav-item ${pathname === item.href ? 'active' : ''}`}
-              onClick={() => setMobileOpen(false)}
-            >
-              <span>{item.icon}</span>
-              <span>{item.label}</span>
-            </Link>
-          ))}
+          {navGroups.map(group => {
+            const isOpen = openGroups.has(group.key)
+            const hasActive = group.items.some(i =>
+              pathname === i.href || pathname.startsWith(i.href + '/')
+            )
+            return (
+              <div key={group.key} className="admin-nav-group">
+                <button
+                  className={`admin-nav-group-header${hasActive ? ' has-active' : ''}`}
+                  onClick={() => toggleGroup(group.key)}
+                >
+                  <span>{group.title}</span>
+                  <ChevronIcon open={isOpen} />
+                </button>
+                {isOpen && group.items.map(item => (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={`admin-nav-item ${pathname === item.href || pathname.startsWith(item.href + '/') ? 'active' : ''}`}
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    <span>{item.icon}</span>
+                    <span>{item.label}</span>
+                  </Link>
+                ))}
+              </div>
+            )
+          })}
 
-          {/* ═══ Betriebssystem ═══ */}
-          <div style={{ borderTop: '1px solid var(--border)', margin: '8px 0 4px', paddingTop: 10 }}>
-            <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.8px', textTransform: 'uppercase', color: 'var(--ink5)', padding: '0 12px 6px' }}>
-              Betriebssystem
-            </div>
-            {opsNavItems.map(item => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`admin-nav-item ${pathname === item.href || pathname.startsWith(item.href + '/') ? 'active' : ''}`}
-                onClick={() => setMobileOpen(false)}
-              >
-                <span>{item.icon}</span>
-                <span>{item.label}</span>
-              </Link>
-            ))}
-          </div>
-
-          {/* MIS Portal Link */}
           <div style={{ borderTop: '1px solid var(--border)', margin: '8px 0', paddingTop: 8 }}>
             <button
               className="admin-nav-item"
@@ -277,7 +386,6 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
         </button>
       </div>
 
-      {/* Mobile header with hamburger */}
       <div className="admin-mobile-header">
         <button onClick={() => setMobileOpen(!mobileOpen)} style={{
           background: 'none', border: 'none', color: 'var(--ink)', cursor: 'pointer',

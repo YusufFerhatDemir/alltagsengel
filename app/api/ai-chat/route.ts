@@ -22,11 +22,10 @@ async function fetchLiveContext(): Promise<string> {
     const supabase = await createClient()
 
     // Parallel queries
-    const [usersRes, bookingsRes, visitorsRes, loginsRes, engelsRes, kundenRes, fahrerRes] = await Promise.all([
-      supabase.from('profiles').select('id, role, full_name, city, created_at').limit(100),
+    const [usersRes, bookingsRes, visitorsRes, engelsRes, kundenRes, fahrerRes] = await Promise.all([
+      supabase.from('profiles').select('id, role').limit(500),
       supabase.from('bookings').select('id, status, created_at, total_price, service_type').limit(100),
       supabase.from('visitor_locations').select('city, country, page_path, created_at').order('created_at', { ascending: false }).limit(50),
-      supabase.from('mis_auth_log').select('user_email, action, device, created_at').order('created_at', { ascending: false }).limit(30),
       supabase.from('profiles').select('id').eq('role', 'engel'),
       supabase.from('profiles').select('id').eq('role', 'kunde'),
       supabase.from('profiles').select('id').eq('role', 'fahrer'),
@@ -35,7 +34,6 @@ async function fetchLiveContext(): Promise<string> {
     const users = usersRes.data || []
     const bookings = bookingsRes.data || []
     const visitors = visitorsRes.data || []
-    const logins = loginsRes.data || []
 
     const totalUsers = users.length
     const totalEngels = engelsRes.data?.length || 0
@@ -59,11 +57,6 @@ async function fetchLiveContext(): Promise<string> {
       if (v.country) countryCounts[v.country] = (countryCounts[v.country] || 0) + 1
     })
 
-    // Letzte Logins
-    const recentLogins = logins.slice(0, 10).map(l =>
-      `${l.user_email} (${l.device}, ${new Date(l.created_at).toLocaleString('de-DE')})`
-    ).join('\n')
-
     return `
 === LIVE DATEN AUS DER DATENBANK (Stand: ${new Date().toLocaleString('de-DE')}) ===
 
@@ -83,12 +76,6 @@ BUCHUNGEN:
 BESUCHER (letzte 50):
 - Top-Städte: ${topCities.map(([c, n]) => `${c} (${n})`).join(', ')}
 - Länder: ${Object.entries(countryCounts).map(([c, n]) => `${c} (${n})`).join(', ')}
-
-LETZTE LOGINS:
-${recentLogins}
-
-REGISTRIERTE BENUTZER:
-${users.map(u => `- ${u.full_name || 'Unbekannt'} (${u.role}, ${u.city || 'Ort unbekannt'}, seit ${new Date(u.created_at).toLocaleDateString('de-DE')})`).join('\n')}
 `
   } catch (error) {
     console.error('Error fetching live context:', error)
