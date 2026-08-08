@@ -12,7 +12,7 @@ export async function GET(request: Request) {
   const empfaengerId = url.searchParams.get('empfaenger_id') || undefined
   try {
     const data = await listWiedervorlagen(supabase, {
-      organizationId: auth.ctx.organizationId,
+      organizationId: auth.organizationId,
       status,
       empfaengerId,
     })
@@ -29,7 +29,7 @@ export async function POST(request: Request) {
   try {
     const body = await request.json()
     const data = await createWiedervorlage(supabase, {
-      organizationId: auth.ctx.organizationId,
+      organizationId: auth.organizationId,
       data: body,
     })
     return NextResponse.json(data)

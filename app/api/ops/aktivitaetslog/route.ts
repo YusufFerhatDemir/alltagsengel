@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
-import { listAktivitaetslog } from '@/lib/ops/ereignisse'
+import { listAktivitaetslog } from '@/lib/ops/aktivitaetslog'
 
 export async function GET(request: Request) {
   const auth = await requireOpsAdmin()
@@ -14,7 +14,7 @@ export async function GET(request: Request) {
   const offset = url.searchParams.get('offset') ? Number(url.searchParams.get('offset')) : undefined
   try {
     const data = await listAktivitaetslog(supabase, {
-      organizationId: auth.ctx.organizationId,
+      organizationId: auth.organizationId,
       entitaetTyp,
       entitaetId,
       limit,

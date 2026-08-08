@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
-import { updateEskalationsregel, deleteEskalationsregel } from '@/lib/ops/eskalation'
+import { updateEskalationsregel, deleteEskalationsregel } from '@/lib/ops/eskalationen'
 
 export async function PATCH(
   request: Request,
@@ -14,7 +14,7 @@ export async function PATCH(
   try {
     const body = await request.json()
     const data = await updateEskalationsregel(supabase, {
-      organizationId: auth.ctx.organizationId,
+      organizationId: auth.organizationId,
       id,
       data: body,
     })
@@ -34,7 +34,7 @@ export async function DELETE(
   const supabase = createAdminClient()
   try {
     const data = await deleteEskalationsregel(supabase, {
-      organizationId: auth.ctx.organizationId,
+      organizationId: auth.organizationId,
       id,
     })
     return NextResponse.json(data)

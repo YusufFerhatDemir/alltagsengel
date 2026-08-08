@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
-import { updateEreignisRegel, deleteEreignisRegel } from '@/lib/ops/ereignisse'
+import { updateEreignisRegel, deleteEreignisRegel } from '@/lib/ops/ereignis-regeln'
 
 export async function PATCH(
   request: Request,
@@ -14,7 +14,7 @@ export async function PATCH(
   try {
     const body = await request.json()
     const data = await updateEreignisRegel(supabase, {
-      organizationId: auth.ctx.organizationId,
+      organizationId: auth.organizationId,
       id,
       data: body,
     })
@@ -34,7 +34,7 @@ export async function DELETE(
   const supabase = createAdminClient()
   try {
     const data = await deleteEreignisRegel(supabase, {
-      organizationId: auth.ctx.organizationId,
+      organizationId: auth.organizationId,
       id,
     })
     return NextResponse.json(data)

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
-import { listEreignisRegeln, createEreignisRegel } from '@/lib/ops/ereignisse'
+import { listEreignisRegeln, createEreignisRegel } from '@/lib/ops/ereignis-regeln'
 
 export async function GET(request: Request) {
   const auth = await requireOpsAdmin()
@@ -11,7 +11,7 @@ export async function GET(request: Request) {
   const aktiv = url.searchParams.get('aktiv')
   try {
     const data = await listEreignisRegeln(supabase, {
-      organizationId: auth.ctx.organizationId,
+      organizationId: auth.organizationId,
       aktiv: aktiv !== null ? aktiv === 'true' : undefined,
     })
     return NextResponse.json(data)
@@ -27,7 +27,7 @@ export async function POST(request: Request) {
   try {
     const body = await request.json()
     const data = await createEreignisRegel(supabase, {
-      organizationId: auth.ctx.organizationId,
+      organizationId: auth.organizationId,
       data: body,
     })
     return NextResponse.json(data)

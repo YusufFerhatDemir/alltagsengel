@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
-import { listEskalationsregeln, createEskalationsregel } from '@/lib/ops/eskalation'
+import { listEskalationsregeln, createEskalationsregel } from '@/lib/ops/eskalationen'
 
 export async function GET(request: Request) {
   const auth = await requireOpsAdmin()
@@ -11,7 +11,7 @@ export async function GET(request: Request) {
   const aktiv = url.searchParams.get('aktiv')
   try {
     const data = await listEskalationsregeln(supabase, {
-      organizationId: auth.ctx.organizationId,
+      organizationId: auth.organizationId,
       aktiv: aktiv !== null ? aktiv === 'true' : undefined,
     })
     return NextResponse.json(data)
@@ -27,7 +27,7 @@ export async function POST(request: Request) {
   try {
     const body = await request.json()
     const data = await createEskalationsregel(supabase, {
-      organizationId: auth.ctx.organizationId,
+      organizationId: auth.organizationId,
       data: body,
     })
     return NextResponse.json(data)
