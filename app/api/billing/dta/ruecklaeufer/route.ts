@@ -3,6 +3,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { NextResponse } from 'next/server'
 import { importiereRuecklaeufer } from '@/lib/abrechnung/ruecklaeufer'
 import { getActiveOrgId } from '@/lib/organizations/server'
+import { createAufgabe } from '@/lib/ops/aufgaben'
 
 export async function GET(request: Request) {
   try {
@@ -96,6 +97,36 @@ export async function POST(request: Request) {
       organizationId,
       actorId: user.id,
     })
+
+    if (ergebnis.fehlerErstellt) {
+      const istAbgelehnt = ergebnis.status === 'abgelehnt'
+      try {
+        await createAufgabe(admin, {
+          organizationId,
+          data: {
+            titel: istAbgelehnt
+              ? `Abrechnung abgelehnt – Korrektur erforderlich${body.kostentraegerIk ? ` (IK ${body.kostentraegerIk})` : ''}`
+              : `Rückläufer mit Fehlern – Prüfung erforderlich${body.kostentraegerIk ? ` (IK ${body.kostentraegerIk})` : ''}`,
+            beschreibung: [
+              `Rückläufer-Typ: ${body.ruecklaeuferTyp}`,
+              `Status: ${ergebnis.status}`,
+              body.fehlerCode ? `Fehlercode: ${body.fehlerCode}` : null,
+              body.fehlerText ? `Fehlermeldung: ${body.fehlerText}` : null,
+              ergebnis.positionenAbgelehnt > 0 ? `${ergebnis.positionenAbgelehnt} von ${ergebnis.positionenGesamt} Positionen abgelehnt` : null,
+              body.laufId ? `Abrechnungslauf: ${body.laufId}` : null,
+            ].filter(Boolean).join('\n'),
+            kategorie: 'abrechnung',
+            prioritaet: istAbgelehnt ? 'kritisch' : 'hoch',
+            status: 'offen',
+            erstellt_von: user.id,
+            abrechnungslauf_id: body.laufId || null,
+            metadata: { ruecklaeufer_id: ergebnis.ruecklaeuferId },
+          },
+        })
+      } catch {
+        // Aufgabe-Erstellung darf Import nicht blockieren
+      }
+    }
 
     return NextResponse.json(ergebnis)
   } catch (err) {

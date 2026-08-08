@@ -173,25 +173,35 @@ export async function importiereRuecklaeufer(
   // Lauf-Status aktualisieren (wenn zugeordnet)
   let zugeordnet = false
   if (params.laufId) {
-    zugeordnet = true
-    const laufAntwortStatus = mapRuecklaeuferZuLaufStatus(status)
-    if (laufAntwortStatus) {
-      await supabase
-        .from('abrechnungslaeufe')
-        .update({
-          antwort_status: laufAntwortStatus,
-          antwort_am: new Date().toISOString(),
-          antwort_datei_url: params.quelldateiUrl || null,
-        })
-        .eq('id', params.laufId)
+    const { data: lauf } = await supabase
+      .from('abrechnungslaeufe')
+      .select('id')
+      .eq('id', params.laufId)
+      .eq('organization_id', params.organizationId)
+      .maybeSingle()
 
-      // Lauf-Status weiterschaltenx
-      const neuerLaufStatus = mapAntwortZuLaufStatus(laufAntwortStatus)
-      if (neuerLaufStatus) {
+    if (lauf) {
+      zugeordnet = true
+      const laufAntwortStatus = mapRuecklaeuferZuLaufStatus(status)
+      if (laufAntwortStatus) {
         await supabase
           .from('abrechnungslaeufe')
-          .update({ status: neuerLaufStatus })
+          .update({
+            antwort_status: laufAntwortStatus,
+            antwort_am: new Date().toISOString(),
+            antwort_datei_url: params.quelldateiUrl || null,
+          })
           .eq('id', params.laufId)
+          .eq('organization_id', params.organizationId)
+
+        const neuerLaufStatus = mapAntwortZuLaufStatus(laufAntwortStatus)
+        if (neuerLaufStatus) {
+          await supabase
+            .from('abrechnungslaeufe')
+            .update({ status: neuerLaufStatus })
+            .eq('id', params.laufId)
+            .eq('organization_id', params.organizationId)
+        }
       }
     }
   }
@@ -259,6 +269,14 @@ export async function ordneRuecklaeuferZu(
     .single()
 
   if (!rl) throw new Error('Rückläufer nicht gefunden')
+
+  const { data: lauf } = await supabase
+    .from('abrechnungslaeufe')
+    .select('id')
+    .eq('id', laufId)
+    .eq('organization_id', rl.organization_id)
+    .maybeSingle()
+  if (!lauf) throw new Error('Abrechnungslauf nicht gefunden oder gehört zu einer anderen Organisation')
 
   await supabase
     .from('dta_ruecklaeufer')
