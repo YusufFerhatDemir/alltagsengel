@@ -1038,3 +1038,128 @@ export const MONATSNAMEN = [
   'Januar', 'Februar', 'März', 'April', 'Mai', 'Juni',
   'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember',
 ]
+
+// ── Aufgabenmanagement ─────────────────────────────────────────
+export const AUFGABEN_KATEGORIE: Record<string, { label: string; color: string }> = {
+  allgemein: { label: 'Allgemein', color: '#999' },
+  kunde: { label: 'Kunde', color: '#26A69A' },
+  mitarbeiter: { label: 'Mitarbeiter', color: '#2196F3' },
+  einsatz: { label: 'Einsatz', color: '#C9963C' },
+  dokument: { label: 'Dokument', color: '#7E57C2' },
+  verordnung: { label: 'Verordnung', color: '#E8A000' },
+  abrechnung: { label: 'Abrechnung', color: '#5CB882' },
+  pflege: { label: 'Pflege', color: '#D04B3B' },
+  qualifikation: { label: 'Qualifikation', color: '#26A69A' },
+  dienstplan: { label: 'Dienstplan', color: '#2196F3' },
+  urlaub: { label: 'Urlaub', color: '#7E57C2' },
+  kommunikation: { label: 'Kommunikation', color: '#C9963C' },
+  system: { label: 'System', color: '#999' },
+}
+
+export const AUFGABEN_PRIORITAET: Record<string, { label: string; color: string }> = {
+  niedrig: { label: 'Niedrig', color: '#999' },
+  mittel: { label: 'Mittel', color: '#2196F3' },
+  hoch: { label: 'Hoch', color: '#E8A000' },
+  kritisch: { label: 'Kritisch', color: '#D04B3B' },
+}
+
+export const AUFGABEN_STATUS: Record<string, { label: string; color: string }> = {
+  offen: { label: 'Offen', color: '#E8A000' },
+  in_bearbeitung: { label: 'In Bearbeitung', color: '#2196F3' },
+  warten: { label: 'Warten', color: '#7E57C2' },
+  erledigt: { label: 'Erledigt', color: '#5CB882' },
+  storniert: { label: 'Storniert', color: '#D04B3B' },
+}
+
+export const WIEDERHOLUNG_INTERVALL: Record<string, { label: string; color: string }> = {
+  taeglich: { label: 'Täglich', color: '#D04B3B' },
+  woechentlich: { label: 'Wöchentlich', color: '#E8A000' },
+  monatlich: { label: 'Monatlich', color: '#2196F3' },
+  quartalsweise: { label: 'Quartalsweise', color: '#7E57C2' },
+  jaehrlich: { label: 'Jährlich', color: '#999' },
+}
+
+export const WIEDERVORLAGE_STATUS: Record<string, { label: string; color: string }> = {
+  aktiv: { label: 'Aktiv', color: '#2196F3' },
+  erledigt: { label: 'Erledigt', color: '#5CB882' },
+  storniert: { label: 'Storniert', color: '#D04B3B' },
+}
+
+export const WIEDERVORLAGE_DRINGLICHKEIT: Record<string, { label: string; color: string }> = {
+  ueberfaellig: { label: 'Überfällig', color: '#D04B3B' },
+  heute: { label: 'Heute', color: '#E8A000' },
+  morgen: { label: 'Morgen', color: '#C9963C' },
+  diese_woche: { label: 'Diese Woche', color: '#2196F3' },
+  spaeter: { label: 'Später', color: '#999' },
+}
+
+export const NACHRICHTEN_PRIORITAET: Record<string, { label: string; color: string }> = {
+  normal: { label: 'Normal', color: '#999' },
+  dringend: { label: 'Dringend', color: '#D04B3B' },
+}
+
+export const NACHRICHTEN_KATEGORIE: Record<string, { label: string; color: string }> = {
+  allgemein: { label: 'Allgemein', color: '#999' },
+  einsatz: { label: 'Einsatz', color: '#C9963C' },
+  kunde: { label: 'Kunde', color: '#26A69A' },
+  mitarbeiter: { label: 'Mitarbeiter', color: '#2196F3' },
+  aufgabe: { label: 'Aufgabe', color: '#E8A000' },
+  dienstplan: { label: 'Dienstplan', color: '#2196F3' },
+  abrechnung: { label: 'Abrechnung', color: '#5CB882' },
+  pflege: { label: 'Pflege', color: '#D04B3B' },
+  system: { label: 'System', color: '#999' },
+}
+
+export const BENACHRICHTIGUNG_TYP: Record<string, { label: string; color: string }> = {
+  info: { label: 'Info', color: '#2196F3' },
+  warnung: { label: 'Warnung', color: '#E8A000' },
+  fehler: { label: 'Fehler', color: '#D04B3B' },
+  erfolg: { label: 'Erfolg', color: '#5CB882' },
+  erinnerung: { label: 'Erinnerung', color: '#C9963C' },
+  eskalation: { label: 'Eskalation', color: '#D04B3B' },
+}
+
+export const BENACHRICHTIGUNG_KATEGORIE: Record<string, { label: string; color: string }> = {
+  dienstplan: { label: 'Dienstplan', color: '#2196F3' },
+  einsatz: { label: 'Einsatz', color: '#C9963C' },
+  urlaub: { label: 'Urlaub', color: '#7E57C2' },
+  qualifikation: { label: 'Qualifikation', color: '#26A69A' },
+  dokument: { label: 'Dokument', color: '#7E57C2' },
+  abrechnung: { label: 'Abrechnung', color: '#5CB882' },
+  aufgabe: { label: 'Aufgabe', color: '#E8A000' },
+  pflege: { label: 'Pflege', color: '#D04B3B' },
+  personal: { label: 'Personal', color: '#2196F3' },
+  system: { label: 'System', color: '#999' },
+  kommunikation: { label: 'Kommunikation', color: '#C9963C' },
+  wiedervorlage: { label: 'Wiedervorlage', color: '#26A69A' },
+  eskalation: { label: 'Eskalation', color: '#D04B3B' },
+}
+
+export const ESKALATION_AN_ROLLE: Record<string, { label: string; color: string }> = {
+  admin: { label: 'Admin', color: '#2196F3' },
+  pdl: { label: 'PDL', color: '#7E57C2' },
+  geschaeftsfuehrung: { label: 'Geschäftsführung', color: '#D04B3B' },
+}
+
+export const AKTIVITAETSLOG_AKTION: Record<string, { label: string; color: string }> = {
+  erstellt: { label: 'Erstellt', color: '#5CB882' },
+  aktualisiert: { label: 'Aktualisiert', color: '#2196F3' },
+  geloescht: { label: 'Gelöscht', color: '#D04B3B' },
+  status_geaendert: { label: 'Status geändert', color: '#E8A000' },
+  zugewiesen: { label: 'Zugewiesen', color: '#C9963C' },
+  eskaliert: { label: 'Eskaliert', color: '#D04B3B' },
+  erledigt: { label: 'Erledigt', color: '#5CB882' },
+  storniert: { label: 'Storniert', color: '#D04B3B' },
+  gelesen: { label: 'Gelesen', color: '#999' },
+  gesendet: { label: 'Gesendet', color: '#2196F3' },
+  genehmigt: { label: 'Genehmigt', color: '#5CB882' },
+  abgelehnt: { label: 'Abgelehnt', color: '#D04B3B' },
+}
+
+export const FAELLIGKEITS_STATUS: Record<string, { label: string; color: string }> = {
+  ueberfaellig: { label: 'Überfällig', color: '#D04B3B' },
+  heute: { label: 'Heute fällig', color: '#E8A000' },
+  diese_woche: { label: 'Diese Woche', color: '#C9963C' },
+  spaeter: { label: 'Später', color: '#999' },
+  ohne_datum: { label: 'Ohne Datum', color: '#999' },
+}
