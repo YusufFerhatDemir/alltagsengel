@@ -76,6 +76,43 @@ export interface ExportErgebnis {
   status: LaufStatus
 }
 
+/**
+ * Abrechnungsmonat → Kalendergrenzen des Monats.
+ *
+ * public.invoices hat KEINE Spalte `period_month` — der Zeitraum steht in
+ * `period_start` / `period_end`. Ein Filter auf period_month brach zur
+ * Laufzeit mit Postgres 42703 ("column invoices.period_month does not
+ * exist") ab und legte damit den gesamten DTA-Pfad still: Pre-Flight,
+ * Lauf-Erstellung und Export liefen alle über denselben Filter.
+ *
+ * Akzeptiert '2026-07' wie auch '2026-07-01'.
+ */
+export function monatsGrenzen(abrechnungsmonat: string): { von: string; bis: string } {
+  const ym = abrechnungsmonat.slice(0, 7)
+  const jahr = Number(ym.slice(0, 4))
+  const monat = Number(ym.slice(5, 7))
+  const letzterTag = new Date(jahr, monat, 0).getDate()
+  return { von: `${ym}-01`, bis: `${ym}-${String(letzterTag).padStart(2, '0')}` }
+}
+
+/**
+ * Euro-Betrag (numeric) → Cent (integer).
+ *
+ * public.invoices.total_amount und public.service_records.amount stehen in
+ * EURO (43.50), waehrend jede *_cent-Spalte und der EDIFACT-Generator CENT
+ * erwarten (4350). Beleg aus der Live-DB: dieselbe Rechnung fuehrt
+ * total_amount=43.50 und soll_betrag_cent=4350.
+ *
+ * Ohne diese Umrechnung landeten alle Betraege um Faktor 100 zu niedrig in
+ * abrechnungslaeufe.gesamtbetrag_cent, dta_lauf_rechnungen.betrag_cent, im
+ * Audit-Trail und in der an die Kasse uebermittelten EDIFACT-Datei.
+ *
+ * Math.round schuetzt vor Float-Artefakten (19.99 * 100 = 1998.9999...).
+ */
+export function euroZuCent(betragEuro: number | null | undefined): number {
+  return Math.round((betragEuro ?? 0) * 100)
+}
+
 // ── Pre-Flight-Validierung ──────────────────────────────────────
 
 export async function preFlightValidierung(
@@ -168,7 +205,8 @@ export async function preFlightValidierung(
     .from('invoices')
     .select('id, status, client_id, total_amount, invoice_number_formatted, frozen_at', { count: 'exact' })
     .eq('organization_id', params.organizationId)
-    .like('period_month', params.abrechnungsmonat.slice(0, 7) + '%')
+    .gte('period_start', monatsGrenzen(params.abrechnungsmonat).von)
+    .lte('period_start', monatsGrenzen(params.abrechnungsmonat).bis)
     .in('status', ['freigegeben', 'uebermittelt', 'erneut_eingereicht'])
     .is('deleted_at', null)
 
@@ -413,7 +451,8 @@ export async function erstelleAbrechnungslauf(
     .from('invoices')
     .select('id, client_id, total_amount, invoice_number_formatted, billing_type')
     .eq('organization_id', params.organizationId)
-    .like('period_month', params.abrechnungsmonat.slice(0, 7) + '%')
+    .gte('period_start', monatsGrenzen(params.abrechnungsmonat).von)
+    .lte('period_start', monatsGrenzen(params.abrechnungsmonat).bis)
     .in('status', ['freigegeben', 'erneut_eingereicht'])
     .is('deleted_at', null)
 
@@ -437,7 +476,7 @@ export async function erstelleAbrechnungslauf(
     }
   }
 
-  const gesamtCent = rechnungen.reduce((s, r) => s + (r.total_amount ?? 0), 0)
+  const gesamtCent = rechnungen.reduce((s, r) => s + euroZuCent(r.total_amount), 0)
 
   // Lauf anlegen
   const { data: lauf, error: laufError } = await supabase
@@ -469,7 +508,7 @@ export async function erstelleAbrechnungslauf(
     lauf_id: lauf.id,
     invoice_id: r.id,
     position_im_lauf: i + 1,
-    betrag_cent: r.total_amount ?? 0,
+    betrag_cent: euroZuCent(r.total_amount),
     status: 'inkludiert',
   }))
 
@@ -597,7 +636,7 @@ export async function exportiereLauf(
 
   const { data: invoices } = await supabase
     .from('invoices')
-    .select('id, client_id, invoice_number_formatted, total_amount, period_month')
+    .select('id, client_id, invoice_number_formatted, total_amount, period_start, period_end')
     .in('id', invoiceIds)
 
   if (!invoices?.length) throw new Error('Rechnungsdaten nicht gefunden')
@@ -673,7 +712,7 @@ export async function exportiereLauf(
       datum: r.date,
       leistungsart: r.service_type || 'alltagsbegleitung_45a',
       menge: (r.duration_minutes ?? 60) / 60,
-      einzelpreis_cent: r.amount ?? 0,
+      einzelpreis_cent: euroZuCent(r.amount),
       uhrzeit: undefined,
       dauer_minuten: r.duration_minutes ?? 60,
       pflegekraft_name: r.caregiver

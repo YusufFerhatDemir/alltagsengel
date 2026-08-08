@@ -33,7 +33,10 @@ export async function GET() {
       admin.from('abrechnung_zertifikate').select('typ, gueltig_bis, ik_nummer, fingerprint').eq('organization_id', organizationId).order('gueltig_bis', { ascending: false }),
       admin.from('datenannahmestellen').select('id, name, ik_nummer, sftp_host, sftp_user, sftp_key_url, aktiv').or(`organization_id.eq.${organizationId},organization_id.is.null`).order('name'),
       admin.from('state_settings').select('bundesland, status, kassenrechnung_enabled, dakota_export_enabled').eq('organization_id', organizationId),
-      admin.from('abrechnungslaeufe').select('id, status, abrechnungsmonat, bundesland, kostentraeger_ik, created_at').eq('organization_id', organizationId).order('created_at', { ascending: false }).limit(20),
+      // abrechnungslaeufe hat KEIN created_at — die Spalte heisst erstellt_am.
+      // Mit created_at lieferte PostgREST 42703, `laufRes.data ?? []` schluckte
+      // den Fehler und die DTA-Seite zeigte dauerhaft "keine Laeufe".
+      admin.from('abrechnungslaeufe').select('id, status, abrechnungsmonat, bundesland, kostentraeger_ik, erstellt_am').eq('organization_id', organizationId).order('erstellt_am', { ascending: false }).limit(20),
     ])
 
     const absenderZert = zertRes.data?.find(z => z.typ === 'absender')

@@ -384,24 +384,54 @@ export const DATENANNAHMESTELLEN: Record<string, Datenannahmestelle> = {
  * Fuer org-spezifische Abweichungen (andere AOK-Annahmestelle, Sonderkassen)
  * gibt es `findeDatenannahmestelleAsync()`, die zuerst die DB abfragt.
  */
+/**
+ * Ordnet einen Kassennamen einem Schluessel aus DATENANNAHMESTELLEN zu.
+ *
+ * Gibt `null` zurueck, wenn der Name keiner bekannten Kassenart entspricht.
+ * Genau dieses `null` ist die Sicherheitsgrenze: eine unbekannte Kasse darf
+ * NICHT stillschweigend an die AOK-Annahmestelle geliefert werden.
+ *
+ * Reihenfolge ist bedeutsam — "BKK" muss vor der AOK-Erkennung greifen, und
+ * die TK-Kurzform wird bewusst nur als eigenstaendiges Wort geprueft, damit
+ * z. B. "IKK classic" nicht faelschlich als TK gilt.
+ */
+export function erkenneKassenSchluessel(kassenName: string): string | null {
+  const n = (kassenName || '').toLowerCase()
+  if (!n.trim()) return null
+
+  if (n.includes('techniker') || /\btk\b/.test(n)) return 'tk'
+  if (n.includes('barmer')) return 'barmer'
+  if (n.includes('dak')) return 'dak'
+  if (n.includes('hek') || n.includes('hanseatische')) return 'hek'
+  if (n.includes('kkh') || n.includes('kaufmännische') || n.includes('kaufmaennische')) return 'kkh'
+  if (n.includes('hkk') || n.includes('handelskrankenkasse')) return 'hkk'
+  if (n.includes('knappschaft')) return 'knappschaft'
+  if (n.includes('ikk') || n.includes('innung')) return 'ikk'
+  if (n.includes('bkk') || n.includes('betriebskrankenkasse')) return 'bkk'
+  // AOK aller Regionen → ITSCare (zentrale § 105 SGB XI Datenannahmestelle)
+  if (n.includes('aok')) return 'aok_hessen'
+
+  return null
+}
+
 export function findeDatenannahmestelle(
   kassenName: string,
-  bundesland?: string | null
+  _bundesland?: string | null
 ): Datenannahmestelle | null {
-  const n = (kassenName || '').toLowerCase()
-  if (n.includes('techniker') || /\btk\b/.test(n)) return DATENANNAHMESTELLEN.tk
-  if (n.includes('barmer')) return DATENANNAHMESTELLEN.barmer
-  if (n.includes('dak')) return DATENANNAHMESTELLEN.dak
-  if (n.includes('hek') || n.includes('hanseatische')) return DATENANNAHMESTELLEN.hek
-  if (n.includes('kkh') || n.includes('kaufmännische')) return DATENANNAHMESTELLEN.kkh
-  if (n.includes('hkk') || n.includes('handelskrankenkasse')) return DATENANNAHMESTELLEN.hkk
-  if (n.includes('knappschaft')) return DATENANNAHMESTELLEN.knappschaft
-  if (n.includes('ikk') || n.includes('innung')) return DATENANNAHMESTELLEN.ikk
-  if (n.includes('bkk') || n.includes('betriebskrankenkasse')) return DATENANNAHMESTELLEN.bkk
-
-  // AOK aller Regionen → ITSCare (zentrale § 105 SGB XI Datenannahmestelle)
-  if (n.includes('aok') || bundesland) return DATENANNAHMESTELLEN.aok_hessen
-  return DATENANNAHMESTELLEN.aok_hessen
+  // Frueher endete diese Funktion mit
+  //     if (n.includes('aok') || bundesland) return …aok_hessen
+  //     return …aok_hessen
+  // — sie konnte also NIE null liefern. Jede unbekannte Kasse (SBK,
+  // Continentale, Beihilfe, Tippfehler im Kassennamen) landete damit still
+  // bei der AOK-Annahmestelle ITSCare. Die Null-Pruefungen in
+  // edifact-generator.ts waren toter Code, und eine Lieferung an die falsche
+  // Annahmestelle ist ein Abrechnungsfehler.
+  //
+  // Das Bundesland darf hier nichts erzwingen: die Annahmestelle haengt an
+  // der Kassenart, nicht am Bundesland (Ersatz-/Betriebs-/Innungskassen sind
+  // bundesweit zentral). Es bleibt nur fuer die Signatur erhalten.
+  const schluessel = erkenneKassenSchluessel(kassenName)
+  return schluessel ? DATENANNAHMESTELLEN[schluessel] : null
 }
 
 /**
@@ -415,32 +445,37 @@ export async function findeDatenannahmestelleAsync(
   bundesland?: string | null,
   organizationId?: string | null,
 ): Promise<Datenannahmestelle | null> {
-  // DB-First: org-spezifische Konfiguration
-  if (organizationId) {
-    const n = (kassenName || '').toLowerCase()
-    const kassenart: Kassenart | null =
-      n.includes('aok') || (!n.includes('techniker') && !n.includes('barmer') && !n.includes('dak') && !n.includes('hek') && !n.includes('kkh') && !n.includes('hkk') && !n.includes('knappschaft') && !n.includes('ikk') && !n.includes('bkk'))
-        ? 'AO'
-        : null
+  // DB-First: org-spezifische Konfiguration.
+  //
+  // Frueher wurde die Kassenart hier ueber eine verschachtelte Negation
+  // hergeleitet, die fuer JEDE Nicht-AOK-Kasse `null` ergab — die DB wurde
+  // dann gar nicht erst befragt. Der "DB-first"-Lookup war damit faktisch
+  // AOK-only: eine Org konnte fuer BKK, IKK, TK, BARMER usw. keine
+  // abweichende Annahmestelle hinterlegen. Jetzt wird die Kassenart aus dem
+  // gemeinsamen Erkenner abgeleitet und fuer jede bekannte Kassenart
+  // nachgeschlagen.
+  const schluessel = erkenneKassenSchluessel(kassenName)
+  if (organizationId && schluessel) {
+    const kassenart: Kassenart = DATENANNAHMESTELLEN[schluessel].kassenart
 
-    if (kassenart) {
-      let query = supabase
-        .from('datenannahmestellen')
-        .select('ik_nummer, name, zustaendig_fuer')
-        .eq('aktiv', true)
-        .eq('organization_id', organizationId)
+    let query = supabase
+      .from('datenannahmestellen')
+      .select('ik_nummer, name, zustaendig_fuer')
+      .eq('aktiv', true)
+      .eq('organization_id', organizationId)
+      .eq('kassenart', kassenart)
 
-      if (bundesland) query = query.eq('bundesland', bundesland)
-      if (kassenart) query = query.eq('kassenart', kassenart)
+    if (bundesland) query = query.eq('bundesland', bundesland)
 
-      const { data } = await query.limit(1).maybeSingle()
-      if (data) {
-        return {
-          ik: data.ik_nummer,
-          name: data.name,
-          kassenart: kassenart,
-        }
-      }
+    const { data, error } = await query.limit(1).maybeSingle()
+    if (error) {
+      // Nicht still auf die hardcodierte Tabelle zurueckfallen, ohne dass es
+      // jemand sieht — eine kaputte Abfrage darf nicht wie "nichts
+      // konfiguriert" aussehen.
+      console.error(`datenannahmestellen-Lookup fehlgeschlagen: ${error.message}`)
+    }
+    if (data) {
+      return { ik: data.ik_nummer, name: data.name, kassenart }
     }
   }
 
