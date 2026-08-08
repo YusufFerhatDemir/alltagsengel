@@ -826,11 +826,11 @@ BEGIN
     IF v_event_id IS NOT NULL THEN v_count := v_count + 1; END IF;
   END LOOP;
 
-  -- 2. Dokumente mit Ablaufdatum: 30 Tage vor Ablauf
+  -- 2. Dokumente: 30 Tage vor Ablauf (FIX: titel statt bezeichnung, client_id/caregiver_id statt akte_typ/akte_id)
   FOR v_rec IN
-    SELECT d.id, d.organization_id, d.bezeichnung, d.ablaufdatum,
+    SELECT d.id, d.organization_id, d.titel, d.ablaufdatum,
            (d.ablaufdatum - current_date) AS tage_verbleibend,
-           d.akte_typ, d.akte_id
+           d.client_id, d.caregiver_id, d.dokument_typ
     FROM public.akten_dokumente d
     WHERE d.ablaufdatum IS NOT NULL
       AND d.ablaufdatum BETWEEN current_date AND current_date + 30
@@ -843,20 +843,21 @@ BEGIN
       'akten_dokumente',
       v_rec.id,
       jsonb_build_object(
-        'bezeichnung', v_rec.bezeichnung,
+        'titel', v_rec.titel,
         'ablauf_datum', v_rec.ablaufdatum,
         'tage_verbleibend', v_rec.tage_verbleibend,
-        'akte_typ', v_rec.akte_typ,
-        'akte_id', v_rec.akte_id
+        'client_id', v_rec.client_id,
+        'caregiver_id', v_rec.caregiver_id,
+        'dokument_typ', v_rec.dokument_typ
       ),
       'dokument_ablauf:' || v_rec.id::text || ':' || to_char(v_rec.ablaufdatum, 'YYYY-MM-DD')
     );
     IF v_event_id IS NOT NULL THEN v_count := v_count + 1; END IF;
   END LOOP;
 
-  -- 3. Verträge mit Vertragsende: 30 Tage vor Ablauf
+  -- 3. Verträge: 30 Tage vor Ablauf (FIX: titel statt bezeichnung)
   FOR v_rec IN
-    SELECT v.id, v.organization_id, v.bezeichnung, v.vertragsende,
+    SELECT v.id, v.organization_id, v.titel, v.vertragsende,
            (v.vertragsende - current_date) AS tage_verbleibend
     FROM public.akten_vertraege v
     WHERE v.vertragsende IS NOT NULL
@@ -870,7 +871,7 @@ BEGIN
       'akten_vertraege',
       v_rec.id,
       jsonb_build_object(
-        'bezeichnung', v_rec.bezeichnung,
+        'titel', v_rec.titel,
         'vertragsende', v_rec.vertragsende,
         'tage_verbleibend', v_rec.tage_verbleibend
       ),
@@ -929,14 +930,14 @@ BEGIN
     IF v_event_id IS NOT NULL THEN v_count := v_count + 1; END IF;
   END LOOP;
 
-  -- 6. Leistungsnachweise ohne Kundenunterschrift (älter als 3 Tage)
+  -- 6. Leistungsnachweise ohne Kundenunterschrift >3 Tage (FIX: date statt service_date, status draft/signed statt completed/submitted)
   FOR v_rec IN
     SELECT sr.id, sr.organization_id, sr.caregiver_id, sr.assignment_id,
-           sr.service_date, (current_date - sr.service_date) AS tage_alt
+           sr.date AS service_date, (current_date - sr.date) AS tage_alt
     FROM public.service_records sr
     WHERE sr.client_signature IS NULL
-      AND sr.service_date < current_date - 3
-      AND sr.status IN ('completed','submitted')
+      AND sr.date < current_date - 3
+      AND sr.status IN ('draft','signed')
   LOOP
     v_event_id := public.wf_emit_event(
       v_rec.organization_id,
