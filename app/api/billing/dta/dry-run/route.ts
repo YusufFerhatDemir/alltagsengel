@@ -276,9 +276,18 @@ export async function POST(request: Request) {
       })
     }
 
+    // Org-Name fuer EDIFACT aus DB
+    let absenderName = 'Alltagsengel UG'
+    const { data: orgDry } = await admin
+      .from('organizations')
+      .select('name')
+      .eq('id', organizationId)
+      .single()
+    if (orgDry?.name) absenderName = orgDry.name
+
     const optionen: GeneratorOptionen = {
       bundesland,
-      absender_name: 'Alltagsengel UG',
+      absender_name: absenderName,
       dateiindikator: '0',
     }
 

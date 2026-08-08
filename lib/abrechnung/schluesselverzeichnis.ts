@@ -303,14 +303,17 @@ export interface Datenannahmestelle {
 }
 
 export const DATENANNAHMESTELLEN: Record<string, Datenannahmestelle> = {
-  // AOK Hessen → DAV der ITSCare, Schwalmstadt (IK 105810615;
-  // Kostenträger-IK der AOK-Hessen-Pflegekasse: 185313145)
+  // AOK → DAV der ITSCare, Schwalmstadt (IK 105810615)
+  // ITSCare ist die zentrale Datenannahme- und -verteilstelle fuer alle
+  // AOK-Regionen im § 105 SGB XI Datenaustausch. In der DB-Tabelle
+  // `datenannahmestellen` koennen org-spezifische Eintraege hinterlegt
+  // werden, falls eine AOK-Region eine andere Annahmestelle nutzt.
   aok_hessen: {
     ik: '105810615',
-    name: 'DAV der ITSCare (AOK Hessen), Schwalmstadt',
+    name: 'DAV der ITSCare (AOK), Schwalmstadt',
     kassenart: 'AO',
     email: 'dav-team-leistungserbringer@itscare.de',
-    hinweis: 'Kostenträger-IK AOK Hessen Pflegekasse: 185313145 — vor Erstlieferung gegen aktuelle AOK-Kostenträgerdatei prüfen',
+    hinweis: 'Zentrale Datenannahmestelle fuer alle AOK-Regionen (§ 105 SGB XI)',
   },
   // Betriebskrankenkassen → BITMARCK, Essen
   bkk: {
@@ -374,14 +377,12 @@ export const DATENANNAHMESTELLEN: Record<string, Datenannahmestelle> = {
 /**
  * Ermittelt die zuständige Datenannahmestelle anhand des Kassennamens.
  *
- * Für die namentlich hinterlegten Ersatz-/Betriebskassen ist die Annahmestelle
- * bundesweit dieselbe. Nur die AOK ist landesspezifisch — hinterlegt ist bisher
- * ausschließlich die AOK Hessen (ITSCare Schwalmstadt).
+ * Ersatz-/Betriebs-/Innungskassen sind bundesweit — die Annahmestelle ist
+ * immer dieselbe. AOK laeuft ueber ITSCare (Schwalmstadt) als zentrale
+ * Datenannahme- und -verteilstelle fuer alle AOK-Regionen im § 105 SGB XI.
  *
- * Deshalb: Greift keine Namensregel, gilt der AOK-Hessen-Fallback NUR, wenn
- * das Bundesland Hessen ist (oder gar nicht angegeben wurde — Bestandsverhalten).
- * Für jedes andere Bundesland wird `null` geliefert, statt eine Datei an die
- * falsche Annahmestelle zu adressieren.
+ * Fuer org-spezifische Abweichungen (andere AOK-Annahmestelle, Sonderkassen)
+ * gibt es `findeDatenannahmestelleAsync()`, die zuerst die DB abfragt.
  */
 export function findeDatenannahmestelle(
   kassenName: string,
@@ -398,7 +399,50 @@ export function findeDatenannahmestelle(
   if (n.includes('ikk') || n.includes('innung')) return DATENANNAHMESTELLEN.ikk
   if (n.includes('bkk') || n.includes('betriebskrankenkasse')) return DATENANNAHMESTELLEN.bkk
 
-  // Unbekannter Kassenname ⇒ AOK-Annahmestelle. Hinterlegt ist nur Hessen.
-  if (!bundesland || bundesland === 'hessen') return DATENANNAHMESTELLEN.aok_hessen
-  return null
+  // AOK aller Regionen → ITSCare (zentrale § 105 SGB XI Datenannahmestelle)
+  if (n.includes('aok') || bundesland) return DATENANNAHMESTELLEN.aok_hessen
+  return DATENANNAHMESTELLEN.aok_hessen
+}
+
+/**
+ * Async-Variante: prueft zuerst die DB-Tabelle `datenannahmestellen`
+ * (org-spezifisch, bundesland-spezifisch), dann Fallback auf die
+ * hardcoded Tabelle.
+ */
+export async function findeDatenannahmestelleAsync(
+  supabase: import('@supabase/supabase-js').SupabaseClient,
+  kassenName: string,
+  bundesland?: string | null,
+  organizationId?: string | null,
+): Promise<Datenannahmestelle | null> {
+  // DB-First: org-spezifische Konfiguration
+  if (organizationId) {
+    const n = (kassenName || '').toLowerCase()
+    const kassenart: Kassenart | null =
+      n.includes('aok') || (!n.includes('techniker') && !n.includes('barmer') && !n.includes('dak') && !n.includes('hek') && !n.includes('kkh') && !n.includes('hkk') && !n.includes('knappschaft') && !n.includes('ikk') && !n.includes('bkk'))
+        ? 'AO'
+        : null
+
+    if (kassenart) {
+      let query = supabase
+        .from('datenannahmestellen')
+        .select('ik_nummer, name, zustaendig_fuer')
+        .eq('aktiv', true)
+        .eq('organization_id', organizationId)
+
+      if (bundesland) query = query.eq('bundesland', bundesland)
+      if (kassenart) query = query.eq('kassenart', kassenart)
+
+      const { data } = await query.limit(1).maybeSingle()
+      if (data) {
+        return {
+          ik: data.ik_nummer,
+          name: data.name,
+          kassenart: kassenart,
+        }
+      }
+    }
+  }
+
+  return findeDatenannahmestelle(kassenName, bundesland)
 }

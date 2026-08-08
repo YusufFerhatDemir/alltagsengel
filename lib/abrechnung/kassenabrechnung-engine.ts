@@ -710,10 +710,21 @@ export async function exportiereLauf(
 
   const faelle = [...faelleMap.values()]
 
+  // Org-Name fuer EDIFACT NAM-Segment aus DB laden
+  let absenderName = 'Alltagsengel UG'
+  if (lauf.organization_id) {
+    const { data: org } = await supabase
+      .from('organizations')
+      .select('name')
+      .eq('id', lauf.organization_id)
+      .single()
+    if (org?.name) absenderName = org.name
+  }
+
   // EDIFACT generieren
   const optionen: GeneratorOptionen = {
     bundesland: lauf.bundesland,
-    absender_name: 'Alltagsengel UG',
+    absender_name: absenderName,
     dateiindikator: '2',
   }
 
