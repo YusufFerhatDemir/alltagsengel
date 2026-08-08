@@ -51,7 +51,7 @@ export async function POST(
 
     const absenderIk = await getOrgIK(admin, organizationId)
 
-    const ergebnis = await exportiereLauf(admin, id, absenderIk, user.id)
+    const ergebnis = await exportiereLauf(admin, id, absenderIk, user.id, organizationId)
 
     return NextResponse.json(ergebnis)
   } catch (err) {

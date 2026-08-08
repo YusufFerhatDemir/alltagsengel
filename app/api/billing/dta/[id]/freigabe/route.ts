@@ -46,7 +46,7 @@ export async function POST(
       return NextResponse.json({ error: 'Lauf nicht gefunden.' }, { status: 404 })
     }
 
-    await gebeLaufFrei(admin, id, user.id)
+    await gebeLaufFrei(admin, id, user.id, organizationId)
 
     return NextResponse.json({ success: true })
   } catch (err) {

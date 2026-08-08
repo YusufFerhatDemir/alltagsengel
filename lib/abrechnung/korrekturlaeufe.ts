@@ -51,11 +51,12 @@ export async function erstelleKorrekturlauf(
   supabase: SupabaseClient,
   params: KorrekturErstellenParams,
 ): Promise<KorrekturErgebnis> {
-  // Original-Lauf laden
+  // Original-Lauf laden (org_id-Fence)
   const { data: originalLauf } = await supabase
     .from('abrechnungslaeufe')
     .select('*')
     .eq('id', params.originalLaufId)
+    .eq('organization_id', params.organizationId)
     .single()
 
   if (!originalLauf) throw new Error('Original-Lauf nicht gefunden')
@@ -83,6 +84,7 @@ export async function erstelleKorrekturlauf(
       .from('dta_ruecklaeufer')
       .select('betrag_differenz_cent')
       .eq('id', params.ruecklaeuferId)
+      .eq('organization_id', params.organizationId)
       .single()
 
     differenzCent = rl?.betrag_differenz_cent ?? 0
@@ -110,11 +112,12 @@ export async function erstelleKorrekturlauf(
     throw new Error(`Korrekturlauf konnte nicht erstellt werden: ${error?.message}`)
   }
 
-  // Original-Lauf als korrigiert markieren
+  // Original-Lauf als korrigiert markieren (org_id-Fence)
   await supabase
     .from('abrechnungslaeufe')
     .update({ status: 'korrigiert' })
     .eq('id', params.originalLaufId)
+    .eq('organization_id', params.organizationId)
 
   // Rückläufer als korrektur_erstellt markieren
   if (params.ruecklaeuferId) {
@@ -125,6 +128,7 @@ export async function erstelleKorrekturlauf(
         korrektur_lauf_id: korrektur.id,
       })
       .eq('id', params.ruecklaeuferId)
+      .eq('organization_id', params.organizationId)
   }
 
   // Fehler als korrigiert markieren
@@ -137,6 +141,7 @@ export async function erstelleKorrekturlauf(
         loesung_am: new Date().toISOString(),
       })
       .in('id', params.fehlerIds)
+      .eq('organization_id', params.organizationId)
   }
 
   // Audit
@@ -167,12 +172,14 @@ export async function fuehreKorrekturAus(
   supabase: SupabaseClient,
   korrekturId: string,
   actorId: string,
+  organizationId?: string,
 ): Promise<KorrekturErgebnis> {
-  const { data: korrektur } = await supabase
+  let korrekturQuery = supabase
     .from('dta_korrekturlaeufe')
     .select('*, original_lauf:abrechnungslaeufe!dta_korrekturlaeufe_original_lauf_id_fkey(*)')
     .eq('id', korrekturId)
-    .single()
+  if (organizationId) korrekturQuery = korrekturQuery.eq('organization_id', organizationId)
+  const { data: korrektur } = await korrekturQuery.single()
 
   if (!korrektur) throw new Error('Korrekturlauf nicht gefunden')
   if (korrektur.status !== 'angelegt' && korrektur.status !== 'in_bearbeitung') {
@@ -278,20 +285,16 @@ export interface KorrekturHistorie {
 export async function ladeKorrekturHistorie(
   supabase: SupabaseClient,
   laufId: string,
+  organizationId?: string,
 ): Promise<KorrekturHistorie> {
   const kette: KorrekturHistorie['kette'] = []
 
   // Rückwärts: alle Vorgänger
   let currentId: string | null = laufId
   while (currentId) {
-    // Explizite Annotation: ohne sie leitet TypeScript den Typ von `lauf`
-    // aus einer Abfrage ab, die selbst von `currentId` abhaengt — und
-    // `currentId` wird unten aus `lauf.korrektur_von` gesetzt (TS7022).
-    const { data: lauf }: { data: KettenLaufRow | null } = await supabase
-      .from('abrechnungslaeufe')
-      .select('id, lauf_typ, status, abrechnungsmonat, gesamtbetrag_cent, erstellt_am, korrektur_von')
-      .eq('id', currentId)
-      .single()
+    const { data: lauf }: { data: KettenLaufRow | null } = organizationId
+      ? await supabase.from('abrechnungslaeufe').select('id, lauf_typ, status, abrechnungsmonat, gesamtbetrag_cent, erstellt_am, korrektur_von').eq('id', currentId).eq('organization_id', organizationId).single()
+      : await supabase.from('abrechnungslaeufe').select('id, lauf_typ, status, abrechnungsmonat, gesamtbetrag_cent, erstellt_am, korrektur_von').eq('id', currentId).single()
 
     if (!lauf) break
 
@@ -317,14 +320,15 @@ export async function ladeKorrekturHistorie(
   // Vorwärts: alle Nachfolger
   currentId = laufId
   while (currentId) {
-    const { data: nachfolger }: { data: KettenLaufRow | null } = await supabase
+    let fwdQuery = supabase
       .from('abrechnungslaeufe')
       .select('id, lauf_typ, status, abrechnungsmonat, gesamtbetrag_cent, erstellt_am')
       .eq('korrektur_von', currentId)
       .is('deleted_at', null)
       .order('erstellt_am', { ascending: true })
       .limit(1)
-      .maybeSingle()
+    if (organizationId) fwdQuery = fwdQuery.eq('organization_id', organizationId)
+    const { data: nachfolger }: { data: KettenLaufRow | null } = await fwdQuery.maybeSingle()
 
     if (!nachfolger) break
 

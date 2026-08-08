@@ -55,6 +55,7 @@ export interface FehlerUpdateParams {
   verantwortlicher?: string
   wiedervorlageAm?: string
   actorId: string
+  organizationId?: string
 }
 
 export interface FehlerDashboardData {
@@ -125,11 +126,12 @@ export async function aktualisiereFehler(
   supabase: SupabaseClient,
   params: FehlerUpdateParams,
 ): Promise<void> {
-  const { data: existing } = await supabase
+  let fehlerQuery = supabase
     .from('dta_fehlerprotokoll')
     .select('bearbeitungsstatus, organization_id')
     .eq('id', params.fehlerId)
-    .single()
+  if (params.organizationId) fehlerQuery = fehlerQuery.eq('organization_id', params.organizationId)
+  const { data: existing } = await fehlerQuery.single()
 
   if (!existing) throw new Error('Fehler nicht gefunden')
 
@@ -163,10 +165,12 @@ export async function aktualisiereFehler(
   if (params.verantwortlicher) update.verantwortlicher = params.verantwortlicher
   if (params.wiedervorlageAm) update.wiedervorlage_am = params.wiedervorlageAm
 
-  await supabase
+  let fehlerUpdate = supabase
     .from('dta_fehlerprotokoll')
     .update(update)
     .eq('id', params.fehlerId)
+  if (params.organizationId) fehlerUpdate = fehlerUpdate.eq('organization_id', params.organizationId)
+  await fehlerUpdate
 
   await logBillingAction(supabase, {
     entityType: 'fehlerprotokoll',
