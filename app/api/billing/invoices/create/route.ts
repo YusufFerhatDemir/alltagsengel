@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { NextResponse } from 'next/server'
 import { createInvoiceDraft } from '@/lib/billing/core'
+import { getActiveOrgId } from '@/lib/organizations/server'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -52,7 +53,7 @@ export async function POST(request: Request) {
     // ── 2. Rollen-Pruefung ────────────────────────────────────────────
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select('role, organization_id')
+      .select('role')
       .eq('id', user.id)
       .single()
 
@@ -70,7 +71,9 @@ export async function POST(request: Request) {
       )
     }
 
-    const orgId = profile.organization_id
+    // Die Organisation haengt am organization_members-Mapping (Org-Switcher-Cookie),
+    // NICHT an profiles — profiles hat keine organization_id-Spalte.
+    const orgId = await getActiveOrgId()
     if (!orgId) {
       return NextResponse.json(
         { error: 'Keine Organisation zugewiesen.' },

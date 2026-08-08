@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { NextResponse } from 'next/server'
 import { importiereRuecklaeufer } from '@/lib/abrechnung/ruecklaeufer'
+import { getActiveOrgId } from '@/lib/organizations/server'
 
 export async function GET(request: Request) {
   try {
@@ -13,12 +14,19 @@ export async function GET(request: Request) {
 
     const { data: profile } = await supabase
       .from('profiles')
-      .select('role, organization_id')
+      .select('role')
       .eq('id', user.id)
       .single()
 
     if (!profile || !['admin', 'superadmin'].includes(profile.role)) {
       return NextResponse.json({ error: 'Nur für Administratoren.' }, { status: 403 })
+    }
+
+    // Die Organisation haengt am organization_members-Mapping (Org-Switcher-Cookie),
+    // NICHT an profiles — profiles hat keine organization_id-Spalte.
+    const organizationId = await getActiveOrgId()
+    if (!organizationId) {
+      return NextResponse.json({ error: 'Keine Organisation zugewiesen.' }, { status: 403 })
     }
 
     const { searchParams } = new URL(request.url)
@@ -29,7 +37,7 @@ export async function GET(request: Request) {
     let query = admin
       .from('dta_ruecklaeufer')
       .select('*, lauf:abrechnungslaeufe(id, abrechnungsmonat, kostentraeger_name, status)')
-      .eq('organization_id', profile.organization_id)
+      .eq('organization_id', organizationId)
       .order('created_at', { ascending: false })
       .limit(100)
 
@@ -53,12 +61,19 @@ export async function POST(request: Request) {
 
     const { data: profile } = await supabase
       .from('profiles')
-      .select('role, organization_id')
+      .select('role')
       .eq('id', user.id)
       .single()
 
     if (!profile || !['admin', 'superadmin'].includes(profile.role)) {
       return NextResponse.json({ error: 'Nur für Administratoren.' }, { status: 403 })
+    }
+
+    // Die Organisation haengt am organization_members-Mapping (Org-Switcher-Cookie),
+    // NICHT an profiles — profiles hat keine organization_id-Spalte.
+    const organizationId = await getActiveOrgId()
+    if (!organizationId) {
+      return NextResponse.json({ error: 'Keine Organisation zugewiesen.' }, { status: 403 })
     }
 
     const body = await request.json()
@@ -72,7 +87,7 @@ export async function POST(request: Request) {
     const admin = createAdminClient()
     const ergebnis = await importiereRuecklaeufer(admin, {
       ...body,
-      organizationId: profile.organization_id,
+      organizationId,
       actorId: user.id,
     })
 

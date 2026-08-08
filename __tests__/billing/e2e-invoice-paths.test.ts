@@ -35,15 +35,22 @@ const {
   mockCreateClient,
   mockCreateAdminClient,
   mockCreateInvoiceDraft,
+  mockGetActiveOrgId,
 } = vi.hoisted(() => ({
   mockRequireCaregiverSession: vi.fn(),
   mockCreateClient: vi.fn(),
   mockCreateAdminClient: vi.fn(),
   mockCreateInvoiceDraft: vi.fn(),
+  mockGetActiveOrgId: vi.fn(),
 }))
 
 vi.mock('@/lib/native-auth', () => ({
   requireCaregiverSession: mockRequireCaregiverSession,
+}))
+// Die aktive Org kommt aus organization_members (Org-Switcher-Cookie),
+// NICHT aus profiles — profiles hat keine organization_id-Spalte.
+vi.mock('@/lib/organizations/server', () => ({
+  getActiveOrgId: mockGetActiveOrgId,
 }))
 vi.mock('@/lib/supabase/server', () => ({
   createClient: mockCreateClient,
@@ -181,7 +188,7 @@ function defaultE2EHandler(overrides: Partial<Record<string, Handler>> = {}): Ha
         return { data: null, error: { message: 'not found' } }
       case 'profiles:select':
         return {
-          data: { role: 'admin', organization_id: TEST_ORG },
+          data: { role: 'admin' },
           error: null,
         }
       case 'invoice_items:select':
@@ -203,13 +210,14 @@ function setupAdminAuth() {
       select: () => ({
         eq: () => ({
           single: vi.fn().mockResolvedValue({
-            data: { role: 'admin', organization_id: TEST_ORG },
+            data: { role: 'admin' },
             error: null,
           }),
         }),
       }),
     }),
   })
+  mockGetActiveOrgId.mockResolvedValue(TEST_ORG)
   mockRequireCaregiverSession.mockResolvedValue({ ok: false, status: 401, error: 'Nicht autorisiert' })
 }
 
@@ -346,13 +354,14 @@ describe('E2E: Cross-Org-Blocking', () => {
         select: () => ({
           eq: () => ({
             single: vi.fn().mockResolvedValue({
-              data: { role: 'admin', organization_id: OTHER_ORG },
+              data: { role: 'admin' },
               error: null,
             }),
           }),
         }),
       }),
     })
+    mockGetActiveOrgId.mockResolvedValue(OTHER_ORG)
 
     const adminMock = createAdminMock(defaultE2EHandler())
     mockCreateAdminClient.mockReturnValue(adminMock)
@@ -554,7 +563,7 @@ describe('E2E: Auth-Anforderungen pro Pfad', () => {
         select: () => ({
           eq: () => ({
             single: vi.fn().mockResolvedValue({
-              data: { role: 'kunde', organization_id: TEST_ORG },
+              data: { role: 'kunde' },
               error: null,
             }),
           }),

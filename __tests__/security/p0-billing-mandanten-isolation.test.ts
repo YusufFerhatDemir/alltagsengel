@@ -1,0 +1,178 @@
+/**
+ * P0: Mandanten-Isolation im Billing-/DTA-Modul.
+ *
+ * Drei Regressionen aus dem Billing-Review vom 08.08.2026:
+ *
+ * 1) Saemtliche Routen unter app/api/billing/ lasen die aktive Organisation aus
+ *    `profiles.organization_id`. Diese Spalte existiert in Production NICHT —
+ *    profiles hat nur id/role/first_name/last_name/email/avatar_url/created_at/
+ *    updated_at. Der Select lieferte deshalb undefined und jede Route brach
+ *    entweder mit 403 "Keine Organisation zugewiesen." ab oder filterte gegen
+ *    `undefined`. Die Org haengt am organization_members-Mapping und kommt aus
+ *    getActiveOrgId() (lib/organizations/server.ts) — derselbe Bug wurde zuvor
+ *    in pflege/personal (2a6703c) und ops/akten (1547188) behoben.
+ *
+ * 2) Die Rechnungs-Mutationen (cancel/correct/credit/freeze) und der DTA-Export
+ *    authentifizierten zwar den Admin, pruefen aber nie, ob die per URL-Parameter
+ *    adressierte Entitaet zur eigenen Organisation gehoert. Da die Routen
+ *    createAdminClient() (Service-Role, BYPASSRLS) nutzen, greift der
+ *    org_fence-Policy nicht — ein Admin von Org A konnte fremde Rechnungen
+ *    stornieren, korrigieren, gutschreiben, festschreiben und fremde
+ *    Abrechnungslaeufe exportieren (IDOR).
+ *
+ * 3) POST /api/billing/tariffs reichte den Request-Body ungeprueft an den
+ *    Admin-Insert durch. Ein mitgeschicktes `organization_id` landete damit
+ *    unveraendert in billing_tariffs — Schreibzugriff in fremde Mandanten.
+ *
+ * Die Tests pruefen die Quelltexte statisch (kein DB-Zugriff) — analog
+ * p0-pflege-mandanten-isolation.test.ts.
+ */
+import { describe, it, expect } from 'vitest'
+import { readFileSync, readdirSync, statSync } from 'node:fs'
+import path from 'node:path'
+
+const REPO_ROOT = path.resolve(__dirname, '../..')
+const read = (rel: string) => readFileSync(path.join(REPO_ROOT, rel), 'utf-8')
+
+const BILLING_DIR = 'app/api/billing'
+
+/** Alle route.ts unterhalb von app/api/billing/ (repo-relative Pfade). */
+function billingRoutes(rel: string = BILLING_DIR): string[] {
+  const abs = path.join(REPO_ROOT, rel)
+  return readdirSync(abs).flatMap(entry => {
+    const child = path.join(rel, entry)
+    if (statSync(path.join(REPO_ROOT, child)).isDirectory()) return billingRoutes(child)
+    return entry === 'route.ts' ? [child] : []
+  })
+}
+
+const ROUTES = billingRoutes()
+
+/**
+ * Schneidet den POST/GET/PATCH-Handler heraus, in dem `marker` vorkommt —
+ * bzw. die ganze Datei, wenn der Marker nicht gefunden wird.
+ */
+function handlerMit(src: string, marker: string): string {
+  const at = src.indexOf(marker)
+  if (at === -1) return src
+  const start = src.lastIndexOf('export async function', at)
+  return src.slice(start === -1 ? 0 : start, at)
+}
+
+describe('P0-1: keine Billing-Route liest profiles.organization_id', () => {
+  it('findet ueberhaupt Billing-Routen (Schutz gegen leeres Glob)', () => {
+    expect(ROUTES.length).toBeGreaterThan(15)
+  })
+
+  it.each(ROUTES)('%s selektiert organization_id nicht aus profiles', rel => {
+    const src = read(rel)
+    // profiles-Selects duerfen die nicht existierende Spalte nicht anfordern.
+    const profileSelects = [...src.matchAll(/from\('profiles'\)[\s\S]{0,120}?\.select\(([^)]*)\)/g)]
+    for (const m of profileSelects) {
+      expect(m[1], `${rel}: profiles.select() fordert organization_id an`).not.toMatch(/organization_id/)
+    }
+  })
+
+  it.each(ROUTES)('%s verwendet profile.organization_id nirgends als Wert', rel => {
+    const src = read(rel)
+    expect(src, `${rel}: liest profile.organization_id`).not.toMatch(/\bprofiles?\??\.organization_id\b/)
+  })
+
+  // Routen, die eine Org AUS DER AUTH ableiten, erkennt man an der camelCase-
+  // Variable. app/api/billing/auto-invoice liest die Org dagegen vom Klienten
+  // (clients.organization_id) und braucht getActiveOrgId() nicht.
+  it.each(ROUTES.filter(rel => /\b(organizationId|orgId)\b/.test(read(rel))))(
+    '%s bezieht die Org aus getActiveOrgId()',
+    rel => {
+      const src = read(rel)
+      expect(src, `${rel}: kein getActiveOrgId-Import`)
+        .toMatch(/import\s*\{[^}]*\bgetActiveOrgId\b[^}]*\}\s*from\s*'@\/lib\/organizations\/server'/)
+      expect(src, `${rel}: getActiveOrgId wird nicht aufgerufen`).toMatch(/await\s+getActiveOrgId\(\)/)
+    },
+  )
+})
+
+describe('P0-2: Rechnungs-Mutationen pruefen die Org-Zugehoerigkeit vor dem Aufruf', () => {
+  const MUTATIONEN: Array<{ rel: string; engine: string }> = [
+    { rel: 'app/api/billing/invoices/[id]/cancel/route.ts', engine: 'cancelInvoice(' },
+    { rel: 'app/api/billing/invoices/[id]/correct/route.ts', engine: 'correctInvoice(' },
+    { rel: 'app/api/billing/invoices/[id]/credit/route.ts', engine: 'createCreditNote(' },
+    { rel: 'app/api/billing/invoices/[id]/freeze/route.ts', engine: 'freezeInvoice(' },
+  ]
+
+  it.each(MUTATIONEN)('$rel laedt die Rechnung org-gefenced', ({ rel }) => {
+    const src = read(rel)
+    const at = src.indexOf("from('invoices')")
+    expect(at, `${rel}: keine invoices-Query — Org-Zugehoerigkeit ungeprueft`).toBeGreaterThan(-1)
+    const kette = src.slice(at, at + 300)
+    expect(kette, `${rel}: invoices-Query ohne .eq('id', id)`).toMatch(/\.eq\('id',\s*id\)/)
+    expect(kette, `${rel}: invoices-Query ohne organization_id-Filter`)
+      .toMatch(/\.eq\('organization_id',\s*organizationId\)/)
+  })
+
+  it.each(MUTATIONEN)('$rel bricht mit 404 ab, wenn die Rechnung fremd ist', ({ rel }) => {
+    const src = read(rel)
+    const at = src.indexOf('if (!invoice)')
+    expect(at, `${rel}: kein !invoice-Guard`).toBeGreaterThan(-1)
+    expect(src.slice(at, at + 200)).toMatch(/status:\s*404/)
+  })
+
+  it.each(MUTATIONEN)('$rel prueft VOR dem Engine-Aufruf ($engine)', ({ rel, engine }) => {
+    const src = read(rel)
+    const guardAt = src.indexOf('if (!invoice)')
+    const engineAt = src.indexOf(engine)
+    expect(engineAt, `${rel}: Engine-Aufruf ${engine} nicht gefunden`).toBeGreaterThan(-1)
+    expect(guardAt, `${rel}: Org-Check steht nach dem Engine-Aufruf`).toBeLessThan(engineAt)
+  })
+})
+
+describe('P0-3: tariffs POST erzwingt organizationId aus der Auth', () => {
+  const REL = 'app/api/billing/tariffs/route.ts'
+  const src = read(REL)
+
+  it('holt die Org ueber getActiveOrgId()', () => {
+    expect(src).toMatch(/import\s*\{[^}]*\bgetActiveOrgId\b[^}]*\}\s*from\s*'@\/lib\/organizations\/server'/)
+    expect(handlerMit(src, "from('billing_tariffs')\n      .insert")).toMatch(/await\s+getActiveOrgId\(\)/)
+  })
+
+  it('setzt organization_id beim Insert NACH dem Body-Spread', () => {
+    const at = src.indexOf('.insert(')
+    expect(at, 'kein billing_tariffs-Insert gefunden').toBeGreaterThan(-1)
+    const insert = src.slice(at, src.indexOf('\n', at))
+    // Der Body darf nicht mehr roh durchgereicht werden.
+    expect(insert, 'Body wird ungeprueft eingefuegt (.insert(body))').not.toMatch(/\.insert\(body\)/)
+    expect(insert).toMatch(/organization_id:\s*organizationId/)
+    // Reihenfolge: Spread zuerst, Auth-Wert gewinnt.
+    const spreadAt = insert.indexOf('...body')
+    const orgAt = insert.indexOf('organization_id:')
+    expect(spreadAt, 'kein ...body-Spread im Insert').toBeGreaterThan(-1)
+    expect(spreadAt, 'organization_id muss NACH dem ...body-Spread stehen').toBeLessThan(orgAt)
+  })
+})
+
+describe('P0-4: DTA-Export prueft die Org-Zugehoerigkeit des Laufs', () => {
+  const REL = 'app/api/billing/dta/[id]/export/route.ts'
+  const src = read(REL)
+
+  it('laedt den Lauf org-gefenced', () => {
+    const at = src.indexOf("from('abrechnungslaeufe')")
+    expect(at, `${REL}: keine abrechnungslaeufe-Query`).toBeGreaterThan(-1)
+    const kette = src.slice(at, at + 300)
+    expect(kette).toMatch(/\.eq\('id',\s*id\)/)
+    expect(kette).toMatch(/\.eq\('organization_id',\s*organizationId\)/)
+  })
+
+  it('bricht mit 404 ab und exportiert erst danach', () => {
+    const guardAt = src.indexOf('if (!lauf)')
+    expect(guardAt, `${REL}: kein !lauf-Guard`).toBeGreaterThan(-1)
+    expect(src.slice(guardAt, guardAt + 200)).toMatch(/status:\s*404/)
+
+    const exportAt = src.indexOf('exportiereLauf(')
+    expect(exportAt).toBeGreaterThan(-1)
+    expect(guardAt, 'Org-Check steht nach dem Export').toBeLessThan(exportAt)
+  })
+
+  it('nutzt die Auth-Org auch fuer die Absender-IK', () => {
+    expect(src).toMatch(/getOrgIK\(admin,\s*organizationId\)/)
+  })
+})

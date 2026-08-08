@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { NextResponse } from 'next/server'
 import { allocatePayment } from '@/lib/billing/core'
+import { getActiveOrgId } from '@/lib/organizations/server'
 
 export async function POST(request: Request) {
   try {
@@ -10,9 +11,16 @@ export async function POST(request: Request) {
     if (authError || !user) return NextResponse.json({ error: 'Nicht autorisiert.' }, { status: 401 })
 
     const { data: profile } = await supabase
-      .from('profiles').select('role, organization_id').eq('id', user.id).single()
+      .from('profiles').select('role').eq('id', user.id).single()
     if (!profile || !['admin', 'superadmin'].includes(profile.role)) {
       return NextResponse.json({ error: 'Nur für Administratoren.' }, { status: 403 })
+    }
+
+    // Die Organisation haengt am organization_members-Mapping (Org-Switcher-Cookie),
+    // NICHT an profiles — profiles hat keine organization_id-Spalte.
+    const organizationId = await getActiveOrgId()
+    if (!organizationId) {
+      return NextResponse.json({ error: 'Keine Organisation zugewiesen.' }, { status: 403 })
     }
 
     const body = await request.json()
@@ -29,6 +37,31 @@ export async function POST(request: Request) {
     }
 
     const admin = createAdminClient()
+
+    // Org-Fence: allocatePayment laeuft mit Service-Role (BYPASSRLS) — Zahlung
+    // und alle Ziel-Rechnungen muessen zur eigenen Organisation gehoeren.
+    const { data: payment } = await admin
+      .from('payments')
+      .select('id')
+      .eq('id', paymentId)
+      .eq('organization_id', organizationId)
+      .maybeSingle()
+
+    if (!payment) {
+      return NextResponse.json({ error: 'Zahlung nicht gefunden.' }, { status: 404 })
+    }
+
+    const invoiceIds = [...new Set(allocations.map((a: { invoiceId: string }) => a.invoiceId))]
+    const { data: invoices } = await admin
+      .from('invoices')
+      .select('id')
+      .in('id', invoiceIds)
+      .eq('organization_id', organizationId)
+
+    if ((invoices?.length ?? 0) !== invoiceIds.length) {
+      return NextResponse.json({ error: 'Rechnung nicht gefunden.' }, { status: 404 })
+    }
+
     await allocatePayment(admin, { paymentId, allocations, actorId: user.id })
 
     return NextResponse.json({ success: true })
