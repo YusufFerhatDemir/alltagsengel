@@ -206,11 +206,11 @@ export async function preFlightValidierung(
     const clientIds = [...new Set(rechnungen.map(r => r.client_id))]
     const { data: clients } = await supabase
       .from('clients')
-      .select('id, versichertennummer, geburtsdatum, nachname, vorname, pflegegrad')
+      .select('id, versichertennummer, geburtsdatum, first_name, last_name, pflegegrad')
       .in('id', clientIds)
 
     const unvollstaendig = clients?.filter(c =>
-      !c.versichertennummer || !c.geburtsdatum || !c.nachname || !c.vorname,
+      !c.versichertennummer || !c.geburtsdatum || !c.last_name || !c.first_name,
     ) ?? []
 
     pruefpunkte.push({
@@ -220,7 +220,7 @@ export async function preFlightValidierung(
       pflicht: true,
       details: unvollstaendig.length === 0
         ? `${clientIds.length} Kunden geprüft — alle vollständig`
-        : `${unvollstaendig.length} Kunden mit fehlenden Daten: ${unvollstaendig.map(c => c.nachname || c.id).join(', ')}`,
+        : `${unvollstaendig.length} Kunden mit fehlenden Daten: ${unvollstaendig.map(c => c.last_name || c.id).join(', ')}`,
     })
 
     const ohnePflegegrad = clients?.filter(c => !c.pflegegrad || c.pflegegrad < 1) ?? []
@@ -237,13 +237,17 @@ export async function preFlightValidierung(
 
   // 9. Leistungsnachweise signiert
   if (rechnungen?.length) {
+    const periodMonth = params.abrechnungsmonat.slice(0, 7)
+    const pfStart = `${periodMonth}-01`
+    const pfLastDay = new Date(Number(periodMonth.slice(0, 4)), Number(periodMonth.slice(5, 7)), 0).getDate()
+    const pfEnd = `${periodMonth}-${String(pfLastDay).padStart(2, '0')}`
     const { count: unsignedCount } = await supabase
       .from('service_records')
       .select('id', { count: 'exact', head: true })
       .eq('organization_id', params.organizationId)
-      .like('service_date', params.abrechnungsmonat.slice(0, 7) + '%')
-      .in('billing_status', ['pending', 'ready'])
-      .eq('proof_status', 'pending')
+      .gte('date', pfStart)
+      .lte('date', pfEnd)
+      .in('proof_status', ['ENTWURF', 'ABGESCHLOSSEN'])
 
     pruefpunkte.push({
       id: 'signaturen',
@@ -596,19 +600,61 @@ export async function exportiereLauf(
   const clientIds = [...new Set(invoices.map(i => i.client_id))]
   const { data: clients } = await supabase
     .from('clients')
-    .select('id, versichertennummer, geburtsdatum, nachname, vorname, pflegegrad, strasse, hausnummer, plz, ort, kostentraeger_ik, kostentraeger_name')
+    .select('id, first_name, last_name, versichertennummer, geburtsdatum, pflegegrad, pflegekasse_ik, address, city, zip_code')
     .in('id', clientIds)
 
   const clientMap = new Map(clients?.map(c => [c.id, c]) ?? [])
 
-  // Service Records für den Monat laden
-  const periodMonth = lauf.abrechnungsmonat.slice(0, 7)
+  // Kostentraeger-Daten aus Verordnungen laden (clients hat kein kostentraeger_ik)
+  const { data: verordnungen } = await supabase
+    .from('verordnungen')
+    .select('id, client_id, kostentraeger_ik_nummer, kostentraeger_name')
+    .in('client_id', clientIds)
+    .eq('genehmigung_status', 'genehmigt')
+
+  const kostentraegerByClient = new Map<string, { ik: string; name: string }>()
+  for (const v of verordnungen ?? []) {
+    if (v.kostentraeger_ik_nummer && !kostentraegerByClient.has(v.client_id)) {
+      kostentraegerByClient.set(v.client_id, {
+        ik: v.kostentraeger_ik_nummer,
+        name: v.kostentraeger_name || '',
+      })
+    }
+  }
+
+  // Kostentraeger-Daten auch aus Rechnungen als Fallback
+  for (const inv of invoices) {
+    if (!kostentraegerByClient.has(inv.client_id)) {
+      const { data: invDetail } = await supabase
+        .from('invoices')
+        .select('kostentraeger_ik, kostentraeger_name')
+        .eq('id', inv.id)
+        .single()
+      if (invDetail?.kostentraeger_ik) {
+        kostentraegerByClient.set(inv.client_id, {
+          ik: invDetail.kostentraeger_ik,
+          name: invDetail.kostentraeger_name || '',
+        })
+      }
+    }
+  }
+
+  // Service Records fuer den Monat laden
+  const exportPeriodMonth = lauf.abrechnungsmonat.slice(0, 7)
+  const expStart = `${exportPeriodMonth}-01`
+  const expLastDay = new Date(
+    Number(exportPeriodMonth.slice(0, 4)),
+    Number(exportPeriodMonth.slice(5, 7)),
+    0,
+  ).getDate()
+  const expEnd = `${exportPeriodMonth}-${String(expLastDay).padStart(2, '0')}`
   const { data: records } = await supabase
     .from('service_records')
-    .select('id, client_id, service_date, service_type, duration_minutes, amount, caregiver_name')
+    .select('id, client_id, date, service_type, duration_minutes, amount, caregiver_id, caregiver:caregivers(first_name, last_name)')
     .in('client_id', clientIds)
-    .like('service_date', periodMonth + '%')
-    .in('status', ['completed', 'signed', 'invoiced'])
+    .gte('date', expStart)
+    .lte('date', expEnd)
+    .in('status', ['complete', 'signed', 'invoiced'])
 
   // AbrechnungsFall-Objekte aufbauen
   const faelleMap = new Map<string, AbrechnungsFall>()
@@ -616,35 +662,39 @@ export async function exportiereLauf(
     const client = clientMap.get(inv.client_id)
     if (!client) continue
 
-    const clientRecords = records?.filter(r => r.client_id === inv.client_id) ?? []
-    const leistungen = clientRecords.map(r => ({
-      datum: r.service_date,
+    const kt = kostentraegerByClient.get(inv.client_id)
+    const clientRecords = records?.filter((r: any) => r.client_id === inv.client_id) ?? []
+    const leistungen = clientRecords.map((r: any) => ({
+      datum: r.date,
       leistungsart: r.service_type || 'alltagsbegleitung_45a',
       menge: (r.duration_minutes ?? 60) / 60,
       einzelpreis_cent: r.amount ?? 0,
       uhrzeit: undefined,
       dauer_minuten: r.duration_minutes ?? 60,
-      pflegekraft_name: r.caregiver_name || 'Alltagsengel',
+      pflegekraft_name: r.caregiver
+        ? `${r.caregiver.first_name || ''} ${r.caregiver.last_name || ''}`.trim()
+        : 'Alltagsengel',
     }))
 
-    const key = `${inv.client_id}_${client.kostentraeger_ik || 'UNBEKANNT'}`
+    const kostentraegerIk = kt?.ik || client.pflegekasse_ik || ''
+    const key = `${inv.client_id}_${kostentraegerIk || 'UNBEKANNT'}`
     if (!faelleMap.has(key)) {
       faelleMap.set(key, {
         verordnung_id: inv.id,
         client: {
           versichertennummer: client.versichertennummer || '',
           geburtsdatum: client.geburtsdatum || '',
-          nachname: client.nachname || '',
-          vorname: client.vorname || '',
+          nachname: client.last_name || '',
+          vorname: client.first_name || '',
           pflegegrad: client.pflegegrad ?? 0,
-          strasse: client.strasse,
-          hausnummer: client.hausnummer,
-          plz: client.plz,
-          ort: client.ort,
+          strasse: client.address,
+          plz: client.zip_code,
+          ort: client.city,
         },
         kostentraeger: {
-          ik_nummer: client.kostentraeger_ik || '',
-          name: client.kostentraeger_name || '',
+          ik_nummer: kostentraegerIk,
+          pflegekasse_ik: client.pflegekasse_ik || kostentraegerIk,
+          name: kt?.name || '',
         },
         leistungen: [],
         abrechnungsmonat: lauf.abrechnungsmonat.replace('-', ''),

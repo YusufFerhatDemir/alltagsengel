@@ -133,22 +133,55 @@ export async function POST(request: Request) {
     const clientIds = [...new Set(rechnungen.map(r => r.client_id))]
     const { data: clients } = await admin
       .from('clients')
-      .select('id, versichertennummer, geburtsdatum, nachname, vorname, pflegegrad, strasse, hausnummer, plz, ort, kostentraeger_ik, kostentraeger_name')
+      .select('id, first_name, last_name, versichertennummer, geburtsdatum, pflegegrad, pflegekasse_ik, address, city, zip_code')
       .in('id', clientIds)
       .eq('organization_id', organizationId)
 
     const clientMap = new Map(clients?.map(c => [c.id, c]) ?? [])
 
+    // Kostentraeger-Daten aus Verordnungen (clients hat kein kostentraeger_ik)
+    const { data: verordnungenDry } = await admin
+      .from('verordnungen')
+      .select('id, client_id, kostentraeger_ik_nummer, kostentraeger_name')
+      .in('client_id', clientIds)
+      .eq('genehmigung_status', 'genehmigt')
+      .eq('organization_id', organizationId)
+
+    const ktByClient = new Map<string, { ik: string; name: string }>()
+    for (const v of verordnungenDry ?? []) {
+      if (v.kostentraeger_ik_nummer && !ktByClient.has(v.client_id)) {
+        ktByClient.set(v.client_id, { ik: v.kostentraeger_ik_nummer, name: v.kostentraeger_name || '' })
+      }
+    }
+
+    // Fallback: Kostentraeger aus Rechnungen
+    for (const inv of rechnungen) {
+      if (!ktByClient.has(inv.client_id)) {
+        const { data: invDet } = await admin
+          .from('invoices')
+          .select('kostentraeger_ik, kostentraeger_name')
+          .eq('id', inv.id)
+          .single()
+        if (invDet?.kostentraeger_ik) {
+          ktByClient.set(inv.client_id, { ik: invDet.kostentraeger_ik, name: invDet.kostentraeger_name || '' })
+        }
+      }
+    }
+
     const periodMonth = abrechnungsmonat.slice(0, 7)
+    const drStart = `${periodMonth}-01`
+    const drLastDay = new Date(Number(periodMonth.slice(0, 4)), Number(periodMonth.slice(5, 7)), 0).getDate()
+    const drEnd = `${periodMonth}-${String(drLastDay).padStart(2, '0')}`
     const { data: records } = await admin
       .from('service_records')
-      .select('id, client_id, service_date, service_type, duration_minutes, amount, caregiver_name, proof_status')
+      .select('id, client_id, date, service_type, duration_minutes, amount, caregiver_id, caregiver:caregivers(first_name, last_name), proof_status')
       .in('client_id', clientIds)
       .eq('organization_id', organizationId)
-      .like('service_date', periodMonth + '%')
-      .in('status', ['completed', 'signed', 'invoiced'])
+      .gte('date', drStart)
+      .lte('date', drEnd)
+      .in('status', ['complete', 'signed', 'invoiced'])
 
-    const unsigniert = records?.filter(r => r.proof_status !== 'UNTERSCHRIEBEN') ?? []
+    const unsigniert = records?.filter((r: any) => r.proof_status !== 'UNTERSCHRIEBEN') ?? []
 
     schritte.push({
       schritt: '3. Kundendaten + Leistungsnachweise',
@@ -164,35 +197,39 @@ export async function POST(request: Request) {
       const client = clientMap.get(inv.client_id)
       if (!client) continue
 
-      const clientRecords = records?.filter(r => r.client_id === inv.client_id) ?? []
-      const leistungen = clientRecords.map(r => ({
-        datum: r.service_date,
+      const kt = ktByClient.get(inv.client_id)
+      const clientRecords = records?.filter((r: any) => r.client_id === inv.client_id) ?? []
+      const leistungen = clientRecords.map((r: any) => ({
+        datum: r.date,
         leistungsart: r.service_type || 'alltagsbegleitung_45a',
         menge: (r.duration_minutes ?? 60) / 60,
         einzelpreis_cent: r.amount ?? 0,
         uhrzeit: undefined,
         dauer_minuten: r.duration_minutes ?? 60,
-        pflegekraft_name: r.caregiver_name || 'Alltagsengel',
+        pflegekraft_name: r.caregiver
+          ? `${r.caregiver.first_name || ''} ${r.caregiver.last_name || ''}`.trim()
+          : 'Alltagsengel',
       }))
 
-      const key = `${inv.client_id}_${client.kostentraeger_ik || 'UNBEKANNT'}`
+      const kostentraegerIk = kt?.ik || client.pflegekasse_ik || ''
+      const key = `${inv.client_id}_${kostentraegerIk || 'UNBEKANNT'}`
       if (!faelleMap.has(key)) {
         faelleMap.set(key, {
           verordnung_id: inv.id,
           client: {
             versichertennummer: client.versichertennummer || '',
             geburtsdatum: client.geburtsdatum || '',
-            nachname: client.nachname || '',
-            vorname: client.vorname || '',
+            nachname: client.last_name || '',
+            vorname: client.first_name || '',
             pflegegrad: client.pflegegrad ?? 0,
-            strasse: client.strasse,
-            hausnummer: client.hausnummer,
-            plz: client.plz,
-            ort: client.ort,
+            strasse: client.address,
+            plz: client.zip_code,
+            ort: client.city,
           },
           kostentraeger: {
-            ik_nummer: client.kostentraeger_ik || '',
-            name: client.kostentraeger_name || '',
+            ik_nummer: kostentraegerIk,
+            pflegekasse_ik: client.pflegekasse_ik || kostentraegerIk,
+            name: kt?.name || '',
           },
           leistungen: [],
           abrechnungsmonat: abrechnungsmonat.replace('-', ''),
