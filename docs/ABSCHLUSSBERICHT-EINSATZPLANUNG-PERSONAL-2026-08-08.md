@@ -110,16 +110,20 @@ Neue Datei: `__tests__/security/p0-personal-mandanten-isolation.test.ts` — 6 T
 
 | Punkt | Priorität | Beschreibung |
 |-------|-----------|-------------|
-| Tabellen-Gap Code↔DB | Mittel | Code referenziert `personal_abwesenheiten`, `personal_qualifikationen`, `personal_onboarding_*`, `personal_dokumente`, `personal_notizen` — diese Tabellen existieren nicht in Production. API-Routen dafür laufen ins Leere. |
-| Pflege-Tabellen-Gap | Mittel | Code erwartet `pflege_assessments`, `pflege_vitalzeichen`, `pflege_medikamente`, `pflege_pflegeberichte`, `pflege_sturzprotokolle`, `pflege_wunddokumentation`, `pflege_pflegeplanung` — Production hat andere Tabellennamen (`pflege_anamnesen`, `pflege_aufnahmen` etc.) |
 | End-to-End Click-Through | Niedrig | `/admin/dienstplan` und `/admin/personal` Seiten nach Vercel-Deploy im Browser testen |
 | Vercel Preview-Deploy | Niedrig | Vercel-Integration reagierte langsam bei letztem Push |
+
+> **Korrektur (08.08.2026):** Die im ersten Entwurf gemeldeten Tabellen-Gaps
+> (`pflege_assessments`, `personal_abwesenheiten` etc.) waren ein Dokumentationsfehler.
+> Alle Code-Referenzen verwenden die korrekten Production-Tabellennamen.
+> Ein Voll-Scan über `app/`, `lib/`, `supabase/` und `scripts/` liefert für die
+> damals genannten Namen **0 Treffer** — es gibt kein Code↔DB-Gap.
 
 ### Systemweit — Andere Module
 
 | Modul | Status | Fehlend |
 |-------|--------|---------|
-| Pflegedokumentation | DB vorhanden, Code vorhanden, Auth gefixt | Tabellennamen-Mapping, Smoke-Tests |
+| Pflegedokumentation | DB vorhanden, Code vorhanden, Auth gefixt | Smoke-Tests |
 | DTA / Datenaustausch | DB + Code vorhanden | Noch nie mit echten Kassen-Daten getestet |
 | Abrechnung | Code vorhanden, computeContentHash gefixt | Kein echter Abrechnungslauf durchgeführt |
 | Ops / Aufgaben | DB + Code vorhanden, Auth gefixt | Noch nie operativ genutzt |
@@ -146,24 +150,22 @@ Neue Datei: `__tests__/security/p0-personal-mandanten-isolation.test.ts` — 6 T
 
 Die kritischen Sicherheitslücken (Auth-Blocker + Mandanten-Isolation) sind behoben und durch Regressionstests abgesichert. Die Module Einsatzplanung, Personalverwaltung, Pflege, Ops und Akten sind jetzt erst funktionsfähig — vorher war JEDE API-Route mit 403 blockiert.
 
-**Einschränkung:** Die Tabellen-Gaps (Code referenziert Tabellen die nicht in Production existieren) sind kein Sicherheitsrisiko, sondern führen zu leeren Antworten. Diese sollten im nächsten Block adressiert werden.
+**Einschränkung:** Keine bekannten Tabellen-Gaps. Die im ersten Entwurf dieses Berichts behaupteten Code↔DB-Abweichungen waren ein Dokumentationsfehler (siehe Korrektur in Abschnitt 4). Offen bleibt der End-to-End-Click-Through der Admin-Oberflächen.
 
 ---
 
 ## 6. Empfehlung für den nächsten Softwareblock
 
-### Empfehlung: **Tabellen-Harmonisierung + Pflegedokumentation**
+### Empfehlung: **Pflegedokumentation operativ scharf schalten**
 
 **Begründung:**
-1. Der Auth-Fix hat ALLE Module gleichzeitig entblockt — aber viele referenzieren Tabellen, die in Production nicht oder unter anderem Namen existieren.
-2. Die Pflege-Tabellen in Production (`pflege_anamnesen`, `pflege_aufnahmen`, `pflege_diagnosen` etc.) weichen von den im Code erwarteten Namen ab — das muss harmonisiert werden bevor echte Dokumentation möglich ist.
+1. Der Auth-Fix hat ALLE Module gleichzeitig entblockt — die Routen sind erst seit diesem Block überhaupt erreichbar und daher noch nie operativ gelaufen.
+2. Die Pflege-Tabellen in Production (`pflege_anamnesen`, `pflege_aufnahmen`, `pflege_diagnosen` etc.) stimmen mit den im Code verwendeten Namen überein — es besteht kein Harmonisierungsbedarf.
 3. Pflegedokumentation ist das geschäftskritischste Modul nach Einsatzplanung: ohne Verlaufsdokumentation keine Qualitätssicherung, keine MDK-Prüfung, keine Kassenabrechnung.
 
 **Scope:**
-- Bestandsaufnahme: Welche Tabellen existieren in Production vs. welche der Code erwartet
-- Migration/Mapping erstellen
-- Pflege-API-Routen auf die tatsächlichen Tabellennamen anpassen
 - Admin-UI Pflege verifizieren
+- Engel- und Kundensicht auf Pflegedoku end-to-end durchklicken
 - Smoke-Tests für Pflege-Dokumentation
 
 ---

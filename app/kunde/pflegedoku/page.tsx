@@ -29,7 +29,7 @@ export default function KundePflegedokuPage() {
       try {
         const supabase = createClient()
         const [planRes, verlaufRes] = await Promise.all([
-          supabase.from('pflege_massnahmenplaene').select('*').order('version', { ascending: false }).limit(1).maybeSingle(),
+          supabase.from('pflege_massnahmenplaene').select('*').eq('status', 'aktiv').order('version', { ascending: false }).limit(1).maybeSingle(),
           supabase.from('pflege_verlauf').select('*').order('eintrag_datum', { ascending: false }).limit(50),
         ])
 

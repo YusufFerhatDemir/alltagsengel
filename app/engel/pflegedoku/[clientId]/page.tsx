@@ -37,8 +37,8 @@ export default function EngelPflegedokuKundePage({ params }: { params: Promise<{
         const supabase = createClient()
         const [kundeRes, dRes, rRes, pRes, vRes] = await Promise.all([
           supabase.from('clients').select('first_name, last_name').eq('id', clientId).maybeSingle(),
-          supabase.from('pflege_diagnosen').select('*').eq('client_id', clientId),
-          supabase.from('pflege_risiken').select('*').eq('client_id', clientId),
+          supabase.from('pflege_diagnosen').select('*').eq('client_id', clientId).eq('aktiv', true),
+          supabase.from('pflege_risiken').select('*').eq('client_id', clientId).eq('aktiv', true),
           supabase.from('pflege_massnahmenplaene').select('*').eq('client_id', clientId).eq('status', 'aktiv').maybeSingle(),
           supabase.from('pflege_verlauf').select('*').eq('client_id', clientId).order('eintrag_datum', { ascending: false }).limit(50),
         ])
