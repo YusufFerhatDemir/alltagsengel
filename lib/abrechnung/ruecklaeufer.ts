@@ -261,12 +261,14 @@ export async function ordneRuecklaeuferZu(
   ruecklaeuferId: string,
   laufId: string,
   actorId: string,
+  organizationId?: string,
 ): Promise<void> {
-  const { data: rl } = await supabase
+  let rlQuery = supabase
     .from('dta_ruecklaeufer')
     .select('id, status, organization_id')
     .eq('id', ruecklaeuferId)
-    .single()
+  if (organizationId) rlQuery = rlQuery.eq('organization_id', organizationId)
+  const { data: rl } = await rlQuery.single()
 
   if (!rl) throw new Error('Rückläufer nicht gefunden')
 
@@ -304,8 +306,9 @@ export async function markiereRuecklaeuferErledigt(
   supabase: SupabaseClient,
   ruecklaeuferId: string,
   actorId: string,
+  organizationId?: string,
 ): Promise<void> {
-  await supabase
+  let erledigtUpdate = supabase
     .from('dta_ruecklaeufer')
     .update({
       status: 'erledigt',
@@ -313,6 +316,8 @@ export async function markiereRuecklaeuferErledigt(
       bearbeitet_am: new Date().toISOString(),
     })
     .eq('id', ruecklaeuferId)
+  if (organizationId) erledigtUpdate = erledigtUpdate.eq('organization_id', organizationId)
+  await erledigtUpdate
 
   await logBillingAction(supabase, {
     entityType: 'ruecklaeufer',

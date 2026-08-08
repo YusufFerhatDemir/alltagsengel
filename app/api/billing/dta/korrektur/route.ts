@@ -47,7 +47,7 @@ export async function GET(request: Request) {
         return NextResponse.json({ error: 'Lauf nicht gefunden.' }, { status: 404 })
       }
 
-      const historie = await ladeKorrekturHistorie(admin, laufId)
+      const historie = await ladeKorrekturHistorie(admin, laufId, organizationId)
       return NextResponse.json(historie)
     }
 
@@ -106,7 +106,7 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: 'Korrekturlauf nicht gefunden.' }, { status: 404 })
       }
 
-      const ergebnis = await fuehreKorrekturAus(admin, body.korrekturId, user.id)
+      const ergebnis = await fuehreKorrekturAus(admin, body.korrekturId, user.id, organizationId)
       return NextResponse.json(ergebnis)
     }
 

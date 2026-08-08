@@ -533,8 +533,9 @@ export async function gebeLaufFrei(
   supabase: SupabaseClient,
   laufId: string,
   actorId: string,
+  organizationId?: string,
 ): Promise<void> {
-  await supabase
+  let query = supabase
     .from('abrechnungslaeufe')
     .update({
       status: 'freigegeben',
@@ -542,6 +543,8 @@ export async function gebeLaufFrei(
       freigegeben_am: new Date().toISOString(),
     })
     .eq('id', laufId)
+  if (organizationId) query = query.eq('organization_id', organizationId)
+  await query
 
   await logBillingAction(supabase, {
     entityType: 'dta_freigabe',
@@ -558,13 +561,15 @@ export async function exportiereLauf(
   laufId: string,
   absenderIk: string,
   actorId: string,
+  organizationId?: string,
 ): Promise<ExportErgebnis> {
   // Lauf laden
-  const { data: lauf } = await supabase
+  let laufQuery = supabase
     .from('abrechnungslaeufe')
     .select('*')
     .eq('id', laufId)
-    .single()
+  if (organizationId) laufQuery = laufQuery.eq('organization_id', organizationId)
+  const { data: lauf } = await laufQuery.single()
 
   if (!lauf) throw new Error('Lauf nicht gefunden')
   if (lauf.status !== 'freigegeben') {
@@ -881,12 +886,14 @@ export async function storniereLauf(
   laufId: string,
   grund: string,
   actorId: string,
+  organizationId?: string,
 ): Promise<void> {
-  const { data: lauf } = await supabase
+  let stornoQuery = supabase
     .from('abrechnungslaeufe')
     .select('status, organization_id')
     .eq('id', laufId)
-    .single()
+  if (organizationId) stornoQuery = stornoQuery.eq('organization_id', organizationId)
+  const { data: lauf } = await stornoQuery.single()
 
   if (!lauf) throw new Error('Lauf nicht gefunden')
 
@@ -899,7 +906,7 @@ export async function storniereLauf(
     throw new Error(`Lauf im Status "${lauf.status}" kann nicht storniert werden`)
   }
 
-  await supabase
+  let stornoUpdate = supabase
     .from('abrechnungslaeufe')
     .update({
       status: 'storniert',
@@ -908,6 +915,8 @@ export async function storniereLauf(
       storno_grund: grund,
     })
     .eq('id', laufId)
+  if (organizationId) stornoUpdate = stornoUpdate.eq('organization_id', organizationId)
+  await stornoUpdate
 
   await logBillingAction(supabase, {
     entityType: 'dta_lauf',

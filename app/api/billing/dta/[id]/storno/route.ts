@@ -51,7 +51,7 @@ export async function POST(
       return NextResponse.json({ error: 'Lauf nicht gefunden.' }, { status: 404 })
     }
 
-    await storniereLauf(admin, id, body.grund, user.id)
+    await storniereLauf(admin, id, body.grund, user.id, organizationId)
 
     return NextResponse.json({ success: true })
   } catch (err) {

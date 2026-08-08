@@ -121,6 +121,7 @@ export async function PATCH(request: Request) {
       verantwortlicher: body.verantwortlicher,
       wiedervorlageAm: body.wiedervorlageAm,
       actorId: user.id,
+      organizationId,
     })
 
     return NextResponse.json({ success: true })
