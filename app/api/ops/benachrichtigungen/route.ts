@@ -10,7 +10,7 @@ export async function GET(request: Request) {
   const supabase = createAdminClient()
   const url = new URL(request.url)
   const gelesen = url.searchParams.get('gelesen')
-  const kategorie = url.searchParams.get('kategorie') || undefined
+  const kategorie = (url.searchParams.get('kategorie') || undefined) as BenachrichtigungKategorie | undefined
   const limit = url.searchParams.get('limit') ? Number(url.searchParams.get('limit')) : undefined
   try {
     const data = await listBenachrichtigungen(supabase, {

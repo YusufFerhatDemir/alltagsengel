@@ -14,7 +14,7 @@ export async function PATCH(
   try {
     const body = await request.json()
     const data = await updateEreignisRegel(supabase, {
-      organizationId: auth.organizationId,
+      organizationId: auth.ctx.organizationId,
       id,
       data: body,
     })
@@ -34,7 +34,7 @@ export async function DELETE(
   const supabase = createAdminClient()
   try {
     const data = await deleteEreignisRegel(supabase, {
-      organizationId: auth.organizationId,
+      organizationId: auth.ctx.organizationId,
       id,
     })
     return NextResponse.json(data)

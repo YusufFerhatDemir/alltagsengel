@@ -18,7 +18,7 @@ export async function GET(request: Request) {
   const offset = url.searchParams.get('offset') ? Number(url.searchParams.get('offset')) : undefined
   try {
     const data = await listAufgaben(supabase, {
-      organizationId: auth.organizationId,
+      organizationId: auth.ctx.organizationId,
       status,
       kategorie,
       prioritaet,
@@ -40,7 +40,7 @@ export async function POST(request: Request) {
   try {
     const body = await request.json()
     const data = await createAufgabe(supabase, {
-      organizationId: auth.organizationId,
+      organizationId: auth.ctx.organizationId,
       data: body,
     })
     return NextResponse.json(data)

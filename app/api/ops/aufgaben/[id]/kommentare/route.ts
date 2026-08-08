@@ -13,7 +13,7 @@ export async function GET(
   const supabase = createAdminClient()
   try {
     const data = await listKommentare(supabase, {
-      organizationId: auth.organizationId,
+      organizationId: auth.ctx.organizationId,
       aufgabeId,
       includeIntern: true,
     })
@@ -34,10 +34,10 @@ export async function POST(
   try {
     const body = await request.json()
     const data = await createKommentar(supabase, {
-      organizationId: auth.organizationId,
+      organizationId: auth.ctx.organizationId,
       aufgabeId,
       inhalt: body.inhalt,
-      autorId: body.autor_id || auth.userId,
+      autorId: body.autor_id || auth.ctx.userId,
       istIntern: body.ist_intern,
     })
     return NextResponse.json(data)

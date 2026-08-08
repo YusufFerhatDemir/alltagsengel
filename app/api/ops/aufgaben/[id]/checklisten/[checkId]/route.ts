@@ -14,7 +14,7 @@ export async function PATCH(
   try {
     const body = await request.json()
     const data = await updateChecklistenItem(supabase, {
-      organizationId: auth.organizationId,
+      organizationId: auth.ctx.organizationId,
       id: checkId,
       data: body,
     })
@@ -34,7 +34,7 @@ export async function DELETE(
   const supabase = createAdminClient()
   try {
     const data = await deleteChecklistenItem(supabase, {
-      organizationId: auth.organizationId,
+      organizationId: auth.ctx.organizationId,
       id: checkId,
     })
     return NextResponse.json(data)

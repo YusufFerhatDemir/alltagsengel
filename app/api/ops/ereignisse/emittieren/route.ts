@@ -10,10 +10,10 @@ export async function POST(request: Request) {
   try {
     const body = await request.json()
     const data = await emitEreignis(supabase, {
-      organizationId: auth.organizationId,
+      organizationId: auth.ctx.organizationId,
       ereignisTyp: body.ereignis_typ,
       entitaetId: body.entitaet_id,
-      akteurId: body.akteur_id || auth.userId,
+      akteurId: body.akteur_id || auth.ctx.userId,
       kontext: body.kontext,
     })
     return NextResponse.json(data)
