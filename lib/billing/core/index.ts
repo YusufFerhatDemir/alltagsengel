@@ -26,6 +26,7 @@ export {
 export {
   type AuditLogParams,
   computeChecksum,
+  computeContentHash,
   computeSnapshotChecksum,
   logBillingAction,
 } from './audit';

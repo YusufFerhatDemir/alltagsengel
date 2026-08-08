@@ -13,7 +13,7 @@
  */
 
 import type { SupabaseClient } from '@supabase/supabase-js'
-import { logBillingAction, computeChecksum } from '../billing/core/audit'
+import { logBillingAction, computeContentHash } from '../billing/core/audit'
 
 // ── Types ───────────────────────────────────────────────────────
 
@@ -81,7 +81,7 @@ export async function importiereRuecklaeufer(
 ): Promise<RuecklaeuferImportErgebnis> {
   // Hash der Quelldatei für Duplikat-Erkennung
   const quelldateiHash = params.originalMeldung
-    ? await computeChecksum({ content: params.originalMeldung })
+    ? await computeContentHash({ content: params.originalMeldung })
     : undefined
 
   // Duplikat prüfen

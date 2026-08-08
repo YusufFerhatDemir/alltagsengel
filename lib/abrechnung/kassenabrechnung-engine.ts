@@ -14,7 +14,7 @@
  */
 
 import type { SupabaseClient } from '@supabase/supabase-js'
-import { logBillingAction, computeChecksum } from '../billing/core/audit'
+import { logBillingAction, computeContentHash } from '../billing/core/audit'
 import { generateAlleDateien, type AbrechnungsFall, type GeneratorOptionen, type EdifactDatei } from './edifact-generator'
 import { validateEDIFACT, validateIK } from './edifact-validator'
 import { generateAuftragsdatei, auftragsdateiName } from './auftragsdatei'
@@ -658,7 +658,7 @@ export async function exportiereLauf(
   }
 
   // Hashes berechnen
-  const contentHash = await computeChecksum({
+  const contentHash = await computeContentHash({
     dateien: dateien.map(d => d.logischer_dateiname),
     betrag: dateien.reduce((s, d) => s + d.gesamtbetrag_cent, 0),
     nachrichten: dateien.reduce((s, d) => s + d.anzahl_nachrichten, 0),

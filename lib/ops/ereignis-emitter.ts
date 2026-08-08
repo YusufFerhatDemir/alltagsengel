@@ -2,6 +2,16 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import type { EreignisTyp, BenachrichtigungKategorie } from './types'
 import { logAktivitaet } from './aktivitaetslog'
 
+/** Ergebnis eines Ereignis-Emits — wird von der API-Route direkt zurueckgegeben. */
+export interface EreignisErgebnis {
+  /** Anzahl der angewandten aktiven Regeln. */
+  regeln: number
+  /** Anzahl tatsaechlich erzeugter Benachrichtigungen. */
+  benachrichtigungen: number
+  /** Id des Aktivitaetslog-Eintrags, oder null wenn das Protokollieren fehlschlug. */
+  log_id: string | null
+}
+
 export async function emitEreignis(
   supabase: SupabaseClient,
   params: {
@@ -11,7 +21,7 @@ export async function emitEreignis(
     akteurId?: string
     kontext?: Record<string, unknown>
   },
-): Promise<void> {
+): Promise<EreignisErgebnis> {
   const { data: regeln, error: regelErr } = await supabase
     .from('ops_ereignis_regeln')
     .select('*')
@@ -20,9 +30,10 @@ export async function emitEreignis(
     .eq('aktiv', true)
 
   if (regelErr) throw new Error(`Ereignisregeln konnten nicht geladen werden: ${regelErr.message}`)
-  if (!regeln || regeln.length === 0) return
 
-  for (const regel of regeln) {
+  let benachrichtigungen = 0
+
+  for (const regel of regeln ?? []) {
     const empfaengerIds = await resolveEmpfaenger(supabase, {
       organizationId: params.organizationId,
       empfaengerRolle: regel.empfaenger_rolle,
@@ -55,11 +66,16 @@ export async function emitEreignis(
       })
       if (bErr) {
         console.error(`Benachrichtigung fuer ${empfaengerId} fehlgeschlagen: ${bErr.message}`)
+      } else {
+        benachrichtigungen++
       }
     }
   }
 
-  await logAktivitaet(supabase, {
+  // Auch ohne passende Regel wird das Ereignis protokolliert — der
+  // Aktivitaetslog soll luecken­los sein, nicht nur dort greifen, wo
+  // zufaellig eine Benachrichtigungsregel konfiguriert ist.
+  const log = await logAktivitaet(supabase, {
     organizationId: params.organizationId,
     entitaetTyp: 'benachrichtigung',
     entitaetId: params.entitaetId,
@@ -68,7 +84,14 @@ export async function emitEreignis(
     akteurId: params.akteurId,
   }).catch((err) => {
     console.error(`Aktivitaetslog fuer Ereignis fehlgeschlagen: ${err}`)
+    return null
   })
+
+  return {
+    regeln: regeln?.length ?? 0,
+    benachrichtigungen,
+    log_id: log?.id ?? null,
+  }
 }
 
 async function resolveEmpfaenger(
@@ -138,11 +161,17 @@ async function checkPraeferenz(
   return data.aktiv && data.in_app
 }
 
+/**
+ * Ersetzt Platzhalter in einer Vorlage durch Kontext-Werte.
+ * Akzeptiert `{key}` und `{{key}}`. Ein Platzhalter ohne passenden
+ * Kontext-Wert bleibt unveraendert stehen.
+ */
 function substituteVorlage(vorlage: string, kontext?: Record<string, unknown>): string {
   if (!kontext) return vorlage
-  return vorlage.replace(/\{\{(\w+)\}\}/g, (_, key) => {
+  return vorlage.replace(/\{\{(\w+)\}\}|\{(\w+)\}/g, (treffer, doppelt, einfach) => {
+    const key = doppelt ?? einfach
     const val = kontext[key]
-    return val != null ? String(val) : `{{${key}}}`
+    return val != null ? String(val) : treffer
   })
 }
 
