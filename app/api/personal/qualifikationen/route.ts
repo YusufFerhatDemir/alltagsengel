@@ -31,8 +31,9 @@ export async function POST(request: Request) {
   try {
     const body = await request.json()
     const data = await createQualifikation(supabase, {
-      organizationId: auth.ctx.organizationId,
       ...body,
+      // Mandant kommt aus dem Auth-Kontext und darf nicht aus dem Body kommen.
+      organizationId: auth.ctx.organizationId,
     })
     return NextResponse.json(data, { status: 201 })
   } catch (e: any) {

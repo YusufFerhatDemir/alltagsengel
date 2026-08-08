@@ -38,9 +38,11 @@ export async function POST(request: Request) {
   try {
     const body = await request.json()
     const data = await createEintrag(supabase, {
+      ...body,
+      // Mandant und Urheber kommen aus dem Auth-Kontext und duerfen
+      // nicht aus dem Request-Body ueberschrieben werden.
       organizationId: auth.ctx.organizationId,
       erstelltVon: auth.ctx.userId,
-      ...body,
     })
     return NextResponse.json(data, { status: 201 })
   } catch (e: any) {

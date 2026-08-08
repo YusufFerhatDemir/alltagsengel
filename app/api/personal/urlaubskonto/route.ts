@@ -28,7 +28,11 @@ export async function POST(req: NextRequest) {
     const supabase = createAdminClient()
 
     const body = await req.json()
-    const data = await createUrlaubskonto(supabase, body)
+    const data = await createUrlaubskonto(supabase, {
+      ...body,
+      // Mandant kommt aus dem Auth-Kontext und darf nicht aus dem Body kommen.
+      organizationId: auth.ctx.organizationId,
+    })
     return NextResponse.json(data, { status: 201 })
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 400 })

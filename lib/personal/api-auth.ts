@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { getActiveOrgId } from '@/lib/organizations/server'
 
 export interface PersonalAuthContext {
   userId: string
@@ -21,14 +22,18 @@ export async function requirePersonalAdmin(): Promise<PersonalAuthResult> {
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('role, organization_id, first_name, last_name')
+    .select('role, first_name, last_name')
     .eq('id', user.id)
     .single()
 
   if (!profile || !['admin', 'superadmin'].includes(profile.role)) {
     return { ok: false, response: NextResponse.json({ error: 'Nur für Administratoren.' }, { status: 403 }) }
   }
-  if (!profile.organization_id) {
+
+  // Die Organisation haengt am organization_members-Mapping (Org-Switcher-Cookie),
+  // NICHT an profiles — profiles hat keine organization_id-Spalte.
+  const organizationId = await getActiveOrgId()
+  if (!organizationId) {
     return { ok: false, response: NextResponse.json({ error: 'Keine Organisation zugewiesen.' }, { status: 403 }) }
   }
 
@@ -36,7 +41,7 @@ export async function requirePersonalAdmin(): Promise<PersonalAuthResult> {
 
   return {
     ok: true,
-    ctx: { userId: user.id, organizationId: profile.organization_id, role: profile.role, name },
+    ctx: { userId: user.id, organizationId, role: profile.role, name },
   }
 }
 
