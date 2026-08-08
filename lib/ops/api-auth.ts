@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { getActiveOrgId } from '@/lib/organizations/server'
 
 export interface OpsAuthContext {
   userId: string
@@ -21,14 +22,18 @@ export async function requireOpsAdmin(): Promise<OpsAuthResult> {
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('role, organization_id, first_name, last_name')
+    .select('role, first_name, last_name')
     .eq('id', user.id)
     .single()
 
   if (!profile || !['admin', 'superadmin'].includes(profile.role)) {
     return { ok: false, response: NextResponse.json({ error: 'Nur fuer Administratoren.' }, { status: 403 }) }
   }
-  if (!profile.organization_id) {
+
+  // Die Organisation haengt am organization_members-Mapping (Org-Switcher-Cookie),
+  // NICHT an profiles — profiles hat keine organization_id-Spalte.
+  const organizationId = await getActiveOrgId()
+  if (!organizationId) {
     return { ok: false, response: NextResponse.json({ error: 'Keine Organisation zugewiesen.' }, { status: 403 }) }
   }
 
@@ -36,7 +41,7 @@ export async function requireOpsAdmin(): Promise<OpsAuthResult> {
 
   return {
     ok: true,
-    ctx: { userId: user.id, organizationId: profile.organization_id, role: profile.role, name },
+    ctx: { userId: user.id, organizationId, role: profile.role, name },
   }
 }
 
@@ -51,20 +56,20 @@ export async function requireOpsUser(): Promise<
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('role, organization_id, first_name, last_name')
+    .select('role, first_name, last_name')
     .eq('id', user.id)
     .single()
 
-  let organizationId = profile?.organization_id
+  // profiles hat keine organization_id-Spalte: Engel bekommen ihre Org aus dem
+  // caregivers-Datensatz, alle uebrigen aus der aktiven Organisation
+  // (organization_members / Org-Switcher-Cookie).
+  const { data: caregiver } = await supabase
+    .from('caregivers')
+    .select('organization_id')
+    .eq('user_id', user.id)
+    .maybeSingle()
 
-  if (!organizationId) {
-    const { data: caregiver } = await supabase
-      .from('caregivers')
-      .select('organization_id')
-      .eq('user_id', user.id)
-      .maybeSingle()
-    organizationId = caregiver?.organization_id
-  }
+  const organizationId: string | undefined = caregiver?.organization_id ?? await getActiveOrgId()
 
   if (!organizationId) {
     return { ok: false, response: NextResponse.json({ error: 'Keine Organisation zugewiesen.' }, { status: 403 }) }

@@ -6,6 +6,7 @@
 
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { getActiveOrgId } from '@/lib/organizations/server'
 
 export interface AktenAuthContext {
   userId: string
@@ -27,18 +28,22 @@ export async function requireAktenAdmin(): Promise<AktenAuthResult> {
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('role, organization_id')
+    .select('role')
     .eq('id', user.id)
     .single()
 
   if (!profile || !['admin', 'superadmin'].includes(profile.role)) {
     return { ok: false, response: NextResponse.json({ error: 'Nur für Administratoren.' }, { status: 403 }) }
   }
-  if (!profile.organization_id) {
+
+  // Die Organisation haengt am organization_members-Mapping (Org-Switcher-Cookie),
+  // NICHT an profiles — profiles hat keine organization_id-Spalte.
+  const organizationId = await getActiveOrgId()
+  if (!organizationId) {
     return { ok: false, response: NextResponse.json({ error: 'Keine Organisation zugewiesen.' }, { status: 403 }) }
   }
 
-  return { ok: true, ctx: { userId: user.id, organizationId: profile.organization_id, role: profile.role } }
+  return { ok: true, ctx: { userId: user.id, organizationId, role: profile.role } }
 }
 
 /**
