@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { NextResponse } from 'next/server'
 import { correctInvoice } from '@/lib/billing/core'
+import { getActiveOrgId } from '@/lib/organizations/server'
 
 /**
  * POST /api/billing/invoices/[id]/correct
@@ -44,8 +45,27 @@ export async function POST(
       )
     }
 
+    // Org-Fence: der Admin-Client umgeht RLS (BYPASSRLS), die Zugehoerigkeit
+    // der Rechnung muss deshalb hier explizit geprueft werden.
+    const organizationId = await getActiveOrgId()
+    if (!organizationId) {
+      return NextResponse.json({ error: 'Keine Organisation zugewiesen.' }, { status: 403 })
+    }
+
     // Admin-Client fuer die eigentlichen Operationen
     const admin = createAdminClient()
+
+    const { data: invoice } = await admin
+      .from('invoices')
+      .select('id')
+      .eq('id', id)
+      .eq('organization_id', organizationId)
+      .maybeSingle()
+
+    if (!invoice) {
+      return NextResponse.json({ error: 'Rechnung nicht gefunden.' }, { status: 404 })
+    }
+
     const result = await correctInvoice(admin, id, body.corrections, body.reason, user.id)
 
     return NextResponse.json(result)

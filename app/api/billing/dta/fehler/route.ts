@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { NextResponse } from 'next/server'
 import { aktualisiereFehler, holeFehlerDashboard } from '@/lib/abrechnung/fehlerprotokoll'
+import { getActiveOrgId } from '@/lib/organizations/server'
 
 export async function GET(request: Request) {
   try {
@@ -13,12 +14,19 @@ export async function GET(request: Request) {
 
     const { data: profile } = await supabase
       .from('profiles')
-      .select('role, organization_id')
+      .select('role')
       .eq('id', user.id)
       .single()
 
     if (!profile || !['admin', 'superadmin'].includes(profile.role)) {
       return NextResponse.json({ error: 'Nur für Administratoren.' }, { status: 403 })
+    }
+
+    // Die Organisation haengt am organization_members-Mapping (Org-Switcher-Cookie),
+    // NICHT an profiles — profiles hat keine organization_id-Spalte.
+    const organizationId = await getActiveOrgId()
+    if (!organizationId) {
+      return NextResponse.json({ error: 'Keine Organisation zugewiesen.' }, { status: 403 })
     }
 
     const { searchParams } = new URL(request.url)
@@ -27,7 +35,7 @@ export async function GET(request: Request) {
     const admin = createAdminClient()
 
     if (view === 'dashboard') {
-      const dashboard = await holeFehlerDashboard(admin, profile.organization_id!, {
+      const dashboard = await holeFehlerDashboard(admin, organizationId, {
         laufId: searchParams.get('lauf_id') || undefined,
         zeitraumVon: searchParams.get('von') || undefined,
         zeitraumBis: searchParams.get('bis') || undefined,
@@ -38,7 +46,7 @@ export async function GET(request: Request) {
     let query = admin
       .from('dta_fehlerprotokoll')
       .select('*, lauf:abrechnungslaeufe(id, abrechnungsmonat, kostentraeger_name)')
-      .eq('organization_id', profile.organization_id)
+      .eq('organization_id', organizationId)
       .order('created_at', { ascending: false })
       .limit(200)
 
@@ -67,12 +75,19 @@ export async function PATCH(request: Request) {
 
     const { data: profile } = await supabase
       .from('profiles')
-      .select('role, organization_id')
+      .select('role')
       .eq('id', user.id)
       .single()
 
     if (!profile || !['admin', 'superadmin'].includes(profile.role)) {
       return NextResponse.json({ error: 'Nur für Administratoren.' }, { status: 403 })
+    }
+
+    // Die Organisation haengt am organization_members-Mapping (Org-Switcher-Cookie),
+    // NICHT an profiles — profiles hat keine organization_id-Spalte.
+    const organizationId = await getActiveOrgId()
+    if (!organizationId) {
+      return NextResponse.json({ error: 'Keine Organisation zugewiesen.' }, { status: 403 })
     }
 
     const body = await request.json()
@@ -84,6 +99,19 @@ export async function PATCH(request: Request) {
     }
 
     const admin = createAdminClient()
+
+    // Org-Fence: aktualisiereFehler laeuft mit Service-Role (BYPASSRLS).
+    const { data: fehler } = await admin
+      .from('dta_fehlerprotokoll')
+      .select('id')
+      .eq('id', body.fehlerId)
+      .eq('organization_id', organizationId)
+      .maybeSingle()
+
+    if (!fehler) {
+      return NextResponse.json({ error: 'Fehler nicht gefunden.' }, { status: 404 })
+    }
+
     await aktualisiereFehler(admin, { ...body, actorId: user.id })
 
     return NextResponse.json({ success: true })

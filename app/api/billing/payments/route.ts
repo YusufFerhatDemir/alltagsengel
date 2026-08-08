@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { NextResponse } from 'next/server'
 import { createPayment } from '@/lib/billing/core'
+import { getActiveOrgId } from '@/lib/organizations/server'
 
 export async function POST(request: Request) {
   try {
@@ -10,11 +11,15 @@ export async function POST(request: Request) {
     if (authError || !user) return NextResponse.json({ error: 'Nicht autorisiert.' }, { status: 401 })
 
     const { data: profile } = await supabase
-      .from('profiles').select('role, organization_id').eq('id', user.id).single()
+      .from('profiles').select('role').eq('id', user.id).single()
     if (!profile || !['admin', 'superadmin'].includes(profile.role)) {
       return NextResponse.json({ error: 'Nur für Administratoren.' }, { status: 403 })
     }
-    if (!profile.organization_id) {
+
+    // Die Organisation haengt am organization_members-Mapping (Org-Switcher-Cookie),
+    // NICHT an profiles — profiles hat keine organization_id-Spalte.
+    const organizationId = await getActiveOrgId()
+    if (!organizationId) {
       return NextResponse.json({ error: 'Keine Organisation zugewiesen.' }, { status: 403 })
     }
 
@@ -27,7 +32,7 @@ export async function POST(request: Request) {
 
     const admin = createAdminClient()
     const result = await createPayment(admin, {
-      organizationId: profile.organization_id,
+      organizationId,
       paymentDate,
       amountCents: Math.round(amountCents),
       paymentMethod: paymentMethod || 'ueberweisung',
@@ -54,9 +59,16 @@ export async function GET(request: Request) {
     if (authError || !user) return NextResponse.json({ error: 'Nicht autorisiert.' }, { status: 401 })
 
     const { data: profile } = await supabase
-      .from('profiles').select('role, organization_id').eq('id', user.id).single()
+      .from('profiles').select('role').eq('id', user.id).single()
     if (!profile || !['admin', 'superadmin'].includes(profile.role)) {
       return NextResponse.json({ error: 'Nur für Administratoren.' }, { status: 403 })
+    }
+
+    // Die Organisation haengt am organization_members-Mapping (Org-Switcher-Cookie),
+    // NICHT an profiles — profiles hat keine organization_id-Spalte.
+    const organizationId = await getActiveOrgId()
+    if (!organizationId) {
+      return NextResponse.json({ error: 'Keine Organisation zugewiesen.' }, { status: 403 })
     }
 
     const { searchParams } = new URL(request.url)
@@ -67,7 +79,7 @@ export async function GET(request: Request) {
     let query = admin
       .from('payments')
       .select('*, payment_allocations(id, invoice_id, amount_cents, allocation_type)')
-      .eq('organization_id', profile.organization_id)
+      .eq('organization_id', organizationId)
       .is('deleted_at', null)
       .order('payment_date', { ascending: false })
       .limit(limit)

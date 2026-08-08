@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { NextResponse } from 'next/server'
+import { getActiveOrgId } from '@/lib/organizations/server'
 
 export async function GET(request: Request) {
   try {
@@ -9,9 +10,16 @@ export async function GET(request: Request) {
     if (authError || !user) return NextResponse.json({ error: 'Nicht autorisiert.' }, { status: 401 })
 
     const { data: profile } = await supabase
-      .from('profiles').select('role, organization_id').eq('id', user.id).single()
+      .from('profiles').select('role').eq('id', user.id).single()
     if (!profile || !['admin', 'superadmin'].includes(profile.role)) {
       return NextResponse.json({ error: 'Nur für Administratoren.' }, { status: 403 })
+    }
+
+    // Die Organisation haengt am organization_members-Mapping (Org-Switcher-Cookie),
+    // NICHT an profiles — profiles hat keine organization_id-Spalte.
+    const organizationId = await getActiveOrgId()
+    if (!organizationId) {
+      return NextResponse.json({ error: 'Keine Organisation zugewiesen.' }, { status: 403 })
     }
 
     const { searchParams } = new URL(request.url)
@@ -32,7 +40,7 @@ export async function GET(request: Request) {
         .gte('date', periodStart).lte('date', periodEnd),
       admin.from('invoices')
         .select('id, client_id, status, total_amount, paid_amount, billing_type, period_start, period_end')
-        .eq('organization_id', profile.organization_id)
+        .eq('organization_id', organizationId)
         .gte('period_start', periodStart).lte('period_end', periodEnd)
         .is('deleted_at', null),
       admin.from('monthly_closings')
@@ -40,7 +48,7 @@ export async function GET(request: Request) {
         .eq('year', year).eq('month', monthNum),
       admin.from('payments')
         .select('id, amount_cents, matching_status, payment_date')
-        .eq('organization_id', profile.organization_id)
+        .eq('organization_id', organizationId)
         .gte('payment_date', periodStart).lte('payment_date', periodEnd)
         .is('deleted_at', null),
     ])

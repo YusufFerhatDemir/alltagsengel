@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { NextResponse } from 'next/server'
+import { getActiveOrgId } from '@/lib/organizations/server'
 
 /**
  * GET /api/billing/tariffs
@@ -51,6 +52,13 @@ export async function POST(request: Request) {
       .single()
     if (!profile || !['admin', 'superadmin'].includes(profile.role)) {
       return NextResponse.json({ error: 'Nur für Administratoren' }, { status: 403 })
+    }
+
+    // Die Organisation haengt am organization_members-Mapping (Org-Switcher-Cookie),
+    // NICHT an profiles — profiles hat keine organization_id-Spalte.
+    const organizationId = await getActiveOrgId()
+    if (!organizationId) {
+      return NextResponse.json({ error: 'Keine Organisation zugewiesen.' }, { status: 403 })
     }
 
     // Tarif-Daten aus dem Request-Body lesen
@@ -152,10 +160,12 @@ export async function POST(request: Request) {
       }
     }
 
-    // Admin-Client für den Insert verwenden (RLS erfordert Admin)
+    // Admin-Client für den Insert verwenden (RLS erfordert Admin).
+    // Org-Fence: organization_id kommt aus der Auth, NICHT aus dem Body — der
+    // Spread steht davor, damit ein mitgeschicktes Feld ueberschrieben wird.
     const { data: tariff, error } = await admin
       .from('billing_tariffs')
-      .insert(body)
+      .insert({ ...body, organization_id: organizationId })
       .select()
       .single()
 
