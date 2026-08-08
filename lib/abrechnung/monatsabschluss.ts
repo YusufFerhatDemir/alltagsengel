@@ -104,6 +104,7 @@ export async function erstelleMonatsabschluss(
      * Preise ziehen.
      */
     bundesland: string
+    organizationId: string
     /** EDIFACT-Generator (PLGA/PLAA) — injiziert, sobald lib/abrechnung/edifact existiert. */
     edifactGenerator?: EdifactGenerator
     /** true = monthly_closings NICHT schreiben (reiner Prüf-/Vorschaulauf). */
@@ -111,12 +112,15 @@ export async function erstelleMonatsabschluss(
   }
 ): Promise<MonatsabschlussErgebnis> {
   if (!/^\d{4}-\d{2}$/.test(monat)) throw new Error('Monat muss das Format YYYY-MM haben.')
-  const { bundesland, edifactGenerator, dryRun = false } = options
+  const { bundesland, organizationId, edifactGenerator, dryRun = false } = options
   if (!bundesland) {
     throw new Error(
       'Bundesland fehlt: erstelleMonatsabschluss() braucht den Bundesland-Katalogcode '
       + 'des Leistungsorts (z. B. "hessen"). Ohne ihn würden landesfremde Preise gezogen.'
     )
+  }
+  if (!organizationId) {
+    throw new Error('organizationId fehlt: erstelleMonatsabschluss() benötigt die Mandanten-ID.')
   }
 
   const [jahr, monatNum] = monat.split('-').map(Number)
@@ -131,6 +135,7 @@ export async function erstelleMonatsabschluss(
     .select(
       'id, client_id, verordnung_type, leistungsart, genehmigung_status, genehmigung_aktenzeichen, genehmigung_bis, kostentraeger_typ, kostentraeger_name, kostentraeger_ik_nummer, abtretungserklaerung_vorhanden'
     )
+    .eq('organization_id', organizationId)
     .eq('genehmigung_status', 'genehmigt')
   if (vErr) throw new Error(`Verordnungen konnten nicht geladen werden: ${vErr.message}`)
   const vos = verordnungen || []
@@ -168,6 +173,7 @@ export async function erstelleMonatsabschluss(
     .select(
       'id, verordnung_id, client_id, date, duration_minutes, service_type, amount, status, client_signature'
     )
+    .eq('organization_id', organizationId)
     .in('verordnung_id', verordnungIds)
     .gte('date', periodStart)
     .lte('date', periodEnd)
