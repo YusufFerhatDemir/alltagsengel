@@ -9,7 +9,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { emitEreignis } from '@/lib/ops/ereignisse'
+import { emitEreignis } from '@/lib/ops/ereignis-emitter'
 
 const ORG = '00000000-0000-4000-8000-000460629986'
 
