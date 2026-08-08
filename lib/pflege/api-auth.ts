@@ -70,6 +70,12 @@ export async function requirePflegeUser(): Promise<
     .eq('id', user.id)
     .single()
 
-  const name = [profile?.first_name, profile?.last_name].filter(Boolean).join(' ') || 'Alltagsengel'
-  return { ok: true, userId: user.id, role: profile?.role ?? 'engel', name }
+  // Gültiger Token ohne Profil-Zeile darf NICHT still als 'engel' durchrutschen —
+  // sonst bekäme ein profilloser Account Engel-Schreibrechte (analog requirePflegeAdmin).
+  if (!profile) {
+    return { ok: false, response: NextResponse.json({ error: 'Kein Profil gefunden.' }, { status: 403 }) }
+  }
+
+  const name = [profile.first_name, profile.last_name].filter(Boolean).join(' ') || 'Alltagsengel'
+  return { ok: true, userId: user.id, role: profile.role ?? 'engel', name }
 }

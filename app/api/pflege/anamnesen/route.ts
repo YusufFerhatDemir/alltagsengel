@@ -35,10 +35,21 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'clientId ist ein Pflichtfeld.' }, { status: 400 })
     }
 
-    const { clientId, anamneseDatum, anamneseTyp, erhobenVon, erhobenRolle, ...felder } = body
+    // organizationId/erstelltVon werden bewusst aus dem Body herausdestrukturiert:
+    // sonst landen sie in ...felder und überschreiben die Auth-Werte (Mandanten-Leak).
+    const {
+      clientId, anamneseDatum, anamneseTyp, erhobenVon, erhobenRolle,
+      organizationId: _bodyOrganizationId,
+      erstelltVon: _bodyErstelltVon,
+      ...felder
+    } = body
+    void _bodyOrganizationId
+    void _bodyErstelltVon
 
     const admin = createAdminClient()
     const anamnese = await createAnamnese(admin, {
+      // Fachfelder zuerst — die vertrauenswürdigen Werte darunter gewinnen immer.
+      ...felder,
       organizationId,
       clientId,
       anamneseDatum,
@@ -46,7 +57,6 @@ export async function POST(request: Request) {
       erhobenVon: erhobenVon ?? userId,
       erhobenRolle: erhobenRolle ?? role,
       erstelltVon: userId,
-      ...felder,
     })
 
     return NextResponse.json({ anamnese })
