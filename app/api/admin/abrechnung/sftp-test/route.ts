@@ -3,6 +3,7 @@ import { requireAdmin } from '@/lib/abrechnung/require-admin'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { testeVerbindung, type TransportConfig } from '@/lib/abrechnung/transport'
 import { ZERTIFIKAT_BUCKET } from '@/lib/abrechnung/zertifikate'
+import { getActiveOrgId } from '@/lib/organizations/server'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -22,6 +23,9 @@ export async function POST(req: NextRequest) {
   const auth = await requireAdmin()
   if (!auth.ok) return auth.response
   try {
+    const organizationId = await getActiveOrgId()
+    if (!organizationId) return NextResponse.json({ error: 'Keine Organisation zugewiesen.' }, { status: 403 })
+
     const { id } = await req.json()
     if (!id) return NextResponse.json({ error: 'id fehlt' }, { status: 400 })
 
@@ -30,6 +34,7 @@ export async function POST(req: NextRequest) {
       .from('datenannahmestellen')
       .select('*')
       .eq('id', id)
+      .or(`organization_id.eq.${organizationId},organization_id.is.null`)
       .single()
     if (error || !das) return NextResponse.json({ error: 'Datenannahmestelle nicht gefunden' }, { status: 404 })
     if (!das.sftp_host || !das.sftp_user) {

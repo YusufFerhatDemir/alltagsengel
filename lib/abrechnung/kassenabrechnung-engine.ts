@@ -291,6 +291,70 @@ export async function preFlightValidierung(
       : 'DAKOTA-Export nicht freigeschaltet — Export möglich, Übermittlung gesperrt',
   })
 
+  // 12. SECON-Zertifikat gültig (Absender)
+  const { data: absenderZert } = await supabase
+    .from('abrechnung_zertifikate')
+    .select('gueltig_bis')
+    .eq('typ', 'absender')
+    .order('gueltig_bis', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  const absenderGueltig = absenderZert?.gueltig_bis
+    ? new Date(absenderZert.gueltig_bis) > new Date()
+    : false
+
+  pruefpunkte.push({
+    id: 'secon_absender',
+    label: 'SECON-Absenderzertifikat gültig',
+    bestanden: absenderGueltig,
+    pflicht: false,
+    details: absenderZert?.gueltig_bis
+      ? absenderGueltig
+        ? `Gültig bis ${new Date(absenderZert.gueltig_bis).toLocaleDateString('de-DE')}`
+        : `ABGELAUFEN am ${new Date(absenderZert.gueltig_bis).toLocaleDateString('de-DE')} — beim ITSG Trust Center verlängern`
+      : 'Kein Absenderzertifikat hinterlegt — EXTERNE KONFIGURATION ERFORDERLICH (ITSG Trust Center)',
+  })
+
+  // 13. SFTP-Konfiguration vorhanden (mindestens eine aktive Datenannahmestelle mit SFTP)
+  const { data: aktiveDas, count: dasCount } = await supabase
+    .from('datenannahmestellen')
+    .select('id, name, sftp_host, sftp_user, sftp_key_url, zustaendig_fuer', { count: 'exact' })
+    .eq('aktiv', true)
+
+  const konfiguriert = aktiveDas?.filter(d => d.sftp_host && d.sftp_user) ?? []
+  const mitKey = konfiguriert.filter(d => d.sftp_key_url)
+
+  pruefpunkte.push({
+    id: 'sftp_config',
+    label: 'SFTP-Transportkonfiguration',
+    bestanden: konfiguriert.length > 0,
+    pflicht: false,
+    details: konfiguriert.length > 0
+      ? `${konfiguriert.length} Datenannahmestelle(n) mit SFTP konfiguriert (${mitKey.length} mit SSH-Key)`
+      : (dasCount ?? 0) === 0
+        ? 'Keine Datenannahmestellen angelegt — EXTERNE KONFIGURATION ERFORDERLICH'
+        : 'Keine Datenannahmestelle hat vollständige SFTP-Daten (Host + User)',
+  })
+
+  // 14. Routing eindeutig (Kostenträger → Datenannahmestelle zugeordnet)
+  if (params.kostentraegerIk && aktiveDas?.length) {
+    const zustaendig = aktiveDas.filter(d =>
+      Array.isArray(d.zustaendig_fuer) && d.zustaendig_fuer.includes(params.kostentraegerIk!)
+    )
+    pruefpunkte.push({
+      id: 'routing',
+      label: 'Kostenträger-Routing eindeutig',
+      bestanden: zustaendig.length === 1,
+      pflicht: false,
+      details: zustaendig.length === 1
+        ? `Kostenträger ${params.kostentraegerIk} → ${zustaendig[0].name}`
+        : zustaendig.length === 0
+          ? `Kein Routing für IK ${params.kostentraegerIk} — Datenannahmestelle in Einstellungen zuweisen`
+          : `Mehrere Annahmestellen für IK ${params.kostentraegerIk}: ${zustaendig.map(d => d.name).join(', ')} — Zuordnung prüfen`,
+    })
+  }
+
   const fehler = pruefpunkte.filter(p => !p.bestanden && p.pflicht)
   const warnungen = pruefpunkte.filter(p => !p.bestanden && !p.pflicht)
 

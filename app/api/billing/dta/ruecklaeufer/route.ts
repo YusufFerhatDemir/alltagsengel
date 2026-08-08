@@ -86,7 +86,13 @@ export async function POST(request: Request) {
 
     const admin = createAdminClient()
     const ergebnis = await importiereRuecklaeufer(admin, {
-      ...body,
+      ruecklaeuferTyp: body.ruecklaeuferTyp,
+      originalMeldung: body.originalMeldung,
+      laufId: body.laufId,
+      quelldateiName: body.quelldateiName,
+      kostentraegerIk: body.kostentraegerIk,
+      fehlerCode: body.fehlerCode,
+      fehlerText: body.fehlerText,
       organizationId,
       actorId: user.id,
     })
