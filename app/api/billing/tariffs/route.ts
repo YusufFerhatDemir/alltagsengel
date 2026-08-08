@@ -15,9 +15,12 @@ export async function GET() {
       return NextResponse.json({ error: 'Nicht autorisiert' }, { status: 401 })
     }
 
-    const { data: tariffs, error } = await supabase
+    const orgId = await getActiveOrgId()
+    const admin = createAdminClient()
+    const { data: tariffs, error } = await admin
       .from('billing_tariffs')
       .select('*')
+      .eq('organization_id', orgId)
       .is('deleted_at', null)
       .order('created_at', { ascending: false })
 

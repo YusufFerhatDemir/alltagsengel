@@ -5,6 +5,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { getOrgIK } from '@/lib/config/org-config'
 import { BUDGET_TYPE_PDF, QUALIFICATION_LEVEL } from '@/lib/admin/ops'
 import { modulAktivFuerPlz } from '@/lib/expansion/state-settings'
+import { getActiveOrgId } from '@/lib/organizations/server'
 
 // ═══════════════════════════════════════════════════════════════
 // GET /api/leistungsnachweis?client_id=…&month=YYYY-MM
@@ -99,6 +100,7 @@ export async function GET(request: Request) {
     const isAdmin = !!profile && ['admin', 'superadmin'].includes(profile.role)
 
     const admin = createAdminClient()
+    const orgId = await getActiveOrgId()
     const companyIk = await getOrgIK(admin)
 
     // ── Optional: Verordnung laden (liefert Genehmigungsnummer + Klient) ──
@@ -115,6 +117,7 @@ export async function GET(request: Request) {
         .from('verordnungen')
         .select('id, client_id, genehmigung_aktenzeichen, genehmigung_bis, kostentraeger_name, kostentraeger_ik_nummer')
         .eq('id', verordnungId)
+        .eq('organization_id', orgId)
         .single()
       if (voErr || !vo) {
         return NextResponse.json({ error: 'Verordnung nicht gefunden' }, { status: 404 })
@@ -131,6 +134,7 @@ export async function GET(request: Request) {
       .from('clients')
       .select('id, user_id, first_name, last_name, date_of_birth, care_level, address, city, zip_code, insurance_name, insurance_number, versichertennummer, pflegekasse_name, pflegekasse_ik')
       .eq('id', clientId)
+      .eq('organization_id', orgId)
       .single()
 
     if (clientErr || !client) {
@@ -155,6 +159,7 @@ export async function GET(request: Request) {
       .from('service_records')
       .select('id, date, start_time, end_time, duration_minutes, service_type, budget_type, amount, status, client_signature, caregiver_initials, caregiver_id, caregiver:caregivers(id, first_name, last_name, lifetime_registration_number, ik_nummer, qualification_level)')
       .eq('client_id', clientId)
+      .eq('organization_id', orgId)
     const { data: records, error: recErr } = await (verordnung ? baseQuery.eq('verordnung_id', verordnung.id) : baseQuery)
       .gte('date', periodStart)
       .lte('date', periodEnd)

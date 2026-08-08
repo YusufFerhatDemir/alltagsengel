@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
+import { getActiveOrgId } from '@/lib/organizations/server'
 
 /**
  * GET /api/admin/krankenfahrten
@@ -23,20 +25,26 @@ export async function GET() {
       return NextResponse.json({ error: 'Nur für Administratoren' }, { status: 403 })
     }
 
-    // Load all data in parallel
+    const orgId = await getActiveOrgId()
+    const admin = createAdminClient()
+
+    // Load all data in parallel — org-fenced
     const [ridesRes, providersRes, reviewsRes] = await Promise.all([
-      supabase
+      admin
         .from('krankenfahrten')
         .select('*, customer:profiles!krankenfahrten_customer_id_fkey(first_name, last_name, email, phone)')
+        .eq('organization_id', orgId)
         .order('created_at', { ascending: false })
         .limit(200),
-      supabase
+      admin
         .from('krankenfahrt_providers')
         .select('*, profile:profiles!krankenfahrt_providers_user_id_fkey(first_name, last_name, email, phone)')
+        .eq('organization_id', orgId)
         .order('created_at', { ascending: false }),
-      supabase
+      admin
         .from('krankenfahrt_reviews')
         .select('*')
+        .eq('organization_id', orgId)
         .order('created_at', { ascending: false })
         .limit(100),
     ])
@@ -98,17 +106,24 @@ export async function PUT(request: Request) {
     }
 
     const body = await request.json()
-    const { entity, id, ...updates } = body
+    const { entity, id } = body
 
     if (!entity || !id) {
       return NextResponse.json({ error: 'entity und id erforderlich' }, { status: 400 })
     }
 
+    const orgId = await getActiveOrgId()
+    const admin = createAdminClient()
+
     if (entity === 'ride') {
-      const { data, error } = await supabase
+      const { organization_id: _oid, ...safeUpdates } = body
+      delete safeUpdates.entity
+      delete safeUpdates.id
+      const { data, error } = await admin
         .from('krankenfahrten')
-        .update(updates)
+        .update({ status: safeUpdates.status })
         .eq('id', id)
+        .eq('organization_id', orgId)
         .select()
         .single()
 
@@ -117,10 +132,11 @@ export async function PUT(request: Request) {
     }
 
     if (entity === 'provider') {
-      const { data, error } = await supabase
+      const { data, error } = await admin
         .from('krankenfahrt_providers')
-        .update(updates)
+        .update({ is_verified: body.is_verified })
         .eq('id', id)
+        .eq('organization_id', orgId)
         .select()
         .single()
 

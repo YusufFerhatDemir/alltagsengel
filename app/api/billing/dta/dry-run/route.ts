@@ -355,6 +355,7 @@ export async function POST(request: Request) {
       .from('abrechnung_zertifikate')
       .select('gueltig_bis, ik_nummer')
       .eq('typ', 'absender')
+      .eq('organization_id', organizationId)
       .order('gueltig_bis', { ascending: false })
       .limit(1)
       .maybeSingle()
@@ -367,6 +368,7 @@ export async function POST(request: Request) {
       .from('abrechnung_zertifikate')
       .select('ik_nummer, gueltig_bis')
       .eq('typ', 'empfaenger')
+      .eq('organization_id', organizationId)
       .in('ik_nummer', empfaengerIks)
 
     const empfaengerGueltig = empfaengerZerts?.filter(z => new Date(z.gueltig_bis) > new Date()) ?? []

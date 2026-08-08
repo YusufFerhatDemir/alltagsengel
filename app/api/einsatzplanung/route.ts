@@ -173,7 +173,8 @@ export async function PATCH(req: NextRequest) {
     }
   }
 
-  const updatePayload = { ...updates, updated_at: new Date().toISOString() }
+  const { organization_id: _oid, id: _uid, created_at: _ca, created_by: _cb, ...safeUpdates } = updates
+  const updatePayload = { ...safeUpdates, updated_at: new Date().toISOString() }
   delete updatePayload.force_override
   let query = supabase
     .from('assignments')

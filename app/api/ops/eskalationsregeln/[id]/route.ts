@@ -13,10 +13,11 @@ export async function PATCH(
   const supabase = createAdminClient()
   try {
     const body = await request.json()
+    const { id: _id, organization_id: _oid, created_at: _ca, ...safeData } = body
     const data = await updateEskalationsregel(supabase, {
       organizationId: auth.ctx.organizationId,
       id,
-      data: body,
+      data: safeData,
     })
     return NextResponse.json(data)
   } catch (e: any) {

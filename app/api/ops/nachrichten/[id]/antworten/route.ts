@@ -17,8 +17,13 @@ export async function POST(
       organizationId: auth.organizationId,
       elternId,
       data: {
-        ...body,
-        absender_id: body.absender_id || auth.userId,
+        betreff: body.betreff,
+        inhalt: body.inhalt,
+        prioritaet: body.prioritaet ?? 'normal',
+        kategorie: body.kategorie ?? 'allgemein',
+        bezug_typ: body.bezug_typ ?? null,
+        bezug_id: body.bezug_id ?? null,
+        absender_id: auth.userId,
       },
       empfaengerIds: body.empfaenger_ids,
     })

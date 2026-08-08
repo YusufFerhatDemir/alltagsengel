@@ -13,7 +13,7 @@ export async function POST(request: Request) {
       organizationId: auth.ctx.organizationId,
       ereignisTyp: body.ereignis_typ,
       entitaetId: body.entitaet_id,
-      akteurId: body.akteur_id || auth.ctx.userId,
+      akteurId: auth.ctx.userId,
       kontext: body.kontext,
     })
     return NextResponse.json(data)

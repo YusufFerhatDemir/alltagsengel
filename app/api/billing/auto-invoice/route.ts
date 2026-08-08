@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireCaregiverSession } from '@/lib/native-auth'
 import { createInvoiceDraft } from '@/lib/billing/core'
+import { getActiveOrgId } from '@/lib/organizations/server'
 
 // ═══════════════════════════════════════════════════════════════
 // POST /api/billing/auto-invoice
@@ -94,6 +95,7 @@ export async function POST(request: Request) {
     }
 
     const admin = createAdminClient()
+    const orgId = await getActiveOrgId()
 
     // ── Klient + Monat auflösen ──
     let resolvedClientId = client_id || null
@@ -106,6 +108,7 @@ export async function POST(request: Request) {
         .from('service_records')
         .select('id, client_id, caregiver_id, date')
         .eq('id', service_record_id)
+        .eq('organization_id', orgId)
         .single()
       if (recErr || !rec) {
         return NextResponse.json({ error: 'Leistungsnachweis nicht gefunden' }, { status: 404 })
@@ -144,6 +147,7 @@ export async function POST(request: Request) {
         .select('id')
         .eq('caregiver_id', auth.caregiverId)
         .eq('client_id', resolvedClientId)
+        .eq('organization_id', orgId)
         .limit(1)
         .maybeSingle()
       if (!assignment) {
@@ -162,21 +166,23 @@ export async function POST(request: Request) {
       }
     }
 
-    // ── Klient (Versicherungsdaten + organization_id) ──
+    // ── Klient (Versicherungsdaten + organization_id) — org-fence ──
     const { data: client, error: clientErr } = await admin
       .from('clients')
       .select('id, organization_id, insurance_name, insurance_number, pflegekasse_name, versichertennummer')
       .eq('id', resolvedClientId)
+      .eq('organization_id', orgId)
       .single()
     if (clientErr || !client) {
       return NextResponse.json({ error: 'Klient nicht gefunden' }, { status: 404 })
     }
 
-    // ── Alle Einsätze des Klienten im Monat ──
+    // ── Alle Einsätze des Klienten im Monat — org-fence ──
     const { data: records, error: monthErr } = await admin
       .from('service_records')
       .select('id, date, service_type, duration_minutes, amount, budget_type, status')
       .eq('client_id', resolvedClientId)
+      .eq('organization_id', orgId)
       .gte('date', periodStart)
       .lte('date', periodEnd)
     if (monthErr) {

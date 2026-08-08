@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
+import { getActiveOrgId } from '@/lib/organizations/server'
 
 // ═══════════════════════════════════════════════════════════════
 // POST /api/admin/ocr
@@ -61,11 +63,15 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'service_record_id und image_url erforderlich' }, { status: 400 })
     }
 
-    // ── 1) Verknüpften Leistungsnachweis laden ──
-    const { data: record, error: recErr } = await supabase
+    const orgId = await getActiveOrgId()
+    const admin = createAdminClient()
+
+    // ── 1) Verknüpften Leistungsnachweis laden — org-fenced ──
+    const { data: record, error: recErr } = await admin
       .from('service_records')
       .select('id, date, start_time, end_time, amount')
       .eq('id', service_record_id)
+      .eq('organization_id', orgId)
       .single()
 
     if (recErr || !record) {

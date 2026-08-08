@@ -27,8 +27,13 @@ export async function POST(request: Request) {
     const data = await createNachricht(supabase, {
       organizationId: auth.organizationId,
       data: {
-        ...body,
-        absender_id: body.absender_id || auth.userId,
+        betreff: body.betreff,
+        inhalt: body.inhalt,
+        prioritaet: body.prioritaet,
+        kategorie: body.kategorie,
+        bezug_typ: body.bezug_typ ?? null,
+        bezug_id: body.bezug_id ?? null,
+        absender_id: auth.userId,
       },
       empfaengerIds: body.empfaenger_ids,
     })

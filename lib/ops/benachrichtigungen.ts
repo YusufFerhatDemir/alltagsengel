@@ -28,6 +28,7 @@ export async function getZaehler(
   const { data, error } = await supabase
     .from('ops_benachrichtigungen_zaehler')
     .select('*')
+    .eq('organization_id', params.organizationId)
     .eq('empfaenger_id', params.empfaengerId)
   if (error) throw new Error(`Benachrichtigungszaehler konnte nicht geladen werden: ${error.message}`)
   return (data ?? []) as OpsBenachrichtigungZaehler[]
