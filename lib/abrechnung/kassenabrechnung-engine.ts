@@ -334,9 +334,13 @@ export async function preFlightValidierung(
   })
 
   // 12. SECON-Zertifikat gültig (Absender)
+  // organization_id ist zwingend: ohne den Filter bestand dieser Pruefpunkt,
+  // sobald IRGENDEINE Organisation ein gueltiges Absenderzertifikat hatte.
+  // Eine Org ohne eigenes Zertifikat waere damit in den Versand gelaufen.
   const { data: absenderZert } = await supabase
     .from('abrechnung_zertifikate')
     .select('gueltig_bis')
+    .eq('organization_id', params.organizationId)
     .eq('typ', 'absender')
     .order('gueltig_bis', { ascending: false })
     .limit(1)
@@ -350,7 +354,10 @@ export async function preFlightValidierung(
     id: 'secon_absender',
     label: 'SECON-Absenderzertifikat gültig',
     bestanden: absenderGueltig,
-    pflicht: false,
+    // Pflicht statt Warnung: ohne gueltiges Absenderzertifikat laesst sich
+    // keine SECON-Lieferung erzeugen. Als blosse Warnung meldete der
+    // Pre-Flight "bestanden" fuer einen Lauf, der niemals versendbar ist.
+    pflicht: true,
     details: absenderZert?.gueltig_bis
       ? absenderGueltig
         ? `Gültig bis ${new Date(absenderZert.gueltig_bis).toLocaleDateString('de-DE')}`
@@ -359,10 +366,15 @@ export async function preFlightValidierung(
   })
 
   // 13. SFTP-Konfiguration vorhanden (mindestens eine aktive Datenannahmestelle mit SFTP)
+  // Ebenfalls org-gefiltert — sonst zaehlten fremde Annahmestellen als
+  // eigene Transportkonfiguration. `organization_id.is.null` bleibt zulaessig:
+  // so sind global gepflegte Annahmestellen (ITSCare, BITMARCK) fuer alle
+  // Mandanten nutzbar, ohne dass Mandanten sich gegenseitig sehen.
   const { data: aktiveDas, count: dasCount } = await supabase
     .from('datenannahmestellen')
     .select('id, name, sftp_host, sftp_user, sftp_key_url, zustaendig_fuer', { count: 'exact' })
     .eq('aktiv', true)
+    .or(`organization_id.eq.${params.organizationId},organization_id.is.null`)
 
   const konfiguriert = aktiveDas?.filter(d => d.sftp_host && d.sftp_user) ?? []
   const mitKey = konfiguriert.filter(d => d.sftp_key_url)
@@ -371,7 +383,8 @@ export async function preFlightValidierung(
     id: 'sftp_config',
     label: 'SFTP-Transportkonfiguration',
     bestanden: konfiguriert.length > 0,
-    pflicht: false,
+    // Pflicht: ohne Transportweg gibt es keinen Empfaenger.
+    pflicht: true,
     details: konfiguriert.length > 0
       ? `${konfiguriert.length} Datenannahmestelle(n) mit SFTP konfiguriert (${mitKey.length} mit SSH-Key)`
       : (dasCount ?? 0) === 0
@@ -388,7 +401,9 @@ export async function preFlightValidierung(
       id: 'routing',
       label: 'Kostenträger-Routing eindeutig',
       bestanden: zustaendig.length === 1,
-      pflicht: false,
+      // Pflicht: ein mehrdeutiges oder fehlendes Routing bedeutet Lieferung
+      // an die falsche oder an gar keine Annahmestelle.
+      pflicht: true,
       details: zustaendig.length === 1
         ? `Kostenträger ${params.kostentraegerIk} → ${zustaendig[0].name}`
         : zustaendig.length === 0
@@ -545,6 +560,7 @@ export async function erstelleAbrechnungslauf(
   // Audit
   await logBillingAction(supabase, {
     entityType: 'dta_lauf',
+    organizationId: params.organizationId,
     entityId: lauf.id,
     action: 'lauf_erstellt',
     newState: {
@@ -583,10 +599,18 @@ export async function gebeLaufFrei(
     })
     .eq('id', laufId)
   if (organizationId) query = query.eq('organization_id', organizationId)
-  await query
+
+  // `.select()` statt blindem Update: ohne Rueckgabe war ein Aufruf mit
+  // fremder organizationId ein stiller No-Op mit trotzdem geschriebenem
+  // Audit-Eintrag "freigegeben".
+  const { data: freigegeben } = await query.select('id, organization_id').maybeSingle()
+  if (!freigegeben) {
+    throw new Error('Abrechnungslauf nicht gefunden oder gehört zu einer anderen Organisation')
+  }
 
   await logBillingAction(supabase, {
-    entityType: 'dta_freigabe',
+    entityType: 'dta_lauf',
+    organizationId: freigegeben.organization_id,
     entityId: laufId,
     action: 'lauf_freigegeben',
     actorId,
@@ -909,7 +933,8 @@ export async function exportiereLauf(
 
   // Audit
   await logBillingAction(supabase, {
-    entityType: 'dta_export',
+    entityType: 'dta_lauf',
+    organizationId: lauf.organization_id,
     entityId: laufId,
     action: 'lauf_exportiert',
     newState: {
@@ -970,6 +995,7 @@ export async function storniereLauf(
 
   await logBillingAction(supabase, {
     entityType: 'dta_lauf',
+    organizationId: lauf.organization_id,
     entityId: laufId,
     action: 'lauf_storniert',
     previousState: { status: lauf.status },

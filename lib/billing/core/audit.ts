@@ -12,13 +12,49 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 // Types
 // ---------------------------------------------------------------------------
 
+/**
+ * Zulaessige entity_type-Werte.
+ *
+ * Diese Liste MUSS deckungsgleich mit dem CHECK-Constraint
+ * `billing_audit_trail_entity_type_check` sein (zuletzt gesetzt in
+ * 20260809010000_dokumentenmanagement_akten.sql). Ein Wert, den TypeScript
+ * erlaubt und Postgres ablehnt, ist kein Typfehler, sondern ein
+ * Produktionsausfall: `logBillingAction` wirft bei 23514, und weil der
+ * Audit-Aufruf mitten in `importiereRuecklaeufer()`, `erstelleFehler()` und
+ * `fuehreKorrekturAus()` steht, riss er die komplette Verarbeitung mit.
+ *
+ * Genau das war der Fall — die frueheren Werte 'ruecklaeufer',
+ * 'fehlerprotokoll', 'korrekturlauf', 'dta_export' und 'dta_freigabe' stehen
+ * NICHT im Constraint. Der Regressionstest
+ * `__tests__/abrechnung/audit-entity-types.test.ts` vergleicht beide Listen.
+ */
+export const AUDIT_ENTITY_TYPES = [
+  'invoice', 'tariff', 'correction', 'snapshot', 'credit_note',
+  'payment', 'payment_allocation', 'dunning', 'payment_difference',
+  'monthly_closing',
+  'dta_lauf', 'dta_kostentraeger', 'dta_dakota_auftrag',
+  'dta_ruecklaeufer', 'dta_fehlerprotokoll', 'dta_korrekturlauf',
+  'dta_validierung', 'dta_lauf_rechnung', 'dta_annahmestelle',
+  'dta_ruecklaeufer_position',
+  'dokument', 'dokument_version', 'vertrag', 'kontaktperson',
+  'verordnung', 'kundenakte', 'mitarbeiterakte',
+] as const;
+
+export type AuditEntityType = (typeof AUDIT_ENTITY_TYPES)[number];
+
 export interface AuditLogParams {
-  entityType: 'invoice' | 'tariff' | 'correction' | 'snapshot' | 'credit_note'
-    | 'payment' | 'payment_allocation' | 'dunning' | 'payment_difference' | 'monthly_closing'
-    | 'dta_lauf' | 'dta_export' | 'dta_validierung' | 'dta_freigabe'
-    | 'dta_uebermittlung' | 'dakota_auftrag' | 'ruecklaeufer' | 'fehlerprotokoll'
-    | 'korrekturlauf' | 'dta_abschluss';
+  entityType: AuditEntityType;
   entityId: string;
+  /**
+   * Mandant, dem der Eintrag gehoert.
+   *
+   * Pflichtfeld. Ohne explizite Angabe greift der Spalten-Default
+   * `current_org_id()`, der bei einem service-role-Client (kein JWT) auf die
+   * Stamm-Org zurueckfaellt — jede Aktion jedes Mandanten waere damit im
+   * Audit-Trail der Stamm-Org gelandet, und der Mandant saehe seinen eigenen
+   * Trail wegen der org_fence-Policy nicht.
+   */
+  organizationId: string;
   action: string;
   previousState?: Record<string, unknown> | null;
   newState?: Record<string, unknown> | null;
@@ -117,6 +153,7 @@ export async function logBillingAction(
   });
 
   const { error } = await supabase.from('billing_audit_trail').insert({
+    organization_id: params.organizationId,
     entity_type:    params.entityType,
     entity_id:      params.entityId,
     action:         params.action,

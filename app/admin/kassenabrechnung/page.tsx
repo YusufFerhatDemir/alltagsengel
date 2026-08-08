@@ -41,8 +41,12 @@ export default function KassenabrechnungPage() {
   return (
     <div className="admin-page">
       <h1>Kassenabrechnung</h1>
-      <p style={{ color: 'var(--muted)', marginBottom: 24 }}>
+      <p style={{ color: 'var(--muted)', marginBottom: 8 }}>
         Übersicht über alle DTA-Abrechnungsläufe, Rückläufer und Fehler.
+      </p>
+      <p style={{ marginBottom: 24, display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+        <Link href="/admin/kassenabrechnung/readiness">→ Bereitschaft prüfen (Ampel: Stammdaten, Zertifikate, Übertragung)</Link>
+        <Link href="/admin/kassenabrechnung/stammdaten">→ Stammdaten pflegen (Kostenträger, Datenannahmestellen)</Link>
       </p>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, marginBottom: 32 }}>

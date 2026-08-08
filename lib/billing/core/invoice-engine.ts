@@ -354,6 +354,7 @@ export async function freezeInvoice(
   // Audit-Trail
   await logBillingAction(supabase, {
     entityType: 'invoice',
+    organizationId: invoice.organization_id,
     entityId: invoiceId,
     action: 'frozen',
     previousState: { status: currentStatus },
@@ -588,6 +589,7 @@ export async function cancelInvoice(
   // Audit-Trail
   await logBillingAction(supabase, {
     entityType: 'invoice',
+    organizationId: original.organization_id,
     entityId: invoiceId,
     action: 'storniert',
     previousState: { status: currentStatus, total_amount: original.total_amount },
@@ -783,6 +785,7 @@ export async function correctInvoice(
 
   await logBillingAction(supabase, {
     entityType: 'correction',
+    organizationId: original.organization_id,
     entityId: correction.id,
     action: 'created',
     newState: {
@@ -921,6 +924,7 @@ export async function createCreditNote(
   // Audit-Trail
   await logBillingAction(supabase, {
     entityType: 'credit_note',
+    organizationId: original.organization_id,
     entityId: correction.id,
     action: 'created',
     newState: {

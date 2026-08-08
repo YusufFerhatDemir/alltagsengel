@@ -146,7 +146,8 @@ export async function erstelleKorrekturlauf(
 
   // Audit
   await logBillingAction(supabase, {
-    entityType: 'korrekturlauf',
+    entityType: 'dta_korrekturlauf',
+    organizationId: params.organizationId,
     entityId: korrektur.id,
     action: 'korrekturlauf_erstellt',
     newState: {
@@ -234,7 +235,8 @@ export async function fuehreKorrekturAus(
   }
 
   await logBillingAction(supabase, {
-    entityType: 'korrekturlauf',
+    entityType: 'dta_korrekturlauf',
+    organizationId: korrektur.organization_id,
     entityId: korrekturId,
     action: 'korrektur_ausgefuehrt',
     newState: {

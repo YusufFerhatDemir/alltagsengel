@@ -95,35 +95,75 @@ export const BENACHRICHTIGUNG_BEZUG_TYP_WERTE: BenachrichtigungBezugTyp[] = [
 
 // ── Ereignis-Enums ─────────────────────────────────────────────
 
+/**
+ * Ereignistypen.
+ *
+ * Diese Liste MUSS deckungsgleich mit dem CHECK-Constraint
+ * `ops_ereignis_typ_check` sein. Sie war es nicht: von 22 TypeScript-Werten
+ * lehnte Postgres 11 ab (u. a. 'aufgabe_erstellt', 'einsatz_erstellt',
+ * 'abrechnung_erstellt'), waehrend 11 DB-Werte in TypeScript fehlten (u. a.
+ * 'abrechnung_ruecklaefer', 'unterschrift_fehlend'). Wirkung: fuer die Haelfte
+ * aller Ereignisse liess sich keine Regel anlegen (23514 beim INSERT), und die
+ * nur in der DB bekannten Typen waren aus dem Code nicht erreichbar.
+ *
+ * Die Liste unten ist die VEREINIGUNG beider Seiten; die DB-Seite zieht
+ * Migration 20260816010000_ereignis_typ_konsistenz.sql nach. Der Abgleich
+ * wird von `__tests__/ops/ereignis-typ-konsistenz.test.ts` erzwungen.
+ */
 export type EreignisTyp =
-  | 'aufgabe_erstellt' | 'aufgabe_faellig' | 'aufgabe_ueberfaellig'
-  | 'aufgabe_erledigt' | 'aufgabe_eskaliert' | 'aufgabe_zugewiesen'
-  | 'wiedervorlage_faellig' | 'wiedervorlage_erstellt'
-  | 'nachricht_empfangen' | 'nachricht_dringend'
-  | 'einsatz_erstellt' | 'einsatz_storniert'
-  | 'dienstplan_geaendert'
+  // in DB und TypeScript
+  | 'aufgabe_ueberfaellig' | 'aufgabe_erledigt' | 'aufgabe_eskaliert' | 'aufgabe_zugewiesen'
+  | 'wiedervorlage_faellig'
+  | 'nachricht_empfangen'
+  | 'einsatz_storniert'
   | 'urlaub_beantragt' | 'urlaub_genehmigt'
   | 'qualifikation_abgelaufen'
+  | 'abrechnung_fehler'
+  // bisher nur in TypeScript — von der Migration in der DB ergaenzt
+  | 'aufgabe_erstellt' | 'aufgabe_faellig'
+  | 'wiedervorlage_erstellt'
+  | 'nachricht_dringend'
+  | 'einsatz_erstellt'
+  | 'dienstplan_geaendert'
   | 'dokument_hochgeladen'
-  | 'abrechnung_erstellt' | 'abrechnung_fehler'
+  | 'abrechnung_erstellt'
   | 'pflege_aufnahme'
   | 'eskalation_ausgeloest'
   | 'system_wartung'
+  // bisher nur in der DB — jetzt auch aus dem Code erreichbar
+  | 'qualifikation_warnung'
+  | 'dokument_abgelaufen' | 'verordnung_abgelaufen'
+  | 'dienstplan_aenderung' | 'neuer_einsatz' | 'einsatz_geaendert'
+  | 'urlaub_abgelehnt'
+  | 'unterschrift_fehlend' | 'pflege_doku_offen'
+  | 'abrechnung_ruecklaefer'
+  | 'system_kritisch'
 
 export const EREIGNIS_TYP_WERTE: EreignisTyp[] = [
-  'aufgabe_erstellt', 'aufgabe_faellig', 'aufgabe_ueberfaellig',
-  'aufgabe_erledigt', 'aufgabe_eskaliert', 'aufgabe_zugewiesen',
-  'wiedervorlage_faellig', 'wiedervorlage_erstellt',
-  'nachricht_empfangen', 'nachricht_dringend',
-  'einsatz_erstellt', 'einsatz_storniert',
-  'dienstplan_geaendert',
+  'aufgabe_ueberfaellig', 'aufgabe_erledigt', 'aufgabe_eskaliert', 'aufgabe_zugewiesen',
+  'wiedervorlage_faellig',
+  'nachricht_empfangen',
+  'einsatz_storniert',
   'urlaub_beantragt', 'urlaub_genehmigt',
   'qualifikation_abgelaufen',
+  'abrechnung_fehler',
+  'aufgabe_erstellt', 'aufgabe_faellig',
+  'wiedervorlage_erstellt',
+  'nachricht_dringend',
+  'einsatz_erstellt',
+  'dienstplan_geaendert',
   'dokument_hochgeladen',
-  'abrechnung_erstellt', 'abrechnung_fehler',
+  'abrechnung_erstellt',
   'pflege_aufnahme',
   'eskalation_ausgeloest',
   'system_wartung',
+  'qualifikation_warnung',
+  'dokument_abgelaufen', 'verordnung_abgelaufen',
+  'dienstplan_aenderung', 'neuer_einsatz', 'einsatz_geaendert',
+  'urlaub_abgelehnt',
+  'unterschrift_fehlend', 'pflege_doku_offen',
+  'abrechnung_ruecklaefer',
+  'system_kritisch',
 ]
 
 export type EreignisEmpfaengerRolle = 'admin' | 'pdl' | 'engel' | 'verantwortlicher' | 'alle'

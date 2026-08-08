@@ -14,6 +14,7 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { logBillingAction, computeContentHash } from '../billing/core/audit'
+import { erstelleRuecklaeuferAufgabe } from './ruecklaeufer-aufgaben'
 
 // ── Types ───────────────────────────────────────────────────────
 
@@ -71,6 +72,10 @@ export interface RuecklaeuferImportErgebnis {
   positionenAngenommen: number
   positionenAbgelehnt: number
   fehlerErstellt: boolean
+  /** Id der automatisch erzeugten Aufgabe, oder null wenn keine nötig/möglich war. */
+  aufgabeId: string | null
+  /** true, wenn zu diesem Rückläufer bereits eine Aufgabe existierte. */
+  aufgabeDublette: boolean
 }
 
 // ── Rückläufer importieren ──────────────────────────────────────
@@ -102,6 +107,8 @@ export async function importiereRuecklaeufer(
         positionenAngenommen: 0,
         positionenAbgelehnt: 0,
         fehlerErstellt: false,
+        aufgabeId: null,
+        aufgabeDublette: false,
       }
     }
   }
@@ -208,8 +215,9 @@ export async function importiereRuecklaeufer(
 
   // Fehlerprotokoll erstellen bei Fehlern
   let fehlerErstellt = false
+  let fehlerprotokollId: string | null = null
   if (['technischer_fehler', 'fachlicher_fehler', 'abgelehnt', 'teilweise_abgelehnt', 'korrektur_erforderlich'].includes(status)) {
-    await supabase.from('dta_fehlerprotokoll').insert({
+    const { data: fehlerZeile } = await supabase.from('dta_fehlerprotokoll').insert({
       organization_id: params.organizationId,
       lauf_id: params.laufId || null,
       dakota_auftrag_id: params.dakotaAuftragId || null,
@@ -224,13 +232,41 @@ export async function importiereRuecklaeufer(
       original_meldung: params.originalMeldung?.slice(0, 2000) || null,
       schweregrad: status === 'abgelehnt' ? 'kritisch' : 'fehler',
       bearbeitungsstatus: 'neu',
-    })
+    }).select('id').single()
     fehlerErstellt = true
+    fehlerprotokollId = fehlerZeile?.id ?? null
   }
+
+  // Automatische Aufgabe bei technischem Rückläufer, Ablehnung oder Fehler.
+  //
+  // Bewusst hier und nicht in der API-Route: `importiereRuecklaeufer` ist der
+  // einzige Weg, auf dem ein Rückläufer entsteht — der automatische Abruf über
+  // `pruefeAntworten()` und jeder Job laufen ebenfalls hier durch. Die Route
+  // erzeugte die Aufgabe frueher selbst, womit jeder andere Pfad still leer
+  // ausging.
+  const aufgabenErgebnis = await erstelleRuecklaeuferAufgabe(supabase, {
+    organizationId: params.organizationId,
+    ruecklaeuferId: ruecklaeufer.id,
+    status,
+    laufId: params.laufId,
+    invoiceId: params.invoiceId,
+    clientId: params.clientId,
+    kostentraegerIk: params.kostentraegerIk,
+    ruecklaeuferTyp: params.ruecklaeuferTyp,
+    fehlerCode: params.fehlerCode,
+    fehlerText: params.fehlerText,
+    fehlerprotokollId,
+    positionenGesamt: params.positionen?.length ?? 0,
+    positionenAbgelehnt: posAbgelehnt,
+    betragAngefordertCent: params.betragAngefordertCent,
+    betragAnerkanntCent: params.betragAnerkannt_cent,
+    actorId: params.actorId,
+  })
 
   // Audit
   await logBillingAction(supabase, {
-    entityType: 'ruecklaeufer',
+    entityType: 'dta_ruecklaeufer',
+    organizationId: params.organizationId,
     entityId: ruecklaeufer.id,
     action: 'ruecklaeufer_importiert',
     newState: {
@@ -239,6 +275,7 @@ export async function importiereRuecklaeufer(
       lauf_id: params.laufId,
       positionen: params.positionen?.length ?? 0,
       fehler: fehlerErstellt,
+      aufgabe_id: aufgabenErgebnis.aufgabeId,
     },
     actorId: params.actorId,
   })
@@ -251,6 +288,8 @@ export async function importiereRuecklaeufer(
     positionenAngenommen: posAngenommen,
     positionenAbgelehnt: posAbgelehnt,
     fehlerErstellt,
+    aufgabeId: aufgabenErgebnis.aufgabeId,
+    aufgabeDublette: aufgabenErgebnis.dublette,
   }
 }
 
@@ -291,7 +330,8 @@ export async function ordneRuecklaeuferZu(
     .eq('id', ruecklaeuferId)
 
   await logBillingAction(supabase, {
-    entityType: 'ruecklaeufer',
+    entityType: 'dta_ruecklaeufer',
+    organizationId: rl.organization_id,
     entityId: ruecklaeuferId,
     action: 'ruecklaeufer_zugeordnet',
     previousState: { status: rl.status },
@@ -317,10 +357,21 @@ export async function markiereRuecklaeuferErledigt(
     })
     .eq('id', ruecklaeuferId)
   if (organizationId) erledigtUpdate = erledigtUpdate.eq('organization_id', organizationId)
-  await erledigtUpdate
+
+  // `.select()` statt blindem Update: ohne Rueckgabe blieb ein Aufruf mit
+  // fremder organizationId ein stiller No-Op — die Zeile wurde nicht
+  // veraendert, der Audit-Trail meldete trotzdem "erledigt".
+  const { data: aktualisiert } = await erledigtUpdate
+    .select('id, organization_id')
+    .maybeSingle()
+
+  if (!aktualisiert) {
+    throw new Error('Rückläufer nicht gefunden oder gehört zu einer anderen Organisation')
+  }
 
   await logBillingAction(supabase, {
-    entityType: 'ruecklaeufer',
+    entityType: 'dta_ruecklaeufer',
+    organizationId: aktualisiert.organization_id,
     entityId: ruecklaeuferId,
     action: 'ruecklaeufer_erledigt',
     actorId,

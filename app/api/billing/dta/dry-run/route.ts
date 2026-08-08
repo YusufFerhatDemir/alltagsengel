@@ -7,6 +7,7 @@ import { validateEDIFACT } from '@/lib/abrechnung/edifact-validator'
 import { generateAuftragsdatei } from '@/lib/abrechnung/auftragsdatei'
 import { getActiveOrgId } from '@/lib/organizations/server'
 import { getOrgIK } from '@/lib/config/org-config'
+import { logBillingAction } from '@/lib/billing/core/audit'
 
 export const maxDuration = 60
 
@@ -449,6 +450,23 @@ export async function POST(request: Request) {
     const ergebnis = fehlerSchritte.length === 0 && validierungsFehler.length === 0
       ? 'BEREIT ZUR ÜBERMITTLUNG'
       : 'NICHT BEREIT'
+
+    // Protokollieren, damit "letzter Dry-Run" in der Readiness-Ansicht aus
+    // einer echten Quelle stammt. Best effort — der Dry-Run selbst schreibt
+    // sonst nichts und darf an einem Audit-Fehler nicht scheitern.
+    await logBillingAction(admin, {
+      entityType: 'dta_validierung',
+      organizationId,
+      entityId: organizationId,
+      action: 'dry_run_ausgefuehrt',
+      newState: {
+        ergebnis,
+        fehler: fehlerSchritte.length,
+        warnungen: warnungSchritte.length,
+        dateien: dateien.length,
+      },
+      actorId: user.id,
+    }).catch(err => console.error('[dta/dry-run] Audit fehlgeschlagen:', err))
 
     return NextResponse.json({
       modus: 'dry-run',
