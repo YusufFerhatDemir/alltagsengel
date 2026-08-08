@@ -249,6 +249,20 @@ export async function fuehreKorrekturAus(
 
 // ── Korrektur-Historie laden ────────────────────────────────────
 
+/**
+ * Zeile aus `abrechnungslaeufe`, wie sie die Ketten-Abfragen unten selektieren.
+ * `korrektur_von` wird nur von der Rückwärts-Abfrage mitgelesen.
+ */
+interface KettenLaufRow {
+  id: string
+  lauf_typ: string | null
+  status: string
+  abrechnungsmonat: string
+  gesamtbetrag_cent: number | null
+  erstellt_am: string
+  korrektur_von?: string | null
+}
+
 export interface KorrekturHistorie {
   kette: Array<{
     laufId: string
@@ -270,7 +284,10 @@ export async function ladeKorrekturHistorie(
   // Rückwärts: alle Vorgänger
   let currentId: string | null = laufId
   while (currentId) {
-    const { data: lauf } = await supabase
+    // Explizite Annotation: ohne sie leitet TypeScript den Typ von `lauf`
+    // aus einer Abfrage ab, die selbst von `currentId` abhaengt — und
+    // `currentId` wird unten aus `lauf.korrektur_von` gesetzt (TS7022).
+    const { data: lauf }: { data: KettenLaufRow | null } = await supabase
       .from('abrechnungslaeufe')
       .select('id, lauf_typ, status, abrechnungsmonat, gesamtbetrag_cent, erstellt_am, korrektur_von')
       .eq('id', currentId)
@@ -294,13 +311,13 @@ export async function ladeKorrekturHistorie(
       korrekturGrund: korrektur?.korrektur_grund,
     })
 
-    currentId = lauf.korrektur_von
+    currentId = lauf.korrektur_von ?? null
   }
 
   // Vorwärts: alle Nachfolger
   currentId = laufId
   while (currentId) {
-    const { data: nachfolger } = await supabase
+    const { data: nachfolger }: { data: KettenLaufRow | null } = await supabase
       .from('abrechnungslaeufe')
       .select('id, lauf_typ, status, abrechnungsmonat, gesamtbetrag_cent, erstellt_am')
       .eq('korrektur_von', currentId)
