@@ -14,11 +14,11 @@ export async function POST(
   try {
     const body = await request.json()
     const data = await createAntwort(supabase, {
-      organizationId: auth.ctx.organizationId,
+      organizationId: auth.organizationId,
       elternId,
       data: {
         ...body,
-        absender_id: body.absender_id || auth.ctx.userId,
+        absender_id: body.absender_id || auth.userId,
       },
       empfaengerIds: body.empfaenger_ids,
     })

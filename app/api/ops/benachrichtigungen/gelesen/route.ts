@@ -13,9 +13,9 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: 'ids array is required' }, { status: 400 })
     }
     const data = await markBenachrichtigungenGelesen(supabase, {
-      organizationId: auth.ctx.organizationId,
+      organizationId: auth.organizationId,
       ids: body.ids,
-      empfaengerId: auth.ctx.userId,
+      empfaengerId: auth.userId,
     })
     return NextResponse.json(data)
   } catch (e: any) {

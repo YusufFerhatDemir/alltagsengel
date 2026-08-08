@@ -9,8 +9,8 @@ export async function GET(request: Request) {
   const supabase = createAdminClient()
   try {
     const data = await getZaehler(supabase, {
-      organizationId: auth.ctx.organizationId,
-      empfaengerId: auth.ctx.userId,
+      organizationId: auth.organizationId,
+      empfaengerId: auth.userId,
     })
     return NextResponse.json(data)
   } catch (e: any) {

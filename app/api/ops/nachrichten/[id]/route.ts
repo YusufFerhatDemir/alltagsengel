@@ -13,7 +13,7 @@ export async function GET(
   const supabase = createAdminClient()
   try {
     const data = await getNachricht(supabase, {
-      organizationId: auth.ctx.organizationId,
+      organizationId: auth.organizationId,
       id,
     })
     return NextResponse.json(data)

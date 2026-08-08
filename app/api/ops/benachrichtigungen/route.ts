@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsUser } from '@/lib/ops/api-auth'
 import { listBenachrichtigungen } from '@/lib/ops/benachrichtigungen'
+import type { BenachrichtigungKategorie } from '@/lib/ops/types'
 
 export async function GET(request: Request) {
   const auth = await requireOpsUser()
@@ -13,8 +14,8 @@ export async function GET(request: Request) {
   const limit = url.searchParams.get('limit') ? Number(url.searchParams.get('limit')) : undefined
   try {
     const data = await listBenachrichtigungen(supabase, {
-      organizationId: auth.ctx.organizationId,
-      empfaengerId: auth.ctx.userId,
+      organizationId: auth.organizationId,
+      empfaengerId: auth.userId,
       gelesen: gelesen !== null ? gelesen === 'true' : undefined,
       kategorie,
       limit,

@@ -9,8 +9,8 @@ export async function GET(request: Request) {
   const supabase = createAdminClient()
   try {
     const data = await listPosteingang(supabase, {
-      organizationId: auth.ctx.organizationId,
-      empfaengerId: auth.ctx.userId,
+      organizationId: auth.organizationId,
+      empfaengerId: auth.userId,
     })
     return NextResponse.json(data)
   } catch (e: any) {
@@ -25,10 +25,10 @@ export async function POST(request: Request) {
   try {
     const body = await request.json()
     const data = await createNachricht(supabase, {
-      organizationId: auth.ctx.organizationId,
+      organizationId: auth.organizationId,
       data: {
         ...body,
-        absender_id: body.absender_id || auth.ctx.userId,
+        absender_id: body.absender_id || auth.userId,
       },
       empfaengerIds: body.empfaenger_ids,
     })

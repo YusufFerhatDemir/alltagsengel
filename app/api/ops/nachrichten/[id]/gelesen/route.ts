@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsUser } from '@/lib/ops/api-auth'
-import { markNachrichtGelesen } from '@/lib/ops/nachrichten'
+import { markGelesen } from '@/lib/ops/nachrichten'
 
 export async function PATCH(
   request: Request,
@@ -12,10 +12,10 @@ export async function PATCH(
   const { id: nachrichtId } = await params
   const supabase = createAdminClient()
   try {
-    const data = await markNachrichtGelesen(supabase, {
-      organizationId: auth.ctx.organizationId,
+    const data = await markGelesen(supabase, {
+      organizationId: auth.organizationId,
       nachrichtId,
-      empfaengerId: auth.ctx.userId,
+      empfaengerId: auth.userId,
     })
     return NextResponse.json(data)
   } catch (e: any) {

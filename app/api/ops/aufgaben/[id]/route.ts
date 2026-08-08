@@ -13,7 +13,7 @@ export async function GET(
   const supabase = createAdminClient()
   try {
     const data = await getAufgabe(supabase, {
-      organizationId: auth.ctx.organizationId,
+      organizationId: auth.organizationId,
       id,
     })
     return NextResponse.json(data)
@@ -33,7 +33,7 @@ export async function PATCH(
   try {
     const body = await request.json()
     const data = await updateAufgabe(supabase, {
-      organizationId: auth.ctx.organizationId,
+      organizationId: auth.organizationId,
       id,
       data: body,
     })
@@ -53,7 +53,7 @@ export async function DELETE(
   const supabase = createAdminClient()
   try {
     const data = await deleteAufgabe(supabase, {
-      organizationId: auth.ctx.organizationId,
+      organizationId: auth.organizationId,
       id,
     })
     return NextResponse.json(data)

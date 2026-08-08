@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
-import { updateChecklistenItem, deleteChecklistenItem } from '@/lib/ops/aufgaben'
+import { updateChecklistenItem, deleteChecklistenItem } from '@/lib/ops/checklisten'
 
 export async function PATCH(
   request: Request,
@@ -14,7 +14,7 @@ export async function PATCH(
   try {
     const body = await request.json()
     const data = await updateChecklistenItem(supabase, {
-      organizationId: auth.ctx.organizationId,
+      organizationId: auth.organizationId,
       id: checkId,
       data: body,
     })
@@ -34,7 +34,7 @@ export async function DELETE(
   const supabase = createAdminClient()
   try {
     const data = await deleteChecklistenItem(supabase, {
-      organizationId: auth.ctx.organizationId,
+      organizationId: auth.organizationId,
       id: checkId,
     })
     return NextResponse.json(data)

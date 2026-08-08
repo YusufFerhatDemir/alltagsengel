@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
-import { listChecklisten, createChecklistenItem } from '@/lib/ops/aufgaben'
+import { listChecklisten, createChecklistenItem } from '@/lib/ops/checklisten'
 
 export async function GET(
   request: Request,
@@ -13,7 +13,7 @@ export async function GET(
   const supabase = createAdminClient()
   try {
     const data = await listChecklisten(supabase, {
-      organizationId: auth.ctx.organizationId,
+      organizationId: auth.organizationId,
       aufgabeId,
     })
     return NextResponse.json(data)
@@ -33,7 +33,7 @@ export async function POST(
   try {
     const body = await request.json()
     const data = await createChecklistenItem(supabase, {
-      organizationId: auth.ctx.organizationId,
+      organizationId: auth.organizationId,
       aufgabeId,
       titel: body.titel,
       position: body.position,

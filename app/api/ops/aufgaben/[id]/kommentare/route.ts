@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
-import { listKommentare, createKommentar } from '@/lib/ops/aufgaben'
+import { listKommentare, createKommentar } from '@/lib/ops/kommentare'
 
 export async function GET(
   request: Request,
@@ -13,7 +13,7 @@ export async function GET(
   const supabase = createAdminClient()
   try {
     const data = await listKommentare(supabase, {
-      organizationId: auth.ctx.organizationId,
+      organizationId: auth.organizationId,
       aufgabeId,
       includeIntern: true,
     })
@@ -34,10 +34,10 @@ export async function POST(
   try {
     const body = await request.json()
     const data = await createKommentar(supabase, {
-      organizationId: auth.ctx.organizationId,
+      organizationId: auth.organizationId,
       aufgabeId,
       inhalt: body.inhalt,
-      autorId: body.autor_id || auth.ctx.userId,
+      autorId: body.autor_id || auth.userId,
       istIntern: body.ist_intern,
     })
     return NextResponse.json(data)
