@@ -94,6 +94,7 @@ export async function createPayment(
 
   await logBillingAction(supabase, {
     entityType: 'payment',
+    organizationId,
     entityId: payment.id,
     action: 'created',
     newState: { amount_cents: amountCents, payment_method: paymentMethod, payer_name: payerName },
@@ -320,6 +321,7 @@ export async function allocatePayment(
 
     await logBillingAction(supabase, {
       entityType: 'payment_allocation',
+      organizationId: payment.organization_id,
       entityId: paymentId,
       action: 'allocated',
       newState: {
@@ -396,6 +398,7 @@ export async function recordPaymentDifference(
 
   await logBillingAction(supabase, {
     entityType: 'payment_difference',
+    organizationId,
     entityId: data.id,
     action: 'created',
     newState: {

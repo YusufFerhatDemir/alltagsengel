@@ -104,7 +104,8 @@ export async function erstelleFehler(
 
   if (params.actorId) {
     await logBillingAction(supabase, {
-      entityType: 'fehlerprotokoll',
+      entityType: 'dta_fehlerprotokoll',
+      organizationId: params.organizationId,
       entityId: data.id,
       action: 'fehler_erstellt',
       newState: {
@@ -173,7 +174,10 @@ export async function aktualisiereFehler(
   await fehlerUpdate
 
   await logBillingAction(supabase, {
-    entityType: 'fehlerprotokoll',
+    entityType: 'dta_fehlerprotokoll',
+    // Aus der geladenen Zeile, nicht aus params: dort ist organizationId
+    // optional, und der Audit-Eintrag muss dem Mandanten des Fehlers folgen.
+    organizationId: existing.organization_id,
     entityId: params.fehlerId,
     action: 'fehler_aktualisiert',
     previousState: { status: current },

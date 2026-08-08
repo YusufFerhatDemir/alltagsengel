@@ -3,7 +3,6 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { NextResponse } from 'next/server'
 import { importiereRuecklaeufer } from '@/lib/abrechnung/ruecklaeufer'
 import { getActiveOrgId } from '@/lib/organizations/server'
-import { createAufgabe } from '@/lib/ops/aufgaben'
 
 export async function GET(request: Request) {
   try {
@@ -98,41 +97,9 @@ export async function POST(request: Request) {
       actorId: user.id,
     })
 
-    if (ergebnis.fehlerErstellt) {
-      const istAbgelehnt = ergebnis.status === 'abgelehnt'
-      const fristTage = istAbgelehnt ? 3 : 7
-      const faelligAm = new Date()
-      faelligAm.setDate(faelligAm.getDate() + fristTage)
-      try {
-        await createAufgabe(admin, {
-          organizationId,
-          data: {
-            titel: istAbgelehnt
-              ? `Abrechnung abgelehnt – Korrektur erforderlich${body.kostentraegerIk ? ` (IK ${body.kostentraegerIk})` : ''}`
-              : `Rückläufer mit Fehlern – Prüfung erforderlich${body.kostentraegerIk ? ` (IK ${body.kostentraegerIk})` : ''}`,
-            beschreibung: [
-              `Rückläufer-Typ: ${body.ruecklaeuferTyp}`,
-              `Status: ${ergebnis.status}`,
-              body.fehlerCode ? `Fehlercode: ${body.fehlerCode}` : null,
-              body.fehlerText ? `Fehlermeldung: ${body.fehlerText}` : null,
-              ergebnis.positionenAbgelehnt > 0 ? `${ergebnis.positionenAbgelehnt} von ${ergebnis.positionenGesamt} Positionen abgelehnt` : null,
-              body.laufId ? `Abrechnungslauf: ${body.laufId}` : null,
-            ].filter(Boolean).join('\n'),
-            kategorie: 'abrechnung',
-            prioritaet: istAbgelehnt ? 'kritisch' : 'hoch',
-            status: 'offen',
-            erstellt_von: user.id,
-            abrechnungslauf_id: body.laufId || null,
-            client_id: body.clientId || null,
-            faellig_am: faelligAm.toISOString().split('T')[0],
-            metadata: { ruecklaeufer_id: ergebnis.ruecklaeuferId },
-          },
-        })
-      } catch (aufgabenErr) {
-        console.error('[ruecklaeufer] Aufgaben-Erstellung fehlgeschlagen:', aufgabenErr)
-      }
-    }
-
+    // Die automatische Aufgabe erzeugt `importiereRuecklaeufer()` selbst —
+    // dort greift sie fuer JEDEN Eingangspfad (Job, Antwortabruf, Korrektur),
+    // nicht nur fuer diese Route, und ist gegen Dubletten abgesichert.
     return NextResponse.json(ergebnis)
   } catch (err) {
     return NextResponse.json({ error: (err as Error).message }, { status: 500 })

@@ -46,6 +46,9 @@ export async function POST(req: NextRequest) {
   const auth = await requireAdmin()
   if (!auth.ok) return auth.response
   try {
+    const orgId = await getActiveOrgId()
+    if (!orgId) return NextResponse.json({ error: 'Keine Organisation zugewiesen' }, { status: 403 })
+
     const form = await req.formData()
     const datei = form.get('datei') as File | null
     const passwort = String(form.get('passwort') || '')
@@ -63,7 +66,7 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const zert = await speichereAbsenderZertifikat(buf, passwort)
+    const zert = await speichereAbsenderZertifikat(buf, passwort, orgId)
     return NextResponse.json({
       erfolg: true,
       zertifikat: {

@@ -85,11 +85,35 @@ describe('P0-1: keine Billing-Route liest profiles.organization_id', () => {
     '%s bezieht die Org aus getActiveOrgId()',
     rel => {
       const src = read(rel)
-      expect(src, `${rel}: kein getActiveOrgId-Import`)
-        .toMatch(/import\s*\{[^}]*\bgetActiveOrgId\b[^}]*\}\s*from\s*'@\/lib\/organizations\/server'/)
-      expect(src, `${rel}: getActiveOrgId wird nicht aufgerufen`).toMatch(/await\s+getActiveOrgId\(\)/)
+
+      // Zwei zulaessige Wege — beide enden bei getActiveOrgId():
+      //   a) direkter Aufruf in der Route
+      //   b) requireAdminMitOrg() aus lib/abrechnung/require-admin, das
+      //      Admin-Pruefung und Org-Aufloesung zusammen erledigt und damit
+      //      strenger ist als der direkte Aufruf.
+      const direkt =
+        /import\s*\{[^}]*\bgetActiveOrgId\b[^}]*\}\s*from\s*'@\/lib\/organizations\/server'/.test(src) &&
+        /await\s+getActiveOrgId\(\)/.test(src)
+
+      const ueberHelfer =
+        /import\s*\{[^}]*\brequireAdminMitOrg\b[^}]*\}\s*from\s*'@\/lib\/abrechnung\/require-admin'/.test(src) &&
+        /await\s+requireAdminMitOrg\(\)/.test(src)
+
+      expect(
+        direkt || ueberHelfer,
+        `${rel}: Org kommt weder aus getActiveOrgId() noch aus requireAdminMitOrg()`,
+      ).toBe(true)
     },
   )
+
+  it('requireAdminMitOrg loest die Org selbst ueber getActiveOrgId() auf', () => {
+    // Sonst waere der oben zugelassene Helfer-Pfad ein Schlupfloch.
+    const src = read('lib/abrechnung/require-admin.ts')
+    expect(src).toMatch(/import\s*\{[^}]*\bgetActiveOrgId\b[^}]*\}\s*from\s*'@\/lib\/organizations\/server'/)
+    expect(src).toMatch(/await\s+getActiveOrgId\(\)/)
+    // Und er darf die Org nicht aus profiles ziehen.
+    expect(src).not.toMatch(/\bprofiles?\??\.organization_id\b/)
+  })
 })
 
 describe('P0-2: Rechnungs-Mutationen pruefen die Org-Zugehoerigkeit vor dem Aufruf', () => {

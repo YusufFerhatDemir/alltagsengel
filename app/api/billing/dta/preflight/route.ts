@@ -3,6 +3,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { NextResponse } from 'next/server'
 import { preFlightValidierung } from '@/lib/abrechnung/kassenabrechnung-engine'
 import { getActiveOrgId } from '@/lib/organizations/server'
+import { logBillingAction } from '@/lib/billing/core/audit'
 
 export async function POST(request: Request) {
   try {
@@ -44,6 +45,26 @@ export async function POST(request: Request) {
       bundesland,
       kostentraegerIk,
     })
+
+    // Protokollieren, damit die Readiness-Ansicht "letzter Preflight" aus
+    // einer echten Quelle beantworten kann statt aus einer Schaetzung.
+    // Best effort: ein fehlgeschlagener Audit-Eintrag darf das Ergebnis
+    // nicht verschlucken.
+    await logBillingAction(admin, {
+      entityType: 'dta_validierung',
+      organizationId,
+      entityId: organizationId,
+      action: 'preflight_ausgefuehrt',
+      newState: {
+        abrechnungsmonat,
+        bundesland,
+        kostentraeger_ik: kostentraegerIk ?? null,
+        bestanden: ergebnis.bestanden,
+        fehler: ergebnis.fehler.length,
+        warnungen: ergebnis.warnungen.length,
+      },
+      actorId: user.id,
+    }).catch(err => console.error('[dta/preflight] Audit fehlgeschlagen:', err))
 
     return NextResponse.json(ergebnis)
   } catch (err) {

@@ -153,20 +153,27 @@ export function parseItsgVerzeichnis(daten: Buffer): forge.pki.Certificate[] {
  */
 export async function ladeEmpfaengerZertifikat(
   empfaenger_ik: string,
-  optionen?: { cacheIgnorieren?: boolean }
+  optionen?: { cacheIgnorieren?: boolean; organizationId?: string }
 ): Promise<Zertifikat> {
   const ik = empfaenger_ik.replace(/\D/g, '')
   if (!/^\d{9}$/.test(ik)) throw new Error(`Ungültige IK-Nummer: ${empfaenger_ik}`)
 
   const supabase = createAdminClient()
+  const orgId = optionen?.organizationId ?? null
 
-  // 1. Cache
+  // 1. Cache — mandantengetrennt.
   if (!optionen?.cacheIgnorieren) {
-    const { data: cached } = await supabase
+    let cacheQuery = supabase
       .from('abrechnung_zertifikate')
       .select('ik_nummer, typ, zertifikat_pem, gueltig_ab, gueltig_bis, fingerprint')
       .eq('ik_nummer', ik)
       .eq('typ', 'empfaenger')
+    cacheQuery = orgId
+      ? cacheQuery.eq('organization_id', orgId)
+      : cacheQuery.is('organization_id', null)
+    const { data: cached } = await cacheQuery
+      .order('gueltig_bis', { ascending: false })
+      .limit(1)
       .maybeSingle()
     if (cached?.zertifikat_pem && cached.gueltig_bis && new Date(cached.gueltig_bis) > new Date()) {
       return {
@@ -212,19 +219,71 @@ export async function ladeEmpfaengerZertifikat(
   zert.ik_nummer = ik // ITSG-Subject kann Zusätze enthalten — IK normieren
 
   // 3. Cache aktualisieren
-  await supabase.from('abrechnung_zertifikate').upsert(
-    {
-      ik_nummer: ik,
-      typ: 'empfaenger',
-      zertifikat_pem: zert.zertifikat_pem,
-      gueltig_ab: zert.gueltig_ab.toISOString().slice(0, 10),
-      gueltig_bis: zert.gueltig_bis.toISOString().slice(0, 10),
-      fingerprint: zert.fingerprint,
-    },
-    { onConflict: 'ik_nummer,typ' }
-  )
+  await schreibeZertifikatZeile(supabase, orgId, {
+    ik_nummer: ik,
+    typ: 'empfaenger',
+    zertifikat_pem: zert.zertifikat_pem,
+    gueltig_ab: zert.gueltig_ab.toISOString().slice(0, 10),
+    gueltig_bis: zert.gueltig_bis.toISOString().slice(0, 10),
+    fingerprint: zert.fingerprint,
+  })
 
   return zert
+}
+
+/**
+ * Schreibt eine Zertifikatszeile ohne `upsert`.
+ *
+ * Bewusst select-then-write statt `upsert(..., { onConflict: 'ik_nummer,typ' })`:
+ * auf der Produktionsdatenbank existiert kein Unique-Constraint über
+ * `(ik_nummer, typ)` — ein `onConflict` darauf schlaegt zur Laufzeit fehl
+ * (42P10). Zusaetzlich waere ein solcher Constraint mandantenblind: zwei
+ * Organisationen mit derselben Empfaenger-IK wuerden sich gegenseitig den
+ * Cache-Eintrag ueberschreiben.
+ *
+ * Der Schluessel ist deshalb `(organization_id, ik_nummer, typ, fingerprint)`.
+ * Ein neuer Fingerprint erzeugt eine NEUE Zeile — das ist die Grundlage der
+ * Zertifikatsrotation: das alte Zertifikat bleibt bis zu seinem Ablauf
+ * lesbar, waehrend das neue bereits hinterlegt ist.
+ */
+async function schreibeZertifikatZeile(
+  supabase: ReturnType<typeof createAdminClient>,
+  organizationId: string | null,
+  zeile: {
+    ik_nummer: string
+    typ: 'absender' | 'empfaenger'
+    zertifikat_pem: string
+    gueltig_ab: string
+    gueltig_bis: string
+    fingerprint: string
+    zertifikat_url?: string
+  }
+): Promise<void> {
+  let vorhandenQuery = supabase
+    .from('abrechnung_zertifikate')
+    .select('id')
+    .eq('ik_nummer', zeile.ik_nummer)
+    .eq('typ', zeile.typ)
+    .eq('fingerprint', zeile.fingerprint)
+  vorhandenQuery = organizationId
+    ? vorhandenQuery.eq('organization_id', organizationId)
+    : vorhandenQuery.is('organization_id', null)
+
+  const { data: vorhanden } = await vorhandenQuery.limit(1).maybeSingle()
+
+  if (vorhanden) {
+    const { error } = await supabase
+      .from('abrechnung_zertifikate')
+      .update({ ...zeile, updated_at: new Date().toISOString() })
+      .eq('id', vorhanden.id)
+    if (error) throw new Error(`Zertifikat konnte nicht aktualisiert werden: ${error.message}`)
+    return
+  }
+
+  const { error } = await supabase
+    .from('abrechnung_zertifikate')
+    .insert({ ...zeile, organization_id: organizationId })
+  if (error) throw new Error(`Zertifikat konnte nicht gespeichert werden: ${error.message}`)
 }
 
 // ---------------------------------------------------------------
@@ -238,37 +297,40 @@ export async function ladeEmpfaengerZertifikat(
  */
 export async function speichereAbsenderZertifikat(
   p12: Buffer,
-  passwort: string
+  passwort: string,
+  organizationId: string
 ): Promise<Zertifikat> {
+  if (!organizationId) {
+    throw new Error('organizationId ist Pflicht — ein Zertifikat ohne Mandantenzuordnung waere fuer alle Organisationen sichtbar')
+  }
+
   const pruefung = await pruefeZertifikat(p12, passwort)
   if (!pruefung.fingerprint) {
     throw new Error(`Zertifikat konnte nicht gelesen werden: ${pruefung.fehler}`)
   }
 
   const supabase = createAdminClient()
-  const pfad = `zertifikate/absender-${pruefung.ik_nummer || 'unbekannt'}.p12`
+  const ident = ladeIdentitaet(p12, passwort)
+  const zert = zuZertifikat(ident.zertifikat, 'absender')
+
+  // Pfad enthaelt Organisation UND Fingerprint: pro Mandant getrennt, und
+  // eine Rotation ueberschreibt das noch gueltige Vorgaengerzertifikat nicht.
+  const pfad = `zertifikate/${organizationId}/absender-${zert.ik_nummer || 'unbekannt'}-${zert.fingerprint.slice(0, 16)}.p12`
 
   const { error: upErr } = await supabase.storage
     .from(ZERTIFIKAT_BUCKET)
     .upload(pfad, p12, { contentType: 'application/x-pkcs12', upsert: true })
   if (upErr) throw new Error(`Storage-Upload fehlgeschlagen: ${upErr.message}`)
 
-  const ident = ladeIdentitaet(p12, passwort)
-  const zert = zuZertifikat(ident.zertifikat, 'absender')
-
-  const { error: dbErr } = await supabase.from('abrechnung_zertifikate').upsert(
-    {
-      ik_nummer: zert.ik_nummer,
-      typ: 'absender',
-      zertifikat_url: pfad,
-      zertifikat_pem: zert.zertifikat_pem,
-      gueltig_ab: zert.gueltig_ab.toISOString().slice(0, 10),
-      gueltig_bis: zert.gueltig_bis.toISOString().slice(0, 10),
-      fingerprint: zert.fingerprint,
-    },
-    { onConflict: 'ik_nummer,typ' }
-  )
-  if (dbErr) throw new Error(`DB-Update fehlgeschlagen: ${dbErr.message}`)
+  await schreibeZertifikatZeile(supabase, organizationId, {
+    ik_nummer: zert.ik_nummer,
+    typ: 'absender',
+    zertifikat_url: pfad,
+    zertifikat_pem: zert.zertifikat_pem,
+    gueltig_ab: zert.gueltig_ab.toISOString().slice(0, 10),
+    gueltig_bis: zert.gueltig_bis.toISOString().slice(0, 10),
+    fingerprint: zert.fingerprint,
+  })
 
   return zert
 }
@@ -278,21 +340,33 @@ export async function speichereAbsenderZertifikat(
  * Passwort kommt aus process.env.SECON_ZERT_PASSWORT.
  */
 export async function ladeAbsenderZertifikat(
-  absender_ik: string
+  absender_ik: string,
+  organizationId: string
 ): Promise<{ p12: Buffer; passwort: string }> {
   const passwort = process.env.SECON_ZERT_PASSWORT
   if (!passwort) {
     throw new Error('SECON_ZERT_PASSWORT ist nicht als Env-Variable gesetzt')
   }
+  if (!organizationId) {
+    throw new Error('organizationId ist Pflicht — sonst koennte das Zertifikat einer fremden Organisation geladen werden')
+  }
   const supabase = createAdminClient()
+
+  // Rotation: es kann mehrere Zeilen geben (altes + neues Zertifikat).
+  // Genommen wird das aktuell gueltige mit dem spaetesten Ablaufdatum.
+  const heute = new Date().toISOString().slice(0, 10)
   const { data: meta, error } = await supabase
     .from('abrechnung_zertifikate')
     .select('zertifikat_url')
+    .eq('organization_id', organizationId)
     .eq('ik_nummer', absender_ik)
     .eq('typ', 'absender')
+    .gte('gueltig_bis', heute)
+    .order('gueltig_bis', { ascending: false })
+    .limit(1)
     .maybeSingle()
   if (error || !meta?.zertifikat_url) {
-    throw new Error(`Kein Absender-Zertifikat für IK ${absender_ik} hinterlegt`)
+    throw new Error(`Kein gueltiges Absender-Zertifikat für IK ${absender_ik} hinterlegt`)
   }
   const { data: datei, error: dlErr } = await supabase.storage
     .from(ZERTIFIKAT_BUCKET)
@@ -304,14 +378,112 @@ export async function ladeAbsenderZertifikat(
 }
 
 /** Ablauf-Warnung: Tage bis zum Ablauf des eigenen Zertifikats. */
-export async function zertifikatAblaufTage(absender_ik: string): Promise<number | null> {
+export async function zertifikatAblaufTage(
+  absender_ik: string,
+  organizationId: string
+): Promise<number | null> {
   const supabase = createAdminClient()
   const { data } = await supabase
     .from('abrechnung_zertifikate')
     .select('gueltig_bis')
+    .eq('organization_id', organizationId)
     .eq('ik_nummer', absender_ik)
     .eq('typ', 'absender')
+    .order('gueltig_bis', { ascending: false })
+    .limit(1)
     .maybeSingle()
   if (!data?.gueltig_bis) return null
-  return Math.floor((new Date(data.gueltig_bis).getTime() - Date.now()) / 86_400_000)
+  return tageBis(data.gueltig_bis)
+}
+
+// ---------------------------------------------------------------
+// Zertifikatsstatus (Ampel, Ablaufwarnung, Rotation)
+// ---------------------------------------------------------------
+
+/** Warnschwelle: ab hier gilt ein Zertifikat als "laeuft demnaechst ab". */
+export const ABLAUF_WARNUNG_TAGE = 60
+
+export type ZertifikatAmpel = 'gruen' | 'gelb' | 'rot'
+
+export interface ZertifikatStatus {
+  id: string
+  ik_nummer: string
+  typ: 'absender' | 'empfaenger'
+  fingerprint: string
+  gueltig_ab: string | null
+  gueltig_bis: string | null
+  tage_bis_ablauf: number | null
+  /** Genau eine Zeile je (ik, typ) ist aktiv: die gueltige mit spaetestem Ablauf. */
+  aktiv: boolean
+  ampel: ZertifikatAmpel
+  hinweis: string | null
+}
+
+export function tageBis(datum: string, jetzt: Date = new Date()): number {
+  const ziel = new Date(`${datum.slice(0, 10)}T00:00:00.000Z`).getTime()
+  const heute = new Date(`${jetzt.toISOString().slice(0, 10)}T00:00:00.000Z`).getTime()
+  return Math.round((ziel - heute) / 86_400_000)
+}
+
+export function bewerteZertifikat(
+  gueltigBis: string | null,
+  jetzt: Date = new Date()
+): { ampel: ZertifikatAmpel; tage: number | null; hinweis: string | null } {
+  if (!gueltigBis) {
+    return { ampel: 'rot', tage: null, hinweis: 'Kein Ablaufdatum hinterlegt' }
+  }
+  const tage = tageBis(gueltigBis, jetzt)
+  if (tage < 0) {
+    return { ampel: 'rot', tage, hinweis: `Abgelaufen seit ${Math.abs(tage)} Tag(en) — beim ITSG Trust Center erneuern` }
+  }
+  if (tage <= ABLAUF_WARNUNG_TAGE) {
+    return { ampel: 'gelb', tage, hinweis: `Laeuft in ${tage} Tag(en) ab — Erneuerung beim ITSG Trust Center anstossen` }
+  }
+  return { ampel: 'gruen', tage, hinweis: null }
+}
+
+/**
+ * Alle Zertifikate einer Organisation mit Ampel, Ablauffrist und
+ * Aktiv-Kennzeichnung. Liefert bewusst KEIN `zertifikat_pem` und keinen
+ * Storage-Pfad — die Ansicht braucht beides nicht, und beides gehoert
+ * nicht in eine API-Antwort.
+ */
+export async function ladeZertifikatsStatus(
+  organizationId: string,
+  jetzt: Date = new Date()
+): Promise<ZertifikatStatus[]> {
+  const supabase = createAdminClient()
+  const { data, error } = await supabase
+    .from('abrechnung_zertifikate')
+    .select('id, ik_nummer, typ, fingerprint, gueltig_ab, gueltig_bis')
+    .eq('organization_id', organizationId)
+    .order('gueltig_bis', { ascending: false })
+
+  if (error) throw new Error(`Zertifikatsstatus konnte nicht geladen werden: ${error.message}`)
+
+  const heuteIso = jetzt.toISOString().slice(0, 10)
+  const aktivGesehen = new Set<string>()
+
+  return (data ?? []).map((z) => {
+    const bewertung = bewerteZertifikat(z.gueltig_bis, jetzt)
+    const schluessel = `${z.ik_nummer}|${z.typ}`
+    // Sortiert nach gueltig_bis DESC: die erste noch gueltige Zeile je
+    // (ik, typ) ist die aktive, alle weiteren sind Rotationshistorie.
+    const nochGueltig = !!z.gueltig_bis && z.gueltig_bis >= heuteIso
+    const aktiv = nochGueltig && !aktivGesehen.has(schluessel)
+    if (aktiv) aktivGesehen.add(schluessel)
+
+    return {
+      id: z.id,
+      ik_nummer: z.ik_nummer,
+      typ: z.typ,
+      fingerprint: z.fingerprint,
+      gueltig_ab: z.gueltig_ab,
+      gueltig_bis: z.gueltig_bis,
+      tage_bis_ablauf: bewertung.tage,
+      aktiv,
+      ampel: aktiv ? bewertung.ampel : nochGueltig ? 'gruen' : 'rot',
+      hinweis: aktiv ? bewertung.hinweis : nochGueltig ? 'Ersatzzertifikat (Rotation)' : 'Historisch — abgelaufen',
+    }
+  })
 }

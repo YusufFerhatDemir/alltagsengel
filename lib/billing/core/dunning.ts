@@ -212,6 +212,7 @@ export async function advanceDunning(
 
   await logBillingAction(supabase, {
     entityType: 'dunning',
+    organizationId: entry.organization_id,
     entityId: entry.id,
     action: 'escalated',
     previousState: { level: entry.dunning_level },
