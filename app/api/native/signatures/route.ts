@@ -64,7 +64,7 @@ export async function POST(request: Request) {
 
     const { data: record, error: recErr } = await admin
       .from('service_records')
-      .select('id, caregiver_id')
+      .select('id, caregiver_id, organization_id')
       .eq('id', service_record_id)
       .single()
 
@@ -72,6 +72,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Leistungsnachweis nicht gefunden' }, { status: 404 })
     }
     if (record.caregiver_id !== auth.caregiverId) {
+      return NextResponse.json({ error: 'Kein Zugriff auf diesen Leistungsnachweis' }, { status: 403 })
+    }
+    if (auth.organizationId && record.organization_id !== auth.organizationId) {
       return NextResponse.json({ error: 'Kein Zugriff auf diesen Leistungsnachweis' }, { status: 403 })
     }
 

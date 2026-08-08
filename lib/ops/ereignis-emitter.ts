@@ -110,19 +110,19 @@ async function resolveEmpfaenger(
   switch (params.empfaengerRolle) {
     case 'admin': {
       const { data } = await supabase
-        .from('profiles')
-        .select('id')
+        .from('organization_members')
+        .select('user_id, profile:profiles!inner(id, role)')
         .eq('organization_id', params.organizationId)
-        .eq('role', 'admin')
-      return (data ?? []).map((p) => p.id)
+        .eq('profiles.role', 'admin')
+      return (data ?? []).map((m: any) => m.user_id)
     }
     case 'pdl': {
       const { data } = await supabase
-        .from('profiles')
-        .select('id')
+        .from('organization_members')
+        .select('user_id, profile:profiles!inner(id, role)')
         .eq('organization_id', params.organizationId)
-        .in('role', ['admin', 'superadmin'])
-      return (data ?? []).map((p) => p.id)
+        .in('profiles.role', ['admin', 'superadmin'])
+      return (data ?? []).map((m: any) => m.user_id)
     }
     case 'engel': {
       const caregiverId = params.kontext?.caregiver_user_id as string | undefined
@@ -134,10 +134,10 @@ async function resolveEmpfaenger(
     }
     case 'alle': {
       const { data } = await supabase
-        .from('profiles')
-        .select('id')
+        .from('organization_members')
+        .select('user_id')
         .eq('organization_id', params.organizationId)
-      return (data ?? []).map((p) => p.id)
+      return (data ?? []).map((m: any) => m.user_id)
     }
     default:
       return []

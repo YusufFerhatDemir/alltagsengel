@@ -113,7 +113,7 @@ export async function pruefeClientFreigabe(
 
   if (einsatzDatum) {
     const { data: vertraege } = await supabase
-      .from('vertraege')
+      .from('akten_vertraege')
       .select('id, status, vertragsende')
       .eq('client_id', clientId)
       .eq('organization_id', organizationId)
@@ -137,13 +137,14 @@ export async function pruefeClientFreigabe(
 export async function pruefeBudget(
   supabase: SupabaseClient,
   clientId: string,
-  _organizationId: string,
+  organizationId: string,
 ): Promise<{ warnung: string | null; blockiert: boolean; prozent: number }> {
   const year = new Date().getFullYear()
   const { data: budget } = await supabase
     .from('client_budgets')
     .select('annual_amount, carryover_amount, used_amount')
     .eq('client_id', clientId)
+    .eq('organization_id', organizationId)
     .eq('year', year)
     .maybeSingle()
   if (!budget) return { warnung: null, blockiert: false, prozent: 0 }
