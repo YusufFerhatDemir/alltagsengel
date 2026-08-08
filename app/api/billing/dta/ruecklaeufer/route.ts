@@ -100,6 +100,9 @@ export async function POST(request: Request) {
 
     if (ergebnis.fehlerErstellt) {
       const istAbgelehnt = ergebnis.status === 'abgelehnt'
+      const fristTage = istAbgelehnt ? 3 : 7
+      const faelligAm = new Date()
+      faelligAm.setDate(faelligAm.getDate() + fristTage)
       try {
         await createAufgabe(admin, {
           organizationId,
@@ -120,11 +123,13 @@ export async function POST(request: Request) {
             status: 'offen',
             erstellt_von: user.id,
             abrechnungslauf_id: body.laufId || null,
+            client_id: body.clientId || null,
+            faellig_am: faelligAm.toISOString().split('T')[0],
             metadata: { ruecklaeufer_id: ergebnis.ruecklaeuferId },
           },
         })
-      } catch {
-        // Aufgabe-Erstellung darf Import nicht blockieren
+      } catch (aufgabenErr) {
+        console.error('[ruecklaeufer] Aufgaben-Erstellung fehlgeschlagen:', aufgabenErr)
       }
     }
 
