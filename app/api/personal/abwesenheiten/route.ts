@@ -40,6 +40,9 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     const data = await createAbwesenheit(supabase, {
       ...body,
+      // Mandant und Urheber kommen aus dem Auth-Kontext und duerfen
+      // nicht aus dem Request-Body ueberschrieben werden.
+      organizationId: auth.ctx.organizationId,
       erstelltVon: auth.ctx.userId,
     })
     return NextResponse.json(data, { status: 201 })
