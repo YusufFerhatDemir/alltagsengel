@@ -74,7 +74,7 @@ export async function POST(request: Request) {
     if (record.caregiver_id !== auth.caregiverId) {
       return NextResponse.json({ error: 'Kein Zugriff auf diesen Leistungsnachweis' }, { status: 403 })
     }
-    if (auth.organizationId && record.organization_id !== auth.organizationId) {
+    if (record.organization_id !== auth.organizationId) {
       return NextResponse.json({ error: 'Kein Zugriff auf diesen Leistungsnachweis' }, { status: 403 })
     }
 
