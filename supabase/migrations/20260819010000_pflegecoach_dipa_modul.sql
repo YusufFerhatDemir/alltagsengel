@@ -372,3 +372,94 @@ REVOKE ALL ON coach_users, coach_consents, coach_shares, coach_assessments,
 -- entziehen (Defense-in-Depth zusätzlich zur fehlenden Policy).
 REVOKE DELETE ON coach_consents FROM authenticated;
 REVOKE UPDATE, DELETE ON coach_reports FROM authenticated;
+
+-- ═══════════════════════════════════════════════════════════════════════════
+-- TEIL 12: coach_audit_log — Auditierbarkeit (DiPAV/GoBD-Anlehnung)
+-- ═══════════════════════════════════════════════════════════════════════════
+-- Append-only Protokoll aller Schreibzugriffe auf coach_*-Tabellen.
+-- DATENMINIMIERUNG: Es werden KEINE Inhalte/Werte protokolliert (sonst
+-- Zweitkopie von Gesundheitsdaten), nur Tabelle, Aktion, Zeilen-ID,
+-- geänderte Feldnamen, Akteur, Zeitpunkt.
+
+CREATE TABLE IF NOT EXISTS coach_audit_log (
+  id              bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  coach_user_id   uuid,             -- Daten-Eigentümer (NULL bei gelöschtem Profil)
+  actor_user_id   uuid,             -- auth.uid() des Handelnden (NULL = Systemkontext)
+  tabelle         text NOT NULL,
+  aktion          text NOT NULL CHECK (aktion IN ('INSERT','UPDATE','DELETE')),
+  zeilen_id       uuid,
+  geaenderte_felder text[],         -- nur bei UPDATE: Feldnamen, keine Werte
+  created_at      timestamptz NOT NULL DEFAULT now()
+);
+
+COMMENT ON TABLE coach_audit_log IS
+  'Append-only Audit des PflegeCoach (DiPA). Keine Datenwerte (Datenminimierung), nur Metadaten. Schreibzugriff ausschließlich über Trigger.';
+
+CREATE INDEX IF NOT EXISTS idx_coach_audit_log_user ON coach_audit_log(coach_user_id, created_at DESC);
+
+-- Trigger-Funktion: SECURITY DEFINER, damit der Eintrag unabhängig von den
+-- RLS-/Grant-Beschränkungen der schreibenden Rolle gelingt.
+CREATE OR REPLACE FUNCTION coach_audit_trigger()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_row jsonb;
+  v_owner uuid;
+  v_zeile uuid;
+  v_felder text[];
+BEGIN
+  v_row := to_jsonb(COALESCE(NEW, OLD));
+  -- Eigentümer: coach_users selbst → id; shares → owner_coach_user_id; sonst coach_user_id
+  v_owner := COALESCE(
+    (v_row->>'coach_user_id')::uuid,
+    (v_row->>'owner_coach_user_id')::uuid,
+    CASE WHEN TG_TABLE_NAME = 'coach_users' THEN (v_row->>'id')::uuid END
+  );
+  v_zeile := (v_row->>'id')::uuid;
+  IF TG_OP = 'UPDATE' THEN
+    SELECT array_agg(key) INTO v_felder
+    FROM jsonb_each(to_jsonb(NEW)) n
+    JOIN jsonb_each(to_jsonb(OLD)) o USING (key)
+    WHERE n.value IS DISTINCT FROM o.value AND key <> 'updated_at';
+  END IF;
+  INSERT INTO coach_audit_log (coach_user_id, actor_user_id, tabelle, aktion, zeilen_id, geaenderte_felder)
+  VALUES (v_owner, auth.uid(), TG_TABLE_NAME, TG_OP, v_zeile, v_felder);
+  RETURN COALESCE(NEW, OLD);
+END;
+$$;
+
+REVOKE ALL ON FUNCTION coach_audit_trigger() FROM PUBLIC, anon, authenticated;
+
+DO $$
+DECLARE t text;
+BEGIN
+  FOREACH t IN ARRAY ARRAY[
+    'coach_users','coach_consents','coach_shares','coach_assessments',
+    'coach_goals','coach_activities','coach_activity_log',
+    'coach_measurements','coach_reports'
+  ] LOOP
+    IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'trg_audit_' || t) THEN
+      EXECUTE format(
+        'CREATE TRIGGER %I AFTER INSERT OR UPDATE OR DELETE ON %I
+           FOR EACH ROW EXECUTE FUNCTION coach_audit_trigger()',
+        'trg_audit_' || t, t);
+    END IF;
+  END LOOP;
+END $$;
+
+-- RLS: Nutzer liest NUR die eigenen Audit-Einträge; niemand außer dem
+-- Trigger (DEFINER) schreibt; kein UPDATE/DELETE für irgendwen außer Owner-Rolle.
+ALTER TABLE coach_audit_log ENABLE ROW LEVEL SECURITY;
+
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'coach_audit_log' AND policyname = 'coach_audit_log_select_self') THEN
+    CREATE POLICY coach_audit_log_select_self ON coach_audit_log FOR SELECT TO authenticated
+      USING (coach_user_id IN (SELECT cu.id FROM coach_users cu WHERE cu.user_id = auth.uid()));
+  END IF;
+END $$;
+
+REVOKE ALL ON coach_audit_log FROM anon;
+REVOKE INSERT, UPDATE, DELETE ON coach_audit_log FROM authenticated;

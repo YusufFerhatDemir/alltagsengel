@@ -5,6 +5,9 @@
 -- Backup sicherstellen (Art. 20 DSGVO). Reihenfolge: Kinder vor Eltern.
 -- ═══════════════════════════════════════════════════════════════════════════
 
+DROP TABLE IF EXISTS coach_audit_log;
+DROP FUNCTION IF EXISTS coach_audit_trigger() CASCADE;
+
 DROP TABLE IF EXISTS coach_reports;
 DROP TABLE IF EXISTS coach_measurements;
 DROP TABLE IF EXISTS coach_activity_log;
