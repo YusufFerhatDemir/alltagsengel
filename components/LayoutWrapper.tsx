@@ -17,9 +17,12 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
   const isLP = pathname.startsWith('/lp')
   const isAdmin = pathname.startsWith('/admin')
   const isInvestor = pathname.startsWith('/investor')
+  // DiPA-Produktbereich: eigenes Layout, KEIN Marketing-Frame und
+  // KEIN PageTracker (Werbefreiheit/Tracker-Verbot, DiPAV Anlage 2).
+  const isPflegeCoach = pathname.startsWith('/pflegecoach')
 
-  // Admin, MIS, LP, Investor — kein Phone-Frame
-  if (isMIS || isLP || isAdmin || isInvestor) {
+  // Admin, MIS, LP, Investor, PflegeCoach — kein Phone-Frame
+  if (isMIS || isLP || isAdmin || isInvestor || isPflegeCoach) {
     return <>{children}</>
   }
 

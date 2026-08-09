@@ -1,0 +1,224 @@
+/* ═══════════════════════════════════════════════════════════════
+   Digitaler PflegeCoach — eigenständiges, barrierefreies Design
+   Maßstab: WCAG 2.1 AA / EN 301 549 (BFSG). Bewusst NICHT im
+   Alltagsengel-Marketing-Look: helles Thema, große Schrift,
+   hohe Kontraste, große Touch-Ziele (>= 48px), sichtbarer Fokus.
+   Schrift-Skalierung über --pc-scale (Einstellung des Nutzers).
+   ═══════════════════════════════════════════════════════════════ */
+
+.pc-root {
+  /* Design-Tokens */
+  --pc-scale: 1;
+  --pc-bg: #FAF9F6;
+  --pc-surface: #FFFFFF;
+  --pc-text: #1F2933;          /* Kontrast zu #FAF9F6: > 13:1 */
+  --pc-text-soft: #3E4C59;     /* Kontrast: > 8:1 */
+  --pc-primary: #0B5394;       /* Kontrast auf Weiß: 7.4:1 */
+  --pc-primary-dark: #083C6C;
+  --pc-border: #9AA5B1;
+  --pc-ok: #1E6641;
+  --pc-warn: #8A4B08;
+  --pc-error: #A61B1B;
+  --pc-focus: #B45309;
+
+  font-size: calc(18px * var(--pc-scale));
+  line-height: 1.6;
+  background: var(--pc-bg);
+  color: var(--pc-text);
+  min-height: 100vh;
+  min-height: 100dvh;
+  font-family: 'Jost', 'Segoe UI', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  color-scheme: light;
+}
+
+/* Kontrastmodus: noch härtere Kontraste, keine Grautöne */
+.pc-root[data-pc-kontrast='true'] {
+  --pc-bg: #FFFFFF;
+  --pc-surface: #FFFFFF;
+  --pc-text: #000000;
+  --pc-text-soft: #000000;
+  --pc-primary: #00317A;
+  --pc-primary-dark: #001F4D;
+  --pc-border: #000000;
+}
+
+.pc-root * { box-sizing: border-box; }
+
+.pc-root a { color: var(--pc-primary); text-decoration: underline; text-underline-offset: 3px; }
+.pc-root a:hover { color: var(--pc-primary-dark); }
+
+/* Sichtbarer Fokus für Tastaturnavigation — niemals unterdrücken */
+.pc-root a:focus-visible,
+.pc-root button:focus-visible,
+.pc-root input:focus-visible,
+.pc-root select:focus-visible,
+.pc-root textarea:focus-visible,
+.pc-root [tabindex]:focus-visible {
+  outline: 4px solid var(--pc-focus);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.pc-skiplink {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  background: var(--pc-primary);
+  color: #fff;
+  padding: 12px 20px;
+  z-index: 100;
+  border-radius: 0 0 8px 0;
+}
+.pc-skiplink:focus { left: 0; color: #fff; }
+
+.pc-container { max-width: 860px; margin: 0 auto; padding: 0 16px 96px; }
+
+/* Kopfbereich */
+.pc-header {
+  background: var(--pc-surface);
+  border-bottom: 2px solid var(--pc-border);
+  padding: 12px 16px;
+}
+.pc-header-inner {
+  max-width: 860px; margin: 0 auto;
+  display: flex; flex-wrap: wrap; gap: 12px;
+  align-items: center; justify-content: space-between;
+}
+.pc-brand { font-weight: 700; font-size: 1.15em; color: var(--pc-text); text-decoration: none; }
+.pc-brand:focus-visible { outline: 4px solid var(--pc-focus); }
+
+.pc-a11y-controls { display: flex; gap: 8px; align-items: center; }
+
+/* Navigation */
+.pc-nav {
+  background: var(--pc-surface);
+  border-bottom: 2px solid var(--pc-border);
+  overflow-x: auto;
+}
+.pc-nav ul {
+  max-width: 860px; margin: 0 auto; padding: 0 8px;
+  display: flex; gap: 4px; list-style: none;
+}
+.pc-nav a {
+  display: block; padding: 12px 14px; min-height: 48px;
+  text-decoration: none; color: var(--pc-text-soft);
+  border-bottom: 4px solid transparent; white-space: nowrap;
+  font-weight: 500;
+}
+.pc-nav a[aria-current='page'] {
+  color: var(--pc-primary);
+  border-bottom-color: var(--pc-primary);
+  font-weight: 700;
+}
+
+/* Karten & Abschnitte */
+.pc-card {
+  background: var(--pc-surface);
+  border: 2px solid var(--pc-border);
+  border-radius: 12px;
+  padding: 20px;
+  margin: 16px 0;
+}
+.pc-card h2, .pc-card h3 { margin-top: 0; }
+
+.pc-h1 { font-size: 1.6em; margin: 24px 0 8px; }
+.pc-lead { color: var(--pc-text-soft); margin: 0 0 8px; }
+
+/* Buttons: große Touch-Ziele */
+.pc-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-height: 48px; padding: 10px 22px;
+  font-size: 1em; font-weight: 600; font-family: inherit;
+  border-radius: 10px; cursor: pointer;
+  border: 2px solid var(--pc-primary);
+  background: var(--pc-primary); color: #FFFFFF;
+}
+.pc-btn:hover { background: var(--pc-primary-dark); border-color: var(--pc-primary-dark); }
+.pc-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+.pc-btn--secondary { background: var(--pc-surface); color: var(--pc-primary); }
+.pc-btn--secondary:hover { background: #EDF2F7; color: var(--pc-primary-dark); }
+.pc-btn--small { min-height: 44px; padding: 6px 14px; font-size: 0.95em; }
+
+/* Formulare */
+.pc-root label { font-weight: 600; display: block; margin-bottom: 6px; }
+.pc-root input[type='text'],
+.pc-root input[type='number'],
+.pc-root input[type='date'],
+.pc-root input[type='time'],
+.pc-root select,
+.pc-root textarea {
+  width: 100%; min-height: 48px;
+  font-size: 1em; font-family: inherit;
+  padding: 10px 12px; margin-bottom: 16px;
+  border: 2px solid var(--pc-border); border-radius: 8px;
+  background: var(--pc-surface); color: var(--pc-text);
+}
+.pc-root textarea { min-height: 96px; }
+
+.pc-fieldset { border: 2px solid var(--pc-border); border-radius: 10px; padding: 16px; margin: 0 0 16px; }
+.pc-fieldset legend { font-weight: 700; padding: 0 8px; }
+
+/* Radio-Skala (Assessment/Belastung): große klickbare Optionen */
+.pc-scale { display: flex; flex-direction: column; gap: 8px; margin-bottom: 8px; }
+.pc-scale-option {
+  display: flex; align-items: center; gap: 12px;
+  border: 2px solid var(--pc-border); border-radius: 10px;
+  padding: 10px 14px; min-height: 48px; cursor: pointer;
+  font-weight: 500; margin-bottom: 0;
+}
+.pc-scale-option input { width: 24px; height: 24px; margin: 0; accent-color: var(--pc-primary); flex-shrink: 0; }
+.pc-scale-option:has(input:checked) { border-color: var(--pc-primary); background: #E8F0F9; }
+.pc-root[data-pc-kontrast='true'] .pc-scale-option:has(input:checked) { background: #D6E4FF; }
+
+/* Checkbox-Zeilen (Checklisten, Erledigungen) */
+.pc-check-row {
+  display: flex; align-items: center; gap: 12px;
+  min-height: 48px; padding: 8px 4px;
+  border-bottom: 1px solid var(--pc-border);
+  font-weight: 500; margin-bottom: 0; cursor: pointer;
+}
+.pc-check-row input { width: 26px; height: 26px; margin: 0; accent-color: var(--pc-ok); flex-shrink: 0; }
+
+/* Status-Meldungen */
+.pc-feedback { border-radius: 10px; padding: 14px 16px; margin: 12px 0; font-weight: 600; border: 2px solid; }
+.pc-feedback--ok { color: var(--pc-ok); border-color: var(--pc-ok); background: #F0FAF4; }
+.pc-feedback--error { color: var(--pc-error); border-color: var(--pc-error); background: #FDF2F2; }
+.pc-feedback--info { color: var(--pc-text-soft); border-color: var(--pc-border); background: var(--pc-surface); }
+
+/* Badges */
+.pc-badge {
+  display: inline-block; padding: 4px 12px; border-radius: 999px;
+  font-size: 0.85em; font-weight: 700; border: 2px solid var(--pc-border);
+  color: var(--pc-text-soft); background: var(--pc-surface);
+}
+.pc-badge--entwurf { border-color: var(--pc-warn); color: var(--pc-warn); }
+
+/* Tabellen (Verlauf) */
+.pc-table-wrap { overflow-x: auto; }
+.pc-table { border-collapse: collapse; width: 100%; }
+.pc-table th, .pc-table td { border: 1px solid var(--pc-border); padding: 10px 12px; text-align: left; }
+.pc-table th { background: #EDF2F7; }
+.pc-root[data-pc-kontrast='true'] .pc-table th { background: #FFFFFF; }
+
+/* Fußbereich */
+.pc-footer {
+  border-top: 2px solid var(--pc-border);
+  background: var(--pc-surface);
+  padding: 24px 16px 40px;
+  color: var(--pc-text-soft);
+  font-size: 0.95em;
+}
+.pc-footer-inner { max-width: 860px; margin: 0 auto; }
+
+/* Reduzierte Bewegung respektieren */
+@media (prefers-reduced-motion: reduce) {
+  .pc-root * { animation: none !important; transition: none !important; }
+}
+
+/* Druckansicht (Bericht als PDF über Drucken) */
+@media print {
+  .pc-header, .pc-nav, .pc-footer, .pc-no-print { display: none !important; }
+  .pc-root { background: #fff; font-size: 12pt; }
+  .pc-card { border: 1px solid #000; break-inside: avoid; }
+}

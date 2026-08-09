@@ -1,6 +1,7 @@
 'use client'
 
 import dynamic from 'next/dynamic'
+import { usePathname } from 'next/navigation'
 
 // ═══ LAZY-LOADED CLIENT COMPONENTS ═══
 // Next.js 16: dynamic() mit { ssr: false } ist nur in Client Components erlaubt.
@@ -22,6 +23,24 @@ const BeratungsChat = dynamic(() => import('@/components/BeratungsChat'), { ssr:
 const InstallPrompt = dynamic(() => import('@/components/InstallPrompt'), { ssr: false })
 
 export default function ClientSideProviders() {
+  const pathname = usePathname()
+
+  // DiPA "Digitaler PflegeCoach": tracker- und werbefrei (DiPAV Anlage 2).
+  // Es bleiben nur funktionale Provider (Session, ServiceWorker, Push für
+  // Erinnerungen, Capacitor-Links) — KEINE Pixel, KEIN Marketing-Widget,
+  // kein Cookie-Banner (es werden dort keine Tracking-Cookies gesetzt).
+  if (pathname.startsWith('/pflegecoach')) {
+    return (
+      <>
+        <SessionKeepAlive />
+        <CapacitorLinkInterceptor />
+        <ServiceWorkerRegister />
+        <PushProvider />
+        <NativePushProvider />
+      </>
+    )
+  }
+
   return (
     <>
       <WebVitalsReporter />
