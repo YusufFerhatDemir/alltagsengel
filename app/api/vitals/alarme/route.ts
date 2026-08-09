@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requirePflegeAdmin } from '@/lib/pflege/api-auth'
 import { berechneAktuelleAlarme, listThresholds, listVitals } from '@/lib/vitals/vitals'
+import { grenzwertAlarmeAktiv } from '@/lib/vitals/config'
 
 /**
  * GET — Aktive Grenzwert-Alarme der Organisation.
@@ -12,6 +13,12 @@ export async function GET(request: Request) {
   try {
     const auth = await requirePflegeAdmin()
     if (!auth.ok) return auth.response
+
+    // MDR-Kill-Switch: Ohne regulatorische Freigabe werden keine Alarme
+    // berechnet oder ausgeliefert (s. lib/vitals/config.ts).
+    if (!grenzwertAlarmeAktiv()) {
+      return NextResponse.json({ alarme: [], alarmeAktiv: false, zeitfensterTage: 0, messungenGeprueft: 0 })
+    }
 
     const params = new URL(request.url).searchParams
     const tage = Math.min(Number(params.get('tage')) || 7, 90)
@@ -24,7 +31,7 @@ export async function GET(request: Request) {
     ])
 
     const alarme = berechneAktuelleAlarme(messungen, grenzwerte)
-    return NextResponse.json({ alarme, zeitfensterTage: tage, messungenGeprueft: messungen.length })
+    return NextResponse.json({ alarme, alarmeAktiv: true, zeitfensterTage: tage, messungenGeprueft: messungen.length })
   } catch (err) {
     return NextResponse.json({ error: (err as Error).message }, { status: 500 })
   }

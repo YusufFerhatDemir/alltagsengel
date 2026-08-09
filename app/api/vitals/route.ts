@@ -3,6 +3,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import { requirePflegeAdmin, requirePflegeUser } from '@/lib/pflege/api-auth'
 import { bewerteMesswert, createVital, listThresholds, listVitals } from '@/lib/vitals/vitals'
+import { grenzwertAlarmeAktiv } from '@/lib/vitals/config'
 import type { VitalTyp } from '@/lib/vitals/types'
 
 export async function GET(request: Request) {
@@ -21,7 +22,7 @@ export async function GET(request: Request) {
       limit: params.get('limit') ? Number(params.get('limit')) : undefined,
     })
 
-    return NextResponse.json({ messungen })
+    return NextResponse.json({ messungen, alarmeAktiv: grenzwertAlarmeAktiv() })
   } catch (err) {
     return NextResponse.json({ error: (err as Error).message }, { status: 500 })
   }
@@ -70,6 +71,13 @@ export async function POST(request: Request) {
       notizen: body.notizen,
     })
 
+    // MDR-Kill-Switch: Die automatische Grenzwert-Bewertung ist eine
+    // potenzielle Medizinprodukt-Funktion und bleibt aus, bis regulatorisch
+    // freigegeben. Die Messung wird trotzdem gespeichert (Dokumentation).
+    if (!grenzwertAlarmeAktiv()) {
+      return NextResponse.json({ messung, bewertung: null, alarmeAktiv: false })
+    }
+
     // Grenzwerte mit Service-Role lesen: der Alarm gehört zur Antwort,
     // unabhängig davon, ob der Erfasser die Grenzwert-Tabelle sehen darf.
     const grenzwerte = await listThresholds(createAdminClient(), messung.organization_id, messung.client_id)
@@ -80,7 +88,7 @@ export async function POST(request: Request) {
       grenzwert,
     )
 
-    return NextResponse.json({ messung, bewertung })
+    return NextResponse.json({ messung, bewertung, alarmeAktiv: true })
   } catch (err) {
     return NextResponse.json({ error: (err as Error).message }, { status: 400 })
   }

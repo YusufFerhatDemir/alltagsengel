@@ -13,6 +13,7 @@ import {
   validierePlausibilitaet,
 } from '../vitals'
 import { VITAL_TYPEN, VITAL_TYP_WERTE, assertVitalTyp, type VitalSign } from '../types'
+import { VITALS_ALARM_ENV, grenzwertAlarmeAktiv } from '../config'
 
 // ── Typ-Konfiguration ────────────────────────────────────────────
 
@@ -189,6 +190,34 @@ test('berechneAktuelleAlarme: kritische Alarme stehen vor Warnungen', () => {
   assert.equal(alarme.length, 2)
   assert.equal(alarme[0].bewertung.stufe, 'kritisch')
   assert.equal(alarme[1].bewertung.stufe, 'warnung')
+})
+
+// ── MDR-Kill-Switch: grenzwertAlarmeAktiv ────────────────────────
+
+test('grenzwertAlarmeAktiv ist fail-closed: unset → false', () => {
+  const vorher = process.env[VITALS_ALARM_ENV]
+  try {
+    delete process.env[VITALS_ALARM_ENV]
+    assert.equal(grenzwertAlarmeAktiv(), false)
+  } finally {
+    if (vorher === undefined) delete process.env[VITALS_ALARM_ENV]
+    else process.env[VITALS_ALARM_ENV] = vorher
+  }
+})
+
+test('grenzwertAlarmeAktiv nur bei exakt "true" aktiv', () => {
+  const vorher = process.env[VITALS_ALARM_ENV]
+  try {
+    for (const wert of ['false', '1', 'yes', 'TRUE', 'on', '']) {
+      process.env[VITALS_ALARM_ENV] = wert
+      assert.equal(grenzwertAlarmeAktiv(), false, `"${wert}" darf nicht aktivieren`)
+    }
+    process.env[VITALS_ALARM_ENV] = 'true'
+    assert.equal(grenzwertAlarmeAktiv(), true)
+  } finally {
+    if (vorher === undefined) delete process.env[VITALS_ALARM_ENV]
+    else process.env[VITALS_ALARM_ENV] = vorher
+  }
 })
 
 // ── createVital (Insert-Payload) ─────────────────────────────────

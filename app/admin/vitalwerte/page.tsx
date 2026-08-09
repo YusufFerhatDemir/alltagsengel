@@ -17,6 +17,7 @@ const STUFEN_FARBE = { warnung: '#E8A000', kritisch: '#D04B3B' }
 export default function AdminVitalwertePage() {
   const [klienten, setKlienten] = useState<PflegeUebersichtZeile[]>([])
   const [alarme, setAlarme] = useState<KlientenAlarm[]>([])
+  const [alarmeAktiv, setAlarmeAktiv] = useState(false)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [search, setSearch] = useState('')
@@ -31,6 +32,7 @@ export default function AdminVitalwertePage() {
         if (aBody.error) { setError(aBody.error); return }
         setKlienten(kBody.uebersicht || [])
         setAlarme(aBody.alarme || [])
+        setAlarmeAktiv(Boolean(aBody.alarmeAktiv))
       })
       .catch(() => setError('Laden fehlgeschlagen.'))
       .finally(() => setLoading(false))
@@ -62,14 +64,24 @@ export default function AdminVitalwertePage() {
         <div>
           <h1>Vitalwerte</h1>
           <p className="admin-subtitle">
-            {klienten.length} Klienten · {alarme.length} aktive Alarme ({kritische.length} kritisch)
+            {klienten.length} Klienten · {alarmeAktiv
+              ? `${alarme.length} aktive Alarme (${kritische.length} kritisch)`
+              : 'Dokumentation & Verlauf'}
           </p>
         </div>
       </div>
 
       {error && <Banner tone="danger">{error}</Banner>}
 
-      {kritische.length > 0 && (
+      {!alarmeAktiv && (
+        <Banner tone="info">
+          Die automatische <strong>Grenzwert-Alarmfunktion ist deaktiviert</strong> (regulatorische
+          Medizinprodukt-Prüfung ausstehend). Vitalwerte werden erfasst und als Verlauf dargestellt;
+          es findet keine automatische klinische Bewertung statt.
+        </Banner>
+      )}
+
+      {alarmeAktiv && kritische.length > 0 && (
         <Banner tone="danger">
           <strong>{kritische.length} kritische{kritische.length === 1 ? 'r' : ''} Alarm{kritische.length === 1 ? '' : 'e'}:</strong>{' '}
           {kritische.slice(0, 3).map(a => a.bewertung.meldungen[0]).join(' · ')}
@@ -96,19 +108,20 @@ export default function AdminVitalwertePage() {
           }}>
             <div style={{ flex: 1, minWidth: 180 }}>
               <div style={{ fontWeight: 600 }}>{k.first_name} {k.last_name}</div>
-              {klientAlarme.length > 0
-                ? (
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 6 }}>
-                    {klientAlarme.map((a, i) => (
-                      <StatusBadge
-                        key={i}
-                        label={`${VITAL_TYPEN[a.type as VitalTyp]?.label ?? a.type}: ${a.bewertung.stufe}`}
-                        color={STUFEN_FARBE[a.bewertung.stufe as 'warnung' | 'kritisch'] ?? 'var(--border)'}
-                      />
-                    ))}
-                  </div>
-                )
-                : <div style={{ fontSize: 12, color: 'var(--ink5)', marginTop: 4 }}>Keine aktiven Alarme</div>}
+              {alarmeAktiv && klientAlarme.length > 0 && (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 6 }}>
+                  {klientAlarme.map((a, i) => (
+                    <StatusBadge
+                      key={i}
+                      label={`${VITAL_TYPEN[a.type as VitalTyp]?.label ?? a.type}: ${a.bewertung.stufe}`}
+                      color={STUFEN_FARBE[a.bewertung.stufe as 'warnung' | 'kritisch'] ?? 'var(--border)'}
+                    />
+                  ))}
+                </div>
+              )}
+              {alarmeAktiv && klientAlarme.length === 0 && (
+                <div style={{ fontSize: 12, color: 'var(--ink5)', marginTop: 4 }}>Keine aktiven Alarme</div>
+              )}
             </div>
             <Link href={`/admin/vitalwerte/${k.client_id}`} style={pflegeSecondaryBtn}>Vitalwerte →</Link>
           </div>
