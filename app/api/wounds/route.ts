@@ -37,6 +37,17 @@ export async function POST(request: Request) {
     }
 
     const admin = createAdminClient()
+    // Mandantenschutz: der Klient muss zur aktiven Organisation gehören.
+    const { data: client } = await admin
+      .from('clients')
+      .select('id')
+      .eq('id', body.clientId)
+      .eq('organization_id', organizationId)
+      .maybeSingle()
+    if (!client) {
+      return NextResponse.json({ error: 'Klient nicht gefunden.' }, { status: 404 })
+    }
+
     const wunde = await createWound(admin, {
       organizationId,
       clientId: body.clientId,
