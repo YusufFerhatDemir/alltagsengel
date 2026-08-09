@@ -183,6 +183,31 @@ CREATE TRIGGER trg_locked_sis_risikomatrix
 -- ═══════════════════════════════════════════════════════════════════════════
 -- TEIL 6: RLS
 -- ═══════════════════════════════════════════════════════════════════════════
+-- Der Engel-Zugriff läuft über einen SECURITY-DEFINER-Helper statt über eine
+-- assignments-Subquery in der Policy: die assignments-Policies enthalten
+-- profiles-Subqueries, und jede Policy, die assignments direkt subqueryt,
+-- läuft in die bekannte 42P17-Rekursion (in der Shadow-DB reproduziert).
+-- DEFINER umgeht die RLS der nachgeschlagenen Tabellen und bricht den Zyklus.
+
+CREATE OR REPLACE FUNCTION public.engel_hat_aktiven_klienten(p_client_id uuid)
+RETURNS boolean
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT EXISTS (
+    SELECT 1
+    FROM assignments a
+    JOIN caregivers cg ON cg.id = a.caregiver_id
+    WHERE a.client_id = p_client_id
+      AND cg.user_id = auth.uid()
+      AND a.status IN ('active','GEPLANT','BESTAETIGT','UNTERWEGS','GESTARTET')
+  );
+$$;
+
+REVOKE ALL ON FUNCTION public.engel_hat_aktiven_klienten(uuid) FROM public, anon;
+GRANT EXECUTE ON FUNCTION public.engel_hat_aktiven_klienten(uuid) TO authenticated, service_role;
 
 ALTER TABLE sis_assessments  ENABLE ROW LEVEL SECURITY;
 ALTER TABLE sis_themenfelder ENABLE ROW LEVEL SECURITY;
@@ -217,33 +242,26 @@ DO $$ BEGIN
       USING (organization_id = current_org_id());
   END IF;
 
-  -- Engel: Lesezugriff auf SIS ihrer aktiv zugewiesenen Kunden
-  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'sis_assessments' AND policyname = 'engel_sis_assessments_select') THEN
-    CREATE POLICY engel_sis_assessments_select ON sis_assessments FOR SELECT
-      USING (client_id IN (
-        SELECT a.client_id FROM assignments a
-        JOIN caregivers cg ON cg.id = a.caregiver_id
-        WHERE cg.user_id = auth.uid() AND a.status IN ('active','GEPLANT','BESTAETIGT','UNTERWEGS','GESTARTET')
-      ));
-  END IF;
-  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'sis_themenfelder' AND policyname = 'engel_sis_themenfelder_select') THEN
-    CREATE POLICY engel_sis_themenfelder_select ON sis_themenfelder FOR SELECT
-      USING (assessment_id IN (
-        SELECT s.id FROM sis_assessments s
-        JOIN assignments a ON a.client_id = s.client_id
-        JOIN caregivers cg ON cg.id = a.caregiver_id
-        WHERE cg.user_id = auth.uid() AND a.status IN ('active','GEPLANT','BESTAETIGT','UNTERWEGS','GESTARTET')
-      ));
-  END IF;
-  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'sis_risikomatrix' AND policyname = 'engel_sis_risikomatrix_select') THEN
-    CREATE POLICY engel_sis_risikomatrix_select ON sis_risikomatrix FOR SELECT
-      USING (assessment_id IN (
-        SELECT s.id FROM sis_assessments s
-        JOIN assignments a ON a.client_id = s.client_id
-        JOIN caregivers cg ON cg.id = a.caregiver_id
-        WHERE cg.user_id = auth.uid() AND a.status IN ('active','GEPLANT','BESTAETIGT','UNTERWEGS','GESTARTET')
-      ));
-  END IF;
+  -- Engel: Lesezugriff auf SIS ihrer aktiv zugewiesenen Kunden.
+  -- DROP+CREATE statt IF-NOT-EXISTS: ersetzt bewusst frühere Fassungen
+  -- dieser Policies (Subquery-Variante → 42P17, s. Kopfkommentar TEIL 6).
+  DROP POLICY IF EXISTS engel_sis_assessments_select ON sis_assessments;
+  CREATE POLICY engel_sis_assessments_select ON sis_assessments FOR SELECT
+    USING (engel_hat_aktiven_klienten(client_id));
+
+  DROP POLICY IF EXISTS engel_sis_themenfelder_select ON sis_themenfelder;
+  CREATE POLICY engel_sis_themenfelder_select ON sis_themenfelder FOR SELECT
+    USING (EXISTS (
+      SELECT 1 FROM sis_assessments s
+      WHERE s.id = assessment_id AND engel_hat_aktiven_klienten(s.client_id)
+    ));
+
+  DROP POLICY IF EXISTS engel_sis_risikomatrix_select ON sis_risikomatrix;
+  CREATE POLICY engel_sis_risikomatrix_select ON sis_risikomatrix FOR SELECT
+    USING (EXISTS (
+      SELECT 1 FROM sis_assessments s
+      WHERE s.id = assessment_id AND engel_hat_aktiven_klienten(s.client_id)
+    ));
 END $$;
 
 -- ═══════════════════════════════════════════════════════════════════════════
