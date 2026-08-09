@@ -114,6 +114,7 @@ const navGroups = [
       { href: '/admin/pflegedoku', label: 'Pflegedokumentation', icon: <IconHeart size={18} /> },
       { href: '/admin/wunddokumentation', label: 'Wunddokumentation', icon: <IconHeart size={18} /> },
       { href: '/admin/vitalwerte', label: 'Vitalwerte', icon: <IconHeart size={18} /> },
+      { href: '/admin/medikamente', label: 'Medikamente', icon: <IconHeart size={18} /> },
       { href: '/admin/sis', label: 'SIS', icon: <IconClipboard size={18} /> },
       { href: '/admin/vertraege', label: 'Verträge', icon: <IconDocument size={18} /> },
       { href: '/admin/dokumente', label: 'Dokumente', icon: <IconDocument size={18} /> },
