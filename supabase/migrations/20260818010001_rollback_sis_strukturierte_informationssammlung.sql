@@ -18,3 +18,7 @@ DROP FUNCTION IF EXISTS prevent_locked_sis_edit();
 DROP TABLE IF EXISTS sis_risikomatrix;
 DROP TABLE IF EXISTS sis_themenfelder;
 DROP TABLE IF EXISTS sis_assessments;
+
+-- Nach den Tabellen: die Engel-Policies hingen an dieser Funktion und sind
+-- mit den Tabellen gefallen — jetzt hat sie keine Abhängigen mehr.
+DROP FUNCTION IF EXISTS public.engel_hat_aktiven_klienten(uuid);
