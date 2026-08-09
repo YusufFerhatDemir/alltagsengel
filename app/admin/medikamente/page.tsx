@@ -150,7 +150,7 @@ export default function AdminMedikamentePage() {
         </button>
       </div>
 
-      {error && <Banner variant="error">{error}</Banner>}
+      {error && <Banner tone="danger">{error}</Banner>}
 
       {/* Neu-Anlage-Formular */}
       {showForm && (
@@ -299,7 +299,7 @@ export default function AdminMedikamentePage() {
                 <td className="px-4 py-3">{KATEGORIEN[m.kategorie] || m.kategorie}</td>
                 <td className="px-4 py-3">{zeitenLabel(m)}</td>
                 <td className="px-4 py-3">
-                  <StatusBadge color={STATUS_FARBE[m.status] || '#A0AEC0'}>{m.status}</StatusBadge>
+                  <StatusBadge label={m.status} color={STATUS_FARBE[m.status] || '#A0AEC0'} />
                 </td>
                 <td className="px-4 py-3">
                   <div className="flex gap-2">
