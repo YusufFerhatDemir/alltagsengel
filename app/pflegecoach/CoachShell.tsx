@@ -11,6 +11,7 @@ import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import type { CoachSchriftgrad } from '@/lib/coach/types'
+import { COACH_PRODUKT_NAME, COACH_PRODUKT_VERSION } from '@/lib/coach/version'
 
 const SCALE: Record<CoachSchriftgrad, number> = { normal: 1, gross: 1.2, sehr_gross: 1.45 }
 
@@ -137,6 +138,9 @@ export default function CoachShell({ children }: { children: React.ReactNode }) 
             <Link href="/pflegecoach/datenschutz">Datenschutz</Link>{' · '}
             <Link href="/impressum">Impressum</Link>{' · '}
             <Link href="/pflegecoach/einstellungen">Datenexport &amp; Einwilligungen</Link>
+          </p>
+          <p aria-label="Produktversion">
+            {COACH_PRODUKT_NAME} — Version {COACH_PRODUKT_VERSION} · Hersteller: Alltagsengel UG (haftungsbeschränkt)
           </p>
         </div>
       </footer>

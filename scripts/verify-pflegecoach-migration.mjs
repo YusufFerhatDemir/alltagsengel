@@ -44,7 +44,7 @@ async function orakel(label, sqlAusdruck) {
 console.log('— PflegeCoach-Migrations-Verifikation (read-only) —')
 await orakel('DB-Rolle von _run_sql', 'SELECT current_user::text')
 await orakel('CREATE-Recht auf public', "SELECT has_schema_privilege(current_user,'public','CREATE')::text")
-const tabellen = ['coach_users','coach_consents','coach_shares','coach_assessments','coach_goals','coach_activities','coach_activity_log','coach_measurements','coach_reports']
+const tabellen = ['coach_users','coach_consents','coach_shares','coach_assessments','coach_goals','coach_activities','coach_activity_log','coach_measurements','coach_reports','coach_audit_log']
 let vorhanden = 0
 for (const t of tabellen) {
   const w = await orakel(`Tabelle ${t}`, `SELECT (to_regclass('public.${t}') IS NOT NULL)::text`)
@@ -53,7 +53,7 @@ for (const t of tabellen) {
 if (vorhanden === tabellen.length) {
   await orakel('RLS aktiv auf allen coach_*', `SELECT (count(*) = ${tabellen.length})::text FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='public' AND c.relname LIKE 'coach\\_%' AND c.relrowsecurity`)
   await orakel('anon-Grants auf coach_* (soll 0)', `SELECT count(*)::text FROM information_schema.role_table_grants WHERE grantee='anon' AND table_schema='public' AND table_name LIKE 'coach\\_%'`)
-  await orakel('Policies auf coach_* (soll >= 18)', `SELECT count(*)::text FROM pg_policies WHERE schemaname='public' AND tablename LIKE 'coach\\_%'`)
+  await orakel('Policies auf coach_* (soll >= 19)', `SELECT count(*)::text FROM pg_policies WHERE schemaname='public' AND tablename LIKE 'coach\\_%'`)
 }
 console.log(`Ergebnis: ${vorhanden}/${tabellen.length} coach_-Tabellen vorhanden`)
 process.exit(vorhanden === tabellen.length ? 0 : 2)

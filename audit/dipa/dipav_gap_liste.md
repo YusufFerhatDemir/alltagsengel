@@ -20,13 +20,18 @@ API `/api/coach/*`, Migration `20260819010000`).
 | Menschenlesbarer Bericht | `/pflegecoach/bericht` (unveränderliche Snapshots, Druck/PDF) |
 | Barrierefreiheits-Grundausstattung | Schriftskalierung (3 Stufen, serverseitig gespeichert), Kontrastmodus, Fokus-Stile, Touch-Ziele ≥ 48 px, Skip-Link, ARIA-Landmarks, `prefers-reduced-motion`, helles UI ohne Dark-Zwang |
 | MDR-Negativabgrenzung technisch verankert | Regelbasierte, rein organisatorische Empfehlungs-Engine mit Verbotsliste (`lib/coach/empfehlungen.ts`), statische Notfall-/Beratungshinweise |
-| Unit-Tests der Produktlogik | 25 Tests (`lib/coach/*.test.ts`) |
+| Unit-Tests der Produktlogik | 27 Tests (`lib/coach/*.test.ts`) inkl. Export-Schema-Konformanz |
+| Auditierbarkeit | `coach_audit_log` (append-only, Metadaten ohne Datenwerte, Trigger auf allen 9 Datentabellen), per Shadow-Tests P7 verifiziert |
+| Klare Produktversion | `lib/coach/version.ts` (SemVer 0.1.0), ausgewiesen in UI-Fußzeile, Export und Berichten; `CHANGELOG_pflegecoach.md` |
+| Interoperabilität (Basis) | Veröffentlichtes JSON-Schema `lib/coach/export.schema.json` + Konformanz-Test; FHIR offen (GAP-INTEROP) |
+| Rollen/Rechte-Tests | `supabase/shadow/50_pflegecoach_tests.sql` — 39/39 PASS (eigen/fremd/admin/anon/Freigabe/Widerruf/Unveränderlichkeit/Audit) |
+| Security-Review (intern) | `security_review_pflegecoach.md` — PASS mit Auflagen (MFA, TR-03161, externes Review) |
 
 ## Offene Gaps
 
 | ID | Gap | Kategorie | Schwere | Nächster Schritt |
 |---|---|---|---|---|
-| GAP-DB | Migration `20260819010000` ist NICHT auf Production angewendet (kein DDL-Weg aus der Agent-Umgebung: `_run_sql` läuft als `service_role` ohne CREATE auf `public`; kein Supabase-MCP/CLI-Token) | Betrieb | **Blocker für jede Nutzung** | Apply via Supabase SQL Editor oder MCP-Session; danach `node scripts/verify-pflegecoach-migration.mjs` |
+| GAP-DB | Migration `20260819010000` ist NICHT auf Production angewendet — zunächst technisch blockiert (`_run_sql` als `service_role` ohne CREATE auf `public`), seit 09.08. zusätzlich **ausdrücklich gesperrt** (Anweisung: keine Produktionsmigration). Auf Shadow-DB vollständig verifiziert (Build/Idempotenz/Rollback/39 RLS-Tests) | Betrieb | **Blocker für jede Nutzung** | Nach Freigabe: Apply via Supabase SQL Editor/MCP; danach `node scripts/verify-pflegecoach-migration.mjs` |
 | GAP-TR03161 | Kein BSI-TR-03161-Zertifikat, keine Prüfstellen-Beauftragung (Pflicht für Neuaufnahme seit 01.01.2025) | Datensicherheit | Kritisch (Monate Vorlauf) | Prüfstelle anfragen; Geltung für vorläufige Aufnahme klären (Frage 9) |
 | GAP-ISMS | Kein ISO-27001-ISMS, kein dokumentierter Pentest | Datensicherheit | Hoch | ISMS-Beratung; Scope-Frage (Frage 11); ORF-2 |
 | GAP-MFA | Kein zweiter Faktor in der Authentifizierung (TR-03161-relevant); Investor-Seite behauptet MFA — Widerspruch beseitigen | Datensicherheit | Hoch | MFA für PflegeCoach-Nutzer einplanen; `app/investor/en/product-technology/page.tsx:186` korrigieren |
@@ -41,6 +46,9 @@ API `/api/coach/*`, Migration `20260819010000`).
 | GAP-PUSH | Erinnerungen sind geplante Aktivitäten ohne Push-/Lokalbenachrichtigung | Produkt | Niedrig (Komfort) | Push-Integration nach Pilot-Feedback |
 | GAP-SHARES-UI | Datenfreigabe (`coach_shares`) ist im Datenmodell + RLS + Consent-Typ vorhanden, aber ohne Verwaltungs-UI (Einladen/Widerrufen per Oberfläche) | Produkt | Mittel | Freigabe-UI in Einstellungen ergänzen |
 | GAP-EVAL | Evaluationskonzept nicht einreichungsreif (kein Partner, kein Ethikvotum, ORF-10 offen) | Evidenz | Hoch (vor Antrag) | Siehe `evaluationskonzept.md` §6 |
+| GAP-E2E | Kein Browser-E2E-Test für `/pflegecoach` (Playwright im Repo vorhanden); UI bisher nur statisch geprüft | Qualität | Mittel | E2E-Suite gegen Preview nach Live-Apply; Screenreader-Durchgang |
+| GAP-EXT-REVIEW | Security-Review ist ein Selbst-Review (gleicher Autor wie Code) | Datensicherheit | Mittel (vor Pilot) | Externes Review/Pentest beauftragen |
+| GAP-QMS | Kein formales QMS/Risikomanagement-System dokumentiert (Anlage 1 DiPAV orientiert sich an MDR-Klasse-I: QMS, Risikomanagement, Lebenszyklus-Prozesse). Bausteine existieren (Changelog/Versionierung, Review-Doku, Test-Gates, Audit-Log), sind aber nicht als QMS verfasst | Qualität | Hoch (vor Antrag) | QMS-Handbuch (schlank, produktbezogen) + Risikoakte erstellen; ggf. mit ISMS-Beratung (GAP-ISMS) bündeln |
 
 ## Referenz: offene regulatorische Fragen (ORF)
 

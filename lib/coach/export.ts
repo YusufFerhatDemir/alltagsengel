@@ -12,6 +12,7 @@ import type {
   CoachActivity, CoachActivityLog, CoachAssessment, CoachConsent,
   CoachGoal, CoachMeasurement, CoachReport, CoachUser,
 } from './types'
+import { COACH_PRODUKT_NAME, COACH_PRODUKT_VERSION } from './version'
 
 export const EXPORT_FORMAT = 'de.alltagsengel.pflegecoach.export'
 export const EXPORT_VERSION = '1.0'
@@ -38,6 +39,7 @@ export function buildExport(input: CoachExportInput) {
   return {
     format: EXPORT_FORMAT,
     version: EXPORT_VERSION,
+    produkt: { name: COACH_PRODUKT_NAME, version: COACH_PRODUKT_VERSION },
     exportiert_am: input.exportiertAm,
     hinweis:
       'Vollständiger Export Ihrer Daten aus dem Digitalen PflegeCoach (Art. 20 DSGVO). ' +
@@ -133,6 +135,7 @@ export function buildVerlaufsbericht(input: {
 
   const logs = imZeitraum(input.activityLog, 'datum')
   return {
+    produkt: { name: COACH_PRODUKT_NAME, version: COACH_PRODUKT_VERSION },
     zeitraum: { von: input.von, bis: input.bis },
     assessments: imZeitraum(input.assessments, 'erhoben_am').map(a => ({
       typ: a.assessment_typ, erhoben_am: a.erhoben_am,
