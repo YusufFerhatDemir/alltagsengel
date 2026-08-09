@@ -377,39 +377,37 @@ Siehe Modul 15 (Angehörigenzugang). Migration `20260819010000_pflegecoach_dipa_
 
 | # | Modul | Status | Tests |
 |---|---|---|---|
-| 1 | Tourenplanung | IN ARBEIT | 2 |
-| 2 | SIS | FERTIG | 1 |
-| 3 | Pflegeplanung | FERTIG | 4 |
-| 4 | Maßnahmenplanung | FERTIG | 1 |
-| 5 | Pflegeberichte | FERTIG | 1 |
+| 1 | Tourenplanung | FERTIG (42c3dde) | 22 |
+| 2 | SIS | FERTIG | 18 |
+| 3 | Pflegeplanung | FERTIG | 16 |
+| 4 | Maßnahmenplanung | FERTIG | 10 |
+| 5 | Pflegeberichte | FERTIG | 11 |
 | 6 | Leistungsnachweise | FERTIG | 0 |
-| 7 | Vitalwerte | FERTIG (Fix unstaged) | 1 |
-| 8 | Wunddokumentation | FERTIG | 3 |
-| 9 | Medikamentenmanagement | FEHLT | 0 |
-| 10 | Aufgaben/Übergaben/Eskalationen | FERTIG | 12 |
-| 11 | Mitarbeiterverwaltung | FERTIG | 6 |
-| 12 | Dienst-/Schichtplanung | TEILWEISE | 1 |
-| 13 | Urlaubs-/Krankheitsmanagement | FERTIG | 2 |
-| 14 | Kunden-/Klientenakte | FERTIG | 4 |
-| 15 | Angehörigenzugang | FERTIG | 4 |
-| 16 | Dokumentenmanagement | FERTIG | 1 |
-| 17 | Digitale Signaturen | TEILWEISE | 0 |
-| 18 | Rollen-/Rechtesystem/RLS | FERTIG | 13 |
-| 19 | Audit-Logs | FERTIG | 0 |
-| 20 | Abrechnung | FERTIG | 21 |
-| 21 | Rechnungen/Korrekturen/OPOS | FERTIG | - |
-| 22 | DTA/Datenaustausch | FERTIG | 2 |
-| 23 | IK-/Kostenträgerverwaltung | FERTIG | 0 |
-| 24 | DiPA/PflegeCoach | FERTIG | 4 |
-| 25 | Readiness-Dashboard | FERTIG | 0 |
-| 26 | Warnungen/Fristen/Eskalationen | FERTIG | 10 |
-| 27 | Mobile/Offline | TEILWEISE | 0 |
+| 7 | Vitalwerte | FERTIG (42c3dde) | 26 |
+| 8 | Wunddokumentation | FERTIG | 20 |
+| 9 | Medikamentenmanagement | FERTIG (fc06ea5) | 20 |
+| 10 | Aufgaben/Übergaben/Eskalationen | FERTIG | 87+ |
+| 11 | Mitarbeiterverwaltung | FERTIG | 17+ |
+| 12 | Dienst-/Schichtplanung | FERTIG | 5 |
+| 13 | Urlaubs-/Krankheitsmanagement | FERTIG | 17 |
+| 14 | Kunden-/Klientenakte | FERTIG | 28 |
+| 15 | Angehörigenzugang | TEILWEISE | — |
+| 16 | Dokumentenmanagement | FERTIG | 11+ |
+| 17 | Digitale Signaturen | TEILWEISE | — |
+| 18 | Rollen-/Rechtesystem/RLS | FERTIG | 50+ |
+| 19 | Audit-Logs | FERTIG | 37+ |
+| 20 | Abrechnung | FERTIG | 100+ |
+| 21 | Rechnungen/Korrekturen/OPOS | FERTIG | — |
+| 22 | DTA/Datenaustausch | FERTIG | 7+ |
+| 23 | IK-/Kostenträgerverwaltung | FERTIG | 27+ |
+| 24 | DiPA/PflegeCoach | FERTIG | 39 |
+| 25 | Readiness-Dashboard | FERTIG | 23+ |
+| 26 | Warnungen/Fristen/Eskalationen | FERTIG | 70+ |
+| 27 | Mobile/Offline | TEILWEISE | — |
 
-### Ergebnis: 21 FERTIG, 3 TEILWEISE, 1 IN ARBEIT, 2 FEHLT
+### Ergebnis: 24 FERTIG, 3 TEILWEISE
 
-### Prioritäten für Implementierung:
-1. **Unstaged Arbeit sichern**: Tourenplanung, Vitalwerte RLS-Fix, Investor-Page
-2. **Medikamentenmanagement**: Komplett fehlendes kritisches Modul
-3. **Dienstplan-API**: API-Route fehlt für vollständige Schichtplanung
-4. **Digitale Signaturen**: PKI-Stubs und Verifikation fehlen
-5. **Offline-Fähigkeit**: Service Worker (niedrige Priorität — Capacitor reicht zunächst)
+### Verbleibende TEILWEISE Module:
+1. **Angehörigenzugang**: Kein dediziertes Login-Portal für Angehörige (Kontaktpersonen-Verwaltung + PflegeCoach existieren)
+2. **Digitale Signaturen**: Canvas-Signatur funktioniert, aber keine QES/eIDAS-Integration
+3. **Mobile/Offline**: Expo-App + Service Worker + 3-Typ-Offline-Queue, aber keine vollständige Offline-Datenhaltung
