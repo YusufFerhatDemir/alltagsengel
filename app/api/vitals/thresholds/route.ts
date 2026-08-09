@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requirePflegeAdmin } from '@/lib/pflege/api-auth'
 import { deleteThreshold, listThresholds, upsertThreshold } from '@/lib/vitals/vitals'
+import { grenzwertAlarmeAktiv } from '@/lib/vitals/config'
 
 export async function GET(request: Request) {
   try {
@@ -12,7 +13,7 @@ export async function GET(request: Request) {
     const grenzwerte = await listThresholds(
       createAdminClient(), auth.ctx.organizationId, params.get('clientId') ?? undefined,
     )
-    return NextResponse.json({ grenzwerte })
+    return NextResponse.json({ grenzwerte, alarmeAktiv: grenzwertAlarmeAktiv() })
   } catch (err) {
     return NextResponse.json({ error: (err as Error).message }, { status: 500 })
   }

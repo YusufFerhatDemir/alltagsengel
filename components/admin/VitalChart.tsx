@@ -17,10 +17,16 @@ interface Props {
   messungen: VitalSign[]
   /** Effektive Grenzwerte (klientenspezifisch oder Standard); null = keine Bänder. */
   grenzen: (Grenzwerte & { enabled?: boolean }) | null
+  /**
+   * MDR-Kill-Switch: nur wenn true werden Grenzwert-Bänder gezeichnet und
+   * Messpunkte nach Alarmstufe eingefärbt. Fail-closed: ohne explizites true
+   * zeigt der Chart eine reine, neutrale Verlaufskurve (nur Dokumentation).
+   */
+  alarmeAktiv?: boolean
   hoehe?: number
 }
 
-export default function VitalChart({ typ, messungen, grenzen, hoehe = 260 }: Props) {
+export default function VitalChart({ typ, messungen, grenzen, alarmeAktiv = false, hoehe = 260 }: Props) {
   const cfg = VITAL_TYPEN[typ]
   const breite = 720
   const pad = { links: 46, rechts: 12, oben: 12, unten: 28 }
@@ -32,15 +38,20 @@ export default function VitalChart({ typ, messungen, grenzen, hoehe = 260 }: Pro
         t: new Date(m.measured_at).getTime(),
         y: Number(m.value),
         y2: m.value_secondary != null ? Number(m.value_secondary) : null,
-        stufe: bewerteMesswert(typ, Number(m.value), m.value_secondary != null ? Number(m.value_secondary) : null, grenzen ? { ...grenzen, enabled: true } : null).stufe,
+        stufe: alarmeAktiv
+          ? bewerteMesswert(typ, Number(m.value), m.value_secondary != null ? Number(m.value_secondary) : null, grenzen ? { ...grenzen, enabled: true } : null).stufe
+          : 'ok' as const,
       })),
-  [messungen, typ, grenzen])
+  [messungen, typ, grenzen, alarmeAktiv])
 
   if (daten.length === 0) {
     return <p style={{ color: 'var(--muted)', padding: 24, textAlign: 'center' }}>Keine Messungen im gewählten Zeitraum</p>
   }
 
-  const aktiveGrenzen = grenzen && grenzen.enabled !== false ? grenzen : null
+  // Bänder nur bei freigeschalteter Alarmfunktion (MDR). Sonst reine Kurve.
+  const aktiveGrenzen = alarmeAktiv && grenzen && grenzen.enabled !== false ? grenzen : null
+  // Ohne Alarmfunktion neutrale Punktfarbe — kein „grün = ok"-Signal.
+  const punktFarbe = (stufe: 'ok' | 'warnung' | 'kritisch') => (alarmeAktiv ? FARBEN[stufe] : 'var(--gold)')
   const grenzwertZahlen = aktiveGrenzen
     ? [
       aktiveGrenzen.min_warn, aktiveGrenzen.max_warn, aktiveGrenzen.min_critical, aktiveGrenzen.max_critical,
@@ -114,11 +125,11 @@ export default function VitalChart({ typ, messungen, grenzen, hoehe = 260 }: Pro
 
         {daten.map((d, i) => (
           <g key={i}>
-            <circle cx={x(d.t)} cy={y(d.y)} r={4} fill={FARBEN[d.stufe]} stroke="var(--coal2)" strokeWidth={1.5}>
+            <circle cx={x(d.t)} cy={y(d.y)} r={4} fill={punktFarbe(d.stufe)} stroke="var(--coal2)" strokeWidth={1.5}>
               <title>{`${datum(d.t)} · ${d.y.toFixed(cfg.dezimalstellen)}${d.y2 != null ? `/${d.y2.toFixed(cfg.dezimalstellen)}` : ''} ${cfg.einheit}`}</title>
             </circle>
             {d.y2 != null && (
-              <circle cx={x(d.t)} cy={y(d.y2)} r={3} fill={FARBEN[d.stufe]} opacity={0.7} stroke="var(--coal2)" strokeWidth={1} />
+              <circle cx={x(d.t)} cy={y(d.y2)} r={3} fill={punktFarbe(d.stufe)} opacity={0.7} stroke="var(--coal2)" strokeWidth={1} />
             )}
           </g>
         ))}

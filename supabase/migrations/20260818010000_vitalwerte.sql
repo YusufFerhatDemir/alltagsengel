@@ -76,11 +76,10 @@ DO $$ BEGIN
         WHERE cg.user_id = auth.uid() AND a.status IN ('active','GEPLANT','BESTAETIGT','UNTERWEGS','GESTARTET')
       ));
   END IF;
-  -- Kunden sehen ihre eigenen Vitalwerte (lesend)
-  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'vital_signs' AND policyname = 'kunde_vital_signs_select') THEN
-    CREATE POLICY kunde_vital_signs_select ON vital_signs FOR SELECT
-      USING (client_id IN (SELECT c.id FROM clients c WHERE c.user_id = auth.uid()));
-  END IF;
+  -- BEWUSST KEINE Kunden-Lesepolicy: vital_signs.notes kann interne
+  -- Pflegevermerke enthalten, und es gibt keine kundengerichtete UI. Least
+  -- Privilege — eine Kundensicht braucht erst ein Sichtbarkeitsmodell (analog
+  -- pflege_verlauf.sichtbarkeit), dann eine gezielte Policy ohne notes.
 END $$;
 
 DROP TRIGGER IF EXISTS trg_updated_at_vital_signs ON vital_signs;

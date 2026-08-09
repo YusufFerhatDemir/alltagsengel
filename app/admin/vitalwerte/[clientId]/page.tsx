@@ -44,6 +44,7 @@ export default function AdminVitalwerteKlientPage({ params }: { params: Promise<
   const { clientId } = use(params)
   const [messungen, setMessungen] = useState<VitalSign[]>([])
   const [grenzwerte, setGrenzwerte] = useState<VitalSignThreshold[]>([])
+  const [alarmeAktiv, setAlarmeAktiv] = useState(false)
   const [kunde, setKunde] = useState<PflegeUebersichtZeile | null>(null)
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState(false)
@@ -74,6 +75,7 @@ export default function AdminVitalwerteKlientPage({ params }: { params: Promise<
       if (gRes.error) { setError(gRes.error); return }
       setMessungen(mRes.messungen || [])
       setGrenzwerte(gRes.grenzwerte || [])
+      setAlarmeAktiv(Boolean(mRes.alarmeAktiv))
       setKunde((kRes.uebersicht || [])[0] ?? null)
     } catch {
       setError('Laden fehlgeschlagen.')
@@ -130,12 +132,16 @@ export default function AdminVitalwerteKlientPage({ params }: { params: Promise<
       setMessungen(ms => [body.messung, ...ms])
       setForm(LEERES_FORMULAR)
       setZeigeForm(false)
-      if (body.bewertung?.stufe === 'kritisch') {
+      // Alarm-Rückmeldung nur bei freigeschalteter Alarmfunktion (MDR).
+      // Ohne Freigabe kommt bewertung=null — dann neutral quittieren.
+      if (body.alarmeAktiv && body.bewertung?.stufe === 'kritisch') {
         setError(`KRITISCHER WERT: ${body.bewertung.meldungen.join(' · ')}`)
-      } else if (body.bewertung?.stufe === 'warnung') {
+      } else if (body.alarmeAktiv && body.bewertung?.stufe === 'warnung') {
         setHinweis(`Warnung: ${body.bewertung.meldungen.join(' · ')}`)
-      } else {
+      } else if (body.alarmeAktiv) {
         setHinweis('Messung gespeichert — Wert im Normbereich.')
+      } else {
+        setHinweis('Messung gespeichert.')
       }
     } finally { setBusy(false) }
   }
@@ -233,12 +239,17 @@ export default function AdminVitalwerteKlientPage({ params }: { params: Promise<
               </div>
             )}
           >
-            <VitalChart typ={typ} messungen={imZeitraum} grenzen={effektiveGrenzen} />
-            {effektiveGrenzen && (
+            <VitalChart typ={typ} messungen={imZeitraum} grenzen={effektiveGrenzen} alarmeAktiv={alarmeAktiv} />
+            {alarmeAktiv && effektiveGrenzen && (
               <p style={{ fontSize: 11, color: 'var(--ink5)', margin: '8px 0 0' }}>
                 Grenzwerte: {klientGrenzwert?.enabled ? 'klientenspezifisch' : 'Standard'} ·
                 Warnung {effektiveGrenzen.min_warn ?? '–'}–{effektiveGrenzen.max_warn ?? '–'} ·
                 Kritisch {effektiveGrenzen.min_critical ?? '–'}–{effektiveGrenzen.max_critical ?? '–'} {cfg.einheit}
+              </p>
+            )}
+            {!alarmeAktiv && (
+              <p style={{ fontSize: 11, color: 'var(--ink5)', margin: '8px 0 0' }}>
+                Reine Verlaufsdarstellung — keine automatische Grenzwert-Bewertung (Alarmfunktion regulatorisch deaktiviert).
               </p>
             )}
           </Karte>
@@ -246,17 +257,20 @@ export default function AdminVitalwerteKlientPage({ params }: { params: Promise<
           <Karte titel="Messungen">
             {imZeitraum.length === 0 && <p style={{ color: 'var(--muted)', margin: 0 }}>Keine Messungen im Zeitraum</p>}
             {imZeitraum.map(m => {
-              const bewertung = bewerteMesswert(
-                m.type, Number(m.value),
-                m.value_secondary != null ? Number(m.value_secondary) : null,
-                klientGrenzwert)
-              const meta = STUFEN_META[bewertung.stufe]
+              // Bewertung nur bei freigeschalteter Alarmfunktion (MDR).
+              const bewertung = alarmeAktiv
+                ? bewerteMesswert(
+                  m.type, Number(m.value),
+                  m.value_secondary != null ? Number(m.value_secondary) : null,
+                  klientGrenzwert)
+                : null
+              const meta = bewertung ? STUFEN_META[bewertung.stufe] : null
               return (
                 <div key={m.id} style={{
                   display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'center',
                   padding: '10px 0', borderBottom: '1px solid var(--border)',
                 }}>
-                  <StatusBadge label={meta.label} color={meta.color} />
+                  {meta && <StatusBadge label={meta.label} color={meta.color} />}
                   <span style={{ fontWeight: 600, minWidth: 120 }}>
                     {Number(m.value).toFixed(cfg.dezimalstellen)}
                     {m.value_secondary != null ? `/${Number(m.value_secondary).toFixed(cfg.dezimalstellen)}` : ''} {cfg.einheit}
@@ -266,7 +280,7 @@ export default function AdminVitalwerteKlientPage({ params }: { params: Promise<
                     {' · '}{m.measured_by_name ?? 'unbekannt'}
                   </span>
                   {m.notes && <span style={{ fontSize: 13, color: 'var(--ink3)', flex: 1 }}>{m.notes}</span>}
-                  {bewertung.meldungen.length > 0 && (
+                  {bewertung && meta && bewertung.meldungen.length > 0 && (
                     <span style={{ fontSize: 12, color: meta.color }}>{bewertung.meldungen.join(' · ')}</span>
                   )}
                   <button onClick={() => messungLoeschen(m.id)} disabled={busy}
@@ -280,14 +294,21 @@ export default function AdminVitalwerteKlientPage({ params }: { params: Promise<
 
       {tab === 'grenzwerte' && (
         <Karte titel={`Grenzwerte: ${cfg.label} (${cfg.einheit})`}>
-          {cfg.standard && !klientGrenzwert && (
+          {!alarmeAktiv && (
+            <Banner tone="warn">
+              Die <strong>Grenzwert-Alarmfunktion ist regulatorisch deaktiviert</strong> (Medizinprodukt-Prüfung
+              ausstehend). Grenzwerte können vorbereitend hinterlegt werden, werden aber <strong>nicht ausgewertet</strong> —
+              es entstehen keine Warnungen oder Alarme, bis die Funktion freigegeben ist.
+            </Banner>
+          )}
+          {alarmeAktiv && cfg.standard && !klientGrenzwert && (
             <Banner tone="info">
               Ohne klientenspezifische Grenzwerte gelten die Standardwerte:
               Warnung {cfg.standard.min_warn ?? '–'}–{cfg.standard.max_warn ?? '–'},
               kritisch {cfg.standard.min_critical ?? '–'}–{cfg.standard.max_critical ?? '–'} {cfg.einheit}.
             </Banner>
           )}
-          {!cfg.standard && !klientGrenzwert && (
+          {alarmeAktiv && !cfg.standard && !klientGrenzwert && (
             <Banner tone="info">Für {cfg.label} gibt es keine Standard-Grenzwerte — Alarme erst nach Konfiguration.</Banner>
           )}
           <FeldRaster>
