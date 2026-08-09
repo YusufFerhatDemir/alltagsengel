@@ -213,7 +213,8 @@ export async function createInvoiceDraft(
 export async function freezeInvoice(
   supabase: SupabaseClient,
   invoiceId: string,
-  actorId: string
+  actorId: string,
+  expectedOrgId?: string
 ): Promise<FreezeResult> {
   // Rechnung laden
   const { data: invoice, error: invError } = await supabase
@@ -224,6 +225,10 @@ export async function freezeInvoice(
 
   if (invError || !invoice) {
     throw new Error(`Rechnung ${invoiceId} nicht gefunden.`);
+  }
+
+  if (expectedOrgId && invoice.organization_id !== expectedOrgId) {
+    throw new Error(`Rechnung ${invoiceId} gehoert nicht zur angegebenen Organisation.`);
   }
 
   // Status validieren
@@ -312,19 +317,24 @@ export async function freezeInvoice(
 
   // Line-Snapshots erstellen
   if (items && items.length > 0) {
-    const lineSnapshots = items.map((item, idx) => ({
-      invoice_snapshot_id: snapshot.id,
-      position_nummer: idx + 1,
-      service_record_id: item.service_record_id,
-      leistungsart: item.description || 'alltagsbegleitung',
-      leistungsdatum: item.date,
-      menge: item.duration_minutes ? item.duration_minutes / 60 : 1,
-      einheit: item.duration_minutes ? 'stunde' : 'einsatz',
-      einzelpreis_cent: Math.round(Number(item.amount) * 100),
-      gesamtpreis_cent: Math.round(Number(item.amount) * 100),
-      budget_typ: item.budget_type,
-      organization_id: invoice.organization_id,
-    }));
+    const lineSnapshots = items.map((item, idx) => {
+      const menge = item.duration_minutes ? item.duration_minutes / 60 : 1;
+      const gesamtpreisCent = Math.round(Number(item.amount) * 100);
+      const einzelpreisCent = menge > 0 ? Math.round(gesamtpreisCent / menge) : gesamtpreisCent;
+      return {
+        invoice_snapshot_id: snapshot.id,
+        position_nummer: idx + 1,
+        service_record_id: item.service_record_id,
+        leistungsart: item.description || 'alltagsbegleitung',
+        leistungsdatum: item.date,
+        menge,
+        einheit: item.duration_minutes ? 'stunde' : 'einsatz',
+        einzelpreis_cent: einzelpreisCent,
+        gesamtpreis_cent: gesamtpreisCent,
+        budget_typ: item.budget_type,
+        organization_id: invoice.organization_id,
+      };
+    });
 
     const { error: lineError } = await supabase
       .from('invoice_line_snapshots')
@@ -480,7 +490,8 @@ export async function cancelInvoice(
   supabase: SupabaseClient,
   invoiceId: string,
   reason: string,
-  actorId: string
+  actorId: string,
+  expectedOrgId?: string
 ): Promise<CorrectionResult> {
   // Original laden
   const { data: original, error: origError } = await supabase
@@ -491,6 +502,10 @@ export async function cancelInvoice(
 
   if (origError || !original) {
     throw new Error(`Rechnung ${invoiceId} nicht gefunden.`);
+  }
+
+  if (expectedOrgId && original.organization_id !== expectedOrgId) {
+    throw new Error(`Rechnung ${invoiceId} gehoert nicht zur angegebenen Organisation.`);
   }
 
   const currentStatus = original.status as string;
@@ -625,7 +640,8 @@ export async function correctInvoice(
   invoiceId: string,
   corrections: CorrectionLineInput[],
   reason: string,
-  actorId: string
+  actorId: string,
+  expectedOrgId?: string
 ): Promise<CorrectionResult> {
   // Original laden
   const { data: original, error: origError } = await supabase
@@ -636,6 +652,10 @@ export async function correctInvoice(
 
   if (origError || !original) {
     throw new Error(`Rechnung ${invoiceId} nicht gefunden.`);
+  }
+
+  if (expectedOrgId && original.organization_id !== expectedOrgId) {
+    throw new Error(`Rechnung ${invoiceId} gehoert nicht zur angegebenen Organisation.`);
   }
 
   // ═══ NEU: Tarif-Gegenprüfung für jede Korrekturposition ═══
@@ -725,7 +745,14 @@ export async function correctInvoice(
     organization_id: original.organization_id,
   }));
 
-  await supabase.from('invoice_items').insert(items);
+  const { error: itemsInsertError } = await supabase.from('invoice_items').insert(items);
+
+  if (itemsInsertError) {
+    throw new Error(
+      `Korrekturpositionen konnten nicht erstellt werden: ${itemsInsertError.message}. ` +
+      `Korrekturrechnung ${korrInvoice.id} wurde angelegt, hat aber keine Positionen.`
+    );
+  }
 
   // Korrektur-Eintrag
   const originalAmountCents = Math.round(Number(original.total_amount) * 100);
@@ -819,7 +846,8 @@ export async function createCreditNote(
   invoiceId: string,
   amountCents: number,
   reason: string,
-  actorId: string
+  actorId: string,
+  expectedOrgId?: string
 ): Promise<CreditNoteResult> {
   if (amountCents <= 0) {
     throw new Error('Gutschriftbetrag muss positiv sein.');
@@ -834,6 +862,10 @@ export async function createCreditNote(
 
   if (origError || !original) {
     throw new Error(`Rechnung ${invoiceId} nicht gefunden.`);
+  }
+
+  if (expectedOrgId && original.organization_id !== expectedOrgId) {
+    throw new Error(`Rechnung ${invoiceId} gehoert nicht zur angegebenen Organisation.`);
   }
 
   const originalAmountCents = Math.round(Number(original.total_amount) * 100);

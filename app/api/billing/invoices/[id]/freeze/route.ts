@@ -52,7 +52,7 @@ export async function POST(
       return NextResponse.json({ error: 'Rechnung nicht gefunden.' }, { status: 404 })
     }
 
-    const result = await freezeInvoice(admin, id, user.id)
+    const result = await freezeInvoice(admin, id, user.id, organizationId)
 
     return NextResponse.json(result)
   } catch (err) {
