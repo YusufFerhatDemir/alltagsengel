@@ -35,10 +35,25 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       return NextResponse.json({ error: 'Datei ist Pflichtfeld.' }, { status: 400 })
     }
 
+    // assessmentId muss zu GENAU dieser Wunde gehören (kein Cross-Referenzieren).
+    const assessmentId = formData.get('assessmentId')?.toString() || null
+    if (assessmentId) {
+      const { data: assessment } = await admin
+        .from('wound_assessments')
+        .select('id')
+        .eq('id', assessmentId)
+        .eq('wound_id', id)
+        .eq('organization_id', organizationId)
+        .maybeSingle()
+      if (!assessment) {
+        return NextResponse.json({ error: 'Assessment gehört nicht zu dieser Wunde.' }, { status: 400 })
+      }
+    }
+
     const foto = await uploadWoundPhoto(admin, {
       organizationId,
       woundId: id,
-      assessmentId: formData.get('assessmentId')?.toString() || null,
+      assessmentId,
       aufgenommenVon: userId,
       aufgenommenAm: formData.get('aufgenommenAm')?.toString() || null,
       bemerkung: formData.get('bemerkung')?.toString() || null,

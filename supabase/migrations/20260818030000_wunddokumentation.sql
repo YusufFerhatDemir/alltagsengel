@@ -14,6 +14,33 @@
 -- ═══════════════════════════════════════════════════════════════════════════
 
 -- ═══════════════════════════════════════════════════════════════════════════
+-- TEIL 0: Engel-Zugriffs-Helper (SECURITY DEFINER)
+-- ═══════════════════════════════════════════════════════════════════════════
+-- Identisch zur Definition in 20260818010000_sis_* — CREATE OR REPLACE macht
+-- die Apply-Reihenfolge egal. SECURITY DEFINER ist hier PFLICHT: eine rohe
+-- assignments/caregivers-Subquery in der Policy löst deren eigene Policies
+-- aus und endet in 42P17 (auf der Shadow-DB nachgewiesen).
+
+CREATE OR REPLACE FUNCTION public.engel_hat_aktiven_klienten(p_client_id uuid)
+RETURNS boolean
+LANGUAGE sql STABLE SECURITY DEFINER
+SET search_path TO 'public'
+AS $$
+  SELECT EXISTS (
+    SELECT 1
+    FROM assignments a
+    JOIN caregivers cg ON cg.id = a.caregiver_id
+    WHERE a.client_id = p_client_id
+      AND cg.user_id = auth.uid()
+      AND a.status IN ('active','GEPLANT','BESTAETIGT','UNTERWEGS','GESTARTET')
+  );
+$$;
+
+REVOKE ALL ON FUNCTION public.engel_hat_aktiven_klienten(uuid) FROM public, anon;
+GRANT EXECUTE ON FUNCTION public.engel_hat_aktiven_klienten(uuid) TO authenticated, service_role;
+
+
+-- ═══════════════════════════════════════════════════════════════════════════
 -- TEIL 1: wounds — Wund-Stammdaten
 -- ═══════════════════════════════════════════════════════════════════════════
 
@@ -81,14 +108,11 @@ DO $$ BEGIN
     CREATE POLICY org_fence_wounds ON wounds AS RESTRICTIVE FOR ALL
       USING (organization_id = current_org_id());
   END IF;
-  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'wounds' AND policyname = 'engel_wounds_select') THEN
-    CREATE POLICY engel_wounds_select ON wounds FOR SELECT
-      USING (client_id IN (
-        SELECT a.client_id FROM assignments a
-        JOIN caregivers cg ON cg.id = a.caregiver_id
-        WHERE cg.user_id = auth.uid() AND a.status IN ('active','GEPLANT','BESTAETIGT','UNTERWEGS','GESTARTET')
-      ));
-  END IF;
+  -- DROP+CREATE statt IF NOT EXISTS: ersetzt eine evtl. vorhandene Fassung
+  -- mit roher assignments-Subquery (42P17-Gefahr) durch den SECDEF-Helper.
+  DROP POLICY IF EXISTS engel_wounds_select ON wounds;
+  CREATE POLICY engel_wounds_select ON wounds FOR SELECT
+    USING (engel_hat_aktiven_klienten(client_id));
 END $$;
 
 DROP TRIGGER IF EXISTS trg_updated_at_wounds ON wounds;
@@ -176,15 +200,12 @@ DO $$ BEGIN
     CREATE POLICY org_fence_wound_assessments ON wound_assessments AS RESTRICTIVE FOR ALL
       USING (organization_id = current_org_id());
   END IF;
-  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'wound_assessments' AND policyname = 'engel_wound_assessments_select') THEN
-    CREATE POLICY engel_wound_assessments_select ON wound_assessments FOR SELECT
-      USING (wound_id IN (
-        SELECT w.id FROM wounds w
-        JOIN assignments a ON a.client_id = w.client_id
-        JOIN caregivers cg ON cg.id = a.caregiver_id
-        WHERE cg.user_id = auth.uid() AND a.status IN ('active','GEPLANT','BESTAETIGT','UNTERWEGS','GESTARTET')
-      ));
-  END IF;
+  DROP POLICY IF EXISTS engel_wound_assessments_select ON wound_assessments;
+  CREATE POLICY engel_wound_assessments_select ON wound_assessments FOR SELECT
+    USING (EXISTS (
+      SELECT 1 FROM wounds w
+      WHERE w.id = wound_id AND engel_hat_aktiven_klienten(w.client_id)
+    ));
 END $$;
 
 DROP TRIGGER IF EXISTS trg_updated_at_wound_assessments ON wound_assessments;
@@ -234,15 +255,12 @@ DO $$ BEGIN
     CREATE POLICY org_fence_wound_treatments ON wound_treatments AS RESTRICTIVE FOR ALL
       USING (organization_id = current_org_id());
   END IF;
-  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'wound_treatments' AND policyname = 'engel_wound_treatments_select') THEN
-    CREATE POLICY engel_wound_treatments_select ON wound_treatments FOR SELECT
-      USING (wound_id IN (
-        SELECT w.id FROM wounds w
-        JOIN assignments a ON a.client_id = w.client_id
-        JOIN caregivers cg ON cg.id = a.caregiver_id
-        WHERE cg.user_id = auth.uid() AND a.status IN ('active','GEPLANT','BESTAETIGT','UNTERWEGS','GESTARTET')
-      ));
-  END IF;
+  DROP POLICY IF EXISTS engel_wound_treatments_select ON wound_treatments;
+  CREATE POLICY engel_wound_treatments_select ON wound_treatments FOR SELECT
+    USING (EXISTS (
+      SELECT 1 FROM wounds w
+      WHERE w.id = wound_id AND engel_hat_aktiven_klienten(w.client_id)
+    ));
 END $$;
 
 DROP TRIGGER IF EXISTS trg_updated_at_wound_treatments ON wound_treatments;
@@ -289,15 +307,12 @@ DO $$ BEGIN
     CREATE POLICY org_fence_wound_photos ON wound_photos AS RESTRICTIVE FOR ALL
       USING (organization_id = current_org_id());
   END IF;
-  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'wound_photos' AND policyname = 'engel_wound_photos_select') THEN
-    CREATE POLICY engel_wound_photos_select ON wound_photos FOR SELECT
-      USING (wound_id IN (
-        SELECT w.id FROM wounds w
-        JOIN assignments a ON a.client_id = w.client_id
-        JOIN caregivers cg ON cg.id = a.caregiver_id
-        WHERE cg.user_id = auth.uid() AND a.status IN ('active','GEPLANT','BESTAETIGT','UNTERWEGS','GESTARTET')
-      ));
-  END IF;
+  DROP POLICY IF EXISTS engel_wound_photos_select ON wound_photos;
+  CREATE POLICY engel_wound_photos_select ON wound_photos FOR SELECT
+    USING (EXISTS (
+      SELECT 1 FROM wounds w
+      WHERE w.id = wound_id AND engel_hat_aktiven_klienten(w.client_id)
+    ));
 END $$;
 
 
