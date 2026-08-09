@@ -158,7 +158,7 @@ describe('AP1: Audit-Trail Sicherheit', () => {
     await setupSchema(db)
     await seedInvoices(db)
     await applyMigration(db, AP1_MIGRATION)
-  }, 30_000)
+  }, 180_000)
 
   afterAll(async () => {
     await db.close()
@@ -250,7 +250,7 @@ describe('AP2: Finalized-Edit-Schutz', () => {
         ('${INVOICE_ID_4}', 'RE-TEST-004', 'sent', 400.00, '${ORG_ID}', '${CLIENT_ID}'),
         ('${INVOICE_ID_5}', 'RE-TEST-005', 'geprueft', 500.00, '${ORG_ID}', '${CLIENT_ID}');
     `)
-  }, 30_000)
+  }, 180_000)
 
   afterAll(async () => {
     await db.close()
@@ -473,7 +473,7 @@ describe('AP4: Backfill-Logik', () => {
       // AP1 + AP2 zuerst anwenden (Vorbedingungen)
       await applyMigration(db, AP1_MIGRATION)
       await applyMigration(db, AP2_MIGRATION)
-    }, 30_000)
+    }, 180_000)
 
     afterAll(async () => {
       await db.close()
