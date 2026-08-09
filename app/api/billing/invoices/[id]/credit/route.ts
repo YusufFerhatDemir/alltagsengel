@@ -66,7 +66,7 @@ export async function POST(
       return NextResponse.json({ error: 'Rechnung nicht gefunden.' }, { status: 404 })
     }
 
-    const result = await createCreditNote(admin, id, body.amountCents, body.reason, user.id)
+    const result = await createCreditNote(admin, id, body.amountCents, body.reason, user.id, organizationId)
 
     return NextResponse.json(result)
   } catch (err) {
