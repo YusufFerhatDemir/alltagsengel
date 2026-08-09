@@ -59,21 +59,25 @@ DO $$ BEGIN
     CREATE POLICY org_fence_vital_signs ON vital_signs AS RESTRICTIVE FOR ALL
       USING (organization_id = current_org_id());
   END IF;
-  -- Engel sehen/erfassen Vitalwerte nur für aktiv zugewiesene Klienten
+  -- Engel sehen/erfassen Vitalwerte nur für aktiv zugewiesene Klienten.
+  -- WICHTIG: eigene_caregiver_ids() (SECURITY DEFINER) statt caregivers-Join —
+  -- caregivers hat für Engel KEINE Lesepolicy (nur Admin + org_fence), ein
+  -- direkter Join liefert unter RLS 0 Zeilen und würde jede Engel-Erfassung
+  -- blockieren. assignments ist per assignments_engel_read lesbar.
   IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'vital_signs' AND policyname = 'engel_vital_signs_select') THEN
     CREATE POLICY engel_vital_signs_select ON vital_signs FOR SELECT
       USING (client_id IN (
         SELECT a.client_id FROM assignments a
-        JOIN caregivers cg ON cg.id = a.caregiver_id
-        WHERE cg.user_id = auth.uid() AND a.status IN ('active','GEPLANT','BESTAETIGT','UNTERWEGS','GESTARTET')
+        WHERE a.caregiver_id IN (SELECT eigene_caregiver_ids())
+          AND a.status IN ('active','GEPLANT','BESTAETIGT','UNTERWEGS','GESTARTET')
       ));
   END IF;
   IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'vital_signs' AND policyname = 'engel_vital_signs_insert') THEN
     CREATE POLICY engel_vital_signs_insert ON vital_signs FOR INSERT
       WITH CHECK (measured_by = auth.uid() AND client_id IN (
         SELECT a.client_id FROM assignments a
-        JOIN caregivers cg ON cg.id = a.caregiver_id
-        WHERE cg.user_id = auth.uid() AND a.status IN ('active','GEPLANT','BESTAETIGT','UNTERWEGS','GESTARTET')
+        WHERE a.caregiver_id IN (SELECT eigene_caregiver_ids())
+          AND a.status IN ('active','GEPLANT','BESTAETIGT','UNTERWEGS','GESTARTET')
       ));
   END IF;
   -- BEWUSST KEINE Kunden-Lesepolicy: vital_signs.notes kann interne
@@ -152,13 +156,14 @@ DO $$ BEGIN
     CREATE POLICY org_fence_vital_sign_thresholds ON vital_sign_thresholds AS RESTRICTIVE FOR ALL
       USING (organization_id = current_org_id());
   END IF;
-  -- Engel lesen Grenzwerte ihrer zugewiesenen Klienten (für die Alarm-Anzeige)
+  -- Engel lesen Grenzwerte ihrer zugewiesenen Klienten (für die Alarm-Anzeige).
+  -- eigene_caregiver_ids() statt caregivers-Join (s. Begründung bei vital_signs).
   IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'vital_sign_thresholds' AND policyname = 'engel_vital_sign_thresholds_select') THEN
     CREATE POLICY engel_vital_sign_thresholds_select ON vital_sign_thresholds FOR SELECT
       USING (client_id IN (
         SELECT a.client_id FROM assignments a
-        JOIN caregivers cg ON cg.id = a.caregiver_id
-        WHERE cg.user_id = auth.uid() AND a.status IN ('active','GEPLANT','BESTAETIGT','UNTERWEGS','GESTARTET')
+        WHERE a.caregiver_id IN (SELECT eigene_caregiver_ids())
+          AND a.status IN ('active','GEPLANT','BESTAETIGT','UNTERWEGS','GESTARTET')
       ));
   END IF;
 END $$;
