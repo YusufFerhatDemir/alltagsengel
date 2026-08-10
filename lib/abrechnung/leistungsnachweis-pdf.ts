@@ -167,11 +167,14 @@ export async function loadLeistungsnachweis(params: {
   const { data: klient, error: kErr } = await supabase
     .from('clients')
     .select(
-      'id, first_name, last_name, date_of_birth, care_level, address, zip_code, city, insurance_name, insurance_number, versichertennummer, pflegekasse_name, pflegekasse_ik'
+      'id, organization_id, first_name, last_name, date_of_birth, care_level, address, zip_code, city, insurance_name, insurance_number, versichertennummer, pflegekasse_name, pflegekasse_ik'
     )
     .eq('id', verordnung.client_id)
     .single()
   if (kErr || !klient) throw new Error(`Klient nicht gefunden: ${kErr?.message || verordnung.client_id}`)
+
+  // Org-ID aus Klient ableiten, falls nicht explizit uebergeben
+  const effectiveOrgId = organizationId || klient.organization_id
 
   // 3) Einsätze des Monats für diese Verordnung
   const [jahr, monatNum] = monat.split('-').map(Number)
@@ -255,15 +258,15 @@ export async function loadLeistungsnachweis(params: {
     year: 'numeric',
   })
 
-  const le = organizationId
-    ? await getLeistungserbringer(supabase, organizationId)
+  const le = effectiveOrgId
+    ? await getLeistungserbringer(supabase, effectiveOrgId)
     : { ...LEISTUNGSERBRINGER }
 
   return {
     monat,
     monat_label: monatLabel,
     erstellt_am: new Date().toLocaleDateString('de-DE'),
-    leistungserbringer_ik: await getOrgIK(supabase, organizationId),
+    leistungserbringer_ik: await getOrgIK(supabase, effectiveOrgId),
     leistungserbringer: le,
     verordnung: {
       id: verordnung.id,

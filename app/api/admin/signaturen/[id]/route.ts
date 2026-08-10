@@ -6,6 +6,7 @@ import {
   lehneSignaturAb,
   verifiziereSignatur,
 } from '@/lib/signaturen/signaturen'
+import { logAuditEvent } from '@/lib/audit-log'
 
 export async function PATCH(
   req: NextRequest,
@@ -27,6 +28,15 @@ export async function PATCH(
         ip_adresse: req.headers.get('x-forwarded-for') || undefined,
         user_agent: req.headers.get('user-agent') || undefined,
       })
+      await logAuditEvent({
+        action: 'update',
+        actorId: auth.userId,
+        organizationId: auth.organizationId,
+        entityType: 'signatur',
+        entityId: id,
+        details: { aktion: 'signieren', methode: body.methode },
+        request: req,
+      })
       return NextResponse.json(signatur)
     }
 
@@ -34,6 +44,15 @@ export async function PATCH(
       const signatur = await lehneSignaturAb(
         supabase, auth.organizationId, id, auth.userId, body.grund,
       )
+      await logAuditEvent({
+        action: 'update',
+        actorId: auth.userId,
+        organizationId: auth.organizationId,
+        entityType: 'signatur',
+        entityId: id,
+        details: { aktion: 'ablehnen', grund: body.grund },
+        request: req,
+      })
       return NextResponse.json(signatur)
     }
 
@@ -41,6 +60,15 @@ export async function PATCH(
       const ergebnis = await verifiziereSignatur(
         supabase, auth.organizationId, id, auth.userId,
       )
+      await logAuditEvent({
+        action: 'update',
+        actorId: auth.userId,
+        organizationId: auth.organizationId,
+        entityType: 'signatur',
+        entityId: id,
+        details: { aktion: 'verifizieren' },
+        request: req,
+      })
       return NextResponse.json(ergebnis)
     }
 

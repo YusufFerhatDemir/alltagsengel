@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { requireAngehAdmin } from '@/lib/angehoerige/api-auth'
 import { listeZugaenge, erstelleZugang, protokolliereZugriff } from '@/lib/angehoerige/angehoerige'
+import { logAuditEvent } from '@/lib/audit-log'
 
 export async function GET(req: NextRequest) {
   const auth = await requireAngehAdmin()
@@ -52,6 +53,16 @@ export async function POST(req: NextRequest) {
       client_id: zugang.client_id,
       aktion: 'zugang_erteilt',
       details: { rolle: zugang.rolle, bereiche: zugang.freigegebene_bereiche },
+    })
+
+    await logAuditEvent({
+      action: 'create',
+      actorId: auth.ctx.userId,
+      organizationId: auth.ctx.organizationId,
+      entityType: 'angehoerigen_zugang',
+      entityId: zugang.id,
+      details: { client_id: zugang.client_id, rolle: zugang.rolle, bereiche: zugang.freigegebene_bereiche },
+      request: req,
     })
 
     return NextResponse.json(zugang, { status: 201 })

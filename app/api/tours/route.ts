@@ -82,8 +82,48 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Mitarbeiter nicht gefunden.' }, { status: 404 })
   }
 
+  // ── P1-30 Fix: Verfügbarkeit VOR dem Anlegen neuer Assignments prüfen,
+  //    damit bei 422 keine Orphan-Assignments zurückbleiben. ──────────
+  // Zeitfenster vorab aus den Input-Stops sammeln
+  const vorabStartZeiten: string[] = []
+  const vorabEndZeiten: string[] = []
+  for (const s of stops) {
+    if (s.geplante_ankunft) vorabStartZeiten.push(s.geplante_ankunft)
+    if (s.geplantes_ende) vorabEndZeiten.push(s.geplantes_ende)
+  }
+  // Für assignment_id-Stops die Zeiten aus der DB laden
+  const vorhandeneIds = stops.filter(s => s.assignment_id).map(s => s.assignment_id!)
+  if (vorhandeneIds.length > 0) {
+    const { data: vorhandene } = await admin
+      .from('assignments')
+      .select('start_time, end_time')
+      .in('id', vorhandeneIds)
+    for (const a of vorhandene ?? []) {
+      if (a.start_time) vorabStartZeiten.push(a.start_time)
+      if (a.end_time) vorabEndZeiten.push(a.end_time)
+    }
+  }
+  vorabStartZeiten.sort()
+  vorabEndZeiten.sort()
+
+  // Verfügbarkeit: Abwesenheit blockiert (außer force_override), Zeitfenster warnt
+  const befund = await pruefeCaregiverVerfuegbarkeit(
+    admin, caregiver_id, tour_date,
+    vorabStartZeiten[0] ?? null,
+    vorabEndZeiten[vorabEndZeiten.length - 1] ?? null
+  )
+  if (befund.abwesend && !force_override) {
+    return NextResponse.json({
+      error: `Mitarbeiter ist am ${tour_date} abwesend (${befund.abwesenheitsGrund}).`,
+      hinweis: 'Mit force_override: true kann die Tour trotzdem angelegt werden, oder /api/tours/{id}/vertretung nutzen.',
+    }, { status: 422 })
+  }
+  if (befund.abwesend) warnungen.push(`Abwesenheit übersteuert: ${befund.abwesenheitsGrund}.`)
+  if (befund.ausserhalbZeitfenster) warnungen.push('Tour liegt außerhalb der gepflegten Verfügbarkeits-Zeitfenster.')
+
   // Stops auflösen (legt für client_id-Stops neue assignments an —
-  // der Doppelbelegungs-Trigger meldet Konflikte als DOPPELBELEGUNG)
+  // der Doppelbelegungs-Trigger meldet Konflikte als DOPPELBELEGUNG).
+  // Verfügbarkeit ist bereits geprüft, kein Orphan-Risiko mehr.
   const aufgeloest = await aufloeseStops(admin, {
     stops,
     caregiverId: caregiver_id,
@@ -109,21 +149,6 @@ export async function POST(req: NextRequest) {
     }))
   )
   warnungen.push(...zeitplanWarnungen.map(w => w.text))
-
-  // Verfügbarkeit: Abwesenheit blockiert (außer force_override), Zeitfenster warnt
-  const zeiten = mitFahrt.map(s => s.geplante_ankunft).filter(Boolean).sort()
-  const enden = mitFahrt.map(s => s.geplantes_ende).filter(Boolean).sort()
-  const befund = await pruefeCaregiverVerfuegbarkeit(
-    admin, caregiver_id, tour_date, zeiten[0] ?? null, enden[enden.length - 1] ?? null
-  )
-  if (befund.abwesend && !force_override) {
-    return NextResponse.json({
-      error: `Mitarbeiter ist am ${tour_date} abwesend (${befund.abwesenheitsGrund}).`,
-      hinweis: 'Mit force_override: true kann die Tour trotzdem angelegt werden, oder /api/tours/{id}/vertretung nutzen.',
-    }, { status: 422 })
-  }
-  if (befund.abwesend) warnungen.push(`Abwesenheit übersteuert: ${befund.abwesenheitsGrund}.`)
-  if (befund.ausserhalbZeitfenster) warnungen.push('Tour liegt außerhalb der gepflegten Verfügbarkeits-Zeitfenster.')
 
   // Wochenkapazität (Montag–Sonntag der Tourwoche)
   const datum = new Date(tour_date + 'T00:00:00Z')
@@ -166,8 +191,8 @@ export async function POST(req: NextRequest) {
       tour_date,
       name: name || null,
       status: 'GEPLANT',
-      start_zeit: zeiten[0] ?? null,
-      ende_zeit: enden[enden.length - 1] ?? null,
+      start_zeit: mitFahrt[0]?.geplante_ankunft ?? null,
+      ende_zeit: mitFahrt[mitFahrt.length - 1]?.geplantes_ende ?? null,
       notes: notes || null,
       created_by: auth.ctx.userId,
     })

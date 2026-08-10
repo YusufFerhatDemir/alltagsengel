@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireAdmin } from '@/lib/abrechnung/require-admin'
+import { requireAdmin, requireAdminMitOrg } from '@/lib/abrechnung/require-admin'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getActiveOrgId } from '@/lib/organizations/server'
 import { pruefeZertifikat, speichereAbsenderZertifikat } from '@/lib/abrechnung/zertifikate'
+import { logAuditEvent } from '@/lib/audit-log'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -43,11 +44,10 @@ export async function GET() {
  *             nicht gespeichert — dauerhaft als Env SECON_ZERT_PASSWORT)
  */
 export async function POST(req: NextRequest) {
-  const auth = await requireAdmin()
+  const auth = await requireAdminMitOrg()
   if (!auth.ok) return auth.response
   try {
-    const orgId = await getActiveOrgId()
-    if (!orgId) return NextResponse.json({ error: 'Keine Organisation zugewiesen' }, { status: 403 })
+    const orgId = auth.organizationId
 
     const form = await req.formData()
     const datei = form.get('datei') as File | null
@@ -67,6 +67,17 @@ export async function POST(req: NextRequest) {
     }
 
     const zert = await speichereAbsenderZertifikat(buf, passwort, orgId)
+
+    await logAuditEvent({
+      action: 'create',
+      actorId: auth.userId,
+      organizationId: orgId,
+      entityType: 'abrechnung_zertifikat',
+      entityId: zert.fingerprint,
+      details: { ik_nummer: zert.ik_nummer, gueltig_ab: zert.gueltig_ab, gueltig_bis: zert.gueltig_bis },
+      request: req,
+    })
+
     return NextResponse.json({
       erfolg: true,
       zertifikat: {

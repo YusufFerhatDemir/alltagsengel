@@ -243,6 +243,17 @@ export async function erfasseEingabe(
     throw new Error(`Ungültiger Eingabestatus: ${eingabe.status}`)
   }
 
+  const { data: medikament, error: medErr } = await sb
+    .from('medikamente')
+    .select('client_id')
+    .eq('id', eingabe.medikament_id)
+    .eq('organization_id', orgId)
+    .maybeSingle()
+  if (medErr || !medikament) throw new Error('Medikament nicht gefunden.')
+  if (medikament.client_id !== eingabe.client_id) {
+    throw new Error('Medikament gehört nicht zum angegebenen Klienten.')
+  }
+
   const row = {
     medikament_id: eingabe.medikament_id,
     client_id: eingabe.client_id,

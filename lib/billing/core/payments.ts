@@ -312,7 +312,8 @@ export async function allocatePayment(
     }
 
     const newStatus = newPaidCents >= totalCents ? 'bezahlt' : 'teilweise_bezahlt'
-    await supabase
+    // OCC: only update if paid_amount hasn't changed since we read it
+    const { data: updatedInv, error: invUpdateErr } = await supabase
       .from('invoices')
       .update({
         paid_amount: newPaidCents / 100,
@@ -320,6 +321,17 @@ export async function allocatePayment(
         status: newStatus,
       })
       .eq('id', alloc.invoiceId)
+      .eq('paid_amount', inv.paid_amount ?? 0)
+      .select('id')
+
+    if (invUpdateErr) {
+      throw new Error(`Rechnungs-Update fehlgeschlagen: ${invUpdateErr.message}`)
+    }
+    if (!updatedInv?.length) {
+      throw new Error(
+        `Konkurrierender Zugriff auf Rechnung ${alloc.invoiceId} — bitte erneut versuchen.`
+      )
+    }
 
     if (newPaidCents < totalCents && totalCents - newPaidCents > 0) {
       await supabase
@@ -352,10 +364,19 @@ export async function allocatePayment(
     ? (actorId === 'system' ? 'automatisch_zugeordnet' : 'manuell_zugeordnet')
     : 'teilweise_zugeordnet'
 
-  await supabase
+  // OCC: only update if allocated_cents hasn't changed since we read it
+  const { data: updatedPayment } = await supabase
     .from('payments')
     .update({ allocated_cents: newAllocated, matching_status: matchingStatus })
     .eq('id', paymentId)
+    .eq('allocated_cents', payment.allocated_cents ?? 0)
+    .select('id')
+
+  if (!updatedPayment?.length) {
+    throw new Error(
+      `Konkurrierender Zugriff auf Zahlung ${paymentId} — bitte erneut versuchen.`
+    )
+  }
 }
 
 // ---------------------------------------------------------------------------

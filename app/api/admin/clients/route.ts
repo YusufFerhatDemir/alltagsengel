@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getActiveOrgId } from '@/lib/organizations/server'
+import { logAuditEvent } from '@/lib/audit-log'
 
 async function requireAdmin() {
   const supabase = await createClient()
@@ -28,12 +29,12 @@ function generateCustomerNumber(): string {
   return `KD-${yy}${mm}-${rand}`
 }
 
-export async function POST(request: Request) {
+export async function POST(req: Request) {
   const auth = await requireAdmin()
   if (!auth.ok) return auth.response
 
   try {
-    const body = await request.json()
+    const body = await req.json()
 
     if (!body.first_name?.trim() || !body.last_name?.trim()) {
       return NextResponse.json({ error: 'Vor- und Nachname sind Pflichtfelder.' }, { status: 400 })
@@ -94,6 +95,16 @@ export async function POST(request: Request) {
     if (insertError) {
       return NextResponse.json({ error: insertError.message }, { status: 500 })
     }
+
+    await logAuditEvent({
+      action: 'create',
+      actorId: auth.userId,
+      organizationId: auth.organizationId,
+      entityType: 'client',
+      entityId: client.id,
+      details: { customer_number: client.customer_number, name: `${client.first_name} ${client.last_name}` },
+      request: req,
+    })
 
     return NextResponse.json({ client }, { status: 201 })
   } catch (err) {

@@ -87,7 +87,7 @@ export async function POST(req: NextRequest) {
     const { data: recentVisits } = await supabase
       .from('visitor_locations')
       .select('page_path, created_at')
-      .like('ip_address', `${ipPrefix}%`)
+      .like('ip_address', `${ipPrefix.replace(/[%_\\]/g, '\\$&')}%`)
       .order('created_at', { ascending: false })
       .limit(10)
 
