@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { requireSigAdmin } from '@/lib/signaturen/api-auth'
 import { listeSignaturen, fordereSignaturAn } from '@/lib/signaturen/signaturen'
+import { SIGNATUR_STATUS_WERTE, type SignaturStatus } from '@/lib/signaturen/types'
 
 export async function GET(req: NextRequest) {
   const auth = await requireSigAdmin()
@@ -16,7 +17,7 @@ export async function GET(req: NextRequest) {
     const supabase = await createClient()
     const signaturen = await listeSignaturen(supabase, auth.ctx.organizationId, {
       dokument_id,
-      status: status as any,
+      status: status && SIGNATUR_STATUS_WERTE.includes(status as SignaturStatus) ? status as SignaturStatus : undefined,
       signatar_id,
     })
     return NextResponse.json(signaturen)

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { requireSigAdmin } from '@/lib/signaturen/api-auth'
 import { listeDokumente, erstelleDokument } from '@/lib/signaturen/signaturen'
+import { SIGNATUR_DOKUMENT_TYPEN, type SignaturDokumentTyp } from '@/lib/signaturen/types'
 
 export async function GET(req: NextRequest) {
   const auth = await requireSigAdmin()
@@ -13,7 +14,7 @@ export async function GET(req: NextRequest) {
   try {
     const supabase = await createClient()
     const dokumente = await listeDokumente(supabase, auth.ctx.organizationId, {
-      dokument_typ: dokument_typ as any,
+      dokument_typ: dokument_typ && SIGNATUR_DOKUMENT_TYPEN.includes(dokument_typ as SignaturDokumentTyp) ? dokument_typ as SignaturDokumentTyp : undefined,
     })
     return NextResponse.json(dokumente)
   } catch (err) {
