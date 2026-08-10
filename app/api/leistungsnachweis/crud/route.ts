@@ -107,6 +107,17 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Pflichtfelder fehlen' }, { status: 400 })
   }
 
+  const { data: clientOk } = await supabase
+    .from('clients').select('id').eq('id', client_id).eq('organization_id', organizationId).maybeSingle()
+  if (!clientOk) {
+    return NextResponse.json({ error: 'Klient nicht gefunden oder gehört nicht zur Organisation.' }, { status: 404 })
+  }
+  const { data: caregiverOk } = await supabase
+    .from('caregivers').select('id').eq('id', caregiver_id).eq('organization_id', organizationId).maybeSingle()
+  if (!caregiverOk) {
+    return NextResponse.json({ error: 'Betreuungskraft nicht gefunden oder gehört nicht zur Organisation.' }, { status: 404 })
+  }
+
   const startParts = start_time.split(':')
   const endParts = end_time.split(':')
   const startMin = parseInt(startParts[0]) * 60 + parseInt(startParts[1])

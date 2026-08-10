@@ -93,7 +93,15 @@ export class OfflineStore {
   private async encryptItem<T extends object>(item: T): Promise<T> {
     const json = JSON.stringify(item)
     const encrypted = await this.encrypt(json)
-    return { ...item, _encrypted: encrypted, _isEncrypted: true } as T
+    const indexed = item as any
+    return {
+      id: indexed.id,
+      status: indexed.status,
+      idempotency_key: indexed.idempotency_key,
+      entity_typ: indexed.entity_typ,
+      _encrypted: encrypted,
+      _isEncrypted: true,
+    } as T
   }
 
   private async decryptItem<T>(item: any): Promise<T> {

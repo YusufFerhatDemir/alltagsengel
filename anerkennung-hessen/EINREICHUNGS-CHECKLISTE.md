@@ -1,8 +1,43 @@
 # EINREICHUNGS-CHECKLISTE
 
-**Stand: 10.08.2026**
+**Stand: 10.08.2026 (FINALE PRUEFUNG)**
 **Frist Nachreichung: 31.08.2026** (behoerdlich gesetzt, Rueckmeldung Fr. Krause vom 08.07.2026)
 **Verbleibende Zeit: 3 Wochen**
+
+---
+
+## STAMMDATEN-PRUEFUNG (FINALE, 10.08.2026)
+
+Alle PDFs und Markdown-Dateien wurden Dokument fuer Dokument geprueft. Ergebnis:
+
+| Pruefpunkt | Ergebnis | Details |
+|------------|----------|---------|
+| Firmenname in allen Dokumenten | ✅ KORREKT | "Alltagsengel UG (haftungsbeschraenkt)" — einheitlich in allen 14 Anlagen |
+| GF-Name in allen Dokumenten | ✅ KORREKT | "Yusuf Ferhat Demir" — einheitlich |
+| Adresse in allen Dokumenten | ✅ KORREKT | "Neue Mainzer Strasse 66-68, 60311 Frankfurt am Main" — einheitlich |
+| IK-Nummer | ✅ KORREKT | 460629986 — in Erhebungsbogen (Anl-00), Anschreiben (Anl-01) |
+| HRB | ✅ KORREKT | 140351 (AG Frankfurt am Main) — in allen relevanten Dokumenten |
+| D-U-N-S | ✅ KORREKT | 316856461 — in Erhebungsbogen und Konzept |
+| Gesetzliche Grundlage | ✅ KORREKT | Par. 45a SGB XI, PfluV Hessen — ueberall korrekt referenziert |
+| Zustaendige Stelle | ✅ KORREKT | Magistrat Frankfurt / Jugend- und Sozialamt, Leitstelle Aelterwerden, Hansaallee 150. NICHT RP Giessen. |
+| Absender-Regel | ✅ KORREKT | Kein persoenlicher Name als Absender. GF-Name erscheint nur in Unterschriftszeilen (fuer Behoerdenantraege korrekt und erforderlich). |
+
+### GEFUNDENE DISKREPANZEN
+
+**1. Anlagenverzeichnis im Anschreiben (Anlage-01) UNVOLLSTAENDIG**
+Das Anschreiben listet 12 Anlagen auf, aber 3 tatsaechlich beigefuegte Dokumente fehlen in der Aufzaehlung:
+- ARGE-IK Bestaetigung (Anlage-03) — NICHT GELISTET
+- Arbeitsvertrag Fachkraft (Anlage-04) — NICHT GELISTET
+- Einverstaendniserklaerung Veroeffentlichung (Anlage-13) — NICHT GELISTET
+
+**EMPFEHLUNG:** Anlage-01 (Anschreiben) muss aktualisiert werden, damit das Anlagenverzeichnis alle 15+ Dokumente auffuehrt. Sonst erhaelt die Behoerde Unterlagen, die im Anschreiben nicht angekuendigt sind.
+
+**2. 00-ANLAGEN-UEBERSICHT-UND-CHECKLISTE.pdf VERALTET**
+- Listet "Examenszeugnis Sabrina Martin" als fehlend/PRUEFEN — tatsaechlich als Anlage-02 vorhanden
+- PfluV-Aenderungsdatum "2024" — korrekt waere "23.09.2021, verlaengert bis Ende 2026"
+- Zeigt 3 externe Nachweise fehlend — tatsaechlich nur 2 (Gewerbe + Police)
+
+**EMPFEHLUNG:** Dieses PDF entweder aktualisieren oder NICHT einreichen (es dient nur zur internen Uebersicht). Die EINREICHUNGS-CHECKLISTE.md ist aktueller und massgeblich.
 
 ---
 
@@ -181,3 +216,16 @@
 9. Parallel per E-Mail an: entlastungsangebote45@stadt-frankfurt.de
 
 ### FRIST: 31.08.2026 — NUR NOCH 3 WOCHEN!
+
+---
+
+## FINALE PRUEFUNG ABGESCHLOSSEN (10.08.2026)
+
+Alle 16 Dokumente im Ordner anerkennung-hessen/ wurden Dokument fuer Dokument gegen die Stammdaten geprueft:
+- 14 Anlagen (Anlage-00 bis Anlage-13) — alle Stammdaten korrekt
+- 1 Fuehrungszeugnis (Scan, kein Text extrahierbar — normal)
+- 1 Behoerden-Rueckmeldung (docx) — verifiziert
+- 2 Platzhalter (Gewerbeanmeldung + Police) — vorhanden, korrekt positioniert als Anlage 14 + 15
+- 2 defekte Dateien (Cloudflare-Block) — nicht fuer Einreichung benoetigt
+
+**Kein einziger Stammdaten-Fehler gefunden.** Einzige Handlungsbedarfe: (1) Anschreiben-Anlagenverzeichnis aktualisieren, (2) 00-PDF aktualisieren oder aus Einreichung ausschliessen.

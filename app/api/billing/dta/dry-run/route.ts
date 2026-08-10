@@ -202,17 +202,22 @@ export async function POST(request: Request) {
 
       const kt = ktByClient.get(inv.client_id)
       const clientRecords = records?.filter((r: any) => r.client_id === inv.client_id) ?? []
-      const leistungen = clientRecords.map((r: any) => ({
-        datum: r.date,
-        leistungsart: r.service_type || 'alltagsbegleitung_45a',
-        menge: (r.duration_minutes ?? 60) / 60,
-        einzelpreis_cent: euroZuCent(r.amount),
-        uhrzeit: undefined,
-        dauer_minuten: r.duration_minutes ?? 60,
-        pflegekraft_name: r.caregiver
-          ? `${r.caregiver.first_name || ''} ${r.caregiver.last_name || ''}`.trim()
-          : 'Alltagsengel',
-      }))
+      const leistungen = clientRecords.map((r: any) => {
+        const menge = (r.duration_minutes ?? 60) / 60
+        const gesamtCent = euroZuCent(r.amount)
+        const einzelpreisCent = menge > 0 ? Math.round(gesamtCent / menge) : gesamtCent
+        return {
+          datum: r.date,
+          leistungsart: r.service_type || 'alltagsbegleitung_45a',
+          menge,
+          einzelpreis_cent: einzelpreisCent,
+          uhrzeit: undefined,
+          dauer_minuten: r.duration_minutes ?? 60,
+          pflegekraft_name: r.caregiver
+            ? `${r.caregiver.first_name || ''} ${r.caregiver.last_name || ''}`.trim()
+            : 'Alltagsengel',
+        }
+      })
 
       const kostentraegerIk = kt?.ik || client.pflegekasse_ik || ''
       const key = `${inv.client_id}_${kostentraegerIk || 'UNBEKANNT'}`

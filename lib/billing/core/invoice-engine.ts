@@ -658,6 +658,11 @@ export async function correctInvoice(
     throw new Error(`Rechnung ${invoiceId} gehoert nicht zur angegebenen Organisation.`);
   }
 
+  const currentStatus = original.status as string;
+  if (isValidInvoiceStatus(currentStatus) && (currentStatus === 'storniert' as InvoiceStatus)) {
+    throw new Error('Rechnung ist storniert — Korrektur nicht moeglich.');
+  }
+
   // ═══ NEU: Tarif-Gegenprüfung für jede Korrekturposition ═══
   // Admin darf nicht beliebige Preise setzen — bei >10% Abweichung vom
   // aktuellen Tarif muss ein expliziter Korrekturgrund angegeben werden.
@@ -868,11 +873,28 @@ export async function createCreditNote(
     throw new Error(`Rechnung ${invoiceId} gehoert nicht zur angegebenen Organisation.`);
   }
 
+  const currentStatus = original.status as string;
+  if (isValidInvoiceStatus(currentStatus) && (currentStatus === 'storniert' as InvoiceStatus)) {
+    throw new Error('Rechnung ist storniert — Gutschrift nicht moeglich.');
+  }
+
   const originalAmountCents = Math.round(Number(original.total_amount) * 100);
 
-  if (amountCents > originalAmountCents) {
+  const { data: existingCredits } = await supabase
+    .from('invoice_corrections')
+    .select('corrected_amount_cents')
+    .eq('original_invoice_id', invoiceId)
+    .eq('correction_type', 'gutschrift')
+    .is('deleted_at', null);
+  const alreadyCreditedCents = (existingCredits || []).reduce(
+    (sum, c) => sum + (originalAmountCents - (c.corrected_amount_cents ?? originalAmountCents)),
+    0
+  );
+  const remainingCreditableCents = originalAmountCents - alreadyCreditedCents;
+
+  if (amountCents > remainingCreditableCents) {
     throw new Error(
-      `Gutschriftbetrag (${amountCents} Cent) übersteigt den Rechnungsbetrag (${originalAmountCents} Cent).`
+      `Gutschriftbetrag (${amountCents} Cent) uebersteigt den verbleibenden Betrag (${remainingCreditableCents} Cent, bereits gutgeschrieben: ${alreadyCreditedCents} Cent).`
     );
   }
 
