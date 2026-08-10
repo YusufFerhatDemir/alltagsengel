@@ -152,6 +152,17 @@ export async function fordereSignaturAn(
 ): Promise<Signatur> {
   validiereSignaturInput(input)
 
+  // Mandantenschutz: das Dokument muss zur aktiven Organisation gehören.
+  const { data: dokument } = await sb
+    .from('signatur_dokumente')
+    .select('id')
+    .eq('id', input.dokument_id as string)
+    .eq('organization_id', orgId)
+    .maybeSingle()
+  if (!dokument) {
+    throw new Error('Dokument nicht gefunden oder gehört nicht zur Organisation.')
+  }
+
   const row = {
     organization_id: orgId,
     dokument_id: input.dokument_id,

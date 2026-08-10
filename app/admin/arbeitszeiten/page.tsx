@@ -32,12 +32,13 @@ export default function ArbeitszeitenPage() {
         setRows((data.konten || data || []).map((r: any) => ({
           id: r.id || `${r.caregiver_id}-${r.monat}-${r.jahr}`,
           caregiver_id: r.caregiver_id,
-          mitarbeiter: r.mitarbeiter || r.name || '—',
+          mitarbeiter: r.caregiver_name || '—',
           monat: r.monat || monat,
           jahr: r.jahr || jahr,
-          ist_stunden: r.ist_stunden ?? 0,
-          soll_stunden: r.soll_stunden ?? 0,
-          ueberstunden: r.ueberstunden ?? 0,
+          // Werte kommen als Minuten aus der DB — fuer die Anzeige in Stunden umrechnen.
+          ist_stunden: (r.ist_minuten_gesamt ?? 0) / 60,
+          soll_stunden: (r.soll_minuten_gesamt ?? 0) / 60,
+          ueberstunden: (r.ueberstunden_gesamt ?? 0) / 60,
           korrigierte_eintraege: r.korrigierte_eintraege ?? 0,
         })))
       } catch (err) {

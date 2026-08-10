@@ -15,6 +15,9 @@ const GUELTIGE_KATEGORIEN: MedikamentKategorie[] = [
 
 const GUELTIGE_STATUS: MedikamentStatus[] = ['aktiv', 'pausiert', 'abgesetzt']
 
+const GUELTIGE_EINNAHME_ZEITEN = ['morgens', 'mittags', 'abends', 'nachts'] as const
+const GUELTIGE_EINGABE_STATUS = ['geplant', 'gegeben', 'verweigert', 'ausgelassen'] as const
+
 export function validiereKategorie(k: string): asserts k is MedikamentKategorie {
   if (!GUELTIGE_KATEGORIEN.includes(k as MedikamentKategorie)) {
     throw new Error(`Ungültige Kategorie: ${k}`)
@@ -233,6 +236,13 @@ export async function erfasseEingabe(
     notizen?: string
   },
 ): Promise<MedikamentEingabe> {
+  if (!GUELTIGE_EINNAHME_ZEITEN.includes(eingabe.einnahme_zeit as typeof GUELTIGE_EINNAHME_ZEITEN[number])) {
+    throw new Error(`Ungültige Einnahmezeit: ${eingabe.einnahme_zeit}`)
+  }
+  if (!GUELTIGE_EINGABE_STATUS.includes(eingabe.status as typeof GUELTIGE_EINGABE_STATUS[number])) {
+    throw new Error(`Ungültiger Eingabestatus: ${eingabe.status}`)
+  }
+
   const row = {
     medikament_id: eingabe.medikament_id,
     client_id: eingabe.client_id,

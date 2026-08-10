@@ -125,6 +125,7 @@ CREATE POLICY "ops_aufgaben_engel_update"
   );
 
 -- updated_at trigger
+DROP TRIGGER IF EXISTS trg_updated_at_ops_aufgaben ON public.ops_aufgaben;
 CREATE TRIGGER trg_updated_at_ops_aufgaben
   BEFORE UPDATE ON public.ops_aufgaben
   FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
@@ -235,6 +236,7 @@ CREATE POLICY "ops_kommentare_engel_insert"
     )
   );
 
+DROP TRIGGER IF EXISTS trg_updated_at_ops_kommentare ON public.ops_aufgaben_kommentare;
 CREATE TRIGGER trg_updated_at_ops_kommentare
   BEFORE UPDATE ON public.ops_aufgaben_kommentare
   FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
@@ -388,6 +390,7 @@ CREATE POLICY "ops_eskalationsregeln_admin_all"
   ON public.ops_eskalationsregeln FOR ALL
   USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin'));
 
+DROP TRIGGER IF EXISTS trg_updated_at_ops_eskalationsregeln ON public.ops_eskalationsregeln;
 CREATE TRIGGER trg_updated_at_ops_eskalationsregeln
   BEFORE UPDATE ON public.ops_eskalationsregeln
   FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
@@ -430,6 +433,7 @@ BEGIN
 END;
 $$;
 
+DROP TRIGGER IF EXISTS trg_ops_eskalation_immutable_update ON public.ops_eskalationshistorie;
 CREATE TRIGGER trg_ops_eskalation_immutable_update
   BEFORE UPDATE ON public.ops_eskalationshistorie
   FOR EACH ROW EXECUTE FUNCTION public.prevent_ops_eskalation_update();
@@ -442,6 +446,7 @@ BEGIN
 END;
 $$;
 
+DROP TRIGGER IF EXISTS trg_ops_eskalation_immutable_delete ON public.ops_eskalationshistorie;
 CREATE TRIGGER trg_ops_eskalation_immutable_delete
   BEFORE DELETE ON public.ops_eskalationshistorie
   FOR EACH ROW EXECUTE FUNCTION public.prevent_ops_eskalation_delete();
@@ -692,6 +697,7 @@ CREATE POLICY "ops_praef_own_insert"
   ON public.ops_benachrichtigungs_praeferenzen FOR INSERT
   WITH CHECK (benutzer_id = auth.uid());
 
+DROP TRIGGER IF EXISTS trg_updated_at_ops_praeferenzen ON public.ops_benachrichtigungs_praeferenzen;
 CREATE TRIGGER trg_updated_at_ops_praeferenzen
   BEFORE UPDATE ON public.ops_benachrichtigungs_praeferenzen
   FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
@@ -760,6 +766,7 @@ CREATE POLICY "ops_ereignis_admin_all"
   ON public.ops_ereignis_regeln FOR ALL
   USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin'));
 
+DROP TRIGGER IF EXISTS trg_updated_at_ops_ereignis_regeln ON public.ops_ereignis_regeln;
 CREATE TRIGGER trg_updated_at_ops_ereignis_regeln
   BEFORE UPDATE ON public.ops_ereignis_regeln
   FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
@@ -819,6 +826,7 @@ BEGIN
 END;
 $$;
 
+DROP TRIGGER IF EXISTS trg_ops_log_immutable_update ON public.ops_aktivitaetslog;
 CREATE TRIGGER trg_ops_log_immutable_update
   BEFORE UPDATE ON public.ops_aktivitaetslog
   FOR EACH ROW EXECUTE FUNCTION public.prevent_ops_log_update();
@@ -830,6 +838,7 @@ BEGIN
 END;
 $$;
 
+DROP TRIGGER IF EXISTS trg_ops_log_immutable_delete ON public.ops_aktivitaetslog;
 CREATE TRIGGER trg_ops_log_immutable_delete
   BEFORE DELETE ON public.ops_aktivitaetslog
   FOR EACH ROW EXECUTE FUNCTION public.prevent_ops_log_delete();
@@ -904,6 +913,7 @@ BEGIN
 END;
 $$;
 
+DROP TRIGGER IF EXISTS trg_aufgabe_eskalation ON public.ops_aufgaben;
 CREATE TRIGGER trg_aufgabe_eskalation
   BEFORE UPDATE ON public.ops_aufgaben
   FOR EACH ROW EXECUTE FUNCTION public.check_aufgabe_eskalation();
@@ -967,6 +977,7 @@ BEGIN
 END;
 $$;
 
+DROP TRIGGER IF EXISTS trg_recurring_aufgabe ON public.ops_aufgaben;
 CREATE TRIGGER trg_recurring_aufgabe
   BEFORE UPDATE ON public.ops_aufgaben
   FOR EACH ROW EXECUTE FUNCTION public.create_recurring_aufgabe();

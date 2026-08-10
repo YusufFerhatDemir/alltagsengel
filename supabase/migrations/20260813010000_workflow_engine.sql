@@ -46,9 +46,9 @@ DROP POLICY IF EXISTS wf_events_admin_all ON public.wf_events;
 CREATE POLICY wf_events_admin_all ON public.wf_events
   FOR ALL USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin'));
 
-CREATE INDEX idx_wf_events_status ON public.wf_events(status) WHERE status IN ('neu','fehlgeschlagen');
-CREATE INDEX idx_wf_events_typ ON public.wf_events(event_typ);
-CREATE INDEX idx_wf_events_org_created ON public.wf_events(organization_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_wf_events_status ON public.wf_events(status) WHERE status IN ('neu','fehlgeschlagen');
+CREATE INDEX IF NOT EXISTS idx_wf_events_typ ON public.wf_events(event_typ);
+CREATE INDEX IF NOT EXISTS idx_wf_events_org_created ON public.wf_events(organization_id, created_at DESC);
 
 -- ============================================================
 -- TEIL 2: wf_regeln — Workflow-Regeln (WHEN → IF → THEN)
@@ -84,7 +84,7 @@ DROP POLICY IF EXISTS wf_regeln_admin_all ON public.wf_regeln;
 CREATE POLICY wf_regeln_admin_all ON public.wf_regeln
   FOR ALL USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin'));
 
-CREATE INDEX idx_wf_regeln_event_typ ON public.wf_regeln(event_typ) WHERE aktiv = true;
+CREATE INDEX IF NOT EXISTS idx_wf_regeln_event_typ ON public.wf_regeln(event_typ) WHERE aktiv = true;
 
 -- ============================================================
 -- TEIL 3: wf_aktionen — Aktionen pro Regel
@@ -144,8 +144,8 @@ DROP POLICY IF EXISTS wf_ausfuehrungen_admin_all ON public.wf_ausfuehrungen;
 CREATE POLICY wf_ausfuehrungen_admin_all ON public.wf_ausfuehrungen
   FOR ALL USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin'));
 
-CREATE INDEX idx_wf_ausfuehrungen_event ON public.wf_ausfuehrungen(event_id);
-CREATE INDEX idx_wf_ausfuehrungen_status ON public.wf_ausfuehrungen(status) WHERE status = 'ausstehend';
+CREATE INDEX IF NOT EXISTS idx_wf_ausfuehrungen_event ON public.wf_ausfuehrungen(event_id);
+CREATE INDEX IF NOT EXISTS idx_wf_ausfuehrungen_status ON public.wf_ausfuehrungen(status) WHERE status = 'ausstehend';
 
 -- ============================================================
 -- TEIL 5: wf_warteschlange — Retry-Queue
@@ -177,7 +177,7 @@ DROP POLICY IF EXISTS wf_warteschlange_admin_all ON public.wf_warteschlange;
 CREATE POLICY wf_warteschlange_admin_all ON public.wf_warteschlange
   FOR ALL USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin'));
 
-CREATE INDEX idx_wf_queue_pending ON public.wf_warteschlange(naechster_versuch)
+CREATE INDEX IF NOT EXISTS idx_wf_queue_pending ON public.wf_warteschlange(naechster_versuch)
   WHERE status = 'wartend';
 
 -- ============================================================
@@ -252,24 +252,28 @@ RETURNS trigger LANGUAGE plpgsql AS $$
 BEGIN RAISE EXCEPTION 'wf_audit_log kann nicht gelöscht werden'; END;
 $$;
 
+DROP TRIGGER IF EXISTS trg_wf_audit_immutable_update ON public.wf_audit_log;
 CREATE TRIGGER trg_wf_audit_immutable_update
   BEFORE UPDATE ON public.wf_audit_log
   FOR EACH ROW EXECUTE FUNCTION public.prevent_wf_audit_update();
 
+DROP TRIGGER IF EXISTS trg_wf_audit_immutable_delete ON public.wf_audit_log;
 CREATE TRIGGER trg_wf_audit_immutable_delete
   BEFORE DELETE ON public.wf_audit_log
   FOR EACH ROW EXECUTE FUNCTION public.prevent_wf_audit_delete();
 
-CREATE INDEX idx_wf_audit_org_created ON public.wf_audit_log(organization_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_wf_audit_org_created ON public.wf_audit_log(organization_id, created_at DESC);
 
 -- ============================================================
 -- TEIL 8: updated_at Trigger für wf_regeln, wf_warteschlange
 -- ============================================================
 
+DROP TRIGGER IF EXISTS trg_updated_at_wf_regeln ON public.wf_regeln;
 CREATE TRIGGER trg_updated_at_wf_regeln
   BEFORE UPDATE ON public.wf_regeln
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at();
 
+DROP TRIGGER IF EXISTS trg_updated_at_wf_warteschlange ON public.wf_warteschlange;
 CREATE TRIGGER trg_updated_at_wf_warteschlange
   BEFORE UPDATE ON public.wf_warteschlange
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at();
@@ -544,7 +548,7 @@ BEGIN
             ELSE now() + interval '7 days'
           END,
           CASE WHEN v_aktion.konfiguration->>'verantwortlich_rolle' = 'admin'
-            THEN (SELECT id FROM public.profiles WHERE organization_id = v_event.organization_id AND role = 'admin' LIMIT 1)
+            THEN (SELECT om.user_id FROM public.organization_members om JOIN public.profiles p ON p.id = om.user_id WHERE om.organization_id = v_event.organization_id AND p.role = 'admin' LIMIT 1)
             ELSE (v_event.payload->>'verantwortlich_id')::uuid
           END,
           NULL, -- system-generiert
@@ -560,15 +564,15 @@ BEGIN
       -- ===== BENACHRICHTIGUNG SENDEN =====
       WHEN 'benachrichtigung_senden' THEN
         INSERT INTO public.ops_benachrichtigungen (
-          organization_id, empfaenger_id, titel, nachricht,
-          kategorie, typ, prioritaet,
+          organization_id, empfaenger_id, titel, inhalt,
+          kategorie, typ,
           bezug_typ, bezug_id
         ) VALUES (
           v_event.organization_id,
           COALESCE(
             (v_aktion.konfiguration->>'empfaenger_id')::uuid,
             CASE WHEN v_aktion.konfiguration->>'empfaenger_rolle' = 'admin'
-              THEN (SELECT id FROM public.profiles WHERE organization_id = v_event.organization_id AND role = 'admin' LIMIT 1)
+              THEN (SELECT om.user_id FROM public.organization_members om JOIN public.profiles p ON p.id = om.user_id WHERE om.organization_id = v_event.organization_id AND p.role = 'admin' LIMIT 1)
               ELSE (v_event.payload->>'verantwortlich_id')::uuid
             END
           ),
@@ -576,7 +580,6 @@ BEGIN
           COALESCE(v_aktion.konfiguration->>'nachricht', v_regel.beschreibung, ''),
           COALESCE(v_aktion.konfiguration->>'kategorie', 'system'),
           COALESCE(v_aktion.konfiguration->>'typ', 'info'),
-          COALESCE(v_aktion.konfiguration->>'prioritaet', 'normal'),
           v_event.quell_tabelle,
           v_event.quell_id
         )
@@ -590,7 +593,7 @@ BEGIN
         INSERT INTO public.ops_wiedervorlagen (
           organization_id, titel, beschreibung,
           faellig_am, empfaenger_id, erstellt_von,
-          bezug_typ, bezug_id, typ, status
+          entitaet_typ, entitaet_id, status
         ) VALUES (
           v_event.organization_id,
           COALESCE(v_aktion.konfiguration->>'titel', v_regel.bezeichnung),
@@ -601,13 +604,12 @@ BEGIN
           END,
           COALESCE(
             (v_aktion.konfiguration->>'empfaenger_id')::uuid,
-            (SELECT id FROM public.profiles WHERE organization_id = v_event.organization_id AND role = 'admin' LIMIT 1)
+            (SELECT om.user_id FROM public.organization_members om JOIN public.profiles p ON p.id = om.user_id WHERE om.organization_id = v_event.organization_id AND p.role = 'admin' LIMIT 1)
           ),
           NULL,
-          v_event.quell_tabelle,
+          COALESCE(v_event.quell_tabelle, 'allgemein'),
           v_event.quell_id,
-          COALESCE(v_aktion.konfiguration->>'typ', 'erinnerung'),
-          'offen'
+          'aktiv'
         )
         RETURNING id INTO v_created_id;
 
@@ -617,14 +619,14 @@ BEGIN
       -- ===== ESKALATION AUSLÖSEN =====
       WHEN 'eskalation_ausloesen' THEN
         INSERT INTO public.ops_eskalationshistorie (
-          organization_id, aufgabe_id, stufe, eskaliert_an, grund
+          organization_id, aufgabe_id, eskalationsstufe, eskaliert_an, grund
         ) VALUES (
           v_event.organization_id,
           (v_event.payload->>'aufgabe_id')::uuid,
           COALESCE((v_aktion.konfiguration->>'stufe')::integer, 1),
           COALESCE(
             (v_aktion.konfiguration->>'eskaliert_an')::uuid,
-            (SELECT id FROM public.profiles WHERE organization_id = v_event.organization_id AND role = 'admin' LIMIT 1)
+            (SELECT om.user_id FROM public.organization_members om JOIN public.profiles p ON p.id = om.user_id WHERE om.organization_id = v_event.organization_id AND p.role = 'admin' LIMIT 1)
           ),
           COALESCE(v_aktion.konfiguration->>'grund', 'Automatische Eskalation durch Workflow-Engine')
         )
@@ -1008,6 +1010,7 @@ BEGIN
 END;
 $$;
 
+DROP TRIGGER IF EXISTS trg_wf_dta_ruecklaeufer ON public.dta_ruecklaeufer;
 CREATE TRIGGER trg_wf_dta_ruecklaeufer
   AFTER INSERT ON public.dta_ruecklaeufer
   FOR EACH ROW EXECUTE FUNCTION public.wf_trigger_dta_ruecklaeufer();
@@ -1028,6 +1031,7 @@ BEGIN
 END;
 $$;
 
+DROP TRIGGER IF EXISTS trg_wf_dta_fehler ON public.dta_fehlerprotokoll;
 CREATE TRIGGER trg_wf_dta_fehler
   AFTER INSERT ON public.dta_fehlerprotokoll
   FOR EACH ROW EXECUTE FUNCTION public.wf_trigger_dta_fehler();
@@ -1048,6 +1052,7 @@ BEGIN
 END;
 $$;
 
+DROP TRIGGER IF EXISTS trg_wf_zahlung ON public.payments;
 CREATE TRIGGER trg_wf_zahlung
   AFTER INSERT ON public.payments
   FOR EACH ROW EXECUTE FUNCTION public.wf_trigger_zahlung();
@@ -1072,6 +1077,7 @@ BEGIN
 END;
 $$;
 
+DROP TRIGGER IF EXISTS trg_wf_dienstplan ON public.dienstplan_eintraege;
 CREATE TRIGGER trg_wf_dienstplan
   AFTER INSERT ON public.dienstplan_eintraege
   FOR EACH ROW EXECUTE FUNCTION public.wf_trigger_dienstplan();
@@ -1099,6 +1105,7 @@ BEGIN
 END;
 $$;
 
+DROP TRIGGER IF EXISTS trg_wf_aufgabe_ueberfaellig ON public.ops_aufgaben;
 CREATE TRIGGER trg_wf_aufgabe_ueberfaellig
   AFTER UPDATE ON public.ops_aufgaben
   FOR EACH ROW EXECUTE FUNCTION public.wf_trigger_aufgabe_ueberfaellig();

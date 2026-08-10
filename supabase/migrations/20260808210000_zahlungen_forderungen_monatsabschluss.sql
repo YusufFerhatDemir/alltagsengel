@@ -322,6 +322,43 @@ END
 $rls_diff$;
 
 -- ──────────────────────────────────────────────────────────────────
+-- 7b) RESTRICTIVE org_fence — Multi-Tenant-Isolation
+-- ──────────────────────────────────────────────────────────────────
+
+DO $org_fence$
+BEGIN
+    -- payments
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'payments_org_fence' AND tablename = 'payments') THEN
+        CREATE POLICY "payments_org_fence" ON public.payments
+            AS RESTRICTIVE FOR ALL
+            USING (organization_id = public.current_org_id())
+            WITH CHECK (organization_id = public.current_org_id());
+    END IF;
+    -- payment_allocations
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'alloc_org_fence' AND tablename = 'payment_allocations') THEN
+        CREATE POLICY "alloc_org_fence" ON public.payment_allocations
+            AS RESTRICTIVE FOR ALL
+            USING (organization_id = public.current_org_id())
+            WITH CHECK (organization_id = public.current_org_id());
+    END IF;
+    -- dunning_entries
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'dunning_org_fence' AND tablename = 'dunning_entries') THEN
+        CREATE POLICY "dunning_org_fence" ON public.dunning_entries
+            AS RESTRICTIVE FOR ALL
+            USING (organization_id = public.current_org_id())
+            WITH CHECK (organization_id = public.current_org_id());
+    END IF;
+    -- payment_differences
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'diff_org_fence' AND tablename = 'payment_differences') THEN
+        CREATE POLICY "diff_org_fence" ON public.payment_differences
+            AS RESTRICTIVE FOR ALL
+            USING (organization_id = public.current_org_id())
+            WITH CHECK (organization_id = public.current_org_id());
+    END IF;
+END
+$org_fence$;
+
+-- ──────────────────────────────────────────────────────────────────
 -- 8) Trigger: updated_at auto-update
 -- ──────────────────────────────────────────────────────────────────
 

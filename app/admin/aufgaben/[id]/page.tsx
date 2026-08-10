@@ -37,7 +37,7 @@ interface Aufgabe {
 
 interface ChecklistItem {
   id: string
-  text: string
+  titel: string
   erledigt: boolean
   position: number
 }
@@ -52,15 +52,14 @@ interface Kommentar {
 
 interface Anhang {
   id: string
-  name: string
-  url: string | null
-  dokument_id: string | null
+  dokument_id: string
+  hinzugefuegt_von: string | null
   created_at: string | null
 }
 
 interface EskalationsEintrag {
   id: string
-  stufe: number
+  eskalationsstufe: number
   eskalation_an_rolle: string | null
   grund: string | null
   created_at: string | null
@@ -137,7 +136,6 @@ export default function AufgabeDetailPage() {
   const [kommentarIntern, setKommentarIntern] = useState(false)
 
   // Anhang form
-  const [newAnhangName, setNewAnhangName] = useState('')
   const [newAnhangDokId, setNewAnhangDokId] = useState('')
 
   // Load Aufgabe
@@ -160,7 +158,7 @@ export default function AufgabeDetailPage() {
       setTabLoading(true)
       try {
         if (tab === 'checkliste') {
-          const res = await fetch(`/api/ops/aufgaben/${aufgabeId}/checkliste`)
+          const res = await fetch(`/api/ops/aufgaben/${aufgabeId}/checklisten`)
           if (res.ok) setChecklist(await res.json())
         } else if (tab === 'kommentare') {
           const res = await fetch(`/api/ops/aufgaben/${aufgabeId}/kommentare`)
@@ -224,7 +222,7 @@ export default function AufgabeDetailPage() {
 
   // Checklist operations
   async function toggleCheck(item: ChecklistItem) {
-    const res = await fetch(`/api/ops/aufgaben/${aufgabeId}/checkliste/${item.id}`, {
+    const res = await fetch(`/api/ops/aufgaben/${aufgabeId}/checklisten/${item.id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ erledigt: !item.erledigt }),
@@ -236,10 +234,10 @@ export default function AufgabeDetailPage() {
 
   async function addCheckItem() {
     if (!newCheckText.trim()) return
-    const res = await fetch(`/api/ops/aufgaben/${aufgabeId}/checkliste`, {
+    const res = await fetch(`/api/ops/aufgaben/${aufgabeId}/checklisten`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text: newCheckText.trim() }),
+      body: JSON.stringify({ titel: newCheckText.trim() }),
     })
     if (res.ok) {
       const item = await res.json()
@@ -249,7 +247,7 @@ export default function AufgabeDetailPage() {
   }
 
   async function deleteCheckItem(itemId: string) {
-    const res = await fetch(`/api/ops/aufgaben/${aufgabeId}/checkliste/${itemId}`, { method: 'DELETE' })
+    const res = await fetch(`/api/ops/aufgaben/${aufgabeId}/checklisten/${itemId}`, { method: 'DELETE' })
     if (res.ok) {
       setChecklist(prev => prev.filter(c => c.id !== itemId))
     }
@@ -273,25 +271,23 @@ export default function AufgabeDetailPage() {
 
   // Anhang operations
   async function addAnhang() {
-    if (!newAnhangName.trim()) return
+    if (!newAnhangDokId.trim()) return
     const res = await fetch(`/api/ops/aufgaben/${aufgabeId}/anhaenge`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        name: newAnhangName.trim(),
-        dokument_id: newAnhangDokId.trim() || null,
+        dokument_id: newAnhangDokId.trim(),
       }),
     })
     if (res.ok) {
       const a = await res.json()
       setAnhaenge(prev => [...prev, a])
-      setNewAnhangName('')
       setNewAnhangDokId('')
     }
   }
 
   async function deleteAnhang(anhangId: string) {
-    const res = await fetch(`/api/ops/aufgaben/${aufgabeId}/anhaenge/${anhangId}`, { method: 'DELETE' })
+    const res = await fetch(`/api/ops/aufgaben/${aufgabeId}/anhaenge?id=${anhangId}`, { method: 'DELETE' })
     if (res.ok) {
       setAnhaenge(prev => prev.filter(a => a.id !== anhangId))
     }
@@ -526,7 +522,7 @@ export default function AufgabeDetailPage() {
                       textDecoration: item.erledigt ? 'line-through' : 'none',
                       color: item.erledigt ? 'var(--ink4)' : 'var(--ink)',
                     }}>
-                      {item.text}
+                      {item.titel}
                     </span>
                     <button
                       onClick={() => deleteCheckItem(item.id)}
@@ -625,8 +621,7 @@ export default function AufgabeDetailPage() {
                     padding: '10px 0', borderBottom: '1px solid var(--border)',
                   }}>
                     <div>
-                      <span style={{ fontWeight: 600, fontSize: 14 }}>{a.name}</span>
-                      {a.dokument_id && <span style={{ fontSize: 12, color: 'var(--ink4)', marginLeft: 8 }}>Dok: {a.dokument_id.slice(0, 8)}...</span>}
+                      <span style={{ fontWeight: 600, fontSize: 14 }}>Dok: {a.dokument_id.slice(0, 8)}...</span>
                       <span style={{ fontSize: 12, color: 'var(--ink4)', marginLeft: 8 }}>{timeAgo(a.created_at)}</span>
                     </div>
                     <button
@@ -648,18 +643,12 @@ export default function AufgabeDetailPage() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 10 }}>
                   <input
                     style={inputStyle}
-                    value={newAnhangName}
-                    onChange={e => setNewAnhangName(e.target.value)}
-                    placeholder="Name des Anhangs"
-                  />
-                  <input
-                    style={inputStyle}
                     value={newAnhangDokId}
                     onChange={e => setNewAnhangDokId(e.target.value)}
-                    placeholder="Dokument-ID (UUID, optional)"
+                    placeholder="Dokument-ID (UUID)"
                   />
                 </div>
-                <button onClick={addAnhang} style={primaryBtn} disabled={!newAnhangName.trim()}>
+                <button onClick={addAnhang} style={primaryBtn} disabled={!newAnhangDokId.trim()}>
                   Hinzufügen
                 </button>
               </div>
@@ -692,7 +681,7 @@ export default function AufgabeDetailPage() {
                         return (
                           <tr key={e.id}>
                             <td style={{ fontSize: 13, whiteSpace: 'nowrap' }}>{formatDate(e.created_at)} ({timeAgo(e.created_at)})</td>
-                            <td style={{ fontSize: 13, textAlign: 'center' }}>{e.stufe}</td>
+                            <td style={{ fontSize: 13, textAlign: 'center' }}>{e.eskalationsstufe}</td>
                             <td><StatusBadge label={rolle.label} color={rolle.color} /></td>
                             <td style={{ fontSize: 13 }}>{e.grund || '—'}</td>
                           </tr>

@@ -33,7 +33,19 @@ export async function PUT(request: Request) {
     const alsZahl = (v: unknown): number | null =>
       v === undefined || v === null || v === '' ? null : Number(v)
 
-    const grenzwert = await upsertThreshold(createAdminClient(), {
+    const admin = createAdminClient()
+    // Mandantenschutz: der Klient muss zur aktiven Organisation gehören.
+    const { data: client } = await admin
+      .from('clients')
+      .select('id')
+      .eq('id', body.clientId)
+      .eq('organization_id', auth.ctx.organizationId)
+      .maybeSingle()
+    if (!client) {
+      return NextResponse.json({ error: 'Klient nicht gefunden oder gehört nicht zur Organisation.' }, { status: 404 })
+    }
+
+    const grenzwert = await upsertThreshold(admin, {
       organizationId: auth.ctx.organizationId,
       clientId: body.clientId,
       typ: body.typ,

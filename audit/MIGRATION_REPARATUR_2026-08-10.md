@@ -33,16 +33,29 @@ END $legacy_check$;
 
 ### Fix 3: Idempotenz Aufgaben (`20260812010000`)
 
-**Problem:** 44 `CREATE POLICY`-Statements ohne vorheriges `DROP POLICY IF EXISTS` → Wiederholungslauf nach Teil-Fehler bricht ab.
-
+**Problem 3a:** 44 `CREATE POLICY`-Statements ohne vorheriges `DROP POLICY IF EXISTS` → Wiederholungslauf nach Teil-Fehler bricht ab.
 **Lösung:** `DROP POLICY IF EXISTS "name" ON table;` vor jedes `CREATE POLICY` eingefügt (45 Stück, inkl. der admin-Policies).
+
+**Problem 3b:** 11 `CREATE TRIGGER`-Statements ohne `DROP TRIGGER IF EXISTS`.
+**Lösung:** `DROP TRIGGER IF EXISTS name ON table;` vor jedes `CREATE TRIGGER` eingefügt.
+
+### Fix 3c: Funktionssignatur Einsatzplanung (`20260808200000`)
+
+**Problem:** `get_monthly_closing_overview(date)` wird in dieser Migration mit 13-spaltigem Rückgabetyp erstellt, in `20260814010000` mit 10-spaltigem. Bei Idempotenz-Test bricht der Zweitlauf ab.
+**Lösung:** `DROP FUNCTION IF EXISTS public.get_monthly_closing_overview(date);` vor `CREATE OR REPLACE` eingefügt.
 
 ### Fix 4: Idempotenz + Security Workflow-Engine (`20260813010000`)
 
 **Problem 4a:** 7 org_fence + 7 admin Policies ohne `DROP POLICY IF EXISTS`.
 **Lösung:** 14 `DROP POLICY IF EXISTS` eingefügt.
 
-**Problem 4b:** 6 SECURITY DEFINER-Funktionen (`wf_emit_event`, `wf_process_event`, `wf_execute_queue_item`, `wf_process_pending`, `wf_check_fristen`, `next_billing_number`) waren per Default für `anon` aufrufbar.
+**Problem 4b:** 8 Indizes ohne `IF NOT EXISTS`, 9 Trigger ohne `DROP TRIGGER IF EXISTS`.
+**Lösung:** Alle `CREATE INDEX` auf `IF NOT EXISTS` umgestellt. `DROP TRIGGER IF EXISTS` vor jedes `CREATE TRIGGER` eingefügt.
+
+**Problem 4c:** View `wf_statistik` referenziert `organization_id` direkt aus `organizations o` — Spalte heißt `id`, nicht `organization_id`.
+**Lösung:** `organization_id,` → `o.id AS organization_id,`.
+
+**Problem 4d:** 6 SECURITY DEFINER-Funktionen (`wf_emit_event`, `wf_process_event`, `wf_execute_queue_item`, `wf_process_pending`, `wf_check_fristen`, `next_billing_number`) waren per Default für `anon` aufrufbar.
 **Lösung:** TEIL 17 eingefügt — explizites `REVOKE ALL FROM PUBLIC, anon, authenticated` + `GRANT TO service_role` für alle 6 Funktionen (Defense in Depth, unabhängig von `20260817030000`).
 
 ### Fix 5: Funktions-Signaturwechsel (`20260814010000`)
@@ -118,7 +131,29 @@ SELECT to_regclass('public.dta_ruecklaeufer'), to_regclass('public.ops_aufgaben'
 
 ---
 
-## 4. Bekannte Risiken
+## 4. Shadow-DB-Verifikation
+
+### Erstdurchlauf (105 Migrationen)
+```
+Dateien: 105 OK, 0 fehlgeschlagen
+```
+Alle 4 ursprünglichen Fehler (§5.1 Inventar) behoben:
+- `20260808210000` — Legacy-payments erkannt + umbenannt ✓
+- `20260808220000` — `current_org_id()` statt `profiles.organization_id` ✓
+- `20260813010000` — `wf_statistik`-View `o.id AS organization_id` + Kaskadenfehler aufgelöst ✓
+- `20260814010000` — `DROP FUNCTION` vor Signaturwechsel ✓
+
+### Idempotenz-Test (Zweitlauf auf derselben DB)
+```
+103 OK, 1 Fehler (vorbestehend)
+```
+Einziger verbleibender Fehler: `20260319000000_fix_rls_policies.sql` — älterer RLS-Fix referenziert `user_id`-Spalte, die von späteren Migrationen umbenannt wurde. **Nicht im Scope** (Baseline, LIVE).
+
+Alle 5 reparierten Dateien + Aufgaben/Workflow-Engine Trigger + Einsatzplanung-Funktion sind idempotent.
+
+---
+
+## 5. Bekannte Risiken
 
 1. **Kein Live-Abgleich möglich** — Supabase-MCP nicht verbunden. Alle Status-Angaben basieren auf Inventar + Memory-Quellen.
 2. **Namenskollision** `20260818010000_sis_*` und `20260818010000_vitalwerte*` — identischer Zeitstempel. Alphabetische Sortierung entscheidet die Reihenfolge. Empfehlung: einen davon umbenennen (z.B. `20260818020000_vitalwerte.sql`).

@@ -54,6 +54,17 @@ export async function POST(request: Request) {
       if (!adminAuth.ok) return adminAuth.response
       organizationId = adminAuth.ctx.organizationId
       supabase = createAdminClient()
+
+      // Mandantenschutz: der Klient muss zur aktiven Organisation gehören.
+      const { data: client } = await supabase
+        .from('clients')
+        .select('id')
+        .eq('id', body.clientId)
+        .eq('organization_id', organizationId)
+        .maybeSingle()
+      if (!client) {
+        return NextResponse.json({ error: 'Klient nicht gefunden oder gehört nicht zur Organisation.' }, { status: 404 })
+      }
     }
 
     const messung = await createVital(supabase, {

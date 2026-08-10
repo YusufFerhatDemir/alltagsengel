@@ -4,9 +4,9 @@
 // Konfliktauflösung und Idempotency.
 // ═══════════════════════════════════════════════════════════════
 
-export type SyncStatus = 'pending' | 'syncing' | 'synced' | 'error'
+export type SyncStatus = 'pending' | 'syncing' | 'synced' | 'error' | 'conflict'
 
-export const SYNC_STATUS_WERTE: SyncStatus[] = ['pending', 'syncing', 'synced', 'error']
+export const SYNC_STATUS_WERTE: SyncStatus[] = ['pending', 'syncing', 'synced', 'error', 'conflict']
 
 export type OfflineEntityTyp =
   | 'leistungsnachweis' | 'pflegebericht' | 'signatur'

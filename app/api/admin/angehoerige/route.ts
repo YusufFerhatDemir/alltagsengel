@@ -32,6 +32,18 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
     const supabase = await createClient()
+
+    // Mandantenschutz: der Klient muss zur aktiven Organisation gehören.
+    const { data: client } = await supabase
+      .from('clients')
+      .select('id')
+      .eq('id', body.client_id)
+      .eq('organization_id', auth.ctx.organizationId)
+      .maybeSingle()
+    if (!client) {
+      return NextResponse.json({ error: 'Klient nicht gefunden oder gehört nicht zur Organisation.' }, { status: 404 })
+    }
+
     const zugang = await erstelleZugang(supabase, auth.ctx.organizationId, auth.ctx.userId, body)
 
     await protokolliereZugriff(supabase, auth.ctx.organizationId, {
