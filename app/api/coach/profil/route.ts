@@ -41,7 +41,11 @@ export async function POST(request: Request) {
       rolle: body.rolle,
       anzeigename: typeof body.anzeigename === 'string' ? body.anzeigename.slice(0, 120) : null,
       pflegegrad,
-      geburtsjahr: body.geburtsjahr == null ? null : Number(body.geburtsjahr),
+      geburtsjahr: body.geburtsjahr == null ? null : (() => {
+        const gj = Number(body.geburtsjahr)
+        if (!Number.isInteger(gj) || gj < 1900 || gj > 2030) throw new Error('Geburtsjahr muss zwischen 1900 und 2030 liegen.')
+        return gj
+      })(),
     })
     .select()
     .single()
