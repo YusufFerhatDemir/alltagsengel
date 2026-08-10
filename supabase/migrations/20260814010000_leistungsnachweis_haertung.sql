@@ -272,6 +272,8 @@ CREATE TRIGGER trg_prevent_locked_record
 -- 6) RPC: Monatsabschluss-Übersicht (KPI-Aggregation)
 -- ═══════════════════════════════════════════════════════════════════
 
+DROP FUNCTION IF EXISTS public.get_monthly_closing_overview(date);
+
 CREATE OR REPLACE FUNCTION public.get_monthly_closing_overview(
   p_month date
 )

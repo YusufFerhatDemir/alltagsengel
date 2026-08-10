@@ -38,9 +38,11 @@ CREATE TABLE IF NOT EXISTS public.wf_events (
 
 ALTER TABLE public.wf_events ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS wf_events_org_fence ON public.wf_events;
 CREATE POLICY wf_events_org_fence ON public.wf_events AS RESTRICTIVE
   FOR ALL USING (organization_id = current_org_id());
 
+DROP POLICY IF EXISTS wf_events_admin_all ON public.wf_events;
 CREATE POLICY wf_events_admin_all ON public.wf_events
   FOR ALL USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin'));
 
@@ -74,9 +76,11 @@ CREATE TABLE IF NOT EXISTS public.wf_regeln (
 
 ALTER TABLE public.wf_regeln ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS wf_regeln_org_fence ON public.wf_regeln;
 CREATE POLICY wf_regeln_org_fence ON public.wf_regeln AS RESTRICTIVE
   FOR ALL USING (organization_id = current_org_id());
 
+DROP POLICY IF EXISTS wf_regeln_admin_all ON public.wf_regeln;
 CREATE POLICY wf_regeln_admin_all ON public.wf_regeln
   FOR ALL USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin'));
 
@@ -102,9 +106,11 @@ CREATE TABLE IF NOT EXISTS public.wf_aktionen (
 
 ALTER TABLE public.wf_aktionen ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS wf_aktionen_org_fence ON public.wf_aktionen;
 CREATE POLICY wf_aktionen_org_fence ON public.wf_aktionen AS RESTRICTIVE
   FOR ALL USING (organization_id = current_org_id());
 
+DROP POLICY IF EXISTS wf_aktionen_admin_all ON public.wf_aktionen;
 CREATE POLICY wf_aktionen_admin_all ON public.wf_aktionen
   FOR ALL USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin'));
 
@@ -130,9 +136,11 @@ CREATE TABLE IF NOT EXISTS public.wf_ausfuehrungen (
 
 ALTER TABLE public.wf_ausfuehrungen ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS wf_ausfuehrungen_org_fence ON public.wf_ausfuehrungen;
 CREATE POLICY wf_ausfuehrungen_org_fence ON public.wf_ausfuehrungen AS RESTRICTIVE
   FOR ALL USING (organization_id = current_org_id());
 
+DROP POLICY IF EXISTS wf_ausfuehrungen_admin_all ON public.wf_ausfuehrungen;
 CREATE POLICY wf_ausfuehrungen_admin_all ON public.wf_ausfuehrungen
   FOR ALL USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin'));
 
@@ -161,9 +169,11 @@ CREATE TABLE IF NOT EXISTS public.wf_warteschlange (
 
 ALTER TABLE public.wf_warteschlange ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS wf_warteschlange_org_fence ON public.wf_warteschlange;
 CREATE POLICY wf_warteschlange_org_fence ON public.wf_warteschlange AS RESTRICTIVE
   FOR ALL USING (organization_id = current_org_id());
 
+DROP POLICY IF EXISTS wf_warteschlange_admin_all ON public.wf_warteschlange;
 CREATE POLICY wf_warteschlange_admin_all ON public.wf_warteschlange
   FOR ALL USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin'));
 
@@ -192,9 +202,11 @@ CREATE TABLE IF NOT EXISTS public.wf_dead_letter (
 
 ALTER TABLE public.wf_dead_letter ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS wf_dead_letter_org_fence ON public.wf_dead_letter;
 CREATE POLICY wf_dead_letter_org_fence ON public.wf_dead_letter AS RESTRICTIVE
   FOR ALL USING (organization_id = current_org_id());
 
+DROP POLICY IF EXISTS wf_dead_letter_admin_all ON public.wf_dead_letter;
 CREATE POLICY wf_dead_letter_admin_all ON public.wf_dead_letter
   FOR ALL USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin'));
 
@@ -221,9 +233,11 @@ CREATE TABLE IF NOT EXISTS public.wf_audit_log (
 
 ALTER TABLE public.wf_audit_log ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS wf_audit_org_fence ON public.wf_audit_log;
 CREATE POLICY wf_audit_org_fence ON public.wf_audit_log AS RESTRICTIVE
   FOR ALL USING (organization_id = current_org_id());
 
+DROP POLICY IF EXISTS wf_audit_admin_all ON public.wf_audit_log;
 CREATE POLICY wf_audit_admin_all ON public.wf_audit_log
   FOR ALL USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin'));
 
@@ -1158,7 +1172,7 @@ ORDER BY dl.created_at DESC;
 -- Workflow-Statistik
 CREATE OR REPLACE VIEW public.wf_statistik AS
 SELECT
-  organization_id,
+  o.id AS organization_id,
   (SELECT COUNT(*) FROM public.wf_events WHERE organization_id = o.id) AS total_events,
   (SELECT COUNT(*) FROM public.wf_events WHERE organization_id = o.id AND status = 'neu') AS offene_events,
   (SELECT COUNT(*) FROM public.wf_events WHERE organization_id = o.id AND status = 'verarbeitet') AS verarbeitete_events,
@@ -1168,6 +1182,37 @@ SELECT
   (SELECT COUNT(*) FROM public.wf_regeln WHERE organization_id = o.id AND aktiv = true) AS aktive_regeln,
   (SELECT COUNT(*) FROM public.wf_ausfuehrungen WHERE organization_id = o.id AND status = 'erfolgreich') AS erfolgreiche_ausfuehrungen
 FROM public.organizations o;
+
+-- ============================================================
+-- TEIL 17: SECURITY DEFINER — REVOKE/GRANT (Defense in Depth)
+-- ============================================================
+-- Alle SECURITY DEFINER-Funktionen dürfen NUR von service_role
+-- aufgerufen werden. Ohne diese Grants sind sie per Default
+-- für anon/authenticated aufrufbar (PostgreSQL DEFAULT PRIVILEGES).
+-- ============================================================
+
+DO $revoke_grant$
+DECLARE
+  fn text;
+BEGIN
+  FOR fn IN SELECT unnest(ARRAY[
+    'wf_emit_event(text, text, text, text, uuid, jsonb)',
+    'wf_process_event(uuid)',
+    'wf_execute_queue_item(uuid)',
+    'wf_process_pending(integer)',
+    'wf_check_fristen()',
+    'next_billing_number(uuid, text)'
+  ])
+  LOOP
+    BEGIN
+      EXECUTE format('REVOKE ALL ON FUNCTION public.%s FROM PUBLIC, anon, authenticated', fn);
+      EXECUTE format('GRANT EXECUTE ON FUNCTION public.%s TO service_role', fn);
+    EXCEPTION WHEN undefined_function THEN
+      NULL;
+    END;
+  END LOOP;
+END
+$revoke_grant$;
 
 -- ============================================================
 -- MIGRATION COMPLETE

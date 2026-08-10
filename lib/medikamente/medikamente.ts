@@ -240,7 +240,7 @@ export async function erfasseEingabe(
     einnahme_zeit: eingabe.einnahme_zeit,
     geplant_um: eingabe.geplant_um,
     gegeben_um: ['gegeben'].includes(eingabe.status) ? new Date().toISOString() : null,
-    gegeben_von: ['gegeben', 'verweigert'].includes(eingabe.status) ? userId : null,
+    gegeben_von: userId,
     status: eingabe.status,
     verweigert_grund: eingabe.verweigert_grund || null,
     notizen: eingabe.notizen || null,
