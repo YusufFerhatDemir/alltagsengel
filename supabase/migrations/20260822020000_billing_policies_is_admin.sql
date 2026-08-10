@@ -53,6 +53,9 @@ DROP POLICY IF EXISTS "Admins can manage all documents" ON public.documents;
 
 DO $$ BEGIN
   IF EXISTS (SELECT 1 FROM pg_tables WHERE tablename = 'documents' AND schemaname = 'public') THEN
+    EXECUTE 'DROP POLICY IF EXISTS "documents_admin_all" ON public.documents';
+    EXECUTE 'DROP POLICY IF EXISTS "documents_user_update" ON public.documents';
+    EXECUTE 'DROP POLICY IF EXISTS "documents_user_delete" ON public.documents';
     EXECUTE 'CREATE POLICY "documents_admin_all" ON public.documents FOR ALL TO authenticated USING (public.is_admin())';
     EXECUTE 'CREATE POLICY "documents_user_update" ON public.documents FOR UPDATE TO authenticated USING (user_id = auth.uid())';
     EXECUTE 'CREATE POLICY "documents_user_delete" ON public.documents FOR DELETE TO authenticated USING (user_id = auth.uid())';

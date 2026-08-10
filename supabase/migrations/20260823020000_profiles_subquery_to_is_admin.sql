@@ -222,12 +222,14 @@ CREATE POLICY admin_personal_audit_log ON public.personal_audit_log
 
 -- 5a) messages — immer vorhanden
 DROP POLICY IF EXISTS "Admins can manage all messages" ON public.messages;
+DROP POLICY IF EXISTS "messages_admin_all" ON public.messages;
 CREATE POLICY "messages_admin_all" ON public.messages
   FOR ALL TO authenticated
   USING (public.is_admin());
 
 -- 5b) notifications — immer vorhanden
 DROP POLICY IF EXISTS "Admins can manage all notifications" ON public.notifications;
+DROP POLICY IF EXISTS "notifications_admin_all" ON public.notifications;
 CREATE POLICY "notifications_admin_all" ON public.notifications
   FOR ALL TO authenticated
   USING (public.is_admin());
@@ -237,6 +239,7 @@ CREATE POLICY "notifications_admin_all" ON public.notifications
 --     wenn FOR ALL existiert.
 DROP POLICY IF EXISTS "Admins can manage all reviews" ON public.reviews;
 DROP POLICY IF EXISTS "Admins can read all reviews" ON public.reviews;
+DROP POLICY IF EXISTS "reviews_admin_all" ON public.reviews;
 CREATE POLICY "reviews_admin_all" ON public.reviews
   FOR ALL TO authenticated
   USING (public.is_admin());
@@ -244,12 +247,14 @@ CREATE POLICY "reviews_admin_all" ON public.reviews
 -- 5d) angel_reviews
 DROP POLICY IF EXISTS "Admin kann alle Bewertungen verwalten" ON public.angel_reviews;
 DROP POLICY IF EXISTS "Admins can manage all reviews" ON public.angel_reviews;
+DROP POLICY IF EXISTS "angel_reviews_admin_all" ON public.angel_reviews;
 CREATE POLICY "angel_reviews_admin_all" ON public.angel_reviews
   FOR ALL TO authenticated
   USING (public.is_admin());
 
 -- 5e) page_views
 DROP POLICY IF EXISTS "Admins can read page views" ON public.page_views;
+DROP POLICY IF EXISTS "page_views_admin_select" ON public.page_views;
 CREATE POLICY "page_views_admin_select" ON public.page_views
   FOR SELECT TO authenticated
   USING (public.is_admin());
@@ -260,6 +265,7 @@ BEGIN
   -- care_eligibility
   IF EXISTS (SELECT 1 FROM pg_tables WHERE schemaname = 'public' AND tablename = 'care_eligibility') THEN
     EXECUTE 'DROP POLICY IF EXISTS "Admins can manage all eligibility" ON public.care_eligibility';
+    EXECUTE 'DROP POLICY IF EXISTS "care_eligibility_admin_all" ON public.care_eligibility';
     EXECUTE 'CREATE POLICY "care_eligibility_admin_all" ON public.care_eligibility FOR ALL TO authenticated USING (public.is_admin())';
     RAISE NOTICE 'care_eligibility: Policy ersetzt';
   END IF;
@@ -267,6 +273,7 @@ BEGIN
   -- carebox_cart
   IF EXISTS (SELECT 1 FROM pg_tables WHERE schemaname = 'public' AND tablename = 'carebox_cart') THEN
     EXECUTE 'DROP POLICY IF EXISTS "Admins can manage all carts" ON public.carebox_cart';
+    EXECUTE 'DROP POLICY IF EXISTS "carebox_cart_admin_all" ON public.carebox_cart';
     EXECUTE 'CREATE POLICY "carebox_cart_admin_all" ON public.carebox_cart FOR ALL TO authenticated USING (public.is_admin())';
     RAISE NOTICE 'carebox_cart: Policy ersetzt';
   END IF;
@@ -274,6 +281,7 @@ BEGIN
   -- carebox_order_requests
   IF EXISTS (SELECT 1 FROM pg_tables WHERE schemaname = 'public' AND tablename = 'carebox_order_requests') THEN
     EXECUTE 'DROP POLICY IF EXISTS "Admins can manage all orders" ON public.carebox_order_requests';
+    EXECUTE 'DROP POLICY IF EXISTS "carebox_orders_admin_all" ON public.carebox_order_requests';
     EXECUTE 'CREATE POLICY "carebox_orders_admin_all" ON public.carebox_order_requests FOR ALL TO authenticated USING (public.is_admin())';
     RAISE NOTICE 'carebox_order_requests: Policy ersetzt';
   END IF;
@@ -281,6 +289,7 @@ BEGIN
   -- carebox_catalog_items
   IF EXISTS (SELECT 1 FROM pg_tables WHERE schemaname = 'public' AND tablename = 'carebox_catalog_items') THEN
     EXECUTE 'DROP POLICY IF EXISTS "Admins can manage catalog" ON public.carebox_catalog_items';
+    EXECUTE 'DROP POLICY IF EXISTS "carebox_catalog_admin_all" ON public.carebox_catalog_items';
     EXECUTE 'CREATE POLICY "carebox_catalog_admin_all" ON public.carebox_catalog_items FOR ALL TO authenticated USING (public.is_admin())';
     RAISE NOTICE 'carebox_catalog_items: Policy ersetzt';
   END IF;
