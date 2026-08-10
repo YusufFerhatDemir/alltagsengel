@@ -114,8 +114,7 @@ DO $$ BEGIN
     CREATE POLICY engel_pflege_aufnahmen_select ON pflege_aufnahmen FOR SELECT
       USING (client_id IN (
         SELECT a.client_id FROM assignments a
-        JOIN caregivers cg ON cg.id = a.caregiver_id
-        WHERE cg.user_id = auth.uid() AND a.status IN ('active','GEPLANT','BESTAETIGT','UNTERWEGS','GESTARTET')
+        WHERE a.caregiver_id IN (SELECT eigene_caregiver_ids()) AND a.status IN ('active','GEPLANT','BESTAETIGT','UNTERWEGS','GESTARTET')
       ));
   END IF;
 END $$;
@@ -208,16 +207,14 @@ DO $$ BEGIN
     CREATE POLICY engel_pflege_anamnesen_select ON pflege_anamnesen FOR SELECT
       USING (client_id IN (
         SELECT a.client_id FROM assignments a
-        JOIN caregivers cg ON cg.id = a.caregiver_id
-        WHERE cg.user_id = auth.uid() AND a.status IN ('active','GEPLANT','BESTAETIGT','UNTERWEGS','GESTARTET')
+        WHERE a.caregiver_id IN (SELECT eigene_caregiver_ids()) AND a.status IN ('active','GEPLANT','BESTAETIGT','UNTERWEGS','GESTARTET')
       ));
   END IF;
   IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'pflege_anamnesen' AND policyname = 'engel_pflege_anamnesen_insert') THEN
     CREATE POLICY engel_pflege_anamnesen_insert ON pflege_anamnesen FOR INSERT
       WITH CHECK (client_id IN (
         SELECT a.client_id FROM assignments a
-        JOIN caregivers cg ON cg.id = a.caregiver_id
-        WHERE cg.user_id = auth.uid() AND a.status IN ('active','GEPLANT','BESTAETIGT','UNTERWEGS','GESTARTET')
+        WHERE a.caregiver_id IN (SELECT eigene_caregiver_ids()) AND a.status IN ('active','GEPLANT','BESTAETIGT','UNTERWEGS','GESTARTET')
       ));
   END IF;
 END $$;
@@ -275,8 +272,7 @@ DO $$ BEGIN
     CREATE POLICY engel_pflege_diagnosen_select ON pflege_diagnosen FOR SELECT
       USING (betreuungsrelevant = true AND aktiv = true AND client_id IN (
         SELECT a.client_id FROM assignments a
-        JOIN caregivers cg ON cg.id = a.caregiver_id
-        WHERE cg.user_id = auth.uid() AND a.status IN ('active','GEPLANT','BESTAETIGT','UNTERWEGS','GESTARTET')
+        WHERE a.caregiver_id IN (SELECT eigene_caregiver_ids()) AND a.status IN ('active','GEPLANT','BESTAETIGT','UNTERWEGS','GESTARTET')
       ));
   END IF;
 END $$;
@@ -333,8 +329,7 @@ DO $$ BEGIN
     CREATE POLICY engel_pflege_risiken_select ON pflege_risiken FOR SELECT
       USING (aktiv = true AND client_id IN (
         SELECT a.client_id FROM assignments a
-        JOIN caregivers cg ON cg.id = a.caregiver_id
-        WHERE cg.user_id = auth.uid() AND a.status IN ('active','GEPLANT','BESTAETIGT','UNTERWEGS','GESTARTET')
+        WHERE a.caregiver_id IN (SELECT eigene_caregiver_ids()) AND a.status IN ('active','GEPLANT','BESTAETIGT','UNTERWEGS','GESTARTET')
       ));
   END IF;
 END $$;
@@ -400,8 +395,7 @@ DO $$ BEGIN
     CREATE POLICY engel_pflege_massnahmenplaene_select ON pflege_massnahmenplaene FOR SELECT
       USING (status IN ('aktiv','abgelaufen') AND client_id IN (
         SELECT a.client_id FROM assignments a
-        JOIN caregivers cg ON cg.id = a.caregiver_id
-        WHERE cg.user_id = auth.uid() AND a.status IN ('active','GEPLANT','BESTAETIGT','UNTERWEGS','GESTARTET')
+        WHERE a.caregiver_id IN (SELECT eigene_caregiver_ids()) AND a.status IN ('active','GEPLANT','BESTAETIGT','UNTERWEGS','GESTARTET')
       ));
   END IF;
   IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'pflege_massnahmenplaene' AND policyname = 'kunde_pflege_massnahmenplaene_select') THEN
@@ -544,16 +538,14 @@ DO $$ BEGIN
     CREATE POLICY engel_pflege_verlauf_select ON pflege_verlauf FOR SELECT
       USING (sichtbarkeit IN ('engel','alle') AND client_id IN (
         SELECT a.client_id FROM assignments a
-        JOIN caregivers cg ON cg.id = a.caregiver_id
-        WHERE cg.user_id = auth.uid() AND a.status IN ('active','GEPLANT','BESTAETIGT','UNTERWEGS','GESTARTET')
+        WHERE a.caregiver_id IN (SELECT eigene_caregiver_ids()) AND a.status IN ('active','GEPLANT','BESTAETIGT','UNTERWEGS','GESTARTET')
       ));
   END IF;
   IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'pflege_verlauf' AND policyname = 'engel_pflege_verlauf_insert') THEN
     CREATE POLICY engel_pflege_verlauf_insert ON pflege_verlauf FOR INSERT
       WITH CHECK (client_id IN (
         SELECT a.client_id FROM assignments a
-        JOIN caregivers cg ON cg.id = a.caregiver_id
-        WHERE cg.user_id = auth.uid() AND a.status IN ('active','GEPLANT','BESTAETIGT','UNTERWEGS','GESTARTET')
+        WHERE a.caregiver_id IN (SELECT eigene_caregiver_ids()) AND a.status IN ('active','GEPLANT','BESTAETIGT','UNTERWEGS','GESTARTET')
       ));
   END IF;
   IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'pflege_verlauf' AND policyname = 'kunde_pflege_verlauf_select') THEN

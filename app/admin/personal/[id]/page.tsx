@@ -90,6 +90,10 @@ interface AuditEntry {
   details: string | null
 }
 
+// qualiForm/schulungForm-Feldnamen entsprechen 1:1 den Parametern von
+// createQualifikation/createSchulung (lib/personal/qualifikationen.ts,
+// lib/personal/schulungen.ts), da sie direkt als POST-Body versendet werden.
+
 type Tab = 'stammdaten' | 'qualifikationen' | 'schulungen' | 'arbeitszeiten' | 'urlaub' | 'audit'
 
 const TABS: { key: Tab; label: string }[] = [
@@ -164,8 +168,8 @@ export default function PersonalDetailPage() {
   // Modal state
   const [showQualiModal, setShowQualiModal] = useState(false)
   const [showSchulungModal, setShowSchulungModal] = useState(false)
-  const [qualiForm, setQualiForm] = useState({ bezeichnung: '', gueltig_bis: '', pflicht: false, einsatzrelevant: false })
-  const [schulungForm, setSchulungForm] = useState({ titel: '', art: 'pflichtschulung', datum: '', stunden: '', anbieter: '' })
+  const [qualiForm, setQualiForm] = useState({ title: '', qualificationType: '', validUntil: '', pflicht: false, einsatzrelevant: false })
+  const [schulungForm, setSchulungForm] = useState({ titel: '', schulungsart: 'pflichtschulung', beginn: '', dauerStunden: '', anbieter: '' })
 
   // Load Stammdaten
   useEffect(() => {
@@ -215,12 +219,12 @@ export default function PersonalDetailPage() {
             const data = await res.json()
             setQualifikationen((data.qualifikationen || data || []).map((r: any) => ({
               id: r.id,
-              bezeichnung: r.bezeichnung || r.name || '—',
-              gueltig_bis: r.gueltig_bis || r.valid_until || null,
-              pflicht: r.pflicht ?? r.mandatory ?? false,
-              einsatzrelevant: r.einsatzrelevant ?? r.deployment_relevant ?? false,
+              bezeichnung: r.title || '—',
+              gueltig_bis: r.valid_until || null,
+              pflicht: r.pflicht ?? false,
+              einsatzrelevant: r.einsatzrelevant ?? false,
               status: r.status || 'valid',
-              nachweis_url: r.nachweis_url || r.proof_url || null,
+              nachweis_url: null,
             })))
           }
         } else if (tab === 'schulungen') {
@@ -229,13 +233,13 @@ export default function PersonalDetailPage() {
             const data = await res.json()
             setSchulungen((data.schulungen || data || []).map((r: any) => ({
               id: r.id,
-              titel: r.titel || r.title || '—',
-              art: r.art || r.type || 'sonstiges',
-              datum: r.datum || r.date || null,
-              stunden: r.stunden ?? r.hours ?? null,
-              bestanden: r.bestanden ?? r.passed ?? null,
-              anbieter: r.anbieter || r.provider || null,
-              nachweis_url: r.nachweis_url || r.proof_url || null,
+              titel: r.titel || '—',
+              art: r.schulungsart || 'sonstiges',
+              datum: r.beginn || null,
+              stunden: r.dauer_stunden ?? null,
+              bestanden: r.bestanden ?? null,
+              anbieter: r.anbieter || null,
+              nachweis_url: null,
             })))
           }
         } else if (tab === 'arbeitszeiten') {
@@ -244,14 +248,15 @@ export default function PersonalDetailPage() {
             const data = await res.json()
             setArbeitszeiten((data.arbeitszeiten || data || []).map((r: any) => ({
               id: r.id,
-              datum: r.datum || r.date || '',
-              beginn: r.beginn || r.start_time || '',
-              ende: r.ende || r.end_time || '',
-              pause_min: r.pause_min ?? r.break_minutes ?? 0,
-              ist_stunden: r.ist_stunden ?? r.actual_hours ?? 0,
+              datum: r.datum || '',
+              beginn: r.start_zeit || '',
+              ende: r.end_zeit || '',
+              pause_min: r.pause_minuten ?? 0,
+              // ist_minuten kommt in Minuten aus der DB — fuer die Anzeige in Stunden umrechnen.
+              ist_stunden: (r.ist_minuten ?? 0) / 60,
               status: r.status || 'erfasst',
-              quelle: r.quelle || r.source || 'manuell',
-              bemerkung: r.bemerkung || r.notes || null,
+              quelle: r.quelle || 'manuell',
+              bemerkung: r.bemerkung || null,
             })))
           }
         } else if (tab === 'urlaub') {
@@ -261,24 +266,26 @@ export default function PersonalDetailPage() {
           ])
           if (resK.ok) {
             const dataK = await resK.json()
-            const k = dataK.konto || dataK
+            // GET /api/personal/urlaubskonto liefert ein Array (pro Jahr ein Konto) — nicht ein einzelnes Objekt.
+            const konten = Array.isArray(dataK) ? dataK : (dataK.konten || [])
+            const k = konten[0] || {}
             setUrlaubskonto({
-              anspruch: k.anspruch ?? k.entitlement ?? 0,
-              genommen: k.genommen ?? k.taken ?? 0,
-              geplant: k.geplant ?? k.planned ?? 0,
-              resturlaub: k.resturlaub ?? k.remaining ?? 0,
+              anspruch: k.anspruch_tage ?? 0,
+              genommen: k.genommen_tage ?? 0,
+              geplant: k.geplant_tage ?? 0,
+              resturlaub: k.resturlaub ?? 0,
             })
           }
           if (resA.ok) {
             const dataA = await resA.json()
             setAbwesenheiten((dataA.abwesenheiten || dataA || []).map((r: any) => ({
               id: r.id,
-              typ: r.typ || r.type || 'vacation',
-              von: r.von || r.start_date || r.datum_von || '',
-              bis: r.bis || r.end_date || r.datum_bis || '',
-              tage: r.tage ?? r.days ?? 0,
+              typ: r.absence_type || 'vacation',
+              von: r.start_date || '',
+              bis: r.end_date || '',
+              tage: r.tage_berechnet ?? 0,
               status: r.status || 'beantragt',
-              bemerkung: r.bemerkung || r.notes || null,
+              bemerkung: r.reason || null,
             })))
           }
         } else if (tab === 'audit') {
@@ -287,11 +294,12 @@ export default function PersonalDetailPage() {
             const data = await res.json()
             setAudit((data.audit || data || []).map((r: any) => ({
               id: r.id,
-              aktion: r.aktion || r.action || '—',
-              tabelle: r.tabelle || r.table_name || '—',
-              zeitpunkt: r.zeitpunkt || r.created_at || r.timestamp || '',
-              benutzer: r.benutzer || r.user_email || null,
-              details: r.details ? (typeof r.details === 'string' ? r.details : JSON.stringify(r.details)) : null,
+              aktion: r.aktion || '—',
+              tabelle: r.entitaet_typ || '—',
+              zeitpunkt: r.created_at || '',
+              benutzer: r.benutzer_id || null,
+              details: r.grund
+                || (r.nachher ? JSON.stringify(r.nachher) : (r.vorher ? JSON.stringify(r.vorher) : null)),
             })))
           }
         }
@@ -336,11 +344,11 @@ export default function PersonalDetailPage() {
       const res = await fetch(`/api/personal/qualifikationen?caregiverId=${caregiverId}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(qualiForm),
+        body: JSON.stringify({ ...qualiForm, caregiverId }),
       })
       if (res.ok) {
         setShowQualiModal(false)
-        setQualiForm({ bezeichnung: '', gueltig_bis: '', pflicht: false, einsatzrelevant: false })
+        setQualiForm({ title: '', qualificationType: '', validUntil: '', pflicht: false, einsatzrelevant: false })
         // Reload
         setTab('stammdaten')
         setTimeout(() => setTab('qualifikationen'), 50)
@@ -358,12 +366,13 @@ export default function PersonalDetailPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...schulungForm,
-          stunden: schulungForm.stunden ? Number(schulungForm.stunden) : null,
+          caregiverId,
+          dauerStunden: schulungForm.dauerStunden ? Number(schulungForm.dauerStunden) : null,
         }),
       })
       if (res.ok) {
         setShowSchulungModal(false)
-        setSchulungForm({ titel: '', art: 'pflichtschulung', datum: '', stunden: '', anbieter: '' })
+        setSchulungForm({ titel: '', schulungsart: 'pflichtschulung', beginn: '', dauerStunden: '', anbieter: '' })
         setTab('stammdaten')
         setTimeout(() => setTab('schulungen'), 50)
       }
@@ -563,11 +572,15 @@ export default function PersonalDetailPage() {
             <Modal title="Qualifikation hinzuf&uuml;gen" onClose={() => setShowQualiModal(false)}>
               <label style={{ fontSize: 13 }}>
                 Bezeichnung
-                <input type="text" value={qualiForm.bezeichnung} onChange={e => setQualiForm({ ...qualiForm, bezeichnung: e.target.value })} style={{ ...inputStyle, marginTop: 4, marginBottom: 12 }} />
+                <input type="text" value={qualiForm.title} onChange={e => setQualiForm({ ...qualiForm, title: e.target.value })} style={{ ...inputStyle, marginTop: 4, marginBottom: 12 }} />
+              </label>
+              <label style={{ fontSize: 13 }}>
+                Art
+                <input type="text" value={qualiForm.qualificationType} onChange={e => setQualiForm({ ...qualiForm, qualificationType: e.target.value })} placeholder="z. B. Pflegefachkraft, Erste-Hilfe-Schein" style={{ ...inputStyle, marginTop: 4, marginBottom: 12 }} />
               </label>
               <label style={{ fontSize: 13 }}>
                 G&uuml;ltig bis
-                <input type="date" value={qualiForm.gueltig_bis} onChange={e => setQualiForm({ ...qualiForm, gueltig_bis: e.target.value })} style={{ ...inputStyle, marginTop: 4, marginBottom: 12 }} />
+                <input type="date" value={qualiForm.validUntil} onChange={e => setQualiForm({ ...qualiForm, validUntil: e.target.value })} style={{ ...inputStyle, marginTop: 4, marginBottom: 12 }} />
               </label>
               <div style={{ display: 'flex', gap: 16, marginBottom: 12 }}>
                 <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}>
@@ -641,17 +654,17 @@ export default function PersonalDetailPage() {
               </label>
               <label style={{ fontSize: 13 }}>
                 Art
-                <select value={schulungForm.art} onChange={e => setSchulungForm({ ...schulungForm, art: e.target.value })} style={{ ...inputStyle, marginTop: 4, marginBottom: 12 }}>
+                <select value={schulungForm.schulungsart} onChange={e => setSchulungForm({ ...schulungForm, schulungsart: e.target.value })} style={{ ...inputStyle, marginTop: 4, marginBottom: 12 }}>
                   {Object.entries(SCHULUNGSART).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
                 </select>
               </label>
               <label style={{ fontSize: 13 }}>
                 Datum
-                <input type="date" value={schulungForm.datum} onChange={e => setSchulungForm({ ...schulungForm, datum: e.target.value })} style={{ ...inputStyle, marginTop: 4, marginBottom: 12 }} />
+                <input type="date" value={schulungForm.beginn} onChange={e => setSchulungForm({ ...schulungForm, beginn: e.target.value })} style={{ ...inputStyle, marginTop: 4, marginBottom: 12 }} />
               </label>
               <label style={{ fontSize: 13 }}>
                 Stunden
-                <input type="number" value={schulungForm.stunden} onChange={e => setSchulungForm({ ...schulungForm, stunden: e.target.value })} style={{ ...inputStyle, marginTop: 4, marginBottom: 12 }} />
+                <input type="number" value={schulungForm.dauerStunden} onChange={e => setSchulungForm({ ...schulungForm, dauerStunden: e.target.value })} style={{ ...inputStyle, marginTop: 4, marginBottom: 12 }} />
               </label>
               <label style={{ fontSize: 13 }}>
                 Anbieter

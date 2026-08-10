@@ -695,6 +695,8 @@ GRANT EXECUTE ON FUNCTION public.get_calendar_assignments(date,date,uuid,uuid,te
 -- 17) RPC: Monatsabschluss-Übersicht
 -- ═══════════════════════════════════════════════════════════════════
 
+DROP FUNCTION IF EXISTS public.get_monthly_closing_overview(date);
+
 CREATE OR REPLACE FUNCTION public.get_monthly_closing_overview(
   p_month date
 )

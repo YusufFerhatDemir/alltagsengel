@@ -29,7 +29,8 @@ export async function PUT(
   const supabase = createAdminClient()
   try {
     const body = await request.json()
-    const data = await updateRegel(supabase, { organizationId: auth.ctx.organizationId, id, data: body })
+    const { id: _id, organization_id: _oid, created_at: _ca, ...safeData } = body
+    const data = await updateRegel(supabase, { organizationId: auth.ctx.organizationId, id, data: safeData })
     return NextResponse.json(data)
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 400 })

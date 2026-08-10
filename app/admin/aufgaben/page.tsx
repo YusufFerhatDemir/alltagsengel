@@ -16,7 +16,7 @@ interface AufgabeRow {
   status: string
   verantwortlich_name: string | null
   faellig_am: string | null
-  checkliste_total: number
+  checkliste_gesamt: number
   checkliste_erledigt: number
   faelligkeits_status: string | null
   created_at: string | null
@@ -163,8 +163,8 @@ export default function AufgabenPage() {
                     <td style={{ fontSize: 13 }}>{r.verantwortlich_name || '—'}</td>
                     <td style={{ fontSize: 13, whiteSpace: 'nowrap' }}>{formatDate(r.faellig_am)}</td>
                     <td style={{ fontSize: 13 }}>
-                      {r.checkliste_total > 0
-                        ? `${r.checkliste_erledigt}/${r.checkliste_total}`
+                      {r.checkliste_gesamt > 0
+                        ? `${r.checkliste_erledigt}/${r.checkliste_gesamt}`
                         : '—'}
                     </td>
                     <td>

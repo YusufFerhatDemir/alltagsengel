@@ -8,23 +8,23 @@ interface Eintrag {
   datum: string
   caregiver_name: string
   caregiver_id: string
-  beginn: string
-  ende: string
+  start_zeit: string
+  end_zeit: string
   status: string
   typ: string
   schicht_farbe: string | null
   konflikt: boolean
   kunde_name: string | null
-  bemerkung: string | null
+  notizen: string | null
 }
 
 interface CreateForm {
   datum: string
-  caregiver_id: string
-  beginn: string
-  ende: string
+  caregiverId: string
+  startZeit: string
+  endZeit: string
   typ: string
-  bemerkung: string
+  notizen: string
 }
 
 const primaryBtn: React.CSSProperties = {
@@ -65,7 +65,7 @@ export default function DienstplanPage() {
   const [showCreate, setShowCreate] = useState(false)
   const [creating, setCreating] = useState(false)
   const [form, setForm] = useState<CreateForm>({
-    datum: '', caregiver_id: '', beginn: '08:00', ende: '16:00', typ: 'regulaer', bemerkung: '',
+    datum: '', caregiverId: '', startZeit: '08:00', endZeit: '16:00', typ: 'regulaer', notizen: '',
   })
 
   const weekEnd = addDays(weekStart, 6)
@@ -84,14 +84,14 @@ export default function DienstplanPage() {
           datum: r.datum || r.date,
           caregiver_name: r.caregiver_name || r.mitarbeiter || '—',
           caregiver_id: r.caregiver_id,
-          beginn: r.beginn || r.start_time || '',
-          ende: r.ende || r.end_time || '',
+          start_zeit: r.start_zeit || '',
+          end_zeit: r.end_zeit || '',
           status: r.status || 'geplant',
           typ: r.typ || r.type || 'regulaer',
           schicht_farbe: r.schicht_farbe || r.shift_color || null,
           konflikt: r.konflikt ?? r.conflict ?? false,
           kunde_name: r.kunde_name || r.client_name || null,
-          bemerkung: r.bemerkung || r.notes || null,
+          notizen: r.notizen || null,
         })))
       } catch (err) {
         console.error('Dienstplan laden fehlgeschlagen', err)
@@ -119,7 +119,7 @@ export default function DienstplanPage() {
   const conflicts = eintraege.filter(e => e.konflikt)
 
   async function createEintrag() {
-    if (!form.datum || !form.beginn || !form.ende) return
+    if (!form.datum || !form.startZeit || !form.endZeit) return
     setCreating(true)
     try {
       const res = await fetch('/api/personal/dienstplan/eintraege', {
@@ -129,7 +129,7 @@ export default function DienstplanPage() {
       })
       if (res.ok) {
         setShowCreate(false)
-        setForm({ datum: '', caregiver_id: '', beginn: '08:00', ende: '16:00', typ: 'regulaer', bemerkung: '' })
+        setForm({ datum: '', caregiverId: '', startZeit: '08:00', endZeit: '16:00', typ: 'regulaer', notizen: '' })
         // Reload
         const von = formatISO(weekStart)
         const bis = formatISO(weekEnd)
@@ -140,13 +140,13 @@ export default function DienstplanPage() {
             id: r.id, datum: r.datum || r.date,
             caregiver_name: r.caregiver_name || r.mitarbeiter || '—',
             caregiver_id: r.caregiver_id,
-            beginn: r.beginn || r.start_time || '',
-            ende: r.ende || r.end_time || '',
+            start_zeit: r.start_zeit || '',
+            end_zeit: r.end_zeit || '',
             status: r.status || 'geplant', typ: r.typ || r.type || 'regulaer',
             schicht_farbe: r.schicht_farbe || r.shift_color || null,
             konflikt: r.konflikt ?? r.conflict ?? false,
             kunde_name: r.kunde_name || r.client_name || null,
-            bemerkung: r.bemerkung || r.notes || null,
+            notizen: r.notizen || null,
           })))
         }
       }
@@ -210,17 +210,17 @@ export default function DienstplanPage() {
             </label>
             <label style={{ fontSize: 13 }}>
               Mitarbeiter-ID<br />
-              <input type="text" value={form.caregiver_id} onChange={e => setForm({ ...form, caregiver_id: e.target.value })}
+              <input type="text" value={form.caregiverId} onChange={e => setForm({ ...form, caregiverId: e.target.value })}
                 placeholder="UUID" style={inputStyle} />
             </label>
             <label style={{ fontSize: 13 }}>
               Beginn<br />
-              <input type="time" value={form.beginn} onChange={e => setForm({ ...form, beginn: e.target.value })}
+              <input type="time" value={form.startZeit} onChange={e => setForm({ ...form, startZeit: e.target.value })}
                 style={inputStyle} />
             </label>
             <label style={{ fontSize: 13 }}>
               Ende<br />
-              <input type="time" value={form.ende} onChange={e => setForm({ ...form, ende: e.target.value })}
+              <input type="time" value={form.endZeit} onChange={e => setForm({ ...form, endZeit: e.target.value })}
                 style={inputStyle} />
             </label>
             <label style={{ fontSize: 13 }}>
@@ -233,7 +233,7 @@ export default function DienstplanPage() {
             </label>
             <label style={{ fontSize: 13 }}>
               Bemerkung<br />
-              <input type="text" value={form.bemerkung} onChange={e => setForm({ ...form, bemerkung: e.target.value })}
+              <input type="text" value={form.notizen} onChange={e => setForm({ ...form, notizen: e.target.value })}
                 placeholder="Optional" style={inputStyle} />
             </label>
             <button style={primaryBtn} onClick={createEintrag} disabled={creating}>
@@ -282,7 +282,7 @@ export default function DienstplanPage() {
                     }}>
                       <div style={{ fontWeight: 600, marginBottom: 2 }}>{e.caregiver_name}</div>
                       <div style={{ color: 'var(--ink4)' }}>
-                        {formatTime(e.beginn)} – {formatTime(e.ende)}
+                        {formatTime(e.start_zeit)} – {formatTime(e.end_zeit)}
                       </div>
                       {e.kunde_name && (
                         <div style={{ color: 'var(--ink4)', fontSize: 11 }}>{e.kunde_name}</div>

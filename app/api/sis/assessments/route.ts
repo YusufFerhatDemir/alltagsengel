@@ -35,6 +35,17 @@ export async function POST(request: Request) {
     }
 
     const admin = createAdminClient()
+    // Mandantenschutz: der Klient muss zur aktiven Organisation gehören.
+    const { data: client } = await admin
+      .from('clients')
+      .select('id')
+      .eq('id', body.clientId)
+      .eq('organization_id', organizationId)
+      .maybeSingle()
+    if (!client) {
+      return NextResponse.json({ error: 'Klient nicht gefunden oder gehört nicht zur Organisation.' }, { status: 404 })
+    }
+
     const assessment = await createAssessment(admin, {
       organizationId,
       clientId: body.clientId,

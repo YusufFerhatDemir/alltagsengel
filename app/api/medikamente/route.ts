@@ -38,6 +38,18 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
     const sb = await createClient()
+
+    // Mandantenschutz: der Klient muss zur aktiven Organisation gehören.
+    const { data: client } = await sb
+      .from('clients')
+      .select('id')
+      .eq('id', body.client_id)
+      .eq('organization_id', auth.ctx.organizationId)
+      .maybeSingle()
+    if (!client) {
+      return NextResponse.json({ error: 'Klient nicht gefunden oder gehört nicht zur Organisation.' }, { status: 404 })
+    }
+
     const created = await erstelleMedikament(sb, auth.ctx.organizationId, auth.ctx.userId, body)
     return NextResponse.json(created, { status: 201 })
   } catch (e: unknown) {

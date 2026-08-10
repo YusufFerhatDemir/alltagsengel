@@ -9,10 +9,10 @@ import { StatusBadge, SearchInput, EmptyRow, Banner } from '@/components/admin/O
 interface EskalationsregelRow {
   id: string
   name: string
-  kategorie_filter: string | null
-  prioritaet_filter: string | null
+  aufgaben_kategorie: string | null
+  aufgaben_prioritaet: string | null
   ueberfaellig_stunden: number | null
-  stufe: number
+  eskalationsstufe: number
   eskalation_an_rolle: string | null
   aktiv: boolean
   created_at: string | null
@@ -135,8 +135,8 @@ export default function EskalationenPage() {
                   {search ? 'Keine Treffer' : 'Keine Eskalationsregeln'}
                 </EmptyRow>
               ) : filtered.map(r => {
-                const kat = r.kategorie_filter ? statusMeta(AUFGABEN_KATEGORIE, r.kategorie_filter) : null
-                const prio = r.prioritaet_filter ? statusMeta(AUFGABEN_PRIORITAET, r.prioritaet_filter) : null
+                const kat = r.aufgaben_kategorie ? statusMeta(AUFGABEN_KATEGORIE, r.aufgaben_kategorie) : null
+                const prio = r.aufgaben_prioritaet ? statusMeta(AUFGABEN_PRIORITAET, r.aufgaben_prioritaet) : null
                 const rolle = statusMeta(ESKALATION_AN_ROLLE, r.eskalation_an_rolle)
                 return (
                   <tr key={r.id}>
@@ -144,7 +144,7 @@ export default function EskalationenPage() {
                     <td>{kat ? <StatusBadge label={kat.label} color={kat.color} /> : 'Alle'}</td>
                     <td>{prio ? <StatusBadge label={prio.label} color={prio.color} /> : 'Alle'}</td>
                     <td style={{ fontSize: 13, textAlign: 'center' }}>{r.ueberfaellig_stunden ?? '—'}</td>
-                    <td style={{ fontSize: 13, textAlign: 'center' }}>{r.stufe}</td>
+                    <td style={{ fontSize: 13, textAlign: 'center' }}>{r.eskalationsstufe}</td>
                     <td><StatusBadge label={rolle.label} color={rolle.color} /></td>
                     <td>
                       <button
@@ -198,10 +198,10 @@ function EskalationsregelModal({
   const [error, setError] = useState<string | null>(null)
   const [form, setForm] = useState({
     name: initial?.name || '',
-    kategorie_filter: initial?.kategorie_filter || '',
-    prioritaet_filter: initial?.prioritaet_filter || '',
+    aufgaben_kategorie: initial?.aufgaben_kategorie || '',
+    aufgaben_prioritaet: initial?.aufgaben_prioritaet || '',
     ueberfaellig_stunden: initial?.ueberfaellig_stunden?.toString() || '',
-    stufe: initial?.stufe?.toString() || '1',
+    eskalationsstufe: initial?.eskalationsstufe?.toString() || '1',
     eskalation_an_rolle: initial?.eskalation_an_rolle || 'admin',
     aktiv: initial?.aktiv ?? true,
   })
@@ -217,10 +217,10 @@ function EskalationsregelModal({
     try {
       const body = {
         name: form.name.trim(),
-        kategorie_filter: form.kategorie_filter || null,
-        prioritaet_filter: form.prioritaet_filter || null,
+        aufgaben_kategorie: form.aufgaben_kategorie || null,
+        aufgaben_prioritaet: form.aufgaben_prioritaet || null,
         ueberfaellig_stunden: form.ueberfaellig_stunden ? parseInt(form.ueberfaellig_stunden) : null,
-        stufe: parseInt(form.stufe) || 1,
+        eskalationsstufe: parseInt(form.eskalationsstufe) || 1,
         eskalation_an_rolle: form.eskalation_an_rolle,
         aktiv: form.aktiv,
       }
@@ -258,7 +258,7 @@ function EskalationsregelModal({
             </div>
             <div>
               <label style={labelStyle}>Kategorie-Filter</label>
-              <select style={inputStyle} value={form.kategorie_filter} onChange={e => upd('kategorie_filter', e.target.value)}>
+              <select style={inputStyle} value={form.aufgaben_kategorie} onChange={e => upd('aufgaben_kategorie', e.target.value)}>
                 <option value="">Alle Kategorien</option>
                 {Object.entries(AUFGABEN_KATEGORIE).map(([k, v]) => (
                   <option key={k} value={k}>{v.label}</option>
@@ -267,7 +267,7 @@ function EskalationsregelModal({
             </div>
             <div>
               <label style={labelStyle}>Priorität-Filter</label>
-              <select style={inputStyle} value={form.prioritaet_filter} onChange={e => upd('prioritaet_filter', e.target.value)}>
+              <select style={inputStyle} value={form.aufgaben_prioritaet} onChange={e => upd('aufgaben_prioritaet', e.target.value)}>
                 <option value="">Alle Prioritäten</option>
                 {Object.entries(AUFGABEN_PRIORITAET).map(([k, v]) => (
                   <option key={k} value={k}>{v.label}</option>
@@ -280,7 +280,7 @@ function EskalationsregelModal({
             </div>
             <div>
               <label style={labelStyle}>Stufe</label>
-              <input type="number" style={inputStyle} value={form.stufe} onChange={e => upd('stufe', e.target.value)} min="1" max="5" />
+              <input type="number" style={inputStyle} value={form.eskalationsstufe} onChange={e => upd('eskalationsstufe', e.target.value)} min="1" max="5" />
             </div>
             <div>
               <label style={labelStyle}>Eskalation an Rolle</label>

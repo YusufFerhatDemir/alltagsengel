@@ -22,6 +22,9 @@ export async function GET(req: NextRequest) {
   const auth = await requireAuth(supabase)
   if (!auth.ok) return auth.response
 
+  const adminErr = requireAdmin(auth)
+  if (adminErr) return adminErr
+
   const organizationId = await getActiveOrgId()
   if (!organizationId) {
     return NextResponse.json({ error: 'Keine Organisation zugewiesen.' }, { status: 403 })
@@ -149,6 +152,9 @@ export async function PATCH(req: NextRequest) {
   const supabase = await createClient()
   const auth = await requireAuth(supabase)
   if (!auth.ok) return auth.response
+
+  const adminErr = requireAdmin(auth)
+  if (adminErr) return adminErr
 
   const organizationId = await getActiveOrgId()
   if (!organizationId) {
