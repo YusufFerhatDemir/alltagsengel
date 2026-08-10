@@ -3,8 +3,8 @@
 ## Zusammenfassung
 
 - **Module geprueft**: 27/27
-- **P0 gefunden/gefixt**: 5 gefunden, 4 gefixt, 1 dokumentiert (mis_audit_log Legacy-Tabelle)
-- **P1 gefunden/gefixt**: 16 gefunden, 7 gefixt, 9 dokumentiert (Test-Coverage / Design-Entscheidungen)
+- **P0 gefunden/gefixt**: 8 gefunden, 7 gefixt, 1 dokumentiert (mis_audit_log Legacy-Tabelle)
+- **P1 gefunden/gefixt**: 28 gefunden, 19 gefixt, 9 dokumentiert (Test-Coverage / Design-Entscheidungen)
 - **P2 dokumentiert**: 38
 - **Tests vorher/nachher**: 1281 -> 1281 (0 Regressionen)
 - **Branch**: staging/expansion-abnahme
@@ -38,6 +38,23 @@
 ### P0-5: Workflow-Engine — benachrichtigung_senden schrieb nicht-existente Spalte `prioritaet` (GEFIXT)
 - Behoben als Teil von P0-1
 
+### P0-6: Leistungsnachweis — fehlende Rollenprüfung (GEFIXT)
+**Datei**: `app/api/leistungsnachweis/crud/route.ts`
+- GET und PATCH hatten keine Admin-Rollenprüfung — jeder authentifizierte User konnte alle service_records lesen/editieren
+- `requireAdmin(auth)` nach `requireAuth()` in beiden Handlern ergänzt
+
+### P0-7: Cross-Tenant client_id — systemischer Ownership-Check (GEFIXT)
+**Dateien**: 6 API-Routes
+- Nur Wunddokumentation hatte den korrekten Cross-Tenant-Check
+- Ergänzt in: SIS (`app/api/sis/assessments/route.ts`), Vitalwerte (`app/api/vitals/route.ts`, `app/api/vitals/thresholds/route.ts`), Medikamente (`app/api/medikamente/route.ts`), Angehörige (`app/api/admin/angehoerige/route.ts`), Signaturen (`lib/signaturen/signaturen.ts` — dokument_id Ownership)
+
+### P0-8: Aufgaben/Eskalationen — Admin-UI gegen falsche Feldnamen gebaut (GEFIXT)
+**Dateien**:
+- `app/admin/aufgaben/[id]/page.tsx`: Checkliste-URL `/checkliste` -> `/checklisten`, `text` -> `titel`, nicht-existentes `name`-Feld entfernt
+- `app/admin/aufgaben/page.tsx`: `checkliste_total` -> `checkliste_gesamt`
+- `app/admin/eskalationen/page.tsx`: `kategorie_filter` -> `aufgaben_kategorie`, `stufe` -> `eskalationsstufe`
+- `app/admin/dienstplan/page.tsx`: `beginn` -> `start_zeit`, `ende` -> `end_zeit`, `bemerkung` -> `notizen`
+
 ---
 
 ## P1-Fixes (Funktionsfehler)
@@ -63,47 +80,69 @@
 **Datei**: `app/api/coach/profil/route.ts`
 - Validierung `1900 <= geburtsjahr <= 2030` vor INSERT mit 400-Response
 
-### P1-5: SIS — caregivers-Join in engel_hat_aktiven_klienten() (DOKUMENTIERT)
+### P1-5: Ops Mass-Assignment — organization_id ueberschreibbar (GEFIXT)
+**Dateien**:
+- `app/api/ops/aufgaben/[id]/route.ts`: Destructuring-Guard `const { id: _id, organization_id: _oid, created_at: _ca, ...safeData } = body`
+- `app/api/ops/aufgaben/[id]/checklisten/[checkId]/route.ts`: Guard inkl. `aufgabe_id`
+- `app/api/ops/workflow/regeln/[id]/route.ts`: Guard in PUT
+
+### P1-6: Medikamente — gegeben_von NULL bei ausgelassen-Status (GEFIXT)
+**Datei**: `lib/medikamente/medikamente.ts`
+- `gegeben_von` war NULL fuer "ausgelassen" und "verweigert" Status -> Audit-Trail kaputt + Engel-RLS-INSERT blockiert
+- Fix: `gegeben_von: userId` fuer alle Status
+
+### P1-7: Offline-Queue — manuell-Konfliktstrategie laesst Items stuck (GEFIXT)
+**Dateien**:
+- `lib/offline/offline-queue.ts`: Neuer `else`-Branch in `handleConflict()` setzt `status: 'conflict'` + `zuletzt_versucht`; `last_write_wins` inkrementiert jetzt `retry_count`
+- `lib/offline/types.ts`: `SyncStatus` um `'conflict'` erweitert
+
+### P1-8: Personal/HR — UI-Feldnamen komplett falsch (GEFIXT)
+**Dateien**:
+- `app/admin/personal/[id]/page.tsx`: Qualifikationen (`bezeichnung` -> `title`, `gueltig_bis` -> `valid_until`), Schulungen (`art` -> `schulungsart`, `datum` -> `beginn`, `stunden` -> `dauer_stunden`), Arbeitszeiten (`beginn/ende` -> `start_zeit/end_zeit`, `ist_stunden` -> `ist_minuten / 60`), Urlaub (Array-Handling + `anspruch_tage/genommen_tage/geplant_tage`), Abwesenheiten (`absence_type/start_date/end_date/tage_berechnet/reason`), Audit (`entitaet_typ/created_at/benutzer_id/grund`)
+- `app/admin/arbeitszeiten/page.tsx`: `caregiver_name` statt `mitarbeiter`, Minuten -> Stunden Konvertierung (`ist_minuten_gesamt / 60` etc.)
+- Qualifikation/Schulung-POST-Body: `caregiverId` ergänzt (API erwartet es im Body, Form hatte es nie gesendet)
+
+### P1-9: SIS — caregivers-Join in engel_hat_aktiven_klienten() (DOKUMENTIERT)
 **Datei**: `supabase/migrations/20260818010000_sis_strukturierte_informationssammlung.sql`
 - Funktion ist SECURITY DEFINER -> kein Sicherheitsrisiko, aber Pattern-Abweichung
 - Empfehlung: Bei naechster SIS-Migration auf eigene_caregiver_ids() umstellen
 
-### P1-6: Leistungsnachweis — Stornierung ohne Admin-Check im Trigger (DOKUMENTIERT)
+### P1-10: Leistungsnachweis — Stornierung ohne Admin-Check im Trigger (DOKUMENTIERT)
 **Datei**: `supabase/migrations/20260814010000_leistungsnachweis_haertung.sql:249`
 - `prevent_locked_record_change` erlaubt STORNIERT fuer alle authentifizierten User
 - API-Layer prueft Admin-Rolle, aber direkter DB-Zugriff koennte umgehen
 
-### P1-7: Wunddokumentation — org_fence ohne WITH CHECK (DOKUMENTIERT)
+### P1-11: Wunddokumentation — org_fence ohne WITH CHECK (DOKUMENTIERT)
 **Datei**: `supabase/migrations/20260818030000_wunddokumentation.sql`
 - 4 org_fence-Policies: nur USING, kein WITH CHECK
 - Mitigiert: Alle Writes via createAdminClient() + DEFAULT current_org_id()
 
-### P1-8: Audit-Log — 3 AuditAction-Werte fehlen im DB CHECK (DOKUMENTIERT)
+### P1-12: Audit-Log — 3 AuditAction-Werte fehlen im DB CHECK (DOKUMENTIERT)
 **Datei**: `lib/audit-log.ts:42-44`
 - `user_self_soft_delete`, `user_self_undelete`, `user_hard_delete_cron` nicht im CHECK-Constraint
 - Inserts werden silent verschluckt (logAuditEvent ist fail-soft)
 
-### P1-9: Tourenplanung — Stop-Reorder ohne Transaktion (DOKUMENTIERT)
+### P1-13: Tourenplanung — Stop-Reorder ohne Transaktion (DOKUMENTIERT)
 **Datei**: `app/api/tours/[id]/stops/route.ts:138-143`
 - 2-Pass UPDATE ohne explizite Transaktionsgrenzen
 
-### P1-10: Workflow-Engine — 9 Trigger ohne DROP IF EXISTS (DOKUMENTIERT)
+### P1-14: Workflow-Engine — 9 Trigger ohne DROP IF EXISTS (DOKUMENTIERT)
 **Datei**: `supabase/migrations/20260813010000_workflow_engine.sql`
 - Re-Run der Migration wuerde fehlschlagen
 
-### P1-11: Dashboard — kein App-Layer-Org-Filter (DOKUMENTIERT)
+### P1-15: Dashboard — kein App-Layer-Org-Filter (DOKUMENTIERT)
 **Datei**: `app/admin/dashboard/page.tsx`
 - 6+ Queries ohne `.eq('organization_id', ...)` — nur RLS-Fence als Schutz
 
-### P1-12: Annahmestellen UI — sftp_key_url Exposure (DOKUMENTIERT)
+### P1-16: Annahmestellen UI — sftp_key_url Exposure (DOKUMENTIERT)
 **Datei**: `app/admin/annahmestellen/page.tsx`
 - Client-Side `select('*')` gibt sftp_key_url an Browser zurueck
 
-### P1-13: Eskalationsregeln — Raw-Body ohne Field-Stripping (DOKUMENTIERT)
+### P1-17: Eskalationsregeln — Raw-Body ohne Field-Stripping (DOKUMENTIERT)
 **Datei**: `app/api/ops/eskalationsregeln/route.ts:28-31`
 - POST nimmt rohen Body, `id`-Injection moeglich (TypeScript Omit = nur compile-time)
 
-### P1-14-16: Personalmanagement + Einsatzplanung + Akten — caregivers-Join-Pattern (DOKUMENTIERT)
+### P1-18: Personalmanagement + Einsatzplanung + Akten — caregivers-Join-Pattern (DOKUMENTIERT)
 - 17 Engel-Policies nutzen direkten caregivers-Subquery statt eigene_caregiver_ids()
 - Empfehlung: Bei naechster Migration umstellen
 
