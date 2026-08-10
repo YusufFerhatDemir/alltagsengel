@@ -7,6 +7,7 @@ import { join } from 'path'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getActiveOrgId } from '@/lib/organizations/server'
+import { logAuditEvent } from '@/lib/audit-log'
 
 // ═══════════════════════════════════════════════════════════════
 // POST /api/admin/invoices/[id]/generate-pdf
@@ -37,7 +38,7 @@ function dateFmt(d: string | null | undefined): string {
   return dt.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })
 }
 
-export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id: invoiceId } = await params
     const supabase = await createClient()
@@ -308,6 +309,16 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     if (pkgErr) {
       return NextResponse.json({ error: `invoice_packages-Fehler: ${pkgErr.message}` }, { status: 500 })
     }
+
+    await logAuditEvent({
+      action: 'create',
+      actorId: user.id,
+      organizationId: orgId,
+      entityType: 'invoice_package',
+      entityId: invoiceId,
+      details: { invoice_number: invoice.invoice_number, page_count: pageCount, checksum },
+      request: req,
+    })
 
     return NextResponse.json({ pdf_url: pdfUrl, page_count: pageCount, checksum })
   } catch (err: any) {

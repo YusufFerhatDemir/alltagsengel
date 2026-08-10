@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireAdmin } from '@/lib/abrechnung/require-admin'
+import { requireAdminMitOrg } from '@/lib/abrechnung/require-admin'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { ZERTIFIKAT_BUCKET } from '@/lib/abrechnung/zertifikate'
-import { getActiveOrgId } from '@/lib/organizations/server'
+import { logAuditEvent } from '@/lib/audit-log'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -14,11 +14,10 @@ export const dynamic = 'force-dynamic'
  * Datenannahmestelle. Keys landen NIE in der Datenbank.
  */
 export async function POST(req: NextRequest) {
-  const auth = await requireAdmin()
+  const auth = await requireAdminMitOrg()
   if (!auth.ok) return auth.response
   try {
-    const organizationId = await getActiveOrgId()
-    if (!organizationId) return NextResponse.json({ error: 'Keine Organisation zugewiesen.' }, { status: 403 })
+    const organizationId = auth.organizationId
 
     const form = await req.formData()
     const dasId = String(form.get('das_id') || '')
@@ -61,6 +60,16 @@ export async function POST(req: NextRequest) {
       .update({ sftp_key_url: pfad })
       .eq('id', das.id)
     if (updErr) return NextResponse.json({ error: updErr.message }, { status: 500 })
+
+    await logAuditEvent({
+      action: 'update',
+      actorId: auth.userId,
+      organizationId,
+      entityType: 'datenannahmestelle',
+      entityId: das.id,
+      details: { sftp_key_url: pfad, das_name: das.name },
+      request: req,
+    })
 
     return NextResponse.json({ erfolg: true, pfad })
   } catch (e: any) {

@@ -89,6 +89,13 @@ export async function erstelleDokument(
 ): Promise<SignaturDokument> {
   validiereDokumentInput(input)
 
+  const inhaltSnapshot = (input.dokument_inhalt_snapshot as string) || null
+  if (inhaltSnapshot && input.dokument_hash_sha256) {
+    if (!verifiziereDokumentHash(inhaltSnapshot, input.dokument_hash_sha256 as string)) {
+      throw new Error('Dokument-Hash stimmt nicht mit dem Inhalt überein.')
+    }
+  }
+
   const row = {
     organization_id: orgId,
     dokument_typ: input.dokument_typ,
@@ -97,7 +104,7 @@ export async function erstelleDokument(
     referenz_tabelle: (input.referenz_tabelle as string) || null,
     referenz_id: (input.referenz_id as string) || null,
     dokument_hash_sha256: input.dokument_hash_sha256,
-    dokument_inhalt_snapshot: (input.dokument_inhalt_snapshot as string) || null,
+    dokument_inhalt_snapshot: inhaltSnapshot,
     erstellt_von: userId,
     version: 1,
   }

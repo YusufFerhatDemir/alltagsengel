@@ -15,6 +15,7 @@ import {
   type VitalSignThreshold,
   type VitalTyp,
 } from './types'
+import { logAuditEvent } from '@/lib/audit-log'
 
 // ── Validierung ──────────────────────────────────────────────────
 
@@ -220,12 +221,35 @@ export async function updateVital(
     .single()
   if (ladeFehler || !bestehend) throw new Error('Vitalwert nicht gefunden.')
 
-  const typ = (bestehend as VitalSign).type
-  const neuerWert = params.wert ?? Number((bestehend as VitalSign).value)
+  const existing = bestehend as VitalSign
+  const typ = existing.type
+  const neuerWert = params.wert ?? Number(existing.value)
   const neuerSekundaer = params.wertSekundaer !== undefined
     ? params.wertSekundaer
-    : (bestehend as VitalSign).value_secondary != null ? Number((bestehend as VitalSign).value_secondary) : null
+    : existing.value_secondary != null ? Number(existing.value_secondary) : null
   validierePlausibilitaet(typ, neuerWert, neuerSekundaer)
+
+  const oldValues = {
+    value: existing.value,
+    value_secondary: existing.value_secondary,
+    measured_at: existing.measured_at,
+    notes: existing.notes,
+  }
+  const newValues = {
+    value: neuerWert,
+    value_secondary: neuerSekundaer,
+    measured_at: params.gemessenAm ?? existing.measured_at,
+    notes: params.notizen !== undefined ? (params.notizen?.trim() || null) : existing.notes,
+  }
+
+  await logAuditEvent({
+    action: 'update',
+    actorId: existing.measured_by,
+    organizationId,
+    entityType: 'vital_sign',
+    entityId: id,
+    details: { old_value: oldValues, new_value: newValues, type: typ },
+  })
 
   const { data, error } = await supabase
     .from('vital_signs')

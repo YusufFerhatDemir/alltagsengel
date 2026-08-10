@@ -115,6 +115,18 @@ export async function genehmigenAbwesenheit(
   organizationId: string,
   genehmigenVon: string,
 ): Promise<Abwesenheit> {
+  const { data: existing, error: loadErr } = await supabase
+    .from('absences')
+    .select('*')
+    .eq('id', id)
+    .eq('organization_id', organizationId)
+    .single()
+  if (loadErr || !existing) throw new Error('Abwesenheit nicht gefunden.')
+  if (existing.status !== 'beantragt') throw new Error('Nur beantragte Abwesenheiten können genehmigt werden.')
+  if (existing.erstellt_von === genehmigenVon) {
+    throw new Error('Eigene Abwesenheiten koennen nicht selbst genehmigt werden.')
+  }
+
   const { data, error } = await supabase
     .from('absences')
     .update({
@@ -127,8 +139,37 @@ export async function genehmigenAbwesenheit(
     .eq('status', 'beantragt')
     .select('*')
     .single()
-  if (error || !data) throw new Error(`Abwesenheit konnte nicht genehmigt werden: ${error?.message ?? 'Nur beantragte Abwesenheiten können genehmigt werden.'}`)
-  return data as Abwesenheit
+  if (error || !data) throw new Error(`Abwesenheit konnte nicht genehmigt werden: ${error?.message ?? 'unbekannt'}`)
+
+  const abwesenheit = data as Abwesenheit
+
+  // P1-35: Urlaubskonto synchronisieren bei genehmigtem Urlaub
+  if (abwesenheit.absence_type === 'vacation') {
+    const start = new Date(abwesenheit.start_date)
+    const end = new Date(abwesenheit.end_date)
+    const diffMs = end.getTime() - start.getTime()
+    const tage = Math.max(1, Math.round(diffMs / (1000 * 60 * 60 * 24)) + 1)
+    const dauer = abwesenheit.halber_tag ? 0.5 : tage
+    const jahr = start.getFullYear()
+
+    const { data: konto } = await supabase
+      .from('personal_urlaubskonto')
+      .select('id, genommen_tage')
+      .eq('organization_id', organizationId)
+      .eq('caregiver_id', abwesenheit.caregiver_id)
+      .eq('jahr', jahr)
+      .maybeSingle()
+
+    if (konto) {
+      await supabase
+        .from('personal_urlaubskonto')
+        .update({ genommen_tage: (konto.genommen_tage ?? 0) + dauer })
+        .eq('id', konto.id)
+        .eq('organization_id', organizationId)
+    }
+  }
+
+  return abwesenheit
 }
 
 export async function ablehnenAbwesenheit(

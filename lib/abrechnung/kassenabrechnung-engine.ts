@@ -493,6 +493,9 @@ export async function erstelleAbrechnungslauf(
 
   const gesamtCent = rechnungen.reduce((s, r) => s + euroZuCent(r.total_amount), 0)
 
+  // Idempotency key prevents duplicate runs from concurrent requests
+  const idempotencyKey = `${params.organizationId}_${params.abrechnungsmonat}_${params.kostentraegerIk || 'SAMMEL'}_${params.laufTyp || 'erstabrechnung'}`
+
   // Lauf anlegen
   const { data: lauf, error: laufError } = await supabase
     .from('abrechnungslaeufe')
@@ -509,12 +512,41 @@ export async function erstelleAbrechnungslauf(
       anzahl_positionen: 0,
       gesamtbetrag_cent: gesamtCent,
       created_by: params.actorId,
+      idempotency_key: idempotencyKey,
     })
     .select('id')
     .single()
 
   if (laufError || !lauf) {
+    // Unique constraint violation → duplicate concurrent request
+    if (laufError?.code === '23505') {
+      throw new Error(
+        `Abrechnungslauf fuer ${params.abrechnungsmonat} / ${params.kostentraegerIk || 'SAMMEL'} wird bereits erstellt — bitte warten.`
+      )
+    }
     throw new Error(`Lauf konnte nicht erstellt werden: ${laufError?.message}`)
+  }
+
+  // Post-insert race check: if pre-flight passed but a concurrent request
+  // inserted between our check and our insert, detect the duplicate now
+  const { count: concurrentCount } = await supabase
+    .from('abrechnungslaeufe')
+    .select('id', { count: 'exact', head: true })
+    .eq('organization_id', params.organizationId)
+    .eq('abrechnungsmonat', params.abrechnungsmonat)
+    .eq('lauf_typ', params.laufTyp || 'erstabrechnung')
+    .eq('kostentraeger_ik', params.kostentraegerIk || 'SAMMEL')
+    .not('status', 'in', '("storniert","abgelehnt")')
+    .is('deleted_at', null)
+
+  if ((concurrentCount ?? 0) > 1) {
+    await supabase
+      .from('abrechnungslaeufe')
+      .update({ status: 'storniert', storno_grund: 'Duplikat durch parallelen Request' })
+      .eq('id', lauf.id)
+    throw new Error(
+      `Doppelter Abrechnungslauf erkannt — paralleler Request hat bereits einen Lauf erstellt. Dieser wurde storniert.`
+    )
   }
 
   // Rechnungen verknüpfen

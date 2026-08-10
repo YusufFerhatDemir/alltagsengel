@@ -128,8 +128,10 @@ describe('P0 — SECURITY-DEFINER-RPCs fuer anon geschlossen', () => {
       if (datei > FIX) {
         const sql = lies(datei)
         for (const fn of ZIELFUNKTIONEN) {
-          const re = new RegExp(`GRANT[\\s\\S]{0,120}${fn}[\\s\\S]{0,120}(anon|authenticated)`, 'i')
-          if (re.test(sql)) treffer.push(`${datei} -> ${fn}`)
+          // GRANT ... TO anon/authenticated = Zugriff erteilen (verboten)
+          // REVOKE ... FROM anon/authenticated + GRANT ... TO service_role = korrekt
+          const reGrantTo = new RegExp(`GRANT\\s+EXECUTE[^;]*${fn}[^;]*TO\\s+[^;]*(anon|authenticated)`, 'i')
+          if (reGrantTo.test(sql)) treffer.push(`${datei} -> ${fn}`)
         }
       }
     }

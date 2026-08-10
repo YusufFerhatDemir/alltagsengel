@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getActiveOrgId } from '@/lib/organizations/server'
+import { logAuditEvent } from '@/lib/audit-log'
 
 /**
  * GET /api/admin/krankenfahrten
@@ -87,7 +88,7 @@ export async function GET() {
  * PUT /api/admin/krankenfahrten
  * Update ride status, provider verification, etc.
  */
-export async function PUT(request: Request) {
+export async function PUT(req: Request) {
   try {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
@@ -105,7 +106,7 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: 'Nur für Administratoren' }, { status: 403 })
     }
 
-    const body = await request.json()
+    const body = await req.json()
     const { entity, id } = body
 
     if (!entity || !id) {
@@ -128,6 +129,17 @@ export async function PUT(request: Request) {
         .single()
 
       if (error) return NextResponse.json({ error: 'Interner Serverfehler' }, { status: 500 })
+
+      await logAuditEvent({
+        action: 'update',
+        actorId: user!.id,
+        organizationId: orgId,
+        entityType: 'krankenfahrt',
+        entityId: id,
+        details: { status: safeUpdates.status },
+        request: req,
+      })
+
       return NextResponse.json(data)
     }
 
@@ -141,6 +153,17 @@ export async function PUT(request: Request) {
         .single()
 
       if (error) return NextResponse.json({ error: 'Interner Serverfehler' }, { status: 500 })
+
+      await logAuditEvent({
+        action: 'update',
+        actorId: user!.id,
+        organizationId: orgId,
+        entityType: 'krankenfahrt_provider',
+        entityId: id,
+        details: { is_verified: body.is_verified },
+        request: req,
+      })
+
       return NextResponse.json(data)
     }
 
