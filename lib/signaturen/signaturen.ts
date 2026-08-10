@@ -222,7 +222,9 @@ export async function leisteSignatur(
   }
 
   const zeitstempel = new Date().toISOString()
-  const dokumentHash = (signatur.data as any).signatur_dokumente?.dokument_hash_sha256 || ''
+  const joinedDoc = signatur.data.signatur_dokumente as unknown as { dokument_hash_sha256: string } | null
+  const dokumentHash = joinedDoc?.dokument_hash_sha256 ?? ''
+  if (!dokumentHash) throw new Error('Dokument-Hash fehlt — Signatur kann nicht berechnet werden.')
   const signaturHash = berechneSignaturHash(dokumentHash, signatarId, zeitstempel)
 
   const { data, error } = await sb
@@ -306,7 +308,7 @@ export async function verifiziereSignatur(
     return { gueltig: false, details: { grund: `Status ist "${sig.status}", nicht "signiert".` } }
   }
 
-  const dok = (sig as any).signatur_dokumente
+  const dok = sig.signatur_dokumente as unknown as { dokument_hash_sha256: string; dokument_inhalt_snapshot?: string } | null
   const erwarteterHash = berechneSignaturHash(
     dok?.dokument_hash_sha256 || '',
     sig.signatar_id,

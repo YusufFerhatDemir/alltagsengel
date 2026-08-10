@@ -33,6 +33,10 @@ export async function POST(request: Request) {
   if (pflegegrad !== null && !(pflegegrad >= 1 && pflegegrad <= 5)) {
     return NextResponse.json({ error: 'Pflegegrad muss zwischen 1 und 5 liegen.' }, { status: 400 })
   }
+  const geburtsjahr = body.geburtsjahr == null ? null : Number(body.geburtsjahr)
+  if (geburtsjahr !== null && (!Number.isInteger(geburtsjahr) || geburtsjahr < 1900 || geburtsjahr > 2030)) {
+    return NextResponse.json({ error: 'Geburtsjahr muss zwischen 1900 und 2030 liegen.' }, { status: 400 })
+  }
 
   const { data, error } = await session.supabase
     .from('coach_users')
@@ -41,11 +45,7 @@ export async function POST(request: Request) {
       rolle: body.rolle,
       anzeigename: typeof body.anzeigename === 'string' ? body.anzeigename.slice(0, 120) : null,
       pflegegrad,
-      geburtsjahr: body.geburtsjahr == null ? null : (() => {
-        const gj = Number(body.geburtsjahr)
-        if (!Number.isInteger(gj) || gj < 1900 || gj > 2030) throw new Error('Geburtsjahr muss zwischen 1900 und 2030 liegen.')
-        return gj
-      })(),
+      geburtsjahr,
     })
     .select()
     .single()
