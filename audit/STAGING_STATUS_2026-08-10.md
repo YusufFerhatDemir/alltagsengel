@@ -119,9 +119,9 @@ Commit: nach P0/P1-Fixes
 | 5 | bookings/notify + respond ohne org-Filter | P1 | **GEFIXT** — org_fence via organization_id |
 | 5b | notify-admin-registration ohne org-Filter | P1 | **GEFIXT** — org_fence via organization_members |
 | 5c | admin/pricing ohne org-Filter | NIEDRIG | AKZEPTIERT — kf_pricing-Tabellen sind globale Preiskonfiguration, nicht mandantenspezifisch, RLS aktiv |
-| 6 | 19 SECDEF-Funktionen ohne REVOKE | P1 | OFFEN — braucht weitere Migration |
-| 7 | 35+ Policies mit profiles-Subquery | P2 | OFFEN — systemisches Problem, dokumentiert |
-| 8 | ~57 Migrationen ausstehend auf Production | — | Blocked bis Supabase-MCP verfügbar |
+| 6 | 19 SECDEF-Funktionen ohne REVOKE | P1 | **GEFIXT** (Migration 20260823010000) — 17 Trigger REVOKE, 2 Non-Trigger PUBLIC-REVOKE |
+| 7 | 44 Policies mit profiles-Subquery | P2 | **GEFIXT** (Migration 20260823020000) — 44 Policies auf is_admin() umgestellt |
+| 8 | ~57 Migrationen ausstehend auf Production | — | Blocked bis Supabase-MCP verfügbar, Apply-Plan in audit/MIGRATION_APPLY_PLAN_2026-08-10.md |
 | 9 | Schema-Vergleich Live vs. Repo unvollständig | — | Blocked bis Supabase-MCP verfügbar |
 
 ---
@@ -129,21 +129,21 @@ Commit: nach P0/P1-Fixes
 ## 6. GO/NO-GO
 
 ### Code-Qualität: **GO** ✓
-- Tests 1281/1281 grün
+- Tests 1462/1462 grün (+181 neue Security-Tests)
 - Build grün
-- Shadow-DB 107/0
-- P0/P1-Fixes committed (DB + API)
+- Shadow-DB 109/0 (+2 neue Migrationen sauber)
+- P0/P1/P2-Fixes committed (DB + API + Policies)
 - 6/6 unfenced API-Routes gefixt (5 org_fence, 1 akzeptiert)
+- 19/19 SECDEF-Funktionen abgesichert
+- 44/44 profiles-Subquery-Policies auf is_admin() umgestellt
 
 ### Production-Deploy: **NO-GO** ✗
 - Supabase-MCP nicht verfügbar → kein Live-Schema-Vergleich möglich
-- 57 ausstehende Migrationen → müssen einzeln geprüft werden
-- 19 SECDEF ohne REVOKE → sollte VOR Modul-Rollout gefixt werden
-- 35+ profiles-Subquery-Policies → latentes Rekursionsrisiko
+- ~57 ausstehende Migrationen → Apply-Plan dokumentiert (audit/MIGRATION_APPLY_PLAN_2026-08-10.md)
+- Apply-Reihenfolge: Security-Basis → Module → Security-Abschluss
 
 ### Nächste Schritte
 1. Supabase-MCP aktivieren
 2. Live-Schema-Vergleich durchführen
-3. SECDEF-REVOKE-Migration erstellen
-4. Migrationen in Security → Module Reihenfolge applyen
-5. profiles-Subquery-Cleanup als separates Projekt planen
+3. Migrationen nach Apply-Plan anwenden (Phase 1 → 2 → 3)
+4. Verifikations-Queries aus Apply-Plan ausfuehren
