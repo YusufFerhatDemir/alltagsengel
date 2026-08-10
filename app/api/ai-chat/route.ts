@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
+import { getActiveOrgId } from '@/lib/organizations/server'
 
 // Rate limiter: max 10 requests per minute per user
 const rateLimit = new Map<string, { count: number; resetAt: number }>()
@@ -16,19 +18,28 @@ function checkRateLimit(key: string): boolean {
   return true
 }
 
-// Live-Daten aus Supabase holen
-async function fetchLiveContext(): Promise<string> {
+// Live-Daten aus Supabase holen — org-gefenced
+async function fetchLiveContext(orgId: string): Promise<string> {
   try {
-    const supabase = await createClient()
+    const admin = createAdminClient()
 
-    // Parallel queries
+    const { data: members } = await admin
+      .from('organization_members')
+      .select('user_id')
+      .eq('organization_id', orgId)
+    const memberIdList = (members || []).map(m => m.user_id)
+
+    if (memberIdList.length === 0) {
+      return '(Keine Organisationsmitglieder gefunden)'
+    }
+
     const [usersRes, bookingsRes, visitorsRes, engelsRes, kundenRes, fahrerRes] = await Promise.all([
-      supabase.from('profiles').select('id, role').limit(500),
-      supabase.from('bookings').select('id, status, created_at, total_price, service_type').limit(100),
-      supabase.from('visitor_locations').select('city, country, page_path, created_at').order('created_at', { ascending: false }).limit(50),
-      supabase.from('profiles').select('id').eq('role', 'engel'),
-      supabase.from('profiles').select('id').eq('role', 'kunde'),
-      supabase.from('profiles').select('id').eq('role', 'fahrer'),
+      admin.from('profiles').select('id, role').in('id', memberIdList).limit(500),
+      admin.from('bookings').select('id, status, created_at, total_price, service_type').eq('organization_id', orgId).limit(100),
+      admin.from('visitor_locations').select('city, country, page_path, created_at').order('created_at', { ascending: false }).limit(50),
+      admin.from('profiles').select('id').in('id', memberIdList).eq('role', 'engel'),
+      admin.from('profiles').select('id').in('id', memberIdList).eq('role', 'kunde'),
+      admin.from('profiles').select('id').in('id', memberIdList).eq('role', 'fahrer'),
     ])
 
     const users = usersRes.data || []
@@ -261,6 +272,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Ungültige Anfrage' }, { status: 400 })
     }
 
+    // Org-Fence
+    const orgId = await getActiveOrgId()
+    if (!orgId) {
+      return NextResponse.json({ error: 'Keine Organisation zugeordnet' }, { status: 403 })
+    }
+
     // Prüfe ob mindestens ein API-Key vorhanden ist
     if (!process.env.GOOGLE_AI_API_KEY && !process.env.OPENAI_API_KEY) {
       return NextResponse.json(
@@ -269,8 +286,8 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // Live-Daten laden
-    const liveContext = await fetchLiveContext()
+    // Live-Daten laden (org-gefenced)
+    const liveContext = await fetchLiveContext(orgId)
     const fullPrompt = SYSTEM_PROMPT + '\n\n' + liveContext
 
     // Gemini zuerst versuchen, dann OpenAI als Fallback

@@ -79,7 +79,32 @@ Commit: nach P0/P1-Fixes
 
 ## 4. API-Route org_fence Status
 
-*(Agent-Audit läuft noch — wird nachgetragen)*
+**233 Routes geprüft:**
+
+| Kategorie | Anzahl |
+|-----------|--------|
+| FENCED (explizit org_id) | 188 |
+| FENCED (RLS-only, Coach — by design) | 12 |
+| N/A (public, cron, webhook) | 23 |
+| User-scoped (kein org nötig) | 4 |
+| **UNFENCED** | **6** |
+
+### UNFENCED Routes (Cross-Tenant-Risiko)
+
+| Route | Risiko | Problem |
+|-------|--------|---------|
+| `api/ai-chat` | **KRITISCH** | Liest profiles/bookings/visitors aller Orgs für AI-Kontext (500 profiles, 100 bookings) |
+| `api/engel/match` | **HOCH** | Liest PLZ (PII) aller Engel über createAdminClient ohne org-Filter |
+| `api/bookings/notify` | MITTEL | createAdminClient ohne org-Filter bei Benachrichtigungen |
+| `api/bookings/respond` | MITTEL | createAdminClient-Lese ohne org-Filter |
+| `api/admin/pricing` | NIEDRIG | kf_pricing-Tabellen ohne org-Filter (aber user-scoped Client) |
+| `api/notify-admin-registration` | NIEDRIG | Admin-Benachrichtigung ohne org-Scoping |
+
+### Positiv
+
+- 188/233 Routes korrekt gefenced via domain-spezifische Auth-Wrapper
+- Pattern (`requirePflegeAdmin`, `requireOpsAdmin`, etc.) konsistent angewendet
+- Coach-Routes bewusst ohne org (DiPAV-Produktgrenze, nur RLS)
 
 ---
 
@@ -89,10 +114,15 @@ Commit: nach P0/P1-Fixes
 |---|--------|-----------|--------|
 | 1 | mis_audit_log ohne org_id | P0 | **GEFIXT** (Migration 20260822010000) |
 | 2 | 6 Billing-Policies mit profiles-Subquery | P1 | **GEFIXT** (Migration 20260822020000) |
-| 3 | 19 SECDEF-Funktionen ohne REVOKE | P1 | OFFEN — braucht weitere Migration |
-| 4 | 35+ Policies mit profiles-Subquery | P2 | OFFEN — systemisches Problem, dokumentiert |
-| 5 | ~57 Migrationen ausstehend auf Production | — | Blocked bis Supabase-MCP verfügbar |
-| 6 | Schema-Vergleich Live vs. Repo unvollständig | — | Blocked bis Supabase-MCP verfügbar |
+| 3 | ai-chat liest Cross-Tenant-Daten (500 profiles) | P0 | **GEFIXT** — org_fence via getActiveOrgId + organization_members |
+| 4 | engel/match liest PLZ aller Engel (PII) | P1 | **GEFIXT** — org_fence via organization_members |
+| 5 | bookings/notify + respond ohne org-Filter | P1 | **GEFIXT** — org_fence via organization_id |
+| 5b | notify-admin-registration ohne org-Filter | P1 | **GEFIXT** — org_fence via organization_members |
+| 5c | admin/pricing ohne org-Filter | NIEDRIG | AKZEPTIERT — kf_pricing-Tabellen sind globale Preiskonfiguration, nicht mandantenspezifisch, RLS aktiv |
+| 6 | 19 SECDEF-Funktionen ohne REVOKE | P1 | OFFEN — braucht weitere Migration |
+| 7 | 35+ Policies mit profiles-Subquery | P2 | OFFEN — systemisches Problem, dokumentiert |
+| 8 | ~57 Migrationen ausstehend auf Production | — | Blocked bis Supabase-MCP verfügbar |
+| 9 | Schema-Vergleich Live vs. Repo unvollständig | — | Blocked bis Supabase-MCP verfügbar |
 
 ---
 
@@ -102,7 +132,8 @@ Commit: nach P0/P1-Fixes
 - Tests 1281/1281 grün
 - Build grün
 - Shadow-DB 107/0
-- P0/P1-Fixes committed
+- P0/P1-Fixes committed (DB + API)
+- 6/6 unfenced API-Routes gefixt (5 org_fence, 1 akzeptiert)
 
 ### Production-Deploy: **NO-GO** ✗
 - Supabase-MCP nicht verfügbar → kein Live-Schema-Vergleich möglich

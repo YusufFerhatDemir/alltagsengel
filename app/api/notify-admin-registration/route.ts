@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
+import { getActiveOrgId } from '@/lib/organizations/server'
 
 export async function POST(req: NextRequest) {
   try {
@@ -20,12 +21,25 @@ export async function POST(req: NextRequest) {
     }
 
     const supabase = createAdminClient()
+    const orgId = await getActiveOrgId()
 
-    // Find all admin users
-    const { data: admins } = await supabase
+    // org_fence: nur Admins der eigenen Organisation benachrichtigen
+    let adminQuery = supabase
       .from('profiles')
       .select('id, email, first_name')
       .in('role', ['admin', 'superadmin'])
+
+    if (orgId) {
+      const { data: members } = await supabase
+        .from('organization_members')
+        .select('user_id')
+        .eq('organization_id', orgId)
+      const memberIdList = (members || []).map(m => m.user_id)
+      if (memberIdList.length > 0) {
+        adminQuery = adminQuery.in('id', memberIdList)
+      }
+    }
+    const { data: admins } = await adminQuery
 
     if (!admins || admins.length === 0) return NextResponse.json({ success: true, sent: 0 })
 
