@@ -15,8 +15,8 @@ async function checkAdmin() {
     .eq('id', user.id)
     .single()
 
-  if (!profile || !['admin', 'superadmin'].includes(profile.role)) {
-    return { supabase, user: null, error: 'Keine Berechtigung' }
+  if (!profile || profile.role !== 'superadmin') {
+    return { supabase, user: null, error: 'Nur Superadmins duerfen Preise verwalten (plattformweite Konfiguration).' }
   }
 
   return { supabase, user, error: null }

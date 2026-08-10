@@ -118,6 +118,7 @@ export async function POST(request: NextRequest) {
     action: 'password_reset',
     actorId: user.id,
     actorRole: profile.role,
+    organizationId,
     targetId: targetUserId,
     targetEmail: targetProfile?.email || email || null,
     entityType: 'profile',
@@ -125,7 +126,6 @@ export async function POST(request: NextRequest) {
     details: {
       send_notification: Boolean(sendNotification),
       target_role: targetProfile?.role ?? null,
-      // Kein Klartext-Passwort, kein Hash, keine Länge — nur die Tatsache der Rücksetzung.
     },
     request,
   })

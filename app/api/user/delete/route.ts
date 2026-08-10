@@ -165,10 +165,18 @@ export async function DELETE(request: NextRequest) {
     }
 
     // ── 8. Audit-Log ─────────────────────────────────────────────
+    const { data: userMembership } = await adminClient
+      .from('organization_members')
+      .select('organization_id')
+      .eq('user_id', userId)
+      .limit(1)
+      .maybeSingle()
+
     await logAuditEvent({
       action: 'user_self_soft_delete',
       actorId: userId,
       actorRole: snapshotRole,
+      organizationId: userMembership?.organization_id ?? null,
       targetId: userId,
       targetEmail: user.email,
       entityType: 'profile',

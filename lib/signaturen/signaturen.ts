@@ -265,6 +265,17 @@ export async function lehneSignaturAb(
 ): Promise<Signatur> {
   if (!grund?.trim()) throw new Error('Ablehnungsgrund ist ein Pflichtfeld.')
 
+  const { data: existing } = await sb
+    .from('signaturen')
+    .select('status')
+    .eq('id', signaturId)
+    .eq('organization_id', orgId)
+    .single()
+  if (!existing) throw new Error('Signatur nicht gefunden.')
+  if (existing.status !== 'offen') {
+    throw new Error(`Signatur kann nur im Status "offen" abgelehnt werden (aktuell: "${existing.status}").`)
+  }
+
   const { data, error } = await sb
     .from('signaturen')
     .update({

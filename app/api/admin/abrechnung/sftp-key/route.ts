@@ -38,11 +38,17 @@ export async function POST(req: NextRequest) {
     const supabase = createAdminClient()
     const { data: das, error: dasErr } = await supabase
       .from('datenannahmestellen')
-      .select('id, name')
+      .select('id, name, organization_id')
       .eq('id', dasId)
       .or(`organization_id.eq.${organizationId},organization_id.is.null`)
       .single()
     if (dasErr || !das) return NextResponse.json({ error: 'Datenannahmestelle nicht gefunden' }, { status: 404 })
+    if (!das.organization_id) {
+      return NextResponse.json(
+        { error: 'Gemeinsame Datenannahmestelle kann nicht direkt bearbeitet werden. Bitte eigene Kopie anlegen.' },
+        { status: 403 }
+      )
+    }
 
     const pfad = `sftp-keys/${das.id}.key`
     const { error: upErr } = await supabase.storage

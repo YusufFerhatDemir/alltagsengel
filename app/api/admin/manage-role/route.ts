@@ -94,6 +94,7 @@ export async function POST(request: NextRequest) {
       action: action === 'grant' ? 'role_grant' : 'role_revoke',
       actorId: user.id,
       actorRole: callerProfile.role,
+      organizationId,
       targetId: userId,
       targetEmail: targetProfile.email ?? null,
       entityType: 'profile',

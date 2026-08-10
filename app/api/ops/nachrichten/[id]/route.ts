@@ -15,6 +15,7 @@ export async function GET(
     const data = await getNachricht(supabase, {
       organizationId: auth.organizationId,
       id,
+      userId: auth.userId,
     })
     return NextResponse.json(data)
   } catch (e: any) {
