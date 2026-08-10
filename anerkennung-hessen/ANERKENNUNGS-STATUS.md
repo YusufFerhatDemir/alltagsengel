@@ -83,25 +83,30 @@
 
 ## UNTERSCHRIFTEN (wo genau unterschrieben werden muss)
 
+**Insgesamt: 10 Unterschriften Yusuf + 2 Unterschriften Sabrina Martin = 12 Unterschriften**
+**Vollstaendige Details: siehe EINREICHUNGS-CHECKLISTE.md**
+
 | Dokument | Wo unterschreiben | Seite |
 |----------|-------------------|-------|
-| Anlage-00 Erhebungsbogen | Feld "Ort, Datum" + Unterschrift am Ende | Seite 3, unten |
-| Anlage-01 Anschreiben | Datum eintragen + Unterschrift unter "Yusuf Ferhat Demir" | Seite 2, unten |
-| Anlage-04 Arbeitsvertrag | Datum + Unterschrift GF + Unterschrift Sabrina Martin | Seite 3, unten (beide Felder) |
-| Anlage-05 Konzept | Unterschrift am Ende | Letzte Seite |
-| Anlage-06 Schulungskonzept | Unterschrift am Ende | Letzte Seite |
-| Anlage-07 Kosten-/Leistungsuebersicht | Unterschrift am Ende | Letzte Seite |
-| Anlage-08 Erklaerung FZ | Unterschrift unter "Yusuf Ferhat Demir" | Seite 2, unten |
-| Anlage-09 Erklaerung SV/ML | Unterschrift unter "Yusuf Ferhat Demir" | Seite 2, unten |
-| Anlage-13 Einverstaendnis | Datum + Unterschrift | Seite 1, unten |
+| Anlage-00 Erhebungsbogen | Feld "Ort, Datum" + Unterschrift am Ende (Yusuf) | Seite 3, unten |
+| Anlage-01 Anschreiben | Unterschrift unter GF-Name (Yusuf) | Seite 2, unten |
+| Anlage-04 Arbeitsvertrag | Datum + Unterschrift GF LINKS (Yusuf) + Unterschrift AN RECHTS (Sabrina) | Seite 3, unten |
+| Anlage-05 Konzept | Unterschrift am Ende (Yusuf) | Seite 8, unten |
+| Anlage-06 Schulungskonzept | OBERE Zeile: Yusuf + UNTERE Zeile: Sabrina Martin | Seite 4, unten |
+| Anlage-07 Kosten-/Leistungsuebersicht | Datum + Unterschrift LINKS Anbieter (Yusuf) | Seite 2, unten |
+| Anlage-08 Erklaerung FZ | Unterschrift unter "Yusuf Ferhat Demir" (Yusuf) | Seite 2, unten |
+| Anlage-09 Erklaerung SV/ML | Unterschrift unter "Yusuf Ferhat Demir" (Yusuf) | Seite 2, unten |
+| Anlage-11 Datenschutzkonzept | Datum + Unterschrift unter GF-Name (Yusuf) | Seite 3, unten |
+| Anlage-13 Einverstaendnis | Datum + Unterschrift (Yusuf) | Seite 1, unten |
 
 ## EINREICHUNGS-GO: NEIN
 
 ### Gruende:
 1. Gewerbeanmeldung fehlt (von Behoerde explizit gefordert)
 2. Betriebshaftpflicht-Nachweis/Police fehlt (von Behoerde explizit gefordert)
-3. Steuernummer fehlt (im Erhebungsbogen einzutragen)
-4. Diverse Unterschriften fehlen (siehe Tabelle oben)
+3. 12 Unterschriften fehlen (10x Yusuf + 2x Sabrina Martin)
+4. 4 Arbeitsvertrag-Felder unausgefuellt (Beginn, Stunden, Verguetung, Urlaub)
+5. Steuernummer KEIN BLOCKER (PfluV erlaubt alternativ Gewerbeanzeige)
 
 ### Sobald 1-3 vorliegen:
 - Steuernummer im Erhebungsbogen eintragen
