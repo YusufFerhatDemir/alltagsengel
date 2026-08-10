@@ -5,7 +5,7 @@ import type { ConsentTyp } from '@/lib/coach/types'
 const CONSENT_TYPEN: ConsentTyp[] = ['gesundheitsdaten_art9', 'wissenschaftliche_auswertung', 'datenfreigabe']
 
 /** Aktuelle Version der Einwilligungstexte — bei Textänderung hochzählen. */
-export const CONSENT_TEXT_VERSION = '2026-08-v1'
+const CONSENT_TEXT_VERSION = '2026-08-v1'
 
 export async function GET() {
   const auth = await requireCoachUser()
