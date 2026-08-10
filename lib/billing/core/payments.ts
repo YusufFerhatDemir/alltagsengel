@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { logBillingAction } from './audit'
+import { isTerminalStatus, isValidInvoiceStatus, type InvoiceStatus } from './status-machine'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -272,14 +273,27 @@ export async function allocatePayment(
 
     if (!inv) throw new Error(`Rechnung ${alloc.invoiceId} nicht gefunden.`)
 
+    if (isValidInvoiceStatus(inv.status) && isTerminalStatus(inv.status as InvoiceStatus)) {
+      throw new Error(
+        `Rechnung ${alloc.invoiceId} ist im Endstatus "${inv.status}" — Zuordnung nicht moeglich.`
+      )
+    }
+
     const totalCents = Math.round(Number(inv.total_amount || 0) * 100)
     const prevPaidCents = Math.round(Number(inv.paid_amount || 0) * 100)
+    const openCents = totalCents - prevPaidCents
+    if (alloc.amountCents > openCents && openCents > 0) {
+      throw new Error(
+        `Zuordnungsbetrag (${alloc.amountCents} Cent) uebersteigt offenen Betrag (${openCents} Cent) der Rechnung ${alloc.invoiceId}.`
+      )
+    }
     const newPaidCents = prevPaidCents + alloc.amountCents
 
+    const isMulti = allocations.length > 1
     let allocationType: AllocationType = 'teilzahlung'
     if (newPaidCents >= totalCents) allocationType = 'vollzahlung'
     if (newPaidCents > totalCents) allocationType = 'ueberzahlung'
-    if (allocations.length > 1) allocationType = 'sammelzahlung_anteil'
+    if (isMulti && allocationType !== 'ueberzahlung') allocationType = 'sammelzahlung_anteil'
 
     const { error: allocError } = await supabase
       .from('payment_allocations')
