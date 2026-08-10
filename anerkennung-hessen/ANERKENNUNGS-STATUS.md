@@ -10,7 +10,7 @@
 | Sachbearbeiterin | Frau Krause, Tel. 069/212-33607 |
 | E-Mail | entlastungsangebote45@stadt-frankfurt.de |
 | Aktenzeichen | 51.D24.12 |
-| Rechtsgrundlage | Par. 45a SGB XI i.V.m. PfluV Hessen (25.04.2018, zul. geaend. 2024) |
+| Rechtsgrundlage | Par. 45a SGB XI i.V.m. PfluV Hessen (25.04.2018, zul. geaend. 23.09.2021, verlaengert bis Ende 2026) |
 | Anbieterform | II (Gewerblich Taetige) |
 | Ersteinreichung | 15.12.2025 |
 | Rueckmeldung Behoerde | 08.07.2026 (Frau Krause) |
@@ -24,9 +24,9 @@
 | Erhebungsbogen ausgefuellt | JA | Anlage-00, IK-Nr. 460629986 eingetragen. Steuernr. fehlt noch. ORIGINAL mit Unterschrift einreichen! |
 | Fuehrungszeugnis GF (Yusuf Demir) | JA | Vorhanden (BfJ, 20.07.2026). ORIGINAL zur Behoerde senden! |
 | IK-Nr. eingetragen | JA | 460629986 (ARGE-IK Bestaetigung vorhanden, Anlage-03) |
-| Steuernummer eingetragen | **NEIN** | Nicht auf dem Mac gefunden. Beim Finanzamt anfordern! |
-| Gewerbeanmeldung | **NEIN** | Von Behoerde explizit angefordert. Nicht auf dem Mac gefunden. Beim Gewerbeamt Frankfurt beantragen! |
-| Betriebshaftpflicht (Police) | **NEIN** | Von Behoerde explizit angefordert. Nur Vergleichsdokument vorhanden. Versicherung abschliessen! |
+| Steuernummer eingetragen | **NEIN** | Nicht auf dem Mac gefunden. Beim Finanzamt anfordern! HINWEIS: Behoerde hat Steuernr. NICHT explizit angefordert, PfluV erlaubt alternativ Gewerbeanzeige (Par. 9 Abs. 1 Nr. 3a) |
+| Gewerbeanmeldung | **NEIN** | Von Behoerde explizit angefordert (Rueckmeldung 08.07.2026). Beim Gewerbeamt Frankfurt beantragen! |
+| Betriebshaftpflicht (Police) | **NEIN** | Von Behoerde explizit angefordert. Versicherung abgeschlossen (5 Mio. Deckung), Police wird nachgereicht |
 | Konzept zum Angebot | JA | Anlage-05 (gem. Par. 6 PfluV) |
 | Schulungskonzept | JA | Anlage-06 (30 UE + Fortbildung) |
 | Leistungs-/Kostenuebersicht | JA | Anlage-07 (gem. Par. 8 PfluV) |
@@ -112,3 +112,22 @@
 - Parallel per E-Mail an: entlastungsangebote45@stadt-frankfurt.de
 
 ### FRIST: 31.08.2026 - NUR NOCH 3 WOCHEN!
+
+## VERIFIZIERUNG (10.08.2026)
+
+| Aussage | Status | Quelle |
+|---------|--------|--------|
+| Preise 30/25 EUR | VERIFIZIERT | Par. 1 Abs. 1 Nr. 12 PfluV (Originaltext) |
+| Frist 31.08.2026 | VERIFIZIERT | Rueckmeldung Fr. Krause, woertlich im Schreiben |
+| Entlastungsbetrag 131 EUR | VERIFIZIERT | PUEG, Erhoehung ab 01.01.2025 |
+| PfluV gueltig | VERIFIZIERT | Verlaengert bis Ende 2026, Reform in Anhoerung |
+| Frankfurter Website zeigt 125 EUR | VERALTET | frankfurt.de nicht aktualisiert, 131 EUR ist korrekt |
+
+## DEFEKTE DATEIEN
+
+| Datei | Problem |
+|-------|---------|
+| Erhebungsbogen-Anbieterform-II-Frankfurt.pdf | Cloudflare-Block, kein echtes PDF |
+| Erklaerskript-Erhebungsbogen.pdf | Cloudflare-Block, kein echtes PDF |
+
+Beide Dateien wurden beim Download von frankfurt.de durch Cloudflare blockiert. Fuer Einreichung nicht benoetigt (eigener Erhebungsbogen Anlage-00 vorhanden).
