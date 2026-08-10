@@ -17,7 +17,7 @@ export async function listPosteingang(
 
 export async function getNachricht(
   supabase: SupabaseClient,
-  params: { organizationId: string; id: string },
+  params: { organizationId: string; id: string; userId?: string },
 ): Promise<{ nachricht: OpsNachricht; empfaenger: OpsNachrichtEmpfaenger[] } | null> {
   const { data: nachricht, error: nErr } = await supabase
     .from('ops_nachrichten')
@@ -34,6 +34,12 @@ export async function getNachricht(
     .eq('organization_id', params.organizationId)
     .eq('nachricht_id', params.id)
   if (eErr) throw new Error(`Nachricht-Empfaenger konnten nicht geladen werden: ${eErr.message}`)
+
+  if (params.userId) {
+    const isSender = (nachricht as any).absender_id === params.userId
+    const isRecipient = (empfaenger ?? []).some((e: any) => e.empfaenger_id === params.userId)
+    if (!isSender && !isRecipient) return null
+  }
 
   return { nachricht: nachricht as OpsNachricht, empfaenger: (empfaenger ?? []) as OpsNachrichtEmpfaenger[] }
 }
@@ -75,6 +81,14 @@ export async function createAntwort(
     empfaengerIds: string[]
   },
 ): Promise<OpsNachricht> {
+  const { data: parent, error: pErr } = await supabase
+    .from('ops_nachrichten')
+    .select('id')
+    .eq('id', params.elternId)
+    .eq('organization_id', params.organizationId)
+    .maybeSingle()
+  if (pErr || !parent) throw new Error('Eltern-Nachricht nicht gefunden oder gehoert nicht zur Organisation.')
+
   const { data: nachricht, error: nErr } = await supabase
     .from('ops_nachrichten')
     .insert({ ...params.data, organization_id: params.organizationId, eltern_id: params.elternId })

@@ -37,6 +37,12 @@ export async function POST(req: NextRequest) {
       .or(`organization_id.eq.${organizationId},organization_id.is.null`)
       .single()
     if (error || !das) return NextResponse.json({ error: 'Datenannahmestelle nicht gefunden' }, { status: 404 })
+    if (!das.organization_id) {
+      return NextResponse.json(
+        { error: 'Gemeinsame Datenannahmestelle: SFTP-Test nur fuer eigene Kopie moeglich.' },
+        { status: 403 }
+      )
+    }
     if (!das.sftp_host || !das.sftp_user) {
       return NextResponse.json({ error: 'SFTP-Host oder -User nicht konfiguriert' }, { status: 400 })
     }

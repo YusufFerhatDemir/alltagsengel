@@ -19,6 +19,11 @@ export async function GET(req: NextRequest) {
   const auth = await requireStaff(supabase)
   if (!auth.ok) return auth.response
 
+  const organizationId = await getActiveOrgId()
+  if (!organizationId) {
+    return NextResponse.json({ error: 'Keine Organisation zugewiesen.' }, { status: 403 })
+  }
+
   const { searchParams } = new URL(req.url)
   const start = searchParams.get('start')
   const end = searchParams.get('end')
@@ -31,14 +36,25 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'start und end Parameter erforderlich' }, { status: 400 })
   }
 
-  const { data, error } = await supabase.rpc('get_calendar_assignments', {
-    p_start: start,
-    p_end: end,
-    p_caregiver_id: caregiverId,
-    p_client_id: clientId,
-    p_bundesland: bundesland,
-    p_status: status,
-  })
+  const admin = createAdminClient()
+  let query = admin
+    .from('assignments')
+    .select(`
+      id, assignment_date, weekday, start_time, end_time, status,
+      assignment_type, recurrence_pattern, bundesland,
+      client:clients!inner(id, first_name, last_name),
+      caregiver:caregivers!inner(id, first_name, last_name)
+    `)
+    .eq('organization_id', organizationId)
+    .gte('assignment_date', start)
+    .lte('assignment_date', end)
+
+  if (caregiverId) query = query.eq('caregiver_id', caregiverId)
+  if (clientId) query = query.eq('client_id', clientId)
+  if (bundesland) query = query.eq('bundesland', bundesland)
+  if (status) query = query.eq('status', status)
+
+  const { data, error } = await query.order('assignment_date').order('start_time')
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json(data)

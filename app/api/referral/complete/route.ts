@@ -43,6 +43,21 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ message: 'Kein offenes Referral' })
     }
 
+    const { data: completedBooking } = await supabaseAdmin
+      .from('bookings')
+      .select('id')
+      .eq('customer_id', user_id)
+      .eq('status', 'completed')
+      .limit(1)
+      .maybeSingle()
+
+    if (!completedBooking) {
+      return NextResponse.json(
+        { error: 'Referral-Bonus erfordert mindestens eine abgeschlossene Buchung.' },
+        { status: 400 }
+      )
+    }
+
     const bonus = referral.bonus_amount || 20
 
     // 1. Referral als completed markieren

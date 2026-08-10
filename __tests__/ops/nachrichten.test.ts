@@ -265,7 +265,7 @@ describe('Nachrichten', () => {
           },
           empfaengerIds: ['u-1'],
         }),
-      ).rejects.toThrow('Antwort konnte nicht erstellt werden')
+      ).rejects.toThrow('Eltern-Nachricht nicht gefunden')
     })
   })
 
