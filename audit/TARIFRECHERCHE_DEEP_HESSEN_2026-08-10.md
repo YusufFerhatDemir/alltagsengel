@@ -459,9 +459,166 @@ Folgende LK schließen sich gegenseitig aus (nicht im selben Einsatz abrechenbar
 |---|---|---|---|
 | DC1 | AOK Arbeitskreis: Vertrag §89 Anlage 2 (BAYERN, 01.01.2025) | https://www.aok.de/gp/fileadmin/user_upload/Pflege/Ambulante_Pflege/Verguetung/Arbeitskreis/20250101_vertrag89xi_arbeitskreis_anlage2.pdf | Punktwert 0,08034 (Bayern!), Orientierung |
 | DC2 | ambulante-pflegedienste.net: Kosten Pflegedienst Hessen | https://ambulante-pflegedienste.net/2025/01/24/was-kostet-ein-pflegedienst-in-hessen/ | Marktpreisübersicht |
+| DC3 | PflegeNah: Was kostet ein ambulanter Pflegedienst 2026 | https://pflege-nah.de/ratgeber/pflegedienst-kosten | Marktpreisübersicht bundesweit |
 
 ---
 
-**ENDE DER DEEP RESEARCH**
+## H. NEU GEFUNDENE ERKENNTNISSE (Deep Research Runde 2, 2026-08-10)
 
-**Zusammenfassung:** Von allen recherchierten Tarifpositionen sind nur die Beratungseinsätze (87€/58€) als echte öffentliche Anbieterpreise verifizierbar. Alle anderen Vergütungssätze (Punktwerte, Stundensätze, HBP, HKP-Positionen, AKI) sind in Hessen VERTRAGSINDIVIDUELL und erfordern Yusufs eigene Vergütungsvereinbarung. Die Punktzahlen der M5.1-Leistungskomplexe sind öffentlich und vollständig dokumentiert — der fehlende Faktor ist jeweils der individuelle Punktwert.
+### ★ H.1 §45b-ENTLASTUNGSLEISTUNGEN — PREISOBERGRENZEN HESSEN (NEU, LEVEL A)
+
+**WICHTIGER FUND:** Die hessische Pflegeunterstützungsverordnung (PfluV) setzt verbindliche Preisobergrenzen für anerkannte Anbieter nach §45a SGB XI:
+
+| Angebotsart | Max. Entgelt (inkl. USt.) | Quelle | Level |
+|---|---|---|---|
+| **Betreuungsangebote** (§45a Abs. 1 S. 2 Nr. 1) | **≤ 30,00 €/Stunde** | PfluV Hessen, pflege-in-hessen.de FAQ Anbieter | **A** |
+| **Angebote zur Entlastung von Pflegenden** (§45a Abs. 1 S. 2 Nr. 2) | **≤ 30,00 €/Stunde** | dto. | **A** |
+| **Angebote zur Entlastung im Alltag / Hauswirtschaft** (§45a Abs. 1 S. 2 Nr. 3) | **≤ 25,00 €/Stunde** | dto. | **A** |
+| **Nachbarschaftshilfe** | pauschalisierte Aufwandsentschädigung, orientiert am Mindestlohn | dto. | **A** |
+
+**Fahrtkosten:** Separat abrechenbar (kein Preisdeckel in PfluV genannt). Die separate Abrechenbarkeit soll ein Stadt-Land-Gefälle bei der Anbieterzahl verhindern.
+
+**Alltagsengel-Planung (Abgleich):**
+- 30 €/Std. körperbezogen → Innerhalb der PfluV-Obergrenze (= Maximum)
+- 25 €/Std. Betreuung → Innerhalb der PfluV-Obergrenze für Betreuung (30€) — Spielraum nach oben
+- 5 €/Std. Hauswirtschaft → **DEUTLICH** unter PfluV-Obergrenze (25€) — ggf. Kalkulation prüfen!
+
+**Quellen:**
+- Pflege in Hessen: FAQ für Anbieter (offizielles Landesportal)
+  URL: https://www.pflege-in-hessen.de/formen-der-pflege/pflege-zuhause/haeufig-gestellte-fragen/informationen-fuer-anbieterinnen-und-anbieter/
+- PfluV Hessen (Verordnungstext)
+  URL: https://www.dvlab.de/hessen/pdf/PfluV_mit_Begruendung.pdf
+
+### H.2 Marktpreise ambulante Pflege (bundesweit, Orientierung, LEVEL C)
+
+Die folgenden Werte stammen aus Marktübersichten (nicht Hessen-spezifisch) und dienen NUR als Größenordnungsorientierung:
+
+| Leistungsbereich | Stundensatz (Marktdurchschnitt 2026) | Quelle | Level |
+|---|---|---|---|
+| Grundpflege (körperbezogen) | **45–65 €/Stunde** | PflegeNah Ratgeber 2026 | **C** |
+| Behandlungspflege (SGB V) | **40–55 €/Stunde** | PflegeNah Ratgeber 2026 | **C** |
+| Hauswirtschaftliche Hilfe | **25–40 €/Stunde** | PflegeNah Ratgeber 2026 | **C** |
+| Wegepauschale pro Besuch | **5–8 €** | PflegeNah Ratgeber 2026 | **C** |
+| Investitionskosten-Aufschlag | **5–15 % auf Monatsrechnung** | PflegeNah Ratgeber 2026 | **C** |
+
+**WARNUNG:** Diese Marktpreise sind KEINE verifizierten Hessen-Anbieterpreise. Sie sind Durchschnittswerte aus bundesweiten Marktübersichten.
+
+**Quelle:** https://pflege-nah.de/ratgeber/pflegedienst-kosten (Stand: 23.04.2026)
+
+### H.3 Regionales Entgeltniveau 2026 (NEU, LEVEL B)
+
+| Kennzahl | Steigerung zum 01.01.2026 | Quelle | Level |
+|---|---|---|---|
+| Entgeltniveau **Helfer** | **+7,22 %** | KMR Rechtsanwälte | **B** |
+| Entgeltniveau **Fachkräfte** | **+5,96 %** | KMR Rechtsanwälte | **B** |
+
+**Quelle:** https://www.kmr-rechtsanwaelte.de/aktuelles/regional-uebliches-entgeltniveau
+**Bedeutung:** Beeinflusst die Vergütungsverhandlung nach §89, da Pflegekassen sich am regionalen Entgeltniveau orientieren müssen (§82c SGB XI).
+
+### H.4 Schiedsstellenentscheidungen Hessen (Recherche-Ergebnis: NEGATIV)
+
+**Recherche-Ergebnis:** Es konnten KEINE öffentlich zugänglichen Schiedsstellenentscheidungen (§76 SGB XI) für den ambulanten Bereich in Hessen identifiziert werden. Die Schiedsstelle Pflege Hessen publiziert ihre Sprüche offenbar nicht öffentlich — im Gegensatz z. B. zu Bayern (LfP Bayern).
+
+**Konsequenz:** Schiedsstellensprüche sind KEIN gangbarer Weg, um an Hessen-spezifische Punktwerte zu gelangen.
+
+### H.5 HKP-Vergütung Hessen (§132a SGB V) — Ergänzung (NEU)
+
+Die vdek-Hessen-HKP-Seite (Stand 05.08.2026) bestätigt:
+- Vergütung erfolgt über Verträge nach §132a SGB V
+- **KEINE** öffentlich zugänglichen Vergütungsvereinbarungen oder Preislisten
+- Kontakt: AmbPflegeHES_Zulassung@vdek.com
+- Die HKP-Richtlinie wurde zuletzt am 16.10.2025 aktualisiert (iK 12.12.2025)
+
+**Download:** HKP-Richtlinie 2025 unter:
+https://www.vdek.com/content/vdeksite/LVen/HES/Vertragspartner/Pflege/haeusliche-krankenpflege/_jcr_content/par/download/file.res/HKP-RL_2025-10-16_iK-2025-12-12.pdf
+
+**Quelle:** https://www.vdek.com/LVen/HES/Vertragspartner/Pflege/haeusliche-krankenpflege.html
+**Level:** B
+
+### H.6 Zuschläge Nacht/Sonntag/Feiertag (Bestätigung)
+
+**Bestätigt:** In Hessen gibt es KEINE separaten prozentualen Zuschläge auf Leistungskomplexe für Nacht/Sonntag/Feiertag. Stattdessen wird die **erhöhte Hausbesuchspauschale (LK 20)** verwendet:
+- LK 20 gilt für Einsätze 20:00–6:00 Uhr sowie Sa/So/Feiertage
+- LK 20 ist VERTRAGSINDIVIDUELL
+- Typische Relation: HBP erhöht ≈ 140–150 % der regulären HBP (LK 19)
+
+Dies wurde bereits in der ersten Research-Runde dokumentiert und konnte nicht weiter präzisiert werden. Es gibt keine öffentlichen Hessen-spezifischen Beträge.
+
+### H.7 Investitionskosten ambulant Hessen — Ergänzung (NEU)
+
+| Aspekt | Detail | Quelle | Level |
+|---|---|---|---|
+| Verfahren ungefördert (§82 Abs. 4) | **Anzeigepflicht** beim HLfGP (nicht genehmigungspflichtig) | HLfGP, Verwaltungsportal | **A** |
+| Verfahren gefördert (§82 Abs. 3) | **Zustimmungspflicht** beim HLfGP | HLfGP | **A** |
+| Kalkulationsvorlage | Stand 07/2026 (XLSX beim HLfGP) | HLfGP | **A** |
+| Marktüblicher Aufschlag (bundesweit) | **5–15 %** auf Monatsrechnung | PflegeNah | **C** |
+| Referenz NRW (Vergleich) | **2,15 € je volle Pflegestunde** (SGB XI) | Rhein-Erft-Kreis Portal | **C** |
+
+**Hessen-spezifisch:** Die Höhe des Investitionskostenzuschlags ist INDIVIDUELL berechnet basierend auf den tatsächlichen betriebsnotwendigen Investitionskosten des jeweiligen Pflegedienstes. Es gibt keinen einheitlichen Landeswert.
+
+**Neuer Link:** Verwaltungsportal Hessen — Berechnung betriebsnotwendiger Investitionsaufwendungen:
+https://verwaltungsportal.hessen.de/en/leistung?leistung_id=L100001_371770465
+
+### H.8 Wegepauschalen Hessen (NEU)
+
+| Aspekt | Detail | Level |
+|---|---|---|
+| Systematik im M5.1 | HBP (LK 19/20) = Wegepauschale im SGB XI | **B** |
+| HBP regulär (LK 19a) | VERTRAGSINDIVIDUELL | — |
+| HBP erhöht (LK 20a) | VERTRAGSINDIVIDUELL | — |
+| HBP-Staffelung | 100% / 50% / 33,3% / 16,7% / 25% (LK 19a–e) | **B** |
+| Marktübliche Wegepauschale (bundesweit) | **5–8 € pro Besuch** | **C** |
+| §45b-Entlastungsleistungen | Fahrtkosten **separat abrechenbar** (PfluV Hessen) | **A** |
+
+**Wichtig:** Im Hessischen M5.1-System ist die "Wegepauschale" als Hausbesuchspauschale (HBP) abgebildet. Es handelt sich NICHT um eine kilometerbasierte Fahrtkostenpauschale, sondern um einen pauschalen Betrag pro Einsatz. Die HKP-Wegepauschale (SGB V) ist separat und ebenfalls vertragsindividuell.
+
+### H.9 Ambulante Betreuungsdienste (§71 Abs. 1a SGB XI) — Separates Vergütungsmodell (NEU)
+
+**NEU:** Die vdek-Hessen-Seite (05.08.2026) zeigt, dass ambulante Betreuungsdienste ein **separates** Vergütungsmodell haben:
+- Eigener Musterversorgungsvertrag
+- Eigene Mustervergütungsvereinbarung
+- Erbringen NUR pflegerische Betreuung + Hauswirtschaft (KEINE körperbezogene Pflege)
+- Nur LK 13 (Hauswirtschaft) und LK 14 (Betreuung) relevant + HBP
+
+**Download Mustervergütungsvereinbarung Betreuungsdienste:**
+https://www.vdek.com/content/vdeksite/LVen/HES/Vertragspartner/Pflege/ambulante-pflege/_jcr_content/par/download_865723797/file.res/Musterverg%c3%bctungsvereinbarung_Betreuungsdienste_GVWG.PDF
+
+**Quelle:** https://www.vdek.com/LVen/HES/Vertragspartner/Pflege/ambulante-pflege.html
+**Level:** B
+
+---
+
+## I. AKTUALISIERTES QUELLENVERZEICHNIS (Runde 2)
+
+### Neue Primärquellen (LEVEL_A)
+
+| # | Dokument | URL | Abrufdatum |
+|---|---|---|---|
+| DA10 | Pflege in Hessen: FAQ Anbieter §45a (PfluV Preisobergrenzen) | https://www.pflege-in-hessen.de/formen-der-pflege/pflege-zuhause/haeufig-gestellte-fragen/informationen-fuer-anbieterinnen-und-anbieter/ | 2026-08-10 |
+| DA11 | Verwaltungsportal Hessen: Berechnung Investitionsaufwendungen | https://verwaltungsportal.hessen.de/en/leistung?leistung_id=L100001_371770465 | 2026-08-10 |
+| DA12 | Frankfurt.de: Anerkennung §45a Angebote | https://frankfurt.de/themen/soziales-und-gesellschaft/pflege/anerkennung-und-foerderung-von-angeboten-zur-unterstuetzung-im-alltag | 2026-08-10 |
+
+### Neue Verbandsquellen (LEVEL_B)
+
+| # | Dokument | URL | Abrufdatum |
+|---|---|---|---|
+| DB9 | vdek Hessen: HKP-Seite (Stand 05.08.2026) | https://www.vdek.com/LVen/HES/Vertragspartner/Pflege/haeusliche-krankenpflege.html | 2026-08-10 |
+| DB10 | vdek Hessen: Mustervergütungsvereinbarung Betreuungsdienste | (PDF-Download über vdek-Seite) | 2026-08-10 |
+| DB11 | KMR Rechtsanwälte: Entgeltniveau 2026 | https://www.kmr-rechtsanwaelte.de/aktuelles/regional-uebliches-entgeltniveau | 2026-08-10 |
+
+### Neue Sekundärquellen (LEVEL_C)
+
+| # | Dokument | URL | Hinweis |
+|---|---|---|---|
+| DC3 | PflegeNah: Was kostet ein Pflegedienst 2026 | https://pflege-nah.de/ratgeber/pflegedienst-kosten | Marktpreisübersicht bundesweit |
+| DC4 | Rhein-Erft-Kreis: Investitionskostenpauschale NRW (Vergleich) | https://portal.rhein-erft-kreis.de/detail/-/vr-bis-detail/dienstleistung/42123/show | NRW-Referenzwert 2,15€/Std. |
+
+---
+
+**ENDE DER DEEP RESEARCH (Runde 2)**
+
+**Aktualisierte Zusammenfassung:**
+
+Die zweite Recherche-Runde erbrachte **einen wichtigen neuen Fund (LEVEL A)**: Die PfluV Hessen setzt verbindliche Preisobergrenzen für §45b-Entlastungsleistungen — max. 30€/Std. für Betreuung/Entlastung Pflegender, max. 25€/Std. für Hauswirtschaft. Diese Obergrenzen sind für Alltagsengels Kalkulation direkt relevant.
+
+Alle übrigen Vergütungssätze (Punktwerte SGB XI, HKP-Preise SGB V, HBP-Beträge, Investitionskosten, Zuschläge) bleiben **VERTRAGSINDIVIDUELL**. Es gibt keine öffentlichen Schiedsstellenentscheidungen für Hessen, keine öffentlichen HKP-Preislisten, und keine veröffentlichten Punktwerte einzelner Anbieter. Yusuf muss diese Werte individuell verhandeln.

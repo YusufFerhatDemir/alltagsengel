@@ -450,10 +450,7 @@ CREATE POLICY org_fence_abrechnungslaeufe ON public.abrechnungslaeufe
   AS RESTRICTIVE FOR ALL
   USING (
     organization_id IS NULL
-    OR organization_id = (
-      SELECT p.organization_id FROM public.profiles p
-      WHERE p.id = auth.uid()
-    )
+    OR organization_id = public.current_org_id()
   );
 
 DROP POLICY IF EXISTS admin_abrechnungslaeufe ON public.abrechnungslaeufe;
@@ -473,10 +470,7 @@ DROP POLICY IF EXISTS org_fence_dlr ON public.dta_lauf_rechnungen;
 CREATE POLICY org_fence_dlr ON public.dta_lauf_rechnungen
   AS RESTRICTIVE FOR ALL
   USING (
-    organization_id = (
-      SELECT p.organization_id FROM public.profiles p
-      WHERE p.id = auth.uid()
-    )
+    organization_id = public.current_org_id()
   );
 
 DROP POLICY IF EXISTS admin_dlr ON public.dta_lauf_rechnungen;
@@ -496,10 +490,7 @@ DROP POLICY IF EXISTS org_fence_kt ON public.dta_kostentraeger;
 CREATE POLICY org_fence_kt ON public.dta_kostentraeger
   AS RESTRICTIVE FOR ALL
   USING (
-    organization_id = (
-      SELECT p.organization_id FROM public.profiles p
-      WHERE p.id = auth.uid()
-    )
+    organization_id = public.current_org_id()
   );
 
 DROP POLICY IF EXISTS admin_kt ON public.dta_kostentraeger;
@@ -520,10 +511,7 @@ CREATE POLICY org_fence_das ON public.datenannahmestellen
   AS RESTRICTIVE FOR ALL
   USING (
     organization_id IS NULL
-    OR organization_id = (
-      SELECT p.organization_id FROM public.profiles p
-      WHERE p.id = auth.uid()
-    )
+    OR organization_id = public.current_org_id()
   );
 
 DROP POLICY IF EXISTS admin_das ON public.datenannahmestellen;
@@ -543,10 +531,7 @@ DROP POLICY IF EXISTS org_fence_da ON public.dta_dakota_auftraege;
 CREATE POLICY org_fence_da ON public.dta_dakota_auftraege
   AS RESTRICTIVE FOR ALL
   USING (
-    organization_id = (
-      SELECT p.organization_id FROM public.profiles p
-      WHERE p.id = auth.uid()
-    )
+    organization_id = public.current_org_id()
   );
 
 DROP POLICY IF EXISTS admin_da ON public.dta_dakota_auftraege;
@@ -566,10 +551,7 @@ DROP POLICY IF EXISTS org_fence_rl ON public.dta_ruecklaeufer;
 CREATE POLICY org_fence_rl ON public.dta_ruecklaeufer
   AS RESTRICTIVE FOR ALL
   USING (
-    organization_id = (
-      SELECT p.organization_id FROM public.profiles p
-      WHERE p.id = auth.uid()
-    )
+    organization_id = public.current_org_id()
   );
 
 DROP POLICY IF EXISTS admin_rl ON public.dta_ruecklaeufer;
@@ -589,10 +571,7 @@ DROP POLICY IF EXISTS org_fence_rlp ON public.dta_ruecklaeufer_positionen;
 CREATE POLICY org_fence_rlp ON public.dta_ruecklaeufer_positionen
   AS RESTRICTIVE FOR ALL
   USING (
-    organization_id = (
-      SELECT p.organization_id FROM public.profiles p
-      WHERE p.id = auth.uid()
-    )
+    organization_id = public.current_org_id()
   );
 
 DROP POLICY IF EXISTS admin_rlp ON public.dta_ruecklaeufer_positionen;
@@ -612,10 +591,7 @@ DROP POLICY IF EXISTS org_fence_fp ON public.dta_fehlerprotokoll;
 CREATE POLICY org_fence_fp ON public.dta_fehlerprotokoll
   AS RESTRICTIVE FOR ALL
   USING (
-    organization_id = (
-      SELECT p.organization_id FROM public.profiles p
-      WHERE p.id = auth.uid()
-    )
+    organization_id = public.current_org_id()
   );
 
 DROP POLICY IF EXISTS admin_fp ON public.dta_fehlerprotokoll;
@@ -635,10 +611,7 @@ DROP POLICY IF EXISTS org_fence_kl ON public.dta_korrekturlaeufe;
 CREATE POLICY org_fence_kl ON public.dta_korrekturlaeufe
   AS RESTRICTIVE FOR ALL
   USING (
-    organization_id = (
-      SELECT p.organization_id FROM public.profiles p
-      WHERE p.id = auth.uid()
-    )
+    organization_id = public.current_org_id()
   );
 
 DROP POLICY IF EXISTS admin_kl ON public.dta_korrekturlaeufe;
@@ -658,10 +631,7 @@ DROP POLICY IF EXISTS org_fence_val ON public.dta_validierungen;
 CREATE POLICY org_fence_val ON public.dta_validierungen
   AS RESTRICTIVE FOR ALL
   USING (
-    organization_id = (
-      SELECT p.organization_id FROM public.profiles p
-      WHERE p.id = auth.uid()
-    )
+    organization_id = public.current_org_id()
   );
 
 DROP POLICY IF EXISTS admin_val ON public.dta_validierungen;

@@ -632,6 +632,48 @@
       "level": "A",
       "ist_anbieterpreis": false,
       "ist_budget": true
+    },
+    {
+      "leistungsart": "§45b Entlastungsleistung — Betreuung (Preisobergrenze Hessen)",
+      "rechtsgrundlage": "§45a Abs. 1 S. 2 Nr. 1 SGB XI / PfluV Hessen",
+      "leistungsnummer": null,
+      "dta_position": null,
+      "punktzahl": null,
+      "punktwert_cent": null,
+      "preis_cent": 3000,
+      "einheit": "stunde",
+      "zuschlag_prozent": 0,
+      "kostentraeger_ik": "alle_pflegekassen",
+      "bundesland": "HE",
+      "gueltig_ab": null,
+      "gueltig_bis": null,
+      "quelle": "PfluV Hessen, Pflege in Hessen FAQ Anbieter",
+      "url": "https://www.pflege-in-hessen.de/formen-der-pflege/pflege-zuhause/haeufig-gestellte-fragen/informationen-fuer-anbieterinnen-und-anbieter/",
+      "level": "A",
+      "ist_anbieterpreis": true,
+      "ist_budget": false,
+      "bemerkung": "NEU (Runde 2). PREISOBERGRENZE (Maximum) für anerkannte Anbieter nach §45a. Inkl. USt. Fahrtkosten separat abrechenbar. Gilt für Betreuungsangebote UND Angebote zur Entlastung von Pflegenden."
+    },
+    {
+      "leistungsart": "§45b Entlastungsleistung — Hauswirtschaft/Alltag (Preisobergrenze Hessen)",
+      "rechtsgrundlage": "§45a Abs. 1 S. 2 Nr. 3 SGB XI / PfluV Hessen",
+      "leistungsnummer": null,
+      "dta_position": null,
+      "punktzahl": null,
+      "punktwert_cent": null,
+      "preis_cent": 2500,
+      "einheit": "stunde",
+      "zuschlag_prozent": 0,
+      "kostentraeger_ik": "alle_pflegekassen",
+      "bundesland": "HE",
+      "gueltig_ab": null,
+      "gueltig_bis": null,
+      "quelle": "PfluV Hessen, Pflege in Hessen FAQ Anbieter",
+      "url": "https://www.pflege-in-hessen.de/formen-der-pflege/pflege-zuhause/haeufig-gestellte-fragen/informationen-fuer-anbieterinnen-und-anbieter/",
+      "level": "A",
+      "ist_anbieterpreis": true,
+      "ist_budget": false,
+      "bemerkung": "NEU (Runde 2). PREISOBERGRENZE (Maximum) für anerkannte Anbieter nach §45a. Inkl. USt. Fahrtkosten separat abrechenbar. Gilt für Angebote zur Entlastung im Alltag (hauswirtschaftliche Hilfen)."
     }
   ]
 }

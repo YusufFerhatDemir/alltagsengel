@@ -221,7 +221,7 @@ export class OfflineQueue {
 
       await this.store.updateQueueItem(item.id, {
         status: 'pending',
-        retry_count: item.retry_count,
+        retry_count: item.retry_count + 1,
       })
     } else if (this.config.konflikt_strategie === 'server_wins') {
       konflikt.status = 'aufgeloest'
@@ -231,6 +231,11 @@ export class OfflineQueue {
       await this.store.updateQueueItem(item.id, {
         status: 'synced',
         synchronisiert_am: Date.now(),
+      })
+    } else {
+      await this.store.updateQueueItem(item.id, {
+        status: 'conflict',
+        zuletzt_versucht: Date.now(),
       })
     }
 

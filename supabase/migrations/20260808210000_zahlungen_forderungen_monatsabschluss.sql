@@ -14,6 +14,25 @@
 BEGIN;
 
 -- ──────────────────────────────────────────────────────────────────
+-- 0) Legacy-payments aus initial-setup.sql erkennen und umbenennen
+-- ──────────────────────────────────────────────────────────────────
+DO $legacy_check$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'payments' AND column_name = 'booking_id'
+  ) AND NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'payments' AND column_name = 'organization_id'
+  ) THEN
+    DROP POLICY IF EXISTS "Kullanıcı kendi ödemelerini okuyabilir" ON public.payments;
+    DROP POLICY IF EXISTS "Admin ödemeleri yönetebilir" ON public.payments;
+    ALTER TABLE public.payments RENAME TO legacy_stripe_payments;
+  END IF;
+END
+$legacy_check$;
+
+-- ──────────────────────────────────────────────────────────────────
 -- 1) PAYMENTS — Zahlungseingänge
 -- ──────────────────────────────────────────────────────────────────
 

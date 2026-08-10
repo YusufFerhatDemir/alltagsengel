@@ -96,14 +96,17 @@ CREATE INDEX IF NOT EXISTS idx_ops_aufgaben_caregiver ON public.ops_aufgaben(car
 -- RLS
 ALTER TABLE public.ops_aufgaben ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "ops_aufgaben_org_fence" ON public.ops_aufgaben;
 CREATE POLICY "ops_aufgaben_org_fence"
   ON public.ops_aufgaben AS RESTRICTIVE FOR ALL
   USING (organization_id = current_org_id());
 
+DROP POLICY IF EXISTS "ops_aufgaben_admin_all" ON public.ops_aufgaben;
 CREATE POLICY "ops_aufgaben_admin_all"
   ON public.ops_aufgaben FOR ALL
   USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin'));
 
+DROP POLICY IF EXISTS "ops_aufgaben_engel_select" ON public.ops_aufgaben;
 CREATE POLICY "ops_aufgaben_engel_select"
   ON public.ops_aufgaben FOR SELECT
   USING (
@@ -113,6 +116,7 @@ CREATE POLICY "ops_aufgaben_engel_select"
     OR caregiver_id IN (SELECT cg.id FROM public.caregivers cg WHERE cg.user_id = auth.uid())
   );
 
+DROP POLICY IF EXISTS "ops_aufgaben_engel_update" ON public.ops_aufgaben;
 CREATE POLICY "ops_aufgaben_engel_update"
   ON public.ops_aufgaben FOR UPDATE
   USING (
@@ -146,14 +150,17 @@ CREATE INDEX IF NOT EXISTS idx_ops_checklisten_aufgabe ON public.ops_aufgaben_ch
 
 ALTER TABLE public.ops_aufgaben_checklisten ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "ops_checklisten_org_fence" ON public.ops_aufgaben_checklisten;
 CREATE POLICY "ops_checklisten_org_fence"
   ON public.ops_aufgaben_checklisten AS RESTRICTIVE FOR ALL
   USING (organization_id = current_org_id());
 
+DROP POLICY IF EXISTS "ops_checklisten_admin_all" ON public.ops_aufgaben_checklisten;
 CREATE POLICY "ops_checklisten_admin_all"
   ON public.ops_aufgaben_checklisten FOR ALL
   USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin'));
 
+DROP POLICY IF EXISTS "ops_checklisten_engel_select" ON public.ops_aufgaben_checklisten;
 CREATE POLICY "ops_checklisten_engel_select"
   ON public.ops_aufgaben_checklisten FOR SELECT
   USING (aufgabe_id IN (
@@ -163,6 +170,7 @@ CREATE POLICY "ops_checklisten_engel_select"
        OR a.erstellt_von = auth.uid()
   ));
 
+DROP POLICY IF EXISTS "ops_checklisten_engel_update" ON public.ops_aufgaben_checklisten;
 CREATE POLICY "ops_checklisten_engel_update"
   ON public.ops_aufgaben_checklisten FOR UPDATE
   USING (aufgabe_id IN (
@@ -191,14 +199,17 @@ CREATE INDEX IF NOT EXISTS idx_ops_kommentare_aufgabe ON public.ops_aufgaben_kom
 
 ALTER TABLE public.ops_aufgaben_kommentare ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "ops_kommentare_org_fence" ON public.ops_aufgaben_kommentare;
 CREATE POLICY "ops_kommentare_org_fence"
   ON public.ops_aufgaben_kommentare AS RESTRICTIVE FOR ALL
   USING (organization_id = current_org_id());
 
+DROP POLICY IF EXISTS "ops_kommentare_admin_all" ON public.ops_aufgaben_kommentare;
 CREATE POLICY "ops_kommentare_admin_all"
   ON public.ops_aufgaben_kommentare FOR ALL
   USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin'));
 
+DROP POLICY IF EXISTS "ops_kommentare_engel_select" ON public.ops_aufgaben_kommentare;
 CREATE POLICY "ops_kommentare_engel_select"
   ON public.ops_aufgaben_kommentare FOR SELECT
   USING (
@@ -211,6 +222,7 @@ CREATE POLICY "ops_kommentare_engel_select"
     )
   );
 
+DROP POLICY IF EXISTS "ops_kommentare_engel_insert" ON public.ops_aufgaben_kommentare;
 CREATE POLICY "ops_kommentare_engel_insert"
   ON public.ops_aufgaben_kommentare FOR INSERT
   WITH CHECK (
@@ -245,14 +257,17 @@ CREATE INDEX IF NOT EXISTS idx_ops_anhaenge_aufgabe ON public.ops_aufgaben_anhae
 
 ALTER TABLE public.ops_aufgaben_anhaenge ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "ops_anhaenge_org_fence" ON public.ops_aufgaben_anhaenge;
 CREATE POLICY "ops_anhaenge_org_fence"
   ON public.ops_aufgaben_anhaenge AS RESTRICTIVE FOR ALL
   USING (organization_id = current_org_id());
 
+DROP POLICY IF EXISTS "ops_anhaenge_admin_all" ON public.ops_aufgaben_anhaenge;
 CREATE POLICY "ops_anhaenge_admin_all"
   ON public.ops_aufgaben_anhaenge FOR ALL
   USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin'));
 
+DROP POLICY IF EXISTS "ops_anhaenge_engel_select" ON public.ops_aufgaben_anhaenge;
 CREATE POLICY "ops_anhaenge_engel_select"
   ON public.ops_aufgaben_anhaenge FOR SELECT
   USING (aufgabe_id IN (
@@ -304,18 +319,22 @@ CREATE INDEX IF NOT EXISTS idx_ops_wiedervorlagen_empfaenger ON public.ops_wiede
 
 ALTER TABLE public.ops_wiedervorlagen ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "ops_wiedervorlagen_org_fence" ON public.ops_wiedervorlagen;
 CREATE POLICY "ops_wiedervorlagen_org_fence"
   ON public.ops_wiedervorlagen AS RESTRICTIVE FOR ALL
   USING (organization_id = current_org_id());
 
+DROP POLICY IF EXISTS "ops_wiedervorlagen_admin_all" ON public.ops_wiedervorlagen;
 CREATE POLICY "ops_wiedervorlagen_admin_all"
   ON public.ops_wiedervorlagen FOR ALL
   USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin'));
 
+DROP POLICY IF EXISTS "ops_wiedervorlagen_engel_select" ON public.ops_wiedervorlagen;
 CREATE POLICY "ops_wiedervorlagen_engel_select"
   ON public.ops_wiedervorlagen FOR SELECT
   USING (empfaenger_id = auth.uid() OR erstellt_von = auth.uid());
 
+DROP POLICY IF EXISTS "ops_wiedervorlagen_engel_update" ON public.ops_wiedervorlagen;
 CREATE POLICY "ops_wiedervorlagen_engel_update"
   ON public.ops_wiedervorlagen FOR UPDATE
   USING (empfaenger_id = auth.uid());
@@ -359,10 +378,12 @@ CREATE TABLE IF NOT EXISTS public.ops_eskalationsregeln (
 
 ALTER TABLE public.ops_eskalationsregeln ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "ops_eskalationsregeln_org_fence" ON public.ops_eskalationsregeln;
 CREATE POLICY "ops_eskalationsregeln_org_fence"
   ON public.ops_eskalationsregeln AS RESTRICTIVE FOR ALL
   USING (organization_id = current_org_id());
 
+DROP POLICY IF EXISTS "ops_eskalationsregeln_admin_all" ON public.ops_eskalationsregeln;
 CREATE POLICY "ops_eskalationsregeln_admin_all"
   ON public.ops_eskalationsregeln FOR ALL
   USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin'));
@@ -391,10 +412,12 @@ CREATE INDEX IF NOT EXISTS idx_ops_eskalation_aufgabe ON public.ops_eskalationsh
 
 ALTER TABLE public.ops_eskalationshistorie ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "ops_eskalation_org_fence" ON public.ops_eskalationshistorie;
 CREATE POLICY "ops_eskalation_org_fence"
   ON public.ops_eskalationshistorie AS RESTRICTIVE FOR ALL
   USING (organization_id = current_org_id());
 
+DROP POLICY IF EXISTS "ops_eskalation_admin_all" ON public.ops_eskalationshistorie;
 CREATE POLICY "ops_eskalation_admin_all"
   ON public.ops_eskalationshistorie FOR ALL
   USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin'));
@@ -465,18 +488,22 @@ CREATE INDEX IF NOT EXISTS idx_ops_nachrichten_eltern ON public.ops_nachrichten(
 
 ALTER TABLE public.ops_nachrichten ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "ops_nachrichten_org_fence" ON public.ops_nachrichten;
 CREATE POLICY "ops_nachrichten_org_fence"
   ON public.ops_nachrichten AS RESTRICTIVE FOR ALL
   USING (organization_id = current_org_id());
 
+DROP POLICY IF EXISTS "ops_nachrichten_admin_all" ON public.ops_nachrichten;
 CREATE POLICY "ops_nachrichten_admin_all"
   ON public.ops_nachrichten FOR ALL
   USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin'));
 
+DROP POLICY IF EXISTS "ops_nachrichten_absender_select" ON public.ops_nachrichten;
 CREATE POLICY "ops_nachrichten_absender_select"
   ON public.ops_nachrichten FOR SELECT
   USING (absender_id = auth.uid());
 
+DROP POLICY IF EXISTS "ops_nachrichten_insert_own" ON public.ops_nachrichten;
 CREATE POLICY "ops_nachrichten_insert_own"
   ON public.ops_nachrichten FOR INSERT
   WITH CHECK (absender_id = auth.uid());
@@ -504,23 +531,28 @@ CREATE INDEX IF NOT EXISTS idx_ops_empfaenger_ungelesen ON public.ops_nachrichte
 
 ALTER TABLE public.ops_nachrichten_empfaenger ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "ops_empfaenger_org_fence" ON public.ops_nachrichten_empfaenger;
 CREATE POLICY "ops_empfaenger_org_fence"
   ON public.ops_nachrichten_empfaenger AS RESTRICTIVE FOR ALL
   USING (organization_id = current_org_id());
 
+DROP POLICY IF EXISTS "ops_empfaenger_admin_all" ON public.ops_nachrichten_empfaenger;
 CREATE POLICY "ops_empfaenger_admin_all"
   ON public.ops_nachrichten_empfaenger FOR ALL
   USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin'));
 
+DROP POLICY IF EXISTS "ops_empfaenger_own_select" ON public.ops_nachrichten_empfaenger;
 CREATE POLICY "ops_empfaenger_own_select"
   ON public.ops_nachrichten_empfaenger FOR SELECT
   USING (empfaenger_id = auth.uid());
 
+DROP POLICY IF EXISTS "ops_empfaenger_own_update" ON public.ops_nachrichten_empfaenger;
 CREATE POLICY "ops_empfaenger_own_update"
   ON public.ops_nachrichten_empfaenger FOR UPDATE
   USING (empfaenger_id = auth.uid());
 
 -- Nachrichten-Empfänger-Policy (jetzt wo empfaenger-Tabelle existiert)
+DROP POLICY IF EXISTS "ops_nachrichten_empfaenger_select" ON public.ops_nachrichten;
 CREATE POLICY "ops_nachrichten_empfaenger_select"
   ON public.ops_nachrichten FOR SELECT
   USING (id IN (
@@ -584,18 +616,22 @@ CREATE INDEX IF NOT EXISTS idx_ops_benach_kategorie ON public.ops_benachrichtigu
 
 ALTER TABLE public.ops_benachrichtigungen ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "ops_benach_org_fence" ON public.ops_benachrichtigungen;
 CREATE POLICY "ops_benach_org_fence"
   ON public.ops_benachrichtigungen AS RESTRICTIVE FOR ALL
   USING (organization_id = current_org_id());
 
+DROP POLICY IF EXISTS "ops_benach_admin_all" ON public.ops_benachrichtigungen;
 CREATE POLICY "ops_benach_admin_all"
   ON public.ops_benachrichtigungen FOR ALL
   USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin'));
 
+DROP POLICY IF EXISTS "ops_benach_own_select" ON public.ops_benachrichtigungen;
 CREATE POLICY "ops_benach_own_select"
   ON public.ops_benachrichtigungen FOR SELECT
   USING (empfaenger_id = auth.uid());
 
+DROP POLICY IF EXISTS "ops_benach_own_update" ON public.ops_benachrichtigungen;
 CREATE POLICY "ops_benach_own_update"
   ON public.ops_benachrichtigungen FOR UPDATE
   USING (empfaenger_id = auth.uid());
@@ -631,22 +667,27 @@ CREATE TABLE IF NOT EXISTS public.ops_benachrichtigungs_praeferenzen (
 
 ALTER TABLE public.ops_benachrichtigungs_praeferenzen ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "ops_praef_org_fence" ON public.ops_benachrichtigungs_praeferenzen;
 CREATE POLICY "ops_praef_org_fence"
   ON public.ops_benachrichtigungs_praeferenzen AS RESTRICTIVE FOR ALL
   USING (organization_id = current_org_id());
 
+DROP POLICY IF EXISTS "ops_praef_admin_all" ON public.ops_benachrichtigungs_praeferenzen;
 CREATE POLICY "ops_praef_admin_all"
   ON public.ops_benachrichtigungs_praeferenzen FOR ALL
   USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin'));
 
+DROP POLICY IF EXISTS "ops_praef_own_select" ON public.ops_benachrichtigungs_praeferenzen;
 CREATE POLICY "ops_praef_own_select"
   ON public.ops_benachrichtigungs_praeferenzen FOR SELECT
   USING (benutzer_id = auth.uid());
 
+DROP POLICY IF EXISTS "ops_praef_own_update" ON public.ops_benachrichtigungs_praeferenzen;
 CREATE POLICY "ops_praef_own_update"
   ON public.ops_benachrichtigungs_praeferenzen FOR UPDATE
   USING (benutzer_id = auth.uid());
 
+DROP POLICY IF EXISTS "ops_praef_own_insert" ON public.ops_benachrichtigungs_praeferenzen;
 CREATE POLICY "ops_praef_own_insert"
   ON public.ops_benachrichtigungs_praeferenzen FOR INSERT
   WITH CHECK (benutzer_id = auth.uid());
@@ -709,10 +750,12 @@ CREATE TABLE IF NOT EXISTS public.ops_ereignis_regeln (
 
 ALTER TABLE public.ops_ereignis_regeln ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "ops_ereignis_org_fence" ON public.ops_ereignis_regeln;
 CREATE POLICY "ops_ereignis_org_fence"
   ON public.ops_ereignis_regeln AS RESTRICTIVE FOR ALL
   USING (organization_id = current_org_id());
 
+DROP POLICY IF EXISTS "ops_ereignis_admin_all" ON public.ops_ereignis_regeln;
 CREATE POLICY "ops_ereignis_admin_all"
   ON public.ops_ereignis_regeln FOR ALL
   USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin'));
@@ -758,10 +801,12 @@ CREATE INDEX IF NOT EXISTS idx_ops_log_akteur ON public.ops_aktivitaetslog(akteu
 
 ALTER TABLE public.ops_aktivitaetslog ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "ops_log_org_fence" ON public.ops_aktivitaetslog;
 CREATE POLICY "ops_log_org_fence"
   ON public.ops_aktivitaetslog AS RESTRICTIVE FOR ALL
   USING (organization_id = current_org_id());
 
+DROP POLICY IF EXISTS "ops_log_admin_all" ON public.ops_aktivitaetslog;
 CREATE POLICY "ops_log_admin_all"
   ON public.ops_aktivitaetslog FOR ALL
   USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin'));
