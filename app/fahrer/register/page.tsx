@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { validatePasswordAsync } from '@/lib/password-validation'
 import Icon3D from '@/components/Icon3D'
 import { trackRegistration } from '@/lib/tracking'
+import * as Sentry from '@sentry/nextjs'
 
 export default function FahrerRegisterPage() {
   const router = useRouter()
@@ -89,8 +90,20 @@ export default function FahrerRegisterPage() {
           setError('Das Passwort muss mindestens 8 Zeichen lang sein und Großbuchstaben, Zahlen und Sonderzeichen enthalten.')
         } else if (authError.message.includes('rate limit') || authError.message.includes('too many')) {
           setError('Zu viele Versuche. Bitte warten Sie einen Moment.')
+        } else if (authError.message.includes('Database error')) {
+          // Meist ein fehlschlagender Trigger auf auth.users → profiles.
+          console.error('[fahrer/register] auth.signUp Database error:', authError.message)
+          Sentry.captureException(new Error(`fahrer register signUp Database error: ${authError.message}`), {
+            tags: { flow: 'register', role: 'fahrer' },
+          })
+          setError('Registrierung fehlgeschlagen. Bitte versuchen Sie es später erneut.')
         } else {
-          setError(`Fehler: ${authError.message}`)
+          // AUTH-005: keine rohen Supabase-Messages an Bewerber leaken.
+          console.warn('[fahrer/register] unmapped supabase error:', authError.message, (authError as { code?: string }).code)
+          Sentry.captureException(new Error(`fahrer register signUp unmapped error: ${authError.message}`), {
+            tags: { flow: 'register', role: 'fahrer' },
+          })
+          setError('Registrierung fehlgeschlagen. Bitte prüfen Sie Ihre Angaben oder versuchen Sie es später erneut.')
         }
         setSubmitting(false)
         return

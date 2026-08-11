@@ -9,6 +9,7 @@ import { validatePassword, validatePasswordAsync } from '@/lib/password-validati
 import Link from 'next/link'
 import Icon3D from '@/components/Icon3D'
 import { trackRegistration } from '@/lib/tracking'
+import * as Sentry from '@sentry/nextjs'
 
 function RegisterForm() {
   const router = useRouter()
@@ -137,11 +138,21 @@ function RegisterForm() {
         } else if (authError.message.includes('signups not allowed') || authError.message.includes('Signups not allowed')) {
           setError('Registrierung ist derzeit deaktiviert. Bitte kontaktieren Sie den Support.')
         } else if (authError.message.includes('Database error')) {
+          // Meist ein fehlschlagender Trigger auf auth.users → profiles (z.B.
+          // BEFORE-INSERT-Guard, der fälschlich für JEDE Rolle abweist).
+          // Ohne dieses Logging bleibt ein solcher Ausfall unsichtbar, bis
+          // sich Bewerber melden — Sentry mitloggen für sofortige Diagnose.
+          console.error('[register] auth.signUp Database error:', authError.message, { role })
+          Sentry.captureException(new Error(`register signUp Database error: ${authError.message}`), {
+            tags: { flow: 'register', role },
+          })
           setError('Registrierung fehlgeschlagen. Bitte versuchen Sie es später erneut.')
         } else {
           // AUTH-005: Keine rohen Supabase-Messages leaken, aber Code mitloggen für Debug
-           
           console.warn('[register] unmapped supabase error:', authError.message, (authError as { code?: string }).code)
+          Sentry.captureException(new Error(`register signUp unmapped error: ${authError.message}`), {
+            tags: { flow: 'register', role },
+          })
           setError('Registrierung fehlgeschlagen. Bitte prüfen Sie Ihre Angaben oder versuchen Sie es später erneut.')
         }
         setLoading(false)
