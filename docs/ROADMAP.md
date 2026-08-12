@@ -493,16 +493,47 @@ ausschließlich bestehende Tabellen — keine weitere Migration nötig.
 
 ---
 
-## Block 20 — Offline-First & Native App 📋
+## Block 20 — Offline-First & Native App 🔄
 
-**Status:** Geplant (Basis: PWA + Capacitor, `lib/offline/` vorhanden)
+**Status:** Kern fertig (12.08.2026), zwei Teile bewusst offen (siehe unten).
+Baut auf der bereits vorhandenen client-seitigen Queue (`lib/offline/`) auf
+und ergänzt den bisher fehlenden Server-Teil: Batch-Sync-Endpunkt,
+bidirektionale Konfliktlösung mit Admin-UI, Persistenz und native
+Feature-Adapter.
 
-| Modul | Beschreibung |
-|-------|--------------|
-| Offline-Queue | `lib/offline/offline-queue.ts` — Erweiterung auf alle Pflegedoku-Module |
-| Offline-Store | `lib/offline/offline-store.ts` — Lokaler Daten-Cache |
-| Sync-Konfliktlösung | Bidirektionale Sync-Strategie mit Konfliktauflösung |
-| Native Features | Push-Notifications (FCM vorhanden), Kamera-Integration, GPS-Tracking |
+| Modul | Dateien | Beschreibung |
+|-------|---------|--------------|
+| Offline-Queue-Erweiterung | `lib/offline/types.ts` | `OfflineEntityTyp` von 6 auf 12 Typen erweitert — alle Pflegedoku-Submodule aus `lib/pflege/` (Anamnesen, Aufnahmen, Diagnosen, Maßnahmen, Maßnahmenpläne, Risiken) zusätzlich zu den bestehenden 6 (Leistungsnachweis, Pflegebericht, Signatur, Medikamenteneingabe, Vitalwerte, Wunddoku) |
+| Entity-Registry | `lib/sync/entity-registry.ts` | Kanonische Endpunkt-/Methoden-Zuordnung je Entity-Typ/Aktion (create/update/delete) — Grundlage für sichere Server-Delegation (keine client-gesteuerten beliebigen Fetch-Ziele) |
+| Sync-Server | `app/api/sync/route.ts` | Nimmt Batches von `OfflineQueueItem`s entgegen, idempotent über `sync_audit_log`, delegiert an die bestehenden Modul-Endpunkte (`app/api/pflege/**`, `app/api/vitals/**`, `app/api/medikamente/**`, `app/api/wounds/**`, `app/api/admin/signaturen/**`) per internem Fetch mit Cookie-Weiterleitung — **keine Fachlogik-Duplizierung** |
+| Konfliktlösung | `lib/sync/conflict.ts`, `lib/sync/audit.ts` | Vergleich `updated_at` (Server) vs. `basis_updated_at` (Client-Snapshot im Payload); Strategie `last_write_wins`/`server_wins`/`manuell` aus `KonfliktStrategie` |
+| Konflikt-Admin-UI | `app/admin/sync-konflikte/`, `app/api/admin/sync-konflikte/**` | Offene Konflikte (Strategie „manuell") mit Lokal-/Server-Diff, Auflösung „Lokal übernehmen" (wendet die Änderung nachträglich über denselben Modul-Endpunkt an) / „Server behalten" / „Verwerfen" |
+| Sync-Status-Dashboard | `app/admin/sync-status/`, `app/api/admin/sync-status/`, `lib/sync/dashboard.ts` | Offene Konflikte, Sync-Fehler (24 Std.), offene Sync-Vorgänge — pro Organisation, aus `sync_audit_log`/`sync_konflikte` |
+| Push bei Sync-Ereignissen | `lib/sync/notify.ts` | Nutzt die bestehende FCM-Anbindung (`lib/fcm.ts`, `sendFCMToUser`) für „Sync fehlgeschlagen"/„Konflikt zu klären" — kein neues FCM-Setup |
+| Kamera-Adapter | `lib/offline/kamera.ts` | Adapter-Interface für Foto-Aufnahme (Wunddoku); Default-Implementierung über `<input capture>` + FileReader (echte Daten, funktioniert auch in der Capacitor-WKWebView) — `@capacitor/camera` bewusst nicht installiert, Interface für später fertig |
+| GPS-Adapter | `lib/offline/gps.ts` | Adapter-Interface für Standorterfassung; Default-Implementierung über `navigator.geolocation` (dieselbe API wie bereits in `app/admin/records/new/`) + Radius-Prüfung (`lib/geo.ts`) — `@capacitor/geolocation` bewusst nicht installiert |
+| Tests | `__tests__/offline/sync.test.ts`, `__tests__/offline/native.test.ts`, erweitertes `offline.test.ts` | 36 neue Tests (Entity-Registry, Konfliktlogik, Kamera-/GPS-Adapter-Randfälle) |
+
+**Migration:** `20260828010000_sync_offline.sql` (`sync_audit_log`,
+`sync_konflikte` — org-gefenced + Engel-Owner-Lesepolicy, wartet auf
+Live-Apply über Supabase-MCP/SQL-Editor).
+
+**Bewusst offen:**
+- `@capacitor/camera` und `@capacitor/geolocation` sind nicht in
+  `package.json` — bewusst kein `npm install` ohne Rücksprache (neue
+  native Abhängigkeit + Xcode/Gradle-Rebuild). Beide Adapter-Interfaces
+  sind fertig und mit einer echten Web-Implementierung hinterlegt
+  (kein Fake); die native Implementierung kann später ergänzt werden,
+  ohne Aufrufer anzupassen.
+- Foto-Uploads (`app/api/wounds/[id]/photos`) sind ein Sub-Ressourcen-
+  Endpunkt, den die Entity-Registry nicht abbildet — sie laufen über
+  den client-seitigen Direkt-Sync (`OfflineQueue.syncAll()`), nicht
+  über den registry-basierten `/api/sync`.
+- `app/api/wounds/**` und `app/api/medikamente/**` (POST/PATCH) sind
+  aktuell teils admin-only (`requireWundenAdmin`) bzw. teils
+  Engel-schreibbar (`requireMedUser` für Eingaben) — der Sync-Server
+  erzwingt hier bewusst nichts zusätzlich, sondern reicht die
+  Auth-Entscheidung an den jeweiligen Ziel-Endpunkt durch.
 
 ---
 
@@ -542,7 +573,7 @@ ausschließlich bestehende Tabellen — keine weitere Migration nötig.
 | 17 | § 302 SGB V (Sonstige Leistungserbringer) | 🔄 Gerüst fertig, Export gesperrt (TA1 fehlt) | Mittel |
 | 18 | KIM / TI-Anbindung | 📋 Geplant | Mittel |
 | 19 | Erweiterte Analytics & Reporting | ✅ Fertig (Bonussystem-Migration wartet auf Live-Apply) | Niedrig |
-| 20 | Offline-First & Native App | 📋 Geplant | Niedrig |
+| 20 | Offline-First & Native App | 🔄 Kern fertig (Capacitor-Kamera/GPS-Plugins offen, Migration wartet auf Live-Apply) | Niedrig |
 | 21 | FHIR / ISiP Interoperabilität | 📋 Geplant | Niedrig |
 
 ---

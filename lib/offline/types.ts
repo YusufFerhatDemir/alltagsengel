@@ -8,13 +8,22 @@ export type SyncStatus = 'pending' | 'syncing' | 'synced' | 'error' | 'conflict'
 
 export const SYNC_STATUS_WERTE: SyncStatus[] = ['pending', 'syncing', 'synced', 'error', 'conflict']
 
+// Block 20: Erweiterung auf alle Pflegedoku-Module aus lib/pflege/ (Anamnesen,
+// Aufnahmen, Diagnosen, Maßnahmen, Maßnahmenpläne, Risiken — Verlauf lief
+// schon vorher unter 'pflegebericht'). Endpoint-Zuordnung siehe
+// lib/sync/entity-registry.ts (SYNC_ENTITY_REGISTRY) — dort die kanonischen
+// REST-Endpunkte je Typ/Aktion, hier nur die reine Typ-Aufzählung.
 export type OfflineEntityTyp =
   | 'leistungsnachweis' | 'pflegebericht' | 'signatur'
   | 'medikament_eingabe' | 'vitalwerte' | 'wunddoku'
+  | 'pflege_anamnese' | 'pflege_aufnahme' | 'pflege_diagnose'
+  | 'pflege_massnahme' | 'pflege_massnahmenplan' | 'pflege_risiko'
 
 export const OFFLINE_ENTITY_TYPEN: OfflineEntityTyp[] = [
   'leistungsnachweis', 'pflegebericht', 'signatur',
   'medikament_eingabe', 'vitalwerte', 'wunddoku',
+  'pflege_anamnese', 'pflege_aufnahme', 'pflege_diagnose',
+  'pflege_massnahme', 'pflege_massnahmenplan', 'pflege_risiko',
 ]
 
 export type KonfliktStrategie = 'last_write_wins' | 'server_wins' | 'manuell'

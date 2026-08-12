@@ -133,7 +133,10 @@ export class OfflineQueue {
           this.notifyStatusChange()
 
           const response = await fetchFn(item.endpoint, {
-            method: item.aktion === 'delete' ? 'DELETE' : item.aktion === 'update' ? 'PUT' : 'POST',
+            // Update-Endpunkte in diesem Repo nutzen durchgängig PATCH (verifiziert
+            // per grep über alle app/api/**/[id]/route.ts der Pflegedoku-/Vitals-/
+            // Medikamente-/Wunden-/Signaturen-Module, Block 20) — nicht PUT.
+            method: item.aktion === 'delete' ? 'DELETE' : item.aktion === 'update' ? 'PATCH' : 'POST',
             headers: {
               'Content-Type': 'application/json',
               'Idempotency-Key': item.idempotency_key,

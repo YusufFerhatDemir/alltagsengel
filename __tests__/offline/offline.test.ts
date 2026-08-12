@@ -116,8 +116,24 @@ describe('OFFLINE_ENTITY_TYPEN', () => {
     expect(OFFLINE_ENTITY_TYPEN).toContain('wunddoku')
   })
 
-  it('hat 6 Typen', () => {
-    expect(OFFLINE_ENTITY_TYPEN).toHaveLength(6)
+  // Block 20: Erweiterung auf alle Pflegedoku-Module aus lib/pflege/
+  // (Anamnesen, Aufnahmen, Diagnosen, Maßnahmen, Maßnahmenpläne, Risiken).
+  it('enthält die Block-20-Pflegedoku-Erweiterung', () => {
+    expect(OFFLINE_ENTITY_TYPEN).toContain('pflege_anamnese')
+    expect(OFFLINE_ENTITY_TYPEN).toContain('pflege_aufnahme')
+    expect(OFFLINE_ENTITY_TYPEN).toContain('pflege_diagnose')
+    expect(OFFLINE_ENTITY_TYPEN).toContain('pflege_massnahme')
+    expect(OFFLINE_ENTITY_TYPEN).toContain('pflege_massnahmenplan')
+    expect(OFFLINE_ENTITY_TYPEN).toContain('pflege_risiko')
+  })
+
+  it('hat 12 Typen (6 ursprüngliche + 6 aus Block 20)', () => {
+    expect(OFFLINE_ENTITY_TYPEN).toHaveLength(12)
+  })
+
+  it('validiereEntityTyp akzeptiert die neuen Pflegedoku-Typen', () => {
+    expect(() => validiereEntityTyp('pflege_massnahmenplan')).not.toThrow()
+    expect(() => validiereEntityTyp('pflege_risiko')).not.toThrow()
   })
 })
 

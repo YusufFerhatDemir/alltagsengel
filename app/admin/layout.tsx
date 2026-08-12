@@ -223,6 +223,8 @@ const navGroups = [
       { href: '/admin/bonuses', label: 'Mitarbeiterbindung', icon: <IconTarget size={18} /> },
       { href: '/admin/partners', label: 'Kooperationspartner', icon: <IconHandshake size={18} /> },
       { href: '/admin/ops-audit', label: 'Aktivitätslog', icon: <IconDocument size={18} /> },
+      { href: '/admin/sync-status', label: 'Sync-Status', icon: <IconWorkflow size={18} /> },
+      { href: '/admin/sync-konflikte', label: 'Sync-Konflikte', icon: <IconClock size={18} /> },
       { href: '/admin/expansion', label: 'Expansion', icon: <IconTarget size={18} /> },
       { href: '/admin/settings', label: 'Einstellungen', icon: <IconSettings size={18} /> },
     ],
