@@ -1,8 +1,8 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { createBrowserClient } from '@/lib/supabase/client'
-import { IconCreditCard, IconPlus, IconDownload, IconBan } from '@tabler/icons-react'
+import { createClient } from '@/lib/supabase/client'
+import { IconMoney, IconDocument } from '@/components/Icons'
 
 // ═══════════════════════════════════════════════════════════════
 // SEPA-Lastschrift Verwaltung
@@ -72,7 +72,7 @@ export default function SepaPage() {
   return (
     <div style={{ padding: '24px 32px', maxWidth: 1200 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
-        <IconCreditCard size={28} color="#c8a84e" />
+        <IconMoney size={28} color="#c8a84e" />
         <h1 style={{ fontSize: 22, fontWeight: 700, margin: 0 }}>SEPA-Lastschrift</h1>
       </div>
 
@@ -94,7 +94,7 @@ export default function SepaPage() {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
             <span style={{ fontSize: 14, color: '#666' }}>{mandates.length} Mandate</span>
             <button onClick={() => setShowNewMandate(true)} style={btnStyle}>
-              <IconPlus size={16} /> Neues Mandat
+              + Neues Mandat
             </button>
           </div>
 
@@ -128,7 +128,7 @@ export default function SepaPage() {
                   <td style={tdStyle}>
                     {m.status === 'aktiv' && (
                       <button onClick={() => revokeMandate(m.id)} style={actionBtnStyle} title="Widerrufen">
-                        <IconBan size={16} />
+                        ✕
                       </button>
                     )}
                   </td>
@@ -147,7 +147,7 @@ export default function SepaPage() {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
             <span style={{ fontSize: 14, color: '#666' }}>{batches.length} Sammelaufträge</span>
             <button onClick={() => setShowNewBatch(true)} style={btnStyle}>
-              <IconPlus size={16} /> Neuer Sammelauftrag
+              + Neuer Sammelauftrag
             </button>
           </div>
 
@@ -181,7 +181,7 @@ export default function SepaPage() {
                   <td style={tdStyle}>
                     {b.xml_storage_path && (
                       <button onClick={() => downloadXml(b.id, b.batch_number)} style={actionBtnStyle} title="XML herunterladen">
-                        <IconDownload size={16} />
+                        ↓
                       </button>
                     )}
                   </td>
@@ -215,7 +215,7 @@ export default function SepaPage() {
   }
 
   async function downloadXml(batchId: string, batchNumber: string) {
-    const supabase = createBrowserClient()
+    const supabase = createClient()
     const { data: batch } = await supabase
       .from('sepa_batches')
       .select('xml_storage_path')
@@ -253,9 +253,9 @@ function NewMandateDialog({ onClose, onSaved }: { onClose: () => void; onSaved: 
   const [err, setErr] = useState<string | null>(null)
 
   useEffect(() => {
-    const supabase = createBrowserClient()
-    supabase.from('clients').select('id, first_name, last_name').then(({ data }) => {
-      setClients((data || []).map(c => ({ id: c.id, name: `${c.first_name} ${c.last_name}` })))
+    const supabase = createClient()
+    supabase.from('clients').select('id, first_name, last_name').then(({ data }: { data: any[] | null }) => {
+      setClients((data || []).map((c: any) => ({ id: c.id, name: `${c.first_name} ${c.last_name}` })))
     })
   }, [])
 
@@ -324,19 +324,19 @@ function NewBatchDialog({ onClose, onSaved }: { onClose: () => void; onSaved: ()
   const [result, setResult] = useState<any>(null)
 
   useEffect(() => {
-    const supabase = createBrowserClient()
+    const supabase = createClient()
     // Offene Privatrechnungen laden (billing_type = 'privat' oder keine Kasse)
     supabase.from('invoices')
       .select('id, invoice_number, invoice_number_formatted, total_amount, paid_amount, billing_type, client:clients(first_name, last_name)')
       .in('status', ['offen', 'faellig', 'ueberfaellig', 'teilweise_bezahlt'])
       .is('deleted_at', null)
-      .then(({ data }) => {
+      .then(({ data }: { data: any[] | null }) => {
         setInvoices((data || []).map((inv: any) => ({
           id: inv.id,
           number: inv.invoice_number_formatted || inv.invoice_number || '',
           amount: Math.round(Number(inv.total_amount || 0) * 100) - Math.round(Number(inv.paid_amount || 0) * 100),
-          clientName: inv.client ? `${inv.client.first_name} ${inv.client.last_name}` : '—',
-        })).filter(i => i.amount > 0))
+          clientName: inv.client ? `${(inv.client as any).first_name} ${(inv.client as any).last_name}` : '—',
+        })).filter((i: any) => i.amount > 0))
       })
   }, [])
 

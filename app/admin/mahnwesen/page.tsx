@@ -1,8 +1,8 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { createBrowserClient } from '@/lib/supabase/client'
-import { IconDocument, IconMail, IconPrinter, IconArrowUp } from '@tabler/icons-react'
+import { createClient } from '@/lib/supabase/client'
+import { IconDocument } from '@/components/Icons'
 
 // ═══════════════════════════════════════════════════════════════
 // Mahnwesen — Übersicht, PDF-Generierung, E-Mail-Versand
@@ -56,7 +56,7 @@ export default function MahnwesenPage() {
 
   const loadData = useCallback(async () => {
     setLoading(true)
-    const supabase = createBrowserClient()
+    const supabase = createClient()
     const { data } = await supabase
       .from('dunning_entries')
       .select('*, invoice:invoices(invoice_number, invoice_number_formatted, client:clients(first_name, last_name))')
@@ -179,11 +179,11 @@ export default function MahnwesenPage() {
                         <>
                           <button onClick={() => generateMahnung(e)} disabled={generating === e.id}
                             style={actionBtnStyle} title="Mahnung generieren">
-                            <IconPrinter size={16} />
+                            🖨
                           </button>
                           <button onClick={() => escalateDunning(e.invoice_id)}
                             style={actionBtnStyle} title="Stufe eskalieren">
-                            <IconArrowUp size={16} />
+                            ↑
                           </button>
                         </>
                       )}
@@ -214,10 +214,10 @@ export default function MahnwesenPage() {
               <h3 style={{ margin: 0, fontSize: 18 }}>Mahnungs-Vorschau</h3>
               <div style={{ display: 'flex', gap: 8 }}>
                 <button onClick={() => printHtml(preview.html)} style={btnStyle}>
-                  <IconPrinter size={16} /> Drucken / PDF
+                  🖨 Drucken / PDF
                 </button>
                 <button onClick={() => copyEmail(preview.email)} style={btnStyle}>
-                  <IconMail size={16} /> E-Mail kopieren
+                  ✉ E-Mail kopieren
                 </button>
               </div>
             </div>
