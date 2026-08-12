@@ -23,6 +23,17 @@ function updateClient(existing: Record<string, unknown>) {
   const updates: Array<Record<string, unknown>> = []
   const supabase = {
     from: () => ({
+      // genehmigen/ablehnen laden den Datensatz zuerst und pruefen Status
+      // sowie Selbstgenehmigung — ohne diesen Lesepfad lief der Mock in
+      // "supabase.from(...).select is not a function".
+      select() {
+        const kette: any = {
+          eq: () => kette,
+          single: async () => ({ data: existing, error: null }),
+          maybeSingle: async () => ({ data: existing, error: null }),
+        }
+        return kette
+      },
       update(payload: Record<string, unknown>) {
         updates.push(payload)
         const kette: any = {
