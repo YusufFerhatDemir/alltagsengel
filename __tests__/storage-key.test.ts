@@ -34,6 +34,33 @@ describe('extractProjectRef', () => {
 
   it('gibt null bei Nicht-Supabase-URL zurück', () => {
     expect(extractProjectRef('https://example.com')).toBeNull()
+    expect(extractProjectRef('https://boesartig.supabase.co.angreifer.de')).toBeNull()
+    expect(extractProjectRef('http://192.168.1.10:8080')).toBeNull()
+    expect(extractProjectRef('http://staging.intern')).toBeNull()
+  })
+
+  it('erlaubt ausschließlich localhost und 127.0.0.1 als lokale Instanz', () => {
+    // Fuer die Staging-Abnahme gegen die Shadow-DB.
+    expect(extractProjectRef('http://127.0.0.1:55440')).toBe('127')
+    expect(extractProjectRef('http://localhost:8080')).toBe('localhost')
+    expect(extractProjectRef('http://localhost')).toBe('localhost')
+  })
+
+  it('bildet denselben Key wie supabase-js', () => {
+    // supabase-js: `sb-${new URL(url).hostname.split('.')[0]}-auth-token`.
+    // Weicht unsere Ableitung davon ab, sucht die Bibliothek einen anderen
+    // Cookie-Namen als die Middleware setzt — die Sitzung geht verloren.
+    const wieSupabaseJs = (url: string) =>
+      `sb-${new URL(url).hostname.split('.')[0]}-auth-token`
+
+    for (const url of [
+      'https://nnwyktkqibdjxgimjyuq.supabase.co',
+      'https://abc123.supabase.co',
+      'http://127.0.0.1:55440',
+      'http://localhost:8080',
+    ]) {
+      expect(getSupabaseStorageKey(url)).toBe(wieSupabaseJs(url))
+    }
   })
 
   it('gibt null bei URL ohne Subdomain zurück', () => {

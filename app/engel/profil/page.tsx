@@ -150,6 +150,55 @@ export default function MeinProfilPage() {
 
         <div className="section-label">Info &amp; Hilfe</div>
         <div className="settings-card">
+          <Link href="/engel/dokumente" className="setting-row" style={{ textDecoration: 'none', color: 'inherit', cursor: 'pointer' }}>
+            <div>
+              <div className="setting-main"><IconDocument size={14} /> Meine Akte</div>
+              <div className="setting-sub">Dokumente und Nachweise ansehen</div>
+            </div>
+            <div style={{ color: 'var(--ink4)', fontSize: 18 }}>›</div>
+          </Link>
+          <Link href="/engel/pflegedoku" className="setting-row" style={{ textDecoration: 'none', color: 'inherit', cursor: 'pointer' }}>
+            <div>
+              <div className="setting-main"><IconDocument size={14} /> Meine Pflegedoku</div>
+              <div className="setting-sub">Diagnosen, Risiken, Pläne und Verlauf</div>
+            </div>
+            <div style={{ color: 'var(--ink4)', fontSize: 18 }}>›</div>
+          </Link>
+          <Link href="/engel/vertraege" className="setting-row" style={{ textDecoration: 'none', color: 'inherit', cursor: 'pointer' }}>
+            <div>
+              <div className="setting-main"><IconDocument size={14} /> Meine Verträge</div>
+              <div className="setting-sub">Vertragsstatus und Unterschriften</div>
+            </div>
+            <div style={{ color: 'var(--ink4)', fontSize: 18 }}>›</div>
+          </Link>
+          <Link href="/engel/arbeitszeiten" className="setting-row" style={{ textDecoration: 'none', color: 'inherit', cursor: 'pointer' }}>
+            <div>
+              <div className="setting-main"><IconClock size={14} /> Meine Arbeitszeiten</div>
+              <div className="setting-sub">Zeiten erfassen und Monatsübersicht</div>
+            </div>
+            <div style={{ color: 'var(--ink4)', fontSize: 18 }}>›</div>
+          </Link>
+          <Link href="/engel/urlaub" className="setting-row" style={{ textDecoration: 'none', color: 'inherit', cursor: 'pointer' }}>
+            <div>
+              <div className="setting-main"><IconCalendar size={14} /> Mein Urlaub</div>
+              <div className="setting-sub">Urlaub beantragen und Resturlaub</div>
+            </div>
+            <div style={{ color: 'var(--ink4)', fontSize: 18 }}>›</div>
+          </Link>
+          <Link href="/engel/dienstplan" className="setting-row" style={{ textDecoration: 'none', color: 'inherit', cursor: 'pointer' }}>
+            <div>
+              <div className="setting-main"><IconCalendar size={14} /> Mein Dienstplan</div>
+              <div className="setting-sub">Eigene Schichten und Einsätze</div>
+            </div>
+            <div style={{ color: 'var(--ink4)', fontSize: 18 }}>›</div>
+          </Link>
+          <Link href="/engel/qualifikationen" className="setting-row" style={{ textDecoration: 'none', color: 'inherit', cursor: 'pointer' }}>
+            <div>
+              <div className="setting-main"><IconDocument size={14} /> Meine Qualifikationen</div>
+              <div className="setting-sub">Nachweise, Schulungen und Ablaufdaten</div>
+            </div>
+            <div style={{ color: 'var(--ink4)', fontSize: 18 }}>›</div>
+          </Link>
           <Link href="/engel/info" className="setting-row" style={{ textDecoration: 'none', color: 'inherit', cursor: 'pointer' }}>
             <div>
               <div className="setting-main"><IconInfo size={14} /> Ablauf &amp; Vergütung</div>

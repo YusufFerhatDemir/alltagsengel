@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
+import { getActiveOrgId } from '@/lib/organizations/server'
+import { logAuditEvent } from '@/lib/audit-log'
 
 /**
  * GET /api/admin/krankenfahrten
@@ -23,20 +26,26 @@ export async function GET() {
       return NextResponse.json({ error: 'Nur für Administratoren' }, { status: 403 })
     }
 
-    // Load all data in parallel
+    const orgId = await getActiveOrgId()
+    const admin = createAdminClient()
+
+    // Load all data in parallel — org-fenced
     const [ridesRes, providersRes, reviewsRes] = await Promise.all([
-      supabase
+      admin
         .from('krankenfahrten')
         .select('*, customer:profiles!krankenfahrten_customer_id_fkey(first_name, last_name, email, phone)')
+        .eq('organization_id', orgId)
         .order('created_at', { ascending: false })
         .limit(200),
-      supabase
+      admin
         .from('krankenfahrt_providers')
         .select('*, profile:profiles!krankenfahrt_providers_user_id_fkey(first_name, last_name, email, phone)')
+        .eq('organization_id', orgId)
         .order('created_at', { ascending: false }),
-      supabase
+      admin
         .from('krankenfahrt_reviews')
         .select('*')
+        .eq('organization_id', orgId)
         .order('created_at', { ascending: false })
         .limit(100),
     ])
@@ -70,7 +79,8 @@ export async function GET() {
       },
     })
   } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 })
+    console.error('[api] Unerwarteter Fehler:', err)
+    return NextResponse.json({ error: 'Interner Serverfehler' }, { status: 500 })
   }
 }
 
@@ -78,7 +88,7 @@ export async function GET() {
  * PUT /api/admin/krankenfahrten
  * Update ride status, provider verification, etc.
  */
-export async function PUT(request: Request) {
+export async function PUT(req: Request) {
   try {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
@@ -96,39 +106,70 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: 'Nur für Administratoren' }, { status: 403 })
     }
 
-    const body = await request.json()
-    const { entity, id, ...updates } = body
+    const body = await req.json()
+    const { entity, id } = body
 
     if (!entity || !id) {
       return NextResponse.json({ error: 'entity und id erforderlich' }, { status: 400 })
     }
 
+    const orgId = await getActiveOrgId()
+    const admin = createAdminClient()
+
     if (entity === 'ride') {
-      const { data, error } = await supabase
+      const { organization_id: _oid, ...safeUpdates } = body
+      delete safeUpdates.entity
+      delete safeUpdates.id
+      const { data, error } = await admin
         .from('krankenfahrten')
-        .update(updates)
+        .update({ status: safeUpdates.status })
         .eq('id', id)
+        .eq('organization_id', orgId)
         .select()
         .single()
 
-      if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+      if (error) return NextResponse.json({ error: 'Interner Serverfehler' }, { status: 500 })
+
+      await logAuditEvent({
+        action: 'update',
+        actorId: user!.id,
+        organizationId: orgId,
+        entityType: 'krankenfahrt',
+        entityId: id,
+        details: { status: safeUpdates.status },
+        request: req,
+      })
+
       return NextResponse.json(data)
     }
 
     if (entity === 'provider') {
-      const { data, error } = await supabase
+      const { data, error } = await admin
         .from('krankenfahrt_providers')
-        .update(updates)
+        .update({ is_verified: body.is_verified })
         .eq('id', id)
+        .eq('organization_id', orgId)
         .select()
         .single()
 
-      if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+      if (error) return NextResponse.json({ error: 'Interner Serverfehler' }, { status: 500 })
+
+      await logAuditEvent({
+        action: 'update',
+        actorId: user!.id,
+        organizationId: orgId,
+        entityType: 'krankenfahrt_provider',
+        entityId: id,
+        details: { is_verified: body.is_verified },
+        request: req,
+      })
+
       return NextResponse.json(data)
     }
 
     return NextResponse.json({ error: 'Ungültige Entität' }, { status: 400 })
   } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 })
+    console.error('[api] Unerwarteter Fehler:', err)
+    return NextResponse.json({ error: 'Interner Serverfehler' }, { status: 500 })
   }
 }

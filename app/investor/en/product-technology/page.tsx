@@ -183,7 +183,7 @@ export default function ProductTechnologyPage() {
           <strong>Encryption:</strong> TLS 1.3 for all data in transit; AES-256 encryption for sensitive data at rest
         </BulletItem>
         <BulletItem icon="🔑">
-          <strong>Authentication:</strong> OAuth 2.0 + JWT; multi-factor authentication (MFA) option; secure password storage with bcrypt
+          <strong>Authentication:</strong> OAuth 2.0 + JWT; secure password storage with bcrypt; MFA planned for Q1 2027
         </BulletItem>
         <BulletItem icon="📋">
           <strong>Row-Level Security (RLS):</strong> Database-level access control; users can only access their own data

@@ -56,6 +56,7 @@ export default function AdminSchedulePage() {
   const [weekOffset, setWeekOffset] = useState(0)
   const [reportAbsence, setReportAbsence] = useState(false)
   const [createSub, setCreateSub] = useState(false)
+  const [createAssignment, setCreateAssignment] = useState(false)
   const [suggestFor, setSuggestFor] = useState<SubRequest | null>(null)
 
   const monday = useMemo(() => {
@@ -177,9 +178,10 @@ export default function AdminSchedulePage() {
           <h1>Einsatzplanung & Ausfallmanagement</h1>
           <p className="admin-subtitle">Wochenübersicht, Ausfälle und Vertretungssuche</p>
         </div>
-        <div style={{ display: 'flex', gap: 8 }}>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <button onClick={() => setCreateAssignment(true)} style={primaryBtn}>+ Einsatz anlegen</button>
           <button onClick={() => setReportAbsence(true)} style={secondaryBtn}>+ Ausfall melden</button>
-          <button onClick={() => setCreateSub(true)} style={primaryBtn}>+ Vertretung anlegen</button>
+          <button onClick={() => setCreateSub(true)} style={secondaryBtn}>+ Vertretung anlegen</button>
         </div>
       </div>
 
@@ -343,6 +345,7 @@ export default function AdminSchedulePage() {
         </>
       )}
 
+      {createAssignment && <CreateAssignmentModal clients={clients} caregivers={caregivers} onClose={() => setCreateAssignment(false)} onSaved={() => { setCreateAssignment(false); load() }} />}
       {reportAbsence && <ReportAbsenceModal caregivers={caregivers} onClose={() => setReportAbsence(false)} onSaved={() => { setReportAbsence(false); load() }} />}
       {createSub && <CreateSubModal clients={clients} caregivers={caregivers} onClose={() => setCreateSub(false)} onSaved={() => { setCreateSub(false); load() }} />}
       {suggestFor && (
@@ -440,6 +443,141 @@ function SuggestModal({ request, caregivers, client, preferred, isAbsent, onClos
         </div>
         <div className="admin-modal-btns" style={{ marginTop: 14 }}>
           <button className="btn-cancel" onClick={onClose}>Schließen</button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ═══ Einsatz anlegen ═══
+function CreateAssignmentModal({ clients, caregivers, onClose, onSaved }: {
+  clients: Client[]; caregivers: Caregiver[]; onClose: () => void; onSaved: () => void
+}) {
+  const [clientId, setClientId] = useState('')
+  const [caregiverId, setCaregiverId] = useState('')
+  const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10))
+  const [startTime, setStartTime] = useState('09:00')
+  const [endTime, setEndTime] = useState('11:00')
+  const [serviceType, setServiceType] = useState('Alltagsbegleitung')
+  const [isRecurring, setIsRecurring] = useState(false)
+  const [weekday, setWeekday] = useState<number | null>(null)
+  const [validUntil, setValidUntil] = useState('')
+  const [address, setAddress] = useState('')
+  const [zipCode, setZipCode] = useState('')
+  const [notes, setNotes] = useState('')
+  const [saving, setSaving] = useState(false)
+  const [err, setErr] = useState<string | null>(null)
+
+  async function save() {
+    setErr(null)
+    if (!clientId) { setErr('Bitte einen Klienten wählen.'); return }
+    if (!caregiverId) { setErr('Bitte eine Betreuungskraft wählen.'); return }
+    if (!startTime || !endTime) { setErr('Start- und Endzeit erforderlich.'); return }
+    if (endTime <= startTime) { setErr('Endzeit muss nach Startzeit liegen.'); return }
+    setSaving(true)
+
+    const body: Record<string, unknown> = {
+      client_id: clientId,
+      caregiver_id: caregiverId,
+      start_time: startTime,
+      end_time: endTime,
+      service_type: serviceType,
+      is_recurring: isRecurring,
+      status: 'GEPLANT',
+    }
+    if (isRecurring && weekday != null) {
+      body.weekday = weekday
+      if (validUntil) body.valid_until = validUntil
+    } else {
+      body.assignment_date = date
+    }
+    if (address) body.address = address
+    if (zipCode) body.zip_code = zipCode
+    if (notes) body.notes = notes
+
+    const res = await fetch('/api/einsatzplanung', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    })
+    const result = await res.json()
+    if (!res.ok) {
+      setErr(result.error || 'Fehler beim Speichern')
+      setSaving(false)
+      return
+    }
+    onSaved()
+  }
+
+  const SERVICE_TYPES = ['Alltagsbegleitung', 'Haushaltshilfe', 'Einkaufshilfe', 'Arztbegleitung', 'Betreuung/Gesellschaft', 'Spaziergang/Mobilität', 'Demenzbetreuung', 'Sonstige']
+
+  return (
+    <div className="admin-modal-overlay" onClick={onClose}>
+      <div className="admin-modal" style={{ maxWidth: 520, width: '92%' }} onClick={e => e.stopPropagation()}>
+        <h3>Neuen Einsatz anlegen</h3>
+        {err && <Banner tone="danger">{err}</Banner>}
+        <Field label="Klient *">
+          <select value={clientId} onChange={e => setClientId(e.target.value)} style={modalSelect}>
+            <option value="">— wählen —</option>
+            {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+          </select>
+        </Field>
+        <Field label="Betreuungskraft *">
+          <select value={caregiverId} onChange={e => setCaregiverId(e.target.value)} style={modalSelect}>
+            <option value="">— wählen —</option>
+            {caregivers.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+          </select>
+        </Field>
+        <Field label="Leistungsart">
+          <select value={serviceType} onChange={e => setServiceType(e.target.value)} style={modalSelect}>
+            {SERVICE_TYPES.map(s => <option key={s} value={s}>{s}</option>)}
+          </select>
+        </Field>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+          <label style={{ fontSize: 13, color: 'var(--ink3)', display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
+            <input type="checkbox" checked={isRecurring} onChange={e => setIsRecurring(e.target.checked)} />
+            Wiederkehrend (Serieneinsatz)
+          </label>
+        </div>
+        {isRecurring ? (
+          <>
+            <Field label="Wochentag *">
+              <select value={weekday ?? ''} onChange={e => setWeekday(e.target.value ? Number(e.target.value) : null)} style={modalSelect}>
+                <option value="">— wählen —</option>
+                <option value="1">Montag</option>
+                <option value="2">Dienstag</option>
+                <option value="3">Mittwoch</option>
+                <option value="4">Donnerstag</option>
+                <option value="5">Freitag</option>
+                <option value="6">Samstag</option>
+                <option value="0">Sonntag</option>
+              </select>
+            </Field>
+            <Field label="Gültig bis (optional)">
+              <input type="date" value={validUntil} onChange={e => setValidUntil(e.target.value)} style={modalInput} />
+            </Field>
+          </>
+        ) : (
+          <Field label="Datum *">
+            <input type="date" value={date} onChange={e => setDate(e.target.value)} style={modalInput} />
+          </Field>
+        )}
+        <div style={{ display: 'flex', gap: 10 }}>
+          <Field label="Von *"><input type="time" value={startTime} onChange={e => setStartTime(e.target.value)} style={modalInput} /></Field>
+          <Field label="Bis *"><input type="time" value={endTime} onChange={e => setEndTime(e.target.value)} style={modalInput} /></Field>
+        </div>
+        <Field label="Adresse (optional)">
+          <input value={address} onChange={e => setAddress(e.target.value)} placeholder="Musterstr. 1, Frankfurt" style={modalInput} />
+        </Field>
+        <Field label="PLZ (optional — Bundesland wird automatisch erkannt)">
+          <input value={zipCode} onChange={e => setZipCode(e.target.value)} placeholder="60311" maxLength={5} style={modalInput} />
+        </Field>
+        <Field label="Notizen (optional)">
+          <input value={notes} onChange={e => setNotes(e.target.value)} style={modalInput} />
+        </Field>
+        <div className="admin-modal-btns" style={{ marginTop: 14 }}>
+          <button className="btn-cancel" onClick={onClose}>Abbrechen</button>
+          <button className="btn-confirm" onClick={save} disabled={saving}>{saving ? 'Speichern…' : 'Einsatz anlegen'}</button>
         </div>
       </div>
     </div>

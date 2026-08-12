@@ -46,10 +46,7 @@ export default function PushProvider() {
         if (!subscription) {
           // Request permission
           const permission = await Notification.requestPermission()
-          if (permission !== 'granted') {
-            console.log('Push notification permission denied')
-            return
-          }
+          if (permission !== 'granted') return
 
           // Subscribe
           subscription = await registration.pushManager.subscribe({
@@ -74,10 +71,7 @@ export default function PushProvider() {
           }),
         })
 
-        if (res.ok) {
-          subscribedRef.current = true
-          console.log('Push subscription saved successfully')
-        }
+        if (res.ok) subscribedRef.current = true
       } catch (err) {
         console.warn('Push subscription error:', err)
       }

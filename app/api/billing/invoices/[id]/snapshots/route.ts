@@ -1,5 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { NextResponse } from 'next/server'
+import { getActiveOrgId } from '@/lib/organizations/server'
 
 /**
  * GET /api/billing/invoices/[id]/snapshots
@@ -20,11 +22,25 @@ export async function GET(
       return NextResponse.json({ error: 'Nicht autorisiert' }, { status: 401 })
     }
 
-    // Pruefen ob die Rechnung existiert
-    const { data: invoice, error: invoiceError } = await supabase
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+
+    if (!profile || !['admin', 'superadmin'].includes(profile.role)) {
+      return NextResponse.json({ error: 'Nur für Administratoren' }, { status: 403 })
+    }
+
+    const orgId = await getActiveOrgId()
+    const admin = createAdminClient()
+
+    // Pruefen ob die Rechnung existiert und zur Organisation gehoert
+    const { data: invoice, error: invoiceError } = await admin
       .from('invoices')
       .select('id')
       .eq('id', id)
+      .eq('organization_id', orgId)
       .single()
 
     if (invoiceError || !invoice) {
@@ -32,7 +48,7 @@ export async function GET(
     }
 
     // Snapshots laden, nach Version sortiert
-    const { data: snapshots, error } = await supabase
+    const { data: snapshots, error } = await admin
       .from('invoice_snapshots')
       .select('*')
       .eq('invoice_id', id)

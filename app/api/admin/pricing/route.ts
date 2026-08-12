@@ -15,8 +15,8 @@ async function checkAdmin() {
     .eq('id', user.id)
     .single()
 
-  if (!profile || !['admin', 'superadmin'].includes(profile.role)) {
-    return { supabase, user: null, error: 'Keine Berechtigung' }
+  if (!profile || profile.role !== 'superadmin') {
+    return { supabase, user: null, error: 'Nur Superadmins duerfen Preise verwalten (plattformweite Konfiguration).' }
   }
 
   return { supabase, user, error: null }
@@ -86,7 +86,8 @@ export async function GET(request: Request) {
     if (dbErr) throw dbErr
     return NextResponse.json({ [entity]: data })
   } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 })
+    console.error('[api] Unerwarteter Fehler:', err)
+    return NextResponse.json({ error: 'Interner Serverfehler' }, { status: 500 })
   }
 }
 
@@ -116,7 +117,8 @@ export async function POST(request: Request) {
 
     return NextResponse.json(data, { status: 201 })
   } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 })
+    console.error('[api] Unerwarteter Fehler:', err)
+    return NextResponse.json({ error: 'Interner Serverfehler' }, { status: 500 })
   }
 }
 
@@ -150,7 +152,8 @@ export async function PUT(request: Request) {
 
     return NextResponse.json(data)
   } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 })
+    console.error('[api] Unerwarteter Fehler:', err)
+    return NextResponse.json({ error: 'Interner Serverfehler' }, { status: 500 })
   }
 }
 
@@ -185,6 +188,7 @@ export async function DELETE(request: Request) {
 
     return NextResponse.json({ success: true })
   } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 })
+    console.error('[api] Unerwarteter Fehler:', err)
+    return NextResponse.json({ error: 'Interner Serverfehler' }, { status: 500 })
   }
 }

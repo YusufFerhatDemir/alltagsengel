@@ -14,7 +14,18 @@ export const dynamic = 'force-dynamic'
  */
 export async function POST(req: NextRequest) {
   try {
-    const form = await req.formData()
+    // Falscher Content-Type laesst formData() werfen. Ohne diesen eigenen
+    // Zweig landete das im aeusseren catch und die Route antwortete mit
+    // 500 auf einen reinen Eingabefehler.
+    let form: FormData
+    try {
+      form = await req.formData()
+    } catch {
+      return NextResponse.json(
+        { error: 'Erwartet wird multipart/form-data mit organization_id und datei.' },
+        { status: 400 }
+      )
+    }
     const organizationId = String(form.get('organization_id') || '')
     const datei = form.get('datei') as File | null
     const passwort = form.get('passwort') != null ? String(form.get('passwort')) : undefined
@@ -98,6 +109,7 @@ export async function POST(req: NextRequest) {
       fingerprint: pruefung.fingerprint,
     })
   } catch (e: any) {
-    return NextResponse.json({ error: e?.message || String(e) }, { status: 500 })
+    console.error('[api] Unerwarteter Fehler:', e)
+    return NextResponse.json({ error: 'Interner Serverfehler' }, { status: 500 })
   }
 }

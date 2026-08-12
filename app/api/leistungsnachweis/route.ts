@@ -1,9 +1,13 @@
 import { NextResponse } from 'next/server'
 import { PDFDocument, StandardFonts, rgb, type PDFPage, type PDFFont } from 'pdf-lib'
+import { readFile } from 'fs/promises'
+import { join } from 'path'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getOrgIK } from '@/lib/config/org-config'
 import { BUDGET_TYPE_PDF, QUALIFICATION_LEVEL } from '@/lib/admin/ops'
+import { modulAktivFuerPlz } from '@/lib/expansion/state-settings'
+import { getActiveOrgId } from '@/lib/organizations/server'
 
 // ═══════════════════════════════════════════════════════════════
 // GET /api/leistungsnachweis?client_id=…&month=YYYY-MM
@@ -98,6 +102,7 @@ export async function GET(request: Request) {
     const isAdmin = !!profile && ['admin', 'superadmin'].includes(profile.role)
 
     const admin = createAdminClient()
+    const orgId = await getActiveOrgId()
     const companyIk = await getOrgIK(admin)
 
     // ── Optional: Verordnung laden (liefert Genehmigungsnummer + Klient) ──
@@ -114,6 +119,7 @@ export async function GET(request: Request) {
         .from('verordnungen')
         .select('id, client_id, genehmigung_aktenzeichen, genehmigung_bis, kostentraeger_name, kostentraeger_ik_nummer')
         .eq('id', verordnungId)
+        .eq('organization_id', orgId)
         .single()
       if (voErr || !vo) {
         return NextResponse.json({ error: 'Verordnung nicht gefunden' }, { status: 404 })
@@ -130,6 +136,7 @@ export async function GET(request: Request) {
       .from('clients')
       .select('id, user_id, first_name, last_name, date_of_birth, care_level, address, city, zip_code, insurance_name, insurance_number, versichertennummer, pflegekasse_name, pflegekasse_ik')
       .eq('id', clientId)
+      .eq('organization_id', orgId)
       .single()
 
     if (clientErr || !client) {
@@ -154,6 +161,7 @@ export async function GET(request: Request) {
       .from('service_records')
       .select('id, date, start_time, end_time, duration_minutes, service_type, budget_type, amount, status, client_signature, caregiver_initials, caregiver_id, caregiver:caregivers(id, first_name, last_name, lifetime_registration_number, ik_nummer, qualification_level)')
       .eq('client_id', clientId)
+      .eq('organization_id', orgId)
     const { data: records, error: recErr } = await (verordnung ? baseQuery.eq('verordnung_id', verordnung.id) : baseQuery)
       .gte('date', periodStart)
       .lte('date', periodEnd)
@@ -210,14 +218,30 @@ export async function GET(request: Request) {
 
     // ═══════════════════ PDF aufbauen ═══════════════════
     const pdfDoc = await PDFDocument.create()
-    const fontRegular = await pdfDoc.embedFont(StandardFonts.Helvetica)
-    const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold)
+    // DejaVuSans für türkische/deutsche Zeichen (ğ, ş, ç, İ, ö, ü, ä, ß)
+    let fontRegular: PDFFont
+    let fontBold: PDFFont
+    try {
+      const fontsDir = join(process.cwd(), 'public', 'fonts')
+      const regularBytes = await readFile(join(fontsDir, 'DejaVuSans.ttf'))
+      const boldBytes = await readFile(join(fontsDir, 'DejaVuSans-Bold.ttf'))
+      fontRegular = await pdfDoc.embedFont(regularBytes)
+      fontBold = await pdfDoc.embedFont(boldBytes)
+    } catch {
+      fontRegular = await pdfDoc.embedFont(StandardFonts.Helvetica)
+      fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold)
+    }
+
+    // Darf dieser Nachweis wie ein einreichbarer Kassennachweis aussehen?
+    // Massgeblich ist das Bundesland des Klienten (PLZ) und dessen
+    // Freischaltung — nicht der Sitz der Organisation.
+    const kassenfaehig = await modulAktivFuerPlz('elnw_enabled', client.zip_code)
 
     let page = pdfDoc.addPage([PAGE_WIDTH, PAGE_HEIGHT])
     let y = PAGE_HEIGHT - MARGIN
 
     function newPage() {
-      drawFooter(page, fontRegular)
+      drawFooter(page, fontRegular, kassenfaehig)
       page = pdfDoc.addPage([PAGE_WIDTH, PAGE_HEIGHT])
       y = PAGE_HEIGHT - MARGIN
     }
@@ -418,7 +442,7 @@ export async function GET(request: Request) {
 
     y = sigTop - sigBoxH - 34
 
-    drawFooter(page, fontRegular)
+    drawFooter(page, fontRegular, kassenfaehig)
 
     const pdfBytes = await pdfDoc.save()
     const fileName = `Leistungsnachweis_${(client.last_name || 'Klient').replace(/[^a-zA-Z0-9äöüÄÖÜß-]/g, '_')}_${month}.pdf`
@@ -493,15 +517,30 @@ async function drawSignatureBox(
   }
 }
 
-function drawFooter(page: PDFPage, font: PDFFont) {
-  const lines = [
-    'Dieser Leistungsnachweis dient der Abrechnung von Betreuungs- und Entlastungsleistungen nach dem SGB XI',
-    '(insb. §45a/§45b Entlastungsbetrag und §39 Verhinderungspflege). Die aufgeführten Leistungen wurden wie',
-    `dokumentiert erbracht. ${COMPANY.name} · ${COMPANY.address}, ${COMPANY.city} · ${COMPANY.email}`,
-  ]
-  let fy = 52
-  for (const line of lines) {
-    page.drawText(line.replace(/ /g, ' '), { x: MARGIN, y: fy, size: 7, font, color: rgb(0.55, 0.55, 0.55) })
+function drawFooter(page: PDFPage, font: PDFFont, kassenfaehig: boolean) {
+  // Ist die Kassenabrechnung im Bundesland des Klienten noch nicht
+  // freigeschaltet, darf das PDF NICHT wie ein einreichbarer Kassennachweis
+  // aussehen. Der Nachweis bleibt vollstaendig erhalten — er wird nur als
+  // das gekennzeichnet, was er dann ist: eine Leistungsdokumentation.
+  const lines = kassenfaehig
+    ? [
+      'Dieser Leistungsnachweis dient der Abrechnung von Betreuungs- und Entlastungsleistungen nach dem SGB XI',
+      '(insb. §45a/§45b Entlastungsbetrag und §39 Verhinderungspflege). Die aufgeführten Leistungen wurden wie',
+      `dokumentiert erbracht. ${COMPANY.name} · ${COMPANY.address}, ${COMPANY.city} · ${COMPANY.email}`,
+    ]
+    : [
+      'LEISTUNGSDOKUMENTATION — NICHT ZUR EINREICHUNG BEI DER PFLEGEKASSE.',
+      'Die Anerkennung nach §45a SGB XI liegt für das Bundesland des Klienten derzeit nicht vor; eine Abrechnung',
+      'über die Pflegekasse ist damit nicht möglich. Die Leistungen wurden wie dokumentiert erbracht.',
+      `${COMPANY.name} · ${COMPANY.address}, ${COMPANY.city} · ${COMPANY.email}`,
+    ]
+  let fy = kassenfaehig ? 52 : 61
+  for (const [i, line] of lines.entries()) {
+    const warnzeile = !kassenfaehig && i === 0
+    page.drawText(line, {
+      x: MARGIN, y: fy, size: warnzeile ? 8 : 7, font,
+      color: warnzeile ? rgb(0.75, 0.25, 0.2) : rgb(0.55, 0.55, 0.55),
+    })
     fy -= 9
   }
 }

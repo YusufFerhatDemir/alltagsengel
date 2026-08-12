@@ -43,6 +43,52 @@ CREATE TABLE IF NOT EXISTS public.documents (
 );
 
 -- ─────────────────────────────────────────────────────────────────────
+-- 1b) Nachruesten, falls die Tabelle bereits existiert
+--
+-- supabase/initial-setup.sql legt public.documents in einer aelteren,
+-- schmaleren Fassung an (ohne organization_id und file_path). Das
+-- CREATE TABLE IF NOT EXISTS oben ist dann ein No-op — und der Index auf
+-- organization_id weiter unten scheiterte mit
+--   ERROR: column "organization_id" does not exist.
+-- Die Migration war dadurch auf jeder DB unanwendbar, auf der
+-- initial-setup.sql zuerst lief. Die folgenden Spalten machen sie in
+-- beide Richtungen idempotent.
+-- ─────────────────────────────────────────────────────────────────────
+ALTER TABLE public.documents
+  ADD COLUMN IF NOT EXISTS organization_id uuid;
+
+ALTER TABLE public.documents
+  ADD COLUMN IF NOT EXISTS file_path text;
+
+-- Bestandszeilen der Stamm-Organisation zuordnen, bevor NOT NULL greift.
+UPDATE public.documents
+   SET organization_id = '00000000-0000-4000-8000-000460629986'::uuid
+ WHERE organization_id IS NULL;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'documents_organization_id_fkey'
+  ) THEN
+    ALTER TABLE public.documents
+      ADD CONSTRAINT documents_organization_id_fkey
+      FOREIGN KEY (organization_id) REFERENCES public.organizations(id) ON DELETE CASCADE;
+  END IF;
+END $$;
+
+ALTER TABLE public.documents
+  ALTER COLUMN organization_id SET DEFAULT public.current_org_id();
+
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM public.documents WHERE organization_id IS NULL) THEN
+    RAISE NOTICE 'documents: NOT NULL auf organization_id uebersprungen — es gibt noch Zeilen ohne Organisation.';
+  ELSE
+    ALTER TABLE public.documents ALTER COLUMN organization_id SET NOT NULL;
+  END IF;
+END $$;
+
+-- ─────────────────────────────────────────────────────────────────────
 -- 2) Indizes
 -- ─────────────────────────────────────────────────────────────────────
 CREATE INDEX IF NOT EXISTS idx_documents_user_id

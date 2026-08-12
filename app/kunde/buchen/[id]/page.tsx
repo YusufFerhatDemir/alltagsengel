@@ -3,11 +3,14 @@ import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { isValidUUID, logError } from '@/lib/safe-query'
+import { CUSTOMER_HOURLY_RATE, PLATFORM_FEE_FACTOR } from '@/lib/pricing/b2c-constants'
 import { NotFoundState, ErrorState, LoadingState } from '@/components/UIStates'
 import { IconWingsGold, IconStarFilled, IconCard, IconShield, IconMedical, IconLock, IconInfo } from '@/components/Icons'
 import Icon3D from '@/components/Icon3D'
 import { trackBooking } from '@/lib/tracking'
-import { isHessenPlz, normalizePlz, resolvePlz } from '@/lib/hessen-plz'
+import { normalizePlz, resolvePlz } from '@/lib/expansion/plz-bundesland'
+import { useBundeslandLage } from '@/lib/expansion/client'
+import BundeslandHinweis from '@/components/kunde/BundeslandHinweis'
 import {
   istVerfuegbar,
   isoWochentag,
@@ -36,8 +39,9 @@ export default function BuchenPage() {
   // Angehörigen-Auswahl
   const [careRecipients, setCareRecipients] = useState<any[]>([])
   const [selectedCareRecipient, setSelectedCareRecipient] = useState<string>('')
-  // Kassenleistung nur in Hessen: PLZ des Kunden (bzw. des Angehörigen,
-  // für den gebucht wird) entscheidet über die erlaubten Zahlungsarten.
+  // Kassenabrechnung: PLZ des Kunden (bzw. des Angehörigen, für den gebucht
+  // wird) bestimmt das Bundesland; dessen Freischaltung in state_settings
+  // entscheidet über die erlaubten Zahlungsarten (lib/expansion).
   const [customerPlz, setCustomerPlz] = useState<string | null>(null)
   const [plzLoaded, setPlzLoaded] = useState(false)
   const [plzInput, setPlzInput] = useState('')
@@ -118,9 +122,12 @@ export default function BuchenPage() {
   // Einsatz statt), sonst die eigene Profil-PLZ.
   const selectedCr = careRecipients.find(cr => cr.id === selectedCareRecipient)
   const effectivePlz = normalizePlz(selectedCr?.postal_code) || customerPlz
-  const kasseAllowed = isHessenPlz(effectivePlz)
 
-  // Außerhalb Hessens (oder ohne PLZ) ist nur Privatzahlung zulässig —
+  // Kassenabrechnung nur, wenn das Bundesland des Einsatzortes freigeschaltet ist.
+  const { lage, laedt: lageLaedt } = useBundeslandLage(effectivePlz)
+  const kasseAllowed = lage.kassenabrechnung
+
+  // Ohne Freischaltung (oder ohne PLZ) ist nur Privatzahlung zulässig —
   // eine evtl. gewählte Kassen-Option wird zurückgesetzt.
   useEffect(() => {
     if (plzLoaded && !kasseAllowed && payMethod !== 'privat') {
@@ -164,9 +171,9 @@ export default function BuchenPage() {
     </div>
   )
 
-  const rate = 32 // Kundenpreis immer 32€/h
+  const rate = CUSTOMER_HOURLY_RATE
   const subtotal = rate * duration
-  const platformFee = Math.round(subtotal * 0.085 * 100) / 100
+  const platformFee = Math.round(subtotal * PLATFORM_FEE_FACTOR * 100) / 100
   const total = subtotal + platformFee
   const angelName = angel?.profiles ? `${angel.profiles.first_name} ${angel.profiles.last_name?.[0]}.` : 'Engel'
 
@@ -338,16 +345,8 @@ export default function BuchenPage() {
             ))}
           </div>
 
-          {plzLoaded && !kasseAllowed && effectivePlz && (
-            <div style={{
-              background: 'rgba(201,150,60,0.08)', border: '1px solid rgba(201,150,60,0.2)',
-              borderRadius: 10, padding: '10px 14px', marginTop: 10,
-              fontSize: 13, color: 'var(--ink3)', lineHeight: 1.5,
-            }}>
-              Eine Abrechnung über die Pflegekasse (§45a/§45b) ist derzeit nur in
-              <strong> Hessen</strong> möglich. In Ihrer Region (PLZ {effectivePlz}) bieten wir
-              unsere Leistungen als <strong>Privatleistung</strong> an.
-            </div>
+          {plzLoaded && !lageLaedt && !kasseAllowed && effectivePlz && (
+            <BundeslandHinweis lage={lage} quelle="buchung" />
           )}
 
           {plzLoaded && !effectivePlz && (
@@ -357,8 +356,9 @@ export default function BuchenPage() {
               fontSize: 13, color: 'var(--ink3)', lineHeight: 1.5,
             }}>
               <div style={{ marginBottom: 8 }}>
-                Für eine Abrechnung über die Pflegekasse benötigen wir Ihre Postleitzahl
-                (Kassenleistung ist derzeit nur in Hessen möglich).
+                Für eine Abrechnung über die Pflegekasse benötigen wir Ihre Postleitzahl —
+                sie bestimmt Ihr Bundesland und damit, ob die Kassenabrechnung dort bereits
+                freigeschaltet ist.
               </div>
               <div style={{ display: 'flex', gap: 8 }}>
                 <input

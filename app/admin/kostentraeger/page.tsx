@@ -8,6 +8,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { BUNDESLAND_LABELS, KOSTENTRAEGER_TYP, statusMeta } from '@/lib/admin/ops'
 import { StatusBadge, SearchInput, EmptyRow, Banner } from '@/components/admin/OpsUI'
+import { useBundeslandFilter } from '@/components/admin/BundeslandContext'
 
 interface Kontakt {
   id: string
@@ -50,6 +51,10 @@ export default function AdminKostentraegerPage() {
   const [search, setSearch] = useState('')
   const [typFilter, setTypFilter] = useState('all')
   const [bundeslandFilter, setBundeslandFilter] = useState('all')
+  // Globaler Umschalter hat Vorrang. Bundesweite Kontakte (bundesland = null)
+  // bleiben immer sichtbar — sie gelten fuer jedes Land.
+  const { aktiv: globalesLand, alle: alleLaender, label: landLabel } = useBundeslandFilter()
+  const wirksamesLand = alleLaender ? bundeslandFilter : globalesLand
   const [showForm, setShowForm] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [form, setForm] = useState<FormState>(EMPTY_FORM)
@@ -80,13 +85,13 @@ export default function AdminKostentraegerPage() {
     const q = search.trim().toLowerCase()
     return kontakte.filter(k => {
       if (typFilter !== 'all' && k.typ !== typFilter) return false
-      if (bundeslandFilter !== 'all' && k.bundesland !== bundeslandFilter) return false
+      if (wirksamesLand !== 'all' && k.bundesland && k.bundesland !== wirksamesLand) return false
       if (!q) return true
       return k.name.toLowerCase().includes(q)
         || (k.ik_nummer || '').toLowerCase().includes(q)
         || (k.email || '').toLowerCase().includes(q)
     })
-  }, [kontakte, search, typFilter, bundeslandFilter])
+  }, [kontakte, search, typFilter, wirksamesLand])
 
   function openCreate() {
     setEditingId(null)
@@ -179,10 +184,23 @@ export default function AdminKostentraegerPage() {
         {Object.entries(KONTAKT_TYPEN).map(([k, v]) => (
           <button key={k} className={`admin-filter-btn ${typFilter === k ? 'active' : ''}`} onClick={() => setTypFilter(k)}>{v.label}</button>
         ))}
-        <select value={bundeslandFilter} onChange={e => setBundeslandFilter(e.target.value)} style={{ ...input, marginLeft: 8 }}>
-          <option value="all">Alle Bundesländer</option>
-          {Object.entries(BUNDESLAND_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-        </select>
+        {alleLaender ? (
+          <select value={bundeslandFilter} onChange={e => setBundeslandFilter(e.target.value)} style={{ ...input, marginLeft: 8 }}>
+            <option value="all">Alle Bundesländer</option>
+            {Object.entries(BUNDESLAND_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+          </select>
+        ) : (
+          <span
+            title="Vorgegeben durch den Bundesland-Umschalter in der Seitenleiste"
+            style={{
+              ...input, marginLeft: 8, display: 'inline-flex', alignItems: 'center', gap: 6,
+              color: 'var(--gold2)', fontWeight: 600, cursor: 'default',
+            }}
+          >
+            <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'currentColor' }} />
+            {landLabel} + bundesweit
+          </span>
+        )}
       </div>
 
       {showForm && (

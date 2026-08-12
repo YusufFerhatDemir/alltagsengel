@@ -5,6 +5,7 @@ import { buildRecoveryLink } from '@/lib/supabase/recovery-link'
 import { sendEmailNotification } from '@/lib/notifications'
 import { validatePasswordAsync } from '@/lib/password-validation'
 import { logAuditEvent } from '@/lib/audit-log'
+import { getActiveOrgId } from '@/lib/organizations/server'
 
 export async function POST(request: NextRequest) {
   try {
@@ -23,6 +24,11 @@ export async function POST(request: NextRequest) {
 
   if (!profile?.role || !['admin', 'superadmin'].includes(profile.role)) {
     return NextResponse.json({ error: 'Keine Admin-Berechtigung' }, { status: 403 })
+  }
+
+  const organizationId = await getActiveOrgId()
+  if (!organizationId) {
+    return NextResponse.json({ error: 'Keine Organisation zugewiesen.' }, { status: 403 })
   }
 
   const { userId, newPassword, email, sendNotification } = await request.json()
@@ -75,9 +81,18 @@ export async function POST(request: NextRequest) {
     targetUserId = found.id
   }
 
-  // Prevent admins from resetting other admins' passwords (only superadmin can)
-  // AUTH-012: Target-Email + Name gleich mitziehen, damit wir sie für Audit-Log
-  //           und Notification-E-Mail nicht zweimal aus der DB holen müssen.
+  // Org-Fence: Ziel-User muss zur selben Organisation gehören
+  const { data: targetMembership } = await adminSupabase
+    .from('organization_members')
+    .select('id')
+    .eq('user_id', targetUserId)
+    .eq('organization_id', organizationId)
+    .maybeSingle()
+
+  if (!targetMembership) {
+    return NextResponse.json({ error: 'Benutzer gehört nicht zu Ihrer Organisation' }, { status: 403 })
+  }
+
   const { data: targetProfile } = await adminSupabase
     .from('profiles')
     .select('role, email, first_name, last_name')
@@ -103,6 +118,7 @@ export async function POST(request: NextRequest) {
     action: 'password_reset',
     actorId: user.id,
     actorRole: profile.role,
+    organizationId,
     targetId: targetUserId,
     targetEmail: targetProfile?.email || email || null,
     entityType: 'profile',
@@ -110,7 +126,6 @@ export async function POST(request: NextRequest) {
     details: {
       send_notification: Boolean(sendNotification),
       target_role: targetProfile?.role ?? null,
-      // Kein Klartext-Passwort, kein Hash, keine Länge — nur die Tatsache der Rücksetzung.
     },
     request,
   })

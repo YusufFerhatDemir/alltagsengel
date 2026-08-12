@@ -1,5 +1,6 @@
 'use client'
 import { useEffect } from 'react'
+import { usePathname } from 'next/navigation'
 import Script from 'next/script'
 import { getCookieConsent } from './CookieConsent'
 
@@ -24,7 +25,14 @@ const GOOGLE_ADS_ID = 'AW-18061588897'
  * keinen Tag -> "Tag falsch konfiguriert" -> Conversions fehlten.
  */
 export default function GoogleTagManager() {
+  // DiPA-Bereich /pflegecoach: gtag/GTM dürfen dort NICHT laden
+  // (Werbefreiheit + kein Tracking, DiPAV Anlage 2). Hook-Reihenfolge:
+  // usePathname vor dem Early-Return, useEffect prüft selbst.
+  const pathname = usePathname()
+  const istPflegeCoach = pathname.startsWith('/pflegecoach')
+
   useEffect(() => {
+    if (istPflegeCoach) return
     // Prüfe ob Consent bereits vorhanden ist und aktualisiere
     const consent = getCookieConsent()
     if (consent === 'accepted') {
@@ -40,7 +48,10 @@ export default function GoogleTagManager() {
     window.addEventListener('ae_consent_change', handleConsent)
 
     return () => window.removeEventListener('ae_consent_change', handleConsent)
-  }, [])
+  }, [istPflegeCoach])
+
+  // Nach den Hooks (stabile Hook-Reihenfolge): im DiPA-Bereich nichts rendern.
+  if (istPflegeCoach) return null
 
   return (
     <>

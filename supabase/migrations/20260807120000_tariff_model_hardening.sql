@@ -215,9 +215,16 @@ CREATE TABLE IF NOT EXISTS public.billing_feiertage (
   datum       DATE NOT NULL,
   bezeichnung TEXT NOT NULL,
   bundesland  TEXT,  -- NULL = bundesweit
-  created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
-  CONSTRAINT unique_feiertag_datum_bl UNIQUE (datum, COALESCE(bundesland, '__ALL__'))
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+-- Eindeutigkeit ueber (datum, bundesland) mit NULL = bundesweit.
+-- Als UNIQUE-CONSTRAINT nicht moeglich: Constraints duerfen in PostgreSQL
+-- keine Ausdruecke enthalten (COALESCE) — das warf
+--   ERROR: syntax error at or near "("
+-- und machte die gesamte Migration unanwendbar. Ein UNIQUE INDEX kann es.
+CREATE UNIQUE INDEX IF NOT EXISTS unique_feiertag_datum_bl
+  ON public.billing_feiertage (datum, COALESCE(bundesland, '__ALL__'));
 
 COMMENT ON TABLE public.billing_feiertage IS
   'Feiertage fuer Zuschlagsberechnung. bundesland NULL = bundesweit.';

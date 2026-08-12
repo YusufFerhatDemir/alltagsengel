@@ -16,6 +16,24 @@ export function extractProjectRef(url: string | undefined | null): string | null
   try {
     const parsed = new URL(url.trim())
     const hostname = parsed.hostname // z.B. "nnwyktkqibdjxgimjyuq.supabase.co"
+
+    // Lokale Staging-Instanz (Shadow-DB + PostgREST-Shim). Ohne diesen Zweig
+    // liefert die Ableitung null, der Client faellt auf 'sb-INVALID-auth-token'
+    // zurueck und KEINE Sitzung laesst sich speichern — eine Browser-Abnahme
+    // der Admin-Oberflaeche gegen Staging waere unmoeglich.
+    //
+    // Der Wert MUSS exakt dem entsprechen, was supabase-js selbst bildet:
+    //   defaultStorageKey = `sb-${baseUrl.hostname.split(".")[0]}-auth-token`
+    // Eine eigene Variante (etwa mit Port) laesst Middleware und Bibliothek
+    // unterschiedliche Cookie-Namen suchen — die Sitzung ist dann zwar
+    // gesetzt, wird aber nie gefunden ("Auth session missing").
+    //
+    // Bewusst eng: NUR die Literale localhost und 127.0.0.1. Jeder andere
+    // Host ausserhalb von *.supabase.co bleibt fail-closed.
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+      return hostname.split('.')[0]
+    }
+
     if (!hostname.endsWith('.supabase.co')) return null
 
     const ref = hostname.split('.')[0]

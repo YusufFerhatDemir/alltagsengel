@@ -4,9 +4,21 @@
     {
       "name": "alltagsengel-dev",
       "runtimeExecutable": "/Users/work/alltagsengel/node_modules/.bin/next",
-      "runtimeArgs": ["dev", "--webpack"],
+      "runtimeArgs": [
+        "dev",
+        "--webpack"
+      ],
       "port": 8080,
       "autoPort": true
+    },
+    {
+      "name": "alltagsengel-staging",
+      "runtimeExecutable": "/Users/work/alltagsengel/scripts/staging-app.sh",
+      "runtimeArgs": [
+        "run"
+      ],
+      "port": 8080,
+      "autoPort": false
     }
   ]
 }

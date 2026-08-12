@@ -1,0 +1,11 @@
+// Öffentliche Fassade für lib/pflege/* — analog lib/akten/index.ts
+export * from './types'
+export * from './aufnahmen'
+export * from './anamnesen'
+export * from './diagnosen'
+export * from './risiken'
+export * from './massnahmenplaene'
+export * from './massnahmen'
+export * from './verlauf'
+export * from './doku-perioden'
+export * from './uebersicht'

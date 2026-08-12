@@ -6,6 +6,7 @@ import {
   notifyCustomerBookingDeclined,
   type BookingNotifyData,
 } from '@/lib/notifications'
+import { getActiveOrgId } from '@/lib/organizations/server'
 
 // ─── Row-Formen des bookings-Selects (inkl. eingebetteter Joins) ───
 interface BookingProfile {
@@ -69,7 +70,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'action muss "accept" oder "decline" sein' }, { status: 400 })
     }
 
-    const { data: bookingRaw, error: bookErr } = await supabase
+    // org_fence: nur Bookings der eigenen Organisation
+    const orgId = await getActiveOrgId()
+
+    let bookingQuery = supabase
       .from('bookings')
       .select(`
         id, customer_id, angel_id, service, date, time, duration_hours, total_amount, status,
@@ -77,7 +81,8 @@ export async function POST(req: NextRequest) {
         angel:angels!bookings_angel_id_fkey(id, profiles(id, first_name, last_name, email))
       `)
       .eq('id', bookingId)
-      .single()
+    if (orgId) bookingQuery = bookingQuery.eq('organization_id', orgId)
+    const { data: bookingRaw, error: bookErr } = await bookingQuery.single()
 
     if (bookErr || !bookingRaw) {
       return NextResponse.json({ error: 'Anfrage nicht gefunden' }, { status: 404 })
@@ -112,23 +117,25 @@ export async function POST(req: NextRequest) {
       : null
 
     let updated: { id: string }[] | null = null
-    const full = await admin
+    let fullQuery = admin
       .from('bookings')
       .update({ status: newStatus, responded_at: respondedAt, decline_reason: declineReason })
       .eq('id', bookingId)
       .eq('status', 'pending')
-      .select('id')
+    if (orgId) fullQuery = fullQuery.eq('organization_id', orgId)
+    const full = await fullQuery.select('id')
 
     if (full.error && isMissingColumn(full.error)) {
       // Live-DB kennt responded_at/decline_reason noch nicht (Migration
       // 20260719_booking_request_workflow.sql noch nicht eingespielt) —
       // der Statuswechsel selbst darf daran nicht scheitern.
-      const minimal = await admin
+      let minQuery = admin
         .from('bookings')
         .update({ status: newStatus })
         .eq('id', bookingId)
         .eq('status', 'pending')
-        .select('id')
+      if (orgId) minQuery = minQuery.eq('organization_id', orgId)
+      const minimal = await minQuery.select('id')
       if (minimal.error) {
         console.error('Booking respond update error:', minimal.error.message)
         return NextResponse.json({ error: 'Status konnte nicht gesetzt werden' }, { status: 500 })

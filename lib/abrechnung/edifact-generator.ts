@@ -31,7 +31,7 @@ import {
 import {
   LEISTUNGSART_SCHLUESSEL,
   ABRECHNUNGSCODE_ALLTAGSENGEL,
-  TARIFKENNZEICHEN_HESSEN,
+  tarifkennzeichenFuerBundesland,
   ERSATZ_BESCHAEFTIGTENNUMMER,
   findeDatenannahmestelle,
   type Datenannahmestelle,
@@ -111,7 +111,14 @@ export interface GeneratorOptionen {
   dateiindikator?: '0' | '1' | '2'
   /** Präfix der Rechnungsnummern (eindeutig je Erstellungsjahr!) */
   rechnungsnummer_praefix?: string
-  /** Tarifkennzeichen (Default Hessen "06000") */
+  /**
+   * Bundesland-Katalogcode ('hessen', 'bayern', …) des Leistungsorts.
+   * Bestimmt Tarifbereich und AOK-Datenannahmestelle. Pflicht, sofern kein
+   * `tarifkennzeichen` explizit gesetzt ist — ein stiller Hessen-Default
+   * würde in anderen Bundesländern eine falsche Abrechnung erzeugen.
+   */
+  bundesland?: string
+  /** Tarifkennzeichen — überschreibt die Ableitung aus `bundesland`. */
   tarifkennzeichen?: string
   /** Abrechnungscode (Default "36" privat gewerblich) */
   abrechnungscode?: string
@@ -220,12 +227,31 @@ export function generateEDIFACT(
   const warnungen: string[] = []
   const jetzt = optionen.rechnungsdatum ?? new Date()
   const monat = faelle[0].abrechnungsmonat
-  const annahmestelle = findeDatenannahmestelle(faelle[0].kostentraeger.name)
+  const annahmestelle = findeDatenannahmestelle(faelle[0].kostentraeger.name, optionen.bundesland)
+  if (!annahmestelle) {
+    throw new Error(
+      `Keine Datenannahmestelle für Kostenträger "${faelle[0].kostentraeger.name}" `
+      + `im Bundesland "${optionen.bundesland}" hinterlegt. Bitte in `
+      + `lib/abrechnung/schluesselverzeichnis.ts ergänzen — eine Lieferung an die `
+      + `falsche Annahmestelle wäre ein Abrechnungsfehler.`
+    )
+  }
   const lfdNr = optionen.laufende_nummer ?? 1
   const dar = optionen.datenaustauschreferenz ?? 1
   const indikator = optionen.dateiindikator ?? '2'
   const abrechnungscode = optionen.abrechnungscode ?? ABRECHNUNGSCODE_ALLTAGSENGEL
-  const tarifkennzeichen = optionen.tarifkennzeichen ?? TARIFKENNZEICHEN_HESSEN
+  // Kein stiller Hessen-Default mehr: entweder explizit gesetzt oder aus dem
+  // Bundesland abgeleitet. Fehlt beides, bricht die Erzeugung ab.
+  const tarifkennzeichen = optionen.tarifkennzeichen
+    ?? (optionen.bundesland
+      ? tarifkennzeichenFuerBundesland(optionen.bundesland)
+      : (() => {
+        throw new Error(
+          'Tarifkennzeichen fehlt: bitte GeneratorOptionen.bundesland setzen '
+          + '(oder tarifkennzeichen explizit angeben). Ein Default würde jede '
+          + 'Abrechnung außerhalb Hessens mit dem falschen Tarifbereich versehen.'
+        )
+      })())
   const praefix = optionen.rechnungsnummer_praefix ?? `AE-${monat}`
   const anwendungsreferenz = logischerDateiname(monat, annahmestelle.kassenart, lfdNr)
 
@@ -398,7 +424,13 @@ export function generateAlleDateien(
 ): EdifactDatei[] {
   const nachAnnahmestelle = new Map<string, AbrechnungsFall[]>()
   for (const fall of faelle) {
-    const stelle = findeDatenannahmestelle(fall.kostentraeger.name)
+    const stelle = findeDatenannahmestelle(fall.kostentraeger.name, optionen.bundesland)
+    if (!stelle) {
+      throw new Error(
+        `Keine Datenannahmestelle für Kostenträger "${fall.kostentraeger.name}" `
+        + `im Bundesland "${optionen.bundesland}" hinterlegt.`
+      )
+    }
     const key = `${stelle.ik}:${stelle.kassenart}`
     if (!nachAnnahmestelle.has(key)) nachAnnahmestelle.set(key, [])
     nachAnnahmestelle.get(key)!.push(fall)

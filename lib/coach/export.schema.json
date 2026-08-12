@@ -1,0 +1,142 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "de.alltagsengel.pflegecoach.export/1.0",
+  "title": "Digitaler PflegeCoach — Datenexport",
+  "description": "Maschinenlesbarer Self-Service-Export aller Nutzerdaten (DiPAV Anlage 2 / Art. 20 DSGVO). Kodierungen: Selbsteinschätzungen 0=selbständig…4=umfassende Unterstützung; Wochentage 1=Montag…7=Sonntag; Belastungs-Items 0=nie…3=fast immer.",
+  "type": "object",
+  "required": ["format", "version", "produkt", "exportiert_am", "hinweis", "nutzer", "einwilligungen", "assessments", "ziele", "aktivitaeten", "erledigungen", "messungen", "berichte"],
+  "properties": {
+    "format": { "const": "de.alltagsengel.pflegecoach.export" },
+    "version": { "const": "1.0" },
+    "produkt": {
+      "type": "object",
+      "required": ["name", "version"],
+      "properties": {
+        "name": { "type": "string" },
+        "version": { "type": "string" }
+      }
+    },
+    "exportiert_am": { "type": "string", "format": "date-time" },
+    "hinweis": { "type": "string" },
+    "nutzer": {
+      "type": "object",
+      "required": ["rolle"],
+      "properties": {
+        "rolle": { "enum": ["pflegebeduerftig", "angehoerig", "pflegedienst"] },
+        "anzeigename": { "type": ["string", "null"] },
+        "pflegegrad": { "type": ["integer", "null"], "minimum": 1, "maximum": 5 },
+        "geburtsjahr": { "type": ["integer", "null"] },
+        "registriert_am": { "type": "string" }
+      }
+    },
+    "einwilligungen": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["typ", "text_version", "erteilt", "erteilt_am"],
+        "properties": {
+          "typ": { "enum": ["gesundheitsdaten_art9", "wissenschaftliche_auswertung", "datenfreigabe"] },
+          "text_version": { "type": "string" },
+          "erteilt": { "type": "boolean" },
+          "erteilt_am": { "type": "string" },
+          "widerrufen_am": { "type": ["string", "null"] }
+        }
+      }
+    },
+    "assessments": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["typ", "erhoben_am"],
+        "properties": {
+          "typ": { "enum": ["erstassessment", "verlaufsassessment"] },
+          "erhoben_am": { "type": "string" },
+          "mobilitaet": { "type": ["integer", "null"], "minimum": 0, "maximum": 4 },
+          "selbstversorgung": { "type": ["integer", "null"], "minimum": 0, "maximum": 4 },
+          "alltagsgestaltung": { "type": ["integer", "null"], "minimum": 0, "maximum": 4 },
+          "soziale_teilhabe": { "type": ["integer", "null"], "minimum": 0, "maximum": 4 },
+          "kognition": { "type": ["integer", "null"], "minimum": 0, "maximum": 4 },
+          "hilfsmittel": { "type": ["string", "null"] },
+          "wohnsituation": { "type": ["string", "null"] },
+          "notizen": { "type": ["string", "null"] }
+        }
+      }
+    },
+    "ziele": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["titel", "bereich", "status", "start_am"],
+        "properties": {
+          "titel": { "type": "string" },
+          "beschreibung": { "type": ["string", "null"] },
+          "bereich": { "enum": ["mobilitaet", "selbstversorgung", "alltagsgestaltung", "soziale_teilhabe", "entlastung_angehoerige"] },
+          "messgroesse": { "type": ["string", "null"] },
+          "startwert": { "type": ["number", "null"] },
+          "zielwert": { "type": ["number", "null"] },
+          "aktueller_wert": { "type": ["number", "null"] },
+          "start_am": { "type": "string" },
+          "ziel_bis": { "type": ["string", "null"] },
+          "status": { "enum": ["aktiv", "erreicht", "angepasst", "pausiert", "beendet"] },
+          "anpassungs_notiz": { "type": ["string", "null"] }
+        }
+      }
+    },
+    "aktivitaeten": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["titel", "kategorie", "wochentage", "aktiv"],
+        "properties": {
+          "titel": { "type": "string" },
+          "beschreibung": { "type": ["string", "null"] },
+          "kategorie": { "enum": ["mobilitaet", "selbstversorgung", "alltagsgestaltung", "soziale_teilhabe", "entlastung", "erinnerung"] },
+          "wochentage": { "type": "array", "items": { "type": "integer", "minimum": 1, "maximum": 7 } },
+          "uhrzeit": { "type": ["string", "null"] },
+          "dauer_minuten": { "type": ["integer", "null"] },
+          "aktiv": { "type": "boolean" }
+        }
+      }
+    },
+    "erledigungen": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["datum", "status"],
+        "properties": {
+          "datum": { "type": "string" },
+          "status": { "enum": ["erledigt", "teilweise", "ausgelassen"] },
+          "notiz": { "type": ["string", "null"] }
+        }
+      }
+    },
+    "messungen": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["instrument", "messzeitpunkt", "antworten", "erhoben_am"],
+        "properties": {
+          "instrument": { "enum": ["fes_i_k", "bsfc_s", "sus", "belastung_kurz", "selbsteinschaetzung_selbststaendigkeit", "sturzereignis", "befinden"] },
+          "messzeitpunkt": { "enum": ["t0", "t1", "t2", "t3", "laufend"] },
+          "antworten": { "type": "object" },
+          "summenwert": { "type": ["number", "null"] },
+          "erhoben_am": { "type": "string" }
+        }
+      }
+    },
+    "berichte": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["typ", "erstellt_am", "inhalt"],
+        "properties": {
+          "typ": { "enum": ["verlaufsbericht", "datenexport"] },
+          "zeitraum_von": { "type": ["string", "null"] },
+          "zeitraum_bis": { "type": ["string", "null"] },
+          "erstellt_am": { "type": "string" },
+          "inhalt": { "type": "object" }
+        }
+      }
+    }
+  }
+}

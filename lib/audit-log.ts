@@ -60,6 +60,10 @@ export interface AuditLogInput {
   action: AuditAction
   /** Actor (wer hat's gemacht) — User-UUID aus der Session. */
   actorId: string
+  /** Organisation, in der die Aktion stattfand. MUSS gesetzt werden,
+   *  weil service_role keinen JWT hat und current_org_id() sonst auf
+   *  die Stamm-Org faellt. */
+  organizationId?: string | null
   /** Rolle des Actors zum Zeitpunkt der Aktion. */
   actorRole?: string | null
   /** Anzeige-Name des Actors (optional, für UI). */
@@ -92,7 +96,7 @@ export async function logAuditEvent(input: AuditLogInput): Promise<boolean> {
     const ip = input.request ? extractIp(input.request) : null
     const ua = input.request ? extractUserAgent(input.request) : null
 
-    const { error } = await adminClient.from('mis_audit_log').insert({
+    const row: Record<string, unknown> = {
       entity_type: input.entityType,
       entity_id: input.entityId ?? null,
       action: input.action,
@@ -104,7 +108,12 @@ export async function logAuditEvent(input: AuditLogInput): Promise<boolean> {
       details: input.details ?? {},
       ip_address: ip,
       user_agent: ua,
-    })
+    }
+    if (input.organizationId) {
+      row.organization_id = input.organizationId
+    }
+
+    const { error } = await adminClient.from('mis_audit_log').insert(row)
 
     if (error) {
       // AUTH-002: kein rohes err-Objekt loggen — könnte sensible Info enthalten

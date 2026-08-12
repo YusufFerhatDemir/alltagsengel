@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireAdmin } from '@/lib/abrechnung/require-admin'
+import { requireAdminMitOrg } from '@/lib/abrechnung/require-admin'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { ZERTIFIKAT_BUCKET } from '@/lib/abrechnung/zertifikate'
+import { logAuditEvent } from '@/lib/audit-log'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -13,9 +14,11 @@ export const dynamic = 'force-dynamic'
  * Datenannahmestelle. Keys landen NIE in der Datenbank.
  */
 export async function POST(req: NextRequest) {
-  const auth = await requireAdmin()
+  const auth = await requireAdminMitOrg()
   if (!auth.ok) return auth.response
   try {
+    const organizationId = auth.organizationId
+
     const form = await req.formData()
     const dasId = String(form.get('das_id') || '')
     const datei = form.get('datei') as File | null
@@ -34,10 +37,17 @@ export async function POST(req: NextRequest) {
     const supabase = createAdminClient()
     const { data: das, error: dasErr } = await supabase
       .from('datenannahmestellen')
-      .select('id, name')
+      .select('id, name, organization_id')
       .eq('id', dasId)
+      .or(`organization_id.eq.${organizationId},organization_id.is.null`)
       .single()
     if (dasErr || !das) return NextResponse.json({ error: 'Datenannahmestelle nicht gefunden' }, { status: 404 })
+    if (!das.organization_id) {
+      return NextResponse.json(
+        { error: 'Gemeinsame Datenannahmestelle kann nicht direkt bearbeitet werden. Bitte eigene Kopie anlegen.' },
+        { status: 403 }
+      )
+    }
 
     const pfad = `sftp-keys/${das.id}.key`
     const { error: upErr } = await supabase.storage
@@ -51,8 +61,19 @@ export async function POST(req: NextRequest) {
       .eq('id', das.id)
     if (updErr) return NextResponse.json({ error: updErr.message }, { status: 500 })
 
+    await logAuditEvent({
+      action: 'update',
+      actorId: auth.userId,
+      organizationId,
+      entityType: 'datenannahmestelle',
+      entityId: das.id,
+      details: { sftp_key_url: pfad, das_name: das.name },
+      request: req,
+    })
+
     return NextResponse.json({ erfolg: true, pfad })
   } catch (e: any) {
-    return NextResponse.json({ error: e?.message || String(e) }, { status: 500 })
+    console.error('[api] Unerwarteter Fehler:', e)
+    return NextResponse.json({ error: 'Interner Serverfehler' }, { status: 500 })
   }
 }
