@@ -33,34 +33,91 @@ const MIGRATIONS = join(process.cwd(), 'supabase', 'migrations')
  * zeitstempel-praefixiert sind und spaetere Dateien den Constraint neu setzen.
  * Rollback-Dateien werden ignoriert — sie stellen den Vorzustand her.
  */
-function letzteConstraintWerte(constraintName: string, spalte: string): string[] | null {
-  const dateien = readdirSync(MIGRATIONS)
-    .filter(f => f.endsWith('.sql') && !f.includes('rollback'))
-    .sort()
+/**
+ * Erkennt BEIDE in den Migrationen genutzten Schreibweisen:
+ *   CHECK (<spalte> IN ('a','b'))
+ *   CHECK (<spalte> = ANY(ARRAY['a','b']))
+ * Die ANY(ARRAY[...])-Form fehlte hier — Constraints, die so definiert sind,
+ * waren fuer den Test unsichtbar und er verglich gegen eine veraltete Liste.
+ */
+function constraintMuster(constraintName: string, spalte: string): RegExp[] {
+  const kopf = `CONSTRAINT\\s+${constraintName}\\s+CHECK\\s*\\(\\s*${spalte}\\s*`
+  return [
+    // IN ( … ) — Terminator ist ')' GEFOLGT VON ')' (IN-Klammer + CHECK-Klammer).
+    // Ein bloßes ')' genügt nicht: die Werteliste enthält SQL-Kommentare, die
+    // selbst Klammern haben ("-- neu ergaenzt (bisher nur in TypeScript)"), und
+    // ein zu früher Abbruch würde stillschweigend Werte unterschlagen.
+    new RegExp(`${kopf}IN\\s*\\(([\\s\\S]*?)\\)\\s*\\)`, 'g'),
+    // = ANY(ARRAY[ … ])
+    new RegExp(`${kopf}=\\s*ANY\\s*\\(\\s*ARRAY\\s*\\[([\\s\\S]*?)\\]\\s*\\)`, 'g'),
+  ]
+}
 
-  let treffer: string[] | null = null
-
-  for (const datei of dateien) {
-    const inhalt = readFileSync(join(MIGRATIONS, datei), 'utf8')
-    if (!inhalt.includes(constraintName)) continue
-
-    // ADD CONSTRAINT <name> CHECK (<spalte> IN ( 'a', 'b', ... ))
-    const muster = new RegExp(
-      `CONSTRAINT\\s+${constraintName}\\s+CHECK\\s*\\(\\s*${spalte}\\s+IN\\s*\\(([\\s\\S]*?)\\)\\s*\\)`,
-      'g',
-    )
+/** Alle Constraint-Definitionen einer Datei, in Textreihenfolge. */
+function werteListenAusDatei(inhalt: string, constraintName: string, spalte: string): Array<{ pos: number; werte: string[] }> {
+  const treffer: Array<{ pos: number; werte: string[] }> = []
+  for (const muster of constraintMuster(constraintName, spalte)) {
     let m: RegExpExecArray | null
     while ((m = muster.exec(inhalt)) !== null) {
       const werte = [...m[1].matchAll(/'([^']+)'/g)].map(x => x[1])
-      if (werte.length > 0) treffer = werte
+      if (werte.length > 0) treffer.push({ pos: m.index, werte })
     }
+  }
+  return treffer.sort((a, b) => a.pos - b.pos)
+}
+
+function migrationsDateien(): string[] {
+  return readdirSync(MIGRATIONS)
+    .filter(f => f.endsWith('.sql') && !f.includes('rollback'))
+    .sort()
+}
+
+function letzteConstraintWerte(constraintName: string, spalte: string): string[] | null {
+  let treffer: string[] | null = null
+
+  for (const datei of migrationsDateien()) {
+    const inhalt = readFileSync(join(MIGRATIONS, datei), 'utf8')
+    if (!inhalt.includes(constraintName)) continue
+
+    const listen = werteListenAusDatei(inhalt, constraintName, spalte)
+    if (listen.length > 0) treffer = listen[listen.length - 1].werte
   }
 
   return treffer
 }
 
+/**
+ * Vereinigung ALLER Constraint-Definitionen ueber alle Migrationen.
+ *
+ * Fuer billing_audit_trail.entity_type ist das die einzige korrekte Sicht:
+ * die Migrationen setzen den Constraint in `DO $$ ... IF NOT EXISTS`-Bloecken
+ * neu, die uebersprungen werden, sobald die dort gesuchten Werte schon
+ * vorhanden sind. Die zuletzt im Datei-Sort stehende Definition ist deshalb
+ * NICHT zwangslaeufig die angewendete — 20260812180000 (mit den datev_*-Werten)
+ * laeuft vor 20260825010000, dessen Guard danach greift und dessen kuerzere
+ * Liste nie angewendet wird.
+ *
+ * Da der Constraint ausschliesslich erweitert und nie verkleinert wird, ist die
+ * Vereinigung die effektive Werteliste. Ein neuer TypeScript-Wert ohne
+ * Migration faellt weiterhin auf.
+ */
+function alleConstraintWerte(constraintName: string, spalte: string): string[] | null {
+  const union = new Set<string>()
+
+  for (const datei of migrationsDateien()) {
+    const inhalt = readFileSync(join(MIGRATIONS, datei), 'utf8')
+    if (!inhalt.includes(constraintName)) continue
+
+    for (const liste of werteListenAusDatei(inhalt, constraintName, spalte)) {
+      for (const wert of liste.werte) union.add(wert)
+    }
+  }
+
+  return union.size > 0 ? [...union] : null
+}
+
 describe('billing_audit_trail.entity_type', () => {
-  const dbWerte = letzteConstraintWerte('billing_audit_trail_entity_type_check', 'entity_type')
+  const dbWerte = alleConstraintWerte('billing_audit_trail_entity_type_check', 'entity_type')
 
   it('findet den Constraint in den Migrationen', () => {
     expect(dbWerte).not.toBeNull()
