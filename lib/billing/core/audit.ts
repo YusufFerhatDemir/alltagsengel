@@ -42,6 +42,8 @@ export const AUDIT_ENTITY_TYPES = [
   'billing_fristen',
   'camt_import', 'zahlungseingang', 'klaerfall', 'ruecklastschrift',
   'datev_export', 'datev_kontenzuordnung',
+  // § 302 SGB V (Block 17) — Migration 20260826020000
+  'sgb_v_lauf', 'sgb_v_formatversion', 'sgb_v_routing',
 ] as const;
 
 export type AuditEntityType = (typeof AUDIT_ENTITY_TYPES)[number];

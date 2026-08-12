@@ -406,19 +406,50 @@ Ergänzende Unterstützungsleistungen sind ein separater Bestandteil des DiPA-Ko
 
 ---
 
-## Block 17 — § 302 SGB V (Sonstige Leistungserbringer) 📋
+## Block 17 — § 302 SGB V (Sonstige Leistungserbringer) 🔄
 
-**Status:** Geplant
+**Status:** Gerüst fertig (12.08.2026), Datensatz-Erzeugung bewusst gesperrt
+**Migration:** `20260826020000_sgb_v_302_geruest.sql` (wartet auf Live-Apply)
+**Kontext:** HKP-Zulassung als sonstiger Leistungserbringer ist beantragt / in Arbeit — das Gerüst steht vor dem Live-Gang.
 
 Bislang ist nur § 105 SGB XI implementiert. Für HKP (Häusliche Krankenpflege) und andere Leistungen nach SGB V ist ein separater Abrechnungskanal erforderlich.
 
-| Modul | Beschreibung |
-|-------|--------------|
-| SGB-V-Versionsengine | Technische Anlage 1 Version 21 (aktuell), Version 22 (ab 02/2027) |
-| HKP-XML-Anlage | Version 1.3.0 (ab 02/2027) |
-| SGB-V-Datenerzeugung | Separater Generator (NICHT EDIFACT, sondern XML/§ 302-Format) |
-| Kostenträger-Routing | Krankenkassen-spezifisches Routing (anders als Pflegekassen) |
-| Verordnungs-Integration | HKP-Verordnungen → Abrechnungspositionen |
+> **Warum der Export gesperrt ist.** Der § 302-Datensatz ist in der Technischen Anlage 1 zur
+> Vereinbarung nach § 302 Abs. 2 SGB V spezifiziert — Nachrichtentypen SLGA/SLLA, Segmentfolgen,
+> Feldlängen, Schlüsselverzeichnisse (Leistungserbringergruppenschlüssel, Abrechnungspositionsnummern,
+> Tarifkennzeichen). Diese Anlage liegt **nicht vor**. Aus dem Gedächtnis rekonstruierte Segmente
+> wären das schlechteste Ergebnis: die Datei sähe gültig aus, würde den eigenen Validator passieren
+> und erst bei der Krankenkasse auffallen — oder dort falsch verarbeitet. Deshalb fail-closed,
+> gleiches Prinzip wie beim SECON-Stub.
+>
+> **Formatfrage geklärt:** Die frühere Notiz „NICHT EDIFACT, sondern XML" war irreführend. Es gibt
+> **zwei** Kanäle: EDIFACT (SLGA/SLLA, TA1 v21 → v22 ab 02/2027) **und** HKP-XML 1.3.0 ab 02/2027.
+> Beide sind im Versionsregister als getrennte Formate angelegt.
+
+| Modul | Beschreibung | Ergebnis |
+|-------|--------------|----------|
+| SGB-V-Versionsengine | Technische Anlage 1 Version 21 (aktuell), Version 22 (ab 02/2027) | ✅ `lib/abrechnung/sgb-v/versionen.ts` — Register + Auflösung je Abrechnungsmonat, fail-closed über `spec_bestaetigt`; Versionswechsel greift automatisch |
+| HKP-XML-Anlage | Version 1.3.0 (ab 02/2027) | ✅ als eigenes Format registriert (`xml_hkp`), erbt keine EDIFACT-Freigabe |
+| SGB-V-Datenerzeugung | Separater Generator | ⏸️ `lib/abrechnung/sgb-v/generator.ts` — Signatur + Freischaltliste stehen, Ausführung wirft `SgbVSpecFehltError`. **Braucht die offizielle TA1.** |
+| Kostenträger-Routing | Krankenkassen-spezifisches Routing | ✅ `lib/abrechnung/sgb-v/routing.ts` + Tabelle `sgb_v_routing` — bewusst LEER, Stammdaten werden nie geraten; Historie mit Gültigkeitszeitraum |
+| Verordnungs-Integration | HKP-Verordnungen → Abrechnungspositionen | ✅ `lib/abrechnung/sgb-v/positionen.ts` — vollständig: Muster-12-Pflicht, Genehmigungsstatus, frühere von Verordnungs-/Kassenende, IK- und Versichertennummer-Prüfung, Gruppierung je Kasse+Klient. Nicht abrechenbare Leistungen kommen **mit Grund** zurück statt weggelassen zu werden |
+
+**Weitere Bausteine**
+
+| Datei | Zweck |
+|-------|-------|
+| `lib/abrechnung/sgb-v/readiness.ts` | Blockerliste, getrennt in intern lösbar / extern zu beschaffen |
+| `app/api/billing/sgb-v/readiness/` | Voraussetzungen je Monat |
+| `app/api/billing/sgb-v/vorschau/` | Trockenlauf: abrechenbar / nicht abrechenbar / Routing-Status (schreibt nichts) |
+| `app/admin/sgb-v/` | Admin-Oberfläche mit Sperrhinweis, Fallliste und Ablehnungsgründen |
+| `__tests__/abrechnung/sgb-v-302.test.ts` | 31 Tests auf Versionslogik, Routing, Verordnungsprüfung, Fail-closed-Sperre |
+
+**Zum Freischalten** (Reihenfolge steht auch im Kopf von `generator.ts`):
+1. Technische Anlage 1 zur § 302-Vereinbarung + Schlüsselverzeichnisse beschaffen (gkv-datenaustausch.de).
+2. Segment-Builder analog `lib/abrechnung/edifact-segments.ts` anlegen.
+3. Validator analog `edifact-validator.ts`.
+4. `sgb_v_formatversionen.spec_bestaetigt = true` mit `spec_quelle` (Dokumentname + Stand).
+5. `erzeugeSgbVDatei()` implementieren, `exportImplementiert()` auf `true`.
 
 ---
 
