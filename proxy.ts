@@ -1,6 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 import { getStorageKeyFromEnv } from '@/lib/supabase/storage-key'
+import { handleRateLimit } from '@/lib/middleware/rate-limit'
 
 // ═══ Cookie-Format Kompatibilität zwischen Browser-Client und Middleware ═══
 // Key wird dynamisch aus NEXT_PUBLIC_SUPABASE_URL abgeleitet.
@@ -86,6 +87,10 @@ function isPublicException(pathname: string): boolean {
 }
 
 export async function proxy(request: NextRequest) {
+  // Rate-Limiting für API-Routen (ehemals middleware.ts)
+  const rateLimited = handleRateLimit(request)
+  if (rateLimited) return rateLimited
+
   let supabaseResponse = NextResponse.next({ request })
 
   // ═══ Referral-Code in Cookie speichern ═══
