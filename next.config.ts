@@ -80,7 +80,7 @@ const nextConfig: NextConfig = {
     root: __dirname,
   },
   // Speicherverbrauch des webpack-Builds senken, nicht nur die Heap-Decke
-  // anheben. Der Build kompiliert 453 Routen (262 Pages + 191 API-Routes)
+  // anheben. Der Build kompiliert 543 Routen (290 Pages + 253 API-Routes)
   // und starb ab Aug 2026 reproduzierbar am V8-Default-Heap von ~2 GB
   // (`FATAL ERROR: Reached heap limit`, Exit 134) — auf einem 8-GB-Builder,
   // wie ihn Vercel standardmaessig stellt.
@@ -88,6 +88,11 @@ const nextConfig: NextConfig = {
   // webpackMemoryOptimizations gibt Modul-/Chunk-Graphen frueher frei und
   // reduziert die Spitze spuerbar. Ergaenzt das erhoehte Heap-Limit
   // (package.json build-Script + vercel.json build.env), ersetzt es nicht.
+  //
+  // Seit Aug 2026 laeuft `npm run build` auf Turbopack (siehe turbopack-Key
+  // oben) — dort greift dieses Flag nicht. Es bleibt fuer die verbliebenen
+  // webpack-Pfade stehen: `npm run build:webpack` (Fallback) und
+  // `npm run analyze` (Bundle-Analyzer ist turbopack-inkompatibel).
   experimental: {
     webpackMemoryOptimizations: true,
   },
