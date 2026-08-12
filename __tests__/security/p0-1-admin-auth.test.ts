@@ -57,6 +57,10 @@ function createMockRequest(
     },
     cookies: {
       getAll: () => Object.entries(cookies).map(([name, value]) => ({ name, value })),
+      get: (name: string) => {
+        const val = cookies[name]
+        return val !== undefined ? { name, value: val } : undefined
+      },
       set: vi.fn(),
     },
   } as any
