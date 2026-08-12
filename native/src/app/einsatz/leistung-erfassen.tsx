@@ -47,6 +47,8 @@ const BUDGET_POTS: { key: string; label: string; hint: string }[] = [
 
 // Fallback-Stundensatz, falls für die Kombination kein Preissatz
 // in service_pricing hinterlegt ist (z. B. Übertrag Vorjahr)
+// Zentralisiert in lib/pricing/b2c-constants.ts — hier inline,
+// weil native App keinen @/-Alias hat
 const FALLBACK_HOURLY_RATE = 35
 
 // Minuten zwischen zwei "HH:MM"-Zeiten (über Mitternacht hinweg robust)

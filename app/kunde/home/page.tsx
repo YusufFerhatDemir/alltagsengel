@@ -3,6 +3,7 @@ import { useState, useEffect, ReactNode } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { requireUser } from '@/lib/supabase/require-session'
 import Link from 'next/link'
+import { CUSTOMER_HOURLY_RATE } from '@/lib/pricing/b2c-constants'
 import { IconPin, IconSearch, IconUser, IconCard, IconStarFilled, IconCheck, IconStarGold, IconHandshakeGold, IconMedicalGold, IconBagGold, IconHomeGold, IconCoffeeGold, IconPillGold, IconWalkGold, IconTargetGold, IconBox, IconKrankenfahrtGold, IconHygieneboxGold } from '@/components/Icons'
 import NotificationBell from '@/components/NotificationBell'
 import Icon3D from '@/components/Icon3D'
@@ -312,7 +313,7 @@ export default function KundeHomePage() {
                   ))}
                 </div>
                 <div className="engel-price-row">
-                  <div className="engel-price">32€ <span>/Std.</span></div>
+                  <div className="engel-price">{CUSTOMER_HOURLY_RATE}€ <span>/Std.</span></div>
                   {angel.is_45b_capable && <div className="badge-45b"><IconCard size={12} /> §45b</div>}
                 </div>
               </div>

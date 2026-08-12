@@ -3,6 +3,7 @@ import { useState, useEffect, useRef, ReactNode } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { geocodePLZ, extractPLZ } from '@/lib/geocoding'
+import { ENGEL_HOURLY_RATE } from '@/lib/pricing/b2c-constants'
 import Icon3D from '@/components/Icon3D'
 import { IconHandshake, IconMedical, IconBag, IconHome as IconHouse, IconCoffee, IconTarget, IconCheck } from '@/components/Icons'
 import { trackRegistration } from '@/lib/tracking'
@@ -27,7 +28,7 @@ export default function EngelRegisterPage() {
   const [stadt, setStadt] = useState('')
   const [location, setLocation] = useState('')
   const [qualification, setQualification] = useState('')
-  const hourlyRate = 20 // Engel-Vergütung fest 20€/h – Kundenpreis (32€) wird im Kunden-UI hardcoded
+  const hourlyRate = ENGEL_HOURLY_RATE
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
   const [firstName, setFirstName] = useState('')
