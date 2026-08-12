@@ -1,0 +1,156 @@
+import { createServerClient } from '@supabase/ssr'
+import { NextResponse, type NextRequest } from 'next/server'
+
+// ═══════════════════════════════════════════════════════════════
+// Auth Middleware — schuetzt Admin- und geschuetzte Routen
+// zentral statt pro Route. Oeffentliche Routen (Landing Pages,
+// Blog, Registrierung, Auth) werden durchgelassen.
+// ═══════════════════════════════════════════════════════════════
+
+// Routen, die KEINE Authentifizierung erfordern
+const PUBLIC_ROUTES = [
+  '/',
+  '/auth',
+  '/choose',
+  '/kontakt',
+  '/impressum',
+  '/datenschutz',
+  '/agb',
+  '/faq',
+  '/blog',
+  '/jobs',
+  '/team',
+  '/ueber-uns',
+  '/bewertungen',
+  '/engel-werden',
+  '/krankenfahrten',
+  '/hygienebox',
+  '/pflegebox',
+  '/alltagsbegleitung',
+  '/entlastungsbetrag',
+  '/verhinderungspflege',
+  '/finanzierung',
+  '/budgetrechner',
+  '/pflegegrad-check',
+  '/termin',
+  '/einzugsgebiet',
+  '/seitenuebersicht',
+  '/pflegecoach',
+  '/investor',
+  '/monitoring',
+  '/sentry-example',
+]
+
+// Prefixe, die immer oeffentlich sind
+const PUBLIC_PREFIXES = [
+  '/auth/',
+  '/blog/',
+  '/alltagsbegleitung/',
+  '/hygienebox/',
+  '/krankenfahrten/',
+  '/api/auth/',
+  '/api/beratung',
+  '/api/callback',
+  '/api/contact',
+  '/api/newsletter',
+  '/api/og',
+  '/api/revalidate',
+  '/api/tracking',
+  '/api/webhook',
+  '/_next/',
+  '/assets/',
+  '/fonts/',
+]
+
+// Statische Dateien (kein Auth noetig)
+const STATIC_EXTENSIONS = [
+  '.ico', '.png', '.jpg', '.jpeg', '.svg', '.webp', '.avif',
+  '.css', '.js', '.map', '.woff', '.woff2', '.ttf', '.otf',
+  '.xml', '.txt', '.json', '.webmanifest',
+]
+
+function isPublicRoute(pathname: string): boolean {
+  // Statische Dateien
+  if (STATIC_EXTENSIONS.some(ext => pathname.endsWith(ext))) return true
+  // Exakte oeffentliche Routen
+  if (PUBLIC_ROUTES.includes(pathname)) return true
+  // Prefix-Match
+  if (PUBLIC_PREFIXES.some(prefix => pathname.startsWith(prefix))) return true
+  return false
+}
+
+// Admin-Routen erfordern admin/superadmin Rolle
+function isAdminRoute(pathname: string): boolean {
+  return pathname.startsWith('/admin') || pathname.startsWith('/mis')
+    || pathname.startsWith('/api/admin') || pathname.startsWith('/api/personal')
+    || pathname.startsWith('/api/billing') || pathname.startsWith('/api/dta')
+    || pathname.startsWith('/api/tours') || pathname.startsWith('/api/invoices')
+}
+
+export async function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl
+
+  // 1. Oeffentliche Routen durchlassen
+  if (isPublicRoute(pathname)) {
+    return NextResponse.next()
+  }
+
+  // 2. Supabase-Session pruefen (ohne DB-Query — nur JWT-Validierung)
+  let response = NextResponse.next({
+    request: { headers: request.headers },
+  })
+
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll: () => request.cookies.getAll(),
+        setAll: (cookiesToSet) => {
+          cookiesToSet.forEach(({ name, value, options }) => {
+            request.cookies.set(name, value)
+            response.cookies.set(name, value, options)
+          })
+        },
+      },
+    }
+  )
+
+  const { data: { user }, error } = await supabase.auth.getUser()
+
+  // 3. Nicht eingeloggt → Login
+  if (error || !user) {
+    const loginUrl = new URL('/auth/login', request.url)
+    loginUrl.searchParams.set('redirect', pathname)
+    return NextResponse.redirect(loginUrl)
+  }
+
+  // 4. Admin-Routen → Rollen-Check per profiles-Tabelle
+  if (isAdminRoute(pathname)) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+
+    if (!profile || !['admin', 'superadmin'].includes(profile.role)) {
+      // Nicht-Admins auf ihre rollenspezifische Startseite weiterleiten
+      const role = profile?.role || 'kunde'
+      const homeMap: Record<string, string> = {
+        kunde: '/kunde/home',
+        engel: '/engel/home',
+        fahrer: '/fahrer/home',
+      }
+      return NextResponse.redirect(new URL(homeMap[role] || '/choose', request.url))
+    }
+  }
+
+  return response
+}
+
+export const config = {
+  matcher: [
+    // Alle Routen matchen ausser _next/static, _next/image und statische Dateien
+    '/((?!_next/static|_next/image|favicon.ico|icon-.*\\.png|apple-touch-icon\\.png|og-image\\.png|manifest\\.webmanifest|robots\\.txt|sitemap.*\\.xml).*)',
+  ],
+}
