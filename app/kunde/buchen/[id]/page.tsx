@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { isValidUUID, logError } from '@/lib/safe-query'
+import { CUSTOMER_HOURLY_RATE, PLATFORM_FEE_FACTOR } from '@/lib/pricing/b2c-constants'
 import { NotFoundState, ErrorState, LoadingState } from '@/components/UIStates'
 import { IconWingsGold, IconStarFilled, IconCard, IconShield, IconMedical, IconLock, IconInfo } from '@/components/Icons'
 import Icon3D from '@/components/Icon3D'
@@ -170,9 +171,9 @@ export default function BuchenPage() {
     </div>
   )
 
-  const rate = 32 // Kundenpreis immer 32€/h
+  const rate = CUSTOMER_HOURLY_RATE
   const subtotal = rate * duration
-  const platformFee = Math.round(subtotal * 0.085 * 100) / 100
+  const platformFee = Math.round(subtotal * PLATFORM_FEE_FACTOR * 100) / 100
   const total = subtotal + platformFee
   const angelName = angel?.profiles ? `${angel.profiles.first_name} ${angel.profiles.last_name?.[0]}.` : 'Engel'
 

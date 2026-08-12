@@ -25,7 +25,7 @@ export async function pruefeEinsatzfreigabe(
 ): Promise<FreigabeErgebnis> {
   const { data: cg, error: cgErr } = await supabase
     .from('caregivers')
-    .select('id, first_name, last_name, einsatzfreigabe, vertragsstatus, deleted_at, is_active')
+    .select('id, first_name, last_name, einsatzfreigabe, vertragsstatus, status')
     .eq('id', caregiverId)
     .eq('organization_id', organizationId)
     .single()
@@ -34,15 +34,11 @@ export async function pruefeEinsatzfreigabe(
   const probleme: string[] = []
   const name = `${cg.first_name ?? ''} ${cg.last_name ?? ''}`.trim()
 
-  if (cg.deleted_at) {
-    probleme.push('Mitarbeiter ist deaktiviert/gelöscht')
+  if (cg.status && !['aktiv', 'active'].includes(cg.status)) {
+    probleme.push(`Mitarbeiter-Status ist "${cg.status}" (erwartet: aktiv)`)
   }
 
-  if (cg.is_active === false) {
-    probleme.push('Mitarbeiter ist inaktiv')
-  }
-
-  if (cg.vertragsstatus !== 'aktiv') {
+  if (cg.vertragsstatus && cg.vertragsstatus !== 'aktiv') {
     probleme.push(`Vertragsstatus ist "${cg.vertragsstatus}" (erwartet: aktiv)`)
   }
 
@@ -90,7 +86,7 @@ export async function pruefeClientFreigabe(
 ): Promise<ClientFreigabeErgebnis> {
   const { data: client, error: clErr } = await supabase
     .from('clients')
-    .select('id, first_name, last_name, status, deleted_at, is_active, organization_id')
+    .select('id, first_name, last_name, status, aufnahmestatus, organization_id')
     .eq('id', clientId)
     .eq('organization_id', organizationId)
     .single()
@@ -98,14 +94,6 @@ export async function pruefeClientFreigabe(
 
   const probleme: string[] = []
   const name = `${client.first_name ?? ''} ${client.last_name ?? ''}`.trim()
-
-  if (client.deleted_at) {
-    probleme.push('Klient ist deaktiviert/gelöscht')
-  }
-
-  if (client.is_active === false) {
-    probleme.push('Klient ist inaktiv')
-  }
 
   if (client.status && !['aktiv', 'active', 'neu'].includes(client.status)) {
     probleme.push(`Klient-Status ist "${client.status}" (erwartet: aktiv)`)

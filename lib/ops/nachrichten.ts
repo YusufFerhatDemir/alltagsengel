@@ -8,7 +8,6 @@ export async function listPosteingang(
   const { data, error } = await supabase
     .from('ops_posteingang')
     .select('*')
-    .eq('organization_id', filter.organizationId)
     .eq('empfaenger_id', filter.empfaengerId)
     .order('created_at', { ascending: false })
   if (error) throw new Error(`Posteingang konnte nicht geladen werden: ${error.message}`)

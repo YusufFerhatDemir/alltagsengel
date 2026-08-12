@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
+import { CUSTOMER_HOURLY_RATE } from '@/lib/pricing/b2c-constants'
 import { IconPin, IconWingsGold, IconStarFilled, IconNav } from '@/components/Icons'
 import Icon3D from '@/components/Icon3D'
 
@@ -108,7 +109,7 @@ export default function KarteSeite() {
                 <div className="engel-name">{selectedAngel.profiles?.first_name} {selectedAngel.profiles?.last_name?.[0]}.</div>
                 <div className="engel-rating"><IconStarFilled size={13} /> {selectedAngel.rating}</div>
               </div>
-              <div className="engel-cert" style={{ color: 'var(--green)' }}>{selectedAngel.total_jobs} Einsätze · 32€/h</div>
+              <div className="engel-cert" style={{ color: 'var(--green)' }}>{selectedAngel.total_jobs} Einsätze · {CUSTOMER_HOURLY_RATE}€/h</div>
               <Link href={`/kunde/engel/${selectedAngel.id}`}>
                 <button className="map-card-btn">Profil ansehen</button>
               </Link>

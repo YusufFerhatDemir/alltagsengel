@@ -3,6 +3,7 @@ import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
+import { CUSTOMER_HOURLY_RATE, PLATFORM_FEE_FACTOR } from '@/lib/pricing/b2c-constants'
 import { IconWingsGold, IconStarFilled, IconCheck, IconCard } from '@/components/Icons'
 import Icon3D from '@/components/Icon3D'
 import { UNIT_ECONOMICS } from '@/lib/mis/constants'
@@ -119,9 +120,9 @@ function BuchenServiceInner() {
   // Fail-safe: solange die Antwort aussteht, gilt „privat".
   const { lage } = useBundeslandLage(kundenPlz)
   const kasseMoeglich = lage.kassenabrechnung
-  const rate = 32 // Kundenpreis immer 32€/h
+  const rate = CUSTOMER_HOURLY_RATE
   const subtotal = rate * duration
-  const platformFee = Math.round(subtotal * 0.085 * 100) / 100
+  const platformFee = Math.round(subtotal * PLATFORM_FEE_FACTOR * 100) / 100
   const total = subtotal + platformFee
 
   const handleBook = async () => {

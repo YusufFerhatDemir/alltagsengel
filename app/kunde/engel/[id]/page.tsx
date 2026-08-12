@@ -3,6 +3,7 @@ import Image from 'next/image'
 import { createClient } from '@/lib/supabase/server'
 import { safeSingleQuery, logError } from '@/lib/safe-query'
 import { NotFoundState, ErrorState } from '@/components/UIStates'
+import { CUSTOMER_HOURLY_RATE } from '@/lib/pricing/b2c-constants'
 import { IconWingsGold, IconStar, IconStarFilled, IconHeart, IconMore, IconUser, IconCheck } from '@/components/Icons'
 import EngelProfilActions from './EngelProfilActions'
 import {
@@ -170,7 +171,7 @@ export default async function EngelProfilPage({ params }: { params: Promise<{ id
 
       <div className="booking-bar">
         <div className="booking-price">
-          <div className="price-val">32€<span style={{ fontSize: 14, fontWeight: 400, color: 'var(--ink4)' }}>/Std.</span></div>
+          <div className="price-val">{CUSTOMER_HOURLY_RATE}€<span style={{ fontSize: 14, fontWeight: 400, color: 'var(--ink4)' }}>/Std.</span></div>
           {angel.is_45b_capable && <div className="price-sub">§45b-fähig</div>}
         </div>
         <Link href={`/kunde/buchen/${id}`}><button className="btn-book">JETZT BUCHEN</button></Link>

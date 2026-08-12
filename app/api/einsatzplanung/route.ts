@@ -41,7 +41,7 @@ export async function GET(req: NextRequest) {
     .from('assignments')
     .select(`
       id, assignment_date, weekday, start_time, end_time, status,
-      assignment_type, recurrence_pattern, bundesland,
+      service_type, recurrence_rule, bundesland,
       client:clients!inner(id, first_name, last_name),
       caregiver:caregivers!inner(id, first_name, last_name)
     `)
