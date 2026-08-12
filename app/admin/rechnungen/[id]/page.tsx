@@ -91,6 +91,10 @@ export default function InvoiceDetailPage() {
       const endpoint = action === 'freeze' ? `/api/billing/invoices/${id}/freeze`
         : action === 'cancel' ? `/api/billing/invoices/${id}/cancel`
         : action === 'pdf' ? `/api/admin/invoices/${id}/generate-pdf`
+        // 'check' schliesst die Luecke entwurf → geprueft; ohne diesen Schritt
+        // ist "Festschreiben" (verlangt 'geprueft') nicht erreichbar.
+        : action === 'check' ? `/api/billing/invoices/${id}/status`
+        : action === 'credit' ? `/api/billing/invoices/${id}/credit`
         : null
       if (!endpoint) return
 
@@ -100,11 +104,34 @@ export default function InvoiceDetailPage() {
         if (!reason) { setActionLoading(false); return }
         body.reason = reason
       }
+      if (action === 'check') {
+        body.status = 'geprueft'
+        body.reason = 'Sachliche Prüfung im Betriebssystem'
+      }
+      if (action === 'credit') {
+        // Eingabe in Euro, die API erwartet Cent.
+        const amountRaw = window.prompt('Gutschriftbetrag in Euro (z. B. 35,00):')
+        if (!amountRaw) { setActionLoading(false); return }
+        const cents = Math.round(Number(amountRaw.trim().replace(/\./g, '').replace(',', '.')) * 100)
+        if (!Number.isFinite(cents) || cents <= 0) {
+          setError('Ungültiger Gutschriftbetrag.')
+          setActionLoading(false)
+          return
+        }
+        const reason = window.prompt('Grund der Gutschrift:')
+        if (!reason) { setActionLoading(false); return }
+        body.amountCents = cents
+        body.reason = reason
+      }
 
       const res = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
       const json = await res.json()
       if (!res.ok) setError(json.error || 'Fehler')
-      else await load()
+      else {
+        // Die signierte PDF-URL laeuft ab — direkt oeffnen statt merken.
+        if (action === 'pdf' && json.pdf_url) window.open(json.pdf_url, '_blank', 'noopener')
+        await load()
+      }
     } catch (e: any) {
       setError(e.message)
     }
@@ -151,8 +178,15 @@ export default function InvoiceDetailPage() {
       {/* Aktionen */}
       {!isTerminal && (
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
+          {inv.status === 'entwurf' && (
+            <ActionBtn label="Prüfen" onClick={() => handleAction('check')} loading={actionLoading} />
+          )}
           {inv.status === 'geprueft' && !inv.frozen_at && (
             <ActionBtn label="Festschreiben" onClick={() => handleAction('freeze')} loading={actionLoading} />
+          )}
+          {/* Gutschrift nur auf echten Rechnungen — nicht auf Korrekturbelegen. */}
+          {!inv.correction_type && (
+            <ActionBtn label="Gutschrift" onClick={() => handleAction('credit')} loading={actionLoading} />
           )}
           {!isTerminal && (
             <ActionBtn label="Stornieren" onClick={() => handleAction('cancel')} loading={actionLoading} danger />
