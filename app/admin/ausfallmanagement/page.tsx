@@ -58,17 +58,17 @@ export default function AusfallmanagementPage() {
       const heute = new Date().toISOString().slice(0, 10)
       const wochenende = new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10)
 
-      // Abwesenheiten laden
+      // Abwesenheiten laden (Tabelle heißt 'absences', Spalten: start_date/end_date/reason)
       let abwQuery = supabase
-        .from('personal_abwesenheiten')
-        .select('id, caregiver_id, absence_type, datum_von, datum_bis, status, bemerkung, caregiver:caregivers(first_name, last_name)')
+        .from('absences')
+        .select('id, caregiver_id, absence_type, start_date, end_date, status, reason, caregiver:caregivers(first_name, last_name)')
         .in('status', ['beantragt', 'genehmigt'])
-        .order('datum_von', { ascending: true })
+        .order('start_date', { ascending: true })
 
       if (zeitraum === 'heute') {
-        abwQuery = abwQuery.lte('datum_von', heute).gte('datum_bis', heute)
+        abwQuery = abwQuery.lte('start_date', heute).gte('end_date', heute)
       } else if (zeitraum === 'woche') {
-        abwQuery = abwQuery.lte('datum_von', wochenende).gte('datum_bis', heute)
+        abwQuery = abwQuery.lte('start_date', wochenende).gte('end_date', heute)
       }
 
       const { data: abwData } = await abwQuery
@@ -77,10 +77,10 @@ export default function AusfallmanagementPage() {
         caregiver_id: a.caregiver_id,
         mitarbeiter: fullName(a.caregiver),
         typ: a.absence_type,
-        von: a.datum_von,
-        bis: a.datum_bis,
+        von: a.start_date,
+        bis: a.end_date,
         status: a.status,
-        bemerkung: a.bemerkung,
+        bemerkung: a.reason,
       })))
 
       // Heutige/betroffene Touren laden
@@ -458,9 +458,9 @@ function KrankmeldungDialog({ onClose, onSaved }: { onClose: () => void; onSaved
         body: JSON.stringify({
           caregiverId,
           absenceType: 'sick',
-          datumVon,
-          datumBis,
-          bemerkung: bemerkung.trim() || null,
+          startDate: datumVon,
+          endDate: datumBis,
+          reason: bemerkung.trim() || null,
           status: 'genehmigt', // Krankmeldung sofort genehmigen
         }),
       })

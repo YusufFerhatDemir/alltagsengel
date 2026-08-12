@@ -16,6 +16,7 @@ export interface CreateAbwesenheitParams {
   tageBerechnet?: number | null
   dokumentId?: string | null
   erstelltVon: string
+  status?: AbwesenheitStatus
 }
 
 export async function createAbwesenheit(supabase: SupabaseClient, params: CreateAbwesenheitParams): Promise<Abwesenheit> {
@@ -30,7 +31,7 @@ export async function createAbwesenheit(supabase: SupabaseClient, params: Create
       start_date: params.startDate,
       end_date: params.endDate,
       reason: params.reason ?? null,
-      status: 'beantragt',
+      status: params.status ?? 'beantragt',
       halber_tag: params.halberTag ?? false,
       tage_berechnet: params.tageBerechnet ?? null,
       dokument_id: params.dokumentId ?? null,
