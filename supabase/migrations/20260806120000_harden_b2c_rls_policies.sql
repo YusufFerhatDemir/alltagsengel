@@ -23,6 +23,7 @@ DROP POLICY IF EXISTS "Users can read their ride messages" ON chat_messages;
 DROP POLICY IF EXISTS "Users can send messages to their rides" ON chat_messages;
 
 -- 1b. SELECT: Nur authentifizierte Teilnehmer der Fahrt + Soft-Delete-Check
+DROP POLICY IF EXISTS "chat_messages_select_ride_participant" ON chat_messages;
 CREATE POLICY "chat_messages_select_ride_participant"
   ON chat_messages FOR SELECT
   TO authenticated
@@ -42,6 +43,7 @@ CREATE POLICY "chat_messages_select_ride_participant"
   );
 
 -- 1c. INSERT: sender_id = auth.uid() UND Fahrt-Teilnehmer-Check
+DROP POLICY IF EXISTS "chat_messages_insert_ride_participant" ON chat_messages;
 CREATE POLICY "chat_messages_insert_ride_participant"
   ON chat_messages FOR INSERT
   TO authenticated
@@ -81,6 +83,7 @@ DROP POLICY IF EXISTS "Users can send messages" ON messages;
 DROP POLICY IF EXISTS "Receiver can mark as read" ON messages;
 
 -- 2b. SELECT: Nur Sender oder Empfaenger + Soft-Delete-Check
+DROP POLICY IF EXISTS "messages_select_sender_or_receiver" ON messages;
 CREATE POLICY "messages_select_sender_or_receiver"
   ON messages FOR SELECT
   TO authenticated
@@ -94,6 +97,7 @@ CREATE POLICY "messages_select_sender_or_receiver"
 --     - Kein Sender-Spoofing (sender_id muss auth.uid() sein)
 --     - Kein Receiver-Spoofing (receiver_id muss die Gegenseite der Buchung sein)
 --     - Keine Fremd-Buchung (booking_id muss eine Buchung sein, an der der User beteiligt ist)
+DROP POLICY IF EXISTS "messages_insert_booking_participant" ON messages;
 CREATE POLICY "messages_insert_booking_participant"
   ON messages FOR INSERT
   TO authenticated
@@ -115,6 +119,7 @@ CREATE POLICY "messages_insert_booking_participant"
 -- 2d. UPDATE: Nur Empfaenger darf read-Flag setzen
 --     USING: Nur der Empfaenger darf updaten
 --     WITH CHECK: receiver_id darf nicht geaendert werden
+DROP POLICY IF EXISTS "messages_update_receiver_read_only" ON messages;
 CREATE POLICY "messages_update_receiver_read_only"
   ON messages FOR UPDATE
   TO authenticated
@@ -175,6 +180,7 @@ DROP POLICY IF EXISTS "Users can insert own notifications" ON notifications;
 DROP POLICY IF EXISTS "Users can update own notifications" ON notifications;
 
 -- 3b. SELECT: Nur eigene + Soft-Delete-Check
+DROP POLICY IF EXISTS "notifications_select_own" ON notifications;
 CREATE POLICY "notifications_select_own"
   ON notifications FOR SELECT
   TO authenticated
@@ -184,12 +190,14 @@ CREATE POLICY "notifications_select_own"
   );
 
 -- 3c. INSERT: Nur eigene (noetig fuer /api/notify user-scoped Route)
+DROP POLICY IF EXISTS "notifications_insert_own" ON notifications;
 CREATE POLICY "notifications_insert_own"
   ON notifications FOR INSERT
   TO authenticated
   WITH CHECK (auth.uid() = user_id);
 
 -- 3d. UPDATE: Nur eigene, user_id unveraenderlich
+DROP POLICY IF EXISTS "notifications_update_own" ON notifications;
 CREATE POLICY "notifications_update_own"
   ON notifications FOR UPDATE
   TO authenticated

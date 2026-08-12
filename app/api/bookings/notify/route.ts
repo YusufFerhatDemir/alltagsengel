@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { notifyAngelNewBooking, notifyCustomerBookingAccepted, type BookingNotifyData } from '@/lib/notifications'
+import { getActiveOrgId } from '@/lib/organizations/server'
 
 // ─── Row-Formen des bookings-Selects (inkl. eingebetteter Joins) ───
 interface BookingProfile {
@@ -52,8 +53,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'bookingId und event sind erforderlich' }, { status: 400 })
     }
 
-    // Booking mit allen nötigen Daten laden
-    const { data: bookingRaw, error: bookErr } = await supabase
+    // org_fence: Booking-Zugriff auf eigene Organisation beschraenken
+    const orgId = await getActiveOrgId()
+
+    // Booking mit allen nötigen Daten laden (RLS + expliziter org-Filter)
+    let bookingQuery = supabase
       .from('bookings')
       .select(`
         id, customer_id, angel_id, service, date, time, duration_hours, total_amount, status,
@@ -61,7 +65,8 @@ export async function POST(req: NextRequest) {
         angel:angels!bookings_angel_id_fkey(id, profiles(id, first_name, last_name, email))
       `)
       .eq('id', bookingId)
-      .single()
+    if (orgId) bookingQuery = bookingQuery.eq('organization_id', orgId)
+    const { data: bookingRaw, error: bookErr } = await bookingQuery.single()
 
     if (bookErr || !bookingRaw) {
       return NextResponse.json({ error: 'Buchung nicht gefunden' }, { status: 404 })

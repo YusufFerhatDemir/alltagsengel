@@ -3,10 +3,13 @@ import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
+import { CUSTOMER_HOURLY_RATE, PLATFORM_FEE_FACTOR } from '@/lib/pricing/b2c-constants'
 import { IconWingsGold, IconStarFilled, IconCheck, IconCard } from '@/components/Icons'
 import Icon3D from '@/components/Icon3D'
 import { UNIT_ECONOMICS } from '@/lib/mis/constants'
-import { isHessenPlz, resolvePlz } from '@/lib/hessen-plz'
+import { resolvePlz } from '@/lib/expansion/plz-bundesland'
+import { useBundeslandLage } from '@/lib/expansion/client'
+import BundeslandHinweis from '@/components/kunde/BundeslandHinweis'
 import { ENGEL_MATCH_RADIUS_KM, RADIUS_OPTIONEN } from '@/lib/plz-radius'
 
 const serviceOptions: { key: string; label: string; desc: string }[] = [
@@ -112,13 +115,14 @@ function BuchenServiceInner() {
   }, [step, selectedService, selectedDate, selectedTime, duration, isFlexible, radiusKm])
 
   const serviceLabel = serviceOptions.find(s => s.key === selectedService)?.label || selectedService
-  // Kassenleistung (§45a/§45b) nur mit hessischer PLZ — außerhalb
-  // Hessens (oder ohne PLZ) läuft die Buchung als Privatleistung.
   const kundenPlz = resolvePlz(profile?.postal_code, profile?.location)
-  const kasseMoeglich = isHessenPlz(kundenPlz)
-  const rate = 32 // Kundenpreis immer 32€/h
+  // Kassenabrechnung nur, wenn das Bundesland freigeschaltet ist (state_settings).
+  // Fail-safe: solange die Antwort aussteht, gilt „privat".
+  const { lage } = useBundeslandLage(kundenPlz)
+  const kasseMoeglich = lage.kassenabrechnung
+  const rate = CUSTOMER_HOURLY_RATE
   const subtotal = rate * duration
-  const platformFee = Math.round(subtotal * 0.085 * 100) / 100
+  const platformFee = Math.round(subtotal * PLATFORM_FEE_FACTOR * 100) / 100
   const total = subtotal + platformFee
 
   const handleBook = async () => {
@@ -603,16 +607,13 @@ function BuchenServiceInner() {
             )}
 
             {!kasseMoeglich && (
-              <div style={{
-                background: 'var(--cream2, rgba(0,0,0,0.04))', borderRadius: 12, padding: '12px 16px',
-                marginBottom: 16, fontSize: 13, color: 'var(--ink3)',
-                display: 'flex', alignItems: 'center', gap: 8,
-              }}>
-                <IconCard size={16} />
-                <span>
-                  Diese Buchung erfolgt als <strong>Privatleistung</strong>. Eine Abrechnung über
-                  die Pflegekasse (§45a/§45b) ist derzeit nur in Hessen möglich.
-                </span>
+              <div style={{ marginBottom: 16 }}>
+                <BundeslandHinweis
+                  lage={lage}
+                  email={profile?.email ?? null}
+                  name={profile?.full_name ?? null}
+                  quelle="buchung-service"
+                />
               </div>
             )}
 

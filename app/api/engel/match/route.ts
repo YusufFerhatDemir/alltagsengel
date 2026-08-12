@@ -35,6 +35,7 @@ import { geocodePLZ, haversineDistance } from '@/lib/geocoding'
 import { resolvePlz } from '@/lib/hessen-plz'
 import { ENGEL_MATCH_RADIUS_KM, plzDistanceKm } from '@/lib/plz-match'
 import { istVerfuegbar, type Zeitfenster } from '@/lib/availability'
+import { getActiveOrgId } from '@/lib/organizations/server'
 
 export const dynamic = 'force-dynamic'
 
@@ -96,6 +97,7 @@ export async function GET(request: NextRequest) {
   const engelIds = allCards.map(c => c.id).filter(Boolean)
 
   const admin = createAdminClient()
+  const orgId = await getActiveOrgId()
 
   // Kunden-PLZ (postal_code, sonst PLZ aus location-Freitext)
   const { data: me } = await admin
@@ -142,14 +144,26 @@ export async function GET(request: NextRequest) {
   }
 
   // Engel-PLZ NUR serverseitig lesen — verlässt den Server nicht
+  // org_fence: nur Engel der eigenen Organisation
   const plzById = new Map<string, string | null>()
   if (engelIds.length > 0) {
-    const { data: engelRows } = await admin
-      .from('profiles')
-      .select('id, postal_code, location')
-      .in('id', engelIds)
-    for (const row of engelRows || []) {
-      plzById.set(row.id, resolvePlz(row.postal_code, row.location))
+    let filteredIds = engelIds
+    if (orgId) {
+      const { data: members } = await admin
+        .from('organization_members')
+        .select('user_id')
+        .eq('organization_id', orgId)
+        .in('user_id', engelIds)
+      filteredIds = (members || []).map(m => m.user_id)
+    }
+    if (filteredIds.length > 0) {
+      const { data: engelRows } = await admin
+        .from('profiles')
+        .select('id, postal_code, location')
+        .in('id', filteredIds)
+      for (const row of engelRows || []) {
+        plzById.set(row.id, resolvePlz(row.postal_code, row.location))
+      }
     }
   }
 

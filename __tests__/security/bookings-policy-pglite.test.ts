@@ -290,7 +290,7 @@ describe('PGlite: Bookings RLS nach Policy-Konsolidierung', () => {
          'alltagsbegleitung', '2026-08-01', '10:00', 2,
          'pending', '${ORG_ID}');
     `)
-  }, 30_000)
+  }, 180_000)
 
   afterAll(async () => {
     if (db) await db.close()

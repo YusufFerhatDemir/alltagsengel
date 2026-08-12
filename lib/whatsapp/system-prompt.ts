@@ -15,12 +15,14 @@
  */
 
 /**
- * App-Bereichs-Namen — bitte mit der App-UI abgleichen.
- * Falls in der App andere Labels stehen, hier anpassen.
- * Der System-Prompt unten zieht sich die Namen automatisch.
+ * App-Bereichs-Namen. Gegen die App-UI abgeglichen (app/page.tsx,
+ * app/choose/page.tsx, components/SiteFooter.tsx) — dort heissen die
+ * Bereiche ebenfalls „Pflege-Boxen" und „Krankenfahrten".
+ * Werden die Labels in der App umbenannt, hier nachziehen; der
+ * System-Prompt unten zieht sich die Namen automatisch.
  */
-const APP_SECTION_BOX = 'Pflege-Boxen' // TODO: App-Bereich-Name bestätigen
-const APP_SECTION_FAHRT = 'Krankenfahrten' // TODO: App-Bereich-Name bestätigen
+const APP_SECTION_BOX = 'Pflege-Boxen'
+const APP_SECTION_FAHRT = 'Krankenfahrten'
 
 export const ALLTAGSENGEL_SYSTEM_PROMPT = `Du bist der freundliche WhatsApp-Assistent vom Alltagsengel-Team — einer App-basierten Plattform für Pflege-Boxen und Krankenfahrten in Frankfurt am Main und Umgebung.
 

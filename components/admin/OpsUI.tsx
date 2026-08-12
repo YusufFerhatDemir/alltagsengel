@@ -64,11 +64,12 @@ export function EmptyRow({ colSpan, children }: { colSpan: number; children: Rea
 }
 
 // Kleines Info-Banner (z. B. Vorjahresübertrag-Warnung)
-export function Banner({ tone, children }: { tone: 'warn' | 'danger' | 'info'; children: ReactNode }) {
+export function Banner({ tone, children }: { tone: 'warn' | 'danger' | 'info' | 'success'; children: ReactNode }) {
   const tones = {
     warn: { bg: 'rgba(232,160,0,.10)', border: 'rgba(232,160,0,.35)', color: '#E8A000' },
     danger: { bg: 'rgba(208,75,59,.10)', border: 'rgba(208,75,59,.35)', color: '#D04B3B' },
     info: { bg: 'rgba(33,150,243,.10)', border: 'rgba(33,150,243,.35)', color: '#64B5F6' },
+    success: { bg: 'rgba(92,184,130,.10)', border: 'rgba(92,184,130,.35)', color: '#5CB882' },
   }[tone]
   return (
     <div style={{
@@ -76,7 +77,10 @@ export function Banner({ tone, children }: { tone: 'warn' | 'danger' | 'info'; c
       padding: '12px 16px', margin: '0 0 16px', color: tones.color, fontSize: 14,
       display: 'flex', alignItems: 'center', gap: 10,
     }}>
-      {children}
+      {/* Kinder in EINEN Flex-Item einpacken. Ohne diese Huelle wird jeder
+          Knoten — auch ein blosses <strong> mitten im Satz — zu einem eigenen
+          Flex-Item und der Text bricht in Spalten auf. */}
+      <div style={{ flex: 1, minWidth: 0, lineHeight: 1.55 }}>{children}</div>
     </div>
   )
 }

@@ -80,6 +80,13 @@ vi.mock('@/lib/billing/core', () => ({
   createInvoiceDraft: (...args: unknown[]) => mockCreateInvoiceDraft(...args),
 }))
 
+// Org-Mock: die aktive Org kommt aus organization_members (Org-Switcher-Cookie),
+// NICHT aus profiles — profiles hat keine organization_id-Spalte.
+const mockGetActiveOrgId = vi.fn()
+vi.mock('@/lib/organizations/server', () => ({
+  getActiveOrgId: () => mockGetActiveOrgId(),
+}))
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -96,8 +103,9 @@ function setupAuth(user = { id: 'user-1' }) {
   mockGetUser.mockResolvedValue({ data: { user }, error: null })
 }
 
-function setupProfile(profile = { role: 'admin', organization_id: 'org-1' }) {
-  mockProfileSelect.mockResolvedValue({ data: profile, error: null })
+function setupProfile(profile: { role: string; organization_id?: string } = { role: 'admin', organization_id: 'org-1' }) {
+  mockProfileSelect.mockResolvedValue({ data: { role: profile.role }, error: null })
+  mockGetActiveOrgId.mockResolvedValue(profile.organization_id ?? null)
 }
 
 function setupClient(client = { id: 'client-1', organization_id: 'org-1' }) {

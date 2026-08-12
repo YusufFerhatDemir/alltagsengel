@@ -101,11 +101,20 @@ export async function GET(request: NextRequest) {
       .update({ confirmed_at: new Date().toISOString() })
       .eq('user_id', userId)
 
-    // 5) Audit
+    // 5) Org fuer Audit-Log
+    const { data: undoMembership } = await adminClient
+      .from('organization_members')
+      .select('organization_id')
+      .eq('user_id', userId)
+      .limit(1)
+      .maybeSingle()
+
+    // 6) Audit
     await logAuditEvent({
       action: 'user_self_undelete',
       actorId: userId,
       actorRole: profileSnapshot.role ?? null,
+      organizationId: undoMembership?.organization_id ?? null,
       targetId: userId,
       targetEmail: null,
       entityType: 'profile',

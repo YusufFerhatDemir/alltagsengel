@@ -34,6 +34,36 @@ export interface SendeErgebnis {
   protokoll: string
 }
 
+/**
+ * Nachweis, dass der Dakota-Export für das Bundesland freigeschaltet ist.
+ *
+ * Bewusst als Pflichtparameter modelliert und nicht als optionale Prüfung:
+ * Der Versand an die Datenannahmestelle ist der Moment, in dem gegenüber der
+ * Pflegekasse eine Forderung entsteht. Ein Aufrufer, der die Freigabe nicht
+ * geprüft hat, bekommt einen Typfehler statt einer stillen Übermittlung.
+ *
+ * Wert holen mit:
+ *   modulAktiv('dakota_export_enabled', bundesland, orgId)   // lib/expansion
+ */
+export interface DakotaFreigabe {
+  organization_id: string
+  /** Bundesland-Katalogcode des Leistungsorts. */
+  bundesland: string
+  /** Ergebnis von modulAktiv('dakota_export_enabled', …). */
+  dakota_export_enabled: boolean
+}
+
+function pruefeDakotaFreigabe(freigabe: DakotaFreigabe): void {
+  if (!freigabe?.dakota_export_enabled) {
+    throw new Error(
+      `DAKOTA_NICHT_FREIGESCHALTET: Für das Bundesland "${freigabe?.bundesland ?? 'unbekannt'}" `
+      + 'ist der Datenaustausch mit der Pflegekasse nicht freigeschaltet. '
+      + 'Die Übermittlung wurde abgebrochen — es entsteht keine Forderung. '
+      + 'Freischaltung über Admin → Expansion Deutschland.'
+    )
+  }
+}
+
 const VERBINDUNGS_TIMEOUT_MS = 20_000
 
 function sftpVerbindungsOptionen(config: TransportConfig): SftpClient.ConnectOptions {
@@ -70,8 +100,10 @@ export async function sendePerSFTP(
   edifact_verschluesselt: Buffer,
   auftragsdatei: Buffer,
   config: TransportConfig,
+  freigabe: DakotaFreigabe,
   dateinamen?: { nutzdaten: string; auftrag?: string }
 ): Promise<SendeErgebnis> {
+  pruefeDakotaFreigabe(freigabe)
   const protokoll: string[] = []
   const sftp = new SftpClient()
   const zielVerzeichnis = (config.sftp_verzeichnis || '/upload').replace(/\/+$/, '')

@@ -44,8 +44,59 @@ export const TARIFBEREICH: Record<string, string> = {
   '23': 'Berlin (gesamt)',
 }
 
-/** Hessen ("06") + Sondertarif "000" (ohne Besonderheiten). */
+/**
+ * Hessen ("06") + Sondertarif "000" (ohne Besonderheiten).
+ *
+ * @deprecated Nicht mehr als Default verwenden — seit der Deutschland-Architektur
+ * ist der Tarifbereich bundeslandabhängig. `tarifkennzeichenFuerBundesland()` nutzen.
+ */
 export const TARIFKENNZEICHEN_HESSEN = '06000'
+
+/**
+ * Tarifbereichs-Schlüssel (TA3 2.2.2, Stelle 1-2) je Bundesland-Katalogcode.
+ * Werte stammen aus TARIFBEREICH oben — hier nur nach Katalogcode indiziert,
+ * damit die Abrechnung ohne Namensvergleich arbeiten kann.
+ */
+export const TARIFBEREICH_JE_BUNDESLAND: Record<string, string> = {
+  baden_wuerttemberg:     '01',
+  bayern:                 '02',
+  bremen:                 '04',
+  hamburg:                '05',
+  hessen:                 '06',
+  niedersachsen:          '07',
+  nordrhein_westfalen:    '08',
+  rheinland_pfalz:        '09',
+  saarland:               '10',
+  schleswig_holstein:     '11',
+  brandenburg:            '12',
+  sachsen:                '13',
+  sachsen_anhalt:         '14',
+  mecklenburg_vorpommern: '15',
+  thueringen:             '16',
+  berlin:                 '23',
+}
+
+/**
+ * Baut das fünfstellige Tarifkennzeichen aus Bundesland und Sondertarif.
+ * Wirft bei unbekanntem Bundesland — lieber ein Abbruch als eine Abrechnung
+ * mit dem Tarifbereich eines fremden Landes.
+ */
+export function tarifkennzeichenFuerBundesland(
+  bundesland: string,
+  sondertarif: string = '000'
+): string {
+  const bereich = TARIFBEREICH_JE_BUNDESLAND[bundesland]
+  if (!bereich) {
+    throw new Error(
+      `Kein Tarifbereich für Bundesland "${bundesland}" hinterlegt. `
+      + `Erlaubt: ${Object.keys(TARIFBEREICH_JE_BUNDESLAND).join(', ')}.`
+    )
+  }
+  if (!/^\d{3}$/.test(sondertarif)) {
+    throw new Error(`Sondertarif muss dreistellig numerisch sein, erhalten: "${sondertarif}".`)
+  }
+  return `${bereich}${sondertarif}`
+}
 
 // ── TA3 2.3 — Verarbeitungskennzeichen ──────────────────────────
 export const VERARBEITUNGSKENNZEICHEN = {
@@ -252,14 +303,17 @@ export interface Datenannahmestelle {
 }
 
 export const DATENANNAHMESTELLEN: Record<string, Datenannahmestelle> = {
-  // AOK Hessen → DAV der ITSCare, Schwalmstadt (IK 105810615;
-  // Kostenträger-IK der AOK-Hessen-Pflegekasse: 185313145)
+  // AOK → DAV der ITSCare, Schwalmstadt (IK 105810615)
+  // ITSCare ist die zentrale Datenannahme- und -verteilstelle fuer alle
+  // AOK-Regionen im § 105 SGB XI Datenaustausch. In der DB-Tabelle
+  // `datenannahmestellen` koennen org-spezifische Eintraege hinterlegt
+  // werden, falls eine AOK-Region eine andere Annahmestelle nutzt.
   aok_hessen: {
     ik: '105810615',
-    name: 'DAV der ITSCare (AOK Hessen), Schwalmstadt',
+    name: 'DAV der ITSCare (AOK), Schwalmstadt',
     kassenart: 'AO',
     email: 'dav-team-leistungserbringer@itscare.de',
-    hinweis: 'Kostenträger-IK AOK Hessen Pflegekasse: 185313145 — vor Erstlieferung gegen aktuelle AOK-Kostenträgerdatei prüfen',
+    hinweis: 'Zentrale Datenannahmestelle fuer alle AOK-Regionen (§ 105 SGB XI)',
   },
   // Betriebskrankenkassen → BITMARCK, Essen
   bkk: {
@@ -322,18 +376,108 @@ export const DATENANNAHMESTELLEN: Record<string, Datenannahmestelle> = {
 
 /**
  * Ermittelt die zuständige Datenannahmestelle anhand des Kassennamens.
- * Fallback: AOK Hessen (Haupteinzugsgebiet Frankfurt/Hessen).
+ *
+ * Ersatz-/Betriebs-/Innungskassen sind bundesweit — die Annahmestelle ist
+ * immer dieselbe. AOK laeuft ueber ITSCare (Schwalmstadt) als zentrale
+ * Datenannahme- und -verteilstelle fuer alle AOK-Regionen im § 105 SGB XI.
+ *
+ * Fuer org-spezifische Abweichungen (andere AOK-Annahmestelle, Sonderkassen)
+ * gibt es `findeDatenannahmestelleAsync()`, die zuerst die DB abfragt.
  */
-export function findeDatenannahmestelle(kassenName: string): Datenannahmestelle {
+/**
+ * Ordnet einen Kassennamen einem Schluessel aus DATENANNAHMESTELLEN zu.
+ *
+ * Gibt `null` zurueck, wenn der Name keiner bekannten Kassenart entspricht.
+ * Genau dieses `null` ist die Sicherheitsgrenze: eine unbekannte Kasse darf
+ * NICHT stillschweigend an die AOK-Annahmestelle geliefert werden.
+ *
+ * Reihenfolge ist bedeutsam — "BKK" muss vor der AOK-Erkennung greifen, und
+ * die TK-Kurzform wird bewusst nur als eigenstaendiges Wort geprueft, damit
+ * z. B. "IKK classic" nicht faelschlich als TK gilt.
+ */
+export function erkenneKassenSchluessel(kassenName: string): string | null {
   const n = (kassenName || '').toLowerCase()
-  if (n.includes('techniker') || /\btk\b/.test(n)) return DATENANNAHMESTELLEN.tk
-  if (n.includes('barmer')) return DATENANNAHMESTELLEN.barmer
-  if (n.includes('dak')) return DATENANNAHMESTELLEN.dak
-  if (n.includes('hek') || n.includes('hanseatische')) return DATENANNAHMESTELLEN.hek
-  if (n.includes('kkh') || n.includes('kaufmännische')) return DATENANNAHMESTELLEN.kkh
-  if (n.includes('hkk') || n.includes('handelskrankenkasse')) return DATENANNAHMESTELLEN.hkk
-  if (n.includes('knappschaft')) return DATENANNAHMESTELLEN.knappschaft
-  if (n.includes('ikk') || n.includes('innung')) return DATENANNAHMESTELLEN.ikk
-  if (n.includes('bkk') || n.includes('betriebskrankenkasse')) return DATENANNAHMESTELLEN.bkk
-  return DATENANNAHMESTELLEN.aok_hessen
+  if (!n.trim()) return null
+
+  if (n.includes('techniker') || /\btk\b/.test(n)) return 'tk'
+  if (n.includes('barmer')) return 'barmer'
+  if (n.includes('dak')) return 'dak'
+  if (n.includes('hek') || n.includes('hanseatische')) return 'hek'
+  if (n.includes('kkh') || n.includes('kaufmännische') || n.includes('kaufmaennische')) return 'kkh'
+  if (n.includes('hkk') || n.includes('handelskrankenkasse')) return 'hkk'
+  if (n.includes('knappschaft')) return 'knappschaft'
+  if (n.includes('ikk') || n.includes('innung')) return 'ikk'
+  if (n.includes('bkk') || n.includes('betriebskrankenkasse')) return 'bkk'
+  // AOK aller Regionen → ITSCare (zentrale § 105 SGB XI Datenannahmestelle)
+  if (n.includes('aok')) return 'aok_hessen'
+
+  return null
+}
+
+export function findeDatenannahmestelle(
+  kassenName: string,
+  _bundesland?: string | null
+): Datenannahmestelle | null {
+  // Frueher endete diese Funktion mit
+  //     if (n.includes('aok') || bundesland) return …aok_hessen
+  //     return …aok_hessen
+  // — sie konnte also NIE null liefern. Jede unbekannte Kasse (SBK,
+  // Continentale, Beihilfe, Tippfehler im Kassennamen) landete damit still
+  // bei der AOK-Annahmestelle ITSCare. Die Null-Pruefungen in
+  // edifact-generator.ts waren toter Code, und eine Lieferung an die falsche
+  // Annahmestelle ist ein Abrechnungsfehler.
+  //
+  // Das Bundesland darf hier nichts erzwingen: die Annahmestelle haengt an
+  // der Kassenart, nicht am Bundesland (Ersatz-/Betriebs-/Innungskassen sind
+  // bundesweit zentral). Es bleibt nur fuer die Signatur erhalten.
+  const schluessel = erkenneKassenSchluessel(kassenName)
+  return schluessel ? DATENANNAHMESTELLEN[schluessel] : null
+}
+
+/**
+ * Async-Variante: prueft zuerst die DB-Tabelle `datenannahmestellen`
+ * (org-spezifisch, bundesland-spezifisch), dann Fallback auf die
+ * hardcoded Tabelle.
+ */
+export async function findeDatenannahmestelleAsync(
+  supabase: import('@supabase/supabase-js').SupabaseClient,
+  kassenName: string,
+  bundesland?: string | null,
+  organizationId?: string | null,
+): Promise<Datenannahmestelle | null> {
+  // DB-First: org-spezifische Konfiguration.
+  //
+  // Frueher wurde die Kassenart hier ueber eine verschachtelte Negation
+  // hergeleitet, die fuer JEDE Nicht-AOK-Kasse `null` ergab — die DB wurde
+  // dann gar nicht erst befragt. Der "DB-first"-Lookup war damit faktisch
+  // AOK-only: eine Org konnte fuer BKK, IKK, TK, BARMER usw. keine
+  // abweichende Annahmestelle hinterlegen. Jetzt wird die Kassenart aus dem
+  // gemeinsamen Erkenner abgeleitet und fuer jede bekannte Kassenart
+  // nachgeschlagen.
+  const schluessel = erkenneKassenSchluessel(kassenName)
+  if (organizationId && schluessel) {
+    const kassenart: Kassenart = DATENANNAHMESTELLEN[schluessel].kassenart
+
+    let query = supabase
+      .from('datenannahmestellen')
+      .select('ik_nummer, name, zustaendig_fuer')
+      .eq('aktiv', true)
+      .eq('organization_id', organizationId)
+      .eq('kassenart', kassenart)
+
+    if (bundesland) query = query.eq('bundesland', bundesland)
+
+    const { data, error } = await query.limit(1).maybeSingle()
+    if (error) {
+      // Nicht still auf die hardcodierte Tabelle zurueckfallen, ohne dass es
+      // jemand sieht — eine kaputte Abfrage darf nicht wie "nichts
+      // konfiguriert" aussehen.
+      console.error(`datenannahmestellen-Lookup fehlgeschlagen: ${error.message}`)
+    }
+    if (data) {
+      return { ik: data.ik_nummer, name: data.name, kassenart }
+    }
+  }
+
+  return findeDatenannahmestelle(kassenName, bundesland)
 }

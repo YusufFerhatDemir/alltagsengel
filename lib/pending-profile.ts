@@ -66,10 +66,20 @@ export async function flushPendingProfile(
     return
   }
 
+  // PostgREST wirft NICHT — Fehler stehen in { error }. Ein reines
+  // try/catch hielt den Upsert deshalb selbst dann fuer geglueckt, wenn er
+  // abgewiesen wurde (fehlende Spalte, RLS). Ergebnis: der geparkte Satz
+  // wurde geloescht und die PLZ war endgueltig weg. Genau der Verlust, den
+  // dieses Modul verhindern soll.
   try {
-    await supabase.from('profiles').upsert(daten)
-  } catch {
-    return // Beim nächsten Login erneut versuchen
+    const { error } = await supabase.from('profiles').upsert(daten)
+    if (error) {
+      console.warn('[pending-profile] Nachtragen fehlgeschlagen:', error.message)
+      return // geparkt lassen, naechster Login versucht es erneut
+    }
+  } catch (e) {
+    console.warn('[pending-profile] Nachtragen abgebrochen:', e)
+    return
   }
   window.localStorage.removeItem(KEY)
 }

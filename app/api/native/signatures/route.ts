@@ -64,7 +64,7 @@ export async function POST(request: Request) {
 
     const { data: record, error: recErr } = await admin
       .from('service_records')
-      .select('id, caregiver_id')
+      .select('id, caregiver_id, organization_id')
       .eq('id', service_record_id)
       .single()
 
@@ -74,21 +74,35 @@ export async function POST(request: Request) {
     if (record.caregiver_id !== auth.caregiverId) {
       return NextResponse.json({ error: 'Kein Zugriff auf diesen Leistungsnachweis' }, { status: 403 })
     }
+    if (record.organization_id !== auth.organizationId) {
+      return NextResponse.json({ error: 'Kein Zugriff auf diesen Leistungsnachweis' }, { status: 403 })
+    }
+
+    const { data: existingSig } = await admin
+      .from('service_signatures')
+      .select('id')
+      .eq('service_record_id', service_record_id)
+      .eq('signer_role', signer_role)
+      .maybeSingle()
+
+    if (existingSig) {
+      return NextResponse.json(
+        { error: 'Unterschrift wurde bereits erfasst und kann nicht ueberschrieben werden.' },
+        { status: 409 }
+      )
+    }
 
     const { data: signature, error: sigErr } = await admin
       .from('service_signatures')
-      .upsert(
-        {
-          service_record_id,
-          signer_role,
-          signer_name,
-          signature_image,
-          device_info: device_info || {},
-          gps_lat: gps_lat ?? null,
-          gps_lng: gps_lng ?? null,
-        },
-        { onConflict: 'service_record_id,signer_role' }
-      )
+      .insert({
+        service_record_id,
+        signer_role,
+        signer_name,
+        signature_image,
+        device_info: device_info || {},
+        gps_lat: gps_lat ?? null,
+        gps_lng: gps_lng ?? null,
+      })
       .select()
       .single()
 

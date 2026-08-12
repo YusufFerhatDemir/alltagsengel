@@ -45,6 +45,46 @@ CREATE SCHEMA IF NOT EXISTS auth;
 CREATE SCHEMA IF NOT EXISTS storage;
 CREATE SCHEMA IF NOT EXISTS extensions;
 
+-- Supabase installiert pgcrypto im Schema `extensions`. Der Audit-Trail
+-- (billing_audit_trail, state_settings_audit) bildet seine SHA-256-Pruefsumme
+-- ueber extensions.digest() — ohne diese Erweiterung scheitert jede Migration,
+-- die einen Audit-Eintrag schreibt, und die Shadow-DB bildet Production nicht ab.
+CREATE EXTENSION IF NOT EXISTS pgcrypto WITH SCHEMA extensions;
+GRANT USAGE ON SCHEMA extensions TO anon, authenticated, service_role;
+
+-- Supabase haengt `extensions` an den Standard-search_path der Datenbank.
+-- Ohne das scheitern alle Funktionen, die pgcrypto unqualifiziert aufrufen
+-- (z. B. generate_referral_code → gen_random_bytes). Wirkt ab der naechsten
+-- Sitzung, also fuer alle nachfolgenden Migrationsdateien.
+DO $bootstrap$
+BEGIN
+  EXECUTE format(
+    'ALTER DATABASE %I SET search_path TO "$user", public, extensions',
+    current_database()
+  );
+END
+$bootstrap$;
+
+-- Auf Production ist pgcrypto aus BEIDEN Schemata erreichbar: der Audit-Trail
+-- ruft extensions.digest() qualifiziert auf, generate_referral_code() dagegen
+-- gen_random_bytes() unqualifiziert mit festem `SET search_path = public,
+-- pg_temp`. Eine Extension laesst sich nicht zweimal installieren — deshalb
+-- hier duenne Weiterleitungen in public. Reine Shadow-DB-Angleichung, kein
+-- Produktionsartefakt.
+-- VOLATILE, nicht IMMUTABLE: als IMMUTABLE faltet der Planer den Aufruf zu
+-- einer Konstanten und jeder Referral-Code waere identisch.
+CREATE OR REPLACE FUNCTION public.gen_random_bytes(integer)
+RETURNS bytea LANGUAGE sql VOLATILE STRICT PARALLEL SAFE
+AS $shim$ SELECT extensions.gen_random_bytes($1) $shim$;
+
+CREATE OR REPLACE FUNCTION public.digest(bytea, text)
+RETURNS bytea LANGUAGE sql IMMUTABLE STRICT PARALLEL SAFE
+AS $shim$ SELECT extensions.digest($1, $2) $shim$;
+
+CREATE OR REPLACE FUNCTION public.digest(text, text)
+RETURNS bytea LANGUAGE sql IMMUTABLE STRICT PARALLEL SAFE
+AS $shim$ SELECT extensions.digest($1, $2) $shim$;
+
 GRANT USAGE ON SCHEMA public  TO anon, authenticated, service_role;
 GRANT USAGE ON SCHEMA auth    TO anon, authenticated, service_role;
 GRANT USAGE ON SCHEMA storage TO anon, authenticated, service_role;

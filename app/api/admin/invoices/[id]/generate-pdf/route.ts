@@ -1,8 +1,13 @@
 import { NextResponse } from 'next/server'
 import crypto from 'crypto'
-import { PDFDocument, StandardFonts, rgb } from 'pdf-lib'
+import { PDFDocument, rgb } from 'pdf-lib'
+import fontkit from '@pdf-lib/fontkit'
+import { readFile } from 'fs/promises'
+import { join } from 'path'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { getActiveOrgId } from '@/lib/organizations/server'
+import { logAuditEvent } from '@/lib/audit-log'
 
 // ═══════════════════════════════════════════════════════════════
 // POST /api/admin/invoices/[id]/generate-pdf
@@ -33,7 +38,7 @@ function dateFmt(d: string | null | undefined): string {
   return dt.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })
 }
 
-export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id: invoiceId } = await params
     const supabase = await createClient()
@@ -50,11 +55,15 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       return NextResponse.json({ error: 'Nur für Administratoren' }, { status: 403 })
     }
 
-    // ── Rechnung + Klient + Positionen laden ──
-    const { data: invoice, error: invErr } = await supabase
+    const orgId = await getActiveOrgId()
+    const admin = createAdminClient()
+
+    // ── Rechnung + Klient + Positionen laden — org-fenced ──
+    const { data: invoice, error: invErr } = await admin
       .from('invoices')
       .select('id, invoice_number, client_id, period_start, period_end, total_amount, budget_amount, private_amount, status, client:clients(first_name, last_name, address, city, zip_code, insurance_name, insurance_number)')
       .eq('id', invoiceId)
+      .eq('organization_id', orgId)
       .single()
 
     if (invErr || !invoice) {
@@ -97,10 +106,23 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       }, {})
     }
 
-    // ── PDF aufbauen ──
+    // ── PDF aufbauen (DejaVuSans für türkische/deutsche Zeichen) ──
     const pdfDoc = await PDFDocument.create()
-    const fontRegular = await pdfDoc.embedFont(StandardFonts.Helvetica)
-    const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold)
+    pdfDoc.registerFontkit(fontkit)
+
+    let fontRegular: any
+    let fontBold: any
+    try {
+      const fontsDir = join(process.cwd(), 'public', 'fonts')
+      const regularBytes = await readFile(join(fontsDir, 'DejaVuSans.ttf'))
+      const boldBytes = await readFile(join(fontsDir, 'DejaVuSans-Bold.ttf'))
+      fontRegular = await pdfDoc.embedFont(regularBytes, { subset: true })
+      fontBold = await pdfDoc.embedFont(boldBytes, { subset: true })
+    } catch {
+      const { StandardFonts } = await import('pdf-lib')
+      fontRegular = await pdfDoc.embedFont(StandardFonts.Helvetica)
+      fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold)
+    }
 
     const client = (invoice as any).client || {}
     const clientName = `${client.first_name || ''} ${client.last_name || ''}`.trim() || '—'
@@ -288,6 +310,16 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       return NextResponse.json({ error: `invoice_packages-Fehler: ${pkgErr.message}` }, { status: 500 })
     }
 
+    await logAuditEvent({
+      action: 'create',
+      actorId: user.id,
+      organizationId: orgId,
+      entityType: 'invoice_package',
+      entityId: invoiceId,
+      details: { invoice_number: invoice.invoice_number, page_count: pageCount, checksum },
+      request: req,
+    })
+
     return NextResponse.json({ pdf_url: pdfUrl, page_count: pageCount, checksum })
   } catch (err: any) {
     console.error('[api/admin/invoices/generate-pdf] Unerwarteter Fehler:', err)
@@ -296,8 +328,11 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 }
 
 function drawFooter(page: any, font: any) {
-  page.drawText('Alltagsengel — automatisch erzeugtes Rechnungspaket (Leistungsnachweis + Unterschrift)', {
-    x: MARGIN, y: 30, size: 8, font, color: rgb(0.55, 0.55, 0.55),
+  page.drawText('Alltagsengel UG (haftungsbeschr.) · Amtsgericht Frankfurt am Main, HRB 140351', {
+    x: MARGIN, y: 38, size: 7, font, color: rgb(0.55, 0.55, 0.55),
+  })
+  page.drawText('Bankverbindung: Alltagsengel UG · Sparkasse · Zahlbar innerhalb von 30 Tagen', {
+    x: MARGIN, y: 28, size: 7, font, color: rgb(0.55, 0.55, 0.55),
   })
 }
 

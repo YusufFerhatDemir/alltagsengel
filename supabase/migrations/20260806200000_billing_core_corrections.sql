@@ -240,19 +240,23 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_invoices_idempotency
 -- === billing_tariffs ===
 ALTER TABLE public.billing_tariffs ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "billing_tariffs_org_fence" ON public.billing_tariffs;
 CREATE POLICY "billing_tariffs_org_fence" ON public.billing_tariffs
   AS RESTRICTIVE FOR ALL TO authenticated
   USING  (organization_id = current_org_id())
   WITH CHECK (organization_id = current_org_id());
 
+DROP POLICY IF EXISTS "billing_tariffs_select" ON public.billing_tariffs;
 CREATE POLICY "billing_tariffs_select" ON public.billing_tariffs
   FOR SELECT TO authenticated
   USING (true);
 
+DROP POLICY IF EXISTS "billing_tariffs_insert" ON public.billing_tariffs;
 CREATE POLICY "billing_tariffs_insert" ON public.billing_tariffs
   FOR INSERT TO authenticated
   WITH CHECK (is_admin());
 
+DROP POLICY IF EXISTS "billing_tariffs_update" ON public.billing_tariffs;
 CREATE POLICY "billing_tariffs_update" ON public.billing_tariffs
   FOR UPDATE TO authenticated
   USING (is_admin())
@@ -261,15 +265,18 @@ CREATE POLICY "billing_tariffs_update" ON public.billing_tariffs
 -- === invoice_snapshots ===
 ALTER TABLE public.invoice_snapshots ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "invoice_snapshots_org_fence" ON public.invoice_snapshots;
 CREATE POLICY "invoice_snapshots_org_fence" ON public.invoice_snapshots
   AS RESTRICTIVE FOR ALL TO authenticated
   USING  (organization_id = current_org_id())
   WITH CHECK (organization_id = current_org_id());
 
+DROP POLICY IF EXISTS "invoice_snapshots_select" ON public.invoice_snapshots;
 CREATE POLICY "invoice_snapshots_select" ON public.invoice_snapshots
   FOR SELECT TO authenticated
   USING (true);
 
+DROP POLICY IF EXISTS "invoice_snapshots_insert" ON public.invoice_snapshots;
 CREATE POLICY "invoice_snapshots_insert" ON public.invoice_snapshots
   FOR INSERT TO authenticated
   WITH CHECK (is_admin());
@@ -279,19 +286,23 @@ CREATE POLICY "invoice_snapshots_insert" ON public.invoice_snapshots
 -- === invoice_corrections ===
 ALTER TABLE public.invoice_corrections ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "invoice_corrections_org_fence" ON public.invoice_corrections;
 CREATE POLICY "invoice_corrections_org_fence" ON public.invoice_corrections
   AS RESTRICTIVE FOR ALL TO authenticated
   USING  (organization_id = current_org_id())
   WITH CHECK (organization_id = current_org_id());
 
+DROP POLICY IF EXISTS "invoice_corrections_select" ON public.invoice_corrections;
 CREATE POLICY "invoice_corrections_select" ON public.invoice_corrections
   FOR SELECT TO authenticated
   USING (true);
 
+DROP POLICY IF EXISTS "invoice_corrections_insert" ON public.invoice_corrections;
 CREATE POLICY "invoice_corrections_insert" ON public.invoice_corrections
   FOR INSERT TO authenticated
   WITH CHECK (is_admin());
 
+DROP POLICY IF EXISTS "invoice_corrections_update" ON public.invoice_corrections;
 CREATE POLICY "invoice_corrections_update" ON public.invoice_corrections
   FOR UPDATE TO authenticated
   USING (is_admin())
@@ -300,15 +311,18 @@ CREATE POLICY "invoice_corrections_update" ON public.invoice_corrections
 -- === invoice_line_snapshots ===
 ALTER TABLE public.invoice_line_snapshots ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "invoice_line_snapshots_org_fence" ON public.invoice_line_snapshots;
 CREATE POLICY "invoice_line_snapshots_org_fence" ON public.invoice_line_snapshots
   AS RESTRICTIVE FOR ALL TO authenticated
   USING  (organization_id = current_org_id())
   WITH CHECK (organization_id = current_org_id());
 
+DROP POLICY IF EXISTS "invoice_line_snapshots_select" ON public.invoice_line_snapshots;
 CREATE POLICY "invoice_line_snapshots_select" ON public.invoice_line_snapshots
   FOR SELECT TO authenticated
   USING (true);
 
+DROP POLICY IF EXISTS "invoice_line_snapshots_insert" ON public.invoice_line_snapshots;
 CREATE POLICY "invoice_line_snapshots_insert" ON public.invoice_line_snapshots
   FOR INSERT TO authenticated
   WITH CHECK (is_admin());
@@ -318,19 +332,23 @@ CREATE POLICY "invoice_line_snapshots_insert" ON public.invoice_line_snapshots
 -- === billing_number_sequences ===
 ALTER TABLE public.billing_number_sequences ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "billing_number_sequences_org_fence" ON public.billing_number_sequences;
 CREATE POLICY "billing_number_sequences_org_fence" ON public.billing_number_sequences
   AS RESTRICTIVE FOR ALL TO authenticated
   USING  (organization_id = current_org_id())
   WITH CHECK (organization_id = current_org_id());
 
+DROP POLICY IF EXISTS "billing_number_sequences_select" ON public.billing_number_sequences;
 CREATE POLICY "billing_number_sequences_select" ON public.billing_number_sequences
   FOR SELECT TO authenticated
   USING (true);
 
+DROP POLICY IF EXISTS "billing_number_sequences_insert" ON public.billing_number_sequences;
 CREATE POLICY "billing_number_sequences_insert" ON public.billing_number_sequences
   FOR INSERT TO authenticated
   WITH CHECK (is_admin());
 
+DROP POLICY IF EXISTS "billing_number_sequences_update" ON public.billing_number_sequences;
 CREATE POLICY "billing_number_sequences_update" ON public.billing_number_sequences
   FOR UPDATE TO authenticated
   USING (is_admin())
@@ -339,16 +357,19 @@ CREATE POLICY "billing_number_sequences_update" ON public.billing_number_sequenc
 -- === billing_audit_trail ===
 ALTER TABLE public.billing_audit_trail ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "billing_audit_trail_org_fence" ON public.billing_audit_trail;
 CREATE POLICY "billing_audit_trail_org_fence" ON public.billing_audit_trail
   AS RESTRICTIVE FOR ALL TO authenticated
   USING  (organization_id = current_org_id())
   WITH CHECK (organization_id = current_org_id());
 
+DROP POLICY IF EXISTS "billing_audit_trail_select" ON public.billing_audit_trail;
 CREATE POLICY "billing_audit_trail_select" ON public.billing_audit_trail
   FOR SELECT TO authenticated
   USING (true);
 
 -- INSERT fuer alle authentifizierten Nutzer (Audit schreiben)
+DROP POLICY IF EXISTS "billing_audit_trail_insert" ON public.billing_audit_trail;
 CREATE POLICY "billing_audit_trail_insert" ON public.billing_audit_trail
   FOR INSERT TO authenticated
   WITH CHECK (true);

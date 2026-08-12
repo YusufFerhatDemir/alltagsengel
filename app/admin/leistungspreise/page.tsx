@@ -8,6 +8,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { formatDate, centToEuro, euroToCent, BUNDESLAND_LABELS, LEISTUNGSART_LABELS, statusMeta } from '@/lib/admin/ops'
 import { StatusBadge, SearchInput, EmptyRow, Banner } from '@/components/admin/OpsUI'
+import { useBundeslandFilter } from '@/components/admin/BundeslandContext'
 
 interface Preis {
   id: string
@@ -33,6 +34,11 @@ export default function AdminLeistungspreisePage() {
   const [error, setError] = useState<string | null>(null)
   const [search, setSearch] = useState('')
   const [bundeslandFilter, setBundeslandFilter] = useState('all')
+  // Der globale Umschalter aus der Seitenleiste hat Vorrang vor dem
+  // Auswahlfeld dieser Seite — sonst zeigt die Seite Preise eines
+  // Bundeslands, das oben gar nicht ausgewaehlt ist.
+  const { aktiv: globalesLand, alle: alleLaender, label: landLabel } = useBundeslandFilter()
+  const wirksamesLand = alleLaender ? bundeslandFilter : globalesLand
   const [leistungsartFilter, setLeistungsartFilter] = useState('all')
   const [showForm, setShowForm] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -65,13 +71,13 @@ export default function AdminLeistungspreisePage() {
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase()
     return preise.filter(p => {
-      if (bundeslandFilter !== 'all' && p.bundesland !== bundeslandFilter) return false
+      if (wirksamesLand !== 'all' && p.bundesland !== wirksamesLand) return false
       if (leistungsartFilter !== 'all' && p.leistungsart !== leistungsartFilter) return false
       if (!q) return true
       return (BUNDESLAND_LABELS[p.bundesland] || p.bundesland).toLowerCase().includes(q)
         || statusMeta(LEISTUNGSART_LABELS, p.leistungsart).label.toLowerCase().includes(q)
     })
-  }, [preise, search, bundeslandFilter, leistungsartFilter])
+  }, [preise, search, wirksamesLand, leistungsartFilter])
 
   function openCreate() {
     setEditingId(null)
@@ -150,10 +156,23 @@ export default function AdminLeistungspreisePage() {
       </div>
 
       <div className="admin-filters">
-        <select value={bundeslandFilter} onChange={e => setBundeslandFilter(e.target.value)} style={input}>
-          <option value="all">Alle Bundesländer</option>
-          {Object.entries(BUNDESLAND_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-        </select>
+        {alleLaender ? (
+          <select value={bundeslandFilter} onChange={e => setBundeslandFilter(e.target.value)} style={input}>
+            <option value="all">Alle Bundesländer</option>
+            {Object.entries(BUNDESLAND_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+          </select>
+        ) : (
+          <span
+            title="Vorgegeben durch den Bundesland-Umschalter in der Seitenleiste"
+            style={{
+              ...input, display: 'inline-flex', alignItems: 'center', gap: 6,
+              color: 'var(--gold2)', fontWeight: 600, cursor: 'default',
+            }}
+          >
+            <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'currentColor' }} />
+            {landLabel}
+          </span>
+        )}
         <select value={leistungsartFilter} onChange={e => setLeistungsartFilter(e.target.value)} style={input}>
           <option value="all">Alle Leistungsarten</option>
           {Object.entries(LEISTUNGSART_LABELS).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}

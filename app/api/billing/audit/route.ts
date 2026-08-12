@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
+import { getActiveOrgId } from '@/lib/organizations/server'
 
 /**
  * GET /api/billing/audit
@@ -23,6 +24,11 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Nur für Administratoren' }, { status: 403 })
     }
 
+    const organizationId = await getActiveOrgId()
+    if (!organizationId) {
+      return NextResponse.json({ error: 'Keine Organisation zugewiesen.' }, { status: 403 })
+    }
+
     // Query-Parameter auslesen
     const { searchParams } = new URL(request.url)
     const entityType = searchParams.get('entity_type')
@@ -36,6 +42,7 @@ export async function GET(request: Request) {
     let query = supabase
       .from('billing_audit_trail')
       .select('*')
+      .eq('organization_id', organizationId)
       .order('created_at', { ascending: false })
       .limit(limit)
 

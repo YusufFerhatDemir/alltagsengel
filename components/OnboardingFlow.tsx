@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
+import { useBundeslandLage } from '@/lib/expansion/client'
 
 // ═══════════════════════════════════════════════════════════
 // ONBOARDING FLOW — Willkommen für neue Kunden
@@ -26,6 +27,11 @@ export default function OnboardingFlow() {
   const [plz, setPlz] = useState('')
   const [existingPflegegrad, setExistingPflegegrad] = useState('')
   const router = useRouter()
+
+  // Der Abschluss-Schritt sagt „0€ Eigenanteil" und „Abrechnung laeuft" zu.
+  // Das gilt nur, wo die Kassenabrechnung freigeschaltet ist — die PLZ steht
+  // an dieser Stelle des Ablaufs bereits fest.
+  const { lage: bundeslandLage } = useBundeslandLage(plz.length === 5 ? plz : null)
 
   useEffect(() => {
     checkOnboarding()
@@ -321,10 +327,19 @@ export default function OnboardingFlow() {
             marginBottom: 16,
           }}>
             <p style={{ color: '#C9963C', fontWeight: 700, fontSize: 22, margin: '0 0 4px' }}>131€/Monat</p>
-            <p style={{ color: '#B8B0A4', fontSize: 13, margin: 0 }}>von der Pflegekasse — 0€ Eigenanteil</p>
+            <p style={{ color: '#B8B0A4', fontSize: 13, margin: 0 }}>
+              {bundeslandLage.kassenabrechnung
+                ? 'von der Pflegekasse — 0€ Eigenanteil'
+                : 'stehen Ihnen nach §45b SGB XI zu'}
+            </p>
+            {!bundeslandLage.kassenabrechnung && (
+              <p style={{ color: '#B8B0A4', fontSize: 12, margin: '10px 0 0', lineHeight: 1.55 }}>
+                {bundeslandLage.hinweis}
+              </p>
+            )}
           </div>
           <div style={{ display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap' }}>
-            {['Engel finden', 'Termin buchen', 'Abrechnung läuft'].map((t, i) => (
+            {['Engel finden', 'Termin buchen', bundeslandLage.kassenabrechnung ? 'Abrechnung läuft' : 'Privat abrechnen'].map((t, i) => (
               <span key={t} style={{
                 background: 'rgba(255,255,255,0.06)',
                 color: '#B8B0A4',

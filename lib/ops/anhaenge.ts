@@ -1,0 +1,46 @@
+import type { SupabaseClient } from '@supabase/supabase-js'
+import type { OpsAufgabeAnhang } from './types'
+
+export async function listAnhaenge(
+  supabase: SupabaseClient,
+  params: { organizationId: string; aufgabeId: string },
+): Promise<OpsAufgabeAnhang[]> {
+  const { data, error } = await supabase
+    .from('ops_aufgaben_anhaenge')
+    .select('*')
+    .eq('organization_id', params.organizationId)
+    .eq('aufgabe_id', params.aufgabeId)
+    .order('created_at', { ascending: false })
+  if (error) throw new Error(`Anhaenge konnten nicht geladen werden: ${error.message}`)
+  return (data ?? []) as OpsAufgabeAnhang[]
+}
+
+export async function createAnhang(
+  supabase: SupabaseClient,
+  params: { organizationId: string; aufgabeId: string; dokumentId: string; hinzugefuegtVon?: string },
+): Promise<OpsAufgabeAnhang> {
+  const { data, error } = await supabase
+    .from('ops_aufgaben_anhaenge')
+    .insert({
+      organization_id: params.organizationId,
+      aufgabe_id: params.aufgabeId,
+      dokument_id: params.dokumentId,
+      hinzugefuegt_von: params.hinzugefuegtVon ?? null,
+    })
+    .select('*')
+    .single()
+  if (error || !data) throw new Error(`Anhang konnte nicht erstellt werden: ${error?.message ?? 'unbekannt'}`)
+  return data as OpsAufgabeAnhang
+}
+
+export async function deleteAnhang(
+  supabase: SupabaseClient,
+  params: { organizationId: string; id: string },
+): Promise<void> {
+  const { error } = await supabase
+    .from('ops_aufgaben_anhaenge')
+    .delete()
+    .eq('id', params.id)
+    .eq('organization_id', params.organizationId)
+  if (error) throw new Error(`Anhang konnte nicht geloescht werden: ${error.message}`)
+}

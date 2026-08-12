@@ -5,6 +5,8 @@ import { createClient } from '@/lib/supabase/client'
 import { requireUser } from '@/lib/supabase/require-session'
 import { uploadDocument, deleteDocument, MAX_FILE_SIZE_MB, checkDocumentsTableExists } from '@/lib/upload-document'
 import { IconDocument, IconCheck, IconClock, IconInfo, IconTrash } from '@/components/Icons'
+import { AKTEN_DOKUMENT_TYP, formatDate, statusMeta } from '@/lib/admin/ops'
+import type { AktenDokument } from '@/lib/akten/types'
 
 const docTypes = [
   { key: 'ausweis', label: 'Personalausweis', desc: 'Vorder- und Rückseite' },
@@ -28,10 +30,34 @@ export default function KundeDokumentePage() {
   const [uploadSuccess, setUploadSuccess] = useState(false)
   const [featureAvailable, setFeatureAvailable] = useState(true)
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [aktenDokumente, setAktenDokumente] = useState<AktenDokument[]>([])
+  const [aktenLoading, setAktenLoading] = useState(true)
 
   useEffect(() => {
     loadDocs()
+    loadAktenDokumente()
   }, [])
+
+  async function loadAktenDokumente() {
+    try {
+      const supabase = createClient()
+      // RLS liefert nur für den Kunden freigegebene, eigene Dokumente
+      // (kunde_akten_dokumente_select: sichtbarkeit in ('kunde','alle')).
+      const { data } = await supabase
+        .from('akten_dokumente')
+        .select('*')
+        .order('created_at', { ascending: false })
+      setAktenDokumente((data || []) as AktenDokument[])
+    } finally {
+      setAktenLoading(false)
+    }
+  }
+
+  async function downloadAktenDokument(id: string) {
+    const res = await fetch(`/api/akten/dokumente/${id}/download`)
+    const body = await res.json()
+    if (res.ok && body.url) window.open(body.url, '_blank')
+  }
 
   async function loadDocs() {
     const user = await requireUser(router, { redirectTo: '/kunde/dokumente' })
@@ -272,6 +298,30 @@ export default function KundeDokumentePage() {
             )
           })
         )}
+
+        <div className="section-label" style={{ marginTop: 24 }}>Meine Akte</div>
+        {aktenLoading ? (
+          <div className="chat-empty">Laden...</div>
+        ) : aktenDokumente.length === 0 ? (
+          <div className="chat-empty">
+            <div className="chat-empty-sub">Noch keine Dokumente in Ihrer Akte hinterlegt.</div>
+          </div>
+        ) : (
+          aktenDokumente.map(d => {
+            const tm = statusMeta(AKTEN_DOKUMENT_TYP, d.dokument_typ)
+            return (
+              <div key={d.id} className="dok-card" onClick={() => downloadAktenDokument(d.id)} style={{ cursor: 'pointer' }}>
+                <div className="dok-card-icon"><IconDocument size={20} /></div>
+                <div className="dok-card-info">
+                  <div className="dok-card-name">{d.titel}</div>
+                  <div className="dok-card-type">{tm.label}</div>
+                  {d.gueltig_bis && <div className="dok-card-date">Gültig bis {formatDate(d.gueltig_bis)}</div>}
+                </div>
+              </div>
+            )
+          })
+        )}
+
         <div style={{ height: 90 }}></div>
         </>}
       </div>

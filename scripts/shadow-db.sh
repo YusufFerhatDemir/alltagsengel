@@ -58,7 +58,23 @@ build() {
     "$ROOT/supabase/shadow/00_supabase_bootstrap.sql"
     "$ROOT/supabase/initial-setup.sql"
   )
-  while IFS= read -r f; do files+=("$f"); done < <(ls "$ROOT"/supabase/migrations/*.sql | sort)
+  # NUR der Vorwaertspfad. Zwei Gruppen werden bewusst uebersprungen:
+  #
+  #   *rollback*  — das sind die Ruecknahmen. Alphabetisch landen sie direkt
+  #                 hinter ihrer Forward-Migration und machen sie sofort
+  #                 wieder rueckgaengig (20260806200001_rollback_… loescht
+  #                 billing_tariffs, das 20260806200000 gerade angelegt hat).
+  #                 Ein Deployment spielt sie nie mit ein.
+  #   20260806700000_overhauled_backfill — einmalige Datenmigration mit
+  #                 hartem Count-Guard auf genau 5 Production-Rechnungen.
+  #                 Auf einer leeren DB kann sie nur scheitern.
+  while IFS= read -r f; do
+    case "$(basename "$f")" in
+      *rollback*)                        continue ;;
+      20260806700000_overhauled_backfill.sql) continue ;;
+    esac
+    files+=("$f")
+  done < <(ls "$ROOT"/supabase/migrations/*.sql | sort)
 
   local ok=0 fail=0
   for f in "${files[@]}"; do
@@ -108,6 +124,10 @@ case "${1:-up}" in
     echo "Zweiter Migrationslauf auf bestehender DB (Idempotenz):"
     idem_fail=0
     for f in "$ROOT"/supabase/migrations/*.sql; do
+      case "$(basename "$f")" in
+        *rollback*)                             continue ;;
+        20260806700000_overhauled_backfill.sql) continue ;;
+      esac
       printf '  %-64s' "$(basename "$f")"
       if out=$("${PSQL[@]}" -d "$DB" -f "$f" 2>&1); then echo "OK"
       else echo "FEHLER"; echo "$out" | grep -E 'ERROR:' | head -3 | sed 's/^/      /'; idem_fail=1; fi
