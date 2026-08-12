@@ -41,6 +41,7 @@ export const AUDIT_ENTITY_TYPES = [
   'sepa_mandate', 'sepa_batch', 'dunning_document',
   'billing_fristen',
   'camt_import', 'zahlungseingang', 'klaerfall', 'ruecklastschrift',
+  'datev_export', 'datev_kontenzuordnung',
 ] as const;
 
 export type AuditEntityType = (typeof AUDIT_ENTITY_TYPES)[number];

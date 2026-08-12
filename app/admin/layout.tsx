@@ -190,6 +190,7 @@ const navGroups = [
       { href: '/admin/forderungen', label: 'Forderungen', icon: <IconMoney size={18} /> },
       { href: '/admin/sepa', label: 'SEPA-Lastschrift', icon: <IconMoney size={18} /> },
       { href: '/admin/mahnwesen', label: 'Mahnwesen', icon: <IconDocument size={18} /> },
+      { href: '/admin/datev', label: 'DATEV-Export', icon: <IconMoney size={18} /> },
     ],
   },
   {
