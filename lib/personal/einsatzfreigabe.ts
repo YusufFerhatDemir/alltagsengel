@@ -1,4 +1,10 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
+import {
+  ENTLASTUNG_JAEHRLICH_EUR,
+  VP_JAEHRLICH_EUR,
+  VP_KZP_KOMBINIERT_EUR,
+} from '@/lib/config/budget-constants'
+import type { BudgetTyp } from '@/lib/config/budget-constants'
 
 export interface FreigabeErgebnis {
   caregiverId: string
