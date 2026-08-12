@@ -6,7 +6,7 @@ import './pflegecoach.css'
 // getrennt vom Alltagsengel-Marketing (LayoutWrapper/Tracker sind für
 // /pflegecoach deaktiviert — siehe components/ClientSideProviders.tsx).
 // DiPA-spezifische Funktionen (Anspruch, Freischaltpflicht, Abrechnung)
-// sind per COACH_DIPA_MODUS gated und im Default AUS.
+// sind per dipaModus() gated (page.tsx + API-Route) und im Default AUS.
 export const metadata: Metadata = {
   title: { absolute: 'Digitaler PflegeCoach' },
   description:
