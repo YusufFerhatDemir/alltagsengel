@@ -92,9 +92,9 @@ Kernergebnis: Lauffähige Next.js-App mit Supabase-Backend, Rollen (Kunde, Engel
 
 ---
 
-## Block 4 — Zahlungseingangs-Matching & OPOS via CAMT 🔄
+## Block 4 — Zahlungseingangs-Matching & OPOS via CAMT ✅
 
-**Status:** In Vercel Production Build
+**Status:** Abgeschlossen
 **Migration:** `20260825010000_zahlungseingang_opos.sql`
 
 | Modul | Dateien | Beschreibung |
@@ -110,9 +110,9 @@ Kernergebnis: Lauffähige Next.js-App mit Supabase-Backend, Rollen (Kunde, Engel
 
 ---
 
-## Block 5 — DATEV-Export 🔄
+## Block 5 — DATEV-Export ✅
 
-**Status:** In Vercel Production Build
+**Status:** Abgeschlossen
 **Migration:** `20260812180000_datev_export.sql`
 
 | Modul | Dateien | Beschreibung |
@@ -426,8 +426,8 @@ Bislang ist nur § 105 SGB XI implementiert. Für HKP (Häusliche Krankenpflege)
 | 1 | Plattform-Grundgerüst & Ausfallmanagement | ✅ Fertig | — |
 | 2 | SEPA-Lastschrift & Mahnwesen | ✅ Fertig | — |
 | 3 | Rückläufer-Parser & Kassenabrechnung | ✅ Fertig | — |
-| 4 | Zahlungseingangs-Matching & OPOS via CAMT | 🔄 In Build | — |
-| 5 | DATEV-Export | 🔄 In Build | — |
+| 4 | Zahlungseingangs-Matching & OPOS via CAMT | ✅ Fertig | — |
+| 5 | DATEV-Export | ✅ Fertig | — |
 | 6 | Einsatzplanung, Tourenplanung & Leistungsnachweise | ✅ Fertig | — |
 | 7 | Pflegedokumentation | ✅ Fertig | — |
 | 8 | Personalmanagement | ✅ Fertig | — |
