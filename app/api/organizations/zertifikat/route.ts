@@ -82,7 +82,7 @@ export async function POST(req: NextRequest) {
       ik_nummer: org.ik_nummer || pruefung.ik_nummer,
       typ: 'absender',
       zertifikat_url: pfad,
-      gueltig_bis: pruefung.datumBerlin(ablauf),
+      gueltig_bis: datumBerlin(pruefung.ablauf),
       fingerprint: pruefung.fingerprint,
       organization_id: organizationId,
     }

@@ -224,8 +224,8 @@ export async function ladeEmpfaengerZertifikat(
     ik_nummer: ik,
     typ: 'empfaenger',
     zertifikat_pem: zert.zertifikat_pem,
-    gueltig_ab: zert.datumBerlin(gueltig_ab),
-    gueltig_bis: zert.datumBerlin(gueltig_bis),
+    gueltig_ab: datumBerlin(zert.gueltig_ab),
+    gueltig_bis: datumBerlin(zert.gueltig_bis),
     fingerprint: zert.fingerprint,
   })
 
@@ -328,8 +328,8 @@ export async function speichereAbsenderZertifikat(
     typ: 'absender',
     zertifikat_url: pfad,
     zertifikat_pem: zert.zertifikat_pem,
-    gueltig_ab: zert.datumBerlin(gueltig_ab),
-    gueltig_bis: zert.datumBerlin(gueltig_bis),
+    gueltig_ab: datumBerlin(zert.gueltig_ab),
+    gueltig_bis: datumBerlin(zert.gueltig_bis),
     fingerprint: zert.fingerprint,
   })
 
