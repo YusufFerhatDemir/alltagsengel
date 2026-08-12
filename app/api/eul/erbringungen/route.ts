@@ -14,8 +14,8 @@
 import { NextResponse } from 'next/server'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { createClient } from '@/lib/supabase/server'
+import { heuteBerlin } from '@/lib/utils/timezone'
 import {
-import { heuteBerlin } from '@/lib/utils/timezone';
   istEulDurchfuehrungsform, istEulLeistungsart, pruefeNachweisVollstaendig,
 } from '@/lib/coach/eul'
 

@@ -46,7 +46,7 @@ describe('D6: Status-Machine — abgeschrieben', () => {
   })
 
   it('erlaubt KEINEN Übergang von bezahlt → abgeschrieben', () => {
-    const bezahltLine = smSrc.match(/bezahlt:\s*\[([^\]]*)\]/)?.[1] ?? ''
+    const bezahltLine = smSrc.match(/^\s+bezahlt:\s*\[([^\]]*)\]/m)?.[1] ?? ''
     expect(bezahltLine).not.toContain('abgeschrieben')
   })
 
