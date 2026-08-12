@@ -3,32 +3,35 @@
 **Stand:** 2026-08-12
 **Prüfmethode:** Automatisierte Web-Recherche gegen offizielle Quellen + Code-Analyse
 **Quellen:** SGB XI (gesetze-im-internet.de), GKV-Spitzenverband, pflege-in-hessen.de, Supabase-Migrationen
-**Status:** TEILWEISE VERIFIZIERT — 3 Budgetwerte FEHLERHAFT, PfluV-Konformität klärungsbedürftig
+**Status:** BUDGETWERTE KORREKT — PfluV-Konformität klärungsbedürftig, VP-Default §42a-konform korrigiert
 
 ---
 
-## KRITISCHE BEFUNDE (sofort handeln)
+## BEFUNDE (Stand: Fachliche Korrekturprüfung 12.08.2026)
 
-### BEFUND 1: VP- und KZP-Budgetwerte veraltet (FEHLERHAFT)
+### BEFUND 1: VP- und KZP-Budgetwerte — BEHOBEN
 
 **Datei:** `lib/config/budget-constants.ts`
 
-| Konstante | Wert im Code | Korrekt seit 01.01.2025 | Abweichung |
-|-----------|-------------|------------------------|------------|
-| `VP_JAEHRLICH_EUR` | **1.612 €** | **1.685 €** | −73 € (−4,3 %) |
-| `KZP_JAEHRLICH_EUR` | **1.774 €** | **1.854 €** | −80 € (−4,3 %) |
-| `VP_KZP_KOMBINIERT_EUR` | **3.386 €** | **3.539 €** | −153 € (−4,3 %) |
+| Konstante | Wert im Code | Korrekt seit 01.01.2025 | Status |
+|-----------|-------------|------------------------|--------|
+| `VP_JAEHRLICH_EUR` | **1.685 €** | **1.685 €** | **KORREKT** (Referenzwert) |
+| `KZP_JAEHRLICH_EUR` | **1.854 €** | **1.854 €** | **KORREKT** (Referenzwert) |
+| `VP_KZP_KOMBINIERT_EUR` | **3.539 €** | **3.539 €** | **KORREKT** (operatives Limit) |
 
-**Ursache:** Die 4,5 %-Dynamisierung (§ 30 Abs. 1 SGB XI, Bekanntmachung vom 14.11.2024) wurde für den Entlastungsbetrag (125 → 131 €) korrekt übernommen, aber für VP und KZP **nicht**.
+**Korrekturhistorie:**
+- Commit 871a713: Budget-Werte auf PUEG +4,5% korrigiert (1685/1854/3539)
+- Fachliche Korrekturprüfung: VP_JAEHRLICH_EUR und KZP_JAEHRLICH_EUR als **Referenzwerte** markiert (seit §42a SGB XI, 01.07.2025, nur noch der gemeinsame Jahresbetrag operativ)
 
-**Auswirkung:** Budget-Prüfungen in `lib/personal/einsatzfreigabe.ts` und `lib/admin/ops.ts` blockieren Leistungen ~4,3 % zu früh.
+### BEFUND 1a: VP-Budget-Default §42a-konform korrigiert — BEHOBEN
 
-**Quellen:**
-- § 39 Abs. 1 SGB XI i.V.m. § 30 Abs. 1 SGB XI — Dynamisierung zum 01.01.2025
-- sozialversicherung-kompetent.de: VP 1.685 € seit 01.01.2025
-- vdek.com: Gemeinsamer Jahresbetrag 3.539 € seit 01.07.2025
+**Datei:** `lib/personal/einsatzfreigabe.ts`
 
-**Zusätzlich:** Seit 01.07.2025 gilt § 42a SGB XI — **Gemeinsamer Jahresbetrag** für VP + KZP. Die getrennte Führung von VP_JAEHRLICH_EUR und KZP_JAEHRLICH_EUR ist rechtlich überholt (Budget ist frei aufteilbar). Der Code-Typ `BudgetTyp` kennt kein `kurzzeitpflege` — ggf. reicht die Aktualisierung des Kombiniert-Werts.
+**Problem:** `pruefeBudget()` verwendete VP_JAEHRLICH_EUR (1685€) als Default für VP-Budgets. Seit §42a SGB XI kann das gesamte 3539€-Budget für VP allein genutzt werden.
+
+**Fix:** Default geändert auf VP_KZP_KOMBINIERT_EUR (3539€). 7 neue Tests für §42a-Logik ergänzt.
+
+**Quelle:** §42a SGB XI (PUEG, in Kraft seit 01.07.2025), BMG-Pressemitteilung, DMRZ Ratgeber, vdek.com
 
 ---
 
@@ -76,35 +79,33 @@
 
 | Parameter | Wert im System | Gesetzlicher Wert | Status |
 |---|---|---|---|
-| Jährlich | **1.612 €** | **1.685 €** (seit 01.01.2025) | **FEHLERHAFT** |
-| Vorpflegezeit | nicht geprüft | **entfallen** seit 01.07.2025 | PRÜFEN |
+| Jährlich (Referenzwert) | **1.685 €** | **1.685 €** (seit 01.01.2025) | **VERIFIZIERT** |
+| Vorpflegezeit | entfallen | **entfallen** seit 01.07.2025 | **VERIFIZIERT** |
+| Operatives Limit | **3.539 €** (VP_KZP_KOMBINIERT_EUR) | **3.539 €** (§42a) | **VERIFIZIERT** |
 
-**Rechtsgrundlage:** § 39 Abs. 1 SGB XI i.V.m. § 30 Abs. 1 SGB XI
-**Historie:** 1.612 € (bis 31.12.2024) → 1.685 € (seit 01.01.2025, +4,5 %)
-**Quelle:** sozialversicherung-kompetent.de/pflegeversicherung/leistungsrecht-ab-2017/682-verhinderungspflege.html
+**Rechtsgrundlage:** § 39 Abs. 1 SGB XI i.V.m. § 42a SGB XI
+**Quelle:** sozialversicherung-kompetent.de, BMG-Pressemitteilung 01.07.2025
 
 ### 1.3 Kurzzeitpflege — § 42 SGB XI
 
 | Parameter | Wert im System | Gesetzlicher Wert | Status |
 |---|---|---|---|
-| Jährlich | **1.774 €** | **1.854 €** (seit 01.01.2025) | **FEHLERHAFT** |
+| Jährlich (Referenzwert) | **1.854 €** | **1.854 €** (seit 01.01.2025) | **VERIFIZIERT** |
 
-**Rechtsgrundlage:** § 42 Abs. 2 SGB XI i.V.m. § 30 Abs. 1 SGB XI
-**Historie:** 1.774 € (bis 31.12.2024) → 1.854 € (seit 01.01.2025, +4,5 %)
-**Quelle:** sozialversicherung-kompetent.de/pflegeversicherung/leistungsrecht-ab-2017/681-kurzzeitpflege.html
+**Rechtsgrundlage:** § 42 Abs. 2 SGB XI i.V.m. § 42a SGB XI
+**Quelle:** sozialversicherung-kompetent.de
 
-### 1.4 Gemeinsamer Jahresbetrag — § 42a SGB XI (NEU seit 01.07.2025)
+### 1.4 Gemeinsamer Jahresbetrag — § 42a SGB XI (seit 01.07.2025)
 
 | Parameter | Wert im System | Gesetzlicher Wert | Status |
 |---|---|---|---|
-| Kombiniert VP + KZP | **3.386 €** | **3.539 €** | **FEHLERHAFT** |
+| Kombiniert VP + KZP | **3.539 €** | **3.539 €** | **VERIFIZIERT** |
+| VP-Default in pruefeBudget() | **3.539 €** | **3.539 €** | **VERIFIZIERT** (korrigiert) |
 
 **Rechtsgrundlage:** § 42a SGB XI (eingefügt durch PUEG, in Kraft seit 01.07.2025)
-**Konzept:** VP (1.685 €) und KZP (1.854 €) werden in einen gemeinsamen Jahresbetrag zusammengeführt — frei aufteilbar.
+**Konzept:** VP (1.685 €) und KZP (1.854 €) werden in einen gemeinsamen Jahresbetrag zusammengeführt — frei aufteilbar. Kann vollständig für VP oder vollständig für KZP genutzt werden.
 **Vorpflegezeit:** Entfällt vollständig seit 01.07.2025.
-**Quelle:** vdek.com/magazin/ausgaben/2025-02/gemeinsamer-jahresbetrag-verhinderungspflege-kurzzeitpflege.html, aok.de/gp/pflegereform/gemeinsamer-jahresbetrag
-
-**Hinweis für das System:** Die Blog-Texte (`lib/blog-posts.ts`) verwenden bereits korrekt 3.539 € und "gemeinsamer Jahresbetrag". Die Budget-Konstanten (`lib/config/budget-constants.ts`) sind inkonsistent dazu.
+**Quelle:** vdek.com, DMRZ Ratgeber, BMG-Pressemitteilung
 
 ---
 
@@ -281,9 +282,10 @@ ORDER BY rechtsgrundlage, leistungsart;
 |---|---|---|
 | Entlastungsbetrag 131 €/Monat | **VERIFIZIERT** | Keiner |
 | Entlastungsbetrag 1.572 €/Jahr | **VERIFIZIERT** | Keiner |
-| VP 1.612 €/Jahr | **FEHLERHAFT** | → 1.685 € in `budget-constants.ts` |
-| KZP 1.774 €/Jahr | **FEHLERHAFT** | → 1.854 € in `budget-constants.ts` |
-| VP+KZP kombiniert 3.386 € | **FEHLERHAFT** | → 3.539 € in `budget-constants.ts` |
+| VP 1.685 €/Jahr (Referenzwert) | **VERIFIZIERT** | Keiner |
+| KZP 1.854 €/Jahr (Referenzwert) | **VERIFIZIERT** | Keiner |
+| VP+KZP §42a Gemeinsamer Jahresbetrag 3.539 € | **VERIFIZIERT** | Keiner |
+| VP-Budget-Default in pruefeBudget() | **VERIFIZIERT** | Korrigiert auf 3539€ (§42a) |
 | PfluV Hessen 30 €/h Betreuung | **PLAUSIBEL** | Verordnungstext 1:1 gegenlesen |
 | PfluV Hessen 25 €/h Entlastung | **PLAUSIBEL** | Verordnungstext 1:1 gegenlesen |
 | Service-Pricing 35 €/h (Kasse) | **PRÜFEN** | Klären: PfluV- oder § 72-Status |
@@ -317,7 +319,7 @@ ORDER BY rechtsgrundlage, leistungsart;
 
 ## Nächste Schritte
 
-1. **SOFORT:** `VP_JAEHRLICH_EUR`, `KZP_JAEHRLICH_EUR`, `VP_KZP_KOMBINIERT_EUR` in `lib/config/budget-constants.ts` korrigieren
+1. ~~**SOFORT:** Budget-Konstanten korrigieren~~ — **ERLEDIGT** (1685/1854/3539 korrekt, VP-Default auf 3539 gefixt)
 2. **KLÄREN:** Rechtsstatus von Alltagsengel (PfluV-Anerkennung vs. § 72-Zulassung) → bestimmt ob 35 €/h zulässig
 3. **PRÜFEN:** billing_tariffs (23 Zeilen) und leistungspreise (24 Zeilen) per SQL-Export gegen PfluV-Obergrenzen prüfen
 4. **BESTÄTIGEN:** PfluV-Obergrenzen (30/25 €) am Originalverordnungstext verifizieren → `bestaetigt=TRUE` setzen
