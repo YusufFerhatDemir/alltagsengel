@@ -24,7 +24,8 @@ export type InvoiceStatus =
   | 'akzeptiert'
   | 'storniert'
   | 'erneut_eingereicht'
-  | 'strittig';
+  | 'strittig'
+  | 'abgeschrieben';
 
 export type CorrectionStatus =
   | 'entwurf'
@@ -46,20 +47,21 @@ export type TransmissionStatus =
 const INVOICE_TRANSITIONS: Record<InvoiceStatus, InvoiceStatus[]> = {
   entwurf:                ['geprueft', 'storniert'],
   geprueft:               ['freigegeben', 'entwurf', 'storniert'],
-  freigegeben:            ['uebermittelt', 'storniert'],
-  uebermittelt:           ['quittiert', 'abgelehnt', 'storniert'],
-  quittiert:              ['bezahlt', 'teilweise_bezahlt', 'gekuerzt', 'strittig', 'storniert'],
-  teilweise_bezahlt:      ['bezahlt', 'storniert', 'korrektur_erforderlich', 'strittig'],
-  gekuerzt:               ['korrektur_erforderlich', 'akzeptiert', 'storniert', 'strittig'],
-  abgelehnt:              ['erneut_eingereicht', 'storniert'],
-  korrektur_erforderlich: ['entwurf', 'storniert'],
-  erneut_eingereicht:     ['uebermittelt', 'storniert'],
+  freigegeben:            ['uebermittelt', 'storniert', 'abgeschrieben'],
+  uebermittelt:           ['quittiert', 'abgelehnt', 'storniert', 'abgeschrieben'],
+  quittiert:              ['bezahlt', 'teilweise_bezahlt', 'gekuerzt', 'strittig', 'storniert', 'abgeschrieben'],
+  teilweise_bezahlt:      ['bezahlt', 'storniert', 'korrektur_erforderlich', 'strittig', 'abgeschrieben'],
+  gekuerzt:               ['korrektur_erforderlich', 'akzeptiert', 'storniert', 'strittig', 'abgeschrieben'],
+  abgelehnt:              ['erneut_eingereicht', 'storniert', 'abgeschrieben'],
+  korrektur_erforderlich: ['entwurf', 'storniert', 'abgeschrieben'],
+  erneut_eingereicht:     ['uebermittelt', 'storniert', 'abgeschrieben'],
   // Strittig: fachlich ungeklaert, manuelle Pruefung erforderlich
-  strittig:               ['gekuerzt', 'korrektur_erforderlich', 'abgelehnt', 'akzeptiert', 'bezahlt', 'storniert'],
+  strittig:               ['gekuerzt', 'korrektur_erforderlich', 'abgelehnt', 'akzeptiert', 'bezahlt', 'storniert', 'abgeschrieben'],
   // Endgueltige Status – keine Uebergaenge moeglich
   bezahlt:                [],
   akzeptiert:             [],
   storniert:              [],
+  abgeschrieben:          [],
 };
 
 const CORRECTION_TRANSITIONS: Record<CorrectionStatus, CorrectionStatus[]> = {
@@ -74,6 +76,7 @@ const TERMINAL_STATUSES: ReadonlySet<InvoiceStatus> = new Set([
   'bezahlt',
   'akzeptiert',
   'storniert',
+  'abgeschrieben',
 ]);
 
 // ---------------------------------------------------------------------------
@@ -95,6 +98,7 @@ export const INVOICE_STATUS_LABELS: Record<InvoiceStatus, string> = {
   storniert:              'Storniert',
   erneut_eingereicht:     'Erneut eingereicht',
   strittig:               'Strittig',
+  abgeschrieben:          'Abgeschrieben',
 };
 
 export const CORRECTION_STATUS_LABELS: Record<CorrectionStatus, string> = {

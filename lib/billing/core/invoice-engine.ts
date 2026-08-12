@@ -113,6 +113,14 @@ export interface CreditNoteResult {
   amountCents: number;
 }
 
+export interface WriteOffResult {
+  invoiceId: string;
+  previousStatus: string;
+  writtenOffAmountCents: number;
+  totalAmountCents: number;
+  paidAmountCents: number;
+}
+
 // ---------------------------------------------------------------------------
 // createInvoiceDraft
 // ---------------------------------------------------------------------------
@@ -677,6 +685,22 @@ export async function correctInvoice(
   if (isValidInvoiceStatus(currentStatus) && (currentStatus === 'storniert' as InvoiceStatus)) {
     throw new Error('Rechnung ist storniert — Korrektur nicht moeglich.');
   }
+  if (isValidInvoiceStatus(currentStatus) && (currentStatus === 'abgeschrieben' as InvoiceStatus)) {
+    throw new Error('Rechnung ist abgeschrieben — Korrektur nicht moeglich.');
+  }
+
+  if (corrections.length === 0) {
+    throw new Error('Mindestens eine Korrekturposition erforderlich.');
+  }
+  const correctedTotal = corrections.reduce((sum, c) => sum + c.gesamtpreisCent, 0);
+  if (correctedTotal <= 0) {
+    throw new Error('Korrigierter Gesamtbetrag muss positiv sein.');
+  }
+  for (const c of corrections) {
+    if (c.gesamtpreisCent < 0) {
+      throw new Error(`Negativer Betrag fuer "${c.leistungsart}" nicht erlaubt.`);
+    }
+  }
 
   // ═══ NEU: Tarif-Gegenprüfung für jede Korrekturposition ═══
   // Admin darf nicht beliebige Preise setzen — bei >10% Abweichung vom
@@ -721,11 +745,6 @@ export async function correctInvoice(
     INVOICE_NUMBER_PREFIX.korrektur
   );
 
-  // Korrigierten Gesamtbetrag berechnen
-  const correctedTotal = corrections.reduce(
-    (sum, c) => sum + c.gesamtpreisCent,
-    0
-  );
   const correctedAmount = correctedTotal / 100;
 
   // Korrekturrechnung erstellen
@@ -794,6 +813,22 @@ export async function correctInvoice(
 
   if (corrError || !correction) {
     throw new Error(`Korrektur-Eintrag konnte nicht erstellt werden: ${corrError?.message}`);
+  }
+
+  // CAS-Guard: Original darf zwischen Laden und Korrektur-Insert nicht
+  // storniert/abgeschrieben worden sein (Race mit cancelInvoice/writeOffInvoice)
+  const { data: casCheck } = await supabase
+    .from('invoices')
+    .select('id')
+    .eq('id', invoiceId)
+    .eq('status', currentStatus)
+    .maybeSingle();
+
+  if (!casCheck) {
+    await supabase.from('invoice_corrections').delete().eq('id', correction.id);
+    await supabase.from('invoice_items').delete().eq('invoice_id', korrInvoice.id);
+    await supabase.from('invoices').delete().eq('id', korrInvoice.id);
+    throw new Error('Rechnung wurde zwischenzeitlich geaendert (paralleler Zugriff) — bitte erneut versuchen.');
   }
 
   // Korrektur-Snapshot
@@ -892,6 +927,9 @@ export async function createCreditNote(
   if (isValidInvoiceStatus(currentStatus) && (currentStatus === 'storniert' as InvoiceStatus)) {
     throw new Error('Rechnung ist storniert — Gutschrift nicht moeglich.');
   }
+  if (isValidInvoiceStatus(currentStatus) && (currentStatus === 'abgeschrieben' as InvoiceStatus)) {
+    throw new Error('Rechnung ist abgeschrieben — Gutschrift nicht moeglich.');
+  }
 
   const originalAmountCents = Math.round(Number(original.total_amount) * 100);
 
@@ -966,6 +1004,28 @@ export async function createCreditNote(
 
   if (corrError || !correction) {
     throw new Error(`Korrektur-Eintrag konnte nicht erstellt werden: ${corrError?.message}`);
+  }
+
+  // CAS-Guard: nach Insert pruefen, ob Gesamtgutschriften den Originalbetrag
+  // nicht uebersteigen (Schutz gegen parallele Gutschrift-Race-Condition)
+  const { data: allCreditsAfterInsert } = await supabase
+    .from('invoice_corrections')
+    .select('corrected_amount_cents')
+    .eq('original_invoice_id', invoiceId)
+    .eq('correction_type', 'gutschrift')
+    .is('deleted_at', null);
+
+  const totalCreditedAfter = (allCreditsAfterInsert || []).reduce(
+    (sum, c) => sum + (originalAmountCents - (c.corrected_amount_cents ?? originalAmountCents)),
+    0
+  );
+
+  if (totalCreditedAfter > originalAmountCents) {
+    await supabase.from('invoice_corrections').delete().eq('id', correction.id);
+    await supabase.from('invoices').delete().eq('id', creditInvoice.id);
+    throw new Error(
+      'Gutschrift abgelehnt: Paralleler Zugriff hat den verfuegbaren Betrag ueberschritten — bitte erneut versuchen.'
+    );
   }
 
   // Gutschrift-Snapshot
