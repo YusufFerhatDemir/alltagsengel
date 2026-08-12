@@ -61,6 +61,25 @@ export function budgetTypeToRechtsgrundlage(budgetType: string): string {
   return result;
 }
 
+export type TarifStatus = 'verified' | 'unverified' | 'blocked';
+
+export class TarifNichtVerifiziertError extends Error {
+  public readonly leistungsart: string;
+  public readonly tarifStatus: TarifStatus;
+  public readonly verifizierungsQuelle: string | null;
+
+  constructor(leistungsart: string, status: TarifStatus, quelle: string | null) {
+    const detail = status === 'blocked'
+      ? `Tarif "${leistungsart}" ist gesperrt${quelle ? `: ${quelle}` : ''}. Kassenabrechnung blockiert.`
+      : `Tarif "${leistungsart}" ist nicht verifiziert. Kassenabrechnung nicht moeglich.`;
+    super(detail);
+    this.name = 'TarifNichtVerifiziertError';
+    this.leistungsart = leistungsart;
+    this.tarifStatus = status;
+    this.verifizierungsQuelle = quelle;
+  }
+}
+
 export interface BillingTarif {
   id: string;
   organization_id: string;
@@ -82,7 +101,12 @@ export interface BillingTarif {
   kombinations_abschlag_prozent: number;
   gueltig_ab: string;
   gueltig_bis: string | null;
-  tarifquelle: Tarifquelle | null;  // P4: Herkunft des Tarifs
+  tarifquelle: Tarifquelle | null;
+  tarif_status: TarifStatus;
+  verifiziert_am: string | null;
+  verifiziert_von: string | null;
+  verifizierungs_quelle: string | null;
+  ist_aktiv?: boolean;
 }
 
 export interface LineTotalParams {
@@ -125,12 +149,15 @@ export async function resolvePrice(
   supabase: SupabaseClient,
   params: PriceResolveParams
 ): Promise<BillingTarif> {
-  // Alle potentiell passenden Tarife laden
+  const istKasse = params.rechtsgrundlage !== 'privat';
+
+  // Alle potentiell passenden Tarife laden — ist_aktiv-Filter immer aktiv
   let query = supabase
     .from('billing_tariffs')
     .select('*')
     .eq('leistungsart', params.leistungsart)
     .eq('rechtsgrundlage', params.rechtsgrundlage)
+    .eq('ist_aktiv', true)
     .lte('gueltig_ab', params.datum)
     .is('deleted_at', null);
 
@@ -180,7 +207,30 @@ export async function resolvePrice(
     );
   }
 
-  return best.tarif;
+  const tarif = best.tarif;
+
+  // Fail-Closed: Kassentarife muessen verifiziert sein
+  if (istKasse) {
+    if (tarif.tarif_status === 'blocked') {
+      throw new TarifNichtVerifiziertError(
+        tarif.leistungsart, 'blocked', tarif.verifizierungs_quelle
+      );
+    }
+    if (tarif.tarif_status !== 'verified') {
+      throw new TarifNichtVerifiziertError(
+        tarif.leistungsart, tarif.tarif_status as TarifStatus, tarif.verifizierungs_quelle
+      );
+    }
+  } else {
+    // Privatrechnungen: blocked ist trotzdem gesperrt
+    if (tarif.tarif_status === 'blocked') {
+      throw new TarifNichtVerifiziertError(
+        tarif.leistungsart, 'blocked', tarif.verifizierungs_quelle
+      );
+    }
+  }
+
+  return tarif;
 }
 
 /**
