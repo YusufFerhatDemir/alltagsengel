@@ -537,16 +537,24 @@ Live-Apply über Supabase-MCP/SQL-Editor).
 
 ---
 
-## Block 21 — FHIR / ISiP Interoperabilität 📋
+## Block 21 — FHIR / ISiP Interoperabilität 🔄
 
-**Status:** Geplant
+**Status:** Größtenteils fertig, mit dokumentierten Einschränkungen (siehe `docs/fhir-isip.md`)
 
 | Modul | Beschreibung |
 |-------|--------------|
-| FHIR-Server | Ressourcen-Endpunkte (Patient, Encounter, Observation, CarePlan) |
-| ISiP-Konformität | Informationssicherheit in der Pflege |
-| Datenexport | Standardisierter Export für Wechsel/Portabilität |
-| Datenimport | Import von Klientendaten aus anderen Systemen |
+| FHIR-Server | Ressourcen-Endpunkte Patient/Encounter/Observation/CarePlan, Basis-R4 (kein Landesprofil), `OperationOutcome`-Fehlerantworten |
+| ISiP-Konformität | Pragmatisch als Sicherheitsmaßnahmen interpretiert (Audit-Trail, Zugriffskontrolle, Verschlüsselung, Datensparsamkeit) — **keine Zertifizierungsbehauptung** |
+| Datenexport | `GET /api/fhir/export?patient=` — vollständiges Bundle je Klient, als Download, Admin-UI unter `/admin/fhir` |
+| Datenimport | `POST /api/fhir/import` — **nur Patient-Ressourcen**, zweistufig (Vorschau → bestätigter Commit), kein Blind-Write |
+
+**Bewusst nicht umgesetzt** (Begründung in `docs/fhir-isip.md`): Encounter-/
+Observation-/CarePlan-**Import** (nur Export), `Practitioner`-Ressource,
+`AllergyIntolerance`/`MedicationStatement`, länderspezifisches
+ISiK/KBV-Profil, API-Key-Auth für externe (nicht-Admin-)Clients.
+
+Migration `20260829010000_fhir_isip_audit_log.sql` (fhir_audit_log)
+wartet auf Live-Apply.
 
 ---
 
@@ -574,7 +582,7 @@ Live-Apply über Supabase-MCP/SQL-Editor).
 | 18 | KIM / TI-Anbindung | 📋 Geplant | Mittel |
 | 19 | Erweiterte Analytics & Reporting | ✅ Fertig (Bonussystem-Migration wartet auf Live-Apply) | Niedrig |
 | 20 | Offline-First & Native App | 🔄 Kern fertig (Capacitor-Kamera/GPS-Plugins offen, Migration wartet auf Live-Apply) | Niedrig |
-| 21 | FHIR / ISiP Interoperabilität | 📋 Geplant | Niedrig |
+| 21 | FHIR / ISiP Interoperabilität | 🔄 Größtenteils fertig (Patient-Import only, Migration wartet auf Live-Apply) | Niedrig |
 
 ---
 
