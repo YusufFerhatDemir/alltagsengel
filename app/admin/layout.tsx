@@ -141,6 +141,7 @@ const navGroups = [
       { href: '/admin/kalender', label: 'Kalender', icon: <IconClipboard size={18} /> },
       { href: '/admin/arbeitszeiten', label: 'Arbeitszeiten', icon: <IconClock size={18} /> },
       { href: '/admin/urlaub', label: 'Urlaub', icon: <IconCalendar size={18} /> },
+      { href: '/admin/ausfallmanagement', label: 'Ausfallmanagement', icon: <IconTarget size={18} /> },
     ],
   },
   {
