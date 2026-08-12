@@ -22,11 +22,51 @@ function addDays(dateStr: string, days: number): string {
   return d.toISOString().slice(0, 10)
 }
 
+interface QualityDashboard {
+  zeitraum: { von: string; bis: string }
+  wunden: { gesamt: number; aktiv: number; verschlechtert: number; abgeheilt: number }
+  sturzereignisse: { anzahl: number }
+  vitalalarme: { aktiv: boolean; kritisch: number; warnung: number }
+  massnahmen: { offen: number; abgeschlossen: number }
+}
+
+function aktuellerMonatVon(): string {
+  const d = new Date()
+  return new Date(d.getFullYear(), d.getMonth(), 1).toISOString().slice(0, 10)
+}
+function aktuellerMonatBis(): string {
+  const d = new Date()
+  return new Date(d.getFullYear(), d.getMonth() + 1, 0).toISOString().slice(0, 10)
+}
+
 export default function AdminQualityPage() {
+  const [tab, setTab] = useState<'anrufe' | 'pflegequalitaet'>('anrufe')
   const [clients, setClients] = useState<Client[]>([])
   const [calls, setCalls] = useState<CallRow[]>([])
   const [loading, setLoading] = useState(true)
   const [docCall, setDocCall] = useState<{ client_id?: string; call_type?: string } | null>(null)
+  const [qVon, setQVon] = useState(aktuellerMonatVon())
+  const [qBis, setQBis] = useState(aktuellerMonatBis())
+  const [qDashboard, setQDashboard] = useState<QualityDashboard | null>(null)
+  const [qLoading, setQLoading] = useState(false)
+  const [qError, setQError] = useState<string | null>(null)
+
+  const loadQuality = useCallback(async () => {
+    setQLoading(true)
+    setQError(null)
+    try {
+      const res = await fetch(`/api/admin/analytics/quality?von=${qVon}&bis=${qBis}`)
+      const json = await res.json()
+      if (!res.ok) { setQError(json.error || 'Unbekannter Fehler'); setQDashboard(null); return }
+      setQDashboard(json)
+    } catch (err: any) {
+      setQError(err.message || 'Unbekannter Fehler')
+    } finally {
+      setQLoading(false)
+    }
+  }, [qVon, qBis])
+
+  useEffect(() => { if (tab === 'pflegequalitaet') loadQuality() }, [tab, loadQuality])
 
   const load = useCallback(async () => {
     try {
@@ -110,9 +150,16 @@ export default function AdminQualityPage() {
           <h1>Qualitätsmanagement</h1>
           <p className="admin-subtitle">Zufriedenheitsanrufe — 7 / 30 / 90 Tage, danach halbjährlich</p>
         </div>
-        <button onClick={() => setDocCall({})} style={primaryBtn}>+ Anruf dokumentieren</button>
+        {tab === 'anrufe' && <button onClick={() => setDocCall({})} style={primaryBtn}>+ Anruf dokumentieren</button>}
       </div>
 
+      <div className="admin-filters" style={{ marginBottom: 20 }}>
+        <button className={`admin-filter-btn ${tab === 'anrufe' ? 'active' : ''}`} onClick={() => setTab('anrufe')}>Zufriedenheitsanrufe</button>
+        <button className={`admin-filter-btn ${tab === 'pflegequalitaet' ? 'active' : ''}`} onClick={() => setTab('pflegequalitaet')}>Pflegequalität</button>
+      </div>
+
+      {tab === 'anrufe' && (
+      <>
       {overdue > 0 && <Banner tone="danger">❗ {overdue} überfällige(r) Zufriedenheitsanruf(e).</Banner>}
 
       {/* Auswertung */}
@@ -197,6 +244,54 @@ export default function AdminQualityPage() {
               </tbody>
             </table>
           </div>
+        </>
+      )}
+      </>
+      )}
+
+      {tab === 'pflegequalitaet' && (
+        <>
+          <div style={{ display: 'flex', gap: 10, alignItems: 'end', flexWrap: 'wrap', marginBottom: 20 }}>
+            <label style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 12, color: 'var(--ink3)' }}>
+              Von
+              <input type="date" value={qVon} onChange={e => setQVon(e.target.value)} style={modalInput} />
+            </label>
+            <label style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 12, color: 'var(--ink3)' }}>
+              Bis
+              <input type="date" value={qBis} onChange={e => setQBis(e.target.value)} style={modalInput} />
+            </label>
+            <button onClick={loadQuality} disabled={qLoading} style={actionBtn}>{qLoading ? 'Lädt…' : 'Aktualisieren'}</button>
+          </div>
+
+          {qError && <Banner tone="danger">{qError}</Banner>}
+
+          {qLoading && !qDashboard ? <p>Laden…</p> : qDashboard && (
+            <>
+              <div className="admin-stats-grid">
+                <div className="admin-stat-card" style={{ borderLeft: qDashboard.wunden.verschlechtert > 0 ? '3px solid #D04B3B' : undefined }}>
+                  <div className="admin-stat-value">{qDashboard.wunden.aktiv}</div>
+                  <div className="admin-stat-label">Offene Wunden ({qDashboard.wunden.verschlechtert} verschlechtert, {qDashboard.wunden.gesamt} gesamt)</div>
+                </div>
+                <div className="admin-stat-card" style={{ borderLeft: qDashboard.sturzereignisse.anzahl > 0 ? '3px solid #E8A000' : undefined }}>
+                  <div className="admin-stat-value">{qDashboard.sturzereignisse.anzahl}</div>
+                  <div className="admin-stat-label">Sturzereignisse im Zeitraum</div>
+                </div>
+                <div className="admin-stat-card" style={{ borderLeft: qDashboard.vitalalarme.kritisch > 0 ? '3px solid #D04B3B' : undefined }}>
+                  <div className="admin-stat-value">
+                    {qDashboard.vitalalarme.aktiv ? `${qDashboard.vitalalarme.kritisch} kritisch / ${qDashboard.vitalalarme.warnung} Warnung` : 'Deaktiviert'}
+                  </div>
+                  <div className="admin-stat-label">Vitalwerte-Alarme{!qDashboard.vitalalarme.aktiv && ' (VITALS_GRENZWERT_ALARME_AKTIV aus)'}</div>
+                </div>
+                <div className="admin-stat-card accent">
+                  <div className="admin-stat-value">{qDashboard.massnahmen.offen}</div>
+                  <div className="admin-stat-label">Offene Maßnahmen ({qDashboard.massnahmen.abgeschlossen} abgeschlossen)</div>
+                </div>
+              </div>
+              <p style={{ fontSize: 12, color: 'var(--ink4)', marginTop: 16 }}>
+                Quelle: Wunddokumentation (Block 7), Pflegeverlauf-Einträge vom Typ „Sturz", Vitalwerte-Grenzwertbewertung (nur aktiv, wenn regulatorisch freigeschaltet), offene Maßnahmenplan-Einträge.
+              </p>
+            </>
+          )}
         </>
       )}
 

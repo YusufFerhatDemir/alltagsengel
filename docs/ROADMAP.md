@@ -466,17 +466,30 @@ Bislang ist nur § 105 SGB XI implementiert. Für HKP (Häusliche Krankenpflege)
 
 ---
 
-## Block 19 — Erweiterte Analytics & Reporting 📋
+## Block 19 — Erweiterte Analytics & Reporting ✅
 
-**Status:** Geplant (Grundlage in `app/admin/analytics/`, `app/mis/analytics/` vorhanden)
+**Status:** Fertig (27.08.2026). Baut auf den bereits vorhandenen Grundlagen in
+`app/admin/analytics/`, `app/mis/analytics/`, `app/admin/ops-audit/`,
+`app/admin/pruefprotokoll/`, `app/admin/quality/` und `app/admin/bonuses/` auf
+(alle fünf Seiten existierten als funktionierende Betriebssystem-Module —
+Block 19 ergänzt die fehlenden Auswertungen/Workflows und hebt sie auf das
+org-gefencte `requireOpsAdmin()`-API-Muster).
+**Migration:** `20260827010000_analytics_bonussystem.sql` (Bonussystem-Tabellen,
+wartet auf Live-Apply über Supabase-MCP/SQL-Editor). Alle übrigen Module lesen
+ausschließlich bestehende Tabellen — keine weitere Migration nötig.
 
-| Modul | Beschreibung |
-|-------|--------------|
-| KPI-Dashboard | Echtzeit-KPIs: Umsatz, Auslastung, Ablehnungsquote, Pflegequalität |
-| Ops-Audit | `app/admin/ops-audit/` — Betriebs-Audit mit Prüfprotokoll-Logik |
-| Prüfprotokoll | `app/admin/pruefprotokoll/` — MDK/MD-Prüfvorbereitung |
-| Quality-Dashboard | `app/admin/quality/` — Qualitätskennzahlen |
-| Bonussystem | `app/admin/bonuses/` — Leistungsbezogene Boni |
+| Modul | Dateien | Beschreibung |
+|-------|---------|--------------|
+| KPI-Dashboard | `lib/analytics/kpi.ts`, `app/api/admin/analytics/kpi/`, `app/admin/analytics/kpi/` | Echtzeit-KPIs aus echten Tabellen: Umsatz (`invoices`), Auslastung (`caregivers`/`assignments`), Ablehnungsquote (`bookings`), Pflegequalität (Ø aus `satisfaction_calls`, org-gefenced Datenquelle — kein Platzhalter nötig, da real vorhanden) |
+| Ops-Audit | `lib/analytics/opsAudit.ts`, `app/api/admin/analytics/ops-audit/`, `app/admin/ops-audit/` | Vereinheitlichte Sicht auf `ops_aktivitaetslog` + `billing_audit_trail`, mit Filterung nach Zeitraum, Akteur (Profil-Auflösung) und Aktion |
+| Prüfprotokoll | `lib/analytics/pruefmappe.ts`, `app/api/admin/analytics/pruefmappe/`, `app/admin/pruefprotokoll/` (Tab „MDK-Prüfmappe") | Stellt prüfungsrelevante Nachweise pro Klient/Zeitraum zusammen: Leistungsnachweise, Pflegeverlauf, Maßnahmenplan, Wunddoku, Vitalwerte — aus Block 6/7-Tabellen, keine Fake-Daten |
+| Quality-Dashboard | `lib/analytics/quality.ts`, `app/api/admin/analytics/quality/`, `app/admin/quality/` (Tab „Pflegequalität") | Aggregiert offene Wunden, Sturzereignisse (`pflege_verlauf` Typ „sturz"), Vitalwerte-Alarme (respektiert den MDR-Kill-Switch `VITALS_GRENZWERT_ALARME_AKTIV`, fail-closed) und offene Maßnahmen |
+| Bonussystem | `lib/analytics/bonusEngine.ts`, `app/api/admin/analytics/bonuses/*`, `app/admin/bonuses/` (Tabs „Regelwerk"/„Berechnungslauf"/„Freigaben & Historie") | Konfigurierbares Regelwerk (`bonus_regeln`, keine hartcodierten Beträge/Prozentsätze), automatischer Berechnungslauf (`bonus_berechnungen`) auf Basis realer Kriterien (keine Ausfälle, vollständige Dokumentation, keine offenen Prüfhinweise), Freigabe-Workflow mit Historie (`bonus_freigaben`) |
+| Tests | `__tests__/analytics/*.test.ts` | 46 Tests auf alle reinen Berechnungs-/Bewertungsfunktionen der fünf Module |
+
+**Bewusste Auslassungen:**
+- Pflegequalität im KPI-Dashboard nutzt `satisfaction_calls` als reale Datenquelle — kein Platzhalter, da vorhanden (anders als ursprünglich vermutet).
+- Bonuskriterien sind auf drei Typen begrenzt, die sich aus real vorhandenen, caregiver-bezogenen Tabellen berechnen lassen (`absences`, `service_records`, `review_errors`). Weitere Kriterien (z. B. Kundenbewertung pro Kraft) fehlt die Datengrundlage — `satisfaction_calls` referenziert nur `client_id`, keine `caregiver_id`.
 
 ---
 
@@ -528,7 +541,7 @@ Bislang ist nur § 105 SGB XI implementiert. Für HKP (Häusliche Krankenpflege)
 | 16 | Rechnungsmanagement & Gutschriften | ✅ Fertig | — |
 | 17 | § 302 SGB V (Sonstige Leistungserbringer) | 🔄 Gerüst fertig, Export gesperrt (TA1 fehlt) | Mittel |
 | 18 | KIM / TI-Anbindung | 📋 Geplant | Mittel |
-| 19 | Erweiterte Analytics & Reporting | 📋 Geplant | Niedrig |
+| 19 | Erweiterte Analytics & Reporting | ✅ Fertig (Bonussystem-Migration wartet auf Live-Apply) | Niedrig |
 | 20 | Offline-First & Native App | 📋 Geplant | Niedrig |
 | 21 | FHIR / ISiP Interoperabilität | 📋 Geplant | Niedrig |
 
