@@ -242,10 +242,11 @@ export async function createMahnungDocument(
   const feeCents = entry?.dunning_fee_cents || DUNNING_FEES_CENTS[dunningLevel] || 0
   const totalDueCents = openCents + feeCents
 
-  // Zahlungsfrist: 14 Tage ab heute
-  const deadline = new Date()
-  deadline.setDate(deadline.getDate() + 14)
-  const deadlineStr = datumBerlin(deadline)
+  // Zahlungsfrist: 14 Tage ab heute (Berlin-Kalender)
+  const heuteIso = heuteBerlin()
+  const deadlineDate = new Date(heuteIso + 'T12:00:00+01:00')
+  deadlineDate.setDate(deadlineDate.getDate() + 14)
+  const deadlineStr = datumBerlin(deadlineDate)
 
   const client = inv.client as any
   const invNum = inv.invoice_number_formatted || inv.invoice_number || ''

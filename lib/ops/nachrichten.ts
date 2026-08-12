@@ -9,6 +9,7 @@ export async function listPosteingang(
     .from('ops_posteingang')
     .select('*')
     .eq('empfaenger_id', filter.empfaengerId)
+    .eq('organization_id', filter.organizationId)
     .order('created_at', { ascending: false })
   if (error) throw new Error(`Posteingang konnte nicht geladen werden: ${error.message}`)
   return (data ?? []) as OpsPosteingang[]
