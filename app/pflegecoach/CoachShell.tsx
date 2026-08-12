@@ -25,7 +25,6 @@ const NAV = [
   { href: '/pflegecoach/angehoerige', label: 'Für Angehörige' },
   { href: '/pflegecoach/verlauf', label: 'Verlauf' },
   { href: '/pflegecoach/bericht', label: 'Bericht' },
-  { href: '/pflegecoach/freischaltung', label: 'Zugang' },
   { href: '/pflegecoach/einstellungen', label: 'Einstellungen' },
 ]
 

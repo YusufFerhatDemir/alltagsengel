@@ -60,8 +60,7 @@ export default function FreischaltungSeite() {
     <>
       <h1 className="pc-h1">Zugang freischalten</h1>
       <p className="pc-lead">
-        Wenn Ihre Pflegekasse den PflegeCoach genehmigt hat, haben Sie einen Freischaltcode
-        erhalten. Geben Sie ihn hier ein.
+        Wenn Sie einen Freischaltcode erhalten haben, können Sie ihn hier eingeben.
       </p>
 
       {status?.freigeschaltet && (
@@ -71,9 +70,8 @@ export default function FreischaltungSeite() {
       )}
       {status && !status.freigeschaltet && !status.pflicht && (
         <p className="pc-feedback pc-feedback--info">
-          Sie können den PflegeCoach schon jetzt vollständig nutzen. Ein Freischaltcode ist
-          derzeit nicht erforderlich — er wird gebraucht, sobald die Abrechnung über die
-          Pflegekasse läuft.
+          Sie können den PflegeCoach vollständig nutzen. Ein Freischaltcode ist
+          derzeit nicht erforderlich.
         </p>
       )}
 
@@ -132,8 +130,8 @@ export default function FreischaltungSeite() {
       <section className="pc-card" aria-labelledby="hilfe-titel">
         <h2 id="hilfe-titel">Sie haben noch keinen Code?</h2>
         <p>
-          Prüfen Sie zuerst, ob ein Antrag bei Ihrer Pflegekasse für Sie infrage kommt:{' '}
-          <Link href="/pflegecoach/anspruch">Zur Anspruchsprüfung</Link>.
+          Ein Freischaltcode kann im Rahmen eines Pilotzugangs oder einer Kooperation
+          bereitgestellt werden. Bei Fragen wenden Sie sich an Alltagsengel.
         </p>
       </section>
     </>

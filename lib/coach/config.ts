@@ -7,8 +7,20 @@
 // etwas Unfreigegebenes scharf ist oder etwas Funktionierendes ausfällt.
 // ═══════════════════════════════════════════════════════════════
 
+export const COACH_DIPA_MODUS_ENV = 'COACH_DIPA_MODUS'
 export const COACH_FREISCHALTUNG_ENV = 'COACH_FREISCHALTUNG_PFLICHT'
 export const COACH_NUTZUNGSNACHWEIS_ENV = 'COACH_NUTZUNGSNACHWEIS_AKTIV'
+
+/**
+ * Ist der PflegeCoach im DiPA-Modus (BfArM-Listing vorhanden)?
+ *
+ * Default AUS — der PflegeCoach laeuft als freier digitaler Service.
+ * Wenn aktiviert: Anspruchspruefung, Kassenreferenzen und Abrechnungswege
+ * werden im UI sichtbar.
+ */
+export function dipaModus(): boolean {
+  return process.env[COACH_DIPA_MODUS_ENV] === 'true'
+}
 
 /**
  * Muss der Zugang per Freischaltcode aktiviert sein, bevor der PflegeCoach

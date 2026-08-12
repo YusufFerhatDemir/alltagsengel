@@ -2,9 +2,11 @@ import type { Metadata } from 'next'
 import CoachShell from './CoachShell'
 import './pflegecoach.css'
 
-// Eigenständiger DiPA-Produktbereich: eigenes Layout, werbefrei,
+// PflegeCoach-Produktbereich: eigenes Layout, werbefrei,
 // getrennt vom Alltagsengel-Marketing (LayoutWrapper/Tracker sind für
 // /pflegecoach deaktiviert — siehe components/ClientSideProviders.tsx).
+// DiPA-spezifische Funktionen (Anspruch, Freischaltpflicht, Abrechnung)
+// sind per COACH_DIPA_MODUS gated und im Default AUS.
 export const metadata: Metadata = {
   title: { absolute: 'Digitaler PflegeCoach' },
   description:
