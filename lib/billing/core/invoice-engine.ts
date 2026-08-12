@@ -668,13 +668,18 @@ export async function correctInvoice(
 ): Promise<CorrectionResult> {
   // D3: Atomare Validierung per RPC — sperrt die Originalrechnung mit FOR UPDATE,
   // sodass parallele Korrektur-/Storno-Operationen serialisiert werden.
+  // Fallback auf App-Layer-CAS wenn RPC noch nicht live (Migration pending).
   if (expectedOrgId) {
     const { error: rpcError } = await supabase.rpc('validate_correction_atomic', {
       p_invoice_id: invoiceId,
       p_org_id: expectedOrgId,
     });
     if (rpcError) {
-      throw new Error(rpcError.message);
+      const msg = rpcError.message ?? '';
+      const notFound = msg.includes('Could not find') || msg.includes('does not exist') || msg.includes('not found');
+      if (!notFound) {
+        throw new Error(msg);
+      }
     }
   }
 
@@ -922,6 +927,8 @@ export async function createCreditNote(
 
   // D3: Atomare Validierung per RPC — sperrt Rechnung + bestehende Gutschriften
   // mit FOR UPDATE, sodass parallele Gutschriften serialisiert werden.
+  // Fallback auf App-Layer-CAS wenn RPC noch nicht live (Migration pending).
+  let rpcValidated = false;
   if (expectedOrgId) {
     const { data: rpcResult, error: rpcError } = await supabase.rpc('create_credit_note_atomic', {
       p_invoice_id: invoiceId,
@@ -931,12 +938,17 @@ export async function createCreditNote(
       p_org_id: expectedOrgId,
     });
     if (rpcError) {
-      throw new Error(rpcError.message);
-    }
-    // RPC hat atomar validiert — proceed with insert
-    const validated = rpcResult as { original_amount_cents: number; remaining_cents: number; validated: boolean };
-    if (!validated?.validated) {
-      throw new Error('Atomare Gutschrift-Validierung fehlgeschlagen.');
+      const msg = rpcError.message ?? '';
+      const notFound = msg.includes('Could not find') || msg.includes('does not exist') || msg.includes('not found');
+      if (!notFound) {
+        throw new Error(msg);
+      }
+    } else {
+      const validated = rpcResult as { original_amount_cents: number; remaining_cents: number; validated: boolean };
+      if (!validated?.validated) {
+        throw new Error('Atomare Gutschrift-Validierung fehlgeschlagen.');
+      }
+      rpcValidated = true;
     }
   }
 
