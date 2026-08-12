@@ -6,7 +6,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { DUNNING_LABELS, DUNNING_FEES_CENTS, type DunningLevel } from '../core/dunning'
 import { logBillingAction } from '../core/audit'
-import { datumBerlin, heuteBerlin } from '@/lib/utils/timezone';
+import { berlinParts, datumBerlin, heuteBerlin } from '@/lib/utils/timezone';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -76,8 +76,8 @@ const DUNNING_TEXTS: Record<string, { subject: string; body: string; closing: st
 // formatDate — deutsches Datumsformat
 // ---------------------------------------------------------------------------
 function formatDateDE(iso: string): string {
-  const d = new Date(iso)
-  return `${d.getDate().toString().padStart(2, '0')}.${(d.getMonth() + 1).toString().padStart(2, '0')}.${d.getFullYear()}`
+  const p = berlinParts(new Date(iso))
+  return `${p.day}.${p.month}.${p.year}`
 }
 
 // ---------------------------------------------------------------------------

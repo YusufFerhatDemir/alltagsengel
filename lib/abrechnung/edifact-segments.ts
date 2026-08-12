@@ -20,6 +20,8 @@
 
 /** Trennzeichen laut UNA-Segment: Komponententrenner ':', Elementtrenner '+',
  *  Dezimalzeichen '.', Freigabezeichen '?', Segmentende "'" */
+import { berlinParts } from '@/lib/utils/timezone'
+
 export const SEGMENT_TERMINATOR = "'"
 
 /** Freigabezeichen: Sonderzeichen in Textfeldern müssen mit '?' maskiert werden. */
@@ -43,7 +45,8 @@ export function menge(wert: number): string {
 /** Datum als JJJJMMTT (aus ISO-String "YYYY-MM-DD" oder Date). */
 export function datumJJJJMMTT(d: string | Date): string {
   if (d instanceof Date) {
-    return `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}`
+    const p = berlinParts(d)
+    return `${p.year}${p.month}${p.day}`
   }
   return d.replace(/-/g, '').slice(0, 8)
 }
@@ -72,7 +75,8 @@ export function UNB(
   dateiindikator: '0' | '1' | '2' = '2',
 ): string {
   const datum = datumJJJJMMTT(erstelldatum)
-  const zeit = `${String(erstelldatum.getHours()).padStart(2, '0')}${String(erstelldatum.getMinutes()).padStart(2, '0')}`
+  const bp = berlinParts(erstelldatum)
+  const zeit = `${bp.hour}${bp.minute}`
   return `UNB+UNOC:3+${absenderIK}+${empfaengerIK}+${datum}:${zeit}+${String(datenaustauschreferenz).padStart(5, '0')}++${anwendungsreferenz}+${dateiindikator}'`
 }
 

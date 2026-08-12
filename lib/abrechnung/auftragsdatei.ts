@@ -1,3 +1,5 @@
+import { berlinParts } from '@/lib/utils/timezone'
+
 // ═══════════════════════════════════════════════════════════════
 // Auftragsdatei (Begleitzettel/"Lieferschein") zur Nutzdatendatei
 // Quelle: Technische Anlage 1, Anhang 1 "Struktur Auftragsdatei",
@@ -26,8 +28,8 @@ function an(wert: string, laenge: number): string {
 
 /** Zeitstempel JJJJMMTTssmmss */
 function zeitstempel(d: Date): string {
-  const p = (x: number, l = 2) => String(x).padStart(l, '0')
-  return `${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}`
+  const p = berlinParts(d)
+  return `${p.year}${p.month}${p.day}${p.hour}${p.minute}${p.second}`
 }
 
 export interface AuftragsdateiParams {

@@ -1,5 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
-import { heuteBerlin } from '@/lib/utils/timezone'
+import { heuteBerlin, datumBerlin, berlinParts } from '@/lib/utils/timezone'
 import {
   ENTLASTUNG_JAEHRLICH_EUR,
   VP_JAEHRLICH_EUR,
@@ -142,7 +142,7 @@ export async function pruefeBudget(
   organizationId: string,
   budgetTyp: BudgetTyp = 'entlastung',
 ): Promise<BudgetPruefErgebnis> {
-  const year = new Date().getFullYear()
+  const year = parseInt(heuteBerlin().slice(0, 4), 10)
   const { data: budget } = await supabase
     .from('client_budgets')
     .select('annual_amount, carryover_amount, used_amount, budget_type')
@@ -188,7 +188,7 @@ export async function pruefeVPBudget(
 ): Promise<BudgetPruefErgebnis & { vpKzpKombiniertWarnung: string | null }> {
   const vpResult = await pruefeBudget(supabase, clientId, organizationId, 'verhinderungspflege')
 
-  const year = new Date().getFullYear()
+  const year = parseInt(heuteBerlin().slice(0, 4), 10)
   const { data: budgets } = await supabase
     .from('client_budgets')
     .select('budget_type, used_amount, combined_used_amount')

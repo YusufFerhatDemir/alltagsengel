@@ -15,6 +15,7 @@
 import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
+import { berlinParts } from '@/lib/utils/timezone'
 import {
   buildImportPreview,
   candidateToClientInsert,
@@ -32,11 +33,10 @@ interface ImportDecision {
 }
 
 function generateCustomerNumber(): string {
-  const now = new Date()
-  const yy = String(now.getFullYear()).slice(-2)
-  const mm = String(now.getMonth() + 1).padStart(2, '0')
+  const p = berlinParts(new Date())
+  const yy = p.year.slice(-2)
   const rand = String(Math.floor(1000 + Math.random() * 9000))
-  return `KD-${yy}${mm}-${rand}`
+  return `KD-${yy}${p.month}-${rand}`
 }
 
 export async function POST(request: Request) {
