@@ -38,6 +38,7 @@ export const AUDIT_ENTITY_TYPES = [
   'dta_ruecklaeufer_position',
   'dokument', 'dokument_version', 'vertrag', 'kontaktperson',
   'verordnung', 'kundenakte', 'mitarbeiterakte',
+  'sepa_mandate', 'sepa_batch', 'dunning_document',
 ] as const;
 
 export type AuditEntityType = (typeof AUDIT_ENTITY_TYPES)[number];
