@@ -34,7 +34,10 @@ export async function GET(request: Request) {
       .range(offset, offset + count - 1)
 
     if (name) {
-      query = query.or(`first_name.ilike.%${name}%,last_name.ilike.%${name}%`)
+      const safeName = name.replace(/[,.()"'\\]/g, '')
+      if (safeName) {
+        query = query.or(`first_name.ilike.%${safeName}%,last_name.ilike.%${safeName}%`)
+      }
     }
 
     const { data, error, count: total } = await query

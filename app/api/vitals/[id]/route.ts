@@ -18,6 +18,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
         : body.wertSekundaer === undefined ? undefined : null,
       gemessenAm: body.gemessenAm,
       notizen: body.notizen,
+      actorId: auth.ctx.userId,
     })
 
     return NextResponse.json({ messung })

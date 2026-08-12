@@ -22,7 +22,7 @@ export async function GET(request: Request) {
   const caregiverId = url.searchParams.get('caregiverId')
 
   const supabase = await createClient()
-  let query = supabase.from('eul_qualifikationen').select('*').order('created_at', { ascending: false })
+  let query = supabase.from('eul_qualifikationen').select('*').eq('organization_id', auth.ctx.organizationId).order('created_at', { ascending: false })
   if (caregiverId) query = query.eq('caregiver_id', caregiverId)
 
   const { data, error } = await query

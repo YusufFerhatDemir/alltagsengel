@@ -208,6 +208,7 @@ export interface UpdateVitalParams {
   wertSekundaer?: number | null
   gemessenAm?: string
   notizen?: string | null
+  actorId?: string
 }
 
 export async function updateVital(
@@ -244,7 +245,7 @@ export async function updateVital(
 
   await logAuditEvent({
     action: 'update',
-    actorId: existing.measured_by,
+    actorId: params.actorId ?? existing.measured_by,
     organizationId,
     entityType: 'vital_sign',
     entityId: id,
