@@ -27,6 +27,7 @@ export async function GET() {
   const { data, error } = await supabase
     .from('coach_freischaltcodes')
     .select('id, code_praefix, quelle, kostentraeger_ik, genehmigt_am, gueltig_von, gueltig_bis, status, abrechnungsweg_key, eingeloest_am, notiz, created_at')
+    .eq('organization_id', auth.ctx.organizationId)
     .order('created_at', { ascending: false })
     .limit(500)
 

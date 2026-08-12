@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { getActiveOrgId } from '@/lib/organizations/server'
 
 /**
  * GET /api/rechnungen/[id]/pdf
@@ -52,7 +53,22 @@ export async function GET(
     }
 
     const client = Array.isArray(invoice.client) ? invoice.client[0] : invoice.client
-    if (!isAdmin && client?.user_id !== user.id) {
+
+    if (isAdmin) {
+      const orgId = await getActiveOrgId()
+      if (!orgId) {
+        return NextResponse.json({ error: 'Keine Organisation zugeordnet.' }, { status: 403 })
+      }
+      const { data: orgCheck } = await admin
+        .from('invoices')
+        .select('id')
+        .eq('id', invoiceId)
+        .eq('organization_id', orgId)
+        .maybeSingle()
+      if (!orgCheck) {
+        return NextResponse.json({ error: 'Kein Zugriff auf diese Rechnung.' }, { status: 403 })
+      }
+    } else if (client?.user_id !== user.id) {
       return NextResponse.json({ error: 'Kein Zugriff auf diese Rechnung.' }, { status: 403 })
     }
 
