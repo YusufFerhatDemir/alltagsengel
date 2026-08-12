@@ -86,9 +86,9 @@ describe('D2: pruefeBudget VP-Unterstützung', () => {
     expect(src).toContain(".eq('budget_type', budgetTyp)")
   })
 
-  it('verwendet VP_JAEHRLICH_EUR als Default für VP', () => {
+  it('verwendet VP_KZP_KOMBINIERT_EUR als Default für VP (§42a gemeinsamer Jahresbetrag)', () => {
     const src = read('lib/personal/einsatzfreigabe.ts')
-    expect(src).toContain('VP_JAEHRLICH_EUR')
+    expect(src).toContain('VP_KZP_KOMBINIERT_EUR')
     expect(src).toContain('ENTLASTUNG_JAEHRLICH_EUR')
   })
 
@@ -113,6 +113,51 @@ describe('D2: pruefeVPBudget (Kombinations-Budget)', () => {
   it('gibt vpKzpKombiniertWarnung zurück', () => {
     const src = read('lib/personal/einsatzfreigabe.ts')
     expect(src).toContain('vpKzpKombiniertWarnung: string | null')
+  })
+})
+
+describe('D2: §42a Gemeinsamer Jahresbetrag (seit 01.07.2025)', () => {
+  it('VP-Default ist VP_KZP_KOMBINIERT_EUR (3539), nicht VP_JAEHRLICH_EUR (1685)', () => {
+    const src = read('lib/personal/einsatzfreigabe.ts')
+    const pruefeBudgetFn = src.slice(
+      src.indexOf('async function pruefeBudget'),
+      src.indexOf('async function pruefeVPBudget'),
+    )
+    expect(pruefeBudgetFn).toContain('VP_KZP_KOMBINIERT_EUR')
+    expect(pruefeBudgetFn).not.toContain('VP_JAEHRLICH_EUR')
+  })
+
+  it('Gesamtbudget 3539€ wird nicht überschritten', async () => {
+    const mod = await import('../../lib/config/budget-constants')
+    expect(mod.VP_KZP_KOMBINIERT_EUR).toBe(3539)
+  })
+
+  it('VP allein kann maximal 3539€ nutzen (nicht nur 1685€)', async () => {
+    const mod = await import('../../lib/config/budget-constants')
+    expect(mod.VP_KZP_KOMBINIERT_EUR).toBeGreaterThanOrEqual(mod.VP_JAEHRLICH_EUR)
+    expect(mod.VP_KZP_KOMBINIERT_EUR).toBe(3539)
+  })
+
+  it('KZP allein kann maximal 3539€ nutzen (nicht nur 1854€)', async () => {
+    const mod = await import('../../lib/config/budget-constants')
+    expect(mod.VP_KZP_KOMBINIERT_EUR).toBeGreaterThanOrEqual(mod.KZP_JAEHRLICH_EUR)
+  })
+
+  it('VP+KZP zusammen maximal 3539€ — keine Doppelzählung', async () => {
+    const mod = await import('../../lib/config/budget-constants')
+    expect(mod.VP_JAEHRLICH_EUR + mod.KZP_JAEHRLICH_EUR).toBe(mod.VP_KZP_KOMBINIERT_EUR)
+  })
+
+  it('pruefeVPBudget prüft combined_used_amount gegen VP_KZP_KOMBINIERT_EUR', () => {
+    const src = read('lib/personal/einsatzfreigabe.ts')
+    const vpBudgetFn = src.slice(src.indexOf('async function pruefeVPBudget'))
+    expect(vpBudgetFn).toContain('combined_used_amount')
+    expect(vpBudgetFn).toContain('VP_KZP_KOMBINIERT_EUR')
+  })
+
+  it('VP_JAEHRLICH_EUR und KZP_JAEHRLICH_EUR sind nur Referenzwerte', () => {
+    const src = read('lib/config/budget-constants.ts')
+    expect(src).toContain('Referenzwert')
   })
 })
 

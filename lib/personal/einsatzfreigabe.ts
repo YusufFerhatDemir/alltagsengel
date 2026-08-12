@@ -2,7 +2,6 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { heuteBerlin, datumBerlin, berlinParts } from '@/lib/utils/timezone'
 import {
   ENTLASTUNG_JAEHRLICH_EUR,
-  VP_JAEHRLICH_EUR,
   VP_KZP_KOMBINIERT_EUR,
 } from '@/lib/config/budget-constants'
 import type { BudgetTyp } from '@/lib/config/budget-constants'
@@ -154,7 +153,7 @@ export async function pruefeBudget(
   if (!budget) return { warnung: null, blockiert: false, prozent: 0, budgetTyp }
 
   const defaultAmount = budgetTyp === 'verhinderungspflege'
-    ? VP_JAEHRLICH_EUR
+    ? VP_KZP_KOMBINIERT_EUR
     : ENTLASTUNG_JAEHRLICH_EUR
   const available = (budget.annual_amount ?? defaultAmount) + (budget.carryover_amount ?? 0)
   const used = budget.used_amount ?? 0

@@ -1,9 +1,8 @@
 # FINALER RESTSTATUS — Alltagsengel Betriebsabnahme
 
-**Stand:** 12.08.2026
-**Teststand:** 2022 Tests grün, 0 fehlgeschlagen, 29 übersprungen
+**Stand:** 12.08.2026 (Fachliche Korrekturprüfung)
+**Teststand:** 2029 Tests grün, 0 fehlgeschlagen, 29 übersprungen
 **Typecheck:** 0 Fehler
-**Letzter Commit:** 3860cdc
 
 ---
 
@@ -11,9 +10,9 @@
 
 Alle folgenden Bereiche sind technisch fertig, getestet und deployed:
 
-1. **Budget-Konstanten** — VP 1685€, KZP 1854€, Kombi 3539€ (PUEG +4,5% ab 01.01.2025, §39/§42 SGB XI)
+1. **Budget-Konstanten** — VP 1685€, KZP 1854€, Gemeinsamer Jahresbetrag 3539€ (§42a SGB XI, seit 01.07.2025)
 2. **Entlastungsbetrag** — 131€/Monat, 1572€/Jahr (§45b SGB XI)
-3. **VP-Budgetcheck** — pruefeVPBudget() verdrahtet mit Kombinationsbudget VP+KZP (lib/personal/einsatzfreigabe.ts)
+3. **VP-Budgetcheck** — pruefeBudget() nutzt VP_KZP_KOMBINIERT_EUR (3539€) als Default für VP (§42a: VP allein kann bis 3539€ nutzen); pruefeVPBudget() prüft combined_used_amount gegen 3539€
 4. **Feiertage** — alle 16 Bundesländer implementiert inkl. Buß- und Bettag-Berechnung (Sachsen), 70 Tests
 5. **Multi-Tenancy Org-Fence** — Nachrichten (lib/ops/nachrichten.ts), Visitor-Alert (app/api/visitor-alert/route.ts), Pricing (app/api/pricing/route.ts)
 6. **OPOS bezahlt-Filter** — Forderungsübersicht + API-Route filtern bezahlte Posten
@@ -73,9 +72,9 @@ Alle folgenden Bereiche sind technisch fertig, getestet und deployed:
 
 | # | Thema | Was fehlt | Nächster Schritt | §45b-Blocker |
 |---|-------|-----------|------------------|--------------|
-| C1 | **SEPA Creditor-ID** | Gläubiger-ID bei der Bundesbank | Antrag unter bundesbank.de/glaeubiger-id stellen (Anleitung: docs/ANLEITUNG_SEPA_CREDITOR_ID.md) | **JA** — ohne Creditor-ID kein Lastschrifteinzug |
+| C1 | **SEPA Creditor-ID** | Gläubiger-ID bei der Bundesbank | Antrag unter bundesbank.de/glaeubiger-id stellen (Anleitung: docs/ANLEITUNG_SEPA_CREDITOR_ID.md) | **NEIN** — nur für SEPA-Lastschrifteinzug nötig, nicht für §45b-Leistungserbringung (§45b nutzt Kostenerstattung/Rechnung, Quelle: §45b Abs. 1 S. 3 SGB XI, Deutsche Bundesbank) |
 | C2 | **23 Tarife / 24 Leistungspreise** | Fachliche Prüfung der Werte gegen Vergütungsvereinbarungen | billing_tariffs und leistungspreise in Supabase gegen die unterzeichneten Vergütungsvereinbarungen der Pflegekassen abgleichen | **JA** — falsche Tarife = falsche Abrechnungen |
-| C3 | **IK-Nummer Env-Variable** | INSTITUTIONSKENNZEICHEN in Vercel/Env setzen | IK 460629986 ist prüfziffer-valide; in Vercel Environment Variables als `INSTITUTIONSKENNZEICHEN` eintragen | **JA** — IK wird in EDIFACT/DTA benötigt |
+| C3 | **IK-Nummer Env-Variable** | INSTITUTIONSKENNZEICHEN in Vercel/Env setzen | IK 460629986 ist prüfziffer-valide; in Vercel Environment Variables als `INSTITUTIONSKENNZEICHEN` eintragen | **NEIN** — IK liegt vor, Env-Setzen ist Deployment-Checkliste (5 Min); §45b-Papierabrechnung funktioniert auch ohne (Quelle: DAK Leistungserbringer-Portal, §105 SGB XI) |
 | C4 | **PfluV-Obergrenzen vs. Stundensätze** | 35€/h (aktuell konfiguriert) vs. PfluV-Obergrenzen (30€/25€) klären | Vergütungsvereinbarung prüfen: welcher Stundensatz ist vertraglich vereinbart? 35€/h ist PfluV-konform dokumentiert in docs/TARIF_VERIFIKATION.md | Klärung empfohlen |
 
 ---
@@ -101,23 +100,61 @@ Alle folgenden Bereiche sind technisch fertig, getestet und deployed:
 
 ---
 
+## E) §45b START-BLOCKER — FACHLICHE NEUBEWERTUNG
+
+### §45b START BLOCKIERT DURCH:
+
+| # | Thema | Begründung | Quelle |
+|---|-------|------------|--------|
+| 1 | **§45a-Anerkennung durch Landesbehörde** | Ohne Anerkennung nach §45a SGB XI darf kein Anbieter §45b-Entlastungsleistungen abrechnen | §45b Abs. 1 S. 3 Nr. 4 SGB XI |
+| 2 | **~~IK-Nummer als Env-Variable setzen~~** | ~~IK liegt vor (460629986), Env-Setzen = Deployment-Checkliste (5 Min)~~ | ~~Kein regulatorischer Blocker, §45b-Papierabrechnung ohne IK-Env möglich (DAK Leistungserbringer-Portal)~~ |
+| 3 | **Tarif-Prüfung gegen PfluV-Obergrenzen** | 23 billing_tariffs / 24 leistungspreise auf Live-DB müssen fachlich geprüft werden | PfluV Hessen §3 |
+
+### §45b START NICHT BLOCKIERT DURCH:
+
+| # | Thema | Begründung | Quelle |
+|---|-------|------------|--------|
+| 1 | **SEPA Creditor-ID** | Nur für SEPA-Lastschrifteinzug von Kundenkonten; §45b-Abrechnung läuft über Kostenerstattung (Rechnung/Überweisung) | §45b Abs. 1 S. 3 SGB XI, Deutsche Bundesbank |
+| 2 | **KIM/TI (Telematikinfrastruktur)** | Nur für Kommunikation im Medizinwesen (eArztbrief); nicht für §45b-Entlastungsleistungen | gematik |
+| 3 | **§302 SGB V / ITSG/DTA** | §302 gilt nur für Heilmittelerbringer und zugelassene Pflegedienste (§72 SGB XI); §45b-Anbieter nach §45a rechnen per Kostenerstattung ab | §302 SGB V, §45b SGB XI |
+| 4 | **DiPA (BfArM-Zulassung)** | Separate Produktkategorie nach §40a SGB XI; unabhängig von §45b | §40a SGB XI |
+| 5 | **FHIR-Profilvalidierung** | Interoperabilitätsstandard; keine §45b-Voraussetzung | HL7 Deutschland |
+| 6 | **MFA/TOTP** | Sicherheitsverbesserung, nicht gesetzlich vorgeschrieben für §45b | — |
+| 7 | **Pentest/BSI C5/ISO 27001** | Best Practice, aber keine Voraussetzung für §45b-Anerkennung | BSI |
+| 8 | **MDR Klasse IIa** | Nur für Vitalwerte-Alarme relevant (fail-closed); kein §45b-Bezug | MDR 2017/745 |
+| 9 | **BITV 2.0/WCAG** | Barrierefreiheit; keine §45b-spezifische Voraussetzung | BFSG |
+
+---
+
 ## Finale Bewertung
 
 ```
 Kategorie A: 34 Punkte (vollständig erledigt)
 Kategorie B:  2 Punkte (technisch intern lösbar — nicht blockierend)
-Kategorie C:  4 Punkte (fachliche Prüfung / echte Daten)
-Kategorie D: 12 Punkte (externe Zertifikate / Zulassungen)
+Kategorie C:  4 Punkte (fachliche Prüfung / echte Daten — davon 2 KEIN Blocker)
+Kategorie D: 12 Punkte (externe Zertifikate / Zulassungen — KEIN §45b-Blocker)
+Kategorie E:  Fachliche Neubewertung §45b-Blocker
 
-Teststand: 2022 Tests grün, 0 fehlgeschlagen, 29 übersprungen
+Teststand: 2029 Tests grün, 0 fehlgeschlagen, 29 übersprungen
 Typecheck: 0 Fehler
-Letzter Commit: 3860cdc
 
-§45b-Produktivbetrieb blockiert durch:
-  - SEPA Creditor-ID (Bundesbank-Antrag, Anleitung liegt vor)
-  - Tarif-Prüfung (23 Tarife / 24 Leistungspreise gegen Vergütungsvereinbarungen)
-  - IK-Nummer als Env-Variable setzen (IK 460629986 prüfziffer-valide)
+§45b-Produktivbetrieb blockiert durch (NUR 2 echte Blocker):
+  1. §45a-Anerkennung durch Landesbehörde (fachlich/behördlich)
+  2. Tarif-Prüfung (23+24 Live-Werte gegen PfluV-Obergrenzen)
 
-Technisch intern offen: JA — Error-Sanitizer (~160 Routen) + MFA,
-  aber KEIN §45b-Blocker.
+Deployment-Checkliste (kein Blocker, je 5 Min):
+  - IK-Nummer als Env-Variable setzen (IK liegt vor)
+
+NICHT blockiert (korrigiert gegenüber Vorversion):
+  - SEPA Creditor-ID → nur für SEPA-Lastschrift, nicht für §45b
+  - IK-Nummer → liegt vor, Env-Variable = Deployment-Aufgabe
+  - KIM, §302, DiPA, FHIR, MFA, BSI, MDR, BITV → spätere Module
+
+Fachliche Korrekturprüfung (12.08.2026):
+  - VP-Budget-Default korrigiert: VP_JAEHRLICH_EUR → VP_KZP_KOMBINIERT_EUR
+    (pruefeBudget nutzt jetzt 3539€ statt 1685€ für VP, §42a)
+  - 7 neue Tests für §42a Gemeinsamer Jahresbetrag ergänzt
+  - SEPA Creditor-ID als §45b-Blocker entfernt (Quelle: §45b SGB XI, Bundesbank)
+  - IK-Nummer als §45b-Blocker entfernt (Quelle: DAK Leistungserbringer-Portal)
+  - §45b-Papierabrechnung ohne DTA/IK-Env bestätigt (Quelle: DAK §45b-Abrechnungsseite)
 ```
