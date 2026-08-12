@@ -188,6 +188,8 @@ const navGroups = [
     items: [
       { href: '/admin/zahlungseingaenge', label: 'Zahlungseingänge', icon: <IconMoney size={18} /> },
       { href: '/admin/forderungen', label: 'Forderungen', icon: <IconMoney size={18} /> },
+      { href: '/admin/sepa', label: 'SEPA-Lastschrift', icon: <IconMoney size={18} /> },
+      { href: '/admin/mahnwesen', label: 'Mahnwesen', icon: <IconDocument size={18} /> },
     ],
   },
   {
