@@ -7,7 +7,6 @@
 // KEINE Zugangsvoraussetzung (COACH_FREISCHALTUNG_PFLICHT, Default aus).
 
 import { useCallback, useEffect, useState } from 'react'
-import Link from 'next/link'
 import type { CoachFreischaltung } from '@/lib/coach/types'
 import { FREISCHALT_QUELLE_LABELS } from '@/lib/coach/freischaltung'
 import { coachApi, CoachApiError, useCoachProfil } from '../_lib/client'
