@@ -174,7 +174,8 @@ export default function TeamPage() {
     if (!editUser) return
     try {
       const supabase = createClient()
-      const { error } = await supabase.from('profiles').update(editForm).eq('id', editUser.id)
+      const { role: _role, ...safeFields } = editForm
+      const { error } = await supabase.from('profiles').update(safeFields).eq('id', editUser.id)
       if (error) { alert('Fehler: ' + error.message); return }
       setEditOpen(false)
       setEditUser(null)
