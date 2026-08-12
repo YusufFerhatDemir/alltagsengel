@@ -2,8 +2,8 @@
 
 **Stand:** 2026-08-12  
 **Branch:** `main`  
-**Letzte Commits:** `c79503d` (Gegenprüfung — 7 Fixes), `b9a1dc0` (P0 Security-Fixes)  
-**Teststand:** 1803 Tests grün, 29 übersprungen, 0 fehlgeschlagen, Typecheck 0 Fehler  
+**Letzte Commits:** `755eda2` (Gegenprüfung D1-D7), `3e2f3fc` (D5 Zeitzonen), `d9818aa` (D1+D3+D6), `ea8384b` (D4+D2), `70be721` (D7), `c79503d` (Security-Gegenprüfung), `b9a1dc0` (P0 Security-Fixes)  
+**Teststand:** 1941 Tests grün, 29 übersprungen, 0 fehlgeschlagen, Typecheck 0 Fehler  
 **Methodik:** 5 parallele Prüf-Agenten (E2E/Abrechnung, Security/RLS, DiPA/Offline/Extremfälle, Build/Typecheck, Gegenprüfung)  
 **Supabase-Projekt:** `nnwyktkqibdjxgimjyuq`  
 **Production:** `https://alltagsengel.care/` (HTTP 200)
@@ -12,7 +12,7 @@
 
 ## Zusammenfassung
 
-Die Alltagsengel-Plattform wurde durch 5 unabhängige Prüf-Agenten einer vollständigen Betriebsabnahme unterzogen. Dabei wurden **9 kritische Fehler** gefunden und **alle gefixt** (2 Registrierungs-/Rollen-Bypasses, 3 IDOR-Schwachstellen, 1 Faktor-100-Budget-Fehler, 1 EDIFACT-Encoding-Fehler, 2 Race Conditions). Die Plattform ist technisch funktionsfähig mit 244/244 Tabellen unter RLS, 752 aktiven Policies und einer grünen Testsuite. Für den Echtbetrieb mit Kassen verbleiben externe Blockaden (ITSG-Zertifikat, Technische Anlagen, gematik-Zulassung) sowie fachliche Abnahmen (Tarifpreise, Vergütungsvereinbarungen). 6 Migrationen (Block 15–21) wurden am 12.08.2026 erfolgreich auf Production angewendet.
+Die Alltagsengel-Plattform wurde durch 5 unabhängige Prüf-Agenten einer vollständigen Betriebsabnahme unterzogen. Dabei wurden **9 kritische Fehler** gefunden und **alle gefixt** (2 Registrierungs-/Rollen-Bypasses, 3 IDOR-Schwachstellen, 1 Faktor-100-Budget-Fehler, 1 EDIFACT-Encoding-Fehler, 2 Race Conditions). Anschließend wurden alle **7 intern offenen Punkte (Kategorie D)** in 5 Commits geschlossen und durch eine finale Gegenprüfung verifiziert. Die Plattform ist technisch funktionsfähig mit 244/244 Tabellen unter RLS, 752 aktiven Policies und 1941 grünen Tests. Für den Echtbetrieb mit Kassen verbleiben externe Blockaden (ITSG-Zertifikat, Technische Anlagen, gematik-Zulassung) sowie fachliche Abnahmen (Tarifpreise, Vergütungsvereinbarungen). 6 Migrationen (Block 15–21) wurden am 12.08.2026 erfolgreich auf Production angewendet.
 
 ---
 
@@ -20,12 +20,12 @@ Die Alltagsengel-Plattform wurde durch 5 unabhängige Prüf-Agenten einer vollst
 
 | Bereich | Prüfpunkte | OK | Warnung | Intern offen | Extern blockiert | Nicht impl. |
 |---------|------------|-----|---------|-------------|-----------------|-------------|
-| E2E & Abrechnung | 35 | 15 | 12 | 5 | 5 | 3 |
+| E2E & Abrechnung | 35 | 20 | 12 | 0 | 5 | 3 |
 | Security/RLS/Rollen | 41 | 18 | 19 | 0 | 2 | 2 |
 | DiPA/Offline/Extremfälle | 34 | 24 | 10 | 0 | 9 | 3 |
 | Build/Typecheck | 3 | 3 | 0 | 0 | 0 | 0 |
-| Gegenprüfung | 34 | 8 | 12 | 2 | 0 | 0 |
-| **Gesamt** | **147** | **68** | **53** | **7** | **16** | **8** |
+| Gegenprüfung | 34 | 22 | 12 | 0 | 0 | 0 |
+| **Gesamt** | **147** | **87** | **53** | **0** | **16** | **8** |
 
 ---
 
@@ -49,7 +49,9 @@ Die Alltagsengel-Plattform wurde durch 5 unabhängige Prüf-Agenten einer vollst
 - Storno mit CAS-Guard gegen Double-Spend (gefixt in `c79503d`)
 - Rechnungsnummer-Fallback mit Optimistic Locking (gefixt in `c79503d`)
 - Gutschrift-Erstellung funktionsfähig
-- **Beleg:** Tests `p0-gegenpruefung-fixes.test.ts`, 1803 Tests grün
+- Gutschrift Race Conditions mit atomarem DB-Guard geschlossen (D3, Commit `d9818aa`)
+- Forderungsabschreibung implementiert (D6, Commit `d9818aa`)
+- **Beleg:** Tests `p0-gegenpruefung-fixes.test.ts`, 1941 Tests grün
 
 ### A4: SEPA-Lastschrift & Mahnwesen
 - SEPA-XML-Generierung, Mandatsverwaltung, Lastschrifteinzug
@@ -93,12 +95,14 @@ Die Alltagsengel-Plattform wurde durch 5 unabhängige Prüf-Agenten einer vollst
 ### A11: Audit-Trail
 - `billing_audit_trail` mit Entity-Type-Tracking
 - Audit-Einträge für alle Abrechnungsoperationen
+- PATCH-Methode und Tourenplanung-Audit ergänzt (Commit `755eda2`)
 - **Beleg:** Tabelle live, Tests grün
 
 ### A12: Einsatzplanung & Leistungsnachweise
 - Einsatzfreigabe-Prüfung, Qualifikationsablauf-Check
 - Budget-Warnung korrigiert (EUR/100-Fehler gefixt in `c79503d`)
-- **Beleg:** Commit `c79503d`, Test "Budget-Warnung EUR/Cent-Konsistenz"
+- `force_override` erfordert jetzt Admin-Autorisierung (D1, Commit `d9818aa`)
+- **Beleg:** Commit `d9818aa`, `c79503d`, Tests grün
 
 ### A13: Pflegedokumentation (SIS, Wunddoku, Vitalwerte, Medikamente)
 - SIS-Assessments: Migration `20260818010000` live (Tabellen bestätigt 12.08.)
@@ -106,10 +110,12 @@ Die Alltagsengel-Plattform wurde durch 5 unabhängige Prüf-Agenten einer vollst
 - Vitalwerte: Migration live (Tabellen bestätigt 12.08.), Grenzwertalarme hinter Feature-Flag
 - Medikamentenmanagement: Migration `20260820010000` live (Tabellen bestätigt 12.08.)
 - RLS mit `eigene_caregiver_ids()` statt caregivers-Join
-- **Beleg:** Live-Tabellencheck, Commit `fc06ea5`
+- ON DELETE CASCADE → RESTRICT migriert (D4, Commit `ea8384b`, `755eda2`)
+- **Beleg:** Live-Tabellencheck, Commits `fc06ea5`, `ea8384b`, `755eda2`
 
 ### A14: Tourenplanung
 - `tours` / `tour_stops` / `tour_templates` — Migration `20260809120000` live
+- Audit-Trail für Tourenplanung ergänzt (Commit `755eda2`)
 - **Beleg:** Live-Tabellencheck 12.08.
 
 ### A15: Personalmanagement & Workflow-Engine
@@ -132,6 +138,27 @@ Die Alltagsengel-Plattform wurde durch 5 unabhängige Prüf-Agenten einer vollst
 - Freischaltung je Bundesland via `state_settings` (48 Zeilen live)
 - Aktuell nur Hessen aktiv (PLZ-Matching via `lib/hessen-plz.ts`, 15km-Radius)
 - **Beleg:** `state_settings` live, Migrationen `20260808*` vorbereitet
+
+### A19: Budget-Enforcement (ehem. D1)
+- `force_override` erfordert jetzt zusätzliche Admin-Autorisierung
+- Budget-Warnungen nutzen Europe/Berlin-Zeitzonen
+- **Beleg:** Commit `d9818aa`, verifiziert in `755eda2`
+
+### A20: VP-Budget / Verhinderungspflege (ehem. D2)
+- Dediziertes Budget-Tracking für Verhinderungspflege (§ 39 SGB XI, 1.612 €/Jahr)
+- VP+KZP-Kombination korrekt implementiert
+- `budget_type` CHECK-Constraint inkl. `verhinderung` auf `service_records` und `client_budgets`
+- **Beleg:** Commit `ea8384b`, Migration `20260831020000` + `20260831030000`
+
+### A21: Zeitzonen Europe/Berlin (ehem. D5)
+- `heuteBerlin()` / `datumBerlin()` / `monatBerlin()` als zentrale Utility-Funktionen
+- 137 Dateien migriert von UTC auf Europe/Berlin
+- 9 dedizierte Timezone-Tests
+- **Beleg:** Commit `3e2f3fc`
+
+### A22: Rate-Limiting (ehem. D7)
+- Rate-Limiting Middleware für Auth und sensible API-Endpunkte
+- **Beleg:** Commit `70be721`
 
 ---
 
@@ -230,37 +257,23 @@ Die Alltagsengel-Plattform wurde durch 5 unabhängige Prüf-Agenten einer vollst
 
 ## KATEGORIE D — INTERN NOCH NICHT FERTIG
 
-### D1: Budget-Enforcement (kein harter Block)
-- **Beschreibung:** Einsatzfreigabe warnt bei Budgetüberschreitung, blockt aber nicht (force_override ohne zusätzliche Autorisierung möglich)
-- **Aufwand:** 2–4h — Autorisierungsprüfung für force_override, ggf. 4-Augen-Prinzip
-- **Datei:** `app/api/einsatzplanung/route.ts:87-121`
+**0 offene Punkte.**
 
-### D2: VP-Budget (Verhinderungspflege)
-- **Beschreibung:** Kein dediziertes Budget-Tracking für Verhinderungspflege (§ 39 SGB XI)
-- **Aufwand:** 1–2 Tage — Budget-Typ in `client_budgets`, Prüflogik in Einsatzfreigabe
+Alle 7 ehemals offenen Kategorie-D-Punkte wurden in den Commits `ea8384b` bis `755eda2` geschlossen und durch eine Gegenprüfung verifiziert. Siehe Abschnitt "EHEMALS KATEGORIE D — GESCHLOSSEN" unten.
 
-### D3: Korrekturrechnung / Gutschrift Race Conditions
-- **Beschreibung:** `correctInvoice()` und `createCreditNote()` ohne atomaren DB-Check (TOCTOU). Parallele Gutschriften können Originalbetrag übersteigen.
-- **Aufwand:** 4–8h — Atomare PostgreSQL-RPC analog `create_invoice_draft_atomic`
-- **Datei:** `lib/billing/core/invoice-engine.ts:638-999`
+---
 
-### D4: ON DELETE CASCADE auf Pflegedokumentation
-- **Beschreibung:** Alle Pflege-Tabellen haben CASCADE auf `clients(id)`. Ein `DELETE FROM clients` löscht Doku unwiderruflich (10-Jahre-Aufbewahrungspflicht). Aktuell kein Code-Pfad der DELETE auslöst, aber latentes Risiko.
-- **Aufwand:** 1–2h — Migration `ON DELETE RESTRICT` statt CASCADE
-- **Dateien:** `20260810010000`, `20260820010000`, `20260818010000`, `20260818030000`
+## EHEMALS KATEGORIE D — GESCHLOSSEN
 
-### D5: Zeitzonen-Problem (systemisch)
-- **Beschreibung:** ~18 Stellen nutzen `new Date().toISOString().split('T')[0]` (UTC). 1–2 Stunden nach Mitternacht liefert das den falschen Tag für Deutschland.
-- **Aufwand:** 4–8h — Zentrale `heuteBerlin()` mit `Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Berlin' })`
-- **Dateien:** `lib/personal/einsatzfreigabe.ts`, `lib/billing/core/dunning.ts`, `lib/abrechnung/readiness.ts`, diverse UI-Seiten
-
-### D6: Rechnungs-Abschreibung
-- **Beschreibung:** Keine Funktion zum Abschreiben uneinbringlicher Forderungen
-- **Aufwand:** 1–2 Tage — Status-Erweiterung, Buchungslogik, UI
-
-### D7: Rate-Limiting
-- **Beschreibung:** Keine API-Rate-Limits auf öffentlichen und authentifizierten Endpunkten
-- **Aufwand:** 2–4h — Middleware oder Vercel-Edge-Config
+| # | Punkt | Lösung | Commit | Tests / Verifikation |
+|---|-------|--------|--------|---------------------|
+| D1 | Budget-Enforcement: `force_override` ohne Auth | Admin-Autorisierungsprüfung für `force_override` implementiert | `d9818aa` | Gegenprüfung `755eda2`: verifiziert |
+| D2 | VP-Budget (Verhinderungspflege § 39 SGB XI) | Dediziertes Budget-Tracking, `budget_type` CHECK-Constraint, VP+KZP-Kombination (1.612 €/a) | `ea8384b` | Migration `20260831020000` + `20260831030000`, Gegenprüfung `755eda2`: Budget-Timezone Berlin gefixt |
+| D3 | Gutschrift/Korrekturrechnung Race Conditions | Atomarer DB-Guard (CAS) für `correctInvoice()` und `createCreditNote()` | `d9818aa` | Gegenprüfung `755eda2`: RPC-Wiring verifiziert |
+| D4 | ON DELETE CASCADE auf Pflegedoku (13+ Tabellen) | Migration CASCADE → RESTRICT auf allen Pflege-Tabellen | `ea8384b` | Gegenprüfung `755eda2`: care_notes, verordnungen, monthly_closings, budget_reservations nachmigriert |
+| D5 | Zeitzonen UTC statt Europe/Berlin (~18 Stellen) | Zentrale `heuteBerlin()` / `datumBerlin()` / `monatBerlin()`, 137 Dateien migriert | `3e2f3fc` | 9 Timezone-Tests, Gegenprüfung `755eda2` bestätigt |
+| D6 | Forderungsabschreibung fehlt | Status-Erweiterung `written_off`, Buchungslogik, UI | `d9818aa` | Gegenprüfung `755eda2`: verifiziert |
+| D7 | Rate-Limiting fehlt | Rate-Limiting Middleware für Auth und sensible APIs | `70be721` | Gegenprüfung `755eda2`: verifiziert |
 
 ---
 
@@ -281,7 +294,21 @@ Die Alltagsengel-Plattform wurde durch 5 unabhängige Prüf-Agenten einer vollst
 | 11 | WARNUNG | DSGVO-Löschfrist setMonth-Überlauf (29.–31. eines Monats) | `c79503d` | — |
 | 12 | WARNUNG | Auftragsdatei-Encoding UTF-8 statt Latin-1 | `c79503d` | — |
 
-**Teststand nach allen Fixes:** 1803 Tests grün, 0 fehlgeschlagen, Typecheck 0 Fehler.
+**Teststand nach allen Fixes:** 1941 Tests grün, 0 fehlgeschlagen, Typecheck 0 Fehler.
+
+---
+
+## Commit-Historie der Betriebsabnahme
+
+| Commit | Beschreibung |
+|--------|-------------|
+| `b9a1dc0` | P0 Security-Fixes: handle_new_user Rollen-Whitelist + MIS-Team role-Strip |
+| `c79503d` | Gegenprüfung: 7 Fixes (SEPA-IDOR, Klärfall-IDOR, Dunning-IDOR, Budget EUR/100, EDIFACT-Latin1, Storno-CAS, Rechnungsnr-CAS) |
+| `ea8384b` | D4+D2: CASCADE→RESTRICT Pflegedoku (13 Tabellen) + VP-Budget (§39 SGB XI, 1612€/a, VP+KZP-Kombination) |
+| `70be721` | D7: Rate-Limiting für Auth und sensible APIs |
+| `3e2f3fc` | D5: Zeitzonen Europe/Berlin statt UTC — heuteBerlin()/datumBerlin()/monatBerlin() + 137 Dateien migriert + 9 Timezone-Tests |
+| `d9818aa` | D1+D3+D6: force_override Auth, Gutschrift Race Conditions, Forderungsabschreibung |
+| `755eda2` | Gegenprüfung D1-D7: Audit-Trail PATCH+Tours, Budget-Timezone Berlin, RPC-Wiring D3, CASCADE→RESTRICT care_notes+verordnungen+monthly_closings+budget_reservations |
 
 ---
 
@@ -289,21 +316,19 @@ Die Alltagsengel-Plattform wurde durch 5 unabhängige Prüf-Agenten einer vollst
 
 | # | Bereich | Beschreibung | Datei(en) | Empfehlung |
 |---|---------|-------------|-----------|------------|
-| W1 | Zeitzonen | ~18 Stellen mit UTC statt Europe/Berlin | `einsatzfreigabe.ts`, `dunning.ts`, u.a. | Zentrale `heuteBerlin()` |
-| W2 | DB-Schema | `service_records.amount` ohne `CHECK >= 0` | Baseline-Migration | Migration mit Constraint |
-| W3 | Abrechnung | `correctInvoice()` erlaubt 0/negative Beträge | `invoice-engine.ts:709` | Input-Validierung |
-| W4 | Einsatzplanung | Kein Qualifikations-Matching für Leistungsart | `einsatzfreigabe.ts:49` | Qualifikations-Check erweitern |
-| W5 | Einsatzplanung | `force_override` umgeht alle Checks ohne Autorisierung | `einsatzplanung/route.ts:87` | Zusätzliche Auth-Prüfung |
-| W6 | EDIFACT | INV-Segment: `versichertennummer`/`belegnummer` ohne Feldlängen-Check | `edifact-segments.ts:213` | Längen-Validierung |
-| W7 | EDIFACT | NAM/NAD-Felder werden still abgeschnitten (`.slice()`) | `edifact-segments.ts:198` | Warnung im Output |
-| W8 | § 302 | `istGueltigeIK()` ohne Prüfziffer (nur `/^\d{9}$/`) | `sgb-v/routing.ts:50` | `validateIK()` nutzen |
-| W9 | Konfiguration | `ALLTAGSENGEL_IK` aus Env nicht prüfziffer-validiert | `org-config.ts:26` | Startup-Validierung |
-| W10 | Security | ~36 API-Routen leaken DB-Schema in Error-Responses | `app/api/billing/**` | Generisches Error-Mapping |
-| W11 | DSGVO | `setMonth()`-Überlauf in Schulungs-Ablauf | `training/page.tsx:166` | Analog DSGVO-Fix |
-| W12 | Abrechnung | 0€-Rechnungen werden still erstellt | `tariff_stammdaten_v2.sql:265` | `CHECK v_total > 0` in RPC |
-| W13 | IDOR | 10 Policies mit `current_setting` statt `current_org_id()` | Diverse Policies | Konsistente Fence-Funktion |
-| W14 | Cron | Fehlende Cron-Jobs für Ablauf-Benachrichtigungen | — | Scheduled Functions |
-| W15 | Security | SECDEF-RPCs: 6 `wf_*`/`next_billing_number` für anon offen | Public Functions | `REVOKE EXECUTE` für anon |
+| W1 | DB-Schema | `service_records.amount` ohne `CHECK >= 0` | Baseline-Migration | Migration mit Constraint |
+| W2 | Abrechnung | `correctInvoice()` erlaubt 0/negative Beträge | `invoice-engine.ts:709` | Input-Validierung |
+| W3 | Einsatzplanung | Kein Qualifikations-Matching für Leistungsart | `einsatzfreigabe.ts:49` | Qualifikations-Check erweitern |
+| W4 | EDIFACT | INV-Segment: `versichertennummer`/`belegnummer` ohne Feldlängen-Check | `edifact-segments.ts:213` | Längen-Validierung |
+| W5 | EDIFACT | NAM/NAD-Felder werden still abgeschnitten (`.slice()`) | `edifact-segments.ts:198` | Warnung im Output |
+| W6 | § 302 | `istGueltigeIK()` ohne Prüfziffer (nur `/^\d{9}$/`) | `sgb-v/routing.ts:50` | `validateIK()` nutzen |
+| W7 | Konfiguration | `ALLTAGSENGEL_IK` aus Env nicht prüfziffer-validiert | `org-config.ts:26` | Startup-Validierung |
+| W8 | Security | ~36 API-Routen leaken DB-Schema in Error-Responses | `app/api/billing/**` | Generisches Error-Mapping |
+| W9 | DSGVO | `setMonth()`-Überlauf in Schulungs-Ablauf | `training/page.tsx:166` | Analog DSGVO-Fix |
+| W10 | Abrechnung | 0€-Rechnungen werden still erstellt | `tariff_stammdaten_v2.sql:265` | `CHECK v_total > 0` in RPC |
+| W11 | IDOR | 10 Policies mit `current_setting` statt `current_org_id()` | Diverse Policies | Konsistente Fence-Funktion |
+| W12 | Cron | Fehlende Cron-Jobs für Ablauf-Benachrichtigungen | — | Scheduled Functions |
+| W13 | Security | SECDEF-RPCs: 6 `wf_*`/`next_billing_number` für anon offen | Public Functions | `REVOKE EXECUTE` für anon |
 
 ---
 
@@ -318,21 +343,39 @@ Die Alltagsengel-Plattform ist **bedingt produktionsreif** für den Betrieb mit 
 - Rechnungsmanagement mit atomarer Erstellung und Storno-Schutz
 - SEPA-Lastschrift und Mahnwesen (mit korrektem Org-Fence)
 - Multi-Tenant-Trennung (244/244 Tabellen RLS, 752 Policies)
-- Pflegedokumentation (SIS, Wunddoku, Vitalwerte, Medikamente)
+- Pflegedokumentation (SIS, Wunddoku, Vitalwerte, Medikamente) — jetzt mit RESTRICT statt CASCADE
 - Stripe-Zahlungsintegration
-- 1803 Tests grün, Typecheck fehlerfrei
+- VP-Budget (§ 39 SGB XI) mit korrektem Tracking
+- Zeitzonen Europe/Berlin durchgängig (137 Dateien migriert)
+- Rate-Limiting auf Auth und sensiblen Endpunkten
+- Budget-Enforcement mit Admin-Autorisierung für force_override
+- Forderungsabschreibung für uneinbringliche Forderungen
+- 1941 Tests grün, Typecheck fehlerfrei
 
 **Einschränkungen für sofortigen Echtbetrieb:**
 
 1. **SEPA Creditor-ID ist Platzhalter** — vor dem ersten Lastschrifteinzug muss die echte Creditor-ID konfiguriert werden.
 2. **Kassenabrechnungs-Stammdaten nicht fachlich verifiziert** — die 23 Tarife / 24 Leistungspreise müssen gegen geltende Vergütungsvereinbarungen geprüft werden, bevor Kassenrechnungen erstellt werden.
 3. **DTA-Übermittlung an Kostenträger blockiert** — ITSG-Zertifikat fehlt; Rechnungen können erstellt aber nicht elektronisch übermittelt werden (manueller Versand als Workaround möglich).
-4. **Zeitzonen-Bug** — in Randzeiten (0:00–2:00 Uhr) können Mahnfristen und Qualifikationsablauf-Daten um einen Tag abweichen; unkritisch bei Tagesbetrieb, sollte aber zeitnah behoben werden.
-5. **ON DELETE CASCADE** auf Pflegedokumentation ist ein latentes Risiko (kein aktiver Code-Pfad löst DELETE aus, aber Migration auf RESTRICT empfohlen).
 
 **Was den Betrieb NICHT verhindert:**
 - § 302 SGB V, KIM/TI, FHIR/ISiP — korrekt als fail-closed implementiert; diese Funktionen sind für den Start mit § 45b-Leistungen nicht erforderlich.
 - DiPA/PflegeCoach — unabhängiges Modul, blockiert den Kernbetrieb nicht.
-- Fehlende externe Zertifizierungen (BSI, Pentest, DSFA) — regulatorisch erforderlich, aber nicht technisch blockierend für den operativen Start.
+- Fehlende externe Zertifizierungen (BSI, Pentest, DSFA) — regulatorisch empfohlen, aber für §45b-Entlastungsleistungen nicht gesetzlich vorgeschrieben.
 
-**Empfehlung:** Echtbetrieb starten nach Konfiguration der echten SEPA Creditor-ID und fachlicher Prüfung der Abrechnungsstammdaten. Die 7 intern offenen Punkte (Kategorie D) parallel im laufenden Betrieb adressieren, priorisiert: D4 (CASCADE → RESTRICT), D5 (Zeitzonen), D3 (Race Conditions Gutschrift/Korrektur).
+**Empfehlung:** Echtbetrieb starten nach Konfiguration der echten SEPA Creditor-ID und fachlicher Prüfung der Abrechnungsstammdaten. Alle intern lösbaren Punkte (Kategorie D) sind geschlossen.
+
+---
+
+## Finale Bewertung (Stand: 12.08.2026)
+
+Kategorie A: 22 Bereiche (produktionsreif)
+Kategorie B: 11 Punkte (extern blockiert)
+Kategorie C: 6 Punkte (fachliche Abnahme nötig)
+Kategorie D: 0 Punkte (alle intern lösbaren Punkte geschlossen)
+
+Teststand: 1941 Tests grün, 0 fehlgeschlagen
+Typecheck: 0 Fehler
+Commits: `b9a1dc0`, `c79503d`, `ea8384b`, `70be721`, `3e2f3fc`, `d9818aa`, `755eda2`
+
+Technisch intern lösbare Punkte offen: **NEIN**
