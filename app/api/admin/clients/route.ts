@@ -109,7 +109,10 @@ export async function POST(req: Request) {
 
     const careLevel = client.care_level ?? client.pflegegrad ?? 0
     if (careLevel >= 1) {
-      await erstelleInitialBudgets(admin, client.id, auth.organizationId, careLevel)
+      const pgMonat = body.pflegegrad_seit_monat
+        ? parseInt(body.pflegegrad_seit_monat, 10)
+        : undefined
+      await erstelleInitialBudgets(admin, client.id, auth.organizationId, careLevel, pgMonat)
     }
 
     return NextResponse.json({ client }, { status: 201 })

@@ -1,21 +1,29 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { berlinParts } from '@/lib/utils/timezone'
-import {
-  ENTLASTUNG_JAEHRLICH_EUR,
-  VP_KZP_KOMBINIERT_EUR,
-} from '@/lib/config/budget-constants'
+import { budgetVersionFuerJahr } from '@/lib/config/budget-constants'
 
+/**
+ * Erstellt Initialbudgets für einen neuen Klienten.
+ *
+ * §45b Entlastungsbetrag: ab PG 1, anteilig wenn PG unterjährig beginnt.
+ * §42a VP/KZP: ab PG 2, immer voller Jahresbetrag (kein Übertrag).
+ *
+ * @param pgBeginnMonat 1-12, Monat ab dem der Pflegegrad gilt (Default: aktueller Monat)
+ */
 export async function erstelleInitialBudgets(
   supabase: SupabaseClient,
   clientId: string,
   organizationId: string,
   pflegegrad: number,
+  pgBeginnMonat?: number,
 ): Promise<{ erstellt: boolean; fehler?: string }> {
   if (pflegegrad < 1) {
     return { erstellt: false, fehler: 'Kein Budget ohne Pflegegrad' }
   }
 
   const year = parseInt(berlinParts(new Date()).year, 10)
+  const monat = pgBeginnMonat ?? parseInt(berlinParts(new Date()).month, 10)
+  const version = budgetVersionFuerJahr(year)
 
   const { data: existing } = await supabase
     .from('client_budgets')
@@ -28,31 +36,34 @@ export async function erstelleInitialBudgets(
   const zuErstellen: Array<Record<string, unknown>> = []
 
   if (!vorhandeneTypen.has('entlastung')) {
+    const restMonate = 12 - monat + 1
+    const anteilig = restMonate * version.entlastungMonatlich
+
     zuErstellen.push({
       client_id: clientId,
       organization_id: organizationId,
       year,
       budget_type: 'entlastung',
-      annual_amount: ENTLASTUNG_JAEHRLICH_EUR,
-      monthly_amount: ENTLASTUNG_JAEHRLICH_EUR / 12,
+      annual_amount: anteilig,
+      monthly_amount: version.entlastungMonatlich,
       carryover_amount: 0,
       used_amount: 0,
       combined_used_amount: 0,
     })
   }
 
-  if (!vorhandeneTypen.has('verhinderungspflege')) {
+  if (pflegegrad >= version.minPflegegradVpKzp && !vorhandeneTypen.has('verhinderungspflege')) {
     zuErstellen.push({
       client_id: clientId,
       organization_id: organizationId,
       year,
       budget_type: 'verhinderungspflege',
-      annual_amount: VP_KZP_KOMBINIERT_EUR,
+      annual_amount: version.vpKzpKombiniert,
       monthly_amount: 0,
       carryover_amount: 0,
       used_amount: 0,
       combined_used_amount: 0,
-      combined_annual_amount: VP_KZP_KOMBINIERT_EUR,
+      combined_annual_amount: version.vpKzpKombiniert,
     })
   }
 
@@ -68,6 +79,13 @@ export async function erstelleInitialBudgets(
   return { erstellt: true }
 }
 
+/**
+ * Überträgt nicht verbrauchte Entlastungsbudgets ins Folgejahr (§45b Abs. 1 S. 5 SGB XI).
+ *
+ * FIFO-Annahme: Übertrag aus dem Vorjahr wird zuerst verbraucht (weil er früher verfällt).
+ * Maximum Übertrag = Jahresanspruch (abgelaufener Vorjahres-Übertrag wird nicht mitgenommen).
+ * VP/KZP wird NICHT übertragen (§42a kennt keinen Übertrag).
+ */
 export async function uebertrageJahresbudgets(
   supabase: SupabaseClient,
   organizationId: string,
@@ -89,13 +107,21 @@ export async function uebertrageJahresbudgets(
     return { uebertragen: 0, uebersprungen: 0, fehler: [] }
   }
 
+  const nachJahrVersion = budgetVersionFuerJahr(nachJahr)
   let uebertragen = 0
   let uebersprungen = 0
   const fehler: string[] = []
   const verfallsDatum = `${nachJahr}-06-30`
 
   for (const alt of alteBudgets) {
-    const rest = (alt.annual_amount ?? 0) + (alt.carryover_amount ?? 0) - (alt.used_amount ?? 0)
+    const annual = alt.annual_amount ?? 0
+    const carryover = alt.carryover_amount ?? 0
+    const used = alt.used_amount ?? 0
+
+    // FIFO: Übertrag aus Vorjahr (carryover) wurde zuerst verbraucht, da er am 30.06. verfällt.
+    // Nur der nicht verbrauchte Anteil des JAHRESANSPRUCHS kann übertragen werden.
+    const verbrauchAusJahresbudget = Math.max(0, used - carryover)
+    const rest = Math.max(0, annual - verbrauchAusJahresbudget)
 
     if (rest <= 0) {
       uebersprungen++
@@ -133,8 +159,8 @@ export async function uebertrageJahresbudgets(
           organization_id: organizationId,
           year: nachJahr,
           budget_type: 'entlastung',
-          annual_amount: ENTLASTUNG_JAEHRLICH_EUR,
-          monthly_amount: ENTLASTUNG_JAEHRLICH_EUR / 12,
+          annual_amount: nachJahrVersion.entlastungJaehrlich,
+          monthly_amount: nachJahrVersion.entlastungMonatlich,
           carryover_amount: rest,
           carryover_expires: verfallsDatum,
           used_amount: 0,
