@@ -220,7 +220,10 @@ export function validateEDIFACT(edifact: string): ValidationResult {
         for (const [idx, feldname] of [[3, 'IK Rechnungssteller'], [4, 'IK Kostenträger'], [6, 'IK Absender']] as const) {
           if (!validateIK(fkt[idx] || '')) f(`${kennung} FKT: ${feldname} "${fkt[idx]}" ungültig`, 'FKT')
         }
-        if (fkt[5] && !fkt[5].startsWith('18')) w(`${kennung} FKT: Pflegekassen-IK "${fkt[5]}" beginnt nicht mit "18"`, 'FKT')
+        if (fkt[5]) {
+          if (!fkt[5].startsWith('18')) w(`${kennung} FKT: Pflegekassen-IK "${fkt[5]}" beginnt nicht mit "18"`, 'FKT')
+          if (!validateIK(fkt[5])) f(`${kennung} FKT: Pflegekassen-IK "${fkt[5]}" ungültig (Prüfziffer)`, 'FKT')
+        }
       }
       const ges = n.segmente.find(s => s[0] === 'GES')
       if (ges) {

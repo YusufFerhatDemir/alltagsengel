@@ -13,6 +13,18 @@ export async function POST(
     const supabase = createAdminClient()
     const { invoiceId } = await params
 
+    // Org-Fence: Rechnung muss zur Organisation des Admins gehören
+    const { data: invoice } = await supabase
+      .from('invoices')
+      .select('id')
+      .eq('id', invoiceId)
+      .eq('organization_id', auth.ctx.organizationId)
+      .maybeSingle()
+
+    if (!invoice) {
+      return NextResponse.json({ error: 'Rechnung nicht gefunden.' }, { status: 404 })
+    }
+
     // Sicherstellen, dass ein Dunning-Entry existiert
     await ensureDunningEntry(supabase, invoiceId, auth.ctx.organizationId, auth.ctx.userId)
 

@@ -141,14 +141,14 @@ export async function pruefeBudget(
   const pct = available > 0 ? Math.round((used / available) * 100) : 0
   if (pct >= 100) {
     return {
-      warnung: `Budget vollständig ausgeschöpft (${pct}%, ${((used - available) / 100).toFixed(2)} EUR über Limit)`,
+      warnung: `Budget vollständig ausgeschöpft (${pct}%, ${(used - available).toFixed(2)} EUR über Limit)`,
       blockiert: true,
       prozent: pct,
     }
   }
   if (pct >= 95) {
     return {
-      warnung: `Budget zu ${pct}% ausgeschöpft (${((available - used) / 100).toFixed(2)} EUR verbleibend)`,
+      warnung: `Budget zu ${pct}% ausgeschöpft (${(available - used).toFixed(2)} EUR verbleibend)`,
       blockiert: false,
       prozent: pct,
     }

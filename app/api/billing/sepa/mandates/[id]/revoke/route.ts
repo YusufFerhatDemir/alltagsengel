@@ -14,7 +14,7 @@ export async function POST(
     const { id } = await params
 
     const body = await req.json()
-    const result = await revokeMandate(supabase, id, body.reason || 'Kein Grund angegeben', auth.ctx.userId)
+    const result = await revokeMandate(supabase, id, body.reason || 'Kein Grund angegeben', auth.ctx.userId, auth.ctx.organizationId)
 
     return NextResponse.json(result)
   } catch (e: any) {

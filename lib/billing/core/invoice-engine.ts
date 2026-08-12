@@ -448,24 +448,30 @@ async function generateInvoiceNumberFallback(
 
   if (seq) {
     nextNumber = seq.last_number + 1;
-    const { error: updError } = await supabase
+    const { data: updData, error: updError } = await supabase
       .from('billing_number_sequences')
       .update({ last_number: nextNumber })
-      .eq('id', seq.id);
+      .eq('id', seq.id)
+      .eq('last_number', seq.last_number)
+      .select('last_number')
+      .maybeSingle();
 
     if (updError) {
       throw new Error(`Nummernsequenz aktualisieren fehlgeschlagen: ${updError.message}`);
+    }
+    if (!updData) {
+      throw new Error('Nummernsequenz-Konflikt (paralleler Zugriff) — bitte erneut versuchen.');
     }
   } else {
     nextNumber = 1;
     const { error: insError } = await supabase
       .from('billing_number_sequences')
-      .insert({
+      .upsert({
         organization_id: orgId,
         prefix,
         year,
         last_number: nextNumber,
-      });
+      }, { onConflict: 'organization_id,prefix,year' });
 
     if (insError) {
       throw new Error(`Nummernsequenz erstellen fehlgeschlagen: ${insError.message}`);
@@ -572,11 +578,20 @@ export async function cancelInvoice(
     organization_id: original.organization_id,
   });
 
-  // Original als storniert markieren
-  await supabase
+  // Original als storniert markieren (CAS: nur wenn Status noch nicht storniert)
+  const { data: updated, error: statusError } = await supabase
     .from('invoices')
     .update({ status: 'storniert' })
-    .eq('id', invoiceId);
+    .eq('id', invoiceId)
+    .neq('status', 'storniert')
+    .select('id')
+    .maybeSingle();
+
+  if (statusError || !updated) {
+    // Storno-Rechnung zurueckrollen, da Original bereits storniert
+    await supabase.from('invoices').delete().eq('id', stornoInvoice.id);
+    throw new Error('Rechnung wurde bereits storniert (paralleler Zugriff).');
+  }
 
   // Korrektur-Eintrag
   const { data: correction, error: corrError } = await supabase

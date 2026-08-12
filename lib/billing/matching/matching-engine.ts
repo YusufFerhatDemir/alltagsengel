@@ -460,11 +460,12 @@ export async function manuellZuordnen(
 
   if (payErr || !payment) throw new Error(`Zahlung konnte nicht erstellt werden: ${payErr?.message}`);
 
-  // Rechnung laden fuer offenen Betrag
+  // Rechnung laden fuer offenen Betrag (Org-Fence: Rechnung muss zur selben Organisation gehoeren)
   const { data: inv } = await supabase
     .from('invoices')
     .select('id, total_amount, paid_amount')
     .eq('id', invoiceId)
+    .eq('organization_id', organizationId)
     .single();
 
   if (!inv) throw new Error('Rechnung nicht gefunden.');
