@@ -453,16 +453,47 @@ Bislang ist nur § 105 SGB XI implementiert. Für HKP (Häusliche Krankenpflege)
 
 ---
 
-## Block 18 — KIM / TI-Anbindung 📋
+## Block 18 — KIM / TI-Anbindung 🔄
 
-**Status:** Geplant
+**Status:** Gerüst fertig (12.08.2026), Versand bewusst gesperrt
+**Migration:** `20260830010000_kim_ti_geruest.sql` (wartet auf Live-Apply)
+**Kontext:** KIM (Kommunikation im Medizinwesen) ist Teil der Telematikinfrastruktur (TI) des
+deutschen Gesundheitswesens — gematik-spezifiziert, hochreguliert. Das Gerüst steht vor der
+gematik-Zulassung/dem KIM-Provider-Vertrag.
 
-| Modul | Beschreibung |
-|-------|--------------|
-| KIM-Gateway | Telematikinfrastruktur-Anbindung (KIM-Postfach) |
-| TI-Übertragung | Technische Anlage 5 Version 1.2.0 (ab 02/2027) |
-| eHBA/SMC-B | Heilberufsausweis- und Institutionskarten-Integration |
-| KIM-Nachrichten | Versand/Empfang von Abrechnungsdateien via KIM |
+> **Warum der Versand gesperrt ist.** Der eigentliche Versand setzt ein gematik-spezifiziertes
+> KIM-Client-Protokoll (Authentifizierung am Postfach, Envelope-Format, Zustellquittungen) UND
+> eine echte Konnektor-Anbindung (Hardware/Middleware für den Zugriff auf SMC-B/eHBA) voraus.
+> Beides liegt nicht vor und wird nicht aus dem Gedächtnis rekonstruiert — ein vermeintlich
+> erfolgreicher „Versand" wäre das gefährlichste denkbare Ergebnis in einem echten
+> Gesundheitsnetz. Deshalb fail-closed, gleiches Prinzip wie beim § 302-SGB-V-Gerüst (Block 17).
+
+| Modul | Beschreibung | Ergebnis |
+|-------|--------------|----------|
+| KIM-Gateway | Telematikinfrastruktur-Anbindung (KIM-Postfach) | ✅ `lib/kim/config.ts` — Postfach-Konfiguration (Bezeichnung, Freitext-Postfachadresse, Provider, Freischaltungsstatus), reine Verwaltung ohne Verbindungsaufbau |
+| TI-Übertragung | Technische Anlage 5 Version 1.2.0 (ab 02/2027) | ✅ `lib/kim/versionen.ts` — Register + Auflösung je Stichtag, fail-closed über `spec_bestaetigt`; Termin aus der Roadmap übernommen, KEINE Segmentinhalte |
+| eHBA/SMC-B | Heilberufsausweis- und Institutionskarten-Integration | ✅ `lib/kim/karten.ts` — Zuordnungsschicht (Kartentyp, generische Kartennummer, Inhaber, Gültigkeit); KEIN Kartenkommunikationsprotokoll |
+| KIM-Nachrichten | Versand/Empfang von Abrechnungsdateien via KIM | ⏸️ `lib/kim/nachrichten.ts` (Warteschlange: entwurf/wartend/gesperrt, vollständig) + `lib/kim/versand.ts` — Signatur + Freischaltliste stehen, Ausführung wirft `KimSpecFehltError`. **Braucht gematik-Zulassung, KIM-Provider-Vertrag, Konnektor, TA5.** |
+
+**Weitere Bausteine**
+
+| Datei | Zweck |
+|-------|-------|
+| `lib/kim/readiness.ts` | Blockerliste, getrennt in intern lösbar / extern zu beschaffen — Versand bleibt in jedem Fall intern gesperrt |
+| `app/api/billing/kim/readiness/` | Voraussetzungen je Stichtag |
+| `app/api/billing/kim/konfiguration/` | Postfach-CRUD (Liste/Anlegen/Ändern/Löschen) |
+| `app/api/billing/kim/karten/` | Karten-CRUD (Liste/Anlegen/Ändern/Löschen) |
+| `app/api/billing/kim/nachrichten/` | Warteschlange (Liste/Entwurf anlegen) + `[id]/versenden` (weist jeden Versuch mit 409 ab) |
+| `app/admin/kim/` | Admin-Oberfläche mit Sperrhinweis, Konfigurations-/Karten-/Nachrichtenformularen |
+| `__tests__/kim/kim-block18.test.ts` | 25 Tests auf Versionslogik, Validierung, Readiness-Bausteine, Fail-closed-Sperre |
+
+**Zum Freischalten** (Reihenfolge steht auch im Kopf von `versand.ts`):
+1. gematik-Zulassung als KIM-Nutzer/Leistungserbringer beschaffen.
+2. KIM-Provider-Vertrag abschliessen (liefert Postfachadresse + Zugang).
+3. Konnektor-Anbindung (Hardware/Middleware für SMC-B/eHBA) einrichten.
+4. Technische Anlage 5 (KIM-Client-Spezifikation) beschaffen (gematik Fachportal), im Repo als Quelle vermerken.
+5. `kim_formatversionen.spec_bestaetigt = true` mit `spec_quelle` (Dokumentname + Stand).
+6. Versand-Client implementieren, `kimVersandImplementiert()` auf `true`, Sperre in `versand.ts` entfernen.
 
 ---
 
@@ -579,7 +610,7 @@ wartet auf Live-Apply.
 | **15** | **Digitaler PflegeCoach (DiPA)** | **✅ 15a–15d umgesetzt (v0.2.0)** | **Hoch** |
 | 16 | Rechnungsmanagement & Gutschriften | ✅ Fertig | — |
 | 17 | § 302 SGB V (Sonstige Leistungserbringer) | 🔄 Gerüst fertig, Export gesperrt (TA1 fehlt) | Mittel |
-| 18 | KIM / TI-Anbindung | 📋 Geplant | Mittel |
+| 18 | KIM / TI-Anbindung | 🔄 Gerüst fertig, Versand gesperrt (TA5/Konnektor/gematik-Zulassung fehlen) | Mittel |
 | 19 | Erweiterte Analytics & Reporting | ✅ Fertig (Bonussystem-Migration wartet auf Live-Apply) | Niedrig |
 | 20 | Offline-First & Native App | 🔄 Kern fertig (Capacitor-Kamera/GPS-Plugins offen, Migration wartet auf Live-Apply) | Niedrig |
 | 21 | FHIR / ISiP Interoperabilität | 🔄 Größtenteils fertig (Patient-Import only, Migration wartet auf Live-Apply) | Niedrig |
