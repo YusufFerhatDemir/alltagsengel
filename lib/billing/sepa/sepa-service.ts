@@ -188,9 +188,9 @@ export async function createSepaBatch(
     .eq('status', 'aktiv')
     .in('client_id', clientIds)
 
-  const mandateByClient = new Map<string, typeof mandates extends (infer T)[] ? T : never>()
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const mandateByClient = new Map<string, any>()
   for (const m of mandates || []) {
-    // Letztes aktives Mandat pro Client
     mandateByClient.set(m.client_id, m)
   }
 
