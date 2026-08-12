@@ -68,6 +68,16 @@ export {
   createCreditNote,
 } from './invoice-engine';
 
+// Gutschrift-Lebenszyklus (Freigabe / Verwerfen)
+export {
+  type CreditNoteRow,
+  type ReleaseCreditNoteResult,
+  type DiscardCreditNoteResult,
+  releaseCreditNote,
+  discardCreditNote,
+  getRemainingCreditableCents,
+} from './credit-notes';
+
 // Payments
 export {
   type PaymentMethod,

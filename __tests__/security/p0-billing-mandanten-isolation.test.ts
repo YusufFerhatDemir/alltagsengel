@@ -86,11 +86,15 @@ describe('P0-1: keine Billing-Route liest profiles.organization_id', () => {
     rel => {
       const src = read(rel)
 
-      // Zwei zulaessige Wege — beide enden bei getActiveOrgId():
+      // Drei zulaessige Wege — alle enden bei getActiveOrgId():
       //   a) direkter Aufruf in der Route
       //   b) requireAdminMitOrg() aus lib/abrechnung/require-admin, das
       //      Admin-Pruefung und Org-Aufloesung zusammen erledigt und damit
       //      strenger ist als der direkte Aufruf.
+      //   c) requireOpsAdmin() aus lib/ops/api-auth — derselbe Vertrag wie (b)
+      //      und der Standardweg der Betriebssystem-Routen. Beide Helfer sind
+      //      unten eigens dahin abgesichert, dass sie die Org selbst ueber
+      //      getActiveOrgId() aufloesen.
       const direkt =
         /import\s*\{[^}]*\bgetActiveOrgId\b[^}]*\}\s*from\s*'@\/lib\/organizations\/server'/.test(src) &&
         /await\s+getActiveOrgId\(\)/.test(src)
@@ -99,9 +103,13 @@ describe('P0-1: keine Billing-Route liest profiles.organization_id', () => {
         /import\s*\{[^}]*\brequireAdminMitOrg\b[^}]*\}\s*from\s*'@\/lib\/abrechnung\/require-admin'/.test(src) &&
         /await\s+requireAdminMitOrg\(\)/.test(src)
 
+      const ueberOpsHelfer =
+        /import\s*\{[^}]*\brequireOps(Admin|User)\b[^}]*\}\s*from\s*'@\/lib\/ops\/api-auth'/.test(src) &&
+        /await\s+requireOps(Admin|User)\(\)/.test(src)
+
       expect(
-        direkt || ueberHelfer,
-        `${rel}: Org kommt weder aus getActiveOrgId() noch aus requireAdminMitOrg()`,
+        direkt || ueberHelfer || ueberOpsHelfer,
+        `${rel}: Org kommt weder aus getActiveOrgId() noch aus requireAdminMitOrg()/requireOpsAdmin()`,
       ).toBe(true)
     },
   )
@@ -113,6 +121,17 @@ describe('P0-1: keine Billing-Route liest profiles.organization_id', () => {
     expect(src).toMatch(/await\s+getActiveOrgId\(\)/)
     // Und er darf die Org nicht aus profiles ziehen.
     expect(src).not.toMatch(/\bprofiles?\??\.organization_id\b/)
+  })
+
+  it('requireOpsAdmin loest die Org selbst ueber getActiveOrgId() auf', () => {
+    // Gleiche Absicherung wie fuer requireAdminMitOrg — sonst waere der
+    // Ops-Helfer-Pfad ein Schlupfloch.
+    const src = read('lib/ops/api-auth.ts')
+    expect(src).toMatch(/import\s*\{[^}]*\bgetActiveOrgId\b[^}]*\}\s*from\s*'@\/lib\/organizations\/server'/)
+    expect(src).toMatch(/await\s+getActiveOrgId\(\)/)
+    expect(src).not.toMatch(/\bprofiles?\??\.organization_id\b/)
+    // Ohne Org gibt es keinen Kontext — sonst liefe die Route org-los weiter.
+    expect(src).toMatch(/Keine Organisation zugewiesen/)
   })
 })
 
@@ -147,6 +166,67 @@ describe('P0-2: Rechnungs-Mutationen pruefen die Org-Zugehoerigkeit vor dem Aufr
     const engineAt = src.indexOf(engine)
     expect(engineAt, `${rel}: Engine-Aufruf ${engine} nicht gefunden`).toBeGreaterThan(-1)
     expect(guardAt, `${rel}: Org-Check steht nach dem Engine-Aufruf`).toBeLessThan(engineAt)
+  })
+})
+
+describe('Block 16: Korrektur- und Rechnungsrouten bleiben mandantengefenced', () => {
+  it('der Statuswechsel laedt die Rechnung org-gefenced und bricht mit 404 ab', () => {
+    const REL = 'app/api/billing/invoices/[id]/status/route.ts'
+    const src = read(REL)
+    const at = src.indexOf("from('invoices')")
+    expect(at, `${REL}: keine invoices-Query`).toBeGreaterThan(-1)
+    const kette = src.slice(at, at + 400)
+    expect(kette).toMatch(/\.eq\('id',\s*id\)/)
+    expect(kette).toMatch(/\.eq\('organization_id',\s*organizationId\)/)
+
+    const guardAt = src.indexOf('!invoice')
+    expect(guardAt, `${REL}: kein !invoice-Guard`).toBeGreaterThan(-1)
+    expect(src.slice(guardAt, guardAt + 200)).toMatch(/status:\s*404/)
+
+    // Storno muss ueber /cancel laufen, damit ein Stornobeleg entsteht.
+    expect(src).toMatch(/target === 'storniert'/)
+  })
+
+  it('die Rechnungsliste filtert auf die Auth-Org', () => {
+    const REL = 'app/api/billing/invoices/route.ts'
+    const src = read(REL)
+    expect(src).toMatch(/\.eq\('organization_id',\s*organizationId\)/)
+    // Auch die Gutschrift-Nebenabfrage darf nicht mandantenfrei laufen.
+    const credits = src.indexOf("from('invoice_corrections')")
+    expect(credits, `${REL}: keine invoice_corrections-Query`).toBeGreaterThan(-1)
+    expect(src.slice(credits, credits + 400)).toMatch(/\.eq\('organization_id',\s*organizationId\)/)
+  })
+
+  it('die Korrekturliste filtert auf die Auth-Org und blendet Verworfenes aus', () => {
+    const REL = 'app/api/billing/corrections/route.ts'
+    const src = read(REL)
+    expect(src).toMatch(/\.eq\('organization_id',\s*organizationId\)/)
+    expect(src).toMatch(/\.is\('deleted_at',\s*null\)/)
+  })
+
+  it('Freigabe und Verwerfen reichen die Auth-Org an die Engine durch', () => {
+    for (const rel of [
+      'app/api/billing/corrections/[id]/release/route.ts',
+      'app/api/billing/corrections/[id]/discard/route.ts',
+    ]) {
+      const src = read(rel)
+      // Die Engine fenced selbst — sie MUSS die Org aber bekommen.
+      expect(src, `${rel}: Org wird nicht an die Engine uebergeben`)
+        .toMatch(/(releaseCreditNote|discardCreditNote)\([^)]*organizationId\)/)
+    }
+  })
+
+  it('die Engine prueft die Mandantenzugehoerigkeit der Korrektur selbst', () => {
+    const src = read('lib/billing/core/credit-notes.ts')
+    // Der Admin-Client umgeht RLS — ohne diesen Vergleich waere jede Korrektur
+    // jedes Mandanten freigebbar.
+    expect(src).toMatch(/organization_id\s*!==\s*expectedOrgId/)
+  })
+
+  it('das Kunden-PDF prueft den Eigentuemer statt nur die Anmeldung', () => {
+    const src = read('app/api/rechnungen/[id]/pdf/route.ts')
+    expect(src).toMatch(/client\?\.user_id\s*!==\s*user\.id/)
+    expect(src).toMatch(/status:\s*403/)
   })
 })
 
