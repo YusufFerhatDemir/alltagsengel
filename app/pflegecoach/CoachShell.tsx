@@ -25,6 +25,7 @@ const NAV = [
   { href: '/pflegecoach/angehoerige', label: 'Für Angehörige' },
   { href: '/pflegecoach/verlauf', label: 'Verlauf' },
   { href: '/pflegecoach/bericht', label: 'Bericht' },
+  { href: '/pflegecoach/freischaltung', label: 'Zugang' },
   { href: '/pflegecoach/einstellungen', label: 'Einstellungen' },
 ]
 
@@ -137,7 +138,8 @@ export default function CoachShell({ children }: { children: React.ReactNode }) 
           <p>
             <Link href="/pflegecoach/datenschutz">Datenschutz</Link>{' · '}
             <Link href="/impressum">Impressum</Link>{' · '}
-            <Link href="/pflegecoach/einstellungen">Datenexport &amp; Einwilligungen</Link>
+            <Link href="/pflegecoach/einstellungen">Datenexport &amp; Einwilligungen</Link>{' · '}
+            <Link href="/pflegecoach/loeschung">Daten löschen</Link>
           </p>
           <p aria-label="Produktversion">
             {COACH_PRODUKT_NAME} — Version {COACH_PRODUKT_VERSION} · Hersteller: Alltagsengel UG (haftungsbeschränkt)

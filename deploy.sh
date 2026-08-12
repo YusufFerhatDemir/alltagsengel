@@ -98,8 +98,13 @@ if [ -n "${DEPLOY_PATHS:-}" ]; then
   set +f
   git add -A -- "$@" || die "git add für DEPLOY_PATHS fehlgeschlagen"
   ok "Scoped staging: ${DEPLOY_PATHS}"
-  unstaged_rest="$(git status --porcelain | grep -v '^[MADRC]' | wc -l | tr -d ' ')"
-  [ "$unstaged_rest" != "0" ] && warn "${unstaged_rest} Datei(en) bleiben ungestaged (andere Session?)"
+  # grep findet nichts, wenn alles staged ist → Exit 1. Unter `set -e` würde
+  # das den Lauf hier still beenden, deshalb `|| true` an der Pipeline UND
+  # ein if statt `[ … ] && warn` (das liefert bei 0 ebenfalls Exit 1).
+  unstaged_rest="$(git status --porcelain | grep -cv '^[MADRC]' || true)"
+  if [ "${unstaged_rest:-0}" != "0" ]; then
+    warn "${unstaged_rest} Datei(en) bleiben ungestaged (andere Session?)"
+  fi
 else
   git add -A
 fi
