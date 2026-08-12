@@ -1,4 +1,5 @@
 'use client'
+import { heuteBerlin } from '@/lib/utils/timezone';
 import { useEffect, useMemo, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import {
@@ -87,7 +88,7 @@ export default function RechnungenPage() {
   const totals = useMemo(() => ({
     open: invoices.filter(i => OPEN_STATUSES.has(i.status)).reduce((s, i) => s + (i.total_amount || 0), 0),
     paid: invoices.filter(i => PAID_STATUSES.has(i.status)).reduce((s, i) => s + (i.paid_amount || i.total_amount || 0), 0),
-    overdue: invoices.filter(i => i.due_date && i.due_date < new Date().toISOString().split('T')[0] && OPEN_STATUSES.has(i.status)).length,
+    overdue: invoices.filter(i => i.due_date && i.due_date < heuteBerlin() && OPEN_STATUSES.has(i.status)).length,
   }), [invoices])
 
   return (
@@ -134,7 +135,7 @@ export default function RechnungenPage() {
                 <EmptyRow colSpan={8}>{search || filter !== 'all' ? 'Keine Treffer' : 'Noch keine Rechnungen'}</EmptyRow>
               ) : filtered.map(i => {
                 const sm = statusMeta(INVOICE_STATUS, i.status)
-                const isOverdue = i.due_date && i.due_date < new Date().toISOString().split('T')[0] && OPEN_STATUSES.has(i.status)
+                const isOverdue = i.due_date && i.due_date < heuteBerlin() && OPEN_STATUSES.has(i.status)
                 return (
                   <tr key={i.id} style={{ cursor: 'pointer' }} onClick={() => window.location.href = `/admin/rechnungen/${i.id}`}>
                     <td style={{ fontWeight: 600 }}>{i.invoice_number || '—'}</td>

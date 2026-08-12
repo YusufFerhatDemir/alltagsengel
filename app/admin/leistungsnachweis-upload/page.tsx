@@ -1,4 +1,5 @@
 'use client'
+import { heuteBerlin } from '@/lib/utils/timezone';
 import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
@@ -67,7 +68,7 @@ export default function LeistungsnachweisUploadPage() {
 
   // Inline-Neuanlage eines Entwurfs-Nachweises
   const [showNewRecord, setShowNewRecord] = useState(false)
-  const [newDate, setNewDate] = useState(() => new Date().toISOString().slice(0, 10))
+  const [newDate, setNewDate] = useState(() => heuteBerlin())
   const [newServiceType, setNewServiceType] = useState('Alltagsbegleitung')
   const [creatingRecord, setCreatingRecord] = useState(false)
 

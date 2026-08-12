@@ -6,6 +6,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { heuteBerlin } from '@/lib/utils/timezone'
 import {
   erstelleRuecklaeuferAufgabe,
   stufeRuecklaeuferEin,
@@ -251,7 +252,7 @@ describe('erstelleRuecklaeuferAufgabe — Inhalt', () => {
     expect(p.verantwortlich_id).toBe(ACTOR)
     expect(p.erstellt_von).toBe(ACTOR)
     expect(p.faellig_am).toMatch(/^\d{4}-\d{2}-\d{2}$/)
-    expect(p.faellig_am >= new Date().toISOString().slice(0, 10)).toBe(true)
+    expect(p.faellig_am >= heuteBerlin()).toBe(true)
   })
 
   it('bevorzugt einen explizit uebergebenen Verantwortlichen', async () => {

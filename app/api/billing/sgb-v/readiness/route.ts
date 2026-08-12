@@ -3,6 +3,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { ermittleSgbVReadiness } from '@/lib/abrechnung/sgb-v/readiness'
 import type { SgbVFormat } from '@/lib/abrechnung/sgb-v/versionen'
+import { monatBerlin } from '@/lib/utils/timezone';
 
 /**
  * GET /api/billing/sgb-v/readiness?monat=2026-08&format=edifact_slga_slla
@@ -17,7 +18,7 @@ export async function GET(request: Request) {
 
   try {
     const url = new URL(request.url)
-    const monat = url.searchParams.get('monat') || new Date().toISOString().slice(0, 7)
+    const monat = url.searchParams.get('monat') || monatBerlin()
     if (!/^\d{4}-\d{2}$/.test(monat)) {
       return NextResponse.json({ error: 'Parameter monat muss JJJJ-MM sein.' }, { status: 400 })
     }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getActiveOrgId } from '@/lib/organizations/server'
+import { datumBerlin } from '@/lib/utils/timezone';
 
 async function requireAuth(supabase: Awaited<ReturnType<typeof createClient>>) {
   const { data: { user } } = await supabase.auth.getUser()
@@ -69,7 +70,7 @@ export async function GET(req: NextRequest) {
     const d = new Date(start)
     d.setMonth(d.getMonth() + 1)
     d.setDate(0)
-    const end = d.toISOString().slice(0, 10)
+    const end = datumBerlin(d)
     query = query.gte('date', start).lte('date', end)
   }
   if (caregiverId) query = query.eq('caregiver_id', caregiverId)

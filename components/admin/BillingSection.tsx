@@ -148,7 +148,7 @@ export default function BillingSection() {
   const status = subscription?.status
   const statusInfo = status ? STATUS_LABELS[status] : null
   const periodEnd = subscription?.current_period_end
-    ? new Date(subscription.current_period_end).toLocaleDateString('de-DE')
+    ? new Date(subscription.current_period_end).toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin' })
     : null
 
   return (

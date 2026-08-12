@@ -1,4 +1,5 @@
 'use client'
+import { heuteBerlin } from '@/lib/utils/timezone';
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import {
@@ -22,7 +23,7 @@ interface PaymentRow {
   isOverdue: boolean
 }
 
-const today = () => new Date().toISOString().slice(0, 10)
+const today = () => heuteBerlin()
 
 export default function AdminZahlungskontrollePage() {
   const [rows, setRows] = useState<PaymentRow[]>([])

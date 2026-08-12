@@ -1,4 +1,5 @@
 'use client'
+import { heuteBerlin } from '@/lib/utils/timezone';
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
@@ -482,7 +483,7 @@ function InitialsModal({ caregiverId, current, onClose, onSaved }: { caregiverId
     if (!initials.trim()) { setErr('Bitte ein Handzeichen eingeben.'); return }
     setSaving(true)
     const supabase = createClient()
-    const today = new Date().toISOString().slice(0, 10)
+    const today = heuteBerlin()
     // Bisheriges aktives Handzeichen abschließen
     await supabase.from('caregiver_initials_history')
       .update({ valid_until: today }).eq('caregiver_id', caregiverId).is('valid_until', null)
@@ -521,7 +522,7 @@ function BonusModal({ caregiverId, onClose, onSaved }: { caregiverId: string; on
       caregiver_id: caregiverId, bonus_type: type, points: points ? Number(points) : null,
       description: desc.trim() || null, reward_type: reward || null,
       reward_value: rewardValue ? Number(rewardValue) : null,
-      awarded_date: new Date().toISOString().slice(0, 10), awarded_by: 'Alltagsengel',
+      awarded_date: heuteBerlin(), awarded_by: 'Alltagsengel',
     })
     if (error) { setErr(error.message); setSaving(false); return }
     onSaved()

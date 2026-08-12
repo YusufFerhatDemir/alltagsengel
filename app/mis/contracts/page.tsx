@@ -119,7 +119,7 @@ export default function ContractsPage() {
   }).length
   const totalValue = contracts.filter(c => c.status === 'active').reduce((s, c) => s + (c.value || 0), 0)
 
-  const formatDate = (d: string | null) => d ? new Date(d).toLocaleDateString('de-DE') : '—'
+  const formatDate = (d: string | null) => d ? new Date(d).toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin' }) : '—'
   const formatCurrency = (v: number | null) => v != null ? `€${v.toLocaleString('de-DE', { minimumFractionDigits: 2 })}` : '—'
 
   const inputStyle: React.CSSProperties = {

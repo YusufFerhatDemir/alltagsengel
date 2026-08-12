@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { ermittleKimReadiness } from '@/lib/kim/readiness'
+import { heuteBerlin } from '@/lib/utils/timezone';
 
 /**
  * GET /api/billing/kim/readiness?stichtag=2027-02-01
@@ -20,7 +21,7 @@ export async function GET(request: Request) {
     const stichtagParam = url.searchParams.get('stichtag')
     const stichtag = stichtagParam && /^\d{4}-\d{2}-\d{2}$/.test(stichtagParam)
       ? stichtagParam
-      : new Date().toISOString().slice(0, 10)
+      : heuteBerlin()
 
     const admin = createAdminClient()
     const ergebnis = await ermittleKimReadiness(admin, organizationId, stichtag)

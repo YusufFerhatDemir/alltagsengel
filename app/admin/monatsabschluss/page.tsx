@@ -1,4 +1,5 @@
 'use client'
+import { datumBerlin } from '@/lib/utils/timezone';
 import { Suspense, useEffect, useMemo, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
@@ -44,7 +45,7 @@ function MonatsabschlussInner() {
       try {
         const supabase = createClient()
         const monthStart = `${year}-${String(month).padStart(2, '0')}-01`
-        const monthEnd = new Date(year, month, 0).toISOString().slice(0, 10)
+        const monthEnd = datumBerlin(new Date(year, month, 0))
 
         const [closingsRes, recordsRes, budgetsRes] = await Promise.all([
           supabase.from('monthly_closings').select('*, client:clients(first_name, last_name)').eq('year', year).eq('month', month),

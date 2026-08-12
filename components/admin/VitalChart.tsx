@@ -99,7 +99,7 @@ export default function VitalChart({ typ, messungen, grenzen, alarmeAktiv = fals
   const sekundaerPunkte = daten.filter(d => d.y2 != null).map(d => ({ t: d.t, v: d.y2 as number }))
   const sekundaer = sekundaerPunkte.length > 0 ? linie(sekundaerPunkte) : null
 
-  const datum = (t: number) => new Date(t).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' })
+  const datum = (t: number) => new Date(t).toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin', day: '2-digit', month: '2-digit' })
   const yTicks = [yMin + (yMax - yMin) * 0.1, (yMin + yMax) / 2, yMax - (yMax - yMin) * 0.1]
 
   return (

@@ -31,7 +31,7 @@ const articles = [...BLOG_POSTS].sort((a, b) =>
 
 // ISO-Datum → deutsches Anzeigeformat (z.B. "2. Juli 2026")
 function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString('de-DE', { day: 'numeric', month: 'long', year: 'numeric' })
+  return new Date(iso).toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin', day: 'numeric', month: 'long', year: 'numeric' })
 }
 
 const categoryColors: Record<string, string> = {

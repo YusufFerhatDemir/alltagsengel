@@ -128,7 +128,7 @@ export default function ZieleSeite() {
             <h3>{z.titel} <span className="pc-badge">{STATUS_LABELS[z.status]}</span></h3>
             <p className="pc-lead">
               {BEREICH_LABELS[z.bereich]}
-              {z.ziel_bis ? ` · bis ${new Date(z.ziel_bis + 'T00:00:00').toLocaleDateString('de-DE')}` : ''}
+              {z.ziel_bis ? ` · bis ${new Date(z.ziel_bis + 'T00:00:00').toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin' })}` : ''}
             </p>
             {z.messgroesse && (
               <p>

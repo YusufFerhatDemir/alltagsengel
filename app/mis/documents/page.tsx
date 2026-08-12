@@ -180,7 +180,7 @@ export default function DocumentsPage() {
               const size = r.file_size as number
               return size > 0 ? (size > 1e6 ? `${(size/1e6).toFixed(1)} MB` : `${(size/1e3).toFixed(0)} KB`) : '—'
             }},
-            { key: 'updated_at', label: 'Aktualisiert', render: (r) => new Date(r.updated_at as string).toLocaleDateString('de-DE') },
+            { key: 'updated_at', label: 'Aktualisiert', render: (r) => new Date(r.updated_at as string).toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin' }) },
           ]}
           data={filteredDocs as unknown as Record<string,unknown>[]}
           onRowClick={(r) => setSelectedDoc(r as unknown as MisDocument)}

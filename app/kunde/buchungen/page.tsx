@@ -160,7 +160,7 @@ export default function KundeBuchungenPage() {
                     <div className="buch-status" style={{ color: st.color }}>{st.label}</div>
                   </div>
                   <div className="buch-details">
-                    <div className="buch-detail"><IconCalendar size={13} /> {b.date ? new Date(b.date).toLocaleDateString('de-DE', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'}</div>
+                    <div className="buch-detail"><IconCalendar size={13} /> {b.date ? new Date(b.date).toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin', day: '2-digit', month: 'short', year: 'numeric' }) : '—'}</div>
                     <div className="buch-detail"><IconClock size={13} /> {b.time?.slice(0,5)}{b.duration_hours ? ` · ${b.duration_hours}h` : ''}</div>
                     <div className="buch-detail"><IconMoney size={13} /> {b.total_amount ? `${Number(b.total_amount).toFixed(2)}€` : '—'}</div>
                   </div>

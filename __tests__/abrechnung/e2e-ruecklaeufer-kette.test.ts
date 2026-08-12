@@ -16,6 +16,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { describe, it, expect, beforeEach } from 'vitest'
+import { heuteBerlin } from '@/lib/utils/timezone'
 import { importiereRuecklaeufer } from '@/lib/abrechnung/ruecklaeufer'
 
 const ORG = '00000000-0000-4000-8000-000460629986'
@@ -172,7 +173,7 @@ describe('E2E: technischer Rueckläufer', () => {
     expect(aufgabe.status).toBe('offen')
     expect(aufgabe.kategorie).toBe('abrechnung')
     expect(aufgabe.verantwortlich_id).toBe(ACTOR)
-    expect(aufgabe.faellig_am >= new Date().toISOString().slice(0, 10)).toBe(true)
+    expect(aufgabe.faellig_am >= heuteBerlin()).toBe(true)
   })
 
   it('setzt den Lauf auf korrektur_erforderlich', async () => {

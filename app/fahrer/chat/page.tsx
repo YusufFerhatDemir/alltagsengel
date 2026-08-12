@@ -94,7 +94,7 @@ export default function FahrerChatPage() {
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: '15px', fontWeight: '600', color: '#F5F0E8' }}>{chat.name}</div>
                     <div style={{ fontSize: '12px', color: 'rgba(245,240,232,0.4)', marginTop: '2px' }}>
-                      {chat.rideCount} Fahrt{chat.rideCount !== 1 ? 'en' : ''} · Letzte: {new Date(chat.lastRide.datum).toLocaleDateString('de-DE')}
+                      {chat.rideCount} Fahrt{chat.rideCount !== 1 ? 'en' : ''} · Letzte: {new Date(chat.lastRide.datum).toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin' })}
                     </div>
                   </div>
                   <span style={{ color: 'rgba(201,150,60,0.5)', fontSize: '18px' }}>›</span>

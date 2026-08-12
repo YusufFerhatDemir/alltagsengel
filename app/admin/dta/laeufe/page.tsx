@@ -1,4 +1,5 @@
 'use client'
+import { datumBerlin } from '@/lib/utils/timezone';
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { StatusBadge, SearchInput, EmptyRow, Banner } from '@/components/admin/OpsUI'
@@ -149,7 +150,7 @@ export default function DtaLaeufePage() {
                   <td><StatusBadge label={st.label} color={st.color} /></td>
                   <td>{l.anzahl_faelle ?? 0}</td>
                   <td style={{ textAlign: 'right' }}>{euro(l.gesamtbetrag_cent ?? 0)}</td>
-                  <td>{new Date(l.erstellt_am).toLocaleDateString('de-DE')}</td>
+                  <td>{new Date(l.erstellt_am).toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin' })}</td>
                   <td>
                     <Link href={`/admin/dta/laeufe/${l.id}`} className="admin-btn small">
                       Details
@@ -169,7 +170,7 @@ function CreateLaufForm({ onClose, bundesland }: { onClose: () => void; bundesla
   const [monat, setMonat] = useState(() => {
     const d = new Date()
     d.setMonth(d.getMonth() - 1)
-    return d.toISOString().slice(0, 7)
+    return datumBerlin(d).slice(0, 7)
   })
   const [bl, setBl] = useState(bundesland || 'hessen')
   const [kt, setKt] = useState('')

@@ -117,7 +117,7 @@ export default function DakotaPage() {
                   <td><StatusBadge label={sm.label} color={sm.color} /></td>
                   <td>{a.nutzdaten_groesse_bytes ? `${(a.nutzdaten_groesse_bytes / 1024).toFixed(1)} KB` : '—'}</td>
                   <td>{a.versand_versuche}</td>
-                  <td>{new Date(a.created_at).toLocaleDateString('de-DE')}</td>
+                  <td>{new Date(a.created_at).toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin' })}</td>
                   <td>{a.uebermittelt_am ? new Date(a.uebermittelt_am).toLocaleString('de-DE') : '—'}</td>
                   <td>
                     <Link href={`/admin/dta/laeufe/${a.lauf_id}`} className="admin-btn small">

@@ -203,7 +203,7 @@ export default function RecruitingPage() {
       }, 0) / completedApplicants.length)
     : 0
 
-  const formatDate = (d: string | null) => d ? new Date(d).toLocaleDateString('de-DE') : '—'
+  const formatDate = (d: string | null) => d ? new Date(d).toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin' }) : '—'
 
   const inputStyle: React.CSSProperties = {
     width: '100%', padding: '10px 14px', borderRadius: 10, border: `1px solid ${BRAND.border}`,

@@ -1,4 +1,5 @@
 'use client'
+import { datumBerlin } from '@/lib/utils/timezone';
 // ═══════════════════════════════════════════════════════════
 // MEIN DIENSTPLAN (Engel)
 // ═══════════════════════════════════════════════════════════
@@ -45,7 +46,7 @@ function addDays(d: Date, n: number): Date {
 }
 
 function isoDate(d: Date): string {
-  return d.toISOString().slice(0, 10)
+  return datumBerlin(d)
 }
 
 function formatDateShort(dateStr: string): string {

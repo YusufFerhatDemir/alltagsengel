@@ -1,4 +1,5 @@
 'use client'
+import { heuteBerlin } from '@/lib/utils/timezone';
 import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
@@ -28,7 +29,7 @@ export default function BuchenPage() {
   const [kkType, setKkType] = useState('gesetzlich')
   const [selectedKK, setSelectedKK] = useState('AOK')
   const [angel, setAngel] = useState<any>(null)
-  const [date, setDate] = useState(() => new Date().toISOString().split('T')[0])
+  const [date, setDate] = useState(() => heuteBerlin())
   const [time, setTime] = useState('10:00')
   const [duration, setDuration] = useState(2)
   const [service, setService] = useState('Alltagsbegleitung')

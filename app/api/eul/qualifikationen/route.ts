@@ -10,6 +10,7 @@ import { NextResponse } from 'next/server'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { createClient } from '@/lib/supabase/server'
 import { EUL_QUALITAETSKRITERIEN, pruefeEulFreigabe } from '@/lib/coach/eul'
+import { heuteBerlin } from '@/lib/utils/timezone';
 
 const KRITERIUM_KEYS = EUL_QUALITAETSKRITERIEN.map(k => k.key)
 
@@ -28,7 +29,7 @@ export async function GET(request: Request) {
   if (error) return NextResponse.json({ error: 'Nachweise konnten nicht geladen werden.' }, { status: 500 })
 
   const zeilen = data ?? []
-  const heute = new Date().toISOString().slice(0, 10)
+  const heute = heuteBerlin()
 
   // Freigabe je Erbringer bestimmen (nur wenn nach Erbringer gefiltert wurde,
   // sonst gruppiert über caregiver_id).
@@ -72,7 +73,7 @@ export async function POST(request: Request) {
       kriterium_key: body.kriterium_key,
       erfuellt: Boolean(body.erfuellt),
       nachweis_art: typeof body.nachweis_art === 'string' ? body.nachweis_art.slice(0, 200) : null,
-      geprueft_am: datumOderNull(body.geprueft_am) ?? new Date().toISOString().slice(0, 10),
+      geprueft_am: datumOderNull(body.geprueft_am) ?? heuteBerlin(),
       geprueft_durch: auth.ctx.name,
       gueltig_bis: datumOderNull(body.gueltig_bis),
       notiz: typeof body.notiz === 'string' ? body.notiz.slice(0, 1000) : null,

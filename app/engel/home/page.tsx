@@ -227,7 +227,7 @@ export default function EngelHomePage() {
               </div>
             </div>
             <div className="req-grid">
-              <div className="req-info"><div className="req-info-lbl">Datum</div><div className="req-info-val">{new Date(b.date).toLocaleDateString('de-DE')}</div></div>
+              <div className="req-info"><div className="req-info-lbl">Datum</div><div className="req-info-val">{new Date(b.date).toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin' })}</div></div>
               <div className="req-info"><div className="req-info-lbl">Uhrzeit</div><div className="req-info-val">{b.time?.slice(0,5)}</div></div>
               <div className="req-info"><div className="req-info-lbl">Dauer</div><div className="req-info-val">{b.duration_hours} Std.</div></div>
               <div className="req-info"><div className="req-info-lbl">Vergütung</div><div className="req-info-val">{b.total_amount?.toFixed(2)}€</div></div>
@@ -265,7 +265,7 @@ export default function EngelHomePage() {
               <div className="upcoming-av" style={{ background: 'var(--gold-pale)' }}><IconUser size={18} /></div>
               <div>
                 <div className="upcoming-name">{b.customer ? `${b.customer.first_name} ${b.customer.last_name?.[0] || ''}.` : 'Ehem. Kunde'}</div>
-                <div className="upcoming-sub">{b.service} · {new Date(b.date).toLocaleDateString('de-DE')}, {b.time?.slice(0,5)}</div>
+                <div className="upcoming-sub">{b.service} · {new Date(b.date).toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin' })}, {b.time?.slice(0,5)}</div>
               </div>
               <div className="upcoming-end">
                 <div className="upcoming-price">{b.total_amount?.toFixed(2)}€</div>

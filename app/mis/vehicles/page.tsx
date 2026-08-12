@@ -135,7 +135,7 @@ export default function VehiclesPage() {
   }).length
   const totalKm = vehicles.reduce((s, v) => s + (v.current_km || 0), 0)
 
-  const formatDate = (d: string | null) => d ? new Date(d).toLocaleDateString('de-DE') : '—'
+  const formatDate = (d: string | null) => d ? new Date(d).toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin' }) : '—'
   const formatKm = (km: number) => `${km.toLocaleString('de-DE')} km`
 
   const inputStyle: React.CSSProperties = {

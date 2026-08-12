@@ -101,7 +101,7 @@ export default function BelastungSeite() {
               <tbody>
                 {[...messungen].reverse().map(m => (
                   <tr key={m.id}>
-                    <td>{new Date(m.erhoben_am).toLocaleDateString('de-DE')}</td>
+                    <td>{new Date(m.erhoben_am).toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin' })}</td>
                     <td>{m.summenwert ?? '—'}</td>
                   </tr>
                 ))}

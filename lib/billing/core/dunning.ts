@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { logBillingAction } from './audit'
+import { datumBerlin, heuteBerlin } from '@/lib/utils/timezone';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -78,7 +79,7 @@ export async function ensureDunningEntry(
 
   if (existing) return existing.id
 
-  const dueDate = inv.due_date || new Date().toISOString().split('T')[0]
+  const dueDate = inv.due_date || heuteBerlin()
 
   const { data, error } = await supabase
     .from('dunning_entries')
@@ -200,7 +201,7 @@ export async function advanceDunning(
       dunning_level: newLevel,
       dunning_fee_cents: (entry.dunning_fee_cents || 0) + feeCents,
       last_dunning_at: now.toISOString(),
-      next_dunning_at: nextDate.toISOString().split('T')[0],
+      next_dunning_at: datumBerlin(nextDate),
       days_overdue: Math.max(0, Math.floor((now.getTime() - new Date(entry.due_date).getTime()) / 86400000)),
     })
     .eq('invoice_id', invoiceId)
@@ -256,7 +257,7 @@ export async function getDunningOverview(
     blockedCount: 0,
   }
 
-  const today = new Date().toISOString().split('T')[0]
+  const today = heuteBerlin()
 
   for (const e of entries || []) {
     overview.total++

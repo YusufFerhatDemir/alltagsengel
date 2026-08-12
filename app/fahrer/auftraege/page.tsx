@@ -1,5 +1,6 @@
 'use client'
 
+import { heuteBerlin } from '@/lib/utils/timezone';
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
@@ -91,7 +92,7 @@ export default function AuftraegePage() {
       filtered = rides.filter(r => r.status === 'pending' && !r.provider_id)
     } else if (activeTab === 'heute') {
       // Today's rides for current provider
-      const today = new Date().toISOString().split('T')[0]
+      const today = heuteBerlin()
       filtered = rides.filter(r => r.datum === today && r.provider_id === providerId)
     } else if (activeTab === 'abgeschlossen') {
       // Completed rides for current provider
@@ -337,11 +338,9 @@ export default function AuftraegePage() {
                     alignItems: 'center',
                   }}>
                     <div style={{ fontSize: '13px', color: '#999' }}>
-                      {new Date(ride.datum).toLocaleDateString('de-DE', {
-                        weekday: 'short',
+                      {new Date(ride.datum).toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin', weekday: 'short',
                         month: 'short',
-                        day: 'numeric',
-                      })} · {ride.uhrzeit}
+                        day: 'numeric', })} · {ride.uhrzeit}
                     </div>
                     <div
                       style={{

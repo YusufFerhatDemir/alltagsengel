@@ -73,7 +73,7 @@ export default function WartenPage() {
   )
 
   const angelName = booking?.angel?.profiles ? `${booking.angel.profiles.first_name} ${booking.angel.profiles.last_name?.[0]}.` : 'Engel'
-  const dateStr = booking?.date ? new Date(booking.date).toLocaleDateString('de-DE') : '...'
+  const dateStr = booking?.date ? new Date(booking.date).toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin' }) : '...'
   const timeStr = booking?.time ? `${booking.time.slice(0,5)} Uhr` : '...'
 
   const accepted = booking?.status === 'accepted'

@@ -22,7 +22,7 @@ const DEKUBITUS_GRAD_ROEMISCH = ['I', 'II', 'III', 'IV']
 
 function formatDatum(iso: string | null): string {
   if (!iso) return '—'
-  return new Date(iso).toLocaleDateString('de-DE')
+  return new Date(iso).toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin' })
 }
 
 function formatZeitpunkt(iso: string): string {

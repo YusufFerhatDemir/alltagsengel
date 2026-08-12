@@ -1,3 +1,4 @@
+import { heuteBerlin } from '@/lib/utils/timezone';
 /**
  * CAMT.053 / CAMT.054 Parser
  *
@@ -172,7 +173,7 @@ function parseNtry(ntryXml: string): CamtBuchung {
       if (bookgDt.length > 0) return getTagContent(bookgDt[0], 'Dt');
       return null;
     })()
-    ?? new Date().toISOString().slice(0, 10);
+    ?? heuteBerlin();
 
   // Valutadatum
   const valutadatum = (() => {

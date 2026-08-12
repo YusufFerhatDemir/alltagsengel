@@ -92,7 +92,7 @@ export async function notifyAngelNewBooking(
   angelUserId: string,
   data: BookingNotifyData
 ): Promise<void> {
-  const dateStr = new Date(data.date).toLocaleDateString('de-DE', { day: '2-digit', month: 'long', year: 'numeric' })
+  const dateStr = new Date(data.date).toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin', day: '2-digit', month: 'long', year: 'numeric' })
 
   // 1. In-App Notification
   await createNotification(supabase, {
@@ -165,7 +165,7 @@ export async function notifyCustomerBookingAccepted(
   customerId: string,
   data: BookingNotifyData
 ): Promise<void> {
-  const dateStr = new Date(data.date).toLocaleDateString('de-DE', { day: '2-digit', month: 'long', year: 'numeric' })
+  const dateStr = new Date(data.date).toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin', day: '2-digit', month: 'long', year: 'numeric' })
 
   // 1. In-App Notification
   await createNotification(supabase, {
@@ -241,7 +241,7 @@ export async function notifyCustomerBookingDeclined(
   data: BookingNotifyData,
   reason?: string | null
 ): Promise<void> {
-  const dateStr = new Date(data.date).toLocaleDateString('de-DE', { day: '2-digit', month: 'long', year: 'numeric' })
+  const dateStr = new Date(data.date).toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin', day: '2-digit', month: 'long', year: 'numeric' })
   const reasonText = reason ? ` Grund: ${reason}` : ''
 
   // 1. In-App Notification

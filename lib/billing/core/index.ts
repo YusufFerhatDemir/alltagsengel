@@ -57,6 +57,7 @@ export {
   type CorrectionLineInput,
   type CorrectionResult,
   type CreditNoteResult,
+  type WriteOffResult,
   type TariffErrorCode,
   TARIFF_ERROR_CODES,
   parseTariffError,
@@ -66,6 +67,7 @@ export {
   cancelInvoice,
   correctInvoice,
   createCreditNote,
+  writeOffInvoice,
 } from './invoice-engine';
 
 // Gutschrift-Lebenszyklus (Freigabe / Verwerfen)

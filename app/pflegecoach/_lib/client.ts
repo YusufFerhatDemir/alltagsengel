@@ -1,5 +1,6 @@
 'use client'
 
+import { heuteBerlin } from '@/lib/utils/timezone';
 // Client-Helfer für alle PflegeCoach-Seiten: API-Aufrufe + Profil-Guard.
 
 import { useEffect, useState } from 'react'
@@ -67,7 +68,7 @@ export function useCoachProfil() {
 }
 
 export function heuteIso(): string {
-  return new Date().toISOString().slice(0, 10)
+  return heuteBerlin()
 }
 
 /** JS-Wochentag → ISO (1=Mo…7=So) */

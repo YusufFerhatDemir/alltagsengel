@@ -1,4 +1,5 @@
 'use client'
+import { heuteBerlin } from '@/lib/utils/timezone';
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
@@ -38,7 +39,7 @@ interface AbsenceItem {
 }
 
 function todayISO(): string {
-  return new Date().toISOString().slice(0, 10)
+  return heuteBerlin()
 }
 function monthStartISO(): string {
   const d = new Date()

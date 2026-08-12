@@ -33,11 +33,9 @@ export async function sendAccountDeletionEmail(
   const undoUrl = `${APP_URL}/api/user/delete/undo?token=${encodeURIComponent(data.token)}`
   const deletionDate = new Date(
     Date.now() + GRACE_PERIOD_DAYS * 24 * 60 * 60 * 1000
-  ).toLocaleDateString('de-DE', {
-    day: '2-digit',
+  ).toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin', day: '2-digit',
     month: 'long',
-    year: 'numeric',
-  })
+    year: 'numeric', })
 
   const subject = 'Konto-Loeschung bestaetigt — 60 Tage Widerrufsfrist'
 

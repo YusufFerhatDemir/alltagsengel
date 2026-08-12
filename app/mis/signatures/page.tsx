@@ -121,7 +121,7 @@ export default function SignaturesPage() {
   const declined = requests.filter(r => r.status === 'declined').length
   const signRate = requests.length > 0 ? Math.round((signed / requests.length) * 100) : 0
 
-  const formatDate = (d: string | null) => d ? new Date(d).toLocaleDateString('de-DE') : '—'
+  const formatDate = (d: string | null) => d ? new Date(d).toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin' }) : '—'
   const formatDateTime = (d: string | null) => d ? new Date(d).toLocaleString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'
 
   const inputStyle: React.CSSProperties = {

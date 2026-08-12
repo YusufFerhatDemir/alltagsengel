@@ -69,7 +69,7 @@ export async function GET() {
         status: absenderZert
           ? new Date(absenderZert.gueltig_bis) > new Date() ? 'ok' : 'abgelaufen'
           : 'fehlt',
-        wert: absenderZert ? `IK ${absenderZert.ik_nummer}, gültig bis ${new Date(absenderZert.gueltig_bis).toLocaleDateString('de-DE')}` : null,
+        wert: absenderZert ? `IK ${absenderZert.ik_nummer}, gültig bis ${new Date(absenderZert.gueltig_bis).toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin' })}` : null,
         hinweis: absenderZert
           ? new Date(absenderZert.gueltig_bis) > new Date() ? null : 'Zertifikat abgelaufen — beim ITSG Trust Center verlängern'
           : 'EXTERNE KONFIGURATION ERFORDERLICH — PKCS#12 vom ITSG Trust Center hochladen',

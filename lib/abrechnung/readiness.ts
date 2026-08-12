@@ -20,6 +20,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { bewerteZertifikat, ABLAUF_WARNUNG_TAGE } from './zertifikate'
 import { pruefeRouting } from './stammdaten'
+import { heuteBerlin } from '@/lib/utils/timezone';
 
 export type Ampel = 'gruen' | 'gelb' | 'rot'
 
@@ -81,7 +82,7 @@ export async function ermittleReadiness(
   supabase: SupabaseClient,
   organizationId: string,
 ): Promise<ReadinessErgebnis> {
-  const heute = new Date().toISOString().slice(0, 10)
+  const heute = heuteBerlin()
 
   const [orgRes, zertRes, dasRes, ktRes, stateRes, tarifRes, laufRes, rlRes, aufgabenRes, fehlerRes, auditRes] =
     await Promise.all([

@@ -157,7 +157,7 @@ export default function BewertungPage() {
         <div>
           <div style={{ fontSize: 16, fontWeight: 600, color: 'var(--ink)' }}>{angelName}</div>
           <div style={{ fontSize: 13, color: 'var(--ink3)' }}>
-            {booking.service || 'Alltagsbegleitung'} • {new Date(booking.date).toLocaleDateString('de-DE')}
+            {booking.service || 'Alltagsbegleitung'} • {new Date(booking.date).toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin' })}
           </div>
         </div>
       </div>

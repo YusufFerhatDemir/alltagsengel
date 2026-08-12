@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { rateLimit, getClientIp } from '@/lib/rate-limit'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { heuteBerlin } from '@/lib/utils/timezone';
 
 // ═══════════════════════════════════════════════════════════
 // BERATUNGS-CHAT API — Öffentlicher KI-Pflegeberater
@@ -100,7 +101,7 @@ function fallbackAntwort(text: string): string {
 async function dailyLlmCapReached(): Promise<boolean> {
   try {
     const supabase = createAdminClient()
-    const key = `beratung-chat:daily:${new Date().toISOString().slice(0, 10)}`
+    const key = `beratung-chat:daily:${heuteBerlin()}`
     const { data, error } = await supabase
       .from('login_rate_limits')
       .select('attempts')

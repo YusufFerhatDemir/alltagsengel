@@ -142,9 +142,7 @@ export default function BundeslandHinweis({
 
 function formatDatum(iso: string): string {
   try {
-    return new Date(iso + 'T00:00:00').toLocaleDateString('de-DE', {
-      day: '2-digit', month: 'long', year: 'numeric',
-    })
+    return new Date(iso + 'T00:00:00').toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin', day: '2-digit', month: 'long', year: 'numeric', })
   } catch {
     return iso
   }

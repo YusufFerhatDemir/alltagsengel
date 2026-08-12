@@ -211,7 +211,7 @@ export default function MedikamentDetailPage() {
             <>
               <div>
                 <dt className="font-medium text-gray-500">Abgesetzt am</dt>
-                <dd>{new Date(med.abgesetzt_am).toLocaleDateString('de-DE')}</dd>
+                <dd>{new Date(med.abgesetzt_am).toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin' })}</dd>
               </div>
               <div>
                 <dt className="font-medium text-gray-500">Absetzgrund</dt>

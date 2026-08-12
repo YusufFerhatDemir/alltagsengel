@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { requireCoachUser } from '@/lib/coach/api-auth'
 import { buildExport } from '@/lib/coach/export'
+import { heuteBerlin } from '@/lib/utils/timezone';
 
 /**
  * Self-Service-Datenexport (Art. 20 DSGVO / DiPAV Anlage 2):
@@ -35,7 +36,7 @@ export async function GET() {
     reports: berichte.data ?? [],
   })
 
-  const dateiname = `pflegecoach-export-${new Date().toISOString().slice(0, 10)}.json`
+  const dateiname = `pflegecoach-export-${heuteBerlin()}.json`
   return new NextResponse(JSON.stringify(exportDaten, null, 2), {
     headers: {
       'Content-Type': 'application/json; charset=utf-8',

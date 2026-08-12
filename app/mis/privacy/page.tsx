@@ -263,7 +263,7 @@ export default function PrivacyPage() {
   }
 
   // ===== Helpers =====
-  const formatDate = (d: string | null) => d ? new Date(d).toLocaleDateString('de-DE') : '—'
+  const formatDate = (d: string | null) => d ? new Date(d).toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin' }) : '—'
   const formatDateTime = (d: string | null) => d ? new Date(d).toLocaleString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'
 
   const inputStyle: React.CSSProperties = {

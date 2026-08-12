@@ -1,4 +1,5 @@
 'use client'
+import { datumBerlin } from '@/lib/utils/timezone';
 import React, { useState, useEffect, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { BRAND } from '@/lib/mis/constants'
@@ -168,7 +169,7 @@ export default function TrainingPage() {
     if (training.validity_months > 0) {
       const exp = new Date(completedDate)
       exp.setMonth(exp.getMonth() + training.validity_months)
-      expiresDate = exp.toISOString().split('T')[0]
+      expiresDate = datumBerlin(exp)
     }
 
     const supabase = createClient()
@@ -258,7 +259,7 @@ export default function TrainingPage() {
   })
 
   // Helpers
-  const formatDate = (d: string | null) => d ? new Date(d).toLocaleDateString('de-DE') : '—'
+  const formatDate = (d: string | null) => d ? new Date(d).toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin' }) : '—'
 
   const inputStyle: React.CSSProperties = {
     width: '100%', padding: '10px 14px', borderRadius: 10, border: `1px solid ${BRAND.border}`,

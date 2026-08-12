@@ -1,4 +1,5 @@
 'use client'
+import { datumBerlin, heuteBerlin } from '@/lib/utils/timezone';
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { formatDate, formatTime, fullName, WEEKDAYS, BUNDESLAND_LABELS } from '@/lib/admin/ops'
@@ -27,7 +28,7 @@ const SERVICE_TYPES = [
 ]
 
 // ── Datums-Helfer ──────────────────────────────────────────────
-function isoDate(d: Date): string { return d.toISOString().slice(0, 10) }
+function isoDate(d: Date): string { return datumBerlin(d) }
 
 function mondayOfWeek(base: Date): Date {
   const d = new Date(base)
@@ -60,7 +61,7 @@ function kwNumber(d: Date): number {
 }
 
 function germanMonthLong(d: Date): string {
-  return d.toLocaleDateString('de-DE', { month: 'long', year: 'numeric' })
+  return d.toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin', month: 'long', year: 'numeric' })
 }
 
 function germanDateShort(d: Date): string {
@@ -154,7 +155,7 @@ export default function AdminKalenderPage() {
   const { rangeStart, rangeEnd, label } = useMemo(() => {
     if (view === 'day') {
       const ds = isoDate(baseDate)
-      const dayLabel = baseDate.toLocaleDateString('de-DE', { day: 'numeric', month: 'long', year: 'numeric' })
+      const dayLabel = baseDate.toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin', day: 'numeric', month: 'long', year: 'numeric' })
       return { rangeStart: ds, rangeEnd: ds, label: dayLabel }
     }
     if (view === 'week') {
@@ -678,7 +679,7 @@ function CreateAssignmentModal({ clients, caregivers, initialDate, onClose, onSa
 }) {
   const [clientId, setClientId] = useState('')
   const [caregiverId, setCaregiverId] = useState('')
-  const [date, setDate] = useState(initialDate || new Date().toISOString().slice(0, 10))
+  const [date, setDate] = useState(initialDate || heuteBerlin())
   const [startTime, setStartTime] = useState('09:00')
   const [endTime, setEndTime] = useState('11:00')
   const [serviceType, setServiceType] = useState('Alltagsbegleitung')

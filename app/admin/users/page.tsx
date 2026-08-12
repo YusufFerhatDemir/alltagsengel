@@ -105,7 +105,7 @@ export default function AdminUsersPage() {
                     </span>
                   </td>
                   <td>{p.location || '—'}</td>
-                  <td>{new Date(p.created_at).toLocaleDateString('de-DE')}</td>
+                  <td>{new Date(p.created_at).toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin' })}</td>
                   <td>
                     <button
                       className="admin-action-btn"

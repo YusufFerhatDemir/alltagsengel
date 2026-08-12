@@ -146,7 +146,7 @@ export default function FahrzeugeManagementPage() {
   const formatDate = (dateStr: string | null) => {
     if (!dateStr) return 'Nicht angegeben'
     try {
-      return new Date(dateStr).toLocaleDateString('de-DE')
+      return new Date(dateStr).toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin' })
     } catch {
       return 'Ungültig'
     }

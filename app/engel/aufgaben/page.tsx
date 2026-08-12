@@ -55,7 +55,7 @@ interface Aufgabe {
 function fmtDate(d: string | null): string {
   if (!d) return ''
   const dt = new Date(d)
-  return isNaN(dt.getTime()) ? '' : dt.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: '2-digit' })
+  return isNaN(dt.getTime()) ? '' : dt.toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin', day: '2-digit', month: '2-digit', year: '2-digit' })
 }
 
 export default function EngelAufgabenPage() {

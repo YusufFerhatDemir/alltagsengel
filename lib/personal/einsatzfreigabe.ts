@@ -1,4 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { heuteBerlin } from '@/lib/utils/timezone'
 import {
   ENTLASTUNG_JAEHRLICH_EUR,
   VP_JAEHRLICH_EUR,
@@ -59,7 +60,7 @@ export async function pruefeEinsatzfreigabe(
     .eq('organization_id', organizationId)
     .eq('einsatzrelevant', true)
 
-  const heute = new Date().toISOString().split('T')[0]
+  const heute = heuteBerlin()
   const abgelaufen = (quals ?? []).filter(q =>
     q.valid_until && q.valid_until < heute
   )
@@ -128,38 +129,88 @@ export async function pruefeClientFreigabe(
   return { clientId, clientName: name, freigegeben: probleme.length === 0, probleme }
 }
 
+export interface BudgetPruefErgebnis {
+  warnung: string | null
+  blockiert: boolean
+  prozent: number
+  budgetTyp: BudgetTyp
+}
+
 export async function pruefeBudget(
   supabase: SupabaseClient,
   clientId: string,
   organizationId: string,
-): Promise<{ warnung: string | null; blockiert: boolean; prozent: number }> {
+  budgetTyp: BudgetTyp = 'entlastung',
+): Promise<BudgetPruefErgebnis> {
   const year = new Date().getFullYear()
   const { data: budget } = await supabase
     .from('client_budgets')
-    .select('annual_amount, carryover_amount, used_amount')
+    .select('annual_amount, carryover_amount, used_amount, budget_type')
     .eq('client_id', clientId)
     .eq('organization_id', organizationId)
     .eq('year', year)
+    .eq('budget_type', budgetTyp)
     .maybeSingle()
-  if (!budget) return { warnung: null, blockiert: false, prozent: 0 }
-  const available = (budget.annual_amount ?? 1572) + (budget.carryover_amount ?? 0)
+  if (!budget) return { warnung: null, blockiert: false, prozent: 0, budgetTyp }
+
+  const defaultAmount = budgetTyp === 'verhinderungspflege'
+    ? VP_JAEHRLICH_EUR
+    : ENTLASTUNG_JAEHRLICH_EUR
+  const available = (budget.annual_amount ?? defaultAmount) + (budget.carryover_amount ?? 0)
   const used = budget.used_amount ?? 0
   const pct = available > 0 ? Math.round((used / available) * 100) : 0
+
+  const label = budgetTyp === 'verhinderungspflege' ? 'VP-Budget' : 'Budget'
+
   if (pct >= 100) {
     return {
-      warnung: `Budget vollständig ausgeschöpft (${pct}%, ${(used - available).toFixed(2)} EUR über Limit)`,
+      warnung: `${label} vollständig ausgeschöpft (${pct}%, ${(used - available).toFixed(2)} EUR über Limit)`,
       blockiert: true,
       prozent: pct,
+      budgetTyp,
     }
   }
   if (pct >= 95) {
     return {
-      warnung: `Budget zu ${pct}% ausgeschöpft (${(available - used).toFixed(2)} EUR verbleibend)`,
+      warnung: `${label} zu ${pct}% ausgeschöpft (${(available - used).toFixed(2)} EUR verbleibend)`,
       blockiert: false,
       prozent: pct,
+      budgetTyp,
     }
   }
-  return { warnung: null, blockiert: false, prozent: pct }
+  return { warnung: null, blockiert: false, prozent: pct, budgetTyp }
+}
+
+export async function pruefeVPBudget(
+  supabase: SupabaseClient,
+  clientId: string,
+  organizationId: string,
+): Promise<BudgetPruefErgebnis & { vpKzpKombiniertWarnung: string | null }> {
+  const vpResult = await pruefeBudget(supabase, clientId, organizationId, 'verhinderungspflege')
+
+  const year = new Date().getFullYear()
+  const { data: budgets } = await supabase
+    .from('client_budgets')
+    .select('budget_type, used_amount, combined_used_amount')
+    .eq('client_id', clientId)
+    .eq('organization_id', organizationId)
+    .eq('year', year)
+    .in('budget_type', ['verhinderungspflege', 'entlastung'])
+
+  let vpKzpKombiniertWarnung: string | null = null
+  if (budgets && budgets.length > 0) {
+    const vpUsed = budgets.find(b => b.budget_type === 'verhinderungspflege')
+    const combinedUsed = vpUsed?.combined_used_amount ?? 0
+    if (combinedUsed > VP_KZP_KOMBINIERT_EUR) {
+      vpKzpKombiniertWarnung =
+        `VP+KZP Kombinationsbudget überschritten (${combinedUsed.toFixed(2)} / ${VP_KZP_KOMBINIERT_EUR} EUR)`
+    } else if (combinedUsed > VP_KZP_KOMBINIERT_EUR * 0.95) {
+      vpKzpKombiniertWarnung =
+        `VP+KZP Kombinationsbudget zu ${Math.round((combinedUsed / VP_KZP_KOMBINIERT_EUR) * 100)}% ausgeschöpft (${(VP_KZP_KOMBINIERT_EUR - combinedUsed).toFixed(2)} EUR verbleibend)`
+    }
+  }
+
+  return { ...vpResult, vpKzpKombiniertWarnung }
 }
 
 export async function setzeEinsatzfreigabe(

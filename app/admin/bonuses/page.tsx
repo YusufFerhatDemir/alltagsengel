@@ -1,4 +1,5 @@
 'use client'
+import { datumBerlin, heuteBerlin, monatBerlin } from '@/lib/utils/timezone';
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
@@ -38,11 +39,11 @@ interface BonusBerechnung {
 
 function aktuellerMonatVon(): string {
   const d = new Date()
-  return new Date(d.getFullYear(), d.getMonth(), 1).toISOString().slice(0, 10)
+  return datumBerlin(new Date(d.getFullYear(), d.getMonth(), 1))
 }
 function aktuellerMonatBis(): string {
   const d = new Date()
-  return new Date(d.getFullYear(), d.getMonth() + 1, 0).toISOString().slice(0, 10)
+  return datumBerlin(new Date(d.getFullYear(), d.getMonth() + 1, 0))
 }
 
 export default function AdminBonusesPage() {
@@ -196,7 +197,7 @@ export default function AdminBonusesPage() {
 
   useEffect(() => { load() }, [load])
 
-  const thisMonth = useMemo(() => new Date().toISOString().slice(0, 7), [])
+  const thisMonth = useMemo(() => monatBerlin(), [])
 
   // Punkte je Mitarbeiter (gesamt + aktueller Monat)
   const ranking = useMemo(() => {
@@ -246,7 +247,7 @@ export default function AdminBonusesPage() {
         <span style={{ fontSize: 36 }}>🏆</span>
         <div>
           <div style={{ fontSize: 12, color: 'var(--ink4)', textTransform: 'uppercase', letterSpacing: '.5px', fontWeight: 700 }}>
-            Mitarbeiter des Monats · {new Date().toLocaleDateString('de-DE', { month: 'long', year: 'numeric' })}
+            Mitarbeiter des Monats · {new Date().toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin', month: 'long', year: 'numeric' })}
           </div>
           {employeeOfMonth ? (
             <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--gold2)', fontFamily: "'Cormorant Garamond', serif" }}>
@@ -491,7 +492,7 @@ function AwardModal({ caregivers, onClose, onSaved }: { caregivers: Caregiver[];
       caregiver_id: caregiverId, bonus_type: type, points: points ? Number(points) : null,
       description: desc.trim() || null, reward_type: reward || null,
       reward_value: rewardValue ? Number(rewardValue) : null,
-      awarded_date: new Date().toISOString().slice(0, 10), awarded_by: 'Alltagsengel',
+      awarded_date: heuteBerlin(), awarded_by: 'Alltagsengel',
     })
     if (error) { setErr(error.message); setSaving(false); return }
     onSaved()

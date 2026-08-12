@@ -78,7 +78,7 @@ export default function WundVerlaufChart({ verlauf }: { verlauf: VerlaufsPunkt[]
               fill="#6b7280"
               textAnchor="middle"
             >
-              {new Date(p.erhoben_am).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' })}
+              {new Date(p.erhoben_am).toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin', day: '2-digit', month: '2-digit' })}
             </text>
           ))}
           {SERIEN.map(s => (

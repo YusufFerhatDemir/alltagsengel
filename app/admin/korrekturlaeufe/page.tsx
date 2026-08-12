@@ -129,7 +129,7 @@ export default function KorrekturlaeufePage() {
               const sm = STATUS_META[k.status] || { label: k.status, color: '#94a3b8' }
               return (
                 <tr key={k.id}>
-                  <td>{new Date(k.created_at).toLocaleDateString('de-DE')}</td>
+                  <td>{new Date(k.created_at).toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin' })}</td>
                   <td>{TYP_LABELS[k.korrektur_typ] || k.korrektur_typ}</td>
                   <td>
                     <Link href={`/admin/dta/laeufe/${k.original_lauf_id}`}>

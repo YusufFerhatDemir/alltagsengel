@@ -7,6 +7,7 @@
  */
 
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { heuteBerlin } from '@/lib/utils/timezone';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -97,7 +98,7 @@ export async function getOposListe(
     .select('id, invoice_number, invoice_number_formatted, total_amount, paid_amount, status, dunning_level, created_at, due_date, client_id, client:clients(first_name, last_name)')
     .eq('organization_id', organizationId)
     .is('deleted_at', null)
-    .not('status', 'in', '("storniert","akzeptiert")');
+    .not('status', 'in', '("storniert","akzeptiert","abgeschrieben")');
 
   if (filter.clientId) {
     query = query.eq('client_id', filter.clientId);
@@ -111,7 +112,7 @@ export async function getOposListe(
 
   if (error) throw new Error(`OPOS-Abfrage fehlgeschlagen: ${error.message}`);
 
-  const heute = new Date().toISOString().slice(0, 10);
+  const heute = heuteBerlin();
   const offenePosten: OffenerPosten[] = [];
 
   for (const inv of invoices || []) {

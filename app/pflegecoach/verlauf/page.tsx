@@ -66,7 +66,7 @@ export default function VerlaufSeite() {
               <tbody>
                 {assessments.map(a => (
                   <tr key={a.id}>
-                    <td>{new Date(a.erhoben_am + 'T00:00:00').toLocaleDateString('de-DE')}</td>
+                    <td>{new Date(a.erhoben_am + 'T00:00:00').toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin' })}</td>
                     {ASSESSMENT_BEREICHE.map(b => <td key={b}>{a[b] ?? '—'}</td>)}
                   </tr>
                 ))}
@@ -91,7 +91,7 @@ export default function VerlaufSeite() {
               <tbody>
                 {[...messungen].reverse().map(m => (
                   <tr key={m.id}>
-                    <td>{new Date(m.erhoben_am).toLocaleDateString('de-DE')}</td>
+                    <td>{new Date(m.erhoben_am).toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin' })}</td>
                     <td>{INSTRUMENT_LABELS[m.instrument] ?? m.instrument}</td>
                     <td>{m.summenwert ?? '—'}</td>
                   </tr>

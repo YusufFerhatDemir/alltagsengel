@@ -1,4 +1,5 @@
 'use client'
+import { datumBerlin } from '@/lib/utils/timezone';
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
@@ -32,12 +33,12 @@ interface Assignment {
   notes: string | null
 }
 
-function isoDate(d: Date): string { return d.toISOString().slice(0, 10) }
+function isoDate(d: Date): string { return datumBerlin(d) }
 function fmtTime(t: string | null): string { return t ? t.slice(0, 5) : '—' }
 function fmtDate(d: string | null): string {
   if (!d) return '—'
   const dt = new Date(d)
-  return isNaN(dt.getTime()) ? '—' : dt.toLocaleDateString('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit' })
+  return isNaN(dt.getTime()) ? '—' : dt.toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin', weekday: 'short', day: '2-digit', month: '2-digit' })
 }
 
 export default function EngelEinsaetzePage() {
@@ -202,7 +203,7 @@ export default function EngelEinsaetzePage() {
         Meine Einsätze
       </h1>
       <p style={{ fontSize: 13, color: 'var(--ink4)', marginBottom: 16 }}>
-        {new Date().toLocaleDateString('de-DE', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' })}
+        {new Date().toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin', weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' })}
       </p>
 
       {err && <div style={{ background: 'rgba(208,75,59,.1)', border: '1px solid rgba(208,75,59,.3)', borderRadius: 10, padding: '10px 14px', marginBottom: 12, fontSize: 13, color: '#D04B3B' }}>{err}</div>}

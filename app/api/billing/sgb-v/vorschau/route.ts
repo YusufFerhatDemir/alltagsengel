@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import {
+import { datumBerlin, monatBerlin } from '@/lib/utils/timezone';
   bereiteHkpVor, HKP_VERORDNUNG_TYPE,
   type HkpLeistung, type HkpVerordnung, type HkpKlient,
 } from '@/lib/abrechnung/sgb-v/positionen'
@@ -25,7 +26,7 @@ export async function GET(request: Request) {
 
   try {
     const url = new URL(request.url)
-    const monat = url.searchParams.get('monat') || new Date().toISOString().slice(0, 7)
+    const monat = url.searchParams.get('monat') || monatBerlin()
     if (!/^\d{4}-\d{2}$/.test(monat)) {
       return NextResponse.json({ error: 'Parameter monat muss JJJJ-MM sein.' }, { status: 400 })
     }
@@ -34,7 +35,7 @@ export async function GET(request: Request) {
     // Letzter Tag des Monats ohne Kalender-Arithmetik-Fallen: Tag 0 des
     // Folgemonats ist der letzte Tag des gewählten Monats.
     const [jahr, mon] = monat.split('-').map(Number)
-    const bis = new Date(Date.UTC(jahr, mon, 0)).toISOString().slice(0, 10)
+    const bis = datumBerlin(new Date(Date.UTC(jahr, mon, 0)))
 
     const admin = createAdminClient()
 

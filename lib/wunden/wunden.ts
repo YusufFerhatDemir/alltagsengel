@@ -5,6 +5,7 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js'
 import {
+import { heuteBerlin } from '@/lib/utils/timezone';
   assertErlaubt,
   KOERPERSEITE_WERTE,
   WUND_STATUS_WERTE,
@@ -135,7 +136,7 @@ export async function updateWound(
   if (patch.status !== undefined) {
     update.status = patch.status
     if (patch.status === 'abgeheilt') {
-      update.abgeheilt_am = patch.abgeheiltAm ?? new Date().toISOString().slice(0, 10)
+      update.abgeheilt_am = patch.abgeheiltAm ?? heuteBerlin()
     } else {
       update.abgeheilt_am = null
     }

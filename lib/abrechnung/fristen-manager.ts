@@ -17,6 +17,7 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { logBillingAction } from '../billing/core/audit'
+import { datumBerlin, heuteBerlin } from '@/lib/utils/timezone';
 
 // ── Types ───────────────────────────────────────────────────────
 
@@ -73,7 +74,7 @@ export function fristFuerTyp(typ: string): number {
 function faelligkeitsDatum(tage: number, ab: Date = new Date()): string {
   const d = new Date(ab)
   d.setDate(d.getDate() + tage)
-  return d.toISOString().slice(0, 10)
+  return datumBerlin(d)
 }
 
 // ── Frist erstellen ─────────────────────────────────────────────
@@ -159,7 +160,7 @@ export async function pruefeUeberfaelligeFristen(
   supabase: SupabaseClient,
   organizationId: string,
 ): Promise<FristenUebersicht> {
-  const heute = new Date().toISOString().slice(0, 10)
+  const heute = heuteBerlin()
 
   const { data: fristen } = await supabase
     .from('billing_fristen')
@@ -207,7 +208,7 @@ export async function escaliereUeberfaellige(
   organizationId: string,
   actorId: string,
 ): Promise<EskalationsErgebnis> {
-  const heute = new Date().toISOString().slice(0, 10)
+  const heute = heuteBerlin()
   const jetzt = new Date().toISOString()
   const fehler: string[] = []
   let eskaliert = 0

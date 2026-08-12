@@ -1,4 +1,5 @@
 'use client'
+import { datumBerlin } from '@/lib/utils/timezone';
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { IconCalendar, IconClock, IconWings } from '@/components/Icons'
@@ -77,7 +78,7 @@ export default function KundeKalenderPage() {
           {Array.from({ length: daysInMonth }).map((_, i) => {
             const day = i + 1
             const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
-            const isToday = dateStr === today.toISOString().slice(0, 10)
+            const isToday = dateStr === datumBerlin(today)
             const hasBooking = bookingDates.has(dateStr)
             const isSelected = dateStr === selectedDate
             return (
@@ -96,7 +97,7 @@ export default function KundeKalenderPage() {
         {selectedDate && (
           <div className="kal-events">
             <div className="kal-events-title">
-              {new Date(selectedDate + 'T00:00:00').toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long' })}
+              {new Date(selectedDate + 'T00:00:00').toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin', weekday: 'long', day: 'numeric', month: 'long' })}
             </div>
             {selectedBookings.length === 0 ? (
               <div className="kal-no-events">Keine Termine an diesem Tag</div>

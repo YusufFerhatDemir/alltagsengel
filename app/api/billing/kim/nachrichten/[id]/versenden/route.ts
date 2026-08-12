@@ -4,6 +4,7 @@ import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { alsGesperrtMarkieren } from '@/lib/kim/nachrichten'
 import { aktuelleVersion } from '@/lib/kim/versionen'
 import { versendeKimNachricht, KimSpecFehltError } from '@/lib/kim/versand'
+import { heuteBerlin } from '@/lib/utils/timezone';
 
 /**
  * POST /api/billing/kim/nachrichten/[id]/versenden
@@ -26,7 +27,7 @@ export async function POST(
   const admin = createAdminClient()
 
   try {
-    const heute = new Date().toISOString().slice(0, 10)
+    const heute = heuteBerlin()
     const versionAufloesung = await aktuelleVersion(admin, organizationId, heute)
 
     versendeKimNachricht({ nachrichtId: id, version: versionAufloesung.version })
