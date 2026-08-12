@@ -1,200 +1,328 @@
 # TARIF-VERIFIKATION — Im System hinterlegte Abrechnungsdaten
 
-**Stand:** 2026-08-12  
-**Quelle:** Supabase-Migrationen im Repository (`supabase/migrations/`)  
-**Status:** NICHT VERIFIZIERT — fachliche Prüfung vor Produktivbetrieb erforderlich
+**Stand:** 2026-08-12
+**Prüfmethode:** Automatisierte Web-Recherche gegen offizielle Quellen + Code-Analyse
+**Quellen:** SGB XI (gesetze-im-internet.de), GKV-Spitzenverband, pflege-in-hessen.de, Supabase-Migrationen
+**Status:** TEILWEISE VERIFIZIERT — 3 Budgetwerte FEHLERHAFT, PfluV-Konformität klärungsbedürftig
 
 ---
 
-## 1. Leistungsarten-Katalog (`billing_leistungsarten`)
+## KRITISCHE BEFUNDE (sofort handeln)
+
+### BEFUND 1: VP- und KZP-Budgetwerte veraltet (FEHLERHAFT)
+
+**Datei:** `lib/config/budget-constants.ts`
+
+| Konstante | Wert im Code | Korrekt seit 01.01.2025 | Abweichung |
+|-----------|-------------|------------------------|------------|
+| `VP_JAEHRLICH_EUR` | **1.612 €** | **1.685 €** | −73 € (−4,3 %) |
+| `KZP_JAEHRLICH_EUR` | **1.774 €** | **1.854 €** | −80 € (−4,3 %) |
+| `VP_KZP_KOMBINIERT_EUR` | **3.386 €** | **3.539 €** | −153 € (−4,3 %) |
+
+**Ursache:** Die 4,5 %-Dynamisierung (§ 30 Abs. 1 SGB XI, Bekanntmachung vom 14.11.2024) wurde für den Entlastungsbetrag (125 → 131 €) korrekt übernommen, aber für VP und KZP **nicht**.
+
+**Auswirkung:** Budget-Prüfungen in `lib/personal/einsatzfreigabe.ts` und `lib/admin/ops.ts` blockieren Leistungen ~4,3 % zu früh.
+
+**Quellen:**
+- § 39 Abs. 1 SGB XI i.V.m. § 30 Abs. 1 SGB XI — Dynamisierung zum 01.01.2025
+- sozialversicherung-kompetent.de: VP 1.685 € seit 01.01.2025
+- vdek.com: Gemeinsamer Jahresbetrag 3.539 € seit 01.07.2025
+
+**Zusätzlich:** Seit 01.07.2025 gilt § 42a SGB XI — **Gemeinsamer Jahresbetrag** für VP + KZP. Die getrennte Führung von VP_JAEHRLICH_EUR und KZP_JAEHRLICH_EUR ist rechtlich überholt (Budget ist frei aufteilbar). Der Code-Typ `BudgetTyp` kennt kein `kurzzeitpflege` — ggf. reicht die Aktualisierung des Kombiniert-Werts.
+
+---
+
+### BEFUND 2: Service-Pricing 35 €/h vs. PfluV-Obergrenze 30/25 €/h
+
+**Datei:** `supabase/migrations/20260719_eylem_audit_complete_features.sql` (service_pricing-Seeds)
+
+| Leistungsart | Budget-Typ | Preis im System | PfluV-Obergrenze Hessen | Status |
+|---|---|---|---|---|
+| alltagsbegleitung | entlastung | **35 €/h** | 30 €/h (Betreuung) oder 25 €/h (Entlastung) | **PRÜFEN** |
+| betreuung_45a | entlastung | **35 €/h** | 30 €/h (Betreuung) | **PRÜFEN** |
+| hauswirtschaft | entlastung | **35 €/h** | 25 €/h (Entlastung im Alltag) | **PRÜFEN** |
+| einkaufsservice | entlastung | **35 €/h** | 25 €/h (Entlastung im Alltag) | **PRÜFEN** |
+| begleitservice | entlastung | **35 €/h** | 25 €/h (Entlastung im Alltag) | **PRÜFEN** |
+
+**Regelung:**
+- Die PfluV Hessen setzt **Preisobergrenzen** für nach § 45a SGB XI **anerkannte** Angebote:
+  - Betreuungsangebote (§ 45a Abs. 1 S. 2 Nr. 1 + 2): **max. 30 €/h inkl. USt.**
+  - Entlastung im Alltag (§ 45a Abs. 1 S. 2 Nr. 3, z. B. Hauswirtschaft): **max. 25 €/h inkl. USt.**
+- **Zugelassene Pflegedienste** (§ 72 SGB XI) sind von der PfluV **ausgenommen** — sie verhandeln Vergütungsvereinbarungen direkt mit den Kassen.
+
+**Entscheidung nötig:** Ist Alltagsengel ein nach PfluV anerkannter Dienst oder ein nach § 72 SGB XI zugelassener Pflegedienst?
+- Falls PfluV-anerkannt: 35 €/h überschreitet die Obergrenze → Preise senken oder Differenz als Privatanteil abrechnen
+- Falls § 72-zugelassen: 35 €/h ist zulässig (keine PfluV-Bindung)
+
+**Hinweis:** Die `service_pricing`-Tabelle ist laut Migration explizit als **INTERNE Kalkulationspreise** markiert, NICHT als verbindliche Kassentarife. Die tatsächliche Abrechnung läuft über `billing_tariffs`.
+
+---
+
+## 1. Gesetzliche Budgetgrenzen
+
+### 1.1 Entlastungsbetrag — § 45b SGB XI
+
+| Parameter | Wert im System | Gesetzlicher Wert | Status |
+|---|---|---|---|
+| Monatlich | 131 € | **131 €** (seit 01.01.2025) | **VERIFIZIERT** |
+| Jährlich | 1.572 € | **1.572 €** (131 × 12) | **VERIFIZIERT** |
+| Anspruch | ab PG 1 | ab PG 1 | **VERIFIZIERT** |
+
+**Rechtsgrundlage:** § 45b Abs. 1 S. 1 SGB XI i.V.m. § 30 Abs. 1 SGB XI
+**Dynamisierung:** Von 125 € auf 131 € zum 01.01.2025 (+4,5 %, Bekanntmachung v. 14.11.2024)
+**Quelle:** sozialgesetzbuch-sgb.de/sgbxi/45b.html, pflege-dschungel.de/entlastungsbetrag-2025/
+
+### 1.2 Verhinderungspflege — § 39 SGB XI
+
+| Parameter | Wert im System | Gesetzlicher Wert | Status |
+|---|---|---|---|
+| Jährlich | **1.612 €** | **1.685 €** (seit 01.01.2025) | **FEHLERHAFT** |
+| Vorpflegezeit | nicht geprüft | **entfallen** seit 01.07.2025 | PRÜFEN |
+
+**Rechtsgrundlage:** § 39 Abs. 1 SGB XI i.V.m. § 30 Abs. 1 SGB XI
+**Historie:** 1.612 € (bis 31.12.2024) → 1.685 € (seit 01.01.2025, +4,5 %)
+**Quelle:** sozialversicherung-kompetent.de/pflegeversicherung/leistungsrecht-ab-2017/682-verhinderungspflege.html
+
+### 1.3 Kurzzeitpflege — § 42 SGB XI
+
+| Parameter | Wert im System | Gesetzlicher Wert | Status |
+|---|---|---|---|
+| Jährlich | **1.774 €** | **1.854 €** (seit 01.01.2025) | **FEHLERHAFT** |
+
+**Rechtsgrundlage:** § 42 Abs. 2 SGB XI i.V.m. § 30 Abs. 1 SGB XI
+**Historie:** 1.774 € (bis 31.12.2024) → 1.854 € (seit 01.01.2025, +4,5 %)
+**Quelle:** sozialversicherung-kompetent.de/pflegeversicherung/leistungsrecht-ab-2017/681-kurzzeitpflege.html
+
+### 1.4 Gemeinsamer Jahresbetrag — § 42a SGB XI (NEU seit 01.07.2025)
+
+| Parameter | Wert im System | Gesetzlicher Wert | Status |
+|---|---|---|---|
+| Kombiniert VP + KZP | **3.386 €** | **3.539 €** | **FEHLERHAFT** |
+
+**Rechtsgrundlage:** § 42a SGB XI (eingefügt durch PUEG, in Kraft seit 01.07.2025)
+**Konzept:** VP (1.685 €) und KZP (1.854 €) werden in einen gemeinsamen Jahresbetrag zusammengeführt — frei aufteilbar.
+**Vorpflegezeit:** Entfällt vollständig seit 01.07.2025.
+**Quelle:** vdek.com/magazin/ausgaben/2025-02/gemeinsamer-jahresbetrag-verhinderungspflege-kurzzeitpflege.html, aok.de/gp/pflegereform/gemeinsamer-jahresbetrag
+
+**Hinweis für das System:** Die Blog-Texte (`lib/blog-posts.ts`) verwenden bereits korrekt 3.539 € und "gemeinsamer Jahresbetrag". Die Budget-Konstanten (`lib/config/budget-constants.ts`) sind inkonsistent dazu.
+
+---
+
+## 2. Preisobergrenzen Hessen (PfluV)
+
+### 2.1 billing_gesetzliche_obergrenzen — Seed-Daten
+
+Quelle: `20260808110000_tarifschichten_bundesland.sql`
+
+| # | Bundesland | Angebotstyp | Obergrenze | Quelle im System | Status |
+|---|---|---|---|---|---|
+| 1 | Hessen | Betreuungsangebot | **30,00 €/h** inkl. USt. | PfluV Hessen § 3 Nr. 1+2 | **PLAUSIBEL** |
+| 2 | Hessen | Entlastungsangebot | **25,00 €/h** inkl. USt. | PfluV Hessen § 3 Nr. 3 | **PLAUSIBEL** |
+
+**Verifikation:** Bestätigt durch pflege-in-hessen.de (offizielles Hessen-Pflegeportal). Die exakten Werte 30 €/h und 25 €/h werden dort als Preisobergrenzen genannt. Der originale Verordnungstext (PDF) war bildbasiert und konnte nicht maschinell ausgewertet werden — daher PLAUSIBEL statt VERIFIZIERT.
+
+**Quellen:**
+- pflege-in-hessen.de/formen-der-pflege/pflege-zuhause/haeufig-gestellte-fragen/informationen-fuer-anbieterinnen-und-anbieter/
+- rv.hessenrecht.hessen.de/bshe/document/jlr-UntAngVHErahmen
+
+**PfluV-Novelle:** Das hessische Kabinett hat eine Änderung der PfluV beschlossen (Verbändeanhörung läuft). Es ist möglich, dass die starren Obergrenzen gelockert oder abgeschafft werden — aktuell gelten sie aber noch. Der Trigger `enforce_tariff_obergrenze` ist korrekt auf `bestaetigt=FALSE` gesetzt.
+
+**Fahrtkosten:** Laut pflege-in-hessen.de dürfen Fahrtkosten **zusätzlich** zu den Obergrenzen abgerechnet werden (um ländliche Anbieter nicht zu benachteiligen). Die 5-€-Fahrtkostenpauschale im Repo ist korrekt NICHT als Obergrenze geseedet.
+
+---
+
+## 3. Leistungsarten-Katalog (billing_leistungsarten)
 
 Quelle: `20260807120000_tariff_model_hardening.sql`
 
-| # | Code | Bezeichnung |
-|---|------|------------|
-| 1 | `alltagsbegleitung` | Alltagsbegleitung |
-| 2 | `betreuung_45a` | Betreuung nach §45a SGB XI |
-| 3 | `verhinderungspflege` | Verhinderungspflege |
-| 4 | `hauswirtschaft` | Hauswirtschaftliche Versorgung |
-| 5 | `einkaufsservice` | Einkaufsservice |
-| 6 | `begleitservice` | Begleitservice |
-| 7 | `nachtbetreuung` | Nachtbetreuung |
-| 8 | `wochenendbetreuung` | Wochenendbetreuung |
-| 9 | `krankenfahrt` | Krankenfahrt |
-| 10 | `demenzbetreuung` | Demenzbetreuung |
-| 11 | `wegepauschale` | Wegepauschale |
-| 12 | `sonstige` | Sonstige Leistung |
+| # | Code | Bezeichnung | Status |
+|---|---|---|---|
+| 1 | `alltagsbegleitung` | Alltagsbegleitung | PLAUSIBEL |
+| 2 | `betreuung_45a` | Betreuung nach § 45a SGB XI | PLAUSIBEL |
+| 3 | `verhinderungspflege` | Verhinderungspflege | PLAUSIBEL |
+| 4 | `hauswirtschaft` | Hauswirtschaftliche Versorgung | PLAUSIBEL |
+| 5 | `einkaufsservice` | Einkaufsservice | PLAUSIBEL |
+| 6 | `begleitservice` | Begleitservice | PLAUSIBEL |
+| 7 | `nachtbetreuung` | Nachtbetreuung | PLAUSIBEL |
+| 8 | `wochenendbetreuung` | Wochenendbetreuung | PLAUSIBEL |
+| 9 | `krankenfahrt` | Krankenfahrt | PLAUSIBEL |
+| 10 | `demenzbetreuung` | Demenzbetreuung | PLAUSIBEL |
+| 11 | `wegepauschale` | Wegepauschale | PLAUSIBEL |
+| 12 | `sonstige` | Sonstige Leistung | PLAUSIBEL |
 
-**Verifikations-Status:** NICHT VERIFIZIERT — fachliche Prüfung erforderlich, ob diese Leistungsarten dem Leistungskatalog der Organisation entsprechen.
+**Hinweis:** Es gibt **keine bundesweit standardisierten Leistungskomplexe** für § 45b SGB XI (anders als bei § 36 Sachleistungen mit LK1/LK2/…). Jedes Bundesland definiert eigene Anerkennungsrahmen. Die Leistungsarten sind daher organisationsspezifisch und NICHT gegen einen gesetzlichen Katalog prüfbar.
 
----
-
-## 2. Rechtsgrundlagen-Katalog (`billing_rechtsgrundlagen`)
-
-Quelle: `20260807120000_tariff_model_hardening.sql`
-
-| # | Code | Bezeichnung |
-|---|------|------------|
-| 1 | `§45b SGB XI` | Entlastungsleistungen |
-| 2 | `§39 SGB XI` | Verhinderungspflege |
-| 3 | `§36 SGB XI` | Häusliche Pflegehilfe |
-| 4 | `privat` | Privatzahler (ohne Kasse) |
-
-**Verifikations-Status:** NICHT VERIFIZIERT — fachliche Prüfung erforderlich, ob diese Rechtsgrundlagen für die angebotenen Leistungen korrekt und vollständig sind.
+**Status:** PLAUSIBEL — intern konsistenter Katalog, der die typischen Leistungen eines Alltagsbegleitungsdienstes abbildet. Kein gesetzlicher Abgleich möglich.
 
 ---
 
-## 3. Tarifquellen-Katalog (`billing_tarifquellen`)
+## 4. Rechtsgrundlagen-Katalog (billing_rechtsgrundlagen)
 
-Quelle: `20260807180000_tariff_stammdaten_v2.sql`
+| # | Code | Bezeichnung | Status |
+|---|---|---|---|
+| 1 | `§45b SGB XI` | Entlastungsleistungen | **VERIFIZIERT** — § 45b SGB XI ist korrekte Rechtsgrundlage |
+| 2 | `§39 SGB XI` | Verhinderungspflege | **VERIFIZIERT** — § 39 SGB XI ist korrekte Rechtsgrundlage |
+| 3 | `§36 SGB XI` | Häusliche Pflegehilfe | **VERIFIZIERT** — § 36 SGB XI ist korrekte Rechtsgrundlage |
+| 4 | `privat` | Privatzahler (ohne Kasse) | **PLAUSIBEL** — keine gesetzliche Referenz nötig |
 
-| # | Code | Bezeichnung |
-|---|------|------------|
-| 1 | `PRIVATE_PREISLISTE` | Interne Preisliste für Privatzahler |
-| 2 | `ANERKENNUNGSBESCHEID` | Preis aus Anerkennungsbescheid (Landesbehörde) |
-| 3 | `VERGUETUNGSVEREINBARUNG` | Vergütungsvereinbarung mit Pflegekasse |
-| 4 | `KASSENVEREINBARUNG` | Rahmenvertrag / Kassenvereinbarung |
-| 5 | `MANUELL_FREIGEGEBEN` | Manuell geprüft und von Geschäftsführung freigegeben |
-
-**Verifikations-Status:** NICHT VERIFIZIERT — Metadaten-Katalog, der die Herkunft/Verbindlichkeit eines Tarifs dokumentiert.
+**Ergänzungshinweis:** § 42a SGB XI (Gemeinsamer Jahresbetrag) ist als eigenständige Rechtsgrundlage im Katalog **nicht** enthalten. Da § 42a faktisch VP + KZP zusammenführt, reicht der bestehende Eintrag `§39 SGB XI` operativ — sofern das Budget-Limit auf 3.539 € aktualisiert wird.
 
 ---
 
-## 4. Interne Service-Preise (`service_pricing`)
+## 5. Tarifquellen-Katalog (billing_tarifquellen)
+
+| # | Code | Bezeichnung | Status |
+|---|---|---|---|
+| 1 | `PRIVATE_PREISLISTE` | Interne Preisliste für Privatzahler | PLAUSIBEL |
+| 2 | `ANERKENNUNGSBESCHEID` | Preis aus Anerkennungsbescheid (Landesbehörde) | PLAUSIBEL |
+| 3 | `VERGUETUNGSVEREINBARUNG` | Vergütungsvereinbarung mit Pflegekasse | PLAUSIBEL |
+| 4 | `KASSENVEREINBARUNG` | Rahmenvertrag / Kassenvereinbarung | PLAUSIBEL |
+| 5 | `MANUELL_FREIGEGEBEN` | Manuell geprüft und von GF freigegeben | PLAUSIBEL |
+
+**Hinweis:** Für nach § 45a anerkannte Dienste (NICHT zugelassene Pflegedienste) gibt es **keine Vergütungsvereinbarungen** mit Pflegekassen. Die Abrechnung läuft über Kostenerstattung (der Pflegebedürftige reicht Rechnungen ein). Die Tarifquelle `VERGUETUNGSVEREINBARUNG` ist nur relevant, wenn Alltagsengel als zugelassener Pflegedienst nach § 72 SGB XI agiert.
+
+---
+
+## 6. Interne Service-Preise (service_pricing)
 
 Quelle: `20260719_eylem_audit_complete_features.sql`
 
-**WICHTIG:** Diese Tabelle ist explizit als **INTERNE Preisliste für die Native-App-Leistungserfassung** markiert. Die Preise sind NUR für die Schnell-Kalkulation bei der Einsatzerfassung. Für die korrekte Abrechnung wird AUSSCHLIESSLICH `billing_tariffs` genutzt (siehe Kommentar in Migration `20260807180000`).
+| # | Leistungsart | Budget-Typ | Preis | PfluV-konform? | Status |
+|---|---|---|---|---|---|
+| 1 | alltagsbegleitung | entlastung | 35 €/h | Betreuung: max 30 € | **PRÜFEN** |
+| 2 | alltagsbegleitung | verhinderung | 35 €/h | VP: keine PfluV-Bindung | PLAUSIBEL |
+| 3 | alltagsbegleitung | private | 40 €/h | Privat: frei | PLAUSIBEL |
+| 4 | betreuung_45a | entlastung | 35 €/h | Betreuung: max 30 € | **PRÜFEN** |
+| 5 | betreuung_45a | verhinderung | 35 €/h | VP: keine PfluV-Bindung | PLAUSIBEL |
+| 6 | hauswirtschaft | entlastung | 35 €/h | Entlastung: max 25 € | **PRÜFEN** |
+| 7 | hauswirtschaft | private | 38 €/h | Privat: frei | PLAUSIBEL |
+| 8 | einkaufsservice | entlastung | 35 €/h | Entlastung: max 25 € | **PRÜFEN** |
+| 9 | begleitservice | entlastung | 35 €/h | Entlastung: max 25 € | **PRÜFEN** |
+| 10 | begleitservice | private | 40 €/h | Privat: frei | PLAUSIBEL |
 
-| # | Leistungsart | Budget-Typ | Beschreibung | Stundensatz | Min. Std. | Einheit |
-|---|-------------|-----------|-------------|-------------|----------|---------|
-| 1 | `alltagsbegleitung` | `entlastung` | Alltagsbegleitung über Entlastungsbetrag §45b | 35,00 € | 1 | Stunde |
-| 2 | `alltagsbegleitung` | `verhinderung` | Alltagsbegleitung über Verhinderungspflege §39 | 35,00 € | 1 | Stunde |
-| 3 | `alltagsbegleitung` | `private` | Alltagsbegleitung privat | 40,00 € | 1 | Stunde |
-| 4 | `betreuung_45a` | `entlastung` | Betreuung nach §45a über Entlastungsbetrag | 35,00 € | 1 | Stunde |
-| 5 | `betreuung_45a` | `verhinderung` | Betreuung nach §45a über Verhinderungspflege | 35,00 € | 1 | Stunde |
-| 6 | `hauswirtschaft` | `entlastung` | Hauswirtschaftliche Unterstützung | 35,00 € | 1 | Stunde |
-| 7 | `hauswirtschaft` | `private` | Hauswirtschaft privat | 38,00 € | 1 | Stunde |
-| 8 | `einkaufsservice` | `entlastung` | Einkaufsbegleitung / Einkaufsservice | 35,00 € | 1 | Stunde |
-| 9 | `begleitservice` | `entlastung` | Begleitservice (Arzt, Behörde, Freizeit) | 35,00 € | 1 | Stunde |
-| 10 | `begleitservice` | `private` | Begleitservice privat | 40,00 € | 1 | Stunde |
-
-**Verifikations-Status:** NICHT VERIFIZIERT — fachliche Prüfung erforderlich, ob diese internen Kalkulationspreise den tatsächlichen Stundensätzen der Organisation entsprechen.
-
----
-
-## 5. Abrechnungstarife (`billing_tariffs`)
-
-Quelle: Keine INSERT-Statements in Migrationen. Die Tabelle `billing_tariffs` enthält **keine geseedeten Preisdaten** — Tarife sind mandantenspezifisch (`organization_id`) und müssen pro Organisation angelegt werden.
-
-**Tabellenstruktur** (relevante Spalten):
-- `leistungsart` → FK auf `billing_leistungsarten`
-- `rechtsgrundlage` → FK auf `billing_rechtsgrundlagen`
-- `preis_cent` — Preis in Cent
-- `einheit` — Abrechnungseinheit
-- `verguetungsart` — `zeit_stunde`, `zeit_minute`, `leistungskomplex`, `pauschale`, `wegepauschale`
-- `bundesland` — Bundesland-Zuordnung
-- `kostentraeger_ik` — IK des Kostenträgers
-- `tarifquelle` → FK auf `billing_tarifquellen`
-- `gueltig_ab` / `gueltig_bis` — Gültigkeitszeitraum
-- `zuschlag_wochenende_prozent`, `zuschlag_feiertag_prozent`, `zuschlag_nacht_prozent`
-
-**Verifikations-Status:** Tabelle ist strukturell korrekt, aber ohne hinterlegte Produktivtarife. Tarife müssen vor dem Abrechnungsbetrieb angelegt und fachlich freigegeben werden.
-
-**Hinweis zum Memory-Eintrag:** Laut früherer Prüfung (Stand 12.08.2026) befanden sich 23 Zeilen in `billing_tariffs` und 24 Zeilen in `leistungspreise` auf der Live-Datenbank. Diese stammen nicht aus Migrationen sondern wurden direkt in die Datenbank eingetragen. Die fachliche Verifikation dieser Live-Daten ist ausstehend.
+**Beurteilung:**
+- **Privat- und VP-Preise** sind **nicht PfluV-reguliert** → PLAUSIBEL
+- **Entlastungs-Preise** bei 35 €/h liegen **über der PfluV-Obergrenze** (30 € für Betreuung, 25 € für Hauswirtschaft/Entlastung)
+- Falls Alltagsengel nach PfluV anerkannt ist, müssten Entlastungs-Preise auf max. 30 €/h (Betreuung) bzw. 25 €/h (Hauswirtschaft) gesenkt werden
+- Die Preise sind laut Migration-Kommentar **INTERNE Kalkulationspreise** — die verbindliche Abrechnung läuft über `billing_tariffs`
 
 ---
 
-## 6. Gesetzliche Preisobergrenzen (`billing_gesetzliche_obergrenzen`)
+## 7. Abrechnungstarife (billing_tariffs) — Live-DB
 
-Quelle: `20260808110000_tarifschichten_bundesland.sql`
+**23 Zeilen auf Live-DB** (direkt eingetragen, nicht aus Migrationen).
 
-**WICHTIG:** Diese Tabelle enthält PREISOBERGRENZEN (Deckelungen), keine Abrechnungstarife. Der Trigger `enforce_tariff_obergrenze` ist auf `bestaetigt=FALSE` gesetzt und damit **inaktiv**.
+**Status:** NICHT VERIFIZIERT — die konkreten Werte sind nicht im Repository einsehbar (nur auf der Live-Datenbank). Ohne Supabase-MCP/DATABASE_URL kann der Inhalt in dieser Session nicht geprüft werden.
 
-| # | Bundesland | Rechtsgrundlage | Angebotstyp | Vergütungsart | Obergrenze | Quelle | Gültig ab | Bestätigt |
-|---|-----------|----------------|-------------|--------------|-----------|--------|----------|-----------|
-| 1 | Hessen | §45b SGB XI | Betreuungsangebot | zeit_stunde | 30,00 €/Std. | PfluV Hessen §3 Nr. 1+2 | 2026-01-01 | **NEIN** |
-| 2 | Hessen | §45b SGB XI | Entlastungsangebot | zeit_stunde | 25,00 €/Std. | PfluV Hessen §3 Nr. 3 | 2026-01-01 | **NEIN** |
-
-**Verifikations-Status:** NICHT VERIFIZIERT — fachliche Prüfung gegen aktuelle PfluV Hessen erforderlich. Beide Zeilen haben `bestaetigt=FALSE`, der Obergrenze-Trigger ist damit inaktiv. Vor Scharfschaltung (`bestaetigt=TRUE`) muss der aktuelle Verordnungstext gegengelesen und der Stand der PfluV-Novelle geprüft werden.
-
----
-
-## 7. Landesspezifische Regeln (`billing_landesregeln`)
-
-Quelle: `20260808110000_tarifschichten_bundesland.sql`
-
-| # | Bundesland | Regel | Wert | Quelle | Bestätigt |
-|---|-----------|-------|------|--------|-----------|
-| 1 | Hessen | `anerkennung_rechtsgrundlage` | PfluV Hessen | Angabe Geschäftsführung, Stand 08.08.2026 | **NEIN** |
-
-Weitere Regel-Schlüssel sind als Katalog definiert (`billing_landesregel_keys`, 16 Einträge), aber ohne konkrete Werte für Hessen oder andere Bundesländer. Die Werte müssen aus der jeweiligen Landesverordnung entnommen werden.
-
-**Definierte Regel-Schlüssel (ohne hinterlegte Werte):**
-- `min_einsatzdauer_minuten` — Mindesteinsatzdauer
-- `taktung_minuten` — Abrechnungstaktung
-- `max_stunden_pro_einsatz` — Maximale Einsatzdauer
-- `max_stunden_pro_monat` — Maximale Stunden pro Monat
-- `qualifikation_erforderlich` — Erforderliche Qualifikation
-- `schulungsstunden_minimum` — Mindest-Schulungsumfang
-- `fuehrungszeugnis_pflicht` — Erweitertes Führungszeugnis Pflicht
-- `unterschrift_pflicht` — Unterschrift des Klienten Pflicht
-- `nachweis_aufbewahrung_jahre` — Aufbewahrungsfrist Leistungsnachweise
-- `abrechnung_frist_monate` — Abrechnungsfrist
-- `elektronische_abrechnung` — Elektronische Abrechnung zulässig
-- `wegekosten_erstattungsfaehig` — Wegekosten erstattungsfähig
-- `zuschlag_wochenende_zulaessig` — Wochenendzuschlag zulässig
-- `zuschlag_feiertag_zulaessig` — Feiertagszuschlag zulässig
-- `zuschlag_nacht_zulaessig` — Nachtzuschlag zulässig
-- `anerkennung_rechtsgrundlage` — Landesrechtliche Grundlage
-
-**Verifikations-Status:** NICHT VERIFIZIERT — nur die landesrechtliche Grundlage für Hessen ist hinterlegt. Alle anderen Regeln müssen aus der PfluV Hessen entnommen und eingetragen werden.
+**Empfehlung:** Inhalt per SQL exportieren und gegen die PfluV-Obergrenzen prüfen:
+```sql
+SELECT leistungsart, rechtsgrundlage, preis_cent/100.0 AS preis_eur,
+       bundesland, verguetungsart, gueltig_ab, tarifquelle
+FROM billing_tariffs
+WHERE ist_aktiv = true
+ORDER BY rechtsgrundlage, leistungsart;
+```
 
 ---
 
-## 8. Wegepauschalen (`billing_wegepauschalen`)
+## 8. Leistungspreise (leistungspreise) — Live-DB
 
-Quelle: `20260808110000_tarifschichten_bundesland.sql`
+**24 Zeilen auf Live-DB** (direkt eingetragen, nicht aus Migrationen).
 
-**Keine Seed-Daten vorhanden.** Die Tabelle ist strukturell angelegt, aber ohne Einträge. Die Migration kommentiert explizit: "KEINE Seed-Werte — Beträge sind vertraglich zu belegen."
+**Tabellenstruktur** (aus Migration `20260731010000`):
+- `bundesland` TEXT (CHECK auf 16 Bundesländer)
+- `leistungsart` TEXT
+- `preis_cent` INTEGER
+- `gueltig_ab` DATE
+- `gueltig_bis` DATE
+- UNIQUE(bundesland, leistungsart, gueltig_ab)
 
-Mögliche Modelle:
-- `keine` — Wegekosten im Leistungspreis enthalten
-- `pro_einsatz` — Fester Betrag je Einsatz
-- `pro_km` — Betrag je gefahrenem Kilometer
-- `zone` — Betrag je Entfernungszone
+**Status:** NICHT VERIFIZIERT — nur auf Live-DB, nicht im Repo einsehbar.
 
-**Verifikations-Status:** Keine Daten zum Verifizieren — Beträge und Modell müssen aus dem Versorgungsvertrag / der Vergütungsvereinbarung entnommen werden.
+---
+
+## 9. Wegepauschalen (billing_wegepauschalen)
+
+**Keine Seed-Daten.** Migration kommentiert: "KEINE Seed-Werte — Beträge sind vertraglich zu belegen."
+
+**Recherche-Ergebnis:** Laut pflege-in-hessen.de dürfen Fahrtkosten **zusätzlich** zu den Leistungspreisen abgerechnet werden. Die 5-€-Fahrtkostenpauschale (Repo-intern erwähnt) hat **keine PfluV-Grundlage** — sie basiert auf einem selbst beantragten Wert.
+
+---
+
+## 10. Landesspezifische Regeln (billing_landesregeln)
+
+| # | Bundesland | Regel | Wert | Status |
+|---|---|---|---|---|
+| 1 | Hessen | anerkennung_rechtsgrundlage | PfluV Hessen | PLAUSIBEL |
+
+16 Regel-Schlüssel definiert, aber nur 1 Wert hinterlegt. Die übrigen Werte (Mindesteinsatzdauer, Taktung, Qualifikation etc.) müssen aus der PfluV Hessen entnommen werden.
+
+---
+
+## Regulatorische Einordnung: § 45a/§ 45b SGB XI
+
+### Wie werden Preise für Alltagsbegleitung reguliert?
+
+1. **Keine bundesweit standardisierten Leistungskomplexe** für § 45b (anders als § 36 Sachleistungen)
+2. **Landesverordnungen** regeln die Anerkennung und ggf. Preisobergrenzen (z. B. PfluV Hessen)
+3. **Keine Vergütungsvereinbarungen** zwischen anerkannten Diensten und Pflegekassen — das Kostenerstattungsprinzip gilt
+4. **Anbieter setzen eigene Preise** innerhalb der landesrechtlichen Grenzen
+5. **Zugelassene Pflegedienste** (§ 72 SGB XI) sind von PfluV-Obergrenzen ausgenommen
+
+### GKV-Spitzenverband
+- Hat Empfehlungen nach § 45a Abs. 7 SGB XI herausgegeben — diese sind Richtlinien für Länder, keine bindenden Leistungskomplexe
+- Kein zentraler Leistungsschlüssel-Katalog für § 45b-Dienste
 
 ---
 
 ## Zusammenfassung
 
-| Tabelle | Zeilen in Migration | Zeilen auf Live-DB (Stand 12.08.) | Status |
-|---------|--------------------|---------------------------------|--------|
-| `billing_leistungsarten` | 12 | 12 | NICHT VERIFIZIERT |
-| `billing_rechtsgrundlagen` | 4 | 4 | NICHT VERIFIZIERT |
-| `billing_tarifquellen` | 5 | 5 | NICHT VERIFIZIERT |
-| `service_pricing` | 10 | 10 | NICHT VERIFIZIERT (interne Kalkulation) |
-| `billing_tariffs` | 0 (keine Seeds) | 23 (direkt eingetragen) | NICHT VERIFIZIERT |
-| `leistungspreise` | 0 (keine Seeds) | 24 (direkt eingetragen) | NICHT VERIFIZIERT |
-| `billing_gesetzliche_obergrenzen` | 2 | 2 | NICHT VERIFIZIERT, Trigger inaktiv |
-| `billing_landesregeln` | 1 | 1 | NICHT VERIFIZIERT |
-| `billing_wegepauschalen` | 0 | 0 | Keine Daten |
+| Tabelle / Wert | Status | Handlungsbedarf |
+|---|---|---|
+| Entlastungsbetrag 131 €/Monat | **VERIFIZIERT** | Keiner |
+| Entlastungsbetrag 1.572 €/Jahr | **VERIFIZIERT** | Keiner |
+| VP 1.612 €/Jahr | **FEHLERHAFT** | → 1.685 € in `budget-constants.ts` |
+| KZP 1.774 €/Jahr | **FEHLERHAFT** | → 1.854 € in `budget-constants.ts` |
+| VP+KZP kombiniert 3.386 € | **FEHLERHAFT** | → 3.539 € in `budget-constants.ts` |
+| PfluV Hessen 30 €/h Betreuung | **PLAUSIBEL** | Verordnungstext 1:1 gegenlesen |
+| PfluV Hessen 25 €/h Entlastung | **PLAUSIBEL** | Verordnungstext 1:1 gegenlesen |
+| Service-Pricing 35 €/h (Kasse) | **PRÜFEN** | Klären: PfluV- oder § 72-Status |
+| Leistungsarten (12 Stück) | **PLAUSIBEL** | Kein gesetzlicher Katalog zum Abgleich |
+| Rechtsgrundlagen (4 Stück) | **VERIFIZIERT** | Ggf. § 42a ergänzen |
+| billing_tariffs (23 Live-Zeilen) | **NICHT VERIFIZIERT** | SQL-Export + fachliche Prüfung |
+| leistungspreise (24 Live-Zeilen) | **NICHT VERIFIZIERT** | SQL-Export + fachliche Prüfung |
 
 ---
 
-## HINWEIS
+## Quellenverzeichnis
 
-Diese Tabelle enthält die aktuell im System hinterlegten Werte, extrahiert aus den Supabase-Migrationen im Repository. Sie wurden **NICHT** gegen echte Vergütungsvereinbarungen verifiziert.
+| # | Quelle | URL / Fundstelle | Geprüft am |
+|---|---|---|---|
+| 1 | § 45b SGB XI (Gesetzestext) | sozialgesetzbuch-sgb.de/sgbxi/45b.html | 2026-08-12 |
+| 2 | § 39 SGB XI (Gesetzestext) | sozialgesetzbuch-sgb.de/sgbxi/39.html | 2026-08-12 |
+| 3 | § 42 SGB XI (Gesetzestext) | sozialgesetzbuch-sgb.de/sgbxi/42.html | 2026-08-12 |
+| 4 | § 42a SGB XI (Gemeinsamer Jahresbetrag) | sozialgesetzbuch-sgb.de/sgbxi/42a.html | 2026-08-12 |
+| 5 | § 45a SGB XI (Gesetzestext) | sozialgesetzbuch-sgb.de/sgbxi/45a.html | 2026-08-12 |
+| 6 | Dynamisierung 2025 (4,5 %) | pflege-dschungel.de/entlastungsbetrag-2025/ | 2026-08-12 |
+| 7 | VP-Budget 1.685 € | sozialversicherung-kompetent.de — VP-Leistungsrecht | 2026-08-12 |
+| 8 | KZP-Budget 1.854 € | sozialversicherung-kompetent.de — KZP-Leistungsrecht | 2026-08-12 |
+| 9 | Gemeinsamer Jahresbetrag 3.539 € | vdek.com/magazin/ausgaben/2025-02/gemeinsamer-jahresbetrag | 2026-08-12 |
+| 10 | PfluV Hessen (Obergrenzen) | pflege-in-hessen.de — Informationen für Anbieter | 2026-08-12 |
+| 11 | PfluV Hessen (Rechtstext) | rv.hessenrecht.hessen.de/bshe/document/jlr-UntAngVHErahmen | 2026-08-12 |
+| 12 | PfluV-Novelle (Kabinettsbeschluss) | hessen.de/presse — Änderung der PfluV | 2026-08-12 |
+| 13 | GKV-Empfehlungen § 45a Abs. 7 | GKV-Spitzenverband — Rahmenrichtlinien | 2026-08-12 |
+| 14 | Marktpreise Alltagsbegleitung | pflege-panorama.de, onlinepflegeakademie.de | 2026-08-12 |
 
-**Vor Produktivbetrieb muss jeder Eintrag gegen die geltende Vergütungsvereinbarung des jeweiligen Bundeslandes / Kostenträgers geprüft werden.**
+---
 
-Insbesondere:
-1. Die 23 Zeilen in `billing_tariffs` (Live-DB) — Herkunft und Korrektheit unklar
-2. Die 24 Zeilen in `leistungspreise` (Live-DB) — Herkunft und Korrektheit unklar
-3. Die Preisobergrenzen (30 €/25 € für Hessen) — gegen aktuelle PfluV Hessen prüfen
-4. Die `service_pricing`-Stundensätze (35 €/38 €/40 €) — gegen interne Preisliste prüfen
+## Nächste Schritte
 
-**Verantwortlich für Verifikation:** Fachliche Leitung / Abrechnungsexperte  
-**Empfohlener Ablauf:** Vergütungsvereinbarung beschaffen → Soll-Ist-Abgleich → Freigabe durch Geschäftsführung → `tarifquelle` auf `MANUELL_FREIGEGEBEN` oder `VERGUETUNGSVEREINBARUNG` setzen
+1. **SOFORT:** `VP_JAEHRLICH_EUR`, `KZP_JAEHRLICH_EUR`, `VP_KZP_KOMBINIERT_EUR` in `lib/config/budget-constants.ts` korrigieren
+2. **KLÄREN:** Rechtsstatus von Alltagsengel (PfluV-Anerkennung vs. § 72-Zulassung) → bestimmt ob 35 €/h zulässig
+3. **PRÜFEN:** billing_tariffs (23 Zeilen) und leistungspreise (24 Zeilen) per SQL-Export gegen PfluV-Obergrenzen prüfen
+4. **BESTÄTIGEN:** PfluV-Obergrenzen (30/25 €) am Originalverordnungstext verifizieren → `bestaetigt=TRUE` setzen
+5. **ERWÄGEN:** § 42a als Rechtsgrundlage in billing_rechtsgrundlagen aufnehmen
+6. **AUSFÜLLEN:** billing_landesregeln für Hessen (Mindesteinsatzdauer, Taktung, Qualifikation etc.)
+
+**Verantwortlich:** Fachliche Leitung / Abrechnungsexperte
+**Freigabe-Workflow:** Wert verifizieren → `tarifquelle` auf `VERGUETUNGSVEREINBARUNG` oder `MANUELL_FREIGEGEBEN` setzen → Trigger `bestaetigt=TRUE`
