@@ -66,7 +66,7 @@ SET search_path = public, extensions
 AS $$
   SELECT CASE
     WHEN p_user_id IS NULL THEN NULL
-    ELSE encode(extensions.hmac(p_user_id::text, k.schluessel, 'sha256'), 'hex')
+    ELSE encode(extensions.hmac(p_user_id::text::bytea, k.schluessel, 'sha256'), 'hex')
   END
   FROM coach_pseudonym_key k
   WHERE k.id = 1;
