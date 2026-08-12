@@ -120,9 +120,10 @@ export async function revokeMandate(
   supabase: SupabaseClient,
   mandateId: string,
   reason: string,
-  actorId: string
+  actorId: string,
+  expectedOrgId?: string
 ) {
-  const { data, error } = await supabase
+  let query = supabase
     .from('sepa_mandates')
     .update({
       status: 'widerrufen',
@@ -131,6 +132,10 @@ export async function revokeMandate(
     })
     .eq('id', mandateId)
     .eq('status', 'aktiv')
+
+  if (expectedOrgId) query = query.eq('organization_id', expectedOrgId)
+
+  const { data, error } = await query
     .select('id, organization_id, mandate_reference')
     .single()
 

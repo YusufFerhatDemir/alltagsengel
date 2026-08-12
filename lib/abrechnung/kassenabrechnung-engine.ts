@@ -19,6 +19,16 @@ import { generateAlleDateien, type AbrechnungsFall, type GeneratorOptionen, type
 import { validateEDIFACT, validateIK } from './edifact-validator'
 import { generateAuftragsdatei, auftragsdateiName } from './auftragsdatei'
 
+function encodeToLatin1(text: string): ArrayBuffer {
+  const buf = new ArrayBuffer(text.length)
+  const view = new Uint8Array(buf)
+  for (let i = 0; i < text.length; i++) {
+    const code = text.charCodeAt(i)
+    view[i] = code > 255 ? 0x3F : code // '?' for unmappable chars
+  }
+  return buf
+}
+
 // ── Types ───────────────────────────────────────────────────────
 
 export type LaufStatus =
@@ -878,7 +888,7 @@ export async function exportiereLauf(
     const path = `dta/${lauf.organization_id}/${laufId}/${datei.physikalischer_dateiname}`
     const { error: uploadErr } = await supabase.storage
       .from('abrechnung')
-      .upload(path, new Blob([datei.inhalt], { type: 'text/plain' }), { upsert: true })
+      .upload(path, new Blob([encodeToLatin1(datei.inhalt)], { type: 'application/octet-stream' }), { upsert: true })
 
     if (uploadErr) {
       dateiUrls.push(`UPLOAD_FEHLER:${path}`)
@@ -904,13 +914,13 @@ export async function exportiereLauf(
       absender_ik: absenderIk,
       datenannahmestelle_ik: datei.datenannahmestelle.ik,
       dateiname: datei.logischer_dateiname,
-      dateigroesse_nutzdaten: new TextEncoder().encode(datei.inhalt).length,
+      dateigroesse_nutzdaten: datei.inhalt.length,
     })
 
     const auftragsPath = `dta/${lauf.organization_id}/${laufId}/${auftragsdateiName(datei.physikalischer_dateiname)}`
     await supabase.storage
       .from('abrechnung')
-      .upload(auftragsPath, new Blob([auftragsdateiInhalt], { type: 'text/plain' }), { upsert: true })
+      .upload(auftragsPath, new Blob([encodeToLatin1(auftragsdateiInhalt)], { type: 'application/octet-stream' }), { upsert: true })
 
     // Prüfen ob DAKOTA-Zugang existiert (Datenannahmestelle mit SFTP-Config)
     const { data: annahmestelle } = await supabase
@@ -934,7 +944,7 @@ export async function exportiereLauf(
         physikalischer_dateiname: datei.physikalischer_dateiname,
         nutzdaten_url: dateiUrls[i],
         auftragsdatei_url: auftragsPath,
-        nutzdaten_groesse_bytes: new TextEncoder().encode(datei.inhalt).length,
+        nutzdaten_groesse_bytes: datei.inhalt.length,
         status: hatZugang ? 'bereit_zur_uebermittlung' : 'externer_zugang_fehlt',
       })
       .select('id')

@@ -298,7 +298,9 @@ export default function PrivacyPage() {
     if (isNaN(months) || months === 0) return null
     const createdDate = new Date(r.created_at)
     const deleteDate = new Date(createdDate)
+    const origDay = deleteDate.getDate()
     deleteDate.setMonth(deleteDate.getMonth() + months)
+    if (deleteDate.getDate() !== origDay) deleteDate.setDate(0)
     const daysLeft = Math.ceil((deleteDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24))
     return { ...r, deleteDate, daysLeft }
   }).filter(Boolean) as (PrivacyRecord & { deleteDate: Date; daysLeft: number })[]
