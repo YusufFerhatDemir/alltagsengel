@@ -26,14 +26,20 @@ interface ClientGroup {
 
 interface GeneratedInvoice {
   id: string
-  invoice_number: string | null
+  invoice_number: string
   client_id: string
   clientName: string
   period_start: string | null
   period_end: string | null
   total_amount: number | null
   status: string
-  pdf_url: string | null
+  frozen: boolean
+  correction_type: string | null
+  has_pdf: boolean
+}
+
+const CORRECTION_TYPE_LABELS: Record<string, string> = {
+  storno: 'Storno', teilstorno: 'Teilstorno', korrektur: 'Korrektur', gutschrift: 'Gutschrift',
 }
 
 function monthLabel(year: number, month: number): string {
@@ -61,6 +67,8 @@ export default function RechnungserstellungPage() {
   const [loadingInvoices, setLoadingInvoices] = useState(true)
   const [generatingPdfFor, setGeneratingPdfFor] = useState<string | null>(null)
   const [pdfError, setPdfError] = useState<string | null>(null)
+  const [actionFor, setActionFor] = useState<string | null>(null)
+  const [notice, setNotice] = useState<string | null>(null)
 
   async function loadBillable() {
     setLoading(true)
@@ -129,23 +137,23 @@ export default function RechnungserstellungPage() {
   async function loadInvoices() {
     setLoadingInvoices(true)
     try {
-      const supabase = createClient()
-      const { data, error: e } = await supabase
-        .from('invoices')
-        .select('id, invoice_number, client_id, period_start, period_end, total_amount, status, client:clients(first_name, last_name), invoice_packages(pdf_url)')
-        .order('created_at', { ascending: false })
-        .limit(50)
-      if (e) { console.error('Rechnungen Ladefehler:', e); setLoadingInvoices(false); return }
-      setInvoices((data || []).map((i: any) => ({
+      // Ueber die API statt direkt per Client: dort wird der Mandant explizit
+      // gefenced und der Gutschrift-Restbetrag mitberechnet.
+      const res = await fetch('/api/billing/invoices?limit=50')
+      const json = await res.json()
+      if (!res.ok) { console.error('Rechnungen Ladefehler:', json.error); return }
+      setInvoices((json.rows || []).map((i: any) => ({
         id: i.id,
         invoice_number: i.invoice_number,
         client_id: i.client_id,
-        clientName: `${i.client?.first_name || ''} ${i.client?.last_name || ''}`.trim() || '—',
+        clientName: i.client_name,
         period_start: i.period_start,
         period_end: i.period_end,
         total_amount: i.total_amount,
         status: i.status,
-        pdf_url: Array.isArray(i.invoice_packages) ? (i.invoice_packages[0]?.pdf_url ?? null) : (i.invoice_packages?.pdf_url ?? null),
+        frozen: !!i.frozen,
+        correction_type: i.correction_type,
+        has_pdf: !!i.has_pdf,
       })))
     } catch (err) {
       console.error('Rechnungen Ladefehler:', err)
@@ -206,6 +214,8 @@ export default function RechnungserstellungPage() {
         setGeneratingPdfFor(null)
         return
       }
+      // Die signierte URL laeuft ab — deshalb direkt oeffnen statt speichern.
+      if (json.pdf_url) window.open(json.pdf_url, '_blank', 'noopener')
       await loadInvoices()
     } catch (err: any) {
       console.error('PDF-Erzeugung Fehler:', err)
@@ -213,6 +223,57 @@ export default function RechnungserstellungPage() {
     } finally {
       setGeneratingPdfFor(null)
     }
+  }
+
+  // ── Workflow: Entwurf → Geprüft → Festgeschrieben/Freigegeben ──
+  // freezeInvoice() verlangt den Status 'geprueft'; ohne den Zwischenschritt
+  // "Prüfen" waere das Festschreiben aus der Oberflaeche nicht erreichbar.
+  async function runAction(invoiceId: string, label: string, run: () => Promise<Response>) {
+    setActionFor(invoiceId)
+    setPdfError(null)
+    setNotice(null)
+    try {
+      const res = await run()
+      const json = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        setPdfError(json.error || `${label} fehlgeschlagen.`)
+        return
+      }
+      setNotice(`${label} erfolgreich.`)
+      await loadInvoices()
+    } catch (err: any) {
+      console.error(`${label} Fehler:`, err)
+      setPdfError(`Unerwarteter Fehler: ${label} fehlgeschlagen.`)
+    } finally {
+      setActionFor(null)
+    }
+  }
+
+  function markChecked(invoiceId: string) {
+    return runAction(invoiceId, 'Prüfung', () => fetch(`/api/billing/invoices/${invoiceId}/status`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: 'geprueft', reason: 'Sachliche Prüfung im Betriebssystem' }),
+    }))
+  }
+
+  function freeze(invoiceId: string) {
+    return runAction(invoiceId, 'Festschreibung', () =>
+      fetch(`/api/billing/invoices/${invoiceId}/freeze`, { method: 'POST' }))
+  }
+
+  function cancelInvoice(invoiceId: string) {
+    const reason = window.prompt('Stornierungsgrund (wird revisionssicher protokolliert):')
+    if (reason === null) return
+    if (!reason.trim()) {
+      setPdfError('Ohne Grund kann nicht storniert werden.')
+      return
+    }
+    return runAction(invoiceId, 'Storno', () => fetch(`/api/billing/invoices/${invoiceId}/cancel`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ reason: reason.trim() }),
+    }))
   }
 
   const monthOptions = useMemo(() => Array.from({ length: 12 }, (_, i) => i + 1), [])
@@ -230,6 +291,7 @@ export default function RechnungserstellungPage() {
 
       {error && <Banner tone="danger">{error}</Banner>}
       {pdfError && <Banner tone="danger">{pdfError}</Banner>}
+      {notice && <Banner tone="success">{notice}</Banner>}
 
       <div style={{ display: 'flex', gap: 10, marginBottom: 16, alignItems: 'center' }}>
         <select value={month} onChange={e => setMonth(Number(e.target.value))} style={select}>
@@ -279,31 +341,60 @@ export default function RechnungserstellungPage() {
           <table className="admin-table">
             <thead>
               <tr>
-                <th>Rechnungsnr.</th><th>Klient</th><th>Zeitraum</th><th>Summe</th><th>Status</th><th>PDF-Paket</th>
+                <th>Rechnungsnr.</th><th>Klient</th><th>Zeitraum</th><th>Summe</th><th>Status</th>
+                <th>Workflow</th><th>PDF-Paket</th>
               </tr>
             </thead>
             <tbody>
               {invoices.length === 0 ? (
-                <EmptyRow colSpan={6}>Noch keine Rechnungen erstellt</EmptyRow>
+                <EmptyRow colSpan={7}>Noch keine Rechnungen erstellt</EmptyRow>
               ) : invoices.map(inv => {
                 const sm = statusMeta(INVOICE_STATUS, inv.status)
+                const isBusy = actionFor === inv.id
                 return (
                   <tr key={inv.id}>
-                    <td style={{ fontWeight: 600 }}>{inv.invoice_number || '—'}</td>
+                    <td style={{ fontWeight: 600 }}>
+                      {inv.invoice_number}
+                      {inv.correction_type && (
+                        <span style={correctionTag}>
+                          {CORRECTION_TYPE_LABELS[inv.correction_type] || inv.correction_type}
+                        </span>
+                      )}
+                    </td>
                     <td>{inv.clientName}</td>
                     <td style={{ whiteSpace: 'nowrap', fontSize: 13 }}>{formatDate(inv.period_start)}–{formatDate(inv.period_end)}</td>
                     <td>{euro(inv.total_amount)}</td>
-                    <td><StatusBadge label={sm.label} color={sm.color} /></td>
                     <td>
-                      {inv.pdf_url ? (
-                        <a href={inv.pdf_url} target="_blank" rel="noreferrer" style={{ color: 'var(--gold2)', fontSize: 13 }}>
-                          PDF herunterladen
-                        </a>
-                      ) : (
-                        <button onClick={() => generatePdf(inv.id)} disabled={generatingPdfFor === inv.id} style={actionBtn}>
-                          {generatingPdfFor === inv.id ? 'Erzeugen…' : 'PDF-Paket erzeugen'}
-                        </button>
+                      <StatusBadge label={sm.label} color={sm.color} />
+                      {inv.frozen && (
+                        <div style={{ fontSize: 11, color: 'var(--ink4)', marginTop: 3 }}>festgeschrieben</div>
                       )}
+                    </td>
+                    <td>
+                      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                        {inv.status === 'entwurf' && (
+                          <button onClick={() => markChecked(inv.id)} disabled={isBusy} style={actionBtn}>
+                            {isBusy ? '…' : 'Prüfen'}
+                          </button>
+                        )}
+                        {inv.status === 'geprueft' && (
+                          <button onClick={() => freeze(inv.id)} disabled={isBusy} style={actionBtn}>
+                            {isBusy ? '…' : 'Festschreiben'}
+                          </button>
+                        )}
+                        {inv.status !== 'storniert' && !inv.correction_type && (
+                          <button onClick={() => cancelInvoice(inv.id)} disabled={isBusy} style={dangerLinkBtn}>
+                            Storno
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                    <td>
+                      <button onClick={() => generatePdf(inv.id)} disabled={generatingPdfFor === inv.id} style={actionBtn}>
+                        {generatingPdfFor === inv.id
+                          ? 'Erzeugen…'
+                          : inv.has_pdf ? 'PDF öffnen' : 'PDF-Paket erzeugen'}
+                      </button>
                     </td>
                   </tr>
                 )
@@ -333,4 +424,12 @@ const actionBtn: React.CSSProperties = {
   fontSize: 12, color: 'var(--gold2)', background: 'rgba(201,150,60,0.1)',
   border: '1px solid rgba(201,150,60,0.3)', borderRadius: 6, padding: '4px 10px',
   cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap',
+}
+const dangerLinkBtn: React.CSSProperties = {
+  fontSize: 12, color: '#D04B3B', background: 'transparent', border: 'none',
+  padding: '4px 2px', cursor: 'pointer', fontFamily: 'inherit', textDecoration: 'underline',
+}
+const correctionTag: React.CSSProperties = {
+  marginLeft: 6, fontSize: 10, fontWeight: 600, padding: '1px 6px', borderRadius: 4,
+  background: 'rgba(208,75,59,0.15)', color: '#D04B3B', whiteSpace: 'nowrap',
 }

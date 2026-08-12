@@ -16,6 +16,12 @@
 #   DEPLOY_REMOTE_REF=refs/heads/main ./deploy.sh "msg"   # erzwingt Ziel-Ref
 #   SKIP_TYPECHECK=1 ./deploy.sh "msg"       # typecheck überspringen
 #   GUARD_BYPASS=1   ./deploy.sh "msg"       # Notfall: precommit-guard ignorieren
+#   DEPLOY_PATHS="lib/x app/y" ./deploy.sh "msg"  # NUR diese Pfade stagen
+#
+# DEPLOY_PATHS ist für parallele Sessions gedacht: laufen zwei Agents
+# gleichzeitig im selben Working Tree, würde `git add -A` die halbfertigen
+# Dateien des anderen Agents mitcommitten. Mit DEPLOY_PATHS staged der Lauf
+# nur die eigenen Pfade; der Guard prüft weiterhin genau das, was staged ist.
 #
 # Worktree-Branches (claude/*, worktree/*) pushen automatisch auf main.
 
@@ -79,8 +85,24 @@ fi
 
 # ──────────────────────────────────────────────────────────────────────
 step "3/7  Precommit-Guard"
-# erst alles stagen, damit der Guard auch noch ungetrackte Files sieht
-git add -A
+# erst stagen, damit der Guard auch noch ungetrackte Files sieht
+if [ -n "${DEPLOY_PATHS:-}" ]; then
+  # Scoped: nur die angegebenen Pfade. Schützt parallele Sessions davor,
+  # sich gegenseitig halbfertige Arbeit in den Commit zu ziehen.
+  #
+  # noglob während des Splittens: Next.js-Routen enthalten [id]-Verzeichnisse,
+  # die die Shell sonst als Zeichenklasse zu interpretieren versucht.
+  set -f
+  # shellcheck disable=SC2086
+  set -- ${DEPLOY_PATHS}
+  set +f
+  git add -A -- "$@" || die "git add für DEPLOY_PATHS fehlgeschlagen"
+  ok "Scoped staging: ${DEPLOY_PATHS}"
+  unstaged_rest="$(git status --porcelain | grep -v '^[MADRC]' | wc -l | tr -d ' ')"
+  [ "$unstaged_rest" != "0" ] && warn "${unstaged_rest} Datei(en) bleiben ungestaged (andere Session?)"
+else
+  git add -A
+fi
 bash scripts/precommit-guard.sh || die "Guard hat Commit blockiert. Fix oder GUARD_BYPASS=1 als Override."
 
 # ──────────────────────────────────────────────────────────────────────

@@ -19,6 +19,32 @@ interface InvoiceRow {
   status: string
   created_at: string
   has_pdf: boolean
+  correction_type: string | null
+}
+
+// Korrekturbelege sehen im Portal anders aus als Rechnungen — ein negativer
+// Betrag ohne Erklaerung wuerde Kunden nur verunsichern.
+const CORRECTION_META: Record<string, { label: string; hint: string; color: string }> = {
+  gutschrift: {
+    label: 'Gutschrift',
+    hint: 'Dieser Betrag wird Ihnen angerechnet oder erstattet.',
+    color: '#5CB882',
+  },
+  storno: {
+    label: 'Storno',
+    hint: 'Diese Rechnung wurde aufgehoben — es ist nichts zu zahlen.',
+    color: '#9E9E9E',
+  },
+  teilstorno: {
+    label: 'Teilstorno',
+    hint: 'Ein Teil der Rechnung wurde aufgehoben.',
+    color: '#9E9E9E',
+  },
+  korrektur: {
+    label: 'Korrektur',
+    hint: 'Diese Rechnung ersetzt eine frühere Rechnung.',
+    color: '#7B68EE',
+  },
 }
 
 interface ItemRow {
@@ -38,6 +64,28 @@ export default function KundeRechnungenPage() {
   const [expanded, setExpanded] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [pdfLoading, setPdfLoading] = useState<string | null>(null)
+  const [pdfError, setPdfError] = useState('')
+
+  // Die in invoice_packages gespeicherte signierte URL laeuft nach 30 Tagen ab.
+  // Deshalb wird sie hier bei jedem Download frisch angefordert.
+  async function openPdf(invoiceId: string) {
+    setPdfLoading(invoiceId)
+    setPdfError('')
+    try {
+      const res = await fetch(`/api/rechnungen/${invoiceId}/pdf`)
+      const json = await res.json()
+      if (!res.ok || !json.pdf_url) {
+        setPdfError(json.error || 'PDF konnte nicht geladen werden.')
+        return
+      }
+      window.open(json.pdf_url, '_blank', 'noopener')
+    } catch {
+      setPdfError('PDF konnte nicht geladen werden.')
+    } finally {
+      setPdfLoading(null)
+    }
+  }
 
   const load = async () => {
     setError('')
@@ -50,7 +98,7 @@ export default function KundeRechnungenPage() {
       // RLS liefert nur die eigenen Rechnungen (clients.user_id = auth.uid())
       const { data, error: invErr } = await supabase
         .from('invoices')
-        .select('id, invoice_number, invoice_number_formatted, period_start, period_end, total_amount, budget_amount, private_amount, paid_amount, status, created_at, invoice_packages(pdf_url)')
+        .select('id, invoice_number, invoice_number_formatted, period_start, period_end, total_amount, budget_amount, private_amount, paid_amount, status, created_at, correction_type, invoice_packages(pdf_url)')
         .order('period_start', { ascending: false, nullsFirst: false })
 
       if (invErr) throw new Error('Rechnungen konnten nicht geladen werden')
@@ -124,6 +172,7 @@ export default function KundeRechnungenPage() {
             const st = statusMeta(INVOICE_STATUS, inv.status)
             const isOpen = expanded === inv.id
             const invItems = items[inv.id]
+            const cm = inv.correction_type ? CORRECTION_META[inv.correction_type] : null
             return (
               <div key={inv.id} style={{
                 background: 'var(--white)', borderRadius: 16, marginBottom: 12,
@@ -134,14 +183,23 @@ export default function KundeRechnungenPage() {
                 <div onClick={() => toggleExpand(inv.id)} style={{ padding: 16, cursor: 'pointer' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
                     <div>
-                      <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--ink)' }}>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--ink)', display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                         {inv.invoice_number || 'Rechnung'}
+                        {cm && (
+                          <span style={{
+                            fontSize: 10, fontWeight: 600, padding: '2px 7px', borderRadius: 20,
+                            color: cm.color, background: `${cm.color}1A`, border: `1px solid ${cm.color}40`,
+                          }}>{cm.label}</span>
+                        )}
                       </div>
                       <div style={{ fontSize: 12, color: 'var(--ink4)', marginTop: 3 }}>
                         {inv.period_start && inv.period_end
                           ? `${formatDate(inv.period_start)} – ${formatDate(inv.period_end)}`
                           : formatDate(inv.created_at)}
                       </div>
+                      {cm && (
+                        <div style={{ fontSize: 11, color: cm.color, marginTop: 4 }}>{cm.hint}</div>
+                      )}
                     </div>
                     <span style={{
                       padding: '3px 10px', borderRadius: 20, fontSize: 11, fontWeight: 600,
@@ -170,18 +228,16 @@ export default function KundeRechnungenPage() {
                   <div style={{ borderTop: '1px solid var(--border)', padding: '4px 16px 14px' }}>
                     {inv.has_pdf && (
                       <div style={{ padding: '10px 0', borderBottom: '1px solid var(--border)' }}>
-                        <button onClick={async (e) => {
-                          e.stopPropagation()
-                          const supabase = createClient()
-                          const { data: pkg } = await supabase.from('invoice_packages').select('pdf_url').eq('invoice_id', inv.id).single()
-                          if (pkg?.pdf_url) window.open(pkg.pdf_url, '_blank')
-                        }} style={{
-                          width: '100%', padding: '10px 0', border: 'none', borderRadius: 8,
-                          background: 'linear-gradient(135deg,var(--gold),var(--gold2))', color: 'var(--coal)',
-                          fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
-                        }}>
-                          PDF herunterladen
+                        <button onClick={(e) => { e.stopPropagation(); openPdf(inv.id) }}
+                          disabled={pdfLoading === inv.id}
+                          style={{
+                            width: '100%', padding: '10px 0', border: 'none', borderRadius: 8,
+                            background: 'linear-gradient(135deg,var(--gold),var(--gold2))', color: 'var(--coal)',
+                            fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
+                          }}>
+                          {pdfLoading === inv.id ? 'PDF wird geladen…' : 'PDF herunterladen'}
                         </button>
+                        {pdfError && <div style={{ fontSize: 12, color: '#D04B3B', marginTop: 6, textAlign: 'center' }}>{pdfError}</div>}
                       </div>
                     )}
                     {itemsLoading === inv.id ? (
