@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "NODE_OPTIONS='--max-old-space-size=4096' next build --webpack",
+    "build": "NODE_OPTIONS='--max-old-space-size=4096' next build --turbopack",
+    "build:webpack": "NODE_OPTIONS='--max-old-space-size=4096' next build --webpack",
     "analyze": "ANALYZE=true NODE_OPTIONS='--max-old-space-size=4096' next build --webpack",
     "start": "next start",
     "lint": "eslint",
@@ -108,7 +109,6 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs",
   "bugs": {
     "url": "https://github.com/YusufFerhatDemir/alltagsengel/issues"
   },
