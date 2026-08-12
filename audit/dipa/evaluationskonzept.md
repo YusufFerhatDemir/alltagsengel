@@ -59,6 +59,37 @@ Technische Grundlage im Produkt: `coach_measurements` (Instrumente + Messzeitpun
 - Keine Dritt-Tracker; Nutzungsdaten ausschließlich aus dem eigenen Backend.
 - DSFA (Art. 35 DSGVO) vor Studienbeginn (siehe `dipav_gap_liste.md` GAP-DSFA).
 
+## 4a. Datenerhebungs-Framework im Produkt (umgesetzt 2026-08-12, Block 15a)
+
+Das in §6.5 als offen geführte pseudonymisierte Ereignis-Logging ist gebaut. Es liefert
+die laufenden Nutzungs-/Adhärenz-Kennzahlen aus §3, ohne eine zweite Kopie der
+Gesundheitsdaten anzulegen.
+
+| Baustein | Umsetzung |
+|---|---|
+| Ereignistabelle | `coach_nutzungsereignisse` — Pseudonym, Ereignisart, Modul, Auswertungswoche, Anzahl |
+| Pseudonymisierung | HMAC-SHA256 mit separatem, für niemanden lesbarem Schlüssel (`coach_pseudonym_key`) |
+| Trennungskonzept | Der Schlüssel liegt beim Verantwortlichen; ein Auswertungspartner erhält nur Aggregate oder pseudonyme Rohdaten ohne Schlüssel |
+| Kennzahlen-Auswertung | `lib/coach/nachweise.ts` (`werteNutzungAus`) — Teilnehmende, Ereignisse je Art und Modul, aktive Nutzer je Woche, Anteil regelmäßiger Nutzung (≥ 4 Wochen) |
+| Zugang für den Betrieb | `/admin/dipa` → Nutzungsnachweise; **nur Aggregate**, nie Einzelzeilen, nie Pseudonyme |
+| Nutzerrechte | eigene Ereignisse einsehbar (Art. 15) und löschbar (Art. 17) |
+
+**Drei eingebaute Schranken, die für die Auswertungsplanung relevant sind:**
+
+1. **Doppelte Freigabe:** Erfassung nur, wenn der Deployment-Schalter
+   `COACH_NUTZUNGSNACHWEIS_AKTIV` gesetzt **und** die Einwilligung
+   `wissenschaftliche_auswertung` erteilt ist. Vor Studienbeginn muss der Schalter
+   bewusst aktiviert werden — sonst liegen keine Daten vor.
+2. **Wochengranularität:** Es gibt keine Zeitstempel, nur Auswertungswochen. Analysen auf
+   Tagesebene oder zur Tageszeit sind damit ausgeschlossen; der Analyseplan muss das
+   berücksichtigen.
+3. **Unterdrückung kleiner Gruppen:** Unter 5 Teilnehmenden werden keine Detailkennzahlen
+   ausgegeben. In der Pilotphase ist deshalb mit leeren Auswertungen zu rechnen, bis die
+   Gruppengröße erreicht ist.
+
+Die Endpunkt-Instrumente (§3) bleiben davon unberührt — sie laufen weiter über
+`coach_measurements` mit den Messzeitpunkten t0–t3.
+
 ## 5. Auswertung und Berichtslegung
 
 - Statistischer Analyseplan vor Studienbeginn (Partner); Intention-to-treat-orientierte
@@ -72,4 +103,6 @@ Technische Grundlage im Produkt: `coach_measurements` (Instrumente + Messzeitpun
 2. Wissenschaftlicher Partner + Ethikvotum.
 3. Instrumenten-Lizenzen (FES-I, HPS/BSFC-s, SUS-Übersetzung).
 4. Fallzahl aus Pilotdaten.
-5. Pseudonymisiertes Ereignis-Logging im Produkt (GAP-NUTZUNG).
+5. ~~Pseudonymisiertes Ereignis-Logging im Produkt (GAP-NUTZUNG).~~ **Umgesetzt am
+   2026-08-12** — siehe §4a. Offen bleibt nur die Aktivierung
+   (`COACH_NUTZUNGSNACHWEIS_AKTIV`) zum Studienbeginn.

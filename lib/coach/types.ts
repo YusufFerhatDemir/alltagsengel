@@ -157,3 +157,112 @@ export const ROLLE_LABELS: Record<CoachRolle, string> = {
   angehoerig: 'Pflegende/r Angehörige/r',
   pflegedienst: 'Pflegedienst',
 }
+
+// ═══════════════════════════════════════════════════════════════
+// Nutzerflow: Anspruch → Genehmigung → Freischaltung → Abrechnung
+// (Migration 20260826010000)
+// ═══════════════════════════════════════════════════════════════
+
+export interface CoachAnspruchspruefung {
+  id: string
+  coach_user_id: string
+  pflegegrad: number | null
+  pflegegrad_beantragt: boolean
+  haeusliche_versorgung: boolean | null
+  nutzung_durch: 'pflegebeduerftig' | 'angehoerig' | 'gemeinsam' | null
+  ergebnis: 'anspruch_moeglich' | 'anspruch_unklar' | 'kein_anspruch'
+  kriterien_version: string
+  hinweise: string[]
+  geprueft_am: string
+}
+
+/** Nutzer-Seite: Nachweis eines gültigen Zugangs. */
+export interface CoachFreischaltung {
+  id: string
+  coach_user_id: string
+  code_id: string | null
+  code_praefix: string | null
+  quelle: 'pflegekasse' | 'hersteller_pilot' | 'testzugang'
+  status: 'aktiv' | 'abgelaufen' | 'widerrufen'
+  gueltig_von: string
+  gueltig_bis: string | null
+  freigeschaltet_am: string
+}
+
+/**
+ * Betriebs-Seite: ausgegebener Code. Enthält bewusst KEINEN Bezug auf
+ * coach_users — die Einlösung ist nur pseudonym vermerkt.
+ */
+export interface CoachFreischaltcode {
+  id: string
+  organization_id: string
+  code_praefix: string
+  quelle: 'pflegekasse' | 'hersteller_pilot' | 'testzugang'
+  kostentraeger_ik: string | null
+  genehmigt_am: string | null
+  gueltig_von: string
+  gueltig_bis: string | null
+  status: 'ausgegeben' | 'eingeloest' | 'abgelaufen' | 'storniert'
+  abrechnungsweg_key: string | null
+  eingeloest_am: string | null
+  eingeloest_pseudonym: string | null
+  notiz: string | null
+  created_at: string
+}
+
+export interface CoachAbrechnungsweg {
+  id: string
+  organization_id: string
+  schluessel: string
+  bezeichnung: string
+  beschreibung: string | null
+  rechtsgrundlage: string | null
+  aktiv: boolean
+  verguetung_geklaert: boolean
+  konfiguration: Record<string, unknown>
+  created_at: string
+  updated_at: string
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Ergänzende Unterstützungsleistungen (eUL) — Betriebsdaten
+// ═══════════════════════════════════════════════════════════════
+
+export interface EulErbringung {
+  id: string
+  organization_id: string
+  booking_id: string | null
+  client_id: string | null
+  coach_pseudonym: string | null
+  leistungsart: string
+  datum: string
+  dauer_minuten: number
+  durchfuehrungsform: string
+  inhalt: string
+  erbracht_von: string | null
+  erbringer_name: string | null
+  qualifikation_geprueft: boolean
+  bestaetigt_am: string | null
+  bestaetigt_durch: string | null
+  abrechnungsweg_key: string | null
+  bemerkung: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface EulQualifikation {
+  id: string
+  organization_id: string
+  user_id: string | null
+  caregiver_id: string | null
+  erbringer_name: string | null
+  kriterium_key: string
+  erfuellt: boolean
+  nachweis_art: string | null
+  geprueft_am: string | null
+  geprueft_durch: string | null
+  gueltig_bis: string | null
+  notiz: string | null
+  created_at: string
+  updated_at: string
+}

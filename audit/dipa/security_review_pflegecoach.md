@@ -63,3 +63,45 @@ stehen aus (bewusst: Deploy-Sperre). Alles lokal Prüfbare ist grün.
   sinnvoll erst gegen eine DB mit `coach_`-Tabellen (Shadow-PostgREST-Shim oder Preview nach Apply).
 - Voller `tsc`-Lauf des Monorepos ist lokal extrem langsam; Ergebnis siehe Abschlussbericht,
   zusätzlich type-checkt Vercel bei jedem Build.
+
+
+## 4. Nachtrag 2026-08-12 — Version 0.2.0 (Block 15a–15d)
+
+Der Befund in §2 „**kein** `createAdminClient`/service_role im gesamten Coach-Code" gilt
+seit 0.2.0 **nicht mehr uneingeschränkt**. Zwei Routen nutzen den Systemkontext:
+
+| Route | Warum notwendig | Eingrenzung |
+|---|---|---|
+| `app/api/coach/freischaltung` (POST) | Die Code-Tabelle darf für Nutzer nicht lesbar sein (sonst ließen sich gültige Codes auslesen), und der Nutzer darf seine Freischaltung nicht selbst schreiben (sonst wäre die Zugangsprüfung wertlos) | Zugriff ausschließlich auf `coach_freischaltcodes` und `coach_freischaltungen` — **nie** auf `coach_*`-Gesundheitsdaten. Die Nutzeridentität stammt weiter aus `requireCoachUser()` |
+| `app/api/dipa/nachweise` (GET) | `coach_nutzungsereignisse` hat bewusst keine Admin-Policy; für die Evaluation werden die Zeilen im Systemkontext gelesen und sofort aggregiert | Gibt nie Einzelzeilen und nie Pseudonyme aus; Unterdrückung unter 5 Teilnehmenden; zusätzlich `requireOpsAdmin()` davor |
+
+**Bewertung:** Die Produktgrenze bleibt gewahrt — kein Admin-Weg zu Gesundheitsdaten. Die
+Aussage muss aber künftig präzise lauten: *kein service_role auf `coach_*`-Datentabellen*,
+nicht *kein service_role im Coach-Code*.
+
+**Neu geprüft (Code-Review, nicht laufzeitgetestet):**
+
+- Code-Einlösung mit Status-Guard `WHERE status = 'ausgegeben'` — bei parallelen Versuchen
+  gewinnt genau einer; schlägt das Anlegen der Freischaltung fehl, wird der Code
+  zurückgesetzt.
+- Codes nur als SHA-256 über (normalisierter Code + Pfeffer `COACH_CODE_PEPPER`); Klartext
+  wird genau einmal ausgegeben und nirgends gespeichert. Fehlversuche liefern eine
+  einheitliche Meldung (keine Präfix-Enumeration). Der Admin-Bereich warnt, wenn der
+  Pfeffer fehlt.
+- `coach_pseudonym(uuid)` ist `authenticated` **entzogen**; Nutzer erhalten nur
+  `coach_mein_pseudonym()`. Andernfalls ließe sich das Pseudonym Dritter berechnen und
+  deren Nachweise lesen.
+- `coach_pseudonym_key`: RLS aktiv ohne jede Policy, Grants entzogen — nur die
+  `SECURITY DEFINER`-Funktion kommt heran.
+- `coach_freischaltungen`: nur SELECT-Policy für den Eigentümer, INSERT/UPDATE/DELETE für
+  `authenticated` auf Grant-Ebene entzogen.
+- `coach_nutzungsereignisse`: kein `coach_user_id`, kein Zeitstempel, keine Inhalte;
+  Policies über `coach_mein_pseudonym()`; UPDATE entzogen; kein Audit-Trigger (die Tabelle
+  hat einen bigint-Primärschlüssel, den `coach_audit_trigger()` nach uuid casten würde).
+- `eul_*`: Betriebsdaten mit `is_admin()` + `org_fence`; bestätigte Nachweise sind gegen
+  Änderung und Löschung gesperrt.
+
+**Weiterhin offen:** alle Auflagen aus §2 (MFA, TR-03161, externes Review) sowie die
+Laufzeit-Verifikation — die neuen Tabellen sind wie die übrigen nicht auf der
+Produktionsdatenbank angelegt (GAP-DB). Shadow-RLS-Tests für die neuen Tabellen sind noch
+zu schreiben.

@@ -4,6 +4,43 @@ Separater Versionsstrang des DiPA-Produkts (unabhängig von Plattform-Deployment
 Jede MINOR-/MAJOR-Änderung ist vor Release regulatorisch zu bewerten
 (Änderungsanzeige? — BfArM-Frage 20, `bfarm_fragenkatalog.md`).
 
+## 0.2.0 — 2026-08-12 (Nutzerflow, Nachweise, eUL — nicht veröffentlicht)
+
+Block 15a–15d. Weiterhin nicht produktiv: Migrationen `20260819010000` und
+`20260826010000` sind nicht auf die Produktionsdatenbank angewendet (GAP-DB).
+
+**Regulatorische Bewertung dieser MINOR-Änderung:** Die Zweckbestimmung bleibt
+unverändert; es kommen keine Funktionen hinzu, die den Nutzen für die betroffene Person
+verändern. Neu sind Berechtigungs-, Nachweis- und Betriebsfunktionen. Ob daraus eine
+Anzeigepflicht folgt, ist mit BfArM-Frage 20 zu klären.
+
+- **Nutzerflow (15a):** Anspruchsprüfung als versionierte Selbstauskunft
+  (`/pflegecoach/anspruch`), Freischaltcode-Verfahren (Ausgabe im Betrieb, Einlösung im
+  Produkt), pseudonymisierte Nutzungsnachweise, konfigurierbare Abrechnungswege ohne
+  Beträge. Neue Migration `20260826010000` (7 Tabellen + Pseudonym-Infrastruktur).
+- **Trennungskonzept:** HMAC-Pseudonymisierung mit eigenem, für niemanden lesbaren
+  Schlüssel (`coach_pseudonym_key`). Ein Betriebs-Admin sieht Einlösungen, aber weder
+  Person noch Inhalte.
+- **Freischaltung ist bewusst KEINE Zugangsvoraussetzung** —
+  `COACH_FREISCHALTUNG_PFLICHT` steht auf `false`, weil das Verfahren regulatorisch nicht
+  feststeht (ORF-DIPA-FLOW).
+- **Nutzungsnachweise** nur bei gesetztem Schalter **und** erteilter Einwilligung; ohne
+  Zeitstempel, ohne Inhalte, mit Unterdrückung kleiner Gruppen. Schließt GAP-NUTZUNG.
+- **Datenschutz (15b):** produktbezogene Löschung ohne Kontoverlust
+  (`/pflegecoach/loeschung`) — schließt GAP-LOESCHUNG; Verschlüsselungs- und
+  Löschkonzept, DSFA-Vorbereitung, TR-03161-Vorbereitungscheckliste.
+- **Zulassung (15c):** maschinenlesbarer Anforderungskatalog mit Prüfstatus je Eintrag
+  (`lib/coach/anforderungskatalog.ts`), MDR-Negativabgrenzung als eigenes Dokument,
+  Testprotokoll-Vorlage für die Gebrauchstauglichkeit, Evaluationskonzept um das
+  umgesetzte Datenerhebungs-Framework ergänzt.
+- **eUL (15d):** Nachweisführung und Qualifikationskatalog für ergänzende
+  Unterstützungsleistungen (`/admin/eul`) — als Betriebsdaten, strikt außerhalb des
+  Produktpfads; keine Bewerbung und kein Buchungsweg im PflegeCoach.
+- **Abweichung vom bisherigen Grundsatz „kein service_role im Coach-Code":** Zwei Routen
+  nutzen den Systemkontext, ausschließlich für Berechtigungs- bzw. Aggregationsdaten —
+  begründet in `security_review_pflegecoach.md` §4.
+- 48 neue Unit-Tests (`anspruch`, `freischaltung`, `nachweise`, `eul`, `abrechnung`).
+
 ## 0.1.0 — 2026-08-09 (MVP, nicht veröffentlicht)
 
 Erster Stand des Produkts. Nicht produktiv (Migration `20260819010000` nicht angewendet,

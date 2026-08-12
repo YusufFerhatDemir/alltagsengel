@@ -27,11 +27,30 @@ API `/api/coach/*`, Migration `20260819010000`).
 | Rollen/Rechte-Tests | `supabase/shadow/50_pflegecoach_tests.sql` — 39/39 PASS (eigen/fremd/admin/anon/Freigabe/Widerruf/Unveränderlichkeit/Audit) |
 | Security-Review (intern) | `security_review_pflegecoach.md` — PASS mit Auflagen (MFA, TR-03161, externes Review) |
 
+## Ergänzt in Version 0.2.0 (2026-08-12, Block 15a–15d)
+
+| Anforderung | Umsetzung |
+|---|---|
+| Vollständiger Nutzerflow abgebildet (Anspruch → Genehmigung → Aktivierung → Nutzung → Nachweis → Abrechnung) | Migration `20260826010000`; `nutzerflow_dipa.md` |
+| Anspruchsprüfung ohne erfundene Voraussetzungen | `lib/coach/anspruch.ts` — versionierte Kriterien mit `verifiziert`-Flag; unverifizierte Kriterien führen nie zum Ausschluss |
+| Freischaltverfahren (Code) inkl. Missbrauchsschutz | Codes nur als Hash + Pfeffer, Klartext einmalig, Status-Guard gegen Doppel-Einlösung; per Schalter deaktiviert, solange das Verfahren regulatorisch offen ist |
+| Trennung Berechtigungs-/Gesundheitsdaten | HMAC-Pseudonymisierung mit nicht lesbarem Schlüssel (`coach_pseudonym_key`); Betriebs-Admin sieht Einlösungen ohne Personenbezug |
+| Abrechnungswege konfigurierbar, ohne Beträge | `coach_abrechnungswege` + `lib/coach/abrechnung.ts`; fail-closed über `verguetung_geklaert` |
+| Verschlüsselungskonzept | `verschluesselungskonzept.md` — inkl. begründeter Entscheidung gegen echte E2E-Verschlüsselung |
+| Löschkonzept + produktbezogene Löschfunktion | `loeschkonzept.md`, `/pflegecoach/loeschung` — löst **GAP-LOESCHUNG** |
+| Pseudonymisiertes Ereignis-Logging | `coach_nutzungsereignisse` + `lib/coach/nachweise.ts` — löst **GAP-NUTZUNG** |
+| DSFA-Vorbereitung | `dsfa_pflegecoach.md` (offene Bewertungen markiert) — GAP-DSFA bleibt offen |
+| TR-03161-Vorbereitung | `tr03161_checkliste.md` — Ist-Zustand nach Themenfeldern, ohne Anforderungstexte zu erfinden |
+| Anforderungskatalog-Struktur | `lib/coach/anforderungskatalog.ts` + `anforderungskatalog.md`; erfüllt zählt nur mit geprüftem Originaltext |
+| MDR-Negativabgrenzung als eigenes Dokument inkl. Sprachregeln | `mdr_negativabgrenzung.md` |
+| Gebrauchstauglichkeits-Testprotokoll | `gebrauchstauglichkeit_testprotokoll.md` (Vorlage) |
+| eUL: Nachweisführung, Abgrenzung, Qualitätsanforderungen | `eul_konzept.md`, `eul_qualitaetsanforderungen.md`, `/admin/eul` |
+
 ## Offene Gaps
 
 | ID | Gap | Kategorie | Schwere | Nächster Schritt |
 |---|---|---|---|---|
-| GAP-DB | Migration `20260819010000` ist NICHT auf Production angewendet — zunächst technisch blockiert (`_run_sql` als `service_role` ohne CREATE auf `public`), seit 09.08. zusätzlich **ausdrücklich gesperrt** (Anweisung: keine Produktionsmigration). Auf Shadow-DB vollständig verifiziert (Build/Idempotenz/Rollback/39 RLS-Tests) | Betrieb | **Blocker für jede Nutzung** | Nach Freigabe: Apply via Supabase SQL Editor/MCP; danach `node scripts/verify-pflegecoach-migration.mjs` |
+| GAP-DB | Migrationen `20260819010000` **und `20260826010000`** sind NICHT auf Production angewendet — zunächst technisch blockiert (`_run_sql` als `service_role` ohne CREATE auf `public`), seit 09.08. zusätzlich **ausdrücklich gesperrt** (Anweisung: keine Produktionsmigration). Auf Shadow-DB vollständig verifiziert (Build/Idempotenz/Rollback/39 RLS-Tests) | Betrieb | **Blocker für jede Nutzung** | Nach Freigabe: Apply via Supabase SQL Editor/MCP; danach `node scripts/verify-pflegecoach-migration.mjs` |
 | GAP-TR03161 | Kein BSI-TR-03161-Zertifikat, keine Prüfstellen-Beauftragung (Pflicht für Neuaufnahme seit 01.01.2025) | Datensicherheit | Kritisch (Monate Vorlauf) | Prüfstelle anfragen; Geltung für vorläufige Aufnahme klären (Frage 9) |
 | GAP-ISMS | Kein ISO-27001-ISMS, kein dokumentierter Pentest | Datensicherheit | Hoch | ISMS-Beratung; Scope-Frage (Frage 11); ORF-2 |
 | GAP-MFA | Kein zweiter Faktor in der Authentifizierung (TR-03161-relevant); Investor-Seite behauptet MFA — Widerspruch beseitigen | Datensicherheit | Hoch | MFA für PflegeCoach-Nutzer einplanen; `app/investor/en/product-technology/page.tsx:186` korrigieren |
@@ -39,15 +58,18 @@ API `/api/coach/*`, Migration `20260819010000`).
 | GAP-INTEROP | Kein FHIR/MIO-Mapping (nur PDF-Druck + dokumentiertes JSON); Verbindlichkeit unklar (ORF-9) | Interoperabilität | Mittel | BfArM-Frage 10; FHIR-Mapping (Questionnaire/QuestionnaireResponse, CarePlan) als Option vorbereitet |
 | GAP-QS | Alle Inhaltsmodule (`lib/coach/inhalte.ts`) tragen `pruefstatus: 'entwurf'` — pflegefachliche Freigabe fehlt (DiPAV: qualitätsgesicherte Inhalte); UI zeigt Entwurfs-Badge | Qualität | Hoch (vor Pilot) | Pflegefachliche Prüfung beauftragen, Freigabe dokumentieren, Status umstellen |
 | GAP-INSTRUMENTE | Validierte Instrumente (FES-I, HPS/BSFC-s, SUS) nicht lizenziert/integriert; produktinternes 7-Item-Kurzinstrument ist nicht validiert (transparent gekennzeichnet) | Evidenz | Hoch (vor Pilot) | Lizenzklärung; BfArM-Frage 16 |
-| GAP-NUTZUNG | Kein dediziertes pseudonymisiertes Ereignis-Logging (Modul gestartet/abgeschlossen) für Pilot-Kennzahlen; kein Pseudonymisierungs-/Schlüsselkonzept implementiert | Evidenz | Mittel | Ereignistabelle + Trennungskonzept vor Pilotstart |
+| ~~GAP-NUTZUNG~~ | **GESCHLOSSEN 2026-08-12** — `coach_nutzungsereignisse` (pseudonym, ohne Zeitstempel, ohne Inhalte), HMAC-Schlüssel in eigener Tabelle ohne Lesezugriff, Aggregation mit Unterdrückung kleiner Gruppen | Evidenz | — | Vor Pilotstart `COACH_NUTZUNGSNACHWEIS_AKTIV=true` setzen |
 | GAP-DSFA | Keine Datenschutz-Folgenabschätzung (Art. 35), Datenschutzhinweise + Einwilligungstexte sind Entwurf ohne juristische Prüfung; AVV-Kette (Supabase/Vercel) nicht produktbezogen dokumentiert | Datenschutz | Hoch (vor Pilot) | DSFA erstellen; juristische Prüfung; AVV-Dossier |
 | GAP-A11Y-AUDIT | Kein BITV-/WCAG-2.1-AA-Audit des neuen UI (Grundausstattung vorhanden, aber ungeprüft; Screenreader-Tests ausstehend) | Barrierefreiheit | Mittel (vor Pilot) | Selbsttest + externer BITV-Test; Nachweisform klären (Frage 12) |
-| GAP-LOESCHUNG | Konto-Löschung läuft über den allgemeinen Alltagsengel-Flow (`app/api/user/delete`); ein produktspezifischer Lösch-/Exportnachweis-Flow nur für PflegeCoach-Daten fehlt | Datenschutz | Mittel | Produktbezogene Löschfunktion (nur `coach_*`-Daten via CASCADE auf `coach_users`) ergänzen |
+| ~~GAP-LOESCHUNG~~ | **GESCHLOSSEN 2026-08-12** — `/pflegecoach/loeschung` löscht ausschließlich die PflegeCoach-Daten (CASCADE auf `coach_users` + eigene Nachweisdaten), Konto bleibt; Export vorher angeboten; Löschkonzept dokumentiert | Datenschutz | — | Offen bleibt nur die Backup-Aufbewahrungsfrist im AVV-Dossier |
 | GAP-PUSH | Erinnerungen sind geplante Aktivitäten ohne Push-/Lokalbenachrichtigung | Produkt | Niedrig (Komfort) | Push-Integration nach Pilot-Feedback |
 | GAP-SHARES-UI | Datenfreigabe (`coach_shares`) ist im Datenmodell + RLS + Consent-Typ vorhanden, aber ohne Verwaltungs-UI (Einladen/Widerrufen per Oberfläche) | Produkt | Mittel | Freigabe-UI in Einstellungen ergänzen |
 | GAP-EVAL | Evaluationskonzept nicht einreichungsreif (kein Partner, kein Ethikvotum, ORF-10 offen) | Evidenz | Hoch (vor Antrag) | Siehe `evaluationskonzept.md` §6 |
 | GAP-E2E | Kein Browser-E2E-Test für `/pflegecoach` (Playwright im Repo vorhanden); UI bisher nur statisch geprüft | Qualität | Mittel | E2E-Suite gegen Preview nach Live-Apply; Screenreader-Durchgang |
 | GAP-EXT-REVIEW | Security-Review ist ein Selbst-Review (gleicher Autor wie Code) | Datensicherheit | Mittel (vor Pilot) | Externes Review/Pentest beauftragen |
+| GAP-DIPA-FLOW | Ob ein Aktivierungscode-Verfahren für DiPA verbindlich vorgesehen ist und wer die Codes ausgibt, ist nicht geklärt. Der Mechanismus ist vollständig gebaut, aber per `COACH_FREISCHALTUNG_PFLICHT=false` deaktiviert | Verfahren | Mittel (vor Abrechnung) | In der BfArM-Beratung klären; danach Schalter setzen |
+| GAP-EUL-QUALI | Die Qualifikationsanforderungen an eUL-Erbringer sind **selbst gesetzt**, nicht regulatorisch abgeleitet (ORF-1). Betroffen ist insbesondere „pflegerische Grundqualifikation" | Qualität | Mittel (vor eUL-Abrechnung) | ORF-1 klären; Kriterien mit `regulatorischGefordert: 'offen'` bestätigen oder ersetzen |
+| GAP-SHADOW-15 | Für die 7 neuen Tabellen aus `20260826010000` fehlen Shadow-RLS-Tests (die 39 bestehenden decken nur die Basis-Migration ab) | Qualität | Mittel | `supabase/shadow/50_pflegecoach_tests.sql` erweitern: Pseudonym-Isolation, kein Admin-Zugriff auf `coach_freischaltungen`, kein Selbst-Insert von Freischaltungen |
 | GAP-QMS | Kein formales QMS/Risikomanagement-System dokumentiert (Anlage 1 DiPAV orientiert sich an MDR-Klasse-I: QMS, Risikomanagement, Lebenszyklus-Prozesse). Bausteine existieren (Changelog/Versionierung, Review-Doku, Test-Gates, Audit-Log), sind aber nicht als QMS verfasst | Qualität | Hoch (vor Antrag) | QMS-Handbuch (schlank, produktbezogen) + Risikoakte erstellen; ggf. mit ISMS-Beratung (GAP-ISMS) bündeln |
 
 ## Referenz: offene regulatorische Fragen (ORF)
