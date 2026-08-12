@@ -44,6 +44,8 @@ export const AUDIT_ENTITY_TYPES = [
   'datev_export', 'datev_kontenzuordnung',
   // § 302 SGB V (Block 17) — Migration 20260826020000
   'sgb_v_lauf', 'sgb_v_formatversion', 'sgb_v_routing',
+  // KIM / TI-Anbindung (Block 18) — Migration 20260830010000
+  'kim_konfiguration', 'kim_formatversion', 'kim_karte', 'kim_nachricht',
 ] as const;
 
 export type AuditEntityType = (typeof AUDIT_ENTITY_TYPES)[number];
