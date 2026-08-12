@@ -227,22 +227,21 @@ export async function verarbeiteRuecklastschrift(
     // 7. Mahnstufe hochsetzen
     const { data: dunning } = await supabase
       .from('dunning_entries')
-      .select('id, current_level')
+      .select('id, dunning_level')
       .eq('invoice_id', sepaItem.invoice_id)
       .single();
 
     if (dunning) {
-      // Bei Ruecklastschrift mindestens auf mahnung_1 setzen
       const ESCALATION_LEVELS = ['offen', 'erinnerung', 'mahnung_1', 'mahnung_2', 'letzte_mahnung'];
-      const currentIdx = ESCALATION_LEVELS.indexOf(dunning.current_level || 'offen');
-      const newIdx = Math.max(currentIdx + 1, 2); // mindestens mahnung_1
+      const currentIdx = ESCALATION_LEVELS.indexOf(dunning.dunning_level || 'offen');
+      const newIdx = Math.max(currentIdx + 1, 2);
       const newLevel = ESCALATION_LEVELS[Math.min(newIdx, ESCALATION_LEVELS.length - 1)];
 
       await supabase
         .from('dunning_entries')
         .update({
-          current_level: newLevel,
-          last_level_change: new Date().toISOString(),
+          dunning_level: newLevel,
+          last_dunning_at: new Date().toISOString(),
         })
         .eq('id', dunning.id);
 

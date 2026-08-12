@@ -191,9 +191,15 @@ export async function advanceDunning(
   const feeCents = DUNNING_FEES_CENTS[newLevel]
 
   const now = new Date()
+  const heuteStr = heuteBerlin()
   const nextDays = DUNNING_DAYS[DUNNING_LEVEL_ORDER[Math.min(currentIdx + 2, DUNNING_LEVEL_ORDER.length - 1)]]
   const nextDate = new Date(now)
   nextDate.setDate(nextDate.getDate() + (nextDays - DUNNING_DAYS[newLevel]))
+
+  const dueDateStr = entry.due_date || heuteStr
+  const dueMs = new Date(dueDateStr + 'T00:00:00+01:00').getTime()
+  const todayMs = new Date(heuteStr + 'T00:00:00+01:00').getTime()
+  const daysOverdue = Math.max(0, Math.floor((todayMs - dueMs) / 86400000))
 
   await supabase
     .from('dunning_entries')
@@ -202,7 +208,7 @@ export async function advanceDunning(
       dunning_fee_cents: (entry.dunning_fee_cents || 0) + feeCents,
       last_dunning_at: now.toISOString(),
       next_dunning_at: datumBerlin(nextDate),
-      days_overdue: Math.max(0, Math.floor((now.getTime() - new Date(entry.due_date).getTime()) / 86400000)),
+      days_overdue: daysOverdue,
     })
     .eq('invoice_id', invoiceId)
 

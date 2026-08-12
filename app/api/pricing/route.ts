@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { heuteBerlin } from '@/lib/utils/timezone';
+import { getActiveOrgId } from '@/lib/organizations/server'
+import { safeDbError } from '@/lib/utils/api-error'
 
 // ═══════════════════════════════════════════════════════════════
 // GET /api/pricing
@@ -53,6 +55,8 @@ export async function GET(request: Request) {
     const budgetType = url.searchParams.get('budget_type')
     const today = heuteBerlin()
 
+    const organizationId = await getActiveOrgId()
+
     const admin = createAdminClient()
     let query = admin
       .from('service_pricing')
@@ -63,13 +67,12 @@ export async function GET(request: Request) {
       .order('service_type', { ascending: true })
       .order('budget_type', { ascending: true })
 
+    if (organizationId) query = query.eq('organization_id', organizationId)
     if (serviceType) query = query.eq('service_type', serviceType)
     if (budgetType) query = query.eq('budget_type', budgetType)
 
     const { data, error } = await query
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 })
-    }
+    if (error) return safeDbError(error)
 
     return NextResponse.json({ prices: data || [] })
   } catch (err: any) {

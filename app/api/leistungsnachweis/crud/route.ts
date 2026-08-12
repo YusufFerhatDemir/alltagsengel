@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getActiveOrgId } from '@/lib/organizations/server'
 import { datumBerlin } from '@/lib/utils/timezone';
+import { safeDbError } from '@/lib/utils/api-error'
 
 async function requireAuth(supabase: Awaited<ReturnType<typeof createClient>>) {
   const { data: { user } } = await supabase.auth.getUser()
@@ -46,7 +47,7 @@ export async function GET(req: NextRequest) {
       .eq('id', id)
       .eq('organization_id', organizationId)
       .single()
-    if (error) return NextResponse.json({ error: error.message }, { status: 404 })
+    if (error) return safeDbError(error, 404)
 
     const { data: auditLog } = await supabase
       .from('service_record_audit_log')
@@ -79,7 +80,7 @@ export async function GET(req: NextRequest) {
   if (billingStatus) query = query.eq('billing_status', billingStatus)
 
   const { data, error } = await query
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) return safeDbError(error)
   return NextResponse.json(data)
 }
 
@@ -149,7 +150,7 @@ export async function POST(req: NextRequest) {
   if (gps_start_lng != null) insertData.gps_start_lng = gps_start_lng
 
   const { data, error } = await supabase.from('service_records').insert(insertData).select().single()
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) return safeDbError(error)
   return NextResponse.json(data, { status: 201 })
 }
 
@@ -203,7 +204,7 @@ export async function PATCH(req: NextRequest) {
       if (error.message.includes('gesperrt')) {
         return NextResponse.json({ error: 'Leistungsnachweis ist gesperrt' }, { status: 423 })
       }
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      return safeDbError(error)
     }
     return NextResponse.json(data)
   }
@@ -220,7 +221,7 @@ export async function PATCH(req: NextRequest) {
       .from('service_records')
       .update({ proof_status: 'ABGESCHLOSSEN', caregiver_confirmed_at: new Date().toISOString(), updated_at: new Date().toISOString() })
       .eq('id', id).eq('organization_id', organizationId).select().single()
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    if (error) return safeDbError(error)
     return NextResponse.json(data)
   }
 
@@ -232,7 +233,7 @@ export async function PATCH(req: NextRequest) {
       .from('service_records')
       .update({ proof_status: 'STORNIERT', billing_status: 'STORNIERT', updated_at: new Date().toISOString() })
       .eq('id', id).eq('organization_id', organizationId).select().single()
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    if (error) return safeDbError(error)
     return NextResponse.json(data)
   }
 
@@ -251,7 +252,7 @@ export async function PATCH(req: NextRequest) {
     if (error.message.includes('gesperrt')) {
       return NextResponse.json({ error: 'Leistungsnachweis ist gesperrt' }, { status: 423 })
     }
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return safeDbError(error)
   }
   return NextResponse.json(data)
 }

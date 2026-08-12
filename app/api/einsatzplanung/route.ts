@@ -58,7 +58,7 @@ export async function GET(req: NextRequest) {
 
   const { data, error } = await query.order('assignment_date').order('start_time')
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) return safeDbError(error)
   return NextResponse.json(data)
 }
 
@@ -121,7 +121,8 @@ export async function POST(req: NextRequest) {
     warnungen.push(`Einsatzfreigabe übersteuert: ${freigabe.probleme.join('; ')}`)
   }
 
-  const budgetCheck = await pruefeBudget(admin, client_id, organizationId)
+  const isVP = service_type === 'verhinderungspflege' || service_type === 'verhinderung'
+  const budgetCheck = await pruefeBudget(admin, client_id, organizationId, isVP ? 'verhinderungspflege' : undefined)
   if (budgetCheck.blockiert && !body.force_override) {
     return NextResponse.json({
       error: `Budget-Blockierung: ${budgetCheck.warnung}`,
@@ -129,6 +130,11 @@ export async function POST(req: NextRequest) {
     }, { status: 422 })
   }
   if (budgetCheck.warnung) warnungen.push(budgetCheck.warnung)
+
+  if (isVP) {
+    const vpCheck = await pruefeVPBudget(admin, client_id, organizationId)
+    if (vpCheck.vpKzpKombiniertWarnung) warnungen.push(vpCheck.vpKzpKombiniertWarnung)
+  }
 
   // Audit-Trail bei force_override
   if (body.force_override && warnungen.length > 0) {
@@ -177,7 +183,7 @@ export async function POST(req: NextRequest) {
     if (error.message.includes('DOPPELBELEGUNG')) {
       return NextResponse.json({ error: error.message }, { status: 409 })
     }
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return safeDbError(error)
   }
 
   return NextResponse.json({ ...data, warnungen: warnungen.length > 0 ? warnungen : undefined }, { status: 201 })
@@ -269,9 +275,9 @@ export async function PATCH(req: NextRequest) {
 
   if (error) {
     if (error.message.includes('DOPPELBELEGUNG')) {
-      return NextResponse.json({ error: error.message }, { status: 409 })
+      return NextResponse.json({ error: 'Zeitliche Doppelbelegung erkannt.' }, { status: 409 })
     }
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return safeDbError(error)
   }
 
   return NextResponse.json(data)

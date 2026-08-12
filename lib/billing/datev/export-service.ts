@@ -301,7 +301,7 @@ function generiereProtokoll(
     '  DATEV-Export Protokoll — Alltagsengel',
     '═══════════════════════════════════════════════════════════',
     '',
-    `Exportdatum:       ${new Date().toLocaleString('de-DE')}`,
+    `Exportdatum:       ${new Date().toLocaleString('de-DE', { timeZone: 'Europe/Berlin' })}`,
     `Zeitraum:          ${params.zeitraumVon} bis ${params.zeitraumBis}`,
     `Beraternummer:     ${config.beraternummer}`,
     `Mandantennummer:   ${config.mandantennummer}`,

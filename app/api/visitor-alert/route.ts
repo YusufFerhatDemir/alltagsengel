@@ -151,15 +151,17 @@ export async function POST(req: NextRequest) {
       })
     }
 
-    // Auch In-App Notification
+    // In-App Notification — nur Stamm-Org-Admins (Multi-Mandant-sicher)
+    const STAMM_ORG_ID = '00000000-0000-4000-8000-000460629986'
     const { data: admins } = await supabase
-      .from('profiles')
-      .select('id')
-      .in('role', ['admin', 'superadmin'])
+      .from('organization_members')
+      .select('user_id')
+      .eq('organization_id', STAMM_ORG_ID)
+      .in('role', ['admin', 'owner'])
 
     if (admins) {
       const notifs = admins.map(a => ({
-        user_id: a.id,
+        user_id: a.user_id,
         type: 'system',
         title: `🚨 Besucher-Alert: ${city || 'Unbekannt'}`,
         body: `${device} aus ${city || 'Unbekannt'}${postalCode ? ' (PLZ ' + postalCode + ')' : ''} — ${isp} — auf ${page || '/'}`,
