@@ -41,9 +41,11 @@ export {
 export {
   type PriceResolveParams,
   type BillingTarif,
+  type TarifStatus,
   type LineTotalParams,
   type LineTotalResult,
   type PriceSnapshot,
+  TarifNichtVerifiziertError,
   resolvePrice,
   calculateLineTotal,
   snapshotPrice,

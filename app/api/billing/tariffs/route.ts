@@ -21,6 +21,7 @@ export async function GET() {
       .from('billing_tariffs')
       .select('*')
       .eq('organization_id', orgId)
+      .eq('ist_aktiv', true)
       .is('deleted_at', null)
       .order('created_at', { ascending: false })
 
@@ -29,7 +30,16 @@ export async function GET() {
       return NextResponse.json({ error: 'Tarife konnten nicht geladen werden' }, { status: 500 })
     }
 
-    return NextResponse.json(tariffs)
+    const warnungen = (tariffs ?? [])
+      .filter((t: Record<string, unknown>) => t.tarif_status !== 'verified' && t.rechtsgrundlage !== 'privat')
+      .map((t: Record<string, unknown>) => {
+        if (t.tarif_status === 'blocked') {
+          return `Tarif "${t.leistungsart}" ist gesperrt: ${t.verifizierungs_quelle || 'kein Grund angegeben'}. Kassenabrechnung blockiert.`
+        }
+        return `Tarif "${t.leistungsart}" ist nicht verifiziert. Kassenabrechnung nicht moeglich.`
+      })
+
+    return NextResponse.json({ tariffs, warnungen })
   } catch (err) {
     console.error('Unerwarteter Fehler beim Laden der Tarife:', err)
     return NextResponse.json({ error: 'Interner Serverfehler' }, { status: 500 })
