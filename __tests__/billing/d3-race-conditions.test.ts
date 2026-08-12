@@ -165,7 +165,12 @@ describe('createCreditNote — CAS-Schutz gegen Doppel-Gutschrift', () => {
         }
         return chainable()
       }),
-      rpc: vi.fn().mockResolvedValue({ data: 'GS-2026-00006', error: null }),
+      rpc: vi.fn().mockImplementation((fnName: string) => {
+        if (fnName === 'create_credit_note_atomic') {
+          return Promise.resolve({ data: { original_amount_cents: 10000, remaining_cents: 10000, validated: true }, error: null })
+        }
+        return Promise.resolve({ data: 'GS-2026-00006', error: null })
+      }),
     }
 
     await expect(
@@ -188,6 +193,7 @@ describe('createCreditNote — CAS-Schutz gegen Doppel-Gutschrift', () => {
           error: null,
         }),
       })),
+      rpc: vi.fn().mockResolvedValue({ data: null, error: { message: 'Rechnung im Status storniert — Gutschrift nicht moeglich.' } }),
     }
 
     await expect(
@@ -210,6 +216,7 @@ describe('createCreditNote — CAS-Schutz gegen Doppel-Gutschrift', () => {
           error: null,
         }),
       })),
+      rpc: vi.fn().mockResolvedValue({ data: null, error: { message: 'Rechnung im Status abgeschrieben — Gutschrift nicht moeglich.' } }),
     }
 
     await expect(
@@ -238,6 +245,7 @@ describe('correctInvoice — Validierung', () => {
           error: null,
         }),
       })),
+      rpc: vi.fn().mockResolvedValue({ data: { status: 'freigegeben', validated: true }, error: null }),
     }
 
     await expect(
@@ -267,6 +275,7 @@ describe('correctInvoice — Validierung', () => {
           error: null,
         }),
       })),
+      rpc: vi.fn().mockResolvedValue({ data: { status: 'freigegeben', validated: true }, error: null }),
     }
 
     await expect(
@@ -299,6 +308,7 @@ describe('correctInvoice — Validierung', () => {
           error: null,
         }),
       })),
+      rpc: vi.fn().mockResolvedValue({ data: { status: 'freigegeben', validated: true }, error: null }),
     }
 
     await expect(

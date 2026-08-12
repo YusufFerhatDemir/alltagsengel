@@ -666,6 +666,18 @@ export async function correctInvoice(
   actorId: string,
   expectedOrgId?: string
 ): Promise<CorrectionResult> {
+  // D3: Atomare Validierung per RPC — sperrt die Originalrechnung mit FOR UPDATE,
+  // sodass parallele Korrektur-/Storno-Operationen serialisiert werden.
+  if (expectedOrgId) {
+    const { error: rpcError } = await supabase.rpc('validate_correction_atomic', {
+      p_invoice_id: invoiceId,
+      p_org_id: expectedOrgId,
+    });
+    if (rpcError) {
+      throw new Error(rpcError.message);
+    }
+  }
+
   // Original laden
   const { data: original, error: origError } = await supabase
     .from('invoices')
@@ -906,6 +918,26 @@ export async function createCreditNote(
 ): Promise<CreditNoteResult> {
   if (amountCents <= 0) {
     throw new Error('Gutschriftbetrag muss positiv sein.');
+  }
+
+  // D3: Atomare Validierung per RPC — sperrt Rechnung + bestehende Gutschriften
+  // mit FOR UPDATE, sodass parallele Gutschriften serialisiert werden.
+  if (expectedOrgId) {
+    const { data: rpcResult, error: rpcError } = await supabase.rpc('create_credit_note_atomic', {
+      p_invoice_id: invoiceId,
+      p_amount_cents: amountCents,
+      p_reason: reason,
+      p_actor_id: actorId,
+      p_org_id: expectedOrgId,
+    });
+    if (rpcError) {
+      throw new Error(rpcError.message);
+    }
+    // RPC hat atomar validiert — proceed with insert
+    const validated = rpcResult as { original_amount_cents: number; remaining_cents: number; validated: boolean };
+    if (!validated?.validated) {
+      throw new Error('Atomare Gutschrift-Validierung fehlgeschlagen.');
+    }
   }
 
   // Original laden

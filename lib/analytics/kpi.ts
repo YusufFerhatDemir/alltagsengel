@@ -6,6 +6,7 @@
 // damit sie ohne Supabase-Verbindung testbar sind.
 // ═══════════════════════════════════════════════════════════════
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { berlinParts } from '@/lib/utils/timezone'
 
 export interface KpiZeitraum {
   von: string // ISO-Datum YYYY-MM-DD, inklusive
@@ -143,16 +144,16 @@ export async function ladeKpiDashboard(
 // ── Zeitraum-Hilfsfunktionen ─────────────────────────────────────
 
 export function standardZeitraumAktuellerMonat(heute: Date = new Date()): KpiZeitraum {
-  const von = new Date(heute.getFullYear(), heute.getMonth(), 1)
-  const bis = new Date(heute.getFullYear(), heute.getMonth() + 1, 0)
-  return { von: isoDatum(von), bis: isoDatum(bis) }
+  const p = berlinParts(heute)
+  const year = Number(p.year)
+  const month = Number(p.month)
+  const von = `${p.year}-${p.month}-01`
+  const letzterTag = new Date(year, month, 0).getDate()
+  const bis = `${p.year}-${p.month}-${String(letzterTag).padStart(2, '0')}`
+  return { von, bis }
 }
 
 function isoDatum(d: Date): string {
-  // Lokale Datumsteile statt toISOString() — toISOString() rechnet auf UTC
-  // um und würde in Zeitzonen westlich von UTC einen Tag zurückspringen.
-  const jahr = d.getFullYear()
-  const monat = String(d.getMonth() + 1).padStart(2, '0')
-  const tag = String(d.getDate()).padStart(2, '0')
-  return `${jahr}-${monat}-${tag}`
+  const p = berlinParts(d)
+  return `${p.year}-${p.month}-${p.day}`
 }

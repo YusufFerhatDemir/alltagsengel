@@ -152,6 +152,47 @@ SELECT _tmp_fk_cascade_to_restrict(
 
 
 -- ═══════════════════════════════════════════════════════════════════════════
+-- Pflegenotizen (20260719_eylem_audit_complete_features) — Gegenprüfung D4
+-- ═══════════════════════════════════════════════════════════════════════════
+
+SELECT _tmp_fk_cascade_to_restrict(
+  'care_notes', 'client_id', 'clients(id)',
+  'care_notes_client_id_restrict_fkey'
+);
+
+
+-- ═══════════════════════════════════════════════════════════════════════════
+-- Verordnungen (20260719_eylem_audit_complete_features) — Gegenprüfung D4
+-- § 630f BGB Aufbewahrungspflicht: ärztliche Verordnungen 10 Jahre
+-- ═══════════════════════════════════════════════════════════════════════════
+
+SELECT _tmp_fk_cascade_to_restrict(
+  'verordnungen', 'client_id', 'clients(id)',
+  'verordnungen_client_id_restrict_fkey'
+);
+
+
+-- ═══════════════════════════════════════════════════════════════════════════
+-- Monatsabschlüsse (20260706_monatsabschluss) — Abrechnungs-Audit-Trail
+-- ═══════════════════════════════════════════════════════════════════════════
+
+SELECT _tmp_fk_cascade_to_restrict(
+  'monthly_closings', 'client_id', 'clients(id)',
+  'monthly_closings_client_id_restrict_fkey'
+);
+
+
+-- ═══════════════════════════════════════════════════════════════════════════
+-- Budget-Reservierungen (20260808200000) — finanziell relevant
+-- ═══════════════════════════════════════════════════════════════════════════
+
+SELECT _tmp_fk_cascade_to_restrict(
+  'budget_reservations', 'client_id', 'clients(id)',
+  'budget_reservations_client_id_restrict_fkey'
+);
+
+
+-- ═══════════════════════════════════════════════════════════════════════════
 -- Hilfsfunktion aufräumen
 -- ═══════════════════════════════════════════════════════════════════════════
 

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
+import { logBillingAction } from '@/lib/billing/core/audit'
 import {
   findeVertretungsKandidaten,
   pruefeCaregiverVerfuegbarkeit,
@@ -108,6 +109,24 @@ export async function POST(
   }
   if (befund.abwesend) warnungen.push(`Abwesenheit der Vertretung übersteuert: ${befund.abwesenheitsGrund}.`)
   if (befund.ausserhalbZeitfenster) warnungen.push('Tour liegt außerhalb der Verfügbarkeits-Zeitfenster der Vertretung.')
+
+  if (force_override && warnungen.length > 0) {
+    await logBillingAction(admin, {
+      entityType: 'invoice',
+      organizationId: auth.ctx.organizationId,
+      entityId: `tour-vertretung-override-${id}`,
+      action: 'force_override',
+      newState: {
+        tour_id: id,
+        neuer_caregiver_id,
+        grund,
+        overridden_checks: warnungen,
+      },
+      reason: grund,
+      actorId: auth.ctx.userId,
+      actorRole: 'admin',
+    })
+  }
 
   // Verknüpfte Assignments umhängen — der Doppelbelegungs-Trigger
   // meldet Terminkonflikte der Vertretung (409)

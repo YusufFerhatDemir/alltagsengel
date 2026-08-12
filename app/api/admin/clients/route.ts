@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getActiveOrgId } from '@/lib/organizations/server'
 import { logAuditEvent } from '@/lib/audit-log'
+import { berlinParts } from '@/lib/utils/timezone'
 
 async function requireAdmin() {
   const supabase = await createClient()
@@ -22,11 +23,10 @@ async function requireAdmin() {
 }
 
 function generateCustomerNumber(): string {
-  const now = new Date()
-  const yy = String(now.getFullYear()).slice(-2)
-  const mm = String(now.getMonth() + 1).padStart(2, '0')
+  const p = berlinParts(new Date())
+  const yy = p.year.slice(-2)
   const rand = String(Math.floor(1000 + Math.random() * 9000))
-  return `KD-${yy}${mm}-${rand}`
+  return `KD-${yy}${p.month}-${rand}`
 }
 
 export async function POST(req: Request) {

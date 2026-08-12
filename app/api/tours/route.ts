@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { datumBerlin } from '@/lib/utils/timezone'
+import { logBillingAction } from '@/lib/billing/core/audit'
 import {
   aufloeseStops,
   reichereFahrtzeitenAn,
@@ -224,6 +225,25 @@ export async function POST(req: NextRequest) {
     // Tour ohne Stops wieder entfernen, damit kein leerer Torso bleibt
     await admin.from('tours').delete().eq('id', tour.id)
     return NextResponse.json({ error: uebersetzeDbFehler(stopsError) }, { status: 500 })
+  }
+
+  // D1-Fix: Audit-Trail bei force_override
+  if (force_override && warnungen.length > 0) {
+    await logBillingAction(admin, {
+      entityType: 'invoice',
+      organizationId: auth.ctx.organizationId,
+      entityId: `tour-override-${tour.id}`,
+      action: 'force_override',
+      newState: {
+        tour_id: tour.id,
+        caregiver_id,
+        tour_date,
+        overridden_checks: warnungen,
+      },
+      reason: body.grund || body.override_reason || 'Keine Begruendung angegeben',
+      actorId: auth.ctx.userId,
+      actorRole: 'admin',
+    })
   }
 
   const { data: komplett } = await admin

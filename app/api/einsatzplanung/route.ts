@@ -226,6 +226,36 @@ export async function PATCH(req: NextRequest) {
     }
   }
 
+  // D1-Fix: Audit-Trail bei force_override im PATCH
+  if (force_override && organizationId) {
+    const admin = createAdminClient()
+    const warnungen: string[] = []
+    if (updates.caregiver_id) {
+      const freigabe = await pruefeEinsatzfreigabe(admin, updates.caregiver_id, organizationId)
+      if (!freigabe.freigegeben) warnungen.push(`Einsatzfreigabe übersteuert: ${freigabe.probleme.join('; ')}`)
+    }
+    if (updates.client_id) {
+      const clientCheck = await pruefeClientFreigabe(admin, updates.client_id, organizationId, updates.assignment_date)
+      if (!clientCheck.freigegeben) warnungen.push(`Client-Freigabe übersteuert: ${clientCheck.probleme.join('; ')}`)
+    }
+    if (warnungen.length > 0) {
+      await logBillingAction(admin, {
+        entityType: 'invoice',
+        organizationId,
+        entityId: `assignment-override-patch-${id}`,
+        action: 'force_override',
+        newState: {
+          assignment_id: id,
+          updates: Object.keys(updates),
+          overridden_checks: warnungen,
+        },
+        reason: body.override_reason || 'Keine Begruendung angegeben',
+        actorId: auth.userId,
+        actorRole: auth.role,
+      })
+    }
+  }
+
   const { organization_id: _oid, id: _uid, created_at: _ca, created_by: _cb, ...safeUpdates } = updates
   const updatePayload = { ...safeUpdates, updated_at: new Date().toISOString() }
   delete updatePayload.force_override
