@@ -20,9 +20,9 @@ describe('D2: Budget-Konstanten (gesetzliche Werte)', () => {
     const mod = await import('../../lib/config/budget-constants')
     expect(mod.ENTLASTUNG_MONATLICH_EUR).toBe(131)
     expect(mod.ENTLASTUNG_JAEHRLICH_EUR).toBe(1572)
-    expect(mod.VP_JAEHRLICH_EUR).toBe(1612)
-    expect(mod.KZP_JAEHRLICH_EUR).toBe(1774)
-    expect(mod.VP_KZP_KOMBINIERT_EUR).toBe(3386)
+    expect(mod.VP_JAEHRLICH_EUR).toBe(1685)
+    expect(mod.KZP_JAEHRLICH_EUR).toBe(1854)
+    expect(mod.VP_KZP_KOMBINIERT_EUR).toBe(3539)
   })
 
   it('VP + KZP = Kombinations-Budget', async () => {
@@ -61,8 +61,8 @@ describe('D2: VP-Budget Migration', () => {
     expect(sql).toContain('client_id, year, budget_type')
   })
 
-  it('korrigiert combined_annual_amount-Default auf 3386', () => {
-    expect(sql).toContain('3386')
+  it('korrigiert combined_annual_amount-Default auf 3539', () => {
+    expect(sql).toContain('3539')
   })
 
   it('ist idempotent (IF NOT EXISTS)', () => {
@@ -121,8 +121,8 @@ describe('D2: Keine Magic Numbers', () => {
     const src = read('lib/personal/einsatzfreigabe.ts')
     const pruefeBudgetSection = src.slice(src.indexOf('async function pruefeBudget'))
     expect(pruefeBudgetSection).not.toContain('1572')
-    expect(pruefeBudgetSection).not.toContain('1612')
-    expect(pruefeBudgetSection).not.toContain('3386')
+    expect(pruefeBudgetSection).not.toContain('1685')
+    expect(pruefeBudgetSection).not.toContain('3539')
   })
 
   it('Budget-Konstanten kommen aus config-Modul', () => {
