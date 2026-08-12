@@ -4,6 +4,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { getActiveOrgId } from '@/lib/organizations/server'
 import { logAuditEvent } from '@/lib/audit-log'
 import { berlinParts } from '@/lib/utils/timezone'
+import { erstelleInitialBudgets } from '@/lib/budget/auto-budget'
 
 async function requireAdmin() {
   const supabase = await createClient()
@@ -105,6 +106,11 @@ export async function POST(req: Request) {
       details: { customer_number: client.customer_number, name: `${client.first_name} ${client.last_name}` },
       request: req,
     })
+
+    const careLevel = client.care_level ?? client.pflegegrad ?? 0
+    if (careLevel >= 1) {
+      await erstelleInitialBudgets(admin, client.id, auth.organizationId, careLevel)
+    }
 
     return NextResponse.json({ client }, { status: 201 })
   } catch (err) {
