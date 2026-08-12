@@ -1,11 +1,15 @@
 import { NextResponse } from 'next/server'
 import { requireCoachUser } from '@/lib/coach/api-auth'
+import { dipaModus } from '@/lib/coach/config'
 import { pruefeAnspruch, type NutzungDurch } from '@/lib/coach/anspruch'
 
 const NUTZUNG_DURCH: NutzungDurch[] = ['pflegebeduerftig', 'angehoerig', 'gemeinsam']
 
 /** Bisherige Anspruchsprüfungen des Nutzers (neueste zuerst). */
 export async function GET() {
+  if (!dipaModus()) {
+    return NextResponse.json({ error: 'Anspruchsprüfung ist nur im DiPA-Modus verfügbar.' }, { status: 404 })
+  }
   const auth = await requireCoachUser()
   if (!auth.ok) return auth.response
 
@@ -26,6 +30,9 @@ export async function GET() {
  * Ergebnis und gespeicherte Kriterien-Version immer zusammenpassen.
  */
 export async function POST(request: Request) {
+  if (!dipaModus()) {
+    return NextResponse.json({ error: 'Anspruchsprüfung ist nur im DiPA-Modus verfügbar.' }, { status: 404 })
+  }
   const auth = await requireCoachUser()
   if (!auth.ok) return auth.response
 

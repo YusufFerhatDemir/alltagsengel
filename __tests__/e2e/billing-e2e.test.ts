@@ -165,24 +165,35 @@ function createCarryoverMock(opts: {
   const updateErr = opts.updateError ?? null;
   const insertErr = opts.insertError ?? null;
 
+  let selectCallCount = 0;
+
   return {
     client: {
       from: (table: string) => {
         if (table !== 'client_budgets') return {} as any;
         return {
-          select: (..._args: any[]) => ({
-            eq: (_k1: string, _v1: any) => ({
-              eq: (_k2: string, _v2: any) => ({
-                eq: (_k3: string, _v3: any) => {
-                  if (_k3 === 'budget_type') {
-                    return thenable({ data: opts.alteBudgets, error: null });
-                  }
-                  return thenable({ data: opts.alteBudgets, error: null });
-                },
-                maybeSingle: () => thenable({ data: existTarget, error: null }),
+          select: (..._args: any[]) => {
+            selectCallCount++;
+            const currentCall = selectCallCount;
+            // First select: fetch old budgets (3 .eq() calls)
+            // Subsequent selects: lookup target budget (4 .eq() + .maybeSingle())
+            return {
+              eq: (_k1: string, _v1: any) => ({
+                eq: (_k2: string, _v2: any) => ({
+                  eq: (_k3: string, _v3: any) => {
+                    if (currentCall === 1) {
+                      return thenable({ data: opts.alteBudgets, error: null });
+                    }
+                    return {
+                      eq: (_k4: string, _v4: any) => ({
+                        maybeSingle: () => thenable({ data: existTarget, error: null }),
+                      }),
+                    };
+                  },
+                }),
               }),
-            }),
-          }),
+            };
+          },
           update: (data: Record<string, unknown>) => ({
             eq: (_k: string, v: string) => {
               updated.push({ id: v, data });
@@ -221,9 +232,10 @@ function createPriceResolveMock(tarife: BillingTarif[]) {
 // ═══════════════════════════════════════════════════════════════════════════
 
 describe('Szenario 1: Neuer §45b-Kunde → Auto-Budget', () => {
-  it('erstellt Entlastungs- und VP-Budget bei Pflegegrad >= 1', async () => {
+  it('erstellt Entlastungs- und VP-Budget bei Pflegegrad >= 2 (Jahresbeginn)', async () => {
     const mock = createBudgetMock();
-    const result = await erstelleInitialBudgets(mock.client, CLIENT_1, ORG_A, 2);
+    // pgBeginnMonat=1 → voller Jahresbetrag (12 Monate * 131 = 1572)
+    const result = await erstelleInitialBudgets(mock.client, CLIENT_1, ORG_A, 2, 1);
 
     expect(result.erstellt).toBe(true);
     expect(mock.inserted).toHaveLength(1);
@@ -233,8 +245,8 @@ describe('Szenario 1: Neuer §45b-Kunde → Auto-Budget', () => {
 
     const entlastung = budgets.find((b: any) => b.budget_type === 'entlastung') as any;
     expect(entlastung).toBeTruthy();
-    expect(entlastung.annual_amount).toBe(ENTLASTUNG_JAEHRLICH_EUR);
-    expect(entlastung.monthly_amount).toBe(ENTLASTUNG_JAEHRLICH_EUR / 12);
+    expect(entlastung.annual_amount).toBe(ENTLASTUNG_JAEHRLICH_EUR); // 12 * 131
+    expect(entlastung.monthly_amount).toBe(ENTLASTUNG_MONATLICH_EUR);
     expect(entlastung.used_amount).toBe(0);
     expect(entlastung.carryover_amount).toBe(0);
     expect(entlastung.organization_id).toBe(ORG_A);
@@ -243,6 +255,24 @@ describe('Szenario 1: Neuer §45b-Kunde → Auto-Budget', () => {
     expect(vp).toBeTruthy();
     expect(vp.annual_amount).toBe(VP_KZP_KOMBINIERT_EUR);
     expect(vp.combined_annual_amount).toBe(VP_KZP_KOMBINIERT_EUR);
+  });
+
+  it('PG 1 erhaelt nur Entlastung, kein VP/KZP (minPflegegrad = 2)', async () => {
+    const mock = createBudgetMock();
+    const result = await erstelleInitialBudgets(mock.client, CLIENT_1, ORG_A, 1, 1);
+
+    expect(result.erstellt).toBe(true);
+    expect(mock.inserted[0]).toHaveLength(1);
+    expect((mock.inserted[0][0] as any).budget_type).toBe('entlastung');
+  });
+
+  it('anteiliges Budget bei unterjährigem PG-Beginn (Monat 7 → 6 Monate)', async () => {
+    const mock = createBudgetMock();
+    await erstelleInitialBudgets(mock.client, CLIENT_1, ORG_A, 2, 7);
+
+    const entlastung = mock.inserted[0].find((b: any) => b.budget_type === 'entlastung') as any;
+    expect(entlastung.annual_amount).toBe(6 * ENTLASTUNG_MONATLICH_EUR); // 786
+    expect(entlastung.monthly_amount).toBe(ENTLASTUNG_MONATLICH_EUR);
   });
 
   it('verweigert Budget bei Pflegegrad 0', async () => {
@@ -256,7 +286,7 @@ describe('Szenario 1: Neuer §45b-Kunde → Auto-Budget', () => {
 
   it('ist idempotent bei bereits existierenden Budgets', async () => {
     const mock = createBudgetMock({ existingTypes: ['entlastung', 'verhinderungspflege'] });
-    const result = await erstelleInitialBudgets(mock.client, CLIENT_1, ORG_A, 3);
+    const result = await erstelleInitialBudgets(mock.client, CLIENT_1, ORG_A, 3, 1);
 
     expect(result.erstellt).toBe(false);
     expect(mock.inserted).toHaveLength(0);
@@ -264,7 +294,7 @@ describe('Szenario 1: Neuer §45b-Kunde → Auto-Budget', () => {
 
   it('legt fehlende Budgets nach (nur VP fehlt)', async () => {
     const mock = createBudgetMock({ existingTypes: ['entlastung'] });
-    const result = await erstelleInitialBudgets(mock.client, CLIENT_1, ORG_A, 2);
+    const result = await erstelleInitialBudgets(mock.client, CLIENT_1, ORG_A, 2, 1);
 
     expect(result.erstellt).toBe(true);
     expect(mock.inserted[0]).toHaveLength(1);
@@ -273,7 +303,7 @@ describe('Szenario 1: Neuer §45b-Kunde → Auto-Budget', () => {
 
   it('meldet DB-Fehler korrekt zurueck', async () => {
     const mock = createBudgetMock({ insertError: { message: 'unique_violation' } });
-    const result = await erstelleInitialBudgets(mock.client, CLIENT_1, ORG_A, 1);
+    const result = await erstelleInitialBudgets(mock.client, CLIENT_1, ORG_A, 1, 1);
 
     expect(result.erstellt).toBe(false);
     expect(result.fehler).toBe('unique_violation');
@@ -648,27 +678,33 @@ describe('Szenario 8: VP/KZP kombiniertes Budget', () => {
     expect(VP_JAEHRLICH_EUR + KZP_JAEHRLICH_EUR).toBe(VP_KZP_KOMBINIERT_EUR);
   });
 
-  it('Auto-Budget erstellt VP als combined Budget', async () => {
+  it('Auto-Budget erstellt VP als combined Budget (ab PG 2)', async () => {
     const mock = createBudgetMock();
-    await erstelleInitialBudgets(mock.client, CLIENT_1, ORG_A, 3);
+    await erstelleInitialBudgets(mock.client, CLIENT_1, ORG_A, 3, 1);
 
     const vp = mock.inserted[0].find((b: any) => b.budget_type === 'verhinderungspflege') as any;
     expect(vp.annual_amount).toBe(VP_KZP_KOMBINIERT_EUR);
     expect(vp.combined_annual_amount).toBe(VP_KZP_KOMBINIERT_EUR);
-    expect(vp.monthly_amount).toBe(0); // VP hat kein monatliches Limit
+    expect(vp.monthly_amount).toBe(0);
   });
 
-  it('Alle Pflegegrade 1-5 erhalten das gleiche Budget', async () => {
-    for (const pg of [1, 2, 3, 4, 5]) {
-      const mock = createBudgetMock();
-      await erstelleInitialBudgets(mock.client, CLIENT_1, ORG_A, pg);
+  it('PG 1 erhaelt nur Entlastung, PG 2+ erhaelt auch VP', async () => {
+    const mockPg1 = createBudgetMock();
+    await erstelleInitialBudgets(mockPg1.client, CLIENT_1, ORG_A, 1, 1);
+    expect(mockPg1.inserted[0]).toHaveLength(1);
+    expect((mockPg1.inserted[0][0] as any).budget_type).toBe('entlastung');
 
-      const entlastung = mock.inserted[0].find((b: any) => b.budget_type === 'entlastung') as any;
-      expect(entlastung.annual_amount).toBe(ENTLASTUNG_JAEHRLICH_EUR);
+    const mockPg2 = createBudgetMock();
+    await erstelleInitialBudgets(mockPg2.client, CLIENT_2, ORG_A, 2, 1);
+    expect(mockPg2.inserted[0]).toHaveLength(2);
 
-      const vp = mock.inserted[0].find((b: any) => b.budget_type === 'verhinderungspflege') as any;
-      expect(vp.annual_amount).toBe(VP_KZP_KOMBINIERT_EUR);
-    }
+    const entlPg1 = mockPg1.inserted[0].find((b: any) => b.budget_type === 'entlastung') as any;
+    const entlPg2 = mockPg2.inserted[0].find((b: any) => b.budget_type === 'entlastung') as any;
+    expect(entlPg1.annual_amount).toBe(entlPg2.annual_amount);
+    expect(entlPg1.annual_amount).toBe(ENTLASTUNG_JAEHRLICH_EUR);
+
+    const vpPg2 = mockPg2.inserted[0].find((b: any) => b.budget_type === 'verhinderungspflege') as any;
+    expect(vpPg2.annual_amount).toBe(VP_KZP_KOMBINIERT_EUR);
   });
 });
 
@@ -1097,7 +1133,7 @@ describe('Grenzfaelle', () => {
 
   it('Pflegegrad -1 wird abgelehnt', async () => {
     const mock = createBudgetMock();
-    const result = await erstelleInitialBudgets(mock.client, CLIENT_1, ORG_A, -1);
+    const result = await erstelleInitialBudgets(mock.client, CLIENT_1, ORG_A, -1, 1);
     expect(result.erstellt).toBe(false);
   });
 
