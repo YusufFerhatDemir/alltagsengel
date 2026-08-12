@@ -135,7 +135,7 @@ export default function BewertungPage() {
             border: '1px solid rgba(201,150,60,0.12)',
           }}>
             <div style={{ fontSize: '13px', color: 'rgba(245,240,232,0.4)', marginBottom: '8px' }}>
-              {ride?.datum ? new Date(ride.datum).toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long' }) : ''} · {ride?.uhrzeit?.slice(0, 5)}
+              {ride?.datum ? new Date(ride.datum).toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin', weekday: 'long', day: 'numeric', month: 'long' }) : ''} · {ride?.uhrzeit?.slice(0, 5)}
             </div>
             <div style={{ fontSize: '14px', color: '#F5F0E8', marginBottom: '4px' }}>
               📍 {ride?.abholadresse}

@@ -1,4 +1,5 @@
 'use client'
+import { heuteBerlin } from '@/lib/utils/timezone';
 // ═══════════════════════════════════════════════════════════════
 // Ergänzende Unterstützungsleistungen (eUL) — Block 15d
 //
@@ -71,7 +72,7 @@ function NachweiseTab({ onError }: { onError: (m: string) => void }) {
   const [busy, setBusy] = useState(false)
 
   const [leistungsart, setLeistungsart] = useState<EulLeistungsart>('einweisung')
-  const [datum, setDatum] = useState(new Date().toISOString().slice(0, 10))
+  const [datum, setDatum] = useState(heuteBerlin())
   const [dauer, setDauer] = useState('60')
   const [form, setForm] = useState<string>('persoenlich_vor_ort')
   const [inhalt, setInhalt] = useState('')

@@ -1,4 +1,5 @@
 'use client'
+import { datumBerlin } from '@/lib/utils/timezone';
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import {
@@ -36,11 +37,11 @@ interface Pruefmappe {
 
 function aktuellerMonatVon(): string {
   const d = new Date()
-  return new Date(d.getFullYear(), d.getMonth(), 1).toISOString().slice(0, 10)
+  return datumBerlin(new Date(d.getFullYear(), d.getMonth(), 1))
 }
 function aktuellerMonatBis(): string {
   const d = new Date()
-  return new Date(d.getFullYear(), d.getMonth() + 1, 0).toISOString().slice(0, 10)
+  return datumBerlin(new Date(d.getFullYear(), d.getMonth() + 1, 0))
 }
 
 const PRUEFMAPPE_STATUS_META: Record<string, { label: string; color: string }> = {

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { requireCoachUser } from '@/lib/coach/api-auth'
 import type { ErledigungStatus } from '@/lib/coach/types'
+import { datumBerlin, heuteBerlin } from '@/lib/utils/timezone';
 
 const STATUS: ErledigungStatus[] = ['erledigt', 'teilweise', 'ausgelassen']
 
@@ -12,7 +13,7 @@ export async function GET(request: Request) {
   const vonParam = new URL(request.url).searchParams.get('von')
   const von = vonParam && /^\d{4}-\d{2}-\d{2}$/.test(vonParam)
     ? vonParam
-    : new Date(Date.now() - 28 * 24 * 3600 * 1000).toISOString().slice(0, 10)
+    : datumBerlin(new Date(Date.now() - 28 * 24 * 3600 * 1000))
 
   const { data, error } = await auth.supabase
     .from('coach_activity_log')
@@ -37,7 +38,7 @@ export async function POST(request: Request) {
   const status: ErledigungStatus = STATUS.includes(body.status) ? body.status : 'erledigt'
   const datum = typeof body.datum === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(body.datum)
     ? body.datum
-    : new Date().toISOString().slice(0, 10)
+    : heuteBerlin()
 
   const { data, error } = await auth.supabase
     .from('coach_activity_log')

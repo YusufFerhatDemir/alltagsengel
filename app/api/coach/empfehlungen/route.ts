@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { requireCoachUser } from '@/lib/coach/api-auth'
 import { berechneEmpfehlungen, EMPFEHLUNG_DISCLAIMER } from '@/lib/coach/empfehlungen'
+import { datumBerlin, heuteBerlin } from '@/lib/utils/timezone';
 
 /**
  * Regelbasierte, ORGANISATORISCHE Anpassungs-Hinweise (kein Medizinprodukt-
@@ -11,8 +12,8 @@ export async function GET() {
   const auth = await requireCoachUser()
   if (!auth.ok) return auth.response
 
-  const heute = new Date().toISOString().slice(0, 10)
-  const vor14Tagen = new Date(Date.now() - 14 * 24 * 3600 * 1000).toISOString().slice(0, 10)
+  const heute = heuteBerlin()
+  const vor14Tagen = datumBerlin(new Date(Date.now() - 14 * 24 * 3600 * 1000))
 
   const [goals, activities, log, assessments, messungen] = await Promise.all([
     auth.supabase.from('coach_goals').select('*').eq('coach_user_id', auth.coachUser.id),

@@ -66,7 +66,7 @@ function dateFmt(d: string | null | undefined): string {
   if (!d) return '—'
   const dt = new Date(d)
   if (isNaN(dt.getTime())) return '—'
-  return dt.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })
+  return dt.toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin', day: '2-digit', month: '2-digit', year: 'numeric' })
 }
 
 function timeFmt(t: string | null | undefined): string {
@@ -154,7 +154,7 @@ export async function GET(request: Request) {
     const lastDay = new Date(year, monthNum, 0).getDate()
     const periodEnd = `${month}-${String(lastDay).padStart(2, '0')}`
     const periodLabel = txt(new Date(year, monthNum - 1, 1)
-      .toLocaleDateString('de-DE', { month: 'long', year: 'numeric' }))
+      .toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin', month: 'long', year: 'numeric' }))
 
     // ── Einsätze des Monats (erfasst/unterschrieben/abgerechnet) ──
     const baseQuery = admin

@@ -1,4 +1,5 @@
 'use client'
+import { datumBerlin } from '@/lib/utils/timezone';
 import { Suspense, useCallback, useEffect, useMemo, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import {
@@ -159,7 +160,7 @@ function LeistungsnachweisDigitalInner() {
         const d = new Date(start)
         d.setMonth(d.getMonth() + 1)
         d.setDate(0)
-        const end = d.toISOString().slice(0, 10)
+        const end = datumBerlin(d)
         query = query.gte('date', start).lte('date', end)
       }
       if (filterClient) query = query.eq('client_id', filterClient)

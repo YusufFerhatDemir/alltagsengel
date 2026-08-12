@@ -88,9 +88,9 @@ export default function BerichtSeite() {
                   onClick={() => setOffen(b)}
                   aria-pressed={offen?.id === b.id}
                 >
-                  Bericht vom {new Date(b.erstellt_am).toLocaleDateString('de-DE')}
+                  Bericht vom {new Date(b.erstellt_am).toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin' })}
                   {b.zeitraum_von && b.zeitraum_bis
-                    ? ` (${new Date(b.zeitraum_von + 'T00:00:00').toLocaleDateString('de-DE')} – ${new Date(b.zeitraum_bis + 'T00:00:00').toLocaleDateString('de-DE')})`
+                    ? ` (${new Date(b.zeitraum_von + 'T00:00:00').toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin' })} – ${new Date(b.zeitraum_bis + 'T00:00:00').toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin' })})`
                     : ''}
                 </button>
               </li>
@@ -105,9 +105,9 @@ export default function BerichtSeite() {
             Verlaufsbericht — Digitaler PflegeCoach
           </h2>
           <p>
-            Zeitraum: {inhalt.zeitraum ? `${new Date(inhalt.zeitraum.von + 'T00:00:00').toLocaleDateString('de-DE')} bis ${new Date(inhalt.zeitraum.bis + 'T00:00:00').toLocaleDateString('de-DE')}` : '—'}
+            Zeitraum: {inhalt.zeitraum ? `${new Date(inhalt.zeitraum.von + 'T00:00:00').toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin' })} bis ${new Date(inhalt.zeitraum.bis + 'T00:00:00').toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin' })}` : '—'}
             <br />
-            Erstellt am: {new Date(offen.erstellt_am).toLocaleDateString('de-DE')}
+            Erstellt am: {new Date(offen.erstellt_am).toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin' })}
           </p>
 
           <h3>Selbsteinschätzungen (0 = selbständig … 4 = umfassende Unterstützung)</h3>
@@ -161,7 +161,7 @@ export default function BerichtSeite() {
           <ul style={{ paddingLeft: 20 }}>
             {inhalt.messungen?.map((m, i) => (
               <li key={i}>
-                {new Date(m.erhoben_am).toLocaleDateString('de-DE')} — {m.instrument}: {m.summenwert ?? '—'}
+                {new Date(m.erhoben_am).toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin' })} — {m.instrument}: {m.summenwert ?? '—'}
               </li>
             ))}
           </ul>

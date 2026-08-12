@@ -20,6 +20,7 @@ import { ladeFormatVersionen, loeseVersionAuf } from './versionen'
 import { ladeKarten, istEinsatzbereit } from './karten'
 import { ladeNachrichten } from './nachrichten'
 import { kimVersandImplementiert } from './versand'
+import { heuteBerlin } from '@/lib/utils/timezone';
 
 export type Ampel = 'gruen' | 'gelb' | 'rot'
 export type BlockerArt = 'intern' | 'extern' | null
@@ -58,7 +59,7 @@ function punkt(
 export async function ermittleKimReadiness(
   supabase: SupabaseClient,
   organizationId: string,
-  stichtag: string = new Date().toISOString().slice(0, 10)
+  stichtag: string = heuteBerlin()
 ): Promise<KimReadinessErgebnis> {
   const punkte: KimReadinessPunkt[] = []
 

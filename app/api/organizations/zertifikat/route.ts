@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOrgRole } from '@/lib/organizations/server'
 import { pruefeZertifikat, ZERTIFIKAT_BUCKET } from '@/lib/abrechnung/zertifikate'
+import { datumBerlin } from '@/lib/utils/timezone';
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -81,7 +82,7 @@ export async function POST(req: NextRequest) {
       ik_nummer: org.ik_nummer || pruefung.ik_nummer,
       typ: 'absender',
       zertifikat_url: pfad,
-      gueltig_bis: pruefung.ablauf.toISOString().slice(0, 10),
+      gueltig_bis: pruefung.datumBerlin(ablauf),
       fingerprint: pruefung.fingerprint,
       organization_id: organizationId,
     }

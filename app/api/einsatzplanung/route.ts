@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getActiveOrgId } from '@/lib/organizations/server'
 import { pruefeEinsatzfreigabe, pruefeClientFreigabe, pruefeBudget } from '@/lib/personal/einsatzfreigabe'
+import { logBillingAction } from '@/lib/billing/core/audit'
 
 async function requireStaff(supabase: Awaited<ReturnType<typeof createClient>>) {
   const { data: { user } } = await supabase.auth.getUser()
@@ -84,6 +85,14 @@ export async function POST(req: NextRequest) {
 
   const admin = createAdminClient()
 
+  // D1: force_override nur fuer admin/superadmin
+  if (body.force_override && !['admin', 'superadmin'].includes(auth.role)) {
+    return NextResponse.json(
+      { error: 'force_override ist nur fuer Administratoren erlaubt.' },
+      { status: 403 }
+    )
+  }
+
   const clientCheck = await pruefeClientFreigabe(admin, client_id, organizationId, assignment_date)
   if (!clientCheck.freigegeben && !body.force_override) {
     return NextResponse.json({
@@ -119,6 +128,26 @@ export async function POST(req: NextRequest) {
     }, { status: 422 })
   }
   if (budgetCheck.warnung) warnungen.push(budgetCheck.warnung)
+
+  // Audit-Trail bei force_override
+  if (body.force_override && warnungen.length > 0) {
+    await logBillingAction(admin, {
+      entityType: 'invoice',
+      organizationId,
+      entityId: `assignment-override-${client_id}-${caregiver_id}`,
+      action: 'force_override',
+      newState: {
+        client_id,
+        caregiver_id,
+        assignment_date,
+        service_type,
+        overridden_checks: warnungen,
+      },
+      reason: body.override_reason || 'Keine Begruendung angegeben',
+      actorId: auth.userId,
+      actorRole: auth.role,
+    })
+  }
 
   const insertData: Record<string, unknown> = {
     client_id,
@@ -162,6 +191,14 @@ export async function PATCH(req: NextRequest) {
   const { id, force_override, ...updates } = body
 
   if (!id) return NextResponse.json({ error: 'id erforderlich' }, { status: 400 })
+
+  // D1: force_override nur fuer admin/superadmin
+  if (force_override && !['admin', 'superadmin'].includes(auth.role)) {
+    return NextResponse.json(
+      { error: 'force_override ist nur fuer Administratoren erlaubt.' },
+      { status: 403 }
+    )
+  }
 
   const organizationId = await getActiveOrgId()
   if (organizationId) {

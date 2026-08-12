@@ -20,6 +20,7 @@ import { NextResponse } from 'next/server'
 import { requireCoachUser } from '@/lib/coach/api-auth'
 import { createAdminClient } from '@/lib/supabase/admin'
 import {
+import { heuteBerlin } from '@/lib/utils/timezone';
   hashCode, istCodeFormatGueltig, istFreigeschaltet,
   pruefeCodeGueltigkeit, codePraefix,
 } from '@/lib/coach/freischaltung'
@@ -40,7 +41,7 @@ export async function GET() {
 
   if (error) return NextResponse.json({ error: 'Freischaltung konnte nicht geladen werden.' }, { status: 500 })
 
-  const heute = new Date().toISOString().slice(0, 10)
+  const heute = heuteBerlin()
   return NextResponse.json({
     freischaltungen: data ?? [],
     freigeschaltet: istFreigeschaltet(data ?? [], heute),
@@ -60,7 +61,7 @@ export async function POST(request: Request) {
   }
 
   const admin = createAdminClient()
-  const heute = new Date().toISOString().slice(0, 10)
+  const heute = heuteBerlin()
 
   const { data: code, error: codeFehler } = await admin
     .from('coach_freischaltcodes')

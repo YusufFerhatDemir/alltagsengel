@@ -6,6 +6,7 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js'
 import {
+import { heuteBerlin } from '@/lib/utils/timezone';
   assertErlaubt,
   AUFNAHME_ORT_WERTE,
   AUFNAHME_STATUS_WERTE,
@@ -65,7 +66,7 @@ export async function createAufnahme(supabase: SupabaseClient, params: CreateAuf
     .insert({
       organization_id: params.organizationId,
       client_id: params.clientId,
-      aufnahmedatum: params.aufnahmedatum ?? new Date().toISOString().slice(0, 10),
+      aufnahmedatum: params.aufnahmedatum ?? heuteBerlin(),
       aufgenommen_von: params.aufgenommenVon,
       aufnahme_ort: params.aufnahmeOrt ?? 'wohnung',
       pflegegrad_bei_aufnahme: params.pflegegradBeiAufnahme ?? null,

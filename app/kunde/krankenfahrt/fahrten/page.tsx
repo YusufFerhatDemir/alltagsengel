@@ -101,7 +101,7 @@ export default function KundeFahrtenPage() {
                     {/* Date & Status */}
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
                       <div style={{ fontSize: '13px', color: 'rgba(245,240,232,0.5)' }}>
-                        {ride.datum ? new Date(ride.datum).toLocaleDateString('de-DE', { day: 'numeric', month: 'short', year: 'numeric' }) : ''} · {ride.uhrzeit?.slice(0, 5)}
+                        {ride.datum ? new Date(ride.datum).toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin', day: 'numeric', month: 'short', year: 'numeric' }) : ''} · {ride.uhrzeit?.slice(0, 5)}
                       </div>
                       <span style={{
                         fontSize: '11px', fontWeight: '600', padding: '3px 10px',

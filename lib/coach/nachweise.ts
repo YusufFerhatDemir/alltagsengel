@@ -1,3 +1,4 @@
+import { datumBerlin } from '@/lib/utils/timezone';
 // ═══════════════════════════════════════════════════════════════
 // PflegeCoach — Nutzungsnachweise (Schritt 5 des DiPA-Nutzerflows)
 //
@@ -149,7 +150,7 @@ export function auswertungswoche(isoDatum: string): string {
   const d = new Date(`${isoDatum.slice(0, 10)}T00:00:00Z`)
   const wochentag = d.getUTCDay() === 0 ? 7 : d.getUTCDay()
   d.setUTCDate(d.getUTCDate() - (wochentag - 1))
-  return d.toISOString().slice(0, 10)
+  return datumBerlin(d)
 }
 
 export function istNutzungsEreignis(wert: unknown): wert is NutzungsEreignis {

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import {
+import { datumBerlin } from '@/lib/utils/timezone';
   aufloeseStops,
   reichereFahrtzeitenAn,
   pruefeCaregiverVerfuegbarkeit,
@@ -159,8 +160,8 @@ export async function POST(req: NextRequest) {
     .from('tours')
     .select('id, gesamt_fahrzeit_minuten, tour_stops(geplante_ankunft, geplantes_ende, fahrzeit_minuten)')
     .eq('caregiver_id', caregiver_id)
-    .gte('tour_date', montag.toISOString().slice(0, 10))
-    .lte('tour_date', sonntag.toISOString().slice(0, 10))
+    .gte('tour_date', datumBerlin(montag))
+    .lte('tour_date', datumBerlin(sonntag))
     .neq('status', 'STORNIERT')
   const verplant = (wochenTouren ?? []).reduce((summe, t) =>
     summe + tourGesamtMinuten((t.tour_stops ?? []).map((s, i) => ({

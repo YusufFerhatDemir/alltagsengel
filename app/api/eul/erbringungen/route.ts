@@ -15,6 +15,7 @@ import { NextResponse } from 'next/server'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { createClient } from '@/lib/supabase/server'
 import {
+import { heuteBerlin } from '@/lib/utils/timezone';
   istEulDurchfuehrungsform, istEulLeistungsart, pruefeNachweisVollstaendig,
 } from '@/lib/coach/eul'
 
@@ -53,7 +54,7 @@ export async function POST(request: Request) {
 
   const datum = typeof body.datum === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(body.datum)
     ? body.datum
-    : new Date().toISOString().slice(0, 10)
+    : heuteBerlin()
   const dauer = Number(body.dauer_minuten)
   if (!Number.isInteger(dauer) || dauer < 1 || dauer > 480) {
     return NextResponse.json({ error: 'Die Dauer muss zwischen 1 und 480 Minuten liegen.' }, { status: 400 })

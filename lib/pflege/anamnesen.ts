@@ -6,6 +6,7 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js'
 import {
+import { heuteBerlin } from '@/lib/utils/timezone';
   ANAMNESE_TYP_WERTE,
   assertErlaubt,
   STURZRISIKO_WERTE,
@@ -75,7 +76,7 @@ export async function createAnamnese(supabase: SupabaseClient, params: CreateAna
     .insert({
       organization_id: params.organizationId,
       client_id: params.clientId,
-      anamnese_datum: params.anamneseDatum ?? new Date().toISOString().slice(0, 10),
+      anamnese_datum: params.anamneseDatum ?? heuteBerlin(),
       anamnese_typ: params.anamneseTyp ?? 'erstanamnese',
       erhoben_von: params.erhobenVon,
       erhoben_rolle: params.erhobenRolle ?? null,

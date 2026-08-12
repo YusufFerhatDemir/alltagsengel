@@ -29,7 +29,7 @@ export default function SettingsPage() {
               <StatRow label="Framework" value="Next.js 16" />
               <StatRow label="Datenbank" value="Supabase (PostgreSQL)" />
               <StatRow label="Hosting" value="Vercel" />
-              <StatRow label="Letzte Aktualisierung" value={new Date().toLocaleDateString('de-DE')} />
+              <StatRow label="Letzte Aktualisierung" value={new Date().toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin' })} />
             </div>
           </Card>
           <Card title="Module" icon="layers">

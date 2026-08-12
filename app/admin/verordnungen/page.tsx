@@ -1,4 +1,5 @@
 'use client'
+import { heuteBerlin } from '@/lib/utils/timezone';
 // ═══════════════════════════════════════════════════════════════
 // Verordnungs-Workflow — kompletter Prozess in 4 Schritten:
 //   1. Erfassen      — ärztliche Verordnung mit Scan + Gültigkeit
@@ -420,7 +421,7 @@ export default function AdminVerordnungenPage() {
     setScanFile(null)
     setAbtretungFile(null)
     setPositionen([{ ...EMPTY_POS }])
-    setForm({ ...EMPTY_FORM, ausstellungsdatum: new Date().toISOString().slice(0, 10) })
+    setForm({ ...EMPTY_FORM, ausstellungsdatum: heuteBerlin() })
     setShowForm(true)
   }
 
@@ -671,7 +672,7 @@ export default function AdminVerordnungenPage() {
     setAntwortId(v.id)
     setAntwort({
       aktenzeichen: v.genehmigung_aktenzeichen || '',
-      datum: new Date().toISOString().slice(0, 10),
+      datum: heuteBerlin(),
       bis: v.gueltig_bis || '',
       ergebnis: 'genehmigt',
       genehmigte_leistungsart: v.leistungsart || '',
@@ -836,7 +837,7 @@ export default function AdminVerordnungenPage() {
         .from('invoices')
         .update({
           bezahlt: !inv.bezahlt,
-          bezahlt_am: !inv.bezahlt ? new Date().toISOString().slice(0, 10) : null,
+          bezahlt_am: !inv.bezahlt ? heuteBerlin() : null,
         })
         .eq('id', inv.id)
       if (e) { setError(`Update fehlgeschlagen: ${e.message}`); return }

@@ -224,7 +224,7 @@ export default function KrankenfahrtenAdminPage() {
 
           <DataTable
             columns={[
-              { key: 'datum', label: 'Datum', render: (r: any) => `${new Date(r.datum).toLocaleDateString('de-DE')} ${r.uhrzeit}` },
+              { key: 'datum', label: 'Datum', render: (r: any) => `${new Date(r.datum).toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin' })} ${r.uhrzeit}` },
               { key: 'customer', label: 'Kunde', render: (r: any) => r.customer ? `${r.customer.first_name} ${(r.customer.last_name || '').charAt(0)}.` : '–' },
               { key: 'abholadresse', label: 'Von', render: (r: any) => r.abholadresse?.substring(0, 30) + (r.abholadresse?.length > 30 ? '…' : '') },
               { key: 'zieladresse', label: 'Nach', render: (r: any) => r.zieladresse?.substring(0, 30) + (r.zieladresse?.length > 30 ? '…' : '') },
@@ -275,7 +275,7 @@ export default function KrankenfahrtenAdminPage() {
         <Modal open={true} title="Auftragsdetails" onClose={() => setSelectedRide(null)}>
           <div style={{ display: 'grid', gap: 12, fontSize: 13, color: BRAND.text }}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-              <InfoField label="Datum" value={`${new Date(selectedRide.datum).toLocaleDateString('de-DE')} ${selectedRide.uhrzeit}`} />
+              <InfoField label="Datum" value={`${new Date(selectedRide.datum).toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin' })} ${selectedRide.uhrzeit}`} />
               <InfoField label="Status" value={statusLabel(selectedRide.status)} />
               <InfoField label="Kunde" value={selectedRide.customer ? `${selectedRide.customer.first_name} ${(selectedRide.customer.last_name || '').charAt(0)}.` : '–'} />
               <InfoField label="Betrag" value={`${(selectedRide.total_amount || 0).toFixed(2)} €`} />

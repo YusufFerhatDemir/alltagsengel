@@ -1,4 +1,5 @@
 'use client'
+import { datumBerlin } from '@/lib/utils/timezone';
 // ═══════════════════════════════════════════════════════════════
 // AmpelSummaryWidget — kompakte Ampel-Zusammenfassung für den
 // Monatsabschluss-Assistenten (🟢/🟡/🔴 Klienten-Anzahl im Monat)
@@ -28,7 +29,7 @@ export default function AmpelSummaryWidget({ year, month, refreshKey }: {
       try {
         const supabase = createClient()
         const monthStart = `${year}-${String(month).padStart(2, '0')}-01`
-        const monthEnd = new Date(year, month, 0).toISOString().slice(0, 10)
+        const monthEnd = datumBerlin(new Date(year, month, 0))
 
         const [closingsRes, recordsRes] = await Promise.all([
           supabase.from('monthly_closings').select('client_id, ampel').eq('year', year).eq('month', month),

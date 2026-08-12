@@ -1,4 +1,5 @@
 'use client'
+import { datumBerlin } from '@/lib/utils/timezone';
 import { useEffect, useMemo, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { euro, formatDate, statusMeta, INVOICE_STATUS } from '@/lib/admin/ops'
@@ -43,13 +44,13 @@ const CORRECTION_TYPE_LABELS: Record<string, string> = {
 }
 
 function monthLabel(year: number, month: number): string {
-  return new Date(year, month - 1, 1).toLocaleDateString('de-DE', { month: 'long', year: 'numeric' })
+  return new Date(year, month - 1, 1).toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin', month: 'long', year: 'numeric' })
 }
 
 function monthBounds(year: number, month: number): { start: string; end: string } {
   const start = new Date(year, month - 1, 1)
   const end = new Date(year, month, 0) // letzter Tag des Monats
-  const iso = (d: Date) => d.toISOString().slice(0, 10)
+  const iso = (d: Date) => datumBerlin(d)
   return { start: iso(start), end: iso(end) }
 }
 

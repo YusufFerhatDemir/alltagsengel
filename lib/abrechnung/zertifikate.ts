@@ -15,6 +15,7 @@
 import forge from 'node-forge'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { ladeIdentitaet, ladeZertifikat, ikAusZertifikat, zertifikatFingerprint } from './secon'
+import { datumBerlin, heuteBerlin } from '@/lib/utils/timezone';
 
 export const ZERTIFIKAT_BUCKET = 'abrechnung'
 
@@ -223,8 +224,8 @@ export async function ladeEmpfaengerZertifikat(
     ik_nummer: ik,
     typ: 'empfaenger',
     zertifikat_pem: zert.zertifikat_pem,
-    gueltig_ab: zert.gueltig_ab.toISOString().slice(0, 10),
-    gueltig_bis: zert.gueltig_bis.toISOString().slice(0, 10),
+    gueltig_ab: zert.datumBerlin(gueltig_ab),
+    gueltig_bis: zert.datumBerlin(gueltig_bis),
     fingerprint: zert.fingerprint,
   })
 
@@ -327,8 +328,8 @@ export async function speichereAbsenderZertifikat(
     typ: 'absender',
     zertifikat_url: pfad,
     zertifikat_pem: zert.zertifikat_pem,
-    gueltig_ab: zert.gueltig_ab.toISOString().slice(0, 10),
-    gueltig_bis: zert.gueltig_bis.toISOString().slice(0, 10),
+    gueltig_ab: zert.datumBerlin(gueltig_ab),
+    gueltig_bis: zert.datumBerlin(gueltig_bis),
     fingerprint: zert.fingerprint,
   })
 
@@ -354,7 +355,7 @@ export async function ladeAbsenderZertifikat(
 
   // Rotation: es kann mehrere Zeilen geben (altes + neues Zertifikat).
   // Genommen wird das aktuell gueltige mit dem spaetesten Ablaufdatum.
-  const heute = new Date().toISOString().slice(0, 10)
+  const heute = heuteBerlin()
   const { data: meta, error } = await supabase
     .from('abrechnung_zertifikate')
     .select('zertifikat_url')
@@ -421,7 +422,7 @@ export interface ZertifikatStatus {
 
 export function tageBis(datum: string, jetzt: Date = new Date()): number {
   const ziel = new Date(`${datum.slice(0, 10)}T00:00:00.000Z`).getTime()
-  const heute = new Date(`${jetzt.toISOString().slice(0, 10)}T00:00:00.000Z`).getTime()
+  const heute = new Date(`${datumBerlin(jetzt)}T00:00:00.000Z`).getTime()
   return Math.round((ziel - heute) / 86_400_000)
 }
 
@@ -461,7 +462,7 @@ export async function ladeZertifikatsStatus(
 
   if (error) throw new Error(`Zertifikatsstatus konnte nicht geladen werden: ${error.message}`)
 
-  const heuteIso = jetzt.toISOString().slice(0, 10)
+  const heuteIso = datumBerlin(jetzt)
   const aktivGesehen = new Set<string>()
 
   return (data ?? []).map((z) => {

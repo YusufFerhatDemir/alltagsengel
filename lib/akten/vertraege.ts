@@ -6,6 +6,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { logAktenZugriff } from './zugriff-log'
 import type { AktenVertrag, SignaturTyp, VertragsStatus, VertragsTyp } from './types'
+import { heuteBerlin } from '@/lib/utils/timezone';
 
 // Erlaubte Status-Übergänge (Statusmaschine, analog lib/billing/core/*)
 const ERLAUBTE_UEBERGAENGE: Record<VertragsStatus, VertragsStatus[]> = {
@@ -201,7 +202,7 @@ export async function vertragUnterschreiben(
     .from('akten_vertraege')
     .update({
       status: 'unterschrieben',
-      unterschrift_datum: params.unterschriftDatum ?? new Date().toISOString().slice(0, 10),
+      unterschrift_datum: params.unterschriftDatum ?? heuteBerlin(),
       unterschrieben_von: params.unterschriebenVon,
       signatur_typ: params.signaturTyp,
       signatur_daten: params.signaturDaten ?? null,

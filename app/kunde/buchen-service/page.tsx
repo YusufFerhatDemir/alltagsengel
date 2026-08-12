@@ -1,4 +1,5 @@
 'use client'
+import { datumBerlin } from '@/lib/utils/timezone';
 import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
@@ -56,7 +57,7 @@ function BuchenServiceInner() {
   useEffect(() => {
     const tomorrow = new Date()
     tomorrow.setDate(tomorrow.getDate() + 1)
-    setSelectedDate(tomorrow.toISOString().split('T')[0])
+    setSelectedDate(datumBerlin(tomorrow))
   }, [])
 
   // Profil laden
@@ -168,14 +169,14 @@ function BuchenServiceInner() {
   const formatDate = (d: string) => {
     if (!d) return ''
     const date = new Date(d + 'T00:00:00')
-    return date.toLocaleDateString('de-DE', { weekday: 'short', day: 'numeric', month: 'long' })
+    return date.toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin', weekday: 'short', day: 'numeric', month: 'long' })
   }
 
   // Nächste 14 Tage
   const dateOptions = Array.from({ length: 14 }, (_, i) => {
     const d = new Date()
     d.setDate(d.getDate() + i + 1)
-    return d.toISOString().split('T')[0]
+    return datumBerlin(d)
   })
 
   return (
@@ -237,9 +238,9 @@ function BuchenServiceInner() {
             <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 12 }}>
               {dateOptions.map(d => {
                 const date = new Date(d + 'T00:00:00')
-                const dayName = date.toLocaleDateString('de-DE', { weekday: 'short' })
+                const dayName = date.toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin', weekday: 'short' })
                 const dayNum = date.getDate()
-                const month = date.toLocaleDateString('de-DE', { month: 'short' })
+                const month = date.toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin', month: 'short' })
                 return (
                   <button
                     key={d}

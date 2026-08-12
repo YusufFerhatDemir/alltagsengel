@@ -69,7 +69,7 @@ export default function MahnwesenPage() {
   useEffect(() => { loadData() }, [loadData])
 
   const formatCurrency = (cents: number) => `${(cents / 100).toFixed(2).replace('.', ',')} €`
-  const formatDate = (d: string | null) => d ? new Date(d).toLocaleDateString('de-DE') : '—'
+  const formatDate = (d: string | null) => d ? new Date(d).toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin' }) : '—'
 
   async function generateMahnung(entry: DunningEntry) {
     setGenerating(entry.id)

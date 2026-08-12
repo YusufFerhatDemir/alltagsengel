@@ -116,7 +116,7 @@ interface CrmActivity {
 }
 
 // ===== HELPER =====
-const formatDate = (d: string | null) => d ? new Date(d).toLocaleDateString('de-DE') : '—'
+const formatDate = (d: string | null) => d ? new Date(d).toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin' }) : '—'
 const timeAgo = (d: string) => {
   const diff = Date.now() - new Date(d).getTime()
   const mins = Math.floor(diff / 60000)

@@ -135,7 +135,7 @@ export default function AbrechnungEinstellungenPage() {
       const json = await res.json()
       if (!res.ok || json.error) { setError(json.error || `Fehler ${res.status}`); return }
       setInfo(
-        `Zertifikat für IK ${json.zertifikat.ik_nummer} gespeichert (gültig bis ${new Date(json.zertifikat.gueltig_bis).toLocaleDateString('de-DE')}).` +
+        `Zertifikat für IK ${json.zertifikat.ik_nummer} gespeichert (gültig bis ${new Date(json.zertifikat.gueltig_bis).toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin' })}).` +
         (json.hinweis ? ` ${json.hinweis}` : '')
       )
       setP12Passwort('')
@@ -163,7 +163,7 @@ export default function AbrechnungEinstellungenPage() {
       })
       const json = await res.json()
       if (!res.ok || json.error) { setError(json.error || `Fehler ${res.status}`); return }
-      setInfo(`Empfänger-Zertifikat für IK ${ziel} geladen (gültig bis ${new Date(json.zertifikat.gueltig_bis).toLocaleDateString('de-DE')}).`)
+      setInfo(`Empfänger-Zertifikat für IK ${ziel} geladen (gültig bis ${new Date(json.zertifikat.gueltig_bis).toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin' })}).`)
       setItsgIk('')
       await load()
     } catch (e: any) {
@@ -305,8 +305,8 @@ export default function AbrechnungEinstellungenPage() {
         {absender ? (
           <p style={{ fontSize: 13, color: 'var(--ink4)', margin: '0 0 12px' }}>
             Hinterlegt für IK <strong>{absender.ik_nummer}</strong> · gültig{' '}
-            {absender.gueltig_ab ? new Date(absender.gueltig_ab).toLocaleDateString('de-DE') : '—'} bis{' '}
-            <strong>{absender.gueltig_bis ? new Date(absender.gueltig_bis).toLocaleDateString('de-DE') : '—'}</strong>
+            {absender.gueltig_ab ? new Date(absender.gueltig_ab).toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin' }) : '—'} bis{' '}
+            <strong>{absender.gueltig_bis ? new Date(absender.gueltig_bis).toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin' }) : '—'}</strong>
             {absenderAblauf !== null && absenderAblauf > 60 && ` (noch ${absenderAblauf} Tage)`} · Fingerprint{' '}
             <code style={{ fontSize: 11 }}>{(absender.fingerprint || '').slice(0, 16)}…</code>
           </p>
@@ -360,9 +360,9 @@ export default function AbrechnungEinstellungenPage() {
                     return (
                       <tr key={z.id}>
                         <td style={{ fontWeight: 600 }}>{z.ik_nummer}</td>
-                        <td style={{ fontSize: 13 }}>{z.gueltig_ab ? new Date(z.gueltig_ab).toLocaleDateString('de-DE') : '—'}</td>
+                        <td style={{ fontSize: 13 }}>{z.gueltig_ab ? new Date(z.gueltig_ab).toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin' }) : '—'}</td>
                         <td style={{ fontSize: 13, color: t !== null && t < 30 ? '#D04B3B' : undefined }}>
-                          {z.gueltig_bis ? new Date(z.gueltig_bis).toLocaleDateString('de-DE') : '—'}
+                          {z.gueltig_bis ? new Date(z.gueltig_bis).toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin' }) : '—'}
                           {t !== null && t < 30 && ` (${t < 0 ? 'abgelaufen' : `${t} Tage`})`}
                         </td>
                         <td><code style={{ fontSize: 11 }}>{(z.fingerprint || '').slice(0, 24)}…</code></td>

@@ -1,4 +1,5 @@
 'use client'
+import { datumBerlin, heuteBerlin } from '@/lib/utils/timezone';
 import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
@@ -92,7 +93,7 @@ const secondaryBtn: React.CSSProperties = {
 
 function monthRange(year: number, month: number): { start: string; end: string } {
   const start = `${year}-${String(month).padStart(2, '0')}-01`
-  const end = new Date(year, month, 0).toISOString().slice(0, 10)
+  const end = datumBerlin(new Date(year, month, 0))
   return { start, end }
 }
 
@@ -222,7 +223,7 @@ export default function MonatsabschlussVorbereitungPage() {
 
   // Tabelle 3: Nicht bestaetigte Einsaetze (in der Vergangenheit)
   const unconfirmed = useMemo(() => {
-    const today = new Date().toISOString().slice(0, 10)
+    const today = heuteBerlin()
     return activeAssignments.filter(
       a => ['GEPLANT', 'BESTAETIGT'].includes(a.status) && a.assignment_date && a.assignment_date < today,
     )

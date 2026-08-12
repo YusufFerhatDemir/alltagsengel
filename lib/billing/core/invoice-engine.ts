@@ -1072,3 +1072,94 @@ export async function createCreditNote(
     amountCents,
   };
 }
+
+// ---------------------------------------------------------------------------
+// writeOffInvoice (Forderungsabschreibung)
+// ---------------------------------------------------------------------------
+
+const WRITE_OFF_ALLOWED_FROM: ReadonlySet<string> = new Set([
+  'freigegeben', 'uebermittelt', 'quittiert', 'teilweise_bezahlt',
+  'gekuerzt', 'abgelehnt', 'korrektur_erforderlich',
+  'erneut_eingereicht', 'strittig',
+]);
+
+export async function writeOffInvoice(
+  supabase: SupabaseClient,
+  invoiceId: string,
+  reason: string,
+  actorId: string,
+  expectedOrgId?: string
+): Promise<WriteOffResult> {
+  if (!reason || reason.trim().length < 5) {
+    throw new Error('Begruendung fuer Forderungsabschreibung erforderlich (mind. 5 Zeichen).');
+  }
+
+  const { data: original, error: origError } = await supabase
+    .from('invoices')
+    .select('*')
+    .eq('id', invoiceId)
+    .single();
+
+  if (origError || !original) {
+    throw new Error(`Rechnung ${invoiceId} nicht gefunden.`);
+  }
+
+  if (expectedOrgId && original.organization_id !== expectedOrgId) {
+    throw new Error(`Rechnung ${invoiceId} gehoert nicht zur angegebenen Organisation.`);
+  }
+
+  const currentStatus = original.status as string;
+  if (!WRITE_OFF_ALLOWED_FROM.has(currentStatus)) {
+    throw new Error(
+      `Rechnung im Status "${currentStatus}" kann nicht abgeschrieben werden. ` +
+      `Erlaubt nur von: ${[...WRITE_OFF_ALLOWED_FROM].join(', ')}.`
+    );
+  }
+
+  const totalAmountCents = Math.round(Number(original.total_amount) * 100);
+  const paidAmountCents = Math.round(Number(original.paid_amount || 0) * 100);
+  const writtenOffAmountCents = totalAmountCents - paidAmountCents;
+
+  if (writtenOffAmountCents <= 0) {
+    throw new Error('Keine offene Forderung zum Abschreiben vorhanden.');
+  }
+
+  // CAS: nur wenn Status noch dem gelesenen entspricht
+  const { data: updated, error: updateError } = await supabase
+    .from('invoices')
+    .update({ status: 'abgeschrieben' })
+    .eq('id', invoiceId)
+    .eq('status', currentStatus)
+    .select('id')
+    .maybeSingle();
+
+  if (updateError || !updated) {
+    throw new Error('Rechnung wurde zwischenzeitlich geaendert (paralleler Zugriff) — bitte erneut versuchen.');
+  }
+
+  await logBillingAction(supabase, {
+    entityType: 'invoice',
+    organizationId: original.organization_id,
+    entityId: invoiceId,
+    action: 'abgeschrieben',
+    previousState: {
+      status: currentStatus,
+      total_amount: original.total_amount,
+      paid_amount: original.paid_amount,
+    },
+    newState: {
+      status: 'abgeschrieben',
+      written_off_amount_cents: writtenOffAmountCents,
+    },
+    reason,
+    actorId,
+  });
+
+  return {
+    invoiceId,
+    previousStatus: currentStatus,
+    writtenOffAmountCents,
+    totalAmountCents,
+    paidAmountCents,
+  };
+}

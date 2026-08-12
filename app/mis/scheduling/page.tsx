@@ -1,4 +1,5 @@
 'use client'
+import { datumBerlin } from '@/lib/utils/timezone';
 import React, { useState, useEffect, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { BRAND } from '@/lib/mis/constants'
@@ -65,12 +66,12 @@ function addDays(d: Date, n: number): Date {
 }
 
 function fmtDate(d: Date): string {
-  return d.toISOString().split('T')[0]
+  return datumBerlin(d)
 }
 
 function fmtDateDE(d: string | null): string {
   if (!d) return '—'
-  return new Date(d).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })
+  return new Date(d).toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin', day: '2-digit', month: '2-digit', year: 'numeric' })
 }
 
 function fmtTime(t: string): string {
@@ -388,7 +389,7 @@ export default function SchedulingPage() {
                   <span style={{ transform: 'scaleX(-1)', display: 'inline-block' }}>←</span> Vorherige
                 </MisButton>
                 <span style={{ fontSize: 15, fontWeight: 700, color: BRAND.text }}>
-                  {weekDays[0].toLocaleDateString('de-DE', { day: '2-digit', month: 'short' })} — {weekDays[6].toLocaleDateString('de-DE', { day: '2-digit', month: 'short', year: 'numeric' })}
+                  {weekDays[0].toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin', day: '2-digit', month: 'short' })} — {weekDays[6].toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin', day: '2-digit', month: 'short', year: 'numeric' })}
                 </span>
                 <MisButton variant="secondary" onClick={() => setWeekStart(addDays(weekStart, 7))}>
                   Nächste →
@@ -409,7 +410,7 @@ export default function SchedulingPage() {
                           fontWeight: 700, fontSize: 13, color: isToday ? BRAND.gold : BRAND.text,
                           marginBottom: 8, display: 'flex', justifyContent: 'space-between',
                         }}>
-                          <span>{WEEKDAYS[day.getDay()]} {day.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' })}</span>
+                          <span>{WEEKDAYS[day.getDay()]} {day.toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin', day: '2-digit', month: '2-digit' })}</span>
                           {isToday && <Badge label="Heute" color={BRAND.gold} />}
                         </div>
                         {dayShifts.length === 0 ? (
@@ -443,7 +444,7 @@ export default function SchedulingPage() {
                               }}>
                                 <div>{WEEKDAYS[day.getDay()]}</div>
                                 <div style={{ fontSize: 11, fontWeight: 400 }}>
-                                  {day.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' })}
+                                  {day.toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin', day: '2-digit', month: '2-digit' })}
                                 </div>
                               </th>
                             )

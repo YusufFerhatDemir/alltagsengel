@@ -6,6 +6,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { DUNNING_LABELS, DUNNING_FEES_CENTS, type DunningLevel } from '../core/dunning'
 import { logBillingAction } from '../core/audit'
+import { datumBerlin, heuteBerlin } from '@/lib/utils/timezone';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -244,7 +245,7 @@ export async function createMahnungDocument(
   // Zahlungsfrist: 14 Tage ab heute
   const deadline = new Date()
   deadline.setDate(deadline.getDate() + 14)
-  const deadlineStr = deadline.toISOString().split('T')[0]
+  const deadlineStr = datumBerlin(deadline)
 
   const client = inv.client as any
   const invNum = inv.invoice_number_formatted || inv.invoice_number || ''
@@ -279,7 +280,7 @@ export async function createMahnungDocument(
     totalDue: formatCurrency(totalDueCents),
     paymentDeadline: deadlineStr,
 
-    date: new Date().toISOString().split('T')[0],
+    date: heuteBerlin(),
     referenceNumber: `M-${invNum}-${dunningLevel.toUpperCase()}`,
   }
 

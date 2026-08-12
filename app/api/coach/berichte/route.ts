@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { requireCoachUser } from '@/lib/coach/api-auth'
 import { buildVerlaufsbericht } from '@/lib/coach/export'
+import { datumBerlin, heuteBerlin } from '@/lib/utils/timezone';
 
 export async function GET() {
   const auth = await requireCoachUser()
@@ -24,10 +25,10 @@ export async function POST(request: Request) {
   const body = await request.json().catch(() => ({}))
   const bis = typeof body.bis === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(body.bis)
     ? body.bis
-    : new Date().toISOString().slice(0, 10)
+    : heuteBerlin()
   const von = typeof body.von === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(body.von)
     ? body.von
-    : new Date(Date.now() - 84 * 24 * 3600 * 1000).toISOString().slice(0, 10)
+    : datumBerlin(new Date(Date.now() - 84 * 24 * 3600 * 1000))
   if (von > bis) return NextResponse.json({ error: 'Zeitraum ungültig (von > bis).' }, { status: 400 })
 
   const [assessments, goals, log, messungen] = await Promise.all([

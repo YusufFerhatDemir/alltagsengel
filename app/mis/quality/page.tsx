@@ -125,7 +125,7 @@ export default function QualityPage() {
                   ...(!isMobile ? [{ key: 'auditor_name', label: 'Auditor' }] : []),
                   { key: 'status', label: 'Status', render: (r) => <Badge label={String(r.status)} color={r.status === 'completed' ? BRAND.success : BRAND.warning} size="sm" /> },
                   ...(!isMobile ? [{ key: 'findings_count', label: 'Befunde' }] : []),
-                  { key: 'scheduled_date', label: 'Datum', render: (r) => r.scheduled_date ? new Date(r.scheduled_date as string).toLocaleDateString('de-DE') : '—' },
+                  { key: 'scheduled_date', label: 'Datum', render: (r) => r.scheduled_date ? new Date(r.scheduled_date as string).toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin' }) : '—' },
                 ]}
                 data={audits as unknown as Record<string,unknown>[]}
               />

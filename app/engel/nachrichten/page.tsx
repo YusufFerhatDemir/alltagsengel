@@ -31,7 +31,7 @@ function timeAgo(dateStr: string): string {
   const diffD = Math.floor(diffH / 24)
   if (diffD === 1) return 'Gestern'
   if (diffD < 7) return `vor ${diffD} Tagen`
-  return d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' })
+  return d.toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin', day: '2-digit', month: '2-digit' })
 }
 
 export default function EngelNachrichtenPage() {

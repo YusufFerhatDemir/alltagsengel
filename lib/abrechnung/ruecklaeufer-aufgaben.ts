@@ -26,6 +26,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { logBillingAction } from '../billing/core/audit'
 import { emitEreignis } from '../ops/ereignis-emitter'
 import type { RuecklaeuferStatus } from './ruecklaeufer'
+import { datumBerlin } from '@/lib/utils/timezone';
 
 /** Rückläufer-Status, die eine Aufgabe auslösen. Alles andere ist Erfolg. */
 export const AUFGABEN_AUSLOESENDE_STATUS: RuecklaeuferStatus[] = [
@@ -102,7 +103,7 @@ export function stufeRuecklaeuferEin(status: RuecklaeuferStatus): Einstufung {
 function faelligkeit(fristTage: number, ab: Date = new Date()): string {
   const d = new Date(ab.getTime())
   d.setDate(d.getDate() + fristTage)
-  return d.toISOString().slice(0, 10)
+  return datumBerlin(d)
 }
 
 function euro(cent?: number | null): string | null {

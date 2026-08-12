@@ -96,9 +96,7 @@ function person(p: PersonRef | PersonRef[] | null): string {
   return e ? [e.first_name, e.last_name].filter(Boolean).join(' ') : '–'
 }
 function datumLang(iso: string): string {
-  return new Date(iso + 'T00:00:00').toLocaleDateString('de-DE', {
-    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
-  })
+  return new Date(iso + 'T00:00:00').toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin', weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', })
 }
 
 // ── Styles ─────────────────────────────────────────────────────
@@ -164,7 +162,7 @@ export default function TourenplanungPage() {
     const sun = addDays(mon, 6)
     return {
       rangeStart: isoDate(mon), rangeEnd: isoDate(sun),
-      label: `${mon.toLocaleDateString('de-DE', { day: 'numeric', month: 'short' })} – ${sun.toLocaleDateString('de-DE', { day: 'numeric', month: 'short', year: 'numeric' })}`,
+      label: `${mon.toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin', day: 'numeric', month: 'short' })} – ${sun.toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin', day: 'numeric', month: 'short', year: 'numeric' })}`,
     }
   }, [view, baseDate])
 
@@ -330,7 +328,7 @@ export default function TourenplanungPage() {
                 return (
                   <div key={tag} style={{ ...card, padding: 8, minHeight: 140, borderColor: heute ? 'var(--gold)' : 'var(--line)' }}>
                     <div style={{ fontSize: 12, fontWeight: 700, color: heute ? 'var(--gold)' : 'var(--ink3)', marginBottom: 8 }}>
-                      {new Date(tag + 'T00:00:00').toLocaleDateString('de-DE', { weekday: 'short', day: 'numeric', month: 'numeric' })}
+                      {new Date(tag + 'T00:00:00').toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin', weekday: 'short', day: 'numeric', month: 'numeric' })}
                     </div>
                     {(tourenProTag.get(tag) ?? []).map(t => {
                       const st = TOUR_STATUS[t.status] ?? { label: t.status, color: '#666' }
@@ -849,7 +847,7 @@ function TourDruck({ tour }: { tour: TourRow }) {
         </tbody>
       </table>
       <p style={{ marginTop: 16, fontSize: '9pt' }}>
-        Alltagsengel · Tourenplan erstellt am {new Date().toLocaleDateString('de-DE')} · Änderungen vorbehalten
+        Alltagsengel · Tourenplan erstellt am {new Date().toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin' })} · Änderungen vorbehalten
       </p>
     </div>
   )

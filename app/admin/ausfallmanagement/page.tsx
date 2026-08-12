@@ -1,4 +1,5 @@
 'use client'
+import { datumBerlin, heuteBerlin } from '@/lib/utils/timezone';
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { formatDate, fullName, ABSENCE_TYPE, ABSENCE_STATUS } from '@/lib/admin/ops'
@@ -55,8 +56,8 @@ export default function AusfallmanagementPage() {
   const load = useCallback(async () => {
     try {
       const supabase = createClient()
-      const heute = new Date().toISOString().slice(0, 10)
-      const wochenende = new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10)
+      const heute = heuteBerlin()
+      const wochenende = datumBerlin(new Date(Date.now() + 7 * 86400000))
 
       // Abwesenheiten laden (Tabelle heißt 'absences', Spalten: start_date/end_date/reason)
       let abwQuery = supabase
@@ -431,8 +432,8 @@ function VertretungDialog({ tour, kandidaten, loading, onSelect, onClose }: {
 function KrankmeldungDialog({ onClose, onSaved }: { onClose: () => void; onSaved: () => void }) {
   const [caregivers, setCaregivers] = useState<{ id: string; name: string }[]>([])
   const [caregiverId, setCaregiverId] = useState('')
-  const [datumVon, setDatumVon] = useState(() => new Date().toISOString().slice(0, 10))
-  const [datumBis, setDatumBis] = useState(() => new Date().toISOString().slice(0, 10))
+  const [datumVon, setDatumVon] = useState(() => heuteBerlin())
+  const [datumBis, setDatumBis] = useState(() => heuteBerlin())
   const [bemerkung, setBemerkung] = useState('')
   const [saving, setSaving] = useState(false)
   const [err, setErr] = useState<string | null>(null)

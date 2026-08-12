@@ -141,7 +141,7 @@ export default function AssessmentSeite() {
           <ul style={{ paddingLeft: 20 }}>
             {[...bisherige].reverse().map(a => (
               <li key={a.id}>
-                {new Date(a.erhoben_am + 'T00:00:00').toLocaleDateString('de-DE')} — {a.assessment_typ === 'erstassessment' ? 'Erstassessment' : 'Verlaufsassessment'}
+                {new Date(a.erhoben_am + 'T00:00:00').toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin' })} — {a.assessment_typ === 'erstassessment' ? 'Erstassessment' : 'Verlaufsassessment'}
               </li>
             ))}
           </ul>

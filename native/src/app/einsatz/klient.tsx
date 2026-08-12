@@ -65,7 +65,7 @@ function InfoRow({ label, value }: { label: string; value: string | null | undef
 function formatDate(value: string | null): string | null {
   if (!value) return null
   const d = new Date(value)
-  return Number.isNaN(d.getTime()) ? value : d.toLocaleDateString('de-DE')
+  return Number.isNaN(d.getTime()) ? value : d.toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin' })
 }
 
 export default function KlientScreen() {

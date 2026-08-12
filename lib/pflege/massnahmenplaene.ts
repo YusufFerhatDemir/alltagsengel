@@ -6,6 +6,7 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js'
 import {
+import { heuteBerlin } from '@/lib/utils/timezone';
   assertErlaubt,
   PLAN_TYP_WERTE,
   type PflegeMassnahme,
@@ -58,7 +59,7 @@ export async function createPlan(supabase: SupabaseClient, params: CreatePlanPar
       client_id: params.clientId,
       titel: params.titel.trim(),
       plan_typ: params.planTyp ?? 'versorgungsplan',
-      gueltig_von: params.gueltigVon ?? new Date().toISOString().slice(0, 10),
+      gueltig_von: params.gueltigVon ?? heuteBerlin(),
       gueltig_bis: params.gueltigBis ?? null,
       version: params.version ?? 1,
       betreuungsziele: params.betreuungsziele ?? null,
@@ -291,7 +292,7 @@ export async function neueVersion(
     clientId: vorgaenger.client_id,
     titel: patch?.titel ?? vorgaenger.titel,
     planTyp: vorgaenger.plan_typ,
-    gueltigVon: patch?.gueltigVon ?? new Date().toISOString().slice(0, 10),
+    gueltigVon: patch?.gueltigVon ?? heuteBerlin(),
     gueltigBis: patch?.gueltigBis !== undefined ? patch.gueltigBis : vorgaenger.gueltig_bis,
     betreuungsziele: vorgaenger.betreuungsziele,
     pflegeziele: vorgaenger.pflegeziele,

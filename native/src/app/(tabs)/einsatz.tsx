@@ -132,7 +132,7 @@ export default function EinsatzScreen() {
             <Card key={r.id} style={styles.recordCard}>
               <Text style={styles.recordClient}>{r.client_name}</Text>
               <Text style={styles.recordDate}>
-                {new Date(r.date).toLocaleDateString('de-DE')} · Status: {r.status}
+                {new Date(r.date).toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin' })} · Status: {r.status}
               </Text>
               <View style={styles.actionRow}>
                 <GhostButton

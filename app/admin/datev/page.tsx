@@ -78,7 +78,7 @@ function statusBadge(status: string) {
 
 function formatDate(d: string) {
   if (!d) return '—'
-  return new Date(d).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })
+  return new Date(d).toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin', day: '2-digit', month: '2-digit', year: 'numeric' })
 }
 
 function formatDateTime(d: string) {
@@ -95,7 +95,7 @@ function getMonatsZeitraum(monatOffset = 0): { von: string; bis: string; label: 
   const von = `${year}-${String(month + 1).padStart(2, '0')}-01`
   const letzterTag = new Date(year, month + 1, 0).getDate()
   const bis = `${year}-${String(month + 1).padStart(2, '0')}-${String(letzterTag).padStart(2, '0')}`
-  const label = d.toLocaleDateString('de-DE', { month: 'long', year: 'numeric' })
+  const label = d.toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin', month: 'long', year: 'numeric' })
   return { von, bis, label }
 }
 

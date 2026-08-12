@@ -267,7 +267,7 @@ export default function KundeDokumentePage() {
                 <div className="dok-card-info">
                   <div className="dok-card-name">{doc.file_name}</div>
                   <div className="dok-card-type">{docTypes.find(d => d.key === doc.type)?.label || doc.type}</div>
-                  <div className="dok-card-date">{new Date(doc.uploaded_at).toLocaleDateString('de-DE')}</div>
+                  <div className="dok-card-date">{new Date(doc.uploaded_at).toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin' })}</div>
                 </div>
                 <div className="dok-card-status" style={{ color: st.color }}>
                   {doc.status === 'verified' ? <IconCheck size={14} /> : <IconClock size={14} />}

@@ -1,4 +1,5 @@
 'use client'
+import { heuteBerlin } from '@/lib/utils/timezone';
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
@@ -86,7 +87,7 @@ export default function FahrerHomePage() {
     setOpenRides(allRides.filter(r => r.status === 'pending' && !r.provider_id).slice(0, 5))
 
     // Today's rides for this provider
-    const today = new Date().toISOString().split('T')[0]
+    const today = heuteBerlin()
     setTodayRides(allRides.filter(r => r.datum === today && r.provider_id === providerData.id && r.status !== 'completed'))
 
     // Active ride (in_progress)
@@ -145,7 +146,7 @@ export default function FahrerHomePage() {
   }
 
   function formatDate(d: string) {
-    return new Date(d).toLocaleDateString('de-DE', { weekday: 'short', day: 'numeric', month: 'short' })
+    return new Date(d).toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin', weekday: 'short', day: 'numeric', month: 'short' })
   }
 
   if (loading) {

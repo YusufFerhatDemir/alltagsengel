@@ -93,7 +93,7 @@ export default function SupplyChainPage() {
                   }},
                   { key: 'status', label: 'Status', render: (r) => <Badge label={String(r.status)} color={r.status === 'received' ? BRAND.success : r.status === 'cancelled' ? BRAND.error : BRAND.info} size="sm" /> },
                   { key: 'total_amount', label: 'Betrag', render: (r) => `€${Number(r.total_amount).toLocaleString('de-DE')}` },
-                  { key: 'order_date', label: 'Bestelldatum', render: (r) => r.order_date ? new Date(r.order_date as string).toLocaleDateString('de-DE') : '—' },
+                  { key: 'order_date', label: 'Bestelldatum', render: (r) => r.order_date ? new Date(r.order_date as string).toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin' }) : '—' },
                 ]}
                 data={orders as unknown as Record<string,unknown>[]}
               />

@@ -1,4 +1,5 @@
 'use client'
+import { heuteBerlin } from '@/lib/utils/timezone';
 // ═══════════════════════════════════════════════════════════════
 // Leistungspreise — Preisliste je Bundesland + Leistungsart, mit
 // Gültigkeitszeitraum. Wird für den SOLL/IST-Abgleich in der
@@ -23,7 +24,7 @@ const EMPTY_FORM = {
   bundesland: 'hessen',
   leistungsart: '',
   preis: '',
-  gueltig_ab: new Date().toISOString().slice(0, 10),
+  gueltig_ab: heuteBerlin(),
   gueltig_bis: '',
 }
 type FormState = typeof EMPTY_FORM

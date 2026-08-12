@@ -6,6 +6,7 @@ import { BodyText, Card, Chip, GhostButton, GoldButton, Input, Label, MutedText 
 import { Colors, Fonts } from '../../constants/theme'
 import { supabase } from '../../lib/supabase'
 import { useCaregiverRole } from '../../lib/use-caregiver-role'
+import { heuteBerlin } from '@/lib/utils/timezone';
 
 // ═══════════════════════════════════════════════════════════
 // LEISTUNGSERFASSUNG — Betreuungskraft erfasst einen Einsatz
@@ -76,7 +77,7 @@ export default function LeistungErfassenScreen() {
   const [clientId, setClientId] = useState('')
   const [serviceType, setServiceType] = useState('alltagsbegleitung')
   const [budgetType, setBudgetType] = useState('entlastung')
-  const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10))
+  const [date, setDate] = useState(() => heuteBerlin())
   const [startTime, setStartTime] = useState('')
   const [endTime, setEndTime] = useState('')
   const [initials, setInitials] = useState('')

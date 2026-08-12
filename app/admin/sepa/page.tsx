@@ -1,5 +1,6 @@
 'use client'
 
+import { datumBerlin, heuteBerlin } from '@/lib/utils/timezone';
 import { useState, useEffect, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { IconMoney, IconDocument } from '@/components/Icons'
@@ -60,7 +61,7 @@ export default function SepaPage() {
   useEffect(() => { loadData() }, [loadData])
 
   const formatCurrency = (cents: number) => `${(cents / 100).toFixed(2).replace('.', ',')} €`
-  const formatDate = (d: string) => d ? new Date(d).toLocaleDateString('de-DE') : '—'
+  const formatDate = (d: string) => d ? new Date(d).toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin' }) : '—'
   const formatIban = (iban: string) => iban.replace(/(.{4})/g, '$1 ').trim()
 
   const STATUS_COLORS: Record<string, string> = {
@@ -248,7 +249,7 @@ function NewMandateDialog({ onClose, onSaved }: { onClose: () => void; onSaved: 
   const [debtorName, setDebtorName] = useState('')
   const [debtorIban, setDebtorIban] = useState('')
   const [debtorBic, setDebtorBic] = useState('')
-  const [mandateDate, setMandateDate] = useState(() => new Date().toISOString().slice(0, 10))
+  const [mandateDate, setMandateDate] = useState(() => heuteBerlin())
   const [saving, setSaving] = useState(false)
   const [err, setErr] = useState<string | null>(null)
 
@@ -317,7 +318,7 @@ function NewBatchDialog({ onClose, onSaved }: { onClose: () => void; onSaved: ()
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [collectionDate, setCollectionDate] = useState(() => {
     const d = new Date(); d.setDate(d.getDate() + 5)
-    return d.toISOString().slice(0, 10)
+    return datumBerlin(d)
   })
   const [saving, setSaving] = useState(false)
   const [err, setErr] = useState<string | null>(null)

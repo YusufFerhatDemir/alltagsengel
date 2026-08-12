@@ -14,6 +14,7 @@ import { NextResponse } from 'next/server'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { createClient } from '@/lib/supabase/server'
 import {
+import { heuteBerlin } from '@/lib/utils/timezone';
   codePraefix, erzeugeCode, hashCode, pepperKonfiguriert,
   FREISCHALT_QUELLEN, type FreischaltQuelle,
 } from '@/lib/coach/freischaltung'
@@ -44,7 +45,7 @@ export async function POST(request: Request) {
   const datumOderNull = (wert: unknown) =>
     typeof wert === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(wert) ? wert : null
 
-  const gueltigVon = datumOderNull(body.gueltig_von) ?? new Date().toISOString().slice(0, 10)
+  const gueltigVon = datumOderNull(body.gueltig_von) ?? heuteBerlin()
   const gueltigBis = datumOderNull(body.gueltig_bis)
   if (gueltigBis && gueltigBis < gueltigVon) {
     return NextResponse.json({ error: 'Das Enddatum liegt vor dem Startdatum.' }, { status: 400 })

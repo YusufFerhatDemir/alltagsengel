@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { isFeatureEnabled } from '@/lib/feature-flags'
 import type {
+import { heuteBerlin } from '@/lib/utils/timezone';
   PricingTier,
   PricingSurcharge,
   PricingConfig,
@@ -250,7 +251,7 @@ export async function calculatePrice(req: PricingRequest): Promise<PricingBreakd
 /** Load cost config for a tier */
 async function loadCostForTier(tierId: string): Promise<PricingCost | null> {
   const supabase = await createClient()
-  const today = new Date().toISOString().split('T')[0]
+  const today = heuteBerlin()
 
   const { data } = await supabase
     .from('kf_pricing_costs')

@@ -1,4 +1,5 @@
 'use client'
+import { heuteBerlin } from '@/lib/utils/timezone';
 import React, { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { BRAND } from '@/lib/mis/constants'
@@ -27,7 +28,7 @@ export default function TeamPage() {
   const [recError, setRecError] = useState<string | null>(null)
   const [recForm, setRecForm] = useState({
     caregiver_id: '', client_id: '',
-    date: new Date().toISOString().slice(0, 10),
+    date: heuteBerlin(),
     start_time: '', end_time: '',
     service_type: '', budget_type: 'entlastung',
     caregiver_initials: '', notes: '',
@@ -121,7 +122,7 @@ export default function TeamPage() {
       setRecOpen(false)
       setRecForm({
         caregiver_id: '', client_id: '',
-        date: new Date().toISOString().slice(0, 10),
+        date: heuteBerlin(),
         start_time: '', end_time: '',
         service_type: '', budget_type: 'entlastung',
         caregiver_initials: '', notes: '',
@@ -247,7 +248,7 @@ export default function TeamPage() {
                   <span style={{ fontWeight: 600 }}>{(r.postal_code as string) || '—'}</span>
                 )},
                 { key: 'location', label: 'Standort', render: (r: Record<string,unknown>) => (r.location as string)?.trim() || '—' },
-                { key: 'created_at', label: 'Registriert', render: (r: Record<string,unknown>) => new Date(r.created_at as string).toLocaleDateString('de-DE') },
+                { key: 'created_at', label: 'Registriert', render: (r: Record<string,unknown>) => new Date(r.created_at as string).toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin' }) },
               ] : []),
               { key: 'actions', label: '', render: (r: Record<string,unknown>) => (
                 <MisButton size="sm" onClick={() => openEditUser(r)}>Bearbeiten</MisButton>
@@ -276,7 +277,7 @@ export default function TeamPage() {
                   <Badge label={r.status === 'done' ? 'Erledigt' : r.status === 'in_progress' ? 'In Arbeit' : String(r.status)}
                     color={r.status === 'done' ? BRAND.success : r.status === 'in_progress' ? BRAND.info : BRAND.muted} size="sm" />
                 )},
-                { key: 'due_date', label: 'Fällig', render: (r) => r.due_date ? new Date(r.due_date as string).toLocaleDateString('de-DE') : '—' },
+                { key: 'due_date', label: 'Fällig', render: (r) => r.due_date ? new Date(r.due_date as string).toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin' }) : '—' },
               ]}
               data={tasks}
               emptyMessage="Keine Aufgaben vorhanden"
@@ -300,7 +301,7 @@ export default function TeamPage() {
               columns={[
                 { key: 'date', label: 'Datum', render: (r) => (
                   <span style={{ fontWeight: 600 }}>
-                    {r.date ? new Date(r.date as string).toLocaleDateString('de-DE') : '—'}
+                    {r.date ? new Date(r.date as string).toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin' }) : '—'}
                   </span>
                 )},
                 { key: 'time', label: 'Uhrzeit', render: (r) => (

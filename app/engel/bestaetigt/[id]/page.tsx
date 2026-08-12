@@ -49,7 +49,7 @@ export default function EngelBestaetigtPage() {
   const hasCareRecipient = !!cr
   const careRecipientName = cr ? `${cr.first_name} ${cr.last_name}` : null
   const displayName = careRecipientName || customerName
-  const dateStr = booking.date ? new Date(booking.date).toLocaleDateString('de-DE', { day: '2-digit', month: 'long', year: 'numeric' }) : '—'
+  const dateStr = booking.date ? new Date(booking.date).toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin', day: '2-digit', month: 'long', year: 'numeric' }) : '—'
   const timeEnd = booking.time && booking.duration_hours
     ? `${booking.time?.slice(0,5)} – ${String(Number(booking.time?.slice(0,2)) + booking.duration_hours).padStart(2,'0')}:${booking.time?.slice(3,5)} Uhr`
     : '—'

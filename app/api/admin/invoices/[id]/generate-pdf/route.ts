@@ -67,7 +67,7 @@ function dateFmt(d: string | null | undefined): string {
   if (!d) return '—'
   const dt = new Date(d)
   if (isNaN(dt.getTime())) return '—'
-  return dt.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })
+  return dt.toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin', day: '2-digit', month: '2-digit', year: 'numeric' })
 }
 
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {

@@ -1,4 +1,5 @@
 'use client'
+import { datumBerlin, heuteBerlin } from '@/lib/utils/timezone';
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import {
@@ -19,7 +20,7 @@ interface DueCall { client_id: string; client: string; call_type: string; due_da
 function addDays(dateStr: string, days: number): string {
   const d = new Date(dateStr)
   d.setDate(d.getDate() + days)
-  return d.toISOString().slice(0, 10)
+  return datumBerlin(d)
 }
 
 interface QualityDashboard {
@@ -32,11 +33,11 @@ interface QualityDashboard {
 
 function aktuellerMonatVon(): string {
   const d = new Date()
-  return new Date(d.getFullYear(), d.getMonth(), 1).toISOString().slice(0, 10)
+  return datumBerlin(new Date(d.getFullYear(), d.getMonth(), 1))
 }
 function aktuellerMonatBis(): string {
   const d = new Date()
-  return new Date(d.getFullYear(), d.getMonth() + 1, 0).toISOString().slice(0, 10)
+  return datumBerlin(new Date(d.getFullYear(), d.getMonth() + 1, 0))
 }
 
 export default function AdminQualityPage() {
@@ -311,7 +312,7 @@ function DocCallModal({ clients, preset, onClose, onSaved }: {
 }) {
   const [clientId, setClientId] = useState(preset.client_id || '')
   const [callType, setCallType] = useState(preset.call_type || 'day7')
-  const [callDate, setCallDate] = useState(() => new Date().toISOString().slice(0, 10))
+  const [callDate, setCallDate] = useState(() => heuteBerlin())
   const [rating, setRating] = useState(5)
   const [punctual, setPunctual] = useState(true)
   const [comfortable, setComfortable] = useState(true)

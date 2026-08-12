@@ -87,7 +87,7 @@ export default function ZeiterfassungScreen() {
         (data || []).map((r: any) => ({
           id: r.id,
           notes: r.notes ?? null,
-          label: `${[r.client?.first_name, r.client?.last_name].filter(Boolean).join(' ') || 'Unbekannt'} · ${new Date(r.date).toLocaleDateString('de-DE')}`,
+          label: `${[r.client?.first_name, r.client?.last_name].filter(Boolean).join(' ') || 'Unbekannt'} · ${new Date(r.date).toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin' })}`,
         }))
       )
       setLoadingRecords(false)

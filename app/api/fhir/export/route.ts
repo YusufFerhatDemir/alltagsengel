@@ -11,6 +11,7 @@ import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import {
+import { heuteBerlin } from '@/lib/utils/timezone';
   buildCollectionBundle,
   clientToFhirPatient,
   massnahmenplanToFhirCarePlan,
@@ -89,7 +90,7 @@ export async function GET(request: Request) {
       details: { customer_number: (client as ClientFhirRow).customer_number },
     })
 
-    const dateStamp = new Date().toISOString().slice(0, 10)
+    const dateStamp = heuteBerlin()
     return new NextResponse(JSON.stringify(bundle, null, 2), {
       status: 200,
       headers: {

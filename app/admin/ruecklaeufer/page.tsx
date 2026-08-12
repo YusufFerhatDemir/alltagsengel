@@ -1,4 +1,5 @@
 'use client'
+import { heuteBerlin } from '@/lib/utils/timezone';
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { StatusBadge, SearchInput, EmptyRow, Banner } from '@/components/admin/OpsUI'
 import Link from 'next/link'
@@ -235,7 +236,7 @@ function UploadBereich({ onUploadErfolg }: { onUploadErfolg: () => void }) {
 // ── Fristen-Mini-Liste ──────────────────────────────────────────
 
 function FristenPanel({ fristen }: { fristen: FristEintrag[] }) {
-  const heute = new Date().toISOString().slice(0, 10)
+  const heute = heuteBerlin()
   const ueberfaellige = fristen.filter(f => f.faelligAm < heute)
   const anstehende = fristen.filter(f => f.faelligAm >= heute).slice(0, 5)
 
@@ -267,7 +268,7 @@ function FristenPanel({ fristen }: { fristen: FristEintrag[] }) {
               {f.eskalationsstufe > 0 && ` (Eskalation ${f.eskalationsstufe})`}
             </span>
             <span style={{ fontSize: 12, color: '#dc2626' }}>
-              fällig {new Date(f.faelligAm).toLocaleDateString('de-DE')}
+              fällig {new Date(f.faelligAm).toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin' })}
             </span>
           </div>
         ))}
@@ -280,7 +281,7 @@ function FristenPanel({ fristen }: { fristen: FristEintrag[] }) {
               {STATUS_META[f.fristTyp]?.label || f.fristTyp}
             </span>
             <span style={{ fontSize: 12, color: 'var(--muted)' }}>
-              fällig {new Date(f.faelligAm).toLocaleDateString('de-DE')}
+              fällig {new Date(f.faelligAm).toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin' })}
             </span>
           </div>
         ))}
@@ -459,7 +460,7 @@ export default function RuecklaeuferPage() {
                   const sm = STATUS_META[r.status] || { label: r.status, color: '#94a3b8' }
                   return (
                     <tr key={r.id}>
-                      <td>{new Date(r.created_at).toLocaleDateString('de-DE')}</td>
+                      <td>{new Date(r.created_at).toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin' })}</td>
                       <td>{TYP_LABELS[r.ruecklaeufer_typ] || r.ruecklaeufer_typ}</td>
                       <td>{r.lauf?.kostentraeger_name || r.kostentraeger_ik || '—'}</td>
                       <td>

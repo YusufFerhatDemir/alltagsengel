@@ -1,4 +1,5 @@
 'use client'
+import { heuteBerlin } from '@/lib/utils/timezone';
 import { Suspense, useEffect, useMemo, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
@@ -19,7 +20,7 @@ function NewRecordInner() {
 
   const [clientId, setClientId] = useState(presetClient)
   const [caregiverId, setCaregiverId] = useState('')
-  const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10))
+  const [date, setDate] = useState(() => heuteBerlin())
   const [startTime, setStartTime] = useState('')
   const [endTime, setEndTime] = useState('')
   const [serviceType, setServiceType] = useState('')

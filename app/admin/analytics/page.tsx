@@ -166,7 +166,7 @@ export default function AdminAnalyticsPage() {
   }
   function formatDate(iso: string) {
     const d = new Date(iso)
-    return d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: '2-digit' })
+    return d.toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin', day: '2-digit', month: '2-digit', year: '2-digit' })
   }
   function formatDateTime(iso: string) {
     return `${formatDate(iso)} ${formatTime(iso)}`

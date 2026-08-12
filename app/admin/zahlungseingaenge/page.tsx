@@ -1,5 +1,6 @@
 'use client'
 
+import { heuteBerlin } from '@/lib/utils/timezone';
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { IconMoney, IconDocument, IconChart, IconTarget } from '@/components/Icons'
@@ -70,7 +71,7 @@ interface Klaerfall {
 const formatCurrency = (cents: number) =>
   `${(cents / 100).toFixed(2).replace('.', ',')} €`
 const formatDate = (d: string | null) =>
-  d ? new Date(d).toLocaleDateString('de-DE') : '—'
+  d ? new Date(d).toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin' }) : '—'
 
 const STATUS_COLORS: Record<string, string> = {
   importiert: '#3b82f6',
@@ -178,7 +179,7 @@ export default function ZahlungseingaengePage() {
   }
 
   // ─── Statistik-Karten ───
-  const todayStr = new Date().toISOString().slice(0, 10)
+  const todayStr = heuteBerlin()
   const eingaengeHeute = imports
     .filter(i => i.import_datum?.startsWith(todayStr))
     .reduce((s, i) => s + i.buchungen_anzahl, 0)

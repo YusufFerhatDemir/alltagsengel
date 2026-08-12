@@ -1,4 +1,5 @@
 'use client'
+import { datumBerlin } from '@/lib/utils/timezone';
 import { useEffect, useMemo, useState } from 'react'
 import { statusMeta, formatTime, DIENSTPLAN_STATUS, DIENSTPLAN_TYP, WEEKDAYS } from '@/lib/admin/ops'
 import { StatusBadge, EmptyRow, Banner } from '@/components/admin/OpsUI'
@@ -49,7 +50,7 @@ function getMondayOfWeek(date: Date): Date {
 }
 
 function formatISO(d: Date): string {
-  return d.toISOString().split('T')[0]
+  return datumBerlin(d)
 }
 
 function addDays(d: Date, n: number): Date {
@@ -157,7 +158,7 @@ export default function DienstplanPage() {
     }
   }
 
-  const weekLabel = `${weekStart.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' })} – ${weekEnd.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })}`
+  const weekLabel = `${weekStart.toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin', day: '2-digit', month: '2-digit' })} – ${weekEnd.toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin', day: '2-digit', month: '2-digit', year: 'numeric' })}`
 
   return (
     <div className="admin-page">
@@ -263,7 +264,7 @@ export default function DienstplanPage() {
                   letterSpacing: '0.05em', color: isToday ? 'var(--gold)' : 'var(--ink4)',
                   marginBottom: 8, textAlign: 'center',
                 }}>
-                  {wd.short} {new Date(date + 'T12:00').toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' })}
+                  {wd.short} {new Date(date + 'T12:00').toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin', day: '2-digit', month: '2-digit' })}
                 </div>
                 {entries.length === 0 ? (
                   <div style={{ fontSize: 12, color: 'var(--ink4)', textAlign: 'center', padding: 8 }}>—</div>

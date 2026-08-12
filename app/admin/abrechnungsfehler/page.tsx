@@ -175,7 +175,7 @@ export default function AbrechnungsfehlerPage() {
               const isBusy = actionBusy === f.id
               return (
                 <tr key={f.id}>
-                  <td style={{ whiteSpace: 'nowrap' }}>{new Date(f.created_at).toLocaleDateString('de-DE')}</td>
+                  <td style={{ whiteSpace: 'nowrap' }}>{new Date(f.created_at).toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin' })}</td>
                   <td><StatusBadge label={sw.label} color={sw.color} /></td>
                   <td>{QUELLE_LABELS[f.fehler_quelle] || f.fehler_quelle}</td>
                   <td style={{ fontFamily: 'monospace', fontSize: 12 }}>{f.fehler_code || '—'}</td>

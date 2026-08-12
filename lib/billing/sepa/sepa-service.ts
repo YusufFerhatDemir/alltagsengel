@@ -6,6 +6,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { generatePain008, validateIban, generateMandateReference } from './pain008'
 import type { SepaDirectDebitItem } from './pain008'
 import { logBillingAction } from '../core/audit'
+import { heuteBerlin } from '@/lib/utils/timezone';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -200,7 +201,7 @@ export async function createSepaBatch(
   }
 
   // Batch-Nummer generieren
-  const batchNumber = `SEPA-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${Date.now().toString(36).toUpperCase()}`
+  const batchNumber = `SEPA-${heuteBerlin().replace(/-/g, '')}-${Date.now().toString(36).toUpperCase()}`
 
   // Batch erstellen
   const items: { invoiceId: string; mandateId: string; amountCents: number; endToEndId: string; item: SepaDirectDebitItem }[] = []
@@ -268,7 +269,7 @@ export async function createSepaBatch(
     .insert({
       organization_id: organizationId,
       batch_number: batchNumber,
-      batch_date: new Date().toISOString().split('T')[0],
+      batch_date: heuteBerlin(),
       total_items: items.length,
       total_cents: totalCents,
       status: 'erstellt',

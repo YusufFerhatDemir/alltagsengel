@@ -3,6 +3,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { datumBerlin } from '@/lib/utils/timezone'
 import { ermittleReadiness } from '@/lib/abrechnung/readiness'
 import { bewerteZertifikat, tageBis, ABLAUF_WARNUNG_TAGE } from '@/lib/abrechnung/zertifikate'
 
@@ -11,7 +12,7 @@ const JETZT = new Date('2026-08-08T12:00:00.000Z')
 
 function inTagen(tage: number): string {
   const d = new Date(JETZT.getTime() + tage * 86_400_000)
-  return d.toISOString().slice(0, 10)
+  return datumBerlin(d)
 }
 
 // ── Zertifikatsbewertung ────────────────────────────────────────

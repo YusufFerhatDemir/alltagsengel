@@ -1,4 +1,5 @@
 'use client'
+import { datumBerlin } from '@/lib/utils/timezone';
 import { useCallback, useEffect, useState } from 'react'
 
 interface KpiDashboard {
@@ -15,11 +16,11 @@ function euro(n: number): string {
 
 function aktuellerMonatVon(): string {
   const d = new Date()
-  return new Date(d.getFullYear(), d.getMonth(), 1).toISOString().slice(0, 10)
+  return datumBerlin(new Date(d.getFullYear(), d.getMonth(), 1))
 }
 function aktuellerMonatBis(): string {
   const d = new Date()
-  return new Date(d.getFullYear(), d.getMonth() + 1, 0).toISOString().slice(0, 10)
+  return datumBerlin(new Date(d.getFullYear(), d.getMonth() + 1, 0))
 }
 
 export default function AdminKpiDashboardPage() {

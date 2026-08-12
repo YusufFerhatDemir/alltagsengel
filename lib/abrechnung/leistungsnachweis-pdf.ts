@@ -125,7 +125,7 @@ function dateDe(iso: string | null | undefined): string {
   const d = new Date(iso)
   return isNaN(d.getTime())
     ? '—'
-    : d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })
+    : d.toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin', day: '2-digit', month: '2-digit', year: 'numeric' })
 }
 function timeDe(t: string | null | undefined): string {
   return t ? String(t).slice(0, 5) : '—'
@@ -253,10 +253,8 @@ export async function loadLeistungsnachweis(params: {
     { anzahl: 0, minuten: 0, betrag_euro: 0 }
   )
 
-  const monatLabel = new Date(jahr, monatNum - 1, 1).toLocaleDateString('de-DE', {
-    month: 'long',
-    year: 'numeric',
-  })
+  const monatLabel = new Date(jahr, monatNum - 1, 1).toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin', month: 'long',
+    year: 'numeric', })
 
   const le = effectiveOrgId
     ? await getLeistungserbringer(supabase, effectiveOrgId)
@@ -265,7 +263,7 @@ export async function loadLeistungsnachweis(params: {
   return {
     monat,
     monat_label: monatLabel,
-    erstellt_am: new Date().toLocaleDateString('de-DE'),
+    erstellt_am: new Date().toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin' }),
     leistungserbringer_ik: await getOrgIK(supabase, effectiveOrgId),
     leistungserbringer: le,
     verordnung: {

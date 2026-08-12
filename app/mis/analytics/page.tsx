@@ -468,7 +468,7 @@ export default function AnalyticsPage() {
                   const d = new Date(r.created_at)
                   return (
                     <div>
-                      <div style={{ fontSize: 13 }}>{d.toLocaleDateString('de-DE')}</div>
+                      <div style={{ fontSize: 13 }}>{d.toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin' })}</div>
                       <div style={{ fontSize: 11, color: BRAND.muted }}>{d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}</div>
                     </div>
                   )
@@ -559,7 +559,7 @@ export default function AnalyticsPage() {
                     const d = new Date(r.created_at as string)
                     return (
                       <div>
-                        <div style={{ fontSize: 13 }}>{d.toLocaleDateString('de-DE')}</div>
+                        <div style={{ fontSize: 13 }}>{d.toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin' })}</div>
                         <div style={{ fontSize: 11, color: BRAND.muted }}>{d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</div>
                       </div>
                     )
@@ -607,7 +607,7 @@ export default function AnalyticsPage() {
                   )},
                   { key: 'created_at', label: 'Registriert', render: (r) => (
                     <div>
-                      <div style={{ fontSize: 13 }}>{new Date(r.created_at as string).toLocaleDateString('de-DE')}</div>
+                      <div style={{ fontSize: 13 }}>{new Date(r.created_at as string).toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin' })}</div>
                       <div style={{ fontSize: 11, color: BRAND.muted }}>{new Date(r.created_at as string).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}</div>
                     </div>
                   )},
@@ -616,7 +616,7 @@ export default function AnalyticsPage() {
                     const d = new Date(r.last_sign_in_at as string)
                     return (
                       <div>
-                        <div style={{ fontSize: 13 }}>{d.toLocaleDateString('de-DE')}</div>
+                        <div style={{ fontSize: 13 }}>{d.toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin' })}</div>
                         <div style={{ fontSize: 11, color: BRAND.muted }}>{d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}</div>
                       </div>
                     )
@@ -676,7 +676,7 @@ export default function AnalyticsPage() {
                     <div style={{ fontSize: 11, color: BRAND.muted }}>{u.role === 'admin' ? 'Admin' : u.role === 'engel' ? 'Engel' : 'Kunde'}</div>
                   </div>
                   <div style={{ fontSize: 11, color: BRAND.muted, flexShrink: 0 }}>
-                    {new Date(u.created_at).toLocaleDateString('de-DE')}
+                    {new Date(u.created_at).toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin' })}
                   </div>
                 </div>
               ))}

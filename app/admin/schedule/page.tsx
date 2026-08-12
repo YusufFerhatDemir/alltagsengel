@@ -1,4 +1,5 @@
 'use client'
+import { datumBerlin, heuteBerlin } from '@/lib/utils/timezone';
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import {
@@ -16,7 +17,7 @@ function mondayOfWeek(base: Date): Date {
   d.setHours(0, 0, 0, 0)
   return d
 }
-function isoDate(d: Date): string { return d.toISOString().slice(0, 10) }
+function isoDate(d: Date): string { return datumBerlin(d) }
 // Datum eines Wochentags (JS-Konvention 0=So) in der angegebenen Woche
 function dateForWeekday(monday: Date, weekday: number): Date {
   const offset = weekday === 0 ? 6 : weekday - 1 // Mo=0 … So=6
@@ -455,7 +456,7 @@ function CreateAssignmentModal({ clients, caregivers, onClose, onSaved }: {
 }) {
   const [clientId, setClientId] = useState('')
   const [caregiverId, setCaregiverId] = useState('')
-  const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10))
+  const [date, setDate] = useState(() => heuteBerlin())
   const [startTime, setStartTime] = useState('09:00')
   const [endTime, setEndTime] = useState('11:00')
   const [serviceType, setServiceType] = useState('Alltagsbegleitung')
@@ -588,8 +589,8 @@ function CreateAssignmentModal({ clients, caregivers, onClose, onSaved }: {
 function ReportAbsenceModal({ caregivers, onClose, onSaved }: { caregivers: Caregiver[]; onClose: () => void; onSaved: () => void }) {
   const [caregiverId, setCaregiverId] = useState('')
   const [type, setType] = useState('sick')
-  const [start, setStart] = useState(() => new Date().toISOString().slice(0, 10))
-  const [end, setEnd] = useState(() => new Date().toISOString().slice(0, 10))
+  const [start, setStart] = useState(() => heuteBerlin())
+  const [end, setEnd] = useState(() => heuteBerlin())
   const [reason, setReason] = useState('')
   const [saving, setSaving] = useState(false)
   const [err, setErr] = useState<string | null>(null)
@@ -642,7 +643,7 @@ function ReportAbsenceModal({ caregivers, onClose, onSaved }: { caregivers: Care
 function CreateSubModal({ clients, caregivers, onClose, onSaved }: { clients: Client[]; caregivers: Caregiver[]; onClose: () => void; onSaved: () => void }) {
   const [clientId, setClientId] = useState('')
   const [originalId, setOriginalId] = useState('')
-  const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10))
+  const [date, setDate] = useState(() => heuteBerlin())
   const [startTime, setStartTime] = useState('')
   const [endTime, setEndTime] = useState('')
   const [service, setService] = useState('')

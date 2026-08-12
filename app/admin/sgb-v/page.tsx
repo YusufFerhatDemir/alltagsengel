@@ -1,4 +1,5 @@
 'use client'
+import { monatBerlin } from '@/lib/utils/timezone';
 // ═══════════════════════════════════════════════════════════════
 // § 302 SGB V — Sonstige Leistungserbringer (Block 17)
 //
@@ -99,7 +100,7 @@ const AMPEL_LABEL: Record<string, string> = {
 }
 
 function aktuellerMonat(): string {
-  return new Date().toISOString().slice(0, 7)
+  return monatBerlin()
 }
 
 export default function SgbVPage() {

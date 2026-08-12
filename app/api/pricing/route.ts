@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { heuteBerlin } from '@/lib/utils/timezone';
 
 // ═══════════════════════════════════════════════════════════════
 // GET /api/pricing
@@ -50,7 +51,7 @@ export async function GET(request: Request) {
     const url = new URL(request.url)
     const serviceType = url.searchParams.get('service_type')
     const budgetType = url.searchParams.get('budget_type')
-    const today = new Date().toISOString().slice(0, 10)
+    const today = heuteBerlin()
 
     const admin = createAdminClient()
     let query = admin

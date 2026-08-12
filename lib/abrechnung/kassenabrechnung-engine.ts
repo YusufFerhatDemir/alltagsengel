@@ -370,8 +370,8 @@ export async function preFlightValidierung(
     pflicht: true,
     details: absenderZert?.gueltig_bis
       ? absenderGueltig
-        ? `Gültig bis ${new Date(absenderZert.gueltig_bis).toLocaleDateString('de-DE')}`
-        : `ABGELAUFEN am ${new Date(absenderZert.gueltig_bis).toLocaleDateString('de-DE')} — beim ITSG Trust Center verlängern`
+        ? `Gültig bis ${new Date(absenderZert.gueltig_bis).toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin' })}`
+        : `ABGELAUFEN am ${new Date(absenderZert.gueltig_bis).toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin' })} — beim ITSG Trust Center verlängern`
       : 'Kein Absenderzertifikat hinterlegt — EXTERNE KONFIGURATION ERFORDERLICH (ITSG Trust Center)',
   })
 

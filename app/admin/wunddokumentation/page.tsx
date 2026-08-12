@@ -223,7 +223,7 @@ export default function WunddokumentationPage() {
                     {WUND_STATUS_LABELS[w.status]}
                   </span>
                 </td>
-                <td>{new Date(w.erstdokumentation_am).toLocaleDateString('de-DE')}</td>
+                <td>{new Date(w.erstdokumentation_am).toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin' })}</td>
                 <td>
                   <Link href={`/admin/wunddokumentation/${w.id}`} style={{ fontWeight: 600 }}>Öffnen →</Link>
                 </td>
