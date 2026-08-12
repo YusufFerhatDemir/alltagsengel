@@ -54,20 +54,30 @@ export function bundesweiteFeiertage(jahr: number): Feiertag[] {
 }
 
 /**
- * Landesspezifische Feiertage.
- * Nur die wichtigsten fuer die Pflege-Abrechnung.
+ * Landesspezifische Feiertage fuer alle 16 Bundeslaender.
+ *
+ * Akzeptiert sowohl Unterstrich- als auch Bindestrich-Format
+ * (z.B. 'nordrhein_westfalen' oder 'nordrhein-westfalen').
+ * Rueckgabe verwendet immer das kanonische Unterstrich-Format
+ * (passend zu BundeslandCode aus lib/expansion/types.ts).
  */
 export function landesFeiertage(jahr: number, bundesland: string): Feiertag[] {
   const ostern = berechneOstersonntag(jahr);
   const fronleichnam = addDays(ostern, 60);
   const feiertage: Feiertag[] = [];
 
-  switch (bundesland.toLowerCase()) {
-    case 'hessen':
+  // Normalisieren: lowercase + Bindestriche → Unterstriche
+  const bl = bundesland.toLowerCase().replace(/-/g, '_');
+
+  switch (bl) {
+    case 'baden_wuerttemberg':
       feiertage.push(
-        { datum: formatDate(fronleichnam), bezeichnung: 'Fronleichnam', bundesland: 'hessen' },
+        { datum: `${jahr}-01-06`, bezeichnung: 'Heilige Drei Koenige', bundesland: 'baden_wuerttemberg' },
+        { datum: formatDate(fronleichnam), bezeichnung: 'Fronleichnam', bundesland: 'baden_wuerttemberg' },
+        { datum: `${jahr}-11-01`, bezeichnung: 'Allerheiligen', bundesland: 'baden_wuerttemberg' },
       );
       break;
+
     case 'bayern':
       feiertage.push(
         { datum: `${jahr}-01-06`, bezeichnung: 'Heilige Drei Koenige', bundesland: 'bayern' },
@@ -76,23 +86,97 @@ export function landesFeiertage(jahr: number, bundesland: string): Feiertag[] {
         { datum: `${jahr}-11-01`, bezeichnung: 'Allerheiligen', bundesland: 'bayern' },
       );
       break;
-    case 'nordrhein-westfalen':
-    case 'nrw':
+
+    case 'berlin':
       feiertage.push(
-        { datum: formatDate(fronleichnam), bezeichnung: 'Fronleichnam', bundesland: 'nordrhein-westfalen' },
-        { datum: `${jahr}-11-01`, bezeichnung: 'Allerheiligen', bundesland: 'nordrhein-westfalen' },
+        { datum: `${jahr}-03-08`, bezeichnung: 'Frauentag', bundesland: 'berlin' },
       );
       break;
+
+    case 'brandenburg':
+      feiertage.push(
+        { datum: `${jahr}-10-31`, bezeichnung: 'Reformationstag', bundesland: 'brandenburg' },
+      );
+      break;
+
+    case 'bremen':
+      feiertage.push(
+        { datum: `${jahr}-10-31`, bezeichnung: 'Reformationstag', bundesland: 'bremen' },
+      );
+      break;
+
+    case 'hamburg':
+      feiertage.push(
+        { datum: `${jahr}-10-31`, bezeichnung: 'Reformationstag', bundesland: 'hamburg' },
+      );
+      break;
+
+    case 'hessen':
+      feiertage.push(
+        { datum: formatDate(fronleichnam), bezeichnung: 'Fronleichnam', bundesland: 'hessen' },
+      );
+      break;
+
+    case 'mecklenburg_vorpommern':
+      feiertage.push(
+        { datum: `${jahr}-03-08`, bezeichnung: 'Frauentag', bundesland: 'mecklenburg_vorpommern' },
+        { datum: `${jahr}-10-31`, bezeichnung: 'Reformationstag', bundesland: 'mecklenburg_vorpommern' },
+      );
+      break;
+
     case 'niedersachsen':
       feiertage.push(
         { datum: `${jahr}-10-31`, bezeichnung: 'Reformationstag', bundesland: 'niedersachsen' },
       );
       break;
-    case 'baden-wuerttemberg':
+
+    case 'nordrhein_westfalen':
+    case 'nrw':
       feiertage.push(
-        { datum: `${jahr}-01-06`, bezeichnung: 'Heilige Drei Koenige', bundesland: 'baden-wuerttemberg' },
-        { datum: formatDate(fronleichnam), bezeichnung: 'Fronleichnam', bundesland: 'baden-wuerttemberg' },
-        { datum: `${jahr}-11-01`, bezeichnung: 'Allerheiligen', bundesland: 'baden-wuerttemberg' },
+        { datum: formatDate(fronleichnam), bezeichnung: 'Fronleichnam', bundesland: 'nordrhein_westfalen' },
+        { datum: `${jahr}-11-01`, bezeichnung: 'Allerheiligen', bundesland: 'nordrhein_westfalen' },
+      );
+      break;
+
+    case 'rheinland_pfalz':
+      feiertage.push(
+        { datum: formatDate(fronleichnam), bezeichnung: 'Fronleichnam', bundesland: 'rheinland_pfalz' },
+        { datum: `${jahr}-11-01`, bezeichnung: 'Allerheiligen', bundesland: 'rheinland_pfalz' },
+      );
+      break;
+
+    case 'saarland':
+      feiertage.push(
+        { datum: formatDate(fronleichnam), bezeichnung: 'Fronleichnam', bundesland: 'saarland' },
+        { datum: `${jahr}-08-15`, bezeichnung: 'Mariae Himmelfahrt', bundesland: 'saarland' },
+        { datum: `${jahr}-11-01`, bezeichnung: 'Allerheiligen', bundesland: 'saarland' },
+      );
+      break;
+
+    case 'sachsen':
+      feiertage.push(
+        { datum: `${jahr}-10-31`, bezeichnung: 'Reformationstag', bundesland: 'sachsen' },
+        { datum: formatDate(berechneBussUndBettag(jahr)), bezeichnung: 'Buss und Bettag', bundesland: 'sachsen' },
+      );
+      break;
+
+    case 'sachsen_anhalt':
+      feiertage.push(
+        { datum: `${jahr}-01-06`, bezeichnung: 'Heilige Drei Koenige', bundesland: 'sachsen_anhalt' },
+        { datum: `${jahr}-10-31`, bezeichnung: 'Reformationstag', bundesland: 'sachsen_anhalt' },
+      );
+      break;
+
+    case 'schleswig_holstein':
+      feiertage.push(
+        { datum: `${jahr}-10-31`, bezeichnung: 'Reformationstag', bundesland: 'schleswig_holstein' },
+      );
+      break;
+
+    case 'thueringen':
+      feiertage.push(
+        { datum: `${jahr}-09-20`, bezeichnung: 'Weltkindertag', bundesland: 'thueringen' },
+        { datum: `${jahr}-10-31`, bezeichnung: 'Reformationstag', bundesland: 'thueringen' },
       );
       break;
   }
@@ -174,6 +258,19 @@ function berechneOstersonntag(jahr: number): Date {
   const monat = Math.floor((h + l - 7 * m + 114) / 31);
   const tag = ((h + l - 7 * m + 114) % 31) + 1;
   return new Date(jahr, monat - 1, tag);
+}
+
+/**
+ * Berechnet den Buss- und Bettag (Mittwoch vor dem 23. November).
+ * Faellt immer zwischen den 16. und 22. November.
+ * Gesetzlicher Feiertag nur noch in Sachsen.
+ */
+function berechneBussUndBettag(jahr: number): Date {
+  const nov23 = new Date(jahr, 10, 23); // Monat 0-indiziert: 10 = November
+  const dow = nov23.getDay(); // 0=So, 1=Mo, ..., 6=Sa
+  // Tage zurueck zum letzten Mittwoch (Mittwoch = 3) VOR dem 23.
+  const daysBack = ((dow - 3) + 7) % 7 || 7;
+  return addDays(nov23, -daysBack);
 }
 
 function addDays(date: Date, days: number): Date {
