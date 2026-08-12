@@ -20,12 +20,159 @@ function monthKey(dateStr: string | null): string | null {
   return dateStr.slice(0, 7) // YYYY-MM
 }
 
+type BonusKriteriumTyp = 'keine_ausfaelle' | 'vollstaendige_dokumentation' | 'keine_offenen_pruefungen'
+const KRITERIUM_LABEL: Record<BonusKriteriumTyp, string> = {
+  keine_ausfaelle: 'Keine Ausfälle (max. Ausfalltage im Zeitraum)',
+  vollstaendige_dokumentation: 'Vollständige Dokumentation (% signierte Leistungsnachweise)',
+  keine_offenen_pruefungen: 'Keine offenen Prüfhinweise (% ohne offene Fehler)',
+}
+interface BonusRegel {
+  id: string; organizationId: string; name: string; kriteriumTyp: BonusKriteriumTyp
+  schwellenwert: number; punkte: number; aktiv: boolean; createdAt: string
+}
+interface BonusBerechnung {
+  id: string; regelId: string; caregiverId: string; zeitraumVon: string; zeitraumBis: string
+  erfuellt: boolean; messwert: number | null; punkte: number
+  status: 'berechnet' | 'freigegeben' | 'abgelehnt' | 'ausgezahlt'; berechnetAm: string
+}
+
+function aktuellerMonatVon(): string {
+  const d = new Date()
+  return new Date(d.getFullYear(), d.getMonth(), 1).toISOString().slice(0, 10)
+}
+function aktuellerMonatBis(): string {
+  const d = new Date()
+  return new Date(d.getFullYear(), d.getMonth() + 1, 0).toISOString().slice(0, 10)
+}
+
 export default function AdminBonusesPage() {
   const router = useRouter()
+  const [tab, setTab] = useState<'uebersicht' | 'regelwerk' | 'berechnungslauf' | 'freigaben'>('uebersicht')
   const [caregivers, setCaregivers] = useState<Caregiver[]>([])
   const [bonuses, setBonuses] = useState<BonusRow[]>([])
   const [loading, setLoading] = useState(true)
   const [award, setAward] = useState(false)
+
+  // Regelwerk
+  const [regeln, setRegeln] = useState<BonusRegel[]>([])
+  const [regelnLoading, setRegelnLoading] = useState(false)
+  const [regelnError, setRegelnError] = useState<string | null>(null)
+  const [neueRegel, setNeueRegel] = useState({ name: '', kriteriumTyp: 'keine_ausfaelle' as BonusKriteriumTyp, schwellenwert: '0', punkte: '10' })
+  const [regelSaving, setRegelSaving] = useState(false)
+
+  const loadRegeln = useCallback(async () => {
+    setRegelnLoading(true)
+    setRegelnError(null)
+    try {
+      const res = await fetch('/api/admin/analytics/bonuses/regeln')
+      const json = await res.json()
+      if (!res.ok) { setRegelnError(json.error || 'Unbekannter Fehler'); return }
+      setRegeln(json)
+    } catch (err: any) {
+      setRegelnError(err.message || 'Unbekannter Fehler')
+    } finally {
+      setRegelnLoading(false)
+    }
+  }, [])
+
+  useEffect(() => { if (tab === 'regelwerk' || tab === 'berechnungslauf' || tab === 'freigaben') loadRegeln() }, [tab, loadRegeln])
+
+  async function regelAnlegen() {
+    setRegelSaving(true)
+    setRegelnError(null)
+    try {
+      const res = await fetch('/api/admin/analytics/bonuses/regeln', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: neueRegel.name,
+          kriteriumTyp: neueRegel.kriteriumTyp,
+          schwellenwert: Number(neueRegel.schwellenwert),
+          punkte: Number(neueRegel.punkte),
+        }),
+      })
+      const json = await res.json()
+      if (!res.ok) { setRegelnError(json.error || 'Unbekannter Fehler'); return }
+      setNeueRegel({ name: '', kriteriumTyp: 'keine_ausfaelle', schwellenwert: '0', punkte: '10' })
+      await loadRegeln()
+    } catch (err: any) {
+      setRegelnError(err.message || 'Unbekannter Fehler')
+    } finally {
+      setRegelSaving(false)
+    }
+  }
+
+  async function regelToggle(id: string, aktiv: boolean) {
+    await fetch('/api/admin/analytics/bonuses/regeln', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, aktiv }),
+    })
+    await loadRegeln()
+  }
+
+  // Berechnungslauf
+  const [laufRegelId, setLaufRegelId] = useState('')
+  const [laufVon, setLaufVon] = useState(aktuellerMonatVon())
+  const [laufBis, setLaufBis] = useState(aktuellerMonatBis())
+  const [laufRunning, setLaufRunning] = useState(false)
+  const [laufError, setLaufError] = useState<string | null>(null)
+  const [laufErgebnis, setLaufErgebnis] = useState<{ anzahl: number; erfuellt: number; ergebnisse: { caregiverId: string; erfuellt: boolean; messwert: number; punkte: number; begruendung: string }[] } | null>(null)
+
+  async function berechnungslaufStarten() {
+    if (!laufRegelId) { setLaufError('Bitte eine Regel wählen.'); return }
+    setLaufRunning(true)
+    setLaufError(null)
+    try {
+      const res = await fetch('/api/admin/analytics/bonuses/berechnen', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ regelId: laufRegelId, von: laufVon, bis: laufBis }),
+      })
+      const json = await res.json()
+      if (!res.ok) { setLaufError(json.error || 'Unbekannter Fehler'); setLaufErgebnis(null); return }
+      setLaufErgebnis(json)
+    } catch (err: any) {
+      setLaufError(err.message || 'Unbekannter Fehler')
+    } finally {
+      setLaufRunning(false)
+    }
+  }
+
+  // Freigaben & Historie
+  const [berechnungen, setBerechnungen] = useState<BonusBerechnung[]>([])
+  const [berechnungenLoading, setBerechnungenLoading] = useState(false)
+  const [freigabeBusyId, setFreigabeBusyId] = useState<string | null>(null)
+
+  const loadBerechnungen = useCallback(async () => {
+    setBerechnungenLoading(true)
+    try {
+      const res = await fetch('/api/admin/analytics/bonuses/historie')
+      const json = await res.json()
+      if (res.ok) setBerechnungen(json)
+    } finally {
+      setBerechnungenLoading(false)
+    }
+  }, [])
+
+  useEffect(() => { if (tab === 'freigaben') loadBerechnungen() }, [tab, loadBerechnungen])
+
+  async function entscheiden(berechnungId: string, entscheidung: 'freigegeben' | 'abgelehnt') {
+    setFreigabeBusyId(berechnungId)
+    try {
+      await fetch('/api/admin/analytics/bonuses/freigeben', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ berechnungId, entscheidung }),
+      })
+      await loadBerechnungen()
+    } finally {
+      setFreigabeBusyId(null)
+    }
+  }
+
+  const caregiverName = useCallback((id: string) => caregivers.find(c => c.id === id)?.name || id, [caregivers])
+  const regelName = useCallback((id: string) => regeln.find(r => r.id === id)?.name || id, [regeln])
 
   const load = useCallback(async () => {
     try {
@@ -82,9 +229,18 @@ export default function AdminBonusesPage() {
           <h1>Mitarbeiterbindung</h1>
           <p className="admin-subtitle">Bonus-Punkte, Prämien und Mitarbeiter des Monats</p>
         </div>
-        <button onClick={() => setAward(true)} style={primaryBtn}>+ Bonus vergeben</button>
+        {tab === 'uebersicht' && <button onClick={() => setAward(true)} style={primaryBtn}>+ Bonus vergeben</button>}
       </div>
 
+      <div className="admin-filters" style={{ marginBottom: 20 }}>
+        <button className={`admin-filter-btn ${tab === 'uebersicht' ? 'active' : ''}`} onClick={() => setTab('uebersicht')}>Übersicht</button>
+        <button className={`admin-filter-btn ${tab === 'regelwerk' ? 'active' : ''}`} onClick={() => setTab('regelwerk')}>Regelwerk</button>
+        <button className={`admin-filter-btn ${tab === 'berechnungslauf' ? 'active' : ''}`} onClick={() => setTab('berechnungslauf')}>Berechnungslauf</button>
+        <button className={`admin-filter-btn ${tab === 'freigaben' ? 'active' : ''}`} onClick={() => setTab('freigaben')}>Freigaben & Historie</button>
+      </div>
+
+      {tab === 'uebersicht' && (
+      <>
       {/* Mitarbeiter des Monats */}
       <div className="admin-stat-card gold" style={{ padding: 20, marginBottom: 20, display: 'flex', alignItems: 'center', gap: 16 }}>
         <span style={{ fontSize: 36 }}>🏆</span>
@@ -159,6 +315,156 @@ export default function AdminBonusesPage() {
             </table>
           </div>
         </>
+      )}
+      </>
+      )}
+
+      {tab === 'regelwerk' && (
+        <div>
+          <h2>Regelwerk anlegen</h2>
+          {regelnError && <Banner tone="danger">{regelnError}</Banner>}
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'end', marginBottom: 20 }}>
+            <Field label="Name">
+              <input value={neueRegel.name} onChange={e => setNeueRegel(s => ({ ...s, name: e.target.value }))} placeholder="z. B. Zuverlässigkeit Q3" style={modalInput} />
+            </Field>
+            <Field label="Kriterium">
+              <select value={neueRegel.kriteriumTyp} onChange={e => setNeueRegel(s => ({ ...s, kriteriumTyp: e.target.value as BonusKriteriumTyp }))} style={modalSelect}>
+                {Object.entries(KRITERIUM_LABEL).map(([k, l]) => <option key={k} value={k}>{l}</option>)}
+              </select>
+            </Field>
+            <Field label="Schwellenwert">
+              <input type="number" step="0.1" value={neueRegel.schwellenwert} onChange={e => setNeueRegel(s => ({ ...s, schwellenwert: e.target.value }))} style={modalInput} />
+            </Field>
+            <Field label="Punkte bei Erfüllung">
+              <input type="number" value={neueRegel.punkte} onChange={e => setNeueRegel(s => ({ ...s, punkte: e.target.value }))} style={modalInput} />
+            </Field>
+            <button onClick={regelAnlegen} disabled={regelSaving || !neueRegel.name} style={primaryBtn}>{regelSaving ? 'Speichern…' : 'Regel anlegen'}</button>
+          </div>
+
+          <h2>Aktive Regeln ({regeln.length})</h2>
+          {regelnLoading ? <p>Laden…</p> : (
+            <div className="admin-table-wrap">
+              <table className="admin-table">
+                <thead><tr><th>Name</th><th>Kriterium</th><th>Schwellenwert</th><th>Punkte</th><th>Status</th><th>Aktion</th></tr></thead>
+                <tbody>
+                  {regeln.length === 0 ? <EmptyRow colSpan={6}>Noch keine Regeln angelegt</EmptyRow> : regeln.map(r => (
+                    <tr key={r.id}>
+                      <td style={{ fontWeight: 600 }}>{r.name}</td>
+                      <td style={{ fontSize: 13 }}>{KRITERIUM_LABEL[r.kriteriumTyp]}</td>
+                      <td>{r.schwellenwert}</td>
+                      <td style={{ fontWeight: 700, color: 'var(--gold2)' }}>{r.punkte}</td>
+                      <td>{r.aktiv ? <StatusBadge label="Aktiv" color="#5CB882" /> : <StatusBadge label="Inaktiv" color="#999" />}</td>
+                      <td><button onClick={() => regelToggle(r.id, !r.aktiv)} style={actionBtn}>{r.aktiv ? 'Deaktivieren' : 'Aktivieren'}</button></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+
+      {tab === 'berechnungslauf' && (
+        <div>
+          <p style={{ fontSize: 13, color: 'var(--ink3)', marginBottom: 16 }}>
+            Wertet eine aktive Regel für alle aktiven Kräfte im gewählten Zeitraum aus und speichert das Ergebnis mit Status „berechnet" — Freigabe erfolgt im nächsten Tab.
+          </p>
+          <div style={{ display: 'flex', gap: 10, alignItems: 'end', flexWrap: 'wrap', marginBottom: 20 }}>
+            <Field label="Regel">
+              <select value={laufRegelId} onChange={e => setLaufRegelId(e.target.value)} style={modalSelect}>
+                <option value="">— wählen —</option>
+                {regeln.filter(r => r.aktiv).map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
+              </select>
+            </Field>
+            <Field label="Von">
+              <input type="date" value={laufVon} onChange={e => setLaufVon(e.target.value)} style={modalInput} />
+            </Field>
+            <Field label="Bis">
+              <input type="date" value={laufBis} onChange={e => setLaufBis(e.target.value)} style={modalInput} />
+            </Field>
+            <button onClick={berechnungslaufStarten} disabled={laufRunning} style={primaryBtn}>{laufRunning ? 'Läuft…' : 'Berechnungslauf starten'}</button>
+          </div>
+
+          {laufError && <Banner tone="danger">{laufError}</Banner>}
+
+          {laufErgebnis && (
+            <>
+              <p style={{ fontSize: 13, color: 'var(--ink3)' }}>{laufErgebnis.erfuellt} von {laufErgebnis.anzahl} Kräften haben das Kriterium erfüllt.</p>
+              <div className="admin-table-wrap">
+                <table className="admin-table">
+                  <thead><tr><th>Mitarbeiter</th><th>Erfüllt</th><th>Messwert</th><th>Punkte</th><th>Begründung</th></tr></thead>
+                  <tbody>
+                    {laufErgebnis.ergebnisse.map(e => (
+                      <tr key={e.caregiverId}>
+                        <td style={{ fontWeight: 600 }}>{caregiverName(e.caregiverId)}</td>
+                        <td>{e.erfuellt ? <StatusBadge label="Ja" color="#5CB882" /> : <StatusBadge label="Nein" color="#D04B3B" />}</td>
+                        <td>{e.messwert}</td>
+                        <td style={{ fontWeight: 700, color: 'var(--gold2)' }}>{e.punkte}</td>
+                        <td style={{ fontSize: 13 }}>{e.begruendung}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          )}
+        </div>
+      )}
+
+      {tab === 'freigaben' && (
+        <div>
+          {berechnungenLoading ? <p>Laden…</p> : (
+            <>
+              <h2>Offen zur Freigabe ({berechnungen.filter(b => b.status === 'berechnet').length})</h2>
+              <div className="admin-table-wrap">
+                <table className="admin-table">
+                  <thead><tr><th>Mitarbeiter</th><th>Regel</th><th>Zeitraum</th><th>Erfüllt</th><th>Punkte</th><th>Aktion</th></tr></thead>
+                  <tbody>
+                    {berechnungen.filter(b => b.status === 'berechnet').length === 0 ? (
+                      <EmptyRow colSpan={6}>Keine offenen Berechnungen</EmptyRow>
+                    ) : berechnungen.filter(b => b.status === 'berechnet').map(b => (
+                      <tr key={b.id}>
+                        <td style={{ fontWeight: 600 }}>{caregiverName(b.caregiverId)}</td>
+                        <td style={{ fontSize: 13 }}>{regelName(b.regelId)}</td>
+                        <td style={{ fontSize: 13, whiteSpace: 'nowrap' }}>{formatDate(b.zeitraumVon)} – {formatDate(b.zeitraumBis)}</td>
+                        <td>{b.erfuellt ? <StatusBadge label="Ja" color="#5CB882" /> : <StatusBadge label="Nein" color="#D04B3B" />}</td>
+                        <td style={{ fontWeight: 700, color: 'var(--gold2)' }}>{b.punkte}</td>
+                        <td style={{ display: 'flex', gap: 6 }}>
+                          <button onClick={() => entscheiden(b.id, 'freigegeben')} disabled={freigabeBusyId === b.id} style={actionBtn}>Freigeben</button>
+                          <button onClick={() => entscheiden(b.id, 'abgelehnt')} disabled={freigabeBusyId === b.id} style={{ ...actionBtn, color: '#D04B3B', borderColor: 'rgba(208,75,59,0.3)', background: 'rgba(208,75,59,0.08)' }}>Ablehnen</button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <h2 style={{ marginTop: 32 }}>Historie ({berechnungen.length})</h2>
+              <div className="admin-table-wrap">
+                <table className="admin-table">
+                  <thead><tr><th>Mitarbeiter</th><th>Regel</th><th>Zeitraum</th><th>Status</th><th>Punkte</th><th>Berechnet am</th></tr></thead>
+                  <tbody>
+                    {berechnungen.length === 0 ? <EmptyRow colSpan={6}>Noch keine Berechnungsläufe</EmptyRow> : berechnungen.map(b => (
+                      <tr key={b.id}>
+                        <td style={{ fontWeight: 600 }}>{caregiverName(b.caregiverId)}</td>
+                        <td style={{ fontSize: 13 }}>{regelName(b.regelId)}</td>
+                        <td style={{ fontSize: 13, whiteSpace: 'nowrap' }}>{formatDate(b.zeitraumVon)} – {formatDate(b.zeitraumBis)}</td>
+                        <td>
+                          {b.status === 'freigegeben' && <StatusBadge label="Freigegeben" color="#5CB882" />}
+                          {b.status === 'abgelehnt' && <StatusBadge label="Abgelehnt" color="#D04B3B" />}
+                          {b.status === 'berechnet' && <StatusBadge label="Offen" color="#E8A000" />}
+                          {b.status === 'ausgezahlt' && <StatusBadge label="Ausgezahlt" color="#2196F3" />}
+                        </td>
+                        <td style={{ fontWeight: 700, color: 'var(--gold2)' }}>{b.punkte}</td>
+                        <td style={{ fontSize: 13, whiteSpace: 'nowrap' }}>{formatDate(b.berechnetAm)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          )}
+        </div>
       )}
 
       {award && <AwardModal caregivers={caregivers} onClose={() => setAward(false)} onSaved={() => { setAward(false); load() }} />}
@@ -249,3 +555,8 @@ const modalInput: React.CSSProperties = {
   outline: 'none', boxSizing: 'border-box', marginBottom: 0,
 }
 const modalSelect: React.CSSProperties = { ...modalInput }
+const actionBtn: React.CSSProperties = {
+  fontSize: 12, color: 'var(--gold2)', background: 'rgba(201,150,60,0.1)',
+  border: '1px solid rgba(201,150,60,0.3)', borderRadius: 6, padding: '4px 10px',
+  cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap',
+}

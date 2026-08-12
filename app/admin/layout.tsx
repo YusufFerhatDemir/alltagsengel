@@ -218,6 +218,7 @@ const navGroups = [
       { href: '/admin/users', label: 'Benutzer', icon: <IconUsers size={18} /> },
       { href: '/admin/bookings', label: 'Buchungen', icon: <IconClipboard size={18} /> },
       { href: '/admin/analytics', label: 'Analytik', icon: <IconTarget size={18} /> },
+      { href: '/admin/analytics/kpi', label: 'KPI-Dashboard', icon: <IconChart size={18} /> },
       { href: '/admin/quality', label: 'Qualitätsmanagement', icon: <IconHeart size={18} /> },
       { href: '/admin/bonuses', label: 'Mitarbeiterbindung', icon: <IconTarget size={18} /> },
       { href: '/admin/partners', label: 'Kooperationspartner', icon: <IconHandshake size={18} /> },
