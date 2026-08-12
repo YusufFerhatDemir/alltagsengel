@@ -8,6 +8,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { logAuditEvent } from '@/lib/audit-log'
+import { getOrgIK } from '@/lib/config/org-config'
 
 // ═══════════════════════════════════════════════════════════════
 // POST /api/admin/invoices/[id]/generate-pdf
@@ -94,6 +95,19 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 
     const invoiceNumber = invoice.invoice_number_formatted || invoice.invoice_number || '—'
     const kind = DOCUMENT_KINDS[invoice.correction_type || 'rechnung'] || DOCUMENT_KINDS.rechnung
+
+    // ── IK-Nummer + Bankdaten der Organisation laden ──
+    const ikNummer = await getOrgIK(admin, orgId)
+    const { data: orgData } = await admin
+      .from('organizations')
+      .select('name, iban, bic, bank_name, steuernummer')
+      .eq('id', orgId)
+      .maybeSingle()
+    const orgName = orgData?.name || 'Alltagsengel UG (haftungsbeschr.)'
+    const orgIban = orgData?.iban || null
+    const orgBic = orgData?.bic || null
+    const orgBank = orgData?.bank_name || 'Sparkasse'
+    const orgSteuer = orgData?.steuernummer || null
 
     // ── Bezug + Korrekturgrund bei Korrekturbelegen ──
     let originalNumber: string | null = null
@@ -200,7 +214,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       // Seite gezeichnet und waren unlesbar.
       const ensureSpace = (needed: number, repeatHeader = false) => {
         if (y - needed >= MARGIN + 40) return
-        drawFooter(page, fontRegular, kind.payable)
+        drawFooter(page, fontRegular, kind.payable, { ik: ikNummer, iban: orgIban ?? undefined, bic: orgBic ?? undefined, bank: orgBank, steuer: orgSteuer ?? undefined })
         page = pdfDoc.addPage([PAGE_WIDTH, PAGE_HEIGHT])
         y = PAGE_HEIGHT - MARGIN
         page.drawText(`${kind.title} ${invoiceNumber} (Fortsetzung)`, {
@@ -211,6 +225,9 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       }
 
       page.drawText('Alltagsengel', { x: MARGIN, y, size: 20, font: fontBold, color: rgb(0.15, 0.11, 0.07) })
+      if (ikNummer) {
+        page.drawText(`IK ${ikNummer}`, { x: MARGIN + 170, y: y + 2, size: 9, font: fontRegular, color: rgb(0.45, 0.45, 0.45) })
+      }
       y -= 30
       page.drawText(kind.title, { x: MARGIN, y, size: 15, font: fontBold, color: rgb(0.3, 0.3, 0.3) })
       y -= 26
@@ -283,7 +300,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       y -= 14
       page.drawText(`davon Privat: ${euroFmt(invoice.private_amount)}`, { x: MARGIN, y, size: 10, font: fontRegular, color: rgb(0.35, 0.35, 0.35) })
 
-      drawFooter(page, fontRegular, kind.payable)
+      drawFooter(page, fontRegular, kind.payable, { ik: ikNummer, iban: orgIban ?? undefined, bic: orgBic ?? undefined, bank: orgBank, steuer: orgSteuer ?? undefined })
     }
 
     // ── Je service_record eine Detailseite mit Unterschriften ──
@@ -354,7 +371,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
         }
       }
 
-      drawFooter(page, fontRegular, kind.payable)
+      drawFooter(page, fontRegular, kind.payable, { ik: ikNummer, iban: orgIban ?? undefined, bic: orgBic ?? undefined, bank: orgBank, steuer: orgSteuer ?? undefined })
     }
 
     const pdfBytes = await pdfDoc.save()
@@ -424,16 +441,19 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   }
 }
 
-function drawFooter(page: any, font: any, payable = true) {
-  page.drawText('Alltagsengel UG (haftungsbeschr.) · Amtsgericht Frankfurt am Main, HRB 140351', {
+function drawFooter(page: any, font: any, payable = true, opts?: { ik?: string; iban?: string; bic?: string; bank?: string; steuer?: string }) {
+  const ik = opts?.ik ? ` · IK ${opts.ik}` : ''
+  const steuer = opts?.steuer ? ` · St.-Nr. ${opts.steuer}` : ''
+  page.drawText(`Alltagsengel UG (haftungsbeschr.) · Amtsgericht Frankfurt am Main, HRB 140351${ik}${steuer}`, {
     x: MARGIN, y: 38, size: 7, font, color: rgb(0.55, 0.55, 0.55),
   })
-  // Zahlungsaufforderung nur auf zahlbaren Belegen — auf einer Gutschrift oder
-  // einem Storno waere sie schlicht falsch.
+  const ibanStr = opts?.iban ? ` · IBAN ${opts.iban}` : ''
+  const bicStr = opts?.bic ? ` · BIC ${opts.bic}` : ''
+  const bankStr = opts?.bank || 'Sparkasse'
   page.drawText(
     payable
-      ? 'Bankverbindung: Alltagsengel UG · Sparkasse · Zahlbar innerhalb von 30 Tagen'
-      : 'Alltagsengel UG · Sparkasse · Dieser Beleg ist keine Zahlungsaufforderung',
+      ? `Bankverbindung: Alltagsengel UG · ${bankStr}${ibanStr}${bicStr} · Zahlbar innerhalb von 30 Tagen`
+      : `Alltagsengel UG · ${bankStr} · Dieser Beleg ist keine Zahlungsaufforderung`,
     { x: MARGIN, y: 28, size: 7, font, color: rgb(0.55, 0.55, 0.55) }
   )
 }

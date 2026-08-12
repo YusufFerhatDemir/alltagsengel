@@ -33,6 +33,7 @@ export async function GET(request: Request) {
   let query = admin
     .from('coach_nutzungsereignisse')
     .select('pseudonym, ereignis, modul_key, rolle, auswertungswoche, anzahl')
+    .eq('organization_id', auth.ctx.organizationId)
     .limit(50000)
   if (von) query = query.gte('auswertungswoche', von)
   if (bis) query = query.lte('auswertungswoche', bis)

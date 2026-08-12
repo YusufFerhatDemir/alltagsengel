@@ -20,6 +20,7 @@ export async function GET() {
   const { data, error } = await supabase
     .from('coach_abrechnungswege')
     .select('*')
+    .eq('organization_id', auth.ctx.organizationId)
     .order('created_at', { ascending: true })
 
   if (error) return NextResponse.json({ error: 'Abrechnungswege konnten nicht geladen werden.' }, { status: 500 })
@@ -95,6 +96,7 @@ export async function PATCH(request: Request) {
     .from('coach_abrechnungswege')
     .update(update)
     .eq('id', body.id)
+    .eq('organization_id', auth.ctx.organizationId)
     .select()
     .single()
 

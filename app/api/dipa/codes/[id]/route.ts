@@ -39,6 +39,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     .from('coach_freischaltcodes')
     .update(update)
     .eq('id', id)
+    .eq('organization_id', auth.ctx.organizationId)
     .neq('status', 'eingeloest')
     .select('id, code_praefix, status, gueltig_von, gueltig_bis, notiz')
 

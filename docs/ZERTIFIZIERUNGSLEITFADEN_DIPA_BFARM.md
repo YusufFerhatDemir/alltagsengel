@@ -8,7 +8,7 @@
 
 ## Was ist eine DiPA?
 
-Eine **Digitale Pflegeanwendung (DiPA)** ist eine CE-gekennzeichnete Software, die von Pflegebedürftigen oder pflegenden Angehörigen genutzt wird. DiPA werden vom BfArM (Bundesinstitut für Arzneimittel und Medizinprodukte) in das DiPA-Verzeichnis aufgenommen und von Pflegekassen erstattet (bis zu 50 €/Monat).
+Eine **Digitale Pflegeanwendung (DiPA)** ist eine Software nach § 40a SGB XI, die von Pflegebedürftigen oder pflegenden Angehörigen genutzt wird. DiPA sind ausdrücklich KEINE Medizinprodukte und tragen KEINE CE-Kennzeichnung (siehe audit/dipa/mdr_negativabgrenzung.md). DiPA werden vom BfArM in das DiPA-Verzeichnis aufgenommen und von Pflegekassen erstattet (§ 40b SGB XI: bis zu 53 €/Monat gesamt, davon DiPA-Anteil bis 40 €/Monat — EXTERN ZU VERIFIZIEREN anhand der zum Antragszeitpunkt gültigen Fassung).
 
 ---
 
@@ -46,8 +46,8 @@ Die DiPAV (§ 3 ff.) definiert folgende Anforderungsgruppen:
 
 | Anforderung | Status | Nachweis |
 |------------|--------|---------|
-| FHIR-Schnittstelle | Vorhanden | R4-Endpunkte, 56 Tests |
-| Datenexport für Nutzer | Vorhanden | FHIR-Export mit Vorschau |
+| FHIR-Schnittstelle (DiPA-spezifisch) | NICHT VORHANDEN | FHIR-Endpunkte existieren nur im Betriebssystem (Block 21), NICHT im DiPA-Modul. Ob FHIR für DiPA gefordert wird, ist offen (ORF-9). |
+| Datenexport für Nutzer | Vorhanden | JSON-Export (lib/coach/export.schema.json), kein FHIR |
 | Barrierefreiheit (WCAG 2.1 AA) | Offen | Keine dedizierte Prüfung |
 | Nutzerfreundlichkeit | Offen | Keine formale Usability-Studie |
 
@@ -115,7 +115,7 @@ Die DiPAV (§ 3 ff.) definiert folgende Anforderungsgruppen:
 
 10. **Listung und Vergütung**
     - Aufnahme ins DiPA-Verzeichnis
-    - Vergütung: bis zu 50 €/Monat pro Nutzer (Pflegekasse zahlt)
+    - Vergütung: § 40b SGB XI sieht bis zu 53 €/Monat gesamt vor (DiPA-Anteil bis 40 €/Monat, eUL bis 30 €/Monat, gemeinsame Obergrenze) — EXTERN ZU VERIFIZIEREN anhand der zum Antragszeitpunkt gültigen Fassung
 
 ---
 

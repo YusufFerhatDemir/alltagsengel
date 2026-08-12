@@ -10,6 +10,7 @@ import {
   uebersetzeDbFehler,
   type StopInput,
 } from '@/lib/touren/server'
+import { pruefeBudget, pruefeClientFreigabe } from '@/lib/personal/einsatzfreigabe'
 import { pruefeZeitplan, tourGesamtMinuten, pruefeWochenkapazitaet } from '@/lib/touren/planung'
 import { TOUR_SELECT, type TourZeile } from '@/lib/touren/select'
 
@@ -122,6 +123,30 @@ export async function POST(req: NextRequest) {
   }
   if (befund.abwesend) warnungen.push(`Abwesenheit übersteuert: ${befund.abwesenheitsGrund}.`)
   if (befund.ausserhalbZeitfenster) warnungen.push('Tour liegt außerhalb der gepflegten Verfügbarkeits-Zeitfenster.')
+
+  // ── Budget- und Client-Freigabe pro Klient prüfen ──────────────
+  const clientIds = [...new Set(stops.filter(s => s.client_id).map(s => s.client_id!))]
+  for (const cId of clientIds) {
+    const clientCheck = await pruefeClientFreigabe(admin, cId, auth.ctx.organizationId, tour_date)
+    if (!clientCheck.freigegeben && !force_override) {
+      return NextResponse.json({
+        error: `Klient ${clientCheck.clientName}: ${clientCheck.probleme.join('; ')}`,
+        hinweis: 'Mit force_override: true kann die Tour trotzdem angelegt werden.',
+      }, { status: 422 })
+    }
+    if (!clientCheck.freigegeben) {
+      warnungen.push(`Klient ${clientCheck.clientName}: ${clientCheck.probleme.join('; ')} (übersteuert)`)
+    }
+
+    const budgetCheck = await pruefeBudget(admin, cId, auth.ctx.organizationId)
+    if (budgetCheck.blockiert && !force_override) {
+      return NextResponse.json({
+        error: `Budget für Klient blockiert: ${budgetCheck.warnung}`,
+        hinweis: 'Mit force_override: true kann die Tour trotzdem angelegt werden.',
+      }, { status: 422 })
+    }
+    if (budgetCheck.warnung) warnungen.push(budgetCheck.warnung)
+  }
 
   // Stops auflösen (legt für client_id-Stops neue assignments an —
   // der Doppelbelegungs-Trigger meldet Konflikte als DOPPELBELEGUNG).
