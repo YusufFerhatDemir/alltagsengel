@@ -22,6 +22,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     .from('eul_erbringungen')
     .select('*')
     .eq('id', id)
+    .eq('organization_id', auth.ctx.organizationId)
     .maybeSingle()
 
   if (ladeFehler) return NextResponse.json({ error: 'Nachweis konnte nicht geladen werden.' }, { status: 500 })
@@ -84,6 +85,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     .from('eul_erbringungen')
     .update(update)
     .eq('id', id)
+    .eq('organization_id', auth.ctx.organizationId)
     .select()
     .single()
 
@@ -102,6 +104,7 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
     .from('eul_erbringungen')
     .delete()
     .eq('id', id)
+    .eq('organization_id', auth.ctx.organizationId)
     .is('bestaetigt_am', null)
     .select('id')
 

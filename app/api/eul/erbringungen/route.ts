@@ -30,6 +30,7 @@ export async function GET(request: Request) {
   let query = supabase
     .from('eul_erbringungen')
     .select('*')
+    .eq('organization_id', auth.ctx.organizationId)
     .order('datum', { ascending: false })
     .limit(500)
   if (clientId) query = query.eq('client_id', clientId)

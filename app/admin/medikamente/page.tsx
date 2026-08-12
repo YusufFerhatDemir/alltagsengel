@@ -81,7 +81,7 @@ export default function AdminMedikamentePage() {
         if (mBody.error) { setError(mBody.error); return }
         setMedikamente(Array.isArray(mBody) ? mBody : [])
         const klist = (kBody.uebersicht || []).map((k: Record<string, string>) => ({
-          id: k.client_id, first_name: k.vorname, last_name: k.nachname,
+          id: k.client_id, first_name: k.first_name, last_name: k.last_name,
         }))
         setKlienten(klist)
       })
