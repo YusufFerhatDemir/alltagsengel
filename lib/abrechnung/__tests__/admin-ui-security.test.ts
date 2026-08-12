@@ -23,6 +23,24 @@ function readRoute(path: string): string {
   return readFileSync(join(ROOT, path), 'utf8')
 }
 
+/**
+ * Prueft, dass eine Route ihre Organisation aus der Auth ableitet.
+ *
+ * Zulaessig sind drei Wege — alle enden bei getActiveOrgId():
+ *   a) direkter Aufruf
+ *   b) requireAdminMitOrg() aus lib/abrechnung/require-admin
+ *   c) requireOpsAdmin()/requireOpsUser() aus lib/ops/api-auth
+ *
+ * Die reine Textsuche nach 'getActiveOrgId' hat (b) und (c) uebersehen und
+ * dadurch korrekt abgesicherte Routen als Fehler gemeldet.
+ */
+function hatOrgAusAuth(code: string): boolean {
+  return code.includes('getActiveOrgId')
+    || code.includes('requireAdminMitOrg')
+    || code.includes('requireOpsAdmin')
+    || code.includes('requireOpsUser')
+}
+
 // ── Org-Isolation: Alle DTA-Routen müssen getActiveOrgId() aufrufen ──
 
 const DTA_ROUTES = [
@@ -45,8 +63,8 @@ for (const route of DTA_ROUTES) {
   test(`DTA Route ${route} verwendet getActiveOrgId()`, () => {
     const code = readRoute(route)
     assert.ok(
-      code.includes('getActiveOrgId'),
-      `${route}: MUSS getActiveOrgId() aufrufen (NICHT profiles.organization_id)`,
+      hatOrgAusAuth(code),
+      `${route}: MUSS die Org aus der Auth ableiten (getActiveOrgId/requireAdminMitOrg/requireOpsAdmin)`,
     )
   })
 
@@ -63,7 +81,7 @@ for (const route of DTA_ROUTES) {
 
 test('Leistungsnachweis CRUD hat getActiveOrgId()', () => {
   const code = readRoute('app/api/leistungsnachweis/crud/route.ts')
-  assert.ok(code.includes('getActiveOrgId'))
+  assert.ok(hatOrgAusAuth(code))
 })
 
 test('Leistungsnachweis CRUD hat organization_id Filter auf Queries', () => {
@@ -105,13 +123,13 @@ test('DTA Ruecklaeufer-Route hat kein Body-Spread mehr', () => {
 
 test('SFTP-Test Route hat getActiveOrgId()', () => {
   const code = readRoute('app/api/admin/abrechnung/sftp-test/route.ts')
-  assert.ok(code.includes('getActiveOrgId'))
+  assert.ok(hatOrgAusAuth(code))
   assert.ok(code.includes('organization_id'))
 })
 
 test('SFTP-Key Route hat getActiveOrgId()', () => {
   const code = readRoute('app/api/admin/abrechnung/sftp-key/route.ts')
-  assert.ok(code.includes('getActiveOrgId'))
+  assert.ok(hatOrgAusAuth(code))
   assert.ok(code.includes('organization_id'))
 })
 
@@ -145,7 +163,7 @@ test('PreFlight hat Routing-Check', () => {
 
 test('Config-Status API existiert und hat Auth', () => {
   const code = readRoute('app/api/billing/dta/config-status/route.ts')
-  assert.ok(code.includes('getActiveOrgId'))
+  assert.ok(hatOrgAusAuth(code))
   assert.ok(code.includes('SECON_ZERT_PASSWORT'))
   assert.ok(code.includes('EXTERNE KONFIGURATION ERFORDERLICH'))
 })

@@ -260,7 +260,7 @@ Behebt 4 Kategorien fataler Bugs in der Kassenabrechnung-Engine, die den DTA/EDI
 
 ## Block 15 — Digitaler PflegeCoach (DiPA-Modul) 📋
 
-**Status:** Datenmodell deployed, Frontend implementiert, Backend-APIs vorhanden — Fachliche Vertiefung & Zulassungsvorbereitung ausstehend
+**Status:** 15a–15d umgesetzt (Produktversion 0.2.0, 12.08.2026) — Zulassungsvorbereitung dokumentiert, externe Schritte (Prüfstelle, DSFA-Abschluss, Evaluationspartner) ausstehend
 
 **Hinweis:** Dieses Modul ist technisch und fachlich STRIKT GETRENNT von der übrigen Pflegesoftware. Es ist eine eigenständige Digitale Pflegeanwendung (DiPA) nach § 40a SGB XI.
 
@@ -288,9 +288,51 @@ Behebt 4 Kategorien fataler Bugs in der Kassenabrechnung-Engine, die den DTA/EDI
 | Empfehlungs-Engine | `lib/coach/empfehlungen.ts` | Regelbasierte Empfehlungen (KEINE KI-Diagnostik, MDR-Negativabgrenzung) |
 | Belastungs-Screening | `lib/coach/belastung.ts` | BSFC-s-Auswertung für pflegende Angehörige |
 
-### Was noch fehlt (DiPA-spezifisch)
+### Umgesetzt in Produktversion 0.2.0 (12.08.2026)
 
-Die folgenden Bereiche sind fachlich und regulatorisch noch nicht abgedeckt und bilden die Kern-Roadmap für Block 15:
+**Migration:** `20260826010000_dipa_freischaltung_nachweise_eul.sql` (+ Rollback) — 7 neue Tabellen, **noch nicht auf Production angewendet** (GAP-DB)
+
+| Teilbereich | Umsetzung |
+|-------------|-----------|
+| **15a** Nutzerflow | Anspruchsprüfung (`/pflegecoach/anspruch`), Freischaltcodes (Ausgabe `/admin/dipa`, Einlösung `/pflegecoach/freischaltung`), pseudonymisierte Nutzungsnachweise, konfigurierbare Abrechnungswege **ohne Beträge** |
+| **15a** Trennungskonzept | HMAC-Pseudonymisierung mit Schlüssel, den niemand lesen kann (`coach_pseudonym_key`) — Betriebs-Admin sieht Einlösungen ohne Personen- oder Datenbezug |
+| **15b** Datenschutz | Produktbezogene Löschung ohne Kontoverlust (`/pflegecoach/loeschung`), Verschlüsselungskonzept, Löschkonzept, DSFA-Vorbereitung, TR-03161-Vorbereitungscheckliste |
+| **15c** Zulassung | Maschinenlesbarer Anforderungskatalog mit Prüfstatus je Eintrag, MDR-Negativabgrenzung inkl. Sprachregeln, Testprotokoll-Vorlage Gebrauchstauglichkeit, Evaluations-Datenframework |
+| **15d** eUL | Nachweisführung + Qualifikationskatalog (`/admin/eul`), Abgrenzung digital/persönlich, Buchungs-Bezug über `booking_id` |
+| Tests | 48 neue Unit-Tests (`lib/coach/{anspruch,freischaltung,nachweise,eul,abrechnung}.test.ts`) |
+| Doku | `audit/dipa/`: `nutzerflow_dipa.md`, `verschluesselungskonzept.md`, `loeschkonzept.md`, `dsfa_pflegecoach.md`, `tr03161_checkliste.md`, `anforderungskatalog.md`, `mdr_negativabgrenzung.md`, `gebrauchstauglichkeit_testprotokoll.md`, `eul_konzept.md`, `eul_qualitaetsanforderungen.md` |
+
+**Zwei Schalter stehen bewusst auf AUS** (Default), weil die zugrunde liegenden Fragen regulatorisch offen sind:
+
+| Schalter | Wirkung |
+|----------|---------|
+| `COACH_FREISCHALTUNG_PFLICHT` | Freischaltcode als Zugangsvoraussetzung — aus, solange unklar ist, ob ein Code-Verfahren für DiPA vorgesehen ist |
+| `COACH_NUTZUNGSNACHWEIS_AKTIV` | Erfassung pseudonymisierter Nutzungsdaten — aus bis Pilotstart; zusätzlich immer einwilligungsabhängig |
+
+**Die eUL-Brücke ist einbahnig:** Aus dem Betrieb heraus lässt sich eine ergänzende Unterstützungsleistung an eine Buchung hängen. Aus dem PflegeCoach heraus gibt es **keine Bewerbung und keinen Buchungsweg** — sonst wäre die Werbefreiheit der Kernfunktion verletzt (siehe `audit/dipa/eul_konzept.md` §1).
+
+### Was noch offen ist (DiPA-spezifisch)
+
+Die folgenden Punkte sind extern zu erbringen und waren im Rahmen der Implementierung nicht leistbar — die Kern-Roadmap für den Antrag:
+
+| Offen | Gap-ID |
+|-------|--------|
+| Live-Apply beider DiPA-Migrationen | GAP-DB |
+| BSI-TR-03161-Zertifizierung durch akkreditierte Prüfstelle | GAP-TR03161 |
+| Zweiter Faktor bei der Anmeldung | GAP-MFA |
+| DSFA-Abschluss durch Datenschutzberatung, AVV-Dossier | GAP-DSFA |
+| Pflegefachliche Freigabe der Inhalte | GAP-QS |
+| Evaluationspartner, Ethikvotum | GAP-EVAL |
+| Externes Security-Review / Penetrationstest | GAP-EXT-REVIEW |
+| QMS und Risikomanagement | GAP-QMS |
+| Verbindlichkeit des Aktivierungscode-Verfahrens | GAP-DIPA-FLOW |
+| Regulatorische Herleitung der eUL-Qualifikationsanforderungen | GAP-EUL-QUALI |
+| Shadow-RLS-Tests für die 7 neuen Tabellen | GAP-SHADOW-15 |
+
+Vollständige Liste inkl. Bewertung: `audit/dipa/dipav_gap_liste.md`.
+
+<details>
+<summary>Ursprüngliche Aufgabenstellung 15a–15d (Stand vor der Umsetzung)</summary>
 
 **15a — DiPA-Nutzerflow (End-to-End)**
 
@@ -332,21 +374,35 @@ Ergänzende Unterstützungsleistungen sind ein separater Bestandteil des DiPA-Ko
 - Abgrenzung: DiPA-Nutzung (digital) vs. eUL-Einsatz (persönlich)
 - Qualitätsanforderungen an eUL-Erbringer
 
+</details>
+
 ---
 
-## Block 16 — Rechnungsmanagement & Gutschriften 📋
+## Block 16 — Rechnungsmanagement & Gutschriften ✅
 
-**Status:** Geplant
+**Status:** Fertig (12.08.2026) — keine Migration nötig, alle Tabellen existierten schon
+(`invoice_corrections`, `invoice_snapshots`, `billing_audit_trail` aus `20260806200000`).
 
-| Modul | Beschreibung |
-|-------|--------------|
-| Abrechnungs-Übersicht | `app/admin/abrechnung/` (inkl. Einstellungen), `app/admin/abrechnungsfehler/` — Gesamtübersicht + Fehlerbehandlung |
-| Rechnungserstellung | `app/admin/rechnungserstellung/` existiert — Workflow-Vervollständigung |
-| Gutschriften | `app/admin/gutschriften/` — Gutschrift-Erzeugung, Zuordnung zu Rechnungen |
-| Rechnungs-PDF | `app/api/admin/invoices/[id]/generate-pdf/` — PDF-Template-Verfeinerung |
-| Rechnungskorrektur | `app/api/billing/invoices/[id]/correct/` — Korrektur-Workflow mit Audit-Trail |
-| Rechnungsstorno | `app/api/billing/invoices/[id]/cancel/` — Storno mit Gutschrift-Erzeugung |
-| Kunden-Rechnungen | `app/kunde/rechnungen/` — Kundenportal-Einsicht |
+| Modul | Beschreibung | Ergebnis |
+|-------|--------------|----------|
+| Abrechnungs-Übersicht | `app/admin/abrechnung/` (inkl. Einstellungen), `app/admin/abrechnungsfehler/` — Gesamtübersicht + Fehlerbehandlung | ✅ war vollständig — geprüft, unverändert |
+| Rechnungserstellung | `app/admin/rechnungserstellung/` existiert — Workflow-Vervollständigung | ✅ „Prüfen"-Schritt (`entwurf → geprueft`) ergänzt — ohne ihn war *Festschreiben* nicht erreichbar; + Storno/PDF je Zeile |
+| Gutschriften | `app/admin/gutschriften/` — Gutschrift-Erzeugung, Zuordnung zu Rechnungen | ✅ von Nur-Lesen zu Vollworkflow: Anlegen (Rechnungsauswahl + Restbetrag), Freigeben, Verwerfen, Storno, KPIs |
+| Rechnungs-PDF | `app/api/admin/invoices/[id]/generate-pdf/` — PDF-Template-Verfeinerung | ✅ Seitenumbruch-Bug behoben (Positionen wurden über den Kopfbereich gezeichnet), Belegarten Gutschrift/Storno/Korrektur, Bezugsrechnung + Grund, keine Zahlungsaufforderung auf Gutschriften |
+| Rechnungskorrektur | `app/api/billing/invoices/[id]/correct/` — Korrektur-Workflow mit Audit-Trail | ✅ Freigabe-/Verwerfen-Pfad ergänzt (`lib/billing/core/credit-notes.ts`) |
+| Rechnungsstorno | `app/api/billing/invoices/[id]/cancel/` — Storno mit Gutschrift-Erzeugung | ✅ aus UI bedienbar (Gutschriften-Seite + Rechnungsdetail) |
+| Kunden-Rechnungen | `app/kunde/rechnungen/` — Kundenportal-Einsicht | ✅ Gutschrift/Storno gekennzeichnet + erklärt; PDF über `GET /api/rechnungen/[id]/pdf` frisch signiert (gespeicherte Signatur lief nach 30 Tagen ab) |
+
+**Neue Bausteine**
+
+| Datei | Zweck |
+|-------|-------|
+| `lib/billing/core/credit-notes.ts` | `releaseCreditNote` / `discardCreditNote` / `getRemainingCreditableCents` — Statusmaschine + Audit-Trail |
+| `app/api/billing/corrections/` | Liste + `[id]/release` + `[id]/discard` |
+| `app/api/billing/invoices/route.ts` | Rechnungsliste mit gutschreibbarem Restbetrag (org-gefenced) |
+| `app/api/billing/invoices/[id]/status/` | Statuswechsel entlang der Statusmaschine (Storno bleibt bei `/cancel`) |
+| `app/api/rechnungen/[id]/pdf/` | Kundenportal: frisch signierte PDF-URL, Eigentümerprüfung |
+| `__tests__/billing/credit-note-lifecycle.test.ts` | 16 Tests auf Statuspfad, Festschreibung, Mandantenfence |
 
 ---
 
@@ -437,7 +493,7 @@ Bislang ist nur § 105 SGB XI implementiert. Für HKP (Häusliche Krankenpflege)
 | 12 | Defense-in-Depth org_id-Guards | ✅ Fertig | — |
 | 13 | Expansion Multi-Tenant | ✅ Fertig | — |
 | 14 | Sicherheits-Sweep & RLS-Härtung | ✅ Fertig | — |
-| **15** | **Digitaler PflegeCoach (DiPA)** | **📋 Fachliche Vertiefung** | **Hoch** |
+| **15** | **Digitaler PflegeCoach (DiPA)** | **✅ 15a–15d umgesetzt (v0.2.0)** | **Hoch** |
 | 16 | Rechnungsmanagement & Gutschriften | 📋 Geplant | Hoch |
 | 17 | § 302 SGB V (Sonstige Leistungserbringer) | 📋 Geplant | Mittel |
 | 18 | KIM / TI-Anbindung | 📋 Geplant | Mittel |
