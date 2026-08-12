@@ -5,8 +5,8 @@
 // ═══════════════════════════════════════════════════════════════
 
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { heuteBerlin } from '@/lib/utils/timezone'
 import {
-import { heuteBerlin } from '@/lib/utils/timezone';
   ANAMNESE_TYP_WERTE,
   assertErlaubt,
   STURZRISIKO_WERTE,

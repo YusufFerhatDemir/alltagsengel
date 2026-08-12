@@ -108,80 +108,64 @@ describe('createCreditNote — CAS-Schutz gegen Doppel-Gutschrift', () => {
   it('rollt zurück wenn parallele Gutschrift den Betrag übersteigt', async () => {
     const { createCreditNote } = await import('@/lib/billing/core/invoice-engine')
 
-    let insertCallCount = 0
-    const mockDelete = vi.fn().mockReturnValue({
-      eq: vi.fn().mockResolvedValue({ error: null }),
-    })
+    let correctionsSelectCount = 0
+
+    const chainable = () => {
+      const obj: Record<string, any> = {}
+      obj.select = vi.fn().mockReturnValue(obj)
+      obj.eq = vi.fn().mockReturnValue(obj)
+      obj.is = vi.fn().mockImplementation(() => {
+        correctionsSelectCount++
+        if (correctionsSelectCount <= 1) {
+          return Promise.resolve({ data: [], error: null })
+        }
+        // Nach dem Insert: zwei Gutschriften, die zusammen 12000 Cent = mehr als 10000
+        return Promise.resolve({
+          data: [{ corrected_amount_cents: 4000 }, { corrected_amount_cents: 4000 }],
+          error: null,
+        })
+      })
+      obj.insert = vi.fn().mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          single: vi.fn().mockResolvedValue({ data: { id: 'corr-1' }, error: null }),
+        }),
+      })
+      obj.delete = vi.fn().mockReturnValue({
+        eq: vi.fn().mockResolvedValue({ error: null }),
+      })
+      obj.single = vi.fn().mockResolvedValue({ data: { id: 'corr-1' }, error: null })
+      obj.maybeSingle = vi.fn().mockResolvedValue({ data: { id: 'seq-1', last_number: 5 }, error: null })
+      obj.upsert = vi.fn().mockResolvedValue({ error: null })
+      obj.update = vi.fn().mockReturnValue(obj)
+      obj.order = vi.fn().mockReturnValue(obj)
+      obj.limit = vi.fn().mockReturnValue(obj)
+      return obj
+    }
 
     const mockSupabase = {
       from: vi.fn().mockImplementation((table: string) => {
         if (table === 'invoices') {
-          return {
-            select: vi.fn().mockReturnThis(),
-            eq: vi.fn().mockReturnThis(),
-            single: vi.fn().mockResolvedValue({
-              data: {
-                id: 'inv-1', total_amount: 100, paid_amount: 0,
-                status: 'freigegeben', organization_id: 'org-1',
-                client_id: 'cl-1', insurance_name: 'AOK',
-                insurance_number: '12345', period_start: '2026-01-01',
-                period_end: '2026-01-31',
-              },
-              error: null,
-            }),
-            insert: vi.fn().mockReturnValue({
-              select: vi.fn().mockReturnValue({
-                single: vi.fn().mockResolvedValue({
-                  data: { id: 'credit-inv-1' }, error: null,
-                }),
-              }),
-            }),
-            delete: mockDelete,
-          }
-        }
-        if (table === 'invoice_corrections') {
-          return {
+          const obj = chainable()
+          obj.single = vi.fn().mockResolvedValue({
+            data: {
+              id: 'inv-1', total_amount: 100, paid_amount: 0,
+              status: 'freigegeben', organization_id: 'org-1',
+              client_id: 'cl-1', insurance_name: 'AOK',
+              insurance_number: '12345', period_start: '2026-01-01',
+              period_end: '2026-01-31',
+            },
+            error: null,
+          })
+          obj.insert = vi.fn().mockReturnValue({
             select: vi.fn().mockReturnValue({
-              eq: vi.fn().mockReturnValue({
-                eq: vi.fn().mockReturnValue({
-                  is: vi.fn().mockResolvedValue({
-                    data: insertCallCount++ === 0
-                      ? []
-                      // Nach dem Insert: simuliere, dass eine zweite Gutschrift
-                      // den Betrag auf 12000 Cent bringt (> 10000 Original)
-                      : [
-                          { corrected_amount_cents: 4000 },
-                          { corrected_amount_cents: 4000 },
-                        ],
-                    error: null,
-                  }),
-                }),
-              }),
+              single: vi.fn().mockResolvedValue({ data: { id: 'credit-inv-1' }, error: null }),
             }),
-            insert: vi.fn().mockReturnValue({
-              select: vi.fn().mockReturnValue({
-                single: vi.fn().mockResolvedValue({
-                  data: { id: 'corr-1' }, error: null,
-                }),
-              }),
-            }),
-            delete: mockDelete,
-          }
+          })
+          return obj
         }
-        if (table === 'invoice_snapshots') {
-          return {
-            insert: vi.fn().mockResolvedValue({ error: null }),
-          }
-        }
-        return {
-          select: vi.fn().mockReturnThis(),
-          eq: vi.fn().mockReturnThis(),
-          single: vi.fn().mockResolvedValue({ data: null, error: null }),
-          insert: vi.fn().mockResolvedValue({ error: null }),
-          delete: mockDelete,
-        }
+        return chainable()
       }),
-      rpc: vi.fn().mockResolvedValue({ data: null, error: { message: 'RPC not found' } }),
+      rpc: vi.fn().mockResolvedValue({ data: 'GS-2026-00006', error: null }),
     }
 
     await expect(
@@ -289,7 +273,10 @@ describe('correctInvoice — Validierung', () => {
       correctInvoice(
         mockSupabase as any,
         'inv-1',
-        [{ leistungsart: 'test', leistungsdatum: '2026-01-01', menge: 1, einheit: 'stunde', einzelpreisCent: -100, gesamtpreisCent: -100 }],
+        [
+          { leistungsart: 'ok', leistungsdatum: '2026-01-01', menge: 1, einheit: 'stunde', einzelpreisCent: 5000, gesamtpreisCent: 5000 },
+          { leistungsart: 'negativ', leistungsdatum: '2026-01-01', menge: 1, einheit: 'stunde', einzelpreisCent: -100, gesamtpreisCent: -100 },
+        ],
         'Test',
         'user-1',
         'org-1'

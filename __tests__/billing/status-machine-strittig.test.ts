@@ -59,6 +59,7 @@ describe('Status strittig — Uebergaenge AUS strittig', () => {
     'akzeptiert',
     'bezahlt',
     'storniert',
+    'abgeschrieben',
   ] as const;
 
   for (const ziel of erlaubteZiele) {
@@ -79,9 +80,9 @@ describe('Status strittig — Uebergaenge AUS strittig', () => {
     expect(isTransitionAllowed('strittig', 'strittig')).toBe(false);
   });
 
-  it('getAllowedTransitions liefert genau 6 Ziele', () => {
+  it('getAllowedTransitions liefert genau 7 Ziele', () => {
     const transitions = getAllowedTransitions('strittig');
-    expect(transitions).toHaveLength(6);
+    expect(transitions).toHaveLength(7);
     expect(new Set(transitions)).toEqual(new Set(erlaubteZiele));
   });
 });

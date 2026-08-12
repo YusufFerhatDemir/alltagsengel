@@ -13,8 +13,8 @@
 import { NextResponse } from 'next/server'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { createClient } from '@/lib/supabase/server'
+import { heuteBerlin } from '@/lib/utils/timezone'
 import {
-import { heuteBerlin } from '@/lib/utils/timezone';
   codePraefix, erzeugeCode, hashCode, pepperKonfiguriert,
   FREISCHALT_QUELLEN, type FreischaltQuelle,
 } from '@/lib/coach/freischaltung'

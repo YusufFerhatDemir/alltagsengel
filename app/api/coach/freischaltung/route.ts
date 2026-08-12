@@ -19,8 +19,8 @@
 import { NextResponse } from 'next/server'
 import { requireCoachUser } from '@/lib/coach/api-auth'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { heuteBerlin } from '@/lib/utils/timezone'
 import {
-import { heuteBerlin } from '@/lib/utils/timezone';
   hashCode, istCodeFormatGueltig, istFreigeschaltet,
   pruefeCodeGueltigkeit, codePraefix,
 } from '@/lib/coach/freischaltung'
