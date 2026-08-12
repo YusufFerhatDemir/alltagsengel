@@ -10,7 +10,7 @@
 --   1) budget_type-Spalte auf client_budgets (DEFAULT 'entlastung')
 --   2) Bestehende Zeilen → 'entlastung'
 --   3) UNIQUE(client_id, year, budget_type) für Doppelbuchungsschutz
---   4) combined_annual_amount-Default auf 3386 korrigiert (§ 39+42, Stand 2025)
+--   4) combined_annual_amount-Default auf 3539 korrigiert (§ 39+42, PUEG +4,5% ab 01.01.2025)
 --
 -- IDEMPOTENT: IF NOT EXISTS / IF EXISTS Guards.
 -- ROLLBACK:   20260831020001_rollback_d2_vp_budget.sql
@@ -43,9 +43,9 @@ DO $$ BEGIN
   END IF;
 END $$;
 
--- ── 4. combined_annual_amount-Default auf korrekten Wert (3386) ───────
+-- ── 4. combined_annual_amount-Default auf korrekten Wert (3539, PUEG +4,5%) ──
 
 ALTER TABLE public.client_budgets
-  ALTER COLUMN combined_annual_amount SET DEFAULT 3386.0;
+  ALTER COLUMN combined_annual_amount SET DEFAULT 3539.0;
 
 COMMIT;
