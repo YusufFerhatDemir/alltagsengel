@@ -525,8 +525,8 @@ Bislang ist nur § 105 SGB XI implementiert. Für HKP (Häusliche Krankenpflege)
 | 13 | Expansion Multi-Tenant | ✅ Fertig | — |
 | 14 | Sicherheits-Sweep & RLS-Härtung | ✅ Fertig | — |
 | **15** | **Digitaler PflegeCoach (DiPA)** | **✅ 15a–15d umgesetzt (v0.2.0)** | **Hoch** |
-| 16 | Rechnungsmanagement & Gutschriften | 📋 Geplant | Hoch |
-| 17 | § 302 SGB V (Sonstige Leistungserbringer) | 📋 Geplant | Mittel |
+| 16 | Rechnungsmanagement & Gutschriften | ✅ Fertig | — |
+| 17 | § 302 SGB V (Sonstige Leistungserbringer) | 🔄 Gerüst fertig, Export gesperrt (TA1 fehlt) | Mittel |
 | 18 | KIM / TI-Anbindung | 📋 Geplant | Mittel |
 | 19 | Erweiterte Analytics & Reporting | 📋 Geplant | Niedrig |
 | 20 | Offline-First & Native App | 📋 Geplant | Niedrig |
