@@ -46,8 +46,12 @@ export async function GET(request: Request) {
 
     // Bereits bewertete Buchungen identifizieren
     const bookingIds = bookings.map(b => b.id)
+    // angel_reviews, nicht reviews: die App schreibt Bewertungen seit
+    // 20260318 ausschliesslich nach angel_reviews. Der Cron hat gegen die
+    // leere Legacy-Tabelle geprueft und deshalb auch Kundschaft
+    // angeschrieben, die laengst bewertet hatte.
     const { data: existingReviews } = await supabaseAdmin
-      .from('reviews')
+      .from('angel_reviews')
       .select('booking_id')
       .in('booking_id', bookingIds)
 
@@ -77,7 +81,9 @@ export async function GET(request: Request) {
 
       const customerName = customer.first_name || 'Kunde'
       const angelName = angel?.first_name || 'Ihrem Engel'
-      const reviewUrl = `https://alltagsengel.care/kunde/bewertung?booking=${booking.id}`
+      // Die Bewertungsseite ist eine dynamische Route (/kunde/bewertung/[id]),
+      // kein Query-Parameter — der alte Link lief in einen 404.
+      const reviewUrl = `https://alltagsengel.care/kunde/bewertung/${booking.id}`
 
       try {
         await resend.emails.send({

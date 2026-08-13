@@ -6,6 +6,8 @@ import { NotFoundState, ErrorState } from '@/components/UIStates'
 import { CUSTOMER_HOURLY_RATE } from '@/lib/pricing/b2c-constants'
 import { IconWingsGold, IconStar, IconStarFilled, IconHeart, IconMore, IconUser, IconCheck } from '@/components/Icons'
 import EngelProfilActions from './EngelProfilActions'
+import { getActiveOrgId } from '@/lib/organizations/server'
+import { ladeEngelBewertungen, type OeffentlicheBewertung } from '@/lib/reviews'
 import {
   WOCHENTAGE,
   fensterProTag,
@@ -34,16 +36,13 @@ export default async function EngelProfilPage({ params }: { params: Promise<{ id
     )
   }
 
-  let reviews: any[] = []
+  // Bewertungen ueber die zentrale, mandantengefencte Leseschicht.
+  // Direkt aus angel_reviews zu lesen ist nicht mehr moeglich (und war
+  // vorher ein PII-Leak: der Join lieferte die Nachnamen der Kundschaft).
+  let reviews: OeffentlicheBewertung[] = []
   try {
-    const { data, error } = await supabase
-      .from('angel_reviews')
-      .select('*, profiles:customer_id(first_name, last_name, avatar_color)')
-      .eq('angel_id', id)
-      .order('created_at', { ascending: false })
-      .limit(5)
-    if (error) logError('EngelProfil:reviews', error.message)
-    reviews = data || []
+    const orgId = await getActiveOrgId()
+    reviews = await ladeEngelBewertungen(id, orgId, 5)
   } catch (err) {
     logError('EngelProfil:reviews', err)
   }
@@ -150,12 +149,12 @@ export default async function EngelProfilPage({ params }: { params: Promise<{ id
           <div className="prof-section">
             <div className="prof-section-hdr">Bewertungen</div>
             <div className="review-list">
-              {reviews.map((r: any) => (
+              {reviews.map((r) => (
                 <div key={r.id} className="review-item">
                   <div className="review-top">
                     <div className="review-av"><IconUser size={16} /></div>
                     <div>
-                      <div className="review-name">{r.profiles?.first_name} {r.profiles?.last_name?.[0]}.</div>
+                      <div className="review-name">{r.verfasser.first_name || 'Kundin/Kunde'}</div>
                       <div className="review-stars">{Array.from({ length: r.rating }).map((_, i) => <IconStarFilled key={i} size={11} color="var(--gold)" />)}{Array.from({ length: 5 - r.rating }).map((_, i) => <IconStar key={i} size={11} color="var(--ink5)" />)}</div>
                     </div>
                   </div>
