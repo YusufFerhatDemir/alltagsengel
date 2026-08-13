@@ -5,7 +5,7 @@ import { logBillingAction } from '@/lib/billing/core/audit'
 import {
   findeVertretungsKandidaten,
   pruefeCaregiverVerfuegbarkeit,
-  reichereFahrtzeitenAn,
+  aktualisiereFahrtzeiten,
   uebersetzeDbFehler,
 } from '@/lib/touren/server'
 import { TOUR_SELECT, type TourZeile } from '@/lib/touren/select'
@@ -169,21 +169,7 @@ export async function POST(
   }
 
   // Fahrtzeiten neu: Startpunkt ist jetzt die Wohn-PLZ der Vertretung
-  const { data: alleStops } = await admin
-    .from('tour_stops')
-    .select('id, position, plz, status')
-    .eq('tour_id', id)
-    .order('position', { ascending: true })
-  if (alleStops) {
-    const aktive = alleStops.filter(s => s.status !== 'AUSGEFALLEN')
-    const mitFahrt = reichereFahrtzeitenAn(aktive, neuerCaregiver.zip_code ?? null)
-    for (const s of mitFahrt) {
-      await admin
-        .from('tour_stops')
-        .update({ fahrzeit_minuten: s.fahrzeit_minuten, distanz_km: s.distanz_km })
-        .eq('id', s.id)
-    }
-  }
+  await aktualisiereFahrtzeiten(admin, id, neuerCaregiver.zip_code ?? null)
 
   return NextResponse.json({
     ...(aktualisiert as unknown as TourZeile),

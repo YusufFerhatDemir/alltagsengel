@@ -3,7 +3,8 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import {
   aufloeseStops,
-  reichereFahrtzeitenAn,
+  aktualisiereFahrtzeiten,
+  storniereGeloesteAssignments,
   uebersetzeDbFehler,
   type StopInput,
 } from '@/lib/touren/server'
@@ -20,29 +21,6 @@ async function ladeTour(admin: ReturnType<typeof createAdminClient>, id: string,
     .eq('organization_id', organizationId)
     .single()
   return data
-}
-
-/** Fahrtzeiten aller Stops einer Tour neu berechnen und persistieren. */
-async function berechneFahrtzeitenNeu(
-  admin: ReturnType<typeof createAdminClient>,
-  tourId: string,
-  startPlz: string | null
-) {
-  const { data: stops } = await admin
-    .from('tour_stops')
-    .select('id, position, plz, status')
-    .eq('tour_id', tourId)
-    .order('position', { ascending: true })
-  if (!stops) return
-
-  const aktive = stops.filter(s => s.status !== 'AUSGEFALLEN')
-  const mitFahrt = reichereFahrtzeitenAn(aktive, startPlz)
-  for (const s of mitFahrt) {
-    await admin
-      .from('tour_stops')
-      .update({ fahrzeit_minuten: s.fahrzeit_minuten, distanz_km: s.distanz_km })
-      .eq('id', s.id)
-  }
 }
 
 // ── POST /api/tours/[id]/stops — Stop anhängen ────────────────────
@@ -100,7 +78,7 @@ export async function POST(
   if (error) return NextResponse.json({ error: uebersetzeDbFehler(error) }, { status: 500 })
 
   const caregiver = Array.isArray(tour.caregivers) ? tour.caregivers[0] : tour.caregivers
-  await berechneFahrtzeitenNeu(admin, id, caregiver?.zip_code ?? null)
+  await aktualisiereFahrtzeiten(admin, id, caregiver?.zip_code ?? null)
 
   return NextResponse.json(neu, { status: 201 })
 }
@@ -141,7 +119,7 @@ export async function PATCH(
     for (let i = 0; i < ids.length; i++) {
       await admin.from('tour_stops').update({ position: i + 1 }).eq('id', ids[i])
     }
-    await berechneFahrtzeitenNeu(admin, id, caregiver?.zip_code ?? null)
+    await aktualisiereFahrtzeiten(admin, id, caregiver?.zip_code ?? null)
     const { data: stops } = await admin
       .from('tour_stops')
       .select(STOP_SELECT)
@@ -223,8 +201,11 @@ export async function PATCH(
   }
 
   // AUSGEFALLEN → Fahrtzeiten der Route neu rechnen (Stop wird umfahren)
+  // und den verknüpften Einsatz stornieren, damit er die Zeit des
+  // Mitarbeiters nicht weiter blockiert und nicht mehr im Kalender steht.
   if (updates.status === 'AUSGEFALLEN') {
-    await berechneFahrtzeitenNeu(admin, id, caregiver?.zip_code ?? null)
+    await storniereGeloesteAssignments(admin, [stop.assignment_id], { ignoriereStopIds: [stop_id] })
+    await aktualisiereFahrtzeiten(admin, id, caregiver?.zip_code ?? null)
   }
 
   return NextResponse.json({
@@ -250,7 +231,7 @@ export async function DELETE(
 
   const { data: stop } = await admin
     .from('tour_stops')
-    .select('id, status')
+    .select('id, status, assignment_id')
     .eq('id', stopId)
     .eq('tour_id', id)
     .single()
@@ -262,7 +243,11 @@ export async function DELETE(
   const { error } = await admin.from('tour_stops').delete().eq('id', stopId)
   if (error) return NextResponse.json({ error: uebersetzeDbFehler(error) }, { status: 500 })
 
+  // Der Stop ist weg — sein Einsatz darf nicht als Geistertermin
+  // zurückbleiben (blockiert sonst die Zeit und den Neu-Ansatz).
+  await storniereGeloesteAssignments(admin, [stop.assignment_id])
+
   const caregiver = Array.isArray(tour.caregivers) ? tour.caregivers[0] : tour.caregivers
-  await berechneFahrtzeitenNeu(admin, id, caregiver?.zip_code ?? null)
+  await aktualisiereFahrtzeiten(admin, id, caregiver?.zip_code ?? null)
   return NextResponse.json({ ok: true })
 }

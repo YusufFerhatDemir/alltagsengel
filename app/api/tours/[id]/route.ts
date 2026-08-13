@@ -1,10 +1,33 @@
 import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
-import { uebersetzeDbFehler } from '@/lib/touren/server'
+import { storniereGeloesteAssignments, uebersetzeDbFehler } from '@/lib/touren/server'
 import { TOUR_SELECT, type TourZeile } from '@/lib/touren/select'
 
 const ERLAUBTE_STATUS = ['GEPLANT', 'FREIGEGEBEN', 'UNTERWEGS', 'ABGESCHLOSSEN', 'STORNIERT']
+
+/**
+ * Einsätze einer stornierten Tour mitstornieren. Ohne das bleiben sie
+ * GEPLANT: sie blockieren die Zeit des Mitarbeiters über
+ * check_assignment_overlap und stehen weiter in Kalender und Engel-App.
+ * Bereits abgeschlossene Stops bleiben unangetastet (Leistungsnachweis).
+ */
+async function storniereTourEinsaetze(
+  admin: ReturnType<typeof createAdminClient>,
+  tourId: string
+): Promise<void> {
+  const { data: stops } = await admin
+    .from('tour_stops')
+    .select('id, assignment_id, status')
+    .eq('tour_id', tourId)
+  const offen = (stops ?? []).filter(s => s.status !== 'ABGESCHLOSSEN')
+  if (offen.length === 0) return
+  await storniereGeloesteAssignments(
+    admin,
+    offen.map(s => s.assignment_id),
+    { ignoriereStopIds: offen.map(s => s.id) }
+  )
+}
 
 // ── GET /api/tours/[id] ───────────────────────────────────────────
 export async function GET(
@@ -66,6 +89,7 @@ export async function PATCH(
     const status = error.code === 'PGRST116' ? 404 : 500
     return NextResponse.json({ error: uebersetzeDbFehler(error) }, { status })
   }
+  if (updates.status === 'STORNIERT') await storniereTourEinsaetze(admin, id)
   return NextResponse.json(data)
 }
 
@@ -90,5 +114,6 @@ export async function DELETE(
     const status = error.code === 'PGRST116' ? 404 : 500
     return NextResponse.json({ error: uebersetzeDbFehler(error) }, { status })
   }
+  await storniereTourEinsaetze(admin, id)
   return NextResponse.json(data)
 }

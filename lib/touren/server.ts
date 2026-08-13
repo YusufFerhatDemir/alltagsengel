@@ -72,6 +72,15 @@ export async function aufloeseStops(
       if (a.caregiver_id !== params.caregiverId) {
         return { stops: [], fehler: `Einsatz ${stop.assignment_id} gehört einem anderen Mitarbeiter.` }
       }
+      // Ein Einsatz eines anderen Tages würde die Tour mit fremden Zeiten
+      // füllen — der Doppelbelegungs-Trigger greift dabei nicht (kein
+      // INSERT/UPDATE auf assignments).
+      if (a.assignment_date && a.assignment_date !== params.tourDate) {
+        return {
+          stops: [],
+          fehler: `Einsatz ${stop.assignment_id} liegt am ${a.assignment_date}, die Tour am ${params.tourDate}.`,
+        }
+      }
       const client = Array.isArray(a.clients) ? a.clients[0] : a.clients
       ergebnis.push({
         assignment_id: a.id,
@@ -150,6 +159,85 @@ export function reichereFahrtzeitenAn<T extends { plz: string | null }>(
       distanz_km: fahrt?.distanzKm ?? null,
     }
   })
+}
+
+/**
+ * Fahrtzeiten aller Stops einer Tour neu berechnen und persistieren.
+ * AUSGEFALLENE Stops werden übersprungen (die Route fährt an ihnen
+ * vorbei) und ihre alten Werte geleert, damit Detailansicht und
+ * Ausdruck keine Anfahrt zu einem entfallenen Halt mehr zeigen.
+ */
+export async function aktualisiereFahrtzeiten(
+  admin: SupabaseClient,
+  tourId: string,
+  startPlz: string | null
+): Promise<void> {
+  const { data: stops } = await admin
+    .from('tour_stops')
+    .select('id, position, plz, status')
+    .eq('tour_id', tourId)
+    .order('position', { ascending: true })
+  if (!stops) return
+
+  const aktive = stops.filter(s => s.status !== 'AUSGEFALLEN')
+  for (const s of reichereFahrtzeitenAn(aktive, startPlz)) {
+    await admin
+      .from('tour_stops')
+      .update({ fahrzeit_minuten: s.fahrzeit_minuten, distanz_km: s.distanz_km })
+      .eq('id', s.id)
+  }
+
+  const entfallen = stops.filter(s => s.status === 'AUSGEFALLEN').map(s => s.id)
+  if (entfallen.length > 0) {
+    await admin
+      .from('tour_stops')
+      .update({ fahrzeit_minuten: null, distanz_km: null })
+      .in('id', entfallen)
+  }
+}
+
+/** Einsatz-Status, die nicht mehr storniert werden dürfen. */
+const NICHT_MEHR_STORNIERBAR = ['BEENDET', 'STORNIERT', 'cancelled', 'NO_SHOW']
+
+/**
+ * Einsätze stornieren, die aus einer Tour herausfallen (Stop entfernt,
+ * Stop AUSGEFALLEN, Tour storniert).
+ *
+ * Ohne das bleibt das assignment auf GEPLANT stehen: es blockiert über
+ * check_assignment_overlap weiterhin die Zeit des Mitarbeiters und
+ * erscheint in Kalender und Engel-App als gültiger Termin.
+ *
+ * Storniert wird nur, wenn KEIN anderer Stop den Einsatz noch nutzt —
+ * `ignoriereStopIds` nimmt die Stops aus, die gerade wegfallen.
+ */
+export async function storniereGeloesteAssignments(
+  admin: SupabaseClient,
+  assignmentIds: (string | null)[],
+  optionen: { ignoriereStopIds?: string[] } = {}
+): Promise<void> {
+  const ids = [...new Set(assignmentIds.filter((a): a is string => !!a))]
+  if (ids.length === 0) return
+
+  const { data: verknuepfte } = await admin
+    .from('tour_stops')
+    .select('id, assignment_id, status')
+    .in('assignment_id', ids)
+
+  const ignoriert = new Set(optionen.ignoriereStopIds ?? [])
+  const nochGenutzt = new Set(
+    (verknuepfte ?? [])
+      .filter(s => !ignoriert.has(s.id) && s.status !== 'AUSGEFALLEN')
+      .map(s => s.assignment_id as string)
+  )
+
+  const frei = ids.filter(id => !nochGenutzt.has(id))
+  if (frei.length === 0) return
+
+  await admin
+    .from('assignments')
+    .update({ status: 'STORNIERT' })
+    .in('id', frei)
+    .not('status', 'in', `(${NICHT_MEHR_STORNIERBAR.join(',')})`)
 }
 
 export interface VerfuegbarkeitsBefund {
