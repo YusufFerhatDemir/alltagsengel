@@ -121,12 +121,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Betreuungskraft nicht gefunden oder gehört nicht zur Organisation.' }, { status: 404 })
   }
 
-  const startParts = start_time.split(':')
-  const endParts = end_time.split(':')
-  const startMin = parseInt(startParts[0]) * 60 + parseInt(startParts[1])
-  const endMin = parseInt(endParts[0]) * 60 + parseInt(endParts[1])
-  const duration = endMin - startMin
-
+  // duration_minutes wird NICHT mitgeschickt: die Spalte ist auf
+  // service_records eine GENERATED-Spalte und wird aus start_time/end_time
+  // berechnet. Ein mitgelieferter Wert lässt den INSERT mit 428C9 scheitern
+  // („cannot insert a non-DEFAULT value into column"). Befund aus dem
+  // Pilot-E2E vom 14.08.2026, siehe docs/PILOT_E2E_BERICHT.md.
   const insertData: Record<string, unknown> = {
     organization_id: organizationId,
     client_id,
@@ -134,7 +133,6 @@ export async function POST(req: NextRequest) {
     date,
     start_time,
     end_time,
-    duration_minutes: duration > 0 ? duration : null,
     service_type,
     budget_type: budget_type || 'private',
     billing_type: billing_type || 'PRIVAT',
@@ -155,8 +153,10 @@ export async function POST(req: NextRequest) {
   return NextResponse.json(data, { status: 201 })
 }
 
+// duration_minutes fehlt bewusst: GENERATED-Spalte, siehe POST oben.
+// Ein UPDATE darauf scheitert genauso wie ein INSERT.
 const ERLAUBTE_PATCH_FELDER = new Set([
-  'date', 'start_time', 'end_time', 'duration_minutes',
+  'date', 'start_time', 'end_time',
   'service_type', 'budget_type', 'billing_type',
   'amount', 'notes', 'leistung_beschreibung',
   'caregiver_initials', 'gps_end_lat', 'gps_end_lng',

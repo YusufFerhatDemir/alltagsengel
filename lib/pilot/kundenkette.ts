@@ -29,6 +29,18 @@
 //   • invoices.total_amount steht in EURO, nicht in Cent — payments und
 //     payment_allocations dagegen in Cent. Die Umrechnung passiert hier an
 //     genau einer Stelle.
+//
+//   • client_budgets führt LIVE genau eine Zeile je Kunde und Jahr:
+//     annual_amount/monthly_amount = § 45b Entlastungsbetrag,
+//     combined_annual_amount = § 42a VP/KZP. Eine Spalte `budget_type`
+//     gibt es dort nicht (die Migration 20260831020000_d2_vp_budget.sql,
+//     die sie einführen würde, ist nicht angewendet). Ein Select darauf
+//     lässt die GANZE Abfrage mit 42703 scheitern.
+//
+// KEIN STILLES SCHLUCKEN VON FEHLERN: jede Abfrage wird auf `error` geprüft.
+// Eine nicht lesbare Tabelle führt zu Stand „blockiert" mit der echten
+// Fehlermeldung — niemals zu einem beruhigenden „0 Datensätze". Genau dieser
+// Unterschied entscheidet, ob die Seite einen Defekt zeigt oder ihn verdeckt.
 // ═══════════════════════════════════════════════════════════════════
 
 import type { SupabaseClient } from '@supabase/supabase-js'
@@ -57,7 +69,13 @@ interface KettenRohdaten {
     pflegegrad: number | null
     pflegekasse_name: string | null
   }
-  budgets: { budget_type: string; year: number; annual_amount: number | null }[]
+  budgets: {
+    year: number
+    /** § 45b Entlastungsbetrag. */
+    annual_amount: number | null
+    /** § 42a gemeinsamer Jahresbetrag (VP/KZP), erst ab PG 2. */
+    combined_annual_amount: number | null
+  }[]
   assignments: { id: string; caregiver_id: string | null; assignment_date: string | null; status: string | null }[]
   freigegebeneEngel: Set<string>
   records: { id: string; status: string | null; amount: number | null; date: string | null }[]
@@ -76,10 +94,35 @@ interface KettenRohdaten {
   pakete: { invoice_id: string }[]
   zuordnungen: { invoice_id: string; amount_cents: number | null }[]
   datevExports: { zeitraum_von: string; zeitraum_bis: string; status: string | null }[]
+  /** Tabelle → Fehlermeldung, wenn die Abfrage nicht gelesen werden konnte. */
+  fehler: Record<string, string>
 }
 
 function euroZuCent(euro: number | null | undefined): number {
   return Math.round((euro ?? 0) * 100)
+}
+
+/** Was eine Supabase-Abfrage minimal zurückgibt — Daten oder Fehler. */
+interface Antwort<T> {
+  data: T[] | null
+  error?: { message?: string; code?: string } | null
+}
+
+/**
+ * Nimmt eine Abfrage-Antwort entgegen und trennt Daten von Fehlern.
+ * Ein Fehler landet in `fehler[tabelle]` und wird NICHT zu einer leeren
+ * Liste geglättet — sonst liest sich ein kaputter Select wie „nichts da".
+ */
+function auswerten<T>(
+  tabelle: string,
+  antwort: Antwort<T>,
+  fehler: Record<string, string>,
+): T[] {
+  if (antwort.error) {
+    fehler[tabelle] = `${antwort.error.code ?? 'Fehler'}: ${antwort.error.message ?? 'unbekannt'}`
+    return []
+  }
+  return antwort.data ?? []
 }
 
 function schritt(
@@ -118,9 +161,11 @@ async function ladeRohdaten(
         .select('id, first_name, last_name, geburtsdatum, date_of_birth, address, zip_code, city, phone, email, pflegegrad, pflegekasse_name')
         .eq('organization_id', organizationId)
         .in('id', clientIds),
+      // budget_type gibt es live NICHT — siehe Kopfkommentar. Ausgewertet
+      // werden die Spalten, die den Anspruch tatsächlich tragen.
       supabase
         .from('client_budgets')
-        .select('client_id, budget_type, year, annual_amount')
+        .select('client_id, year, annual_amount, combined_annual_amount')
         .eq('organization_id', organizationId)
         .eq('year', jahr)
         .in('client_id', clientIds),
@@ -151,8 +196,17 @@ async function ladeRohdaten(
         .eq('organization_id', organizationId),
     ])
 
-  const recordIds = (recordsRes.data ?? []).map(r => r.id)
-  const invoiceIds = (invoicesRes.data ?? []).map(i => i.id)
+  const fehler: Record<string, string> = {}
+  const alleClients = auswerten('clients', clientsRes, fehler)
+  const alleBudgets = auswerten('client_budgets', budgetsRes, fehler)
+  const alleAssignments = auswerten('assignments', assignmentsRes, fehler)
+  const alleEngel = auswerten('caregivers', engelRes, fehler)
+  const alleRecords = auswerten('service_records', recordsRes, fehler)
+  const alleInvoices = auswerten('invoices', invoicesRes, fehler)
+  const datevExports = auswerten('datev_exports', datevRes, fehler) as KettenRohdaten['datevExports']
+
+  const recordIds = alleRecords.map(r => r.id)
+  const invoiceIds = alleInvoices.map(i => i.id)
 
   // Signaturen und Belegpakete hängen an Nachweisen bzw. Rechnungen, nicht am
   // Kunden — sie werden über die eben ermittelten IDs nachgeladen.
@@ -180,31 +234,69 @@ async function ladeRohdaten(
       : Promise.resolve({ data: [] as { invoice_id: string; amount_cents: number | null }[] }),
   ])
 
-  const freigegebeneEngel = new Set((engelRes.data ?? []).map(c => c.id))
-  const datevExports = (datevRes.data ?? []) as KettenRohdaten['datevExports']
+  const alleSignaturen = auswerten('service_signatures', signaturenRes, fehler)
+  const allePakete = auswerten('invoice_packages', paketeRes, fehler)
+  const alleZuordnungen = auswerten('payment_allocations', zuordnungenRes, fehler)
+
+  const freigegebeneEngel = new Set(alleEngel.map(c => c.id))
 
   const map = new Map<string, KettenRohdaten>()
-  for (const client of clientsRes.data ?? []) {
-    const eigeneRecords = (recordsRes.data ?? []).filter(r => r.client_id === client.id)
+  for (const client of alleClients) {
+    const eigeneRecords = alleRecords.filter(r => r.client_id === client.id)
     const eigeneRecordIds = new Set(eigeneRecords.map(r => r.id))
-    const eigeneInvoices = (invoicesRes.data ?? []).filter(i => i.client_id === client.id)
+    const eigeneInvoices = alleInvoices.filter(i => i.client_id === client.id)
     const eigeneInvoiceIds = new Set(eigeneInvoices.map(i => i.id))
 
     map.set(client.id, {
       client,
-      budgets: (budgetsRes.data ?? []).filter(b => b.client_id === client.id),
-      assignments: (assignmentsRes.data ?? []).filter(a => a.client_id === client.id),
+      budgets: alleBudgets.filter(b => b.client_id === client.id),
+      assignments: alleAssignments.filter(a => a.client_id === client.id),
       freigegebeneEngel,
       records: eigeneRecords,
-      signaturen: (signaturenRes.data ?? []).filter(s => eigeneRecordIds.has(s.service_record_id)),
+      signaturen: alleSignaturen.filter(s => eigeneRecordIds.has(s.service_record_id)),
       invoices: eigeneInvoices,
-      pakete: (paketeRes.data ?? []).filter(p => eigeneInvoiceIds.has(p.invoice_id)),
-      zuordnungen: (zuordnungenRes.data ?? []).filter(z => eigeneInvoiceIds.has(z.invoice_id)),
+      pakete: allePakete.filter(p => eigeneInvoiceIds.has(p.invoice_id)),
+      zuordnungen: alleZuordnungen.filter(z => eigeneInvoiceIds.has(z.invoice_id)),
       datevExports,
+      fehler,
     })
   }
 
   return map
+}
+
+/**
+ * Beschriftet eine Budgetzeile aus den Spalten, die den Anspruch tragen.
+ * § 45b und § 42a stehen in derselben Zeile nebeneinander — sie werden
+ * getrennt benannt, weil sie verschiedene Rechtsgrundlagen und verschiedene
+ * Verfallsregeln haben.
+ */
+function budgetBeschriftung(b: { annual_amount: number | null; combined_annual_amount: number | null }): string {
+  const teile: string[] = []
+  if (b.annual_amount) teile.push(`§ 45b ${b.annual_amount} €`)
+  if (b.combined_annual_amount) teile.push(`§ 42a ${b.combined_annual_amount} €`)
+  return teile.length > 0 ? teile.join(' + ') : 'Budgetzeile ohne Betrag'
+}
+
+/**
+ * Welche Tabellen ein Schritt braucht. Ist eine davon nicht lesbar, ist der
+ * Stand des Schritts UNBEKANNT — er wird als blockiert mit der echten
+ * Fehlermeldung ausgewiesen und nicht als „offen" beschönigt.
+ */
+const SCHRITT_QUELLEN: Record<SchrittId, string[]> = {
+  kunde: ['clients'],
+  pflegegrad: ['clients'],
+  budget: ['client_budgets'],
+  engel: ['assignments', 'caregivers'],
+  termin: ['assignments'],
+  leistungsnachweis: ['service_records'],
+  signatur: ['service_records', 'service_signatures'],
+  freigabe: ['service_records'],
+  rechnung: ['invoices'],
+  pdf: ['invoices', 'invoice_packages'],
+  zahlung: ['invoices', 'payment_allocations'],
+  opos: ['invoices', 'payment_allocations'],
+  datev: ['invoices', 'datev_exports'],
 }
 
 /** Baut die Kette aus bereits geladenen Rohdaten. */
@@ -245,7 +337,7 @@ function baueKette(clientId: string, d: KettenRohdaten): KundenKette {
     'budget', clientId,
     budgetStand,
     budgets.length > 0
-      ? budgets.map(b => `${b.budget_type} ${b.annual_amount ?? 0} €`).join(' · ')
+      ? budgets.map(budgetBeschriftung).join(' · ')
       : 'kein Budget für das laufende Jahr',
     budgetStand === 'blockiert'
       ? 'Erst Pflegegrad erfassen — ohne ihn besteht kein Budgetanspruch.'
@@ -437,16 +529,35 @@ function baueKette(clientId: string, d: KettenRohdaten): KundenKette {
       : 'DATEV-Export für den Zeitraum erstellen und an den Steuerberater übergeben.',
   ))
 
+  // ── Nicht lesbare Tabellen überschreiben den Stand ───────────────
+  // Muss NACH dem Aufbau laufen: die Bewertung oben hat mangels Daten
+  // „offen"/„blockiert" gerechnet, ohne zu wissen, dass die Zeilen gar nicht
+  // erst geladen werden konnten. Ohne diesen Durchgang sähe ein 42703 exakt
+  // aus wie ein Kunde ohne Budget.
+  const geprueft = schritte.map(s => {
+    const kaputt = SCHRITT_QUELLEN[s.id].filter(t => d.fehler[t])
+    if (kaputt.length === 0) return s
+    return {
+      ...s,
+      stand: 'blockiert' as SchrittStand,
+      wert: 'Stand nicht ermittelbar',
+      naechsterSchritt:
+        `Technischer Fehler beim Lesen von ${kaputt.map(t => `${t} (${d.fehler[t]})`).join(', ')}. ` +
+        'Der Stand dieses Schritts ist unbekannt — er ist NICHT als „nichts vorhanden" zu lesen.',
+    }
+  })
+
   // ── Auswertung ──────────────────────────────────────────────────
-  const anwendbar = schritte.filter(s => s.stand !== 'entfaellt')
+  const anwendbar = geprueft.filter(s => s.stand !== 'entfaellt')
   const erledigt = anwendbar.filter(s => s.stand === 'erledigt')
-  const aktuellerSchritt = schritte.find(s => s.stand !== 'erledigt' && s.stand !== 'entfaellt') ?? null
+  const aktuellerSchritt = geprueft.find(s => s.stand !== 'erledigt' && s.stand !== 'entfaellt') ?? null
 
   return {
     clientId,
     name,
     abrechnungsweg: c.pflegekasse_name ? 'kasse' : 'privat',
-    schritte,
+    schritte: geprueft,
+    datenfehler: Object.entries(d.fehler).map(([tabelle, meldung]) => `${tabelle}: ${meldung}`),
     fortschritt: {
       erledigt: erledigt.length,
       anwendbar: anwendbar.length,
