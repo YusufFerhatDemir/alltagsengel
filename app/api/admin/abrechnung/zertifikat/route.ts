@@ -3,6 +3,7 @@ import { requireAdmin, requireAdminMitOrg } from '@/lib/abrechnung/require-admin
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getActiveOrgId } from '@/lib/organizations/server'
 import { pruefeZertifikat, speichereAbsenderZertifikat } from '@/lib/abrechnung/zertifikate'
+import { protokolliereRotation } from '@/lib/abrechnung/credentials'
 import { logAuditEvent } from '@/lib/audit-log'
 
 export const runtime = 'nodejs'
@@ -66,7 +67,31 @@ export async function POST(req: NextRequest) {
       )
     }
 
+    // Vorgänger VOR dem Speichern feststellen: danach ist die neue Zeile da und
+    // die Unterscheidung "erstmals hinterlegt" vs. "rotiert" nicht mehr möglich.
+    const supabase = createAdminClient()
+    const { data: vorgaenger } = await supabase
+      .from('abrechnung_zertifikate')
+      .select('fingerprint')
+      .eq('organization_id', orgId)
+      .eq('typ', 'absender')
+      .neq('fingerprint', pruefung.fingerprint)
+      .order('gueltig_bis', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+
     const zert = await speichereAbsenderZertifikat(buf, passwort, orgId)
+
+    await protokolliereRotation(supabase, {
+      organizationId: orgId,
+      credentialId: 'secon_absender_zertifikat',
+      ereignis: vorgaenger ? 'rotiert' : 'hinterlegt',
+      fingerprintNeu: zert.fingerprint,
+      fingerprintAlt: vorgaenger?.fingerprint ?? null,
+      gueltigBis: zert.gueltig_bis.toISOString().slice(0, 10),
+      bezugLabel: `IK ${zert.ik_nummer}`,
+      actorId: auth.userId,
+    })
 
     await logAuditEvent({
       action: 'create',

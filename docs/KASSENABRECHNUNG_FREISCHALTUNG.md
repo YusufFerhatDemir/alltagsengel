@@ -1,6 +1,6 @@
 # Kassenabrechnung — Freischaltung
 
-**Stand:** 2026-09-02 · **Betrifft:** § 105 SGB XI (Pflege), § 302 SGB V (häusliche Krankenpflege), KIM/TI
+**Stand:** 2026-09-03 · **Betrifft:** § 105 SGB XI (Pflege), § 302 SGB V (häusliche Krankenpflege), KIM/TI
 
 Dieses Dokument beantwortet eine Frage: **Was ist zu tun, wenn die Unterlagen von aussen ankommen?**
 
@@ -259,15 +259,104 @@ Abruf: `GET /api/billing/dta/versand-protokoll?lauf_id=…&kanal=…`
 
 ---
 
+## Betrieb — Zugangsmittel, Test-/Echtbetrieb, Überwachung
+
+Alles in diesem Abschnitt liegt unter **Admin → Kassenabrechnung → Betrieb**
+(`/admin/kassenabrechnung/betrieb`).
+
+### Zugangsmittel: wo was liegt
+
+Geheimnisse liegen an genau zwei Orten — nie in der Datenbank.
+
+| Zugangsmittel | Ablage | Beschaffung |
+|---|---|---|
+| ITSG-Zertifikat (PKCS#12) | Bucket `abrechnung`, `zertifikate/<org>/absender-<ik>-<fingerprint>.p12` | ITSG Trust Center |
+| Passwort des PKCS#12 | Env `SECON_ZERT_PASSWORT` | beim Antrag selbst vergeben |
+| SSH-Private-Key je Annahmestelle | Bucket `abrechnung`, `sftp-keys/<das-id>.key` | Schlüsselpaar selbst erzeugen, öffentlichen Teil bei der Stelle registrieren |
+| Empfänger-Zertifikate | Cache `abrechnung_zertifikate` (öffentliches ITSG-Verzeichnis) | wird automatisch geladen |
+| KIM-Provider-Zugang | **steht noch nicht fest** | erst mit dem Provider-Vertrag — bewusst kein Ablageort vorgegeben |
+
+In der Datenbank steht ausschliesslich, **dass und wann** etwas hinterlegt oder ausgetauscht wurde
+(`abrechnung_credential_rotationen`: Fingerprint, Ablaufdatum, Ablageort). Zwei unabhängige Sperren
+halten Schlüsselmaterial heraus: `pruefeKeinSchluesselmaterial()` im Code und CHECK-Constraints in
+der Tabelle.
+
+**Rotation:** Ein neues Zertifikat wird hinterlegt, während das alte noch gilt — Pfad und Zeile
+enthalten den Fingerprint, eine Rotation überschreibt den Vorgänger nicht. Die Ampel warnt 60 Tage
+vor Ablauf. `GET /api/admin/abrechnung/credentials` liefert das Inventar (nie Werte).
+
+### Test- oder Echtbetrieb (Dateiindikator)
+
+Der Dateiindikator im UNB-Segment entscheidet, was die Annahmestelle mit der Datei macht:
+`0` = Testdatei, folgenlos · `2` = Echtdatei, **Forderung**.
+
+**Ohne Eintrag gilt Testbetrieb.** Nicht „unbekannt", nicht „wie zuletzt" — Test. Ein Lesefehler,
+eine fehlende Zeile, eine unbekannte Organisation: alles endet bei `0`.
+
+Zum Umschalten auf Echtbetrieb müssen **drei Dinge gleichzeitig** erfüllt sein:
+
+1. Das Env-Gate des Kanals steht offen (`ITSG_ZERTIFIZIERT` / `SGB_V_302_FREIGABE` / `KIM_AKTIV`)
+2. Eine bestandene Testübertragung ist belegt — Datum **und** Referenz der Annahmestelle
+3. Die umschaltende Person tippt `ECHTBETRIEB`
+
+Der Rückweg in den Testbetrieb ist immer offen und braucht nur eine Begründung. Jeder Wechsel landet
+unveränderlich in `abrechnung_betriebsmodus_historie`, mitsamt dem Gate-Stand zum Zeitpunkt des
+Umschaltens.
+
+Steht ein Kanal auf Echtbetrieb, das Gate aber zu, bleibt es bei Indikator `0` — ein Kanal, der
+nicht senden darf, erzeugt auch keine Echtdateien.
+
+### Wiederholversuche und Fehlerqueue
+
+Vorübergehende Netzfehler (`ETIMEDOUT`, `ECONNRESET`, Handshake-Timeouts …) werden bis zu dreimal
+mit wachsendem Abstand wiederholt (1 s, 2 s, 4 s) — **aber nur, solange die Wiederholung folgenlos
+ist**:
+
+| Abbruch in Phase | Automatische Wiederholung |
+|---|---|
+| `verbindung` | ja — es liegt nichts drüben |
+| `nutzdaten` | ja — ohne Auftragsdatei beginnt keine Verarbeitung |
+| `auftragsdatei` | **nein** — die Annahmestelle könnte bereits angefangen haben |
+| `verifikation` | **nein** — beide Dateien liegen vollständig drüben |
+
+Konfigurationsfehler (Authentifizierung, falscher Hostname, Rechte) werden nie wiederholt. **Alles
+Unbekannte gilt als nicht wiederholbar** — eine unnötige Dead-Letter-Zeile kostet einen Blick, eine
+unnötige Wiederholung kann eine Forderung verdoppeln.
+
+Was nicht wiederholt wird, landet in `dta_dead_letter` und damit auf einer sichtbaren Liste mit
+Bearbeiter und Abschluss. „Wiedervorlegen" setzt den DAKOTA-Auftrag zurück auf
+`bereit_zur_uebermittlung`, **startet aber keinen Versand** — wer wiedervorlegt, hat die Ursache
+gesehen und löst den Versand danach bewusst aus. „Verworfen" verlangt eine Begründung.
+
+### Überwachung
+
+`GET /api/admin/abrechnung/health` meldet je Kanal (§ 105, § 302, KIM): Gate-Stand, Betriebsmodus
+und effektiven Dateiindikator, letzte erfolgreiche Übertragung, letzten Fehler, Warteschlangentiefe
+mit Alter des ältesten wartenden Vorgangs, offene Rückläufer und offene Dead-Letter-Einträge.
+`?kurz=1` liefert die Kurzform für Statusanzeigen.
+
+Ein geschlossenes Gate macht einen Kanal **nicht rot** — das ist der erwartete Zustand vor der
+Freischaltung, und ein Dauer-Rot, das jeder kennt, sieht niemand mehr. Rot bedeutet: es liegt
+Arbeit, die nicht von selbst weggeht.
+
+---
+
 ## Migrationen
 
 | Datei | Inhalt | Status |
 |---|---|---|
-| `20260902010000_dta_versand_pipeline.sql` | `dta_versand_protokoll`, `dta_fehlercode_katalog`, `dta_wiedervorlage`, Audit-Entity-Typen | **wartet auf Live-Apply** |
-| `20260902020000_sgb_v_302_laeufe.sql` | `sgb_v_laeufe` | **wartet auf Live-Apply** |
+| `20260902010000_dta_versand_pipeline.sql` | `dta_versand_protokoll`, `dta_fehlercode_katalog`, `dta_wiedervorlage`, Audit-Entity-Typen | **live** |
+| `20260902020000_sgb_v_302_laeufe.sql` | `sgb_v_laeufe` | **live** |
+| `20260903010000_kassenabrechnung_betrieb.sql` | `abrechnung_betriebsmodus` (+ Historie), `abrechnung_credential_rotationen`, `dta_dead_letter`, Audit-Entity-Typen | **wartet auf Live-Apply** |
 
-Reihenfolge beim Rollback umgekehrt: erst `20260902020001`, dann `20260902010001` — der Trigger
-auf `sgb_v_laeufe` nutzt die Funktion aus der ersten Migration.
+Reihenfolge beim Rollback umgekehrt: erst `20260903010001`, dann `20260902020001`, dann
+`20260902010001` — der Trigger auf `sgb_v_laeufe` nutzt die Funktion aus der ersten Migration, und
+`dta_dead_letter` verweist auf `dta_versand_protokoll`.
+
+**Bis zum Live-Apply von `20260903010000`:** Betriebsmodus, Rotationsprotokoll und Fehlerqueue
+schreiben ins Leere — `ladeBetriebsmodus()` fällt dabei auf Testbetrieb zurück (fail-closed, der
+Export erzeugt weiterhin Indikator `0`), und `inDeadLetter()` meldet den Fehler zurück, statt den
+Versand abzubrechen. Die Betriebsansicht zeigt in diesem Zustand leere Listen.
 
 ---
 

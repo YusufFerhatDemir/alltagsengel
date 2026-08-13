@@ -18,6 +18,7 @@ import { logBillingAction, computeContentHash } from '../billing/core/audit'
 import { generateAlleDateien, type AbrechnungsFall, type GeneratorOptionen, type EdifactDatei } from './edifact-generator'
 import { validateEDIFACT, validateIK } from './edifact-validator'
 import { generateAuftragsdatei, auftragsdateiName } from './auftragsdatei'
+import { dateiindikatorFuer } from './betriebsmodus'
 
 function encodeToLatin1(text: string): ArrayBuffer {
   const buf = new ArrayBuffer(text.length)
@@ -832,11 +833,20 @@ export async function exportiereLauf(
     if (org?.name) absenderName = org.name
   }
 
+  // Dateiindikator: '0' = Testdatei, '2' = Echtdatei. Bis hierher stand '2'
+  // hartkodiert — jede erzeugte Datei behauptete Echtabrechnung, auch vor der
+  // ersten mit der Annahmestelle abgesprochenen Testübertragung. Der Wert
+  // kommt jetzt aus dem Betriebsmodus des Kanals und ist ohne ausdrückliche,
+  // belegte Umschaltung '0'.
+  const dateiindikator = lauf.organization_id
+    ? await dateiindikatorFuer(supabase, lauf.organization_id, 'sftp_105')
+    : '0'
+
   // EDIFACT generieren
   const optionen: GeneratorOptionen = {
     bundesland: lauf.bundesland,
     absender_name: absenderName,
-    dateiindikator: '2',
+    dateiindikator,
   }
 
   let dateien: EdifactDatei[]

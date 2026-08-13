@@ -13,6 +13,7 @@ import { useCallback, useEffect, useState } from 'react'
 import type { CoachFreischaltung } from '@/lib/coach/types'
 import { FREISCHALT_QUELLE_LABELS } from '@/lib/coach/freischaltung'
 import { coachApi, CoachApiError, useCoachProfil } from '../_lib/client'
+import { CoachLaden, CoachLadefehler } from '../_lib/Zustand'
 
 interface StatusAntwort {
   freischaltungen: CoachFreischaltung[]
@@ -21,7 +22,7 @@ interface StatusAntwort {
 }
 
 export default function FreischaltungClient() {
-  const { profil, laden } = useCoachProfil()
+  const { profil, laden, fehler: profilFehler, neuLaden } = useCoachProfil()
   const [status, setStatus] = useState<StatusAntwort | null>(null)
   const [code, setCode] = useState('')
   const [sende, setSende] = useState(false)
@@ -56,7 +57,11 @@ export default function FreischaltungClient() {
     }
   }
 
-  if (laden || !profil) return <p role="status">Wird geladen …</p>
+  // Ohne die Fehlerprüfung bliebe die Seite bei einem Ladefehler dauerhaft
+  // auf „Wird geladen …" stehen (profil bleibt null, laden ist false).
+  if (laden) return <CoachLaden />
+  if (profilFehler) return <CoachLadefehler fehler={profilFehler} neuLaden={neuLaden} />
+  if (!profil) return null
 
   return (
     <>

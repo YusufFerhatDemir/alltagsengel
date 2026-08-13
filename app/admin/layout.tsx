@@ -101,6 +101,8 @@ const navGroups = [
     title: 'Übersicht',
     items: [
       { href: '/admin/dashboard', label: 'Dashboard', icon: <IconHome size={18} /> },
+      { href: '/admin/pilot', label: 'Pilot / Echtbetrieb', icon: <IconTarget size={18} /> },
+      { href: '/admin/go-live', label: 'Go-Live-Status', icon: <IconTarget size={18} /> },
     ],
   },
   {
@@ -138,6 +140,7 @@ const navGroups = [
       { href: '/admin/schedule', label: 'Einsatzplanung', icon: <IconHome size={18} /> },
       { href: '/admin/tourenplanung', label: 'Tourenplanung', icon: <IconTarget size={18} /> },
       { href: '/admin/dienstplan', label: 'Dienstplan', icon: <IconCalendar size={18} /> },
+      { href: '/admin/uebergaben', label: 'Dienstübergabe', icon: <IconClipboard size={18} /> },
       { href: '/admin/kalender', label: 'Kalender', icon: <IconClipboard size={18} /> },
       { href: '/admin/arbeitszeiten', label: 'Arbeitszeiten', icon: <IconClock size={18} /> },
       { href: '/admin/urlaub', label: 'Urlaub', icon: <IconCalendar size={18} /> },

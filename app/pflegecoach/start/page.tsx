@@ -6,13 +6,20 @@
 // auch OHNE Anmeldung etwas Sinnvolles zeigen: die Zweckbestimmung und die
 // Produktgrenze. Erst danach kommt der Anmeldeweg. Ohne das wäre der
 // PflegeCoach von außen eine reine Login-Sackgasse.
+//
+// ABBRUCHFEST: Das Onboarding schreibt in mehreren Schritten (Profil,
+// Pflicht-Einwilligung, optionale Einwilligung, Abschluss-Vermerk). Bricht
+// es dazwischen ab — Netz weg, Tab geschlossen —, darf der Nutzer nicht in
+// einem halben Zustand landen. Die Seite erkennt deshalb beim Aufruf, was
+// schon existiert, und setzt genau dort fort.
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import type { CoachRolle, CoachUser } from '@/lib/coach/types'
 import { ROLLE_LABELS } from '@/lib/coach/types'
 import { coachApi, CoachApiError } from '../_lib/client'
+import { CoachLaden, CoachLadefehler } from '../_lib/Zustand'
 
 const ZURUECK = encodeURIComponent('/pflegecoach/start')
 
@@ -40,6 +47,11 @@ export default function CoachStart() {
   const router = useRouter()
   const [angemeldet, setAngemeldet] = useState(true)
   const [pruefe, setPruefe] = useState(true)
+  /** Profil bereits vorhanden? Dann fehlt nur noch die Einwilligung. */
+  const [bestehendesProfil, setBestehendesProfil] = useState<CoachUser | null>(null)
+  const [ladeFehler, setLadeFehler] = useState<string | null>(null)
+  const [versuch, setVersuch] = useState(0)
+
   const [rolle, setRolle] = useState<CoachRolle | ''>('')
   const [anzeigename, setAnzeigename] = useState('')
   const [pflegegrad, setPflegegrad] = useState('')
@@ -48,34 +60,61 @@ export default function CoachStart() {
   const [sende, setSende] = useState(false)
   const [fehler, setFehler] = useState<string | null>(null)
 
+  const neuLaden = useCallback(() => {
+    setLadeFehler(null)
+    setPruefe(true)
+    setVersuch(v => v + 1)
+  }, [])
+
   useEffect(() => {
-    coachApi<{ profil: CoachUser | null }>('/api/coach/profil')
-      .then(({ profil }) => {
-        if (profil) router.push('/pflegecoach')
-        else setPruefe(false)
-      })
-      .catch((e: CoachApiError) => {
-        if (e.status === 401) setAngemeldet(false)
-        else setFehler(e.message)
+    let aktiv = true
+    coachApi<{ profil: CoachUser | null; einwilligung_aktiv?: boolean }>('/api/coach/profil')
+      .then(({ profil, einwilligung_aktiv }) => {
+        if (!aktiv) return
+        // Fertig eingerichtet ist nur, wer Profil UND gültige Einwilligung hat.
+        // Sonst bliebe ein abgebrochenes Onboarding unsichtbar, und jeder
+        // Speicherversuch liefe später in einen 403.
+        if (profil && einwilligung_aktiv !== false) {
+          router.push('/pflegecoach')
+          return
+        }
+        setBestehendesProfil(profil)
         setPruefe(false)
       })
-  }, [router])
+      .catch((e: CoachApiError) => {
+        if (!aktiv) return
+        if (e.status === 401) setAngemeldet(false)
+        else setLadeFehler(e.message)
+        setPruefe(false)
+      })
+    return () => { aktiv = false }
+  }, [router, versuch])
 
   const absenden = async (ev: React.FormEvent) => {
     ev.preventDefault()
     setFehler(null)
-    if (!rolle) { setFehler('Bitte wählen Sie Ihre Rolle.'); return }
+    if (!bestehendesProfil && !rolle) { setFehler('Bitte wählen Sie Ihre Rolle.'); return }
     if (!einwilligungArt9) { setFehler('Ohne Einwilligung in die Datenverarbeitung kann der PflegeCoach nicht genutzt werden.'); return }
     setSende(true)
     try {
-      await coachApi('/api/coach/profil', {
-        method: 'POST',
-        body: JSON.stringify({
-          rolle,
-          anzeigename: anzeigename || null,
-          pflegegrad: rolle === 'pflegebeduerftig' && pflegegrad ? Number(pflegegrad) : null,
-        }),
-      })
+      if (!bestehendesProfil) {
+        try {
+          await coachApi('/api/coach/profil', {
+            method: 'POST',
+            body: JSON.stringify({
+              rolle,
+              anzeigename: anzeigename || null,
+              pflegegrad: rolle === 'pflegebeduerftig' && pflegegrad ? Number(pflegegrad) : null,
+            }),
+          })
+        } catch (e) {
+          // 409 = das Profil existiert bereits (z. B. zweiter Tab oder ein
+          // früherer Anlauf, der nur beim Einwilligen abgebrochen ist).
+          // Das ist kein Fehlerfall: die restlichen Schritte laufen weiter.
+          if (!(e instanceof CoachApiError && e.status === 409)) throw e
+        }
+      }
+
       await coachApi('/api/coach/consents', {
         method: 'POST',
         body: JSON.stringify({ consent_typ: 'gesundheitsdaten_art9', erteilt: true }),
@@ -97,7 +136,8 @@ export default function CoachStart() {
     }
   }
 
-  if (pruefe) return <p role="status">Wird geladen …</p>
+  if (pruefe) return <CoachLaden />
+  if (ladeFehler) return <CoachLadefehler fehler={ladeFehler} neuLaden={neuLaden} />
 
   if (!angemeldet) {
     return (
@@ -136,43 +176,57 @@ export default function CoachStart() {
 
   return (
     <>
-      <h1 className="pc-h1">Willkommen beim Digitalen PflegeCoach</h1>
+      <h1 className="pc-h1">
+        {bestehendesProfil ? 'Nur noch ein Schritt' : 'Willkommen beim Digitalen PflegeCoach'}
+      </h1>
 
       <Zweckbestimmung />
+
+      {bestehendesProfil && (
+        <p className="pc-feedback pc-feedback--info">
+          Ihr Profil ist bereits angelegt. Es fehlt nur noch Ihre Einwilligung in die
+          Verarbeitung Ihrer Pflege- und Gesundheitsdaten — ohne sie kann der PflegeCoach
+          keine Einträge für Sie speichern.
+        </p>
+      )}
 
       {fehler && <p className="pc-feedback pc-feedback--error" role="alert">{fehler}</p>}
 
       <form onSubmit={absenden}>
-        <fieldset className="pc-fieldset">
-          <legend>Ihre Rolle</legend>
-          <div className="pc-scale">
-            {(Object.keys(ROLLE_LABELS) as CoachRolle[]).map(r => (
-              <label key={r} className="pc-scale-option">
-                <input
-                  type="radio" name="rolle" value={r}
-                  checked={rolle === r}
-                  onChange={() => setRolle(r)}
-                />
-                <span>{ROLLE_LABELS[r]}</span>
-              </label>
-            ))}
-          </div>
-        </fieldset>
+        {!bestehendesProfil && (
+          <>
+            <fieldset className="pc-fieldset">
+              <legend>Ihre Rolle</legend>
+              <div className="pc-scale">
+                {(Object.keys(ROLLE_LABELS) as CoachRolle[]).map(r => (
+                  <label key={r} className="pc-scale-option">
+                    <input
+                      type="radio" name="rolle" value={r}
+                      checked={rolle === r}
+                      onChange={() => setRolle(r)}
+                    />
+                    <span>{ROLLE_LABELS[r]}</span>
+                  </label>
+                ))}
+              </div>
+            </fieldset>
 
-        <div className="pc-card">
-          <label htmlFor="anzeigename">Wie dürfen wir Sie ansprechen? (optional)</label>
-          <input id="anzeigename" type="text" value={anzeigename} onChange={e => setAnzeigename(e.target.value)} maxLength={120} />
+            <div className="pc-card">
+              <label htmlFor="anzeigename">Wie dürfen wir Sie ansprechen? (optional)</label>
+              <input id="anzeigename" type="text" value={anzeigename} onChange={e => setAnzeigename(e.target.value)} maxLength={120} />
 
-          {rolle === 'pflegebeduerftig' && (
-            <>
-              <label htmlFor="pflegegrad">Pflegegrad (optional)</label>
-              <select id="pflegegrad" value={pflegegrad} onChange={e => setPflegegrad(e.target.value)}>
-                <option value="">Keine Angabe</option>
-                {[1, 2, 3, 4, 5].map(g => <option key={g} value={g}>Pflegegrad {g}</option>)}
-              </select>
-            </>
-          )}
-        </div>
+              {rolle === 'pflegebeduerftig' && (
+                <>
+                  <label htmlFor="pflegegrad">Pflegegrad (optional)</label>
+                  <select id="pflegegrad" value={pflegegrad} onChange={e => setPflegegrad(e.target.value)}>
+                    <option value="">Keine Angabe</option>
+                    {[1, 2, 3, 4, 5].map(g => <option key={g} value={g}>Pflegegrad {g}</option>)}
+                  </select>
+                </>
+              )}
+            </div>
+          </>
+        )}
 
         <fieldset className="pc-fieldset">
           <legend>Einwilligungen</legend>

@@ -1,6 +1,9 @@
 import { redirect } from 'next/navigation'
 import { dipaModus, freischaltungPflicht } from '@/lib/coach/config'
+import { coachSeitenMetadata } from '../_lib/seitentitel'
 import FreischaltungClient from './FreischaltungClient'
+
+export const metadata = coachSeitenMetadata('Zugang freischalten')
 
 // Der Freischaltcode ist ein DiPA-/Pilot-Mechanismus, kein Bestandteil des
 // normalen Betriebs. Sind beide Schalter aus, existiert die Seite für den

@@ -5,12 +5,13 @@
 import Link from 'next/link'
 import { INHALT_ENTWURF_HINWEIS, WISSEN_MODULE } from '@/lib/coach/inhalte'
 import { useCoachProfil } from '../_lib/client'
+import { CoachLaden, CoachLadefehler } from '../_lib/Zustand'
 
 export default function AlltagSeite() {
-  const { profil, laden, fehler } = useCoachProfil()
+  const { profil, laden, fehler, neuLaden } = useCoachProfil()
 
-  if (laden) return <p role="status">Wird geladen …</p>
-  if (fehler) return <p className="pc-feedback pc-feedback--error" role="alert">{fehler}</p>
+  if (laden) return <CoachLaden />
+  if (fehler) return <CoachLadefehler fehler={fehler} neuLaden={neuLaden} />
   if (!profil) return null
 
   const wissensmodule = WISSEN_MODULE.filter(m => m.zielgruppe === 'pflegebeduerftig' || m.zielgruppe === 'alle')

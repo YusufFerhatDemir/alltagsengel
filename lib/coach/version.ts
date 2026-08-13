@@ -17,5 +17,5 @@
 // ═══════════════════════════════════════════════════════════════
 
 export const COACH_PRODUKT_NAME = 'Digitaler PflegeCoach'
-export const COACH_PRODUKT_VERSION = '0.3.0'
+export const COACH_PRODUKT_VERSION = '0.4.0'
 export const COACH_PRODUKT_STAND = '2026-08-13'

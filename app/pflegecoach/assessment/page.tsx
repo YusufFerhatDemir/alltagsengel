@@ -9,9 +9,10 @@ import {
   vergleicheAssessments, type AssessmentBereich,
 } from '@/lib/coach/assessment'
 import { coachApi, useCoachProfil } from '../_lib/client'
+import { CoachLaden, CoachLadefehler } from '../_lib/Zustand'
 
 export default function AssessmentSeite() {
-  const { profil, laden, fehler } = useCoachProfil()
+  const { profil, laden, fehler, neuLaden } = useCoachProfil()
   const [bisherige, setBisherige] = useState<CoachAssessment[]>([])
   const [werte, setWerte] = useState<Partial<Record<AssessmentBereich, number>>>({})
   const [notizen, setNotizen] = useState('')
@@ -25,8 +26,8 @@ export default function AssessmentSeite() {
 
   useEffect(() => { if (profil) lade() }, [profil])
 
-  if (laden) return <p role="status">Wird geladen …</p>
-  if (fehler) return <p className="pc-feedback pc-feedback--error" role="alert">{fehler}</p>
+  if (laden) return <CoachLaden />
+  if (fehler) return <CoachLadefehler fehler={fehler} neuLaden={neuLaden} />
   if (!profil) return null
 
   const absenden = async (ev: React.FormEvent) => {

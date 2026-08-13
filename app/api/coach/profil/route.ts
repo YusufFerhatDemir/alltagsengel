@@ -1,11 +1,20 @@
 import { NextResponse } from 'next/server'
 import { requireCoachSession, requireCoachUser } from '@/lib/coach/api-auth'
+import { hatAktiveEinwilligung, PFLICHT_CONSENT } from '@/lib/coach/consent'
 import type { CoachRolle, CoachSchriftgrad } from '@/lib/coach/types'
 
 const ROLLEN: CoachRolle[] = ['pflegebeduerftig', 'angehoerig', 'pflegedienst']
 const SCHRIFTGRADE: CoachSchriftgrad[] = ['normal', 'gross', 'sehr_gross']
 
-/** Eigenes PflegeCoach-Profil laden (null, wenn Onboarding noch aussteht). */
+/**
+ * Eigenes PflegeCoach-Profil laden (null, wenn Onboarding noch aussteht).
+ *
+ * Liefert zusätzlich `einwilligung_aktiv`: Der Client muss wissen, ob die
+ * Pflicht-Einwilligung (Art. 9) noch gilt — nur so kann er den gesperrten
+ * Zustand erklären, statt den Nutzer erst beim Speichern in einen 403
+ * laufen zu lassen. Ohne Profil ist das Feld `false` (es gibt dann noch
+ * keine Einwilligung; das Onboarding holt sie ein).
+ */
 export async function GET() {
   const session = await requireCoachSession()
   if (!session.ok) return session.response
@@ -17,7 +26,21 @@ export async function GET() {
     .maybeSingle()
 
   if (error) return NextResponse.json({ error: 'Profil konnte nicht geladen werden.' }, { status: 500 })
-  return NextResponse.json({ profil: data })
+  if (!data) return NextResponse.json({ profil: null, einwilligung_aktiv: false })
+
+  const { data: consents, error: consentFehler } = await session.supabase
+    .from('coach_consents')
+    .select('consent_typ, erteilt, widerrufen_am')
+    .eq('coach_user_id', data.id)
+
+  if (consentFehler) {
+    return NextResponse.json({ error: 'Profil konnte nicht geladen werden.' }, { status: 500 })
+  }
+
+  return NextResponse.json({
+    profil: data,
+    einwilligung_aktiv: hatAktiveEinwilligung(consents ?? [], PFLICHT_CONSENT),
+  })
 }
 
 /** Onboarding: Profil anlegen (einmalig, user_id ist UNIQUE). */

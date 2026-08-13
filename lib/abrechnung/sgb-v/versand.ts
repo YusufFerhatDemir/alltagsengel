@@ -29,6 +29,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { logBillingAction } from '../../billing/core/audit'
 import { ExternGesperrtError, istFreigegeben, pruefeFreigabe } from '../externe-freigaben'
 import { protokolliereVersand } from '../versand-protokoll'
+import { dateiindikatorFuer } from '../betriebsmodus'
 import { erzeugeSgbVDatei, exportImplementiert, SgbVSpecFehltError } from './generator'
 import { aktuelleVersion, monatsStichtag, type SgbVFormat } from './versionen'
 import { ladeRouting, findeRouting } from './routing'
@@ -47,7 +48,11 @@ export interface SgbVLaufParams {
   /** Nur diese Kasse abrechnen. Ohne Angabe: Sammellauf über alle. */
   kostentraegerIk?: string | null
   format?: SgbVFormat
-  /** '0' = Test (Standard), '2' = Produktion. */
+  /**
+   * Nur zum Herunterstufen: '0' erzwingt eine Testdatei, auch wenn der Kanal
+   * auf Echtbetrieb steht. Ein '2' hat keine Wirkung — der Echtbetrieb kommt
+   * ausschliesslich aus dem Betriebsmodus (lib/abrechnung/betriebsmodus.ts).
+   */
   dateiindikator?: '0' | '2'
   actorId: string
 }
@@ -126,12 +131,19 @@ export async function erzeugeUndVersendeSgbV(
   const {
     organizationId, abrechnungsmonat, actorId,
     format = 'edifact_slga_slla',
-    dateiindikator = '0',
   } = params
 
   if (!/^\d{4}-\d{2}$/.test(abrechnungsmonat)) {
     throw new Error(`Abrechnungsmonat muss JJJJ-MM sein (erhalten: "${abrechnungsmonat}")`)
   }
+
+  // Dateiindikator kommt aus dem Betriebsmodus des Kanals, nicht vom Aufrufer.
+  // Ein Aufrufer darf herunterstufen ('0' erzwingen), aber nie heraufstufen:
+  // sonst entschiede ein API-Parameter darüber, ob eine Datei bei der Kasse
+  // eine Forderung auslöst.
+  const betriebsIndikator = await dateiindikatorFuer(supabase, organizationId, 'sftp_302')
+  const dateiindikator: '0' | '2' =
+    betriebsIndikator === '2' && params.dateiindikator !== '0' ? '2' : '0'
 
   const start = Date.now()
 

@@ -13,7 +13,6 @@
 // ═══════════════════════════════════════════════════════════════
 
 import type { CoachActivity, CoachActivityLog, CoachAssessment, CoachGoal, CoachMeasurement } from './types'
-import { BEREICH_LABELS } from './types'
 import { vergleicheAssessments, verschlechterteBereiche } from './assessment'
 import { belastungHinweisNoetig } from './belastung'
 

@@ -34,6 +34,14 @@ export default function CoachDatenschutz() {
           Verarbeitung ist Ihre ausdrückliche Einwilligung (Art. 9 Abs. 2 lit. a DSGVO), die Sie
           jederzeit in den <a href="/pflegecoach/einstellungen">Einstellungen</a> widerrufen können.
         </p>
+        <p>
+          <strong>Was der Widerruf bewirkt:</strong> Ab dem Widerruf können Sie keine neuen
+          Einträge mehr anlegen — der PflegeCoach nimmt dann keine Assessments, Ziele,
+          Aktivitäten oder Messungen mehr entgegen. Ihre bisherigen Daten bleiben für Sie
+          einsehbar und exportierbar; die Rechtmäßigkeit der Verarbeitung bis zum Widerruf
+          bleibt unberührt (Art. 7 Abs. 3 DSGVO). Gelöscht werden Ihre Daten erst, wenn Sie
+          die Löschung ausdrücklich veranlassen.
+        </p>
       </section>
 
       <section className="pc-card">
@@ -52,7 +60,13 @@ export default function CoachDatenschutz() {
           Ihre Daten werden bei unserem Auftragsverarbeiter (Datenbank-Hosting) gespeichert.
           Sie können Ihre Daten jederzeit selbst exportieren
           (<a href="/pflegecoach/einstellungen">Einstellungen → Daten exportieren</a>).
-          Mit Löschung Ihres Kontos werden Ihre PflegeCoach-Daten gelöscht (Art. 17 DSGVO).
+        </p>
+        <p>
+          Löschen können Sie Ihre PflegeCoach-Daten ebenfalls selbst und vollständig
+          (<a href="/pflegecoach/loeschung">Daten löschen</a>, Art. 17 DSGVO) — Ihr
+          Alltagsengel-Konto bleibt dabei bestehen. Umgekehrt werden mit der Löschung Ihres
+          Kontos auch Ihre PflegeCoach-Daten gelöscht. Nach der Löschung bleibt allein ein
+          Protokolleintrag über den Löschvorgang selbst bestehen, ohne Ihre Inhalte.
         </p>
       </section>
 

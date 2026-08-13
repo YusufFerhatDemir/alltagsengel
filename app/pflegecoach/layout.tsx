@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { dipaModus, freischaltungPflicht } from '@/lib/coach/config'
 import CoachShell from './CoachShell'
 import './pflegecoach.css'
 
@@ -15,5 +16,13 @@ export const metadata: Metadata = {
 }
 
 export default function PflegeCoachLayout({ children }: { children: React.ReactNode }) {
-  return <CoachShell>{children}</CoachShell>
+  // Die Schalter werden hier (Server) ausgewertet und als Prop übergeben:
+  // CoachShell ist eine Client-Komponente und kann process.env nicht lesen.
+  // So bleibt der Freischalt-Punkt im Normalbetrieb nicht nur unerreichbar,
+  // sondern taucht in der Navigation gar nicht erst auf.
+  return (
+    <CoachShell zeigeFreischaltung={dipaModus() || freischaltungPflicht()}>
+      {children}
+    </CoachShell>
+  )
 }

@@ -60,6 +60,22 @@
   border-radius: 4px;
 }
 
+/* Nur für Screenreader. Bewusst hier und nicht nur in app/globals.css:
+   Der Produktbereich soll nicht davon abhängen, dass das Marketing-
+   Stylesheet geladen ist — fiele es weg, würden sonst Hilfstexte und
+   die Seitenwechsel-Ansage sichtbar mitten im Layout stehen. */
+.pc-root .sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 .pc-skiplink {
   position: absolute;
   left: -9999px;

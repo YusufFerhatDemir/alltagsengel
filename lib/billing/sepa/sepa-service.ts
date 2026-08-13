@@ -5,6 +5,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { generatePain008, validateIban, generateMandateReference } from './pain008'
 import type { SepaDirectDebitItem } from './pain008'
+import { pruefeGlaeubigerIdOderWerfe } from './glaeubiger-id'
 import { logBillingAction } from '../core/audit'
 import { heuteBerlin } from '@/lib/utils/timezone';
 
@@ -174,7 +175,10 @@ export async function createSepaBatch(
     .single()
 
   if (!org?.iban) throw new Error('Organisation hat keine IBAN hinterlegt.')
-  if (!org?.sepa_creditor_id) throw new Error('Gläubiger-Identifikationsnummer fehlt.')
+
+  // Fail-closed: ein Platzhalter (z. B. der Migrations-Default) ist nicht leer
+  // und rutschte durch eine reine Null-Prüfung hindurch. Siehe glaeubiger-id.ts.
+  const glaeubigerId = pruefeGlaeubigerIdOderWerfe(org.sepa_creditor_id)
 
   // Rechnungen mit Client + Mandat laden
   const { data: invoices } = await supabase
@@ -258,7 +262,7 @@ export async function createSepaBatch(
       name: org.name || 'Alltagsengel UG',
       iban: org.iban,
       bic: org.bic || undefined,
-      creditorId: org.sepa_creditor_id,
+      creditorId: glaeubigerId,
     },
     items: items.map(i => i.item),
   })

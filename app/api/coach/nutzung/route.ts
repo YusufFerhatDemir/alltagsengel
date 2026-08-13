@@ -31,6 +31,11 @@ export async function GET() {
   return NextResponse.json({ ereignisse: data ?? [], erfassungAktiv: nutzungsnachweisAktiv() })
 }
 
+// Bewusst OHNE `schreibzugriff`: Diese Route hat ihr eigenes, strengeres
+// Tor (Deployment-Schalter + Einwilligung 'wissenschaftliche_auswertung')
+// und antwortet bei fehlender Grundlage weich mit `erfasst: false`, statt
+// mit 403. Ein 403 würde einen Nutzerablauf abbrechen, den die Erfassung
+// nie beeinflussen darf.
 export async function POST(request: Request) {
   const auth = await requireCoachUser()
   if (!auth.ok) return auth.response
