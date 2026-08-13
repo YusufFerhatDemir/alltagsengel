@@ -87,14 +87,45 @@ export async function POST(req: Request) {
       insertData.pflegegrad = cl
     }
 
-    const { data: client, error: insertError } = await admin
+    // ── Anlage, robust gegen den engeren Live-Constraint ──────────────
+    // clients_status_check lässt live NUR ('active','paused','inactive') zu.
+    // Das hier fachlich richtige 'new' (siehe CLIENT_STATUS in lib/admin/ops)
+    // wird mit Fehler 23514 abgewiesen — dadurch war die Neuanlage über die
+    // Oberfläche vollständig blockiert und der Admin sah nur eine rohe
+    // Postgres-Meldung.
+    //
+    // Bis die Migration 20260907010000_clients_status_check.sql angewendet
+    // ist, degradiert die Anlage kontrolliert auf 'inactive': der Klient
+    // existiert, ist aber noch nicht in Betreuung — die Lebenszyklus-Stufe
+    // steht ohnehin in pipeline_status ('erstgespraech').
+    const STATUS_FALLBACK = 'inactive'
+    const hinweise: string[] = []
+
+    let { data: client, error: insertError } = await admin
       .from('clients')
       .insert(insertData)
       .select()
       .single()
 
-    if (insertError) {
-      return NextResponse.json({ error: insertError.message }, { status: 500 })
+    if (insertError?.code === '23514' && insertError.message.includes('clients_status_check')) {
+      ;({ data: client, error: insertError } = await admin
+        .from('clients')
+        .insert({ ...insertData, status: STATUS_FALLBACK })
+        .select()
+        .single())
+      if (!insertError) {
+        hinweise.push(
+          `Status „Neu" ist in der Datenbank noch nicht freigeschaltet — der Klient wurde als „Inaktiv" angelegt. ` +
+          `Migration 20260907010000_clients_status_check.sql anwenden.`
+        )
+      }
+    }
+
+    if (insertError || !client) {
+      return NextResponse.json(
+        { error: insertError?.message ?? 'Klient konnte nicht angelegt werden.' },
+        { status: 500 }
+      )
     }
 
     await logAuditEvent({
@@ -110,7 +141,6 @@ export async function POST(req: Request) {
     // Budget-Anlage darf nicht still scheitern: ohne Budget steht der Kunde
     // in der Kette bei Schritt 3 und niemand sieht warum. Der Klient bleibt
     // angelegt (der Datensatz ist gültig), der Fehler wandert in die Antwort.
-    const hinweise: string[] = []
     const careLevel = client.care_level ?? client.pflegegrad ?? 0
     if (careLevel >= 1) {
       const pgMonat = body.pflegegrad_seit_monat
