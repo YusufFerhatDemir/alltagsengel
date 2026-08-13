@@ -46,6 +46,9 @@ export default function SiteFooter() {
         <Link href="/termin">Termin buchen</Link>
         <Link href="/budgetrechner">Budgetrechner</Link>
         <Link href="/pflegegrad-check">Pflegegrad-Check</Link>
+        {/* Einstieg in den PflegeCoach — der Produktbereich selbst ist noindex,
+            ohne diesen Link wäre er von außen überhaupt nicht auffindbar. */}
+        <Link href="/pflegecoach/start">Digitaler PflegeCoach</Link>
         <Link href="/finanzierung">Finanzierung</Link>
         <Link href="/jobs">Jobs</Link>
         <Link href="/engel-werden">Engel werden</Link>

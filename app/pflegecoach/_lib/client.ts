@@ -31,8 +31,10 @@ export async function coachApi<T = unknown>(url: string, init?: RequestInit): Pr
 }
 
 /**
- * Lädt das PflegeCoach-Profil. Ohne Anmeldung → Login (mit Rücksprung),
- * ohne Profil → Onboarding (/pflegecoach/start).
+ * Lädt das PflegeCoach-Profil.
+ * Ohne Anmeldung UND ohne Profil → /pflegecoach/start. Diese Seite ist der
+ * einzige Einstieg: sie zeigt Nicht-Angemeldeten die Zweckbestimmung und
+ * den Anmeldeweg, statt sie ohne Erklärung auf das Login zu werfen.
  */
 export function useCoachProfil() {
   const router = useRouter()
@@ -55,7 +57,7 @@ export function useCoachProfil() {
       .catch((e: CoachApiError) => {
         if (!aktiv) return
         if (e.status === 401) {
-          router.push('/auth/login?redirectTo=' + encodeURIComponent('/pflegecoach'))
+          router.push('/pflegecoach/start')
           return
         }
         setFehler(e.message)

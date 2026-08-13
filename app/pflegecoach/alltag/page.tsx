@@ -13,7 +13,7 @@ export default function AlltagSeite() {
   if (fehler) return <p className="pc-feedback pc-feedback--error" role="alert">{fehler}</p>
   if (!profil) return null
 
-  const module = WISSEN_MODULE.filter(m => m.zielgruppe === 'pflegebeduerftig' || m.zielgruppe === 'alle')
+  const wissensmodule = WISSEN_MODULE.filter(m => m.zielgruppe === 'pflegebeduerftig' || m.zielgruppe === 'alle')
 
   return (
     <>
@@ -24,7 +24,7 @@ export default function AlltagSeite() {
         <Link href="/pflegecoach/wochenplan">Wochenplan</Link>.
       </p>
 
-      {module.map(m => (
+      {wissensmodule.map(m => (
         <article key={m.id} className="pc-card" aria-label={m.titel}>
           <h2>
             {m.titel}{' '}

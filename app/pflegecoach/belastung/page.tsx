@@ -56,7 +56,7 @@ export default function BelastungSeite() {
       <h1 className="pc-h1">Belastungs-Check</h1>
       <p className="pc-lead">
         7 Fragen zu den letzten zwei Wochen. Die Selbsteinschätzung hilft Ihnen, Veränderungen
-        früh zu bemerken — sie ist keine medizinische Bewertung und kein Test mit „Diagnose".
+        früh zu bemerken — sie ist keine medizinische Bewertung und kein Test mit „Diagnose“.
       </p>
 
       {meldung && (
