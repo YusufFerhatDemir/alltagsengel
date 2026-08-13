@@ -116,6 +116,18 @@ export interface LeistungsnachweisData {
   pflegekraefte: string[] // Kürzel/Namen — nur intern, im PDF nur Handzeichen
   einsaetze: LnEinsatz[]
   summe: { anzahl: number; minuten: number; betrag_euro: number }
+  /**
+   * Darf die Betragssumme auf dem Nachweis gedruckt werden?
+   *
+   * `false` ⇒ mindestens eine abgerechnete Leistungsart hat keinen als
+   * `verified` gekennzeichneten Kassentarif. Der Nachweis wird dann OHNE
+   * Eurobetrag ausgegeben (siehe `betrag_sperrgrund`). Die gemessene Summe
+   * bleibt in `summe.betrag_euro` stehen — sie ist die interne Wahrheit aus
+   * den Einsätzen, sie darf nur das Haus nicht verlassen.
+   */
+  betraege_freigegeben: boolean
+  /** Warum die Summe gesperrt ist — Klartext für die Fachabteilung. */
+  betrag_sperrgrund: string | null
   warnungen: string[]
 }
 
@@ -139,6 +151,98 @@ function esc(s: string | null | undefined): string {
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Fail-Closed: darf ein Eurobetrag auf den Nachweis?
+// ═══════════════════════════════════════════════════════════════
+// Der Leistungsnachweis ist ein KASSENDOKUMENT: er nennt Pflegekasse,
+// Genehmigungsnummer und §45a/§45b/§39 SGB XI als Grundlage. Der Betrag,
+// den er ausweist, ist damit eine Forderungsbehauptung gegenüber einem
+// Kostenträger — auch dann, wenn die Kasse ihn über die Kostenerstattung
+// der versicherten Person erreicht.
+//
+// Die Beträge in `service_records.amount` stammen aus `service_pricing`.
+// Diese Tabelle hat KEINE Spalte `tarif_status` und ist deshalb von der
+// Tarif-Verifizierung (Migration 20260831040000/050000) nicht erfasst.
+// Ein Betrag von dort ist also nicht dadurch gedeckt, dass er existiert.
+//
+// Deshalb hier dieselbe Regel wie in resolvePrice(), correctInvoice() und
+// create_invoice_draft_atomic(): ein Kassenbetrag wird nur gedruckt, wenn
+// jede abgerechnete Leistungsart einen als 'verified' gekennzeichneten
+// Kassentarif hat. Alles andere — 'blocked', 'unverified', gar kein Tarif,
+// Lesefehler, keine Organisation — sperrt die Summe.
+//
+// STRENGER ALS resolvePrice(): existiert zu einer Leistungsart NEBEN einem
+// verifizierten Tarif auch ein gesperrter, wird ebenfalls gesperrt. Der
+// Nachweis wählt keinen Tarif aus (das tut die Rechnung), er summiert nur
+// vorhandene Beträge — er kann also nicht belegen, welcher der beiden der
+// Summe zugrunde liegt.
+//
+// Der Nachweis selbst bleibt gültig: Einsätze, Zeiten und Handzeichen
+// werden weiter gedruckt. Nur die Geldzeile fällt weg.
+export async function pruefeBetragsfreigabe(
+  supabase: SupabaseClient,
+  organizationId: string | null,
+  leistungsarten: string[],
+  stichtag: string,
+): Promise<{ freigegeben: boolean; grund: string | null }> {
+  if (leistungsarten.length === 0) {
+    // Keine Einsätze ⇒ keine Summe, die gedeckt sein müsste.
+    return { freigegeben: true, grund: null }
+  }
+  if (!organizationId) {
+    return {
+      freigegeben: false,
+      grund: 'Organisation des Klienten ist nicht bestimmbar — Tarifstand nicht prüfbar.',
+    }
+  }
+
+  const { data: tarife, error } = await supabase
+    .from('billing_tariffs')
+    .select('leistungsart, tarif_status, rechtsgrundlage, gueltig_bis')
+    .eq('organization_id', organizationId)
+    .in('leistungsart', leistungsarten)
+    .neq('rechtsgrundlage', 'privat')
+    .lte('gueltig_ab', stichtag)
+    .is('deleted_at', null)
+
+  if (error) {
+    return {
+      freigegeben: false,
+      grund: `Tarifstand konnte nicht geprüft werden (${error.message}).`,
+    }
+  }
+
+  const gueltig = (tarife || []).filter(
+    t => !t.gueltig_bis || String(t.gueltig_bis) >= stichtag,
+  )
+
+  const ohneDeckung: string[] = []
+  for (const art of leistungsarten) {
+    const passend = gueltig.filter(t => t.leistungsart === art)
+    if (passend.length === 0) {
+      ohneDeckung.push(`${art} (kein Kassentarif hinterlegt)`)
+      continue
+    }
+    // Fail-closed: fehlender Status zählt wie 'unverified'.
+    const nichtVerifiziert = passend.filter(t => (t.tarif_status ?? 'unverified') !== 'verified')
+    if (nichtVerifiziert.length > 0) {
+      const status = [...new Set(nichtVerifiziert.map(t => t.tarif_status ?? 'unverified'))].join('/')
+      ohneDeckung.push(`${art} (${status})`)
+    }
+  }
+
+  if (ohneDeckung.length > 0) {
+    return {
+      freigegeben: false,
+      grund:
+        'Kein verifizierter Kassentarif für: ' + ohneDeckung.join(', ') + '. '
+        + 'Bis zur Verifizierung wird der Nachweis ohne Betrag ausgegeben.',
+    }
+  }
+
+  return { freigegeben: true, grund: null }
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -253,6 +357,19 @@ export async function loadLeistungsnachweis(params: {
     { anzahl: 0, minuten: 0, betrag_euro: 0 }
   )
 
+  // Fail-Closed-Gegenprüfung der Beträge (siehe pruefeBetragsfreigabe).
+  // Stichtag ist das Monatsende: der Nachweis deckt den ganzen Monat ab.
+  const leistungsarten = [...new Set(einsaetze.map(e => e.leistungsart))]
+  const betragsfreigabe = await pruefeBetragsfreigabe(
+    supabase,
+    effectiveOrgId,
+    leistungsarten,
+    periodEnd,
+  )
+  if (!betragsfreigabe.freigegeben && betragsfreigabe.grund) {
+    warnungen.push(betragsfreigabe.grund)
+  }
+
   const monatLabel = new Date(jahr, monatNum - 1, 1).toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin', month: 'long',
     year: 'numeric', })
 
@@ -287,6 +404,8 @@ export async function loadLeistungsnachweis(params: {
     pflegekraefte: [],
     einsaetze,
     summe,
+    betraege_freigegeben: betragsfreigabe.freigegeben,
+    betrag_sperrgrund: betragsfreigabe.grund,
     warnungen,
   }
 }
@@ -438,9 +557,16 @@ export function buildLeistungsnachweisHtml(data: LeistungsnachweisData): string 
       <td>Summe der Leistungen:</td>
       <td class="r">${data.summe.anzahl} Einsätze</td>
       <td class="r">${stunden} Stunden</td>
-      <td class="r total">${euroDe(data.summe.betrag_euro)}</td>
+      <td class="r total">${data.betraege_freigegeben ? euroDe(data.summe.betrag_euro) : '—'}</td>
     </tr>
   </table>
+${data.betraege_freigegeben ? '' : `
+  <p class="hinweis">
+    <b>Ohne Betragsangabe.</b> Für die abgerechneten Leistungsarten liegt derzeit kein
+    verifizierter Kassentarif vor. Der Nachweis dokumentiert Einsätze, Zeiten und
+    Handzeichen; der abzurechnende Betrag wird gesondert mitgeteilt, sobald die
+    Vergütung mit dem Kostenträger verbindlich feststeht.
+  </p>`}
 
   <p class="hinweis">
     Die oben aufgeführten Leistungen wurden wie dokumentiert erbracht und durch Handzeichen je Einsatz
