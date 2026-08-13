@@ -95,11 +95,11 @@ BEGIN
     CASE
       WHEN TG_OP = 'INSERT' THEN 'erstellt'
       WHEN OLD.tarif_status IS DISTINCT FROM NEW.tarif_status THEN 'status_geaendert'
-      WHEN OLD.betrag_cent IS DISTINCT FROM NEW.betrag_cent THEN 'preis_geaendert'
+      WHEN OLD.preis_cent IS DISTINCT FROM NEW.preis_cent THEN 'preis_geaendert'
       ELSE 'aktualisiert'
     END,
-    CASE WHEN TG_OP = 'UPDATE' THEN OLD.betrag_cent ELSE NULL END,
-    NEW.betrag_cent,
+    CASE WHEN TG_OP = 'UPDATE' THEN OLD.preis_cent ELSE NULL END,
+    NEW.preis_cent,
     CASE WHEN TG_OP = 'UPDATE' THEN OLD.tarif_status ELSE NULL END,
     NEW.tarif_status,
     COALESCE(NEW.verifiziert_von, current_setting('request.jwt.claims', true)::json->>'sub'),
@@ -135,7 +135,7 @@ SET tarif_status = 'verified',
     verifiziert_von = 'system/migration',
     verifizierungs_quelle = '§45b SGB XI: 125 EUR/Monat gesetzlich, 131 EUR inkl. Erhoehung'
 WHERE leistungsart = 'entlastungsbetrag'
-  AND betrag_cent = 13100
+  AND preis_cent = 13100
   AND deleted_at IS NULL;
 
 -- 5c. Alltagsbegleitung §45a 25€/h → verified (PfluV-Obergrenze)
@@ -145,7 +145,7 @@ SET tarif_status = 'verified',
     verifiziert_von = 'system/migration',
     verifizierungs_quelle = 'PfluV Hessen: Alltagsbegleitung bis 25 EUR/h zulaessig'
 WHERE leistungsart = 'alltagsbegleitung_45a'
-  AND betrag_cent = 2500
+  AND preis_cent = 2500
   AND deleted_at IS NULL;
 
 -- 5d. §45b-Tarife à 35€/h → blocked (ueberschreiten PfluV-Obergrenze)
@@ -155,7 +155,7 @@ SET tarif_status = 'blocked',
     verifiziert_von = 'system/migration',
     verifizierungs_quelle = 'PfluV Hessen: 35 EUR/h ueberschreitet zulaessige Obergrenze (25 EUR/h)'
 WHERE rechtsgrundlage = '§45b SGB XI'
-  AND betrag_cent = 3500
+  AND preis_cent = 3500
   AND deleted_at IS NULL;
 
 -- 5e. LK-Positionen (Punktwert 0,0803) → unverified (kein Verguetungsvertrag)
@@ -173,7 +173,7 @@ SET tarif_status = 'blocked',
     verifiziert_von = 'system/migration',
     verifizierungs_quelle = 'LK18: 75 EUR weicht stark vom Standard §37.3 SGB XI ab'
 WHERE leistungsart = 'LK18'
-  AND betrag_cent = 7500
+  AND preis_cent = 7500
   AND deleted_at IS NULL;
 
 -- 5g. VP-Tarife → unverified (keine Verguetungsvereinbarung)
