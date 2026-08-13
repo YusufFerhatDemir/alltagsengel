@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import {
   statusMeta, fullName, VERTRAGSSTATUS, QUALIFICATION_LEVEL,
 } from '@/lib/admin/ops'
-import { StatusBadge, SearchInput, EmptyRow } from '@/components/admin/OpsUI'
+import { StatusBadge, SearchInput, EmptyRow, Banner } from '@/components/admin/OpsUI'
 
 interface Row {
   id: string
@@ -22,34 +22,99 @@ const primaryBtn: React.CSSProperties = {
   borderRadius: 8, padding: '8px 16px', cursor: 'pointer', fontFamily: 'inherit',
 }
 
+const LEER_FORM = {
+  vorname: '', nachname: '', email: '', telefon: '',
+  qualifikationsstufe: 'betreuungskraft_45a', vertragsstatus: 'aktiv',
+  eintrittsdatum: '', wochenstundenSoll: '',
+}
+
 export default function PersonalPage() {
   const [rows, setRows] = useState<Row[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState('all')
+  const [ladefehler, setLadefehler] = useState('')
+  const [zeigeForm, setZeigeForm] = useState(false)
+  const [form, setForm] = useState(LEER_FORM)
+  const [speichert, setSpeichert] = useState(false)
+  const [formFehler, setFormFehler] = useState('')
+  const [erfolg, setErfolg] = useState('')
 
-  useEffect(() => {
-    async function load() {
-      try {
-        const res = await fetch('/api/personal/stammdaten')
-        if (!res.ok) { console.error('Fehler beim Laden der Stammdaten'); setLoading(false); return }
-        const data = await res.json()
-        setRows((data.stammdaten || data || []).map((r: any) => ({
-          id: r.id || r.caregiver_id,
-          name: r.name || fullName(r),
-          vertragsstatus: r.vertragsstatus || 'aktiv',
-          qualifikationsstufe: r.qualifikationsstufe || r.qualification_level || '—',
-          wochenstunden_soll: r.wochenstunden_soll ?? r.weekly_hours_target ?? null,
-          einsatzfreigabe: r.einsatzfreigabe ?? r.deployment_cleared ?? false,
-        })))
-      } catch (err) {
-        console.error('Personal laden fehlgeschlagen', err)
-      } finally {
+  async function load() {
+    try {
+      const res = await fetch('/api/personal/stammdaten')
+      if (!res.ok) {
+        // Ein stiller console.error sah aus wie „noch keine Mitarbeiter".
+        const d = await res.json().catch(() => ({}))
+        setLadefehler(d.error || `Stammdaten konnten nicht geladen werden (HTTP ${res.status}).`)
         setLoading(false)
+        return
       }
+      setLadefehler('')
+      const data = await res.json()
+      setRows((data.stammdaten || data || []).map((r: any) => ({
+        id: r.id || r.caregiver_id,
+        name: r.name || fullName(r),
+        vertragsstatus: r.vertragsstatus || 'aktiv',
+        qualifikationsstufe: r.qualifikationsstufe || r.qualification_level || '—',
+        wochenstunden_soll: r.wochenstunden_soll ?? r.weekly_hours_target ?? null,
+        einsatzfreigabe: r.einsatzfreigabe ?? r.deployment_cleared ?? false,
+      })))
+    } catch (err) {
+      setLadefehler('Netzwerkfehler beim Laden der Stammdaten.')
+      console.error('Personal laden fehlgeschlagen', err)
+    } finally {
+      setLoading(false)
     }
-    load()
-  }, [])
+  }
+
+  useEffect(() => { load() }, [])
+
+  async function anlegen() {
+    if (!form.vorname.trim() || !form.nachname.trim()) {
+      setFormFehler('Vor- und Nachname sind Pflichtfelder.')
+      return
+    }
+    setSpeichert(true); setFormFehler(''); setErfolg('')
+    try {
+      const res = await fetch('/api/personal/stammdaten', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          vorname: form.vorname.trim(),
+          nachname: form.nachname.trim(),
+          email: form.email.trim() || null,
+          telefon: form.telefon.trim() || null,
+          qualifikationsstufe: form.qualifikationsstufe,
+          vertragsstatus: form.vertragsstatus,
+          eintrittsdatum: form.eintrittsdatum || null,
+          wochenstundenSoll: form.wochenstundenSoll ? Number(form.wochenstundenSoll) : null,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) { setFormFehler(data.error || 'Anlegen fehlgeschlagen.'); return }
+      setErfolg(
+        `${form.vorname} ${form.nachname} angelegt — noch OHNE Einsatzfreigabe. ` +
+        'Die Freigabe wird unter „Einsatzfreigabe" nach Prüfung der Unterlagen erteilt.'
+      )
+      setForm(LEER_FORM)
+      setZeigeForm(false)
+      await load()
+    } catch {
+      setFormFehler('Netzwerkfehler beim Anlegen.')
+    } finally {
+      setSpeichert(false)
+    }
+  }
+
+  const feldStil: React.CSSProperties = {
+    padding: '8px 12px', border: '1px solid var(--border)', borderRadius: 8,
+    fontSize: 14, width: '100%', background: 'var(--coal2)', color: 'var(--ink)',
+    fontFamily: 'inherit',
+  }
+  const labelStil: React.CSSProperties = {
+    fontSize: 12, fontWeight: 600, marginBottom: 4, display: 'block', color: 'var(--ink4)',
+  }
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase()
@@ -67,7 +132,92 @@ export default function PersonalPage() {
           <h1>Personal</h1>
           <p className="admin-subtitle">{rows.length} Mitarbeiter insgesamt</p>
         </div>
+        <button
+          style={primaryBtn}
+          onClick={() => { setZeigeForm(!zeigeForm); setFormFehler(''); setErfolg('') }}
+        >
+          {zeigeForm ? 'Abbrechen' : '+ Neuen Mitarbeiter anlegen'}
+        </button>
       </div>
+
+      {ladefehler && <Banner tone="danger">{ladefehler}</Banner>}
+      {erfolg && <Banner tone="success">{erfolg}</Banner>}
+
+      {zeigeForm && (
+        <div style={{
+          background: 'var(--coal2)', border: '1px solid var(--border)',
+          borderRadius: 12, padding: 20, marginBottom: 20,
+        }}>
+          <h2 style={{ margin: '0 0 4px', fontSize: 16 }}>Neuen Mitarbeiter aufnehmen</h2>
+          <p style={{ margin: '0 0 16px', fontSize: 13, color: 'var(--ink4)' }}>
+            Der Mitarbeiter wird ohne Einsatzfreigabe angelegt. Erst nach Prüfung von
+            Führungszeugnis, Erste-Hilfe-Nachweis und Qualifikation wird er unter
+            „Einsatzfreigabe" freigeschaltet.
+          </p>
+
+          {formFehler && <Banner tone="danger">{formFehler}</Banner>}
+
+          <div style={{
+            display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
+            gap: 12, marginBottom: 16,
+          }}>
+            <div>
+              <label style={labelStil}>Vorname *</label>
+              <input style={feldStil} value={form.vorname}
+                onChange={e => setForm(f => ({ ...f, vorname: e.target.value }))} />
+            </div>
+            <div>
+              <label style={labelStil}>Nachname *</label>
+              <input style={feldStil} value={form.nachname}
+                onChange={e => setForm(f => ({ ...f, nachname: e.target.value }))} />
+            </div>
+            <div>
+              <label style={labelStil}>E-Mail</label>
+              <input style={feldStil} type="email" value={form.email}
+                onChange={e => setForm(f => ({ ...f, email: e.target.value }))} />
+            </div>
+            <div>
+              <label style={labelStil}>Telefon</label>
+              <input style={feldStil} value={form.telefon}
+                onChange={e => setForm(f => ({ ...f, telefon: e.target.value }))} />
+            </div>
+            <div>
+              <label style={labelStil}>Qualifikation</label>
+              <select style={feldStil} value={form.qualifikationsstufe}
+                onChange={e => setForm(f => ({ ...f, qualifikationsstufe: e.target.value }))}>
+                {Object.entries(QUALIFICATION_LEVEL).map(([k, v]) => (
+                  <option key={k} value={k}>{v.label}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label style={labelStil}>Vertragsstatus</label>
+              <select style={feldStil} value={form.vertragsstatus}
+                onChange={e => setForm(f => ({ ...f, vertragsstatus: e.target.value }))}>
+                {Object.entries(VERTRAGSSTATUS).map(([k, v]) => (
+                  <option key={k} value={k}>{v.label}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label style={labelStil}>Eintrittsdatum</label>
+              <input style={feldStil} type="date" value={form.eintrittsdatum}
+                onChange={e => setForm(f => ({ ...f, eintrittsdatum: e.target.value }))} />
+            </div>
+            <div>
+              <label style={labelStil}>Wochenstunden-Soll</label>
+              <input style={feldStil} type="number" min="0" max="60" step="0.5"
+                value={form.wochenstundenSoll}
+                onChange={e => setForm(f => ({ ...f, wochenstundenSoll: e.target.value }))} />
+            </div>
+          </div>
+
+          <button style={{ ...primaryBtn, opacity: speichert ? 0.6 : 1 }}
+            onClick={anlegen} disabled={speichert}>
+            {speichert ? 'Wird angelegt…' : 'Mitarbeiter anlegen'}
+          </button>
+        </div>
+      )}
 
       <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 16, alignItems: 'center' }}>
         <SearchInput value={search} onChange={setSearch} placeholder="Name suchen..." />

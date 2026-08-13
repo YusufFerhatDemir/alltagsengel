@@ -126,6 +126,8 @@ export default function AdminClientsPage() {
       const data = await res.json()
       if (!res.ok) { setError(data.error || 'Fehler beim Anlegen.'); return }
 
+      const hinweise: string[] = Array.isArray(data.hinweise) ? data.hinweise : []
+      if (hinweise.length > 0) setError(hinweise.join(' '))
       setSuccess(`Klient ${form.first_name} ${form.last_name} angelegt.`)
       setShowForm(false)
       setForm(EMPTY_FORM)

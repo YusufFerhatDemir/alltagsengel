@@ -2,89 +2,123 @@ import { test, describe } from 'node:test'
 import assert from 'node:assert/strict'
 import { erstelleInitialBudgets, uebertrageJahresbudgets } from '../auto-budget'
 
+// ═══════════════════════════════════════════════════════════════════
+// Der Mock bildet das LIVE-Schema von client_budgets ab: EINE Zeile je
+// Kunde und Jahr, Entlastung in annual_amount/monthly_amount, VP/KZP in
+// combined_annual_amount. Es gibt KEINE Spalte `budget_type`.
+//
+// Deshalb prüft der Mock die angeforderten Spalten mit: ein `select` oder
+// `eq` auf eine unbekannte Spalte liefert — wie PostgREST — Fehler 42703
+// statt eines stillen Treffers. Genau dieses Schlucken hat den Defekt
+// vorher vor den Tests versteckt.
+// ═══════════════════════════════════════════════════════════════════
+const LIVE_SPALTEN = new Set([
+  'id', 'client_id', 'organization_id', 'year',
+  'annual_amount', 'monthly_amount', 'carryover_amount', 'carryover_expires',
+  'used_amount', 'used_from_carryover', 'private_amount', 'status',
+  'combined_annual_amount', 'combined_used_amount', 'combined_type',
+])
+
+function pruefeSpalte(name: string) {
+  if (!LIVE_SPALTEN.has(name)) {
+    throw new Error(`42703: column client_budgets.${name} does not exist`)
+  }
+}
+
+function pruefeSelect(cols: string) {
+  for (const c of cols.split(',')) pruefeSpalte(c.trim())
+}
+
 function mockSupabaseForInitial(
-  existingTypes: string[] = [],
-  insertError: { message: string } | null = null,
+  bestehendeZeile: Record<string, unknown> | null = null,
+  schreibFehler: { message: string } | null = null,
 ) {
-  const inserted: Record<string, unknown>[][] = []
+  const inserted: Record<string, unknown>[] = []
+  const updated: Array<{ id: string; data: Record<string, unknown> }> = []
+
+  const eqKette = (rest: number, terminal: () => unknown): any => ({
+    eq: (spalte: string) => {
+      pruefeSpalte(spalte)
+      return rest <= 1 ? terminal() : eqKette(rest - 1, terminal)
+    },
+  })
+
   return {
     client: {
       from: (table: string) => {
         if (table !== 'client_budgets') return {}
         return {
-          select: () => ({
-            eq: () => ({
-              eq: () => ({
-                eq: () => ({
-                  data: existingTypes.map(t => ({ budget_type: t })),
-                  error: null,
-                  then: (fn: any) => fn({
-                    data: existingTypes.map(t => ({ budget_type: t })),
-                    error: null,
-                  }),
-                }),
-              }),
-            }),
-          }),
-          insert: (rows: Record<string, unknown>[]) => {
-            inserted.push(rows)
-            return { error: insertError }
+          select: (cols: string) => {
+            pruefeSelect(cols)
+            return eqKette(3, () => ({
+              maybeSingle: async () => ({ data: bestehendeZeile, error: null }),
+            }))
+          },
+          insert: (row: Record<string, unknown>) => {
+            for (const k of Object.keys(row)) pruefeSpalte(k)
+            inserted.push(row)
+            return { error: schreibFehler }
+          },
+          update: (data: Record<string, unknown>) => {
+            for (const k of Object.keys(data)) pruefeSpalte(k)
+            return {
+              eq: (_c: string, id: string) => {
+                updated.push({ id, data })
+                return { error: schreibFehler }
+              },
+            }
           },
         }
       },
     } as never,
     inserted,
+    updated,
   }
 }
 
 describe('erstelleInitialBudgets', () => {
-  test('PG 2 → Entlastung + VP/KZP angelegt', async () => {
+  test('PG 2 → eine Zeile mit Entlastung UND VP/KZP', async () => {
     const mock = mockSupabaseForInitial()
-    const result = await erstelleInitialBudgets(mock.client, 'client-1', 'org-1', 2)
+    const result = await erstelleInitialBudgets(mock.client, 'client-1', 'org-1', 2, 1)
     assert.equal(result.erstellt, true)
     assert.equal(mock.inserted.length, 1)
-    assert.equal(mock.inserted[0].length, 2)
-    const typen = mock.inserted[0].map((r: any) => r.budget_type).sort()
-    assert.deepEqual(typen, ['entlastung', 'verhinderungspflege'])
+    assert.equal((mock.inserted[0] as any).annual_amount, 1572)
+    assert.equal((mock.inserted[0] as any).combined_annual_amount, 3539)
   })
 
   test('PG 1 → NUR Entlastung, KEIN VP/KZP (§42a erfordert PG ≥ 2)', async () => {
     const mock = mockSupabaseForInitial()
-    const result = await erstelleInitialBudgets(mock.client, 'client-pg1', 'org-1', 1)
+    const result = await erstelleInitialBudgets(mock.client, 'client-pg1', 'org-1', 1, 1)
     assert.equal(result.erstellt, true)
-    assert.equal(mock.inserted[0].length, 1)
-    assert.equal((mock.inserted[0][0] as any).budget_type, 'entlastung')
+    assert.equal(mock.inserted.length, 1)
+    assert.equal((mock.inserted[0] as any).annual_amount, 1572)
+    assert.equal((mock.inserted[0] as any).combined_annual_amount, 0)
   })
 
   test('Entlastung: 131 €/Monat × 12 = 1.572 € bei Jahresbeginn', async () => {
     const mock = mockSupabaseForInitial()
     await erstelleInitialBudgets(mock.client, 'c-full', 'org-1', 2, 1)
-    const entlastung = mock.inserted[0].find((r: any) => r.budget_type === 'entlastung') as any
-    assert.equal(entlastung.annual_amount, 1572)
-    assert.equal(entlastung.monthly_amount, 131)
+    assert.equal((mock.inserted[0] as any).annual_amount, 1572)
+    assert.equal((mock.inserted[0] as any).monthly_amount, 131)
   })
 
   test('Unterjähriger PG-Beginn Juli → anteilig 6 × 131 = 786 €', async () => {
     const mock = mockSupabaseForInitial()
     await erstelleInitialBudgets(mock.client, 'c-juli', 'org-1', 3, 7)
-    const entlastung = mock.inserted[0].find((r: any) => r.budget_type === 'entlastung') as any
-    assert.equal(entlastung.annual_amount, 786)
-    assert.equal(entlastung.monthly_amount, 131)
+    assert.equal((mock.inserted[0] as any).annual_amount, 786)
+    assert.equal((mock.inserted[0] as any).monthly_amount, 131)
   })
 
   test('Unterjähriger PG-Beginn Dezember → 1 × 131 = 131 €', async () => {
     const mock = mockSupabaseForInitial()
     await erstelleInitialBudgets(mock.client, 'c-dez', 'org-1', 2, 12)
-    const entlastung = mock.inserted[0].find((r: any) => r.budget_type === 'entlastung') as any
-    assert.equal(entlastung.annual_amount, 131)
+    assert.equal((mock.inserted[0] as any).annual_amount, 131)
   })
 
-  test('VP/KZP: 3.539 € als gemeinsames Limit', async () => {
+  test('VP/KZP: 3.539 € als gemeinsames Limit in combined_annual_amount', async () => {
     const mock = mockSupabaseForInitial()
     await erstelleInitialBudgets(mock.client, 'c-vp', 'org-1', 2, 1)
-    const vp = mock.inserted[0].find((r: any) => r.budget_type === 'verhinderungspflege') as any
-    assert.equal(vp.annual_amount, 3539)
-    assert.equal(vp.combined_annual_amount, 3539)
+    assert.equal((mock.inserted[0] as any).combined_annual_amount, 3539)
   })
 
   test('Klient ohne Pflegegrad → kein Budget', async () => {
@@ -95,39 +129,57 @@ describe('erstelleInitialBudgets', () => {
     assert.equal(mock.inserted.length, 0)
   })
 
-  test('Budgets existieren bereits → idempotent, kein Duplikat', async () => {
-    const mock = mockSupabaseForInitial(['entlastung', 'verhinderungspflege'])
-    const result = await erstelleInitialBudgets(mock.client, 'client-3', 'org-1', 3)
+  test('Budget existiert vollständig → idempotent, kein Schreibvorgang', async () => {
+    const mock = mockSupabaseForInitial({
+      id: 'b-1', annual_amount: 1572, monthly_amount: 131, combined_annual_amount: 3539,
+    })
+    const result = await erstelleInitialBudgets(mock.client, 'client-3', 'org-1', 3, 1)
     assert.equal(result.erstellt, false)
     assert.equal(mock.inserted.length, 0)
+    assert.equal(mock.updated.length, 0)
   })
 
-  test('Nur Entlastung existiert → nur VP wird angelegt', async () => {
-    const mock = mockSupabaseForInitial(['entlastung'])
-    const result = await erstelleInitialBudgets(mock.client, 'client-4', 'org-1', 2)
+  test('Hochstufung PG 1 → 2: VP/KZP wird zur bestehenden Zeile ergänzt', async () => {
+    const mock = mockSupabaseForInitial({
+      id: 'b-2', annual_amount: 1572, monthly_amount: 131, combined_annual_amount: 0,
+    })
+    const result = await erstelleInitialBudgets(mock.client, 'client-4', 'org-1', 2, 1)
     assert.equal(result.erstellt, true)
-    assert.equal(mock.inserted[0].length, 1)
-    assert.equal((mock.inserted[0][0] as any).budget_type, 'verhinderungspflege')
+    assert.equal(mock.inserted.length, 0)
+    assert.equal(mock.updated.length, 1)
+    assert.equal(mock.updated[0].id, 'b-2')
+    assert.deepEqual(mock.updated[0].data, { combined_annual_amount: 3539 })
+  })
+
+  test('Bestehende Beträge werden NIE überschrieben', async () => {
+    const mock = mockSupabaseForInitial({
+      id: 'b-3', annual_amount: 786, monthly_amount: 131, combined_annual_amount: 3539,
+    })
+    await erstelleInitialBudgets(mock.client, 'client-4b', 'org-1', 3, 1)
+    assert.equal(mock.updated.length, 0)
   })
 
   test('organization_id wird korrekt gesetzt', async () => {
     const mock = mockSupabaseForInitial()
     await erstelleInitialBudgets(mock.client, 'client-5', 'org-xyz', 1)
-    for (const row of mock.inserted[0]) {
-      assert.equal((row as any).organization_id, 'org-xyz')
-    }
+    assert.equal((mock.inserted[0] as any).organization_id, 'org-xyz')
   })
 
-  test('Pflegegradwechsel 1→3: Budget bleibt 131 €/Mon (Betrag ändert sich nicht)', async () => {
+  test('Schreibfehler wird gemeldet statt geschluckt', async () => {
+    const mock = mockSupabaseForInitial(null, { message: 'permission denied' })
+    const result = await erstelleInitialBudgets(mock.client, 'client-6', 'org-1', 2, 1)
+    assert.equal(result.erstellt, false)
+    assert.equal(result.fehler, 'permission denied')
+  })
+
+  test('Pflegegradwechsel 1→3: Entlastung bleibt 131 €/Mon', async () => {
     const mock = mockSupabaseForInitial()
     await erstelleInitialBudgets(mock.client, 'c-pg1', 'org-1', 1, 1)
-    const entlastung1 = mock.inserted[0].find((r: any) => r.budget_type === 'entlastung') as any
-    assert.equal(entlastung1.monthly_amount, 131)
+    assert.equal((mock.inserted[0] as any).monthly_amount, 131)
 
     const mock3 = mockSupabaseForInitial()
     await erstelleInitialBudgets(mock3.client, 'c-pg3', 'org-1', 3, 1)
-    const entlastung3 = mock3.inserted[0].find((r: any) => r.budget_type === 'entlastung') as any
-    assert.equal(entlastung3.monthly_amount, 131)
+    assert.equal((mock3.inserted[0] as any).monthly_amount, 131)
   })
 })
 
@@ -161,14 +213,17 @@ function mockSupabaseForCarryover(
       from: (table: string) => {
         if (table !== 'client_budgets') return {}
         return {
-          select: (..._cols: string[]) => {
+          select: (cols: string) => {
+            pruefeSelect(cols)
             const thisCall = callCount++
             if (thisCall === 0) {
-              return chainEq(3, () => thenable({ data: alteBudgets, error: null }))
+              // .eq(organization_id).eq(year)
+              return chainEq(2, () => thenable({ data: alteBudgets, error: null }))
             }
             const idx = thisCall - 1
             const clientId = alteBudgets[idx]?.client_id
-            return chainEq(4, () => ({
+            // .eq(client_id).eq(organization_id).eq(year)
+            return chainEq(3, () => ({
               maybeSingle: async () => ({
                 data: bestehendesNachJahr[clientId] ?? null,
                 error: null,
@@ -176,6 +231,7 @@ function mockSupabaseForCarryover(
             }))
           },
           insert: (row: Record<string, unknown>) => {
+            for (const k of Object.keys(row)) pruefeSpalte(k)
             inserts.push(row)
             return { error: null }
           },

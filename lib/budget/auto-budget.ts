@@ -2,11 +2,47 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { berlinParts } from '@/lib/utils/timezone'
 import { budgetVersionFuerJahr } from '@/lib/config/budget-constants'
 
+// ═══════════════════════════════════════════════════════════════════
+// LIVE-SCHEMA VON client_budgets — bitte vor jeder Änderung lesen
+// ═══════════════════════════════════════════════════════════════════
+//
+// client_budgets führt in der produktiven Datenbank GENAU EINE Zeile je
+// Kunde und Jahr. Die beiden Ansprüche stehen nebeneinander in derselben
+// Zeile:
+//
+//   annual_amount / monthly_amount / carryover_amount / used_amount
+//       → § 45b SGB XI Entlastungsbetrag
+//   combined_annual_amount / combined_used_amount
+//       → § 42a SGB XI gemeinsamer Jahresbetrag VP + KZP
+//
+// Eine Spalte `budget_type` gibt es dort NICHT. Die Migration, die sie
+// einführen würde (20260831020000_d2_vp_budget.sql), ist nicht angewendet.
+// Ein `select`/`eq` darauf lässt die GANZE Abfrage mit PostgREST-Fehler
+// 42703 scheitern — bei einem `select` sieht das Ergebnis dann aus wie
+// „kein Budget vorhanden", beim `insert` wie „Budget angelegt, aber leer".
+// Genau daran sind Neuanlage und Jahresübertrag vorher still gescheitert.
+//
+// Dieselbe Ein-Zeilen-Sicht benutzen lib/pilot/kundenkette.ts,
+// lib/personal/einsatzfreigabe.ts und alle /admin-Budgetseiten.
+// ═══════════════════════════════════════════════════════════════════
+
+/** Eine Budgetzeile, so wie sie live existiert. */
+interface BudgetZeile {
+  id: string
+  annual_amount: number | null
+  monthly_amount: number | null
+  combined_annual_amount: number | null
+}
+
 /**
- * Erstellt Initialbudgets für einen neuen Klienten.
+ * Erstellt bzw. ergänzt das Budget eines Klienten für das laufende Jahr.
  *
  * §45b Entlastungsbetrag: ab PG 1, anteilig wenn PG unterjährig beginnt.
  * §42a VP/KZP: ab PG 2, immer voller Jahresbetrag (kein Übertrag).
+ *
+ * Idempotent: eine bereits vorhandene Zeile wird NICHT überschrieben.
+ * Ergänzt wird nur, was noch fehlt — beim Hochstufen PG 1 → PG 2 kommt so
+ * der VP/KZP-Anspruch zur bestehenden Zeile dazu.
  *
  * @param pgBeginnMonat 1-12, Monat ab dem der Pflegegrad gilt (Default: aktueller Monat)
  */
@@ -25,57 +61,60 @@ export async function erstelleInitialBudgets(
   const monat = pgBeginnMonat ?? parseInt(berlinParts(new Date()).month, 10)
   const version = budgetVersionFuerJahr(year)
 
-  const { data: existing } = await supabase
+  const restMonate = 12 - monat + 1
+  const entlastungAnteilig = restMonate * version.entlastungMonatlich
+  const vpAnspruch = pflegegrad >= version.minPflegegradVpKzp ? version.vpKzpKombiniert : 0
+
+  const { data: vorhanden, error: leseFehler } = await supabase
     .from('client_budgets')
-    .select('budget_type')
+    .select('id, annual_amount, monthly_amount, combined_annual_amount')
     .eq('client_id', clientId)
     .eq('organization_id', organizationId)
     .eq('year', year)
+    .maybeSingle<BudgetZeile>()
 
-  const vorhandeneTypen = new Set((existing ?? []).map((b: { budget_type: string }) => b.budget_type))
-  const zuErstellen: Array<Record<string, unknown>> = []
+  // FAIL-CLOSED: ein Lesefehler darf nicht als „noch kein Budget" gelten,
+  // sonst legt der nächste Aufruf eine zweite Zeile für dasselbe Jahr an.
+  if (leseFehler) {
+    return { erstellt: false, fehler: leseFehler.message }
+  }
 
-  if (!vorhandeneTypen.has('entlastung')) {
-    const restMonate = 12 - monat + 1
-    const anteilig = restMonate * version.entlastungMonatlich
-
-    zuErstellen.push({
+  if (!vorhanden) {
+    const { error } = await supabase.from('client_budgets').insert({
       client_id: clientId,
       organization_id: organizationId,
       year,
-      budget_type: 'entlastung',
-      annual_amount: anteilig,
+      annual_amount: entlastungAnteilig,
       monthly_amount: version.entlastungMonatlich,
       carryover_amount: 0,
       used_amount: 0,
+      combined_annual_amount: vpAnspruch,
       combined_used_amount: 0,
     })
+    if (error) return { erstellt: false, fehler: error.message }
+    return { erstellt: true }
   }
 
-  if (pflegegrad >= version.minPflegegradVpKzp && !vorhandeneTypen.has('verhinderungspflege')) {
-    zuErstellen.push({
-      client_id: clientId,
-      organization_id: organizationId,
-      year,
-      budget_type: 'verhinderungspflege',
-      annual_amount: version.vpKzpKombiniert,
-      monthly_amount: 0,
-      carryover_amount: 0,
-      used_amount: 0,
-      combined_used_amount: 0,
-      combined_annual_amount: version.vpKzpKombiniert,
-    })
+  // Zeile existiert: nur fehlende Ansprüche nachtragen, nie überschreiben.
+  const nachtrag: Record<string, unknown> = {}
+  if (!Number(vorhanden.annual_amount)) {
+    nachtrag.annual_amount = entlastungAnteilig
+    nachtrag.monthly_amount = version.entlastungMonatlich
+  }
+  if (vpAnspruch > 0 && !Number(vorhanden.combined_annual_amount)) {
+    nachtrag.combined_annual_amount = vpAnspruch
   }
 
-  if (zuErstellen.length === 0) {
+  if (Object.keys(nachtrag).length === 0) {
     return { erstellt: false }
   }
 
-  const { error } = await supabase.from('client_budgets').insert(zuErstellen)
-  if (error) {
-    return { erstellt: false, fehler: error.message }
-  }
+  const { error } = await supabase
+    .from('client_budgets')
+    .update(nachtrag)
+    .eq('id', vorhanden.id)
 
+  if (error) return { erstellt: false, fehler: error.message }
   return { erstellt: true }
 }
 
@@ -84,7 +123,9 @@ export async function erstelleInitialBudgets(
  *
  * FIFO-Annahme: Übertrag aus dem Vorjahr wird zuerst verbraucht (weil er früher verfällt).
  * Maximum Übertrag = Jahresanspruch (abgelaufener Vorjahres-Übertrag wird nicht mitgenommen).
- * VP/KZP wird NICHT übertragen (§42a kennt keinen Übertrag).
+ * VP/KZP wird NICHT übertragen (§42a kennt keinen Übertrag) — deshalb bleibt
+ * combined_annual_amount im Folgejahr bei 0 und wird erst durch
+ * erstelleInitialBudgets anhand des dann gültigen Pflegegrads gesetzt.
  */
 export async function uebertrageJahresbudgets(
   supabase: SupabaseClient,
@@ -97,7 +138,6 @@ export async function uebertrageJahresbudgets(
     .select('client_id, annual_amount, carryover_amount, used_amount')
     .eq('organization_id', organizationId)
     .eq('year', vonJahr)
-    .eq('budget_type', 'entlastung')
 
   if (fetchErr) {
     return { uebertragen: 0, uebersprungen: 0, fehler: [fetchErr.message] }
@@ -134,7 +174,6 @@ export async function uebertrageJahresbudgets(
       .eq('client_id', alt.client_id)
       .eq('organization_id', organizationId)
       .eq('year', nachJahr)
-      .eq('budget_type', 'entlastung')
       .maybeSingle()
 
     if (bestehendes) {
@@ -158,12 +197,12 @@ export async function uebertrageJahresbudgets(
           client_id: alt.client_id,
           organization_id: organizationId,
           year: nachJahr,
-          budget_type: 'entlastung',
           annual_amount: nachJahrVersion.entlastungJaehrlich,
           monthly_amount: nachJahrVersion.entlastungMonatlich,
           carryover_amount: rest,
           carryover_expires: verfallsDatum,
           used_amount: 0,
+          combined_annual_amount: 0,
           combined_used_amount: 0,
         })
 
