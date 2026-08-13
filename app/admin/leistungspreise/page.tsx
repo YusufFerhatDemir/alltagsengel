@@ -18,6 +18,17 @@ interface Preis {
   preis_cent: number
   gueltig_ab: string
   gueltig_bis: string | null
+  tarif_status: string | null
+  verifizierungs_quelle: string | null
+}
+
+// tarif_status wird bewusst NICHT in diesem Formular gesetzt: neue und
+// geänderte Preise sind immer 'unverified'. Freigabe ist ein eigener,
+// dokumentierter Akt mit Angabe der Rechtsquelle.
+const STATUS_ANZEIGE: Record<string, { label: string; color: string }> = {
+  verified: { label: 'verifiziert', color: '#3FA46A' },
+  unverified: { label: 'UNVERIFIED', color: '#D9962B' },
+  blocked: { label: 'gesperrt', color: '#D04B3B' },
 }
 
 const EMPTY_FORM = {
@@ -54,7 +65,7 @@ export default function AdminLeistungspreisePage() {
       const supabase = createClient()
       const { data, error: e } = await supabase
         .from('leistungspreise')
-        .select('id, bundesland, leistungsart, preis_cent, gueltig_ab, gueltig_bis')
+        .select('id, bundesland, leistungsart, preis_cent, gueltig_ab, gueltig_bis, tarif_status, verifizierungs_quelle')
         .order('bundesland')
         .order('leistungsart')
         .order('gueltig_ab', { ascending: false })
@@ -152,6 +163,15 @@ export default function AdminLeistungspreisePage() {
 
       {error && <Banner tone="danger">{error}</Banner>}
 
+      {!loading && preise.some(p => (p.tarif_status || 'unverified') !== 'verified') && (
+        <Banner tone="warn">
+          {preise.filter(p => (p.tarif_status || 'unverified') !== 'verified').length} von {preise.length} Preisen
+          sind nicht verifiziert. Nicht verifizierte Preise werden im Monatsabschluss NICHT angesetzt
+          (Fail-Closed). Die Freigabe erfolgt nur mit Angabe der Rechtsquelle — jede Preis- oder
+          Gültigkeitsänderung setzt eine bestehende Freigabe automatisch zurück.
+        </Banner>
+      )}
+
       <div style={{ marginBottom: 16 }}>
         <SearchInput value={search} onChange={setSearch} placeholder="Bundesland, Leistungsart…" />
       </div>
@@ -222,18 +242,24 @@ export default function AdminLeistungspreisePage() {
       <div className="admin-table-wrap">
         <table className="admin-table">
           <thead>
-            <tr><th>Bundesland</th><th>Leistungsart</th><th>Preis</th><th>Gültig von</th><th>Gültig bis</th><th>Aktionen</th></tr>
+            <tr><th>Bundesland</th><th>Leistungsart</th><th>Preis</th><th>Verifizierung</th><th>Gültig von</th><th>Gültig bis</th><th>Aktionen</th></tr>
           </thead>
           <tbody>
             {loading
-              ? <EmptyRow colSpan={6}>Laden…</EmptyRow>
+              ? <EmptyRow colSpan={7}>Laden…</EmptyRow>
               : filtered.length === 0
-                ? <EmptyRow colSpan={6}>{search || bundeslandFilter !== 'all' || leistungsartFilter !== 'all' ? 'Keine Treffer' : 'Noch keine Preise erfasst'}</EmptyRow>
+                ? <EmptyRow colSpan={7}>{search || bundeslandFilter !== 'all' || leistungsartFilter !== 'all' ? 'Keine Treffer' : 'Noch keine Preise erfasst'}</EmptyRow>
                 : filtered.map(p => (
                   <tr key={p.id}>
                     <td>{BUNDESLAND_LABELS[p.bundesland] || p.bundesland}</td>
                     <td><StatusBadge label={statusMeta(LEISTUNGSART_LABELS, p.leistungsart).label} color={statusMeta(LEISTUNGSART_LABELS, p.leistungsart).color} /></td>
                     <td style={{ fontWeight: 600 }}>{centToEuro(p.preis_cent)}</td>
+                    <td title={p.verifizierungs_quelle || ''}>
+                      <StatusBadge
+                        label={(STATUS_ANZEIGE[p.tarif_status || 'unverified'] ?? STATUS_ANZEIGE.unverified).label}
+                        color={(STATUS_ANZEIGE[p.tarif_status || 'unverified'] ?? STATUS_ANZEIGE.unverified).color}
+                      />
+                    </td>
                     <td style={{ whiteSpace: 'nowrap' }}>{formatDate(p.gueltig_ab)}</td>
                     <td style={{ whiteSpace: 'nowrap' }}>{p.gueltig_bis ? formatDate(p.gueltig_bis) : 'unbegrenzt'}</td>
                     <td style={{ whiteSpace: 'nowrap' }}>

@@ -155,7 +155,12 @@ describe('F4: Monatsabschluss nutzt keinen service_records.amount Fallback', () 
   });
 
   it('warnt bei fehlenden leistungspreise-Eintraegen', () => {
-    expect(src).toMatch(/hatPreisluecke/);
+    // Preisluecken werden benannt statt still mit 0 durchgereicht.
+    // Seit Stream 5 unterscheidet die Meldung 'kein_eintrag' von
+    // 'nicht_verifiziert' — beides erzeugt eine Warnung, keinen Ersatzpreis.
+    expect(src).toMatch(/Preisluecke/);
+    expect(src).toMatch(/kein_eintrag/);
+    expect(src).toMatch(/nicht_verifiziert/);
     expect(src).toMatch(/Vorschau-Betrag unvollstaendig/);
   });
 

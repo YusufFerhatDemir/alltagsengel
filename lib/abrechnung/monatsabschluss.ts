@@ -76,15 +76,38 @@ interface Leistungspreis {
   preis_cent: number
   gueltig_ab: string
   gueltig_bis: string | null
+  tarif_status: string | null
+  verifizierungs_quelle: string | null
 }
 
+/** Warum für eine Leistungsart kein Preis ermittelt werden konnte. */
+type Preisluecke =
+  | { grund: 'kein_eintrag' }
+  | { grund: 'nicht_verifiziert'; status: string; quelle: string | null }
+
+interface PreisErgebnis {
+  preisCent: number | null
+  luecke: Preisluecke | null
+}
+
+/**
+ * Sucht den am Stichtag gültigen Preis einer Leistungsart.
+ *
+ * Fail-Closed in zwei Stufen:
+ *  1. Gültigkeitszeitraum — es wird NICHT auf einen Preis aus einem anderen
+ *     Zeitraum ausgewichen. Kein gültiger Eintrag am Leistungsdatum = kein Preis.
+ *  2. Verifizierung — nur tarif_status='verified' zählt. 'unverified' und
+ *     'blocked' liefern keinen Preis, sondern eine benannte Lücke, damit im
+ *     Abschluss sichtbar wird, WARUM nichts abgerechnet werden kann.
+ */
 function findePreis(
   preise: Leistungspreis[],
   leistungsart: string | null,
   stichtag: string
-): number | null {
-  if (!leistungsart) return null
-  const passend = preise
+): PreisErgebnis {
+  if (!leistungsart) return { preisCent: null, luecke: { grund: 'kein_eintrag' } }
+
+  const imZeitraum = preise
     .filter(
       p =>
         p.leistungsart === leistungsart &&
@@ -92,7 +115,25 @@ function findePreis(
         (!p.gueltig_bis || p.gueltig_bis >= stichtag)
     )
     .sort((a, b) => (a.gueltig_ab < b.gueltig_ab ? 1 : -1))
-  return passend[0]?.preis_cent ?? null
+
+  if (imZeitraum.length === 0) {
+    return { preisCent: null, luecke: { grund: 'kein_eintrag' } }
+  }
+
+  const verifiziert = imZeitraum.find(p => p.tarif_status === 'verified')
+  if (!verifiziert) {
+    const bester = imZeitraum[0]
+    return {
+      preisCent: null,
+      luecke: {
+        grund: 'nicht_verifiziert',
+        status: bester.tarif_status ?? 'unbekannt',
+        quelle: bester.verifizierungs_quelle,
+      },
+    }
+  }
+
+  return { preisCent: verifiziert.preis_cent, luecke: null }
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -205,13 +246,19 @@ export async function erstelleMonatsabschluss(
   // ── 6) Preistabelle laden ──
   const { data: preisRows } = await supabase
     .from('leistungspreise')
-    .select('leistungsart, preis_cent, gueltig_ab, gueltig_bis')
+    .select('leistungsart, preis_cent, gueltig_ab, gueltig_bis, tarif_status, verifizierungs_quelle')
+    .eq('organization_id', organizationId)
     .eq('bundesland', bundesland)
   const preise: Leistungspreis[] = (preisRows || []) as Leistungspreis[]
   if (preise.length === 0) {
     warnungen.push({
-      schwere: 'hinweis',
-      text: `Keine Leistungspreise für Bundesland „${bundesland}" hinterlegt — es wird der erfasste Einsatz-Betrag (service_records.amount) verwendet.`,
+      schwere: 'warnung',
+      text: `Keine Leistungspreise für Bundesland „${bundesland}" hinterlegt — es kann kein Vorschau-Betrag ermittelt werden. Es wird KEIN Ersatzpreis verwendet.`,
+    })
+  } else if (!preise.some(p => p.tarif_status === 'verified')) {
+    warnungen.push({
+      schwere: 'warnung',
+      text: `Alle ${preise.length} Leistungspreise für „${bundesland}" sind nicht verifiziert — kein Vorschau-Betrag abrechenbar. Preise unter /admin/leistungspreise mit Angabe der Rechtsquelle verifizieren.`,
     })
   }
 
@@ -277,23 +324,32 @@ export async function erstelleMonatsabschluss(
     // als nicht-abrechenbar markiert (betrag_cent = 0, Warnung).
     let betragCent = 0
     let minuten = 0
-    let hatPreisluecke = false
+    let luecke: Preisluecke | null = null
     for (const r of vRecs) {
       const mins = r.duration_minutes || 0
       minuten += mins
-      const preisCent = findePreis(preise, r.service_type || v.leistungsart, r.date)
+      const { preisCent, luecke: l } = findePreis(preise, r.service_type || v.leistungsart, r.date)
       if (preisCent != null && mins > 0) {
         betragCent += Math.round((mins / 60) * preisCent)
       } else {
-        hatPreisluecke = true
+        // Erste Lücke gewinnt; 'nicht_verifiziert' ist die aussagekräftigere
+        // Meldung und verdrängt ein vorher gemerktes 'kein_eintrag'.
+        if (!luecke || (luecke.grund === 'kein_eintrag' && l?.grund === 'nicht_verifiziert')) {
+          luecke = l ?? { grund: 'kein_eintrag' }
+        }
       }
     }
-    if (hatPreisluecke) {
+    if (luecke) {
       warnungen.push({
         schwere: 'warnung',
         verordnung_id: v.id,
         client: name,
-        text: `Kein Eintrag in leistungspreise fuer Leistungsart "${v.leistungsart}" — Vorschau-Betrag unvollstaendig. Verbindliche Preise kommen aus billing_tariffs bei Rechnungserstellung.`,
+        text: luecke.grund === 'nicht_verifiziert'
+          ? `Leistungspreis fuer "${v.leistungsart}" ist nicht verifiziert (Status: ${luecke.status}`
+            + `${luecke.quelle ? `, Grund: ${luecke.quelle}` : ''}) — kein Vorschau-Betrag angesetzt. `
+            + `Preis unter /admin/leistungspreise mit Rechtsquelle verifizieren.`
+          : `Kein gueltiger Eintrag in leistungspreise fuer Leistungsart "${v.leistungsart}" zum Leistungsdatum `
+            + `— Vorschau-Betrag unvollstaendig. Verbindliche Preise kommen aus billing_tariffs bei Rechnungserstellung.`,
       })
     }
 

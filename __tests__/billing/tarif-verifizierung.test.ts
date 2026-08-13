@@ -74,6 +74,7 @@ function mockSupabaseError(message: string) {
 }
 
 const BASE_PARAMS = {
+  organizationId: 'org-1',
   leistungsart: 'alltagsbegleitung_45a',
   rechtsgrundlage: '§45b SGB XI',
   datum: '2026-06-15',
@@ -167,6 +168,7 @@ describe('resolvePrice: Verifizierungs-Fail-Closed', () => {
     const sb = mockSupabase([tarif]);
 
     const result = await resolvePrice(sb, {
+      organizationId: 'org-1',
       ...BASE_PARAMS,
       rechtsgrundlage: 'privat',
     });
@@ -182,6 +184,7 @@ describe('resolvePrice: Verifizierungs-Fail-Closed', () => {
     const sb = mockSupabase([tarif]);
 
     await expect(resolvePrice(sb, {
+      organizationId: 'org-1',
       ...BASE_PARAMS,
       rechtsgrundlage: 'privat',
     })).rejects.toThrow(TarifNichtVerifiziertError);
@@ -220,6 +223,7 @@ describe('resolvePrice: Spezifitaet + Verifizierung', () => {
     const sb = mockSupabase([allgemein, spezifisch]);
 
     const result = await resolvePrice(sb, {
+      organizationId: 'org-1',
       ...BASE_PARAMS,
       bundesland: 'HE',
     });
@@ -240,6 +244,7 @@ describe('resolvePrice: Spezifitaet + Verifizierung', () => {
 
     // Spezifischster gewinnt, aber unverified → Error
     await expect(resolvePrice(sb, {
+      organizationId: 'org-1',
       ...BASE_PARAMS,
       bundesland: 'HE',
     })).rejects.toThrow(TarifNichtVerifiziertError);
