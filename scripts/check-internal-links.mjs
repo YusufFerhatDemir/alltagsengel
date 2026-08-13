@@ -36,6 +36,24 @@ function collectRoutes(dir, urlSegments = []) {
   return routes
 }
 
+// API-Routen (route.ts) separat einsammeln. collectRoutes() überspringt app/api,
+// aber Seiten verlinken sehr wohl direkt auf Endpunkte (z. B. Download-Links auf
+// /api/coach/export) — ohne dieses Inventar meldet der Check sie als broken.
+function collectApiRoutes(dir, urlSegments = ['api']) {
+  const routes = new Set()
+  if (!existsSync(dir)) return routes
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    if (!entry.isDirectory()) {
+      if (/^route\.(tsx|ts|jsx|js)$/.test(entry.name)) routes.add('/' + urlSegments.join('/'))
+      continue
+    }
+    for (const r of collectApiRoutes(join(dir, entry.name), [...urlSegments, entry.name])) {
+      routes.add(r)
+    }
+  }
+  return routes
+}
+
 // Städte-Slugs direkt aus dem Template lesen — bleibt bei neuen Städten aktuell.
 const stadtTemplate = readFileSync(
   join(ROOT, 'app', 'alltagsbegleitung', '[stadt]', 'page.tsx'),
@@ -54,6 +72,8 @@ for (const r of collectRoutes(join(ROOT, 'app'))) {
     routes.add(r)
   }
 }
+
+for (const r of collectApiRoutes(join(ROOT, 'app', 'api'))) routes.add(r)
 
 // Redirect-Quellen aus next.config.ts gelten als erreichbar (301 → Ziel)
 const nextConfig = readFileSync(join(ROOT, 'next.config.ts'), 'utf8')

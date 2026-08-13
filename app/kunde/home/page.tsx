@@ -282,6 +282,9 @@ export default function KundeHomePage() {
           <Link href="/kunde/notfall" className="quick-link">
             <span>Notfall & Medikamente</span>
           </Link>
+          <Link href="/pflegecoach" className="quick-link">
+            <span>Digitaler PflegeCoach</span>
+          </Link>
         </div>
 
         <div className="section-row">

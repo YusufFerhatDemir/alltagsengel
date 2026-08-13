@@ -77,7 +77,7 @@ export default function ZieleSeite() {
       <h1 className="pc-h1">Meine Pflegeziele</h1>
       <p className="pc-lead">
         Gute Ziele sind konkret, messbar und haben einen Termin — zum Beispiel:
-        „Bis Ende nächsten Monats dreimal pro Woche 10 Minuten im Flur gehen."
+        „Bis Ende nächsten Monats dreimal pro Woche 10 Minuten im Flur gehen.“
       </p>
 
       {meldung && (

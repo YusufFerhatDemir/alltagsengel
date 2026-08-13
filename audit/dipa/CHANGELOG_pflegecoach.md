@@ -4,6 +4,34 @@ Separater Versionsstrang des DiPA-Produkts (unabhängig von Plattform-Deployment
 Jede MINOR-/MAJOR-Änderung ist vor Release regulatorisch zu bewerten
 (Änderungsanzeige? — BfArM-Frage 20, `bfarm_fragenkatalog.md`).
 
+## 0.3.0 — 2026-08-13 (Betrieb als normaler Service, Zulassungsunterlagen)
+
+**Regulatorische Bewertung dieser MINOR-Änderung:** Die Zweckbestimmung bleibt
+unverändert. Es kommt keine Funktion hinzu, die den Nutzen für die betroffene
+Person verändert. Die Änderungen betreffen Auffindbarkeit, Sichtbarkeitsregeln
+und Unterlagen. Ob daraus eine Anzeigepflicht folgt, ist mit BfArM-Frage 20 zu
+klären.
+
+- **Einstiegspunkt:** `/pflegecoach/start` zeigt Nicht-Angemeldeten jetzt die
+  Zweckbestimmung samt Negativabgrenzung und den Anmeldeweg, statt sie ohne
+  Erklärung auf das Login umzuleiten. Das Produkt ist erstmals von außen
+  auffindbar (Fußzeile der Website, Schnellzugriff im Kundenbereich). Vorher war
+  es aus der laufenden Anwendung heraus nicht erreichbar.
+- **Freischaltseite versteckt:** `/pflegecoach/freischaltung` wird nur noch
+  gerendert, wenn `COACH_DIPA_MODUS` oder `COACH_FREISCHALTUNG_PFLICHT` aktiv
+  ist. Im Auslieferungszustand existierte dort eine Codeeingabe für ein
+  Verfahren, das gar nicht gilt.
+- **`COACH_DIPA_MODUS` in `.env.example` dokumentiert** — der Hauptschalter war
+  als einziger nicht beschrieben. Default unverändert `false`.
+- **Barrierefreiheit:** vollständiger `jsx-a11y`-Regelsatz als Fehler für
+  `app/pflegecoach/**` (`eslint.config.mjs`); Lauf ohne Befund.
+- **Neue Unterlagen:** Verarbeitungsverzeichnis, technische Dokumentation und
+  Risikoanalyse (je `audit/dipa/*_pflegecoach.md`), zusammengeführt in
+  `docs/DIPA_BFARM_READINESS.md`.
+- **Korrektur zum Eintrag 0.2.0:** Die dort als offen bezeichneten Migrationen
+  `20260819010000` und `20260826010000` sind seit dem 12.08.2026 auf der
+  Produktionsdatenbank angewendet (GAP-DB damit erledigt).
+
 ## 0.2.0 — 2026-08-12 (Nutzerflow, Nachweise, eUL — nicht veröffentlicht)
 
 Block 15a–15d. Weiterhin nicht produktiv: Migrationen `20260819010000` und

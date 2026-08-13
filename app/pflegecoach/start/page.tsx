@@ -1,15 +1,44 @@
 'use client'
 
-// PflegeCoach — Onboarding: Zweckbestimmung, Rolle, Einwilligungen (Art. 9).
+// PflegeCoach — Einstieg: Zweckbestimmung, Rolle, Einwilligungen (Art. 9).
+//
+// Diese Seite ist der einzige Einstiegspunkt des Produkts und muss deshalb
+// auch OHNE Anmeldung etwas Sinnvolles zeigen: die Zweckbestimmung und die
+// Produktgrenze. Erst danach kommt der Anmeldeweg. Ohne das wäre der
+// PflegeCoach von außen eine reine Login-Sackgasse.
 
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import type { CoachRolle, CoachUser } from '@/lib/coach/types'
 import { ROLLE_LABELS } from '@/lib/coach/types'
 import { coachApi, CoachApiError } from '../_lib/client'
 
+const ZURUECK = encodeURIComponent('/pflegecoach/start')
+
+/** Zweckbestimmung + Produktgrenze — identisch für an- und abgemeldete Sicht. */
+function Zweckbestimmung() {
+  return (
+    <section className="pc-card" aria-labelledby="zweck-titel">
+      <h2 id="zweck-titel">Was dieser PflegeCoach ist</h2>
+      <p>
+        Der Digitale PflegeCoach unterstützt Pflegebedürftige in häuslicher Versorgung sowie
+        ihre pflegenden Angehörigen mit strukturierten Anleitungs-, Erinnerungs- und
+        Dokumentationsfunktionen: Selbständigkeit im Alltag erhalten, die häusliche Versorgung
+        stabilisieren und Angehörige entlasten.
+      </p>
+      <p>
+        <strong>Was er nicht ist:</strong> Der PflegeCoach dient nicht der Erkennung, Behandlung
+        oder Überwachung von Krankheiten und trifft keine diagnostischen oder therapeutischen
+        Entscheidungen. Er ersetzt keine ärztliche oder pflegefachliche Beratung.
+      </p>
+    </section>
+  )
+}
+
 export default function CoachStart() {
   const router = useRouter()
+  const [angemeldet, setAngemeldet] = useState(true)
   const [pruefe, setPruefe] = useState(true)
   const [rolle, setRolle] = useState<CoachRolle | ''>('')
   const [anzeigename, setAnzeigename] = useState('')
@@ -26,8 +55,9 @@ export default function CoachStart() {
         else setPruefe(false)
       })
       .catch((e: CoachApiError) => {
-        if (e.status === 401) router.push('/auth/login?redirectTo=' + encodeURIComponent('/pflegecoach/start'))
-        else { setFehler(e.message); setPruefe(false) }
+        if (e.status === 401) setAngemeldet(false)
+        else setFehler(e.message)
+        setPruefe(false)
       })
   }, [router])
 
@@ -69,24 +99,46 @@ export default function CoachStart() {
 
   if (pruefe) return <p role="status">Wird geladen …</p>
 
+  if (!angemeldet) {
+    return (
+      <>
+        <h1 className="pc-h1">Digitaler PflegeCoach</h1>
+        <Zweckbestimmung />
+
+        <section className="pc-card" aria-labelledby="funktionen-titel">
+          <h2 id="funktionen-titel">Diese Bereiche stehen bereit</h2>
+          <ul style={{ paddingLeft: 20 }}>
+            <li>Pflegeassessment zur Selbsteinschätzung, mit Verlauf über die Zeit</li>
+            <li>Persönliche Ziele und ein Wochenplan mit wiederkehrenden Aktivitäten</li>
+            <li>Anleitungen zu Mobilität, Alltag und Selbstversorgung</li>
+            <li>Belastungs-Selbsteinschätzung und Wissensmodule für Angehörige</li>
+            <li>Verlaufsbericht zum Ausdrucken und Datenexport für Sie selbst</li>
+          </ul>
+        </section>
+
+        <section className="pc-card" aria-labelledby="zugang-titel">
+          <h2 id="zugang-titel">So kommen Sie hinein</h2>
+          <p>
+            Für die Nutzung ist ein Alltagsengel-Konto nötig — Ihre Pflegedaten sind damit
+            geschützt und nur für Sie sichtbar. Wie wir sie verarbeiten, steht in den{' '}
+            <Link href="/pflegecoach/datenschutz">Datenschutzhinweisen</Link>.
+          </p>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
+            <Link className="pc-btn" href={`/auth/login?redirectTo=${ZURUECK}`}>Anmelden</Link>
+            {/* /auth/register wertet redirectTo nicht aus — deshalb ohne Parameter,
+                statt einen Rücksprung zu versprechen, den es nicht gibt. */}
+            <Link className="pc-btn pc-btn--secondary" href="/auth/register">Konto anlegen</Link>
+          </div>
+        </section>
+      </>
+    )
+  }
+
   return (
     <>
       <h1 className="pc-h1">Willkommen beim Digitalen PflegeCoach</h1>
 
-      <section className="pc-card" aria-labelledby="zweck-titel">
-        <h2 id="zweck-titel">Was dieser PflegeCoach ist</h2>
-        <p>
-          Der Digitale PflegeCoach unterstützt Pflegebedürftige in häuslicher Versorgung sowie
-          ihre pflegenden Angehörigen mit strukturierten Anleitungs-, Erinnerungs- und
-          Dokumentationsfunktionen: Selbständigkeit im Alltag erhalten, die häusliche Versorgung
-          stabilisieren und Angehörige entlasten.
-        </p>
-        <p>
-          <strong>Was er nicht ist:</strong> Der PflegeCoach dient nicht der Erkennung, Behandlung
-          oder Überwachung von Krankheiten und trifft keine diagnostischen oder therapeutischen
-          Entscheidungen. Er ersetzt keine ärztliche oder pflegefachliche Beratung.
-        </p>
-      </section>
+      <Zweckbestimmung />
 
       {fehler && <p className="pc-feedback pc-feedback--error" role="alert">{fehler}</p>}
 

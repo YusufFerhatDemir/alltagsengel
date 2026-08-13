@@ -164,7 +164,7 @@ export default function AnspruchClient() {
           </table>
         </div>
         <p className="pc-lead">
-          Punkte mit dem Hinweis „noch zu klären" führen nie zu einer Ablehnung — sie bedeuten,
+          Punkte mit dem Hinweis „noch zu klären“ führen nie zu einer Ablehnung — sie bedeuten,
           dass Sie diesen Punkt mit Ihrer Pflegekasse besprechen sollten.
         </p>
       </section>
