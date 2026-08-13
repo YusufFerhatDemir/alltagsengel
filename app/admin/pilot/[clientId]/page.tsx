@@ -68,6 +68,17 @@ export default function PilotKundePage({ params }: { params: Promise<{ clientId:
         </Banner>
       )}
 
+      {(kette.datenfehler ?? []).length > 0 && (
+        <Banner tone="danger">
+          <strong>Kettenstand teilweise nicht ermittelbar.</strong> Diese Tabellen liessen sich nicht
+          lesen — die betroffenen Schritte stehen deshalb auf „blockiert" und sind NICHT als „noch
+          nichts passiert" zu lesen:
+          <ul style={{ margin: '8px 0 0', paddingLeft: 18 }}>
+            {kette.datenfehler.map(f => <li key={f}><code>{f}</code></li>)}
+          </ul>
+        </Banner>
+      )}
+
       {kette.vollstaendig && (
         <Banner tone="success">
           Die Kette ist vollständig durchlaufen — von den Stammdaten bis zur DATEV-Übergabe.

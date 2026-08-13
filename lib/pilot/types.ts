@@ -154,4 +154,12 @@ export interface KundenKette {
   aktuellerSchritt: KundenSchritt | null
   /** true, wenn die Kette bis DATEV vollständig durchlaufen ist. */
   vollstaendig: boolean
+  /**
+   * Tabellen, die für diesen Kunden nicht gelesen werden konnten, je mit der
+   * echten Datenbankmeldung. Leer im Normalfall.
+   *
+   * Existiert, damit ein defekter Select nicht als „Kunde hat nichts" durchgeht:
+   * die betroffenen Schritte stehen dann auf `blockiert`, und hier steht warum.
+   */
+  datenfehler: string[]
 }

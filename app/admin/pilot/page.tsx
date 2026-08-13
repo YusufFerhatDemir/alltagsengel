@@ -64,6 +64,11 @@ export default function PilotPage() {
   const v = data.voraussetzungen
   const pflichtOffen = v.punkte.filter(p => p.pflicht && p.ampel === 'rot')
 
+  // Tabellen, die für mindestens einen Kunden nicht lesbar waren. Ohne diesen
+  // Hinweis sähe ein defekter Select aus wie ein Kunde, bei dem noch nichts
+  // passiert ist — die Seite würde ihren eigenen Defekt verdecken.
+  const datenfehler = [...new Set(data.ketten.flatMap(k => k.datenfehler ?? []))]
+
   return (
     <div className="admin-page">
       <h1>Pilot — kontrollierter Echtbetrieb</h1>
@@ -78,6 +83,19 @@ export default function PilotPage() {
           ? 'Alle Pflichtpunkte erfüllt — ein echter Kunde kann vollständig bearbeitet und abgerechnet werden.'
           : `Echtbetrieb gesperrt: ${pflichtOffen.length} Pflichtpunkt(e) offen — ${pflichtOffen.map(p => p.label).join(', ')}.`}
       </Banner>
+
+      {datenfehler.length > 0 && (
+        <div style={{ marginTop: 16 }}>
+          <Banner tone="danger">
+            <strong>Kettenstand teilweise nicht ermittelbar.</strong> Die folgenden Tabellen liessen
+            sich nicht lesen. Die betroffenen Schritte stehen auf „blockiert" — das ist ein
+            technischer Defekt und NICHT als „noch nichts passiert" zu lesen:
+            <ul style={{ margin: '8px 0 0', paddingLeft: 18 }}>
+              {datenfehler.map(f => <li key={f}><code>{f}</code></li>)}
+            </ul>
+          </Banner>
+        </div>
+      )}
 
       {v.gesperrteWege.length > 0 && (
         <div className="admin-card" style={{ marginTop: 20, borderLeft: '4px solid #f59e0b' }}>

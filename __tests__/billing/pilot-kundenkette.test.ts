@@ -11,6 +11,15 @@
  *   • invoices.total_amount steht in EURO, payment_allocations in CENT.
  *   • invoices führt alte ('paid','sent') und neue Statuswerte parallel —
  *     die Bezahlt-Erkennung darf nicht am Status-String hängen.
+ *   • Ein Select auf eine Spalte, die es live nicht gibt, muss als Defekt
+ *     sichtbar werden und nicht als „Kunde hat noch nichts".
+ *
+ * DER STUB PRÜFT SPALTEN. Der frühere Stub hat den `select`-String ignoriert
+ * und damit genau den Fehler durchgelassen, der live auftrat: die Abfrage
+ * las `client_budgets.budget_type`, PostgREST antwortete mit 42703, und die
+ * Seite meldete beruhigend „kein Budget". Deshalb kennt der Stub jetzt je
+ * Tabelle die live vorhandenen Spalten und antwortet auf alles andere mit
+ * demselben Fehler wie die Datenbank.
  */
 
 import { describe, it, expect } from 'vitest'
@@ -41,26 +50,94 @@ interface Tabellen {
 }
 
 /**
+ * Spalten, die es in der Produktionsdatenbank je Tabelle wirklich gibt
+ * (Stand 14.08.2026, per PostgREST-Introspektion abgeglichen).
+ *
+ * Bewusst nur die für die Kette relevanten Tabellen. Wer hier eine Spalte
+ * ergänzt, muss belegen, dass sie live existiert — sonst wandert der Fehler
+ * aus der Datenbank zurück in die grünen Tests.
+ */
+const LIVE_SPALTEN: Record<keyof Tabellen, string[]> = {
+  clients: [
+    'id', 'client_id', 'first_name', 'last_name', 'geburtsdatum', 'date_of_birth',
+    'address', 'zip_code', 'city', 'phone', 'email', 'pflegegrad', 'pflegekasse_name',
+    'organization_id', 'status', 'created_at',
+  ],
+  // KEIN budget_type: die Migration 20260831020000_d2_vp_budget.sql, die die
+  // Spalte einführen würde, ist auf Produktion nicht angewendet.
+  client_budgets: [
+    'id', 'client_id', 'year', 'annual_amount', 'monthly_amount',
+    'combined_annual_amount', 'combined_used_amount', 'combined_type',
+    'used_amount', 'carryover_amount', 'status', 'organization_id',
+  ],
+  assignments: [
+    'id', 'client_id', 'caregiver_id', 'assignment_date', 'status', 'organization_id',
+  ],
+  caregivers: ['id', 'einsatzfreigabe', 'organization_id'],
+  service_records: [
+    'id', 'client_id', 'status', 'amount', 'date', 'proof_status', 'organization_id',
+  ],
+  service_signatures: [
+    'id', 'service_record_id', 'signer_role', 'signer_name', 'organization_id',
+  ],
+  invoices: [
+    'id', 'client_id', 'invoice_number', 'invoice_number_formatted', 'status',
+    'total_amount', 'paid_amount', 'period_start', 'period_end', 'created_at',
+    'deleted_at', 'due_date', 'organization_id',
+  ],
+  invoice_packages: ['id', 'invoice_id', 'pdf_url', 'organization_id'],
+  payment_allocations: ['id', 'invoice_id', 'payment_id', 'amount_cents', 'organization_id'],
+  datev_exports: ['id', 'zeitraum_von', 'zeitraum_bis', 'status', 'organization_id'],
+}
+
+/** Fehlerobjekt in der Form, die PostgREST bei unbekannter Spalte liefert. */
+function spaltenFehler(tabelle: string, spalte: string) {
+  return { code: '42703', message: `column ${tabelle}.${spalte} does not exist` }
+}
+
+/**
  * Minimaler Supabase-Stub: sammelt .eq()/.in()/.is()-Aufrufe ein und ist
  * am Ende `await`-bar. Filtert bewusst NICHT nach — die Kettenlogik erhält
  * genau die Zeilen, die der Test vorgibt.
+ *
+ * Der Stub prüft aber den `select`-String gegen LIVE_SPALTEN und antwortet
+ * bei einer unbekannten Spalte mit demselben 42703, das die echte Datenbank
+ * liefern würde. Nur so kann ein Test einen Schema-Drift überhaupt sehen.
  */
-function stub(tabellen: Tabellen): SupabaseClient {
+function stub(
+  tabellen: Tabellen,
+  /** Tabellen, die unabhängig vom Select mit diesem Fehler antworten. */
+  defekte: Partial<Record<keyof Tabellen, { code: string; message: string }>> = {},
+): SupabaseClient {
   const client = {
     from(tabelle: keyof Tabellen) {
       const daten = tabellen[tabelle] ?? []
+      let fehler: { code: string; message: string } | null = defekte[tabelle] ?? null
+
       const query: Record<string, unknown> = {
-        select: () => query,
+        select: (spalten?: string) => {
+          const erlaubt = LIVE_SPALTEN[tabelle] ?? []
+          for (const roh of (spalten ?? '').split(',')) {
+            const spalte = roh.trim()
+            if (!spalte || spalte === '*') continue
+            if (!erlaubt.includes(spalte)) fehler = spaltenFehler(tabelle, spalte)
+          }
+          return query
+        },
         eq: () => query,
         in: () => query,
         is: () => query,
         neq: () => query,
         order: () => query,
         limit: () => query,
-        maybeSingle: () => Promise.resolve({ data: daten[0] ?? null, error: null }),
-        single: () => Promise.resolve({ data: daten[0] ?? null, error: null }),
-        then: (aufloesen: (v: { data: unknown[]; error: null; count: number }) => unknown) =>
-          Promise.resolve({ data: daten, error: null, count: daten.length }).then(aufloesen),
+        maybeSingle: () => Promise.resolve({ data: fehler ? null : daten[0] ?? null, error: fehler }),
+        single: () => Promise.resolve({ data: fehler ? null : daten[0] ?? null, error: fehler }),
+        then: (aufloesen: (v: { data: unknown[] | null; error: unknown; count: number }) => unknown) =>
+          Promise.resolve({
+            data: fehler ? null : daten,
+            error: fehler,
+            count: daten.length,
+          }).then(aufloesen),
       }
       return query
     },
@@ -141,10 +218,52 @@ describe('Kundenkette — leerer Kunde', () => {
   })
 })
 
+describe('Kundenkette — Schema und Datenfehler', () => {
+  it('liest client_budgets ohne die live fehlende Spalte budget_type', async () => {
+    // Der Stub wirft 42703 auf jede Spalte ausserhalb von LIVE_SPALTEN.
+    // Bleibt die Kette hier fehlerfrei, passt der Select zum Live-Schema.
+    const kette = await ermittleKundenKette(
+      stub({
+        clients: [VOLLSTAENDIGER_KUNDE],
+        client_budgets: [{ client_id: KUNDE, year: JAHR, annual_amount: 1572, combined_annual_amount: 3539 }],
+      }),
+      ORG, KUNDE,
+    )
+    expect(kette!.datenfehler).toEqual([])
+    const budget = kette!.schritte.find(x => x.id === 'budget')!
+    expect(budget.stand).toBe('erledigt')
+    // Beschriftung aus den Spalten, die den Anspruch wirklich tragen.
+    expect(budget.wert).toBe('§ 45b 1572 € + § 42a 3539 €')
+  })
+
+  it('meldet eine nicht lesbare Tabelle als Defekt statt als „nichts vorhanden"', async () => {
+    // Genau die Live-Konstellation vor dem Fix: der Budget-Select scheiterte,
+    // und die Seite zeigte beruhigend „kein Budget für das laufende Jahr".
+    const kette = await ermittleKundenKette(
+      stub(
+        {
+          clients: [VOLLSTAENDIGER_KUNDE],
+          client_budgets: [{ client_id: KUNDE, year: JAHR, annual_amount: 1572 }],
+        },
+        { client_budgets: spaltenFehler('client_budgets', 'budget_type') },
+      ),
+      ORG, KUNDE,
+    )
+    const budget = kette!.schritte.find(x => x.id === 'budget')!
+
+    expect(budget.stand).toBe('blockiert')
+    expect(budget.wert).toBe('Stand nicht ermittelbar')
+    expect(budget.naechsterSchritt).toContain('42703')
+    expect(kette!.datenfehler.join(' ')).toContain('client_budgets')
+    // Und die Kette darf sich unter keinen Umständen als vollständig ausgeben.
+    expect(kette!.vollstaendig).toBe(false)
+  })
+})
+
 describe('Kundenkette — Signaturen', () => {
   const basis: Tabellen = {
     clients: [VOLLSTAENDIGER_KUNDE],
-    client_budgets: [{ client_id: KUNDE, budget_type: 'entlastung', year: JAHR, annual_amount: 1572 }],
+    client_budgets: [{ client_id: KUNDE, year: JAHR, annual_amount: 1572, combined_annual_amount: 3539 }],
     caregivers: [{ id: ENGEL_FREI }],
     assignments: [{ id: 'a1', client_id: KUNDE, caregiver_id: ENGEL_FREI, assignment_date: '2026-08-01', status: 'geplant' }],
   }
@@ -202,7 +321,7 @@ describe('Kundenkette — Betreuungskraft', () => {
 describe('Kundenkette — Geld', () => {
   const mitRechnung: Tabellen = {
     clients: [VOLLSTAENDIGER_KUNDE],
-    client_budgets: [{ client_id: KUNDE, budget_type: 'entlastung', year: JAHR, annual_amount: 1572 }],
+    client_budgets: [{ client_id: KUNDE, year: JAHR, annual_amount: 1572, combined_annual_amount: 3539 }],
     caregivers: [{ id: ENGEL_FREI }],
     assignments: [{ id: 'a1', client_id: KUNDE, caregiver_id: ENGEL_FREI, assignment_date: '2026-08-01', status: 'geplant' }],
     service_records: [{ id: 'r1', client_id: KUNDE, status: 'invoiced', amount: 100, date: '2026-08-01' }],
