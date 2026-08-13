@@ -46,6 +46,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { berlinParts } from '@/lib/utils/timezone'
 import { KETTEN_SCHRITTE, schrittHref } from './schritte'
+import { pflegegradVon } from '@/lib/clients/pflegegrad'
 import type { KundenKette, KundenSchritt, SchrittId, SchrittStand } from './types'
 
 /** service_records.status-Werte, die als abrechenbar gelten. */
@@ -66,6 +67,7 @@ interface KettenRohdaten {
     city: string | null
     phone: string | null
     email: string | null
+    care_level: number | null
     pflegegrad: number | null
     pflegekasse_name: string | null
   }
@@ -158,7 +160,7 @@ async function ladeRohdaten(
     await Promise.all([
       supabase
         .from('clients')
-        .select('id, first_name, last_name, geburtsdatum, date_of_birth, address, zip_code, city, phone, email, pflegegrad, pflegekasse_name')
+        .select('id, first_name, last_name, geburtsdatum, date_of_birth, address, zip_code, city, phone, email, care_level, pflegegrad, pflegekasse_name')
         .eq('organization_id', organizationId)
         .in('id', clientIds),
       // budget_type gibt es live NICHT — siehe Kopfkommentar. Ausgewertet
@@ -320,7 +322,8 @@ function baueKette(clientId: string, d: KettenRohdaten): KundenKette {
   ))
 
   // ── 2. Pflegegrad ───────────────────────────────────────────────
-  const pg = c.pflegegrad
+  // care_level ist die führende Spalte — siehe lib/clients/pflegegrad.ts.
+  const pg = pflegegradVon(c)
   schritte.push(schritt(
     'pflegegrad', clientId,
     pg && pg >= 1 ? 'erledigt' : 'offen',
