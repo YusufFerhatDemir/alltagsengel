@@ -27,7 +27,7 @@
 import { NextResponse } from 'next/server'
 import { Resend } from 'resend'
 import { rateLimit, getClientIp, escapeHtml } from '@/lib/rate-limit'
-import { COACH_PRODUKT_NAME, COACH_PRODUKT_VERSION, COACH_SUPPORT_EMAIL } from '@/lib/coach/version'
+import { COACH_PRODUKT_VERSION, COACH_SUPPORT_EMAIL } from '@/lib/coach/version'
 
 const MAX_LEN = { name: 120, email: 200, telefon: 40, nachricht: 2000 }
 
@@ -99,7 +99,7 @@ export async function POST(request: Request) {
       to: adminEmail,
       subject: `PflegeCoach-Anfrage von ${name.trim().slice(0, 80)}`,
       html: `
-        <h2>Neue Anfrage zum ${COACH_PRODUKT_NAME}</h2>
+        <h2>Neue Anfrage zum PflegeCoach</h2>
         <table style="border-collapse:collapse;font-family:sans-serif">
           <tr><td style="padding:8px;font-weight:bold;color:#666">Name:</td><td style="padding:8px">${sicherName}</td></tr>
           <tr><td style="padding:8px;font-weight:bold;color:#666">E-Mail:</td><td style="padding:8px"><a href="mailto:${sicherEmail}">${sicherEmail}</a></td></tr>
@@ -121,17 +121,17 @@ export async function POST(request: Request) {
       await resend.emails.send({
         from: 'Alltagsengel <info@alltagsengel.care>',
         to: email.trim(),
-        subject: `Ihre Anfrage zum ${COACH_PRODUKT_NAME}`,
+        subject: 'Ihre Anfrage zum PflegeCoach',
         html: `
           <div style="max-width:560px;margin:0 auto;font-family:-apple-system,sans-serif;background:#F7F2EA;padding:24px">
             <div style="background:white;border-radius:16px;padding:28px">
               <h2 style="color:#1A1612;margin:0 0 12px">Vielen Dank, ${sicherName}!</h2>
               <p style="color:#444;font-size:15px;line-height:1.6">
-                Wir haben Ihre Anfrage zum ${COACH_PRODUKT_NAME} erhalten und melden uns
-                bei Ihnen — in der Regel innerhalb von zwei Werktagen.
+                Wir haben Ihre Anfrage zum PflegeCoach erhalten und melden uns bei Ihnen —
+                in der Regel innerhalb von zwei Werktagen.
               </p>
               <p style="color:#444;font-size:15px;line-height:1.6">
-                Zur Einordnung: Der ${COACH_PRODUKT_NAME} ist ein digitales Unterstützungsangebot
+                Zur Einordnung: Der Digitale PflegeCoach ist ein digitales Unterstützungsangebot
                 für die häusliche Pflege. Er ist kein Medizinprodukt und keine Leistung der
                 gesetzlichen Pflege- oder Krankenversicherung; die Nutzung erfolgt als privat zu
                 zahlendes Angebot.
