@@ -129,8 +129,14 @@ function zustaendigkeitAus(pruefungen: GoLivePruefung[], status: GoLiveStatus): 
   return status === 'external' ? 'extern' : 'intern'
 }
 
-/** Wiederholte-Ziffern-UUIDs wie 33333333-3333-… stammen aus Seed-/Testdaten. */
-function istSeedUuid(id: unknown): boolean {
+/**
+ * Wiederholte-Ziffern-UUIDs wie 33333333-3333-… stammen aus Seed-/Testdaten.
+ *
+ * Exportiert, damit `scripts/bereinige-testdaten.ts` exakt dieselbe Erkennung
+ * benutzt wie die Prüfung. Zwei Definitionen von „Testdatensatz" hiessen: das
+ * Aufräumskript löscht etwas anderes, als das Dashboard zählt.
+ */
+export function istSeedUuid(id: unknown): boolean {
   return typeof id === 'string' && /^(\w)\1{7}-(\w)\2{3}-/.test(id)
 }
 
@@ -156,7 +162,8 @@ export interface Messwerte {
   kimKarten: Array<{ karten_typ: string | null; status: string | null }>
   kimVersionen: Array<{ spec_bestaetigt: boolean | null }>
   bewertungen: Array<{ angel_id: unknown; reviewer_id: unknown }>
-  testOrganisationen: number | null
+  /** Organisationen mit „TEST" im Namen. `null` = nicht prüfbar (fail-closed). */
+  testMandanten: Array<{ id: string; name: string | null }> | null
   anonBewertungen: { lesbar: boolean | null; quelle: string }
   fehler: string[]
 }
@@ -228,7 +235,7 @@ async function erhebeMesswerte(supabase: SupabaseClient, organizationId: string)
     messe(fehler, 'kim_karten', async () => supabase.from('kim_karten').select('karten_typ, status').eq('organization_id', organizationId)),
     messe(fehler, 'kim_formatversionen', async () => supabase.from('kim_formatversionen').select('spec_bestaetigt').or(orgFilter)),
     messe(fehler, 'reviews', async () => supabase.from('reviews').select('angel_id, reviewer_id')),
-    messe(fehler, 'organizations (Testmandanten)', async () => supabase.from('organizations').select('id', { count: 'exact', head: true }).ilike('name', '%TEST%')),
+    messe(fehler, 'organizations (Testmandanten)', async () => supabase.from('organizations').select('id, name').ilike('name', '%TEST%')),
     pruefeAnonZugriff('reviews'),
   ])
 
@@ -250,7 +257,7 @@ async function erhebeMesswerte(supabase: SupabaseClient, organizationId: string)
     kimKarten: (kimKarten.data as Messwerte['kimKarten']) ?? [],
     kimVersionen: (kimVer.data as Messwerte['kimVersionen']) ?? [],
     bewertungen: (reviews.data as Messwerte['bewertungen']) ?? [],
-    testOrganisationen: testOrgs.count,
+    testMandanten: (testOrgs.data as Messwerte['testMandanten']) ?? null,
     anonBewertungen: anon as { lesbar: boolean | null; quelle: string },
     fehler,
   }
@@ -574,7 +581,11 @@ function bereichProduction(m: Messwerte): GoLiveBereich {
   const org = m.organisation
   const sepaPlatzhalter = org?.sepa_creditor_id === SEPA_PLATZHALTER_ID
   const fehlendeEnv = PFLICHT_ENV.filter(k => !process.env[k])
-  const testOrgs = m.testOrganisationen ?? 0
+  const testOrgs = m.testMandanten?.length ?? 0
+  // Namen nennen statt nur zählen: „2" ist keine Handlungsanweisung. Wer den
+  // Rest wegräumen soll, muss wissen, welcher Mandant übrig ist — zumal nicht
+  // jeder löschbar ist (unveränderliches wf_audit_log blockiert per FK).
+  const testOrgNamen = (m.testMandanten ?? []).map(o => o.name ?? o.id).join(', ')
 
   const pruefungen = [
     pruefung(
@@ -586,7 +597,15 @@ function bereichProduction(m: Messwerte): GoLiveBereich {
     pruefung('Absender-IK der Organisation', Boolean(org?.ik_nummer), org?.ik_nummer ?? 'fehlt', 'intern'),
     pruefung('Bankverbindung hinterlegt', Boolean(org?.iban), org?.iban ? 'gesetzt' : 'fehlt', 'intern'),
     pruefung('Pflicht-Env-Variablen gesetzt', fehlendeEnv.length === 0, fehlendeEnv.length === 0 ? `${PFLICHT_ENV.length} von ${PFLICHT_ENV.length}` : `fehlt: ${fehlendeEnv.join(', ')}`, 'intern'),
-    pruefung('Keine Testmandanten in der Produktions-DB', testOrgs === 0, m.testOrganisationen === null ? 'nicht prüfbar' : `${testOrgs}`, 'intern'),
+    pruefung(
+      'Keine Testmandanten in der Produktions-DB',
+      // Fail-closed: eine nicht ausführbare Abfrage (`null`) ist kein Beweis
+      // für „keine Testmandanten". Vorher wurde `null` zu 0 gerechnet und die
+      // Prüfung damit grün — ein kaputter Zähler hätte den Bereich freigegeben.
+      m.testMandanten !== null && testOrgs === 0,
+      m.testMandanten === null ? 'nicht prüfbar' : testOrgs === 0 ? '0' : `${testOrgs}: ${testOrgNamen}`,
+      'intern',
+    ),
   ]
   const status = statusAus(pruefungen)
 
@@ -595,7 +614,7 @@ function bereichProduction(m: Messwerte): GoLiveBereich {
     titel: 'Production',
     status,
     begruendung: sepaPlatzhalter
-      ? `Die hinterlegte SEPA-Gläubiger-ID ist ein Platzhalter aus der Migration und keine echte Kennung. Ein Lastschrifteinzug damit würde von der Bank abgelehnt.${testOrgs > 0 ? ` Zusätzlich liegen ${testOrgs} Testmandanten in der Produktions-Datenbank.` : ''}`
+      ? `Die hinterlegte SEPA-Gläubiger-ID ist ein Platzhalter aus der Migration und keine echte Kennung. Ein Lastschrifteinzug damit würde von der Bank abgelehnt.${testOrgs > 0 ? ` Zusätzlich liegen ${testOrgs} Testmandant(en) in der Produktions-Datenbank: ${testOrgNamen}.` : ''}`
       : status === 'ready'
         ? 'Stammdaten, Bankverbindung, Gläubiger-ID und Pflicht-Env-Variablen sind vollständig; keine Testmandanten in der Produktions-DB.'
         : 'Mindestens eine Pflichtprüfung des Produktivbetriebs ist offen.',
