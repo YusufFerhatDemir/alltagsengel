@@ -35,6 +35,8 @@ import path from 'node:path'
 const RPC_MIGRATION = 'supabase/migrations/20260831050000_fail_closed_tarif_status_rpcs.sql'
 const TARIFFS_ROUTE = 'app/api/billing/tariffs/route.ts'
 const VERIFIZIERUNG_ROUTE = 'app/api/billing/tariffs/[id]/verifizierung/route.ts'
+const VERIFIZIERUNG_SERVICE = 'lib/billing/tarif-verifizierung-service.ts'
+const VERIFIZIERUNG_REGELN = 'lib/billing/core/tarif-verifizierung.ts'
 
 function readFile(relPath: string): string {
   return fs.readFileSync(path.join(__dirname, '..', '..', relPath), 'utf-8')
@@ -135,24 +137,35 @@ describe('Statisch: POST /api/billing/tariffs ignoriert tarif_status im Body', (
 })
 
 describe('Statisch: PATCH /api/billing/tariffs/[id]/verifizierung ist der kontrollierte Freigabeprozess', () => {
-  const src = readFile(VERIFIZIERUNG_ROUTE)
+  // Die Route delegiert seit 20260904000000 an den geteilten Service, damit
+  // billing_tariffs und leistungspreise nicht auseinanderdriften koennen.
+  const route = readFile(VERIFIZIERUNG_ROUTE)
+  const service = readFile(VERIFIZIERUNG_SERVICE)
+  const regeln = readFile(VERIFIZIERUNG_REGELN)
+
+  it('die Route benutzt den geteilten Freigabe-Service', () => {
+    expect(route).toMatch(/handleVerifizierungPatch/)
+    expect(route).toMatch(/'billing_tariffs'/)
+  })
 
   it('verlangt Admin-Auth', () => {
-    expect(src).toMatch(/requireOpsAdmin/)
+    expect(service).toMatch(/requireOpsAdmin/)
   })
 
   it('laesst nur verified/unverified/blocked als Zielstatus zu', () => {
-    expect(src).toMatch(/ERLAUBTE_STATUS\s*=\s*\['verified', 'unverified', 'blocked'\]/)
+    expect(regeln).toMatch(/TARIF_STATUS\s*=\s*\['verified', 'unverified', 'blocked'\]/)
+    expect(service).toMatch(/pruefeStatusaenderung/)
   })
 
   it('verlangt eine Quelle (min. 5 Zeichen) fuer verified und blocked', () => {
-    expect(src).toMatch(/status === 'verified' \|\| status === 'blocked'/)
-    expect(src).toMatch(/quelle\.length < 5/)
+    expect(regeln).toMatch(/QUELLE_MIN_LAENGE\s*=\s*5/)
+    expect(regeln).toMatch(/quelle\.length < QUELLE_MIN_LAENGE/)
   })
 
   it('filtert das UPDATE auf organization_id (Mandantentrennung, Admin-Client umgeht RLS)', () => {
-    const updateBlock = src.match(/\.update\(\{[\s\S]*?\.select\(\)/)?.[0] ?? ''
-    expect(updateBlock).toMatch(/\.eq\('organization_id', organizationId\)/)
+    const updateBlock = service.match(/const \{ data: aktualisiert[\s\S]*?\n\n/)?.[0] ?? ''
+    expect(service).toMatch(/update\.eq\('organization_id', ctx\.organizationId\)/)
+    expect(updateBlock.length).toBeGreaterThan(0)
   })
 })
 

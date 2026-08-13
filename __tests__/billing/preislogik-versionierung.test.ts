@@ -290,9 +290,17 @@ describe('Fail-Closed: alle Preisquellen respektieren tarif_status', () => {
   })
 
   it('Verifizierung verlangt eine Rechtsquelle', () => {
-    const src = repo('app/api/billing/tariffs/[id]/verifizierung/route.ts')
+    // Die Regel liegt seit 20260904000000 in der geteilten Pruefung, die beide
+    // Preistabellen benutzen — nicht mehr inline in der Route.
+    const src = repo('lib/billing/core/tarif-verifizierung.ts')
     expect(src).toContain('Rechtsquelle')
-    expect(src).toContain('quelle.length < 5')
+    expect(src).toContain('quelle.length < QUELLE_MIN_LAENGE')
+  })
+
+  it('leistungspreise haben denselben kontrollierten Freigabeweg wie billing_tariffs', () => {
+    const src = repo('app/api/billing/leistungspreise/[id]/verifizierung/route.ts')
+    expect(src).toContain('handleVerifizierungPatch')
+    expect(src).toContain('leistungspreise')
   })
 })
 
