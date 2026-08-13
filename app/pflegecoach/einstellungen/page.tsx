@@ -5,7 +5,10 @@
 import { useEffect, useState } from 'react'
 import type { CoachConsent, ConsentTyp } from '@/lib/coach/types'
 import { ROLLE_LABELS } from '@/lib/coach/types'
+import Link from 'next/link'
+import { hatAktiveEinwilligung, PFLICHT_CONSENT } from '@/lib/coach/consent'
 import { coachApi, useCoachProfil } from '../_lib/client'
+import { CoachLaden, CoachLadefehler, EinwilligungWiderrufen } from '../_lib/Zustand'
 
 const CONSENT_LABELS: Record<ConsentTyp, string> = {
   gesundheitsdaten_art9: 'Verarbeitung meiner Pflege- und Gesundheitsdaten (erforderlich für die Nutzung)',
@@ -14,31 +17,35 @@ const CONSENT_LABELS: Record<ConsentTyp, string> = {
 }
 
 export default function EinstellungenSeite() {
-  const { profil, laden, fehler } = useCoachProfil()
+  const { profil, laden, fehler, neuLaden } = useCoachProfil()
   const [consents, setConsents] = useState<CoachConsent[]>([])
+  // Ohne dieses Flag zeigte die Seite zwischen Render und Antwort kurz den
+  // Sperrhinweis an — die noch leere Liste sieht wie „nichts erteilt" aus.
+  const [consentsGeladen, setConsentsGeladen] = useState(false)
   const [meldung, setMeldung] = useState<{ art: 'ok' | 'error'; text: string } | null>(null)
 
   const lade = () =>
     coachApi<{ consents: CoachConsent[] }>('/api/coach/consents')
-      .then(r => setConsents(r.consents))
+      .then(r => { setConsents(r.consents); setConsentsGeladen(true) })
       .catch(e => setMeldung({ art: 'error', text: e.message }))
 
   useEffect(() => { if (profil) lade() }, [profil])
 
-  if (laden) return <p role="status">Wird geladen …</p>
-  if (fehler) return <p className="pc-feedback pc-feedback--error" role="alert">{fehler}</p>
+  if (laden) return <CoachLaden />
+  if (fehler) return <CoachLadefehler fehler={fehler} neuLaden={neuLaden} />
   if (!profil) return null
 
-  /** Aktueller Stand je Typ: jüngster nicht widerrufener, erteilter Eintrag. */
-  const aktiv = (typ: ConsentTyp) =>
-    consents.some(c => c.consent_typ === typ && c.erteilt && !c.widerrufen_am)
+  /** Aktueller Stand je Typ — dieselbe Auswertung wie serverseitig. */
+  const aktiv = (typ: ConsentTyp) => hatAktiveEinwilligung(consents, typ)
 
   const setzeConsent = async (typ: ConsentTyp, erteilt: boolean) => {
     setMeldung(null)
-    if (typ === 'gesundheitsdaten_art9' && !erteilt) {
+    if (typ === PFLICHT_CONSENT && !erteilt) {
       const ok = window.confirm(
-        'Ohne diese Einwilligung kann der PflegeCoach nicht weiter genutzt werden. ' +
-        'Ihre bisherigen Daten bleiben gespeichert, bis Sie die Löschung veranlassen. Wirklich widerrufen?'
+        'Nach dem Widerruf können Sie keine neuen Einträge mehr anlegen — weder Assessments ' +
+        'noch Ziele, Aktivitäten oder Messungen. Ihre bisherigen Daten bleiben lesbar und ' +
+        'exportierbar, bis Sie die Löschung veranlassen. Sie können die Einwilligung jederzeit ' +
+        'wieder erteilen. Wirklich widerrufen?'
       )
       if (!ok) return
     }
@@ -60,6 +67,8 @@ export default function EinstellungenSeite() {
           {meldung.text}
         </p>
       )}
+
+      {consentsGeladen && !aktiv(PFLICHT_CONSENT) && <EinwilligungWiderrufen />}
 
       <section className="pc-card" aria-labelledby="profil-titel">
         <h2 id="profil-titel">Ihr Profil</h2>
@@ -110,10 +119,13 @@ export default function EinstellungenSeite() {
       <section className="pc-card" aria-labelledby="loeschung-titel">
         <h2 id="loeschung-titel">Daten löschen</h2>
         <p>
-          Wenn Sie Ihr Nutzerkonto löschen, werden auch alle Ihre PflegeCoach-Daten gelöscht
-          (Art. 17 DSGVO). Die Konto-Löschung finden Sie in den allgemeinen Konto-Einstellungen;
-          bei Fragen hilft Ihnen der Support (Kontakt in den <a href="/pflegecoach/datenschutz">Datenschutzhinweisen</a>).
+          Sie können Ihre PflegeCoach-Daten selbst und vollständig löschen (Art. 17 DSGVO) —
+          Ihr Alltagsengel-Konto bleibt dabei bestehen. Die Seite zeigt Ihnen vorher genau an,
+          was gelöscht wird, und verlangt eine ausdrückliche Bestätigung.
         </p>
+        <Link className="pc-btn pc-btn--secondary" href="/pflegecoach/loeschung">
+          PflegeCoach-Daten löschen
+        </Link>
       </section>
     </>
   )

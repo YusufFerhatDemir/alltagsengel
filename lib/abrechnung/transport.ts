@@ -13,6 +13,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import SftpClient from 'ssh2-sftp-client'
+import type { TransportPhase } from './retry'
 
 export interface TransportConfig {
   /** Name der Datenannahmestelle (z. B. 'DAVASO', 'BITMARCK', 'AOK-RZ') */
@@ -32,6 +33,17 @@ export interface TransportConfig {
 export interface SendeErgebnis {
   erfolg: boolean
   protokoll: string
+  /**
+   * Wie weit der Versuch gekommen ist.
+   *
+   * Entscheidet darüber, ob automatisch wiederholt werden darf: ab dem Upload
+   * der Auftragsdatei kann die Annahmestelle die Verarbeitung bereits gestartet
+   * haben — ein zweiter Versuch würde dann eine zweite Forderung erzeugen.
+   * Siehe lib/abrechnung/retry.ts.
+   */
+  phase: TransportPhase
+  /** Rohe Fehlermeldung des Transportclients, für die Klassifizierung. */
+  fehler: string | null
 }
 
 /**
@@ -110,6 +122,10 @@ export async function sendePerSFTP(
   const nutzdatenName = dateinamen?.nutzdaten || `TSOL${Date.now()}`
   const auftragName = dateinamen?.auftrag || `${nutzdatenName}.AUF`
 
+  // Wird bei jedem erreichten Abschnitt weitergestellt. Bricht etwas ab, sagt
+  // dieser Wert, ob eine Wiederholung noch folgenlos ist.
+  let phase: TransportPhase = 'verbindung'
+
   try {
     protokoll.push(`[${zeitstempel()}] Verbinde zu ${config.sftp_host}:${config.sftp_port} (${config.datenannahmestelle})`)
     await sftp.connect(sftpVerbindungsOptionen(config))
@@ -124,25 +140,31 @@ export async function sendePerSFTP(
 
     // WICHTIG: erst Nutzdaten, dann Auftragsdatei — viele Annahmestellen
     // starten die Verarbeitung, sobald die Auftragsdatei eintrifft.
+    phase = 'nutzdaten'
     const nutzdatenPfad = `${zielVerzeichnis}/${nutzdatenName}`
     await sftp.put(edifact_verschluesselt, nutzdatenPfad)
     protokoll.push(`[${zeitstempel()}] Nutzdaten hochgeladen: ${nutzdatenPfad} (${edifact_verschluesselt.length} Bytes)`)
 
+    // Ab hier ist eine automatische Wiederholung nicht mehr harmlos.
+    phase = 'auftragsdatei'
     const auftragPfad = `${zielVerzeichnis}/${auftragName}`
     await sftp.put(auftragsdatei, auftragPfad)
     protokoll.push(`[${zeitstempel()}] Auftragsdatei hochgeladen: ${auftragPfad} (${auftragsdatei.length} Bytes)`)
 
     // Upload verifizieren
+    phase = 'verifikation'
     const stat = await sftp.stat(nutzdatenPfad)
     if (stat.size !== edifact_verschluesselt.length) {
-      protokoll.push(`[${zeitstempel()}] WARNUNG: Größe auf Server (${stat.size}) ≠ lokal (${edifact_verschluesselt.length})`)
-      return { erfolg: false, protokoll: protokoll.join('\n') }
+      const abweichung = `Größe auf Server (${stat.size}) ≠ lokal (${edifact_verschluesselt.length})`
+      protokoll.push(`[${zeitstempel()}] WARNUNG: ${abweichung}`)
+      return { erfolg: false, protokoll: protokoll.join('\n'), phase, fehler: abweichung }
     }
     protokoll.push(`[${zeitstempel()}] Übertragung erfolgreich abgeschlossen`)
-    return { erfolg: true, protokoll: protokoll.join('\n') }
+    return { erfolg: true, protokoll: protokoll.join('\n'), phase: 'fertig', fehler: null }
   } catch (e: any) {
-    protokoll.push(`[${zeitstempel()}] FEHLER: ${e?.message || e}`)
-    return { erfolg: false, protokoll: protokoll.join('\n') }
+    const meldung = String(e?.message || e)
+    protokoll.push(`[${zeitstempel()}] FEHLER: ${meldung}`)
+    return { erfolg: false, protokoll: protokoll.join('\n'), phase, fehler: meldung }
   } finally {
     await sftp.end().catch(() => {})
   }
@@ -194,10 +216,12 @@ export async function testeVerbindung(config: TransportConfig): Promise<SendeErg
     const ziel = config.sftp_verzeichnis || '/'
     const existiert = await sftp.exists(ziel)
     protokoll.push(`[${zeitstempel()}] Zielverzeichnis ${ziel}: ${existiert ? 'vorhanden' : 'NICHT vorhanden'}`)
-    return { erfolg: true, protokoll: protokoll.join('\n') }
+    return { erfolg: true, protokoll: protokoll.join('\n'), phase: 'fertig', fehler: null }
   } catch (e: any) {
-    protokoll.push(`[${zeitstempel()}] FEHLER: ${e?.message || e}`)
-    return { erfolg: false, protokoll: protokoll.join('\n') }
+    const meldung = String(e?.message || e)
+    protokoll.push(`[${zeitstempel()}] FEHLER: ${meldung}`)
+    // Der Verbindungstest überträgt nichts — er kommt nie über 'verbindung' hinaus.
+    return { erfolg: false, protokoll: protokoll.join('\n'), phase: 'verbindung', fehler: meldung }
   } finally {
     await sftp.end().catch(() => {})
   }

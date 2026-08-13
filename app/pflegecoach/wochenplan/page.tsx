@@ -5,6 +5,7 @@
 import { useEffect, useState } from 'react'
 import type { AktivitaetKategorie, CoachActivity, CoachActivityLog } from '@/lib/coach/types'
 import { coachApi, heuteIso, isoWochentag, useCoachProfil, WOCHENTAG_LABELS } from '../_lib/client'
+import { CoachLaden, CoachLadefehler } from '../_lib/Zustand'
 
 const KATEGORIE_LABELS: Record<AktivitaetKategorie, string> = {
   mobilitaet: 'Bewegung & Mobilität',
@@ -16,7 +17,7 @@ const KATEGORIE_LABELS: Record<AktivitaetKategorie, string> = {
 }
 
 export default function WochenplanSeite() {
-  const { profil, laden, fehler } = useCoachProfil()
+  const { profil, laden, fehler, neuLaden } = useCoachProfil()
   const [aktivitaeten, setAktivitaeten] = useState<CoachActivity[]>([])
   const [log, setLog] = useState<CoachActivityLog[]>([])
   const [meldung, setMeldung] = useState<{ art: 'ok' | 'error'; text: string } | null>(null)
@@ -38,8 +39,8 @@ export default function WochenplanSeite() {
 
   useEffect(() => { if (profil) lade() }, [profil])
 
-  if (laden) return <p role="status">Wird geladen …</p>
-  if (fehler) return <p className="pc-feedback pc-feedback--error" role="alert">{fehler}</p>
+  if (laden) return <CoachLaden />
+  if (fehler) return <CoachLadefehler fehler={fehler} neuLaden={neuLaden} />
   if (!profil) return null
 
   const anlegen = async (ev: React.FormEvent) => {

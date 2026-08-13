@@ -19,7 +19,7 @@ export async function GET() {
 
 /** Verlaufsbericht als unveränderlichen Snapshot erzeugen (Default: letzte 12 Wochen). */
 export async function POST(request: Request) {
-  const auth = await requireCoachUser()
+  const auth = await requireCoachUser({ schreibzugriff: true })
   if (!auth.ok) return auth.response
 
   const body = await request.json().catch(() => ({}))

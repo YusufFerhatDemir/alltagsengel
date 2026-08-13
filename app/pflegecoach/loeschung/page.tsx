@@ -7,6 +7,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { coachApi, CoachApiError, useCoachProfil } from '../_lib/client'
+import { CoachLaden, CoachLadefehler } from '../_lib/Zustand'
 
 interface UmfangAntwort {
   umfang: Record<string, number>
@@ -27,7 +28,7 @@ const UMFANG_LABELS: Record<string, string> = {
 
 export default function LoeschungSeite() {
   const router = useRouter()
-  const { profil, laden } = useCoachProfil()
+  const { profil, laden, fehler: profilFehler, neuLaden } = useCoachProfil()
   const [daten, setDaten] = useState<UmfangAntwort | null>(null)
   const [bestaetigung, setBestaetigung] = useState('')
   const [sende, setSende] = useState(false)
@@ -56,7 +57,13 @@ export default function LoeschungSeite() {
     }
   }
 
-  if (laden || !profil) return <p role="status">Wird geladen …</p>
+  // Reihenfolge ist wichtig: Ohne die Fehlerprüfung blieb die Seite bei
+  // einem Ladefehler dauerhaft auf „Wird geladen …" stehen (profil bleibt
+  // null, laden ist aber längst false) — eine Sackgasse ausgerechnet im
+  // Löschweg.
+  if (laden) return <CoachLaden />
+  if (profilFehler) return <CoachLadefehler fehler={profilFehler} neuLaden={neuLaden} />
+  if (!profil) return null
 
   const wort = daten?.bestaetigungswort ?? 'LOESCHEN'
 

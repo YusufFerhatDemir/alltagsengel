@@ -7,6 +7,7 @@ import Link from 'next/link'
 import type { CoachAssessment, CoachMeasurement } from '@/lib/coach/types'
 import { ASSESSMENT_BEREICHE, ASSESSMENT_BEREICH_LABELS } from '@/lib/coach/assessment'
 import { coachApi, useCoachProfil } from '../_lib/client'
+import { CoachLaden, CoachLadefehler } from '../_lib/Zustand'
 
 const INSTRUMENT_LABELS: Record<string, string> = {
   belastung_kurz: 'Belastungs-Check',
@@ -19,7 +20,7 @@ const INSTRUMENT_LABELS: Record<string, string> = {
 }
 
 export default function VerlaufSeite() {
-  const { profil, laden, fehler } = useCoachProfil()
+  const { profil, laden, fehler, neuLaden } = useCoachProfil()
   const [assessments, setAssessments] = useState<CoachAssessment[]>([])
   const [messungen, setMessungen] = useState<CoachMeasurement[]>([])
   const [ladeFehler, setLadeFehler] = useState<string | null>(null)
@@ -34,8 +35,8 @@ export default function VerlaufSeite() {
       .catch(e => setLadeFehler(e.message))
   }, [profil])
 
-  if (laden) return <p role="status">Wird geladen …</p>
-  if (fehler) return <p className="pc-feedback pc-feedback--error" role="alert">{fehler}</p>
+  if (laden) return <CoachLaden />
+  if (fehler) return <CoachLadefehler fehler={fehler} neuLaden={neuLaden} />
   if (!profil) return null
 
   return (

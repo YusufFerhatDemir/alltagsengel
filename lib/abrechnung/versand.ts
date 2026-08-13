@@ -27,6 +27,15 @@
  * Schritt, der von aussen kommt. Stünde das Gate vorne, wäre unbewiesen, ob
  * der Rest funktioniert.
  *
+ * WIEDERHOLUNG UND FEHLERQUEUE (Schritt 6)
+ * Die Übertragung wird bei vorübergehenden Netzfehlern bis zu dreimal mit
+ * wachsendem Abstand wiederholt — aber nur, solange die Wiederholung folgenlos
+ * ist. Sobald die Auftragsdatei oben liegt, kann die Annahmestelle die
+ * Verarbeitung begonnen haben; ab da wird nicht mehr automatisch wiederholt,
+ * sondern in die Dead-Letter-Queue eingestellt (lib/abrechnung/dead-letter.ts).
+ * Ein endgültig gescheiterter Versand verschwindet dadurch nicht im
+ * Auftragsstatus, sondern steht auf einer Liste mit Bearbeiter und Abschluss.
+ *
  * TESTMODUS: `testmodus: true` durchläuft 1–4 vollständig und hält vor 5 an.
  * Ergebnis ist ein echter Dateihash und eine echte Grössenangabe — nur eben
  * ohne Leitung. Der Auftragsstatus bleibt dabei unverändert.
@@ -42,6 +51,8 @@ import { sendePerSFTP, pruefeAntworten, type TransportConfig, type DakotaFreigab
 import { verschluesseln } from './secon'
 import { ladeAbsenderZertifikat, ladeEmpfaengerZertifikat, ZERTIFIKAT_BUCKET } from './zertifikate'
 import { protokolliereVersand } from './versand-protokoll'
+import { mitWiederholung, MAX_VERSUCHE } from './retry'
+import { inDeadLetter } from './dead-letter'
 import { parseSlgaDatei } from './slga-parser'
 import { importiereRuecklaeufer } from './ruecklaeufer'
 import { modulAktiv } from '../expansion/state-settings'
@@ -82,6 +93,10 @@ export interface VersandDetail {
   grund: string | null
   /** Was zu tun ist, damit es beim nächsten Mal durchläuft. */
   naechsterSchritt: string | null
+  /** Wie viele Übertragungsversuche unternommen wurden (0 = gar nicht erst gesendet). */
+  versuche: number
+  /** Gesetzt, wenn der Versand in der Fehlerqueue gelandet ist. */
+  deadLetterId: string | null
   dateiName: string | null
   dateiHash: string | null
   dateiGroesseBytes: number | null
@@ -270,6 +285,10 @@ export async function versendeDakotaAuftrag(
       gestoppt: art,
       grund,
       naechsterSchritt,
+      // Ein Abbruch VOR der Leitung ist kein Übertragungsversuch: die Zahl
+      // zählt, was tatsächlich an der Annahmestelle probiert wurde.
+      versuche: 0,
+      deadLetterId: null,
       dateiName: extras.dateiName ?? auftrag.logischer_dateiname,
       dateiHash: extras.dateiHash ?? null,
       dateiGroesseBytes: extras.dateiGroesseBytes ?? null,
@@ -505,30 +524,58 @@ export async function versendeDakotaAuftrag(
     .eq('id', auftragId)
     .eq('organization_id', organizationId)
 
-  const ergebnis = await sendePerSFTP(
-    nutzlast,
-    auftragsdatei,
-    transportConfig,
-    freigabe,
+  // Wiederholversuche mit wachsendem Abstand — aber nur, solange eine
+  // Wiederholung folgenlos ist. Sobald die Auftragsdatei oben liegt, kann die
+  // Annahmestelle die Verarbeitung begonnen haben; ab da entscheidet ein
+  // Mensch über die Dead-Letter-Queue. Siehe lib/abrechnung/retry.ts.
+  const versandStart = new Date().toISOString()
+  const wiederholung = await mitWiederholung(
+    (versuch) => {
+      if (versuch > 1) log(`Wiederholung ${versuch} von ${MAX_VERSUCHE}`)
+      return sendePerSFTP(
+        nutzlast,
+        auftragsdatei,
+        transportConfig,
+        freigabe,
+        {
+          nutzdaten: auftrag.physikalischer_dateiname || auftrag.logischer_dateiname,
+          auftrag: `${auftrag.physikalischer_dateiname || auftrag.logischer_dateiname}.AUF`,
+        },
+      )
+    },
     {
-      nutzdaten: auftrag.physikalischer_dateiname || auftrag.logischer_dateiname,
-      auftrag: `${auftrag.physikalischer_dateiname || auftrag.logischer_dateiname}.AUF`,
+      bewerte: (e) => ({ erfolg: e.erfolg, phase: e.phase, fehler: e.fehler }),
+      aufWiederholung: (zeile) => {
+        log(
+          `Versuch ${zeile.versuch}: ${zeile.erfolg ? 'erfolgreich' : 'gescheitert'} `
+          + `(Phase ${zeile.phase}, ${zeile.dauerMs} ms)`
+          + (zeile.fehler ? ` — ${zeile.fehler}` : '')
+          + (zeile.abbruchgrund ? ` — ${zeile.abbruchgrund}` : ''),
+        )
+      },
     },
   )
 
+  const ergebnis = wiederholung.ergebnis
   protokoll.push(ergebnis.protokoll)
 
   const endStatus = ergebnis.erfolg ? 'uebermittelt' : 'technischer_fehler'
 
-  await zaehleVersuch(supabase, auftragId, organizationId, auftrag.versand_versuche ?? 0, {
-    status: endStatus,
-    nutzdaten_hash: dateiHash,
-    nutzdaten_groesse_bytes: nutzlast.length,
-    verschluesselt,
-    uebermittelt_am: ergebnis.erfolg ? jetzt() : null,
-    fehler_code: ergebnis.erfolg ? null : 'TRANSPORT',
-    fehler_meldung: ergebnis.erfolg ? null : ergebnis.protokoll.slice(-1000),
-  })
+  // Jeder Wiederholversuch zählt einzeln mit: an dieser Zahl fällt später auf,
+  // dass eine Annahmestelle systematisch Verbindungen abweist.
+  await zaehleVersuch(
+    supabase, auftragId, organizationId,
+    (auftrag.versand_versuche ?? 0) + wiederholung.versuche - 1,
+    {
+      status: endStatus,
+      nutzdaten_hash: dateiHash,
+      nutzdaten_groesse_bytes: nutzlast.length,
+      verschluesselt,
+      uebermittelt_am: ergebnis.erfolg ? jetzt() : null,
+      fehler_code: ergebnis.erfolg ? null : 'TRANSPORT',
+      fehler_meldung: ergebnis.erfolg ? null : ergebnis.protokoll.slice(-1000),
+    },
+  )
 
   if (!ergebnis.erfolg && basis.laufId) {
     await supabase.from('dta_fehlerprotokoll').insert({
@@ -552,7 +599,7 @@ export async function versendeDakotaAuftrag(
     laufErgebnis = await aktualisiereLaufStatus(supabase, basis.laufId, organizationId)
   }
 
-  await protokolliereVersand(supabase, {
+  const { protokollId } = await protokolliereVersand(supabase, {
     organizationId,
     kanal,
     phase: 'uebertragung',
@@ -561,7 +608,9 @@ export async function versendeDakotaAuftrag(
     dakotaAuftragId: auftragId,
     protokoll: protokoll.join('\n'),
     fehlerCode: ergebnis.erfolg ? null : 'TRANSPORT',
-    fehlerMeldung: ergebnis.erfolg ? null : 'Übertragung fehlgeschlagen — Protokoll beachten',
+    fehlerMeldung: ergebnis.erfolg
+      ? null
+      : `Übertragung nach ${wiederholung.versuche} Versuch(en) fehlgeschlagen — ${wiederholung.aufgegeben?.text ?? 'Protokoll beachten'}`,
     dateiName: auftrag.logischer_dateiname,
     dateiHash,
     dateiGroesseBytes: nutzlast.length,
@@ -572,17 +621,50 @@ export async function versendeDakotaAuftrag(
     actorId,
   })
 
+  // Endgültig gescheitert: sichtbar machen. Ohne diesen Eintrag bliebe der
+  // Auftrag in 'technischer_fehler' liegen und fiele erst auf, wenn die Kasse
+  // eine fehlende Lieferung anmahnt.
+  let deadLetterId: string | null = null
+  if (!ergebnis.erfolg) {
+    const dl = await inDeadLetter(supabase, {
+      organizationId,
+      kanal,
+      grund: wiederholung.aufgegeben?.grund ?? 'dauerhafter_fehler',
+      laufId: basis.laufId,
+      dakotaAuftragId: auftragId,
+      versandProtokollId: protokollId,
+      fehlerCode: 'TRANSPORT',
+      fehlerMeldung: ergebnis.fehler ?? 'Übertragung fehlgeschlagen',
+      letztePhase: ergebnis.phase,
+      versuche: wiederholung.versuche,
+      ersterVersuchAm: versandStart,
+      dateiName: auftrag.logischer_dateiname,
+      dateiHash,
+      empfaengerIk: basis.empfaengerIk,
+      notiz: wiederholung.aufgegeben?.text ?? null,
+      actorId,
+    })
+    deadLetterId = dl.id
+    if (dl.id) log(`Dead-Letter-Eintrag ${dl.neu ? 'angelegt' : 'fortgeschrieben'}: ${dl.id}`)
+  }
+
   return {
     ...basis,
     status: endStatus,
     uebertragen: ergebnis.erfolg,
     gestoppt: null,
-    grund: ergebnis.erfolg ? null : 'Übertragung fehlgeschlagen',
+    grund: ergebnis.erfolg
+      ? null
+      : `Übertragung fehlgeschlagen (${wiederholung.versuche} Versuch(e))`,
     naechsterSchritt: ergebnis.erfolg
       ? laufErgebnis === 'uebermittelt'
         ? 'Auf Quittung/Rückmeldung der Kasse warten (Antwortabruf)'
         : 'Verbleibende Aufträge dieses Laufs übertragen'
-      : 'Protokoll prüfen, Ursache beheben, erneut versenden',
+      : deadLetterId
+        ? 'Liegt in der Fehlerqueue (Admin → Kassenabrechnung → Betrieb) — Ursache prüfen und wiedervorlegen'
+        : 'Protokoll prüfen, Ursache beheben, erneut versenden',
+    versuche: wiederholung.versuche,
+    deadLetterId,
     dateiName: auftrag.logischer_dateiname,
     dateiHash,
     dateiGroesseBytes: nutzlast.length,

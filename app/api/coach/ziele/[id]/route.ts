@@ -5,7 +5,7 @@ import type { ZielStatus } from '@/lib/coach/types'
 const STATUS: ZielStatus[] = ['aktiv', 'erreicht', 'angepasst', 'pausiert', 'beendet']
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const auth = await requireCoachUser()
+  const auth = await requireCoachUser({ schreibzugriff: true })
   if (!auth.ok) return auth.response
   const { id } = await params
 

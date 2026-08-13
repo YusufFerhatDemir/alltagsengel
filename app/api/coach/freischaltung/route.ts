@@ -24,12 +24,32 @@ import {
   hashCode, istCodeFormatGueltig, istFreigeschaltet,
   pruefeCodeGueltigkeit, codePraefix,
 } from '@/lib/coach/freischaltung'
-import { freischaltungPflicht } from '@/lib/coach/config'
+import { dipaModus, freischaltungPflicht } from '@/lib/coach/config'
 
 const FEHLER_UNGUELTIG = 'Dieser Code ist nicht gültig. Bitte prüfen Sie Ihre Eingabe.'
 
+/**
+ * Der Freischaltcode ist ein DiPA-/Pilot-Mechanismus. Sind beide Schalter
+ * aus, existiert er im Produkt nicht — die zugehörige Seite leitet dann um,
+ * und die API muss dasselbe tun. Sonst bliebe über die Route ein Teil des
+ * DiPA-Verfahrens erreichbar, den es im Normalbetrieb gar nicht gibt.
+ * 404 statt 403: Was es nicht gibt, soll sich auch nicht abfragen lassen.
+ */
+function freischaltungAktiv(): boolean {
+  return dipaModus() || freischaltungPflicht()
+}
+
+/** Neue Antwort je Aufruf — eine NextResponse-Instanz ist nicht wiederverwendbar. */
+function nichtVerfuegbar(): NextResponse {
+  return NextResponse.json(
+    { error: 'Eine Freischaltung ist für den PflegeCoach derzeit nicht vorgesehen.' },
+    { status: 404 }
+  )
+}
+
 /** Eigener Freischaltstatus. */
 export async function GET() {
+  if (!freischaltungAktiv()) return nichtVerfuegbar()
   const auth = await requireCoachUser()
   if (!auth.ok) return auth.response
 
@@ -51,6 +71,7 @@ export async function GET() {
 
 /** Code einlösen. */
 export async function POST(request: Request) {
+  if (!freischaltungAktiv()) return nichtVerfuegbar()
   const auth = await requireCoachUser()
   if (!auth.ok) return auth.response
 

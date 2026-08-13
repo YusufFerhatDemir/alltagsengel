@@ -7,7 +7,7 @@
 // Profil existiert — serverseitig gespeichert (geräteübergreifend).
 // ═══════════════════════════════════════════════════════════════
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import type { CoachSchriftgrad } from '@/lib/coach/types'
@@ -23,15 +23,61 @@ const NAV = [
   { href: '/pflegecoach/mobilitaet', label: 'Mobilität' },
   { href: '/pflegecoach/alltag', label: 'Alltag' },
   { href: '/pflegecoach/angehoerige', label: 'Für Angehörige' },
+  // Der Belastungs-Check war bisher nur über Querverweise erreichbar,
+  // obwohl er ein eigener Inhaltsbereich mit eigenem Verlauf ist.
+  { href: '/pflegecoach/belastung', label: 'Belastungs-Check' },
   { href: '/pflegecoach/verlauf', label: 'Verlauf' },
   { href: '/pflegecoach/bericht', label: 'Bericht' },
   { href: '/pflegecoach/einstellungen', label: 'Einstellungen' },
 ]
 
-export default function CoachShell({ children }: { children: React.ReactNode }) {
+/**
+ * Bereichsnamen für die Wechsel-Ansage (WCAG 4.1.3). Deckt auch die Seiten
+ * ab, die nicht in der Hauptnavigation stehen — sonst bliebe die Ansage
+ * beim Wechsel dorthin stumm.
+ */
+const BEREICH_NAMEN: Record<string, string> = {
+  ...Object.fromEntries(NAV.map(n => [n.href, n.label])),
+  '/pflegecoach/start': 'Willkommen und Zweckbestimmung',
+  '/pflegecoach/datenschutz': 'Datenschutzhinweise',
+  '/pflegecoach/loeschung': 'Daten löschen',
+  '/pflegecoach/anspruch': 'Anspruch prüfen',
+  '/pflegecoach/freischaltung': 'Zugang freischalten',
+}
+
+/**
+ * Zusatzpunkt, der NUR erscheint, wenn ein Freischaltverfahren tatsächlich
+ * aktiv ist (COACH_DIPA_MODUS oder COACH_FREISCHALTUNG_PFLICHT). Im
+ * Normalbetrieb ist der Punkt nicht bloß gesperrt, sondern gar nicht
+ * vorhanden — sonst stünde im Produkt eine Zugangshürde, die es nicht gibt.
+ * Der Wert kommt aus dem Server-Layout: Client-Komponenten können
+ * process.env nicht lesen.
+ */
+const NAV_FREISCHALTUNG = { href: '/pflegecoach/freischaltung', label: 'Zugang freischalten' }
+
+export default function CoachShell({
+  children,
+  zeigeFreischaltung = false,
+}: {
+  children: React.ReactNode
+  zeigeFreischaltung?: boolean
+}) {
   const pathname = usePathname()
+  const navPunkte = zeigeFreischaltung ? [...NAV, NAV_FREISCHALTUNG] : NAV
   const [schriftgrad, setSchriftgrad] = useState<CoachSchriftgrad>('normal')
   const [kontrast, setKontrast] = useState(false)
+  const [ansage, setAnsage] = useState('')
+  const ersterPfad = useRef(pathname)
+
+  // Seitenwechsel hörbar machen: Bei einer Navigation innerhalb der App wird
+  // das Dokument nicht neu geladen — Screenreader lesen den neuen Titel
+  // deshalb nicht vor, und der Fokus bleibt auf dem angeklickten Link.
+  // Die Ansage schließt diese Lücke. Beim ersten Aufruf bleibt sie leer,
+  // weil der Seitentitel dort bereits vorgelesen wird.
+  useEffect(() => {
+    if (pathname === ersterPfad.current) return
+    setAnsage(`${BEREICH_NAMEN[pathname] ?? 'PflegeCoach'} — Seite geladen`)
+  }, [pathname])
 
   useEffect(() => {
     // Bewusst setState im Effect: die Darstellungseinstellungen liegen in
@@ -119,7 +165,7 @@ export default function CoachShell({ children }: { children: React.ReactNode }) 
 
       <nav className="pc-nav" aria-label="PflegeCoach-Bereiche">
         <ul>
-          {NAV.map(item => {
+          {navPunkte.map(item => {
             const aktiv = item.href === '/pflegecoach' ? pathname === item.href : pathname.startsWith(item.href)
             return (
               <li key={item.href}>
@@ -129,6 +175,8 @@ export default function CoachShell({ children }: { children: React.ReactNode }) 
           })}
         </ul>
       </nav>
+
+      <p className="sr-only" role="status" aria-live="polite">{ansage}</p>
 
       <main id="pc-main" className="pc-container">
         {children}
@@ -146,7 +194,11 @@ export default function CoachShell({ children }: { children: React.ReactNode }) 
             <Link href="/pflegecoach/einstellungen">Datenexport &amp; Einwilligungen</Link>{' · '}
             <Link href="/pflegecoach/loeschung">Daten löschen</Link>
           </p>
-          <p aria-label="Produktversion">
+          {/* Kein aria-label auf dem Absatz: Die Rolle „paragraph" erlaubt keinen
+              zugänglichen Namen, das Attribut würde ignoriert. Der Hinweis steht
+              deshalb als echter, nur für Screenreader sichtbarer Text davor. */}
+          <p>
+            <span className="sr-only">Produktversion: </span>
             {COACH_PRODUKT_NAME} — Version {COACH_PRODUKT_VERSION} · Hersteller: Alltagsengel UG (haftungsbeschränkt)
           </p>
         </div>

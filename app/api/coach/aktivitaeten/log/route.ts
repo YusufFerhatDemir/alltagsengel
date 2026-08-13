@@ -28,7 +28,7 @@ export async function GET(request: Request) {
 
 /** Erledigung eintragen/ändern (Upsert je Aktivität+Tag). */
 export async function POST(request: Request) {
-  const auth = await requireCoachUser()
+  const auth = await requireCoachUser({ schreibzugriff: true })
   if (!auth.ok) return auth.response
 
   const body = await request.json().catch(() => ({}))

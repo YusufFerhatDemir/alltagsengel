@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react'
 import type { CoachReport } from '@/lib/coach/types'
 import { ASSESSMENT_BEREICH_LABELS, type AssessmentBereich } from '@/lib/coach/assessment'
 import { coachApi, useCoachProfil } from '../_lib/client'
+import { CoachLaden, CoachLadefehler } from '../_lib/Zustand'
 
 interface BerichtInhalt {
   zeitraum?: { von: string; bis: string }
@@ -16,7 +17,7 @@ interface BerichtInhalt {
 }
 
 export default function BerichtSeite() {
-  const { profil, laden, fehler } = useCoachProfil()
+  const { profil, laden, fehler, neuLaden } = useCoachProfil()
   const [berichte, setBerichte] = useState<CoachReport[]>([])
   const [offen, setOffen] = useState<CoachReport | null>(null)
   const [sende, setSende] = useState(false)
@@ -29,8 +30,8 @@ export default function BerichtSeite() {
 
   useEffect(() => { if (profil) lade() }, [profil])
 
-  if (laden) return <p role="status">Wird geladen …</p>
-  if (fehler) return <p className="pc-feedback pc-feedback--error" role="alert">{fehler}</p>
+  if (laden) return <CoachLaden />
+  if (fehler) return <CoachLadefehler fehler={fehler} neuLaden={neuLaden} />
   if (!profil) return null
 
   const erstellen = async () => {

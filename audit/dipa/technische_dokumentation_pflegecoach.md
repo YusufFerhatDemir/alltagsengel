@@ -90,13 +90,19 @@ voreingestellt (`lib/coach/config.ts`, dokumentiert in `.env.example`):
 
 | Variable | Default | Wirkung, wenn `true` |
 |----------|---------|----------------------|
-| `COACH_DIPA_MODUS` | aus | Anspruchsprüfung und Kostenträgerbezug werden sichtbar |
-| `COACH_FREISCHALTUNG_PFLICHT` | aus | Freischaltcode wird Zugangsvoraussetzung |
+| `COACH_DIPA_MODUS` | aus | Anspruchsprüfung und Kostenträgerbezug werden sichtbar; Seite, API-Route und Navigationspunkt existieren nur dann |
+| `COACH_FREISCHALTUNG_PFLICHT` | aus | Freischaltcode wird Zugangsvoraussetzung: ohne gültige Freischaltung lehnt `requireCoachUser({ schreibzugriff: true })` jeden Schreibzugriff ab (403) |
 | `COACH_NUTZUNGSNACHWEIS_AKTIV` | aus | Nutzungsereignisse werden erfasst — zusätzlich immer einwilligungsabhängig |
 | `COACH_CODE_PEPPER` | leer | Pfeffer für den Code-Hash; nachträgliche Änderung entwertet ausgegebene Codes |
 
 Der Auslieferungszustand ist damit: normaler digitaler Pflege- und
 Assistenzservice, ohne Kostenträgerbezug, ohne Zugangscode, ohne Ereigniserfassung.
+
+Dass die Schalter tatsächlich greifen, sichert `lib/coach/produktgrenze.test.ts`
+als Strukturtest ab: Er prüft, dass die DiPA-spezifischen Seiten und Routen an
+`dipaModus()`/`freischaltungPflicht()` gebunden sind, dass im ungegateten
+Produktbereich keine Erstattungs- oder Zulassungsaussage steht und dass keine
+schreibende Coach-Route die Einwilligungsprüfung auslässt.
 
 ## 6. Systemanforderungen
 

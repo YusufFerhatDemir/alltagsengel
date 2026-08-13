@@ -9,9 +9,10 @@ import Link from 'next/link'
 import type { CoachMeasurement } from '@/lib/coach/types'
 import { BELASTUNG_ITEMS, BELASTUNG_MAX, BELASTUNG_STUFEN } from '@/lib/coach/belastung'
 import { coachApi, useCoachProfil } from '../_lib/client'
+import { CoachLaden, CoachLadefehler } from '../_lib/Zustand'
 
 export default function BelastungSeite() {
-  const { profil, laden, fehler } = useCoachProfil()
+  const { profil, laden, fehler, neuLaden } = useCoachProfil()
   const [messungen, setMessungen] = useState<CoachMeasurement[]>([])
   const [antworten, setAntworten] = useState<Record<string, number>>({})
   const [sende, setSende] = useState(false)
@@ -24,8 +25,8 @@ export default function BelastungSeite() {
 
   useEffect(() => { if (profil) lade() }, [profil])
 
-  if (laden) return <p role="status">Wird geladen …</p>
-  if (fehler) return <p className="pc-feedback pc-feedback--error" role="alert">{fehler}</p>
+  if (laden) return <CoachLaden />
+  if (fehler) return <CoachLadefehler fehler={fehler} neuLaden={neuLaden} />
   if (!profil) return null
 
   const absenden = async (ev: React.FormEvent) => {

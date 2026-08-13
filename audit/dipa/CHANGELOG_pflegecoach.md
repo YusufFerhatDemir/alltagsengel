@@ -4,6 +4,61 @@ Separater Versionsstrang des DiPA-Produkts (unabhängig von Plattform-Deployment
 Jede MINOR-/MAJOR-Änderung ist vor Release regulatorisch zu bewerten
 (Änderungsanzeige? — BfArM-Frage 20, `bfarm_fragenkatalog.md`).
 
+## 0.4.0 — 2026-08-13 (Widerruf wirkt, Schalter greifen, keine Sackgassen)
+
+**Regulatorische Bewertung dieser MINOR-Änderung:** Die Zweckbestimmung bleibt
+unverändert. Es kommt keine Funktion hinzu, die den Nutzen für die betroffene
+Person verändert; es entfällt auch keine. Die Änderungen betreffen die
+Durchsetzung der Einwilligung, die Wirksamkeit der Produktschalter und die
+Fehlerführung. Ob daraus eine Anzeigepflicht folgt, ist mit BfArM-Frage 20 zu
+klären. `COACH_DIPA_MODUS` bleibt Default `false`.
+
+- **Widerruf der Pflicht-Einwilligung wirkt jetzt (Art. 7 Abs. 3 DSGVO).**
+  Bisher war der Widerruf folgenlos: Die Oberfläche kündigte an, der
+  PflegeCoach lasse sich danach nicht weiter nutzen — tatsächlich lief alles
+  unverändert weiter. Neu prüft `requireCoachUser({ schreibzugriff: true })`
+  vor jedem Schreibzugriff die Einwilligung (`lib/coach/consent.ts`) und
+  antwortet sonst mit 403. Bewusst weiterhin offen bleiben Lesen, Datenexport
+  (Art. 15/20), Löschung (Art. 17) und das erneute Erteilen — sonst wäre der
+  Widerruf eine Falle. Bestehende Daten werden nicht automatisch gelöscht;
+  die Löschung bleibt ein ausdrücklicher, eigener Schritt.
+- **`COACH_FREISCHALTUNG_PFLICHT` war ein wirkungsloser Schalter.** Er wurde
+  nur angezeigt, nie durchgesetzt. Ist er aktiv, sperrt er nun Schreibzugriffe
+  bis zur Freischaltung. Solange er aus ist (Normalbetrieb), entsteht keine
+  zusätzliche Abfrage.
+- **Freischaltungs-API gegatet.** `/api/coach/freischaltung` war auch dann
+  erreichbar, wenn beide Schalter aus waren — die Seite leitete um, die Route
+  nicht. Sie antwortet jetzt mit 404. Der Navigationspunkt „Zugang
+  freischalten" erscheint nur, wenn ein Verfahren tatsächlich aktiv ist.
+- **Onboarding ist abbruchfest.** Ein zwischen Profilanlage und Einwilligung
+  abgebrochener Anlauf endete in einem stillen Zwischenzustand: Profil
+  vorhanden, Einwilligung fehlt, jeder spätere Speicherversuch scheitert.
+  `/pflegecoach/start` erkennt das jetzt und holt gezielt den fehlenden
+  Schritt nach; ein bereits vorhandenes Profil (409) ist kein Fehlerfall mehr.
+- **Erste Schritte:** Nach dem Onboarding führt die Übersicht durch
+  Assessment, erstes Ziel und erste Aktivität. Die Karte verschwindet, sobald
+  alle drei erledigt sind.
+- **Belastungs-Check in der Hauptnavigation** — er war bisher nur über
+  Querverweise erreichbar, obwohl er ein eigener Inhaltsbereich mit eigenem
+  Verlauf ist.
+- **Keine Sackgassen mehr:** eigene Fehlergrenze (`error.tsx`) und 404-Seite
+  (`not-found.tsx`) innerhalb der Produkt-Shell statt der Plattform-Seiten;
+  Lösch- und Freischaltseite blieben bei einem Ladefehler dauerhaft auf
+  „Wird geladen …" stehen; ungültige Fortschrittseingaben bei Zielen wurden
+  stillschweigend verworfen.
+- **Netzwerkfehler auf Deutsch:** Ein Verbindungsabbruch zeigte der Zielgruppe
+  bisher die Browser-Meldung „Failed to fetch". Jetzt erscheint ein
+  verständlicher Hinweis mit Schaltfläche „Erneut versuchen".
+- **Einstellungen verwiesen falsch** auf Konto-Löschung und Support, obwohl
+  die produkteigene Löschung (`/pflegecoach/loeschung`) längst existiert.
+  Datenschutzhinweise um Widerrufswirkung und Selbstlöschung ergänzt.
+- **Neue Tests:** Schalter-Semantik (`config.test.ts`), Einwilligungs-
+  Auswertung (`consent.test.ts`) und ein Strukturtest der Produktgrenze
+  (`produktgrenze.test.ts`) — er schlägt an, wenn im ungegateten
+  Produktbereich eine Erstattungs- oder Zulassungsaussage auftaucht, ein
+  DiPA-Gate fehlt oder eine neue Schreibroute die Einwilligungsprüfung
+  auslässt.
+
 ## 0.3.0 — 2026-08-13 (Betrieb als normaler Service, Zulassungsunterlagen)
 
 **Regulatorische Bewertung dieser MINOR-Änderung:** Die Zweckbestimmung bleibt

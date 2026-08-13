@@ -46,6 +46,8 @@ export default function KassenabrechnungPage() {
       </p>
       <p style={{ marginBottom: 24, display: 'flex', gap: 16, flexWrap: 'wrap' }}>
         <Link href="/admin/kassenabrechnung/readiness">→ Bereitschaft prüfen (Ampel: Stammdaten, Zertifikate, Übertragung)</Link>
+        <Link href="/admin/kassenabrechnung/betrieb">→ Betrieb (Kanäle, Test-/Echtbetrieb, Zugangsmittel, Fehlerqueue)</Link>
+        <Link href="/admin/kassenabrechnung/wiedervorlage">→ Rückläufer &amp; Wiedervorlagen</Link>
         <Link href="/admin/kassenabrechnung/stammdaten">→ Stammdaten pflegen (Kostenträger, Datenannahmestellen)</Link>
         <Link href="/admin/kassenabrechnung/tarife">→ Tarife &amp; Verifizierungsstatus</Link>
       </p>

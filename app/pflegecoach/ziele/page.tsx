@@ -6,13 +6,14 @@ import { useEffect, useState } from 'react'
 import type { CoachGoal, ZielBereich, ZielStatus } from '@/lib/coach/types'
 import { BEREICH_LABELS } from '@/lib/coach/types'
 import { coachApi, useCoachProfil } from '../_lib/client'
+import { CoachLaden, CoachLadefehler } from '../_lib/Zustand'
 
 const STATUS_LABELS: Record<ZielStatus, string> = {
   aktiv: 'Aktiv', erreicht: 'Erreicht', angepasst: 'Angepasst', pausiert: 'Pausiert', beendet: 'Beendet',
 }
 
 export default function ZieleSeite() {
-  const { profil, laden, fehler } = useCoachProfil()
+  const { profil, laden, fehler, neuLaden } = useCoachProfil()
   const [ziele, setZiele] = useState<CoachGoal[]>([])
   const [meldung, setMeldung] = useState<{ art: 'ok' | 'error'; text: string } | null>(null)
 
@@ -32,8 +33,8 @@ export default function ZieleSeite() {
 
   useEffect(() => { if (profil) lade() }, [profil])
 
-  if (laden) return <p role="status">Wird geladen …</p>
-  if (fehler) return <p className="pc-feedback pc-feedback--error" role="alert">{fehler}</p>
+  if (laden) return <CoachLaden />
+  if (fehler) return <CoachLadefehler fehler={fehler} neuLaden={neuLaden} />
   if (!profil) return null
 
   const anlegen = async (ev: React.FormEvent) => {
@@ -60,6 +61,22 @@ export default function ZieleSeite() {
     } finally {
       setSende(false)
     }
+  }
+
+  /**
+   * Fortschritt eintragen. Bisher wurde eine ungültige Eingabe stillschweigend
+   * verworfen — der Nutzer sah nur, dass „nichts passiert". Jetzt gibt es
+   * jedes Mal eine Rückmeldung.
+   */
+  const eintragen = (z: CoachGoal) => {
+    const wert = window.prompt(`Aktueller Wert für „${z.messgroesse}":`, String(z.aktueller_wert ?? ''))
+    if (wert === null) return // abgebrochen — bewusst kommentarlos
+    const zahl = Number(wert.replace(',', '.'))
+    if (wert.trim() === '' || !Number.isFinite(zahl)) {
+      setMeldung({ art: 'error', text: 'Bitte eine Zahl eingeben — der Fortschritt wurde nicht gespeichert.' })
+      return
+    }
+    aktualisiere(z.id, { aktueller_wert: zahl })
   }
 
   const aktualisiere = async (id: string, update: Record<string, unknown>) => {
@@ -143,12 +160,7 @@ export default function ZieleSeite() {
                 {z.messgroesse && (
                   <button
                     type="button" className="pc-btn pc-btn--secondary pc-btn--small"
-                    onClick={() => {
-                      const wert = window.prompt(`Aktueller Wert für „${z.messgroesse}":`, String(z.aktueller_wert ?? ''))
-                      if (wert !== null && wert !== '' && Number.isFinite(Number(wert))) {
-                        aktualisiere(z.id, { aktueller_wert: Number(wert) })
-                      }
-                    }}
+                    onClick={() => eintragen(z)}
                   >
                     Fortschritt eintragen
                   </button>

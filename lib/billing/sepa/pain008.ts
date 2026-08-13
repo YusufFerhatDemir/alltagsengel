@@ -3,6 +3,8 @@
 // Erzeugt ISO 20022 XML für SEPA-Basislastschrift (CORE)
 // ═══════════════════════════════════════════════════════════════
 
+import { pruefeGlaeubigerIdOderWerfe } from './glaeubiger-id'
+
 export interface SepaCreditor {
   name: string          // Gläubiger-Name (max 70 Zeichen)
   iban: string          // Gläubiger-IBAN
@@ -69,6 +71,11 @@ export function generatePain008(options: SepaPain008Options): string {
   if (items.length === 0) {
     throw new Error('Mindestens eine Lastschrift-Position erforderlich.')
   }
+
+  // Letzte Sperre gegen Platzhalter-Gläubiger-IDs. Sie sitzt bewusst hier und
+  // nicht nur im aufrufenden Service: dies ist die einzige Stelle, an der ein
+  // einziehbares pain.008 entsteht. Jeder künftige Aufrufer läuft dagegen.
+  pruefeGlaeubigerIdOderWerfe(creditor.creditorId)
 
   const totalCents = items.reduce((sum, i) => sum + i.amountCents, 0)
   const numberOfTransactions = items.length

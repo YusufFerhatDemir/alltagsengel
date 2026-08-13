@@ -48,6 +48,8 @@ export const AUDIT_ENTITY_TYPES = [
   'kim_konfiguration', 'kim_formatversion', 'kim_karte', 'kim_nachricht',
   // Versandpipeline (Stream 2) — Migration 20260902010000
   'dta_versand', 'dta_wiedervorlage', 'dta_fehlercode',
+  // Betriebsreife (Stream 2) — Migration 20260903010000
+  'abrechnung_betriebsmodus', 'abrechnung_credential', 'dta_dead_letter',
 ] as const;
 
 export type AuditEntityType = (typeof AUDIT_ENTITY_TYPES)[number];

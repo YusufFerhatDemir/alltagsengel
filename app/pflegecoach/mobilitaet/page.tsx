@@ -7,15 +7,16 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { INHALT_ENTWURF_HINWEIS, UEBUNGEN, WOHNRAUM_CHECK } from '@/lib/coach/inhalte'
 import { coachApi, useCoachProfil } from '../_lib/client'
+import { CoachLaden, CoachLadefehler } from '../_lib/Zustand'
 
 export default function MobilitaetSeite() {
-  const { profil, laden, fehler } = useCoachProfil()
+  const { profil, laden, fehler, neuLaden } = useCoachProfil()
   const [abgehakt, setAbgehakt] = useState<Set<string>>(new Set())
   const [meldung, setMeldung] = useState<{ art: 'ok' | 'error'; text: string } | null>(null)
   const [sende, setSende] = useState(false)
 
-  if (laden) return <p role="status">Wird geladen …</p>
-  if (fehler) return <p className="pc-feedback pc-feedback--error" role="alert">{fehler}</p>
+  if (laden) return <CoachLaden />
+  if (fehler) return <CoachLadefehler fehler={fehler} neuLaden={neuLaden} />
   if (!profil) return null
 
   const sturzNotieren = async () => {

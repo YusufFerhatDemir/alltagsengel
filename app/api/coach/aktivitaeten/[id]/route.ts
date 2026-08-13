@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { requireCoachUser } from '@/lib/coach/api-auth'
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const auth = await requireCoachUser()
+  const auth = await requireCoachUser({ schreibzugriff: true })
   if (!auth.ok) return auth.response
   const { id } = await params
 

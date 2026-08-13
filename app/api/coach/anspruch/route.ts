@@ -33,7 +33,7 @@ export async function POST(request: Request) {
   if (!dipaModus()) {
     return NextResponse.json({ error: 'Anspruchsprüfung ist nur im DiPA-Modus verfügbar.' }, { status: 404 })
   }
-  const auth = await requireCoachUser()
+  const auth = await requireCoachUser({ schreibzugriff: true })
   if (!auth.ok) return auth.response
 
   const body = await request.json().catch(() => ({}))
