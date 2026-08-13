@@ -59,7 +59,7 @@ function leereMesswerte(): Messwerte {
     kimKarten: [],
     kimVersionen: [],
     bewertungen: [],
-    testOrganisationen: 0,
+    testMandanten: [],
     anonBewertungen: { lesbar: false, quelle: '0 Zeilen' },
     fehler: [],
   }
@@ -268,9 +268,23 @@ describe('Production', () => {
   })
 
   test('Testmandanten in der Produktions-DB blockieren', () => {
-    const m = { ...interneMesswerte(), testOrganisationen: 2 }
+    const m = { ...interneMesswerte(), testMandanten: [{ id: 'a', name: 'E2E_TEST_A' }, { id: 'b', name: 'E2E_TEST_B' }] }
     const b = hole(baueBereiche(m), 'production')
     assert.equal(b.status, 'blocked')
+    // Der Wert muss die Mandanten benennen — eine blosse Zahl sagt nicht,
+    // welcher Datensatz weg soll.
+    const p = b.pruefungen.find(x => x.label.includes('Testmandanten'))
+    assert.ok(p)
+    assert.match(p.wert, /E2E_TEST_A/)
+    assert.match(p.wert, /E2E_TEST_B/)
+  })
+
+  test('nicht prüfbare Testmandanten-Abfrage gilt als nicht erfüllt', () => {
+    const m = { ...interneMesswerte(), testMandanten: null }
+    const p = hole(baueBereiche(m), 'production').pruefungen.find(x => x.label.includes('Testmandanten'))
+    assert.ok(p)
+    assert.equal(p.erfuellt, false)
+    assert.equal(p.wert, 'nicht prüfbar')
   })
 
   test('fehlende Pflicht-Env-Variablen werden benannt', () => {
