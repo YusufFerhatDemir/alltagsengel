@@ -123,7 +123,7 @@ export default function EngelBestaetigtPage() {
               <button className="action-btn"><IconPin size={15} /> Navigation</button>
             </a>
           ) : (
-            <button className="action-btn" disabled><IconPin size={15} /> Navigation</button>
+            <button className="action-btn" disabled title="Keine Adresse hinterlegt"><IconPin size={15} /> Navigation</button>
           )}
           <Link href="/engel/kalender"><button className="action-btn"><IconCalendar size={15} /> Kalender</button></Link>
           <Link href="/engel/home"><button className="action-btn primary"><IconHouse size={15} /> Dashboard</button></Link>
