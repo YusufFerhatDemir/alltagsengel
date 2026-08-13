@@ -110,8 +110,9 @@ export default function StammdatenPage() {
         Kostenträger, Datenannahmestellen und deren Zuordnung. Jede IK-Nummer wird
         gegen die Prüfziffer nach § 293 SGB V validiert.
       </p>
-      <p style={{ marginBottom: 24 }}>
+      <p style={{ marginBottom: 24, display: 'flex', gap: 16, flexWrap: 'wrap' }}>
         <Link href="/admin/kassenabrechnung/readiness">→ Bereitschaft prüfen</Link>
+        <Link href="/admin/kassenabrechnung/tarife">→ Tarife &amp; Verifizierungsstatus</Link>
       </p>
 
       {fehler && <Banner tone="danger">{fehler}</Banner>}

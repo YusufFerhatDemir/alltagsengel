@@ -243,14 +243,22 @@ describe('P0-3: tariffs POST erzwingt organizationId aus der Auth', () => {
     const at = src.indexOf('.insert(')
     expect(at, 'kein billing_tariffs-Insert gefunden').toBeGreaterThan(-1)
     const insert = src.slice(at, src.indexOf('\n', at))
-    // Der Body darf nicht mehr roh durchgereicht werden.
+    // Der Body darf nicht mehr roh durchgereicht werden — auch nicht als
+    // vollstaendiger Spread. Seit dem Tarif-Verifizierungs-Fail-Closed-Fix
+    // wird zuerst tarif_status/verifiziert_* aus dem Body herausdestrukturiert
+    // (tarifDaten = body OHNE diese Felder), erst DANN gespreadet.
     expect(insert, 'Body wird ungeprueft eingefuegt (.insert(body))').not.toMatch(/\.insert\(body\)/)
+    expect(insert, 'roher ...body-Spread statt gefilterter ...tarifDaten').not.toMatch(/\.\.\.body\b/)
     expect(insert).toMatch(/organization_id:\s*organizationId/)
     // Reihenfolge: Spread zuerst, Auth-Wert gewinnt.
-    const spreadAt = insert.indexOf('...body')
+    const spreadAt = insert.indexOf('...tarifDaten')
     const orgAt = insert.indexOf('organization_id:')
-    expect(spreadAt, 'kein ...body-Spread im Insert').toBeGreaterThan(-1)
-    expect(spreadAt, 'organization_id muss NACH dem ...body-Spread stehen').toBeLessThan(orgAt)
+    expect(spreadAt, 'kein ...tarifDaten-Spread im Insert').toBeGreaterThan(-1)
+    expect(spreadAt, 'organization_id muss NACH dem ...tarifDaten-Spread stehen').toBeLessThan(orgAt)
+  })
+
+  it('tarifDaten entsteht durch Destrukturierung aus body, ist kein neues, ungeprueftes Objekt', () => {
+    expect(src).toMatch(/const\s*\{[\s\S]*?\.\.\.tarifDaten\s*\}\s*=\s*body\s+as\s+Record<string,\s*unknown>/)
   })
 })
 
