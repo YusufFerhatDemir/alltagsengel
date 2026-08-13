@@ -210,6 +210,18 @@
 }
 .pc-badge--entwurf { border-color: var(--pc-warn); color: var(--pc-warn); }
 
+/* Leistungsumfang (Produktseite) — Begriff + Erklärung als Definitionsliste.
+   Grid statt fester Spaltenbreite: skaliert mit dem eingestellten Schriftgrad
+   mit, statt bei „sehr groß" umzubrechen. */
+.pc-leistungen { margin: 0 0 12px; }
+.pc-leistungen > div {
+  padding: 12px 0;
+  border-bottom: 1px solid var(--pc-border);
+}
+.pc-leistungen > div:last-child { border-bottom: none; }
+.pc-leistungen dt { font-weight: 700; }
+.pc-leistungen dd { margin: 4px 0 0; color: var(--pc-text-soft); }
+
 /* Tabellen (Verlauf) */
 .pc-table-wrap { overflow-x: auto; }
 .pc-table { border-collapse: collapse; width: 100%; }

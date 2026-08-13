@@ -21,7 +21,10 @@ export default function PflegeCoachLayout({ children }: { children: React.ReactN
   // So bleibt der Freischalt-Punkt im Normalbetrieb nicht nur unerreichbar,
   // sondern taucht in der Navigation gar nicht erst auf.
   return (
-    <CoachShell zeigeFreischaltung={dipaModus() || freischaltungPflicht()}>
+    <CoachShell
+      zeigeFreischaltung={dipaModus() || freischaltungPflicht()}
+      dipaAktiv={dipaModus()}
+    >
       {children}
     </CoachShell>
   )

@@ -18,28 +18,106 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import type { CoachRolle, CoachUser } from '@/lib/coach/types'
 import { ROLLE_LABELS } from '@/lib/coach/types'
+import { COACH_SUPPORT_EMAIL } from '@/lib/coach/version'
 import { coachApi, CoachApiError } from '../_lib/client'
+import { useDipaModus } from '../_lib/Modus'
 import { CoachLaden, CoachLadefehler } from '../_lib/Zustand'
 
 const ZURUECK = encodeURIComponent('/pflegecoach/start')
 
-/** Zweckbestimmung + Produktgrenze — identisch für an- und abgemeldete Sicht. */
+/**
+ * Leistungsumfang — die acht Bereiche, die das Produkt heute wirklich
+ * enthält. Jeder Punkt entspricht einem gebauten Bereich in der
+ * Navigation; hier darf nichts stehen, das es nicht gibt.
+ */
+const LEISTUNGSUMFANG: Array<{ titel: string; text: string }> = [
+  {
+    titel: 'Pflegeassessment',
+    text: 'Strukturierte Selbsteinschätzung der Lebensbereiche — der Ausgangspunkt für alles Weitere.',
+  },
+  {
+    titel: 'Ziele',
+    text: 'Eigene, konkrete Ziele festhalten und ihren Stand über die Zeit nachhalten.',
+  },
+  {
+    titel: 'Aktivitäten',
+    text: 'Wiederkehrende Aufgaben und Übungen anlegen, abhaken und nachvollziehen.',
+  },
+  {
+    titel: 'Wochenplan',
+    text: 'Aktivitäten auf Wochentage und Uhrzeiten verteilen — Struktur für den Alltag.',
+  },
+  {
+    titel: 'Mobilität',
+    text: 'Anleitungen zu Bewegung, Sturzvermeidung und sicherem Bewegen in der Wohnung.',
+  },
+  {
+    titel: 'Angehörigen-Entlastung',
+    text: 'Wissensmodule für pflegende Angehörige und ein Belastungs-Check mit eigenem Verlauf.',
+  },
+  {
+    titel: 'Verlauf',
+    text: 'Entwicklung der Selbsteinschätzungen, Ziele und Erledigungen über Wochen und Monate.',
+  },
+  {
+    titel: 'Bericht',
+    text: 'Druckbarer Verlaufsbericht — etwa für das Gespräch mit Ärztin, Arzt oder Pflegedienst.',
+  },
+]
+
+/**
+ * Zweckbestimmung + Produktgrenze — identisch für an- und abgemeldete Sicht.
+ *
+ * Die Negativabgrenzung steht bewusst hier und nicht nur im Marketing:
+ * Sie ist Teil der Zweckbestimmung und muss jeder sehen, der das Produkt
+ * einrichtet — nicht nur der, der die Verkaufsseite gelesen hat.
+ */
 function Zweckbestimmung() {
+  // Der Selbstzahler-Hinweis ist an COACH_DIPA_MODUS gebunden: Er ist
+  // heute richtig und wäre in einem tatsächlichen DiPA-Verfahren falsch.
+  const dipaAktiv = useDipaModus()
+
   return (
-    <section className="pc-card" aria-labelledby="zweck-titel">
-      <h2 id="zweck-titel">Was dieser PflegeCoach ist</h2>
-      <p>
-        Der Digitale PflegeCoach unterstützt Pflegebedürftige in häuslicher Versorgung sowie
-        ihre pflegenden Angehörigen mit strukturierten Anleitungs-, Erinnerungs- und
-        Dokumentationsfunktionen: Selbständigkeit im Alltag erhalten, die häusliche Versorgung
-        stabilisieren und Angehörige entlasten.
-      </p>
-      <p>
-        <strong>Was er nicht ist:</strong> Der PflegeCoach dient nicht der Erkennung, Behandlung
-        oder Überwachung von Krankheiten und trifft keine diagnostischen oder therapeutischen
-        Entscheidungen. Er ersetzt keine ärztliche oder pflegefachliche Beratung.
-      </p>
-    </section>
+    <>
+      <section className="pc-card" aria-labelledby="zweck-titel">
+        <h2 id="zweck-titel">Was dieser PflegeCoach ist</h2>
+        <p>
+          Der Digitale PflegeCoach unterstützt Pflegebedürftige in häuslicher Versorgung sowie
+          ihre pflegenden Angehörigen mit strukturierten Anleitungs-, Erinnerungs- und
+          Dokumentationsfunktionen: Selbständigkeit im Alltag erhalten, die häusliche Versorgung
+          stabilisieren und Angehörige entlasten.
+        </p>
+        <p>
+          <strong>Was er nicht ist:</strong> Der PflegeCoach dient nicht der Erkennung, Behandlung
+          oder Überwachung von Krankheiten und trifft keine diagnostischen oder therapeutischen
+          Entscheidungen. Er ersetzt keine ärztliche oder pflegefachliche Beratung.
+        </p>
+      </section>
+
+      <section className="pc-card" aria-labelledby="abgrenzung-titel">
+        <h2 id="abgrenzung-titel">Wichtig zu wissen</h2>
+        <ul style={{ paddingLeft: 20 }}>
+          <li>
+            <strong>Dies ist kein medizinisches Produkt.</strong> Der PflegeCoach ist kein
+            Medizinprodukt im Sinne der Medizinprodukte-Verordnung und stellt keine Diagnosen,
+            spricht keine Therapieempfehlungen aus und überwacht keine Krankheitsverläufe.
+          </li>
+          {!dipaAktiv && (
+            <li>
+              <strong>Dies ist keine Kassenleistung.</strong> Der PflegeCoach ist keine Leistung
+              der gesetzlichen Pflege- oder Krankenversicherung. Es findet keine Abrechnung mit
+              Pflege- oder Krankenkassen statt; einen Anspruch gegenüber Ihrer Kasse gibt es
+              nicht. Die Nutzung erfolgt als privat zu zahlendes Angebot.
+            </li>
+          )}
+          <li>
+            <strong>Kein Ersatz für Versorgung.</strong> Der PflegeCoach ersetzt weder ärztliche
+            oder pflegefachliche Beratung noch einen Pflegedienst. In Notfällen wählen Sie
+            bitte die 112.
+          </li>
+        </ul>
+      </section>
+    </>
   )
 }
 
@@ -146,14 +224,19 @@ export default function CoachStart() {
         <Zweckbestimmung />
 
         <section className="pc-card" aria-labelledby="funktionen-titel">
-          <h2 id="funktionen-titel">Diese Bereiche stehen bereit</h2>
-          <ul style={{ paddingLeft: 20 }}>
-            <li>Pflegeassessment zur Selbsteinschätzung, mit Verlauf über die Zeit</li>
-            <li>Persönliche Ziele und ein Wochenplan mit wiederkehrenden Aktivitäten</li>
-            <li>Anleitungen zu Mobilität, Alltag und Selbstversorgung</li>
-            <li>Belastungs-Selbsteinschätzung und Wissensmodule für Angehörige</li>
-            <li>Verlaufsbericht zum Ausdrucken und Datenexport für Sie selbst</li>
-          </ul>
+          <h2 id="funktionen-titel">Das ist enthalten</h2>
+          <dl className="pc-leistungen">
+            {LEISTUNGSUMFANG.map(l => (
+              <div key={l.titel}>
+                <dt>{l.titel}</dt>
+                <dd>{l.text}</dd>
+              </div>
+            ))}
+          </dl>
+          <p>
+            Alle Ihre Eingaben können Sie jederzeit selbst herunterladen und selbst
+            vollständig löschen.
+          </p>
         </section>
 
         <section className="pc-card" aria-labelledby="zugang-titel">
@@ -163,12 +246,33 @@ export default function CoachStart() {
             geschützt und nur für Sie sichtbar. Wie wir sie verarbeiten, steht in den{' '}
             <Link href="/pflegecoach/datenschutz">Datenschutzhinweisen</Link>.
           </p>
+          <p>
+            Sie sind unsicher, ob der PflegeCoach zu Ihrer Situation passt, oder möchten die
+            Konditionen besprechen? Schreiben Sie uns — wir melden uns bei Ihnen zurück.
+          </p>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
-            <Link className="pc-btn" href={`/auth/login?redirectTo=${ZURUECK}`}>Anmelden</Link>
-            {/* /auth/register wertet redirectTo nicht aus — deshalb ohne Parameter,
-                statt einen Rücksprung zu versprechen, den es nicht gibt. */}
-            <Link className="pc-btn pc-btn--secondary" href="/auth/register">Konto anlegen</Link>
+            <Link className="pc-btn" href="/auth/register">Konto anlegen</Link>
+            <Link className="pc-btn pc-btn--secondary" href="/pflegecoach/anfrage">
+              Anfrage stellen
+            </Link>
+            <Link className="pc-btn pc-btn--secondary" href={`/auth/login?redirectTo=${ZURUECK}`}>
+              Ich habe schon ein Konto
+            </Link>
           </div>
+          {/* Hinweis statt Rücksprung-Versprechen: /auth/register wertet
+              redirectTo nicht aus, deshalb steht der Weg zurück als Text da. */}
+          <p className="pc-lead">
+            Nach der Registrierung kommen Sie über diese Seite zurück in den PflegeCoach.
+          </p>
+        </section>
+
+        <section className="pc-card" aria-labelledby="hilfe-titel">
+          <h2 id="hilfe-titel">Hilfe und Kontakt</h2>
+          <p>
+            Bei Fragen zum Produkt erreichen Sie uns per E-Mail unter{' '}
+            <a href={`mailto:${COACH_SUPPORT_EMAIL}`}>{COACH_SUPPORT_EMAIL}</a>.
+            Bitte senden Sie uns keine Gesundheitsdaten per E-Mail.
+          </p>
         </section>
       </>
     )
