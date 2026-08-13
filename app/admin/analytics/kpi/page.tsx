@@ -95,7 +95,7 @@ export default function AdminKpiDashboardPage() {
                 : '— (keine Datenquelle)'}
             </div>
             <div className="admin-stat-label">
-              Pflegequalität {data.pflegequalitaet.datenquelle === 'zufriedenheitsanrufe' ? `(Ø aus ${data.pflegequalitaet.anzahlBewertungen} Zufriedenheitsanrufen)` : '— TODO: weitere Datenquelle klären'}
+              Pflegequalität {data.pflegequalitaet.datenquelle === 'zufriedenheitsanrufe' ? `(Ø aus ${data.pflegequalitaet.anzahlBewertungen} Zufriedenheitsanrufen)` : '— keine Datenquelle konfiguriert'}
             </div>
           </div>
         </div>

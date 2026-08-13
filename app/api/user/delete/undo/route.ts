@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
     const url = new URL(request.url)
     const token = (url.searchParams.get('token') || '').trim()
     if (!token || token.length < 16) {
-      return redirect('/login?undo_error=invalid_token')
+      return redirect('/auth/login?undo_error=invalid_token')
     }
 
     const adminClient = createAdminClient()
@@ -53,15 +53,15 @@ export async function GET(request: NextRequest) {
       .maybeSingle()
 
     if (tokErr || !tokenRow) {
-      return redirect('/login?undo_error=token_not_found')
+      return redirect('/auth/login?undo_error=token_not_found')
     }
 
     // 2) Validitaet pruefen
     if (tokenRow.confirmed_at) {
-      return redirect('/login?undo_error=already_used')
+      return redirect('/auth/login?undo_error=already_used')
     }
     if (new Date(tokenRow.expires_at).getTime() < Date.now()) {
-      return redirect('/login?undo_error=expired')
+      return redirect('/auth/login?undo_error=expired')
     }
 
     // 3) Profil reaktivieren
@@ -76,7 +76,7 @@ export async function GET(request: NextRequest) {
 
     if (!profileSnapshot) {
       // Profil existiert nicht mehr (Hard-Delete bereits durchgelaufen?)
-      return redirect('/login?undo_error=account_already_deleted')
+      return redirect('/auth/login?undo_error=account_already_deleted')
     }
 
     // Wenn deleted_at bereits NULL ist, ist der Account schon aktiv —
@@ -91,7 +91,7 @@ export async function GET(request: NextRequest) {
           code: (undelErr as any)?.code,
           name: (undelErr as any)?.name,
         })
-        return redirect('/login?undo_error=server_error')
+        return redirect('/auth/login?undo_error=server_error')
       }
     }
 
@@ -129,12 +129,12 @@ export async function GET(request: NextRequest) {
       request,
     })
 
-    return redirect('/login?reactivated=1')
+    return redirect('/auth/login?reactivated=1')
   } catch (err: any) {
     console.error('user/delete/undo unexpected error:', {
       code: err?.code,
       name: err?.name,
     })
-    return redirect('/login?undo_error=server_error')
+    return redirect('/auth/login?undo_error=server_error')
   }
 }

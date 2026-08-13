@@ -168,7 +168,7 @@ export default function NotfallPage() {
 
   async function loadData() {
     const { data: { user } } = await supabase.auth.getUser()
-    if (!user) { router.push('/login'); return }
+    if (!user) { router.push('/auth/login'); return }
     setUser(user)
 
     const [medsRes, notfallRes] = await Promise.all([
