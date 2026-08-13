@@ -8,6 +8,19 @@ import { DUNNING_LABELS, DUNNING_FEES_CENTS, type DunningLevel } from '../core/d
 import { logBillingAction } from '../core/audit'
 import { berlinParts, datumBerlin, heuteBerlin } from '@/lib/utils/timezone';
 
+/**
+ * Absender-Rückfall, falls die Organisation keine Anschrift gepflegt hat.
+ * Bewusst als lokale Konstante statt Import aus lib/pdf/briefkopf — dort
+ * hängt pdf-lib mit dran, das dieses Modul nicht braucht.
+ * Quelle: app/impressum/page.tsx.
+ */
+const ABSENDER_FALLBACK = {
+  firma: 'Alltagsengel UG (haftungsbeschränkt)',
+  strasse: 'Neue Mainzer Straße 66-68',
+  ort: '60311 Frankfurt am Main',
+  email: 'info@alltagsengel.care',
+} as const
+
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
@@ -211,22 +224,33 @@ export async function createMahnungDocument(
 ) {
   const { organizationId, invoiceId, dunningEntryId, dunningLevel, actorId } = params
 
-  // Org-Daten laden
-  const { data: org } = await supabase
+  // Org-Daten laden.
+  // LIVE-SCHEMA: organizations hat KEINE Spalten street/zip/city/phone/email.
+  // Die Anschrift steckt im JSONB `address` ({strasse, plz, ort, bundesland}),
+  // Telefon und E-Mail gibt es dort gar nicht — die stehen im Briefkopf.
+  // Ein Select auf die alten Spaltennamen scheiterte mit 42703, `org` war
+  // null und die Mahnung brach mit „Organisation nicht gefunden" ab.
+  const { data: org, error: orgErr } = await supabase
     .from('organizations')
-    .select('name, street, zip, city, phone, email, iban, bic')
+    .select('name, address, iban, bic')
     .eq('id', organizationId)
     .single()
 
+  if (orgErr) throw new Error(`Organisation nicht lesbar: ${orgErr.message}`)
   if (!org) throw new Error('Organisation nicht gefunden')
 
-  // Rechnung + Client laden
-  const { data: inv } = await supabase
+  const orgAdresse = (org.address ?? {}) as { strasse?: string; plz?: string; ort?: string }
+
+  // Rechnung + Client laden.
+  // invoices hat kein invoice_date (created_at ist das Belegdatum), und
+  // clients heißen die Adressfelder address/zip_code/city.
+  const { data: inv, error: invErr } = await supabase
     .from('invoices')
-    .select('id, invoice_number, invoice_number_formatted, invoice_date, total_amount, paid_amount, due_date, client:clients(first_name, last_name, street, zip, city)')
+    .select('id, invoice_number, invoice_number_formatted, created_at, total_amount, paid_amount, due_date, client:clients(first_name, last_name, address, zip_code, city)')
     .eq('id', invoiceId)
     .single()
 
+  if (invErr) throw new Error(`Rechnung ${invoiceId} nicht lesbar: ${invErr.message}`)
   if (!inv) throw new Error(`Rechnung ${invoiceId} nicht gefunden`)
 
   // Dunning-Entry laden
@@ -252,25 +276,26 @@ export async function createMahnungDocument(
   const invNum = inv.invoice_number_formatted || inv.invoice_number || ''
 
   const mahnungData: MahnungData = {
-    creditorName: org.name || 'Alltagsengel UG',
+    creditorName: org.name || ABSENDER_FALLBACK.firma,
     creditorAddress: [
-      org.street || 'Neue Mainzer Straße 66-68',
-      `${org.zip || '60311'} ${org.city || 'Frankfurt am Main'}`,
+      orgAdresse.strasse || ABSENDER_FALLBACK.strasse,
+      `${orgAdresse.plz || ''} ${orgAdresse.ort || ''}`.trim() || ABSENDER_FALLBACK.ort,
     ],
-    creditorPhone: org.phone || undefined,
-    creditorEmail: org.email || 'info@alltagsengel.care',
+    creditorPhone: undefined,
+    creditorEmail: ABSENDER_FALLBACK.email,
     creditorIban: org.iban || undefined,
     creditorBic: org.bic || undefined,
 
     debtorName: `${client?.first_name || ''} ${client?.last_name || ''}`.trim(),
     debtorAddress: [
       `${client?.first_name || ''} ${client?.last_name || ''}`.trim(),
-      client?.street || '',
-      `${client?.zip || ''} ${client?.city || ''}`.trim(),
+      client?.address || '',
+      `${client?.zip_code || ''} ${client?.city || ''}`.trim(),
     ].filter(Boolean),
 
     invoiceNumber: invNum,
-    invoiceDate: inv.invoice_date || '',
+    // Belegdatum = Anlagezeitpunkt der Rechnung (invoices.created_at).
+    invoiceDate: typeof inv.created_at === 'string' ? inv.created_at.slice(0, 10) : '',
     invoiceAmount: formatCurrency(totalCents),
     paidAmount: formatCurrency(paidCents),
     openAmount: formatCurrency(openCents),

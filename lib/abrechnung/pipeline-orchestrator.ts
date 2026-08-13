@@ -123,7 +123,10 @@ export async function holePipelineStatus(
     .select('id, abrechnungsmonat, kostentraeger_name, kostentraeger_ik, status, updated_at')
     .eq('organization_id', organizationId)
     .not('status', 'in', '("storniert","abgeschlossen")')
-    .order('created_at', { ascending: false })
+    // abrechnungslaeufe hat kein created_at — der Anlagezeitpunkt heißt
+    // erstellt_am. Mit dem falschen Namen scheiterte die Abfrage mit 42703
+    // und die Pipeline-Übersicht war dauerhaft leer.
+    .order('erstellt_am', { ascending: false })
     .limit(100)
 
   // Rückläufer-Counts pro Lauf
@@ -226,7 +229,7 @@ async function ordneRuecklaeuferAutomatischZu(
         'angenommen', 'teilweise_abgelehnt', 'abgelehnt',
         'korrektur_erforderlich',
       ])
-      .order('created_at', { ascending: false })
+      .order('erstellt_am', { ascending: false })
       .limit(1)
       .maybeSingle()
 

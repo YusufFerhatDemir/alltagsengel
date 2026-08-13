@@ -110,16 +110,24 @@ async function generiereRechnungsBuchungen(
   bis: string,
   rahmen: Kontenrahmen,
 ): Promise<DatevBuchungssatz[]> {
-  const { data: invoices } = await supabase
+  // LIVE-SCHEMA: invoices hat KEINE Spalte `is_credit_note`. Gutschriften und
+  // Stornos stehen in `correction_type`. Select und Filter darauf ließen die
+  // Abfrage mit 42703 scheitern — der DATEV-Export lieferte dann stillschweigend
+  // NULL Rechnungsbuchungen, sah also aus wie „nichts zu exportieren".
+  const { data: invoices, error } = await supabase
     .from('invoices')
-    .select('id, invoice_number, invoice_number_formatted, total_amount, created_at, client_id, client:clients(first_name, last_name), is_credit_note')
+    .select('id, invoice_number, invoice_number_formatted, total_amount, created_at, client_id, client:clients(first_name, last_name), correction_type')
     .eq('organization_id', orgId)
     .gte('created_at', `${von}T00:00:00`)
     .lte('created_at', `${bis}T23:59:59`)
     .is('deleted_at', null)
-    .eq('is_credit_note', false)
+    // Gutschriften/Stornos laufen über generiereGutschriftBuchungen.
+    .or('correction_type.is.null,correction_type.eq.rechnung')
     .not('status', 'eq', 'entwurf');
 
+  // FAIL-CLOSED: ein Lesefehler darf nicht als „keine Rechnungen" durchgehen,
+  // sonst entsteht ein unvollständiger Export, der wie ein vollständiger aussieht.
+  if (error) throw new Error(`Rechnungen für DATEV nicht lesbar: ${error.message}`);
   if (!invoices?.length) return [];
 
   const buchungen: DatevBuchungssatz[] = [];
@@ -228,15 +236,18 @@ async function generiereGutschriftBuchungen(
   bis: string,
   rahmen: Kontenrahmen,
 ): Promise<DatevBuchungssatz[]> {
-  const { data: credits } = await supabase
+  // LIVE-SCHEMA: kein `is_credit_note` — der Belegtyp steht in correction_type
+  // (siehe DOCUMENT_KINDS in app/api/admin/invoices/[id]/generate-pdf).
+  const { data: credits, error } = await supabase
     .from('invoices')
     .select('id, invoice_number, invoice_number_formatted, total_amount, created_at, client_id, client:clients(last_name)')
     .eq('organization_id', orgId)
-    .eq('is_credit_note', true)
+    .in('correction_type', ['gutschrift', 'storno', 'teilstorno'])
     .gte('created_at', `${von}T00:00:00`)
     .lte('created_at', `${bis}T23:59:59`)
     .is('deleted_at', null);
 
+  if (error) throw new Error(`Gutschriften für DATEV nicht lesbar: ${error.message}`);
   if (!credits?.length) return [];
 
   const erloesKonto = getKonto(rahmen, 'erloesePflege');
@@ -284,24 +295,26 @@ async function generiereMahngebuerenBuchungen(
   bis: string,
   rahmen: Kontenrahmen,
 ): Promise<DatevBuchungssatz[]> {
-  const { data: entries } = await supabase
+  // LIVE-SCHEMA: die Spalte heißt dunning_fee_cents, nicht gebuehr_cents.
+  const { data: entries, error } = await supabase
     .from('dunning_entries')
     .select(`
-      id, gebuehr_cents, created_at, dunning_level,
+      id, dunning_fee_cents, created_at, dunning_level,
       invoice:invoices(id, invoice_number_formatted, client_id, client:clients(last_name))
     `)
     .eq('organization_id', orgId)
     .gte('created_at', `${von}T00:00:00`)
     .lte('created_at', `${bis}T23:59:59`)
-    .gt('gebuehr_cents', 0);
+    .gt('dunning_fee_cents', 0);
 
+  if (error) throw new Error(`Mahngebühren für DATEV nicht lesbar: ${error.message}`);
   if (!entries?.length) return [];
 
   const mahnKonto = getKonto(rahmen, 'mahngebuehren');
   const buchungen: DatevBuchungssatz[] = [];
 
   for (const entry of entries) {
-    const betragEur = (entry.gebuehr_cents || 0) / 100;
+    const betragEur = (entry.dunning_fee_cents || 0) / 100;
     if (betragEur <= 0) continue;
 
     const inv = Array.isArray(entry.invoice) ? entry.invoice[0] : entry.invoice;

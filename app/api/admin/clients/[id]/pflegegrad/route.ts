@@ -152,17 +152,21 @@ export async function PATCH(
     const version = budgetVersionFuerJahr(parseInt(berlinParts(new Date()).year, 10))
 
     if (neuerPg < version.minPflegegradVpKzp && alterPg >= version.minPflegegradVpKzp) {
+      // LIVE-SCHEMA: eine Zeile je Kunde und Jahr, VP/KZP steht in den
+      // combined_*-Spalten — es gibt kein budget_type (siehe
+      // lib/budget/auto-budget.ts). Der alte Filter ließ die Abfrage mit
+      // 42703 scheitern, der Hinweis auf ein verbrauchtes VP-Budget blieb
+      // bei jeder Herabstufung aus.
       const { data: vpBudget } = await admin
         .from('client_budgets')
-        .select('id, used_amount, combined_used_amount')
+        .select('id, combined_annual_amount, combined_used_amount')
         .eq('client_id', id)
         .eq('organization_id', organizationId)
-        .eq('budget_type', 'verhinderungspflege')
         .eq('year', parseInt(berlinParts(new Date()).year, 10))
         .maybeSingle()
 
-      if (vpBudget) {
-        const verbraucht = Number(vpBudget.combined_used_amount ?? vpBudget.used_amount ?? 0)
+      if (vpBudget && Number(vpBudget.combined_annual_amount ?? 0) > 0) {
+        const verbraucht = Number(vpBudget.combined_used_amount ?? 0)
         hinweise.push(
           `Herabstufung auf PG ${neuerPg}: Der Anspruch auf Verhinderungs-/Kurzzeitpflege (ab PG ${version.minPflegegradVpKzp}) entfällt ab dem Änderungsdatum. ` +
           `Das bestehende VP/KZP-Budget (bereits verbraucht: ${verbraucht.toFixed(2)} €) wurde NICHT gelöscht und muss manuell geprüft werden.`
