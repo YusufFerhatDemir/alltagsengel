@@ -107,15 +107,20 @@ export async function POST(req: Request) {
       request: req,
     })
 
+    // Budget-Anlage darf nicht still scheitern: ohne Budget steht der Kunde
+    // in der Kette bei Schritt 3 und niemand sieht warum. Der Klient bleibt
+    // angelegt (der Datensatz ist gültig), der Fehler wandert in die Antwort.
+    const hinweise: string[] = []
     const careLevel = client.care_level ?? client.pflegegrad ?? 0
     if (careLevel >= 1) {
       const pgMonat = body.pflegegrad_seit_monat
         ? parseInt(body.pflegegrad_seit_monat, 10)
         : undefined
-      await erstelleInitialBudgets(admin, client.id, auth.organizationId, careLevel, pgMonat)
+      const budget = await erstelleInitialBudgets(admin, client.id, auth.organizationId, careLevel, pgMonat)
+      if (budget.fehler) hinweise.push(`Budget konnte nicht angelegt werden: ${budget.fehler}`)
     }
 
-    return NextResponse.json({ client }, { status: 201 })
+    return NextResponse.json({ client, hinweise }, { status: 201 })
   } catch (err) {
     return NextResponse.json({ error: (err as Error).message }, { status: 500 })
   }

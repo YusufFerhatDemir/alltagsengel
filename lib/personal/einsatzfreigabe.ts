@@ -135,6 +135,17 @@ export interface BudgetPruefErgebnis {
   budgetTyp: BudgetTyp
 }
 
+/**
+ * Prüft, wie weit das Jahresbudget eines Klienten ausgeschöpft ist.
+ *
+ * LIVE-SCHEMA: client_budgets führt EINE Zeile je Kunde und Jahr; der
+ * Budgettyp steckt in den Spalten, nicht in einer `budget_type`-Zeile
+ * (ausführlich in lib/budget/auto-budget.ts). Ein `eq('budget_type', …)`
+ * ließ die Abfrage vorher mit 42703 scheitern — das Ergebnis sah aus wie
+ * „kein Budget hinterlegt" und die Prüfung lief FAIL-OPEN durch.
+ *
+ * Fehler und fehlendes Budget blockieren deshalb jetzt beide.
+ */
 export async function pruefeBudget(
   supabase: SupabaseClient,
   clientId: string,
@@ -142,21 +153,42 @@ export async function pruefeBudget(
   budgetTyp: BudgetTyp = 'entlastung',
 ): Promise<BudgetPruefErgebnis> {
   const year = parseInt(heuteBerlin().slice(0, 4), 10)
-  const { data: budget } = await supabase
+  const { data: budget, error } = await supabase
     .from('client_budgets')
-    .select('annual_amount, carryover_amount, used_amount, budget_type')
+    .select('annual_amount, carryover_amount, used_amount, combined_annual_amount, combined_used_amount')
     .eq('client_id', clientId)
     .eq('organization_id', organizationId)
     .eq('year', year)
-    .eq('budget_type', budgetTyp)
     .maybeSingle()
-  if (!budget) return { warnung: null, blockiert: false, prozent: 0, budgetTyp }
 
-  const defaultAmount = budgetTyp === 'verhinderungspflege'
-    ? VP_KZP_KOMBINIERT_EUR
-    : ENTLASTUNG_JAEHRLICH_EUR
-  const available = (budget.annual_amount ?? defaultAmount) + (budget.carryover_amount ?? 0)
-  const used = budget.used_amount ?? 0
+  // FAIL-CLOSED: eine nicht lesbare Budgetzeile ist kein freies Budget.
+  if (error) {
+    return {
+      warnung: `Budget nicht prüfbar (${error.message}) — Einsatz nicht freigegeben.`,
+      blockiert: true,
+      prozent: 0,
+      budgetTyp,
+    }
+  }
+  // Keine Zeile heißt nicht „Fehler": Selbstzahler haben kein Kassenbudget.
+  // Das ist ein Hinweis für die Disposition, keine Sperre.
+  if (!budget) {
+    return {
+      warnung: `Für ${year} ist kein Budget hinterlegt (Selbstzahler?) — bitte prüfen.`,
+      blockiert: false,
+      prozent: 0,
+      budgetTyp,
+    }
+  }
+
+  const istVp = budgetTyp === 'verhinderungspflege'
+  const defaultAmount = istVp ? VP_KZP_KOMBINIERT_EUR : ENTLASTUNG_JAEHRLICH_EUR
+  const anspruch = istVp
+    ? Number(budget.combined_annual_amount ?? 0) || defaultAmount
+    : Number(budget.annual_amount ?? 0) || defaultAmount
+  // § 42a kennt keinen Übertrag — carryover zählt nur beim Entlastungsbetrag.
+  const available = anspruch + (istVp ? 0 : Number(budget.carryover_amount ?? 0))
+  const used = Number((istVp ? budget.combined_used_amount : budget.used_amount) ?? 0)
   const pct = available > 0 ? Math.round((used / available) * 100) : 0
 
   const label = budgetTyp === 'verhinderungspflege' ? 'VP-Budget' : 'Budget'
@@ -188,18 +220,17 @@ export async function pruefeVPBudget(
   const vpResult = await pruefeBudget(supabase, clientId, organizationId, 'verhinderungspflege')
 
   const year = parseInt(heuteBerlin().slice(0, 4), 10)
-  const { data: budgets } = await supabase
+  const { data: budget } = await supabase
     .from('client_budgets')
-    .select('budget_type, used_amount, combined_used_amount')
+    .select('used_amount, combined_used_amount')
     .eq('client_id', clientId)
     .eq('organization_id', organizationId)
     .eq('year', year)
-    .in('budget_type', ['verhinderungspflege', 'entlastung'])
+    .maybeSingle()
 
   let vpKzpKombiniertWarnung: string | null = null
-  if (budgets && budgets.length > 0) {
-    const vpUsed = budgets.find(b => b.budget_type === 'verhinderungspflege')
-    const combinedUsed = vpUsed?.combined_used_amount ?? 0
+  if (budget) {
+    const combinedUsed = Number(budget.combined_used_amount ?? 0)
     if (combinedUsed > VP_KZP_KOMBINIERT_EUR) {
       vpKzpKombiniertWarnung =
         `VP+KZP Kombinationsbudget überschritten (${combinedUsed.toFixed(2)} / ${VP_KZP_KOMBINIERT_EUR} EUR)`

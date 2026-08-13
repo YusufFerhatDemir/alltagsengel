@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requirePersonalAdmin } from '@/lib/personal/api-auth'
-import { listStammdaten, getStammdaten, updateStammdaten } from '@/lib/personal/stammdaten'
+import { listStammdaten, getStammdaten, updateStammdaten, erstelleStammdaten } from '@/lib/personal/stammdaten'
+import { writeAuditLog } from '@/lib/personal/audit'
 import type { Vertragsstatus } from '@/lib/personal/types'
 
 export async function GET(request: Request) {
@@ -23,6 +24,29 @@ export async function GET(request: Request) {
       search: search || undefined,
     })
     return NextResponse.json(data)
+  } catch (e: any) {
+    return NextResponse.json({ error: e.message }, { status: 400 })
+  }
+}
+
+export async function POST(request: Request) {
+  const auth = await requirePersonalAdmin()
+  if (!auth.ok) return auth.response
+  const supabase = createAdminClient()
+  try {
+    const body = await request.json()
+    const data = await erstelleStammdaten(supabase, auth.ctx.organizationId, body)
+    await writeAuditLog(supabase, {
+      organizationId: auth.ctx.organizationId,
+      entitaetTyp: 'caregiver',
+      entitaetId: data.id,
+      caregiverId: data.id,
+      aktion: 'erstellt',
+      nachher: { name: `${data.first_name} ${data.last_name}`, vertragsstatus: data.vertragsstatus },
+      benutzerId: auth.ctx.userId,
+      benutzerRolle: auth.ctx.role,
+    })
+    return NextResponse.json(data, { status: 201 })
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 400 })
   }
