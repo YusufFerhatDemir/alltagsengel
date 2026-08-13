@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { createClient } from '@/lib/supabase/server'
 
 interface RateLimitEntry {
   key: string
@@ -59,6 +60,22 @@ async function upsertEntry(supabase: SupabaseClient, key: string, attempts: numb
       locked_until: lockedUntil,
       updated_at: new Date().toISOString(),
     }, { onConflict: 'key' })
+}
+
+/**
+ * Liefert den eingeloggten User der aktuellen Session — oder null.
+ * Faengt eigene Fehler ab, damit der Aufrufer FAIL-CLOSED (401) reagiert
+ * und nicht in den fail-open-Catch der Route rutscht.
+ */
+async function getVerifiedUser(): Promise<{ id: string; email?: string | null } | null> {
+  try {
+    const authClient = await createClient()
+    const { data, error } = await authClient.auth.getUser()
+    if (error || !data?.user) return null
+    return { id: data.user.id, email: data.user.email }
+  } catch {
+    return null
+  }
 }
 
 export async function POST(req: NextRequest) {
@@ -150,6 +167,25 @@ export async function POST(req: NextRequest) {
     }
 
     if (action === 'success') {
+      // ═══ SECURITY: 'success' ist nur nach echtem Login erlaubt ═══
+      // Vorher konnte jeder per POST {email:"opfer@x.de", action:"success"}
+      // den Brute-Force-Schutz eines fremden Kontos zuruecksetzen. Jetzt muss
+      // eine gueltige Session existieren UND die uebergebene E-Mail muss zum
+      // eingeloggten User gehoeren.
+      const sessionUser = await getVerifiedUser()
+      if (!sessionUser) {
+        return NextResponse.json(
+          { error: 'Nicht authentifiziert' },
+          { status: 401 }
+        )
+      }
+      if ((sessionUser.email ?? '').toLowerCase() !== String(email).toLowerCase()) {
+        return NextResponse.json(
+          { error: 'E-Mail gehoert nicht zur aktiven Sitzung' },
+          { status: 403 }
+        )
+      }
+
       // AUTH-006: Bisher wurde der IP-Counter bei Success GAR NICHT resettet.
       // Das hat ein reales Problem in Shared-IP-Settings (Pflegeheim, Büro,
       // Hotel-WLAN, NAT-Gateway): Ein Kollege tippt 5x falsch → 15min Sperre

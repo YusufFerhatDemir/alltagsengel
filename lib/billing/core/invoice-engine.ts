@@ -27,6 +27,9 @@ import { logBillingAction, computeSnapshotChecksum } from './audit';
 // resolvePrice wird nicht mehr als Fallback verwendet — die Tarifaufloesung
 // erfolgt vollstaendig innerhalb der atomaren RPC (billing_tariffs = fuehrend).
 // import { resolvePrice } from './price-resolver';  // ENTFERNT: kein Fallback
+// Der Fail-Closed-Fehlertyp wird dagegen geteilt, damit Korrekturen dieselbe
+// Tarif-Statuspruefung wie resolvePrice/RPC verwenden.
+import { TarifNichtVerifiziertError, type TarifStatus } from './price-resolver';
 
 // ---------------------------------------------------------------------------
 // Fehler-Codes fuer Tarif-Aufloesung
@@ -653,6 +656,26 @@ export async function cancelInvoice(
 // ---------------------------------------------------------------------------
 
 /**
+ * Fail-Closed-Statuspruefung fuer die Tarif-Gegenpruefung bei Korrekturen.
+ *
+ * Gleiche Regel wie resolvePrice():
+ *  - 'blocked'                      → nie verwendbar (auch privat nicht)
+ *  - Kassentarif (!== 'privat')     → nur 'verified'
+ *  - Privattarif  (=== 'privat')    → alles ausser 'blocked'
+ *
+ * Fehlender Status wird als 'unverified' behandelt (fail-closed).
+ */
+export function isTarifFuerKorrekturVerwendbar(
+  tarif: { tarif_status?: string | null; rechtsgrundlage?: string | null }
+): boolean {
+  const status = tarif.tarif_status ?? 'unverified';
+  if (status === 'blocked') return false;
+  const istKasse = (tarif.rechtsgrundlage ?? '') !== 'privat';
+  if (istKasse) return status === 'verified';
+  return true;
+}
+
+/**
  * Erstellt eine Korrekturrechnung:
  * 1. Neue Rechnung mit korrigierten Positionen
  * 2. Bezug auf Original
@@ -719,13 +742,20 @@ export async function correctInvoice(
     }
   }
 
-  // ═══ NEU: Tarif-Gegenprüfung für jede Korrekturposition ═══
+  // ═══ Tarif-Gegenprüfung für jede Korrekturposition ═══
   // Admin darf nicht beliebige Preise setzen — bei >10% Abweichung vom
   // aktuellen Tarif muss ein expliziter Korrekturgrund angegeben werden.
+  //
+  // FAIL-CLOSED (identisch zu resolvePrice und create_invoice_draft_atomic):
+  // Nicht verwendbare Tarife (Kasse ohne 'verified', oder 'blocked') werden
+  // aus dem Cross-Check entfernt. Sonst koennte eine Korrektur den Preis eines
+  // gesperrten/unverifizierten Tarifs verwenden und die Abweichungspruefung
+  // wuerde ihn als "passend" durchwinken. Gibt es zu einer Leistungsart nur
+  // unbrauchbare Tarife, wird die Korrektur abgelehnt.
   for (const c of corrections) {
-    const { data: matchingTariffs } = await supabase
+    const { data: matchingTariffs, error: tariffError } = await supabase
       .from('billing_tariffs')
-      .select('preis_cent, verguetungsart, id')
+      .select('preis_cent, verguetungsart, id, tarif_status, rechtsgrundlage, verifizierungs_quelle')
       .eq('leistungsart', c.leistungsart)
       .eq('organization_id', original.organization_id)
       .lte('gueltig_ab', c.leistungsdatum)
@@ -733,9 +763,27 @@ export async function correctInvoice(
       .order('gueltig_ab', { ascending: false })
       .limit(5);
 
+    if (tariffError) {
+      // Kein stiller Fallback: ohne Tarifdaten ist keine Gegenpruefung moeglich.
+      throw new Error(
+        `Tarif-Gegenpruefung fuer "${c.leistungsart}" fehlgeschlagen: ${tariffError.message}`
+      );
+    }
+
     if (matchingTariffs && matchingTariffs.length > 0) {
-      // Besten Tarif nehmen (neuester gueltig_ab)
-      const bestTariff = matchingTariffs[0];
+      const verwendbare = matchingTariffs.filter(isTarifFuerKorrekturVerwendbar);
+
+      if (verwendbare.length === 0) {
+        const gesperrt = matchingTariffs.find(t => t.tarif_status === 'blocked') ?? matchingTariffs[0];
+        throw new TarifNichtVerifiziertError(
+          c.leistungsart,
+          (gesperrt.tarif_status ?? 'unverified') as TarifStatus,
+          gesperrt.verifizierungs_quelle ?? null
+        );
+      }
+
+      // Besten verwendbaren Tarif nehmen (neuester gueltig_ab)
+      const bestTariff = verwendbare[0];
       const deviation = Math.abs(c.einzelpreisCent - bestTariff.preis_cent);
       const deviationPercent = bestTariff.preis_cent > 0
         ? (deviation / bestTariff.preis_cent) * 100

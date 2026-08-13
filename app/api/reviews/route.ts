@@ -86,13 +86,20 @@ export async function POST(req: NextRequest) {
 }
 
 // GET: Bewertungen für einen Engel abrufen
+//
+// SECURITY: Der Endpunkt war ohne Login erreichbar und hat ueber den
+// profiles-Join Klarnamen von Kundinnen und Kunden ausgeliefert (PII-Leak).
+// Jetzt: Login-Pflicht (401) + nur noch Vorname/Avatar-Farbe im Join,
+// keine Nachnamen mehr.
 export async function GET(req: NextRequest) {
   try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return NextResponse.json({ error: 'Nicht authentifiziert' }, { status: 401 })
+
     const { searchParams } = new URL(req.url)
     const angelId = searchParams.get('angelId')
     const bookingId = searchParams.get('bookingId')
-
-    const supabase = await createClient()
 
     if (bookingId) {
       // Check if a specific booking has been reviewed
@@ -108,7 +115,7 @@ export async function GET(req: NextRequest) {
       // Get all reviews for an angel
       const { data } = await supabase
         .from('angel_reviews')
-        .select('*, profiles:customer_id(first_name, last_name, avatar_color)')
+        .select('*, profiles:customer_id(first_name, avatar_color)')
         .eq('angel_id', angelId)
         .order('created_at', { ascending: false })
         .limit(50)
