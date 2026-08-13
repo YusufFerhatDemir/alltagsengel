@@ -2,13 +2,22 @@ import { NextResponse } from 'next/server'
 import crypto from 'crypto'
 import { PDFDocument, rgb } from 'pdf-lib'
 import fontkit from '@pdf-lib/fontkit'
-import { readFile } from 'fs/promises'
-import { join } from 'path'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { logAuditEvent } from '@/lib/audit-log'
 import { getOrgIK } from '@/lib/config/org-config'
+import {
+  drawBriefkopf,
+  drawBriefkopfFooter,
+  loadBriefkopfLogo,
+  loadPdfFonts,
+  asDrawable,
+  CONTENT_BOTTOM,
+  PAGE_WIDTH,
+  PAGE_HEIGHT,
+  MARGIN,
+} from '@/lib/pdf/briefkopf'
 
 // ═══════════════════════════════════════════════════════════════
 // POST /api/admin/invoices/[id]/generate-pdf
@@ -30,9 +39,7 @@ import { getOrgIK } from '@/lib/config/org-config'
 // invoice_packages-Zeile (Checksumme via sha256).
 // ═══════════════════════════════════════════════════════════════
 
-const PAGE_WIDTH = 595.28 // A4 @ 72dpi
-const PAGE_HEIGHT = 841.89
-const MARGIN = 50
+// Seitengeometrie + Briefkopf-/Fußzeilen-Layout: siehe lib/pdf/briefkopf.ts.
 
 // Belegarten: Titel + Hinweis, der auf dem Beleg stehen muss.
 const DOCUMENT_KINDS: Record<string, { title: string; note: string | null; payable: boolean }> = {
@@ -103,7 +110,6 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       .select('name, iban, bic, bank_name, steuernummer')
       .eq('id', orgId)
       .maybeSingle()
-    const orgName = orgData?.name || 'Alltagsengel UG (haftungsbeschr.)'
     const orgIban = orgData?.iban || null
     const orgBic = orgData?.bic || null
     const orgBank = orgData?.bank_name || 'Sparkasse'
@@ -172,19 +178,31 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     const pdfDoc = await PDFDocument.create()
     pdfDoc.registerFontkit(fontkit)
 
-    let fontRegular: any
-    let fontBold: any
-    try {
-      const fontsDir = join(process.cwd(), 'public', 'fonts')
-      const regularBytes = await readFile(join(fontsDir, 'DejaVuSans.ttf'))
-      const boldBytes = await readFile(join(fontsDir, 'DejaVuSans-Bold.ttf'))
-      fontRegular = await pdfDoc.embedFont(regularBytes, { subset: true })
-      fontBold = await pdfDoc.embedFont(boldBytes, { subset: true })
-    } catch {
-      const { StandardFonts } = await import('pdf-lib')
-      fontRegular = await pdfDoc.embedFont(StandardFonts.Helvetica)
-      fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold)
+    // DejaVuSans ist Pflicht — kein Helvetica-Fallback. Helvetica ist
+    // WinAnsi-kodiert und würde türkische Zeichen (ş, ç, ğ, ı) in Klienten-
+    // und Betreuungskraftnamen als ■ ausgeben.
+    const { regular: fontRegular, bold: fontBold } = await loadPdfFonts(pdfDoc)
+    const logo = await loadBriefkopfLogo(pdfDoc)
+
+    // Briefkopf + Pflichtangaben-Fußzeile für jede Seite dieses Belegs.
+    const footerOpts = {
+      payable: kind.payable,
+      ik: ikNummer,
+      iban: orgIban,
+      bic: orgBic,
+      bank: orgBank,
+      steuernummer: orgSteuer,
     }
+    const footer = (p: any) => drawBriefkopfFooter({ page: asDrawable(p), font: fontRegular, ...footerOpts })
+    /** Voller 3-spaltiger Briefkopf — nur Seite 1 des Belegs. */
+    const briefkopf = (p: any) =>
+      drawBriefkopf({ page: asDrawable(p), fontRegular, fontBold, logo, ik: ikNummer })
+    /** Kompakter Briefkopf für Folge- und Nachweisseiten. */
+    const briefkopfKompakt = (p: any, hint: string) =>
+      drawBriefkopf({
+        page: asDrawable(p), fontRegular, fontBold, logo, ik: ikNummer,
+        compact: true, compactHint: hint,
+      })
 
     const client = (invoice as any).client || {}
     const clientName = `${client.first_name || ''} ${client.last_name || ''}`.trim() || '—'
@@ -192,7 +210,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     // ── Seite 1 ff.: Belegübersicht ──
     {
       let page = pdfDoc.addPage([PAGE_WIDTH, PAGE_HEIGHT])
-      let y = PAGE_HEIGHT - MARGIN
+      let y = briefkopf(page)
       const colX = { date: MARGIN, desc: MARGIN + 70, dur: MARGIN + 300, budget: MARGIN + 350, amount: PAGE_WIDTH - MARGIN - 70 }
 
       // Kopfzeilen der Positionstabelle — werden auf jeder Folgeseite
@@ -212,24 +230,18 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       // Vorher wurde y einfach auf den Seitenanfang zurueckgesetzt — die
       // restlichen Positionen wurden dadurch UEBER den Kopfbereich derselben
       // Seite gezeichnet und waren unlesbar.
+      // CONTENT_BOTTOM statt MARGIN: die Pflichtangaben-Fußzeile ist vier
+      // Zeilen hoch — bei MARGIN als Untergrenze liefe die letzte Position
+      // in die Fußzeile hinein.
       const ensureSpace = (needed: number, repeatHeader = false) => {
-        if (y - needed >= MARGIN + 40) return
-        drawFooter(page, fontRegular, kind.payable, { ik: ikNummer, iban: orgIban ?? undefined, bic: orgBic ?? undefined, bank: orgBank, steuer: orgSteuer ?? undefined })
+        if (y - needed >= CONTENT_BOTTOM) return
+        footer(page)
         page = pdfDoc.addPage([PAGE_WIDTH, PAGE_HEIGHT])
-        y = PAGE_HEIGHT - MARGIN
-        page.drawText(`${kind.title} ${invoiceNumber} (Fortsetzung)`, {
-          x: MARGIN, y, size: 11, font: fontBold, color: rgb(0.35, 0.35, 0.35),
-        })
-        y -= 24
+        y = briefkopfKompakt(page, `${kind.title} ${invoiceNumber} (Fortsetzung)`)
         if (repeatHeader) drawTableHeader()
       }
 
-      page.drawText('Alltagsengel', { x: MARGIN, y, size: 20, font: fontBold, color: rgb(0.15, 0.11, 0.07) })
-      if (ikNummer) {
-        page.drawText(`IK ${ikNummer}`, { x: MARGIN + 170, y: y + 2, size: 9, font: fontRegular, color: rgb(0.45, 0.45, 0.45) })
-      }
-      y -= 30
-      page.drawText(kind.title, { x: MARGIN, y, size: 15, font: fontBold, color: rgb(0.3, 0.3, 0.3) })
+      page.drawText(kind.title, { x: MARGIN, y, size: 16, font: fontBold, color: rgb(0.15, 0.11, 0.07) })
       y -= 26
 
       if (kind.note) {
@@ -300,7 +312,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       y -= 14
       page.drawText(`davon Privat: ${euroFmt(invoice.private_amount)}`, { x: MARGIN, y, size: 10, font: fontRegular, color: rgb(0.35, 0.35, 0.35) })
 
-      drawFooter(page, fontRegular, kind.payable, { ik: ikNummer, iban: orgIban ?? undefined, bic: orgBic ?? undefined, bank: orgBank, steuer: orgSteuer ?? undefined })
+      footer(page)
     }
 
     // ── Je service_record eine Detailseite mit Unterschriften ──
@@ -308,11 +320,21 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       const record = records.find(r => r.id === item.service_record_id)
       if (!record) continue
 
-      const page = pdfDoc.addPage([PAGE_WIDTH, PAGE_HEIGHT])
-      let y = PAGE_HEIGHT - MARGIN
+      let page = pdfDoc.addPage([PAGE_WIDTH, PAGE_HEIGHT])
+      let y = briefkopfKompakt(page, `Anlage zu ${kind.title} ${invoiceNumber}`)
 
       page.drawText('Leistungsnachweis', { x: MARGIN, y, size: 16, font: fontBold, color: rgb(0.15, 0.11, 0.07) })
       y -= 28
+
+      // Viele Unterschriftsbilder passen nicht auf eine Seite. Vorher wurde y
+      // in dem Fall einfach an den Seitenanfang zurückgesetzt — die weiteren
+      // Signaturen landeten dadurch ÜBER dem Briefkopf derselben Seite.
+      const ensureNachweisSpace = (needed: number) => {
+        if (y - needed >= CONTENT_BOTTOM) return
+        footer(page)
+        page = pdfDoc.addPage([PAGE_WIDTH, PAGE_HEIGHT])
+        y = briefkopfKompakt(page, `Anlage zu ${kind.title} ${invoiceNumber} (Fortsetzung)`)
+      }
 
       const caregiverName = `${record.caregiver?.first_name || ''} ${record.caregiver?.last_name || ''}`.trim() || '—'
       const detailLines = [
@@ -327,11 +349,13 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
         ['Status:', record.status || '—'],
       ]
       for (const [k, v] of detailLines) {
+        ensureNachweisSpace(18)
         page.drawText(k, { x: MARGIN, y, size: 11, font: fontBold, color: rgb(0.35, 0.35, 0.35) })
         page.drawText(String(v), { x: MARGIN + 150, y, size: 11, font: fontRegular, color: rgb(0.1, 0.1, 0.1) })
         y -= 18
       }
 
+      ensureNachweisSpace(60)
       y -= 12
       page.drawLine({ start: { x: MARGIN, y }, end: { x: PAGE_WIDTH - MARGIN, y }, thickness: 0.5, color: rgb(0.7, 0.7, 0.7) })
       y -= 24
@@ -355,7 +379,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
                 const scale = Math.min(maxW / embedded.width, maxH / embedded.height, 1)
                 const w = embedded.width * scale
                 const h = embedded.height * scale
-                if (y - h < MARGIN + 30) y = PAGE_HEIGHT - MARGIN - 40
+                ensureNachweisSpace(h + 26)
                 page.drawImage(embedded.image, { x: MARGIN, y: y - h, width: w, height: h })
                 y -= h + 6
               }
@@ -363,6 +387,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
           } catch (imgErr) {
             console.error('[generate-pdf] Signatur-Einbettung fehlgeschlagen:', imgErr)
           }
+          ensureNachweisSpace(20)
           const roleLabel = sig.signer_role === 'client' ? 'Klient' : 'Betreuungskraft'
           page.drawText(`${roleLabel}: ${sig.signer_name} — ${dateFmt(sig.signed_at)}`, {
             x: MARGIN, y, size: 9, font: fontRegular, color: rgb(0.3, 0.3, 0.3),
@@ -371,7 +396,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
         }
       }
 
-      drawFooter(page, fontRegular, kind.payable, { ik: ikNummer, iban: orgIban ?? undefined, bic: orgBic ?? undefined, bank: orgBank, steuer: orgSteuer ?? undefined })
+      footer(page)
     }
 
     const pdfBytes = await pdfDoc.save()
@@ -439,23 +464,6 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     console.error('[api/admin/invoices/generate-pdf] Unerwarteter Fehler:', err)
     return NextResponse.json({ error: err.message || 'Unerwarteter Fehler' }, { status: 500 })
   }
-}
-
-function drawFooter(page: any, font: any, payable = true, opts?: { ik?: string; iban?: string; bic?: string; bank?: string; steuer?: string }) {
-  const ik = opts?.ik ? ` · IK ${opts.ik}` : ''
-  const steuer = opts?.steuer ? ` · St.-Nr. ${opts.steuer}` : ''
-  page.drawText(`Alltagsengel UG (haftungsbeschr.) · Amtsgericht Frankfurt am Main, HRB 140351${ik}${steuer}`, {
-    x: MARGIN, y: 38, size: 7, font, color: rgb(0.55, 0.55, 0.55),
-  })
-  const ibanStr = opts?.iban ? ` · IBAN ${opts.iban}` : ''
-  const bicStr = opts?.bic ? ` · BIC ${opts.bic}` : ''
-  const bankStr = opts?.bank || 'Sparkasse'
-  page.drawText(
-    payable
-      ? `Bankverbindung: Alltagsengel UG · ${bankStr}${ibanStr}${bicStr} · Zahlbar innerhalb von 30 Tagen`
-      : `Alltagsengel UG · ${bankStr} · Dieser Beleg ist keine Zahlungsaufforderung`,
-    { x: MARGIN, y: 28, size: 7, font, color: rgb(0.55, 0.55, 0.55) }
-  )
 }
 
 // Lädt Bild-Bytes aus signature_image: entweder Data-URL (base64) oder externe URL

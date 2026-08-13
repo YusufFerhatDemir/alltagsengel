@@ -100,6 +100,18 @@ const nextConfig: NextConfig = {
   // bundeln kann → Build-Abbruch. Als extern markiert wird es zur Laufzeit
   // per require() geladen (Vercel packt es via File-Tracing mit ein).
   serverExternalPackages: ['ssh2', 'ssh2-sftp-client'],
+  // PDF-Routen lesen Schrift- und Logodatei zur Laufzeit per fs aus public/.
+  // Das File-Tracing sieht diese Zugriffe nicht (Pfade entstehen erst per
+  // path.join), und public/ landet NICHT automatisch im Serverless-Bundle —
+  // ohne diesen Eintrag fehlen DejaVuSans (türkische Zeichen würden zu ■)
+  // und das Engel-Logo im Briefkopf auf Vercel.
+  outputFileTracingIncludes: {
+    '/api/admin/invoices/[id]/generate-pdf': [
+      './public/fonts/DejaVuSans.ttf',
+      './public/fonts/DejaVuSans-Bold.ttf',
+      './public/icon-transparent-trimmed.png',
+    ],
+  },
   // Bild-Pipeline (CWV): AVIF zuerst (30–50 % kleiner als WebP), WebP als
   // Fallback. Betrifft nur das Auslieferungsformat via next/image — die
   // Quelldateien (z. B. die goldenen 3D-Icons) bleiben unverändert.
