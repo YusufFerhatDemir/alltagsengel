@@ -46,6 +46,8 @@ export const AUDIT_ENTITY_TYPES = [
   'sgb_v_lauf', 'sgb_v_formatversion', 'sgb_v_routing',
   // KIM / TI-Anbindung (Block 18) — Migration 20260830010000
   'kim_konfiguration', 'kim_formatversion', 'kim_karte', 'kim_nachricht',
+  // Versandpipeline (Stream 2) — Migration 20260902010000
+  'dta_versand', 'dta_wiedervorlage', 'dta_fehlercode',
 ] as const;
 
 export type AuditEntityType = (typeof AUDIT_ENTITY_TYPES)[number];
