@@ -20,6 +20,11 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 // ---------------------------------------------------------------------------
 
 export interface PriceResolveParams {
+  /**
+   * Mandant, dessen Tarifwerk gilt. PFLICHT — ohne Org-Fence wuerde die
+   * Aufloesung Tarife fremder Mandanten finden und deren Preise abrechnen.
+   */
+  organizationId: string;
   leistungsart: string;
   rechtsgrundlage: string;    // P7: 'privat' fuer Privatzahler, '§45b SGB XI' etc. fuer Kasse
   datum: string;              // ISO date YYYY-MM-DD
@@ -151,10 +156,25 @@ export async function resolvePrice(
 ): Promise<BillingTarif> {
   const istKasse = params.rechtsgrundlage !== 'privat';
 
+  if (!params.organizationId) {
+    throw new Error(
+      'organizationId fehlt: Tarifaufloesung ohne Mandanten-Fence wuerde Tarife ' +
+      'fremder Organisationen finden. Kein Fallback.'
+    );
+  }
+
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(params.datum)) {
+    throw new Error(
+      `Leistungsdatum "${params.datum}" ist kein ISO-Datum (YYYY-MM-DD). ` +
+      `Ohne verlaessliches Datum ist der Gueltigkeitszeitraum nicht pruefbar.`
+    );
+  }
+
   // Alle potentiell passenden Tarife laden — ist_aktiv-Filter immer aktiv
   let query = supabase
     .from('billing_tariffs')
     .select('*')
+    .eq('organization_id', params.organizationId)
     .eq('leistungsart', params.leistungsart)
     .eq('rechtsgrundlage', params.rechtsgrundlage)
     .eq('ist_aktiv', true)

@@ -486,6 +486,7 @@ describe('Szenario 4: Nicht verifizierter Kassentarif', () => {
 
     await expect(
       resolvePrice(mock, {
+        organizationId: 'org-1',
         leistungsart: 'Grundpflege',
         rechtsgrundlage: '§45b SGB XI',
         datum: '2026-01-15',
@@ -499,6 +500,7 @@ describe('Szenario 4: Nicht verifizierter Kassentarif', () => {
 
     await expect(
       resolvePrice(mock, {
+        organizationId: 'org-1',
         leistungsart: 'Grundpflege',
         rechtsgrundlage: '§45b SGB XI',
         datum: '2026-01-15',
@@ -515,6 +517,7 @@ describe('Szenario 4: Nicht verifizierter Kassentarif', () => {
 
     try {
       await resolvePrice(mock, {
+        organizationId: 'org-1',
         leistungsart: 'Grundpflege',
         rechtsgrundlage: '§45b SGB XI',
         datum: '2026-01-15',
@@ -534,6 +537,7 @@ describe('Szenario 4: Nicht verifizierter Kassentarif', () => {
     const mock = createPriceResolveMock([tarif]);
 
     const result = await resolvePrice(mock, {
+      organizationId: 'org-1',
       leistungsart: 'Grundpflege',
       rechtsgrundlage: '§45b SGB XI',
       datum: '2026-01-15',
@@ -556,6 +560,7 @@ describe('Szenario 5: Deaktivierter Tarif (ist_aktiv = false)', () => {
 
     await expect(
       resolvePrice(mock, {
+        organizationId: 'org-1',
         leistungsart: 'Grundpflege',
         rechtsgrundlage: '§45b SGB XI',
         datum: '2026-01-15',
@@ -568,6 +573,7 @@ describe('Szenario 5: Deaktivierter Tarif (ist_aktiv = false)', () => {
     const mock = createPriceResolveMock([aktiverTarif]);
 
     const result = await resolvePrice(mock, {
+      organizationId: 'org-1',
       leistungsart: 'Grundpflege',
       rechtsgrundlage: '§45b SGB XI',
       datum: '2026-01-15',
@@ -587,6 +593,7 @@ describe('Szenario 6: Fehlender Tarif', () => {
 
     try {
       await resolvePrice(mock, {
+        organizationId: 'org-1',
         leistungsart: 'Wundversorgung',
         rechtsgrundlage: '§45b SGB XI',
         datum: '2026-03-01',
@@ -630,6 +637,7 @@ describe('Szenario 7: Privatkunde (kein Verifizierungs-Check)', () => {
     const mock = createPriceResolveMock([tarif]);
 
     const result = await resolvePrice(mock, {
+      organizationId: 'org-1',
       leistungsart: 'Grundpflege',
       rechtsgrundlage: 'privat',
       datum: '2026-01-15',
@@ -647,6 +655,7 @@ describe('Szenario 7: Privatkunde (kein Verifizierungs-Check)', () => {
 
     await expect(
       resolvePrice(mock, {
+        organizationId: 'org-1',
         leistungsart: 'Grundpflege',
         rechtsgrundlage: 'privat',
         datum: '2026-01-15',
@@ -988,6 +997,7 @@ describe('Szenario 10: Voller Abrechnungsflow', () => {
       const mock = createPriceResolveMock([allgemein, spezifisch]);
 
       const result = await resolvePrice(mock, {
+        organizationId: 'org-1',
         leistungsart: 'Grundpflege',
         rechtsgrundlage: '§45b SGB XI',
         datum: '2026-01-15',
@@ -1003,6 +1013,7 @@ describe('Szenario 10: Voller Abrechnungsflow', () => {
 
       await expect(
         resolvePrice(mock, {
+          organizationId: 'org-1',
           leistungsart: 'Grundpflege',
           rechtsgrundlage: '§45b SGB XI',
           datum: '2026-01-15',
@@ -1156,6 +1167,7 @@ describe('Grenzfaelle', () => {
 
     await expect(
       resolvePrice(mock, {
+        organizationId: 'org-1',
         leistungsart: 'Grundpflege',
         rechtsgrundlage: '§45b SGB XI',
         datum: '2026-06-01',
@@ -1178,6 +1190,7 @@ describe('Grenzfaelle', () => {
 
     await expect(
       resolvePrice(mock, {
+        organizationId: 'org-1',
         leistungsart: 'X',
         rechtsgrundlage: '§45b SGB XI',
         datum: '2026-01-01',
