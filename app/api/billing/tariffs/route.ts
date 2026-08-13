@@ -173,12 +173,25 @@ export async function POST(request: Request) {
       }
     }
 
+    // Verifizierungsfelder gehoeren NICHT in den freien Request-Body: sie duerfen
+    // nur ueber PATCH /api/billing/tariffs/[id]/verifizierung gesetzt werden,
+    // dort mit eigenem Admin-Gate und Pflichtangabe der Quelle. Ein im Body
+    // mitgeschicktes tarif_status='verified' waere sonst die Kasse-Freigabe-
+    // Sperre der Rechnungs-RPC ohne jede Pruefung wert.
+    const {
+      tarif_status: _ignoredTarifStatus,
+      verifiziert_am: _ignoredVerifiziertAm,
+      verifiziert_von: _ignoredVerifiziertVon,
+      verifizierungs_quelle: _ignoredVerifizierungsQuelle,
+      ...tarifDaten
+    } = body as Record<string, unknown>
+
     // Admin-Client für den Insert verwenden (RLS erfordert Admin).
     // Org-Fence: organization_id kommt aus der Auth, NICHT aus dem Body — der
     // Spread steht davor, damit ein mitgeschicktes Feld ueberschrieben wird.
     const { data: tariff, error } = await admin
       .from('billing_tariffs')
-      .insert({ ...body, organization_id: organizationId })
+      .insert({ ...tarifDaten, organization_id: organizationId, tarif_status: 'unverified' })
       .select()
       .single()
 

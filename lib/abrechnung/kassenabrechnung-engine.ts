@@ -178,13 +178,14 @@ export async function preFlightValidierung(
       : 'Kein Anerkennungsbescheid hinterlegt',
   })
 
-  // 4. Gültige Tarife vorhanden
+  // 4. Gültige, verifizierte Tarife vorhanden (fail-closed: tarif_status muss 'verified' sein)
   const { count: tarifCount } = await supabase
     .from('billing_tariffs')
     .select('id', { count: 'exact', head: true })
     .eq('organization_id', params.organizationId)
     .eq('bundesland', params.bundesland)
     .eq('ist_aktiv', true)
+    .eq('tarif_status', 'verified')
     .lte('gueltig_ab', params.abrechnungsmonat.slice(0, 7) + '-01')
     .or(`gueltig_bis.is.null,gueltig_bis.gte.${params.abrechnungsmonat.slice(0, 7)}-01`)
 
@@ -193,7 +194,7 @@ export async function preFlightValidierung(
     label: 'Gültige Kassentarife',
     bestanden: (tarifCount ?? 0) > 0,
     pflicht: true,
-    details: `${tarifCount ?? 0} aktive Tarife für ${params.bundesland}`,
+    details: `${tarifCount ?? 0} verifizierte Tarife für ${params.bundesland}`,
   })
 
   // 5. Kostenträger konfiguriert (wenn spezifisch angegeben)

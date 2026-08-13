@@ -91,7 +91,7 @@ export async function ermittleReadiness(
       supabase.from('datenannahmestellen').select('id, name, ik_nummer, aktiv, sftp_host, sftp_user, sftp_key_url, kim_adresse, organization_id').or(`organization_id.eq.${organizationId},organization_id.is.null`).is('deleted_at', null),
       supabase.from('dta_kostentraeger').select('id, ik_nummer, name, ist_aktiv, datenannahmestelle_id').eq('organization_id', organizationId).is('deleted_at', null),
       supabase.from('state_settings').select('bundesland, status, kassenrechnung_enabled, dakota_export_enabled, approval_document').eq('organization_id', organizationId),
-      supabase.from('billing_tariffs').select('id', { count: 'exact', head: true }).eq('organization_id', organizationId).eq('ist_aktiv', true).is('deleted_at', null),
+      supabase.from('billing_tariffs').select('id', { count: 'exact', head: true }).eq('organization_id', organizationId).eq('ist_aktiv', true).eq('tarif_status', 'verified').is('deleted_at', null),
       supabase.from('abrechnungslaeufe').select('id, status, abrechnungsmonat, erstellt_am, uebermittelt_am').eq('organization_id', organizationId).is('deleted_at', null).order('erstellt_am', { ascending: false }).limit(20),
       supabase.from('dta_ruecklaeufer').select('id, status, created_at').eq('organization_id', organizationId).order('created_at', { ascending: false }).limit(1),
       supabase.from('ops_aufgaben').select('id', { count: 'exact', head: true }).eq('organization_id', organizationId).eq('kategorie', 'abrechnung').in('status', ['offen', 'in_bearbeitung']),
@@ -192,8 +192,8 @@ export async function ermittleReadiness(
   punkte.push(punkt(
     'tarife', 'Kassentarife hinterlegt', 'stammdaten',
     tarifAnzahl > 0 ? 'gruen' : 'rot',
-    `${tarifAnzahl} aktive Tarife`,
-    tarifAnzahl > 0 ? null : 'Ohne Tarife kann kein Betrag berechnet werden — Landesrahmenvertrag einpflegen',
+    `${tarifAnzahl} verifizierte Tarife`,
+    tarifAnzahl > 0 ? null : 'Ohne verifizierte Tarife (tarif_status=verified) kann kein Betrag berechnet werden — Landesrahmenvertrag einpflegen und in der Tarifverwaltung verifizieren',
     'intern',
   ))
 
