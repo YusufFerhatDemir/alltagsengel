@@ -105,15 +105,25 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 
     // ── IK-Nummer + Bankdaten der Organisation laden ──
     const ikNummer = await getOrgIK(admin, orgId)
-    const { data: orgData } = await admin
+    // LIVE-SCHEMA: organizations hat KEINE Spalte `steuernummer`. Das Select
+    // scheiterte deshalb mit 42703 und lieferte null zurück — die Rechnung
+    // wurde ohne IBAN, BIC und Bank erzeugt und war damit nicht zahlbar.
+    // Die Steuernummer wird, falls gepflegt, aus settings gelesen.
+    const { data: orgData, error: orgErr } = await admin
       .from('organizations')
-      .select('name, iban, bic, bank_name, steuernummer')
+      .select('name, iban, bic, bank_name, settings')
       .eq('id', orgId)
       .maybeSingle()
+    if (orgErr) {
+      return NextResponse.json(
+        { error: `Organisationsdaten nicht lesbar: ${orgErr.message}` },
+        { status: 500 }
+      )
+    }
     const orgIban = orgData?.iban || null
     const orgBic = orgData?.bic || null
     const orgBank = orgData?.bank_name || 'Sparkasse'
-    const orgSteuer = orgData?.steuernummer || null
+    const orgSteuer = (orgData?.settings as { steuernummer?: string } | null)?.steuernummer || null
 
     // ── Bezug + Korrekturgrund bei Korrekturbelegen ──
     let originalNumber: string | null = null

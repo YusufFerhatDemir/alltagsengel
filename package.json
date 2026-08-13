@@ -14,6 +14,7 @@
     "rls:matrix": "tsx scripts/rls-matrix.ts",
     "rls:matrix:check": "tsx scripts/rls-matrix.ts --check",
     "lint:forbidden": "tsx scripts/lint-forbidden.ts",
+    "check:schema-drift": "node scripts/schema-drift-check.mjs",
     "generate:plz-sql": "tsx scripts/generate-plz-bundesland-sql.ts",
     "lint:forbidden:staged": "tsx scripts/lint-forbidden.ts --staged",
     "indexnow:ping": "node scripts/indexnow-ping.mjs",

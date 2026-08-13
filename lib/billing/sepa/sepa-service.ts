@@ -50,13 +50,16 @@ export async function createMandate(
   }
 
   // Client-Nummer für Mandatsreferenz
+  // LIVE-SCHEMA: die Kundennummer heißt customer_number. Mit dem alten Namen
+  // scheiterte die Abfrage mit 42703 und jede Mandatsreferenz fiel auf einen
+  // UUID-Ausschnitt zurück — für den Kunden nicht wiedererkennbar.
   const { data: client } = await supabase
     .from('clients')
-    .select('client_number, first_name, last_name')
+    .select('customer_number, first_name, last_name')
     .eq('id', clientId)
     .single()
 
-  const clientNum = client?.client_number || clientId.slice(0, 8)
+  const clientNum = client?.customer_number || clientId.slice(0, 8)
   const mandateReference = generateMandateReference('AE', clientNum)
 
   const { data, error } = await supabase

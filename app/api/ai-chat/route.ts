@@ -35,7 +35,7 @@ async function fetchLiveContext(orgId: string): Promise<string> {
 
     const [usersRes, bookingsRes, visitorsRes, engelsRes, kundenRes, fahrerRes] = await Promise.all([
       admin.from('profiles').select('id, role').in('id', memberIdList).limit(500),
-      admin.from('bookings').select('id, status, created_at, total_price, service_type').eq('organization_id', orgId).limit(100),
+      admin.from('bookings').select('id, status, created_at, total_amount, service').eq('organization_id', orgId).limit(100),
       admin.from('visitor_locations').select('city, country, page_path, created_at').order('created_at', { ascending: false }).limit(50),
       admin.from('profiles').select('id').in('id', memberIdList).eq('role', 'engel'),
       admin.from('profiles').select('id').in('id', memberIdList).eq('role', 'kunde'),
@@ -53,7 +53,7 @@ async function fetchLiveContext(orgId: string): Promise<string> {
     const totalBookings = bookings.length
     const completedBookings = bookings.filter(b => b.status === 'completed').length
     const pendingBookings = bookings.filter(b => b.status === 'pending').length
-    const totalRevenue = bookings.reduce((sum, b) => sum + (Number(b.total_price) || 0), 0)
+    const totalRevenue = bookings.reduce((sum, b) => sum + (Number(b.total_amount) || 0), 0)
 
     // Visitor Städte
     const cityCounts: Record<string, number> = {}
