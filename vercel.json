@@ -6,6 +6,10 @@
   },
   "crons": [
     {
+      "path": "/api/cron/mahnlauf",
+      "schedule": "0 7 * * *"
+    },
+    {
       "path": "/api/cron/drip",
       "schedule": "0 9 * * *"
     },

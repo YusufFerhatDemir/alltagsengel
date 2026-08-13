@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { isValidUUID } from '@/lib/safe-query'
@@ -72,45 +72,44 @@ export default function ClientDetailPage() {
   const [notFound, setNotFound] = useState(false)
   const [tab, setTab] = useState<'uebersicht' | 'gesundheit' | 'notizen'>('uebersicht')
 
-  useEffect(() => {
-    async function load() {
-      if (!isValidUUID(id)) { setNotFound(true); setLoading(false); return }
-      try {
-        const supabase = createClient()
-        const year = new Date().getFullYear()
-        const [clientRes, budgetRes, recordsRes] = await Promise.all([
-          supabase.from('clients').select('*').eq('id', id).single(),
-          supabase.from('client_budgets').select('*').eq('client_id', id).eq('year', year).maybeSingle(),
-          supabase.from('service_records')
-            .select('id, date, start_time, end_time, duration_minutes, service_type, budget_type, amount, status, caregiver:caregivers(first_name, last_name)')
-            .eq('client_id', id).order('date', { ascending: false }).limit(100),
-        ])
+  const load = useCallback(async () => {
+    if (!isValidUUID(id)) { setNotFound(true); setLoading(false); return }
+    try {
+      const supabase = createClient()
+      const year = new Date().getFullYear()
+      const [clientRes, budgetRes, recordsRes] = await Promise.all([
+        supabase.from('clients').select('*').eq('id', id).single(),
+        supabase.from('client_budgets').select('*').eq('client_id', id).eq('year', year).maybeSingle(),
+        supabase.from('service_records')
+          .select('id, date, start_time, end_time, duration_minutes, service_type, budget_type, amount, status, caregiver:caregivers(first_name, last_name)')
+          .eq('client_id', id).order('date', { ascending: false }).limit(100),
+      ])
 
-        if (clientRes.error || !clientRes.data) { setNotFound(true); setLoading(false); return }
-        setClient(clientRes.data as ClientDetail)
-        setBudget(budgetRes.data)
-        setSummary(budgetRes.data ? summarizeBudget(budgetRes.data) : null)
-        setRecords((recordsRes.data || []).map((r: any) => ({
-          id: r.id,
-          date: r.date,
-          start_time: r.start_time,
-          end_time: r.end_time,
-          duration_minutes: r.duration_minutes,
-          service_type: r.service_type,
-          budget_type: r.budget_type,
-          amount: r.amount,
-          status: r.status,
-          caregiver: fullName(r.caregiver),
-        })))
-      } catch (err) {
-        console.error('Client detail load error:', err)
-        setNotFound(true)
-      } finally {
-        setLoading(false)
-      }
+      if (clientRes.error || !clientRes.data) { setNotFound(true); setLoading(false); return }
+      setClient(clientRes.data as ClientDetail)
+      setBudget(budgetRes.data)
+      setSummary(budgetRes.data ? summarizeBudget(budgetRes.data) : null)
+      setRecords((recordsRes.data || []).map((r: any) => ({
+        id: r.id,
+        date: r.date,
+        start_time: r.start_time,
+        end_time: r.end_time,
+        duration_minutes: r.duration_minutes,
+        service_type: r.service_type,
+        budget_type: r.budget_type,
+        amount: r.amount,
+        status: r.status,
+        caregiver: fullName(r.caregiver),
+      })))
+    } catch (err) {
+      console.error('Client detail load error:', err)
+      setNotFound(true)
+    } finally {
+      setLoading(false)
     }
-    load()
   }, [id])
+
+  useEffect(() => { load() }, [load])
 
   if (loading) return <div className="admin-page"><p>Laden…</p></div>
   if (notFound || !client) return (
@@ -174,7 +173,7 @@ export default function ClientDetailPage() {
           <InfoRow label="E-Mail" value={client.email || '—'} />
           <InfoRow label="Pflegekasse" value={client.insurance_name || '—'} />
           <InfoRow label="Versichertennr." value={client.insurance_number || '—'} />
-          <InfoRow label="Pflegegrad seit" value={formatDate(client.care_level_since)} />
+          <PflegegradEditor client={client} onSaved={load} />
           {client.notes && <InfoRow label="Notizen" value={client.notes} />}
         </div>
 
@@ -451,6 +450,95 @@ function InfoBlock({ label, value }: { label: string; value: string | null }) {
     <div style={{ padding: '8px 0', borderBottom: '1px solid var(--border)', fontSize: 14 }}>
       <div style={{ color: 'var(--ink4)', marginBottom: 2 }}>{label}</div>
       <div style={{ fontWeight: 500, color: 'var(--ink2)', whiteSpace: 'pre-wrap' }}>{value || '—'}</div>
+    </div>
+  )
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Pflegegrad — Höher-/Herabstufung durch den MDK
+// ═══════════════════════════════════════════════════════════════
+function PflegegradEditor({ client, onSaved }: { client: ClientDetail; onSaved: () => void }) {
+  const [editing, setEditing] = useState(false)
+  const [pg, setPg] = useState(String(client.care_level ?? 0))
+  const [seit, setSeit] = useState(client.care_level_since || '')
+  const [saving, setSaving] = useState(false)
+  const [err, setErr] = useState<string | null>(null)
+  const [hinweise, setHinweise] = useState<string[]>([])
+
+  function startEdit() {
+    setPg(String(client.care_level ?? 0))
+    setSeit(client.care_level_since || '')
+    setErr(null); setHinweise([]); setEditing(true)
+  }
+
+  async function save() {
+    setErr(null); setSaving(true)
+    try {
+      const res = await fetch(`/api/admin/clients/${client.id}/pflegegrad`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          care_level: Number(pg),
+          care_level_since: seit || undefined,
+        }),
+      })
+      const json = await res.json()
+      if (!res.ok) { setErr(json.error || 'Speichern fehlgeschlagen.'); setSaving(false); return }
+      setHinweise(json.hinweise || [])
+      setEditing(false)
+      // Budget neu laden — beim Hochstufen auf PG 2 entsteht das VP/KZP-Budget.
+      onSaved()
+    } catch (e: any) {
+      setErr(e?.message || 'Speichern fehlgeschlagen.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  if (!editing) {
+    return (
+      <>
+        <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16, padding: '6px 0', borderBottom: '1px solid var(--border)', fontSize: 14, alignItems: 'center' }}>
+          <span style={{ color: 'var(--ink4)' }}>Pflegegrad</span>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span style={{ fontWeight: 500, color: 'var(--ink2)' }}>
+              {client.care_level ? `PG ${client.care_level}` : 'kein Pflegegrad'}
+            </span>
+            <button onClick={startEdit} style={{ ...backBtn, marginBottom: 0, fontSize: 13 }}>ändern</button>
+          </span>
+        </div>
+        <InfoRow label="Pflegegrad seit" value={formatDate(client.care_level_since)} />
+        {hinweise.length > 0 && (
+          <div style={{ marginTop: 8 }}>
+            {hinweise.map((h, i) => <Banner key={i} tone="warn">{h}</Banner>)}
+          </div>
+        )}
+      </>
+    )
+  }
+
+  return (
+    <div style={{ padding: '10px 0', borderBottom: '1px solid var(--border)' }}>
+      {err && <Banner tone="danger">{err}</Banner>}
+      <div style={{ display: 'flex', gap: 10, alignItems: 'flex-end', flexWrap: 'wrap' }}>
+        <FormField label="Pflegegrad">
+          <select value={pg} onChange={e => setPg(e.target.value)} style={fieldInput}>
+            <option value="0">kein Pflegegrad</option>
+            {[1, 2, 3, 4, 5].map(n => <option key={n} value={String(n)}>Pflegegrad {n}</option>)}
+          </select>
+        </FormField>
+        <FormField label="gültig ab">
+          <input type="date" value={seit} onChange={e => setSeit(e.target.value)} style={fieldInput} />
+        </FormField>
+      </div>
+      <p style={{ fontSize: 12, color: 'var(--ink5)', margin: '8px 0 0' }}>
+        §45b Entlastungsbetrag ab PG 1 · §42a Verhinderungs-/Kurzzeitpflege ab PG 2.
+        Fehlende Budgets werden nach dem Speichern automatisch angelegt.
+      </p>
+      <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+        <button onClick={save} disabled={saving} style={addBtn}>{saving ? 'Speichert…' : 'Speichern'}</button>
+        <button onClick={() => setEditing(false)} disabled={saving} style={{ ...backBtn, marginBottom: 0 }}>Abbrechen</button>
+      </div>
     </div>
   )
 }
