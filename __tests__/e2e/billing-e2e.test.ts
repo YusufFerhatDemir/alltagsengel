@@ -808,6 +808,19 @@ describe('Szenario 10: Voller Abrechnungsflow', () => {
           },
           error: null,
         }),
+        // Faelligkeits-Nachlauf (setzeFaelligkeitFallsLeer): laedt die Rechnung
+        // und setzt due_date, solange sie leer ist.
+        update: vi.fn().mockReturnThis(),
+        is: vi.fn().mockResolvedValue({ error: null }),
+        maybeSingle: vi.fn().mockResolvedValue({
+          data: {
+            id: 'inv-new',
+            due_date: null,
+            payment_terms_days: 14,
+            created_at: '2026-06-30T10:00:00Z',
+          },
+          error: null,
+        }),
       };
       const mock = {
         from: vi.fn(() => mockChain),

@@ -30,6 +30,10 @@ import { logBillingAction, computeSnapshotChecksum } from './audit';
 // Der Fail-Closed-Fehlertyp wird dagegen geteilt, damit Korrekturen dieselbe
 // Tarif-Statuspruefung wie resolvePrice/RPC verwenden.
 import { TarifNichtVerifiziertError, type TarifStatus } from './price-resolver';
+// Zahlungsziel + Faelligkeit: invoices.due_date wurde bisher nirgends gesetzt,
+// dadurch war jede zahlungszielbasierte Auswertung (OPOS, Mahnwesen,
+// workflow_engine) wirkungslos.
+import { zahlungszielFelder } from './zahlungsziel';
 
 // ---------------------------------------------------------------------------
 // Fehler-Codes fuer Tarif-Aufloesung
@@ -150,6 +154,59 @@ export interface WriteOffResult {
  * Bei Fehler in JEDEM Schritt: kompletter Rollback. Keine halbfertigen Daten.
  * Preise kommen aus billing_tariffs (DB), NICHT vom Browser, NICHT aus service_records.
  */
+/**
+ * Setzt invoices.due_date aus payment_terms_days — aber nur, solange due_date
+ * noch NULL ist. Wird nach RPC-Pfaden aufgerufen, die die Spalte nicht kennen.
+ *
+ * Bewusst best-effort: das Faelligkeitsdatum ist eine Auswertungsgroesse
+ * (OPOS/Mahnwesen), keine Rechnungsgroesse. Ein Fehler hier wird protokolliert,
+ * aber nicht geworfen — die Rechnung selbst ist zu diesem Zeitpunkt bereits
+ * atomar committet.
+ */
+export async function setzeFaelligkeitFallsLeer(
+  supabase: SupabaseClient,
+  invoiceId: string
+): Promise<string | null> {
+  try {
+    const { data: invoice, error: loadError } = await supabase
+      .from('invoices')
+      .select('id, due_date, payment_terms_days, created_at')
+      .eq('id', invoiceId)
+      .maybeSingle();
+
+    if (loadError || !invoice) {
+      console.error('[billing] Faelligkeit: Rechnung nicht ladbar:', loadError?.message);
+      return null;
+    }
+    if (invoice.due_date) return invoice.due_date as string;
+
+    const rechnungsdatum = invoice.created_at
+      ? String(invoice.created_at).slice(0, 10)
+      : null;
+    const felder = zahlungszielFelder(rechnungsdatum, invoice.payment_terms_days);
+
+    const { error: updateError } = await supabase
+      .from('invoices')
+      .update(felder)
+      .eq('id', invoiceId)
+      .is('due_date', null);
+
+    if (updateError) {
+      console.error('[billing] Faelligkeit konnte nicht gesetzt werden:', updateError.message);
+      return null;
+    }
+
+    return felder.due_date;
+  } catch (err) {
+    // Die Rechnung ist an dieser Stelle bereits atomar committet. Ein Problem
+    // beim Nachziehen der Faelligkeit darf sie nicht nachtraeglich zu einem
+    // Fehlschlag machen — OPOS haette dann gar keine Rechnung statt einer
+    // Rechnung ohne Faelligkeit.
+    console.error('[billing] Faelligkeit: unerwarteter Fehler:', err);
+    return null;
+  }
+}
+
 export async function createInvoiceDraft(
   supabase: SupabaseClient,
   params: CreateDraftParams
@@ -198,6 +255,18 @@ export async function createInvoiceDraft(
   if (!rpcResult) {
     throw new Error('RPC create_invoice_draft_atomic hat kein Ergebnis zurueckgegeben.');
   }
+
+  // ── Zahlungsziel / Faelligkeit nachziehen ────────────────────────────
+  // Die RPC schreibt due_date nicht (Spalte kam erst mit 20260808210000).
+  // Ohne due_date faellt die gesamte zahlungszielbasierte Auswertung aus:
+  // OPOS-Altersklassen, Mahnlauf und die faelligkeits-Workflows finden nichts.
+  //
+  // NUR setzen, wenn noch leer (.is('due_date', null)):
+  //   • bei already_exists=true bleibt das Ziel der Bestandsrechnung stehen
+  //   • ein manuell abweichend gesetztes Zahlungsziel wird nicht ueberschrieben
+  // Der Faelligkeitswert ist eine Auswertungsgroesse, keine Preisangabe —
+  // ein Fehlschlag hier darf die bereits committete Rechnung nicht kippen.
+  await setzeFaelligkeitFallsLeer(supabase, rpcResult.invoice_id);
 
   // Ergebnis auswerten — Preise kommen ausschliesslich aus billing_tariffs
   return {
@@ -557,6 +626,7 @@ export async function cancelInvoice(
       correction_of: invoiceId,
       correction_type: 'storno',
       organization_id: original.organization_id,
+      ...zahlungszielFelder(null, original.payment_terms_days),
     })
     .select('id')
     .single();
@@ -829,6 +899,7 @@ export async function correctInvoice(
       correction_of: invoiceId,
       correction_type: 'korrektur',
       organization_id: original.organization_id,
+      ...zahlungszielFelder(null, original.payment_terms_days),
     })
     .select('id')
     .single();
@@ -1069,6 +1140,7 @@ export async function createCreditNote(
       correction_of: invoiceId,
       correction_type: 'gutschrift',
       organization_id: original.organization_id,
+      ...zahlungszielFelder(null, original.payment_terms_days),
     })
     .select('id')
     .single();

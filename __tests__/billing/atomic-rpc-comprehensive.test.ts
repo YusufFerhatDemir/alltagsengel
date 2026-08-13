@@ -100,6 +100,24 @@ function createSupabaseMock(opts: {
       const builder: any = {
         select() { return builder },
         eq() { return builder },
+        // Faelligkeits-Nachlauf (setzeFaelligkeitFallsLeer): laedt die Rechnung
+        // und setzt due_date, solange sie leer ist.
+        is() { return Promise.resolve({ data: null, error: null }) },
+        update() { return builder },
+        maybeSingle() {
+          if (table === 'invoices') {
+            return Promise.resolve({
+              data: {
+                id: 'inv-mock',
+                due_date: null,
+                payment_terms_days: 14,
+                created_at: '2026-09-01T10:00:00Z',
+              },
+              error: null,
+            })
+          }
+          return Promise.resolve({ data: null, error: null })
+        },
         single() {
           if (table === 'clients') {
             return Promise.resolve({
