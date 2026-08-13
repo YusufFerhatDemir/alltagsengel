@@ -287,11 +287,22 @@ DO $$ BEGIN
     CREATE POLICY admin_uebergabe_kenntnisnahmen_all ON uebergabe_kenntnisnahmen FOR ALL USING (is_admin());
   END IF;
 
-  -- Engel: Protokollköpfe der eigenen Organisation lesen. Der Kopf enthält
-  -- keine Klientendaten; ohne Lesbarkeit gäbe es keine Übergabe.
+  -- Engel: Protokollköpfe der eigenen Organisation lesen. Ohne Lesbarkeit
+  -- gäbe es keine Übergabe.
+  --
+  -- NICHT 'auth.uid() IS NOT NULL': current_org_id() fällt für Nutzer ohne
+  -- organization_members-Zeile auf die Stamm-Organisation zurück. Ein
+  -- angemeldeter Kunde liegt damit innerhalb des Org-Fence und läse den
+  -- Freitext in `zusammenfassung` mit. Die API sperrt Kunden bereits über
+  -- die Rolle aus (lib/uebergabe/api-auth.ts) — direkt gegen PostgREST
+  -- greift nur diese Policy. Gelesen wird deshalb, wer eine Betreuungskraft
+  -- ist oder das Protokoll selbst übergeben hat.
   IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'uebergabe_protokolle' AND policyname = 'engel_uebergabe_protokolle_select') THEN
     CREATE POLICY engel_uebergabe_protokolle_select ON uebergabe_protokolle FOR SELECT
-      USING (auth.uid() IS NOT NULL);
+      USING (
+        uebergeber_id = auth.uid()
+        OR EXISTS (SELECT 1 FROM eigene_caregiver_ids())
+      );
   END IF;
 
   -- Engel: eigenes Protokoll anlegen und bis zum Abschluss pflegen.
@@ -348,9 +359,18 @@ DO $$ BEGIN
   END IF;
 
   -- Kenntnisnahme: jeder quittiert ausschliesslich für sich selbst.
+  -- Lesbar für Betreuungskräfte, für die eigene Quittung und für den
+  -- Übergeber des Protokolls — nicht für jeden angemeldeten Nutzer
+  -- (siehe Begründung bei engel_uebergabe_protokolle_select).
   IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'uebergabe_kenntnisnahmen' AND policyname = 'engel_uebergabe_kenntnisnahmen_select') THEN
     CREATE POLICY engel_uebergabe_kenntnisnahmen_select ON uebergabe_kenntnisnahmen FOR SELECT
-      USING (auth.uid() IS NOT NULL);
+      USING (
+        user_id = auth.uid()
+        OR EXISTS (SELECT 1 FROM eigene_caregiver_ids())
+        OR protokoll_id IN (
+          SELECT p.id FROM uebergabe_protokolle p WHERE p.uebergeber_id = auth.uid()
+        )
+      );
   END IF;
   IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'uebergabe_kenntnisnahmen' AND policyname = 'engel_uebergabe_kenntnisnahmen_insert') THEN
     CREATE POLICY engel_uebergabe_kenntnisnahmen_insert ON uebergabe_kenntnisnahmen FOR INSERT
