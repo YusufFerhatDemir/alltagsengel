@@ -76,6 +76,8 @@ export interface RuecklaeuferImportErgebnis {
   aufgabeId: string | null
   /** true, wenn zu diesem Rückläufer bereits eine Aufgabe existierte. */
   aufgabeDublette: boolean
+  /** Neu in die Wiedervorlage-Queue aufgenommene Positionen. */
+  wiedervorlageEintraege: number
 }
 
 // ── Rückläufer importieren ──────────────────────────────────────
@@ -109,6 +111,7 @@ export async function importiereRuecklaeufer(
         fehlerErstellt: false,
         aufgabeId: null,
         aufgabeDublette: false,
+        wiedervorlageEintraege: 0,
       }
     }
   }
@@ -263,6 +266,36 @@ export async function importiereRuecklaeufer(
     actorId: params.actorId,
   })
 
+  // Abgelehnte/gekürzte Positionen in die Wiedervorlage-Queue.
+  //
+  // Hier und nicht in der API-Route, aus demselben Grund wie bei der Aufgabe:
+  // `importiereRuecklaeufer` ist der einzige Weg, auf dem ein Rückläufer
+  // entsteht — der automatische Antwortabruf läuft ebenfalls hier durch.
+  //
+  // Bewusst fehlertolerant: solange die Migration 20260902010000 nicht
+  // angewendet ist, existiert `dta_wiedervorlage` nicht. Ein Fehler dabei darf
+  // den Import der Rückmeldung nicht mitreissen — die Rückmeldung selbst ist
+  // der Beleg und muss in jedem Fall ankommen. Der Arbeitsvorrat lässt sich
+  // jederzeit über POST /api/billing/dta/wiedervorlage nachziehen.
+  let wiedervorlageEintraege = 0
+  if (['abgelehnt', 'teilweise_abgelehnt', 'fachlicher_fehler', 'technischer_fehler', 'korrektur_erforderlich'].includes(status)
+      || posAbgelehnt > 0) {
+    try {
+      const { reiheRuecklaeuferEin } = await import('./wiedervorlage')
+      const queue = await reiheRuecklaeuferEin(supabase, {
+        ruecklaeuferId: ruecklaeufer.id,
+        organizationId: params.organizationId,
+        actorId: params.actorId,
+      })
+      wiedervorlageEintraege = queue.erstellt
+    } catch (err) {
+      console.error(
+        '[ruecklaeufer] Wiedervorlage konnte nicht befüllt werden (Import bleibt gültig):',
+        (err as Error).message,
+      )
+    }
+  }
+
   // Audit
   await logBillingAction(supabase, {
     entityType: 'dta_ruecklaeufer',
@@ -276,6 +309,7 @@ export async function importiereRuecklaeufer(
       positionen: params.positionen?.length ?? 0,
       fehler: fehlerErstellt,
       aufgabe_id: aufgabenErgebnis.aufgabeId,
+      wiedervorlage_eintraege: wiedervorlageEintraege,
     },
     actorId: params.actorId,
   })
@@ -290,6 +324,7 @@ export async function importiereRuecklaeufer(
     fehlerErstellt,
     aufgabeId: aufgabenErgebnis.aufgabeId,
     aufgabeDublette: aufgabenErgebnis.dublette,
+    wiedervorlageEintraege,
   }
 }
 
