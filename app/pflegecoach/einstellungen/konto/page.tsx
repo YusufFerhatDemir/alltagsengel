@@ -25,7 +25,9 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import type { CoachConsent } from '@/lib/coach/types'
 import { hatAktiveEinwilligung, PFLICHT_CONSENT } from '@/lib/coach/consent'
-import { COACH_PRODUKT_NAME, COACH_SUPPORT_EMAIL } from '@/lib/coach/version'
+// Kurzform „PflegeCoach" in gebeugten Sätzen — COACH_PRODUKT_NAME steht im
+// Nominativ und ergäbe „des Digitaler PflegeCoachs".
+import { COACH_SUPPORT_EMAIL } from '@/lib/coach/version'
 import { coachApi, useCoachProfil } from '../../_lib/client'
 import { CoachLaden, CoachLadefehler } from '../../_lib/Zustand'
 
@@ -87,8 +89,8 @@ export default function KontoSeite() {
     <>
       <h1 className="pc-h1">Konto und Nutzung beenden</h1>
       <p className="pc-lead">
-        Hier beenden Sie die Nutzung des {COACH_PRODUKT_NAME}s, nehmen Ihre Daten mit oder
-        löschen sie. Sie entscheiden bei jedem Schritt einzeln.
+        Hier beenden Sie die Nutzung des PflegeCoach, nehmen Ihre Daten mit oder löschen sie.
+        Sie entscheiden bei jedem Schritt einzeln.
       </p>
 
       {meldung && (

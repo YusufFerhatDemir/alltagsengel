@@ -18,7 +18,12 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { COACH_PRODUKT_NAME, COACH_SUPPORT_EMAIL } from '@/lib/coach/version'
+// Nur die Support-Adresse als Konstante: COACH_PRODUKT_NAME steht im
+// Nominativ („Digitaler PflegeCoach") und ergäbe in gebeugten Sätzen
+// („zum …", „des …s") falsches Deutsch. In solchen Sätzen steht deshalb
+// die Kurzform „PflegeCoach"; der vollständige Produktname erscheint in
+// Titel, Fußzeile, Export und Bericht.
+import { COACH_SUPPORT_EMAIL } from '@/lib/coach/version'
 
 const ROLLEN = [
   { wert: 'fuer_mich', label: 'Für mich selbst' },
@@ -93,7 +98,7 @@ export default function AnfrageSeite() {
 
   return (
     <>
-      <h1 className="pc-h1">Anfrage zum {COACH_PRODUKT_NAME}</h1>
+      <h1 className="pc-h1">Anfrage zum PflegeCoach</h1>
       <p className="pc-lead">
         Sie möchten den PflegeCoach nutzen oder haben Fragen dazu, ob er zu Ihrer Situation passt?
         Schreiben Sie uns — Sie brauchen dafür kein Konto.
