@@ -101,6 +101,9 @@ export {
 export {
   type DunningLevel,
   type DunningOverview,
+  type DunningRunEscalation,
+  type DunningRunSkip,
+  type DunningRunResult,
   DUNNING_LEVEL_ORDER,
   DUNNING_LABELS,
   DUNNING_DAYS,
@@ -109,4 +112,5 @@ export {
   checkDunningBlocks,
   advanceDunning,
   getDunningOverview,
+  runDunningRun,
 } from './dunning';

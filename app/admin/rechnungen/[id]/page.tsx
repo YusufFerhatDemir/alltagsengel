@@ -95,6 +95,7 @@ export default function InvoiceDetailPage() {
         // ist "Festschreiben" (verlangt 'geprueft') nicht erreichbar.
         : action === 'check' ? `/api/billing/invoices/${id}/status`
         : action === 'credit' ? `/api/billing/invoices/${id}/credit`
+        : action === 'zahlung' ? `/api/billing/invoices/${id}/zahlung`
         : null
       if (!endpoint) return
 
@@ -107,6 +108,29 @@ export default function InvoiceDetailPage() {
       if (action === 'check') {
         body.status = 'geprueft'
         body.reason = 'Sachliche Prüfung im Betriebssystem'
+      }
+      if (action === 'zahlung') {
+        // Default ist die Vollzahlung des offenen Betrags — der haeufigste Fall.
+        const openEuro = ((inv?.total_amount || 0) - (inv?.paid_amount || 0))
+        const amountRaw = window.prompt(
+          'Zahlungsbetrag in Euro (Enter = offener Betrag):',
+          openEuro.toFixed(2).replace('.', ',')
+        )
+        if (amountRaw === null) { setActionLoading(false); return }
+        if (amountRaw.trim()) {
+          const cents = Math.round(Number(amountRaw.trim().replace(/\./g, '').replace(',', '.')) * 100)
+          if (!Number.isFinite(cents) || cents <= 0) {
+            setError('Ungültiger Zahlungsbetrag.')
+            setActionLoading(false)
+            return
+          }
+          body.amountCents = cents
+        }
+        const datum = window.prompt('Zahlungsdatum (JJJJ-MM-TT, Enter = heute):', '')
+        if (datum === null) { setActionLoading(false); return }
+        if (datum.trim()) body.paymentDate = datum.trim()
+        const zahler = window.prompt('Zahler (optional):', '')
+        if (zahler && zahler.trim()) body.payerName = zahler.trim()
       }
       if (action === 'credit') {
         // Eingabe in Euro, die API erwartet Cent.
@@ -183,6 +207,11 @@ export default function InvoiceDetailPage() {
           )}
           {inv.status === 'geprueft' && !inv.frozen_at && (
             <ActionBtn label="Festschreiben" onClick={() => handleAction('freeze')} loading={actionLoading} />
+          )}
+          {/* Zahlung erst ab 'freigegeben' — auf einen Entwurf zahlt niemand.
+              Alt-Status (z. B. 'sent') bleiben bewusst buchbar. */}
+          {openAmount > 0.01 && !['entwurf', 'geprueft'].includes(inv.status) && (
+            <ActionBtn label="Zahlung verbuchen" onClick={() => handleAction('zahlung')} loading={actionLoading} />
           )}
           {/* Gutschrift nur auf echten Rechnungen — nicht auf Korrekturbelegen. */}
           {!inv.correction_type && (

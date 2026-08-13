@@ -277,3 +277,200 @@ export async function getDunningOverview(
 
   return overview
 }
+
+// ---------------------------------------------------------------------------
+// Mahnlauf — automatische Eskalation aller faelligen Rechnungen
+// ---------------------------------------------------------------------------
+
+/**
+ * Status, in denen eine Rechnung NICHT gemahnt werden darf.
+ *
+ * - entwurf/geprueft/korrektur_erforderlich: nie beim Kunden gewesen
+ * - storniert/bezahlt/akzeptiert/abgeschrieben: Endstatus
+ * - strittig/abgelehnt: fachlich ungeklaert, gehoert in die manuelle Klaerung
+ *
+ * Alles andere (inkl. Alt-Status wie 'sent') ist mahnfaehig.
+ */
+const NICHT_MAHNFAEHIG: ReadonlySet<string> = new Set([
+  'entwurf',
+  'geprueft',
+  'korrektur_erforderlich',
+  'storniert',
+  'bezahlt',
+  'akzeptiert',
+  'abgeschrieben',
+  'strittig',
+  'abgelehnt',
+])
+
+export interface DunningRunEscalation {
+  invoiceId: string
+  invoiceNumber: string | null
+  fromLevel: DunningLevel
+  toLevel: DunningLevel
+  daysOverdue: number
+  feeCents: number
+}
+
+export interface DunningRunSkip {
+  invoiceId: string
+  invoiceNumber: string | null
+  reason: string
+}
+
+export interface DunningRunResult {
+  organizationId: string
+  /** Rechnungen, die ueberhaupt geprueft wurden (faellig + mahnfaehig) */
+  geprueft: number
+  eskaliert: DunningRunEscalation[]
+  blockiert: DunningRunSkip[]
+  /** faellig, aber Frist zur naechsten Stufe noch nicht erreicht */
+  unveraendert: number
+  dryRun: boolean
+}
+
+/**
+ * Fuehrt einen Mahnlauf fuer eine Organisation aus.
+ *
+ * Pro Lauf wird je Rechnung hoechstens EINE Stufe eskaliert — eine Mahnung
+ * muss beim Kunden gewesen sein, bevor die naechste faellig wird. Ein seit
+ * 90 Tagen offener Posten springt also nicht in einem Rutsch auf
+ * "Inkasso-Vorbereitung", sondern laeuft die Leiter im Rhythmus von
+ * DUNNING_DAYS ab.
+ *
+ * Fristen (Tage nach Faelligkeit, aus DUNNING_DAYS):
+ *   14 → Zahlungserinnerung, 28 → 1. Mahnung, 42 → 2. Mahnung,
+ *   56 → Letzte Mahnung, 70 → Inkasso-Vorbereitung
+ */
+export async function runDunningRun(
+  supabase: SupabaseClient,
+  organizationId: string,
+  actorId: string,
+  options: { dryRun?: boolean } = {}
+): Promise<DunningRunResult> {
+  const dryRun = options.dryRun ?? false
+  const heute = heuteBerlin()
+
+  const result: DunningRunResult = {
+    organizationId,
+    geprueft: 0,
+    eskaliert: [],
+    blockiert: [],
+    unveraendert: 0,
+    dryRun,
+  }
+
+  const { data: invoices, error } = await supabase
+    .from('invoices')
+    .select('id, invoice_number, invoice_number_formatted, status, total_amount, paid_amount, due_date')
+    .eq('organization_id', organizationId)
+    .is('deleted_at', null)
+    .not('due_date', 'is', null)
+    .lt('due_date', heute)
+    .order('due_date', { ascending: true })
+    .limit(1000)
+
+  if (error) throw new Error(`Mahnlauf: Rechnungen laden fehlgeschlagen — ${error.message}`)
+
+  const heuteMs = new Date(heute + 'T00:00:00+01:00').getTime()
+
+  for (const inv of invoices || []) {
+    if (NICHT_MAHNFAEHIG.has(inv.status)) continue
+
+    const totalCents = Math.round(Number(inv.total_amount || 0) * 100)
+    const paidCents = Math.round(Number(inv.paid_amount || 0) * 100)
+    if (totalCents - paidCents <= 0) continue
+
+    result.geprueft++
+
+    const nummer = inv.invoice_number_formatted || inv.invoice_number || null
+    const daysOverdue = Math.max(
+      0,
+      Math.floor((heuteMs - new Date(inv.due_date + 'T00:00:00+01:00').getTime()) / 86400000)
+    )
+
+    try {
+      if (!dryRun) {
+        await ensureDunningEntry(supabase, inv.id, organizationId, actorId)
+      }
+
+      const { data: entry } = await supabase
+        .from('dunning_entries')
+        .select('dunning_level, block_dunning, block_reason, next_dunning_at')
+        .eq('invoice_id', inv.id)
+        .maybeSingle()
+
+      // Im Dry-Run existiert der Eintrag u. U. noch nicht — dann ist 'offen' der Startpunkt.
+      const currentLevel = (entry?.dunning_level as DunningLevel) || 'offen'
+
+      if (entry?.block_dunning) {
+        result.blockiert.push({
+          invoiceId: inv.id,
+          invoiceNumber: nummer,
+          reason: `Manuell blockiert: ${entry.block_reason || 'kein Grund hinterlegt'}`,
+        })
+        continue
+      }
+
+      const currentIdx = DUNNING_LEVEL_ORDER.indexOf(currentLevel)
+      // length - 2 = 'inkasso_vorbereitung': hoechste automatisch erreichbare Stufe.
+      if (currentIdx < 0 || currentIdx >= DUNNING_LEVEL_ORDER.length - 2) {
+        result.unveraendert++
+        continue
+      }
+
+      const nextLevel = DUNNING_LEVEL_ORDER[currentIdx + 1]
+
+      // Karenz: erst wenn die Frist der naechsten Stufe erreicht ist UND die
+      // in advanceDunning gesetzte Wiedervorlage faellig ist.
+      if (daysOverdue < DUNNING_DAYS[nextLevel]) {
+        result.unveraendert++
+        continue
+      }
+      if (entry?.next_dunning_at && entry.next_dunning_at > heute) {
+        result.unveraendert++
+        continue
+      }
+
+      const blocks = await checkDunningBlocks(supabase, inv.id)
+      if (blocks.length > 0) {
+        result.blockiert.push({
+          invoiceId: inv.id,
+          invoiceNumber: nummer,
+          reason: blocks.map(b => b.reason).join('; '),
+        })
+        continue
+      }
+
+      if (dryRun) {
+        result.eskaliert.push({
+          invoiceId: inv.id,
+          invoiceNumber: nummer,
+          fromLevel: currentLevel,
+          toLevel: nextLevel,
+          daysOverdue,
+          feeCents: DUNNING_FEES_CENTS[nextLevel],
+        })
+        continue
+      }
+
+      const advanced = await advanceDunning(supabase, inv.id, actorId)
+      result.eskaliert.push({
+        invoiceId: inv.id,
+        invoiceNumber: nummer,
+        fromLevel: currentLevel,
+        toLevel: advanced.newLevel,
+        daysOverdue,
+        feeCents: advanced.feeCents,
+      })
+    } catch (err) {
+      result.blockiert.push({
+        invoiceId: inv.id,
+        invoiceNumber: nummer,
+        reason: err instanceof Error ? err.message : String(err),
+      })
+    }
+  }
+
+  return result
+}

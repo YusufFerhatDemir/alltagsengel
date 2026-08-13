@@ -48,11 +48,21 @@ interface DunningEntry {
   }
 }
 
+interface DunningRunResult {
+  geprueft: number
+  eskaliert: Array<{ invoiceNumber: string | null; fromLevel: string; toLevel: string; daysOverdue: number; feeCents: number }>
+  blockiert: Array<{ invoiceNumber: string | null; reason: string }>
+  unveraendert: number
+  dryRun: boolean
+}
+
 export default function MahnwesenPage() {
   const [entries, setEntries] = useState<DunningEntry[]>([])
   const [loading, setLoading] = useState(true)
   const [generating, setGenerating] = useState<string | null>(null)
   const [preview, setPreview] = useState<{ html: string; email: { subject: string; body: string } } | null>(null)
+  const [lauf, setLauf] = useState<DunningRunResult | null>(null)
+  const [laufLoading, setLaufLoading] = useState<'dry' | 'echt' | null>(null)
 
   const loadData = useCallback(async () => {
     setLoading(true)
@@ -110,6 +120,26 @@ export default function MahnwesenPage() {
     } catch { alert('Netzwerkfehler') }
   }
 
+  async function starteMahnlauf(dryRun: boolean) {
+    if (!dryRun && !confirm('Mahnlauf jetzt ausführen? Alle fälligen Rechnungen werden um eine Stufe eskaliert.')) return
+    setLaufLoading(dryRun ? 'dry' : 'echt')
+    setLauf(null)
+    try {
+      const res = await fetch('/api/billing/dunning/lauf', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ dryRun }),
+      })
+      const data = await res.json()
+      if (!res.ok) alert(`Fehler: ${data.error}`)
+      else {
+        setLauf(data as DunningRunResult)
+        if (!dryRun) loadData()
+      }
+    } catch { alert('Netzwerkfehler') }
+    setLaufLoading(null)
+  }
+
   // Statistik-Karten
   const stats = {
     total: entries.length,
@@ -131,6 +161,48 @@ export default function MahnwesenPage() {
         <StatCard label="Gesamtforderung" value={formatCurrency(stats.totalOpen)} />
         <StatCard label="Blockiert" value={stats.blocked} color="#f59e0b" />
         <StatCard label="> 30 Tage überfällig" value={stats.overdue30} color="#ef4444" />
+      </div>
+
+      {/* Mahnlauf — dieselbe Logik läuft nachts um 07:00 automatisch (Cron). */}
+      <div style={{ border: '1px solid var(--border, #2a2a2a)', borderRadius: 8, padding: 16, marginBottom: 24 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+          <div style={{ flex: 1, minWidth: 240 }}>
+            <div style={{ fontWeight: 600, fontSize: 15 }}>Mahnlauf</div>
+            <div style={{ fontSize: 12, color: '#888', marginTop: 2 }}>
+              Fristen ab Fälligkeit: 14 Tage Zahlungserinnerung · 28 Tage 1. Mahnung · 42 Tage 2. Mahnung ·
+              56 Tage letzte Mahnung · 70 Tage Inkasso-Vorbereitung. Je Lauf wird höchstens eine Stufe
+              eskaliert. Läuft automatisch täglich um 07:00 Uhr — der Versand der Schreiben bleibt manuell.
+            </div>
+          </div>
+          <button onClick={() => starteMahnlauf(true)} disabled={laufLoading !== null} style={btnStyle}>
+            {laufLoading === 'dry' ? 'Prüfe…' : 'Simulieren'}
+          </button>
+          <button onClick={() => starteMahnlauf(false)} disabled={laufLoading !== null} style={{ ...btnStyle, background: '#c8a84e', color: '#1a1a1a', borderColor: '#c8a84e' }}>
+            {laufLoading === 'echt' ? 'Läuft…' : 'Mahnlauf starten'}
+          </button>
+        </div>
+
+        {lauf && (
+          <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid var(--border, #2a2a2a)', fontSize: 13 }}>
+            <div style={{ marginBottom: 6 }}>
+              {lauf.dryRun ? 'Simulation: ' : 'Ergebnis: '}
+              {lauf.geprueft} fällige Rechnung(en) geprüft · <strong>{lauf.eskaliert.length}</strong> eskaliert
+              {lauf.dryRun ? ' (würden eskaliert)' : ''} · {lauf.unveraendert} unverändert · {lauf.blockiert.length} blockiert
+            </div>
+            {lauf.eskaliert.map((e, i) => (
+              <div key={`e${i}`} style={{ color: '#f59e0b' }}>
+                {e.invoiceNumber || '(ohne Nummer)'}: {DUNNING_LABELS[e.fromLevel] || e.fromLevel} →{' '}
+                {DUNNING_LABELS[e.toLevel] || e.toLevel} ({e.daysOverdue} Tage überfällig
+                {e.feeCents > 0 ? `, ${formatCurrency(e.feeCents)} Gebühr` : ''})
+              </div>
+            ))}
+            {lauf.blockiert.map((b, i) => (
+              <div key={`b${i}`} style={{ color: '#ef4444' }}>
+                {b.invoiceNumber || '(ohne Nummer)'}: blockiert — {b.reason}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {loading ? <p>Laden…</p> : (
