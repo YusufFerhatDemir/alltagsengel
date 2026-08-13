@@ -56,6 +56,30 @@ const createMockSupabase = () => ({
         }),
       };
     }
+    if (table === 'invoices') {
+      // Faelligkeits-Nachlauf (setzeFaelligkeitFallsLeer): laedt die Rechnung
+      // und setzt due_date, solange sie leer ist.
+      return {
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            maybeSingle: vi.fn().mockResolvedValue({
+              data: {
+                id: 'inv-1',
+                due_date: null,
+                payment_terms_days: 14,
+                created_at: '2026-09-01T10:00:00Z',
+              },
+              error: null,
+            }),
+          }),
+        }),
+        update: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            is: vi.fn().mockResolvedValue({ error: null }),
+          }),
+        }),
+      };
+    }
     return {
       select: mockSelect,
       insert: vi.fn().mockReturnValue({ select: vi.fn().mockReturnValue({ single: mockSingle }) }),

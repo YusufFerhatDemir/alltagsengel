@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getActiveOrgId } from '@/lib/organizations/server'
 import { datumBerlin } from '@/lib/utils/timezone';
 import { safeDbError } from '@/lib/utils/api-error'
+import { mitStatusSync } from '@/lib/leistungsnachweis/status-sync'
 
 async function requireAuth(supabase: Awaited<ReturnType<typeof createClient>>) {
   const { data: { user } } = await supabase.auth.getUser()
@@ -181,7 +182,7 @@ export async function PATCH(req: NextRequest) {
 
   if (action === 'sign') {
     const { data: current } = await supabase
-      .from('service_records').select('proof_status').eq('id', id).eq('organization_id', organizationId).single()
+      .from('service_records').select('proof_status, status').eq('id', id).eq('organization_id', organizationId).single()
     if (!current) return NextResponse.json({ error: 'Nicht gefunden' }, { status: 404 })
     if (current.proof_status !== 'ABGESCHLOSSEN') {
       return NextResponse.json({ error: 'Unterschrift nur im Status ABGESCHLOSSEN möglich' }, { status: 409 })
@@ -198,8 +199,12 @@ export async function PATCH(req: NextRequest) {
     if (body.gps_end_lat != null) signData.gps_end_lat = body.gps_end_lat
     if (body.gps_end_lng != null) signData.gps_end_lng = body.gps_end_lng
 
+    // status MUSS im selben UPDATE mit: der Signatur-Trigger setzt is_locked=true,
+    // danach blockiert prevent_locked_record_change() jedes Folge-UPDATE.
+    const signUpdate = mitStatusSync(signData, 'UNTERSCHRIEBEN', current.status)
+
     const { data, error } = await supabase
-      .from('service_records').update(signData).eq('id', id).eq('organization_id', organizationId).select().single()
+      .from('service_records').update(signUpdate).eq('id', id).eq('organization_id', organizationId).select().single()
     if (error) {
       if (error.message.includes('gesperrt')) {
         return NextResponse.json({ error: 'Leistungsnachweis ist gesperrt' }, { status: 423 })
@@ -211,15 +216,21 @@ export async function PATCH(req: NextRequest) {
 
   if (action === 'confirm') {
     const { data: current } = await supabase
-      .from('service_records').select('proof_status').eq('id', id).eq('organization_id', organizationId).single()
+      .from('service_records').select('proof_status, status').eq('id', id).eq('organization_id', organizationId).single()
     if (!current) return NextResponse.json({ error: 'Nicht gefunden' }, { status: 404 })
     if (current.proof_status !== 'ENTWURF') {
       return NextResponse.json({ error: 'Bestätigung nur im Status ENTWURF möglich' }, { status: 409 })
     }
 
+    const confirmUpdate = mitStatusSync(
+      { proof_status: 'ABGESCHLOSSEN', caregiver_confirmed_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+      'ABGESCHLOSSEN',
+      current.status,
+    )
+
     const { data, error } = await supabase
       .from('service_records')
-      .update({ proof_status: 'ABGESCHLOSSEN', caregiver_confirmed_at: new Date().toISOString(), updated_at: new Date().toISOString() })
+      .update(confirmUpdate)
       .eq('id', id).eq('organization_id', organizationId).select().single()
     if (error) return safeDbError(error)
     return NextResponse.json(data)
