@@ -15,6 +15,7 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { logBillingAction, computeContentHash } from '../billing/core/audit'
+import { pflegegradVon } from '../clients/pflegegrad'
 import { generateAlleDateien, type AbrechnungsFall, type GeneratorOptionen, type EdifactDatei } from './edifact-generator'
 import { validateEDIFACT, validateIK } from './edifact-validator'
 import { generateAuftragsdatei, auftragsdateiName } from './auftragsdatei'
@@ -256,7 +257,7 @@ export async function preFlightValidierung(
     const clientIds = [...new Set(rechnungen.map(r => r.client_id))]
     const { data: clients } = await supabase
       .from('clients')
-      .select('id, versichertennummer, geburtsdatum, first_name, last_name, pflegegrad')
+      .select('id, versichertennummer, geburtsdatum, first_name, last_name, care_level, pflegegrad')
       .in('id', clientIds)
 
     const unvollstaendig = clients?.filter(c =>
@@ -273,7 +274,8 @@ export async function preFlightValidierung(
         : `${unvollstaendig.length} Kunden mit fehlenden Daten: ${unvollstaendig.map(c => c.last_name || c.id).join(', ')}`,
     })
 
-    const ohnePflegegrad = clients?.filter(c => !c.pflegegrad || c.pflegegrad < 1) ?? []
+    // care_level ist die führende Spalte — siehe lib/clients/pflegegrad.ts.
+    const ohnePflegegrad = clients?.filter(c => pflegegradVon(c) === null) ?? []
     pruefpunkte.push({
       id: 'pflegegrad',
       label: 'Pflegegrad vorhanden',
@@ -712,7 +714,7 @@ export async function exportiereLauf(
   const clientIds = [...new Set(invoices.map(i => i.client_id))]
   const { data: clients } = await supabase
     .from('clients')
-    .select('id, first_name, last_name, versichertennummer, geburtsdatum, pflegegrad, pflegekasse_ik, address, city, zip_code')
+    .select('id, first_name, last_name, versichertennummer, geburtsdatum, care_level, pflegegrad, pflegekasse_ik, address, city, zip_code')
     .in('id', clientIds)
 
   const clientMap = new Map(clients?.map(c => [c.id, c]) ?? [])
@@ -803,7 +805,7 @@ export async function exportiereLauf(
           geburtsdatum: client.geburtsdatum || '',
           nachname: client.last_name || '',
           vorname: client.first_name || '',
-          pflegegrad: client.pflegegrad ?? 0,
+          pflegegrad: pflegegradVon(client) ?? 0,
           strasse: client.address,
           plz: client.zip_code,
           ort: client.city,

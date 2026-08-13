@@ -8,6 +8,7 @@ import { generateAuftragsdatei } from '@/lib/abrechnung/auftragsdatei'
 import { getActiveOrgId } from '@/lib/organizations/server'
 import { getOrgIK } from '@/lib/config/org-config'
 import { logBillingAction } from '@/lib/billing/core/audit'
+import { pflegegradVon } from '@/lib/clients/pflegegrad'
 
 export const maxDuration = 60
 
@@ -136,7 +137,7 @@ export async function POST(request: Request) {
     const clientIds = [...new Set(rechnungen.map(r => r.client_id))]
     const { data: clients } = await admin
       .from('clients')
-      .select('id, first_name, last_name, versichertennummer, geburtsdatum, pflegegrad, pflegekasse_ik, address, city, zip_code')
+      .select('id, first_name, last_name, versichertennummer, geburtsdatum, care_level, pflegegrad, pflegekasse_ik, address, city, zip_code')
       .in('id', clientIds)
       .eq('organization_id', organizationId)
 
@@ -229,7 +230,7 @@ export async function POST(request: Request) {
             geburtsdatum: client.geburtsdatum || '',
             nachname: client.last_name || '',
             vorname: client.first_name || '',
-            pflegegrad: client.pflegegrad ?? 0,
+            pflegegrad: pflegegradVon(client) ?? 0,
             strasse: client.address,
             plz: client.zip_code,
             ort: client.city,
