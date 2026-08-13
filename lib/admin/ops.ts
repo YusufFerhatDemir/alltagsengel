@@ -7,9 +7,20 @@
 // bleiben.
 // ═══════════════════════════════════════════════════════════════
 
-// Entlastungsbetrag nach §45b SGB XI — 131 € pro Monat (NICHT 125!)
-export const ENTLASTUNGSBETRAG_MONAT = 131
-export const ENTLASTUNGSBETRAG_JAHR = ENTLASTUNGSBETRAG_MONAT * 12 // 1572 €
+// Entlastungsbetrag nach §45b SGB XI.
+//
+// Kein eigener Zahlenwert mehr: die gesetzlichen Saetze stehen versioniert in
+// lib/config/budget-constants.ts (BUDGET_VERSIONEN). Ein zweiter hartkodierter
+// Wert hier wuerde bei der naechsten Dynamisierung nach §30 SGB XI stillschweigend
+// auseinanderlaufen — die Abrechnung rechnete dann mit dem neuen Satz, waehrend
+// /admin/budgets und /kunde/budget dem Kunden weiter den alten anzeigen.
+import {
+  ENTLASTUNG_MONATLICH_EUR,
+  ENTLASTUNG_JAEHRLICH_EUR,
+} from '@/lib/config/budget-constants'
+
+export const ENTLASTUNGSBETRAG_MONAT = ENTLASTUNG_MONATLICH_EUR
+export const ENTLASTUNGSBETRAG_JAHR = ENTLASTUNG_JAEHRLICH_EUR
 
 // ── Formatierung ────────────────────────────────────────────────
 export function euro(value: number | null | undefined): string {
