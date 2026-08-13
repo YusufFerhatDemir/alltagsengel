@@ -76,6 +76,39 @@ test('Produktbereich enthält keine Erstattungs- oder Zulassungsaussage', () => 
   assert.deepEqual(funde, [], `Unzulässige Produktaussagen:\n${funde.join('\n')}`)
 })
 
+/**
+ * Die Gegenprobe zu Abschnitt 1: Dort wird geprüft, dass NICHTS Falsches
+ * behauptet wird. Hier, dass das Nötige tatsächlich dasteht. Der
+ * Selbstzahler-Hinweis ist der verkaufsrelevante Teil der Zweckbestimmung —
+ * fällt er beim Umbau der Startseite heraus, verkauft das Produkt sich
+ * ohne seine eigene Abgrenzung.
+ */
+test('Produktseite trägt die Negativabgrenzung und bindet sie an den DiPA-Schalter', () => {
+  const text = readFileSync(join(WURZEL, 'app/pflegecoach/start/page.tsx'), 'utf8')
+  assert.match(text, /kein medizinisches Produkt/i, 'MDR-Abgrenzung fehlt auf der Produktseite')
+  assert.match(text, /keine Kassenleistung/i, 'Selbstzahler-Abgrenzung fehlt auf der Produktseite')
+  assert.match(
+    text, /useDipaModus\(\)/,
+    'Die Kassen-Abgrenzung muss an COACH_DIPA_MODUS gebunden sein — hartkodiert wäre sie ' +
+    'in einem tatsächlichen DiPA-Verfahren falsch'
+  )
+})
+
+/**
+ * Die Anfrage ist ein vorvertraglicher Kontakt, kein Produktvorgang. Sie
+ * darf deshalb keinen Datensatz anlegen — sonst entstünde ein Nutzer, der
+ * nie eingewilligt hat.
+ */
+test('Anfrage-Route schreibt nichts in den Produktdatenbestand', () => {
+  const text = readFileSync(join(WURZEL, 'app/api/coach/anfrage/route.ts'), 'utf8')
+  for (const verboten of [/supabase/i, /from\(['"]coach_/]) {
+    assert.ok(
+      !verboten.test(text),
+      `Anfrage-Route greift auf die Datenbank zu (${verboten}) — sie darf nur eine E-Mail senden`
+    )
+  }
+})
+
 // ── 2. DiPA-Oberflächen sind an die Schalter gebunden ──────────
 
 const GEGATETE_QUELLEN: Array<{ datei: string; muss: RegExp[] }> = [
@@ -138,6 +171,10 @@ const OHNE_EINWILLIGUNGSPRUEFUNG: Record<string, string> = {
     'Zugangsverwaltung, keine Gesundheitsdaten; läuft bewusst im Systemkontext.',
   'app/api/coach/nutzung/route.ts:POST':
     'Eigenes, strengeres Tor (Deployment-Schalter + gesonderte Einwilligung) und bewusst nicht blockierend.',
+  'app/api/coach/anfrage/route.ts:POST':
+    'Vorvertragliche Kontaktanfrage ohne Anmeldung: verarbeitet ausschließlich Kontaktdaten ' +
+    '(Art. 6 Abs. 1 lit. b DSGVO), keine Gesundheitsdaten, und schreibt nichts in den ' +
+    'Produktdatenbestand — es gibt hier noch keinen Nutzer, der einwilligen könnte.',
 }
 
 test('jede schreibende Coach-Route prüft die Pflicht-Einwilligung', () => {

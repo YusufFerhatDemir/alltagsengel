@@ -17,5 +17,13 @@
 // ═══════════════════════════════════════════════════════════════
 
 export const COACH_PRODUKT_NAME = 'Digitaler PflegeCoach'
-export const COACH_PRODUKT_VERSION = '0.4.0'
-export const COACH_PRODUKT_STAND = '2026-08-13'
+export const COACH_PRODUKT_VERSION = '0.5.0'
+export const COACH_PRODUKT_STAND = '2026-08-14'
+
+/**
+ * Support-Adresse des Produkts. Bewusst eine zentrale Konstante und keine
+ * über die Seiten verstreute mailto-Adresse: Der Hersteller-Support ist
+ * eine Produkteigenschaft (Verbraucherschutz), sie muss überall dieselbe
+ * sein und darf nie versehentlich auf eine private Adresse zeigen.
+ */
+export const COACH_SUPPORT_EMAIL = 'info@alltagsengel.care'

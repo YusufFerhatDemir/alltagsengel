@@ -7,6 +7,7 @@ import type { CoachConsent, ConsentTyp } from '@/lib/coach/types'
 import { ROLLE_LABELS } from '@/lib/coach/types'
 import Link from 'next/link'
 import { hatAktiveEinwilligung, PFLICHT_CONSENT } from '@/lib/coach/consent'
+import { COACH_SUPPORT_EMAIL } from '@/lib/coach/version'
 import { coachApi, useCoachProfil } from '../_lib/client'
 import { CoachLaden, CoachLadefehler, EinwilligungWiderrufen } from '../_lib/Zustand'
 
@@ -116,16 +117,34 @@ export default function EinstellungenSeite() {
         <a className="pc-btn" href="/api/coach/export">Daten herunterladen (JSON)</a>
       </section>
 
-      <section className="pc-card" aria-labelledby="loeschung-titel">
-        <h2 id="loeschung-titel">Daten löschen</h2>
+      <section className="pc-card" aria-labelledby="beenden-titel">
+        <h2 id="beenden-titel">Nutzung beenden und Daten löschen</h2>
         <p>
-          Sie können Ihre PflegeCoach-Daten selbst und vollständig löschen (Art. 17 DSGVO) —
-          Ihr Alltagsengel-Konto bleibt dabei bestehen. Die Seite zeigt Ihnen vorher genau an,
-          was gelöscht wird, und verlangt eine ausdrückliche Bestätigung.
+          Sie können die Nutzung jederzeit beenden — ohne Frist — und Ihre PflegeCoach-Daten
+          selbst und vollständig löschen (Art. 17 DSGVO). Der Ausstieg steht Schritt für Schritt
+          auf einer eigenen Seite: beenden, Daten mitnehmen, löschen.
         </p>
-        <Link className="pc-btn pc-btn--secondary" href="/pflegecoach/loeschung">
-          PflegeCoach-Daten löschen
-        </Link>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
+          <Link className="pc-btn pc-btn--secondary" href="/pflegecoach/einstellungen/konto">
+            Konto und Nutzung beenden
+          </Link>
+          <Link className="pc-btn pc-btn--secondary" href="/pflegecoach/loeschung">
+            Direkt zur Löschung
+          </Link>
+        </div>
+      </section>
+
+      <section className="pc-card" aria-labelledby="hilfe-titel">
+        <h2 id="hilfe-titel">Hilfe und Kontakt</h2>
+        <p>
+          Bei Fragen oder Problemen erreichen Sie uns unter{' '}
+          <a href={`mailto:${COACH_SUPPORT_EMAIL}`}>{COACH_SUPPORT_EMAIL}</a>. Bitte senden Sie
+          uns keine Gesundheitsdaten per E-Mail.
+        </p>
+        <p>
+          Wie wir Ihre Daten verarbeiten, steht in den{' '}
+          <Link href="/pflegecoach/datenschutz">Datenschutzhinweisen zum PflegeCoach</Link>.
+        </p>
       </section>
     </>
   )

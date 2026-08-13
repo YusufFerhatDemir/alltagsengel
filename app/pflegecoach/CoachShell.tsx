@@ -11,7 +11,8 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import type { CoachSchriftgrad } from '@/lib/coach/types'
-import { COACH_PRODUKT_NAME, COACH_PRODUKT_VERSION } from '@/lib/coach/version'
+import { COACH_PRODUKT_NAME, COACH_PRODUKT_VERSION, COACH_SUPPORT_EMAIL } from '@/lib/coach/version'
+import { DipaModusProvider } from './_lib/Modus'
 
 const SCALE: Record<CoachSchriftgrad, number> = { normal: 1, gross: 1.2, sehr_gross: 1.45 }
 
@@ -39,7 +40,9 @@ const NAV = [
 const BEREICH_NAMEN: Record<string, string> = {
   ...Object.fromEntries(NAV.map(n => [n.href, n.label])),
   '/pflegecoach/start': 'Willkommen und Zweckbestimmung',
+  '/pflegecoach/anfrage': 'Anfrage stellen',
   '/pflegecoach/datenschutz': 'Datenschutzhinweise',
+  '/pflegecoach/einstellungen/konto': 'Konto und Nutzung beenden',
   '/pflegecoach/loeschung': 'Daten löschen',
   '/pflegecoach/anspruch': 'Anspruch prüfen',
   '/pflegecoach/freischaltung': 'Zugang freischalten',
@@ -58,9 +61,12 @@ const NAV_FREISCHALTUNG = { href: '/pflegecoach/freischaltung', label: 'Zugang f
 export default function CoachShell({
   children,
   zeigeFreischaltung = false,
+  dipaAktiv = false,
 }: {
   children: React.ReactNode
   zeigeFreischaltung?: boolean
+  /** COACH_DIPA_MODUS — steuert produktrechtliche Aussagen auf den Seiten. */
+  dipaAktiv?: boolean
 }) {
   const pathname = usePathname()
   const navPunkte = zeigeFreischaltung ? [...NAV, NAV_FREISCHALTUNG] : NAV
@@ -179,7 +185,7 @@ export default function CoachShell({
       <p className="sr-only" role="status" aria-live="polite">{ansage}</p>
 
       <main id="pc-main" className="pc-container">
-        {children}
+        <DipaModusProvider aktiv={dipaAktiv}>{children}</DipaModusProvider>
       </main>
 
       <footer className="pc-footer">
@@ -188,10 +194,20 @@ export default function CoachShell({
             Der Digitale PflegeCoach unterstützt bei der Organisation der häuslichen Pflege.
             Er ersetzt keine ärztliche oder pflegefachliche Beratung. Bei Notfällen: 112.
           </p>
+          {/* Support gehört sichtbar in jede Ansicht: Wer im Produkt nicht
+              weiterkommt, darf nicht erst über das Marketing-Impressum
+              suchen müssen. */}
+          <p>
+            Fragen zum Produkt?{' '}
+            <a href={`mailto:${COACH_SUPPORT_EMAIL}`}>{COACH_SUPPORT_EMAIL}</a>
+            {' · '}
+            <Link href="/pflegecoach/anfrage">Anfrage stellen</Link>
+          </p>
           <p>
             <Link href="/pflegecoach/datenschutz">Datenschutz</Link>{' · '}
             <Link href="/impressum">Impressum</Link>{' · '}
             <Link href="/pflegecoach/einstellungen">Datenexport &amp; Einwilligungen</Link>{' · '}
+            <Link href="/pflegecoach/einstellungen/konto">Nutzung beenden</Link>{' · '}
             <Link href="/pflegecoach/loeschung">Daten löschen</Link>
           </p>
           {/* Kein aria-label auf dem Absatz: Die Rolle „paragraph" erlaubt keinen
