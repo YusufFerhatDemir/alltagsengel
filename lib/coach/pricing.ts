@@ -1,10 +1,18 @@
 // ═══════════════════════════════════════════════════════════════
-// PflegeCoach — Preise und Tarife (Selbstzahler)
+// PflegeCoach — Preise und Tarife (Selbstzahler-Infrastruktur)
 //
-// ═══ DIESE DATEI IST DIE EINZIGE PREIS-WAHRHEIT ════════════════
-// Kein Betrag steht irgendwo sonst — nicht in einer Seite, nicht in
-// einer Mail-Vorlage, nicht in der Datenbank. Wer einen Preis ändern
-// will, ändert ihn hier (oder per Env-Variable) und nirgends sonst.
+// ═══ ENDNUTZER-ABONNEMENTS SIND NICHT VORGESEHEN ═══════════════
+// Geschäftsmodell-Entscheidung vom 14.08.2026: PflegeCoach ist
+// dauerhaft KOSTENLOS für alle Endnutzer. Keine Abos, keine
+// Monats-/Jahrespreise, keine Paywall, keine Stripe-Zahlung durch
+// Nutzer. Monetarisierung ausschließlich über Pflegekassen-
+// Erstattung nach tatsächlicher DiPA-Zulassung.
+//
+// ═══ DIESE DATEI BLEIBT ALS TECHNISCHE INFRASTRUKTUR ═══════════
+// Der Selbstzahler-Verkaufsweg wird nicht gelöscht, weil er aktuell
+// keinen Nutzer blockiert (COACH_PREISE_FREIGEGEBEN=false, Verkauf
+// fail-closed) und bei einer künftigen Umstellung wiederverwendet
+// werden könnte.
 //
 // ═══ DIE BETRÄGE UNTEN SIND PLATZHALTER ════════════════════════
 // Sie sind NICHT kaufmännisch entschieden und dürfen niemandem in
@@ -16,16 +24,7 @@
 // (lib/billing: tarif_status) — ein ungeprüfter Betrag darf nie
 // versehentlich abgerechnet werden.
 //
-// FREIGABE-CHECKLISTE (alles nötig, bevor der Schalter umgelegt wird):
-//   1. Monats- und Jahrespreis kaufmännisch entschieden
-//   2. Umsatzsteuer-Behandlung geklärt (§ 19 UStG Kleinunternehmer
-//      ODER Regelbesteuerung mit dem korrekten Satz) — siehe UMSATZSTEUER
-//   3. Stripe-Preise angelegt, IDs in COACH_STRIPE_PRICE_* hinterlegt
-//   4. AGB und Widerrufsbelehrung mit den echten Beträgen gegengelesen
-//   5. COACH_PREISE_FREIGEGEBEN=true setzen
-//
-// KEINE ERSTATTUNGSAUSSAGE: Der PflegeCoach wird als privat zu
-// zahlendes Angebot verkauft. Diese Datei enthält bewusst keinen
+// KEINE ERSTATTUNGSAUSSAGE: Diese Datei enthält bewusst keinen
 // Kostenträger-, Kassen- oder Erstattungsbezug (siehe
 // lib/coach/abrechnung.ts für die getrennte, deaktivierte DiPA-Seite).
 // ═══════════════════════════════════════════════════════════════

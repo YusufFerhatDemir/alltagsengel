@@ -19,8 +19,9 @@ Grundlagen: [`FINALER_BERICHT_2026-08-14.md`](./FINALER_BERICHT_2026-08-14.md) �
 ## Was heute Umsatz trägt
 
 **Genau ein Weg: Privatkunden Alltagsbegleitung gegen Rechnung.** Alles andere ist entweder
-extern blockiert (§45b, VP/KZP, §105, DiPA) oder wartet auf eine Preisentscheidung
-(PflegeCoach Selbstzahler). Priorität **A** macht genau diesen einen Weg sauber scharf.
+extern blockiert (§45b, VP/KZP, §105, DiPA). PflegeCoach ist dauerhaft kostenlos für Endnutzer
+(Monetarisierung über Pflegekassen nach DiPA-Zulassung). Priorität **A** macht genau diesen
+einen Weg sauber scharf.
 
 ## Übersicht
 
@@ -193,35 +194,17 @@ Vollständige Anleitung: [`ANLEITUNG_SEPA_CREDITOR_ID.md`](./ANLEITUNG_SEPA_CRED
 
 ---
 
-## B2 — Preisentscheidung PflegeCoach Selbstzahler
+## B2 — ~~Preisentscheidung PflegeCoach Selbstzahler~~ ENTFALLEN (14.08.2026)
 
-**Was:** Der Verkaufsweg ist **technisch vollständig** (12 von 14 Checklistenpunkten erfüllt,
-die übrigen zwei sind bewusste Entscheidungen). Er ist fail-closed gesperrt, weil die Preise
-in `lib/coach/pricing.ts` ausdrücklich als Platzhalter deklariert sind
-(`PLATZHALTER_BETRAG_CENT`, Kopfkommentar: „dürfen niemandem in Rechnung gestellt werden").
+> **Geschäftsmodell-Korrektur:** PflegeCoach ist dauerhaft **kostenlos für alle Endnutzer**.
+> Kein Abonnement, keine Monats-/Jahrespreise, keine Paywall, keine Stripe-Zahlung durch Nutzer.
+> Monetarisierung ausschließlich über Pflegekassen-Erstattung nach tatsächlicher DiPA-Zulassung.
+> Siehe [`PFLEGECOACH_VERKAUFSSTATUS.md`](./PFLEGECOACH_VERKAUFSSTATUS.md) und
+> [`GO_LIVE_EXTERNE_SCHRITTE_2026-08-14.md`](./GO_LIVE_EXTERNE_SCHRITTE_2026-08-14.md), Abschnitt 4.
 
-Zu entscheiden sind, in dieser Reihenfolge:
-1. Realer Monats- und Jahrespreis → `COACH_PREIS_MONATLICH_CENT`, `COACH_PREIS_JAEHRLICH_CENT`
-2. Testphase in Tagen → `COACH_TESTPHASE_MONATLICH_TAGE`, `COACH_TESTPHASE_JAEHRLICH_TAGE`
-3. Umsatzsteuer → `COACH_UST_KLEINUNTERNEHMER`, `COACH_UST_SATZ`, `COACH_STEUERNUMMER`,
-   ggf. `COACH_UST_ID_NR`
-4. Stripe-Produkte mit den echten Beträgen anlegen → `COACH_STRIPE_PRICE_MONATLICH`,
-   `COACH_STRIPE_PRICE_JAEHRLICH`, `COACH_STRIPE_WEBHOOK_SECRET` (eigener Secret, nicht der
-   der Hauptanwendung)
-5. **Erst danach** `COACH_PREISE_FREIGEGEBEN=true`
-
-**Wo:** Preisentscheidung durch den Produktverantwortlichen; Stripe-Dashboard;
-Env-Variablen in Vercel (Production).
-
-**Unterlagen:** Kalkulation. Diese Checkliste nennt bewusst keinen Betrag — die im Code
-stehenden 19 €/190 € sind Platzhalter und **keine Empfehlung**.
-
-**Schaltet frei:** Checkout, Bestellung, Rechnung (`PC-YYYY-NNNNNN`), Zugangsfreischaltung und
-Kündigung. Automatisch mit: die Verkaufsseite `/pflegecoach/start` wird indexierbar —
-`robots.index` hängt in `app/pflegecoach/_lib/seitentitel.ts:57-63` direkt an
-`verkaufMoeglich()`. Der Produktbereich selbst bleibt dauerhaft `noindex`.
-**`COACH_DIPA_MODUS` bleibt `false`** — der Selbstzahler-Weg darf keine Aussage über
-Kostenträger, Kassenerstattung oder BfArM treffen.
+Der technische Selbstzahler-Verkaufsweg in `lib/coach/pricing.ts` bleibt als Infrastruktur
+erhalten (blockiert keinen Nutzer), wird aber **nicht aktiviert**. Alle Schalter bleiben auf `false`:
+`COACH_PREISE_FREIGEGEBEN`, `COACH_FREISCHALTUNG_PFLICHT`, `COACH_DIPA_MODUS`.
 
 ---
 
