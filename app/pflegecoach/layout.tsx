@@ -8,6 +8,17 @@ import './pflegecoach.css'
 // /pflegecoach deaktiviert — siehe components/ClientSideProviders.tsx).
 // DiPA-spezifische Funktionen (Anspruch, Freischaltpflicht, Abrechnung)
 // sind per dipaModus() gated (page.tsx + API-Route) und im Default AUS.
+//
+// ═══ noindex BLEIBT HIER DER VORGABEWERT ═══════════════════════
+// Der Produktbereich zeigt Nutzerdaten — Übersicht, Assessment, Ziele,
+// Verlauf, Konto. Nichts davon gehört in einen Suchindex, und diese
+// Vorgabe soll auch für Seiten gelten, die erst später dazukommen.
+//
+// Genau EINE Seite weicht bewusst ab: /pflegecoach/start, der
+// öffentliche Einstieg. Sie setzt ihre Metadaten über
+// coachVerkaufsMetadata() und wird indexierbar, sobald das Produkt
+// tatsächlich verkäuflich ist (freigegebene Preise + konfigurierter
+// Zahlungsweg). Die Begründung steht in _lib/seitentitel.ts.
 export const metadata: Metadata = {
   title: { absolute: 'Digitaler PflegeCoach' },
   description:

@@ -76,7 +76,7 @@ export const WIDERRUFSBELEHRUNG: { titel: string; absaetze: string[] }[] = [
 export const MUSTER_WIDERRUFSFORMULAR = [
   '(Wenn Sie den Vertrag widerrufen wollen, füllen Sie bitte dieses Formular aus und senden Sie es zurück.)',
   '',
-  `An ${WIDERRUF_ANSCHRIFT.name}, ${WIDERRUF_ANSCHRIFT.zusatz}, ${WIDERRUF_ANSCHRIFT.strasse}, ${WIDERRUF_ANSCHRIFT.ort}, E-Mail: ${WIDERRUF_ANSCHRIFT.email}:',
+  `An ${WIDERRUF_ANSCHRIFT.name}, ${WIDERRUF_ANSCHRIFT.zusatz}, ${WIDERRUF_ANSCHRIFT.strasse}, ${WIDERRUF_ANSCHRIFT.ort}, E-Mail: ${WIDERRUF_ANSCHRIFT.email}:`,
   '',
   'Hiermit widerrufe(n) ich/wir (*) den von mir/uns (*) abgeschlossenen Vertrag über die Bereitstellung des Digitalen PflegeCoach:',
   '',
