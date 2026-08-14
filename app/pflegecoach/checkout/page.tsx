@@ -26,7 +26,7 @@
 //    erhebt ausschließlich Stripe auf seiner eigenen Seite.
 // ═══════════════════════════════════════════════════════════════
 
-import { useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { coachApi, useCoachProfil } from '../_lib/client'
@@ -59,7 +59,25 @@ function proMonat(t: TarifAnzeige): string {
   return geld(Math.round(t.betrag_cent / t.intervall_monate))
 }
 
+/**
+ * Suspense-Grenze um den Bestellinhalt.
+ *
+ * `useSearchParams()` zwingt Next beim Prerendern zum Abbruch, wenn es
+ * nicht in einer Suspense-Grenze steht — der Produktions-Build bricht
+ * dann mit „missing-suspense-with-csr-bailout" ab (im Entwicklungsmodus
+ * fällt das nicht auf). Gebraucht wird der Parameter nur für den
+ * Hinweis nach einem abgebrochenen Stripe-Vorgang; die Grenze kostet
+ * also nichts und hält den Build grün.
+ */
 export default function CheckoutSeite() {
+  return (
+    <Suspense fallback={<CoachLaden />}>
+      <CheckoutInhalt />
+    </Suspense>
+  )
+}
+
+function CheckoutInhalt() {
   const { profil, laden: profilLaedt, fehler: profilFehler, neuLaden } = useCoachProfil()
   const suchparameter = useSearchParams()
   const abgebrochen = suchparameter.get('abgebrochen') === '1'
