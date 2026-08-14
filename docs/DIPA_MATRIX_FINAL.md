@@ -2,12 +2,18 @@
 
 **Stand:** 2026-08-14 (Phase 4 Reverify — Zahlen in diesem Kopf aktualisiert, Tabellen unten teils veraltet) · **Produktversion:** 0.5.0 · **Betriebsmodus:** `COACH_DIPA_MODUS=false`
 
-> **Aktuellster Stand:** `docs/dipa/18_PHASE4_REVERIFY_2026-08-14.md` — vollständige
-> 48-Punkte-Tabelle mit Primärquellen (DiPAV-Volltext inkl. Anlage 1+2, BfArM-DiPA-Leitfaden
-> v1.3, MDR). Die Tabellen weiter unten in diesem Dokument stammen aus einem früheren
-> Durchgang und enthalten teils überholte Angaben (u. a. BF-01 zitierte fälschlich EN
-> 301 549/WCAG statt der tatsächlich einschlägigen DIN EN ISO 9241-171). Für belastbare
-> Einzelaussagen den Phase-4-Reverify verwenden, nicht diese Tabellen.
+> **Aktuellster Stand:** `docs/dipa/20_DIPA_MATRIX_EINDEUTIG_2026-08-15.md` —
+> eindeutige 48-Punkte-Tabelle (ein Status pro Punkt, keine Doppel-Codes mehr) mit
+> Primärquellen (DiPAV-Volltext inkl. Anlage 1+2, BfArM-DiPA-Leitfaden v1.3, MDR,
+> §78a SGB XI, §139e SGB V) und nachgerechneter 44 %-Quote. Ergänzend:
+> `docs/DIPA_EXTERNE_RECLASSIFIZIERUNG_2026-08-15.md` für die Einordnung der
+> externen Punkte in zwingend/vorbereitbar/fälschlich-extern. Die Tabellen weiter
+> unten in diesem Dokument sowie `docs/dipa/18_PHASE4_REVERIFY_2026-08-14.md`
+> stammen aus einem früheren Durchgang und enthalten teils überholte Angaben (u. a.
+> BF-01 zitierte fälschlich EN 301 549/WCAG statt der tatsächlich einschlägigen
+> DIN EN ISO 9241-171; AK-REG-01 war fälschlich als Klasse E statt C eingestuft).
+> Für belastbare Einzelaussagen die Matrix vom 15.08.2026 verwenden, nicht diese
+> Tabellen.
 
 ## Wozu dieses Dokument
 
