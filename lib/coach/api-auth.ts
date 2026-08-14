@@ -22,6 +22,7 @@ import {
 } from './consent'
 import { freischaltungPflicht } from './config'
 import { istFreigeschaltet, type FreischaltungZeile } from './freischaltung'
+import { mfaSperre, mfaStand, type MfaFaktor, type MfaNiveau } from './mfa'
 
 export type CoachSessionResult =
   | { ok: true; supabase: SupabaseClient; user: User }
@@ -82,8 +83,26 @@ export async function requireCoachUser(optionen: CoachUserOptions = {}): Promise
   }
   if (!optionen.schreibzugriff) return treffer
 
-  const sperre = await pruefeSchreibzugriff(session.supabase, (coachUser as CoachUser).id)
+  const sperre = await pruefeSchreibzugriff(session.supabase, session.user, (coachUser as CoachUser).id)
   return sperre ?? treffer
+}
+
+/**
+ * Sitzungsniveau (AAL) ermitteln.
+ *
+ * Rein lokale Auswertung des Sitzungs-Tokens — kein zusätzlicher
+ * Netzaufruf. Schlägt sie fehl, wird `null` gemeldet; für Nutzer MIT
+ * eingerichtetem Faktor bedeutet das gesperrt (lib/coach/mfa.ts), für alle
+ * anderen ändert es nichts.
+ */
+async function niveauDerSitzung(supabase: SupabaseClient): Promise<MfaNiveau> {
+  try {
+    const { data } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
+    const stufe = data?.currentLevel
+    return stufe === 'aal1' || stufe === 'aal2' ? stufe : null
+  } catch {
+    return null
+  }
 }
 
 /**
@@ -96,8 +115,26 @@ export async function requireCoachUser(optionen: CoachUserOptions = {}): Promise
  */
 async function pruefeSchreibzugriff(
   supabase: SupabaseClient,
+  user: User,
   coachUserId: string
 ): Promise<{ ok: false; response: NextResponse } | null> {
+  // Zweiter Faktor zuerst: Wer einen eingerichtet hat, dessen Sitzung aber
+  // nur auf AAL1 steht, schreibt nicht (lib/coach/mfa.ts). Ohne diese
+  // Durchsetzung wäre der Faktor wirkungslos — ein gestohlenes Passwort
+  // käme weiterhin an die Gesundheitsdaten.
+  const faktoren = ((user as unknown as { factors?: MfaFaktor[] }).factors) ?? []
+  // Sitzungsniveau nur ermitteln, wenn es überhaupt etwas entscheiden kann.
+  const niveau = faktoren.some(f => f.status === 'verified')
+    ? await niveauDerSitzung(supabase)
+    : null
+  const sperre = mfaSperre(mfaStand(faktoren, niveau))
+  if (sperre) {
+    return {
+      ok: false,
+      response: NextResponse.json({ error: sperre.text, code: sperre.code }, { status: 403 }),
+    }
+  }
+
   const { data: consents, error: consentFehler } = await supabase
     .from('coach_consents')
     .select('consent_typ, erteilt, widerrufen_am')

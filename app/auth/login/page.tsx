@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import Icon3D from '@/components/Icon3D'
 import { flushPendingProfile } from '@/lib/pending-profile'
+import { codeAbfrageNoetig, type MfaNiveau } from '@/lib/coach/mfa'
 
 // ═══ Brute-Force Schutz: Konstanten ═══
 const MAX_CLIENT_ATTEMPTS = 5
@@ -23,6 +24,13 @@ function LoginForm() {
   const [loading, setLoading] = useState(false)
   const [showAdminPw, setShowAdminPw] = useState(false)
   const [adminPwInput, setAdminPwInput] = useState('')
+
+  // ═══ Zweiter Faktor ═══
+  // Hat das Konto einen bestätigten TOTP-Faktor, steht die Sitzung nach dem
+  // Passwort erst auf AAL1. Erst der Code hebt sie auf AAL2 — bis dahin wird
+  // NICHT weitergeleitet. Regeln: lib/coach/mfa.ts
+  const [mfaUser, setMfaUser] = useState<{ id: string; email?: string; user_metadata?: Record<string, unknown> } | null>(null)
+  const [mfaCode, setMfaCode] = useState('')
 
   // ═══ Brute-Force State ═══
   const [lockoutUntil, setLockoutUntil] = useState<number>(0)
@@ -220,19 +228,48 @@ function LoginForm() {
     // ═══ Erfolgreichen Login melden → Counter zurücksetzen ═══
     await reportSuccessfulLogin(loginEmail)
 
-    const role = signInData.user.user_metadata?.role || ''
+    // ═══ Zweiter Faktor: Code abfragen, bevor irgendetwas weitergeht ═══
+    // Fail-open bei Fehlern in der Niveau-Abfrage ist Absicht: Wer keinen
+    // Faktor hat, dürfte sonst wegen einer Störung gar nicht mehr hinein.
+    // Die verbindliche Durchsetzung sitzt ohnehin serverseitig
+    // (lib/coach/api-auth.ts) und ist von dieser Abfrage unabhängig.
+    let aktuellesNiveau: MfaNiveau = null
+    let naechstesNiveau: MfaNiveau = null
+    try {
+      const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
+      aktuellesNiveau = (aal?.currentLevel as MfaNiveau) ?? null
+      naechstesNiveau = (aal?.nextLevel as MfaNiveau) ?? null
+    } catch {}
+    if (codeAbfrageNoetig(aktuellesNiveau, naechstesNiveau)) {
+      setMfaUser(signInData.user)
+      setMfaCode('')
+      setError('')
+      return
+    }
+
+    await nachAnmeldung(signInData.user)
+  }
+
+  /**
+   * Alles, was NACH der vollständigen Authentifizierung passiert —
+   * Protokoll, geparkte Profildaten, Weiterleitung. Bewusst herausgezogen:
+   * Der Weg mit zweitem Faktor betritt ihn erst nach der Code-Prüfung.
+   */
+  async function nachAnmeldung(user: { id: string; email?: string; user_metadata?: Record<string, unknown> }) {
+    const supabase = createClient()
+    const role = (user.user_metadata?.role as string) || ''
 
     // Log im Hintergrund
     Promise.all([
       getClientIP(),
-      supabase.from('profiles').select('first_name, last_name').eq('id', signInData.user.id).single()
+      supabase.from('profiles').select('first_name, last_name').eq('id', user.id).single()
     ]).then(([ip, { data: profile }]) => {
       const displayName = profile?.first_name
         ? `${profile.first_name} ${(profile.last_name || '').charAt(0)}.`.trim()
-        : signInData.user.user_metadata?.first_name || signInData.user.email
+        : (user.user_metadata?.first_name as string) || user.email
       supabase.from('mis_auth_log').insert({
-        user_id: signInData.user.id,
-        user_email: signInData.user.email,
+        user_id: user.id,
+        user_email: user.email,
         user_name: displayName,
         action: 'login',
         ip_address: ip || null,
@@ -243,7 +280,7 @@ function LoginForm() {
 
     // Bei der Registrierung geparkte Profildaten (u.a. PLZ) nachtragen —
     // relevant, wenn signUp wegen E-Mail-Bestätigung keine Session hatte.
-    await flushPendingProfile(supabase, signInData.user.id)
+    await flushPendingProfile(supabase, user.id)
 
     // Redirect — ?next= / ?redirectTo= hat Vorrang (sicherer Rücksprung nach Middleware-Redirect)
     // Nur relative Pfade erlaubt (kein Open-Redirect via https://evil.com)
@@ -258,6 +295,51 @@ function LoginForm() {
     } else {
       window.location.href = '/kunde/home'
     }
+  }
+
+  /** Code aus der Authenticator-App prüfen und die Anmeldung abschließen. */
+  async function bestaetigeMfa(e: React.FormEvent) {
+    e.preventDefault()
+    if (!mfaUser) return
+    setLoading(true)
+    setError('')
+    try {
+      const supabase = createClient()
+      const { data: faktoren, error: listenFehler } = await supabase.auth.mfa.listFactors()
+      const faktor = faktoren?.totp?.[0]
+      if (listenFehler || !faktor) {
+        setError('Ihr zweiter Faktor konnte nicht geladen werden. Bitte laden Sie die Seite neu.')
+        return
+      }
+      const { data: challenge, error: challengeFehler } = await supabase.auth.mfa.challenge({ factorId: faktor.id })
+      if (challengeFehler || !challenge) {
+        setError('Die Prüfung konnte nicht gestartet werden. Bitte versuchen Sie es erneut.')
+        return
+      }
+      const { error: pruefFehler } = await supabase.auth.mfa.verify({
+        factorId: faktor.id,
+        challengeId: challenge.id,
+        code: mfaCode.replace(/\s/g, ''),
+      })
+      if (pruefFehler) {
+        setError('Der Code stimmt nicht. Bitte geben Sie den aktuell angezeigten sechsstelligen Code ein — er wechselt alle 30 Sekunden.')
+        return
+      }
+      await nachAnmeldung(mfaUser)
+    } catch {
+      setError('Netzwerkfehler. Bitte versuchen Sie es erneut.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  /** Abbrechen: Sitzung beenden, damit keine halbe Anmeldung stehen bleibt. */
+  async function brichMfaAb() {
+    setMfaUser(null)
+    setMfaCode('')
+    setError('')
+    setPassword('')
+    try { await createClient().auth.signOut() } catch {}
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -279,6 +361,57 @@ function LoginForm() {
   }
 
   const isLocked = lockoutUntil > Date.now()
+
+  // ═══ Zwischenschritt: Code aus der Authenticator-App ═══
+  // Eigene Ansicht statt eines zusätzlichen Feldes im Anmeldeformular:
+  // An dieser Stelle ist das Passwort bereits akzeptiert; ein weiterhin
+  // sichtbares Passwortfeld würde den Stand der Anmeldung verschleiern.
+  if (mfaUser) {
+    return (
+      <div className="screen auth-screen">
+        <div className="auth-card">
+          <div style={{ marginBottom: 24, textAlign: 'center' }}>
+            <Icon3D size={56} />
+          </div>
+          <div className="auth-title">Noch ein Schritt</div>
+          <div className="auth-sub">Bitte geben Sie den Code aus Ihrer Authenticator-App ein</div>
+
+          <form onSubmit={bestaetigeMfa}>
+            <label htmlFor="mfa-code" style={{ display: 'block', fontSize: 13, color: 'rgba(255,255,255,0.6)', marginBottom: 6 }}>
+              Sechsstelliger Code
+            </label>
+            <input
+              id="mfa-code"
+              className="auth-input"
+              type="text"
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              maxLength={7}
+              required
+              autoFocus
+              value={mfaCode}
+              onChange={e => setMfaCode(e.target.value)}
+              style={{ letterSpacing: '0.3em', fontSize: 20, textAlign: 'center' }}
+            />
+            {error && <div className="auth-error">{error}</div>}
+            <button className="btn-gold" type="submit" disabled={loading || mfaCode.trim().length < 6} style={{ width: '100%', marginTop: 8 }}>
+              {loading ? 'Wird geprüft...' : 'BESTÄTIGEN'}
+            </button>
+          </form>
+
+          <div className="auth-link" style={{ marginTop: 16 }}>
+            <button
+              type="button"
+              onClick={brichMfaAb}
+              style={{ background: 'none', border: 'none', color: 'var(--gold-2)', cursor: 'pointer', fontSize: 13, textDecoration: 'underline', padding: 0 }}
+            >
+              Abbrechen und neu anmelden
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="screen auth-screen">

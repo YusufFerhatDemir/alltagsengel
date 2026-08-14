@@ -107,6 +107,18 @@ export default function EinstellungenSeite() {
         ))}
       </section>
 
+      <section className="pc-card" aria-labelledby="sicherheit-titel">
+        <h2 id="sicherheit-titel">Anmeldesicherheit</h2>
+        <p>
+          Sie können Ihre Anmeldung zusätzlich mit einem zweiten Faktor schützen: einem
+          sechsstelligen Code aus einer App auf Ihrem Handy. Das ist freiwillig — ohne ihn
+          nutzen Sie den PflegeCoach unverändert weiter.
+        </p>
+        <Link className="pc-btn pc-btn--secondary" href="/pflegecoach/einstellungen/sicherheit">
+          Zweiten Faktor verwalten
+        </Link>
+      </section>
+
       <section className="pc-card" aria-labelledby="export-titel">
         <h2 id="export-titel">Meine Daten exportieren</h2>
         <p>
@@ -114,7 +126,17 @@ export default function EinstellungenSeite() {
           Datei (JSON). Einen menschenlesbaren, druckbaren Bericht erstellen Sie unter{' '}
           <a href="/pflegecoach/bericht">Bericht</a>.
         </p>
-        <a className="pc-btn" href="/api/coach/export">Daten herunterladen (JSON)</a>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
+          <a className="pc-btn" href="/api/coach/export">Daten herunterladen (JSON)</a>
+          <a className="pc-btn pc-btn--secondary" href="/api/coach/export?format=fhir">
+            Für Praxis oder Pflegedienst (FHIR)
+          </a>
+        </div>
+        <p className="pc-lead">
+          Das FHIR-Format können viele Praxis- und Pflegesysteme einlesen. Es enthält Ihre
+          Selbsteinschätzungen, Ziele und den Wochenplan — ohne Ihren Namen und ohne Ihre
+          Einwilligungen. Die vollständige Ausgabe ist die JSON-Datei.
+        </p>
       </section>
 
       <section className="pc-card" aria-labelledby="beenden-titel">

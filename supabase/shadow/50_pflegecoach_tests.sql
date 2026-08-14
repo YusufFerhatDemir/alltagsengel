@@ -275,14 +275,198 @@ COMMIT;
 -- ════════════════════════════════════════════════════════════════════
 -- P8) Struktur: RLS aktiv, anon-Grants = 0 auf allen coach_-Tabellen
 -- ════════════════════════════════════════════════════════════════════
-SELECT pg_temp.check_test('P8', 'Alle 10 coach_-Tabellen haben RLS aktiv', 10::bigint,
+-- Bewusst als „0 Tabellen OHNE RLS" formuliert und nicht als feste Anzahl:
+-- Die frühere Fassung erwartete exakt 10 Tabellen und schlug fehl, sobald
+-- eine neue coach_-Tabelle hinzukam (Migration 20260826010000 und
+-- 20260907000000 brachten neun weitere). Eine feste Zahl misst das Wachstum
+-- des Schemas, nicht die Sicherheitszusicherung.
+SELECT pg_temp.check_test('P8', 'Keine coach_-Tabelle ohne RLS', 0::bigint,
   (SELECT count(*) FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
    WHERE n.nspname = 'public' AND c.relkind = 'r'
-     AND c.relname LIKE 'coach\_%' AND c.relrowsecurity));
+     AND c.relname LIKE 'coach\_%' AND NOT c.relrowsecurity));
+
+SELECT pg_temp.check_test('P8', 'Mindestens 19 coach_-Tabellen vorhanden (Untergrenze)', 'true',
+  (SELECT (count(*) >= 19)::text FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
+   WHERE n.nspname = 'public' AND c.relkind = 'r' AND c.relname LIKE 'coach\_%'));
 
 SELECT pg_temp.check_test('P8', 'anon hat 0 Grants auf coach_-Tabellen', 0::bigint,
   (SELECT count(*) FROM information_schema.role_table_grants
    WHERE grantee = 'anon' AND table_schema = 'public' AND table_name LIKE 'coach\_%'));
+
+SELECT pg_temp.check_test('P8', 'anon hat 0 Grants auf eul_-Tabellen', 0::bigint,
+  (SELECT count(*) FROM information_schema.role_table_grants
+   WHERE grantee = 'anon' AND table_schema = 'public' AND table_name LIKE 'eul\_%'));
+
+-- ════════════════════════════════════════════════════════════════════
+-- P9) Nutzerflow-Tabellen aus 20260826010000 (DiPA-Matrix QS-04)
+-- ════════════════════════════════════════════════════════════════════
+-- Die sechs Tabellen dieser Migration plus die beiden eul_-Betriebstabellen
+-- waren bis hierher ungetestet. Geprüft wird genau das, was die
+-- Produktgrenze zusagt:
+--   * das Pseudonym ist nicht berechenbar und nicht fremdlesbar
+--   * Nachweisdaten sind nur unter dem EIGENEN Pseudonym schreibbar
+--   * Freischaltungen kann sich niemand selbst eintragen
+--   * Betriebstabellen (Codes, Abrechnungswege, eUL) sind für den
+--     Produktnutzer unsichtbar
+-- ════════════════════════════════════════════════════════════════════
+
+-- ── P9.1 Pseudonymisierung ───────────────────────────────────────────
+BEGIN;
+SET LOCAL ROLE authenticated;
+SELECT pg_temp.als_user(:PB);
+
+SELECT pg_temp.check_test('P9', 'Schlüsseltabelle ist für Nutzer nicht lesbar', 'verweigert',
+  pg_temp.zaehle('SELECT count(*) FROM coach_pseudonym_key'));
+
+-- Die parametrisierte Variante wäre ein Orakel: Wer sie ausführen darf,
+-- berechnet das Pseudonym eines beliebigen Nutzers und liest dessen
+-- Nachweisdaten. Der Aufruf MUSS scheitern.
+SELECT pg_temp.check_test('P9', 'coach_pseudonym(uuid) ist für Nutzer gesperrt', 'verweigert',
+  pg_temp.zaehle($$SELECT length(coach_pseudonym('c0000000-0000-4000-8000-0000000000c2'::uuid))$$));
+
+SELECT pg_temp.check_test('P9', 'Eigenes Pseudonym ist berechenbar (64 Hex-Zeichen)', '64',
+  pg_temp.zaehle('SELECT length(coach_mein_pseudonym())'));
+COMMIT;
+
+-- Zwei Nutzer, zwei verschiedene Pseudonyme — sonst wäre die Trennung
+-- der Nachweisdaten wirkungslos.
+BEGIN;
+SET LOCAL ROLE authenticated;
+SELECT pg_temp.als_user(:PB);
+CREATE TEMP TABLE pseudo_pb AS SELECT coach_mein_pseudonym() AS p;
+COMMIT;
+
+BEGIN;
+SET LOCAL ROLE authenticated;
+SELECT pg_temp.als_user(:FREMD);
+SELECT pg_temp.check_test('P9', 'FREMD bekommt ein anderes Pseudonym als PB', 'false',
+  (SELECT (coach_mein_pseudonym() = (SELECT p FROM pseudo_pb))::text));
+COMMIT;
+
+-- ── P9.2 Nutzungsereignisse ──────────────────────────────────────────
+BEGIN;
+SET LOCAL ROLE authenticated;
+SELECT pg_temp.als_user(:PB);
+
+SELECT pg_temp.check_test('P9', 'PB schreibt Ereignis unter eigenem Pseudonym', '1',
+  pg_temp.dml($$INSERT INTO coach_nutzungsereignisse (pseudonym, ereignis, rolle)
+    VALUES (coach_mein_pseudonym(), 'sitzung_gestartet', 'pflegebeduerftig')$$));
+
+SELECT pg_temp.check_test('P9', 'PB kann kein fremdes Pseudonym unterschieben', 'verweigert',
+  pg_temp.dml($$INSERT INTO coach_nutzungsereignisse (pseudonym, ereignis)
+    VALUES ('a0b1c2d3e4f5', 'sitzung_gestartet')$$));
+
+SELECT pg_temp.check_test('P9', 'Ereignisse sind unveränderlich (kein UPDATE)', 'verweigert',
+  pg_temp.dml($$UPDATE coach_nutzungsereignisse SET anzahl = 99$$));
+
+SELECT pg_temp.check_test('P9', 'PB sieht sein eigenes Ereignis', '1',
+  pg_temp.zaehle('SELECT count(*) FROM coach_nutzungsereignisse'));
+
+SELECT pg_temp.check_test('P9', 'Tabelle führt weder Nutzer-ID noch Zeitstempel', '0',
+  pg_temp.zaehle($$SELECT count(*) FROM information_schema.columns
+    WHERE table_name = 'coach_nutzungsereignisse'
+      AND column_name IN ('coach_user_id','user_id','created_at','erstellt_am')$$));
+COMMIT;
+
+BEGIN;
+SET LOCAL ROLE authenticated;
+SELECT pg_temp.als_user(:FREMD);
+SELECT pg_temp.check_test('P9', 'FREMD sieht 0 Nutzungsereignisse', '0',
+  pg_temp.zaehle('SELECT count(*) FROM coach_nutzungsereignisse'));
+SELECT pg_temp.check_test('P9', 'FREMD kann PBs Ereignisse nicht löschen', '0',
+  pg_temp.dml('DELETE FROM coach_nutzungsereignisse'));
+COMMIT;
+
+-- Das eigene Löschrecht muss bleiben (Art. 17, Löschkonzept).
+BEGIN;
+SET LOCAL ROLE authenticated;
+SELECT pg_temp.als_user(:PB);
+SELECT pg_temp.check_test('P9', 'PB löscht seine eigenen Nachweisdaten', '1',
+  pg_temp.dml('DELETE FROM coach_nutzungsereignisse'));
+COMMIT;
+
+-- ── P9.3 Freischaltungen und Codes ───────────────────────────────────
+BEGIN;
+SET LOCAL ROLE authenticated;
+SELECT pg_temp.als_user(:PB);
+
+SELECT pg_temp.check_test('P9', 'PB sieht 0 Freischaltungen (keine vergeben)', '0',
+  pg_temp.zaehle('SELECT count(*) FROM coach_freischaltungen'));
+
+-- Der Kern der Freischaltung: Sie darf NUR im Systemkontext entstehen.
+-- Könnte ein Nutzer sich selbst eintragen, wäre das ganze Verfahren
+-- (Migration 20260826010000, Teil 3) wertlos.
+SELECT pg_temp.check_test('P9', 'PB kann sich NICHT selbst freischalten', 'verweigert',
+  pg_temp.dml($$INSERT INTO coach_freischaltungen (coach_user_id, quelle, status)
+    VALUES ('cc000000-0000-4000-8000-0000000000d1'::uuid, 'pflegekasse', 'aktiv')$$));
+
+SELECT pg_temp.check_test('P9', 'PB kann Freischaltungen nicht ändern', 'verweigert',
+  pg_temp.dml($$UPDATE coach_freischaltungen SET status = 'aktiv'$$));
+
+SELECT pg_temp.check_test('P9', 'PB sieht keine ausgegebenen Codes (Betriebsseite)', '0',
+  pg_temp.zaehle('SELECT count(*) FROM coach_freischaltcodes'));
+
+SELECT pg_temp.check_test('P9', 'PB kann keinen Code anlegen', 'verweigert',
+  pg_temp.dml($$INSERT INTO coach_freischaltcodes (code_hash, code_praefix)
+    VALUES ('deadbeef', 'AAA')$$));
+COMMIT;
+
+-- ── P9.4 Anspruchsprüfungen (eigene Selbstauskunft) ──────────────────
+BEGIN;
+SET LOCAL ROLE authenticated;
+SELECT pg_temp.als_user(:PB);
+
+SELECT pg_temp.check_test('P9', 'PB legt eigene Anspruchsprüfung an', '1',
+  pg_temp.dml($$INSERT INTO coach_anspruchspruefungen
+      (coach_user_id, pflegegrad, ergebnis, kriterien_version)
+    VALUES ('cc000000-0000-4000-8000-0000000000d1'::uuid, 2, 'anspruch_unklar', 'test-v1')$$));
+SELECT pg_temp.check_test('P9', 'PB sieht seine Anspruchsprüfung', '1',
+  pg_temp.zaehle('SELECT count(*) FROM coach_anspruchspruefungen'));
+COMMIT;
+
+BEGIN;
+SET LOCAL ROLE authenticated;
+SELECT pg_temp.als_user(:FREMD);
+SELECT pg_temp.check_test('P9', 'FREMD sieht 0 Anspruchsprüfungen', '0',
+  pg_temp.zaehle('SELECT count(*) FROM coach_anspruchspruefungen'));
+SELECT pg_temp.check_test('P9', 'FREMD kann PB keine Anspruchsprüfung unterschieben', 'verweigert',
+  pg_temp.dml($$INSERT INTO coach_anspruchspruefungen
+      (coach_user_id, ergebnis, kriterien_version)
+    VALUES ('cc000000-0000-4000-8000-0000000000d1'::uuid, 'anspruch_moeglich', 'test-v1')$$));
+COMMIT;
+
+-- ── P9.5 Betriebstabellen bleiben außerhalb des Produkts ─────────────
+-- Abrechnungswege und eUL-Erbringungen sind Betriebsdaten. Ein
+-- PflegeCoach-Nutzer darf sie nicht sehen — sonst wäre die Produktgrenze
+-- in der Gegenrichtung durchlässig.
+BEGIN;
+SET LOCAL ROLE authenticated;
+SELECT pg_temp.als_user(:PB);
+
+SELECT pg_temp.check_test('P9', 'PB sieht 0 Abrechnungswege', '0',
+  pg_temp.zaehle('SELECT count(*) FROM coach_abrechnungswege'));
+SELECT pg_temp.check_test('P9', 'PB sieht 0 eUL-Erbringungen', '0',
+  pg_temp.zaehle('SELECT count(*) FROM eul_erbringungen'));
+SELECT pg_temp.check_test('P9', 'PB sieht 0 eUL-Qualifikationen', '0',
+  pg_temp.zaehle('SELECT count(*) FROM eul_qualifikationen'));
+SELECT pg_temp.check_test('P9', 'PB kann keine eUL-Erbringung anlegen', 'verweigert',
+  pg_temp.dml($$INSERT INTO eul_erbringungen (leistungsart, datum, dauer_minuten, durchfuehrungsform, inhalt)
+    VALUES ('beratung', CURRENT_DATE, 30, 'vor_ort', 'Test')$$));
+COMMIT;
+
+-- ── P9.6 Struktur der neuen Tabellen ─────────────────────────────────
+SELECT pg_temp.check_test('P9', 'Alle 8 Tabellen aus 20260826010000 haben RLS aktiv', 8::bigint,
+  (SELECT count(*) FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
+   WHERE n.nspname = 'public' AND c.relkind = 'r' AND c.relrowsecurity
+     AND c.relname IN ('coach_pseudonym_key','coach_freischaltcodes','coach_freischaltungen',
+                       'coach_anspruchspruefungen','coach_nutzungsereignisse','coach_abrechnungswege',
+                       'eul_erbringungen','eul_qualifikationen')));
+
+-- Der Schlüssel darf für NIEMANDEN außer dem Eigentümer erreichbar sein.
+SELECT pg_temp.check_test('P9', 'coach_pseudonym_key hat 0 Grants für anon/authenticated', 0::bigint,
+  (SELECT count(*) FROM information_schema.role_table_grants
+   WHERE table_schema = 'public' AND table_name = 'coach_pseudonym_key'
+     AND grantee IN ('anon','authenticated')));
 
 -- ════════════════════════════════════════════════════════════════════
 -- Auswertung

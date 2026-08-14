@@ -41,7 +41,8 @@
     "tauri:build": "tauri build",
     "tauri:build:mac": "tauri build --target universal-apple-darwin",
     "tauri:build:win": "tauri build --target x86_64-pc-windows-msvc",
-    "tauri:icons": "tauri icon src-tauri/icons/icon.png"
+    "tauri:icons": "tauri icon src-tauri/icons/icon.png",
+    "dipa:katalog": "tsx scripts/dipa-katalog-check.ts"
   },
   "dependencies": {
     "@capacitor/android": "^8.2.0",
