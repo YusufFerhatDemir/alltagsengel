@@ -266,3 +266,76 @@ export interface EulQualifikation {
   created_at: string
   updated_at: string
 }
+
+// ═══════════════════════════════════════════════════════════════
+// Selbstzahler-Verkaufsweg (Migration 20260907000000)
+// Vertrags- und Zahlungsdaten — KEINE Gesundheitsdaten.
+// Rechenlogik dazu: lib/coach/bestellung.ts, lib/coach/pricing.ts
+// ═══════════════════════════════════════════════════════════════
+
+export interface CoachBestellung {
+  id: string
+  coach_user_id: string
+  tarif: 'monatlich' | 'jaehrlich'
+  /** Bruttobetrag je Abrechnungszeitraum in CENT, eingefroren zum Vertragsschluss. */
+  betrag_cent: number
+  waehrung: string
+  intervall_monate: number
+  status: 'offen' | 'aktiv' | 'gekuendigt' | 'abgelaufen' | 'widerrufen' | 'zahlung_offen' | 'gesperrt'
+  rechnung_name: string
+  rechnung_strasse: string
+  rechnung_plz: string
+  rechnung_ort: string
+  rechnung_land: string
+  rechnung_email: string
+  bestellt_am: string
+  laufzeit_bis: string | null
+  gekuendigt_am: string | null
+  widerrufen_am: string | null
+  agb_akzeptiert_am: string
+  datenschutz_akzeptiert_am: string
+  widerrufsbelehrung_version: string
+  stripe_customer_id: string | null
+  stripe_subscription_id: string | null
+  stripe_checkout_id: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface CoachZahlung {
+  id: string
+  bestellung_id: string
+  coach_user_id: string
+  art: 'zahlung' | 'fehlgeschlagen' | 'erstattung'
+  betrag_cent: number
+  waehrung: string
+  zeitraum_von: string | null
+  zeitraum_bis: string | null
+  fehlergrund: string | null
+  stripe_invoice_id: string | null
+  stripe_payment_intent: string | null
+  gebucht_am: string
+  created_at: string
+}
+
+export interface CoachRechnung {
+  id: string
+  bestellung_id: string
+  coach_user_id: string
+  zahlung_id: string | null
+  nummer: string
+  rechnungsdatum: string
+  leistung_von: string
+  leistung_bis: string
+  brutto_cent: number
+  netto_cent: number
+  steuer_cent: number
+  steuersatz: number
+  waehrung: string
+  empfaenger_name: string
+  empfaenger_anschrift: string
+  angaben_unvollstaendig: string | null
+  storniert_am: string | null
+  storno_grund: string | null
+  created_at: string
+}
