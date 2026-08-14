@@ -42,8 +42,11 @@ const KEIN_OFFENES_LESEN = [
   'billing_audit_trail',
   'billing_number_sequences',
   'billing_tariffs',
-  'angel_availability',
 ];
+
+// Bewusst NICHT in der Liste: angel_availability. Die Kundenseite liest dort
+// mit User-JWT freie Termine, um die Buchung zu ermoeglichen — das ist
+// Marktplatz-Funktion, kein Leck (Begruendung in Migration 20260908020000).
 
 /**
  * Audit-Trails. Ein Protokoll, in das jeder eingeloggte Nutzer schreiben darf,

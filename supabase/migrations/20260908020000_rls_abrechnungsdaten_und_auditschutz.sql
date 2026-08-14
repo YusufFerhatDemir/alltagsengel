@@ -36,9 +36,17 @@
 -- Fix: INSERT nur noch fuer Admins. Der regulaere Schreibweg der Anwendung
 -- laeuft ueber Service-Role und ist von RLS ohnehin nicht betroffen.
 --
--- ── BEFUND 3 (P1, Mandantentrennung) ────────────────────────────────────────
--- angel_availability: SELECT USING(true), kein Org-Zaun. Verfuegbarkeiten
--- aller Engel aller Mandanten waren fuer jeden eingeloggten Nutzer lesbar.
+-- ── BEFUND 3 (bewertet, bewusst NICHT geaendert) ────────────────────────────
+-- angel_availability: SELECT USING(true), kein Org-Zaun — Verfuegbarkeiten
+-- aller Engel sind fuer jeden eingeloggten Nutzer lesbar.
+-- Bewertung: das ist Marktplatz-Funktion, keine Luecke. Die Kundenseite
+-- (app/kunde/engel/[id], app/kunde/buchen/[id]) liest diese Zeilen mit dem
+-- User-JWT, um freie Termine anzuzeigen; die Engel-Profile in `angels` sind
+-- aus demselben Grund bereits bewusst oeffentlich (siehe Freigabeliste in
+-- scripts/verify-anon-exposure.mjs). Die Tabelle enthaelt Zeitfenster und
+-- angel_id, keine Kontakt- oder Gesundheitsdaten.
+-- Eine Verschaerfung auf `angel_id = auth.uid() OR is_admin()` wurde geprueft
+-- und verworfen: sie haette die Terminauswahl im Buchungsweg abgeschaltet.
 --
 -- ── BEFUND 4 (P1, Unveraenderlichkeit Leistungsnachweis) ────────────────────
 -- prevent_finalized_service_record_mutation() prueft OLD.status = 'freigegeben'.
@@ -74,15 +82,19 @@ CREATE POLICY invoice_corrections_select ON public.invoice_corrections
   FOR SELECT TO authenticated
   USING (public.is_admin() OR public.is_internal_staff());
 
+-- is_internal_staff() = admin, superadmin, pdl, buero. Bewusst nicht nur
+-- is_admin(): die Ops-Audit-Ansicht (lib/analytics/opsAudit.ts, aufgerufen
+-- aus /admin) laeuft mit dem User-JWT und wird auch von PDL und Buero
+-- geoeffnet. Kunden und Engel bleiben aussen vor.
 DROP POLICY IF EXISTS billing_audit_trail_select    ON public.billing_audit_trail;
 CREATE POLICY billing_audit_trail_select ON public.billing_audit_trail
   FOR SELECT TO authenticated
-  USING (public.is_admin());
+  USING (public.is_admin() OR public.is_internal_staff());
 
 DROP POLICY IF EXISTS billing_number_sequences_select ON public.billing_number_sequences;
 CREATE POLICY billing_number_sequences_select ON public.billing_number_sequences
   FOR SELECT TO authenticated
-  USING (public.is_admin());
+  USING (public.is_admin() OR public.is_internal_staff());
 
 -- billing_tariffs: internes Personal darf Preise sehen (Einsatzplanung,
 -- Rechnungspruefung). Kunden und Engel nicht.
@@ -109,15 +121,6 @@ DROP POLICY IF EXISTS sr_audit_insert ON public.service_record_audit_log;
 CREATE POLICY sr_audit_insert ON public.service_record_audit_log
   FOR INSERT TO authenticated
   WITH CHECK (public.is_admin());
-
--- ─────────────────────────────────────────────────────────────────────
--- 3) angel_availability: eigener Kalender + Admin, kein Fremdzugriff
--- ─────────────────────────────────────────────────────────────────────
-
-DROP POLICY IF EXISTS angel_availability_select ON public.angel_availability;
-CREATE POLICY angel_availability_select ON public.angel_availability
-  FOR SELECT TO authenticated
-  USING (angel_id = auth.uid() OR public.is_admin() OR public.is_internal_staff());
 
 -- ─────────────────────────────────────────────────────────────────────
 -- 4) Leistungsnachweis nach Freigabe unveraenderlich
@@ -158,8 +161,8 @@ BEGIN
     NEW.organization_id  IS DISTINCT FROM OLD.organization_id
   ) THEN
     RAISE EXCEPTION
-      'Leistungsnachweis im Status "%" ist unveraenderlich. Inhaltliche '
-      'Aenderungen erfordern den Korrekturweg (status = ''korrektur'').',
+      'Leistungsnachweis im Status "%" ist unveraenderlich. Korrektur nur '
+      'ueber Stornierung (proof_status = ''STORNIERT'') und Neuerfassung.',
       OLD.status;
   END IF;
 
