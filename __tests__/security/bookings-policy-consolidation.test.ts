@@ -55,7 +55,7 @@ describe('Statisch: Negativtest — DSGVO-Lücke in alten Policies', () => {
   })
 
   it('20260419 "Users can view own bookings" prüft nur auth.uid(), nicht den Buchungspartner', () => {
-    const sql = readMigration('20260419_soft_delete.sql')
+    const sql = readMigration('20260419000100_soft_delete.sql')
     // Die Policy prüft NOT is_profile_soft_deleted(auth.uid()) —
     // aber NICHT is_profile_soft_deleted(customer_id) / angel_id.
     // Selbst wenn der Engel gelöscht ist, sieht der Kunde die Buchung.

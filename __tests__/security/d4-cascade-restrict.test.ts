@@ -13,7 +13,7 @@ import path from 'node:path'
 const REPO_ROOT = path.resolve(__dirname, '../..')
 const read = (rel: string) => readFileSync(path.join(REPO_ROOT, rel), 'utf-8')
 
-const MIGRATION = 'supabase/migrations/20260831010000_d4_cascade_to_restrict.sql'
+const MIGRATION = 'supabase/migrations/20260831010100_d4_cascade_to_restrict.sql'
 const ROLLBACK = 'supabase/migrations/20260831010001_rollback_d4_cascade_to_restrict.sql'
 
 const PFLEGE_TABELLEN_MIT_CLIENT_FK = [
@@ -99,7 +99,7 @@ describe('D4: Ursprüngliche Migrationen haben CASCADE (Ist-Zustand vor Fix)', (
   const QUELL_MIGRATIONEN = [
     'supabase/migrations/20260810010000_pflegedokumentation.sql',
     'supabase/migrations/20260820010000_medikamentenmanagement.sql',
-    'supabase/migrations/20260818010000_vitalwerte.sql',
+    'supabase/migrations/20260818010100_vitalwerte.sql',
     'supabase/migrations/20260818030000_wunddokumentation.sql',
     'supabase/migrations/20260818010000_sis_strukturierte_informationssammlung.sql',
   ]
