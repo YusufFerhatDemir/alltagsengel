@@ -126,7 +126,11 @@ jobs:
       - name: Run E2E suite
         env:
           PLAYWRIGHT_BASE_URL: http://localhost:3000
-        run: npx playwright test e2e/pflegecoach.spec.ts
+        # pflegecoach-axe.spec.ts (DiPA-Matrix BF-03) laeuft mit: axe-core
+        # WCAG 2.1 A/AA plus ein eigener Kontrastrechner. Letzterer existiert,
+        # weil axe den am 14.08.2026 gefundenen 1:1-Kontrast des primaeren
+        # Link-Buttons nur als "incomplete" meldete, nicht als Verstoss.
+        run: npx playwright test e2e/pflegecoach.spec.ts e2e/pflegecoach-axe.spec.ts
 
       - name: Upload Playwright report
         if: always()

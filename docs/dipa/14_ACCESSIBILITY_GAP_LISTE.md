@@ -1,6 +1,6 @@
 # Accessibility-Gap-Liste — Digitaler PflegeCoach
 
-**Stand:** 2026-08-14
+**Stand:** 2026-08-14 (aktualisiert nach dem axe-core-Durchgang)
 **Zweck:** Was an Barrierefreiheit umgesetzt und maschinell geprüft ist, und was noch fehlt — deckt DiPA-Matrix BF-01 bis BF-03 ab.
 
 ---
@@ -79,6 +79,89 @@ tatsächlich vorgelesene Ansage betrifft, lässt sich nur mit echter
 Screenreader-Software klären — deshalb hier nicht als Befund gewertet, sondern
 als **erster zu prüfender Punkt** für den Durchgang aus §3.3 vermerkt.
 
+## 2b. Regelbasierter axe-core-Durchgang (14.08.2026) — `e2e/pflegecoach-axe.spec.ts`
+
+Neu hinzugekommen: ein **regelbasierter** Accessibility-Durchgang mit **axe-core 4.11.3**
+gegen die WCAG-Regelsätze `wcag2a`, `wcag2aa`, `wcag21a`, `wcag21aa`. axe-core lag
+bereits als transitive Abhängigkeit im Baum; es wird als Skript in die Seite injiziert,
+damit für diesen Nachweis keine neue Abhängigkeit aufgenommen werden muss.
+
+**Tatsächlich ausgeführt** am 14.08.2026 gegen `https://alltagsengel.care`
+(Produktionsstand), in **beiden** Browser-Projekten der Playwright-Matrix:
+
+```
+PLAYWRIGHT_BASE_URL=https://alltagsengel.care npx playwright test e2e/pflegecoach-axe.spec.ts
+→ 10 passed  (5 Tests × Chromium + Mobile Safari)
+```
+
+### Ergebnis je Seite
+
+| Seite | axe-Regeln bestanden | Verstöße | „manuell zu klären" (incomplete) |
+|---|---|---|---|
+| `/pflegecoach/start` | 26 | **0** | 1 — `color-contrast` auf `a[href$="register"]` |
+| `/pflegecoach/datenschutz` | 23 | **0** | 0 |
+| `/pflegecoach/anfrage` | 27 | **0** | 0 |
+| `/pflegecoach/anfrage` nach Absendeversuch | 27 | **0** | 0 |
+
+### Systematisch geprüfte Struktur (Landmark-Inventur, je Seite protokolliert)
+
+| Seite | Landmarks | h1 | Überschriften | `lang` | Eingaben | ohne Label | Knöpfe ohne Namen |
+|---|---|---|---|---|---|---|---|
+| `/pflegecoach/start` | banner, group, navigation, status, main, contentinfo | 1 | h1 + 6× h2 | `de` | 0 | 0 | 0 |
+| `/pflegecoach/datenschutz` | banner, group, navigation, status, main, contentinfo | 1 | h1 + 5× h2 | `de` | 0 | 0 | 0 |
+| `/pflegecoach/anfrage` | banner, group, navigation, status, main, contentinfo | 1 | h1 + 2× h2 | `de` | 8 | **0** | 0 |
+
+Zusätzlich maschinell zugesichert: keine übersprungene Überschriftenebene (WCAG 1.3.1),
+`<html lang="de">` gesetzt, genau eine `h1`, `main`- und `contentinfo`-Landmark vorhanden.
+
+### Dabei gefundener echter Fehler — behoben
+
+Der einzige `incomplete`-Befund war **kein Werkzeugartefakt, sondern ein echter,
+sichtbarer Bedienfehler**. Am Live-DOM nachgemessen:
+
+```
+a.pc-btn "Konto anlegen":  color rgb(11,83,148)  auf  background rgb(11,83,148)
+→ Kontrastverhältnis 1:1 — die Beschriftung des primären Handlungsknopfes war unsichtbar.
+```
+
+**Ursache:** CSS-Spezifität. `.pc-root a` (0,1,1) schlägt `.pc-btn` (0,1,0) unabhängig von
+der Reihenfolge — jeder Link-Button (`<Link className="pc-btn">`) erbte damit die Linkfarbe
+`--pc-primary` und stand auf seinem eigenen `--pc-primary`-Hintergrund. Betroffen war
+ausschließlich die **primäre** Variante; `.pc-btn--secondary` (blau auf weiß) und echte
+`<button>`-Elemente waren korrekt.
+
+**Behoben** in `app/pflegecoach/pflegecoach.css` durch vier spezifitätsgleiche Regeln
+(`.pc-root a.pc-btn` / `--secondary`, jeweils mit `:hover`). Gegenprobe am Live-DOM:
+Primär `rgb(255,255,255)` auf `rgb(11,83,148)` = **7,8:1**, Sekundär `rgb(11,83,148)` auf
+`rgb(255,255,255)` = **7,4:1** — beide deutlich über der AA-Schwelle 4,5:1.
+
+**Lehre, die in den Test eingebaut wurde:** axe-core hat diesen Fall **nicht als Verstoß
+gemeldet**, sondern nur als `incomplete`. Ein Durchgang, der allein auf `violations.length === 0`
+prüft, wäre grün gewesen — mit einem unsichtbaren Hauptknopf im Produkt. Deshalb enthält
+`e2e/pflegecoach-axe.spec.ts` jetzt zusätzlich einen **eigenen Kontrastrechner**, der für
+jede sichtbare `.pc-btn` das Verhältnis gegen den ersten nicht-transparenten Hintergrund
+der Elternkette berechnet und unter 4,5:1 fehlschlägt.
+
+**Beide Richtungen belegt** — der Test behauptet die Regression nicht, er weist sie nach:
+
+| Lauf | Stand | Ergebnis |
+|---|---|---|
+| gegen `https://alltagsengel.care` **vor** dem Fix | Produktion mit Fehler | **fehlgeschlagen**, Verhältnis `1` |
+| gegen den lokalen Produktions-Build **nach** dem Fix | `npm run build` + `npm run start` | **12/12 grün** (Chromium + Mobile Safari); der `incomplete`-Befund auf `/pflegecoach/start` ist mit verschwunden |
+
+Die bestehende Suite `e2e/pflegecoach.spec.ts` lief gegen denselben Build ebenfalls
+vollständig durch (**48/48**), die CSS-Änderung hat also nichts anderes verschoben.
+Beide Suiten laufen ab sofort gemeinsam im CI-Job `e2e` (`.github/workflows/ci.yml`).
+
+### Was dieser Durchgang ausdrücklich NICHT ist
+
+axe-core prüft, was maschinell entscheidbar ist. Nicht geprüft und nicht prüfbar bleiben:
+ob eine Ansage **verständlich** ist, ob eine Live-Region **zum richtigen Zeitpunkt** spricht,
+ob ein Alternativtext **inhaltlich** stimmt, ob die **Vorlese-Reihenfolge** sinnvoll ist und
+ob in echter Screenreader-Bedienung eine **Fokusfalle** entsteht. Der Durchgang ersetzt
+damit weder §3.1 (BITV-Test) noch §3.3 (manueller VoiceOver/NVDA-Durchgang) — er ist deren
+Voraussetzung.
+
 ## 3. Was fehlt
 
 ### 3.1 BITV-Test — EXTERN_BENÖTIGT
@@ -123,13 +206,37 @@ durchgeführt** — der Durchführungsplan sieht ihn organisatorisch zusammen mi
 dem Gebrauchstauglichkeitstest (§3.2) vor, ist aber fachlich nicht daran
 gebunden und könnte separat vorgezogen werden.
 
+**Maschineller Anteil ist nach dem axe-core-Durchgang (§2b) abgeschlossen.**
+Der verbleibende manuelle Anteil ist damit klar abgegrenzt — dies ist die
+Arbeitsliste für die Person, die den Durchgang macht:
+
+| # | Prüfpunkt | Maschinell abgedeckt? | Was der manuelle Durchgang leisten muss |
+|---|---|:---:|---|
+| S1 | Seitentitel beim Wechsel angesagt? | teilweise | Existenz/Eindeutigkeit des `<title>` ist maschinell belegt — **ob** und **wann** er angesagt wird, nicht |
+| S2 | Sprungmarke erreichbar und wirksam? | ✅ strukturell | Nur noch die tatsächliche Sprungwirkung im Screenreader bestätigen |
+| S3 | Überschriftenebenen sinnvoll und sprungfähig? | ✅ formal | Hierarchie ist lückenlos (kein Ebenensprung, geprüft) — **inhaltliche** Sinnhaftigkeit bleibt Urteilsfrage |
+| S4 | Formularfeld-Beschriftungen vorgelesen? | teilweise | 8 von 8 Feldern auf `/pflegecoach/anfrage` tragen ein Label (geprüft) — die **Ansage** ist zu hören |
+| S5 | Fehlermeldungen/Bestätigungen angesagt? | **nein** | Live-Region-Verhalten; axe prüft keine Ansage-Zeitpunkte |
+| S6 | Schaltflächen am Namen erkennbar? | teilweise | 0 Schaltflächen ohne zugänglichen Namen (geprüft) — ob der Name **treffend** ist, nicht |
+| S7 | QR-Code der Anmeldesicherheit mit Alternativweg? | **nein** | Nur unter Anmeldung erreichbar, im E2E-Lauf bewusst nicht getestet |
+| S8 | Vollständig tastaturbedienbar, ohne Fokusfalle? | **nein** | Muss von Hand durchlaufen werden |
+
+**Erster konkreter Prüfpunkt** (aus §2a, unverändert offen): Im
+Accessibility-Baum erscheint bei den Radiobuttons und der Checkbox auf
+`/pflegecoach/anfrage` als Kennung der rohe `value`/Zustand statt des
+sichtbaren Label-Texts. Ob das ein Artefakt des Inspektionswerkzeugs ist oder
+die tatsächliche Ansage betrifft, klärt nur echte Screenreader-Software.
+Anmerkung dazu: der axe-Durchgang meldet für diese Felder **keinen** Verstoß
+(`label`-Regel bestanden) — was den Punkt nicht entkräftet, sondern zeigt,
+dass genau hier die Grenze der Maschine liegt.
+
 ## 4. Zusammenfassung
 
 | Punkt | Klasse | Status | Wer kann es lösen |
 |---|---|---|---|
 | BF-01 — BITV-Test | D | EXTERN | Prüfstelle |
 | BF-02 — Gebrauchstauglichkeitstest (5 Testpersonen) | D | EXTERN (Testpersonen) | eigener Betrieb muss Testpersonen gewinnen; Durchführung selbst intern möglich |
-| BF-03 — Screenreader-Durchgang (S1–S8) | C | TEILWEISE (Struktur maschinell geprüft, manueller Durchgang offen) | intern, eine Person mit VoiceOver/NVDA |
+| BF-03 — Screenreader-Durchgang (S1–S8) | C | TEILWEISE (maschineller Anteil **abgeschlossen**: axe-core WCAG 2.1 A/AA + Landmark-Inventur, 0 Verstöße auf beiden Browsern; manueller Durchgang S1/S5/S7/S8 offen) | intern, eine Person mit VoiceOver/NVDA |
 
 ---
 
@@ -137,6 +244,8 @@ gebunden und könnte separat vorgezogen werden.
 
 * `docs/DIPA_MATRIX_FINAL.md` (BF-01 bis BF-03)
 * `e2e/pflegecoach.spec.ts`
+* `e2e/pflegecoach-axe.spec.ts` — axe-core-Durchgang + eigener Kontrastrechner (§2b)
+* `app/pflegecoach/pflegecoach.css` — Fix des Link-Button-Kontrasts
 * `audit/dipa/gebrauchstauglichkeit_durchfuehrungsplan.md`
 * `audit/dipa/gebrauchstauglichkeit_testprotokoll.md`
 * `audit/dipa/bfarm_fragenkatalog.md`
