@@ -34,6 +34,10 @@ jobs:
   verify:
     name: Typecheck, Lint, Tests, Build
     runs-on: ubuntu-latest
+    # Laeuft normal in ~5-6 Min. Ohne explizites Limit greift GitHubs
+    # Default von 6 Stunden — ein haengender Schritt blockiert dann den
+    # ganzen Run, statt schnell rot zu werden.
+    timeout-minutes: 30
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -86,6 +90,10 @@ jobs:
   e2e:
     name: E2E — PflegeCoach-Produktbereich (DiPA-Matrix QS-05)
     runs-on: ubuntu-latest
+    # Laeuft normal in ~4-5 Min (erfolgreiche Runs am 14.08.: 4m32s,
+    # 4m21s, 5m02s). 25 Min lassen reichlich Luft und beenden einen
+    # Haenger zeitnah — Run 31796623330 stand 29m33s im Browser-Install.
+    timeout-minutes: 25
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -100,6 +108,10 @@ jobs:
         run: npm ci
 
       - name: Install Playwright browsers
+        # Nur chromium + webkit — genau die zwei Projekte aus
+        # playwright.config.ts (chromium, mobile-safari/iPhone 14).
+        # Firefox wurde bisher unnoetig mitinstalliert.
+        timeout-minutes: 10
         run: npm run test:e2e:install
 
       - name: Production build

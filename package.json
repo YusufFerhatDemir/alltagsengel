@@ -29,7 +29,7 @@
     "test:unit": "tsx --test $(find lib -name '*.test.ts')",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
-    "test:e2e:install": "playwright install --with-deps",
+    "test:e2e:install": "playwright install --with-deps chromium webkit",
     "lastmod:generate": "node scripts/generate-lastmod.mjs",
     "prebuild": "node scripts/generate-lastmod.mjs",
     "test": "vitest run",
