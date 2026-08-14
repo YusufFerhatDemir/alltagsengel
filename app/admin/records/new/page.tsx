@@ -108,7 +108,16 @@ function NewRecordInner() {
         amount: amount ? Number(amount) : null,
         client_signature: signature,
         notes: notes.trim() || null,
-        status: isComplete ? 'signed' : 'complete',
+        // H-1: NIE 'signed' aus einem Vollständigkeits-Flag ableiten.
+        // 'signed' entsteht ausschliesslich über den Unterschrifts-Workflow
+        // (POST /api/leistungsnachweis/crud, action='sign'), der proof_status
+        // auf 'UNTERSCHRIEBEN' setzt und dabei per Trigger den signature_hash
+        // berechnet und den Nachweis sperrt. Die hier gezeichnete Unterschrift
+        // wird als client_signature mitgespeichert, ist aber kein
+        // Unterschriftsnachweis im Sinne der Belegkette — sie ersetzt weder
+        // die Bestätigung der Betreuungskraft noch den Hash.
+        // create_invoice_draft_atomic (v8) verlangt genau diesen Nachweis.
+        status: 'complete',
         completeness_check: { ...checks, complete: isComplete, checked_at: new Date().toISOString() },
       })
 
@@ -232,8 +241,14 @@ function NewRecordInner() {
             background: isComplete ? 'rgba(92,184,130,.12)' : coreComplete ? 'rgba(33,150,243,.12)' : 'rgba(232,160,0,.12)',
             color: isComplete ? '#5CB882' : coreComplete ? '#64B5F6' : '#E8A000',
           }}>
-            {isComplete ? '✓ Vollständig & unterschrieben' : coreComplete ? 'Bereit — Unterschrift fehlt noch' : `${missing.length} Pflichtfeld(er) offen`}
+            {isComplete ? '✓ Vollständig erfasst' : coreComplete ? 'Bereit — Unterschrift fehlt noch' : `${missing.length} Pflichtfeld(er) offen`}
           </div>
+
+          <p style={{ marginTop: 10, fontSize: 12, lineHeight: 1.5, color: 'var(--ink4)' }}>
+            Der Nachweis wird als <strong>vollständig erfasst</strong> gespeichert.
+            Abrechenbar wird er erst nach Bestätigung durch die Betreuungskraft und
+            Unterschrift des Klienten unter „Digitale Leistungsnachweise".
+          </p>
 
           <button onClick={save} disabled={saving || !coreComplete} style={{
             ...primaryBtn, width: '100%', marginTop: 16, opacity: (saving || !coreComplete) ? 0.5 : 1,
