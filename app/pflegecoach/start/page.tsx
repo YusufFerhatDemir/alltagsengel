@@ -375,7 +375,7 @@ export default function CoachStart() {
           <h2 id="zugang-titel">So kommen Sie hinein</h2>
           <p>
             In drei Schritten: <strong>Konto anlegen</strong> — <strong>Einwilligung
-            erteilen</strong> — <strong>Zugang bestellen</strong>. Das Konto ist nötig, damit Ihre
+            erteilen</strong> — <strong>Loslegen</strong>. Das Konto ist nötig, damit Ihre
             Pflegedaten geschützt und nur für Sie sichtbar sind. Wie wir sie verarbeiten, steht
             in den <Link href="/pflegecoach/datenschutz">Datenschutzhinweisen</Link>.
           </p>

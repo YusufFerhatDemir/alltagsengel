@@ -400,7 +400,7 @@ export default function KontoSeite() {
           )}
           <p className="pc-lead">
             Die Rechnung öffnet sich als Dokument. Zum Speichern als PDF wählen Sie im Browser
-            „Drucken" und dort „Als PDF sichern".
+            „Drucken“ und dort „Als PDF sichern“.
           </p>
         </section>
       )}
@@ -503,7 +503,7 @@ export default function KontoSeite() {
           <p className="pc-feedback pc-feedback--info">
             <strong>Wichtig:</strong> Dieser Schritt beendet die Datenverarbeitung, nicht Ihren
             Vertrag. Wenn Sie auch nicht mehr zahlen möchten, kündigen Sie bitte zusätzlich oben
-            im Abschnitt „Vertrag kündigen".
+            im Abschnitt „Vertrag kündigen“.
           </p>
         )}
         <p>

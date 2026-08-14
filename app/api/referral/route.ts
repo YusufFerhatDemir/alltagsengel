@@ -1,5 +1,4 @@
 import { NextResponse, NextRequest } from 'next/server'
-import { createClient as createBrowserClient } from '@/lib/supabase/client'
 import { createAdminClient } from '@/lib/supabase/admin'
 
 const supabaseAdmin = createAdminClient()
