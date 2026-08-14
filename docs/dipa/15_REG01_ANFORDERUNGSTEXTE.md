@@ -3,6 +3,13 @@
 **Stand:** 2026-08-14 · **Klasse:** E (Behörde/Normgeber) · **Status:** OFFEN
 **Gegenstand:** `lib/coach/anforderungskatalog.ts`, Feld `anforderungstextGeprueft`
 
+> Für die vollständige Punkt-für-Punkt-Neubewertung aller 48 Matrixeinträge
+> nach dem verschärften Prüfschema (technisch tatsächlich erfüllt vs. nur
+> behauptet) siehe `docs/dipa/16_PHASE7_FINALAUDIT_2026-08-14.md`. Dieses
+> Dokument bleibt die Detailaufschlüsselung speziell für REG-01 selbst — beide
+> Läufe (14.08. nachmittags und abends) kommen unabhängig auf denselben Stand:
+> 5/48 (6 %) geprüft, unverändert.
+
 > Dies ist ein **Dokumentations- und Prozesspunkt, kein Code-Fix.** Es gibt hier
 > nichts zu bauen. Was fehlt, sind Originaldokumente und die Zeit einer Person,
 > die sie gegen 43 Katalogeinträge hält.
