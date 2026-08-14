@@ -9,6 +9,12 @@ Selbstzahler-Verkaufswegs (Checkout, Bestellung, Rechnung, Zugang, Kündigung, W
 Baurückstand, sondern jeweils entweder bereits korrekt gelöst (siehe unten) oder eine bewusste
 Architekturentscheidung, die hier nicht ohne Rücksprache aufgehoben wird.
 
+**Nachtrag 14.08.2026 abends (siehe Punkt 12 unten):** Der Verkaufsweg selbst ist vollständig,
+aber Verkauf und Zugangs-Gate hängen an zwei getrennten Schaltern
+(`COACH_PREISE_FREIGEGEBEN` und `COACH_FREISCHALTUNG_PFLICHT`). Werden nicht beide zusammen
+gesetzt, schaltet Zahlung faktisch nichts frei, was ein unbezahlter, eingeloggter Nutzer nicht
+ohnehin schon hätte. Das ist bei der Preisfreigabe zu beachten.
+
 | # | Punkt | Status |
 |---|---|---|
 | 1 | Produktseite erreichbar | ✅ `/pflegecoach/start` |
@@ -22,9 +28,41 @@ Architekturentscheidung, die hier nicht ohne Rücksprache aufgehoben wird.
 | 9 | AGB verlinkt | ✅ eigene Coach-AGB |
 | 10 | Admin-Verwaltung: Bestellungen einsehbar | **Bewusst NICHT umgesetzt** — Produktgrenze, siehe unten |
 | 11 | Kaufstatus sichtbar | ✅ Konto-Seite |
-| 12 | Zugriffsfreischaltung `quelle='selbstzahler'` | ✅ `lib/coach/verkauf-server.ts` |
+| 12 | Zugriffsfreischaltung `quelle='selbstzahler'` | ✅ mit Voraussetzung, siehe unten |
 | 13 | Ein-Klick-Kündigung, §312k BGB | ✅ kein Dark Pattern |
 | 14 | noindex an Verkaufsfreigabe gekoppelt | ✅ bereits korrekt — s.u. |
+
+## Punkt 12 — wichtiger Nachtrag (14.08.2026, später Abend): zwei Schalter, nicht einer
+
+Erneute Code-Prüfung deckt eine bisher nicht dokumentierte Abhängigkeit auf: `schalteZugangFrei()`
+(`lib/coach/verkauf-server.ts:58-87`) legt bei Zahlung korrekt eine Zeile in `coach_freischaltungen`
+an, und `istFreigeschaltet()` (`lib/coach/freischaltung.ts:130-135`) prüft diese Zeile technisch
+richtig (Status `aktiv` + Gültigkeitszeitraum). **Diese Prüfung wird aber nur ausgeführt, wenn
+`freischaltungPflicht()` `true` liefert** (`lib/coach/api-auth.ts:156`: `if
+(!freischaltungPflicht()) return null` — Gate übersprungen). Diese Funktion liest denselben
+Schalter wie das DiPA-Freischaltcode-Verfahren: `COACH_FREISCHALTUNG_PFLICHT`, **Default AUS**
+(`lib/coach/config.ts:35`), bewusst wegen der bei DiPA offenen Frage, ob ein Code-Verfahren
+verbindlich ist (siehe `docs/dipa/16_PHASE7_FINALAUDIT_2026-08-14.md`, REG-02).
+
+**Konsequenz für den Selbstzahler-Weg:** Der Schalter ist produktübergreifend derselbe. Setzt
+jemand künftig **nur** `COACH_PREISE_FREIGEGEBEN=true` (Verkauf ermöglichen), ohne zusätzlich
+`COACH_FREISCHALTUNG_PFLICHT=true` zu setzen, verkauft die Seite zwar korrekt und bucht auch
+korrekt ab — aber **jeder eingeloggte, einwilligende Nutzer hat exakt denselben Funktionszugriff
+wie ein zahlender Kunde**, weil das Zugangs-Gate dann für niemanden greift (weder für
+Selbstzahler noch für DiPA-Codes). Das ist kein Implementierungsfehler — der Mechanismus selbst
+ist korrekt gebaut und mit `bestellung.test.ts` (`hatZugang`, separat für die reine Statusanzeige
+auf der Konto-Seite) sowie über die Shadow-DB-Tests abgesichert — sondern eine bisher nicht
+explizit festgehaltene **Kopplung zweier unabhängiger Schalter**, die bei der Verkaufsfreigabe
+leicht übersehen werden kann.
+
+**Handlungsbedarf vor echtem Go-Live:** `COACH_FREISCHALTUNG_PFLICHT=true` muss zusammen mit
+`COACH_PREISE_FREIGEGEBEN=true` gesetzt werden (oder eine bewusste Entscheidung getroffen werden,
+den PflegeCoach dauerhaft ohne Zugangs-Gate als kostenpflichtiges, aber technisch offenes Produkt
+zu betreiben — was nicht empfohlen wird). Dies ist eine reine Konfigurationsentscheidung, kein
+Code-Fix; in dieser Sitzung bewusst nicht selbst umgestellt, weil das Umschalten von
+`COACH_FREISCHALTUNG_PFLICHT` auch das DiPA-Freischaltcode-Verfahren scharf schaltet — das ist
+laut REG-02 weiterhin eine offene regulatorische Frage und keine Entscheidung, die hier ohne
+Rücksprache getroffen werden darf.
 
 ## Punkt 10 — Admin sieht Bestellungen nicht: Produktgrenze, kein Fehlen
 
@@ -72,6 +110,19 @@ ihre Links auf Impressum/Datenschutz sollen aber zählen) — das ist beabsichti
 ## Fazit
 
 Der Selbstzahler-Verkaufsweg ist technisch vollständig. Es fehlt nichts, was code-seitig zu bauen
-wäre. Offen sind ausschließlich zwei Entscheidungen des Produktverantwortlichen: die reale
-Preisfreigabe (`COACH_PREISE_FREIGEGEBEN`) und — falls gewünscht — eine bewusste Aufweichung der
-Admin-Zugriffsgrenze auf `coach_bestellungen`.
+wäre. Offen sind ausschließlich Entscheidungen des Produktverantwortlichen:
+
+1. Reale Preisfreigabe (`COACH_PREISE_FREIGEGEBEN`) — echte Preise statt Platzhalter, echte
+   Stripe-Price-IDs (aktuell in `.env.example` nicht gesetzt).
+2. **Zusammen damit** `COACH_FREISCHALTUNG_PFLICHT=true`, sonst bleibt das Zugangs-Gate für alle
+   Nutzer wirkungslos (Punkt 12 oben) — unabhängig von der Preisfreigabe zu entscheiden, weil der
+   Schalter auch das DiPA-Freischaltcode-Verfahren betrifft.
+3. Umsatzsteuer-Regime (Kleinunternehmer vs. Regelbesteuerung) und Steuernummer/USt-IdNr., ohne
+   die jede ausgestellte Rechnung formal unvollständig bleibt (`lib/coach/rechnung.ts`,
+   `pruefeRechnungsangaben`, `.env.example` aktuell leer).
+4. Falls gewünscht — eine bewusste Aufweichung der Admin-Zugriffsgrenze auf `coach_bestellungen`
+   (Punkt 10 unten).
+
+**PflegeCoach technisch verkaufsfähig: NEIN** — nicht wegen einer Baulücke, sondern weil die
+Sperren (Preise, Zugangs-Gate) bewusst und korrekt fail-closed stehen, bis die vier Punkte oben
+kaufmännisch entschieden sind.
