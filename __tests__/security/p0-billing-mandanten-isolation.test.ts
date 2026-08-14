@@ -288,3 +288,35 @@ describe('P0-4: DTA-Export prueft die Org-Zugehoerigkeit des Laufs', () => {
     expect(src).toMatch(/getOrgIK\(admin,\s*organizationId\)/)
   })
 })
+
+describe('P0-5: tariffs GET erzwingt Rollen-Pruefung (MITTEL-Befund Finale Abnahme)', () => {
+  const REL = 'app/api/billing/tariffs/route.ts'
+  const src = read(REL)
+  const getStart = src.indexOf('export async function GET')
+  const postStart = src.indexOf('export async function POST')
+  const get = src.slice(getStart, postStart === -1 ? undefined : postStart)
+
+  it('lehnt unauthentifizierte Requests mit 401 ab, bevor Tarife geladen werden', () => {
+    const authAt = get.indexOf('if (!user)')
+    const loadAt = get.indexOf("from('billing_tariffs')")
+    expect(authAt, `${REL}: kein !user-Guard im GET`).toBeGreaterThan(-1)
+    expect(get.slice(authAt, authAt + 120)).toMatch(/status:\s*401/)
+    expect(authAt, 'Auth-Guard muss vor dem Tarif-Load stehen').toBeLessThan(loadAt)
+  })
+
+  it('prueft die Rolle gegen internes Personal, nicht nur die Anmeldung', () => {
+    expect(get).toMatch(/\.from\('profiles'\)\s*\n\s*\.select\('role'\)/)
+    expect(get).toMatch(
+      /\['admin',\s*'superadmin',\s*'pdl',\s*'buero'\]\.includes\(profile\.role\)/
+    )
+    const roleCheckAt = get.search(/if\s*\(!profile\s*\|\|\s*!\['admin'/)
+    const loadAt = get.indexOf("from('billing_tariffs')")
+    expect(roleCheckAt, `${REL}: keine Rollen-Pruefung vor dem Tarif-Load`).toBeGreaterThan(-1)
+    expect(roleCheckAt).toBeLessThan(loadAt)
+  })
+
+  it('lehnt Kunden/Engel (keine interne Rolle) mit 403 ab', () => {
+    const roleCheckAt = get.search(/if\s*\(!profile\s*\|\|\s*!\['admin'/)
+    expect(get.slice(roleCheckAt, roleCheckAt + 200)).toMatch(/status:\s*403/)
+  })
+})
