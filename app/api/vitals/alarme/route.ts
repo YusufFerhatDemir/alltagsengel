@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requirePflegeAdmin } from '@/lib/pflege/api-auth'
-import { berechneAktuelleAlarme, listThresholds, listVitals } from '@/lib/vitals/vitals'
+import { berechneAktuelleAlarme } from '@/lib/vitals/vitals'
+import { listThresholds, listVitals } from '@/lib/vitals/server'
 import { grenzwertAlarmeAktiv } from '@/lib/vitals/config'
 
 /**

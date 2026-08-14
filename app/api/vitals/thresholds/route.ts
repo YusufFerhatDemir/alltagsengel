@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requirePflegeAdmin } from '@/lib/pflege/api-auth'
-import { deleteThreshold, listThresholds, upsertThreshold } from '@/lib/vitals/vitals'
+import { deleteThreshold, listThresholds, upsertThreshold } from '@/lib/vitals/server'
 import { grenzwertAlarmeAktiv } from '@/lib/vitals/config'
 
 export async function GET(request: Request) {
