@@ -259,21 +259,12 @@ export default function KontoSeite() {
         {aboGeladen && !bestellung && (
           <>
             <p>
-              Für Ihr Konto liegt keine Bestellung vor. Sie nutzen den PflegeCoach derzeit ohne
-              kostenpflichtigen Zugang.
+              <strong>Der PflegeCoach ist für Sie kostenlos.</strong> Es liegt keine Bestellung
+              vor und es wird auch keine benötigt — Sie haben vollen Zugang ohne Kosten, ohne
+              Abonnement und ohne Kreditkarte.
             </p>
-            {abo?.verkauf_moeglich ? (
+            {abo?.verkauf_moeglich && (
               <Link className="pc-btn" href="/pflegecoach/checkout">Zugang bestellen</Link>
-            ) : (
-              <>
-                <p className="pc-feedback pc-feedback--info">
-                  Eine Online-Bestellung ist derzeit nicht möglich. Schreiben Sie uns — wir
-                  melden uns mit den aktuellen Konditionen bei Ihnen.
-                </p>
-                <Link className="pc-btn pc-btn--secondary" href="/pflegecoach/anfrage">
-                  Anfrage stellen
-                </Link>
-              </>
             )}
           </>
         )}

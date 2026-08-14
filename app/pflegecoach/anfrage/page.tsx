@@ -113,8 +113,7 @@ export default function AnfrageSeite() {
           </li>
           <li>Er ersetzt keine ärztliche oder pflegefachliche Beratung. In Notfällen: 112.</li>
           <li>
-            Über die Konditionen sprechen wir persönlich mit Ihnen — hier entsteht noch kein
-            kostenpflichtiger Vertrag.
+            Der PflegeCoach ist kostenlos. Mit dieser Anfrage entstehen für Sie keinerlei Kosten.
           </li>
         </ul>
       </section>

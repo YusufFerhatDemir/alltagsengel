@@ -147,17 +147,17 @@ function CheckoutInhalt() {
   if (!stand.verkauf_moeglich) {
     return (
       <>
-        <h1 className="pc-h1">Bestellung derzeit nicht möglich</h1>
+        <h1 className="pc-h1">Keine Bestellung nötig</h1>
         <section className="pc-card">
           <p>
-            Der PflegeCoach kann zurzeit nicht online bestellt werden. Schreiben Sie uns — wir
-            melden uns mit den aktuellen Konditionen bei Ihnen zurück, in der Regel innerhalb
-            von zwei Werktagen.
+            <strong>Der PflegeCoach ist für Sie kostenlos.</strong> Es gibt derzeit keinen
+            kostenpflichtigen Zugang zu bestellen — Sie nutzen den PflegeCoach ohne Kosten,
+            ohne Abonnement und ohne Kreditkarte.
           </p>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
-            <Link className="pc-btn" href="/pflegecoach/anfrage">Anfrage stellen</Link>
+            <Link className="pc-btn" href="/pflegecoach">Zum PflegeCoach</Link>
             <a className="pc-btn pc-btn--secondary" href={`mailto:${COACH_SUPPORT_EMAIL}`}>
-              E-Mail schreiben
+              Fragen? E-Mail schreiben
             </a>
           </div>
         </section>

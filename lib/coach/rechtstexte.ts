@@ -121,7 +121,7 @@ export const AGB: AgbAbschnitt[] = [
       'Der PflegeCoach ist ein digitales Unterstützungsangebot für die häusliche Pflege. Er stellt strukturierte Anleitungs-, Erinnerungs- und Dokumentationsfunktionen bereit: Pflegeassessment, Ziele, Aktivitäten, Wochenplan, Mobilitätsanleitungen, Wissensmodule und Belastungs-Check für pflegende Angehörige, Verlaufsdarstellung sowie einen druckbaren Verlaufsbericht.',
       'Der PflegeCoach ist ausdrücklich kein Medizinprodukt. Er dient nicht der Erkennung, Behandlung, Linderung oder Überwachung von Krankheiten, trifft keine diagnostischen oder therapeutischen Entscheidungen und gibt keine Therapieempfehlungen.',
       'Der PflegeCoach ersetzt weder ärztliche noch pflegefachliche Beratung und keinen Pflegedienst. In Notfällen ist der Rettungsdienst unter 112 zu verständigen.',
-      'Der PflegeCoach ist keine Leistung der gesetzlichen Pflege- oder Krankenversicherung. Eine Abrechnung mit Pflege- oder Krankenkassen findet nicht statt; ein Erstattungsanspruch gegenüber einem Kostenträger besteht nicht. Die Nutzung erfolgt als privat zu zahlendes Angebot.',
+      'Der PflegeCoach ist keine Leistung der gesetzlichen Pflege- oder Krankenversicherung. Eine Abrechnung mit Pflege- oder Krankenkassen findet nicht statt; ein Erstattungsanspruch gegenüber einem Kostenträger besteht nicht. Der PflegeCoach wird Endnutzerinnen und Endnutzern derzeit kostenlos zur Verfügung gestellt; die §§ 3 bis 6 dieser Bedingungen gelten nur für den Fall, dass künftig ein kostenpflichtiger Bestellweg freigeschaltet wird.',
     ],
   },
   {

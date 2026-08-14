@@ -30,8 +30,11 @@ export default function CoachAgb() {
       </p>
 
       <p className="pc-feedback pc-feedback--info">
-        <strong>Entwurf.</strong> Diese Bedingungen werden vor dem Verkaufsstart juristisch
-        geprüft und finalisiert. Fassung {AGB_VERSION}, Stand {RECHTSTEXTE_STAND}.
+        <strong>Der PflegeCoach ist derzeit kostenlos.</strong> Ein kostenpflichtiger Bestellweg
+        ist aktuell nicht verfügbar. Die folgenden Regelungen zu Bestellung, Preisen und
+        Kündigung (§§ 3–6) sind ein <strong>Entwurf</strong> für den Fall, dass ein solcher
+        Bestellweg künftig freigeschaltet wird, und werden vor einem etwaigen Verkaufsstart
+        juristisch geprüft und finalisiert. Fassung {AGB_VERSION}, Stand {RECHTSTEXTE_STAND}.
       </p>
 
       {AGB.map(abschnitt => (
