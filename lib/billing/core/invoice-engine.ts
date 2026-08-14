@@ -242,7 +242,6 @@ export async function createInvoiceDraft(
   );
 
   if (rpcError) {
-    // Strukturierte Tarif-Fehlercodes erkennen und weiterleiten
     const tariffError = parseTariffError(rpcError.message);
     if (tariffError) {
       const err = new Error(rpcError.message);
@@ -254,6 +253,21 @@ export async function createInvoiceDraft(
 
   if (!rpcResult) {
     throw new Error('RPC create_invoice_draft_atomic hat kein Ergebnis zurueckgegeben.');
+  }
+
+  // v9: Fehler-JSON erkennen (Audit-Eintrag wurde in der DB persistiert, kein Rollback)
+  if (rpcResult.success === false) {
+    const errorMsg = rpcResult.message || rpcResult.error || 'Unbekannter Fehler';
+    if (rpcResult.error === 'MISSING_SIGNATURE') {
+      throw new Error(errorMsg);
+    }
+    const tariffError = parseTariffError(String(rpcResult.error));
+    if (tariffError) {
+      const err = new Error(errorMsg);
+      (err as any).tariffErrorCode = tariffError;
+      throw err;
+    }
+    throw new Error(`Atomare Rechnungserstellung fehlgeschlagen: ${errorMsg}`);
   }
 
   // ── Zahlungsziel / Faelligkeit nachziehen ────────────────────────────
