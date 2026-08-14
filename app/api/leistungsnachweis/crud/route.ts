@@ -4,6 +4,7 @@ import { getActiveOrgId } from '@/lib/organizations/server'
 import { datumBerlin } from '@/lib/utils/timezone';
 import { safeDbError } from '@/lib/utils/api-error'
 import { mitStatusSync } from '@/lib/leistungsnachweis/status-sync'
+import { tarifLeistungsart, bekannteLeistungsarten } from '@/lib/billing/leistungsarten'
 
 async function requireAuth(supabase: Awaited<ReturnType<typeof createClient>>) {
   const { data: { user } } = await supabase.auth.getUser()
@@ -18,6 +19,27 @@ function requireAdmin(auth: { ok: true; role: string }) {
     return NextResponse.json({ error: 'Nur für Administratoren.' }, { status: 403 })
   }
   return null
+}
+
+/**
+ * Lehnt eine Leistungsart ab, die sich nicht auf einen Tarif abbilden lässt.
+ *
+ * Bewusst kein Ausweichen auf 'sonstige': das würde eine nicht abrechenbare
+ * Leistung zum Begleitungssatz abrechnen. Lieber hier absagen — die Ursache
+ * (fehlender Tarif) ist dann noch behebbar, bevor der Einsatz läuft.
+ */
+function pruefeLeistungsart(serviceType: string): NextResponse | null {
+  if (tarifLeistungsart(serviceType)) return null
+  return NextResponse.json(
+    {
+      error:
+        `Leistungsart „${serviceType}" hat keine Tarifzuordnung — ein Leistungsnachweis ` +
+        `dazu wäre nicht abrechenbar. Entweder eine der bekannten Leistungsarten wählen ` +
+        `oder zuerst einen Tarif dafür hinterlegen (Abrechnung → Tarife).`,
+      bekannteLeistungsarten: bekannteLeistungsarten(),
+    },
+    { status: 422 },
+  )
 }
 
 export async function GET(req: NextRequest) {
@@ -109,6 +131,12 @@ export async function POST(req: NextRequest) {
   if (!client_id || !caregiver_id || !date || !start_time || !end_time || !service_type) {
     return NextResponse.json({ error: 'Pflichtfelder fehlen' }, { status: 400 })
   }
+
+  // Abrechenbarkeit VOR der Erfassung prüfen: ohne Tarifzuordnung scheitert
+  // erst die Rechnung Wochen später mit MISSING_VALID_TARIFF — die Leistung
+  // ist dann längst erbracht und der Nachweis unterschrieben.
+  const leistungsartFehler = pruefeLeistungsart(service_type)
+  if (leistungsartFehler) return leistungsartFehler
 
   const { data: clientOk } = await supabase
     .from('clients').select('id').eq('id', client_id).eq('organization_id', organizationId).maybeSingle()
@@ -246,6 +274,13 @@ export async function PATCH(req: NextRequest) {
       .eq('id', id).eq('organization_id', organizationId).select().single()
     if (error) return safeDbError(error)
     return NextResponse.json(data)
+  }
+
+  // Auch beim Ändern: eine Leistungsart ohne Tarif macht den Nachweis
+  // nachträglich unabrechenbar.
+  if (typeof body.service_type === 'string') {
+    const leistungsartFehler = pruefeLeistungsart(body.service_type)
+    if (leistungsartFehler) return leistungsartFehler
   }
 
   const safeUpdates: Record<string, unknown> = { updated_at: new Date().toISOString() }

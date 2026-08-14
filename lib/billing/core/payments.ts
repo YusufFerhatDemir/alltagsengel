@@ -33,6 +33,17 @@ export interface CreatePaymentParams {
   verwendungszweck?: string
   notes?: string
   actorId: string
+  /**
+   * Automatische Rechnungszuordnung nach dem Anlegen (Default: true).
+   *
+   * FALSE setzen, wenn der Aufrufer die Zuordnung selbst vornimmt. Sonst
+   * ordnet autoMatchPayment() bereits zu und die anschliessende explizite
+   * allocatePayment() scheitert an der Ueberzahlungspruefung
+   * („Zuordnung uebersteigt Zahlungsbetrag") — die Zahlung ist dann korrekt
+   * verbucht, der Aufrufer bekommt aber einen Fehler. Genau so war
+   * POST /api/billing/invoices/[id]/zahlung fuer jede Vollzahlung kaputt.
+   */
+  autoMatch?: boolean
 }
 
 export interface PaymentResult {
@@ -65,7 +76,7 @@ export async function createPayment(
   const {
     organizationId, paymentDate, amountCents, paymentMethod,
     payerType, payerName, payerReference, bankReference,
-    verwendungszweck, notes, actorId,
+    verwendungszweck, notes, actorId, autoMatch = true,
   } = params
 
   if (amountCents <= 0) throw new Error('Zahlungsbetrag muss positiv sein.')
@@ -101,6 +112,16 @@ export async function createPayment(
     newState: { amount_cents: amountCents, payment_method: paymentMethod, payer_name: payerName },
     actorId,
   })
+
+  // Ohne Auto-Matching bleibt der Zahlungseingang bewusst unzugeordnet —
+  // der Aufrufer verbucht ihn selbst auf eine konkrete Rechnung.
+  if (!autoMatch) {
+    return {
+      paymentId: payment.id,
+      matchingStatus: 'nicht_zugeordnet',
+      matchedInvoices: [],
+    }
+  }
 
   const matched = await autoMatchPayment(supabase, payment.id, {
     amountCents,
@@ -265,13 +286,22 @@ export async function allocatePayment(
   }
 
   for (const alloc of allocations) {
+    // Org-Fence im Kern, nicht nur in der Route: allocatePayment laeuft mit
+    // Service-Role (BYPASSRLS). Ohne diese Bedingung liesse sich eine Zahlung
+    // der eigenen Organisation auf eine Rechnung einer FREMDEN Organisation
+    // verbuchen — deren OPOS und Rechnungsstatus waeren damit manipulierbar.
     const { data: inv } = await supabase
       .from('invoices')
       .select('id, total_amount, paid_amount, status')
       .eq('id', alloc.invoiceId)
-      .single()
+      .eq('organization_id', payment.organization_id)
+      .maybeSingle()
 
-    if (!inv) throw new Error(`Rechnung ${alloc.invoiceId} nicht gefunden.`)
+    if (!inv) {
+      throw new Error(
+        `Rechnung ${alloc.invoiceId} nicht gefunden oder gehoert nicht zur Organisation der Zahlung.`
+      )
+    }
 
     if (isValidInvoiceStatus(inv.status) && isTerminalStatus(inv.status as InvoiceStatus)) {
       throw new Error(
@@ -405,6 +435,22 @@ export async function recordPaymentDifference(
 
   if (istCents >= sollCents) {
     throw new Error('Ist-Betrag ist nicht kleiner als Soll-Betrag — keine Differenz.')
+  }
+
+  // Org-Fence im Kern: die Funktion setzt weiter unten invoices.status auf
+  // 'gekuerzt'. Mit Service-Role (BYPASSRLS) waere das ohne diese Pruefung ein
+  // Schreibzugriff auf die Rechnung einer beliebigen fremden Organisation.
+  const { data: zielRechnung } = await supabase
+    .from('invoices')
+    .select('id')
+    .eq('id', invoiceId)
+    .eq('organization_id', organizationId)
+    .maybeSingle()
+
+  if (!zielRechnung) {
+    throw new Error(
+      `Rechnung ${invoiceId} nicht gefunden oder gehoert nicht zur angegebenen Organisation.`
+    )
   }
 
   const { data, error } = await supabase
