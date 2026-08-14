@@ -289,7 +289,8 @@ export async function allocatePayment(
     // Org-Fence im Kern, nicht nur in der Route: allocatePayment laeuft mit
     // Service-Role (BYPASSRLS). Ohne diese Bedingung liesse sich eine Zahlung
     // der eigenen Organisation auf eine Rechnung einer FREMDEN Organisation
-    // verbuchen — deren OPOS und Rechnungsstatus waeren damit manipulierbar.
+    // verbuchen — deren OPOS und Rechnungsstatus waeren damit von aussen
+    // manipulierbar.
     const { data: inv } = await supabase
       .from('invoices')
       .select('id, total_amount, paid_amount, status')
