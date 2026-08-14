@@ -1,7 +1,7 @@
-import { createClient } from '@supabase/supabase-js'
 import { Resend } from 'resend'
 import { NextResponse } from 'next/server'
 import { escapeHtml } from '@/lib/rate-limit'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 // ═══════════════════════════════════════════════════════════
 // DRIP E-MAIL KAMPAGNE — Automatische Follow-Up Mails
@@ -16,10 +16,7 @@ import { escapeHtml } from '@/lib/rate-limit'
 // Tag 14: "Letzte Erinnerung + Referral-Bonus"
 // ═══════════════════════════════════════════════════════════
 
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+const supabaseAdmin = createAdminClient()
 
 function getResend() {
   const key = process.env.RESEND_API_KEY

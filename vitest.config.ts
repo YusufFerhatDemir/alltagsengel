@@ -16,6 +16,9 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, '.'),
+      // Siehe __tests__/mocks/server-only.ts: das echte Package wirft in
+      // jedem plain-Node-Kontext, nicht nur im Browser-Bundle.
+      'server-only': path.resolve(__dirname, '__tests__/mocks/server-only.ts'),
     },
   },
 })

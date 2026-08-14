@@ -1,14 +1,11 @@
-import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 // ═══════════════════════════════════════════════════════════
 // NEWSLETTER ABMELDUNG — Unsubscribe Endpoint
 // ═══════════════════════════════════════════════════════════
 
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+const supabaseAdmin = createAdminClient()
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
