@@ -279,7 +279,7 @@ export const ANFORDERUNGSKATALOG: KatalogEintrag[] = [
   {
     id: 'AK-SEC-05', kategorie: 'datensicherheit', klasse: 'D',
     formulierung: 'Ein Informationssicherheits-Managementsystem ist eingerichtet.',
-    quelle: 'BfArM-DiPA-Leitfaden Version 1.3 (Stand 15.07.2026) Kap. 3.4.1, S. 50: "Der Hersteller einer DiPA muss bei der Antragstellung ein Zertifikat über die Umsetzung eines ISMS nach ISO 27001 bzw. ISO 27001 auf Basis IT-Grundschutz vorweisen. Die zertifizierende Stelle muss durch die DAkkS oder eine entsprechende ausländische Stelle für die Durchführung einer ISO 27001 [-Zertifizierung akkreditiert sein]." KORREKTUR gegenüber vorheriger Formulierung: kein "o. ä." — Zertifikat ist laut Leitfaden zwingender Bestandteil der Antragstellung, nicht optional. Geltungsbereich (Gesamtbetrieb vs. Produktumfang) bleibt Klärungspunkt für die Beauftragung, aber die Zertifizierungspflicht selbst ist nicht mehr offen. Gegen Originaltext geprüft 14.08.2026.',
+    quelle: 'BfArM-DiPA-Leitfaden Version 1.3 (Stand 15.07.2026) Kap. 3.4.1, S. 50: "Der Hersteller einer DiPA muss bei der Antragstellung ein Zertifikat über die Umsetzung eines ISMS nach ISO 27001 bzw. ISO 27001 auf Basis IT-Grundschutz vorweisen. Die zertifizierende Stelle muss durch die DAkkS oder eine entsprechende ausländische Stelle für die Durchführung einer ISO 27001 [-Zertifizierung akkreditiert sein]." KORREKTUR gegenüber vorheriger Formulierung: kein "o. ä." — Zertifikat ist laut Leitfaden zwingender Bestandteil der Antragstellung, nicht optional. Geltungsbereich (Gesamtbetrieb vs. Produktumfang) bleibt Klärungspunkt für die Beauftragung, aber die Zertifizierungspflicht selbst ist nicht mehr offen. Gegen Originaltext geprüft 14.08.2026. VORBEHALT (15.08.2026, gegen Anlage 1 DiPAV Rohtext geprüft): Anlage 1 DiPAV selbst (bindender Verordnungstext, Themenfeld "Informationssicherheit" Nr. 24) verlangt nur eine Selbstauskunft nach Stand der Technik, KEIN ISO-27001-Zertifikat und keine DAkkS-Akkreditierung namentlich — diese Pflicht steht ausschließlich im (nicht bindenden) Leitfaden. BfArM wendet den Leitfaden in der Praxis als Prüfmaßstab an, das Ablehnungsrisiko ohne Zertifikat bleibt real, aber die rechtliche Verbindlichkeit ist schwächer als bei AK-SEC-01 (dort: Verordnung→SGB XI→SGB V mit festen Daten). Siehe docs/DIPA_EXTERNE_RECLASSIFIZIERUNG_2026-08-15.md.',
     anforderungstextGeprueft: true, stand: 'offen',
     nachweis: 'audit/dipa/isms_scope_vorbereitung.md — Geltungsbereich vorbereitet, Bestand erhoben, Lücken benannt',
     nachweisDateien: ['audit/dipa/isms_scope_vorbereitung.md'],
@@ -525,7 +525,7 @@ export const ANFORDERUNGSKATALOG: KatalogEintrag[] = [
 
   // ── Verfahren und offene regulatorische Fragen ─────────────────────
   {
-    id: 'AK-REG-01', kategorie: 'verfahren_regulatorik', klasse: 'E',
+    id: 'AK-REG-01', kategorie: 'verfahren_regulatorik', klasse: 'C',
     formulierung: 'Die Anforderungstexte sind gegen die Originaldokumente geprüft.',
     quelle: 'DiPAV, BfArM-Leitfaden, BSI TR-03161 in gültiger Fassung',
     anforderungstextGeprueft: false, stand: 'offen',
