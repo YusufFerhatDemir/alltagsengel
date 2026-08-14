@@ -126,6 +126,13 @@ jobs:
         # Fehler von supabase.auth.getUser() — auch eine nicht auflösbare
         # Placeholder-Domain — als „nicht angemeldet" (401), fail-closed
         # nach lib/coach/api-auth.ts.
+        # DISABLE_RATE_LIMIT_FOR_E2E: Playwright läuft ohne Reverse-Proxy
+        # gegen localhost — x-forwarded-for fehlt, also landet JEDE
+        # anonyme Anfrage aus JEDEM Browser-Kontext im selben
+        # "ip:unknown"-Bucket (siehe lib/middleware/rate-limit.ts). Nur
+        # hier gesetzt, nicht im Build-Job und nicht in Produktion.
+        env:
+          DISABLE_RATE_LIMIT_FOR_E2E: '1'
         run: |
           npm run start -- -p 3000 &
           for i in $(seq 1 60); do

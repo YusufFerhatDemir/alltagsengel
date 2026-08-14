@@ -200,3 +200,35 @@ describe('handleRateLimit', () => {
     expect(body.error).toMatch(/Zu viele Anfragen/)
   })
 })
+
+// ── E2E-CI-Bypass ──
+// Regression für CI-Run 31846683884: Playwright teilt sich ohne
+// x-forwarded-for einen einzigen "ip:unknown"-Bucket über alle
+// Browser-Projekte hinweg und löste falsche 429er aus.
+
+describe('handleRateLimit — DISABLE_RATE_LIMIT_FOR_E2E', () => {
+  const ORIGINAL = process.env.DISABLE_RATE_LIMIT_FOR_E2E
+
+  afterEach(() => {
+    if (ORIGINAL === undefined) delete process.env.DISABLE_RATE_LIMIT_FOR_E2E
+    else process.env.DISABLE_RATE_LIMIT_FOR_E2E = ORIGINAL
+  })
+
+  it('bleibt standardmäßig (Flag nicht gesetzt) scharf', () => {
+    delete process.env.DISABLE_RATE_LIMIT_FOR_E2E
+    for (let i = 0; i < 5; i++) {
+      handleRateLimit(makeRequest('/api/auth/login', { ip: '6.6.6.6', method: 'POST' }))
+    }
+    const blocked = handleRateLimit(makeRequest('/api/auth/login', { ip: '6.6.6.6', method: 'POST' }))
+    expect(blocked).not.toBeNull()
+    expect(blocked!.status).toBe(429)
+  })
+
+  it('lässt bei DISABLE_RATE_LIMIT_FOR_E2E=1 auch weit über dem Limit alles durch', () => {
+    process.env.DISABLE_RATE_LIMIT_FOR_E2E = '1'
+    for (let i = 0; i < 200; i++) {
+      const result = handleRateLimit(makeRequest('/api/auth/login', { ip: '4.4.4.4', method: 'POST' }))
+      expect(result).toBeNull()
+    }
+  })
+})

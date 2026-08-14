@@ -145,6 +145,15 @@ export function extractUserIdFromCookies(req: NextRequest, projectRef: string): 
 // ── Middleware-Handler ──
 
 export function handleRateLimit(req: NextRequest): NextResponse | null {
+  // E2E-CI: Playwright spricht den Server direkt (ohne Reverse-Proxy) an,
+  // dadurch fehlt x-forwarded-for und getClientIP() liefert für JEDE
+  // Anfrage aus JEDER Browser-Session denselben Schlüssel "ip:unknown".
+  // 70 Tests × 2 Browser-Projekte × Retries teilen sich so EIN
+  // TIER_STANDARD-Budget (120/min) und lösen falsche 429er aus. Nur in
+  // diesem CI-Job gesetzt (.github/workflows/ci.yml) — überall sonst
+  // (Produktion, lokale Entwicklung) bleibt das Limit scharf.
+  if (process.env.DISABLE_RATE_LIMIT_FOR_E2E === '1') return null
+
   const { pathname } = req.nextUrl
   const method = req.method
 
