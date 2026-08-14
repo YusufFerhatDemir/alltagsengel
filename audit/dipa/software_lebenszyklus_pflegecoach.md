@@ -48,7 +48,7 @@ Nacharbeit.
 | Grundsatz | Umsetzung |
 |---|---|
 | Fachlogik ist frei von Ein-/Ausgabe | Alle Regeln in `lib/coach/*.ts` sind reine Funktionen — deshalb überhaupt testbar |
-| Zugriffsregeln liegen in der Datenbank | Die Anwendung kennt keinen privilegierten Weg; `service_role` existiert im Produktpfad nicht |
+| Zugriffsregeln liegen in der Datenbank | `service_role` wird ausschließlich in `lib/coach/verkauf-server.ts` und den Zahlungsrouten (`app/api/coach/checkout`, `/freischaltung`, `/abo`) genutzt — begrenzt auf Bestell-/Rechnungs-/Freischaltungstabellen (`coach_bestellungen`, `coach_rechnungen`, `coach_zahlungen`, `coach_freischaltungen`), nie für `coach_*`-Gesundheitsdaten. Details und Begründung: `audit/dipa/nutzerflow_dipa.md` §"Warum hier ausnahmsweise der Systemkontext genutzt wird" |
 | Trennung von der Betriebsplattform | Eigene Tabellen, eigene Zeilenfilter, eigenes Layout, eigene Typen |
 | Voreinstellungen sind die sichere Stellung | Jeder Schalter ist fail-closed (QM-Handbuch §7) |
 

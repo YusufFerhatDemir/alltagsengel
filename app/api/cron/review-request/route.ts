@@ -1,6 +1,6 @@
-import { createClient } from '@supabase/supabase-js'
 import { Resend } from 'resend'
 import { NextResponse } from 'next/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 // ═══════════════════════════════════════════════════════════
 // CRON: AUTOMATISCHE BEWERTUNGS-ANFRAGE
@@ -10,10 +10,7 @@ import { NextResponse } from 'next/server'
 // Nur wenn keine Bewertung für diese Buchung vorliegt.
 // ═══════════════════════════════════════════════════════════
 
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+const supabaseAdmin = createAdminClient()
 
 export async function GET(request: Request) {
   // Auth-Check

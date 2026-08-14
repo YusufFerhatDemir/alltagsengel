@@ -1,11 +1,8 @@
-import { createClient } from '@supabase/supabase-js'
 import { NextResponse, NextRequest } from 'next/server'
 import { createClient as createServerClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+const supabaseAdmin = createAdminClient()
 
 // ═══ POST: Referral abschließen nach erster Buchung ═══
 // Wird aufgerufen wenn ein referred User seine erste Buchung abschließt

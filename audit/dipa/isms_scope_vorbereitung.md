@@ -50,7 +50,7 @@ anknüpfen kann. Sie behauptet **keine** Normkonformität.
 
 | Themenfeld | Vorhanden | Nachweis | Lücke |
 |---|---|---|---|
-| Zugriffssteuerung | Zeilenfilter auf allen Produkttabellen; kein privilegierter Zugang im Produktpfad; keine Administrator-Policy | 68 automatische Tests | keine bekannt |
+| Zugriffssteuerung | Zeilenfilter auf allen Produkttabellen; privilegierter Zugang (`service_role`) eng begrenzt auf Zahlungs-/Freischaltungstabellen in `lib/coach/verkauf-server.ts`, nie für Gesundheitsdaten (Details: `audit/dipa/nutzerflow_dipa.md`); keine Administrator-Policy auf `coach_*`; zentraler Server-Only-Guard seit 14.08.2026 (`lib/supabase/admin.ts`, build- und laufzeitseitig) | 68 automatische Tests + `__tests__/security/admin-client-server-only-guard.test.ts` | keine bekannt |
 | Identität und Anmeldung | Passwortanmeldung mit Sperre nach Fehlversuchen; zweiter Faktor (TOTP) verfügbar und serverseitig durchgesetzt | `lib/coach/mfa.ts`, `app/auth/login` | zweiter Faktor ist freiwillig |
 | Verschlüsselung | Transportverschlüsselung; Verschlüsselung im Ruhezustand durch die Plattform | `audit/dipa/verschluesselungskonzept.md` | keine Ende-zu-Ende-Verschlüsselung (bewusst, begründet) |
 | Protokollierung | `coach_audit_log`, append-only, nur Metadaten | Test P7 | keine automatische Auswertung, keine Alarmierung |

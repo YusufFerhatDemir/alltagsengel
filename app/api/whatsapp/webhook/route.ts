@@ -18,7 +18,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createHmac, timingSafeEqual } from 'node:crypto'
-import { createClient } from '@supabase/supabase-js'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { getBotReply, WaMessage } from '@/lib/whatsapp/ai'
 import {
   shouldEscalate,
@@ -64,12 +64,7 @@ function verifyMetaSignature(rawBody: string, signatureHeader: string | null): b
 
 // Service-Role-Client (bypasst RLS, weil Webhook anonym aufgerufen wird)
 function getServiceClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY
-  if (!url || !key) throw new Error('Supabase service-role env missing')
-  return createClient(url, key, {
-    auth: { persistSession: false, autoRefreshToken: false },
-  })
+  return createAdminClient()
 }
 
 /**

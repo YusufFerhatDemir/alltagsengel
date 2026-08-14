@@ -1,11 +1,8 @@
-import { createClient } from '@supabase/supabase-js'
 import { NextResponse, NextRequest } from 'next/server'
 import { createClient as createBrowserClient } from '@/lib/supabase/client'
+import { createAdminClient } from '@/lib/supabase/admin'
 
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+const supabaseAdmin = createAdminClient()
 
 // ═══ GET: Referral-Info für den eingeloggten User ═══
 export async function GET(request: NextRequest) {
