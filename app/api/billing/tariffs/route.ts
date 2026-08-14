@@ -5,7 +5,9 @@ import { getActiveOrgId } from '@/lib/organizations/server'
 
 /**
  * GET /api/billing/tariffs
- * Liste aller aktiven Tarife. Authentifizierung erforderlich, kein Admin nötig.
+ * Liste aller aktiven Tarife der eigenen Organisation. Nur für internes
+ * Personal (admin/superadmin/pdl/buero) — Tarifpreise sind keine Kunden-
+ * oder Engel-Information.
  */
 export async function GET() {
   try {
@@ -13,6 +15,14 @@ export async function GET() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) {
       return NextResponse.json({ error: 'Nicht autorisiert' }, { status: 401 })
+    }
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+    if (!profile || !['admin', 'superadmin', 'pdl', 'buero'].includes(profile.role)) {
+      return NextResponse.json({ error: 'Nur für internes Personal' }, { status: 403 })
     }
 
     const orgId = await getActiveOrgId()
