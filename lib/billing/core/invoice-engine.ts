@@ -802,14 +802,55 @@ export async function correctInvoice(
   if (corrections.length === 0) {
     throw new Error('Mindestens eine Korrekturposition erforderlich.');
   }
-  const correctedTotal = corrections.reduce((sum, c) => sum + c.gesamtpreisCent, 0);
-  if (correctedTotal <= 0) {
-    throw new Error('Korrigierter Gesamtbetrag muss positiv sein.');
-  }
+  // ═══ Betragsplausibilitaet JEDER Position ═══
+  // Der Rechnungsbetrag entsteht ausschliesslich aus gesamtpreisCent. Die
+  // Tarif-Gegenpruefung weiter unten vergleicht aber nur einzelpreisCent.
+  // Ohne die folgende Kopplung ist die Gegenpruefung wirkungslos: mit
+  // einzelpreisCent = Tarifpreis (besteht die Abweichungspruefung) und einem
+  // beliebigen gesamtpreisCent laesst sich jeder Rechnungsbetrag erzeugen.
   for (const c of corrections) {
+    for (const [feld, wert] of [
+      ['menge', c.menge],
+      ['einzelpreisCent', c.einzelpreisCent],
+      ['gesamtpreisCent', c.gesamtpreisCent],
+    ] as const) {
+      if (typeof wert !== 'number' || !Number.isFinite(wert)) {
+        throw new Error(
+          `Korrekturposition "${c.leistungsart}": ${feld} muss eine Zahl sein.`
+        );
+      }
+    }
     if (c.gesamtpreisCent < 0) {
       throw new Error(`Negativer Betrag fuer "${c.leistungsart}" nicht erlaubt.`);
     }
+    if (c.menge <= 0) {
+      throw new Error(`Menge fuer "${c.leistungsart}" muss groesser als 0 sein.`);
+    }
+    if (!Number.isInteger(c.einzelpreisCent) || !Number.isInteger(c.gesamtpreisCent)) {
+      throw new Error(
+        `Korrekturposition "${c.leistungsart}": Betraege muessen ganzzahlige Cent sein.`
+      );
+    }
+
+    const erwartet = Math.round(c.einzelpreisCent * c.menge);
+    const zuschlag = c.zuschlagProzent
+      ? Math.round(erwartet * (c.zuschlagProzent / 100))
+      : 0;
+    // 1 Cent Toleranz fuer Rundung bei gebrochenen Mengen (z.B. 1,5 Stunden).
+    if (Math.abs(c.gesamtpreisCent - (erwartet + zuschlag)) > 1) {
+      throw new Error(
+        `Korrekturposition "${c.leistungsart}" am ${c.leistungsdatum}: ` +
+        `Gesamtpreis ${c.gesamtpreisCent} Cent passt nicht zu Einzelpreis ` +
+        `${c.einzelpreisCent} Cent x Menge ${c.menge}` +
+        (zuschlag ? ` + ${c.zuschlagProzent}% Zuschlag` : '') +
+        ` (erwartet ${erwartet + zuschlag} Cent).`
+      );
+    }
+  }
+
+  const correctedTotal = corrections.reduce((sum, c) => sum + c.gesamtpreisCent, 0);
+  if (correctedTotal <= 0) {
+    throw new Error('Korrigierter Gesamtbetrag muss positiv sein.');
   }
 
   // ═══ Tarif-Gegenprüfung für jede Korrekturposition ═══
@@ -840,7 +881,18 @@ export async function correctInvoice(
       );
     }
 
-    if (matchingTariffs && matchingTariffs.length > 0) {
+    // FAIL-CLOSED bei fehlendem Tarif: ohne Tarif gibt es keinen Massstab fuer
+    // den Preis. Frueher wurde die Position dann ungeprueft uebernommen — damit
+    // liess sich die gesamte Gegenpruefung umgehen, indem man eine Leistungsart
+    // angab, zu der kein Tarif existiert.
+    if (!matchingTariffs || matchingTariffs.length === 0) {
+      throw new Error(
+        `Kein Tarif fuer "${c.leistungsart}" zum ${c.leistungsdatum} hinterlegt — ` +
+        `Korrektur nicht moeglich. Erst einen verifizierten Tarif anlegen.`
+      );
+    }
+
+    {
       const verwendbare = matchingTariffs.filter(isTarifFuerKorrekturVerwendbar);
 
       if (verwendbare.length === 0) {
@@ -870,7 +922,6 @@ export async function correctInvoice(
         }
       }
     }
-    // Kein Tarif gefunden = kein Cross-Check moeglich (Warnung im Audit)
   }
 
   // Korrekturnummer generieren
