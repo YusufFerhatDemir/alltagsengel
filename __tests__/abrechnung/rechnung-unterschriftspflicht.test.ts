@@ -22,6 +22,7 @@ import { funktionAusMigration, liesMigration } from '../helpers/sql-extract'
 
 const V8 = '20260911010000_rechnung_unterschriftspflicht.sql'
 const V7 = '20260911010001_rollback_rechnung_unterschriftspflicht.sql'
+const ENTITY_FIX = '20260912000000_audit_entity_type_invoice_draft.sql'
 const LEISTUNGSART = '20260908000000_leistungsart_tarif_mapping.sql'
 const BILLING_CORE = '20260806200000_billing_core_corrections.sql'
 const REVIEW_FIXES = '20260808120000_expansion_review_fixes.sql'
@@ -112,11 +113,21 @@ CREATE TABLE public.invoice_items (
   abweichung_cent integer, abweichung_grund text
 );
 
+-- Der CHECK auf entity_type ist NICHT dekorativ: er existiert live seit
+-- 20260903010000 und war die Ursache dafuer, dass der MISSING_SIGNATURE-Pfad
+-- auf Production mit 23514 statt mit der Klartextmeldung abbrach, waehrend
+-- diese Suite gruen blieb. Das Testschema traegt ihn deshalb wortgleich —
+-- ein Testschema, das lockerer ist als die Produktion, beweist nichts.
 CREATE TABLE public.billing_audit_trail (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   organization_id uuid, entity_type text, entity_id uuid, action text,
   previous_state jsonb, new_state jsonb, actor_id uuid,
-  created_at timestamptz, checksum text
+  created_at timestamptz, checksum text,
+  CONSTRAINT billing_audit_trail_entity_type_check CHECK (
+    entity_type = ANY(ARRAY['invoice', 'tariff', 'correction', 'snapshot',
+      'credit_note', 'payment', 'payment_allocation', 'dunning',
+      'payment_difference', 'monthly_closing'])
+  )
 );
 
 CREATE TABLE public.billing_number_sequences (
@@ -231,7 +242,13 @@ describe('H-1: create_invoice_draft_atomic — Unterschriftspflicht', () => {
 
   // ── 2. Der Fix ──────────────────────────────────────────────────────────
   describe('v8 (Fix) — fail-closed', () => {
-    beforeAll(async () => { await db.exec(liesMigration(V8)) }, 60_000)
+    beforeAll(async () => {
+      await db.exec(liesMigration(V8))
+      // v8 schreibt entity_type='invoice_draft'. Ohne 20260912000000 verletzt
+      // dieser INSERT den CHECK und der Abbruch kommt als 23514 statt als
+      // MISSING_SIGNATURE heraus — genau der Live-Befund aus Audit B.
+      await db.exec(liesMigration(ENTITY_FIX))
+    }, 60_000)
 
     it('blockiert Nachweise ohne Unterschriftsnachweis', async () => {
       await nachweis({ proofStatus: 'ENTWURF', signatureHash: null })
@@ -322,6 +339,32 @@ describe('H-1: create_invoice_draft_atomic — Unterschriftspflicht', () => {
            FROM pg_proc WHERE proname = 'create_invoice_draft_atomic'`,
       )
       expect(r.rows[0].hat).toBe(true)
+    })
+
+    it('der Audit-Eintrag ist ueberhaupt schreibbar (entity_type-Vokabular)', async () => {
+      // Live-Befund Audit B: 'invoice_draft' fehlte im CHECK. Der INSERT lief
+      // deshalb in 23514, BEVOR das RAISE MISSING_SIGNATURE erreicht wurde.
+      // Der Aufrufer sah einen Constraint-Text statt der Sperrbegruendung, und
+      // der forensische Nachweis des abgewiesenen Versuchs entstand nie.
+      await db.exec(`
+        INSERT INTO public.billing_audit_trail
+          (organization_id, entity_type, entity_id, action, new_state, actor_id, created_at, checksum)
+        VALUES ('${ORG}', 'invoice_draft', '${CLIENT}', 'missing_signature',
+                '{"error_code":"MISSING_SIGNATURE"}'::jsonb, '${ACTOR}', now(), 'x')
+      `)
+      const r = await db.query<{ n: number }>(
+        `SELECT count(*)::int AS n FROM public.billing_audit_trail
+          WHERE entity_type = 'invoice_draft' AND action = 'missing_signature'`,
+      )
+      expect(r.rows[0].n).toBe(1)
+    })
+
+    it('die Fehlermeldung ist die Sperrbegruendung, nicht der Constraint-Text', async () => {
+      await nachweis({ proofStatus: 'ENTWURF', signatureHash: null })
+      const r = await rechnungErzeugen() as any
+      expect(r.fehler).toContain('MISSING_SIGNATURE')
+      expect(r.fehler).not.toContain('violates check constraint')
+      expect(r.fehler).not.toContain('billing_audit_trail_entity_type_check')
     })
 
     it('setzt abgerechnete Nachweise weiterhin auf invoiced', async () => {
