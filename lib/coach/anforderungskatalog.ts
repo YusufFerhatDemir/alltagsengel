@@ -508,9 +508,9 @@ export const ANFORDERUNGSKATALOG: KatalogEintrag[] = [
     id: 'AK-QS-05', kategorie: 'qms_risikomanagement', klasse: 'B',
     formulierung: 'Ein Browser-E2E-Test des Produktbereichs liegt vor.',
     quelle: 'e2e/pflegecoach.spec.ts',
-    anforderungstextGeprueft: false, stand: 'in_arbeit',
-    nachweis: 'Suite geschrieben: Erreichbarkeit, Zugangsschutz (9 Seiten), 401 auf allen Produkt-APIs, 404 der DiPA-Seiten ohne Schalter, Werbefreiheit, A11y-Struktur. Ausführung in dieser Umgebung nicht erfolgt (keine Playwright-Browser installiert)',
-    nachweisDateien: ['e2e/pflegecoach.spec.ts', 'playwright.config.ts'],
+    anforderungstextGeprueft: false, stand: 'erfuellt',
+    nachweis: 'Am 14.08.2026 erstmals ausgeführt (Chromium + Mobile Safari, 24 Tests je Browser). Dabei 4 Fehler in der Testlogik selbst gefunden und behoben (falsche 404-Erwartung statt Redirect-Prüfung, zwei fehlende Waits vor async Content-Load, zu enger Formularfeld-Label-Check, ungefilterter Button-Selektor traf Next.js-Dev-Tools) sowie 1 echten Produktfehler (Inhalts-Abschneidung auf schmalen Viewports durch body-Flex-Layout, siehe unten) gefunden und in app/pflegecoach/pflegecoach.css behoben. Ergebnis danach: 24/24 grün auf beiden Browsern, reproduziert über mehrere Läufe. In .github/workflows/ci.yml als eigener Job aufgenommen.',
+    nachweisDateien: ['e2e/pflegecoach.spec.ts', 'playwright.config.ts', '.github/workflows/ci.yml', 'app/pflegecoach/pflegecoach.css'],
     gapId: null, verantwortlich: 'technik',
   },
   {

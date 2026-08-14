@@ -147,7 +147,7 @@ das ist selbst eine offene Aufgabe (REG-01).
 | QMS-02 | Risikoanalyse | A | ERLEDIGT | `audit/dipa/risikoanalyse_pflegecoach.md` + **neu:** Risikoakte mit Bewertung vor/nach Maßnahme und Restrisiko: **0 kritisch, 3 hoch, 11 mittel, 5 niedrig** | Wiedervorlage bei jeder MINOR-Version |
 | QMS-03 | Technische Dokumentation | A | ERLEDIGT | `technische_dokumentation_pflegecoach.md`, `sicherheitsarchitektur_pflegecoach.md`, **neu:** `software_lebenszyklus_pflegecoach.md` | Auf Version 0.5.0 fortschreiben |
 | QS-04 | Automatisierte Tests decken Produktlogik und Zugriffsregeln ab | **B** | **ERLEDIGT (14.08.2026)** | `supabase/shadow/50_pflegecoach_tests.sql`: **68/68 bestanden**, real gemessen gegen eine aus dem Repository aufgebaute Datenbank. P9 neu für alle 8 Tabellen aus `20260826010000` | Bei neuen Tabellen mitziehen |
-| QS-05 | Browser-E2E-Test des Produktbereichs | **B** | TEILWEISE | **NEU:** `e2e/pflegecoach.spec.ts` — 9 geschützte Seiten, 401 auf allen Produkt-APIs, 404 der DiPA-Seiten ohne Schalter, Werbefreiheit, 6 A11y-Strukturprüfungen. **Suite geschrieben, in dieser Umgebung nicht ausgeführt** (keine Playwright-Browser installiert) | `npm run test:e2e:install`, dann Suite gegen Preview laufen lassen und in CI aufnehmen |
+| QS-05 | Browser-E2E-Test des Produktbereichs | **B** | **ERLEDIGT (14.08.2026)** | `e2e/pflegecoach.spec.ts` — 24 Tests (Erreichbarkeit/Zugangsschutz, Produktgrenze, A11y-Struktur), erstmals ausgeführt: Chromium **und** Mobile Safari, 24/24 grün auf beiden, reproduziert. Dabei 4 Fehler in der Testlogik selbst gefunden+behoben und **1 echter Produktfehler** (Inhalts-Abschneidung auf schmalen Viewports durch das globale `body`-Flex-Layout, WCAG 1.4.10) gefunden und in `app/pflegecoach/pflegecoach.css` behoben — Details in `docs/dipa/00_KATEGORISIERUNG_PHASE4.md`. In `.github/workflows/ci.yml` als eigener Job (`e2e`) aufgenommen | Bei neuen Seiten/Formularfeldern mitziehen |
 | BETR-01 | Datenbankstand des Produkts auf Production | A | ERLEDIGT | Migrationen `20260819010000` und `20260826010000` live (Tabellencheck 12.08.2026) | Live-Apply-Bestätigung bleibt Pflichtschritt im Änderungsverfahren |
 
 ## 10. Verfahren und offene regulatorische Fragen
@@ -169,7 +169,7 @@ das ist selbst eine offene Aufgabe (REG-01).
 | Klasse | Gesamt | davon offen |
 |---|---|---|
 | A — intern erledigt | 26 | 0 |
-| B — intern umsetzbar | 4 | 2 (teilweise) |
+| B — intern umsetzbar | 4 | 1 (teilweise) |
 | C — intern erstellbar | 2 | 1 (teilweise) |
 | D — externer Dienstleister | 11 | 11 |
 | E — Behörde/Kostenträger | 5 | 5 |
@@ -179,8 +179,8 @@ das ist selbst eine offene Aufgabe (REG-01).
 
 | Status | Anzahl | Anteil |
 |---|---|---|
-| ERLEDIGT | 29 | 60 % |
-| TEILWEISE / in Arbeit | 9 | 19 % |
+| ERLEDIGT | 30 | 63 % |
+| TEILWEISE / in Arbeit | 8 | 17 % |
 | OFFEN (davon 15 extern) | 10 | 21 % |
 
 Zahlen maschinell erzeugt mit `npm run dipa:katalog` (14.08.2026).
@@ -192,17 +192,20 @@ Zahlen maschinell erzeugt mit `npm run dipa:katalog` (14.08.2026).
 | SEC-03 | INTERN OFFEN — kein zweiter Faktor | **ERLEDIGT** — TOTP gebaut, serverseitig durchgesetzt, 9 Tests |
 | INT-02 | INTERN OFFEN — kein Mapping | **technisch ERLEDIGT** — FHIR-R4-Bundle, 13 Tests, Doku |
 | QS-04 | „39/39 PASS" (tatsächlich 38/39) | **68/68 real gemessen**, P9 für 8 bisher ungetestete Tabellen |
-| QS-05 | INTERN OFFEN — keine Suite | Suite geschrieben, Ausführung offen |
+| QS-05 | INTERN OFFEN — keine Suite | **ERLEDIGT** — Suite gegen Chromium und Mobile Safari ausgeführt (24/24 je Browser), 4 Testfehler und 1 echter Produktfehler (Reflow-Bug auf schmalen Viewports) gefunden und behoben, in CI aufgenommen |
 | QMS-01 | INTERN OFFEN — Bausteine ohne System | **ERLEDIGT** — Handbuch, Risikoakte, Lebenszyklus |
 | BF-03 | INTERN OFFEN — nichts | Strukturprüfung maschinell, manueller Durchgang offen |
 | DS-04, SEC-04, SEC-05, BF-02, QI-01, VS-04 | „extern nötig", ohne Unterlage | Beauftragungsunterlagen fertig — versandfertig |
 | REG-01 | INTERN OFFEN — kein Werkzeug | Werkzeug gebaut; Prüfung selbst bleibt offen |
 
-**Drei Punkte sind bewusst NICHT auf „erledigt" gesetzt**, obwohl daran
-gearbeitet wurde: INT-02 (die Verbindlichkeitsfrage ist extern), BF-03 (eine
-Maschine kann nicht beurteilen, ob eine Ansage verständlich ist) und QS-05 (die
-Suite wurde nicht ausgeführt). Ein „erledigt" ohne Ausführung wäre genau die
-Sorte Statusmeldung, die dieses Projekt schon einmal teuer bezahlt hat.
+**Zwei Punkte sind bewusst NICHT auf „erledigt" gesetzt**, obwohl daran
+gearbeitet wurde: INT-02 (die Verbindlichkeitsfrage ist extern) und BF-03
+(eine Maschine kann nicht beurteilen, ob eine Ansage verständlich ist — der
+manuelle VoiceOver/NVDA-Durchgang bleibt offen, auch nachdem die E2E-Suite
+jetzt läuft). QS-05 wurde erst auf „erledigt" gesetzt, nachdem die Suite
+tatsächlich zweimal reproduzierbar grün gelaufen ist — ein „erledigt" ohne
+Ausführung wäre genau die Sorte Statusmeldung, die dieses Projekt schon
+einmal teuer bezahlt hat.
 
 ### Korrektur einer bisherigen Angabe
 

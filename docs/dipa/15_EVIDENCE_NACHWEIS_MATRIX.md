@@ -101,7 +101,7 @@ Die Spalte „Nachweisdatei" ist wörtlich aus der Nachweis-Spalte der Matrix
 | QMS-02 | Ja | `audit/dipa/risikoanalyse_pflegecoach.md` + Risikoakte: 0 kritisch, 3 hoch, 11 mittel, 5 niedrig | Wiedervorlage bei jeder MINOR-Version |
 | QMS-03 | Ja | `technische_dokumentation_pflegecoach.md`, `sicherheitsarchitektur_pflegecoach.md`, `software_lebenszyklus_pflegecoach.md` | Auf Version 0.5.0 fortschreiben |
 | QS-04 | Ja (14.08.2026) | `supabase/shadow/50_pflegecoach_tests.sql`: 68/68 bestanden, real gemessen | Bei neuen Tabellen mitziehen |
-| QS-05 | Teilweise | `e2e/pflegecoach.spec.ts` — 9 geschützte Seiten, 401 auf allen Produkt-APIs, 404 der DiPA-Seiten, Werbefreiheit, 6 A11y-Strukturprüfungen. **Suite geschrieben, nicht ausgeführt** (keine Playwright-Browser installiert) | `npm run test:e2e:install`, dann Suite gegen Preview laufen lassen und in CI aufnehmen |
+| QS-05 | **Ja (14.08.2026)** | `e2e/pflegecoach.spec.ts` — 24 Tests, ausgeführt gegen Chromium und Mobile Safari (24/24 grün, beide Browser, reproduziert). Dabei 4 Fehler in der Testlogik behoben, 1 echter Produktfehler (Reflow auf schmalen Viewports) gefunden und behoben. In `.github/workflows/ci.yml` aufgenommen | Bei neuen Seiten/Formularfeldern mitziehen |
 | BETR-01 | Ja | Migrationen `20260819010000` und `20260826010000` live (Tabellencheck 12.08.2026) | Live-Apply-Bestätigung bleibt Pflichtschritt im Änderungsverfahren |
 
 ## 10. Verfahren und offene regulatorische Fragen
@@ -120,8 +120,8 @@ Die Spalte „Nachweisdatei" ist wörtlich aus der Nachweis-Spalte der Matrix
 
 | Liegt vor? | Anzahl |
 |---|---|
-| Ja | 29 |
-| Teilweise | 3 (INT-02, BF-03, QS-05) |
+| Ja | 30 (QS-05 am 14.08.2026 hinzugekommen) |
+| Teilweise | 2 (INT-02, BF-03) |
 | Nein (davon 15 EXTERN_BENÖTIGT, 1 intern offen: REG-01) | 16 |
 
 **Hinweis zur Abweichung von der Zusammenfassung in `docs/DIPA_MATRIX_FINAL.md`:**
