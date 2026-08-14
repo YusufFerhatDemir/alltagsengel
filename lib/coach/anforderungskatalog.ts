@@ -140,8 +140,8 @@ export const ANFORDERUNGSKATALOG: KatalogEintrag[] = [
   {
     id: 'AK-PROD-03', kategorie: 'produkt_zweckbestimmung', klasse: 'A',
     formulierung: 'Das Produkt ist eindeutig identifizierbar und versioniert; Änderungen sind dokumentiert.',
-    quelle: 'lib/coach/version.ts, audit/dipa/CHANGELOG_pflegecoach.md',
-    anforderungstextGeprueft: false, stand: 'erfuellt',
+    quelle: 'Kein externer Normtext (eigene Versionierungsdisziplin, Formvorgabe der DiPAV bleibt zu prüfen, siehe REG-01 §3.1). Intern geprüft 14.08.2026 gegen lib/coach/version.ts, audit/dipa/CHANGELOG_pflegecoach.md',
+    anforderungstextGeprueft: true, stand: 'erfuellt',
     nachweis: 'SemVer in lib/coach/version.ts, Änderungshistorie im Changelog',
     nachweisDateien: ['lib/coach/version.ts', 'audit/dipa/CHANGELOG_pflegecoach.md'],
     gapId: null, verantwortlich: 'technik',
@@ -317,8 +317,8 @@ export const ANFORDERUNGSKATALOG: KatalogEintrag[] = [
   {
     id: 'AK-INT-01', kategorie: 'interoperabilitaet', klasse: 'A',
     formulierung: 'Der Datenexport ist maschinenlesbar und dokumentiert.',
-    quelle: 'lib/coach/export.schema.json',
-    anforderungstextGeprueft: false, stand: 'erfuellt',
+    quelle: 'Kein externer Normtext (eigenes Schema, keine externe Formvorgabe). Intern geprüft 14.08.2026 gegen lib/coach/export.schema.json, lib/coach/export.test.ts',
+    anforderungstextGeprueft: true, stand: 'erfuellt',
     nachweis: 'Schema de.alltagsengel.pflegecoach.export v1.0 + Konformanz-Test',
     nachweisDateien: ['lib/coach/export.schema.json', 'lib/coach/export.test.ts'],
     gapId: null, verantwortlich: 'technik',
@@ -498,8 +498,8 @@ export const ANFORDERUNGSKATALOG: KatalogEintrag[] = [
   {
     id: 'AK-QS-04', kategorie: 'qms_risikomanagement', klasse: 'B',
     formulierung: 'Automatisierte Tests decken Produktlogik und Zugriffsregeln ab.',
-    quelle: 'lib/coach/*.test.ts, supabase/shadow/50_pflegecoach_tests.sql',
-    anforderungstextGeprueft: false, stand: 'erfuellt',
+    quelle: 'Kein externer Normtext (eigene QS-Erwartung, keine externe Formvorgabe). Intern geprüft 14.08.2026 gegen lib/coach/*.test.ts, supabase/shadow/50_pflegecoach_tests.sql',
+    anforderungstextGeprueft: true, stand: 'erfuellt',
     nachweis: '68/68 Zugriffstests bestanden (14.08.2026), erweitert um P9 für die acht Tabellen aus 20260826010000: Pseudonym-Isolation, kein Selbst-Freischalten, Betriebstabellen unsichtbar. P8 misst jetzt „keine Tabelle ohne RLS" statt einer festen Tabellenzahl',
     nachweisDateien: ['supabase/shadow/50_pflegecoach_tests.sql', 'lib/coach/produktgrenze.test.ts'],
     gapId: null, verantwortlich: 'technik',
@@ -507,8 +507,8 @@ export const ANFORDERUNGSKATALOG: KatalogEintrag[] = [
   {
     id: 'AK-QS-05', kategorie: 'qms_risikomanagement', klasse: 'B',
     formulierung: 'Ein Browser-E2E-Test des Produktbereichs liegt vor.',
-    quelle: 'e2e/pflegecoach.spec.ts',
-    anforderungstextGeprueft: false, stand: 'erfuellt',
+    quelle: 'Kein externer Normtext (eigene QS-Erwartung, keine externe Formvorgabe). Intern geprüft 14.08.2026 gegen e2e/pflegecoach.spec.ts, CI-Job in .github/workflows/ci.yml',
+    anforderungstextGeprueft: true, stand: 'erfuellt',
     nachweis: 'Am 14.08.2026 erstmals ausgeführt (Chromium + Mobile Safari, 24 Tests je Browser). Dabei 4 Fehler in der Testlogik selbst gefunden und behoben (falsche 404-Erwartung statt Redirect-Prüfung, zwei fehlende Waits vor async Content-Load, zu enger Formularfeld-Label-Check, ungefilterter Button-Selektor traf Next.js-Dev-Tools) sowie 1 echten Produktfehler (Inhalts-Abschneidung auf schmalen Viewports durch body-Flex-Layout, siehe unten) gefunden und in app/pflegecoach/pflegecoach.css behoben. Ergebnis danach: 24/24 grün auf beiden Browsern, reproduziert über mehrere Läufe. In .github/workflows/ci.yml als eigener Job aufgenommen.',
     nachweisDateien: ['e2e/pflegecoach.spec.ts', 'playwright.config.ts', '.github/workflows/ci.yml', 'app/pflegecoach/pflegecoach.css'],
     gapId: null, verantwortlich: 'technik',
