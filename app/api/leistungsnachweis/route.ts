@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { PDFDocument, rgb, type PDFPage, type PDFFont } from 'pdf-lib'
+import fontkit from '@pdf-lib/fontkit'
 import { readFile } from 'fs/promises'
 import { join } from 'path'
 import { createClient } from '@/lib/supabase/server'
@@ -218,6 +219,7 @@ export async function GET(request: Request) {
 
     // ═══════════════════ PDF aufbauen ═══════════════════
     const pdfDoc = await PDFDocument.create()
+    pdfDoc.registerFontkit(fontkit)
     // DejaVuSans für türkische/deutsche Zeichen (ğ, ş, ç, İ, ö, ü, ä, ß)
     let fontRegular: PDFFont
     let fontBold: PDFFont

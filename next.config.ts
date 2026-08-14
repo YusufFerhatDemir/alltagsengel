@@ -111,6 +111,10 @@ const nextConfig: NextConfig = {
       './public/fonts/DejaVuSans-Bold.ttf',
       './public/icon-transparent-trimmed.png',
     ],
+    '/api/leistungsnachweis': [
+      './public/fonts/DejaVuSans.ttf',
+      './public/fonts/DejaVuSans-Bold.ttf',
+    ],
   },
   // Bild-Pipeline (CWV): AVIF zuerst (30–50 % kleiner als WebP), WebP als
   // Fallback. Betrifft nur das Auslieferungsformat via next/image — die
