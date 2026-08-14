@@ -63,6 +63,12 @@ describe('allocatePayment — OCC (P0-15)', () => {
               data: { id: 'inv-1', total_amount: 50, paid_amount: 0, status: 'offen' },
               error: null,
             }),
+            // allocatePayment liest die Rechnung seit dem Org-Fence mit
+            // .eq('organization_id', …).maybeSingle() statt .single().
+            maybeSingle: vi.fn().mockResolvedValue({
+              data: { id: 'inv-1', total_amount: 50, paid_amount: 0, status: 'offen' },
+              error: null,
+            }),
             update: vi.fn().mockReturnValue({
               eq: vi.fn().mockReturnValue({
                 eq: vi.fn().mockReturnValue({
@@ -124,6 +130,12 @@ describe('allocatePayment — OCC (P0-15)', () => {
             select: vi.fn().mockReturnThis(),
             eq: vi.fn().mockReturnThis(),
             single: vi.fn().mockResolvedValue({
+              data: { id: 'inv-1', total_amount: 50, paid_amount: 0, status: 'offen' },
+              error: null,
+            }),
+            // allocatePayment liest die Rechnung seit dem Org-Fence mit
+            // .eq('organization_id', …).maybeSingle() statt .single().
+            maybeSingle: vi.fn().mockResolvedValue({
               data: { id: 'inv-1', total_amount: 50, paid_amount: 0, status: 'offen' },
               error: null,
             }),
