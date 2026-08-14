@@ -43,6 +43,7 @@ const BEREICH_NAMEN: Record<string, string> = {
   '/pflegecoach/anfrage': 'Anfrage stellen',
   '/pflegecoach/datenschutz': 'Datenschutzhinweise',
   '/pflegecoach/einstellungen/konto': 'Konto und Nutzung beenden',
+  '/pflegecoach/einstellungen/sicherheit': 'Anmeldesicherheit',
   '/pflegecoach/loeschung': 'Daten löschen',
   '/pflegecoach/anspruch': 'Anspruch prüfen',
   '/pflegecoach/freischaltung': 'Zugang freischalten',
@@ -203,11 +204,19 @@ export default function CoachShell({
             {' · '}
             <Link href="/pflegecoach/anfrage">Anfrage stellen</Link>
           </p>
+          {/* Rechtliche Pflichtverweise auf JEDER Produktseite: Datenschutz,
+              Impressum, AGB und Widerrufsbelehrung. Sie stehen im Layout und
+              nicht auf den einzelnen Seiten, damit keine Seite sie vergessen
+              kann — auch keine, die später dazukommt. */}
           <p>
             <Link href="/pflegecoach/datenschutz">Datenschutz</Link>{' · '}
             <Link href="/impressum">Impressum</Link>{' · '}
+            <Link href="/pflegecoach/agb">AGB</Link>{' · '}
+            <Link href="/pflegecoach/widerruf">Widerrufsbelehrung</Link>
+          </p>
+          <p>
             <Link href="/pflegecoach/einstellungen">Datenexport &amp; Einwilligungen</Link>{' · '}
-            <Link href="/pflegecoach/einstellungen/konto">Nutzung beenden</Link>{' · '}
+            <Link href="/pflegecoach/einstellungen/konto">Vertrag &amp; Nutzung beenden</Link>{' · '}
             <Link href="/pflegecoach/loeschung">Daten löschen</Link>
           </p>
           {/* Kein aria-label auf dem Absatz: Die Rolle „paragraph" erlaubt keinen

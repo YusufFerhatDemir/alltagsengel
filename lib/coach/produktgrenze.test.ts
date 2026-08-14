@@ -175,6 +175,17 @@ const OHNE_EINWILLIGUNGSPRUEFUNG: Record<string, string> = {
     'Vorvertragliche Kontaktanfrage ohne Anmeldung: verarbeitet ausschließlich Kontaktdaten ' +
     '(Art. 6 Abs. 1 lit. b DSGVO), keine Gesundheitsdaten, und schreibt nichts in den ' +
     'Produktdatenbestand — es gibt hier noch keinen Nutzer, der einwilligen könnte.',
+  'app/api/coach/abo/route.ts:POST':
+    'Vertragsaktionen (Kündigung, Widerruf, Zahlungsmittel) — Vertragsdaten nach ' +
+    'Art. 6 Abs. 1 lit. b DSGVO, keine Gesundheitsdaten. Eine Einwilligungsprüfung wäre hier ' +
+    'schädlich: Wer die Art.-9-Einwilligung widerrufen hat, käme sonst aus seinem ' +
+    'kostenpflichtigen Vertrag nicht mehr heraus und zahlte weiter. § 312k BGB verlangt das ' +
+    'Gegenteil. Die Bestellung wird ausschließlich über die geprüfte coach_user_id ermittelt.',
+  'app/api/coach/webhook/route.ts:POST':
+    'Stripe-Rückruf ohne Nutzersitzung — es gibt keinen angemeldeten Nutzer, dessen ' +
+    'Einwilligung geprüft werden könnte. Die Authentizität wird stattdessen über die ' +
+    'Stripe-Signatur (COACH_STRIPE_WEBHOOK_SECRET) sichergestellt; verarbeitet werden nur ' +
+    'Vertrags- und Zahlungsdaten, keine Gesundheitsdaten.',
 }
 
 test('jede schreibende Coach-Route prüft die Pflicht-Einwilligung', () => {
