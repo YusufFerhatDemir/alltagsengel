@@ -788,57 +788,41 @@ Begründung: 13 extern zu erbringende Nachweise fehlen. Die 4 antragskritischste
 
 ---
 
-# 4. PFLEGECOACH — PREISENTSCHEIDUNGSVORLAGE
+# 4. PFLEGECOACH — GESCHÄFTSMODELL
 
-## Markthintergrund
+## Entscheidung (14.08.2026)
 
-Seit 01.01.2026 erstattet die Pflegekasse bis zu 40 €/Monat für eine gelistete DiPA (+ 30 €/Monat für ergänzende Unterstützungsleistungen). Das DiPA-Verzeichnis ist noch sehr überschaubar — wenige Apps sind bisher gelistet. Der PflegeCoach wird zunächst als **Selbstzahler-Produkt** verkauft, mit dem Ziel, nach DiPA-Listung auch über die Kasse abrechenbar zu sein.
+**PflegeCoach ist dauerhaft kostenlos für alle Endnutzer.** Kein Abonnement, keine Monats- oder Jahresgebühr, keine Stripe-Zahlung durch Nutzer, keine Paywall.
 
-## Preisoptionen
+## Monetarisierungsziel
 
-| Option | Monatspreis | Jahrespreis | Rabatt | Positionierung |
-|---|---|---|---|---|
-| **A: Niedrig** | 9,90 €/Monat | 89,90 €/Jahr | 24% | Einstiegspreis, maximale Reichweite, niedrige Marge |
-| **B: Mittel** | 14,90 €/Monat | 139,90 €/Jahr | 22% | Balance Reichweite/Marge, unter DiPA-Erstattungsgrenze |
-| **C: Premium** | 19,90 €/Monat | 189,90 €/Jahr | 21% | Näher an Kassenerstattung (40 €), Signal für Qualität |
-| **D: An DiPA-Grenze** | 29,90 €/Monat | 289,90 €/Jahr | 19% | Maximale Marge, nah an Kassenerstattung, Risiko geringerer Selbstzahler-Akzeptanz |
+Ausschließlich Erstattung/Vergütung über die Pflegekassen nach tatsächlicher DiPA-Zulassung durch das BfArM. Seit 01.01.2026 erstattet die Pflegekasse bis zu 40 €/Monat für eine im DiPA-Verzeichnis gelistete Anwendung (+ 30 €/Monat für ergänzende Unterstützungsleistungen).
 
-## Relevante Faktoren
+**Wichtig:** Eine DiPA-Zulassung liegt derzeit NICHT vor und ist NICHT beantragt. Bis zur tatsächlichen Zulassung ist klar zwischen „kostenlos nutzbar" und „von Pflegekassen erstattungsfähig/zugelassen" zu unterscheiden. Kassenvergütung bleibt EXTERNAL_REQUIRED.
 
-**Für niedrigere Preise (A/B):**
-- Zielgruppe (Senioren/pflegende Angehörige) ist preissensibel
-- Noch kein DiPA-Siegel — kein Kassenvertrauensbonus
-- Erste Nutzer gewinnen ist wichtiger als Marge
-- Preis kann nach DiPA-Listung angehoben werden
+## Strategie
 
-**Für höhere Preise (C/D):**
-- Bei späterer DiPA-Listung erstattet die Kasse bis 40 €/Monat — ein hoher Selbstzahlerpreis etabliert das Preisniveau
-- Niedrigpreisprodukte werden im Gesundheitsbereich als weniger vertrauenswürdig wahrgenommen
-- Höhere Marge pro Nutzer wichtig bei kleiner Anfangs-Nutzerbasis
+Möglichst viele Nutzer gewinnen durch kostenlosen Zugang → Nutzungsdaten und Wirksamkeitsbelege sammeln → DiPA-Zulassungsantrag beim BfArM stellen → nach Aufnahme ins DiPA-Verzeichnis Vergütung über die Pflegekassen.
 
-**B2C vs. B2B:** Aktuell rein B2C (Selbstzahler). B2B (Pflegedienste kaufen für ihre Klienten) ist technisch nicht vorbereitet und kein aktuelles Feature — keine neuen Features.
+## Technischer Stand
 
-## Jahresrabatt
+Der Code enthält einen vollständigen Selbstzahler-Verkaufsweg (`lib/coach/pricing.ts`, `lib/coach/verkauf-server.ts`, Stripe-Integration), der als technische Infrastruktur erhalten bleibt. Dieser Weg ist aktuell korrekt gesperrt:
 
-Ein Rabatt von 20–25% für das Jahresabo ist marktüblich und reduziert die Churn-Rate.
+- `COACH_PREISE_FREIGEGEBEN` = `false` (Default) → kein Checkout möglich
+- `COACH_FREISCHALTUNG_PFLICHT` = `false` (Default) → kein Zugangs-Gate aktiv
+- `COACH_DIPA_MODUS` = `false` (Default) → keine DiPA-Funktionen aktiv
 
-## Umsatzsteuer
+**Ergebnis:** Jeder authentifizierte, einwilligende Nutzer hat vollen Zugang zum PflegeCoach ohne Zahlung. Das ist das gewünschte Verhalten.
 
-| Option | Auswirkung |
-|---|---|
-| **Kleinunternehmer (§19 UStG)** | Keine USt auf Rechnungen, kein Vorsteuerabzug. Einfacher. Grenze: 25.000 € Vorjahresumsatz / 100.000 € laufendes Jahr (seit 2025). |
-| **Regelbesteuerung** | 19% USt auf Rechnungen, Vorsteuerabzug möglich. Nötig wenn Umsatzgrenze überschritten. |
+## Was NICHT geplant ist
 
-**Keine Empfehlung** — das ist eine steuerliche Feststellung, die vom Steuerberater bestätigt werden muss.
+- Endnutzer-Abonnements (monatlich/jährlich)
+- Stripe-Produkte oder Price-IDs für Endnutzer anlegen
+- Preisfreigabe (`COACH_PREISE_FREIGEGEBEN=true`) für Endnutzer
 
-**Steuernummer/USt-IdNr.:** Muss in jedem Fall auf der Rechnung stehen (§ 14 Abs. 4 UStG). Aktuell nicht konfiguriert (`COACH_STEUERNUMMER` / `COACH_UST_ID_NR` in `.env`).
+## Offene externe Schritte für Kassenvergütung
 
-## Was nach deiner Entscheidung passiert
-
-1. Du sagst mir: Monatspreis X €, Jahrespreis Y €, Kleinunternehmer JA/NEIN, Steuernummer Z
-2. Du legst 2 Produkte in Stripe an (monatlich + jährlich) und gibst mir die Price-IDs
-3. Ich setze die Env-Variablen und schalte frei (`COACH_PREISE_FREIGEGEBEN=true` + `COACH_FREISCHALTUNG_PFLICHT=true`)
-4. Verkauf startet sofort
+Siehe Abschnitt 3 (BfArM-Readiness) und Abschnitt 5 (Kassenabrechnung). Die 13 extern zu erbringenden Nachweise und die BfArM-Beratung bleiben die kritischen Voraussetzungen.
 
 ---
 
@@ -891,16 +875,15 @@ Sortiert nach: Umsatzwirkung → regulatorische Abhängigkeit → Zeitkritikalit
 
 | # | Was tun | Wo | Dokument | Was wird dadurch freigeschaltet |
 |---|---|---|---|---|
-| **1** | **PflegeCoach Preise festlegen + Stripe-Produkte anlegen** | Stripe Dashboard + mir die IDs mitteilen | `lib/coach/pricing.ts` (Platzhalter-Beträge ansehen) | **Sofortige Umsätze** — Selbstzahler-Verkauf startet |
-| **2** | **Steuernummer/USt-IdNr. + Kleinunternehmer-Status klären** | Steuerberater fragen, dann mir mitteilen | `.env` Variablen COACH_STEUERNUMMER, COACH_UST_KLEINUNTERNEHMER | Rechtskonforme Rechnungen |
-| **3** | **BfArM-Beratungstermin beantragen** | BfArM-Innovationsbüro (online/telefonisch) | `audit/dipa/bfarm_fragenkatalog.md` (20 Fragen mitschicken) | Klärt 6+ Abhängigkeiten (SEC-01, SEC-05, INT-02, REG-02/03, NN-01), beschleunigt ALLES |
-| **4** | **Pflegefachkraft für Inhaltsfreigabe finden** | Netzwerk / Pflegewissenschaftliche Fakultäten / deine Frau (25J Erfahrung) fragen | `audit/dipa/inhalte_pruefdossier.md` (versandfertig) | Höchstes Produktrisiko (R1.4) gemindert, Pflichtanlage für BfArM |
-| **5** | **Datenschutzkanzlei beauftragen** | Kanzlei kontaktieren mit Anschreiben 2d | `audit/dipa/dsfa_pflegecoach.md` + `avv_dossier_pflegecoach.md` + `nutzungsbedingungen_entwurf_selbstzahler.md` | DSFA + AVVs + Nutzungsbedingungen — 3 BfArM-Pflichtanlagen |
-| **6** | **Pentest beauftragen** | IT-Sicherheitsfirma kontaktieren mit Anschreiben 2b | `audit/dipa/pentest_beauftragung_scope.md` (versandfertig, 154 Zeilen) | Unabhängiger Sicherheitsnachweis |
-| **7** | **BITV-Prüfstelle beauftragen** | BITV-Prüfstelle kontaktieren mit Anschreiben 2a | `docs/dipa/14_ACCESSIBILITY_GAP_LISTE.md` | Barrierefreiheitsnachweis — BfArM-Pflichtanlage |
-| **8** | **SEPA-Gläubiger-ID bei Bundesbank beantragen** | Online über Bundesbank-Portal | Keine Unterlage nötig, nur Firmendaten | SEPA-Lastschriften für Kassenabrechnung + ggf. Abo-Einzug |
-| **9** | **§45a-Anerkennung in Hessen beantragen** | RP Gießen / zuständige Landesbehörde | Nachweise gemäß HePflBG (Qualifikation, Konzept) | Kassenabrechnung für Entlastungsleistungen |
-| **10** | **Manal + Violeta Groening — Bewerbungsgespräche terminieren** | Nachmittags (nie vor 13 Uhr) | — | Personalaufbau für Leistungserbringung |
+| **1** | **BfArM-Beratungstermin beantragen** | BfArM-Innovationsbüro (online/telefonisch) | `audit/dipa/bfarm_fragenkatalog.md` (20 Fragen mitschicken) | Klärt 6+ Abhängigkeiten (SEC-01, SEC-05, INT-02, REG-02/03, NN-01), beschleunigt ALLES |
+| **2** | **Pflegefachkraft für Inhaltsfreigabe finden** | Netzwerk / Pflegewissenschaftliche Fakultäten / deine Frau (25J Erfahrung) fragen | `audit/dipa/inhalte_pruefdossier.md` (versandfertig) | Höchstes Produktrisiko (R1.4) gemindert, Pflichtanlage für BfArM |
+| **3** | **Datenschutzkanzlei beauftragen** | Kanzlei kontaktieren mit Anschreiben 2d | `audit/dipa/dsfa_pflegecoach.md` + `avv_dossier_pflegecoach.md` + `nutzungsbedingungen_entwurf_selbstzahler.md` | DSFA + AVVs + Nutzungsbedingungen — 3 BfArM-Pflichtanlagen |
+| **4** | **Pentest beauftragen** | IT-Sicherheitsfirma kontaktieren mit Anschreiben 2b | `audit/dipa/pentest_beauftragung_scope.md` (versandfertig, 154 Zeilen) | Unabhängiger Sicherheitsnachweis |
+| **5** | **BITV-Prüfstelle beauftragen** | BITV-Prüfstelle kontaktieren mit Anschreiben 2a | `docs/dipa/14_ACCESSIBILITY_GAP_LISTE.md` | Barrierefreiheitsnachweis — BfArM-Pflichtanlage |
+| **6** | **Steuernummer/USt-IdNr. klären** | Steuerberater fragen, dann mir mitteilen | `.env` Variablen COACH_STEUERNUMMER | Pflichtangabe für spätere Kassenrechnungen |
+| **7** | **SEPA-Gläubiger-ID bei Bundesbank beantragen** | Online über Bundesbank-Portal | Keine Unterlage nötig, nur Firmendaten | SEPA-Lastschriften für Kassenabrechnung |
+| **8** | **§45a-Anerkennung in Hessen beantragen** | RP Gießen / zuständige Landesbehörde | Nachweise gemäß HePflBG (Qualifikation, Konzept) | Kassenabrechnung für Entlastungsleistungen |
+| **9** | **Manal + Violeta Groening — Bewerbungsgespräche terminieren** | Nachmittags (nie vor 13 Uhr) | — | Personalaufbau für Leistungserbringung |
 
 ---
 
@@ -909,6 +892,6 @@ Sortiert nach: Umsatzwirkung → regulatorische Abhängigkeit → Zeitkritikalit
 1. ✅ DiPA 18-Punkte External Matrix (Abschnitt 1)
 2. ✅ Beauftragungspakete — 7 versandfertige Anschreiben (Abschnitt 2)
 3. ✅ BfArM Readiness (Abschnitt 3)
-4. ✅ PflegeCoach Preisentscheidungsvorlage (Abschnitt 4)
+4. ✅ PflegeCoach Geschäftsmodell — kostenlos für Endnutzer (Abschnitt 4)
 5. ✅ Kassen-External-Matrix (Abschnitt 5)
 6. ✅ Top-10 persönliche nächste Schritte (Abschnitt 6)
