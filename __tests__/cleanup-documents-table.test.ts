@@ -52,7 +52,7 @@ describe('A2: Engel/Kunde Dokumente-Seiten haben Feature-Guard', () => {
 
 describe('A2: Migration soft_delete hat Guard für documents-Policy', () => {
   it('soft_delete Migration hat IF EXISTS Guard', () => {
-    const src = readFile('supabase/migrations/20260419_soft_delete.sql')
+    const src = readFile('supabase/migrations/20260419000100_soft_delete.sql')
     // Darf kein direktes CREATE POLICY ... ON public.documents mehr haben
     // (nur innerhalb eines DO $$ ... $$ Blocks)
     const lines = src.split('\n')

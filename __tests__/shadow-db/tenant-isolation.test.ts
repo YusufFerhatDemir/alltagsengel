@@ -171,7 +171,7 @@ describe('Statisch: Live-only-Tabellen (Schema existiert NICHT in supabase/migra
     // "relation public.clients does not exist" (siehe audit/SHADOW_DB_MIGRATION_REPORT.md).
     // Seit 20260101000000_baseline_live_only_tables.sql ist die Lücke zu —
     // dieser Test hält sie zu.
-    const eylem = readMigration('supabase/migrations/20260719_eylem_audit_complete_features.sql')
+    const eylem = readMigration('supabase/migrations/20260719000200_eylem_audit_complete_features.sql')
     expect(eylem).toMatch(/REFERENCES public\.clients\(id\)/)
     const created = tablesCreatedByMigrations()
     const stillMissing = [...KNOWN_LIVE_ONLY_TABLES].filter(t => !created.has(t))
