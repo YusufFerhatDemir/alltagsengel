@@ -11,6 +11,13 @@
 // (istVerkaufBereit().grund nennt Env-Variablen) und alles andere aus
 // der Konfiguration. Nach außen geht nur, was auf einem Preisschild
 // steht — plus die Angabe, ob bestellt werden kann.
+//
+// SOLANGE DER VERKAUF GESPERRT IST (Default, siehe lib/coach/pricing.ts:
+// PflegeCoach ist dauerhaft kostenlos), gibt es kein Preisschild — also
+// darf auch kein Betrag herausgehen. Die Platzhalter-Beträge sind sonst
+// über einen direkten Aufruf dieser Route abrufbar, obwohl sie „niemandem
+// in Rechnung gestellt werden dürfen" (pricing.ts). Deshalb liefert die
+// Route in diesem Zustand ein leeres tarife-Array ohne Beträge.
 // ═══════════════════════════════════════════════════════════════
 
 import { NextResponse } from 'next/server'
@@ -22,10 +29,21 @@ export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
 export async function GET() {
+  const bereit = verkaufMoeglich()
+
+  if (!bereit) {
+    return NextResponse.json({
+      verkauf_moeglich: false,
+      waehrung: 'EUR',
+      tarife: [],
+      jahres_ersparnis: null,
+    })
+  }
+
   const ersparnis = jahresErsparnis()
 
   return NextResponse.json({
-    verkauf_moeglich: verkaufMoeglich(),
+    verkauf_moeglich: true,
     waehrung: 'EUR',
     tarife: alleTarife().map(t => ({
       key: t.key,

@@ -53,15 +53,15 @@ function geld(cent: number): string {
 /**
  * Preisabschnitt.
  *
- * Lädt über eine öffentliche Route, weil diese Seite auch ohne
- * Anmeldung etwas Sinnvolles zeigen muss — und ein Preis gehört zum
- * Sinnvollsten.
+ * Geschäftsmodell-Entscheidung vom 14.08.2026 (lib/coach/pricing.ts):
+ * Der PflegeCoach ist dauerhaft kostenlos für Endnutzer. Der bezahlte
+ * Bestellweg bleibt als fail-closed gesperrte Infrastruktur bestehen
+ * (siehe pricing.ts) — solange COACH_PREISE_FREIGEGEBEN nicht auf
+ * 'true' steht, gilt ausschließlich der kostenlose Zweig unten.
  *
- * Rendert NICHTS, solange nichts geladen ist, und nichts, wenn der
- * Verkauf gesperrt ist. Ein Preis, der nicht gilt, darf nicht auf einer
- * Verkaufsseite stehen: Die Sperre in lib/coach/pricing.ts wäre
- * wertlos, wenn die Zahl trotzdem sichtbar wäre und jemand sich darauf
- * beriefe.
+ * Lädt über eine öffentliche Route, weil diese Seite auch ohne
+ * Anmeldung etwas Sinnvolles zeigen muss. Rendert nichts, solange
+ * nichts geladen ist.
  */
 function Preise({ mitBestellknopf }: { mitBestellknopf: boolean }) {
   const [stand, setStand] = useState<TarifStand | null>(null)
@@ -82,14 +82,10 @@ function Preise({ mitBestellknopf }: { mitBestellknopf: boolean }) {
       <section className="pc-card" aria-labelledby="preise-titel">
         <h2 id="preise-titel">Was der PflegeCoach kostet</h2>
         <p>
-          Der PflegeCoach ist ein privat zu zahlendes Angebot. Die Konditionen stimmen wir
-          derzeit persönlich ab — schreiben Sie uns kurz, was Sie brauchen, und wir melden uns
-          mit einem konkreten Angebot bei Ihnen zurück, in der Regel innerhalb von zwei
-          Werktagen.
+          <strong>Der PflegeCoach ist für Sie kostenlos.</strong> Es entstehen keine Kosten,
+          Sie benötigen keine Kreditkarte und schließen kein Abonnement ab. Es gibt keine
+          Testphase, die abläuft — die Nutzung bleibt dauerhaft kostenfrei.
         </p>
-        <Link className="pc-btn pc-btn--secondary" href="/pflegecoach/anfrage">
-          Konditionen anfragen
-        </Link>
       </section>
     )
   }
@@ -216,7 +212,8 @@ function Zweckbestimmung() {
           Der Digitale PflegeCoach unterstützt Pflegebedürftige in häuslicher Versorgung sowie
           ihre pflegenden Angehörigen mit strukturierten Anleitungs-, Erinnerungs- und
           Dokumentationsfunktionen: Selbständigkeit im Alltag erhalten, die häusliche Versorgung
-          stabilisieren und Angehörige entlasten.
+          stabilisieren und Angehörige entlasten. <strong>Die Nutzung ist für Sie kostenlos</strong> —
+          keine Kosten, kein Abonnement, keine Kreditkarte.
         </p>
         <p>
           <strong>Was er nicht ist:</strong> Der PflegeCoach dient nicht der Erkennung, Behandlung
@@ -238,7 +235,7 @@ function Zweckbestimmung() {
               <strong>Dies ist keine Kassenleistung.</strong> Der PflegeCoach ist keine Leistung
               der gesetzlichen Pflege- oder Krankenversicherung. Es findet keine Abrechnung mit
               Pflege- oder Krankenkassen statt; einen Anspruch gegenüber Ihrer Kasse gibt es
-              nicht. Die Nutzung erfolgt als privat zu zahlendes Angebot.
+              nicht. Für Sie als Nutzerin oder Nutzer ist der PflegeCoach dennoch kostenlos.
             </li>
           )}
           <li>
@@ -383,8 +380,8 @@ export default function CoachStart() {
             in den <Link href="/pflegecoach/datenschutz">Datenschutzhinweisen</Link>.
           </p>
           <p>
-            Sie sind unsicher, ob der PflegeCoach zu Ihrer Situation passt, oder möchten die
-            Konditionen besprechen? Schreiben Sie uns — wir melden uns bei Ihnen zurück.
+            Sie sind unsicher, ob der PflegeCoach zu Ihrer Situation passt, oder haben Fragen?
+            Schreiben Sie uns — wir melden uns bei Ihnen zurück.
           </p>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
             <Link className="pc-btn" href="/auth/register">Konto anlegen</Link>

@@ -42,6 +42,8 @@ const GESCHUETZT = [
   '/pflegecoach/bericht',
   '/pflegecoach/einstellungen',
   '/pflegecoach/einstellungen/sicherheit',
+  '/pflegecoach/einstellungen/konto',
+  '/pflegecoach/checkout',
 ]
 
 test.describe('PflegeCoach — Erreichbarkeit und Zugangsschutz', () => {
@@ -135,6 +137,50 @@ test.describe('PflegeCoach — Zweckbestimmung und Produktgrenze', () => {
       /google|facebook|meta|hotjar|clarity|segment|mixpanel|doubleclick|analytics|tiktok|linkedin/i.test(h)
     )
     expect(verdaechtig, `Tracker im Produktbereich: ${verdaechtig.join(', ')}`).toEqual([])
+  })
+})
+
+test.describe('PflegeCoach — Kostenlos-Garantie', () => {
+  // Geschäftsmodell-Entscheidung vom 14.08.2026 (lib/coach/pricing.ts):
+  // dauerhaft kostenlos für Endnutzer, kein Abo, keine Kreditkarte, keine
+  // Testphase. Diese Suite prüft, dass die ausgelieferte Oberfläche und
+  // die öffentliche Preis-API das auch tatsächlich einhalten.
+
+  test('öffentliche Seiten behaupten nirgends einen Preis, ein Abo oder eine Testphase', async ({ page }) => {
+    // Bewusst keine blanke Wortsperre für „kostenpflichtig"/„Abonnement": Die
+    // kostenlos-Aussagen benutzen diese Wörter legitim in verneinter Form
+    // („kein Abonnement", „ohne kostenpflichtigen Zugang"). Geprüft wird
+    // stattdessen, ob tatsächlich ein Preis, ein Zahlungsanbieter oder ein
+    // Bestellvorgang auftaucht.
+    const verboten = [
+      /\d[.,]?\d*\s?€/, /privat zu zahlen/i, /Konditionen (anfragen|besprechen)/i,
+      /zahlungspflichtig bestellen/i, /Zugang bestellen/i, /Stripe/i,
+    ]
+    for (const seite of OEFFENTLICH) {
+      await page.goto(seite.pfad)
+      await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
+      await page.waitForLoadState('networkidle')
+      const text = await page.locator('body').innerText()
+      for (const muster of verboten) {
+        expect(text, `${seite.pfad} enthält einen Preis-/Abo-Hinweis (${muster})`).not.toMatch(muster)
+      }
+    }
+  })
+
+  test('Startseite sagt ausdrücklich, dass die Nutzung kostenlos ist', async ({ page }) => {
+    await page.goto('/pflegecoach/start')
+    await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
+    await page.waitForLoadState('networkidle')
+    const text = await page.locator('body').innerText()
+    expect(text).toMatch(/kostenlos/i)
+  })
+
+  test('/api/coach/tarife liefert ohne Verkaufsfreigabe keine Beträge', async ({ request }) => {
+    const antwort = await request.get('/api/coach/tarife')
+    expect(antwort.status()).toBe(200)
+    const daten = await antwort.json()
+    expect(daten.verkauf_moeglich, 'COACH_PREISE_FREIGEGEBEN darf im Test nicht scharf sein').toBe(false)
+    expect(daten.tarife).toEqual([])
   })
 })
 
