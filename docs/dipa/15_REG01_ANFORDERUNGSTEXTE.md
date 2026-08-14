@@ -1,14 +1,22 @@
 # REG-01 — Anforderungstexte gegen die Originaldokumente prüfen
 
-**Stand:** 2026-08-14 · **Klasse:** E (Behörde/Normgeber) · **Status:** OFFEN
+**Stand:** 2026-08-14 (Nachtrag: DiPAV-Durchgang) · **Klasse:** E (Behörde/Normgeber) · **Status:** IN ARBEIT
 **Gegenstand:** `lib/coach/anforderungskatalog.ts`, Feld `anforderungstextGeprueft`
 
 > Für die vollständige Punkt-für-Punkt-Neubewertung aller 48 Matrixeinträge
 > nach dem verschärften Prüfschema (technisch tatsächlich erfüllt vs. nur
 > behauptet) siehe `docs/dipa/16_PHASE7_FINALAUDIT_2026-08-14.md`. Dieses
-> Dokument bleibt die Detailaufschlüsselung speziell für REG-01 selbst — beide
-> Läufe (14.08. nachmittags und abends) kommen unabhängig auf denselben Stand:
-> 5/48 (6 %) geprüft, unverändert.
+> Dokument bleibt die Detailaufschlüsselung speziell für REG-01 selbst.
+>
+> **Nachtrag 14.08.2026 (später Durchgang):** Die DiPAV (Fassung 22.06.2026,
+> `lxgesetze.de/dipav` + amtlicher Text `gesetze-im-internet.de/dipav`) wurde
+> gegen die 48 Katalogeinträge gehalten. Ergebnis: **15 Einträge zusätzlich
+> geprüft** (11 mit direktem DiPAV-Textbeleg, 4 als „kein externer Normtext"
+> bestätigt) — Stand jetzt **20/48 (42 % der Einträge, 35 % belastbare
+> Erfüllungsquote)**. Mehrere der ursprünglich in §3 dieses Dokuments
+> vermuteten Paragraphen-Zuordnungen erwiesen sich beim Lesen des Originaltexts
+> als falsch (siehe §7) und wurden NICHT übernommen — konservativ auf `false`
+> belassen, wo der Text nicht eindeutig passte.
 
 > Dies ist ein **Dokumentations- und Prozesspunkt, kein Code-Fix.** Es gibt hier
 > nichts zu bauen. Was fehlt, sind Originaldokumente und die Zeit einer Person,
@@ -30,7 +38,7 @@ Original geprüft). Der Abstand zwischen beiden ist genau das Risiko, das REG-01
 beschreibt: dass wir eine Anforderung erfüllt haben, die so gar nicht gestellt wird —
 oder die eigentliche verfehlen.
 
-## 2. Gemessener Stand (`npm run dipa:katalog`, 14.08.2026)
+## 2. Gemessener Stand (`npm run dipa:katalog`, 14.08.2026, nach DiPAV-Durchgang)
 
 ```
 Anforderungen gesamt:  48
@@ -38,10 +46,12 @@ erfüllt:               30      in Arbeit: 8      offen: 10
 Nachweise:             alle 93 verwiesenen Dateien existieren
 Belege:                jeder erfüllte Eintrag nennt mindestens eine Datei
 
-Anforderungstexte gegen das Original geprüft:  5 von 48
-ungeprüft:                                    43
-Belastbare Quote:                              6 %
+Anforderungstexte gegen das Original geprüft:  20 von 48
+ungeprüft:                                    28
+Belastbare Quote:                              35 %
 ```
+
+Ursprünglicher Stand vor diesem Durchgang (zum Vergleich): 5/48 (6 %).
 
 **Geprüft sind ausschließlich die fünf DSGVO-Einträge** — und zwar nicht zufällig:
 der Verordnungstext ist frei und amtlich verfügbar, es gibt nichts zu beschaffen.
@@ -189,6 +199,61 @@ warten. REG-01 ist der einzige E-Punkt, der überwiegend sofort begonnen werden 
    Originaltext verfehlt, ist der Eintrag zu korrigieren und der Status neu zu
    bewerten — es ist damit zu rechnen, dass die Rohquote von 30 erfüllten Einträgen
    dabei **sinkt**. Das wäre der Erfolg von REG-01, nicht sein Scheitern.
+
+## 6a. Ergebnis des DiPAV-Durchgangs (14.08.2026, später)
+
+Quelle: DiPAV in der Fassung vom 22.06.2026, gelesen §§1–9 über
+`lxgesetze.de/dipav/1`–`/9` und gegengeprüft gegen den amtlichen Text unter
+`gesetze-im-internet.de/dipav/` (Inhaltsverzeichnis, §§2–9, Anlage 1/2-Verweise).
+
+**11 Einträge mit direktem DiPAV-Textbeleg auf `true` gesetzt:**
+AK-PROD-01, AK-PROD-04, AK-PROD-05, AK-DS-07, AK-INT-02, AK-INT-03, AK-QMS-02,
+AK-QMS-03, AK-VS-01 — plus als „kein externer Normtext" bestätigt:
+AK-QI-03, AK-BETR-01 (Muster wie AK-PROD-03/AK-QS-04/AK-QS-05).
+
+**Bewusst NICHT auf `true` gesetzt, obwohl in §3.1 dieses Dokuments als
+„über DiPAV verifizierbar" vermutet** — der Originaltext trug die Annahme nicht:
+
+* **AK-PROD-02** (MDR-Negativabgrenzung) — DiPAV §3/§4 regeln Sicherheit und
+  Funktionstauglichkeit, nicht die Frage „ist es überhaupt ein Medizinprodukt".
+  Das bleibt MDR-Text + juristische Bewertung, wie §3.5 unten bereits empfiehlt.
+* **AK-PROD-06** (Nutzerflow bis zur Abrechnung) — kein DiPAV-Antragsinhalt
+  erwähnt Abrechnung; Vergütung ist laut AK-REG-04 „erst nach Aufnahme
+  verhandelbar", also außerhalb des Antragsinhalts nach §2.
+* **AK-DS-06** (Datenflüsse dokumentiert) — §5 regelt materielle
+  Datenschutz-/Datensicherheitsanforderungen, keine Dokumentationspflicht für
+  Datenflüsse als eigenen Punkt (das deckt eher Art. 30 DSGVO, siehe AK-DS-05).
+* **AK-SEC-02, AK-SEC-06, AK-SEC-07, AK-SEC-08** (Verschlüsselung,
+  Rollen/Rechte, Audit-Logging, Produkttrennung) — §5 Abs. 2 verweist auf vom
+  BSI nach § 78a Abs. 7 SGB XI *gesondert festgelegte* Datensicherheits-
+  anforderungen; diese Konkretisierung steht in der BSI TR-03161, nicht im
+  DiPAV-Text selbst. Anlage 1 (Fragebogen nach §3 Abs. 2) wurde ebenfalls
+  geprüft (`gesetze-im-internet.de/dipav/anlage_1.html`) und enthält dazu
+  **keine** explizit benannten Anforderungen — nur allgemeine Klauseln zu
+  „unbefugtem Zugriff" (Nr. 32) und „Informationssicherheit" (Nr. 24) ohne
+  Bezug zu MFA, RBAC oder Audit-Logging im Speziellen. Bleibt an AK-SEC-01
+  (BSI TR-03161) hängen.
+* **AK-BF-01** (Barrierefreiheits-Standard) — §6 Abs. 6 verweist nur allgemein
+  auf „die Anforderungen an die Barrierefreiheit"; der materielle Maßstab ist
+  EN 301 549 / WCAG 2.1 AA, nicht der DiPAV-Text selbst (wie in §3.4 bereits
+  korrekt beschrieben).
+* **AK-QMS-01** (QMS/Risikomanagementsystem) — die in §3.1 vermutete Stelle
+  „§6 Nr. 2" ist tatsächlich §6 Abs. 2 und regelt Robustheit gegen Störungen/
+  Fehlbedienungen, **nicht** QMS. Keine passende DiPAV-Stelle gefunden, bleibt
+  `false`.
+* **AK-VS-02, AK-VS-03** (Herstellersupport, Beendbarkeit) — §6 Abs. 3 regelt
+  Zugang zu Gebrauchsanweisung und allgemeinverständlichen Informationen, ohne
+  Support-Erreichbarkeit oder Kündbarkeit wörtlich zu nennen; die genauere
+  Fundstelle wäre vermutlich Anlage 2 (Fragebogen nach §§6/7), deren Volltext
+  hier aus Lizenz-/Reproduktionsgründen nicht wörtlich vorlag.
+* **AK-NN-02, AK-NN-03** — trotz Nennung im ursprünglichen §3.7 als mögliche
+  interne Sonderfälle bewusst `false` belassen: §3.2 dieses Dokuments ordnet
+  beide dem BfArM-Leitfaden zu (Evaluationsmethodik), der noch nicht vorliegt.
+
+**Randfund:** Die vollständige Nummerierung von §2 Abs. 1 DiPAV hat 21 (nicht
+6) Einzelpunkte — die in §3.1 verwendete „Nr. 1–6"-Zählung war eine grobe
+Näherung des ersten REG-01-Durchgangs. Für alle jetzt geprüften Einträge steht
+die korrekte Nr. im `quelle`-Feld des Katalogs.
 
 ## 6. Verhältnis zu REG-05 (BfArM-Beratungstermin)
 
