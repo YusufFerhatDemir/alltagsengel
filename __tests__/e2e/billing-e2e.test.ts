@@ -103,12 +103,38 @@ function makeTarif(overrides: Partial<BillingTarif> = {}): BillingTarif {
   };
 }
 
+function thenable<T>(result: T) {
+  return {
+    ...result,
+    then: (resolve: (v: T) => void) => Promise.resolve(result).then(resolve),
+  };
+}
+
+/**
+ * Stub fuer erstelleInitialBudgets.
+ *
+ * LIVE-SCHEMA: client_budgets fuehrt GENAU EINE Zeile je Kunde und Jahr,
+ * die beiden Ansprueche stehen als Spalten nebeneinander (annual_amount =
+ * §45b, combined_annual_amount = §42a VP/KZP). Eine Spalte `budget_type`
+ * gibt es live nicht — ein Select darauf antwortet mit 42703. Der Stub
+ * bildet deshalb die Ein-Zeilen-Sicht ab: `.eq().eq().eq().maybeSingle()`.
+ */
 function createBudgetMock(opts: {
-  existingTypes?: string[];
+  /** Bereits vorhandene Budgetzeile fuer Kunde+Jahr, oder null. */
+  vorhanden?: Record<string, unknown> | null;
+  /** Lesefehler der Budgetzeile (fail-closed-Pfad). */
+  leseFehler?: { message: string } | null;
   insertError?: { message: string } | null;
+  updateError?: { message: string } | null;
 } = {}) {
-  const { existingTypes = [], insertError = null } = opts;
-  const inserted: Record<string, unknown>[][] = [];
+  const {
+    vorhanden = null,
+    leseFehler = null,
+    insertError = null,
+    updateError = null,
+  } = opts;
+  const inserted: Record<string, unknown>[] = [];
+  const updated: Array<{ id: string; data: Record<string, unknown> }> = [];
 
   return {
     client: {
@@ -119,31 +145,29 @@ function createBudgetMock(opts: {
             eq: () => ({
               eq: () => ({
                 eq: () => ({
-                  data: existingTypes.map(t => ({ budget_type: t })),
-                  error: null,
-                  then: (fn: any) => fn({
-                    data: existingTypes.map(t => ({ budget_type: t })),
-                    error: null,
+                  maybeSingle: () => thenable({
+                    data: leseFehler ? null : vorhanden,
+                    error: leseFehler,
                   }),
                 }),
               }),
             }),
           }),
-          insert: (rows: Record<string, unknown>[]) => {
-            inserted.push(rows);
+          insert: (row: Record<string, unknown>) => {
+            inserted.push(row);
             return { error: insertError };
           },
+          update: (data: Record<string, unknown>) => ({
+            eq: (_k: string, v: string) => {
+              updated.push({ id: v, data });
+              return { error: updateError };
+            },
+          }),
         };
       },
     } as any,
     inserted,
-  };
-}
-
-function thenable<T>(result: T) {
-  return {
-    ...result,
-    then: (resolve: (v: T) => void) => Promise.resolve(result).then(resolve),
+    updated,
   };
 }
 
@@ -175,24 +199,24 @@ function createCarryoverMock(opts: {
           select: (..._args: any[]) => {
             selectCallCount++;
             const currentCall = selectCallCount;
-            // First select: fetch old budgets (3 .eq() calls)
-            // Subsequent selects: lookup target budget (4 .eq() + .maybeSingle())
-            return {
-              eq: (_k1: string, _v1: any) => ({
-                eq: (_k2: string, _v2: any) => ({
-                  eq: (_k3: string, _v3: any) => {
-                    if (currentCall === 1) {
-                      return thenable({ data: opts.alteBudgets, error: null });
-                    }
-                    return {
-                      eq: (_k4: string, _v4: any) => ({
-                        maybeSingle: () => thenable({ data: existTarget, error: null }),
-                      }),
-                    };
-                  },
-                }),
-              }),
-            };
+            // Erster Select: Vorjahres-Budgets holen — .eq(organization_id)
+            //   .eq(year), danach direkt awaitbar.
+            // Folge-Selects: Ziel-Budget suchen — .eq(client_id)
+            //   .eq(organization_id).eq(year).maybeSingle().
+            // Der Stub ist auf jeder Stufe awaitbar UND weiter verkettbar,
+            // damit eine geaenderte Filter-Reihenfolge im Quellcode nicht
+            // still als „keine Budgets" durchgeht.
+            const stufe = (tiefe: number): any => ({
+              eq: (_k: string, _v: any) => stufe(tiefe + 1),
+              maybeSingle: () => thenable({ data: existTarget, error: null }),
+              then: (resolve: (v: any) => void) =>
+                Promise.resolve(
+                  currentCall === 1
+                    ? { data: opts.alteBudgets, error: null }
+                    : { data: existTarget ? [existTarget] : [], error: null },
+                ).then(resolve),
+            });
+            return stufe(0);
           },
           update: (data: Record<string, unknown>) => ({
             eq: (_k: string, v: string) => {
@@ -232,7 +256,7 @@ function createPriceResolveMock(tarife: BillingTarif[]) {
 // ═══════════════════════════════════════════════════════════════════════════
 
 describe('Szenario 1: Neuer §45b-Kunde → Auto-Budget', () => {
-  it('erstellt Entlastungs- und VP-Budget bei Pflegegrad >= 2 (Jahresbeginn)', async () => {
+  it('erstellt Entlastungs- und VP-Anspruch in EINER Zeile bei Pflegegrad >= 2 (Jahresbeginn)', async () => {
     const mock = createBudgetMock();
     // pgBeginnMonat=1 → voller Jahresbetrag (12 Monate * 131 = 1572)
     const result = await erstelleInitialBudgets(mock.client, CLIENT_1, ORG_A, 2, 1);
@@ -240,21 +264,18 @@ describe('Szenario 1: Neuer §45b-Kunde → Auto-Budget', () => {
     expect(result.erstellt).toBe(true);
     expect(mock.inserted).toHaveLength(1);
 
-    const budgets = mock.inserted[0];
-    expect(budgets).toHaveLength(2);
-
-    const entlastung = budgets.find((b: any) => b.budget_type === 'entlastung') as any;
-    expect(entlastung).toBeTruthy();
-    expect(entlastung.annual_amount).toBe(ENTLASTUNG_JAEHRLICH_EUR); // 12 * 131
-    expect(entlastung.monthly_amount).toBe(ENTLASTUNG_MONATLICH_EUR);
-    expect(entlastung.used_amount).toBe(0);
-    expect(entlastung.carryover_amount).toBe(0);
-    expect(entlastung.organization_id).toBe(ORG_A);
-
-    const vp = budgets.find((b: any) => b.budget_type === 'verhinderungspflege') as any;
-    expect(vp).toBeTruthy();
-    expect(vp.annual_amount).toBe(VP_KZP_KOMBINIERT_EUR);
-    expect(vp.combined_annual_amount).toBe(VP_KZP_KOMBINIERT_EUR);
+    const zeile = mock.inserted[0] as any;
+    // §45b Entlastungsbetrag
+    expect(zeile.annual_amount).toBe(ENTLASTUNG_JAEHRLICH_EUR); // 12 * 131
+    expect(zeile.monthly_amount).toBe(ENTLASTUNG_MONATLICH_EUR);
+    expect(zeile.used_amount).toBe(0);
+    expect(zeile.carryover_amount).toBe(0);
+    expect(zeile.organization_id).toBe(ORG_A);
+    // §42a VP/KZP in derselben Zeile
+    expect(zeile.combined_annual_amount).toBe(VP_KZP_KOMBINIERT_EUR);
+    expect(zeile.combined_used_amount).toBe(0);
+    // Die Spalte gibt es live nicht — sie darf nie mitgeschrieben werden.
+    expect(zeile).not.toHaveProperty('budget_type');
   });
 
   it('PG 1 erhaelt nur Entlastung, kein VP/KZP (minPflegegrad = 2)', async () => {
@@ -262,17 +283,21 @@ describe('Szenario 1: Neuer §45b-Kunde → Auto-Budget', () => {
     const result = await erstelleInitialBudgets(mock.client, CLIENT_1, ORG_A, 1, 1);
 
     expect(result.erstellt).toBe(true);
-    expect(mock.inserted[0]).toHaveLength(1);
-    expect((mock.inserted[0][0] as any).budget_type).toBe('entlastung');
+    expect(mock.inserted).toHaveLength(1);
+    const zeile = mock.inserted[0] as any;
+    expect(zeile.annual_amount).toBe(ENTLASTUNG_JAEHRLICH_EUR);
+    expect(zeile.combined_annual_amount).toBe(0);
   });
 
   it('anteiliges Budget bei unterjährigem PG-Beginn (Monat 7 → 6 Monate)', async () => {
     const mock = createBudgetMock();
     await erstelleInitialBudgets(mock.client, CLIENT_1, ORG_A, 2, 7);
 
-    const entlastung = mock.inserted[0].find((b: any) => b.budget_type === 'entlastung') as any;
-    expect(entlastung.annual_amount).toBe(6 * ENTLASTUNG_MONATLICH_EUR); // 786
-    expect(entlastung.monthly_amount).toBe(ENTLASTUNG_MONATLICH_EUR);
+    const zeile = mock.inserted[0] as any;
+    expect(zeile.annual_amount).toBe(6 * ENTLASTUNG_MONATLICH_EUR); // 786
+    expect(zeile.monthly_amount).toBe(ENTLASTUNG_MONATLICH_EUR);
+    // §42a wird nicht anteilig gekuerzt.
+    expect(zeile.combined_annual_amount).toBe(VP_KZP_KOMBINIERT_EUR);
   });
 
   it('verweigert Budget bei Pflegegrad 0', async () => {
@@ -285,20 +310,37 @@ describe('Szenario 1: Neuer §45b-Kunde → Auto-Budget', () => {
   });
 
   it('ist idempotent bei bereits existierenden Budgets', async () => {
-    const mock = createBudgetMock({ existingTypes: ['entlastung', 'verhinderungspflege'] });
+    const mock = createBudgetMock({
+      vorhanden: {
+        id: 'budget-1',
+        annual_amount: ENTLASTUNG_JAEHRLICH_EUR,
+        monthly_amount: ENTLASTUNG_MONATLICH_EUR,
+        combined_annual_amount: VP_KZP_KOMBINIERT_EUR,
+      },
+    });
     const result = await erstelleInitialBudgets(mock.client, CLIENT_1, ORG_A, 3, 1);
 
     expect(result.erstellt).toBe(false);
     expect(mock.inserted).toHaveLength(0);
+    expect(mock.updated).toHaveLength(0);
   });
 
-  it('legt fehlende Budgets nach (nur VP fehlt)', async () => {
-    const mock = createBudgetMock({ existingTypes: ['entlastung'] });
+  it('legt fehlende Ansprueche nach (nur VP fehlt) statt eine zweite Zeile anzulegen', async () => {
+    const mock = createBudgetMock({
+      vorhanden: {
+        id: 'budget-1',
+        annual_amount: ENTLASTUNG_JAEHRLICH_EUR,
+        monthly_amount: ENTLASTUNG_MONATLICH_EUR,
+        combined_annual_amount: 0,
+      },
+    });
     const result = await erstelleInitialBudgets(mock.client, CLIENT_1, ORG_A, 2, 1);
 
     expect(result.erstellt).toBe(true);
-    expect(mock.inserted[0]).toHaveLength(1);
-    expect((mock.inserted[0][0] as any).budget_type).toBe('verhinderungspflege');
+    expect(mock.inserted).toHaveLength(0);
+    expect(mock.updated).toHaveLength(1);
+    expect(mock.updated[0].id).toBe('budget-1');
+    expect(mock.updated[0].data).toEqual({ combined_annual_amount: VP_KZP_KOMBINIERT_EUR });
   });
 
   it('meldet DB-Fehler korrekt zurueck', async () => {
@@ -307,6 +349,20 @@ describe('Szenario 1: Neuer §45b-Kunde → Auto-Budget', () => {
 
     expect(result.erstellt).toBe(false);
     expect(result.fehler).toBe('unique_violation');
+  });
+
+  // Ein Lesefehler darf nicht als „noch kein Budget" gelten — sonst legt der
+  // naechste Aufruf eine zweite Zeile fuer dasselbe Jahr an.
+  it('legt bei nicht lesbarer Budgetzeile NICHTS an (fail-closed)', async () => {
+    const mock = createBudgetMock({
+      leseFehler: { message: 'column client_budgets.budget_type does not exist' },
+    });
+    const result = await erstelleInitialBudgets(mock.client, CLIENT_1, ORG_A, 2, 1);
+
+    expect(result.erstellt).toBe(false);
+    expect(result.fehler).toContain('does not exist');
+    expect(mock.inserted).toHaveLength(0);
+    expect(mock.updated).toHaveLength(0);
   });
 
   it('Budget-Werte stimmen mit gesetzlichen Grenzen ueberein', () => {
@@ -687,33 +743,31 @@ describe('Szenario 8: VP/KZP kombiniertes Budget', () => {
     expect(VP_JAEHRLICH_EUR + KZP_JAEHRLICH_EUR).toBe(VP_KZP_KOMBINIERT_EUR);
   });
 
-  it('Auto-Budget erstellt VP als combined Budget (ab PG 2)', async () => {
+  it('Auto-Budget schreibt VP in combined_annual_amount (ab PG 2)', async () => {
     const mock = createBudgetMock();
     await erstelleInitialBudgets(mock.client, CLIENT_1, ORG_A, 3, 1);
 
-    const vp = mock.inserted[0].find((b: any) => b.budget_type === 'verhinderungspflege') as any;
-    expect(vp.annual_amount).toBe(VP_KZP_KOMBINIERT_EUR);
-    expect(vp.combined_annual_amount).toBe(VP_KZP_KOMBINIERT_EUR);
-    expect(vp.monthly_amount).toBe(0);
+    const zeile = mock.inserted[0] as any;
+    expect(zeile.combined_annual_amount).toBe(VP_KZP_KOMBINIERT_EUR);
+    // annual_amount bleibt der §45b-Anspruch — VP darf ihn nicht ueberschreiben.
+    expect(zeile.annual_amount).toBe(ENTLASTUNG_JAEHRLICH_EUR);
   });
 
   it('PG 1 erhaelt nur Entlastung, PG 2+ erhaelt auch VP', async () => {
     const mockPg1 = createBudgetMock();
     await erstelleInitialBudgets(mockPg1.client, CLIENT_1, ORG_A, 1, 1);
-    expect(mockPg1.inserted[0]).toHaveLength(1);
-    expect((mockPg1.inserted[0][0] as any).budget_type).toBe('entlastung');
+    expect(mockPg1.inserted).toHaveLength(1);
+    const pg1 = mockPg1.inserted[0] as any;
+    expect(pg1.combined_annual_amount).toBe(0);
 
     const mockPg2 = createBudgetMock();
     await erstelleInitialBudgets(mockPg2.client, CLIENT_2, ORG_A, 2, 1);
-    expect(mockPg2.inserted[0]).toHaveLength(2);
+    expect(mockPg2.inserted).toHaveLength(1);
+    const pg2 = mockPg2.inserted[0] as any;
 
-    const entlPg1 = mockPg1.inserted[0].find((b: any) => b.budget_type === 'entlastung') as any;
-    const entlPg2 = mockPg2.inserted[0].find((b: any) => b.budget_type === 'entlastung') as any;
-    expect(entlPg1.annual_amount).toBe(entlPg2.annual_amount);
-    expect(entlPg1.annual_amount).toBe(ENTLASTUNG_JAEHRLICH_EUR);
-
-    const vpPg2 = mockPg2.inserted[0].find((b: any) => b.budget_type === 'verhinderungspflege') as any;
-    expect(vpPg2.annual_amount).toBe(VP_KZP_KOMBINIERT_EUR);
+    expect(pg1.annual_amount).toBe(pg2.annual_amount);
+    expect(pg1.annual_amount).toBe(ENTLASTUNG_JAEHRLICH_EUR);
+    expect(pg2.combined_annual_amount).toBe(VP_KZP_KOMBINIERT_EUR);
   });
 });
 
@@ -750,7 +804,8 @@ describe('Szenario 9: Cross-Tenant-Isolation', () => {
     const mock = createBudgetMock();
     await erstelleInitialBudgets(mock.client, CLIENT_1, ORG_A, 2);
 
-    for (const row of mock.inserted[0]) {
+    expect(mock.inserted).toHaveLength(1);
+    for (const row of mock.inserted) {
       expect((row as any).organization_id).toBe(ORG_A);
     }
   });

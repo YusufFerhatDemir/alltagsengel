@@ -81,9 +81,30 @@ describe('D2: pruefeBudget VP-Unterstützung', () => {
     expect(src).toContain("budgetTyp: BudgetTyp = 'entlastung'")
   })
 
-  it('filtert nach budget_type', () => {
+  // Live gibt es die Spalte client_budgets.budget_type NICHT (Migration
+  // 20260831020000_d2_vp_budget.sql ist nicht angewendet; PostgREST antwortet
+  // auf ein Select mit 42703). Ein Filter darauf ließ die Abfrage scheitern,
+  // was wie „kein Budget hinterlegt" aussah und die Prüfung fail-open
+  // durchlaufen ließ. Der Budgettyp steckt in den Spalten, nicht in Zeilen.
+  it('filtert NICHT nach der live fehlenden Spalte budget_type', () => {
+    // Ohne Kommentare pruefen: die Datei erklaert den Fallstrick im Fliesstext
+    // und wuerde sonst an der eigenen Warnung scheitern.
+    const code = read('lib/personal/einsatzfreigabe.ts')
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      .replace(/^\s*\/\/.*$/gm, '')
+    expect(code).not.toContain("eq('budget_type'")
+    expect(code).not.toContain("select('budget_type")
+  })
+
+  it('unterscheidet die Budgettypen über die Spalten statt über Zeilen', () => {
     const src = read('lib/personal/einsatzfreigabe.ts')
-    expect(src).toContain(".eq('budget_type', budgetTyp)")
+    expect(src).toContain('combined_annual_amount')
+    expect(src).toContain('combined_used_amount')
+  })
+
+  it('blockiert fail-closed, wenn die Budgetzeile nicht lesbar ist', () => {
+    const src = read('lib/personal/einsatzfreigabe.ts')
+    expect(src).toContain('FAIL-CLOSED')
   })
 
   it('verwendet VP_KZP_KOMBINIERT_EUR als Default für VP (§42a gemeinsamer Jahresbetrag)', () => {

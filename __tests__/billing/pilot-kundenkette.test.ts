@@ -58,10 +58,13 @@ interface Tabellen {
  * aus der Datenbank zurück in die grünen Tests.
  */
 const LIVE_SPALTEN: Record<keyof Tabellen, string[]> = {
+  // care_level ist die führende Pflegegrad-Spalte; `pflegegrad` existiert
+  // zwar, ist bei Bestandskunden aber NULL. Beide am 14.08.2026 per
+  // PostgREST belegt (care_level → 200 mit Wert, pflegegrad → 200 mit null).
   clients: [
     'id', 'client_id', 'first_name', 'last_name', 'geburtsdatum', 'date_of_birth',
-    'address', 'zip_code', 'city', 'phone', 'email', 'pflegegrad', 'pflegekasse_name',
-    'organization_id', 'status', 'created_at',
+    'address', 'zip_code', 'city', 'phone', 'email', 'care_level', 'pflegegrad',
+    'pflegekasse_name', 'organization_id', 'status', 'created_at',
   ],
   // KEIN budget_type: die Migration 20260831020000_d2_vp_budget.sql, die die
   // Spalte einführen würde, ist auf Produktion nicht angewendet.
