@@ -125,11 +125,15 @@ export async function POST(
       verwendungszweck: `Rechnung ${rechnungsnummer}`,
       notes: (body.notes as string) || undefined,
       actorId: user.id,
+      // Kein Auto-Matching: zugeordnet wird ausschliesslich hier, explizit auf
+      // diese Rechnung. Mit Auto-Matching hat createPayment die Zahlung bei
+      // einer Vollzahlung selbst zugeordnet (Verwendungszweck traegt die
+      // Rechnungsnummer = 50 Punkte, Betrag passt = 30 Punkte, Schwelle 70),
+      // und die folgende explizite Zuordnung scheiterte dann an der
+      // Ueberzahlungspruefung — HTTP 500 bei korrekt verbuchter Zahlung.
+      autoMatch: false,
     })
 
-    // createPayment laeuft durch das Auto-Matching und kann bereits einen
-    // Vorschlag erzeugt haben — zugeordnet wird aber ausschliesslich hier,
-    // explizit auf diese Rechnung.
     await allocatePayment(admin, {
       paymentId: payment.paymentId,
       allocations: [{ invoiceId: invoice.id, amountCents }],

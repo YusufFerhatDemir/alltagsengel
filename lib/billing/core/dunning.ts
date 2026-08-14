@@ -192,9 +192,24 @@ export async function advanceDunning(
 
   const now = new Date()
   const heuteStr = heuteBerlin()
-  const nextDays = DUNNING_DAYS[DUNNING_LEVEL_ORDER[Math.min(currentIdx + 2, DUNNING_LEVEL_ORDER.length - 1)]]
+
+  // Wiedervorlage = Abstand zur NÄCHSTEN Stufe.
+  //
+  // 'bezahlt' steht am Ende von DUNNING_LEVEL_ORDER, hat aber DUNNING_DAYS = 0
+  // und ist keine Eskalationsstufe. Ohne die Abgrenzung lieferte der Blick
+  // zwei Stufen weiter bei 'letzte_mahnung' → 'inkasso_vorbereitung' den Wert
+  // 0 − 70 = −70 Tage und setzte next_dunning_at 70 Tage in die
+  // VERGANGENHEIT. Fachlich harmlos (inkasso_vorbereitung ist die höchste
+  // automatische Stufe), in der Mahnliste aber eine falsche Fälligkeit.
+  const folgeIdx = currentIdx + 2
+  const naechsteStufe = folgeIdx <= DUNNING_LEVEL_ORDER.length - 2
+    ? DUNNING_LEVEL_ORDER[folgeIdx]
+    : null
+  const abstandTage = naechsteStufe
+    ? Math.max(0, DUNNING_DAYS[naechsteStufe] - DUNNING_DAYS[newLevel])
+    : 0
   const nextDate = new Date(now)
-  nextDate.setDate(nextDate.getDate() + (nextDays - DUNNING_DAYS[newLevel]))
+  nextDate.setDate(nextDate.getDate() + abstandTage)
 
   const dueDateStr = entry.due_date || heuteStr
   const dueMs = new Date(dueDateStr + 'T00:00:00+01:00').getTime()

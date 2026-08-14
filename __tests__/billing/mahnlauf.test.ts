@@ -298,3 +298,73 @@ describe('runDunningRun — dryRun', () => {
     expect(mockLogBillingAction).not.toHaveBeenCalled()
   })
 })
+
+// ═══════════════════════════════════════════════════════════════
+// Agent 2 / E2E-Nutzerworkflow — Schritt 14 „Mahnwesen, 5 Stufen"
+// ═══════════════════════════════════════════════════════════════
+
+describe('Mahnleiter — die geforderten 5 Stufen', () => {
+  it('hält die Fristen 14 / 28 / 42 / 56 / 70 ein', () => {
+    expect(DUNNING_DAYS.erinnerung).toBe(14)
+    expect(DUNNING_DAYS.mahnung_1).toBe(28)
+    expect(DUNNING_DAYS.mahnung_2).toBe(42)
+    expect(DUNNING_DAYS.letzte_mahnung).toBe(56)
+    expect(DUNNING_DAYS.inkasso_vorbereitung).toBe(70)
+  })
+
+  it('läuft die Leiter Stufe für Stufe durch — ein Schritt je Lauf', async () => {
+    // 200 Tage Verzug: die Frist JEDER Stufe ist erreicht. Trotzdem darf pro
+    // Lauf nur eine Stufe fallen — eine Mahnung muss beim Kunden gewesen sein,
+    // bevor die nächste rausgeht.
+    const store = emptyStore([invoice({ due_date: '2026-01-25' })])
+    const db = makeDb(store)
+    const erreicht: string[] = []
+
+    for (let lauf = 0; lauf < 6; lauf++) {
+      // Karenz für den nächsten Lauf zurücksetzen: in echt liegen zwischen
+      // den Läufen Tage, hier laufen sie am selben fixierten "heute".
+      for (const d of store.dunning_entries) d.next_dunning_at = null
+      const r = await runDunningRun(db, ORG, ACTOR)
+      if (r.eskaliert.length > 0) erreicht.push(r.eskaliert[0].toLevel)
+    }
+
+    expect(erreicht).toEqual([
+      'erinnerung', 'mahnung_1', 'mahnung_2', 'letzte_mahnung', 'inkasso_vorbereitung',
+    ])
+    // Der sechste Lauf findet die Höchststufe und lässt sie stehen.
+    expect(store.invoices[0].dunning_level).toBe('inkasso_vorbereitung')
+  })
+
+  it('setzt die Wiedervorlage nie in die Vergangenheit', async () => {
+    // Befund: der Blick "zwei Stufen weiter" traf bei letzte_mahnung auf
+    // 'bezahlt' (DUNNING_DAYS 0) und ergab 0 − 56 = −56 Tage.
+    const store = emptyStore(
+      [invoice({ due_date: '2026-01-25' })],
+      [{
+        id: 'd1', invoice_id: 'inv-1', organization_id: ORG,
+        dunning_level: 'letzte_mahnung', due_date: '2026-01-25',
+        next_dunning_at: null, dunning_fee_cents: 0,
+      }],
+    )
+    const r = await runDunningRun(makeDb(store), ORG, ACTOR)
+
+    expect(r.eskaliert[0].toLevel).toBe('inkasso_vorbereitung')
+    expect(store.dunning_entries[0].next_dunning_at >= '2026-08-13').toBe(true)
+  })
+
+  it('staffelt die Mahngebühren aufsteigend', async () => {
+    const store = emptyStore([invoice({ due_date: '2026-01-25' })])
+    const db = makeDb(store)
+    const gebuehren: number[] = []
+
+    for (let lauf = 0; lauf < 5; lauf++) {
+      for (const d of store.dunning_entries) d.next_dunning_at = null
+      const r = await runDunningRun(db, ORG, ACTOR)
+      if (r.eskaliert.length > 0) gebuehren.push(r.eskaliert[0].feeCents)
+    }
+
+    // Zahlungserinnerung bleibt gebührenfrei, danach steigt es.
+    expect(gebuehren).toEqual([0, 250, 500, 750, 1000])
+    expect(store.dunning_entries[0].dunning_fee_cents).toBe(2500)
+  })
+})
