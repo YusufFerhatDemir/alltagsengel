@@ -31,6 +31,22 @@ function getResend(): Resend | null {
   return new Resend(key)
 }
 
+/**
+ * HTML-Escaping fuer alles, was aus Nutzereingaben stammt (Namen,
+ * Leistungsbezeichnung, Ablehnungsgrund). Ohne das kann ein Nutzer ueber
+ * seinen eigenen first_name oder einen Freitext-Ablehnungsgrund HTML in
+ * E-Mails injizieren, die unter der Alltagsengel-Absenderadresse an
+ * ANDERE Nutzer verschickt werden (Phishing-Risiko trotz legitimen
+ * Absenders). Gleiches Muster wie esc() in lib/emails/coach-bestellung.ts.
+ */
+function esc(s: string): string {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+}
+
 // ─── In-App Notification ───
 export async function createNotification(
   supabase: SupabaseClient,
@@ -114,15 +130,15 @@ export async function notifyAngelNewBooking(
   if (profile?.email) {
     await sendEmailNotification(
       profile.email,
-      profile.first_name || 'Engel',
+      esc(profile.first_name || 'Engel'),
       `Neue Buchungsanfrage von ${data.customerName}`,
       `
         <p>Sie haben eine neue Buchungsanfrage erhalten:</p>
         <table style="width:100%;border-collapse:collapse;margin:16px 0;">
-          <tr><td style="padding:8px 12px;border-bottom:1px solid #eee;color:#888;width:120px;">Kunde</td><td style="padding:8px 12px;border-bottom:1px solid #eee;font-weight:600;">${data.customerName}</td></tr>
-          <tr><td style="padding:8px 12px;border-bottom:1px solid #eee;color:#888;">Leistung</td><td style="padding:8px 12px;border-bottom:1px solid #eee;">${data.service}</td></tr>
+          <tr><td style="padding:8px 12px;border-bottom:1px solid #eee;color:#888;width:120px;">Kunde</td><td style="padding:8px 12px;border-bottom:1px solid #eee;font-weight:600;">${esc(data.customerName)}</td></tr>
+          <tr><td style="padding:8px 12px;border-bottom:1px solid #eee;color:#888;">Leistung</td><td style="padding:8px 12px;border-bottom:1px solid #eee;">${esc(data.service)}</td></tr>
           <tr><td style="padding:8px 12px;border-bottom:1px solid #eee;color:#888;">Datum</td><td style="padding:8px 12px;border-bottom:1px solid #eee;">${dateStr}</td></tr>
-          <tr><td style="padding:8px 12px;border-bottom:1px solid #eee;color:#888;">Uhrzeit</td><td style="padding:8px 12px;border-bottom:1px solid #eee;">${data.time} Uhr</td></tr>
+          <tr><td style="padding:8px 12px;border-bottom:1px solid #eee;color:#888;">Uhrzeit</td><td style="padding:8px 12px;border-bottom:1px solid #eee;">${esc(data.time)} Uhr</td></tr>
           <tr><td style="padding:8px 12px;border-bottom:1px solid #eee;color:#888;">Dauer</td><td style="padding:8px 12px;border-bottom:1px solid #eee;">${data.duration} Stunden</td></tr>
           <tr><td style="padding:8px 12px;color:#888;">Betrag</td><td style="padding:8px 12px;font-weight:600;">${data.amount.toFixed(2)}€</td></tr>
         </table>
@@ -187,15 +203,15 @@ export async function notifyCustomerBookingAccepted(
   if (profile?.email) {
     await sendEmailNotification(
       profile.email,
-      profile.first_name || 'Kunde',
+      esc(profile.first_name || 'Kunde'),
       `${data.angelName} hat Ihre Buchung bestätigt`,
       `
         <p>Gute Nachrichten! Ihr Termin wurde bestätigt:</p>
         <table style="width:100%;border-collapse:collapse;margin:16px 0;">
-          <tr><td style="padding:8px 12px;border-bottom:1px solid #eee;color:#888;width:120px;">Engel</td><td style="padding:8px 12px;border-bottom:1px solid #eee;font-weight:600;">${data.angelName}</td></tr>
-          <tr><td style="padding:8px 12px;border-bottom:1px solid #eee;color:#888;">Leistung</td><td style="padding:8px 12px;border-bottom:1px solid #eee;">${data.service}</td></tr>
+          <tr><td style="padding:8px 12px;border-bottom:1px solid #eee;color:#888;width:120px;">Engel</td><td style="padding:8px 12px;border-bottom:1px solid #eee;font-weight:600;">${esc(data.angelName)}</td></tr>
+          <tr><td style="padding:8px 12px;border-bottom:1px solid #eee;color:#888;">Leistung</td><td style="padding:8px 12px;border-bottom:1px solid #eee;">${esc(data.service)}</td></tr>
           <tr><td style="padding:8px 12px;border-bottom:1px solid #eee;color:#888;">Datum</td><td style="padding:8px 12px;border-bottom:1px solid #eee;">${dateStr}</td></tr>
-          <tr><td style="padding:8px 12px;border-bottom:1px solid #eee;color:#888;">Uhrzeit</td><td style="padding:8px 12px;border-bottom:1px solid #eee;">${data.time} Uhr</td></tr>
+          <tr><td style="padding:8px 12px;border-bottom:1px solid #eee;color:#888;">Uhrzeit</td><td style="padding:8px 12px;border-bottom:1px solid #eee;">${esc(data.time)} Uhr</td></tr>
           <tr><td style="padding:8px 12px;border-bottom:1px solid #eee;color:#888;">Dauer</td><td style="padding:8px 12px;border-bottom:1px solid #eee;">${data.duration} Stunden</td></tr>
           <tr><td style="padding:8px 12px;color:#888;">Betrag</td><td style="padding:8px 12px;font-weight:600;">${data.amount.toFixed(2)}€</td></tr>
         </table>
@@ -264,16 +280,16 @@ export async function notifyCustomerBookingDeclined(
   if (profile?.email) {
     await sendEmailNotification(
       profile.email,
-      profile.first_name || 'Kunde',
+      esc(profile.first_name || 'Kunde'),
       `Ihre Anfrage vom ${dateStr} konnte nicht angenommen werden`,
       `
-        <p>leider kann ${data.angelName} Ihre Anfrage nicht annehmen:</p>
+        <p>leider kann ${esc(data.angelName)} Ihre Anfrage nicht annehmen:</p>
         <table style="width:100%;border-collapse:collapse;margin:16px 0;">
-          <tr><td style="padding:8px 12px;border-bottom:1px solid #eee;color:#888;width:120px;">Leistung</td><td style="padding:8px 12px;border-bottom:1px solid #eee;">${data.service}</td></tr>
+          <tr><td style="padding:8px 12px;border-bottom:1px solid #eee;color:#888;width:120px;">Leistung</td><td style="padding:8px 12px;border-bottom:1px solid #eee;">${esc(data.service)}</td></tr>
           <tr><td style="padding:8px 12px;border-bottom:1px solid #eee;color:#888;">Datum</td><td style="padding:8px 12px;border-bottom:1px solid #eee;">${dateStr}</td></tr>
-          <tr><td style="padding:8px 12px;color:#888;">Uhrzeit</td><td style="padding:8px 12px;">${data.time} Uhr</td></tr>
+          <tr><td style="padding:8px 12px;color:#888;">Uhrzeit</td><td style="padding:8px 12px;">${esc(data.time)} Uhr</td></tr>
         </table>
-        ${reason ? `<p style="color:#666;">Begründung: ${reason}</p>` : ''}
+        ${reason ? `<p style="color:#666;">Begründung: ${esc(reason)}</p>` : ''}
         <p>Das ist kein Problem — es stehen weitere Engel in Ihrer Nähe zur Verfügung. Suchen Sie einfach einen neuen Termin aus.</p>
         <a href="https://alltagsengel.care/kunde/home" style="display:inline-block;padding:12px 28px;background:#C9963C;color:#1A1612;text-decoration:none;border-radius:10px;font-weight:600;margin-top:8px;">Anderen Engel finden</a>
       `
