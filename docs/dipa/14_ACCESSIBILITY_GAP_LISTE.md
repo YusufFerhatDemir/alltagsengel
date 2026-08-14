@@ -60,6 +60,25 @@ den manuellen Durchgang — „ob eine Ansage verständlich ist, kann keine
 Maschine beurteilen" (wörtlich aus
 `audit/dipa/gebrauchstauglichkeit_durchfuehrungsplan.md`).
 
+### 2a. Ergänzender Accessibility-Tree-Durchgang (14.08.2026, kein Screenreader-Ersatz)
+
+Zusätzlich zur automatisierten Suite wurde der Chromium-Accessibility-Baum von
+`/pflegecoach/start` und `/pflegecoach/anfrage` gelesen (kein echtes
+VoiceOver/NVDA — nur der Baum, den ein Screenreader konsumieren würde).
+**Ausdrückliche Grenze:** keine Prüfung von Ansage-Timing, Sprachausgabe oder
+Live-Region-Verhalten — dafür braucht es die echte Software.
+
+Ergebnis: Struktur (Landmarks, Überschriftenhierarchie, Formular-Label über
+`label[for]` **und** implizite Label-Wrapping bei Radios/Checkbox) ist im Baum
+korrekt abgebildet. **Ein konkreter Prüfpunkt für den manuellen Durchgang**:
+Im gelesenen Baum erscheint bei den Radiobuttons und der Checkbox auf
+`/pflegecoach/anfrage` als Kennung der rohe `value`/Zustand (z. B.
+`radio "fuer_mich"`, `checkbox "on"`) statt des sichtbaren Label-Texts (z. B.
+„Für mich selbst"). Ob das ein Artefakt des Inspektionswerkzeugs ist oder die
+tatsächlich vorgelesene Ansage betrifft, lässt sich nur mit echter
+Screenreader-Software klären — deshalb hier nicht als Befund gewertet, sondern
+als **erster zu prüfender Punkt** für den Durchgang aus §3.3 vermerkt.
+
 ## 3. Was fehlt
 
 ### 3.1 BITV-Test — EXTERN_BENÖTIGT

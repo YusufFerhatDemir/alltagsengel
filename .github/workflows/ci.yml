@@ -82,3 +82,56 @@ jobs:
           # V8-Heap reicht knapp nicht — mit mehr Headroom auf GH-Runnern.
           NODE_OPTIONS: '--max-old-space-size=4096'
         run: npm run build
+
+  e2e:
+    name: E2E — PflegeCoach-Produktbereich (DiPA-Matrix QS-05)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies (npm ci)
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npm run test:e2e:install
+
+      - name: Production build
+        env:
+          NODE_OPTIONS: '--max-old-space-size=4096'
+        run: npm run build
+
+      - name: Start server
+        # Placeholder-Supabase-URL genügt: die getestete Suite läuft
+        # ausdrücklich ohne Anmeldung (siehe Kommentar in
+        # e2e/pflegecoach.spec.ts). requireCoachSession() behandelt jeden
+        # Fehler von supabase.auth.getUser() — auch eine nicht auflösbare
+        # Placeholder-Domain — als „nicht angemeldet" (401), fail-closed
+        # nach lib/coach/api-auth.ts.
+        run: |
+          npm run start -- -p 3000 &
+          for i in $(seq 1 60); do
+            curl -sf http://localhost:3000/pflegecoach/start -o /dev/null && exit 0
+            sleep 1
+          done
+          echo "Server kam nach 60s nicht hoch." >&2
+          exit 1
+
+      - name: Run E2E suite
+        env:
+          PLAYWRIGHT_BASE_URL: http://localhost:3000
+        run: npx playwright test e2e/pflegecoach.spec.ts
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 14
