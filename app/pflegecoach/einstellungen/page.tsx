@@ -95,6 +95,12 @@ export default function EinstellungenSeite() {
               <strong>{CONSENT_LABELS[typ]}</strong>
               <br />
               <span className="pc-lead">{aktiv(typ) ? 'Erteilt' : 'Nicht erteilt'}</span>
+              {typ === 'datenfreigabe' && (
+                <>
+                  <br />
+                  <Link href="/pflegecoach/einstellungen/freigaben">Freigaben für einzelne Personen verwalten</Link>
+                </>
+              )}
             </div>
             <button
               type="button"
