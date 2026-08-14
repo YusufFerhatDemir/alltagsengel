@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { PDFDocument, StandardFonts, rgb, type PDFPage, type PDFFont } from 'pdf-lib'
+import { PDFDocument, rgb, type PDFPage, type PDFFont } from 'pdf-lib'
 import { readFile } from 'fs/promises'
 import { join } from 'path'
 import { createClient } from '@/lib/supabase/server'
@@ -221,16 +221,11 @@ export async function GET(request: Request) {
     // DejaVuSans für türkische/deutsche Zeichen (ğ, ş, ç, İ, ö, ü, ä, ß)
     let fontRegular: PDFFont
     let fontBold: PDFFont
-    try {
-      const fontsDir = join(process.cwd(), 'public', 'fonts')
-      const regularBytes = await readFile(join(fontsDir, 'DejaVuSans.ttf'))
-      const boldBytes = await readFile(join(fontsDir, 'DejaVuSans-Bold.ttf'))
-      fontRegular = await pdfDoc.embedFont(regularBytes)
-      fontBold = await pdfDoc.embedFont(boldBytes)
-    } catch {
-      fontRegular = await pdfDoc.embedFont(StandardFonts.Helvetica)
-      fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold)
-    }
+    const fontsDir = join(process.cwd(), 'public', 'fonts')
+    const regularBytes = await readFile(join(fontsDir, 'DejaVuSans.ttf'))
+    const boldBytes = await readFile(join(fontsDir, 'DejaVuSans-Bold.ttf'))
+    fontRegular = await pdfDoc.embedFont(regularBytes)
+    fontBold = await pdfDoc.embedFont(boldBytes)
 
     // Darf dieser Nachweis wie ein einreichbarer Kassennachweis aussehen?
     // Massgeblich ist das Bundesland des Klienten (PLZ) und dessen
