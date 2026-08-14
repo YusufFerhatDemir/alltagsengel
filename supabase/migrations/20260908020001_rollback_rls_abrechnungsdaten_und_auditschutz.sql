@@ -44,10 +44,6 @@ DROP POLICY IF EXISTS sr_audit_insert ON public.service_record_audit_log;
 CREATE POLICY sr_audit_insert ON public.service_record_audit_log
   FOR INSERT TO authenticated WITH CHECK (true);
 
-DROP POLICY IF EXISTS angel_availability_select ON public.angel_availability;
-CREATE POLICY angel_availability_select ON public.angel_availability
-  FOR SELECT TO authenticated USING (true);
-
 CREATE OR REPLACE FUNCTION public.prevent_finalized_service_record_mutation()
 RETURNS trigger
 LANGUAGE plpgsql
