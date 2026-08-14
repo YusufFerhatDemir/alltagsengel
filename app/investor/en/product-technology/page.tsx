@@ -183,7 +183,7 @@ export default function ProductTechnologyPage() {
           <strong>Encryption:</strong> TLS 1.3 for all data in transit; AES-256 encryption for sensitive data at rest
         </BulletItem>
         <BulletItem icon="🔑">
-          <strong>Authentication:</strong> OAuth 2.0 + JWT; secure password storage with bcrypt; MFA planned for Q1 2027
+          <strong>Authentication:</strong> OAuth 2.0 + JWT; secure password storage with bcrypt; optional TOTP two-factor authentication available (enforced server-side once a user enables it); mandatory rollout not yet decided
         </BulletItem>
         <BulletItem icon="📋">
           <strong>Row-Level Security (RLS):</strong> Database-level access control; users can only access their own data
@@ -195,7 +195,7 @@ export default function ProductTechnologyPage() {
           <strong>Audit Logging:</strong> Comprehensive activity logs for compliance audits and security investigations
         </BulletItem>
         <BulletItem icon="👨‍⚖️">
-          <strong>Data Protection Officer (DPO):</strong> Planned hire in Year 1; DPIA (Data Protection Impact Assessment) completed for high-risk processing
+          <strong>Data Protection Officer (DPO):</strong> Planned hire in Year 1; DPIA (Data Protection Impact Assessment) drafted for high-risk processing — external legal review still pending
         </BulletItem>
       </Card>
 
