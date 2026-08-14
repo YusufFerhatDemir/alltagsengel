@@ -64,10 +64,17 @@ test.describe('PflegeCoach — Erreichbarkeit und Zugangsschutz', () => {
   }
 
   test('DiPA-Seiten sind ohne den Schalter nicht vorhanden', async ({ page }) => {
-    // COACH_DIPA_MODUS=false → /pflegecoach/anspruch existiert nicht.
-    // Schlägt dieser Test fehl, steht eine Kassen-Oberfläche live.
-    const antwort = await page.goto('/pflegecoach/anspruch')
-    expect(antwort?.status()).toBe(404)
+    // COACH_DIPA_MODUS=false → app/pflegecoach/anspruch/page.tsx wirft
+    // redirect('/pflegecoach') (kein 404 — das ist der reguläre Next.js-Weg,
+    // eine Seite serverseitig unerreichbar zu machen, siehe GESCHUETZT oben).
+    // Schlägt dieser Test fehl, wird tatsächlich die Kassen-Oberfläche
+    // (AnspruchClient) ausgeliefert.
+    await page.goto('/pflegecoach/anspruch')
+    await page.waitForURL(/\/pflegecoach\/start/, { timeout: 15000 })
+    const text = await page.locator('body').innerText()
+    expect(text, 'Kassen-Oberfläche (Anspruchsprüfung) ist trotz COACH_DIPA_MODUS=false erreichbar').not.toMatch(
+      /Anspruchsprüfung|Pflegegrad.*beantragt|nutzungDurch/i
+    )
   })
 
   test('Produkt-APIs antworten ohne Anmeldung mit 401', async ({ request }) => {
@@ -86,6 +93,11 @@ test.describe('PflegeCoach — Erreichbarkeit und Zugangsschutz', () => {
 test.describe('PflegeCoach — Zweckbestimmung und Produktgrenze', () => {
   test('Startseite trägt die Negativabgrenzung sichtbar', async ({ page }) => {
     await page.goto('/pflegecoach/start')
+    // /start ist eine Client-Komponente: Sie zeigt zuerst <CoachLaden />
+    // ("Wird geladen …"), bis der Profil-Check (useEffect → /api/coach/profil)
+    // zurück ist. Ohne diese Wartestelle liest innerText() zuverlässig nur
+    // den Ladezustand statt der Zweckbestimmung.
+    await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
     const text = await page.locator('body').innerText()
     expect(text).toMatch(/kein Medizinprodukt/i)
   })
@@ -99,6 +111,7 @@ test.describe('PflegeCoach — Zweckbestimmung und Produktgrenze', () => {
     ]
     for (const seite of OEFFENTLICH) {
       await page.goto(seite.pfad)
+      await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
       const text = await page.locator('body').innerText()
       for (const muster of verboten) {
         expect(text, `${seite.pfad} enthält eine unzulässige Aussage (${muster})`).not.toMatch(muster)
@@ -157,7 +170,16 @@ test.describe('PflegeCoach — Struktur der Barrierefreiheit', () => {
 
   test('Bedienelemente erreichen die Mindestgröße von 44 Pixeln', async ({ page }) => {
     await page.goto('/pflegecoach/start')
-    const knoepfe = page.locator('button:visible, a.pc-btn:visible')
+    // Erst warten, bis der Ladezustand vorbei ist und alle Netzwerk-Requests
+    // (u. a. der Tarife-Abruf in Preise()) sowie CSS/Fonts fertig sind —
+    // sonst werden Knöpfe in einem Zwischenzustand vermessen (z. B. vor
+    // Anwendung von min-height, was fälschlich als zu kleines Ziel auffällt).
+    await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
+    await page.waitForLoadState('networkidle')
+    // Nur Produkt-Bedienelemente (.pc-btn) — ein ungefiltertes `button:visible`
+    // trifft im Dev-Modus zusätzlich Next.js' eigenen Dev-Tools-Button
+    // (#next-logo, 32×32px, kein Produktbestandteil, existiert im Build nicht).
+    const knoepfe = page.locator('button.pc-btn:visible, a.pc-btn:visible')
     const anzahl = await knoepfe.count()
     expect(anzahl).toBeGreaterThan(0)
     for (let i = 0; i < anzahl; i++) {
@@ -177,9 +199,13 @@ test.describe('PflegeCoach — Struktur der Barrierefreiheit', () => {
       const id = await feld.getAttribute('id')
       const ariaLabel = await feld.getAttribute('aria-label')
       const ariaBy = await feld.getAttribute('aria-labelledby')
-      const hatLabel = id ? (await page.locator(`label[for="${id}"]`).count()) > 0 : false
+      const hatLabelFor = id ? (await page.locator(`label[for="${id}"]`).count()) > 0 : false
+      // Radios/Checkboxes hier sind implizit beschriftet: <label><input/>Text</label>
+      // ohne eigene id. Das ist gültiges, zugängliches HTML (WCAG 1.3.1/4.1.2) —
+      // die Prüfung muss auch diese Form akzeptieren, nicht nur label[for].
+      const hatUmschließendesLabel = await feld.evaluate(el => el.closest('label') !== null)
       expect(
-        hatLabel || Boolean(ariaLabel) || Boolean(ariaBy),
+        hatLabelFor || hatUmschließendesLabel || Boolean(ariaLabel) || Boolean(ariaBy),
         `Feld ${id ?? i} hat keine Beschriftung`
       ).toBe(true)
     }

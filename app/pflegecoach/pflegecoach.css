@@ -30,6 +30,16 @@
   font-family: 'Jost', 'Segoe UI', system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   color-scheme: light;
+  /* Das globale Marketing-body ist für die Phone-Mockup-Seiten
+     `display:flex; justify-content:center` (app/globals.css) — ohne
+     Gegenmaßnahme macht das aus .pc-root ein Flex-Item, das nicht unter
+     die Min-Content-Breite seiner Kinder (u. a. .pc-nav mit
+     white-space:nowrap-Links) schrumpft. Auf schmalen Viewports wird
+     Inhalt dann nicht nur gescrollt, sondern durch body's overflow-x:hidden
+     unerreichbar abgeschnitten (WCAG 1.4.10 Reflow). width:100% + min-width:0
+     lässt .pc-root wie einen normalen Block auf die Viewportbreite schrumpfen. */
+  width: 100%;
+  min-width: 0;
 }
 
 /* Kontrastmodus: noch härtere Kontraste, keine Grautöne */
