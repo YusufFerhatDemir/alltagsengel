@@ -186,6 +186,14 @@ const OHNE_EINWILLIGUNGSPRUEFUNG: Record<string, string> = {
     'Einwilligung geprüft werden könnte. Die Authentizität wird stattdessen über die ' +
     'Stripe-Signatur (COACH_STRIPE_WEBHOOK_SECRET) sichergestellt; verarbeitet werden nur ' +
     'Vertrags- und Zahlungsdaten, keine Gesundheitsdaten.',
+  'app/api/coach/freigaben/route.ts:POST':
+    'Prüft die Einwilligung manuell und gezielter als die generische ' +
+    "schreibzugriff:true-Prüfung: hatAktiveEinwilligung(consents, 'datenfreigabe') verlangt " +
+    'die spezifische Datenfreigabe-Einwilligung, nicht nur irgendeine.',
+  'app/api/coach/freigaben/[id]/route.ts:PATCH':
+    'Widerruft eine erteilte Freigabe — wie bei loeschung/route.ts:DELETE muss das gerade ' +
+    'nach einem Widerruf der allgemeinen Einwilligung möglich bleiben, sonst käme ein ' +
+    'Nutzer aus einer bereits erteilten Freigabe nicht mehr heraus.',
 }
 
 test('jede schreibende Coach-Route prüft die Pflicht-Einwilligung', () => {

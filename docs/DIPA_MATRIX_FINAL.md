@@ -1,6 +1,13 @@
 # DiPA-Matrix — Digitaler PflegeCoach
 
-**Stand:** 2026-08-14 (aktualisiert nach BF-03-axe-Durchgang und REG-01-Aufschlüsselung) · **Produktversion:** 0.5.0 · **Betriebsmodus:** `COACH_DIPA_MODUS=false`
+**Stand:** 2026-08-14 (Phase 4 Reverify — Zahlen in diesem Kopf aktualisiert, Tabellen unten teils veraltet) · **Produktversion:** 0.5.0 · **Betriebsmodus:** `COACH_DIPA_MODUS=false`
+
+> **Aktuellster Stand:** `docs/dipa/18_PHASE4_REVERIFY_2026-08-14.md` — vollständige
+> 48-Punkte-Tabelle mit Primärquellen (DiPAV-Volltext inkl. Anlage 1+2, BfArM-DiPA-Leitfaden
+> v1.3, MDR). Die Tabellen weiter unten in diesem Dokument stammen aus einem früheren
+> Durchgang und enthalten teils überholte Angaben (u. a. BF-01 zitierte fälschlich EN
+> 301 549/WCAG statt der tatsächlich einschlägigen DIN EN ISO 9241-171). Für belastbare
+> Einzelaussagen den Phase-4-Reverify verwenden, nicht diese Tabellen.
 
 ## Wozu dieses Dokument
 
@@ -55,9 +62,11 @@ Die verbindlichen Anforderungen stehen in DiPAV/SGB XI, im BfArM-Leitfaden und i
 BSI TR-03161 — in der zum Antragszeitpunkt gültigen Fassung. Die Formulierungen in
 dieser Matrix sind **Arbeitsfassungen**, keine Zitate. `lib/coach/anforderungskatalog.ts`
 führt dafür pro Eintrag das Flag `anforderungstextGeprueft`; ein Eintrag zählt dort
-erst als erfüllt, wenn jemand den Originaltext dagegen gehalten hat. **Aktuell sind
-43 von 48 Einträgen ungeprüft; die belastbare Quote liegt damit bei 6 %.** Vor
-Antragstellung ist der komplette Katalog gegen die Originaldokumente zu prüfen —
+erst als erfüllt, wenn jemand den Originaltext dagegen gehalten hat. **Stand 14.08.2026
+(Phase 4) sind 36 von 48 Einträgen geprüft; die belastbare Quote liegt bei 44 %**
+(`npm run dipa:katalog`). Details und Fundstellen: `docs/dipa/18_PHASE4_REVERIFY_2026-08-14.md`.
+Restliche 12 Einträge hängen größtenteils am TR-03161-Volltext. Vor Antragstellung bleibt
+der komplette Katalog gegen die dann gültige Fassung der Originaldokumente zu prüfen —
 das ist selbst eine offene Aufgabe (REG-01).
 
 ---
