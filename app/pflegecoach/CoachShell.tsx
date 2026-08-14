@@ -44,6 +44,7 @@ const BEREICH_NAMEN: Record<string, string> = {
   '/pflegecoach/datenschutz': 'Datenschutzhinweise',
   '/pflegecoach/einstellungen/konto': 'Konto und Nutzung beenden',
   '/pflegecoach/einstellungen/sicherheit': 'Anmeldesicherheit',
+  '/pflegecoach/einstellungen/freigaben': 'Datenfreigaben',
   '/pflegecoach/loeschung': 'Daten löschen',
   '/pflegecoach/anspruch': 'Anspruch prüfen',
   '/pflegecoach/freischaltung': 'Zugang freischalten',
