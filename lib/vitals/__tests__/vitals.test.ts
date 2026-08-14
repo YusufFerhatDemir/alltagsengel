@@ -8,10 +8,10 @@ import assert from 'node:assert/strict'
 import {
   berechneAktuelleAlarme,
   bewerteMesswert,
-  createVital,
   validiereGrenzwerte,
   validierePlausibilitaet,
 } from '../vitals'
+import { createVital } from '../server'
 import { VITAL_TYPEN, VITAL_TYP_WERTE, assertVitalTyp, type VitalSign } from '../types'
 import { VITALS_ALARM_ENV, grenzwertAlarmeAktiv } from '../config'
 

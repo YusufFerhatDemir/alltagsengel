@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requirePflegeAdmin } from '@/lib/pflege/api-auth'
-import { deleteVital, updateVital } from '@/lib/vitals/vitals'
+import { deleteVital, updateVital } from '@/lib/vitals/server'
 
 /** PATCH — Messung korrigieren (nur Admin: Wert, Zeitpunkt, Notiz). */
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
