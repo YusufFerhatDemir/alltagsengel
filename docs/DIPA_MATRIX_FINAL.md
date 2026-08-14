@@ -1,6 +1,6 @@
 # DiPA-Matrix — Digitaler PflegeCoach
 
-**Stand:** 2026-08-14 · **Produktversion:** 0.5.0 · **Betriebsmodus:** `COACH_DIPA_MODUS=false`
+**Stand:** 2026-08-14 (aktualisiert nach BF-03-axe-Durchgang und REG-01-Aufschlüsselung) · **Produktversion:** 0.5.0 · **Betriebsmodus:** `COACH_DIPA_MODUS=false`
 
 ## Wozu dieses Dokument
 
@@ -110,9 +110,9 @@ das ist selbst eine offene Aufgabe (REG-01).
 
 | # | Anforderung (Arbeitsfassung) | Klasse | Status | Nachweis | Nächste Aktion |
 |---|---|---|---|---|---|
-| BF-01 | Erfüllung des geltenden Barrierefreiheits-Standards (EN 301 549 / WCAG 2.1 AA) | **D** | EXTERN | Grundausstattung umgesetzt (3 Schriftgrade, Kontrastmodus, Skip-Link, ARIA-Landmarks, Touch-Ziele ≥ 44 px, `prefers-reduced-motion`); **neu:** Strukturprüfung in `e2e/pflegecoach.spec.ts` | BITV-Test beauftragen; Nachweisform klären (BfArM-Frage 12) |
+| BF-01 | Erfüllung des geltenden Barrierefreiheits-Standards (EN 301 549 / WCAG 2.1 AA) | **D** | EXTERN | Grundausstattung umgesetzt (3 Schriftgrade, Kontrastmodus, Skip-Link, ARIA-Landmarks, Touch-Ziele ≥ 44 px, `prefers-reduced-motion`); Strukturprüfung in `e2e/pflegecoach.spec.ts`; **neu (14.08.2026):** regelbasierter **axe-core**-Durchgang (WCAG 2.1 A/AA) in `e2e/pflegecoach-axe.spec.ts` — gegen Produktion ausgeführt, **0 Verstöße** auf allen drei öffentlichen Seiten in Chromium **und** Mobile Safari (10/10 grün) | BITV-Test beauftragen; Nachweisform klären (BfArM-Frage 12). Die axe-Regelprüfung ersetzt den BITV-Test **nicht** |
 | BF-02 | Gebrauchstauglichkeit mit der Zielgruppe geprüft und protokolliert | **D** | EXTERN (Testpersonen) | **NEU:** `audit/dipa/gebrauchstauglichkeit_durchfuehrungsplan.md` — 5 Testpersonen definiert, 9 Aufgaben mit Zeitlimits und Erfolgskriterien, Bewertungsmaßstab, Aufwand | Testpersonen gewinnen — ohne Vorkenntnis des Produkts |
-| BF-03 | Screenreader-Durchgang | **C** | TEILWEISE | **NEU:** maschinelle Strukturprüfung (eine H1 je Seite, eindeutige Titel, Sprungmarke, Landmarks, beschriftete Felder, kein Überlauf bei 200 % Schrift); Prüfpunkte S1–S8 festgelegt | Manuellen Durchgang mit VoiceOver/NVDA durchführen — zusammen mit BF-02 |
+| BF-03 | Screenreader-Durchgang | **C** | TEILWEISE — **maschineller Anteil abgeschlossen (14.08.2026)** | Strukturprüfung (eine H1 je Seite, eindeutige Titel, Sprungmarke, Landmarks, beschriftete Felder, kein Überlauf bei 200 % Schrift); **neu:** `e2e/pflegecoach-axe.spec.ts` — axe-core WCAG 2.1 A/AA (0 Verstöße), Landmark-/Rollen-/Label-Inventur je Seite protokolliert, Überschriftenhierarchie ohne Ebenensprung, eigener Kontrastrechner ≥ 4,5:1. **Dabei ein echter Fehler gefunden und behoben:** der primäre Link-Button stand `--pc-primary` auf `--pc-primary` (Kontrast **1:1**, Beschriftung unsichtbar) — Ursache CSS-Spezifität `.pc-root a` (0,1,1) > `.pc-btn` (0,1,0); gefixt in `app/pflegecoach/pflegecoach.css`, am Live-DOM auf 7,8:1 gegengeprüft. Details: `docs/dipa/14_ACCESSIBILITY_GAP_LISTE.md` §2b | Manuellen Durchgang mit VoiceOver/NVDA durchführen — verbleibender Umfang auf **S1, S5, S7, S8** eingegrenzt (Tabelle in §3.3 der Gap-Liste), zusammen mit BF-02 |
 
 ## 6. Qualität der Inhalte
 
@@ -154,7 +154,7 @@ das ist selbst eine offene Aufgabe (REG-01).
 
 | # | Frage | Klasse | Status | Nachweis | Nächste Aktion |
 |---|---|---|---|---|---|
-| REG-01 | Anforderungstexte gegen die Originaldokumente geprüft | **E** | OFFEN | **NEU:** Werkzeug `npm run dipa:katalog` — prüft alle 91 Nachweisverweise gegen das Dateisystem und meldet die 43 ungeprüften Anforderungstexte. Die Prüfung selbst setzt die Originaldokumente voraus | Vor Antrag: DiPAV, BfArM-Leitfaden, TR-03161 in gültiger Fassung durcharbeiten, je Eintrag `anforderungstextGeprueft` setzen |
+| REG-01 | Anforderungstexte gegen die Originaldokumente geprüft | **E** | OFFEN — **Beschaffungsbedarf jetzt beziffert** | Werkzeug `npm run dipa:katalog` — prüft alle **93** Nachweisverweise gegen das Dateisystem (alle vorhanden) und meldet die **43 von 48** ungeprüften Anforderungstexte; belastbare Quote **6 %**. **NEU:** `docs/dipa/15_REG01_ANFORDERUNGSTEXTE.md` — die 43 Einträge auf **sechs Beschaffungsvorgänge** heruntergebrochen, mit Hebel je Dokument (DiPAV ~16 Einträge, BfArM-Leitfaden ~10, TR-03161 8, WCAG/EN 301 549 3, MDR 1, ISO 27001 1) und 4 intern klärbaren Sonderfällen | **Drei der vier hebelstärksten Dokumente sind frei verfügbar** — Engpass ist Lesezeit, nicht Beschaffung. Mit DiPAV beginnen, **vor** dem BfArM-Termin (REG-05). ISO 27001 zurückstellen, bis der ISMS-Geltungsbereich feststeht (ORF-2) |
 | REG-02 | Ist ein Freischaltcode-Verfahren verbindlich, und wer gibt die Codes aus? | **E** | EXTERN | Mechanismus vollständig gebaut und getestet, per `COACH_FREISCHALTUNG_PFLICHT=false` deaktiviert | In der BfArM-Beratung klären, danach Schalter setzen |
 | REG-03 | Qualifikationsanforderungen an eUL-Erbringer | **E** | EXTERN | `audit/dipa/eul_qualitaetsanforderungen.md` — Kriterien **selbst gesetzt**, nicht regulatorisch abgeleitet (ORF-1) | Klären, dann Kriterien bestätigen oder ersetzen |
 | REG-04 | Vergütung und Abrechnungsweg | **E** | EXTERN | `coach_abrechnungswege` + `lib/coach/abrechnung.ts` — fail-closed über `verguetung_geklaert`, keine Beträge im Code | Erst nach Aufnahme verhandelbar |
@@ -198,6 +198,22 @@ Zahlen maschinell erzeugt mit `npm run dipa:katalog` (14.08.2026).
 | DS-04, SEC-04, SEC-05, BF-02, QI-01, VS-04 | „extern nötig", ohne Unterlage | Beauftragungsunterlagen fertig — versandfertig |
 | REG-01 | INTERN OFFEN — kein Werkzeug | Werkzeug gebaut; Prüfung selbst bleibt offen |
 
+### Nachtrag vom 14.08.2026 (später Nachmittag)
+
+| # | Vorher | Jetzt |
+|---|---|---|
+| BF-01 / BF-03 | Strukturprüfung, aber **kein** regelbasierter A11y-Durchgang | **axe-core WCAG 2.1 A/AA gegen Produktion ausgeführt**, Chromium + Mobile Safari, 10/10 grün, 0 Verstöße. Dabei **1 echter Produktfehler** gefunden und behoben: primärer Link-Button mit Kontrast **1:1** (Beschriftung unsichtbar) |
+| BF-03 — Restumfang | „manueller Durchgang offen" (unbestimmt) | Auf **S1, S5, S7, S8** eingegrenzt; S2/S3/S6 maschinell belegt, S4 zur Hälfte |
+| REG-01 | „43 ungeprüft" — ohne Beschaffungsplan | Auf **6 Beschaffungsvorgänge** heruntergebrochen, Hebel je Dokument beziffert, `docs/dipa/15_REG01_ANFORDERUNGSTEXTE.md` |
+
+**Der Kontrastfehler ist der zweite echte Produktfehler, den die DiPA-Qualitätsarbeit
+gefunden hat** (nach dem Reflow-Bug aus QS-05). Beide waren im Betrieb sichtbar und
+sind es nicht durch Nachdenken geworden, sondern durch tatsächliches Ausführen.
+Bemerkenswert am zweiten: **axe-core hat ihn nicht als Verstoß gemeldet**, sondern
+nur als `incomplete`. Ein Durchgang, der auf `violations.length === 0` prüft, wäre
+grün gewesen. Deshalb enthält die Suite jetzt einen eigenen Kontrastrechner — die
+Lehre ist, einem Werkzeugurteil nicht mehr zu glauben, als es beansprucht.
+
 **Zwei Punkte sind bewusst NICHT auf „erledigt" gesetzt**, obwohl daran
 gearbeitet wurde: INT-02 (die Verbindlichkeitsfrage ist extern) und BF-03
 (eine Maschine kann nicht beurteilen, ob eine Ansage verständlich ist — der
@@ -235,7 +251,7 @@ Drei Restrisiken stehen auf „hoch" — alle drei extern:
 4. **Pflegefachliche Inhaltsfreigabe** (QI-01) — Prüfdossier liegt vor; senkt zugleich das höchste Produktrisiko.
 5. **Evaluationspartner suchen** (NN-01) — lange Anbahnung.
 6. **Testpersonen gewinnen** (BF-02/BF-03) — naheliegend über den eigenen Betrieb.
-7. Intern parallel: Playwright-Browser installieren und QS-05 ausführen; Screenreader-Durchgang; Rücksicherung erproben; Auswertung des Zugriffsprotokolls einrichten.
+7. Intern parallel: **DiPAV lesen und REG-01 beginnen** (frei verfügbar, größter Hebel, sollte vor dem BfArM-Termin liegen); manuellen Screenreader-Durchgang für S1/S5/S7/S8; Rücksicherung erproben; Auswertung des Zugriffsprotokolls einrichten. *(QS-05 und der axe-Durchgang sind erledigt und laufen in CI.)*
 
 **Was heute nicht behauptet werden darf:** keine Erstattungsfähigkeit, keine
 BfArM-Listung, keine Kassenfinanzierung, keine DiPA-Zulassung, keine

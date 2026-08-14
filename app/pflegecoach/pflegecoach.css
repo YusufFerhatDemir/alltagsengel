@@ -164,6 +164,19 @@
 .pc-btn:disabled { opacity: 0.55; cursor: not-allowed; }
 .pc-btn--secondary { background: var(--pc-surface); color: var(--pc-primary); }
 .pc-btn--secondary:hover { background: #EDF2F7; color: var(--pc-primary-dark); }
+
+/* Link-Buttons (<Link className="pc-btn">) brauchen eine eigene Regel:
+   `.pc-root a` (Spezifitaet 0,1,1) schlaegt `.pc-btn` (0,1,0), unabhaengig
+   von der Reihenfolge. Ohne diese Zeilen erbt ein Link-Button die Linkfarbe
+   und steht damit als --pc-primary auf --pc-primary — Kontrast 1:1, der
+   Text ist unsichtbar. Gefunden am 14.08.2026 durch den axe-core-Durchgang
+   (e2e/pflegecoach-axe.spec.ts) und am Live-DOM bestaetigt:
+   color rgb(11,83,148) auf background rgb(11,83,148).
+   Die --secondary-Regel steht danach und gewinnt bei gleicher Spezifitaet. */
+.pc-root a.pc-btn { color: #FFFFFF; }
+.pc-root a.pc-btn:hover { color: #FFFFFF; }
+.pc-root a.pc-btn--secondary { color: var(--pc-primary); }
+.pc-root a.pc-btn--secondary:hover { color: var(--pc-primary-dark); }
 .pc-btn--small { min-height: 44px; padding: 6px 14px; font-size: 0.95em; }
 
 /* Formulare */
