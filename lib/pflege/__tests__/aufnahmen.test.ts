@@ -65,13 +65,13 @@ test('createAufnahme lehnt ungültige Werte ab, bevor die DB angefragt wird', as
   assert.equal(dbAufgerufen, false, 'Bei Validierungsfehlern darf kein DB-Zugriff erfolgen')
 })
 
-test('createAufnahme setzt die Vorgabewerte für Ort und Dringlichkeit', async () => {
-  const inserts: Array<Record<string, unknown>> = []
+test('createAufnahme setzt die Vorgabewerte für Ort und Dringlichkeit und protokolliert die Erstellung', async () => {
+  const inserts: Array<{ tabelle: string; payload: Record<string, unknown> }> = []
   const supabase = {
-    from: () => ({
+    from: (tabelle: string) => ({
       insert(payload: Record<string, unknown>) {
-        inserts.push(payload)
-        return { select: () => ({ single: async () => ({ data: { id: 'a-1', ...payload }, error: null }) }) }
+        inserts.push({ tabelle, payload })
+        return { select: () => ({ single: async () => ({ data: { id: 'a-1', organization_id: 'org-1', ...payload }, error: null }) }) }
       },
     }),
   }
@@ -80,10 +80,17 @@ test('createAufnahme setzt die Vorgabewerte für Ort und Dringlichkeit', async (
     organizationId: 'org-1', clientId: 'client-1', aufgenommenVon: 'user-1', erstelltVon: 'user-1',
   })
 
-  assert.equal(inserts.length, 1)
-  assert.equal(inserts[0].aufnahme_ort, 'wohnung')
-  assert.equal(inserts[0].dringlichkeit, 'normal')
-  assert.equal(inserts[0].organization_id, 'org-1')
+  const aufnahmeInserts = inserts.filter(i => i.tabelle === 'pflege_aufnahmen')
+  assert.equal(aufnahmeInserts.length, 1)
+  assert.equal(aufnahmeInserts[0].payload.aufnahme_ort, 'wohnung')
+  assert.equal(aufnahmeInserts[0].payload.dringlichkeit, 'normal')
+  assert.equal(aufnahmeInserts[0].payload.organization_id, 'org-1')
+
+  const logInserts = inserts.filter(i => i.tabelle === 'pflege_audit_log')
+  assert.equal(logInserts.length, 1, 'Audit-Log-Eintrag muss geschrieben werden')
+  assert.equal(logInserts[0].payload.entitaet_typ, 'aufnahme')
+  assert.equal(logInserts[0].payload.aktion, 'erstellt')
+  assert.equal(logInserts[0].payload.akteur_id, 'user-1')
 })
 
 test('updateAufnahme verweigert Änderungen an abgeschlossenen Aufnahmen', async () => {
@@ -101,8 +108,9 @@ test('updateAufnahme verweigert Änderungen an abgeschlossenen Aufnahmen', async
   )
 })
 
-test('updateAufnahme protokolliert den Abschluss und spiegelt die Stammdaten', async () => {
+test('updateAufnahme protokolliert den Abschluss, spiegelt die Stammdaten und schreibt einen Audit-Log-Eintrag', async () => {
   const updates: Array<{ tabelle: string; payload: Record<string, unknown> }> = []
+  const inserts: Array<{ tabelle: string; payload: Record<string, unknown> }> = []
   const aufnahme = {
     id: 'a-1', status: 'in_bearbeitung', client_id: 'client-1',
     aufnahmedatum: '2026-08-01', aufgenommen_von: 'user-9', betreuungsbedarf: 'Begleitung im Alltag',
@@ -123,6 +131,10 @@ test('updateAufnahme protokolliert den Abschluss und spiegelt die Stammdaten', a
           }
           return kette
         },
+        insert(payload: Record<string, unknown>) {
+          inserts.push({ tabelle, payload })
+          return { select: () => ({ single: async () => ({ data: { id: 'log-1', ...payload }, error: null }) }) }
+        },
       }
     },
   }
@@ -140,4 +152,12 @@ test('updateAufnahme protokolliert den Abschluss und spiegelt die Stammdaten', a
   assert.equal(clientUpdate!.payload.aufnahmestatus, 'vollstaendig')
   assert.equal(clientUpdate!.payload.aufnahmedatum, '2026-08-01')
   assert.equal(clientUpdate!.payload.betreuungsbedarf_beschreibung, 'Begleitung im Alltag')
+
+  const logInsert = inserts.find(i => i.tabelle === 'pflege_audit_log')
+  assert.ok(logInsert, 'Audit-Log-Eintrag muss geschrieben werden')
+  assert.equal(logInsert!.payload.entitaet_typ, 'aufnahme')
+  assert.equal(logInsert!.payload.entitaet_id, 'a-1')
+  assert.equal(logInsert!.payload.aktion, 'aktualisiert')
+  assert.equal(logInsert!.payload.akteur_id, 'user-1')
+  assert.deepEqual(logInsert!.payload.vorher, aufnahme)
 })

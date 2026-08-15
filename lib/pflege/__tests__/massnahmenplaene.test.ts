@@ -106,12 +106,38 @@ test('createPlan verlangt einen Titel', async () => {
   )
 })
 
+test('createPlan protokolliert die Erstellung in pflege_audit_log', async () => {
+  const { supabase, inserts } = planClient(BASIS_PLAN)
+  await createPlan(supabase, {
+    organizationId: 'org-1', clientId: 'client-1', titel: 'Versorgungsplan', erstelltVon: 'user-3',
+  })
+
+  const logInsert = inserts.find(i => i.tabelle === 'pflege_audit_log')
+  assert.ok(logInsert, 'Audit-Log-Eintrag muss geschrieben werden')
+  const logPayload = logInsert!.payload as Record<string, unknown>
+  assert.equal(logPayload.entitaet_typ, 'massnahmenplan')
+  assert.equal(logPayload.aktion, 'erstellt')
+  assert.equal(logPayload.akteur_id, 'user-3')
+})
+
 test('updatePlan blockt Änderungen an gesperrten Plänen', async () => {
   const { supabase } = planClient({ ...BASIS_PLAN, gesperrt: true })
   await assert.rejects(
     () => updatePlan(supabase, 'plan-1', 'org-1', { titel: 'Neu' }),
     /Gesperrter Maßnahmenplan kann nicht bearbeitet werden/
   )
+})
+
+test('updatePlan protokolliert "aktualisiert" in pflege_audit_log', async () => {
+  const { supabase, inserts } = planClient(BASIS_PLAN)
+  await updatePlan(supabase, 'plan-1', 'org-1', { titel: 'Neuer Titel' })
+
+  const logInsert = inserts.find(i => i.tabelle === 'pflege_audit_log')
+  assert.ok(logInsert, 'Audit-Log-Eintrag muss geschrieben werden')
+  const logPayload = logInsert!.payload as Record<string, unknown>
+  assert.equal(logPayload.entitaet_typ, 'massnahmenplan')
+  assert.equal(logPayload.entitaet_id, 'plan-1')
+  assert.equal(logPayload.aktion, 'aktualisiert')
 })
 
 test('freigebenPlan verweigert die Freigabe ohne Maßnahmen', async () => {
@@ -122,8 +148,8 @@ test('freigebenPlan verweigert die Freigabe ohne Maßnahmen', async () => {
   )
 })
 
-test('freigebenPlan setzt den Plan aktiv und löst den Vorgänger ab', async () => {
-  const { supabase, updates } = planClient(BASIS_PLAN, { massnahmenCount: 3 })
+test('freigebenPlan setzt den Plan aktiv, löst den Vorgänger ab und protokolliert "freigegeben"', async () => {
+  const { supabase, updates, inserts } = planClient(BASIS_PLAN, { massnahmenCount: 3 })
   const plan = await freigebenPlan(supabase, 'plan-1', 'org-1', 'user-7')
 
   // Erstes Update löst den bisher aktiven Plan ab, zweites gibt diesen frei.
@@ -133,6 +159,14 @@ test('freigebenPlan setzt den Plan aktiv und löst den Vorgänger ab', async () 
   assert.equal(updates[1].payload.freigegeben_von, 'user-7')
   assert.ok(updates[1].payload.freigegeben_am)
   assert.equal(plan.status, 'aktiv')
+
+  const logInsert = inserts.find(i => i.tabelle === 'pflege_audit_log')
+  assert.ok(logInsert, 'Audit-Log-Eintrag muss geschrieben werden')
+  const logPayload = logInsert!.payload as Record<string, unknown>
+  assert.equal(logPayload.entitaet_typ, 'massnahmenplan')
+  assert.equal(logPayload.entitaet_id, 'plan-1')
+  assert.equal(logPayload.aktion, 'freigegeben')
+  assert.equal(logPayload.akteur_id, 'user-7')
 })
 
 test('freigebenPlan blockt gesperrte Pläne', async () => {

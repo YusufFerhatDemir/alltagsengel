@@ -53,25 +53,25 @@ Zwei Implementierungen auf `service_records`: generischer CRUD-Pfad (alle Zahlun
 
 **Offen:** Audit-Schreibschutz auf `service_record_audit_log` (Migration 20260908020000) — Live-Apply-Status unverifizierbar ohne DB-Zugriff. SGB-V-Erfassungs-UI nutzt Freitext-UUIDs statt Dropdowns (UX-Schuld, kein Fehler).
 
-## Modul 7: Pflegedokumentation — **TEILWEISE**
+## Modul 7: Pflegedokumentation — **FERTIG**
 
-Alle 6 Kernentitäten (Aufnahme, Anamnese, Diagnosen, Risiken, Verlauf, Perioden) vollständig mit UI für Admin/Engel/Kunde, korrekter RLS (kein Join-Bug), Tests inkl. dediziertem Mandanten-Isolations-Test. **Lücke:** kein Audit-Logging. **Wird in dieser Session nachgerüstet** (siehe Abschnitt "Nachträglich ergänzte Features" unten).
+Alle 6 Kernentitäten (Aufnahme, Anamnese, Diagnosen, Risiken, Verlauf, Perioden) vollständig mit UI für Admin/Engel/Kunde, korrekter RLS (kein Join-Bug), Tests inkl. dediziertem Mandanten-Isolations-Test. Audit-Logging war die einzige Lücke — **in dieser Session nachgerüstet** (`pflege_audit_log`, siehe Abschnitt "Nachträglich ergänzte Features" unten); Migration wartet auf Live-Apply.
 
-**Offen:** Live-Apply-Status des `is_admin()`-RLS-Fixes (20260823020000) unverifizierbar.
+**Offen:** Live-Apply-Status des `is_admin()`-RLS-Fixes (20260823020000) und der neuen Audit-Log-Migration.
 
-## Modul 8: Pflegeplanung (Maßnahmenplanung) — **TEILWEISE**
+## Modul 8: Pflegeplanung (Maßnahmenplanung) — **FERTIG**
 
-Plan+Maßnahmen mit Statusmaschine und Versionierung vollständig. Der bekannte caregivers-Join-Bug in `engel_pflege_massnahmen_select` ist bereits in einer früheren, committeten Migration (20260917000000) behoben — nur der Live-Apply-Status ist offen. Gleiche Audit-Logging-Lücke wie Modul 7.
+Plan+Maßnahmen mit Statusmaschine und Versionierung vollständig. Der bekannte caregivers-Join-Bug in `engel_pflege_massnahmen_select` ist bereits in einer früheren, committeten Migration (20260917000000) behoben — nur der Live-Apply-Status ist offen. Audit-Logging wie Modul 7 nachgerüstet.
 
-**Offen:** Live-Apply-Status, Audit-Logging (wird nachgerüstet).
+**Offen:** Live-Apply-Status, Audit-Log-Migration.
 
-## Modul 9: Medikamentenmanagement — **TEILWEISE → wird ergänzt**
+## Modul 9: Medikamentenmanagement — **FERTIG**
 
-Backend (Stammdaten, Verabreichungs-Log, Validierung, RLS mit `eigene_caregiver_ids()`) vollständig und korrekt. **Kritische Lücke: keine Engel-UI** — die RLS-Policy für Engel-Insert existiert für eine Seite, die es nicht gibt. Engel im Feld können Medikamentengaben nicht dokumentieren. **Wird in dieser Session gebaut** (siehe unten).
+Backend (Stammdaten, Verabreichungs-Log, Validierung, RLS mit `eigene_caregiver_ids()`) vollständig und korrekt. Kritische Lücke war: keine Engel-UI — die RLS-Policy für Engel-Insert existierte für eine Seite, die es nicht gab, Engel im Feld konnten Medikamentengaben nicht dokumentieren. **In dieser Session gebaut:** `app/engel/medikamente/page.tsx` (siehe "Nachträglich ergänzte Features").
 
-## Modul 10: Vitalzeichenerfassung — **TEILWEISE → wird ergänzt**
+## Modul 10: Vitalzeichenerfassung — **FERTIG**
 
-Gleiches Muster wie Modul 9: 10-Parameter-Backend fertig, Grenzwert-Alarme korrekt fail-closed (Absicht, `VITALS_GRENZWERT_ALARME_AKTIV` Default aus), aber **keine Engel-UI**. **Wird in dieser Session gebaut.**
+Gleiches Muster wie Modul 9: 10-Parameter-Backend fertig, Grenzwert-Alarme korrekt fail-closed (Absicht, `VITALS_GRENZWERT_ALARME_AKTIV` Default aus), Engel-UI fehlte. **In dieser Session gebaut:** `app/engel/vitalwerte/page.tsx`.
 
 ## Modul 11: Wunddokumentation — **FERTIG**
 
@@ -187,11 +187,20 @@ Bei der Prüfung tauchten mehrere fachlich notwendige Dokumentationsformen auf, 
 
 Sowie, direkt aus diesem Audit heraus als Reaktion auf die Modul-9/10-Befunde:
 
-- **Engel-UI Medikamentengabe** (`app/engel/medikamente`) — läuft als eigener Hintergrund-Task
-- **Engel-UI Vitalzeichenerfassung** (`app/engel/vitalwerte`) — läuft als eigener Hintergrund-Task
-- **Audit-Logging Pflegedokumentation** (`pflege_audit_log`) — läuft als eigener Hintergrund-Task
+- **Engel-UI Medikamentengabe** (`app/engel/medikamente/page.tsx`, verlinkt aus `app/engel/profil/page.tsx`) — **fertiggestellt.** Lädt zugewiesene Klienten über `eigene_caregiver_ids()`, liest Medikamente direkt per RLS-geschütztem Client (nicht über die admin-only GET-Route), dokumentiert Verabreichungen über `POST /api/medikamente/eingaben`, zeigt Verlauf. Behebt die in Modul 9 festgestellte Lücke (Backend fertig, keine Engel-UI).
+- **Engel-UI Vitalzeichenerfassung** (`app/engel/vitalwerte/page.tsx`, verlinkt aus `app/engel/profil/page.tsx`) — **fertiggestellt.** Alle 10 Parameter aus `lib/vitals/types.ts`, clientseitige Plausibilitätsprüfung vor dem Request, respektiert den MDR-Kill-Switch (`bewertung: null` wenn Alarme deaktiviert, keine vorgetäuschte Alarmstufe). Behebt die in Modul 10 festgestellte Lücke.
+- **Audit-Logging Pflegedokumentation** (`lib/pflege/audit-log.ts` + `pflege_audit_log`) — **fertiggestellt.** Append-only-Tabelle nach dem Muster von `ops_aktivitaetslog` (RESTRICTIVE org_fence, admin-only lesbar, BEFORE UPDATE/DELETE-Trigger blockt Änderungen), 19 Log-Aufrufe über 7 Dateien verdrahtet (aufnahmen, anamnesen, diagnosen, risiken, verlauf, massnahmen, massnahmenplaene). Migration `20260921040000_pflege_audit_log.sql` **wartet auf Live-Apply**. Bekannte Einschränkung: einzelne interne Seiteneffekte (z. B. das Ablösen des Vorgänger-Plans bei Freigabe, die Massnahmen-Kopie bei `neueVersion`) werden nicht separat protokolliert, nur die primäre CRUD-Aktion; drei Update-Funktionen (`updateDiagnose`, `updateRisiko`, `updateMassnahme`) haben kein Akteur-Parameter in der bestehenden Signatur, ihre Log-Einträge tragen daher `akteur_id: null` — Signaturänderung war außerhalb des Scopes. Schließt die in Modul 7/8 festgestellte Lücke.
 
-*(Diese drei werden nach Fertigstellung durch die Hintergrund-Agents in dieses Dokument nachgetragen, siehe Ergänzung unten falls vorhanden.)*
+---
+
+## Finale Verifikation (nach allen Fixes)
+
+- **Typecheck** (`tsc --noEmit`): 0 Fehler
+- **Vitest** (`__tests__/**`): 152 Testdateien, 3060 Tests — alle grün
+- **test:unit** (`lib/**/*.test.ts`, node:test): 523 Tests — alle grün (dabei 1 verwaiste, seit Commit 0aec34a nie lauffähige Testdatei gefunden und auf das im übrigen `lib/abrechnung/__tests__`-Ordner übliche node:test-Format umgestellt: `lib/abrechnung/__tests__/sgb-v-generator.test.ts` importierte `vitest`, lag aber außerhalb von vitests konfiguriertem Testpfad `__tests__/**` und crashte gleichzeitig unter dem node:test-Runner von `test:unit` — lief in keiner der beiden Suiten je erfolgreich)
+- **Lint**: repo-weiter Altbestand (~2300 `no-explicit-any`/`setState-in-effect`-Meldungen, auch in unberührten Dateien) nicht wholesale gefixt — kein Blocker für `deploy.sh` (das nur Typecheck warn-only + den Secrets-Guard prüft), echte Bugs, die Lint aufgedeckt hat, wurden gefixt (siehe Modul-Einträge)
+
+**Wichtiger Hinweis zur Deploy-Historie:** Während dieses Audits lief `./deploy.sh` bereits einmal aus einer parallelen Session heraus (Commits `7f65880` und `f3126f5`, "WS8: Production-Abnahme"/"Production Readiness Report") und hat den Großteil der hier beschriebenen Fixes bereits nach `origin/main` gepusht — inklusive einer früheren Fassung dieses Reports. Der finale Deploy dieser Session ergänzt: die 3 hier neu dokumentierten Bausteine (Engel-UI Medikamente/Vitalwerte, Pflegedoku-Audit-Log inkl. präzisierter Tests), den Fix der verwaisten SGB-V-Testdatei, und diese aktualisierte Fassung des Reports.
 
 ---
 
@@ -199,12 +208,14 @@ Sowie, direkt aus diesem Audit heraus als Reaktion auf die Modul-9/10-Befunde:
 
 | Status | Anzahl | Module |
 |---|---|---|
-| FERTIG | 13 | 4, 5, 6, 11, 12, 16, 17, 20, 22*, 23, 25, 26, 27 |
-| TEILWEISE | 13 | 1, 2, 3, 7, 8, 9, 10, 13, 14, 15, 18, 19, 21 |
+| FERTIG | 16 | 4, 5, 6, 7, 8, 9, 10, 11, 12, 16, 17, 20, 22*, 23, 25, 26, 27 |
+| TEILWEISE | 10 | 1, 2, 3, 13, 14, 15, 18, 19, 21 |
 | FEHLT | 1 | 24 (Angehörigenportal — Backend fertig, UI fehlt komplett) |
 
-*Modul 22 als FERTIG gewertet für den geprüften Kernumfang (Upload/Versionierung/RLS); die DSGVO-Hard-Delete-Lücke ist als eigener, großer Befund vermerkt, nicht Teil der Kernfunktion.
+*Modul 22 als FERTIG gewertet für den geprüften Kernumfang (Upload/Versionierung/RLS); die DSGVO-Hard-Delete-Lücke ist als eigener, großer Befund vermerkt, nicht Teil der Kernfunktion. Module 7–10 sind nach Nachrüsten von Audit-Logging (7, 8) bzw. Engel-UI (9, 10) auf FERTIG hochgestuft — die zugrundeliegende Migration (Audit-Log) wartet noch auf Live-Apply, ändert aber nichts an der Vollständigkeit von Code/UI/API.
 
 **Wiederkehrendes Muster über fast alle Module:** Die "caregivers-Join-Falle" (RLS-Subquery auf `caregivers` liefert für Engel-Nutzer immer 0 Zeilen) wurde in dieser Session in 4 weiteren, bisher übersehenen Stellen gefunden und gefixt (Module 1, 2, 5, plus die bereits vorher bekannten). Alle Migrationen mit dieser Klasse von Fix warten auf manuellen Live-Apply — **ohne diesen bleiben die betroffenen Engel-Seiten trotz korrigiertem App-Code leer**, das ist der mit Abstand wichtigste Einzelbefund dieses Audits.
 
 **Zweitwichtigster Befund:** Medikamentenmanagement und Vitalzeichenerfassung hatten fertiges Backend, aber keine Engel-Erfassungs-UI — beides in dieser Session nachgebaut.
+
+**Insgesamt ausstehend vor echter Production-Reife:** ca. 20 Migrationsdateien warten auf manuellen Live-Apply in Supabase (kein DB-Zugang in dieser Session) — bis dahin sind mehrere der oben als "FERTIG"/"gefixt" markierten Punkte in Production weiterhin wirkungslos (u. a. alle caregivers-Join-Falle-Fixes, der Eskalationsrollen-Fix, der Posteingang-View-Fix, das neue Pflegedoku-Audit-Log). Modul 24 (Angehörigenportal) und die DSGVO-Hard-Delete-Lücke in Modul 22 bleiben bewusst unangetastet als eigene, größere Vorhaben.
