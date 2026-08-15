@@ -1,0 +1,38 @@
+import { NextResponse } from 'next/server'
+import { requireOpsAdmin } from '@/lib/ops/api-auth'
+import { createAdminClient } from '@/lib/supabase/admin'
+import { generateXRechnungXml } from '@/lib/billing/xrechnung'
+
+export async function GET(
+  _req: Request,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  const auth = await requireOpsAdmin()
+  if (!auth.ok) return auth.response
+  const { organizationId: orgId } = auth.ctx
+  const { id: invoiceId } = await params
+
+  try {
+    const admin = createAdminClient()
+    const xml = await generateXRechnungXml(admin, invoiceId, orgId)
+
+    const { data: inv } = await admin
+      .from('invoices')
+      .select('invoice_number_formatted, invoice_number')
+      .eq('id', invoiceId)
+      .single()
+    const nr = inv?.invoice_number_formatted || inv?.invoice_number || invoiceId
+    const filename = `XRechnung_${nr.replace(/[^a-zA-Z0-9_-]/g, '_')}.xml`
+
+    return new NextResponse(xml, {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/xml; charset=utf-8',
+        'Content-Disposition': `attachment; filename="${filename}"`,
+      },
+    })
+  } catch (err: any) {
+    console.error('[xrechnung] Fehler:', err)
+    return NextResponse.json({ error: err.message || 'XRechnung-Generierung fehlgeschlagen' }, { status: 500 })
+  }
+}

@@ -224,6 +224,12 @@ export default function InvoiceDetailPage() {
         </div>
       )}
 
+      {/* E-Invoicing Downloads — immer verfügbar */}
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
+        <ActionBtn label="XRechnung XML" onClick={() => window.open(`/api/ops/rechnungen/${id}/xrechnung`, '_blank')} loading={false} />
+        <ActionBtn label="ZUGFeRD PDF" onClick={() => window.open(`/api/ops/rechnungen/${id}/zugferd`, '_blank')} loading={false} />
+      </div>
+
       {/* Positionen */}
       <h3 style={{ fontSize: 16, margin: '20px 0 8px' }}>Positionen ({items.length})</h3>
       <div className="admin-table-wrap">
