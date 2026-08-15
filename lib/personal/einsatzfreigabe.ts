@@ -68,6 +68,19 @@ export async function pruefeEinsatzfreigabe(
     probleme.push(`${abgelaufen.length} einsatzrelevante Qualifikation(en) abgelaufen`)
   }
 
+  // Enforcing: Führungszeugnis + Erste Hilfe müssen als Pflichtqualifikation vorliegen
+  const pflichtTypen = PFLICHT_QUALIFIKATIONEN
+  for (const pflicht of pflichtTypen) {
+    const vorhanden = (quals ?? []).find(q =>
+      q.title?.toLowerCase().includes(pflicht.suchbegriff) && q.pflicht
+    )
+    if (!vorhanden) {
+      probleme.push(`Pflichtqualifikation "${pflicht.label}" fehlt`)
+    } else if (vorhanden.valid_until && vorhanden.valid_until < heute) {
+      // Bereits in abgelaufen erfasst, aber expliziter Hinweis
+    }
+  }
+
   return {
     caregiverId,
     caregiverName: name,
@@ -83,6 +96,11 @@ export async function pruefeEinsatzfreigabe(
     budgetBlockiert: false,
   }
 }
+
+const PFLICHT_QUALIFIKATIONEN = [
+  { suchbegriff: 'führungszeugnis', label: 'Erweitertes Führungszeugnis' },
+  { suchbegriff: 'erste hilfe', label: 'Erste-Hilfe-Nachweis' },
+] as const
 
 export async function pruefeClientFreigabe(
   supabase: SupabaseClient,
@@ -249,9 +267,13 @@ export async function setzeEinsatzfreigabe(
   organizationId: string,
   freigabe: boolean,
 ): Promise<void> {
+  const update: Record<string, unknown> = {
+    einsatzfreigabe: freigabe,
+    einsatzfreigabe_am: freigabe ? heuteBerlin() : null,
+  }
   const { error } = await supabase
     .from('caregivers')
-    .update({ einsatzfreigabe: freigabe })
+    .update(update)
     .eq('id', caregiverId)
     .eq('organization_id', organizationId)
   if (error) throw new Error(`Einsatzfreigabe konnte nicht gesetzt werden: ${error.message}`)

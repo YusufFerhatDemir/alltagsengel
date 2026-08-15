@@ -342,6 +342,8 @@ export interface DunningRunResult {
   /** faellig, aber Frist zur naechsten Stufe noch nicht erreicht */
   unveraendert: number
   dryRun: boolean
+  /** Anzahl versendeter Mahn-E-Mails (nur bei sendEmails: true) */
+  emailsVersendet?: number
 }
 
 /**
@@ -361,9 +363,10 @@ export async function runDunningRun(
   supabase: SupabaseClient,
   organizationId: string,
   actorId: string,
-  options: { dryRun?: boolean } = {}
+  options: { dryRun?: boolean; sendEmails?: boolean } = {}
 ): Promise<DunningRunResult> {
   const dryRun = options.dryRun ?? false
+  const sendEmails = options.sendEmails ?? false
   const heute = heuteBerlin()
 
   const result: DunningRunResult = {
@@ -487,5 +490,84 @@ export async function runDunningRun(
     }
   }
 
+  // E-Mail-Versand: nach erfolgreicher Eskalation Mahnschreiben als E-Mail senden
+  if (sendEmails && !dryRun && result.eskaliert.length > 0) {
+    let emailCount = 0
+    for (const esc of result.eskaliert) {
+      try {
+        await sendDunningEmail(supabase, esc.invoiceId, organizationId, actorId)
+        emailCount++
+      } catch (err) {
+        console.error('[MAHNLAUF] E-Mail-Versand fehlgeschlagen:', esc.invoiceId, err)
+      }
+    }
+    result.emailsVersendet = emailCount
+  }
+
   return result
+}
+
+async function sendDunningEmail(
+  supabase: SupabaseClient,
+  invoiceId: string,
+  organizationId: string,
+  actorId: string,
+): Promise<void> {
+  const { data: inv } = await supabase
+    .from('invoices')
+    .select('id, dunning_level, client:clients(email, first_name, last_name)')
+    .eq('id', invoiceId)
+    .single()
+
+  if (!inv) return
+  const client = inv.client as any
+  if (!client?.email) return
+
+  const { data: entry } = await supabase
+    .from('dunning_entries')
+    .select('id, dunning_level')
+    .eq('invoice_id', invoiceId)
+    .single()
+
+  if (!entry) return
+
+  // Lazy-Import um zirkuläre Abhängigkeit zu vermeiden
+  const { createMahnungDocument, generateMahnungEmail } = await import('../dunning/mahnung-pdf')
+
+  const doc = await createMahnungDocument(supabase, {
+    organizationId,
+    invoiceId,
+    dunningEntryId: entry.id,
+    dunningLevel: entry.dunning_level as DunningLevel,
+    actorId,
+  })
+
+  const email = generateMahnungEmail(doc.mahnungData)
+
+  // E-Mail über die Notifications-Tabelle zur Verarbeitung eintragen
+  const { error: queueError } = await supabase.from('dunning_email_queue').insert({
+    organization_id: organizationId,
+    invoice_id: invoiceId,
+    dunning_entry_id: entry.id,
+    dunning_document_id: doc.documentId,
+    empfaenger_email: client.email,
+    empfaenger_name: `${client.first_name ?? ''} ${client.last_name ?? ''}`.trim(),
+    betreff: email.subject,
+    inhalt: email.body,
+    status: 'wartend',
+    created_by: actorId,
+  })
+
+  if (queueError) {
+    console.error('[MAHNLAUF] E-Mail-Queue-Insert fehlgeschlagen:', queueError.message)
+  }
+
+  await logBillingAction(supabase, {
+    entityType: 'dunning',
+    organizationId,
+    entityId: entry.id,
+    action: 'email_queued',
+    newState: { empfaenger: client.email, betreff: email.subject },
+    actorId,
+  })
 }

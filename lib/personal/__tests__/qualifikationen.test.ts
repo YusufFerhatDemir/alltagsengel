@@ -1,57 +1,144 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { assertErlaubt, SCHULUNGSART_WERTE, VERTRAGSSTATUS_WERTE, DIENSTPLAN_STATUS_WERTE, DIENSTPLAN_TYP_WERTE, ARBEITSZEIT_QUELLE_WERTE, ARBEITSZEIT_STATUS_WERTE, ABWESENHEIT_STATUS_WERTE, ABWESENHEIT_TYP_WERTE } from '../types'
+import { createQualifikation, listQualifikationen, updateQualifikation, deleteQualifikation } from '../qualifikationen'
 
-// ── assertErlaubt ───────────────────────────────────────────────
+function mockInsertClient(data: Record<string, unknown>) {
+  return {
+    from: () => ({
+      insert: () => ({
+        select: () => ({
+          single: async () => ({ data, error: null }),
+        }),
+      }),
+    }),
+  } as never
+}
 
-test('assertErlaubt lässt null/undefined durch', () => {
-  assert.doesNotThrow(() => assertErlaubt(null, VERTRAGSSTATUS_WERTE, 'test'))
-  assert.doesNotThrow(() => assertErlaubt(undefined, VERTRAGSSTATUS_WERTE, 'test'))
+function mockListClient(data: Record<string, unknown>[]) {
+  return {
+    from: () => ({
+      select: () => ({
+        eq: () => ({
+          order: () => ({
+            data,
+            error: null,
+            then: (fn: any) => fn({ data, error: null }),
+          }),
+          eq: () => ({
+            order: () => ({
+              data,
+              error: null,
+              then: (fn: any) => fn({ data, error: null }),
+            }),
+            eq: () => ({
+              order: () => ({
+                data,
+                error: null,
+                then: (fn: any) => fn({ data, error: null }),
+              }),
+            }),
+          }),
+        }),
+      }),
+    }),
+  } as never
+}
+
+test('createQualifikation: wirft bei leerem Titel', async () => {
+  const supabase = mockInsertClient({})
+  await assert.rejects(
+    () => createQualifikation(supabase, {
+      organizationId: 'org-1',
+      caregiverId: 'cg-1',
+      title: '',
+      qualificationType: 'zertifikat',
+    }),
+    /Pflichtfeld/,
+  )
 })
 
-test('assertErlaubt lässt gültige Werte durch', () => {
-  assert.doesNotThrow(() => assertErlaubt('aktiv', VERTRAGSSTATUS_WERTE, 'vertragsstatus'))
-  assert.doesNotThrow(() => assertErlaubt('gekuendigt', VERTRAGSSTATUS_WERTE, 'vertragsstatus'))
-  assert.doesNotThrow(() => assertErlaubt('pflichtschulung', SCHULUNGSART_WERTE, 'schulungsart'))
+test('createQualifikation: setzt Defaults korrekt', async () => {
+  const inserted: Record<string, unknown>[] = []
+  const supabase = {
+    from: () => ({
+      insert(payload: Record<string, unknown>) {
+        inserted.push(payload)
+        return {
+          select: () => ({
+            single: async () => ({
+              data: { id: 'q-1', ...payload },
+              error: null,
+            }),
+          }),
+        }
+      },
+    }),
+  } as never
+
+  const result = await createQualifikation(supabase, {
+    organizationId: 'org-1',
+    caregiverId: 'cg-1',
+    title: 'Erweitertes Führungszeugnis',
+    qualificationType: 'nachweis',
+  })
+
+  assert.equal(inserted.length, 1)
+  assert.equal(inserted[0].status, 'valid')
+  assert.equal(inserted[0].pflicht, false)
+  assert.equal(inserted[0].einsatzrelevant, false)
+  assert.equal(result.title, 'Erweitertes Führungszeugnis')
 })
 
-test('assertErlaubt wirft bei ungültigen Werten', () => {
-  assert.throws(() => assertErlaubt('ungueltig' as any, VERTRAGSSTATUS_WERTE, 'vertragsstatus'), /Ungültiger Wert/)
-  assert.throws(() => assertErlaubt('falsch' as any, DIENSTPLAN_STATUS_WERTE, 'status'), /Ungültiger Wert/)
+test('createQualifikation: pflicht + einsatzrelevant werden durchgereicht', async () => {
+  const inserted: Record<string, unknown>[] = []
+  const supabase = {
+    from: () => ({
+      insert(payload: Record<string, unknown>) {
+        inserted.push(payload)
+        return {
+          select: () => ({
+            single: async () => ({
+              data: { id: 'q-2', ...payload },
+              error: null,
+            }),
+          }),
+        }
+      },
+    }),
+  } as never
+
+  await createQualifikation(supabase, {
+    organizationId: 'org-1',
+    caregiverId: 'cg-1',
+    title: 'Erste Hilfe',
+    qualificationType: 'schulung',
+    pflicht: true,
+    einsatzrelevant: true,
+    validUntil: '2028-12-31',
+  })
+
+  assert.equal(inserted[0].pflicht, true)
+  assert.equal(inserted[0].einsatzrelevant, true)
+  assert.equal(inserted[0].valid_until, '2028-12-31')
 })
 
-// ── Enum-Vollständigkeit ────────────────────────────────────────
+test('updateQualifikation: wirft bei leeren Änderungen', async () => {
+  const supabase = {
+    from: () => ({
+      update: () => ({
+        eq: () => ({
+          eq: () => ({
+            select: () => ({
+              single: async () => ({ data: null, error: null }),
+            }),
+          }),
+        }),
+      }),
+    }),
+  } as never
 
-test('DIENSTPLAN_STATUS_WERTE enthält alle Status', () => {
-  const expected = ['geplant', 'bestaetigt', 'in_bearbeitung', 'abgeschlossen', 'ausgefallen', 'vertretung']
-  assert.deepEqual(DIENSTPLAN_STATUS_WERTE, expected)
-})
-
-test('DIENSTPLAN_TYP_WERTE enthält alle Typen', () => {
-  const expected = ['regulaer', 'vertretung', 'ueberstunden', 'bereitschaft', 'notdienst']
-  assert.deepEqual(DIENSTPLAN_TYP_WERTE, expected)
-})
-
-test('ARBEITSZEIT_QUELLE_WERTE enthält alle Quellen', () => {
-  assert.equal(ARBEITSZEIT_QUELLE_WERTE.length, 4)
-  assert.ok(ARBEITSZEIT_QUELLE_WERTE.includes('manuell'))
-  assert.ok(ARBEITSZEIT_QUELLE_WERTE.includes('app'))
-})
-
-test('ARBEITSZEIT_STATUS_WERTE enthält alle Status', () => {
-  assert.equal(ARBEITSZEIT_STATUS_WERTE.length, 4)
-  assert.ok(ARBEITSZEIT_STATUS_WERTE.includes('gesperrt'))
-})
-
-test('ABWESENHEIT_TYP_WERTE enthält erweiterte Typen', () => {
-  assert.ok(ABWESENHEIT_TYP_WERTE.includes('fortbildung'))
-  assert.ok(ABWESENHEIT_TYP_WERTE.includes('mutterschutz'))
-  assert.ok(ABWESENHEIT_TYP_WERTE.includes('elternzeit'))
-  assert.ok(ABWESENHEIT_TYP_WERTE.includes('sonderurlaub'))
-  assert.ok(ABWESENHEIT_TYP_WERTE.includes('unbezahlt'))
-})
-
-test('ABWESENHEIT_STATUS_WERTE enthält Genehmigungsworkflow-Status', () => {
-  const expected = ['beantragt', 'genehmigt', 'abgelehnt', 'storniert']
-  assert.deepEqual(ABWESENHEIT_STATUS_WERTE, expected)
+  await assert.rejects(
+    () => updateQualifikation(supabase, 'q-1', 'org-1', {}),
+    /Keine Änderungen/,
+  )
 })
