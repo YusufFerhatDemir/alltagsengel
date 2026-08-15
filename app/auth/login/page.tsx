@@ -293,7 +293,19 @@ function LoginForm() {
     } else if (role === 'fahrer') {
       window.location.href = '/fahrer/home'
     } else {
-      window.location.href = '/kunde/home'
+      // Prüfe ob der User einen aktiven Angehörigen-Zugang hat
+      const { data: zugaenge } = await supabase
+        .from('angehoerigen_zugaenge')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('status', 'aktiv')
+        .limit(1)
+
+      if (zugaenge && zugaenge.length > 0) {
+        window.location.href = '/angehoerige'
+      } else {
+        window.location.href = '/kunde/home'
+      }
     }
   }
 
