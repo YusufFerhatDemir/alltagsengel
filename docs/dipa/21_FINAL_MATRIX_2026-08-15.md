@@ -1,5 +1,26 @@
 # DiPA — Finale 48-Punkte-Matrix (15.08.2026)
 
+> **NACHTRAG 15.08.2026 — regulatorischer Final-Check.** Die 13 Punkte mit
+> `EXTERNAL_EVIDENCE_REQUIRED` und die 2 `PARTIAL`-Punkte wurden anschließend
+> noch einmal einzeln gegen die Primärquellen geprüft. Ergebnis in
+> **`docs/dipa/22_REGULATORISCHER_FINALCHECK_2026-08-15.md`** — dort steht für
+> jeden der 15 Punkte die zeitliche Klassifizierung (vor Antrag / vor Aufnahme /
+> nachreichbar / nach Aufnahme / nur empfohlen) mit Fundstelle.
+>
+> **Der Zählstand unten ist unverändert richtig** (33/13/2/0/0). Korrigiert
+> wurden Fundstellen, Zuständigkeiten und Zeitpunkte, nicht der Erfüllungsstand.
+> Die vier wichtigsten Korrekturen an *dieser* Datei sind unten jeweils an Ort
+> und Stelle markiert:
+> 1. **SEC-05 ist ein Eingangsblocker** — der Leitfaden verlangt das
+>    ISO-27001-Zertifikat „bei der Antragstellung". Damit stehen **drei** Punkte
+>    auf dem kritischen Pfad, nicht zwei.
+> 2. **SEC-01** — neuer Stichtag **01.07.2025** für die formale
+>    Antragsvollständigkeit; die Schließung des Erklärungswegs ist jetzt
+>    wörtlich belegt statt hergeleitet.
+> 3. **REG-04** — die Angabe „§ 40a Abs. 1a SGB XI, 70-€-Deckel" war **falsch**.
+> 4. **VS-02, BF-01, BF-02, DS-02** — die Blocker sind milder als hier
+>    beschrieben.
+
 **Diese Datei ist der definitive Stand.** Sie ersetzt
 `docs/dipa/20_DIPA_MATRIX_EINDEUTIG_2026-08-15.md` als Referenz (die bleibt als
 Zwischenstand und Änderungsprotokoll stehen). Maschinenlesbares Gegenstück:
@@ -111,11 +132,11 @@ Datensicherheitsanforderungen stehen **nicht** in Anlage 1 DiPAV, sondern in der
 
 | ID | Anforderung | Primärquelle (geprüfte Fundstelle) | Nachweis | Status | Blocker |
 |---|---|---|---|---|---|
-| SEC-01 | Datensicherheitszertifikat (BSI TR-03161) | DiPAV § 5 Abs. 2 Nr. 1, § 8 Abs. 3 + § 78a Abs. 7 SGB XI + § 139e Abs. 10 S. 3 SGB V | `audit/dipa/tr03161_checkliste.md` (Selbsteinschätzung) | EXTERNAL_EVIDENCE_REQUIRED | **Erklärungs-Fallback aus § 8 Abs. 3 S. 4 gegengeprüft und geschlossen** (s. u.). Anwendbar: TR-03161-2 (Web) + -3 (Backend). P0, kritischer Pfad |
+| SEC-01 | Datensicherheitszertifikat (BSI TR-03161) | DiPAV § 5 Abs. 2 Nr. 1, § 8 Abs. 3 + § 78a Abs. 7 SGB XI + § 139e Abs. 10 S. 3 SGB V; **Leitfaden v1.3 Kap. 3.4 (S. 49)** | `audit/dipa/tr03161_checkliste.md` (Selbsteinschätzung) | EXTERNAL_EVIDENCE_REQUIRED | **Erklärungs-Fallback aus § 8 Abs. 3 S. 4 gegengeprüft und geschlossen** (s. u.). **Nachtrag 15.08.: seit 01.07.2025 ist das Zertifikat Voraussetzung für die *formale Vollständigkeit* des Antrags — wörtlich im Leitfaden, nicht mehr hergeleitet.** Anwendbar: TR-03161-2 (Web) + -3 (Backend). P0, kritischer Pfad, **Zeitklasse A** |
 | **SEC-02** | Verschlüsselung Transport/Ruhezustand | **Neu gefunden:** TR-03161-3 O.Data_1, O.Arch_4, O.Ntwk_1/_2; TR-03161-1 O.Cryp_1–7; DiPAV § 5 Abs. 1 | `audit/dipa/verschluesselungskonzept.md` | **PASS_INTERNAL** | Formale Bestätigung derselben Punkte läuft über SEC-01 |
 | **SEC-03** | Zweiter Faktor bei Anmeldung | **Neu gefunden, strenger als angenommen:** TR-03161-1 O.Auth_3 / -3 O.Auth_4 — „Jeder Authentifizierungsvorgang des Nutzers MUSS in Form einer Zwei-Faktor-Authentisierung umgesetzt werden." Herabstufung nur als KANN mit Einzel-Einwilligung (O.Auth_4/_5, § 139e Abs. 10 S. 4 SGB V über § 78a Abs. 7 S. 2 SGB XI) | `lib/coach/mfa.ts` (+ 5 neue Tests), `lib/coach/api-auth.ts` | **PASS_INTERNAL** | Dokumentierte Abweichung: Lesen, Export, Widerruf, Löschung bleiben ohne zweiten Faktor erreichbar (Art. 7 Abs. 3 / 15 / 20 DSGVO) — als Herstelleraussage in die TR-Prüfung |
-| SEC-04 | Externer Penetrationstest | DiPAV § 8 Abs. 3 S. 5; BfArM-Leitfaden Kap. 3.4 | `audit/dipa/pentest_beauftragung_scope.md` | EXTERNAL_EVIDENCE_REQUIRED | **Nicht separat beauftragen** — mit SEC-01 zusammen vergeben |
-| SEC-05 | Informationssicherheits-Managementsystem | **Vorbehalt zurückgenommen:** TR-03161-3 O.Org_1 (ISO 27001 / IT-Grundschutz, MUSS) + DiPAV § 8 Abs. 3 S. 2 | `audit/dipa/isms_scope_vorbereitung.md` | EXTERNAL_EVIDENCE_REQUIRED | **Verbindlicher als bisher notiert.** Scope zu erweitern um O.Org_2 (C5-Typ-2-Testat der Cloud-Dienstleister), O.Org_3/_4 (Monitoring + Alarmprozesse), O.Org_5 (Notfallvorsorgekonzept) |
+| SEC-04 | Externer Penetrationstest | **korrigiert 15.08.:** nicht § 8 Abs. 3 S. 5 (der gilt nur auf dem geschlossenen Erklärungsweg), sondern **Leitfaden Kap. 3.4.2 (S. 51)** | `audit/dipa/pentest_beauftragung_scope.md` | EXTERNAL_EVIDENCE_REQUIRED | **Nicht separat beauftragen** — mit SEC-01 zusammen vergeben. BSI-Teststelle ist ein **SOLL**, kein MUSS. **Zeitklasse A** (Durchführung; Vorlage nur auf Verlangen) |
+| SEC-05 | Informationssicherheits-Managementsystem | **Vorbehalt zurückgenommen:** TR-03161-3 O.Org_1 (ISO 27001 / IT-Grundschutz, MUSS) + DiPAV § 8 Abs. 3 S. 2; **Leitfaden v1.3 Kap. 3.4.1 (S. 50)** | `audit/dipa/isms_scope_vorbereitung.md` | EXTERNAL_EVIDENCE_REQUIRED | **Verbindlicher als bisher notiert.** **Nachtrag 15.08.: „muss *bei der Antragstellung* ein Zertifikat … vorweisen", DAkkS-akkreditiert, auf den Hersteller ausgestellt → Zeitklasse A, DRITTER Eingangsblocker.** Scope zu erweitern um O.Org_2 (C5-Typ-2-Testat der Cloud-Dienstleister), O.Org_3/_4 (Monitoring + Alarmprozesse), O.Org_5 (Notfallvorsorgekonzept) |
 | **SEC-06** | Rollen-/Rechtekonzept durchgesetzt | **Neu gefunden:** TR-03161-3 O.Auth_1, O.Auth_3 („Autorisierung bei jedem Datenzugriff separat"), O.Auth_7, O.Arch_10 | 68/68 Shadow-Tests | **PASS_INTERNAL** | — |
 | **SEC-07** | Auditierbarkeit der Zugriffe | **Neu gefunden:** TR-03161-3 O.Arch_11 (zentrales Protokollierungssystem, MUSS), O.Org_3, Passwort-/Verbindungsprotokollierung | `coach_audit_log` (append-only), Tests P7 | **PASS_INTERNAL** | SOLL (nicht MUSS) offen: dedizierter Logserver getrennt vom Quellsystem |
 | **SEC-08** | Trennung von Betriebsplattform | **Neu gefunden, andere Begründung als vermutet:** DiPAV § 5 Abs. 3 S. 1 (abschließende Zweckliste) + § 5 Abs. 5 (andere Zwecke „ausgeschlossen"); ergänzend TR-03161-3 O.Arch_9 | Eigene Tabellen/Policies, Tests P3 + P9.5 | **PASS_INTERNAL** | Trennungstiefe (gemeinsames DB-Projekt) bleibt BfArM-Frage 13 — betrifft das Wie, nicht mehr das Ob |
@@ -179,7 +200,7 @@ Datensicherheitsanforderungen stehen **nicht** in Anlage 1 DiPAV, sondern in der
 | **REG-01** | Anforderungstexte gegen Original geprüft (Meta) | DiPAV + Anlagen, SGB XI § 78a, SGB V § 139e, TR-03161 Teile 1–3, BfArM-Leitfaden v1.3 | `npm run dipa:katalog`: 48/48 geprüft, 0 ungeprüft | **PASS_INTERNAL** | Wiedervorlage bei jeder neuen Fassung eines der Dokumente — „geprüft" gilt gegen die genannten Fassungen, nicht auf Dauer |
 | REG-02 | Freischaltcode-Verfahren verbindlich? | BfArM-Leitfaden Kap. 1/1.1 | Frage beantwortet: **nein**, Kostenerstattung statt Code | PASS_INTERNAL | Zugangsschalter vor Aktivierung an das Modell anpassen |
 | REG-03 | Qualifikationsanforderungen eUL-Erbringer? | BfArM-Leitfaden S. 88 | Frage beantwortet: Herstellerentscheidung | PASS_INTERNAL | — |
-| REG-04 | Vergütung und Abrechnungsweg | § 40a Abs. 1a SGB XI (70-€-Deckel gesetzlich) + Leitfaden | `lib/coach/abrechnung.ts` fail-closed | EXTERNAL_EVIDENCE_REQUIRED | Konkreter Anteil erst nach Aufnahme verhandelbar |
+| REG-04 | Vergütung und Abrechnungsweg | **korrigiert 15.08.: § 40b Abs. 1 SGB XI** (40 € DiPA + 30 € eUL, zwei getrennte Beträge) + **§ 78a Abs. 1 S. 1 SGB XI** (Vergütungsbetrag wird sehr wohl verhandelt) + Leitfaden Kap. 5.3.1 | `lib/coach/abrechnung.ts` fail-closed | EXTERNAL_EVIDENCE_REQUIRED | Die bisherige Angabe „§ 40a Abs. 1a, 70-€-Deckel, keine verhandelte Vergütung" war **falsch**. Seit **BEEP (01.01.2026)** kann die Verhandlung vor und während des Antragsverfahrens laufen. **Zeitklasse D** |
 | REG-05 | BfArM-Beratungstermin | DiPAV § 22 („auf Anfrage"), Leitfaden Kap. 5.5 („keine rechtliche Bindung") | `audit/dipa/bfarm_fragenkatalog.md` | EXTERNAL_EVIDENCE_REQUIRED | **Kein Pflicht-Blocker — ausdrücklich freiwillig.** Höchste Hebelwirkung: klärt SEC-01-Scope, INT-02-MIO-Frage, QI-02 und REG-04 in einem Termin |
 
 ---
@@ -247,19 +268,39 @@ verändert, damit die Vorher-/Nachher-Zahlen vergleichbar bleiben.
 
 ## Was jetzt zuerst zu tun ist
 
-**Auf dem kritischen Pfad (blockieren die Antragstellung):**
+*Aktualisiert am 15.08.2026 nach dem regulatorischen Final-Check.*
+
+**Auf dem kritischen Pfad (blockieren die Antragstellung) — jetzt drei
+Beauftragungen, nicht zwei:**
 
 1. **SEC-01 + SEC-04** — eine Beauftragung, nicht zwei. TR-03161-2 und -3.
-2. **NN-01** — herstellerunabhängiges Institut. Wird auch für den
-   Erprobungs-Antrag gebraucht, ist also nicht aufschiebbar.
-3. **QI-01** — pflegefachliche Freigabe der 12 Module. Braucht keine
+2. **SEC-05** — ISO-27001-Zertifizierung, DAkkS-akkreditierte Stelle, auf den
+   Hersteller ausgestellt. **Neu auf dem kritischen Pfad**: der Leitfaden
+   verlangt sie „bei der Antragstellung". Längste Vorlaufzeit von allen.
+3. **NN-01** — herstellerunabhängiges Institut. Wird auch für den
+   Erprobungs-Antrag gebraucht, ist also nicht aufschiebbar. Eine CRO genügt,
+   eine akkreditierte Prüfstelle ist *nicht* gefordert, und die Beauftragung
+   darf marktüblich vergütet werden.
+4. **QI-01** — pflegefachliche Freigabe der 12 Module. Braucht keine
    Zertifizierungsstelle, nur eine qualifizierte Person.
 
 **Intern erledigbar, ohne Auftrag:**
 
-4. **BF-01** — DIN EN ISO 9241-171 beschaffen, dann selbst abgleichen.
-5. **BF-03** — einen Termin für den manuellen VoiceOver/NVDA-Durchgang setzen.
-6. **VS-02** — Entscheidung der Geschäftsführung zur 24-Stunden-Zusage.
+5. **BF-02** — die formative Runde geht als Cognitive Walkthrough **ohne
+   Testpersonen**; Testpersonen brauchen nur Anlage 2 IV Nr. 3, 10 und 12.
+6. **VS-02** — Entscheidung der Geschäftsführung. Geschuldet ist eine
+   **Rückmeldung** binnen 24 h, nicht die fertige Antwort; Format frei.
+7. **BF-01** — Anlage 2 IV Nr. 15 (Informationen auf mehr als eine Art) ist der
+   verbleibende Rest. Der DIN-Normkauf ist sinnvoll, aber **keine Rechtspflicht**.
+8. **DS-02 / DS-04** — DSFA abschließen, AVV-Kette gegenzeichnen. Keine externe
+   Stelle nötig. **Achtung bei DS-04:** Standardvertragsklauseln nach Art. 46
+   DSGVO sind für DiPA unzulässig — betroffene Dienstleister müssen ersetzt,
+   nicht nachvertraglich geheilt werden.
+
+**Nicht auf dem Pfad, entgegen bisheriger Darstellung:**
+
+9. **BF-03** — „Screenreader" kommt in keiner Rechtsquelle vor. Fachlich
+   sinnvoll, regulatorisch nur empfohlen.
 
 **Höchste Hebelwirkung pro Aufwand:** **REG-05** (BfArM-Beratung) — freiwillig,
 klärt aber SEC-01-Scope, die MIO-Frage aus INT-02, QI-02 und REG-04 in einem
