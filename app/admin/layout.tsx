@@ -209,6 +209,18 @@ const navGroups = [
     ],
   },
   {
+    key: 'kim',
+    title: 'KIM / TI',
+    items: [
+      { href: '/admin/kim', label: 'Posteingang', icon: <IconChat size={18} /> },
+      { href: '/admin/kim/outbox', label: 'Postausgang', icon: <IconClipboard size={18} /> },
+      { href: '/admin/kim/verfassen', label: 'Verfassen', icon: <IconDocument size={18} /> },
+      { href: '/admin/kim/adressbuch', label: 'Adressbuch', icon: <IconUsers size={18} /> },
+      { href: '/admin/kim/einstellungen', label: 'Provider-Einstellungen', icon: <IconSettings size={18} /> },
+      { href: '/admin/kim/postfach', label: 'Postfach & Karten (Block 18)', icon: <IconClipboard size={18} /> },
+    ],
+  },
+  {
     key: 'auto',
     title: 'Automatisierung',
     items: [
