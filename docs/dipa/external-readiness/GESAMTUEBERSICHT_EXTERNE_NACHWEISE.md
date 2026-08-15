@@ -268,7 +268,7 @@ Unabhängig von externen Beauftragungen kann Alltagsengel sofort beginnen:
 | Asset-Inventar für ISMS | Hardware, Software, Cloud-Dienste | Entwurf | 2–3 Tage |
 | Prozessdokumentation | Entwicklung, Deployment, Incident | Teilweise (CI, deploy.sh) | 3–5 Tage |
 | Standard-DPAs beschaffen | Supabase, Vercel, Resend | Nicht begonnen | 1 Tag |
-| C5-Testate anfragen | Supabase (O.Org_2) | Nicht begonnen | 1 Tag (Anfrage) |
+| ~~C5-Testate anfragen~~ | ~~Supabase (O.Org_2)~~ | **KORRIGIERT** | **Supabase und Vercel haben KEIN C5-Testat.** Beide haben SOC 2 Type II + ISO 27001. Ob das als „vergleichbares Testat" (O.Org_2) genügt: OFFENE RISIKOFRAGE, s. docs/dipa/24_REGULATORIK_TIEFENPRUEFUNG_2026-08-15.md Abschnitt F |
 | Backup-Aufbewahrungsfristen | Bei Supabase erfragen | Nicht begonnen | 1 Tag (Anfrage) |
 | Barrierefreiheits-Selbsttest | Gegen DIN EN ISO 9241-171 | Nicht begonnen | 3–5 Tage |
 | Usability-Testplan (formativ) | Ergänzung zum bestehenden Plan | Summativ vorhanden | 2–3 Tage |
