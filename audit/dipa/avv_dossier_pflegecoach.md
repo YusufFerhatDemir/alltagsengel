@@ -1,7 +1,9 @@
 # Auftragsverarbeitung — Dossier und Prüfliste
 
-**Produkt:** Digitaler PflegeCoach · **Version:** 0.5.0 · **Stand:** 2026-08-14
-**Deckt ab:** DiPA-Matrix DS-04 (Vorbereitung) · **Status der Anforderung:** EXTERN NÖTIG
+**Produkt:** Digitaler PflegeCoach · **Version:** 0.5.0 · **Stand:** 2026-08-15
+**Deckt ab:** DiPA-Matrix DS-04 (Vorbereitung) · **Status der Anforderung:** GESCHÄFTSFÜHRUNG
+(korrigiert 15.08.2026 — Unterschriften unter bestehende Anbieterbeziehungen, kein neuer
+Dienstleister nötig; Abschnitt 5b liefert die Checkliste)
 
 ---
 
@@ -127,3 +129,34 @@ Seite dokumentiert und teilweise automatisch nachgewiesen:
 | Sicherungs- und Protokollfristen schriftlich erfragen | Geschäftsführung | schließt zugleich die offene Frist in DS-03 |
 | Verträge und Rollenfrage Stripe juristisch prüfen | extern | zusammen mit DS-02 beauftragen |
 | Ergebnis in Verarbeitungsverzeichnis und Risikoakte nachziehen | intern | erst danach sinkt R2.9 |
+
+## 5b. Abschluss-Checkliste für die Geschäftsführung
+
+**Korrigiert 15.08.2026 (WS4):** AK-DS-04 ist keine „externer Dienstleister nötig"-
+Anforderung (Bearbeitungsklasse D→C, siehe `lib/coach/anforderungskatalog.ts`) —
+gebraucht werden keine neuen Verträge mit neuen Dienstleistern, sondern
+**Unterschriften unter bereits bestehende Anbieterbeziehungen**. Bei allen vier
+Anbietern unten ist ein Auftragsverarbeitungsvertrag (DPA) im Regelfall als
+Online-Zustimmung im Kunden-Dashboard oder als öffentliches Vertragsdokument auf der
+Rechtsseite des Anbieters hinterlegt — die genaue Fundstelle ändert sich erfahrungsgemäß
+häufiger als dieses Dokument gepflegt wird, deshalb bewusst kein Link hier, sondern der
+Suchpfad:
+
+| Anbieter | Wonach suchen | Was danach hier abzulegen ist |
+|---|---|---|
+| Supabase | Projekteinstellungen → „Legal" / „Compliance", alternativ öffentliche Rechtsseite des Anbieters | unterzeichnete/akzeptierte DPA-Bestätigung, Verarbeitungsregion (Zeile 1.1), Unterauftragnehmerliste |
+| Vercel | Team-/Projekteinstellungen → „Legal", alternativ öffentliche Rechtsseite des Anbieters | dieselben drei Punkte, zusätzlich Aufbewahrungsdauer der Zugriffsprotokolle (Zeile 1.2) |
+| Resend | Kontoeinstellungen → „Legal"/„Compliance", alternativ öffentliche Rechtsseite des Anbieters | DPA-Bestätigung, Aufbewahrung der Versandprotokolle (Zeile 1.3) |
+| Stripe | Dashboard → „Legal"/„Agreements", alternativ öffentliche Rechtsseite des Anbieters | DPA-Bestätigung UND schriftliche Klärung der Rollenfrage (Zeile 1.4) — hier zusätzlich die unter „extern" vermerkte juristische Prüfung, weil die Rollenfrage selbst strittig ist |
+
+**Reihenfolge, die den größten Blocker zuerst löst:** Supabase (höchste Kritikalität,
+alle Gesundheitsdaten) → Vercel → Resend → Stripe (derzeit ohne Betroffenheit, da
+`COACH_PREISE_FREIGEGEBEN` aus ist — kann zuletzt kommen).
+
+**Was diese Checkliste NICHT ersetzt:** Prüfliste aus Abschnitt 2 (was in jedem Vertrag
+stehen muss) bleibt die inhaltliche Prüfgrundlage, insbesondere Punkt 10
+(Drittlandbezug) — bei Ablehnung eines Standard-DPA wegen SCC-Klausel in einem
+Drittstaat ist der Dienstleister zu ersetzen, nicht die Klausel zu akzeptieren (siehe
+`AK-DS-04`-Eintrag im Katalog, DiPAV § 5 Abs. 4 lässt Standardvertragsklauseln nicht
+zu). Sobald ein Punkt aus der Tabelle erledigt ist, hier abhaken und in Abschnitt 1 den
+jeweiligen „Was zu klären ist"-Eintrag streichen.

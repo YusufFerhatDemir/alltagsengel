@@ -18,6 +18,7 @@ import {
   ANFORDERUNGSKATALOG, KATEGORIE_LABELS, STAND_LABELS,
   katalogFortschritt, katalogNachKategorie,
 } from '@/lib/coach/anforderungskatalog'
+import { antragsreife, formatiereBlocker } from '@/lib/coach/dipa-compliance'
 import { ABRECHNUNGSWEG_VORLAGEN } from '@/lib/coach/abrechnung'
 import { FREISCHALT_QUELLE_LABELS, FREISCHALT_QUELLEN } from '@/lib/coach/freischaltung'
 import type { NutzungsAuswertung } from '@/lib/coach/nachweise'
@@ -448,9 +449,28 @@ function AbrechnungTab({ onError }: { onError: (m: string) => void }) {
 function KatalogTab() {
   const fortschritt = katalogFortschritt()
   const gruppen = katalogNachKategorie()
+  const reife = antragsreife()
 
   return (
     <>
+      <Banner tone={reife.bereit ? 'success' : 'danger'}>
+        {reife.bereit ? (
+          <>Antragsreife (Zeitklasse A): kein offener Pflichtpunkt mehr.</>
+        ) : (
+          <>
+            Antragsreife (Zeitklasse A): <strong>{reife.blocker.length}</strong> offene(r)
+            Pflichtpunkt(e) vor Antragstellung — {reife.blockerIntern} intern (Klasse A–C),{' '}
+            {reife.blockerExtern} extern (Klasse D–E). Live berechnet aus diesem Katalog, ersetzt
+            die manuell gepflegte Liste in docs/dipa/.
+            <ul style={{ margin: '4px 0 0', paddingLeft: 18 }}>
+              {reife.blocker.map(e => (
+                <li key={e.id} style={{ fontSize: 12 }}>{formatiereBlocker(e)}</li>
+              ))}
+            </ul>
+          </>
+        )}
+      </Banner>
+
       <Banner tone="warn">
         Der Katalog enthält bewusst KEINE ausformulierten Verordnungstexte. Maßgeblich sind die
         Originaldokumente in der zum Antragszeitpunkt gültigen Fassung. Einträge, deren
