@@ -13,12 +13,15 @@ function readFile(rel: string): string {
 }
 
 describe('A1: profiles.pflegegrad Referenzen entfernt', () => {
-  it('register/page.tsx schreibt nicht mehr in profiles.pflegegrad', () => {
-    const src = readFile('app/auth/register/page.tsx')
-    // Darf kein .from('profiles').update({pflegegrad: ...}) mehr enthalten
-    expect(src).not.toMatch(/from\(['"]profiles['"]\)\.update\(\{[\s\S]*?pflegegrad/)
-    // Soll stattdessen care_recipients verwenden
-    expect(src).toContain("from('care_recipients').insert")
+  it('register schreibt nicht mehr in profiles.pflegegrad', () => {
+    const page = readFile('app/auth/register/page.tsx')
+    // page.tsx darf kein .from('profiles').update({pflegegrad: ...}) mehr enthalten
+    expect(page).not.toMatch(/from\(['"]profiles['"]\)\.update\(\{[\s\S]*?pflegegrad/)
+    // Soll Server Action nutzen statt direktem Client-Write
+    expect(page).toContain("insertCareRecipient")
+    // Die Server Action schreibt in care_recipients
+    const actions = readFile('app/auth/register/actions.ts')
+    expect(actions).toContain("from('care_recipients').insert")
   })
 
   it('OnboardingFlow.tsx liest pflegegrad aus care_recipients statt profiles', () => {
