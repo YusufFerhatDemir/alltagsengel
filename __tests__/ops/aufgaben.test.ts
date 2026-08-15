@@ -245,7 +245,7 @@ describe('Aufgaben', () => {
   // ── deleteAufgabe ─────────────────────────────────────────────
 
   describe('deleteAufgabe', () => {
-    it('loescht eine Aufgabe ohne Fehler', async () => {
+    it('archiviert eine Aufgabe per Soft-Delete', async () => {
       mock._setResult(null)
 
       await expect(
@@ -253,7 +253,7 @@ describe('Aufgaben', () => {
       ).resolves.toBeUndefined()
 
       expect(mock.client.from).toHaveBeenCalledWith('ops_aufgaben')
-      expect(mock.queryBuilder.delete).toHaveBeenCalled()
+      expect(mock.queryBuilder.update).toHaveBeenCalled()
     })
 
     it('wirft Fehler bei DB-Problem', async () => {
@@ -261,7 +261,7 @@ describe('Aufgaben', () => {
 
       await expect(
         deleteAufgabe(mock.client as any, { organizationId: ORG, id: 'a-1' }),
-      ).rejects.toThrow('Aufgabe konnte nicht geloescht werden')
+      ).rejects.toThrow('Aufgabe konnte nicht archiviert werden')
     })
   })
 })
