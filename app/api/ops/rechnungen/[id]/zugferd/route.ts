@@ -52,7 +52,7 @@ export async function GET(
 
     const zugferdBytes = await generateZugferdPdf(admin, invoiceId, orgId, existingPdfBytes)
 
-    return new NextResponse(zugferdBytes, {
+    return new NextResponse(Buffer.from(zugferdBytes), {
       status: 200,
       headers: {
         'Content-Type': 'application/pdf',
