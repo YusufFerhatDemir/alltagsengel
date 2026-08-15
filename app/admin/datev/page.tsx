@@ -123,7 +123,10 @@ export default function DatevExportPage() {
       if (!res.ok) throw new Error('Fehler beim Laden')
       const data = await res.json()
       setExporte(data)
-    } catch {}
+    } catch (err) {
+      console.error('Fehler in ladeExporte:', err)
+      setError('DATEV-Exporte konnten nicht geladen werden.')
+    }
   }, [])
 
   const ladeConfig = useCallback(async () => {
@@ -133,7 +136,10 @@ export default function DatevExportPage() {
       const data = await res.json()
       setConfig(data)
       setConfigForm(data)
-    } catch {}
+    } catch (err) {
+      console.error('Fehler in ladeConfig:', err)
+      setError('DATEV-Konfiguration konnte nicht geladen werden.')
+    }
   }, [])
 
   const ladeKonten = useCallback(async () => {
@@ -142,7 +148,10 @@ export default function DatevExportPage() {
       if (!res.ok) throw new Error('Fehler beim Laden')
       const data = await res.json()
       setKonten(data)
-    } catch {}
+    } catch (err) {
+      console.error('Fehler in ladeKonten:', err)
+      setError('Kontenzuordnung konnte nicht geladen werden.')
+    }
   }, [])
 
   useEffect(() => {

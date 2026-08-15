@@ -1,5 +1,4 @@
 'use client'
-import { heuteBerlin } from '@/lib/utils/timezone';
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
@@ -10,6 +9,13 @@ import {
   BONUS_TYPE, REWARD_TYPE, QUALIFICATION_LEVEL,
 } from '@/lib/admin/ops'
 import { StatusBadge, Banner, EmptyRow } from '@/components/admin/OpsUI'
+import {
+  addCaregiverDocument,
+  addCaregiverQualification,
+  changeCaregiverInitials,
+  addCaregiverBonus,
+  updateCaregiverRegistration,
+} from './actions'
 
 interface Caregiver {
   id: string
@@ -408,13 +414,12 @@ function DocModal({ caregiverId, onClose, onSaved }: { caregiverId: string; onCl
 
   async function save() {
     setErr(null); setSaving(true)
-    const supabase = createClient()
-    const { error } = await supabase.from('caregiver_documents').insert({
-      caregiver_id: caregiverId, document_type: type, title: title.trim() || null,
-      document_url: url.trim() || null, issued_date: issued || null,
-      valid_until: validUntil || null, notes: notes.trim() || null,
+    const result = await addCaregiverDocument({
+      caregiverId, documentType: type, title: title.trim() || null,
+      documentUrl: url.trim() || null, issuedDate: issued || null,
+      validUntil: validUntil || null, notes: notes.trim() || null,
     })
-    if (error) { setErr(error.message); setSaving(false); return }
+    if (!result.ok) { setErr(result.error); setSaving(false); return }
     onSaved()
   }
 
@@ -449,13 +454,11 @@ function QualModal({ caregiverId, onClose, onSaved }: { caregiverId: string; onC
     setErr(null)
     if (!title.trim()) { setErr('Bitte eine Bezeichnung angeben.'); return }
     setSaving(true)
-    const supabase = createClient()
-    const { error } = await supabase.from('caregiver_qualifications').insert({
-      caregiver_id: caregiverId, title: title.trim(), qualification_type: type.trim() || null,
-      document_url: url.trim() || null, issued_date: issued || null, valid_until: validUntil || null,
-      status: 'valid',
+    const result = await addCaregiverQualification({
+      caregiverId, title: title.trim(), qualificationType: type.trim() || null,
+      documentUrl: url.trim() || null, issuedDate: issued || null, validUntil: validUntil || null,
     })
-    if (error) { setErr(error.message); setSaving(false); return }
+    if (!result.ok) { setErr(result.error); setSaving(false); return }
     onSaved()
   }
 
@@ -482,18 +485,10 @@ function InitialsModal({ caregiverId, current, onClose, onSaved }: { caregiverId
     setErr(null)
     if (!initials.trim()) { setErr('Bitte ein Handzeichen eingeben.'); return }
     setSaving(true)
-    const supabase = createClient()
-    const today = heuteBerlin()
-    // Bisheriges aktives Handzeichen abschließen
-    await supabase.from('caregiver_initials_history')
-      .update({ valid_until: today }).eq('caregiver_id', caregiverId).is('valid_until', null)
-    const { error } = await supabase.from('caregiver_initials_history').insert({
-      caregiver_id: caregiverId, initials: initials.trim(), valid_from: today,
-      valid_until: null, changed_reason: reason.trim() || null,
+    const result = await changeCaregiverInitials({
+      caregiverId, initials: initials.trim(), reason: reason.trim() || null,
     })
-    if (error) { setErr(error.message); setSaving(false); return }
-    // Aktuelles Handzeichen am Stammdatensatz aktualisieren
-    await supabase.from('caregivers').update({ initials: initials.trim() }).eq('id', caregiverId)
+    if (!result.ok) { setErr(result.error); setSaving(false); return }
     onSaved()
   }
 
@@ -517,14 +512,12 @@ function BonusModal({ caregiverId, onClose, onSaved }: { caregiverId: string; on
 
   async function save() {
     setErr(null); setSaving(true)
-    const supabase = createClient()
-    const { error } = await supabase.from('caregiver_bonuses').insert({
-      caregiver_id: caregiverId, bonus_type: type, points: points ? Number(points) : null,
-      description: desc.trim() || null, reward_type: reward || null,
-      reward_value: rewardValue ? Number(rewardValue) : null,
-      awarded_date: heuteBerlin(), awarded_by: 'Alltagsengel',
+    const result = await addCaregiverBonus({
+      caregiverId, bonusType: type, points: points ? Number(points) : null,
+      description: desc.trim() || null, rewardType: reward || null,
+      rewardValue: rewardValue ? Number(rewardValue) : null,
     })
-    if (error) { setErr(error.message); setSaving(false); return }
+    if (!result.ok) { setErr(result.error); setSaving(false); return }
     onSaved()
   }
 
@@ -559,13 +552,13 @@ function RegNrModal({ caregiver, onClose, onSaved }: { caregiver: Caregiver; onC
 
   async function save() {
     setErr(null); setSaving(true)
-    const supabase = createClient()
-    const { error } = await supabase.from('caregivers').update({
-      lifetime_registration_number: lifetimeNr.trim() || null,
-      ik_nummer: ikNummer.trim() || null,
-      qualification_level: level,
-    }).eq('id', caregiver.id)
-    if (error) { setErr(error.message); setSaving(false); return }
+    const result = await updateCaregiverRegistration({
+      caregiverId: caregiver.id,
+      lifetimeRegistrationNumber: lifetimeNr.trim() || null,
+      ikNummer: ikNummer.trim() || null,
+      qualificationLevel: level,
+    })
+    if (!result.ok) { setErr(result.error); setSaving(false); return }
     onSaved()
   }
 

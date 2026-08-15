@@ -2,8 +2,8 @@
 import { useState, useEffect, useRef, ReactNode } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { geocodePLZ, extractPLZ } from '@/lib/geocoding'
 import { ENGEL_HOURLY_RATE } from '@/lib/pricing/b2c-constants'
+import { registerAsEngel } from './actions'
 import Icon3D from '@/components/Icon3D'
 import { IconHandshake, IconMedical, IconBag, IconHome as IconHouse, IconCoffee, IconTarget, IconCheck } from '@/components/Icons'
 import { trackRegistration } from '@/lib/tracking'
@@ -71,45 +71,24 @@ export default function EngelRegisterPage() {
   async function handleSubmit() {
     setSubmitting(true)
     setError('')
-    const supabase = createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) { setError('Nicht eingeloggt'); setSubmitting(false); return }
 
-    const { error: angelError } = await supabase.from('angels').upsert({
-      id: user.id,
-      hourly_rate: hourlyRate,
+    const result = await registerAsEngel({
+      firstName,
+      lastName,
+      email,
+      phone,
+      plz,
+      stadt,
+      qualification,
       services,
       availability,
-      bio: null,
-      qualification: qualification || null,
-      is_certified: qualification.includes('45b') || qualification.includes('53b'),
-      is_45b_capable: qualification.includes('45b'),
-      is_online: true,
-      total_jobs: 0,
-      rating: 5.0,
-      satisfaction_pct: 100,
+      hourlyRate,
     })
 
-    if (angelError) { setError(angelError.message); setSubmitting(false); return }
-
-    const profileUpdate: Record<string, any> = {}
-    if (firstName) profileUpdate.first_name = firstName
-    if (lastName) profileUpdate.last_name = lastName
-    if (email) profileUpdate.email = email
-    if (phone) profileUpdate.phone = phone
-    if (plz || stadt) {
-      profileUpdate.location = [plz, stadt].filter(Boolean).join(' ')
-      if (plz && plz.length === 5) {
-        profileUpdate.postal_code = plz
-        const coords = await geocodePLZ(plz)
-        if (coords) {
-          profileUpdate.latitude = coords.lat
-          profileUpdate.longitude = coords.lng
-        }
-      }
-    }
-    if (Object.keys(profileUpdate).length > 0) {
-      await supabase.from('profiles').update(profileUpdate).eq('id', user.id)
+    if (!result.ok) {
+      setError(result.error)
+      setSubmitting(false)
+      return
     }
 
     // Conversion-Tracking für Google Ads

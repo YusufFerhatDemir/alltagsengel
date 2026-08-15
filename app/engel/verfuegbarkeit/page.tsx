@@ -14,6 +14,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
+import { addAvailabilitySlot, deleteAvailabilitySlot, applyDefaultTemplate } from './actions'
 import {
   WOCHENTAGE,
   fensterProTag,
@@ -86,14 +87,9 @@ export default function VerfuegbarkeitPage() {
     setBusy(true)
     setError('')
     try {
-      const supabase = createClient()
-      const { data, error: dbError } = await supabase
-        .from('angel_availability')
-        .insert({ angel_id: angelId, weekday, start_time: start, end_time: ende })
-        .select('id, weekday, start_time, end_time')
-        .single()
-      if (dbError) throw dbError
-      setSlots(prev => [...prev, data as Slot])
+      const result = await addAvailabilitySlot(weekday, start, ende)
+      if (!result.ok) { setError(result.error); return }
+      setSlots(prev => [...prev, result.data])
       setOffenerTag(null)
     } catch (err) {
       console.error('Zeitfenster speichern:', err)
@@ -107,9 +103,8 @@ export default function VerfuegbarkeitPage() {
     setBusy(true)
     setError('')
     try {
-      const supabase = createClient()
-      const { error: dbError } = await supabase.from('angel_availability').delete().eq('id', id)
-      if (dbError) throw dbError
+      const result = await deleteAvailabilitySlot(id)
+      if (!result.ok) { setError(result.error); return }
       setSlots(prev => prev.filter(s => s.id !== id))
     } catch (err) {
       console.error('Zeitfenster löschen:', err)
@@ -129,18 +124,9 @@ export default function VerfuegbarkeitPage() {
     setBusy(true)
     setError('')
     try {
-      const supabase = createClient()
-      const { data, error: dbError } = await supabase
-        .from('angel_availability')
-        .insert(fehlende.map(weekday => ({
-          angel_id: angelId,
-          weekday,
-          start_time: VORLAGE.start,
-          end_time: VORLAGE.ende,
-        })))
-        .select('id, weekday, start_time, end_time')
-      if (dbError) throw dbError
-      setSlots(prev => [...prev, ...((data || []) as Slot[])])
+      const result = await applyDefaultTemplate(fehlende, VORLAGE.start, VORLAGE.ende)
+      if (!result.ok) { setError(result.error); return }
+      setSlots(prev => [...prev, ...result.data])
     } catch (err) {
       console.error('Vorlage übernehmen:', err)
       setError('Die Vorlage konnte nicht übernommen werden.')

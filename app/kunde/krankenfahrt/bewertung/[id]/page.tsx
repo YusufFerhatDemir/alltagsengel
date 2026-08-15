@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { submitRideReviewAction } from '../../actions'
 
 function StarRating({ value, onChange, size = 32 }: { value: number; onChange: (v: number) => void; size?: number }) {
   return (
@@ -69,24 +70,18 @@ export default function BewertungPage() {
     setSubmitting(true)
     setError('')
 
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return
+    const result = await submitRideReviewAction({
+      krankenfahrtId: rideId,
+      providerId: ride.provider_id,
+      rating,
+      puenktlichkeit: puenktlichkeit || null,
+      freundlichkeit: freundlichkeit || null,
+      fahrzeugZustand: fahrzeugZustand || null,
+      comment: comment.trim() || null,
+    })
 
-    const { error: insertError } = await supabase
-      .from('krankenfahrt_reviews')
-      .insert({
-        krankenfahrt_id: rideId,
-        customer_id: user.id,
-        provider_id: ride.provider_id,
-        rating,
-        puenktlichkeit: puenktlichkeit || null,
-        freundlichkeit: freundlichkeit || null,
-        fahrzeug_zustand: fahrzeugZustand || null,
-        comment: comment.trim() || null,
-      })
-
-    if (insertError) {
-      setError('Bewertung konnte nicht gespeichert werden')
+    if (!result.ok) {
+      setError(result.error || 'Bewertung konnte nicht gespeichert werden')
       setSubmitting(false)
       return
     }

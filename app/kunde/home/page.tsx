@@ -2,6 +2,7 @@
 import { useState, useEffect, ReactNode } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { requireUser } from '@/lib/supabase/require-session'
+import { updateLocationAction } from './actions'
 import Link from 'next/link'
 import { CUSTOMER_HOURLY_RATE } from '@/lib/pricing/b2c-constants'
 import { IconPin, IconSearch, IconUser, IconCard, IconStarFilled, IconCheck, IconStarGold, IconHandshakeGold, IconMedicalGold, IconBagGold, IconHomeGold, IconCoffeeGold, IconPillGold, IconWalkGold, IconTargetGold, IconBox, IconKrankenfahrtGold, IconHygieneboxGold } from '@/components/Icons'
@@ -92,12 +93,7 @@ export default function KundeHomePage() {
   // Standort in Profil aktualisieren (GPS/IP)
   useEffect(() => {
     if (!userLocation.loading && userLocation.city && profile && !profile.location) {
-      const supabase = createClient()
-      supabase.auth.getUser().then(({ data: { user } }) => {
-        if (user) {
-          supabase.from('profiles').update({ location: userLocation.city }).eq('id', user.id)
-        }
-      })
+      updateLocationAction({ location: userLocation.city }).catch(() => {})
     }
   }, [userLocation.loading, userLocation.city, profile])
 

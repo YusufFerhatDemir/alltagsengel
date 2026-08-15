@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client'
 import { uploadServiceProof } from '@/lib/upload-service-proof'
 import { euro, formatDate, fullName, statusMeta, OCR_STATUS, REVIEW_ERROR_TYPE } from '@/lib/admin/ops'
 import { Banner, EmptyRow, StatusBadge } from '@/components/admin/OpsUI'
+import { createDraftServiceRecordAction } from './actions'
 
 interface Option { id: string; label: string }
 
@@ -168,18 +169,13 @@ export default function LeistungsnachweisUploadPage() {
     setCreatingRecord(true)
     setError(null)
     try {
-      const supabase = createClient()
-      const { data, error: insErr } = await supabase
-        .from('service_records')
-        .insert({
-          client_id: clientId,
-          date: newDate,
-          service_type: newServiceType,
-          status: 'draft',
-        })
-        .select('id, date, start_time, end_time, amount, status')
-        .single()
-      if (insErr || !data) { setError(`Fehler beim Anlegen: ${insErr?.message}`); setCreatingRecord(false); return }
+      const result = await createDraftServiceRecordAction({
+        client_id: clientId,
+        date: newDate,
+        service_type: newServiceType,
+      })
+      if (!result.ok) { setError(result.error); setCreatingRecord(false); return }
+      const data = result.data
       setRecords(prev => [{ id: data.id, label: `${formatDate(data.date)} · ${data.status}`, date: data.date, start_time: data.start_time, end_time: data.end_time, amount: data.amount, status: data.status }, ...prev])
       setRecordId(data.id)
       setShowNewRecord(false)

@@ -7,6 +7,7 @@ import { requireUser } from '@/lib/supabase/require-session'
 import Icon3D from '@/components/Icon3D'
 import { useUserLocation } from '@/hooks/useUserLocation'
 import { useTrackVisit } from '@/hooks/useTrackVisit'
+import { updateProviderCity, claimRide as claimRideAction, startRide as startRideAction, completeRide as completeRideAction } from './actions'
 
 interface Ride {
   id: string
@@ -100,8 +101,7 @@ export default function FahrerHomePage() {
   // Standort in DB aktualisieren
   useEffect(() => {
     if (!userLocation.loading && userLocation.city && provider) {
-      const supabase = createClient()
-      supabase.from('krankenfahrt_providers').update({ city: userLocation.city }).eq('id', provider.id)
+      updateProviderCity(provider.id, userLocation.city).catch(() => {})
     }
   }, [userLocation.loading, userLocation.city, provider])
 
@@ -109,8 +109,8 @@ export default function FahrerHomePage() {
     if (!provider) return
     setActionInProgress(rideId)
     try {
-      const supabase = createClient()
-      await supabase.from('krankenfahrten').update({ provider_id: provider.id, status: 'confirmed' }).eq('id', rideId)
+      const result = await claimRideAction(rideId)
+      if (!result.ok) console.error(result.error)
       await loadData()
     } catch (err) {
       console.error(err)
@@ -122,8 +122,8 @@ export default function FahrerHomePage() {
   async function handleStartRide(rideId: string) {
     setActionInProgress(rideId)
     try {
-      const supabase = createClient()
-      await supabase.from('krankenfahrten').update({ status: 'in_progress' }).eq('id', rideId)
+      const result = await startRideAction(rideId)
+      if (!result.ok) console.error(result.error)
       await loadData()
     } catch (err) {
       console.error(err)
@@ -135,8 +135,8 @@ export default function FahrerHomePage() {
   async function handleCompleteRide(rideId: string) {
     setActionInProgress(rideId)
     try {
-      const supabase = createClient()
-      await supabase.from('krankenfahrten').update({ status: 'completed' }).eq('id', rideId)
+      const result = await completeRideAction(rideId)
+      if (!result.ok) console.error(result.error)
       await loadData()
     } catch (err) {
       console.error(err)

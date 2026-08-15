@@ -88,7 +88,9 @@ export default function EngelBenachrichtigungenPage() {
       })
       if (!res.ok) throw new Error('Fehler')
       setItems(prev => prev.map(b => ids.includes(b.id) ? { ...b, gelesen: true } : b))
-    } catch { /* ignore */ }
+    } catch (err) {
+      console.error('Fehler in markAsRead (Engel-Benachrichtigungen):', err)
+    }
     finally { setMarking(false) }
   }
 

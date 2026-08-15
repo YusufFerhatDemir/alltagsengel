@@ -6,6 +6,7 @@ import { validatePasswordAsync } from '@/lib/password-validation'
 import Icon3D from '@/components/Icon3D'
 import { trackRegistration } from '@/lib/tracking'
 import * as Sentry from '@sentry/nextjs'
+import { registerFahrerProfile } from './actions'
 
 export default function FahrerRegisterPage() {
   const router = useRouter()
@@ -115,40 +116,22 @@ export default function FahrerRegisterPage() {
         return
       }
 
-      const userId = authData.user.id
-
-      // 2. Update profile with role='fahrer'
-      const { error: profileError } = await supabase.from('profiles').update({
-        role: 'fahrer',
-        first_name: formData.firstName,
-        last_name: formData.lastName,
+      // 2. Update profile + insert provider via server action
+      const regResult = await registerFahrerProfile({
+        firstName: formData.firstName,
+        lastName: formData.lastName,
         phone: formData.phone,
-        location: [formData.plz, formData.city].filter(Boolean).join(' '),
-        postal_code: formData.plz && formData.plz.length === 5 ? formData.plz : null,
-      }).eq('id', userId)
-
-      if (profileError) {
-        setError(`Fehler beim Speichern des Profils: ${profileError.message}`)
-        setSubmitting(false)
-        return
-      }
-
-      // 3. Insert into krankenfahrt_providers
-      const { error: providerError } = await supabase.from('krankenfahrt_providers').insert({
-        user_id: userId,
-        company_name: formData.companyName,
-        license_number: formData.licenseNumber,
-        tax_id: formData.taxId,
-        address: formData.address,
+        plz: formData.plz,
         city: formData.city,
-        phone: formData.phone,
+        companyName: formData.companyName,
+        licenseNumber: formData.licenseNumber,
+        taxId: formData.taxId,
+        address: formData.address,
         email: formData.email,
-        status: 'pending',
-        is_verified: false,
       })
 
-      if (providerError) {
-        setError(`Fehler beim Speichern der Anbieter-Daten: ${providerError.message}`)
+      if (!regResult.ok) {
+        setError(regResult.error)
         setSubmitting(false)
         return
       }

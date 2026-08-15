@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { createKrankenfahrtAction } from './actions'
 import { IconTruck, IconCard, IconShield, IconInfo } from '@/components/Icons'
 import { logError } from '@/lib/safe-query'
 import { trackKrankenfahrt } from '@/lib/tracking'
@@ -180,37 +181,27 @@ export default function KrankenfahrtPage() {
     if (!formData.uhrzeit) { setError('Bitte wählen Sie eine Uhrzeit'); setSubmitting(false); return }
 
     try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) { setError('Sie sind nicht eingeloggt'); setSubmitting(false); return }
-
       // Fail-safe: Kassenabrechnung nur mit hessischer PLZ
       const finalPayMethod = kasseAllowed ? payMethod : 'privat'
       const withKasse = finalPayMethod === 'kasse' || finalPayMethod === 'kombi'
 
-      const { data: booking, error: bookErr } = await supabase
-        .from('krankenfahrten')
-        .insert({
-          customer_id: user.id,
-          abholadresse: formData.abholadresse,
-          zieladresse: formData.zieladresse,
-          datum: formData.datum,
-          uhrzeit: formData.uhrzeit,
-          rueckfahrt: formData.rueckfahrt,
-          rollstuhl_benoetig: selectedTier === 'rollstuhl',
-          tragestuhl_benoetig: selectedTier === 'tragestuhl',
-          hinweise: formData.hinweise || null,
-          payment_method: finalPayMethod,
-          insurance_type: withKasse ? kkType : null,
-          insurance_provider: withKasse ? selectedKK : null,
-          total_amount: breakdown?.total || 0,
-          pricing_snapshot: breakdown || null,
-          status: 'pending',
-        })
-        .select()
-        .single()
+      const result = await createKrankenfahrtAction({
+        abholadresse: formData.abholadresse,
+        zieladresse: formData.zieladresse,
+        datum: formData.datum,
+        uhrzeit: formData.uhrzeit,
+        rueckfahrt: formData.rueckfahrt,
+        selectedTier,
+        hinweise: formData.hinweise || null,
+        paymentMethod: finalPayMethod,
+        insuranceType: withKasse ? kkType : null,
+        insuranceProvider: withKasse ? selectedKK : null,
+        totalAmount: breakdown?.total || 0,
+        pricingSnapshot: breakdown || null,
+      })
 
-      if (bookErr) {
-        logError('KrankenfahrtPage:submit', bookErr.message)
+      if (!result.ok) {
+        logError('KrankenfahrtPage:submit', result.error)
         setError('Die Buchung konnte nicht erstellt werden. Bitte versuchen Sie es erneut.')
         setSubmitting(false)
         return

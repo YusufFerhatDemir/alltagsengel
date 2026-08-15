@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { requireUser } from '@/lib/supabase/require-session'
+import { sendSupportNoteAction } from './actions'
 import { IconWingsGold } from '@/components/Icons'
 
 // ═══════════════════════════════════════════════════════════════
@@ -128,7 +129,6 @@ export default function KundeNachrichtenPage() {
 
   async function handleSend() {
     if (!newMsg.trim() || !userId || !clientId) return
-    const supabase = createClient()
     const content = newMsg.trim()
     setNewMsg('')
 
@@ -142,23 +142,12 @@ export default function KundeNachrichtenPage() {
     }
     setMessages(prev => [...prev, optimistic])
 
-    const { data, error: sendErr } = await supabase
-      .from('care_notes')
-      .insert({
-        client_id: clientId,
-        author_id: userId,
-        author_role: 'kunde',
-        author_name: authorName,
-        category: 'allgemein',
-        content,
-      })
-      .select('id, author_id, author_role, content, is_urgent, created_at')
-      .single()
+    const result = await sendSupportNoteAction({ clientId, content })
 
-    if (data) {
-      setMessages(prev => prev.map(m => m.id === optimistic.id ? (data as NoteMessage) : m))
-    } else if (sendErr) {
-      console.error('[KundeNachrichten:send] error:', sendErr)
+    if (result.ok) {
+      setMessages(prev => prev.map(m => m.id === optimistic.id ? (result.data as NoteMessage) : m))
+    } else {
+      console.error('[KundeNachrichten:send] error:', result.error)
       setMessages(prev => prev.filter(m => m.id !== optimistic.id))
       setError('Nachricht konnte nicht gesendet werden. Bitte versuchen Sie es erneut.')
       setTimeout(() => setError(''), 4000)

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
+import { submitHygieneboxOrderAction } from './actions'
 import { IconBox, IconShield, IconCheck, IconInfo, IconGloves, IconDroplet } from '@/components/Icons'
 
 interface Product {
@@ -100,19 +101,16 @@ export default function HygieneboBoxPage() {
     setSubmitting(true)
 
     try {
-      const supabase = createClient()
-      const { error: dbError } = await supabase.from('hygienebox_orders').insert({
-        user_id: userId,
-        delivery_address: deliveryAddress,
+      const result = await submitHygieneboxOrderAction({
+        deliveryAddress,
         pflegegrad,
-        insurance_company: insuranceCompany,
-        insurance_number: insuranceNumber,
+        insuranceCompany,
+        insuranceNumber,
         products: selectedProducts,
-        consent: consent,
-        status: 'submitted',
+        consent,
       })
 
-      if (dbError) throw dbError
+      if (!result.ok) throw new Error(result.error)
 
       router.push('/kunde/home')
     } catch (err: any) {

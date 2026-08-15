@@ -13,6 +13,21 @@ import { heuteBerlin } from '@/lib/utils/timezone';
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import {
+  saveVerordnungAction,
+  softDeleteVerordnung,
+  toggleNeuantragAction,
+  beantragenVerordnung as beantragenAction,
+  saveKassenantwort,
+  removeAssignmentAction,
+  setAbrechnungsStatusAction,
+  saveVerordnungInvoiceEdit,
+  toggleInvoiceBezahlt,
+  toggleInvoiceVersand,
+  saveAbsageAction,
+  setAbsageErsatz,
+  removeAbsageAction,
+} from './actions'
+import {
   formatDate, formatDuration, formatTime, fullName, statusMeta, daysUntil,
   gueltigkeitsAmpel, euro, centToEuro, euroToCent,
   VERORDNUNG_TYPE, GENEHMIGUNG_STATUS, LEISTUNGSART_LABELS, ABRECHNUNGS_STATUS,
@@ -507,6 +522,7 @@ export default function AdminVerordnungenPage() {
       const supabase = createClient()
 
       // Scan hochladen (privater Bucket, Pfad wird gespeichert — Anzeige via Signed URL)
+      // File uploads bleiben client-seitig (File-Objekte nicht serialisierbar)
       let documentPath: string | null | undefined = undefined
       if (scanFile) {
         const path = `${form.client_id}/${Date.now()}-${sanitizeFileName(scanFile.name)}`
@@ -521,7 +537,7 @@ export default function AdminVerordnungenPage() {
         documentPath = path
       }
 
-      // Abtretungserklärung hochladen (gleicher privater Bucket)
+      // Abtretungserklaerung hochladen (gleicher privater Bucket)
       let abtretungPath: string | null | undefined = undefined
       if (abtretungFile) {
         const path = `${form.client_id}/abtretung/${Date.now()}-${sanitizeFileName(abtretungFile.name)}`
@@ -536,6 +552,7 @@ export default function AdminVerordnungenPage() {
         abtretungPath = path
       }
 
+      // Payload zusammenbauen (bleibt client-seitig, nur DB-Write geht zum Server)
       const payload: Record<string, unknown> = {
         client_id: form.client_id,
         verordnung_type: form.verordnung_type,
@@ -572,44 +589,9 @@ export default function AdminVerordnungenPage() {
       if (documentPath !== undefined) payload.verordnung_document_url = documentPath
       if (abtretungPath !== undefined) payload.abtretungserklaerung_document_url = abtretungPath
 
-      let verordnungId = editingId
-      if (editingId) {
-        const { error: e } = await supabase.from('verordnungen').update(payload).eq('id', editingId)
-        if (e) { setError(`Speichern fehlgeschlagen: ${e.message}`); setSaving(false); return }
-      } else {
-        const { data: inserted, error: e } = await supabase
-          .from('verordnungen')
-          .insert(payload)
-          .select('id')
-          .single()
-        if (e || !inserted) { setError(`Speichern fehlgeschlagen: ${e?.message || 'Kein Datensatz zurückgegeben'}`); setSaving(false); return }
-        verordnungId = inserted.id
-      }
-
-      // Leistungspositionen synchronisieren (mehrere Leistungsarten pro Rezept):
-      // alte Positionen ersetzen, nur ausgefüllte Zeilen speichern
-      if (verordnungId) {
-        const gueltige = positionen.filter(p => p.leistungsart)
-        const { error: delErr } = await supabase
-          .from('verordnung_leistungen')
-          .delete()
-          .eq('verordnung_id', verordnungId)
-        if (delErr) { setError(`Leistungspositionen aktualisieren fehlgeschlagen: ${delErr.message}`); setSaving(false); return }
-        if (gueltige.length > 0) {
-          const { error: posErr } = await supabase.from('verordnung_leistungen').insert(
-            gueltige.map(p => ({
-              verordnung_id: verordnungId,
-              leistungsart: p.leistungsart,
-              haeufigkeit: p.haeufigkeit || null,
-              menge: p.menge ? Number(p.menge) : 1,
-              dauer_minuten: p.dauer_minuten ? Number(p.dauer_minuten) : null,
-              leistungskomplex: p.leistungskomplex || null,
-              bemerkung: p.bemerkung || null,
-            }))
-          )
-          if (posErr) { setError(`Leistungspositionen speichern fehlgeschlagen: ${posErr.message}`); setSaving(false); return }
-        }
-      }
+      // DB-Writes via Server Action (inkl. Leistungspositionen-Sync + Audit-Log)
+      const result = await saveVerordnungAction(editingId, payload, positionen)
+      if (!result.ok) { setError(result.error); setSaving(false); return }
 
       setShowForm(false)
       setScanFile(null)
@@ -628,13 +610,8 @@ export default function AdminVerordnungenPage() {
     if (!window.confirm('Verordnung wirklich löschen? (Sie wird nur ausgeblendet, nicht endgültig entfernt — Revisionssicherheit)')) return
     setBusyId(id)
     try {
-      const supabase = createClient()
-      const { data: userData } = await supabase.auth.getUser()
-      const { error: e } = await supabase
-        .from('verordnungen')
-        .update({ deleted_at: new Date().toISOString(), deleted_by: userData?.user?.id || null })
-        .eq('id', id)
-      if (e) { setError(`Löschen fehlgeschlagen: ${e.message}`); return }
+      const result = await softDeleteVerordnung(id)
+      if (!result.ok) { setError(result.error); return }
       await load()
     } finally {
       setBusyId(null)
@@ -644,12 +621,8 @@ export default function AdminVerordnungenPage() {
   async function markNeuantrag(v: Verordnung) {
     setBusyId(v.id)
     try {
-      const supabase = createClient()
-      const { error: e } = await supabase
-        .from('verordnungen')
-        .update({ neuantrag_erforderlich: !v.neuantrag_erforderlich })
-        .eq('id', v.id)
-      if (e) { setError(`Update fehlgeschlagen: ${e.message}`); return }
+      const result = await toggleNeuantragAction(v.id, v.neuantrag_erforderlich)
+      if (!result.ok) { setError(result.error); return }
       await load()
     } finally {
       setBusyId(null)
@@ -675,15 +648,8 @@ export default function AdminVerordnungenPage() {
   async function beantragen(v: Verordnung) {
     setBusyId(v.id)
     try {
-      const supabase = createClient()
-      const { error: e } = await supabase
-        .from('verordnungen')
-        .update({
-          genehmigung_status: 'beantragt',
-          kassengenehmigung_beantragt_am: new Date().toISOString(),
-        })
-        .eq('id', v.id)
-      if (e) { setError(`Antrag fehlgeschlagen: ${e.message}`); return }
+      const result = await beantragenAction(v.id)
+      if (!result.ok) { setError(result.error); return }
       await load()
     } finally {
       setBusyId(null)
@@ -709,31 +675,14 @@ export default function AdminVerordnungenPage() {
     }
     setBusyId(antwortId)
     try {
-      const supabase = createClient()
-      const original = verordnungen.find(x => x.id === antwortId)
-      // Abgleich: beantragte vs. genehmigte Leistungsart — bei Abweichung Warnung im UI
-      let abgleichOk: boolean | null = null
-      let abweichung: string | null = null
-      if (antwort.ergebnis === 'genehmigt' && original?.leistungsart && antwort.genehmigte_leistungsart) {
-        abgleichOk = original.leistungsart === antwort.genehmigte_leistungsart
-        if (!abgleichOk) {
-          abweichung = `Beantragt: ${statusMeta(LEISTUNGSART_LABELS, original.leistungsart).label} — Genehmigt: ${statusMeta(LEISTUNGSART_LABELS, antwort.genehmigte_leistungsart).label}`
-        }
-      }
-      const { error: e } = await supabase
-        .from('verordnungen')
-        .update({
-          genehmigung_status: antwort.ergebnis,
-          genehmigung_aktenzeichen: antwort.aktenzeichen || null,
-          genehmigung_datum: antwort.datum || null,
-          genehmigung_bis: antwort.ergebnis === 'genehmigt' ? (antwort.bis || null) : null,
-          kassengenehmigung_antwort_am: new Date().toISOString(),
-          genehmigte_leistungsart: antwort.genehmigte_leistungsart || null,
-          genehmigung_abgleich_ok: abgleichOk,
-          genehmigung_abweichung: abweichung,
-        })
-        .eq('id', antwortId)
-      if (e) { setError(`Speichern fehlgeschlagen: ${e.message}`); return }
+      const result = await saveKassenantwort(antwortId, {
+        ergebnis: antwort.ergebnis,
+        aktenzeichen: antwort.aktenzeichen,
+        datum: antwort.datum,
+        bis: antwort.bis,
+        genehmigte_leistungsart: antwort.genehmigte_leistungsart,
+      })
+      if (!result.ok) { setError(result.error); return }
       setAntwortId(null)
       await load()
     } finally {
@@ -794,9 +743,8 @@ export default function AdminVerordnungenPage() {
     if (!window.confirm('Einsatz wirklich entfernen?')) return
     setBusyId(a.id)
     try {
-      const supabase = createClient()
-      const { error: e } = await supabase.from('assignments').delete().eq('id', a.id)
-      if (e) { setError(`Entfernen fehlgeschlagen: ${e.message}`); return }
+      const result = await removeAssignmentAction(a.id)
+      if (!result.ok) { setError(result.error); return }
       await load()
     } finally {
       setBusyId(null)
@@ -807,12 +755,8 @@ export default function AdminVerordnungenPage() {
   async function setAbrechnungsStatus(v: Verordnung, status: string) {
     setBusyId(v.id)
     try {
-      const supabase = createClient()
-      const { error: e } = await supabase
-        .from('verordnungen')
-        .update({ abrechnungs_status: status })
-        .eq('id', v.id)
-      if (e) { setError(`Update fehlgeschlagen: ${e.message}`); return }
+      const result = await setAbrechnungsStatusAction(v.id, status)
+      if (!result.ok) { setError(result.error); return }
       await load()
     } finally {
       setBusyId(null)
@@ -833,17 +777,14 @@ export default function AdminVerordnungenPage() {
     if (!invoiceEditId) return
     setBusyId(invoiceEditId)
     try {
-      const supabase = createClient()
-      const { error: e } = await supabase
-        .from('invoices')
-        .update({
-          soll_betrag_cent: euroToCent(invoiceForm.soll),
-          ist_betrag_cent: euroToCent(invoiceForm.ist),
-          kuerzung_cent: euroToCent(invoiceForm.kuerzung) ?? 0,
-          kuerzung_grund: invoiceForm.kuerzung_grund || null,
-        })
-        .eq('id', invoiceEditId)
-      if (e) { setError(`Speichern fehlgeschlagen: ${e.message}`); return }
+      const result = await saveVerordnungInvoiceEdit(
+        invoiceEditId,
+        invoiceForm.soll,
+        invoiceForm.ist,
+        invoiceForm.kuerzung,
+        invoiceForm.kuerzung_grund,
+      )
+      if (!result.ok) { setError(result.error); return }
       setInvoiceEditId(null)
       await load()
     } finally {
@@ -854,15 +795,8 @@ export default function AdminVerordnungenPage() {
   async function toggleBezahlt(inv: InvoiceRow) {
     setBusyId(inv.id)
     try {
-      const supabase = createClient()
-      const { error: e } = await supabase
-        .from('invoices')
-        .update({
-          bezahlt: !inv.bezahlt,
-          bezahlt_am: !inv.bezahlt ? heuteBerlin() : null,
-        })
-        .eq('id', inv.id)
-      if (e) { setError(`Update fehlgeschlagen: ${e.message}`); return }
+      const result = await toggleInvoiceBezahlt(inv.id, inv.bezahlt)
+      if (!result.ok) { setError(result.error); return }
       await load()
     } finally {
       setBusyId(null)
@@ -872,12 +806,8 @@ export default function AdminVerordnungenPage() {
   async function toggleVersand(inv: InvoiceRow, field: 'versand_elektronisch' | 'versand_post') {
     setBusyId(inv.id)
     try {
-      const supabase = createClient()
-      const { error: e } = await supabase
-        .from('invoices')
-        .update({ [field]: !inv[field] })
-        .eq('id', inv.id)
-      if (e) { setError(`Update fehlgeschlagen: ${e.message}`); return }
+      const result = await toggleInvoiceVersand(inv.id, field, inv[field])
+      if (!result.ok) { setError(result.error); return }
       await load()
     } finally {
       setBusyId(null)
@@ -889,15 +819,13 @@ export default function AdminVerordnungenPage() {
     if (!absageForm.assignment_id) { setError('Bitte einen Einsatz auswählen.'); return }
     setSaving(true)
     try {
-      const supabase = createClient()
-      const { error: e } = await supabase.from('einsatz_absagen').insert({
+      const result = await saveAbsageAction({
         assignment_id: absageForm.assignment_id,
         abgesagt_von: absageForm.abgesagt_von,
-        grund: absageForm.grund || null,
-        ersatz_mitarbeiterin_id: absageForm.ersatz_mitarbeiterin_id || null,
-        ersatz_gefunden: !!absageForm.ersatz_mitarbeiterin_id,
+        grund: absageForm.grund,
+        ersatz_mitarbeiterin_id: absageForm.ersatz_mitarbeiterin_id,
       })
-      if (e) { setError(`Speichern fehlgeschlagen: ${e.message}`); return }
+      if (!result.ok) { setError(result.error); return }
       setShowAbsageForm(false)
       setAbsageForm(EMPTY_ABSAGE)
       await load()
@@ -909,12 +837,8 @@ export default function AdminVerordnungenPage() {
   async function setErsatz(a: AbsageRow, caregiverId: string) {
     setBusyId(a.id)
     try {
-      const supabase = createClient()
-      const { error: e } = await supabase
-        .from('einsatz_absagen')
-        .update({ ersatz_mitarbeiterin_id: caregiverId || null, ersatz_gefunden: !!caregiverId })
-        .eq('id', a.id)
-      if (e) { setError(`Update fehlgeschlagen: ${e.message}`); return }
+      const result = await setAbsageErsatz(a.id, caregiverId)
+      if (!result.ok) { setError(result.error); return }
       await load()
     } finally {
       setBusyId(null)
@@ -925,9 +849,8 @@ export default function AdminVerordnungenPage() {
     if (!window.confirm('Absage wirklich löschen?')) return
     setBusyId(id)
     try {
-      const supabase = createClient()
-      const { error: e } = await supabase.from('einsatz_absagen').delete().eq('id', id)
-      if (e) { setError(`Löschen fehlgeschlagen: ${e.message}`); return }
+      const result = await removeAbsageAction(id)
+      if (!result.ok) { setError(result.error); return }
       await load()
     } finally {
       setBusyId(null)

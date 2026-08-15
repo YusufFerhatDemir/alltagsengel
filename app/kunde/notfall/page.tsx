@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { saveMedicationAction, deleteMedicationAction, saveNotfallInfoAction } from './actions'
 // Tesseract wird dynamisch geladen (siehe handlePhotoScan) — spart ~2.3 MB First-Load-JS
 
 interface Medication {
@@ -238,30 +239,25 @@ export default function NotfallPage() {
   async function saveMedication() {
     if (!user || !medForm.medikament_name || !medForm.dosierung) return
 
-    const payload = {
-      user_id: user.id,
+    const result = await saveMedicationAction({
+      id: editingMed?.id,
       medikament_name: medForm.medikament_name,
-      wirkstoff: medForm.wirkstoff || null,
+      wirkstoff: medForm.wirkstoff || undefined,
       dosierung: parseFloat(medForm.dosierung),
       einheit: medForm.einheit,
       einnahme_morgens: medForm.einnahmezeiten.morgens,
       einnahme_mittags: medForm.einnahmezeiten.mittags,
       einnahme_abends: medForm.einnahmezeiten.abends,
       einnahme_nachts: medForm.einnahmezeiten.nachts,
-      einnahme_hinweis: medForm.einnahme_hinweis || null,
-      verordnet_von: medForm.verordnet_von || null,
+      einnahme_hinweis: medForm.einnahme_hinweis || undefined,
+      verordnet_von: medForm.verordnet_von || undefined,
       dauermedikation: medForm.dauermedikation,
-      beginn_datum: medForm.beginn_datum || null,
-      end_datum: medForm.end_datum || null,
-      notizen: medForm.notizen || null,
-      aktiv: true,
-    }
+      beginn_datum: medForm.beginn_datum || undefined,
+      end_datum: medForm.end_datum || undefined,
+      notizen: medForm.notizen || undefined,
+    })
 
-    if (editingMed) {
-      await supabase.from('medikamentenplan').update(payload).eq('id', editingMed.id)
-    } else {
-      await supabase.from('medikamentenplan').insert(payload)
-    }
+    if (!result.ok) return
 
     setShowMedModal(false)
     resetMedForm()
@@ -269,7 +265,8 @@ export default function NotfallPage() {
   }
 
   async function deleteMedication(id: string) {
-    await supabase.from('medikamentenplan').update({ aktiv: false }).eq('id', id)
+    const result = await deleteMedicationAction({ id })
+    if (!result.ok) return
     setShowDeleteDialog(false)
     setDeleteTarget(null)
     loadData()
@@ -278,13 +275,8 @@ export default function NotfallPage() {
   async function saveNotfallInfo() {
     if (!user) return
 
-    const payload = { user_id: user.id, ...notfallForm }
-
-    if (notfallInfo) {
-      await supabase.from('notfall_info').update(payload).eq('user_id', user.id)
-    } else {
-      await supabase.from('notfall_info').insert(payload)
-    }
+    const result = await saveNotfallInfoAction(notfallForm)
+    if (!result.ok) return
 
     setSaveSuccess(true)
     setTimeout(() => setSaveSuccess(false), 3000)

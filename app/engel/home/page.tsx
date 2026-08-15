@@ -8,6 +8,7 @@ import { IconUser, IconCard } from '@/components/Icons'
 import NotificationBell from '@/components/NotificationBell'
 import { useUserLocation } from '@/hooks/useUserLocation'
 import { useTrackVisit } from '@/hooks/useTrackVisit'
+import { updateEngelLocation, toggleEngelOnline } from './actions'
 
 export default function EngelHomePage() {
   const router = useRouter()
@@ -89,23 +90,14 @@ export default function EngelHomePage() {
   // Standort in DB aktualisieren wenn GPS verfügbar
   useEffect(() => {
     if (!userLocation.loading && userLocation.city && angel) {
-      const supabase = createClient()
-      supabase.auth.getUser().then(({ data: { user } }) => {
-        if (user) {
-          supabase.from('profiles').update({ location: userLocation.city }).eq('id', user.id)
-        }
-      })
+      updateEngelLocation(userLocation.city).catch(() => {})
     }
   }, [userLocation.loading, userLocation.city, angel])
 
   async function toggleOnline() {
     const next = !isOnline
     setIsOnline(next)
-    const supabase = createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    if (user) {
-      await supabase.from('angels').update({ is_online: next }).eq('id', user.id)
-    }
+    await toggleEngelOnline(next).catch(() => {})
   }
 
   async function handleBooking(bookingId: string, action: 'accept' | 'decline') {
