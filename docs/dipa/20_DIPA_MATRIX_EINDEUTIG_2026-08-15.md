@@ -1,6 +1,33 @@
-# DiPA — Eindeutige 48-Punkte-Matrix (15.08.2026)
+# DiPA — Eindeutige 48-Punkte-Matrix (15.08.2026, Zwischenstand)
 
-**Status:** Diese Datei ist ab sofort die aktuellste Quelle. Sie ersetzt
+> **ÜBERHOLT — die aktuelle Quelle ist
+> [`21_FINAL_MATRIX_2026-08-15.md`](21_FINAL_MATRIX_2026-08-15.md).**
+>
+> Diese Datei hält den Zwischenstand vom Vormittag des 15.08.2026 fest, als
+> noch zwölf Punkte `UNVERIFIED` waren. Sie bleibt als Änderungsprotokoll
+> stehen, weil die Statusverschiebungen sonst nicht nachvollziehbar wären.
+>
+> Der Stand hier ist an mehreren Stellen **inhaltlich widerlegt**. Wer die
+> Einzelheiten braucht, findet sie in der finalen Matrix; die drei
+> folgenschwersten Irrtümer dieses Zwischenstands:
+>
+> 1. **„Kein Textfund" bei SEC-02, SEC-03, SEC-06, SEC-07, SEC-08, NN-02 und
+>    QI-01 war falsch.** Die Suche endete bei DiPAV und Anlage 1 und griff
+>    nicht auf die BSI TR-03161 durch, die § 5 Abs. 2 Nr. 1 DiPAV selbst in
+>    Bezug nimmt. QI-01 steht sogar direkt als § 6 Abs. 8 DiPAV im
+>    Verordnungstext.
+> 2. **SEC-05 (ISMS) wurde hier zu schwach eingeordnet.** Der Vorbehalt
+>    „steht nur im nicht bindenden Leitfaden" ist zurückgenommen:
+>    TR-03161-3 O.Org_1 verlangt die ISO-27001-Zertifizierung als MUSS, über
+>    dieselbe Kette wie SEC-01.
+> 3. **BF-01 wurde hier zu streng eingeordnet.** Anlage 2 DiPAV ist ein
+>    Selbsterklärungs-Fragebogen — eine externe Prüfstelle ist nirgends
+>    gefordert.
+>
+> Zahlen dieses Zwischenstands: 21 PASS_INTERNAL / 12 EXTERNAL / 3 PARTIAL /
+> 12 UNVERIFIED. Finaler Stand: **33 / 13 / 2 / 0**.
+
+**Status (historisch):** Diese Datei war die aktuellste Quelle. Sie ersetzt
 `docs/dipa/18_PHASE4_REVERIFY_2026-08-14.md` als Referenz (der Reverify bleibt als
 Änderungsprotokoll stehen) und die veralteten Tabellen in `docs/DIPA_MATRIX_FINAL.md`.
 Maschinenlesbares Gegenstück: `lib/coach/anforderungskatalog.ts`

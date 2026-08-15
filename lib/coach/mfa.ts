@@ -10,14 +10,30 @@
 //     Telefonnummer als personenbezogenes Datum — Datenminimierung spricht
 //     dagegen (Art. 5 Abs. 1 lit. c DSGVO).
 //
-//  2. FREIWILLIG per Voreinstellung (`COACH_MFA_PFLICHT` = false). Die
-//     Zielgruppe umfasst hochaltrige und technisch wenig geübte Menschen;
-//     eine erzwungene Authenticator-App würde einen Teil von ihnen vom
-//     eigenen Pflegetagebuch aussperren. Der Faktor ist vorhanden,
-//     einrichtbar und wird — sobald eingerichtet — technisch durchgesetzt.
-//     Ob DiPA einen PFLICHT-Faktor verlangt, ist offen (BfArM-Beratung,
-//     REG-05); der Schalter macht die Umstellung zu einer Deployment-,
-//     nicht zu einer Code-Entscheidung.
+//  2. FREIWILLIG per Voreinstellung AUSSERHALB des DiPA-Modus
+//     (`COACH_MFA_PFLICHT` = false). Die Zielgruppe umfasst hochaltrige und
+//     technisch wenig geübte Menschen; eine erzwungene Authenticator-App
+//     würde einen Teil von ihnen vom eigenen Pflegetagebuch aussperren.
+//     Der Faktor ist vorhanden, einrichtbar und wird — sobald eingerichtet
+//     — technisch durchgesetzt.
+//
+//     GEKLÄRT 15.08.2026 (vorher offen, „hängt an BfArM-Beratung"): Für den
+//     DiPA-Betrieb ist der zweite Faktor NICHT freiwillig. BSI TR-03161-1
+//     O.Auth_3 bzw. TR-03161-3 O.Auth_4 lauten wörtlich: „Jeder
+//     Authentifizierungsvorgang des Nutzers MUSS in Form einer
+//     Zwei-Faktor-Authentisierung umgesetzt werden." Die TR-03161 ist über
+//     DiPAV §5 Abs. 2 Nr. 1 → §78a Abs. 7 SGB XI verbindlich. Deshalb gilt
+//     im DiPA-Modus die Pflicht unabhängig vom Deployment-Schalter — ein
+//     versehentlich vergessenes `COACH_MFA_PFLICHT=true` darf die
+//     Anforderung nicht aushebeln.
+//
+//     Die in TR-03161-1 O.Auth_4 / -3 O.Auth_5 vorgesehene Herabstufung auf
+//     ein niedrigeres Vertrauensniveau (§ 139e Abs. 10 Satz 4 SGB V, über
+//     § 78a Abs. 7 Satz 2 SGB XI auf DiPA erstreckt) ist ein KANN und
+//     setzt „umfassende Information und Einwilligung" des EINZELNEN Nutzers
+//     voraus — ein globaler Deployment-Schalter erfüllt das nicht. Solange
+//     dieser Einwilligungsweg nicht gebaut ist, wird die Herabstufung
+//     bewusst NICHT angeboten.
 //
 //  3. Durchsetzung fail-closed für Nutzer MIT Faktor: Wer einen
 //     verifizierten Faktor hat, dessen Sitzung aber nur auf AAL1 steht,
@@ -29,16 +45,29 @@
 // der Oberfläche dieselben bleiben.
 // ═══════════════════════════════════════════════════════════════
 
+import { dipaModus } from './config'
+
 export const COACH_MFA_PFLICHT_ENV = 'COACH_MFA_PFLICHT'
 
 /**
  * Muss jeder PflegeCoach-Nutzer einen zweiten Faktor haben?
  *
- * Default AUS (siehe Entscheidung 2 oben). Der Schalter wirkt nur auf
- * schreibende Zugriffe — Lesen, Export und Löschung bleiben immer offen,
- * sonst sperrte eine Umstellung Nutzer von ihren eigenen Daten aus.
+ * Zwei Wege führen zu `true`:
+ *   1. DiPA-Modus aktiv → Pflicht, ohne Abschaltmöglichkeit (TR-03161
+ *      O.Auth_3, siehe Entscheidung 2 im Kopf dieser Datei).
+ *   2. Ausserhalb des DiPA-Modus: nur, wenn `COACH_MFA_PFLICHT=true`
+ *      ausdrücklich gesetzt ist. Default AUS.
+ *
+ * Der Schalter wirkt nur auf schreibende Zugriffe — Lesen, Export, Widerruf
+ * und Löschung bleiben immer offen. Das ist eine bewusste, begründete
+ * Abweichung vom Wortlaut des O.Auth_3 („jeder Authentifizierungsvorgang"):
+ * Art. 7 Abs. 3 DSGVO verlangt, dass der Widerruf so einfach ist wie die
+ * Erteilung, Art. 15/20 DSGVO sichern Auskunft und Portabilität. Ein
+ * MFA-Gate vor diesen Wegen würde genau diese Rechte verkürzen. Die
+ * Abweichung gehört als Herstelleraussage in die TR-03161-Prüfung.
  */
 export function mfaPflicht(): boolean {
+  if (dipaModus()) return true
   return process.env[COACH_MFA_PFLICHT_ENV] === 'true'
 }
 
