@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { escapeXml, formatCiiDate, formatAmount, formatQuantity } from '../xml-escape'
+import { escapeXml, formatCiiDate, formatAmount, formatQuantity } from '@/lib/billing/xrechnung/xml-escape'
 
 describe('escapeXml', () => {
   it('escapes ampersand', () => expect(escapeXml('A & B')).toBe('A &amp; B'))

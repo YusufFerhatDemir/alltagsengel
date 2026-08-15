@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import { generateCiiXml } from '../cii-generator'
-import type { XRechnungData } from '../types'
+import { generateCiiXml } from '@/lib/billing/xrechnung/cii-generator'
+import type { XRechnungData } from '@/lib/billing/xrechnung/types'
 
 function sampleData(overrides: Partial<XRechnungData> = {}): XRechnungData {
   return {
