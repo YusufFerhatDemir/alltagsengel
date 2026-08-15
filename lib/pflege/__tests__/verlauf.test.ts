@@ -11,22 +11,24 @@ import {
 import type { PflegeVerlaufEintrag } from '../types'
 
 function insertClient() {
-  const inserts: Array<Record<string, unknown>> = []
+  const inserts: Array<{ tabelle: string; payload: Record<string, unknown> }> = []
   const supabase = {
-    from: () => ({
+    from: (tabelle: string) => ({
       insert(payload: Record<string, unknown>) {
-        inserts.push(payload)
-        return { select: () => ({ single: async () => ({ data: { id: 'v-1', ...payload }, error: null }) }) }
+        inserts.push({ tabelle, payload })
+        return { select: () => ({ single: async () => ({ data: { id: 'v-1', organization_id: 'org-1', ...payload }, error: null }) }) }
       },
     }),
   }
-  return { supabase: supabase as never, inserts }
+  const nur = (tabelle: string) => inserts.filter(i => i.tabelle === tabelle).map(i => i.payload)
+  return { supabase: supabase as never, inserts, nur }
 }
 
 function leseClient(eintrag: Record<string, unknown>) {
   const updates: Array<Record<string, unknown>> = []
+  const inserts: Array<{ tabelle: string; payload: Record<string, unknown> }> = []
   const supabase = {
-    from: () => ({
+    from: (tabelle: string) => ({
       select: () => ({
         eq: () => ({ eq: () => ({ maybeSingle: async () => ({ data: eintrag, error: null }) }) }),
       }),
@@ -38,9 +40,13 @@ function leseClient(eintrag: Record<string, unknown>) {
         }
         return kette
       },
+      insert(payload: Record<string, unknown>) {
+        inserts.push({ tabelle, payload })
+        return { select: () => ({ single: async () => ({ data: { id: 'log-1', ...payload }, error: null }) }) }
+      },
     }),
   }
-  return { supabase: supabase as never, updates }
+  return { supabase: supabase as never, updates, inserts }
 }
 
 test('erlaubteSichtbarkeiten gibt Admins alle, Engeln nur die internen Stufen', () => {
@@ -66,35 +72,51 @@ test('validateSichtbarkeit weist unbekannte Stufen ab', () => {
 
 test('createVerlauf erzwingt Dringlichkeit bei Sturz und Notfall', async () => {
   for (const typ of ['sturz', 'notfall'] as const) {
-    const { supabase, inserts } = insertClient()
+    const { supabase, nur } = insertClient()
     await createVerlauf(supabase, {
       organizationId: 'org-1', clientId: 'client-1', inhalt: 'Ereignis dokumentiert',
       eintragTyp: typ, istDringend: false,
       autorId: 'user-1', autorName: 'Alltagsengel', autorRolle: 'engel',
     })
-    assert.equal(inserts[0].ist_dringend, true, `${typ} muss als dringend gespeichert werden`)
+    assert.equal(nur('pflege_verlauf')[0].ist_dringend, true, `${typ} muss als dringend gespeichert werden`)
   }
 })
 
 test('createVerlauf übernimmt das Dringlichkeitsflag bei normalen Einträgen unverändert', async () => {
-  const { supabase, inserts } = insertClient()
+  const { supabase, nur } = insertClient()
   await createVerlauf(supabase, {
     organizationId: 'org-1', clientId: 'client-1', inhalt: 'Alles ruhig',
     eintragTyp: 'beobachtung', istDringend: false,
     autorId: 'user-1', autorName: 'Alltagsengel', autorRolle: 'engel',
   })
-  assert.equal(inserts[0].ist_dringend, false)
-  assert.equal(inserts[0].sichtbarkeit, 'intern')
+  const verlaufInsert = nur('pflege_verlauf')[0]
+  assert.equal(verlaufInsert.ist_dringend, false)
+  assert.equal(verlaufInsert.sichtbarkeit, 'intern')
 })
 
 test('createVerlauf lässt organization_id weg, wenn keine übergeben wird', async () => {
-  const { supabase, inserts } = insertClient()
+  const { supabase, nur } = insertClient()
   await createVerlauf(supabase, {
     clientId: 'client-1', inhalt: 'Über den user-scoped Client geschrieben',
     autorId: 'user-1', autorName: 'Alltagsengel', autorRolle: 'engel',
   })
   // Ohne Spalte greift der DB-Default current_org_id().
-  assert.equal('organization_id' in inserts[0], false)
+  assert.equal('organization_id' in nur('pflege_verlauf')[0], false)
+})
+
+test('createVerlauf protokolliert die Erstellung in pflege_audit_log', async () => {
+  const { supabase, nur } = insertClient()
+  await createVerlauf(supabase, {
+    organizationId: 'org-1', clientId: 'client-1', inhalt: 'Ereignis dokumentiert',
+    autorId: 'user-5', autorName: 'Alltagsengel', autorRolle: 'engel',
+  })
+  const logEintrag = nur('pflege_audit_log')[0]
+  assert.ok(logEintrag, 'Audit-Log-Eintrag muss geschrieben werden')
+  assert.equal(logEintrag.entitaet_typ, 'verlauf')
+  assert.equal(logEintrag.aktion, 'erstellt')
+  assert.equal(logEintrag.akteur_id, 'user-5')
+  // organization_id kommt aus der zurückgegebenen Zeile (DB-Default), nicht aus params.
+  assert.equal(logEintrag.organization_id, 'org-1')
 })
 
 test('createVerlauf verlangt Inhalt und prüft die Aufzählungen vor dem DB-Zugriff', async () => {
@@ -128,10 +150,16 @@ test('updateVerlauf blockt gesperrte Einträge mit Hinweis auf die Periode', asy
   )
 })
 
-test('updateVerlauf setzt nur die übergebenen Felder', async () => {
-  const { supabase, updates } = leseClient({ id: 'v-1', gesperrt: false, inhalt: 'alt' })
+test('updateVerlauf setzt nur die übergebenen Felder und protokolliert "aktualisiert"', async () => {
+  const { supabase, updates, inserts } = leseClient({ id: 'v-1', gesperrt: false, inhalt: 'alt' })
   await updateVerlauf(supabase, 'v-1', 'org-1', { inhalt: '  neuer Text  ' }, 'admin')
   assert.deepEqual(updates[0], { inhalt: 'neuer Text' })
+
+  const logInsert = inserts.find(i => i.tabelle === 'pflege_audit_log')
+  assert.ok(logInsert, 'Audit-Log-Eintrag muss geschrieben werden')
+  assert.equal(logInsert!.payload.entitaet_typ, 'verlauf')
+  assert.equal(logInsert!.payload.entitaet_id, 'v-1')
+  assert.equal(logInsert!.payload.aktion, 'aktualisiert')
 })
 
 test('updateVerlauf lehnt eine leere Änderung ab', async () => {
