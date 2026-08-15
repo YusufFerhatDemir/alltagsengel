@@ -2485,3 +2485,80 @@ body:has(.admin-layout) {
     top: 52px !important;
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   Angehörigenportal — Modul 24
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Gold Spinner */
+.gold-spinner {
+  width: 36px; height: 36px; margin: 0 auto;
+  border: 3px solid rgba(201,150,60,0.15);
+  border-top-color: var(--gold);
+  border-radius: 50%;
+  animation: portalSpin .8s linear infinite;
+}
+@keyframes portalSpin { to { transform: rotate(360deg); } }
+
+/* Stat Cards (Dashboard) */
+.portal-stat-card {
+  background: var(--coal2, #1E1A16);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 16px;
+  transition: all .2s;
+}
+.portal-stat-card:hover {
+  border-color: rgba(201,150,60,.2);
+  transform: translateY(-1px);
+}
+.portal-stat-icon {
+  width: 36px; height: 36px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 10px;
+}
+.portal-stat-value {
+  font-size: 24px; font-weight: 700; color: var(--ink);
+  font-family: 'Cormorant Garamond', serif;
+  display: flex; align-items: baseline;
+}
+.portal-stat-label {
+  font-size: 12px; color: var(--ink4); margin-top: 2px;
+}
+
+/* Client Card */
+.portal-client-card {
+  background: var(--coal2, #1E1A16);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 16px;
+  margin-bottom: 12px;
+  transition: all .2s;
+}
+.portal-client-card:hover {
+  border-color: rgba(201,150,60,.15);
+}
+
+/* List Items */
+.portal-list-item {
+  background: var(--coal2, #1E1A16);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 10px;
+  transition: all .2s;
+}
+.portal-list-item:hover {
+  border-color: rgba(201,150,60,.15);
+}
+
+/* Status Badges */
+.portal-status {
+  font-size: 11px; padding: 3px 8px; border-radius: 6px;
+  font-weight: 600; white-space: nowrap;
+}
+.portal-status--signed,
+.portal-status--completed { background: rgba(92,184,130,.12); color: var(--green); }
+.portal-status--draft { background: rgba(255,255,255,.06); color: var(--ink4); }
+.portal-status--submitted { background: rgba(201,150,60,.12); color: var(--gold2); }
+.portal-status--billed { background: rgba(92,184,130,.08); color: var(--green); }
