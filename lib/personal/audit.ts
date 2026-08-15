@@ -15,7 +15,7 @@ export interface WriteAuditParams {
 }
 
 export async function writeAuditLog(supabase: SupabaseClient, params: WriteAuditParams): Promise<void> {
-  await supabase.from('personal_audit_log').insert({
+  const { error } = await supabase.from('personal_audit_log').insert({
     organization_id: params.organizationId,
     entitaet_typ: params.entitaetTyp,
     entitaet_id: params.entitaetId,
@@ -27,6 +27,9 @@ export async function writeAuditLog(supabase: SupabaseClient, params: WriteAudit
     benutzer_id: params.benutzerId,
     benutzer_rolle: params.benutzerRolle ?? null,
   })
+  if (error) {
+    console.error('[AUDIT] Insert fehlgeschlagen:', error.message, params.entitaetTyp, params.entitaetId)
+  }
 }
 
 export interface ListAuditFilter {

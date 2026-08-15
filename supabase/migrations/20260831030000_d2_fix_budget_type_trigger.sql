@@ -89,18 +89,18 @@ BEGIN
 
   -- Jahr aus dem Leistungsdatum
   IF TG_OP = 'DELETE' THEN
-    v_year := EXTRACT(YEAR FROM OLD.service_date)::INTEGER;
+    v_year := EXTRACT(YEAR FROM OLD.date)::INTEGER;
   ELSE
-    v_year := EXTRACT(YEAR FROM NEW.service_date)::INTEGER;
+    v_year := EXTRACT(YEAR FROM NEW.date)::INTEGER;
   END IF;
 
   -- Summe der abgerechneten Beträge für diesen Budget-Typ
-  SELECT COALESCE(SUM(total_amount), 0) INTO v_new_used
+  SELECT COALESCE(SUM(amount), 0) INTO v_new_used
   FROM service_records
   WHERE client_id = v_client_id
     AND organization_id = v_org_id
     AND budget_type = v_budget_type
-    AND EXTRACT(YEAR FROM service_date) = v_year
+    AND EXTRACT(YEAR FROM date) = v_year
     AND status IN ('completed', 'billed', 'paid');
 
   -- Budget-Zeile aktualisieren (oder anlegen falls nötig)

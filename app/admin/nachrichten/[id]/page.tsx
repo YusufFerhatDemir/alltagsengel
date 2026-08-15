@@ -67,11 +67,10 @@ export default function NachrichtDetailPage() {
       setReplies(data.replies || [])
 
       // Mark as read
-      if (data.nachricht && !data.nachricht.gelesen) {
-        fetch(`/api/ops/nachrichten/${id}`, {
+      const n = data.nachricht || data
+      if (n && !n.gelesen) {
+        fetch(`/api/ops/nachrichten/${id}/gelesen`, {
           method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ gelesen: true }),
         }).catch(() => {})
       }
     } catch { /* ignore */ } finally { setLoading(false) }
@@ -84,10 +83,13 @@ export default function NachrichtDetailPage() {
     if (!replyText.trim()) return
     setSending(true)
     try {
-      const res = await fetch(`/api/ops/nachrichten/${id}/reply`, {
+      const res = await fetch(`/api/ops/nachrichten/${id}/antworten`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ inhalt: replyText.trim() }),
+        body: JSON.stringify({
+          betreff: `Re: ${msg?.betreff ?? ''}`,
+          inhalt: replyText.trim(),
+        }),
       })
       if (!res.ok) {
         setError('Fehler beim Senden der Antwort')

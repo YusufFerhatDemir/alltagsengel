@@ -17,7 +17,22 @@ export async function GET(
       id,
       userId: auth.userId,
     })
-    return NextResponse.json(data)
+    if (!data) return NextResponse.json({ error: 'Nicht gefunden' }, { status: 404 })
+
+    const { data: rawReplies } = await supabase
+      .from('ops_nachrichten')
+      .select('id, inhalt, absender_id, created_at, profiles:absender_id(first_name, last_name)')
+      .eq('organization_id', auth.organizationId)
+      .eq('eltern_id', id)
+      .order('created_at', { ascending: true })
+    const replies = (rawReplies ?? []).map((r: any) => ({
+      id: r.id,
+      inhalt: r.inhalt,
+      absender_name: r.profiles ? `${r.profiles.first_name} ${r.profiles.last_name}`.trim() : null,
+      created_at: r.created_at,
+    }))
+
+    return NextResponse.json({ ...data, replies: replies ?? [] })
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 400 })
   }

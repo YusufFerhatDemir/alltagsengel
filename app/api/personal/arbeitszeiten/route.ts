@@ -1,28 +1,40 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { requirePersonalAdmin } from '@/lib/personal/api-auth'
+import { requirePersonalAdmin, requirePersonalUser } from '@/lib/personal/api-auth'
 import { createArbeitszeit, listArbeitszeiten } from '@/lib/personal/arbeitszeiten'
+import { getActiveOrgId } from '@/lib/organizations/server'
 
 export async function GET(req: NextRequest) {
   try {
-    const auth = await requirePersonalAdmin()
-    if (!auth.ok) return auth.response
+    const admin = await requirePersonalAdmin()
+    if (admin.ok) {
+      const supabase = createAdminClient()
+      const sp = req.nextUrl.searchParams
+      const data = await listArbeitszeiten(supabase, {
+        organizationId: admin.ctx.organizationId,
+        caregiverId: sp.get('caregiverId') ?? undefined,
+        datumVon: sp.get('datumVon') ?? undefined,
+        datumBis: sp.get('datumBis') ?? undefined,
+        status: (sp.get('status') ?? undefined) as any,
+        nurGesperrt: sp.get('nurGesperrt') === 'true' ? true : undefined,
+      })
+      return NextResponse.json(data)
+    }
+
+    const user = await requirePersonalUser()
+    if (!user.ok) return user.response
+    if (!user.caregiverId) {
+      return NextResponse.json({ error: 'Kein Mitarbeiterprofil vorhanden.' }, { status: 403 })
+    }
     const supabase = createAdminClient()
-
+    const orgId = await getActiveOrgId()
     const sp = req.nextUrl.searchParams
-    const caregiverId = sp.get('caregiverId') ?? undefined
-    const datumVon = sp.get('datumVon') ?? undefined
-    const datumBis = sp.get('datumBis') ?? undefined
-    const status = sp.get('status') ?? undefined
-    const nurGesperrt = sp.get('nurGesperrt') === 'true' ? true : undefined
-
     const data = await listArbeitszeiten(supabase, {
-      organizationId: auth.ctx.organizationId,
-      caregiverId,
-      datumVon,
-      datumBis,
-      status: status as any,
-      nurGesperrt,
+      organizationId: orgId,
+      caregiverId: user.caregiverId,
+      datumVon: sp.get('datumVon') ?? undefined,
+      datumBis: sp.get('datumBis') ?? undefined,
+      status: (sp.get('status') ?? undefined) as any,
     })
     return NextResponse.json(data)
   } catch (e: any) {
@@ -32,15 +44,29 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const auth = await requirePersonalAdmin()
-    if (!auth.ok) return auth.response
-    const supabase = createAdminClient()
+    const admin = await requirePersonalAdmin()
+    if (admin.ok) {
+      const supabase = createAdminClient()
+      const body = await req.json()
+      const data = await createArbeitszeit(supabase, {
+        ...body,
+        organizationId: admin.ctx.organizationId,
+      })
+      return NextResponse.json(data, { status: 201 })
+    }
 
+    const user = await requirePersonalUser()
+    if (!user.ok) return user.response
+    if (!user.caregiverId) {
+      return NextResponse.json({ error: 'Kein Mitarbeiterprofil vorhanden.' }, { status: 403 })
+    }
+    const supabase = createAdminClient()
+    const orgId = await getActiveOrgId()
     const body = await req.json()
     const data = await createArbeitszeit(supabase, {
       ...body,
-      // Mandant kommt aus dem Auth-Kontext und darf nicht aus dem Body kommen.
-      organizationId: auth.ctx.organizationId,
+      organizationId: orgId,
+      caregiverId: user.caregiverId,
     })
     return NextResponse.json(data, { status: 201 })
   } catch (e: any) {
