@@ -68,7 +68,7 @@ und die bereits umgesetzten Maßnahmen:
 | R1 | Unbefugter Zugriff durch andere Nutzer | RLS als einzige Zugriffswahrheit, mit 39 Rollen-/Rechte-Tests belegt | gering |
 | R2 | Einsichtnahme durch eigene Administratoren | Keine Admin-Policies auf `coach_*`; Produkttrennung im Datenmodell | gering, aber: Datenbank-Superuser des Betreibers bleibt technisch möglich — **[zu bewerten]** |
 | R3 | Re-Identifikation aus Auswertungsdaten | HMAC-Pseudonym mit nicht lesbarem Schlüssel; keine Zeitstempel; Unterdrückung kleiner Gruppen | gering |
-| R4 | Kompromittierte Zugangsdaten | — | **hoch: MFA fehlt (GAP-MFA)** |
+| R4 | Kompromittierte Zugangsdaten | TOTP-basierte Zwei-Faktor-Authentifizierung: lib/coach/mfa.ts, Durchsetzung über lib/coach/api-auth.ts; im DiPA-Modus fail-closed (O.Auth_3). 5 Tests belegen beide Richtungen | gering (seit 15.08.2026) |
 | R5 | Zweckentfremdung für Vermittlung/Werbung | Keine Tracker im Produktpfad; eUL strikt auf der Betriebsseite; kein Buchungsweg aus dem Produkt heraus | gering |
 | R6 | Unbeabsichtigte Weitergabe über Freigaben | Freigabe nur lesend, jederzeit widerruflich, `coach_users` bleibt privat | gering; Verwaltungs-UI fehlt noch (GAP-SHARES-UI) |
 | R7 | Datenverlust durch Löschung | Export vor Löschung angeboten, Bestätigungswort erforderlich | gering |
@@ -79,7 +79,7 @@ und die bereits umgesetzten Maßnahmen:
 
 | Maßnahme | Adressiert | Status |
 |---|---|---|
-| Zweiter Faktor bei der Anmeldung | R4 | offen (GAP-MFA) |
+| Zweiter Faktor bei der Anmeldung | R4 | **erledigt** (TOTP seit 15.08.2026, lib/coach/mfa.ts) |
 | Externes Security-Review und Penetrationstest | R1, R2, R4 | offen (GAP-EXT-REVIEW) |
 | Pflegefachliche Freigabe aller Inhalte | R8 | offen (GAP-QS) |
 | Eigenes Projekt/Deployment für das Produkt | R9 | zu entscheiden (GAP-TRENNUNG) |

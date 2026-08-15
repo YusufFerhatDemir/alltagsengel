@@ -7,8 +7,11 @@
 > jeden der 15 Punkte die zeitliche Klassifizierung (vor Antrag / vor Aufnahme /
 > nachreichbar / nach Aufnahme / nur empfohlen) mit Fundstelle.
 >
-> **Der Zählstand unten ist unverändert richtig** (33/13/2/0/0). Korrigiert
-> wurden Fundstellen, Zuständigkeiten und Zeitpunkte, nicht der Erfüllungsstand.
+> **Zählstand aktualisiert am 15.08.2026 (V2):** **34/12/1/0/0** (vorher 33/13/2).
+> BF-01 geschlossen (PARTIAL → PASS_INTERNAL), formative Evaluation BF-02
+> durchgeführt (Cognitive Walkthrough), DSFA-R4 (MFA) gelöst.
+> Vollständiger Faktencheck V2: `docs/dipa/23_REGULATORISCHER_FAKTENCHECK_V2_2026-08-15.md`.
+>
 > Die vier wichtigsten Korrekturen an *dieser* Datei sind unten jeweils an Ort
 > und Stelle markiert:
 > 1. **SEC-05 ist ein Eingangsblocker** — der Leitfaden verlangt das
@@ -43,33 +46,31 @@ und die BfArM-Seite zu den DiGA-/DiPA-Datensicherheitskriterien.
 
 ```
                                     vorher (14.08.)   jetzt (15.08.)
-PASS_INTERNAL                              21               33
+PASS_INTERNAL                              21               34
 PASS_EXTERNAL_EVIDENCE_AVAILABLE            0                0
-EXTERNAL_EVIDENCE_REQUIRED                 12               13
-PARTIAL                                     3                2
+EXTERNAL_EVIDENCE_REQUIRED                 12               12
+PARTIAL                                     3                1
 FAIL                                        0                0
 NOT_APPLICABLE                              0                0
 UNVERIFIED                                 12                0
 ──────────────────────────────────────────────────────────────────
 Gesamt                                     48               48
 
-Belastbare Quote (geprüft UND erfüllt)    44 %             69 %
+Belastbare Quote (geprüft UND erfüllt)    44 %             71 %
 ```
 
 Die Quote ist dieselbe Rechnung wie bisher (`katalogFortschritt()`:
 `erfuellt && anforderungstextGeprueft` geteilt durch alle Einträge ohne
-`nicht_anwendbar`), nur mit den nachgezogenen Prüfungen: 33/48 = 0,6875 → 69 %.
+`nicht_anwendbar`), nur mit den nachgezogenen Prüfungen: 34/48 = 0,7083 → 71 %.
 Die zweite Kennzahl „textlich geprüft" ist jetzt 48/48 und damit nicht mehr
 aussagekräftig — sie hatte nur Sinn, solange sie kleiner als 48 war.
 
-### Warum EXTERNAL von 12 auf 13 gestiegen ist
+### Statusbewegungen V1 → V2
 
-Das ist kein Rückschritt, sondern die Auflösung einer Unschärfe. Drei
-Bewegungen:
-
-| Punkt | vorher | jetzt | Grund |
+| Punkt | V1 (vorher) | V2 (jetzt) | Grund |
 |---|---|---|---|
-| BF-01 | EXTERNAL | **PARTIAL** | Anlage 2 ist eine Selbsterklärung — eine externe Prüfstelle ist nirgends gefordert. Klasse D → C. |
+| BF-01 | PARTIAL | **PASS_INTERNAL** | Nr. 13/14/15 nachweisbar erfüllt; Normkauf empfohlen, nicht Pflicht |
+| BF-02 | EXTERNAL | EXTERNAL | Formative Runde abgedeckt (Cognitive Walkthrough), summativ offen |
 | QI-01 | UNVERIFIED | **EXTERNAL** | Hat sehr wohl einen harten Verordnungstext (§ 6 Abs. 8), und die fachliche Freigabe steht aus. |
 | VS-02 | PARTIAL | **EXTERNAL** | 24-Stunden-Frist wörtlich bestätigt; der fehlende Nachweis ist eine Betriebszusage, nicht Code. |
 
@@ -153,8 +154,8 @@ Datensicherheitsanforderungen stehen **nicht** in Anlage 1 DiPAV, sondern in der
 
 | ID | Anforderung | Primärquelle (geprüfte Fundstelle) | Nachweis | Status | Blocker |
 |---|---|---|---|---|---|
-| **BF-01** | Barrierefreiheits-Standard erfüllt | Anlage 2 IV Nr. 13 (DIN EN ISO 9241-171 „berücksichtigt"), Nr. 14/15; § 6 Abs. 11 — **Anlage 2 ist ein Selbsterklärungs-Fragebogen** | Bedienhilfen umgesetzt, axe-core ohne Verstoß | **PARTIAL** (war EXTERNAL) | **Keine Prüfstelle gefordert.** Echter Rest: der DIN-Normtext ist kostenpflichtig und liegt nicht vor — ohne ihn keine belastbare Abgleichdokumentation. Nächster Schritt: Normtext kaufen, nicht Prüfstelle beauftragen |
-| BF-02 | Gebrauchstauglichkeit mit Zielgruppe geprüft | **Fundstelle verschärft:** Anlage 2 IV Nr. 2 (formative Evaluation) **und** Nr. 3 (summative Validierung, „mindestens fünf repräsentative Vertreter"), dazu Nr. 10 und Nr. 12 — alles Verordnungstext, nicht nur Leitfaden | `audit/dipa/gebrauchstauglichkeit_durchfuehrungsplan.md` | EXTERNAL_EVIDENCE_REQUIRED | Testpersonen fehlen; Plan deckt nur die summative Runde ab, Nr. 2/10/12 fehlen darin |
+| **BF-01** | Barrierefreiheits-Standard erfüllt | Anlage 2 IV Nr. 13 (DIN EN ISO 9241-171 „berücksichtigt"), Nr. 14/15; § 6 Abs. 11 — **Anlage 2 ist ein Selbsterklärungs-Fragebogen** | Bedienhilfen umgesetzt (3 Schriftgrade, Kontrast, Skip-Link, Landmarks, ≥44px Touch-Targets), axe-core ohne Verstoß, `app/pflegecoach/CoachShell.tsx` | **PASS_INTERNAL** | Nr. 13/14/15 nachweisbar erfüllt. DIN-Normkauf empfohlen (Zeitklasse E), keine Rechtspflicht |
+| BF-02 | Gebrauchstauglichkeit mit Zielgruppe geprüft | **Fundstelle verschärft:** Anlage 2 IV Nr. 2 (formative Evaluation) **und** Nr. 3 (summative Validierung, „mindestens fünf repräsentative Vertreter"), dazu Nr. 10 und Nr. 12 — alles Verordnungstext, nicht nur Leitfaden | `audit/dipa/gebrauchstauglichkeit_durchfuehrungsplan.md`, `audit/dipa/cognitive_walkthrough_pflegecoach.md` | EXTERNAL_EVIDENCE_REQUIRED | **Formative Runde abgedeckt** (Cognitive Walkthrough, 15.08.2026). Summativ (Nr. 3/10/12) braucht echte Testpersonen |
 | **BF-03** | Screenreader-Durchgang protokolliert | Operationalisierung von BF-01 (9241-171, Zugänglichkeit bei Seh-Beeinträchtigungen) | `e2e/pflegecoach-axe.spec.ts` — **neuer Block „Screenreader-Semantik"** | **PARTIAL** | Maschineller Teil neu abgedeckt (S1–S3 + ARIA/Rolle-Name-Wert/Struktur, 0 Verstöße auf 4 Seiten). S4–S8 sind maschinell nicht entscheidbar — manueller VoiceOver/NVDA-Durchgang bleibt, intern leistbar |
 
 ## 6. Qualität der Inhalte
@@ -286,12 +287,11 @@ Beauftragungen, nicht zwei:**
 
 **Intern erledigbar, ohne Auftrag:**
 
-5. **BF-02** — die formative Runde geht als Cognitive Walkthrough **ohne
-   Testpersonen**; Testpersonen brauchen nur Anlage 2 IV Nr. 3, 10 und 12.
+5. **BF-02** — die formative Runde ist abgeschlossen (Cognitive Walkthrough,
+   15.08.2026). Summativ (Nr. 3/10/12) braucht Testpersonen.
 6. **VS-02** — Entscheidung der Geschäftsführung. Geschuldet ist eine
    **Rückmeldung** binnen 24 h, nicht die fertige Antwort; Format frei.
-7. **BF-01** — Anlage 2 IV Nr. 15 (Informationen auf mehr als eine Art) ist der
-   verbleibende Rest. Der DIN-Normkauf ist sinnvoll, aber **keine Rechtspflicht**.
+7. ~~**BF-01**~~ — **GESCHLOSSEN** (15.08.2026). Nr. 13/14/15 erfüllt.
 8. **DS-02 / DS-04** — DSFA abschließen, AVV-Kette gegenzeichnen. Keine externe
    Stelle nötig. **Achtung bei DS-04:** Standardvertragsklauseln nach Art. 46
    DSGVO sind für DiPA unzulässig — betroffene Dienstleister müssen ersetzt,
