@@ -73,7 +73,10 @@ export default function NachrichtDetailPage() {
           method: 'PATCH',
         }).catch(() => {})
       }
-    } catch { /* ignore */ } finally { setLoading(false) }
+    } catch (err) {
+      console.error('Fehler beim Laden der Nachricht:', err)
+      setError('Netzwerkfehler beim Laden der Nachricht.')
+    } finally { setLoading(false) }
   }
 
   useEffect(() => { load() }, [id])

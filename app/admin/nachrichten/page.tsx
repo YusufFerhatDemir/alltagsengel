@@ -57,7 +57,10 @@ export default function NachrichtenPage() {
       if (!res.ok) { setLoading(false); return }
       const data = await res.json()
       setRows(data)
-    } catch { /* ignore */ } finally { setLoading(false) }
+    } catch (err) {
+      console.error('Fehler beim Laden der Nachrichten:', err)
+      setError('Netzwerkfehler beim Laden der Nachrichten.')
+    } finally { setLoading(false) }
   }
 
   useEffect(() => { load() }, [])
