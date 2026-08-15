@@ -172,7 +172,7 @@ export default function SturzprotokollPage() {
       </div>
 
       {error && <Banner tone="danger">{error}</Banner>}
-      {success && <Banner tone="ok">{success}</Banner>}
+      {success && <Banner tone="success">{success}</Banner>}
 
       {/* Kundenauswahl */}
       <div style={{ marginBottom: 16 }}>
