@@ -11,6 +11,7 @@ import { useEffect, useRef, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { getOrgIK } from '@/lib/config/org-config'
 import { Banner, EmptyRow } from '@/components/admin/OpsUI'
+import { saveDatenannahmestelle, removeDatenannahmestelle } from './actions'
 
 interface ZertifikatRow {
   id: string
@@ -201,8 +202,7 @@ export default function AbrechnungEinstellungenPage() {
     setDasSaving(true)
     setError(null)
     try {
-      const supabase = createClient()
-      const payload = {
+      await saveDatenannahmestelle(dasEditId, {
         name: dasForm.name,
         ik_nummer: dasForm.ik_nummer.replace(/\D/g, '') || null,
         sftp_host: dasForm.sftp_host || null,
@@ -215,13 +215,11 @@ export default function AbrechnungEinstellungenPage() {
           ? dasForm.zustaendig_fuer.split(',').map(s => s.trim().replace(/\D/g, '')).filter(Boolean)
           : [],
         aktiv: dasForm.aktiv,
-      }
-      const { error: e } = dasEditId
-        ? await supabase.from('datenannahmestellen').update(payload).eq('id', dasEditId)
-        : await supabase.from('datenannahmestellen').insert(payload)
-      if (e) { setError(`Speichern fehlgeschlagen: ${e.message}`); return }
+      })
       setShowDasForm(false)
       await load()
+    } catch (e: any) {
+      setError(e?.message || 'Speichern fehlgeschlagen.')
     } finally {
       setDasSaving(false)
     }
@@ -229,10 +227,12 @@ export default function AbrechnungEinstellungenPage() {
 
   async function removeDas(id: string) {
     if (!confirm('Datenannahmestelle wirklich löschen?')) return
-    const supabase = createClient()
-    const { error: e } = await supabase.from('datenannahmestellen').delete().eq('id', id)
-    if (e) { setError(`Löschen fehlgeschlagen: ${e.message}`); return }
-    await load()
+    try {
+      await removeDatenannahmestelle(id)
+      await load()
+    } catch (e: any) {
+      setError(e?.message || 'Loeschen fehlgeschlagen.')
+    }
   }
 
   async function uploadSshKey(dasId: string) {
