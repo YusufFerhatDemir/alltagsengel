@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { PDFDocument } from 'pdf-lib'
-import { embedZugferdXml } from '../zugferd-pdf'
+import { embedZugferdXml } from '@/lib/billing/xrechnung/zugferd-pdf'
 
 const SAMPLE_XML = `<?xml version="1.0" encoding="UTF-8"?>
 <rsm:CrossIndustryInvoice xmlns:rsm="urn:un:unece:uncefact:data:standard:CrossIndustryInvoice:100">

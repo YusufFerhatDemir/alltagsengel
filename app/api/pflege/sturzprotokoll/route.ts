@@ -9,10 +9,6 @@ import { createVerlauf, listVerlauf } from '@/lib/pflege/verlauf'
 // strukturierten Metadaten im inhalt-Feld.
 // ═══════════════════════════════════════════════════════════════
 
-const STURZ_ORTE = ['Zimmer', 'Bad', 'Flur', 'Kueche', 'Aussenbereich', 'Treppe', 'Sonstiges'] as const
-const VERLETZUNGS_ARTEN = ['keine', 'prellungen', 'schuerfen', 'platzwunde', 'frakturverdacht', 'kopfverletzung', 'sonstiges'] as const
-const RISIKO_FAKTOREN = ['medikamente', 'schwindel', 'sehstoerung', 'gehunsicherheit', 'verwirrtheit', 'umgebung', 'schuhe', 'sonstiges'] as const
-
 interface SturzprotokollBody {
   clientId: string
   sturzDatum: string
