@@ -17,7 +17,7 @@ interface Gespraech {
   ziele_vereinbart: string | null
   massnahmen: string | null
   naechstes_gespraech_geplant_am: string | null
-  status: 'geplant' | 'durchgefuehrt' | 'abgesagt'
+  status: 'geplant' | 'durchgefuehrt' | 'abgesagt' | 'archiviert'
   vertraulich: boolean
   caregivers: { first_name: string; last_name: string } | null
 }
@@ -54,6 +54,7 @@ export default function MitarbeitergespraechePage() {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [search, setSearch] = useState('')
+  const [showArchived, setShowArchived] = useState(false)
   const [zeigeForm, setZeigeForm] = useState(false)
   const [form, setForm] = useState(LEER_FORM)
 
@@ -69,7 +70,10 @@ export default function MitarbeitergespraechePage() {
   async function load() {
     setLoading(true); setError('')
     try {
-      const res = await fetch('/api/admin/mitarbeitergespraeche')
+      const url = showArchived
+        ? '/api/admin/mitarbeitergespraeche?showArchived=true'
+        : '/api/admin/mitarbeitergespraeche'
+      const res = await fetch(url)
       const body = await res.json()
       if (!res.ok) { setError(body.error || 'Fehler beim Laden'); return }
       setGespraeche(body.gespraeche || [])
@@ -80,7 +84,7 @@ export default function MitarbeitergespraechePage() {
     }
   }
 
-  useEffect(() => { load(); loadMitarbeiter() }, [])
+  useEffect(() => { load(); loadMitarbeiter() }, [showArchived])
 
   async function speichern() {
     if (!form.caregiverId) { setError('Bitte Mitarbeiter wählen.'); return }
@@ -165,26 +169,45 @@ export default function MitarbeitergespraechePage() {
 
       {!zeigeForm && (
         <>
-          <div style={{ marginBottom: 16 }}>
+          <div style={{ marginBottom: 16, display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
             <SearchInput value={search} onChange={setSearch} placeholder="Mitarbeiter..." />
+            <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: 'var(--ink4)', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+              <input type="checkbox" checked={showArchived} onChange={e => setShowArchived(e.target.checked)} />
+              Archivierte anzeigen
+            </label>
           </div>
           <div className="admin-table-wrap">
             <table className="admin-table">
               <thead>
-                <tr><th>Mitarbeiter</th><th>Art</th><th>Datum</th><th>Nächstes geplant</th><th>Status</th></tr>
+                <tr><th>Mitarbeiter</th><th>Art</th><th>Datum</th><th>Nächstes geplant</th><th>Status</th><th>Aktionen</th></tr>
               </thead>
               <tbody>
                 {loading
-                  ? <EmptyRow colSpan={5}>Laden...</EmptyRow>
+                  ? <EmptyRow colSpan={6}>Laden...</EmptyRow>
                   : gefiltert.length === 0
-                    ? <EmptyRow colSpan={5}>Noch keine Gespräche erfasst</EmptyRow>
+                    ? <EmptyRow colSpan={6}>Noch keine Gespräche erfasst</EmptyRow>
                     : gefiltert.map(g => (
                       <tr key={g.id}>
                         <td style={{ fontWeight: 600 }}>{g.caregivers?.first_name} {g.caregivers?.last_name}</td>
                         <td>{ARTEN[g.gespraechsart] || g.gespraechsart}</td>
                         <td style={{ fontSize: 13 }}>{g.datum}</td>
                         <td style={{ fontSize: 13 }}>{g.naechstes_gespraech_geplant_am || '—'}</td>
-                        <td><StatusBadge label={g.status} color={g.status === 'durchgefuehrt' ? 'green' : 'gray'} /></td>
+                        <td><StatusBadge label={g.status === 'archiviert' ? 'Archiviert' : g.status} color={g.status === 'durchgefuehrt' ? 'green' : g.status === 'archiviert' ? '#9E9E9E' : 'gray'} /></td>
+                        <td>
+                          {g.status !== 'archiviert' && (
+                            <button
+                              onClick={async () => {
+                                await fetch(`/api/admin/mitarbeitergespraeche/${g.id}`, {
+                                  method: 'PATCH',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify({ status: 'archiviert' }),
+                                })
+                                load()
+                              }}
+                              style={{ fontSize: 12, color: '#9E9E9E', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
+                            >Archivieren</button>
+                          )}
+                        </td>
                       </tr>
                     ))}
               </tbody>

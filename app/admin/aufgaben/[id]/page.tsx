@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { useParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
   statusMeta, formatDate, timeAgo,
@@ -109,6 +109,7 @@ const fieldLabel: React.CSSProperties = {
 
 export default function AufgabeDetailPage() {
   const params = useParams()
+  const router = useRouter()
   const aufgabeId = params.id as string
 
   const [tab, setTab] = useState<Tab>('details')
@@ -134,6 +135,9 @@ export default function AufgabeDetailPage() {
   // Kommentar form
   const [newKommentar, setNewKommentar] = useState('')
   const [kommentarIntern, setKommentarIntern] = useState(false)
+
+  // Archive state
+  const [archiving, setArchiving] = useState(false)
 
   // Anhang form
   const [newAnhangDokId, setNewAnhangDokId] = useState('')
@@ -218,6 +222,26 @@ export default function AufgabeDetailPage() {
     } catch {
       setSaveMsg('Netzwerkfehler')
     } finally { setSaving(false) }
+  }
+
+  // Archive
+  async function archivieren() {
+    setArchiving(true)
+    try {
+      const res = await fetch(`/api/ops/aufgaben/${aufgabeId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'archiviert' }),
+      })
+      if (res.ok) {
+        router.push('/admin/aufgaben')
+      } else {
+        const err = await res.json().catch(() => ({}))
+        setSaveMsg(err.error || 'Fehler beim Archivieren')
+      }
+    } catch {
+      setSaveMsg('Netzwerkfehler')
+    } finally { setArchiving(false) }
   }
 
   // Checklist operations
@@ -322,7 +346,18 @@ export default function AufgabeDetailPage() {
             )}
           </p>
         </div>
-        <Link href="/admin/aufgaben" style={secondaryBtn}>Zurück</Link>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          {(aufgabe.status === 'erledigt' || aufgabe.status === 'storniert') && (
+            <button
+              style={{ ...secondaryBtn, color: '#9E9E9E' }}
+              onClick={archivieren}
+              disabled={archiving}
+            >
+              {archiving ? 'Archiviere...' : 'Archivieren'}
+            </button>
+          )}
+          <Link href="/admin/aufgaben" style={secondaryBtn}>Zurück</Link>
+        </div>
       </div>
 
       {saveMsg && <Banner tone={saveMsg === 'Gespeichert' || saveMsg === 'Keine Änderungen' ? 'success' : 'danger'}>{saveMsg}</Banner>}

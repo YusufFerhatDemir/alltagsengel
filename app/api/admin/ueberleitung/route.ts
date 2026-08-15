@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
+import { logAuditEvent } from '@/lib/audit-log'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -35,6 +36,11 @@ export async function GET(request: NextRequest) {
       .order('uebergabe_am', { ascending: false })
 
     if (clientId) query = query.eq('client_id', clientId)
+
+    const showArchived = request.nextUrl.searchParams.get('showArchived')
+    if (showArchived !== 'true') {
+      query = query.neq('status', 'archiviert')
+    }
 
     const { data, error } = await query
     if (error) {
@@ -86,6 +92,16 @@ export async function POST(req: NextRequest) {
       console.error('[admin/ueberleitung] Anlegen fehlgeschlagen:', error.message)
       return NextResponse.json({ error: `Speichern fehlgeschlagen: ${error.message}` }, { status: 500 })
     }
+
+    await logAuditEvent({
+      action: 'create',
+      actorId: auth.ctx.userId,
+      organizationId: auth.ctx.organizationId,
+      entityType: 'pflegeueberleitung',
+      entityId: data.id,
+      details: { nachher: eingabe },
+      request: req,
+    }).catch(err => console.error('[admin/ueberleitung] Audit-Log fehlgeschlagen:', err))
 
     return NextResponse.json({ erfolg: true, id: data.id })
   } catch (e) {

@@ -20,8 +20,8 @@ export const AUFGABEN_KATEGORIE_WERTE: AufgabenKategorie[] = [
 export type AufgabenPrioritaet = 'niedrig' | 'mittel' | 'hoch' | 'kritisch'
 export const AUFGABEN_PRIORITAET_WERTE: AufgabenPrioritaet[] = ['niedrig', 'mittel', 'hoch', 'kritisch']
 
-export type AufgabenStatus = 'offen' | 'in_bearbeitung' | 'warten' | 'erledigt' | 'storniert'
-export const AUFGABEN_STATUS_WERTE: AufgabenStatus[] = ['offen', 'in_bearbeitung', 'warten', 'erledigt', 'storniert']
+export type AufgabenStatus = 'offen' | 'in_bearbeitung' | 'warten' | 'erledigt' | 'storniert' | 'archiviert'
+export const AUFGABEN_STATUS_WERTE: AufgabenStatus[] = ['offen', 'in_bearbeitung', 'warten', 'erledigt', 'storniert', 'archiviert']
 
 export type WiederholungIntervall = 'taeglich' | 'woechentlich' | 'monatlich' | 'quartalsweise' | 'jaehrlich'
 export const WIEDERHOLUNG_INTERVALL_WERTE: WiederholungIntervall[] = ['taeglich', 'woechentlich', 'monatlich', 'quartalsweise', 'jaehrlich']

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
+import { logAuditEvent } from '@/lib/audit-log'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -26,6 +27,7 @@ export async function GET(request: NextRequest) {
 
   try {
     const caregiverId = request.nextUrl.searchParams.get('caregiverId')
+    const showArchived = request.nextUrl.searchParams.get('showArchived')
     const admin = createAdminClient()
     let query = admin
       .from('mitarbeitergespraeche')
@@ -34,6 +36,7 @@ export async function GET(request: NextRequest) {
       .order('datum', { ascending: false })
 
     if (caregiverId) query = query.eq('caregiver_id', caregiverId)
+    if (showArchived !== 'true') query = query.neq('status', 'archiviert')
 
     const { data, error } = await query
     if (error) {
@@ -85,6 +88,16 @@ export async function POST(req: NextRequest) {
       console.error('[admin/mitarbeitergespraeche] Anlegen fehlgeschlagen:', error.message)
       return NextResponse.json({ error: `Speichern fehlgeschlagen: ${error.message}` }, { status: 500 })
     }
+
+    await logAuditEvent({
+      action: 'create',
+      actorId: auth.ctx.userId,
+      organizationId: auth.ctx.organizationId,
+      entityType: 'mitarbeitergespraech',
+      entityId: data.id,
+      details: { nachher: eingabe },
+      request: req,
+    }).catch(err => console.error('[admin/mitarbeitergespraeche] Audit-Log fehlgeschlagen:', err))
 
     return NextResponse.json({ erfolg: true, id: data.id })
   } catch (e) {

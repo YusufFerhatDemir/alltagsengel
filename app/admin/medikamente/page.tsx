@@ -110,6 +110,15 @@ export default function AdminMedikamentePage() {
     finally { setSaving(false) }
   }
 
+  async function handleArchive(id: string) {
+    if (!confirm('Medikament wirklich archivieren?')) return
+    try {
+      const res = await fetch(`/api/medikamente/${id}`, { method: 'DELETE' })
+      if (!res.ok) { const b = await res.json(); setError(b.error); return }
+      loadData()
+    } catch { setError('Archivierung fehlgeschlagen.') }
+  }
+
   async function handleStatusChange(id: string, status: string) {
     const grund = status === 'abgesetzt' ? prompt('Grund für das Absetzen:') : undefined
     try {
@@ -314,6 +323,10 @@ export default function AdminMedikamentePage() {
                     {m.status === 'pausiert' && (
                       <button onClick={() => handleStatusChange(m.id, 'aktiv')}
                         className="text-xs text-green-600 hover:underline">Reaktivieren</button>
+                    )}
+                    {m.status !== 'abgesetzt' && (
+                      <button onClick={() => handleArchive(m.id)}
+                        className="text-xs text-gray-500 hover:underline">Archivieren</button>
                     )}
                   </div>
                 </td>

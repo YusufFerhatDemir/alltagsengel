@@ -128,6 +128,7 @@ const navGroups = [
       { href: '/admin/ueberleitung', label: 'Pflegeüberleitung', icon: <IconDocument size={18} /> },
       { href: '/admin/vertraege', label: 'Verträge', icon: <IconDocument size={18} /> },
       { href: '/admin/dokumente', label: 'Dokumente', icon: <IconDocument size={18} /> },
+      { href: '/admin/angehoerige', label: 'Angehörigenzugänge', icon: <IconUsers size={18} /> },
     ],
   },
   {

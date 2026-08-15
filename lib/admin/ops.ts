@@ -1080,6 +1080,7 @@ export const AUFGABEN_STATUS: Record<string, { label: string; color: string }> =
   warten: { label: 'Warten', color: '#7E57C2' },
   erledigt: { label: 'Erledigt', color: '#5CB882' },
   storniert: { label: 'Storniert', color: '#D04B3B' },
+  archiviert: { label: 'Archiviert', color: '#9E9E9E' },
 }
 
 export const WIEDERHOLUNG_INTERVALL: Record<string, { label: string; color: string }> = {

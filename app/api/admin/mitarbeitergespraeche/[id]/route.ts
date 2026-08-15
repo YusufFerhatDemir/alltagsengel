@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
+import { logAuditEvent } from '@/lib/audit-log'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -51,6 +52,16 @@ export async function PATCH(
       return NextResponse.json({ error: `Speichern fehlgeschlagen: ${error.message}` }, { status: 500 })
     }
     if (!data) return NextResponse.json({ error: 'Nicht gefunden' }, { status: 404 })
+
+    await logAuditEvent({
+      action: eingabe.status === 'archiviert' ? 'archive' : 'update',
+      actorId: auth.ctx.userId,
+      organizationId: auth.ctx.organizationId,
+      entityType: 'mitarbeitergespraech',
+      entityId: data.id,
+      details: { nachher: eingabe },
+      request: req,
+    }).catch(err => console.error('[admin/mitarbeitergespraeche] Audit-Log fehlgeschlagen:', err))
 
     return NextResponse.json({ erfolg: true, id: data.id })
   } catch (e) {

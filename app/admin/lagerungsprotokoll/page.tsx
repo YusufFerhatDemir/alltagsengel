@@ -86,6 +86,22 @@ export default function LagerungsprotokollPage() {
   useEffect(() => { loadKunden() }, [])
   useEffect(() => { if (selectedClient) loadProtokolle() }, [selectedClient])
 
+  async function archivieren(id: string) {
+    if (!confirm('Eintrag wirklich archivieren?')) return
+    setBusy(true); setError('')
+    try {
+      const res = await fetch('/api/admin/lagerungsprotokoll', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id }),
+      })
+      const body = await res.json()
+      if (!res.ok) { setError(body.error || 'Archivierung fehlgeschlagen.'); return }
+      setSuccess('Eintrag wurde archiviert.')
+      await loadProtokolle()
+    } finally { setBusy(false) }
+  }
+
   async function speichern() {
     if (!selectedClient) { setError('Bitte Klient wählen.'); return }
     setBusy(true); setError(''); setSuccess('')
@@ -163,13 +179,13 @@ export default function LagerungsprotokollPage() {
       <div className="admin-table-wrap">
         <table className="admin-table">
           <thead>
-            <tr><th>Zeitpunkt</th><th>Position</th><th>Hautzustand</th><th>Risiko</th><th>Nächste geplant</th></tr>
+            <tr><th>Zeitpunkt</th><th>Position</th><th>Hautzustand</th><th>Risiko</th><th>Nächste geplant</th><th>Aktion</th></tr>
           </thead>
           <tbody>
             {loading
-              ? <EmptyRow colSpan={5}>Laden...</EmptyRow>
+              ? <EmptyRow colSpan={6}>Laden...</EmptyRow>
               : protokolle.length === 0
-                ? <EmptyRow colSpan={5}>Noch keine Einträge</EmptyRow>
+                ? <EmptyRow colSpan={6}>Noch keine Einträge</EmptyRow>
                 : protokolle.map(p => (
                   <tr key={p.id}>
                     <td style={{ fontSize: 13 }}>{new Date(p.durchgefuehrt_am).toLocaleString('de-DE')}</td>
@@ -177,6 +193,11 @@ export default function LagerungsprotokollPage() {
                     <td style={{ fontSize: 13 }}>{p.hautzustand || '—'}</td>
                     <td>{p.dekubitusrisiko_auffaellig ? <span style={{ color: '#D04B3B' }}>Auffällig</span> : '—'}</td>
                     <td style={{ fontSize: 13 }}>{p.naechste_lagerung_geplant_am ? new Date(p.naechste_lagerung_geplant_am).toLocaleString('de-DE') : '—'}</td>
+                    <td>
+                      <button onClick={() => archivieren(p.id)} style={{ fontSize: 12, color: 'var(--ink4)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>
+                        Archivieren
+                      </button>
+                    </td>
                   </tr>
                 ))}
           </tbody>

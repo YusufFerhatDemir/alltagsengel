@@ -5,6 +5,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { requirePortalAccess, hatPortalBereichZugriff } from '@/lib/angehoerige/portal-helpers'
+import { protokolliereZugriff } from '@/lib/angehoerige/angehoerige'
 
 export async function GET() {
   const auth = await requirePortalAccess()
@@ -100,6 +101,15 @@ export async function POST(request: NextRequest) {
   if (error) {
     return NextResponse.json({ error: 'Nachricht konnte nicht gesendet werden.' }, { status: 500 })
   }
+
+  // Audit: Nachricht gesendet protokollieren (Best-Effort)
+  protokolliereZugriff(supabase, ctx.organizationId, {
+    zugang_id: zugang_id,
+    user_id: ctx.userId,
+    client_id: zugang.client_id,
+    aktion: 'nachricht_gesendet',
+    details: { nachricht_id: nachricht?.id },
+  }).catch(() => {})
 
   return NextResponse.json({ nachricht })
 }

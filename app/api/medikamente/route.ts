@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { requireMedAdmin } from '@/lib/medikamente/api-auth'
+import { logAuditEvent } from '@/lib/audit-log'
 import {
   listeMedikamente,
   erstelleMedikament,
@@ -51,6 +52,19 @@ export async function POST(req: NextRequest) {
     }
 
     const created = await erstelleMedikament(sb, auth.ctx.organizationId, auth.ctx.userId, body)
+
+    await logAuditEvent({
+      action: 'create',
+      actorId: auth.ctx.userId,
+      actorName: auth.ctx.name,
+      actorRole: auth.ctx.role,
+      organizationId: auth.ctx.organizationId,
+      entityType: 'medikament',
+      entityId: created.id,
+      details: { client_id: body.client_id, medikament_name: body.medikament_name },
+      request: req,
+    })
+
     return NextResponse.json(created, { status: 201 })
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : 'Unbekannter Fehler'

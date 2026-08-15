@@ -145,6 +145,7 @@ export default function AdminKalenderPage() {
   const [filterClient, setFilterClient] = useState('')
   const [filterService, setFilterService] = useState('')
   const [filterStatus, setFilterStatus] = useState('')
+  const [hideAbgeschlossen, setHideAbgeschlossen] = useState(true)
 
   // Detail + create modals
   const [selected, setSelected] = useState<AssignmentRow | null>(null)
@@ -225,13 +226,15 @@ export default function AdminKalenderPage() {
 
   // ── Expand recurring assignments into date-keyed entries ────
   const mapped = useMemo(() => {
+    const abgeschlosseneStatus = ['BEENDET', 'STORNIERT', 'NO_SHOW', 'cancelled']
     const result: (AssignmentRow & { effectiveDay: string })[] = []
     for (const a of assignments) {
+      if (hideAbgeschlossen && abgeschlosseneStatus.includes(a.status)) continue
       const ed = effectiveDate(a, rangeStart, rangeEnd)
       if (ed) result.push({ ...a, effectiveDay: ed })
     }
     return result
-  }, [assignments, rangeStart, rangeEnd])
+  }, [assignments, rangeStart, rangeEnd, hideAbgeschlossen])
 
   // ── Stats ────────────────────────────────────────────────────
   const stats = useMemo(() => {
@@ -349,6 +352,15 @@ export default function AdminKalenderPage() {
             return <option key={s} value={s}>{m.label}</option>
           })}
         </select>
+        <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: 'var(--ink3)', cursor: 'pointer', userSelect: 'none' }}>
+          <input
+            type="checkbox"
+            checked={hideAbgeschlossen}
+            onChange={e => setHideAbgeschlossen(e.target.checked)}
+            style={{ accentColor: 'var(--gold2)' }}
+          />
+          Abgeschlossene ausblenden
+        </label>
       </div>
 
       {loading ? <p style={{ color: 'var(--ink4)' }}>Laden…</p> : (
@@ -401,6 +413,17 @@ export default function AdminKalenderPage() {
             <DetailRow label="Wiederkehrend">{selected.is_recurring ? 'Ja' : 'Nein'}</DetailRow>
             <div className="admin-modal-btns" style={{ marginTop: 14 }}>
               <button className="btn-cancel" onClick={() => setSelected(null)}>Schließen</button>
+              {!['STORNIERT', 'cancelled', 'BEENDET'].includes(selected.status) && (
+                <button className="btn-confirm" style={{ background: '#9E9E9E' }} onClick={async () => {
+                  await fetch('/api/einsatzplanung', {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: selected.id, status: 'STORNIERT' }),
+                  })
+                  setSelected(null)
+                  load()
+                }}>Stornieren</button>
+              )}
             </div>
           </div>
         </div>

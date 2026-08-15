@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
+import { logAuditEvent } from '@/lib/audit-log'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -93,6 +94,18 @@ export async function POST(
       console.error('[admin/fixierungen/ueberwachung] Anlegen fehlgeschlagen:', error.message)
       return NextResponse.json({ error: `Speichern fehlgeschlagen: ${error.message}` }, { status: 500 })
     }
+
+    await logAuditEvent({
+      action: 'create',
+      actorId: auth.ctx.userId,
+      actorName: auth.ctx.name,
+      actorRole: auth.ctx.role,
+      organizationId: auth.ctx.organizationId,
+      entityType: 'fem_ueberwachung',
+      entityId: data.id,
+      details: { massnahme_id: id, verletzungen: !!body.verletzungen },
+      request: req,
+    })
 
     return NextResponse.json({ erfolg: true, id: data.id })
   } catch (e) {

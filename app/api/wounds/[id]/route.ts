@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireWundenAdmin } from '@/lib/wunden/api-auth'
 import { getWound, updateWound } from '@/lib/wunden/wunden'
+import { logAuditEvent } from '@/lib/audit-log'
 import { listAssessments } from '@/lib/wunden/assessments'
 import { listTreatments, naechsterVwTermin } from '@/lib/wunden/behandlungen'
 
@@ -50,6 +51,18 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       status: body.status,
       abgeheiltAm: body.abgeheiltAm,
       bemerkung: body.bemerkung,
+    })
+
+    await logAuditEvent({
+      action: 'update',
+      actorId: auth.ctx.userId,
+      actorName: auth.ctx.name,
+      actorRole: auth.ctx.role,
+      organizationId: auth.ctx.organizationId,
+      entityType: 'wunddokumentation',
+      entityId: id,
+      details: { geaenderte_felder: Object.keys(body).filter(k => body[k] !== undefined) },
+      request,
     })
 
     return NextResponse.json({ wunde })

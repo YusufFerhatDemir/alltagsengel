@@ -3,6 +3,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { requireWundenAdmin } from '@/lib/wunden/api-auth'
 import { getWound } from '@/lib/wunden/wunden'
 import { createTreatment, listTreatments, naechsterVwTermin } from '@/lib/wunden/behandlungen'
+import { logAuditEvent } from '@/lib/audit-log'
 
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -45,6 +46,18 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       schmerzmittelGegeben: body.schmerzmittelGegeben ?? false,
       besonderheiten: body.besonderheiten ?? null,
       naechsterVwAm: body.naechsterVwAm ?? null,
+    })
+
+    await logAuditEvent({
+      action: 'create',
+      actorId: auth.ctx.userId,
+      actorName: auth.ctx.name,
+      actorRole: auth.ctx.role,
+      organizationId: auth.ctx.organizationId,
+      entityType: 'wund_behandlung',
+      entityId: behandlung.id,
+      details: { wound_id: id, massnahme: body.massnahme },
+      request,
     })
 
     return NextResponse.json({ behandlung })

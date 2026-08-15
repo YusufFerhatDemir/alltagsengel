@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
+import { logAuditEvent } from '@/lib/audit-log'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -103,6 +104,19 @@ export async function PUT(
         console.error('[admin/biografiebogen] Update fehlgeschlagen:', error.message)
         return NextResponse.json({ error: `Speichern fehlgeschlagen: ${error.message}` }, { status: 500 })
       }
+
+      // Audit-Log: archive/unarchive vs. normales Update
+      const auditAction = eingabe.gesperrt === true ? 'archive' : eingabe.gesperrt === false ? 'update' : 'update'
+      await logAuditEvent({
+        action: auditAction,
+        actorId: auth.ctx.userId,
+        organizationId: auth.ctx.organizationId,
+        entityType: 'biografiebogen',
+        entityId: bestehend.id,
+        details: { clientId, geaenderteFelder: Object.keys(eingabe) },
+        request: req,
+      }).catch(err => console.error('[admin/biografiebogen] Audit-Log fehlgeschlagen:', err))
+
       return NextResponse.json({ erfolg: true, id: bestehend.id })
     }
 
@@ -115,6 +129,16 @@ export async function PUT(
       console.error('[admin/biografiebogen] Anlegen fehlgeschlagen:', error.message)
       return NextResponse.json({ error: `Speichern fehlgeschlagen: ${error.message}` }, { status: 500 })
     }
+
+    await logAuditEvent({
+      action: 'create',
+      actorId: auth.ctx.userId,
+      organizationId: auth.ctx.organizationId,
+      entityType: 'biografiebogen',
+      entityId: data.id,
+      details: { clientId, felder: Object.keys(eingabe) },
+      request: req,
+    }).catch(err => console.error('[admin/biografiebogen] Audit-Log fehlgeschlagen:', err))
 
     return NextResponse.json({ erfolg: true, id: data.id })
   } catch (e) {

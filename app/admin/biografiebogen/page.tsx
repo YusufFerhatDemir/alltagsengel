@@ -33,6 +33,7 @@ export default function BiografiebogenPage() {
   const [success, setSuccess] = useState('')
   const [form, setForm] = useState<FormState>(LEER_FORM)
   const [zuletztAktualisiert, setZuletztAktualisiert] = useState<string | null>(null)
+  const [gesperrt, setGesperrt] = useState(false)
 
   async function loadKunden() {
     try {
@@ -69,9 +70,11 @@ export default function BiografiebogenPage() {
           biografische_besonderheiten: body.bogen.biografische_besonderheiten || '',
         })
         setZuletztAktualisiert(body.bogen.updated_at)
+        setGesperrt(!!body.bogen.gesperrt)
       } else {
         setForm(LEER_FORM)
         setZuletztAktualisiert(null)
+        setGesperrt(false)
       }
     } catch {
       setError('Biografiebogen konnte nicht geladen werden.')
@@ -95,6 +98,25 @@ export default function BiografiebogenPage() {
       if (!res.ok) { setError(body.error || 'Speichern fehlgeschlagen.'); return }
       setSuccess('Biografiebogen gespeichert.')
       await loadBogen()
+    } finally { setBusy(false) }
+  }
+
+  async function toggleGesperrt(neuerWert: boolean) {
+    const msg = neuerWert
+      ? 'Biografiebogen wirklich archivieren (sperren)? Danach kann er nicht mehr bearbeitet werden, bis er entsperrt wird.'
+      : 'Biografiebogen entsperren und wieder zur Bearbeitung freigeben?'
+    if (!window.confirm(msg)) return
+    setBusy(true); setError(''); setSuccess('')
+    try {
+      const res = await fetch(`/api/admin/biografiebogen/${selectedClient}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ gesperrt: neuerWert }),
+      })
+      const body = await res.json()
+      if (!res.ok) { setError(body.error || 'Aktion fehlgeschlagen.'); return }
+      setSuccess(neuerWert ? 'Biografiebogen wurde archiviert.' : 'Biografiebogen wurde entsperrt.')
+      setGesperrt(neuerWert)
     } finally { setBusy(false) }
   }
 
@@ -125,26 +147,61 @@ export default function BiografiebogenPage() {
       </div>
 
       {selectedClient && !loading && (
-        <Karte titel="Biografiebogen" aktion={
-          zuletztAktualisiert ? <span style={{ fontSize: 12, color: 'var(--ink4)' }}>Zuletzt aktualisiert: {new Date(zuletztAktualisiert).toLocaleString('de-DE')}</span> : undefined
-        }>
-          <FeldRaster>
-            <TextBereich label="Beruflicher Werdegang" value={form.beruflicher_werdegang} onChange={v => set('beruflicher_werdegang', v)} rows={2} />
-            <TextBereich label="Familienstand / Kinder" value={form.familienstand} onChange={v => set('familienstand', v)} rows={2} />
-            <TextBereich label="Wichtige Bezugspersonen" value={form.wichtige_bezugspersonen} onChange={v => set('wichtige_bezugspersonen', v)} rows={2} />
-            <TextBereich label="Wichtige Lebensereignisse" value={form.lebensereignisse} onChange={v => set('lebensereignisse', v)} rows={3} />
-            <TextBereich label="Gewohnheiten / Tagesablauf" value={form.gewohnheiten_tagesablauf} onChange={v => set('gewohnheiten_tagesablauf', v)} rows={3} />
-            <TextBereich label="Vorlieben" value={form.vorlieben} onChange={v => set('vorlieben', v)} rows={2} />
-            <TextBereich label="Abneigungen" value={form.abneigungen} onChange={v => set('abneigungen', v)} rows={2} />
-            <TextBereich label="Glaubensrichtung / Werte" value={form.glaubensrichtung_werte} onChange={v => set('glaubensrichtung_werte', v)} rows={2} />
-            <TextBereich label="Hobbies / Interessen" value={form.hobbies_interessen} onChange={v => set('hobbies_interessen', v)} rows={2} />
-            <TextBereich label="Haustiere" value={form.haustiere} onChange={v => set('haustiere', v)} rows={1} />
-            <TextBereich label="Biografische Besonderheiten" value={form.biografische_besonderheiten} onChange={v => set('biografische_besonderheiten', v)} rows={3} />
-          </FeldRaster>
-          <button onClick={speichern} disabled={busy} style={{ ...pflegePrimaryBtn, marginTop: 14 }}>
-            {busy ? 'Speichern...' : 'Speichern'}
-          </button>
-        </Karte>
+        <>
+          {gesperrt && (
+            <Banner tone="warn">
+              Dieser Biografiebogen ist archiviert/gesperrt. Bearbeitung ist deaktiviert.
+            </Banner>
+          )}
+          <Karte titel="Biografiebogen" aktion={
+            zuletztAktualisiert ? <span style={{ fontSize: 12, color: 'var(--ink4)' }}>Zuletzt aktualisiert: {new Date(zuletztAktualisiert).toLocaleString('de-DE')}</span> : undefined
+          }>
+            <fieldset disabled={gesperrt} style={{ border: 'none', padding: 0, margin: 0, opacity: gesperrt ? 0.6 : 1 }}>
+              <FeldRaster>
+                <TextBereich label="Beruflicher Werdegang" value={form.beruflicher_werdegang} onChange={v => set('beruflicher_werdegang', v)} rows={2} />
+                <TextBereich label="Familienstand / Kinder" value={form.familienstand} onChange={v => set('familienstand', v)} rows={2} />
+                <TextBereich label="Wichtige Bezugspersonen" value={form.wichtige_bezugspersonen} onChange={v => set('wichtige_bezugspersonen', v)} rows={2} />
+                <TextBereich label="Wichtige Lebensereignisse" value={form.lebensereignisse} onChange={v => set('lebensereignisse', v)} rows={3} />
+                <TextBereich label="Gewohnheiten / Tagesablauf" value={form.gewohnheiten_tagesablauf} onChange={v => set('gewohnheiten_tagesablauf', v)} rows={3} />
+                <TextBereich label="Vorlieben" value={form.vorlieben} onChange={v => set('vorlieben', v)} rows={2} />
+                <TextBereich label="Abneigungen" value={form.abneigungen} onChange={v => set('abneigungen', v)} rows={2} />
+                <TextBereich label="Glaubensrichtung / Werte" value={form.glaubensrichtung_werte} onChange={v => set('glaubensrichtung_werte', v)} rows={2} />
+                <TextBereich label="Hobbies / Interessen" value={form.hobbies_interessen} onChange={v => set('hobbies_interessen', v)} rows={2} />
+                <TextBereich label="Haustiere" value={form.haustiere} onChange={v => set('haustiere', v)} rows={1} />
+                <TextBereich label="Biografische Besonderheiten" value={form.biografische_besonderheiten} onChange={v => set('biografische_besonderheiten', v)} rows={3} />
+              </FeldRaster>
+            </fieldset>
+            <div style={{ display: 'flex', gap: 10, marginTop: 14, flexWrap: 'wrap' }}>
+              <button onClick={speichern} disabled={busy || gesperrt} style={{ ...pflegePrimaryBtn }}>
+                {busy ? 'Speichern...' : 'Speichern'}
+              </button>
+              {zuletztAktualisiert && !gesperrt && (
+                <button
+                  onClick={() => toggleGesperrt(true)}
+                  disabled={busy}
+                  style={{
+                    ...pflegePrimaryBtn,
+                    background: 'var(--ink2, #6b7280)',
+                  }}
+                >
+                  Archivieren
+                </button>
+              )}
+              {gesperrt && (
+                <button
+                  onClick={() => toggleGesperrt(false)}
+                  disabled={busy}
+                  style={{
+                    ...pflegePrimaryBtn,
+                    background: 'var(--success, #16a34a)',
+                  }}
+                >
+                  Entsperren
+                </button>
+              )}
+            </div>
+          </Karte>
+        </>
       )}
     </div>
   )

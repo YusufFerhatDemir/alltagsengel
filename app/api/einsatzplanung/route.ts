@@ -4,6 +4,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { getActiveOrgId } from '@/lib/organizations/server'
 import { pruefeEinsatzfreigabe, pruefeClientFreigabe, pruefeBudget, pruefeVPBudget } from '@/lib/personal/einsatzfreigabe'
 import { logBillingAction } from '@/lib/billing/core/audit'
+import { logAuditEvent } from '@/lib/audit-log'
 import { safeErrorResponse, safeDbError } from '@/lib/utils/api-error'
 
 async function requireStaff(supabase: Awaited<ReturnType<typeof createClient>>) {
@@ -186,6 +187,16 @@ export async function POST(req: NextRequest) {
     return safeDbError(error)
   }
 
+  await logAuditEvent({
+    action: 'create',
+    actorId: auth.userId,
+    organizationId,
+    entityType: 'assignment',
+    entityId: data.id,
+    details: { nachher: data },
+    request: req,
+  }).catch(err => console.error('[einsatzplanung] Audit-Log fehlgeschlagen:', err))
+
   return NextResponse.json({ ...data, warnungen: warnungen.length > 0 ? warnungen : undefined }, { status: 201 })
 }
 
@@ -279,6 +290,16 @@ export async function PATCH(req: NextRequest) {
     }
     return safeDbError(error)
   }
+
+  await logAuditEvent({
+    action: 'update',
+    actorId: auth.userId,
+    organizationId: organizationId || undefined,
+    entityType: 'assignment',
+    entityId: id,
+    details: { aenderungen: safeUpdates },
+    request: req,
+  }).catch(err => console.error('[einsatzplanung] Audit-Log fehlgeschlagen:', err))
 
   return NextResponse.json(data)
 }

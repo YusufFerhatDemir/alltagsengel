@@ -115,6 +115,22 @@ export default function SturzprotokollPage() {
     }
   }
 
+  async function archivieren(id: string) {
+    if (!confirm('Sturzprotokoll wirklich archivieren?')) return
+    setBusy(true); setError('')
+    try {
+      const res = await fetch('/api/pflege/sturzprotokoll', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id }),
+      })
+      const body = await res.json()
+      if (!res.ok) { setError(body.error || 'Archivierung fehlgeschlagen.'); return }
+      setSuccess('Sturzprotokoll wurde archiviert.')
+      await loadProtokolle()
+    } finally { setBusy(false) }
+  }
+
   async function speichern() {
     setBusy(true); setError(''); setSuccess('')
     try {
@@ -366,6 +382,9 @@ export default function SturzprotokollPage() {
                           <td style={{ fontSize: 13 }}>{p.autor_name}</td>
                           <td>
                             <button onClick={() => setViewId(p.id)} style={viewBtn}>Ansehen</button>
+                            <button onClick={() => archivieren(p.id)} style={{ ...viewBtn, color: 'var(--ink4)', marginLeft: 8 }}>
+                              Archivieren
+                            </button>
                           </td>
                         </tr>
                       )
