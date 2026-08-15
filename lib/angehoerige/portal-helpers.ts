@@ -20,13 +20,26 @@ export type PortalAuthResult =
 
 /**
  * Server-seitige Auth-Prüfung für das Angehörigenportal.
- * Prüft ob der User eingeloggt ist und mindestens einen aktiven Zugang hat.
+ * Prüft ob der User eingeloggt ist, die richtige Rolle hat
+ * und mindestens einen aktiven Zugang besitzt.
  */
 export async function requirePortalAccess(): Promise<PortalAuthResult> {
   const supabase = await createClient()
   const { data: { user }, error: authError } = await supabase.auth.getUser()
   if (authError || !user) {
     return { ok: false, response: NextResponse.json({ error: 'Nicht autorisiert.' }, { status: 401 }) }
+  }
+
+  // Rollenprüfung: Nur Angehoerige (+ Admins fuer Verwaltung) duerfen zugreifen
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single()
+
+  const erlaubteRollen = ['angehoerige', 'admin', 'superadmin']
+  if (!profile || !erlaubteRollen.includes(profile.role)) {
+    return { ok: false, response: NextResponse.json({ error: 'Zugriff nur fuer Angehoerige.' }, { status: 403 }) }
   }
 
   const organizationId = await getActiveOrgId()

@@ -63,6 +63,13 @@ export async function requireAngehUser(): Promise<
     return { ok: false, response: NextResponse.json({ error: 'Kein Profil.' }, { status: 403 }) }
   }
 
+  // Rollenprüfung: Nur Benutzer mit der Rolle "angehoerige" dürfen zugreifen.
+  // Admins/Superadmins werden ebenfalls durchgelassen (für Verwaltungszwecke).
+  const erlaubteRollen = ['angehoerige', 'admin', 'superadmin']
+  if (!erlaubteRollen.includes(profile.role)) {
+    return { ok: false, response: NextResponse.json({ error: 'Zugriff nur fuer Angehoerige.' }, { status: 403 }) }
+  }
+
   const organizationId = await getActiveOrgId()
   if (!organizationId) {
     return { ok: false, response: NextResponse.json({ error: 'Keine Organisation zugewiesen.' }, { status: 403 }) }
