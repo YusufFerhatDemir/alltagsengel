@@ -115,6 +115,7 @@ export default function AdminPflegedokuPage() {
                       <Link href={`/admin/pflegedoku/diagnosen/${z.client_id}`} style={miniLink}>Diagnosen</Link>
                       <Link href={`/admin/pflegedoku/massnahmenplan/${z.client_id}`} style={miniLink}>Plan</Link>
                       <Link href={`/admin/pflegedoku/verlauf/${z.client_id}`} style={miniLink}>Verlauf</Link>
+                      <Link href={`/admin/pflegedoku/berichteblatt/${z.client_id}`} style={miniLink}>Berichteblatt</Link>
                       <Link href={`/admin/pflegedoku/perioden/${z.client_id}`} style={miniLink}>Perioden</Link>
                     </td>
                   </tr>

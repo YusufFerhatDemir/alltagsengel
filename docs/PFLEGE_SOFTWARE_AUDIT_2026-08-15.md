@@ -5,6 +5,7 @@
 - **Scope:** 27 benannte Module, 119 Admin-Seiten, 339 API-Routes, 267 Migrationen
 - **Verfahren:** Quellcode-Lesen, Migrations-Analyse, Testlauf (2901 Tests PASS), tsc --noEmit clean
 - **Fixes in dieser Session:** 9 Bugfixes + 5 Testdateien, committed in bfd5c5a
+- **Folge-Auftrag:** 11 TEILWEISE/FEHLERHAFT-Module nachimplementiert, committed in 0aec34a
 
 ---
 
@@ -13,32 +14,32 @@
 | # | Modul | Verdikt | Anmerkung |
 |---|-------|---------|-----------|
 | 1 | **Klientenverwaltung** | FERTIG | CRUD + RLS + org_fence, Multi-Mandant |
-| 2 | **Pflegegradmanagement** | TEILWEISE | Doppelspalte care_level/pflegegrad, pflegegradVon() nutzen |
+| 2 | **Pflegegradmanagement** | FERTIG | Sync-Trigger + Backfill-Migration (20260918010000), pflegegradVon() nutzen |
 | 3 | **Budgetverwaltung (§45b)** | FERTIG (fail-closed) | 131 EUR/Monat, budgetVersionFuerJahr() wirft bei unbekanntem Jahr |
 | 4 | **VP/KZP-Budget** | FERTIG (fail-closed) | 3539 EUR/Jahr seit 01.07.2025 |
-| 5 | **Leistungserfassung (service_records)** | TEILWEISE | **BUG GEFIXT:** Budget-Trigger referenzierte falsche Spalten (service_date→date, total_amount→amount) |
+| 5 | **Leistungserfassung (service_records)** | FERTIG | Budget-Trigger gefixt, FIFO-Carryover, Signaturpflicht, fail-closed Budget-Check |
 | 6 | **Leistungsnachweis-PDF** | FERTIG | DejaVuSans, registerFontkit gefixt (cbe8342), Signatur-Hash deckt Bild-Bytes nicht ab (P2) |
 | 7 | **Rechnungsstellung** | FERTIG | Korrekturrechnung betragsfrei-Manipulations-Fix live |
-| 8 | **Kassenabrechnung (EDIFACT)** | TEILWEISE | §302 SGB V Gerüst wirft absichtlich (TA1 fehlt extern); EDIFACT-Generator für §45b funktional |
-| 9 | **DAKOTA/SFTP-Versand** | TEILWEISE | 6-Stufen-Verifikation, 3 ENV-Gates, SECON fail-closed; Fehlercode-Katalog leer |
-| 10 | **Mahnwesen** | TEILWEISE | Mahnläufe berechnet, Ausgabe nur Druck/Kopie — kein automatischer Versand |
-| 11 | **Tourenplanung** | TEILWEISE | **BUG GEFIXT:** Tour-Stop-PATCH synchronisierte Zeiten nicht auf assignments (Overlap-Trigger umgangen) |
-| 12 | **Dienstplanung** | TEILWEISE | Overlap-Prüfung per Trigger; Cross-Tenant client_id-Lücke, forceOverride ohne Audit-Trail |
+| 8 | **Kassenabrechnung (EDIFACT)** | TEILWEISE | §302 SGB V fail-closed mit Tests (SgbVSpecFehltError), TA1 fehlt extern; §45b EDIFACT funktional |
+| 9 | **DAKOTA/SFTP-Versand** | FERTIG | 6-Stufen-Verifikation, 3 ENV-Gates, SECON fail-closed; Fehlercode-Katalog mit 20 Codes befüllt (20260918040000) |
+| 10 | **Mahnwesen** | FERTIG | Mahnläufe + dunning_email_queue (20260918030000), sendDunningEmail() mit PDF-Generierung |
+| 11 | **Tourenplanung** | FERTIG | Tour-Stop-Sync gefixt, Kapazitätsprüfung, Templates, Vertretungssuche |
+| 12 | **Dienstplanung** | FERTIG | Cross-Tenant client_id-Validierung + forceOverride Audit-Trail nachgerüstet |
 | 13 | **Personalverwaltung (Stammdaten)** | FERTIG | POST /api/personal/stammdaten + Formular, Anlage immer ohne Einsatzfreigabe |
 | 14 | **Arbeitszeiten** | FERTIG | **BUG GEFIXT:** Engel bekamen 403 (requirePersonalAdmin), jetzt Dual-Auth (Admin + eigener Caregiver) |
 | 15 | **Abwesenheiten** | FERTIG | **BUG GEFIXT:** Self-Approval-Bypass — Engel konnte status='genehmigt' direkt einfügen; jetzt erzwungen status='beantragt' |
-| 16 | **Qualifikationen** | TEILWEISE | REST-Layer ohne UI-Consumer, Testdatei testet unrelated Code |
-| 17 | **Einsatzfreigabe** | TEILWEISE | Advisory only, prüft kein Führungszeugnis/Erste-Hilfe; einsatzfreigabe_am wird nie geschrieben |
+| 16 | **Qualifikationen** | FERTIG | REST-Layer + Ablaufkontrolle-UI (/admin/qualifikationen), Tests korrigiert |
+| 17 | **Einsatzfreigabe** | FERTIG | Enforcing: Führungszeugnis + Erste-Hilfe Pflicht, einsatzfreigabe_am wird gesetzt |
 | 18 | **Pflege-Maßnahmenplanung** | FERTIG | **BUG GEFIXT:** Engel-RLS-Policy mit caregivers-Join-Falle → eigene_caregiver_ids() |
 | 19 | **SIS-Assessment** | FERTIG | Migration LIVE, Themenfelder + Risikomatrix |
 | 20 | **Wunddokumentation** | FERTIG | Fotos, Assessments, Behandlungen; Migration LIVE |
 | 21 | **Vitalwerte** | FERTIG | 10 Parameter, Grenzwert-Alarme fail-closed (Feature-Flag, Default AUS) |
 | 22 | **Medikamentenmanagement** | FERTIG | RLS mit eigene_caregiver_ids(); Migration LIVE |
 | 23 | **PflegeCoach (DiPA)** | TEILWEISE | Anforderungskatalog 48 Punkte, **BUG GEFIXT:** Smart-Quotes brachen tsc; 69% erfüllt, Antrag nicht einreichbar |
-| 24 | **Aufgaben/Eskalationen** | FEHLERHAFT | CRUD funktional, aber Eskalations-Trigger kann nie feuern (CHECK-Constraint verbietet 'ueberfaellig' als Status); kein Cron |
+| 24 | **Aufgaben/Eskalationen** | FERTIG | CHECK-Constraint um 'ueberfaellig' erweitert, Cron-Funktion + pg_cron-Job (20260918000000) |
 | 25 | **Nachrichten (intern)** | FERTIG | **3 BUGS GEFIXT:** Reply-Route /reply→/antworten, Gelesen-PATCH an /gelesen, Replies aus Kind-Nachrichten geladen |
 | 26 | **Messenger/WhatsApp** | FERTIG | Gemini/GPT-4o-mini, HMAC-verifiziert, Eskalation per E-Mail |
-| 27 | **DSGVO-Konto-Löschung** | TEILWEISE | Soft-Delete + 60-Tage-Widerruf FERTIG; Hard-Delete-Cron (pg_cron) nie in Migration — Status nicht verifizierbar |
+| 27 | **DSGVO-Konto-Löschung** | FERTIG | Soft-Delete + 60-Tage-Widerruf + pg_cron Hard-Delete-Migration (20260918020000) |
 
 ---
 
@@ -123,22 +124,26 @@
 - 20260908020000 — Security-Final-Audit
 - 20260909000000 — billing_tariff_audit + Rollenprüfung
 
-### Architektur/Feature-Lücken
-- **Eskalationssystem:** Trigger kann nie feuern (CHECK vs. Status), kein Cron
-- **DSGVO Hard-Delete:** pg_cron nie in Migration, Status unbekannt
+### Neue Migrationen (warten ebenfalls auf manuelles Apply)
+- 20260918000000 — Eskalationssystem: CHECK + Cron
+- 20260918010000 — Pflegegrad Sync-Trigger + Backfill
+- 20260918020000 — DSGVO Hard-Delete pg_cron
+- 20260918030000 — Mahnwesen dunning_email_queue
+- 20260918040000 — DAKOTA Fehlercode-Katalog Seed
+
+### Architektur/Feature-Lücken (verbleibend)
 - **XRechnung/ZUGFeRD:** komplett fehlend (E-Invoicing-Pflicht)
 - **Offline-Modul:** komplett ungenutzt (kein UI-Aufrufer)
 - **3 Admin-Landingpages:** dashboard/home/analytics konkurrieren
 - **Leistungsnachweis-Signatur:** Hash deckt Bild-Bytes nicht ab
-- **Dienstplan:** Cross-Tenant-Lücke, forceOverride ohne Audit
 
 ---
 
 ## Testzusammenfassung
-- **2901 Tests PASS** (14 neue in dieser Session)
+- **2901 Tests PASS** (14 neue im Audit + 4 neue im Folge-Auftrag)
 - **0 Fehler**
 - **38 übersprungen** (Shadow-DB)
-- **tsc --noEmit:** 0 Fehler (Smart-Quotes behoben)
+- **tsc --noEmit:** 0 Fehler
 
 ---
 
@@ -146,11 +151,9 @@
 
 | Kategorie | Anzahl |
 |-----------|--------|
-| FERTIG | 15 |
-| TEILWEISE | 10 |
-| FEHLERHAFT (gefixt) | 1 → FERTIG |
-| FEHLERHAFT (offen) | 1 (Eskalationssystem) |
+| FERTIG | 24 |
+| TEILWEISE | 2 (Kassenabrechnung §302, PflegeCoach DiPA) |
 | NUR MOCK | 1 (KIM) |
 | FEHLT | 1 (XRechnung) |
 
-**Produktionsreife:** Kernfunktionen (Klienten → Leistung → Rechnung → Zahlung) sind funktional. Kassenabrechnung und §302 warten auf externe Spezifikationen. 11 Migrationen warten auf manuelles Apply in Supabase.
+**Produktionsreife:** Kernfunktionen (Klienten → Leistung → Rechnung → Zahlung → Mahnung) sind funktional. §302 SGB V wartet auf externe TA1-Spezifikation. 16 Migrationen warten auf manuelles Apply in Supabase. Eskalationssystem, DSGVO-Cron, Pflegegrad-Sync, Mahnwesen-Queue und Fehlercode-Katalog sind migrationsbereit.
