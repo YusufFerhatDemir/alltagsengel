@@ -10,6 +10,7 @@ import {
   type Ampel, type BudgetSummary,
 } from '@/lib/admin/ops'
 import { AmpelDot, BudgetBar, StatusBadge, Banner, EmptyRow } from '@/components/admin/OpsUI'
+import { closeMonthAction } from './actions'
 
 const MONTH_NAMES = [
   'Januar', 'Februar', 'März', 'April', 'Mai', 'Juni',
@@ -141,38 +142,16 @@ function MonatsabschlussDetailInner() {
     }
     setClosingBusy(true)
     try {
-      const supabase = createClient()
-      const { data: { user } } = await supabase.auth.getUser()
-      const now = new Date().toISOString()
-
-      const snapshot = {
-        client_id: clientId, year, month, ampel,
-        total_records: records.length, total_amount: totalAmount,
-        budget_used: budgetSummary?.used ?? null, budget_available: budgetSummary?.available ?? null,
-      }
-
-      const { data: upserted, error: upsertErr } = await supabase
-        .from('monthly_closings')
-        .upsert({
-          client_id: clientId, year, month,
-          status: 'closed', ampel,
-          total_records: records.length, total_amount: totalAmount,
-          budget_used: budgetSummary?.used ?? null, budget_available: budgetSummary?.available ?? null,
-          closed_by: user?.id ?? null, closed_at: now,
-        }, { onConflict: 'client_id,year,month' })
-        .select('id')
-        .single()
-
-      if (upsertErr) { setCloseError(upsertErr.message); setClosingBusy(false); return }
-
-      await supabase.from('audit_logs').insert({
-        entity_type: 'monthly_closing',
-        entity_id: upserted?.id ?? null,
-        action: 'close',
-        actor_id: user?.id ?? null,
-        after: snapshot,
+      await closeMonthAction({
+        clientId,
+        year,
+        month,
+        ampel,
+        totalRecords: records.length,
+        totalAmount,
+        budgetUsed: budgetSummary?.used ?? null,
+        budgetAvailable: budgetSummary?.available ?? null,
       })
-
       await load()
     } catch (err: any) {
       setCloseError(err?.message || 'Unerwarteter Fehler beim Abschließen.')

@@ -5,6 +5,9 @@ import {
   euro, formatDate, fullName, statusMeta, INVOICE_STATUS,
 } from '@/lib/admin/ops'
 import { StatusBadge, SearchInput, EmptyRow, Banner } from '@/components/admin/OpsUI'
+import {
+  advanceInvoiceSimple, recordInvoicePayment, recordInvoiceDispute, decideInvoiceKuerzung,
+} from './actions'
 
 interface InvoiceRow {
   id: string
@@ -122,56 +125,42 @@ export default function AdminInvoicesPage() {
 
   // Status weiterschalten — unterstützt Legacy-EN und neuen DE-Flow
   async function advance(inv: InvoiceRow) {
-    const supabase = createClient()
-
-    // 1. Einzel-Klick-Aktionen (entwurf→geprueft, draft→sent, …)
-    const simple = SIMPLE_ADVANCES[inv.status]
-    if (simple) {
-      const extra: Record<string, any> = {}
-      // sent_at bei Versand setzen (Legacy: draft→sent, Deutsch: freigegeben→uebermittelt, erneut→uebermittelt)
-      if (['draft', 'freigegeben', 'erneut_eingereicht'].includes(inv.status)) {
-        extra.sent_at = new Date().toISOString()
+    try {
+      // 1. Einzel-Klick-Aktionen (entwurf→geprueft, draft→sent, …)
+      const simple = SIMPLE_ADVANCES[inv.status]
+      if (simple) {
+        await advanceInvoiceSimple(inv.id, inv.status)
+        loadInvoices()
+        return
       }
-      await supabase.from('invoices').update({ status: simple.to, ...extra }).eq('id', inv.id)
-      loadInvoices()
-      return
-    }
 
-    // 2. Zahlungserfassung (quittiert, sent, partial, disputed, teilweise_bezahlt, strittig)
-    if (PAYMENT_STATUSES.has(inv.status)) {
-      const input = window.prompt(`Bezahlter Betrag für Rechnung ${inv.invoice_number || ''}?\n(Rechnungssumme: ${euro(inv.total_amount)})`, String(inv.total_amount ?? ''))
-      if (input === null) return
-      const paid = Number(input.replace(',', '.'))
-      if (isNaN(paid)) { alert('Ungültiger Betrag'); return }
-      const total = inv.total_amount ?? 0
-      const diff = total - paid
-      const fullyPaid = paid >= total
-      // Zielstatus je nach Sprache des aktuellen Status
-      const isGerman = ['quittiert', 'teilweise_bezahlt', 'strittig'].includes(inv.status)
-      await supabase.from('invoices').update({
-        status: fullyPaid ? (isGerman ? 'bezahlt' : 'paid') : (isGerman ? 'teilweise_bezahlt' : 'partial'),
-        paid_amount: paid,
-        paid_at: new Date().toISOString(),
-      }).eq('id', inv.id)
-      // Kürzung dokumentieren
-      if (diff > 0.005) {
-        const reason = window.prompt('Grund der Kürzung dokumentieren:', '') || 'Kürzung durch Kostenträger'
-        await supabase.from('invoice_disputes').insert({
-          invoice_id: inv.id, original_amount: total, paid_amount: paid, difference: diff,
-          reason, status: 'open',
-        })
+      // 2. Zahlungserfassung (quittiert, sent, partial, disputed, teilweise_bezahlt, strittig)
+      if (PAYMENT_STATUSES.has(inv.status)) {
+        const input = window.prompt(`Bezahlter Betrag für Rechnung ${inv.invoice_number || ''}?\n(Rechnungssumme: ${euro(inv.total_amount)})`, String(inv.total_amount ?? ''))
+        if (input === null) return
+        const paid = Number(input.replace(',', '.'))
+        if (isNaN(paid)) { alert('Ungültiger Betrag'); return }
+        const total = inv.total_amount ?? 0
+
+        const result = await recordInvoicePayment(inv.id, inv.status, paid, total)
+
+        // Kürzung dokumentieren
+        if (result.difference > 0.005) {
+          const reason = window.prompt('Grund der Kürzung dokumentieren:', '') || 'Kürzung durch Kostenträger'
+          await recordInvoiceDispute(inv.id, total, paid, result.difference, reason)
+        }
+        loadInvoices()
+        return
       }
-      loadInvoices()
-      return
-    }
 
-    // 3. Gekürzt: Akzeptieren oder Korrektur anfordern
-    if (inv.status === 'gekuerzt') {
-      const choice = window.confirm('Kürzung akzeptieren?\n\nOK = Akzeptieren\nAbbrechen = Korrektur anfordern')
-      await supabase.from('invoices').update({
-        status: choice ? 'akzeptiert' : 'korrektur_erforderlich',
-      }).eq('id', inv.id)
-      loadInvoices()
+      // 3. Gekürzt: Akzeptieren oder Korrektur anfordern
+      if (inv.status === 'gekuerzt') {
+        const choice = window.confirm('Kürzung akzeptieren?\n\nOK = Akzeptieren\nAbbrechen = Korrektur anfordern')
+        await decideInvoiceKuerzung(inv.id, choice)
+        loadInvoices()
+      }
+    } catch (err: any) {
+      setError(err?.message || 'Aktion fehlgeschlagen.')
     }
   }
 

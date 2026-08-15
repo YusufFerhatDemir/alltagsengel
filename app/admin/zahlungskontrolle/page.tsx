@@ -6,6 +6,7 @@ import {
   euro, formatDate, fullName, statusMeta, PAYMENT_STATUS,
 } from '@/lib/admin/ops'
 import { StatusBadge, SearchInput, EmptyRow, Banner } from '@/components/admin/OpsUI'
+import { sendPaymentReminder, recordPayment } from './actions'
 
 interface PaymentRow {
   id: string
@@ -71,14 +72,11 @@ export default function AdminZahlungskontrollePage() {
   async function sendReminder(row: PaymentRow) {
     setReminderBusyId(row.id)
     try {
-      const supabase = createClient()
-      await supabase.from('payment_status').update({
-        reminder_count: row.reminder_count + 1,
-        last_reminder_at: new Date().toISOString(),
-      }).eq('id', row.id)
+      await sendPaymentReminder(row.id, row.reminder_count)
       await load()
-    } catch (err) {
+    } catch (err: any) {
       console.error('Mahnung error:', err)
+      setError(err?.message || 'Mahnung fehlgeschlagen.')
     } finally {
       setReminderBusyId(null)
     }
@@ -198,15 +196,7 @@ function PaymentModal({ row, onClose, onSaved }: {
     if (isNaN(paid) || paid < 0) { setErr('Ungültiger Betrag.'); return }
     setSaving(true)
     try {
-      const supabase = createClient()
-      const newStatus = paid >= row.amount_due ? 'bezahlt' : 'teilbezahlt'
-      const { error } = await supabase.from('payment_status').update({
-        amount_paid: paid,
-        paid_date: paidDate,
-        payment_method: method,
-        status: newStatus,
-      }).eq('id', row.id)
-      if (error) { setErr(error.message); setSaving(false); return }
+      await recordPayment(row.id, paid, paidDate, method, row.amount_due)
       onSaved()
     } catch (e: any) {
       setErr(e?.message || 'Unerwarteter Fehler.')
