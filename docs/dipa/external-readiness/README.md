@@ -43,6 +43,20 @@ verdichtet, nicht neu erfunden.
 | 4 | [BRIEFING_BARRIEREFREIHEIT_USABILITY.md](BRIEFING_BARRIEREFREIHEIT_USABILITY.md) | Usability-/Accessibility-Prüfstelle (DIN EN ISO 9241-171) | BF-01, BF-02 (P1) |
 | 5 | [BRIEFING_EVALUATION.md](BRIEFING_EVALUATION.md) | Herstellerunabhängiges wissenschaftliches Institut | NN-01 (P1) |
 | 6 | [BFARM_BERATUNG_PAKET.md](BFARM_BERATUNG_PAKET.md) | BfArM (freiwilliger Beratungstermin, § 22 DiPAV) | REG-05 sowie Bündelung offener Grundsatzfragen |
+| 7 | [BRIEFING_ISO27001_ZERTIFIZIERUNG.md](BRIEFING_ISO27001_ZERTIFIZIERUNG.md) | DAkkS-akkreditierte Zertifizierungsstelle | SEC-05 (P0, EINGANGSBLOCKER) |
+| 8 | [BRIEFING_PENETRATIONSTEST.md](BRIEFING_PENETRATIONSTEST.md) | Pentest-Anbieter (falls separat von TR-03161) | SEC-04 (P0) |
+| 9 | [BRIEFING_DSFA.md](BRIEFING_DSFA.md) | Kanzlei / ext. DSB (Einzelbriefing zur DSFA) | DS-02 (P0) |
+| 10 | [BRIEFING_AVV_VORLAGEN.md](BRIEFING_AVV_VORLAGEN.md) | Kanzlei (Einzelbriefing zu AVV-Verträgen) | DS-04 (P0) |
+
+**Neu hinzugekommen (15.08.2026):**
+- Paket 7 (ISO 27001) deckt den dritten und kritischsten Eingangsblocker ab
+- Pakete 8–10 sind Einzelbriefings zu Themen, die in Paket 3 gebündelt sind, aber
+  auch unabhängig vergeben werden können
+
+**Gesamtübersicht aller externen Nachweise:**
+[GESAMTUEBERSICHT_EXTERNE_NACHWEISE.md](GESAMTUEBERSICHT_EXTERNE_NACHWEISE.md) — Vollständige
+Klassifizierung (MUSS EXTERN / KANN INTERN / GESCHÄFTSENTSCHEIDUNG / NICHT ERFORDERLICH),
+Kostenrahmen, Zeitplan und kritischer Pfad.
 
 Die vollständige Priorisierung (P0/P1/P2) und alle 16 externen Punkte im
 Detail stehen in `docs/DIPA_EXTERNE_TODO_2026-08-14.md`. Dieser Ordner deckt
@@ -90,14 +104,16 @@ Steuernummer, SEPA-Gläubiger-ID).
    (Barrierefreiheit/Usability).
 4. **Nach Möglichkeit nach Paket 6:** Paket 5 (Evaluationspartner) — profitiert
    von vorab geklärten Studiendesign-Fragen, ist aber nicht davon abhängig.
-5. **Nicht in diesem Ordner, aber parallel zu berücksichtigen:** ISO-27001-
-   ISMS-Zertifizierung (SEC-05, P1) sowie die rein internen/organisatorischen
-   Punkte aus `docs/DIPA_EXTERNE_TODO_2026-08-14.md` (Support-SLA-Entscheidung,
+5. **Sofort, parallel, kritischer Pfad:** Paket 7 (ISO 27001) — längste
+   Vorlaufzeit aller Nachweise (8–12 Monate), Eingangsblocker.
+6. **Parallel zu berücksichtigen:** Rein interne/organisatorische Punkte aus
+   `docs/DIPA_EXTERNE_TODO_2026-08-14.md` (Support-SLA-Entscheidung,
    Datenschutzbeauftragter, Steuernummer).
 
-**Ausgangslage, ehrlich:** 36 von 48 Anforderungen sind aktuell textlich
-geprüft (44 % belastbare Quote), 0 von 12 Inhaltsmodulen sind fachlich
-freigegeben. Eine BfArM-Einreichung ist heute nicht möglich — dieser Ordner
-bereitet die externen Nachweise vor, die dafür fehlen. Details:
-`docs/DIPA_EXTERNE_TODO_2026-08-14.md`, Abschnitt „BfArM-Einreichung heute
-möglich: NEIN".
+**Ausgangslage, ehrlich:** 48 von 48 Anforderungen sind textlich geprüft
+(69 % belastbare Quote: 33 PASS_INTERNAL, 13 EXTERNAL, 2 PARTIAL),
+0 von 12 Inhaltsmodulen sind fachlich freigegeben. Eine BfArM-Einreichung
+ist heute nicht möglich — dieser Ordner bereitet die externen Nachweise vor,
+die dafür fehlen. Geschätzte Gesamtkosten: 115.000–150.000 € (empfohlen).
+Details: `GESAMTUEBERSICHT_EXTERNE_NACHWEISE.md` und
+`docs/DIPA_EXTERNE_TODO_2026-08-14.md`.

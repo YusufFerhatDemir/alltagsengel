@@ -163,6 +163,27 @@ export async function PATCH(
   }
   const stop = stopRoh as unknown as StopZeile
 
+  // Zeiten auf assignments zurückschreiben, damit check_assignment_overlap greift
+  if (stop.assignment_id && (updates.geplante_ankunft || updates.geplantes_ende)) {
+    const assignmentUpdates: Record<string, unknown> = {}
+    if (updates.geplante_ankunft) assignmentUpdates.start_time = updates.geplante_ankunft
+    if (updates.geplantes_ende) assignmentUpdates.end_time = updates.geplantes_ende
+    const { error: aErr } = await admin
+      .from('assignments')
+      .update(assignmentUpdates)
+      .eq('id', stop.assignment_id)
+    if (aErr) {
+      const msg = uebersetzeDbFehler(aErr)
+      if (msg.includes('DOPPELBELEGUNG') || aErr.code === '23514') {
+        await admin.from('tour_stops').update({
+          geplante_ankunft: stop.geplante_ankunft,
+          geplantes_ende: stop.geplantes_ende,
+        }).eq('id', stop_id)
+        return NextResponse.json({ error: msg }, { status: 409 })
+      }
+    }
+  }
+
   // Leistungserfassung: bei Abschluss auf Wunsch Nachweis-Entwurf anlegen
   let serviceRecordFehler: string | null = null
   if (
