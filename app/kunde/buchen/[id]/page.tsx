@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { isValidUUID, logError } from '@/lib/safe-query'
+import { savePlzAction, createBookingAction } from './actions'
 import { CUSTOMER_HOURLY_RATE, PLATFORM_FEE_FACTOR } from '@/lib/pricing/b2c-constants'
 import { NotFoundState, ErrorState, LoadingState } from '@/components/UIStates'
 import { IconWingsGold, IconStarFilled, IconCard, IconShield, IconMedical, IconLock, IconInfo } from '@/components/Icons'
@@ -151,10 +152,8 @@ export default function BuchenPage() {
     if (!plz) return
     setSavingPlz(true)
     try {
-      const supabase = createClient()
-      const { data: { user } } = await supabase.auth.getUser()
-      if (user) {
-        await supabase.from('profiles').update({ postal_code: plz }).eq('id', user.id)
+      const result = await savePlzAction({ plz })
+      if (result.ok) {
         setCustomerPlz(plz)
       }
     } finally {
@@ -188,38 +187,28 @@ export default function BuchenPage() {
     setSubmitting(true)
     setError('')
     try {
-      const supabase = createClient()
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) { setError('Nicht eingeloggt'); setSubmitting(false); return }
-
       // Fail-safe: Kassenabrechnung nur mit hessischer PLZ — selbst wenn
       // im UI-State noch 'kasse' stehen sollte, wird privat gebucht.
       const finalPayMethod = kasseAllowed ? payMethod : 'privat'
       const withKasse = finalPayMethod === 'kasse' || finalPayMethod === 'kombi'
 
-      const { data: booking, error: bookErr } = await supabase
-        .from('bookings')
-        .insert({
-          customer_id: user.id,
-          angel_id: angelId,
-          service,
-          date,
-          time,
-          duration_hours: duration,
-          status: 'pending',
-          payment_method: finalPayMethod,
-          insurance_type: withKasse ? kkType : null,
-          insurance_provider: withKasse ? selectedKK : null,
-          total_amount: total,
-          platform_fee: platformFee,
-          notes: notes || null,
-          care_recipient_id: selectedCareRecipient || null,
-        })
-        .select()
-        .single()
+      const result = await createBookingAction({
+        angelId,
+        service,
+        date,
+        time,
+        durationHours: duration,
+        paymentMethod: finalPayMethod,
+        insuranceType: withKasse ? kkType : null,
+        insuranceProvider: withKasse ? selectedKK : null,
+        totalAmount: total,
+        platformFee,
+        notes: notes || null,
+        careRecipientId: selectedCareRecipient || null,
+      })
 
-      if (bookErr) {
-        logError('BuchenPage:submit', bookErr.message)
+      if (!result.ok) {
+        logError('BuchenPage:submit', result.error)
         setError('Buchung konnte nicht erstellt werden. Bitte versuchen Sie es erneut.')
         setSubmitting(false)
         return
@@ -232,10 +221,10 @@ export default function BuchenPage() {
       fetch('/api/bookings/notify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ bookingId: booking.id, event: 'created' }),
+        body: JSON.stringify({ bookingId: result.data.id, event: 'created' }),
       }).catch(() => {})
 
-      router.push(`/kunde/warten/${booking.id}`)
+      router.push(`/kunde/warten/${result.data.id}`)
     } catch (err) {
       logError('BuchenPage:submit', err)
       setError('Ein unerwarteter Fehler ist aufgetreten. Bitte versuchen Sie es erneut.')

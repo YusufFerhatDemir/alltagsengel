@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { addVehicle as addVehicleAction, toggleVehicleActive as toggleVehicleActiveAction } from './actions'
 
 export default function FahrzeugeManagementPage() {
   const router = useRouter()
@@ -74,31 +75,23 @@ export default function FahrzeugeManagementPage() {
 
     setSaving(true)
     try {
-      const supabase = createClient()
-      const { data, error } = await supabase
-        .from('fahrzeuge')
-        .insert([
-          {
-            provider_id: provider.id,
-            kennzeichen: formData.kennzeichen,
-            marke: formData.marke,
-            modell: formData.modell,
-            baujahr: formData.baujahr ? parseInt(formData.baujahr) : null,
-            farbe: formData.farbe,
-            sitze: formData.sitze ? parseInt(formData.sitze) : null,
-            rollstuhl_geeignet: formData.rollstuhl_geeignet,
-            tragestuhl_geeignet: formData.tragestuhl_geeignet,
-            liegend_transport: formData.liegend_transport,
-            klimaanlage: formData.klimaanlage,
-            tuev_bis: formData.tuev_bis || null,
-            versicherung_bis: formData.versicherung_bis || null,
-            is_active: true,
-          },
-        ])
-        .select()
+      const result = await addVehicleAction({
+        kennzeichen: formData.kennzeichen,
+        marke: formData.marke,
+        modell: formData.modell,
+        baujahr: formData.baujahr,
+        farbe: formData.farbe,
+        sitze: formData.sitze,
+        rollstuhl_geeignet: formData.rollstuhl_geeignet,
+        tragestuhl_geeignet: formData.tragestuhl_geeignet,
+        liegend_transport: formData.liegend_transport,
+        klimaanlage: formData.klimaanlage,
+        tuev_bis: formData.tuev_bis,
+        versicherung_bis: formData.versicherung_bis,
+      })
 
-      if (!error && data) {
-        setVehicles((prev) => [data[0], ...prev])
+      if (result.ok) {
+        setVehicles((prev) => [result.data, ...prev])
         setFormData({
           kennzeichen: '',
           marke: '',
@@ -114,6 +107,8 @@ export default function FahrzeugeManagementPage() {
           versicherung_bis: '',
         })
         setShowForm(false)
+      } else {
+        alert(result.error)
       }
     } catch (err) {
       console.error('Add vehicle error:', err)
@@ -126,17 +121,17 @@ export default function FahrzeugeManagementPage() {
   // Handle toggle active status
   async function handleToggleActive(vehicleId: string, currentStatus: boolean) {
     try {
-      const supabase = createClient()
-      await supabase
-        .from('fahrzeuge')
-        .update({ is_active: !currentStatus })
-        .eq('id', vehicleId)
+      const result = await toggleVehicleActiveAction(vehicleId, !currentStatus)
 
-      setVehicles((prev) =>
-        prev.map((v) =>
-          v.id === vehicleId ? { ...v, is_active: !currentStatus } : v
+      if (result.ok) {
+        setVehicles((prev) =>
+          prev.map((v) =>
+            v.id === vehicleId ? { ...v, is_active: !currentStatus } : v
+          )
         )
-      )
+      } else {
+        console.error('Toggle error:', result.error)
+      }
     } catch (err) {
       console.error('Toggle error:', err)
     }

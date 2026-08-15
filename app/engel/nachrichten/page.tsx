@@ -75,7 +75,9 @@ export default function EngelNachrichtenPage() {
       setNachrichten(prev =>
         prev.map(n => n.nachricht_id === nachrichtId ? { ...n, gelesen: true } : n)
       )
-    } catch { /* ignore */ }
+    } catch (err) {
+      console.error('Fehler in markAsRead (Engel-Nachrichten):', err)
+    }
   }
 
   const handleExpand = (nachrichtId: string) => {

@@ -8,6 +8,7 @@ import { heuteBerlin } from '@/lib/utils/timezone';
 import { useEffect, useMemo, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { formatDate, centToEuro, euroToCent, BUNDESLAND_LABELS, LEISTUNGSART_LABELS, statusMeta } from '@/lib/admin/ops'
+import { upsertLeistungspreis, deleteLeistungspreis } from './actions'
 import { StatusBadge, SearchInput, EmptyRow, Banner } from '@/components/admin/OpsUI'
 import { useBundeslandFilter } from '@/components/admin/BundeslandContext'
 
@@ -117,18 +118,14 @@ export default function AdminLeistungspreisePage() {
     setSaving(true)
     setError(null)
     try {
-      const supabase = createClient()
-      const payload = {
+      const result = await upsertLeistungspreis(editingId, {
         bundesland: form.bundesland,
         leistungsart: form.leistungsart,
         preis_cent: euroToCent(form.preis) ?? 0,
         gueltig_ab: form.gueltig_ab,
         gueltig_bis: form.gueltig_bis || null,
-      }
-      const { error: e } = editingId
-        ? await supabase.from('leistungspreise').update(payload).eq('id', editingId)
-        : await supabase.from('leistungspreise').insert(payload)
-      if (e) { setError(`Speichern fehlgeschlagen: ${e.message}`); setSaving(false); return }
+      })
+      if (!result.ok) { setError(result.error); setSaving(false); return }
       setShowForm(false)
       await load()
     } catch (err: any) {
@@ -142,9 +139,8 @@ export default function AdminLeistungspreisePage() {
     if (!window.confirm('Preis wirklich löschen?')) return
     setBusyId(id)
     try {
-      const supabase = createClient()
-      const { error: e } = await supabase.from('leistungspreise').delete().eq('id', id)
-      if (e) { setError(`Löschen fehlgeschlagen: ${e.message}`); return }
+      const result = await deleteLeistungspreis(id)
+      if (!result.ok) { setError(result.error); return }
       await load()
     } finally {
       setBusyId(null)

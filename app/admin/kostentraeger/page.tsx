@@ -7,6 +7,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { BUNDESLAND_LABELS, KOSTENTRAEGER_TYP, statusMeta } from '@/lib/admin/ops'
+import { upsertKostentraeger, deleteKostentraeger } from './actions'
 import { StatusBadge, SearchInput, EmptyRow, Banner } from '@/components/admin/OpsUI'
 import { useBundeslandFilter } from '@/components/admin/BundeslandContext'
 
@@ -124,8 +125,7 @@ export default function AdminKostentraegerPage() {
     setSaving(true)
     setError(null)
     try {
-      const supabase = createClient()
-      const payload = {
+      const result = await upsertKostentraeger(editingId, {
         name: form.name,
         typ: form.typ,
         ik_nummer: form.ik_nummer || null,
@@ -136,11 +136,8 @@ export default function AdminKostentraegerPage() {
         bundesland: form.bundesland || null,
         elektronisch_abrechenbar: form.elektronisch_abrechenbar,
         notes: form.notes || null,
-      }
-      const { error: e } = editingId
-        ? await supabase.from('kostentraeger_kontakte').update(payload).eq('id', editingId)
-        : await supabase.from('kostentraeger_kontakte').insert(payload)
-      if (e) { setError(`Speichern fehlgeschlagen: ${e.message}`); setSaving(false); return }
+      })
+      if (!result.ok) { setError(result.error); setSaving(false); return }
       setShowForm(false)
       await load()
     } catch (err: any) {
@@ -154,9 +151,8 @@ export default function AdminKostentraegerPage() {
     if (!window.confirm('Kontakt wirklich löschen?')) return
     setBusyId(id)
     try {
-      const supabase = createClient()
-      const { error: e } = await supabase.from('kostentraeger_kontakte').delete().eq('id', id)
-      if (e) { setError(`Löschen fehlgeschlagen: ${e.message}`); return }
+      const result = await deleteKostentraeger(id)
+      if (!result.ok) { setError(result.error); return }
       await load()
     } finally {
       setBusyId(null)

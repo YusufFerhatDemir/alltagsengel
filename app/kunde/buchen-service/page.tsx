@@ -3,6 +3,7 @@ import { datumBerlin } from '@/lib/utils/timezone';
 import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { createServiceBookingAction } from './actions'
 import Link from 'next/link'
 import { CUSTOMER_HOURLY_RATE, PLATFORM_FEE_FACTOR } from '@/lib/pricing/b2c-constants'
 import { IconWingsGold, IconStarFilled, IconCheck, IconCard } from '@/components/Icons'
@@ -129,41 +130,36 @@ function BuchenServiceInner() {
   const handleBook = async () => {
     if (!selectedAngel) return
     setSubmitting(true)
-    const supabase = createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) { setSubmitting(false); return }
 
     const notes = [
       profile?.address ? `Adresse: ${profile.address}` : '',
       isFlexible ? `FLEXIBEL: Mindestdauer ${duration}h, danach 15-Min-Takt (${(rate / 4).toFixed(0)}€/15 Min)` : '',
     ].filter(Boolean).join(' | ')
 
-    const { data, error } = await supabase.from('bookings').insert({
-      customer_id: user.id,
-      angel_id: selectedAngel.id,
+    const result = await createServiceBookingAction({
+      angelId: selectedAngel.id,
       service: serviceLabel,
       date: selectedDate,
       time: selectedTime,
-      duration_hours: duration,
-      total_amount: total,
-      is_flexible: isFlexible,
-      status: 'pending',
+      durationHours: duration,
+      totalAmount: total,
+      isFlexible,
       // Explizit setzen (DB-Default wäre 'kasse'): Kassenabrechnung
       // nur mit hessischer PLZ — sonst immer Privatleistung.
-      payment_method: kasseMoeglich ? 'kasse' : 'privat',
+      paymentMethod: kasseMoeglich ? 'kasse' : 'privat',
       notes: notes || null,
-    }).select().single()
+    })
 
-    if (error) { setSubmitting(false); return }
+    if (!result.ok) { setSubmitting(false); return }
 
     // Engel über die neue Anfrage benachrichtigen (in-app + E-Mail + Push)
     fetch('/api/bookings/notify', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ bookingId: data.id, event: 'created' }),
+      body: JSON.stringify({ bookingId: result.data.id, event: 'created' }),
     }).catch(() => {})
 
-    router.push(`/kunde/warten/${data.id}`)
+    router.push(`/kunde/warten/${result.data.id}`)
   }
 
   const formatDate = (d: string) => {

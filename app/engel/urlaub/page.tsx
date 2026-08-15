@@ -8,6 +8,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
+import { requestAbsence } from './actions'
 import {
   formatDate, statusMeta,
   ABSENCE_TYPE, ABSENCE_STATUS,
@@ -119,19 +120,17 @@ export default function UrlaubPage() {
     setError('')
     setSuccess('')
     try {
-      const supabase = createClient()
-      const { error: insertErr } = await supabase
-        .from('absences')
-        .insert({
-          caregiver_id: caregiverId,
-          absence_type: formTyp,
-          start_date: formVon,
-          end_date: formBis,
-          halber_tag: formHalberTag,
-          reason: formBemerkung || null,
-          status: 'beantragt',
-        })
-      if (insertErr) throw insertErr
+      const result = await requestAbsence({
+        absenceType: formTyp,
+        startDate: formVon,
+        endDate: formBis,
+        halberTag: formHalberTag,
+        reason: formBemerkung || null,
+      })
+      if (!result.ok) {
+        setError(result.error)
+        return
+      }
 
       setSuccess('Abwesenheit erfolgreich beantragt.')
       setShowForm(false)

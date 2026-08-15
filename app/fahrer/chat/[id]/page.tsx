@@ -4,6 +4,7 @@ import { useRouter, useParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { requireUser } from '@/lib/supabase/require-session'
 import { useChatPagination, useScrollToLoadOlder, type ChatMessage } from '@/lib/use-chat-pagination'
+import { sendChatMessage } from './actions'
 
 export default function FahrerChatDetailPage() {
   const router = useRouter()
@@ -133,7 +134,6 @@ export default function FahrerChatDetailPage() {
 
   async function handleSend() {
     if (!newMsg.trim() || !userId) return
-    const supabase = createClient()
     const content = newMsg.trim()
     setNewMsg('')
 
@@ -145,16 +145,12 @@ export default function FahrerChatDetailPage() {
     }
     appendMessage(optimistic)
 
-    const { data, error: insertErr } = await supabase
-      .from('chat_messages')
-      .insert({ ride_id: rideId, sender_id: userId, content })
-      .select()
-      .single()
+    const result = await sendChatMessage(rideId, content)
 
-    if (data) {
-      replaceMessage(optimistic.id, data as ChatMessage)
-    } else if (insertErr) {
-      console.error('[FahrerChat:send] error:', insertErr)
+    if (result.ok) {
+      replaceMessage(optimistic.id, result.data as ChatMessage)
+    } else {
+      console.error('[FahrerChat:send] error:', result.error)
       removeMessage(optimistic.id)
     }
   }

@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
+import { claimRide as claimRideAction, startRide as startRideAction, completeRide as completeRideAction } from './actions'
 
 type TabType = 'alle' | 'offen' | 'heute' | 'abgeschlossen'
 type RideStatus = 'pending' | 'confirmed' | 'in_progress' | 'completed'
@@ -110,17 +111,10 @@ export default function AuftraegePage() {
 
     setActionInProgress(rideId)
     try {
-      const supabase = createClient()
-      const { error: updateError } = await supabase
-        .from('krankenfahrten')
-        .update({
-          provider_id: providerId,
-          status: 'confirmed',
-        })
-        .eq('id', rideId)
+      const result = await claimRideAction(rideId)
 
-      if (updateError) {
-        setError('Fehler beim Annehmen des Auftrags')
+      if (!result.ok) {
+        setError(result.error)
       } else {
         // Update local state
         setRides(rides.map(r =>
@@ -137,14 +131,10 @@ export default function AuftraegePage() {
   const handleStartRide = async (rideId: string) => {
     setActionInProgress(rideId)
     try {
-      const supabase = createClient()
-      const { error: updateError } = await supabase
-        .from('krankenfahrten')
-        .update({ status: 'in_progress' })
-        .eq('id', rideId)
+      const result = await startRideAction(rideId)
 
-      if (updateError) {
-        setError('Fehler beim Starten der Fahrt')
+      if (!result.ok) {
+        setError(result.error)
       } else {
         setRides(rides.map(r =>
           r.id === rideId ? { ...r, status: 'in_progress' } : r
@@ -160,14 +150,10 @@ export default function AuftraegePage() {
   const handleCompleteRide = async (rideId: string) => {
     setActionInProgress(rideId)
     try {
-      const supabase = createClient()
-      const { error: updateError } = await supabase
-        .from('krankenfahrten')
-        .update({ status: 'completed' })
-        .eq('id', rideId)
+      const result = await completeRideAction(rideId)
 
-      if (updateError) {
-        setError('Fehler beim Abschließen der Fahrt')
+      if (!result.ok) {
+        setError(result.error)
       } else {
         setRides(rides.map(r =>
           r.id === rideId ? { ...r, status: 'completed' } : r

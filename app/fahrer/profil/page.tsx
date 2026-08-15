@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { saveFahrerProfile } from './actions'
 
 export default function FahrerProfilPage() {
   const router = useRouter()
@@ -47,23 +48,28 @@ export default function FahrerProfilPage() {
   async function handleSave() {
     setSaving(true)
     setSuccess('')
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return
 
-    await supabase.from('profiles').update({ phone }).eq('id', user.id)
-
-    if (provider) {
-      await supabase.from('krankenfahrt_providers').update({
-        company_name: companyName,
+    try {
+      const result = await saveFahrerProfile({
+        phone,
+        companyName,
         address,
         city,
-        license_number: licenseNumber,
-      }).eq('id', provider.id)
-    }
+        licenseNumber,
+      })
 
-    setSaving(false)
-    setSuccess('Profil gespeichert!')
-    setTimeout(() => setSuccess(''), 3000)
+      if (!result.ok) {
+        setSuccess('')
+        console.error(result.error)
+      } else {
+        setSuccess('Profil gespeichert!')
+        setTimeout(() => setSuccess(''), 3000)
+      }
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setSaving(false)
+    }
   }
 
   async function handleLogout() {

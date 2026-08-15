@@ -6,6 +6,7 @@ import {
   formatDate, fullName, statusMeta, REVIEW_SEVERITY, REVIEW_ERROR_TYPE,
 } from '@/lib/admin/ops'
 import { StatusBadge, EmptyRow } from '@/components/admin/OpsUI'
+import { resolveReviewErrorAction } from './actions'
 
 interface ErrorRow {
   id: string
@@ -128,11 +129,10 @@ export default function AdminPruefprotokollPage() {
   async function resolve(id: string) {
     setBusyId(id)
     try {
-      const supabase = createClient()
-      const { data: { user } } = await supabase.auth.getUser()
-      await supabase.from('review_errors').update({
-        resolved: true, resolved_by: user?.id ?? null, resolved_at: new Date().toISOString(),
-      }).eq('id', id)
+      const result = await resolveReviewErrorAction(id)
+      if (!result.ok) {
+        console.error('Resolve error:', result.error)
+      }
       await load()
     } catch (err) {
       console.error('Resolve error:', err)

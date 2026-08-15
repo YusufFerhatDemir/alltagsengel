@@ -41,7 +41,10 @@ export default function BenachrichtigungenPage() {
       if (!res.ok) { setLoading(false); return }
       const data = await res.json()
       setRows(data)
-    } catch { /* ignore */ } finally { setLoading(false) }
+    } catch (err) {
+      console.error('Fehler beim Laden der Admin-Benachrichtigungen:', err)
+      setError('Benachrichtigungen konnten nicht geladen werden.')
+    } finally { setLoading(false) }
   }
 
   useEffect(() => { load() }, [])
@@ -64,7 +67,9 @@ export default function BenachrichtigungenPage() {
       })
       if (!res.ok) return
       setRows(prev => prev.map(r => r.id === id ? { ...r, gelesen: true } : r))
-    } catch { /* ignore */ }
+    } catch (err) {
+      console.error('Fehler in markAsRead (Admin-Benachrichtigungen):', err)
+    }
   }
 
   async function markAllRead() {

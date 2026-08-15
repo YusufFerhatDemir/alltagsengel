@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { StatusBadge, SearchInput, EmptyRow, Banner } from '@/components/admin/OpsUI'
+import { updateVerbindungStatus } from './actions'
 
 const VERBINDUNG_META: Record<string, { label: string; color: string }> = {
   nicht_getestet: { label: 'Nicht getestet', color: '#94a3b8' },
@@ -60,19 +61,8 @@ export default function AnnahmestellenPage() {
         body: JSON.stringify({ datenannahmestelleId: id }),
       })
       const data = await res.json()
-      if (data.success) {
-        const supabase = createClient()
-        await supabase
-          .from('datenannahmestellen')
-          .update({ verbindung_status: 'erfolgreich', letzte_verbindung_am: new Date().toISOString() })
-          .eq('id', id)
-      } else {
-        const supabase = createClient()
-        await supabase
-          .from('datenannahmestellen')
-          .update({ verbindung_status: 'fehlgeschlagen', letzte_verbindung_am: new Date().toISOString() })
-          .eq('id', id)
-      }
+      const result = await updateVerbindungStatus(id, !!data.success)
+      if (!result.ok) { setError(result.error); return }
       await load()
     } catch (e) {
       setError((e as Error).message)

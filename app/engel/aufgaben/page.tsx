@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { requireUser } from '@/lib/supabase/require-session'
 import { IconCheck, IconClock, IconClipboard } from '@/components/Icons'
+import { updateTaskStatus } from './actions'
 
 const STATUS_META: Record<string, { label: string; color: string }> = {
   offen: { label: 'Offen', color: '#2196F3' },
@@ -100,19 +101,13 @@ export default function EngelAufgabenPage() {
     setSaving(true)
     setStatusError('')
     try {
-      const supabase = createClient()
-      const updates: any = { status: newStatus }
-      if (newStatus === 'erledigt') {
-        const { data: { user } } = await supabase.auth.getUser()
-        updates.erledigt_am = new Date().toISOString()
-        updates.erledigt_von = user?.id
+      const result = await updateTaskStatus(id, newStatus)
+      if (!result.ok) {
+        setStatusError(result.error)
+        setTimeout(() => setStatusError(''), 4000)
+      } else {
+        await load()
       }
-      const { error: err } = await supabase
-        .from('ops_aufgaben')
-        .update(updates)
-        .eq('id', id)
-      if (err) throw err
-      await load()
     } catch (e: any) {
       console.error('Status update error:', e)
       setStatusError('Status konnte nicht geändert werden. Bitte erneut versuchen.')

@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { requireUser } from '@/lib/supabase/require-session'
+import { savePlzAction } from './actions'
 import Link from 'next/link'
 import { IconDocument, IconNav, IconCalendar, IconMoney, IconClipboard, IconChat, IconCard } from '@/components/Icons'
 import { AvatarKunde } from '@/components/AvatarGlow'
@@ -28,16 +29,8 @@ export default function KundeProfilPage() {
     if (!plz) { setPlzStatus('error'); return }
     setPlzStatus('saving')
     try {
-      const supabase = createClient()
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) { setPlzStatus('error'); return }
-      // location bleibt der Freitext für die Anzeige; postal_code ist das
-      // Feld, das die Umkreis-Suche und die Bundesland-Freischaltung auswerten.
-      const { error } = await supabase
-        .from('profiles')
-        .update({ postal_code: plz })
-        .eq('id', user.id)
-      if (error) throw error
+      const result = await savePlzAction({ plz })
+      if (!result.ok) throw new Error(result.error)
       setProfile((prev: any) => (prev ? { ...prev, postal_code: plz } : prev))
       setPlzStatus('saved')
     } catch (err) {

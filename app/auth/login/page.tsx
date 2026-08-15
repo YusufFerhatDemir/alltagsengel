@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback, useRef, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { logFailedLogin, logSuccessLogin } from './actions'
 import Link from 'next/link'
 import Icon3D from '@/components/Icon3D'
 import { flushPendingProfile } from '@/lib/pending-profile'
@@ -120,7 +121,9 @@ function LoginForm() {
       } else if (data.message) {
         setAttemptsWarning(data.message)
       }
-    } catch {}
+    } catch (err) {
+      console.error('Fehler in reportFailedLogin:', err)
+    }
   }, [])
 
   // Erfolgreichen Login melden
@@ -135,44 +138,10 @@ function LoginForm() {
       setLockoutUntil(0)
       setLockoutMessage('')
       setAttemptsWarning('')
-    } catch {}
-  }, [])
-
-  function getDeviceInfo(): string {
-    const ua = navigator.userAgent
-    if (/iPhone/i.test(ua)) return 'iPhone'
-    if (/iPad/i.test(ua)) return 'iPad'
-    if (/Android/i.test(ua)) return 'Android'
-    if (/Mac/i.test(ua)) return 'Mac'
-    if (/Windows/i.test(ua)) return 'Windows'
-    if (/Linux/i.test(ua)) return 'Linux'
-    return 'Unbekannt'
-  }
-
-  async function getClientIP(): Promise<string> {
-    // Schnelle interne API zuerst (1.5s Timeout)
-    try {
-      const res = await fetch('/api/client-ip', { signal: AbortSignal.timeout(1500) })
-      if (res.ok) {
-        const data = await res.json()
-        if (data.ip) return data.ip
-      }
-    } catch {}
-    // ipapi.co nur im Web (NICHT in Capacitor — externe Calls hängen WebView)
-    const isNative =
-      typeof window !== 'undefined' &&
-      (window as any).Capacitor?.isNativePlatform?.()
-    if (!isNative) {
-      try {
-        const res = await fetch('https://ipapi.co/json/', { signal: AbortSignal.timeout(1500) })
-        if (res.ok) {
-          const data = await res.json()
-          return data.ip || ''
-        }
-      } catch {}
+    } catch (err) {
+      console.error('Fehler in reportSuccessfulLogin:', err)
     }
-    return ''
-  }
+  }, [])
 
   async function loginAndRedirect(loginEmail: string, loginPassword: string) {
     // ═══ Brute-Force Check: Client-side Lockout ═══
@@ -196,18 +165,7 @@ function LoginForm() {
       await reportFailedLogin(loginEmail)
 
       // Failed Login loggen (im Hintergrund)
-      getClientIP().then(ip => {
-        const supabaseLog = createClient()
-        supabaseLog.from('mis_auth_log').insert({
-          user_id: null,
-          user_email: loginEmail,
-          user_name: null,
-          action: 'login_failed',
-          ip_address: ip || null,
-          device: getDeviceInfo(),
-          status: 'failed',
-        }).then(() => {})
-      })
+      logFailedLogin(loginEmail).catch(() => {})
 
       // AUTH-005 Fix: Keine E-Mail-Enumeration mehr — generische Fehlermeldung für alle Auth-Fehler,
       // die an E-Mail-Existenz gekoppelt sind. Details nur server-seitig in mis_auth_log.
@@ -260,23 +218,7 @@ function LoginForm() {
     const role = (user.user_metadata?.role as string) || ''
 
     // Log im Hintergrund
-    Promise.all([
-      getClientIP(),
-      supabase.from('profiles').select('first_name, last_name').eq('id', user.id).single()
-    ]).then(([ip, { data: profile }]) => {
-      const displayName = profile?.first_name
-        ? `${profile.first_name} ${(profile.last_name || '').charAt(0)}.`.trim()
-        : (user.user_metadata?.first_name as string) || user.email
-      supabase.from('mis_auth_log').insert({
-        user_id: user.id,
-        user_email: user.email,
-        user_name: displayName,
-        action: 'login',
-        ip_address: ip || null,
-        device: getDeviceInfo(),
-        status: 'success',
-      }).then(() => {})
-    })
+    logSuccessLogin().catch(() => {})
 
     // Bei der Registrierung geparkte Profildaten (u.a. PLZ) nachtragen —
     // relevant, wenn signUp wegen E-Mail-Bestätigung keine Session hatte.

@@ -1,5 +1,5 @@
 'use client'
-import { datumBerlin, heuteBerlin, monatBerlin } from '@/lib/utils/timezone';
+import { datumBerlin, monatBerlin } from '@/lib/utils/timezone';
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
@@ -7,6 +7,7 @@ import {
   euro, formatDate, fullName, statusMeta,
   BONUS_TYPE, REWARD_TYPE, CAREGIVER_STATUS,
 } from '@/lib/admin/ops'
+import { awardBonus } from './actions'
 import { StatusBadge, EmptyRow, Banner } from '@/components/admin/OpsUI'
 
 interface Caregiver { id: string; name: string; status: string }
@@ -487,14 +488,15 @@ function AwardModal({ caregivers, onClose, onSaved }: { caregivers: Caregiver[];
     setErr(null)
     if (!caregiverId) { setErr('Bitte einen Mitarbeiter wählen.'); return }
     setSaving(true)
-    const supabase = createClient()
-    const { error } = await supabase.from('caregiver_bonuses').insert({
-      caregiver_id: caregiverId, bonus_type: type, points: points ? Number(points) : null,
-      description: desc.trim() || null, reward_type: reward || null,
+    const result = await awardBonus({
+      caregiver_id: caregiverId,
+      bonus_type: type,
+      points: points ? Number(points) : null,
+      description: desc.trim() || null,
+      reward_type: reward || null,
       reward_value: rewardValue ? Number(rewardValue) : null,
-      awarded_date: heuteBerlin(), awarded_by: 'Alltagsengel',
     })
-    if (error) { setErr(error.message); setSaving(false); return }
+    if (!result.ok) { setErr(result.error); setSaving(false); return }
     onSaved()
   }
 

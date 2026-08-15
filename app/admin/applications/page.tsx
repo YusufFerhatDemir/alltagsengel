@@ -5,6 +5,7 @@ import {
   formatDate, timeAgo, statusMeta,
   APPLICATION_STATUS, APPLICATION_FLOW, APPLICATION_SOURCE,
 } from '@/lib/admin/ops'
+import { updateApplicationStatus, createApplication } from './actions'
 import { StatusBadge, SearchInput, EmptyRow, Banner } from '@/components/admin/OpsUI'
 
 interface AppRow {
@@ -59,8 +60,8 @@ export default function AdminApplicationsPage() {
   useEffect(() => { load() }, [])
 
   async function setStatus(app: AppRow, status: string) {
-    const supabase = createClient()
-    await supabase.from('applications').update({ status }).eq('id', app.id)
+    const result = await updateApplicationStatus(app.id, status)
+    if (!result.ok) { setError(result.error); return }
     setRows(prev => prev.map(r => r.id === app.id ? { ...r, status } : r))
   }
 
@@ -202,14 +203,17 @@ function CreateAppModal({ onClose, onCreated }: { onClose: () => void; onCreated
     setErr(null)
     if (!firstName.trim() || !lastName.trim()) { setErr('Bitte Vor- und Nachname angeben.'); return }
     setSaving(true)
-    const supabase = createClient()
-    const { error } = await supabase.from('applications').insert({
-      first_name: firstName.trim(), last_name: lastName.trim(), email: email.trim() || null,
-      phone: phone.trim() || null, position: position.trim() || null, source,
+    const result = await createApplication({
+      first_name: firstName.trim(),
+      last_name: lastName.trim(),
+      email: email.trim() || null,
+      phone: phone.trim() || null,
+      position: position.trim() || null,
+      source,
       referred_by_caregiver_id: source === 'empfehlung' && referredBy ? referredBy : null,
-      notes: notes.trim() || null, status: 'new',
+      notes: notes.trim() || null,
     })
-    if (error) { setErr(error.message); setSaving(false); return }
+    if (!result.ok) { setErr(result.error); setSaving(false); return }
     onCreated()
   }
 

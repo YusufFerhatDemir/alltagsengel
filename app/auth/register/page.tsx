@@ -3,8 +3,8 @@ import { useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Suspense } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { geocodePLZ } from '@/lib/geocoding'
 import { stashPendingProfile } from '@/lib/pending-profile'
+import { upsertRegistrationProfile, insertCareRecipient } from './actions'
 import { validatePassword, validatePasswordAsync } from '@/lib/password-validation'
 import Link from 'next/link'
 import Icon3D from '@/components/Icon3D'
@@ -194,14 +194,7 @@ function RegisterForm() {
 
         // Try to create/update profile (may already exist via auth trigger)
         if (data.session) {
-          if (plz && plz.length === 5) {
-            const coords = await geocodePLZ(plz)
-            if (coords) {
-              ;(profileData as any).latitude = coords.lat
-              ;(profileData as any).longitude = coords.lng
-            }
-          }
-          await supabase.from('profiles').upsert(profileData).then(() => {})
+          await upsertRegistrationProfile(profileData as any)
 
           // Pflegegrad speichern (nur für Kunden)
           // Hinweis: care_eligibility-Schreibvorgang entfernt (Pflegebox-Feature deaktiviert,
@@ -212,19 +205,17 @@ function RegisterForm() {
             // Selbst-Modus: care_recipient für den Kunden selbst anlegen
             // (profiles hat kein pflegegrad-Feld; Pflegegrad wird in care_recipients gespeichert)
             if (registerFor === 'selbst' && pflegegrad) {
-              await supabase.from('care_recipients').insert({
-                profile_id: data.user.id,
+              await insertCareRecipient({
                 first_name: firstName,
                 last_name: lastName,
                 pflegegrad: parseInt(String(pflegegrad), 10) || null,
                 postal_code: plz || null,
                 relationship: 'selbst',
-              }).then(() => {})
+              })
             }
             // Angehörige Person speichern
             if (registerFor === 'angehoerig' && crFirstName && crLastName) {
-              await supabase.from('care_recipients').insert({
-                profile_id: data.user.id,
+              await insertCareRecipient({
                 first_name: crFirstName,
                 last_name: crLastName,
                 birth_year: crBirthYear ? parseInt(crBirthYear) : null,
@@ -234,7 +225,7 @@ function RegisterForm() {
                 city: crCity || null,
                 relationship: crRelationship || null,
                 notes: crNotes || null,
-              }).then(() => {})
+              })
             }
           }
         }

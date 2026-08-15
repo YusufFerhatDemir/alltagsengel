@@ -4,8 +4,8 @@ import { Suspense, useEffect, useMemo, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { BUDGET_TYPE, SERVICE_TYPES, diffMinutes } from '@/lib/admin/ops'
-import { saveServiceRecord } from '@/lib/admin/service-records'
 import { Banner } from '@/components/admin/OpsUI'
+import { createServiceRecordAction } from './actions'
 import SignaturePad from '@/components/admin/SignaturePad'
 
 interface Option { id: string; label: string }
@@ -91,12 +91,21 @@ function NewRecordInner() {
     if (!coreComplete) { setError('Bitte alle Pflichtfelder ausfüllen.'); return }
     setSaving(true)
     try {
-      const supabase = createClient()
-      // saveServiceRecord kapselt zwei Fallstricke: die generierte Spalte
+      // Server Action: saveServiceRecord kapselt zwei Fallstricke: die generierte Spalte
       // duration_minutes darf nicht mitgeschickt werden, und die Live-DB hat
       // noch die alten status/budget_type-Check-Constraints (siehe
       // lib/admin/service-records.ts).
-      const { id, error: insErr } = await saveServiceRecord(supabase, {
+      //
+      // H-1: NIE 'signed' aus einem Vollständigkeits-Flag ableiten.
+      // 'signed' entsteht ausschliesslich über den Unterschrifts-Workflow
+      // (POST /api/leistungsnachweis/crud, action='sign'), der proof_status
+      // auf 'UNTERSCHRIEBEN' setzt und dabei per Trigger den signature_hash
+      // berechnet und den Nachweis sperrt. Die hier gezeichnete Unterschrift
+      // wird als client_signature mitgespeichert, ist aber kein
+      // Unterschriftsnachweis im Sinne der Belegkette — sie ersetzt weder
+      // die Bestätigung der Betreuungskraft noch den Hash.
+      // create_invoice_draft_atomic (v8) verlangt genau diesen Nachweis.
+      const result = await createServiceRecordAction({
         client_id: clientId,
         caregiver_id: caregiverId,
         date,
@@ -108,26 +117,14 @@ function NewRecordInner() {
         amount: amount ? Number(amount) : null,
         client_signature: signature,
         notes: notes.trim() || null,
-        // H-1: NIE 'signed' aus einem Vollständigkeits-Flag ableiten.
-        // 'signed' entsteht ausschliesslich über den Unterschrifts-Workflow
-        // (POST /api/leistungsnachweis/crud, action='sign'), der proof_status
-        // auf 'UNTERSCHRIEBEN' setzt und dabei per Trigger den signature_hash
-        // berechnet und den Nachweis sperrt. Die hier gezeichnete Unterschrift
-        // wird als client_signature mitgespeichert, ist aber kein
-        // Unterschriftsnachweis im Sinne der Belegkette — sie ersetzt weder
-        // die Bestätigung der Betreuungskraft noch den Hash.
-        // create_invoice_draft_atomic (v8) verlangt genau diesen Nachweis.
         status: 'complete',
         completeness_check: { ...checks, complete: isComplete, checked_at: new Date().toISOString() },
+        gps: gps ?? null,
       })
 
-      if (insErr) { setError(`Fehler beim Speichern: ${insErr}`); setSaving(false); return }
+      if (!result.ok) { setError(result.error); setSaving(false); return }
 
-      // GPS nachtragen, falls erfasst — nicht Teil des Pflicht-Inserts.
-      if (id && gps) {
-        await supabase.from('service_records').update({ gps_lat: gps.lat, gps_lng: gps.lng }).eq('id', id)
-      }
-      router.push(`/admin/records?focus=${id || ''}`)
+      router.push(`/admin/records?focus=${result.id || ''}`)
     } catch (err: any) {
       setError(`Unerwarteter Fehler: ${err.message}`)
       setSaving(false)

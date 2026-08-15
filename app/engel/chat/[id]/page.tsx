@@ -4,6 +4,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { requireUser } from '@/lib/supabase/require-session'
 import { isValidUUID, logError } from '@/lib/safe-query'
+import { markMessagesRead, sendChatMessage } from './actions'
 import { NotFoundState, ErrorState, LoadingState } from '@/components/UIStates'
 import { IconUser } from '@/components/Icons'
 import { useChatPagination, useScrollToLoadOlder } from '@/lib/use-chat-pagination'
@@ -86,13 +87,8 @@ export default function EngelChatConversationPage() {
         await initMessages()
         if (cancelled) return
 
-        // Ungelesene markieren
-        const { error: updateErr } = await supabase
-          .from('messages')
-          .update({ read: true })
-          .eq('booking_id', bookingId)
-          .eq('receiver_id', user.id)
-        if (updateErr) logError('EngelChat:markRead', updateErr.message)
+        // Ungelesene markieren (fire-and-forget via Server Action)
+        markMessagesRead(bookingId).catch(() => {})
 
         // Realtime-Subscription
         channel = supabase
@@ -153,32 +149,12 @@ export default function EngelChatConversationPage() {
     if (!newMsg.trim() || !userId || sending) return
     setSending(true)
     try {
-      const supabase = createClient()
-      const { data: booking } = await supabase
-        .from('bookings')
-        .select('angel_id, customer_id, angels:angel_id(id)')
-        .eq('id', bookingId)
-        .single()
-
-      if (!booking) { setSending(false); return }
-
-      const angelUserId = (booking.angels as any)?.id || booking.angel_id
-      const receiverId = userId === angelUserId ? booking.customer_id : angelUserId
-
-      if (!receiverId) {
-        // Profil des Empfängers wurde gelöscht — Nachricht kann nicht zugestellt werden
-        setSending(false)
-        return
+      const result = await sendChatMessage(bookingId, newMsg.trim())
+      if (result.ok) {
+        setNewMsg('')
+      } else {
+        logError('EngelChat:send', result.error)
       }
-
-      await supabase.from('messages').insert({
-        booking_id: bookingId,
-        sender_id: userId,
-        receiver_id: receiverId,
-        content: newMsg.trim(),
-      })
-
-      setNewMsg('')
     } catch (err) {
       logError('EngelChat:send', err)
     } finally {

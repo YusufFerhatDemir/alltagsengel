@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { requireUser } from '@/lib/supabase/require-session'
+import { markMessagesReadAction, sendBookingMessageAction, sendRideMessageAction } from './actions'
 import { IconWingsGold, IconTruck } from '@/components/Icons'
 import { useChatPagination, useScrollToLoadOlder, type ChatMessage } from '@/lib/use-chat-pagination'
 
@@ -90,12 +91,7 @@ export default function ChatDetailPage() {
           setMode('booking')
 
           // Ungelesene markieren
-          await supabase
-            .from('messages')
-            .update({ read: true })
-            .eq('booking_id', chatId)
-            .eq('receiver_id', user.id)
-            .eq('read', false)
+          await markMessagesReadAction({ bookingId: chatId })
 
           // Realtime
           channel = supabase
@@ -200,7 +196,6 @@ export default function ChatDetailPage() {
 
   async function handleSend() {
     if (!newMsg.trim() || !userId || !mode) return
-    const supabase = createClient()
     const content = newMsg.trim()
     setNewMsg('')
 
@@ -213,27 +208,19 @@ export default function ChatDetailPage() {
     appendMessage(optimistic)
 
     if (mode === 'booking') {
-      const { data, error } = await supabase
-        .from('messages')
-        .insert({ booking_id: chatId, sender_id: userId, receiver_id: partnerId, content })
-        .select('id, sender_id, content, created_at')
-        .single()
-      if (data) {
-        replaceMessage(optimistic.id, data as ChatMessage)
-      } else if (error) {
-        console.error('[KundeChat:send] booking error:', error)
+      const result = await sendBookingMessageAction({ bookingId: chatId, receiverId: partnerId, content })
+      if (result.ok) {
+        replaceMessage(optimistic.id, result.data as ChatMessage)
+      } else {
+        console.error('[KundeChat:send] booking error:', result.error)
         removeMessage(optimistic.id)
       }
     } else {
-      const { data, error } = await supabase
-        .from('chat_messages')
-        .insert({ ride_id: chatId, sender_id: userId, content })
-        .select('id, sender_id, content, created_at')
-        .single()
-      if (data) {
-        replaceMessage(optimistic.id, data as ChatMessage)
-      } else if (error) {
-        console.error('[KundeChat:send] ride error:', error)
+      const result = await sendRideMessageAction({ rideId: chatId, content })
+      if (result.ok) {
+        replaceMessage(optimistic.id, result.data as ChatMessage)
+      } else {
+        console.error('[KundeChat:send] ride error:', result.error)
         removeMessage(optimistic.id)
       }
     }

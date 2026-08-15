@@ -2,6 +2,13 @@
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import BillingSection from '@/components/admin/BillingSection'
+import {
+  enableDemoAccess,
+  disableDemoAccess,
+  autoDisableExpiredDemo,
+  saveDemoPassword,
+  changeOwnPassword,
+} from './actions'
 
 export default function AdminSettings() {
   const [currentUser, setCurrentUser] = useState<any>(null)
@@ -79,7 +86,7 @@ export default function AdminSettings() {
       } else if (enabled && expiresAt && new Date(expiresAt).getTime() <= Date.now()) {
         // Abgelaufen → automatisch deaktivieren
         setDemoEnabled(false)
-        await supabase.from('app_settings').update({ value: false }).eq('key', 'demo_enabled')
+        await autoDisableExpiredDemo()
       }
     }
 
@@ -94,7 +101,7 @@ export default function AdminSettings() {
         setDemoRemaining('')
         setDemoMsg('Demo-Zugang abgelaufen')
         // DB auch deaktivieren
-        supabase.from('app_settings').update({ value: false }).eq('key', 'demo_enabled')
+        autoDisableExpiredDemo()
         return
       }
       const min = Math.floor(diff / 60000)
@@ -112,23 +119,19 @@ export default function AdminSettings() {
 
     if (newValue) {
       // Aktivieren: 10 Minuten Timer setzen
-      const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString()
-      const [r1, r2] = await Promise.all([
-        supabase.from('app_settings').update({ value: true, updated_at: new Date().toISOString(), updated_by: currentUser?.id }).eq('key', 'demo_enabled'),
-        supabase.from('app_settings').update({ value: expiresAt, updated_at: new Date().toISOString(), updated_by: currentUser?.id }).eq('key', 'demo_expires_at'),
-      ])
-      if (r1.error || r2.error) {
-        setDemoMsg('Fehler: ' + (r1.error?.message || r2.error?.message))
+      const result = await enableDemoAccess()
+      if (!result.ok) {
+        setDemoMsg('Fehler: ' + result.error)
       } else {
         setDemoEnabled(true)
         setDemoMsg('✓ Demo-Zugang für 10 Minuten aktiviert!')
-        startCountdown(new Date(expiresAt).getTime())
+        startCountdown(new Date(result.expiresAt).getTime())
       }
     } else {
       // Deaktivieren
-      const { error } = await supabase.from('app_settings').update({ value: false, updated_at: new Date().toISOString(), updated_by: currentUser?.id }).eq('key', 'demo_enabled')
-      if (error) {
-        setDemoMsg('Fehler: ' + error.message)
+      const result = await disableDemoAccess()
+      if (!result.ok) {
+        setDemoMsg('Fehler: ' + result.error)
       } else {
         setDemoEnabled(false)
         setDemoRemaining('')
@@ -145,9 +148,9 @@ export default function AdminSettings() {
     if (newPassword !== confirmPassword) { setPwMsg('Passwörter stimmen nicht überein'); return }
 
     setPwLoading(true)
-    const { error } = await supabase.auth.updateUser({ password: newPassword })
-    if (error) {
-      setPwMsg('Fehler: ' + error.message)
+    const result = await changeOwnPassword(newPassword)
+    if (!result.ok) {
+      setPwMsg('Fehler: ' + result.error)
     } else {
       setPwMsg('✓ Passwort erfolgreich geändert!')
       setNewPassword('')
@@ -332,9 +335,9 @@ export default function AdminSettings() {
                   if (!pw || pw.length < 6) { setDemoMsg('Mindestens 6 Zeichen'); return }
                   setDemoLoading(true)
                   setDemoMsg('')
-                  // Demo-Passwort in app_settings speichern
-                  const { error: settingsErr } = await supabase.from('app_settings').update({ value: pw, updated_at: new Date().toISOString(), updated_by: currentUser?.id }).eq('key', 'demo_password')
-                  if (settingsErr) { setDemoMsg('Fehler: ' + settingsErr.message); setDemoLoading(false); return }
+                  // Demo-Passwort in app_settings speichern (server action)
+                  const result = await saveDemoPassword(pw)
+                  if (!result.ok) { setDemoMsg('Fehler: ' + result.error); setDemoLoading(false); return }
                   // Passwörter der Demo-Accounts aktualisieren
                   const res = await fetch('/api/admin/reset-password', {
                     method: 'POST',
