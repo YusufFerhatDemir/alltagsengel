@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsUser } from '@/lib/ops/api-auth'
 import { createAntwort } from '@/lib/ops/nachrichten'
+import { logAuditEvent } from '@/lib/audit-log'
 
 export async function POST(
   request: Request,
@@ -26,6 +27,15 @@ export async function POST(
         absender_id: auth.userId,
       },
       empfaengerIds: Array.isArray(body.empfaenger_ids) ? body.empfaenger_ids : [],
+    })
+    await logAuditEvent({
+      action: 'create',
+      actorId: auth.userId,
+      organizationId: auth.organizationId,
+      entityType: 'nachricht_antwort',
+      entityId: data?.id ?? null,
+      details: { eltern_id: elternId, betreff: body.betreff },
+      request,
     })
     return NextResponse.json(data)
   } catch (e: any) {

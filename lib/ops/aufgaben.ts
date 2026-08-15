@@ -21,6 +21,7 @@ export async function listAufgaben(
     .order('created_at', { ascending: false })
 
   if (filter.status) query = query.eq('status', filter.status)
+  else query = query.neq('status', 'archiviert')
   if (filter.kategorie) query = query.eq('kategorie', filter.kategorie)
   if (filter.prioritaet) query = query.eq('prioritaet', filter.prioritaet)
   if (filter.verantwortlichId) query = query.eq('verantwortlich_id', filter.verantwortlichId)
@@ -107,8 +108,8 @@ export async function deleteAufgabe(
 ): Promise<void> {
   const { error } = await supabase
     .from('ops_aufgaben')
-    .delete()
+    .update({ status: 'archiviert', updated_at: new Date().toISOString() })
     .eq('id', params.id)
     .eq('organization_id', params.organizationId)
-  if (error) throw new Error(`Aufgabe konnte nicht geloescht werden: ${error.message}`)
+  if (error) throw new Error(`Aufgabe konnte nicht archiviert werden: ${error.message}`)
 }

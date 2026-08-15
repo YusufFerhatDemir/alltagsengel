@@ -1,7 +1,7 @@
 'use client'
 import './analytics.css'
 import { useEffect, useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
+import { loadAnalyticsData } from './actions'
 import { IconUser, IconClock, IconTarget, IconChart } from '@/components/Icons'
 
 interface Visitor {
@@ -57,59 +57,13 @@ export default function AdminAnalyticsPage() {
   async function loadData() {
     setLoading(true)
     try {
-      const supabase = createClient()
-
-      let query = supabase
-        .from('page_views')
-        .select('*, profile:profiles!page_views_user_id_fkey(first_name, last_name, role, email)')
-        .order('viewed_at', { ascending: false })
-        .limit(500)
-
-      if (dateFilter !== 'all') {
-        const now = new Date()
-        let from: Date
-        if (dateFilter === 'today') {
-          from = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-        } else if (dateFilter === '7d') {
-          from = new Date(now.getTime() - 7 * 86400000)
-        } else {
-          from = new Date(now.getTime() - 30 * 86400000)
-        }
-        query = query.gte('viewed_at', from.toISOString())
-      }
-
-      const { data, error } = await query
-      if (error) {
-        console.error('[Analytics] Load error:', error.message)
-        setViews([])
-      } else {
-        setViews((data as PageView[]) || [])
-      }
-
-      // Besucher-Daten (IP, Region) laden
-      let vQuery = supabase
-        .from('visitors')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(500)
-
-      if (dateFilter !== 'all') {
-        const now = new Date()
-        let from: Date
-        if (dateFilter === 'today') {
-          from = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-        } else if (dateFilter === '7d') {
-          from = new Date(now.getTime() - 7 * 86400000)
-        } else {
-          from = new Date(now.getTime() - 30 * 86400000)
-        }
-        vQuery = vQuery.gte('created_at', from.toISOString())
-      }
-
-      const { data: vData } = await vQuery
-      setVisitors((vData as Visitor[]) || [])
+      const data = await loadAnalyticsData(dateFilter)
+      setViews(data.views)
+      setVisitors(data.visitors)
     } catch (err) {
       console.error('[Analytics] Unexpected error:', err)
+      setViews([])
+      setVisitors([])
     } finally {
       setLoading(false)
     }

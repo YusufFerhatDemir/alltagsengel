@@ -62,8 +62,20 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: 'caregiverId is required' }, { status: 400 })
   }
   try {
+    const vorher = await getStammdaten(supabase, caregiverId, auth.ctx.organizationId).catch(() => null)
     const body = await request.json()
     const data = await updateStammdaten(supabase, caregiverId, auth.ctx.organizationId, body)
+    await writeAuditLog(supabase, {
+      organizationId: auth.ctx.organizationId,
+      entitaetTyp: 'caregiver',
+      entitaetId: caregiverId,
+      caregiverId,
+      aktion: 'bearbeitet',
+      vorher: vorher ? { name: `${vorher.first_name} ${vorher.last_name}`, vertragsstatus: vorher.vertragsstatus } : null,
+      nachher: { name: `${data.first_name} ${data.last_name}`, vertragsstatus: data.vertragsstatus },
+      benutzerId: auth.ctx.userId,
+      benutzerRolle: auth.ctx.role,
+    })
     return NextResponse.json(data)
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 400 })

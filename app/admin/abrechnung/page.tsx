@@ -24,6 +24,7 @@ import {
 import { validateEDIFACT, validateIK, type ValidationIssue } from '@/lib/abrechnung/edifact-validator'
 import { generateAuftragsdatei, auftragsdateiName } from '@/lib/abrechnung/auftragsdatei'
 import { LEISTUNGSART_SCHLUESSEL, findeDatenannahmestelle } from '@/lib/abrechnung/schluesselverzeichnis'
+import { speichereLauf, setzeLaufStatusAction } from './actions'
 
 // ── Typen ───────────────────────────────────────────────────────
 interface ClientRow {
@@ -375,35 +376,34 @@ export default function AbrechnungPage() {
     download(auftragsdateiName(datei.physikalischer_dateiname), auf)
 
     // 3) Lauf in DB festhalten (upsert je Monat + Kostenträger)
-    const supabase = createClient()
-    const { data: userData } = await supabase.auth.getUser()
-    const { error } = await supabase.from('abrechnungslaeufe').upsert({
-      abrechnungsmonat: monat,
-      kostentraeger_ik: gruppe.kostentraeger_ik,
-      kostentraeger_name: gruppe.kostentraeger_name,
-      status: 'exportiert',
-      anzahl_faelle: gruppe.faelle.length,
-      gesamtbetrag_cent: datei.gesamtbetrag_cent,
-      rechnungsnummer: datei.rechnungen.map(r => r.rechnungsnummer).join(', '),
-      datenannahmestelle_ik: datei.datenannahmestelle.ik,
-      datenannahmestelle_name: datei.datenannahmestelle.name,
-      logischer_dateiname: datei.logischer_dateiname,
-      fehlerprotokoll: [...ergebnis.fehler, ...ergebnis.warnungen].map(i => `${i.ebene.toUpperCase()}: ${i.meldung}`).join('\n') || null,
-      created_by: userData?.user?.id || null,
-    }, { onConflict: 'abrechnungsmonat,kostentraeger_ik' })
-    if (error) setMeldung(`Export ok, aber Speichern des Laufs fehlgeschlagen: ${error.message}`)
-    else setMeldung(`Export für ${gruppe.kostentraeger_name} abgeschlossen (${datei.physikalischer_dateiname} + .AUF). Nächster Schritt: SECON-Verschlüsselung + Versand an ${datei.datenannahmestelle.name}.`)
+    try {
+      await speichereLauf({
+        abrechnungsmonat: monat,
+        kostentraeger_ik: gruppe.kostentraeger_ik,
+        kostentraeger_name: gruppe.kostentraeger_name,
+        status: 'exportiert',
+        anzahl_faelle: gruppe.faelle.length,
+        gesamtbetrag_cent: datei.gesamtbetrag_cent,
+        rechnungsnummer: datei.rechnungen.map(r => r.rechnungsnummer).join(', '),
+        datenannahmestelle_ik: datei.datenannahmestelle.ik,
+        datenannahmestelle_name: datei.datenannahmestelle.name,
+        logischer_dateiname: datei.logischer_dateiname,
+        fehlerprotokoll: [...ergebnis.fehler, ...ergebnis.warnungen].map(i => `${i.ebene.toUpperCase()}: ${i.meldung}`).join('\n') || null,
+      })
+      setMeldung(`Export für ${gruppe.kostentraeger_name} abgeschlossen (${datei.physikalischer_dateiname} + .AUF). Nächster Schritt: SECON-Verschlüsselung + Versand an ${datei.datenannahmestelle.name}.`)
+    } catch (e: any) {
+      setMeldung(`Export ok, aber Speichern des Laufs fehlgeschlagen: ${e.message}`)
+    }
     ladeDaten()
   }
 
   async function setzeLaufStatus(lauf: LaufRow, status: string) {
-    const supabase = createClient()
-    const patch: Record<string, unknown> = { status }
-    if (status === 'uebermittelt') patch.uebermittelt_am = new Date().toISOString()
-    if (['akzeptiert', 'teilweise_abgelehnt', 'abgelehnt'].includes(status)) patch.antwort_am = new Date().toISOString()
-    const { error } = await supabase.from('abrechnungslaeufe').update(patch).eq('id', lauf.id)
-    if (error) setMeldung(`Status-Update fehlgeschlagen: ${error.message}`)
-    else ladeDaten()
+    try {
+      await setzeLaufStatusAction(lauf.id, status)
+      ladeDaten()
+    } catch (e: any) {
+      setMeldung(`Status-Update fehlgeschlagen: ${e.message}`)
+    }
   }
 
   const gesamtSumme = useMemo(

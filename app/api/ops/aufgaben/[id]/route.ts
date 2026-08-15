@@ -74,7 +74,7 @@ export async function DELETE(
       organizationId: auth.ctx.organizationId,
       entitaetTyp: 'aufgabe',
       entitaetId: id,
-      aktion: 'geloescht',
+      aktion: 'archiviert',
       vorher,
       akteurId: auth.ctx.userId,
     }).catch((err) => console.error(`Aktivitaetslog (Aufgabe geloescht) fehlgeschlagen: ${err}`))

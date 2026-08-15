@@ -184,11 +184,13 @@ export type AktivitaetAktion =
   | 'erstellt' | 'aktualisiert' | 'geloescht' | 'status_geaendert'
   | 'zugewiesen' | 'eskaliert' | 'erledigt' | 'storniert'
   | 'gelesen' | 'gesendet' | 'genehmigt' | 'abgelehnt'
+  | 'archiviert'
 
 export const AKTIVITAET_AKTION_WERTE: AktivitaetAktion[] = [
   'erstellt', 'aktualisiert', 'geloescht', 'status_geaendert',
   'zugewiesen', 'eskaliert', 'erledigt', 'storniert',
   'gelesen', 'gesendet', 'genehmigt', 'abgelehnt',
+  'archiviert',
 ]
 
 // ── DB-Interfaces ──────────────────────────────────────────────

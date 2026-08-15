@@ -6,6 +6,7 @@ import {
   formatDate, formatTime, fullName, statusMeta, daysUntil,
   ABSENCE_TYPE, SUBSTITUTION_STATUS, ESCALATION_LEVELS, WEEKDAYS, normalizeWeekday,
 } from '@/lib/admin/ops'
+import { escalateRequest, markRequestFailed, toggleClientNotified, assignSubstitute, reportAbsence, createSubstitutionRequest } from './actions'
 import { StatusBadge, Banner, EmptyRow } from '@/components/admin/OpsUI'
 
 // ── Datums-Helfer für die laufende Woche ────────────────────────
@@ -153,20 +154,15 @@ export default function AdminSchedulePage() {
   }, [caregivers, isAbsent])
 
   async function escalate(req: SubRequest) {
-    const supabase = createClient()
-    const newLevel = Math.min((req.escalation_level ?? 0) + 1, 2)
-    const newStatus = newLevel >= 2 ? 'external' : 'escalated'
-    await supabase.from('substitution_requests').update({ escalation_level: newLevel, status: newStatus }).eq('id', req.id)
+    await escalateRequest(req.id, req.escalation_level ?? 0)
     load()
   }
   async function markFailed(req: SubRequest) {
-    const supabase = createClient()
-    await supabase.from('substitution_requests').update({ status: 'failed' }).eq('id', req.id)
+    await markRequestFailed(req.id)
     load()
   }
   async function notifyClient(req: SubRequest) {
-    const supabase = createClient()
-    await supabase.from('substitution_requests').update({ client_notified: !req.client_notified }).eq('id', req.id)
+    await toggleClientNotified(req.id, req.client_notified)
     load()
   }
 
@@ -402,12 +398,12 @@ function SuggestModal({ request, caregivers, client, preferred, isAbsent, onClos
 
   async function assign(caregiverId: string) {
     setErr(null); setSaving(true)
-    const supabase = createClient()
-    const { error } = await supabase.from('substitution_requests')
-      .update({ substitute_caregiver_id: caregiverId, status: 'filled', resolved_at: new Date().toISOString() })
-      .eq('id', request.id)
-    if (error) { setErr(error.message); setSaving(false); return }
-    onAssigned()
+    try {
+      await assignSubstitute(request.id, caregiverId)
+      onAssigned()
+    } catch (e: any) {
+      setErr(e.message); setSaving(false)
+    }
   }
 
   return (
@@ -600,13 +596,18 @@ function ReportAbsenceModal({ caregivers, onClose, onSaved }: { caregivers: Care
     if (!caregiverId) { setErr('Bitte eine Betreuungskraft wählen.'); return }
     if (end < start) { setErr('Enddatum liegt vor dem Startdatum.'); return }
     setSaving(true)
-    const supabase = createClient()
-    const { error } = await supabase.from('absences').insert({
-      caregiver_id: caregiverId, absence_type: type, start_date: start, end_date: end,
-      reason: reason.trim() || null, reported_at: new Date().toISOString(),
-    })
-    if (error) { setErr(error.message); setSaving(false); return }
-    onSaved()
+    try {
+      await reportAbsence({
+        caregiverId,
+        absenceType: type,
+        startDate: start,
+        endDate: end,
+        reason: reason.trim() || null,
+      })
+      onSaved()
+    } catch (e: any) {
+      setErr(e.message); setSaving(false)
+    }
   }
 
   return (
@@ -654,14 +655,19 @@ function CreateSubModal({ clients, caregivers, onClose, onSaved }: { clients: Cl
     setErr(null)
     if (!clientId || !date) { setErr('Bitte Klient und Datum angeben.'); return }
     setSaving(true)
-    const supabase = createClient()
-    const { error } = await supabase.from('substitution_requests').insert({
-      client_id: clientId, original_caregiver_id: originalId || null, date,
-      start_time: startTime || null, end_time: endTime || null, service_type: service.trim() || null,
-      status: 'open', escalation_level: 0, client_notified: false,
-    })
-    if (error) { setErr(error.message); setSaving(false); return }
-    onSaved()
+    try {
+      await createSubstitutionRequest({
+        clientId,
+        originalCaregiverId: originalId || null,
+        date,
+        startTime: startTime || null,
+        endTime: endTime || null,
+        serviceType: service.trim() || null,
+      })
+      onSaved()
+    } catch (e: any) {
+      setErr(e.message); setSaving(false)
+    }
   }
 
   return (

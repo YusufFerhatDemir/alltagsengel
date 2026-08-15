@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsUser } from '@/lib/ops/api-auth'
 import { markGelesen } from '@/lib/ops/nachrichten'
+import { logAuditEvent } from '@/lib/audit-log'
 
 export async function PATCH(
   request: Request,
@@ -16,6 +17,15 @@ export async function PATCH(
       organizationId: auth.organizationId,
       nachrichtId,
       empfaengerId: auth.userId,
+    })
+    await logAuditEvent({
+      action: 'update',
+      actorId: auth.userId,
+      organizationId: auth.organizationId,
+      entityType: 'nachricht',
+      entityId: nachrichtId,
+      details: { aktion: 'gelesen' },
+      request,
     })
     return NextResponse.json(data)
   } catch (e: any) {
