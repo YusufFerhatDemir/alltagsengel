@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requirePflegeAdmin } from '@/lib/pflege/api-auth'
 import { createVerlauf, listVerlauf } from '@/lib/pflege/verlauf'
+import { logAuditEvent } from '@/lib/audit-log'
 
 // ═══════════════════════════════════════════════════════════════
 // Sturzprotokoll — strukturiertes Sturz-/Unfall-Formular
@@ -82,8 +83,11 @@ export async function GET(request: Request) {
       limit: params.get('limit') ? Number(params.get('limit')) : 100,
     })
 
+    // Filter archived entries
+    const aktiveEintraege = eintraege.filter((e: any) => !e.archiviert_am)
+
     // Kundennamen dazuladen
-    const clientIds = [...new Set(eintraege.map(e => e.client_id))]
+    const clientIds = [...new Set(aktiveEintraege.map(e => e.client_id))]
     let kunden: Record<string, string> = {}
     if (clientIds.length > 0) {
       const { data: clients } = await admin
@@ -97,7 +101,7 @@ export async function GET(request: Request) {
       }
     }
 
-    const protokolle = eintraege.map(e => ({
+    const protokolle = aktiveEintraege.map(e => ({
       ...e,
       kunde_name: kunden[e.client_id] || '—',
     }))
@@ -151,8 +155,75 @@ export async function POST(request: Request) {
       sichtbarkeit: 'intern',
     })
 
+    await logAuditEvent({
+      action: 'create',
+      actorId: auth.ctx.userId,
+      actorName: auth.ctx.name,
+      actorRole: auth.ctx.role,
+      organizationId: auth.ctx.organizationId,
+      entityType: 'sturzprotokoll',
+      entityId: eintrag.id,
+      details: { client_id: body.clientId, sturz_datum: body.sturzDatum, sturz_ort: body.sturzOrt },
+      request,
+    })
+
     return NextResponse.json({ eintrag })
   } catch (err) {
     return NextResponse.json({ error: (err as Error).message }, { status: 400 })
+  }
+}
+
+export async function PATCH(request: Request) {
+  try {
+    const auth = await requirePflegeAdmin()
+    if (!auth.ok) return auth.response
+
+    const body = await request.json()
+    const { id } = body
+    if (!id) {
+      return NextResponse.json({ error: 'ID ist ein Pflichtfeld.' }, { status: 400 })
+    }
+
+    const admin = createAdminClient()
+
+    // Verify the entry belongs to this org and is a sturz entry
+    const { data: eintrag } = await admin
+      .from('pflege_verlauf')
+      .select('id, client_id')
+      .eq('id', id)
+      .eq('organization_id', auth.ctx.organizationId)
+      .eq('eintrag_typ', 'sturz')
+      .is('archiviert_am', null)
+      .maybeSingle()
+
+    if (!eintrag) {
+      return NextResponse.json({ error: 'Sturzprotokoll nicht gefunden.' }, { status: 404 })
+    }
+
+    const { error } = await admin
+      .from('pflege_verlauf')
+      .update({ archiviert_am: new Date().toISOString() })
+      .eq('id', id)
+      .eq('organization_id', auth.ctx.organizationId)
+
+    if (error) {
+      return NextResponse.json({ error: `Archivierung fehlgeschlagen: ${error.message}` }, { status: 500 })
+    }
+
+    await logAuditEvent({
+      action: 'archive',
+      actorId: auth.ctx.userId,
+      actorName: auth.ctx.name,
+      actorRole: auth.ctx.role,
+      organizationId: auth.ctx.organizationId,
+      entityType: 'sturzprotokoll',
+      entityId: id,
+      details: { client_id: eintrag.client_id },
+      request,
+    })
+
+    return NextResponse.json({ erfolg: true })
+  } catch (err) {
+    return NextResponse.json({ error: (err as Error).message }, { status: 500 })
   }
 }

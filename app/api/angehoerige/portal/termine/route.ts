@@ -5,6 +5,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { requirePortalAccess, erlaubteClientIds } from '@/lib/angehoerige/portal-helpers'
+import { protokolliereZugriff } from '@/lib/angehoerige/angehoerige'
 
 export async function GET() {
   const auth = await requirePortalAccess()
@@ -54,6 +55,17 @@ export async function GET() {
       client_name: client ? `${client.first_name} ${client.last_name}` : 'Klient',
     }
   })
+
+  // Audit: Terminzugriff protokollieren (Best-Effort)
+  const zugangFuerAudit = ctx.zugaenge.find(z => z.freigegebene_bereiche.includes('termine'))
+  if (zugangFuerAudit) {
+    protokolliereZugriff(supabase, ctx.organizationId, {
+      zugang_id: zugangFuerAudit.id,
+      user_id: ctx.userId,
+      client_id: zugangFuerAudit.client_id,
+      aktion: 'termine_eingesehen',
+    }).catch(() => {})
+  }
 
   return NextResponse.json({ termine: enriched })
 }

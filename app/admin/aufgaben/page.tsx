@@ -36,6 +36,7 @@ export default function AufgabenPage() {
   const [filterStatus, setFilterStatus] = useState('all')
   const [filterKategorie, setFilterKategorie] = useState('all')
   const [filterPrioritaet, setFilterPrioritaet] = useState('all')
+  const [showArchived, setShowArchived] = useState(false)
 
   useEffect(() => {
     async function load() {
@@ -58,6 +59,7 @@ export default function AufgabenPage() {
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase()
     return rows.filter(r => {
+      if (!showArchived && r.status === 'archiviert') return false
       if (filterStatus !== 'all' && r.status !== filterStatus) return false
       if (filterKategorie !== 'all' && r.kategorie !== filterKategorie) return false
       if (filterPrioritaet !== 'all' && r.prioritaet !== filterPrioritaet) return false
@@ -66,7 +68,7 @@ export default function AufgabenPage() {
         (r.verantwortlich_name || '').toLowerCase().includes(q) ||
         (r.beschreibung || '').toLowerCase().includes(q)
     })
-  }, [rows, filterStatus, filterKategorie, filterPrioritaet, search])
+  }, [rows, filterStatus, filterKategorie, filterPrioritaet, search, showArchived])
 
   const offenCount = rows.filter(r => r.status === 'offen' || r.status === 'in_bearbeitung').length
   const ueberfaelligCount = rows.filter(r => r.faelligkeits_status === 'ueberfaellig').length
@@ -122,6 +124,18 @@ export default function AufgabenPage() {
             <option key={k} value={k}>{v.label}</option>
           ))}
         </select>
+
+        <button
+          onClick={() => setShowArchived(v => !v)}
+          style={{
+            ...selectStyle,
+            background: showArchived ? 'var(--gold)' : 'var(--coal2)',
+            color: showArchived ? 'var(--coal)' : 'var(--ink)',
+            fontWeight: showArchived ? 600 : 400,
+          }}
+        >
+          {showArchived ? 'Archivierte ausblenden' : 'Archivierte anzeigen'}
+        </button>
       </div>
 
       {loading ? <p>Laden...</p> : (

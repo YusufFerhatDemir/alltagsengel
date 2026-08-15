@@ -166,6 +166,18 @@ export default function FixierungsprotokollPage() {
     } finally { setBusy(false) }
   }
 
+  async function archivieren(m: Massnahme) {
+    if (!confirm('Maßnahme wirklich archivieren? Sie wird aus der Liste entfernt.')) return
+    setBusy(true)
+    try {
+      const res = await fetch(`/api/admin/fixierungen/${m.id}`, { method: 'DELETE' })
+      const body = await res.json()
+      if (!res.ok) { setError(body.error || 'Archivierung fehlgeschlagen.'); return }
+      setSuccess('Maßnahme wurde archiviert.')
+      await load()
+    } finally { setBusy(false) }
+  }
+
   async function beenden(m: Massnahme) {
     const grund = window.prompt('Beendigungsgrund (z. B. "Maßnahme nicht mehr erforderlich"):')
     if (grund === null) return
@@ -387,7 +399,7 @@ export default function FixierungsprotokollPage() {
                         <td style={{ fontSize: 13 }}>{new Date(m.beginn_am).toLocaleString('de-DE')}</td>
                         <td style={{ fontSize: 13 }}>{m.richterlich_genehmigt ? 'Ja' : (m.eilfall ? 'Eilfall' : '—')}</td>
                         <td><StatusBadge label={m.status === 'aktiv' ? 'Aktiv' : 'Beendet'} color={m.status === 'aktiv' ? 'green' : 'gray'} /></td>
-                        <td><button onClick={() => setViewId(m.id)} style={pflegeMiniBtn}>Details</button></td>
+                        <td><button onClick={() => setViewId(m.id)} style={pflegeMiniBtn}>Details</button><button onClick={() => archivieren(m)} style={{ ...pflegeMiniBtn, color: 'var(--ink4)', marginLeft: 4 }}>Archivieren</button></td>
                       </tr>
                     ))}
               </tbody>

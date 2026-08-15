@@ -81,3 +81,51 @@ export async function PATCH(
     return NextResponse.json({ error: 'Interner Serverfehler' }, { status: 500 })
   }
 }
+
+/** DELETE — Maßnahme archivieren (Soft-Delete). */
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  const auth = await requireOpsAdmin()
+  if (!auth.ok) return auth.response
+
+  const { id } = await params
+
+  try {
+    const admin = createAdminClient()
+    const { data, error } = await admin
+      .from('freiheitsentziehende_massnahmen')
+      .update({ archiviert_am: new Date().toISOString() })
+      .eq('id', id)
+      .eq('organization_id', auth.ctx.organizationId)
+      .is('archiviert_am', null)
+      .select('id')
+      .maybeSingle()
+
+    if (error) {
+      console.error('[admin/fixierungen] Archivierung fehlgeschlagen:', error.message)
+      return NextResponse.json({ error: `Archivierung fehlgeschlagen: ${error.message}` }, { status: 500 })
+    }
+    if (!data) {
+      return NextResponse.json({ error: 'Nicht gefunden oder bereits archiviert' }, { status: 404 })
+    }
+
+    await logAuditEvent({
+      action: 'archive',
+      actorId: auth.ctx.userId,
+      actorName: auth.ctx.name,
+      actorRole: auth.ctx.role,
+      organizationId: auth.ctx.organizationId,
+      entityType: 'freiheitsentziehende_massnahme',
+      entityId: data.id,
+      details: { aktion: 'archiviert' },
+      request: req,
+    })
+
+    return NextResponse.json({ erfolg: true, id: data.id })
+  } catch (e) {
+    console.error('[admin/fixierungen] Unerwarteter Fehler:', e)
+    return NextResponse.json({ error: 'Interner Serverfehler' }, { status: 500 })
+  }
+}

@@ -336,19 +336,27 @@ export interface PflegeUebersichtZeile {
 export type PflegeAuditEntitaetTyp =
   | 'aufnahme' | 'anamnese' | 'diagnose' | 'risiko'
   | 'verlauf' | 'massnahme' | 'massnahmenplan'
+  | 'medikament' | 'wunddokumentation' | 'sturzprotokoll'
+  | 'fixierungsprotokoll' | 'lagerungsprotokoll'
+  | 'wund_assessment' | 'wund_behandlung' | 'fem_ueberwachung'
 
 export const PFLEGE_AUDIT_ENTITAET_TYP_WERTE: PflegeAuditEntitaetTyp[] = [
   'aufnahme', 'anamnese', 'diagnose', 'risiko',
   'verlauf', 'massnahme', 'massnahmenplan',
+  'medikament', 'wunddokumentation', 'sturzprotokoll',
+  'fixierungsprotokoll', 'lagerungsprotokoll',
+  'wund_assessment', 'wund_behandlung', 'fem_ueberwachung',
 ]
 
 export type PflegeAuditAktion =
   | 'erstellt' | 'aktualisiert' | 'geloescht'
   | 'gesperrt' | 'entsperrt' | 'freigegeben'
+  | 'archiviert'
 
 export const PFLEGE_AUDIT_AKTION_WERTE: PflegeAuditAktion[] = [
   'erstellt', 'aktualisiert', 'geloescht',
   'gesperrt', 'entsperrt', 'freigegeben',
+  'archiviert',
 ]
 
 export interface PflegeAuditLogEintrag {

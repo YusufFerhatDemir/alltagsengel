@@ -35,6 +35,7 @@ export async function GET(request: NextRequest) {
       .from('freiheitsentziehende_massnahmen')
       .select('id, client_id, art, grund, beginn_am, ende_am, richterlich_genehmigt, genehmigung_aktenzeichen, genehmigung_gueltig_bis, eilfall, einwilligung_betreuer, betreuer_name, arzt_informiert, ueberwachungsintervall_minuten, status, beendigungsgrund, bemerkung, created_at, clients(first_name, last_name)')
       .eq('organization_id', auth.ctx.organizationId)
+      .is('archiviert_am', null)
       .order('beginn_am', { ascending: false })
 
     const clientId = params.get('clientId')

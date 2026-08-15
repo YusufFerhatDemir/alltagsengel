@@ -1,12 +1,12 @@
 'use client'
 import { datumBerlin, heuteBerlin } from '@/lib/utils/timezone';
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
 import {
-  formatDate, fullName, statusMeta, daysUntil, stars,
+  formatDate, statusMeta, daysUntil, stars,
   CALL_TYPE, CALL_SEQUENCE,
 } from '@/lib/admin/ops'
 import { StatusBadge, Banner, EmptyRow } from '@/components/admin/OpsUI'
+import { saveSatisfactionCall, loadQualityData } from './actions'
 
 interface Client { id: string; name: string; created_at: string | null; status: string }
 interface CallRow {
@@ -73,23 +73,9 @@ export default function AdminQualityPage() {
   const load = useCallback(async () => {
     setLoadError(null)
     try {
-      const supabase = createClient()
-      const [clRes, caRes] = await Promise.all([
-        supabase.from('clients').select('id, first_name, last_name, created_at, status'),
-        supabase.from('satisfaction_calls').select('id, client_id, call_type, call_date, called_by, satisfaction_rating, is_punctual, feels_comfortable, keep_caregiver, suggestions, notes, next_call_date, client:clients(first_name, last_name)').order('call_date', { ascending: false }),
-      ])
-      if (clRes.error || caRes.error) {
-        console.error('Quality load error:', clRes.error || caRes.error)
-        setLoadError((clRes.error || caRes.error)?.message || 'Daten konnten nicht geladen werden.')
-        return
-      }
-      setClients((clRes.data || []).map((c: any) => ({ id: c.id, name: fullName(c), created_at: c.created_at, status: c.status || 'active' })))
-      setCalls((caRes.data || []).map((c: any) => ({
-        id: c.id, client_id: c.client_id, client: fullName(c.client), call_type: c.call_type, call_date: c.call_date,
-        called_by: c.called_by, satisfaction_rating: c.satisfaction_rating, is_punctual: c.is_punctual,
-        feels_comfortable: c.feels_comfortable, keep_caregiver: c.keep_caregiver, suggestions: c.suggestions,
-        notes: c.notes, next_call_date: c.next_call_date,
-      })))
+      const data = await loadQualityData()
+      setClients(data.clients)
+      setCalls(data.calls)
     } catch (err: any) {
       console.error('Quality load error:', err)
       setLoadError(err?.message || 'Daten konnten nicht geladen werden.')
@@ -345,15 +331,24 @@ function DocCallModal({ clients, preset, onClose, onSaved }: {
     setErr(null)
     if (!clientId) { setErr('Bitte einen Klienten wählen.'); return }
     setSaving(true)
-    const supabase = createClient()
-    const { error } = await supabase.from('satisfaction_calls').insert({
-      client_id: clientId, call_type: callType, call_date: callDate, called_by: 'Alltagsengel',
-      satisfaction_rating: rating, is_punctual: punctual, feels_comfortable: comfortable,
-      keep_caregiver: keep, suggestions: suggestions.trim() || null, notes: notes.trim() || null,
-      next_call_date: nextCallDate,
-    })
-    if (error) { setErr(error.message); setSaving(false); return }
-    onSaved()
+    try {
+      await saveSatisfactionCall({
+        clientId,
+        callType,
+        callDate,
+        rating,
+        punctual,
+        comfortable,
+        keep,
+        suggestions: suggestions.trim() || null,
+        notes: notes.trim() || null,
+        nextCallDate,
+      })
+      onSaved()
+    } catch (error: any) {
+      setErr(error?.message || 'Anruf konnte nicht gespeichert werden.')
+      setSaving(false)
+    }
   }
 
   return (

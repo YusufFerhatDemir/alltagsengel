@@ -16,7 +16,7 @@ interface Ueberleitung {
   anlass: string
   ziel_einrichtung: string | null
   uebergabe_am: string
-  status: 'entwurf' | 'abgeschlossen'
+  status: 'entwurf' | 'abgeschlossen' | 'archiviert'
   ansprechpartner_uebernehmend: string | null
   clients: { first_name: string; last_name: string } | null
 }
@@ -56,6 +56,7 @@ export default function UeberleitungPage() {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [search, setSearch] = useState('')
+  const [showArchived, setShowArchived] = useState(false)
   const [zeigeForm, setZeigeForm] = useState(false)
   const [form, setForm] = useState(LEER_FORM)
 
@@ -70,10 +71,12 @@ export default function UeberleitungPage() {
     } catch { /* optional */ }
   }
 
-  async function load() {
+  async function load(archived?: boolean) {
+    const archiv = archived ?? showArchived
     setLoading(true); setError('')
     try {
-      const res = await fetch('/api/admin/ueberleitung')
+      const url = archiv ? '/api/admin/ueberleitung?showArchived=true' : '/api/admin/ueberleitung'
+      const res = await fetch(url)
       const body = await res.json()
       if (!res.ok) { setError(body.error || 'Fehler beim Laden'); return }
       setUeberleitungen(body.ueberleitungen || [])
@@ -85,6 +88,27 @@ export default function UeberleitungPage() {
   }
 
   useEffect(() => { load(); loadKunden() }, [])
+
+  async function archivieren(id: string) {
+    setBusy(true); setError(''); setSuccess('')
+    try {
+      const res = await fetch(`/api/admin/ueberleitung/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'archiviert' }),
+      })
+      const body = await res.json()
+      if (!res.ok) { setError(body.error || 'Archivieren fehlgeschlagen.'); return }
+      setSuccess('Überleitungsbogen archiviert.')
+      await load()
+    } finally { setBusy(false) }
+  }
+
+  function toggleArchived() {
+    const next = !showArchived
+    setShowArchived(next)
+    load(next)
+  }
 
   async function speichern(alsAbgeschlossen: boolean) {
     if (!form.clientId) { setError('Bitte Klient wählen.'); return }
@@ -191,26 +215,61 @@ export default function UeberleitungPage() {
 
       {!zeigeForm && (
         <>
-          <div style={{ marginBottom: 16 }}>
+          <div style={{ marginBottom: 16, display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
             <SearchInput value={search} onChange={setSearch} placeholder="Klient, Zieleinrichtung..." />
+            <button
+              onClick={toggleArchived}
+              style={{
+                ...pflegeSecondaryBtn,
+                fontSize: 13,
+                padding: '6px 14px',
+                opacity: showArchived ? 1 : 0.7,
+              }}
+            >
+              {showArchived ? 'Archivierte ausblenden' : 'Archivierte anzeigen'}
+            </button>
           </div>
           <div className="admin-table-wrap">
             <table className="admin-table">
               <thead>
-                <tr><th>Klient</th><th>Anlass</th><th>Ziel</th><th>Übergabe am</th><th>Status</th></tr>
+                <tr><th>Klient</th><th>Anlass</th><th>Ziel</th><th>Übergabe am</th><th>Status</th><th>Aktionen</th></tr>
               </thead>
               <tbody>
                 {loading
-                  ? <EmptyRow colSpan={5}>Laden...</EmptyRow>
+                  ? <EmptyRow colSpan={6}>Laden...</EmptyRow>
                   : gefiltert.length === 0
-                    ? <EmptyRow colSpan={5}>Noch keine Überleitungsbögen</EmptyRow>
+                    ? <EmptyRow colSpan={6}>Noch keine Überleitungsbögen</EmptyRow>
                     : gefiltert.map(u => (
                       <tr key={u.id}>
                         <td style={{ fontWeight: 600 }}>{u.clients?.first_name} {u.clients?.last_name}</td>
                         <td>{ANLAESSE[u.anlass] || u.anlass}</td>
                         <td style={{ fontSize: 13 }}>{u.ziel_einrichtung || '—'}</td>
                         <td style={{ fontSize: 13 }}>{new Date(u.uebergabe_am).toLocaleString('de-DE')}</td>
-                        <td><StatusBadge label={u.status === 'abgeschlossen' ? 'Abgeschlossen' : 'Entwurf'} color={u.status === 'abgeschlossen' ? 'green' : 'gray'} /></td>
+                        <td>
+                          <StatusBadge
+                            label={u.status === 'abgeschlossen' ? 'Abgeschlossen' : u.status === 'archiviert' ? 'Archiviert' : 'Entwurf'}
+                            color={u.status === 'abgeschlossen' ? 'green' : u.status === 'archiviert' ? 'gray' : 'yellow'}
+                          />
+                        </td>
+                        <td>
+                          {u.status !== 'archiviert' && (
+                            <button
+                              onClick={() => archivieren(u.id)}
+                              disabled={busy}
+                              style={{
+                                background: 'none',
+                                border: 'none',
+                                color: 'var(--ink3, #888)',
+                                cursor: 'pointer',
+                                fontSize: 13,
+                                padding: '2px 6px',
+                                textDecoration: 'underline',
+                              }}
+                            >
+                              Archivieren
+                            </button>
+                          )}
+                        </td>
                       </tr>
                     ))}
               </tbody>

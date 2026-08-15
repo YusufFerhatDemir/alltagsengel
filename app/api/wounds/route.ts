@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireWundenAdmin } from '@/lib/wunden/api-auth'
 import { createWound, listWounds, zusammenfassungWunden } from '@/lib/wunden/wunden'
+import { logAuditEvent } from '@/lib/audit-log'
 import type { WundStatus, WundTyp } from '@/lib/wunden/types'
 
 export async function GET(request: Request) {
@@ -59,6 +60,18 @@ export async function POST(request: Request) {
       entstandenAm: body.entstandenAm ?? null,
       bemerkung: body.bemerkung ?? null,
       erstelltVon: userId,
+    })
+
+    await logAuditEvent({
+      action: 'create',
+      actorId: auth.ctx.userId,
+      actorName: auth.ctx.name,
+      actorRole: auth.ctx.role,
+      organizationId: auth.ctx.organizationId,
+      entityType: 'wunddokumentation',
+      entityId: wunde.id,
+      details: { client_id: body.clientId, wund_typ: body.wundTyp, lokalisation: body.lokalisation },
+      request,
     })
 
     return NextResponse.json({ wunde })

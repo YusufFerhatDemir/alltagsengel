@@ -20,7 +20,41 @@ export async function GET(req: NextRequest) {
       status: status as any,
       rolle: rolle as any,
     })
-    return NextResponse.json(zugaenge)
+
+    // Enrich: Benutzer- und Klientennamen zuordnen
+    const userIds = [...new Set(zugaenge.map(z => z.user_id))]
+    const clientIds = [...new Set(zugaenge.map(z => z.client_id))]
+
+    const [{ data: profiles }, { data: clients }] = await Promise.all([
+      userIds.length > 0
+        ? supabase.from('profiles').select('id, first_name, last_name, email').in('id', userIds)
+        : Promise.resolve({ data: [] }),
+      clientIds.length > 0
+        ? supabase.from('clients').select('id, first_name, last_name').in('id', clientIds)
+        : Promise.resolve({ data: [] }),
+    ])
+
+    const profileMap = new Map<string, { name: string; email: string }>()
+    for (const p of profiles ?? []) {
+      profileMap.set(p.id, {
+        name: [p.first_name, p.last_name].filter(Boolean).join(' ') || 'Unbekannt',
+        email: p.email || '',
+      })
+    }
+
+    const clientMap = new Map<string, string>()
+    for (const c of clients ?? []) {
+      clientMap.set(c.id, [c.first_name, c.last_name].filter(Boolean).join(' ') || 'Unbekannt')
+    }
+
+    const enriched = zugaenge.map(z => ({
+      ...z,
+      user_name: profileMap.get(z.user_id)?.name ?? undefined,
+      user_email: profileMap.get(z.user_id)?.email ?? undefined,
+      client_name: clientMap.get(z.client_id) ?? undefined,
+    }))
+
+    return NextResponse.json(enriched)
   } catch (err) {
     return NextResponse.json({ error: (err as Error).message }, { status: 500 })
   }
