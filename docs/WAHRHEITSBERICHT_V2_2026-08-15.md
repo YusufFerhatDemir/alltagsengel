@@ -149,7 +149,7 @@ Diese 3 Blocker sind **erwartungsgemaess** und betreffen Schnittstellen zu exter
 | Externe Nachweise erforderlich | 9 |
 | COACH_DIPA_MODUS | false (Standard) |
 | PflegeCoach | Kostenlos |
-| Kassenverguetunung | EXTERNAL_REQUIRED |
+| Kassenverguetung | EXTERNAL_REQUIRED |
 
 **DiPA ist ein eigenes Verfahren und blockiert den Einsatz der Pflege-Software NICHT.**
 
@@ -197,7 +197,7 @@ Die 10 DiPA-Eingangsblocker (3 GF-intern, 7 extern) sind gesondert zu bearbeiten
 
 **Begruendung:**
 
-Die Software ist **funktionsfaehig** fuer den Kerneinsatz -- die 12 FERTIG-Module decken den taeglichen Betrieb ab:
+Die Software ist **funktionsfaehig** fuer den Kerneinsatz -- die 11 FERTIG-Module decken den taeglichen Betrieb ab:
 
 - Klientenverwaltung
 - Personalmanagement
