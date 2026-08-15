@@ -53,6 +53,20 @@ export async function POST(request: Request) {
       }
     }
 
+    // Cross-Tenant-Schutz: schicht_id muss zur selben Organisation gehören
+    // (createAdminClient umgeht RLS — dieser Check MUSS in der Route passieren).
+    if (body.schichtId) {
+      const { data: sch } = await supabase
+        .from('dienstplan_schichten')
+        .select('id')
+        .eq('id', body.schichtId)
+        .eq('organization_id', auth.ctx.organizationId)
+        .maybeSingle()
+      if (!sch) {
+        return NextResponse.json({ error: 'Schicht gehört nicht zu dieser Organisation.' }, { status: 403 })
+      }
+    }
+
     let freigabeProbleme: string[] = []
     if (body.caregiverId) {
       const freigabe = await pruefeEinsatzfreigabe(supabase, body.caregiverId, auth.ctx.organizationId)
@@ -73,19 +87,30 @@ export async function POST(request: Request) {
       erstelltVon: auth.ctx.userId,
     })
 
-    // Audit-Trail bei forceOverride
-    if (body.forceOverride && freigabeProbleme.length > 0) {
-      await writeAuditLog(supabase, {
-        organizationId: auth.ctx.organizationId,
-        entitaetTyp: 'dienstplan',
-        entitaetId: data.id,
-        caregiverId: body.caregiverId,
-        aktion: 'erstellt',
-        nachher: { forceOverride: true, probleme: freigabeProbleme },
-        grund: `forceOverride: ${freigabeProbleme.join('; ')}`,
-        benutzerId: auth.ctx.userId,
-      })
-    }
+    // Audit-Trail: jeder Dienstplan-Eintrag wird protokolliert (nicht nur
+    // forceOverride) — analog zum Muster in stammdaten/route.ts POST.
+    await writeAuditLog(supabase, {
+      organizationId: auth.ctx.organizationId,
+      entitaetTyp: 'dienstplan',
+      entitaetId: data.id,
+      caregiverId: body.caregiverId ?? null,
+      aktion: 'erstellt',
+      nachher: {
+        datum: data.datum,
+        caregiverId: data.caregiver_id,
+        clientId: data.client_id,
+        startZeit: data.start_zeit,
+        endZeit: data.end_zeit,
+        status: data.status,
+        typ: data.typ,
+        ...(body.forceOverride ? { forceOverride: true, probleme: freigabeProbleme } : {}),
+      },
+      grund: body.forceOverride && freigabeProbleme.length > 0
+        ? `forceOverride: ${freigabeProbleme.join('; ')}`
+        : null,
+      benutzerId: auth.ctx.userId,
+      benutzerRolle: auth.ctx.role,
+    })
 
     return NextResponse.json(data, { status: 201 })
   } catch (e: any) {

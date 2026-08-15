@@ -14,7 +14,8 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { logBillingAction, computeContentHash } from '../billing/core/audit'
-import { erstelleRuecklaeuferAufgabe } from './ruecklaeufer-aufgaben'
+import { erstelleRuecklaeuferAufgabe, AUFGABEN_AUSLOESENDE_STATUS } from './ruecklaeufer-aufgaben'
+import { klassifiziereFehlercode } from './ruecklaeufer-fehlercodes'
 
 // ── Types ───────────────────────────────────────────────────────
 
@@ -46,6 +47,8 @@ export interface RuecklaeuferPosition {
 export interface RuecklaeuferImportParams {
   organizationId: string
   laufId?: string
+  /** § 302 SGB V — Zuordnung zu sgb_v_laeufe statt abrechnungslaeufe. */
+  sgbVLaufId?: string
   dakotaAuftragId?: string
   invoiceId?: string
   clientId?: string
@@ -131,6 +134,7 @@ export async function importiereRuecklaeufer(
     .insert({
       organization_id: params.organizationId,
       lauf_id: params.laufId || null,
+      sgb_v_lauf_id: params.sgbVLaufId || null,
       dakota_auftrag_id: params.dakotaAuftragId || null,
       invoice_id: params.invoiceId || null,
       client_id: params.clientId || null,
@@ -216,6 +220,39 @@ export async function importiereRuecklaeufer(
     }
   }
 
+  // § 302 SGB V — dieselbe Zuordnung, aber gegen sgb_v_laeufe statt
+  // abrechnungslaeufe: eigenes Statusvokabular (sgb_v_laeufe.status), kein
+  // antwort_datei_url-Feld auf dieser Tabelle.
+  if (params.sgbVLaufId) {
+    const { data: sgbVLauf } = await supabase
+      .from('sgb_v_laeufe')
+      .select('id')
+      .eq('id', params.sgbVLaufId)
+      .eq('organization_id', params.organizationId)
+      .maybeSingle()
+
+    if (sgbVLauf) {
+      zugeordnet = true
+      const laufAntwortStatus = mapRuecklaeuferZuLaufStatus(status)
+      if (laufAntwortStatus) {
+        await supabase
+          .from('sgb_v_laeufe')
+          .update({ antwort_status: laufAntwortStatus, antwort_am: new Date().toISOString() })
+          .eq('id', params.sgbVLaufId)
+          .eq('organization_id', params.organizationId)
+
+        const neuerLaufStatus = mapAntwortZuSgbVLaufStatus(laufAntwortStatus)
+        if (neuerLaufStatus) {
+          await supabase
+            .from('sgb_v_laeufe')
+            .update({ status: neuerLaufStatus })
+            .eq('id', params.sgbVLaufId)
+            .eq('organization_id', params.organizationId)
+        }
+      }
+    }
+  }
+
   // Fehlerprotokoll erstellen bei Fehlern
   let fehlerErstellt = false
   let fehlerprotokollId: string | null = null
@@ -240,6 +277,23 @@ export async function importiereRuecklaeufer(
     fehlerprotokollId = fehlerZeile?.id ?? null
   }
 
+  // Fehlercode klassifizieren (Katalog vor Heuristik) — liefert den
+  // Korrekturvorschlag, der unten in die Aufgabe wandert. Best effort:
+  // ein Klassifizierungsfehler darf den Rückläufer-Import nicht blockieren.
+  let korrekturvorschlag: string | null = null
+  let fehlerKategorie: string | null = null
+  if (AUFGABEN_AUSLOESENDE_STATUS.includes(status)) {
+    try {
+      const klassifizierung = await klassifiziereFehlercode(
+        supabase, params.organizationId, params.fehlerCode, params.fehlerText, params.kostentraegerIk,
+      )
+      korrekturvorschlag = klassifizierung.massnahme
+      fehlerKategorie = klassifizierung.kategorie
+    } catch (err) {
+      console.error(`[ruecklaeufer] Fehlercode-Klassifizierung fehlgeschlagen: ${err}`)
+    }
+  }
+
   // Automatische Aufgabe bei technischem Rückläufer, Ablehnung oder Fehler.
   //
   // Bewusst hier und nicht in der API-Route: `importiereRuecklaeufer` ist der
@@ -259,6 +313,8 @@ export async function importiereRuecklaeufer(
     fehlerCode: params.fehlerCode,
     fehlerText: params.fehlerText,
     fehlerprotokollId,
+    korrekturvorschlag,
+    fehlerKategorie,
     positionenGesamt: params.positionen?.length ?? 0,
     positionenAbgelehnt: posAbgelehnt,
     betragAngefordertCent: params.betragAngefordertCent,
@@ -306,6 +362,7 @@ export async function importiereRuecklaeufer(
       typ: params.ruecklaeuferTyp,
       status,
       lauf_id: params.laufId,
+      sgb_v_lauf_id: params.sgbVLaufId,
       positionen: params.positionen?.length ?? 0,
       fehler: fehlerErstellt,
       aufgabe_id: aufgabenErgebnis.aufgabeId,
@@ -441,6 +498,26 @@ function mapRuecklaeuferZuLaufStatus(rlStatus: RuecklaeuferStatus): string | nul
 }
 
 function mapAntwortZuLaufStatus(antwortStatus: string): string | null {
+  switch (antwortStatus) {
+    case 'angenommen': return 'angenommen'
+    case 'angenommen_mit_hinweis': return 'angenommen'
+    case 'teilweise_abgelehnt': return 'teilweise_abgelehnt'
+    case 'abgelehnt': return 'abgelehnt'
+    case 'technischer_fehler': return 'korrektur_erforderlich'
+    case 'fachlicher_fehler': return 'korrektur_erforderlich'
+    case 'korrektur_erforderlich': return 'korrektur_erforderlich'
+    default: return null
+  }
+}
+
+/**
+ * sgb_v_laeufe.status kennt kein 'angenommen_mit_hinweis' und keine eigenen
+ * 'technischer_fehler'/'fachlicher_fehler'-Werte (siehe CHECK-Constraint in
+ * 20260902020000_sgb_v_302_laeufe.sql) — beide fallen auf die vorhandenen
+ * Nachbarwerte zurück, statt einen neuen Statuswert einzuführen, der dort
+ * nicht erlaubt ist.
+ */
+function mapAntwortZuSgbVLaufStatus(antwortStatus: string): string | null {
   switch (antwortStatus) {
     case 'angenommen': return 'angenommen'
     case 'angenommen_mit_hinweis': return 'angenommen'

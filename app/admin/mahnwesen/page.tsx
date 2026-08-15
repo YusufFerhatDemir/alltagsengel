@@ -156,7 +156,7 @@ export default function MahnwesenPage() {
       </div>
 
       {/* Statistik-Karten */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 24 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 16, marginBottom: 24 }}>
         <StatCard label="Offene Mahnungen" value={stats.total} />
         <StatCard label="Gesamtforderung" value={formatCurrency(stats.totalOpen)} />
         <StatCard label="Blockiert" value={stats.blocked} color="#f59e0b" />
@@ -206,6 +206,7 @@ export default function MahnwesenPage() {
       </div>
 
       {loading ? <p>Laden…</p> : (
+        <div style={{ overflowX: 'auto' }}>
         <table style={tableStyle}>
           <thead>
             <tr>
@@ -276,6 +277,7 @@ export default function MahnwesenPage() {
             )}
           </tbody>
         </table>
+        </div>
       )}
 
       {/* Vorschau-Modal */}

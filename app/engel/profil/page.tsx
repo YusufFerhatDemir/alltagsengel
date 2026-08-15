@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
-import { IconWingsGold, IconDocument, IconCheck, IconClock, IconInfo, IconShield, IconCalendar } from '@/components/Icons'
+import { IconWingsGold, IconDocument, IconCheck, IconClock, IconInfo, IconShield, IconCalendar, IconPill, IconHeart } from '@/components/Icons'
 import { UNIT_ECONOMICS } from '@/lib/mis/constants'
 import { AvatarEngel } from '@/components/AvatarGlow'
 
@@ -161,6 +161,20 @@ export default function MeinProfilPage() {
             <div>
               <div className="setting-main"><IconDocument size={14} /> Meine Pflegedoku</div>
               <div className="setting-sub">Diagnosen, Risiken, Pläne und Verlauf</div>
+            </div>
+            <div style={{ color: 'var(--ink4)', fontSize: 18 }}>›</div>
+          </Link>
+          <Link href="/engel/medikamente" className="setting-row" style={{ textDecoration: 'none', color: 'inherit', cursor: 'pointer' }}>
+            <div>
+              <div className="setting-main"><IconPill size={14} /> Medikamentengabe</div>
+              <div className="setting-sub">Medikamente einsehen und Verabreichung dokumentieren</div>
+            </div>
+            <div style={{ color: 'var(--ink4)', fontSize: 18 }}>›</div>
+          </Link>
+          <Link href="/engel/vitalwerte" className="setting-row" style={{ textDecoration: 'none', color: 'inherit', cursor: 'pointer' }}>
+            <div>
+              <div className="setting-main"><IconHeart size={14} /> Vitalwerte</div>
+              <div className="setting-sub">Blutdruck, Puls & Co. erfassen und Verlauf ansehen</div>
             </div>
             <div style={{ color: 'var(--ink4)', fontSize: 18 }}>›</div>
           </Link>

@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server'
 import { preFlightValidierung } from '@/lib/abrechnung/kassenabrechnung-engine'
 import { getActiveOrgId } from '@/lib/organizations/server'
 import { logBillingAction } from '@/lib/billing/core/audit'
+import { meldeAbrechnungsfehler } from '@/lib/automation/abrechnung-fehler-aufgabe'
 
 export async function POST(request: Request) {
   try {
@@ -65,6 +66,22 @@ export async function POST(request: Request) {
       },
       actorId: user.id,
     }).catch(err => console.error('[dta/preflight] Audit fehlgeschlagen:', err))
+
+    // Kette 9: Pflicht-Prüfpunkte durchgefallen → Aufgabe an Sachbearbeiter.
+    // Best effort — ein fehlgeschlagenes Aufgaben-Anlegen darf das
+    // Preflight-Ergebnis selbst nicht verschlucken.
+    if (!ergebnis.bestanden) {
+      const pflichtFehler = ergebnis.fehler.filter(p => p.pflicht)
+      if (pflichtFehler.length > 0) {
+        await meldeAbrechnungsfehler(admin, {
+          organizationId,
+          actorId: user.id,
+          abrechnungsmonat,
+          bundesland,
+          fehlgeschlagenePruefpunkte: pflichtFehler.map(p => ({ label: p.label, details: p.details ?? '' })),
+        }).catch(err => console.error('[dta/preflight] Aufgaben-Erstellung fehlgeschlagen:', err))
+      }
+    }
 
     return NextResponse.json(ergebnis)
   } catch (err) {

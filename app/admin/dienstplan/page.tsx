@@ -65,6 +65,7 @@ export default function DienstplanPage() {
   const [weekStart, setWeekStart] = useState(() => getMondayOfWeek(new Date()))
   const [showCreate, setShowCreate] = useState(false)
   const [creating, setCreating] = useState(false)
+  const [createError, setCreateError] = useState<string | null>(null)
   const [form, setForm] = useState<CreateForm>({
     datum: '', caregiverId: '', startZeit: '08:00', endZeit: '16:00', typ: 'regulaer', notizen: '',
   })
@@ -122,6 +123,7 @@ export default function DienstplanPage() {
   async function createEintrag() {
     if (!form.datum || !form.startZeit || !form.endZeit) return
     setCreating(true)
+    setCreateError(null)
     try {
       const res = await fetch('/api/personal/dienstplan/eintraege', {
         method: 'POST',
@@ -150,9 +152,20 @@ export default function DienstplanPage() {
             notizen: r.notizen || null,
           })))
         }
+      } else {
+        // Bisher wurde ein Fehler (z.B. Doppelbelegung, Cross-Tenant-Sperre,
+        // fehlende Einsatzfreigabe) hier still verschluckt — Nutzer sah keine
+        // Rückmeldung. Jetzt wird die Fehlermeldung der API angezeigt.
+        let message = 'Eintrag konnte nicht gespeichert werden.'
+        try {
+          const body = await res.json()
+          if (body?.error) message = body.error
+        } catch { /* Antwort ohne JSON-Body */ }
+        setCreateError(message)
       }
     } catch (err) {
       console.error('Eintrag erstellen fehlgeschlagen', err)
+      setCreateError('Eintrag konnte nicht gespeichert werden (Netzwerkfehler).')
     } finally {
       setCreating(false)
     }
@@ -203,6 +216,11 @@ export default function DienstplanPage() {
           padding: 16, marginBottom: 16,
         }}>
           <h3 style={{ fontSize: 15, fontWeight: 600, margin: '0 0 12px' }}>Neuer Dienstplan-Eintrag</h3>
+          {createError && (
+            <div style={{ marginBottom: 12 }}>
+              <Banner tone="danger">{createError}</Banner>
+            </div>
+          )}
           <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'end' }}>
             <label style={{ fontSize: 13 }}>
               Datum<br />

@@ -5,6 +5,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { logPflegeAktivitaet } from './audit-log'
 import {
   assertErlaubt,
   RISIKO_SCHWEREGRAD_WERTE,
@@ -70,6 +71,16 @@ export async function createRisiko(supabase: SupabaseClient, params: CreateRisik
     .select('*')
     .single()
   if (error || !data) throw new Error(`Risiko konnte nicht angelegt werden: ${error?.message ?? 'unbekannt'}`)
+
+  await logPflegeAktivitaet(supabase, {
+    organizationId: (data as PflegeRisiko).organization_id,
+    entitaetTyp: 'risiko',
+    entitaetId: (data as PflegeRisiko).id,
+    aktion: 'erstellt',
+    nachher: data,
+    akteurId: params.erstelltVon,
+  }).catch((err) => console.error('[pflege-audit] Risiko-Log fehlgeschlagen:', err))
+
   return data as PflegeRisiko
 }
 
@@ -152,6 +163,15 @@ export async function updateRisiko(
     .select('*')
     .single()
   if (error || !data) throw new Error(`Risiko konnte nicht aktualisiert werden: ${error?.message ?? 'unbekannt'}`)
+
+  await logPflegeAktivitaet(supabase, {
+    organizationId,
+    entitaetTyp: 'risiko',
+    entitaetId: id,
+    aktion: patch.aktiv === false ? 'geloescht' : 'aktualisiert',
+    nachher: data,
+  }).catch((err) => console.error('[pflege-audit] Risiko-Log fehlgeschlagen:', err))
+
   return data as PflegeRisiko
 }
 

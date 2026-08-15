@@ -68,12 +68,15 @@ export default function DienstplanPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
 
-      const { data: cg } = await supabase
-        .from('caregivers')
-        .select('id')
-        .eq('user_id', user.id)
-        .maybeSingle()
-      if (!cg) { setError('Kein Engel-Profil gefunden.'); return }
+      // WICHTIG: NIE direkt gegen caregivers selektieren — die Tabelle hat
+      // fuer Engel keine Self-Select-Policy (nur admin_all), das liefert
+      // hier still "keine Zeile" statt eines Fehlers. eigene_caregiver_ids()
+      // ist eine SECURITY DEFINER RPC und umgeht das (siehe Memory-Eintrag
+      // engel-rls-caregivers-join-falle).
+      const { data: cgIds, error: cgErr } = await supabase.rpc('eigene_caregiver_ids')
+      if (cgErr) throw cgErr
+      const cgId = cgIds?.[0] ?? null
+      if (!cgId) { setError('Kein Engel-Profil gefunden.'); return }
 
       const von = isoDate(startDate)
       const bis = isoDate(addDays(startDate, 6))
@@ -81,7 +84,7 @@ export default function DienstplanPage() {
       const { data, error: dbErr } = await supabase
         .from('dienstplan_eintraege')
         .select('id, datum, start_zeit, end_zeit, pause_minuten, status, typ, notizen, clients(first_name, last_name), dienstplan_schichten(bezeichnung, farbe)')
-        .eq('caregiver_id', cg.id)
+        .eq('caregiver_id', cgId)
         .gte('datum', von)
         .lte('datum', bis)
         .order('datum', { ascending: true })

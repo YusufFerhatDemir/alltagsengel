@@ -12,9 +12,11 @@ import { createAdminClient } from '@/lib/supabase/admin'
 // Fristen (Tage nach Faelligkeit): 14 Zahlungserinnerung, 28 1. Mahnung,
 // 42 2. Mahnung, 56 Letzte Mahnung, 70 Inkasso-Vorbereitung.
 //
-// Der Lauf erstellt KEINE Dokumente und versendet KEINE Mails — er hebt nur
-// die Mahnstufe. Der Versand bleibt bewusst manuell unter /admin/mahnwesen,
-// weil Mahnschreiben vor dem Rausgehen gesichtet werden sollen.
+// Der Lauf eskaliert die Mahnstufe UND legt bei jeder Eskalation automatisch
+// eine Mahnung (PDF + E-Mail) in `dunning_email_queue` (status='wartend') an.
+// Der tatsaechliche E-Mail-VERSAND bleibt bewusst manuell unter
+// /admin/mahnwesen, weil Mahnschreiben vor dem Rausgehen gesichtet werden
+// sollen — hier wird nur die Queue befuellt, nichts verschickt.
 // ═══════════════════════════════════════════════════════════
 
 const supabaseAdmin = createAdminClient()
@@ -42,7 +44,7 @@ export async function GET(request: Request) {
       try {
         // actorId = Org-ID: der Lauf ist systemgetrieben, es gibt keinen
         // handelnden Benutzer. Der Audit-Eintrag bleibt so zuordenbar.
-        const result = await runDunningRun(supabaseAdmin, org.id, org.id)
+        const result = await runDunningRun(supabaseAdmin, org.id, org.id, { sendEmails: true })
         eskaliertGesamt += result.eskaliert.length
         blockiertGesamt += result.blockiert.length
         laeufe.push({

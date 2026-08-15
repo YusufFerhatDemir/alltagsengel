@@ -154,6 +154,18 @@ export default function PdlCockpitPage() {
               <div className="admin-stat-value">{data.personal.imUrlaub}</div>
               <div className="admin-stat-label">Im Urlaub</div>
             </div>
+            {data.personal.krankenstandsquoteProzent !== null && (
+              <div className="admin-stat-card" style={data.personal.krankenstandsquoteProzent > 5 ? { borderLeft: '3px solid #D04B3B' } : undefined}>
+                <div className="admin-stat-value">{data.personal.krankenstandsquoteProzent.toFixed(1)}%</div>
+                <div className="admin-stat-label">Krankenstandsquote (Zeitraum)</div>
+              </div>
+            )}
+            {data.personal.fehlzeitenquoteProzent !== null && (
+              <div className="admin-stat-card">
+                <div className="admin-stat-value">{data.personal.fehlzeitenquoteProzent.toFixed(1)}%</div>
+                <div className="admin-stat-label">Fehlzeitenquote (Zeitraum)</div>
+              </div>
+            )}
           </div>
           {(data.personal.ueberStundenKonto > 0 || data.personal.unterStundenKonto > 0) && (
             <div style={{ display: 'flex', gap: 12, marginTop: 8, marginBottom: 16 }}>

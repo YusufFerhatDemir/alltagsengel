@@ -5,6 +5,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { IconChart, IconUsers, IconClipboard, IconWings, IconLogout, IconTarget, IconHeart, IconMoney, IconDocument, IconHandshake, IconHome, IconCalendar, IconClock, IconChat, IconBell, IconWorkflow } from '@/components/Icons'
 import NotificationBell from '@/components/NotificationBell'
+import OpsNotificationBell from '@/components/OpsNotificationBell'
 import OrgSwitcher from '@/components/OrgSwitcher'
 import BundeslandSwitcher from '@/components/admin/BundeslandSwitcher'
 import { BundeslandProvider } from '@/components/admin/BundeslandContext'
@@ -101,6 +102,7 @@ const navGroups = [
     title: 'Übersicht',
     items: [
       { href: '/admin/dashboard', label: 'Dashboard', icon: <IconHome size={18} /> },
+      { href: '/admin/home', label: 'Marktplatz-Übersicht', icon: <IconHome size={18} /> },
       { href: '/admin/pilot', label: 'Pilot / Echtbetrieb', icon: <IconTarget size={18} /> },
       { href: '/admin/go-live', label: 'Go-Live-Status', icon: <IconTarget size={18} /> },
     ],
@@ -117,9 +119,13 @@ const navGroups = [
       { href: '/admin/pflegedoku', label: 'Pflegedokumentation', icon: <IconHeart size={18} /> },
       { href: '/admin/sturzprotokoll', label: 'Sturzprotokoll', icon: <IconClipboard size={18} /> },
       { href: '/admin/wunddokumentation', label: 'Wunddokumentation', icon: <IconHeart size={18} /> },
+      { href: '/admin/lagerungsprotokoll', label: 'Lagerungsprotokoll', icon: <IconHeart size={18} /> },
       { href: '/admin/vitalwerte', label: 'Vitalwerte', icon: <IconHeart size={18} /> },
       { href: '/admin/medikamente', label: 'Medikamente', icon: <IconHeart size={18} /> },
       { href: '/admin/sis', label: 'SIS', icon: <IconClipboard size={18} /> },
+      { href: '/admin/biografiebogen', label: 'Biografiebogen', icon: <IconDocument size={18} /> },
+      { href: '/admin/fixierungsprotokoll', label: 'Fixierungsprotokoll', icon: <IconTarget size={18} /> },
+      { href: '/admin/ueberleitung', label: 'Pflegeüberleitung', icon: <IconDocument size={18} /> },
       { href: '/admin/vertraege', label: 'Verträge', icon: <IconDocument size={18} /> },
       { href: '/admin/dokumente', label: 'Dokumente', icon: <IconDocument size={18} /> },
     ],
@@ -133,6 +139,7 @@ const navGroups = [
       { href: '/admin/nachweise', label: 'Qualifikationen', icon: <IconClipboard size={18} /> },
       { href: '/admin/einsatzfreigabe', label: 'Einsatzfreigabe', icon: <IconTarget size={18} /> },
       { href: '/admin/applications', label: 'Bewerbungen', icon: <IconClipboard size={18} /> },
+      { href: '/admin/mitarbeitergespraeche', label: 'Mitarbeitergespräche', icon: <IconChat size={18} /> },
     ],
   },
   {
@@ -167,6 +174,7 @@ const navGroups = [
       { href: '/admin/rechnungen', label: 'Rechnungsübersicht', icon: <IconDocument size={18} /> },
       { href: '/admin/gutschriften', label: 'Gutschriften', icon: <IconDocument size={18} /> },
       { href: '/admin/leistungspreise', label: 'Leistungspreise', icon: <IconMoney size={18} /> },
+      { href: '/admin/zuzahlungen', label: 'Zuzahlungen (§61 SGB V)', icon: <IconMoney size={18} /> },
       { href: '/admin/monatsabschluss-vorbereitung', label: 'Monatsabschluss-Vorb.', icon: <IconChart size={18} /> },
       { href: '/admin/monatsabschluss', label: 'Monatsabschluss', icon: <IconChart size={18} /> },
       { href: '/admin/pruefprotokoll', label: 'Prüfprotokoll', icon: <IconTarget size={18} /> },
@@ -185,6 +193,7 @@ const navGroups = [
       { href: '/admin/ruecklaeufer', label: 'Rückläufer', icon: <IconClipboard size={18} /> },
       { href: '/admin/korrekturlaeufe', label: 'Korrekturläufe', icon: <IconClipboard size={18} /> },
       { href: '/admin/abrechnungsfehler', label: 'Fehlermanagement', icon: <IconTarget size={18} /> },
+      { href: '/admin/sgb-v', label: 'SGB V § 302 (HKP)', icon: <IconMoney size={18} /> },
     ],
   },
   {
@@ -367,7 +376,10 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
         <div className="admin-logo">
           <span style={{ display: 'flex', alignItems: 'center' }}><IconWings size={20} /></span>
           <span>Admin Panel</span>
-          <div style={{ marginLeft: 'auto' }}><NotificationBell /></div>
+          <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 4 }}>
+            <OpsNotificationBell />
+            <NotificationBell />
+          </div>
         </div>
         <OrgSwitcher />
         <BundeslandSwitcher />
@@ -431,6 +443,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
           Admin Panel
         </span>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <OpsNotificationBell />
           <NotificationBell />
           <button onClick={() => { window.location.href = '/mis' }} style={{ color: 'var(--gold2)', fontSize: 12, fontWeight: 600, padding: '4px 10px', borderRadius: 8, background: 'rgba(201,150,60,0.1)', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>
             MIS

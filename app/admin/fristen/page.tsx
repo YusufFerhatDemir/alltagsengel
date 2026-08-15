@@ -34,7 +34,7 @@ const DRINGLICHKEIT_META: Record<string, { label: string; color: string; dotColo
   ok: { label: 'OK', color: '#5CB882', dotColor: '#5CB882' },
 }
 
-const QUELLE_OPTIONS = ['Alle', 'Qualifikationen', 'Verordnungen', 'Schulungen', 'Dokumente', 'Abrechnung']
+const QUELLE_OPTIONS = ['Alle', 'Qualifikationen', 'Verordnungen', 'Schulungen', 'Dokumente', 'Abrechnung', 'Personal', 'Dienstplan', 'Fixierungsprotokoll']
 const DRINGLICHKEIT_OPTIONS = ['alle', 'ueberfaellig', 'kritisch', 'warnung', 'ok']
 
 const selectStyle: React.CSSProperties = {
@@ -296,6 +296,10 @@ function typColor(typ: string): string {
     case 'Schulung': return '#2196F3'
     case 'Dokument': return '#C9963C'
     case 'Abrechnungsfrist': return '#E8A000'
+    case 'Probezeit': return '#8D6E63'
+    case 'Mitarbeitergespräch': return '#5C6BC0'
+    case 'ArbZG-Verstoß': return '#D04B3B'
+    case 'FEM-Überwachung': return '#EC407A'
     default: return '#999'
   }
 }

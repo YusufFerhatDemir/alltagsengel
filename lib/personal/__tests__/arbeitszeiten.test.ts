@@ -87,3 +87,55 @@ test('updateArbeitszeit: mappt camelCase → snake_case korrekt', async () => {
   assert.equal(updates[0].pause_minuten, 30)
   assert.equal(updates[0].ist_minuten, 450)
 })
+
+test('createArbeitszeit: weist istMinuten <= 0 ab', async () => {
+  const { supabase } = insertClient()
+  await assert.rejects(
+    () => createArbeitszeit(supabase, {
+      organizationId: 'org-1', caregiverId: 'cg-1', datum: '2026-08-11',
+      startZeit: '08:00', endZeit: '16:00', istMinuten: 0,
+    }),
+    /Ist-Minuten müssen größer als 0 sein/,
+  )
+})
+
+test('createArbeitszeit: weist istMinuten > 24h ab', async () => {
+  const { supabase } = insertClient()
+  await assert.rejects(
+    () => createArbeitszeit(supabase, {
+      organizationId: 'org-1', caregiverId: 'cg-1', datum: '2026-08-11',
+      startZeit: '08:00', endZeit: '16:00', istMinuten: 1441,
+    }),
+    /24 Stunden/,
+  )
+})
+
+test('createArbeitszeit: weist negative Pause ab', async () => {
+  const { supabase } = insertClient()
+  await assert.rejects(
+    () => createArbeitszeit(supabase, {
+      organizationId: 'org-1', caregiverId: 'cg-1', datum: '2026-08-11',
+      startZeit: '08:00', endZeit: '16:00', istMinuten: 480, pauseMinuten: -10,
+    }),
+    /Pause-Minuten dürfen nicht negativ sein/,
+  )
+})
+
+test('createArbeitszeit: akzeptiert Nachtdienst über Mitternacht (Ende < Start)', async () => {
+  const { supabase, inserts } = insertClient()
+  // 22:00 - 06:00 ist ein legitimer Nachtdienst, kein "Ende vor Start"-Fehler.
+  await createArbeitszeit(supabase, {
+    organizationId: 'org-1', caregiverId: 'cg-1', datum: '2026-08-11',
+    startZeit: '22:00', endZeit: '06:00', istMinuten: 480,
+  })
+  assert.equal(inserts[0].start_zeit, '22:00')
+  assert.equal(inserts[0].end_zeit, '06:00')
+})
+
+test('updateArbeitszeit: weist istMinuten <= 0 im Patch ab', async () => {
+  const { supabase } = updateClient({ id: 'az-1' })
+  await assert.rejects(
+    () => updateArbeitszeit(supabase, 'az-1', 'org-1', { istMinuten: -5 }),
+    /Ist-Minuten müssen größer als 0 sein/,
+  )
+})

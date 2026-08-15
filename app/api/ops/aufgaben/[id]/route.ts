@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { getAufgabe, updateAufgabe, deleteAufgabe } from '@/lib/ops/aufgaben'
+import { logAktivitaet } from '@/lib/ops/aktivitaetslog'
 
 export async function GET(
   request: Request,
@@ -33,11 +34,22 @@ export async function PATCH(
   try {
     const body = await request.json()
     const { id: _id, organization_id: _oid, created_at: _ca, ...safeData } = body
+    const vorher = await getAufgabe(supabase, { organizationId: auth.ctx.organizationId, id }).catch(() => null)
     const data = await updateAufgabe(supabase, {
       organizationId: auth.ctx.organizationId,
       id,
       data: safeData,
     })
+    const statusGeaendert = vorher != null && vorher.status !== data.status
+    await logAktivitaet(supabase, {
+      organizationId: auth.ctx.organizationId,
+      entitaetTyp: 'aufgabe',
+      entitaetId: id,
+      aktion: statusGeaendert ? 'status_geaendert' : 'aktualisiert',
+      vorher,
+      nachher: data,
+      akteurId: auth.ctx.userId,
+    }).catch((err) => console.error(`Aktivitaetslog (Aufgabe aktualisiert) fehlgeschlagen: ${err}`))
     return NextResponse.json(data)
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 400 })
@@ -53,10 +65,19 @@ export async function DELETE(
   const { id } = await params
   const supabase = createAdminClient()
   try {
+    const vorher = await getAufgabe(supabase, { organizationId: auth.ctx.organizationId, id }).catch(() => null)
     const data = await deleteAufgabe(supabase, {
       organizationId: auth.ctx.organizationId,
       id,
     })
+    await logAktivitaet(supabase, {
+      organizationId: auth.ctx.organizationId,
+      entitaetTyp: 'aufgabe',
+      entitaetId: id,
+      aktion: 'geloescht',
+      vorher,
+      akteurId: auth.ctx.userId,
+    }).catch((err) => console.error(`Aktivitaetslog (Aufgabe geloescht) fehlgeschlagen: ${err}`))
     return NextResponse.json(data)
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 400 })

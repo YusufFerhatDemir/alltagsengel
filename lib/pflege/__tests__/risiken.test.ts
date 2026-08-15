@@ -1,5 +1,6 @@
 // ═══════════════════════════════════════════════════════════════
-// Tests: Risiken — Typ-/Schweregrad-Validierung, Soft-Delete, Kennzahlen
+// Tests: Risiken — Typ-/Schweregrad-Validierung, Soft-Delete, Kennzahlen,
+// Audit-Log-Verdrahtung (pflege_audit_log)
 // Ausführen: npm run test:unit
 // ═══════════════════════════════════════════════════════════════
 
@@ -12,26 +13,35 @@ import {
 import { RISIKO_SCHWEREGRAD_WERTE, RISIKO_TYP_WERTE } from '../types'
 import type { PflegeRisiko, PflegeRisikoDashboardZeile } from '../types'
 
+/**
+ * Mock routet nach Tabellenname, damit pflege_risiken- und
+ * pflege_audit_log-Schreibzugriffe unterscheidbar sind. `inserts`/`updates`
+ * bleiben tabellen-gemischt (chronologische Reihenfolge) — Tests, die nur
+ * den fachlichen Schreibzugriff prüfen, filtern per `nur()`.
+ */
 function schreibClient(bestand: Record<string, unknown> = { id: 'r-1', aktiv: true }) {
-  const inserts: Array<Record<string, unknown>> = []
-  const updates: Array<Record<string, unknown>> = []
+  const inserts: Array<{ tabelle: string; payload: Record<string, unknown> }> = []
+  const updates: Array<{ tabelle: string; payload: Record<string, unknown> }> = []
   const supabase = {
-    from: () => ({
-      insert(payload: Record<string, unknown>) {
-        inserts.push(payload)
-        return { select: () => ({ single: async () => ({ data: { id: 'r-1', ...payload }, error: null }) }) }
-      },
-      update(payload: Record<string, unknown>) {
-        updates.push(payload)
-        const kette: any = {
-          eq: () => kette,
-          select: () => ({ single: async () => ({ data: { ...bestand, ...payload }, error: null }) }),
-        }
-        return kette
-      },
-    }),
+    from(tabelle: string) {
+      return {
+        insert(payload: Record<string, unknown>) {
+          inserts.push({ tabelle, payload })
+          return { select: () => ({ single: async () => ({ data: { id: 'r-1', organization_id: 'org-1', ...payload }, error: null }) }) }
+        },
+        update(payload: Record<string, unknown>) {
+          updates.push({ tabelle, payload })
+          const kette: any = {
+            eq: () => kette,
+            select: () => ({ single: async () => ({ data: { ...bestand, ...payload }, error: null }) }),
+          }
+          return kette
+        },
+      }
+    },
   }
-  return { supabase: supabase as never, inserts, updates }
+  const nur = (liste: typeof inserts, tabelle: string) => liste.filter(e => e.tabelle === tabelle).map(e => e.payload)
+  return { supabase: supabase as never, inserts, updates, nur }
 }
 
 test('SCHWEREGRAD_RANG deckt alle erlaubten Schweregrade streng aufsteigend ab', () => {
@@ -51,12 +61,12 @@ test('istKritisch trennt bei "hoch"', () => {
 
 test('createRisiko akzeptiert alle in der Migration erlaubten Risikotypen', async () => {
   for (const typ of RISIKO_TYP_WERTE) {
-    const { supabase, inserts } = schreibClient()
+    const { supabase, inserts, nur } = schreibClient()
     await createRisiko(supabase, {
       organizationId: 'org-1', clientId: 'client-1', risikoTyp: typ,
       bezeichnung: 'Testeintrag', erstelltVon: 'user-1',
     })
-    assert.equal(inserts[0].risiko_typ, typ)
+    assert.equal(nur(inserts, 'pflege_risiken')[0].risiko_typ, typ)
   }
 })
 
@@ -81,17 +91,34 @@ test('createRisiko weist unbekannte Typen und Schweregrade zurück', async () =>
 })
 
 test('createRisiko setzt "mittel" als Vorgabe-Schweregrad und aktiviert das Risiko', async () => {
-  const { supabase, inserts } = schreibClient()
+  const { supabase, inserts, nur } = schreibClient()
   await createRisiko(supabase, {
     organizationId: 'org-1', clientId: 'client-1', risikoTyp: 'sturzrisiko',
     bezeichnung: 'Unsicherer Gang', erstelltVon: 'user-1',
   })
-  assert.equal(inserts[0].schweregrad, 'mittel')
-  assert.equal(inserts[0].bezeichnung, 'Unsicherer Gang')
+  const risikoInsert = nur(inserts, 'pflege_risiken')[0]
+  assert.equal(risikoInsert.schweregrad, 'mittel')
+  assert.equal(risikoInsert.bezeichnung, 'Unsicherer Gang')
+})
+
+test('createRisiko protokolliert die Erstellung in pflege_audit_log', async () => {
+  const { supabase, inserts, nur } = schreibClient()
+  const risiko = await createRisiko(supabase, {
+    organizationId: 'org-1', clientId: 'client-1', risikoTyp: 'allergie',
+    bezeichnung: 'Nussallergie', erstelltVon: 'user-9',
+  }) as PflegeRisiko
+
+  const logEintrag = nur(inserts, 'pflege_audit_log')[0]
+  assert.ok(logEintrag, 'Audit-Log-Eintrag muss geschrieben werden')
+  assert.equal(logEintrag.entitaet_typ, 'risiko')
+  assert.equal(logEintrag.entitaet_id, risiko.id)
+  assert.equal(logEintrag.aktion, 'erstellt')
+  assert.equal(logEintrag.akteur_id, 'user-9')
+  assert.equal(logEintrag.organization_id, 'org-1')
 })
 
 test('updateRisiko validiert vor dem Schreiben und trimmt die Bezeichnung', async () => {
-  const { supabase, updates } = schreibClient()
+  const { supabase, updates, nur } = schreibClient()
   await assert.rejects(
     () => updateRisiko(supabase, 'r-1', 'org-1', { schweregrad: 'sehr_hoch' as never }),
     /Ungültiger Wert "sehr_hoch" für schweregrad/
@@ -106,14 +133,29 @@ test('updateRisiko validiert vor dem Schreiben und trimmt die Bezeichnung', asyn
   )
 
   await updateRisiko(supabase, 'r-1', 'org-1', { bezeichnung: '  Nussallergie  ' })
-  assert.deepEqual(updates[0], { bezeichnung: 'Nussallergie' })
+  assert.deepEqual(nur(updates, 'pflege_risiken')[0], { bezeichnung: 'Nussallergie' })
 })
 
-test('deaktiviereRisiko ist ein Soft-Delete über aktiv=false', async () => {
-  const { supabase, updates } = schreibClient()
+test('updateRisiko protokolliert "aktualisiert" in pflege_audit_log', async () => {
+  const { supabase, inserts, nur } = schreibClient()
+  await updateRisiko(supabase, 'r-1', 'org-1', { bezeichnung: 'Neue Bezeichnung' })
+
+  const logEintrag = nur(inserts, 'pflege_audit_log')[0]
+  assert.ok(logEintrag, 'Audit-Log-Eintrag muss geschrieben werden')
+  assert.equal(logEintrag.entitaet_typ, 'risiko')
+  assert.equal(logEintrag.entitaet_id, 'r-1')
+  assert.equal(logEintrag.aktion, 'aktualisiert')
+})
+
+test('deaktiviereRisiko ist ein Soft-Delete über aktiv=false und protokolliert "geloescht"', async () => {
+  const { supabase, updates, inserts, nur } = schreibClient()
   const risiko = await deaktiviereRisiko(supabase, 'r-1', 'org-1')
-  assert.deepEqual(updates[0], { aktiv: false })
+  assert.deepEqual(nur(updates, 'pflege_risiken')[0], { aktiv: false })
   assert.equal((risiko as PflegeRisiko).aktiv, false)
+
+  const logEintrag = nur(inserts, 'pflege_audit_log')[0]
+  assert.ok(logEintrag, 'Audit-Log-Eintrag muss geschrieben werden')
+  assert.equal(logEintrag.aktion, 'geloescht')
 })
 
 test('zusammenfassungRisiken zählt Schweregrade und Prüfstatus getrennt', () => {

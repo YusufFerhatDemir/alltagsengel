@@ -6,6 +6,7 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { heuteBerlin } from '@/lib/utils/timezone'
+import { logPflegeAktivitaet } from './audit-log'
 import {
   assertErlaubt,
   PLAN_TYP_WERTE,
@@ -70,6 +71,16 @@ export async function createPlan(supabase: SupabaseClient, params: CreatePlanPar
     .select('*')
     .single()
   if (error || !data) throw new Error(`Maßnahmenplan konnte nicht angelegt werden: ${error?.message ?? 'unbekannt'}`)
+
+  await logPflegeAktivitaet(supabase, {
+    organizationId: (data as PflegeMassnahmenplan).organization_id,
+    entitaetTyp: 'massnahmenplan',
+    entitaetId: (data as PflegeMassnahmenplan).id,
+    aktion: 'erstellt',
+    nachher: data,
+    akteurId: params.erstelltVon,
+  }).catch((err) => console.error('[pflege-audit] Maßnahmenplan-Log fehlgeschlagen:', err))
+
   return data as PflegeMassnahmenplan
 }
 
@@ -175,6 +186,16 @@ export async function updatePlan(
     .select('*')
     .single()
   if (error || !data) throw new Error(`Maßnahmenplan konnte nicht aktualisiert werden: ${error?.message ?? 'unbekannt'}`)
+
+  await logPflegeAktivitaet(supabase, {
+    organizationId,
+    entitaetTyp: 'massnahmenplan',
+    entitaetId: id,
+    aktion: 'aktualisiert',
+    vorher: existing,
+    nachher: data,
+  }).catch((err) => console.error('[pflege-audit] Maßnahmenplan-Log fehlgeschlagen:', err))
+
   return data as PflegeMassnahmenplan
 }
 
@@ -223,6 +244,17 @@ export async function freigebenPlan(
     .select('*')
     .single()
   if (error || !data) throw new Error(`Maßnahmenplan konnte nicht freigegeben werden: ${error?.message ?? 'unbekannt'}`)
+
+  await logPflegeAktivitaet(supabase, {
+    organizationId,
+    entitaetTyp: 'massnahmenplan',
+    entitaetId: id,
+    aktion: 'freigegeben',
+    vorher: existing,
+    nachher: data,
+    akteurId: freigegebenVon,
+  }).catch((err) => console.error('[pflege-audit] Maßnahmenplan-Log fehlgeschlagen:', err))
+
   return data as PflegeMassnahmenplan
 }
 
@@ -243,6 +275,16 @@ export async function sperrePlan(
     .select('*')
     .single()
   if (error || !data) throw new Error(`Maßnahmenplan konnte nicht gesperrt werden: ${error?.message ?? 'unbekannt'}`)
+
+  await logPflegeAktivitaet(supabase, {
+    organizationId,
+    entitaetTyp: 'massnahmenplan',
+    entitaetId: id,
+    aktion: 'gesperrt',
+    vorher: existing,
+    nachher: data,
+  }).catch((err) => console.error('[pflege-audit] Maßnahmenplan-Log fehlgeschlagen:', err))
+
   return data as PflegeMassnahmenplan
 }
 
@@ -266,6 +308,16 @@ export async function entsperrePlan(
     .select('*')
     .single()
   if (error || !data) throw new Error(`Maßnahmenplan konnte nicht entsperrt werden: ${error?.message ?? 'unbekannt'}`)
+
+  await logPflegeAktivitaet(supabase, {
+    organizationId,
+    entitaetTyp: 'massnahmenplan',
+    entitaetId: id,
+    aktion: 'entsperrt',
+    vorher: existing,
+    nachher: data,
+  }).catch((err) => console.error('[pflege-audit] Maßnahmenplan-Log fehlgeschlagen:', err))
+
   return data as PflegeMassnahmenplan
 }
 

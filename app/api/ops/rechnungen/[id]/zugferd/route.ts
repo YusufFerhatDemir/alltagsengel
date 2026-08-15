@@ -2,9 +2,10 @@ import { NextResponse } from 'next/server'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { generateZugferdPdf } from '@/lib/billing/xrechnung'
+import { logAuditEvent } from '@/lib/audit-log'
 
 export async function GET(
-  _req: Request,
+  req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
   const auth = await requireOpsAdmin()
@@ -51,6 +52,18 @@ export async function GET(
     const existingPdfBytes = new Uint8Array(await pdfRes.arrayBuffer())
 
     const zugferdBytes = await generateZugferdPdf(admin, invoiceId, orgId, existingPdfBytes)
+
+    await logAuditEvent({
+      action: 'download',
+      actorId: auth.ctx.userId,
+      organizationId: orgId,
+      actorRole: auth.ctx.role,
+      actorName: auth.ctx.name,
+      entityType: 'invoice',
+      entityId: invoiceId,
+      details: { format: 'zugferd-pdf', filename },
+      request: req,
+    })
 
     return new NextResponse(Buffer.from(zugferdBytes), {
       status: 200,

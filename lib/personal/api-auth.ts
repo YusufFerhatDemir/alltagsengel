@@ -60,12 +60,14 @@ export async function requirePersonalUser(): Promise<
     .eq('id', user.id)
     .single()
 
-  const { data: caregiver } = await supabase
-    .from('caregivers')
-    .select('id')
-    .eq('user_id', user.id)
-    .maybeSingle()
+  // WICHTIG: NIE direkt gegen caregivers selektieren — die Tabelle hat fuer
+  // Engel keine Self-Select-Policy (nur admin_all), ein direktes .from()
+  // liefert hier still "keine Zeile" statt eines Fehlers und caregiverId
+  // waere fuer JEDEN Engel dauerhaft null. eigene_caregiver_ids() ist eine
+  // SECURITY DEFINER RPC und umgeht das (siehe Memory-Eintrag
+  // engel-rls-caregivers-join-falle).
+  const { data: caregiverIds } = await supabase.rpc('eigene_caregiver_ids')
 
   const name = [profile?.first_name, profile?.last_name].filter(Boolean).join(' ') || 'Alltagsengel'
-  return { ok: true, userId: user.id, role: profile?.role ?? 'engel', name, caregiverId: caregiver?.id ?? null }
+  return { ok: true, userId: user.id, role: profile?.role ?? 'engel', name, caregiverId: caregiverIds?.[0] ?? null }
 }

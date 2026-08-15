@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
+import { logAuditEvent } from '@/lib/audit-log'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -18,6 +19,22 @@ function nurErlaubteFelder(roh: Record<string, unknown>): Record<string, unknown
     if (roh[feld] !== undefined) sauber[feld] = roh[feld]
   }
   return sauber
+}
+
+/** Validiert LANR/BSNR (9-stellig numerisch, wie DB-CHECK-Constraint) vorab,
+ *  damit der Nutzer eine verstaendliche Fehlermeldung statt eines rohen
+ *  Postgres-Constraint-Fehlers (23514) sieht. */
+function validiereFelder(eingabe: Record<string, unknown>): string | null {
+  for (const [feld, label] of [['lanr', 'LANR'], ['bsnr', 'BSNR']] as const) {
+    const wert = eingabe[feld]
+    if (wert !== null && wert !== undefined && wert !== '' && !/^\d{9}$/.test(String(wert))) {
+      return `${label} muss 9-stellig numerisch sein.`
+    }
+  }
+  if (typeof eingabe.email === 'string' && eingabe.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(eingabe.email)) {
+    return 'E-Mail-Adresse ist ungueltig.'
+  }
+  return null
 }
 
 /** GET — einzelnen Arzt laden. */
@@ -75,6 +92,11 @@ export async function PATCH(
       return NextResponse.json({ error: 'Keine aenderbaren Felder uebergeben' }, { status: 400 })
     }
 
+    const validierungsfehler = validiereFelder(eingabe)
+    if (validierungsfehler) {
+      return NextResponse.json({ error: validierungsfehler }, { status: 400 })
+    }
+
     const admin = createAdminClient()
     // organization_id im WHERE ist die IDOR-Grenze
     const { data, error } = await admin
@@ -93,6 +115,18 @@ export async function PATCH(
       return NextResponse.json({ error: 'Nicht gefunden' }, { status: 404 })
     }
 
+    await logAuditEvent({
+      action: 'update',
+      actorId: auth.ctx.userId,
+      actorName: auth.ctx.name,
+      actorRole: auth.ctx.role,
+      organizationId: auth.ctx.organizationId,
+      entityType: 'arzt',
+      entityId: data.id,
+      details: { geaenderte_felder: Object.keys(eingabe) },
+      request: req,
+    })
+
     return NextResponse.json({ erfolg: true, id: data.id })
   } catch (e) {
     console.error('[admin/aerzte] Unerwarteter Fehler:', e)
@@ -102,7 +136,7 @@ export async function PATCH(
 
 /** DELETE — Soft-Delete (aktiv = false). */
 export async function DELETE(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
   const auth = await requireOpsAdmin()
@@ -128,6 +162,18 @@ export async function DELETE(
     if (!data) {
       return NextResponse.json({ error: 'Nicht gefunden' }, { status: 404 })
     }
+
+    await logAuditEvent({
+      action: 'delete',
+      actorId: auth.ctx.userId,
+      actorName: auth.ctx.name,
+      actorRole: auth.ctx.role,
+      organizationId: auth.ctx.organizationId,
+      entityType: 'arzt',
+      entityId: data.id,
+      details: { grund: 'deaktiviert' },
+      request: req,
+    })
 
     return NextResponse.json({ erfolg: true })
   } catch (e) {

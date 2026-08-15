@@ -1,11 +1,12 @@
 'use client'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { IconHome, IconSearch, IconCalendar, IconUser, IconClipboard, IconChat } from '@/components/Icons'
+import { IconHome, IconSearch, IconCalendar, IconUser, IconClipboard, IconChat, IconCheck } from '@/components/Icons'
 
 const engelItems = [
   { href: '/engel/home', icon: <IconHome size={20} />, label: 'Home' },
   { href: '/engel/buchungen', icon: <IconClipboard size={20} />, label: 'Aufträge' },
+  { href: '/engel/aufgaben', icon: <IconCheck size={20} />, label: 'Aufgaben' },
   { href: '/engel/chat', icon: <IconChat size={20} />, label: 'Chat' },
   { href: '/engel/einsaetze', icon: <IconCalendar size={20} />, label: 'Einsätze' },
   { href: '/engel/profil', icon: <IconUser size={20} />, label: 'Profil' },

@@ -60,20 +60,23 @@ export default function UrlaubPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
 
-      const { data: cg } = await supabase
-        .from('caregivers')
-        .select('id')
-        .eq('user_id', user.id)
-        .maybeSingle()
-      if (!cg) { setError('Kein Engel-Profil gefunden.'); return }
-      setCaregiverId(cg.id)
+      // WICHTIG: NIE direkt gegen caregivers selektieren — die Tabelle hat
+      // fuer Engel keine Self-Select-Policy (nur admin_all), das liefert
+      // hier still "keine Zeile" statt eines Fehlers. eigene_caregiver_ids()
+      // ist eine SECURITY DEFINER RPC und umgeht das (siehe Memory-Eintrag
+      // engel-rls-caregivers-join-falle).
+      const { data: cgIds, error: cgErr } = await supabase.rpc('eigene_caregiver_ids')
+      if (cgErr) throw cgErr
+      const cgId = cgIds?.[0] ?? null
+      if (!cgId) { setError('Kein Engel-Profil gefunden.'); return }
+      setCaregiverId(cgId)
 
       // Urlaubskonto (aktuelles Jahr)
       const currentYear = new Date().getFullYear()
       const { data: kontoData } = await supabase
         .from('personal_urlaubskonto')
         .select('anspruch_tage, genommen_tage, geplant_tage, uebertrag_vorjahr, resturlaub')
-        .eq('caregiver_id', cg.id)
+        .eq('caregiver_id', cgId)
         .eq('jahr', currentYear)
         .maybeSingle()
       setKonto(kontoData as Urlaubskonto | null)
@@ -82,7 +85,7 @@ export default function UrlaubPage() {
       const { data: absData, error: absErr } = await supabase
         .from('absences')
         .select('id, absence_type, start_date, end_date, status, halber_tag, reason, ablehnungsgrund, created_at')
-        .eq('caregiver_id', cg.id)
+        .eq('caregiver_id', cgId)
         .order('start_date', { ascending: false })
       if (absErr) throw absErr
       setAbwesenheiten((absData || []) as Abwesenheit[])

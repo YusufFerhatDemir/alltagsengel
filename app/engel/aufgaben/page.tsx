@@ -66,6 +66,7 @@ export default function EngelAufgabenPage() {
   const [tab, setTab] = useState<string>('offen')
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
+  const [statusError, setStatusError] = useState('')
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -97,6 +98,7 @@ export default function EngelAufgabenPage() {
 
   const updateStatus = async (id: string, newStatus: string) => {
     setSaving(true)
+    setStatusError('')
     try {
       const supabase = createClient()
       const updates: any = { status: newStatus }
@@ -113,6 +115,8 @@ export default function EngelAufgabenPage() {
       await load()
     } catch (e: any) {
       console.error('Status update error:', e)
+      setStatusError('Status konnte nicht geändert werden. Bitte erneut versuchen.')
+      setTimeout(() => setStatusError(''), 4000)
     } finally {
       setSaving(false)
     }
@@ -153,6 +157,16 @@ export default function EngelAufgabenPage() {
       <p style={{ fontSize: 13, color: 'var(--ink4)', marginBottom: 16 }}>
         {aufgaben.filter(a => a.status !== 'erledigt' && a.status !== 'storniert').length} offene Aufgaben
       </p>
+
+      {statusError && (
+        <div style={{
+          background: 'rgba(208,75,59,0.12)', border: '1px solid rgba(208,75,59,0.4)',
+          borderRadius: 10, padding: '10px 14px', marginBottom: 12,
+          fontSize: 13, color: '#D04B3B',
+        }}>
+          {statusError}
+        </div>
+      )}
 
       {/* Status Tabs */}
       <div style={{ display: 'flex', gap: 8, marginBottom: 16, overflowX: 'auto' }}>

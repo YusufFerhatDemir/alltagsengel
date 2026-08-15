@@ -7,6 +7,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { PFLEGE_AUFNAHMESTATUS, formatDate, statusMeta } from '@/lib/admin/ops'
 import { Banner, EmptyRow, SearchInput, StatusBadge } from '@/components/admin/OpsUI'
 import type { PflegeUebersichtZeile } from '@/lib/pflege/types'
+import { pflegegradVon } from '@/lib/clients/pflegegrad'
 
 type Zusammenfassung = {
   kunden: number
@@ -89,7 +90,7 @@ export default function AdminPflegedokuPage() {
                 : gefiltert.map(z => (
                   <tr key={z.client_id}>
                     <td style={{ fontWeight: 600 }}>{z.first_name} {z.last_name}</td>
-                    <td style={{ fontSize: 13 }}>{z.pflegegrad ?? '—'}</td>
+                    <td style={{ fontSize: 13 }}>{pflegegradVon(z) ?? '—'}</td>
                     <td>
                       <StatusBadge
                         label={statusMeta(PFLEGE_AUFNAHMESTATUS, z.aufnahmestatus ?? 'offen').label}
