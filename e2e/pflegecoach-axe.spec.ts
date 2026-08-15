@@ -29,9 +29,10 @@ import { join } from 'node:path'
  * ────────────────────────────────────────────────────────────────────────────
  * axe-core liegt bereits im Baum (transitive Abhängigkeit, Version 4.11.3);
  * es wird als Skript in die Seite injiziert, statt eine neue Abhängigkeit
- * (@axe-core/playwright) aufzunehmen. Geprüft werden ausschließlich die drei
- * ÖFFENTLICHEN Seiten — dieselbe Datensparsamkeitsregel wie in
- * e2e/pflegecoach.spec.ts: keine Anmeldung, keine echten Nutzerdaten.
+ * (@axe-core/playwright) aufzunehmen. Geprüft werden ausschließlich die
+ * ÖFFENTLICHEN Seiten (OEFFENTLICHE_SEITEN) — dieselbe
+ * Datensparsamkeitsregel wie in e2e/pflegecoach.spec.ts: keine Anmeldung,
+ * keine echten Nutzerdaten.
  *
  * Lauf:  npx playwright test e2e/pflegecoach-axe.spec.ts --project=chromium
  *        (gegen PLAYWRIGHT_BASE_URL, Default http://localhost:3000)
@@ -43,10 +44,34 @@ const OEFFENTLICHE_SEITEN = [
   '/pflegecoach/start',
   '/pflegecoach/datenschutz',
   '/pflegecoach/anfrage',
+  '/pflegecoach/interoperabilitaet',
 ] as const
 
 /** WCAG-2.1-Stufen A und AA — der für die DiPA maßgebliche Prüfumfang. */
 const REGELSATZ = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'] as const
+
+/**
+ * Zusätzlicher Regelsatz für den SCREENREADER-Teil (BF-03).
+ *
+ * Der WCAG-A/AA-Lauf oben deckt die Verstöße ab, die eine Seite
+ * unzugänglich machen. Er lässt aber genau die Kategorie aus, die für
+ * einen Screenreader den Unterschied zwischen „bedienbar" und „bedienbar,
+ * aber unverständlich" macht: Überschriftenhierarchie, Landmark-Struktur
+ * und die Vollständigkeit von Rolle/Name/Wert an interaktiven Elementen.
+ * Vieles davon ist bei axe-core als „best-practice" eingestuft und damit
+ * NICHT Teil von wcag2a/wcag2aa.
+ *
+ * Diese Kategorien sind die maschinell entscheidbare Teilmenge der
+ * Prüfpunkte S1–S8 aus docs/dipa/14_ACCESSIBILITY_GAP_LISTE.md §3.3.
+ * Der manuelle Durchgang mit VoiceOver/NVDA bleibt daneben erforderlich —
+ * dieser Lauf ersetzt ihn nicht, er nimmt ihm die mechanische Arbeit ab.
+ */
+const SCREENREADER_REGELSATZ = [
+  'cat.aria',
+  'cat.name-role-value',
+  'cat.structure',
+  'cat.semantics',
+] as const
 
 interface AxeVerstoss {
   id: string
@@ -62,7 +87,10 @@ interface AxeErgebnis {
   unvollstaendig: { id: string; help: string; knoten: number; ziele: string[] }[]
 }
 
-async function axeLauf(page: import('@playwright/test').Page): Promise<AxeErgebnis> {
+async function axeLauf(
+  page: import('@playwright/test').Page,
+  regelsatz: readonly string[] = REGELSATZ,
+): Promise<AxeErgebnis> {
   await page.addScriptTag({ path: AXE_PFAD })
   return page.evaluate(async (tags) => {
     // @ts-expect-error — axe wird zur Laufzeit injiziert
@@ -83,7 +111,7 @@ async function axeLauf(page: import('@playwright/test').Page): Promise<AxeErgebn
         ziele: i.nodes.slice(0, 5).map((n: any) => String(n.target[0])),
       })),
     }
-  }, [...REGELSATZ])
+  }, [...regelsatz])
 }
 
 test.describe('PflegeCoach — axe-core WCAG 2.1 A/AA (BF-03, maschineller Teil)', () => {
@@ -151,18 +179,23 @@ test.describe('PflegeCoach — axe-core WCAG 2.1 A/AA (BF-03, maschineller Teil)
     ).toEqual([])
   })
 
-  test('Schaltflächen erfüllen den Kontrastwert 4,5:1 gegen ihren eigenen Hintergrund', async ({
-    page,
-  }) => {
-    // Diese Prüfung existiert, WEIL axe-core den Fall nicht als Verstoß
-    // meldet: bei `.pc-btn` lag am 14.08.2026 Vordergrund- gleich
-    // Hintergrundfarbe (rgb(11,83,148) auf rgb(11,83,148), Kontrast 1:1,
-    // Text unsichtbar), axe stufte das nur als „incomplete / manuell zu
-    // klären" ein. Ursache war die CSS-Spezifität: `.pc-root a` (0,1,1)
-    // schlägt `.pc-btn` (0,1,0), Link-Buttons erbten die Linkfarbe.
-    // Behoben in app/pflegecoach/pflegecoach.css; dieser Test hält den
-    // Zustand fest, statt sich auf axes Einstufung zu verlassen.
-    for (const pfad of OEFFENTLICHE_SEITEN) {
+  // Je Seite ein eigener Testfall statt einer Schleife über alle Seiten.
+  // Grund (15.08.2026): Mit der vierten öffentlichen Seite lief die Schleife
+  // samt networkidle-Wartezeiten auf einem kalten Dev-Server über das
+  // 30-Sekunden-Budget des EINEN Testfalls. Die Prüfungen sind unverändert —
+  // sie bekommen nur jeweils ein eigenes Budget und laufen parallel.
+  for (const pfad of OEFFENTLICHE_SEITEN) {
+    test(`${pfad}: Schaltflächen erfüllen den Kontrastwert 4,5:1 gegen ihren eigenen Hintergrund`, async ({
+      page,
+    }) => {
+      // Diese Prüfung existiert, WEIL axe-core den Fall nicht als Verstoß
+      // meldet: bei `.pc-btn` lag am 14.08.2026 Vordergrund- gleich
+      // Hintergrundfarbe (rgb(11,83,148) auf rgb(11,83,148), Kontrast 1:1,
+      // Text unsichtbar), axe stufte das nur als „incomplete / manuell zu
+      // klären" ein. Ursache war die CSS-Spezifität: `.pc-root a` (0,1,1)
+      // schlägt `.pc-btn` (0,1,0), Link-Buttons erbten die Linkfarbe.
+      // Behoben in app/pflegecoach/pflegecoach.css; dieser Test hält den
+      // Zustand fest, statt sich auf axes Einstufung zu verlassen.
       await page.goto(pfad)
       await page.waitForLoadState('networkidle')
 
@@ -198,16 +231,16 @@ test.describe('PflegeCoach — axe-core WCAG 2.1 A/AA (BF-03, maschineller Teil)
       })
 
       expect(schwach, `${pfad}: Schaltflächen unter 4,5:1`).toEqual([])
-    }
-  })
+    })
+  }
 
-  test('ARIA-Landmarks und Rollen sind auf jeder öffentlichen Seite vollständig', async ({
-    page,
-  }) => {
-    // Ergänzt die axe-Regeln um eine explizite Landmark-Inventur: axe meldet
-    // fehlende/doppelte Landmarks, listet aber nicht auf, WELCHE vorhanden
-    // sind. Für den DiPA-Nachweis ist genau diese Liste der Beleg.
-    for (const pfad of OEFFENTLICHE_SEITEN) {
+  for (const pfad of OEFFENTLICHE_SEITEN) {
+    test(`${pfad}: ARIA-Landmarks und Rollen sind vollständig`, async ({
+      page,
+    }) => {
+      // Ergänzt die axe-Regeln um eine explizite Landmark-Inventur: axe meldet
+      // fehlende/doppelte Landmarks, listet aber nicht auf, WELCHE vorhanden
+      // sind. Für den DiPA-Nachweis ist genau diese Liste der Beleg.
       await page.goto(pfad)
       await page.waitForLoadState('networkidle')
 
@@ -269,6 +302,115 @@ test.describe('PflegeCoach — axe-core WCAG 2.1 A/AA (BF-03, maschineller Teil)
         }
         vorher = stufe
       }
+    })
+  }
+})
+
+// ═══════════════════════════════════════════════════════════════════════════
+// BF-03 — Screenreader-Semantik, maschineller Teil
+//
+// Neu am 15.08.2026. Vorher war BF-03 ausschließlich als manueller
+// VoiceOver/NVDA-Durchgang geplant und deshalb offen. Der manuelle
+// Durchgang bleibt nötig (siehe Kopf dieser Datei) — aber alles, was eine
+// Maschine entscheiden kann, wird jetzt bei jedem Lauf entschieden und
+// nicht mehr einer Person überlassen, die es vergessen kann.
+//
+// Fundstelle für die Anforderung: Anlage 2 DiPAV, Themenfeld IV Nr. 13
+// („Bedienhilfen ... insbesondere werden die aktuellsten Empfehlungen der
+// DIN EN ISO 9241-171-Normenfamilie berücksichtigt") und Nr. 15
+// („bietet Informationen auf mehr als eine Art der Interaktion an").
+// ═══════════════════════════════════════════════════════════════════════════
+
+test.describe('PflegeCoach — Screenreader-Semantik (BF-03, maschineller Teil)', () => {
+  for (const pfad of OEFFENTLICHE_SEITEN) {
+    test(`${pfad}: ARIA, Rolle/Name/Wert und Dokumentstruktur sind sauber`, async ({ page }) => {
+      await page.goto(pfad)
+      await page.waitForLoadState('networkidle')
+
+      const ergebnis = await axeLauf(page, SCREENREADER_REGELSATZ)
+
+      console.log(
+        `[axe/sr] ${pfad}: ${ergebnis.bestanden} Regeln bestanden, ` +
+          `${ergebnis.verstoesse.length} Verstöße, ` +
+          `${ergebnis.unvollstaendig.length} manuell zu klären`,
+      )
+      for (const v of ergebnis.verstoesse) {
+        console.log(
+          `[axe/sr]   VERSTOSS ${v.id} [${v.impact}] ${v.knoten}× — ${v.help}\n` +
+            `[axe/sr]     ${v.ziele.join(' | ')}`,
+        )
+      }
+
+      expect(
+        ergebnis.verstoesse,
+        `Screenreader-Semantikverstöße auf ${pfad}:\n${JSON.stringify(ergebnis.verstoesse, null, 2)}`,
+      ).toEqual([])
+    })
+  }
+
+  test('jede öffentliche Seite trägt einen eindeutigen, vorlesbaren Dokumenttitel', async ({
+    page,
+  }) => {
+    // Prüfpunkt S1: Der Titel ist das Erste, was ein Screenreader beim
+    // Seitenwechsel ansagt. Zwei Seiten mit demselben Titel machen die
+    // Ansage wertlos — das ist maschinell entscheidbar, also wird es hier
+    // entschieden und nicht im manuellen Durchgang gesucht.
+    const gesehen = new Map<string, string>()
+    for (const pfad of OEFFENTLICHE_SEITEN) {
+      await page.goto(pfad)
+      await page.waitForLoadState('networkidle')
+      const titel = (await page.title()).trim()
+
+      expect(titel.length, `${pfad}: leerer Dokumenttitel`).toBeGreaterThan(0)
+      const schon = gesehen.get(titel)
+      expect(schon, `${pfad} und ${schon} tragen denselben Titel „${titel}"`).toBeUndefined()
+      gesehen.set(titel, pfad)
+    }
+  })
+
+  test('die Sprache ist ausgezeichnet — sonst liest der Screenreader Deutsch englisch vor', async ({
+    page,
+  }) => {
+    // Prüfpunkt S2. Ohne lang="de" wählt der Screenreader die Systemstimme;
+    // deutscher Text in englischer Aussprache ist für die Zielgruppe des
+    // PflegeCoachs faktisch unbrauchbar.
+    for (const pfad of OEFFENTLICHE_SEITEN) {
+      await page.goto(pfad)
+      const sprache = await page.evaluate(() => document.documentElement.lang)
+      expect(sprache.toLowerCase(), `${pfad}: html lang fehlt oder ist nicht deutsch`).toMatch(
+        /^de\b/,
+      )
+    }
+  })
+
+  test('Sprungmarke zum Hauptinhalt ist vorhanden und zeigt auf ein echtes Ziel', async ({
+    page,
+  }) => {
+    // Prüfpunkt S3. Eine Sprungmarke, deren Ziel nicht existiert, ist
+    // schlimmer als keine: der Fokus verschwindet ins Leere.
+    for (const pfad of OEFFENTLICHE_SEITEN) {
+      await page.goto(pfad)
+      await page.waitForLoadState('networkidle')
+
+      const zielTrifft = await page.evaluate(() => {
+        const marke = Array.from(document.querySelectorAll('a[href^="#"]')).find((a) =>
+          /inhalt|hauptinhalt|main|content/i.test(a.textContent ?? '') ||
+          /inhalt|hauptinhalt|main|content/i.test(a.getAttribute('href') ?? ''),
+        )
+        if (!marke) return { gefunden: false, zielVorhanden: false, ziel: '' }
+        const ziel = (marke.getAttribute('href') ?? '').slice(1)
+        return {
+          gefunden: true,
+          zielVorhanden: ziel.length > 0 && document.getElementById(ziel) !== null,
+          ziel,
+        }
+      })
+
+      expect(zielTrifft.gefunden, `${pfad}: keine Sprungmarke zum Hauptinhalt`).toBe(true)
+      expect(
+        zielTrifft.zielVorhanden,
+        `${pfad}: Sprungmarke zeigt auf „#${zielTrifft.ziel}", dieses Element existiert nicht`,
+      ).toBe(true)
     }
   })
 })

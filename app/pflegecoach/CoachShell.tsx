@@ -220,6 +220,14 @@ export default function CoachShell({
             <Link href="/pflegecoach/einstellungen/konto">Vertrag &amp; Nutzung beenden</Link>{' · '}
             <Link href="/pflegecoach/loeschung">Daten löschen</Link>
           </p>
+          {/* Anlage 2 DiPAV, Themenfeld I Nr. 4 verlangt, dass die genutzten
+              Interoperabilitäts-Standards „auf der Anwendungswebseite verlinkt"
+              sind. Der Verweis gehört deshalb ins Layout, nicht auf eine
+              einzelne Seite — sonst hinge die Erfüllung an einer Seite, die
+              jemand später umbaut. */}
+          <p>
+            <Link href="/pflegecoach/interoperabilitaet">Interoperabilität &amp; Datenexport-Standards</Link>
+          </p>
           {/* Kein aria-label auf dem Absatz: Die Rolle „paragraph" erlaubt keinen
               zugänglichen Namen, das Attribut würde ignoriert. Der Hinweis steht
               deshalb als echter, nur für Screenreader sichtbarer Text davor. */}
