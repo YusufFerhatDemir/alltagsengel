@@ -51,8 +51,9 @@ export async function POST(request: Request) {
     // ── Eigentümer-Prüfung: der Leistungsnachweis muss der eigenen Betreuungskraft gehören ──
     const { data: record, error: recErr } = await admin
       .from('service_records')
-      .select('id, caregiver_id')
+      .select('id, caregiver_id, organization_id')
       .eq('id', service_record_id)
+      .eq('organization_id', auth.organizationId)
       .single()
 
     if (recErr || !record) {

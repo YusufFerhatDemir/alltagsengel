@@ -1,5 +1,14 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
-import type { OpsAufgabe, OpsAufgabeUebersicht, ListAufgabenFilter } from './types'
+import {
+  assertErlaubt,
+  AUFGABEN_KATEGORIE_WERTE,
+  AUFGABEN_PRIORITAET_WERTE,
+  AUFGABEN_STATUS_WERTE,
+  WIEDERHOLUNG_INTERVALL_WERTE,
+  type OpsAufgabe,
+  type OpsAufgabeUebersicht,
+  type ListAufgabenFilter,
+} from './types'
 
 export async function listAufgaben(
   supabase: SupabaseClient,
@@ -38,13 +47,34 @@ export async function getAufgabe(
   return data as OpsAufgabeUebersicht | null
 }
 
+/** Wirft bei ungueltigen Enum-Werten oder fehlenden Pflichtfeldern. */
+function assertAufgabeGueltig(
+  data: Partial<Omit<OpsAufgabe, 'id' | 'organization_id' | 'created_at' | 'updated_at'>>,
+  params: { istErstellung: boolean },
+): void {
+  if (params.istErstellung && !data.titel?.trim()) {
+    throw new Error('Titel ist ein Pflichtfeld.')
+  }
+  if (data.titel !== undefined && !data.titel?.trim()) {
+    throw new Error('Titel darf nicht leer sein.')
+  }
+  assertErlaubt(data.kategorie, AUFGABEN_KATEGORIE_WERTE, 'kategorie')
+  assertErlaubt(data.prioritaet, AUFGABEN_PRIORITAET_WERTE, 'prioritaet')
+  assertErlaubt(data.status, AUFGABEN_STATUS_WERTE, 'status')
+  assertErlaubt(data.wiederholung_intervall, WIEDERHOLUNG_INTERVALL_WERTE, 'wiederholung_intervall')
+  if (data.faellig_am && data.wiederholung_ende && data.wiederholung_ende < data.faellig_am) {
+    throw new Error('Wiederholung-Ende darf nicht vor der Faelligkeit liegen.')
+  }
+}
+
 export async function createAufgabe(
   supabase: SupabaseClient,
   params: { organizationId: string; data: Partial<Omit<OpsAufgabe, 'id' | 'organization_id' | 'created_at' | 'updated_at'>> },
 ): Promise<OpsAufgabe> {
+  assertAufgabeGueltig(params.data, { istErstellung: true })
   const { data, error } = await supabase
     .from('ops_aufgaben')
-    .insert({ ...params.data, organization_id: params.organizationId })
+    .insert({ ...params.data, titel: params.data.titel?.trim(), organization_id: params.organizationId })
     .select('*')
     .single()
   if (error || !data) throw new Error(`Aufgabe konnte nicht erstellt werden: ${error?.message ?? 'unbekannt'}`)
@@ -55,9 +85,14 @@ export async function updateAufgabe(
   supabase: SupabaseClient,
   params: { organizationId: string; id: string; data: Partial<Omit<OpsAufgabe, 'id' | 'organization_id' | 'created_at' | 'updated_at'>> },
 ): Promise<OpsAufgabe> {
+  assertAufgabeGueltig(params.data, { istErstellung: false })
   const { data, error } = await supabase
     .from('ops_aufgaben')
-    .update({ ...params.data, updated_at: new Date().toISOString() })
+    .update({
+      ...params.data,
+      ...(params.data.titel !== undefined ? { titel: params.data.titel?.trim() } : {}),
+      updated_at: new Date().toISOString(),
+    })
     .eq('id', params.id)
     .eq('organization_id', params.organizationId)
     .select('*')

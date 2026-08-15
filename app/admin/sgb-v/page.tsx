@@ -14,8 +14,20 @@ import { monatBerlin } from '@/lib/utils/timezone';
 // Verordnungsprüfung, Routing) und was noch fehlt.
 // ═══════════════════════════════════════════════════════════════
 import { useCallback, useEffect, useState, type CSSProperties } from 'react'
+import Link from 'next/link'
 import { euro, formatDate } from '@/lib/admin/ops'
 import { Banner, EmptyRow, StatusBadge } from '@/components/admin/OpsUI'
+
+// Interne Pipeline (WS2): Verordnungsverwaltung, Leistungserfassung,
+// Abrechnungsläufe, Rückläufer, Zahlungsabgleich — ergänzt diese Seite
+// (Readiness + Trockenlauf) um die operativen Unterseiten.
+const PIPELINE_KACHELN = [
+  { href: '/admin/sgb-v/verordnungen', label: 'Verordnungen', hint: 'HKP-Verordnungen (§ 37 SGB V) verwalten' },
+  { href: '/admin/sgb-v/leistungsnachweise', label: 'Leistungsnachweise', hint: 'Einzelleistungen erfassen und prüfen' },
+  { href: '/admin/sgb-v/laeufe', label: 'Abrechnungsläufe', hint: 'Monatliche Läufe, Prüf-Export, Storno' },
+  { href: '/admin/sgb-v/ruecklaeufer', label: 'Rückläufer', hint: 'Rückmeldungen der Kassen bearbeiten' },
+  { href: '/admin/sgb-v/zahlungen', label: 'Zahlungsabgleich', hint: 'OPOS und Zahlungszuordnung' },
+]
 
 interface ReadinessPunkt {
   id: string
@@ -160,6 +172,16 @@ export default function SgbVPage() {
         ist — bis dahin würde jede Datei nur plausibel aussehen. Positionsaufbereitung,
         Verordnungsprüfung und Routing sind bereits nutzbar und unten auswertbar.
       </Banner>
+
+      <h2 style={cardTitle}>Interne Pipeline</h2>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16, marginBottom: 24 }}>
+        {PIPELINE_KACHELN.map(k => (
+          <Link key={k.href} href={k.href} className="admin-card" style={{ textDecoration: 'none', color: 'inherit' }}>
+            <h3 style={{ margin: 0 }}>{k.label}</h3>
+            <p style={{ color: 'var(--ink4)', fontSize: 13, marginTop: 6 }}>{k.hint}</p>
+          </Link>
+        ))}
+      </div>
 
       {loading ? <p>Laden…</p> : (
         <>

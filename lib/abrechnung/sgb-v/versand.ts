@@ -78,8 +78,12 @@ function monatsGrenzen(monat: string): { von: string; bis: string } {
   return { von: `${monat}-01`, bis: `${monat}-${String(letzterTag).padStart(2, '0')}` }
 }
 
-/** Lädt HKP-Leistungen, Verordnungen und Klienten und bereitet die Fälle auf. */
-async function ladeAufbereitung(
+/**
+ * Lädt HKP-Leistungen, Verordnungen und Klienten und bereitet die Fälle auf.
+ * Exportiert, damit export-generator.ts/abrechnungslauf.ts denselben
+ * Datenzugriff für den Prüf-Export nutzen können, statt ihn zu duplizieren.
+ */
+export async function ladeAufbereitung(
   supabase: SupabaseClient,
   organizationId: string,
   monat: string,

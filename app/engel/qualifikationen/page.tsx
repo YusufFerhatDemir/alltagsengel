@@ -64,18 +64,21 @@ export default function QualifikationenPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
 
-      const { data: cg } = await supabase
-        .from('caregivers')
-        .select('id')
-        .eq('user_id', user.id)
-        .maybeSingle()
-      if (!cg) { setError('Kein Engel-Profil gefunden.'); return }
+      // WICHTIG: NIE direkt gegen caregivers selektieren — die Tabelle hat
+      // fuer Engel keine Self-Select-Policy (nur admin_all), das liefert
+      // hier still "keine Zeile" statt eines Fehlers. eigene_caregiver_ids()
+      // ist eine SECURITY DEFINER RPC und umgeht das (siehe Memory-Eintrag
+      // engel-rls-caregivers-join-falle).
+      const { data: cgIds, error: cgErr } = await supabase.rpc('eigene_caregiver_ids')
+      if (cgErr) throw cgErr
+      const caregiverId = cgIds?.[0] ?? null
+      if (!caregiverId) { setError('Kein Engel-Profil gefunden.'); return }
 
       // Qualifikationen
       const { data: qData, error: qErr } = await supabase
         .from('caregiver_qualifications')
         .select('id, title, qualification_type, issued_date, valid_until, status, pflicht, einsatzrelevant, ausstellende_stelle, bemerkung')
-        .eq('caregiver_id', cg.id)
+        .eq('caregiver_id', caregiverId)
         .order('valid_until', { ascending: true, nullsFirst: false })
       if (qErr) throw qErr
       setQualifikationen((qData || []) as Qualification[])
@@ -84,7 +87,7 @@ export default function QualifikationenPage() {
       const { data: sData, error: sErr } = await supabase
         .from('personal_schulungen')
         .select('id, titel, schulungsart, anbieter, beginn, ende, dauer_stunden, bestanden, naechste_auffrischung, bemerkung')
-        .eq('caregiver_id', cg.id)
+        .eq('caregiver_id', caregiverId)
         .order('beginn', { ascending: false })
       if (sErr) throw sErr
       setSchulungen((sData || []) as Schulung[])

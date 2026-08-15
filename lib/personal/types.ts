@@ -298,3 +298,29 @@ export function assertErlaubt<T extends string>(
     throw new Error(`Ungültiger Wert "${wert}" für ${feldname}. Erlaubt: ${erlaubt.join(', ')}`)
   }
 }
+
+// Plausibilitätsprüfung für Arbeitszeit-Minutenwerte. Absichtlich KEIN
+// Vergleich von start_zeit/end_zeit ("Ende vor Start"), da Nachtdienste
+// über Mitternacht (z.B. 22:00-06:00) legitim sind (siehe diffMinutes in
+// lib/admin/ops.ts, die diesen Fall bereits korrekt über den Tageswechsel
+// hinweg berechnet). Stattdessen werden die daraus abgeleiteten
+// Minutenwerte auf Plausibilität geprüft -- das fängt vertauschte Felder,
+// negative Pausen und Tippfehler ohne falsche Nachtdienst-Ablehnung ab.
+export function assertPlausibleZeiten(werte: { istMinuten?: number; pauseMinuten?: number }): void {
+  if (werte.istMinuten !== undefined) {
+    if (!Number.isFinite(werte.istMinuten) || werte.istMinuten <= 0) {
+      throw new Error('Ist-Minuten müssen größer als 0 sein.')
+    }
+    if (werte.istMinuten > 1440) {
+      throw new Error('Ist-Minuten dürfen 24 Stunden (1440 Minuten) nicht überschreiten.')
+    }
+  }
+  if (werte.pauseMinuten !== undefined && werte.pauseMinuten !== null) {
+    if (!Number.isFinite(werte.pauseMinuten) || werte.pauseMinuten < 0) {
+      throw new Error('Pause-Minuten dürfen nicht negativ sein.')
+    }
+    if (werte.pauseMinuten > 1440) {
+      throw new Error('Pause-Minuten dürfen 24 Stunden (1440 Minuten) nicht überschreiten.')
+    }
+  }
+}

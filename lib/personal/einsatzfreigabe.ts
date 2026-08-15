@@ -227,6 +227,16 @@ export async function pruefeBudget(
       budgetTyp,
     }
   }
+  // 80%-Schwelle: frühzeitige Warnung, damit Disposition/PDL noch vor der
+  // 95%-Blockiergrenze reagieren können (Automatisierungskette 5).
+  if (pct >= 80) {
+    return {
+      warnung: `${label} zu ${pct}% ausgeschöpft (${(available - used).toFixed(2)} EUR verbleibend)`,
+      blockiert: false,
+      prozent: pct,
+      budgetTyp,
+    }
+  }
   return { warnung: null, blockiert: false, prozent: pct, budgetTyp }
 }
 

@@ -5,6 +5,22 @@ import { datumBerlin } from '@/lib/utils/timezone';
 import { safeDbError } from '@/lib/utils/api-error'
 import { mitStatusSync } from '@/lib/leistungsnachweis/status-sync'
 import { tarifLeistungsart, bekannteLeistungsarten } from '@/lib/billing/leistungsarten'
+import { pruefeBudget } from '@/lib/personal/einsatzfreigabe'
+import type { BudgetTyp } from '@/lib/config/budget-constants'
+
+/**
+ * service_records.budget_type ist ein anderes Vokabular als
+ * client_budgets/pruefeBudget (BudgetTyp = 'entlastung'|'verhinderungspflege').
+ * 'verhinderung' ist der aktuell LIVE Constraint-Wert, 'verhinderungspflege'
+ * der Zielwert nach Migration 20260831030000 (noch nicht angewendet) — beide
+ * werden hier abgefangen, damit die Pruefung unabhaengig vom Migrationsstand
+ * funktioniert. 'private'/'carryover' laufen nicht gegen ein Kassenlimit.
+ */
+function budgetTypFuerPruefung(serviceRecordBudgetType: string): BudgetTyp | null {
+  if (serviceRecordBudgetType === 'entlastung') return 'entlastung'
+  if (serviceRecordBudgetType === 'verhinderung' || serviceRecordBudgetType === 'verhinderungspflege') return 'verhinderungspflege'
+  return null
+}
 
 async function requireAuth(supabase: Awaited<ReturnType<typeof createClient>>) {
   const { data: { user } } = await supabase.auth.getUser()
@@ -125,7 +141,7 @@ export async function POST(req: NextRequest) {
     client_id, caregiver_id, date, start_time, end_time,
     service_type, budget_type, billing_type, caregiver_initials,
     amount, notes, assignment_id, leistung_beschreibung,
-    gps_start_lat, gps_start_lng,
+    gps_start_lat, gps_start_lng, force_override,
   } = body
 
   if (!client_id || !caregiver_id || !date || !start_time || !end_time || !service_type) {
@@ -176,9 +192,26 @@ export async function POST(req: NextRequest) {
   if (gps_start_lat != null) insertData.gps_start_lat = gps_start_lat
   if (gps_start_lng != null) insertData.gps_start_lng = gps_start_lng
 
+  // Budget-Pruefung bei Leistungserfassung (Automatisierungskette 6):
+  // Entlastungsbetrag warnt nur (Eigenanteil moeglich, § 45b kennt keine
+  // Kassen-Deckelung der Leistungserbringung). VP/KZP blockiert hart bei
+  // Ueberschreitung, weil § 42a ein festes Kombinationsbudget ist.
+  let budgetWarnung: string | null = null
+  const budgetTypFuerCheck = budgetTypFuerPruefung(budget_type || 'private')
+  if (budgetTypFuerCheck) {
+    const budgetErgebnis = await pruefeBudget(supabase, client_id, organizationId, budgetTypFuerCheck)
+    budgetWarnung = budgetErgebnis.warnung
+    if (budgetTypFuerCheck === 'verhinderungspflege' && budgetErgebnis.blockiert && !force_override) {
+      return NextResponse.json({
+        error: budgetErgebnis.warnung ?? 'VP/KZP-Kombinationsbudget überschritten.',
+        hinweis: 'Mit force_override: true kann der Nachweis trotzdem erfasst werden.',
+      }, { status: 422 })
+    }
+  }
+
   const { data, error } = await supabase.from('service_records').insert(insertData).select().single()
   if (error) return safeDbError(error)
-  return NextResponse.json(data, { status: 201 })
+  return NextResponse.json(budgetWarnung ? { ...data, budget_warnung: budgetWarnung } : data, { status: 201 })
 }
 
 // duration_minutes fehlt bewusst: GENERATED-Spalte, siehe POST oben.

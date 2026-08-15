@@ -1,6 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import {
-  assertErlaubt,
+  assertErlaubt, assertPlausibleZeiten,
   ARBEITSZEIT_QUELLE_WERTE, ARBEITSZEIT_STATUS_WERTE,
   type PersonalArbeitszeit, type ArbeitszeitKonto,
   type ArbeitszeitQuelle, type ArbeitszeitStatus,
@@ -23,6 +23,7 @@ export interface CreateArbeitszeitParams {
 
 export async function createArbeitszeit(supabase: SupabaseClient, params: CreateArbeitszeitParams): Promise<PersonalArbeitszeit> {
   assertErlaubt(params.quelle, ARBEITSZEIT_QUELLE_WERTE, 'quelle')
+  assertPlausibleZeiten({ istMinuten: params.istMinuten, pauseMinuten: params.pauseMinuten })
 
   const { data, error } = await supabase
     .from('personal_arbeitszeiten')
@@ -94,6 +95,7 @@ export async function updateArbeitszeit(
   patch: UpdateArbeitszeitParams,
 ): Promise<PersonalArbeitszeit> {
   assertErlaubt(patch.status, ARBEITSZEIT_STATUS_WERTE, 'status')
+  assertPlausibleZeiten({ istMinuten: patch.istMinuten, pauseMinuten: patch.pauseMinuten })
 
   const update: Record<string, unknown> = {}
   if (patch.startZeit !== undefined) update.start_zeit = patch.startZeit

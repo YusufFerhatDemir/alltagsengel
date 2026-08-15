@@ -3,6 +3,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { requirePersonalAdmin, requirePersonalUser } from '@/lib/personal/api-auth'
 import { createArbeitszeit, listArbeitszeiten } from '@/lib/personal/arbeitszeiten'
 import { getActiveOrgId } from '@/lib/organizations/server'
+import { writeAuditLog } from '@/lib/personal/audit'
 
 export async function GET(req: NextRequest) {
   try {
@@ -52,6 +53,16 @@ export async function POST(req: NextRequest) {
         ...body,
         organizationId: admin.ctx.organizationId,
       })
+      await writeAuditLog(supabase, {
+        organizationId: admin.ctx.organizationId,
+        entitaetTyp: 'arbeitszeit',
+        entitaetId: data.id,
+        caregiverId: data.caregiver_id,
+        aktion: 'erstellt',
+        nachher: { datum: data.datum, start_zeit: data.start_zeit, end_zeit: data.end_zeit, ist_minuten: data.ist_minuten, quelle: data.quelle },
+        benutzerId: admin.ctx.userId,
+        benutzerRolle: admin.ctx.role,
+      })
       return NextResponse.json(data, { status: 201 })
     }
 
@@ -67,6 +78,16 @@ export async function POST(req: NextRequest) {
       ...body,
       organizationId: orgId,
       caregiverId: user.caregiverId,
+    })
+    await writeAuditLog(supabase, {
+      organizationId: orgId,
+      entitaetTyp: 'arbeitszeit',
+      entitaetId: data.id,
+      caregiverId: data.caregiver_id,
+      aktion: 'erstellt',
+      nachher: { datum: data.datum, start_zeit: data.start_zeit, end_zeit: data.end_zeit, ist_minuten: data.ist_minuten, quelle: data.quelle },
+      benutzerId: user.userId,
+      benutzerRolle: user.role,
     })
     return NextResponse.json(data, { status: 201 })
   } catch (e: any) {

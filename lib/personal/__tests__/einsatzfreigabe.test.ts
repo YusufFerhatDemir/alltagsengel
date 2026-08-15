@@ -37,9 +37,15 @@ function mockSupabase(caregiver: Record<string, unknown>, quals: Record<string, 
 }
 
 test('Einsatzfreigabe: aktiver Mitarbeiter mit gültigen Quals → freigegeben', async () => {
+  // pruefeEinsatzfreigabe verlangt BEIDE Pflichtqualifikationen (Führungszeugnis
+  // + Erste Hilfe, s. PFLICHT_QUALIFIKATIONEN in ../einsatzfreigabe.ts) — die
+  // Fixture braucht deshalb beide, sonst schlägt "Pflichtqualifikation fehlt" an.
   const supabase = mockSupabase(
     { id: 'cg-1', first_name: 'Anna', last_name: 'Müller', einsatzfreigabe: true, vertragsstatus: 'aktiv' },
-    [{ id: 'q-1', title: 'Erste Hilfe', valid_until: '2027-12-31', einsatzrelevant: true, pflicht: true }],
+    [
+      { id: 'q-1', title: 'Erste Hilfe', valid_until: '2027-12-31', einsatzrelevant: true, pflicht: true },
+      { id: 'q-2', title: 'Erweitertes Führungszeugnis', valid_until: '2027-12-31', einsatzrelevant: true, pflicht: true },
+    ],
   )
   const result = await pruefeEinsatzfreigabe(supabase, 'cg-1', 'org-1')
   assert.equal(result.freigegeben, true)

@@ -11,6 +11,12 @@ export async function GET(request: Request) {
   const url = new URL(request.url)
   const von = url.searchParams.get('von')
   const bis = url.searchParams.get('bis')
+
+  const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/
+  if ((von && !ISO_DATE.test(von)) || (bis && !ISO_DATE.test(bis))) {
+    return NextResponse.json({ error: 'von/bis müssen im Format YYYY-MM-DD übergeben werden.' }, { status: 400 })
+  }
+
   const zeitraum = von && bis ? { von, bis } : standardZeitraumAktuellerMonat()
 
   try {

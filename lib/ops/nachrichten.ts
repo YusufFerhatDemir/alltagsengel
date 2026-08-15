@@ -1,5 +1,33 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
-import type { OpsNachricht, OpsNachrichtEmpfaenger, OpsPosteingang, ListPosteingangFilter } from './types'
+import {
+  assertErlaubt,
+  NACHRICHTEN_PRIORITAET_WERTE,
+  NACHRICHTEN_KATEGORIE_WERTE,
+  type OpsNachricht,
+  type OpsNachrichtEmpfaenger,
+  type OpsPosteingang,
+  type ListPosteingangFilter,
+} from './types'
+
+/**
+ * Wirft bei fehlenden Pflichtfeldern oder ungueltigen Enum-Werten.
+ * Empfaenger sind absichtlich NICHT Pflicht — System-/Ankuendigungs-
+ * Nachrichten koennen ohne individuelle Empfaenger angelegt werden
+ * (siehe __tests__/ops/nachrichten.test.ts "erstellt Nachricht ohne Empfaenger").
+ */
+function assertNachrichtGueltig(
+  data: Omit<OpsNachricht, 'id' | 'organization_id' | 'created_at' | 'eltern_id'>,
+  empfaengerIds: string[],
+): void {
+  if (!data.betreff?.trim()) throw new Error('Betreff ist ein Pflichtfeld.')
+  if (!data.inhalt?.trim()) throw new Error('Inhalt ist ein Pflichtfeld.')
+  if (!data.absender_id?.trim()) throw new Error('Absender ist ein Pflichtfeld.')
+  if (!Array.isArray(empfaengerIds)) {
+    throw new Error('Empfaenger muessen als Liste uebergeben werden.')
+  }
+  assertErlaubt(data.prioritaet, NACHRICHTEN_PRIORITAET_WERTE, 'prioritaet')
+  assertErlaubt(data.kategorie, NACHRICHTEN_KATEGORIE_WERTE, 'kategorie')
+}
 
 export async function listPosteingang(
   supabase: SupabaseClient,
@@ -52,9 +80,10 @@ export async function createNachricht(
     empfaengerIds: string[]
   },
 ): Promise<OpsNachricht> {
+  assertNachrichtGueltig(params.data, params.empfaengerIds)
   const { data: nachricht, error: nErr } = await supabase
     .from('ops_nachrichten')
-    .insert({ ...params.data, organization_id: params.organizationId })
+    .insert({ ...params.data, betreff: params.data.betreff.trim(), inhalt: params.data.inhalt.trim(), organization_id: params.organizationId })
     .select('*')
     .single()
   if (nErr || !nachricht) throw new Error(`Nachricht konnte nicht erstellt werden: ${nErr?.message ?? 'unbekannt'}`)
@@ -88,10 +117,17 @@ export async function createAntwort(
     .eq('organization_id', params.organizationId)
     .maybeSingle()
   if (pErr || !parent) throw new Error('Eltern-Nachricht nicht gefunden oder gehoert nicht zur Organisation.')
+  assertNachrichtGueltig(params.data, params.empfaengerIds)
 
   const { data: nachricht, error: nErr } = await supabase
     .from('ops_nachrichten')
-    .insert({ ...params.data, organization_id: params.organizationId, eltern_id: params.elternId })
+    .insert({
+      ...params.data,
+      betreff: params.data.betreff.trim(),
+      inhalt: params.data.inhalt.trim(),
+      organization_id: params.organizationId,
+      eltern_id: params.elternId,
+    })
     .select('*')
     .single()
   if (nErr || !nachricht) throw new Error(`Antwort konnte nicht erstellt werden: ${nErr?.message ?? 'unbekannt'}`)

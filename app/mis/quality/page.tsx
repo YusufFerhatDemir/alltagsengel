@@ -12,6 +12,7 @@ export default function QualityPage() {
   const [audits, setAudits] = useState<QualityAudit[]>([])
   const [capas, setCapas] = useState<CAPA[]>([])
   const [tab, setTab] = useState('processes')
+  const [loadError, setLoadError] = useState<string | null>(null)
   const [auditOpen, setAuditOpen] = useState(false)
   const [auditForm, setAuditForm] = useState({ audit_number: '', audit_type: 'internal', auditor_name: '', scheduled_date: '', notes: '' })
   const [capaOpen, setCapaOpen] = useState(false)
@@ -19,6 +20,7 @@ export default function QualityPage() {
 
   useEffect(() => {
     (async () => {
+      setLoadError(null)
       try {
         const supabase = createClient()
         const [{ data: p, error: e1 }, { data: a, error: e2 }, { data: c, error: e3 }] = await Promise.all([
@@ -29,10 +31,15 @@ export default function QualityPage() {
         if (e1) console.error('Processes error:', e1)
         if (e2) console.error('Audits error:', e2)
         if (e3) console.error('CAPA error:', e3)
+        const firstError = e1 || e2 || e3
+        if (firstError) setLoadError(firstError.message || 'Daten konnten nicht geladen werden.')
         setProcesses(p as QualityProcess[] || [])
         setAudits(a as QualityAudit[] || [])
         setCapas(c as CAPA[] || [])
-      } catch (err) { console.error('Quality loadData error:', err) }
+      } catch (err: any) {
+        console.error('Quality loadData error:', err)
+        setLoadError(err?.message || 'Daten konnten nicht geladen werden.')
+      }
     })()
   }, [])
 
@@ -71,6 +78,12 @@ export default function QualityPage() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
       <SectionHeader title="Qualitätsmanagement (ISO 9001)" subtitle="Prozesse, Audits, CAPA und kontinuierliche Verbesserung" icon="shield" />
+
+      {loadError && (
+        <div style={{ padding: '10px 14px', borderRadius: 10, background: `${BRAND.error}14`, border: `1px solid ${BRAND.error}40`, color: BRAND.error, fontSize: 13 }}>
+          {loadError}
+        </div>
+      )}
 
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(auto-fill, minmax(min(220px, 100%), 1fr))', gap: isMobile ? 10 : 16 }}>
         <KpiCard title="Prozesse" value={processes.length} icon="layers" />

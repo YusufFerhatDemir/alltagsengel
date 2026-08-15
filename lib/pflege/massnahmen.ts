@@ -4,6 +4,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { logPflegeAktivitaet } from './audit-log'
 import {
   assertErlaubt,
   MASSNAHME_KATEGORIE_WERTE,
@@ -73,6 +74,16 @@ export async function createMassnahme(supabase: SupabaseClient, params: CreateMa
     .select('*')
     .single()
   if (error || !data) throw new Error(`Maßnahme konnte nicht angelegt werden: ${error?.message ?? 'unbekannt'}`)
+
+  await logPflegeAktivitaet(supabase, {
+    organizationId: (data as PflegeMassnahme).organization_id,
+    entitaetTyp: 'massnahme',
+    entitaetId: (data as PflegeMassnahme).id,
+    aktion: 'erstellt',
+    nachher: data,
+    akteurId: params.erstelltVon,
+  }).catch((err) => console.error('[pflege-audit] Maßnahme-Log fehlgeschlagen:', err))
+
   return data as PflegeMassnahme
 }
 
@@ -171,5 +182,15 @@ export async function updateMassnahme(
     .select('*')
     .single()
   if (error || !data) throw new Error(`Maßnahme konnte nicht aktualisiert werden: ${error?.message ?? 'unbekannt'}`)
+
+  await logPflegeAktivitaet(supabase, {
+    organizationId,
+    entitaetTyp: 'massnahme',
+    entitaetId: id,
+    aktion: 'aktualisiert',
+    vorher: existing,
+    nachher: data,
+  }).catch((err) => console.error('[pflege-audit] Maßnahme-Log fehlgeschlagen:', err))
+
   return data as PflegeMassnahme
 }

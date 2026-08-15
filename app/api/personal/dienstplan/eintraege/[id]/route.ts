@@ -26,6 +26,20 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       }
     }
 
+    // Cross-Tenant-Schutz: schicht_id muss zur selben Organisation gehören
+    // (createAdminClient umgeht RLS — dieser Check MUSS in der Route passieren).
+    if (body.schichtId) {
+      const { data: sch } = await supabase
+        .from('dienstplan_schichten')
+        .select('id')
+        .eq('id', body.schichtId)
+        .eq('organization_id', auth.ctx.organizationId)
+        .maybeSingle()
+      if (!sch) {
+        return NextResponse.json({ error: 'Schicht gehört nicht zu dieser Organisation.' }, { status: 403 })
+      }
+    }
+
     let freigabeProbleme: string[] = []
     if (body.caregiverId) {
       const freigabe = await pruefeEinsatzfreigabe(supabase, body.caregiverId, auth.ctx.organizationId)
@@ -40,20 +54,40 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       if (!freigabe.freigegeben) freigabeProbleme = freigabe.probleme
     }
 
+    // Vorher-Snapshot fuer den Audit-Trail (Best-Effort — blockiert PATCH nicht).
+    const { data: vorher } = await supabase
+      .from('dienstplan_eintraege')
+      .select('datum, caregiver_id, client_id, start_zeit, end_zeit, status, typ, notizen')
+      .eq('id', id)
+      .eq('organization_id', auth.ctx.organizationId)
+      .maybeSingle()
+
     const data = await updateEintrag(supabase, id, auth.ctx.organizationId, body)
 
-    if (body.forceOverride && freigabeProbleme.length > 0) {
-      await writeAuditLog(supabase, {
-        organizationId: auth.ctx.organizationId,
-        entitaetTyp: 'dienstplan',
-        entitaetId: id,
-        caregiverId: body.caregiverId,
-        aktion: 'bearbeitet',
-        nachher: { forceOverride: true, probleme: freigabeProbleme },
-        grund: `forceOverride: ${freigabeProbleme.join('; ')}`,
-        benutzerId: auth.ctx.userId,
-      })
-    }
+    // Audit-Trail: jede Aenderung wird protokolliert (nicht nur forceOverride).
+    await writeAuditLog(supabase, {
+      organizationId: auth.ctx.organizationId,
+      entitaetTyp: 'dienstplan',
+      entitaetId: id,
+      caregiverId: body.caregiverId ?? vorher?.caregiver_id ?? null,
+      aktion: 'bearbeitet',
+      vorher: vorher ?? null,
+      nachher: {
+        datum: data.datum,
+        caregiverId: data.caregiver_id,
+        clientId: data.client_id,
+        startZeit: data.start_zeit,
+        endZeit: data.end_zeit,
+        status: data.status,
+        typ: data.typ,
+        ...(body.forceOverride ? { forceOverride: true, probleme: freigabeProbleme } : {}),
+      },
+      grund: body.forceOverride && freigabeProbleme.length > 0
+        ? `forceOverride: ${freigabeProbleme.join('; ')}`
+        : null,
+      benutzerId: auth.ctx.userId,
+      benutzerRolle: auth.ctx.role,
+    })
 
     return NextResponse.json(data)
   } catch (e: any) {
@@ -67,7 +101,27 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
   const { id } = await params
   const supabase = createAdminClient()
   try {
+    // Vorher-Snapshot fuer den Audit-Trail (Best-Effort — blockiert DELETE nicht).
+    const { data: vorher } = await supabase
+      .from('dienstplan_eintraege')
+      .select('datum, caregiver_id, client_id, start_zeit, end_zeit, status, typ, notizen')
+      .eq('id', id)
+      .eq('organization_id', auth.ctx.organizationId)
+      .maybeSingle()
+
     await deleteEintrag(supabase, id, auth.ctx.organizationId)
+
+    await writeAuditLog(supabase, {
+      organizationId: auth.ctx.organizationId,
+      entitaetTyp: 'dienstplan',
+      entitaetId: id,
+      caregiverId: vorher?.caregiver_id ?? null,
+      aktion: 'geloescht',
+      vorher: vorher ?? null,
+      benutzerId: auth.ctx.userId,
+      benutzerRolle: auth.ctx.role,
+    })
+
     return NextResponse.json({ ok: true })
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 400 })

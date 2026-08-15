@@ -263,6 +263,10 @@ export default function AdminVerordnungenPage() {
   const [absageFilterDate, setAbsageFilterDate] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
 
+  // Aerzte-Stammdaten (aerzte_praxen) — zum schnellen Uebernehmen in
+  // arzt_name/arzt_praxis, ohne die Freitextfelder zu ersetzen.
+  const [aerzteStammdaten, setAerzteStammdaten] = useState<{ id: string; name: string; praxis_name: string | null }[]>([])
+
   async function load() {
     setLoading(true)
     setError(null)
@@ -324,6 +328,24 @@ export default function AdminVerordnungenPage() {
       setError('Unerwarteter Fehler beim Laden.')
     } finally {
       setLoading(false)
+    }
+
+    // Aerzte-Stammdaten separat laden — nicht kritisch fuer die Verordnungsliste,
+    // ein Fehler hier darf die Seite nicht blockieren.
+    try {
+      const supabase = createClient()
+      const { data } = await supabase
+        .from('aerzte_praxen')
+        .select('id, anrede, titel, vorname, nachname, praxis_name')
+        .eq('aktiv', true)
+        .order('nachname')
+      setAerzteStammdaten((data || []).map((a: any) => ({
+        id: a.id,
+        name: [a.anrede, a.titel, a.vorname, a.nachname].filter(Boolean).join(' '),
+        praxis_name: a.praxis_name,
+      })))
+    } catch (err) {
+      console.error('Aerzte-Stammdaten Ladefehler:', err)
     }
   }
 
@@ -981,6 +1003,7 @@ export default function AdminVerordnungenPage() {
               leistungenByVerordnung={leistungenByVerordnung}
               save={save} openEdit={openEdit} remove={remove}
               markNeuantrag={markNeuantrag} openScan={openScan}
+              aerzteStammdaten={aerzteStammdaten}
             />
           )}
 
@@ -1060,13 +1083,14 @@ function ErfassungTab(props: {
   remove: (id: string) => void
   markNeuantrag: (v: Verordnung) => void
   openScan: (v: Verordnung) => void
+  aerzteStammdaten: { id: string; name: string; praxis_name: string | null }[]
 }) {
   const {
     grouped, verordnungen, search, setSearch, filter, setFilter, expiringCount, neuantragCount,
     showForm, setShowForm, editingId, form, setForm, clients, saving, busyId,
     scanFile, setScanFile, fileInputRef, abtretungFile, setAbtretungFile,
     positionen, setPositionen, leistungenByVerordnung,
-    save, openEdit, remove, markNeuantrag, openScan,
+    save, openEdit, remove, markNeuantrag, openScan, aerzteStammdaten,
   } = props
 
   function updatePos(idx: number, patch: Partial<LeistungPos>) {
@@ -1185,6 +1209,24 @@ function ErfassungTab(props: {
             </label>
             {brauchtVerordnung && (
               <>
+                {aerzteStammdaten.length > 0 && (
+                  <label style={{ ...fieldLabel, gridColumn: '1 / -1' }}>
+                    Aus Ärzte-Stammdaten übernehmen
+                    <select
+                      value=""
+                      onChange={e => {
+                        const gewaehlt = aerzteStammdaten.find(a => a.id === e.target.value)
+                        if (gewaehlt) setForm({ ...form, arzt_name: gewaehlt.name, arzt_praxis: gewaehlt.praxis_name || '' })
+                      }}
+                      style={input}
+                    >
+                      <option value="">-- Arzt wählen (füllt Felder unten) --</option>
+                      {aerzteStammdaten.map(a => (
+                        <option key={a.id} value={a.id}>{a.name}{a.praxis_name ? ` — ${a.praxis_name}` : ''}</option>
+                      ))}
+                    </select>
+                  </label>
+                )}
                 <label style={fieldLabel}>
                   Arzt
                   <input value={form.arzt_name} onChange={e => setForm({ ...form, arzt_name: e.target.value })} style={input} placeholder="Dr. …" />

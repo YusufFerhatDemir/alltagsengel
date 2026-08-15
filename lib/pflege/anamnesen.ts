@@ -6,6 +6,7 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { heuteBerlin } from '@/lib/utils/timezone'
+import { logPflegeAktivitaet } from './audit-log'
 import {
   ANAMNESE_TYP_WERTE,
   assertErlaubt,
@@ -86,6 +87,16 @@ export async function createAnamnese(supabase: SupabaseClient, params: CreateAna
     .select('*')
     .single()
   if (error || !data) throw new Error(`Anamnese konnte nicht angelegt werden: ${error?.message ?? 'unbekannt'}`)
+
+  await logPflegeAktivitaet(supabase, {
+    organizationId: (data as PflegeAnamnese).organization_id,
+    entitaetTyp: 'anamnese',
+    entitaetId: (data as PflegeAnamnese).id,
+    aktion: 'erstellt',
+    nachher: data,
+    akteurId: params.erstelltVon,
+  }).catch((err) => console.error('[pflege-audit] Anamnese-Log fehlgeschlagen:', err))
+
   return data as PflegeAnamnese
 }
 
@@ -163,6 +174,16 @@ export async function updateAnamnese(
     .select('*')
     .single()
   if (error || !data) throw new Error(`Anamnese konnte nicht aktualisiert werden: ${error?.message ?? 'unbekannt'}`)
+
+  await logPflegeAktivitaet(supabase, {
+    organizationId,
+    entitaetTyp: 'anamnese',
+    entitaetId: id,
+    aktion: 'aktualisiert',
+    vorher: existing,
+    nachher: data,
+  }).catch((err) => console.error('[pflege-audit] Anamnese-Log fehlgeschlagen:', err))
+
   return data as PflegeAnamnese
 }
 
@@ -191,6 +212,16 @@ export async function sperreAnamnese(
     .select('*')
     .single()
   if (error || !data) throw new Error(`Anamnese konnte nicht gesperrt werden: ${error?.message ?? 'unbekannt'}`)
+
+  await logPflegeAktivitaet(supabase, {
+    organizationId,
+    entitaetTyp: 'anamnese',
+    entitaetId: id,
+    aktion: 'gesperrt',
+    vorher: existing,
+    nachher: data,
+  }).catch((err) => console.error('[pflege-audit] Anamnese-Log fehlgeschlagen:', err))
+
   return data as PflegeAnamnese
 }
 
@@ -214,6 +245,16 @@ export async function entsperreAnamnese(
     .select('*')
     .single()
   if (error || !data) throw new Error(`Anamnese konnte nicht entsperrt werden: ${error?.message ?? 'unbekannt'}`)
+
+  await logPflegeAktivitaet(supabase, {
+    organizationId,
+    entitaetTyp: 'anamnese',
+    entitaetId: id,
+    aktion: 'entsperrt',
+    vorher: existing,
+    nachher: data,
+  }).catch((err) => console.error('[pflege-audit] Anamnese-Log fehlgeschlagen:', err))
+
   return data as PflegeAnamnese
 }
 

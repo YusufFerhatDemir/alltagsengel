@@ -319,9 +319,16 @@ function HealthSection({ client, onSaved }: { client: ClientDetail; onSaved: (u:
         pflegekasse_name: t('pflegekasse_name'),
         pflegekasse_ik: t('pflegekasse_ik'),
       }
-      const supabase = createClient()
-      const { error } = await supabase.from('clients').update(payload).eq('id', client.id)
-      if (error) { setErr(error.message); setSaving(false); return }
+      // Läuft über die API-Route (nicht direkt per Browser-Client), damit
+      // die Änderung wie Klienten-Anlage und Pflegegrad-Änderung ins
+      // Audit-Log geschrieben wird.
+      const res = await fetch(`/api/admin/clients/${client.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+      const json = await res.json()
+      if (!res.ok) { setErr(json.error || 'Speichern fehlgeschlagen.'); setSaving(false); return }
       onSaved(payload)
       setEditing(false)
       setSavedOk(true)

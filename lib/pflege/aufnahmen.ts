@@ -6,6 +6,7 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { heuteBerlin } from '@/lib/utils/timezone'
+import { logPflegeAktivitaet } from './audit-log'
 import {
   assertErlaubt,
   AUFNAHME_ORT_WERTE,
@@ -87,6 +88,16 @@ export async function createAufnahme(supabase: SupabaseClient, params: CreateAuf
     .select('*')
     .single()
   if (error || !data) throw new Error(`Aufnahme konnte nicht angelegt werden: ${error?.message ?? 'unbekannt'}`)
+
+  await logPflegeAktivitaet(supabase, {
+    organizationId: (data as PflegeAufnahme).organization_id,
+    entitaetTyp: 'aufnahme',
+    entitaetId: (data as PflegeAufnahme).id,
+    aktion: 'erstellt',
+    nachher: data,
+    akteurId: params.erstelltVon,
+  }).catch((err) => console.error('[pflege-audit] Aufnahme-Log fehlgeschlagen:', err))
+
   return data as PflegeAufnahme
 }
 
@@ -197,6 +208,16 @@ export async function updateAufnahme(
     .select('*')
     .single()
   if (error || !data) throw new Error(`Aufnahme konnte nicht aktualisiert werden: ${error?.message ?? 'unbekannt'}`)
+
+  await logPflegeAktivitaet(supabase, {
+    organizationId,
+    entitaetTyp: 'aufnahme',
+    entitaetId: id,
+    aktion: 'aktualisiert',
+    vorher: existing,
+    nachher: data,
+    akteurId: actorId,
+  }).catch((err) => console.error('[pflege-audit] Aufnahme-Log fehlgeschlagen:', err))
 
   if (patch.status === 'abgeschlossen') {
     await spiegeleAufnahmeAufClient(supabase, data as PflegeAufnahme, organizationId)

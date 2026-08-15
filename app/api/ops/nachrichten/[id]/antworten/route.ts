@@ -25,7 +25,7 @@ export async function POST(
         bezug_id: body.bezug_id ?? null,
         absender_id: auth.userId,
       },
-      empfaengerIds: body.empfaenger_ids,
+      empfaengerIds: Array.isArray(body.empfaenger_ids) ? body.empfaenger_ids : [],
     })
     return NextResponse.json(data)
   } catch (e: any) {

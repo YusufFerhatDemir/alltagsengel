@@ -1,0 +1,124 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { createAdminClient } from '@/lib/supabase/admin'
+import { requireOpsAdmin } from '@/lib/ops/api-auth'
+
+export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
+
+const ERLAUBTE_FELDER = [
+  'beruflicher_werdegang', 'familienstand', 'wichtige_bezugspersonen', 'lebensereignisse',
+  'gewohnheiten_tagesablauf', 'vorlieben', 'abneigungen', 'glaubensrichtung_werte',
+  'hobbies_interessen', 'haustiere', 'biografische_besonderheiten', 'gesperrt',
+] as const
+
+function nurErlaubteFelder(roh: Record<string, unknown>): Record<string, unknown> {
+  const sauber: Record<string, unknown> = {}
+  for (const feld of ERLAUBTE_FELDER) {
+    if (roh[feld] !== undefined) sauber[feld] = roh[feld]
+  }
+  return sauber
+}
+
+/** GET — Biografiebogen eines Klienten (null, wenn noch nicht angelegt). */
+export async function GET(
+  _req: NextRequest,
+  { params }: { params: Promise<{ clientId: string }> },
+) {
+  const auth = await requireOpsAdmin()
+  if (!auth.ok) return auth.response
+  const { clientId } = await params
+
+  try {
+    const admin = createAdminClient()
+    const { data: client } = await admin
+      .from('clients')
+      .select('id, first_name, last_name')
+      .eq('id', clientId)
+      .eq('organization_id', auth.ctx.organizationId)
+      .maybeSingle()
+    if (!client) {
+      return NextResponse.json({ error: 'Klient nicht gefunden.' }, { status: 404 })
+    }
+
+    const { data, error } = await admin
+      .from('biografiebogen')
+      .select('*')
+      .eq('client_id', clientId)
+      .eq('organization_id', auth.ctx.organizationId)
+      .maybeSingle()
+
+    if (error) {
+      console.error('[admin/biografiebogen] Laden fehlgeschlagen:', error.message)
+      return NextResponse.json({ error: 'Interner Serverfehler' }, { status: 500 })
+    }
+
+    return NextResponse.json({ client, bogen: data ?? null })
+  } catch (e) {
+    console.error('[admin/biografiebogen] Unerwarteter Fehler:', e)
+    return NextResponse.json({ error: 'Interner Serverfehler' }, { status: 500 })
+  }
+}
+
+/** PUT — Biografiebogen anlegen oder aktualisieren (Upsert über client_id). */
+export async function PUT(
+  req: NextRequest,
+  { params }: { params: Promise<{ clientId: string }> },
+) {
+  const auth = await requireOpsAdmin()
+  if (!auth.ok) return auth.response
+  const { clientId } = await params
+
+  try {
+    const body = await req.json().catch(() => null)
+    if (!body || typeof body !== 'object') {
+      return NextResponse.json({ error: 'Ungueltiger Request-Body' }, { status: 400 })
+    }
+    const eingabe = nurErlaubteFelder(body)
+
+    const admin = createAdminClient()
+    const { data: client } = await admin
+      .from('clients')
+      .select('id')
+      .eq('id', clientId)
+      .eq('organization_id', auth.ctx.organizationId)
+      .maybeSingle()
+    if (!client) {
+      return NextResponse.json({ error: 'Klient nicht gefunden.' }, { status: 404 })
+    }
+
+    const { data: bestehend } = await admin
+      .from('biografiebogen')
+      .select('id')
+      .eq('client_id', clientId)
+      .eq('organization_id', auth.ctx.organizationId)
+      .maybeSingle()
+
+    if (bestehend) {
+      const { error } = await admin
+        .from('biografiebogen')
+        .update(eingabe)
+        .eq('id', bestehend.id)
+        .eq('organization_id', auth.ctx.organizationId)
+      if (error) {
+        console.error('[admin/biografiebogen] Update fehlgeschlagen:', error.message)
+        return NextResponse.json({ error: `Speichern fehlgeschlagen: ${error.message}` }, { status: 500 })
+      }
+      return NextResponse.json({ erfolg: true, id: bestehend.id })
+    }
+
+    const { data, error } = await admin
+      .from('biografiebogen')
+      .insert({ ...eingabe, client_id: clientId, organization_id: auth.ctx.organizationId, erstellt_von: auth.ctx.userId })
+      .select('id')
+      .single()
+    if (error) {
+      console.error('[admin/biografiebogen] Anlegen fehlgeschlagen:', error.message)
+      return NextResponse.json({ error: `Speichern fehlgeschlagen: ${error.message}` }, { status: 500 })
+    }
+
+    return NextResponse.json({ erfolg: true, id: data.id })
+  } catch (e) {
+    console.error('[admin/biografiebogen] Unerwarteter Fehler:', e)
+    return NextResponse.json({ error: 'Interner Serverfehler' }, { status: 500 })
+  }
+}

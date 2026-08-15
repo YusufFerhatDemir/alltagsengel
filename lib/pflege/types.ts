@@ -313,7 +313,10 @@ export interface PflegeUebersichtZeile {
   organization_id: string
   first_name: string
   last_name: string
+  /** Nachgeordnete Spalte, kann bei Bestandskunden NULL sein. Nie direkt lesen — pflegegradVon() nutzen. */
   pflegegrad: number | null
+  /** Führende Spalte (lib/clients/pflegegrad.ts). Nur vorhanden, wenn Migration 20260921020000 live ist. */
+  care_level?: number | string | null
   aufnahmestatus: Aufnahmestatus | null
   aufnahmedatum: string | null
   aufnahmen_count: number
@@ -324,6 +327,41 @@ export interface PflegeUebersichtZeile {
   aktive_plaene: number
   verlauf_count: number
   letzter_verlauf: string | null
+}
+
+// ── pflege_audit_log ──────────────────────────────────────────────
+// Änderungshistorie der Pflegedokumentation (Aufnahme, Anamnese, Diagnosen,
+// Risiken, Verlauf, Maßnahmen/-pläne). Append-only, analog ops_aktivitaetslog
+// (lib/ops/aktivitaetslog.ts) / akten_zugriff_log (lib/akten/zugriff-log.ts).
+export type PflegeAuditEntitaetTyp =
+  | 'aufnahme' | 'anamnese' | 'diagnose' | 'risiko'
+  | 'verlauf' | 'massnahme' | 'massnahmenplan'
+
+export const PFLEGE_AUDIT_ENTITAET_TYP_WERTE: PflegeAuditEntitaetTyp[] = [
+  'aufnahme', 'anamnese', 'diagnose', 'risiko',
+  'verlauf', 'massnahme', 'massnahmenplan',
+]
+
+export type PflegeAuditAktion =
+  | 'erstellt' | 'aktualisiert' | 'geloescht'
+  | 'gesperrt' | 'entsperrt' | 'freigegeben'
+
+export const PFLEGE_AUDIT_AKTION_WERTE: PflegeAuditAktion[] = [
+  'erstellt', 'aktualisiert', 'geloescht',
+  'gesperrt', 'entsperrt', 'freigegeben',
+]
+
+export interface PflegeAuditLogEintrag {
+  id: string
+  organization_id: string
+  entitaet_typ: PflegeAuditEntitaetTyp
+  entitaet_id: string
+  aktion: PflegeAuditAktion
+  vorher: Record<string, unknown> | null
+  nachher: Record<string, unknown> | null
+  akteur_id: string | null
+  ip_adresse: string | null
+  erstellt_am: string
 }
 
 // ── Gültigkeitslisten (Laufzeit-Validierung vor jedem DB-Zugriff) ─

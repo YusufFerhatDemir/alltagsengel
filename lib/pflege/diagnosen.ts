@@ -4,6 +4,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { logPflegeAktivitaet } from './audit-log'
 import {
   assertErlaubt,
   DIAGNOSE_SCHWEREGRAD_WERTE,
@@ -52,6 +53,16 @@ export async function createDiagnose(supabase: SupabaseClient, params: CreateDia
     .select('*')
     .single()
   if (error || !data) throw new Error(`Diagnose konnte nicht angelegt werden: ${error?.message ?? 'unbekannt'}`)
+
+  await logPflegeAktivitaet(supabase, {
+    organizationId: (data as PflegeDiagnose).organization_id,
+    entitaetTyp: 'diagnose',
+    entitaetId: (data as PflegeDiagnose).id,
+    aktion: 'erstellt',
+    nachher: data,
+    akteurId: params.erstelltVon,
+  }).catch((err) => console.error('[pflege-audit] Diagnose-Log fehlgeschlagen:', err))
+
   return data as PflegeDiagnose
 }
 
@@ -138,6 +149,15 @@ export async function updateDiagnose(
     .select('*')
     .single()
   if (error || !data) throw new Error(`Diagnose konnte nicht aktualisiert werden: ${error?.message ?? 'unbekannt'}`)
+
+  await logPflegeAktivitaet(supabase, {
+    organizationId,
+    entitaetTyp: 'diagnose',
+    entitaetId: id,
+    aktion: patch.aktiv === false ? 'geloescht' : 'aktualisiert',
+    nachher: data,
+  }).catch((err) => console.error('[pflege-audit] Diagnose-Log fehlgeschlagen:', err))
+
   return data as PflegeDiagnose
 }
 

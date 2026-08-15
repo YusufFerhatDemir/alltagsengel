@@ -6,6 +6,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { logPflegeAktivitaet } from './audit-log'
 import {
   assertErlaubt,
   VERLAUF_KATEGORIE_WERTE,
@@ -92,6 +93,18 @@ export async function createVerlauf(supabase: SupabaseClient, params: CreateVerl
     .select('*')
     .single()
   if (error || !data) throw new Error(`Verlaufseintrag konnte nicht angelegt werden: ${error?.message ?? 'unbekannt'}`)
+
+  await logPflegeAktivitaet(supabase, {
+    // organization_id kommt hier ggf. aus dem DB-Default (current_org_id()),
+    // nicht aus params — die zurückgegebene Zeile trägt den echten Wert.
+    organizationId: (data as PflegeVerlaufEintrag).organization_id,
+    entitaetTyp: 'verlauf',
+    entitaetId: (data as PflegeVerlaufEintrag).id,
+    aktion: 'erstellt',
+    nachher: data,
+    akteurId: params.autorId,
+  }).catch((err) => console.error('[pflege-audit] Verlauf-Log fehlgeschlagen:', err))
+
   return data as PflegeVerlaufEintrag
 }
 
@@ -189,6 +202,16 @@ export async function updateVerlauf(
     .select('*')
     .single()
   if (error || !data) throw new Error(`Verlaufseintrag konnte nicht aktualisiert werden: ${error?.message ?? 'unbekannt'}`)
+
+  await logPflegeAktivitaet(supabase, {
+    organizationId,
+    entitaetTyp: 'verlauf',
+    entitaetId: id,
+    aktion: 'aktualisiert',
+    vorher: existing,
+    nachher: data,
+  }).catch((err) => console.error('[pflege-audit] Verlauf-Log fehlgeschlagen:', err))
+
   return data as PflegeVerlaufEintrag
 }
 

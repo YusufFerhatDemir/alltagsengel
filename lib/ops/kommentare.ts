@@ -23,12 +23,14 @@ export async function createKommentar(
   supabase: SupabaseClient,
   params: { organizationId: string; aufgabeId: string; inhalt: string; autorId: string; istIntern?: boolean },
 ): Promise<OpsAufgabeKommentar> {
+  if (!params.inhalt?.trim()) throw new Error('Kommentarinhalt ist ein Pflichtfeld.')
+  if (!params.autorId?.trim()) throw new Error('Autor ist ein Pflichtfeld.')
   const { data, error } = await supabase
     .from('ops_aufgaben_kommentare')
     .insert({
       organization_id: params.organizationId,
       aufgabe_id: params.aufgabeId,
-      inhalt: params.inhalt,
+      inhalt: params.inhalt.trim(),
       autor_id: params.autorId,
       ist_intern: params.istIntern ?? false,
     })

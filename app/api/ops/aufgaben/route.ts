@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { listAufgaben, createAufgabe } from '@/lib/ops/aufgaben'
+import { logAktivitaet } from '@/lib/ops/aktivitaetslog'
 import type { AufgabenStatus, AufgabenKategorie, AufgabenPrioritaet } from '@/lib/ops/types'
 
 export async function GET(request: Request) {
@@ -43,6 +44,14 @@ export async function POST(request: Request) {
       organizationId: auth.ctx.organizationId,
       data: body,
     })
+    await logAktivitaet(supabase, {
+      organizationId: auth.ctx.organizationId,
+      entitaetTyp: 'aufgabe',
+      entitaetId: data.id,
+      aktion: 'erstellt',
+      nachher: data,
+      akteurId: auth.ctx.userId,
+    }).catch((err) => console.error(`Aktivitaetslog (Aufgabe erstellt) fehlgeschlagen: ${err}`))
     return NextResponse.json(data)
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 400 })

@@ -32,7 +32,7 @@ export async function POST(request: Request) {
     const { id: _id, organization_id: _oid, created_at: _ca, ...safeData } = body
     const data = await createWiedervorlage(supabase, {
       organizationId: auth.ctx.organizationId,
-      data: safeData,
+      data: { ...safeData, erstellt_von: safeData.erstellt_von || auth.ctx.userId },
     })
     return NextResponse.json(data)
   } catch (e: any) {

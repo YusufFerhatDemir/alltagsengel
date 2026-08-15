@@ -49,6 +49,9 @@ export interface RuecklaeuferAufgabeParams {
   fehlerCode?: string | null
   fehlerText?: string | null
   fehlerprotokollId?: string | null
+  /** Korrekturvorschlag aus der Fehlercode-Klassifizierung (dta_fehlercode_katalog). */
+  korrekturvorschlag?: string | null
+  fehlerKategorie?: string | null
   positionenGesamt?: number
   positionenAbgelehnt?: number
   betragAngefordertCent?: number | null
@@ -203,6 +206,8 @@ export async function erstelleRuecklaeuferAufgabe(
       params.ruecklaeuferTyp ? `Rückläufer-Typ: ${params.ruecklaeuferTyp}` : null,
       params.fehlerCode ? `Fehlercode: ${params.fehlerCode}` : null,
       params.fehlerText ? `Fehlermeldung: ${params.fehlerText}` : null,
+      params.fehlerKategorie ? `Fehlerkategorie: ${params.fehlerKategorie}` : null,
+      params.korrekturvorschlag ? `Korrekturvorschlag: ${params.korrekturvorschlag}` : null,
       params.positionenAbgelehnt
         ? `${params.positionenAbgelehnt} von ${params.positionenGesamt ?? '?'} Positionen abgelehnt`
         : null,
@@ -237,6 +242,8 @@ export async function erstelleRuecklaeuferAufgabe(
           ruecklaeufer_typ: params.ruecklaeuferTyp ?? null,
           fehlerprotokoll_id: params.fehlerprotokollId ?? null,
           fehler_code: params.fehlerCode ?? null,
+          fehler_kategorie: params.fehlerKategorie ?? null,
+          korrekturvorschlag: params.korrekturvorschlag ?? null,
           invoice_id: params.invoiceId ?? null,
           kostentraeger_ik: params.kostentraegerIk ?? null,
           quelle: 'automatisch_ruecklaeufer',

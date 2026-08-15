@@ -47,6 +47,10 @@ export interface PersonalUebersicht {
   imUrlaub: number
   ueberStundenKonto: number
   unterStundenKonto: number
+  /** Genehmigte Kranktage je aktiver Kraft/Kalendertag im Zeitraum, in %. */
+  krankenstandsquoteProzent: number | null
+  /** Ungeplante Abwesenheitstage (krank/sonstige/unbezahlt) je aktiver Kraft/Kalendertag, in %. */
+  fehlzeitenquoteProzent: number | null
 }
 
 export interface PflegegradZeile {
@@ -340,7 +344,45 @@ async function ladePersonal(
     unterStundenKonto = Math.round((unterStundenKonto / 60) * 10) / 10
   } catch { /* View existiert evtl. nicht */ }
 
-  return { aktiveKraefte, imEinsatz, krankgemeldet, imUrlaub, ueberStundenKonto, unterStundenKonto }
+  // Krankenstands-/Fehlzeitenquote über den Zeitraum: genehmigte Abwesenheitstage
+  // je aktiver Kraft / Kalendertage im Zeitraum. Fehlzeitenquote zählt nur
+  // ungeplante Ausfälle (krank/sonstige/unbezahlt) — Urlaub/Fortbildung/
+  // Mutterschutz/Elternzeit/Sonderurlaub sind geplant und keine "Fehlzeit"
+  // im Controlling-Sinn.
+  let krankenstandsquoteProzent: number | null = null
+  let fehlzeitenquoteProzent: number | null = null
+  try {
+    const kalendertage = Math.round((new Date(zeitraum.bis).getTime() - new Date(zeitraum.von).getTime()) / 86400000) + 1
+    if (aktiveKraefte > 0 && kalendertage > 0) {
+      const { data, error } = await supabase
+        .from('absences')
+        .select('absence_type, start_date, end_date')
+        .eq('organization_id', orgId)
+        .eq('status', 'genehmigt')
+        .lte('start_date', zeitraum.bis)
+        .or(`end_date.gte.${zeitraum.von},end_date.is.null`)
+      if (error) throw error
+
+      const UNGEPLANT = new Set(['sick', 'personal', 'other', 'unbezahlt'])
+      let krankTage = 0
+      let fehlTage = 0
+      for (const a of data || []) {
+        const von = new Date(Math.max(new Date(a.start_date).getTime(), new Date(zeitraum.von).getTime()))
+        const bis = new Date(Math.min(new Date(a.end_date || zeitraum.bis).getTime(), new Date(zeitraum.bis).getTime()))
+        const tage = Math.max(0, Math.round((bis.getTime() - von.getTime()) / 86400000) + 1)
+        if (a.absence_type === 'sick') krankTage += tage
+        if (UNGEPLANT.has(a.absence_type)) fehlTage += tage
+      }
+      const basis = aktiveKraefte * kalendertage
+      krankenstandsquoteProzent = Math.round((krankTage / basis) * 1000) / 10
+      fehlzeitenquoteProzent = Math.round((fehlTage / basis) * 1000) / 10
+    }
+  } catch { /* absences nicht ladbar */ }
+
+  return {
+    aktiveKraefte, imEinsatz, krankgemeldet, imUrlaub, ueberStundenKonto, unterStundenKonto,
+    krankenstandsquoteProzent, fehlzeitenquoteProzent,
+  }
 }
 
 // ── Klienten ────────────────────────────────────────────────────

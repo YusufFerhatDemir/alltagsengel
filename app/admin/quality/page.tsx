@@ -51,6 +51,7 @@ export default function AdminQualityPage() {
   const [qDashboard, setQDashboard] = useState<QualityDashboard | null>(null)
   const [qLoading, setQLoading] = useState(false)
   const [qError, setQError] = useState<string | null>(null)
+  const [loadError, setLoadError] = useState<string | null>(null)
 
   const loadQuality = useCallback(async () => {
     setQLoading(true)
@@ -70,12 +71,18 @@ export default function AdminQualityPage() {
   useEffect(() => { if (tab === 'pflegequalitaet') loadQuality() }, [tab, loadQuality])
 
   const load = useCallback(async () => {
+    setLoadError(null)
     try {
       const supabase = createClient()
       const [clRes, caRes] = await Promise.all([
         supabase.from('clients').select('id, first_name, last_name, created_at, status'),
         supabase.from('satisfaction_calls').select('id, client_id, call_type, call_date, called_by, satisfaction_rating, is_punctual, feels_comfortable, keep_caregiver, suggestions, notes, next_call_date, client:clients(first_name, last_name)').order('call_date', { ascending: false }),
       ])
+      if (clRes.error || caRes.error) {
+        console.error('Quality load error:', clRes.error || caRes.error)
+        setLoadError((clRes.error || caRes.error)?.message || 'Daten konnten nicht geladen werden.')
+        return
+      }
       setClients((clRes.data || []).map((c: any) => ({ id: c.id, name: fullName(c), created_at: c.created_at, status: c.status || 'active' })))
       setCalls((caRes.data || []).map((c: any) => ({
         id: c.id, client_id: c.client_id, client: fullName(c.client), call_type: c.call_type, call_date: c.call_date,
@@ -83,8 +90,9 @@ export default function AdminQualityPage() {
         feels_comfortable: c.feels_comfortable, keep_caregiver: c.keep_caregiver, suggestions: c.suggestions,
         notes: c.notes, next_call_date: c.next_call_date,
       })))
-    } catch (err) {
+    } catch (err: any) {
       console.error('Quality load error:', err)
+      setLoadError(err?.message || 'Daten konnten nicht geladen werden.')
     } finally {
       setLoading(false)
     }
@@ -161,6 +169,7 @@ export default function AdminQualityPage() {
 
       {tab === 'anrufe' && (
       <>
+      {loadError && <Banner tone="danger">{loadError}</Banner>}
       {overdue > 0 && <Banner tone="danger">❗ {overdue} überfällige(r) Zufriedenheitsanruf(e).</Banner>}
 
       {/* Auswertung */}

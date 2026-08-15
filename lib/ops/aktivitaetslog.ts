@@ -28,8 +28,8 @@ export async function logAktivitaet(
     entitaetTyp: AktivitaetEntitaetTyp
     entitaetId: string
     aktion: AktivitaetAktion
-    vorher?: Record<string, unknown> | null
-    nachher?: Record<string, unknown> | null
+    vorher?: object | null
+    nachher?: object | null
     akteurId?: string | null
     ipAdresse?: string | null
   },

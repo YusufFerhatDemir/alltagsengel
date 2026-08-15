@@ -52,6 +52,7 @@ export default function AdminDashboardPage() {
   const [warnings, setWarnings] = useState<BudgetWarning[]>([])
   const [absences, setAbsences] = useState<AbsenceItem[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     async function load() {
@@ -121,6 +122,7 @@ export default function AdminDashboardPage() {
         })))
       } catch (err) {
         console.error('Dashboard load error:', err)
+        setError('Die Übersicht konnte nicht vollständig geladen werden. Bitte Seite neu laden.')
       } finally {
         setLoading(false)
       }
@@ -134,6 +136,8 @@ export default function AdminDashboardPage() {
     <div className="admin-page">
       <h1>Übersicht</h1>
       <p className="admin-subtitle">Betriebssystem — heute, {formatDate(todayISO())}</p>
+
+      {error && <Banner tone="danger">{error}</Banner>}
 
       {/* Operative Kennzahlen */}
       <div className="admin-stats-grid">

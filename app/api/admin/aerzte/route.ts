@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
+import { logAuditEvent } from '@/lib/audit-log'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -18,6 +19,22 @@ function nurErlaubteFelder(roh: Record<string, unknown>): Record<string, unknown
     if (roh[feld] !== undefined) sauber[feld] = roh[feld]
   }
   return sauber
+}
+
+/** Validiert LANR/BSNR (9-stellig numerisch, wie DB-CHECK-Constraint) vorab,
+ *  damit der Nutzer eine verstaendliche Fehlermeldung statt eines rohen
+ *  Postgres-Constraint-Fehlers (23514) sieht. */
+function validiereFelder(eingabe: Record<string, unknown>): string | null {
+  for (const [feld, label] of [['lanr', 'LANR'], ['bsnr', 'BSNR']] as const) {
+    const wert = eingabe[feld]
+    if (wert !== null && wert !== undefined && wert !== '' && !/^\d{9}$/.test(String(wert))) {
+      return `${label} muss 9-stellig numerisch sein.`
+    }
+  }
+  if (typeof eingabe.email === 'string' && eingabe.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(eingabe.email)) {
+    return 'E-Mail-Adresse ist ungueltig.'
+  }
+  return null
 }
 
 /** GET — alle Aerzte der aktiven Organisation. */
@@ -63,6 +80,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Vorname und Nachname sind Pflichtfelder' }, { status: 400 })
     }
 
+    const validierungsfehler = validiereFelder(eingabe)
+    if (validierungsfehler) {
+      return NextResponse.json({ error: validierungsfehler }, { status: 400 })
+    }
+
     const admin = createAdminClient()
     const { data, error } = await admin
       .from('aerzte_praxen')
@@ -74,6 +96,18 @@ export async function POST(req: NextRequest) {
       console.error('[admin/aerzte] Anlegen fehlgeschlagen:', error.message)
       return NextResponse.json({ error: `Speichern fehlgeschlagen: ${error.message}` }, { status: 500 })
     }
+
+    await logAuditEvent({
+      action: 'create',
+      actorId: auth.ctx.userId,
+      actorName: auth.ctx.name,
+      actorRole: auth.ctx.role,
+      organizationId: auth.ctx.organizationId,
+      entityType: 'arzt',
+      entityId: data.id,
+      details: { vorname: eingabe.vorname, nachname: eingabe.nachname, praxis_name: eingabe.praxis_name ?? null },
+      request: req,
+    })
 
     return NextResponse.json({ erfolg: true, id: data.id })
   } catch (e) {

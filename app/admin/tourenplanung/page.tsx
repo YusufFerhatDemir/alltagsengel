@@ -320,9 +320,11 @@ export default function TourenplanungPage() {
 
       {loading ? <p style={{ color: 'var(--ink4)' }}>Laden…</p> : (
         <>
-          {/* Wochenansicht */}
+          {/* Wochenansicht — auf Mobilgeraeten waere die 7-Spalten-Ansicht sonst
+              unlesbar gequetscht; horizontales Scrollen statt Layout-Bruch. */}
           {view === 'week' && (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 8 }}>
+            <div style={{ overflowX: 'auto' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(120px, 1fr))', gap: 8, minWidth: 840 }}>
               {tageDerWoche.map(tag => {
                 const heute = tag === isoDate(new Date())
                 return (
@@ -354,6 +356,7 @@ export default function TourenplanungPage() {
                   </div>
                 )
               })}
+            </div>
             </div>
           )}
 

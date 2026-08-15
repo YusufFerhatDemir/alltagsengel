@@ -19,13 +19,14 @@ export async function createChecklistenItem(
   supabase: SupabaseClient,
   params: { organizationId: string; aufgabeId: string; titel: string; position: number },
 ): Promise<OpsAufgabeCheckliste> {
+  if (!params.titel?.trim()) throw new Error('Titel ist ein Pflichtfeld.')
   const { data, error } = await supabase
     .from('ops_aufgaben_checklisten')
     .insert({
       organization_id: params.organizationId,
       aufgabe_id: params.aufgabeId,
-      titel: params.titel,
-      position: params.position,
+      titel: params.titel.trim(),
+      position: params.position ?? 0,
     })
     .select('*')
     .single()
@@ -37,9 +38,12 @@ export async function updateChecklistenItem(
   supabase: SupabaseClient,
   params: { organizationId: string; id: string; data: Partial<Pick<OpsAufgabeCheckliste, 'titel' | 'position' | 'erledigt' | 'erledigt_von' | 'erledigt_am'>> },
 ): Promise<OpsAufgabeCheckliste> {
+  if (params.data.titel !== undefined && !params.data.titel?.trim()) {
+    throw new Error('Titel darf nicht leer sein.')
+  }
   const { data, error } = await supabase
     .from('ops_aufgaben_checklisten')
-    .update(params.data)
+    .update(params.data.titel !== undefined ? { ...params.data, titel: params.data.titel.trim() } : params.data)
     .eq('id', params.id)
     .eq('organization_id', params.organizationId)
     .select('*')
