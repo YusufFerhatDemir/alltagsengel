@@ -1,7 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
-import { getActiveOrgId } from '@/lib/organizations/server'
+import { getActiveOrgIdOrDefault } from '@/lib/organizations/server'
 import { logAuditEvent } from '@/lib/audit-log'
 import { geocodePLZ } from '@/lib/geocoding'
 
@@ -17,7 +17,9 @@ async function requireAuth() {
     .eq('id', user.id)
     .single()
 
-  const organizationId = await getActiveOrgId()
+  // Registrierung: der Nutzer hat noch keine caregivers/clients-Zeile —
+  // bewusster Stamm-Org-Fallback (Audit MITTEL-1, dokumentierte Ausnahme).
+  const organizationId = await getActiveOrgIdOrDefault()
   const name = [profile?.first_name, profile?.last_name].filter(Boolean).join(' ') || 'Engel'
   return { supabase, userId: user.id, organizationId, role: profile?.role ?? null, name }
 }

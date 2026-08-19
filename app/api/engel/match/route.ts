@@ -35,7 +35,7 @@ import { geocodePLZ, haversineDistance } from '@/lib/geocoding'
 import { resolvePlz } from '@/lib/hessen-plz'
 import { ENGEL_MATCH_RADIUS_KM, plzDistanceKm } from '@/lib/plz-match'
 import { istVerfuegbar, type Zeitfenster } from '@/lib/availability'
-import { getActiveOrgId } from '@/lib/organizations/server'
+import { getActiveOrgIdOrDefault } from '@/lib/organizations/server'
 
 export const dynamic = 'force-dynamic'
 
@@ -97,7 +97,9 @@ export async function GET(request: NextRequest) {
   const engelIds = allCards.map(c => c.id).filter(Boolean)
 
   const admin = createAdminClient()
-  const orgId = await getActiveOrgId()
+  // Kundschaft ist nicht in organization_members gefuehrt — bewusster
+  // Stamm-Org-Fallback (Audit MITTEL-1, dokumentierte Ausnahme).
+  const orgId = await getActiveOrgIdOrDefault()
 
   // Kunden-PLZ (postal_code, sonst PLZ aus location-Freitext)
   const { data: me } = await admin
@@ -148,7 +150,7 @@ export async function GET(request: NextRequest) {
   const plzById = new Map<string, string | null>()
   if (engelIds.length > 0) {
     let filteredIds = engelIds
-    if (orgId) {
+    {
       const { data: members } = await admin
         .from('organization_members')
         .select('user_id')

@@ -1,9 +1,9 @@
 'use client'
 import { useEffect, useRef } from 'react'
 import { usePathname } from 'next/navigation'
-// Kein statischer Supabase-Import: PageTracker hängt im Root-Layout und würde
-// sonst ~46 KB gzip Supabase-JS ins First-Load-JS JEDER Seite ziehen (auch
-// Marketing/SEO). Der Client wird erst im Track-Effect nachgeladen.
+// Kein Supabase-Import: PageTracker hängt im Root-Layout und würde sonst
+// ~46 KB gzip Supabase-JS ins First-Load-JS JEDER Seite ziehen (auch
+// Marketing/SEO). Der Aufruf geht stattdessen an /api/track/page-view.
 
 const PAGE_LABELS: Record<string, string> = {
   '/': 'Splash',
@@ -42,17 +42,6 @@ function getPageLabel(path: string): string {
   return path
 }
 
-// IP adresini al — /api/client-ip üzerinden
-async function getClientIP(): Promise<string | null> {
-  try {
-    const res = await fetch('/api/client-ip', { signal: AbortSignal.timeout(3000) })
-    if (res.ok) {
-      const data = await res.json()
-      return data.ip || null
-    }
-  } catch {}
-  return null
-}
 
 export default function PageTracker() {
   const pathname = usePathname()
@@ -64,24 +53,21 @@ export default function PageTracker() {
 
     async function track() {
       try {
-        const { createClient } = await import('@/lib/supabase/client')
-        const supabase = createClient()
-
-        // IP + user bilgisi paralel al
-        const [ipResult, authResult] = await Promise.all([
-          getClientIP(),
-          supabase.auth.getUser()
-        ])
-
-        await supabase.from('page_views').insert({
-          user_id: authResult.data?.user?.id || null,
-          path: pathname,
-          page_label: getPageLabel(pathname),
-          user_agent: navigator.userAgent,
-          referrer: document.referrer || null,
-          screen_width: window.innerWidth,
-          ip_address: ipResult,
-          viewed_at: new Date().toISOString(),
+        // Security-Audit 2026-08-19 (NIEDRIG-3): kein Direktschreibpfad aus dem
+        // Browser mehr. /api/track/page-view setzt IP, User und Organisation
+        // serverseitig und ist ratenbegrenzt; die offene INSERT-Policy auf
+        // page_views ist damit entfallen.
+        await fetch('/api/track/page-view', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          keepalive: true,
+          signal: AbortSignal.timeout(3000),
+          body: JSON.stringify({
+            path: pathname,
+            page_label: getPageLabel(pathname),
+            referrer: document.referrer || null,
+            screen_width: window.innerWidth,
+          }),
         })
       } catch {
         // Tracking should never break the app

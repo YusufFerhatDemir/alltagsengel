@@ -6,7 +6,7 @@ import { NotFoundState, ErrorState } from '@/components/UIStates'
 import { CUSTOMER_HOURLY_RATE } from '@/lib/pricing/b2c-constants'
 import { IconWingsGold, IconStar, IconStarFilled, IconHeart, IconMore, IconUser, IconCheck } from '@/components/Icons'
 import EngelProfilActions from './EngelProfilActions'
-import { getActiveOrgId } from '@/lib/organizations/server'
+import { getActiveOrgIdOrDefault } from '@/lib/organizations/server'
 import { ladeEngelBewertungen, type OeffentlicheBewertung } from '@/lib/reviews'
 import {
   WOCHENTAGE,
@@ -41,7 +41,9 @@ export default async function EngelProfilPage({ params }: { params: Promise<{ id
   // vorher ein PII-Leak: der Join lieferte die Nachnamen der Kundschaft).
   let reviews: OeffentlicheBewertung[] = []
   try {
-    const orgId = await getActiveOrgId()
+    // Kundschaft ist nicht in organization_members gefuehrt — bewusster
+    // Stamm-Org-Fallback (Audit MITTEL-1, dokumentierte Ausnahme).
+    const orgId = await getActiveOrgIdOrDefault()
     reviews = await ladeEngelBewertungen(id, orgId, 5)
   } catch (err) {
     logError('EngelProfil:reviews', err)

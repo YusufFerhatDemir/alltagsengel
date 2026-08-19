@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { getActiveOrgId } from '@/lib/organizations/server'
+import { getActiveOrgId, resolveUserOrgId } from '@/lib/organizations/server'
 
 export interface AngehAuthContext {
   userId: string
@@ -70,7 +70,7 @@ export async function requireAngehUser(): Promise<
     return { ok: false, response: NextResponse.json({ error: 'Zugriff nur fuer Angehoerige.' }, { status: 403 }) }
   }
 
-  const organizationId = await getActiveOrgId()
+  const organizationId = await resolveUserOrgId()
   if (!organizationId) {
     return { ok: false, response: NextResponse.json({ error: 'Keine Organisation zugewiesen.' }, { status: 403 }) }
   }

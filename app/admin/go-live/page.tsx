@@ -38,6 +38,8 @@ export default async function GoLivePage() {
   }
 
   const organizationId = await getActiveOrgId()
+  // Fail-closed (Audit MITTEL-1): ohne Org-Mitgliedschaft kein Go-Live-Status.
+  if (!organizationId) redirect('/auth/login?error=keine_organisation')
   const ergebnis = await ermittleGoLiveStatus(createAdminClient(), organizationId)
   const { zusammenfassung: z } = ergebnis
 

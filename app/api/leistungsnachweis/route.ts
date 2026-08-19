@@ -104,6 +104,8 @@ export async function GET(request: Request) {
 
     const admin = createAdminClient()
     const orgId = await getActiveOrgId()
+    // Fail-closed (Audit MITTEL-1)
+    if (!orgId) return NextResponse.json({ error: 'Keine Organisation zugewiesen' }, { status: 403 })
     const companyIk = await getOrgIK(admin)
 
     // ── Optional: Verordnung laden (liefert Genehmigungsnummer + Klient) ──

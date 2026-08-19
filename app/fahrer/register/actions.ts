@@ -1,7 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
-import { getActiveOrgId } from '@/lib/organizations/server'
+import { getActiveOrgIdOrDefault } from '@/lib/organizations/server'
 import { logAuditEvent } from '@/lib/audit-log'
 
 // ═══════════════════════════════════════════════════════════════
@@ -13,7 +13,9 @@ async function requireAuthUser() {
   const supabase = await createClient()
   const { data: { user }, error } = await supabase.auth.getUser()
   if (error || !user) throw new Error('Nicht autorisiert.')
-  const organizationId = await getActiveOrgId()
+  // Registrierung: der Nutzer hat noch keine caregivers/clients-Zeile —
+  // bewusster Stamm-Org-Fallback (Audit MITTEL-1, dokumentierte Ausnahme).
+  const organizationId = await getActiveOrgIdOrDefault()
   return { supabase, userId: user.id, organizationId }
 }
 

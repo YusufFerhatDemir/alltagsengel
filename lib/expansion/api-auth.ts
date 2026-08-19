@@ -39,5 +39,12 @@ export async function requireExpansionAdmin(): Promise<AdminKontext> {
   }
 
   const orgId = await getActiveOrgId()
+  // Fail-closed (Audit MITTEL-1): keine Org-Mitgliedschaft => kein Zugriff.
+  if (!orgId) {
+    return {
+      ok: false,
+      response: NextResponse.json({ error: 'Keine Organisation zugewiesen.' }, { status: 403 }),
+    }
+  }
   return { ok: true, userId: user.id, orgId }
 }

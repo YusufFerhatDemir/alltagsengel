@@ -96,6 +96,8 @@ export async function POST(request: Request) {
 
     const admin = createAdminClient()
     const orgId = await getActiveOrgId()
+    // Fail-closed (Audit MITTEL-1)
+    if (!orgId) return NextResponse.json({ error: 'Keine Organisation zugewiesen' }, { status: 403 })
 
     // ── Klient + Monat auflösen ──
     let resolvedClientId = client_id || null

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { requireCoachUser } from '@/lib/coach/api-auth'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { hatAktiveEinwilligung } from '@/lib/coach/consent'
 import {
   BEREITS_FREIGEGEBEN_CODE, BEREITS_FREIGEGEBEN_TEXT,
@@ -50,7 +51,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: FREIGABE_CONSENT_FEHLT_TEXT, code: FREIGABE_CONSENT_FEHLT_CODE }, { status: 403 })
   }
 
-  const { data: granteeId, error: lookupFehler } = await auth.supabase.rpc('coach_finde_nutzer_id', { p_email: email })
+  // NIEDRIG-7 (Security-Audit 2026-08-19): coach_finde_nutzer_id ist ein
+  // Mitgliedschafts-Orakel — zu jeder E-Mail liesse sich abfragen, ob ein
+  // PflegeCoach-Konto existiert. EXECUTE ist deshalb auf service_role
+  // beschraenkt (20260922000000); der Lookup laeuft nur noch hier, hinter
+  // requireCoachUser() UND der Pruefung der eigenen Einwilligung.
+  const { data: granteeId, error: lookupFehler } = await createAdminClient()
+    .rpc('coach_finde_nutzer_id', { p_email: email })
   if (lookupFehler) {
     return NextResponse.json({ error: 'Die Person konnte nicht gesucht werden. Bitte später erneut versuchen.' }, { status: 503 })
   }

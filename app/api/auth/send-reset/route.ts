@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { buildRecoveryLink } from '@/lib/supabase/recovery-link'
 import { sendEmailNotification } from '@/lib/notifications'
+import { rateLimit, getClientIp } from '@/lib/rate-limit'
 
 /**
  * POST /api/auth/send-reset
@@ -10,9 +11,21 @@ import { sendEmailNotification } from '@/lib/notifications'
  */
 export async function POST(request: Request) {
   try {
+    // NIEDRIG-8 (Security-Audit 2026-08-19): ohne Limit liess sich ueber
+    // diesen Endpunkt ein fremdes Postfach mit Reset-Mails fluten.
+    // 3 Anfragen/10 min pro IP und zusaetzlich pro Ziel-Adresse.
+    const ip = getClientIp(request)
+    if (!rateLimit(`send-reset:ip:${ip}`, 5, 600_000)) {
+      return NextResponse.json({ success: true })
+    }
+
     const { email } = await request.json()
     if (!email) {
       return NextResponse.json({ error: 'E-Mail erforderlich' }, { status: 400 })
+    }
+    if (!rateLimit(`send-reset:mail:${String(email).toLowerCase()}`, 3, 600_000)) {
+      // Stille Annahme — kein Hinweis darauf, ob die Adresse existiert.
+      return NextResponse.json({ success: true })
     }
 
     const supabase = createAdminClient()
@@ -55,6 +68,15 @@ export async function POST(request: Request) {
     // entgegen — das Feld muss auf Dashboard-Ebene gesetzt werden (Auth →
     // URL Configuration → Email Link Expiry). Siehe SENTRY_SETUP.md →
     // Follow-up in SUPABASE_AUTH_HARDENING.md.
+    //
+    // NIEDRIG-6 (Security-Audit 2026-08-19): Die Mail nannte frueher „nur
+    // 1 Stunde gueltig". Diese Zusage konnte der Code nicht einloesen — der
+    // Supabase-Default sind 24 h, und ob das Dashboard-Setting gesetzt ist,
+    // laesst sich aus der Anwendung heraus nicht auslesen. Der Text nennt
+    // deshalb keine konkrete Dauer mehr, sondern die belegbare Eigenschaft:
+    // begrenzt gueltig und einmal verwendbar (das Token wird von verifyOtp
+    // verbraucht). Sobald das Dashboard-Setting nachweislich auf 1 h steht,
+    // kann hier wieder eine konkrete Dauer stehen.
 
     if (error) {
       console.error('generateLink recovery error:', error)
@@ -77,7 +99,7 @@ export async function POST(request: Request) {
           <p>Sie haben angefordert, Ihr Passwort zurückzusetzen.</p>
           <p>Klicken Sie auf den folgenden Button, um ein neues Passwort festzulegen:</p>
           <a href="${resetLink}" style="display:inline-block;padding:14px 32px;background:#C9963C;color:#1A1612;text-decoration:none;border-radius:10px;font-weight:600;margin:16px 0;">PASSWORT ZURÜCKSETZEN</a>
-          <p style="color:#888;font-size:12px;margin-top:16px;">Dieser Link ist aus Sicherheitsgründen nur 1 Stunde gültig. Wenn Sie kein neues Passwort angefordert haben, können Sie diese E-Mail ignorieren.</p>
+          <p style="color:#888;font-size:12px;margin-top:16px;">Dieser Link ist aus Sicherheitsgründen nur begrenzte Zeit gültig und lässt sich nur einmal verwenden. Fordern Sie einfach einen neuen an, falls er nicht mehr funktioniert. Wenn Sie kein neues Passwort angefordert haben, können Sie diese E-Mail ignorieren.</p>
         `
       )
     }

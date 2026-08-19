@@ -248,6 +248,19 @@ export default function MeinProfilPage() {
           {loggingOut ? 'Abmelden...' : 'Abmelden'}
         </button>
 
+        {/* DSGVO Art. 15: Auskunft ueber die eigenen Daten */}
+        <a
+          href="/api/user/export"
+          style={{
+            display: 'block', width: '100%', padding: '12px 0', borderRadius: 12,
+            border: 'none', background: 'transparent', textAlign: 'center',
+            color: 'var(--ink5)', fontSize: 13, cursor: 'pointer', marginTop: 8,
+            textDecoration: 'none',
+          }}
+        >
+          Meine Daten herunterladen
+        </a>
+
         <button onClick={() => setDeleteConfirm(true)} style={{
           width: '100%', padding: '12px 0', borderRadius: 12, border: 'none',
           background: 'transparent', color: 'var(--ink5)', fontSize: 13, cursor: 'pointer', marginTop: 8,

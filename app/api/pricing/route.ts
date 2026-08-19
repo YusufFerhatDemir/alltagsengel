@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { heuteBerlin } from '@/lib/utils/timezone';
-import { getActiveOrgId } from '@/lib/organizations/server'
+import { getActiveOrgIdOrDefault } from '@/lib/organizations/server'
 import { safeDbError } from '@/lib/utils/api-error'
 
 // ═══════════════════════════════════════════════════════════════
@@ -55,7 +55,11 @@ export async function GET(request: Request) {
     const budgetType = url.searchParams.get('budget_type')
     const today = heuteBerlin()
 
-    const organizationId = await getActiveOrgId()
+    // Endkunden-/Engel-Pfad: diese Rollen sind nicht in organization_members
+    // gefuehrt. Bewusster Stamm-Org-Fallback (Audit MITTEL-1, dokumentierte
+    // Ausnahme) — entscheidend ist, dass der Org-Filter UNBEDINGT greift und
+    // nicht mehr an einer Bedingung haengt und uebersprungen werden kann.
+    const organizationId = await getActiveOrgIdOrDefault()
 
     const admin = createAdminClient()
     let query = admin
@@ -67,7 +71,7 @@ export async function GET(request: Request) {
       .order('service_type', { ascending: true })
       .order('budget_type', { ascending: true })
 
-    if (organizationId) query = query.eq('organization_id', organizationId)
+    query = query.eq('organization_id', organizationId)
     if (serviceType) query = query.eq('service_type', serviceType)
     if (budgetType) query = query.eq('budget_type', budgetType)
 

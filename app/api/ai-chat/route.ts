@@ -36,7 +36,10 @@ async function fetchLiveContext(orgId: string): Promise<string> {
     const [usersRes, bookingsRes, visitorsRes, engelsRes, kundenRes, fahrerRes] = await Promise.all([
       admin.from('profiles').select('id, role').in('id', memberIdList).limit(500),
       admin.from('bookings').select('id, status, created_at, total_amount, service').eq('organization_id', orgId).limit(100),
-      admin.from('visitor_locations').select('city, country, page_path, created_at').order('created_at', { ascending: false }).limit(50),
+      // MITTEL-2 (Security-Audit 2026-08-19): lief vorher ohne jeden
+      // Org-Filter — Besucherdaten ALLER Mandanten landeten in der
+      // Aggregation, die anschliessend an ein LLM geht.
+      admin.from('visitor_locations').select('city, country, page_path, created_at').eq('organization_id', orgId).order('created_at', { ascending: false }).limit(50),
       admin.from('profiles').select('id').in('id', memberIdList).eq('role', 'engel'),
       admin.from('profiles').select('id').in('id', memberIdList).eq('role', 'kunde'),
       admin.from('profiles').select('id').in('id', memberIdList).eq('role', 'fahrer'),

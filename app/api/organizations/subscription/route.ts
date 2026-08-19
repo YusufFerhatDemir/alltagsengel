@@ -16,6 +16,8 @@ export async function GET() {
   if (!user) return NextResponse.json({ error: 'Nicht autorisiert' }, { status: 401 })
 
   const orgId = await getActiveOrgId()
+  // Fail-closed (Audit MITTEL-1)
+  if (!orgId) return NextResponse.json({ error: 'Keine Organisation zugewiesen' }, { status: 403 })
   const admin = createAdminClient()
 
   const [{ data: organization }, { data: subscription }] = await Promise.all([

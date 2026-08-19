@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { getActiveOrgIdOrDefault } from '@/lib/organizations/server'
 
 // Rate Limiter: max 10 Tracking-Requests pro IP pro Minute
 const trackRateLimit = new Map<string, { count: number; resetAt: number }>()
@@ -111,6 +112,10 @@ export async function POST(req: NextRequest) {
     }
 
     const supabase = createAdminClient()
+    // MITTEL-2 (Security-Audit 2026-08-19): Tracking-Zeilen brauchen einen
+    // Mandantenbezug. Besucher sind in der Regel nicht angemeldet — der
+    // Stamm-Org-Fallback ist hier die fachlich richtige Zuordnung.
+    const organizationId = await getActiveOrgIdOrDefault()
 
     // Vercel Geo-Header (Basis)
     const vercelCountry = req.headers.get('x-vercel-ip-country') || ''
@@ -131,6 +136,7 @@ export async function POST(req: NextRequest) {
 
     // 1) visitors-Tabelle (erweitert mit PLZ, ISP, Stadtteil, UTM/gclid für Google Ads Attribution)
     await supabase.from('visitors').insert({
+      organization_id: organizationId,
       ip,
       country,
       city,
@@ -165,6 +171,7 @@ export async function POST(req: NextRequest) {
     else if (pagePath.startsWith('/mis')) portal = 'admin'
 
     await supabase.from('visitor_locations').insert({
+      organization_id: organizationId,
       portal,
       city: city || null,
       country: country || null,

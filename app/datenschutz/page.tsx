@@ -109,6 +109,13 @@ export default function DatenschutzPage() {
             Auskunft über Ihre gespeicherten personenbezogenen Daten, deren Herkunft und Empfänger und den Zweck
             der Datenverarbeitung und ggf. ein Recht auf Berichtigung oder Löschung dieser Daten.
           </p>
+          <p>
+            Für die Auskunft nach Art. 15 Abs. 3 DSGVO steht Ihnen ein Selbstbedienungs-Export zur Verfügung: In
+            Ihrem Profil finden Sie den Punkt „Meine Daten herunterladen". Sie erhalten damit sofort eine
+            strukturierte, maschinenlesbare Kopie der zu Ihrer Person gespeicherten Daten (Art. 20 DSGVO). Nutzende
+            des PflegeCoach exportieren ihre dort pseudonymisiert gespeicherten Daten separat über den PflegeCoach.
+            Selbstverständlich können Sie eine Auskunft weiterhin auch formlos bei uns anfordern.
+          </p>
         </section>
 
         <section className="legal-section">
@@ -161,6 +168,23 @@ export default function DatenschutzPage() {
             Abs. 1 lit. a DSGVO (Einwilligung bei Newsletter). Weitere Informationen:{' '}
             <a href="https://resend.com/legal/privacy-policy" target="_blank" rel="noopener noreferrer" style={{ color: '#C9963C', textDecoration: 'underline' }}>
               Datenschutzerklärung von Resend
+            </a>.
+          </p>
+          <h3>Stripe (Zahlungsabwicklung)</h3>
+          <p>
+            Für die Abwicklung kostenpflichtiger Buchungen und Abonnements (u. a. PflegeCoach) nutzen wir den
+            Zahlungsdienstleister Stripe (Stripe Payments Europe Ltd., The One Building, 1 Grand Canal Street Lower,
+            Dublin 2, Irland; für Kartenzahlungen zusätzlich Stripe Inc., 510 Townsend Street, San Francisco,
+            CA 94103, USA). Wenn Sie einen kostenpflichtigen Vorgang starten, werden Sie auf eine von Stripe
+            gehostete Zahlungsseite geleitet. Dabei verarbeitet Stripe Ihren Namen, Ihre E-Mail-Adresse, den
+            Rechnungsbetrag sowie die von Ihnen eingegebenen Zahlungsdaten (z. B. Kartennummer). Die Zahlungsdaten
+            selbst werden ausschließlich von Stripe verarbeitet und erreichen unsere Systeme nicht; wir erhalten
+            lediglich eine Kunden- und Zahlungskennung sowie den Zahlungsstatus zurück. Rechtsgrundlage ist Art. 6
+            Abs. 1 lit. b DSGVO (Vertragserfüllung) sowie Art. 6 Abs. 1 lit. c DSGVO (handels- und steuerrechtliche
+            Aufbewahrungspflichten). Für die Übermittlung in die USA stützt sich Stripe auf die
+            EU-Standardvertragsklauseln. Weitere Informationen:{' '}
+            <a href="https://stripe.com/de/privacy" target="_blank" rel="noopener noreferrer" style={{ color: '#C9963C', textDecoration: 'underline' }}>
+              Datenschutzerklärung von Stripe
             </a>.
           </p>
           <h3>Google Gemini AI (KI-gestützter Chat)</h3>

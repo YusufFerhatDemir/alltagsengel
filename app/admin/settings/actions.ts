@@ -180,6 +180,8 @@ export async function changeOwnPassword(newPassword: string): Promise<{ ok: true
       return { ok: false, error: error.message }
     }
 
+    // Nur fuer die Audit-Zuordnung; ein null wird von logAuditEvent
+    // ausgelassen und blockiert die bereits erfolgte Aktion nicht.
     const organizationId = await getActiveOrgId()
 
     const { data: profile } = await supabase

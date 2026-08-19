@@ -44,7 +44,23 @@ if (!existsSync(pfad)) {
   process.exit(1)
 }
 
-const inhalt = readFileSync(pfad, 'utf8')
+const roh = readFileSync(pfad, 'utf8')
+
+// _run_sql fuehrt den Text per EXECUTE in einer plpgsql-Funktion aus. Postgres
+// erlaubt dort keine Transaktionsbefehle:
+//   0A000 "EXECUTE of transaction commands is not implemented"
+// Deshalb werden ein fuehrendes BEGIN; und ein abschliessendes COMMIT; hier
+// entfernt. Die Atomaritaet geht dabei NICHT verloren: der Funktionsaufruf
+// laeuft selbst in einer Transaktion, der ganze Rumpf faellt also gemeinsam
+// durch. Die Migrationsdatei behaelt BEGIN/COMMIT, damit sie unveraendert im
+// Supabase-SQL-Editor und per psql anwendbar bleibt.
+const inhalt = roh
+  .replace(/^\s*BEGIN\s*;\s*$/im, '')
+  .replace(/^\s*COMMIT\s*;\s*$/im, '')
+
+if (inhalt !== roh) {
+  console.log('Hinweis: BEGIN/COMMIT entfernt — _run_sql kapselt die Anweisungen selbst in einer Transaktion.')
+}
 console.log(`Wende an: ${name} (${inhalt.length} Zeichen)`)
 
 const res = await fetch(`${URL_BASIS}/rest/v1/rpc/_run_sql`, {

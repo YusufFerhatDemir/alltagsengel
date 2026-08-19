@@ -219,7 +219,12 @@ export async function PATCH(req: NextRequest) {
   }
 
   const organizationId = await getActiveOrgId()
-  if (organizationId) {
+  // Fail-closed (Audit MITTEL-1): ohne Org wuerde die Einsatzfreigabe-Pruefung
+  // komplett uebersprungen — genau der Pfad, den sie absichern soll.
+  if (!organizationId) {
+    return NextResponse.json({ error: 'Keine Organisation zugewiesen.' }, { status: 403 })
+  }
+  {
     const admin = createAdminClient()
     if (updates.caregiver_id) {
       const freigabe = await pruefeEinsatzfreigabe(admin, updates.caregiver_id, organizationId)
@@ -281,7 +286,7 @@ export async function PATCH(req: NextRequest) {
     .from('assignments')
     .update(updatePayload)
     .eq('id', id)
-  if (organizationId) query = query.eq('organization_id', organizationId)
+  query = query.eq('organization_id', organizationId)
   const { data, error } = await query.select().single()
 
   if (error) {
