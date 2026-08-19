@@ -103,6 +103,11 @@ function createMockSupabase(opts: {
       const builder: any = {
         select() { return builder },
         eq() { return builder },
+        // Budgetdeckel (ermittleBudgetLage): liest client_budgets und die
+        // Bestandsrechnungen des Kalenderjahres, bevor die RPC laeuft.
+        gte() { return builder },
+        lte() { return builder },
+        in() { return builder },
         // Faelligkeits-Nachlauf (setzeFaelligkeitFallsLeer): laedt die Rechnung
         // und setzt due_date, solange sie leer ist.
         is() { return Promise.resolve({ data: null, error: null }) },

@@ -56,29 +56,50 @@ const createMockSupabase = () => ({
         }),
       };
     }
+    if (table === 'client_budgets') {
+      // Budgetdeckel (ermittleBudgetLage): ohne Zeile gelten die gesetzlichen
+      // Werte — 131 EUR/Monat, 1572 EUR/Jahr.
+      const kette: any = {};
+      kette.select = () => kette;
+      kette.eq = () => kette;
+      kette.maybeSingle = vi.fn().mockResolvedValue({ data: null, error: null });
+      return kette;
+    }
+    if (table === 'invoice_items') {
+      const kette: any = {};
+      kette.select = () => kette;
+      kette.in = vi.fn().mockResolvedValue({ data: [], error: null });
+      return kette;
+    }
     if (table === 'invoices') {
-      // Faelligkeits-Nachlauf (setzeFaelligkeitFallsLeer): laedt die Rechnung
-      // und setzt due_date, solange sie leer ist.
-      return {
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            maybeSingle: vi.fn().mockResolvedValue({
-              data: {
-                id: 'inv-1',
-                due_date: null,
-                payment_terms_days: 14,
-                created_at: '2026-09-01T10:00:00Z',
-              },
-              error: null,
-            }),
-          }),
+      // Zwei Lesewege auf derselben Tabelle:
+      //   • Liste der Bestandsrechnungen des Jahres (Budgetdeckel) — endet auf .lte()
+      //   • Einzelzeile (Faelligkeit + Deckelung) — endet auf .maybeSingle()
+      const kette: any = {};
+      kette.select = () => kette;
+      kette.eq = () => kette;
+      kette.gte = () => kette;
+      kette.lte = vi.fn().mockResolvedValue({ data: [], error: null });
+      kette.maybeSingle = vi.fn().mockResolvedValue({
+        data: {
+          id: 'inv-1',
+          due_date: null,
+          payment_terms_days: 14,
+          created_at: '2026-09-01T10:00:00Z',
+          total_amount: 0,
+          budget_amount: 0,
+          private_amount: 0,
+          notes: null,
+        },
+        error: null,
+      });
+      kette.update = vi.fn().mockReturnValue({
+        eq: vi.fn().mockReturnValue({
+          is: vi.fn().mockResolvedValue({ error: null }),
+          then: (resolve: any) => Promise.resolve({ error: null }).then(resolve),
         }),
-        update: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            is: vi.fn().mockResolvedValue({ error: null }),
-          }),
-        }),
-      };
+      });
+      return kette;
     }
     return {
       select: mockSelect,

@@ -64,6 +64,7 @@ export {
   TARIFF_ERROR_CODES,
   parseTariffError,
   createInvoiceDraft,
+  wendeBudgetDeckelAn,
   freezeInvoice,
   generateInvoiceNumber,
   cancelInvoice,
@@ -71,6 +72,27 @@ export {
   createCreditNote,
   writeOffInvoice,
 } from './invoice-engine';
+
+// Budgetdeckel § 45b / § 42a
+export {
+  type BudgetTopf,
+  type GedeckelterTopf,
+  type BudgetDeckelEingabe,
+  type BudgetDeckelErgebnis,
+  type BudgetLage,
+  ENTLASTUNG_BUDGET_TYPEN,
+  VERHINDERUNG_BUDGET_TYPEN,
+  SACHLEISTUNG_36_BUDGET_TYPEN,
+  PRIVAT_BUDGET_TYPEN,
+  UNGEDECKELTE_TOEPFE,
+  UnbekannterBudgetTypError,
+  BudgetLageNichtErmittelbarError,
+  budgetTopfFuer,
+  istGedeckelt,
+  berechneBudgetDeckel,
+  ermittleBudgetLage,
+  deckelAusLage,
+} from './budget-cap';
 
 // Gutschrift-Lebenszyklus (Freigabe / Verwerfen)
 export {

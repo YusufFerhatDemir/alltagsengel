@@ -34,6 +34,18 @@ import { TarifNichtVerifiziertError, type TarifStatus } from './price-resolver';
 // dadurch war jede zahlungszielbasierte Auswertung (OPOS, Mahnwesen,
 // workflow_engine) wirkungslos.
 import { zahlungszielFelder } from './zahlungsziel';
+// Budgetdeckel § 45b / § 42a: die RPC kennt client_budgets nicht und weist
+// jeden Nicht-Privat-Betrag ungedeckelt als Kassenanteil aus (Befund A-1).
+// Der Deckel sitzt deshalb hier — Lage VOR der RPC lesen (fail-closed),
+// Aufteilung danach korrigieren.
+import {
+  budgetTopfFuer,
+  istGedeckelt,
+  ermittleBudgetLage,
+  deckelAusLage,
+  type BudgetLage,
+  type BudgetDeckelErgebnis,
+} from './budget-cap';
 
 // ---------------------------------------------------------------------------
 // Fehler-Codes fuer Tarif-Aufloesung
@@ -75,6 +87,12 @@ export interface CreateDraftResult {
   priceSource: 'billing_tariffs';
   tariffErrorCode?: TariffErrorCode;
   tariffErrorMessage?: string;
+  /**
+   * Ergebnis der Budgetdeckelung (§ 45b / § 42a). `null` bei Privatrechnungen
+   * und bei `alreadyExists` — dort wurde der Deckel bei der Erstanlage
+   * angewendet und wird nicht erneut gerechnet.
+   */
+  budgetDeckel?: BudgetDeckelErgebnis | null;
 }
 
 export interface FreezeResult {
@@ -207,6 +225,106 @@ export async function setzeFaelligkeitFallsLeer(
   }
 }
 
+/**
+ * Wendet den Budgetdeckel auf eine bereits erstellte Rechnung an.
+ *
+ * Wird unmittelbar nach `create_invoice_draft_atomic()` aufgerufen. Die
+ * Budgetlage wurde bereits **vor** der RPC gelesen (fail-closed) — hier wird
+ * nur noch gerechnet und geschrieben.
+ *
+ * Es wird nichts blockiert: der Ueberschuss wandert von `budget_amount` nach
+ * `private_amount`. `total_amount` bleibt unveraendert — die Leistung wurde
+ * erbracht, nur der Traeger der Kosten aendert sich.
+ *
+ * Ein Fehlschlag des Schreibens wirft. Anders als beim Faelligkeitsdatum ist
+ * das hier richtig: eine Rechnung mit ungedeckeltem Kassenanteil ist eine
+ * unzulaessige Forderung gegen die Pflegekasse, kein Auswertungsmangel. Der
+ * Aufrufer sieht den Entwurf dann als fehlgeschlagen und kann ihn stornieren.
+ */
+export async function wendeBudgetDeckelAn(
+  supabase: SupabaseClient,
+  params: {
+    invoiceId: string;
+    organizationId: string;
+    actorId: string;
+    lage: BudgetLage;
+  }
+): Promise<BudgetDeckelErgebnis | null> {
+  const { invoiceId, organizationId, actorId, lage } = params;
+
+  const { data: invoice, error: loadError } = await supabase
+    .from('invoices')
+    .select('id, total_amount, budget_amount, private_amount, notes')
+    .eq('id', invoiceId)
+    .maybeSingle();
+
+  if (loadError || !invoice) {
+    throw new Error(
+      `Budgetdeckel: Rechnung ${invoiceId} nach der Erstellung nicht lesbar `
+      + `(${loadError?.message ?? 'keine Zeile'}). Aufteilung ungeprueft.`
+    );
+  }
+
+  const kassenBetrag = Number(invoice.budget_amount ?? 0);
+  const bisherPrivat = Number(invoice.private_amount ?? 0);
+
+  const ergebnis = deckelAusLage(lage, kassenBetrag);
+
+  if (!ergebnis.gedeckelt) return ergebnis;
+
+  const neuerPrivatAnteil = Math.round((bisherPrivat + ergebnis.ueberschussEuro + Number.EPSILON) * 100) / 100;
+
+  const notizZusatz = `[Budgetdeckel] ${ergebnis.grund}`;
+  const notes = invoice.notes ? `${invoice.notes}\n${notizZusatz}` : notizZusatz;
+
+  const { error: updateError } = await supabase
+    .from('invoices')
+    .update({
+      budget_amount: ergebnis.budgetAnteilEuro,
+      private_amount: neuerPrivatAnteil,
+      notes,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', invoiceId);
+
+  if (updateError) {
+    throw new Error(
+      `Budgetdeckel konnte nicht angewendet werden (${updateError.message}). `
+      + `Rechnung ${invoiceId} traegt weiterhin einen ungedeckelten Kassenanteil `
+      + `von ${kassenBetrag.toFixed(2)} EUR.`
+    );
+  }
+
+  await logBillingAction(supabase, {
+    entityType: 'invoice',
+    entityId: invoiceId,
+    organizationId,
+    action: 'budget_capped',
+    previousState: {
+      budget_amount: kassenBetrag,
+      private_amount: bisherPrivat,
+    },
+    newState: {
+      budget_amount: ergebnis.budgetAnteilEuro,
+      private_amount: neuerPrivatAnteil,
+      ueberschuss_euro: ergebnis.ueberschussEuro,
+      greifender_deckel: ergebnis.greifenderDeckel,
+      limit_bis_monat_euro: ergebnis.limitBisMonatEuro,
+      limit_jahr_euro: ergebnis.limitJahrEuro,
+      verfuegbar_euro: ergebnis.verfuegbarEuro,
+      budget_topf: lage.topf,
+      period_month: lage.periodMonth,
+      anspruch_quelle: lage.anspruchQuelle,
+      verbraucht_bis_monat_euro: lage.verbrauchtBisMonatEuro,
+      verbraucht_jahr_euro: lage.verbrauchtJahrEuro,
+    },
+    reason: ergebnis.grund ?? undefined,
+    actorId,
+  });
+
+  return ergebnis;
+}
+
 export async function createInvoiceDraft(
   supabase: SupabaseClient,
   params: CreateDraftParams
@@ -223,6 +341,24 @@ export async function createInvoiceDraft(
   if (clientError || !client) {
     throw new Error(`Klient ${clientId} nicht gefunden.`);
   }
+
+  // ── Budgetlage VOR der Rechnungserstellung ───────────────────────────
+  // Reihenfolge ist bewusst: die RPC kennt client_budgets nicht und weist
+  // jeden Nicht-Privat-Betrag ungedeckelt als Kassenanteil aus. Ist die
+  // Budgetlage nicht ermittelbar, wird hier geworfen — bevor eine Rechnung
+  // existiert, deren Aufteilung niemand belegen kann.
+  // `privat` hat keinen Anspruch zu begrenzen; `sachleistung_36` (§ 36 SGB XI)
+  // ist pflegegradabhaengig und hat keine hinterlegten Saetze — beides in
+  // UNGEDECKELTE_TOEPFE begruendet, damit die Luecke benannt bleibt.
+  const topf = budgetTopfFuer(budgetType);
+  const lage = istGedeckelt(topf)
+    ? await ermittleBudgetLage(supabase, {
+        clientId,
+        organizationId: client.organization_id,
+        periodMonth,
+        topf,
+      })
+    : null;
 
   // ── Atomare Rechnungserstellung via RPC ──────────────────────────────
   // Tarif-Aufloesung + Preisberechnung + Rechnungserstellung
@@ -282,6 +418,21 @@ export async function createInvoiceDraft(
   // ein Fehlschlag hier darf die bereits committete Rechnung nicht kippen.
   await setzeFaelligkeitFallsLeer(supabase, rpcResult.invoice_id);
 
+  // ── Budgetdeckel § 45b / § 42a anwenden ──────────────────────────────
+  // Nur bei frisch erstellten Rechnungen: bei already_exists=true wurde der
+  // Deckel bei der Erstanlage angewendet, und der bereits fakturierte
+  // Verbrauch enthaelt diese Rechnung schon — ein zweiter Lauf wuerde sie
+  // gegen sich selbst rechnen.
+  let budgetDeckel: BudgetDeckelErgebnis | null = null;
+  if (lage && !rpcResult.already_exists) {
+    budgetDeckel = await wendeBudgetDeckelAn(supabase, {
+      invoiceId: rpcResult.invoice_id,
+      organizationId: client.organization_id,
+      actorId,
+      lage,
+    });
+  }
+
   // Ergebnis auswerten — Preise kommen ausschliesslich aus billing_tariffs
   return {
     invoiceId: rpcResult.invoice_id,
@@ -290,6 +441,7 @@ export async function createInvoiceDraft(
     lineCount: rpcResult.line_count,
     alreadyExists: rpcResult.already_exists,
     priceSource: 'billing_tariffs',
+    budgetDeckel,
   };
 }
 
