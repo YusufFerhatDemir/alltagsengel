@@ -5,6 +5,7 @@ import { requireKimAdmin } from '@/lib/kim/api-auth'
 import { listMessages } from '@/lib/kim/message-service'
 import { fetchAndStoreInbound } from '@/lib/kim/inbox-service'
 import { resolveOrgProvider } from '@/lib/kim/provider-config-service'
+import { ermittleVersandModus, KimBetriebsmodusError } from '@/lib/kim/versandmodus'
 
 export async function GET(req: NextRequest) {
   const auth = await requireKimAdmin()
@@ -38,8 +39,11 @@ export async function POST() {
     const admin = createAdminClient()
     const provider = await resolveOrgProvider(sb, auth.ctx.organizationId)
     const summary = await fetchAndStoreInbound(admin, provider, auth.ctx.organizationId)
-    return NextResponse.json(summary)
+    return NextResponse.json({ ...summary, betriebsmodus: ermittleVersandModus(provider) })
   } catch (e: unknown) {
+    if (e instanceof KimBetriebsmodusError) {
+      return NextResponse.json({ error: e.message, code: e.code }, { status: 409 })
+    }
     const msg = e instanceof Error ? e.message : 'Unbekannter Fehler'
     return NextResponse.json({ error: msg }, { status: 500 })
   }

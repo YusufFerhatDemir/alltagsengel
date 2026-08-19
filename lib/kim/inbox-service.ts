@@ -2,6 +2,7 @@ import type { IKimProvider } from './provider-interface'
 import type { KimClient, KimMessage } from './types'
 import { writeKimAuditLog } from './audit-service'
 import { uploadKimAttachment } from './attachment-service'
+import { mitSimulationsMarker, pruefeVersandModus, simulationsMarker } from './versandmodus'
 
 export interface FetchInboundSummary {
   inserted: number
@@ -32,6 +33,12 @@ export async function fetchAndStoreInbound(
   provider: IKimProvider,
   organizationId: string
 ): Promise<FetchInboundSummary> {
+  // Auch der Abruf wird geprüft und gekennzeichnet: eine simulierte
+  // Eingangsnachricht mit status='zugestellt' sähe sonst aus wie ein echter
+  // Arztbrief aus der TI — und würde in der Akte genauso behandelt.
+  const modus = pruefeVersandModus(provider)
+  const marker = simulationsMarker(modus)
+
   const inbound = await provider.fetchInbound()
   const messages: KimMessage[] = []
   let duplicates = 0
@@ -55,6 +62,7 @@ export async function fetchAndStoreInbound(
         status: 'zugestellt',
         delivered_at: item.receivedAt,
         provider_message_id: item.providerMessageId,
+        metadata: mitSimulationsMarker(null, marker),
       })
       .select('*')
       .single()

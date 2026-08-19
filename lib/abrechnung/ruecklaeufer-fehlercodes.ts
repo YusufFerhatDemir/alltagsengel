@@ -31,6 +31,46 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js'
 
+/**
+ * Abrechnungsverfahren, aus dem ein Fehlercode stammt.
+ *
+ * WARUM DAS NÖTIG IST
+ * `dta_fehlercode_katalog` kennt nur `kassen_code` — kein Verfahrensfeld. Die
+ * heute gepflegten 20 Einträge stammen ausnahmslos aus dem Fehlerverzeichnis
+ * zur § 105 SGB XI-Vereinbarung (spec_quelle "TA1 6.5.1 Anlage 4"). Die Codes
+ * sind kurz und numerisch ("01", "02", "03") und im § 302-Verfahren
+ * (häusliche Krankenpflege) mit ANDERER Bedeutung belegt.
+ *
+ * Ohne Verfahrensfilter würde ein § 302-Rückläufer mit Code "02" die
+ * § 105-Beschreibung "Nutzdatendatei fehlerhaft — EDIFACT-Struktur ungueltig"
+ * samt Massnahme erben. Das ist eine plausible, aber unbelegte Behauptung
+ * über eine fremde Spezifikation — genau der Fehler, den der Katalog laut
+ * Modulkopf verhindern soll.
+ *
+ * Die Trennung läuft über `spec_quelle`, weil das Schema kein eigenes Feld
+ * hat und für DDL kein Zugang besteht: ein Eintrag gehört zu § 302, wenn seine
+ * Quellenangabe die Vorschrift ausdrücklich nennt.
+ *
+ * Die Zuordnung ist bewusst streng. "TA1" allein genügt NICHT — sowohl die
+ * § 105- als auch die § 302-Vereinbarung haben eine Technische Anlage 1, und
+ * die heute gepflegten Einträge ("TA1 6.5.1 Anlage 4 Fehlerverzeichnis")
+ * nennen keine Vorschrift. Sie gehören damit zu KEINEM erkennbaren Verfahren
+ * und greifen bei gesetztem Verfahrensfilter nicht. Das ist das gewollte
+ * Ergebnis: lieber unklassifiziert und sichtbar auf dem Tisch, als mit der
+ * Beschreibung eines fremden Verfahrens versehen. Wer sie für § 105 nutzbar
+ * machen will, ergänzt die Quellenangabe um die Vorschrift.
+ */
+export type Abrechnungsverfahren = 'sgb_xi_105' | 'sgb_v_302'
+
+/** Erkennt am Quellendokument, zu welchem Verfahren ein Katalogeintrag gehört. */
+export function verfahrenAusQuelle(specQuelle: string | null | undefined): Abrechnungsverfahren | null {
+  const q = (specQuelle ?? '').trim()
+  if (!q) return null
+  if (/§\s*302|302\s*(Abs|SGB\s*V)|SGB\s*V/i.test(q)) return 'sgb_v_302'
+  if (/§\s*105|105\s*(Abs|SGB\s*XI)|SGB\s*XI/i.test(q)) return 'sgb_xi_105'
+  return null
+}
+
 export type FehlerKategorie =
   | 'verarbeitungsfehler'
   | 'datenfehler'
@@ -160,11 +200,24 @@ export function klassifiziereHeuristisch(
   return ausKategorie('unbekannt', 'unbekannt')
 }
 
+export interface KlassifizierungsOptionen {
+  /**
+   * Nur Katalogeinträge dieses Verfahrens akzeptieren. Ohne Angabe wird nicht
+   * gefiltert — das ist das seit jeher bestehende Verhalten des § 105-Pfads.
+   */
+  verfahren?: Abrechnungsverfahren
+}
+
 /**
  * Klassifiziert einen Fehlercode: erst Katalog, dann Heuristik.
  *
  * Der Katalog schlägt die Heuristik immer — ein gepflegter Eintrag ist belegt,
  * die Heuristik ist bestenfalls plausibel.
+ *
+ * Mit `optionen.verfahren` greifen nur Katalogeinträge, deren Quellendokument
+ * zu diesem Verfahren gehört. Findet sich keiner, bleibt es bei der Heuristik
+ * bzw. 'unbekannt' — ein sichtbar unklassifizierter Rückläufer ist besser als
+ * einer, der die Beschreibung eines fremden Verfahrens trägt.
  */
 export async function klassifiziereFehlercode(
   supabase: SupabaseClient,
@@ -172,17 +225,24 @@ export async function klassifiziereFehlercode(
   fehlerCode?: string | null,
   fehlerText?: string | null,
   quelleIk?: string | null,
+  optionen?: KlassifizierungsOptionen,
 ): Promise<Klassifizierung> {
   const code = (fehlerCode ?? '').trim()
   if (!code) return klassifiziereHeuristisch(fehlerCode, fehlerText)
 
   // Spezifisch (eigene Org + passende Quelle) vor allgemein.
-  const { data: treffer } = await supabase
+  const { data: rohTreffer } = await supabase
     .from('dta_fehlercode_katalog')
     .select('id, kategorie, beschreibung, massnahme, korrigierbar, spec_quelle, organization_id, quelle_ik')
     .eq('kassen_code', code)
     .or(`organization_id.eq.${organizationId},organization_id.is.null`)
     .is('deleted_at', null)
+
+  // Verfahrensfilter nur, wenn der Aufrufer ein Verfahren nennt. Ohne Angabe
+  // bleibt das Verhalten unverändert (§ 105-Pfad, seit jeher so im Einsatz).
+  const treffer = optionen?.verfahren
+    ? (rohTreffer ?? []).filter(t => verfahrenAusQuelle(t.spec_quelle) === optionen.verfahren)
+    : rohTreffer
 
   if (treffer?.length) {
     const sortiert = [...treffer].sort((a, b) => {

@@ -2,6 +2,7 @@ import type { IKimProvider } from './provider-interface'
 import type { KimAttachment, KimClient, KimMessage } from './types'
 import { writeKimAuditLog } from './audit-service'
 import { downloadKimAttachmentBytes } from './attachment-service'
+import { mitSimulationsMarker, pruefeVersandModus, simulationsMarker } from './versandmodus'
 
 export const RETRY_BACKOFF_BASE_MS = 60_000 // 1 Minute
 export const RETRY_BACKOFF_MAX_MS = 24 * 60 * 60 * 1000 // 24 Stunden
@@ -67,6 +68,11 @@ export async function sendQueuedMessage(
   message: KimMessage,
   actorId?: string | null
 ): Promise<SendAttemptResult> {
+  // Vor jedem Provider-Zugriff, der Zustand schreibt: wirft, wenn im
+  // Echtbetrieb (KIM_AKTIV=true) ein simulierter Provider aktiv wäre.
+  const modus = pruefeVersandModus(provider)
+  const marker = simulationsMarker(modus)
+
   const attachmentRows = await loadAttachments(supabase, message.id)
   const attachments = await Promise.all(
     attachmentRows.map(async a => ({
@@ -94,6 +100,9 @@ export async function sendQueuedMessage(
         provider_message_id: result.providerMessageId ?? null,
         error_details: null,
         next_retry_at: null,
+        // Die Kennzeichnung entsteht im selben Update wie der Statuswechsel:
+        // es gibt keinen Zwischenzustand, in dem 'gesendet' ohne Herkunft steht.
+        metadata: mitSimulationsMarker(message.metadata, marker),
       })
       .eq('id', message.id)
       .eq('organization_id', organizationId)
@@ -105,7 +114,7 @@ export async function sendQueuedMessage(
       aktion: 'gesendet',
       messageId: message.id,
       actorId: actorId ?? null,
-      details: { provider_message_id: result.providerMessageId },
+      details: { provider_message_id: result.providerMessageId, simuliert: modus.simuliert, provider_typ: modus.providerTyp },
     })
 
     return { messageId: message.id, outcome: 'gesendet' }
@@ -121,6 +130,7 @@ export async function sendQueuedMessage(
       retry_count: retryCount,
       error_details: result.errorDetails ?? 'Unbekannter Fehler beim Versand.',
       next_retry_at: exhausted ? null : new Date(Date.now() + computeBackoffMs(retryCount)).toISOString(),
+      metadata: mitSimulationsMarker(message.metadata, marker),
     })
     .eq('id', message.id)
     .eq('organization_id', organizationId)
@@ -132,7 +142,7 @@ export async function sendQueuedMessage(
     aktion: 'sendefehler',
     messageId: message.id,
     actorId: actorId ?? null,
-    details: { retry_count: retryCount, exhausted, error: result.errorDetails },
+    details: { retry_count: retryCount, exhausted, error: result.errorDetails, simuliert: modus.simuliert, provider_typ: modus.providerTyp },
   })
 
   return {
@@ -187,6 +197,12 @@ export async function pollDeliveryStatuses(
 
   if (error) throw new Error(`Nachrichten für Statusabfrage konnten nicht geladen werden: ${error.message}`)
 
+  // 'zugestellt'/'gelesen' sind die Werte, die im Gesundheitswesen als
+  // Zustellnachweis gelesen werden. Sie dürfen erst recht nicht ohne
+  // Herkunftskennzeichnung aus einem Simulator kommen.
+  const modus = pruefeVersandModus(provider)
+  const marker = simulationsMarker(modus)
+
   let updated = 0
   for (const message of (data ?? []) as KimMessage[]) {
     if (!message.provider_message_id) continue
@@ -207,6 +223,7 @@ export async function pollDeliveryStatuses(
       patch.error_details = delivery.errorDetails ?? 'Zustellfehler laut Provider.'
     }
     if (Object.keys(patch).length === 0) continue
+    patch.metadata = mitSimulationsMarker(message.metadata, marker)
 
     const { error: updateError } = await supabase
       .from('kim_messages')
