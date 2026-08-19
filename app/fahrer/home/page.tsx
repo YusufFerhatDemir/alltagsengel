@@ -101,7 +101,7 @@ export default function FahrerHomePage() {
   // Standort in DB aktualisieren
   useEffect(() => {
     if (!userLocation.loading && userLocation.city && provider) {
-      updateProviderCity(provider.id, userLocation.city).catch(() => {})
+      updateProviderCity(provider.id, userLocation.city).catch((err) => console.warn('[Fahrer-Home] Standort-Aktualisierung fehlgeschlagen (non-blocking):', err))
     }
   }, [userLocation.loading, userLocation.city, provider])
 

@@ -204,7 +204,7 @@ export async function POST(req: NextRequest) {
           isp: detailedGeo?.isp || '',
           district: detailedGeo?.district || '',
         }),
-      }).catch(() => {})
+      }).catch((err) => console.warn('[Tracking] Geo-Tracking fehlgeschlagen (non-blocking):', err))
     }
 
     return NextResponse.json({ ok: true })

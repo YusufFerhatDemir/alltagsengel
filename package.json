@@ -117,5 +117,8 @@
   "bugs": {
     "url": "https://github.com/YusufFerhatDemir/alltagsengel/issues"
   },
-  "homepage": "https://github.com/YusufFerhatDemir/alltagsengel#readme"
+  "homepage": "https://github.com/YusufFerhatDemir/alltagsengel#readme",
+  "optionalDependencies": {
+    "@esbuild/linux-x64": "^0.28.2"
+  }
 }

@@ -5,6 +5,7 @@ import { BRAND } from '@/lib/mis/constants'
 import { SectionHeader, Card, DataTable, MisButton, SearchInput, Badge, Tabs, EmptyState, Modal, KpiCard, ActivityItem } from '@/components/mis/MisComponents'
 import { MIcon } from '@/components/mis/MisIcons'
 import { useMis } from '@/lib/mis/MisContext'
+import { updateClientPipeline as updateClientPipelineAction, updateLeadStatus as updateLeadStatusAction, createLead, createPartner, createActivity } from './actions'
 
 // ===== Pipeline Status =====
 const PIPELINE_STATUS: Record<string, { label: string; color: string; icon: string }> = {
@@ -186,63 +187,49 @@ export default function CrmPage() {
 
   // ===== ACTIONS =====
   async function updateClientPipeline(id: string, newStatus: string) {
-    const supabase = createClient()
-    await supabase.from('clients').update({ pipeline_status: newStatus, updated_at: new Date().toISOString() }).eq('id', id)
-    await supabase.from('mis_crm_activities').insert({
-      client_id: id, activity_type: 'status_change',
-      title: `Status → ${PIPELINE_STATUS[newStatus]?.label || newStatus}`,
-      performed_by: 'System',
-    })
+    await updateClientPipelineAction(id, newStatus)
     setSelectedClient(null)
     loadData()
   }
 
   async function updateLeadStatus(id: string, newStatus: string) {
-    const supabase = createClient()
-    await supabase.from('lead_inquiries').update({ status: newStatus, updated_at: new Date().toISOString() }).eq('id', id)
+    await updateLeadStatusAction(id, newStatus)
     setSelectedLead(null)
     loadData()
   }
 
   async function handleCreateLead() {
-    const supabase = createClient()
-    const { error } = await supabase.from('lead_inquiries').insert({
+    const result = await createLead({
       name: leadForm.name, phone: leadForm.phone, plz: leadForm.plz,
-      message: leadForm.message || null, source: leadForm.source || null,
-      service: leadForm.service || null, status: 'new',
+      message: leadForm.message, source: leadForm.source, service: leadForm.service,
     })
-    if (!error) {
+    if (result.ok) {
       setCreateLeadOpen(false)
       setLeadForm({ name: '', phone: '', plz: '', message: '', source: '', service: '' })
       loadData()
-    } else alert('Fehler: ' + error.message)
+    } else alert('Fehler: ' + result.error)
   }
 
   async function handleCreatePartner() {
-    const supabase = createClient()
-    const { error } = await supabase.from('cooperation_partners').insert({
+    const result = await createPartner({
       name: partnerForm.name, type: partnerForm.type,
-      city: partnerForm.city || null, phone: partnerForm.phone || null,
-      email: partnerForm.email || null, contact_person: partnerForm.contact_person || null,
-      status: 'active',
+      city: partnerForm.city, phone: partnerForm.phone,
+      email: partnerForm.email, contact_person: partnerForm.contact_person,
     })
-    if (!error) {
+    if (result.ok) {
       setCreatePartnerOpen(false)
       setPartnerForm({ name: '', type: 'pflegedienst', city: '', phone: '', email: '', contact_person: '' })
       loadData()
-    } else alert('Fehler: ' + error.message)
+    } else alert('Fehler: ' + result.error)
   }
 
   async function handleAddActivity() {
-    const supabase = createClient()
-    const payload: Record<string, unknown> = {
+    const result = await createActivity({
       activity_type: activityForm.activity_type, title: activityForm.title,
-      description: activityForm.description || null, performed_by: activityForm.performed_by || null,
-    }
-    if (selectedClient) payload.client_id = selectedClient.id
-    if (selectedLead) payload.lead_id = selectedLead.id
-    const { error } = await supabase.from('mis_crm_activities').insert(payload)
-    if (!error) {
+      description: activityForm.description, performed_by: activityForm.performed_by,
+      client_id: selectedClient?.id, lead_id: selectedLead?.id,
+    })
+    if (result.ok) {
       setAddActivityOpen(false)
       setActivityForm({ activity_type: 'call', title: '', description: '', performed_by: '' })
       loadData()

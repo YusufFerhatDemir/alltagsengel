@@ -71,7 +71,7 @@ export default function NachrichtDetailPage() {
       if (n && !n.gelesen) {
         fetch(`/api/ops/nachrichten/${id}/gelesen`, {
           method: 'PATCH',
-        }).catch(() => {})
+        }).catch((err) => console.warn('[Nachrichten] Gelesen-Markierung fehlgeschlagen (non-blocking):', err))
       }
     } catch (err) {
       console.error('Fehler beim Laden der Nachricht:', err)

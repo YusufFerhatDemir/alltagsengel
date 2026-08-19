@@ -5,6 +5,7 @@ import { BRAND } from '@/lib/mis/constants'
 import { SectionHeader, Card, DataTable, MisButton, SearchInput, Badge, Tabs, EmptyState, Modal } from '@/components/mis/MisComponents'
 import { MIcon } from '@/components/mis/MisIcons'
 import { useMis } from '@/lib/mis/MisContext'
+import { createComplaint, updateComplaintStatus, saveComplaintCapa, deleteComplaint } from './actions'
 
 // ===== Beschwerde-Konstanten =====
 const COMPLAINT_STATUS: Record<string, { label: string; color: string; next?: string; nextLabel?: string }> = {
@@ -99,8 +100,7 @@ export default function ComplaintsPage() {
   }
 
   async function handleCreate() {
-    const supabase = createClient()
-    const { error } = await supabase.from('mis_complaints').insert({
+    const result = await createComplaint({
       title: form.title,
       description: form.description,
       category: form.category,
@@ -109,42 +109,32 @@ export default function ComplaintsPage() {
       angel_name: form.angel_name,
       reported_by: form.reported_by,
       assigned_to: form.assigned_to,
-      incident_date: form.incident_date || null,
-      due_date: form.due_date || null,
+      incident_date: form.incident_date,
+      due_date: form.due_date,
       notes: form.notes,
     })
-    if (!error) {
+    if (result.ok) {
       setCreateOpen(false)
       setForm({ title: '', description: '', category: 'sonstiges', priority: 'normal', customer_name: '', angel_name: '', reported_by: '', assigned_to: '', incident_date: '', due_date: '', notes: '' })
       loadComplaints()
     } else {
-      alert('Fehler: ' + error.message)
+      alert('Fehler: ' + result.error)
     }
   }
 
   async function handleStatusChange(complaint: Complaint, newStatus: string) {
-    const supabase = createClient()
-    const updates: Record<string, unknown> = {
-      status: newStatus,
-      updated_at: new Date().toISOString(),
-    }
-    if (newStatus === 'geloest') updates.resolved_date = new Date().toISOString()
-    if (newStatus === 'geschlossen') updates.closed_date = new Date().toISOString()
-
-    await supabase.from('mis_complaints').update(updates).eq('id', complaint.id)
+    await updateComplaintStatus(complaint.id, newStatus)
     setSelectedComplaint(null)
     loadComplaints()
   }
 
   async function handleSaveCapa() {
     if (!selectedComplaint) return
-    const supabase = createClient()
-    await supabase.from('mis_complaints').update({
+    await saveComplaintCapa(selectedComplaint.id, {
       root_cause: capaForm.root_cause,
       corrective_action: capaForm.corrective_action,
       preventive_action: capaForm.preventive_action,
-      updated_at: new Date().toISOString(),
-    }).eq('id', selectedComplaint.id)
+    })
     setCapaOpen(false)
     setSelectedComplaint(null)
     loadComplaints()
@@ -152,8 +142,7 @@ export default function ComplaintsPage() {
 
   async function handleDelete(id: string) {
     if (!confirm('Beschwerde wirklich löschen?')) return
-    const supabase = createClient()
-    await supabase.from('mis_complaints').delete().eq('id', id)
+    await deleteComplaint(id)
     setSelectedComplaint(null)
     loadComplaints()
   }

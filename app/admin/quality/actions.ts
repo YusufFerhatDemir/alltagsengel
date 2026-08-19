@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { getActiveOrgId } from '@/lib/organizations/server'
 import { fullName } from '@/lib/admin/ops'
+import { logAuditEvent } from '@/lib/audit-log'
 
 // ═══════════════════════════════════════════════════════════════
 // Server-seitige Aktionen für das Qualitätsmanagement (M13)
@@ -27,7 +28,9 @@ async function requireQMAdmin() {
   const organizationId = await getActiveOrgId()
   if (!organizationId) throw new Error('Keine Organisation zugewiesen.')
 
-  return { supabase, userId: user.id, organizationId, role: profile.role }
+  const name = fullName(profile)
+
+  return { supabase, userId: user.id, organizationId, role: profile.role, name }
 }
 
 // ── Zufriedenheitsanruf dokumentieren ──────────────────────────
@@ -46,7 +49,7 @@ export interface SatisfactionCallInput {
 }
 
 export async function saveSatisfactionCall(input: SatisfactionCallInput): Promise<{ ok: true }> {
-  const { supabase, organizationId } = await requireQMAdmin()
+  const { supabase, userId, organizationId, role, name } = await requireQMAdmin()
 
   // ── Validierung ──
   if (!input.clientId || typeof input.clientId !== 'string') {
@@ -90,6 +93,18 @@ export async function saveSatisfactionCall(input: SatisfactionCallInput): Promis
   })
 
   if (error) throw new Error(`Anruf konnte nicht gespeichert werden: ${error.message}`)
+
+  logAuditEvent({
+    action: 'create',
+    actorId: userId,
+    organizationId,
+    actorRole: role,
+    actorName: name,
+    entityType: 'satisfaction_call',
+    entityId: input.clientId,
+    details: { aktion: 'zufriedenheitsanruf_dokumentiert', callType: input.callType, callDate: input.callDate, rating: input.rating },
+  }).catch((err) => console.warn('[Quality] Audit-Log fehlgeschlagen (non-blocking):', err))
+
   return { ok: true }
 }
 

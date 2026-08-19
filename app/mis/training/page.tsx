@@ -6,6 +6,7 @@ import { BRAND } from '@/lib/mis/constants'
 import { SectionHeader, Card, DataTable, MisButton, SearchInput, Badge, Tabs, EmptyState, Modal } from '@/components/mis/MisComponents'
 import { MIcon } from '@/components/mis/MisIcons'
 import { useMis } from '@/lib/mis/MisContext'
+import { seedTrainingCatalog as seedCatalogAction, createTrainingCatalogEntry, createTrainingRecord, deleteTrainingRecord, deleteTrainingCatalogEntry, updateTrainingRecordStatus } from './actions'
 
 // ===== Typen =====
 interface Training {
@@ -128,32 +129,29 @@ export default function TrainingPage() {
       if (r.status !== newStatus) updates.push({ id: r.id, status: newStatus })
     })
     if (updates.length > 0) {
-      const supabase = createClient()
-      Promise.all(updates.map(u => supabase.from('mis_training_records').update({ status: u.status }).eq('id', u.id)))
+      Promise.all(updates.map(u => updateTrainingRecordStatus(u.id, u.status)))
         .then(() => loadData())
     }
   }, [records, loadData])
 
   // ===== Seed Katalog =====
   async function seedCatalog() {
-    const supabase = createClient()
-    const { error } = await supabase.from('mis_training_catalog').insert(DEFAULT_TRAININGS)
-    if (error) { alert('Fehler: ' + error.message); return }
+    const result = await seedCatalogAction()
+    if (!result.ok) { alert('Fehler: ' + result.error); return }
     loadData()
   }
 
   // ===== CRUD =====
   async function handleCreateCatalog() {
-    const supabase = createClient()
-    const { error } = await supabase.from('mis_training_catalog').insert({
+    const result = await createTrainingCatalogEntry({
       name: catalogForm.name,
       description: catalogForm.description,
       category: catalogForm.category,
-      validity_months: parseInt(catalogForm.validity_months) || 12,
+      validity_months: catalogForm.validity_months,
       provider: catalogForm.provider,
-      duration_hours: parseFloat(catalogForm.duration_hours) || 0,
+      duration_hours: catalogForm.duration_hours,
     })
-    if (error) { alert('Fehler: ' + error.message); return }
+    if (!result.ok) { alert('Fehler: ' + result.error); return }
     setCatalogOpen(false)
     setCatalogForm({ name: '', description: '', category: 'pflicht', validity_months: '12', provider: '', duration_hours: '0' })
     loadData()
@@ -172,8 +170,7 @@ export default function TrainingPage() {
       expiresDate = datumBerlin(exp)
     }
 
-    const supabase = createClient()
-    const { error } = await supabase.from('mis_training_records').insert({
+    const result = await createTrainingRecord({
       training_id: recordForm.training_id,
       engel_id: recordForm.engel_id,
       engel_name: `${engelObj.first_name} ${engelObj.last_name}`.trim(),
@@ -181,9 +178,8 @@ export default function TrainingPage() {
       expires_date: expiresDate,
       certificate_url: recordForm.certificate_url,
       notes: recordForm.notes,
-      status: 'valid',
     })
-    if (error) { alert('Fehler: ' + error.message); return }
+    if (!result.ok) { alert('Fehler: ' + result.error); return }
     setRecordOpen(false)
     setRecordForm({ training_id: '', engel_id: '', completed_date: '', certificate_url: '', notes: '' })
     loadData()
@@ -191,16 +187,14 @@ export default function TrainingPage() {
 
   async function handleDeleteRecord(id: string) {
     if (!confirm('Nachweis wirklich löschen?')) return
-    const supabase = createClient()
-    await supabase.from('mis_training_records').delete().eq('id', id)
+    await deleteTrainingRecord(id)
     setDetailRecord(null)
     loadData()
   }
 
   async function handleDeleteCatalogEntry(id: string) {
     if (!confirm('Schulung aus Katalog entfernen? Alle zugehörigen Nachweise werden ebenfalls gelöscht.')) return
-    const supabase = createClient()
-    await supabase.from('mis_training_catalog').delete().eq('id', id)
+    await deleteTrainingCatalogEntry(id)
     loadData()
   }
 

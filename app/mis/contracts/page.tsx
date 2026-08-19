@@ -5,6 +5,7 @@ import { BRAND } from '@/lib/mis/constants'
 import { SectionHeader, Card, DataTable, MisButton, SearchInput, Badge, Tabs, EmptyState, Modal } from '@/components/mis/MisComponents'
 import { MIcon } from '@/components/mis/MisIcons'
 import { useMis } from '@/lib/mis/MisContext'
+import { createContract, updateContractStatus, deleteContract } from './actions'
 
 // ===== Vertrags-Status-Labels =====
 const CONTRACT_STATUS: Record<string, { label: string; color: string }> = {
@@ -67,38 +68,35 @@ export default function ContractsPage() {
   }
 
   async function handleCreate() {
-    const supabase = createClient()
-    const { error } = await supabase.from('mis_contracts').insert({
+    const result = await createContract({
       title: form.title,
       partner: form.partner,
       type: form.type,
       status: form.status,
-      start_date: form.start_date || null,
-      end_date: form.end_date || null,
-      value: form.value ? parseFloat(form.value) : null,
+      start_date: form.start_date,
+      end_date: form.end_date,
+      value: form.value,
       auto_renew: form.auto_renew,
-      notice_period_days: parseInt(form.notice_period_days) || 30,
+      notice_period_days: form.notice_period_days,
       notes: form.notes,
     })
-    if (!error) {
+    if (result.ok) {
       setCreateOpen(false)
       setForm({ title: '', partner: '', type: 'Arbeitsvertrag', status: 'draft', start_date: '', end_date: '', value: '', auto_renew: false, notice_period_days: '30', notes: '' })
       loadContracts()
     } else {
-      alert('Fehler: ' + error.message)
+      alert('Fehler: ' + result.error)
     }
   }
 
   async function handleStatusChange(id: string, newStatus: string) {
-    const supabase = createClient()
-    await supabase.from('mis_contracts').update({ status: newStatus, updated_at: new Date().toISOString() }).eq('id', id)
+    await updateContractStatus(id, newStatus)
     loadContracts()
   }
 
   async function handleDelete(id: string) {
     if (!confirm('Vertrag wirklich löschen?')) return
-    const supabase = createClient()
-    await supabase.from('mis_contracts').delete().eq('id', id)
+    await deleteContract(id)
     setSelectedContract(null)
     loadContracts()
   }

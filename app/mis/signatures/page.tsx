@@ -5,6 +5,7 @@ import { BRAND } from '@/lib/mis/constants'
 import { SectionHeader, Card, DataTable, MisButton, SearchInput, Badge, Tabs, EmptyState, Modal } from '@/components/mis/MisComponents'
 import { MIcon } from '@/components/mis/MisIcons'
 import { useMis } from '@/lib/mis/MisContext'
+import { createSignatureRequest, updateSignatureRequestStatus, deleteSignatureRequest } from './actions'
 
 // ===== Unterschrift-Status =====
 const SIG_STATUS: Record<string, { label: string; color: string }> = {
@@ -62,41 +63,32 @@ export default function SignaturesPage() {
   }
 
   async function handleCreate() {
-    const supabase = createClient()
-    const { error } = await supabase.from('mis_signature_requests').insert({
+    const result = await createSignatureRequest({
       document_title: form.document_title,
       document_type: form.document_type,
       signer_name: form.signer_name,
       signer_email: form.signer_email,
-      status: 'pending',
-      expires_at: form.expires_at || null,
+      expires_at: form.expires_at,
       notes: form.notes,
     })
-    if (!error) {
+    if (result.ok) {
       setCreateOpen(false)
       setForm({ document_title: '', document_type: 'Vertrag', signer_name: '', signer_email: '', expires_at: '', notes: '' })
       loadRequests()
     } else {
-      alert('Fehler: ' + error.message)
+      alert('Fehler: ' + result.error)
     }
   }
 
   async function handleStatusUpdate(id: string, status: string, extras?: Record<string, unknown>) {
-    const supabase = createClient()
-    await supabase.from('mis_signature_requests').update({
-      status,
-      ...(status === 'sent' ? { sent_at: new Date().toISOString() } : {}),
-      ...(status === 'signed' ? { signed_at: new Date().toISOString() } : {}),
-      ...extras,
-    }).eq('id', id)
+    await updateSignatureRequestStatus(id, status, extras)
     setSelectedReq(null)
     loadRequests()
   }
 
   async function handleDelete(id: string) {
     if (!confirm('Unterschriftsanfrage wirklich löschen?')) return
-    const supabase = createClient()
-    await supabase.from('mis_signature_requests').delete().eq('id', id)
+    await deleteSignatureRequest(id)
     setSelectedReq(null)
     loadRequests()
   }

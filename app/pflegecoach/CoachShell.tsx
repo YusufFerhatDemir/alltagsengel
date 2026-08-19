@@ -112,7 +112,7 @@ export default function CoachShell({
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ a11y_schriftgrad: grad, a11y_kontrast: kontrastAn }),
-    }).catch(() => {})
+    }).catch((err) => console.warn('[PflegeCoach] Profil-Sync fehlgeschlagen (non-blocking):', err))
   }, [])
 
   const setzeGrad = (grad: CoachSchriftgrad) => {

@@ -166,7 +166,7 @@ export async function sendePerSFTP(
     protokoll.push(`[${zeitstempel()}] FEHLER: ${meldung}`)
     return { erfolg: false, protokoll: protokoll.join('\n'), phase, fehler: meldung }
   } finally {
-    await sftp.end().catch(() => {})
+    await sftp.end().catch((err) => console.warn('[SFTP] Verbindungsabbau fehlgeschlagen (non-blocking):', err))
   }
 }
 
@@ -196,7 +196,7 @@ export async function pruefeAntworten(
     }
     return ergebnisse
   } finally {
-    await sftp.end().catch(() => {})
+    await sftp.end().catch((err) => console.warn('[SFTP] Verbindungsabbau fehlgeschlagen (non-blocking):', err))
   }
 }
 
@@ -223,7 +223,7 @@ export async function testeVerbindung(config: TransportConfig): Promise<SendeErg
     // Der Verbindungstest überträgt nichts — er kommt nie über 'verbindung' hinaus.
     return { erfolg: false, protokoll: protokoll.join('\n'), phase: 'verbindung', fehler: meldung }
   } finally {
-    await sftp.end().catch(() => {})
+    await sftp.end().catch((err) => console.warn('[SFTP] Verbindungsabbau fehlgeschlagen (non-blocking):', err))
   }
 }
 

@@ -165,7 +165,7 @@ function LoginForm() {
       await reportFailedLogin(loginEmail)
 
       // Failed Login loggen (im Hintergrund)
-      logFailedLogin(loginEmail).catch(() => {})
+      logFailedLogin(loginEmail).catch((err) => console.warn('[Login] Failed-Login-Logging fehlgeschlagen (non-blocking):', err))
 
       // AUTH-005 Fix: Keine E-Mail-Enumeration mehr — generische Fehlermeldung für alle Auth-Fehler,
       // die an E-Mail-Existenz gekoppelt sind. Details nur server-seitig in mis_auth_log.
@@ -218,7 +218,7 @@ function LoginForm() {
     const role = (user.user_metadata?.role as string) || ''
 
     // Log im Hintergrund
-    logSuccessLogin().catch(() => {})
+    logSuccessLogin().catch((err) => console.warn('[Login] Success-Login-Logging fehlgeschlagen (non-blocking):', err))
 
     // Bei der Registrierung geparkte Profildaten (u.a. PLZ) nachtragen —
     // relevant, wenn signUp wegen E-Mail-Bestätigung keine Session hatte.

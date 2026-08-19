@@ -5,6 +5,7 @@ import { BRAND } from '@/lib/mis/constants'
 import { SectionHeader, Card, DataTable, MisButton, SearchInput, Badge, Tabs, EmptyState, Modal, ProgressBar } from '@/components/mis/MisComponents'
 import { MIcon } from '@/components/mis/MisIcons'
 import { useMis } from '@/lib/mis/MisContext'
+import { createVehicle, updateVehicleStatus, updateVehicleKm, deleteVehicle } from './actions'
 
 // ===== Fahrzeug-Status =====
 const VEHICLE_STATUS: Record<string, { label: string; color: string }> = {
@@ -67,46 +68,42 @@ export default function VehiclesPage() {
   }
 
   async function handleCreate() {
-    const supabase = createClient()
-    const { error } = await supabase.from('mis_vehicles').insert({
-      plate: form.plate.toUpperCase(),
+    const result = await createVehicle({
+      plate: form.plate,
       brand: form.brand,
       model: form.model,
-      year: parseInt(form.year),
+      year: form.year,
       fuel_type: form.fuel_type,
       status: form.status,
-      current_km: form.current_km ? parseInt(form.current_km) : 0,
-      next_tuev: form.next_tuev || null,
-      next_service_km: form.next_service_km ? parseInt(form.next_service_km) : null,
-      insurance_until: form.insurance_until || null,
-      assigned_to: form.assigned_to || null,
+      current_km: form.current_km,
+      next_tuev: form.next_tuev,
+      next_service_km: form.next_service_km,
+      insurance_until: form.insurance_until,
+      assigned_to: form.assigned_to,
       notes: form.notes,
     })
-    if (!error) {
+    if (result.ok) {
       setCreateOpen(false)
       setForm({ plate: '', brand: '', model: '', year: String(new Date().getFullYear()), fuel_type: 'Benzin', status: 'available', current_km: '', next_tuev: '', next_service_km: '', insurance_until: '', assigned_to: '', notes: '' })
       loadVehicles()
     } else {
-      alert('Fehler: ' + error.message)
+      alert('Fehler: ' + result.error)
     }
   }
 
   async function handleStatusChange(id: string, newStatus: string) {
-    const supabase = createClient()
-    await supabase.from('mis_vehicles').update({ status: newStatus, updated_at: new Date().toISOString() }).eq('id', id)
+    await updateVehicleStatus(id, newStatus)
     loadVehicles()
   }
 
   async function handleUpdateKm(id: string, km: number) {
-    const supabase = createClient()
-    await supabase.from('mis_vehicles').update({ current_km: km, updated_at: new Date().toISOString() }).eq('id', id)
+    await updateVehicleKm(id, km)
     loadVehicles()
   }
 
   async function handleDelete(id: string) {
     if (!confirm('Fahrzeug wirklich löschen?')) return
-    const supabase = createClient()
-    await supabase.from('mis_vehicles').delete().eq('id', id)
+    await deleteVehicle(id)
     setSelectedVehicle(null)
     loadVehicles()
   }

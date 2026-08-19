@@ -152,7 +152,7 @@ export default function FahrerRegisterPage() {
             email: formData.email,
             phone: formData.phone,
           }),
-        }).catch(() => {})
+        }).catch((err) => console.warn('[Fahrer-Register] Registrierungs-Tracking fehlgeschlagen (non-blocking):', err))
       }
 
       // Redirect to home if session exists

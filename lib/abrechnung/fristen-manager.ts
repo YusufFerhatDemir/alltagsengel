@@ -285,7 +285,7 @@ export async function escaliereUeberfaellige(
           ruecklaeufer_id: frist.ruecklaeufer_id,
         },
         actorId,
-      }).catch(() => {})
+      }).catch((err) => console.warn('[Fristen] Audit-Log fehlgeschlagen (non-blocking):', err))
 
       eskaliert++
     } catch (err) {
@@ -316,5 +316,5 @@ export async function markiereFristErledigt(
     entityId: fristId,
     action: 'frist_erledigt',
     actorId,
-  }).catch(() => {})
+  }).catch((err) => console.warn('[Fristen] Audit-Log fehlgeschlagen (non-blocking):', err))
 }

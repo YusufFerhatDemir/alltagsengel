@@ -7,6 +7,7 @@ import { SectionHeader, Card, KpiCard, DataTable, MisButton, Badge, Tabs, Modal,
 import { useMis } from '@/lib/mis/MisContext'
 import { SERVICE_TYPES, BUDGET_TYPE, RECORD_STATUS, diffMinutes, formatDuration, statusMeta } from '@/lib/admin/ops'
 import { saveServiceRecord } from '@/lib/admin/service-records'
+import { createTask, updateProfile } from './actions'
 
 export default function TeamPage() {
   const { isMobile } = useMis()
@@ -142,17 +143,18 @@ export default function TeamPage() {
 
   async function handleAddTask() {
     try {
-      const supabase = createClient()
-      const insertData = {
-        ...taskForm,
-        due_date: taskForm.due_date || null,
-        created_by: (await supabase.auth.getUser()).data.user?.id,
-      }
-      const { error } = await supabase.from('mis_tasks').insert(insertData)
-      if (error) { alert('Fehler: ' + error.message); return }
+      const result = await createTask({
+        title: taskForm.title,
+        module: taskForm.module,
+        priority: taskForm.priority,
+        description: taskForm.description,
+        due_date: taskForm.due_date,
+      })
+      if (!result.ok) { alert('Fehler: ' + result.error); return }
       setTaskOpen(false)
       setTaskForm({ title: '', module: 'Team', priority: 'medium', description: '', due_date: '' })
       // reload tasks
+      const supabase = createClient()
       const { data } = await supabase.from('mis_tasks').select('*').order('created_at', { ascending: false }).limit(20)
       setTasks(data || [])
     } catch { alert('Speichern fehlgeschlagen') }
@@ -174,13 +176,18 @@ export default function TeamPage() {
   async function handleEditUser() {
     if (!editUser) return
     try {
-      const supabase = createClient()
-      const { role: _role, ...safeFields } = editForm
-      const { error } = await supabase.from('profiles').update(safeFields).eq('id', editUser.id)
-      if (error) { alert('Fehler: ' + error.message); return }
+      const result = await updateProfile(editUser.id as string, {
+        first_name: editForm.first_name,
+        last_name: editForm.last_name,
+        email: editForm.email,
+        phone: editForm.phone,
+        location: editForm.location,
+      })
+      if (!result.ok) { alert('Fehler: ' + result.error); return }
       setEditOpen(false)
       setEditUser(null)
       // reload users
+      const supabase = createClient()
       const { data } = await supabase.from('profiles').select('*').order('created_at', { ascending: false })
       setUsers(data || [])
     } catch { alert('Speichern fehlgeschlagen') }

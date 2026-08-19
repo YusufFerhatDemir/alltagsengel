@@ -112,7 +112,7 @@ function gtagConversion(label: string, value?: number, currency = 'EUR', userDat
         timestamp: new Date().toISOString(),
       }),
       keepalive: true,
-    }).catch(() => {})
+    }).catch((err) => console.warn('[Tracking] Conversion-Tracking fehlgeschlagen (non-blocking):', err))
   } catch {}
 }
 

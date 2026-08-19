@@ -6,6 +6,7 @@ import {
   SectionHeader, Tabs, KpiCard, Card, DataTable, MisButton, Badge, Modal, EmptyState,
 } from '@/components/mis/MisComponents'
 import { useMis } from '@/lib/mis/MisContext'
+import { savePricingItem, deletePricingItem } from './actions'
 import type { PricingTier, PricingSurcharge, PricingRegion, PricingConfig, PricingAuditEntry, PricingBreakdown } from '@/lib/types/pricing'
 
 // ─── Helpers ───
@@ -86,20 +87,8 @@ export default function KrankenfahrtPricingPage() {
   async function saveItem(entity: string, item: any) {
     setSaving(true)
     try {
-      const supabase = createClient()
-      const table = tableMap[entity]
-      if (!table) { alert('Ungültige Entität'); setSaving(false); return }
-
-      const { id, ...values } = item
-      if (!id) {
-        // Create
-        const { error } = await supabase.from(table).insert(values)
-        if (error) { alert(error.message); setSaving(false); return }
-      } else {
-        // Update
-        const { error } = await supabase.from(table).update({ ...values, updated_at: new Date().toISOString() }).eq('id', id)
-        if (error) { alert(error.message); setSaving(false); return }
-      }
+      const result = await savePricingItem(entity, item)
+      if (!result.ok) { alert(result.error); setSaving(false); return }
       await loadData()
       setEditModal(null)
     } catch { alert('Fehler beim Speichern') }
@@ -109,11 +98,8 @@ export default function KrankenfahrtPricingPage() {
   async function deleteItem(entity: string, id: string) {
     if (!confirm('Wirklich löschen?')) return
     try {
-      const supabase = createClient()
-      const table = tableMap[entity]
-      if (!table) { alert('Ungültige Entität'); return }
-      const { error } = await supabase.from(table).delete().eq('id', id)
-      if (error) { alert(error.message); return }
+      const result = await deletePricingItem(entity, id)
+      if (!result.ok) { alert(result.error); return }
       await loadData()
     } catch { alert('Fehler beim Löschen') }
   }

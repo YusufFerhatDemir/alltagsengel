@@ -5,6 +5,7 @@ import { BRAND } from '@/lib/mis/constants'
 import { SectionHeader, Card, DataTable, MisButton, SearchInput, Badge, Tabs, EmptyState, Modal } from '@/components/mis/MisComponents'
 import { MIcon } from '@/components/mis/MisIcons'
 import { useMis } from '@/lib/mis/MisContext'
+import { createApplicant, createJobPosting, updateApplicantStatus, updateApplicantRating, deleteApplicant, updatePostingStatus, deleteJobPosting } from './actions'
 
 // ===== Status-Definitionen =====
 const APPLICANT_STATUS: Record<string, { label: string; color: string }> = {
@@ -100,8 +101,7 @@ export default function RecruitingPage() {
   }
 
   async function handleCreateApplicant() {
-    const supabase = createClient()
-    const { error } = await supabase.from('mis_applicants').insert({
+    const result = await createApplicant({
       first_name: form.first_name,
       last_name: form.last_name,
       email: form.email,
@@ -109,67 +109,57 @@ export default function RecruitingPage() {
       position: form.position,
       source: form.source,
       notes: form.notes,
-      status: 'eingang',
-      rating: 0,
-      documents: [],
-      job_posting_id: form.job_posting_id || null,
+      job_posting_id: form.job_posting_id || '',
     })
-    if (!error) {
+    if (result.ok) {
       setCreateOpen(false)
       setForm({ first_name: '', last_name: '', email: '', phone: '', position: 'Alltagsbegleiter/in', source: 'Initiativbewerbung', notes: '', job_posting_id: '' })
       loadAll()
-    } else alert('Fehler: ' + error.message)
+    } else alert('Fehler: ' + result.error)
   }
 
   async function handleCreatePosting() {
-    const supabase = createClient()
-    const { error } = await supabase.from('mis_job_postings').insert({
+    const result = await createJobPosting({
       title: postingForm.title,
       description: postingForm.description,
       location: postingForm.location,
       position_type: postingForm.position_type,
-      status: 'active',
       channels: postingForm.channels,
     })
-    if (!error) {
+    if (result.ok) {
       setCreatePostingOpen(false)
       setPostingForm({ title: '', description: '', location: 'Hagen', position_type: 'Alltagsbegleiter/in', channels: [] })
       loadAll()
-    } else alert('Fehler: ' + error.message)
+    } else alert('Fehler: ' + result.error)
   }
 
   async function handleStatusUpdate(id: string, status: string) {
-    const supabase = createClient()
-    await supabase.from('mis_applicants').update({ status, updated_at: new Date().toISOString() }).eq('id', id)
+    await updateApplicantStatus(id, status)
     setSelectedApplicant(null)
     loadAll()
   }
 
   async function handleRating(id: string, rating: number) {
-    const supabase = createClient()
-    await supabase.from('mis_applicants').update({ rating }).eq('id', id)
+    await updateApplicantRating(id, rating)
     loadAll()
     if (selectedApplicant?.id === id) setSelectedApplicant(prev => prev ? { ...prev, rating } : null)
   }
 
   async function handleDeleteApplicant(id: string) {
     if (!confirm('Bewerber wirklich löschen?')) return
-    const supabase = createClient()
-    await supabase.from('mis_applicants').delete().eq('id', id)
+    await deleteApplicant(id)
     setSelectedApplicant(null)
     loadAll()
   }
 
   async function handlePostingStatusUpdate(id: string, status: string) {
-    const supabase = createClient()
-    await supabase.from('mis_job_postings').update({ status, updated_at: new Date().toISOString() }).eq('id', id)
+    await updatePostingStatus(id, status)
     loadAll()
   }
 
   async function handleDeletePosting(id: string) {
     if (!confirm('Stellenanzeige wirklich löschen?')) return
-    const supabase = createClient()
-    await supabase.from('mis_job_postings').delete().eq('id', id)
+    await deleteJobPosting(id)
     loadAll()
   }
 

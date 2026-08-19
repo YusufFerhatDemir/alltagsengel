@@ -64,7 +64,7 @@ export async function GET() {
       user_id: ctx.userId,
       client_id: zugangFuerAudit.client_id,
       aktion: 'termine_eingesehen',
-    }).catch(() => {})
+    }).catch((err) => console.warn('[Angehoerige-Termine] Zugriffs-Protokollierung fehlgeschlagen (non-blocking):', err))
   }
 
   return NextResponse.json({ termine: enriched })

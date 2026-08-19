@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { getActiveOrgId } from '@/lib/organizations/server'
+import { logAuditEvent } from '@/lib/audit-log'
 
 async function requireAbrechnungAdmin() {
   const supabase = await createClient()
@@ -10,7 +11,7 @@ async function requireAbrechnungAdmin() {
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('role')
+    .select('role, first_name, last_name')
     .eq('id', user.id)
     .single()
 
@@ -21,7 +22,9 @@ async function requireAbrechnungAdmin() {
   const organizationId = await getActiveOrgId()
   if (!organizationId) throw new Error('Keine Organisation zugewiesen.')
 
-  return { supabase, userId: user.id, organizationId }
+  const name = `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || undefined
+
+  return { supabase, userId: user.id, organizationId, role: profile.role, name }
 }
 
 export async function speichereLauf(input: {
@@ -37,7 +40,7 @@ export async function speichereLauf(input: {
   logischer_dateiname: string
   fehlerprotokoll: string | null
 }): Promise<{ ok: true }> {
-  const { supabase, userId } = await requireAbrechnungAdmin()
+  const { supabase, userId, organizationId, role, name } = await requireAbrechnungAdmin()
 
   const { error } = await supabase.from('abrechnungslaeufe').upsert({
     abrechnungsmonat: input.abrechnungsmonat,
@@ -55,11 +58,23 @@ export async function speichereLauf(input: {
   }, { onConflict: 'abrechnungsmonat,kostentraeger_ik' })
 
   if (error) throw new Error(`Abrechnungslauf konnte nicht gespeichert werden: ${error.message}`)
+
+  logAuditEvent({
+    action: 'create',
+    actorId: userId,
+    organizationId,
+    actorRole: role,
+    actorName: name,
+    entityType: 'abrechnungslauf',
+    entityId: `${input.abrechnungsmonat}_${input.kostentraeger_ik}`,
+    details: { aktion: 'lauf_gespeichert', abrechnungsmonat: input.abrechnungsmonat, kostentraeger_ik: input.kostentraeger_ik, status: input.status },
+  }).catch((err) => console.warn('[Abrechnung] Audit-Log fehlgeschlagen (non-blocking):', err))
+
   return { ok: true }
 }
 
 export async function setzeLaufStatusAction(laufId: string, status: string): Promise<{ ok: true }> {
-  const { supabase } = await requireAbrechnungAdmin()
+  const { supabase, userId, organizationId, role, name } = await requireAbrechnungAdmin()
 
   const patch: Record<string, unknown> = { status }
   if (status === 'uebermittelt') patch.uebermittelt_am = new Date().toISOString()
@@ -67,5 +82,17 @@ export async function setzeLaufStatusAction(laufId: string, status: string): Pro
 
   const { error } = await supabase.from('abrechnungslaeufe').update(patch).eq('id', laufId)
   if (error) throw new Error(`Status-Update fehlgeschlagen: ${error.message}`)
+
+  logAuditEvent({
+    action: 'update',
+    actorId: userId,
+    organizationId,
+    actorRole: role,
+    actorName: name,
+    entityType: 'abrechnungslauf',
+    entityId: laufId,
+    details: { aktion: 'status_geaendert', neuerStatus: status },
+  }).catch((err) => console.warn('[Abrechnung] Audit-Log fehlgeschlagen (non-blocking):', err))
+
   return { ok: true }
 }

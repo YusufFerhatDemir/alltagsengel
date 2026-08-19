@@ -5,6 +5,7 @@ import { BRAND } from '@/lib/mis/constants'
 import { SectionHeader, Card, KpiCard, DataTable, Tabs, MisButton, Badge, EmptyState, Modal, StatRow } from '@/components/mis/MisComponents'
 import { useMis } from '@/lib/mis/MisContext'
 import type { Supplier, PurchaseOrder } from '@/lib/mis/types'
+import { createSupplier } from './actions'
 
 export default function SupplyChainPage() {
   const { isMobile } = useMis()
@@ -28,9 +29,14 @@ export default function SupplyChainPage() {
 
   async function handleAddSupplier() {
     try {
-      const supabase = createClient()
-      const { error } = await supabase.from('mis_suppliers').insert(form)
-      if (error) { alert('Fehler: ' + error.message); return }
+      const result = await createSupplier({
+        name: form.name,
+        category: form.category,
+        contact_person: form.contact_person,
+        email: form.email,
+        phone: form.phone,
+      })
+      if (!result.ok) { alert('Fehler: ' + result.error); return }
       setAddOpen(false)
       setForm({ name: '', category: '', contact_person: '', email: '', phone: '' })
       loadData()
