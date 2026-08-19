@@ -109,7 +109,7 @@ export async function POST(request: NextRequest) {
     client_id: zugang.client_id,
     aktion: 'nachricht_gesendet',
     details: { nachricht_id: nachricht?.id },
-  }).catch(() => {})
+  }).catch((err) => console.warn('[Angehoerige-Kommunikation] Zugriffs-Protokollierung fehlgeschlagen (non-blocking):', err))
 
   return NextResponse.json({ nachricht })
 }

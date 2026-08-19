@@ -90,14 +90,14 @@ export default function EngelHomePage() {
   // Standort in DB aktualisieren wenn GPS verfügbar
   useEffect(() => {
     if (!userLocation.loading && userLocation.city && angel) {
-      updateEngelLocation(userLocation.city).catch(() => {})
+      updateEngelLocation(userLocation.city).catch((err) => console.warn('[Engel-Home] Standort-Update fehlgeschlagen (non-blocking):', err))
     }
   }, [userLocation.loading, userLocation.city, angel])
 
   async function toggleOnline() {
     const next = !isOnline
     setIsOnline(next)
-    await toggleEngelOnline(next).catch(() => {})
+    await toggleEngelOnline(next).catch((err) => console.warn('[Engel-Home] Online-Toggle fehlgeschlagen (non-blocking):', err))
   }
 
   async function handleBooking(bookingId: string, action: 'accept' | 'decline') {

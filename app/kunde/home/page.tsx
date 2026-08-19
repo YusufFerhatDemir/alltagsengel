@@ -93,7 +93,7 @@ export default function KundeHomePage() {
   // Standort in Profil aktualisieren (GPS/IP)
   useEffect(() => {
     if (!userLocation.loading && userLocation.city && profile && !profile.location) {
-      updateLocationAction({ location: userLocation.city }).catch(() => {})
+      updateLocationAction({ location: userLocation.city }).catch((err) => console.warn('[Kunde-Home] Standort-Aktualisierung fehlgeschlagen (non-blocking):', err))
     }
   }, [userLocation.loading, userLocation.city, profile])
 

@@ -63,7 +63,7 @@ export async function GET() {
       user_id: ctx.userId,
       client_id: zugangFuerAudit.client_id,
       aktion: 'dokument_eingesehen',
-    }).catch(() => {})
+    }).catch((err) => console.warn('[Angehoerige-Dokumente] Zugriffs-Protokollierung fehlgeschlagen (non-blocking):', err))
   }
 
   return NextResponse.json({ dokumente: enriched })

@@ -66,7 +66,7 @@ export async function GET() {
       user_id: ctx.userId,
       client_id: zugangFuerAudit.client_id,
       aktion: 'pflegebericht_eingesehen',
-    }).catch(() => {})
+    }).catch((err) => console.warn('[Angehoerige-Pflegebericht] Zugriffs-Protokollierung fehlgeschlagen (non-blocking):', err))
   }
 
   return NextResponse.json({ berichte: enriched })

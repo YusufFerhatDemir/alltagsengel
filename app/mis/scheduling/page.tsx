@@ -6,6 +6,7 @@ import { BRAND } from '@/lib/mis/constants'
 import { SectionHeader, Card, MisButton, SearchInput, Badge, Tabs, EmptyState, Modal } from '@/components/mis/MisComponents'
 import { MIcon } from '@/components/mis/MisIcons'
 import { useMis } from '@/lib/mis/MisContext'
+import { createShift, assignShift, updateShiftStatus, deleteShift, createAvailability, deleteAvailability } from './actions'
 
 // ===== Typen & Konstanten =====
 const SHIFT_TYPES: Record<string, { label: string; color: string; zeit: string }> = {
@@ -194,71 +195,60 @@ export default function SchedulingPage() {
 
   // CRUD
   async function handleCreate() {
-    const supabase = createClient()
-    const { error } = await supabase.from('mis_shifts').insert({
+    const result = await createShift({
       engel_name: form.engel_name || '',
       kunde_name: form.kunde_name,
       datum: form.datum,
       start_zeit: form.start_zeit,
       end_zeit: form.end_zeit,
       typ: form.typ,
-      status: form.engel_name ? 'zugewiesen' : 'offen',
       notizen: form.notizen,
     })
-    if (!error) {
+    if (result.ok) {
       setCreateOpen(false)
       setForm({ engel_name: '', kunde_name: '', datum: fmtDate(new Date()), start_zeit: '08:00', end_zeit: '12:00', typ: 'vormittag', notizen: '' })
       loadData()
-    } else alert('Fehler: ' + error.message)
+    } else alert('Fehler: ' + result.error)
   }
 
   async function handleAssign() {
     if (!assignOpen) return
-    const supabase = createClient()
-    await supabase.from('mis_shifts').update({
-      engel_name: assignName,
-      status: 'zugewiesen',
-    }).eq('id', assignOpen.id)
+    await assignShift(assignOpen.id, assignName)
     setAssignOpen(null)
     setAssignName('')
     loadData()
   }
 
   async function handleStatusUpdate(id: string, status: string) {
-    const supabase = createClient()
-    await supabase.from('mis_shifts').update({ status }).eq('id', id)
+    await updateShiftStatus(id, status)
     setDetailShift(null)
     loadData()
   }
 
   async function handleDeleteShift(id: string) {
     if (!confirm('Schicht wirklich löschen?')) return
-    const supabase = createClient()
-    await supabase.from('mis_shifts').delete().eq('id', id)
+    await deleteShift(id)
     setDetailShift(null)
     loadData()
   }
 
   async function handleCreateAvail() {
-    const supabase = createClient()
-    const { error } = await supabase.from('mis_availability').insert({
+    const result = await createAvailability({
       engel_name: availData.engel_name,
-      engel_id: crypto.randomUUID(),
       wochentag: availData.wochentag,
       von: availData.von,
       bis: availData.bis,
       wiederholend: availData.wiederholend,
     })
-    if (!error) {
+    if (result.ok) {
       setAvailForm(false)
       setAvailData({ engel_name: '', wochentag: 1, von: '08:00', bis: '17:00', wiederholend: true })
       loadData()
-    } else alert('Fehler: ' + error.message)
+    } else alert('Fehler: ' + result.error)
   }
 
   async function handleDeleteAvail(id: string) {
-    const supabase = createClient()
-    await supabase.from('mis_availability').delete().eq('id', id)
+    await deleteAvailability(id)
     loadData()
   }
 

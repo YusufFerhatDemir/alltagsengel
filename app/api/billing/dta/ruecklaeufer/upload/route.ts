@@ -99,7 +99,7 @@ export async function POST(request: Request) {
             ruecklaeuferId: ergebnis.ruecklaeuferId,
             fristTyp: ergebnis.status,
             actorId: userId,
-          }).catch(() => {})
+          }).catch((err) => console.warn('[DTA-Ruecklaeufer] Frist-Erstellung fehlgeschlagen (non-blocking):', err))
         }
       } catch (err) {
         importFehler.push((err as Error).message)

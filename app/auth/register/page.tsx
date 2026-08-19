@@ -243,7 +243,7 @@ function RegisterForm() {
               email,
               phone: '',
             }),
-          }).catch(() => {})
+          }).catch((err) => console.warn('[Register] Admin-Benachrichtigung fehlgeschlagen (non-blocking):', err))
         }
 
         // Always send welcome/confirmation email via Resend (fire-and-forget)
@@ -251,7 +251,7 @@ function RegisterForm() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email, firstName, role }),
-        }).catch(() => {})
+        }).catch((err) => console.warn('[Register] Willkommens-Mail fehlgeschlagen (non-blocking):', err))
 
         // Referral-Code einlösen (fire-and-forget) — nur mit gültiger Session,
         // da /api/referral jetzt authentifiziert ist (referred_user_id = Token-User).
@@ -263,7 +263,7 @@ function RegisterForm() {
               Authorization: `Bearer ${data.session.access_token}`,
             },
             body: JSON.stringify({ referral_code: refCode }),
-          }).catch(() => {})
+          }).catch((err) => console.warn('[Register] Referral-Einloesung fehlgeschlagen (non-blocking):', err))
         }
 
         // Conversion-Tracking für Google Ads

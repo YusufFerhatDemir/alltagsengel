@@ -5,6 +5,7 @@ import { BRAND } from '@/lib/mis/constants'
 import {
   SectionHeader, Tabs, KpiCard, Card, DataTable, MisButton, Badge, Modal, EmptyState,
 } from '@/components/mis/MisComponents'
+import { updateKrankenfahrt, updateKrankenfahrtProvider } from './actions'
 
 interface Ride {
   id: string
@@ -109,13 +110,8 @@ export default function KrankenfahrtenAdminPage() {
   async function updateRide(id: string, updates: Record<string, any>) {
     setSaving(true)
     try {
-      const supabase = createClient()
-      const { error } = await supabase
-        .from('krankenfahrten')
-        .update(updates)
-        .eq('id', id)
-
-      if (!error) {
+      const result = await updateKrankenfahrt(id, updates)
+      if (result.ok) {
         await loadData()
         setSelectedRide(null)
       }
@@ -128,13 +124,8 @@ export default function KrankenfahrtenAdminPage() {
   async function updateProvider(id: string, updates: Record<string, any>) {
     setSaving(true)
     try {
-      const supabase = createClient()
-      const { error } = await supabase
-        .from('krankenfahrt_providers')
-        .update(updates)
-        .eq('id', id)
-
-      if (!error) {
+      const result = await updateKrankenfahrtProvider(id, updates)
+      if (result.ok) {
         await loadData()
         setSelectedProvider(null)
       }

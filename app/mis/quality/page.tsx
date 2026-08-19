@@ -5,6 +5,7 @@ import { BRAND } from '@/lib/mis/constants'
 import { SectionHeader, Card, KpiCard, DataTable, Tabs, MisButton, Badge, RiskBadge, ProgressBar, StatRow, EmptyState, Modal } from '@/components/mis/MisComponents'
 import { useMis } from '@/lib/mis/MisContext'
 import type { QualityProcess, QualityAudit, CAPA } from '@/lib/mis/types'
+import { createQualityAudit, createCapa } from './actions'
 
 export default function QualityPage() {
   const { isMobile } = useMis()
@@ -47,14 +48,17 @@ export default function QualityPage() {
 
   async function handleAddAudit() {
     try {
-      const supabase = createClient()
-      const { error } = await supabase.from('mis_quality_audits').insert({
-        ...auditForm,
-        scheduled_date: auditForm.scheduled_date || null,
+      const result = await createQualityAudit({
+        audit_number: auditForm.audit_number,
+        audit_type: auditForm.audit_type,
+        auditor_name: auditForm.auditor_name,
+        scheduled_date: auditForm.scheduled_date,
+        notes: auditForm.notes,
       })
-      if (error) { alert('Fehler: ' + error.message); return }
+      if (!result.ok) { alert('Fehler: ' + result.error); return }
       setAuditOpen(false)
       setAuditForm({ audit_number: '', audit_type: 'internal', auditor_name: '', scheduled_date: '', notes: '' })
+      const supabase = createClient()
       const { data } = await supabase.from('mis_quality_audits').select('*').order('scheduled_date', { ascending: false })
       setAudits(data as QualityAudit[] || [])
     } catch { alert('Speichern fehlgeschlagen') }
@@ -62,14 +66,18 @@ export default function QualityPage() {
 
   async function handleAddCapa() {
     try {
-      const supabase = createClient()
-      const { error } = await supabase.from('mis_capa').insert({
-        ...capaForm,
-        due_date: capaForm.due_date || null,
+      const result = await createCapa({
+        capa_number: capaForm.capa_number,
+        type: capaForm.type,
+        title: capaForm.title,
+        description: capaForm.description,
+        priority: capaForm.priority,
+        due_date: capaForm.due_date,
       })
-      if (error) { alert('Fehler: ' + error.message); return }
+      if (!result.ok) { alert('Fehler: ' + result.error); return }
       setCapaOpen(false)
       setCapaForm({ capa_number: '', type: 'corrective', title: '', description: '', priority: 'medium', due_date: '' })
+      const supabase = createClient()
       const { data } = await supabase.from('mis_capa').select('*').order('created_at', { ascending: false })
       setCapas(data as CAPA[] || [])
     } catch { alert('Speichern fehlgeschlagen') }

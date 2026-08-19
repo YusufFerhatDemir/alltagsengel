@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/client'
 import { BRAND } from '@/lib/mis/constants'
 import { SectionHeader, Card, KpiCard, DataTable, Tabs, Badge, SearchInput, EmptyState } from '@/components/mis/MisComponents'
 import { useMis } from '@/lib/mis/MisContext'
+import { logAuthEvent } from './actions'
 
 interface VisitorProfile {
   first_name: string | null
@@ -152,10 +153,10 @@ export default function AnalyticsPage() {
     const supabase = createClient()
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_IN' && session?.user) {
-        await supabase.from('mis_auth_log').insert({
+        await logAuthEvent({
           user_id: session.user.id,
-          user_email: session.user.email,
-          user_name: session.user.email,
+          user_email: session.user.email || '',
+          user_name: session.user.email || '',
           action: 'login',
           user_agent: navigator.userAgent,
           device: getDeviceInfo(),

@@ -24,7 +24,7 @@ export default function KrankenfahrtenContent({ faqs = [] }: { faqs?: FaqItem[] 
           setSurcharges(data.surcharges || [])
         }
       })
-      .catch(() => {})
+      .catch((err) => console.warn('[Krankenfahrten] Preisdaten-Laden fehlgeschlagen (non-blocking):', err))
       .finally(() => setLoading(false))
   }, [])
 

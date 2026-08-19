@@ -5,6 +5,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { NAV_ITEMS, BRAND } from '@/lib/mis/constants'
 import { MIcon } from '@/components/mis/MisIcons'
+import { logMISAuthEvent } from './actions'
 import { SearchInput } from '@/components/mis/MisComponents'
 import { MisProvider } from '@/lib/mis/MisContext'
 import './responsive.css'
@@ -74,14 +75,9 @@ export default function MISLayout({ children }: { children: React.ReactNode }) {
 
   const handleLogout = async () => {
     const supabase = createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    if (user) {
-      try { await supabase.from('mis_auth_log').insert({
-        user_id: user.id, user_email: user.email, user_name: userName,
-        action: 'logout', device: /iPhone|iPad/i.test(navigator.userAgent) ? 'iOS' : /Android/i.test(navigator.userAgent) ? 'Android' : /Mac/i.test(navigator.userAgent) ? 'Mac' : 'Desktop',
-        status: 'success',
-      }) } catch {}
-    }
+    try {
+      await logMISAuthEvent({ action: 'logout', device: /iPhone|iPad/i.test(navigator.userAgent) ? 'iOS' : /Android/i.test(navigator.userAgent) ? 'Android' : /Mac/i.test(navigator.userAgent) ? 'Mac' : 'Desktop' })
+    } catch {}
     await supabase.auth.signOut()
     router.push('/auth/login')
   }

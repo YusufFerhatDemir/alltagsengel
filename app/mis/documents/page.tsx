@@ -6,6 +6,7 @@ import { SectionHeader, Card, DataTable, MisButton, SearchInput, StatusBadge, Ba
 import { MIcon } from '@/components/mis/MisIcons'
 import { useMis } from '@/lib/mis/MisContext'
 import type { MisDocument, DocumentCategory } from '@/lib/mis/types'
+import { createDocument, updateDocumentStatus, incrementDownloadCount } from './actions'
 
 export default function DocumentsPage() {
   const { isMobile } = useMis()
@@ -42,8 +43,6 @@ export default function DocumentsPage() {
     const supabase = createClient()
     const file = fileRef.current?.files?.[0]
 
-    const { data: { user } } = await supabase.auth.getUser()
-
     let filePath = ''
     let fileName = ''
     let fileSize = 0
@@ -53,33 +52,24 @@ export default function DocumentsPage() {
       fileName = file.name
       fileSize = file.size
       fileType = file.type
-      const ext = file.name.split('.').pop()
       filePath = `documents/${Date.now()}_${file.name}`
       await supabase.storage.from('mis-documents').upload(filePath, file)
     }
 
-    const { error } = await supabase.from('mis_documents').insert({
+    const result = await createDocument({
       title: uploadForm.title,
       description: uploadForm.description,
-      category_id: uploadForm.category_id || null,
+      category_id: uploadForm.category_id,
       file_path: filePath,
       file_name: fileName,
       file_size: fileSize,
       file_type: fileType,
       classification: uploadForm.classification,
-      iso_doc_number: uploadForm.iso_doc_number || null,
-      tags: uploadForm.tags ? uploadForm.tags.split(',').map(t => t.trim()) : [],
-      owner_id: user?.id,
-      status: 'draft',
+      iso_doc_number: uploadForm.iso_doc_number,
+      tags: uploadForm.tags,
     })
 
-    if (!error) {
-      // Audit log
-      await supabase.from('mis_audit_log').insert({
-        entity_type: 'document', entity_id: crypto.randomUUID(),
-        action: 'create', actor_id: user?.id, actor_name: 'Admin',
-        details: { title: uploadForm.title },
-      })
+    if (result.ok) {
       setUploadOpen(false)
       setUploadForm({ title: '', description: '', category_id: '', classification: 'internal', iso_doc_number: '', tags: '' })
       loadData()
@@ -87,17 +77,7 @@ export default function DocumentsPage() {
   }
 
   async function handleStatusChange(docId: string, newStatus: string) {
-    const supabase = createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    await supabase.from('mis_documents').update({
-      status: newStatus,
-      ...(newStatus === 'approved' ? { approved_by: user?.id, approved_at: new Date().toISOString() } : {}),
-    }).eq('id', docId)
-    await supabase.from('mis_audit_log').insert({
-      entity_type: 'document', entity_id: docId,
-      action: newStatus === 'approved' ? 'approve' : 'update',
-      actor_id: user?.id, details: { new_status: newStatus },
-    })
+    await updateDocumentStatus(docId, newStatus)
     loadData()
     setSelectedDoc(null)
   }
@@ -108,7 +88,7 @@ export default function DocumentsPage() {
     const { data } = await supabase.storage.from('mis-documents').createSignedUrl(doc.file_path, 3600)
     if (data?.signedUrl) {
       window.open(data.signedUrl, '_blank')
-      await supabase.from('mis_documents').update({ download_count: doc.download_count + 1 }).eq('id', doc.id)
+      await incrementDownloadCount(doc.id)
     }
   }
 

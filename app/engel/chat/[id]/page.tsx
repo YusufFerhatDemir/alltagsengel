@@ -88,7 +88,7 @@ export default function EngelChatConversationPage() {
         if (cancelled) return
 
         // Ungelesene markieren (fire-and-forget via Server Action)
-        markMessagesRead(bookingId).catch(() => {})
+        markMessagesRead(bookingId).catch((err) => console.warn('[Engel-Chat] Gelesen-Markierung fehlgeschlagen (non-blocking):', err))
 
         // Realtime-Subscription
         channel = supabase

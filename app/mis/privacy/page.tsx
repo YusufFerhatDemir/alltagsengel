@@ -5,6 +5,7 @@ import { BRAND } from '@/lib/mis/constants'
 import { SectionHeader, Card, DataTable, MisButton, SearchInput, Badge, Tabs, EmptyState, Modal, ProgressBar } from '@/components/mis/MisComponents'
 import { MIcon } from '@/components/mis/MisIcons'
 import { useMis } from '@/lib/mis/MisContext'
+import { createPrivacyRecord, deletePrivacyRecord, createPrivacyConsent, revokePrivacyConsent, createPrivacyRequest, updatePrivacyRequestStatus } from './actions'
 
 // ===== Status-Maps =====
 const RECORD_STATUS: Record<string, { label: string; color: string }> = {
@@ -160,104 +161,72 @@ export default function PrivacyPage() {
     setLoading(false)
   }
 
-  // ===== Audit helper =====
-  async function logAudit(action: string, entityType: string, entityId?: string, details?: Record<string, unknown>) {
-    const supabase = createClient()
-    await supabase.from('mis_privacy_audit_log').insert({
-      action, entity_type: entityType, entity_id: entityId || null,
-      performed_by: 'MIS-User', details: details || {},
-    })
-  }
-
   // ===== CRUD: Records =====
   async function handleCreateRecord() {
-    const supabase = createClient()
-    const payload = {
+    const result = await createPrivacyRecord({
       title: recordForm.title,
       purpose: recordForm.purpose,
       legal_basis: recordForm.legal_basis,
-      data_categories: recordForm.data_categories.split(',').map(s => s.trim()).filter(Boolean),
-      affected_persons: recordForm.affected_persons.split(',').map(s => s.trim()).filter(Boolean),
-      recipients: recordForm.recipients.split(',').map(s => s.trim()).filter(Boolean),
-      retention_period: recordForm.retention_period || null,
-      toms: recordForm.toms || null,
-      responsible_person: recordForm.responsible_person || null,
-      notes: recordForm.notes || null,
-      status: 'active',
-    }
-    const { data, error } = await supabase.from('mis_privacy_records').insert(payload).select().single()
-    if (!error && data) {
-      await logAudit('erstellt', 'verarbeitungstätigkeit', data.id, { title: payload.title })
+      data_categories: recordForm.data_categories,
+      affected_persons: recordForm.affected_persons,
+      recipients: recordForm.recipients,
+      retention_period: recordForm.retention_period,
+      toms: recordForm.toms,
+      responsible_person: recordForm.responsible_person,
+      notes: recordForm.notes,
+    })
+    if (result.ok) {
       setCreateRecordOpen(false)
       setRecordForm({ title: '', purpose: '', legal_basis: LEGAL_BASIS_OPTIONS[1], data_categories: '', affected_persons: '', recipients: '', retention_period: '', toms: '', responsible_person: '', notes: '' })
       loadAll()
-    } else alert('Fehler: ' + error?.message)
+    } else alert('Fehler: ' + result.error)
   }
 
   async function handleDeleteRecord(id: string) {
     if (!confirm('Verarbeitungstätigkeit wirklich löschen?')) return
-    const supabase = createClient()
-    await supabase.from('mis_privacy_records').delete().eq('id', id)
-    await logAudit('gelöscht', 'verarbeitungstätigkeit', id)
+    await deletePrivacyRecord(id)
     setSelectedRecord(null)
     loadAll()
   }
 
   // ===== CRUD: Consents =====
   async function handleCreateConsent() {
-    const supabase = createClient()
-    const { data, error } = await supabase.from('mis_privacy_consents').insert({
+    const result = await createPrivacyConsent({
       person_name: consentForm.person_name,
       person_type: consentForm.person_type,
       consent_type: consentForm.consent_type,
-      status: 'erteilt',
       channel: consentForm.channel,
-      notes: consentForm.notes || null,
-    }).select().single()
-    if (!error && data) {
-      await logAudit('einwilligung_erteilt', 'einwilligung', data.id, { person: consentForm.person_name, type: consentForm.consent_type })
+      notes: consentForm.notes,
+    })
+    if (result.ok) {
       setCreateConsentOpen(false)
       setConsentForm({ person_name: '', person_type: 'kunde', consent_type: '', channel: 'app', notes: '' })
       loadAll()
-    } else alert('Fehler: ' + error?.message)
+    } else alert('Fehler: ' + result.error)
   }
 
   async function handleRevokeConsent(id: string) {
-    const supabase = createClient()
-    await supabase.from('mis_privacy_consents').update({
-      status: 'widerrufen', revoked_at: new Date().toISOString(),
-    }).eq('id', id)
-    await logAudit('einwilligung_widerrufen', 'einwilligung', id)
+    await revokePrivacyConsent(id)
     loadAll()
   }
 
   // ===== CRUD: Requests =====
   async function handleCreateRequest() {
-    const supabase = createClient()
-    const dueDate = new Date()
-    dueDate.setDate(dueDate.getDate() + 30)
-    const { data, error } = await supabase.from('mis_privacy_requests').insert({
+    const result = await createPrivacyRequest({
       requester_name: requestForm.requester_name,
       request_type: requestForm.request_type,
-      description: requestForm.description || null,
-      assigned_to: requestForm.assigned_to || null,
-      due_date: dueDate.toISOString(),
-      status: 'offen',
-    }).select().single()
-    if (!error && data) {
-      await logAudit('anfrage_erstellt', 'datenschutzanfrage', data.id, { type: requestForm.request_type, requester: requestForm.requester_name })
+      description: requestForm.description,
+      assigned_to: requestForm.assigned_to,
+    })
+    if (result.ok) {
       setCreateRequestOpen(false)
       setRequestForm({ requester_name: '', request_type: 'auskunft', description: '', assigned_to: '' })
       loadAll()
-    } else alert('Fehler: ' + error?.message)
+    } else alert('Fehler: ' + result.error)
   }
 
   async function handleUpdateRequestStatus(id: string, status: string) {
-    const supabase = createClient()
-    const updates: Record<string, unknown> = { status, updated_at: new Date().toISOString() }
-    if (status === 'abgeschlossen') updates.completed_at = new Date().toISOString()
-    await supabase.from('mis_privacy_requests').update(updates).eq('id', id)
-    await logAudit('status_geändert', 'datenschutzanfrage', id, { new_status: status })
+    await updatePrivacyRequestStatus(id, status)
     setSelectedRequest(null)
     loadAll()
   }
