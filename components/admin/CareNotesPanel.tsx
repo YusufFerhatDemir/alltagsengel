@@ -9,6 +9,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { timeAgo, NOTE_CATEGORY, NOTE_AUTHOR_ROLE } from '@/lib/admin/ops'
 import { StatusBadge, Banner } from '@/components/admin/OpsUI'
+import { createCareNoteAction } from '@/app/admin/notizen/actions'
 
 export interface CareNote {
   id: string
@@ -106,22 +107,18 @@ export function NoteComposer({ clientId, clients, onSaved, onCancel }: {
     if (!content.trim()) { setErr('Bitte einen Notiz-Text eingeben.'); return }
     setSaving(true)
     try {
-      const supabase = createClient()
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) { setErr('Keine aktive Sitzung — bitte neu anmelden.'); setSaving(false); return }
-      const authorName = (typeof user.user_metadata?.full_name === 'string' && user.user_metadata.full_name)
-        || 'Alltagsengel Büro'
-      const { error } = await supabase.from('care_notes').insert({
-        client_id: cid,
-        author_id: user.id,
-        author_role: role,
-        author_name: authorName,
-        category,
+      // Security-Audit 2026-08-19 (MITTEL-3): kein Direktschreibpfad aus dem
+      // Browser mehr. Die Server Action prueft die Rolle, setzt author_id und
+      // author_name aus der Session und schreibt einen Audit-Eintrag.
+      const res = await createCareNoteAction({
+        clientId: cid,
         content: content.trim(),
-        is_urgent: urgent,
-        is_internal: internal,
+        category,
+        authorRole: role,
+        isUrgent: urgent,
+        isInternal: internal,
       })
-      if (error) { setErr(error.message); setSaving(false); return }
+      if (!res.ok) { setErr(res.error); setSaving(false); return }
       setContent(''); setUrgent(false); setInternal(false); setCategory('allgemein')
       setSaving(false)
       onSaved()

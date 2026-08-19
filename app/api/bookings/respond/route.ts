@@ -6,7 +6,7 @@ import {
   notifyCustomerBookingDeclined,
   type BookingNotifyData,
 } from '@/lib/notifications'
-import { getActiveOrgId } from '@/lib/organizations/server'
+import { getActiveOrgIdOrDefault } from '@/lib/organizations/server'
 
 // ─── Row-Formen des bookings-Selects (inkl. eingebetteter Joins) ───
 interface BookingProfile {
@@ -70,8 +70,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'action muss "accept" oder "decline" sein' }, { status: 400 })
     }
 
-    // org_fence: nur Bookings der eigenen Organisation
-    const orgId = await getActiveOrgId()
+    // org_fence: nur Bookings der eigenen Organisation.
+    // Endkunden-/Engel-Pfad: diese Rollen sind nicht in organization_members
+    // gefuehrt. Bewusster Stamm-Org-Fallback (Audit MITTEL-1, dokumentierte
+    // Ausnahme) — entscheidend ist, dass der Org-Filter UNBEDINGT greift und
+    // nicht mehr an einer Bedingung haengt und uebersprungen werden kann.
+    const orgId = await getActiveOrgIdOrDefault()
 
     let bookingQuery = supabase
       .from('bookings')
@@ -81,7 +85,7 @@ export async function POST(req: NextRequest) {
         angel:angels!bookings_angel_id_fkey(id, profiles(id, first_name, last_name, email))
       `)
       .eq('id', bookingId)
-    if (orgId) bookingQuery = bookingQuery.eq('organization_id', orgId)
+    bookingQuery = bookingQuery.eq('organization_id', orgId)
     const { data: bookingRaw, error: bookErr } = await bookingQuery.single()
 
     if (bookErr || !bookingRaw) {
@@ -122,7 +126,7 @@ export async function POST(req: NextRequest) {
       .update({ status: newStatus, responded_at: respondedAt, decline_reason: declineReason })
       .eq('id', bookingId)
       .eq('status', 'pending')
-    if (orgId) fullQuery = fullQuery.eq('organization_id', orgId)
+    fullQuery = fullQuery.eq('organization_id', orgId)
     const full = await fullQuery.select('id')
 
     if (full.error && isMissingColumn(full.error)) {
@@ -134,7 +138,7 @@ export async function POST(req: NextRequest) {
         .update({ status: newStatus })
         .eq('id', bookingId)
         .eq('status', 'pending')
-      if (orgId) minQuery = minQuery.eq('organization_id', orgId)
+      minQuery = minQuery.eq('organization_id', orgId)
       const minimal = await minQuery.select('id')
       if (minimal.error) {
         console.error('Booking respond update error:', minimal.error.message)

@@ -1,6 +1,6 @@
 # RLS-Policy-Matrix
 
-> Auto-generiert von `scripts/rls-matrix.ts` am 2026-08-19T11:15:10.945Z.
+> Auto-generiert von `scripts/rls-matrix.ts` am 2026-08-19T12:31:53.454Z.
 > NICHT manuell bearbeiten — Aenderungen werden ueberschrieben.
 
 Status: 298 Tabellen, 872 Policies.

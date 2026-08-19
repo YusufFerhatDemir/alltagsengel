@@ -1,7 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
-import { getActiveOrgId } from '@/lib/organizations/server'
+import { resolveUserOrgId } from '@/lib/organizations/server'
 import { logAuditEvent } from '@/lib/audit-log'
 
 // ═══════════════════════════════════════════════════════════════
@@ -24,7 +24,9 @@ async function requireKunde() {
     throw new Error('Nur fuer Kunden.')
   }
 
-  const organizationId = await getActiveOrgId()
+  // Org des Nutzers aus Mitgliedschaft/caregivers/clients (Audit MITTEL-1:
+  // fail-closed statt stillem Rueckfall auf die Stamm-Org).
+  const organizationId = await resolveUserOrgId()
   const name = [profile.first_name, profile.last_name].filter(Boolean).join(' ') || 'Kunde'
   return { supabase, userId: user.id, organizationId, role: profile.role, name }
 }

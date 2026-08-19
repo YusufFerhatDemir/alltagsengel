@@ -1,6 +1,7 @@
 import { Resend } from 'resend'
 import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { rateLimit, getClientIp } from '@/lib/rate-limit'
 
 // ═══════════════════════════════════════════════════════════
 // NEWSLETTER API — Anmeldung + Willkommens-Mail
@@ -10,6 +11,14 @@ const supabaseAdmin = createAdminClient()
 
 export async function POST(request: Request) {
   try {
+    // NIEDRIG-8 (Security-Audit 2026-08-19): ratenbegrenzt wie kontakt /
+    // lead-inquiry — sonst laesst sich die Willkommens-Mail als Versandhilfe
+    // auf fremde Adressen missbrauchen.
+    const ip = getClientIp(request)
+    if (!rateLimit(`newsletter:${ip}`, 5, 600_000)) {
+      return NextResponse.json({ error: 'Zu viele Anfragen. Bitte später erneut versuchen.' }, { status: 429 })
+    }
+
     const { email } = await request.json()
     if (!email || !email.includes('@')) {
       return NextResponse.json({ error: 'Ungültige E-Mail' }, { status: 400 })

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { getActiveOrgId } from '@/lib/organizations/server'
+import { getActiveOrgIdOrDefault } from '@/lib/organizations/server'
 import { rateLimit } from '@/lib/rate-limit'
 import {
   ladeEngelBewertungen,
@@ -152,7 +152,10 @@ export async function GET(req: NextRequest) {
     const angelId = searchParams.get('angelId')
     const bookingId = searchParams.get('bookingId')
 
-    const orgId = await getActiveOrgId()
+    // Endkunden-/Engel-Leseweg: diese Rollen sind nicht in organization_members
+    // gefuehrt. Bewusster Stamm-Org-Fallback (Audit MITTEL-1, dokumentierte
+    // Ausnahme) — die Fail-closed-Variante bleibt den Admin-Guards vorbehalten.
+    const orgId = await getActiveOrgIdOrDefault()
 
     if (bookingId) {
       // Bewertung einer einzelnen Buchung — nur fuer Kunde, Engel, Admin

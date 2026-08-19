@@ -40,6 +40,15 @@ vi.mock('@/lib/supabase/server', () => ({
 vi.mock('@/lib/supabase/admin', () => ({
   createAdminClient: mockCreateAdminClient,
 }))
+// Fail-closed getActiveOrgId (Audit MITTEL-1): ohne Mitgliedschaft liefert
+// die echte Funktion null und die Route antwortet mit 403. Im Test wird
+// eine gueltige Organisation gestellt.
+vi.mock('@/lib/organizations/server', () => ({
+  getActiveOrgId: async () => 'org-test',
+  getActiveOrgIdOrDefault: async () => 'org-test',
+  resolveUserOrgId: async () => 'org-test',
+}))
+
 vi.mock('@/lib/billing/core', () => ({
   createInvoiceDraft: (...args: unknown[]) => mockCreateInvoiceDraft(...args),
 }))

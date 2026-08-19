@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { getActiveOrgId } from '@/lib/organizations/server'
+import { getActiveOrgId, resolveUserOrgId } from '@/lib/organizations/server'
 
 export interface OpsAuthContext {
   userId: string
@@ -69,7 +69,10 @@ export async function requireOpsUser(): Promise<
     .eq('user_id', user.id)
     .maybeSingle()
 
-  const organizationId: string | undefined = caregiver?.organization_id ?? await getActiveOrgId()
+  // Fail-closed (Audit MITTEL-1): Engel bekommen ihre Org aus caregivers,
+  // alle uebrigen aus der Mitgliedschaft bzw. clients — kein stiller
+  // Rueckfall auf die Stamm-Org mehr.
+  const organizationId: string | null = caregiver?.organization_id ?? await resolveUserOrgId()
 
   if (!organizationId) {
     return { ok: false, response: NextResponse.json({ error: 'Keine Organisation zugewiesen.' }, { status: 403 }) }

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
-import { getActiveOrgId } from '@/lib/organizations/server'
+import { getActiveOrgIdOrDefault } from '@/lib/organizations/server'
 
 export async function POST(req: NextRequest) {
   try {
@@ -21,7 +21,10 @@ export async function POST(req: NextRequest) {
     }
 
     const supabase = createAdminClient()
-    const orgId = await getActiveOrgId()
+    // Frisch registrierter Nutzer hat noch keine Org-Bindung — bewusster
+    // Stamm-Org-Fallback (Audit MITTEL-1, dokumentierte Ausnahme). Ohne ihn
+    // wuerde die Benachrichtigung an die Admins ALLER Mandanten gehen.
+    const orgId = await getActiveOrgIdOrDefault()
 
     // org_fence: nur Admins der eigenen Organisation benachrichtigen
     let adminQuery = supabase

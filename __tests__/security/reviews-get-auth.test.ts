@@ -69,6 +69,9 @@ vi.mock('@/lib/supabase/server', () => ({
 
 vi.mock('@/lib/organizations/server', () => ({
   getActiveOrgId: async () => 'org-A',
+  // Der Endkunden-Leseweg nutzt bewusst den dokumentierten Stamm-Org-Fallback
+  // (Audit MITTEL-1): Kundschaft hat keine Zeile in organization_members.
+  getActiveOrgIdOrDefault: async () => 'org-A',
 }))
 
 vi.mock('@/lib/rate-limit', () => ({

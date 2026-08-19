@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { escapeHtml } from '@/lib/rate-limit'
+import { getActiveOrgIdOrDefault } from '@/lib/organizations/server'
+import { escapeHtml, rateLimit, getClientIp } from '@/lib/rate-limit'
 
 // Einzeiler + Längen-Cap für Felder, die in E-Mail-HTML landen.
 // Verhindert HTML-/Link-Injection (der Endpunkt ist bewusst anonym aufrufbar,
@@ -37,6 +38,15 @@ const lastAlerts = new Map<string, number>()
 
 export async function POST(req: NextRequest) {
   try {
+    // NIEDRIG-8 (Security-Audit 2026-08-19): der Endpunkt ist bewusst anonym
+    // aufrufbar und loest Admin-Mails aus. Ohne Limit ist er eine Spam-Schleuder
+    // (der Cooldown weiter unten greift erst nach dem DB-Lesezugriff und nur
+    // pro gemeldeter — also frei waehlbarer — IP aus dem Body).
+    const aufruferIp = getClientIp(req)
+    if (!rateLimit(`visitor-alert:${aufruferIp}`, 20, 60_000)) {
+      return NextResponse.json({ ok: true })
+    }
+
     const { ip, city, region, page, userAgent, postalCode, isp: bodyIsp, district } = await req.json()
     if (!ip) return NextResponse.json({ ok: true })
 
@@ -84,9 +94,12 @@ export async function POST(req: NextRequest) {
 
     // Letzte Besuche dieser IP laden
     const supabase = createAdminClient()
+    // MITTEL-2: Besuchshistorie nur aus der eigenen Organisation.
+    const organizationId = await getActiveOrgIdOrDefault()
     const { data: recentVisits } = await supabase
       .from('visitor_locations')
       .select('page_path, created_at')
+      .eq('organization_id', organizationId)
       .like('ip_address', `${ipPrefix.replace(/[%_\\]/g, '\\$&')}%`)
       .order('created_at', { ascending: false })
       .limit(10)

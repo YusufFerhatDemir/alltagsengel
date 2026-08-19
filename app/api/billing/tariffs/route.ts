@@ -26,6 +26,8 @@ export async function GET() {
     }
 
     const orgId = await getActiveOrgId()
+    // Fail-closed (Audit MITTEL-1)
+    if (!orgId) return NextResponse.json({ error: 'Keine Organisation zugewiesen' }, { status: 403 })
     const admin = createAdminClient()
     const { data: tariffs, error } = await admin
       .from('billing_tariffs')

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { notifyAngelNewBooking, notifyCustomerBookingAccepted, type BookingNotifyData } from '@/lib/notifications'
-import { getActiveOrgId } from '@/lib/organizations/server'
+import { getActiveOrgIdOrDefault } from '@/lib/organizations/server'
 
 // ─── Row-Formen des bookings-Selects (inkl. eingebetteter Joins) ───
 interface BookingProfile {
@@ -53,8 +53,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'bookingId und event sind erforderlich' }, { status: 400 })
     }
 
-    // org_fence: Booking-Zugriff auf eigene Organisation beschraenken
-    const orgId = await getActiveOrgId()
+    // org_fence: Booking-Zugriff auf eigene Organisation beschraenken.
+    // Endkunden-/Engel-Pfad: diese Rollen sind nicht in organization_members
+    // gefuehrt. Bewusster Stamm-Org-Fallback (Audit MITTEL-1, dokumentierte
+    // Ausnahme) — entscheidend ist, dass der Org-Filter UNBEDINGT greift und
+    // nicht mehr an einer Bedingung haengt und uebersprungen werden kann.
+    const orgId = await getActiveOrgIdOrDefault()
 
     // Booking mit allen nötigen Daten laden (RLS + expliziter org-Filter)
     let bookingQuery = supabase
@@ -65,7 +69,7 @@ export async function POST(req: NextRequest) {
         angel:angels!bookings_angel_id_fkey(id, profiles(id, first_name, last_name, email))
       `)
       .eq('id', bookingId)
-    if (orgId) bookingQuery = bookingQuery.eq('organization_id', orgId)
+    bookingQuery = bookingQuery.eq('organization_id', orgId)
     const { data: bookingRaw, error: bookErr } = await bookingQuery.single()
 
     if (bookErr || !bookingRaw) {

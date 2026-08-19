@@ -29,6 +29,8 @@ export async function GET(req: NextRequest) {
     }
     const supabase = createAdminClient()
     const orgId = await getActiveOrgId()
+    // Fail-closed (Audit MITTEL-1): ohne Org-Mitgliedschaft keine Zeitdaten.
+    if (!orgId) return NextResponse.json({ error: 'Keine Organisation zugewiesen.' }, { status: 403 })
     const sp = req.nextUrl.searchParams
     const data = await listArbeitszeiten(supabase, {
       organizationId: orgId,
@@ -73,6 +75,8 @@ export async function POST(req: NextRequest) {
     }
     const supabase = createAdminClient()
     const orgId = await getActiveOrgId()
+    // Fail-closed (Audit MITTEL-1): ohne Org-Mitgliedschaft kein Schreibrecht.
+    if (!orgId) return NextResponse.json({ error: 'Keine Organisation zugewiesen.' }, { status: 403 })
     const body = await req.json()
     const data = await createArbeitszeit(supabase, {
       ...body,

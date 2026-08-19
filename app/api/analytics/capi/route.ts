@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { rateLimit, getClientIp } from '@/lib/rate-limit'
 
 /**
  * Welle-1 CAPI-Stub (Conversions API für Meta + TikTok).
@@ -39,6 +40,13 @@ const ALLOWED_EVENTS = new Set([
 
 export async function POST(req: NextRequest) {
   try {
+    // NIEDRIG-8 (Security-Audit 2026-08-19): oeffentlicher Schreibendpunkt
+    // ohne Limit. 60 Events/Minute pro IP — gleiche Groessenordnung wie
+    // /api/analytics/vitals.
+    if (!rateLimit(`capi:${getClientIp(req)}`, 60, 60_000)) {
+      return NextResponse.json({ ok: true, accepted: false })
+    }
+
     const body = (await req.json()) as Partial<CapiPayload>
     if (!body?.event_name || !ALLOWED_EVENTS.has(body.event_name)) {
       return NextResponse.json({ ok: true, accepted: false })

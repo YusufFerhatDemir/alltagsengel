@@ -1,0 +1,114 @@
+{
+  "_beschreibung": "Klassifizierung der Tabellen OHNE organization_id (Security-Audit 2026-08-19, HOCH-1). Quelle der Wahrheit fuer __tests__/security/org-id-klassifizierung.test.ts — dort wird gegen die Live-Relationen geprueft, damit keine neue Tabelle unklassifiziert durchrutscht.",
+  "_klassen": {
+    "referenz": "Systemweite Referenz-/Regelwerksdaten. Fuer alle Mandanten identisch, kein Personenbezug. organization_id waere Ballast.",
+    "technisch": "Technische Hilfstabellen, an auth.uid() oder ein Geraet gebunden. Zugriff laeuft ueber die Nutzer-Bindung, nicht ueber die Organisation.",
+    "analytics": "Tracking-/Analytics-Tabellen. organization_id + RESTRICTIVE org_fence nachgezogen in 20260922010000_analytics_org_scope.sql.",
+    "coach": "PflegeCoach. Eigener, pseudonymisierter Mandantenkontext ueber coach_users; der Pseudonym-Schluessel liegt in coach_pseudonym_key (nur service_role). Ein organization_id waere hier eine Re-Identifizierungshilfe und wird bewusst NICHT ergaenzt.",
+    "org_fence": "Personenbezogen, Mandantentrennung erforderlich. organization_id + RESTRICTIVE org_fence nachgezogen in 20260922020000_hoch1_mandantentrennung.sql.",
+    "admin_policy_verengt": "Personenbezogen, aber Zeilen entstehen durch Endnutzer selbst. Ein RESTRICTIVE Fence wuerde Nutzer aus den eigenen Zeilen aussperren, sobald sich ihre Org-Zuordnung nachtraeglich aendert. Stattdessen wird die org-blinde is_admin()-Policy auf einen Org-Nachweis verengt (Muster von reviews/angel_reviews).",
+    "offen": "Noch nicht entschieden — braucht eine fachliche Festlegung. Im Bericht als Rest ausgewiesen."
+  },
+
+  "referenz": [
+    "_sql_parts",
+    "app_settings",
+    "billing_feiertage",
+    "billing_gesetzliche_obergrenzen",
+    "billing_landesregel_keys",
+    "billing_leistungsarten",
+    "billing_rechtsgrundlagen",
+    "billing_tarifquellen",
+    "bundeslaender",
+    "content_blocks",
+    "kf_feature_flags",
+    "kf_pricing_audit",
+    "kf_pricing_config",
+    "kf_pricing_costs",
+    "kf_pricing_regions",
+    "kf_pricing_rules",
+    "kf_pricing_surcharges",
+    "kf_pricing_tiers",
+    "kf_review_rules",
+    "kf_service_doc_requirements",
+    "mis_dataroom_sections",
+    "mis_document_categories",
+    "organizations",
+    "plz_bundesland_regeln"
+  ],
+
+  "technisch": [
+    "account_deletion_tokens",
+    "action_fingerprints",
+    "coach_pseudonym_key",
+    "fcm_tokens",
+    "login_rate_limits",
+    "offline_queue",
+    "push_subscriptions",
+    "sync_conflicts"
+  ],
+
+  "analytics": [
+    "analytics_events",
+    "conversions",
+    "geo_events",
+    "page_views",
+    "partner_visits",
+    "visitor_locations",
+    "visitors"
+  ],
+
+  "coach": [
+    "coach_activities",
+    "coach_activity_log",
+    "coach_anspruchspruefungen",
+    "coach_assessments",
+    "coach_audit_log",
+    "coach_bestellungen",
+    "coach_consents",
+    "coach_freischaltungen",
+    "coach_goals",
+    "coach_measurements",
+    "coach_nutzungsereignisse",
+    "coach_rechnungen",
+    "coach_reports",
+    "coach_shares",
+    "coach_users",
+    "coach_zahlungen"
+  ],
+
+  "org_fence": [
+    "approved_locations",
+    "audit_logs",
+    "kf_booking_reviews",
+    "kf_partner_availability",
+    "kf_partners",
+    "krankenfahrt_providers",
+    "krankenfahrt_reviews",
+    "krankenfahrten",
+    "lead_inquiries",
+    "mis_auth_log",
+    "mis_dataroom_access",
+    "mis_privacy_audit_log",
+    "mis_privacy_consents",
+    "mis_privacy_records",
+    "mis_privacy_requests",
+    "newsletter_subscribers",
+    "notfall_access_attempts",
+    "whatsapp_conversations"
+  ],
+
+  "admin_policy_verengt": [
+    "angel_availability",
+    "angel_reviews",
+    "angels",
+    "chat_messages",
+    "messages",
+    "notifications",
+    "profiles",
+    "referrals",
+    "reviews"
+  ],
+
+  "offen": []
+}
