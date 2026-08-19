@@ -2,7 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { resolveUserOrgId } from '@/lib/organizations/server'
-import { logAuditEvent } from '@/lib/audit-log'
+import { logAuditEventOrWarn } from '@/lib/audit-log'
 
 // ═══════════════════════════════════════════════════════════════
 // Server-seitige Aktionen fuer Krankenfahrt + Bewertung
@@ -85,7 +85,7 @@ export async function createKrankenfahrtAction(
       return { ok: false, error: dbError?.message || 'Buchung konnte nicht erstellt werden.' }
     }
 
-    logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'create',
       actorId: userId,
       actorRole: role,
@@ -94,7 +94,7 @@ export async function createKrankenfahrtAction(
       entityType: 'krankenfahrten',
       entityId: booking.id,
       details: { tier: input.selectedTier },
-    }).catch(() => {})
+    })
 
     return { ok: true, data: { id: booking.id } }
   } catch (err: any) {
@@ -165,7 +165,7 @@ export async function submitRideReviewAction(
       return { ok: false, error: dbError.message }
     }
 
-    logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'create',
       actorId: userId,
       actorRole: role,
@@ -174,7 +174,7 @@ export async function submitRideReviewAction(
       entityType: 'krankenfahrt_reviews',
       entityId: input.krankenfahrtId,
       details: { rating: input.rating, provider_id: input.providerId },
-    }).catch(() => {})
+    })
 
     return { ok: true }
   } catch (err: any) {

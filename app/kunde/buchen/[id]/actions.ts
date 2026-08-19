@@ -2,7 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { resolveUserOrgId } from '@/lib/organizations/server'
-import { logAuditEvent } from '@/lib/audit-log'
+import { logAuditEventOrWarn } from '@/lib/audit-log'
 
 // ═══════════════════════════════════════════════════════════════
 // Server-seitige Aktionen fuer die Buchungsseite
@@ -50,7 +50,7 @@ export async function savePlzAction(
 
     if (dbError) return { ok: false, error: `PLZ-Update fehlgeschlagen: ${dbError.message}` }
 
-    await logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'update',
       actorId: userId,
       actorRole: role,
@@ -59,7 +59,7 @@ export async function savePlzAction(
       entityType: 'profiles',
       entityId: userId,
       details: { field: 'postal_code' },
-    }).catch(() => {})
+    })
 
     return { ok: true }
   } catch (err: unknown) {
@@ -128,7 +128,7 @@ export async function createBookingAction(
       return { ok: false, error: `Buchung fehlgeschlagen: ${dbError?.message || 'Kein Datensatz zurueckgegeben.'}` }
     }
 
-    await logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'create',
       actorId: userId,
       actorRole: role,
@@ -137,7 +137,7 @@ export async function createBookingAction(
       entityType: 'bookings',
       entityId: booking.id,
       details: { service: input.service, angel_id: input.angelId },
-    }).catch(() => {})
+    })
 
     return { ok: true, data: { id: booking.id } }
   } catch (err: unknown) {

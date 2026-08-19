@@ -2,7 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { resolveUserOrgId } from '@/lib/organizations/server'
-import { logAuditEvent } from '@/lib/audit-log'
+import { logAuditEventOrWarn } from '@/lib/audit-log'
 
 async function requireFahrer() {
   const supabase = await createClient()
@@ -81,7 +81,7 @@ export async function claimRide(rideId: string): Promise<{ ok: true } | { ok: fa
       return { ok: false, error: 'Fehler beim Annehmen der Fahrt.' }
     }
 
-    logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'update',
       actorId: userId,
       organizationId,
@@ -90,7 +90,7 @@ export async function claimRide(rideId: string): Promise<{ ok: true } | { ok: fa
       entityType: 'krankenfahrt',
       entityId: rideId,
       details: { field: 'status', from: 'pending', to: 'confirmed', provider_id: provider.id },
-    }).catch(() => {})
+    })
 
     return { ok: true }
   } catch (err) {
@@ -140,7 +140,7 @@ export async function startRide(rideId: string): Promise<{ ok: true } | { ok: fa
       return { ok: false, error: 'Fehler beim Starten der Fahrt.' }
     }
 
-    logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'update',
       actorId: userId,
       organizationId,
@@ -149,7 +149,7 @@ export async function startRide(rideId: string): Promise<{ ok: true } | { ok: fa
       entityType: 'krankenfahrt',
       entityId: rideId,
       details: { field: 'status', from: 'confirmed', to: 'in_progress' },
-    }).catch(() => {})
+    })
 
     return { ok: true }
   } catch (err) {
@@ -199,7 +199,7 @@ export async function completeRide(rideId: string): Promise<{ ok: true } | { ok:
       return { ok: false, error: 'Fehler beim Abschliessen der Fahrt.' }
     }
 
-    logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'update',
       actorId: userId,
       organizationId,
@@ -208,7 +208,7 @@ export async function completeRide(rideId: string): Promise<{ ok: true } | { ok:
       entityType: 'krankenfahrt',
       entityId: rideId,
       details: { field: 'status', from: 'in_progress', to: 'completed' },
-    }).catch(() => {})
+    })
 
     return { ok: true }
   } catch (err) {

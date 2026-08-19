@@ -2,7 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { getActiveOrgId } from '@/lib/organizations/server'
-import { logAuditEvent } from '@/lib/audit-log'
+import { logAuditEventOrWarn } from '@/lib/audit-log'
 
 // ═══════════════════════════════════════════════════════════════
 // Server-seitige Aktionen fuer Einstellungen
@@ -53,7 +53,7 @@ export async function enableDemoAccess(): Promise<{ ok: true; expiresAt: string 
       return { ok: false, error: r1.error?.message || r2.error?.message || 'Unbekannter Fehler' }
     }
 
-    await logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'update',
       actorId: userId,
       actorRole: role,
@@ -62,7 +62,7 @@ export async function enableDemoAccess(): Promise<{ ok: true; expiresAt: string 
       entityType: 'app_settings',
       entityId: 'demo_enabled',
       details: { aktion: 'demo_aktiviert', expires_at: expiresAt },
-    }).catch(() => {})
+    })
 
     return { ok: true, expiresAt }
   } catch (err: any) {
@@ -87,7 +87,7 @@ export async function disableDemoAccess(): Promise<{ ok: true } | { ok: false; e
       return { ok: false, error: error.message }
     }
 
-    await logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'update',
       actorId: userId,
       actorRole: role,
@@ -96,7 +96,7 @@ export async function disableDemoAccess(): Promise<{ ok: true } | { ok: false; e
       entityType: 'app_settings',
       entityId: 'demo_enabled',
       details: { aktion: 'demo_deaktiviert' },
-    }).catch(() => {})
+    })
 
     return { ok: true }
   } catch (err: any) {
@@ -145,7 +145,7 @@ export async function saveDemoPassword(password: string): Promise<{ ok: true } |
       return { ok: false, error: error.message }
     }
 
-    await logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'update',
       actorId: userId,
       actorRole: role,
@@ -154,7 +154,7 @@ export async function saveDemoPassword(password: string): Promise<{ ok: true } |
       entityType: 'app_settings',
       entityId: 'demo_password',
       details: { aktion: 'demo_passwort_geaendert' },
-    }).catch(() => {})
+    })
 
     return { ok: true }
   } catch (err: any) {
@@ -193,7 +193,7 @@ export async function changeOwnPassword(newPassword: string): Promise<{ ok: true
     const actorRole = profile?.role ?? null
     const actorName = [profile?.first_name, profile?.last_name].filter(Boolean).join(' ') || 'Alltagsengel'
 
-    await logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'update',
       actorId: user.id,
       actorRole,
@@ -202,7 +202,7 @@ export async function changeOwnPassword(newPassword: string): Promise<{ ok: true
       entityType: 'profile',
       entityId: user.id,
       details: { aktion: 'eigenes_passwort_geaendert' },
-    }).catch(() => {})
+    })
 
     return { ok: true }
   } catch (err: any) {

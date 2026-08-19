@@ -2,7 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { getActiveOrgId } from '@/lib/organizations/server'
-import { logAuditEvent } from '@/lib/audit-log'
+import { logAuditEventOrWarn } from '@/lib/audit-log'
 
 // ═══════════════════════════════════════════════════════════════
 // Server-seitige Aktionen für Bewerbungen
@@ -54,7 +54,7 @@ export async function updateApplicationStatus(
 
     if (dbError) return { ok: false, error: `Status-Update fehlgeschlagen: ${dbError.message}` }
 
-    await logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'update',
       actorId: userId,
       actorRole: role,
@@ -63,7 +63,7 @@ export async function updateApplicationStatus(
       entityType: 'application',
       entityId: applicationId,
       details: { neuer_status: status },
-    }).catch(() => {})
+    })
 
     return { ok: true }
   } catch (err: any) {
@@ -109,7 +109,7 @@ export async function createApplication(
     const { error: dbError } = await supabase.from('applications').insert(row)
     if (dbError) return { ok: false, error: `Anlegen fehlgeschlagen: ${dbError.message}` }
 
-    await logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'create',
       actorId: userId,
       actorRole: role,
@@ -118,7 +118,7 @@ export async function createApplication(
       entityType: 'application',
       entityId: 'neu',
       details: { first_name: row.first_name, last_name: row.last_name, source: row.source },
-    }).catch(() => {})
+    })
 
     return { ok: true }
   } catch (err: any) {

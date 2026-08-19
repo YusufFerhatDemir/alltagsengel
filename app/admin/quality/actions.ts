@@ -94,7 +94,7 @@ export async function saveSatisfactionCall(input: SatisfactionCallInput): Promis
 
   if (error) throw new Error(`Anruf konnte nicht gespeichert werden: ${error.message}`)
 
-  logAuditEvent({
+  await logAuditEvent({
     action: 'create',
     actorId: userId,
     organizationId,

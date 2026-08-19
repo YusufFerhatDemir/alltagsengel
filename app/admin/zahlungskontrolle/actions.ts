@@ -2,7 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { getActiveOrgId } from '@/lib/organizations/server'
-import { logAuditEvent } from '@/lib/audit-log'
+import { logAuditEventOrWarn } from '@/lib/audit-log'
 
 // ═══════════════════════════════════════════════════════════════
 // Server-seitige Aktionen für Zahlungskontrolle
@@ -53,7 +53,7 @@ export async function sendPaymentReminder(
 
   if (error) throw new Error(`Mahnung fehlgeschlagen: ${error.message}`)
 
-  await logAuditEvent({
+  await logAuditEventOrWarn({
     action: 'update',
     actorId: userId,
     actorRole: role,
@@ -62,7 +62,7 @@ export async function sendPaymentReminder(
     entityType: 'payment_status',
     entityId: paymentId,
     details: { aktion: 'mahnung_gesendet', neuer_zaehler: currentReminderCount + 1 },
-  }).catch(() => {})
+  })
 
   return { ok: true }
 }
@@ -102,7 +102,7 @@ export async function recordPayment(
 
   if (error) throw new Error(`Zahlung konnte nicht gespeichert werden: ${error.message}`)
 
-  await logAuditEvent({
+  await logAuditEventOrWarn({
     action: 'update',
     actorId: userId,
     actorRole: role,
@@ -117,7 +117,7 @@ export async function recordPayment(
       payment_method: paymentMethod,
       neuer_status: newStatus,
     },
-  }).catch(() => {})
+  })
 
   return { ok: true }
 }

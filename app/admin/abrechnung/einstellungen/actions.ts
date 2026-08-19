@@ -2,7 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { getActiveOrgId } from '@/lib/organizations/server'
-import { logAuditEvent } from '@/lib/audit-log'
+import { logAuditEventOrWarn } from '@/lib/audit-log'
 
 // ═══════════════════════════════════════════════════════════════
 // Server-seitige Aktionen für Abrechnung · Einstellungen
@@ -79,7 +79,7 @@ export async function saveDatenannahmestelle(
 
   if (e) throw new Error(`Speichern fehlgeschlagen: ${e.message}`)
 
-  await logAuditEvent({
+  await logAuditEventOrWarn({
     action: isUpdate ? 'update' : 'create',
     actorId: userId,
     actorRole: role,
@@ -88,7 +88,7 @@ export async function saveDatenannahmestelle(
     entityType: 'datenannahmestelle',
     entityId: dasEditId,
     details: { aktion: isUpdate ? 'bearbeitet' : 'angelegt', name: dbPayload.name, ik_nummer: dbPayload.ik_nummer },
-  }).catch(() => {})
+  })
 
   return { ok: true }
 }
@@ -112,7 +112,7 @@ export async function removeDatenannahmestelle(id: string): Promise<{ ok: true }
   const { error: e } = await supabase.from('datenannahmestellen').delete().eq('id', id)
   if (e) throw new Error(`Loeschen fehlgeschlagen: ${e.message}`)
 
-  await logAuditEvent({
+  await logAuditEventOrWarn({
     action: 'delete',
     actorId: userId,
     actorRole: role,
@@ -121,7 +121,7 @@ export async function removeDatenannahmestelle(id: string): Promise<{ ok: true }
     entityType: 'datenannahmestelle',
     entityId: id,
     details: { aktion: 'geloescht', name: existing?.name ?? 'unbekannt' },
-  }).catch(() => {})
+  })
 
   return { ok: true }
 }

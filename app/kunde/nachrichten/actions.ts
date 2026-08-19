@@ -2,7 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { resolveUserOrgId } from '@/lib/organizations/server'
-import { logAuditEvent } from '@/lib/audit-log'
+import { logAuditEventOrWarn } from '@/lib/audit-log'
 
 // ═══════════════════════════════════════════════════════════════
 // Server-seitige Aktionen fuer Kunden-Support-Nachrichten
@@ -68,7 +68,7 @@ export async function sendSupportNoteAction(
       return { ok: false, error: dbError?.message || 'Nachricht konnte nicht gesendet werden.' }
     }
 
-    logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'create',
       actorId: userId,
       actorRole: role,
@@ -77,7 +77,7 @@ export async function sendSupportNoteAction(
       entityType: 'care_notes',
       entityId: data.id,
       details: { client_id: input.clientId },
-    }).catch(() => {})
+    })
 
     return { ok: true, data }
   } catch (err: any) {

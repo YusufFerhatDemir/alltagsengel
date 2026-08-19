@@ -2,7 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { getActiveOrgId } from '@/lib/organizations/server'
-import { logAuditEvent } from '@/lib/audit-log'
+import { logAuditEventOrWarn } from '@/lib/audit-log'
 
 // ═══════════════════════════════════════════════════════════════
 // Server-seitige Aktionen fuer Vertragsverwaltung
@@ -73,7 +73,7 @@ export async function createContract(data: {
       return { ok: false, error: error.message }
     }
 
-    await logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'create',
       actorId: userId,
       actorRole: role,
@@ -82,7 +82,7 @@ export async function createContract(data: {
       entityType: 'mis_contracts',
       entityId: inserted.id,
       details: { aktion: 'vertrag_angelegt', title: data.title },
-    }).catch(() => {})
+    })
 
     return { ok: true, data: inserted }
   } catch (err: any) {
@@ -109,7 +109,7 @@ export async function updateContractStatus(
       return { ok: false, error: error.message }
     }
 
-    await logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'update',
       actorId: userId,
       actorRole: role,
@@ -118,7 +118,7 @@ export async function updateContractStatus(
       entityType: 'mis_contracts',
       entityId: id,
       details: { aktion: 'status_geaendert', neuer_status: newStatus },
-    }).catch(() => {})
+    })
 
     return { ok: true }
   } catch (err: any) {
@@ -143,7 +143,7 @@ export async function deleteContract(
       return { ok: false, error: error.message }
     }
 
-    await logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'delete',
       actorId: userId,
       actorRole: role,
@@ -152,7 +152,7 @@ export async function deleteContract(
       entityType: 'mis_contracts',
       entityId: id,
       details: { aktion: 'vertrag_geloescht' },
-    }).catch(() => {})
+    })
 
     return { ok: true }
   } catch (err: any) {

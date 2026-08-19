@@ -43,7 +43,7 @@ export async function escalateRequest(requestId: string, currentLevel: number): 
     .eq('id', requestId)
   if (error) throw new Error(`Eskalation fehlgeschlagen: ${error.message}`)
 
-  logAuditEvent({
+  await logAuditEvent({
     action: 'update',
     actorId: userId,
     organizationId,
@@ -66,7 +66,7 @@ export async function markRequestFailed(requestId: string): Promise<{ ok: true }
     .eq('id', requestId)
   if (error) throw new Error(`Status-Update fehlgeschlagen: ${error.message}`)
 
-  logAuditEvent({
+  await logAuditEvent({
     action: 'update',
     actorId: userId,
     organizationId,
@@ -89,7 +89,7 @@ export async function toggleClientNotified(requestId: string, currentNotified: b
     .eq('id', requestId)
   if (error) throw new Error(`Klient-Info Update fehlgeschlagen: ${error.message}`)
 
-  logAuditEvent({
+  await logAuditEvent({
     action: 'update',
     actorId: userId,
     organizationId,
@@ -116,7 +116,7 @@ export async function assignSubstitute(requestId: string, caregiverId: string): 
     .eq('id', requestId)
   if (error) throw new Error(`Zuweisung fehlgeschlagen: ${error.message}`)
 
-  logAuditEvent({
+  await logAuditEvent({
     action: 'update',
     actorId: userId,
     organizationId,
@@ -153,7 +153,7 @@ export async function reportAbsence(input: {
   })
   if (error) throw new Error(`Ausfall konnte nicht gespeichert werden: ${error.message}`)
 
-  logAuditEvent({
+  await logAuditEvent({
     action: 'create',
     actorId: userId,
     organizationId,
@@ -193,7 +193,7 @@ export async function createSubstitutionRequest(input: {
   })
   if (error) throw new Error(`Vertretung konnte nicht erstellt werden: ${error.message}`)
 
-  logAuditEvent({
+  await logAuditEvent({
     action: 'create',
     actorId: userId,
     organizationId,

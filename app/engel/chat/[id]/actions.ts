@@ -2,7 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { resolveUserOrgId } from '@/lib/organizations/server'
-import { logAuditEvent } from '@/lib/audit-log'
+import { logAuditEventOrWarn } from '@/lib/audit-log'
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
@@ -51,7 +51,7 @@ export async function markMessagesRead(
       return { ok: false, error: 'Nachrichten konnten nicht als gelesen markiert werden.' }
     }
 
-    logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'update',
       actorId: userId,
       organizationId,
@@ -60,7 +60,7 @@ export async function markMessagesRead(
       entityType: 'message',
       entityId: bookingId,
       details: { field: 'read', value: true },
-    }).catch(() => {})
+    })
 
     return { ok: true }
   } catch (err) {
@@ -128,7 +128,7 @@ export async function sendChatMessage(
       return { ok: false, error: 'Nachricht konnte nicht gesendet werden.' }
     }
 
-    logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'create',
       actorId: userId,
       organizationId,
@@ -137,7 +137,7 @@ export async function sendChatMessage(
       entityType: 'message',
       entityId: bookingId,
       details: { booking_id: bookingId, receiver_id: receiverId },
-    }).catch(() => {})
+    })
 
     return { ok: true }
   } catch (err) {

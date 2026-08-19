@@ -2,7 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { getActiveOrgId } from '@/lib/organizations/server'
-import { logAuditEvent } from '@/lib/audit-log'
+import { logAuditEventOrWarn } from '@/lib/audit-log'
 
 // ═══════════════════════════════════════════════════════════════
 // Server-seitige Aktionen fuer Krankenfahrten (MIS)
@@ -49,7 +49,7 @@ export async function updateKrankenfahrt(
 
     if (error) return { ok: false, error: error.message }
 
-    await logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'update',
       actorId: userId,
       actorRole: role,
@@ -58,7 +58,7 @@ export async function updateKrankenfahrt(
       entityType: 'krankenfahrt',
       entityId: id,
       details: { aktion: 'krankenfahrt_aktualisiert', felder: Object.keys(updates) },
-    }).catch(() => {})
+    })
 
     return { ok: true }
   } catch (err: any) {
@@ -84,7 +84,7 @@ export async function updateKrankenfahrtProvider(
 
     if (error) return { ok: false, error: error.message }
 
-    await logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'update',
       actorId: userId,
       actorRole: role,
@@ -93,7 +93,7 @@ export async function updateKrankenfahrtProvider(
       entityType: 'krankenfahrt_provider',
       entityId: id,
       details: { aktion: 'anbieter_aktualisiert', felder: Object.keys(updates) },
-    }).catch(() => {})
+    })
 
     return { ok: true }
   } catch (err: any) {

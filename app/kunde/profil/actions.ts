@@ -2,7 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { resolveUserOrgId } from '@/lib/organizations/server'
-import { logAuditEvent } from '@/lib/audit-log'
+import { logAuditEventOrWarn } from '@/lib/audit-log'
 
 // ═══════════════════════════════════════════════════════════════
 // Server-seitige Aktionen fuer das Kundenprofil
@@ -52,7 +52,7 @@ export async function savePlzAction(
       return { ok: false, error: dbError.message }
     }
 
-    logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'update',
       actorId: userId,
       actorRole: role,
@@ -61,7 +61,7 @@ export async function savePlzAction(
       entityType: 'profiles',
       entityId: userId,
       details: { field: 'postal_code' },
-    }).catch(() => {})
+    })
 
     return { ok: true }
   } catch (err: any) {

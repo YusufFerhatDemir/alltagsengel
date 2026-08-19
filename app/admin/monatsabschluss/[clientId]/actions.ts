@@ -2,7 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { getActiveOrgId } from '@/lib/organizations/server'
-import { logAuditEvent } from '@/lib/audit-log'
+import { logAuditEventOrWarn } from '@/lib/audit-log'
 import { isValidUUID } from '@/lib/safe-query'
 
 // ═══════════════════════════════════════════════════════════════
@@ -110,7 +110,7 @@ export async function closeMonthAction(input: CloseMonthInput): Promise<{ ok: tr
   } catch { /* audit-log darf Hauptaktion nicht blockieren */ }
 
   // mis_audit_log Eintrag
-  await logAuditEvent({
+  await logAuditEventOrWarn({
     action: 'update',
     actorId: userId,
     actorRole: role,
@@ -126,7 +126,7 @@ export async function closeMonthAction(input: CloseMonthInput): Promise<{ ok: tr
       total_records: input.totalRecords,
       total_amount: input.totalAmount,
     },
-  }).catch(() => {})
+  })
 
   return { ok: true, closingId: closingId ?? '' }
 }

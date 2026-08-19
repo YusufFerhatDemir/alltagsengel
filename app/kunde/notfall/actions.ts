@@ -2,7 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { resolveUserOrgId } from '@/lib/organizations/server'
-import { logAuditEvent } from '@/lib/audit-log'
+import { logAuditEventOrWarn } from '@/lib/audit-log'
 
 // ═══════════════════════════════════════════════════════════════
 // Server-seitige Aktionen fuer Notfall- & Medikamentenplan
@@ -94,7 +94,7 @@ export async function saveMedicationAction(
         return { ok: false, error: updateError.message }
       }
 
-      await logAuditEvent({
+      await logAuditEventOrWarn({
         action: 'update',
         actorId: userId,
         actorRole: role,
@@ -103,7 +103,7 @@ export async function saveMedicationAction(
         entityType: 'medikamentenplan',
         entityId: input.id,
         details: { medikament_name: payload.medikament_name },
-      }).catch(() => {})
+      })
     } else {
       // Insert
       const { data: inserted, error: insertError } = await supabase
@@ -116,7 +116,7 @@ export async function saveMedicationAction(
         return { ok: false, error: insertError.message }
       }
 
-      await logAuditEvent({
+      await logAuditEventOrWarn({
         action: 'create',
         actorId: userId,
         actorRole: role,
@@ -125,7 +125,7 @@ export async function saveMedicationAction(
         entityType: 'medikamentenplan',
         entityId: inserted?.id ?? null,
         details: { medikament_name: payload.medikament_name },
-      }).catch(() => {})
+      })
     }
 
     return { ok: true }
@@ -156,7 +156,7 @@ export async function deleteMedicationAction(
       return { ok: false, error: updateError.message }
     }
 
-    await logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'delete',
       actorId: userId,
       actorRole: role,
@@ -165,7 +165,7 @@ export async function deleteMedicationAction(
       entityType: 'medikamentenplan',
       entityId: input.id,
       details: { aktion: 'soft_delete' },
-    }).catch(() => {})
+    })
 
     return { ok: true }
   } catch (err: any) {
@@ -232,7 +232,7 @@ export async function saveNotfallInfoAction(
         return { ok: false, error: updateError.message }
       }
 
-      await logAuditEvent({
+      await logAuditEventOrWarn({
         action: 'update',
         actorId: userId,
         actorRole: role,
@@ -241,7 +241,7 @@ export async function saveNotfallInfoAction(
         entityType: 'notfall_info',
         entityId: userId,
         details: { aktion: 'notfall_info_aktualisiert' },
-      }).catch(() => {})
+      })
     } else {
       // Insert
       const { error: insertError } = await supabase
@@ -252,7 +252,7 @@ export async function saveNotfallInfoAction(
         return { ok: false, error: insertError.message }
       }
 
-      await logAuditEvent({
+      await logAuditEventOrWarn({
         action: 'create',
         actorId: userId,
         actorRole: role,
@@ -261,7 +261,7 @@ export async function saveNotfallInfoAction(
         entityType: 'notfall_info',
         entityId: userId,
         details: { aktion: 'notfall_info_erstellt' },
-      }).catch(() => {})
+      })
     }
 
     return { ok: true }

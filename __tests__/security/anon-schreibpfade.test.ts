@@ -83,7 +83,9 @@ describe('NIEDRIG-8: oeffentliche Schreibendpunkte sind ratenbegrenzt', () => {
       const src = lesen(datei)
       // Entweder der gemeinsame Helfer aus lib/rate-limit oder ein eigener
       // Limiter im File (die aelteren Routen haben ihren eigenen).
-      const hatHelfer = /rateLimit\(`/.test(src) || /rateLimit\(/.test(src)
+      // rateLimitPersistent zaehlt instanzuebergreifend in der DB
+      // (Master-Audit 2026-08-19, B-2) und zaehlt hier ebenfalls.
+      const hatHelfer = /rateLimit\(/.test(src) || /rateLimitPersistent\(/.test(src)
       const hatEigenen = /resetAt|checkRate|checkTrackRateLimit|function ok\(/.test(src)
       expect(hatHelfer || hatEigenen, `${datei} ohne erkennbares Limit`).toBe(true)
     })

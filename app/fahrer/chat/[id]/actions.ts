@@ -2,7 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { resolveUserOrgId } from '@/lib/organizations/server'
-import { logAuditEvent } from '@/lib/audit-log'
+import { logAuditEventOrWarn } from '@/lib/audit-log'
 
 async function requireFahrer() {
   const supabase = await createClient()
@@ -84,7 +84,7 @@ export async function sendChatMessage(
       return { ok: false, error: 'Fehler beim Senden der Nachricht.' }
     }
 
-    logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'create',
       actorId: userId,
       organizationId,
@@ -93,7 +93,7 @@ export async function sendChatMessage(
       entityType: 'chat_message',
       entityId: data?.id,
       details: { ride_id: rideId },
-    }).catch(() => {})
+    })
 
     return { ok: true, data }
   } catch (err: any) {

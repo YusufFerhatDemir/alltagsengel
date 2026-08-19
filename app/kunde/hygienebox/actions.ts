@@ -2,7 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { resolveUserOrgId } from '@/lib/organizations/server'
-import { logAuditEvent } from '@/lib/audit-log'
+import { logAuditEventOrWarn } from '@/lib/audit-log'
 
 // ═══════════════════════════════════════════════════════════════
 // Server-seitige Aktionen fuer Hygienebox-Bestellung
@@ -74,7 +74,7 @@ export async function submitHygieneboxOrderAction(
       return { ok: false, error: dbError.message }
     }
 
-    logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'create',
       actorId: userId,
       actorRole: role,
@@ -83,7 +83,7 @@ export async function submitHygieneboxOrderAction(
       entityType: 'hygienebox_orders',
       entityId: order?.id ?? null,
       details: { pflegegrad: input.pflegegrad, product_count: input.products.length },
-    }).catch(() => {})
+    })
 
     return { ok: true }
   } catch (err: any) {

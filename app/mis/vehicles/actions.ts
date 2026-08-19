@@ -2,7 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { getActiveOrgId } from '@/lib/organizations/server'
-import { logAuditEvent } from '@/lib/audit-log'
+import { logAuditEventOrWarn } from '@/lib/audit-log'
 
 // ═══════════════════════════════════════════════════════════════
 // Server-seitige Aktionen fuer Fahrzeugverwaltung
@@ -77,7 +77,7 @@ export async function createVehicle(data: {
       return { ok: false, error: error.message }
     }
 
-    await logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'create',
       actorId: userId,
       actorRole: role,
@@ -86,7 +86,7 @@ export async function createVehicle(data: {
       entityType: 'mis_vehicles',
       entityId: inserted.id,
       details: { aktion: 'fahrzeug_angelegt', plate: row.plate },
-    }).catch(() => {})
+    })
 
     return { ok: true, data: inserted }
   } catch (err: any) {
@@ -113,7 +113,7 @@ export async function updateVehicleStatus(
       return { ok: false, error: error.message }
     }
 
-    await logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'update',
       actorId: userId,
       actorRole: role,
@@ -122,7 +122,7 @@ export async function updateVehicleStatus(
       entityType: 'mis_vehicles',
       entityId: id,
       details: { aktion: 'status_geaendert', neuer_status: newStatus },
-    }).catch(() => {})
+    })
 
     return { ok: true }
   } catch (err: any) {
@@ -149,7 +149,7 @@ export async function updateVehicleKm(
       return { ok: false, error: error.message }
     }
 
-    await logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'update',
       actorId: userId,
       actorRole: role,
@@ -158,7 +158,7 @@ export async function updateVehicleKm(
       entityType: 'mis_vehicles',
       entityId: id,
       details: { aktion: 'km_aktualisiert', neuer_km: km },
-    }).catch(() => {})
+    })
 
     return { ok: true }
   } catch (err: any) {
@@ -183,7 +183,7 @@ export async function deleteVehicle(
       return { ok: false, error: error.message }
     }
 
-    await logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'delete',
       actorId: userId,
       actorRole: role,
@@ -192,7 +192,7 @@ export async function deleteVehicle(
       entityType: 'mis_vehicles',
       entityId: id,
       details: { aktion: 'fahrzeug_geloescht' },
-    }).catch(() => {})
+    })
 
     return { ok: true }
   } catch (err: any) {

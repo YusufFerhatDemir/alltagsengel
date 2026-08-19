@@ -2,7 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { getActiveOrgId } from '@/lib/organizations/server'
-import { logAuditEvent } from '@/lib/audit-log'
+import { logAuditEventOrWarn } from '@/lib/audit-log'
 
 // ═══════════════════════════════════════════════════════════════
 // Server-seitige Aktionen für Kostenträger-Kontakte
@@ -76,7 +76,7 @@ export async function upsertKostentraeger(
 
     if (dbError) return { ok: false, error: `Speichern fehlgeschlagen: ${dbError.message}` }
 
-    await logAuditEvent({
+    await logAuditEventOrWarn({
       action: editingId ? 'update' : 'create',
       actorId: userId,
       actorRole: role,
@@ -85,7 +85,7 @@ export async function upsertKostentraeger(
       entityType: 'kostentraeger_kontakt',
       entityId: editingId || 'neu',
       details: { name: payload.name, typ: payload.typ },
-    }).catch(() => {})
+    })
 
     return { ok: true }
   } catch (err: any) {
@@ -108,7 +108,7 @@ export async function deleteKostentraeger(
     const { error: dbError } = await supabase.from('kostentraeger_kontakte').delete().eq('id', id)
     if (dbError) return { ok: false, error: `Loeschen fehlgeschlagen: ${dbError.message}` }
 
-    await logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'delete',
       actorId: userId,
       actorRole: role,
@@ -117,7 +117,7 @@ export async function deleteKostentraeger(
       entityType: 'kostentraeger_kontakt',
       entityId: id,
       details: {},
-    }).catch(() => {})
+    })
 
     return { ok: true }
   } catch (err: any) {

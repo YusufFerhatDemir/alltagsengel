@@ -2,7 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { resolveUserOrgId } from '@/lib/organizations/server'
-import { logAuditEvent } from '@/lib/audit-log'
+import { logAuditEventOrWarn } from '@/lib/audit-log'
 
 // ═══════════════════════════════════════════════════════════════
 // Server-seitige Aktionen fuer Kunden-Chat
@@ -91,7 +91,7 @@ export async function sendBookingMessageAction(
       return { ok: false, error: `Nachricht konnte nicht gesendet werden: ${error?.message ?? 'Keine Daten.'}` }
     }
 
-    logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'create',
       actorId: userId,
       actorRole: role,
@@ -100,7 +100,7 @@ export async function sendBookingMessageAction(
       entityType: 'messages',
       entityId: data.id,
       details: { booking_id: input.bookingId, receiver_id: input.receiverId },
-    }).catch(() => {})
+    })
 
     return { ok: true, data }
   } catch (e) {
@@ -137,7 +137,7 @@ export async function sendRideMessageAction(
       return { ok: false, error: `Nachricht konnte nicht gesendet werden: ${error?.message ?? 'Keine Daten.'}` }
     }
 
-    logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'create',
       actorId: userId,
       actorRole: role,
@@ -146,7 +146,7 @@ export async function sendRideMessageAction(
       entityType: 'chat_messages',
       entityId: data.id,
       details: { ride_id: input.rideId },
-    }).catch(() => {})
+    })
 
     return { ok: true, data }
   } catch (e) {

@@ -2,7 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { getActiveOrgId } from '@/lib/organizations/server'
-import { logAuditEvent } from '@/lib/audit-log'
+import { logAuditEventOrWarn } from '@/lib/audit-log'
 
 // ═══════════════════════════════════════════════════════════════
 // Server-seitige Aktionen fuer Dokumentenmanagement (MIS)
@@ -75,7 +75,7 @@ export async function createDocument(data: {
 
     if (error) return { ok: false, error: error.message }
 
-    await logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'create',
       actorId: userId,
       actorRole: role,
@@ -84,7 +84,7 @@ export async function createDocument(data: {
       entityType: 'document',
       entityId: inserted?.id,
       details: { aktion: 'dokument_erstellt', title: data.title, file_name: data.file_name },
-    }).catch(() => {})
+    })
 
     return { ok: true, data: inserted }
   } catch (err: any) {
@@ -118,7 +118,7 @@ export async function updateDocumentStatus(
 
     if (error) return { ok: false, error: error.message }
 
-    await logAuditEvent({
+    await logAuditEventOrWarn({
       action: newStatus === 'approved' ? 'approve' : 'update',
       actorId: userId,
       actorRole: role,
@@ -127,7 +127,7 @@ export async function updateDocumentStatus(
       entityType: 'document',
       entityId: docId,
       details: { aktion: 'dokument_status_geaendert', neuer_status: newStatus },
-    }).catch(() => {})
+    })
 
     return { ok: true }
   } catch (err: any) {
@@ -163,7 +163,7 @@ export async function incrementDownloadCount(
 
     if (error) return { ok: false, error: error.message }
 
-    await logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'download',
       actorId: userId,
       actorRole: role,
@@ -172,7 +172,7 @@ export async function incrementDownloadCount(
       entityType: 'document',
       entityId: docId,
       details: { aktion: 'dokument_heruntergeladen', download_count: newCount },
-    }).catch(() => {})
+    })
 
     return { ok: true }
   } catch (err: any) {

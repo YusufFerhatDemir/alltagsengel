@@ -2,7 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { getActiveOrgId } from '@/lib/organizations/server'
-import { logAuditEvent } from '@/lib/audit-log'
+import { logAuditEventOrWarn } from '@/lib/audit-log'
 
 // ═══════════════════════════════════════════════════════════════
 // Server-seitige Aktionen fuer MIS CRM
@@ -73,7 +73,7 @@ export async function updateClientPipeline(id: string, newStatus: string): Promi
       console.error('Aktivitaet konnte nicht erstellt werden:', activityErr.message)
     }
 
-    await logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'update',
       actorId: userId,
       actorRole: role,
@@ -82,7 +82,7 @@ export async function updateClientPipeline(id: string, newStatus: string): Promi
       entityType: 'clients',
       entityId: id,
       details: { aktion: 'pipeline_status_aktualisiert', neuer_status: newStatus },
-    }).catch(() => {})
+    })
 
     return { ok: true }
   } catch (err: any) {
@@ -105,7 +105,7 @@ export async function updateLeadStatus(id: string, newStatus: string): Promise<{
 
     if (error) return { ok: false, error: error.message }
 
-    await logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'update',
       actorId: userId,
       actorRole: role,
@@ -114,7 +114,7 @@ export async function updateLeadStatus(id: string, newStatus: string): Promise<{
       entityType: 'lead_inquiries',
       entityId: id,
       details: { aktion: 'lead_status_aktualisiert', neuer_status: newStatus },
-    }).catch(() => {})
+    })
 
     return { ok: true }
   } catch (err: any) {
@@ -154,7 +154,7 @@ export async function createLead(data: {
 
     if (error) return { ok: false, error: error.message }
 
-    await logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'create',
       actorId: userId,
       actorRole: role,
@@ -163,7 +163,7 @@ export async function createLead(data: {
       entityType: 'lead_inquiries',
       entityId: inserted?.id ?? 'unknown',
       details: { aktion: 'lead_erstellt', name: data.name, source: data.source },
-    }).catch(() => {})
+    })
 
     return { ok: true, data: inserted }
   } catch (err: any) {
@@ -203,7 +203,7 @@ export async function createPartner(data: {
 
     if (error) return { ok: false, error: error.message }
 
-    await logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'create',
       actorId: userId,
       actorRole: role,
@@ -212,7 +212,7 @@ export async function createPartner(data: {
       entityType: 'cooperation_partners',
       entityId: inserted?.id ?? 'unknown',
       details: { aktion: 'partner_erstellt', name: data.name, type: data.type },
-    }).catch(() => {})
+    })
 
     return { ok: true, data: inserted }
   } catch (err: any) {
@@ -252,7 +252,7 @@ export async function createActivity(data: {
 
     if (error) return { ok: false, error: error.message }
 
-    await logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'create',
       actorId: userId,
       actorRole: role,
@@ -261,7 +261,7 @@ export async function createActivity(data: {
       entityType: 'mis_crm_activities',
       entityId: inserted?.id ?? 'unknown',
       details: { aktion: 'aktivitaet_erstellt', title: data.title, activity_type: data.activity_type },
-    }).catch(() => {})
+    })
 
     return { ok: true, data: inserted }
   } catch (err: any) {

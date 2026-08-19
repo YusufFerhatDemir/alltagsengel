@@ -2,7 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { resolveUserOrgId } from '@/lib/organizations/server'
-import { logAuditEvent } from '@/lib/audit-log'
+import { logAuditEventOrWarn } from '@/lib/audit-log'
 
 async function requireFahrer() {
   const supabase = await createClient()
@@ -63,7 +63,7 @@ export async function updateProviderCity(providerId: string, city: string) {
       return { ok: false, error: 'Stadt konnte nicht aktualisiert werden.' }
     }
 
-    logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'update',
       actorId: userId,
       organizationId,
@@ -72,7 +72,7 @@ export async function updateProviderCity(providerId: string, city: string) {
       entityType: 'krankenfahrt_provider',
       entityId: providerId,
       details: { field: 'city', newValue: city.trim() },
-    }).catch(() => {})
+    })
 
     return { ok: true }
   } catch (err) {
@@ -129,7 +129,7 @@ export async function claimRide(rideId: string) {
       return { ok: false, error: 'Fahrt konnte nicht uebernommen werden.' }
     }
 
-    logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'update',
       actorId: userId,
       organizationId,
@@ -138,7 +138,7 @@ export async function claimRide(rideId: string) {
       entityType: 'krankenfahrt',
       entityId: rideId,
       details: { action: 'claim', providerId: provider.id, newStatus: 'confirmed' },
-    }).catch(() => {})
+    })
 
     return { ok: true }
   } catch (err) {
@@ -195,7 +195,7 @@ export async function startRide(rideId: string) {
       return { ok: false, error: 'Fahrt konnte nicht gestartet werden.' }
     }
 
-    logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'update',
       actorId: userId,
       organizationId,
@@ -204,7 +204,7 @@ export async function startRide(rideId: string) {
       entityType: 'krankenfahrt',
       entityId: rideId,
       details: { action: 'start', providerId: provider.id, newStatus: 'in_progress' },
-    }).catch(() => {})
+    })
 
     return { ok: true }
   } catch (err) {
@@ -261,7 +261,7 @@ export async function completeRide(rideId: string) {
       return { ok: false, error: 'Fahrt konnte nicht abgeschlossen werden.' }
     }
 
-    logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'update',
       actorId: userId,
       organizationId,
@@ -270,7 +270,7 @@ export async function completeRide(rideId: string) {
       entityType: 'krankenfahrt',
       entityId: rideId,
       details: { action: 'complete', providerId: provider.id, newStatus: 'completed' },
-    }).catch(() => {})
+    })
 
     return { ok: true }
   } catch (err) {

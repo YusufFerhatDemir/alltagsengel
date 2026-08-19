@@ -59,7 +59,7 @@ export async function speichereLauf(input: {
 
   if (error) throw new Error(`Abrechnungslauf konnte nicht gespeichert werden: ${error.message}`)
 
-  logAuditEvent({
+  await logAuditEvent({
     action: 'create',
     actorId: userId,
     organizationId,
@@ -83,7 +83,7 @@ export async function setzeLaufStatusAction(laufId: string, status: string): Pro
   const { error } = await supabase.from('abrechnungslaeufe').update(patch).eq('id', laufId)
   if (error) throw new Error(`Status-Update fehlgeschlagen: ${error.message}`)
 
-  logAuditEvent({
+  await logAuditEvent({
     action: 'update',
     actorId: userId,
     organizationId,
