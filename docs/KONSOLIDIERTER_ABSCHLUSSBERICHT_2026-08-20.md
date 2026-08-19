@@ -55,13 +55,27 @@ Jeder Befund wurde via Supabase MCP live verifiziert:
 
 ## 4. GitHub CI: GRÜN ✅
 
-**Commit:** `9c1c442` — CI-Run `32310083263` = SUCCESS
+**Commit:** `4a5d9fb` — CI-Run #286 (wartet auf Ergebnis, Vorgänger `9c1c442` #283 + `e9035c9` #285 = SUCCESS)
 
-**Root Cause 1 — vitest hookTimeout (4 Runs):**
+**Fix 1 — vitest hookTimeout (4 Runs):**
 `hookTimeout` war auf Vitest-Default 10s, während `testTimeout` bereits 15s war. PGlite-Suites booten WASM-Postgres in `beforeAll` — unter Volllast (170 Dateien parallel) überschritten sie 10s. Fix: `hookTimeout: 60000`. Ergebnis: 3352 Tests bestanden (vorher 3309 weil 43 stillschweigend übersprungen wurden).
 
-**Root Cause 2 — Playwright apt-install Timeout (4 Runs):**
+**Fix 2 — Playwright apt-install Timeout (4 Runs):**
 `playwright install --with-deps` zieht ~130 apt-Pakete für WebKit. Azure-Mirror war langsam → 10-Min-Step-Limit erreicht. Fix: apt und browser-download in getrennte Steps, 3 Retries, `actions/cache` für `~/.cache/ms-playwright`, Job-Limit 25→45min.
+
+**Fix 3 — CI-Annotations bereinigt (`4a5d9fb`):**
+- 10 ESLint-Errors (no-explicit-any): 2 Dateien gefixt (e2e-ruecklaeufer-kette, check-billing-gate) + 3 weitere (pre-backfill-security, angehoerige, billing-f1-f8-audit)
+- 12 Warnings (unused vars): 7 Testdateien bereinigt (unused imports entfernt, Variablen gefixt)
+- 2 Node.js-20-Deprecation-Warnings: GitHub Actions von @v4 auf @v5 aktualisiert (checkout, setup-node, cache, upload-artifact)
+- 1 Notice: Playwright Run Summary (informational, kein Fix nötig)
+
+**38 Skips — alle geprüft und begründet:**
+Alle 38 in 4 Testdateien, alle `describe.skipIf(!hasShadowDb)`. Brauchen echte Supabase-Credentials (`SHADOW_SUPABASE_URL/ANON_KEY/SERVICE_ROLE_KEY`), die in CI aus Sicherheitsgründen nicht hinterlegt sind. Aufschlüsselung:
+- `fail-closed-invoice.test.ts`: 9 Tests (Invoice-Draft gegen echte DB)
+- `bookings-policy-consolidation.test.ts`: 13 Tests (RLS-Policy-Check)
+- `dsgvo-account-deletion.test.ts`: 11 Tests (DSGVO-Löschkette)
+- `tenant-isolation.test.ts`: 5 Tests (Mandantentrennung)
+Alle 38 Skips sind korrekt und notwendig — keiner davon ist sinnvoll ohne echte DB ausführbar.
 
 **Lokale Verifikation:** tsc ✓ · vitest 3352/3352 ✓ · node:test 794/794 ✓ · E2E 98 ✓ · secret-scan ✓ · forbidden-strings ✓
 

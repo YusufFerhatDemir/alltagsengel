@@ -15,7 +15,7 @@
  */
 
 import { describe, it, expect } from 'vitest'
-import { readFileSync, existsSync } from 'node:fs'
+import { readFileSync, existsSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
 
 const MIGRATIONEN = join(process.cwd(), 'supabase', 'migrations')
@@ -62,7 +62,6 @@ describe('profiles BEFORE-INSERT-Trigger: kein OLD-Zugriff', () => {
     // gebunden ist, die ihn erzeugt/ersetzt. 20260804140000 fuehrt den Bug
     // ein, 20260808170000 ersetzt ihn korrekt — die Reihenfolge der
     // Dateinamen (Zeitstempel-Praefix) muss das widerspiegeln.
-    const { readdirSync } = require('node:fs') as typeof import('node:fs')
     const dateien = readdirSync(MIGRATIONEN)
       .filter(f => f.endsWith('.sql') && !f.includes('rollback'))
       .sort()

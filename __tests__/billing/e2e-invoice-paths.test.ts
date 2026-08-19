@@ -123,11 +123,6 @@ const INVOICE_ITEMS_OBJ = [
 // Admin-Mock Builder (gleiche Struktur wie in anderen Tests)
 // ═══════════════════════════════════════════════════════════════
 
-/* eslint-disable @typescript-eslint/no-explicit-any -- Diese Attrappe bildet
- * die selbstreferenzierende, fluide Supabase-Query-Builder-API nach (jede
- * Methode gibt `builder` zurück, Werte/Filter sind beliebig geformt). Das
- * ist per Definition `any`-typisiert. */
-
 type QueryState = { table: string; op: string; values?: any; filters: Record<string, any> }
 type Handler = (q: QueryState) => { data: any; error: any }
 

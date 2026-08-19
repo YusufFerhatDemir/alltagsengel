@@ -9,7 +9,7 @@
  */
 
 import { describe, it, expect } from 'vitest'
-import { readFileSync, existsSync } from 'node:fs'
+import { readFileSync, existsSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
 
 const MIGRATIONEN = join(process.cwd(), 'supabase', 'migrations')
@@ -109,8 +109,7 @@ describe('SECDEF-Trigger-REVOKE — search_path-Haertung', () => {
 })
 
 describe('SECDEF-Trigger-REVOKE — kein spaeterer Re-Grant', () => {
-  const alleFiles = require('node:fs')
-    .readdirSync(MIGRATIONEN)
+  const alleFiles = readdirSync(MIGRATIONEN)
     .filter((f: string) => f.endsWith('.sql') && !f.includes('rollback') && f > FIX)
 
   for (const fn of TRIGGER_FUNKTIONEN) {
