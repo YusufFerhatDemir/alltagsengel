@@ -13,10 +13,14 @@
 | | Stand vorher | Stand jetzt |
 |---|---|---|
 | **Code** | 6 Befunde offen | alle bearbeitet, 91 neue Tests |
-| **Datenbank** | 3 Änderungen nötig | 3 Migrationen geschrieben, auf echtem Postgres bewiesen, **Live-Apply steht aus** |
+| **Datenbank** | 3 Änderungen nötig | 3 Migrationen geschrieben, auf echtem Postgres bewiesen — **Live-Apply: EXTERNAL_BLOCKER** |
 | **DSGVO** | 3 offene Punkte | 3 geschlossen (Stripe, Art.-15-Export, Analytics-Mandantenbezug) |
 
-**Wichtigste Einschränkung, gleich vorweg:** Die drei Migrationen sind geschrieben, gegen eine echte PostgreSQL-Instanz getestet und mit Rollback versehen — aber **noch nicht auf Production angewendet**. Bis dahin gelten HOCH-1, MITTEL-2 und MITTEL-5 in Production unverändert weiter. Details unter [Live-Apply](#live-apply--der-verbleibende-schritt).
+Der Code ist deployed (Commit `dfe6de0`, Push nach `origin/main` verifiziert).
+
+**Wichtigste Einschränkung, gleich vorweg:** Die drei Migrationen sind geschrieben, gegen eine echte PostgreSQL-Instanz getestet und mit Rollback versehen — aber **nicht auf Production angewendet, und sie lassen sich aus dieser Umgebung heraus auch nicht anwenden.** Der Apply-Weg des Repos läuft als `service_role`, und die besitzt in diesem Projekt keinerlei DDL-Rechte. Schlimmer noch: `REVOKE`/`GRANT` quittieren dort **Erfolg**, ohne etwas zu ändern — der erste Apply-Versuch meldete `HTTP 204`, und der Endpunkt war danach unverändert offen. Das Werkzeug ist repariert und bricht jetzt ab; die Anwendung muss über den Supabase-SQL-Editor erfolgen. Vollständige Herleitung unter [Live-Apply](#live-apply--external_blocker).
+
+**Bis zum Apply gelten HOCH-1, MITTEL-2, MITTEL-5 und NIEDRIG-3 in Production unverändert weiter.** `node scripts/verify-security-fixes-2026-08-19.mjs` meldet den Stand jederzeit — aktuell **1/7**.
 
 ---
 
@@ -71,7 +75,7 @@ Die Suite misst zuerst den **Vorher-Zustand** (Admin aus Org B sieht Profile und
 
 ### Ergebnis
 
-✅ **Intern gelöst, auf echtem Postgres bewiesen** — ⏳ **Live-Apply steht aus.**
+✅ **Intern gelöst, auf echtem Postgres bewiesen** — ⛔ **Live-Apply: EXTERNAL_BLOCKER** (Supabase-SQL-Editor nötig, siehe unten).
 
 **Dokumentierter Restpunkt:** `nutzer_in_aktiver_org()` gibt `true` zurück, wenn ein Nutzer *überhaupt keine* Org-Bindung hat. Ohne diesen Zweig wären frisch registrierte Nutzer für jeden Admin unsichtbar und die Nutzerverwaltung direkt nach der Registrierung blind. Folge: bindungslose Nutzer sind bis zur ersten Zuordnung für Admins aller Mandanten sichtbar. Der Test hält das ausdrücklich fest, damit es nicht unbemerkt zur Annahme wird.
 
@@ -144,7 +148,7 @@ Drei bestehende Testdateien mussten mitgezogen werden (`reviews-get-auth`, `auto
 
 ### Ergebnis
 
-✅ **Code gelöst** — ⏳ **Live-Apply steht aus.**
+✅ **Code gelöst** — ⛔ **Live-Apply: EXTERNAL_BLOCKER** (Supabase-SQL-Editor nötig, siehe unten).
 
 **Bis zum Apply meldet `npm run check:schema-drift` weiterhin 4 Treffer** (die zwei bekannten plus die zwei neuen Org-Filter in `ai-chat` und `visitor-alert`). Das ist gewollt: Der rote Check ist das ehrliche Signal, dass eine Migration aussteht — er wurde bewusst **nicht** über die Ausnahmeliste stummgeschaltet. Das Verhalten in der Zwischenzeit ist fail-closed und nicht schlechter als vorher: Die Aggregation bleibt leer, statt mandantenfremde Daten zu liefern.
 
@@ -229,7 +233,7 @@ POST /rest/v1/rpc/cron_check_ueberfaellige_aufgaben   (anon-Key)
 
 ### Ergebnis
 
-✅ **Migration fertig** — ⏳ **Live-Apply steht aus.** Bis dahin ist der Pfad in Production offen.
+✅ **Migration fertig** — ⛔ **Live-Apply: EXTERNAL_BLOCKER** (Supabase-SQL-Editor nötig, siehe unten). Bis dahin ist der Pfad in Production offen.
 
 ---
 
@@ -256,7 +260,7 @@ Die Migration entfernt die drei offenen Policies. `visitors` und `visitor_locati
 
 ### Ergebnis
 
-✅ **Code gelöst** — ⏳ **Policy-Drop mit dem Live-Apply.**
+✅ **Code gelöst** — ⛔ **Policy-Drop: EXTERNAL_BLOCKER** (Supabase-SQL-Editor nötig).
 
 **Reihenfolge beachten:** erst Code deployen, dann Migration anwenden. Umgekehrt würden Browser mit dem alten Bundle beim Insert scheitern (fail-soft, aber unnötig).
 
@@ -339,7 +343,7 @@ Der Audit ließ zwei Wege: Dashboard-Setting verifizieren oder Text anpassen. **
 
 ### Ergebnis
 
-✅ **Code gelöst** — ⏳ **REVOKE mit dem Live-Apply.**
+✅ **Code gelöst** — ⛔ **REVOKE: EXTERNAL_BLOCKER** (Supabase-SQL-Editor nötig).
 
 **Reihenfolge beachten:** erst Code deployen, dann Migration. Umgekehrt bräche der Freigabe-Flow bis zum Deploy.
 
@@ -393,55 +397,99 @@ Zusätzlich: NIEDRIG-6 (irreführende Gültigkeitsangabe) und NIEDRIG-7 (Mitglie
 
 ---
 
-## Live-Apply — der verbleibende Schritt
+## Live-Apply — EXTERNAL_BLOCKER
 
-Drei Migrationen sind geschrieben, jeweils mit Rollback, und warten auf die Anwendung gegen Production. **In dieser Reihenfolge, und erst nach dem Code-Deploy:**
+Drei Migrationen sind geschrieben, jeweils mit Rollback, und **können aus dieser Umgebung heraus nicht angewendet werden.**
 
 | # | Migration | Inhalt | Rollback |
 |---|---|---|---|
-| 1 | `20260922000000_revoke_anon_cron_funktionen.sql` | MITTEL-5 + NIEDRIG-7 — reine Rechte-Entziehung | `…000001` |
+| 1 | `20260922000000_revoke_anon_cron_funktionen.sql` | MITTEL-5 + NIEDRIG-7 — Rechte-Entziehung | `…000001` |
 | 2 | `20260922010000_analytics_org_scope.sql` | MITTEL-2 + NIEDRIG-3 — Spalte, Fence, Policy-Drop | `…010001` |
 | 3 | `20260922020000_hoch1_mandantentrennung.sql` | HOCH-1 — `current_org_id()`, 18 Fences, 9 verengte Policies | `…020001` |
 
-```
-node scripts/apply-migration.mjs 20260922000000_revoke_anon_cron_funktionen.sql
-node scripts/apply-migration.mjs 20260922010000_analytics_org_scope.sql
-node scripts/apply-migration.mjs 20260922020000_hoch1_mandantentrennung.sql
-```
+### Warum es nicht geht — und was dabei aufgefallen ist
 
-**Warum der Deploy zuerst kommt:** Migration 1 entzieht `coach_finde_nutzer_id` das Recht für `authenticated` — bis der neue Code (Service-Role-Client) live ist, bräche der Freigabe-Flow. Migration 2 entfernt die offene `INSERT`-Policy auf `page_views` — bis der neue `PageTracker` ausgeliefert ist, würden alte Bundles beim Insert scheitern (fail-soft, aber unnötig).
+Der bisherige Apply-Weg (`scripts/apply-migration.mjs` → `public._run_sql`) sah zunächst so aus, als würde er funktionieren. Er tat es nicht — und das war die gefährlichere Variante von „geht nicht":
 
-**Am Apply-Werkzeug war eine Reparatur nötig.** `scripts/apply-migration.mjs` schickt den Dateiinhalt an `public._run_sql`, das ihn per `EXECUTE` in einer plpgsql-Funktion ausführt. Postgres lehnt dort Transaktionsbefehle ab:
+**Erster Versuch:** `HTTP 400 — 0A000 "EXECUTE of transaction commands is not implemented"`. `_run_sql` führt den Text per `EXECUTE` in einer plpgsql-Funktion aus, und dort sind `BEGIN;`/`COMMIT;` unzulässig. Das Skript entfernt sie jetzt vor dem Senden; die Atomarität bleibt erhalten, weil der Funktionsaufruf selbst in einer Transaktion läuft. Die Migrationsdateien behalten `BEGIN`/`COMMIT`, damit sie unverändert im SQL-Editor und per `psql` anwendbar bleiben.
 
-```
-0A000  EXECUTE of transaction commands is not implemented
-```
-
-Das Skript entfernt jetzt ein führendes `BEGIN;` und ein abschließendes `COMMIT;`. **Die Atomarität geht dabei nicht verloren** — der Funktionsaufruf läuft selbst in einer Transaktion, der ganze Rumpf fällt also gemeinsam durch. Die Migrationsdateien behalten `BEGIN`/`COMMIT`, damit sie unverändert im Supabase-SQL-Editor und per `psql` anwendbar bleiben.
-
-### Verifikation nach dem Apply
-
-```sql
-select public.current_org_id();
-select count(*) from page_views      where organization_id is null;  -- 0
-select count(*) from krankenfahrten  where organization_id is null;  -- 0
-select policyname from pg_policies
- where tablename in ('page_views','visitors','visitor_locations') and cmd = 'INSERT';  -- leer
-select qual from pg_policies where tablename='profiles' and policyname='profiles_select_admin';
- -- muss nutzer_in_aktiver_org enthalten
-```
-
-```bash
-npm run check:schema-drift        # danach 0 Treffer
-npx tsx scripts/rls-matrix.ts     # Matrix neu erzeugen
-node scripts/verify-anon-exposure.mjs
-```
-
-Und die Live-Gegenprobe zu MITTEL-5 — muss nach dem Apply **nicht** mehr `200` liefern:
+**Zweiter Versuch:** `HTTP 204` — Erfolg. **Und trotzdem war nichts passiert.** Die Live-Gegenprobe lieferte weiterhin:
 
 ```
 POST /rest/v1/rpc/cron_check_ueberfaellige_aufgaben   (anon-Key)
+→ HTTP 200  {"checked_at": "...", "marked_overdue": 0}
 ```
+
+Die Ursache, per Katalog-Abfrage gegen Production ermittelt:
+
+```
+current_user = service_role | session_user = authenticator
+superuser = false | Mitglied von "postgres" = false
+CREATE auf schema public = false
+Eigentümer von page_views / visitors / krankenfahrten / profiles = postgres
+```
+
+Die ACL der Funktion war nach dem „erfolgreichen" Apply unverändert:
+`{=X/postgres, postgres=X/postgres, anon=X/postgres, authenticated=X/postgres, service_role=X/postgres}`
+
+**Der entscheidende Punkt:** `ALTER TABLE`/`CREATE POLICY` würden als Nicht-Eigentümer hart scheitern — das fällt auf. `REVOKE`/`GRANT` scheitern **nicht** hart: Postgres gibt für einen Nicht-Eigentümer nur eine `WARNING` aus („no privileges could be revoked") und macht weiter. Das Skript meldete deshalb Erfolg für eine Sicherheitsmaßnahme, die nie stattgefunden hat. Genau so entsteht der Glaube, eine Lücke sei geschlossen.
+
+### Was daraufhin geändert wurde
+
+**`scripts/apply-migration.mjs` bricht jetzt vorher ab.** Eine Vorabprüfung ermittelt Rolle, `CREATE`-Recht auf `public` und Mitgliedschaft in `postgres`; fehlt beides, endet der Lauf mit Exit 2 und einer klaren Ansage statt mit einem falschen Erfolg:
+
+```
+ABBRUCH: Rolle "service_role" darf in diesem Projekt kein DDL ausfuehren.
+Wichtig: REVOKE/GRANT wuerden hier NICHT hart scheitern, sondern nur eine
+WARNING erzeugen — das Skript haette "erfolgreich" gemeldet, ohne dass sich
+etwas aendert. Deshalb der Abbruch.
+```
+
+Der Docstring hält die Messung samt Datum fest, damit die Einschränkung nicht wieder verloren geht.
+
+**Neu: `scripts/verify-security-fixes-2026-08-19.mjs`** — unabhängige Live-Gegenprobe, die nichts glaubt, was ein Apply-Skript meldet:
+
+```
+$ node scripts/verify-security-fixes-2026-08-19.mjs
+
+MITTEL-5 — Cron-RPC gegen anon
+  ✗ cron_check_ueberfaellige_aufgaben() ist fuer anon gesperrt — HTTP 200 (200 = weiterhin offen)
+
+MITTEL-2 + HOCH-1 — organization_id auf den nachgezogenen Tabellen
+  ✗ analytics (20260922010000): alle 7 Tabellen haben organization_id
+  ✗ org_fence (20260922020000): alle 18 Tabellen haben organization_id
+
+NIEDRIG-3 — offene INSERT-Policies auf den Tracking-Tabellen
+  ✗ page_views / visitors / visitor_locations: anon darf nicht mehr schreiben — HTTP 201
+
+1/7 Pruefungen bestanden
+```
+
+Die eine bestandene Prüfung ist die Dauerkontrolle über die `SECURITY DEFINER`-Funktionen (siehe unten); die sechs offenen sind die drei nicht angewendeten Migrationen.
+
+Zwei Eigenschaften waren dafür nötig:
+
+* **Die Probe hinterlässt keine Spuren.** Kommt ein Insert durch (= Policy noch offen), wird die Zeile unmittelbar mit dem Service-Role-Key wieder entfernt. Beim ersten Lauf entstanden zwei Testzeilen in `page_views` und `visitors`; beide sind gelöscht, Nachkontrolle 0 Zeilen.
+* **Kein Fehler wird als Erfolg gewertet.** Der erste Entwurf meldete `visitor_locations` fälschlich als geschützt — die Antwort war aber `23502` (not-null violation auf `portal`), die Policy wurde also nie ausgewertet. Die Probe füllt jetzt alle NOT-NULL-Spalten, und nur `42501` bzw. eine ausdrückliche RLS-Meldung zählt als Block. Alles andere wird als **UNGEKLÄRT** gemeldet, nicht als bestanden.
+
+### Was zu tun ist
+
+Die drei Dateien im **Supabase-SQL-Editor** ausführen — der läuft als `postgres` und hat die nötigen Rechte. **In dieser Reihenfolge**, und der Code-Deploy ist bereits erfolgt (Commit `dfe6de0`), die Voraussetzung ist also erfüllt:
+
+1. `supabase/migrations/20260922000000_revoke_anon_cron_funktionen.sql`
+2. `supabase/migrations/20260922010000_analytics_org_scope.sql`
+3. `supabase/migrations/20260922020000_hoch1_mandantentrennung.sql`
+
+Danach:
+
+```bash
+node scripts/verify-security-fixes-2026-08-19.mjs   # muss 7/7 melden
+npm run check:schema-drift                          # danach 0 Treffer
+npx tsx scripts/rls-matrix.ts                       # Matrix neu erzeugen
+node scripts/verify-anon-exposure.mjs
+```
+
+**Warum der Code zuerst kam:** Migration 1 entzieht `coach_finde_nutzer_id` das Recht für `authenticated` — ohne den neuen Code (Service-Role-Client) bräche der Freigabe-Flow. Migration 2 entfernt die offene `INSERT`-Policy auf `page_views` — ohne den neuen `PageTracker` würden alte Bundles beim Insert scheitern (fail-soft, aber unnötig). Beides ist mit `dfe6de0` live.
 
 ---
 
@@ -449,7 +497,15 @@ POST /rest/v1/rpc/cron_check_ueberfaellige_aufgaben   (anon-Key)
 
 Damit der Bericht nicht mehr behauptet, als er belegt:
 
-1. **Die Migrationen sind nicht live.** HOCH-1, MITTEL-2, MITTEL-5 und NIEDRIG-3/-7 gelten in Production bis zum Apply unverändert. Der Nachweis ist auf einer echten PostgreSQL-Instanz erbracht (PGlite), **nicht** per Impersonation gegen Production.
+1. **Die Migrationen sind nicht live — und aus dieser Umgebung heraus nicht anwendbar (EXTERNAL_BLOCKER).** HOCH-1, MITTEL-2, MITTEL-5 und NIEDRIG-3/-7 gelten in Production bis zum Apply unverändert; `node scripts/verify-security-fixes-2026-08-19.mjs` meldet aktuell 1/7. Der Wirksamkeitsnachweis ist auf einer echten PostgreSQL-Instanz erbracht (PGlite), **nicht** per Impersonation gegen Production.
+
+   **Naheliegender Verdacht, geprüft und entkräftet:** Wenn dieser Apply-Weg `REVOKE` still verschluckt, könnten frühere REVOKE-Migrationen (`20260812040000`, `20260823010000`, `20260913000000`, `20260916000000`) ebenso wirkungslos verbucht worden sein. Die Katalog-Abfrage über **alle** `SECURITY DEFINER`-Funktionen in `public` sagt etwas anderes:
+
+   ```
+   ✓ anon-ausfuehrbar: cron_check_ueberfaellige_aufgaben()
+   ```
+
+   Genau eine — die aus MITTEL-5. Alle übrigen REVOKEs sind wirksam; sie wurden offenbar über den SQL-Editor als `postgres` angewendet. Die Prüfung ist als Dauerkontrolle in `scripts/verify-security-fixes-2026-08-19.mjs` eingebaut und schlägt an, sobald eine weitere Funktion für `anon` freigegeben wird.
 
 2. **`npm run lint` ist rot — und war es schon vorher.** Der Audit meldete für Commit `3b939d0` „Exit 0, 0 Findings". Auf `fa9b37b` meldet derselbe Befehl **9717 Fehler in 66126 Problemen**, verteilt über den gesamten Bestand (`@typescript-eslint/no-explicit-any`, `react-hooks/set-state-in-effect`). Gegenprobe an unberührten Dateien: `lib/audit-log.ts` allein hat 2 Fehler, `app/kunde/buchungen/page.tsx` 7. Das ist **kein** Ergebnis dieser Arbeit — offenbar hat eine ESLint-/Config-Aktualisierung seit dem Audit bestehende Warnungen zu Fehlern hochgestuft. Die hier neu angelegten Dateien sind lint-sauber. Der Bestand aufzuräumen ist eine eigene Aufgabe.
 
@@ -478,6 +534,9 @@ Damit der Bericht nicht mehr behauptet, als er belegt:
 
 **Neu — Dokumentation:**
 `docs/SECURITY_FIXES_2026-08-19.md` · `docs/security/ORG_ID_KLASSIFIZIERUNG.md` · `scripts/org-id-klassifizierung.json`
+
+**Neu — Werkzeug:**
+`scripts/verify-security-fixes-2026-08-19.mjs` (Live-Gegenprobe der drei Migrationen + Dauerkontrolle der SECDEF-Funktionen)
 
 **Geändert (Auswahl):**
 `lib/organizations/server.ts` (Kern des MITTEL-1-Fixes) · 7 Guards in `lib/*/api-auth.ts` · 21 Rollen-Server-Actions · 14 API-Routen · `app/datenschutz/page.tsx` · `components/PageTracker.tsx` · `components/admin/CareNotesPanel.tsx` · `scripts/apply-migration.mjs` · 3 bestehende Testdateien (Mocks an den neuen Fail-closed-Kontrakt gezogen)
