@@ -2,112 +2,173 @@
   "$schema": "https://json-schema.org/draft-07/schema#",
   "description": "Verbotene Strings im gesamten Repo. Jeder Eintrag führt zum Abbruch von pre-commit + CI-Lint. Analogie: Schwarze Liste am Türsteher — Name drauf, kein Einlass.",
   "version": 1,
-  "lastUpdated": "2026-04-17",
+  "lastUpdated": "2026-08-19",
   "rules": [
     {
       "id": "legal-entity-gmbh",
       "pattern": "AlltagsEngel GmbH",
       "reason": "Rechtsform ist UG (haftungsbeschränkt), NICHT GmbH. Siehe Impressum / HRB 140351.",
       "caseSensitive": false,
-      "allowedReplacements": ["Alltagsengel UG (haftungsbeschränkt)"]
+      "allowedReplacements": [
+        "Alltagsengel UG (haftungsbeschränkt)"
+      ]
     },
     {
       "id": "legal-entity-gmbh-de-spelling",
       "pattern": "Alltagsengel GmbH",
       "reason": "Rechtsform ist UG (haftungsbeschränkt), NICHT GmbH. Siehe Impressum / HRB 140351.",
       "caseSensitive": false,
-      "allowedReplacements": ["Alltagsengel UG (haftungsbeschränkt)"]
+      "allowedReplacements": [
+        "Alltagsengel UG (haftungsbeschränkt)"
+      ]
     },
     {
       "id": "stale-entlastungsbetrag-monat-en",
       "pattern": "€125/month",
       "reason": "Entlastungsbetrag ist seit Pflegereform 2025: 131 €/Monat. Historische Erwähnungen bitte als Fließtext formulieren (z. B. 'zuvor 125 €'), nicht in dieser Schreibweise.",
       "caseSensitive": false,
-      "allowedReplacements": ["€131/month"]
+      "allowedReplacements": [
+        "€131/month"
+      ]
     },
     {
       "id": "stale-entlastungsbetrag-monat-de",
       "pattern": "€125/Monat",
       "reason": "Entlastungsbetrag ist seit Pflegereform 2025: 131 €/Monat.",
       "caseSensitive": false,
-      "allowedReplacements": ["€131/Monat"]
+      "allowedReplacements": [
+        "€131/Monat"
+      ]
     },
     {
       "id": "stale-sam-de",
       "pattern": "7,44 Mrd",
       "reason": "SAM basiert auf altem 125-€-Betrag. Korrekt: 4,96 Mio × 131 € × 12 = 7,80 Mrd €.",
       "caseSensitive": false,
-      "allowedReplacements": ["7,80 Mrd"]
+      "allowedReplacements": [
+        "7,80 Mrd"
+      ]
     },
     {
       "id": "stale-sam-en",
       "pattern": "€7.44B",
       "reason": "SAM basiert auf altem 125-€-Betrag. Korrekt: €7.80B (4.96M × €131 × 12).",
       "caseSensitive": false,
-      "allowedReplacements": ["€7.80B"]
+      "allowedReplacements": [
+        "€7.80B"
+      ]
     },
     {
       "id": "stale-sam-en-billion",
       "pattern": "7.44 billion",
       "reason": "SAM basiert auf altem 125-€-Betrag. Korrekt: €7.80 billion.",
       "caseSensitive": false,
-      "allowedReplacements": ["7.80 billion"]
+      "allowedReplacements": [
+        "7.80 billion"
+      ]
     },
     {
       "id": "wrong-sam-784",
       "pattern": "7,84 Mrd",
       "reason": "Rechenfehler: 4,96 Mio × 131 € × 12 = 7,80 Mrd €, nicht 7,84.",
       "caseSensitive": false,
-      "allowedReplacements": ["7,80 Mrd"]
+      "allowedReplacements": [
+        "7,80 Mrd"
+      ]
     },
     {
       "id": "truncated-sam-779-de",
       "pattern": "€7,79 Mrd",
       "reason": "Abschneiden statt kaufmännisch Runden: 7.797,12 Mio → 7,80 Mrd. Einheitlich €7,80 Mrd verwenden.",
       "caseSensitive": false,
-      "allowedReplacements": ["€7,80 Mrd"]
+      "allowedReplacements": [
+        "€7,80 Mrd"
+      ]
     },
     {
       "id": "truncated-sam-779-en",
       "pattern": "€7.79B",
       "reason": "Abschneiden statt Runden. Einheitlich €7.80B verwenden.",
       "caseSensitive": false,
-      "allowedReplacements": ["€7.80B"]
+      "allowedReplacements": [
+        "€7.80B"
+      ]
     },
     {
       "id": "stale-unused-budget-de",
       "pattern": "4,46 Mrd",
       "reason": "Ungenutztes §45b-Budget auf alter 7,44-Basis. Korrekt: 60 % von 7,80 Mrd = 4,68 Mrd €.",
       "caseSensitive": false,
-      "allowedReplacements": ["4,68 Mrd"]
+      "allowedReplacements": [
+        "4,68 Mrd"
+      ]
     },
     {
       "id": "stale-unused-budget-en",
       "pattern": "€4.46B",
       "reason": "Ungenutztes §45b-Budget auf alter Basis. Korrekt: €4.68B.",
       "caseSensitive": false,
-      "allowedReplacements": ["€4.68B"]
+      "allowedReplacements": [
+        "€4.68B"
+      ]
     },
     {
       "id": "stale-used-budget-de",
       "pattern": "2,98 Mrd",
       "reason": "Genutztes §45b-Budget auf alter 7,44-Basis. Korrekt: 40 % von 7,80 Mrd = 3,12 Mrd €.",
       "caseSensitive": false,
-      "allowedReplacements": ["3,12 Mrd"]
+      "allowedReplacements": [
+        "3,12 Mrd"
+      ]
     },
     {
       "id": "stale-used-budget-en",
       "pattern": "€2.98B",
       "reason": "Genutztes §45b-Budget auf alter Basis. Korrekt: €3.12B.",
       "caseSensitive": false,
-      "allowedReplacements": ["€3.12B"]
+      "allowedReplacements": [
+        "€3.12B"
+      ]
     },
     {
       "id": "stale-companion-share",
       "pattern": "€102.50",
       "reason": "Companion-Anteil (82 %) auf alter 125-€-Basis. Korrekt: 82 % von 131 € = €107.42.",
       "caseSensitive": false,
-      "allowedReplacements": ["€107.42"]
+      "allowedReplacements": [
+        "€107.42"
+      ]
+    },
+    {
+      "id": "dipav-tote-dokument-id",
+      "pattern": "BJNR622800023",
+      "reason": "Diese DiPAV-Dokument-ID liefert HTTP 404. Gueltig ist BJNR156800022 (DiPAV vom 29.09.2022, BGBl. I S. 1568). Die falsche ID stand ueber Wochen in den Regulatorik-Dokumenten. Ausnahmen: die Dokumente, die genau diese Korrektur belegen, und lib/coach/regulatorik.ts, das vor ihr warnt.",
+      "caseSensitive": false,
+      "allowedReplacements": [
+        "BJNR156800022"
+      ],
+      "excludeGlobs": [
+        "docs/dipa/22_REGULATORISCHER_FINALCHECK_2026-08-15.md",
+        "docs/TRACK3_DIPA_PFLEGECOACH_STATUS_2026-08-19.md",
+        "lib/coach/regulatorik.ts",
+        "lib/coach/regulatorik.test.ts",
+        "docs/WAHRHEITSBERICHT_V6_TECHNISCHE_ENDABNAHME_2026-08-19.md"
+      ]
+    },
+    {
+      "id": "dipa-falsche-anspruchsnorm",
+      "pattern": "40a Abs. 1a SGB XI",
+      "reason": "Falsche Anspruchsnorm. Der Erstattungsanspruch steht in Paragraph 40b Abs. 1 SGB XI (40 Euro DiPA + 30 Euro ergaenzende Unterstuetzungsleistungen, getrennte Betraege). Paragraph 40a regelt die DiPA selbst, nicht den Anspruch. Siehe lib/coach/regulatorik.ts.",
+      "caseSensitive": false,
+      "allowedReplacements": [
+        "40b Abs. 1 SGB XI"
+      ],
+      "excludeGlobs": [
+        "docs/dipa/**",
+        "lib/coach/anforderungskatalog.ts",
+        "lib/coach/regulatorik.ts",
+        "docs/TRACK3_DIPA_PFLEGECOACH_STATUS_2026-08-19.md"
+      ]
     }
   ],
   "excludeGlobs": [

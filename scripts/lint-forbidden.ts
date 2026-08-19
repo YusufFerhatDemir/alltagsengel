@@ -33,6 +33,18 @@ interface ForbiddenRule {
   reason: string
   caseSensitive?: boolean
   allowedReplacements?: string[]
+  /**
+   * Dateien, in denen GERADE DIESE Regel nicht gilt — zusätzlich zu den
+   * globalen excludeGlobs.
+   *
+   * Gebraucht für Regeln, die einen dokumentierten Fehler sperren: Das
+   * Dokument, das die Korrektur belegt, muss den falschen Wert zitieren
+   * dürfen, sonst verbietet die Regel ausgerechnet ihre eigene
+   * Begründung. Jede Ausnahme ist eine bewusste Entscheidung und gehört
+   * in `reason` erklärt — sie darf nie dazu dienen, einen echten Treffer
+   * stillzulegen.
+   */
+  excludeGlobs?: string[]
 }
 
 interface ForbiddenConfig {
@@ -181,6 +193,7 @@ function scanFile(relPath: string, rules: ForbiddenRule[]): Hit[] {
   const lines = content.split('\n')
 
   for (const rule of rules) {
+    if (rule.excludeGlobs && isExcluded(relPath, rule.excludeGlobs)) continue
     const flags = rule.caseSensitive === true ? 'g' : 'gi'
     // Escape regex specials im Pattern — wir matchen Literal-Strings.
     const escaped = rule.pattern.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
