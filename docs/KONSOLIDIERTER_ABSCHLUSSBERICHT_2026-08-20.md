@@ -53,12 +53,17 @@ Jeder Befund wurde via Supabase MCP live verifiziert:
 
 ---
 
-## 4. GitHub CI: IN ARBEIT 🔄
+## 4. GitHub CI: GRÜN ✅
 
-- CI-Fix-Task läuft seit dieser Session (Session `local_f633f4e5`, 70+ Assistant-Turns)
-- Fix wurde gepusht, wartet auf CI-Run-Ergebnis
-- Vorheriger Stand: 7 failing Runs auf `main`
-- **Ursache noch zu bestätigen** — wird separat nachgereicht sobald CI-Run abgeschlossen
+**Commit:** `9c1c442` — CI-Run `32310083263` = SUCCESS
+
+**Root Cause 1 — vitest hookTimeout (4 Runs):**
+`hookTimeout` war auf Vitest-Default 10s, während `testTimeout` bereits 15s war. PGlite-Suites booten WASM-Postgres in `beforeAll` — unter Volllast (170 Dateien parallel) überschritten sie 10s. Fix: `hookTimeout: 60000`. Ergebnis: 3352 Tests bestanden (vorher 3309 weil 43 stillschweigend übersprungen wurden).
+
+**Root Cause 2 — Playwright apt-install Timeout (4 Runs):**
+`playwright install --with-deps` zieht ~130 apt-Pakete für WebKit. Azure-Mirror war langsam → 10-Min-Step-Limit erreicht. Fix: apt und browser-download in getrennte Steps, 3 Retries, `actions/cache` für `~/.cache/ms-playwright`, Job-Limit 25→45min.
+
+**Lokale Verifikation:** tsc ✓ · vitest 3352/3352 ✓ · node:test 794/794 ✓ · E2E 98 ✓ · secret-scan ✓ · forbidden-strings ✓
 
 ---
 
@@ -79,7 +84,9 @@ Jeder Befund wurde via Supabase MCP live verifiziert:
 | Budget-Cap Unit Tests | 44 | ✅ Bestanden |
 | Audit-Log Konvertierungen | 141 silent catches → `logAuditEventOrWarn`/`OrThrow` | ✅ Deployed |
 | Security-Verifikation (DB-Queries) | 15+ Live-Queries via Supabase MCP | ✅ Alle bestanden |
-| Automatisierte Test-Suite (`vitest`) | Abhängig von CI-Ergebnis | 🔄 CI läuft |
+| Automatisierte Test-Suite (`vitest`) | 3352/3352 | ✅ Bestanden |
+| Node.js Tests (`node:test`) | 794/794 | ✅ Bestanden |
+| E2E Tests (Playwright) | 98 | ✅ Bestanden |
 
 ---
 
@@ -143,7 +150,7 @@ Basierend auf DiPA 14-Punkte-Analyse (Session vom 19.08.2026):
 
 | # | Aufgabe | Priorität |
 |---|---|---|
-| 1 | GitHub CI grün bekommen (läuft bereits) | P0 |
+| 1 | ~~GitHub CI grün bekommen~~ | ✅ ERLEDIGT |
 | 2 | ChairMatch CM-S1 fixen: `insurance_policies` + `referrals` INSERT-Policies verschärfen | P1 |
 | 3 | ChairMatch CM-S2: Table-level REVOKE INSERT/UPDATE/DELETE von anon (Defense-in-Depth) | P2 |
 | 4 | Alltagsengel Produkt-Verbesserungen (8 parallele Tracks) | P1 |
@@ -173,7 +180,7 @@ Basierend auf DiPA 14-Punkte-Analyse (Session vom 19.08.2026):
 - ✅ Alltagsengel 4/4 Security-Migrationen angewendet + 7/7 verifiziert
 - ✅ ChairMatch Comprehensive Scan (70 Tabellen, INSERT-Policies, Storage, RPCs)
 - ✅ 2 neue MEDIUM-Findings dokumentiert (CM-S1, CM-S2)
-- 🔄 GitHub CI Fix in Arbeit
+- ✅ GitHub CI GRÜN (3352 vitest + 794 node:test + 98 E2E)
 
 **Security-Score:**
 - Alltagsengel: **13/13 Findings geschlossen** (8 vorher + 5 diese Session)
