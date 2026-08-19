@@ -10,11 +10,6 @@
 
 import { vi } from 'vitest'
 
-/* eslint-disable @typescript-eslint/no-explicit-any -- Diese Attrappe bildet
- * die selbstreferenzierende, fluide Supabase-Query-Builder-API nach (jede
- * Methode gibt `self` zurück, Zeilen/Payloads sind beliebig geformt). Das
- * ist per Definition `any`-typisiert. */
-
 type Resolver = () => { data: any; error: any } | Promise<{ data: any; error: any }>
 
 export function createAutomationMock() {
@@ -66,13 +61,11 @@ export function createAutomationMock() {
 
   const client = {
     from: vi.fn((table: string) => ({
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Signatur muss zu .select(columns) der echten Query-Builder-API passen; die Attrappe ignoriert die Spaltenliste.
       select: vi.fn((..._args: any[]) => chain(table, 'select')),
       insert: vi.fn((payload: any) => {
         inserts.push({ table, payload })
         return chain(table, 'insert')
       }),
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Signatur muss zu .update(payload) der echten Query-Builder-API passen; die Attrappe ignoriert die Argumente.
       update: vi.fn((..._args: any[]) => chain(table, 'update')),
     })),
     rpc: vi.fn(async () => ({ data: null, error: null })),

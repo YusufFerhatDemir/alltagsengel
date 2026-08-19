@@ -19,6 +19,20 @@ const eslintConfig = defineConfig([
     files: ["app/pflegecoach/**/*.{ts,tsx}"],
     rules: jsxA11y.flatConfigs.recommended.rules,
   },
+  // Testdateien: no-explicit-any und no-unused-vars lockern. Supabase-Mocks
+  // und PGlite-Attrappen brauchen zwangsläufig `any`; Destruktur-Variablen
+  // mit Unterstrich-Präfix sind absichtlich unbenutzte Platzhalter. Ohne
+  // diesen Override erzeugt ESLint ~600 nicht-behebbare Annotations in CI.
+  {
+    files: ["__tests__/**/*.{ts,tsx}", "**/*.test.{ts,tsx}", "**/*.spec.{ts,tsx}"],
+    rules: {
+      "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/no-unsafe-function-type": "off",
+      "@typescript-eslint/no-unused-vars": "off",
+      // Basis-Regel ebenfalls aus — sonst greift sie statt der TS-Variante.
+      "no-unused-vars": "off",
+    },
+  },
   // Override default ignores of eslint-config-next.
   globalIgnores([
     // Default ignores of eslint-config-next:
