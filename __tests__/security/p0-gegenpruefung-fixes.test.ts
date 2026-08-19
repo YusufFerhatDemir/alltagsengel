@@ -66,9 +66,16 @@ describe('EDIFACT ISO-8859-1 Encoding', () => {
     expect(src).toContain('application/octet-stream')
   })
 
-  it('Dateigröße wird als String-Länge berechnet (= Latin-1 Bytes)', () => {
+  it('Dateigröße wird als Latin-1-Bytelänge berechnet, nicht als UTF-8', () => {
     const src = read('lib/abrechnung/kassenabrechnung-engine.ts')
-    expect(src).toContain('datei.inhalt.length')
+    // Die Groesse kommt aus byteLaengeLatin1() — genau ein Byte je Zeichen,
+    // wie encodeToLatin1() es schreibt. Frueher stand hier direkt
+    // `datei.inhalt.length`; der benannte Helfer ist dasselbe Ergebnis,
+    // sagt aber, WARUM String-Laenge hier die Bytezahl ist.
+    expect(src).toContain('byteLaengeLatin1')
+    expect(src).toMatch(/dateigroesse_nutzdaten:\s*byteLaengeLatin1\(/)
+    expect(src).toMatch(/nutzdaten_groesse_bytes:\s*byteLaengeLatin1\(/)
+    // TextEncoder wuerde UTF-8 kodieren — Umlaute zaehlten dann doppelt.
     expect(src).not.toContain('TextEncoder')
   })
 })
