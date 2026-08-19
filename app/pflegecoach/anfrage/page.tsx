@@ -24,6 +24,10 @@ import Link from 'next/link'
 // die Kurzform „PflegeCoach"; der vollständige Produktname erscheint in
 // Titel, Fußzeile, Export und Bericht.
 import { COACH_SUPPORT_EMAIL } from '@/lib/coach/version'
+// Der Antwort-Hinweis kommt aus dem Register, nicht aus dieser Seite: eine
+// veröffentlichte Reaktionszeit ist eine bindende Zusage (Anlage 2 DiPAV,
+// Themenfeld III Nr. 8) und braucht einen hinterlegten Beschluss.
+import { supportAntwortHinweis } from '@/lib/coach/support'
 
 const ROLLEN = [
   { wert: 'fuer_mich', label: 'Für mich selbst' },
@@ -82,10 +86,7 @@ export default function AnfrageSeite() {
       <>
         <h1 className="pc-h1">Vielen Dank für Ihre Anfrage</h1>
         <section className="pc-card">
-          <p>
-            Ihre Anfrage ist bei uns eingegangen. Wir melden uns in der Regel innerhalb von zwei
-            Werktagen bei Ihnen. Eine Bestätigung haben wir an Ihre E-Mail-Adresse geschickt.
-          </p>
+          <p>{supportAntwortHinweis()}</p>
           <p>
             <Link className="pc-btn pc-btn--secondary" href="/pflegecoach/start">
               Zurück zur Produktübersicht

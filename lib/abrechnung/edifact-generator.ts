@@ -107,7 +107,7 @@ export interface GeneratorOptionen {
   datenaustauschreferenz?: number
   /** laufende Datei-Nr. je Kalenderjahr für den logischen Dateinamen */
   laufende_nummer?: number
-  /** 0=Testdatei, 1=Erprobung, 2=Echtdatei */
+  /** 0=Testdatei, 1=Erprobung, 2=Echtdatei. Ohne Angabe: '0' (fail-closed). */
   dateiindikator?: '0' | '1' | '2'
   /** Präfix der Rechnungsnummern (eindeutig je Erstellungsjahr!) */
   rechnungsnummer_praefix?: string
@@ -238,7 +238,13 @@ export function generateEDIFACT(
   }
   const lfdNr = optionen.laufende_nummer ?? 1
   const dar = optionen.datenaustauschreferenz ?? 1
-  const indikator = optionen.dateiindikator ?? '2'
+  // FAIL-CLOSED: ohne ausdrücklichen Wert gilt Testdatei ('0'), nicht Echtdatei.
+  // Bis 19.08.2026 stand hier '2'. Der einzige Produktivaufrufer
+  // (kassenabrechnung-engine.ts) setzt den Wert zwar immer aus
+  // `dateiindikatorFuer()` — aber ein Default, der im Vergessensfall eine
+  // Forderung bei der Kasse auslöst, ist die falsche Richtung. Wer eine
+  // Echtdatei will, muss '2' hinschreiben.
+  const indikator = optionen.dateiindikator ?? '0'
   const abrechnungscode = optionen.abrechnungscode ?? ABRECHNUNGSCODE_ALLTAGSENGEL
   // Kein stiller Hessen-Default mehr: entweder explizit gesetzt oder aus dem
   // Bundesland abgeleitet. Fehlt beides, bricht die Erzeugung ab.

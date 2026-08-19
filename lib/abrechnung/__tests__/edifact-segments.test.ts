@@ -87,9 +87,12 @@ test('UNB füllt die Datenaustauschreferenz fünfstellig auf', () => {
   assert.match(unb, /\+00001\+\+/)
 })
 
-test('UNB ohne Angabe erzeugt eine Echtdatei (Indikator 2)', () => {
+// Bis 19.08.2026 stand hier die umgekehrte Erwartung: ohne Angabe eine
+// Echtdatei. Ein Default, der im Vergessensfall eine Forderung bei der Kasse
+// auslöst, ist die teurere Richtung — der Default ist jetzt die Testdatei.
+test('UNB ohne Angabe erzeugt eine Testdatei (Indikator 0)', () => {
   const unb = UNB(ALLTAGSENGEL_IK, ITSCARE_IK, new Date('2026-08-19T08:05:00Z'), 1, 'PL086001SAO')
-  assert.ok(unb.endsWith("+2'"))
+  assert.ok(unb.endsWith("+0'"), 'Der Default muss 0 (Testdatei) sein')
 })
 
 test('UNZ spiegelt Nachrichtenzahl und Referenz aus dem UNB', () => {
