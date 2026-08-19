@@ -872,6 +872,11 @@ describe('Szenario 10: Voller Abrechnungsflow', () => {
           },
           error: null,
         }),
+        // Budgetdeckel (ermittleBudgetLage): liest client_budgets und die
+        // Bestandsrechnungen des Kalenderjahres, bevor die RPC laeuft.
+        gte: vi.fn().mockReturnThis(),
+        lte: vi.fn().mockResolvedValue({ data: [], error: null }),
+        in: vi.fn().mockResolvedValue({ data: [], error: null }),
         // Faelligkeits-Nachlauf (setzeFaelligkeitFallsLeer): laedt die Rechnung
         // und setzt due_date, solange sie leer ist.
         update: vi.fn().mockReturnThis(),
@@ -926,6 +931,11 @@ describe('Szenario 10: Voller Abrechnungsflow', () => {
           },
           error: null,
         }),
+        // Budgetlage wird VOR der RPC gelesen — ohne diese Kettenglieder
+        // kaeme der Tarif-Fehler der RPC gar nicht erst zustande.
+        maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
+        gte: vi.fn().mockReturnThis(),
+        lte: vi.fn().mockResolvedValue({ data: [], error: null }),
       };
       const mock = {
         from: vi.fn(() => mockChain),
