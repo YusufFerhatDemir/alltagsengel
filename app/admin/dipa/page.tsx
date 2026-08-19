@@ -25,7 +25,7 @@ import type { NutzungsAuswertung } from '@/lib/coach/nachweise'
 import { EREIGNIS_LABELS, MIN_GRUPPENGROESSE } from '@/lib/coach/nachweise'
 import type { CoachAbrechnungsweg, CoachFreischaltcode } from '@/lib/coach/types'
 
-type TabKey = 'codes' | 'nachweise' | 'abrechnung' | 'katalog'
+type TabKey = 'codes' | 'nachweise' | 'abrechnung' | 'katalog' | 'schalter'
 
 const CODE_STATUS_LABELS: Record<string, string> = {
   ausgegeben: 'Ausgegeben',
@@ -63,6 +63,7 @@ export default function AdminDipaPage() {
           { key: 'nachweise', label: 'Nutzungsnachweise' },
           { key: 'abrechnung', label: 'Abrechnungswege' },
           { key: 'katalog', label: 'Anforderungskatalog' },
+          { key: 'schalter', label: 'Schalter & Regulatorik' },
         ]}
         aktiv={tab}
         onChange={setTab}
@@ -72,6 +73,7 @@ export default function AdminDipaPage() {
       {tab === 'nachweise' && <NachweiseTab onError={setError} />}
       {tab === 'abrechnung' && <AbrechnungTab onError={setError} />}
       {tab === 'katalog' && <KatalogTab />}
+      {tab === 'schalter' && <SchalterTab onError={setError} />}
     </div>
   )
 }
@@ -529,4 +531,221 @@ function formatDatum(wert: string): string {
   const iso = wert.slice(0, 10)
   const [j, m, t] = iso.split('-')
   return t && m && j ? `${t}.${m}.${j}` : iso
+}
+
+// ───────────────────────────────────────────────────────────────
+// Schalter & Regulatorik
+//
+// Diese Ansicht beantwortet die Frage, die man am Tag einer Freigabe
+// stellt: „Was ist gerade scharf, und was fehlt, bevor mehr scharf
+// werden darf?" Sie zieht ihren Inhalt über /api/dipa/schalter, weil
+// process.env in einer Client-Komponente leer ist — eine hier
+// eingebaute Auswertung würde alles als „nicht gesetzt" anzeigen und
+// damit das Gegenteil von dem behaupten, was gilt.
+//
+// Es werden ZUSTÄNDE angezeigt, keine Werte: Unter den Schaltern sind
+// ein Pepper und ein Signaturschlüssel (siehe Kopf der Route).
+// ───────────────────────────────────────────────────────────────
+
+interface SchalterZeile {
+  env: string
+  titel: string
+  modul: string
+  wirkung: string
+  voraussetzung: string
+  risiko: string
+  freigabeweg: 'intern' | 'extern' | 'entfaellt'
+  sicherer_stand: 'aus' | 'an' | 'wert_noetig'
+  zulassungsgebunden: boolean
+  gesetzt: boolean
+  aktiv: boolean
+  abweichung: boolean
+}
+
+interface SchalterAntwort {
+  stand: SchalterZeile[]
+  eingangsblocker: Array<{
+    katalog_id: string
+    kurz: string
+    ausstellende_stelle: string
+    begruendung: string
+    fundstelle: string
+  }>
+  leistungsanspruch: {
+    norm: string
+    dipa_euro_pro_monat: number
+    eul_euro_pro_monat: number
+    gemeinsamer_deckel_euro: number | null
+    bezugszeitraum: string
+  }
+  regulatorik_stand: string
+}
+
+const FREIGABEWEG_LABELS: Record<SchalterZeile['freigabeweg'], string> = {
+  intern: 'Interne Entscheidung',
+  extern: 'Externe Freigabe nötig',
+  entfaellt: 'Entfällt',
+}
+
+function zustandsText(z: SchalterZeile): string {
+  if (z.sicherer_stand === 'wert_noetig') return z.gesetzt ? 'Wert gesetzt' : 'Kein Wert'
+  return z.aktiv ? 'An' : 'Aus'
+}
+
+function SchalterTab({ onError }: { onError: (m: string) => void }) {
+  const [daten, setDaten] = useState<SchalterAntwort | null>(null)
+  const [laedt, setLaedt] = useState(true)
+
+  useEffect(() => {
+    let aktiv = true
+    fetch('/api/dipa/schalter')
+      .then(async r => {
+        if (!r.ok) throw new Error('Schalterstand konnte nicht geladen werden.')
+        return r.json() as Promise<SchalterAntwort>
+      })
+      .then(d => { if (aktiv) setDaten(d) })
+      .catch(e => { if (aktiv) onError(e instanceof Error ? e.message : 'Unbekannter Fehler.') })
+      .finally(() => { if (aktiv) setLaedt(false) })
+    return () => { aktiv = false }
+  }, [onError])
+
+  if (laedt) return <Karte titel="Schalter"><p style={{ margin: 0 }}>Wird geladen …</p></Karte>
+  if (!daten) return <Karte titel="Schalter"><p style={{ margin: 0 }}>Kein Schalterstand verfügbar.</p></Karte>
+
+  const gebunden = daten.stand.filter(z => z.zulassungsgebunden)
+  const scharf = gebunden.filter(z => z.abweichung)
+  const uebrige = daten.stand.filter(z => !z.zulassungsgebunden)
+
+  return (
+    <>
+      <Banner tone={scharf.length === 0 ? 'success' : 'danger'}>
+        {scharf.length === 0 ? (
+          <>
+            Alle {gebunden.length} zulassungsgebundenen Schalter stehen auf dem sicheren Stand.
+            Das Produkt macht damit keine Aussage, die eine BfArM-Listung voraussetzen würde.
+          </>
+        ) : (
+          <>
+            <strong>{scharf.length}</strong> zulassungsgebundene(r) Schalter ist/sind scharf,
+            ohne dass eine Listung im DiPA-Verzeichnis vorliegt:{' '}
+            {scharf.map(z => z.env).join(', ')}. Das ist kein Anzeigefehler — das Produkt
+            behauptet in diesem Zustand etwas, das nicht gedeckt ist.
+          </>
+        )}
+      </Banner>
+
+      <Banner tone="warn">
+        Eine DiPA-Zulassung liegt nicht vor. Der PflegeCoach ist dauerhaft kostenlos für
+        Endnutzer; eine Vergütung durch Pflegekassen käme frühestens nach einer tatsächlichen
+        Aufnahme in das DiPA-Verzeichnis in Betracht und ist derzeit weder vereinbart noch
+        beantragbar.
+      </Banner>
+
+      <Karte titel="Zulassungsgebundene Schalter">
+        <table className="admin-table">
+          <thead>
+            <tr>
+              <th>Variable</th>
+              <th>Zustand</th>
+              <th>Sicherer Stand</th>
+              <th>Wirkung</th>
+              <th>Voraussetzung für die Freigabe</th>
+            </tr>
+          </thead>
+          <tbody>
+            {gebunden.map(z => (
+              <tr key={z.env}>
+                <td><code>{z.env}</code><br /><span style={{ fontSize: 11, opacity: 0.7 }}>{z.titel}</span></td>
+                <td>
+                  <strong style={{ color: z.abweichung ? '#b42318' : undefined }}>
+                    {zustandsText(z)}
+                  </strong>
+                </td>
+                <td>{z.sicherer_stand === 'aus' ? 'Aus' : z.sicherer_stand === 'an' ? 'An' : 'Wert'}</td>
+                <td style={{ fontSize: 12 }}>{z.wirkung}</td>
+                <td style={{ fontSize: 12 }}>
+                  <em>{FREIGABEWEG_LABELS[z.freigabeweg]}</em><br />{z.voraussetzung}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </Karte>
+
+      <Karte titel="Übrige Schalter (Sicherheit, Steuer, Zahlungsanbindung)">
+        <table className="admin-table">
+          <thead>
+            <tr>
+              <th>Variable</th>
+              <th>Zustand</th>
+              <th>Modul</th>
+              <th>Wirkung</th>
+            </tr>
+          </thead>
+          <tbody>
+            {uebrige.map(z => (
+              <tr key={z.env}>
+                <td><code>{z.env}</code><br /><span style={{ fontSize: 11, opacity: 0.7 }}>{z.titel}</span></td>
+                <td>
+                  {zustandsText(z)}
+                  {z.abweichung && (
+                    <><br /><span style={{ fontSize: 11, color: '#b54708' }}>weicht ab</span></>
+                  )}
+                </td>
+                <td style={{ fontSize: 11 }}><code>{z.modul}</code></td>
+                <td style={{ fontSize: 12 }}>{z.wirkung}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <p style={{ fontSize: 12, opacity: 0.75, marginBottom: 0 }}>
+          Angezeigt wird ausschließlich, OB eine Variable gesetzt ist — nie ihr Inhalt. Unter
+          diesen Schaltern sind ein Pepper und ein Signaturschlüssel.
+        </p>
+      </Karte>
+
+      <Karte titel="Eingangsblocker — ohne diese ist der Antrag nicht formal vollständig">
+        <table className="admin-table">
+          <thead>
+            <tr>
+              <th>Katalog</th>
+              <th>Nachweis</th>
+              <th>Ausstellende Stelle</th>
+              <th>Fundstelle</th>
+            </tr>
+          </thead>
+          <tbody>
+            {daten.eingangsblocker.map(b => (
+              <tr key={b.katalog_id}>
+                <td><code>{b.katalog_id}</code></td>
+                <td>{b.kurz}<br /><span style={{ fontSize: 11, opacity: 0.7 }}>{b.begruendung}</span></td>
+                <td style={{ fontSize: 12 }}>{b.ausstellende_stelle}</td>
+                <td style={{ fontSize: 11 }}>{b.fundstelle}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <p style={{ fontSize: 12, opacity: 0.75, marginBottom: 0 }}>
+          Keiner dieser Punkte ist intern erzeugbar oder nachreichbar. Sie bestimmen den
+          kritischen Pfad allein.
+        </p>
+      </Karte>
+
+      <Karte titel="Leistungsanspruch der versicherten Person (nach einer Aufnahme)">
+        <p style={{ margin: 0 }}>
+          <strong>{daten.leistungsanspruch.norm}</strong> — {daten.leistungsanspruch.dipa_euro_pro_monat} €
+          für die digitale Pflegeanwendung und {daten.leistungsanspruch.eul_euro_pro_monat} € für
+          ergänzende Unterstützungsleistungen, je {daten.leistungsanspruch.bezugszeitraum}.
+          Zwei getrennte Beträge{daten.leistungsanspruch.gemeinsamer_deckel_euro === null
+            ? ' — es gibt keinen gemeinsamen Höchstbetrag'
+            : ''}; sie sind nicht gegeneinander verschiebbar.
+        </p>
+        <p style={{ fontSize: 12, opacity: 0.75, marginBottom: 0 }}>
+          Das ist der Anspruch der versicherten Person, nicht eine Einnahme von Alltagsengel. Ein
+          Vergütungsbetrag für den PflegeCoach existiert nicht; er entstünde erst aus einer
+          Vereinbarung nach § 78a Abs. 1 SGB XI. Stand der Konstanten: {daten.regulatorik_stand}.
+        </p>
+      </Karte>
+    </>
+  )
 }

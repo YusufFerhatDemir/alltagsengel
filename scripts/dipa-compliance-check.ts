@@ -19,6 +19,8 @@ import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { antragsreife, formatiereBlocker, pruefeKritischeDokumente } from '../lib/coach/dipa-compliance'
 import { ZEITKLASSE_LABELS } from '../lib/coach/anforderungskatalog'
+import { EINGANGSBLOCKER, LEISTUNGSANSPRUCH, REGULATORIK_STAND } from '../lib/coach/regulatorik'
+import { COACH_SCHALTER, formatiereSchalter, schalterStand } from '../lib/coach/schalter'
 
 const nurPruefen = process.argv.includes('--check')
 const wurzel = resolve(import.meta.dirname, '..')
@@ -68,6 +70,54 @@ for (const d of dokBefunde) {
     meldung(`✓ ${d.pfad} — Stand ${d.pruefung.datum}, ${d.pruefung.tageAlt} Tage alt`)
   }
 }
+
+// ── 3. Eingangsblocker ───────────────────────────────────────────────
+// Nicht redundant zu Abschnitt 1: Dort stehen ALLE offenen
+// Zeitklasse-A-Punkte nebeneinander, hier die drei, ohne die der Antrag
+// nicht einmal formal vollständig ist. Der Unterschied entscheidet, was
+// zuerst beauftragt wird — in einer Liste von zehn gleich aussehenden
+// Zeilen geht er unter.
+meldung('')
+meldung('── Eingangsblocker (ohne diese ist der Antrag nicht vollständig) ──')
+for (const b of EINGANGSBLOCKER) {
+  meldung(`   ${b.katalogId}  ${b.kurz}`)
+  meldung(`      ausstellende Stelle: ${b.ausstellendeStelle}`)
+}
+
+// ── 4. Schalterstand ─────────────────────────────────────────────────
+// Der Bericht wäre sonst vollständig über Papier und blind gegenüber dem
+// Zustand, in dem das Produkt gerade tatsächlich läuft. Ein scharfer
+// zulassungsgebundener Schalter ohne Listung ist der einzige Befund hier,
+// der einen Betriebsstopp rechtfertigt.
+meldung('')
+meldung('── Schalterstand dieser Umgebung ────────────────────────────')
+const stand = schalterStand()
+const zulassungsgebunden = stand.filter(b => b.schalter.zulassungsgebunden)
+const scharf = zulassungsgebunden.filter(b => b.abweichung)
+if (scharf.length === 0) {
+  meldung(`✓ Alle ${zulassungsgebunden.length} zulassungsgebundenen Schalter stehen auf dem sicheren Stand.`)
+} else {
+  befunde += scharf.length
+  meldung(`✗ ${scharf.length} zulassungsgebundene(r) Schalter scharf, ohne dass eine BfArM-Listung vorliegt:`)
+  for (const b of scharf) {
+    meldung(`    ${formatiereSchalter(b)}`)
+    meldung(`      ${b.schalter.risiko}`)
+  }
+}
+const uebrige = stand.filter(b => !b.schalter.zulassungsgebunden && b.abweichung)
+for (const b of uebrige) {
+  // Kein Befund: abweichend, aber nicht zulassungsrelevant (praktisch die
+  // MFA-Pflicht, deren Einschalten eine Abwägung ist, kein Automatismus).
+  meldung(`   Hinweis: ${formatiereSchalter(b)}`)
+}
+meldung(`   Verzeichnis umfasst ${COACH_SCHALTER.length} Schalter.`)
+
+// ── 5. Regulatorische Eckwerte ───────────────────────────────────────
+meldung('')
+meldung('── Regulatorische Eckwerte ──────────────────────────────────')
+meldung(`   Leistungsanspruch: ${LEISTUNGSANSPRUCH.norm}`)
+meldung(`   ${LEISTUNGSANSPRUCH.dipaEuroProMonat} € DiPA + ${LEISTUNGSANSPRUCH.eulEuroProMonat} € eUL je ${LEISTUNGSANSPRUCH.bezugszeitraum} — getrennte Beträge, kein gemeinsamer Deckel`)
+meldung(`   Stand der Regulatorik-Konstanten: ${REGULATORIK_STAND}`)
 
 meldung('')
 meldung('── Zeitklassen-Legende ──────────────────────────────────────')
