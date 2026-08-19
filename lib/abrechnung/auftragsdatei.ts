@@ -57,6 +57,8 @@ export interface AuftragsdateiParams {
   verschluesselt?: boolean
   /** Art der abgegebenen Leistung (TA3 2.4) für DATEI_BEZEICHNUNG Stelle 319-320 */
   leistungsart?: string
+  /** physikalischer Dateiname (Stellen 275-318), z. B. "EPFL0001" */
+  physikalischer_dateiname?: string
 }
 
 /**
@@ -110,7 +112,7 @@ export function generateAuftragsdatei(params: AuftragsdateiParams): string {
   teile.push(an('', 28))                                        // 247-274 Variables Info-Feld
 
   // ── Teil 4: RZ-interne Verarbeitung (Stellen 275–348)
-  teile.push(an('', 44))                                        // 275-318 DATEINAME_PHYSIKALISCH
+  teile.push(an(params.physikalischer_dateiname ?? '', 44))     // 275-318 DATEINAME_PHYSIKALISCH
   // DATEI_BEZEICHNUNG: Stelle 319-320 = Schlüssel Art der abgegebenen Leistung
   teile.push(an(params.leistungsart ?? '01', 30))               // 319-348 DATEI_BEZEICHNUNG
 
@@ -124,4 +126,145 @@ export function generateAuftragsdatei(params: AuftragsdateiParams): string {
 /** Dateiname der Auftragsdatei zum physikalischen Nutzdaten-Dateinamen. */
 export function auftragsdateiName(physikalischerDateiname: string): string {
   return `${physikalischerDateiname}.AUF`
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Feldverzeichnis, Parser und Nachtrag zur Übertragung
+//
+// Der Auftragssatz wird beim Export erzeugt, aber erst beim Versand
+// übertragen. Zwischen beiden Zeitpunkten ändern sich Tatsachen, die im
+// Satz stehen: die Nutzdaten werden SECON-verschlüsselt (andere Größe,
+// Verschlüsselungsart 03, elektronische Unterschrift 03) und der
+// Sendezeitpunkt entsteht überhaupt erst. Ohne Nachtrag meldet die
+// Auftragsdatei der Annahmestelle eine unverschlüsselte Datei der
+// falschen Größe — sie würde die Lieferung abweisen.
+// ═══════════════════════════════════════════════════════════════
+
+/** Offset (0-basiert) und Länge jedes Feldes im 348-Byte-Satz. */
+export const AUFTRAGSDATEI_FELDER = {
+  IDENTIFIKATOR: [0, 6],
+  VERSION: [6, 2],
+  LAENGE_AUFTRAG: [8, 8],
+  SEQUENZ_NR: [16, 3],
+  VERFAHREN_KENNUNG: [19, 5],
+  TRANSFER_NUMMER: [24, 3],
+  VERFAHREN_KENNUNG_SPEZIFIKATION: [27, 5],
+  ABSENDER_EIGNER: [32, 15],
+  ABSENDER_PHYSIKALISCH: [47, 15],
+  EMPFAENGER_NUTZER: [62, 15],
+  EMPFAENGER_PHYSIKALISCH: [77, 15],
+  FEHLER_NUMMER: [92, 6],
+  FEHLER_MASSNAHME: [98, 6],
+  DATEINAME: [104, 11],
+  DATUM_ERSTELLUNG: [115, 14],
+  DATUM_UEBERTRAGUNG_GESENDET: [129, 14],
+  DATUM_UEBERTRAGUNG_EMPFANGEN_START: [143, 14],
+  DATUM_UEBERTRAGUNG_EMPFANGEN_ENDE: [157, 14],
+  DATEIVERSION: [171, 6],
+  KORREKTUR: [177, 1],
+  DATEIGROESSE_NUTZDATEN: [178, 12],
+  DATEIGROESSE_UEBERTRAGUNG: [190, 12],
+  ZEICHENSATZ: [202, 2],
+  KOMPRIMIERUNG: [204, 2],
+  VERSCHLUESSELUNGSART: [206, 2],
+  ELEKTRONISCHE_UNTERSCHRIFT: [208, 2],
+  SATZFORMAT: [210, 3],
+  SATZLAENGE: [213, 5],
+  BLOCKLAENGE: [218, 8],
+  STATUS: [226, 1],
+  WIEDERHOLUNG: [227, 2],
+  UEBERTRAGUNGSWEG: [229, 1],
+  VERZOEGERTER_VERSAND: [230, 10],
+  INFO_FEHLER: [240, 6],
+  VARIABLES_INFO: [246, 28],
+  DATEINAME_PHYSIKALISCH: [274, 44],
+  DATEI_BEZEICHNUNG: [318, 30],
+} as const satisfies Record<string, readonly [number, number]>
+
+export type AuftragsdateiFeld = keyof typeof AUFTRAGSDATEI_FELDER
+
+export const AUFTRAGSDATEI_LAENGE = 348
+
+/** Verschlüsselungsart/elektronische Unterschrift: 00 = keine, 03 = PKCS#7 (SECON). */
+export const VERSCHLUESSELUNGSART = { KEINE: '00', PKCS7: '03' } as const
+
+/** Liest ein Feld aus einem Auftragssatz (ohne Trimmen der Füllzeichen). */
+export function leseAuftragsdateiFeld(satz: string, feld: AuftragsdateiFeld): string {
+  const [offset, laenge] = AUFTRAGSDATEI_FELDER[feld]
+  return satz.slice(offset, offset + laenge)
+}
+
+/** Zerlegt einen 348-Byte-Auftragssatz in seine Felder (Werte getrimmt). */
+export function parseAuftragsdatei(satz: string): Record<AuftragsdateiFeld, string> {
+  if (satz.length !== AUFTRAGSDATEI_LAENGE) {
+    throw new Error(
+      `Auftragsdatei hat ${satz.length} Bytes statt ${AUFTRAGSDATEI_LAENGE} — keine gültige Auftragsdatei`,
+    )
+  }
+  const felder = {} as Record<AuftragsdateiFeld, string>
+  for (const name of Object.keys(AUFTRAGSDATEI_FELDER) as AuftragsdateiFeld[]) {
+    felder[name] = leseAuftragsdateiFeld(satz, name).trim()
+  }
+  return felder
+}
+
+/** Ersetzt ein Feld längentreu. Numerische Felder rechtsbündig mit Nullen. */
+function setzeFeld(satz: string, feld: AuftragsdateiFeld, wert: string, numerisch: boolean): string {
+  const [offset, laenge] = AUFTRAGSDATEI_FELDER[feld]
+  const roh = numerisch ? String(wert).replace(/\D/g, '') : String(wert)
+  if (roh.length > laenge) {
+    throw new Error(`Auftragsdatei: Wert "${wert}" für ${feld} länger als ${laenge} Stellen`)
+  }
+  const gefuellt = numerisch ? roh.padStart(laenge, '0') : roh.padEnd(laenge, ' ')
+  return satz.slice(0, offset) + gefuellt + satz.slice(offset + laenge)
+}
+
+export interface AuftragsdateiNachtrag {
+  /** Größe der tatsächlich übertragenen (ggf. verschlüsselten) Datei in Bytes */
+  dateigroesse_uebertragung?: number
+  /** true = Nutzlast ist SECON-verschlüsselt und signiert (PKCS#7) */
+  verschluesselt?: boolean
+  /** Sendezeitpunkt — füllt DATUM_ÜBERTRAGUNG_GESENDET */
+  gesendet_am?: Date
+  /** laufende Transfernummer je Kommunikationspartner (0–999) */
+  transfer_nummer?: number
+  /** physikalischer Dateiname der übertragenen Datei */
+  physikalischer_dateiname?: string
+}
+
+/**
+ * Trägt die erst beim Versand bekannten Tatsachen in einen bereits
+ * erzeugten Auftragssatz nach — längentreu, alle anderen Felder bleiben
+ * unverändert. Gibt immer wieder genau 348 Bytes zurück.
+ */
+export function patcheAuftragsdatei(satz: string, nachtrag: AuftragsdateiNachtrag): string {
+  if (satz.length !== AUFTRAGSDATEI_LAENGE) {
+    throw new Error(
+      `Auftragsdatei hat ${satz.length} Bytes statt ${AUFTRAGSDATEI_LAENGE} — Nachtrag abgelehnt`,
+    )
+  }
+  let ergebnis = satz
+
+  if (nachtrag.dateigroesse_uebertragung !== undefined) {
+    ergebnis = setzeFeld(ergebnis, 'DATEIGROESSE_UEBERTRAGUNG', String(nachtrag.dateigroesse_uebertragung), true)
+  }
+  if (nachtrag.verschluesselt !== undefined) {
+    const art = nachtrag.verschluesselt ? VERSCHLUESSELUNGSART.PKCS7 : VERSCHLUESSELUNGSART.KEINE
+    ergebnis = setzeFeld(ergebnis, 'VERSCHLUESSELUNGSART', art, true)
+    ergebnis = setzeFeld(ergebnis, 'ELEKTRONISCHE_UNTERSCHRIFT', art, true)
+  }
+  if (nachtrag.gesendet_am) {
+    ergebnis = setzeFeld(ergebnis, 'DATUM_UEBERTRAGUNG_GESENDET', zeitstempel(nachtrag.gesendet_am), true)
+  }
+  if (nachtrag.transfer_nummer !== undefined) {
+    ergebnis = setzeFeld(ergebnis, 'TRANSFER_NUMMER', String(nachtrag.transfer_nummer), true)
+  }
+  if (nachtrag.physikalischer_dateiname !== undefined) {
+    ergebnis = setzeFeld(ergebnis, 'DATEINAME_PHYSIKALISCH', nachtrag.physikalischer_dateiname, false)
+  }
+
+  if (ergebnis.length !== AUFTRAGSDATEI_LAENGE) {
+    throw new Error(`Nachtrag hat die Satzlänge auf ${ergebnis.length} verändert — Feldtabelle prüfen!`)
+  }
+  return ergebnis
 }

@@ -54,6 +54,7 @@ import { protokolliereVersand } from './versand-protokoll'
 import { mitWiederholung, MAX_VERSUCHE } from './retry'
 import { inDeadLetter } from './dead-letter'
 import { parseSlgaDatei } from './slga-parser'
+import { patcheAuftragsdatei, AUFTRAGSDATEI_LAENGE } from './auftragsdatei'
 import { importiereRuecklaeufer } from './ruecklaeufer'
 import { modulAktiv } from '../expansion/state-settings'
 
@@ -387,6 +388,43 @@ export async function versendeDakotaAuftrag(
         { dateiGroesseBytes: nutzdaten.length },
       )
     }
+  }
+
+  // ── 5b. Auftragsdatei an die Nutzlast angleichen ─────────────
+  // Der Auftragssatz entstand beim Export, also vor der Verschluesselung.
+  // Er meldete deshalb die Klartextgroesse und "keine Verschluesselung",
+  // waehrend tatsaechlich eine PKCS#7-Nutzlast anderer Groesse uebertragen
+  // wird. Die Annahmestelle prueft genau diese Felder gegen die gelieferte
+  // Datei — ohne den Nachtrag ist die Lieferung formal falsch.
+  if (auftragsdatei.length === AUFTRAGSDATEI_LAENGE) {
+    try {
+      auftragsdatei = Buffer.from(
+        patcheAuftragsdatei(auftragsdatei.toString('latin1'), {
+          dateigroesse_uebertragung: nutzlast.length,
+          verschluesselt,
+          gesendet_am: new Date(),
+          physikalischer_dateiname: auftrag.physikalischer_dateiname || undefined,
+        }),
+        'latin1',
+      )
+      log(`Auftragsdatei nachgetragen: ${nutzlast.length} Bytes, verschluesselt=${verschluesselt}`)
+    } catch (err) {
+      return abbruch(
+        'intern',
+        'vorbereitung',
+        `Auftragsdatei laesst sich nicht an die Nutzlast angleichen: ${(err as Error).message}`,
+        'Lauf erneut exportieren — der gespeicherte Auftragssatz ist beschaedigt',
+        { dateiGroesseBytes: nutzlast.length },
+      )
+    }
+  } else {
+    return abbruch(
+      'intern',
+      'vorbereitung',
+      `Auftragsdatei hat ${auftragsdatei.length} statt ${AUFTRAGSDATEI_LAENGE} Bytes`,
+      'Lauf erneut exportieren — der Auftragssatz hat nicht die vorgeschriebene feste Laenge',
+      { dateiGroesseBytes: nutzlast.length },
+    )
   }
 
   const dateiHash = await computeContentHash({

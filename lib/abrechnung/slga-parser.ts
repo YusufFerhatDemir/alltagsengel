@@ -105,13 +105,26 @@ function parseUNA(raw: string): EdifactServiceAdvice {
 
 // ── Escape-aware split ──────────────────────────────────────────
 
+/**
+ * Trennt an `sep` und ueberspringt maskierte Zeichen — laesst die Maskierung
+ * dabei aber STEHEN.
+ *
+ * Der Grund: eine Antwortdatei wird in drei Stufen zerlegt (Segment →
+ * Element → Komponente). Wuerde schon die erste Stufe das Freigabezeichen
+ * entfernen, waere ein maskiertes "?+" danach ein gewoehnliches "+" — die
+ * zweite Stufe wuerde mitten im Text trennen. Genau so ging aus einem
+ * Fehlertext "Betrag ?+ Zuschlag unzulaessig" das blosse "Betrag" hervor,
+ * und der Rest der Begruendung der Kasse verschwand still in einem
+ * Feld, das niemand liest. Die Maskierung faellt deshalb erst in
+ * `entmaskiere()` nach der letzten Stufe weg.
+ */
 function splitEscaped(text: string, sep: string, esc: string): string[] {
   const result: string[] = []
   let current = ''
   let i = 0
   while (i < text.length) {
     if (text[i] === esc && i + 1 < text.length) {
-      current += text[i + 1]
+      current += text[i] + text[i + 1]
       i += 2
     } else if (text[i] === sep) {
       result.push(current)
@@ -124,6 +137,22 @@ function splitEscaped(text: string, sep: string, esc: string): string[] {
   }
   result.push(current)
   return result
+}
+
+/** Entfernt die Freigabezeichen — erst nach der letzten Zerlegungsstufe. */
+function entmaskiere(text: string, esc: string): string {
+  let out = ''
+  let i = 0
+  while (i < text.length) {
+    if (text[i] === esc && i + 1 < text.length) {
+      out += text[i + 1]
+      i += 2
+      continue
+    }
+    out += text[i]
+    i++
+  }
+  return out
 }
 
 // ── Segment tokenizer ───────────────────────────────────────────
@@ -145,7 +174,7 @@ function tokenizeSegments(raw: string, sa: EdifactServiceAdvice): ParsedSegment[
     if (!tag) continue
 
     const parsed: string[][] = elemente.map(el =>
-      splitEscaped(el, sa.komponenten, sa.escape),
+      splitEscaped(el, sa.komponenten, sa.escape).map(k => entmaskiere(k, sa.escape)),
     )
 
     segments.push({ tag, elemente: parsed, raw: trimmed })
