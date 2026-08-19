@@ -26,11 +26,22 @@ export type SgbVRuecklaeuferImportParams = Omit<RuecklaeuferImportParams, 'laufI
   sgbVLaufId: string
 }
 
+/**
+ * `verfahren: 'sgb_v_302'` ist hier fest gesetzt und kein Aufrufer-Parameter:
+ * ein Rückläufer aus diesem Service stammt per Definition aus dem
+ * § 302-Verfahren. Ohne die Angabe würde die Fehlercode-Klassifizierung
+ * Katalogeinträge aus dem § 105-Verfahren übernehmen — dieselben kurzen
+ * numerischen Codes, andere Bedeutung (s. verfahrenAusQuelle()).
+ */
 export async function importiereSgbVRuecklaeufer(
   supabase: SupabaseClient,
   params: SgbVRuecklaeuferImportParams,
 ): Promise<RuecklaeuferImportErgebnis> {
-  return importiereRuecklaeufer(supabase, { ...params, sgbVLaufId: params.sgbVLaufId })
+  return importiereRuecklaeufer(supabase, {
+    ...params,
+    sgbVLaufId: params.sgbVLaufId,
+    verfahren: 'sgb_v_302',
+  })
 }
 
 export async function ladeSgbVRuecklaeufer(

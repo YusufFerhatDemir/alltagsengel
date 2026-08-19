@@ -24,7 +24,8 @@ import { resolvePrice } from '../../billing/core/price-resolver'
 import { pflegegradVon } from '../../clients/pflegegrad'
 import {
   HKP_PROBLEM_TEXT, pruefePosition,
-  type HkpKlient, type HkpLeistung, type HkpVerordnung,
+  type HkpAufbereitung, type HkpFall, type HkpKlient, type HkpLeistung,
+  type HkpPosition, type HkpVerordnung,
 } from './positionen'
 
 export interface RegelwerkErgebnis {
@@ -98,4 +99,112 @@ export async function pruefeRegelwerk(
   }
 
   return { ok: blocker.length === 0, blocker, hinweise }
+}
+
+// ── Batch-Prüfung einer ganzen Aufbereitung ──────────────────────
+//
+// pruefeRegelwerk() prüft eine einzelne Leistung. Bis Track 4 (19.08.2026)
+// wurde die Funktion NUR von Tests aufgerufen — im Produktivpfad (Vorschau,
+// Abrechnungslauf) lief ausschliesslich pruefePosition() aus positionen.ts.
+// Damit war die Tarif-Fail-Closed-Regel (kein verifizierter § 37-Tarif → nicht
+// abrechenbar) faktisch wirkungslos: eine Position ohne hinterlegten Tarif
+// wäre als abrechenbar durchgelaufen.
+//
+// Die Batch-Funktion unten schliesst diese Lücke, ohne bereiteHkpVor() zu
+// verändern: die Aufbereitung bleibt rein synchron und ohne DB-Zugriff, die
+// Tarifprüfung ist eine zweite, ausdrücklich aufgerufene Stufe darüber.
+
+export interface TarifBefund {
+  leistung_id: string
+  client_id: string
+  klient_name: string
+  datum: string
+  leistungsart: string | null
+  kostentraeger_ik: string
+  hinweis: string
+}
+
+export interface AufbereitungsPruefung {
+  /** true nur, wenn KEINE Position an der Tarifprüfung scheitert. */
+  ok: boolean
+  /** Fälle, deren Positionen alle einen verifizierten Tarif haben. */
+  faelle: HkpFall[]
+  /** Positionen ohne verifizierten § 37-Tarif — nicht abrechenbar. */
+  ohneTarif: TarifBefund[]
+  geprueftePositionen: number
+}
+
+/**
+ * Prüft jede Position einer Aufbereitung gegen den Tarif-Resolver und gibt
+ * eine bereinigte Fallliste zurück.
+ *
+ * Fail-closed: eine Position, deren Tarif nicht auflösbar ist, fällt heraus.
+ * Ein Fall, dessen Positionen dadurch alle wegfallen, fällt ebenfalls heraus —
+ * ein Fall mit 0 Positionen wäre eine leere Forderung.
+ *
+ * Die Preise werden je (Leistungsart, Datum, Kassen-IK) genau einmal
+ * aufgelöst; identische Kombinationen teilen sich das Ergebnis. Ohne diesen
+ * Cache würde ein Monatslauf mit 500 Positionen 500 Einzelabfragen auslösen,
+ * obwohl es typischerweise eine Handvoll verschiedener Leistungsarten gibt.
+ */
+export async function pruefeAufbereitungTarife(
+  supabase: SupabaseClient,
+  organizationId: string,
+  aufbereitung: Pick<HkpAufbereitung, 'faelle'>,
+): Promise<AufbereitungsPruefung> {
+  const cache = new Map<string, string | null>()
+  const ohneTarif: TarifBefund[] = []
+  const faelle: HkpFall[] = []
+  let geprueftePositionen = 0
+
+  const tarifProblem = async (p: HkpPosition): Promise<string | null> => {
+    if (!p.leistungsart) return 'Position hat keine Leistungsart — Tarifprüfung nicht möglich.'
+    const key = `${p.leistungsart}|${p.datum}|${p.kostentraeger_ik}`
+    if (cache.has(key)) return cache.get(key) as string | null
+
+    let problem: string | null = null
+    try {
+      await resolvePrice(supabase, {
+        organizationId,
+        leistungsart: p.leistungsart,
+        rechtsgrundlage: SGB_V_RECHTSGRUNDLAGE,
+        datum: p.datum,
+        kostentraegerIk: p.kostentraeger_ik,
+      })
+    } catch (err) {
+      problem = `Kein verifizierter § 37-Tarif für "${p.leistungsart}" (${p.datum}): ${(err as Error).message}`
+    }
+    cache.set(key, problem)
+    return problem
+  }
+
+  for (const fall of aufbereitung.faelle) {
+    const behalten: HkpPosition[] = []
+    for (const position of fall.positionen) {
+      geprueftePositionen++
+      const problem = await tarifProblem(position)
+      if (problem) {
+        ohneTarif.push({
+          leistung_id: position.leistung_id,
+          client_id: position.client_id,
+          klient_name: position.klient_name,
+          datum: position.datum,
+          leistungsart: position.leistungsart,
+          kostentraeger_ik: position.kostentraeger_ik,
+          hinweis: problem,
+        })
+        continue
+      }
+      behalten.push(position)
+    }
+
+    if (behalten.length === 0) continue
+    faelle.push({
+      ...fall,
+      positionen: behalten,
+      betrag_cent: behalten.reduce((s, p) => s + p.betrag_cent, 0),
+    })
+  }
+
+  return { ok: ohneTarif.length === 0, faelle, ohneTarif, geprueftePositionen }
 }

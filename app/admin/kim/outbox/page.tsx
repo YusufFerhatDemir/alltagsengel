@@ -4,6 +4,16 @@ import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { Banner } from '@/components/admin/OpsUI'
 import { KIM_MESSAGE_STATUS_LABELS, type KimMessage } from '@/lib/kim/types'
+import { istSimulierteNachricht } from '@/lib/kim/versandmodus'
+
+interface Betriebsmodus {
+  gateOffen: boolean
+  simuliert: boolean
+  providerTyp: string
+  providerBezeichnung: string
+  erlaubt: boolean
+  grund: string | null
+}
 
 const STATUS_FARBE: Record<string, string> = {
   wartend: '#D69E2E',
@@ -29,13 +39,14 @@ function Table({ title, rows }: { title: string; rows: KimMessage[] }) {
               <th className="px-4 py-2 text-left font-medium">An</th>
               <th className="px-4 py-2 text-left font-medium">Betreff</th>
               <th className="px-4 py-2 text-left font-medium">Status</th>
+              <th className="px-4 py-2 text-left font-medium">Herkunft</th>
               <th className="px-4 py-2 text-left font-medium">Versucht</th>
               <th className="px-4 py-2 text-left font-medium">Fehler</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
             {rows.length === 0 && (
-              <tr><td colSpan={5} className="px-4 py-6 text-center text-gray-500">Keine Einträge.</td></tr>
+              <tr><td colSpan={6} className="px-4 py-6 text-center text-gray-500">Keine Einträge.</td></tr>
             )}
             {rows.map(m => (
               <tr key={m.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
@@ -49,6 +60,11 @@ function Table({ title, rows }: { title: string; rows: KimMessage[] }) {
                   <span className="admin-status" style={{ background: STATUS_FARBE[m.status] }}>
                     {KIM_MESSAGE_STATUS_LABELS[m.status]}
                   </span>
+                </td>
+                <td className="px-4 py-2">
+                  {istSimulierteNachricht(m.metadata)
+                    ? <span className="rounded bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-900 dark:bg-amber-900/40 dark:text-amber-200">SIMULIERT</span>
+                    : <span className="text-xs text-gray-500">—</span>}
                 </td>
                 <td className="px-4 py-2">{fmt(m.sent_at)} {m.retry_count > 0 ? `(${m.retry_count}/${m.max_retries})` : ''}</td>
                 <td className="px-4 py-2 text-red-600 dark:text-red-400">{m.error_details ?? '—'}</td>
@@ -69,6 +85,7 @@ export default function KimOutboxPage() {
   const [processing, setProcessing] = useState(false)
   const [error, setError] = useState('')
   const [info, setInfo] = useState('')
+  const [modus, setModus] = useState<Betriebsmodus | null>(null)
 
   function loadData() {
     setLoading(true)
@@ -79,6 +96,7 @@ export default function KimOutboxPage() {
         setGesendet(body.gesendet ?? [])
         setWartend(body.wartend ?? [])
         setFehler(body.fehler ?? [])
+        setModus(body.betriebsmodus ?? null)
       })
       .catch(() => setError('Laden fehlgeschlagen.'))
       .finally(() => setLoading(false))
@@ -112,7 +130,7 @@ export default function KimOutboxPage() {
           </Link>
           <button
             onClick={handleProcess}
-            disabled={processing}
+            disabled={processing || modus?.erlaubt === false}
             className="rounded bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700 disabled:opacity-50"
           >
             {processing ? 'Verarbeite…' : 'Warteschlange verarbeiten'}
@@ -120,6 +138,18 @@ export default function KimOutboxPage() {
         </div>
       </div>
 
+      {modus?.simuliert && (
+        <Banner tone="warn">
+          <strong>Simulationsbetrieb — kein echter KIM-Versand.</strong> Aktiver Provider:{' '}
+          {modus.providerBezeichnung}. Es besteht keine Verbindung zur Telematikinfrastruktur;
+          die Status „gesendet“, „zugestellt“ und „gelesen“ stammen vom Simulator und sind
+          <strong> kein Zustellnachweis</strong>. Betroffene Nachrichten sind in der Spalte
+          „Herkunft“ als SIMULIERT gekennzeichnet.
+        </Banner>
+      )}
+      {modus && !modus.erlaubt && (
+        <Banner tone="danger">{modus.grund}</Banner>
+      )}
       {error && <Banner tone="danger">{error}</Banner>}
       {info && <Banner tone="success">{info}</Banner>}
 

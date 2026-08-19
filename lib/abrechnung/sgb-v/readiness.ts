@@ -134,9 +134,14 @@ export async function ermittleSgbVReadiness(
   ))
 
   // ── 4. Abrechenbare HKP-Verordnungen ──
+  // organization_id MUSS mitgefiltert werden: die Readiness läuft mit einem
+  // service_role-Client (RLS greift dort nicht), sonst zählt der Punkt die
+  // Verordnungen aller Mandanten und meldet "grün", obwohl diese Organisation
+  // keine einzige HKP-Verordnung hat.
   const { count: hkpCount } = await supabase
     .from('verordnungen')
     .select('id', { count: 'exact', head: true })
+    .eq('organization_id', organizationId)
     .eq('verordnung_type', HKP_VERORDNUNG_TYPE)
     .eq('genehmigung_status', 'genehmigt')
     .is('deleted_at', null)

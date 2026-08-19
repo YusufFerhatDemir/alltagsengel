@@ -15,7 +15,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { logBillingAction, computeContentHash } from '../billing/core/audit'
 import { erstelleRuecklaeuferAufgabe, AUFGABEN_AUSLOESENDE_STATUS } from './ruecklaeufer-aufgaben'
-import { klassifiziereFehlercode } from './ruecklaeufer-fehlercodes'
+import { klassifiziereFehlercode, type Abrechnungsverfahren } from './ruecklaeufer-fehlercodes'
 
 // ── Types ───────────────────────────────────────────────────────
 
@@ -64,6 +64,12 @@ export interface RuecklaeuferImportParams {
   fehlerText?: string
   hinweise?: string[]
   ablehnungsgruende?: string[]
+  /**
+   * Verfahren, aus dem der Fehlercode stammt. Steuert, welche Einträge aus
+   * `dta_fehlercode_katalog` überhaupt greifen dürfen. Ohne Angabe wird nicht
+   * gefiltert (bisheriges Verhalten des § 105-Pfads).
+   */
+  verfahren?: Abrechnungsverfahren
   actorId: string
 }
 
@@ -286,6 +292,7 @@ export async function importiereRuecklaeufer(
     try {
       const klassifizierung = await klassifiziereFehlercode(
         supabase, params.organizationId, params.fehlerCode, params.fehlerText, params.kostentraegerIk,
+        params.verfahren ? { verfahren: params.verfahren } : undefined,
       )
       korrekturvorschlag = klassifizierung.massnahme
       fehlerKategorie = klassifizierung.kategorie

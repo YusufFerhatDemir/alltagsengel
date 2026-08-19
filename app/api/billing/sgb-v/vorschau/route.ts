@@ -9,6 +9,7 @@ import {
 import { ladeRouting, findeRouting } from '@/lib/abrechnung/sgb-v/routing'
 import { aktuelleVersion, monatsStichtag } from '@/lib/abrechnung/sgb-v/versionen'
 import { exportImplementiert } from '@/lib/abrechnung/sgb-v/generator'
+import { pruefeAufbereitungTarife } from '@/lib/abrechnung/sgb-v/validierung'
 
 /**
  * GET /api/billing/sgb-v/vorschau?monat=2026-08
@@ -83,10 +84,15 @@ export async function GET(request: Request) {
 
     const aufbereitung = bereiteHkpVor(leistungen, verordnungen, klienten)
 
+    // Zweite Stufe: § 37-Tarifprüfung. Der echte Lauf (lib/abrechnung/sgb-v/
+    // versand.ts) bricht daran ab — die Vorschau muss dasselbe zeigen, sonst
+    // meldet der Trockenlauf abrechenbare Fälle, die der Lauf ablehnt.
+    const tarifPruefung = await pruefeAufbereitungTarife(admin, organizationId, aufbereitung)
+
     // Routing je beteiligter Kasse prüfen
     const routingEintraege = await ladeRouting(admin, organizationId)
     const stichtag = monatsStichtag(monat)
-    const routingStatus = aufbereitung.faelle
+    const routingStatus = tarifPruefung.faelle
       .map(f => f.kostentraeger_ik)
       .filter((ik, i, arr) => arr.indexOf(ik) === i)
       .map(ik => {
@@ -105,11 +111,15 @@ export async function GET(request: Request) {
     return NextResponse.json({
       abrechnungsmonat: monat,
       zeitraum: { von, bis },
-      faelle: aufbereitung.faelle,
+      faelle: tarifPruefung.faelle,
       abgelehnt: aufbereitung.abgelehnt,
-      summe_cent: aufbereitung.summe_cent,
-      anzahl_faelle: aufbereitung.faelle.length,
-      anzahl_positionen: aufbereitung.anzahl_positionen,
+      ohne_tarif: tarifPruefung.ohneTarif,
+      summe_cent: tarifPruefung.faelle.reduce((s, f) => s + f.betrag_cent, 0),
+      anzahl_faelle: tarifPruefung.faelle.length,
+      anzahl_positionen: tarifPruefung.faelle.reduce((s, f) => s + f.positionen.length, 0),
+      // Vor der Tarifprüfung — zeigt, wie viel an ihr hängen bleibt.
+      anzahl_faelle_vor_tarifpruefung: aufbereitung.faelle.length,
+      summe_cent_vor_tarifpruefung: aufbereitung.summe_cent,
       routing: routingStatus,
       version: {
         ok: version.ok,
@@ -119,7 +129,7 @@ export async function GET(request: Request) {
         hinweis: version.hinweis,
       },
       // Der Export bleibt gesperrt, bis die Technische Anlage vorliegt.
-      export_moeglich: version.ok && exportImplementiert('edifact_slga_slla'),
+      export_moeglich: version.ok && exportImplementiert('edifact_slga_slla') && tarifPruefung.ok,
     })
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Interner Serverfehler'

@@ -33,6 +33,7 @@ import { dateiindikatorFuer } from '../betriebsmodus'
 import { erzeugeSgbVDatei, exportImplementiert, SgbVSpecFehltError } from './generator'
 import { aktuelleVersion, monatsStichtag, type SgbVFormat } from './versionen'
 import { ladeRouting, findeRouting } from './routing'
+import { pruefeAufbereitungTarife, type TarifBefund } from './validierung'
 import {
   bereiteHkpVor, HKP_VERORDNUNG_TYPE,
   type HkpAufbereitung, type HkpLeistung, type HkpVerordnung, type HkpKlient,
@@ -61,7 +62,7 @@ export interface SgbVLaufErgebnis {
   laufId: string | null
   status: string
   /** Wo die Kette angehalten hat. */
-  gestoppt: 'generator' | 'version' | 'routing' | 'extern' | 'daten' | null
+  gestoppt: 'generator' | 'version' | 'routing' | 'extern' | 'daten' | 'stammdaten' | 'tarif' | null
   grund: string | null
   naechsterSchritt: string | null
   anzahlFaelle: number
@@ -70,6 +71,8 @@ export interface SgbVLaufErgebnis {
   /** Leistungen, die nicht abrechenbar sind — mit Begründung. */
   abgelehnt: HkpAufbereitung['abgelehnt']
   routingProbleme: Array<{ kostentraegerIk: string; hinweis: string | null }>
+  /** Positionen, die an der § 37-Tarifprüfung gescheitert sind. */
+  ohneTarif: TarifBefund[]
 }
 
 function monatsGrenzen(monat: string): { von: string; bis: string } {
@@ -154,9 +157,15 @@ export async function erzeugeUndVersendeSgbV(
   // ── Positionen aufbereiten ───────────────────────────────────
   const aufbereitung = await ladeAufbereitung(supabase, organizationId, abrechnungsmonat)
 
-  const faelle = params.kostentraegerIk
+  const rohFaelle = params.kostentraegerIk
     ? aufbereitung.faelle.filter(f => f.kostentraeger_ik === params.kostentraegerIk)
     : aufbereitung.faelle
+
+  // § 37-Tarifprüfung als eigene Stufe über der (rein synchronen) Aufbereitung.
+  // Ohne sie liefe die Fail-Closed-Regel aus lib/billing/core/price-resolver
+  // am Abrechnungslauf vorbei — pruefePosition() kennt keine Preise.
+  const tarifPruefung = await pruefeAufbereitungTarife(supabase, organizationId, { faelle: rohFaelle })
+  const faelle = tarifPruefung.faelle
 
   const gesamtbetragCent = faelle.reduce((s, f) => s + f.betrag_cent, 0)
   const anzahlPositionen = faelle.reduce((s, f) => s + f.positionen.length, 0)
@@ -170,7 +179,9 @@ export async function erzeugeUndVersendeSgbV(
       bundesland: params.bundesland ?? null,
       kostentraeger_ik: params.kostentraegerIk ?? null,
       kostentraeger_name: params.kostentraegerIk
-        ? faelle[0]?.kostentraeger_name ?? null
+        // aus rohFaelle: bei einem Tarif-Stopp ist `faelle` leer, der Name
+        // der Kasse gehört trotzdem an den Lauf.
+        ? rohFaelle[0]?.kostentraeger_name ?? null
         : null,
       anzahl_faelle: faelle.length,
       anzahl_positionen: anzahlPositionen,
@@ -216,8 +227,14 @@ export async function erzeugeUndVersendeSgbV(
     grund: string,
     naechsterSchritt: string,
     routingProbleme: SgbVLaufErgebnis['routingProbleme'] = [],
+    ohneTarif: TarifBefund[] = [],
   ): Promise<SgbVLaufErgebnis> => {
-    const status = art === 'daten' ? 'validierung_fehlgeschlagen' : 'gesperrt_extern'
+    // 'daten', 'tarif' und 'stammdaten' sind hausgemacht und im eigenen Haus
+    // lösbar — sie dürfen nicht als 'gesperrt_extern' erscheinen, sonst sieht
+    // ein interner Pflegefehler wie ein fehlender Kassenvertrag aus.
+    const status = art === 'daten' || art === 'tarif' || art === 'stammdaten'
+      ? 'validierung_fehlgeschlagen'
+      : 'gesperrt_extern'
     await supabase
       .from('sgb_v_laeufe')
       .update({ status, sperr_grund: grund })
@@ -252,11 +269,14 @@ export async function erzeugeUndVersendeSgbV(
       gesamtbetragCent,
       abgelehnt: aufbereitung.abgelehnt,
       routingProbleme,
+      ohneTarif,
     }
   }
 
   // ── Daten vorhanden? ─────────────────────────────────────────
-  if (faelle.length === 0) {
+  // Auf die UNgeprüften Fälle: sonst meldet ein reiner Tarifmangel
+  // "keine Leistungen erfasst" und schickt die Suche in die falsche Richtung.
+  if (rohFaelle.length === 0) {
     return stoppe(
       'daten',
       `Keine abrechenbaren HKP-Leistungen für ${abrechnungsmonat}`
@@ -264,6 +284,43 @@ export async function erzeugeUndVersendeSgbV(
           ? ` — ${aufbereitung.abgelehnt.length} Leistung(en) sind nicht abrechenbar (siehe Liste)`
           : ''),
       'Verordnungen und Leistungsnachweise prüfen (Vorschau: /api/billing/sgb-v/vorschau)',
+    )
+  }
+
+  // ── § 37-Tarife ──────────────────────────────────────────────
+  // Fail-closed und ohne Teilabrechnung: schon eine einzige Position ohne
+  // verifizierten Tarif hält den Lauf an. Die Alternative — die betroffenen
+  // Positionen still weglassen — wäre gegenüber der Kasse eine unvollständige
+  // Abrechnung, die wie eine vollständige aussieht.
+  if (!tarifPruefung.ok) {
+    return stoppe(
+      'tarif',
+      `${tarifPruefung.ohneTarif.length} von ${tarifPruefung.geprueftePositionen} Position(en) haben keinen `
+        + 'verifizierten § 37-Tarif. Ohne hinterlegten und als verifiziert markierten Tarif wird kein Betrag '
+        + 'gegenüber einer Krankenkasse geltend gemacht.',
+      'billing_tariffs mit Rechtsgrundlage "§37 SGB V" pflegen und nach Belegprüfung auf tarif_status = "verified" setzen',
+      [],
+      tarifPruefung.ohneTarif,
+    )
+  }
+
+  // ── Absender-IK der Organisation ─────────────────────────────
+  // Muss VOR dem Generator geladen werden: die Erzeugungsparameter verlangen
+  // eine Absender-IK, und eine leere IK würde im Kopfsegment einer echten
+  // Datei landen. Die Readiness prüft denselben Punkt — hier ist er scharf.
+  const { data: absender } = await supabase
+    .from('organizations')
+    .select('ik_nummer')
+    .eq('id', organizationId)
+    .maybeSingle()
+
+  const absenderIk = absender?.ik_nummer ? String(absender.ik_nummer) : ''
+  if (!/^\d{9}$/.test(absenderIk)) {
+    return stoppe(
+      'stammdaten',
+      `Der Organisation fehlt eine gültige neunstellige Absender-IK (gefunden: ${absenderIk || 'keine'}). `
+        + 'Ohne sie kann kein § 302-Datensatz adressiert werden.',
+      'IK-Nummer bei den Verbänden der Krankenkassen beantragen und in organizations.ik_nummer eintragen',
     )
   }
 
@@ -348,7 +405,7 @@ export async function erzeugeUndVersendeSgbV(
     erzeugeSgbVDatei({
       aufbereitung: { ...aufbereitung, faelle },
       version: version.version,
-      absenderIk: '',
+      absenderIk,
       datenannahmestelleIk: datenannahmestelleIk ?? '',
       abrechnungsmonat,
       dateiindikator,
