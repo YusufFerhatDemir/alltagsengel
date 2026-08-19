@@ -12,6 +12,17 @@ export default defineConfig({
     include: ['__tests__/**/*.test.ts'],
     exclude: ['node_modules', '.next', 'native', '.claude'],
     testTimeout: 15000,
+    // Die PGlite-Suiten booten in beforeAll ein WASM-Postgres und spielen
+    // echte Migrationen ein. Isoliert dauert das ~2s, unter Volllast der
+    // kompletten Suite (170 Dateien parallel, mehrere WASM-Instanzen
+    // gleichzeitig) aber deutlich laenger — mit Vitests Default von 10s
+    // kippten hoch1-mandantentrennung-pglite und
+    // persistenter-api-ratelimit-pglite reproduzierbar mit
+    // "Hook timed out in 10000ms", waehrend sie einzeln in 3,6s
+    // durchlaufen. Kein Testinhalt wird abgeschaltet, nur die
+    // Hook-Schranke realistisch bemessen; 60s beenden einen echten
+    // Haenger weiterhin zeitnah.
+    hookTimeout: 60000,
   },
   resolve: {
     alias: {
