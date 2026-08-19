@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getActiveOrgIdOrDefault } from '@/lib/organizations/server'
-import { escapeHtml, rateLimit, getClientIp } from '@/lib/rate-limit'
+import { escapeHtml, getClientIp } from '@/lib/rate-limit'
+import { rateLimitPersistent } from '@/lib/rate-limit-persistent'
 
 // Einzeiler + Längen-Cap für Felder, die in E-Mail-HTML landen.
 // Verhindert HTML-/Link-Injection (der Endpunkt ist bewusst anonym aufrufbar,
@@ -33,8 +34,10 @@ const EXCLUDED_IPS = (process.env.EXCLUDED_TRACKING_IPS || '').split(',').filter
 
 const ALERT_EMAIL = process.env.ADMIN_ALERT_EMAIL || ''
 
-// Cooldown: maximal 1 E-Mail pro Stunde pro IP
-const lastAlerts = new Map<string, number>()
+// Cooldown: maximal 1 E-Mail pro Stunde pro gemeldeter IP.
+// B-2 (Master-Audit 2026-08-19): frueher eine Map im Modul-Scope, also
+// pro Serverless-Instanz. Jetzt instanzuebergreifend in der Datenbank.
+const COOLDOWN_MS = 3_600_000
 
 export async function POST(req: NextRequest) {
   try {
@@ -42,8 +45,10 @@ export async function POST(req: NextRequest) {
     // aufrufbar und loest Admin-Mails aus. Ohne Limit ist er eine Spam-Schleuder
     // (der Cooldown weiter unten greift erst nach dem DB-Lesezugriff und nur
     // pro gemeldeter — also frei waehlbarer — IP aus dem Body).
+    // B-2 (Master-Audit 2026-08-19): instanzuebergreifend statt In-Memory —
+    // sonst startet jede neue Serverless-Instanz mit leerem Zaehler.
     const aufruferIp = getClientIp(req)
-    if (!rateLimit(`visitor-alert:${aufruferIp}`, 20, 60_000)) {
+    if (!(await rateLimitPersistent(`visitor-alert:ip:${aufruferIp}`, 20, 60_000))) {
       return NextResponse.json({ ok: true })
     }
 
@@ -63,13 +68,11 @@ export async function POST(req: NextRequest) {
     const isWatched = isWatchedCity || isWatchedPLZ
     if (!isWatched) return NextResponse.json({ ok: true })
 
-    // Cooldown prüfen (1 Stunde pro IP)
+    // Cooldown prüfen (1 Stunde pro gemeldeter IP) — ebenfalls persistent.
     const ipPrefix = ip.substring(0, 20)
-    const lastAlert = lastAlerts.get(ipPrefix)
-    if (lastAlert && Date.now() - lastAlert < 3600000) {
+    if (!(await rateLimitPersistent(`visitor-alert:cooldown:${ipPrefix}`, 1, COOLDOWN_MS))) {
       return NextResponse.json({ ok: true, cooldown: true })
     }
-    lastAlerts.set(ipPrefix, Date.now())
 
     // Gerät-Info aus User-Agent
     let device = 'Unbekannt'

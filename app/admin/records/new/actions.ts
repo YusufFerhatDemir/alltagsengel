@@ -2,7 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { getActiveOrgId } from '@/lib/organizations/server'
-import { logAuditEvent } from '@/lib/audit-log'
+import { logAuditEventOrWarn } from '@/lib/audit-log'
 import { saveServiceRecord, type ServiceRecordInput } from '@/lib/admin/service-records'
 
 // ═══════════════════════════════════════════════════════════════
@@ -100,7 +100,7 @@ export async function createServiceRecordAction(input: {
     }
 
     // Audit-Log (fail-soft)
-    await logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'create',
       actorId: userId,
       actorRole: role,
@@ -116,7 +116,7 @@ export async function createServiceRecordAction(input: {
         budget_type: input.budget_type,
         status: input.status,
       },
-    }).catch(() => {})
+    })
 
     return { ok: true, id }
   } catch (err: any) {

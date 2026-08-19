@@ -2,7 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { getActiveOrgId } from '@/lib/organizations/server'
-import { logAuditEvent } from '@/lib/audit-log'
+import { logAuditEventOrWarn } from '@/lib/audit-log'
 
 // ═══════════════════════════════════════════════════════════════
 // Server-seitige Aktionen fuer Pruefprotokoll
@@ -57,7 +57,7 @@ export async function resolveReviewErrorAction(
     }
 
     // Audit-Log (fail-soft)
-    await logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'update',
       actorId: userId,
       actorRole: role,
@@ -66,7 +66,7 @@ export async function resolveReviewErrorAction(
       entityType: 'review_error',
       entityId: errorId,
       details: { resolved: true },
-    }).catch(() => {})
+    })
 
     return { ok: true }
   } catch (err: any) {

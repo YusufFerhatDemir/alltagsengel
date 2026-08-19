@@ -153,14 +153,11 @@ export default function AnalyticsPage() {
     const supabase = createClient()
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_IN' && session?.user) {
+        // Identitaet (user_id/email/name), User-Agent und Status setzt die
+        // Server Action aus der Session bzw. den Request-Headern — A-2.
         await logAuthEvent({
-          user_id: session.user.id,
-          user_email: session.user.email || '',
-          user_name: session.user.email || '',
           action: 'login',
-          user_agent: navigator.userAgent,
           device: getDeviceInfo(),
-          status: 'success',
         })
         loadData()
       }

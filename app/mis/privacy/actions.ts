@@ -3,7 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getActiveOrgId } from '@/lib/organizations/server'
-import { logAuditEvent } from '@/lib/audit-log'
+import { logAuditEventOrWarn } from '@/lib/audit-log'
 
 // ═══════════════════════════════════════════════════════════════
 // Server-seitige Aktionen fuer Datenschutz (MIS)
@@ -107,7 +107,7 @@ export async function createPrivacyRecord(data: {
       details: { title: data.title },
     })
 
-    await logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'create',
       actorId: userId,
       actorRole: role,
@@ -116,7 +116,7 @@ export async function createPrivacyRecord(data: {
       entityType: 'privacy_record',
       entityId: inserted?.id,
       details: { aktion: 'verarbeitungstaetigkeit_erstellt', title: data.title },
-    }).catch(() => {})
+    })
 
     return { ok: true, data: inserted }
   } catch (err: any) {
@@ -147,7 +147,7 @@ export async function deletePrivacyRecord(
       performedBy: name,
     })
 
-    await logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'delete',
       actorId: userId,
       actorRole: role,
@@ -156,7 +156,7 @@ export async function deletePrivacyRecord(
       entityType: 'privacy_record',
       entityId: id,
       details: { aktion: 'verarbeitungstaetigkeit_geloescht' },
-    }).catch(() => {})
+    })
 
     return { ok: true }
   } catch (err: any) {
@@ -202,7 +202,7 @@ export async function createPrivacyConsent(data: {
       details: { person_name: data.person_name, consent_type: data.consent_type },
     })
 
-    await logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'create',
       actorId: userId,
       actorRole: role,
@@ -211,7 +211,7 @@ export async function createPrivacyConsent(data: {
       entityType: 'privacy_consent',
       entityId: inserted?.id,
       details: { aktion: 'einwilligung_erteilt', person_name: data.person_name },
-    }).catch(() => {})
+    })
 
     return { ok: true, data: inserted }
   } catch (err: any) {
@@ -246,7 +246,7 @@ export async function revokePrivacyConsent(
       performedBy: name,
     })
 
-    await logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'update',
       actorId: userId,
       actorRole: role,
@@ -255,7 +255,7 @@ export async function revokePrivacyConsent(
       entityType: 'privacy_consent',
       entityId: id,
       details: { aktion: 'einwilligung_widerrufen' },
-    }).catch(() => {})
+    })
 
     return { ok: true }
   } catch (err: any) {
@@ -303,7 +303,7 @@ export async function createPrivacyRequest(data: {
       details: { requester_name: data.requester_name, request_type: data.request_type },
     })
 
-    await logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'create',
       actorId: userId,
       actorRole: role,
@@ -312,7 +312,7 @@ export async function createPrivacyRequest(data: {
       entityType: 'privacy_request',
       entityId: inserted?.id,
       details: { aktion: 'anfrage_erstellt', request_type: data.request_type },
-    }).catch(() => {})
+    })
 
     return { ok: true, data: inserted }
   } catch (err: any) {
@@ -354,7 +354,7 @@ export async function updatePrivacyRequestStatus(
       details: { neuer_status: status },
     })
 
-    await logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'update',
       actorId: userId,
       actorRole: role,
@@ -363,7 +363,7 @@ export async function updatePrivacyRequestStatus(
       entityType: 'privacy_request',
       entityId: id,
       details: { aktion: 'anfrage_status_geaendert', neuer_status: status },
-    }).catch(() => {})
+    })
 
     return { ok: true }
   } catch (err: any) {

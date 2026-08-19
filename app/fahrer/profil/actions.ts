@@ -2,7 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { resolveUserOrgId } from '@/lib/organizations/server'
-import { logAuditEvent } from '@/lib/audit-log'
+import { logAuditEventOrWarn } from '@/lib/audit-log'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -101,7 +101,7 @@ export async function saveFahrerProfile(
     }
 
     // 6. Audit log (fail-soft)
-    logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'update',
       actorId: userId,
       organizationId,
@@ -110,7 +110,7 @@ export async function saveFahrerProfile(
       entityType: 'fahrer_profile',
       entityId: provider.id,
       details: { phone, companyName, address, city, licenseNumber },
-    }).catch(() => {})
+    })
 
     // 7. Success
     return { ok: true }

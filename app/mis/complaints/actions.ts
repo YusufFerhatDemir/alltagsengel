@@ -2,7 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { getActiveOrgId } from '@/lib/organizations/server'
-import { logAuditEvent } from '@/lib/audit-log'
+import { logAuditEventOrWarn } from '@/lib/audit-log'
 
 // ═══════════════════════════════════════════════════════════════
 // Server-seitige Aktionen fuer Beschwerdemanagement
@@ -75,7 +75,7 @@ export async function createComplaint(data: {
       return { ok: false, error: error.message }
     }
 
-    await logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'create',
       actorId: userId,
       actorRole: role,
@@ -84,7 +84,7 @@ export async function createComplaint(data: {
       entityType: 'mis_complaints',
       entityId: inserted.id,
       details: { aktion: 'beschwerde_angelegt', title: data.title },
-    }).catch(() => {})
+    })
 
     return { ok: true, data: inserted }
   } catch (err: any) {
@@ -123,7 +123,7 @@ export async function updateComplaintStatus(
       return { ok: false, error: error.message }
     }
 
-    await logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'update',
       actorId: userId,
       actorRole: role,
@@ -132,7 +132,7 @@ export async function updateComplaintStatus(
       entityType: 'mis_complaints',
       entityId: id,
       details: { aktion: 'status_geaendert', neuer_status: newStatus },
-    }).catch(() => {})
+    })
 
     return { ok: true }
   } catch (err: any) {
@@ -168,7 +168,7 @@ export async function saveComplaintCapa(
       return { ok: false, error: error.message }
     }
 
-    await logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'update',
       actorId: userId,
       actorRole: role,
@@ -177,7 +177,7 @@ export async function saveComplaintCapa(
       entityType: 'mis_complaints',
       entityId: id,
       details: { aktion: 'capa_gespeichert' },
-    }).catch(() => {})
+    })
 
     return { ok: true }
   } catch (err: any) {
@@ -202,7 +202,7 @@ export async function deleteComplaint(
       return { ok: false, error: error.message }
     }
 
-    await logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'delete',
       actorId: userId,
       actorRole: role,
@@ -211,7 +211,7 @@ export async function deleteComplaint(
       entityType: 'mis_complaints',
       entityId: id,
       details: { aktion: 'beschwerde_geloescht' },
-    }).catch(() => {})
+    })
 
     return { ok: true }
   } catch (err: any) {

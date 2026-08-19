@@ -141,10 +141,14 @@ Entwurf.
 | 1 | alltagsengel | `20260922000000_revoke_anon_cron_funktionen.sql` | MITTEL-5 + NIEDRIG-7 |
 | 2 | alltagsengel | `20260922010000_analytics_org_scope.sql` | MITTEL-2 + NIEDRIG-3 |
 | 3 | alltagsengel | `20260922020000_hoch1_mandantentrennung.sql` | HOCH-1 |
-| 4 | chairmatch | `20260819_rls_close_gaps.sql` | 3 (leere) Tabellen |
-| 5 | chairmatch | `20260819_rls_close_gaps_v2.sql` | **der P0-Fix** — `profiles`, `reviews`, `promo_codes`, `commission_rates`, `totp_secret` |
+| 4 | alltagsengel | `20260922030000_persistenter_api_ratelimit.sql` | I-6 / B-2 — persistenter API-Ratelimit (`api_rate_limits` + `api_rate_limit_hit()`) |
+| 5 | chairmatch | `20260819_rls_close_gaps.sql` | 3 (leere) Tabellen |
+| 6 | chairmatch | `20260819_rls_close_gaps_v2.sql` | **der P0-Fix** — `profiles`, `reviews`, `promo_codes`, `commission_rates`, `totp_secret` |
 
-Reihenfolge für Alltagsengel: 1 → 2 → 3, Code-Deploy ist bereits erfolgt (`dfe6de0`).
+Reihenfolge für Alltagsengel: 1 → 2 → 3 → 4, Code-Deploy ist bereits erfolgt (`dfe6de0`).
+Nr. 4 ist unabhängig von 1–3 und nicht dringlich: ohne sie fällt `lib/rate-limit-persistent.ts`
+auf den bisherigen In-Memory-Limiter zurück (mit einmaliger Warnung im Log), der Zustand ist
+also nicht schlechter als vor dem Fix — nur eben noch nicht besser.
 Gegenprobe danach: `node scripts/verify-security-fixes-2026-08-19.mjs` muss **7/7** melden.
 
 ### 3.3 Kassenabrechnung / EDIFACT (Track 2) — für den Start **nicht erforderlich**
@@ -195,17 +199,17 @@ Siehe Abschnitt 6.
 | # | Punkt | Quelle | Aufwand |
 |---|---|---|---|
 | **I-1** | **§ 36 SGB XI (Pflegesachleistung) ist ungedeckelt.** Der neue Budget-Cap begrenzt § 45b und § 42a; für `haeusliche_pflege_36` sind in `lib/config/budget-constants.ts` **keine gesetzlichen Sätze hinterlegt** (der Anspruch ist pflegegradabhängig). Es wurde bewusst kein Betrag erfunden. Die Lücke ist als `UNGEDECKELTE_TOEPFE.sachleistung_36` im Code benannt und getestet. | diese Sitzung | mittel — Sätze je Pflegegrad recherchieren und versioniert eintragen, vor dem ersten Sachleistungsvertrag |
-| **I-2** | **A-2 — `/mis/analytics` schreibt fremdbestimmte Identitäten ins Audit-Log.** `app/mis/analytics/actions.ts` übernimmt `user_id`, `user_email`, `user_name`, `status` unverändert aus dem Client-Body. Die Schwesterfunktion `app/mis/actions.ts:logMISAuthEvent` macht es richtig. | Re-Check A-2 | klein — dem bestehenden Muster folgen |
-| **I-3** | **A-3 — 139× `logAuditEvent(...).catch(() => {})`.** Fällt der Audit-Insert aus, läuft die Geschäftsoperation weiter und niemand erfährt, dass die Spur fehlt. Positiv-Gegenbeispiel im selben Repo: `app/api/einsatzplanung/route.ts` protokolliert den Fehlschlag. | Re-Check A-3 | mittel — mechanisch, aber 139 Stellen; für § 630f BGB / Art. 30 DSGVO relevant |
-| **I-4** | **A-4 — DSGVO-Hard-Delete verschluckt das Löschen der Dokumente.** `supabase/functions/account-hard-delete/index.ts:126` fängt den Fehler ab, gestützt auf den überholten Kommentar „documents-Tabelle existiert derzeit nicht in Produktion". Sie existiert. Der Hard-Delete meldet trotzdem Erfolg. | Re-Check A-4 | klein |
-| **I-5** | **B-1 — ESLint lintet 880 MB Build-Artefakte.** `.next-old/**` (349 MB) und `.claude/worktrees/**` (531 MB) fehlen in `globalIgnores`. Von 66 109 gemeldeten Problemen stammen ~63 800 aus minifiziertem Fremdcode; der reale App-Wert ist 2 338. Der Lint-Lauf ist als CI-Gate wertlos. | Re-Check B-1 | klein — zwei Pfade eintragen |
-| **I-6** | **B-2 — `visitor-alert` hat nur einen In-Memory-Ratelimit.** Unauthentifiziert, `createAdminClient()`, schreibt `visitor_locations`, legt Notifications an, versendet Mail. Die 1-h-IP-Sperre gilt auf Serverless pro Instanz. Schaden bleibt auf Rauschen begrenzt (fester Empfänger, HTML-escaped), als Dauerlösung reicht es nicht. | Re-Check B-2 | mittel — Persistenz-Ratelimit |
-| **I-7** | **B-3 — `OnboardingFlow.tsx` schreibt `pflegegrad` direkt aus dem Browser** (Zeilen 107/120/128), an der `care_level`-Führung und am Server-Sync vorbei. | Re-Check B-3 | klein |
+| **I-2** | ✅ **GESCHLOSSEN (Folge-Sitzung 19.08.2026).** `logAuthEvent` nimmt nur noch `action` (Whitelist) und `device` (feste Liste) entgegen; `user_id`/`user_email`/`user_name` kommen aus der Session, `user_agent` aus dem Request-Header, `status` ist serverseitig fix. Caller `app/mis/analytics/page.tsx` angepasst. 8 Tests in `__tests__/security/mis-analytics-audit-identitaet.test.ts` (inkl. Unterschieb-Versuch). ~~**A-2 — `/mis/analytics` schreibt fremdbestimmte Identitäten ins Audit-Log.** `app/mis/analytics/actions.ts` übernimmt `user_id`, `user_email`, `user_name`, `status` unverändert aus dem Client-Body. Die Schwesterfunktion `app/mis/actions.ts:logMISAuthEvent` macht es richtig.~~ | Re-Check A-2 | klein — dem bestehenden Muster folgen |
+| **I-3** | ✅ **GESCHLOSSEN (Folge-Sitzung 19.08.2026).** Zentrales Muster `logAuditEventOrWarn()` (fail-soft, aber `await`-et und meldet „AUDIT-LUECKE" auf `console.error`) und `logAuditEventOrThrow()` in `lib/audit-log.ts`. Alle 141 Fundstellen in 55 Dateien umgestellt; die übrigen `logAuditEvent`-Aufrufe sind jetzt durchgängig `await`-et. Regressionstest scannt `app/` und `lib/`. 9 Tests in `__tests__/security/audit-log-luecken.test.ts`. ~~**A-3 — 139× `logAuditEvent(...).catch(() => {})`.** Fällt der Audit-Insert aus, läuft die Geschäftsoperation weiter und niemand erfährt, dass die Spur fehlt. Positiv-Gegenbeispiel im selben Repo: `app/api/einsatzplanung/route.ts` protokolliert den Fehlschlag.~~ | Re-Check A-3 | mittel — mechanisch, aber 139 Stellen; für § 630f BGB / Art. 30 DSGVO relevant |
+| **I-4** | ✅ **GESCHLOSSEN (Folge-Sitzung 19.08.2026).** `.catch(() => {})` entfernt, Fehler wird ausgewertet, der Nutzer wird bei Fehlschlag mit `ok: false` gemeldet und **vor** `auth.admin.deleteUser` abgebrochen (sonst wären die Dokumente verwaist). Kommentar korrigiert. 6 Tests in `__tests__/security/hard-delete-und-lint-gate.test.ts`; der Alt-Test `__tests__/cleanup-documents-table.test.ts`, der das `.catch` noch **forderte**, wurde umgedreht. ~~**A-4 — DSGVO-Hard-Delete verschluckt das Löschen der Dokumente.** `supabase/functions/account-hard-delete/index.ts:126` fängt den Fehler ab, gestützt auf den überholten Kommentar „documents-Tabelle existiert derzeit nicht in Produktion". Sie existiert. Der Hard-Delete meldet trotzdem Erfolg.~~ | Re-Check A-4 | klein |
+| **I-5** | ✅ **GESCHLOSSEN (Folge-Sitzung 19.08.2026).** `.next-old/**` und `.claude/worktrees/**` in `globalIgnores`. Gemessen: **66 109 → 2 374 Probleme** (2 017 Fehler). Der Lauf ist damit wieder als Gate brauchbar — rot ist er weiterhin, siehe I-12. ~~**B-1 — ESLint lintet 880 MB Build-Artefakte.** `.next-old/**` (349 MB) und `.claude/worktrees/**` (531 MB) fehlen in `globalIgnores`. Von 66 109 gemeldeten Problemen stammen ~63 800 aus minifiziertem Fremdcode; der reale App-Wert ist 2 338. Der Lint-Lauf ist als CI-Gate wertlos.~~ | Re-Check B-1 | klein — zwei Pfade eintragen |
+| **I-6** | ✅ **CODE FERTIG, Migration wartet auf Apply (Folge-Sitzung 19.08.2026).** Neu: `public.api_rate_limits` + SECDEF-RPC `api_rate_limit_hit()` (Migration `20260922030000`, mit Rollback) und `lib/rate-limit-persistent.ts`. `visitor-alert` nutzt ihn für Aufrufer-IP **und** Cooldown; die `Map` im Modul-Scope ist weg. Ohne eingespielte Migration Fallback auf den bisherigen In-Memory-Limiter mit einmaliger Warnung — bewusst nicht fail-closed, sonst wäre die Route bis zum Apply tot. 16 PGlite-Tests + 11 TS-Tests. ~~**B-2 — `visitor-alert` hat nur einen In-Memory-Ratelimit.** Unauthentifiziert, `createAdminClient()`, schreibt `visitor_locations`, legt Notifications an, versendet Mail. Die 1-h-IP-Sperre gilt auf Serverless pro Instanz. Schaden bleibt auf Rauschen begrenzt (fester Empfänger, HTML-escaped), als Dauerlösung reicht es nicht.~~ | Re-Check B-2 | mittel — Persistenz-Ratelimit |
+| **I-7** | ✅ **GESCHLOSSEN (Folge-Sitzung 19.08.2026).** Neue Server Action `app/onboarding/actions.ts`: validiert Pflegegrad (1–5) und PLZ (5 Ziffern), schreibt `care_recipients` **und** zieht die Führungsspalte `clients.care_level` mit, protokolliert den Abschluss. Legt bewusst keinen Klienten an (Bürovorgang). 20 Tests in `__tests__/security/onboarding-server-action.test.ts`. ~~**B-3 — `OnboardingFlow.tsx` schreibt `pflegegrad` direkt aus dem Browser** (Zeilen 107/120/128), an der `care_level`-Führung und am Server-Sync vorbei.~~ | Re-Check B-3 | klein |
 | **I-8** | **B-4 — 62 lokal nachgebaute Guard-Funktionen in `app/`**, obwohl `lib/*/api-auth.ts` bereits 29 zentrale `require*`-Helfer bietet. Kein akuter Fehler, aber die wahrscheinlichste Ursache des nächsten Auth-Befunds. | Re-Check B-4 | mittel |
 | **I-9** | **Screenreader-Durchgang (AK-BF-03)** ist intern leistbar — eine Person, ein Termin, VoiceOver oder NVDA. Protokollvorlage steht. Formal GF-Entscheidung, faktisch kein externer Akteur nötig. | DiPA-Bericht | klein |
 | **I-10** | **Zusammenführung der beiden KIM-Pfade A und B.** Pfad A hat Adapter-Register und Kartenverwaltung, Pfad B den funktionierenden Nachrichtenbetrieb. Umbau an fremden Kernmodulen, für den letzten Durchlauf ausgeschlossen. | Track 5 | groß |
 | **I-11** | **Referenzdaten-Schreibschutz.** `billing_*`, `kf_pricing_*`, `bundeslaender` sind mandantenübergreifend beschreibbar. Heute unkritisch (nur `is_admin()`/`service_role`, nur eine produktive Org). Vor dem ersten Fremdmandanten zu entscheiden — Empfehlung: nur `superadmin`. | Security-Fixes, Punkt 5 | mittel |
-| **I-12** | **`npm run lint` ist rot** (9 717 Fehler in 66 126 Problemen) und war es schon vor dieser Arbeitsphase. Eine ESLint-/Config-Aktualisierung hat bestehende Warnungen zu Fehlern hochgestuft. Die neu angelegten Dateien sind lint-sauber. | Security-Fixes, Punkt 2 | groß — eigene Aufgabe |
+| **I-12** | **`npm run lint` ist rot** (nach dem B-1-Fix vom 19.08.2026: 2 017 Fehler in 2 374 Problemen; davor 9 717 in 66 126) und war es schon vor dieser Arbeitsphase. Eine ESLint-/Config-Aktualisierung hat bestehende Warnungen zu Fehlern hochgestuft. Die neu angelegten Dateien sind lint-sauber. | Security-Fixes, Punkt 2 | groß — eigene Aufgabe |
 
 ### 4.3 Bewusst nicht lösbar, weil eine Entscheidung fehlt
 
@@ -500,9 +504,9 @@ sind weder EDIFACT noch Kassenverträge noch SEPA nötig.
 | Punkt | Warum es zählt |
 |---|---|
 | **I-1 · § 36 SGB XI ungedeckelt** | Der Budget-Cap deckt § 45b und § 42a. Pflegesachleistung läuft ungedeckelt durch. Relevant erst mit dem ersten Sachleistungsvertrag — aber dann sofort. |
-| **I-2 · A-2, fremdbestimmte Audit-Identitäten** | Jeder eingeloggte Nutzer kann Audit-Zeilen unter fremdem Namen erzeugen. Das entwertet den Trail, an dem alles andere hängt. |
-| **I-3 · A-3, 139 verschluckte Audit-Fehler** | Fällt der Audit-Insert aus, läuft die Operation weiter und niemand erfährt, dass die Spur fehlt. § 630f BGB / Art. 30 DSGVO. |
-| **I-4 · A-4, Hard-Delete verschluckt Dokument-Löschung** | Der DSGVO-Hard-Delete meldet Erfolg, obwohl die personenbezogenen Dokumente möglicherweise stehen bleiben. |
+| ~~I-2 · A-2, fremdbestimmte Audit-Identitäten~~ ✅ | Erledigt in der Folge-Sitzung 19.08.2026. War: jeder eingeloggte Nutzer konnte Audit-Zeilen unter fremdem Namen erzeugen. |
+| ~~I-3 · A-3, 139 verschluckte Audit-Fehler~~ ✅ | Erledigt in der Folge-Sitzung 19.08.2026 (`logAuditEventOrWarn`, 141 Stellen). |
+| ~~I-4 · A-4, Hard-Delete verschluckt Dokument-Löschung~~ ✅ | Erledigt in der Folge-Sitzung 19.08.2026. Der Hard-Delete bricht jetzt ab, statt Erfolg zu melden. |
 
 Alles Weitere aus Abschnitt 4.2 ist Härtung, nicht kritisch.
 
@@ -655,12 +659,12 @@ Punkte, an denen intern nichts mehr zu tun ist:
 
 | # | Aufgabe | Aufwand |
 |---|---|---|
-| 1 | **A-2 fixen** — `/mis/analytics` auf Session-Identität umstellen (Muster existiert in `app/mis/actions.ts`) | klein |
-| 2 | **A-4 fixen** — `.catch(() => {})` beim Dokument-Delete im DSGVO-Hard-Delete entfernen, überholten Kommentar korrigieren | klein |
-| 3 | **B-1 fixen** — `.next-old/**` und `.claude/worktrees/**` in `globalIgnores` eintragen; macht den Lint-Lauf wieder als Gate brauchbar | klein |
-| 4 | **B-3 fixen** — `OnboardingFlow.tsx` auf eine Server Action umstellen (Muster: `createCareNoteAction` aus MITTEL-3) | klein |
-| 5 | **A-3 angehen** — die 139 stillen Audit-Catches auf ein sichtbares Muster ziehen, plus zentraler Zähler/Alarm | mittel |
-| 6 | **I-6** — `visitor-alert` auf einen persistenten Ratelimit umstellen | mittel |
+| ~~1~~ ✅ | ~~**A-2 fixen**~~ — erledigt 19.08.2026 | klein |
+| ~~2~~ ✅ | ~~**A-4 fixen**~~ — erledigt 19.08.2026 | klein |
+| ~~3~~ ✅ | ~~**B-1 fixen**~~ — erledigt 19.08.2026, 66 109 → 2 374 Probleme | klein |
+| ~~4~~ ✅ | ~~**B-3 fixen**~~ — erledigt 19.08.2026 (`app/onboarding/actions.ts`) | klein |
+| ~~5~~ ✅ | ~~**A-3 angehen**~~ — erledigt 19.08.2026 (141 Stellen auf `logAuditEventOrWarn`). Ein zentraler Zähler/Alarm auf die „AUDIT-LUECKE"-Meldungen fehlt weiterhin. | mittel |
+| ~~6~~ ✅ | ~~**I-6**~~ — Code erledigt 19.08.2026; Migration `20260922030000` wartet auf den SQL-Editor | mittel |
 | 7 | **I-8** — die 62 lokalen Guard-Kopien auf `lib/*/api-auth.ts` konsolidieren | mittel |
 | 8 | **I-11** — Referenzdaten-Schreibschutz als Migration vorbereiten (`superadmin`-only) | mittel |
 | 9 | **I-12** — Lint-Bestand aufräumen | groß |

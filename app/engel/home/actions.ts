@@ -2,7 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { resolveUserOrgId } from '@/lib/organizations/server'
-import { logAuditEvent } from '@/lib/audit-log'
+import { logAuditEventOrWarn } from '@/lib/audit-log'
 
 async function requireEngel() {
   const supabase = await createClient()
@@ -51,7 +51,7 @@ export async function updateEngelLocation(
       return { ok: false, error: 'Standort konnte nicht aktualisiert werden.' }
     }
 
-    logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'update',
       actorId: userId,
       organizationId,
@@ -60,7 +60,7 @@ export async function updateEngelLocation(
       entityType: 'profile',
       entityId: userId,
       details: { field: 'location', value: city.trim() },
-    }).catch(() => {})
+    })
 
     return { ok: true }
   } catch (err) {
@@ -91,7 +91,7 @@ export async function toggleEngelOnline(
       return { ok: false, error: 'Online-Status konnte nicht aktualisiert werden.' }
     }
 
-    logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'update',
       actorId: userId,
       organizationId,
@@ -100,7 +100,7 @@ export async function toggleEngelOnline(
       entityType: 'angel',
       entityId: userId,
       details: { field: 'is_online', value: isOnline },
-    }).catch(() => {})
+    })
 
     return { ok: true }
   } catch (err) {

@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { useBundeslandLage } from '@/lib/expansion/client'
+import { completeOnboardingAction } from '@/app/onboarding/actions'
 
 // ═══════════════════════════════════════════════════════════
 // ONBOARDING FLOW — Willkommen für neue Kunden
@@ -95,44 +96,14 @@ export default function OnboardingFlow() {
     setLoading(false)
   }
 
+  // Master-Audit 2026-08-19, B-3: Kein Direktschreibpfad mehr aus dem
+  // Browser. Die Server Action validiert die Eingaben, zieht die
+  // Fuehrungsspalte clients.care_level mit und protokolliert den Abschluss.
   async function completeOnboarding() {
     try {
-      const supabase = createClient()
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
-
-      const updates: Record<string, any> = { onboarding_completed: true }
-      if (plz) updates.postal_code = plz
-
-      await supabase.from('profiles').update(updates).eq('id', user.id)
-
-      // Pflegegrad in care_recipients speichern (nicht in profiles)
-      if (pflegegrad) {
-        const { data: existing } = await supabase
-          .from('care_recipients')
-          .select('id')
-          .eq('profile_id', user.id)
-          .limit(1)
-          .maybeSingle()
-
-        if (existing) {
-          await supabase.from('care_recipients')
-            .update({ pflegegrad: parseInt(pflegegrad) })
-            .eq('id', existing.id)
-        } else {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('first_name, last_name')
-            .eq('id', user.id)
-            .single()
-          await supabase.from('care_recipients').insert({
-            profile_id: user.id,
-            first_name: profile?.first_name || '',
-            last_name: profile?.last_name || '',
-            pflegegrad: parseInt(pflegegrad),
-            relationship: 'selbst',
-          })
-        }
+      const ergebnis = await completeOnboardingAction({ pflegegrad, plz })
+      if (!ergebnis.ok) {
+        console.error('[Onboarding] Save error:', ergebnis.error)
       }
     } catch (e) {
       console.error('[Onboarding] Save error:', e)

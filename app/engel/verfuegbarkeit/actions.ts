@@ -2,7 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { resolveUserOrgId } from '@/lib/organizations/server'
-import { logAuditEvent } from '@/lib/audit-log'
+import { logAuditEventOrWarn } from '@/lib/audit-log'
 
 type Slot = { id: string; weekday: number; start_time: string; end_time: string }
 
@@ -59,7 +59,7 @@ export async function addAvailabilitySlot(
       return { ok: false, error: 'Das Zeitfenster konnte nicht gespeichert werden.' }
     }
 
-    logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'create',
       actorId: userId,
       organizationId,
@@ -68,7 +68,7 @@ export async function addAvailabilitySlot(
       entityType: 'angel_availability',
       entityId: (data as Slot).id,
       details: { weekday, startTime, endTime },
-    }).catch(() => {})
+    })
 
     return { ok: true, data: data as Slot }
   } catch (err) {
@@ -113,7 +113,7 @@ export async function deleteAvailabilitySlot(
       return { ok: false, error: 'Das Zeitfenster konnte nicht geloescht werden.' }
     }
 
-    logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'delete',
       actorId: userId,
       organizationId,
@@ -121,7 +121,7 @@ export async function deleteAvailabilitySlot(
       actorName: name,
       entityType: 'angel_availability',
       entityId: slotId,
-    }).catch(() => {})
+    })
 
     return { ok: true }
   } catch (err) {
@@ -168,7 +168,7 @@ export async function applyDefaultTemplate(
       return { ok: false, error: 'Die Vorlage konnte nicht uebernommen werden.' }
     }
 
-    logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'create',
       actorId: userId,
       organizationId,
@@ -176,7 +176,7 @@ export async function applyDefaultTemplate(
       actorName: name,
       entityType: 'angel_availability',
       details: { weekdays, startTime, endTime, count: weekdays.length },
-    }).catch(() => {})
+    })
 
     return { ok: true, data: (data || []) as Slot[] }
   } catch (err) {

@@ -2,7 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { getActiveOrgId } from '@/lib/organizations/server'
-import { logAuditEvent } from '@/lib/audit-log'
+import { logAuditEventOrWarn } from '@/lib/audit-log'
 
 // ═══════════════════════════════════════════════════════════════
 // Server-seitige Aktionen fuer Qualitaetsmanagement (MIS)
@@ -57,7 +57,7 @@ export async function createQualityAudit(data: {
 
     if (error) return { ok: false, error: error.message }
 
-    await logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'create',
       actorId: userId,
       actorRole: role,
@@ -66,7 +66,7 @@ export async function createQualityAudit(data: {
       entityType: 'quality_audit',
       entityId: inserted?.id,
       details: { aktion: 'qualitaets_audit_erstellt', audit_number: data.audit_number },
-    }).catch(() => {})
+    })
 
     return { ok: true, data: inserted }
   } catch (err: any) {
@@ -102,7 +102,7 @@ export async function createCapa(data: {
 
     if (error) return { ok: false, error: error.message }
 
-    await logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'create',
       actorId: userId,
       actorRole: role,
@@ -111,7 +111,7 @@ export async function createCapa(data: {
       entityType: 'capa',
       entityId: inserted?.id,
       details: { aktion: 'capa_erstellt', capa_number: data.capa_number, title: data.title },
-    }).catch(() => {})
+    })
 
     return { ok: true, data: inserted }
   } catch (err: any) {

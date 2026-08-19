@@ -17,7 +17,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { resolveUserOrgId } from '@/lib/organizations/server'
-import { logAuditEvent } from '@/lib/audit-log'
+import { logAuditEventOrWarn } from '@/lib/audit-log'
 import { rateLimit } from '@/lib/rate-limit'
 import { sammleAuskunft, type AuskunftClient } from '@/lib/dsgvo/auskunft'
 import { heuteBerlin } from '@/lib/utils/timezone'
@@ -44,7 +44,7 @@ export async function GET(request: Request) {
     new Date().toISOString(),
   )
 
-  logAuditEvent({
+  await logAuditEventOrWarn({
     action: 'data_export',
     actorId: user.id,
     targetId: user.id,
@@ -57,7 +57,7 @@ export async function GET(request: Request) {
       zeilen: auskunft.abschnitte.reduce((s, a) => s + a.anzahl, 0),
     },
     request,
-  }).catch(() => {})
+  })
 
   return new NextResponse(JSON.stringify(auskunft, null, 2), {
     headers: {

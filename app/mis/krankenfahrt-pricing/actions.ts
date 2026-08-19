@@ -2,7 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { getActiveOrgId } from '@/lib/organizations/server'
-import { logAuditEvent } from '@/lib/audit-log'
+import { logAuditEventOrWarn } from '@/lib/audit-log'
 
 // ═══════════════════════════════════════════════════════════════
 // Server-seitige Aktionen fuer Krankenfahrt-Pricing (MIS)
@@ -67,7 +67,7 @@ export async function savePricingItem(
 
       if (error) return { ok: false, error: error.message }
 
-      await logAuditEvent({
+      await logAuditEventOrWarn({
         action: 'update',
         actorId: userId,
         actorRole: role,
@@ -76,7 +76,7 @@ export async function savePricingItem(
         entityType: `kf_pricing_${entity}`,
         entityId: id,
         details: { aktion: 'pricing_aktualisiert', entity },
-      }).catch(() => {})
+      })
 
       return { ok: true, data: updated }
     } else {
@@ -90,7 +90,7 @@ export async function savePricingItem(
 
       if (error) return { ok: false, error: error.message }
 
-      await logAuditEvent({
+      await logAuditEventOrWarn({
         action: 'create',
         actorId: userId,
         actorRole: role,
@@ -99,7 +99,7 @@ export async function savePricingItem(
         entityType: `kf_pricing_${entity}`,
         entityId: inserted?.id,
         details: { aktion: 'pricing_erstellt', entity },
-      }).catch(() => {})
+      })
 
       return { ok: true, data: inserted }
     }
@@ -130,7 +130,7 @@ export async function deletePricingItem(
 
     if (error) return { ok: false, error: error.message }
 
-    await logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'delete',
       actorId: userId,
       actorRole: role,
@@ -139,7 +139,7 @@ export async function deletePricingItem(
       entityType: `kf_pricing_${entity}`,
       entityId: id,
       details: { aktion: 'pricing_geloescht', entity },
-    }).catch(() => {})
+    })
 
     return { ok: true }
   } catch (err: any) {

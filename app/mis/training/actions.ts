@@ -2,7 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { getActiveOrgId } from '@/lib/organizations/server'
-import { logAuditEvent } from '@/lib/audit-log'
+import { logAuditEventOrWarn } from '@/lib/audit-log'
 
 // ═══════════════════════════════════════════════════════════════
 // Server-seitige Aktionen fuer MIS Training
@@ -59,7 +59,7 @@ export async function seedTrainingCatalog(): Promise<{ ok: true; data?: any } | 
 
     if (error) return { ok: false, error: error.message }
 
-    await logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'create',
       actorId: userId,
       actorRole: role,
@@ -68,7 +68,7 @@ export async function seedTrainingCatalog(): Promise<{ ok: true; data?: any } | 
       entityType: 'mis_training_catalog',
       entityId: 'seed',
       details: { aktion: 'standard_schulungskatalog_befuellt', anzahl: rows.length },
-    }).catch(() => {})
+    })
 
     return { ok: true, data }
   } catch (err: any) {
@@ -107,7 +107,7 @@ export async function createTrainingCatalogEntry(data: {
 
     if (error) return { ok: false, error: error.message }
 
-    await logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'create',
       actorId: userId,
       actorRole: role,
@@ -116,7 +116,7 @@ export async function createTrainingCatalogEntry(data: {
       entityType: 'mis_training_catalog',
       entityId: inserted?.id ?? 'unknown',
       details: { aktion: 'schulung_erstellt', name: data.name },
-    }).catch(() => {})
+    })
 
     return { ok: true, data: inserted }
   } catch (err: any) {
@@ -158,7 +158,7 @@ export async function createTrainingRecord(data: {
 
     if (error) return { ok: false, error: error.message }
 
-    await logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'create',
       actorId: userId,
       actorRole: role,
@@ -167,7 +167,7 @@ export async function createTrainingRecord(data: {
       entityType: 'mis_training_records',
       entityId: inserted?.id ?? 'unknown',
       details: { aktion: 'schulungsnachweis_erstellt', engel_name: data.engel_name, training_id: data.training_id },
-    }).catch(() => {})
+    })
 
     return { ok: true, data: inserted }
   } catch (err: any) {
@@ -188,7 +188,7 @@ export async function deleteTrainingRecord(id: string): Promise<{ ok: true } | {
 
     if (error) return { ok: false, error: error.message }
 
-    await logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'delete',
       actorId: userId,
       actorRole: role,
@@ -197,7 +197,7 @@ export async function deleteTrainingRecord(id: string): Promise<{ ok: true } | {
       entityType: 'mis_training_records',
       entityId: id,
       details: { aktion: 'schulungsnachweis_geloescht' },
-    }).catch(() => {})
+    })
 
     return { ok: true }
   } catch (err: any) {
@@ -218,7 +218,7 @@ export async function deleteTrainingCatalogEntry(id: string): Promise<{ ok: true
 
     if (error) return { ok: false, error: error.message }
 
-    await logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'delete',
       actorId: userId,
       actorRole: role,
@@ -227,7 +227,7 @@ export async function deleteTrainingCatalogEntry(id: string): Promise<{ ok: true
       entityType: 'mis_training_catalog',
       entityId: id,
       details: { aktion: 'schulung_geloescht' },
-    }).catch(() => {})
+    })
 
     return { ok: true }
   } catch (err: any) {
@@ -248,7 +248,7 @@ export async function updateTrainingRecordStatus(id: string, status: string): Pr
 
     if (error) return { ok: false, error: error.message }
 
-    await logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'update',
       actorId: userId,
       actorRole: role,
@@ -257,7 +257,7 @@ export async function updateTrainingRecordStatus(id: string, status: string): Pr
       entityType: 'mis_training_records',
       entityId: id,
       details: { aktion: 'schulungsstatus_aktualisiert', neuer_status: status },
-    }).catch(() => {})
+    })
 
     return { ok: true }
   } catch (err: any) {

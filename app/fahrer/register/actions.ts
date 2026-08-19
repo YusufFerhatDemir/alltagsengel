@@ -2,7 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { getActiveOrgIdOrDefault } from '@/lib/organizations/server'
-import { logAuditEvent } from '@/lib/audit-log'
+import { logAuditEventOrWarn } from '@/lib/audit-log'
 
 // ═══════════════════════════════════════════════════════════════
 // Server-seitige Aktionen für Fahrer-Registrierung
@@ -102,7 +102,7 @@ export async function registerFahrerProfile(
     }
 
     // ── Audit-Log (fail-soft) ──
-    logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'create',
       actorId: userId,
       organizationId: organizationId ?? null,
@@ -114,7 +114,7 @@ export async function registerFahrerProfile(
         company_name: input.companyName.trim(),
         license_number: input.licenseNumber.trim(),
       },
-    }).catch(() => {})
+    })
 
     return { ok: true }
   } catch (err) {

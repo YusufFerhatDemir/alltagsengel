@@ -136,6 +136,69 @@ export async function logAuditEvent(input: AuditLogInput): Promise<boolean> {
 }
 
 /**
+ * Fail-soft mit Spur.
+ *
+ * Master-Audit 2026-08-19, A-3 / I-3: An 141 Stellen stand
+ * ein blosser `logAuditEvent(...)`-Aufruf mit leerem `.catch`.
+ * Das hatte zwei Fehler:
+ *
+ *   1. Der Aufruf wurde nicht `await`-et. In einer Serverless-Funktion
+ *      endet die Ausführung mit der Antwort — der Insert konnte also
+ *      abgeschnitten werden, bevor er die DB erreicht.
+ *   2. Der leere `catch` verschluckte jeden Fehlschlag. Fiel der Insert
+ *      aus, lief die Geschäftsoperation weiter und niemand erfuhr, dass
+ *      die Spur fehlt (§ 630f BGB / Art. 30 DSGVO).
+ *
+ * `logAuditEventOrWarn` behält das Fail-soft-Prinzip bei — die
+ * Hauptaktion wird NICHT blockiert —, wartet den Insert aber ab und
+ * meldet den Fehlschlag auf `console.error` mit klarer Kennung, sodass
+ * er im Log auffindbar ist.
+ *
+ * Für Vorgänge, bei denen der Eintrag rechtlich zwingend ist (der
+ * Vorgang also NICHT ohne Spur stattfinden darf), gibt es
+ * `logAuditEventOrThrow`.
+ */
+export async function logAuditEventOrWarn(input: AuditLogInput): Promise<boolean> {
+  try {
+    const ok = await logAuditEvent(input)
+    if (!ok) {
+      console.error('[audit-log] AUDIT-LUECKE — Eintrag nicht geschrieben:', {
+        action: input.action,
+        entityType: input.entityType,
+        entityId: input.entityId ?? null,
+        actorId: input.actorId,
+      })
+    }
+    return ok
+  } catch (err: any) {
+    // logAuditEvent fängt intern bereits alles ab; dieser Pfad greift nur,
+    // falls schon der Client-Aufbau scheitert.
+    console.error('[audit-log] AUDIT-LUECKE — unerwarteter Fehler:', {
+      code: err?.code,
+      name: err?.name,
+      action: input.action,
+      entityType: input.entityType,
+    })
+    return false
+  }
+}
+
+/**
+ * Strikte Variante: wirft, wenn der Audit-Eintrag nicht geschrieben
+ * werden konnte. Nur dort einsetzen, wo der Vorgang ohne Spur nicht
+ * stattfinden darf — der Aufrufer muss dann selbst dafür sorgen, dass
+ * die Hauptaktion zurückgerollt oder gar nicht erst ausgeführt wird.
+ */
+export async function logAuditEventOrThrow(input: AuditLogInput): Promise<void> {
+  const ok = await logAuditEventOrWarn(input)
+  if (!ok) {
+    throw new Error(
+      `Audit-Eintrag (${input.action}/${input.entityType}) konnte nicht geschrieben werden — Vorgang abgebrochen.`,
+    )
+  }
+}
+
+/**
  * Extrahiert die erste IP aus x-forwarded-for (Vercel/Proxy-Chain).
  * Fällt zurück auf x-real-ip, sonst null.
  */

@@ -2,7 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { geocodePLZ } from '@/lib/geocoding'
-import { logAuditEvent } from '@/lib/audit-log'
+import { logAuditEventOrWarn } from '@/lib/audit-log'
 
 async function requireAuth() {
   const supabase = await createClient()
@@ -45,14 +45,14 @@ export async function upsertRegistrationProfile(profileData: {
     const { error } = await supabase.from('profiles').upsert(data)
     if (error) return { ok: false, error: error.message }
 
-    await logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'create',
       actorId: userId,
       actorRole: profileData.role,
       entityType: 'profile',
       entityId: userId,
       details: { aktion: 'registrierung_profil_angelegt', rolle: profileData.role },
-    }).catch(() => {})
+    })
 
     return { ok: true }
   } catch (err: any) {
@@ -82,12 +82,12 @@ export async function insertCareRecipient(data: {
     })
     if (error) return { ok: false, error: error.message }
 
-    await logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'create',
       actorId: userId,
       entityType: 'care_recipient',
       details: { aktion: 'pflegeempfaenger_angelegt', first_name: data.first_name, relationship: data.relationship },
-    }).catch(() => {})
+    })
 
     return { ok: true }
   } catch (err: any) {

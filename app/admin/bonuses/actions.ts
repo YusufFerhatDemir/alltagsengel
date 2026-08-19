@@ -2,7 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { getActiveOrgId } from '@/lib/organizations/server'
-import { logAuditEvent } from '@/lib/audit-log'
+import { logAuditEventOrWarn } from '@/lib/audit-log'
 import { heuteBerlin } from '@/lib/utils/timezone'
 
 // ═══════════════════════════════════════════════════════════════
@@ -67,7 +67,7 @@ export async function awardBonus(
     const { error: dbError } = await supabase.from('caregiver_bonuses').insert(row)
     if (dbError) return { ok: false, error: `Bonus-Vergabe fehlgeschlagen: ${dbError.message}` }
 
-    await logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'create',
       actorId: userId,
       actorRole: role,
@@ -76,7 +76,7 @@ export async function awardBonus(
       entityType: 'caregiver_bonus',
       entityId: payload.caregiver_id,
       details: { bonus_type: payload.bonus_type, points: payload.points, reward_type: payload.reward_type },
-    }).catch(() => {})
+    })
 
     return { ok: true }
   } catch (err: any) {

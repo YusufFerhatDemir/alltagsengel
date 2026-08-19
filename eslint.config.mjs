@@ -23,6 +23,11 @@ const eslintConfig = defineConfig([
   globalIgnores([
     // Default ignores of eslint-config-next:
     ".next/**",
+    // Alt-Build-Artefakt und Worktree-Kopien: minifizierter Fremdcode bzw.
+    // Duplikate der App. Ohne diese beiden Pfade lintet ESLint ~880 MB
+    // Build-Output mit (~63 800 der 66 109 Meldungen) — das Gate wird wertlos.
+    ".next-old/**",
+    ".claude/worktrees/**",
     "out/**",
     "build/**",
     "next-env.d.ts",

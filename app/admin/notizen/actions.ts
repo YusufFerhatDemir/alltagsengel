@@ -20,7 +20,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { getActiveOrgId } from '@/lib/organizations/server'
-import { logAuditEvent } from '@/lib/audit-log'
+import { logAuditEvent, logAuditEventOrWarn } from '@/lib/audit-log'
 import { NOTE_AUTHOR_ROLE, NOTE_CATEGORY } from '@/lib/admin/ops'
 
 // Erlaubte Werte NICHT abschreiben, sondern aus den geteilten Maps ableiten —
@@ -123,7 +123,7 @@ export async function createCareNoteAction(
 
     // MITTEL-3: Pflegedokumentation darf nicht ohne Audit-Eintrag entstehen.
     // logAuditEvent ist fail-soft und blockiert die Notiz nicht.
-    logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'create',
       actorId: userId,
       actorRole: role,
@@ -138,7 +138,7 @@ export async function createCareNoteAction(
         is_urgent: data.is_urgent,
         is_internal: data.is_internal,
       },
-    }).catch(() => {})
+    })
 
     return { ok: true, data: data as CareNoteAusgabe }
   } catch (err: unknown) {

@@ -2,7 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { resolveUserOrgId } from '@/lib/organizations/server'
-import { logAuditEvent } from '@/lib/audit-log'
+import { logAuditEventOrWarn } from '@/lib/audit-log'
 
 async function requireEngel() {
   const supabase = await createClient()
@@ -82,7 +82,7 @@ export async function requestAbsence(data: {
       return { ok: false, error: 'Abwesenheit konnte nicht beantragt werden.' }
     }
 
-    logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'create',
       actorId: userId,
       organizationId,
@@ -91,7 +91,7 @@ export async function requestAbsence(data: {
       entityType: 'absence',
       entityId: inserted?.id ?? null,
       details: { absenceType, startDate, endDate, halberTag, reason },
-    }).catch(() => {})
+    })
 
     return { ok: true }
   } catch (err) {

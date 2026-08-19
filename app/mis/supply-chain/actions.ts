@@ -2,7 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { getActiveOrgId } from '@/lib/organizations/server'
-import { logAuditEvent } from '@/lib/audit-log'
+import { logAuditEventOrWarn } from '@/lib/audit-log'
 
 // ═══════════════════════════════════════════════════════════════
 // Server-seitige Aktionen fuer Supply-Chain (MIS)
@@ -57,7 +57,7 @@ export async function createSupplier(data: {
 
     if (error) return { ok: false, error: error.message }
 
-    await logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'create',
       actorId: userId,
       actorRole: role,
@@ -66,7 +66,7 @@ export async function createSupplier(data: {
       entityType: 'supplier',
       entityId: inserted?.id,
       details: { aktion: 'lieferant_erstellt', lieferant: data.name },
-    }).catch(() => {})
+    })
 
     return { ok: true, data: inserted }
   } catch (err: any) {

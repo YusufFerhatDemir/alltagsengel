@@ -2,7 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { getActiveOrgId } from '@/lib/organizations/server'
-import { logAuditEvent } from '@/lib/audit-log'
+import { logAuditEventOrWarn } from '@/lib/audit-log'
 
 // ═══════════════════════════════════════════════════════════════
 // Server-seitige Aktionen fuer Team (MIS)
@@ -58,7 +58,7 @@ export async function createTask(data: {
 
     if (error) return { ok: false, error: error.message }
 
-    await logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'create',
       actorId: userId,
       actorRole: role,
@@ -67,7 +67,7 @@ export async function createTask(data: {
       entityType: 'task',
       entityId: inserted?.id,
       details: { aktion: 'aufgabe_erstellt', title: data.title, module: data.module },
-    }).catch(() => {})
+    })
 
     return { ok: true, data: inserted }
   } catch (err: any) {
@@ -103,7 +103,7 @@ export async function updateProfile(
 
     if (error) return { ok: false, error: error.message }
 
-    await logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'update',
       actorId: userId,
       actorRole: role,
@@ -112,7 +112,7 @@ export async function updateProfile(
       entityType: 'profile',
       entityId: profileId,
       details: { aktion: 'profil_aktualisiert' },
-    }).catch(() => {})
+    })
 
     return { ok: true }
   } catch (err: any) {

@@ -2,7 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { getActiveOrgId } from '@/lib/organizations/server'
-import { logAuditEvent } from '@/lib/audit-log'
+import { logAuditEventOrWarn } from '@/lib/audit-log'
 
 // ═══════════════════════════════════════════════════════════════
 // Server-seitige Aktionen fuer Unterschriftenverwaltung
@@ -66,7 +66,7 @@ export async function createSignatureRequest(data: {
       return { ok: false, error: error.message }
     }
 
-    await logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'create',
       actorId: userId,
       actorRole: role,
@@ -75,7 +75,7 @@ export async function createSignatureRequest(data: {
       entityType: 'mis_signature_requests',
       entityId: inserted.id,
       details: { aktion: 'unterschrift_angefordert', document_title: data.document_title },
-    }).catch(() => {})
+    })
 
     return { ok: true, data: inserted }
   } catch (err: any) {
@@ -116,7 +116,7 @@ export async function updateSignatureRequestStatus(
       return { ok: false, error: error.message }
     }
 
-    await logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'update',
       actorId: userId,
       actorRole: role,
@@ -125,7 +125,7 @@ export async function updateSignatureRequestStatus(
       entityType: 'mis_signature_requests',
       entityId: id,
       details: { aktion: 'status_geaendert', neuer_status: status },
-    }).catch(() => {})
+    })
 
     return { ok: true }
   } catch (err: any) {
@@ -150,7 +150,7 @@ export async function deleteSignatureRequest(
       return { ok: false, error: error.message }
     }
 
-    await logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'delete',
       actorId: userId,
       actorRole: role,
@@ -159,7 +159,7 @@ export async function deleteSignatureRequest(
       entityType: 'mis_signature_requests',
       entityId: id,
       details: { aktion: 'unterschrift_anfrage_geloescht' },
-    }).catch(() => {})
+    })
 
     return { ok: true }
   } catch (err: any) {

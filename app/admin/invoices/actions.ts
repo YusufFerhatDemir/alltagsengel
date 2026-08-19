@@ -2,7 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { getActiveOrgId } from '@/lib/organizations/server'
-import { logAuditEvent } from '@/lib/audit-log'
+import { logAuditEventOrWarn } from '@/lib/audit-log'
 
 // ═══════════════════════════════════════════════════════════════
 // Server-seitige Aktionen für Rechnungsverwaltung
@@ -72,7 +72,7 @@ export async function advanceInvoiceSimple(
 
   if (error) throw new Error(`Status-Update fehlgeschlagen: ${error.message}`)
 
-  await logAuditEvent({
+  await logAuditEventOrWarn({
     action: 'update',
     actorId: userId,
     actorRole: role,
@@ -81,7 +81,7 @@ export async function advanceInvoiceSimple(
     entityType: 'invoice',
     entityId: invoiceId,
     details: { von: currentStatus, nach: advance.to, ...extra },
-  }).catch(() => {})
+  })
 
   return { ok: true }
 }
@@ -115,7 +115,7 @@ export async function recordInvoicePayment(
 
   if (error) throw new Error(`Zahlungserfassung fehlgeschlagen: ${error.message}`)
 
-  await logAuditEvent({
+  await logAuditEventOrWarn({
     action: 'update',
     actorId: userId,
     actorRole: role,
@@ -124,7 +124,7 @@ export async function recordInvoicePayment(
     entityType: 'invoice',
     entityId: invoiceId,
     details: { aktion: 'zahlung_erfasst', paid_amount: paidAmount, total_amount: totalAmount, fully_paid: fullyPaid },
-  }).catch(() => {})
+  })
 
   return { ok: true, fullyPaid, difference: diff }
 }
@@ -155,7 +155,7 @@ export async function recordInvoiceDispute(
 
   if (error) throw new Error(`Kuerzung konnte nicht dokumentiert werden: ${error.message}`)
 
-  await logAuditEvent({
+  await logAuditEventOrWarn({
     action: 'create',
     actorId: userId,
     actorRole: role,
@@ -164,7 +164,7 @@ export async function recordInvoiceDispute(
     entityType: 'invoice_dispute',
     entityId: invoiceId,
     details: { original_amount: originalAmount, paid_amount: paidAmount, difference, reason },
-  }).catch(() => {})
+  })
 
   return { ok: true }
 }
@@ -188,7 +188,7 @@ export async function decideInvoiceKuerzung(
 
   if (error) throw new Error(`Entscheidung fehlgeschlagen: ${error.message}`)
 
-  await logAuditEvent({
+  await logAuditEventOrWarn({
     action: 'update',
     actorId: userId,
     actorRole: role,
@@ -197,7 +197,7 @@ export async function decideInvoiceKuerzung(
     entityType: 'invoice',
     entityId: invoiceId,
     details: { aktion: accept ? 'kuerzung_akzeptiert' : 'korrektur_angefordert', neuer_status: newStatus },
-  }).catch(() => {})
+  })
 
   return { ok: true }
 }

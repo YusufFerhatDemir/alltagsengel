@@ -2,7 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { getActiveOrgId } from '@/lib/organizations/server'
-import { logAuditEvent } from '@/lib/audit-log'
+import { logAuditEventOrWarn } from '@/lib/audit-log'
 
 // ═══════════════════════════════════════════════════════════════
 // Server-seitige Aktionen fuer Leistungsnachweis-Upload / Pruefzentrale
@@ -70,7 +70,7 @@ export async function createDraftServiceRecordAction(input: {
     }
 
     // Audit-Log (fail-soft)
-    await logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'create',
       actorId: userId,
       actorRole: role,
@@ -85,7 +85,7 @@ export async function createDraftServiceRecordAction(input: {
         status: 'draft',
         source: 'leistungsnachweis-upload',
       },
-    }).catch(() => {})
+    })
 
     return { ok: true, data }
   } catch (err: any) {

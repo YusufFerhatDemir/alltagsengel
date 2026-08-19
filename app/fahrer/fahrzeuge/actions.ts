@@ -2,7 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { resolveUserOrgId } from '@/lib/organizations/server'
-import { logAuditEvent } from '@/lib/audit-log'
+import { logAuditEventOrWarn } from '@/lib/audit-log'
 
 async function requireFahrer() {
   const supabase = await createClient()
@@ -97,7 +97,7 @@ export async function addVehicle(
       return { ok: false, error: 'Fehler beim Hinzufuegen des Fahrzeugs.' }
     }
 
-    logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'create',
       actorId: userId,
       organizationId,
@@ -106,7 +106,7 @@ export async function addVehicle(
       entityType: 'fahrzeug',
       entityId: data?.id,
       details: { kennzeichen: input.kennzeichen.trim(), marke: input.marke.trim(), modell: input.modell.trim() },
-    }).catch(() => {})
+    })
 
     return { ok: true, data }
   } catch (err: any) {
@@ -164,7 +164,7 @@ export async function toggleVehicleActive(
       return { ok: false, error: 'Fehler beim Aktualisieren des Fahrzeug-Status.' }
     }
 
-    logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'update',
       actorId: userId,
       organizationId,
@@ -173,7 +173,7 @@ export async function toggleVehicleActive(
       entityType: 'fahrzeug',
       entityId: vehicleId,
       details: { is_active: newStatus },
-    }).catch(() => {})
+    })
 
     return { ok: true }
   } catch (err: any) {

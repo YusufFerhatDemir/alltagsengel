@@ -2,7 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { getActiveOrgId } from '@/lib/organizations/server'
-import { logAuditEvent } from '@/lib/audit-log'
+import { logAuditEventOrWarn } from '@/lib/audit-log'
 
 // ═══════════════════════════════════════════════════════════════
 // Server-seitige Aktionen fuer MIS Scheduling
@@ -65,7 +65,7 @@ export async function createShift(data: {
 
     if (error) return { ok: false, error: error.message }
 
-    await logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'create',
       actorId: userId,
       actorRole: role,
@@ -74,7 +74,7 @@ export async function createShift(data: {
       entityType: 'mis_shifts',
       entityId: inserted?.id ?? 'unknown',
       details: { aktion: 'schicht_erstellt', kunde: data.kunde_name, datum: data.datum },
-    }).catch(() => {})
+    })
 
     return { ok: true, data: inserted }
   } catch (err: any) {
@@ -95,7 +95,7 @@ export async function assignShift(id: string, engel_name: string): Promise<{ ok:
 
     if (error) return { ok: false, error: error.message }
 
-    await logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'update',
       actorId: userId,
       actorRole: role,
@@ -104,7 +104,7 @@ export async function assignShift(id: string, engel_name: string): Promise<{ ok:
       entityType: 'mis_shifts',
       entityId: id,
       details: { aktion: 'schicht_zugewiesen', engel_name },
-    }).catch(() => {})
+    })
 
     return { ok: true }
   } catch (err: any) {
@@ -125,7 +125,7 @@ export async function updateShiftStatus(id: string, status: string): Promise<{ o
 
     if (error) return { ok: false, error: error.message }
 
-    await logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'update',
       actorId: userId,
       actorRole: role,
@@ -134,7 +134,7 @@ export async function updateShiftStatus(id: string, status: string): Promise<{ o
       entityType: 'mis_shifts',
       entityId: id,
       details: { aktion: 'schichtstatus_aktualisiert', neuer_status: status },
-    }).catch(() => {})
+    })
 
     return { ok: true }
   } catch (err: any) {
@@ -155,7 +155,7 @@ export async function deleteShift(id: string): Promise<{ ok: true } | { ok: fals
 
     if (error) return { ok: false, error: error.message }
 
-    await logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'delete',
       actorId: userId,
       actorRole: role,
@@ -164,7 +164,7 @@ export async function deleteShift(id: string): Promise<{ ok: true } | { ok: fals
       entityType: 'mis_shifts',
       entityId: id,
       details: { aktion: 'schicht_geloescht' },
-    }).catch(() => {})
+    })
 
     return { ok: true }
   } catch (err: any) {
@@ -202,7 +202,7 @@ export async function createAvailability(data: {
 
     if (error) return { ok: false, error: error.message }
 
-    await logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'create',
       actorId: userId,
       actorRole: role,
@@ -211,7 +211,7 @@ export async function createAvailability(data: {
       entityType: 'mis_availability',
       entityId: inserted?.id ?? 'unknown',
       details: { aktion: 'verfuegbarkeit_erstellt', engel_name: data.engel_name, wochentag: data.wochentag },
-    }).catch(() => {})
+    })
 
     return { ok: true, data: inserted }
   } catch (err: any) {
@@ -232,7 +232,7 @@ export async function deleteAvailability(id: string): Promise<{ ok: true } | { o
 
     if (error) return { ok: false, error: error.message }
 
-    await logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'delete',
       actorId: userId,
       actorRole: role,
@@ -241,7 +241,7 @@ export async function deleteAvailability(id: string): Promise<{ ok: true } | { o
       entityType: 'mis_availability',
       entityId: id,
       details: { aktion: 'verfuegbarkeit_geloescht' },
-    }).catch(() => {})
+    })
 
     return { ok: true }
   } catch (err: any) {

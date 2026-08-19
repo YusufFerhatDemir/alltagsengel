@@ -2,7 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { getActiveOrgIdOrDefault } from '@/lib/organizations/server'
-import { logAuditEvent } from '@/lib/audit-log'
+import { logAuditEventOrWarn } from '@/lib/audit-log'
 import { geocodePLZ } from '@/lib/geocoding'
 
 // Register: user may not have 'engel' role yet — only check authenticated
@@ -102,7 +102,7 @@ export async function registerAsEngel(data: {
     }
 
     // --- 3. Audit log (fail-soft) ---
-    logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'create',
       actorId: userId,
       organizationId,
@@ -115,7 +115,7 @@ export async function registerAsEngel(data: {
         availability: data.availability,
         qualification: data.qualification || null,
       },
-    }).catch(() => {})
+    })
 
     return { ok: true }
   } catch (err: any) {

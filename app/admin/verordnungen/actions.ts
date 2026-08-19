@@ -2,7 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { getActiveOrgId } from '@/lib/organizations/server'
-import { logAuditEvent } from '@/lib/audit-log'
+import { logAuditEventOrWarn } from '@/lib/audit-log'
 import { euroToCent, statusMeta, LEISTUNGSART_LABELS } from '@/lib/admin/ops'
 import { heuteBerlin } from '@/lib/utils/timezone'
 
@@ -92,7 +92,7 @@ export async function saveVerordnungAction(
       }
     }
 
-    logAuditEvent({
+    await logAuditEventOrWarn({
       action: editingId ? 'update' : 'create',
       actorId: userId,
       actorRole: role,
@@ -104,7 +104,7 @@ export async function saveVerordnungAction(
         aktion: editingId ? 'verordnung_aktualisiert' : 'verordnung_erstellt',
         positionen_anzahl: positionen.filter(p => p.leistungsart).length,
       },
-    }).catch(() => {})
+    })
 
     return { ok: true, id: verordnungId! }
   } catch (err: any) {
@@ -128,7 +128,7 @@ export async function softDeleteVerordnung(
       .eq('id', id)
     if (e) return { ok: false, error: `Loeschen fehlgeschlagen: ${e.message}` }
 
-    logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'delete',
       actorId: userId,
       actorRole: role,
@@ -137,7 +137,7 @@ export async function softDeleteVerordnung(
       entityType: 'verordnung',
       entityId: id,
       details: { aktion: 'soft_delete' },
-    }).catch(() => {})
+    })
 
     return { ok: true }
   } catch (err: any) {
@@ -162,7 +162,7 @@ export async function toggleNeuantragAction(
       .eq('id', id)
     if (e) return { ok: false, error: `Update fehlgeschlagen: ${e.message}` }
 
-    logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'update',
       actorId: userId,
       actorRole: role,
@@ -171,7 +171,7 @@ export async function toggleNeuantragAction(
       entityType: 'verordnung',
       entityId: id,
       details: { aktion: 'neuantrag_toggle', neuer_wert: !currentValue },
-    }).catch(() => {})
+    })
 
     return { ok: true }
   } catch (err: any) {
@@ -198,7 +198,7 @@ export async function beantragenVerordnung(
       .eq('id', id)
     if (e) return { ok: false, error: `Antrag fehlgeschlagen: ${e.message}` }
 
-    logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'update',
       actorId: userId,
       actorRole: role,
@@ -207,7 +207,7 @@ export async function beantragenVerordnung(
       entityType: 'verordnung',
       entityId: id,
       details: { aktion: 'kassengenehmigung_beantragt' },
-    }).catch(() => {})
+    })
 
     return { ok: true }
   } catch (err: any) {
@@ -266,7 +266,7 @@ export async function saveKassenantwort(
       .eq('id', id)
     if (e) return { ok: false, error: `Speichern fehlgeschlagen: ${e.message}` }
 
-    logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'update',
       actorId: userId,
       actorRole: role,
@@ -275,7 +275,7 @@ export async function saveKassenantwort(
       entityType: 'verordnung',
       entityId: id,
       details: { aktion: 'kassenantwort_erfasst', ergebnis: antwort.ergebnis, aktenzeichen: antwort.aktenzeichen },
-    }).catch(() => {})
+    })
 
     return { ok: true }
   } catch (err: any) {
@@ -296,7 +296,7 @@ export async function removeAssignmentAction(
     const { error: e } = await supabase.from('assignments').delete().eq('id', id)
     if (e) return { ok: false, error: `Entfernen fehlgeschlagen: ${e.message}` }
 
-    logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'delete',
       actorId: userId,
       actorRole: role,
@@ -305,7 +305,7 @@ export async function removeAssignmentAction(
       entityType: 'assignment',
       entityId: id,
       details: { aktion: 'einsatz_entfernt' },
-    }).catch(() => {})
+    })
 
     return { ok: true }
   } catch (err: any) {
@@ -330,7 +330,7 @@ export async function setAbrechnungsStatusAction(
       .eq('id', id)
     if (e) return { ok: false, error: `Update fehlgeschlagen: ${e.message}` }
 
-    logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'update',
       actorId: userId,
       actorRole: role,
@@ -339,7 +339,7 @@ export async function setAbrechnungsStatusAction(
       entityType: 'verordnung',
       entityId: id,
       details: { aktion: 'abrechnungsstatus_geaendert', neuer_status: status },
-    }).catch(() => {})
+    })
 
     return { ok: true }
   } catch (err: any) {
@@ -372,7 +372,7 @@ export async function saveVerordnungInvoiceEdit(
       .eq('id', id)
     if (e) return { ok: false, error: `Speichern fehlgeschlagen: ${e.message}` }
 
-    logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'update',
       actorId: userId,
       actorRole: role,
@@ -381,7 +381,7 @@ export async function saveVerordnungInvoiceEdit(
       entityType: 'invoice',
       entityId: id,
       details: { aktion: 'soll_ist_kuerzung_aktualisiert', soll, ist, kuerzung },
-    }).catch(() => {})
+    })
 
     return { ok: true }
   } catch (err: any) {
@@ -409,7 +409,7 @@ export async function toggleInvoiceBezahlt(
       .eq('id', id)
     if (e) return { ok: false, error: `Update fehlgeschlagen: ${e.message}` }
 
-    logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'update',
       actorId: userId,
       actorRole: role,
@@ -418,7 +418,7 @@ export async function toggleInvoiceBezahlt(
       entityType: 'invoice',
       entityId: id,
       details: { aktion: 'bezahlt_toggle', neuer_wert: !currentBezahlt },
-    }).catch(() => {})
+    })
 
     return { ok: true }
   } catch (err: any) {
@@ -447,7 +447,7 @@ export async function toggleInvoiceVersand(
       .eq('id', id)
     if (e) return { ok: false, error: `Update fehlgeschlagen: ${e.message}` }
 
-    logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'update',
       actorId: userId,
       actorRole: role,
@@ -456,7 +456,7 @@ export async function toggleInvoiceVersand(
       entityType: 'invoice',
       entityId: id,
       details: { aktion: 'versand_toggle', feld: field, neuer_wert: !currentValue },
-    }).catch(() => {})
+    })
 
     return { ok: true }
   } catch (err: any) {
@@ -488,7 +488,7 @@ export async function saveAbsageAction(
     })
     if (e) return { ok: false, error: `Speichern fehlgeschlagen: ${e.message}` }
 
-    logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'create',
       actorId: userId,
       actorRole: role,
@@ -497,7 +497,7 @@ export async function saveAbsageAction(
       entityType: 'einsatz_absage',
       entityId: data.assignment_id,
       details: { aktion: 'absage_erfasst', abgesagt_von: data.abgesagt_von },
-    }).catch(() => {})
+    })
 
     return { ok: true }
   } catch (err: any) {
@@ -522,7 +522,7 @@ export async function setAbsageErsatz(
       .eq('id', id)
     if (e) return { ok: false, error: `Update fehlgeschlagen: ${e.message}` }
 
-    logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'update',
       actorId: userId,
       actorRole: role,
@@ -531,7 +531,7 @@ export async function setAbsageErsatz(
       entityType: 'einsatz_absage',
       entityId: id,
       details: { aktion: 'ersatz_zugewiesen', ersatz_mitarbeiterin_id: caregiverId || null },
-    }).catch(() => {})
+    })
 
     return { ok: true }
   } catch (err: any) {
@@ -552,7 +552,7 @@ export async function removeAbsageAction(
     const { error: e } = await supabase.from('einsatz_absagen').delete().eq('id', id)
     if (e) return { ok: false, error: `Loeschen fehlgeschlagen: ${e.message}` }
 
-    logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'delete',
       actorId: userId,
       actorRole: role,
@@ -561,7 +561,7 @@ export async function removeAbsageAction(
       entityType: 'einsatz_absage',
       entityId: id,
       details: { aktion: 'absage_geloescht' },
-    }).catch(() => {})
+    })
 
     return { ok: true }
   } catch (err: any) {

@@ -71,12 +71,19 @@ describe('A2: Migration soft_delete hat Guard für documents-Policy', () => {
 })
 
 describe('A2: account-hard-delete hat Error-Handling für documents', () => {
-  it('hard-delete edge function fängt documents-Fehler ab', () => {
+  // Diese Erwartung war bis zum Master-Final-Release-Audit 2026-08-19
+  // (Befund A-4) umgekehrt: sie verlangte ein `.catch` auf dem
+  // documents-Delete. Genau das war der Fehler — der leere catch liess
+  // den Art.-17-DSGVO-Hard-Delete Erfolg melden, obwohl die Dokumente
+  // stehen bleiben konnten. Erwartet wird jetzt: Fehler auswerten.
+  it('hard-delete edge function wertet den documents-Fehler aus', () => {
     const src = readFile('supabase/functions/account-hard-delete/index.ts')
-    // Muss .catch() oder try/catch für documents-Delete haben
     const docDeleteLine = src.match(/from\(['"]documents['"]\).*\.delete\(\).*/)
     expect(docDeleteLine).toBeTruthy()
-    // Muss catch haben
-    expect(src).toMatch(/from\(['"]documents['"]\).*\.catch/)
+    // Kein verschluckter Fehler mehr …
+    expect(src).not.toMatch(/from\(['"]documents['"]\)[\s\S]{0,120}?\.catch\(\(\)\s*=>\s*\{\}\)/)
+    // … sondern eine ausgewertete Fehlervariable.
+    expect(src).toMatch(/const \{ error: docErr \} = await admin\.from\(['"]documents['"]\)\.delete\(\)/)
+    expect(src).toMatch(/if \(docErr\)/)
   })
 })

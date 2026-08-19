@@ -2,7 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { getActiveOrgId } from '@/lib/organizations/server'
-import { logAuditEvent } from '@/lib/audit-log'
+import { logAuditEventOrWarn } from '@/lib/audit-log'
 
 // ═══════════════════════════════════════════════════════════════
 // Server-seitige Aktionen fuer Recruiting (MIS)
@@ -68,7 +68,7 @@ export async function createApplicant(data: {
 
     if (error) return { ok: false, error: error.message }
 
-    await logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'create',
       actorId: userId,
       actorRole: role,
@@ -77,7 +77,7 @@ export async function createApplicant(data: {
       entityType: 'applicant',
       entityId: inserted?.id,
       details: { aktion: 'bewerber_erstellt', position: data.position },
-    }).catch(() => {})
+    })
 
     return { ok: true, data: inserted }
   } catch (err: any) {
@@ -114,7 +114,7 @@ export async function createJobPosting(data: {
 
     if (error) return { ok: false, error: error.message }
 
-    await logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'create',
       actorId: userId,
       actorRole: role,
@@ -123,7 +123,7 @@ export async function createJobPosting(data: {
       entityType: 'job_posting',
       entityId: inserted?.id,
       details: { aktion: 'stellenanzeige_erstellt', title: data.title },
-    }).catch(() => {})
+    })
 
     return { ok: true, data: inserted }
   } catch (err: any) {
@@ -147,7 +147,7 @@ export async function updateApplicantStatus(
 
     if (error) return { ok: false, error: error.message }
 
-    await logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'update',
       actorId: userId,
       actorRole: role,
@@ -156,7 +156,7 @@ export async function updateApplicantStatus(
       entityType: 'applicant',
       entityId: id,
       details: { aktion: 'status_geaendert', neuer_status: status },
-    }).catch(() => {})
+    })
 
     return { ok: true }
   } catch (err: any) {
@@ -180,7 +180,7 @@ export async function updateApplicantRating(
 
     if (error) return { ok: false, error: error.message }
 
-    await logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'update',
       actorId: userId,
       actorRole: role,
@@ -189,7 +189,7 @@ export async function updateApplicantRating(
       entityType: 'applicant',
       entityId: id,
       details: { aktion: 'bewertung_geaendert', rating },
-    }).catch(() => {})
+    })
 
     return { ok: true }
   } catch (err: any) {
@@ -212,7 +212,7 @@ export async function deleteApplicant(
 
     if (error) return { ok: false, error: error.message }
 
-    await logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'delete',
       actorId: userId,
       actorRole: role,
@@ -221,7 +221,7 @@ export async function deleteApplicant(
       entityType: 'applicant',
       entityId: id,
       details: { aktion: 'bewerber_geloescht' },
-    }).catch(() => {})
+    })
 
     return { ok: true }
   } catch (err: any) {
@@ -245,7 +245,7 @@ export async function updatePostingStatus(
 
     if (error) return { ok: false, error: error.message }
 
-    await logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'update',
       actorId: userId,
       actorRole: role,
@@ -254,7 +254,7 @@ export async function updatePostingStatus(
       entityType: 'job_posting',
       entityId: id,
       details: { aktion: 'posting_status_geaendert', neuer_status: status },
-    }).catch(() => {})
+    })
 
     return { ok: true }
   } catch (err: any) {
@@ -277,7 +277,7 @@ export async function deleteJobPosting(
 
     if (error) return { ok: false, error: error.message }
 
-    await logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'delete',
       actorId: userId,
       actorRole: role,
@@ -286,7 +286,7 @@ export async function deleteJobPosting(
       entityType: 'job_posting',
       entityId: id,
       details: { aktion: 'stellenanzeige_geloescht' },
-    }).catch(() => {})
+    })
 
     return { ok: true }
   } catch (err: any) {

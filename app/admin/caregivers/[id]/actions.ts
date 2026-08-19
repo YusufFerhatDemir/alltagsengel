@@ -2,7 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { getActiveOrgId } from '@/lib/organizations/server'
-import { logAuditEvent } from '@/lib/audit-log'
+import { logAuditEventOrWarn } from '@/lib/audit-log'
 import { isValidUUID } from '@/lib/safe-query'
 
 // ═══════════════════════════════════════════════════════════════
@@ -75,7 +75,7 @@ export async function addCaregiverDocument(
 
     if (dbError) return { ok: false, error: `Speichern fehlgeschlagen: ${dbError.message}` }
 
-    await logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'create',
       actorId: userId,
       actorRole: role,
@@ -84,7 +84,7 @@ export async function addCaregiverDocument(
       entityType: 'caregiver_document',
       entityId: result.id,
       details: { caregiver_id: payload.caregiverId, document_type: payload.documentType },
-    }).catch(() => {})
+    })
 
     return { ok: true }
   } catch (err: any) {
@@ -133,7 +133,7 @@ export async function addCaregiverQualification(
 
     if (dbError) return { ok: false, error: `Speichern fehlgeschlagen: ${dbError.message}` }
 
-    await logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'create',
       actorId: userId,
       actorRole: role,
@@ -142,7 +142,7 @@ export async function addCaregiverQualification(
       entityType: 'caregiver_qualification',
       entityId: result.id,
       details: { caregiver_id: payload.caregiverId, title: payload.title },
-    }).catch(() => {})
+    })
 
     return { ok: true }
   } catch (err: any) {
@@ -203,7 +203,7 @@ export async function changeCaregiverInitials(
 
     if (updateErr) return { ok: false, error: `Handzeichen-Update fehlgeschlagen: ${updateErr.message}` }
 
-    await logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'update',
       actorId: userId,
       actorRole: role,
@@ -212,7 +212,7 @@ export async function changeCaregiverInitials(
       entityType: 'caregiver',
       entityId: payload.caregiverId,
       details: { aktion: 'handzeichen_geaendert', neues_handzeichen: payload.initials, grund: payload.reason },
-    }).catch(() => {})
+    })
 
     return { ok: true }
   } catch (err: any) {
@@ -263,7 +263,7 @@ export async function addCaregiverBonus(
 
     if (dbError) return { ok: false, error: `Speichern fehlgeschlagen: ${dbError.message}` }
 
-    await logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'create',
       actorId: userId,
       actorRole: role,
@@ -272,7 +272,7 @@ export async function addCaregiverBonus(
       entityType: 'caregiver_bonus',
       entityId: result.id,
       details: { caregiver_id: payload.caregiverId, bonus_type: payload.bonusType, points: payload.points },
-    }).catch(() => {})
+    })
 
     return { ok: true }
   } catch (err: any) {
@@ -310,7 +310,7 @@ export async function updateCaregiverRegistration(
 
     if (dbError) return { ok: false, error: `Speichern fehlgeschlagen: ${dbError.message}` }
 
-    await logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'update',
       actorId: userId,
       actorRole: role,
@@ -324,7 +324,7 @@ export async function updateCaregiverRegistration(
         ik_nummer: payload.ikNummer,
         qualification_level: payload.qualificationLevel,
       },
-    }).catch(() => {})
+    })
 
     return { ok: true }
   } catch (err: any) {

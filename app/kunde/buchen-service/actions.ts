@@ -2,7 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { resolveUserOrgId } from '@/lib/organizations/server'
-import { logAuditEvent } from '@/lib/audit-log'
+import { logAuditEventOrWarn } from '@/lib/audit-log'
 
 // ═══════════════════════════════════════════════════════════════
 // Server-seitige Aktionen fuer die Service-Buchung
@@ -84,7 +84,7 @@ export async function createServiceBookingAction(
       return { ok: false, error: dbError?.message || 'Buchung konnte nicht erstellt werden.' }
     }
 
-    logAuditEvent({
+    await logAuditEventOrWarn({
       action: 'create',
       actorId: userId,
       actorRole: role,
@@ -93,7 +93,7 @@ export async function createServiceBookingAction(
       entityType: 'bookings',
       entityId: booking.id,
       details: { service: input.service, angel_id: input.angelId, is_flexible: input.isFlexible },
-    }).catch(() => {})
+    })
 
     return { ok: true, data: { id: booking.id } }
   } catch (err: any) {

@@ -121,9 +121,19 @@ serve(async (req: Request) => {
         .delete()
         .eq('sender_id', userId)
       // care_eligibility-Delete entfernt: Tabelle existiert nicht (Phase 5).
-      // documents-Tabelle: existiert derzeit nicht in Produktion.
-      // Delete-Aufruf ist safe (Supabase gibt Fehler zurück, blockiert aber nicht).
-      await admin.from('documents').delete().eq('user_id', userId).then(() => {}).catch(() => {})
+      // documents-Tabelle EXISTIERT in Produktion (Migration
+      // 20260804200000_create_documents_table.sql). Der Fehler darf hier
+      // NICHT verschluckt werden: bleiben Dokumente stehen, waere die
+      // Art.-17-DSGVO-Loeschung unvollstaendig — und der frueher gemeldete
+      // Erfolg damit falsch. Bei Fehler brechen wir fuer diesen Nutzer ab,
+      // bevor auth.users geloescht wird (sonst waeren die Dokumente
+      // dauerhaft verwaist und nicht mehr zuordenbar).
+      const { error: docErr } = await admin.from('documents').delete().eq('user_id', userId)
+      if (docErr) {
+        console.error('[hard-delete] documents-Delete fehlgeschlagen', userId, docErr.message)
+        results.push({ userId, ok: false, error: `documents: ${docErr.message}` })
+        continue
+      }
       await admin.from('bookings').delete().eq('customer_id', userId)
       await admin.from('bookings').delete().eq('angel_id', userId)
       await admin.from('angels').delete().eq('id', userId)
