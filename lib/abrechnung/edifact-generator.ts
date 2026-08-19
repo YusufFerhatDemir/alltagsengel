@@ -436,10 +436,21 @@ export function generateAlleDateien(
     nachAnnahmestelle.get(key)!.push(fall)
   }
   let lfd = optionen.laufende_nummer ?? 1
+  // Die Datenaustauschreferenz (UNB DE0020) muss je Lieferung fortlaufend
+  // sein. Bis hierher bekam JEDE Datei des Laufs dieselbe Referenz aus den
+  // Optionen — gehen zwei Dateien an dieselbe Annahmestelle (etwa BITMARCK
+  // fuer BKK und IKK), ist das eine doppelte Referenz und damit ein
+  // Abweisungsgrund. Sie laeuft deshalb parallel zur Dateinummer weiter.
+  let dar = optionen.datenaustauschreferenz ?? 1
   const dateien: EdifactDatei[] = []
   for (const gruppe of nachAnnahmestelle.values()) {
-    dateien.push(generateEDIFACT(gruppe, absender_ik, { ...optionen, laufende_nummer: lfd }))
+    dateien.push(generateEDIFACT(gruppe, absender_ik, {
+      ...optionen,
+      laufende_nummer: lfd,
+      datenaustauschreferenz: dar,
+    }))
     lfd++
+    dar++
   }
   return dateien
 }

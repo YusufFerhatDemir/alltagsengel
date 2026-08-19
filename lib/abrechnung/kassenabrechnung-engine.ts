@@ -31,6 +31,16 @@ function encodeToLatin1(text: string): ArrayBuffer {
   return buf
 }
 
+/**
+ * Byte-Laenge des Dateiinhalts in der Kodierung, in der er auch abgelegt wird.
+ * `encodeToLatin1` schreibt genau ein Byte je Zeichen — die Auftragsdatei muss
+ * dieselbe Zahl melden. Die Funktion haelt beide Stellen aneinander: wer die
+ * Kodierung aendert, muss hier ebenfalls vorbeikommen.
+ */
+function byteLaengeLatin1(text: string): number {
+  return encodeToLatin1(text).byteLength
+}
+
 // ── Types ───────────────────────────────────────────────────────
 
 export type LaufStatus =
@@ -922,12 +932,24 @@ export async function exportiereLauf(
   for (let i = 0; i < dateien.length; i++) {
     const datei = dateien[i]
 
-    // Auftragsdatei generieren
+    // Auftragsdatei generieren.
+    // `test` MUSS am Dateiindikator der Nutzdaten haengen: bis hierher stand
+    // in der Auftragsdatei immer die Verfahrenskennung "EPFL0" (Echtlieferung),
+    // waehrend die Nutzdatendatei bei Indikator '0' als "TPFL0nnn" erzeugt
+    // wurde. Die Annahmestelle haette eine Testlieferung als Echtabrechnung
+    // angekuendigt bekommen — und die Nutzdaten dazu passend nicht gefunden.
+    const istTestlieferung = dateiindikator === '0'
     const auftragsdateiInhalt = generateAuftragsdatei({
       absender_ik: absenderIk,
       datenannahmestelle_ik: datei.datenannahmestelle.ik,
       dateiname: datei.logischer_dateiname,
-      dateigroesse_nutzdaten: datei.inhalt.length,
+      dateigroesse_nutzdaten: byteLaengeLatin1(datei.inhalt),
+      test: istTestlieferung,
+      transfer_nummer: i + 1,
+      // Art der abgegebenen Leistung der ersten Rechnung dieser Datei — je
+      // Nutzdatendatei ist laut TA1 nur eine Leistungsart zulaessig.
+      leistungsart: datei.rechnungen[0]?.leistungsart,
+      physikalischer_dateiname: datei.physikalischer_dateiname,
     })
 
     const auftragsPath = `dta/${lauf.organization_id}/${laufId}/${auftragsdateiName(datei.physikalischer_dateiname)}`
@@ -957,7 +979,7 @@ export async function exportiereLauf(
         physikalischer_dateiname: datei.physikalischer_dateiname,
         nutzdaten_url: dateiUrls[i],
         auftragsdatei_url: auftragsPath,
-        nutzdaten_groesse_bytes: datei.inhalt.length,
+        nutzdaten_groesse_bytes: byteLaengeLatin1(datei.inhalt),
         status: hatZugang ? 'bereit_zur_uebermittlung' : 'externer_zugang_fehlt',
       })
       .select('id')
