@@ -10,8 +10,8 @@
  * F7: tariff_version Analyse
  * F8: generateInvoiceNumberFallback Race-Condition
  */
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { readFileSync, existsSync } from 'node:fs';
+import { describe, it, expect } from 'vitest';
+import { readFileSync, existsSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 
 const REPO_ROOT = path.resolve(__dirname, '../..');
@@ -189,7 +189,7 @@ describe('F5: Billing-Migrationen haben Rollbacks', () => {
   it.each(billingMigrations)('%s hat eine Rollback-Datei', (migration) => {
     const timestamp = migration.slice(0, 14);
     const migDir = path.join(REPO_ROOT, 'supabase/migrations');
-    const files = require('node:fs').readdirSync(migDir) as string[];
+    const files = readdirSync(migDir) as string[];
     const rollback = files.find(f =>
       f.startsWith(timestamp.slice(0, 8)) && f.includes('rollback') &&
       f.includes(migration.replace(/^\d+_/, '').split('_').slice(0, 2).join('_'))

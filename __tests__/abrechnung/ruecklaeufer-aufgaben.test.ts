@@ -14,6 +14,11 @@ import {
 } from '@/lib/abrechnung/ruecklaeufer-aufgaben'
 import type { RuecklaeuferStatus } from '@/lib/abrechnung/ruecklaeufer'
 
+/* eslint-disable @typescript-eslint/no-explicit-any -- Diese Attrappe bildet
+ * die selbstreferenzierende, fluide Supabase-Query-Builder-API nach (jede
+ * Methode gibt `self` zurück, Zeilen/Payloads sind beliebig geformt). Das
+ * ist per Definition `any`-typisiert. */
+
 const ORG = '00000000-0000-4000-8000-000460629986'
 const FREMDE_ORG = '11111111-1111-4111-8111-111111111111'
 const ACTOR = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'
@@ -80,12 +85,12 @@ function createMock(opts: {
     self.insert = vi.fn((payload: Record<string, unknown>) => {
       const iq: Query = { table, op: 'insert', eq: {}, payload }
       queries.push(iq)
-      return chainMitPayload(table, 'insert')
+      return chainMitPayload(table)
     })
     return self
   }
 
-  function chainMitPayload(table: string, op: string): any {
+  function chainMitPayload(table: string): any {
     const self: any = {
       select: vi.fn(() => self),
       single: vi.fn(() => {

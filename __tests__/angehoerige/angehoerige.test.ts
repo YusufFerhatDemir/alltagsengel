@@ -13,7 +13,7 @@ import {
   istZugangGueltig,
   hatBereichZugriff,
 } from '@/lib/angehoerige/angehoerige'
-import type { AngehoerigenZugang, FreigabeBereich } from '@/lib/angehoerige/types'
+import type { AngehoerigenZugang } from '@/lib/angehoerige/types'
 
 // ── Rollen-Validierung ──────────────────────────────────────────
 
@@ -54,11 +54,11 @@ describe('validiereBereiche', () => {
   })
 
   it('wirft bei ungültigem Bereich im Array', () => {
-    expect(() => validiereBereiche(['termine', 'invalid' as any])).toThrow('Ungültiger Bereich')
+    expect(() => validiereBereiche(['termine', 'invalid'])).toThrow('Ungültiger Bereich')
   })
 
   it('wirft bei nicht-Array', () => {
-    expect(() => validiereBereiche(null as any)).toThrow('Mindestens ein Freigabebereich')
+    expect(() => validiereBereiche(null as unknown as string[])).toThrow('Mindestens ein Freigabebereich')
   })
 })
 

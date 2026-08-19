@@ -106,8 +106,9 @@ describe('P0-1: check_billing_gate()', () => {
         [clientId, billingType, billingStatus ?? null],
       )
       return res.rows[0]
-    } catch (e: any) {
-      return { fehler: String(e?.message ?? e), code: String(e?.code ?? '') }
+    } catch (e: unknown) {
+      const fehler = e as { message?: string; code?: string } | undefined
+      return { fehler: String(fehler?.message ?? e), code: String(fehler?.code ?? '') }
     }
   }
 
@@ -166,7 +167,7 @@ describe('P0-1: check_billing_gate()', () => {
     })
 
     it('Kassen-Nachweis scheitert mit 42703 (undefined_column kasse_status)', async () => {
-      const r = await insertNachweis(CLIENT_HESSEN_A, '§45b') as any
+      const r = await insertNachweis(CLIENT_HESSEN_A, '§45b') as { fehler?: string; code?: string }
       expect(r.code).toBe('42703')
       expect(r.fehler).toContain('kasse_status')
     })
@@ -193,7 +194,7 @@ describe('P0-1: check_billing_gate()', () => {
     it.each(['§45b', '§39', '§36', '§37', '§42', 'SONSTIGE'])(
       'billing_type %s wird verarbeitet statt zurückgerollt',
       async (typ) => {
-        const r = await insertNachweis(CLIENT_HESSEN_A, typ) as any
+        const r = await insertNachweis(CLIENT_HESSEN_A, typ) as { code?: string; billing_status?: string | null }
         expect(r.code).toBeUndefined()
         expect(r.billing_status).toBe('KASSENABRECHNUNG_NOCH_NICHT_FREIGESCHALTET')
       },

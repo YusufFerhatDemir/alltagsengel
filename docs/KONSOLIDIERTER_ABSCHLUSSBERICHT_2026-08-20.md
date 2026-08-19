@@ -102,9 +102,10 @@ Jeder Befund wurde via Supabase MCP live verifiziert:
 
 | ID | Beschreibung | Projekt | Status |
 |---|---|---|---|
-| CM-S1 (NEU) | `insurance_policies` + `referrals`: anon INSERT offen (WITH CHECK = true) | ChairMatch | OFFEN — Spam-Risiko, kein Datenleck |
-| CM-S2 (NEU) | Table-level GRANT zu breit: 67/70 Tabellen geben anon INSERT/UPDATE/DELETE auf Grant-Ebene (RLS blockiert effektiv, aber Defense-in-Depth fehlt) | ChairMatch | OFFEN — Best Practice, nicht akut |
+| CM-S1 | `insurance_policies` + `referrals`: anon INSERT → authenticated-only | ChairMatch | ✅ GESCHLOSSEN — Policy `insurance_insert_auth` / `ref_insert_auth` mit `WITH CHECK (auth.uid() IS NOT NULL)` |
+| CM-S2 | Defense-in-Depth: Table-level REVOKE von anon (70/70/70/70 → 36/8/1/1) | ChairMatch | ✅ GESCHLOSSEN — 62 Tabellen REVOKE INSERT/UPDATE/DELETE, 31 sensitive REVOKE SELECT, 3 Trigger-Funktionen REVOKE EXECUTE |
 | — | Alle vorherigen MITTEL-Befunde (MITTEL-2, MITTEL-5) | Alltagsengel | ✅ GESCHLOSSEN |
+| — | **0 offene MEDIUM-Findings** | Alle | ✅ |
 
 ---
 
@@ -151,12 +152,13 @@ Basierend auf DiPA 14-Punkte-Analyse (Session vom 19.08.2026):
 | # | Aufgabe | Priorität |
 |---|---|---|
 | 1 | ~~GitHub CI grün bekommen~~ | ✅ ERLEDIGT |
-| 2 | ChairMatch CM-S1 fixen: `insurance_policies` + `referrals` INSERT-Policies verschärfen | P1 |
-| 3 | ChairMatch CM-S2: Table-level REVOKE INSERT/UPDATE/DELETE von anon (Defense-in-Depth) | P2 |
+| 2 | ~~ChairMatch CM-S1: INSERT-Policies verschärft~~ | ✅ ERLEDIGT |
+| 3 | ~~ChairMatch CM-S2: Defense-in-Depth REVOKE~~ | ✅ ERLEDIGT |
 | 4 | Alltagsengel Produkt-Verbesserungen (8 parallele Tracks) | P1 |
 | 5 | efy care Weiterentwicklung | P2 |
 | 6 | ChairMatch Release QA (weitere Tabellen/Views/RPCs/Storage prüfen) | P2 |
 | 7 | Verify-Security-Fixes Skript aktualisieren (spiegelt live-verifizierte Ergebnisse) | P3 |
+| 8 | TypeScript `Unexpected any` Warnings in e2e-Tests bereinigen | P3 |
 
 ---
 
@@ -179,10 +181,13 @@ Basierend auf DiPA 14-Punkte-Analyse (Session vom 19.08.2026):
 - ✅ ChairMatch P0 Profiles-Leak GESCHLOSSEN + live verifiziert
 - ✅ Alltagsengel 4/4 Security-Migrationen angewendet + 7/7 verifiziert
 - ✅ ChairMatch Comprehensive Scan (70 Tabellen, INSERT-Policies, Storage, RPCs)
-- ✅ 2 neue MEDIUM-Findings dokumentiert (CM-S1, CM-S2)
+- ✅ CM-S1 GESCHLOSSEN: `insurance_policies` + `referrals` INSERT → authenticated-only
+- ✅ CM-S2 GESCHLOSSEN: Defense-in-Depth — anon Rechte von 70/70/70/70 auf 36/8/1/1 reduziert
+- ✅ 3 Trigger-Funktionen: REVOKE EXECUTE FROM public
 - ✅ GitHub CI GRÜN (3352 vitest + 794 node:test + 98 E2E)
+- ✅ GitHub Screenshots als Live-Beweis erstellt
 
 **Security-Score:**
 - Alltagsengel: **13/13 Findings geschlossen** (8 vorher + 5 diese Session)
-- ChairMatch: **P0 geschlossen**, 2 neue MEDIUM offen (CM-S1, CM-S2)
-- Gesamt: Keine offenen HIGH-Findings mehr
+- ChairMatch: **P0 + CM-S1 + CM-S2 alle geschlossen** — 0 offene Findings
+- Gesamt: **0 HIGH, 0 MEDIUM** — alle intern lösbaren Security-Findings geschlossen
