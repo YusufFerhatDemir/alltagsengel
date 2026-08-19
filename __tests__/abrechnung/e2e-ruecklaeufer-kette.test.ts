@@ -19,6 +19,12 @@ import { describe, it, expect, beforeEach } from 'vitest'
 import { heuteBerlin } from '@/lib/utils/timezone'
 import { importiereRuecklaeufer } from '@/lib/abrechnung/ruecklaeufer'
 
+/* eslint-disable @typescript-eslint/no-explicit-any -- Diese Attrappe bildet
+ * die selbstreferenzierende, fluide Supabase-Query-API nach (jede Methode
+ * gibt `chain` zurück, Payloads sind beliebige Zeilenformen). Das ist per
+ * Definition `any`-typisiert; präzise Typen würden die Attrappe unlesbar
+ * machen, ohne die getestete Logik sicherer zu machen. */
+
 const ORG = '00000000-0000-4000-8000-000460629986'
 const FREMDE_ORG = '11111111-1111-4111-8111-111111111111'
 const ACTOR = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'

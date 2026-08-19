@@ -8,7 +8,7 @@
  */
 
 import { PGlite } from '@electric-sql/pglite'
-import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest'
+import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import fs from 'node:fs'
 import path from 'node:path'
 
@@ -178,7 +178,7 @@ describe('AP1: Audit-Trail Sicherheit', () => {
     )
     expect(result.rows.length).toBeGreaterThanOrEqual(1)
 
-    const entry = result.rows[0] as any
+    const entry = result.rows[0] as Record<string, unknown>
     expect(entry.entity_type).toBe('invoice')
     expect(entry.action).toBe('status_change')
     expect(entry.previous_state).toMatchObject({ status: 'sent' })
@@ -191,7 +191,7 @@ describe('AP1: Audit-Trail Sicherheit', () => {
     const before = await db.query(
       `SELECT COUNT(*)::int AS cnt FROM public.billing_audit_trail`,
     )
-    const countBefore = (before.rows[0] as any).cnt
+    const countBefore = (before.rows[0] as Record<string, unknown>).cnt
 
     // Status auf den gleichen Wert setzen (sollte kein Audit erzeugen)
     await db.exec(`
@@ -203,7 +203,7 @@ describe('AP1: Audit-Trail Sicherheit', () => {
     const after = await db.query(
       `SELECT COUNT(*)::int AS cnt FROM public.billing_audit_trail`,
     )
-    const countAfter = (after.rows[0] as any).cnt
+    const countAfter = (after.rows[0] as Record<string, unknown>).cnt
 
     expect(countAfter).toBe(countBefore)
   })
@@ -215,7 +215,7 @@ describe('AP1: Audit-Trail Sicherheit', () => {
     )
     expect(entries.rows.length).toBeGreaterThan(0)
 
-    const auditId = (entries.rows[0] as any).id
+    const auditId = (entries.rows[0] as Record<string, unknown>).id
 
     await expect(
       db.exec(`UPDATE public.billing_audit_trail SET reason = 'hacked' WHERE id = '${auditId}'`),
@@ -285,8 +285,8 @@ describe('AP2: Finalized-Edit-Schutz', () => {
       `SELECT paid_amount, notes FROM public.invoices WHERE id = $1`,
       [INVOICE_ID_1],
     )
-    expect(Number((result.rows[0] as any).paid_amount)).toBe(100)
-    expect((result.rows[0] as any).notes).toBe('Zahlung eingegangen')
+    expect(Number((result.rows[0] as Record<string, unknown>).paid_amount)).toBe(100)
+    expect((result.rows[0] as Record<string, unknown>).notes).toBe('Zahlung eingegangen')
   })
 
   it('Status-Aenderung erlaubt bei geschuetztem Status', async () => {
@@ -298,7 +298,7 @@ describe('AP2: Finalized-Edit-Schutz', () => {
       `SELECT status FROM public.invoices WHERE id = $1`,
       [INVOICE_ID_1],
     )
-    expect((result.rows[0] as any).status).toBe('bezahlt')
+    expect((result.rows[0] as Record<string, unknown>).status).toBe('bezahlt')
   })
 
   it('Entwurf ist frei editierbar', async () => {
@@ -313,8 +313,8 @@ describe('AP2: Finalized-Edit-Schutz', () => {
       `SELECT total_amount, insurance_name FROM public.invoices WHERE id = $1`,
       [INVOICE_ID_2],
     )
-    expect(Number((result.rows[0] as any).total_amount)).toBeCloseTo(999.99)
-    expect((result.rows[0] as any).insurance_name).toBe('Test-Kasse')
+    expect(Number((result.rows[0] as Record<string, unknown>).total_amount)).toBeCloseTo(999.99)
+    expect((result.rows[0] as Record<string, unknown>).insurance_name).toBe('Test-Kasse')
   })
 
   it('Geprueft ist frei editierbar', async () => {
@@ -327,7 +327,7 @@ describe('AP2: Finalized-Edit-Schutz', () => {
       `SELECT total_amount FROM public.invoices WHERE id = $1`,
       [INVOICE_ID_5],
     )
-    expect(Number((result.rows[0] as any).total_amount)).toBeCloseTo(555.55)
+    expect(Number((result.rows[0] as Record<string, unknown>).total_amount)).toBeCloseTo(555.55)
   })
 })
 
@@ -502,7 +502,7 @@ describe('AP4: Backfill-Logik', () => {
     it('Count-Guard blockt bei falscher Anzahl', async () => {
       // Bereits durch vorherigen Test bewiesen
       const result = await db.query(`SELECT COUNT(*)::int AS cnt FROM public.invoices`)
-      expect((result.rows[0] as any).cnt).toBe(6) // 5 original + 1 extra
+      expect((result.rows[0] as Record<string, unknown>).cnt).toBe(6) // 5 original + 1 extra
     })
   })
 })

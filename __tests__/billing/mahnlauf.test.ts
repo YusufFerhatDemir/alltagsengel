@@ -18,6 +18,11 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
+/* eslint-disable @typescript-eslint/no-explicit-any -- In-Memory-Supabase-
+ * Stub (Klasse QB unten) bildet die fluide, selbstreferenzierende
+ * Query-Builder-API nach (jede Methode gibt `this` zurück, Zeilen/Payloads
+ * sind beliebig geformt). Das ist per Definition `any`-typisiert. */
+
 const { mockLogBillingAction } = vi.hoisted(() => ({
   mockLogBillingAction: vi.fn(),
 }))
@@ -68,6 +73,7 @@ class QB {
   lt(col: string, val: any) { this.filters.push(r => r[col] < val); return this }
   gte(col: string, val: any) { this.filters.push(r => r[col] >= val); return this }
   in(col: string, arr: any[]) { this.filters.push(r => arr.includes(r[col])); return this }
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Signatur muss zu .not(col, op, val) der echten Query-Builder-API passen; die Attrappe braucht nur col.
   not(col: string, _op: string, _val: any) { this.filters.push(r => (r[col] ?? null) !== null); return this }
 
   insert(payload: Row) {
