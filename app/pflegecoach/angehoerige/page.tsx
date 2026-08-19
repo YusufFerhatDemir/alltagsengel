@@ -5,6 +5,10 @@
 
 import Link from 'next/link'
 import { INHALT_ENTWURF_HINWEIS, WISSEN_MODULE } from '@/lib/coach/inhalte'
+// Der Prüfstatus kommt aus dem Freigaberegister, nicht aus dem Literal in
+// inhalte.ts: freigegeben ist ein Inhalt nur mit vollständigem Vermerk, der
+// zur aktuellen Textfassung passt (AK-QI-01).
+import { pruefstatusWissen } from '@/lib/coach/inhalte-freigabe'
 import { useCoachProfil } from '../_lib/client'
 import { CoachLaden, CoachLadefehler } from '../_lib/Zustand'
 
@@ -39,7 +43,7 @@ export default function AngehoerigeSeite() {
         <article key={m.id} className="pc-card" aria-label={m.titel}>
           <h2>
             {m.titel}{' '}
-            {m.pruefstatus === 'entwurf' && <span className="pc-badge pc-badge--entwurf">In fachlicher Prüfung</span>}
+            {pruefstatusWissen(m) === 'entwurf' && <span className="pc-badge pc-badge--entwurf">In fachlicher Prüfung</span>}
           </h2>
           {m.abschnitte.map((a, i) => (
             <div key={i}>
@@ -47,7 +51,7 @@ export default function AngehoerigeSeite() {
               <p>{a.text}</p>
             </div>
           ))}
-          {m.pruefstatus === 'entwurf' && <p className="pc-lead" style={{ fontSize: '0.9em' }}>{INHALT_ENTWURF_HINWEIS}</p>}
+          {pruefstatusWissen(m) === 'entwurf' && <p className="pc-lead" style={{ fontSize: '0.9em' }}>{INHALT_ENTWURF_HINWEIS}</p>}
         </article>
       ))}
     </>

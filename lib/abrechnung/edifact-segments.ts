@@ -72,7 +72,9 @@ export function UNB(
   erstelldatum: Date,
   datenaustauschreferenz: number,
   anwendungsreferenz: string,
-  dateiindikator: '0' | '1' | '2' = '2',
+  // Fail-closed: ohne Angabe Testdatei. Eine Echtdatei entsteht nur, wenn
+  // der Aufrufer '2' ausdrücklich übergibt.
+  dateiindikator: '0' | '1' | '2' = '0',
 ): string {
   const datum = datumJJJJMMTT(erstelldatum)
   const bp = berlinParts(erstelldatum)

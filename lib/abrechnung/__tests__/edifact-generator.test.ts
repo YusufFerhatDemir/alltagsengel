@@ -216,6 +216,23 @@ test('nicht zeitbasierte Leistungen tragen die Zusatzinfo 00', () => {
   assert.equal(parseSegmente(datei.inhalt).find(s => s[0] === 'ELS')![5], '00')
 })
 
+// ── Fail-closed: der Default ist die Testdatei ─────────────────
+// Der einzige Produktivaufrufer (kassenabrechnung-engine.ts) holt den
+// Indikator aus dem Betriebsmodus und setzt ihn immer. Der Default greift
+// also nur, wenn jemand den Aufruf vergisst — und dann darf keine Echtdatei
+// entstehen. Vorher stand hier '2': ein vergessener Parameter hätte eine
+// Forderung bei der Kasse ausgelöst.
+test('ohne Dateiindikator entsteht eine Testdatei, keine Echtdatei', () => {
+  const { dateiindikator: _weg, ...ohneIndikator } = OPTIONEN
+  const datei = generateEDIFACT([fall()], ALLTAGSENGEL_IK, ohneIndikator)
+  const unb = datei.inhalt.split('\n').find(z => z.startsWith('UNB+'))!
+  assert.ok(unb.endsWith("+0'"), `UNB muss Dateiindikator 0 tragen, ist: ${unb}`)
+  assert.ok(
+    datei.physikalischer_dateiname.startsWith('T'),
+    'Der physikalische Dateiname muss der Testlieferung entsprechen (T…)',
+  )
+})
+
 test('Dateiindikator und physikalischer Name gehören zusammen', () => {
   const test0 = generateEDIFACT([fall()], ALLTAGSENGEL_IK, { ...OPTIONEN, dateiindikator: '0' })
   assert.ok(test0.physikalischer_dateiname.startsWith('T'), 'Indikator 0 muss einen T-Dateinamen ergeben')

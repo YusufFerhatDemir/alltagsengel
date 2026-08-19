@@ -6,6 +6,10 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { INHALT_ENTWURF_HINWEIS, UEBUNGEN, WOHNRAUM_CHECK } from '@/lib/coach/inhalte'
+// Der Prüfstatus kommt aus dem Freigaberegister, nicht aus dem Literal in
+// inhalte.ts: freigegeben ist ein Inhalt nur mit vollständigem Vermerk, der
+// zur aktuellen Textfassung passt (AK-QI-01).
+import { pruefstatusUebung } from '@/lib/coach/inhalte-freigabe'
 import { coachApi, useCoachProfil } from '../_lib/client'
 import { CoachLaden, CoachLadefehler } from '../_lib/Zustand'
 
@@ -65,14 +69,14 @@ export default function MobilitaetSeite() {
           <article key={u.id} className="pc-card" aria-label={`Übung: ${u.titel}`}>
             <h3>
               {u.titel}{' '}
-              {u.pruefstatus === 'entwurf' && <span className="pc-badge pc-badge--entwurf">In fachlicher Prüfung</span>}
+              {pruefstatusUebung(u) === 'entwurf' && <span className="pc-badge pc-badge--entwurf">In fachlicher Prüfung</span>}
             </h3>
             <p className="pc-lead">{u.ziel} · ca. {u.dauer_minuten} Minuten</p>
             <ol style={{ paddingLeft: 22 }}>
               {u.schritte.map((s, i) => <li key={i} style={{ marginBottom: 6 }}>{s}</li>)}
             </ol>
             <p><strong>Sicherheit:</strong> {u.sicherheitshinweis}</p>
-            {u.pruefstatus === 'entwurf' && <p className="pc-lead" style={{ fontSize: '0.9em' }}>{INHALT_ENTWURF_HINWEIS}</p>}
+            {pruefstatusUebung(u) === 'entwurf' && <p className="pc-lead" style={{ fontSize: '0.9em' }}>{INHALT_ENTWURF_HINWEIS}</p>}
           </article>
         ))}
       </section>
