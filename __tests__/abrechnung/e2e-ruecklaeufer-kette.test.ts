@@ -87,6 +87,7 @@ function createDb(seed: Record<string, any[]> = {}) {
       eq: (spalte: string, wert: unknown) => { filter.push({ spalte, wert, art: 'eq' }); return chain },
       in: (spalte: string, wert: unknown) => { filter.push({ spalte, wert, art: 'in' }); return chain },
       is: (spalte: string, wert: unknown) => { filter.push({ spalte, wert, art: 'is' }); return chain },
+      or: () => chain,
       order: () => chain,
       limit: () => chain,
       insert: (p: any) => { modus = 'insert'; nutzlast = p; return chain },
