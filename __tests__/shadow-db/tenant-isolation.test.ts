@@ -187,6 +187,7 @@ describe('Statisch: Live-only-Tabellen (Schema existiert NICHT in supabase/migra
         .filter(line => !line.trim().startsWith('--'))
         .filter(line => !/^\s*(REVOKE|GRANT)\b/i.test(line))
         .join('\n')
+        .replace(/'[^']*'/g, "''")   // String-Literale entfernen (z.B. privilege_type = 'TRUNCATE')
       expect(codeOnly, `${file} enthält DROP TABLE/TRUNCATE`).not.toMatch(/\b(DROP TABLE|TRUNCATE)\b/i)
     }
   })
