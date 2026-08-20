@@ -197,23 +197,78 @@ describe.skipIf(!hasShadowDb)('Dynamisch: create_invoice_draft_atomic gegen echt
   const ACTOR = '10000000-0000-4000-8000-0000000000ac'
 
   async function anlegenTarif(overrides: Record<string, unknown>) {
+    const desiredStatus = (overrides.tarif_status as string) || 'unverified'
+    const rechtsgrundlage = (overrides.rechtsgrundlage as string) || '§45b SGB XI'
+    const istKasse = rechtsgrundlage !== 'privat'
+
+    // Immer als unverified einfügen — der DB-Trigger
+    // trg_verifizierung_belegpflicht blockiert INSERT mit
+    // tarif_status=verified ohne beleg_id + verifizierungs_quelle.
+    const { tarif_status: _ts, ...restOverrides } = overrides
     const { data, error } = await supabase
       .from('billing_tariffs')
       .insert({
         organization_id: ORG_A,
         leistungsart: 'alltagsbegleitung_45a',
-        rechtsgrundlage: '§45b SGB XI',
+        rechtsgrundlage,
         verguetungsart: 'zeit_stunde',
         preis_cent: 2500,
         einheit: 'stunde',
         gueltig_ab: '2026-01-01',
         ist_aktiv: true,
-        ...overrides,
+        ...restOverrides,
+        tarif_status: 'unverified',
       })
       .select()
       .single()
     if (error) throw error
-    return data
+
+    if (desiredStatus === 'unverified') return data
+
+    if (desiredStatus === 'verified') {
+      const updateFields: Record<string, unknown> = {
+        tarif_status: 'verified',
+        verifizierungs_quelle: 'CI-Shadow-DB-Test (automatisch)',
+        verifiziert_von: ACTOR,
+        verifiziert_am: new Date().toISOString(),
+      }
+
+      if (istKasse) {
+        // Beleg anlegen (Trigger prüft beleg_id bei Kassensatz)
+        const { data: beleg, error: bErr } = await supabase
+          .from('billing_tarif_belege')
+          .insert({
+            organization_id: ORG_A,
+            quell_tabelle: 'billing_tariffs',
+            tariff_id: data.id,
+            dateiname: 'shadow-test.pdf',
+            dateipfad: `shadow-ci/${data.id}.pdf`,
+            mime_type: 'application/pdf',
+            groesse_bytes: 1024,
+            sha256: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
+            hochgeladen_von: ACTOR,
+          })
+          .select('id')
+          .single()
+        if (bErr) throw bErr
+        updateFields.beleg_id = beleg.id
+      }
+
+      const { error: updErr } = await supabase
+        .from('billing_tariffs')
+        .update(updateFields)
+        .eq('id', data.id)
+      if (updErr) throw updErr
+      return { ...data, ...updateFields }
+    }
+
+    // blocked oder anderer Status
+    const { error: updErr } = await supabase
+      .from('billing_tariffs')
+      .update({ tarif_status: desiredStatus })
+      .eq('id', data.id)
+    if (updErr) throw updErr
+    return { ...data, tarif_status: desiredStatus }
   }
 
   it('initialisiert den Supabase-Client', async () => {
