@@ -256,13 +256,13 @@ describe.skipIf(!hasShadowDb)(
       // ── Testdaten anlegen (idempotent) ──
 
       // Angel-User in auth.users
-      await service.rpc('raw_sql', {
+      await Promise.resolve(service.rpc('raw_sql', {
         query: `
           INSERT INTO auth.users (id, email)
           VALUES ('${ANGEL_USER_ID}', 'angel-test@shadow.test')
           ON CONFLICT (id) DO NOTHING;
         `,
-      }).catch(() => {
+      })).catch(() => {
         // Falls raw_sql nicht existiert, über direkte API
       })
 
@@ -300,17 +300,16 @@ describe.skipIf(!hasShadowDb)(
         time: '10:00',
         duration_hours: 2,
         status: 'confirmed',
-        is_flexible: false,
       })
 
       // User C (Unbeteiligter)
-      await service.rpc('raw_sql', {
+      await Promise.resolve(service.rpc('raw_sql', {
         query: `
           INSERT INTO auth.users (id, email)
           VALUES ('${USER_C_ID}', 'userc@shadow.test')
           ON CONFLICT (id) DO NOTHING;
         `,
-      }).catch(() => {})
+      })).catch(() => {})
 
       await service.from('profiles').upsert({
         id: USER_C_ID,
