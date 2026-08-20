@@ -1,9 +1,9 @@
 # RLS-Policy-Matrix
 
-> Auto-generiert von `scripts/rls-matrix.ts` am 2026-08-19T12:31:53.454Z.
+> Auto-generiert von `scripts/rls-matrix.ts` am 2026-08-20T22:55:30.962Z.
 > NICHT manuell bearbeiten — Aenderungen werden ueberschrieben.
 
-Status: 298 Tabellen, 872 Policies.
+Status: 299 Tabellen, 894 Policies.
 
 ## ✅ Alle Tabellen haben RLS aktiviert
 
@@ -13,6 +13,7 @@ Diese Tabellen haben RLS-Status, aber KEINE Policy — d.h. niemand
 ausser service_role darf zugreifen. Pruefen, ob beabsichtigt:
 
 - `_sql_parts`
+- `api_rate_limits`
 - `coach_pseudonym_key`
 
 ## Vollstaendige Policy-Liste
@@ -58,6 +59,7 @@ ausser service_role darf zugreifen. Pruefen, ob beabsichtigt:
 | akten_zugriff_log | ✅ | admin_akten_zugriff | public | ALL | `is_admin()` | `` |
 | akten_zugriff_log | ✅ | org_fence_akten_zugriff | public | ALL | `(organization_id = current_org_id())` | `` |
 | analytics_events | ✅ | analytics_events_admin_read | authenticated | SELECT | `is_admin()` | `` |
+| analytics_events | ✅ | analytics_events_org_fence | public | ALL | `(organization_id = current_org_id())` | `(organization_id = current_org_id())` |
 | analytics_events | ✅ | analytics_events_service_insert | service_role | INSERT | `` | `true` |
 | angehoerigen_audit_log | ✅ | admin_angeh_audit_all | public | ALL | `is_admin()` | `` |
 | angehoerigen_audit_log | ✅ | org_fence_angeh_audit | public | ALL | `(organization_id = current_org_id())` | `` |
@@ -71,27 +73,29 @@ ausser service_role darf zugreifen. Pruefen, ob beabsichtigt:
 | angehoerigen_zugaenge | ✅ | admin_angeh_zugaenge_all | public | ALL | `is_admin()` | `` |
 | angehoerigen_zugaenge | ✅ | angeh_eigene_zugaenge_select | public | SELECT | `((user_id = auth.uid()) AND (status = 'aktiv'::text))` | `` |
 | angehoerigen_zugaenge | ✅ | org_fence_angeh_zugaenge | public | ALL | `(organization_id = current_org_id())` | `` |
-| angel_availability | ✅ | angel_availability_delete | authenticated | DELETE | `((angel_id = auth.uid()) OR is_admin())` | `` |
-| angel_availability | ✅ | angel_availability_insert | authenticated | INSERT | `` | `((angel_id = auth.uid()) OR is_admin())` |
+| angel_availability | ✅ | angel_availability_delete | authenticated | DELETE | `((angel_id = auth.uid()) OR (is_admin() AND nutzer_in_aktiver_org(angel_id)))` | `` |
+| angel_availability | ✅ | angel_availability_insert | authenticated | INSERT | `` | `((angel_id = auth.uid()) OR (is_admin() AND nutzer_in_aktiver_org(angel_id)))` |
 | angel_availability | ✅ | angel_availability_select | authenticated | SELECT | `true` | `` |
-| angel_availability | ✅ | angel_availability_update | authenticated | UPDATE | `((angel_id = auth.uid()) OR is_admin())` | `((angel_id = auth.uid()) OR is_admin())` |
+| angel_availability | ✅ | angel_availability_update | authenticated | UPDATE | `((angel_id = auth.uid()) OR (is_admin() AND nutzer_in_aktiver_org(angel_id)))` | `((angel_id = auth.uid()) OR (is_admin() AND nutzer_in_aktiver_org(angel_id)))` |
 | angel_reviews | ✅ | angel_reviews_delete_eigene | authenticated | DELETE | `((customer_id = auth.uid()) OR (is_admin() AND buchung_in_aktiver_org(booking_id)))` | `` |
 | angel_reviews | ✅ | angel_reviews_insert_eigene | authenticated | INSERT | `` | `((customer_id = auth.uid()) AND darf_buchung_bewerten(booking_id, angel_id))` |
 | angel_reviews | ✅ | angel_reviews_select_beteiligte | authenticated | SELECT | `((customer_id = auth.uid()) OR (angel_id = auth.uid()) OR (is_admin() AND buchung_in_aktiver_org(booking_id)))` | `` |
 | angel_reviews | ✅ | angel_reviews_update_eigene | authenticated | UPDATE | `(customer_id = auth.uid())` | `((customer_id = auth.uid()) AND darf_buchung_bewerten(booking_id, angel_id))` |
-| angels | ✅ | Admin engelleri yönetebilir | public | ALL | `is_admin()` | `` |
+| angels | ✅ | Admin engelleri yönetebilir | public | ALL | `(is_admin() AND nutzer_in_aktiver_org(id))` | `` |
 | angels | ✅ | Angels can update own record | public | UPDATE | `(auth.uid() = id)` | `` |
 | angels | ✅ | Angels can upsert own record | public | INSERT | `` | `(auth.uid() = id)` |
 | angels | ✅ | Anyone can view angels | public | SELECT | `(NOT is_profile_soft_deleted(id))` | `` |
 | angels | ✅ | Engel kendi profilini güncelleyebilir | public | UPDATE | `(auth.uid() = id)` | `` |
 | angels | ✅ | Engel kendi profilini oluşturabilir | public | INSERT | `` | `(auth.uid() = id)` |
 | angels | ✅ | Herkes engelleri okuyabilir | public | SELECT | `true` | `` |
+| api_rate_limits | ✅ | — (keine Policy) |  |  | `` | `` |
 | app_settings | ✅ | app_settings_read | public | SELECT | `((key <> 'demo_password'::text) OR is_admin())` | `` |
 | app_settings | ✅ | app_settings_update | authenticated | UPDATE | `is_admin()` | `` |
 | applications | ✅ | applications_admin_all | public | ALL | `is_admin()` | `is_admin()` |
 | applications | ✅ | applications_org_fence | public | ALL | `(organization_id = current_org_id())` | `(organization_id = current_org_id())` |
 | applications | ✅ | applications_service_all | service_role | ALL | `true` | `true` |
 | approved_locations | ✅ | approved_locations_admin_all | public | ALL | `is_admin()` | `is_admin()` |
+| approved_locations | ✅ | approved_locations_org_fence | public | ALL | `(organization_id = current_org_id())` | `(organization_id = current_org_id())` |
 | approved_locations | ✅ | approved_locations_service_all | service_role | ALL | `true` | `true` |
 | approved_locations | ✅ | approved_locations_staff_read | public | SELECT | `is_internal_staff()` | `` |
 | arbeitszeit_verstoesse | ✅ | admin_arbeitszeit_verstoesse | public | ALL | `is_admin()` | `` |
@@ -106,6 +110,7 @@ ausser service_role darf zugreifen. Pruefen, ob beabsichtigt:
 | assignments | ✅ | assignments_org_fence | public | ALL | `(organization_id = current_org_id())` | `(organization_id = current_org_id())` |
 | assignments | ✅ | assignments_service_all | service_role | ALL | `true` | `true` |
 | audit_logs | ✅ | audit_logs_admin_read | public | SELECT | `is_admin()` | `` |
+| audit_logs | ✅ | audit_logs_org_fence | public | ALL | `(organization_id = current_org_id())` | `(organization_id = current_org_id())` |
 | audit_logs | ✅ | audit_logs_service_all | service_role | ALL | `true` | `true` |
 | billing_audit_trail | ✅ | billing_audit_trail_insert | authenticated | INSERT | `` | `is_admin()` |
 | billing_audit_trail | ✅ | billing_audit_trail_org_fence | authenticated | ALL | `(organization_id = current_org_id())` | `(organization_id = current_org_id())` |
@@ -249,6 +254,7 @@ ausser service_role darf zugreifen. Pruefen, ob beabsichtigt:
 | content_blocks | ✅ | Admin manages all content | public | ALL | `is_admin()` | `` |
 | content_blocks | ✅ | Public can read active content | public | SELECT | `((status = 'active'::text) AND (context = 'public'::text))` | `` |
 | conversions | ✅ | Service role full access | service_role | ALL | `true` | `true` |
+| conversions | ✅ | conversions_org_fence | public | ALL | `(organization_id = current_org_id())` | `(organization_id = current_org_id())` |
 | cooperation_partners | ✅ | coop_partners_admin_all | public | ALL | `is_admin()` | `is_admin()` |
 | cooperation_partners | ✅ | coop_partners_service_all | service_role | ALL | `true` | `true` |
 | cooperation_partners | ✅ | cooperation_partners_org_fence | public | ALL | `(organization_id = current_org_id())` | `(organization_id = current_org_id())` |
@@ -329,6 +335,7 @@ ausser service_role darf zugreifen. Pruefen, ob beabsichtigt:
 | freiheitsentziehende_massnahmen | ✅ | org_fence_fem | public | ALL | `(organization_id = current_org_id())` | `` |
 | geo_events | ✅ | geo_events_admin_all | public | ALL | `is_admin()` | `is_admin()` |
 | geo_events | ✅ | geo_events_caregiver_read | public | SELECT | `is_own_caregiver(caregiver_id)` | `` |
+| geo_events | ✅ | geo_events_org_fence | public | ALL | `(organization_id = current_org_id())` | `(organization_id = current_org_id())` |
 | geo_events | ✅ | geo_events_service_all | service_role | ALL | `true` | `true` |
 | geo_events | ✅ | geo_events_staff_read | public | SELECT | `is_internal_staff()` | `` |
 | hygienebox_orders | ✅ | Users can insert own hygienebox orders | public | INSERT | `` | `(auth.uid() = user_id)` |
@@ -363,10 +370,13 @@ ausser service_role darf zugreifen. Pruefen, ob beabsichtigt:
 | invoices | ✅ | invoices_org_fence | authenticated | ALL | `(organization_id = current_org_id())` | `(organization_id = current_org_id())` |
 | invoices | ✅ | invoices_service_all | service_role | ALL | `true` | `true` |
 | kf_booking_reviews | ✅ | Admin manages booking reviews | public | ALL | `is_admin()` | `` |
+| kf_booking_reviews | ✅ | kf_booking_reviews_org_fence | public | ALL | `(organization_id = current_org_id())` | `(organization_id = current_org_id())` |
 | kf_feature_flags | ✅ | Admin manages feature flags | public | ALL | `is_admin()` | `` |
 | kf_feature_flags | ✅ | Auth can read feature flags | public | SELECT | `true` | `` |
 | kf_partner_availability | ✅ | Admin manages partner availability | public | ALL | `is_admin()` | `` |
+| kf_partner_availability | ✅ | kf_partner_availability_org_fence | public | ALL | `(organization_id = current_org_id())` | `(organization_id = current_org_id())` |
 | kf_partners | ✅ | Admin manages partners | public | ALL | `is_admin()` | `` |
+| kf_partners | ✅ | kf_partners_org_fence | public | ALL | `(organization_id = current_org_id())` | `(organization_id = current_org_id())` |
 | kf_pricing_audit | ✅ | Admin read audit | public | SELECT | `is_admin()` | `` |
 | kf_pricing_audit | ✅ | Admins can insert audit entries | authenticated | INSERT | `` | `(actor_id = auth.uid())` |
 | kf_pricing_config | ✅ | Admin full access config | public | ALL | `is_admin()` | `` |
@@ -414,10 +424,12 @@ ausser service_role darf zugreifen. Pruefen, ob beabsichtigt:
 | krankenfahrt_providers | ✅ | Providers can insert own data | public | INSERT | `` | `(auth.uid() = user_id)` |
 | krankenfahrt_providers | ✅ | Providers can update own data | public | UPDATE | `(auth.uid() = user_id)` | `` |
 | krankenfahrt_providers | ✅ | Providers can view own data | public | SELECT | `(auth.uid() = user_id)` | `` |
+| krankenfahrt_providers | ✅ | krankenfahrt_providers_org_fence | public | ALL | `(organization_id = current_org_id())` | `(organization_id = current_org_id())` |
 | krankenfahrt_reviews | ✅ | Admins can view all reviews | public | SELECT | `is_admin()` | `` |
 | krankenfahrt_reviews | ✅ | Customers can insert own reviews | public | INSERT | `` | `(auth.uid() = customer_id)` |
 | krankenfahrt_reviews | ✅ | Customers can view own reviews | public | SELECT | `(auth.uid() = customer_id)` | `` |
 | krankenfahrt_reviews | ✅ | Providers can view own reviews | public | SELECT | `(provider_id IN ( SELECT krankenfahrt_providers.id    FROM krankenfahrt_providers   WHERE (krankenfahrt_providers.user_id = auth.uid())))` | `` |
+| krankenfahrt_reviews | ✅ | krankenfahrt_reviews_org_fence | public | ALL | `(organization_id = current_org_id())` | `(organization_id = current_org_id())` |
 | krankenfahrten | ✅ | Admins can delete krankenfahrten | public | DELETE | `is_admin()` | `` |
 | krankenfahrten | ✅ | Admins can update all krankenfahrten | public | UPDATE | `is_admin()` | `` |
 | krankenfahrten | ✅ | Admins can view all krankenfahrten | public | SELECT | `is_admin()` | `` |
@@ -428,12 +440,14 @@ ausser service_role darf zugreifen. Pruefen, ob beabsichtigt:
 | krankenfahrten | ✅ | Users can insert own krankenfahrten | public | INSERT | `` | `(auth.uid() = customer_id)` |
 | krankenfahrten | ✅ | Users can update own krankenfahrten | public | UPDATE | `(auth.uid() = customer_id)` | `` |
 | krankenfahrten | ✅ | Users can view own krankenfahrten | public | SELECT | `(auth.uid() = customer_id)` | `` |
+| krankenfahrten | ✅ | krankenfahrten_org_fence | public | ALL | `(organization_id = current_org_id())` | `(organization_id = current_org_id())` |
 | lagerungsprotokolle | ✅ | admin_lagerungsprotokolle | public | ALL | `is_admin()` | `` |
 | lagerungsprotokolle | ✅ | engel_lagerungsprotokolle_insert | public | INSERT | `` | `((durchgefuehrt_von = auth.uid()) AND engel_hat_aktiven_klienten(client_id))` |
 | lagerungsprotokolle | ✅ | engel_lagerungsprotokolle_select | public | SELECT | `engel_hat_aktiven_klienten(client_id)` | `` |
 | lagerungsprotokolle | ✅ | org_fence_lagerungsprotokolle | public | ALL | `(organization_id = current_org_id())` | `` |
 | lead_inquiries | ✅ | Admin full access lead_inquiries | authenticated | ALL | `is_admin()` | `is_admin()` |
 | lead_inquiries | ✅ | Anyone can submit lead inquiry | public | INSERT | `` | `true` |
+| lead_inquiries | ✅ | lead_inquiries_org_fence | public | ALL | `(organization_id = current_org_id())` | `(organization_id = current_org_id())` |
 | leistungspreise | ✅ | admin_leistungspreise | public | ALL | `is_admin()` | `is_admin()` |
 | leistungspreise | ✅ | leistungspreise_org_fence | public | ALL | `(organization_id = current_org_id())` | `(organization_id = current_org_id())` |
 | login_rate_limits | ✅ | service_role only | service_role | ALL | `true` | `true` |
@@ -450,7 +464,7 @@ ausser service_role darf zugreifen. Pruefen, ob beabsichtigt:
 | medikamentenplan | ✅ | Users can update own medikamentenplan | public | UPDATE | `(auth.uid() = user_id)` | `` |
 | medikamentenplan | ✅ | Users can view own medikamentenplan | public | SELECT | `(auth.uid() = user_id)` | `` |
 | medikamentenplan | ✅ | medikamentenplan_org_fence | public | ALL | `(organization_id = current_org_id())` | `(organization_id = current_org_id())` |
-| messages | ✅ | messages_admin_all | authenticated | ALL | `is_admin()` | `` |
+| messages | ✅ | messages_admin_all | authenticated | ALL | `(is_admin() AND nutzer_in_aktiver_org(sender_id))` | `` |
 | messages | ✅ | messages_insert_booking_participant | authenticated | INSERT | `` | `((sender_id = auth.uid()) AND (EXISTS ( SELECT 1    FROM bookings b   WHERE ((b.id = messages.booking_id) AND (((b.customer_id = auth.uid()) AND (b.angel_id = messages.receiver_id)) OR ((b.angel_id = ` |
 | messages | ✅ | messages_select_sender_or_receiver | authenticated | SELECT | `(((auth.uid() = sender_id) OR (auth.uid() = receiver_id)) AND (NOT is_profile_soft_deleted(auth.uid())))` | `` |
 | messages | ✅ | messages_update_receiver_read_only | authenticated | UPDATE | `(auth.uid() = receiver_id)` | `(auth.uid() = receiver_id)` |
@@ -472,6 +486,7 @@ ausser service_role darf zugreifen. Pruefen, ob beabsichtigt:
 | mis_audit_log | ✅ | mis_audit_log_org_fence | authenticated | ALL | `(organization_id = current_org_id())` | `(organization_id = current_org_id())` |
 | mis_auth_log | ✅ | Admin can read auth log | public | SELECT | `is_admin()` | `` |
 | mis_auth_log | ✅ | Users can insert own auth_log | anon, authenticated | INSERT | `` | `((user_id IS NULL) OR (user_id = auth.uid()))` |
+| mis_auth_log | ✅ | mis_auth_log_org_fence | public | ALL | `(organization_id = current_org_id())` | `(organization_id = current_org_id())` |
 | mis_availability | ✅ | mis_availability_org_fence | public | ALL | `(organization_id = current_org_id())` | `(organization_id = current_org_id())` |
 | mis_availability | ✅ | mis_availability_service | service_role | ALL | `true` | `true` |
 | mis_availability | ✅ | mis_availability_staff_all | public | ALL | `is_internal_staff()` | `is_internal_staff()` |
@@ -501,6 +516,7 @@ ausser service_role darf zugreifen. Pruefen, ob beabsichtigt:
 | mis_crm_activities | ✅ | mis_crm_staff_select | public | SELECT | `is_internal_staff()` | `` |
 | mis_crm_activities | ✅ | mis_crm_staff_update | public | UPDATE | `is_internal_staff()` | `` |
 | mis_dataroom_access | ✅ | mis_dataroom_access_admin_select | public | SELECT | `is_admin()` | `` |
+| mis_dataroom_access | ✅ | mis_dataroom_access_org_fence | public | ALL | `(organization_id = current_org_id())` | `(organization_id = current_org_id())` |
 | mis_dataroom_sections | ✅ | mis_dataroom_sections_admin_select | public | SELECT | `is_admin()` | `` |
 | mis_document_categories | ✅ | mis_document_categories_admin_select | public | SELECT | `is_admin()` | `` |
 | mis_document_versions | ✅ | mis_document_versions_admin_select | public | SELECT | `is_admin()` | `` |
@@ -517,10 +533,12 @@ ausser service_role darf zugreifen. Pruefen, ob beabsichtigt:
 | mis_kpis | ✅ | mis_kpis_org_fence | public | ALL | `(organization_id = current_org_id())` | `(organization_id = current_org_id())` |
 | mis_notifications | ✅ | Users see own notifications | public | SELECT | `(user_id = auth.uid())` | `` |
 | mis_notifications | ✅ | mis_notifications_org_fence | public | ALL | `(organization_id = current_org_id())` | `(organization_id = current_org_id())` |
+| mis_privacy_audit_log | ✅ | mis_privacy_audit_log_org_fence | public | ALL | `(organization_id = current_org_id())` | `(organization_id = current_org_id())` |
 | mis_privacy_audit_log | ✅ | mis_privacy_audit_service_insert | service_role | INSERT | `` | `true` |
 | mis_privacy_audit_log | ✅ | mis_privacy_audit_service_select | service_role | SELECT | `true` | `` |
 | mis_privacy_audit_log | ✅ | mis_privacy_audit_staff_select | public | SELECT | `is_admin()` | `` |
 | mis_privacy_consents | ✅ | mis_privacy_consents_admin_delete | public | DELETE | `is_admin()` | `` |
+| mis_privacy_consents | ✅ | mis_privacy_consents_org_fence | public | ALL | `(organization_id = current_org_id())` | `(organization_id = current_org_id())` |
 | mis_privacy_consents | ✅ | mis_privacy_consents_service | service_role | ALL | `true` | `true` |
 | mis_privacy_consents | ✅ | mis_privacy_consents_staff_insert | public | INSERT | `` | `is_internal_staff()` |
 | mis_privacy_consents | ✅ | mis_privacy_consents_staff_select | public | SELECT | `is_internal_staff()` | `` |
@@ -529,8 +547,10 @@ ausser service_role darf zugreifen. Pruefen, ob beabsichtigt:
 | mis_privacy_records | ✅ | mis_privacy_records_admin_insert | public | INSERT | `` | `is_admin()` |
 | mis_privacy_records | ✅ | mis_privacy_records_admin_select | public | SELECT | `is_admin()` | `` |
 | mis_privacy_records | ✅ | mis_privacy_records_admin_update | public | UPDATE | `is_admin()` | `` |
+| mis_privacy_records | ✅ | mis_privacy_records_org_fence | public | ALL | `(organization_id = current_org_id())` | `(organization_id = current_org_id())` |
 | mis_privacy_records | ✅ | mis_privacy_records_service | service_role | ALL | `true` | `true` |
 | mis_privacy_requests | ✅ | mis_privacy_requests_admin_delete | public | DELETE | `is_admin()` | `` |
+| mis_privacy_requests | ✅ | mis_privacy_requests_org_fence | public | ALL | `(organization_id = current_org_id())` | `(organization_id = current_org_id())` |
 | mis_privacy_requests | ✅ | mis_privacy_requests_service | service_role | ALL | `true` | `true` |
 | mis_privacy_requests | ✅ | mis_privacy_requests_staff_insert | public | INSERT | `` | `is_internal_staff()` |
 | mis_privacy_requests | ✅ | mis_privacy_requests_staff_select | public | SELECT | `is_internal_staff()` | `` |
@@ -582,13 +602,15 @@ ausser service_role darf zugreifen. Pruefen, ob beabsichtigt:
 | monthly_closings | ✅ | monthly_closings_service_all | service_role | ALL | `true` | `true` |
 | monthly_closings | ✅ | monthly_closings_staff_read | public | SELECT | `is_internal_staff()` | `` |
 | newsletter_subscribers | ✅ | Admin full access newsletter | authenticated | ALL | `is_admin()` | `is_admin()` |
+| newsletter_subscribers | ✅ | newsletter_subscribers_org_fence | public | ALL | `(organization_id = current_org_id())` | `(organization_id = current_org_id())` |
 | notfall_access_attempts | ✅ | Admins can view notfall_access_attempts | public | SELECT | `is_admin()` | `` |
+| notfall_access_attempts | ✅ | notfall_access_attempts_org_fence | public | ALL | `(organization_id = current_org_id())` | `(organization_id = current_org_id())` |
 | notfall_info | ✅ | Admins can view all notfall_info | public | SELECT | `is_admin()` | `` |
 | notfall_info | ✅ | Users can insert own notfall_info | public | INSERT | `` | `(auth.uid() = user_id)` |
 | notfall_info | ✅ | Users can update own notfall_info | public | UPDATE | `(auth.uid() = user_id)` | `` |
 | notfall_info | ✅ | Users can view own notfall_info | public | SELECT | `(auth.uid() = user_id)` | `` |
 | notfall_info | ✅ | notfall_info_org_fence | public | ALL | `(organization_id = current_org_id())` | `(organization_id = current_org_id())` |
-| notifications | ✅ | notifications_admin_all | authenticated | ALL | `is_admin()` | `` |
+| notifications | ✅ | notifications_admin_all | authenticated | ALL | `(is_admin() AND nutzer_in_aktiver_org(user_id))` | `` |
 | notifications | ✅ | notifications_insert_blocked | authenticated | INSERT | `` | `false` |
 | notifications | ✅ | notifications_select_own | authenticated | SELECT | `((auth.uid() = user_id) AND (NOT is_profile_soft_deleted(auth.uid())))` | `` |
 | notifications | ✅ | notifications_update_own | authenticated | UPDATE | `(auth.uid() = user_id)` | `(auth.uid() = user_id)` |
@@ -650,9 +672,10 @@ ausser service_role darf zugreifen. Pruefen, ob beabsichtigt:
 | organizations | ✅ | orgs_member_select | public | SELECT | `is_org_member(id)` | `` |
 | organizations | ✅ | orgs_owner_update | public | UPDATE | `has_org_role(id, ARRAY['owner'::text, 'admin'::text])` | `has_org_role(id, ARRAY['owner'::text, 'admin'::text])` |
 | page_views | ✅ | Admins can read page_views | authenticated | SELECT | `is_admin()` | `` |
-| page_views | ✅ | Anyone can insert page_views | public | INSERT | `` | `true` |
 | page_views | ✅ | page_views_admin_select | authenticated | SELECT | `is_admin()` | `` |
+| page_views | ✅ | page_views_org_fence | public | ALL | `(organization_id = current_org_id())` | `(organization_id = current_org_id())` |
 | partner_visits | ✅ | partner_visits_admin_all | public | ALL | `is_admin()` | `is_admin()` |
+| partner_visits | ✅ | partner_visits_org_fence | public | ALL | `(organization_id = current_org_id())` | `(organization_id = current_org_id())` |
 | partner_visits | ✅ | partner_visits_service_all | service_role | ALL | `true` | `true` |
 | payment_allocations | ✅ | alloc_admin_all | authenticated | ALL | `is_admin()` | `` |
 | payment_allocations | ✅ | org_fence_payment_allocations | public | ALL | `(organization_id = current_org_id())` | `` |
@@ -713,14 +736,14 @@ ausser service_role darf zugreifen. Pruefen, ob beabsichtigt:
 | pflegeueberleitungen | ✅ | engel_pflegeueberleitungen_select | public | SELECT | `engel_hat_aktiven_klienten(client_id)` | `` |
 | pflegeueberleitungen | ✅ | org_fence_pflegeueberleitungen | public | ALL | `(organization_id = current_org_id())` | `` |
 | plz_bundesland_regeln | ✅ | plz_regeln_read | anon, authenticated | SELECT | `true` | `` |
-| profiles | ✅ | Admin can delete profiles | public | DELETE | `is_admin()` | `` |
-| profiles | ✅ | Admin can update all profiles | public | UPDATE | `((auth.uid() = id) OR is_admin())` | `` |
-| profiles | ✅ | Admins can manage all profiles | public | ALL | `is_admin()` | `` |
+| profiles | ✅ | Admin can delete profiles | public | DELETE | `(is_admin() AND nutzer_in_aktiver_org(id))` | `` |
+| profiles | ✅ | Admin can update all profiles | public | UPDATE | `((auth.uid() = id) OR (is_admin() AND nutzer_in_aktiver_org(id)))` | `` |
+| profiles | ✅ | Admins can manage all profiles | public | ALL | `(is_admin() AND nutzer_in_aktiver_org(id))` | `` |
 | profiles | ✅ | Kullanıcı kendi profilini güncelleyebilir | public | UPDATE | `(auth.uid() = id)` | `` |
 | profiles | ✅ | Kullanıcı kendi profilini oluşturabilir | public | INSERT | `` | `(auth.uid() = id)` |
 | profiles | ✅ | Users can update own profile | public | UPDATE | `(auth.uid() = id)` | `` |
 | profiles | ✅ | profiles_insert | public | INSERT | `` | `(auth.uid() = id)` |
-| profiles | ✅ | profiles_select_admin | public | SELECT | `is_admin()` | `` |
+| profiles | ✅ | profiles_select_admin | public | SELECT | `(is_admin() AND nutzer_in_aktiver_org(id))` | `` |
 | profiles | ✅ | profiles_select_booking_partner | public | SELECT | `((auth.role() = 'authenticated'::text) AND (deleted_at IS NULL) AND ((EXISTS ( SELECT 1    FROM bookings b   WHERE (((b.customer_id = profiles.id) AND (b.angel_id = auth.uid())) OR ((b.angel_id = prof` | `` |
 | profiles | ✅ | profiles_select_own | public | SELECT | `(auth.uid() = id)` | `` |
 | profiles | ✅ | profiles_update | public | UPDATE | `(auth.uid() = id)` | `` |
@@ -728,7 +751,7 @@ ausser service_role darf zugreifen. Pruefen, ob beabsichtigt:
 | push_subscriptions | ✅ | Users can manage own subscriptions | public | ALL | `(auth.uid() = user_id)` | `` |
 | qes_hooks | ✅ | admin_qes_hooks_all | public | ALL | `is_admin()` | `` |
 | qes_hooks | ✅ | org_fence_qes_hooks | public | ALL | `(organization_id = current_org_id())` | `` |
-| referrals | ✅ | Admins sehen alle Referrals | authenticated | SELECT | `is_admin()` | `` |
+| referrals | ✅ | Admins sehen alle Referrals | authenticated | SELECT | `(is_admin() AND nutzer_in_aktiver_org(referrer_id))` | `` |
 | referrals | ✅ | System kann Referrals erstellen | public | INSERT | `` | `(auth.uid() = referred_id)` |
 | referrals | ✅ | Users sehen eigene Referrals | public | SELECT | `((auth.uid() = referrer_id) OR (auth.uid() = referred_id))` | `` |
 | review_errors | ✅ | review_errors_admin_all | public | ALL | `is_admin()` | `is_admin()` |
@@ -852,9 +875,9 @@ ausser service_role darf zugreifen. Pruefen, ob beabsichtigt:
 | verordnungen | ✅ | verordnungen_service_all | service_role | ALL | `true` | `true` |
 | verordnungen | ✅ | verordnungen_staff_read | public | SELECT | `is_internal_staff()` | `` |
 | visitor_locations | ✅ | Admin can read all visits | public | SELECT | `is_admin()` | `` |
-| visitor_locations | ✅ | Anyone can insert visitor_locations | public | INSERT | `` | `true` |
+| visitor_locations | ✅ | visitor_locations_org_fence | public | ALL | `(organization_id = current_org_id())` | `(organization_id = current_org_id())` |
 | visitors | ✅ | Admin can read visits | public | SELECT | `is_admin()` | `` |
-| visitors | ✅ | Anyone can insert visitors | public | INSERT | `` | `true` |
+| visitors | ✅ | visitors_org_fence | public | ALL | `(organization_id = current_org_id())` | `(organization_id = current_org_id())` |
 | vital_sign_thresholds | ✅ | admin_vital_sign_thresholds | public | ALL | `is_admin()` | `is_admin()` |
 | vital_sign_thresholds | ✅ | engel_vital_sign_thresholds_select | public | SELECT | `(client_id IN ( SELECT a.client_id    FROM assignments a   WHERE ((a.caregiver_id IN ( SELECT eigene_caregiver_ids() AS eigene_caregiver_ids)) AND (a.status = ANY (ARRAY['active'::text, 'GEPLANT'::tex` | `` |
 | vital_sign_thresholds | ✅ | org_fence_vital_sign_thresholds | public | ALL | `(organization_id = current_org_id())` | `` |
@@ -877,6 +900,7 @@ ausser service_role darf zugreifen. Pruefen, ob beabsichtigt:
 | wf_warteschlange | ✅ | wf_warteschlange_admin_all | authenticated | ALL | `is_admin()` | `` |
 | wf_warteschlange | ✅ | wf_warteschlange_org_fence | public | ALL | `(organization_id = current_org_id())` | `` |
 | whatsapp_conversations | ✅ | whatsapp_admin_read | authenticated | SELECT | `is_admin()` | `` |
+| whatsapp_conversations | ✅ | whatsapp_conversations_org_fence | public | ALL | `(organization_id = current_org_id())` | `(organization_id = current_org_id())` |
 | wound_assessments | ✅ | admin_wound_assessments | public | ALL | `is_admin()` | `` |
 | wound_assessments | ✅ | engel_wound_assessments_select | public | SELECT | `(EXISTS ( SELECT 1    FROM wounds w   WHERE ((w.id = wound_assessments.wound_id) AND engel_hat_aktiven_klienten(w.client_id))))` | `` |
 | wound_assessments | ✅ | org_fence_wound_assessments | public | ALL | `(organization_id = current_org_id())` | `` |
