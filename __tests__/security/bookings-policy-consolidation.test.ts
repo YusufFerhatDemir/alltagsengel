@@ -301,7 +301,7 @@ describe.skipIf(!hasShadowDb)(
         date: '2026-08-01',
         time: '10:00',
         duration_hours: 2,
-        status: 'confirmed',
+        status: 'accepted',
       })
 
       // User C (Unbeteiligter)
