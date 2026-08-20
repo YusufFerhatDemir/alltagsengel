@@ -277,10 +277,10 @@ describe.skipIf(!hasShadowDb)('Dynamisch: create_invoice_draft_atomic gegen echt
     expect(supabase).toBeTruthy()
 
     // Aufräumen: Tarife + Belege + Invoices aus vorherigen Runs entfernen
-    // FK-Reihenfolge: beleg_id auf Tarif nullen → Audit (referenziert Belege) → Belege →
-    //   invoice_items (referenziert Tarife+Invoices) → Invoices → Audit-Trail → Tarife
+    // FK-Reihenfolge: beleg_id auf Tarif nullen → Tariff-Audit (ON DELETE RESTRICT!) →
+    //   Belege → invoice_items → Invoices → Audit-Trail → Tarife
     await supabase.from('billing_tariffs').update({ beleg_id: null }).eq('organization_id', ORG_A)
-    await supabase.rpc('raw_sql', { query: `DELETE FROM billing_tariff_audit WHERE tariff_id IN (SELECT id FROM billing_tariffs WHERE organization_id = '${ORG_A}')` }).then(() => {}, () => {})
+    await supabase.from('billing_tariff_audit').delete().eq('organization_id', ORG_A)
     await supabase.from('billing_tarif_belege').delete().eq('organization_id', ORG_A)
     await supabase.from('invoice_items').delete().eq('organization_id', ORG_A).then(() => {}, () => {})
     await supabase.from('invoices').delete().eq('organization_id', ORG_A)
