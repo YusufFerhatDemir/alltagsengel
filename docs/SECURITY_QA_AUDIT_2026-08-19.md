@@ -257,3 +257,51 @@ Damit der Bericht nicht mehr behauptet, als er belegt:
 ---
 
 *Erstellt im Rahmen von Track 7. Grundlage: Codescan über 384 API-Routen, 60 Server Actions und 319 Migrationen sowie Live-Abfragen gegen `nnwyktkqibdjxgimjyuq` (PostgREST, Katalog-Orakel, Storage-API).*
+
+---
+
+# Nachtrag — Nachprüfung 2026-08-21
+
+Der Bericht oben ist der Stand vom **2026-08-19, Commit `3b939d0`**. Zwischenzeitlich haben parallele Sessions die Befunde abgearbeitet (u. a. `dfe6de0`). Alles Folgende ist **erneut gegen Production gemessen**, nicht aus den Commit-Messages übernommen.
+
+## Status der Befunde
+
+| ID | Stand 19.08. | Stand 21.08. | Nachweis |
+|---|---|---|---|
+| **HOCH-1** Mandantentrennung | 82 Tabellen ohne Org, 52 org-blind | 🟢 **weitgehend geschlossen** | Tabellen ohne `organization_id`: **82 → 58**. Neuer Helper `nutzer_in_aktiver_org()` ist live auf `profiles`, `angels`, `messages`, `notifications` — z. B. `profiles_select_admin` lautet jetzt `is_admin() AND nutzer_in_aktiver_org(id)`. Migration `20260922020000_hoch1_mandantentrennung.sql` (mit Rollback). |
+| **MITTEL-1** `getActiveOrgId()` fail-open | Stamm-Org bei jedem Fehler | 🟢 **geschlossen** | Signatur jetzt `Promise<string \| null>`; `null` bei fehlendem User, leerer Mitgliedschaft und im `catch`. Der Default-Fall ist in ein separates `getActiveOrgIdOrDefault()` gezogen. |
+| **MITTEL-2** Schema-Drift Analytics | 2 Befunde, Analytics still kaputt | 🟢 **geschlossen** | `npm run check:schema-drift`: **OK, 1195 Dateien gegen 322 Live-Tabellen**. `page_views`, `visitors`, `visitor_locations` haben live jetzt `organization_id` (Migration `20260922010000`). `ai-chat` wurde angefasst. |
+| **MITTEL-3** Client-Write Pflegenotizen | Browser schreibt `care_notes` | 🟢 **geschlossen** | `from('care_notes').insert` in `CareNotesPanel.tsx`: **0 Treffer**. Neue Server Action `app/admin/notizen/actions.ts` (147 Zeilen). |
+| **MITTEL-4** Stripe in Datenschutz | 0 Nennungen | 🟢 **geschlossen** | „Stripe" jetzt **9×** in `app/datenschutz/page.tsx`. |
+| **MITTEL-5** anon-ausführbare Cron-RPC | live **HTTP 200** | 🟢 **geschlossen, live verifiziert** | Anonymer POST auf `/rest/v1/rpc/cron_check_ueberfaellige_aufgaben` liefert jetzt **HTTP 401**. Migration `20260922000000_revoke_anon_cron_funktionen.sql`. |
+| **NIEDRIG-8** Rate-Limits | 7 Endpunkte offen | 🟡 **teilweise** | `send-reset`, `newsletter`, `capi` und `visitor-alert` sind versorgt. Siehe Restbefunde. |
+
+Ein paralleler Audit hat dabei einen **schärferen** Punkt gefunden, als in meinem Bericht stand: der bisherige `rateLimit()` aus `lib/rate-limit.ts` hält seinen Zähler in einer Map im Modul-Scope und gilt damit **pro Serverless-Instanz**. Auf Vercel startet jede neue Instanz bei null — das Limit war beliebig oft umgehbar. Antwort darauf ist `api_rate_limits` + `api_rate_limit_hit()` (Migration `20260922030000`), ein gemeinsamer Zähler in der Datenbank.
+
+## Erneut geprüft und weiterhin sauber
+
+- **Anon-Exposure:** **322 Relationen** getestet, kein Leseleck. 6 bewusst öffentlich.
+- **RLS-Matrix:** neu erzeugt. Jetzt **3** Tabellen ohne Policy — `_sql_parts`, `coach_pseudonym_key` und neu `api_rate_limits`. Letztere ist korrekt abgeriegelt: `ENABLE ROW LEVEL SECURITY`, `REVOKE ALL … FROM PUBLIC, anon, authenticated`, `GRANT … TO service_role`. Auch beide zugehörigen Funktionen sind auf `service_role` beschränkt.
+- **Migrationen mit Rollback:** alle vier neuen Migrationen (`20260922*`) haben ein zugehöriges `*_rollback_*.sql`.
+
+## Offene Restbefunde
+
+| ID | Schwere | Befund | Ort |
+|---|---|---|---|
+| **REST-1** | 🟠 mittel | **Testsuite ist auf `main` rot.** `__tests__/migrations/persistenter-api-ratelimit-pglite.test.ts` → „Rollback › entfernt Tabelle und beide Funktionen restlos" scheitert mit `Test timed out in 15000ms`. **Kein Logikfehler:** isoliert mit `--testTimeout=120000` laufen alle 16 Tests in **4,41 s** durch. Unter Volllast (295 s Testzeit, parallele Worker) reißt der 15-s-Default. Fix: explizites Timeout am Test, wie bei den anderen PGlite-Migrationstests. | `__tests__/migrations/persistenter-api-ratelimit-pglite.test.ts:216` |
+| **REST-2** | 🟡 niedrig | `app/api/track/route.ts` hat **gar kein** Rate-Limit. `track-conversion` und `analytics/vitals` nutzen weiterhin eine Map im Modul-Scope — also genau das Muster, das für `visitor-alert` gerade als instanz-lokal und umgehbar verworfen wurde. Auf `rateLimitPersistent` umstellen. | `app/api/track/`, `track-conversion/`, `analytics/vitals/` |
+| **REST-3** | 🟡 niedrig | 58 Tabellen weiterhin ohne `organization_id`; 22 davon mit org-blinder `is_admin()`-Policy. Der Großteil ist **korrekt global** (`billing_feiertage`, `billing_gesetzliche_obergrenzen`, `billing_leistungsarten`, `billing_rechtsgrundlagen`, `billing_tarifquellen`, `kf_pricing_*`, `content_blocks`, `app_settings`, `kf_feature_flags`, `mis_document_categories`, `mis_dataroom_sections`). Genauer anzusehen bleiben: `offline_queue` und `sync_conflicts` (können Nutzlast ausstehender Schreibvorgänge enthalten), `action_fingerprints`, `kf_pricing_audit`. | DB-Policies |
+| **NIEDRIG-5/6/7** | 🟡 niedrig | Aus dem Hauptbericht **nicht erneut geprüft**: Art.-15-Export (laut Commit-Message adressiert — nicht verifiziert), Ablauffrist der Reset-Mail, `coach_finde_nutzer_id`-Orakel. | — |
+
+## Qualitätsgates gegen den neuen Stand
+
+| Prüfung | Ergebnis |
+|---|---|
+| `npx tsc --noEmit` | ✅ Exit 0 |
+| `npx vitest run` | ⚠️ **Exit 1** — 3351 grün, **1 rot** (Timeout-Flake, siehe REST-1), 38 skipped, 170 Dateien |
+| Einzellauf des roten Tests | ✅ 16/16 grün in 4,41 s |
+| `npm run build` | ✅ Exit 0 |
+| `verify-anon-exposure` | ✅ 322 Relationen, kein Leck |
+| `check:schema-drift` | ✅ OK |
+
+**Bewertung:** Die Sicherheitslage hat sich seit dem 19.08. deutlich verbessert — fünf von fünf MITTEL-Befunden sind geschlossen, HOCH-1 ist im personenbezogenen Kern erledigt. Der einzige neue Handlungspunkt ist die **rote Testsuite (REST-1)**, und die Ursache ist ein Timeout, keine Regression.
