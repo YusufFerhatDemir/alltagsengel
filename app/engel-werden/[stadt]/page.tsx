@@ -14,6 +14,9 @@ interface CityData {
   name: string
   region: string
   slug: string
+  // Repräsentative PLZ der Kernstadt — Pflichtfeld für JobPosting-JSON-LD
+  // (Google Search Console: "Feld postalCode fehlt in jobLocation.address")
+  plz: string
   // Echte Stadtteile — sichtbar gerendert + in FAQ integriert
   stadtteile: string[]
   // Stadtspezifischer Satz für Fließtext (nur stabile öffentliche Fakten)
@@ -29,6 +32,7 @@ const cities: Record<string, CityData> = {
     name: 'Frankfurt am Main',
     region: 'Hessen',
     slug: 'frankfurt',
+    plz: '60311',
     stadtteile: ['Bornheim', 'Nordend', 'Sachsenhausen', 'Bockenheim', 'Rödelheim', 'Niederrad'],
     lokal: 'In Frankfurt vermitteln wir Einsätze beiderseits des Mains — du übernimmst Aufträge in deinem Stadtteil und sparst dir lange Anfahrten.',
     nachbarn: ['offenbach', 'bad-homburg', 'neu-isenburg', 'frankfurt-hoechst'],
@@ -37,6 +41,7 @@ const cities: Record<string, CityData> = {
     name: 'Offenbach am Main',
     region: 'Hessen',
     slug: 'offenbach',
+    plz: '63067',
     stadtteile: ['Bürgel', 'Bieber', 'Rumpenheim', 'Lauterborn', 'Tempelsee'],
     lokal: 'In Offenbach warten Klientinnen und Klienten vom Kaiserlei im Westen bis Bürgel und Rumpenheim am Mainufer.',
     nachbarn: ['frankfurt', 'neu-isenburg', 'rodgau', 'hanau'],
@@ -45,6 +50,7 @@ const cities: Record<string, CityData> = {
     name: 'Wiesbaden',
     region: 'Hessen',
     slug: 'wiesbaden',
+    plz: '65183',
     stadtteile: ['Biebrich', 'Dotzheim', 'Sonnenberg', 'Bierstadt', 'Schierstein'],
     lokal: 'In der Landeshauptstadt Wiesbaden gibt es Einsätze von Biebrich am Rhein bis hinauf nach Sonnenberg.',
     nachbarn: ['mainz', 'frankfurt-hoechst', 'frankfurt'],
@@ -53,6 +59,7 @@ const cities: Record<string, CityData> = {
     name: 'Darmstadt',
     region: 'Hessen',
     slug: 'darmstadt',
+    plz: '64283',
     stadtteile: ['Bessungen', 'Arheilgen', 'Eberstadt', 'Kranichstein', 'Wixhausen'],
     lokal: 'In der Wissenschaftsstadt Darmstadt vermitteln wir Aufträge von Arheilgen im Norden bis Eberstadt im Süden.',
     nachbarn: ['frankfurt', 'neu-isenburg', 'rodgau'],
@@ -61,6 +68,7 @@ const cities: Record<string, CityData> = {
     name: 'Hanau',
     region: 'Hessen',
     slug: 'hanau',
+    plz: '63450',
     stadtteile: ['Steinheim', 'Kesselstadt', 'Großauheim', 'Klein-Auheim', 'Mittelbuchen'],
     lokal: 'In der Brüder-Grimm-Stadt Hanau gibt es Einsätze von Kesselstadt bis Steinheim und Großauheim südlich des Mains.',
     nachbarn: ['offenbach', 'rodgau', 'frankfurt', 'aschaffenburg'],
@@ -69,6 +77,7 @@ const cities: Record<string, CityData> = {
     name: 'Bad Homburg',
     region: 'Hessen',
     slug: 'bad-homburg',
+    plz: '61348',
     stadtteile: ['Kirdorf', 'Gonzenheim', 'Dornholzhausen', 'Ober-Erlenbach', 'Ober-Eschbach'],
     lokal: 'In der Kurstadt Bad Homburg vor der Höhe vermitteln wir Einsätze von Kirdorf bis Ober-Erlenbach.',
     nachbarn: ['frankfurt', 'friedberg-wetterau', 'frankfurt-hoechst'],
@@ -77,6 +86,7 @@ const cities: Record<string, CityData> = {
     name: 'Mainz',
     region: 'Rheinland-Pfalz',
     slug: 'mainz',
+    plz: '55116',
     stadtteile: ['Gonsenheim', 'Mombach', 'Bretzenheim', 'Hechtsheim', 'Neustadt', 'Oberstadt'],
     lokal: 'In der rheinland-pfälzischen Landeshauptstadt Mainz gibt es Aufträge von der Neustadt bis Gonsenheim und Hechtsheim.',
     nachbarn: ['wiesbaden', 'frankfurt', 'frankfurt-hoechst'],
@@ -85,6 +95,7 @@ const cities: Record<string, CityData> = {
     name: 'Aschaffenburg',
     region: 'Bayern',
     slug: 'aschaffenburg',
+    plz: '63739',
     stadtteile: ['Damm', 'Nilkheim', 'Schweinheim', 'Obernau', 'Leider'],
     lokal: 'In Aschaffenburg am Bayerischen Untermain vermitteln wir Einsätze von Damm bis Schweinheim und Obernau.',
     nachbarn: ['hanau', 'rodgau', 'offenbach'],
@@ -93,6 +104,7 @@ const cities: Record<string, CityData> = {
     name: 'Frankfurt-Höchst',
     region: 'Hessen',
     slug: 'frankfurt-hoechst',
+    plz: '65929',
     stadtteile: ['Nied', 'Sindlingen', 'Unterliederbach', 'Zeilsheim', 'Sossenheim'],
     lokal: 'Im Frankfurter Westen gibt es Einsätze rund um die Höchster Altstadt sowie in den Nachbarstadtteilen.',
     nachbarn: ['frankfurt', 'wiesbaden', 'mainz'],
@@ -101,6 +113,7 @@ const cities: Record<string, CityData> = {
     name: 'Neu-Isenburg',
     region: 'Hessen',
     slug: 'neu-isenburg',
+    plz: '63263',
     stadtteile: ['Stadtmitte', 'Gravenbruch', 'Zeppelinheim'],
     lokal: 'In Neu-Isenburg liegen die Einsätze nah beieinander — von der Stadtmitte bis Gravenbruch und Zeppelinheim.',
     nachbarn: ['frankfurt', 'offenbach', 'darmstadt', 'rodgau'],
@@ -109,6 +122,7 @@ const cities: Record<string, CityData> = {
     name: 'Friedberg (Wetterau)',
     region: 'Hessen',
     slug: 'friedberg-wetterau',
+    plz: '61169',
     stadtteile: ['Ockstadt', 'Dorheim', 'Bauernheim', 'Bruchenbrücken', 'Ossenheim'],
     lokal: 'In der Kreisstadt Friedberg (Wetterau) gibt es Aufträge in der Kernstadt und allen Ortsteilen bis Ockstadt und Dorheim.',
     nachbarn: ['bad-homburg', 'frankfurt', 'hanau'],
@@ -117,6 +131,7 @@ const cities: Record<string, CityData> = {
     name: 'Rodgau',
     region: 'Hessen',
     slug: 'rodgau',
+    plz: '63110',
     stadtteile: ['Jügesheim', 'Dudenhofen', 'Weiskirchen', 'Hainhausen', 'Nieder-Roden'],
     lokal: 'In Rodgau vermitteln wir Einsätze in allen fünf Stadtteilen — von Weiskirchen bis Nieder-Roden.',
     nachbarn: ['offenbach', 'hanau', 'neu-isenburg'],
@@ -225,6 +240,7 @@ function buildJsonLd(city: CityData, faqs: { frage: string; antwort: string }[])
           address: {
             '@type': 'PostalAddress',
             addressLocality: city.name,
+            postalCode: city.plz,
             addressRegion: city.region,
             addressCountry: 'DE',
           },
