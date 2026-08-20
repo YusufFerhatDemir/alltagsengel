@@ -65,6 +65,10 @@ jobs:
         run: npm run lint || true
 
       - name: Unit tests (vitest)
+        env:
+          SHADOW_SUPABASE_URL: ${{ secrets.SHADOW_SUPABASE_URL }}
+          SHADOW_SUPABASE_ANON_KEY: ${{ secrets.SHADOW_SUPABASE_ANON_KEY }}
+          SHADOW_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SHADOW_SUPABASE_SERVICE_ROLE_KEY }}
         run: npx vitest run
 
       - name: Unit tests (node:test)
