@@ -74,7 +74,7 @@ export default function WunddokumentationPage() {
       .then(r => r.json())
       .then(body => setKunden(body.uebersicht || []))
       .catch(() => undefined)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [])
 
   const gefiltert = useMemo(() => {

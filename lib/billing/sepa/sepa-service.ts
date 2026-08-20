@@ -201,7 +201,7 @@ export async function createSepaBatch(
     .eq('status', 'aktiv')
     .in('client_id', clientIds)
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   const mandateByClient = new Map<string, any>()
   for (const m of mandates || []) {
     mandateByClient.set(m.client_id, m)

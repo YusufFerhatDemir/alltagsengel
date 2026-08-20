@@ -39,7 +39,7 @@ export default function KimNachrichtDetailPage() {
       .finally(() => setLoading(false))
   }
 
-  useEffect(() => { loadData() }, [params.id]) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { loadData() }, [params.id])  
 
   async function handleAction(action: 'queue' | 'cancel' | 'mark_read') {
     setBusy(true)

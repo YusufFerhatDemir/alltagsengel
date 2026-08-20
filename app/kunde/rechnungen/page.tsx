@@ -116,7 +116,7 @@ export default function KundeRechnungenPage() {
 
   useEffect(() => {
     load()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [])
 
   async function toggleExpand(invoiceId: string) {

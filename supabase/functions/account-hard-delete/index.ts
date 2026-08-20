@@ -60,7 +60,7 @@ interface AuthUserEmail {
   email: string | null
 }
 
-// @ts-ignore — Deno global
+// @ts-expect-error — Deno global
 serve(async (req: Request) => {
   const cronSecret = Deno.env.get('CRON_SECRET')
   const authHeader = req.headers.get('authorization') || ''

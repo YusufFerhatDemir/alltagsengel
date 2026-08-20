@@ -163,7 +163,7 @@ export default function RechnungserstellungPage() {
     }
   }
 
-  useEffect(() => { loadBillable() }, [year, month]) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { loadBillable() }, [year, month])  
   useEffect(() => { loadInvoices() }, [])
 
   async function createInvoice(group: ClientGroup) {

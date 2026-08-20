@@ -89,7 +89,7 @@ export default function AdminMedikamentePage() {
       .finally(() => setLoading(false))
   }
 
-  useEffect(() => { loadData() }, [filterStatus, filterKategorie, filterClient]) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { loadData() }, [filterStatus, filterKategorie, filterClient])  
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault()

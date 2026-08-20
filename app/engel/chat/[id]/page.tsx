@@ -118,14 +118,14 @@ export default function EngelChatConversationPage() {
         supabase.removeChannel(channel)
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [bookingId])
 
   // Scroll-Position nach Load aelterer Nachrichten erhalten
   useEffect(() => {
     if (loadingOlder) return
     requestRestoreScroll()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [messages.length, loadingOlder])
 
   // Initial: zum unteren Ende scrollen. Bei spaeteren Updates auch, AUSSER

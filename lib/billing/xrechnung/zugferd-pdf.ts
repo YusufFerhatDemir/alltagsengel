@@ -91,7 +91,7 @@ export async function embedZugferdXml(
     Names: namesArray,
   })
 
-  let namesDict = catalog.lookup(PDFName.of('Names')) as PDFDict | undefined
+  const namesDict = catalog.lookup(PDFName.of('Names')) as PDFDict | undefined
   if (namesDict instanceof PDFDict) {
     namesDict.set(PDFName.of('EmbeddedFiles'), embeddedFilesDict)
   } else {

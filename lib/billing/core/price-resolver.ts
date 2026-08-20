@@ -171,7 +171,7 @@ export async function resolvePrice(
   }
 
   // Alle potentiell passenden Tarife laden — ist_aktiv-Filter immer aktiv
-  let query = supabase
+  const query = supabase
     .from('billing_tariffs')
     .select('*')
     .eq('organization_id', params.organizationId)

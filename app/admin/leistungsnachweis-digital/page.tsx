@@ -603,7 +603,7 @@ function LeistungsnachweisDigitalInner() {
                   <div style={{ marginTop: 12 }}>
                     <div style={detailLabel}>Klienten-Unterschrift</div>
                     <div style={{ background: '#fff', border: '1px solid var(--border)', borderRadius: 6, padding: 8, display: 'inline-block' }}>
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      { }
                       <img src={detailRecord.client_signature} alt="Unterschrift" style={{ maxWidth: 300, maxHeight: 120 }} />
                     </div>
                     {detailRecord.client_signer_name && (

@@ -32,5 +32,6 @@ declare module 'web-push' {
   function generateVAPIDKeys(): { publicKey: string; privateKey: string }
 
   export { PushSubscription, SendResult, RequestOptions }
-  export default { setVapidDetails, sendNotification, generateVAPIDKeys }
+  const webPush: { setVapidDetails: typeof setVapidDetails; sendNotification: typeof sendNotification; generateVAPIDKeys: typeof generateVAPIDKeys }
+  export default webPush
 }

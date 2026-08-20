@@ -452,7 +452,7 @@ function FotosTab({ woundId, fotos, assessments, onChanged, onError }: {
         {fotos.map(f => (
           <figure key={f.id} style={{ margin: 0, border: '1px solid var(--line, #e5e7eb)', borderRadius: 10, overflow: 'hidden' }}>
             {/* Signed URLs sind kurzlebig — next/image-Optimierung würde sie cachen/brechen. */}
-            {/* eslint-disable-next-line @next/next/no-img-element */}
+            { }
             <img src={f.signed_url} alt={`Wundfoto vom ${formatZeitpunkt(f.aufgenommen_am)}`} style={{ width: '100%', height: 160, objectFit: 'cover', display: 'block' }} />
             <figcaption style={{ padding: '8px 10px', fontSize: 12 }}>
               <strong>{formatZeitpunkt(f.aufgenommen_am)}</strong>

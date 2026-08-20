@@ -80,7 +80,7 @@ export default function MedikamentDetailPage() {
       .finally(() => setLoading(false))
   }
 
-  useEffect(() => { loadData() }, [id]) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { loadData() }, [id])  
 
   async function handleSave() {
     setSaving(true)

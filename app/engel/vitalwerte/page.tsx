@@ -117,7 +117,7 @@ function VitalwerteFormular() {
       }
     }
     load()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [])
 
   // ── Verlauf des ausgewählten Kunden laden ──

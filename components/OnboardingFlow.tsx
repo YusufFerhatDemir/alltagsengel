@@ -125,7 +125,7 @@ export default function OnboardingFlow() {
             border: '2px solid rgba(201, 150, 60, 0.5)',
             background: '#1A1612',
           }}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
+            { }
             <img
               src="/icon-512x512.png"
               alt="Alltagsengel"
@@ -267,7 +267,7 @@ export default function OnboardingFlow() {
               border: '2px solid rgba(201, 150, 60, 0.5)',
               background: '#1A1612',
             }}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
+              { }
               <img
                 src="/icon-512x512.png"
                 alt="Alltagsengel"
@@ -376,7 +376,7 @@ export default function OnboardingFlow() {
         pointerEvents: 'none',
         zIndex: 0,
       }}>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
+        { }
         <img
           src="/icon-512x512.png"
           alt=""

@@ -85,7 +85,7 @@ export default function KrankenfahrtPage() {
       setDataLoading(false)
     }
     init()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [])
 
   // GPS/IP-Standort als Fallback für Abholadresse
@@ -111,7 +111,7 @@ export default function KrankenfahrtPage() {
     if (plzLoaded && !kasseAllowed && payMethod !== 'privat') {
       setPayMethod('privat')
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [plzLoaded, kasseAllowed])
 
   // Detect night hours

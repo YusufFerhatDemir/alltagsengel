@@ -74,7 +74,7 @@ export default function KundeLeistungsnachweisPage() {
 
   useEffect(() => {
     load()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [])
 
   // Verfügbare Jahre aus den Daten (aktuelles Jahr immer wählbar)
@@ -82,7 +82,7 @@ export default function KundeLeistungsnachweisPage() {
     const set = new Set<number>([now.getFullYear()])
     for (const r of records) set.add(new Date(r.date).getFullYear())
     return Array.from(set).sort((a, b) => b - a)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [records])
 
   // Nach Jahr/Monat filtern und je Monat gruppieren

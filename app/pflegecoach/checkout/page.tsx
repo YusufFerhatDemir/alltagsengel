@@ -111,7 +111,7 @@ function CheckoutInhalt() {
       .catch(e => setStandFehler((e as Error).message))
     // Absichtlich nur von `profil` abhängig: Ein erneuter Lauf bei jeder
     // Namenseingabe würde die Vorbelegung wieder überschreiben.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [profil])
 
   if (profilLaedt) return <CoachLaden />
