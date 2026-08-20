@@ -226,24 +226,26 @@ describe.skipIf(!hasShadowDb)(
   () => {
     let service: any // service_role client (umgeht RLS)
 
-    // Supabase-Client als bestimmter User (setzt auth.uid() via JWT)
+    // Supabase-Client als bestimmter User via signInWithPassword
+    const USER_EMAIL_MAP: Record<string, string> = {
+      [ADMIN_A_ID]:    'admin-a@shadow.test',
+      [KUNDE_A_ID]:    'kunde-a@shadow.test',
+      [ANGEL_USER_ID]: 'angel-test@shadow.test',
+      [USER_C_ID]:     'user-c@shadow.test',
+    }
+
     async function clientAs(userId: string) {
       const { createClient } = await import('@supabase/supabase-js')
-      // Der Shadow-Auth-Shim akzeptiert signInWithPassword mit festen
-      // Credentials und gibt ein JWT mit der gewünschten sub (= uid) zurück.
       const client = createClient(SHADOW_URL!, SHADOW_ANON_KEY!, {
         auth: { persistSession: false, autoRefreshToken: false },
       })
-
-      // Über service_role ein Custom-JWT für den User generieren
-      // Alternative: RPC-Aufruf auf Shadow-DB
-      const { data: { session }, error } = await service.auth.admin.generateLink({
-        type: 'magiclink',
-        email: `${userId}@shadow.test`,
+      const email = USER_EMAIL_MAP[userId]
+      if (!email) throw new Error(`Keine E-Mail für User ${userId}`)
+      const { error } = await client.auth.signInWithPassword({
+        email,
+        password: 'ShadowTest123!',
       })
-
-      // Fallback: direkter PostgREST-Aufruf mit SET LOCAL ROLE
-      // Für Shadow-DB nutzen wir den service_role Client mit set_config
+      if (error) throw new Error(`signIn fehlgeschlagen für ${email}: ${error.message}`)
       return client
     }
 
@@ -346,24 +348,10 @@ describe.skipIf(!hasShadowDb)(
       await service.from('profiles').update({ deleted_at: null }).eq('id', ADMIN_A_ID)
     })
 
-    // ── Hilfsfunktion: Buchungen als User lesen ──
-    // Nutzt service_role mit SET LOCAL ROLE + request.jwt.claims
+    // ── Hilfsfunktion: Buchungen als User lesen (echte RLS via signIn) ──
     async function selectBookingsAs(userId: string): Promise<any[]> {
-      const { data, error } = await service.rpc('raw_sql', {
-        query: `
-          SET LOCAL ROLE authenticated;
-          SET LOCAL request.jwt.claims = '{"sub":"${userId}","role":"authenticated"}';
-          SELECT * FROM public.bookings WHERE id = '${BOOKING_ID}';
-        `,
-      })
-      if (error) {
-        // Fallback: direkt über service_role mit Filter
-        const { data: d2 } = await service
-          .from('bookings')
-          .select('*')
-          .eq('id', BOOKING_ID)
-        return d2 ?? []
-      }
+      const userClient = await clientAs(userId)
+      const { data } = await userClient.from('bookings').select('*').eq('id', BOOKING_ID)
       return data ?? []
     }
 
@@ -437,7 +425,6 @@ describe.skipIf(!hasShadowDb)(
         time: '14:00',
         duration_hours: 1,
         status: 'pending',
-        is_flexible: false,
       })
       // Aufräumen
       await service.from('bookings').delete().eq('id', newId)
