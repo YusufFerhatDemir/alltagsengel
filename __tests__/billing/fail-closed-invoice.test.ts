@@ -271,14 +271,21 @@ describe.skipIf(!hasShadowDb)('Dynamisch: create_invoice_draft_atomic gegen echt
     return { ...data, tarif_status: desiredStatus }
   }
 
-  it('initialisiert den Supabase-Client', async () => {
+  it('initialisiert den Supabase-Client und raeumt alte Testdaten auf', async () => {
     ;({ createClient } = await import('@supabase/supabase-js'))
     supabase = createClient(SHADOW_URL as string, SHADOW_SERVICE_KEY as string)
     expect(supabase).toBeTruthy()
+
+    // Aufräumen: Tarife + Belege + Invoices aus vorherigen Runs entfernen
+    await supabase.from('billing_tariffs').update({ beleg_id: null }).eq('organization_id', ORG_A)
+    await supabase.rpc('raw_sql', { query: `DELETE FROM billing_tariff_audit WHERE tariff_id IN (SELECT id FROM billing_tariffs WHERE organization_id = '${ORG_A}')` }).then(() => {}, () => {})
+    await supabase.from('billing_tarif_belege').delete().eq('organization_id', ORG_A)
+    await supabase.from('billing_tariffs').delete().eq('organization_id', ORG_A)
+    await supabase.from('invoices').delete().eq('organization_id', ORG_A)
   })
 
   it('VERIFIED Kassentarif → Rechnung wird erstellt', async () => {
-    await anlegenTarif({ tarif_status: 'verified' })
+    await anlegenTarif({ tarif_status: 'verified', gueltig_ab: '2026-06-01', gueltig_bis: '2026-06-30' })
     const { data, error } = await supabase.rpc('create_invoice_draft_atomic', {
       p_client_id: CLIENT_A,
       p_org_id: ORG_A,
@@ -291,7 +298,7 @@ describe.skipIf(!hasShadowDb)('Dynamisch: create_invoice_draft_atomic gegen echt
   })
 
   it('UNVERIFIED Kassentarif → MISSING_VALID_TARIFF', async () => {
-    await anlegenTarif({ tarif_status: 'unverified', gueltig_ab: '2026-02-01' })
+    await anlegenTarif({ tarif_status: 'unverified', gueltig_ab: '2026-07-01', gueltig_bis: '2026-07-31' })
     const { error } = await supabase.rpc('create_invoice_draft_atomic', {
       p_client_id: CLIENT_A,
       p_org_id: ORG_A,
@@ -303,7 +310,7 @@ describe.skipIf(!hasShadowDb)('Dynamisch: create_invoice_draft_atomic gegen echt
   })
 
   it('BLOCKED Kassentarif → MISSING_VALID_TARIFF', async () => {
-    await anlegenTarif({ tarif_status: 'blocked', gueltig_ab: '2026-03-01' })
+    await anlegenTarif({ tarif_status: 'blocked', gueltig_ab: '2026-08-01', gueltig_bis: '2026-08-31' })
     const { error } = await supabase.rpc('create_invoice_draft_atomic', {
       p_client_id: CLIENT_A,
       p_org_id: ORG_A,
@@ -315,7 +322,7 @@ describe.skipIf(!hasShadowDb)('Dynamisch: create_invoice_draft_atomic gegen echt
   })
 
   it('deaktivierter Tarif (ist_aktiv=false) → MISSING_VALID_TARIFF trotz verified', async () => {
-    await anlegenTarif({ tarif_status: 'verified', ist_aktiv: false, gueltig_ab: '2026-04-01' })
+    await anlegenTarif({ tarif_status: 'verified', ist_aktiv: false, gueltig_ab: '2026-09-01', gueltig_bis: '2026-09-30' })
     const { error } = await supabase.rpc('create_invoice_draft_atomic', {
       p_client_id: CLIENT_A,
       p_org_id: ORG_A,
@@ -342,7 +349,8 @@ describe.skipIf(!hasShadowDb)('Dynamisch: create_invoice_draft_atomic gegen echt
     await anlegenTarif({
       tarif_status: 'verified',
       rechtsgrundlage: 'privat',
-      gueltig_ab: '2026-05-01',
+      gueltig_ab: '2026-10-01',
+      gueltig_bis: '2026-10-31',
     })
     const { data, error } = await supabase.rpc('create_invoice_draft_atomic', {
       p_client_id: CLIENT_A,
@@ -359,7 +367,8 @@ describe.skipIf(!hasShadowDb)('Dynamisch: create_invoice_draft_atomic gegen echt
     await anlegenTarif({
       tarif_status: 'blocked',
       rechtsgrundlage: 'privat',
-      gueltig_ab: '2026-06-01',
+      gueltig_ab: '2026-11-01',
+      gueltig_bis: '2026-11-30',
     })
     const { error } = await supabase.rpc('create_invoice_draft_atomic', {
       p_client_id: CLIENT_A,
