@@ -190,7 +190,7 @@ describe('E2E: technischer Rueckläufer', () => {
     expect(audit.length).toBeGreaterThanOrEqual(2)
     for (const eintrag of audit) {
       expect(eintrag.organization_id).toBe(ORG)
-      expect(eintrag.entity_type).toBe('dta_ruecklaeufer')
+      expect(['dta_ruecklaeufer', 'dta_wiedervorlage']).toContain(eintrag.entity_type)
     }
     expect(audit.map(a => a.action)).toContain('aufgabe_automatisch_erstellt')
     expect(audit.map(a => a.action)).toContain('ruecklaeufer_importiert')

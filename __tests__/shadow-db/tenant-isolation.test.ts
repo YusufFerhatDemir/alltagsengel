@@ -185,6 +185,7 @@ describe('Statisch: Live-only-Tabellen (Schema existiert NICHT in supabase/migra
       const codeOnly = sql
         .split('\n')
         .filter(line => !line.trim().startsWith('--'))
+        .filter(line => !/^\s*(REVOKE|GRANT)\b/i.test(line))
         .join('\n')
       expect(codeOnly, `${file} enthält DROP TABLE/TRUNCATE`).not.toMatch(/\b(DROP TABLE|TRUNCATE)\b/i)
     }
