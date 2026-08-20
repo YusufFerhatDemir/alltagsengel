@@ -209,7 +209,7 @@ describe.skipIf(!hasShadowDb)('Dynamisch: create_invoice_draft_atomic gegen echt
       .from('billing_tariffs')
       .insert({
         organization_id: ORG_A,
-        leistungsart: 'alltagsbegleitung_45a',
+        leistungsart: 'alltagsbegleitung',
         rechtsgrundlage,
         verguetungsart: 'zeit_stunde',
         preis_cent: 2500,
