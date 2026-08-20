@@ -135,7 +135,7 @@ export default function BuchenPage() {
     if (plzLoaded && !kasseAllowed && payMethod !== 'privat') {
       setPayMethod('privat')
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [plzLoaded, kasseAllowed])
 
   // Passt der Wunschtermin in ein Zeitfenster des Engels? Engel ohne

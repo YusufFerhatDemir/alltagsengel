@@ -131,7 +131,7 @@ export async function holePipelineStatus(
 
   // Rückläufer-Counts pro Lauf
   const laufIds = (laeufe ?? []).map(l => l.id)
-  let ruecklaeuferCounts: Record<string, number> = {}
+  const ruecklaeuferCounts: Record<string, number> = {}
 
   if (laufIds.length > 0) {
     const { data: rlCounts } = await supabase

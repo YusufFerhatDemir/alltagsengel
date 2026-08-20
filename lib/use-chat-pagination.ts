@@ -166,7 +166,7 @@ export function useChatPagination(opts: ChatPaginationOptions): ChatPaginationRe
   // Bewusstes Reset-Pattern bei Schluessel-Wechsel — alternative Loesung waere
   // <ChatList key={chatId} />, aber das ist Aufgabe des Parent-Components.
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- bewusster Reset bei Key-Wechsel, siehe Kommentar oben
+     
     setMessages([])
     setHasMore(false)
     oldestCursorRef.current = null

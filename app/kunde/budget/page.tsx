@@ -122,7 +122,7 @@ export default function KundeBudgetPage() {
 
   useEffect(() => {
     load()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [])
 
   // ── Monatsaufstellung: Summe je Monat und Budgettopf ──

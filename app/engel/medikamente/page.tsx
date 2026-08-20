@@ -111,7 +111,7 @@ function MedikamentePage() {
       }
     }
     load()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [])
 
   // ── Medikamente + Verlauf für ausgewählten Kunden laden ──

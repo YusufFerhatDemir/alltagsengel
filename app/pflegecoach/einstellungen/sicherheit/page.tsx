@@ -236,7 +236,7 @@ export default function SicherheitSeite() {
           {/* Das Bild kommt als fertige Grafik von der Auth-Schicht (Daten-URL);
               next/image bringt hier nichts und würde nur eine Optimierungs-Route
               vor ein bereits eingebettetes Bild schalten. */}
-          {/* eslint-disable-next-line @next/next/no-img-element */}
+          { }
           <img
             src={einrichtung.qrCode}
             alt="QR-Code zum Einrichten des zweiten Faktors. Falls Sie ihn nicht scannen können, verwenden Sie den darunter angezeigten Schlüssel."

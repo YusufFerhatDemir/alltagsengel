@@ -164,21 +164,21 @@ export default function ChatDetailPage() {
         supabase.removeChannel(channel)
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [chatId])
 
   // ═══ 2. Sobald mode gesetzt: Initial-Page laden ═══
   useEffect(() => {
     if (!mode) return
     initMessages()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [mode])
 
   // ═══ 3. Scroll-Position erhalten beim Prepend ═══
   useEffect(() => {
     if (loadingOlder) return
     requestRestoreScroll()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [messages.length, loadingOlder])
 
   // ═══ 4. Smart Scroll-to-bottom ═══

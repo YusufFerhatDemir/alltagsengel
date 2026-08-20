@@ -54,7 +54,7 @@ function NewRecordInner() {
   useEffect(() => {
     const cg = caregivers.find(c => c.id === caregiverId)
     if (cg && cg.initials && !initials) setInitials(cg.initials)
-  }, [caregiverId, caregivers]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [caregiverId, caregivers])  
 
   const duration = useMemo(() => diffMinutes(startTime, endTime), [startTime, endTime])
 

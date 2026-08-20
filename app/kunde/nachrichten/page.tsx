@@ -118,7 +118,7 @@ export default function KundeNachrichtenPage() {
         supabase.removeChannel(channel)
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [])
 
   useEffect(() => {

@@ -65,7 +65,7 @@ export default function EngelPflegedokuKundePage({ params }: { params: Promise<{
       }
     }
     load()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [clientId])
 
   return (

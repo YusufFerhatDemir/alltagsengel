@@ -109,14 +109,14 @@ export default function FahrerChatDetailPage() {
         supabase.removeChannel(channel)
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [rideId])
 
   // ═══ 2. Scroll-Position erhalten beim Prepend ═══
   useEffect(() => {
     if (loadingOlder) return
     requestRestoreScroll()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [messages.length, loadingOlder])
 
   // ═══ 3. Smart Scroll-to-bottom ═══

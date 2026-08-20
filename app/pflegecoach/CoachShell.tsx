@@ -92,13 +92,13 @@ export default function CoachShell({
     // localStorage und dürfen im SSR-Render nicht gelesen werden, sonst
     // weicht der Server-HTML vom Client ab (Hydration-Mismatch). Der Effect
     // läuft genau einmal und übernimmt den gespeicherten Stand.
-    /* eslint-disable react-hooks/set-state-in-effect */
+     
     try {
       const g = localStorage.getItem('pc_schriftgrad') as CoachSchriftgrad | null
       if (g && SCALE[g]) setSchriftgrad(g)
       setKontrast(localStorage.getItem('pc_kontrast') === 'true')
     } catch { /* localStorage nicht verfügbar */ }
-    /* eslint-enable react-hooks/set-state-in-effect */
+     
   }, [])
 
   const speichere = useCallback((grad: CoachSchriftgrad, kontrastAn: boolean) => {
