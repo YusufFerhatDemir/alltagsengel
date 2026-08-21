@@ -1,0 +1,89 @@
+# Uptime-Monitoring — prueft alle 5 Minuten, ob die App erreichbar ist.
+#
+# Bei Fehler wird ein GitHub Issue erstellt. Doppelte Issues werden
+# durch title-Matching verhindert.
+
+name: Uptime Monitor
+
+on:
+  schedule:
+    # Alle 5 Minuten (GitHub garantiert keine exakte Ausfuehrung,
+    # aber im Schnitt +/- 1 Minute)
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+
+jobs:
+  health-check:
+    name: Health Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Ping Health-Endpunkt
+        id: health
+        run: |
+          HTTP_STATUS=$(curl -s -o /tmp/health-response.json -w "%{http_code}" \
+            --max-time 30 \
+            --retry 2 \
+            --retry-delay 10 \
+            "${{ vars.PRODUCTION_URL || 'https://alltagsengel.care' }}/api/health" \
+          ) || HTTP_STATUS=000
+
+          echo "status=$HTTP_STATUS" >> "$GITHUB_OUTPUT"
+
+          if [ "$HTTP_STATUS" -ge 200 ] && [ "$HTTP_STATUS" -lt 300 ]; then
+            echo "Health-Check bestanden (HTTP $HTTP_STATUS)"
+            cat /tmp/health-response.json | jq . 2>/dev/null || cat /tmp/health-response.json
+          else
+            echo "Health-Check FEHLGESCHLAGEN (HTTP $HTTP_STATUS)"
+            cat /tmp/health-response.json 2>/dev/null || echo "(keine Antwort)"
+            echo "failed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Issue erstellen bei Fehler
+        if: steps.health.outputs.failed == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const title = '🚨 Uptime-Alert: Health-Check fehlgeschlagen'
+
+            // Pruefen ob bereits ein offenes Issue existiert
+            const { data: issues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'uptime-alert',
+            })
+
+            const existing = issues.find(i => i.title === title)
+            if (existing) {
+              // Kommentar zum bestehenden Issue
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: existing.number,
+                body: `Erneuter Fehlschlag: HTTP ${process.env.HTTP_STATUS || 'unbekannt'} um ${new Date().toISOString()}`,
+              })
+              return
+            }
+
+            // Neues Issue erstellen
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title,
+              body: [
+                `## Health-Check fehlgeschlagen`,
+                '',
+                `- **Zeitpunkt:** ${new Date().toISOString()}`,
+                `- **HTTP-Status:** ${process.env.HTTP_STATUS || 'unbekannt'}`,
+                `- **URL:** /api/health`,
+                '',
+                'Bitte pruefen:',
+                '1. Ist die App auf Vercel deployed?',
+                '2. Ist Supabase erreichbar?',
+                '3. Gibt es Deployment-Fehler?',
+              ].join('\n'),
+              labels: ['uptime-alert'],
+            })
+        env:
+          HTTP_STATUS: ${{ steps.health.outputs.status }}
