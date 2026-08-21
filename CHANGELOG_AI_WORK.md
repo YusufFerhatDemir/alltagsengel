@@ -4,6 +4,33 @@ Chronologische Dokumentation aller KI-gestuetzten Arbeitssitzungen.
 
 ---
 
+## 2026-08-21 | Session: Typecheck-Fix nach as-any Cleanup
+
+### Durchgefuehrt
+
+**as-any Cleanup Typecheck-Regression behoben**
+- 34 Typecheck-Fehler in 13 Dateien gefixt (CI #316/#317 waren rot)
+- Zentraler Helfer `lib/supabase/join.ts` erstellt: `one<T>(relation)` loest PostgREST Array/Objekt-Mehrdeutigkeit bei FK-Joins
+- 12 Dateien auf `one()` migriert statt `as any` zurueckzuholen
+- 4 weitere Fixes: roleBadge-Signatur, bestaetigt-Typ erweitert, NoteMessage.is_internal ergaenzt, Capacitor addListener-Typ
+- Lokal verifiziert: tsc 0 Fehler, 3403 vitest passed, 794 node:test, Build OK
+
+### CI
+| Run | Commit | Status |
+|-----|--------|--------|
+| #316 | ee5453b | CANCELLED (Typecheck failed, superseded) |
+| #317 | 14c5851 | FAILED (Typecheck, partieller Fix) |
+| #318 | 49503a3 | **GRUEN** (6m 13s) |
+
+### Commits
+| Commit | Beschreibung |
+|--------|-------------|
+| ee5453b | as-any Cleanup: ~90 Produktions-Casts entfernt |
+| 14c5851 | as-any Cleanup: Typecheck-Fehler in mahnung (partiell) |
+| 49503a3 | fix: Typecheck-Fehler aus as-any Cleanup behoben |
+
+---
+
 ## 2026-08-21 | Session: Projekt-Status-Initialisierung
 
 ### Durchgefuehrt
