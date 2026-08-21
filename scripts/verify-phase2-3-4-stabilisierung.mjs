@@ -15,6 +15,7 @@
  * Exit 0 = alles bestanden, Exit 1 = mindestens ein FAIL.
  */
 import { readFileSync, existsSync, readdirSync } from 'node:fs'
+import { apiHeaders, publishableKey, secretKey } from './lib/supabase-keys.mjs'
 
 for (const datei of ['.env.local', '.env']) {
   if (!existsSync(datei)) continue
@@ -26,7 +27,7 @@ for (const datei of ['.env.local', '.env']) {
 }
 
 const BASIS = process.env.NEXT_PUBLIC_SUPABASE_URL
-const SVC = process.env.SUPABASE_SERVICE_ROLE_KEY
+const SVC = secretKey()
 if (!BASIS || !SVC) {
   console.error('NEXT_PUBLIC_SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY fehlen')
   process.exit(1)
@@ -42,7 +43,7 @@ function pruefe(phase, id, status, meldung) {
 async function post(fn, body, key) {
   const res = await fetch(`${BASIS}/rest/v1/rpc/${fn}`, {
     method: 'POST',
-    headers: { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
+    headers: apiHeaders(key, { 'Content-Type': 'application/json' }),
     body: JSON.stringify(body),
   })
   return { status: res.status, text: await res.text() }

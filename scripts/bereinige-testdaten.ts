@@ -180,7 +180,7 @@ async function bereinigeTestmandanten(sb: SupabaseClient): Promise<{ gefunden: n
 
 async function main() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY
+  const key = (process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY)
   if (!url || !key) {
     console.error('NEXT_PUBLIC_SUPABASE_URL und SUPABASE_SERVICE_ROLE_KEY müssen gesetzt sein.')
     process.exit(2)

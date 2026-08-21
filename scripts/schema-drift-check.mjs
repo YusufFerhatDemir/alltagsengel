@@ -33,6 +33,7 @@
 import { readFileSync, existsSync, readdirSync, statSync } from 'node:fs'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { apiHeaders, publishableKey, secretKey } from './lib/supabase-keys.mjs'
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
 
@@ -46,7 +47,7 @@ for (const datei of ['.env.local', '.env']) {
 }
 
 const URL_ = process.env.NEXT_PUBLIC_SUPABASE_URL
-const KEY = process.env.SUPABASE_SERVICE_ROLE_KEY
+const KEY = secretKey()
 if (!URL_ || !KEY) {
   console.error('NEXT_PUBLIC_SUPABASE_URL und SUPABASE_SERVICE_ROLE_KEY werden benötigt.')
   process.exit(1)
@@ -76,7 +77,7 @@ const AUSNAHMEN = new Set([
 ])
 
 const spec = await (await fetch(`${URL_}/rest/v1/`, {
-  headers: { apikey: KEY, Authorization: `Bearer ${KEY}` },
+  headers: apiHeaders(KEY),
 })).json()
 
 const schema = new Map()

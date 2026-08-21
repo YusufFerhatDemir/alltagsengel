@@ -11,6 +11,7 @@
     "lint": "eslint",
     "audit:rls": "tsx scripts/audit-rls.ts",
     "verify:profiles-rls": "node scripts/verify-profiles-rls.mjs",
+    "verify:publishable-key": "node scripts/verify-publishable-key.mjs",
     "rls:matrix": "tsx scripts/rls-matrix.ts",
     "rls:matrix:check": "tsx scripts/rls-matrix.ts --check",
     "lint:forbidden": "tsx scripts/lint-forbidden.ts",

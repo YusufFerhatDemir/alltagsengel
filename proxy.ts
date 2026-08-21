@@ -1,6 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 import { getStorageKeyFromEnv } from '@/lib/supabase/storage-key'
+import { supabasePublishableKey, supabaseUrl } from '@/lib/supabase/keys'
 import { handleRateLimit } from '@/lib/middleware/rate-limit'
 import { logger } from '@/lib/logger'
 const log = logger.child('proxy')
@@ -142,8 +143,8 @@ export async function proxy(request: NextRequest) {
 
   try {
     const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      supabaseUrl(),
+      supabasePublishableKey(),
       {
         cookies: {
           getAll: () => {

@@ -20,6 +20,7 @@
  * Exit 0 = alles angewendet, Exit 1 = mindestens eine Pruefung offen.
  */
 import { readFileSync, existsSync } from 'node:fs'
+import { apiHeaders, publishableKey, secretKey } from './lib/supabase-keys.mjs'
 
 for (const datei of ['.env.local', '.env']) {
   if (!existsSync(datei)) continue
@@ -31,8 +32,8 @@ for (const datei of ['.env.local', '.env']) {
 }
 
 const URL_BASIS = process.env.NEXT_PUBLIC_SUPABASE_URL
-const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY
+const ANON = publishableKey()
+const SERVICE = secretKey()
 if (!URL_BASIS || !ANON || !SERVICE) {
   console.error('NEXT_PUBLIC_SUPABASE_URL / _ANON_KEY / SUPABASE_SERVICE_ROLE_KEY fehlen')
   process.exit(1)
@@ -49,7 +50,7 @@ console.log('\nMITTEL-5 — Cron-RPC gegen anon')
 {
   const r = await fetch(`${URL_BASIS}/rest/v1/rpc/cron_check_ueberfaellige_aufgaben`, {
     method: 'POST',
-    headers: { apikey: ANON, Authorization: `Bearer ${ANON}`, 'Content-Type': 'application/json' },
+    headers: apiHeaders(ANON, { 'Content-Type': 'application/json' }),
     body: '{}',
   })
   pruefe(
@@ -63,7 +64,7 @@ console.log('\nMITTEL-5 — Cron-RPC gegen anon')
 console.log('\nMITTEL-2 + HOCH-1 — organization_id auf den nachgezogenen Tabellen')
 {
   const spec = await (await fetch(`${URL_BASIS}/rest/v1/`, {
-    headers: { apikey: SERVICE, Authorization: `Bearer ${SERVICE}`, Accept: 'application/openapi+json' },
+    headers: apiHeaders(SERVICE, { Accept: 'application/openapi+json' }),
   })).json()
   const defs = spec.definitions || {}
 
@@ -103,7 +104,7 @@ const PROBE = {
 for (const [tabelle, { spalte, koerper }] of Object.entries(PROBE)) {
   const r = await fetch(`${URL_BASIS}/rest/v1/${tabelle}`, {
     method: 'POST',
-    headers: { apikey: ANON, Authorization: `Bearer ${ANON}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+    headers: apiHeaders(ANON, { 'Content-Type': 'application/json', Prefer: 'return=minimal' }),
     body: JSON.stringify(koerper),
   })
   const durchgekommen = r.status === 200 || r.status === 201 || r.status === 204
@@ -114,7 +115,7 @@ for (const [tabelle, { spalte, koerper }] of Object.entries(PROBE)) {
   if (durchgekommen) {
     const weg = await fetch(
       `${URL_BASIS}/rest/v1/${tabelle}?${spalte}=eq.${encodeURIComponent(MARKER)}`,
-      { method: 'DELETE', headers: { apikey: SERVICE, Authorization: `Bearer ${SERVICE}` } },
+      { method: 'DELETE', headers: apiHeaders(SERVICE) },
     )
     nachsatz += ` — Probe-Zeile wieder entfernt (DELETE ${weg.status})`
   } else {
@@ -142,7 +143,7 @@ console.log('\nZusatz — SECURITY-DEFINER-Funktionen mit EXECUTE fuer anon')
 {
   const res = await fetch(`${URL_BASIS}/rest/v1/rpc/_run_sql`, {
     method: 'POST',
-    headers: { apikey: SERVICE, Authorization: `Bearer ${SERVICE}`, 'Content-Type': 'application/json' },
+    headers: apiHeaders(SERVICE, { 'Content-Type': 'application/json' }),
     body: JSON.stringify({ p: `
 DO $$
 DECLARE

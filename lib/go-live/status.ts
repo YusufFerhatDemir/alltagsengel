@@ -42,6 +42,7 @@ import { kimVersandImplementiert } from '@/lib/kim/versand'
 import { exportImplementiert } from '@/lib/abrechnung/sgb-v/generator'
 import { budgetVersionFuerJahrOderNull } from '@/lib/config/budget-constants'
 import { heuteBerlin } from '@/lib/utils/timezone'
+import { supabaseApiHeaders, supabasePublishableKey, supabaseUrl } from '@/lib/supabase/keys'
 
 export type GoLiveStatus = 'ready' | 'blocked' | 'external'
 export type Zustaendigkeit = 'intern' | 'extern'
@@ -87,13 +88,19 @@ export interface GoLiveErgebnis {
  */
 export const SEPA_PLATZHALTER_ID = 'DE98ZZZ09999999999'
 
-/** Env-Variablen, ohne die der Produktivbetrieb nicht läuft. Geprüft wird NUR die Existenz. */
-const PFLICHT_ENV = [
-  'NEXT_PUBLIC_SUPABASE_URL',
-  'NEXT_PUBLIC_SUPABASE_ANON_KEY',
-  'SUPABASE_SERVICE_ROLE_KEY',
-  'RESEND_API_KEY',
-] as const
+/**
+ * Env-Variablen, ohne die der Produktivbetrieb nicht läuft. Geprüft wird NUR
+ * die Existenz. Jede Zeile nennt alle akzeptierten Namen: während der
+ * Migration auf die neuen Supabase-Keys (`sb_publishable_…` / `sb_secret_…`)
+ * zählt der neue Name genauso wie der Legacy-Name. Sonst meldet das
+ * Go-Live-Dashboard nach der Umstellung „Env fehlt", obwohl alles läuft.
+ */
+const PFLICHT_ENV: readonly (readonly string[])[] = [
+  ['NEXT_PUBLIC_SUPABASE_URL'],
+  ['NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY', 'NEXT_PUBLIC_SUPABASE_ANON_KEY'],
+  ['SUPABASE_SECRET_KEY', 'SUPABASE_SERVICE_ROLE_KEY'],
+  ['RESEND_API_KEY'],
+]
 
 /** Rechtsgrundlagen der Verhinderungs- und Kurzzeitpflege (§§ 39, 42 SGB XI). */
 const VP_KZP_GRUNDLAGEN = ['§39', '§42', '§ 39', '§ 42']
@@ -190,12 +197,15 @@ async function messe<T>(fehler: string[], label: string, fn: () => Promise<{ dat
  * weil nur die API abgesichert war, nicht die Tabelle.
  */
 async function pruefeAnonZugriff(tabelle: string): Promise<{ lesbar: boolean | null; quelle: string }> {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  if (!url || !anon) return { lesbar: null, quelle: 'Anon-Key oder URL nicht gesetzt' }
+  const url = supabaseUrl()
+  const anon = supabasePublishableKey()
+  if (!url || !anon) return { lesbar: null, quelle: 'Öffentlicher Key oder URL nicht gesetzt' }
   try {
     const res = await fetch(`${url}/rest/v1/${tabelle}?select=id&limit=1`, {
-      headers: { apikey: anon, Authorization: `Bearer ${anon}` },
+      // supabaseApiHeaders setzt `Authorization: Bearer` nur bei Legacy-JWTs.
+      // Publishable-Keys sind keine JWTs — als Bearer geschickt antwortet die
+      // API mit „Invalid JWT", und die Prüfung wäre dann fälschlich „dicht".
+      headers: supabaseApiHeaders(anon),
       cache: 'no-store',
     })
     if (!res.ok) return { lesbar: false, quelle: `HTTP ${res.status}` }
@@ -548,13 +558,20 @@ function bereichDipaErstattung(): GoLiveBereich {
 }
 
 function bereichSecurity(m: Messwerte): GoLiveBereich {
+  // Waehrend der Key-Migration zaehlt beides. Die Quelle wird mit ausgegeben,
+  // damit im Dashboard sichtbar ist, ob das Projekt schon auf `sb_secret_…`
+  // umgestellt ist oder noch am Legacy-JWT haengt.
+  const geheimerServerKey = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY
+  const geheimerKeyQuelle = process.env.SUPABASE_SECRET_KEY
+    ? 'gesetzt (SUPABASE_SECRET_KEY)'
+    : 'gesetzt (Legacy SUPABASE_SERVICE_ROLE_KEY)'
   const seedBewertungen = m.bewertungen.filter(b => istSeedUuid(b.angel_id) || istSeedUuid(b.reviewer_id)).length
   const anon = m.anonBewertungen
 
   const pruefungen = [
     pruefung('Bewertungen nicht anonym lesbar', anon.lesbar === false, anon.lesbar === null ? `nicht prüfbar (${anon.quelle})` : anon.lesbar ? `LECK — ${anon.quelle}` : 'anon liefert 0 Zeilen', 'intern'),
     pruefung('Keine Demo-/Seed-Bewertungen in Produktion', seedBewertungen === 0, `${seedBewertungen} von ${m.bewertungen.length}`, 'intern'),
-    pruefung('Service-Role-Key serverseitig gesetzt', Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY), process.env.SUPABASE_SERVICE_ROLE_KEY ? 'gesetzt' : 'fehlt', 'intern'),
+    pruefung('Geheimer Server-Key gesetzt (Secret- oder Service-Role-Key)', Boolean(geheimerServerKey), geheimerServerKey ? geheimerKeyQuelle : 'fehlt', 'intern'),
     pruefung('Mehr-Faktor-Authentisierung (MFA)', false, 'nicht implementiert', 'intern', 'hinweis'),
     pruefung('Penetrationstest durch Dritte', false, 'nicht durchgeführt', 'extern', 'hinweis'),
   ]
@@ -580,7 +597,9 @@ function bereichSecurity(m: Messwerte): GoLiveBereich {
 function bereichProduction(m: Messwerte): GoLiveBereich {
   const org = m.organisation
   const sepaPlatzhalter = org?.sepa_creditor_id === SEPA_PLATZHALTER_ID
-  const fehlendeEnv = PFLICHT_ENV.filter(k => !process.env[k])
+  const fehlendeEnv = PFLICHT_ENV
+    .filter(namen => !namen.some(k => process.env[k]))
+    .map(namen => namen.join(' oder '))
   const testOrgs = m.testMandanten?.length ?? 0
   // Namen nennen statt nur zählen: „2" ist keine Handlungsanweisung. Wer den
   // Rest wegräumen soll, muss wissen, welcher Mandant übrig ist — zumal nicht

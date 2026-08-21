@@ -19,13 +19,14 @@
  * Liest ausschliesslich. Keine Schreiboperationen.
  */
 import fs from 'node:fs';
+import { apiHeaders, publishableKey, secretKey } from './lib/supabase-keys.mjs'
 
 const read = (f) => { try { return fs.readFileSync(f, 'utf8'); } catch { return ''; } };
 const env = read('.env') + '\n' + read('.env.local');
 const get = (k) => process.env[k] || (env.match(new RegExp('^' + k + '=(.*)$', 'm')) || [])[1]?.trim();
 
 const URL_ = get('NEXT_PUBLIC_SUPABASE_URL');
-const SR = get('SUPABASE_SERVICE_ROLE_KEY');
+const SR = secretKey();
 if (!URL_ || !SR) {
   console.error('FEHLT: NEXT_PUBLIC_SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY');
   process.exit(2);
@@ -61,7 +62,7 @@ const KEIN_OFFENES_SCHREIBEN = [
 const rpc = async (fn) => {
   const r = await fetch(`${URL_}/rest/v1/rpc/${fn}`, {
     method: 'POST',
-    headers: { apikey: SR, Authorization: `Bearer ${SR}`, 'Content-Type': 'application/json' },
+    headers: apiHeaders(SR, { 'Content-Type': 'application/json' }),
     body: '{}',
   });
   if (!r.ok) {

@@ -6,6 +6,7 @@
  * Aufruf: node scripts/stammdaten-bestand.mjs
  */
 import { readFileSync, existsSync } from 'node:fs'
+import { apiHeaders, publishableKey, secretKey } from './lib/supabase-keys.mjs'
 
 for (const datei of ['.env.local', '.env']) {
   if (!existsSync(datei)) continue
@@ -17,7 +18,7 @@ for (const datei of ['.env.local', '.env']) {
 }
 
 const BASIS = process.env.NEXT_PUBLIC_SUPABASE_URL
-const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY
+const SERVICE = secretKey()
 if (!BASIS || !SERVICE) { console.error('env fehlt'); process.exit(1) }
 
 const TABELLEN = [
@@ -44,12 +45,7 @@ const TABELLEN = [
 
 async function zaehle(tabelle, filter = '') {
   const res = await fetch(`${BASIS}/rest/v1/${tabelle}?select=id${filter}`, {
-    headers: {
-      apikey: SERVICE,
-      Authorization: `Bearer ${SERVICE}`,
-      Prefer: 'count=exact',
-      Range: '0-0',
-    },
+    headers: apiHeaders(SERVICE, { Prefer: 'count=exact', Range: '0-0' }),
   })
   if (!res.ok) return `FEHLER ${res.status}: ${(await res.text()).slice(0, 90)}`
   const bereich = res.headers.get('content-range')

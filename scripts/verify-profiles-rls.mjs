@@ -20,6 +20,7 @@
  */
 
 import { readFileSync, existsSync } from 'node:fs'
+import { apiHeaders, publishableKey, secretKey } from './lib/supabase-keys.mjs'
 
 // ── Env laden (.env.local hat Vorrang, wie in Next.js) ──────────
 for (const datei of ['.env.local', '.env']) {
@@ -33,8 +34,8 @@ for (const datei of ['.env.local', '.env']) {
 }
 
 const URL_BASIS = process.env.NEXT_PUBLIC_SUPABASE_URL
-const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY
+const ANON = publishableKey()
+const SERVICE = secretKey()
 
 if (!URL_BASIS || !ANON || !SERVICE) {
   console.error('Fehlt: NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY oder SUPABASE_SERVICE_ROLE_KEY')
@@ -46,7 +47,7 @@ const ERWARTETE_ZEILEN = argErwartet !== -1 ? Number(process.argv[argErwartet + 
 
 async function hole(pfad, schluessel, extraHeader = {}) {
   const res = await fetch(`${URL_BASIS}/rest/v1/${pfad}`, {
-    headers: { apikey: schluessel, Authorization: `Bearer ${schluessel}`, ...extraHeader },
+    headers: apiHeaders(schluessel, { ...extraHeader }),
   })
   const text = await res.text()
   let json = null
