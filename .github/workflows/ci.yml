@@ -92,7 +92,7 @@ jobs:
         run: npm run build
 
   e2e:
-    name: E2E — PflegeCoach-Produktbereich (DiPA-Matrix QS-05)
+    name: E2E — PflegeCoach (DiPA QS-05) + Barrierefreiheit (BITV B-13)
     runs-on: ubuntu-latest
     # Laeuft normal in ~4-5 Min (erfolgreiche Runs am 14.08.: 4m32s,
     # 4m21s, 5m02s). Das Job-Limit muss den Worst Case der Install-Schritte
@@ -180,7 +180,8 @@ jobs:
         run: |
           npm run start -- -p 3000 &
           for i in $(seq 1 60); do
-            curl -sf http://localhost:3000/pflegecoach/start -o /dev/null && exit 0
+            curl -sf http://localhost:3000/pflegecoach/start -o /dev/null \
+              && curl -sf http://localhost:3000/ -o /dev/null && exit 0
             sleep 1
           done
           echo "Server kam nach 60s nicht hoch." >&2
@@ -193,7 +194,12 @@ jobs:
         # WCAG 2.1 A/AA plus ein eigener Kontrastrechner. Letzterer existiert,
         # weil axe den am 14.08.2026 gefundenen 1:1-Kontrast des primaeren
         # Link-Buttons nur als "incomplete" meldete, nicht als Verstoss.
-        run: npx playwright test e2e/pflegecoach.spec.ts e2e/pflegecoach-axe.spec.ts
+        # landing-axe.spec.ts (BITV-Audit B-13) prueft zusaetzlich die
+        # oeffentlichen Hauptseiten und — als einziger Lauf ueberhaupt — das
+        # Fokus-Verhalten eines echten, geoeffneten Dialogs (Fokus hinein,
+        # Tab-Zyklus, ESC, Fokus-Rueckgabe). Er laeuft als Sperrklinke gegen
+        # eine dokumentierte Altlasten-Liste, siehe Kopf der Datei.
+        run: npx playwright test e2e/pflegecoach.spec.ts e2e/pflegecoach-axe.spec.ts e2e/landing-axe.spec.ts
 
       - name: Upload Playwright report
         if: always()
