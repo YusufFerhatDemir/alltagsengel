@@ -3,6 +3,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { NextResponse } from 'next/server'
 import { writeOffInvoice } from '@/lib/billing/core'
 import { getActiveOrgId } from '@/lib/organizations/server'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 
 export async function POST(
   request: Request,
@@ -55,8 +56,6 @@ export async function POST(
 
     return NextResponse.json(result)
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'Interner Serverfehler'
-    console.error('[billing/abschreiben] Fehler:', message)
-    return NextResponse.json({ error: message }, { status: 400 })
+    return safeApiError(err, request)
   }
 }

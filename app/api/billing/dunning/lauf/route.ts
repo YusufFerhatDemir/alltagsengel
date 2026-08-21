@@ -2,6 +2,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { NextResponse } from 'next/server'
 import { runDunningRun } from '@/lib/billing/core'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 
 /**
  * Manueller Mahnlauf fuer die aktive Organisation.
@@ -30,7 +31,6 @@ export async function POST(request: Request) {
 
     return NextResponse.json(result)
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'Interner Serverfehler'
-    return NextResponse.json({ error: message }, { status: 500 })
+    return safeApiError(err, request)
   }
 }

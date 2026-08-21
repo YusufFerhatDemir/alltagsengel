@@ -5,6 +5,7 @@ import { parseCamtXml, computeCamtFileHash } from '@/lib/billing/camt/camt-parse
 import { matchBuchung } from '@/lib/billing/matching/matching-engine';
 import { verarbeiteRuecklastschrift } from '@/lib/billing/sepa/ruecklastschrift';
 import { logBillingAction } from '@/lib/billing/core/audit';
+import { safeApiError } from '@/lib/api/error-sanitizer';
 
 /**
  * POST /api/billing/camt/import
@@ -191,8 +192,7 @@ export async function POST(req: NextRequest) {
       ergebnisse,
     }, { status: 201 });
 
-  } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : String(e);
-    return NextResponse.json({ error: msg }, { status: 500 });
+  } catch (e) {
+    return safeApiError(e, req);
   }
 }

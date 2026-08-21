@@ -2,6 +2,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { NextResponse } from 'next/server'
 import { getDunningOverview } from '@/lib/billing/core'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 
 export async function GET() {
   try {
@@ -23,7 +24,6 @@ export async function GET() {
 
     return NextResponse.json({ overview, entries: entries || [] })
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'Interner Serverfehler'
-    return NextResponse.json({ error: message }, { status: 500 })
+    return safeApiError(err)
   }
 }

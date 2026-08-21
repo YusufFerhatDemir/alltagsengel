@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { requireOpsAdmin } from '@/lib/ops/api-auth';
 import { getOposListe, type OposFilter } from '@/lib/billing/opos/opos-manager';
+import { safeApiError } from '@/lib/api/error-sanitizer';
 
 /**
  * GET /api/billing/opos
@@ -35,8 +36,7 @@ export async function GET(req: NextRequest) {
 
     const data = await getOposListe(supabase, auth.ctx.organizationId, filter);
     return NextResponse.json(data);
-  } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : String(e);
-    return NextResponse.json({ error: msg }, { status: 400 });
+  } catch (e) {
+    return safeApiError(e, req);
   }
 }

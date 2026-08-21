@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { ordneZahlungSgbVLaufZu } from '@/lib/abrechnung/sgb-v/zahlungsabgleich'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 
 /** POST /api/billing/sgb-v/zahlungen/[id]/zuordnen — Body: { laufId } */
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -18,8 +19,6 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 
     return NextResponse.json({ success: true })
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'Interner Serverfehler'
-    console.error('[billing/sgb-v/zahlungen/[id]/zuordnen] Fehler:', message)
-    return NextResponse.json({ error: message }, { status: 400 })
+    return safeApiError(err, request)
   }
 }

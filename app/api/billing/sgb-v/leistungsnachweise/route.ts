@@ -4,6 +4,7 @@ import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import {
   erfasseHkpLeistung, listeHkpLeistungsnachweise, pruefeVollstaendigkeit,
 } from '@/lib/abrechnung/sgb-v/leistungsnachweis-service'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 
 /**
  * GET /api/billing/sgb-v/leistungsnachweise?von=...&bis=...&verordnungId=...&pruefen=1
@@ -29,9 +30,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json({ leistungsnachweise, vollstaendigkeit })
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'Interner Serverfehler'
-    console.error('[billing/sgb-v/leistungsnachweise] Fehler:', message)
-    return NextResponse.json({ error: message }, { status: 500 })
+    return safeApiError(err, request)
   }
 }
 
@@ -64,8 +63,6 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ id }, { status: 201 })
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'Interner Serverfehler'
-    console.error('[billing/sgb-v/leistungsnachweise] Fehler:', message)
-    return NextResponse.json({ error: message }, { status: 400 })
+    return safeApiError(err, request)
   }
 }

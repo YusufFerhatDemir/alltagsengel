@@ -3,6 +3,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { ermittleKimReadiness } from '@/lib/kim/readiness'
 import { heuteBerlin } from '@/lib/utils/timezone';
+import { safeApiError } from '@/lib/api/error-sanitizer'
 
 /**
  * GET /api/billing/kim/readiness?stichtag=2027-02-01
@@ -28,8 +29,6 @@ export async function GET(request: Request) {
 
     return NextResponse.json(ergebnis)
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'Interner Serverfehler'
-    console.error('[billing/kim/readiness] Fehler:', message)
-    return NextResponse.json({ error: message }, { status: 500 })
+    return safeApiError(err, request)
   }
 }

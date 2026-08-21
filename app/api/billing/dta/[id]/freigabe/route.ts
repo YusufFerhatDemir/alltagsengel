@@ -3,6 +3,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { NextResponse } from 'next/server'
 import { gebeLaufFrei } from '@/lib/abrechnung/kassenabrechnung-engine'
 import { getActiveOrgId } from '@/lib/organizations/server'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 
 export async function POST(
   _request: Request,
@@ -50,6 +51,6 @@ export async function POST(
 
     return NextResponse.json({ success: true })
   } catch (err) {
-    return NextResponse.json({ error: (err as Error).message }, { status: 500 })
+    return safeApiError(err, _request)
   }
 }

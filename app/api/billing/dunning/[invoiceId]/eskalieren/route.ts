@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { advanceDunning, ensureDunningEntry } from '@/lib/billing/core/dunning'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 
 export async function POST(
   _req: NextRequest,
@@ -32,7 +33,7 @@ export async function POST(
     const result = await advanceDunning(supabase, invoiceId, auth.ctx.userId)
 
     return NextResponse.json(result)
-  } catch (e: any) {
-    return NextResponse.json({ error: e.message }, { status: 400 })
+  } catch (e) {
+    return safeApiError(e, _req)
   }
 }

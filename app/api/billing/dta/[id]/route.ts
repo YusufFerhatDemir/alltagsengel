@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { NextResponse } from 'next/server'
 import { getActiveOrgId } from '@/lib/organizations/server'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 
 export async function GET(
   _request: Request,
@@ -84,6 +85,6 @@ export async function GET(
       ruecklaeufer: ruecklaeufer ?? [],
     })
   } catch (err) {
-    return NextResponse.json({ error: (err as Error).message }, { status: 500 })
+    return safeApiError(err, _request)
   }
 }

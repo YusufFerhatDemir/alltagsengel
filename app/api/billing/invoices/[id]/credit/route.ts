@@ -3,6 +3,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { NextResponse } from 'next/server'
 import { createCreditNote } from '@/lib/billing/core'
 import { getActiveOrgId } from '@/lib/organizations/server'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 
 /**
  * POST /api/billing/invoices/[id]/credit
@@ -70,8 +71,6 @@ export async function POST(
 
     return NextResponse.json(result)
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'Interner Serverfehler'
-    console.error('[billing/credit] Fehler:', message)
-    return NextResponse.json({ error: message }, { status: 400 })
+    return safeApiError(err, request)
   }
 }

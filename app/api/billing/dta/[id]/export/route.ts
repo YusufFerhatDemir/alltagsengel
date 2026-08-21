@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server'
 import { exportiereLauf } from '@/lib/abrechnung/kassenabrechnung-engine'
 import { getOrgIK } from '@/lib/config/org-config'
 import { getActiveOrgId } from '@/lib/organizations/server'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 
 export async function POST(
   _request: Request,
@@ -55,6 +56,6 @@ export async function POST(
 
     return NextResponse.json(ergebnis)
   } catch (err) {
-    return NextResponse.json({ error: (err as Error).message }, { status: 500 })
+    return safeApiError(err, _request)
   }
 }

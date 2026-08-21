@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { createMandate, listMandates } from '@/lib/billing/sepa/sepa-service'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 
 export async function GET(req: NextRequest) {
   try {
@@ -15,8 +16,8 @@ export async function GET(req: NextRequest) {
 
     const data = await listMandates(supabase, auth.ctx.organizationId, { clientId, status })
     return NextResponse.json(data)
-  } catch (e: any) {
-    return NextResponse.json({ error: e.message }, { status: 400 })
+  } catch (e) {
+    return safeApiError(e, req)
   }
 }
 
@@ -33,7 +34,7 @@ export async function POST(req: NextRequest) {
       actorId: auth.ctx.userId,
     })
     return NextResponse.json(data, { status: 201 })
-  } catch (e: any) {
-    return NextResponse.json({ error: e.message }, { status: 400 })
+  } catch (e) {
+    return safeApiError(e, req)
   }
 }

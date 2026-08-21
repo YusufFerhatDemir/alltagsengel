@@ -3,6 +3,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { NextResponse } from 'next/server'
 import { recordPaymentDifference } from '@/lib/billing/core'
 import { getActiveOrgId } from '@/lib/organizations/server'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 
 export async function POST(request: Request) {
   try {
@@ -57,8 +58,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ differenceId: diffId })
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'Interner Serverfehler'
-    return NextResponse.json({ error: message }, { status: 500 })
+    return safeApiError(err, request)
   }
 }
 
@@ -89,10 +89,9 @@ export async function GET(request: Request) {
       .order('created_at', { ascending: false })
       .limit(200)
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    if (error) return safeApiError(error, request)
     return NextResponse.json({ differences: data || [] })
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'Interner Serverfehler'
-    return NextResponse.json({ error: message }, { status: 500 })
+    return safeApiError(err, request)
   }
 }
