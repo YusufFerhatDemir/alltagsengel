@@ -91,6 +91,9 @@ marketing/_tmp*.png
 # Lokale Shadow-DB (scripts/shadow-db.sh) — kompletter Postgres-Cluster, nie committen
 .shadow-db/
 
+# ChairMatch Landing: Supabase-Config wird per generate-config.sh erzeugt
+chairmatch-landing/js/supabase-config.js
+
 # Next.js 16 uses proxy.ts — middleware.ts must not exist
 middleware.ts
 .next-old/
