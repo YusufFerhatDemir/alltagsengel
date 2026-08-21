@@ -238,6 +238,7 @@ footer .f-links a:hover{color:var(--accent)}
   <div style="margin-top:12px">© 2026 ChairMatch — Wiesbaden</div>
 </footer>
 
+<script src="/js/supabase-config.js"></script>
 <script>
 async function submitLead(e, source, service) {
   e.preventDefault();
@@ -250,12 +251,12 @@ async function submitLead(e, source, service) {
   const utmSource = params.get('utm_source') || params.get('source') || '';
   const branch = data.get('branch');
   try {
-    await fetch('https://nnwyktkqibdjxgimjyuq.supabase.co/rest/v1/lead_inquiries', {
+    await fetch(window.__SUPABASE_URL + '/rest/v1/lead_inquiries', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ud3lrdGtxaWJkanhnaW1qeXVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5OTc3NDUsImV4cCI6MjA4NzU3Mzc0NX0.DOGjqwwoWrQzelnIQX5ve-HKts0G5Qg5r9JiKNXWxpk',
-        'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ud3lrdGtxaWJkanhnaW1qeXVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5OTc3NDUsImV4cCI6MjA4NzU3Mzc0NX0.DOGjqwwoWrQzelnIQX5ve-HKts0G5Qg5r9JiKNXWxpk',
+        'apikey': window.__SUPABASE_ANON_KEY,
+        'Authorization': 'Bearer ' + window.__SUPABASE_ANON_KEY,
         'Prefer': 'return=minimal'
       },
       body: JSON.stringify({

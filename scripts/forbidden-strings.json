@@ -169,6 +169,12 @@
         "lib/coach/regulatorik.ts",
         "docs/TRACK3_DIPA_PFLEGECOACH_STATUS_2026-08-19.md"
       ]
+    },
+    {
+      "id": "hardcoded-supabase-key-in-html",
+      "pattern": "apikey': 'eyJhbGciOi",
+      "reason": "Hardcodierter Supabase-Anon-Key in statischem HTML. Stattdessen window.__SUPABASE_ANON_KEY aus supabase-config.js verwenden (siehe chairmatch-landing/generate-config.sh).",
+      "caseSensitive": true
     }
   ],
   "excludeGlobs": [
