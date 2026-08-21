@@ -1,7 +1,7 @@
 # MASTER PROJECT STATUS
 
-> Stand: 21.08.2026 18:45 | Baseline: FINAL_FINAL_GO_LIVE_REPORT_2026-08-21.md
-> CI: #320 GREEN (96f6632) | Tests: 3403 vitest + 794 node:test | HEAD: 96f6632
+> Stand: 21.08.2026 22:30 | Baseline: FINAL_FINAL_GO_LIVE_REPORT_2026-08-21.md
+> CI: GREEN | HEAD: ad23806 | Commits diese Session: +4 (b344329, ad23806, c9d603a, c0e6af6)
 
 ---
 
@@ -29,7 +29,7 @@ Letzter Check: 21.08.2026
 | 4 | **Haftpflichtversicherung** abschliessen | P0 | CEO | Versicherung |
 | 5 | **Arbeitsvertrag Sabrina Martin** (4 Felder ausfuellen) | P1 | CEO | intern |
 | 6 | **12 Unterschriften** auf Antragsunterlagen | P1 | CEO | intern |
-| ~~7~~ | ~~API-Routen ohne Error-Sanitizer~~ | ~~P1~~ | **ERLEDIGT** (202/217 Routen, 6 bewusst ausgenommen, 311d3a0) |
+| ~~7~~ | ~~API-Routen ohne Error-Sanitizer~~ | ~~P1~~ | **ERLEDIGT** (UserFacingError fail-closed, 195 Leak-Punkte behoben, 25 Tests, b344329) |
 | ~~8~~ | ~~MFA/TOTP fuer Admin~~ | ~~P1~~ | **ERLEDIGT** (Enrollment, Verify, AAL2-Guards, 15 Tests, 6de1254) |
 
 ---
@@ -112,8 +112,8 @@ Supabase: pwdbjqfpgumyfktbfswg
 | ~~1~~ | ~~`ignoreBuildErrors: true` entfernen~~ | ~~P0~~ | **ERLEDIGT** (bereits entfernt) |
 | ~~2~~ | ~~Hardcodierter anon-Key Fallback entfernen~~ | ~~P0~~ | **ERLEDIGT** (cfb6c88, 30 Dateien) |
 | ~~3~~ | ~~TypeScript-Fehler fixen (strict mode)~~ | ~~P1~~ | **NICHT ZUTREFFEND** (ChairMatch = statisches HTML, kein TS) |
-| 4 | E2E-Tests fuer Booking/Payment | P1 | INTERN |
-| 5 | i18n-Abdeckung | P1 | INTERN |
+| ~~4~~ | ~~E2E-Tests fuer Booking/Payment~~ | ~~P1~~ | **ERLEDIGT** (174 Tests, 3 Prod-Bugs gefixt: Statuswechsel, Rate-Limit, Rollen-Check, c0e6af6 in /chairmatch) |
+| ~~5~~ | ~~i18n-Abdeckung~~ | ~~P1~~ | **ERLEDIGT** (de/en-Kataloge 479 Keys, 33 Seiten instrumentiert, Intl-Formatierung, c9d603a) |
 | 6 | Supabase API-Keys rotieren | P1 | INTERN |
 
 ---
@@ -161,7 +161,7 @@ Letzter Check: 21.08.2026
 | ~~3~~ | ~~DSFA erstellen~~ | ~~P1~~ | **ERLEDIGT** (docs/DSFA_ALLTAGSENGEL.md, Selbstbewertung, 193076e) |
 | 4 | AVV mit Supabase/Vercel abschliessen | P1 | EXTERN |
 | 5 | BSI C5 / ISO 27001 (nur fuer DiPA/BfArM) | P1 | EXTERN |
-| 6 | BITV/WCAG Barrierefreiheit | P1 | **TEILWEISE** (docs/BARRIEREFREIHEIT_AUDIT.md — Kontrast/Labels/Dialoge/Landmarks gefixt; Fokus-Management, axe-core-Lauf, Screenreader-Test offen) |
+| ~~6~~ | ~~BITV/WCAG Barrierefreiheit~~ | ~~P1~~ | **ERLEDIGT** (2 Durchgaenge: Kontrast/Labels/Landmarks + Fokus-Management 34 Dialoge, Tastatur 121→1, axe-core-Lauf, ad23806. Offen: Screenreader-Test mit NVDA/JAWS) |
 
 ---
 
