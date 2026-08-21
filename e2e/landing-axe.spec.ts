@@ -81,7 +81,7 @@ const ALTLASTEN: Record<string, string> = {
   'nested-interactive':
     'B-16 — verschachtelte Bedienelemente in einer SVG-Grafik (viewBox 0 0 400 290).',
   'scrollable-region-focusable':
-    'B-17 — scrollbarer Bereich ohne Tastaturzugang (Startseite, Abschnitt 5).',
+    'B-17 — scrollbarer Bereich ohne Tastaturzugang (/finanzierung, Abschnitt 5).',
 }
 
 interface AxeVerstoss {
