@@ -3,6 +3,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { buildRecoveryLink } from '@/lib/supabase/recovery-link'
 import { sendEmailNotification } from '@/lib/notifications'
 import { rateLimit, getClientIp } from '@/lib/rate-limit'
+import { authLogger as log } from '@/lib/logger'
 
 /**
  * POST /api/auth/send-reset
@@ -79,7 +80,7 @@ export async function POST(request: Request) {
     // kann hier wieder eine konkrete Dauer stehen.
 
     if (error) {
-      console.error('generateLink recovery error:', error)
+      log.error('generateLink recovery error', { errorMessage: error.message })
       return NextResponse.json({ success: true })
     }
 
@@ -106,7 +107,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true })
   } catch (err) {
-    console.error('send-reset error:', err)
+    log.errorWithException('send-reset error', err)
     return NextResponse.json({ success: true })
   }
 }

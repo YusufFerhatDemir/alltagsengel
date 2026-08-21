@@ -5,6 +5,7 @@
  */
 
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { billingLogger as log } from '@/lib/logger';
 
 /**
  * Erzeugt einen deterministischen Idempotency-Key.
@@ -36,7 +37,7 @@ export async function checkIdempotency(
     .maybeSingle();
 
   if (error) {
-    console.error('[billing-idempotency] Fehler bei Idempotenz-Pruefung:', error);
+    log.error('Fehler bei Idempotenz-Pruefung', { idempotencyKey: key, errorMessage: error.message });
     throw new Error(`Idempotenz-Prüfung fehlgeschlagen: ${error.message}`);
   }
 

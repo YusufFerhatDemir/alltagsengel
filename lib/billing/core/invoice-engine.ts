@@ -17,6 +17,7 @@
  */
 
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { billingLogger as log } from '@/lib/logger';
 import {
   validateTransition,
   isValidInvoiceStatus,
@@ -193,7 +194,7 @@ export async function setzeFaelligkeitFallsLeer(
       .maybeSingle();
 
     if (loadError || !invoice) {
-      console.error('[billing] Faelligkeit: Rechnung nicht ladbar:', loadError?.message);
+      log.error('Faelligkeit: Rechnung nicht ladbar', { invoiceId, errorMessage: loadError?.message });
       return null;
     }
     if (invoice.due_date) return invoice.due_date as string;
@@ -210,7 +211,7 @@ export async function setzeFaelligkeitFallsLeer(
       .is('due_date', null);
 
     if (updateError) {
-      console.error('[billing] Faelligkeit konnte nicht gesetzt werden:', updateError.message);
+      log.error('Faelligkeit konnte nicht gesetzt werden', { invoiceId, errorMessage: updateError.message });
       return null;
     }
 
@@ -220,7 +221,7 @@ export async function setzeFaelligkeitFallsLeer(
     // beim Nachziehen der Faelligkeit darf sie nicht nachtraeglich zu einem
     // Fehlschlag machen — OPOS haette dann gar keine Rechnung statt einer
     // Rechnung ohne Faelligkeit.
-    console.error('[billing] Faelligkeit: unerwarteter Fehler:', err);
+    log.errorWithException('Faelligkeit: unerwarteter Fehler', err, { invoiceId });
     return null;
   }
 }
@@ -483,7 +484,7 @@ export async function freezeInvoice(
     validateTransition(currentStatus, 'freigegeben');
   } else {
     // Legacy-Status: erlauben, aber warnen
-    console.warn(`[billing] Legacy-Status "${currentStatus}" wird festgeschrieben.`);
+    log.warn('Legacy-Status wird festgeschrieben', { invoiceId, status: currentStatus });
   }
 
   if (invoice.frozen_at) {
@@ -587,7 +588,7 @@ export async function freezeInvoice(
       .insert(lineSnapshots);
 
     if (lineError) {
-      console.error('[billing] Line-Snapshots Fehler:', lineError);
+      log.error('Line-Snapshots Fehler', { invoiceId, errorMessage: lineError?.message });
     }
   }
 
@@ -628,7 +629,7 @@ export async function freezeInvoice(
     const { ensureDunningEntry } = await import('./dunning');
     await ensureDunningEntry(supabase, invoiceId, invoice.organization_id, actorId);
   } catch (e) {
-    console.error('[billing] Auto-Dunning bei Festschreibung fehlgeschlagen:', e);
+    log.errorWithException('Auto-Dunning bei Festschreibung fehlgeschlagen', e, { invoiceId });
   }
 
   return {
@@ -663,7 +664,7 @@ export async function generateInvoiceNumber(
 
   if (error) {
     // Fallback: eigene Implementierung
-    console.warn('[billing] next_billing_number RPC fehlgeschlagen, nutze Fallback:', error.message);
+    log.warn('next_billing_number RPC fehlgeschlagen, nutze Fallback', { errorMessage: error.message });
     return generateInvoiceNumberFallback(supabase, orgId, prefix, currentYear);
   }
 

@@ -30,6 +30,7 @@
 
 import type { NextRequest } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { auditLogger as log } from '@/lib/logger'
 
 /** Alle erlaubten Audit-Aktionen (synchron mit CHECK in Migration) */
 export type AuditAction =
@@ -117,19 +118,19 @@ export async function logAuditEvent(input: AuditLogInput): Promise<boolean> {
 
     if (error) {
       // AUTH-002: kein rohes err-Objekt loggen — könnte sensible Info enthalten
-      console.error('[audit-log] insert failed:', {
-        code: (error as any)?.code,
-        message: error?.message,
+      log.error('insert failed', {
+        errorCode: (error as any)?.code,
+        errorMessage: error?.message,
         action: input.action,
+        entityType: input.entityType,
       })
       return false
     }
     return true
   } catch (err: any) {
-    console.error('[audit-log] unexpected error:', {
-      code: err?.code,
-      name: err?.name,
+    log.errorWithException('unexpected error', err, {
       action: input.action,
+      entityType: input.entityType,
     })
     return false
   }
@@ -162,7 +163,7 @@ export async function logAuditEventOrWarn(input: AuditLogInput): Promise<boolean
   try {
     const ok = await logAuditEvent(input)
     if (!ok) {
-      console.error('[audit-log] AUDIT-LUECKE — Eintrag nicht geschrieben:', {
+      log.error('AUDIT-LUECKE — Eintrag nicht geschrieben', {
         action: input.action,
         entityType: input.entityType,
         entityId: input.entityId ?? null,
@@ -173,9 +174,7 @@ export async function logAuditEventOrWarn(input: AuditLogInput): Promise<boolean
   } catch (err: any) {
     // logAuditEvent fängt intern bereits alles ab; dieser Pfad greift nur,
     // falls schon der Client-Aufbau scheitert.
-    console.error('[audit-log] AUDIT-LUECKE — unerwarteter Fehler:', {
-      code: err?.code,
-      name: err?.name,
+    log.errorWithException('AUDIT-LUECKE — unerwarteter Fehler', err, {
       action: input.action,
       entityType: input.entityType,
     })
