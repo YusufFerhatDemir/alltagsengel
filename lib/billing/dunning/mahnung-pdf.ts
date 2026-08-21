@@ -15,7 +15,7 @@ import { berlinParts, datumBerlin, heuteBerlin } from '@/lib/utils/timezone';
  * Quelle: app/impressum/page.tsx.
  */
 /** Typ fuer client-Join-Ergebnis aus Supabase-Abfragen. */
-type ClientJoin = { first_name?: string; last_name?: string; email?: string } | null
+type ClientJoin = { first_name?: string; last_name?: string; email?: string; address?: string; zip_code?: string; city?: string } | null
 
 const ABSENDER_FALLBACK = {
   firma: 'Alltagsengel UG (haftungsbeschränkt)',

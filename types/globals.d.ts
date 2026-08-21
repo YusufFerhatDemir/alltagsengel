@@ -11,7 +11,7 @@ interface Window {
   Capacitor?: {
     isNativePlatform?(): boolean
     getPlatform?(): string
-    Plugins?: Record<string, unknown>
+    Plugins?: Record<string, { addListener?: (...args: unknown[]) => unknown; [key: string]: unknown }>
   }
   /** WebKit Message Handlers (iOS WKWebView / Capacitor-iOS). */
   webkit?: {
