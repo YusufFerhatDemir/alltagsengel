@@ -45,7 +45,9 @@
     "tauri:build:win": "tauri build --target x86_64-pc-windows-msvc",
     "tauri:icons": "tauri icon src-tauri/icons/icon.png",
     "dipa:katalog": "tsx scripts/dipa-katalog-check.ts",
-    "dipa:compliance": "tsx scripts/dipa-compliance-check.ts"
+    "dipa:compliance": "tsx scripts/dipa-compliance-check.ts",
+    "chairmatch:i18n:check": "node scripts/chairmatch-i18n-check.mjs",
+    "chairmatch:i18n:coverage": "node scripts/chairmatch-i18n-coverage.mjs"
   },
   "dependencies": {
     "@capacitor/android": "^8.2.0",
@@ -97,6 +99,7 @@
     "@types/react": "19.2.14",
     "@types/react-dom": "^19",
     "@types/ssh2-sftp-client": "^9.0.5",
+    "axe-core": "^4.11.3",
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
     "tsx": "^4.23.1",

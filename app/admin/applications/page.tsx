@@ -8,6 +8,8 @@ import {
 import { updateApplicationStatus, createApplication } from './actions'
 import { StatusBadge, SearchInput, EmptyRow, Banner } from '@/components/admin/OpsUI'
 import { logger } from '@/lib/logger'
+import DialogOverlay from '@/components/DialogOverlay'
+import { klickbareZeile } from '@/lib/a11y'
 const log = logger.child('admin:applications')
 
 interface AppRow {
@@ -130,7 +132,7 @@ export default function AdminApplicationsPage() {
                 const next = idx >= 0 && idx < 4 ? APPLICATION_FLOW[idx + 1] : null
                 return (
                   <Fragment key={a.id}>
-                    <tr onClick={() => setExpanded(isOpen ? null : a.id)} style={{ cursor: 'pointer' }}>
+                    <tr {...klickbareZeile(() => setExpanded(isOpen ? null : a.id))} aria-expanded={isOpen} style={{ cursor: 'pointer' }}>
                       <td style={{ fontWeight: 600 }}>
                         {a.first_name} {a.last_name}
                         {a.referred_by_caregiver_id && <span title={`Empfohlen von ${a.referredBy}`} style={{ marginLeft: 6 }}>🤝</span>}
@@ -220,7 +222,7 @@ function CreateAppModal({ onClose, onCreated }: { onClose: () => void; onCreated
   }
 
   return (
-    <div role="presentation" className="admin-modal-overlay" onClick={onClose}>
+    <DialogOverlay onClose={onClose}>
       <div role="dialog" aria-label="Neue Bewerbung erfassen" aria-modal="true" className="admin-modal" style={{ maxWidth: 500, width: '92%' }} onClick={e => e.stopPropagation()}>
         <h3>Neue Bewerbung erfassen</h3>
         {err && <Banner tone="danger">{err}</Banner>}
@@ -252,7 +254,7 @@ function CreateAppModal({ onClose, onCreated }: { onClose: () => void; onCreated
           <button className="btn-confirm" onClick={save} disabled={saving}>{saving ? 'Speichern…' : 'Bewerbung anlegen'}</button>
         </div>
       </div>
-    </div>
+    </DialogOverlay>
   )
 }
 

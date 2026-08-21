@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useState, useCallback, type ReactNode } from 'react'
 import Link from 'next/link'
 import { Banner, StatusBadge, SearchInput } from '@/components/admin/OpsUI'
+import { useFokusFalle } from '@/lib/a11y'
 import {
   anforderungFuerStatus,
   QUELLE_MIN_LAENGE,
@@ -417,6 +418,9 @@ function VerifizierungsDialog({
       ? `/api/billing/tariffs/${zeile.id}/verifizierung`
       : `/api/billing/leistungspreise/${zeile.id}/verifizierung`
 
+  // Fokus-Falle: Fokus in den Dialog, Tab-Zyklus, ESC schliesst, Fokus zurueck.
+  const dialogRef = useFokusFalle<HTMLDivElement>(onAbbrechen)
+
   const [status, setStatus] = useState<TarifStatus>(zeile.tarifStatus)
   const [quelle, setQuelle] = useState(zeile.verifizierungsQuelle ?? '')
   const [belegId, setBelegId] = useState<string | null>(zeile.belegId)
@@ -517,6 +521,7 @@ function VerifizierungsDialog({
 
   return (
     <div
+      ref={dialogRef}
       role="dialog"
       aria-modal="true"
       aria-label="Tarifstatus prüfen"

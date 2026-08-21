@@ -1,6 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { IconHeart, IconMore } from '@/components/Icons'
+import { klickbar } from '@/lib/a11y'
 
 export default function EngelProfilActions({ angelId, angelName }: { angelId: string; angelName: string }) {
   const [liked, setLiked] = useState(false)
@@ -32,10 +33,10 @@ export default function EngelProfilActions({ angelId, angelName }: { angelId: st
 
   return (
     <div className="ep-actions">
-      <div className="ep-action" onClick={handleLike} style={{ cursor: 'pointer' }}>
+      <div className="ep-action" {...klickbar(handleLike)} aria-pressed={liked} aria-label={liked ? 'Aus Favoriten entfernen' : 'Zu Favoriten hinzufügen'} style={{ cursor: 'pointer' }}>
         <IconHeart size={18} fill={liked ? 'var(--gold)' : 'none'} color={liked ? 'var(--gold)' : 'currentColor'} />
       </div>
-      <div role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); (() => setMenuOpen(!menuOpen))() } }} className="ep-action" onClick={() => setMenuOpen(!menuOpen)} style={{ cursor: 'pointer', position: 'relative' }}>
+      <div className="ep-action" {...klickbar(() => setMenuOpen(!menuOpen))} aria-expanded={menuOpen} aria-label="Weitere Optionen" style={{ cursor: 'pointer', position: 'relative' }}>
         <IconMore size={18} />
         {menuOpen && (
           <div style={{

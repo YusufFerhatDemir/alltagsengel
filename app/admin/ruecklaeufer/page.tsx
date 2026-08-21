@@ -3,6 +3,7 @@ import { heuteBerlin } from '@/lib/utils/timezone';
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { StatusBadge, SearchInput, EmptyRow, Banner } from '@/components/admin/OpsUI'
 import Link from 'next/link'
+import { klickbar } from '@/lib/a11y'
 
 function euro(cents: number) {
   return (cents / 100).toLocaleString('de-DE', { style: 'currency', currency: 'EUR' })
@@ -182,7 +183,8 @@ function UploadBereich({ onUploadErfolg }: { onUploadErfolg: () => void }) {
       onDragOver={e => { e.preventDefault(); setDragging(true) }}
       onDragLeave={() => setDragging(false)}
       onDrop={handleDrop}
-      onClick={() => inputRef.current?.click()}
+      {...klickbar(() => inputRef.current?.click())}
+      aria-label="Rückläufer-Datei auswählen oder hierher ziehen"
       style={{
         border: `2px dashed ${dragging ? '#3b82f6' : 'var(--border, #d1d5db)'}`,
         borderRadius: 8,

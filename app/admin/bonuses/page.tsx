@@ -10,6 +10,8 @@ import {
 import { awardBonus } from './actions'
 import { StatusBadge, EmptyRow, Banner } from '@/components/admin/OpsUI'
 import { logger } from '@/lib/logger';
+import DialogOverlay from '@/components/DialogOverlay'
+import { klickbareZeile } from '@/lib/a11y'
 const log = logger.child('admin:bonuses');
 
 interface Caregiver { id: string; name: string; status: string }
@@ -277,7 +279,7 @@ export default function AdminBonusesPage() {
                   const sm = statusMeta(CAREGIVER_STATUS, r.status)
                   const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i + 1}`
                   return (
-                    <tr key={r.id} onClick={() => router.push(`/admin/caregivers/${r.id}`)} style={{ cursor: 'pointer' }}>
+                    <tr key={r.id} {...klickbareZeile(() => router.push(`/admin/caregivers/${r.id}`))} style={{ cursor: 'pointer' }}>
                       <td style={{ fontWeight: 700, color: i < 3 ? 'var(--gold2)' : 'var(--ink4)', fontSize: i < 3 ? 16 : 14 }}>{medal}</td>
                       <td style={{ fontWeight: 600 }}>{r.name}</td>
                       <td><StatusBadge label={sm.label} color={sm.color} /></td>
@@ -503,7 +505,7 @@ function AwardModal({ caregivers, onClose, onSaved }: { caregivers: Caregiver[];
   }
 
   return (
-    <div role="presentation" className="admin-modal-overlay" onClick={onClose}>
+    <DialogOverlay onClose={onClose}>
       <div role="dialog" aria-label="Bonus vergeben" aria-modal="true" className="admin-modal" style={{ maxWidth: 460, width: '92%' }} onClick={e => e.stopPropagation()}>
         <h3>Bonus vergeben</h3>
         {err && <Banner tone="danger">{err}</Banner>}
@@ -536,7 +538,7 @@ function AwardModal({ caregivers, onClose, onSaved }: { caregivers: Caregiver[];
           <button className="btn-confirm" onClick={save} disabled={saving}>{saving ? 'Speichern…' : 'Vergeben'}</button>
         </div>
       </div>
-    </div>
+    </DialogOverlay>
   )
 }
 

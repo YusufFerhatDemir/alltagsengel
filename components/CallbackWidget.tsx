@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react'
 import { usePathname } from 'next/navigation'
 import { trackContactRequest } from '@/lib/tracking'
+import { useFokusFalle } from '@/lib/a11y'
 
 // ═══════════════════════════════════════════════════════════
 // RÜCKRUFSERVICE-WIDGET — "Wir rufen Sie zurück!"
@@ -30,13 +31,9 @@ export default function CallbackWidget() {
     return () => clearTimeout(t)
   }, [])
 
-  // Escape schließt das Modal (Tastatur-Bedienung).
-  useEffect(() => {
-    if (!open) return
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false) }
-    document.addEventListener('keydown', onKey)
-    return () => document.removeEventListener('keydown', onKey)
-  }, [open])
+  // Fokus-Management des Modals (WCAG 2.1.2, 2.4.3): Fokus hinein, Tab-Zyklus
+  // innerhalb, ESC schließt, Fokus zurück zum Rückruf-Button.
+  const dialogRef = useFokusFalle<HTMLDivElement>(() => setOpen(false), { aktiv: open })
 
   const firstSegment = (pathname?.split('/')[1]) || ''
   const isPortal = PORTAL_ROOTS.has(firstSegment)
@@ -125,6 +122,7 @@ export default function CallbackWidget() {
       {/* Modal */}
       {open && (
         <div
+          ref={dialogRef}
           role="dialog"
           aria-modal="true"
           aria-label="Rückrufservice"

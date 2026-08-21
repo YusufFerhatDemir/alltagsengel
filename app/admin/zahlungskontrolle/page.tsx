@@ -8,6 +8,7 @@ import {
 import { StatusBadge, SearchInput, EmptyRow, Banner } from '@/components/admin/OpsUI'
 import { sendPaymentReminder, recordPayment } from './actions'
 import { logger } from '@/lib/logger';
+import DialogOverlay from '@/components/DialogOverlay'
 const log = logger.child('admin:zahlungskontrolle');
 
 interface PaymentRow {
@@ -207,7 +208,7 @@ function PaymentModal({ row, onClose, onSaved }: {
   }
 
   return (
-    <div role="presentation" className="admin-modal-overlay" onClick={onClose}>
+    <DialogOverlay onClose={onClose}>
       <div role="dialog" aria-label="Zahlung erfassen" aria-modal="true" className="admin-modal" style={{ maxWidth: 420, width: '92%' }} onClick={e => e.stopPropagation()}>
         <h3>Zahlung erfassen</h3>
         <p style={{ fontSize: 13, color: 'var(--ink4)', margin: '0 0 14px' }}>
@@ -233,7 +234,7 @@ function PaymentModal({ row, onClose, onSaved }: {
           <button className="btn-confirm" onClick={save} disabled={saving}>{saving ? 'Speichern…' : 'Zahlung speichern'}</button>
         </div>
       </div>
-    </div>
+    </DialogOverlay>
   )
 }
 

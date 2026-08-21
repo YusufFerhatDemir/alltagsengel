@@ -10,6 +10,7 @@ import {
 import { AmpelDot, BudgetBar, StatusBadge, Banner, EmptyRow } from '@/components/admin/OpsUI'
 import { CareNotesPanel } from '@/components/admin/CareNotesPanel'
 import { logger } from '@/lib/logger'
+import { klickbareZeile } from '@/lib/a11y'
 const log = logger.child('admin:clients')
 
 interface ClientDetail {
@@ -232,7 +233,7 @@ export default function ClientDetailPage() {
             ) : records.map(r => {
               const rm = statusMeta(RECORD_STATUS, r.status)
               return (
-                <tr key={r.id} onClick={() => router.push(`/admin/records?focus=${r.id}`)} style={{ cursor: 'pointer' }}>
+                <tr key={r.id} {...klickbareZeile(() => router.push(`/admin/records?focus=${r.id}`))} style={{ cursor: 'pointer' }}>
                   <td style={{ whiteSpace: 'nowrap' }}>{formatDate(r.date)}</td>
                   <td style={{ whiteSpace: 'nowrap', fontSize: 13 }}>{formatTime(r.start_time)}–{formatTime(r.end_time)}</td>
                   <td>{r.service_type || '—'}</td>

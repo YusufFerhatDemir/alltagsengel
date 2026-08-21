@@ -7,6 +7,7 @@ import {
 } from '@/lib/admin/ops'
 import { StatusBadge, SearchInput, EmptyRow, Banner } from '@/components/admin/OpsUI'
 import Link from 'next/link'
+import { klickbareZeile } from '@/lib/a11y'
 
 interface InvoiceRow {
   id: string
@@ -137,7 +138,7 @@ export default function RechnungenPage() {
                 const sm = statusMeta(INVOICE_STATUS, i.status)
                 const isOverdue = i.due_date && i.due_date < heuteBerlin() && OPEN_STATUSES.has(i.status)
                 return (
-                  <tr key={i.id} style={{ cursor: 'pointer' }} onClick={() => window.location.href = `/admin/rechnungen/${i.id}`}>
+                  <tr key={i.id} style={{ cursor: 'pointer' }} {...klickbareZeile(() => { window.location.href = `/admin/rechnungen/${i.id}` })}>
                     <td style={{ fontWeight: 600 }}>{i.invoice_number || '—'}</td>
                     <td>{i.client}</td>
                     <td style={{ whiteSpace: 'nowrap', fontSize: 13 }}>{formatDate(i.period_start)}–{formatDate(i.period_end)}</td>

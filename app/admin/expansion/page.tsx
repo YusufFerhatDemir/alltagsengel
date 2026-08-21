@@ -20,6 +20,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Banner, EmptyRow, StatusBadge } from '@/components/admin/OpsUI'
 import { useBundeslandFilter } from '@/components/admin/BundeslandContext'
 import {
+import DialogOverlay from '@/components/DialogOverlay'
   ALLE_BUNDESLAENDER,
   BUNDESLAND_NAMEN,
   EXPANSION_STATUS,
@@ -901,8 +902,9 @@ function Dialog({
   onSchliessen: () => void
 }) {
   return (
-    <div
-      onClick={onSchliessen}
+    <DialogOverlay
+      className=""
+      onClose={onSchliessen}
       style={{
         position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', zIndex: 60,
         display: 'flex', alignItems: 'flex-start', justifyContent: 'center',
@@ -910,6 +912,9 @@ function Dialog({
       }}
     >
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-label={titel}
         onClick={e => e.stopPropagation()}
         style={{
           background: 'var(--coal2)', border: '1px solid var(--border)', borderRadius: 14,
@@ -919,7 +924,7 @@ function Dialog({
         <h3 style={{ margin: '0 0 14px', fontSize: 18 }}>{titel}</h3>
         {children}
       </div>
-    </div>
+    </DialogOverlay>
   )
 }
 

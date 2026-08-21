@@ -8,6 +8,8 @@ import {
 } from '@/lib/admin/ops'
 import { StatusBadge, Banner, EmptyRow } from '@/components/admin/OpsUI'
 import SignaturePad from '@/components/admin/SignaturePad'
+import DialogOverlay from '@/components/DialogOverlay'
+import { klickbareZeile } from '@/lib/a11y'
 
 // -- Typen ------------------------------------------------------------------
 
@@ -433,7 +435,7 @@ function LeistungsnachweisDigitalInner() {
                 const bm = billingMeta(r.billing_status)
                 const duration = r.duration_minutes ?? (r.start_time && r.end_time ? diffMinutes(r.start_time, r.end_time) : null)
                 return (
-                  <tr key={r.id} onClick={() => openDetail(r.id)} style={{ cursor: 'pointer' }}>
+                  <tr key={r.id} {...klickbareZeile(() => openDetail(r.id))} style={{ cursor: 'pointer' }}>
                     <td style={{ whiteSpace: 'nowrap' }}>{formatDate(r.date)}</td>
                     <td style={{ fontWeight: 600 }}>{fullName(r.client)}</td>
                     <td>{fullName(r.caregiver)}</td>
@@ -459,7 +461,7 @@ function LeistungsnachweisDigitalInner() {
 
       {/* Detail-Modal */}
       {selectedId && (
-        <div role="presentation" className="admin-modal-overlay" onClick={closeDetail}>
+        <DialogOverlay onClose={closeDetail}>
           <div role="dialog" aria-label="Leistungsnachweis-Details" aria-modal="true" className="admin-modal" style={{ maxWidth: 820, maxHeight: '90vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
             {detailLoading ? <p>Laden...</p> : detailRecord ? (
               <>
@@ -696,12 +698,12 @@ function LeistungsnachweisDigitalInner() {
               <p>Nachweis nicht gefunden</p>
             )}
           </div>
-        </div>
+        </DialogOverlay>
       )}
 
       {/* Erstellungs-Modal */}
       {showCreate && (
-        <div role="presentation" className="admin-modal-overlay" onClick={() => setShowCreate(false)}>
+        <DialogOverlay onClose={() => setShowCreate(false)}>
           <div role="dialog" aria-modal="true" aria-label="Neuer Leistungsnachweis" className="admin-modal" style={{ maxWidth: 640 }} onClick={e => e.stopPropagation()}>
             <h2 style={{ margin: '0 0 16px', fontSize: 18 }}>Neuer Leistungsnachweis</h2>
 
@@ -775,7 +777,7 @@ function LeistungsnachweisDigitalInner() {
               <button onClick={() => setShowCreate(false)} className="btn-cancel">Abbrechen</button>
             </div>
           </div>
-        </div>
+        </DialogOverlay>
       )}
     </div>
   )

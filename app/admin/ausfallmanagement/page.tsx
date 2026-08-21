@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { formatDate, fullName, ABSENCE_TYPE, ABSENCE_STATUS } from '@/lib/admin/ops'
 import { StatusBadge, SearchInput, EmptyRow, Banner } from '@/components/admin/OpsUI'
 import { logger } from '@/lib/logger';
+import DialogOverlay from '@/components/DialogOverlay'
 const log = logger.child('admin:ausfallmanagement');
 
 // ── Typen ──────────────────────────────────────────────────────
@@ -384,7 +385,7 @@ function VertretungDialog({ tour, kandidaten, loading, onSelect, onClose }: {
   onClose: () => void
 }) {
   return (
-    <div role="presentation" className="admin-modal-overlay" onClick={onClose}>
+    <DialogOverlay onClose={onClose}>
       <div role="dialog" aria-labelledby="dlg-vertretung-ausfall" aria-modal="true" className="admin-modal" style={{ maxWidth: 560, width: '94%' }} onClick={e => e.stopPropagation()}>
         <h3 id="dlg-vertretung-ausfall">Vertretung für {tour.mitarbeiter}</h3>
         <p style={{ fontSize: 13, color: 'var(--ink4)', margin: '0 0 12px' }}>
@@ -426,7 +427,7 @@ function VertretungDialog({ tour, kandidaten, loading, onSelect, onClose }: {
           <button className="btn-cancel" onClick={onClose}>Schließen</button>
         </div>
       </div>
-    </div>
+    </DialogOverlay>
   )
 }
 
@@ -480,7 +481,7 @@ function KrankmeldungDialog({ onClose, onSaved }: { onClose: () => void; onSaved
   }
 
   return (
-    <div role="presentation" className="admin-modal-overlay" onClick={onClose}>
+    <DialogOverlay onClose={onClose}>
       <div role="dialog" aria-label="Krankmeldung erfassen" aria-modal="true" className="admin-modal" style={{ maxWidth: 440, width: '92%' }} onClick={e => e.stopPropagation()}>
         <h3>Krankmeldung erfassen</h3>
         {err && <Banner tone="danger">{err}</Banner>}
@@ -500,7 +501,7 @@ function KrankmeldungDialog({ onClose, onSaved }: { onClose: () => void; onSaved
           <button className="btn-confirm" onClick={save} disabled={saving}>{saving ? 'Speichern…' : 'Krankmeldung speichern'}</button>
         </div>
       </div>
-    </div>
+    </DialogOverlay>
   )
 }
 

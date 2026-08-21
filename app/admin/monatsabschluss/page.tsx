@@ -10,6 +10,7 @@ import {
 import { AmpelDot, BudgetBar, StatusBadge, SearchInput, EmptyRow } from '@/components/admin/OpsUI'
 import AmpelSummaryWidget from '@/components/admin/AmpelSummaryWidget'
 import { logger } from '@/lib/logger';
+import { klickbareZeile } from '@/lib/a11y'
 const log = logger.child('admin:monatsabschluss');
 
 interface ClosingRow {
@@ -197,7 +198,7 @@ function MonatsabschlussInner() {
               ) : filtered.map(r => {
                 const sm = statusMeta(CLOSING_STATUS, r.status)
                 return (
-                  <tr key={r.client_id} onClick={() => router.push(`/admin/monatsabschluss/${r.client_id}?year=${year}&month=${month}`)} style={{ cursor: 'pointer' }}>
+                  <tr key={r.client_id} {...klickbareZeile(() => router.push(`/admin/monatsabschluss/${r.client_id}?year=${year}&month=${month}`))} style={{ cursor: 'pointer' }}>
                     <td><AmpelDot ampel={r.ampel} /></td>
                     <td style={{ fontWeight: 600 }}>{r.client}</td>
                     <td>{r.recordCount}</td>

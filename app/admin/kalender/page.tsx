@@ -5,6 +5,8 @@ import { createClient } from '@/lib/supabase/client'
 import { formatDate, formatTime, fullName, WEEKDAYS, BUNDESLAND_LABELS } from '@/lib/admin/ops'
 import { StatusBadge, Banner, EmptyRow } from '@/components/admin/OpsUI'
 import { logger } from '@/lib/logger';
+import DialogOverlay from '@/components/DialogOverlay'
+import { klickbar } from '@/lib/a11y'
 const log = logger.child('admin:kalender');
 
 // ── Status-Farben ──────────────────────────────────────────────
@@ -397,7 +399,7 @@ export default function AdminKalenderPage() {
 
       {/* Detail-Ansicht */}
       {selected && (
-        <div role="presentation" className="admin-modal-overlay" onClick={() => setSelected(null)}>
+        <DialogOverlay onClose={() => setSelected(null)}>
           <div role="dialog" aria-label="Einsatz-Details" aria-modal="true" className="admin-modal" style={{ maxWidth: 480, width: '92%' }} onClick={e => e.stopPropagation()}>
             <h3>Einsatz-Details</h3>
             <DetailRow label="Klient">{fullName(selected.client)}</DetailRow>
@@ -428,7 +430,7 @@ export default function AdminKalenderPage() {
               )}
             </div>
           </div>
-        </div>
+        </DialogOverlay>
       )}
 
       {/* Neuer Einsatz */}
@@ -499,6 +501,8 @@ function DayView({ date, assignments, isAbsent, onSelect, onCreateSlot }: {
         return (
           <div
             key={a.id}
+            {...klickbar(() => onSelect(a))}
+            aria-label={`Einsatz ${fullName(a.client)}, Details öffnen`}
             onClick={(e) => { e.stopPropagation(); onSelect(a) }}
             style={{
               position: 'absolute', top, left: 64, right: 8, height, minHeight: 24,
@@ -756,7 +760,7 @@ function CreateAssignmentModal({ clients, caregivers, initialDate, onClose, onSa
   }
 
   return (
-    <div role="presentation" className="admin-modal-overlay" onClick={onClose}>
+    <DialogOverlay onClose={onClose}>
       <div role="dialog" aria-label="Neuen Einsatz anlegen" aria-modal="true" className="admin-modal" style={{ maxWidth: 520, width: '92%' }} onClick={e => e.stopPropagation()}>
         <h3>Neuen Einsatz anlegen</h3>
         {err && <Banner tone="danger">{err}</Banner>}
@@ -798,7 +802,7 @@ function CreateAssignmentModal({ clients, caregivers, initialDate, onClose, onSa
           <button className="btn-confirm" onClick={save} disabled={saving}>{saving ? 'Speichern…' : 'Einsatz anlegen'}</button>
         </div>
       </div>
-    </div>
+    </DialogOverlay>
   )
 }
 

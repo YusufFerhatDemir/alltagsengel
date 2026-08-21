@@ -11,6 +11,7 @@ import { fullName, NOTE_CATEGORY, NOTE_AUTHOR_ROLE } from '@/lib/admin/ops'
 import { Banner } from '@/components/admin/OpsUI'
 import { NoteCard, NoteComposer, type CareNote } from '@/components/admin/CareNotesPanel'
 import { logger } from '@/lib/logger'
+import DialogOverlay from '@/components/DialogOverlay'
 const log = logger.child('admin:notizen')
 
 interface ClientOption { id: string; name: string }
@@ -176,7 +177,7 @@ export default function AdminNotizenPage() {
 
       {/* ═══ Neue Notiz (Modal) ═══ */}
       {showModal && (
-        <div role="presentation" className="admin-modal-overlay" onClick={() => setShowModal(false)}>
+        <DialogOverlay onClose={() => setShowModal(false)}>
           <div role="dialog" aria-label="Neue Notiz" aria-modal="true" className="admin-modal" style={{ maxWidth: 520, width: '92%' }} onClick={e => e.stopPropagation()}>
             <h3>Neue Notiz</h3>
             <NoteComposer
@@ -185,7 +186,7 @@ export default function AdminNotizenPage() {
               onCancel={() => setShowModal(false)}
             />
           </div>
-        </div>
+        </DialogOverlay>
       )}
     </div>
   )

@@ -9,6 +9,7 @@ import {
 import { escalateRequest, markRequestFailed, toggleClientNotified, assignSubstitute, reportAbsence, createSubstitutionRequest } from './actions'
 import { StatusBadge, Banner, EmptyRow } from '@/components/admin/OpsUI'
 import { logger } from '@/lib/logger';
+import DialogOverlay from '@/components/DialogOverlay'
 const log = logger.child('admin:schedule');
 
 // ── Datums-Helfer für die laufende Woche ────────────────────────
@@ -409,7 +410,7 @@ function SuggestModal({ request, caregivers, client, preferred, isAbsent, onClos
   }
 
   return (
-    <div role="presentation" className="admin-modal-overlay" onClick={onClose}>
+    <DialogOverlay onClose={onClose}>
       <div role="dialog" aria-labelledby="dlg-vertretung-suchen" aria-modal="true" className="admin-modal" style={{ maxWidth: 560, width: '92%' }} onClick={e => e.stopPropagation()}>
         <h3 id="dlg-vertretung-suchen">Vertretung suchen — {request.client}</h3>
         <p style={{ fontSize: 13, color: 'var(--ink4)', margin: '0 0 12px' }}>
@@ -444,7 +445,7 @@ function SuggestModal({ request, caregivers, client, preferred, isAbsent, onClos
           <button className="btn-cancel" onClick={onClose}>Schließen</button>
         </div>
       </div>
-    </div>
+    </DialogOverlay>
   )
 }
 
@@ -511,7 +512,7 @@ function CreateAssignmentModal({ clients, caregivers, onClose, onSaved }: {
   const SERVICE_TYPES = ['Alltagsbegleitung', 'Haushaltshilfe', 'Einkaufshilfe', 'Arztbegleitung', 'Betreuung/Gesellschaft', 'Spaziergang/Mobilität', 'Demenzbetreuung', 'Sonstige']
 
   return (
-    <div role="presentation" className="admin-modal-overlay" onClick={onClose}>
+    <DialogOverlay onClose={onClose}>
       <div role="dialog" aria-label="Neuen Einsatz anlegen" aria-modal="true" className="admin-modal" style={{ maxWidth: 520, width: '92%' }} onClick={e => e.stopPropagation()}>
         <h3>Neuen Einsatz anlegen</h3>
         {err && <Banner tone="danger">{err}</Banner>}
@@ -579,7 +580,7 @@ function CreateAssignmentModal({ clients, caregivers, onClose, onSaved }: {
           <button className="btn-confirm" onClick={save} disabled={saving}>{saving ? 'Speichern…' : 'Einsatz anlegen'}</button>
         </div>
       </div>
-    </div>
+    </DialogOverlay>
   )
 }
 
@@ -613,7 +614,7 @@ function ReportAbsenceModal({ caregivers, onClose, onSaved }: { caregivers: Care
   }
 
   return (
-    <div role="presentation" className="admin-modal-overlay" onClick={onClose}>
+    <DialogOverlay onClose={onClose}>
       <div role="dialog" aria-label="Ausfall melden" aria-modal="true" className="admin-modal" style={{ maxWidth: 460, width: '92%' }} onClick={e => e.stopPropagation()}>
         <h3>Ausfall melden</h3>
         {err && <Banner tone="danger">{err}</Banner>}
@@ -638,7 +639,7 @@ function ReportAbsenceModal({ caregivers, onClose, onSaved }: { caregivers: Care
           <button className="btn-confirm" onClick={save} disabled={saving}>{saving ? 'Speichern…' : 'Ausfall speichern'}</button>
         </div>
       </div>
-    </div>
+    </DialogOverlay>
   )
 }
 
@@ -673,7 +674,7 @@ function CreateSubModal({ clients, caregivers, onClose, onSaved }: { clients: Cl
   }
 
   return (
-    <div role="presentation" className="admin-modal-overlay" onClick={onClose}>
+    <DialogOverlay onClose={onClose}>
       <div role="dialog" aria-label="Vertretung anlegen" aria-modal="true" className="admin-modal" style={{ maxWidth: 460, width: '92%' }} onClick={e => e.stopPropagation()}>
         <h3>Vertretung anlegen</h3>
         {err && <Banner tone="danger">{err}</Banner>}
@@ -700,7 +701,7 @@ function CreateSubModal({ clients, caregivers, onClose, onSaved }: { clients: Cl
           <button className="btn-confirm" onClick={save} disabled={saving}>{saving ? 'Speichern…' : 'Anfrage erstellen'}</button>
         </div>
       </div>
-    </div>
+    </DialogOverlay>
   )
 }
 

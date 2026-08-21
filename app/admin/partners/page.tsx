@@ -6,6 +6,7 @@ import {
 } from '@/lib/admin/ops'
 import { StatusBadge, SearchInput, EmptyRow, Banner } from '@/components/admin/OpsUI'
 import { logger } from '@/lib/logger'
+import { klickbareZeile } from '@/lib/a11y'
 const log = logger.child('admin:partners')
 
 interface Visit {
@@ -145,7 +146,7 @@ export default function AdminPartnersPage() {
                 const nextColor = p.nextDays == null ? 'var(--ink3)' : p.nextDays < 0 ? '#D04B3B' : p.nextDays <= 7 ? '#E8A000' : 'var(--ink2)'
                 return (
                   <Fragment key={p.id}>
-                    <tr onClick={() => setExpanded(isOpen ? null : p.id)} style={{ cursor: 'pointer' }}>
+                    <tr {...klickbareZeile(() => setExpanded(isOpen ? null : p.id))} aria-expanded={isOpen} style={{ cursor: 'pointer' }}>
                       <td style={{ fontWeight: 600 }}>{p.name}</td>
                       <td><StatusBadge label={tm.label} color={tm.color} /></td>
                       <td style={{ fontSize: 13 }}>{p.city || '—'}</td>

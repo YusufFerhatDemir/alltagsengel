@@ -4,6 +4,7 @@ import { heuteBerlin } from '@/lib/utils/timezone';
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { IconMoney, IconDocument, IconChart, IconTarget } from '@/components/Icons'
+import { klickbar } from '@/lib/a11y'
 
 // ═══════════════════════════════════════════════════════════════
 // Zahlungseingänge — CAMT Import, OPOS, Klärfälle
@@ -237,7 +238,8 @@ export default function ZahlungseingaengePage() {
                   const f = e.dataTransfer.files[0]
                   if (f) handleUpload(f)
                 }}
-                onClick={() => fileRef.current?.click()}
+                {...klickbar(() => fileRef.current?.click())}
+                aria-label="camt.053-Datei auswählen oder hierher ziehen"
                 style={{
                   border: '2px dashed #c8a84e', borderRadius: 12, padding: '32px 24px',
                   textAlign: 'center', cursor: 'pointer', marginBottom: 20,

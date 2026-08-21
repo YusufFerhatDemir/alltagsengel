@@ -16,6 +16,7 @@
 import { useCallback, useEffect, useMemo, useState, type CSSProperties } from 'react'
 import { euro, formatDate } from '@/lib/admin/ops'
 import { SearchInput, EmptyRow, Banner, StatusBadge } from '@/components/admin/OpsUI'
+import DialogOverlay from '@/components/DialogOverlay'
 
 interface CorrectionRow {
   id: string
@@ -423,8 +424,8 @@ export default function GutschriftenPage() {
       )}
 
       {dialogMode && (
-        <div style={overlayStyle} onClick={closeDialog}>
-          <div style={modalStyle} onClick={e => e.stopPropagation()}>
+        <DialogOverlay className="" onClose={closeDialog} style={overlayStyle}>
+          <div role="dialog" aria-modal="true" aria-label={dialogMode === 'gutschrift' ? 'Neue Gutschrift' : 'Rechnung stornieren'} style={modalStyle} onClick={e => e.stopPropagation()}>
             <h2 style={{ margin: '0 0 4px', fontFamily: "'Cormorant Garamond',serif", fontSize: 20, color: 'var(--ink)' }}>
               {dialogMode === 'gutschrift' ? 'Neue Gutschrift' : 'Rechnung stornieren'}
             </h2>
@@ -538,7 +539,7 @@ export default function GutschriftenPage() {
               )}
             </div>
           </div>
-        </div>
+        </DialogOverlay>
       )}
     </div>
   )

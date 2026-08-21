@@ -9,6 +9,7 @@ import {
 } from '@/lib/admin/ops'
 import { AmpelDot, StatusBadge, Banner } from '@/components/admin/OpsUI'
 import { logger } from '@/lib/logger';
+import { klickbareZeile } from '@/lib/a11y'
 const log = logger.child('admin:dashboard');
 
 interface DashStats {
@@ -204,7 +205,7 @@ export default function AdminDashboardPage() {
             </thead>
             <tbody>
               {warnings.map(w => (
-                <tr key={w.client_id} onClick={() => router.push(`/admin/clients/${w.client_id}`)} style={{ cursor: 'pointer' }}>
+                <tr key={w.client_id} {...klickbareZeile(() => router.push(`/admin/clients/${w.client_id}`))} style={{ cursor: 'pointer' }}>
                   <td><AmpelDot ampel={w.ampel} withLabel /></td>
                   <td style={{ fontWeight: 600 }}>{w.name}</td>
                   <td>{w.pct}%</td>

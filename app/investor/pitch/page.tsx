@@ -540,7 +540,7 @@ export default function PitchDeck() {
         </div>
 
         {/* Overlay for mobile */}
-        <div className="overlay" onClick={() => setMenuOpen(false)} />
+        <div role="presentation" className="overlay" onClick={() => setMenuOpen(false)} />
 
         {/* Sidebar Navigation */}
         <nav className="pitch-sidebar">

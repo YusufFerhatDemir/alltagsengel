@@ -7,6 +7,7 @@ import { IconWingsGold, IconDocument, IconCheck, IconClock, IconInfo, IconShield
 import { UNIT_ECONOMICS } from '@/lib/mis/constants'
 import { AvatarEngel } from '@/components/AvatarGlow'
 import { logger } from '@/lib/logger'
+import DialogOverlay from '@/components/DialogOverlay'
 const log = logger.child('engel:profil')
 
 export default function MeinProfilPage() {
@@ -269,8 +270,8 @@ export default function MeinProfilPage() {
         }}>Konto und Daten löschen</button>
 
         {deleteConfirm && (
-          <div role="presentation" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.7)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }} onClick={() => { if (!deleting) { setDeleteConfirm(false); setDeletePassword(''); setDeleteError('') } }}>
-            <div onClick={e => e.stopPropagation()} style={{ background: 'var(--coal2)', borderRadius: 18, padding: 24, maxWidth: 340, width: '100%', border: '1px solid rgba(255,80,80,.2)' }}>
+          <DialogOverlay className="" onClose={() => { if (!deleting) { setDeleteConfirm(false); setDeletePassword(''); setDeleteError('') } }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.7)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+            <div role="dialog" aria-modal="true" aria-label="Konto löschen?" onClick={e => e.stopPropagation()} style={{ background: 'var(--coal2)', borderRadius: 18, padding: 24, maxWidth: 340, width: '100%', border: '1px solid rgba(255,80,80,.2)' }}>
               <div style={{ fontSize: 16, fontWeight: 600, color: '#ff6b6b', marginBottom: 8 }}>Konto löschen?</div>
               <p style={{ fontSize: 13, color: 'var(--ink3)', lineHeight: 1.5, marginBottom: 14 }}>Alle deine Daten werden unwiderruflich gelöscht. Diese Aktion kann nicht rückgängig gemacht werden.</p>
               <label style={{ fontSize: 12, color: 'var(--ink3)', fontWeight: 500, display: 'block', marginBottom: 6 }}>
@@ -324,7 +325,7 @@ export default function MeinProfilPage() {
                 </button>
               </div>
             </div>
-          </div>
+          </DialogOverlay>
         )}
 
         <div style={{ height: 80 }}></div>

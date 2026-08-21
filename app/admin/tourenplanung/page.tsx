@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Banner } from '@/components/admin/OpsUI'
+import DialogOverlay from '@/components/DialogOverlay'
 
 // ── Status ─────────────────────────────────────────────────────
 const TOUR_STATUS: Record<string, { label: string; color: string }> = {
@@ -509,8 +510,8 @@ function TourDetail({ tour, onClose, onPatchTour, onPatchStop, onVerschiebe, onE
   }
 
   return (
-    <div style={modalWrap} onClick={onClose}>
-      <div style={{ ...modalBox, maxWidth: 780 }} onClick={e => e.stopPropagation()}>
+    <DialogOverlay className="" onClose={onClose} style={modalWrap}>
+      <div role="dialog" aria-modal="true" aria-label="Tour-Details" style={{ ...modalBox, maxWidth: 780 }} onClick={e => e.stopPropagation()}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
           <h2 style={{ fontSize: 17, fontWeight: 700, color: 'var(--ink)', margin: 0 }}>
             {tour.name || `Tour ${person(tour.caregivers)}`}
@@ -632,7 +633,7 @@ function TourDetail({ tour, onClose, onPatchTour, onPatchStop, onVerschiebe, onE
           )
         )}
       </div>
-    </div>
+    </DialogOverlay>
   )
 }
 
@@ -679,8 +680,8 @@ function VertretungsDialog({ tour, onClose, onDone, onFehler }: {
   }
 
   return (
-    <div style={{ ...modalWrap, zIndex: 70 }} onClick={onClose}>
-      <div style={modalBox} onClick={e => e.stopPropagation()}>
+    <DialogOverlay className="" onClose={onClose} style={{ ...modalWrap, zIndex: 70 }}>
+      <div role="dialog" aria-modal="true" aria-label="Vertretung suchen" style={modalBox} onClick={e => e.stopPropagation()}>
         <h3 style={{ fontSize: 16, fontWeight: 700, color: 'var(--ink)', marginBottom: 10 }}>
           Vertretung für {person(tour.caregivers)} am {datumLang(tour.tour_date)}
         </h3>
@@ -715,7 +716,7 @@ function VertretungsDialog({ tour, onClose, onDone, onFehler }: {
           </>
         )}
       </div>
-    </div>
+    </DialogOverlay>
   )
 }
 
@@ -766,8 +767,8 @@ function NeueTourDialog({ caregivers, clients, defaultDate, onClose, onDone }: {
   }
 
   return (
-    <div style={modalWrap} onClick={onClose}>
-      <div style={modalBox} onClick={e => e.stopPropagation()}>
+    <DialogOverlay className="" onClose={onClose} style={modalWrap}>
+      <div role="dialog" aria-modal="true" aria-label="Neue Tour anlegen" style={modalBox} onClick={e => e.stopPropagation()}>
         <h3 style={{ fontSize: 16, fontWeight: 700, color: 'var(--ink)', marginBottom: 12 }}>Neue Tour anlegen</h3>
         {fehler && <div style={{ marginBottom: 10 }}><Banner tone="danger">{fehler}</Banner></div>}
         <div style={{ display: 'flex', gap: 8, marginBottom: 10, flexWrap: 'wrap' }}>
@@ -808,7 +809,7 @@ function NeueTourDialog({ caregivers, clients, defaultDate, onClose, onDone }: {
           <button style={btn} onClick={onClose}>Abbrechen</button>
         </div>
       </div>
-    </div>
+    </DialogOverlay>
   )
 }
 

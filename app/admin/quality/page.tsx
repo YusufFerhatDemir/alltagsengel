@@ -8,6 +8,7 @@ import {
 import { StatusBadge, Banner, EmptyRow } from '@/components/admin/OpsUI'
 import { saveSatisfactionCall, loadQualityData } from './actions'
 import { logger } from '@/lib/logger';
+import DialogOverlay from '@/components/DialogOverlay'
 const log = logger.child('admin:quality');
 
 interface Client { id: string; name: string; created_at: string | null; status: string }
@@ -354,7 +355,7 @@ function DocCallModal({ clients, preset, onClose, onSaved }: {
   }
 
   return (
-    <div role="presentation" className="admin-modal-overlay" onClick={onClose}>
+    <DialogOverlay onClose={onClose}>
       <div role="dialog" aria-label="Zufriedenheitsanruf dokumentieren" aria-modal="true" className="admin-modal" style={{ maxWidth: 480, width: '92%' }} onClick={e => e.stopPropagation()}>
         <h3>Zufriedenheitsanruf dokumentieren</h3>
         {err && <Banner tone="danger">{err}</Banner>}
@@ -388,7 +389,7 @@ function DocCallModal({ clients, preset, onClose, onSaved }: {
           <button className="btn-confirm" onClick={save} disabled={saving}>{saving ? 'Speichern…' : 'Anruf speichern'}</button>
         </div>
       </div>
-    </div>
+    </DialogOverlay>
   )
 }
 

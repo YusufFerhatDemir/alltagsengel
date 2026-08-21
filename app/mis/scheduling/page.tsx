@@ -8,6 +8,7 @@ import { MIcon } from '@/components/mis/MisIcons'
 import { useMis } from '@/lib/mis/MisContext'
 import { createShift, assignShift, updateShiftStatus, deleteShift, createAvailability, deleteAvailability } from './actions'
 import { logger } from '@/lib/logger';
+import { klickbar } from '@/lib/a11y'
 const log = logger.child('mis:scheduling');
 
 // ===== Typen & Konstanten =====
@@ -813,7 +814,7 @@ function ShiftBlock({ shift, compact, onClick, onAssign }: {
   const isOpen = shift.status === 'offen'
   return (
     <div
-      onClick={onClick}
+      {...(onClick ? { ...klickbar(onClick), 'aria-label': `Schicht ${fmtTime(shift.start_zeit)} bis ${fmtTime(shift.end_zeit)}` } : {})}
       style={{
         padding: compact ? '4px 6px' : '6px 10px',
         borderRadius: 6,
@@ -834,6 +835,8 @@ function ShiftBlock({ shift, compact, onClick, onAssign }: {
         </span>
         {isOpen && onAssign && (
           <span
+            {...klickbar(onAssign)}
+            aria-label="Schicht zuweisen"
             onClick={e => { e.stopPropagation(); onAssign() }}
             style={{
               fontSize: 9, padding: '1px 5px', borderRadius: 4,
