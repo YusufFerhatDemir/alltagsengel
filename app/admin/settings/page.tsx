@@ -1,7 +1,9 @@
 'use client'
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import BillingSection from '@/components/admin/BillingSection'
+import { verifizierteFaktoren, type MfaFaktor } from '@/lib/coach/mfa'
 import {
   enableDemoAccess,
   disableDemoAccess,
@@ -11,11 +13,14 @@ import {
 } from './actions'
 
 export default function AdminSettings() {
+  const router = useRouter()
   const [currentUser, setCurrentUser] = useState<any>(null)
   const [currentRole, setCurrentRole] = useState('')
   const [admins, setAdmins] = useState<any[]>([])
   const [allUsers, setAllUsers] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [mfaFaktoren, setMfaFaktoren] = useState<MfaFaktor[]>([])
+  const [mfaGeladen, setMfaGeladen] = useState(false)
 
   // Demo-Zugang
   const [demoEnabled, setDemoEnabled] = useState(false)
@@ -89,6 +94,13 @@ export default function AdminSettings() {
         await autoDisableExpiredDemo()
       }
     }
+
+    // MFA-Faktoren laden
+    try {
+      const { data: mfaData } = await supabase.auth.mfa.listFactors()
+      setMfaFaktoren((mfaData?.all ?? []) as MfaFaktor[])
+    } catch {}
+    setMfaGeladen(true)
 
     setLoading(false)
   }
@@ -401,6 +413,39 @@ export default function AdminSettings() {
           </button>
           {pwMsg && <div style={msgStyle(pwMsg)}>{pwMsg}</div>}
         </form>
+      </div>
+
+      {/* ═══ Zweiter Faktor (MFA) ═══ */}
+      <div style={cardStyle}>
+        <h2 style={{ fontSize: 18, fontWeight: 700, color: 'var(--ink)', marginBottom: 16, fontFamily: "'Cormorant Garamond', serif" }}>
+          Anmeldesicherheit (MFA)
+        </h2>
+        {mfaGeladen && (
+          <>
+            {verifizierteFaktoren(mfaFaktoren).length > 0 ? (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+                <span style={{ display: 'inline-block', width: 10, height: 10, borderRadius: '50%', background: '#6ddf80' }} />
+                <span style={{ color: 'var(--ink)', fontSize: 14 }}>
+                  Zweiter Faktor aktiv ({verifizierteFaktoren(mfaFaktoren).length} Gerät{verifizierteFaktoren(mfaFaktoren).length > 1 ? 'e' : ''})
+                </span>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+                <span style={{ display: 'inline-block', width: 10, height: 10, borderRadius: '50%', background: '#ff8080' }} />
+                <span style={{ color: '#ff8080', fontSize: 14 }}>
+                  Kein zweiter Faktor eingerichtet — Pflicht für Admin-Konten
+                </span>
+              </div>
+            )}
+            <button
+              type="button"
+              onClick={() => router.push('/admin/mfa-einrichtung')}
+              style={btnStyle}
+            >
+              {verifizierteFaktoren(mfaFaktoren).length > 0 ? 'MFA verwalten' : 'Jetzt einrichten'}
+            </button>
+          </>
+        )}
       </div>
 
       {/* ═══ Admin-Verwaltung ═══ */}

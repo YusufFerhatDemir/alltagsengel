@@ -2,6 +2,33 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getActiveOrgId } from '@/lib/organizations/server'
+import type { SupabaseClient } from '@supabase/supabase-js'
+
+/**
+ * Prüft, ob die Sitzung auf AAL2 steht (zweiter Faktor verifiziert).
+ * Admin-Konten mit eingerichtetem TOTP-Faktor MÜSSEN auf AAL2 sein,
+ * sonst dürfen sie keine schreibenden Operationen durchführen.
+ *
+ * Fail-open für Admins OHNE eingerichteten Faktor: Sonst sperrt man
+ * sie komplett aus, bevor sie MFA einrichten können. Das Layout-Gate
+ * leitet sie zur Einrichtung weiter.
+ */
+async function requireAdminAal2(supabase: SupabaseClient): Promise<NextResponse | null> {
+  try {
+    const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
+    if (!aal) return null // Fehler → fail-open (Layout-Guard greift)
+    // Nur blockieren, wenn ein Faktor existiert UND die Sitzung nicht AAL2 ist
+    if (aal.nextLevel === 'aal2' && aal.currentLevel !== 'aal2') {
+      return NextResponse.json(
+        { error: 'Zweiter Faktor nicht verifiziert. Bitte erneut anmelden.' },
+        { status: 403 },
+      )
+    }
+  } catch {
+    // Fail-open bei Fehlern
+  }
+  return null
+}
 
 export async function requireAdmin(): Promise<{ ok: true } | { ok: false; response: NextResponse }> {
   const supabase = await createClient()
@@ -17,6 +44,9 @@ export async function requireAdmin(): Promise<{ ok: true } | { ok: false; respon
   if (!profile || !['admin', 'superadmin'].includes(profile.role)) {
     return { ok: false, response: NextResponse.json({ error: 'Nur für Administratoren' }, { status: 403 }) }
   }
+  // MFA-Prüfung: Admin mit Faktor muss auf AAL2 sein
+  const aalBlock = await requireAdminAal2(supabase)
+  if (aalBlock) return { ok: false, response: aalBlock }
   return { ok: true }
 }
 
@@ -48,6 +78,9 @@ export async function requireAdminMitOrg(): Promise<
   if (!profile || !['admin', 'superadmin'].includes(profile.role)) {
     return { ok: false, response: NextResponse.json({ error: 'Nur für Administratoren' }, { status: 403 }) }
   }
+  // MFA-Prüfung: Admin mit Faktor muss auf AAL2 sein
+  const aalBlock = await requireAdminAal2(supabase)
+  if (aalBlock) return { ok: false, response: aalBlock }
 
   const organizationId = await getActiveOrgId()
   if (!organizationId) {
