@@ -2,10 +2,12 @@
 
 import * as Sentry from '@sentry/nextjs'
 import { useEffect } from 'react'
+import { logger } from '@/lib/logger'
+const log = logger.child('error.tsx')
 
 export default function RootError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   useEffect(() => {
-    console.error('App Error:', error)
+    log.errorWithException('App Error', error)
     Sentry.captureException(error)
   }, [error])
 

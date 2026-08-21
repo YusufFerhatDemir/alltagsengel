@@ -5,6 +5,8 @@ import {
   formatDate, statusMeta, daysUntil, PARTNER_TYPE,
 } from '@/lib/admin/ops'
 import { StatusBadge, SearchInput, EmptyRow, Banner } from '@/components/admin/OpsUI'
+import { logger } from '@/lib/logger'
+const log = logger.child('admin:partners')
 
 interface Visit {
   id: string
@@ -66,7 +68,7 @@ export default function AdminPartnersPage() {
           nextDays: daysUntil(p.next_visit),
         })))
       } catch (err) {
-        console.error('Partners load error:', err)
+        log.errorWithException('Partners load error', err)
       } finally {
         setLoading(false)
       }

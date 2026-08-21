@@ -19,6 +19,8 @@ import {
   type QuellTabelle,
 } from '@/lib/billing/core/tarif-verifizierung'
 import { ladeBelege, signiereBeleg, istMigrationFehlt, MIGRATION_FEHLT_TEXT } from '@/lib/billing/core/tarif-belege'
+import { logger } from '@/lib/logger'
+const log = logger.child('billing')
 
 export interface TabellenProfil {
   tabelle: QuellTabelle
@@ -205,7 +207,7 @@ export async function handleVerifizierungPatch(
     const { data: aktualisiert, error } = await update.select().single()
 
     if (error) {
-      console.error('Tarif-Verifizierung fehlgeschlagen:', error)
+      log.errorWithException('Tarif-Verifizierung fehlgeschlagen', error)
       if (istMigrationFehlt(error.message)) {
         return NextResponse.json({ error: MIGRATION_FEHLT_TEXT }, { status: 503 })
       }
@@ -228,7 +230,7 @@ export async function handleVerifizierungPatch(
       }),
     })
   } catch (err) {
-    console.error('Unerwarteter Fehler bei der Tarif-Verifizierung:', err)
+    log.errorWithException('Unerwarteter Fehler bei der Tarif-Verifizierung', err)
     return NextResponse.json({ error: 'Interner Serverfehler' }, { status: 500 })
   }
 }
@@ -312,7 +314,7 @@ export async function handleDetailGet(
 
     return NextResponse.json({ quellTabelle, zeile: geladen.zeile, historie, belege, belegHinweis })
   } catch (err) {
-    console.error('Tarif-Detail laden fehlgeschlagen:', err)
+    log.errorWithException('Tarif-Detail laden fehlgeschlagen', err)
     return NextResponse.json({ error: 'Interner Serverfehler' }, { status: 500 })
   }
 }

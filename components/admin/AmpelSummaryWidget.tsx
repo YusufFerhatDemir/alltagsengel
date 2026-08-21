@@ -7,6 +7,8 @@ import { datumBerlin } from '@/lib/utils/timezone';
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { AMPEL_META, type Ampel } from '@/lib/admin/ops'
+import { logger } from '@/lib/logger';
+const log = logger.child('ui:AmpelSummaryWidget');
 
 interface AmpelCounts {
   gruen: number
@@ -91,7 +93,7 @@ export default function AmpelSummaryWidget({ year, month, refreshKey }: {
 
         if (!cancelled) setCounts(result)
       } catch (err) {
-        console.error('AmpelSummaryWidget load error:', err)
+        log.errorWithException('AmpelSummaryWidget load error', err)
         if (!cancelled) setCounts({ gruen: 0, gelb: 0, rot: 0 })
       } finally {
         if (!cancelled) setLoading(false)

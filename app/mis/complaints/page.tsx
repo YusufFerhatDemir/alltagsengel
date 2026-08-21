@@ -6,6 +6,8 @@ import { SectionHeader, Card, DataTable, MisButton, SearchInput, Badge, Tabs, Em
 import { MIcon } from '@/components/mis/MisIcons'
 import { useMis } from '@/lib/mis/MisContext'
 import { createComplaint, updateComplaintStatus, saveComplaintCapa, deleteComplaint } from './actions'
+import { logger } from '@/lib/logger'
+const log = logger.child('mis:complaints')
 
 // ===== Beschwerde-Konstanten =====
 const COMPLAINT_STATUS: Record<string, { label: string; color: string; next?: string; nextLabel?: string }> = {
@@ -91,10 +93,10 @@ export default function ComplaintsPage() {
         .from('mis_complaints')
         .select('*')
         .order('created_at', { ascending: false })
-      if (error) console.error('Complaints error:', error)
+      if (error) log.errorWithException('Complaints error', error)
       setComplaints(data as Complaint[] || [])
     } catch (err) {
-      console.error('Complaints load error:', err)
+      log.errorWithException('Complaints load error', err)
     }
     setLoading(false)
   }

@@ -13,6 +13,8 @@ import {
   formatDate, statusMeta, daysUntil,
   QUALIFICATION_STATUS, SCHULUNGSART,
 } from '@/lib/admin/ops'
+import { logger } from '@/lib/logger'
+const log = logger.child('engel:qualifikationen')
 
 interface Qualification {
   id: string
@@ -92,7 +94,7 @@ export default function QualifikationenPage() {
       if (sErr) throw sErr
       setSchulungen((sData || []) as Schulung[])
     } catch (err) {
-      console.error('Qualifikationen laden:', err)
+      log.errorWithException('Qualifikationen laden', err)
       const code = (err as { code?: string })?.code
       setError(
         code === 'PGRST205'

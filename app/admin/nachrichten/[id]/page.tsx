@@ -7,6 +7,8 @@ import {
   NACHRICHTEN_KATEGORIE, NACHRICHTEN_PRIORITAET,
 } from '@/lib/admin/ops'
 import { StatusBadge, Banner } from '@/components/admin/OpsUI'
+import { logger } from '@/lib/logger'
+const log = logger.child('admin:nachrichten')
 
 interface Nachricht {
   id: string
@@ -71,10 +73,10 @@ export default function NachrichtDetailPage() {
       if (n && !n.gelesen) {
         fetch(`/api/ops/nachrichten/${id}/gelesen`, {
           method: 'PATCH',
-        }).catch((err) => console.warn('[Nachrichten] Gelesen-Markierung fehlgeschlagen (non-blocking):', err))
+        }).catch((err) => log.warnWithException('Gelesen-Markierung fehlgeschlagen (non-blocking)', err, { scope: 'Nachrichten' }))
       }
     } catch (err) {
-      console.error('Fehler beim Laden der Nachricht:', err)
+      log.errorWithException('Fehler beim Laden der Nachricht', err)
       setError('Netzwerkfehler beim Laden der Nachricht.')
     } finally { setLoading(false) }
   }

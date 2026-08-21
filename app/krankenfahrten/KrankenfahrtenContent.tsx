@@ -2,6 +2,8 @@
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
 import type { PricingTier, PricingSurcharge } from '@/lib/types/pricing'
+import { logger } from '@/lib/logger'
+const log = logger.child('krankenfahrten')
 
 interface FaqItem {
   q: string
@@ -24,7 +26,7 @@ export default function KrankenfahrtenContent({ faqs = [] }: { faqs?: FaqItem[] 
           setSurcharges(data.surcharges || [])
         }
       })
-      .catch((err) => console.warn('[Krankenfahrten] Preisdaten-Laden fehlgeschlagen (non-blocking):', err))
+      .catch((err) => log.warnWithException('Preisdaten-Laden fehlgeschlagen (non-blocking)', err))
       .finally(() => setLoading(false))
   }, [])
 

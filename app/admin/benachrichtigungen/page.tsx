@@ -5,6 +5,8 @@ import {
   BENACHRICHTIGUNG_TYP, BENACHRICHTIGUNG_KATEGORIE,
 } from '@/lib/admin/ops'
 import { StatusBadge, SearchInput, EmptyRow, Banner } from '@/components/admin/OpsUI'
+import { logger } from '@/lib/logger'
+const log = logger.child('admin:benachrichtigungen')
 
 interface BenachrichtigungRow {
   id: string
@@ -42,7 +44,7 @@ export default function BenachrichtigungenPage() {
       const data = await res.json()
       setRows(data)
     } catch (err) {
-      console.error('Fehler beim Laden der Admin-Benachrichtigungen:', err)
+      log.errorWithException('Fehler beim Laden der Admin-Benachrichtigungen', err)
       setError('Benachrichtigungen konnten nicht geladen werden.')
     } finally { setLoading(false) }
   }
@@ -68,7 +70,7 @@ export default function BenachrichtigungenPage() {
       if (!res.ok) return
       setRows(prev => prev.map(r => r.id === id ? { ...r, gelesen: true } : r))
     } catch (err) {
-      console.error('Fehler in markAsRead (Admin-Benachrichtigungen):', err)
+      log.errorWithException('Fehler in markAsRead (Admin-Benachrichtigungen)', err)
     }
   }
 

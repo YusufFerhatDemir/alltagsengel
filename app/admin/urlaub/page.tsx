@@ -2,6 +2,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { statusMeta, formatDate, ABSENCE_STATUS, ABSENCE_TYPE, MONATSNAMEN } from '@/lib/admin/ops'
 import { StatusBadge, SearchInput, EmptyRow, Banner } from '@/components/admin/OpsUI'
+import { logger } from '@/lib/logger'
+const log = logger.child('admin:urlaub')
 
 interface Antrag {
   id: string
@@ -82,7 +84,7 @@ export default function UrlaubPage() {
         })))
       }
     } catch (err) {
-      console.error('Urlaub laden fehlgeschlagen', err)
+      log.errorWithException('Urlaub laden fehlgeschlagen', err)
     } finally {
       setLoading(false)
     }
@@ -98,7 +100,7 @@ export default function UrlaubPage() {
         setAntraege(prev => prev.filter(a => a.id !== id))
       }
     } catch (err) {
-      console.error('Genehmigung fehlgeschlagen', err)
+      log.errorWithException('Genehmigung fehlgeschlagen', err)
     } finally {
       setActing(null)
     }
@@ -118,7 +120,7 @@ export default function UrlaubPage() {
         setAntraege(prev => prev.filter(a => a.id !== id))
       }
     } catch (err) {
-      console.error('Ablehnung fehlgeschlagen', err)
+      log.errorWithException('Ablehnung fehlgeschlagen', err)
     } finally {
       setActing(null)
     }

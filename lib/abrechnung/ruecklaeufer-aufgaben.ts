@@ -27,6 +27,8 @@ import { logBillingAction } from '../billing/core/audit'
 import { emitEreignis } from '../ops/ereignis-emitter'
 import type { RuecklaeuferStatus } from './ruecklaeufer'
 import { datumBerlin } from '@/lib/utils/timezone';
+import { logger } from '@/lib/logger';
+const log = logger.child('ruecklaeufer-aufgabe');
 
 /** Rückläufer-Status, die eine Aufgabe auslösen. Alles andere ist Erfolg. */
 export const AUFGABEN_AUSLOESENDE_STATUS: RuecklaeuferStatus[] = [
@@ -132,7 +134,7 @@ async function ersterAdminDerOrg(
     .eq('organization_id', organizationId)
 
   if (mErr) {
-    console.error(`[ruecklaeufer-aufgabe] organization_members fehlgeschlagen: ${mErr.message}`)
+    log.error('organization_members fehlgeschlagen', { errorMessage: mErr.message })
     return null
   }
 
@@ -148,7 +150,7 @@ async function ersterAdminDerOrg(
     .limit(1)
 
   if (pErr) {
-    console.error(`[ruecklaeufer-aufgabe] profiles fehlgeschlagen: ${pErr.message}`)
+    log.error('profiles fehlgeschlagen', { errorMessage: pErr.message })
     return null
   }
 
@@ -184,7 +186,7 @@ export async function erstelleRuecklaeuferAufgabe(
       // Kein stiller Fallthrough: wenn die Dublettenprüfung scheitert, wird
       // KEINE Aufgabe angelegt. Eine doppelte Aufgabe ist teurer als eine
       // fehlende, die beim nächsten Import nachgezogen wird.
-      console.error(`[ruecklaeufer-aufgabe] Dublettenprüfung fehlgeschlagen: ${dupErr.message}`)
+      log.error('Dublettenprüfung fehlgeschlagen', { errorMessage: dupErr.message })
       return { aufgabeId: null, erstellt: false, dublette: false, grund: `Dublettenprüfung fehlgeschlagen: ${dupErr.message}` }
     }
 
@@ -253,7 +255,7 @@ export async function erstelleRuecklaeuferAufgabe(
       .single()
 
     if (error || !aufgabe) {
-      console.error(`[ruecklaeufer-aufgabe] Anlage fehlgeschlagen: ${error?.message}`)
+      log.error('Anlage fehlgeschlagen', { errorMessage: error?.message })
       return { aufgabeId: null, erstellt: false, dublette: false, grund: error?.message ?? 'unbekannt' }
     }
 
@@ -274,7 +276,7 @@ export async function erstelleRuecklaeuferAufgabe(
       actorId: params.actorId,
     }).catch((err) => {
       // Audit-Fehler darf die Aufgabe nicht zurückrollen — sie ist angelegt.
-      console.error(`[ruecklaeufer-aufgabe] Audit fehlgeschlagen: ${err}`)
+      log.error('Audit fehlgeschlagen', { errorMessage: String(err) })
     })
 
     // Benachrichtigung ueber die konfigurierbaren Ereignisregeln.
@@ -295,12 +297,12 @@ export async function erstelleRuecklaeuferAufgabe(
         verantwortlich_id: verantwortlichId ?? '',
       },
     }).catch((err) => {
-      console.error(`[ruecklaeufer-aufgabe] Ereignis-Emit fehlgeschlagen: ${err}`)
+      log.error('Ereignis-Emit fehlgeschlagen', { errorMessage: String(err) })
     })
 
     return { aufgabeId: aufgabe.id, erstellt: true, dublette: false }
   } catch (err) {
-    console.error(`[ruecklaeufer-aufgabe] unerwarteter Fehler: ${err}`)
+    log.error('unerwarteter Fehler', { errorMessage: String(err) })
     return { aufgabeId: null, erstellt: false, dublette: false, grund: String(err) }
   }
 }

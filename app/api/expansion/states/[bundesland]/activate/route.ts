@@ -24,6 +24,8 @@ import { requireExpansionAdmin } from '@/lib/expansion/api-auth'
 import { invalidateStateCache } from '@/lib/expansion/state-settings'
 import { normalizeBundesland } from '@/lib/expansion/plz-bundesland'
 import { BUNDESLAND_NAMEN, type StateActivationResult } from '@/lib/expansion/types'
+import { logger } from '@/lib/logger'
+const log = logger.child('expansion/activate')
 
 export const dynamic = 'force-dynamic'
 
@@ -76,7 +78,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
   })
 
   if (error) {
-    console.error('[expansion/activate] fehlgeschlagen:', error.message)
+    log.error('fehlgeschlagen', { errorMessage: error.message })
     return NextResponse.json(
       { error: `Freischaltung fehlgeschlagen: ${error.message}` },
       { status: 400 }
@@ -146,7 +148,7 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
   })
 
   if (error) {
-    console.error('[expansion/activate] DELETE fehlgeschlagen:', error.message)
+    log.error('DELETE fehlgeschlagen', { errorMessage: error.message })
     return NextResponse.json(
       { error: `Abschaltung fehlgeschlagen: ${error.message}` },
       { status: 400 }

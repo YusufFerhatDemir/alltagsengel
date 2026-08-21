@@ -3,6 +3,8 @@ import { safeApiError } from '@/lib/api/error-sanitizer'
 import { rateLimit, getClientIp } from '@/lib/rate-limit'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { heuteBerlin } from '@/lib/utils/timezone';
+import { logger } from '@/lib/logger';
+const log = logger.child('beratung-chat');
 
 // ═══════════════════════════════════════════════════════════
 // BERATUNGS-CHAT API — Öffentlicher KI-Pflegeberater
@@ -109,7 +111,7 @@ async function dailyLlmCapReached(): Promise<boolean> {
       .eq('key', key)
       .maybeSingle()
     if (error) {
-      console.warn('[BeratungsChat] Tages-Cap-Lesen fehlgeschlagen (fail-open):', error.message)
+      log.warn('Tages-Cap-Lesen fehlgeschlagen (fail-open)', { errorMessage: error.message })
       return false
     }
     const attempts = data?.attempts ?? 0
@@ -122,7 +124,7 @@ async function dailyLlmCapReached(): Promise<boolean> {
       )
     return false
   } catch (e) {
-    console.warn('[BeratungsChat] Tages-Cap-Check fehlgeschlagen (fail-open):', e instanceof Error ? e.message : e)
+    log.warn('Tages-Cap-Check fehlgeschlagen (fail-open)', { errorMessage: e instanceof Error ? e.message : e })
     return false
   }
 }
@@ -157,13 +159,13 @@ async function callGemini(messages: ChatMessage[]): Promise<string | null> {
       }
     )
     if (!res.ok) {
-      console.error('[BeratungsChat] Gemini Error:', await res.text())
+      log.error('Gemini Error', { responseBody: await res.text() })
       return null
     }
     const data = await res.json()
     return data.candidates?.[0]?.content?.parts?.[0]?.text || null
   } catch (e) {
-    console.error('[BeratungsChat] Gemini Exception:', e)
+    log.errorWithException('Gemini Exception', e)
     return null
   }
 }
@@ -184,13 +186,13 @@ async function callOpenAI(messages: ChatMessage[]): Promise<string | null> {
       }),
     })
     if (!res.ok) {
-      console.error('[BeratungsChat] OpenAI Error:', await res.text())
+      log.error('OpenAI Error', { responseBody: await res.text() })
       return null
     }
     const data = await res.json()
     return data.choices?.[0]?.message?.content || null
   } catch (e) {
-    console.error('[BeratungsChat] OpenAI Exception:', e)
+    log.errorWithException('OpenAI Exception', e)
     return null
   }
 }

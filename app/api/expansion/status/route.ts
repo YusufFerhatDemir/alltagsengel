@@ -20,6 +20,8 @@ import {
   bundeslandLageFuerLand,
 } from '@/lib/expansion/state-settings'
 import { DEFAULT_ORG_ID } from '@/lib/organizations/types'
+import { logger } from '@/lib/logger'
+const log = logger.child('expansion/status')
 
 export const dynamic = 'force-dynamic'
 
@@ -60,7 +62,7 @@ export async function GET(request: NextRequest) {
       { headers: { 'Cache-Control': 'private, max-age=30' } }
     )
   } catch (err) {
-    console.error('[expansion/status] Unerwarteter Fehler:', err)
+    log.errorWithException('Unerwarteter Fehler', err)
     // Fail-safe: lieber gar keine Freischaltung melden als eine falsche.
     return NextResponse.json(
       { error: 'Status konnte nicht ermittelt werden', kassenabrechnung: false },

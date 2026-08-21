@@ -8,6 +8,8 @@ import {
 import { useMis } from '@/lib/mis/MisContext'
 import { savePricingItem, deletePricingItem } from './actions'
 import type { PricingTier, PricingSurcharge, PricingRegion, PricingConfig, PricingAuditEntry, PricingBreakdown } from '@/lib/types/pricing'
+import { logger } from '@/lib/logger'
+const log = logger.child('mis:krankenfahrt-pricing')
 
 // ─── Helpers ───
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
@@ -77,7 +79,7 @@ export default function KrankenfahrtPricingPage() {
       setConfig((configRes.data || []) as PricingConfig[])
       setAudit((auditRes.data || []) as PricingAuditEntry[])
     } catch (err) {
-      console.error('Failed to load pricing data', err)
+      log.errorWithException('Failed to load pricing data', err)
     }
     setLoading(false)
   }, [])

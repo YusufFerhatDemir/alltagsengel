@@ -6,6 +6,8 @@ import { getActiveOrgId } from '@/lib/organizations/server'
 import { safeApiError } from '@/lib/api/error-sanitizer'
 import { logBillingAction } from '@/lib/billing/core/audit'
 import { meldeAbrechnungsfehler } from '@/lib/automation/abrechnung-fehler-aufgabe'
+import { logger } from '@/lib/logger'
+const log = logger.child('dta/preflight')
 
 export async function POST(request: Request) {
   try {
@@ -66,7 +68,7 @@ export async function POST(request: Request) {
         warnungen: ergebnis.warnungen.length,
       },
       actorId: user.id,
-    }).catch(err => console.error('[dta/preflight] Audit fehlgeschlagen:', err))
+    }).catch(err => log.errorWithException('Audit fehlgeschlagen', err))
 
     // Kette 9: Pflicht-Prüfpunkte durchgefallen → Aufgabe an Sachbearbeiter.
     // Best effort — ein fehlgeschlagenes Aufgaben-Anlegen darf das
@@ -80,7 +82,7 @@ export async function POST(request: Request) {
           abrechnungsmonat,
           bundesland,
           fehlgeschlagenePruefpunkte: pflichtFehler.map(p => ({ label: p.label, details: p.details ?? '' })),
-        }).catch(err => console.error('[dta/preflight] Aufgaben-Erstellung fehlgeschlagen:', err))
+        }).catch(err => log.errorWithException('Aufgaben-Erstellung fehlgeschlagen', err))
       }
     }
 

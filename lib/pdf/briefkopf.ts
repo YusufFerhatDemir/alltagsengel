@@ -30,6 +30,8 @@ import { readFile } from 'fs/promises'
 import { join } from 'path'
 import { rgb } from 'pdf-lib'
 import type { PDFDocument, PDFFont, PDFImage, PDFPage } from 'pdf-lib'
+import { logger } from '@/lib/logger'
+const log = logger.child('briefkopf')
 
 // ── Firmen-Stammdaten (Quelle: app/impressum/page.tsx) ─────────────
 export const BRIEFKOPF = {
@@ -103,7 +105,7 @@ export async function loadBriefkopfLogo(pdfDoc: PDFDocument): Promise<PDFImage |
     const bytes = await readFile(LOGO_FILE)
     return await pdfDoc.embedPng(bytes)
   } catch (err) {
-    console.error('[briefkopf] Logo konnte nicht eingebettet werden:', err)
+    log.errorWithException('Logo konnte nicht eingebettet werden', err)
     return null
   }
 }

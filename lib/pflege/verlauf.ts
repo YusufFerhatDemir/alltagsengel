@@ -17,6 +17,8 @@ import {
   type VerlaufSichtbarkeit,
   type VerlaufTyp,
 } from './types'
+import { logger } from '@/lib/logger'
+const log = logger.child('pflege-audit')
 
 /** Eintragstypen, die immer als dringend gelten und nie nur „intern" bleiben sollen. */
 export const KRITISCHE_TYPEN: VerlaufTyp[] = ['sturz', 'notfall']
@@ -103,7 +105,7 @@ export async function createVerlauf(supabase: SupabaseClient, params: CreateVerl
     aktion: 'erstellt',
     nachher: data,
     akteurId: params.autorId,
-  }).catch((err) => console.error('[pflege-audit] Verlauf-Log fehlgeschlagen:', err))
+  }).catch((err) => log.errorWithException('Verlauf-Log fehlgeschlagen', err))
 
   return data as PflegeVerlaufEintrag
 }
@@ -210,7 +212,7 @@ export async function updateVerlauf(
     aktion: 'aktualisiert',
     vorher: existing,
     nachher: data,
-  }).catch((err) => console.error('[pflege-audit] Verlauf-Log fehlgeschlagen:', err))
+  }).catch((err) => log.errorWithException('Verlauf-Log fehlgeschlagen', err))
 
   return data as PflegeVerlaufEintrag
 }

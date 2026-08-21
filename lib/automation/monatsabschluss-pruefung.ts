@@ -22,6 +22,8 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { logAuditEvent } from '@/lib/audit-log'
 import { ersterPdlDerOrg } from './org-empfaenger'
 import { heuteBerlin } from '@/lib/utils/timezone'
+import { logger } from '@/lib/logger'
+const log = logger.child('monatsabschluss-pruefung')
 
 export interface MonatsabschlussPruefungErgebnis {
   monat: string
@@ -56,7 +58,7 @@ export async function pruefeMonatsabschlussVollstaendigkeit(
     .in('status', ['draft', 'incomplete'])
 
   if (countErr) {
-    console.error(`[monatsabschluss-pruefung] Zählung fehlgeschlagen: ${countErr.message}`)
+    log.error('Zählung fehlgeschlagen', { errorMessage: countErr.message })
     return { monat, unvollstaendig: 0, aufgabeErstellt: false }
   }
 
@@ -74,7 +76,7 @@ export async function pruefeMonatsabschlussVollstaendigkeit(
     .maybeSingle()
 
   if (dupErr) {
-    console.error(`[monatsabschluss-pruefung] Dublettenprüfung fehlgeschlagen: ${dupErr.message}`)
+    log.error('Dublettenprüfung fehlgeschlagen', { errorMessage: dupErr.message })
     return { monat, unvollstaendig: unvollstaendigAnzahl, aufgabeErstellt: false }
   }
   if (vorhanden) {
@@ -105,14 +107,14 @@ export async function pruefeMonatsabschlussVollstaendigkeit(
     .single()
 
   if (insErr || !aufgabe) {
-    console.error(`[monatsabschluss-pruefung] Anlage fehlgeschlagen: ${insErr?.message}`)
+    log.error('Anlage fehlgeschlagen', { errorMessage: insErr?.message })
     return { monat, unvollstaendig: unvollstaendigAnzahl, aufgabeErstellt: false }
   }
 
   await logAuditEvent({
     action: 'create', actorId, organizationId, entityType: 'ops_aufgabe', entityId: aufgabe.id,
     details: { grund: 'monatsabschluss_unvollstaendig', monat, unvollstaendig: unvollstaendigAnzahl },
-  }).catch(err => console.error(`[monatsabschluss-pruefung] Audit fehlgeschlagen: ${err}`))
+  }).catch(err => log.error('Audit fehlgeschlagen', { errorMessage: String(err) }))
 
   return { monat, unvollstaendig: unvollstaendigAnzahl, aufgabeErstellt: true }
 }

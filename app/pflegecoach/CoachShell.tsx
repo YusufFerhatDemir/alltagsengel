@@ -13,6 +13,8 @@ import { usePathname } from 'next/navigation'
 import type { CoachSchriftgrad } from '@/lib/coach/types'
 import { COACH_PRODUKT_NAME, COACH_PRODUKT_VERSION, COACH_SUPPORT_EMAIL } from '@/lib/coach/version'
 import { DipaModusProvider } from './_lib/Modus'
+import { logger } from '@/lib/logger'
+const log = logger.child('pflegecoach')
 
 const SCALE: Record<CoachSchriftgrad, number> = { normal: 1, gross: 1.2, sehr_gross: 1.45 }
 
@@ -112,7 +114,7 @@ export default function CoachShell({
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ a11y_schriftgrad: grad, a11y_kontrast: kontrastAn }),
-    }).catch((err) => console.warn('[PflegeCoach] Profil-Sync fehlgeschlagen (non-blocking):', err))
+    }).catch((err) => log.warnWithException('Profil-Sync fehlgeschlagen (non-blocking)', err))
   }, [])
 
   const setzeGrad = (grad: CoachSchriftgrad) => {

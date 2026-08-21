@@ -223,4 +223,60 @@ describe('Structured Logger', () => {
     expect(parsed.errorMessage).toBe('string-fehler')
     expect(parsed.errorName).toBe('Error')
   })
+
+  it('errorWithException extrahiert message/code aus Nicht-Error-Objekten', async () => {
+    process.env.NODE_ENV = 'production'
+    const { logger } = await importLogger()
+
+    // Supabase (PostgrestError) und Resend liefern einfache Objekte, keine
+    // Error-Instanzen. String(obj) waere '[object Object]' — die Ursache
+    // muss trotzdem im Log landen.
+    logger.errorWithException('DB-Fehler', {
+      message: 'duplicate key value',
+      code: '23505',
+      details: 'Key (id)=(1) already exists.',
+      hint: 'unique constraint',
+    })
+
+    const parsed = JSON.parse((console.error as ReturnType<typeof vi.fn>).mock.calls[0][0])
+    expect(parsed.errorMessage).toBe('duplicate key value')
+    expect(parsed.errorCode).toBe('23505')
+    expect(parsed.errorDetails).toBe('Key (id)=(1) already exists.')
+    expect(parsed.errorHint).toBe('unique constraint')
+  })
+
+  it('errorWithException verschluckt Objekte ohne message nicht', async () => {
+    process.env.NODE_ENV = 'production'
+    const { logger } = await importLogger()
+
+    logger.errorWithException('Fehler', { foo: 'bar' })
+
+    const parsed = JSON.parse((console.error as ReturnType<typeof vi.fn>).mock.calls[0][0])
+    expect(parsed.errorMessage).toBe('{"foo":"bar"}')
+  })
+
+  it('warnWithException loggt auf Level warn statt error', async () => {
+    process.env.NODE_ENV = 'production'
+    const { logger } = await importLogger()
+
+    logger.warnWithException('Nicht blockierend', new Error('kaputt'), { module: 'test' })
+
+    expect(console.error).not.toHaveBeenCalled()
+    const parsed = JSON.parse((console.warn as ReturnType<typeof vi.fn>).mock.calls[0][0])
+    expect(parsed.level).toBe('warn')
+    expect(parsed.module).toBe('test')
+    expect(parsed.errorName).toBe('Error')
+    expect(parsed.errorMessage).toBe('kaputt')
+  })
+
+  it('child-Logger-Kontext bleibt bei errorWithException erhalten', async () => {
+    process.env.NODE_ENV = 'production'
+    const { logger } = await importLogger()
+
+    logger.child('billing').errorWithException('Rechnung kaputt', new Error('x'), { invoiceId: 'r-1' })
+
+    const parsed = JSON.parse((console.error as ReturnType<typeof vi.fn>).mock.calls[0][0])
+    expect(parsed.module).toBe('billing')
+    expect(parsed.invoiceId).toBe('r-1')
+  })
 })

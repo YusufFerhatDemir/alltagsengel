@@ -7,6 +7,8 @@ import { SectionHeader, Card, DataTable, MisButton, SearchInput, Badge, Tabs, Em
 import { MIcon } from '@/components/mis/MisIcons'
 import { useMis } from '@/lib/mis/MisContext'
 import { seedTrainingCatalog as seedCatalogAction, createTrainingCatalogEntry, createTrainingRecord, deleteTrainingRecord, deleteTrainingCatalogEntry, updateTrainingRecordStatus } from './actions'
+import { logger } from '@/lib/logger';
+const log = logger.child('mis:training');
 
 // ===== Typen =====
 interface Training {
@@ -110,7 +112,7 @@ export default function TrainingPage() {
       setRecords(rec as TrainingRecord[] || [])
       setEngel(eng as Engel[] || [])
     } catch (err) {
-      console.error('Training loadData error:', err)
+      log.errorWithException('Training loadData error', err)
     }
     setLoading(false)
   }, [])

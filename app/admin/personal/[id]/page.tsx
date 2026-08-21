@@ -9,6 +9,8 @@ import {
   MONATSNAMEN,
 } from '@/lib/admin/ops'
 import { StatusBadge, SearchInput, EmptyRow, Banner } from '@/components/admin/OpsUI'
+import { logger } from '@/lib/logger'
+const log = logger.child('admin:personal')
 
 // ── Types ──────────────────────────────────────────────────────
 
@@ -200,7 +202,7 @@ export default function PersonalDetailPage() {
         setStamm(s)
         setEditData(s)
       } catch (err) {
-        console.error('Stammdaten laden fehlgeschlagen', err)
+        log.errorWithException('Stammdaten laden fehlgeschlagen', err)
       } finally {
         setLoading(false)
       }
@@ -304,7 +306,7 @@ export default function PersonalDetailPage() {
           }
         }
       } catch (err) {
-        console.error(`Tab ${tab} laden fehlgeschlagen`, err)
+        log.errorWithException(`Tab ${tab} laden fehlgeschlagen`, err)
       } finally {
         setTabLoading(false)
       }
@@ -354,7 +356,7 @@ export default function PersonalDetailPage() {
         setTimeout(() => setTab('qualifikationen'), 50)
       }
     } catch (err) {
-      console.error('Qualifikation hinzufuegen fehlgeschlagen', err)
+      log.errorWithException('Qualifikation hinzufuegen fehlgeschlagen', err)
     }
   }
 
@@ -377,7 +379,7 @@ export default function PersonalDetailPage() {
         setTimeout(() => setTab('schulungen'), 50)
       }
     } catch (err) {
-      console.error('Schulung hinzufuegen fehlgeschlagen', err)
+      log.errorWithException('Schulung hinzufuegen fehlgeschlagen', err)
     }
   }
 

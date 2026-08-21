@@ -4,6 +4,8 @@ import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import { IconCalendar, IconClock, IconUser, IconCheck, IconMoney } from '@/components/Icons'
 import type { Profile } from '@/lib/types'
+import { logger } from '@/lib/logger'
+const log = logger.child('engel:buchungen')
 
 const statusLabels: Record<string, { label: string; color: string }> = {
   pending: { label: 'Neue Anfrage', color: 'var(--gold2)' },
@@ -67,7 +69,7 @@ export default function EngelBuchungenPage() {
       if (err) throw err
       setBookings(data || [])
     } catch (err) {
-      console.error('Engel buchungen load error:', err)
+      log.errorWithException('Engel buchungen load error', err)
       setError('Fehler beim Laden der Aufträge. Bitte versuche es später erneut.')
     } finally {
       setLoading(false)

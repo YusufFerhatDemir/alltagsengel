@@ -8,6 +8,8 @@ import {
   summarizeBudget, AMPEL_META, type Ampel, type BudgetSummary,
 } from '@/lib/admin/ops'
 import { StatusBadge, Banner, EmptyRow } from '@/components/admin/OpsUI'
+import { logger } from '@/lib/logger';
+const log = logger.child('admin:monatsabschluss-vorbereitung');
 
 // -- Typen -------------------------------------------------------------------
 
@@ -163,7 +165,7 @@ export default function MonatsabschlussVorbereitungPage() {
         for (const c of (caregiverRes.data || [])) cg.set(c.id, c)
         setCaregiverMap(cg)
       } catch (err) {
-        console.error('Monatsabschluss-Vorbereitung Ladefehler:', err)
+        log.errorWithException('Monatsabschluss-Vorbereitung Ladefehler', err)
       } finally {
         if (!cancelled) setLoading(false)
       }

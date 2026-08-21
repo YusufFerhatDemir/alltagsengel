@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { erstelleSgbVKorrektur, fuehreSgbVKorrekturAus, type SgbVKorrekturTyp } from '@/lib/abrechnung/sgb-v/storno-korrektur'
+import { logger } from '@/lib/logger'
+const log = logger.child('billing/sgb-v/laeufe/[id]')
 
 const TYPEN: SgbVKorrekturTyp[] = ['storno', 'teilstorno', 'korrekturabrechnung']
 
@@ -41,7 +43,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     return NextResponse.json({ korrekturId, korrekturLaufId })
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Interner Serverfehler'
-    console.error('[billing/sgb-v/laeufe/[id]/storno] Fehler:', message)
+    log.error('/storno] Fehler', { message })
     return NextResponse.json({ error: message }, { status: 400 })
   }
 }

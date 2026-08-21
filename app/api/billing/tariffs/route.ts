@@ -3,6 +3,8 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { NextResponse } from 'next/server'
 import { safeApiError } from '@/lib/api/error-sanitizer'
 import { getActiveOrgId } from '@/lib/organizations/server'
+import { logger } from '@/lib/logger'
+const log = logger.child('api:billing')
 
 /**
  * GET /api/billing/tariffs
@@ -39,7 +41,7 @@ export async function GET(request: Request) {
       .order('created_at', { ascending: false })
 
     if (error) {
-      console.error('Tarife laden fehlgeschlagen:', error)
+      log.errorWithException('Tarife laden fehlgeschlagen', error)
       return NextResponse.json({ error: 'Tarife konnten nicht geladen werden' }, { status: 500 })
     }
 
@@ -208,7 +210,7 @@ export async function POST(request: Request) {
       .single()
 
     if (error) {
-      console.error('Tarif anlegen fehlgeschlagen:', error)
+      log.errorWithException('Tarif anlegen fehlgeschlagen', error)
       return NextResponse.json({ error: 'Tarif konnte nicht angelegt werden' }, { status: 500 })
     }
 

@@ -6,6 +6,8 @@ import {
   SectionHeader, Tabs, KpiCard, Card, DataTable, MisButton, Badge, Modal, EmptyState,
 } from '@/components/mis/MisComponents'
 import { updateKrankenfahrt, updateKrankenfahrtProvider } from './actions'
+import { logger } from '@/lib/logger'
+const log = logger.child('mis:krankenfahrten')
 
 interface Ride {
   id: string
@@ -100,7 +102,7 @@ export default function KrankenfahrtenAdminPage() {
 
       setStats({ totalRides, pendingRides, activeRides, completedRides, totalRevenue, totalProviders, verifiedProviders })
     } catch (err) {
-      console.error('Failed to load data', err)
+      log.errorWithException('Failed to load data', err)
     }
     setLoading(false)
   }, [])
@@ -116,7 +118,7 @@ export default function KrankenfahrtenAdminPage() {
         setSelectedRide(null)
       }
     } catch (err) {
-      console.error(err)
+      log.errorWithException('Unerwarteter Fehler', err)
     }
     setSaving(false)
   }
@@ -130,7 +132,7 @@ export default function KrankenfahrtenAdminPage() {
         setSelectedProvider(null)
       }
     } catch (err) {
-      console.error(err)
+      log.errorWithException('Unerwarteter Fehler', err)
     }
     setSaving(false)
   }

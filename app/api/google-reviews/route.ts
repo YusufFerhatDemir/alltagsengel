@@ -1,4 +1,6 @@
 import { NextResponse } from 'next/server'
+import { logger } from '@/lib/logger'
+const log = logger.child('google-reviews')
 
 // ═══════════════════════════════════════════════════════════
 // GOOGLE-REVIEWS API — echte Bewertungen vom Business-Profil
@@ -67,7 +69,7 @@ export async function GET() {
     })
 
     if (!res.ok) {
-      console.error('[GoogleReviews] Places API Error:', res.status, await res.text())
+      log.error('Places API Error', { resStatus: res.status, responseBody: await res.text() })
       // Alten Cache weiterverwenden, falls vorhanden
       if (cache) return NextResponse.json(cache.data)
       return NextResponse.json({ configured: false })
@@ -93,7 +95,7 @@ export async function GET() {
     cache = { at: Date.now(), data }
     return NextResponse.json(data, { headers: { 'Cache-Control': 'public, max-age=3600' } })
   } catch (e) {
-    console.error('[GoogleReviews] Fehler:', e)
+    log.errorWithException('Fehler', e)
     if (cache) return NextResponse.json(cache.data)
     return NextResponse.json({ configured: false })
   }

@@ -25,6 +25,8 @@ import { VITAL_TYPEN } from '@/lib/vitals/types'
 import { logAuditEvent } from '@/lib/audit-log'
 import { ersterPdlDerOrg } from './org-empfaenger'
 import { heuteBerlin } from '@/lib/utils/timezone'
+import { logger } from '@/lib/logger'
+const log = logger.child('vitalwerte-pdl')
 
 /** Tage ohne jede Vitalwert-Messung, ab denen eine Doku-Lücke gemeldet wird. */
 export const DOKU_LUECKE_TAGE = 3
@@ -60,7 +62,7 @@ async function aufgabeFallsNeu(
     .maybeSingle()
 
   if (dupErr) {
-    console.error(`[vitalwerte-pdl] Dublettenprüfung fehlgeschlagen: ${dupErr.message}`)
+    log.error('Dublettenprüfung fehlgeschlagen', { errorMessage: dupErr.message })
     return false
   }
   if (vorhanden) return false
@@ -85,14 +87,14 @@ async function aufgabeFallsNeu(
     .single()
 
   if (error || !aufgabe) {
-    console.error(`[vitalwerte-pdl] Anlage fehlgeschlagen: ${error?.message}`)
+    log.error('Anlage fehlgeschlagen', { errorMessage: error?.message })
     return false
   }
 
   await logAuditEvent({
     action: 'create', actorId, organizationId, entityType: 'ops_aufgabe', entityId: aufgabe.id,
     details: { grund: params.typ, client_id: params.clientId },
-  }).catch(err => console.error(`[vitalwerte-pdl] Audit fehlgeschlagen: ${err}`))
+  }).catch(err => log.error('Audit fehlgeschlagen', { errorMessage: String(err) }))
 
   return true
 }

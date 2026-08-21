@@ -11,6 +11,8 @@ import { ladeRouting, findeRouting } from '@/lib/abrechnung/sgb-v/routing'
 import { aktuelleVersion, monatsStichtag } from '@/lib/abrechnung/sgb-v/versionen'
 import { exportImplementiert } from '@/lib/abrechnung/sgb-v/generator'
 import { pruefeAufbereitungTarife } from '@/lib/abrechnung/sgb-v/validierung'
+import { logger } from '@/lib/logger'
+const log = logger.child('billing/sgb-v/vorschau')
 
 /**
  * GET /api/billing/sgb-v/vorschau?monat=2026-08
@@ -68,7 +70,7 @@ export async function GET(request: Request) {
       ['Klienten', klientenRes],
     ] as const) {
       if (res.error) {
-        console.error(`[billing/sgb-v/vorschau] ${name} Ladefehler:`, res.error.message)
+        log.error(`${name} Ladefehler:`, { resMessage: res.error.message })
         return NextResponse.json({ error: `${name} konnten nicht geladen werden.` }, { status: 500 })
       }
     }

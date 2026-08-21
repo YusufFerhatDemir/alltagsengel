@@ -6,6 +6,8 @@ import { SectionHeader, Card, DataTable, MisButton, SearchInput, Badge, Tabs, Em
 import { MIcon } from '@/components/mis/MisIcons'
 import { useMis } from '@/lib/mis/MisContext'
 import { createPrivacyRecord, deletePrivacyRecord, createPrivacyConsent, revokePrivacyConsent, createPrivacyRequest, updatePrivacyRequestStatus } from './actions'
+import { logger } from '@/lib/logger'
+const log = logger.child('mis:privacy')
 
 // ===== Status-Maps =====
 const RECORD_STATUS: Record<string, { label: string; color: string }> = {
@@ -156,7 +158,7 @@ export default function PrivacyPage() {
       setRequests((r3.data as PrivacyRequest[]) || [])
       setAuditLog((r4.data as AuditEntry[]) || [])
     } catch (err) {
-      console.error('Privacy load error:', err)
+      log.errorWithException('Privacy load error', err)
     }
     setLoading(false)
   }

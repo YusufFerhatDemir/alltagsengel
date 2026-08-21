@@ -5,6 +5,8 @@ import { BRAND } from '@/lib/mis/constants'
 import { SectionHeader, Card, KpiCard, DataTable, Tabs, Badge, SearchInput, EmptyState } from '@/components/mis/MisComponents'
 import { useMis } from '@/lib/mis/MisContext'
 import { logAuthEvent } from './actions'
+import { logger } from '@/lib/logger'
+const log = logger.child('mis/analytics')
 
 interface VisitorProfile {
   first_name: string | null
@@ -85,7 +87,7 @@ export default function AnalyticsPage() {
       if (session) {
         const meta = session.user?.user_metadata
       } else {
-        console.warn('[mis/analytics] NO AUTH SESSION — alle Admin-Queries werden leer sein!')
+        log.warn('NO AUTH SESSION — alle Admin-Queries werden leer sein!')
       }
 
       // Zeitfilter berechnen
@@ -103,14 +105,14 @@ export default function AnalyticsPage() {
         .gte('created_at', since.toISOString())
         .order('created_at', { ascending: false })
         .limit(200)
-      if (logsErr) console.error('[mis/analytics] Auth logs error:', logsErr)
+      if (logsErr) log.errorWithException('Auth logs error', logsErr)
 
       // Benutzer laden mit letztem Login
       const { data: profiles, error: profilesErr } = await supabase
         .from('profiles')
         .select('*')
         .order('created_at', { ascending: false })
-      if (profilesErr) console.error('[mis/analytics] Profiles error:', profilesErr)
+      if (profilesErr) log.errorWithException('Profiles error', profilesErr)
 
       // Besucher-Standorte laden (ohne Join — Profile werden in JS gemappt)
       let allVisitors: any[] = []
@@ -125,7 +127,7 @@ export default function AnalyticsPage() {
           .gte('created_at', since.toISOString())
           .order('created_at', { ascending: false })
           .range(from, from + pageSize - 1)
-        if (chunkErr) { console.error('Visitors error:', chunkErr); break }
+        if (chunkErr) { log.errorWithException('Visitors error', chunkErr); break }
         if (!chunk || chunk.length === 0) break
         allVisitors = allVisitors.concat(chunk)
         if (chunk.length < pageSize) break
@@ -142,7 +144,7 @@ export default function AnalyticsPage() {
       setUsers(profiles as UserSession[] || [])
       setVisitors(visitorData as VisitorLocation[] || [])
     } catch (err) {
-      console.error('[mis/analytics] Analytics loadData CATCH error:', err)
+      log.errorWithException('Analytics loadData CATCH error', err)
     }
     setLoading(false)
   }

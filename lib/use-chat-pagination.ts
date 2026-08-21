@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { createClient } from './supabase/client'
+import { logger } from '@/lib/logger'
+const log = logger.child('use-chat-pagination')
 
 // ═══════════════════════════════════════════════════════════════
 // useChatPagination — Cursor-based Pagination fuer Chat-Mesajlar
@@ -106,7 +108,7 @@ export function useChatPagination(opts: ChatPaginationOptions): ChatPaginationRe
       setHasMore(arr.length >= PAGE_SIZE)
       oldestCursorRef.current = arr[0]?.created_at || null
     } catch (err: any) {
-      console.error('[useChatPagination.init] error:', err)
+      log.errorWithException('error', err, { scope: 'useChatPagination.init' })
       setError(err?.message || 'Fehler beim Laden der Nachrichten')
     } finally {
       setLoading(false)
@@ -142,7 +144,7 @@ export function useChatPagination(opts: ChatPaginationOptions): ChatPaginationRe
       setHasMore(arr.length >= PAGE_SIZE)
       oldestCursorRef.current = arr[0]?.created_at || oldestCursorRef.current
     } catch (err: any) {
-      console.error('[useChatPagination.loadOlder] error:', err)
+      log.errorWithException('error', err, { scope: 'useChatPagination.loadOlder' })
       setError(err?.message || 'Aeltere Nachrichten konnten nicht geladen werden')
     } finally {
       setLoadingOlder(false)

@@ -6,6 +6,8 @@ import { SectionHeader, Card, KpiCard, DataTable, Tabs, MisButton, Badge, RiskBa
 import { useMis } from '@/lib/mis/MisContext'
 import type { QualityProcess, QualityAudit, CAPA } from '@/lib/mis/types'
 import { createQualityAudit, createCapa } from './actions'
+import { logger } from '@/lib/logger'
+const log = logger.child('mis:quality')
 
 export default function QualityPage() {
   const { isMobile } = useMis()
@@ -29,16 +31,16 @@ export default function QualityPage() {
           supabase.from('mis_quality_audits').select('*').order('scheduled_date', { ascending: false }),
           supabase.from('mis_capa').select('*').order('created_at', { ascending: false }),
         ])
-        if (e1) console.error('Processes error:', e1)
-        if (e2) console.error('Audits error:', e2)
-        if (e3) console.error('CAPA error:', e3)
+        if (e1) log.errorWithException('Processes error', e1)
+        if (e2) log.errorWithException('Audits error', e2)
+        if (e3) log.errorWithException('CAPA error', e3)
         const firstError = e1 || e2 || e3
         if (firstError) setLoadError(firstError.message || 'Daten konnten nicht geladen werden.')
         setProcesses(p as QualityProcess[] || [])
         setAudits(a as QualityAudit[] || [])
         setCapas(c as CAPA[] || [])
       } catch (err: any) {
-        console.error('Quality loadData error:', err)
+        log.errorWithException('Quality loadData error', err)
         setLoadError(err?.message || 'Daten konnten nicht geladen werden.')
       }
     })()

@@ -3,6 +3,8 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { IconBell, IconCheck } from '@/components/Icons'
+import { logger } from '@/lib/logger'
+const log = logger.child('ui:NotificationBell')
 
 interface Notification {
   id: string
@@ -88,7 +90,7 @@ export default function NotificationBell() {
         setUnreadCount(data.filter(n => !n.is_read).length)
       }
     } catch (err) {
-      console.error('NotificationBell load error:', err)
+      log.errorWithException('NotificationBell load error', err)
     }
   }, [showBrowserNotification])
 

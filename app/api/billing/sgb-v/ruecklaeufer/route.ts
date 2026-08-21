@@ -4,6 +4,8 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { importiereSgbVRuecklaeufer, ladeSgbVRuecklaeufer } from '@/lib/abrechnung/sgb-v/ruecklaufer-service'
 import type { RuecklaeuferTyp } from '@/lib/abrechnung/ruecklaeufer'
+import { logger } from '@/lib/logger'
+const log = logger.child('billing/sgb-v/ruecklaeufer')
 
 const TYPEN: RuecklaeuferTyp[] = ['quittung', 'annahmebestaetigung', 'fehlermeldung', 'abrechnungsergebnis', 'zahlungsavis', 'sonstige']
 
@@ -59,7 +61,7 @@ export async function POST(request: Request) {
     return NextResponse.json(ergebnis, { status: 201 })
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Interner Serverfehler'
-    console.error('[billing/sgb-v/ruecklaeufer] Fehler:', message)
+    log.error('Fehler', { message })
     return NextResponse.json({ error: message }, { status: 400 })
   }
 }

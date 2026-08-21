@@ -22,6 +22,8 @@
 // Funktion kann dann unverändert bestehen bleiben.
 
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { logger } from '@/lib/logger'
+const log = logger.child('leistungs-erfassung')
 
 // Live erlaubte Rückfallwerte (kleinster gemeinsamer Nenner beider Constraint-Stände)
 const FALLBACK_STATUS = 'draft'
@@ -105,11 +107,10 @@ export async function saveServiceRecord(
       const degraded =
         attempt.status !== input.status || attempt.budget_type !== input.budget_type
       if (degraded) {
-        console.warn(
-          '[Leistungserfassung] Check-Constraint noch nicht migriert — gespeichert als',
-          attempt,
-          '(gewünscht:', { status: input.status, budget_type: input.budget_type }, ')',
-        )
+        log.warn('Check-Constraint noch nicht migriert — abweichend gespeichert', {
+          gespeichert: attempt,
+          gewuenscht: { status: input.status, budget_type: input.budget_type },
+        })
       }
       return { id: data?.id ?? null, error: null, degraded }
     }

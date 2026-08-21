@@ -7,6 +7,8 @@ import {
 } from '@/lib/admin/ops'
 import { StatusBadge, Banner, EmptyRow } from '@/components/admin/OpsUI'
 import { saveSatisfactionCall, loadQualityData } from './actions'
+import { logger } from '@/lib/logger';
+const log = logger.child('admin:quality');
 
 interface Client { id: string; name: string; created_at: string | null; status: string }
 interface CallRow {
@@ -77,7 +79,7 @@ export default function AdminQualityPage() {
       setClients(data.clients)
       setCalls(data.calls)
     } catch (err: any) {
-      console.error('Quality load error:', err)
+      log.errorWithException('Quality load error', err)
       setLoadError(err?.message || 'Daten konnten nicht geladen werden.')
     } finally {
       setLoading(false)

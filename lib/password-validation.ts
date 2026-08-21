@@ -1,3 +1,6 @@
+import { logger } from '@/lib/logger'
+const log = logger.child('password-validation')
+
 // ═══════════════════════════════════════════════════════════
 // Passwort-Validierung — Gemeinsame Logik für alle Formulare
 //
@@ -191,7 +194,7 @@ export async function checkPasswordBreach(password: string): Promise<boolean> {
     }
 
     if (!response.ok) {
-      console.warn('[checkPasswordBreach] HIBP API returned non-OK:', response.status)
+      log.warn('HIBP API returned non-OK', { responseStatus: response.status })
       return false
     }
 
@@ -211,9 +214,9 @@ export async function checkPasswordBreach(password: string): Promise<boolean> {
   } catch (err: any) {
     // Fail-safe: Netzfehler / Timeout / SubtleCrypto-Probleme
     if (err?.name === 'AbortError') {
-      console.warn('[checkPasswordBreach] HIBP API timeout — skipping breach check')
+      log.warn('HIBP API timeout — skipping breach check')
     } else {
-      console.warn('[checkPasswordBreach] HIBP check failed — skipping:', err?.message || err)
+      log.warn('HIBP check failed — skipping', { errorMessage: err?.message || err })
     }
     return false
   }
@@ -292,7 +295,7 @@ export async function validatePasswordAsync(
     // Wir blockieren den Nutzer NICHT zusätzlich, damit der Login/Register
     // nicht komplett ausfällt — im Zweifel sind die Regex-Regeln die
     // minimale Linie. Das Ereignis landet im Log.
-    console.warn('[password-validation] zxcvbn load failed — fallback to regex only.', err)
+    log.warnWithException('zxcvbn load failed — fallback to regex only.', err, { scope: 'password-validation' })
     return base
   }
 }

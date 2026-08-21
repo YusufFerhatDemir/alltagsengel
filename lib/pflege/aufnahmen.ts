@@ -17,6 +17,8 @@ import {
   type Dringlichkeit,
   type PflegeAufnahme,
 } from './types'
+import { logger } from '@/lib/logger'
+const log = logger.child('pflege-audit')
 
 // Erlaubte Status-Übergänge (analog lib/akten/vertraege.ts)
 const ERLAUBTE_UEBERGAENGE: Record<AufnahmeStatus, AufnahmeStatus[]> = {
@@ -96,7 +98,7 @@ export async function createAufnahme(supabase: SupabaseClient, params: CreateAuf
     aktion: 'erstellt',
     nachher: data,
     akteurId: params.erstelltVon,
-  }).catch((err) => console.error('[pflege-audit] Aufnahme-Log fehlgeschlagen:', err))
+  }).catch((err) => log.errorWithException('Aufnahme-Log fehlgeschlagen', err))
 
   return data as PflegeAufnahme
 }
@@ -217,7 +219,7 @@ export async function updateAufnahme(
     vorher: existing,
     nachher: data,
     akteurId: actorId,
-  }).catch((err) => console.error('[pflege-audit] Aufnahme-Log fehlgeschlagen:', err))
+  }).catch((err) => log.errorWithException('Aufnahme-Log fehlgeschlagen', err))
 
   if (patch.status === 'abgeschlossen') {
     await spiegeleAufnahmeAufClient(supabase, data as PflegeAufnahme, organizationId)

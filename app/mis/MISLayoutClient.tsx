@@ -9,6 +9,8 @@ import { logMISAuthEvent } from './actions'
 import { SearchInput } from '@/components/mis/MisComponents'
 import { MisProvider } from '@/lib/mis/MisContext'
 import './responsive.css'
+import { logger } from '@/lib/logger'
+const log = logger.child('mis')
 
 export default function MISLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
@@ -44,7 +46,7 @@ export default function MISLayout({ children }: { children: React.ReactNode }) {
           const { data: profile } = await supabase.from('profiles').select('first_name,last_name').eq('id', data.user.id).single()
           if (profile) setUserName(`${profile.first_name} ${profile.last_name}`.trim() || 'Admin')
         }
-      } catch (err) { console.error('[mis] Layout getUser error:', err) }
+      } catch (err) { log.errorWithException('Layout getUser error', err) }
     })()
   }, [])
 

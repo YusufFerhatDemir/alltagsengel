@@ -16,6 +16,8 @@ import { parseSlgaDatei } from '@/lib/abrechnung/slga-parser'
 import { importiereRuecklaeufer } from '@/lib/abrechnung/ruecklaeufer'
 import { erstelleFrist, fristFuerTyp } from '@/lib/abrechnung/fristen-manager'
 import type { RuecklaeuferImportErgebnis } from '@/lib/abrechnung/ruecklaeufer'
+import { logger } from '@/lib/logger'
+const log = logger.child('api:billing')
 
 export async function POST(request: Request) {
   try {
@@ -59,7 +61,7 @@ export async function POST(request: Request) {
     let quelldateiUrl: string | undefined
     if (uploadError) {
       // Storage-Fehler ist nicht kritisch — Import geht trotzdem
-      console.error(`[ruecklaeufer-upload] Storage-Upload fehlgeschlagen: ${uploadError.message}`)
+      log.error('Storage-Upload fehlgeschlagen', { errorMessage: uploadError.message, scope: 'ruecklaeufer-upload' })
     } else {
       const { data: urlData } = admin.storage
         .from('dta-dateien')
@@ -100,7 +102,7 @@ export async function POST(request: Request) {
             ruecklaeuferId: ergebnis.ruecklaeuferId,
             fristTyp: ergebnis.status,
             actorId: userId,
-          }).catch((err) => console.warn('[DTA-Ruecklaeufer] Frist-Erstellung fehlgeschlagen (non-blocking):', err))
+          }).catch((err) => log.warnWithException('Frist-Erstellung fehlgeschlagen (non-blocking)', err, { scope: 'DTA-Ruecklaeufer' }))
         }
       } catch (err) {
         importFehler.push((err as Error).message)

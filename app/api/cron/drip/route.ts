@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server'
 import { safeApiError } from '@/lib/api/error-sanitizer'
+import { logger } from '@/lib/logger'
+const log = logger.child('cron:drip')
 
 // ═══════════════════════════════════════════════════════════
 // VERCEL CRON JOB — Drip E-Mail Kampagne
@@ -29,7 +31,7 @@ export async function GET(request: Request) {
     })
 
     const result = await response.json()
-    console.log('[CRON] Drip-Kampagne ausgeführt:', result)
+    log.info('Drip-Kampagne ausgeführt', { result })
 
     return NextResponse.json({
       success: true,

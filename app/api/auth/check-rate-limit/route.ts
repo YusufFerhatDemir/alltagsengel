@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
+import { logger } from '@/lib/logger'
+const log = logger.child('api:auth')
 
 interface RateLimitEntry {
   key: string
@@ -231,7 +233,7 @@ export async function POST(req: NextRequest) {
   } catch (err: unknown) {
     // AUTH-002-Pattern: niemals rohes err-Objekt loggen
     const e = err as { code?: string; name?: string } | undefined
-    console.error('Rate limit error:', { code: e?.code, name: e?.name })
+    log.error('Rate limit error', { code: e?.code, name: e?.name })
     // FAIL-OPEN bei Rate Limiter Fehler (Login nicht blockieren)
     return NextResponse.json({ allowed: true })
   }

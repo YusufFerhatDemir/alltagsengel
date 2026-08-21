@@ -7,6 +7,8 @@ import { MIcon } from '@/components/mis/MisIcons'
 import { useMis } from '@/lib/mis/MisContext'
 import type { MisDocument, DocumentCategory } from '@/lib/mis/types'
 import { createDocument, updateDocumentStatus, incrementDownloadCount } from './actions'
+import { logger } from '@/lib/logger'
+const log = logger.child('mis:documents')
 
 export default function DocumentsPage() {
   const { isMobile } = useMis()
@@ -29,12 +31,12 @@ export default function DocumentsPage() {
         supabase.from('mis_documents').select('*, category:mis_document_categories(*)').order('updated_at', { ascending: false }),
         supabase.from('mis_document_categories').select('*').order('sort_order'),
       ])
-      if (e1) console.error('Documents error:', e1)
-      if (e2) console.error('Categories error:', e2)
+      if (e1) log.errorWithException('Documents error', e1)
+      if (e2) log.errorWithException('Categories error', e2)
       setDocs(docData as MisDocument[] || [])
       setCategories(catData as DocumentCategory[] || [])
     } catch (err) {
-      console.error('Documents loadData error:', err)
+      log.errorWithException('Documents loadData error', err)
     }
     setLoading(false)
   }

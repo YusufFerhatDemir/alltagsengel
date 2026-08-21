@@ -2,6 +2,8 @@ import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 import { safeApiError } from '@/lib/api/error-sanitizer'
 import { getActiveOrgId } from '@/lib/organizations/server'
+import { logger } from '@/lib/logger'
+const log = logger.child('api:billing')
 
 /**
  * GET /api/billing/audit
@@ -63,7 +65,7 @@ export async function GET(request: Request) {
     const { data: entries, error } = await query
 
     if (error) {
-      console.error('Audit-Trail laden fehlgeschlagen:', error)
+      log.errorWithException('Audit-Trail laden fehlgeschlagen', error)
       return NextResponse.json(
         { error: 'Audit-Trail konnte nicht geladen werden' },
         { status: 500 }

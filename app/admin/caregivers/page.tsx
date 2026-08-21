@@ -7,6 +7,8 @@ import {
   CAREGIVER_STATUS, QUALIFICATION_STATUS,
 } from '@/lib/admin/ops'
 import { StatusBadge, SearchInput, EmptyRow, Banner } from '@/components/admin/OpsUI'
+import { logger } from '@/lib/logger'
+const log = logger.child('admin:caregivers')
 
 interface Qualification {
   id: string
@@ -92,7 +94,7 @@ export default function AdminCaregiversPage() {
           }
         }))
       } catch (err) {
-        console.error('Caregivers load error:', err)
+        log.errorWithException('Caregivers load error', err)
       } finally {
         setLoading(false)
       }

@@ -18,6 +18,8 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { logBillingAction } from '../billing/core/audit'
 import { datumBerlin, heuteBerlin } from '@/lib/utils/timezone';
+import { logger } from '@/lib/logger';
+const log = logger.child('fristen-manager');
 
 // ── Types ───────────────────────────────────────────────────────
 
@@ -109,7 +111,7 @@ export async function erstelleFrist(
     .single()
 
   if (error || !data) {
-    console.error(`[fristen-manager] Frist erstellen fehlgeschlagen: ${error?.message}`)
+    log.error('Frist erstellen fehlgeschlagen', { errorMessage: error?.message })
     return null
   }
 
@@ -125,7 +127,7 @@ export async function erstelleFrist(
       aufgabe_id: params.aufgabeId,
     },
     actorId: params.actorId,
-  }).catch(err => console.error(`[fristen-manager] Audit fehlgeschlagen: ${err}`))
+  }).catch(err => log.error('Audit fehlgeschlagen', { errorMessage: String(err) }))
 
   return data.id
 }
@@ -285,7 +287,7 @@ export async function escaliereUeberfaellige(
           ruecklaeufer_id: frist.ruecklaeufer_id,
         },
         actorId,
-      }).catch((err) => console.warn('[Fristen] Audit-Log fehlgeschlagen (non-blocking):', err))
+      }).catch((err) => log.warnWithException('Audit-Log fehlgeschlagen (non-blocking)', err, { scope: 'Fristen' }))
 
       eskaliert++
     } catch (err) {
@@ -316,5 +318,5 @@ export async function markiereFristErledigt(
     entityId: fristId,
     action: 'frist_erledigt',
     actorId,
-  }).catch((err) => console.warn('[Fristen] Audit-Log fehlgeschlagen (non-blocking):', err))
+  }).catch((err) => log.warnWithException('Audit-Log fehlgeschlagen (non-blocking)', err, { scope: 'Fristen' }))
 }

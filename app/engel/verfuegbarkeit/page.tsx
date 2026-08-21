@@ -24,6 +24,8 @@ import {
   zeitAnzeige,
   type Zeitfenster,
 } from '@/lib/availability'
+import { logger } from '@/lib/logger'
+const log = logger.child('engel:verfuegbarkeit')
 
 type Slot = Zeitfenster & { id: string }
 
@@ -56,7 +58,7 @@ export default function VerfuegbarkeitPage() {
       if (dbError) throw dbError
       setSlots((data || []) as Slot[])
     } catch (err) {
-      console.error('Verfügbarkeit laden:', err)
+      log.errorWithException('Verfügbarkeit laden', err)
       // PGRST205 = Tabelle fehlt im Schema-Cache. Das heißt: die Migration
       // 20260719_angel_availability.sql ist noch nicht eingespielt — kein
       // Fehler, den ein Wiederholen behebt.
@@ -92,7 +94,7 @@ export default function VerfuegbarkeitPage() {
       setSlots(prev => [...prev, result.data])
       setOffenerTag(null)
     } catch (err) {
-      console.error('Zeitfenster speichern:', err)
+      log.errorWithException('Zeitfenster speichern', err)
       setError('Das Zeitfenster konnte nicht gespeichert werden.')
     } finally {
       setBusy(false)
@@ -107,7 +109,7 @@ export default function VerfuegbarkeitPage() {
       if (!result.ok) { setError(result.error); return }
       setSlots(prev => prev.filter(s => s.id !== id))
     } catch (err) {
-      console.error('Zeitfenster löschen:', err)
+      log.errorWithException('Zeitfenster löschen', err)
       setError('Das Zeitfenster konnte nicht gelöscht werden.')
     } finally {
       setBusy(false)
@@ -128,7 +130,7 @@ export default function VerfuegbarkeitPage() {
       if (!result.ok) { setError(result.error); return }
       setSlots(prev => [...prev, ...result.data])
     } catch (err) {
-      console.error('Vorlage übernehmen:', err)
+      log.errorWithException('Vorlage übernehmen', err)
       setError('Die Vorlage konnte nicht übernommen werden.')
     } finally {
       setBusy(false)

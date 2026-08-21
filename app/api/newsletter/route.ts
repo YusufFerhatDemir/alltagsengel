@@ -3,6 +3,8 @@ import { NextResponse } from 'next/server'
 import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { rateLimit, getClientIp } from '@/lib/rate-limit'
+import { logger } from '@/lib/logger'
+const log = logger.child('newsletter')
 
 // ═══════════════════════════════════════════════════════════
 // NEWSLETTER API — Anmeldung + Willkommens-Mail
@@ -42,7 +44,7 @@ export async function POST(request: Request) {
       .insert({ email: email.toLowerCase(), source: 'website' })
 
     if (dbError) {
-      console.error('[Newsletter] DB Fehler:', dbError)
+      log.errorWithException('DB Fehler', dbError)
       return NextResponse.json({ error: 'Speicherfehler' }, { status: 500 })
     }
 

@@ -10,6 +10,8 @@ import { createClient } from '@/lib/supabase/client'
 import { fullName, NOTE_CATEGORY, NOTE_AUTHOR_ROLE } from '@/lib/admin/ops'
 import { Banner } from '@/components/admin/OpsUI'
 import { NoteCard, NoteComposer, type CareNote } from '@/components/admin/CareNotesPanel'
+import { logger } from '@/lib/logger'
+const log = logger.child('admin:notizen')
 
 interface ClientOption { id: string; name: string }
 
@@ -39,7 +41,7 @@ export default function AdminNotizenPage() {
       setNotes((notesRes.data || []) as CareNote[])
       setClients((clientsRes.data || []).map((c: any) => ({ id: c.id, name: fullName(c) })))
     } catch (err: any) {
-      console.error('Notizen load error:', err)
+      log.errorWithException('Notizen load error', err)
       setLoadErr(err?.message || 'Notizen konnten nicht geladen werden.')
     } finally {
       setLoading(false)

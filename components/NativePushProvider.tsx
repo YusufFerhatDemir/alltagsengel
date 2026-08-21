@@ -2,6 +2,8 @@
 
 import { useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { logger } from '@/lib/logger'
+const log = logger.child('ui:NativePushProvider')
 
 /**
  * NativePushProvider — Professional Push Setup für Capacitor (iOS + Android)
@@ -49,7 +51,7 @@ export default function NativePushProvider() {
           const mod = await import('@capacitor/push-notifications')
           PushNotifications = mod.PushNotifications
         } catch (importErr) {
-          console.warn('[NativePush] Plugin nicht verfügbar:', importErr)
+          log.warnWithException('Plugin nicht verfügbar', importErr)
           return
         }
 
@@ -58,7 +60,7 @@ export default function NativePushProvider() {
         try {
           permResult = await PushNotifications.requestPermissions()
         } catch (permErr) {
-          console.warn('[NativePush] Permission-Request fehlgeschlagen:', permErr)
+          log.warnWithException('Permission-Request fehlgeschlagen', permErr)
           return
         }
 
@@ -86,14 +88,14 @@ export default function NativePushProvider() {
               registeredRef.current = true
             }
           } catch (regErr) {
-            console.warn('[NativePush] Token-Registrierung fehlgeschlagen:', regErr)
+            log.warnWithException('Token-Registrierung fehlgeschlagen', regErr)
           }
         })
 
         await PushNotifications.addListener('registrationError', (err: any) => {
           // Häufigster Fehler auf iOS: "no valid 'aps-environment' entitlement"
           // → bedeutet: Push Capability fehlt im Xcode-Projekt
-          console.warn('[NativePush] Registrierung fehlgeschlagen (vermutlich fehlt APNS-Setup):', err)
+          log.warnWithException('Registrierung fehlgeschlagen (vermutlich fehlt APNS-Setup)', err)
         })
 
         // Kein Listener auf 'pushNotificationReceived': im Vordergrund
@@ -114,12 +116,12 @@ export default function NativePushProvider() {
         try {
           await PushNotifications.register()
         } catch (regErr) {
-          console.warn('[NativePush] register() fehlgeschlagen:', regErr)
+          log.warnWithException('register() fehlgeschlagen', regErr)
         }
 
       } catch (err) {
         // Letzter Sicherheitsnetz: nichts darf die App crashen lassen
-        console.warn('[NativePush] Unerwarteter Fehler:', err)
+        log.warnWithException('Unerwarteter Fehler', err)
       }
     }
 

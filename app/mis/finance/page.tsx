@@ -5,6 +5,8 @@ import { BRAND, FINANCIAL_PROJECTIONS, UNIT_ECONOMICS } from '@/lib/mis/constant
 import { SectionHeader, Card, KpiCard, MiniBarChart, DataTable, StatRow, ProgressBar, Tabs, MisButton, Badge } from '@/components/mis/MisComponents'
 import { useMis } from '@/lib/mis/MisContext'
 import type { BudgetItem } from '@/lib/mis/types'
+import { logger } from '@/lib/logger'
+const log = logger.child('mis:finance')
 
 export default function FinancePage() {
   const { isMobile } = useMis()
@@ -16,9 +18,9 @@ export default function FinancePage() {
       try {
         const supabase = createClient()
         const { data, error } = await supabase.from('mis_budget_items').select('*').order('category')
-        if (error) console.error('Budget items error:', error)
+        if (error) log.errorWithException('Budget items error', error)
         setBudgetItems(data as BudgetItem[] || [])
-      } catch (err) { console.error('Finance loadData error:', err) }
+      } catch (err) { log.errorWithException('Finance loadData error', err) }
     })()
   }, [])
 

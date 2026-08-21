@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server'
 import { safeApiError } from '@/lib/api/error-sanitizer'
 import { Resend } from 'resend'
 import { rateLimit, getClientIp, escapeHtml } from '@/lib/rate-limit'
+import { logger } from '@/lib/logger'
+const log = logger.child('kontakt')
 
 // ═══════════════════════════════════════════════════════════
 // KONTAKT FORMULAR API
@@ -42,7 +44,7 @@ export async function POST(request: Request) {
 
     const key = process.env.RESEND_API_KEY
     if (!key) {
-      console.error('[Kontakt] RESEND_API_KEY nicht konfiguriert')
+      log.error('RESEND_API_KEY nicht konfiguriert')
       return NextResponse.json({ error: 'E-Mail-Service nicht verfügbar' }, { status: 500 })
     }
 
@@ -106,7 +108,7 @@ export async function POST(request: Request) {
         `,
       })
     } catch (confirmErr) {
-      console.error('[Kontakt] Bestätigungs-Mail fehlgeschlagen (non-fatal):', confirmErr)
+      log.errorWithException('Bestätigungs-Mail fehlgeschlagen (non-fatal)', confirmErr)
     }
 
     return NextResponse.json({ success: true })

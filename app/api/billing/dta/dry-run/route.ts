@@ -10,6 +10,8 @@ import { getActiveOrgId } from '@/lib/organizations/server'
 import { getOrgIK } from '@/lib/config/org-config'
 import { logBillingAction } from '@/lib/billing/core/audit'
 import { pflegegradVon } from '@/lib/clients/pflegegrad'
+import { logger } from '@/lib/logger'
+const log = logger.child('dta/dry-run')
 
 export const maxDuration = 60
 
@@ -473,7 +475,7 @@ export async function POST(request: Request) {
         dateien: dateien.length,
       },
       actorId: user.id,
-    }).catch(err => console.error('[dta/dry-run] Audit fehlgeschlagen:', err))
+    }).catch(err => log.errorWithException('Audit fehlgeschlagen', err))
 
     return NextResponse.json({
       modus: 'dry-run',

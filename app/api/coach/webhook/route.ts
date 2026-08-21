@@ -35,6 +35,8 @@ import {
 import {
   sendeBestellbestaetigung, sendeZahlungFehlgeschlagen,
 } from '@/lib/emails/coach-bestellung'
+import { logger } from '@/lib/logger'
+const log = logger.child('coach-webhook')
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -107,7 +109,7 @@ export async function POST(request: Request) {
 
   const secret = process.env[WEBHOOK_SECRET_ENV]
   if (!secret) {
-    console.error(`[Coach-Webhook] ${WEBHOOK_SECRET_ENV} fehlt — Ereignis nicht verarbeitet`)
+    log.error(`${WEBHOOK_SECRET_ENV} fehlt — Ereignis nicht verarbeitet`)
     // 500: Das Ereignis ist echt, wir können es nur nicht prüfen. Stripe
     // soll es wiederholen, sobald das Geheimnis hinterlegt ist.
     return NextResponse.json({ error: 'Webhook nicht konfiguriert' }, { status: 500 })
@@ -128,7 +130,7 @@ export async function POST(request: Request) {
   } catch (err) {
     // Bewusst quittiert: siehe Kopf. Der Fehler steht im Protokoll und
     // die Bestellung bleibt in ihrem letzten gültigen Zustand.
-    console.error(`[Coach-Webhook] Verarbeitung von ${ereignis.type} fehlgeschlagen:`, err)
+    log.errorWithException(`Verarbeitung von ${ereignis.type} fehlgeschlagen:`, err)
   }
 
   return NextResponse.json({ received: true })
@@ -144,7 +146,7 @@ async function verarbeite(ereignis: Stripe.Event): Promise<void> {
 
       const bestellung = await bestellungPerCheckout(sitzung.id)
       if (!bestellung) {
-        console.error(`[Coach-Webhook] Keine Bestellung zu Checkout ${sitzung.id}`)
+        log.error('Keine Bestellung zu Checkout', { id: sitzung.id })
         return
       }
       // Bereits aktiv = zweite Zustellung desselben Ereignisses.

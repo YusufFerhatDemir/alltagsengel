@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { logAuditEvent } from '@/lib/audit-log'
+import { logger } from '@/lib/logger'
+const log = logger.child('api:user')
 
 /**
  * GET /api/user/delete/undo?token=…
@@ -87,7 +89,7 @@ export async function GET(request: NextRequest) {
         .update({ deleted_at: null })
         .eq('id', userId)
       if (undelErr) {
-        console.error('user/delete/undo: profile-update fehlgeschlagen', {
+        log.error('user/delete/undo: profile-update fehlgeschlagen', {
           code: undelErr?.code,
           name: undelErr?.name,
         })
@@ -131,7 +133,7 @@ export async function GET(request: NextRequest) {
 
     return redirect('/auth/login?reactivated=1')
   } catch (err: any) {
-    console.error('user/delete/undo unexpected error:', {
+    log.error('user/delete/undo unexpected error', {
       code: err?.code,
       name: err?.name,
     })

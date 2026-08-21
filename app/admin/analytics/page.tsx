@@ -3,6 +3,8 @@ import './analytics.css'
 import { useEffect, useState } from 'react'
 import { loadAnalyticsData } from './actions'
 import { IconUser, IconClock, IconTarget, IconChart } from '@/components/Icons'
+import { logger } from '@/lib/logger'
+const log = logger.child('analytics')
 
 interface Visitor {
   id: number
@@ -61,7 +63,7 @@ export default function AdminAnalyticsPage() {
       setViews(data.views)
       setVisitors(data.visitors)
     } catch (err) {
-      console.error('[Analytics] Unexpected error:', err)
+      log.errorWithException('Unexpected error', err)
       setViews([])
       setVisitors([])
     } finally {

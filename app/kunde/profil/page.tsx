@@ -9,6 +9,8 @@ import { IconDocument, IconNav, IconCalendar, IconMoney, IconClipboard, IconChat
 import { AvatarKunde } from '@/components/AvatarGlow'
 import { normalizePlz, resolvePlz } from '@/lib/expansion/plz-bundesland'
 import BundeslandErkennung from '@/components/kunde/BundeslandErkennung'
+import { logger } from '@/lib/logger'
+const log = logger.child('kunde:profil')
 
 // KASSEN-Liste entfernt (gehoerte zur Pflegedaten-UI, deaktiviert Phase 5)
 
@@ -34,7 +36,7 @@ export default function KundeProfilPage() {
       setProfile((prev: any) => (prev ? { ...prev, postal_code: plz } : prev))
       setPlzStatus('saved')
     } catch (err) {
-      console.error('PLZ speichern:', err)
+      log.errorWithException('PLZ speichern', err)
       setPlzStatus('error')
     }
   }

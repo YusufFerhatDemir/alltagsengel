@@ -22,6 +22,8 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { logAuditEventOrWarn } from '@/lib/audit-log'
+import { logger } from '@/lib/logger'
+const log = logger.child('onboarding')
 
 export interface OnboardingEingabe {
   /** Pflegegrad 1–5, oder leer/undefined wenn der Nutzer keinen angibt. */
@@ -120,7 +122,7 @@ export async function completeOnboardingAction(
         // Schreiben auf clients verwehren) — aber er darf nicht
         // unbemerkt bleiben, sonst driften die beiden Spalten wieder.
         if (error) {
-          console.error('[onboarding] clients.care_level-Sync fehlgeschlagen:', error.message)
+          log.error('clients.care_level-Sync fehlgeschlagen', { errorMessage: error.message })
         }
       }
     }

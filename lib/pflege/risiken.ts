@@ -16,6 +16,8 @@ import {
   type RisikoSchweregrad,
   type RisikoTyp,
 } from './types'
+import { logger } from '@/lib/logger'
+const log = logger.child('pflege-audit')
 
 /** Rangfolge der Schweregrade — für Sortierung und "kritischstes Risiko zuerst". */
 export const SCHWEREGRAD_RANG: Record<RisikoSchweregrad, number> = {
@@ -79,7 +81,7 @@ export async function createRisiko(supabase: SupabaseClient, params: CreateRisik
     aktion: 'erstellt',
     nachher: data,
     akteurId: params.erstelltVon,
-  }).catch((err) => console.error('[pflege-audit] Risiko-Log fehlgeschlagen:', err))
+  }).catch((err) => log.errorWithException('Risiko-Log fehlgeschlagen', err))
 
   return data as PflegeRisiko
 }
@@ -170,7 +172,7 @@ export async function updateRisiko(
     entitaetId: id,
     aktion: patch.aktiv === false ? 'geloescht' : 'aktualisiert',
     nachher: data,
-  }).catch((err) => console.error('[pflege-audit] Risiko-Log fehlgeschlagen:', err))
+  }).catch((err) => log.errorWithException('Risiko-Log fehlgeschlagen', err))
 
   return data as PflegeRisiko
 }

@@ -6,6 +6,8 @@ import { createClient as createRawClient } from '@supabase/supabase-js'
 import { randomBytes } from 'node:crypto'
 import { logAuditEvent } from '@/lib/audit-log'
 import { sendAccountDeletionEmail } from '@/lib/emails/account-deletion'
+import { logger } from '@/lib/logger'
+const log = logger.child('api:user')
 
 /**
  * DELETE /api/user/delete
@@ -77,7 +79,7 @@ export async function DELETE(request: NextRequest) {
       process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
     if (!supabaseUrl || !supabaseAnonKey) {
-      console.error('user/delete: Supabase-Env-Vars fehlen')
+      log.error('user/delete: Supabase-Env-Vars fehlen')
       return NextResponse.json({ error: 'Konfigurationsfehler' }, { status: 500 })
     }
     const verifier = createRawClient(supabaseUrl, supabaseAnonKey, {
@@ -88,7 +90,7 @@ export async function DELETE(request: NextRequest) {
       password,
     })
     if (signInError) {
-      console.error('user/delete re-auth error:', {
+      log.error('user/delete re-auth error', {
         code: signInError?.code,
         name: signInError?.name,
       })
@@ -117,7 +119,7 @@ export async function DELETE(request: NextRequest) {
         .update({ deleted_at: new Date().toISOString() })
         .eq('id', userId)
       if (softErr) {
-        console.error('user/delete soft-delete error:', {
+        log.error('user/delete soft-delete error', {
           code: softErr?.code,
           name: softErr?.name,
         })
@@ -144,7 +146,7 @@ export async function DELETE(request: NextRequest) {
         { onConflict: 'user_id' }
       )
     if (tokenErr) {
-      console.error('user/delete token upsert error:', {
+      log.error('user/delete token upsert error', {
         code: tokenErr?.code,
         name: tokenErr?.name,
       })
@@ -159,7 +161,7 @@ export async function DELETE(request: NextRequest) {
         token,
       })
     } catch (mailErr: any) {
-      console.error('user/delete mail error:', {
+      log.error('user/delete mail error', {
         name: mailErr?.name,
         code: mailErr?.code,
       })

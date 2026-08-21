@@ -16,6 +16,8 @@
 
 import forge from 'node-forge'
 import zlib from 'zlib'
+import { logger } from '@/lib/logger'
+const log = logger.child('abrechnung')
 
 // ---------------------------------------------------------------
 // OIDs (CMS / RFC 5652, RFC 3274, RFC 4056, RFC 3560)
@@ -339,7 +341,7 @@ export async function verschluesseln(klartext: Buffer, config: SECONConfig): Pro
   // Plausibilität: eigene IK muss zum Zertifikat passen (Warnfall, kein Abbruch)
   const zertIk = ikAusZertifikat(ident.zertifikat)
   if (zertIk && config.absender_ik && zertIk !== config.absender_ik) {
-    console.warn(`SECON: IK im Zertifikat (${zertIk}) ≠ konfigurierte Absender-IK (${config.absender_ik})`)
+    log.warn(`SECON: IK im Zertifikat (${zertIk}) ≠ konfigurierte Absender-IK (${config.absender_ik})`)
   }
 
   const signiert = signiereCms(klartext, ident)

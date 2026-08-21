@@ -4,6 +4,8 @@ import { createClient } from '@/lib/supabase/server'
 import { getActiveOrgId } from '@/lib/organizations/server'
 import { fullName } from '@/lib/admin/ops'
 import { logAuditEvent } from '@/lib/audit-log'
+import { logger } from '@/lib/logger'
+const log = logger.child('quality')
 
 // ═══════════════════════════════════════════════════════════════
 // Server-seitige Aktionen für das Qualitätsmanagement (M13)
@@ -103,7 +105,7 @@ export async function saveSatisfactionCall(input: SatisfactionCallInput): Promis
     entityType: 'satisfaction_call',
     entityId: input.clientId,
     details: { aktion: 'zufriedenheitsanruf_dokumentiert', callType: input.callType, callDate: input.callDate, rating: input.rating },
-  }).catch((err) => console.warn('[Quality] Audit-Log fehlgeschlagen (non-blocking):', err))
+  }).catch((err) => log.warnWithException('Audit-Log fehlgeschlagen (non-blocking)', err))
 
   return { ok: true }
 }

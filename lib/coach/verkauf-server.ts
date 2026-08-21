@@ -34,6 +34,8 @@ import type { CoachBestellung } from './types'
 import { laufzeitEnde, type BestellStatus } from './bestellung'
 import { steuerEinstellung } from './pricing'
 import { zerlegeBrutto, pruefeRechnungsangaben, type RechnungsDaten } from './rechnung'
+import { logger } from '@/lib/logger'
+const log = logger.child('coach-verkauf')
 
 function admin(): SupabaseClient {
   return createAdminClient()
@@ -291,7 +293,7 @@ export async function stelleRechnungAus(
 
   const { data: nummerDaten, error: nummerFehler } = await db.rpc('coach_naechste_rechnungsnummer')
   if (nummerFehler || !nummerDaten) {
-    console.error('[Coach-Verkauf] Rechnungsnummer konnte nicht gezogen werden:', nummerFehler)
+    log.error('Rechnungsnummer konnte nicht gezogen werden', { nummerFehler })
     return null
   }
   const nummer = String(nummerDaten)
@@ -339,12 +341,12 @@ export async function stelleRechnungAus(
   })
 
   if (error) {
-    console.error('[Coach-Verkauf] Rechnung konnte nicht angelegt werden:', error)
+    log.errorWithException('Rechnung konnte nicht angelegt werden', error)
     return null
   }
   if (!pruefung.vollstaendig) {
     // Sichtbar im Protokoll, damit die Lücke nicht erst beim Betriebsprüfer auffällt.
-    console.warn(`[Coach-Verkauf] Rechnung ${nummer} unvollständig: ${pruefung.fehlend.join('; ')}`)
+    log.warn(`Rechnung ${nummer} unvollständig: ${pruefung.fehlend.join('; ')}`)
   }
   return nummer
 }

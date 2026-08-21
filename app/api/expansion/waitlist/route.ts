@@ -20,6 +20,8 @@ import { requireExpansionAdmin } from '@/lib/expansion/api-auth'
 import { bundeslandFuerPlz, normalizeBundesland, normalizePlz } from '@/lib/expansion/plz-bundesland'
 import { bundeslandEinstellungen } from '@/lib/expansion/state-settings'
 import { istBundeslandCode } from '@/lib/expansion/types'
+import { logger } from '@/lib/logger'
+const log = logger.child('expansion/waitlist')
 
 export const dynamic = 'force-dynamic'
 
@@ -97,7 +99,7 @@ export async function POST(request: NextRequest) {
       )
 
     if (error) {
-      console.error('[expansion/waitlist] Eintragung fehlgeschlagen:', error.message)
+      log.error('Eintragung fehlgeschlagen', { errorMessage: error.message })
       return NextResponse.json(
         { error: 'Eintragung fehlgeschlagen. Bitte später erneut versuchen.' },
         { status: 500 }
@@ -139,7 +141,7 @@ export async function GET(request: NextRequest) {
 
   const { data, error } = await query
   if (error) {
-    console.error('[expansion/waitlist] Laden fehlgeschlagen:', error.message)
+    log.error('Laden fehlgeschlagen', { errorMessage: error.message })
     return NextResponse.json({ error: 'Warteliste konnte nicht geladen werden' }, { status: 500 })
   }
 

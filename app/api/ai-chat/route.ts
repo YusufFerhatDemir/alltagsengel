@@ -3,6 +3,8 @@ import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getActiveOrgId } from '@/lib/organizations/server'
+import { logger } from '@/lib/logger'
+const log = logger.child('api:ai-chat')
 
 // Rate limiter: max 10 requests per minute per user
 const rateLimit = new Map<string, { count: number; resetAt: number }>()
@@ -93,7 +95,7 @@ BESUCHER (letzte 50):
 - Länder: ${Object.entries(countryCounts).map(([c, n]) => `${c} (${n})`).join(', ')}
 `
   } catch (error) {
-    console.error('Error fetching live context:', error)
+    log.errorWithException('Error fetching live context', error)
     return '(Live-Daten konnten nicht geladen werden)'
   }
 }
@@ -201,7 +203,7 @@ async function callGemini(systemPrompt: string, messages: Array<{ role: string; 
 
   if (!response.ok) {
     const err = await response.text()
-    console.error('Gemini API Error:', err)
+    log.errorWithException('Gemini API Error', err)
     return null
   }
 
@@ -235,7 +237,7 @@ async function callOpenAI(systemPrompt: string, messages: Array<{ role: string; 
 
   if (!response.ok) {
     const err = await response.text()
-    console.error('OpenAI API Error:', err)
+    log.errorWithException('OpenAI API Error', err)
     return null
   }
 
@@ -298,7 +300,7 @@ export async function POST(req: NextRequest) {
     let content = await callGemini(fullPrompt, messages.slice(-10))
 
     if (!content) {
-      console.log('Gemini nicht verfügbar, versuche OpenAI...')
+      log.info('Gemini nicht verfügbar, versuche OpenAI...')
       content = await callOpenAI(fullPrompt, messages.slice(-10))
     }
 

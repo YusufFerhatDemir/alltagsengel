@@ -29,6 +29,8 @@ import {
 import { isRateLimited, RATE_LIMIT_REPLY } from '@/lib/whatsapp/rate-limit'
 import { sendWhatsAppMessage } from '@/lib/whatsapp/send'
 import { isLowConfidenceReply, sanitizeNames, HOLDING_REPLY } from '@/lib/whatsapp/confidence'
+import { logger } from '@/lib/logger'
+const log = logger.child('wa-webhook')
 
 /**
  * Meta-Signaturprüfung (x-hub-signature-256).
@@ -50,7 +52,7 @@ function verifyMetaSignature(rawBody: string, signatureHeader: string | null): b
     // JEDEM, gefälschte Webhook-Payloads einzuschleusen (Bot antwortet, eskaliert,
     // verschickt Mails, schreibt in die DB). Jetzt: ablehnen, bis das Secret gesetzt ist.
      
-    console.error('[wa-webhook] WHATSAPP_APP_SECRET fehlt — Webhook FAIL-CLOSED, Request abgelehnt. App-Secret in den Env-Vars setzen!')
+    log.error('WHATSAPP_APP_SECRET fehlt — Webhook FAIL-CLOSED, Request abgelehnt. App-Secret in den Env-Vars setzen!')
     return false
   }
   if (!signatureHeader || !signatureHeader.startsWith('sha256=')) return false
@@ -81,7 +83,7 @@ export async function GET(req: NextRequest) {
   const expectedToken = process.env.WHATSAPP_VERIFY_TOKEN
   if (mode === 'subscribe' && token && token === expectedToken && challenge) {
      
-    console.log('[wa-webhook] verification successful')
+    log.info('verification successful')
     return new NextResponse(challenge, { status: 200 })
   }
   return new NextResponse('Verification failed', { status: 403 })
@@ -109,7 +111,7 @@ export async function POST(req: NextRequest) {
   const signature = req.headers.get('x-hub-signature-256')
   if (!verifyMetaSignature(rawBody, signature)) {
      
-    console.warn('[wa-webhook] Ungültige/fehlende Meta-Signatur — Request abgelehnt')
+    log.warn('Ungültige/fehlende Meta-Signatur — Request abgelehnt')
     return NextResponse.json({ ok: false, error: 'invalid_signature' }, { status: 401 })
   }
 
@@ -174,7 +176,7 @@ function extractMessages(payload: unknown): IncomingMessage[] {
     }
   } catch (err) {
      
-    console.warn('[wa-webhook] extract error:', err)
+    log.warnWithException('extract error', err)
   }
   return result
 }
@@ -192,7 +194,7 @@ async function processIncomingMessage(
     .maybeSingle()
   if (existing) {
      
-    console.log('[wa-webhook] duplicate msg, skip:', msg.id)
+    log.info('duplicate msg, skip', { id: msg.id })
     return
   }
 
@@ -260,10 +262,7 @@ async function processIncomingMessage(
   const sanitized = sanitizeNames(rawReply)
   if (sanitized.didReplace) {
      
-    console.warn(
-      '[wa-webhook] persona drift: KI hat Namen verwendet, sanitisiert:',
-      sanitized.replaced.join(', ')
-    )
+    log.warn('persona drift: KI hat Namen verwendet, sanitisiert', { ersetzteNamen: sanitized.replaced.join(', ') })
   }
   const cleanReply = sanitized.sanitized
 

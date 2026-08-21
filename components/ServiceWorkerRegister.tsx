@@ -1,6 +1,8 @@
 'use client'
 
 import { useEffect } from 'react'
+import { logger } from '@/lib/logger'
+const log = logger.child('ui:ServiceWorkerRegister')
 
 /**
  * ServiceWorkerRegister — PWA Service Worker (nur Web)
@@ -20,7 +22,7 @@ export default function ServiceWorkerRegister() {
 
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/sw.js').catch((err) => {
-        console.warn('SW registration failed:', err)
+        log.warnWithException('SW registration failed', err)
       })
     }
   }, [])

@@ -5,6 +5,8 @@ import { createClient } from '@/lib/supabase/client'
 import { requireUser } from '@/lib/supabase/require-session'
 import { IconCheck, IconClock, IconClipboard } from '@/components/Icons'
 import { updateTaskStatus } from './actions'
+import { logger } from '@/lib/logger'
+const log = logger.child('engel:aufgaben')
 
 const STATUS_META: Record<string, { label: string; color: string }> = {
   offen: { label: 'Offen', color: '#2196F3' },
@@ -88,7 +90,7 @@ export default function EngelAufgabenPage() {
       if (err) throw err
       setAufgaben((data || []) as Aufgabe[])
     } catch (e: any) {
-      console.error('Aufgaben load error:', e)
+      log.errorWithException('Aufgaben load error', e)
       setError('Fehler beim Laden der Aufgaben')
     } finally {
       setLoading(false)
@@ -109,7 +111,7 @@ export default function EngelAufgabenPage() {
         await load()
       }
     } catch (e: any) {
-      console.error('Status update error:', e)
+      log.errorWithException('Status update error', e)
       setStatusError('Status konnte nicht geändert werden. Bitte erneut versuchen.')
       setTimeout(() => setStatusError(''), 4000)
     } finally {

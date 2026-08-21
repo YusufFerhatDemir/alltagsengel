@@ -8,6 +8,8 @@ import {
 import { AmpelDot, BudgetBar, StatusBadge, SearchInput, EmptyRow, Banner } from '@/components/admin/OpsUI'
 import { useBundeslandFilter } from '@/components/admin/BundeslandContext'
 import BundeslandFilterHinweis from '@/components/admin/BundeslandFilterHinweis'
+import { logger } from '@/lib/logger'
+const log = logger.child('admin:clients')
 
 interface ClientRow {
   id: string
@@ -74,7 +76,7 @@ export default function AdminClientsPage() {
       })
       setClients(rows)
     } catch (err) {
-      console.error('Clients load error:', err)
+      log.errorWithException('Clients load error', err)
     } finally {
       setLoading(false)
     }

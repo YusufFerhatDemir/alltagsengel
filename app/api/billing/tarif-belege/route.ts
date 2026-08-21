@@ -9,6 +9,8 @@ import {
   MIGRATION_FEHLT_TEXT,
 } from '@/lib/billing/core/tarif-belege'
 import { pruefeBelegDatei, type QuellTabelle } from '@/lib/billing/core/tarif-verifizierung'
+import { logger } from '@/lib/logger'
+const log = logger.child('api:billing')
 
 const QUELLEN: readonly QuellTabelle[] = ['billing_tariffs', 'leistungspreise']
 
@@ -87,7 +89,7 @@ export async function GET(request: Request) {
     if (nachricht === MIGRATION_FEHLT_TEXT || istMigrationFehlt(nachricht)) {
       return NextResponse.json({ error: MIGRATION_FEHLT_TEXT }, { status: 503 })
     }
-    console.error('Belege laden fehlgeschlagen:', err)
+    log.errorWithException('Belege laden fehlgeschlagen', err)
     return NextResponse.json({ error: 'Belege konnten nicht geladen werden.' }, { status: 500 })
   }
 }
@@ -174,7 +176,7 @@ export async function POST(request: Request) {
     if (nachricht === MIGRATION_FEHLT_TEXT || istMigrationFehlt(nachricht)) {
       return NextResponse.json({ error: MIGRATION_FEHLT_TEXT }, { status: 503 })
     }
-    console.error('Beleg-Upload fehlgeschlagen:', err)
+    log.errorWithException('Beleg-Upload fehlgeschlagen', err)
     return NextResponse.json({ error: 'Beleg konnte nicht gespeichert werden.' }, { status: 500 })
   }
 }

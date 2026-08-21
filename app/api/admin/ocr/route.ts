@@ -3,6 +3,8 @@ import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getActiveOrgId } from '@/lib/organizations/server'
+import { logger } from '@/lib/logger'
+const log = logger.child('api/admin/ocr')
 
 // ═══════════════════════════════════════════════════════════════
 // POST /api/admin/ocr
@@ -188,7 +190,7 @@ export async function POST(request: Request) {
         .insert(createdErrors)
         .select()
       if (errInsErr) {
-        console.error('[api/admin/ocr] review_errors insert error:', errInsErr)
+        log.errorWithException('review_errors insert error', errInsErr)
       } else {
         insertedErrors = errData || []
       }

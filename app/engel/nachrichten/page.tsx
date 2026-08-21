@@ -4,6 +4,8 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { requireUser } from '@/lib/supabase/require-session'
 import { IconChat } from '@/components/Icons'
+import { logger } from '@/lib/logger'
+const log = logger.child('engel:nachrichten')
 
 interface Nachricht {
   nachricht_id: string
@@ -60,7 +62,7 @@ export default function EngelNachrichtenPage() {
       const data = await res.json()
       setNachrichten((data || []) as Nachricht[])
     } catch (e: any) {
-      console.error('Nachrichten load error:', e)
+      log.errorWithException('Nachrichten load error', e)
       setError('Fehler beim Laden der Nachrichten')
     } finally {
       setLoading(false)
@@ -76,7 +78,7 @@ export default function EngelNachrichtenPage() {
         prev.map(n => n.nachricht_id === nachrichtId ? { ...n, gelesen: true } : n)
       )
     } catch (err) {
-      console.error('Fehler in markAsRead (Engel-Nachrichten):', err)
+      log.errorWithException('Fehler in markAsRead (Engel-Nachrichten)', err)
     }
   }
 
@@ -113,7 +115,7 @@ export default function EngelNachrichtenPage() {
       setReplyText('')
       await load()
     } catch (e: any) {
-      console.error('Reply error:', e)
+      log.errorWithException('Reply error', e)
     } finally {
       setSending(false)
     }

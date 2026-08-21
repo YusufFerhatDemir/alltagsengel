@@ -3,6 +3,8 @@ import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireCaregiverSession } from '@/lib/native-auth'
 import { checkWithinRadius } from '@/lib/geo'
+import { logger } from '@/lib/logger'
+const log = logger.child('api/native/geo-events')
 
 // ═══════════════════════════════════════════════════════════════
 // POST /api/native/geo-events
@@ -107,7 +109,7 @@ export async function POST(request: Request) {
       .single()
 
     if (geoErr || !geoEvent) {
-      console.error('[api/native/geo-events] Insert-Fehler:', geoErr)
+      log.errorWithException('Insert-Fehler', geoErr)
       return NextResponse.json({ error: 'Standort konnte nicht gespeichert werden' }, { status: 500 })
     }
 
@@ -120,7 +122,7 @@ export async function POST(request: Request) {
         description: `${event_type === 'check_in' ? 'Check-in' : 'Check-out'} außerhalb des erwarteten Einsatzortes (${distanceM} m entfernt, Radius ${radiusM} m).`,
       })
       if (reviewErr) {
-        console.error('[api/native/geo-events] review_errors-Fehler:', reviewErr)
+        log.errorWithException('review_errors-Fehler', reviewErr)
       }
     }
 

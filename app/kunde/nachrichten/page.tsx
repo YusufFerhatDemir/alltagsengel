@@ -6,6 +6,8 @@ import { createClient } from '@/lib/supabase/client'
 import { requireUser } from '@/lib/supabase/require-session'
 import { sendSupportNoteAction } from './actions'
 import { IconWingsGold } from '@/components/Icons'
+import { logger } from '@/lib/logger'
+const log = logger.child('kundenachrichten:send')
 
 // ═══════════════════════════════════════════════════════════════
 // Kunden-Support-Nachrichten — buchungsunabhängig
@@ -148,7 +150,7 @@ export default function KundeNachrichtenPage() {
     if (result.ok) {
       setMessages(prev => prev.map(m => m.id === optimistic.id ? (result.data as NoteMessage) : m))
     } else {
-      console.error('[KundeNachrichten:send] error:', result.error)
+      log.error('error', { error: result.error })
       setMessages(prev => prev.filter(m => m.id !== optimistic.id))
       setError('Nachricht konnte nicht gesendet werden. Bitte versuchen Sie es erneut.')
       setTimeout(() => setError(''), 4000)

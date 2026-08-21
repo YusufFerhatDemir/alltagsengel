@@ -10,6 +10,8 @@ import { IconUser } from '@/components/Icons'
 import type { Profile } from '@/lib/types'
 import { useChatPagination, useScrollToLoadOlder, type ChatMessage } from '@/lib/use-chat-pagination'
 import { one } from '@/lib/supabase/join'
+import { logger } from '@/lib/logger'
+const log = logger.child('engel-chat')
 
 export default function EngelChatConversationPage() {
   const params = useParams()
@@ -90,7 +92,7 @@ export default function EngelChatConversationPage() {
         if (cancelled) return
 
         // Ungelesene markieren (fire-and-forget via Server Action)
-        markMessagesRead(bookingId).catch((err) => console.warn('[Engel-Chat] Gelesen-Markierung fehlgeschlagen (non-blocking):', err))
+        markMessagesRead(bookingId).catch((err) => log.warnWithException('Gelesen-Markierung fehlgeschlagen (non-blocking)', err))
 
         // Realtime-Subscription
         channel = supabase

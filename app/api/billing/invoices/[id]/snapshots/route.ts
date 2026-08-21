@@ -3,6 +3,8 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { NextResponse } from 'next/server'
 import { safeApiError } from '@/lib/api/error-sanitizer'
 import { getActiveOrgId } from '@/lib/organizations/server'
+import { logger } from '@/lib/logger'
+const log = logger.child('api:billing')
 
 /**
  * GET /api/billing/invoices/[id]/snapshots
@@ -58,7 +60,7 @@ export async function GET(
       .order('version', { ascending: true })
 
     if (error) {
-      console.error('Snapshots laden fehlgeschlagen:', error)
+      log.errorWithException('Snapshots laden fehlgeschlagen', error)
       return NextResponse.json(
         { error: 'Snapshots konnten nicht geladen werden' },
         { status: 500 }

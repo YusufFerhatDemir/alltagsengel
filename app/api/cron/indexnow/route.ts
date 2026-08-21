@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import { safeApiError } from '@/lib/api/error-sanitizer'
 import { notifyIndexers } from '@/lib/indexing'
+import { logger } from '@/lib/logger'
+const log = logger.child('cron:indexnow')
 
 // ═══════════════════════════════════════════════════════════
 // VERCEL CRON JOB — IndexNow-Ping (Bing/Yandex/Seznam/Naver)
@@ -32,7 +34,7 @@ export async function GET(request: Request) {
     const urls = [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1])
 
     const result = await notifyIndexers(urls)
-    console.log('[CRON] IndexNow-Ping:', result)
+    log.info('IndexNow-Ping', { result })
 
     return NextResponse.json({
       success: result.ok,

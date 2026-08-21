@@ -19,6 +19,8 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { logAuditEvent } from '@/lib/audit-log'
 import { ersterPdlDerOrg } from './org-empfaenger'
 import { heuteBerlin } from '@/lib/utils/timezone'
+import { logger } from '@/lib/logger'
+const log = logger.child('nachweis-fehlt')
 
 /** Tage nach Einsatzdatum, ab denen ein fehlender Nachweis eine Aufgabe auslöst. */
 export const NACHWEIS_FRIST_TAGE = 3
@@ -140,7 +142,7 @@ async function erstelleAufgabeFallsNeu(
     .maybeSingle()
 
   if (dupErr) {
-    console.error(`[nachweis-fehlt] Dublettenprüfung fehlgeschlagen: ${dupErr.message}`)
+    log.error('Dublettenprüfung fehlgeschlagen', { errorMessage: dupErr.message })
     throw new Error(`Dublettenprüfung fehlgeschlagen: ${dupErr.message}`)
   }
   if (vorhanden) return false
@@ -170,7 +172,7 @@ async function erstelleAufgabeFallsNeu(
     .single()
 
   if (error || !aufgabe) {
-    console.error(`[nachweis-fehlt] Anlage fehlgeschlagen: ${error?.message}`)
+    log.error('Anlage fehlgeschlagen', { errorMessage: error?.message })
     throw new Error(error?.message ?? 'Aufgabe konnte nicht angelegt werden')
   }
 
@@ -181,7 +183,7 @@ async function erstelleAufgabeFallsNeu(
     entityType: 'ops_aufgabe',
     entityId: aufgabe.id,
     details: { grund: 'nachweis_fehlt', service_record_id: params.serviceRecordId, zielrolle: params.zielrolle },
-  }).catch(err => console.error(`[nachweis-fehlt] Audit fehlgeschlagen: ${err}`))
+  }).catch(err => log.error('Audit fehlgeschlagen', { errorMessage: String(err) }))
 
   return true
 }

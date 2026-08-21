@@ -6,6 +6,8 @@ import { SectionHeader, Card, DataTable, MisButton, SearchInput, Badge, Tabs, Em
 import { MIcon } from '@/components/mis/MisIcons'
 import { useMis } from '@/lib/mis/MisContext'
 import { createVehicle, updateVehicleStatus, updateVehicleKm, deleteVehicle } from './actions'
+import { logger } from '@/lib/logger'
+const log = logger.child('mis:vehicles')
 
 // ===== Fahrzeug-Status =====
 const VEHICLE_STATUS: Record<string, { label: string; color: string }> = {
@@ -59,10 +61,10 @@ export default function VehiclesPage() {
         .from('mis_vehicles')
         .select('*')
         .order('plate', { ascending: true })
-      if (error) console.error('Vehicles error:', error)
+      if (error) log.errorWithException('Vehicles error', error)
       setVehicles(data as Vehicle[] || [])
     } catch (err) {
-      console.error('Vehicles load error:', err)
+      log.errorWithException('Vehicles load error', err)
     }
     setLoading(false)
   }

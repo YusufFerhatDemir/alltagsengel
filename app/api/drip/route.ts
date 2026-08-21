@@ -3,6 +3,8 @@ import { NextResponse } from 'next/server'
 import { safeApiError } from '@/lib/api/error-sanitizer'
 import { escapeHtml } from '@/lib/rate-limit'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { logger } from '@/lib/logger'
+const log = logger.child('api:drip')
 
 // ═══════════════════════════════════════════════════════════
 // DRIP E-MAIL KAMPAGNE — Automatische Follow-Up Mails
@@ -215,7 +217,7 @@ export async function POST(request: Request) {
           sent.day14++
         }
       } catch (emailErr) {
-        console.error(`Drip mail error for ${customer.email}:`, emailErr)
+        log.errorWithException(`Drip mail error for ${customer.email}:`, emailErr)
       }
     }
 

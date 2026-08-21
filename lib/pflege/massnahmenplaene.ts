@@ -15,6 +15,8 @@ import {
   type PlanStatus,
   type PlanTyp,
 } from './types'
+import { logger } from '@/lib/logger'
+const log = logger.child('pflege-audit')
 
 // Erlaubte Status-Übergänge (analog lib/akten/vertraege.ts)
 const ERLAUBTE_UEBERGAENGE: Record<PlanStatus, PlanStatus[]> = {
@@ -79,7 +81,7 @@ export async function createPlan(supabase: SupabaseClient, params: CreatePlanPar
     aktion: 'erstellt',
     nachher: data,
     akteurId: params.erstelltVon,
-  }).catch((err) => console.error('[pflege-audit] Maßnahmenplan-Log fehlgeschlagen:', err))
+  }).catch((err) => log.errorWithException('Maßnahmenplan-Log fehlgeschlagen', err))
 
   return data as PflegeMassnahmenplan
 }
@@ -194,7 +196,7 @@ export async function updatePlan(
     aktion: 'aktualisiert',
     vorher: existing,
     nachher: data,
-  }).catch((err) => console.error('[pflege-audit] Maßnahmenplan-Log fehlgeschlagen:', err))
+  }).catch((err) => log.errorWithException('Maßnahmenplan-Log fehlgeschlagen', err))
 
   return data as PflegeMassnahmenplan
 }
@@ -253,7 +255,7 @@ export async function freigebenPlan(
     vorher: existing,
     nachher: data,
     akteurId: freigegebenVon,
-  }).catch((err) => console.error('[pflege-audit] Maßnahmenplan-Log fehlgeschlagen:', err))
+  }).catch((err) => log.errorWithException('Maßnahmenplan-Log fehlgeschlagen', err))
 
   return data as PflegeMassnahmenplan
 }
@@ -283,7 +285,7 @@ export async function sperrePlan(
     aktion: 'gesperrt',
     vorher: existing,
     nachher: data,
-  }).catch((err) => console.error('[pflege-audit] Maßnahmenplan-Log fehlgeschlagen:', err))
+  }).catch((err) => log.errorWithException('Maßnahmenplan-Log fehlgeschlagen', err))
 
   return data as PflegeMassnahmenplan
 }
@@ -316,7 +318,7 @@ export async function entsperrePlan(
     aktion: 'entsperrt',
     vorher: existing,
     nachher: data,
-  }).catch((err) => console.error('[pflege-audit] Maßnahmenplan-Log fehlgeschlagen:', err))
+  }).catch((err) => log.errorWithException('Maßnahmenplan-Log fehlgeschlagen', err))
 
   return data as PflegeMassnahmenplan
 }

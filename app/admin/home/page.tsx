@@ -2,6 +2,8 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
+import { logger } from '@/lib/logger'
+const log = logger.child('admin:home')
 
 interface Stats {
   totalUsers: number
@@ -94,7 +96,7 @@ export default function AdminHomePage() {
           angel_name: '—',
         })))
       } catch (err) {
-        console.error('Admin stats load error:', err)
+        log.errorWithException('Admin stats load error', err)
       } finally {
         setLoading(false)
       }

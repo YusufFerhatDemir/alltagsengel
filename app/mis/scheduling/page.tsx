@@ -7,6 +7,8 @@ import { SectionHeader, Card, MisButton, SearchInput, Badge, Tabs, EmptyState, M
 import { MIcon } from '@/components/mis/MisIcons'
 import { useMis } from '@/lib/mis/MisContext'
 import { createShift, assignShift, updateShiftStatus, deleteShift, createAvailability, deleteAvailability } from './actions'
+import { logger } from '@/lib/logger';
+const log = logger.child('mis:scheduling');
 
 // ===== Typen & Konstanten =====
 const SHIFT_TYPES: Record<string, { label: string; color: string; zeit: string }> = {
@@ -174,7 +176,7 @@ export default function SchedulingPage() {
       setShifts((shiftsRes.data as Shift[]) || [])
       setAvailability((availRes.data as Availability[]) || [])
     } catch (err) {
-      console.error('Scheduling load error:', err)
+      log.errorWithException('Scheduling load error', err)
     }
     setLoading(false)
   }, [])

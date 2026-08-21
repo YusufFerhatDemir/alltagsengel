@@ -2,6 +2,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { statusMeta, ARBEITSZEIT_STATUS, MONATSNAMEN } from '@/lib/admin/ops'
 import { StatusBadge, SearchInput, EmptyRow } from '@/components/admin/OpsUI'
+import { logger } from '@/lib/logger'
+const log = logger.child('admin:arbeitszeiten')
 
 interface Row {
   id: string
@@ -27,7 +29,7 @@ export default function ArbeitszeitenPage() {
     async function load() {
       try {
         const res = await fetch(`/api/personal/arbeitszeiten/konto?monat=${monat}&jahr=${jahr}`)
-        if (!res.ok) { console.error('Fehler beim Laden der Arbeitszeiten'); setLoading(false); return }
+        if (!res.ok) { log.error('Fehler beim Laden der Arbeitszeiten'); setLoading(false); return }
         const data = await res.json()
         setRows((data.konten || data || []).map((r: any) => ({
           id: r.id || `${r.caregiver_id}-${r.monat}-${r.jahr}`,
@@ -42,7 +44,7 @@ export default function ArbeitszeitenPage() {
           korrigierte_eintraege: r.korrigierte_eintraege ?? 0,
         })))
       } catch (err) {
-        console.error('Arbeitszeiten laden fehlgeschlagen', err)
+        log.errorWithException('Arbeitszeiten laden fehlgeschlagen', err)
       } finally {
         setLoading(false)
       }

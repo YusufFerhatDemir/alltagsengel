@@ -6,6 +6,8 @@ import { SectionHeader, Card, DataTable, MisButton, SearchInput, Badge, Tabs, Em
 import { MIcon } from '@/components/mis/MisIcons'
 import { useMis } from '@/lib/mis/MisContext'
 import { updateClientPipeline as updateClientPipelineAction, updateLeadStatus as updateLeadStatusAction, createLead, createPartner, createActivity } from './actions'
+import { logger } from '@/lib/logger'
+const log = logger.child('mis:crm')
 
 // ===== Pipeline Status =====
 const PIPELINE_STATUS: Record<string, { label: string; color: string; icon: string }> = {
@@ -178,7 +180,7 @@ export default function CrmPage() {
       setSatisfactionCalls(satisfactionRes.data as SatisfactionCall[] || [])
       setActivities(activitiesRes.data as CrmActivity[] || [])
     } catch (err) {
-      console.error('CRM load error:', err)
+      log.errorWithException('CRM load error', err)
     }
     setLoading(false)
   }, [])

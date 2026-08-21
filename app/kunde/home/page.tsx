@@ -17,6 +17,8 @@ import OnboardingFlow from '@/components/OnboardingFlow'
 import BundeslandHinweis from '@/components/kunde/BundeslandHinweis'
 import { useBundeslandLage } from '@/lib/expansion/client'
 import { resolvePlz } from '@/lib/expansion/plz-bundesland'
+import { logger } from '@/lib/logger'
+const log = logger.child('kunde-home')
 
 const categories: { key: string; icon: ReactNode; label: string }[] = [
   { key: 'all', icon: <IconStarGold size={26} />, label: 'Alle' },
@@ -93,7 +95,7 @@ export default function KundeHomePage() {
   // Standort in Profil aktualisieren (GPS/IP)
   useEffect(() => {
     if (!userLocation.loading && userLocation.city && profile && !profile.location) {
-      updateLocationAction({ location: userLocation.city }).catch((err) => console.warn('[Kunde-Home] Standort-Aktualisierung fehlgeschlagen (non-blocking):', err))
+      updateLocationAction({ location: userLocation.city }).catch((err) => log.warnWithException('Standort-Aktualisierung fehlgeschlagen (non-blocking)', err))
     }
   }, [userLocation.loading, userLocation.city, profile])
 

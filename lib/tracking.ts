@@ -1,3 +1,6 @@
+import { logger } from '@/lib/logger'
+const log = logger.child('tracking')
+
 /**
  * Google Ads Conversion Tracking — Direct gtag() calls
  *
@@ -92,7 +95,7 @@ function gtagConversion(label: string, value?: number, currency = 'EUR', userDat
     if (attempts < maxAttempts) {
       setTimeout(tryFire, 500)
     } else {
-      console.warn(`[Tracking] ⚠️ gtag not available after ${maxAttempts} attempts — conversion ${label} only sent server-side`)
+      log.warn(`⚠️ gtag not available after ${maxAttempts} attempts — conversion ${label} only sent server-side`)
     }
   }
   tryFire()
@@ -112,7 +115,7 @@ function gtagConversion(label: string, value?: number, currency = 'EUR', userDat
         timestamp: new Date().toISOString(),
       }),
       keepalive: true,
-    }).catch((err) => console.warn('[Tracking] Conversion-Tracking fehlgeschlagen (non-blocking):', err))
+    }).catch((err) => log.warnWithException('Conversion-Tracking fehlgeschlagen (non-blocking)', err))
   } catch {}
 }
 

@@ -8,6 +8,8 @@ import { useMis } from '@/lib/mis/MisContext'
 import { SERVICE_TYPES, BUDGET_TYPE, RECORD_STATUS, diffMinutes, formatDuration, statusMeta } from '@/lib/admin/ops'
 import { saveServiceRecord } from '@/lib/admin/service-records'
 import { createTask, updateProfile } from './actions'
+import { logger } from '@/lib/logger';
+const log = logger.child('mis:team');
 
 export default function TeamPage() {
   const { isMobile } = useMis()
@@ -43,11 +45,11 @@ export default function TeamPage() {
           supabase.from('profiles').select('*').order('created_at', { ascending: false }),
           supabase.from('mis_tasks').select('*').order('created_at', { ascending: false }).limit(20),
         ])
-        if (e1) console.error('Profiles error:', e1)
-        if (e2) console.error('Tasks error:', e2)
+        if (e1) log.errorWithException('Profiles error', e1)
+        if (e2) log.errorWithException('Tasks error', e2)
         setUsers(u || [])
         setTasks(t || [])
-      } catch (err) { console.error('Team loadData error:', err) }
+      } catch (err) { log.errorWithException('Team loadData error', err) }
     })()
     loadLeistungen()
   }, [])
@@ -62,9 +64,9 @@ export default function TeamPage() {
         supabase.from('caregivers').select('id, first_name, last_name, initials').order('last_name'),
         supabase.from('clients').select('id, first_name, last_name').order('last_name'),
       ])
-      if (e1) console.error('Service records error:', e1)
-      if (e2) console.error('Caregivers error:', e2)
-      if (e3) console.error('Clients error:', e3)
+      if (e1) log.errorWithException('Service records error', e1)
+      if (e2) log.errorWithException('Caregivers error', e2)
+      if (e3) log.errorWithException('Clients error', e3)
       setRecords(r || [])
       setCaregivers((cg || []).map((c: Record<string,unknown>) => ({
         id: c.id as string,
@@ -75,7 +77,7 @@ export default function TeamPage() {
         id: c.id as string,
         label: `${c.first_name || ''} ${c.last_name || ''}`.trim() || '—',
       })))
-    } catch (err) { console.error('Leistungen loadData error:', err) }
+    } catch (err) { log.errorWithException('Leistungen loadData error', err) }
   }
 
   // Handzeichen aus der gewählten Betreuungskraft vorbelegen — überschreibt

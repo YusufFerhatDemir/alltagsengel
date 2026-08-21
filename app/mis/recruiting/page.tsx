@@ -6,6 +6,8 @@ import { SectionHeader, Card, DataTable, MisButton, SearchInput, Badge, Tabs, Em
 import { MIcon } from '@/components/mis/MisIcons'
 import { useMis } from '@/lib/mis/MisContext'
 import { createApplicant, createJobPosting, updateApplicantStatus, updateApplicantRating, deleteApplicant, updatePostingStatus, deleteJobPosting } from './actions'
+import { logger } from '@/lib/logger'
+const log = logger.child('mis:recruiting')
 
 // ===== Status-Definitionen =====
 const APPLICANT_STATUS: Record<string, { label: string; color: string }> = {
@@ -90,12 +92,12 @@ export default function RecruitingPage() {
         supabase.from('mis_applicants').select('*').order('created_at', { ascending: false }),
         supabase.from('mis_job_postings').select('*').order('created_at', { ascending: false }),
       ])
-      if (aRes.error) console.error('Applicants error:', aRes.error)
-      if (pRes.error) console.error('Postings error:', pRes.error)
+      if (aRes.error) log.error('Applicants error', { error: aRes.error })
+      if (pRes.error) log.error('Postings error', { error: pRes.error })
       setApplicants((aRes.data as Applicant[]) || [])
       setPostings((pRes.data as JobPosting[]) || [])
     } catch (err) {
-      console.error('Recruiting load error:', err)
+      log.errorWithException('Recruiting load error', err)
     }
     setLoading(false)
   }

@@ -6,6 +6,8 @@
  */
 
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { logger } from '@/lib/logger'
+const log = logger.child('wa-bot-rate-limit')
 
 const MAX_INBOUND_PER_HOUR = 20
 
@@ -24,7 +26,7 @@ export async function isRateLimited(
   if (error) {
     // Bei Fehler: durchlassen (lieber falsch positiv als Service-Blockade)
 
-    console.warn('[wa-bot rate-limit] supabase error:', error.message)
+    log.warn('supabase error', { errorMessage: error.message })
     return { limited: false, count: 0 }
   }
 

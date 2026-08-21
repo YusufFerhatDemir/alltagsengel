@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
+import { logger } from '@/lib/logger'
+const log = logger.child('admin/zuzahlungen')
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -45,7 +47,7 @@ export async function GET(request: NextRequest) {
 
     const { data, error } = await query
     if (error) {
-      console.error('[admin/zuzahlungen] Laden fehlgeschlagen:', error.message)
+      log.error('Laden fehlgeschlagen', { errorMessage: error.message })
       return NextResponse.json({ error: 'Interner Serverfehler' }, { status: 500 })
     }
 
@@ -105,7 +107,7 @@ export async function POST(req: NextRequest) {
       .single()
 
     if (error) {
-      console.error('[admin/zuzahlungen] Anlegen fehlgeschlagen:', error.message)
+      log.error('Anlegen fehlgeschlagen', { errorMessage: error.message })
       return NextResponse.json({ error: `Speichern fehlgeschlagen: ${error.message}` }, { status: 500 })
     }
 

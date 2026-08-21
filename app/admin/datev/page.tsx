@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { IconMoney, IconDocument, IconTarget } from '@/components/Icons'
+import { logger } from '@/lib/logger'
+const log = logger.child('admin:datev')
 
 // ═══════════════════════════════════════════════════════════════
 // DATEV-Export — Export, Konfiguration, Kontenzuordnung
@@ -124,7 +126,7 @@ export default function DatevExportPage() {
       const data = await res.json()
       setExporte(data)
     } catch (err) {
-      console.error('Fehler in ladeExporte:', err)
+      log.errorWithException('Fehler in ladeExporte', err)
       setError('DATEV-Exporte konnten nicht geladen werden.')
     }
   }, [])
@@ -137,7 +139,7 @@ export default function DatevExportPage() {
       setConfig(data)
       setConfigForm(data)
     } catch (err) {
-      console.error('Fehler in ladeConfig:', err)
+      log.errorWithException('Fehler in ladeConfig', err)
       setError('DATEV-Konfiguration konnte nicht geladen werden.')
     }
   }, [])
@@ -149,7 +151,7 @@ export default function DatevExportPage() {
       const data = await res.json()
       setKonten(data)
     } catch (err) {
-      console.error('Fehler in ladeKonten:', err)
+      log.errorWithException('Fehler in ladeKonten', err)
       setError('Kontenzuordnung konnte nicht geladen werden.')
     }
   }, [])

@@ -8,6 +8,8 @@ import {
   type BookingNotifyData,
 } from '@/lib/notifications'
 import { getActiveOrgIdOrDefault } from '@/lib/organizations/server'
+import { logger } from '@/lib/logger'
+const log = logger.child('api:bookings')
 
 // ─── Row-Formen des bookings-Selects (inkl. eingebetteter Joins) ───
 interface BookingProfile {
@@ -142,12 +144,12 @@ export async function POST(req: NextRequest) {
       minQuery = minQuery.eq('organization_id', orgId)
       const minimal = await minQuery.select('id')
       if (minimal.error) {
-        console.error('Booking respond update error:', minimal.error.message)
+        log.error('Booking respond update error', { minimalMessage: minimal.error.message })
         return NextResponse.json({ error: 'Status konnte nicht gesetzt werden' }, { status: 500 })
       }
       updated = minimal.data
     } else if (full.error) {
-      console.error('Booking respond update error:', full.error.message)
+      log.error('Booking respond update error', { fullMessage: full.error.message })
       return NextResponse.json({ error: 'Status konnte nicht gesetzt werden' }, { status: 500 })
     } else {
       updated = full.data
@@ -182,7 +184,7 @@ export async function POST(req: NextRequest) {
         }
       } catch (notifyErr) {
         // Benachrichtigung ist Nebenwirkung — der Statuswechsel bleibt gültig.
-        console.error('Booking respond notify error:', notifyErr)
+        log.errorWithException('Booking respond notify error', notifyErr)
       }
     }
 

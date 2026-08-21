@@ -16,6 +16,8 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { logBillingAction, computeContentHash } from '../billing/core/audit'
 import { erstelleRuecklaeuferAufgabe, AUFGABEN_AUSLOESENDE_STATUS } from './ruecklaeufer-aufgaben'
 import { klassifiziereFehlercode, type Abrechnungsverfahren } from './ruecklaeufer-fehlercodes'
+import { logger } from '@/lib/logger'
+const log = logger.child('ruecklaeufer')
 
 // ── Types ───────────────────────────────────────────────────────
 
@@ -297,7 +299,7 @@ export async function importiereRuecklaeufer(
       korrekturvorschlag = klassifizierung.massnahme
       fehlerKategorie = klassifizierung.kategorie
     } catch (err) {
-      console.error(`[ruecklaeufer] Fehlercode-Klassifizierung fehlgeschlagen: ${err}`)
+      log.error('Fehlercode-Klassifizierung fehlgeschlagen', { errorMessage: String(err) })
     }
   }
 
@@ -352,10 +354,7 @@ export async function importiereRuecklaeufer(
       })
       wiedervorlageEintraege = queue.erstellt
     } catch (err) {
-      console.error(
-        '[ruecklaeufer] Wiedervorlage konnte nicht befüllt werden (Import bleibt gültig):',
-        (err as Error).message,
-      )
+      log.error('Wiedervorlage konnte nicht befüllt werden (Import bleibt gültig)', { errorMessage: (err as Error).message })
     }
   }
 

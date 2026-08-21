@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getActiveOrgIdOrDefault } from '@/lib/organizations/server'
+import { logger } from '@/lib/logger'
+const log = logger.child('tracking')
 
 // Rate Limiter: max 10 Tracking-Requests pro IP pro Minute
 const trackRateLimit = new Map<string, { count: number; resetAt: number }>()
@@ -212,7 +214,7 @@ export async function POST(req: NextRequest) {
           isp: detailedGeo?.isp || '',
           district: detailedGeo?.district || '',
         }),
-      }).catch((err) => console.warn('[Tracking] Geo-Tracking fehlgeschlagen (non-blocking):', err))
+      }).catch((err) => log.warnWithException('Geo-Tracking fehlgeschlagen (non-blocking)', err))
     }
 
     return NextResponse.json({ ok: true })

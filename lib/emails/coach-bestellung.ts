@@ -32,6 +32,8 @@ import { formatiereCent } from '@/lib/coach/pricing'
 import { formatDatum } from '@/lib/coach/bestellung'
 import { COACH_SUPPORT_EMAIL } from '@/lib/coach/version'
 import { WIDERRUFSFRIST_TAGE } from '@/lib/coach/bestellung'
+import { logger } from '@/lib/logger'
+const log = logger.child('coach-mail')
 
 const ABSENDER = 'Alltagsengel <info@alltagsengel.care>'
 const APP_URL = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_APP_URL || 'https://alltagsengel.care'
@@ -103,18 +105,18 @@ function knopf(text: string, pfad: string): string {
 async function sende(an: string, betreff: string, html: string, anlass: string): Promise<boolean> {
   const resend = resendClient()
   if (!resend) {
-    console.error(`[Coach-Mail] RESEND_API_KEY fehlt — ${anlass} nicht versendet`)
+    log.error(`RESEND_API_KEY fehlt — ${anlass} nicht versendet`)
     return false
   }
   try {
     const { error } = await resend.emails.send({ from: ABSENDER, to: an, subject: betreff, html })
     if (error) {
-      console.error(`[Coach-Mail] ${anlass} fehlgeschlagen:`, error)
+      log.errorWithException(`${anlass} fehlgeschlagen:`, error)
       return false
     }
     return true
   } catch (err) {
-    console.error(`[Coach-Mail] ${anlass} fehlgeschlagen:`, err)
+    log.errorWithException(`${anlass} fehlgeschlagen:`, err)
     return false
   }
 }

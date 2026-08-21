@@ -10,6 +10,8 @@ import Link from 'next/link'
 import Icon3D from '@/components/Icon3D'
 import { trackRegistration } from '@/lib/tracking'
 import * as Sentry from '@sentry/nextjs'
+import { logger } from '@/lib/logger'
+const log = logger.child('register')
 
 function RegisterForm() {
   const router = useRouter()
@@ -142,14 +144,14 @@ function RegisterForm() {
           // BEFORE-INSERT-Guard, der fälschlich für JEDE Rolle abweist).
           // Ohne dieses Logging bleibt ein solcher Ausfall unsichtbar, bis
           // sich Bewerber melden — Sentry mitloggen für sofortige Diagnose.
-          console.error('[register] auth.signUp Database error:', authError.message, { role })
+          log.error('auth.signUp Database error', { errorMessage: authError.message, role })
           Sentry.captureException(new Error(`register signUp Database error: ${authError.message}`), {
             tags: { flow: 'register', role },
           })
           setError('Registrierung fehlgeschlagen. Bitte versuchen Sie es später erneut.')
         } else {
           // AUTH-005: Keine rohen Supabase-Messages leaken, aber Code mitloggen für Debug
-          console.warn('[register] unmapped supabase error:', authError.message, (authError as { code?: string }).code)
+          log.warn('unmapped supabase error', { errorMessage: authError.message, errorCode: (authError as { code?: string }).code })
           Sentry.captureException(new Error(`register signUp unmapped error: ${authError.message}`), {
             tags: { flow: 'register', role },
           })
@@ -246,7 +248,7 @@ function RegisterForm() {
               email,
               phone: '',
             }),
-          }).catch((err) => console.warn('[Register] Admin-Benachrichtigung fehlgeschlagen (non-blocking):', err))
+          }).catch((err) => log.warnWithException('Admin-Benachrichtigung fehlgeschlagen (non-blocking)', err))
         }
 
         // Always send welcome/confirmation email via Resend (fire-and-forget)
@@ -254,7 +256,7 @@ function RegisterForm() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email, firstName, role }),
-        }).catch((err) => console.warn('[Register] Willkommens-Mail fehlgeschlagen (non-blocking):', err))
+        }).catch((err) => log.warnWithException('Willkommens-Mail fehlgeschlagen (non-blocking)', err))
 
         // Referral-Code einlösen (fire-and-forget) — nur mit gültiger Session,
         // da /api/referral jetzt authentifiziert ist (referred_user_id = Token-User).
@@ -266,7 +268,7 @@ function RegisterForm() {
               Authorization: `Bearer ${data.session.access_token}`,
             },
             body: JSON.stringify({ referral_code: refCode }),
-          }).catch((err) => console.warn('[Register] Referral-Einloesung fehlgeschlagen (non-blocking):', err))
+          }).catch((err) => log.warnWithException('Referral-Einloesung fehlgeschlagen (non-blocking)', err))
         }
 
         // Conversion-Tracking für Google Ads
@@ -290,7 +292,7 @@ function RegisterForm() {
       setError('Registrierung fehlgeschlagen. Bitte versuchen Sie es später erneut.')
     } catch (err: any) {
       // AUTH-005 / AUTH-002: Rohe err.message nicht leaken (kann Enumeration oder interne Details enthüllen)
-      console.error('register error:', { name: err?.name, code: err?.code })
+      log.error('register error', { name: err?.name, code: err?.code })
       setError('Netzwerkfehler. Bitte prüfen Sie Ihre Internetverbindung und versuchen Sie es erneut.')
     } finally {
       setLoading(false)

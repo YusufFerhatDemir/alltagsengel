@@ -13,6 +13,8 @@ import { resolvePlz } from '@/lib/expansion/plz-bundesland'
 import { useBundeslandLage } from '@/lib/expansion/client'
 import BundeslandHinweis from '@/components/kunde/BundeslandHinweis'
 import { ENGEL_MATCH_RADIUS_KM, RADIUS_OPTIONEN } from '@/lib/plz-radius'
+import { logger } from '@/lib/logger';
+const log = logger.child('kunde-buchung');
 
 const serviceOptions: { key: string; label: string; desc: string }[] = [
   { key: 'begleitung', label: 'Begleitung', desc: 'Alltägliche Begleitung und Unterstützung' },
@@ -157,7 +159,7 @@ function BuchenServiceInner() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ bookingId: result.data.id, event: 'created' }),
-    }).catch((err) => console.warn('[Kunde-Buchung] Benachrichtigung fehlgeschlagen (non-blocking):', err))
+    }).catch((err) => log.warnWithException('Benachrichtigung fehlgeschlagen (non-blocking)', err))
 
     router.push(`/kunde/warten/${result.data.id}`)
   }

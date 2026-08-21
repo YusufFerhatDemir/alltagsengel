@@ -3,6 +3,8 @@
 import { useParams, useSearchParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import { logger } from '@/lib/logger';
+const log = logger.child('notfall');
 
 interface NotfallInfo {
   id: string;
@@ -123,7 +125,7 @@ export default function NotfallPage() {
       setMedications(result.medikamente || []);
       setStage('info');
     } catch (err) {
-      console.error('Error:', err);
+      log.errorWithException('Error', err);
       setError('Fehler beim Abrufen der Daten');
     } finally {
       setLoading(false);

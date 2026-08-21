@@ -1,3 +1,6 @@
+import { logger } from '@/lib/logger'
+const log = logger.child('indexing')
+
 /**
  * Indexing-Notifier für alltagsengel.care — pingt Suchmaschinen, sobald
  * neue/aktualisierte URLs verfügbar sind. Beschleunigt Erst-Indexierung
@@ -57,11 +60,11 @@ export async function notifyIndexers(urls: string[]): Promise<IndexNowResult> {
       }),
     })
     if (!res.ok) {
-      console.warn(`[indexing] IndexNow-Ping fehlgeschlagen: HTTP ${res.status}`)
+      log.warn('IndexNow-Ping fehlgeschlagen: HTTP', { resStatus: res.status })
     }
     return { ok: res.ok, status: res.status, submitted: cleanUrls.length }
   } catch (e) {
-    console.warn('[indexing] IndexNow-Ping Fehler:', e)
+    log.warnWithException('IndexNow-Ping Fehler', e)
     return { ok: false, error: String(e) }
   }
 }

@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server'
 import { safeApiError } from '@/lib/api/error-sanitizer'
 import { rateLimit, getClientIp } from '@/lib/rate-limit'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { logger } from '@/lib/logger'
+const log = logger.child('lead-inquiry')
 
 // ═══════════════════════════════════════════════════════════
 // LEAD INQUIRY API — Beratungsanfrage speichern
@@ -83,7 +85,7 @@ export async function POST(request: Request) {
       })
 
     if (dbError) {
-      console.error('[LeadInquiry] DB Fehler:', dbError)
+      log.errorWithException('DB Fehler', dbError)
       return NextResponse.json({ error: 'Speicherfehler' }, { status: 500 })
     }
 

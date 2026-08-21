@@ -29,6 +29,8 @@ import { safeApiError } from '@/lib/api/error-sanitizer'
 import { Resend } from 'resend'
 import { rateLimit, getClientIp, escapeHtml } from '@/lib/rate-limit'
 import { COACH_PRODUKT_VERSION, COACH_SUPPORT_EMAIL } from '@/lib/coach/version'
+import { logger } from '@/lib/logger'
+const log = logger.child('coach-anfrage')
 
 const MAX_LEN = { name: 120, email: 200, telefon: 40, nachricht: 2000 }
 
@@ -78,7 +80,7 @@ export async function POST(request: Request) {
 
     const key = process.env.RESEND_API_KEY
     if (!key) {
-      console.error('[Coach-Anfrage] RESEND_API_KEY nicht konfiguriert')
+      log.error('RESEND_API_KEY nicht konfiguriert')
       return NextResponse.json(
         { error: 'Der Versand ist gerade nicht möglich. Bitte schreiben Sie uns an ' + COACH_SUPPORT_EMAIL + '.' },
         { status: 500 }
@@ -145,7 +147,7 @@ export async function POST(request: Request) {
         `,
       })
     } catch (bestaetigungsFehler) {
-      console.error('[Coach-Anfrage] Bestätigungsmail fehlgeschlagen (non-fatal):', bestaetigungsFehler)
+      log.error('Bestätigungsmail fehlgeschlagen (non-fatal)', { bestaetigungsFehler })
     }
 
     return NextResponse.json({ gesendet: true })
