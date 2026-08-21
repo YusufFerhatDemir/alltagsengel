@@ -123,13 +123,13 @@ export default function AdminUsersPage() {
       )}
 
       {selectedUser && (
-        <div className="admin-modal-overlay" onClick={() => setSelectedUser(null)}>
-          <div className="admin-modal" onClick={e => e.stopPropagation()}>
+        <div role="presentation" className="admin-modal-overlay" onClick={() => setSelectedUser(null)}>
+          <div role="dialog" aria-label="Passwort zurücksetzen" aria-modal="true" className="admin-modal" onClick={e => e.stopPropagation()}>
             <h3>Passwort zurücksetzen</h3>
             <p style={{ color: 'var(--ink3)', marginBottom: 16, fontSize: 14 }}>
               {selectedUser.first_name} {(selectedUser.last_name || '').charAt(0)}. ({selectedUser.email})
             </p>
-            <input
+            <input aria-label="Neues Passwort (min. 6 Zeichen)"
               type="password"
               placeholder="Neues Passwort (min. 6 Zeichen)"
               value={newPassword}

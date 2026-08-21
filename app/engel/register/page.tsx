@@ -129,14 +129,14 @@ export default function EngelRegisterPage() {
         <div className="form-card">
           <div className="form-card-h">Persönliche Daten</div>
           <div className="input-row2">
-            <input className="input" type="text" placeholder="Vorname" value={firstName} onChange={e => setFirstName(e.target.value)} />
-            <input className="input" type="text" placeholder="Nachname" value={lastName} onChange={e => setLastName(e.target.value)} />
+            <input aria-label="Vorname" className="input" type="text" placeholder="Vorname" value={firstName} onChange={e => setFirstName(e.target.value)} />
+            <input aria-label="Nachname" className="input" type="text" placeholder="Nachname" value={lastName} onChange={e => setLastName(e.target.value)} />
           </div>
-          <input className="input" type="email" placeholder="E-Mail-Adresse" value={email} onChange={e => setEmail(e.target.value)} />
-          <input className="input" type="tel" placeholder="Telefonnummer" value={phone} onChange={e => setPhone(e.target.value)} />
+          <input aria-label="E-Mail-Adresse" className="input" type="email" placeholder="E-Mail-Adresse" value={email} onChange={e => setEmail(e.target.value)} />
+          <input aria-label="Telefonnummer" className="input" type="tel" placeholder="Telefonnummer" value={phone} onChange={e => setPhone(e.target.value)} />
           <div className="input-row2">
-            <input className="input" type="text" placeholder="PLZ" value={plz} onChange={e => setPlz(e.target.value.replace(/\D/g, '').slice(0, 5))} inputMode="numeric" maxLength={5} minLength={5} required style={{ maxWidth: 100 }} />
-            <input className="input" type="text" placeholder="Stadt" value={stadt} onChange={e => setStadt(e.target.value)} required />
+            <input aria-label="PLZ" className="input" type="text" placeholder="PLZ" value={plz} onChange={e => setPlz(e.target.value.replace(/\D/g, '').slice(0, 5))} inputMode="numeric" maxLength={5} minLength={5} required style={{ maxWidth: 100 }} />
+            <input aria-label="Stadt" className="input" type="text" placeholder="Stadt" value={stadt} onChange={e => setStadt(e.target.value)} required />
           </div>
         </div>
 
@@ -169,7 +169,7 @@ export default function EngelRegisterPage() {
           <div className="form-card-h">Verfügbarkeit</div>
           <div className="avail-row">
             {days.map(d => (
-              <div key={d} className={`avail-day${availability.includes(d) ? ' on' : ''}`} onClick={() => toggleDay(d)}>
+              <div role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); (() => toggleDay(d))() } }} key={d} className={`avail-day${availability.includes(d) ? ' on' : ''}`} onClick={() => toggleDay(d)}>
                 <div className="day-name">{d}</div>
                 <div className="day-dot"></div>
               </div>

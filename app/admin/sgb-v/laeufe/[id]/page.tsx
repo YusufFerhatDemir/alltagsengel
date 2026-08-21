@@ -110,7 +110,7 @@ export default function SgbVLaufDetailPage() {
         </div>
         {!['storniert', 'abgeschlossen'].includes(lauf.status) && (
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-            <input placeholder="Storno-Grund (Pflicht)" value={stornoGrund} onChange={e => setStornoGrund(e.target.value)} style={{ minWidth: 260 }} />
+            <input aria-label="Storno-Grund (Pflicht)" placeholder="Storno-Grund (Pflicht)" value={stornoGrund} onChange={e => setStornoGrund(e.target.value)} style={{ minWidth: 260 }} />
             <button className="admin-btn" disabled={busy} onClick={stornieren}>Stornieren</button>
           </div>
         )}

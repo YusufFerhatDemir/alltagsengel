@@ -184,7 +184,7 @@ export default function OnboardingFlow() {
           <p style={{ color: '#B8B0A4', fontSize: 14, lineHeight: 1.6, marginBottom: 20 }}>
             Geben Sie Ihre PLZ ein, damit wir Ihnen passende Alltagsbegleiter in Ihrer Umgebung anzeigen können.
           </p>
-          <input
+          <input aria-label="z.B. 60311"
             type="text"
             inputMode="numeric"
             maxLength={5}

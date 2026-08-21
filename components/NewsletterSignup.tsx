@@ -84,7 +84,7 @@ export default function NewsletterSignup({
         margin: variant === 'banner' ? '0 auto' : 0,
         flexWrap: 'wrap',
       }}>
-        <input
+        <input aria-label="Ihre E-Mail Adresse"
           type="email"
           required
           placeholder="Ihre E-Mail Adresse"

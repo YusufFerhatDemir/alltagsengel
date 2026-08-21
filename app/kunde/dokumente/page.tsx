@@ -159,7 +159,7 @@ export default function KundeDokumentePage() {
         <div className="section-label">Dokument hochladen</div>
         <div className="dok-types">
           {docTypes.map(dt => (
-            <div
+            <div role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); (() => setSelectedType(dt.key))() } }}
               key={dt.key}
               className={`dok-type${selectedType === dt.key ? ' on' : ''}`}
               onClick={() => setSelectedType(dt.key)}
@@ -312,7 +312,7 @@ export default function KundeDokumentePage() {
           aktenDokumente.map(d => {
             const tm = statusMeta(AKTEN_DOKUMENT_TYP, d.dokument_typ)
             return (
-              <div key={d.id} className="dok-card" onClick={() => downloadAktenDokument(d.id)} style={{ cursor: 'pointer' }}>
+              <div role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); (() => downloadAktenDokument(d.id))() } }} key={d.id} className="dok-card" onClick={() => downloadAktenDokument(d.id)} style={{ cursor: 'pointer' }}>
                 <div className="dok-card-icon"><IconDocument size={20} /></div>
                 <div className="dok-card-info">
                   <div className="dok-card-name">{d.titel}</div>

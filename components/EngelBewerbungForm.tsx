@@ -114,7 +114,7 @@ export default function EngelBewerbungForm() {
           aria-hidden="true"
           style={{ position: 'absolute', left: '-9999px', height: 0, width: 0, opacity: 0 }}
         />
-        <input
+        <input aria-label="Dein Name *"
           type="text"
           required
           placeholder="Dein Name *"
@@ -123,7 +123,7 @@ export default function EngelBewerbungForm() {
           style={inputStyle}
         />
         <div style={{ display: 'flex', gap: 12 }}>
-          <input
+          <input aria-label="Telefonnummer *"
             type="tel"
             required
             placeholder="Telefonnummer *"
@@ -133,7 +133,7 @@ export default function EngelBewerbungForm() {
             title="Bitte gib eine gültige Telefonnummer an (mindestens 6 Ziffern)"
             style={{ ...inputStyle, flex: 2 }}
           />
-          <input
+          <input aria-label="PLZ *"
             type="text"
             required
             placeholder="PLZ *"
@@ -157,7 +157,7 @@ export default function EngelBewerbungForm() {
           <option value="Altenpfleger/in">Altenpfleger/in</option>
           <option value="Sonstige">Sonstige Erfahrung</option>
         </select>
-        <textarea
+        <textarea aria-label="Kurze Nachricht (optional)"
           placeholder="Kurze Nachricht (optional)"
           value={form.message}
           onChange={e => setForm({ ...form, message: e.target.value })}

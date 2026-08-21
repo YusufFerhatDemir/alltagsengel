@@ -59,7 +59,7 @@ export default function DataRoomPage() {
         {isMobile ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {DATA_ROOM_DOCS.map((doc, i) => (
-              <div key={i} onClick={() => window.open(doc.link, '_blank')} style={{
+              <div role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); (() => window.open(doc.link, '_blank'))() } }} key={i} onClick={() => window.open(doc.link, '_blank')} style={{
                 padding: '14px 16px', borderRadius: 10, cursor: 'pointer',
                 border: `1px solid ${BRAND.border}`, background: BRAND.white,
                 display: 'flex', alignItems: 'center', gap: 12,

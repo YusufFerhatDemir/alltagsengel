@@ -420,7 +420,7 @@ function RideCard({ ride, actionInProgress, onStart, onComplete, onChat }: {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 10, paddingTop: 8, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
         <span style={{ fontSize: 16, fontWeight: 700, color: '#DBA84A' }}>{ride.total_amount?.toFixed(2)}€</span>
         <div style={{ display: 'flex', gap: 6 }}>
-          <button onClick={onChat} style={{
+          <button onClick={onChat} aria-label="Chat öffnen" style={{
             background: 'rgba(201,150,60,0.12)', border: '1px solid rgba(201,150,60,0.2)',
             color: '#DBA84A', padding: '6px 12px', borderRadius: 8, fontSize: 12, cursor: 'pointer',
           }}>💬</button>

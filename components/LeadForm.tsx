@@ -139,7 +139,7 @@ export default function LeadForm({ defaultService, source }: LeadFormProps) {
             title="Bitte eine gültige Telefonnummer eingeben (mindestens 6 Ziffern)"
             style={{ ...inputStyle, flex: 2 }}
           />
-          <input
+          <input aria-label="PLZ *"
             type="text"
             required
             placeholder="PLZ *"
@@ -161,7 +161,7 @@ export default function LeadForm({ defaultService, source }: LeadFormProps) {
           <option value="Krankenfahrt">Krankenfahrt (§60)</option>
           <option value="Allgemein">Allgemeine Beratung</option>
         </select>
-        <textarea
+        <textarea aria-label="Ihre Nachricht (optional)"
           placeholder="Ihre Nachricht (optional)"
           value={form.message}
           onChange={e => setForm({ ...form, message: e.target.value })}

@@ -130,15 +130,15 @@ export default function MeinProfilPage() {
         <div className="settings-card">
           <div className="setting-row">
             <div><div className="setting-main">Sofort-Buchung</div><div className="setting-sub">Aufträge automatisch annehmen</div></div>
-            <div className={`toggle${settings.sofort ? ' on' : ''}`} onClick={() => toggle('sofort')}></div>
+            <div role="switch" aria-checked={settings.sofort} aria-label="Sofort-Buchung" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle('sofort') } }} className={`toggle${settings.sofort ? ' on' : ''}`} onClick={() => toggle('sofort')}></div>
           </div>
           <div className="setting-row">
             <div><div className="setting-main">Push-Benachrichtigungen</div><div className="setting-sub">Neue Anfragen sofort erhalten</div></div>
-            <div className={`toggle${settings.push ? ' on' : ''}`} onClick={() => toggle('push')}></div>
+            <div role="switch" aria-checked={settings.push} aria-label="Push-Benachrichtigungen" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle('push') } }} className={`toggle${settings.push ? ' on' : ''}`} onClick={() => toggle('push')}></div>
           </div>
           <div className="setting-row">
             <div><div className="setting-main">§45b Aufträge</div><div className="setting-sub">Nur Kassenaufträge anzeigen</div></div>
-            <div className={`toggle${settings.kasse ? ' on' : ''}`} onClick={() => toggle('kasse')}></div>
+            <div role="switch" aria-checked={settings.kasse} aria-label="§45b Aufträge" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle('kasse') } }} className={`toggle${settings.kasse ? ' on' : ''}`} onClick={() => toggle('kasse')}></div>
           </div>
         </div>
 
@@ -269,7 +269,7 @@ export default function MeinProfilPage() {
         }}>Konto und Daten löschen</button>
 
         {deleteConfirm && (
-          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.7)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }} onClick={() => { if (!deleting) { setDeleteConfirm(false); setDeletePassword(''); setDeleteError('') } }}>
+          <div role="presentation" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.7)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }} onClick={() => { if (!deleting) { setDeleteConfirm(false); setDeletePassword(''); setDeleteError('') } }}>
             <div onClick={e => e.stopPropagation()} style={{ background: 'var(--coal2)', borderRadius: 18, padding: 24, maxWidth: 340, width: '100%', border: '1px solid rgba(255,80,80,.2)' }}>
               <div style={{ fontSize: 16, fontWeight: 600, color: '#ff6b6b', marginBottom: 8 }}>Konto löschen?</div>
               <p style={{ fontSize: 13, color: 'var(--ink3)', lineHeight: 1.5, marginBottom: 14 }}>Alle deine Daten werden unwiderruflich gelöscht. Diese Aktion kann nicht rückgängig gemacht werden.</p>

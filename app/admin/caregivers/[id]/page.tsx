@@ -596,9 +596,9 @@ function ModalShell({ title, children, onClose, onSave, saving, err, saveLabel }
   title: string; children: React.ReactNode; onClose: () => void; onSave: () => void; saving: boolean; err: string | null; saveLabel: string
 }) {
   return (
-    <div className="admin-modal-overlay" onClick={onClose}>
-      <div className="admin-modal" style={{ maxWidth: 480, width: '92%' }} onClick={e => e.stopPropagation()}>
-        <h3>{title}</h3>
+    <div role="presentation" className="admin-modal-overlay" onClick={onClose}>
+      <div role="dialog" aria-labelledby="dlg-caregiver" aria-modal="true" className="admin-modal" style={{ maxWidth: 480, width: '92%' }} onClick={e => e.stopPropagation()}>
+        <h3 id="dlg-caregiver">{title}</h3>
         {err && <Banner tone="danger">{err}</Banner>}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 14 }}>{children}</div>
         <div className="admin-modal-btns">
@@ -612,10 +612,10 @@ function ModalShell({ title, children, onClose, onSave, saving, err, saveLabel }
 
 function ModalField({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div style={{ flex: 1, minWidth: 0 }}>
+    <label style={{ display: 'block', flex: 1, minWidth: 0 }}>
       <span style={{ fontSize: 12, color: 'var(--ink3)', fontWeight: 600 }}>{label}</span>
       <div style={{ marginTop: 3 }}>{children}</div>
-    </div>
+    </label>
   )
 }
 

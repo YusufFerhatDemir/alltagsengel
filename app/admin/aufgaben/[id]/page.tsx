@@ -397,21 +397,21 @@ export default function AufgabeDetailPage() {
             <div style={fieldRow}>
               <span style={fieldLabel}>Titel</span>
               {editMode
-                ? <input style={inputStyle} value={editData.titel || ''} onChange={e => setEditData(p => ({ ...p, titel: e.target.value }))} />
+                ? <input aria-label="Titel" style={inputStyle} value={editData.titel || ''} onChange={e => setEditData(p => ({ ...p, titel: e.target.value }))} />
                 : <span>{aufgabe.titel}</span>}
             </div>
 
             <div style={fieldRow}>
               <span style={fieldLabel}>Beschreibung</span>
               {editMode
-                ? <textarea style={{ ...inputStyle, minHeight: 60, resize: 'vertical' }} value={editData.beschreibung || ''} onChange={e => setEditData(p => ({ ...p, beschreibung: e.target.value }))} />
+                ? <textarea aria-label="Beschreibung" style={{ ...inputStyle, minHeight: 60, resize: 'vertical' }} value={editData.beschreibung || ''} onChange={e => setEditData(p => ({ ...p, beschreibung: e.target.value }))} />
                 : <span style={{ whiteSpace: 'pre-wrap' }}>{aufgabe.beschreibung || '—'}</span>}
             </div>
 
             <div style={fieldRow}>
               <span style={fieldLabel}>Kategorie</span>
               {editMode
-                ? <select style={inputStyle} value={editData.kategorie || ''} onChange={e => setEditData(p => ({ ...p, kategorie: e.target.value }))}>
+                ? <select aria-label="Kategorie" style={inputStyle} value={editData.kategorie || ''} onChange={e => setEditData(p => ({ ...p, kategorie: e.target.value }))}>
                     {Object.entries(AUFGABEN_KATEGORIE).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
                   </select>
                 : <StatusBadge label={kat.label} color={kat.color} />}
@@ -420,7 +420,7 @@ export default function AufgabeDetailPage() {
             <div style={fieldRow}>
               <span style={fieldLabel}>Priorität</span>
               {editMode
-                ? <select style={inputStyle} value={editData.prioritaet || ''} onChange={e => setEditData(p => ({ ...p, prioritaet: e.target.value }))}>
+                ? <select aria-label="Priorität" style={inputStyle} value={editData.prioritaet || ''} onChange={e => setEditData(p => ({ ...p, prioritaet: e.target.value }))}>
                     {Object.entries(AUFGABEN_PRIORITAET).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
                   </select>
                 : <StatusBadge label={prio.label} color={prio.color} />}
@@ -429,7 +429,7 @@ export default function AufgabeDetailPage() {
             <div style={fieldRow}>
               <span style={fieldLabel}>Status</span>
               {editMode
-                ? <select style={inputStyle} value={editData.status || ''} onChange={e => setEditData(p => ({ ...p, status: e.target.value }))}>
+                ? <select aria-label="Status" style={inputStyle} value={editData.status || ''} onChange={e => setEditData(p => ({ ...p, status: e.target.value }))}>
                     {Object.entries(AUFGABEN_STATUS).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
                   </select>
                 : <StatusBadge label={st.label} color={st.color} />}
@@ -438,35 +438,35 @@ export default function AufgabeDetailPage() {
             <div style={fieldRow}>
               <span style={fieldLabel}>Verantwortlich</span>
               {editMode
-                ? <input style={inputStyle} value={editData.verantwortlich_id || ''} onChange={e => setEditData(p => ({ ...p, verantwortlich_id: e.target.value }))} placeholder="UUID" />
+                ? <input aria-label="Verantwortlich" style={inputStyle} value={editData.verantwortlich_id || ''} onChange={e => setEditData(p => ({ ...p, verantwortlich_id: e.target.value }))} placeholder="UUID" />
                 : <span>{aufgabe.verantwortlich_name || '—'}</span>}
             </div>
 
             <div style={fieldRow}>
               <span style={fieldLabel}>Stellvertreter</span>
               {editMode
-                ? <input style={inputStyle} value={editData.stellvertreter_id || ''} onChange={e => setEditData(p => ({ ...p, stellvertreter_id: e.target.value }))} placeholder="UUID" />
+                ? <input aria-label="Stellvertreter" style={inputStyle} value={editData.stellvertreter_id || ''} onChange={e => setEditData(p => ({ ...p, stellvertreter_id: e.target.value }))} placeholder="UUID" />
                 : <span>{aufgabe.stellvertreter_name || '—'}</span>}
             </div>
 
             <div style={fieldRow}>
               <span style={fieldLabel}>Fällig am</span>
               {editMode
-                ? <input type="date" style={inputStyle} value={editData.faellig_am || ''} onChange={e => setEditData(p => ({ ...p, faellig_am: e.target.value }))} />
+                ? <input aria-label="Fällig am" type="date" style={inputStyle} value={editData.faellig_am || ''} onChange={e => setEditData(p => ({ ...p, faellig_am: e.target.value }))} />
                 : <span>{formatDate(aufgabe.faellig_am)}</span>}
             </div>
 
             <div style={fieldRow}>
               <span style={fieldLabel}>Klient</span>
               {editMode
-                ? <input style={inputStyle} value={editData.client_id || ''} onChange={e => setEditData(p => ({ ...p, client_id: e.target.value }))} placeholder="UUID" />
+                ? <input aria-label="Klient" style={inputStyle} value={editData.client_id || ''} onChange={e => setEditData(p => ({ ...p, client_id: e.target.value }))} placeholder="UUID" />
                 : <span style={{ fontSize: 13 }}>{aufgabe.client_id || '—'}</span>}
             </div>
 
             <div style={fieldRow}>
               <span style={fieldLabel}>Betreuungskraft</span>
               {editMode
-                ? <input style={inputStyle} value={editData.caregiver_id || ''} onChange={e => setEditData(p => ({ ...p, caregiver_id: e.target.value }))} placeholder="UUID" />
+                ? <input aria-label="Betreuungskraft" style={inputStyle} value={editData.caregiver_id || ''} onChange={e => setEditData(p => ({ ...p, caregiver_id: e.target.value }))} placeholder="UUID" />
                 : <span style={{ fontSize: 13 }}>{aufgabe.caregiver_id || '—'}</span>}
             </div>
 
@@ -479,7 +479,7 @@ export default function AufgabeDetailPage() {
               <span style={fieldLabel}>Wiederkehrend</span>
               {editMode ? (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <input type="checkbox" checked={!!editData.ist_wiederkehrend} onChange={e => setEditData(p => ({ ...p, ist_wiederkehrend: e.target.checked }))} />
+                  <input aria-label="Wiederkehrend" type="checkbox" checked={!!editData.ist_wiederkehrend} onChange={e => setEditData(p => ({ ...p, ist_wiederkehrend: e.target.checked }))} />
                   <span style={{ fontSize: 13, color: 'var(--ink4)' }}>Ja</span>
                 </div>
               ) : (
@@ -492,7 +492,7 @@ export default function AufgabeDetailPage() {
                 <div style={fieldRow}>
                   <span style={fieldLabel}>Intervall</span>
                   {editMode
-                    ? <select style={inputStyle} value={editData.wiederholung_intervall || ''} onChange={e => setEditData(p => ({ ...p, wiederholung_intervall: e.target.value }))}>
+                    ? <select aria-label="Intervall" style={inputStyle} value={editData.wiederholung_intervall || ''} onChange={e => setEditData(p => ({ ...p, wiederholung_intervall: e.target.value }))}>
                         <option value="">Bitte wählen</option>
                         {Object.entries(WIEDERHOLUNG_INTERVALL).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
                       </select>
@@ -501,7 +501,7 @@ export default function AufgabeDetailPage() {
                 <div style={fieldRow}>
                   <span style={fieldLabel}>Wiederholung bis</span>
                   {editMode
-                    ? <input type="date" style={inputStyle} value={editData.wiederholung_ende || ''} onChange={e => setEditData(p => ({ ...p, wiederholung_ende: e.target.value }))} />
+                    ? <input aria-label="Wiederholung bis" type="date" style={inputStyle} value={editData.wiederholung_ende || ''} onChange={e => setEditData(p => ({ ...p, wiederholung_ende: e.target.value }))} />
                     : <span>{formatDate(aufgabe.wiederholung_ende)}</span>}
                 </div>
               </>

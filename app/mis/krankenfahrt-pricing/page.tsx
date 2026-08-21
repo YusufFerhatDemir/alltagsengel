@@ -14,10 +14,10 @@ const log = logger.child('mis:krankenfahrt-pricing')
 // ─── Helpers ───
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div style={{ marginBottom: 14 }}>
-      <label style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, display: 'block', marginBottom: 4 }}>{label}</label>
+    <label style={{ display: 'block', marginBottom: 14 }}>
+      <span style={{ fontSize: 12, fontWeight: 600, color: BRAND.muted, display: 'block', marginBottom: 4 }}>{label}</span>
       {children}
-    </div>
+    </label>
   )
 }
 

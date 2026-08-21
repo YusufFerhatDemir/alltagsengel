@@ -398,46 +398,46 @@ function HealthSection({ client, onSaved }: { client: ClientDetail; onSaved: (u:
                 </select>
               </FormField>
               <FormField label="Allergien">
-                <textarea value={form.allergies} onChange={set('allergies')} rows={3} placeholder="z. B. Penicillin, Nüsse…" style={fieldArea} />
+                <textarea aria-label="z. B. Penicillin, Nüsse…" value={form.allergies} onChange={set('allergies')} rows={3} placeholder="z. B. Penicillin, Nüsse…" style={fieldArea} />
               </FormField>
               <FormField label="Medikamente">
-                <textarea value={form.medications} onChange={set('medications')} rows={3} placeholder="z. B. Marcumar 1-0-0…" style={fieldArea} />
+                <textarea aria-label="z. B. Marcumar 1-0-0…" value={form.medications} onChange={set('medications')} rows={3} placeholder="z. B. Marcumar 1-0-0…" style={fieldArea} />
               </FormField>
               <FormField label="Ernährungseinschränkungen">
-                <textarea value={form.dietary_restrictions} onChange={set('dietary_restrictions')} rows={3} placeholder="z. B. Diabetiker-Kost, laktosefrei…" style={fieldArea} />
+                <textarea aria-label="z. B. Diabetiker-Kost, laktosefrei…" value={form.dietary_restrictions} onChange={set('dietary_restrictions')} rows={3} placeholder="z. B. Diabetiker-Kost, laktosefrei…" style={fieldArea} />
               </FormField>
               <FormField label="Medizinische Vorerkrankungen">
-                <textarea value={form.medical_conditions} onChange={set('medical_conditions')} rows={3} placeholder="z. B. Demenz, Herzinsuffizienz…" style={fieldArea} />
+                <textarea aria-label="z. B. Demenz, Herzinsuffizienz…" value={form.medical_conditions} onChange={set('medical_conditions')} rows={3} placeholder="z. B. Demenz, Herzinsuffizienz…" style={fieldArea} />
               </FormField>
             </div>
 
             {/* Spalte 2: Kontakte & Versicherung */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               <div style={groupLabel}>Notfallkontakt</div>
-              <FormField label="Name"><input value={form.emergency_contact_name} onChange={set('emergency_contact_name')} style={fieldInput} /></FormField>
+              <FormField label="Name"><input aria-label="Notfallkontakt" value={form.emergency_contact_name} onChange={set('emergency_contact_name')} style={fieldInput} /></FormField>
               <div style={{ display: 'flex', gap: 10 }}>
                 <FormField label="Telefon"><input value={form.emergency_contact_phone} onChange={set('emergency_contact_phone')} style={fieldInput} /></FormField>
-                <FormField label="Beziehung"><input value={form.emergency_contact_relationship} onChange={set('emergency_contact_relationship')} placeholder="z. B. Tochter" style={fieldInput} /></FormField>
+                <FormField label="Beziehung"><input aria-label="z. B. Tochter" value={form.emergency_contact_relationship} onChange={set('emergency_contact_relationship')} placeholder="z. B. Tochter" style={fieldInput} /></FormField>
               </div>
 
               <div style={groupLabel}>Angehörige</div>
-              <FormField label="Name"><input value={form.next_of_kin_name} onChange={set('next_of_kin_name')} style={fieldInput} /></FormField>
+              <FormField label="Name"><input aria-label="Angehörige" value={form.next_of_kin_name} onChange={set('next_of_kin_name')} style={fieldInput} /></FormField>
               <div style={{ display: 'flex', gap: 10 }}>
                 <FormField label="Telefon"><input value={form.next_of_kin_phone} onChange={set('next_of_kin_phone')} style={fieldInput} /></FormField>
-                <FormField label="Beziehung"><input value={form.next_of_kin_relationship} onChange={set('next_of_kin_relationship')} placeholder="z. B. Sohn" style={fieldInput} /></FormField>
+                <FormField label="Beziehung"><input aria-label="z. B. Sohn" value={form.next_of_kin_relationship} onChange={set('next_of_kin_relationship')} placeholder="z. B. Sohn" style={fieldInput} /></FormField>
               </div>
               <FormField label="E-Mail"><input type="email" value={form.next_of_kin_email} onChange={set('next_of_kin_email')} style={fieldInput} /></FormField>
 
               <div style={groupLabel}>Hausarzt</div>
               <div style={{ display: 'flex', gap: 10 }}>
-                <FormField label="Name"><input value={form.hausarzt_name} onChange={set('hausarzt_name')} style={fieldInput} /></FormField>
+                <FormField label="Name"><input aria-label="Hausarzt" value={form.hausarzt_name} onChange={set('hausarzt_name')} style={fieldInput} /></FormField>
                 <FormField label="Telefon"><input value={form.hausarzt_phone} onChange={set('hausarzt_phone')} style={fieldInput} /></FormField>
               </div>
 
               <div style={groupLabel}>Versicherung</div>
-              <FormField label="Versichertennummer"><input value={form.versichertennummer} onChange={set('versichertennummer')} style={fieldInput} /></FormField>
+              <FormField label="Versichertennummer"><input aria-label="Versicherung" value={form.versichertennummer} onChange={set('versichertennummer')} style={fieldInput} /></FormField>
               <div style={{ display: 'flex', gap: 10 }}>
-                <FormField label="Pflegekasse"><input value={form.pflegekasse_name} onChange={set('pflegekasse_name')} placeholder="z. B. AOK Hessen" style={fieldInput} /></FormField>
+                <FormField label="Pflegekasse"><input aria-label="z. B. AOK Hessen" value={form.pflegekasse_name} onChange={set('pflegekasse_name')} placeholder="z. B. AOK Hessen" style={fieldInput} /></FormField>
                 <FormField label="IK-Nummer"><input value={form.pflegekasse_ik} onChange={set('pflegekasse_ik')} style={fieldInput} /></FormField>
               </div>
             </div>
@@ -554,10 +554,10 @@ function PflegegradEditor({ client, onSaved }: { client: ClientDetail; onSaved: 
 
 function FormField({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div style={{ flex: 1, minWidth: 0 }}>
+    <label style={{ display: 'block', flex: 1, minWidth: 0 }}>
       <span style={{ fontSize: 12, color: 'var(--ink3)', fontWeight: 600 }}>{label}</span>
       <div style={{ marginTop: 3 }}>{children}</div>
-    </div>
+    </label>
   )
 }
 

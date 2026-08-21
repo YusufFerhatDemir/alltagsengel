@@ -503,8 +503,8 @@ function AwardModal({ caregivers, onClose, onSaved }: { caregivers: Caregiver[];
   }
 
   return (
-    <div className="admin-modal-overlay" onClick={onClose}>
-      <div className="admin-modal" style={{ maxWidth: 460, width: '92%' }} onClick={e => e.stopPropagation()}>
+    <div role="presentation" className="admin-modal-overlay" onClick={onClose}>
+      <div role="dialog" aria-label="Bonus vergeben" aria-modal="true" className="admin-modal" style={{ maxWidth: 460, width: '92%' }} onClick={e => e.stopPropagation()}>
         <h3>Bonus vergeben</h3>
         {err && <Banner tone="danger">{err}</Banner>}
         <Field label="Mitarbeiter *">
@@ -542,10 +542,10 @@ function AwardModal({ caregivers, onClose, onSaved }: { caregivers: Caregiver[];
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div style={{ flex: 1, minWidth: 0, marginBottom: 10 }}>
+    <label style={{ display: 'block', flex: 1, minWidth: 0, marginBottom: 10}}>
       <span style={{ fontSize: 12, color: 'var(--ink3)', fontWeight: 600 }}>{label}</span>
       <div style={{ marginTop: 3 }}>{children}</div>
-    </div>
+    </label>
   )
 }
 

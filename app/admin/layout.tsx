@@ -441,8 +441,10 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       .admin-nav-group-header.has-active { color: var(--gold2, #C9963C); }
     `}</style>
     <div className="admin-layout">
+      {/* WCAG 2.4.1 — Admin umgeht den LayoutWrapper, braucht daher einen eigenen Skip-Link */}
+      <a href="#admin-main" className="skip-link">Zum Hauptinhalt springen</a>
       {isMobile && mobileOpen && (
-        <div onClick={() => setMobileOpen(false)} style={{
+        <div role="presentation" onClick={() => setMobileOpen(false)} style={{
           position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 9,
         }} />
       )}
@@ -458,7 +460,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
         </div>
         <OrgSwitcher />
         <BundeslandSwitcher />
-        <nav className="admin-nav">
+        <nav className="admin-nav" id="admin-sidebar-nav" aria-label="Admin-Navigation">
           {navGroups.map(group => {
             const isOpen = openGroups.has(group.key)
             const hasActive = group.items.some(i =>
@@ -506,7 +508,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       </div>
 
       <div className="admin-mobile-header">
-        <button onClick={() => setMobileOpen(!mobileOpen)} style={{
+        <button onClick={() => setMobileOpen(!mobileOpen)} aria-label="Navigation umschalten" aria-expanded={mobileOpen} aria-controls="admin-sidebar-nav" style={{
           background: 'none', border: 'none', color: 'var(--ink)', cursor: 'pointer',
           padding: 4, display: 'flex', alignItems: 'center',
         }}>
@@ -526,9 +528,9 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
         </div>
       </div>
 
-      <div className="admin-main">
+      <main id="admin-main" className="admin-main">
         <AdminMfaGuard>{children}</AdminMfaGuard>
-      </div>
+      </main>
     </div>
     </BundeslandProvider>
   )

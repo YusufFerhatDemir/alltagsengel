@@ -325,7 +325,7 @@ export default function ChatDetailPage() {
           className="input"
           style={{ flex: 1, borderRadius: 24, padding: '12px 16px' }}
         />
-        <button onClick={handleSend} style={{
+        <button onClick={handleSend} aria-label="Nachricht senden" style={{
           width: 44, height: 44, borderRadius: '50%',
           background: newMsg.trim() ? 'linear-gradient(135deg, var(--gold), var(--gold2))' : 'var(--white)',
           border: 'none', color: newMsg.trim() ? 'var(--bg)' : 'var(--ink4)',

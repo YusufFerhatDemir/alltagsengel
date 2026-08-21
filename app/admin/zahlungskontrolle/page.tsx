@@ -207,8 +207,8 @@ function PaymentModal({ row, onClose, onSaved }: {
   }
 
   return (
-    <div className="admin-modal-overlay" onClick={onClose}>
-      <div className="admin-modal" style={{ maxWidth: 420, width: '92%' }} onClick={e => e.stopPropagation()}>
+    <div role="presentation" className="admin-modal-overlay" onClick={onClose}>
+      <div role="dialog" aria-label="Zahlung erfassen" aria-modal="true" className="admin-modal" style={{ maxWidth: 420, width: '92%' }} onClick={e => e.stopPropagation()}>
         <h3>Zahlung erfassen</h3>
         <p style={{ fontSize: 13, color: 'var(--ink4)', margin: '0 0 14px' }}>
           {row.invoice_number || 'Rechnung'} · {row.client} · offen: {euro(row.amount_due - row.amount_paid)}
@@ -239,10 +239,10 @@ function PaymentModal({ row, onClose, onSaved }: {
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div style={{ marginBottom: 10 }}>
+    <label style={{ display: 'block', marginBottom: 10}}>
       <span style={{ fontSize: 12, color: 'var(--ink3)', fontWeight: 600 }}>{label}</span>
       <div style={{ marginTop: 3 }}>{children}</div>
-    </div>
+    </label>
   )
 }
 

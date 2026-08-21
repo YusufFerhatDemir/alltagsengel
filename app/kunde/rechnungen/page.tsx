@@ -180,7 +180,7 @@ export default function KundeRechnungenPage() {
                 overflow: 'hidden',
               }}>
                 {/* Kopfzeile — klickbar */}
-                <div onClick={() => toggleExpand(inv.id)} style={{ padding: 16, cursor: 'pointer' }}>
+                <div role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); (() => toggleExpand(inv.id))() } }} onClick={() => toggleExpand(inv.id)} style={{ padding: 16, cursor: 'pointer' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
                     <div>
                       <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--ink)', display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>

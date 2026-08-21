@@ -367,7 +367,7 @@ export default function CrmPage() {
                     </div>
                     <div style={{ padding: 8, display: 'flex', flexDirection: 'column', gap: 6, minHeight: 80, maxHeight: 240, overflowY: 'auto' }}>
                       {clients.filter(c => c.pipeline_status === key).map(c => (
-                        <div key={c.id} onClick={() => setSelectedClient(c)} style={{
+                        <div role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); (() => setSelectedClient(c))() } }} key={c.id} onClick={() => setSelectedClient(c)} style={{
                           padding: '8px 10px', borderRadius: 8, background: BRAND.light,
                           cursor: 'pointer', transition: 'all 0.15s', fontSize: 12,
                           border: `1px solid transparent`,

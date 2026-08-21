@@ -397,8 +397,8 @@ export default function AdminKalenderPage() {
 
       {/* Detail-Ansicht */}
       {selected && (
-        <div className="admin-modal-overlay" onClick={() => setSelected(null)}>
-          <div className="admin-modal" style={{ maxWidth: 480, width: '92%' }} onClick={e => e.stopPropagation()}>
+        <div role="presentation" className="admin-modal-overlay" onClick={() => setSelected(null)}>
+          <div role="dialog" aria-label="Einsatz-Details" aria-modal="true" className="admin-modal" style={{ maxWidth: 480, width: '92%' }} onClick={e => e.stopPropagation()}>
             <h3>Einsatz-Details</h3>
             <DetailRow label="Klient">{fullName(selected.client)}</DetailRow>
             <DetailRow label="Betreuungskraft">{fullName(selected.caregiver)}</DetailRow>
@@ -475,7 +475,7 @@ function DayView({ date, assignments, isAbsent, onSelect, onCreateSlot }: {
     <div style={{ position: 'relative', background: 'var(--coal2)', border: '1px solid var(--border)', borderRadius: 12, overflow: 'hidden' }}>
       {/* Hour grid lines */}
       {DAY_HOURS.map(h => (
-        <div
+        <div role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); (() => onCreateSlot(h))() } }}
           key={h}
           onClick={() => onCreateSlot(h)}
           style={{
@@ -554,7 +554,7 @@ function WeekView({ monday, assignments, isAbsent, onSelect, onDayClick }: {
             background: 'var(--coal2)', border: `1px solid ${isToday ? 'var(--gold2)' : 'var(--border)'}`,
             borderRadius: 12, padding: 10, minHeight: 120,
           }}>
-            <div
+            <div role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); (() => onDayClick(col.dateStr))() } }}
               onClick={() => onDayClick(col.dateStr)}
               style={{
                 fontSize: 12, fontWeight: 700, color: isToday ? 'var(--gold2)' : 'var(--ink3)',
@@ -568,7 +568,7 @@ function WeekView({ monday, assignments, isAbsent, onSelect, onDayClick }: {
             ) : col.items.map(it => {
               const absent = isAbsent(it.caregiver_id, col.dateStr)
               return (
-                <div
+                <div role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); (() => onSelect(it))() } }}
                   key={it.id}
                   onClick={() => onSelect(it)}
                   style={{
@@ -643,7 +643,7 @@ function MonthView({ baseDate, assignments, onDayClick }: {
           const isToday = ds === todayStr
           const count = countByDay.get(ds) || 0
           return (
-            <div
+            <div role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); (() => onDayClick(ds))() } }}
               key={idx}
               onClick={() => onDayClick(ds)}
               style={{
@@ -756,8 +756,8 @@ function CreateAssignmentModal({ clients, caregivers, initialDate, onClose, onSa
   }
 
   return (
-    <div className="admin-modal-overlay" onClick={onClose}>
-      <div className="admin-modal" style={{ maxWidth: 520, width: '92%' }} onClick={e => e.stopPropagation()}>
+    <div role="presentation" className="admin-modal-overlay" onClick={onClose}>
+      <div role="dialog" aria-label="Neuen Einsatz anlegen" aria-modal="true" className="admin-modal" style={{ maxWidth: 520, width: '92%' }} onClick={e => e.stopPropagation()}>
         <h3>Neuen Einsatz anlegen</h3>
         {err && <Banner tone="danger">{err}</Banner>}
         <Field label="Klient *">
@@ -807,10 +807,10 @@ function CreateAssignmentModal({ clients, caregivers, initialDate, onClose, onSa
 // ═══════════════════════════════════════════════════════════════
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div style={{ flex: 1, minWidth: 0, marginBottom: 10 }}>
+    <label style={{ display: 'block', flex: 1, minWidth: 0, marginBottom: 10}}>
       <span style={{ fontSize: 12, color: 'var(--ink3)', fontWeight: 600 }}>{label}</span>
       <div style={{ marginTop: 3 }}>{children}</div>
-    </div>
+    </label>
   )
 }
 

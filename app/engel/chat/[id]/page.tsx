@@ -220,7 +220,7 @@ export default function EngelChatConversationPage() {
       </div>
 
       <div className="chat-input-bar">
-        <input
+        <input aria-label="Nachricht schreiben..."
           className="chat-input"
           type="text"
           placeholder="Nachricht schreiben..."

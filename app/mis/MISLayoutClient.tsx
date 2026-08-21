@@ -102,7 +102,7 @@ export default function MISLayout({ children }: { children: React.ReactNode }) {
     <div className="mis-root" style={{ display: 'flex', minHeight: '100dvh', background: BRAND.light, fontFamily: "'Jost', var(--font-jost), sans-serif", overflowX: 'hidden' }}>
       {/* MOBILE OVERLAY */}
       {isMobile && mobileOpen && (
-        <div onClick={() => setMobileOpen(false)} style={{
+        <div role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); (() => setMobileOpen(false))() } }} onClick={() => setMobileOpen(false)} style={{
           position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)',
           zIndex: 49, transition: 'opacity 0.25s',
         }} />
@@ -264,7 +264,7 @@ export default function MISLayout({ children }: { children: React.ReactNode }) {
                     { icon: 'shield', title: 'QP-002 Audit abgeschlossen', time: 'vor 5 Stunden', color: BRAND.success, href: '/mis/quality' },
                     { icon: 'users', title: 'Neuer Engel registriert', time: 'vor 1 Tag', color: BRAND.info, href: '/mis/team' },
                   ].map((n, i) => (
-                    <div key={i} onClick={() => { setNotifOpen(false); router.push(n.href) }} style={{
+                    <div role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); (() => { setNotifOpen(false); router.push(n.href) })() } }} key={i} onClick={() => { setNotifOpen(false); router.push(n.href) }} style={{
                       padding: '12px 16px', display: 'flex', alignItems: 'flex-start', gap: 10,
                       borderBottom: `1px solid ${BRAND.border}`, cursor: 'pointer', transition: 'background 0.15s',
                     }}

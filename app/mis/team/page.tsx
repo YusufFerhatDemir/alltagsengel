@@ -357,14 +357,14 @@ export default function TeamPage() {
           <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 12 }}>
             <div>
               <div style={labelStyle}>Betreuungskraft *</div>
-              <select value={recForm.caregiver_id} onChange={e => pickCaregiver(e.target.value)} style={inputStyle}>
+              <select aria-label="Betreuungskraft" value={recForm.caregiver_id} onChange={e => pickCaregiver(e.target.value)} style={inputStyle}>
                 <option value="">— wählen —</option>
                 {caregivers.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
               </select>
             </div>
             <div>
               <div style={labelStyle}>Klient *</div>
-              <select value={recForm.client_id} onChange={e => setRecForm({ ...recForm, client_id: e.target.value })} style={inputStyle}>
+              <select aria-label="Klient" value={recForm.client_id} onChange={e => setRecForm({ ...recForm, client_id: e.target.value })} style={inputStyle}>
                 <option value="">— wählen —</option>
                 {clients.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
               </select>
@@ -375,15 +375,15 @@ export default function TeamPage() {
           <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr 1fr', gap: 12 }}>
             <div>
               <div style={labelStyle}>Datum *</div>
-              <input type="date" value={recForm.date} onChange={e => setRecForm({ ...recForm, date: e.target.value })} style={inputStyle} />
+              <input aria-label="Datum" type="date" value={recForm.date} onChange={e => setRecForm({ ...recForm, date: e.target.value })} style={inputStyle} />
             </div>
             <div>
               <div style={labelStyle}>Von *</div>
-              <input type="time" value={recForm.start_time} onChange={e => setRecForm({ ...recForm, start_time: e.target.value })} style={inputStyle} />
+              <input aria-label="Von" type="time" value={recForm.start_time} onChange={e => setRecForm({ ...recForm, start_time: e.target.value })} style={inputStyle} />
             </div>
             <div>
               <div style={labelStyle}>Bis *</div>
-              <input type="time" value={recForm.end_time} onChange={e => setRecForm({ ...recForm, end_time: e.target.value })} style={inputStyle} />
+              <input aria-label="Bis" type="time" value={recForm.end_time} onChange={e => setRecForm({ ...recForm, end_time: e.target.value })} style={inputStyle} />
             </div>
           </div>
 
@@ -399,14 +399,14 @@ export default function TeamPage() {
           <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 12 }}>
             <div>
               <div style={labelStyle}>Leistung *</div>
-              <select value={recForm.service_type} onChange={e => setRecForm({ ...recForm, service_type: e.target.value })} style={inputStyle}>
+              <select aria-label="Leistung" value={recForm.service_type} onChange={e => setRecForm({ ...recForm, service_type: e.target.value })} style={inputStyle}>
                 <option value="">— wählen —</option>
                 {SERVICE_TYPES.map(s => <option key={s} value={s}>{s}</option>)}
               </select>
             </div>
             <div>
               <div style={labelStyle}>Budget-Topf</div>
-              <select value={recForm.budget_type} onChange={e => setRecForm({ ...recForm, budget_type: e.target.value })} style={inputStyle}>
+              <select aria-label="Budget-Topf" value={recForm.budget_type} onChange={e => setRecForm({ ...recForm, budget_type: e.target.value })} style={inputStyle}>
                 {Object.entries(BUDGET_TYPE).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
               </select>
             </div>
@@ -415,7 +415,7 @@ export default function TeamPage() {
           {/* 5. Handzeichen */}
           <div>
             <div style={labelStyle}>Handzeichen *</div>
-            <input
+            <input aria-label="Handzeichen"
               type="text" value={recForm.caregiver_initials} maxLength={10}
               onChange={e => setRecForm({ ...recForm, caregiver_initials: e.target.value })}
               placeholder="z. B. M.S." style={inputStyle}
@@ -427,7 +427,7 @@ export default function TeamPage() {
 
           <div>
             <div style={labelStyle}>Notizen</div>
-            <textarea
+            <textarea aria-label="Notizen"
               value={recForm.notes} rows={2}
               onChange={e => setRecForm({ ...recForm, notes: e.target.value })}
               placeholder="Optionale Anmerkungen zum Einsatz…"

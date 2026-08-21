@@ -164,7 +164,7 @@ export default function ResetPasswordPage() {
           </div>
         ) : (
           <form onSubmit={handleSubmit}>
-            <input
+            <input aria-label="Neues Passwort (min. 6 Zeichen)"
               className="auth-input"
               type="password"
               placeholder="Neues Passwort (min. 6 Zeichen)"
@@ -174,7 +174,7 @@ export default function ResetPasswordPage() {
               minLength={6}
               autoComplete="new-password"
             />
-            <input
+            <input aria-label="Passwort bestätigen"
               className="auth-input"
               type="password"
               placeholder="Passwort bestätigen"
@@ -184,7 +184,7 @@ export default function ResetPasswordPage() {
               minLength={6}
               autoComplete="new-password"
             />
-            {error && <div className="auth-error">{error}</div>}
+            {error && <div className="auth-error" role="alert" aria-live="assertive">{error}</div>}
             <button
               className="btn-gold"
               type="submit"

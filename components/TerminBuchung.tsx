@@ -216,9 +216,9 @@ export default function TerminBuchung() {
               aria-hidden="true"
               style={{ position: 'absolute', left: '-9999px', height: 0, width: 0, opacity: 0 }}
             />
-            <input type="text" required placeholder="Ihr Name *" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} style={inputStyle} />
-            <input type="tel" required placeholder="Telefonnummer *" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} pattern="[0-9+\s\(\)\/\-]{6,}" title="Bitte geben Sie eine gültige Telefonnummer an (mindestens 6 Ziffern)" style={inputStyle} />
-            <input type="text" required placeholder="PLZ *" value={form.plz} onChange={e => setForm({ ...form, plz: e.target.value })} pattern="[0-9]{5}" maxLength={5} style={inputStyle} />
+            <input aria-label="Ihr Name *" type="text" required placeholder="Ihr Name *" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} style={inputStyle} />
+            <input aria-label="Telefonnummer *" type="tel" required placeholder="Telefonnummer *" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} pattern="[0-9+\s\(\)\/\-]{6,}" title="Bitte geben Sie eine gültige Telefonnummer an (mindestens 6 Ziffern)" style={inputStyle} />
+            <input aria-label="PLZ *" type="text" required placeholder="PLZ *" value={form.plz} onChange={e => setForm({ ...form, plz: e.target.value })} pattern="[0-9]{5}" maxLength={5} style={inputStyle} />
           </div>
           {status === 'error' && (
             <p style={{ color: '#E74C3C', fontSize: 13, marginTop: 8 }}>{errorMsg || 'Fehler beim Senden. Bitte versuchen Sie es erneut.'}</p>

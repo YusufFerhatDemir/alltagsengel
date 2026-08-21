@@ -135,7 +135,7 @@ export default function NeueWorkflowRegelPage() {
                 <select style={{ ...inputStyle, flex: 1 }} value={b.operator} onChange={e => updBedingung(i, { operator: e.target.value })}>
                   {Object.entries(WF_BEDINGUNG_OPERATOR).map(([k, label]) => <option key={k} value={k}>{label}</option>)}
                 </select>
-                <input style={{ ...inputStyle, flex: 2 }} placeholder="Wert" value={b.wert} onChange={e => updBedingung(i, { wert: e.target.value })} />
+                <input aria-label="Wert" style={{ ...inputStyle, flex: 2 }} placeholder="Wert" value={b.wert} onChange={e => updBedingung(i, { wert: e.target.value })} />
                 <button type="button" onClick={() => removeBedingung(i)} style={{ ...secondaryBtn, color: '#D04B3B' }}>✕</button>
               </div>
             ))}

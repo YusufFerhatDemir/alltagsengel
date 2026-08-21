@@ -285,8 +285,8 @@ export default function KrankenfahrtPage() {
         {/* Fahrtdaten */}
         <div className="form-card">
           <div className="form-card-h">Fahrtdaten</div>
-          <input className="input" type="text" placeholder="Abholadresse" value={formData.abholadresse} onChange={(e) => handleInputChange('abholadresse', e.target.value)} />
-          <input className="input" type="text" placeholder="Zieladresse" value={formData.zieladresse} onChange={(e) => handleInputChange('zieladresse', e.target.value)} />
+          <input aria-label="Abholadresse" className="input" type="text" placeholder="Abholadresse" value={formData.abholadresse} onChange={(e) => handleInputChange('abholadresse', e.target.value)} />
+          <input aria-label="Zieladresse" className="input" type="text" placeholder="Zieladresse" value={formData.zieladresse} onChange={(e) => handleInputChange('zieladresse', e.target.value)} />
           <div className="input-row2">
             <div>
               <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: 'var(--ink4)', marginBottom: '4px' }}>Datum</label>
@@ -307,7 +307,7 @@ export default function KrankenfahrtPage() {
           ) : (
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
               {tiers.map(tier => (
-                <div
+                <div role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); (() => setSelectedTier(tier.slug))() } }}
                   key={tier.slug}
                   className={`pay-opt${selectedTier === tier.slug ? ' on' : ''}`}
                   onClick={() => setSelectedTier(tier.slug)}
@@ -326,12 +326,12 @@ export default function KrankenfahrtPage() {
         <div className="form-card">
           <div className="form-card-h">Fahrttyp</div>
           <div className="pay-row">
-            <div className={`pay-opt${!formData.rueckfahrt ? ' on' : ''}`} onClick={() => handleInputChange('rueckfahrt', false)}>
+            <div role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); (() => handleInputChange('rueckfahrt', false))() } }} className={`pay-opt${!formData.rueckfahrt ? ' on' : ''}`} onClick={() => handleInputChange('rueckfahrt', false)}>
               <div className="pay-ic"><IconTruck size={16} /></div>
               <div className="pay-lbl">Hinfahrt</div>
               <div className="pay-sub">Einfache Fahrt</div>
             </div>
-            <div className={`pay-opt${formData.rueckfahrt ? ' on' : ''}`} onClick={() => handleInputChange('rueckfahrt', true)}>
+            <div role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); (() => handleInputChange('rueckfahrt', true))() } }} className={`pay-opt${formData.rueckfahrt ? ' on' : ''}`} onClick={() => handleInputChange('rueckfahrt', true)}>
               <div className="pay-ic"><IconTruck size={16} /></div>
               <div className="pay-lbl">Hin- und Rückfahrt</div>
               <div className="pay-sub">2× Grundgebühr</div>
@@ -367,7 +367,7 @@ export default function KrankenfahrtPage() {
         {/* Spezielle Hinweise */}
         <div className="form-card">
           <div className="form-card-h">Spezielle Hinweise</div>
-          <textarea className="input" rows={3} placeholder="z.B. Treppen, Gehbehinderung, spezielle Anforderungen..." value={formData.hinweise} onChange={(e) => handleInputChange('hinweise', e.target.value)} />
+          <textarea aria-label="z.B. Treppen, Gehbehinderung, spezielle Anforderungen..." className="input" rows={3} placeholder="z.B. Treppen, Gehbehinderung, spezielle Anforderungen..." value={formData.hinweise} onChange={(e) => handleInputChange('hinweise', e.target.value)} />
         </div>
 
         {/* Zahlungsart */}
@@ -382,7 +382,7 @@ export default function KrankenfahrtPage() {
                 ]
               : [{ key: 'privat', label: 'Privat', sub: 'Selbstzahler' }]
             ).map((p) => (
-              <div key={p.key} className={`pay-opt${payMethod === p.key ? ' on' : ''}`} onClick={() => setPayMethod(p.key)}>
+              <div role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); (() => setPayMethod(p.key))() } }} key={p.key} className={`pay-opt${payMethod === p.key ? ' on' : ''}`} onClick={() => setPayMethod(p.key)}>
                 <div className="pay-ic"><IconCard size={16} /></div>
                 <div className="pay-lbl">{p.label}</div>
                 <div className="pay-sub">{p.sub}</div>
@@ -398,7 +398,7 @@ export default function KrankenfahrtPage() {
             <div className="kk-panel show">
               <div className="kk-type-row">
                 {['gesetzlich', 'privat'].map((t) => (
-                  <div key={t} className={`kk-type${kkType === t ? ' on' : ''}`} onClick={() => setKkType(t)}>
+                  <div role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); (() => setKkType(t))() } }} key={t} className={`kk-type${kkType === t ? ' on' : ''}`} onClick={() => setKkType(t)}>
                     <div className="kk-type-main">{t === 'gesetzlich' ? 'Gesetzlich' : 'Privat'}</div>
                     <div className="kk-type-sub">{t === 'gesetzlich' ? 'GKV' : 'PKV'}</div>
                   </div>
@@ -407,13 +407,13 @@ export default function KrankenfahrtPage() {
               <div className="kk-label">Krankenkasse wählen</div>
               <div className="kk-grid">
                 {['AOK', 'TK', 'Barmer', 'DAK', 'IKK', 'KKH'].map((kk) => (
-                  <div key={kk} className={`kk-item${selectedKK === kk ? ' on' : ''}`} onClick={() => setSelectedKK(kk)}>
+                  <div role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); (() => setSelectedKK(kk))() } }} key={kk} className={`kk-item${selectedKK === kk ? ' on' : ''}`} onClick={() => setSelectedKK(kk)}>
                     <div className="kk-dot"></div>
                     <div className="kk-name">{kk}</div>
                   </div>
                 ))}
               </div>
-              <input className="kk-other" placeholder="Andere Kasse eingeben..." />
+              <input aria-label="Andere Kasse eingeben..." className="kk-other" placeholder="Andere Kasse eingeben..." />
               <div className="kk-result">
                 <IconInfo size={14} /> Mit einer <strong>Verordnung vom Arzt</strong> kann die Krankenkasse die Kosten übernehmen
               </div>

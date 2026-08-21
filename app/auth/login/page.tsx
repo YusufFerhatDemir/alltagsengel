@@ -349,7 +349,7 @@ function LoginForm() {
               onChange={e => setMfaCode(e.target.value)}
               style={{ letterSpacing: '0.3em', fontSize: 20, textAlign: 'center' }}
             />
-            {error && <div className="auth-error">{error}</div>}
+            {error && <div className="auth-error" role="alert" aria-live="assertive">{error}</div>}
             <button className="btn-gold" type="submit" disabled={loading || mfaCode.trim().length < 6} style={{ width: '100%', marginTop: 8 }}>
               {loading ? 'Wird geprüft...' : 'BESTÄTIGEN'}
             </button>
@@ -404,9 +404,9 @@ function LoginForm() {
         )}
 
         <form onSubmit={handleSubmit}>
-          <input className="auth-input" type="email" placeholder="E-Mail-Adresse" value={email} onChange={e => setEmail(e.target.value)} required autoComplete="email" name="email" disabled={isLocked} />
+          <input aria-label="E-Mail-Adresse" className="auth-input" type="email" placeholder="E-Mail-Adresse" value={email} onChange={e => setEmail(e.target.value)} required autoComplete="email" name="email" disabled={isLocked} />
           <div style={{ position: 'relative' }}>
-            <input className="auth-input" type={showPassword ? 'text' : 'password'} placeholder="Passwort" value={password} onChange={e => setPassword(e.target.value)} required style={{ paddingRight: 48 }} autoComplete="current-password" name="password" disabled={isLocked} />
+            <input aria-label="Passwort" className="auth-input" type={showPassword ? 'text' : 'password'} placeholder="Passwort" value={password} onChange={e => setPassword(e.target.value)} required style={{ paddingRight: 48 }} autoComplete="current-password" name="password" disabled={isLocked} />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
@@ -415,7 +415,7 @@ function LoginForm() {
               {showPassword ? 'Verbergen' : 'Anzeigen'}
             </button>
           </div>
-          {error && <div className="auth-error">{error}</div>}
+          {error && <div className="auth-error" role="alert" aria-live="assertive">{error}</div>}
           {attemptsWarning && !error && (
             <div style={{ color: '#ff9800', fontSize: 12, marginBottom: 4, textAlign: 'center' }}>{attemptsWarning}</div>
           )}
@@ -447,7 +447,7 @@ function LoginForm() {
             </div>
           ) : (
             <div>
-              <input
+              <input aria-label="Admin E-Mail"
                 type="email"
                 placeholder="Admin E-Mail"
                 value={email}
@@ -456,7 +456,7 @@ function LoginForm() {
                 disabled={isLocked}
               />
               <div style={{ display: 'flex', gap: 8 }}>
-                <input
+                <input aria-label="Admin-Passwort"
                   type="password"
                   placeholder="Admin-Passwort"
                   value={adminPwInput}

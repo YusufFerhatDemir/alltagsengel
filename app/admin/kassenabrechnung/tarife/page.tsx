@@ -392,10 +392,10 @@ function Kachel({ wert, label, farbe }: { wert: number; label: string; farbe: st
 
 function Feld({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+    <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
       <span style={{ fontSize: 12, color: 'var(--muted)' }}>{label}</span>
       {children}
-    </div>
+    </label>
   )
 }
 

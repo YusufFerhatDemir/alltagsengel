@@ -208,7 +208,7 @@ export default function AuftraegePage() {
           gap: '12px',
         }}>
           <Link href="/fahrer/home">
-            <button style={{
+            <button aria-label="Zurück zur Übersicht" style={{
               background: 'none',
               border: 'none',
               color: '#C9963C',

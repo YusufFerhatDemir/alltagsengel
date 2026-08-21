@@ -62,7 +62,7 @@ export default function ForgotPasswordPage() {
           </div>
         ) : (
           <form onSubmit={handleSubmit}>
-            <input
+            <input aria-label="E-Mail-Adresse"
               className="auth-input"
               type="email"
               placeholder="E-Mail-Adresse"
@@ -71,7 +71,7 @@ export default function ForgotPasswordPage() {
               required
               autoComplete="email"
             />
-            {error && <div className="auth-error">{error}</div>}
+            {error && <div className="auth-error" role="alert" aria-live="assertive">{error}</div>}
             <button className="btn-gold" type="submit" disabled={loading} style={{ width: '100%', marginTop: 8 }}>
               {loading ? 'Wird gesendet...' : 'LINK SENDEN'}
             </button>

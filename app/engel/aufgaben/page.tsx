@@ -205,7 +205,7 @@ export default function EngelAufgabenPage() {
             const isOverdue = a.faelligkeits_status === 'ueberfaellig'
 
             return (
-              <div
+              <div role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); (() => setExpandedId(isExpanded ? null : a.id))() } }}
                 key={a.id}
                 style={{
                   background: 'var(--coal2)',
