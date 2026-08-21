@@ -1,6 +1,21 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getActiveOrgId, resolveUserOrgId } from '@/lib/organizations/server'
+import type { SupabaseClient } from '@supabase/supabase-js'
+
+/** MFA-Prüfung: Admin mit Faktor muss auf AAL2 sein. Fail-open bei Fehler. */
+async function requireAdminAal2(supabase: SupabaseClient): Promise<NextResponse | null> {
+  try {
+    const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
+    if (aal && aal.nextLevel === 'aal2' && aal.currentLevel !== 'aal2') {
+      return NextResponse.json(
+        { error: 'Zweiter Faktor nicht verifiziert. Bitte erneut anmelden.' },
+        { status: 403 },
+      )
+    }
+  } catch {}
+  return null
+}
 
 export interface OpsAuthContext {
   userId: string
@@ -29,6 +44,9 @@ export async function requireOpsAdmin(): Promise<OpsAuthResult> {
   if (!profile || !['admin', 'superadmin'].includes(profile.role)) {
     return { ok: false, response: NextResponse.json({ error: 'Nur fuer Administratoren.' }, { status: 403 }) }
   }
+  // MFA-Prüfung
+  const aalBlock = await requireAdminAal2(supabase)
+  if (aalBlock) return { ok: false, response: aalBlock }
 
   // Die Organisation haengt am organization_members-Mapping (Org-Switcher-Cookie),
   // NICHT an profiles — profiles hat keine organization_id-Spalte.
