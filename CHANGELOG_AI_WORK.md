@@ -4,6 +4,41 @@ Chronologische Dokumentation aller KI-gestuetzten Arbeitssitzungen.
 
 ---
 
+## 2026-08-21 | Session: BITV/WCAG Barrierefreiheit
+
+### Durchgefuehrt
+- Barrierefreiheit-Audit gegen WCAG 2.1 AA
+- 2 Farbtokens (--ink4, --ink5) auf AA-Kontrast gehoben (758 Stellen)
+- Banner-Komponente als Live-Region (295 Stellen)
+- 15x kopierter Field-Wrapper div→label (201 Felder)
+- 11 Icon-Buttons mit aria-label versehen
+- 21 Dialoge mit role="dialog" + aria-modal
+- 90 onClick-Elemente auf Tastaturzugang umgestellt
+- lib/a11y.ts mit klickbar() Helfer erstellt
+- docs/BARRIEREFREIHEIT_AUDIT.md erstellt
+
+### CI
+| Run | Commit | Status |
+|-----|--------|--------|
+| #321 | a903ec3 | **GRUEN** (4m 48s) |
+
+---
+
+## 2026-08-21 | Session: Structured Logger Vollmigration
+
+### Durchgefuehrt
+- 234 weitere Dateien von console.log/error/warn auf Structured Logger migriert
+- Codemod-basierte Migration mit Klammer-Balancing-Parser
+- Neue Modul-Logger erstellt (engelLogger, kundeLogger, apiLogger etc.)
+- Produktionscode durchgehend auf JSON-Logging in Production
+
+### CI
+| Run | Commit | Status |
+|-----|--------|--------|
+| #320 | 96f6632 | **GRUEN** (5m 51s) |
+
+---
+
 ## 2026-08-21 | Session: Typecheck-Fix nach as-any Cleanup
 
 ### Durchgefuehrt
