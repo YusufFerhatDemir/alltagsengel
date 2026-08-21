@@ -1,3 +1,4 @@
+import { apiErrorResponse } from '@/lib/api/error-sanitizer'
 import { NextRequest, NextResponse } from 'next/server'
 import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createClient } from '@/lib/supabase/server'
@@ -42,7 +43,7 @@ export async function POST() {
     return NextResponse.json({ ...summary, betriebsmodus: ermittleVersandModus(provider) })
   } catch (e: unknown) {
     if (e instanceof KimBetriebsmodusError) {
-      return NextResponse.json({ error: e.message, code: e.code }, { status: 409 })
+      return apiErrorResponse(e, undefined, 409)
     }
     const msg = e instanceof Error ? e.message : 'Unbekannter Fehler'
     return NextResponse.json({ error: msg }, { status: 500 })

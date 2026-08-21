@@ -26,7 +26,7 @@ export async function GET(request: Request) {
       .select('id, name')
 
     if (orgError) {
-      return NextResponse.json({ error: `Organisationen laden: ${orgError.message}` }, { status: 500 })
+      return safeApiError(orgError, request)
     }
 
     const laeufe: Array<Record<string, unknown>> = []

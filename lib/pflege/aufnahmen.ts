@@ -1,3 +1,4 @@
+import { UserFacingError } from '@/lib/api/user-facing-error'
 // ═══════════════════════════════════════════════════════════════
 // Kundenaufnahme — pflege_aufnahmen
 // CRUD + Statusmaschine. Beim Abschluss werden die Aufnahme-Felder
@@ -61,7 +62,7 @@ export async function createAufnahme(supabase: SupabaseClient, params: CreateAuf
   assertErlaubt(params.aufnahmeOrt, AUFNAHME_ORT_WERTE, 'aufnahme_ort')
   assertErlaubt(params.dringlichkeit, DRINGLICHKEIT_WERTE, 'dringlichkeit')
   if (params.pflegegradBeiAufnahme != null && (params.pflegegradBeiAufnahme < 0 || params.pflegegradBeiAufnahme > 5)) {
-    throw new Error('Pflegegrad muss zwischen 0 und 5 liegen.')
+    throw new UserFacingError('Pflegegrad muss zwischen 0 und 5 liegen.')
   }
 
   const { data, error } = await supabase
@@ -166,7 +167,7 @@ export async function updateAufnahme(
   actorId: string
 ): Promise<PflegeAufnahme> {
   const existing = await getAufnahme(supabase, id, organizationId)
-  if (!existing) throw new Error('Aufnahme nicht gefunden.')
+  if (!existing) throw new UserFacingError('Aufnahme nicht gefunden.')
   if (existing.status === 'abgeschlossen' || existing.status === 'storniert') {
     throw new Error(`Aufnahme im Status "${existing.status}" kann nicht mehr bearbeitet werden.`)
   }

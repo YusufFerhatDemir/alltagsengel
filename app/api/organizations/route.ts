@@ -1,3 +1,4 @@
+import { safeApiError } from '@/lib/api/error-sanitizer'
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { createClient } from '@/lib/supabase/server'
@@ -117,7 +118,7 @@ export async function POST(req: NextRequest) {
   if (orgErr || !org) {
     const hint = orgErr?.code === '42P01'
       ? ' (Phase-3-Migration noch nicht angewendet)' : ''
-    return NextResponse.json({ error: `Organisation konnte nicht angelegt werden${hint}: ${orgErr?.message}` }, { status: 500 })
+    return safeApiError(orgErr, req)
   }
 
   const { error: memberErr } = await admin
@@ -125,7 +126,7 @@ export async function POST(req: NextRequest) {
     .insert({ organization_id: org.id, user_id: user.id, role: 'owner' })
   if (memberErr) {
     await admin.from('organizations').delete().eq('id', org.id)
-    return NextResponse.json({ error: `Mitgliedschaft konnte nicht angelegt werden: ${memberErr.message}` }, { status: 500 })
+    return safeApiError(memberErr, req)
   }
 
   await admin.from('organization_subscriptions').insert({

@@ -1,3 +1,4 @@
+import { UserFacingError } from '@/lib/api/user-facing-error'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { heuteBerlin, datumBerlin, berlinParts } from '@/lib/utils/timezone'
 import {
@@ -35,7 +36,7 @@ export async function pruefeEinsatzfreigabe(
     .eq('id', caregiverId)
     .eq('organization_id', organizationId)
     .single()
-  if (cgErr || !cg) throw new Error('Mitarbeiter nicht gefunden.')
+  if (cgErr || !cg) throw new UserFacingError('Mitarbeiter nicht gefunden.')
 
   const probleme: string[] = []
   const name = `${cg.first_name ?? ''} ${cg.last_name ?? ''}`.trim()
@@ -114,7 +115,7 @@ export async function pruefeClientFreigabe(
     .eq('id', clientId)
     .eq('organization_id', organizationId)
     .single()
-  if (clErr || !client) throw new Error('Klient nicht gefunden oder gehört zu einer anderen Organisation.')
+  if (clErr || !client) throw new UserFacingError('Klient nicht gefunden oder gehört zu einer anderen Organisation.')
 
   const probleme: string[] = []
   const name = `${client.first_name ?? ''} ${client.last_name ?? ''}`.trim()

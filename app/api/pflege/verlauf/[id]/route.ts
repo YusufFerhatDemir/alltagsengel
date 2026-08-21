@@ -1,3 +1,4 @@
+import { apiErrorResponse } from '@/lib/api/error-sanitizer'
 import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requirePflegeAdmin } from '@/lib/pflege/api-auth'
@@ -23,6 +24,6 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 
     return NextResponse.json({ eintrag })
   } catch (err) {
-    return NextResponse.json({ error: (err as Error).message }, { status: 400 })
+    return apiErrorResponse(err, request)
   }
 }

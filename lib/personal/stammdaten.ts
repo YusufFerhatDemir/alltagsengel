@@ -1,3 +1,4 @@
+import { UserFacingError } from '@/lib/api/user-facing-error'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { assertErlaubt, VERTRAGSSTATUS_WERTE, type CaregiverStammdaten, type Vertragsstatus } from './types'
 
@@ -75,7 +76,7 @@ export async function erstelleStammdaten(
 ): Promise<CaregiverStammdaten> {
   const vorname = params.vorname?.trim()
   const nachname = params.nachname?.trim()
-  if (!vorname || !nachname) throw new Error('Vor- und Nachname sind Pflichtfelder.')
+  if (!vorname || !nachname) throw new UserFacingError('Vor- und Nachname sind Pflichtfelder.')
 
   assertErlaubt(params.vertragsstatus, VERTRAGSSTATUS_WERTE, 'vertragsstatus')
   assertErlaubt(params.qualifikationsstufe, QUALIFIKATIONSSTUFE_WERTE, 'qualifikationsstufe')
@@ -91,7 +92,7 @@ export async function erstelleStammdaten(
     // FAIL-CLOSED: lässt sich die Dublettenprüfung nicht durchführen,
     // wird nicht angelegt — sonst entstehen zwei Personalakten.
     if (doppeltErr) throw new Error(`Dublettenprüfung fehlgeschlagen: ${doppeltErr.message}`)
-    if (doppelt) throw new Error('Zu dieser E-Mail existiert bereits ein Mitarbeiter.')
+    if (doppelt) throw new UserFacingError('Zu dieser E-Mail existiert bereits ein Mitarbeiter.')
   }
 
   const insert: Record<string, unknown> = {
@@ -157,7 +158,7 @@ export async function updateStammdaten(
   if (patch.fahrzeugKennzeichen !== undefined) update.fahrzeug_kennzeichen = patch.fahrzeugKennzeichen
   if (patch.fuehrerscheinKlassen !== undefined) update.fuehrerschein_klassen = patch.fuehrerscheinKlassen
 
-  if (Object.keys(update).length === 0) throw new Error('Keine Änderungen übergeben.')
+  if (Object.keys(update).length === 0) throw new UserFacingError('Keine Änderungen übergeben.')
 
   const { data, error } = await supabase
     .from('caregivers')

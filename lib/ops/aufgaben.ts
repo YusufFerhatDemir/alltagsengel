@@ -1,3 +1,4 @@
+import { UserFacingError } from '@/lib/api/user-facing-error'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import {
   assertErlaubt,
@@ -54,17 +55,17 @@ function assertAufgabeGueltig(
   params: { istErstellung: boolean },
 ): void {
   if (params.istErstellung && !data.titel?.trim()) {
-    throw new Error('Titel ist ein Pflichtfeld.')
+    throw new UserFacingError('Titel ist ein Pflichtfeld.')
   }
   if (data.titel !== undefined && !data.titel?.trim()) {
-    throw new Error('Titel darf nicht leer sein.')
+    throw new UserFacingError('Titel darf nicht leer sein.')
   }
   assertErlaubt(data.kategorie, AUFGABEN_KATEGORIE_WERTE, 'kategorie')
   assertErlaubt(data.prioritaet, AUFGABEN_PRIORITAET_WERTE, 'prioritaet')
   assertErlaubt(data.status, AUFGABEN_STATUS_WERTE, 'status')
   assertErlaubt(data.wiederholung_intervall, WIEDERHOLUNG_INTERVALL_WERTE, 'wiederholung_intervall')
   if (data.faellig_am && data.wiederholung_ende && data.wiederholung_ende < data.faellig_am) {
-    throw new Error('Wiederholung-Ende darf nicht vor der Faelligkeit liegen.')
+    throw new UserFacingError('Wiederholung-Ende darf nicht vor der Faelligkeit liegen.')
   }
 }
 

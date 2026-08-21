@@ -77,7 +77,7 @@ export async function POST(req: NextRequest) {
         contentType: istP12 ? 'application/x-pkcs12' : 'application/x-pem-file',
         upsert: true,
       })
-    if (upErr) return NextResponse.json({ error: `Storage-Upload fehlgeschlagen: ${upErr.message}` }, { status: 500 })
+    if (upErr) return safeApiError(upErr, req)
 
     const zeile = {
       ik_nummer: org.ik_nummer || pruefung.ik_nummer,
@@ -97,7 +97,7 @@ export async function POST(req: NextRequest) {
         .from('abrechnung_zertifikate')
         .upsert(ohneOrg, { onConflict: 'ik_nummer,typ' }))
     }
-    if (dbErr) return NextResponse.json({ error: `DB-Update fehlgeschlagen: ${dbErr.message}` }, { status: 500 })
+    if (dbErr) return safeApiError(dbErr, req)
 
     // Onboarding-Fortschritt
     if ((org.onboarding_step ?? 0) < 3) {

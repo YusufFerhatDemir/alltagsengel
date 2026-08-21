@@ -23,6 +23,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { randomUUID } from 'crypto'
 import { logger } from '@/lib/logger'
+import { UserFacingError } from '@/lib/api/user-facing-error'
 
 const log = logger.child('api')
 
@@ -127,3 +128,38 @@ export function withErrorSanitizer(handler: RouteHandler): RouteHandler {
     }
   }
 }
+
+// ---------------------------------------------------------------------------
+// UserFacingError — Re-Export aus abhaengigkeitsfreiem Modul
+// ---------------------------------------------------------------------------
+
+/**
+ * Fehlerantwort fuer Routen, die sowohl Validierungsfehler (sichtbar) als
+ * auch interne Fehler (sanitisiert) produzieren koennen.
+ *
+ * - `UserFacingError` → Original-Meldung + zugehoeriger Statuscode
+ * - alles andere      → `safeApiError` (generische Meldung + Korrelations-ID, 500)
+ *
+ * Fail-closed: Was nicht ausdruecklich als `UserFacingError` markiert ist,
+ * wird sanitisiert. Damit kann eine durchgereichte Postgres-Meldung nicht
+ * versehentlich beim Client landen.
+ *
+ * @param err            Aufgefangener Fehler
+ * @param request        Optional: Request fuer Pfad-/Methoden-Logging
+ * @param fallbackStatus Status fuer `UserFacingError` ohne eigenen Status (Default: 400)
+ */
+export function apiErrorResponse(
+  err: unknown,
+  request?: Request | NextRequest,
+  fallbackStatus = 400,
+): NextResponse {
+  if (err instanceof UserFacingError) {
+    return NextResponse.json(
+      { error: err.message },
+      { status: err.status || fallbackStatus },
+    )
+  }
+  return safeApiError(err, request, 500)
+}
+
+export { UserFacingError }

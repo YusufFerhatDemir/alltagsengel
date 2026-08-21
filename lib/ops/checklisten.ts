@@ -1,3 +1,4 @@
+import { UserFacingError } from '@/lib/api/user-facing-error'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { OpsAufgabeCheckliste } from './types'
 
@@ -19,7 +20,7 @@ export async function createChecklistenItem(
   supabase: SupabaseClient,
   params: { organizationId: string; aufgabeId: string; titel: string; position: number },
 ): Promise<OpsAufgabeCheckliste> {
-  if (!params.titel?.trim()) throw new Error('Titel ist ein Pflichtfeld.')
+  if (!params.titel?.trim()) throw new UserFacingError('Titel ist ein Pflichtfeld.')
   const { data, error } = await supabase
     .from('ops_aufgaben_checklisten')
     .insert({
@@ -39,7 +40,7 @@ export async function updateChecklistenItem(
   params: { organizationId: string; id: string; data: Partial<Pick<OpsAufgabeCheckliste, 'titel' | 'position' | 'erledigt' | 'erledigt_von' | 'erledigt_am'>> },
 ): Promise<OpsAufgabeCheckliste> {
   if (params.data.titel !== undefined && !params.data.titel?.trim()) {
-    throw new Error('Titel darf nicht leer sein.')
+    throw new UserFacingError('Titel darf nicht leer sein.')
   }
   const { data, error } = await supabase
     .from('ops_aufgaben_checklisten')

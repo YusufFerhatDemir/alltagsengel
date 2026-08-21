@@ -1,3 +1,4 @@
+import { UserFacingError } from '@/lib/api/user-facing-error'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { OpsAufgabeKommentar } from './types'
 
@@ -23,8 +24,8 @@ export async function createKommentar(
   supabase: SupabaseClient,
   params: { organizationId: string; aufgabeId: string; inhalt: string; autorId: string; istIntern?: boolean },
 ): Promise<OpsAufgabeKommentar> {
-  if (!params.inhalt?.trim()) throw new Error('Kommentarinhalt ist ein Pflichtfeld.')
-  if (!params.autorId?.trim()) throw new Error('Autor ist ein Pflichtfeld.')
+  if (!params.inhalt?.trim()) throw new UserFacingError('Kommentarinhalt ist ein Pflichtfeld.')
+  if (!params.autorId?.trim()) throw new UserFacingError('Autor ist ein Pflichtfeld.')
   const { data, error } = await supabase
     .from('ops_aufgaben_kommentare')
     .insert({

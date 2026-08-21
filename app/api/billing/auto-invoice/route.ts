@@ -191,7 +191,7 @@ export async function POST(request: Request) {
       .gte('date', periodStart)
       .lte('date', periodEnd)
     if (monthErr) {
-      return NextResponse.json({ error: `Lade-Fehler: ${monthErr.message}` }, { status: 500 })
+      return safeApiError(monthErr, request)
     }
 
     const all = records || []

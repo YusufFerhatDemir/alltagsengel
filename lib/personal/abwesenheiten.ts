@@ -1,3 +1,4 @@
+import { UserFacingError } from '@/lib/api/user-facing-error'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import {
   assertErlaubt,
@@ -97,7 +98,7 @@ export async function updateAbwesenheit(
   if (patch.tageBerechnet !== undefined) update.tage_berechnet = patch.tageBerechnet
   if (patch.dokumentId !== undefined) update.dokument_id = patch.dokumentId
 
-  if (Object.keys(update).length === 0) throw new Error('Keine Änderungen übergeben.')
+  if (Object.keys(update).length === 0) throw new UserFacingError('Keine Änderungen übergeben.')
 
   const { data, error } = await supabase
     .from('absences')
@@ -122,10 +123,10 @@ export async function genehmigenAbwesenheit(
     .eq('id', id)
     .eq('organization_id', organizationId)
     .single()
-  if (loadErr || !existing) throw new Error('Abwesenheit nicht gefunden.')
-  if (existing.status !== 'beantragt') throw new Error('Nur beantragte Abwesenheiten können genehmigt werden.')
+  if (loadErr || !existing) throw new UserFacingError('Abwesenheit nicht gefunden.')
+  if (existing.status !== 'beantragt') throw new UserFacingError('Nur beantragte Abwesenheiten können genehmigt werden.')
   if (existing.erstellt_von === genehmigenVon) {
-    throw new Error('Eigene Abwesenheiten koennen nicht selbst genehmigt werden.')
+    throw new UserFacingError('Eigene Abwesenheiten koennen nicht selbst genehmigt werden.')
   }
 
   const { data, error } = await supabase
@@ -180,7 +181,7 @@ export async function ablehnenAbwesenheit(
   abgelehntVon: string,
   ablehnungsgrund: string,
 ): Promise<Abwesenheit> {
-  if (!ablehnungsgrund?.trim()) throw new Error('Ablehnungsgrund ist ein Pflichtfeld.')
+  if (!ablehnungsgrund?.trim()) throw new UserFacingError('Ablehnungsgrund ist ein Pflichtfeld.')
 
   const { data, error } = await supabase
     .from('absences')

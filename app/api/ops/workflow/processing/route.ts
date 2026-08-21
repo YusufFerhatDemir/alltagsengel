@@ -1,3 +1,4 @@
+import { apiErrorResponse } from '@/lib/api/error-sanitizer'
 import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
@@ -42,6 +43,6 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ error: 'Unbekannte Aktion. Erlaubt: process_pending, check_fristen' }, { status: 400 })
   } catch (e: any) {
-    return NextResponse.json({ error: e.message }, { status: 400 })
+    return apiErrorResponse(e, request)
   }
 }

@@ -1,3 +1,4 @@
+import { UserFacingError } from '@/lib/api/user-facing-error'
 // ═══════════════════════════════════════════════════════════════
 // SIS-Themenfelder — sis_themenfelder
 // Upsert je (assessment_id, feld_nr); nur solange der Kopfsatz
@@ -20,12 +21,12 @@ export interface UpsertThemenfeldParams {
 
 export async function upsertThemenfeld(supabase: SupabaseClient, params: UpsertThemenfeldParams): Promise<SisThemenfeld> {
   if (!Number.isInteger(params.feldNr) || params.feldNr < 1 || params.feldNr > 6) {
-    throw new Error('feld_nr muss zwischen 1 und 6 liegen.')
+    throw new UserFacingError('feld_nr muss zwischen 1 und 6 liegen.')
   }
 
   const kopf = await ladeKopfsatz(supabase, params.assessmentId, params.organizationId)
-  if (kopf.gesperrt) throw new Error('Informationssammlung ist gesperrt — Änderung nicht möglich.')
-  if (kopf.status !== 'entwurf') throw new Error('Themenfelder können nur im Entwurf bearbeitet werden.')
+  if (kopf.gesperrt) throw new UserFacingError('Informationssammlung ist gesperrt — Änderung nicht möglich.')
+  if (kopf.status !== 'entwurf') throw new UserFacingError('Themenfelder können nur im Entwurf bearbeitet werden.')
 
   if (!relevanteThemenfelder(kopf.versorgungsform).includes(params.feldNr)) {
     const titel = SIS_THEMENFELDER.find(t => t.nr === params.feldNr)?.titel ?? `Feld ${params.feldNr}`

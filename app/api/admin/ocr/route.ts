@@ -102,7 +102,7 @@ export async function POST(request: Request) {
       .single()
 
     if (ocrErr || !ocrResult) {
-      return NextResponse.json({ error: `OCR-Speicherfehler: ${ocrErr?.message}` }, { status: 500 })
+      return safeApiError(ocrErr, request)
     }
 
     // ── 3) Abgleich extrahierter Felder vs. Leistungsnachweis ──

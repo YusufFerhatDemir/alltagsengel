@@ -1,3 +1,4 @@
+import { apiErrorResponse } from '@/lib/api/error-sanitizer'
 // ═══════════════════════════════════════════════════════════════
 // GET /api/fhir/audit-log — Audit-Trail für Admin-UI (Block 21)
 // ═══════════════════════════════════════════════════════════════
@@ -23,7 +24,7 @@ export async function GET(request: Request) {
       .order('created_at', { ascending: false })
       .limit(limit)
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    if (error) return apiErrorResponse(error, request)
     return NextResponse.json({ entries: data ?? [] })
   } catch (err) {
     return safeApiError(err, request)

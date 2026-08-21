@@ -1,3 +1,4 @@
+import { UserFacingError } from '@/lib/api/user-facing-error'
 // ═══════════════════════════════════════════════════════════════
 // Personalmanagement — geteilte Typen
 // Spiegelt 1:1 die Spalten aus
@@ -309,18 +310,18 @@ export function assertErlaubt<T extends string>(
 export function assertPlausibleZeiten(werte: { istMinuten?: number; pauseMinuten?: number }): void {
   if (werte.istMinuten !== undefined) {
     if (!Number.isFinite(werte.istMinuten) || werte.istMinuten <= 0) {
-      throw new Error('Ist-Minuten müssen größer als 0 sein.')
+      throw new UserFacingError('Ist-Minuten müssen größer als 0 sein.')
     }
     if (werte.istMinuten > 1440) {
-      throw new Error('Ist-Minuten dürfen 24 Stunden (1440 Minuten) nicht überschreiten.')
+      throw new UserFacingError('Ist-Minuten dürfen 24 Stunden (1440 Minuten) nicht überschreiten.')
     }
   }
   if (werte.pauseMinuten !== undefined && werte.pauseMinuten !== null) {
     if (!Number.isFinite(werte.pauseMinuten) || werte.pauseMinuten < 0) {
-      throw new Error('Pause-Minuten dürfen nicht negativ sein.')
+      throw new UserFacingError('Pause-Minuten dürfen nicht negativ sein.')
     }
     if (werte.pauseMinuten > 1440) {
-      throw new Error('Pause-Minuten dürfen 24 Stunden (1440 Minuten) nicht überschreiten.')
+      throw new UserFacingError('Pause-Minuten dürfen 24 Stunden (1440 Minuten) nicht überschreiten.')
     }
   }
 }

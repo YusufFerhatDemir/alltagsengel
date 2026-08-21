@@ -1,3 +1,4 @@
+import { UserFacingError } from '@/lib/api/user-facing-error'
 // ═══════════════════════════════════════════════════════════════
 // Maßnahmen-/Versorgungsplan — pflege_massnahmenplaene
 // CRUD, Statusmaschine, Versionierung (Nachfolger erbt Maßnahmen),
@@ -49,10 +50,10 @@ export interface CreatePlanParams {
 }
 
 export async function createPlan(supabase: SupabaseClient, params: CreatePlanParams): Promise<PflegeMassnahmenplan> {
-  if (!params.titel?.trim()) throw new Error('Titel ist ein Pflichtfeld.')
+  if (!params.titel?.trim()) throw new UserFacingError('Titel ist ein Pflichtfeld.')
   assertErlaubt(params.planTyp, PLAN_TYP_WERTE, 'plan_typ')
   if (params.gueltigBis && params.gueltigVon && params.gueltigBis < params.gueltigVon) {
-    throw new Error('"Gültig bis" darf nicht vor "Gültig von" liegen.')
+    throw new UserFacingError('"Gültig bis" darf nicht vor "Gültig von" liegen.')
   }
 
   const { data, error } = await supabase
@@ -157,18 +158,18 @@ export async function updatePlan(
   patch: UpdatePlanParams
 ): Promise<PflegeMassnahmenplan> {
   const existing = await getPlan(supabase, id, organizationId)
-  if (!existing) throw new Error('Maßnahmenplan nicht gefunden.')
-  if (existing.gesperrt) throw new Error('Gesperrter Maßnahmenplan kann nicht bearbeitet werden.')
+  if (!existing) throw new UserFacingError('Maßnahmenplan nicht gefunden.')
+  if (existing.gesperrt) throw new UserFacingError('Gesperrter Maßnahmenplan kann nicht bearbeitet werden.')
   assertErlaubt(patch.planTyp, PLAN_TYP_WERTE, 'plan_typ')
   if (patch.status) validatePlanUebergang(existing.status, patch.status)
 
   const von = patch.gueltigVon ?? existing.gueltig_von
   const bis = patch.gueltigBis !== undefined ? patch.gueltigBis : existing.gueltig_bis
-  if (bis && von && bis < von) throw new Error('"Gültig bis" darf nicht vor "Gültig von" liegen.')
+  if (bis && von && bis < von) throw new UserFacingError('"Gültig bis" darf nicht vor "Gültig von" liegen.')
 
   const update: Record<string, unknown> = {}
   if (patch.titel !== undefined) {
-    if (!patch.titel.trim()) throw new Error('Titel darf nicht leer sein.')
+    if (!patch.titel.trim()) throw new UserFacingError('Titel darf nicht leer sein.')
     update.titel = patch.titel.trim()
   }
   if (patch.planTyp !== undefined) update.plan_typ = patch.planTyp
@@ -178,7 +179,7 @@ export async function updatePlan(
   if (patch.betreuungsziele !== undefined) update.betreuungsziele = patch.betreuungsziele
   if (patch.pflegeziele !== undefined) update.pflegeziele = patch.pflegeziele
 
-  if (Object.keys(update).length === 0) throw new Error('Keine Änderungen übergeben.')
+  if (Object.keys(update).length === 0) throw new UserFacingError('Keine Änderungen übergeben.')
 
   const { data, error } = await supabase
     .from('pflege_massnahmenplaene')
@@ -212,8 +213,8 @@ export async function freigebenPlan(
   freigegebenVon: string
 ): Promise<PflegeMassnahmenplan> {
   const existing = await getPlan(supabase, id, organizationId)
-  if (!existing) throw new Error('Maßnahmenplan nicht gefunden.')
-  if (existing.gesperrt) throw new Error('Gesperrter Maßnahmenplan kann nicht freigegeben werden.')
+  if (!existing) throw new UserFacingError('Maßnahmenplan nicht gefunden.')
+  if (existing.gesperrt) throw new UserFacingError('Gesperrter Maßnahmenplan kann nicht freigegeben werden.')
   validatePlanUebergang(existing.status, 'aktiv')
 
   const { count, error: countError } = await supabase
@@ -222,7 +223,7 @@ export async function freigebenPlan(
     .eq('plan_id', id)
     .eq('organization_id', organizationId)
   if (countError) throw new Error(`Maßnahmen konnten nicht geprüft werden: ${countError.message}`)
-  if (!count) throw new Error('Ein Plan ohne Maßnahmen kann nicht freigegeben werden.')
+  if (!count) throw new UserFacingError('Ein Plan ohne Maßnahmen kann nicht freigegeben werden.')
 
   // Vorherigen aktiven Plan ablösen
   const { error: ersetztError } = await supabase
@@ -266,8 +267,8 @@ export async function sperrePlan(
   organizationId: string
 ): Promise<PflegeMassnahmenplan> {
   const existing = await getPlan(supabase, id, organizationId)
-  if (!existing) throw new Error('Maßnahmenplan nicht gefunden.')
-  if (existing.gesperrt) throw new Error('Maßnahmenplan ist bereits gesperrt.')
+  if (!existing) throw new UserFacingError('Maßnahmenplan nicht gefunden.')
+  if (existing.gesperrt) throw new UserFacingError('Maßnahmenplan ist bereits gesperrt.')
 
   const { data, error } = await supabase
     .from('pflege_massnahmenplaene')
@@ -297,8 +298,8 @@ export async function entsperrePlan(
   organizationId: string
 ): Promise<PflegeMassnahmenplan> {
   const existing = await getPlan(supabase, id, organizationId)
-  if (!existing) throw new Error('Maßnahmenplan nicht gefunden.')
-  if (!existing.gesperrt) throw new Error('Maßnahmenplan ist nicht gesperrt.')
+  if (!existing) throw new UserFacingError('Maßnahmenplan nicht gefunden.')
+  if (!existing.gesperrt) throw new UserFacingError('Maßnahmenplan ist nicht gesperrt.')
 
   // trg_locked_plan blockiert nur Updates, bei denen gesperrt vorher UND
   // nachher true ist — das Entsperren läuft daher in einem Statement.
@@ -336,9 +337,9 @@ export async function neueVersion(
   patch?: { titel?: string; gueltigVon?: string; gueltigBis?: string | null }
 ): Promise<PflegeMassnahmenplan> {
   const vorgaenger = await getPlan(supabase, vorgaengerId, organizationId)
-  if (!vorgaenger) throw new Error('Vorgänger-Plan nicht gefunden.')
+  if (!vorgaenger) throw new UserFacingError('Vorgänger-Plan nicht gefunden.')
   if (vorgaenger.status === 'ersetzt') {
-    throw new Error('Ein bereits ersetzter Plan kann nicht erneut versioniert werden.')
+    throw new UserFacingError('Ein bereits ersetzter Plan kann nicht erneut versioniert werden.')
   }
 
   const neu = await createPlan(supabase, {

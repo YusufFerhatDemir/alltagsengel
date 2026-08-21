@@ -101,7 +101,7 @@ export async function PATCH(
       .maybeSingle()
 
     if (updateError) {
-      return NextResponse.json({ error: updateError.message }, { status: 500 })
+      return safeApiError(updateError)
     }
     if (!client) {
       return NextResponse.json({ error: 'Klient nicht gefunden.' }, { status: 404 })

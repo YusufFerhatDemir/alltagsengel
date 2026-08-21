@@ -1,3 +1,4 @@
+import { UserFacingError } from '@/lib/api/user-facing-error'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import {
   assertErlaubt,
@@ -19,11 +20,11 @@ function assertNachrichtGueltig(
   data: Omit<OpsNachricht, 'id' | 'organization_id' | 'created_at' | 'eltern_id'>,
   empfaengerIds: string[],
 ): void {
-  if (!data.betreff?.trim()) throw new Error('Betreff ist ein Pflichtfeld.')
-  if (!data.inhalt?.trim()) throw new Error('Inhalt ist ein Pflichtfeld.')
-  if (!data.absender_id?.trim()) throw new Error('Absender ist ein Pflichtfeld.')
+  if (!data.betreff?.trim()) throw new UserFacingError('Betreff ist ein Pflichtfeld.')
+  if (!data.inhalt?.trim()) throw new UserFacingError('Inhalt ist ein Pflichtfeld.')
+  if (!data.absender_id?.trim()) throw new UserFacingError('Absender ist ein Pflichtfeld.')
   if (!Array.isArray(empfaengerIds)) {
-    throw new Error('Empfaenger muessen als Liste uebergeben werden.')
+    throw new UserFacingError('Empfaenger muessen als Liste uebergeben werden.')
   }
   assertErlaubt(data.prioritaet, NACHRICHTEN_PRIORITAET_WERTE, 'prioritaet')
   assertErlaubt(data.kategorie, NACHRICHTEN_KATEGORIE_WERTE, 'kategorie')
@@ -116,7 +117,7 @@ export async function createAntwort(
     .eq('id', params.elternId)
     .eq('organization_id', params.organizationId)
     .maybeSingle()
-  if (pErr || !parent) throw new Error('Eltern-Nachricht nicht gefunden oder gehoert nicht zur Organisation.')
+  if (pErr || !parent) throw new UserFacingError('Eltern-Nachricht nicht gefunden oder gehoert nicht zur Organisation.')
   assertNachrichtGueltig(params.data, params.empfaengerIds)
 
   const { data: nachricht, error: nErr } = await supabase

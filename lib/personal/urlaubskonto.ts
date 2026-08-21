@@ -1,3 +1,4 @@
+import { UserFacingError } from '@/lib/api/user-facing-error'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { PersonalUrlaubskonto, UrlaubsUebersicht } from './types'
 
@@ -69,7 +70,7 @@ export async function updateUrlaubskonto(
   if (patch.uebertragVorjahr !== undefined) update.uebertrag_vorjahr = patch.uebertragVorjahr
   if (patch.bemerkung !== undefined) update.bemerkung = patch.bemerkung
 
-  if (Object.keys(update).length === 0) throw new Error('Keine Änderungen übergeben.')
+  if (Object.keys(update).length === 0) throw new UserFacingError('Keine Änderungen übergeben.')
 
   const { data, error } = await supabase
     .from('personal_urlaubskonto')

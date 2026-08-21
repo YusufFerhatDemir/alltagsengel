@@ -1,3 +1,4 @@
+import { UserFacingError } from '@/lib/api/user-facing-error'
 // ═══════════════════════════════════════════════════════════════
 // SIS-Risikomatrix — sis_risikomatrix
 // Upsert je (assessment_id, risiko); nur solange der Kopfsatz
@@ -29,8 +30,8 @@ export async function upsertRisiko(supabase: SupabaseClient, params: UpsertRisik
   assertSisWert(params.risikoVorhanden, SIS_RISIKO_VORHANDEN_WERTE, 'risiko_vorhanden')
 
   const kopf = await ladeKopfsatz(supabase, params.assessmentId, params.organizationId)
-  if (kopf.gesperrt) throw new Error('Informationssammlung ist gesperrt — Änderung nicht möglich.')
-  if (kopf.status !== 'entwurf') throw new Error('Die Risikomatrix kann nur im Entwurf bearbeitet werden.')
+  if (kopf.gesperrt) throw new UserFacingError('Informationssammlung ist gesperrt — Änderung nicht möglich.')
+  if (kopf.status !== 'entwurf') throw new UserFacingError('Die Risikomatrix kann nur im Entwurf bearbeitet werden.')
 
   const payload: Record<string, unknown> = {
     organization_id: params.organizationId,

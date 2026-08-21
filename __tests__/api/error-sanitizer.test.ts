@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { NextRequest } from 'next/server'
-import { safeApiError, withErrorSanitizer } from '@/lib/api/error-sanitizer'
+import { safeApiError, withErrorSanitizer, apiErrorResponse, UserFacingError } from '@/lib/api/error-sanitizer'
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -217,5 +217,74 @@ describe('withErrorSanitizer', () => {
     expect(text).not.toContain('at ')
     expect(text).not.toContain('.ts:')
     expect(text).not.toContain('.js:')
+  })
+})
+
+// ---------------------------------------------------------------------------
+// apiErrorResponse / UserFacingError
+// ---------------------------------------------------------------------------
+
+describe('apiErrorResponse', () => {
+  let consoleErrorSpy: ReturnType<typeof vi.spyOn>
+
+  beforeEach(() => {
+    consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+  })
+
+  afterEach(() => {
+    consoleErrorSpy.mockRestore()
+    vi.unstubAllEnvs()
+  })
+
+  it('liefert die Meldung eines UserFacingError im Klartext aus', async () => {
+    const res = apiErrorResponse(new UserFacingError('Titel ist ein Pflichtfeld.'))
+    expect(res.status).toBe(400)
+    expect(await parseBody(res)).toEqual({ error: 'Titel ist ein Pflichtfeld.' })
+  })
+
+  it('uebernimmt den Statuscode des UserFacingError', async () => {
+    const res = apiErrorResponse(new UserFacingError('Bereits gesperrt.', 409))
+    expect(res.status).toBe(409)
+    expect((await parseBody(res)).error).toBe('Bereits gesperrt.')
+  })
+
+  it('sanitisiert einen gewoehnlichen Error und antwortet mit 500', async () => {
+    vi.stubEnv('NODE_ENV', 'production')
+    const res = apiErrorResponse(
+      new Error('Aufgaben konnten nicht geladen werden: relation "ops_aufgaben" does not exist'),
+      makeRequest(),
+    )
+    expect(res.status).toBe(500)
+    const body = await parseBody(res)
+    expect(body.error).toBe('Interner Serverfehler')
+    expect(body.correlationId).toEqual(expect.any(String))
+    expect(JSON.stringify(body)).not.toContain('ops_aufgaben')
+  })
+
+  it('leakt keine Postgres-Details, auch wenn ein 400 erwartet wurde', async () => {
+    vi.stubEnv('NODE_ENV', 'production')
+    const dbErr = new Error('new row violates row-level security policy for table "ops_aufgaben"')
+    const res = apiErrorResponse(dbErr, makeRequest(), 400)
+    expect(res.status).toBe(500)
+    expect(JSON.stringify(await parseBody(res))).not.toContain('row-level security')
+  })
+
+  it('behandelt Nicht-Error-Werte fail-closed', async () => {
+    vi.stubEnv('NODE_ENV', 'production')
+    const res = apiErrorResponse('irgendein string', makeRequest())
+    expect(res.status).toBe(500)
+    expect((await parseBody(res)).error).toBe('Interner Serverfehler')
+  })
+})
+
+describe('UserFacingError', () => {
+  it('nutzt 400 als Standard-Status', () => {
+    expect(new UserFacingError('x').status).toBe(400)
+  })
+
+  it('ist eine Error-Instanz mit eigenem Namen', () => {
+    const err = new UserFacingError('x')
+    expect(err).toBeInstanceOf(Error)
+    expect(err.name).toBe('UserFacingError')
   })
 })

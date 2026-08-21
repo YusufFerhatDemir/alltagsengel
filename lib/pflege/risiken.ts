@@ -1,3 +1,4 @@
+import { UserFacingError } from '@/lib/api/user-facing-error'
 // ═══════════════════════════════════════════════════════════════
 // Risiken / Allergien / Notfallhinweise — pflege_risiken
 // Soft-Delete über aktiv=false. Zusätzlich: Risiko-Dashboard-View
@@ -51,7 +52,7 @@ export interface CreateRisikoParams {
 }
 
 export async function createRisiko(supabase: SupabaseClient, params: CreateRisikoParams): Promise<PflegeRisiko> {
-  if (!params.bezeichnung?.trim()) throw new Error('Bezeichnung ist ein Pflichtfeld.')
+  if (!params.bezeichnung?.trim()) throw new UserFacingError('Bezeichnung ist ein Pflichtfeld.')
   assertErlaubt(params.risikoTyp, RISIKO_TYP_WERTE, 'risiko_typ')
   assertErlaubt(params.schweregrad, RISIKO_SCHWEREGRAD_WERTE, 'schweregrad')
 
@@ -142,7 +143,7 @@ export async function updateRisiko(
   assertErlaubt(patch.risikoTyp, RISIKO_TYP_WERTE, 'risiko_typ')
   assertErlaubt(patch.schweregrad, RISIKO_SCHWEREGRAD_WERTE, 'schweregrad')
   if (patch.bezeichnung !== undefined && !patch.bezeichnung.trim()) {
-    throw new Error('Bezeichnung darf nicht leer sein.')
+    throw new UserFacingError('Bezeichnung darf nicht leer sein.')
   }
 
   const update: Record<string, unknown> = {}
@@ -155,7 +156,7 @@ export async function updateRisiko(
   if (patch.erkanntAm !== undefined) update.erkannt_am = patch.erkanntAm
   if (patch.naechstePruefung !== undefined) update.naechste_pruefung = patch.naechstePruefung
 
-  if (Object.keys(update).length === 0) throw new Error('Keine Änderungen übergeben.')
+  if (Object.keys(update).length === 0) throw new UserFacingError('Keine Änderungen übergeben.')
 
   const { data, error } = await supabase
     .from('pflege_risiken')

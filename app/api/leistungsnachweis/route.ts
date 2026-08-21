@@ -177,7 +177,7 @@ export async function GET(request: Request) {
       .order('start_time', { ascending: true })
 
     if (recErr) {
-      return NextResponse.json({ error: `Einsätze-Fehler: ${recErr.message}` }, { status: 500 })
+      return safeApiError(recErr, request)
     }
     interface LeistungsnachweisRecord {
       id: string; date: string; start_time?: string; end_time?: string
