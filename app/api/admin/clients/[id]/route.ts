@@ -4,19 +4,11 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getActiveOrgId } from '@/lib/organizations/server'
 import { logAuditEvent } from '@/lib/audit-log'
-
-// Felder, die über die "Gesundheitsdaten & Notfallkontakte"-Sektion
-// (app/admin/clients/[id]/page.tsx, HealthSection) editierbar sind.
-const ALLOWED_FIELDS = [
-  'allergies', 'medications', 'mobility_status', 'dietary_restrictions', 'medical_conditions',
-  'emergency_contact_name', 'emergency_contact_phone', 'emergency_contact_relationship',
-  'next_of_kin_name', 'next_of_kin_phone', 'next_of_kin_email', 'next_of_kin_relationship',
-  'hausarzt_name', 'hausarzt_phone',
-  'versichertennummer', 'pflegekasse_name', 'pflegekasse_ik',
-] as const
-
-const MOBILITY_VALUES = ['mobil', 'eingeschraenkt', 'rollstuhl', 'bettlaegerig']
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+import {
+  ALLOWED_CLIENT_FIELDS,
+  STAMMDATEN_SET,
+  pruefeStammdaten,
+} from '@/lib/clients/stammdaten'
 
 async function requireAdmin() {
   const supabase = await createClient()
@@ -38,7 +30,8 @@ async function requireAdmin() {
 /**
  * PATCH /api/admin/clients/[id]
  *
- * Aktualisiert Gesundheitsdaten & Notfallkontakte eines Klienten.
+ * Aktualisiert Kontaktstammdaten sowie Gesundheitsdaten & Notfallkontakte
+ * eines Klienten.
  *
  * Vorher schrieb HealthSection (app/admin/clients/[id]/page.tsx) direkt per
  * Browser-Client gegen `clients` — RLS (clients_admin_all + org_fence)
@@ -48,9 +41,20 @@ async function requireAdmin() {
  * Allergien/Medikamenten/Notfallkontakten aber nicht. Diese Route schließt
  * die Lücke, ohne das Nutzerverhalten zu ändern.
  *
- * Es werden absichtlich nur die GEÄNDERTEN FELDNAMEN geloggt, nicht die
- * Werte selbst — Allergien/Medikamente/Diagnosen sind Gesundheitsdaten und
- * gehören nicht als Klartext in den Audit-Log.
+ * Seit Track 6 deckt die Whitelist zusätzlich Name, Adresse, PLZ, Ort,
+ * Telefon, E-Mail und Geburtsdatum ab (Bereich 1 der Lückenanalyse) — ein
+ * Umzug oder eine Namensänderung war über die Oberfläche sonst nicht
+ * abbildbar. Der Lebenszyklus (`status`/`pipeline_status`) läuft bewusst
+ * über die eigene Route PATCH /api/admin/clients/[id]/status.
+ *
+ * Audit-Trail:
+ * - Gesundheitsdaten: absichtlich nur die geänderten FELDNAMEN, nicht die
+ *   Werte — Allergien/Medikamente/Diagnosen gehören nicht als Klartext in
+ *   den Audit-Log.
+ * - Stammdaten: ebenfalls nur die Feldnamen; einzige Ausnahme ist eine
+ *   Namensänderung, bei der Vorher/Nachher protokolliert wird (der Name
+ *   stand ohnehin schon in jedem Eintrag und ist für die Nachvollziehbarkeit
+ *   von Rechnungen und Nachweisen nötig).
  */
 export async function PATCH(
   req: Request,
@@ -67,19 +71,13 @@ export async function PATCH(
       return NextResponse.json({ error: 'Ungültiger Request-Body.' }, { status: 400 })
     }
 
-    if (
-      body.mobility_status !== undefined && body.mobility_status !== null &&
-      body.mobility_status !== '' && !MOBILITY_VALUES.includes(body.mobility_status)
-    ) {
-      return NextResponse.json({ error: 'Ungültiger Wert für Mobilität.' }, { status: 400 })
-    }
-
-    if (body.next_of_kin_email && !EMAIL_RE.test(String(body.next_of_kin_email))) {
-      return NextResponse.json({ error: 'E-Mail-Adresse des Angehörigen ist ungültig.' }, { status: 400 })
+    const fehler = pruefeStammdaten(body as Record<string, unknown>)
+    if (fehler) {
+      return NextResponse.json({ error: fehler }, { status: 400 })
     }
 
     const updateData: Record<string, unknown> = {}
-    for (const field of ALLOWED_FIELDS) {
+    for (const field of ALLOWED_CLIENT_FIELDS) {
       if (field in body) {
         const v = body[field]
         updateData[field] = typeof v === 'string' ? (v.trim() || null) : v
@@ -91,6 +89,16 @@ export async function PATCH(
     }
 
     const admin = createAdminClient()
+
+    // Vorzustand nur für den Audit-Eintrag bei Namensänderung. Ein fehlender
+    // Datensatz führt weiter unten zu 404 — hier wird nicht abgebrochen,
+    // damit der Org-Fence des UPDATE die einzige Zugriffsprüfung bleibt.
+    const { data: vorher } = await admin
+      .from('clients')
+      .select('first_name, last_name')
+      .eq('id', id)
+      .eq('organization_id', auth.organizationId)
+      .maybeSingle()
 
     const { data: client, error: updateError } = await admin
       .from('clients')
@@ -107,6 +115,19 @@ export async function PATCH(
       return NextResponse.json({ error: 'Klient nicht gefunden.' }, { status: 404 })
     }
 
+    const geaendert = Object.keys(updateData)
+    const stammdatenFelder = geaendert.filter(f => STAMMDATEN_SET.has(f))
+    const gesundheitsFelder = geaendert.filter(f => !STAMMDATEN_SET.has(f))
+
+    const bereiche: string[] = []
+    if (stammdatenFelder.length > 0) bereiche.push('stammdaten')
+    if (gesundheitsFelder.length > 0) bereiche.push('gesundheitsdaten_notfallkontakte')
+
+    const nameGeaendert =
+      vorher != null &&
+      (`${vorher.first_name ?? ''} ${vorher.last_name ?? ''}`.trim() !==
+        `${client.first_name ?? ''} ${client.last_name ?? ''}`.trim())
+
     await logAuditEvent({
       action: 'update',
       actorId: auth.userId,
@@ -114,9 +135,12 @@ export async function PATCH(
       entityType: 'client',
       entityId: id,
       details: {
-        feld: 'gesundheitsdaten_notfallkontakte',
-        geaenderte_felder: Object.keys(updateData),
+        feld: bereiche.join('+'),
+        geaenderte_felder: geaendert,
         name: `${client.first_name} ${client.last_name}`,
+        ...(nameGeaendert
+          ? { name_vorher: `${vorher!.first_name ?? ''} ${vorher!.last_name ?? ''}`.trim() }
+          : {}),
       },
       request: req,
     })

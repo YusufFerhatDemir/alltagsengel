@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getActiveOrgId } from '@/lib/organizations/server'
 import { pruefeEinsatzfreigabe, pruefeClientFreigabe, pruefeBudget, pruefeVPBudget } from '@/lib/personal/einsatzfreigabe'
+import { pruefeCaregiverVerfuegbarkeit } from '@/lib/touren/server'
 import { logBillingAction } from '@/lib/billing/core/audit'
 import { logAuditEvent } from '@/lib/audit-log'
 import { safeErrorResponse, safeDbError } from '@/lib/utils/api-error'
@@ -125,6 +126,36 @@ export async function POST(req: NextRequest) {
     warnungen.push(`Einsatzfreigabe übersteuert: ${freigabe.probleme.join('; ')}`)
   }
 
+  // ── Abwesenheit + Verfügbarkeitsfenster ───────────────────────────
+  // Diese Prüfung gab es bisher NUR in der Tourenplanung (POST /api/tours).
+  // Über /api/einsatzplanung ließ sich einem Engel im genehmigten Urlaub ein
+  // Einsatz zuweisen (Bereich 3 der Lückenanalyse, P2). Gleiche Semantik wie
+  // dort: Abwesenheit blockiert (422, mit force_override übersteuerbar),
+  // ein Termin außerhalb der gepflegten angel_availability-Fenster warnt nur.
+  //
+  // Ohne assignment_date wird nicht geprüft: eine Serie (weekday +
+  // recurrence_rule) hat kein einzelnes Datum, gegen das sich eine
+  // Abwesenheit sinnvoll halten ließe.
+  if (assignment_date) {
+    const verfuegbarkeit = await pruefeCaregiverVerfuegbarkeit(
+      admin, caregiver_id, assignment_date, start_time ?? null, end_time ?? null
+    )
+    if (verfuegbarkeit.abwesend && !body.force_override) {
+      return NextResponse.json({
+        error: `Mitarbeiter "${freigabe.caregiverName}" ist am ${assignment_date} abwesend (${verfuegbarkeit.abwesenheitsGrund}).`,
+        hinweis: 'Mit force_override: true kann die Zuweisung erzwungen werden.',
+      }, { status: 422 })
+    }
+    if (verfuegbarkeit.abwesend) {
+      warnungen.push(`Abwesenheit übersteuert: ${verfuegbarkeit.abwesenheitsGrund}.`)
+    }
+    if (verfuegbarkeit.ausserhalbZeitfenster) {
+      warnungen.push('Einsatz liegt außerhalb der gepflegten Verfügbarkeits-Zeitfenster.')
+    }
+  } else {
+    warnungen.push('Ohne Einsatzdatum wurde keine Abwesenheits- und Verfügbarkeitsprüfung durchgeführt.')
+  }
+
   const isVP = service_type === 'verhinderungspflege' || service_type === 'verhinderung'
   const budgetCheck = await pruefeBudget(admin, client_id, organizationId, isVP ? 'verhinderungspflege' : undefined)
   if (budgetCheck.blockiert && !body.force_override) {
@@ -227,6 +258,7 @@ export async function PATCH(req: NextRequest) {
   if (!organizationId) {
     return NextResponse.json({ error: 'Keine Organisation zugewiesen.' }, { status: 403 })
   }
+  const patchWarnungen: string[] = []
   {
     const admin = createAdminClient()
     if (updates.caregiver_id) {
@@ -248,6 +280,42 @@ export async function PATCH(req: NextRequest) {
           client_probleme: clientCheck.probleme,
           hinweis: 'Mit force_override: true kann die Zuweisung erzwungen werden.',
         }, { status: 422 })
+      }
+    }
+
+    // ── Abwesenheit + Verfügbarkeitsfenster (gleiche Prüfung wie im POST) ──
+    // Greift, sobald sich Mitarbeiter, Datum oder Uhrzeit ändern. Nicht
+    // veränderte Werte kommen aus dem Bestand — sonst würde ein reiner
+    // Datumswechsel gegen den alten Tag geprüft und liefe ins Leere.
+    if (updates.caregiver_id || updates.assignment_date || updates.start_time || updates.end_time) {
+      const { data: bestand } = await admin
+        .from('assignments')
+        .select('caregiver_id, assignment_date, start_time, end_time')
+        .eq('id', id)
+        .eq('organization_id', organizationId)
+        .maybeSingle()
+
+      const caregiverId = updates.caregiver_id ?? bestand?.caregiver_id ?? null
+      const datum = updates.assignment_date ?? bestand?.assignment_date ?? null
+      const startZeit = updates.start_time ?? bestand?.start_time ?? null
+      const endeZeit = updates.end_time ?? bestand?.end_time ?? null
+
+      if (caregiverId && datum) {
+        const verfuegbarkeit = await pruefeCaregiverVerfuegbarkeit(
+          admin, caregiverId, datum, startZeit, endeZeit
+        )
+        if (verfuegbarkeit.abwesend && !force_override) {
+          return NextResponse.json({
+            error: `Mitarbeiter ist am ${datum} abwesend (${verfuegbarkeit.abwesenheitsGrund}).`,
+            hinweis: 'Mit force_override: true kann die Änderung erzwungen werden.',
+          }, { status: 422 })
+        }
+        if (verfuegbarkeit.abwesend) {
+          patchWarnungen.push(`Abwesenheit übersteuert: ${verfuegbarkeit.abwesenheitsGrund}.`)
+        }
+        if (verfuegbarkeit.ausserhalbZeitfenster) {
+          patchWarnungen.push('Einsatz liegt außerhalb der gepflegten Verfügbarkeits-Zeitfenster.')
+        }
       }
     }
   }
@@ -309,5 +377,5 @@ export async function PATCH(req: NextRequest) {
     request: req,
   }).catch(err => log.errorWithException('Audit-Log fehlgeschlagen', err))
 
-  return NextResponse.json(data)
+  return NextResponse.json({ ...data, warnungen: patchWarnungen.length > 0 ? patchWarnungen : undefined })
 }

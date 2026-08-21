@@ -77,6 +77,8 @@ export default function AdminBudgetsPage() {
         </div>
       </div>
 
+      <JahresuebertragPanel onFertig={() => window.location.reload()} />
+
       {/* Vorjahresübertrag-Warnung */}
       {carryoverSoon.length > 0 && (
         <Banner tone="warn">
@@ -148,4 +150,96 @@ export default function AdminBudgetsPage() {
       )}
     </div>
   )
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Jahresübertrag § 45b — manuell auslösbar
+// ═══════════════════════════════════════════════════════════════
+// uebertrageJahresbudgets() hing bisher nur an POST /api/admin/budgets/
+// jahresuebertrag, ohne Oberfläche und ohne Cron (Bereich 5 der
+// Lückenanalyse). Der Übertrag ins Folgejahr verfällt am 30.06. — wenn
+// ihn niemand auslöst, verfällt er ungenutzt.
+//
+// Der Cron /api/cron/jahresuebertrag läuft am 01.01.; dieser Knopf ist
+// der Nachhol- und Korrekturweg (die Funktion ist idempotent: sie setzt
+// carryover_amount, sie addiert nicht).
+function JahresuebertragPanel({ onFertig }: { onFertig: () => void }) {
+  const jetzt = new Date().getFullYear()
+  const [offen, setOffen] = useState(false)
+  const [vonJahr, setVonJahr] = useState(String(jetzt - 1))
+  const [nachJahr, setNachJahr] = useState(String(jetzt))
+  const [laeuft, setLaeuft] = useState(false)
+  const [err, setErr] = useState<string | null>(null)
+  const [ergebnis, setErgebnis] = useState<{ uebertragen: number; uebersprungen: number; fehler: string[] } | null>(null)
+
+  async function starten() {
+    setErr(null); setErgebnis(null); setLaeuft(true)
+    try {
+      const res = await fetch('/api/admin/budgets/jahresuebertrag', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ vonJahr: Number(vonJahr), nachJahr: Number(nachJahr) }),
+      })
+      const json = await res.json().catch(() => ({}))
+      if (!res.ok) { setErr(json.error || 'Jahresübertrag fehlgeschlagen.'); return }
+      setErgebnis({
+        uebertragen: json.uebertragen ?? 0,
+        uebersprungen: json.uebersprungen ?? 0,
+        fehler: json.fehler ?? [],
+      })
+      if ((json.uebertragen ?? 0) > 0) onFertig()
+    } catch (e: any) {
+      setErr(e?.message || 'Jahresübertrag fehlgeschlagen.')
+    } finally {
+      setLaeuft(false)
+    }
+  }
+
+  if (!offen) {
+    return (
+      <div style={{ margin: '4px 0 16px' }}>
+        <button className="admin-filter-btn" onClick={() => setOffen(true)}>
+          Jahresübertrag § 45b auslösen
+        </button>
+      </div>
+    )
+  }
+
+  return (
+    <div className="admin-stat-card" style={{ padding: 20, margin: '4px 0 16px' }}>
+      <h2 style={{ fontSize: 17, marginBottom: 8 }}>Jahresübertrag § 45b</h2>
+      <p style={{ fontSize: 13, color: 'var(--ink4)', margin: '0 0 12px' }}>
+        Überträgt nicht verbrauchte Entlastungsbeträge ins Folgejahr (§ 45b Abs. 1 S. 5 SGB XI).
+        Der Übertrag verfällt am 30.06. des Folgejahres. Verhinderungs-/Kurzzeitpflege wird
+        nicht übertragen. Der Lauf ist wiederholbar — er setzt den Übertrag, er addiert ihn nicht.
+      </p>
+      {err && <Banner tone="danger">{err}</Banner>}
+      {ergebnis && (
+        <Banner tone={ergebnis.fehler.length > 0 ? 'warn' : 'info'}>
+          {ergebnis.uebertragen} Budget(s) übertragen, {ergebnis.uebersprungen} ohne Restbetrag übersprungen.
+          {ergebnis.fehler.length > 0 && ` ${ergebnis.fehler.length} Fehler: ${ergebnis.fehler.join(' | ')}`}
+        </Banner>
+      )}
+      <div style={{ display: 'flex', gap: 12, alignItems: 'flex-end', flexWrap: 'wrap', marginTop: 10 }}>
+        <label style={{ display: 'block' }}>
+          <span style={{ fontSize: 12, color: 'var(--ink3)', fontWeight: 600 }}>von Jahr</span>
+          <div><input type="number" value={vonJahr} onChange={e => setVonJahr(e.target.value)} style={jahrInput} /></div>
+        </label>
+        <label style={{ display: 'block' }}>
+          <span style={{ fontSize: 12, color: 'var(--ink3)', fontWeight: 600 }}>nach Jahr</span>
+          <div><input type="number" value={nachJahr} onChange={e => setNachJahr(e.target.value)} style={jahrInput} /></div>
+        </label>
+        <button className="admin-filter-btn active" onClick={starten} disabled={laeuft}>
+          {laeuft ? 'Läuft…' : 'Übertrag starten'}
+        </button>
+        <button className="admin-filter-btn" onClick={() => setOffen(false)} disabled={laeuft}>Schließen</button>
+      </div>
+    </div>
+  )
+}
+
+const jahrInput: React.CSSProperties = {
+  width: 110, padding: '9px 12px', border: '1px solid var(--border)', borderRadius: 10,
+  fontSize: 14, background: 'var(--coal3)', color: 'var(--ink)', fontFamily: "'Jost',sans-serif",
+  outline: 'none', boxSizing: 'border-box',
 }
