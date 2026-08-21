@@ -69,3 +69,5 @@ Chronologische Dokumentation aller KI-gestuetzten Arbeitssitzungen.
 | 311d3a0 | API Error Sanitizer: 166 weitere Routen migriert (gesamt 202/217) |
 | aa280e6 | Error Boundaries pro Route-Segment: SharedErrorContent + 10 error.tsx |
 | 6de1254 | P1 Security: MFA/TOTP für Admin-Konten — Einrichtung, Prüfung, AAL2-Guards, 15 Tests |
+| 193076e | Structured Logging (lib/logger.ts, 12 Tests) + DSFA Alltagsengel (Selbstbewertung §45b) |
+| 0e0a1aa | Monitoring: Health-Endpoint, Metrics-Buffer, Admin-Dashboard, Uptime-GitHub-Action, 6 Tests |

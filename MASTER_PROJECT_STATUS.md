@@ -1,7 +1,7 @@
 # MASTER PROJECT STATUS
 
-> Stand: 21.08.2026 16:00 | Baseline: FINAL_FINAL_GO_LIVE_REPORT_2026-08-21.md
-> CI: #306-#309 green, #310 in progress (6de1254) | HEAD: 6de1254
+> Stand: 21.08.2026 16:45 | Baseline: FINAL_FINAL_GO_LIVE_REPORT_2026-08-21.md
+> CI: #306-#309,#311 green, #310 cancelled (superseded), #312-#313 in progress | HEAD: 0e0a1aa
 
 ---
 
@@ -111,7 +111,7 @@ Supabase: pwdbjqfpgumyfktbfswg
 |---|------|------|-----|
 | ~~1~~ | ~~`ignoreBuildErrors: true` entfernen~~ | ~~P0~~ | **ERLEDIGT** (bereits entfernt) |
 | ~~2~~ | ~~Hardcodierter anon-Key Fallback entfernen~~ | ~~P0~~ | **ERLEDIGT** (cfb6c88, 30 Dateien) |
-| 3 | TypeScript-Fehler fixen (strict mode) | P1 | INTERN |
+| ~~3~~ | ~~TypeScript-Fehler fixen (strict mode)~~ | ~~P1~~ | **NICHT ZUTREFFEND** (ChairMatch = statisches HTML, kein TS) |
 | 4 | E2E-Tests fuer Booking/Payment | P1 | INTERN |
 | 5 | i18n-Abdeckung | P1 | INTERN |
 | 6 | Supabase API-Keys rotieren | P1 | INTERN |
@@ -133,8 +133,8 @@ Letzter Check: 21.08.2026
 ### Offene P0/P1 Items
 | # | Item | Prio | Typ |
 |---|------|------|-----|
-| 1 | Monitoring/Alerting einrichten | P1 | INTERN |
-| 2 | Structured Logging | P1 | INTERN |
+| ~~1~~ | ~~Monitoring/Alerting einrichten~~ | ~~P1~~ | **ERLEDIGT** (Health-Endpoint, Metrics, Uptime-Action, 0e0a1aa) |
+| ~~2~~ | ~~Structured Logging~~ | ~~P1~~ | **ERLEDIGT** (lib/logger.ts, 7 Dateien migriert, 12 Tests, 193076e) |
 | ~~3~~ | ~~Error Boundaries pro Route-Segment~~ | ~~P1~~ | **ERLEDIGT** (10 Segmente + Root, aa280e6) |
 
 ---
@@ -156,7 +156,7 @@ Letzter Check: 21.08.2026
 |---|------|------|-----|
 | 1 | SEPA Creditor-ID Platzhalter | MEDIUM | EXTERN (Bankantrag) |
 | ~~2~~ | ~~Loeschkonzept dokumentieren~~ | ~~MEDIUM~~ | **ERLEDIGT** (docs/LOESCHKONZEPT.md, 5e8ff5a) |
-| 3 | DSFA erstellen | P1 | INTERN (kein Startblocker) |
+| ~~3~~ | ~~DSFA erstellen~~ | ~~P1~~ | **ERLEDIGT** (docs/DSFA_ALLTAGSENGEL.md, Selbstbewertung, 193076e) |
 | 4 | AVV mit Supabase/Vercel abschliessen | P1 | EXTERN |
 | 5 | BSI C5 / ISO 27001 (nur fuer DiPA/BfArM) | P1 | EXTERN |
 | 6 | BITV/WCAG Barrierefreiheit | P1 | INTERN |
