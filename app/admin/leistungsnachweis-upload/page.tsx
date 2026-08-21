@@ -8,6 +8,8 @@ import { euro, formatDate, fullName, statusMeta, OCR_STATUS, REVIEW_ERROR_TYPE }
 import { Banner, EmptyRow, StatusBadge } from '@/components/admin/OpsUI'
 import { createDraftServiceRecordAction } from './actions'
 import { one } from '@/lib/supabase/join'
+import { logger } from '@/lib/logger';
+const log = logger.child('admin:leistungsnachweis-upload');
 
 interface Option { id: string; label: string }
 
@@ -120,7 +122,7 @@ export default function LeistungsnachweisUploadPage() {
         .select('id, service_record_id, image_url, confidence, status, engine, created_at, service_record:service_records(client:clients(first_name, last_name))')
         .order('created_at', { ascending: false })
         .limit(30)
-      if (e) { console.error('OCR-Historie Ladefehler:', e); setLoadingRecent(false); return }
+      if (e) { log.errorWithException('OCR-Historie Ladefehler', e); setLoadingRecent(false); return }
 
       const rows = (data || [])
       const ids = rows.map(r => r.id)
@@ -148,7 +150,7 @@ export default function LeistungsnachweisUploadPage() {
         errorCount: errorCounts[r.id] || 0,
       })))
     } catch (err) {
-      console.error('OCR-Historie Fehler:', err)
+      log.errorWithException('OCR-Historie Fehler', err)
     } finally {
       setLoadingRecent(false)
     }
@@ -248,7 +250,7 @@ export default function LeistungsnachweisUploadPage() {
       if (fileInputRef.current) fileInputRef.current.value = ''
       loadRecent()
     } catch (err: any) {
-      console.error('OCR-Fehler:', err)
+      log.errorWithException('OCR-Fehler', err)
       setError('Fehler bei der Texterkennung. Bitte erneut versuchen (gute Beleuchtung hilft).')
     } finally {
       setScanning(false)

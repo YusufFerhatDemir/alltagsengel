@@ -3,6 +3,8 @@ import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { legeHkpVerordnungAn, listeHkpVerordnungen } from '@/lib/abrechnung/sgb-v/verordnung-service'
+import { logger } from '@/lib/logger'
+const log = logger.child('billing/sgb-v/verordnungen')
 
 /** GET /api/billing/sgb-v/verordnungen — Liste der HKP-Verordnungen (§ 37 SGB V). */
 export async function GET(request: Request) {
@@ -47,7 +49,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ id }, { status: 201 })
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Interner Serverfehler'
-    console.error('[billing/sgb-v/verordnungen] Fehler:', message)
+    log.error('Fehler', { message })
     return NextResponse.json({ error: message }, { status: 400 })
   }
 }

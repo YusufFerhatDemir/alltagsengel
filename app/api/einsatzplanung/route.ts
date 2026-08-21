@@ -6,6 +6,8 @@ import { pruefeEinsatzfreigabe, pruefeClientFreigabe, pruefeBudget, pruefeVPBudg
 import { logBillingAction } from '@/lib/billing/core/audit'
 import { logAuditEvent } from '@/lib/audit-log'
 import { safeErrorResponse, safeDbError } from '@/lib/utils/api-error'
+import { logger } from '@/lib/logger'
+const log = logger.child('einsatzplanung')
 
 async function requireStaff(supabase: Awaited<ReturnType<typeof createClient>>) {
   const { data: { user } } = await supabase.auth.getUser()
@@ -195,7 +197,7 @@ export async function POST(req: NextRequest) {
     entityId: data.id,
     details: { nachher: data },
     request: req,
-  }).catch(err => console.error('[einsatzplanung] Audit-Log fehlgeschlagen:', err))
+  }).catch(err => log.errorWithException('Audit-Log fehlgeschlagen', err))
 
   return NextResponse.json({ ...data, warnungen: warnungen.length > 0 ? warnungen : undefined }, { status: 201 })
 }
@@ -304,7 +306,7 @@ export async function PATCH(req: NextRequest) {
     entityId: id,
     details: { aenderungen: safeUpdates },
     request: req,
-  }).catch(err => console.error('[einsatzplanung] Audit-Log fehlgeschlagen:', err))
+  }).catch(err => log.errorWithException('Audit-Log fehlgeschlagen', err))
 
   return NextResponse.json(data)
 }

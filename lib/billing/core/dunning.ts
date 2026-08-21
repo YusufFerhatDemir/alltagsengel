@@ -1,6 +1,8 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { logBillingAction } from './audit'
 import { datumBerlin, heuteBerlin } from '@/lib/utils/timezone';
+import { logger } from '@/lib/logger';
+const log = logger.child('mahnlauf');
 
 // ---------------------------------------------------------------------------
 // Types
@@ -501,7 +503,7 @@ export async function runDunningRun(
         await sendDunningEmail(supabase, esc.invoiceId, organizationId, actorId)
         emailCount++
       } catch (err) {
-        console.error('[MAHNLAUF] E-Mail-Versand fehlgeschlagen:', esc.invoiceId, err)
+        log.errorWithException('E-Mail-Versand fehlgeschlagen', err, { invoiceId: esc.invoiceId })
       }
     }
     result.emailsVersendet = emailCount
@@ -562,7 +564,7 @@ async function sendDunningEmail(
   })
 
   if (queueError) {
-    console.error('[MAHNLAUF] E-Mail-Queue-Insert fehlgeschlagen:', queueError.message)
+    log.error('E-Mail-Queue-Insert fehlgeschlagen', { errorMessage: queueError.message })
   }
 
   await logBillingAction(supabase, {

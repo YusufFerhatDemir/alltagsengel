@@ -4,6 +4,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { formatDate, formatTime, fullName, WEEKDAYS, BUNDESLAND_LABELS } from '@/lib/admin/ops'
 import { StatusBadge, Banner, EmptyRow } from '@/components/admin/OpsUI'
+import { logger } from '@/lib/logger';
+const log = logger.child('admin:kalender');
 
 // ── Status-Farben ──────────────────────────────────────────────
 const STATUS_COLORS: Record<string, { label: string; color: string }> = {
@@ -207,7 +209,7 @@ export default function AdminKalenderPage() {
       setCaregiverOptions((cgRes.data || []).map((c: any) => ({ id: c.id, name: fullName(c) })))
       setClientOptions((clRes.data || []).map((c: any) => ({ id: c.id, name: fullName(c) })))
     } catch (err) {
-      console.error('Kalender load error:', err)
+      log.errorWithException('Kalender load error', err)
     } finally {
       setLoading(false)
     }

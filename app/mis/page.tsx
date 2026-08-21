@@ -6,6 +6,8 @@ import { useMis } from '@/lib/mis/MisContext'
 import { useRouter } from 'next/navigation'
 import { KpiCard, SectionHeader, Card, MiniBarChart, ProgressBar, ActivityItem, StatRow, MisButton, Badge, DataTable } from '@/components/mis/MisComponents'
 import { MIcon } from '@/components/mis/MisIcons'
+import { logger } from '@/lib/logger'
+const log = logger.child('mis')
 
 // ===== DASHBOARD: Control Pilot View =====
 export default function DashboardPage() {
@@ -36,7 +38,7 @@ export default function DashboardPage() {
       })
       setRecentBookings(bookings || [])
     } catch (e) {
-      console.error('Dashboard load error:', e)
+      log.errorWithException('Dashboard load error', e)
     } finally {
       setLoading(false)
     }

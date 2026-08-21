@@ -6,6 +6,8 @@ import { SectionHeader, Card, DataTable, MisButton, SearchInput, Badge, Tabs, Em
 import { MIcon } from '@/components/mis/MisIcons'
 import { useMis } from '@/lib/mis/MisContext'
 import { createSignatureRequest, updateSignatureRequestStatus, deleteSignatureRequest } from './actions'
+import { logger } from '@/lib/logger'
+const log = logger.child('mis:signatures')
 
 // ===== Unterschrift-Status =====
 const SIG_STATUS: Record<string, { label: string; color: string }> = {
@@ -54,10 +56,10 @@ export default function SignaturesPage() {
         .from('mis_signature_requests')
         .select('*')
         .order('created_at', { ascending: false })
-      if (error) console.error('Signatures error:', error)
+      if (error) log.errorWithException('Signatures error', error)
       setRequests(data as SignatureRequest[] || [])
     } catch (err) {
-      console.error('Signatures load error:', err)
+      log.errorWithException('Signatures load error', err)
     }
     setLoading(false)
   }

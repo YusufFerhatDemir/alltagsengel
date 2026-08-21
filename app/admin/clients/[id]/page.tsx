@@ -9,6 +9,8 @@ import {
 } from '@/lib/admin/ops'
 import { AmpelDot, BudgetBar, StatusBadge, Banner, EmptyRow } from '@/components/admin/OpsUI'
 import { CareNotesPanel } from '@/components/admin/CareNotesPanel'
+import { logger } from '@/lib/logger'
+const log = logger.child('admin:clients')
 
 interface ClientDetail {
   id: string
@@ -102,7 +104,7 @@ export default function ClientDetailPage() {
         caregiver: fullName(r.caregiver),
       })))
     } catch (err) {
-      console.error('Client detail load error:', err)
+      log.errorWithException('Client detail load error', err)
       setNotFound(true)
     } finally {
       setLoading(false)

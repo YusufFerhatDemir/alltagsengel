@@ -8,6 +8,8 @@ import Icon3D from '@/components/Icon3D'
 import { useUserLocation } from '@/hooks/useUserLocation'
 import { useTrackVisit } from '@/hooks/useTrackVisit'
 import { updateProviderCity, claimRide as claimRideAction, startRide as startRideAction, completeRide as completeRideAction } from './actions'
+import { logger } from '@/lib/logger';
+const log = logger.child('fahrer:home');
 
 interface Ride {
   id: string
@@ -101,7 +103,7 @@ export default function FahrerHomePage() {
   // Standort in DB aktualisieren
   useEffect(() => {
     if (!userLocation.loading && userLocation.city && provider) {
-      updateProviderCity(provider.id, userLocation.city).catch((err) => console.warn('[Fahrer-Home] Standort-Aktualisierung fehlgeschlagen (non-blocking):', err))
+      updateProviderCity(provider.id, userLocation.city).catch((err) => log.warnWithException('Standort-Aktualisierung fehlgeschlagen (non-blocking)', err, { scope: 'Fahrer-Home' }))
     }
   }, [userLocation.loading, userLocation.city, provider])
 
@@ -110,10 +112,10 @@ export default function FahrerHomePage() {
     setActionInProgress(rideId)
     try {
       const result = await claimRideAction(rideId)
-      if (!result.ok) console.error(result.error)
+      if (!result.ok) log.errorWithException('Unerwarteter Fehler', result.error)
       await loadData()
     } catch (err) {
-      console.error(err)
+      log.errorWithException('Unerwarteter Fehler', err)
     } finally {
       setActionInProgress(null)
     }
@@ -123,10 +125,10 @@ export default function FahrerHomePage() {
     setActionInProgress(rideId)
     try {
       const result = await startRideAction(rideId)
-      if (!result.ok) console.error(result.error)
+      if (!result.ok) log.errorWithException('Unerwarteter Fehler', result.error)
       await loadData()
     } catch (err) {
-      console.error(err)
+      log.errorWithException('Unerwarteter Fehler', err)
     } finally {
       setActionInProgress(null)
     }
@@ -136,10 +138,10 @@ export default function FahrerHomePage() {
     setActionInProgress(rideId)
     try {
       const result = await completeRideAction(rideId)
-      if (!result.ok) console.error(result.error)
+      if (!result.ok) log.errorWithException('Unerwarteter Fehler', result.error)
       await loadData()
     } catch (err) {
-      console.error(err)
+      log.errorWithException('Unerwarteter Fehler', err)
     } finally {
       setActionInProgress(null)
     }

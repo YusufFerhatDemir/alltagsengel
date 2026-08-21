@@ -13,6 +13,8 @@ import {
   type DiagnoseTyp,
   type PflegeDiagnose,
 } from './types'
+import { logger } from '@/lib/logger'
+const log = logger.child('pflege-audit')
 
 export interface CreateDiagnoseParams {
   organizationId: string
@@ -61,7 +63,7 @@ export async function createDiagnose(supabase: SupabaseClient, params: CreateDia
     aktion: 'erstellt',
     nachher: data,
     akteurId: params.erstelltVon,
-  }).catch((err) => console.error('[pflege-audit] Diagnose-Log fehlgeschlagen:', err))
+  }).catch((err) => log.errorWithException('Diagnose-Log fehlgeschlagen', err))
 
   return data as PflegeDiagnose
 }
@@ -156,7 +158,7 @@ export async function updateDiagnose(
     entitaetId: id,
     aktion: patch.aktiv === false ? 'geloescht' : 'aktualisiert',
     nachher: data,
-  }).catch((err) => console.error('[pflege-audit] Diagnose-Log fehlgeschlagen:', err))
+  }).catch((err) => log.errorWithException('Diagnose-Log fehlgeschlagen', err))
 
   return data as PflegeDiagnose
 }

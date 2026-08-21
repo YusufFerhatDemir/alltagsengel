@@ -1,5 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { AuditEntitaetTyp, AuditAktion, PersonalAuditLog } from './types'
+import { logger } from '@/lib/logger'
+const log = logger.child('personal-audit')
 
 export interface WriteAuditParams {
   organizationId: string
@@ -28,7 +30,7 @@ export async function writeAuditLog(supabase: SupabaseClient, params: WriteAudit
     benutzer_rolle: params.benutzerRolle ?? null,
   })
   if (error) {
-    console.error('[AUDIT] Insert fehlgeschlagen:', error.message, params.entitaetTyp, params.entitaetId)
+    log.error('Insert fehlgeschlagen', { errorMessage: error.message, entitaetTyp: params.entitaetTyp, entitaetId: params.entitaetId })
   }
 }
 

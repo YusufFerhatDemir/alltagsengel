@@ -1,4 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { logger } from '@/lib/logger'
+const log = logger.child('safe-query')
 
 /* ── UUID Validation ── */
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
@@ -10,7 +12,7 @@ export function isValidUUID(id: string): boolean {
 /* ── Error Logger ── */
 export function logError(context: string, error: unknown) {
   const msg = error instanceof Error ? error.message : String(error)
-  console.error(`[AlltagsEngel] ${context}:`, msg)
+  log.error(`${context}:`, { msg })
   // Future: send to Sentry / LogRocket / PostHog
 }
 

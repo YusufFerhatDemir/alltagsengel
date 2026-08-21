@@ -7,6 +7,8 @@ import Link from 'next/link'
 import Icon3D from '@/components/Icon3D'
 import { flushPendingProfile } from '@/lib/pending-profile'
 import { codeAbfrageNoetig, type MfaNiveau } from '@/lib/coach/mfa'
+import { logger } from '@/lib/logger'
+const log = logger.child('login')
 
 // ═══ Brute-Force Schutz: Konstanten ═══
 const MAX_CLIENT_ATTEMPTS = 5
@@ -122,7 +124,7 @@ function LoginForm() {
         setAttemptsWarning(data.message)
       }
     } catch (err) {
-      console.error('Fehler in reportFailedLogin:', err)
+      log.errorWithException('Fehler in reportFailedLogin', err)
     }
   }, [])
 
@@ -139,7 +141,7 @@ function LoginForm() {
       setLockoutMessage('')
       setAttemptsWarning('')
     } catch (err) {
-      console.error('Fehler in reportSuccessfulLogin:', err)
+      log.errorWithException('Fehler in reportSuccessfulLogin', err)
     }
   }, [])
 
@@ -165,7 +167,7 @@ function LoginForm() {
       await reportFailedLogin(loginEmail)
 
       // Failed Login loggen (im Hintergrund)
-      logFailedLogin(loginEmail).catch((err) => console.warn('[Login] Failed-Login-Logging fehlgeschlagen (non-blocking):', err))
+      logFailedLogin(loginEmail).catch((err) => log.warnWithException('Failed-Login-Logging fehlgeschlagen (non-blocking)', err))
 
       // AUTH-005 Fix: Keine E-Mail-Enumeration mehr — generische Fehlermeldung für alle Auth-Fehler,
       // die an E-Mail-Existenz gekoppelt sind. Details nur server-seitig in mis_auth_log.
@@ -218,7 +220,7 @@ function LoginForm() {
     const role = (user.user_metadata?.role as string) || ''
 
     // Log im Hintergrund
-    logSuccessLogin().catch((err) => console.warn('[Login] Success-Login-Logging fehlgeschlagen (non-blocking):', err))
+    logSuccessLogin().catch((err) => log.warnWithException('Success-Login-Logging fehlgeschlagen (non-blocking)', err))
 
     // Bei der Registrierung geparkte Profildaten (u.a. PLZ) nachtragen —
     // relevant, wenn signUp wegen E-Mail-Bestätigung keine Session hatte.

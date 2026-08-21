@@ -13,6 +13,8 @@ import {
   formatDate, statusMeta,
   ABSENCE_TYPE, ABSENCE_STATUS,
 } from '@/lib/admin/ops'
+import { logger } from '@/lib/logger'
+const log = logger.child('engel:urlaub')
 
 interface Urlaubskonto {
   anspruch_tage: number
@@ -91,7 +93,7 @@ export default function UrlaubPage() {
       if (absErr) throw absErr
       setAbwesenheiten((absData || []) as Abwesenheit[])
     } catch (err) {
-      console.error('Urlaub laden:', err)
+      log.errorWithException('Urlaub laden', err)
       const code = (err as { code?: string })?.code
       setError(
         code === 'PGRST205'
@@ -142,7 +144,7 @@ export default function UrlaubPage() {
       setTimeout(() => setSuccess(''), 4000)
       laden()
     } catch (err: any) {
-      console.error('Abwesenheit beantragen:', err)
+      log.errorWithException('Abwesenheit beantragen', err)
       setError(err.message || 'Abwesenheit konnte nicht beantragt werden.')
     } finally {
       setSaving(false)

@@ -6,6 +6,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { requirePortalAccess, hatPortalBereichZugriff } from '@/lib/angehoerige/portal-helpers'
 import { protokolliereZugriff } from '@/lib/angehoerige/angehoerige'
+import { logger } from '@/lib/logger'
+const log = logger.child('angehoerige-kommunikation')
 
 export async function GET() {
   const auth = await requirePortalAccess()
@@ -109,7 +111,7 @@ export async function POST(request: NextRequest) {
     client_id: zugang.client_id,
     aktion: 'nachricht_gesendet',
     details: { nachricht_id: nachricht?.id },
-  }).catch((err) => console.warn('[Angehoerige-Kommunikation] Zugriffs-Protokollierung fehlgeschlagen (non-blocking):', err))
+  }).catch((err) => log.warnWithException('Zugriffs-Protokollierung fehlgeschlagen (non-blocking)', err))
 
   return NextResponse.json({ nachricht })
 }

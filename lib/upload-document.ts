@@ -1,4 +1,6 @@
 import { createClient } from './supabase/client'
+import { logger } from '@/lib/logger'
+const log = logger.child('upload-document')
 
 // ═══════════════════════════════════════════════════════════════
 // uploadDocument — Robuster Datei-Upload mit Timeout + Validierung
@@ -129,7 +131,7 @@ export async function uploadDocument(
     const { error: uploadErr } = result as { error: unknown }
 
     if (uploadErr) {
-      console.error('[uploadDocument] Storage error:', uploadErr)
+      log.errorWithException('Storage error', uploadErr)
       return {
         ok: false,
         errorCode: 'storage_error',
@@ -146,7 +148,7 @@ export async function uploadDocument(
           'Der Upload hat zu lange gedauert. Bitte wechsle zu WLAN oder wähle ein kleineres Foto.',
       }
     }
-    console.error('[uploadDocument] Network exception:', err)
+    log.errorWithException('Network exception', err)
     return {
       ok: false,
       errorCode: 'network',
@@ -166,7 +168,7 @@ export async function uploadDocument(
     .createSignedUrl(filePath, SIGNED_URL_TTL_SECONDS)
 
   if (signErr || !signedData?.signedUrl) {
-    console.error('[uploadDocument] Signed URL error:', signErr)
+    log.errorWithException('Signed URL error', signErr)
     try {
       await supabase.storage.from('documents').remove([filePath])
     } catch {
@@ -191,7 +193,7 @@ export async function uploadDocument(
   })
 
   if (insertErr) {
-    console.error('[uploadDocument] DB insert error:', insertErr)
+    log.errorWithException('DB insert error', insertErr)
     // Best-effort Rollback: Datei aus Storage löschen, damit kein Ghost-Upload entsteht
     try {
       await supabase.storage.from('documents').remove([filePath])
@@ -224,7 +226,7 @@ export async function getSignedDocumentUrl(
     .from('documents')
     .createSignedUrl(filePath, expiresInSeconds)
   if (error || !data?.signedUrl) {
-    console.error('[getSignedDocumentUrl] Signed URL error:', error)
+    log.errorWithException('Signed URL error', error, { scope: 'getSignedDocumentUrl' })
     return null
   }
   return data.signedUrl
@@ -268,7 +270,7 @@ export async function deleteDocument(documentId: string): Promise<DeleteResult> 
       .remove([doc.file_path])
 
     if (storageError) {
-      console.error('[deleteDocument] Storage-Löschfehler:', storageError.message)
+      log.error('Storage-Löschfehler', { errorMessage: storageError.message, scope: 'deleteDocument' })
       // Trotzdem DB-Eintrag löschen — verwaiste Dateien sind besser als unlöschbare Einträge
     }
   }

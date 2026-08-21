@@ -1,5 +1,7 @@
 import webpush from 'web-push'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { logger } from '@/lib/logger'
+const log = logger.child('push')
 
 // ─── VAPID Config ───
 const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || ''
@@ -52,14 +54,14 @@ async function sendToSubscription(
   } catch (err: any) {
     // 410 Gone or 404 = subscription expired, remove it
     if (err.statusCode === 410 || err.statusCode === 404) {
-      console.log(`Push subscription expired (${err.statusCode}), removing:`, subscription.endpoint)
+      log.info(`Push subscription expired (${err.statusCode}), removing:`, { endpoint: subscription.endpoint })
       const supabase = createAdminClient()
       await supabase
         .from('push_subscriptions')
         .delete()
         .eq('endpoint', subscription.endpoint)
     } else {
-      console.error('Push send error:', err.statusCode, err.body)
+      log.error('Push send error', { statusCode: err.statusCode, body: err.body })
     }
     return false
   }
@@ -71,7 +73,7 @@ export async function sendPushToUser(
   payload: PushPayload
 ): Promise<{ sent: number; failed: number }> {
   if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) {
-    console.log('VAPID keys not configured — push skipped')
+    log.info('VAPID keys not configured — push skipped')
     return { sent: 0, failed: 0 }
   }
 
@@ -84,7 +86,7 @@ export async function sendPushToUser(
     .eq('user_id', userId)
 
   if (error || !subscriptions?.length) {
-    if (error) console.error('Push: Error fetching subscriptions:', error.message)
+    if (error) log.error('Push: Error fetching subscriptions', { errorMessage: error.message })
     return { sent: 0, failed: 0 }
   }
 
@@ -96,6 +98,6 @@ export async function sendPushToUser(
   const sent = results.filter((r) => r.status === 'fulfilled' && r.value).length
   const failed = results.length - sent
 
-  console.log(`Push sent to user ${userId}: ${sent}/${results.length} successful`)
+  log.info(`Push sent to user ${userId}: ${sent}/${results.length} successful`)
   return { sent, failed }
 }

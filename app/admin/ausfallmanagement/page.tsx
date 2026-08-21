@@ -4,6 +4,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { formatDate, fullName, ABSENCE_TYPE, ABSENCE_STATUS } from '@/lib/admin/ops'
 import { StatusBadge, SearchInput, EmptyRow, Banner } from '@/components/admin/OpsUI'
+import { logger } from '@/lib/logger';
+const log = logger.child('admin:ausfallmanagement');
 
 // ── Typen ──────────────────────────────────────────────────────
 interface Abwesenheit {
@@ -109,7 +111,7 @@ export default function AusfallmanagementPage() {
         vertretung_grund: t.vertretung_grund,
       })))
     } catch (err) {
-      console.error('Ausfallmanagement load error:', err)
+      log.errorWithException('Ausfallmanagement load error', err)
     } finally {
       setLoading(false)
     }
@@ -150,7 +152,7 @@ export default function AusfallmanagementPage() {
         setKandidaten(Array.isArray(data) ? data : [])
       }
     } catch (err) {
-      console.error('Kandidaten-Fehler:', err)
+      log.errorWithException('Kandidaten-Fehler', err)
     } finally {
       setLadtKandidaten(false)
     }

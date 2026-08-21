@@ -21,6 +21,8 @@ import { sammleFristen, type FristItem, type FristEntitaetTyp } from './fristen-
 import { ersterPdlDerOrg } from './org-empfaenger'
 import { logAuditEvent } from '@/lib/audit-log'
 import type { AufgabenKategorie } from '@/lib/ops/types'
+import { logger } from '@/lib/logger'
+const log = logger.child('eskalation-fristen')
 
 const KATEGORIE: Record<FristEntitaetTyp, AufgabenKategorie> = {
   qualifikation: 'qualifikation',
@@ -90,7 +92,7 @@ async function erstelleFristEskalationsAufgabe(
     .maybeSingle()
 
   if (dupErr) {
-    console.error(`[eskalation-fristen] Dublettenprüfung fehlgeschlagen: ${dupErr.message}`)
+    log.error('Dublettenprüfung fehlgeschlagen', { errorMessage: dupErr.message })
     throw new Error(`Dublettenprüfung fehlgeschlagen: ${dupErr.message}`)
   }
   if (vorhanden) return false
@@ -131,7 +133,7 @@ async function erstelleFristEskalationsAufgabe(
     .single()
 
   if (error || !aufgabe) {
-    console.error(`[eskalation-fristen] Anlage fehlgeschlagen: ${error?.message}`)
+    log.error('Anlage fehlgeschlagen', { errorMessage: error?.message })
     throw new Error(error?.message ?? 'Aufgabe konnte nicht angelegt werden')
   }
 
@@ -142,7 +144,7 @@ async function erstelleFristEskalationsAufgabe(
     entityType: 'ops_aufgabe',
     entityId: aufgabe.id,
     details: { grund: 'frist_abgelaufen', frist_entitaet_typ: item.entitaetTyp, frist_entitaet_id: item.entitaetId },
-  }).catch(err => console.error(`[eskalation-fristen] Audit fehlgeschlagen: ${err}`))
+  }).catch(err => log.error('Audit fehlgeschlagen', { errorMessage: String(err) }))
 
   return true
 }

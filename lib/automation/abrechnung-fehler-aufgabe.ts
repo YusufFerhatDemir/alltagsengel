@@ -19,6 +19,8 @@ import { logAuditEvent } from '@/lib/audit-log'
 import { emitEreignis } from '@/lib/ops/ereignis-emitter'
 import { ersterPdlDerOrg } from './org-empfaenger'
 import { heuteBerlin } from '@/lib/utils/timezone'
+import { logger } from '@/lib/logger'
+const log = logger.child('abrechnung-fehler')
 
 export interface AbrechnungsFehlerParams {
   organizationId: string
@@ -54,7 +56,7 @@ export async function meldeAbrechnungsfehler(
     .maybeSingle()
 
   if (dupErr) {
-    console.error(`[abrechnung-fehler] Dublettenprüfung fehlgeschlagen: ${dupErr.message}`)
+    log.error('Dublettenprüfung fehlgeschlagen', { errorMessage: dupErr.message })
     return { aufgabeId: null, erstellt: false, dublette: false }
   }
   if (vorhanden) {
@@ -96,7 +98,7 @@ export async function meldeAbrechnungsfehler(
     .single()
 
   if (error || !aufgabe) {
-    console.error(`[abrechnung-fehler] Anlage fehlgeschlagen: ${error?.message}`)
+    log.error('Anlage fehlgeschlagen', { errorMessage: error?.message })
     return { aufgabeId: null, erstellt: false, dublette: false }
   }
 
@@ -104,7 +106,7 @@ export async function meldeAbrechnungsfehler(
     action: 'create', actorId: params.actorId, organizationId: params.organizationId,
     entityType: 'ops_aufgabe', entityId: aufgabe.id,
     details: { grund: 'abrechnung_fehler', abrechnungsmonat: params.abrechnungsmonat, bundesland: params.bundesland },
-  }).catch(err => console.error(`[abrechnung-fehler] Audit fehlgeschlagen: ${err}`))
+  }).catch(err => log.error('Audit fehlgeschlagen', { errorMessage: String(err) }))
 
   await emitEreignis(supabase, {
     organizationId: params.organizationId,
@@ -112,7 +114,7 @@ export async function meldeAbrechnungsfehler(
     entitaetId: aufgabe.id,
     akteurId: params.actorId,
     kontext: { titel, abrechnungsmonat: params.abrechnungsmonat, aufgabe_id: aufgabe.id },
-  }).catch(err => console.error(`[abrechnung-fehler] Ereignis-Emit fehlgeschlagen: ${err}`))
+  }).catch(err => log.error('Ereignis-Emit fehlgeschlagen', { errorMessage: String(err) }))
 
   return { aufgabeId: aufgabe.id, erstellt: true, dublette: false }
 }

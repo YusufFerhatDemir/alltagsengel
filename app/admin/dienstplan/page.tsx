@@ -3,6 +3,8 @@ import { datumBerlin } from '@/lib/utils/timezone';
 import { useEffect, useMemo, useState } from 'react'
 import { statusMeta, formatTime, DIENSTPLAN_STATUS, DIENSTPLAN_TYP, WEEKDAYS } from '@/lib/admin/ops'
 import { StatusBadge, EmptyRow, Banner } from '@/components/admin/OpsUI'
+import { logger } from '@/lib/logger';
+const log = logger.child('admin:dienstplan');
 
 interface Eintrag {
   id: string
@@ -79,7 +81,7 @@ export default function DienstplanPage() {
         const von = formatISO(weekStart)
         const bis = formatISO(weekEnd)
         const res = await fetch(`/api/personal/dienstplan/eintraege?datumVon=${von}&datumBis=${bis}`)
-        if (!res.ok) { console.error('Dienstplan laden fehlgeschlagen'); setLoading(false); return }
+        if (!res.ok) { log.error('Dienstplan laden fehlgeschlagen'); setLoading(false); return }
         const data = await res.json()
         setEintraege((data.eintraege || data || []).map((r: any) => ({
           id: r.id,
@@ -96,7 +98,7 @@ export default function DienstplanPage() {
           notizen: r.notizen || null,
         })))
       } catch (err) {
-        console.error('Dienstplan laden fehlgeschlagen', err)
+        log.errorWithException('Dienstplan laden fehlgeschlagen', err)
       } finally {
         setLoading(false)
       }
@@ -164,7 +166,7 @@ export default function DienstplanPage() {
         setCreateError(message)
       }
     } catch (err) {
-      console.error('Eintrag erstellen fehlgeschlagen', err)
+      log.errorWithException('Eintrag erstellen fehlgeschlagen', err)
       setCreateError('Eintrag konnte nicht gespeichert werden (Netzwerkfehler).')
     } finally {
       setCreating(false)

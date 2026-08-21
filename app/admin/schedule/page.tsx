@@ -8,6 +8,8 @@ import {
 } from '@/lib/admin/ops'
 import { escalateRequest, markRequestFailed, toggleClientNotified, assignSubstitute, reportAbsence, createSubstitutionRequest } from './actions'
 import { StatusBadge, Banner, EmptyRow } from '@/components/admin/OpsUI'
+import { logger } from '@/lib/logger';
+const log = logger.child('admin:schedule');
 
 // ── Datums-Helfer für die laufende Woche ────────────────────────
 function mondayOfWeek(base: Date): Date {
@@ -100,7 +102,7 @@ export default function AdminSchedulePage() {
       })))
       setPreferred((prRes.data || []) as { client_id: string; caregiver_id: string; priority: number }[])
     } catch (err) {
-      console.error('Schedule load error:', err)
+      log.errorWithException('Schedule load error', err)
     } finally {
       setLoading(false)
     }

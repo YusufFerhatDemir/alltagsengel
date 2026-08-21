@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
+import { logger } from '@/lib/logger'
+const log = logger.child('admin/zuzahlungen')
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -53,7 +55,7 @@ export async function PATCH(
       .maybeSingle()
 
     if (error) {
-      console.error('[admin/zuzahlungen] Update fehlgeschlagen:', error.message)
+      log.error('Update fehlgeschlagen', { errorMessage: error.message })
       return NextResponse.json({ error: `Speichern fehlgeschlagen: ${error.message}` }, { status: 500 })
     }
     if (!data) return NextResponse.json({ error: 'Nicht gefunden' }, { status: 404 })

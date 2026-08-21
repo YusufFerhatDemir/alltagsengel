@@ -3,6 +3,8 @@ import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { logAuditEvent } from '@/lib/audit-log'
+import { logger } from '@/lib/logger'
+const log = logger.child('admin/ueberleitung')
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -40,7 +42,7 @@ export async function GET(
       .maybeSingle()
 
     if (error) {
-      console.error('[admin/ueberleitung] Laden fehlgeschlagen:', error.message)
+      log.error('Laden fehlgeschlagen', { errorMessage: error.message })
       return NextResponse.json({ error: 'Interner Serverfehler' }, { status: 500 })
     }
     if (!data) return NextResponse.json({ error: 'Nicht gefunden' }, { status: 404 })
@@ -80,7 +82,7 @@ export async function PATCH(
       .maybeSingle()
 
     if (error) {
-      console.error('[admin/ueberleitung] Update fehlgeschlagen:', error.message)
+      log.error('Update fehlgeschlagen', { errorMessage: error.message })
       return NextResponse.json({ error: `Speichern fehlgeschlagen: ${error.message}` }, { status: 500 })
     }
     if (!data) return NextResponse.json({ error: 'Nicht gefunden' }, { status: 404 })
@@ -94,7 +96,7 @@ export async function PATCH(
       entityId: data.id,
       details: { nachher: eingabe },
       request: req,
-    }).catch(err => console.error('[admin/ueberleitung] Audit-Log fehlgeschlagen:', err))
+    }).catch(err => log.errorWithException('Audit-Log fehlgeschlagen', err))
 
     return NextResponse.json({ erfolg: true, id: data.id })
   } catch (e) {

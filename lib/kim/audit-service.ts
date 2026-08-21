@@ -1,4 +1,6 @@
 import type { KimClient, KimAuditLogEntry } from './types'
+import { logger } from '@/lib/logger'
+const log = logger.child('kim-audit')
 
 export type KimAuditAktion =
   | 'erstellt'
@@ -39,7 +41,7 @@ export async function writeKimAuditLog(supabase: KimClient, params: WriteKimAudi
     details: params.details ?? {},
   })
   if (error) {
-    console.error('[kim-audit] Insert fehlgeschlagen:', error.message, params.aktion, params.messageId)
+    log.error('Insert fehlgeschlagen', { errorMessage: error.message, aktion: params.aktion, messageId: params.messageId })
   }
 }
 

@@ -3,6 +3,8 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { saveFahrerProfile } from './actions'
+import { logger } from '@/lib/logger'
+const log = logger.child('fahrer:profil')
 
 export default function FahrerProfilPage() {
   const router = useRouter()
@@ -60,13 +62,13 @@ export default function FahrerProfilPage() {
 
       if (!result.ok) {
         setSuccess('')
-        console.error(result.error)
+        log.errorWithException('Unerwarteter Fehler', result.error)
       } else {
         setSuccess('Profil gespeichert!')
         setTimeout(() => setSuccess(''), 3000)
       }
     } catch (err) {
-      console.error(err)
+      log.errorWithException('Unerwarteter Fehler', err)
     } finally {
       setSaving(false)
     }

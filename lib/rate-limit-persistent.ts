@@ -18,6 +18,8 @@
 
 import { createAdminClient } from '@/lib/supabase/admin'
 import { rateLimit } from '@/lib/rate-limit'
+import { logger } from '@/lib/logger'
+const log = logger.child('rate-limit')
 
 /** Warnung nur einmal pro Instanz, nicht pro Request. */
 let fallbackGewarnt = false
@@ -25,10 +27,10 @@ let fallbackGewarnt = false
 function fallback(key: string, limit: number, windowMs: number, grund: string): boolean {
   if (!fallbackGewarnt) {
     fallbackGewarnt = true
-    console.warn(
-      '[rate-limit] Persistenter Limiter nicht verfuegbar, Fallback auf In-Memory ' +
-        '(Migration 20260922030000_persistenter_api_ratelimit.sql eingespielt?):',
-      grund,
+    log.warn(
+      'Persistenter Limiter nicht verfuegbar, Fallback auf In-Memory ' +
+        '(Migration 20260922030000_persistenter_api_ratelimit.sql eingespielt?)',
+      { grund },
     )
   }
   return rateLimit(key, limit, windowMs)

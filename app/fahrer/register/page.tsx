@@ -7,6 +7,8 @@ import Icon3D from '@/components/Icon3D'
 import { trackRegistration } from '@/lib/tracking'
 import * as Sentry from '@sentry/nextjs'
 import { registerFahrerProfile } from './actions'
+import { logger } from '@/lib/logger'
+const log = logger.child('fahrer/register')
 
 export default function FahrerRegisterPage() {
   const router = useRouter()
@@ -93,14 +95,14 @@ export default function FahrerRegisterPage() {
           setError('Zu viele Versuche. Bitte warten Sie einen Moment.')
         } else if (authError.message.includes('Database error')) {
           // Meist ein fehlschlagender Trigger auf auth.users → profiles.
-          console.error('[fahrer/register] auth.signUp Database error:', authError.message)
+          log.error('auth.signUp Database error', { errorMessage: authError.message })
           Sentry.captureException(new Error(`fahrer register signUp Database error: ${authError.message}`), {
             tags: { flow: 'register', role: 'fahrer' },
           })
           setError('Registrierung fehlgeschlagen. Bitte versuchen Sie es später erneut.')
         } else {
           // AUTH-005: keine rohen Supabase-Messages an Bewerber leaken.
-          console.warn('[fahrer/register] unmapped supabase error:', authError.message, (authError as { code?: string }).code)
+          log.warn('unmapped supabase error', { errorMessage: authError.message, errorCode: (authError as { code?: string }).code })
           Sentry.captureException(new Error(`fahrer register signUp unmapped error: ${authError.message}`), {
             tags: { flow: 'register', role: 'fahrer' },
           })
@@ -152,7 +154,7 @@ export default function FahrerRegisterPage() {
             email: formData.email,
             phone: formData.phone,
           }),
-        }).catch((err) => console.warn('[Fahrer-Register] Registrierungs-Tracking fehlgeschlagen (non-blocking):', err))
+        }).catch((err) => log.warnWithException('Registrierungs-Tracking fehlgeschlagen (non-blocking)', err, { scope: 'Fahrer-Register' }))
       }
 
       // Redirect to home if session exists

@@ -6,6 +6,8 @@ import { ladeAbrechnungslauf } from '@/lib/abrechnung/sgb-v/abrechnungslauf'
 import { ladeAufbereitung } from '@/lib/abrechnung/sgb-v/versand'
 import { erzeugePruefExport } from '@/lib/abrechnung/sgb-v/export-generator'
 import { ladeWarteschlange, reiheEin, verarbeiteEintrag, type AdapterTyp } from '@/lib/abrechnung/sgb-v/transport-adapter'
+import { logger } from '@/lib/logger'
+const log = logger.child('billing/sgb-v/laeufe/[id]')
 
 const ADAPTER_TYPEN: AdapterTyp[] = ['mock', 'file_export', 'dakota', 'kim']
 
@@ -70,7 +72,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     return NextResponse.json({ queueId, ergebnis })
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Interner Serverfehler'
-    console.error('[billing/sgb-v/laeufe/[id]/queue] Fehler:', message)
+    log.error('/queue] Fehler', { message })
     return NextResponse.json({ error: message }, { status: 400 })
   }
 }

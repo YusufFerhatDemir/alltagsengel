@@ -6,6 +6,8 @@ import { SectionHeader, Card, DataTable, MisButton, SearchInput, Badge, Tabs, Em
 import { MIcon } from '@/components/mis/MisIcons'
 import { useMis } from '@/lib/mis/MisContext'
 import { createContract, updateContractStatus, deleteContract } from './actions'
+import { logger } from '@/lib/logger'
+const log = logger.child('mis:contracts')
 
 // ===== Vertrags-Status-Labels =====
 const CONTRACT_STATUS: Record<string, { label: string; color: string }> = {
@@ -59,10 +61,10 @@ export default function ContractsPage() {
         .from('mis_contracts')
         .select('*')
         .order('end_date', { ascending: true, nullsFirst: false })
-      if (error) console.error('Contracts error:', error)
+      if (error) log.errorWithException('Contracts error', error)
       setContracts(data as Contract[] || [])
     } catch (err) {
-      console.error('Contracts load error:', err)
+      log.errorWithException('Contracts load error', err)
     }
     setLoading(false)
   }

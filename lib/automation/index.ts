@@ -25,6 +25,8 @@ import { erinnereFehlendeUnterschriften } from './unterschrift-erinnerung'
 import { pruefeMonatsabschlussVollstaendigkeit } from './monatsabschluss-pruefung'
 import { pruefeVitalwerteUndMeldePdl } from './vitalwerte-pdl'
 import { escaliereUeberfaellige } from '@/lib/abrechnung/fristen-manager'
+import { logger } from '@/lib/logger'
+const log = logger.child('automatisierung')
 
 export interface AutomatisierungsErgebnis {
   organizationId: string
@@ -39,7 +41,7 @@ async function ketteAusfuehren<T>(
   try {
     ketten[name] = { ok: true, ergebnis: await fn() }
   } catch (err) {
-    console.error(`[automatisierung] Kette "${name}" fehlgeschlagen: ${err}`)
+    log.error(`Kette "${name}" fehlgeschlagen: ${err}`)
     ketten[name] = { ok: false, fehler: (err as Error).message }
   }
 }

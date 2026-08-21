@@ -9,6 +9,8 @@ import {
 } from '@/lib/admin/ops'
 import { AmpelDot, BudgetBar, StatusBadge, SearchInput, EmptyRow } from '@/components/admin/OpsUI'
 import AmpelSummaryWidget from '@/components/admin/AmpelSummaryWidget'
+import { logger } from '@/lib/logger';
+const log = logger.child('admin:monatsabschluss');
 
 interface ClosingRow {
   client_id: string
@@ -125,7 +127,7 @@ function MonatsabschlussInner() {
         result.sort((a, b) => a.client.localeCompare(b.client, 'de'))
         if (!cancelled) setRows(result)
       } catch (err) {
-        console.error('Monatsabschluss load error:', err)
+        log.errorWithException('Monatsabschluss load error', err)
       } finally {
         if (!cancelled) setLoading(false)
       }

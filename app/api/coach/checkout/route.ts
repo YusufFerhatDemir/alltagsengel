@@ -35,6 +35,8 @@ import {
   istTarifKey, istVerkaufBereit, tarif, VERKAUF_GESPERRT_TEXT,
 } from '@/lib/coach/pricing'
 import { WIDERRUFSBELEHRUNG_VERSION } from '@/lib/coach/rechtstexte'
+import { logger } from '@/lib/logger'
+const log = logger.child('coach-checkout')
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -106,7 +108,7 @@ export async function POST(request: Request) {
     if (!bereit.bereit) {
       // Der interne Grund wandert ins Protokoll, nicht in die Antwort —
       // die Konfigurationslage geht Kundinnen und Kunden nichts an.
-      console.warn(`[Coach-Checkout] Verkauf gesperrt (${bereit.code}): ${bereit.grund}`)
+      log.warn(`Verkauf gesperrt (${bereit.code}): ${bereit.grund}`)
       return NextResponse.json(
         { error: VERKAUF_GESPERRT_TEXT, code: bereit.code },
         { status: 409 }
@@ -204,7 +206,7 @@ export async function POST(request: Request) {
       .single()
 
     if (anlageFehler || !bestellung) {
-      console.error('[Coach-Checkout] Bestellung konnte nicht angelegt werden:', anlageFehler)
+      log.error('Bestellung konnte nicht angelegt werden', { anlageFehler })
       return NextResponse.json(
         { error: 'Die Bestellung konnte nicht angelegt werden. Bitte versuchen Sie es erneut.' },
         { status: 500 }
@@ -239,7 +241,7 @@ export async function POST(request: Request) {
       .eq('id', bestellung.id)
 
     if (!sitzung.url) {
-      console.error('[Coach-Checkout] Stripe lieferte keine Weiterleitungs-URL')
+      log.error('Stripe lieferte keine Weiterleitungs-URL')
       return NextResponse.json(
         { error: 'Die Zahlungsseite konnte nicht geöffnet werden. Bitte versuchen Sie es erneut.' },
         { status: 502 }

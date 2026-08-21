@@ -35,6 +35,8 @@ import {
   istVerordnungPflicht, KEINE_VERORDNUNG_HINWEIS, BUDGET_DEFAULT_CENT,
 } from '@/lib/admin/ops'
 import { StatusBadge, SearchInput, EmptyRow, Banner, AmpelDot } from '@/components/admin/OpsUI'
+import { logger } from '@/lib/logger';
+const log = logger.child('admin:verordnungen');
 
 // ── Typen ───────────────────────────────────────────────────────
 interface Verordnung {
@@ -339,7 +341,7 @@ export default function AdminVerordnungenPage() {
       })))
       setLeistungen((lRes.data || []) as LeistungRow[])
     } catch (err: any) {
-      console.error('Verordnungen Ladefehler:', err)
+      log.errorWithException('Verordnungen Ladefehler', err)
       setError('Unerwarteter Fehler beim Laden.')
     } finally {
       setLoading(false)
@@ -360,7 +362,7 @@ export default function AdminVerordnungenPage() {
         praxis_name: a.praxis_name,
       })))
     } catch (err) {
-      console.error('Aerzte-Stammdaten Ladefehler:', err)
+      log.errorWithException('Aerzte-Stammdaten Ladefehler', err)
     }
   }
 

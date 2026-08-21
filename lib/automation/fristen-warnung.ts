@@ -19,6 +19,8 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { sammleFristen, type FristItem, type FristEntitaetTyp } from './fristen-sammler'
 import { rollentraegerDerOrg } from './org-empfaenger'
 import type { BenachrichtigungBezugTyp, BenachrichtigungKategorie } from '@/lib/ops/types'
+import { logger } from '@/lib/logger'
+const log = logger.child('fristen-warnung')
 
 /** Tage-Schwellen, an denen gewarnt wird (absteigend, erste passende gewinnt). */
 const SCHWELLEN = [30, 14, 7] as const
@@ -85,7 +87,7 @@ async function bereitsGewarnt(
   if (error) {
     // Fail-closed für Dubletten: bei Unsicherheit lieber keine weitere
     // Benachrichtigung erzeugen als den Nutzer zuzuspammen.
-    console.error(`[fristen-warnung] Dublettenprüfung fehlgeschlagen: ${error.message}`)
+    log.error('Dublettenprüfung fehlgeschlagen', { errorMessage: error.message })
     return true
   }
   return !!data

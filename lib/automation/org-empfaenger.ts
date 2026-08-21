@@ -10,6 +10,8 @@
  */
 
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { logger } from '@/lib/logger'
+const log = logger.child('automation')
 
 export async function rollentraegerDerOrg(
   supabase: SupabaseClient,
@@ -22,7 +24,7 @@ export async function rollentraegerDerOrg(
     .eq('organization_id', organizationId)
 
   if (mErr) {
-    console.error(`[automation] organization_members fehlgeschlagen: ${mErr.message}`)
+    log.error('organization_members fehlgeschlagen', { errorMessage: mErr.message })
     return []
   }
 
@@ -37,7 +39,7 @@ export async function rollentraegerDerOrg(
     .is('deleted_at', null)
 
   if (pErr) {
-    console.error(`[automation] profiles fehlgeschlagen: ${pErr.message}`)
+    log.error('profiles fehlgeschlagen', { errorMessage: pErr.message })
     return []
   }
 

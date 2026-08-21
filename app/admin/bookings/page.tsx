@@ -1,6 +1,8 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { logger } from '@/lib/logger'
+const log = logger.child('admin:bookings')
 
 interface BookingRow {
   id: string
@@ -38,7 +40,7 @@ export default function AdminBookingsPage() {
           .order('created_at', { ascending: false })
 
         if (bookingsError) {
-          console.error('Bookings load error:', bookingsError)
+          log.errorWithException('Bookings load error', bookingsError)
           setError(`Fehler beim Laden: ${bookingsError.message}`)
           setLoading(false)
           return
@@ -80,7 +82,7 @@ export default function AdminBookingsPage() {
 
         setBookings(rows)
       } catch (err: any) {
-        console.error('Bookings page error:', err)
+        log.errorWithException('Bookings page error', err)
         setError(`Unerwarteter Fehler: ${err.message}`)
       } finally {
         setLoading(false)

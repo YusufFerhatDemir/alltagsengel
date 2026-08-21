@@ -19,6 +19,8 @@ import {
   PAGE_HEIGHT,
   MARGIN,
 } from '@/lib/pdf/briefkopf'
+import { logger } from '@/lib/logger'
+const log = logger.child('generate-pdf')
 
 // ═══════════════════════════════════════════════════════════════
 // POST /api/admin/invoices/[id]/generate-pdf
@@ -397,7 +399,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
               }
             }
           } catch (imgErr) {
-            console.error('[generate-pdf] Signatur-Einbettung fehlgeschlagen:', imgErr)
+            log.errorWithException('Signatur-Einbettung fehlgeschlagen', imgErr)
           }
           ensureNachweisSpace(20)
           const roleLabel = sig.signer_role === 'client' ? 'Klient' : 'Betreuungskraft'
@@ -504,7 +506,7 @@ async function embedImageBytes(pdfDoc: PDFDocument, bytes: Uint8Array): Promise<
       const jpg = await pdfDoc.embedJpg(bytes)
       return { image: jpg, width: jpg.width, height: jpg.height }
     } catch (e) {
-      console.error('[generate-pdf] Bild konnte weder als PNG noch JPG eingebettet werden:', e)
+      log.errorWithException('Bild konnte weder als PNG noch JPG eingebettet werden', e)
       return null
     }
   }

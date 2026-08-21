@@ -2,6 +2,8 @@
 
 import * as Sentry from '@sentry/nextjs'
 import { useEffect } from 'react'
+import { logger } from '@/lib/logger'
+const log = logger.child('ui:ErrorContent')
 
 /**
  * Wiederverwendbare Fehlerseiten-Komponente fuer alle Route-Segmente.
@@ -29,7 +31,7 @@ export default function ErrorContent({
   zurueckLabel?: string
 }) {
   useEffect(() => {
-    console.error(`[${bereich}] Fehler:`, error)
+    log.errorWithException('Fehler', error, { bereich })
     Sentry.captureException(error, { tags: { bereich } })
   }, [error, bereich])
 

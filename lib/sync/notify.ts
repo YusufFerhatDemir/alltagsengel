@@ -7,6 +7,8 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { sendFCMToUser } from '@/lib/fcm'
+import { logger } from '@/lib/logger'
+const log = logger.child('sync/notify')
 
 export async function benachrichtigeSyncFehler(
   userId: string,
@@ -21,7 +23,7 @@ export async function benachrichtigeSyncFehler(
       url: '/engel/pflegedoku',
     })
   } catch (err) {
-    console.error('[sync/notify] Push für Sync-Fehler fehlgeschlagen:', err)
+    log.errorWithException('Push für Sync-Fehler fehlgeschlagen', err)
   }
 }
 
@@ -37,6 +39,6 @@ export async function benachrichtigeKonflikt(
       url: '/admin/sync-konflikte',
     })
   } catch (err) {
-    console.error('[sync/notify] Push für Sync-Konflikt fehlgeschlagen:', err)
+    log.errorWithException('Push für Sync-Konflikt fehlgeschlagen', err)
   }
 }

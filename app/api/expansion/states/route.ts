@@ -19,6 +19,8 @@ import { requireExpansionAdmin } from '@/lib/expansion/api-auth'
 import { adminMatrix, invalidateStateCache } from '@/lib/expansion/state-settings'
 import { normalizeBundesland } from '@/lib/expansion/plz-bundesland'
 import { istExpansionStatus } from '@/lib/expansion/types'
+import { logger } from '@/lib/logger'
+const log = logger.child('expansion/states')
 
 export const dynamic = 'force-dynamic'
 
@@ -45,7 +47,7 @@ export async function GET() {
   }
 
   // Fallback, solange 20260808130000 noch nicht angewendet ist: nackte Matrix.
-  console.warn('[expansion/states] Dashboard-View nicht verfügbar:', error?.message)
+  log.warn('Dashboard-View nicht verfügbar', { errorMessage: error?.message })
   const matrix = await adminMatrix(auth.orgId)
   return NextResponse.json({
     organization_id: auth.orgId,
@@ -153,7 +155,7 @@ export async function PATCH(request: NextRequest) {
   })
 
   if (error) {
-    console.error('[expansion/states] PATCH fehlgeschlagen:', error.message)
+    log.error('PATCH fehlgeschlagen', { errorMessage: error.message })
     return NextResponse.json(
       { error: `Änderung fehlgeschlagen: ${error.message}` },
       { status: 400 }

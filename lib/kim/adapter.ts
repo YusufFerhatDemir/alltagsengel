@@ -40,6 +40,8 @@
 
 import { ExternGesperrtError, istFreigegeben, pruefeFreigabe } from '../abrechnung/externe-freigaben'
 import { kimVersandImplementiert } from './versand'
+import { logger } from '@/lib/logger'
+const log = logger.child('kim/adapter')
 
 // ── Datentypen der Schnittstelle ────────────────────────────────
 
@@ -169,9 +171,7 @@ export function registriereKimAdapter(adapter: KimAdapter): void {
     throw new Error('Ungültiger KIM-Adapter: name, senden, empfangen und status sind Pflicht')
   }
   if (registrierterAdapter && registrierterAdapter.name !== adapter.name) {
-    console.warn(
-      `[kim/adapter] Adapter gewechselt: "${registrierterAdapter.name}" → "${adapter.name}"`,
-    )
+    log.warn(`Adapter gewechselt: "${registrierterAdapter.name}" → "${adapter.name}"`)
   }
   registrierterAdapter = adapter
 }

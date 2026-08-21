@@ -6,6 +6,8 @@ import {
   NACHRICHTEN_KATEGORIE, NACHRICHTEN_PRIORITAET,
 } from '@/lib/admin/ops'
 import { StatusBadge, SearchInput, EmptyRow, Banner } from '@/components/admin/OpsUI'
+import { logger } from '@/lib/logger'
+const log = logger.child('admin:nachrichten')
 
 interface NachrichtRow {
   id: string
@@ -58,7 +60,7 @@ export default function NachrichtenPage() {
       const data = await res.json()
       setRows(data)
     } catch (err) {
-      console.error('Fehler beim Laden der Nachrichten:', err)
+      log.errorWithException('Fehler beim Laden der Nachrichten', err)
       setError('Netzwerkfehler beim Laden der Nachrichten.')
     } finally { setLoading(false) }
   }

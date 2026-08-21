@@ -9,6 +9,8 @@ import {
 } from '@/lib/admin/ops'
 import { awardBonus } from './actions'
 import { StatusBadge, EmptyRow, Banner } from '@/components/admin/OpsUI'
+import { logger } from '@/lib/logger';
+const log = logger.child('admin:bonuses');
 
 interface Caregiver { id: string; name: string; status: string }
 interface BonusRow {
@@ -190,7 +192,7 @@ export default function AdminBonusesPage() {
         awarded_date: b.awarded_date,
       })))
     } catch (err) {
-      console.error('Bonuses load error:', err)
+      log.errorWithException('Bonuses load error', err)
     } finally {
       setLoading(false)
     }

@@ -1,3 +1,6 @@
+import { logger } from '@/lib/logger'
+const log = logger.child('abrechnung')
+
 // ═══════════════════════════════════════════════════════════════
 // Schlüsselverzeichnisse für die Abrechnung nach § 105 Abs. 2 SGB XI
 // Quelle: Technische Anlage 3 (Schlüsselverzeichnisse), Version 6.5.0,
@@ -472,7 +475,7 @@ export async function findeDatenannahmestelleAsync(
       // Nicht still auf die hardcodierte Tabelle zurueckfallen, ohne dass es
       // jemand sieht — eine kaputte Abfrage darf nicht wie "nichts
       // konfiguriert" aussehen.
-      console.error(`datenannahmestellen-Lookup fehlgeschlagen: ${error.message}`)
+      log.error('datenannahmestellen-Lookup fehlgeschlagen', { errorMessage: error.message })
     }
     if (data) {
       return { ik: data.ik_nummer, name: data.name, kassenart }

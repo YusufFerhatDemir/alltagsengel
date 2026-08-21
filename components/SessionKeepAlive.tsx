@@ -2,6 +2,8 @@
 import { useEffect } from 'react'
 import * as Sentry from '@sentry/nextjs'
 import { createClient, readSessionFromIDB, writeSessionCookie, writeSessionBackup } from '@/lib/supabase/client'
+import { logger } from '@/lib/logger'
+const log = logger.child('ui:SessionKeepAlive')
 
 /**
  * SessionKeepAlive — WhatsApp-Level Session-Persistenz
@@ -42,17 +44,17 @@ export default function SessionKeepAlive() {
                 refresh_token: parsed.refresh_token,
               })
               if (error) {
-                console.warn('[SessionKeepAlive] IDB-Recovery Refresh fehlgeschlagen:', error.message)
+                log.warn('IDB-Recovery Refresh fehlgeschlagen', { errorMessage: error.message })
                 Sentry.captureException(error, { tags: { source: 'SessionKeepAlive.idb_recovery' } })
               }
             }
           } catch (parseErr) {
-            console.warn('[SessionKeepAlive] IDB-Session JSON-Parse fehlgeschlagen')
+            log.warn('IDB-Session JSON-Parse fehlgeschlagen')
             Sentry.captureException(parseErr, { tags: { source: 'SessionKeepAlive.idb_parse' } })
           }
         }
       } catch (err) {
-        console.warn('[SessionKeepAlive] IDB-Recovery Fehler:', err)
+        log.warnWithException('IDB-Recovery Fehler', err)
         Sentry.captureException(err, { tags: { source: 'SessionKeepAlive.idb_recover_outer' } })
       }
     }
@@ -85,7 +87,7 @@ export default function SessionKeepAlive() {
           if (session) {
             supabase.auth.refreshSession().then(({ error }) => {
               if (error) {
-                console.warn('[SessionKeepAlive] Visibility refresh fehlgeschlagen:', error.message)
+                log.warn('Visibility refresh fehlgeschlagen', { errorMessage: error.message })
                 Sentry.captureException(error, { tags: { source: 'SessionKeepAlive.visibility' } })
               }
             })
@@ -101,7 +103,7 @@ export default function SessionKeepAlive() {
         if (session) {
           supabase.auth.refreshSession().then(({ error }) => {
             if (error) {
-              console.warn('[SessionKeepAlive] Focus refresh fehlgeschlagen:', error.message)
+              log.warn('Focus refresh fehlgeschlagen', { errorMessage: error.message })
               Sentry.captureException(error, { tags: { source: 'SessionKeepAlive.focus' } })
             }
           })
@@ -121,7 +123,7 @@ export default function SessionKeepAlive() {
               if (session) {
                 supabase.auth.refreshSession().then(({ error }) => {
                   if (error) {
-                    console.warn('[SessionKeepAlive] Capacitor resume refresh fehlgeschlagen:', error.message)
+                    log.warn('Capacitor resume refresh fehlgeschlagen', { errorMessage: error.message })
                     Sentry.captureException(error, { tags: { source: 'SessionKeepAlive.capacitor' } })
                   }
                 })
@@ -142,7 +144,7 @@ export default function SessionKeepAlive() {
           if (session) {
             supabase.auth.refreshSession().then(({ error }) => {
               if (error) {
-                console.warn('[SessionKeepAlive] Periodic refresh fehlgeschlagen:', error.message)
+                log.warn('Periodic refresh fehlgeschlagen', { errorMessage: error.message })
                 Sentry.captureException(error, { tags: { source: 'SessionKeepAlive.periodic' } })
               }
             })

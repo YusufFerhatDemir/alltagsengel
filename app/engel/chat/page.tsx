@@ -5,6 +5,8 @@ import Link from 'next/link'
 import { IconChat, IconUser } from '@/components/Icons'
 import type { Profile } from '@/lib/types'
 import { one } from '@/lib/supabase/join'
+import { logger } from '@/lib/logger'
+const log = logger.child('engel:chat')
 
 export default function EngelChatPage() {
   const [chats, setChats] = useState<any[]>([])
@@ -64,7 +66,7 @@ export default function EngelChatPage() {
       }
       setChats(chatList)
     } catch (err) {
-      console.error('Engel chat load error:', err)
+      log.errorWithException('Engel chat load error', err)
       setError('Fehler beim Laden der Nachrichten. Bitte versuche es später erneut.')
     } finally {
       setLoading(false)

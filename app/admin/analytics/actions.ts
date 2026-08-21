@@ -2,6 +2,8 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { getActiveOrgId } from '@/lib/organizations/server'
+import { logger } from '@/lib/logger'
+const log = logger.child('analytics')
 
 async function requireAnalyticsAdmin() {
   const supabase = await createClient()
@@ -77,7 +79,7 @@ export async function loadAnalyticsData(dateFilter: 'today' | '7d' | '30d' | 'al
 
   const { data: viewsData, error: viewsError } = await query
   if (viewsError) {
-    console.error('[Analytics] page_views load error:', viewsError.message)
+    log.error('page_views load error', { errorMessage: viewsError.message })
   }
 
   // --- visitors mit org-Filter ---

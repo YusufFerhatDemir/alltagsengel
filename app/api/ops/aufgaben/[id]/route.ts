@@ -3,6 +3,8 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { getAufgabe, updateAufgabe, deleteAufgabe } from '@/lib/ops/aufgaben'
 import { logAktivitaet } from '@/lib/ops/aktivitaetslog'
+import { logger } from '@/lib/logger'
+const log = logger.child('api:ops')
 
 export async function GET(
   request: Request,
@@ -49,7 +51,7 @@ export async function PATCH(
       vorher,
       nachher: data,
       akteurId: auth.ctx.userId,
-    }).catch((err) => console.error(`Aktivitaetslog (Aufgabe aktualisiert) fehlgeschlagen: ${err}`))
+    }).catch((err) => log.error('Aktivitaetslog (Aufgabe aktualisiert) fehlgeschlagen', { errorMessage: String(err) }))
     return NextResponse.json(data)
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 400 })
@@ -77,7 +79,7 @@ export async function DELETE(
       aktion: 'archiviert',
       vorher,
       akteurId: auth.ctx.userId,
-    }).catch((err) => console.error(`Aktivitaetslog (Aufgabe geloescht) fehlgeschlagen: ${err}`))
+    }).catch((err) => log.error('Aktivitaetslog (Aufgabe geloescht) fehlgeschlagen', { errorMessage: String(err) }))
     return NextResponse.json(data)
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 400 })

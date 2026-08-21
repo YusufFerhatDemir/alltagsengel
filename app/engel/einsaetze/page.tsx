@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { requireUser } from '@/lib/supabase/require-session'
 import SignaturePad from '@/components/admin/SignaturePad'
+import { logger } from '@/lib/logger';
+const log = logger.child('engel:einsaetze');
 
 const STATUS_META: Record<string, { label: string; color: string }> = {
   GEPLANT: { label: 'Geplant', color: '#2196F3' },
@@ -82,7 +84,7 @@ export default function EngelEinsaetzePage() {
         client_name: a.client ? `${a.client.first_name || ''} ${a.client.last_name || ''}`.trim() : '—',
       })))
     } catch (e) {
-      console.error('Load error:', e)
+      log.errorWithException('Load error', e)
     } finally {
       setLoading(false)
     }

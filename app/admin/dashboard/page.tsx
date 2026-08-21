@@ -8,6 +8,8 @@ import {
   ABSENCE_TYPE, type Ampel,
 } from '@/lib/admin/ops'
 import { AmpelDot, StatusBadge, Banner } from '@/components/admin/OpsUI'
+import { logger } from '@/lib/logger';
+const log = logger.child('admin:dashboard');
 
 interface DashStats {
   newClients: number
@@ -121,7 +123,7 @@ export default function AdminDashboardPage() {
           reason: a.reason,
         })))
       } catch (err) {
-        console.error('Dashboard load error:', err)
+        log.errorWithException('Dashboard load error', err)
         setError('Die Übersicht konnte nicht vollständig geladen werden. Bitte Seite neu laden.')
       } finally {
         setLoading(false)

@@ -17,6 +17,8 @@
 
 import { useEffect } from 'react'
 import Link from 'next/link'
+import { logger } from '@/lib/logger'
+const log = logger.child('pflegecoach')
 
 export default function CoachFehlerseite({
   error,
@@ -26,7 +28,7 @@ export default function CoachFehlerseite({
   reset: () => void
 }) {
   useEffect(() => {
-    console.error('[pflegecoach] Unerwarteter Fehler:', error)
+    log.errorWithException('Unerwarteter Fehler', error)
   }, [error])
 
   return (

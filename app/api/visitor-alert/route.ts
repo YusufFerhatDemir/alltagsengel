@@ -3,6 +3,8 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { getActiveOrgIdOrDefault } from '@/lib/organizations/server'
 import { escapeHtml, getClientIp } from '@/lib/rate-limit'
 import { rateLimitPersistent } from '@/lib/rate-limit-persistent'
+import { logger } from '@/lib/logger'
+const log = logger.child('api:visitor-alert')
 
 // Einzeiler + Längen-Cap für Felder, die in E-Mail-HTML landen.
 // Verhindert HTML-/Link-Injection (der Endpunkt ist bewusst anonym aufrufbar,
@@ -188,7 +190,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ ok: true, alerted: true })
   } catch (err: any) {
-    console.error('Visitor alert error:', err)
+    log.errorWithException('Visitor alert error', err)
     return NextResponse.json({ ok: true })
   }
 }

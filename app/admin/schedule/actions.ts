@@ -3,6 +3,8 @@
 import { createClient } from '@/lib/supabase/server'
 import { getActiveOrgId } from '@/lib/organizations/server'
 import { logAuditEvent } from '@/lib/audit-log'
+import { logger } from '@/lib/logger'
+const log = logger.child('schedule')
 
 // ═══════════════════════════════════════════════════════════════
 // Server-seitige Aktionen für Einsatzplanung & Ausfallmanagement
@@ -52,7 +54,7 @@ export async function escalateRequest(requestId: string, currentLevel: number): 
     entityType: 'substitution_request',
     entityId: requestId,
     details: { aktion: 'eskaliert', newLevel, newStatus },
-  }).catch((err) => console.warn('[Schedule] Audit-Log fehlgeschlagen (non-blocking):', err))
+  }).catch((err) => log.warnWithException('Audit-Log fehlgeschlagen (non-blocking)', err))
 
   return { ok: true }
 }
@@ -75,7 +77,7 @@ export async function markRequestFailed(requestId: string): Promise<{ ok: true }
     entityType: 'substitution_request',
     entityId: requestId,
     details: { aktion: 'als_gescheitert_markiert', status: 'failed' },
-  }).catch((err) => console.warn('[Schedule] Audit-Log fehlgeschlagen (non-blocking):', err))
+  }).catch((err) => log.warnWithException('Audit-Log fehlgeschlagen (non-blocking)', err))
 
   return { ok: true }
 }
@@ -98,7 +100,7 @@ export async function toggleClientNotified(requestId: string, currentNotified: b
     entityType: 'substitution_request',
     entityId: requestId,
     details: { aktion: 'klient_benachrichtigung_umgeschaltet', client_notified: !currentNotified },
-  }).catch((err) => console.warn('[Schedule] Audit-Log fehlgeschlagen (non-blocking):', err))
+  }).catch((err) => log.warnWithException('Audit-Log fehlgeschlagen (non-blocking)', err))
 
   return { ok: true }
 }
@@ -125,7 +127,7 @@ export async function assignSubstitute(requestId: string, caregiverId: string): 
     entityType: 'substitution_request',
     entityId: requestId,
     details: { aktion: 'vertretung_zugewiesen', substitute_caregiver_id: caregiverId },
-  }).catch((err) => console.warn('[Schedule] Audit-Log fehlgeschlagen (non-blocking):', err))
+  }).catch((err) => log.warnWithException('Audit-Log fehlgeschlagen (non-blocking)', err))
 
   return { ok: true }
 }
@@ -162,7 +164,7 @@ export async function reportAbsence(input: {
     entityType: 'absence',
     entityId: input.caregiverId,
     details: { aktion: 'ausfall_gemeldet', absenceType: input.absenceType, startDate: input.startDate, endDate: input.endDate },
-  }).catch((err) => console.warn('[Schedule] Audit-Log fehlgeschlagen (non-blocking):', err))
+  }).catch((err) => log.warnWithException('Audit-Log fehlgeschlagen (non-blocking)', err))
 
   return { ok: true }
 }
@@ -202,7 +204,7 @@ export async function createSubstitutionRequest(input: {
     entityType: 'substitution_request',
     entityId: input.clientId,
     details: { aktion: 'vertretungsanfrage_erstellt', date: input.date, clientId: input.clientId },
-  }).catch((err) => console.warn('[Schedule] Audit-Log fehlgeschlagen (non-blocking):', err))
+  }).catch((err) => log.warnWithException('Audit-Log fehlgeschlagen (non-blocking)', err))
 
   return { ok: true }
 }

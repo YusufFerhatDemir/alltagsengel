@@ -3,6 +3,8 @@
 import { createClient } from '@/lib/supabase/server'
 import { getActiveOrgId } from '@/lib/organizations/server'
 import { logAuditEventOrWarn } from '@/lib/audit-log'
+import { logger } from '@/lib/logger'
+const log = logger.child('mis:crm')
 
 // ═══════════════════════════════════════════════════════════════
 // Server-seitige Aktionen fuer MIS CRM
@@ -70,7 +72,7 @@ export async function updateClientPipeline(id: string, newStatus: string): Promi
 
     if (activityErr) {
       // Aktivitaet ist sekundaer — Pipeline-Update war erfolgreich
-      console.error('Aktivitaet konnte nicht erstellt werden:', activityErr.message)
+      log.error('Aktivitaet konnte nicht erstellt werden', { errorMessage: activityErr.message })
     }
 
     await logAuditEventOrWarn({

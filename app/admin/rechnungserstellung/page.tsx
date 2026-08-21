@@ -5,6 +5,8 @@ import { createClient } from '@/lib/supabase/client'
 import { euro, formatDate, statusMeta, INVOICE_STATUS } from '@/lib/admin/ops'
 import { Banner, EmptyRow, StatusBadge } from '@/components/admin/OpsUI'
 import { one } from '@/lib/supabase/join'
+import { logger } from '@/lib/logger';
+const log = logger.child('admin:rechnungserstellung');
 
 interface BillableRecord {
   id: string
@@ -130,7 +132,7 @@ export default function RechnungserstellungPage() {
 
       setGroups(Object.values(byClient).sort((a, b) => a.clientName.localeCompare(b.clientName)))
     } catch (err: any) {
-      console.error('Rechnungserstellung Ladefehler:', err)
+      log.errorWithException('Rechnungserstellung Ladefehler', err)
       setError('Unerwarteter Fehler beim Laden.')
     } finally {
       setLoading(false)
@@ -144,7 +146,7 @@ export default function RechnungserstellungPage() {
       // gefenced und der Gutschrift-Restbetrag mitberechnet.
       const res = await fetch('/api/billing/invoices?limit=50')
       const json = await res.json()
-      if (!res.ok) { console.error('Rechnungen Ladefehler:', json.error); return }
+      if (!res.ok) { log.error('Rechnungen Ladefehler', { error: json.error }); return }
       setInvoices((json.rows || []).map((i: any) => ({
         id: i.id,
         invoice_number: i.invoice_number,
@@ -159,7 +161,7 @@ export default function RechnungserstellungPage() {
         has_pdf: !!i.has_pdf,
       })))
     } catch (err) {
-      console.error('Rechnungen Ladefehler:', err)
+      log.errorWithException('Rechnungen Ladefehler', err)
     } finally {
       setLoadingInvoices(false)
     }
@@ -194,7 +196,7 @@ export default function RechnungserstellungPage() {
       }
 
       if (json.warnings?.length) {
-        console.warn('[Rechnungserstellung] Warnungen:', json.warnings)
+        log.warn('Warnungen', { warnings: json.warnings, scope: 'Rechnungserstellung' })
       }
 
       await loadBillable()
@@ -221,7 +223,7 @@ export default function RechnungserstellungPage() {
       if (json.pdf_url) window.open(json.pdf_url, '_blank', 'noopener')
       await loadInvoices()
     } catch (err: any) {
-      console.error('PDF-Erzeugung Fehler:', err)
+      log.errorWithException('PDF-Erzeugung Fehler', err)
       setPdfError('Unerwarteter Fehler bei der PDF-Erzeugung.')
     } finally {
       setGeneratingPdfFor(null)
@@ -245,7 +247,7 @@ export default function RechnungserstellungPage() {
       setNotice(`${label} erfolgreich.`)
       await loadInvoices()
     } catch (err: any) {
-      console.error(`${label} Fehler:`, err)
+      log.errorWithException(`${label} Fehler:`, err)
       setPdfError(`Unerwarteter Fehler: ${label} fehlgeschlagen.`)
     } finally {
       setActionFor(null)

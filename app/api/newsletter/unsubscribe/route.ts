@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { logger } from '@/lib/logger'
+const log = logger.child('newsletter')
 
 // ═══════════════════════════════════════════════════════════
 // NEWSLETTER ABMELDUNG — Unsubscribe Endpoint
@@ -25,7 +27,7 @@ export async function GET(request: Request) {
       .eq('email', email.toLowerCase())
 
     if (error) {
-      console.error('[Newsletter] Abmeldung Fehler:', error)
+      log.errorWithException('Abmeldung Fehler', error)
       return new NextResponse(unsubPage('Fehler bei der Abmeldung. Bitte versuchen Sie es erneut.', false), {
         status: 500,
         headers: { 'Content-Type': 'text/html; charset=utf-8' },
@@ -37,7 +39,7 @@ export async function GET(request: Request) {
       headers: { 'Content-Type': 'text/html; charset=utf-8' },
     })
   } catch (err) {
-    console.error('[Newsletter] Abmeldung Exception:', err)
+    log.errorWithException('Abmeldung Exception', err)
     return new NextResponse(unsubPage('Serverfehler. Bitte versuchen Sie es später erneut.', false), {
       status: 500,
       headers: { 'Content-Type': 'text/html; charset=utf-8' },

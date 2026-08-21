@@ -3,6 +3,8 @@ import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { requireUser } from '@/lib/supabase/require-session'
 import { IconBell, IconCheck } from '@/components/Icons'
+import { logger } from '@/lib/logger'
+const log = logger.child('engel:benachrichtigungen')
 
 const TYP_META: Record<string, { label: string; color: string }> = {
   info: { label: 'Info', color: '#2196F3' },
@@ -68,7 +70,7 @@ export default function EngelBenachrichtigungenPage() {
       const data = await res.json()
       setItems((data || []) as Benachrichtigung[])
     } catch (e: any) {
-      console.error('Benachrichtigungen load error:', e)
+      log.errorWithException('Benachrichtigungen load error', e)
       setError('Fehler beim Laden der Benachrichtigungen')
     } finally {
       setLoading(false)
@@ -89,7 +91,7 @@ export default function EngelBenachrichtigungenPage() {
       if (!res.ok) throw new Error('Fehler')
       setItems(prev => prev.map(b => ids.includes(b.id) ? { ...b, gelesen: true } : b))
     } catch (err) {
-      console.error('Fehler in markAsRead (Engel-Benachrichtigungen):', err)
+      log.errorWithException('Fehler in markAsRead (Engel-Benachrichtigungen)', err)
     }
     finally { setMarking(false) }
   }

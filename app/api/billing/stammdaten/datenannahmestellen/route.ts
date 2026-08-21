@@ -8,6 +8,8 @@ import {
   type DatenannahmestelleEingabe,
 } from '@/lib/abrechnung/stammdaten'
 import { logBillingAction } from '@/lib/billing/core/audit'
+import { logger } from '@/lib/logger'
+const log = logger.child('stammdaten/datenannahmestellen')
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -55,7 +57,7 @@ export async function GET(request: Request) {
       .order('name')
 
     if (error) {
-      console.error('[stammdaten/datenannahmestellen] Laden fehlgeschlagen:', error.message)
+      log.error('Laden fehlgeschlagen', { errorMessage: error.message })
       return NextResponse.json({ error: 'Interner Serverfehler' }, { status: 500 })
     }
 
@@ -102,7 +104,7 @@ export async function POST(req: NextRequest) {
           action: 'datenannahmestellen_importiert',
           newState: { gesamt: ergebnis.gesamt, erfolgreich: ergebnis.erfolgreich, fehlerhaft: ergebnis.fehlerhaft },
           actorId: auth.userId,
-        }).catch(err => console.error('[stammdaten/datenannahmestellen] Audit fehlgeschlagen:', err))
+        }).catch(err => log.errorWithException('Audit fehlgeschlagen', err))
       }
 
       return NextResponse.json(ergebnis, { status: ergebnis.fehlerhaft > 0 ? 207 : 200 })
@@ -122,7 +124,7 @@ export async function POST(req: NextRequest) {
       action: 'datenannahmestelle_gespeichert',
       newState: { ik_nummer: eingabe.ik_nummer, name: eingabe.name, kassenart: eingabe.kassenart },
       actorId: auth.userId,
-    }).catch(err => console.error('[stammdaten/datenannahmestellen] Audit fehlgeschlagen:', err))
+    }).catch(err => log.errorWithException('Audit fehlgeschlagen', err))
 
     return NextResponse.json({ erfolg: true, id: ergebnis.id, warnungen: ergebnis.warnungen })
   } catch (e) {
@@ -150,7 +152,7 @@ export async function DELETE(req: NextRequest) {
       .maybeSingle()
 
     if (error) {
-      console.error('[stammdaten/datenannahmestellen] Loeschen fehlgeschlagen:', error.message)
+      log.error('Loeschen fehlgeschlagen', { errorMessage: error.message })
       return NextResponse.json({ error: 'Interner Serverfehler' }, { status: 500 })
     }
     if (!data) return NextResponse.json({ error: 'Nicht gefunden oder nicht editierbar' }, { status: 404 })
@@ -161,7 +163,7 @@ export async function DELETE(req: NextRequest) {
       entityId: id,
       action: 'datenannahmestelle_geloescht',
       actorId: auth.userId,
-    }).catch(err => console.error('[stammdaten/datenannahmestellen] Audit fehlgeschlagen:', err))
+    }).catch(err => log.errorWithException('Audit fehlgeschlagen', err))
 
     return NextResponse.json({ erfolg: true })
   } catch (e) {

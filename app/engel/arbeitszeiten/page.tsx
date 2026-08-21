@@ -12,6 +12,8 @@ import {
   formatDate, formatTime, formatDuration, diffMinutes,
   statusMeta, ARBEITSZEIT_STATUS, MONATSNAMEN,
 } from '@/lib/admin/ops'
+import { logger } from '@/lib/logger'
+const log = logger.child('engel:arbeitszeiten')
 
 interface Eintrag {
   id: string
@@ -79,7 +81,7 @@ export default function ArbeitszeitenPage() {
       if (dbErr) throw dbErr
       setEintraege((data || []) as Eintrag[])
     } catch (err) {
-      console.error('Arbeitszeiten laden:', err)
+      log.errorWithException('Arbeitszeiten laden', err)
       const code = (err as { code?: string })?.code
       setError(
         code === 'PGRST205'
@@ -146,7 +148,7 @@ export default function ArbeitszeitenPage() {
       // Neu laden falls der erfasste Tag im aktuellen Monat liegt
       laden(monat, jahr)
     } catch (err: any) {
-      console.error('Arbeitszeit speichern:', err)
+      log.errorWithException('Arbeitszeit speichern', err)
       setError(err.message || 'Arbeitszeit konnte nicht gespeichert werden.')
     } finally {
       setSaving(false)

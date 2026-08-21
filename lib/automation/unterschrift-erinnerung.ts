@@ -17,6 +17,8 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { logAuditEvent } from '@/lib/audit-log'
 import { emitEreignis } from '@/lib/ops/ereignis-emitter'
 import { heuteBerlin } from '@/lib/utils/timezone'
+import { logger } from '@/lib/logger'
+const log = logger.child('unterschrift-erinnerung')
 
 /** Tage nach Einsatzdatum, ab denen eine fehlende Unterschrift erinnert wird. */
 export const UNTERSCHRIFT_ERINNERUNG_TAGE = 2
@@ -117,7 +119,7 @@ export async function erinnereFehlendeUnterschriften(
       await logAuditEvent({
         action: 'create', actorId, organizationId, entityType: 'ops_aufgabe', entityId: aufgabe.id,
         details: { grund: 'unterschrift_fehlt', service_record_id: rec.id },
-      }).catch(err => console.error(`[unterschrift-erinnerung] Audit fehlgeschlagen: ${err}`))
+      }).catch(err => log.error('Audit fehlgeschlagen', { errorMessage: String(err) }))
 
       await emitEreignis(supabase, {
         organizationId,
@@ -125,7 +127,7 @@ export async function erinnereFehlendeUnterschriften(
         entitaetId: rec.id,
         akteurId: actorId,
         kontext: { service_record_id: rec.id, aufgabe_id: aufgabe.id, caregiver_user_id: cg.user_id },
-      }).catch(err => console.error(`[unterschrift-erinnerung] Ereignis-Emit fehlgeschlagen: ${err}`))
+      }).catch(err => log.error('Ereignis-Emit fehlgeschlagen', { errorMessage: String(err) }))
 
       aufgabenErstellt++
     } catch (err) {

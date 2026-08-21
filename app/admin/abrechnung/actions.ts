@@ -3,6 +3,8 @@
 import { createClient } from '@/lib/supabase/server'
 import { getActiveOrgId } from '@/lib/organizations/server'
 import { logAuditEvent } from '@/lib/audit-log'
+import { logger } from '@/lib/logger'
+const log = logger.child('abrechnung')
 
 async function requireAbrechnungAdmin() {
   const supabase = await createClient()
@@ -68,7 +70,7 @@ export async function speichereLauf(input: {
     entityType: 'abrechnungslauf',
     entityId: `${input.abrechnungsmonat}_${input.kostentraeger_ik}`,
     details: { aktion: 'lauf_gespeichert', abrechnungsmonat: input.abrechnungsmonat, kostentraeger_ik: input.kostentraeger_ik, status: input.status },
-  }).catch((err) => console.warn('[Abrechnung] Audit-Log fehlgeschlagen (non-blocking):', err))
+  }).catch((err) => log.warnWithException('Audit-Log fehlgeschlagen (non-blocking)', err))
 
   return { ok: true }
 }
@@ -92,7 +94,7 @@ export async function setzeLaufStatusAction(laufId: string, status: string): Pro
     entityType: 'abrechnungslauf',
     entityId: laufId,
     details: { aktion: 'status_geaendert', neuerStatus: status },
-  }).catch((err) => console.warn('[Abrechnung] Audit-Log fehlgeschlagen (non-blocking):', err))
+  }).catch((err) => log.warnWithException('Audit-Log fehlgeschlagen (non-blocking)', err))
 
   return { ok: true }
 }

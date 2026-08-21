@@ -6,6 +6,8 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { ZugriffAktion, ZugriffEntitaetTyp } from './types'
+import { logger } from '@/lib/logger'
+const log = logger.child('akten-zugriff-log')
 
 export interface LogZugriffParams {
   entitaetTyp: ZugriffEntitaetTyp
@@ -36,7 +38,7 @@ export async function logAktenZugriff(
   })
 
   if (error) {
-    console.error('[akten-zugriff-log] Fehler beim Schreiben des Audit-Logs:', error)
+    log.errorWithException('Fehler beim Schreiben des Audit-Logs', error)
     throw new Error(`Zugriffs-Log konnte nicht geschrieben werden: ${error.message}`)
   }
 }

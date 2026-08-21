@@ -3,6 +3,8 @@ import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { logAuditEvent } from '@/lib/audit-log'
+import { logger } from '@/lib/logger'
+const log = logger.child('admin/fixierungen')
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -57,7 +59,7 @@ export async function PATCH(
       .maybeSingle()
 
     if (error) {
-      console.error('[admin/fixierungen] Update fehlgeschlagen:', error.message)
+      log.error('Update fehlgeschlagen', { errorMessage: error.message })
       return NextResponse.json({ error: `Speichern fehlgeschlagen: ${error.message}` }, { status: 500 })
     }
     if (!data) {
@@ -104,7 +106,7 @@ export async function DELETE(
       .maybeSingle()
 
     if (error) {
-      console.error('[admin/fixierungen] Archivierung fehlgeschlagen:', error.message)
+      log.error('Archivierung fehlgeschlagen', { errorMessage: error.message })
       return NextResponse.json({ error: `Archivierung fehlgeschlagen: ${error.message}` }, { status: 500 })
     }
     if (!data) {

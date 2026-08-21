@@ -7,6 +7,8 @@ import {
   RECORD_STATUS, BUDGET_TYPE,
 } from '@/lib/admin/ops'
 import { StatusBadge, SearchInput, EmptyRow } from '@/components/admin/OpsUI'
+import { logger } from '@/lib/logger'
+const log = logger.child('admin:records')
 
 interface RecordRow {
   id: string
@@ -41,7 +43,7 @@ function RecordsInner() {
           .select('id, date, start_time, end_time, duration_minutes, service_type, budget_type, amount, status, client_signature, client:clients(first_name, last_name), caregiver:caregivers(first_name, last_name)')
           .order('date', { ascending: false })
           .limit(300)
-        if (error) { console.error('Records load error:', error); setLoading(false); return }
+        if (error) { log.errorWithException('Records load error', error); setLoading(false); return }
         setRecords((data || []).map((r: any) => ({
           id: r.id,
           date: r.date,
@@ -57,7 +59,7 @@ function RecordsInner() {
           caregiver: fullName(r.caregiver),
         })))
       } catch (err) {
-        console.error('Records page error:', err)
+        log.errorWithException('Records page error', err)
       } finally {
         setLoading(false)
       }

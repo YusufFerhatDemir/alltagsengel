@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createClient } from '@/lib/supabase/server'
+import { logger } from '@/lib/logger'
+const log = logger.child('api:push')
 
 /**
  * POST /api/push/subscribe
@@ -33,7 +35,7 @@ export async function POST(request: Request) {
     })
 
     if (error) {
-      console.error('Push subscribe error:', error)
+      log.errorWithException('Push subscribe error', error)
       return NextResponse.json({ error: 'Speicherfehler' }, { status: 500 })
     }
 

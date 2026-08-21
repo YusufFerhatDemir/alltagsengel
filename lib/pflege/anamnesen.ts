@@ -16,6 +16,8 @@ import {
   type PflegeAnamnese,
   type Sturzrisiko,
 } from './types'
+import { logger } from '@/lib/logger'
+const log = logger.child('pflege-audit')
 
 /** Alle Fachfelder der Anamnese (ohne Metadaten) — camelCase → Spaltenname. */
 const FELD_MAP: Record<string, string> = {
@@ -95,7 +97,7 @@ export async function createAnamnese(supabase: SupabaseClient, params: CreateAna
     aktion: 'erstellt',
     nachher: data,
     akteurId: params.erstelltVon,
-  }).catch((err) => console.error('[pflege-audit] Anamnese-Log fehlgeschlagen:', err))
+  }).catch((err) => log.errorWithException('Anamnese-Log fehlgeschlagen', err))
 
   return data as PflegeAnamnese
 }
@@ -182,7 +184,7 @@ export async function updateAnamnese(
     aktion: 'aktualisiert',
     vorher: existing,
     nachher: data,
-  }).catch((err) => console.error('[pflege-audit] Anamnese-Log fehlgeschlagen:', err))
+  }).catch((err) => log.errorWithException('Anamnese-Log fehlgeschlagen', err))
 
   return data as PflegeAnamnese
 }
@@ -220,7 +222,7 @@ export async function sperreAnamnese(
     aktion: 'gesperrt',
     vorher: existing,
     nachher: data,
-  }).catch((err) => console.error('[pflege-audit] Anamnese-Log fehlgeschlagen:', err))
+  }).catch((err) => log.errorWithException('Anamnese-Log fehlgeschlagen', err))
 
   return data as PflegeAnamnese
 }
@@ -253,7 +255,7 @@ export async function entsperreAnamnese(
     aktion: 'entsperrt',
     vorher: existing,
     nachher: data,
-  }).catch((err) => console.error('[pflege-audit] Anamnese-Log fehlgeschlagen:', err))
+  }).catch((err) => log.errorWithException('Anamnese-Log fehlgeschlagen', err))
 
   return data as PflegeAnamnese
 }

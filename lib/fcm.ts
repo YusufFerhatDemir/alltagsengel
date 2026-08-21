@@ -1,5 +1,7 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import { GoogleAuth } from 'google-auth-library'
+import { logger } from '@/lib/logger'
+const log = logger.child('fcm')
 
 // ─── FCM V1 API Config ───
 const FCM_PROJECT_ID = process.env.FCM_PROJECT_ID || 'alltagsengel-2bbe9'
@@ -37,7 +39,7 @@ async function getAccessToken(): Promise<string | null> {
     const tokenResponse = await client.getAccessToken()
     return tokenResponse?.token || null
   } catch (err) {
-    console.error('FCM: Error getting access token:', err)
+    log.errorWithException('FCM: Error getting access token', err)
     // Reset cache on error
     cachedAuth = null
     return null
@@ -110,7 +112,7 @@ async function sendToToken(
 
     if (!response.ok) {
       const errorBody = await response.text()
-      console.error('FCM V1 send error:', response.status, errorBody)
+      log.error('FCM V1 send error', { responseStatus: response.status, errorBody })
 
       // Check for unregistered/invalid token errors
       if (
@@ -121,7 +123,7 @@ async function sendToToken(
         // Remove invalid token
         const supabase = createAdminClient()
         await supabase.from('fcm_tokens').delete().eq('token', token)
-        console.log('FCM token removed (invalid):', token.slice(0, 20) + '...')
+        log.info('FCM token removed (invalid)', { tokenPrefix: token.slice(0, 20) + '...' })
       }
 
       return false
@@ -129,7 +131,7 @@ async function sendToToken(
 
     return true
   } catch (err) {
-    console.error('FCM V1 send error:', err)
+    log.errorWithException('FCM V1 send error', err)
     return false
   }
 }
@@ -141,7 +143,7 @@ export async function sendFCMToUser(
 ): Promise<{ sent: number; failed: number }> {
   const accessToken = await getAccessToken()
   if (!accessToken) {
-    console.log('FCM: No access token available — FCM push skipped')
+    log.info('FCM: No access token available — FCM push skipped')
     return { sent: 0, failed: 0 }
   }
 
@@ -153,7 +155,7 @@ export async function sendFCMToUser(
     .eq('user_id', userId)
 
   if (error || !tokens?.length) {
-    if (error) console.error('FCM: Error fetching tokens:', error.message)
+    if (error) log.error('FCM: Error fetching tokens', { errorMessage: error.message })
     return { sent: 0, failed: 0 }
   }
 
@@ -164,6 +166,6 @@ export async function sendFCMToUser(
   const sent = results.filter((r) => r.status === 'fulfilled' && r.value).length
   const failed = results.length - sent
 
-  console.log(`FCM V1 sent to user ${userId}: ${sent}/${results.length} successful`)
+  log.info(`FCM V1 sent to user ${userId}: ${sent}/${results.length} successful`)
   return { sent, failed }
 }

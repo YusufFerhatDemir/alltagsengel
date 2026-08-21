@@ -6,6 +6,8 @@ import { requireUser } from '@/lib/supabase/require-session'
 import { markMessagesReadAction, sendBookingMessageAction, sendRideMessageAction } from './actions'
 import { IconWingsGold, IconTruck } from '@/components/Icons'
 import { useChatPagination, useScrollToLoadOlder, type ChatMessage } from '@/lib/use-chat-pagination'
+import { logger } from '@/lib/logger'
+const log = logger.child('kundechat:send')
 
 type ChatMode = 'booking' | 'ride' | null
 
@@ -212,7 +214,7 @@ export default function ChatDetailPage() {
       if (result.ok) {
         replaceMessage(optimistic.id, result.data as ChatMessage)
       } else {
-        console.error('[KundeChat:send] booking error:', result.error)
+        log.error('booking error', { error: result.error })
         removeMessage(optimistic.id)
       }
     } else {
@@ -220,7 +222,7 @@ export default function ChatDetailPage() {
       if (result.ok) {
         replaceMessage(optimistic.id, result.data as ChatMessage)
       } else {
-        console.error('[KundeChat:send] ride error:', result.error)
+        log.error('ride error', { error: result.error })
         removeMessage(optimistic.id)
       }
     }

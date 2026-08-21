@@ -4,6 +4,8 @@ import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { useBundeslandLage } from '@/lib/expansion/client'
 import { completeOnboardingAction } from '@/app/onboarding/actions'
+import { logger } from '@/lib/logger'
+const log = logger.child('onboarding')
 
 // ═══════════════════════════════════════════════════════════
 // ONBOARDING FLOW — Willkommen für neue Kunden
@@ -91,7 +93,7 @@ export default function OnboardingFlow() {
         setShow(true)
       }
     } catch (e) {
-      console.error('[Onboarding] Error:', e)
+      log.errorWithException('Error', e)
     }
     setLoading(false)
   }
@@ -103,10 +105,10 @@ export default function OnboardingFlow() {
     try {
       const ergebnis = await completeOnboardingAction({ pflegegrad, plz })
       if (!ergebnis.ok) {
-        console.error('[Onboarding] Save error:', ergebnis.error)
+        log.error('Save error', { error: ergebnis.error })
       }
     } catch (e) {
-      console.error('[Onboarding] Save error:', e)
+      log.errorWithException('Save error', e)
     }
     setShow(false)
   }

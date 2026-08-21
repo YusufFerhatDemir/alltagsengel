@@ -17,6 +17,8 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { createAdminClient } from '@/lib/supabase/admin'
+import { logger } from '@/lib/logger'
+const log = logger.child('fhir-audit-log')
 
 export type FhirAuditAction = 'export' | 'import_preview' | 'import_commit'
 
@@ -51,12 +53,12 @@ export async function logFhirAuditEvent(input: FhirAuditLogInput): Promise<boole
       details: input.details ?? {},
     })
     if (error) {
-      console.error('[fhir-audit-log] insert failed:', { code: (error as { code?: string }).code, message: error.message })
+      log.error('insert failed', { code: (error as { code?: string }).code, message: error.message })
       return false
     }
     return true
   } catch (err) {
-    console.error('[fhir-audit-log] unexpected error:', { message: (err as Error).message })
+    log.error('unexpected error', { message: (err as Error).message })
     return false
   }
 }

@@ -2,6 +2,8 @@ import { Resend } from 'resend'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { sendPushToUser } from '@/lib/push'
 import { sendFCMToUser } from '@/lib/fcm'
+import { logger } from '@/lib/logger'
+const log = logger.child('notifications')
 
 // ─── Types ───
 export interface NotifyPayload {
@@ -62,12 +64,12 @@ export async function createNotification(
       data: payload.data || {},
     })
     if (error) {
-      console.error('Notification insert error:', error.message)
+      log.error('Notification insert error', { errorMessage: error.message })
       return false
     }
     return true
   } catch (err) {
-    console.error('createNotification error:', err)
+    log.errorWithException('createNotification error', err)
     return false
   }
 }
@@ -81,7 +83,7 @@ export async function sendEmailNotification(
 ): Promise<boolean> {
   const resend = getResend()
   if (!resend) {
-    console.log('RESEND_API_KEY nicht konfiguriert — E-Mail übersprungen')
+    log.info('RESEND_API_KEY nicht konfiguriert — E-Mail übersprungen')
     return false
   }
   try {
@@ -92,12 +94,12 @@ export async function sendEmailNotification(
       html: wrapEmailTemplate(recipientName, subject, bodyHtml),
     })
     if (error) {
-      console.error('Resend email error:', error)
+      log.errorWithException('Resend email error', error)
       return false
     }
     return true
   } catch (err) {
-    console.error('sendEmailNotification error:', err)
+    log.errorWithException('sendEmailNotification error', err)
     return false
   }
 }
@@ -164,7 +166,7 @@ export async function notifyAngelNewBooking(
     actions: [
       { action: 'open', title: 'Ansehen' },
     ],
-  }).catch((err) => console.error('Web Push to angel error:', err))
+  }).catch((err) => log.errorWithException('Web Push to angel error', err))
 
   // 4. Native Push (FCM) Notification
   await sendFCMToUser(angelUserId, {
@@ -172,7 +174,7 @@ export async function notifyAngelNewBooking(
     body: `${data.customerName} möchte ${data.service} am ${dateStr} um ${data.time} Uhr buchen.`,
     tag: `booking-${data.bookingId}`,
     url: '/engel/buchungen',
-  }).catch((err) => console.error('FCM to angel error:', err))
+  }).catch((err) => log.errorWithException('FCM to angel error', err))
 }
 
 // ─── Booking: Engel hat angenommen → Kunde benachrichtigen ───
@@ -239,7 +241,7 @@ export async function notifyCustomerBookingAccepted(
     actions: [
       { action: 'open', title: 'Ansehen' },
     ],
-  }).catch((err) => console.error('Web Push to customer error:', err))
+  }).catch((err) => log.errorWithException('Web Push to customer error', err))
 
   // 4. Native Push (FCM) Notification
   await sendFCMToUser(customerId, {
@@ -247,7 +249,7 @@ export async function notifyCustomerBookingAccepted(
     body: `${data.angelName} hat Ihre Buchung für ${data.service} am ${dateStr} angenommen.`,
     tag: `booking-confirmed-${data.bookingId}`,
     url: `/kunde/bestaetigt/${data.bookingId}`,
-  }).catch((err) => console.error('FCM to customer error:', err))
+  }).catch((err) => log.errorWithException('FCM to customer error', err))
 }
 
 // ─── Booking: Engel hat abgelehnt → Kunde benachrichtigen ───
@@ -311,7 +313,7 @@ export async function notifyCustomerBookingDeclined(
     actions: [
       { action: 'open', title: 'Anderen Engel finden' },
     ],
-  }).catch((err) => console.error('Web Push to customer error:', err))
+  }).catch((err) => log.errorWithException('Web Push to customer error', err))
 
   // 4. Native Push (FCM) Notification
   await sendFCMToUser(customerId, {
@@ -319,7 +321,7 @@ export async function notifyCustomerBookingDeclined(
     body: `${data.angelName} kann Ihre Anfrage für ${dateStr} leider nicht annehmen.`,
     tag: `booking-declined-${data.bookingId}`,
     url: '/kunde/home',
-  }).catch((err) => console.error('FCM to customer error:', err))
+  }).catch((err) => log.errorWithException('FCM to customer error', err))
 }
 
 // ─── Email Template Wrapper ───

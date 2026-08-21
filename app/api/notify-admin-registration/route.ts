@@ -3,6 +3,8 @@ import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import { getActiveOrgIdOrDefault } from '@/lib/organizations/server'
+import { logger } from '@/lib/logger'
+const log = logger.child('api:notify-admin-registration')
 
 export async function POST(req: NextRequest) {
   try {
@@ -64,7 +66,7 @@ export async function POST(req: NextRequest) {
     }))
 
     const { error } = await supabase.from('notifications').insert(inserts)
-    if (error) console.error('Notification insert error:', error)
+    if (error) log.errorWithException('Notification insert error', error)
 
     return NextResponse.json({ success: true, sent: admins.length })
   } catch (err) {

@@ -13,6 +13,8 @@
 // ═══════════════════════════════════════════════════════════
 
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { logger } from '@/lib/logger'
+const log = logger.child('pending-profile')
 
 const KEY = 'ae_pending_profile'
 
@@ -74,11 +76,11 @@ export async function flushPendingProfile(
   try {
     const { error } = await supabase.from('profiles').upsert(daten)
     if (error) {
-      console.warn('[pending-profile] Nachtragen fehlgeschlagen:', error.message)
+      log.warn('Nachtragen fehlgeschlagen', { errorMessage: error.message })
       return // geparkt lassen, naechster Login versucht es erneut
     }
   } catch (e) {
-    console.warn('[pending-profile] Nachtragen abgebrochen:', e)
+    log.warnWithException('Nachtragen abgebrochen', e)
     return
   }
   window.localStorage.removeItem(KEY)

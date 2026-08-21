@@ -16,6 +16,8 @@ import {
   addCaregiverBonus,
   updateCaregiverRegistration,
 } from './actions'
+import { logger } from '@/lib/logger'
+const log = logger.child('admin:caregivers')
 
 interface Caregiver {
   id: string
@@ -144,7 +146,7 @@ export default function CaregiverDetailPage() {
       setHistory((histRes.data || []) as InitialsRow[])
       setBonuses((bonusRes.data || []) as BonusRow[])
     } catch (err) {
-      console.error('Caregiver detail load error:', err)
+      log.errorWithException('Caregiver detail load error', err)
       setNotFound(true)
     } finally {
       setLoading(false)

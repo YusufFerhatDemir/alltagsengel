@@ -6,6 +6,8 @@ import Link from 'next/link'
 import { IconWingsGold, IconDocument, IconCheck, IconClock, IconInfo, IconShield, IconCalendar, IconPill, IconHeart } from '@/components/Icons'
 import { UNIT_ECONOMICS } from '@/lib/mis/constants'
 import { AvatarEngel } from '@/components/AvatarGlow'
+import { logger } from '@/lib/logger'
+const log = logger.child('engel:profil')
 
 export default function MeinProfilPage() {
   const router = useRouter()
@@ -56,7 +58,7 @@ export default function MeinProfilPage() {
       if (compErr) throw compErr
       setTotalEarnings((completed || []).reduce((sum, b) => sum + (b.total_amount || 0), 0))
     } catch (err) {
-      console.error('Profile load error:', err)
+      log.errorWithException('Profile load error', err)
       setError('Fehler beim Laden des Profils. Bitte versuche es später erneut.')
     } finally {
       setLoading(false)

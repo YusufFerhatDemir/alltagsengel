@@ -19,6 +19,8 @@ import { sendEmailNotification } from '@/lib/notifications'
 import { requireExpansionAdmin } from '@/lib/expansion/api-auth'
 import { normalizeBundesland } from '@/lib/expansion/plz-bundesland'
 import { BUNDESLAND_NAMEN, type BundeslandCode } from '@/lib/expansion/types'
+import { logger } from '@/lib/logger'
+const log = logger.child('expansion/notify-waitlist')
 
 export const dynamic = 'force-dynamic'
 
@@ -148,7 +150,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
     })
 
   if (claimError) {
-    console.error('[expansion/notify-waitlist] Beanspruchen fehlgeschlagen:', claimError.message)
+    log.error('Beanspruchen fehlgeschlagen', { errorMessage: claimError.message })
     return NextResponse.json(
       { error: 'Warteliste konnte nicht geladen werden' },
       { status: 500 }

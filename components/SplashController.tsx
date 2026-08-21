@@ -1,6 +1,8 @@
 'use client'
 
 import { useEffect } from 'react'
+import { logger } from '@/lib/logger'
+const log = logger.child('ui:SplashController')
 
 /**
  * SplashController — Professionelles Splash-Screen Management
@@ -37,7 +39,7 @@ export default function SplashController() {
         const { SplashScreen } = await import('@capacitor/splash-screen')
         await SplashScreen.hide({ fadeOutDuration: 250 })
       } catch (err) {
-        console.warn('[SplashController] Hide fehlgeschlagen:', err)
+        log.warnWithException('Hide fehlgeschlagen', err)
       }
     }
 
@@ -65,7 +67,7 @@ export default function SplashController() {
     // Verhindert "ewig hängender Splash" bei Netzwerk-Problemen
     const safetyTimer = setTimeout(() => {
       if (!hideCalled) {
-        console.warn('[SplashController] Safety-Timeout — Splash wird forciert ausgeblendet')
+        log.warn('Safety-Timeout — Splash wird forciert ausgeblendet')
         hideSplash()
       }
     }, 7000)

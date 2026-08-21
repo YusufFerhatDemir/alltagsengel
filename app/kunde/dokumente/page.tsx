@@ -7,6 +7,8 @@ import { uploadDocument, deleteDocument, MAX_FILE_SIZE_MB, checkDocumentsTableEx
 import { IconDocument, IconCheck, IconClock, IconInfo, IconTrash } from '@/components/Icons'
 import { AKTEN_DOKUMENT_TYP, formatDate, statusMeta } from '@/lib/admin/ops'
 import type { AktenDokument } from '@/lib/akten/types'
+import { logger } from '@/lib/logger'
+const log = logger.child('kunde:dokumente')
 
 const docTypes = [
   { key: 'ausweis', label: 'Personalausweis', desc: 'Vorder- und Rückseite' },
@@ -93,7 +95,7 @@ export default function KundeDokumentePage() {
       }
       setDocuments(prev => prev.filter(d => d.id !== docId))
     } catch (err) {
-      console.error('[handleDelete] Unexpected error:', err)
+      log.errorWithException('Unexpected error', err, { scope: 'handleDelete' })
       alert('Ein unerwarteter Fehler ist aufgetreten.')
     } finally {
       setDeletingId(null)
@@ -126,7 +128,7 @@ export default function KundeDokumentePage() {
       setTimeout(() => setUploadSuccess(false), 4000)
       loadDocs()
     } catch (err) {
-      console.error('[handleUpload] Unexpected error:', err)
+      log.errorWithException('Unexpected error', err, { scope: 'handleUpload' })
       setUploadError('Ein unerwarteter Fehler ist aufgetreten. Bitte versuche es erneut.')
     } finally {
       setUploading(false)

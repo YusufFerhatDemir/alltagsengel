@@ -6,6 +6,8 @@ import {
   statusMeta, fullName, VERTRAGSSTATUS, QUALIFICATION_LEVEL,
 } from '@/lib/admin/ops'
 import { StatusBadge, SearchInput, EmptyRow, Banner } from '@/components/admin/OpsUI'
+import { logger } from '@/lib/logger'
+const log = logger.child('admin:personal')
 
 interface Row {
   id: string
@@ -62,7 +64,7 @@ export default function PersonalPage() {
       })))
     } catch (err) {
       setLadefehler('Netzwerkfehler beim Laden der Stammdaten.')
-      console.error('Personal laden fehlgeschlagen', err)
+      log.errorWithException('Personal laden fehlgeschlagen', err)
     } finally {
       setLoading(false)
     }

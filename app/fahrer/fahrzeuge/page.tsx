@@ -3,6 +3,8 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { addVehicle as addVehicleAction, toggleVehicleActive as toggleVehicleActiveAction } from './actions'
+import { logger } from '@/lib/logger'
+const log = logger.child('fahrer:fahrzeuge')
 
 export default function FahrzeugeManagementPage() {
   const router = useRouter()
@@ -58,7 +60,7 @@ export default function FahrzeugeManagementPage() {
           setVehicles(vehiclesData || [])
         }
       } catch (err) {
-        console.error('Load error:', err)
+        log.errorWithException('Load error', err)
       } finally {
         setLoading(false)
       }
@@ -111,7 +113,7 @@ export default function FahrzeugeManagementPage() {
         alert(result.error)
       }
     } catch (err) {
-      console.error('Add vehicle error:', err)
+      log.errorWithException('Add vehicle error', err)
       alert('Fehler beim Hinzufügen des Fahrzeugs')
     } finally {
       setSaving(false)
@@ -130,10 +132,10 @@ export default function FahrzeugeManagementPage() {
           )
         )
       } else {
-        console.error('Toggle error:', result.error)
+        log.error('Toggle error', { error: result.error })
       }
     } catch (err) {
-      console.error('Toggle error:', err)
+      log.errorWithException('Toggle error', err)
     }
   }
 

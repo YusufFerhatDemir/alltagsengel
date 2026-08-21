@@ -1,4 +1,6 @@
 import { createClient } from './supabase/client'
+import { logger } from '@/lib/logger'
+const log = logger.child('upload-service-proof')
 
 // ═══════════════════════════════════════════════════════════════
 // uploadServiceProof — Upload für fotografierte Leistungsnachweise
@@ -59,14 +61,14 @@ export async function uploadServiceProof(
     const { error: uploadErr } = result as { error: unknown }
 
     if (uploadErr) {
-      console.error('[uploadServiceProof] Storage error:', uploadErr)
+      log.errorWithException('Storage error', uploadErr)
       return { ok: false, errorMessage: 'Upload fehlgeschlagen. Bitte Internetverbindung prüfen und erneut versuchen.' }
     }
   } catch (err: any) {
     if (err?.message === 'TIMEOUT') {
       return { ok: false, errorMessage: 'Der Upload hat zu lange gedauert. Bitte kleineres Foto wählen oder WLAN nutzen.' }
     }
-    console.error('[uploadServiceProof] Network exception:', err)
+    log.errorWithException('Network exception', err)
     return { ok: false, errorMessage: 'Netzwerkfehler. Bitte erneut versuchen.' }
   }
 
@@ -76,7 +78,7 @@ export async function uploadServiceProof(
     .createSignedUrl(filePath, 60 * 60 * 24 * 7)
 
   if (signErr || !signedData?.signedUrl) {
-    console.error('[uploadServiceProof] Signed URL error:', signErr)
+    log.errorWithException('Signed URL error', signErr)
     return { ok: false, errorMessage: 'Datei hochgeladen, aber URL konnte nicht erstellt werden.' }
   }
 

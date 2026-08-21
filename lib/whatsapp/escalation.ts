@@ -13,6 +13,8 @@
  */
 
 import { ESCALATION_KEYWORDS, MEDICAL_KEYWORDS } from './system-prompt'
+import { logger } from '@/lib/logger'
+const log = logger.child('wa-bot-escalation')
 
 export type EscalationKind = 'medical' | 'general'
 
@@ -68,7 +70,7 @@ export async function sendEscalationEmail(params: {
   const apiKey = process.env.RESEND_API_KEY
   if (!apiKey) {
 
-    console.warn('[wa-bot escalation] RESEND_API_KEY missing — no escalation mail sent')
+    log.warn('RESEND_API_KEY missing — no escalation mail sent')
     return false
   }
 
@@ -110,13 +112,13 @@ export async function sendEscalationEmail(params: {
     })
     if (!response.ok) {
 
-      console.warn('[wa-bot escalation] Resend failed:', response.status, await response.text())
+      log.warn('Resend failed', { responseStatus: response.status, responseBody: await response.text() })
       return false
     }
     return true
   } catch (err) {
 
-    console.warn('[wa-bot escalation] Resend error:', err)
+    log.warnWithException('Resend error', err)
     return false
   }
 }
@@ -134,7 +136,7 @@ export async function sendDraftNotificationEmail(params: {
   const apiKey = process.env.RESEND_API_KEY
   if (!apiKey) {
 
-    console.warn('[wa-bot draft] RESEND_API_KEY missing — no draft mail sent')
+    log.warn('RESEND_API_KEY missing — no draft mail sent', { scope: 'wa-bot draft' })
     return false
   }
 
@@ -179,13 +181,13 @@ export async function sendDraftNotificationEmail(params: {
     })
     if (!response.ok) {
 
-      console.warn('[wa-bot draft] Resend failed:', response.status, await response.text())
+      log.warn('Resend failed', { responseStatus: response.status, responseBody: await response.text(), scope: 'wa-bot draft' })
       return false
     }
     return true
   } catch (err) {
 
-    console.warn('[wa-bot draft] Resend error:', err)
+    log.warnWithException('Resend error', err, { scope: 'wa-bot draft' })
     return false
   }
 }

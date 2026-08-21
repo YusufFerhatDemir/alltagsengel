@@ -7,6 +7,8 @@ import {
 } from '@/lib/admin/ops'
 import { updateApplicationStatus, createApplication } from './actions'
 import { StatusBadge, SearchInput, EmptyRow, Banner } from '@/components/admin/OpsUI'
+import { logger } from '@/lib/logger'
+const log = logger.child('admin:applications')
 
 interface AppRow {
   id: string
@@ -51,7 +53,7 @@ export default function AdminApplicationsPage() {
         interview_date: a.interview_date, created_at: a.created_at,
       })))
     } catch (err) {
-      console.error('Applications load error:', err)
+      log.errorWithException('Applications load error', err)
     } finally {
       setLoading(false)
     }

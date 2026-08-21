@@ -6,6 +6,8 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { requirePortalAccess, erlaubteClientIds } from '@/lib/angehoerige/portal-helpers'
 import { protokolliereZugriff } from '@/lib/angehoerige/angehoerige'
+import { logger } from '@/lib/logger'
+const log = logger.child('angehoerige-termine')
 
 export async function GET() {
   const auth = await requirePortalAccess()
@@ -64,7 +66,7 @@ export async function GET() {
       user_id: ctx.userId,
       client_id: zugangFuerAudit.client_id,
       aktion: 'termine_eingesehen',
-    }).catch((err) => console.warn('[Angehoerige-Termine] Zugriffs-Protokollierung fehlgeschlagen (non-blocking):', err))
+    }).catch((err) => log.warnWithException('Zugriffs-Protokollierung fehlgeschlagen (non-blocking)', err))
   }
 
   return NextResponse.json({ termine: enriched })

@@ -11,6 +11,8 @@ import { BUDGET_TYPE_PDF, QUALIFICATION_LEVEL } from '@/lib/admin/ops'
 import { modulAktivFuerPlz } from '@/lib/expansion/state-settings'
 import { getActiveOrgId } from '@/lib/organizations/server'
 import { one } from '@/lib/supabase/join'
+import { logger } from '@/lib/logger'
+const log = logger.child('leistungsnachweis')
 
 // ═══════════════════════════════════════════════════════════════
 // GET /api/leistungsnachweis?client_id=…&month=YYYY-MM
@@ -506,7 +508,7 @@ async function drawSignatureBox(
         }
       }
     } catch (e) {
-      console.error('[leistungsnachweis] Signatur-Einbettung fehlgeschlagen:', e)
+      log.errorWithException('Signatur-Einbettung fehlgeschlagen', e)
     }
   }
   if (!drewImage && fallbackText) {
@@ -582,7 +584,7 @@ async function embedImageBytes(pdfDoc: PDFDocument, bytes: Uint8Array): Promise<
       const jpg = await pdfDoc.embedJpg(bytes)
       return { image: jpg, width: jpg.width, height: jpg.height }
     } catch (e) {
-      console.error('[leistungsnachweis] Bild weder PNG noch JPG:', e)
+      log.errorWithException('Bild weder PNG noch JPG', e)
       return null
     }
   }

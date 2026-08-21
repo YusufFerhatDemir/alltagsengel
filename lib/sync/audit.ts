@@ -9,6 +9,8 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { OfflineEntityTyp, KonfliktStrategie, KonfliktStatus } from '@/lib/offline/types'
 import type { SyncAuditLogRow, SyncKonfliktRow } from './types'
+import { logger } from '@/lib/logger'
+const log = logger.child('sync/audit')
 
 export interface SchreibeAuditParams {
   organizationId: string
@@ -32,7 +34,7 @@ export async function schreibeSyncAudit(admin: SupabaseClient, params: SchreibeA
   })
   if (error) {
     // Audit-Fehler dürfen den Sync selbst nicht blockieren — nur loggen.
-    console.error('[sync/audit] Konnte sync_audit_log nicht schreiben:', error.message)
+    log.error('Konnte sync_audit_log nicht schreiben', { errorMessage: error.message })
   }
 }
 
@@ -58,7 +60,7 @@ export async function warBereitsErfolgreich(
     .maybeSingle()
 
   if (error) {
-    console.error('[sync/audit] Idempotency-Check fehlgeschlagen:', error.message)
+    log.error('Idempotency-Check fehlgeschlagen', { errorMessage: error.message })
     return false
   }
   return !!data
@@ -101,7 +103,7 @@ export async function schreibeSyncKonflikt(admin: SupabaseClient, params: Schrei
     .single()
 
   if (error) {
-    console.error('[sync/audit] Konnte sync_konflikte nicht schreiben:', error.message)
+    log.error('Konnte sync_konflikte nicht schreiben', { errorMessage: error.message })
     return null
   }
   return data as SyncKonfliktRow

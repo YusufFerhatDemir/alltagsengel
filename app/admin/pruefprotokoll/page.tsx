@@ -7,6 +7,8 @@ import {
 } from '@/lib/admin/ops'
 import { StatusBadge, EmptyRow } from '@/components/admin/OpsUI'
 import { resolveReviewErrorAction } from './actions'
+import { logger } from '@/lib/logger';
+const log = logger.child('admin:pruefprotokoll');
 
 interface ErrorRow {
   id: string
@@ -104,7 +106,7 @@ export default function AdminPruefprotokollPage() {
         `)
         .order('created_at', { ascending: false })
         .limit(500)
-      if (error) { console.error('Prüfprotokoll load error:', error); setLoading(false); return }
+      if (error) { log.errorWithException('Prüfprotokoll load error', error); setLoading(false); return }
       setRows((data || []).map((e: any) => ({
         id: e.id,
         service_record_id: e.service_record_id,
@@ -118,7 +120,7 @@ export default function AdminPruefprotokollPage() {
         date: e.service_record?.date ?? null,
       })))
     } catch (err) {
-      console.error('Prüfprotokoll page error:', err)
+      log.errorWithException('Prüfprotokoll page error', err)
     } finally {
       setLoading(false)
     }
@@ -131,11 +133,11 @@ export default function AdminPruefprotokollPage() {
     try {
       const result = await resolveReviewErrorAction(id)
       if (!result.ok) {
-        console.error('Resolve error:', result.error)
+        log.error('Resolve error', { error: result.error })
       }
       await load()
     } catch (err) {
-      console.error('Resolve error:', err)
+      log.errorWithException('Resolve error', err)
     } finally {
       setBusyId(null)
     }

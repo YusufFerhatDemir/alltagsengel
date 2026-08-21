@@ -2,6 +2,8 @@ import { Resend } from 'resend'
 import { NextResponse } from 'next/server'
 import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { logger } from '@/lib/logger'
+const log = logger.child('review-cron')
 
 // ═══════════════════════════════════════════════════════════
 // CRON: AUTOMATISCHE BEWERTUNGS-ANFRAGE
@@ -124,11 +126,11 @@ export async function GET(request: Request) {
         })
         sent++
       } catch (emailErr) {
-        console.error(`[ReviewCron] E-Mail Fehler für ${customer.email}:`, emailErr)
+        log.errorWithException(`E-Mail Fehler für ${customer.email}:`, emailErr)
       }
     }
 
-    console.log(`[ReviewCron] ${sent} Bewertungs-Anfragen gesendet`)
+    log.info(`${sent} Bewertungs-Anfragen gesendet`)
     return NextResponse.json({ success: true, sent, total: bookings.length })
   } catch (err) {
     return safeApiError(err, request)

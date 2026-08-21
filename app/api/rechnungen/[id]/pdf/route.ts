@@ -3,6 +3,8 @@ import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getActiveOrgId } from '@/lib/organizations/server'
+import { logger } from '@/lib/logger'
+const log = logger.child('rechnungen/pdf')
 
 /**
  * GET /api/rechnungen/[id]/pdf
@@ -94,7 +96,7 @@ export async function GET(
       .createSignedUrl(storagePath, 60 * 10) // 10 Minuten reichen zum Download
 
     if (signErr || !signed?.signedUrl) {
-      console.error('[rechnungen/pdf] Signierung fehlgeschlagen:', signErr?.message)
+      log.error('Signierung fehlgeschlagen', { errorMessage: signErr?.message })
       return NextResponse.json({ error: 'PDF konnte nicht bereitgestellt werden.' }, { status: 500 })
     }
 

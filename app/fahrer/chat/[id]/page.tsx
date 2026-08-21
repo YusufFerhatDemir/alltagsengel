@@ -5,6 +5,8 @@ import { createClient } from '@/lib/supabase/client'
 import { requireUser } from '@/lib/supabase/require-session'
 import { useChatPagination, useScrollToLoadOlder, type ChatMessage } from '@/lib/use-chat-pagination'
 import { sendChatMessage } from './actions'
+import { logger } from '@/lib/logger'
+const log = logger.child('fahrerchat:send')
 
 export default function FahrerChatDetailPage() {
   const router = useRouter()
@@ -150,7 +152,7 @@ export default function FahrerChatDetailPage() {
     if (result.ok) {
       replaceMessage(optimistic.id, result.data as ChatMessage)
     } else {
-      console.error('[FahrerChat:send] error:', result.error)
+      log.error('error', { error: result.error })
       removeMessage(optimistic.id)
     }
   }

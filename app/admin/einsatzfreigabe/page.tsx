@@ -3,6 +3,8 @@ import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { statusMeta, fullName, VERTRAGSSTATUS, WARNSTUFE } from '@/lib/admin/ops'
 import { StatusBadge, SearchInput, EmptyRow, Banner } from '@/components/admin/OpsUI'
+import { logger } from '@/lib/logger'
+const log = logger.child('admin:einsatzfreigabe')
 
 interface Row {
   id: string
@@ -63,7 +65,7 @@ export default function EinsatzfreigabePage() {
           }
         }))
       } catch (err) {
-        console.error('Einsatzfreigabe laden fehlgeschlagen', err)
+        log.errorWithException('Einsatzfreigabe laden fehlgeschlagen', err)
       } finally {
         setLoading(false)
       }
@@ -85,7 +87,7 @@ export default function EinsatzfreigabePage() {
         ))
       }
     } catch (err) {
-      console.error('Freigabe-Toggle fehlgeschlagen', err)
+      log.errorWithException('Freigabe-Toggle fehlgeschlagen', err)
     } finally {
       setToggling(null)
     }

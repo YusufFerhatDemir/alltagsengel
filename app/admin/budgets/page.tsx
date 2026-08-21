@@ -7,6 +7,8 @@ import {
   ENTLASTUNGSBETRAG_MONAT, type Ampel, type BudgetSummary,
 } from '@/lib/admin/ops'
 import { AmpelDot, BudgetBar, Banner, SearchInput, EmptyRow } from '@/components/admin/OpsUI'
+import { logger } from '@/lib/logger'
+const log = logger.child('admin:budgets')
 
 interface BudgetRow {
   client_id: string
@@ -31,7 +33,7 @@ export default function AdminBudgetsPage() {
           .from('client_budgets')
           .select('client_id, annual_amount, monthly_amount, carryover_amount, carryover_expires, used_amount, used_from_carryover, private_amount, client:clients(first_name, last_name)')
           .eq('year', year)
-        if (error) { console.error('Budgets load error:', error); setLoading(false); return }
+        if (error) { log.errorWithException('Budgets load error', error); setLoading(false); return }
         const mapped: BudgetRow[] = (data || []).map((b: any) => ({
           client_id: b.client_id,
           name: fullName(b.client),
@@ -40,7 +42,7 @@ export default function AdminBudgetsPage() {
         })).sort((a: BudgetRow, b: BudgetRow) => b.summary.pct - a.summary.pct)
         setRows(mapped)
       } catch (err) {
-        console.error('Budgets page error:', err)
+        log.errorWithException('Budgets page error', err)
       } finally {
         setLoading(false)
       }

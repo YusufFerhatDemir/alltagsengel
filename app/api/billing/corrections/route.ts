@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
+import { logger } from '@/lib/logger'
+const log = logger.child('billing/corrections')
 
 /**
  * GET /api/billing/corrections
@@ -50,7 +52,7 @@ export async function GET(request: Request) {
 
   const { data, error } = await query
   if (error) {
-    console.error('[billing/corrections] Ladefehler:', error.message)
+    log.error('Ladefehler', { errorMessage: error.message })
     return NextResponse.json({ error: 'Korrekturen konnten nicht geladen werden.' }, { status: 500 })
   }
 

@@ -3,6 +3,8 @@ import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { logAuditEvent } from '@/lib/audit-log'
+import { logger } from '@/lib/logger'
+const log = logger.child('admin/lagerungsprotokoll')
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -40,7 +42,7 @@ export async function GET(request: NextRequest) {
 
     const { data, error } = await query
     if (error) {
-      console.error('[admin/lagerungsprotokoll] Laden fehlgeschlagen:', error.message)
+      log.error('Laden fehlgeschlagen', { errorMessage: error.message })
       return NextResponse.json({ error: 'Interner Serverfehler' }, { status: 500 })
     }
 
@@ -84,7 +86,7 @@ export async function POST(req: NextRequest) {
       .single()
 
     if (error) {
-      console.error('[admin/lagerungsprotokoll] Anlegen fehlgeschlagen:', error.message)
+      log.error('Anlegen fehlgeschlagen', { errorMessage: error.message })
       return NextResponse.json({ error: `Speichern fehlgeschlagen: ${error.message}` }, { status: 500 })
     }
 
@@ -128,7 +130,7 @@ export async function DELETE(req: NextRequest) {
       .maybeSingle()
 
     if (error) {
-      console.error('[admin/lagerungsprotokoll] Archivierung fehlgeschlagen:', error.message)
+      log.error('Archivierung fehlgeschlagen', { errorMessage: error.message })
       return NextResponse.json({ error: `Archivierung fehlgeschlagen: ${error.message}` }, { status: 500 })
     }
     if (!data) {

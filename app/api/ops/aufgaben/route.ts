@@ -4,6 +4,8 @@ import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { listAufgaben, createAufgabe } from '@/lib/ops/aufgaben'
 import { logAktivitaet } from '@/lib/ops/aktivitaetslog'
 import type { AufgabenStatus, AufgabenKategorie, AufgabenPrioritaet } from '@/lib/ops/types'
+import { logger } from '@/lib/logger'
+const log = logger.child('api:ops')
 
 export async function GET(request: Request) {
   const auth = await requireOpsAdmin()
@@ -51,7 +53,7 @@ export async function POST(request: Request) {
       aktion: 'erstellt',
       nachher: data,
       akteurId: auth.ctx.userId,
-    }).catch((err) => console.error(`Aktivitaetslog (Aufgabe erstellt) fehlgeschlagen: ${err}`))
+    }).catch((err) => log.error('Aktivitaetslog (Aufgabe erstellt) fehlgeschlagen', { errorMessage: String(err) }))
     return NextResponse.json(data)
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 400 })

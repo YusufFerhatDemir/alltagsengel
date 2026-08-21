@@ -37,6 +37,8 @@ import {
 import { alleTarife, istVerkaufBereit, verkaufMoeglich } from '@/lib/coach/pricing'
 import { beendeZugang, massgeblicheBestellung, setzeStatus, verbucheZahlung } from '@/lib/coach/verkauf-server'
 import { sendeKuendigungsbestaetigung, sendeWiderrufsbestaetigung } from '@/lib/emails/coach-bestellung'
+import { logger } from '@/lib/logger'
+const log = logger.child('coach-abo')
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -225,10 +227,9 @@ async function widerrufen(bestellung: CoachBestellung): Promise<NextResponse> {
   } else if (letzteZahlung) {
     // Zahlung verbucht, aber ohne Payment-Intent — Erstattung muss von
     // Hand erfolgen. Sichtbar im Protokoll statt stillschweigend.
-    console.warn(
-      `[Coach-Abo] Widerruf zu Bestellung ${bestellung.id}: Zahlung ohne payment_intent, ` +
-      'Erstattung muss manuell in Stripe ausgelöst werden.'
-    )
+    log.warn('Widerruf: Zahlung ohne payment_intent — Erstattung muss manuell in Stripe ausgeloest werden', {
+      bestellungId: bestellung.id,
+    })
   }
 
   await setzeStatus(bestellung.id, 'widerrufen', { widerrufen_am: new Date().toISOString() })

@@ -143,6 +143,52 @@ function emitLog(level: LogLevel, message: string, context?: LogContext): void {
 }
 
 // ---------------------------------------------------------------------------
+// Error-Normalisierung
+// ---------------------------------------------------------------------------
+
+/**
+ * Extrahiert loggbare Felder aus einem beliebigen Fehlerwert.
+ *
+ * Wichtig: Nicht jeder Fehler ist eine Error-Instanz. Supabase (PostgrestError),
+ * Resend und fetch-Wrapper liefern einfache Objekte mit message/code/details.
+ * String(obj) wuerde daraus '[object Object]' machen und die Ursache
+ * verschlucken — deshalb werden diese Felder hier gezielt uebernommen.
+ */
+function normalizeError(err: unknown): Record<string, unknown> {
+  if (err instanceof Error) {
+    return {
+      errorName: err.name,
+      errorMessage: err.message,
+      ...(isProduction() ? {} : { stack: err.stack }),
+    }
+  }
+  if (err && typeof err === 'object') {
+    const o = err as Record<string, unknown>
+    const out: Record<string, unknown> = {
+      errorName: typeof o.name === 'string' ? o.name : 'Object',
+      errorMessage:
+        typeof o.message === 'string' ? o.message : safeStringify(err),
+    }
+    if (typeof o.code === 'string' || typeof o.code === 'number') out.errorCode = o.code
+    if (typeof o.details === 'string') out.errorDetails = o.details
+    if (typeof o.hint === 'string') out.errorHint = o.hint
+    if (typeof o.status === 'number') out.errorStatus = o.status
+    return out
+  }
+  // Primitive (string/number/...) verhalten sich wie bisher: als Error gewertet,
+  // damit bestehende Auswertungen auf errorName unveraendert greifen.
+  return { errorName: 'Error', errorMessage: String(err) }
+}
+
+function safeStringify(value: unknown): string {
+  try {
+    return JSON.stringify(value) ?? String(value)
+  } catch {
+    return String(value)
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Logger class
 // ---------------------------------------------------------------------------
 
@@ -184,13 +230,23 @@ class Logger {
    * Stack wird nur in Development mitgeloggt.
    */
   errorWithException(message: string, err: unknown, context?: LogContext): void {
-    const error = err instanceof Error ? err : new Error(String(err))
     emitLog('error', message, {
       ...this.defaultContext,
       ...context,
-      errorName: error.name,
-      errorMessage: error.message,
-      ...(isProduction() ? {} : { stack: error.stack }),
+      ...normalizeError(err),
+    })
+  }
+
+  /**
+   * Wie errorWithException, aber auf Level 'warn' — fuer nicht-blockierende
+   * Fehler (z.B. fehlgeschlagene Benachrichtigung), die den Hauptpfad nicht
+   * scheitern lassen.
+   */
+  warnWithException(message: string, err: unknown, context?: LogContext): void {
+    emitLog('warn', message, {
+      ...this.defaultContext,
+      ...context,
+      ...normalizeError(err),
     })
   }
 }
@@ -209,3 +265,7 @@ export const billingLogger = logger.child('billing')
 export const authLogger = logger.child('auth')
 export const adminLogger = logger.child('admin')
 export const auditLogger = logger.child('audit')
+export const apiLogger = logger.child('api')
+export const engelLogger = logger.child('engel')
+export const kundeLogger = logger.child('kunde')
+export const pflegeLogger = logger.child('pflege')

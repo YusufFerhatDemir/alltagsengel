@@ -12,6 +12,8 @@ import {
 import { AmpelDot, BudgetBar, StatusBadge, Banner, EmptyRow } from '@/components/admin/OpsUI'
 import { closeMonthAction } from './actions'
 import { one } from '@/lib/supabase/join'
+import { logger } from '@/lib/logger';
+const log = logger.child('admin:monatsabschluss');
 
 const MONTH_NAMES = [
   'Januar', 'Februar', 'März', 'April', 'Mai', 'Juni',
@@ -110,7 +112,7 @@ function MonatsabschlussDetailInner() {
         caregiver: fullName(one(r.caregiver)), errors: errorsByRecord.get(r.id) || [],
       })))
     } catch (err) {
-      console.error('Monatsabschluss-Detail load error:', err)
+      log.errorWithException('Monatsabschluss-Detail load error', err)
       setNotFound(true)
     } finally {
       setLoading(false)

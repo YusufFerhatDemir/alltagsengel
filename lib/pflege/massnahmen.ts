@@ -15,6 +15,8 @@ import {
   type MassnahmeStatus,
   type PflegeMassnahme,
 } from './types'
+import { logger } from '@/lib/logger'
+const log = logger.child('pflege-audit')
 
 /** Wirft, wenn der Plan gesperrt ist — Maßnahmen erben die Sperre des Plans. */
 async function assertPlanOffen(supabase: SupabaseClient, planId: string, organizationId: string): Promise<void> {
@@ -82,7 +84,7 @@ export async function createMassnahme(supabase: SupabaseClient, params: CreateMa
     aktion: 'erstellt',
     nachher: data,
     akteurId: params.erstelltVon,
-  }).catch((err) => console.error('[pflege-audit] Maßnahme-Log fehlgeschlagen:', err))
+  }).catch((err) => log.errorWithException('Maßnahme-Log fehlgeschlagen', err))
 
   return data as PflegeMassnahme
 }
@@ -190,7 +192,7 @@ export async function updateMassnahme(
     aktion: 'aktualisiert',
     vorher: existing,
     nachher: data,
-  }).catch((err) => console.error('[pflege-audit] Maßnahme-Log fehlgeschlagen:', err))
+  }).catch((err) => log.errorWithException('Maßnahme-Log fehlgeschlagen', err))
 
   return data as PflegeMassnahme
 }

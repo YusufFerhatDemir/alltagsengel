@@ -9,6 +9,8 @@ import NotificationBell from '@/components/NotificationBell'
 import { useUserLocation } from '@/hooks/useUserLocation'
 import { useTrackVisit } from '@/hooks/useTrackVisit'
 import { updateEngelLocation, toggleEngelOnline } from './actions'
+import { logger } from '@/lib/logger'
+const log = logger.child('engel-home')
 
 export default function EngelHomePage() {
   const router = useRouter()
@@ -76,7 +78,7 @@ export default function EngelHomePage() {
       if (completedErr) throw completedErr
       setMonthEarnings((completed || []).reduce((sum, b) => sum + (b.total_amount || 0), 0))
     } catch (err) {
-      console.error('Engel home load error:', err)
+      log.errorWithException('Engel home load error', err)
       setError('Fehler beim Laden der Daten. Bitte versuche es später erneut.')
     } finally {
       setLoading(false)
@@ -90,14 +92,14 @@ export default function EngelHomePage() {
   // Standort in DB aktualisieren wenn GPS verfügbar
   useEffect(() => {
     if (!userLocation.loading && userLocation.city && angel) {
-      updateEngelLocation(userLocation.city).catch((err) => console.warn('[Engel-Home] Standort-Update fehlgeschlagen (non-blocking):', err))
+      updateEngelLocation(userLocation.city).catch((err) => log.warnWithException('Standort-Update fehlgeschlagen (non-blocking)', err))
     }
   }, [userLocation.loading, userLocation.city, angel])
 
   async function toggleOnline() {
     const next = !isOnline
     setIsOnline(next)
-    await toggleEngelOnline(next).catch((err) => console.warn('[Engel-Home] Online-Toggle fehlgeschlagen (non-blocking):', err))
+    await toggleEngelOnline(next).catch((err) => log.warnWithException('Online-Toggle fehlgeschlagen (non-blocking)', err))
   }
 
   async function handleBooking(bookingId: string, action: 'accept' | 'decline') {

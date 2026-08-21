@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server'
 import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireCaregiverSession } from '@/lib/native-auth'
+import { logger } from '@/lib/logger'
+const log = logger.child('api/native/leistungsnachweis-upload')
 
 // ═══════════════════════════════════════════════════════════════
 // POST /api/native/leistungsnachweis-upload
@@ -88,7 +90,7 @@ export async function POST(request: Request) {
       .upload(filePath, buffer, { contentType, cacheControl: '3600', upsert: false })
 
     if (uploadErr) {
-      console.error('[api/native/leistungsnachweis-upload] Storage-Fehler:', uploadErr)
+      log.errorWithException('Storage-Fehler', uploadErr)
       return NextResponse.json({ error: 'Upload fehlgeschlagen' }, { status: 500 })
     }
 
@@ -107,7 +109,7 @@ export async function POST(request: Request) {
       .single()
 
     if (ocrErr || !ocrResult) {
-      console.error('[api/native/leistungsnachweis-upload] ocr_results-Fehler:', ocrErr)
+      log.errorWithException('ocr_results-Fehler', ocrErr)
       return NextResponse.json({ error: 'Foto gespeichert, aber Prüfeintrag fehlgeschlagen' }, { status: 500 })
     }
 

@@ -1,6 +1,8 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { EreignisTyp, BenachrichtigungKategorie } from './types'
 import { logAktivitaet } from './aktivitaetslog'
+import { logger } from '@/lib/logger'
+const slog = logger.child('ops')
 
 /** Ergebnis eines Ereignis-Emits — wird von der API-Route direkt zurueckgegeben. */
 export interface EreignisErgebnis {
@@ -65,7 +67,7 @@ export async function emitEreignis(
         push_gesendet: false,
       })
       if (bErr) {
-        console.error(`Benachrichtigung fuer ${empfaengerId} fehlgeschlagen: ${bErr.message}`)
+        slog.error(`Benachrichtigung fuer ${empfaengerId} fehlgeschlagen: ${bErr.message}`)
       } else {
         benachrichtigungen++
       }
@@ -83,7 +85,7 @@ export async function emitEreignis(
     nachher: { ereignis_typ: params.ereignisTyp, kontext: params.kontext },
     akteurId: params.akteurId,
   }).catch((err) => {
-    console.error(`Aktivitaetslog fuer Ereignis fehlgeschlagen: ${err}`)
+    slog.error('Aktivitaetslog fuer Ereignis fehlgeschlagen', { errorMessage: String(err) })
     return null
   })
 
@@ -117,7 +119,7 @@ async function mitgliederMitProfilrolle(
     .eq('organization_id', organizationId)
 
   if (mErr) {
-    console.error(`resolveEmpfaenger: organization_members fehlgeschlagen: ${mErr.message}`)
+    slog.error('resolveEmpfaenger: organization_members fehlgeschlagen', { errorMessage: mErr.message })
     return []
   }
 
@@ -132,7 +134,7 @@ async function mitgliederMitProfilrolle(
     .is('deleted_at', null)
 
   if (pErr) {
-    console.error(`resolveEmpfaenger: profiles fehlgeschlagen: ${pErr.message}`)
+    slog.error('resolveEmpfaenger: profiles fehlgeschlagen', { errorMessage: pErr.message })
     return []
   }
 

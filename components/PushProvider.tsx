@@ -2,6 +2,8 @@
 
 import { useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { logger } from '@/lib/logger'
+const log = logger.child('ui:PushProvider')
 
 const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || ''
 
@@ -73,7 +75,7 @@ export default function PushProvider() {
 
         if (res.ok) subscribedRef.current = true
       } catch (err) {
-        console.warn('Push subscription error:', err)
+        log.warnWithException('Push subscription error', err)
       }
     }
 

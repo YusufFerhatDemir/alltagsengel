@@ -13,6 +13,8 @@ import {
   formatTime, statusMeta, fullName,
   DIENSTPLAN_STATUS, DIENSTPLAN_TYP,
 } from '@/lib/admin/ops'
+import { logger } from '@/lib/logger';
+const log = logger.child('engel:dienstplan');
 
 interface DienstplanEintrag {
   id: string
@@ -98,7 +100,7 @@ export default function DienstplanPage() {
       }))
       setEintraege(normalized as DienstplanEintrag[])
     } catch (err) {
-      console.error('Dienstplan laden:', err)
+      log.errorWithException('Dienstplan laden', err)
       const code = (err as { code?: string })?.code
       setError(
         code === 'PGRST205'

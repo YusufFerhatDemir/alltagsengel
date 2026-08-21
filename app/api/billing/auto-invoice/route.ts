@@ -5,6 +5,8 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { requireCaregiverSession } from '@/lib/native-auth'
 import { createInvoiceDraft } from '@/lib/billing/core'
 import { getActiveOrgId } from '@/lib/organizations/server'
+import { logger } from '@/lib/logger'
+const log = logger.child('auto-invoice')
 
 // ═══════════════════════════════════════════════════════════════
 // POST /api/billing/auto-invoice
@@ -259,7 +261,7 @@ export async function POST(request: Request) {
         })
         engineResults.push({ ...result, budgetType })
       } catch (engineErr: any) {
-        console.error(`[auto-invoice] Engine-Fehler für ${budgetType}:`, engineErr)
+        log.errorWithException(`Engine-Fehler für ${budgetType}:`, engineErr)
         warnings.push(`${budgetType}: ${engineErr.message}`)
       }
     }
@@ -291,7 +293,7 @@ export async function POST(request: Request) {
       .select()
       .eq('invoice_id', primary.invoiceId)
 
-    console.log(`[auto-invoice] ${engineResults.length} Rechnung(en) via Engine erstellt für Klient ${resolvedClientId}, Monat ${resolvedMonth} durch ${auth.actor}`)
+    log.info(`${engineResults.length} Rechnung(en) via Engine erstellt für Klient ${resolvedClientId}, Monat ${resolvedMonth} durch ${auth.actor}`)
 
     return NextResponse.json({
       ready: true,

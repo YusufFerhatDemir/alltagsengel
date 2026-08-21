@@ -3,6 +3,8 @@ import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { logAuditEvent } from '@/lib/audit-log'
+import { logger } from '@/lib/logger'
+const log = logger.child('admin/aerzte')
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -58,7 +60,7 @@ export async function GET(
       .maybeSingle()
 
     if (error) {
-      console.error('[admin/aerzte] Laden fehlgeschlagen:', error.message)
+      log.error('Laden fehlgeschlagen', { errorMessage: error.message })
       return NextResponse.json({ error: 'Interner Serverfehler' }, { status: 500 })
     }
     if (!data) {
@@ -108,7 +110,7 @@ export async function PATCH(
       .maybeSingle()
 
     if (error) {
-      console.error('[admin/aerzte] Update fehlgeschlagen:', error.message)
+      log.error('Update fehlgeschlagen', { errorMessage: error.message })
       return NextResponse.json({ error: `Speichern fehlgeschlagen: ${error.message}` }, { status: 500 })
     }
     if (!data) {
@@ -155,7 +157,7 @@ export async function DELETE(
       .maybeSingle()
 
     if (error) {
-      console.error('[admin/aerzte] Deaktivieren fehlgeschlagen:', error.message)
+      log.error('Deaktivieren fehlgeschlagen', { errorMessage: error.message })
       return NextResponse.json({ error: 'Interner Serverfehler' }, { status: 500 })
     }
     if (!data) {

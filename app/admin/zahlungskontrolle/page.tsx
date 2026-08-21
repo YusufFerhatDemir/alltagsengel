@@ -7,6 +7,8 @@ import {
 } from '@/lib/admin/ops'
 import { StatusBadge, SearchInput, EmptyRow, Banner } from '@/components/admin/OpsUI'
 import { sendPaymentReminder, recordPayment } from './actions'
+import { logger } from '@/lib/logger';
+const log = logger.child('admin:zahlungskontrolle');
 
 interface PaymentRow {
   id: string
@@ -61,7 +63,7 @@ export default function AdminZahlungskontrollePage() {
         isOverdue: !!p.due_date && p.due_date < t && p.status !== 'bezahlt' && p.status !== 'storniert',
       })))
     } catch (err) {
-      console.error('Zahlungskontrolle load error:', err)
+      log.errorWithException('Zahlungskontrolle load error', err)
     } finally {
       setLoading(false)
     }
@@ -75,7 +77,7 @@ export default function AdminZahlungskontrollePage() {
       await sendPaymentReminder(row.id, row.reminder_count)
       await load()
     } catch (err: any) {
-      console.error('Mahnung error:', err)
+      log.errorWithException('Mahnung error', err)
       setError(err?.message || 'Mahnung fehlgeschlagen.')
     } finally {
       setReminderBusyId(null)

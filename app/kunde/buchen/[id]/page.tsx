@@ -21,6 +21,8 @@ import {
   WOCHENTAGE,
   type Zeitfenster,
 } from '@/lib/availability'
+import { logger } from '@/lib/logger';
+const log = logger.child('kunde-buchung');
 
 export default function BuchenPage() {
   const router = useRouter()
@@ -222,7 +224,7 @@ export default function BuchenPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ bookingId: result.data.id, event: 'created' }),
-      }).catch((err) => console.warn('[Kunde-Buchung] Benachrichtigung fehlgeschlagen (non-blocking):', err))
+      }).catch((err) => log.warnWithException('Benachrichtigung fehlgeschlagen (non-blocking)', err))
 
       router.push(`/kunde/warten/${result.data.id}`)
     } catch (err) {

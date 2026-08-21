@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server'
 import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireCaregiverSession } from '@/lib/native-auth'
+import { logger } from '@/lib/logger'
+const log = logger.child('api/native/signatures')
 
 // ═══════════════════════════════════════════════════════════════
 // POST /api/native/signatures
@@ -108,7 +110,7 @@ export async function POST(request: Request) {
       .single()
 
     if (sigErr || !signature) {
-      console.error('[api/native/signatures] Insert-Fehler:', sigErr)
+      log.errorWithException('Insert-Fehler', sigErr)
       return NextResponse.json({ error: 'Unterschrift konnte nicht gespeichert werden' }, { status: 500 })
     }
 

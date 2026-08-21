@@ -3,6 +3,8 @@ import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { genehmigeHkpVerordnung, ladeHkpVerordnung } from '@/lib/abrechnung/sgb-v/verordnung-service'
+import { logger } from '@/lib/logger'
+const log = logger.child('billing/sgb-v/verordnungen/[id]')
 
 /** GET /api/billing/sgb-v/verordnungen/[id] */
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -36,7 +38,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     return NextResponse.json({ success: true })
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Interner Serverfehler'
-    console.error('[billing/sgb-v/verordnungen/[id]] Fehler:', message)
+    log.error('] Fehler', { message })
     return NextResponse.json({ error: message }, { status: 400 })
   }
 }

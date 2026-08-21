@@ -5,6 +5,8 @@ import { requireAdminMitOrg } from '@/lib/abrechnung/require-admin'
 import { ermittleVoraussetzungen } from '@/lib/pilot/voraussetzungen'
 import { ermittleKundenKetten } from '@/lib/pilot/kundenkette'
 import { KETTEN_SCHRITTE } from '@/lib/pilot/schritte'
+import { logger } from '@/lib/logger'
+const log = logger.child('admin/pilot')
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -38,7 +40,7 @@ export async function GET(request: Request) {
       .limit(MAX_KUNDEN)
 
     if (clientsError) {
-      console.error('[admin/pilot] Kunden nicht lesbar:', clientsError)
+      log.errorWithException('Kunden nicht lesbar', clientsError)
       return NextResponse.json({ error: 'Interner Serverfehler' }, { status: 500 })
     }
 

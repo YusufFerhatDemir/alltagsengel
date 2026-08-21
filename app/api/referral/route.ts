@@ -1,6 +1,8 @@
 import { NextResponse, NextRequest } from 'next/server'
 import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { logger } from '@/lib/logger'
+const log = logger.child('api:referral')
 
 const supabaseAdmin = createAdminClient()
 
@@ -117,7 +119,7 @@ export async function POST(request: NextRequest) {
       })
 
     if (insertError) {
-      console.error('Referral insert error:', insertError)
+      log.errorWithException('Referral insert error', insertError)
       return NextResponse.json({ error: 'Fehler beim Speichern' }, { status: 500 })
     }
 

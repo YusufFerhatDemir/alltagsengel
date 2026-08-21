@@ -3,6 +3,8 @@ import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { logAuditEvent } from '@/lib/audit-log'
+import { logger } from '@/lib/logger'
+const log = logger.child('admin/biografiebogen')
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -50,7 +52,7 @@ export async function GET(
       .maybeSingle()
 
     if (error) {
-      console.error('[admin/biografiebogen] Laden fehlgeschlagen:', error.message)
+      log.error('Laden fehlgeschlagen', { errorMessage: error.message })
       return NextResponse.json({ error: 'Interner Serverfehler' }, { status: 500 })
     }
 
@@ -101,7 +103,7 @@ export async function PUT(
         .eq('id', bestehend.id)
         .eq('organization_id', auth.ctx.organizationId)
       if (error) {
-        console.error('[admin/biografiebogen] Update fehlgeschlagen:', error.message)
+        log.error('Update fehlgeschlagen', { errorMessage: error.message })
         return NextResponse.json({ error: `Speichern fehlgeschlagen: ${error.message}` }, { status: 500 })
       }
 
@@ -115,7 +117,7 @@ export async function PUT(
         entityId: bestehend.id,
         details: { clientId, geaenderteFelder: Object.keys(eingabe) },
         request: req,
-      }).catch(err => console.error('[admin/biografiebogen] Audit-Log fehlgeschlagen:', err))
+      }).catch(err => log.errorWithException('Audit-Log fehlgeschlagen', err))
 
       return NextResponse.json({ erfolg: true, id: bestehend.id })
     }
@@ -126,7 +128,7 @@ export async function PUT(
       .select('id')
       .single()
     if (error) {
-      console.error('[admin/biografiebogen] Anlegen fehlgeschlagen:', error.message)
+      log.error('Anlegen fehlgeschlagen', { errorMessage: error.message })
       return NextResponse.json({ error: `Speichern fehlgeschlagen: ${error.message}` }, { status: 500 })
     }
 
@@ -138,7 +140,7 @@ export async function PUT(
       entityId: data.id,
       details: { clientId, felder: Object.keys(eingabe) },
       request: req,
-    }).catch(err => console.error('[admin/biografiebogen] Audit-Log fehlgeschlagen:', err))
+    }).catch(err => log.errorWithException('Audit-Log fehlgeschlagen', err))
 
     return NextResponse.json({ erfolg: true, id: data.id })
   } catch (e) {

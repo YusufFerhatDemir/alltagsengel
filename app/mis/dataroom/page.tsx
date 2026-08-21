@@ -5,6 +5,8 @@ import { BRAND } from '@/lib/mis/constants'
 import { SectionHeader, Card, DataTable, MisButton, Badge, EmptyState, StatRow, KpiCard } from '@/components/mis/MisComponents'
 import { MIcon } from '@/components/mis/MisIcons'
 import { useMis } from '@/lib/mis/MisContext'
+import { logger } from '@/lib/logger'
+const log = logger.child('mis:dataroom')
 
 const DATA_ROOM_DOCS = [
   { section: 'Unternehmensübersicht', file: 'AlltagsEngel-Company-Overview.docx', size: '13 KB', type: 'DOCX', status: 'final', link: '/investor/unternehmensprofil' },
@@ -29,9 +31,9 @@ export default function DataRoomPage() {
       try {
         const supabase = createClient()
         const { data, error } = await supabase.from('mis_dataroom_access').select('*').order('created_at', { ascending: false }).limit(20)
-        if (error) console.error('Dataroom access error:', error)
+        if (error) log.errorWithException('Dataroom access error', error)
         setAccessLog(data || [])
-      } catch (err) { console.error('Dataroom loadData error:', err) }
+      } catch (err) { log.errorWithException('Dataroom loadData error', err) }
     })()
   }, [])
 
