@@ -64,11 +64,12 @@ describe('safeApiError', () => {
     safeApiError(new Error('Supabase RLS denied'), req)
 
     expect(consoleErrorSpy).toHaveBeenCalledOnce()
-    const [prefix, details] = consoleErrorSpy.mock.calls[0]
-    expect(prefix).toContain('[API_ERROR]')
-    expect(details.message).toBe('Supabase RLS denied')
-    expect(details.path).toBe('/api/billing/create')
-    expect(details.method).toBe('POST')
+    // Structured logger gibt einen einzelnen formatierten String aus
+    const ausgabe = String(consoleErrorSpy.mock.calls[0][0])
+    expect(ausgabe).toContain('API-Fehler')
+    expect(ausgabe).toContain('Supabase RLS denied')
+    expect(ausgabe).toContain('/api/billing/create')
+    expect(ausgabe).toContain('POST')
   })
 
   it('gibt debug_message in Development zurueck', async () => {
@@ -88,14 +89,14 @@ describe('safeApiError', () => {
     const req = makeRequest()
     safeApiError(new Error('prod error'), req)
 
-    const details = consoleErrorSpy.mock.calls[0][1]
-    expect(details.stack).toBeUndefined()
+    const ausgabe = String(consoleErrorSpy.mock.calls[0][0])
+    expect(ausgabe).not.toContain('"stack":')
   })
 
   it('behandelt Non-Error-Objekte (string throw)', async () => {
     const body = await parseBody(safeApiError('something broke'))
     expect(body.error).toBe('Interner Serverfehler')
-    expect(consoleErrorSpy.mock.calls[0][1].message).toBe('something broke')
+    expect(String(consoleErrorSpy.mock.calls[0][0])).toContain('something broke')
   })
 
   it('behandelt undefined/null Fehler', async () => {
@@ -108,8 +109,8 @@ describe('safeApiError', () => {
     const body = await parseBody(safeApiError(new Error('no req')))
     expect(body.error).toBe('Interner Serverfehler')
     expect(body.correlationId).toBeDefined()
-    const details = consoleErrorSpy.mock.calls[0][1]
-    expect(details.path).toBeUndefined()
+    const ausgabe = String(consoleErrorSpy.mock.calls[0][0])
+    expect(ausgabe).not.toContain('"path":')
   })
 
   it('generiert einzigartige correlationIds', () => {
