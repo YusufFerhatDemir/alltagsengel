@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { NextResponse } from 'next/server'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 import { aktualisiereFehler, holeFehlerDashboard } from '@/lib/abrechnung/fehlerprotokoll'
 import { getActiveOrgId } from '@/lib/organizations/server'
 
@@ -61,7 +62,7 @@ export async function GET(request: Request) {
     const { data } = await query
     return NextResponse.json(data ?? [])
   } catch (err) {
-    return NextResponse.json({ error: (err as Error).message }, { status: 500 })
+    return safeApiError(err, request)
   }
 }
 
@@ -126,6 +127,6 @@ export async function PATCH(request: Request) {
 
     return NextResponse.json({ success: true })
   } catch (err) {
-    return NextResponse.json({ error: (err as Error).message }, { status: 500 })
+    return safeApiError(err, request)
   }
 }

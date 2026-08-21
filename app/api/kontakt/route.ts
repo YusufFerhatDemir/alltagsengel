@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 import { Resend } from 'resend'
 import { rateLimit, getClientIp, escapeHtml } from '@/lib/rate-limit'
 
@@ -110,7 +111,6 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true })
   } catch (err) {
-    console.error('[Kontakt] Fehler:', err)
-    return NextResponse.json({ error: 'Serverfehler' }, { status: 500 })
+    return safeApiError(err, request)
   }
 }

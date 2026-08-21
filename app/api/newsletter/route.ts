@@ -1,5 +1,6 @@
 import { Resend } from 'resend'
 import { NextResponse } from 'next/server'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { rateLimit, getClientIp } from '@/lib/rate-limit'
 
@@ -88,7 +89,6 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true })
   } catch (err) {
-    console.error('[Newsletter] Fehler:', err)
-    return NextResponse.json({ error: 'Serverfehler' }, { status: 500 })
+    return safeApiError(err, request)
   }
 }

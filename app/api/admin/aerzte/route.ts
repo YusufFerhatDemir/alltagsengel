@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { logAuditEvent } from '@/lib/audit-log'
@@ -38,7 +39,7 @@ function validiereFelder(eingabe: Record<string, unknown>): string | null {
 }
 
 /** GET — alle Aerzte der aktiven Organisation. */
-export async function GET() {
+export async function GET(request: NextRequest) {
   const auth = await requireOpsAdmin()
   if (!auth.ok) return auth.response
 
@@ -58,8 +59,7 @@ export async function GET() {
 
     return NextResponse.json({ aerzte: data ?? [] })
   } catch (e) {
-    console.error('[admin/aerzte] Unerwarteter Fehler:', e)
-    return NextResponse.json({ error: 'Interner Serverfehler' }, { status: 500 })
+    return safeApiError(e, request)
   }
 }
 
@@ -111,7 +111,6 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ erfolg: true, id: data.id })
   } catch (e) {
-    console.error('[admin/aerzte] Unerwarteter Fehler:', e)
-    return NextResponse.json({ error: 'Interner Serverfehler' }, { status: 500 })
+    return safeApiError(e, req)
   }
 }

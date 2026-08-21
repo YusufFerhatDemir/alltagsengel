@@ -25,6 +25,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { NextResponse } from 'next/server'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 import { stripe } from '@/lib/stripe/client'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireCoachUser } from '@/lib/coach/api-auth'
@@ -135,11 +136,7 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: 'Unbekannte Aktion.' }, { status: 400 })
     }
   } catch (err) {
-    console.error(`[Coach-Abo] Aktion „${aktion}" fehlgeschlagen:`, err)
-    return NextResponse.json(
-      { error: 'Die Aktion konnte nicht ausgeführt werden. Bitte versuchen Sie es später erneut.' },
-      { status: 500 }
-    )
+    return safeApiError(err, request)
   }
 }
 

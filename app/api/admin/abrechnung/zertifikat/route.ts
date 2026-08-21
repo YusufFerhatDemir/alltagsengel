@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 import { requireAdmin, requireAdminMitOrg } from '@/lib/abrechnung/require-admin'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getActiveOrgId } from '@/lib/organizations/server'
@@ -13,7 +14,7 @@ export const dynamic = 'force-dynamic'
  * GET /api/admin/abrechnung/zertifikat
  * Liste aller hinterlegten Zertifikate (Absender + Empfänger-Cache).
  */
-export async function GET() {
+export async function GET(request: Request) {
   const auth = await requireAdmin()
   if (!auth.ok) return auth.response
   try {
@@ -31,9 +32,8 @@ export async function GET() {
 
     const passwortGesetzt = Boolean(process.env.SECON_ZERT_PASSWORT)
     return NextResponse.json({ zertifikate: data || [], passwort_env_gesetzt: passwortGesetzt })
-  } catch (e: any) {
-    console.error('[api] Unerwarteter Fehler:', e)
-    return NextResponse.json({ error: 'Interner Serverfehler' }, { status: 500 })
+  } catch (e) {
+    return safeApiError(e, request)
   }
 }
 
@@ -115,8 +115,7 @@ export async function POST(req: NextRequest) {
         ? undefined
         : 'WICHTIG: Passwort als Env-Variable SECON_ZERT_PASSWORT in Vercel hinterlegen — es wird nicht gespeichert.',
     })
-  } catch (e: any) {
-    console.error('[api] Unerwarteter Fehler:', e)
-    return NextResponse.json({ error: 'Interner Serverfehler' }, { status: 500 })
+  } catch (e) {
+    return safeApiError(e, req)
   }
 }

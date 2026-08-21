@@ -6,6 +6,7 @@
  */
 
 import { NextResponse } from 'next/server'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import {
@@ -13,7 +14,7 @@ import {
   escaliereUeberfaellige,
 } from '@/lib/abrechnung/fristen-manager'
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     const auth = await requireOpsAdmin()
     if (!auth.ok) return auth.response
@@ -24,11 +25,11 @@ export async function GET() {
 
     return NextResponse.json(uebersicht)
   } catch (err) {
-    return NextResponse.json({ error: (err as Error).message }, { status: 500 })
+    return safeApiError(err, request)
   }
 }
 
-export async function POST() {
+export async function POST(request: Request) {
   try {
     const auth = await requireOpsAdmin()
     if (!auth.ok) return auth.response
@@ -42,6 +43,6 @@ export async function POST() {
       nachricht: `${ergebnis.eskaliert} Fristen eskaliert, ${ergebnis.abgelaufen} als abgelaufen markiert.`,
     })
   } catch (err) {
-    return NextResponse.json({ error: (err as Error).message }, { status: 500 })
+    return safeApiError(err, request)
   }
 }

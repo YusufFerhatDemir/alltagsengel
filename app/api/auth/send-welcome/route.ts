@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 import { sendEmailNotification } from '@/lib/notifications'
 import { createClient } from '@/lib/supabase/server'
 
@@ -117,7 +118,6 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true })
   } catch (err) {
-    console.error('send-welcome error:', err)
-    return NextResponse.json({ error: 'Fehler beim Senden der Willkommens-E-Mail' }, { status: 500 })
+    return safeApiError(err, request)
   }
 }

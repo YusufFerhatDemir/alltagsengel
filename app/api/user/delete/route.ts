@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient as createRawClient } from '@supabase/supabase-js'
@@ -201,12 +202,7 @@ export async function DELETE(request: NextRequest) {
       grace_days: GRACE_DAYS,
       expires_at: expiresAt.toISOString(),
     })
-  } catch (err: any) {
-    console.error('user/delete unexpected error:', {
-      code: err?.code,
-      name: err?.name,
-      status: err?.status,
-    })
-    return NextResponse.json({ error: 'Fehler beim Loeschen des Kontos' }, { status: 500 })
+  } catch (err) {
+    return safeApiError(err, request)
   }
 }

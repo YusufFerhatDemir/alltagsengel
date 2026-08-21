@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getActiveOrgId } from '@/lib/organizations/server'
@@ -8,7 +9,7 @@ import { logAuditEvent } from '@/lib/audit-log'
  * GET /api/admin/krankenfahrten
  * Returns all Krankenfahrten bookings + providers + stats for admin
  */
-export async function GET() {
+export async function GET(request: Request) {
   try {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
@@ -80,9 +81,8 @@ export async function GET() {
         verifiedProviders,
       },
     })
-  } catch (err: any) {
-    console.error('[api] Unerwarteter Fehler:', err)
-    return NextResponse.json({ error: 'Interner Serverfehler' }, { status: 500 })
+  } catch (err) {
+    return safeApiError(err, request)
   }
 }
 
@@ -172,8 +172,7 @@ export async function PUT(req: Request) {
     }
 
     return NextResponse.json({ error: 'Ungültige Entität' }, { status: 400 })
-  } catch (err: any) {
-    console.error('[api] Unerwarteter Fehler:', err)
-    return NextResponse.json({ error: 'Interner Serverfehler' }, { status: 500 })
+  } catch (err) {
+    return safeApiError(err, req)
   }
 }

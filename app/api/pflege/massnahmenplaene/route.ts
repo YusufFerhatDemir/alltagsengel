@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requirePflegeAdmin } from '@/lib/pflege/api-auth'
 import { createPlan, listPlaene, neueVersion } from '@/lib/pflege/massnahmenplaene'
@@ -20,7 +21,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json({ plaene })
   } catch (err) {
-    return NextResponse.json({ error: (err as Error).message }, { status: 500 })
+    return safeApiError(err, request)
   }
 }
 

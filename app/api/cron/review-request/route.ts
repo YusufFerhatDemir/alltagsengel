@@ -1,5 +1,6 @@
 import { Resend } from 'resend'
 import { NextResponse } from 'next/server'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createAdminClient } from '@/lib/supabase/admin'
 
 // ═══════════════════════════════════════════════════════════
@@ -130,7 +131,6 @@ export async function GET(request: Request) {
     console.log(`[ReviewCron] ${sent} Bewertungs-Anfragen gesendet`)
     return NextResponse.json({ success: true, sent, total: bookings.length })
   } catch (err) {
-    console.error('[ReviewCron] Fehler:', err)
-    return NextResponse.json({ error: 'Cron job failed' }, { status: 500 })
+    return safeApiError(err, request)
   }
 }

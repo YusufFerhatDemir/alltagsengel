@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 import { notifyIndexers } from '@/lib/indexing'
 
 // ═══════════════════════════════════════════════════════════
@@ -40,7 +41,6 @@ export async function GET(request: Request) {
       result,
     })
   } catch (err) {
-    console.error('[CRON] IndexNow-Ping Fehler:', err)
-    return NextResponse.json({ error: 'Cron job failed' }, { status: 500 })
+    return safeApiError(err, request)
   }
 }

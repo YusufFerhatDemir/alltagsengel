@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 
@@ -59,7 +60,6 @@ export async function PATCH(
 
     return NextResponse.json({ erfolg: true, id: data.id })
   } catch (e) {
-    console.error('[admin/zuzahlungen] Unerwarteter Fehler:', e)
-    return NextResponse.json({ error: 'Interner Serverfehler' }, { status: 500 })
+    return safeApiError(e, req)
   }
 }

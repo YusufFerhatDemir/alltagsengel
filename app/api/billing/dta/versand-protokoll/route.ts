@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireAdminMitOrg } from '@/lib/abrechnung/require-admin'
 import { ladeVersandProtokoll, type VersandKanal } from '@/lib/abrechnung/versand-protokoll'
@@ -37,6 +38,6 @@ export async function GET(request: Request) {
 
     return NextResponse.json({ zeilen, anzahl: zeilen.length })
   } catch (err) {
-    return NextResponse.json({ error: (err as Error).message }, { status: 500 })
+    return safeApiError(err, request)
   }
 }

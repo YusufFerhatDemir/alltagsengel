@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireAdminMitOrg } from '@/lib/abrechnung/require-admin'
 import { ermittleKundenKette } from '@/lib/pilot/kundenkette'
@@ -43,7 +44,6 @@ export async function GET(
 
     return NextResponse.json({ kette, voraussetzungen })
   } catch (e) {
-    console.error('[admin/pilot/:clientId] Unerwarteter Fehler:', e)
-    return NextResponse.json({ error: 'Interner Serverfehler' }, { status: 500 })
+    return safeApiError(e, _request)
   }
 }

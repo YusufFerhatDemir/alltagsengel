@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 import { requireAdminMitOrg } from '@/lib/abrechnung/require-admin'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { ZERTIFIKAT_BUCKET } from '@/lib/abrechnung/zertifikate'
@@ -97,8 +98,7 @@ export async function POST(req: NextRequest) {
     })
 
     return NextResponse.json({ erfolg: true, pfad })
-  } catch (e: any) {
-    console.error('[api] Unerwarteter Fehler:', e)
-    return NextResponse.json({ error: 'Interner Serverfehler' }, { status: 500 })
+  } catch (e) {
+    return safeApiError(e, req)
   }
 }

@@ -1,5 +1,6 @@
 import { Resend } from 'resend'
 import { NextResponse } from 'next/server'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 import { escapeHtml } from '@/lib/rate-limit'
 import { createAdminClient } from '@/lib/supabase/admin'
 
@@ -220,7 +221,6 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true, sent })
   } catch (err) {
-    console.error('Drip campaign error:', err)
-    return NextResponse.json({ error: 'Serverfehler' }, { status: 500 })
+    return safeApiError(err, request)
   }
 }

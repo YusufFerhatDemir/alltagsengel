@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireCaregiverSession } from '@/lib/native-auth'
 import { checkWithinRadius } from '@/lib/geo'
@@ -131,7 +132,6 @@ export async function POST(request: Request) {
       radius_m: radiusM,
     })
   } catch (err) {
-    console.error('[api/native/geo-events] Unerwarteter Fehler:', err)
-    return NextResponse.json({ error: 'Interner Fehler' }, { status: 500 })
+    return safeApiError(err, request)
   }
 }

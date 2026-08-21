@@ -56,8 +56,7 @@ export async function GET(
 
     return NextResponse.json({ client, bogen: data ?? null })
   } catch (e) {
-    console.error('[admin/biografiebogen] Unerwarteter Fehler:', e)
-    return NextResponse.json({ error: 'Interner Serverfehler' }, { status: 500 })
+    return safeApiError(e, _req)
   }
 }
 
@@ -143,7 +142,6 @@ export async function PUT(
 
     return NextResponse.json({ erfolg: true, id: data.id })
   } catch (e) {
-    console.error('[admin/biografiebogen] Unerwarteter Fehler:', e)
-    return NextResponse.json({ error: 'Interner Serverfehler' }, { status: 500 })
+    return safeApiError(e, req)
   }
 }

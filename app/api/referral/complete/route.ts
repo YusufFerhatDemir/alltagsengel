@@ -1,4 +1,5 @@
 import { NextResponse, NextRequest } from 'next/server'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createClient as createServerClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 
@@ -120,7 +121,6 @@ export async function POST(request: NextRequest) {
       message: `${bonus} € Bonus für beide Seiten gutgeschrieben`,
     })
   } catch (err) {
-    console.error('Referral complete error:', err)
-    return NextResponse.json({ error: 'Serverfehler' }, { status: 500 })
+    return safeApiError(err, request)
   }
 }

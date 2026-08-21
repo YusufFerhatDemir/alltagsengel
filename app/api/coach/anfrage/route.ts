@@ -25,6 +25,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { NextResponse } from 'next/server'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 import { Resend } from 'resend'
 import { rateLimit, getClientIp, escapeHtml } from '@/lib/rate-limit'
 import { COACH_PRODUKT_VERSION, COACH_SUPPORT_EMAIL } from '@/lib/coach/version'
@@ -149,7 +150,6 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ gesendet: true })
   } catch (err) {
-    console.error('[Coach-Anfrage] Fehler:', err)
-    return NextResponse.json({ error: 'Die Anfrage konnte nicht gesendet werden.' }, { status: 500 })
+    return safeApiError(err, request)
   }
 }

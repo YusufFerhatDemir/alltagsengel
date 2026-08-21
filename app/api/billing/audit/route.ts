@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 import { getActiveOrgId } from '@/lib/organizations/server'
 
 /**
@@ -71,7 +72,6 @@ export async function GET(request: Request) {
 
     return NextResponse.json(entries)
   } catch (err) {
-    console.error('Unerwarteter Fehler beim Laden des Audit-Trails:', err)
-    return NextResponse.json({ error: 'Interner Serverfehler' }, { status: 500 })
+    return safeApiError(err, request)
   }
 }

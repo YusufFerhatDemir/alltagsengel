@@ -26,6 +26,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { NextResponse } from 'next/server'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 import { stripe } from '@/lib/stripe/client'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireCoachUser } from '@/lib/coach/api-auth'
@@ -247,10 +248,6 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ url: sitzung.url })
   } catch (err) {
-    console.error('[Coach-Checkout] Fehler:', err)
-    return NextResponse.json(
-      { error: 'Die Bestellung konnte nicht gestartet werden. Bitte versuchen Sie es später erneut.' },
-      { status: 500 }
-    )
+    return safeApiError(err, request)
   }
 }

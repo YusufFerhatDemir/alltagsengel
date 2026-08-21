@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireAktenUser } from '@/lib/akten/api-auth'
@@ -13,7 +14,7 @@ import { logAktenZugriff } from '@/lib/akten/zugriff-log'
 //    oder Engel).
 // 2) Erst danach wird mit dem Service-Role-Client die signierte URL erzeugt,
 //    weil die Storage-Buckets keine eigenen Client-Policies haben.
-export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params
     const auth = await requireAktenUser()
@@ -49,6 +50,6 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
 
     return NextResponse.json({ url, dateiname: dokument.dateiname })
   } catch (err) {
-    return NextResponse.json({ error: (err as Error).message }, { status: 500 })
+    return safeApiError(err, request)
   }
 }

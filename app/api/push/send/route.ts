@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { sendPushToUser, type PushPayload } from '@/lib/push'
 
@@ -34,7 +35,6 @@ export async function POST(request: Request) {
       failed: result.failed,
     })
   } catch (err) {
-    console.error('Push send API error:', err)
-    return NextResponse.json({ error: 'Interner Fehler' }, { status: 500 })
+    return safeApiError(err, request)
   }
 }

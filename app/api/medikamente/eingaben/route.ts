@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createClient } from '@/lib/supabase/server'
 import { requireMedUser } from '@/lib/medikamente/api-auth'
 import { listeEingaben, erfasseEingabe } from '@/lib/medikamente/medikamente'
@@ -27,9 +28,8 @@ export async function GET(req: NextRequest) {
     const sb = await createClient()
     const data = await listeEingaben(sb, auth.organizationId, filter)
     return NextResponse.json(data)
-  } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : 'Unbekannter Fehler'
-    return NextResponse.json({ error: msg }, { status: 500 })
+  } catch (e) {
+    return safeApiError(e, req)
   }
 }
 
@@ -45,8 +45,7 @@ export async function POST(req: NextRequest) {
     const sb = await createClient()
     const data = await erfasseEingabe(sb, auth.organizationId, auth.userId, body)
     return NextResponse.json(data, { status: 201 })
-  } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : 'Unbekannter Fehler'
-    return NextResponse.json({ error: msg }, { status: 500 })
+  } catch (e) {
+    return safeApiError(e, req)
   }
 }

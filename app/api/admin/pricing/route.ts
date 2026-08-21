@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/server'
 import { invalidatePricingCache } from '@/lib/pricing-engine'
@@ -85,9 +86,8 @@ export async function GET(request: Request) {
     )
     if (dbErr) throw dbErr
     return NextResponse.json({ [entity]: data })
-  } catch (err: any) {
-    console.error('[api] Unerwarteter Fehler:', err)
-    return NextResponse.json({ error: 'Interner Serverfehler' }, { status: 500 })
+  } catch (err) {
+    return safeApiError(err, request)
   }
 }
 
@@ -116,9 +116,8 @@ export async function POST(request: Request) {
     invalidatePricingCache()
 
     return NextResponse.json(data, { status: 201 })
-  } catch (err: any) {
-    console.error('[api] Unerwarteter Fehler:', err)
-    return NextResponse.json({ error: 'Interner Serverfehler' }, { status: 500 })
+  } catch (err) {
+    return safeApiError(err, request)
   }
 }
 
@@ -151,9 +150,8 @@ export async function PUT(request: Request) {
     invalidatePricingCache()
 
     return NextResponse.json(data)
-  } catch (err: any) {
-    console.error('[api] Unerwarteter Fehler:', err)
-    return NextResponse.json({ error: 'Interner Serverfehler' }, { status: 500 })
+  } catch (err) {
+    return safeApiError(err, request)
   }
 }
 
@@ -187,8 +185,7 @@ export async function DELETE(request: Request) {
     invalidatePricingCache()
 
     return NextResponse.json({ success: true })
-  } catch (err: any) {
-    console.error('[api] Unerwarteter Fehler:', err)
-    return NextResponse.json({ error: 'Interner Serverfehler' }, { status: 500 })
+  } catch (err) {
+    return safeApiError(err, request)
   }
 }

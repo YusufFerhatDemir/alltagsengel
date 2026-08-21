@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import {
@@ -40,7 +41,7 @@ interface UebersichtZeile {
  * fail-closed blockiert — genau diese Luecke hat Migration 20260902000000
  * beschrieben.
  */
-export async function GET() {
+export async function GET(request: Request) {
   const auth = await requireOpsAdmin()
   if (!auth.ok) return auth.response
   const orgId = auth.ctx.organizationId
@@ -178,7 +179,6 @@ export async function GET() {
       hinweise,
     })
   } catch (err) {
-    console.error('Tarifübersicht laden fehlgeschlagen:', err)
-    return NextResponse.json({ error: 'Tarifübersicht konnte nicht geladen werden.' }, { status: 500 })
+    return safeApiError(err, request)
   }
 }

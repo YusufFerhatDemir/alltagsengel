@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 import { requireAdmin } from '@/lib/abrechnung/require-admin'
 import { getActiveOrgId } from '@/lib/organizations/server'
 import { ladeEmpfaengerZertifikat } from '@/lib/abrechnung/zertifikate'
@@ -38,8 +39,7 @@ export async function POST(req: NextRequest) {
         fingerprint: zert.fingerprint,
       },
     })
-  } catch (e: any) {
-    console.error('[api] Unerwarteter Fehler:', e)
-    return NextResponse.json({ error: 'Interner Serverfehler' }, { status: 500 })
+  } catch (e) {
+    return safeApiError(e, req)
   }
 }

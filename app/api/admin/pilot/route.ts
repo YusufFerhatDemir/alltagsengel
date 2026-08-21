@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireAdminMitOrg } from '@/lib/abrechnung/require-admin'
 import { ermittleVoraussetzungen } from '@/lib/pilot/voraussetzungen'
@@ -21,7 +22,7 @@ const MAX_KUNDEN = 100
  * Nur lesend. Antwortet ausschliesslich mit Status- und Zählwerten,
  * niemals mit Zugangsdaten.
  */
-export async function GET() {
+export async function GET(request: Request) {
   const auth = await requireAdminMitOrg()
   if (!auth.ok) return auth.response
 
@@ -57,7 +58,6 @@ export async function GET() {
       gekappt: clientIds.length >= MAX_KUNDEN,
     })
   } catch (e) {
-    console.error('[admin/pilot] Unerwarteter Fehler:', e)
-    return NextResponse.json({ error: 'Interner Serverfehler' }, { status: 500 })
+    return safeApiError(e, request)
   }
 }

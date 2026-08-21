@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requirePflegeAdmin } from '@/lib/pflege/api-auth'
 import { berechneAktuelleAlarme } from '@/lib/vitals/vitals'
@@ -34,6 +35,6 @@ export async function GET(request: Request) {
     const alarme = berechneAktuelleAlarme(messungen, grenzwerte)
     return NextResponse.json({ alarme, alarmeAktiv: true, zeitfensterTage: tage, messungenGeprueft: messungen.length })
   } catch (err) {
-    return NextResponse.json({ error: (err as Error).message }, { status: 500 })
+    return safeApiError(err, request)
   }
 }

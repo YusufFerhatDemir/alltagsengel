@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { NextResponse } from 'next/server'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 import { preFlightValidierung, monatsGrenzen, euroZuCent } from '@/lib/abrechnung/kassenabrechnung-engine'
 import { generateAlleDateien, type AbrechnungsFall, type GeneratorOptionen } from '@/lib/abrechnung/edifact-generator'
 import { validateEDIFACT } from '@/lib/abrechnung/edifact-validator'
@@ -500,6 +501,6 @@ export async function POST(request: Request) {
       dauer_ms: Date.now() - start,
     })
   } catch (err) {
-    return NextResponse.json({ error: (err as Error).message }, { status: 500 })
+    return safeApiError(err, request)
   }
 }

@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createClient } from '@/lib/supabase/server'
 import { requireKimAdmin } from '@/lib/kim/api-auth'
 import { getActiveProviderConfig, listProviderConfigs, setActiveProviderConfig } from '@/lib/kim/provider-config-service'
 import type { SetProviderConfigInput } from '@/lib/kim/provider-config-service'
 
-export async function GET() {
+export async function GET(request: Request) {
   const auth = await requireKimAdmin()
   if (!auth.ok) return auth.response
 
@@ -15,9 +16,8 @@ export async function GET() {
       listProviderConfigs(sb, auth.ctx.organizationId),
     ])
     return NextResponse.json({ active, all })
-  } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : 'Unbekannter Fehler'
-    return NextResponse.json({ error: msg }, { status: 500 })
+  } catch (e) {
+    return safeApiError(e, request)
   }
 }
 
@@ -33,8 +33,7 @@ export async function POST(req: NextRequest) {
     const sb = await createClient()
     const config = await setActiveProviderConfig(sb, auth.ctx.organizationId, auth.ctx.userId, body)
     return NextResponse.json(config)
-  } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : 'Unbekannter Fehler'
-    return NextResponse.json({ error: msg }, { status: 500 })
+  } catch (e) {
+    return safeApiError(e, req)
   }
 }

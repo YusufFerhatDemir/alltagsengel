@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createClient } from '@/lib/supabase/server'
 import { requireKimAdmin } from '@/lib/kim/api-auth'
 import { createDraftMessage, listMessages } from '@/lib/kim/message-service'
@@ -24,9 +25,8 @@ export async function GET(req: NextRequest) {
     const sb = await createClient()
     const data = await listMessages(sb, auth.ctx.organizationId, filter)
     return NextResponse.json(data)
-  } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : 'Unbekannter Fehler'
-    return NextResponse.json({ error: msg }, { status: 500 })
+  } catch (e) {
+    return safeApiError(e, req)
   }
 }
 
