@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsUser } from '@/lib/ops/api-auth'
 import { validiereQueueItem, DEFAULT_OFFLINE_CONFIG } from '@/lib/offline/types'
@@ -280,6 +281,6 @@ export async function POST(request: Request) {
     const response: SyncBatchAntwort = { ergebnisse, zusammenfassung }
     return NextResponse.json(response)
   } catch (err) {
-    return NextResponse.json({ error: (err as Error).message }, { status: 500 })
+    return safeApiError(err, request)
   }
 }

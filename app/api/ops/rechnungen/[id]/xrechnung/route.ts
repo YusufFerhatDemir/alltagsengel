@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { generateXRechnungXml } from '@/lib/billing/xrechnung'
@@ -49,8 +50,7 @@ export async function GET(
         'Content-Disposition': `attachment; filename="${filename}"`,
       },
     })
-  } catch (err: any) {
-    console.error('[xrechnung] Fehler:', err)
-    return NextResponse.json({ error: err.message || 'XRechnung-Generierung fehlgeschlagen' }, { status: 500 })
+  } catch (err) {
+    return safeApiError(err, req)
   }
 }

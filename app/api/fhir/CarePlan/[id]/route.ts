@@ -3,6 +3,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { NextResponse } from 'next/server'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { massnahmenplanToFhirCarePlan } from '@/lib/fhir/mappers'
@@ -39,6 +40,6 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     const carePlan = massnahmenplanToFhirCarePlan(plan as PflegeMassnahmenplan, (massnahmen as PflegeMassnahme[]) ?? [])
     return new NextResponse(JSON.stringify(carePlan), { status: 200, headers: { 'Content-Type': FHIR_CONTENT_TYPE } })
   } catch (err) {
-    return exceptionOutcome((err as Error).message)
+    return safeApiError(err, _request)
   }
 }

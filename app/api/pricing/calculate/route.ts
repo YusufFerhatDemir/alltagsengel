@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 import { calculatePrice, getAvailableTiers, getAvailableSurcharges } from '@/lib/pricing-engine'
 import type { PricingRequest } from '@/lib/types/pricing'
 
@@ -12,20 +13,20 @@ export async function POST(request: Request) {
 
     const breakdown = await calculatePrice(body)
     return NextResponse.json(breakdown)
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message || 'Preisberechnung fehlgeschlagen' }, { status: 500 })
+  } catch (err) {
+    return safeApiError(err, request)
   }
 }
 
 /** GET returns available tiers and surcharges for the booking form */
-export async function GET() {
+export async function GET(request: Request) {
   try {
     const [tiers, surcharges] = await Promise.all([
       getAvailableTiers(),
       getAvailableSurcharges(),
     ])
     return NextResponse.json({ tiers, surcharges })
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message || 'Fehler beim Laden der Preisdaten' }, { status: 500 })
+  } catch (err) {
+    return safeApiError(err, request)
   }
 }

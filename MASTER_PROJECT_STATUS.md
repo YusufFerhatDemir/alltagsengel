@@ -1,7 +1,7 @@
 # MASTER PROJECT STATUS
 
-> Stand: 21.08.2026 | Baseline: FINAL_FINAL_GO_LIVE_REPORT_2026-08-21.md
-> CI: #302 green, 3389/3389 Tests, Commit e9f20bd | HEAD: bf149da
+> Stand: 21.08.2026 14:30 | Baseline: FINAL_FINAL_GO_LIVE_REPORT_2026-08-21.md
+> CI: #305 green (cfb6c88), #306 in progress (9a2b464) | HEAD: 9a2b464
 
 ---
 
@@ -29,7 +29,7 @@ Letzter Check: 21.08.2026
 | 4 | **Haftpflichtversicherung** abschliessen | P0 | CEO | Versicherung |
 | 5 | **Arbeitsvertrag Sabrina Martin** (4 Felder ausfuellen) | P1 | CEO | intern |
 | 6 | **12 Unterschriften** auf Antragsunterlagen | P1 | CEO | intern |
-| 7 | **160 API-Routen ohne Error-Sanitizer** | P1 | INTERN | Entwicklung |
+| ~~7~~ | ~~160 API-Routen ohne Error-Sanitizer~~ | ~~P1~~ | **TEILWEISE ERLEDIGT** (37/217 kritische Routen, 9a2b464) |
 | 8 | **MFA/TOTP fuer Admin** | P1 | INTERN | Entwicklung |
 
 ---
@@ -109,8 +109,8 @@ Supabase: pwdbjqfpgumyfktbfswg
 ### Offene P0/P1 Items
 | # | Item | Prio | Typ |
 |---|------|------|-----|
-| 1 | `ignoreBuildErrors: true` entfernen | P0 | INTERN |
-| 2 | Hardcodierter anon-Key Fallback entfernen | P0 | INTERN |
+| ~~1~~ | ~~`ignoreBuildErrors: true` entfernen~~ | ~~P0~~ | **ERLEDIGT** (bereits entfernt) |
+| ~~2~~ | ~~Hardcodierter anon-Key Fallback entfernen~~ | ~~P0~~ | **ERLEDIGT** (cfb6c88, 30 Dateien) |
 | 3 | TypeScript-Fehler fixen (strict mode) | P1 | INTERN |
 | 4 | E2E-Tests fuer Booking/Payment | P1 | INTERN |
 | 5 | i18n-Abdeckung | P1 | INTERN |

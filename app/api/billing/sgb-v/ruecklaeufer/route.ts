@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { importiereSgbVRuecklaeufer, ladeSgbVRuecklaeufer } from '@/lib/abrechnung/sgb-v/ruecklaufer-service'
@@ -18,9 +19,7 @@ export async function GET(request: Request) {
     const ruecklaeufer = await ladeSgbVRuecklaeufer(admin, auth.ctx.organizationId, laufId)
     return NextResponse.json({ ruecklaeufer })
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'Interner Serverfehler'
-    console.error('[billing/sgb-v/ruecklaeufer] Fehler:', message)
-    return NextResponse.json({ error: message }, { status: 500 })
+    return safeApiError(err, request)
   }
 }
 

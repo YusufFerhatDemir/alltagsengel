@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { listeAbrechnungslaeufe, starteAbrechnungslauf } from '@/lib/abrechnung/sgb-v/abrechnungslauf'
 
 /** GET /api/billing/sgb-v/laeufe — Liste der § 302-Abrechnungsläufe. */
-export async function GET() {
+export async function GET(request: Request) {
   const auth = await requireOpsAdmin()
   if (!auth.ok) return auth.response
 
@@ -13,9 +14,7 @@ export async function GET() {
     const laeufe = await listeAbrechnungslaeufe(admin, auth.ctx.organizationId)
     return NextResponse.json({ laeufe })
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'Interner Serverfehler'
-    console.error('[billing/sgb-v/laeufe] Fehler:', message)
-    return NextResponse.json({ error: message }, { status: 500 })
+    return safeApiError(err, request)
   }
 }
 

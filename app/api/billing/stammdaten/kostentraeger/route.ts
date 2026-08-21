@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireAdminMitOrg } from '@/lib/abrechnung/require-admin'
 import {
@@ -34,7 +35,7 @@ function nurErlaubteFelder(roh: Record<string, unknown>): KostentraegerEingabe {
 }
 
 /** GET — alle Kostentraeger der aktiven Organisation. */
-export async function GET() {
+export async function GET(request: Request) {
   const auth = await requireAdminMitOrg()
   if (!auth.ok) return auth.response
 
@@ -54,8 +55,7 @@ export async function GET() {
 
     return NextResponse.json({ kostentraeger: data ?? [] })
   } catch (e) {
-    console.error('[stammdaten/kostentraeger] Unerwarteter Fehler:', e)
-    return NextResponse.json({ error: 'Interner Serverfehler' }, { status: 500 })
+    return safeApiError(e, request)
   }
 }
 
@@ -120,8 +120,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ erfolg: true, id: ergebnis.id, warnungen: ergebnis.warnungen })
   } catch (e) {
-    console.error('[stammdaten/kostentraeger] Unerwarteter Fehler:', e)
-    return NextResponse.json({ error: 'Interner Serverfehler' }, { status: 500 })
+    return safeApiError(e, req)
   }
 }
 
@@ -162,7 +161,6 @@ export async function DELETE(req: NextRequest) {
 
     return NextResponse.json({ erfolg: true })
   } catch (e) {
-    console.error('[stammdaten/kostentraeger] Unerwarteter Fehler:', e)
-    return NextResponse.json({ error: 'Interner Serverfehler' }, { status: 500 })
+    return safeApiError(e, req)
   }
 }

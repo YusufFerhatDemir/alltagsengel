@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { fuehreTaeglicheAutomatisierungAus } from '@/lib/automation'
 
@@ -44,7 +45,6 @@ export async function GET(request: Request) {
 
     return NextResponse.json({ ok: true, organisationen: laeufe.length, laeufe })
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'Interner Serverfehler'
-    return NextResponse.json({ error: message }, { status: 500 })
+    return safeApiError(err, request)
   }
 }

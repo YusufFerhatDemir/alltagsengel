@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requirePflegeAdmin } from '@/lib/pflege/api-auth'
 import { createVerlauf, listVerlauf } from '@/lib/pflege/verlauf'
@@ -108,7 +109,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json({ protokolle })
   } catch (err) {
-    return NextResponse.json({ error: (err as Error).message }, { status: 500 })
+    return safeApiError(err, request)
   }
 }
 
@@ -224,6 +225,6 @@ export async function PATCH(request: Request) {
 
     return NextResponse.json({ erfolg: true })
   } catch (err) {
-    return NextResponse.json({ error: (err as Error).message }, { status: 500 })
+    return safeApiError(err, request)
   }
 }

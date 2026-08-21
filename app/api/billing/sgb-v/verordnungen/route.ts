@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { legeHkpVerordnungAn, listeHkpVerordnungen } from '@/lib/abrechnung/sgb-v/verordnung-service'
 
 /** GET /api/billing/sgb-v/verordnungen — Liste der HKP-Verordnungen (§ 37 SGB V). */
-export async function GET() {
+export async function GET(request: Request) {
   const auth = await requireOpsAdmin()
   if (!auth.ok) return auth.response
 
@@ -13,9 +14,7 @@ export async function GET() {
     const verordnungen = await listeHkpVerordnungen(admin, auth.ctx.organizationId)
     return NextResponse.json({ verordnungen })
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'Interner Serverfehler'
-    console.error('[billing/sgb-v/verordnungen] Fehler:', message)
-    return NextResponse.json({ error: message }, { status: 500 })
+    return safeApiError(err, request)
   }
 }
 

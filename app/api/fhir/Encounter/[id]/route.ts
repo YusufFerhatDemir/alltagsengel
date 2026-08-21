@@ -3,6 +3,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { NextResponse } from 'next/server'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { serviceRecordToFhirEncounter } from '@/lib/fhir/mappers'
@@ -31,6 +32,6 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     const encounter = serviceRecordToFhirEncounter(data as ServiceRecordFhirRow)
     return new NextResponse(JSON.stringify(encounter), { status: 200, headers: { 'Content-Type': FHIR_CONTENT_TYPE } })
   } catch (err) {
-    return exceptionOutcome((err as Error).message)
+    return safeApiError(err, _request)
   }
 }

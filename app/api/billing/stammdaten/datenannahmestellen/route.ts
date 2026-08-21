@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireAdminMitOrg } from '@/lib/abrechnung/require-admin'
 import {
@@ -40,7 +41,7 @@ function nurErlaubteFelder(roh: Record<string, unknown>): DatenannahmestelleEing
  * Liefert bewusst KEINE Zugangsdaten im Klartext: `sftp_key_url` wird nur als
  * Ja/Nein gemeldet, ein SSH-Key gehoert nicht in eine API-Antwort.
  */
-export async function GET() {
+export async function GET(request: Request) {
   const auth = await requireAdminMitOrg()
   if (!auth.ok) return auth.response
 
@@ -68,8 +69,7 @@ export async function GET() {
 
     return NextResponse.json({ datenannahmestellen: stellen })
   } catch (e) {
-    console.error('[stammdaten/datenannahmestellen] Unerwarteter Fehler:', e)
-    return NextResponse.json({ error: 'Interner Serverfehler' }, { status: 500 })
+    return safeApiError(e, request)
   }
 }
 
@@ -126,8 +126,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ erfolg: true, id: ergebnis.id, warnungen: ergebnis.warnungen })
   } catch (e) {
-    console.error('[stammdaten/datenannahmestellen] Unerwarteter Fehler:', e)
-    return NextResponse.json({ error: 'Interner Serverfehler' }, { status: 500 })
+    return safeApiError(e, req)
   }
 }
 
@@ -166,7 +165,6 @@ export async function DELETE(req: NextRequest) {
 
     return NextResponse.json({ erfolg: true })
   } catch (e) {
-    console.error('[stammdaten/datenannahmestellen] Unerwarteter Fehler:', e)
-    return NextResponse.json({ error: 'Interner Serverfehler' }, { status: 500 })
+    return safeApiError(e, req)
   }
 }
