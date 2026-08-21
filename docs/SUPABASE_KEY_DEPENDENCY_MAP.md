@@ -39,7 +39,7 @@ Der Scan hat **sechs** Projekt-Refs gefunden — zwei mehr als beauftragt.
 | P3 | ChairMatch Production | `pwdbjqfpgumyfktbfswg` | **401** (lebt) | Produktion chairmatch.de + Mobile | ja |
 | P4 | efy care | `nsfbwhpjesmathsrqkfi` | **401** (lebt) | Expo-App efy care | ja |
 | **P5** | **Alltagsengel Staging (verwaist)** | `uwmjqckhjkgukhzeidyw` | **000** (DNS tot / Projekt weg) | nur noch `.env.staging.local` lokal | **nein — neu gefunden** |
-| **P6** | **ChairMatch Legacy (lebt!)** | `vlrviyrgggzhayepfmop` | **401** (lebt) | keine aktive Nutzung im Code, aber Anon-Key liegt in einem **getrackten Repo-File** | **nein — neu gefunden** |
+| **P6** | **ChairMatch Legacy (lebt!)** | `vlrviyrgggzhayepfmop` | **401** (lebt) | ⚠️ **live erreichbares Public-Deployment** — Anon-Key hartkodiert in getracktem Repo-File **und** in `next.config.ts:186` referenziert; GitHub Pages serviert die Legacy-SPA live. Voll geprüft → [P6_LEGACY_SECURITY_CHECK.md](P6_LEGACY_SECURITY_CHECK.md) | **nein — neu gefunden** |
 
 `401` bedeutet: Endpoint antwortet, Projekt existiert. `000` bedeutet: kein DNS/keine Verbindung.
 
@@ -398,7 +398,7 @@ Aufsteigend nach Risiko. Jede Stufe ist ein eigener Termin — **nie zwei Stufen
 ### Stufe 0 — Aufräumen (kein Risiko, sofort)
 
 1. `.env.staging.local` löschen (P5, totes Projekt).
-2. RLS-Zustand von P6 (`vlrviyrgggzhayepfmop`) prüfen. Ergebnis entscheidet: Projekt löschen oder Key rollen.
+2. ✅ **ERLEDIGT** — RLS-/Zugriffs-Zustand von P6 geprüft ([P6_LEGACY_SECURITY_CHECK.md](P6_LEGACY_SECURITY_CHECK.md)). Ergebnis: `DECOMMISSION_CANDIDATE` mit **akuter Live-Exposition** (Public-Pages-Deployment + offene Signups). Nächster Schritt ist **nicht** „Key rollen", sondern Pages abschalten + Projekt pausieren (Stufe A dort). INSERT ist fail-closed, UPDATE/DELETE-Posture unbewiesen.
 3. `index_legacy.html` aus dem ChairMatch-Repo entfernen.
 4. Entscheiden, ob `deploy-chairmatch.yml` reaktiviert (dann `generate-config.sh` in den Workflow) oder gelöscht wird — Pages ist aus, der Workflow ist heute Attrappe.
 
