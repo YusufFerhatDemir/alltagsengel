@@ -2263,6 +2263,22 @@ body {
   outline:2px solid var(--gold2);
   outline-offset:2px;
   border-radius:4px;
+  /* Zweiter, dunkler Ring AUSSEN um den goldenen (WCAG 1.4.11, 3:1 fuer
+     Bedienelement-Begrenzungen). Gold allein traegt nur auf dunklem Grund:
+     #DBA84A auf --coal = 8,32:1, aber auf Weiss nur 2,16:1 und auf einer
+     goldenen Flaeche 1,23:1 — im MIS-Bereich und auf hellen Karten waere
+     der Fokus praktisch unsichtbar gewesen. Der dunkle Halo verschwindet
+     auf dunklem Grund (dort traegt Gold) und traegt auf hellem Grund.
+     Deshalb zwei Ringe statt einer "mittleren" Farbe, die nirgends reicht. */
+  box-shadow:0 0 0 6px rgba(26,22,18,.6);
+}
+/* Im Kontrastmodus gibt das System die Farben vor: eigene Ringe wuerden
+   ignoriert oder stoerten. Highlight ist die dafuer vorgesehene Systemfarbe. */
+@media (forced-colors: active) {
+  *:focus-visible {
+    outline:3px solid Highlight;
+    box-shadow:none;
+  }
 }
 .sr-only {
   position:absolute; width:1px; height:1px;

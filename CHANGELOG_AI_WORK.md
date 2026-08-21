@@ -4,6 +4,52 @@ Chronologische Dokumentation aller KI-gestuetzten Arbeitssitzungen.
 
 ---
 
+## 2026-08-21 | Session: Parallel-Tracks A-D (Error Sanitizer, WCAG, ChairMatch E2E, ChairMatch i18n)
+
+### Track A: Error Sanitizer + Logging Final Check
+- **195 echte Leak-Punkte** gefunden und behoben (statt geschaetzter ~15)
+- `UserFacingError`-Klasse + `apiErrorResponse()` fuer fail-closed Error-Handling
+- 32 lib-Dateien, ~140 Validierungs-Throws auf UserFacingError migriert
+- DB-Fehler jetzt 500 statt 400, Correlation-ID beibehalten
+- Structured Logging Delta: 0 console.* in Prod, keine Secrets/PII in Logs
+- 10 neue Tests (25/25 gruen)
+
+### Track B: WCAG Focus-Management + Tastaturzugang (2. Durchgang)
+- 34 Dialoge mit Fokus-Trap, ESC-Close, Focus-Return implementiert
+- Klickbare Elemente ohne Tastaturzugang: 121 → 1 (Rest = stopPropagation-Guards)
+- 10 zusaetzliche Modale entdeckt die im 1. Durchgang fehlten
+- axe-core Laufzeit-Pruefung integriert
+- Focus-Ring Kontrast-Fix auf Gold-Hintergruenden
+- docs/BARRIEREFREIHEIT_AUDIT.md aktualisiert (2. Durchgang)
+
+### Track C: ChairMatch E2E Tests (im separaten Repo /chairmatch)
+- 174 neue Tests: Booking (55), Payment (39), Auth (35), Permissions (30), Error Cases (15)
+- In-Memory Supabase + Stripe-Mock Test-Harness
+- **3 Produktionsfehler gefunden und behoben:**
+  1. Statuswechsel-Bug (Case-Sensitivity PENDING/pending)
+  2. Login-Rate-Limit wirkungslos (throw in eigenem try/catch)
+  3. isBusinessOwnerOrAbove() gab fuer jede Rolle true zurueck (Stripe Connect offen)
+- vitest-Konfiguration repariert (231 Tests gesamt gruen)
+
+### Track D: ChairMatch i18n (Landing-Pages)
+- 39 HTML-Dateien, 1477 deutsche Text-Knoten inventarisiert
+- i18n-Runtime (500 Zeilen, 0 Abhaengigkeiten) mit data-i18n-Attributen
+- de.json + en.json Kataloge (479 Keys, volle Paritaet)
+- 24 Stadtseiten + Index + FAQ + Blog-Index = 100% Abdeckung
+- Intl.DateTimeFormat + Intl.NumberFormat fuer Datums-/Waehrungsformatierung
+- Regressionsbarriere: chairmatch-i18n-check.mjs
+- **Nebenbefund behoben:** submitLead() zeigte "Danke!" auch bei POST-Fehler
+
+### CI
+| Run | Commit | Status |
+|-----|--------|--------|
+| b344329 | Error Sanitizer | **DEPLOYED** (scoped) |
+| ad23806 | WCAG Focus | **DEPLOYED** |
+| c9d603a | ChairMatch i18n | **DEPLOYED** |
+| c0e6af6 | ChairMatch E2E | **DEPLOYED** (separates Repo) |
+
+---
+
 ## 2026-08-21 | Session: BITV/WCAG Barrierefreiheit
 
 ### Durchgefuehrt

@@ -8,7 +8,7 @@ import {
 } from '@/lib/admin/ops'
 import { StatusBadge, SearchInput, EmptyRow, Banner } from '@/components/admin/OpsUI'
 import { logger } from '@/lib/logger'
-import { klickbareZeile } from '@/lib/a11y'
+import { klickbar, klickbareZeile } from '@/lib/a11y'
 const log = logger.child('admin:caregivers')
 
 interface Qualification {

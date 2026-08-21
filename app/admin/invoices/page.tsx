@@ -1,12 +1,12 @@
 'use client'
 import { useEffect, useMemo, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import DialogOverlay from '@/components/DialogOverlay'
 import {
   euro, formatDate, fullName, statusMeta, INVOICE_STATUS,
 } from '@/lib/admin/ops'
 import { StatusBadge, SearchInput, EmptyRow, Banner } from '@/components/admin/OpsUI'
 import {
-import DialogOverlay from '@/components/DialogOverlay'
   advanceInvoiceSimple, recordInvoicePayment, recordInvoiceDispute, decideInvoiceKuerzung,
 } from './actions'
 
