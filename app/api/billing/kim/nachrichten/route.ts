@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { ladeNachrichten, erstelleEntwurf, type KimNachrichtStatus } from '@/lib/kim/nachrichten'
@@ -29,9 +30,7 @@ export async function GET(request: Request) {
     const data = await ladeNachrichten(admin, organizationId, status)
     return NextResponse.json(data)
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'Interner Serverfehler'
-    console.error('[billing/kim/nachrichten GET] Fehler:', message)
-    return NextResponse.json({ error: message }, { status: 500 })
+    return safeApiError(err, request)
   }
 }
 

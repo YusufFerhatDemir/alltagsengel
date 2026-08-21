@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 import crypto from 'crypto'
 import { PDFDocument, rgb } from 'pdf-lib'
 import fontkit from '@pdf-lib/fontkit'
@@ -471,8 +472,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 
     return NextResponse.json({ pdf_url: pdfUrl, page_count: pageCount, checksum })
   } catch (err: any) {
-    console.error('[api/admin/invoices/generate-pdf] Unerwarteter Fehler:', err)
-    return NextResponse.json({ error: err.message || 'Unerwarteter Fehler' }, { status: 500 })
+    return safeApiError(err, req)
   }
 }
 

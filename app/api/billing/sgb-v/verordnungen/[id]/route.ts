@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { genehmigeHkpVerordnung, ladeHkpVerordnung } from '@/lib/abrechnung/sgb-v/verordnung-service'
 
 /** GET /api/billing/sgb-v/verordnungen/[id] */
-export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireOpsAdmin()
   if (!auth.ok) return auth.response
 
@@ -15,9 +16,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     if (!verordnung) return NextResponse.json({ error: 'Verordnung nicht gefunden.' }, { status: 404 })
     return NextResponse.json({ verordnung })
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'Interner Serverfehler'
-    console.error('[billing/sgb-v/verordnungen/[id]] Fehler:', message)
-    return NextResponse.json({ error: message }, { status: 500 })
+    return safeApiError(err, request)
   }
 }
 

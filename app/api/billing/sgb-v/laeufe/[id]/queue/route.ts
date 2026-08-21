@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { ladeAbrechnungslauf } from '@/lib/abrechnung/sgb-v/abrechnungslauf'
@@ -9,7 +10,7 @@ import { ladeWarteschlange, reiheEin, verarbeiteEintrag, type AdapterTyp } from 
 const ADAPTER_TYPEN: AdapterTyp[] = ['mock', 'file_export', 'dakota', 'kim']
 
 /** GET /api/billing/sgb-v/laeufe/[id]/queue */
-export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireOpsAdmin()
   if (!auth.ok) return auth.response
 
@@ -19,9 +20,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     const queue = await ladeWarteschlange(admin, auth.ctx.organizationId, id)
     return NextResponse.json({ queue })
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'Interner Serverfehler'
-    console.error('[billing/sgb-v/laeufe/[id]/queue] Fehler:', message)
-    return NextResponse.json({ error: message }, { status: 500 })
+    return safeApiError(err, request)
   }
 }
 

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireCaregiverSession } from '@/lib/native-auth'
@@ -308,8 +309,7 @@ export async function POST(request: Request) {
       invoiceIds: engineResults.map(r => r.invoiceId),
       warnings: warnings.length > 0 ? warnings : undefined,
     }, { status: 201 })
-  } catch (err: any) {
-    console.error('[api/billing/auto-invoice] Unerwarteter Fehler:', err)
-    return NextResponse.json({ error: err.message || 'Unerwarteter Fehler' }, { status: 500 })
+  } catch (err) {
+    return safeApiError(err, request)
   }
 }

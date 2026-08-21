@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { heuteBerlin } from '@/lib/utils/timezone';
@@ -79,8 +80,7 @@ export async function GET(request: Request) {
     if (error) return safeDbError(error)
 
     return NextResponse.json({ prices: data || [] })
-  } catch (err: any) {
-    console.error('[api/pricing] Unerwarteter Fehler:', err)
-    return NextResponse.json({ error: err.message || 'Unerwarteter Fehler' }, { status: 500 })
+  } catch (err) {
+    return safeApiError(err, request)
   }
 }

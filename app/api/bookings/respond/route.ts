@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import {
@@ -186,9 +187,7 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({ success: true, status: newStatus })
-  } catch (err: unknown) {
-    console.error('Booking respond error:', err)
-    const message = err instanceof Error ? err.message : 'Serverfehler'
-    return NextResponse.json({ error: message }, { status: 500 })
+  } catch (err) {
+    return safeApiError(err, req)
   }
 }

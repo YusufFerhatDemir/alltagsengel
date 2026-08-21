@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 import { rateLimit, getClientIp } from '@/lib/rate-limit'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { heuteBerlin } from '@/lib/utils/timezone';
@@ -235,7 +236,6 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ content })
   } catch (e) {
-    console.error('[BeratungsChat] Fehler:', e)
-    return NextResponse.json({ error: 'Ein Fehler ist aufgetreten.' }, { status: 500 })
+    return safeApiError(e, req)
   }
 }

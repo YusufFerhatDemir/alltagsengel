@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { logAuditEvent } from '@/lib/audit-log'
@@ -41,8 +42,7 @@ export async function GET(
 
     return NextResponse.json({ ueberwachungen: data ?? [] })
   } catch (e) {
-    console.error('[admin/fixierungen/ueberwachung] Unerwarteter Fehler:', e)
-    return NextResponse.json({ error: 'Interner Serverfehler' }, { status: 500 })
+    return safeApiError(e, _req)
   }
 }
 
@@ -109,7 +109,6 @@ export async function POST(
 
     return NextResponse.json({ erfolg: true, id: data.id })
   } catch (e) {
-    console.error('[admin/fixierungen/ueberwachung] Unerwarteter Fehler:', e)
-    return NextResponse.json({ error: 'Interner Serverfehler' }, { status: 500 })
+    return safeApiError(e, req)
   }
 }

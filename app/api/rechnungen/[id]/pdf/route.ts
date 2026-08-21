@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getActiveOrgId } from '@/lib/organizations/server'
@@ -104,8 +105,6 @@ export async function GET(
       invoice_number: invoice.invoice_number_formatted || invoice.invoice_number,
     })
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'Interner Serverfehler'
-    console.error('[rechnungen/pdf] Fehler:', message)
-    return NextResponse.json({ error: 'Interner Serverfehler' }, { status: 500 })
+    return safeApiError(err, _request)
   }
 }

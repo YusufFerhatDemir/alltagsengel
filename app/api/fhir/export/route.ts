@@ -8,6 +8,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { NextResponse } from 'next/server'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { heuteBerlin } from '@/lib/utils/timezone'
@@ -99,6 +100,6 @@ export async function GET(request: Request) {
       },
     })
   } catch (err) {
-    return exceptionOutcome((err as Error).message)
+    return safeApiError(err, request)
   }
 }

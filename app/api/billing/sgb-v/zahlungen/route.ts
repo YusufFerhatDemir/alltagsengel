@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { automatischeZahlungszuordnungSgbV, sgbVOffenePostenListe } from '@/lib/abrechnung/sgb-v/zahlungsabgleich'
 
 /** GET /api/billing/sgb-v/zahlungen — OPOS-Liste der § 302-Läufe. */
-export async function GET() {
+export async function GET(request: Request) {
   const auth = await requireOpsAdmin()
   if (!auth.ok) return auth.response
 
@@ -13,14 +14,12 @@ export async function GET() {
     const offenePosten = await sgbVOffenePostenListe(admin, auth.ctx.organizationId)
     return NextResponse.json({ offenePosten })
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'Interner Serverfehler'
-    console.error('[billing/sgb-v/zahlungen] Fehler:', message)
-    return NextResponse.json({ error: message }, { status: 500 })
+    return safeApiError(err, request)
   }
 }
 
 /** POST /api/billing/sgb-v/zahlungen — automatischen Zahlungsabgleich anstossen. */
-export async function POST() {
+export async function POST(request: Request) {
   const auth = await requireOpsAdmin()
   if (!auth.ok) return auth.response
 
@@ -29,8 +28,6 @@ export async function POST() {
     const ergebnis = await automatischeZahlungszuordnungSgbV(admin, auth.ctx.organizationId, auth.ctx.userId)
     return NextResponse.json(ergebnis)
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'Interner Serverfehler'
-    console.error('[billing/sgb-v/zahlungen] Fehler:', message)
-    return NextResponse.json({ error: message }, { status: 500 })
+    return safeApiError(err, request)
   }
 }

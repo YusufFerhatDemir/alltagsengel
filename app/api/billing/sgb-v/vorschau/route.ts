@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { datumBerlin, monatBerlin } from '@/lib/utils/timezone'
@@ -132,8 +133,6 @@ export async function GET(request: Request) {
       export_moeglich: version.ok && exportImplementiert('edifact_slga_slla') && tarifPruefung.ok,
     })
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'Interner Serverfehler'
-    console.error('[billing/sgb-v/vorschau] Fehler:', message)
-    return NextResponse.json({ error: message }, { status: 500 })
+    return safeApiError(err, request)
   }
 }

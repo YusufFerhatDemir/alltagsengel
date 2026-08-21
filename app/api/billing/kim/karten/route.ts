@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { ladeKarten, erstelleKarte } from '@/lib/kim/karten'
@@ -10,7 +11,7 @@ import { ladeKarten, erstelleKarte } from '@/lib/kim/karten'
  * Verwaltungsschicht für eHBA/SMC-B-Zuordnungen. KEINE Kartenkommunikation
  * (s. lib/kim/karten.ts) — nur Speichern/Auflisten der Zuordnung.
  */
-export async function GET() {
+export async function GET(request: Request) {
   const auth = await requireOpsAdmin()
   if (!auth.ok) return auth.response
   const { organizationId } = auth.ctx
@@ -20,9 +21,7 @@ export async function GET() {
     const data = await ladeKarten(admin, organizationId)
     return NextResponse.json(data)
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'Interner Serverfehler'
-    console.error('[billing/kim/karten GET] Fehler:', message)
-    return NextResponse.json({ error: message }, { status: 500 })
+    return safeApiError(err, request)
   }
 }
 

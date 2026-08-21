@@ -4,6 +4,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { NextResponse } from 'next/server'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { buildSearchsetBundle, massnahmenplanToFhirCarePlan } from '@/lib/fhir/mappers'
@@ -60,6 +61,6 @@ export async function GET(request: Request) {
 
     return new NextResponse(JSON.stringify(bundle), { status: 200, headers: { 'Content-Type': FHIR_CONTENT_TYPE } })
   } catch (err) {
-    return exceptionOutcome((err as Error).message)
+    return safeApiError(err, request)
   }
 }

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { generateZugferdPdf } from '@/lib/billing/xrechnung'
@@ -72,11 +73,7 @@ export async function GET(
         'Content-Disposition': `attachment; filename="${filename}"`,
       },
     })
-  } catch (err: any) {
-    console.error('[zugferd] Fehler:', err)
-    return NextResponse.json(
-      { error: err.message || 'ZUGFeRD-Generierung fehlgeschlagen' },
-      { status: 500 },
-    )
+  } catch (err) {
+    return safeApiError(err, req)
   }
 }

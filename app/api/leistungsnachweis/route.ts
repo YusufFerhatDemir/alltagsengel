@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 import { PDFDocument, rgb, type PDFPage, type PDFFont } from 'pdf-lib'
 import fontkit from '@pdf-lib/fontkit'
 import { readFile } from 'fs/promises'
@@ -452,9 +453,8 @@ export async function GET(request: Request) {
         'Cache-Control': 'no-store',
       },
     })
-  } catch (err: any) {
-    console.error('[api/leistungsnachweis] Unerwarteter Fehler:', err)
-    return NextResponse.json({ error: err.message || 'Unerwarteter Fehler' }, { status: 500 })
+  } catch (err) {
+    return safeApiError(err, request)
   }
 }
 
