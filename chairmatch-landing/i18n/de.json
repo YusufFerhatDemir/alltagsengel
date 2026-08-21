@@ -1,0 +1,672 @@
+{
+  "switcher": {
+    "label": "Sprache wählen"
+  },
+  "common": {
+    "brand": "ChairMatch",
+    "brandUpper": "CHAIRMATCH",
+    "tagline": "Stuhlvermietung & Raumvermittlung für die Beauty-Branche",
+    "copyright": "© {year} ChairMatch — {location}",
+    "nav": {
+      "home": "Startseite",
+      "faq": "Häufige Fragen",
+      "faqArrow": "Häufige Fragen →",
+      "blog": "Blog",
+      "imprint": "Impressum",
+      "privacy": "Datenschutz",
+      "terms": "AGB",
+      "contact": "Kontakt",
+      "backHome": "Zur Startseite"
+    },
+    "cta": {
+      "start": "JETZT STARTEN",
+      "howItWorks": "So funktioniert's",
+      "whatsapp": "WhatsApp",
+      "whatsappWrite": "WhatsApp schreiben"
+    },
+    "donationAmount": "1 €"
+  },
+  "cat": {
+    "barbershop": "Barbershop",
+    "hair": "Friseur",
+    "cosmetics": "Kosmetik",
+    "aesthetics": "Ästhetik",
+    "nails": "Nails",
+    "massage": "Massage",
+    "other": "Sonstige"
+  },
+  "form": {
+    "salon": {
+      "title": "🏪 Salonbesitzer",
+      "subtitle": "Stühle vermieten & verdienen",
+      "submit": "SALON LISTEN"
+    },
+    "pro": {
+      "title": "🎨 Beauty-Profi",
+      "subtitle": "Stuhl mieten & loslegen",
+      "subtitleCity": "Stuhl mieten in {city}",
+      "submit": "STUHL FINDEN"
+    },
+    "field": {
+      "name": "Name *",
+      "phone": "Telefon *",
+      "city": "Stadt *",
+      "message": "Anzahl Stühle, Salon-Art...",
+      "branch": "Branche (optional)"
+    },
+    "sending": "Wird gesendet...",
+    "success": {
+      "title": "Danke!",
+      "text": "Wir melden uns in 24h."
+    },
+    "error": {
+      "title": "Das hat nicht geklappt.",
+      "network": "Deine Anfrage konnte nicht gesendet werden. Bitte prüfe deine Verbindung und versuche es erneut.",
+      "server": "Wir konnten deine Anfrage gerade nicht speichern. Bitte versuche es später noch einmal oder schreib uns per WhatsApp.",
+      "config": "Das Formular ist derzeit nicht verfügbar. Bitte schreib uns per WhatsApp.",
+      "required": "Bitte fülle alle Pflichtfelder aus.",
+      "retry": "Erneut senden"
+    },
+    "privacy": "Deine Daten werden nur zur Kontaktaufnahme verwendet."
+  },
+  "home": {
+    "hero": {
+      "title": "Dein <span>Stuhl</span>. Dein Business.<br>Deine Freiheit.",
+      "subtitle": "ChairMatch vermittelt Stuhlmiete und Raumvermietung für Beauty-Profis. Finde deinen Platz — flexibel, fair, ohne langfristige Bindung."
+    },
+    "categories": {
+      "badge": "Branchen",
+      "title": "Für jede Beauty-Sparte der passende Platz",
+      "subtitle": "Ob Stuhl, Raum oder Kabine — ChairMatch bringt Anbieter und Profis zusammen."
+    },
+    "steps": {
+      "badge": "So funktioniert's",
+      "title": "In 3 Schritten zum eigenen Stuhl",
+      "s1": {
+        "title": "Profil erstellen",
+        "text": "Registriere dich kostenlos und gib an, was du suchst: Stuhl, Raum oder Kabine."
+      },
+      "s2": {
+        "title": "Match finden",
+        "text": "ChairMatch zeigt dir passende Angebote in deiner Stadt — mit Preis, Fotos und Bewertungen."
+      },
+      "s3": {
+        "title": "Buchen & loslegen",
+        "text": "Buche direkt in der App. Flexibel kündbar, keine versteckten Kosten."
+      }
+    },
+    "audience": {
+      "badge": "Zwei Seiten, ein Match",
+      "title": "Für Salonbesitzer & Beauty-Profis",
+      "owner": {
+        "title": "Salonbesitzer",
+        "text": "Leerer Stuhl kostet Geld. Vermiete ihn an qualifizierte Profis und verdiene, statt draufzuzahlen."
+      },
+      "pro": {
+        "title": "Beauty-Profis",
+        "text": "Kein eigener Salon nötig. Miete einen Stuhl, bring deine Kunden mit und arbeite selbstständig."
+      }
+    },
+    "donate": {
+      "badge": "Soziales Engagement",
+      "title": "Mit jeder Buchung helfen wir",
+      "subtitle": "Von jeder Buchung bei ChairMatch fließt <strong style=\"color:var(--accent)\">{amount}</strong> direkt an Kinder und Familien in Not. Für die Zukunft der Kinder — nicht für Verwaltung.",
+      "c1": {
+        "title": "{amount} pro Buchung",
+        "text": "Jede Stuhlmiete und jede Raumbuchung hilft automatisch mit."
+      },
+      "c2": {
+        "title": "Für Kinderzukunft",
+        "text": "Wir unterstützen Schulen, Kinder mit Behinderung und bedürftige Familien."
+      },
+      "c3": {
+        "title": "100 % transparent",
+        "text": "Wir verwalten die Spenden selbst und legen offen, wohin jeder Euro geht."
+      }
+    },
+    "cities": {
+      "badge": "Deutschlandweit",
+      "title": "ChairMatch in deiner Stadt",
+      "subtitle": "Stuhlvermietung in über 20 Städten — und es werden mehr."
+    },
+    "contact": {
+      "badge": "Jetzt starten",
+      "title": "Interesse? Melde dich kostenlos.",
+      "subtitle": "Ob Salonbesitzer oder Beauty-Profi — hinterlasse deine Daten und wir melden uns innerhalb von 24 Stunden."
+    }
+  },
+  "faq": {
+    "hero": {
+      "title": "Häufige Fragen zur <span>Stuhlvermietung</span>",
+      "subtitle": "Alles über Stuhlmiete, Preise, rechtliche Fragen und wie ChairMatch funktioniert."
+    },
+    "cat": {
+      "basics": "Grundlagen",
+      "pricing": "Preise & Kosten",
+      "owners": "Für Salonbesitzer",
+      "freelancers": "Für Freelancer",
+      "about": "Über ChairMatch"
+    },
+    "q1": {
+      "q": "Was ist Stuhlvermietung in der Beauty-Branche?",
+      "a": "Stuhlvermietung (auch Chair Rental oder Stuhlmiete) ist ein Geschäftsmodell, bei dem Salonbesitzer einzelne Arbeitsplätze an selbstständige Beauty-Profis vermieten. Der Mieter bringt eigene Kunden mit, setzt eigene Preise und zahlt dem Salonbesitzer eine feste Miete — tageweise, wochenweise oder monatlich. In den USA und UK ist dieses Modell seit Jahrzehnten etabliert, in Deutschland wächst es rasant."
+    },
+    "q2": {
+      "q": "Ist Stuhlvermietung in Deutschland legal?",
+      "a": "Ja, Stuhlvermietung ist in Deutschland legal. Wichtig ist die korrekte Gestaltung: Der Mieter muss tatsächlich selbstständig arbeiten — eigene Kunden, eigene Preise, eigenes unternehmerisches Risiko. Eine Scheinselbstständigkeit muss vermieden werden. ChairMatch stellt rechtlich geprüfte Musterverträge bereit."
+    },
+    "q3": {
+      "q": "Wie unterscheidet sich Stuhlmiete von Festanstellung?",
+      "a": "Bei Stuhlmiete bist du selbstständig: Du bestimmst deine Arbeitszeiten, setzt eigene Preise, behältst 100% deiner Einnahmen und trägst dein eigenes unternehmerisches Risiko. Bei Festanstellung arbeitest du weisungsgebunden für den Salon und erhältst ein festes Gehalt. Der größte Unterschied: Als Stuhlmieter bist du dein eigener Chef."
+    },
+    "q4": {
+      "q": "Was kostet Stuhlvermietung in Deutschland?",
+      "a": "Die Kosten variieren je nach Stadt und Ausstattung. Richtwerte: Tagesmiete 30–60 €, Wochenmiete 150–250 €, Monatsmiete 500–900 €. In Großstädten wie München oder Frankfurt liegen die Preise am oberen Ende, in kleineren Städten günstiger. Verglichen mit einem eigenen Salon (2.000–5.000 €/Monat Fixkosten) ist Stuhlmiete deutlich günstiger."
+    },
+    "q5": {
+      "q": "Was kostet die Nutzung von ChairMatch?",
+      "a": "Das Listing eines Salons auf ChairMatch ist kostenlos. Es gibt keine Grundgebühr und keine Vertragsbindung. ChairMatch erhebt lediglich eine kleine Vermittlungsgebühr bei erfolgreicher Vermietung. Von jeder Buchung fließt 1 € an Kinder und Familien in Not."
+    },
+    "q6": {
+      "q": "Was ist in der Stuhlmiete enthalten?",
+      "a": "Je nach Salon umfasst die Stuhlmiete: Arbeitsplatz mit Stuhl und Spiegel, Zugang zu Waschplatz, Strom und Wasser, Empfangsbereich, Wartezimmer und Sanitäranlagen. Manche Salons bieten zusätzlich WLAN, Handtücher und Produktlagerung an. Die genaue Ausstattung findest du im jeweiligen Listing."
+    },
+    "q7": {
+      "q": "Welche Steuern fallen bei Stuhlvermietung an?",
+      "a": "Für den Salonbesitzer: Mieteinnahmen sind umsatzsteuerpflichtig (19%), falls du nicht die Kleinunternehmerregelung nutzt. Die Einnahmen werden als gewerbliche Einkünfte versteuert. Für den Mieter: Du versteuerst deine Einnahmen aus selbstständiger Tätigkeit und kannst die Stuhlmiete als Betriebsausgabe absetzen."
+    },
+    "q8": {
+      "q": "Kann ich Stühle vermieten, wenn ich selbst noch arbeite?",
+      "a": "Ja, das ist der Normalfall. Die meisten Salonbesitzer vermieten nur die Stühle, die nicht von ihrem eigenen Team genutzt werden — ob das ein leerer Platz an bestimmten Tagen ist oder dauerhaft freie Kapazität. So verwandeln Sie tote Kosten in passives Einkommen."
+    },
+    "q9": {
+      "q": "Wie schnell finde ich einen Mieter?",
+      "a": "In beliebten Städten wie Frankfurt, Berlin oder München vermitteln wir in der Regel innerhalb von 24 bis 72 Stunden den ersten Mieter. In kleineren Städten kann es etwas länger dauern. Je vollständiger Ihr Profil (Fotos, Ausstattung, Preise), desto schneller die Vermittlung."
+    },
+    "q10": {
+      "q": "Was passiert bei Schäden am Arbeitsplatz?",
+      "a": "Jeder Mietvorgang über ChairMatch ist versichert. Sollte es zu Schäden kommen, kümmern wir uns um die Abwicklung. Salonbesitzer tragen kein finanzielles Risiko durch die Vermietung über unsere Plattform."
+    },
+    "q11": {
+      "q": "Brauche ich einen Gewerbeschein für Stuhlmiete?",
+      "a": "Ja. Als selbstständiger Beauty-Profi benötigst du einen Gewerbeschein. Für Friseure ist in vielen Bundesländern ein Meisterbrief erforderlich (Ausnahmen möglich). Für Kosmetik, Nails und Massage gelten andere Regelungen — ChairMatch berät dich gerne zu den Anforderungen in deiner Region."
+    },
+    "q12": {
+      "q": "Welche Versicherungen brauche ich als Stuhlmieter?",
+      "a": "Als selbstständiger Beauty-Profi empfehlen sich: Berufshaftpflichtversicherung, Betriebshaftpflichtversicherung und ggf. eine Inhaltsversicherung für eigene Geräte. Über ChairMatch gebuchte Stuhlmieten sind zusätzlich über eine Plattform-Versicherung abgedeckt."
+    },
+    "q13": {
+      "q": "Kann ich meine eigenen Produkte und Geräte mitbringen?",
+      "a": "Ja, als Stuhlmieter kannst du in der Regel deine eigenen Produkte und Geräte mitbringen und nutzen. Die genauen Regelungen findest du in der Beschreibung des jeweiligen Salons oder besprichst sie direkt mit dem Salonbesitzer."
+    },
+    "q14": {
+      "q": "Gibt es eine Mindestmietdauer?",
+      "a": "Nein. Du kannst einen Stuhl tageweise, wochenweise oder monatlich mieten. Es gibt keine Mindestlaufzeiten und keine Kündigungsfristen — du kannst jederzeit aufhören oder den Salon wechseln."
+    },
+    "q15": {
+      "q": "In welchen Städten ist ChairMatch verfügbar?",
+      "a": "ChairMatch ist deutschlandweit verfügbar, mit besonderem Fokus auf: Frankfurt (inkl. Offenbach, Wiesbaden, Darmstadt, Mainz, Hanau), Berlin (inkl. Potsdam), Hamburg (inkl. Lüneburg), München (inkl. Augsburg, Nürnberg), Köln (inkl. Bonn, Leverkusen), Düsseldorf (inkl. Essen, Duisburg, Wuppertal, Dortmund). Neue Städte werden laufend hinzugefügt."
+    },
+    "q16": {
+      "q": "Wie unterscheidet sich ChairMatch von eBay Kleinanzeigen?",
+      "a": "ChairMatch ist spezialisiert auf die Beauty-Branche: Verifizierte Profile, Versicherungsschutz, rechtlich geprüfte Musterverträge und persönliche Betreuung. Bei eBay Kleinanzeigen bist du auf dich allein gestellt — ohne Absicherung und ohne branchenspezifische Features."
+    },
+    "cta": {
+      "title": "Noch Fragen?",
+      "text": "Schreib uns direkt — wir beraten dich kostenlos und unverbindlich."
+    }
+  },
+  "city": {
+    "hero": {
+      "title": "Stuhlvermietung in <span>{city}</span>"
+    },
+    "categories": {
+      "badge": "Branchen in {city}",
+      "title": "Stuhlmiete in {city} — alle Beauty-Sparten",
+      "subtitle": "Ob Stuhl, Raum oder Kabine — in {city} findest du das passende Angebot."
+    },
+    "benefits": {
+      "badge": "Vorteile",
+      "title": "Warum Stuhlvermietung in {city}?",
+      "fair": {
+        "title": "Faire Konditionen",
+        "text": "Flexible Mietmodelle: tageweise, wöchentlich oder monatlich — du zahlst nur, was du brauchst."
+      },
+      "start": {
+        "title": "Sofort loslegen",
+        "text": "Kein eigener Salon nötig. Stuhl mieten, Kunden mitbringen und vom ersten Tag an selbstständig arbeiten."
+      }
+    },
+    "trust": {
+      "residents": "Einwohner {city}",
+      "donation": "pro Buchung für Kinder in Not"
+    },
+    "contact": {
+      "badge": "Jetzt starten",
+      "title": "Stuhlvermietung {city} — kostenlos anfragen",
+      "subtitle": "Ob Salonbesitzer oder Beauty-Profi in {city} — hinterlasse deine Daten und wir melden uns innerhalb von 24 Stunden."
+    },
+    "guides": {
+      "title": "Ratgeber & Tipps",
+      "all": "Alle Artikel lesen →"
+    },
+    "local": {
+      "augsburg": {
+        "city": "Augsburg",
+        "heroSubtitle": "Augsburg ist Bayerns drittgrößte Stadt und bietet einen etablierten Beauty-Markt mit guter Infrastruktur. ChairMatch bringt Salonbesitzer und Beauty-Profis zusammen — flexibel, fair und ohne langfristige Bindung.",
+        "catTitle": "Stuhlmiete in Augsburg — alle Beauty-Sparten",
+        "footerCity": "Augsburg",
+        "uspTitle": "Drittgrößte Stadt Bayerns",
+        "uspText": "Augsburg hat eine starke Kaufkraft und viele etablierte Salons — perfekt für Freelancer und Salonbesitzer.",
+        "trust1Num": "300k+",
+        "trust1Label": "Einwohner Augsburg",
+        "trust2Num": "6.2 Mio",
+        "trust2Label": "Bayerisch-Schwaben",
+        "metaTitle": "Stuhlvermietung Augsburg — Friseurstuhl mieten | ChairMatch",
+        "metaDescription": "Stuhlvermietung in Augsburg: Friseurstuhl, Kosmetikstuhl oder Barbershop-Platz mieten. ChairMatch vermittelt Beauty-Profis und Salons in Bayerisch-Schwaben."
+      },
+      "berlin": {
+        "city": "Berlin",
+        "heroSubtitle": "Friseurstuhl mieten in Berlin? ChairMatch verbindet Salonbesitzer und selbstständige Beauty-Profis in Kreuzberg, Mitte, Neukölln, Charlottenburg und allen Berliner Bezirken.",
+        "catTitle": "Stuhlmiete Berlin — alle Beauty-Sparten",
+        "catSubtitle": "Von Friedrichshain bis Prenzlauer Berg — finde deinen Beauty-Arbeitsplatz in Berlin.",
+        "footerCity": "Berlin",
+        "uspTitle": "Deutschlands Hauptstadt",
+        "uspText": "Berlin ist Trend-Metropole der Beauty-Branche. Millionen potenzielle Kunden und eine lebendige Freelancer-Szene.",
+        "trust1Num": "3.7 Mio",
+        "trust1Label": "Einwohner Berlin",
+        "trust2Num": "12",
+        "trust2Label": "Bezirke abgedeckt",
+        "metaTitle": "Stuhlvermietung Berlin — Friseurstuhl mieten | ChairMatch",
+        "metaDescription": "Stuhlvermietung in Berlin: Friseurstuhl, Kosmetikstuhl oder Barbershop-Platz mieten. ChairMatch vermittelt Beauty-Profis und Salons in allen Berliner Bezirken."
+      },
+      "bonn": {
+        "city": "Bonn",
+        "heroSubtitle": "Bonn, die ehemalige Bundeshauptstadt, bietet eine kaufkräftige Kundschaft und internationale Community. ChairMatch bringt Salonbesitzer und Beauty-Profis zusammen — flexibel, fair und ohne langfristige Bindung.",
+        "catTitle": "Stuhlmiete in Bonn — alle Beauty-Sparten",
+        "footerCity": "Bonn",
+        "uspTitle": "Ehemalige Bundeshauptstadt",
+        "uspText": "Bonns internationale Bevölkerung und gute Infrastruktur machen es zu einem attraktiven Beauty-Standort.",
+        "trust1Num": "330k+",
+        "trust1Label": "Einwohner Bonn",
+        "trust2Num": "3.6 Mio",
+        "trust2Label": "Köln/Bonn Region",
+        "metaTitle": "Stuhlvermietung Bonn — Friseurstuhl mieten | ChairMatch",
+        "metaDescription": "Stuhlvermietung in Bonn: Friseurstuhl, Kosmetikstuhl oder Barbershop-Platz mieten. ChairMatch vermittelt Beauty-Profis und Salons in Köln/Bonn Region."
+      },
+      "darmstadt": {
+        "city": "Darmstadt",
+        "heroSubtitle": "Darmstadt ist die Wissenschaftsstadt im Süden des Rhein-Main-Gebiets mit einer jungen, urbanen Bevölkerung. ChairMatch bringt Salonbesitzer und Beauty-Profis zusammen — flexibel, fair und ohne langfristige Bindung.",
+        "catTitle": "Stuhlmiete in Darmstadt — alle Beauty-Sparten",
+        "footerCity": "Darmstadt",
+        "uspTitle": "Junge Universitätsstadt",
+        "uspText": "Darmstadts Studenten und Tech-Beschäftigte sorgen für eine trendbewusste Kundschaft, die Wert auf moderne Beauty-Dienstleistungen legt.",
+        "trust1Num": "160k+",
+        "trust1Label": "Einwohner Darmstadt",
+        "trust2Num": "5.8 Mio",
+        "trust2Label": "Rhein-Main-Gebiet",
+        "metaTitle": "Stuhlvermietung Darmstadt — Friseurstuhl mieten | ChairMatch",
+        "metaDescription": "Stuhlvermietung in Darmstadt: Friseurstuhl, Kosmetikstuhl oder Barbershop-Platz mieten. ChairMatch vermittelt Beauty-Profis und Salons in Rhein-Main-Gebiet."
+      },
+      "dortmund": {
+        "city": "Dortmund",
+        "heroSubtitle": "Dortmund ist eine der größten Städte im Ruhrgebiet und bietet einen dynamischen Beauty-Markt. ChairMatch bringt Salonbesitzer und Beauty-Profis zusammen — flexibel, fair und ohne langfristige Bindung.",
+        "catTitle": "Stuhlmiete in Dortmund — alle Beauty-Sparten",
+        "footerCity": "Dortmund",
+        "uspTitle": "Dynamisches Ruhrgebiet",
+        "uspText": "Dortmunds wachsende Gastronomie- und Lifestyle-Szene treibt auch den Beauty-Markt — mit steigender Nachfrage nach flexibler Stuhlmiete.",
+        "trust1Num": "600k+",
+        "trust1Label": "Einwohner Dortmund",
+        "trust2Num": "5.1 Mio",
+        "trust2Label": "Ruhrgebiet",
+        "metaTitle": "Stuhlvermietung Dortmund — Friseurstuhl mieten | ChairMatch",
+        "metaDescription": "Stuhlvermietung in Dortmund: Friseurstuhl, Kosmetikstuhl oder Barbershop-Platz mieten. ChairMatch vermittelt Beauty-Profis und Salons in Ruhrgebiet."
+      },
+      "duesseldorf": {
+        "city": "Düsseldorf",
+        "heroSubtitle": "Friseurstuhl mieten in Düsseldorf? ChairMatch verbindet Salonbesitzer und Beauty-Profis in der Mode- und Beautyhauptstadt am Rhein — von der Kö bis Flingern.",
+        "catTitle": "Stuhlmiete Düsseldorf — alle Beauty-Sparten",
+        "catSubtitle": "Fashion meets Beauty — Düsseldorf bietet Top-Standorte für jeden Beauty-Bereich.",
+        "footerCity": "Düsseldorf",
+        "uspTitle": "Mode- & Beautystadt",
+        "uspText": "Düsseldorf ist Deutschlands Modehauptstadt mit der Königsallee — Premium-Klientel und höchste Ansprüche an Beauty-Dienstleistungen.",
+        "trust1Num": "620k+",
+        "trust1Label": "Einwohner Düsseldorf",
+        "trust2Num": "11 Mio",
+        "trust2Label": "Region Rhein-Ruhr",
+        "metaTitle": "Stuhlvermietung Düsseldorf — Friseurstuhl mieten | ChairMatch",
+        "metaDescription": "Stuhlvermietung in Düsseldorf: Friseurstuhl, Kosmetikstuhl oder Barbershop-Platz mieten. ChairMatch vermittelt Beauty-Profis und Salons in Düsseldorf und am Niederrhein."
+      },
+      "duisburg": {
+        "city": "Duisburg",
+        "heroSubtitle": "Duisburg liegt im westlichen Ruhrgebiet und bietet einen vielfältigen, multikulturellen Beauty-Markt. ChairMatch bringt Salonbesitzer und Beauty-Profis zusammen — flexibel, fair und ohne langfristige Bindung.",
+        "catTitle": "Stuhlmiete in Duisburg — alle Beauty-Sparten",
+        "footerCity": "Duisburg",
+        "uspTitle": "Multikulturelles Ruhrgebiet",
+        "uspText": "Duisburgs vielfältige Bevölkerung sorgt für eine breite Nachfrage nach verschiedensten Beauty-Dienstleistungen.",
+        "trust1Num": "500k+",
+        "trust1Label": "Einwohner Duisburg",
+        "trust2Num": "5.1 Mio",
+        "trust2Label": "Ruhrgebiet",
+        "metaTitle": "Stuhlvermietung Duisburg — Friseurstuhl mieten | ChairMatch",
+        "metaDescription": "Stuhlvermietung in Duisburg: Friseurstuhl, Kosmetikstuhl oder Barbershop-Platz mieten. ChairMatch vermittelt Beauty-Profis und Salons in Ruhrgebiet."
+      },
+      "essen": {
+        "city": "Essen",
+        "heroSubtitle": "Essen ist die größte Stadt im Ruhrgebiet und ein wichtiger Beauty-Standort in Nordrhein-Westfalen. ChairMatch bringt Salonbesitzer und Beauty-Profis zusammen — flexibel, fair und ohne langfristige Bindung.",
+        "catTitle": "Stuhlmiete in Essen — alle Beauty-Sparten",
+        "footerCity": "Essen",
+        "uspTitle": "Herz des Ruhrgebiets",
+        "uspText": "Essen liegt zentral im Ruhrgebiet — mit 5 Millionen potenziellen Kunden in der näheren Umgebung.",
+        "trust1Num": "590k+",
+        "trust1Label": "Einwohner Essen",
+        "trust2Num": "5.1 Mio",
+        "trust2Label": "Ruhrgebiet",
+        "metaTitle": "Stuhlvermietung Essen — Friseurstuhl mieten | ChairMatch",
+        "metaDescription": "Stuhlvermietung in Essen: Friseurstuhl, Kosmetikstuhl oder Barbershop-Platz mieten. ChairMatch vermittelt Beauty-Profis und Salons in Ruhrgebiet."
+      },
+      "frankfurt": {
+        "city": "Frankfurt",
+        "heroSubtitle": "Du suchst einen Friseurstuhl, Kosmetikplatz oder Barbershop-Stuhl in Frankfurt am Main? ChairMatch bringt Salonbesitzer und Beauty-Profis im gesamten Rhein-Main-Gebiet zusammen — flexibel, fair und ohne langfristige Bindung.",
+        "catTitle": "Stuhlmiete in Frankfurt — alle Beauty-Sparten",
+        "catSubtitle": "Ob Stuhl, Raum oder Kabine — in Frankfurt findest du das passende Angebot.",
+        "footerCity": "Frankfurt am Main",
+        "uspTitle": "Rhein-Main-Gebiet",
+        "uspText": "Frankfurt, Offenbach, Darmstadt, Wiesbaden — das Rhein-Main-Gebiet bietet einen der dynamischsten Beauty-Märkte Deutschlands.",
+        "trust1Num": "750k+",
+        "trust1Label": "Einwohner Frankfurt",
+        "trust2Num": "5.8 Mio",
+        "trust2Label": "Rhein-Main-Region",
+        "metaTitle": "Stuhlvermietung Frankfurt — Friseurstuhl mieten | ChairMatch",
+        "metaDescription": "Stuhlvermietung in Frankfurt am Main: Friseurstuhl, Kosmetikstuhl oder Barbershop-Platz mieten. ChairMatch vermittelt Beauty-Profis und Salons im Rhein-Main-Gebiet."
+      },
+      "hamburg": {
+        "city": "Hamburg",
+        "heroSubtitle": "Friseurstuhl mieten in Hamburg? ChairMatch verbindet Salonbesitzer und Beauty-Profis in der Hansestadt — von Eppendorf über die Schanze bis Harburg.",
+        "catTitle": "Stuhlmiete Hamburg — alle Beauty-Sparten",
+        "catSubtitle": "Von der Hafencity bis Altona — finde deinen Beauty-Arbeitsplatz in Hamburg.",
+        "footerCity": "Hamburg",
+        "uspTitle": "Tor zur Welt",
+        "uspText": "Hamburg ist Deutschlands zweitgrößte Stadt mit einer internationalen, kaufkräftigen Kundschaft und hoher Beauty-Nachfrage.",
+        "trust1Num": "1.9 Mio",
+        "trust1Label": "Einwohner Hamburg",
+        "trust2Num": "5.4 Mio",
+        "trust2Label": "Metropolregion",
+        "metaTitle": "Stuhlvermietung Hamburg — Friseurstuhl mieten | ChairMatch",
+        "metaDescription": "Stuhlvermietung in Hamburg: Friseurstuhl, Kosmetikstuhl oder Barbershop-Platz mieten. ChairMatch vermittelt Beauty-Profis und Salons in der Hansestadt."
+      },
+      "hanau": {
+        "city": "Hanau",
+        "heroSubtitle": "Hanau liegt östlich von Frankfurt und bietet Beauty-Profis einen wachsenden Markt mit erschwinglichen Mietkonditionen. ChairMatch bringt Salonbesitzer und Beauty-Profis zusammen — flexibel, fair und ohne langfristige Bindung.",
+        "catTitle": "Stuhlmiete in Hanau — alle Beauty-Sparten",
+        "footerCity": "Hanau",
+        "uspTitle": "Wachsender Markt",
+        "uspText": "Hanau wächst kontinuierlich und bietet Beauty-Profis gute Konditionen bei steigender Nachfrage.",
+        "trust1Num": "100k+",
+        "trust1Label": "Einwohner Hanau",
+        "trust2Num": "5.8 Mio",
+        "trust2Label": "Rhein-Main-Gebiet",
+        "metaTitle": "Stuhlvermietung Hanau — Friseurstuhl mieten | ChairMatch",
+        "metaDescription": "Stuhlvermietung in Hanau: Friseurstuhl, Kosmetikstuhl oder Barbershop-Platz mieten. ChairMatch vermittelt Beauty-Profis und Salons in Rhein-Main-Gebiet."
+      },
+      "hannover": {
+        "city": "Hannover",
+        "heroSubtitle": "Friseurstuhl mieten in Hannover? ChairMatch verbindet Salonbesitzer und selbstständige Beauty-Profis in der List, Linden, Südstadt, Nordstadt und allen Stadtteilen Hannovers.",
+        "catTitle": "Stuhlmiete Hannover — alle Beauty-Sparten",
+        "catSubtitle": "Von Linden bis Kleefeld — finde deinen Beauty-Arbeitsplatz in Niedersachsens Hauptstadt.",
+        "footerCity": "Hannover",
+        "uspTitle": "Messestadt mit Reichweite",
+        "uspText": "Hannover ist internationaler Messestandort — viele Geschäftsreisende sorgen für zusätzliche Laufkundschaft im Beauty-Bereich.",
+        "trust1Num": "535.000",
+        "trust1Label": "Einwohner Hannover",
+        "trust2Num": "13",
+        "trust2Label": "Stadtbezirke abgedeckt",
+        "metaTitle": "Stuhlvermietung Hannover — Friseurstuhl mieten | ChairMatch",
+        "metaDescription": "Stuhlvermietung in Hannover: Friseurstuhl, Kosmetikstuhl oder Barbershop-Platz mieten. ChairMatch vermittelt Beauty-Profis und Salons in der niedersächsischen Landeshauptstadt."
+      },
+      "koeln": {
+        "city": "Köln",
+        "heroSubtitle": "Friseurstuhl mieten in Köln? ChairMatch verbindet Salonbesitzer und Beauty-Profis in der Domstadt — von der Südstadt über Ehrenfeld bis Nippes.",
+        "catTitle": "Stuhlmiete Köln — alle Beauty-Sparten",
+        "catSubtitle": "Von Ehrenfeld bis Deutz — finde deinen Beauty-Arbeitsplatz in der Rheinmetropole.",
+        "footerCity": "Köln",
+        "uspTitle": "Rheinland-Metropole",
+        "uspText": "Köln ist eine der lebendigsten Städte Deutschlands mit einer vielfältigen, internationalen Beauty-Szene und hoher Nachfrage.",
+        "trust1Num": "1.1 Mio",
+        "trust1Label": "Einwohner Köln",
+        "trust2Num": "3.6 Mio",
+        "trust2Label": "Region Köln/Bonn",
+        "metaTitle": "Stuhlvermietung Köln — Friseurstuhl mieten | ChairMatch",
+        "metaDescription": "Stuhlvermietung in Köln: Friseurstuhl, Kosmetikstuhl oder Barbershop-Platz mieten. ChairMatch vermittelt Beauty-Profis und Salons in Köln und der Rheinland-Region."
+      },
+      "leipzig": {
+        "city": "Leipzig",
+        "heroSubtitle": "Friseurstuhl mieten in Leipzig? ChairMatch verbindet Salonbesitzer und selbstständige Beauty-Profis in Connewitz, Plagwitz, Südvorstadt, Lindenau und allen Leipziger Ortsteilen.",
+        "catTitle": "Stuhlmiete Leipzig — alle Beauty-Sparten",
+        "catSubtitle": "Von der Südvorstadt bis Plagwitz — finde deinen Beauty-Arbeitsplatz in der wachsenden Kreativstadt.",
+        "footerCity": "Leipzig",
+        "uspTitle": "Boomende Kreativstadt",
+        "uspText": "Leipzig wächst rasant — junge, trendbewusste Einwohner und eine blühende Freelancer-Szene sorgen für steigende Beauty-Nachfrage.",
+        "trust1Num": "620.000",
+        "trust1Label": "Einwohner Leipzig",
+        "trust2Num": "10",
+        "trust2Label": "Stadtbezirke abgedeckt",
+        "metaTitle": "Stuhlvermietung Leipzig — Friseurstuhl mieten | ChairMatch",
+        "metaDescription": "Stuhlvermietung in Leipzig: Friseurstuhl, Kosmetikstuhl oder Barbershop-Platz mieten. ChairMatch vermittelt Beauty-Profis und Salons in der sächsischen Boomstadt."
+      },
+      "leverkusen": {
+        "city": "Leverkusen",
+        "heroSubtitle": "Leverkusen liegt zwischen Köln und Düsseldorf und profitiert von beiden Metropolen. ChairMatch bringt Salonbesitzer und Beauty-Profis zusammen — flexibel, fair und ohne langfristige Bindung.",
+        "catTitle": "Stuhlmiete in Leverkusen — alle Beauty-Sparten",
+        "footerCity": "Leverkusen",
+        "uspTitle": "Zwischen den Metropolen",
+        "uspText": "Leverkusens Lage zwischen Köln und Düsseldorf bietet Zugang zu zwei großen Kundenmärkten bei günstigen Mietpreisen.",
+        "trust1Num": "165k+",
+        "trust1Label": "Einwohner Leverkusen",
+        "trust2Num": "3.6 Mio",
+        "trust2Label": "Köln/Bonn Region",
+        "metaTitle": "Stuhlvermietung Leverkusen — Friseurstuhl mieten | ChairMatch",
+        "metaDescription": "Stuhlvermietung in Leverkusen: Friseurstuhl, Kosmetikstuhl oder Barbershop-Platz mieten. ChairMatch vermittelt Beauty-Profis und Salons in Köln/Bonn Region."
+      },
+      "lueneburg": {
+        "city": "Lüneburg",
+        "heroSubtitle": "Lüneburg ist die charmante Universitätsstadt südlich von Hamburg mit einem wachsenden Beauty-Markt. ChairMatch bringt Salonbesitzer und Beauty-Profis zusammen — flexibel, fair und ohne langfristige Bindung.",
+        "catTitle": "Stuhlmiete in Lüneburg — alle Beauty-Sparten",
+        "footerCity": "Lüneburg",
+        "uspTitle": "Studentenstadt bei Hamburg",
+        "uspText": "Lüneburgs junge Bevölkerung und die Nähe zu Hamburg machen es zu einem attraktiven Standort für Beauty-Freelancer.",
+        "trust1Num": "78k+",
+        "trust1Label": "Einwohner Lüneburg",
+        "trust2Num": "5.4 Mio",
+        "trust2Label": "Metropolregion Hamburg",
+        "metaTitle": "Stuhlvermietung Lüneburg — Friseurstuhl mieten | ChairMatch",
+        "metaDescription": "Stuhlvermietung in Lüneburg: Friseurstuhl, Kosmetikstuhl oder Barbershop-Platz mieten. ChairMatch vermittelt Beauty-Profis und Salons in Metropolregion Hamburg."
+      },
+      "mainz": {
+        "city": "Mainz",
+        "heroSubtitle": "Mainz, die rheinland-pfälzische Landeshauptstadt, liegt direkt gegenüber von Wiesbaden am Rhein. ChairMatch bringt Salonbesitzer und Beauty-Profis zusammen — flexibel, fair und ohne langfristige Bindung.",
+        "catTitle": "Stuhlmiete in Mainz — alle Beauty-Sparten",
+        "footerCity": "Mainz",
+        "uspTitle": "Zwei Landeshauptstädte",
+        "uspText": "Mainz und Wiesbaden bilden zusammen einen Beauty-Hotspot — Kunden aus beiden Städten erreichbar.",
+        "trust1Num": "220k+",
+        "trust1Label": "Einwohner Mainz",
+        "trust2Num": "5.8 Mio",
+        "trust2Label": "Rhein-Main-Gebiet",
+        "metaTitle": "Stuhlvermietung Mainz — Friseurstuhl mieten | ChairMatch",
+        "metaDescription": "Stuhlvermietung in Mainz: Friseurstuhl, Kosmetikstuhl oder Barbershop-Platz mieten. ChairMatch vermittelt Beauty-Profis und Salons in Rhein-Main-Gebiet."
+      },
+      "muenchen": {
+        "city": "München",
+        "heroSubtitle": "Friseurstuhl mieten in München? ChairMatch verbindet Salonbesitzer und Beauty-Profis in der bayerischen Landeshauptstadt — von Schwabing über Maxvorstadt bis Sendling.",
+        "catTitle": "Stuhlmiete München — alle Beauty-Sparten",
+        "catSubtitle": "Premium-Standorte für Beauty-Profis in Bayerns Landeshauptstadt.",
+        "footerCity": "München",
+        "uspTitle": "Premium-Markt",
+        "uspText": "München hat die höchste Kaufkraft Deutschlands. Beauty-Profis profitieren von zahlungskräftiger Kundschaft und hoher Nachfrage.",
+        "trust1Num": "1.5 Mio",
+        "trust1Label": "Einwohner München",
+        "trust2Num": "6.2 Mio",
+        "trust2Label": "Metropolregion",
+        "metaTitle": "Stuhlvermietung München — Friseurstuhl mieten | ChairMatch",
+        "metaDescription": "Stuhlvermietung in München: Friseurstuhl, Kosmetikstuhl oder Barbershop-Platz mieten. ChairMatch vermittelt Beauty-Profis und Salons in der bayerischen Landeshauptstadt."
+      },
+      "nuernberg": {
+        "city": "Nürnberg",
+        "heroSubtitle": "Nürnberg ist Frankens Metropole und bietet einen der größten Beauty-Märkte in Bayern. ChairMatch bringt Salonbesitzer und Beauty-Profis zusammen — flexibel, fair und ohne langfristige Bindung.",
+        "catTitle": "Stuhlmiete in Nürnberg — alle Beauty-Sparten",
+        "footerCity": "Nürnberg",
+        "uspTitle": "Frankens Metropole",
+        "uspText": "Nürnberg mit über 500.000 Einwohnern ist ein bedeutender Beauty-Standort mit hoher Nachfrage nach Stuhlvermietung.",
+        "trust1Num": "520k+",
+        "trust1Label": "Einwohner Nürnberg",
+        "trust2Num": "3.6 Mio",
+        "trust2Label": "Franken",
+        "metaTitle": "Stuhlvermietung Nürnberg — Friseurstuhl mieten | ChairMatch",
+        "metaDescription": "Stuhlvermietung in Nürnberg: Friseurstuhl, Kosmetikstuhl oder Barbershop-Platz mieten. ChairMatch vermittelt Beauty-Profis und Salons in Franken."
+      },
+      "offenbach": {
+        "city": "Offenbach",
+        "heroSubtitle": "Offenbach am Main liegt direkt neben Frankfurt und bietet einen wachsenden Beauty-Markt mit günstigen Mietkonditionen. ChairMatch bringt Salonbesitzer und Beauty-Profis zusammen — flexibel, fair und ohne langfristige Bindung.",
+        "catTitle": "Stuhlmiete in Offenbach — alle Beauty-Sparten",
+        "footerCity": "Offenbach am Main",
+        "uspTitle": "Direkt neben Frankfurt",
+        "uspText": "Offenbach profitiert von der Nähe zu Frankfurt — günstigere Mieten bei gleicher Kundschaft aus dem Rhein-Main-Gebiet.",
+        "trust1Num": "130k+",
+        "trust1Label": "Einwohner Offenbach",
+        "trust2Num": "5.8 Mio",
+        "trust2Label": "Rhein-Main-Gebiet",
+        "metaTitle": "Stuhlvermietung Offenbach am Main — Friseurstuhl mieten | ChairMatch",
+        "metaDescription": "Stuhlvermietung in Offenbach am Main: Friseurstuhl, Kosmetikstuhl oder Barbershop-Platz mieten. ChairMatch vermittelt Beauty-Profis und Salons in Rhein-Main-Gebiet."
+      },
+      "potsdam": {
+        "city": "Potsdam",
+        "heroSubtitle": "Potsdam, Brandenburgs Landeshauptstadt, ist bekannt für ihr gehobenes Publikum und liegt direkt an Berlin. ChairMatch bringt Salonbesitzer und Beauty-Profis zusammen — flexibel, fair und ohne langfristige Bindung.",
+        "catTitle": "Stuhlmiete in Potsdam — alle Beauty-Sparten",
+        "footerCity": "Potsdam",
+        "uspTitle": "Brandenburgs Hauptstadt",
+        "uspText": "Potsdam bietet eine wohlhabende Kundschaft und profitiert von Berlins Beauty-Boom — bei niedrigeren Mietkosten.",
+        "trust1Num": "185k+",
+        "trust1Label": "Einwohner Potsdam",
+        "trust2Num": "6.2 Mio",
+        "trust2Label": "Berlin-Brandenburg",
+        "metaTitle": "Stuhlvermietung Potsdam — Friseurstuhl mieten | ChairMatch",
+        "metaDescription": "Stuhlvermietung in Potsdam: Friseurstuhl, Kosmetikstuhl oder Barbershop-Platz mieten. ChairMatch vermittelt Beauty-Profis und Salons in Berlin-Brandenburg."
+      },
+      "stuttgart": {
+        "city": "Stuttgart",
+        "heroSubtitle": "Friseurstuhl mieten in Stuttgart? ChairMatch verbindet Salonbesitzer und selbstständige Beauty-Profis in Stuttgart-Mitte, Bad Cannstatt, Vaihingen, Degerloch und allen Stuttgarter Stadtbezirken.",
+        "catTitle": "Stuhlmiete Stuttgart — alle Beauty-Sparten",
+        "catSubtitle": "Von der Königstraße bis zum Stuttgarter Westen — finde deinen Beauty-Arbeitsplatz in der Schwabenmetropole.",
+        "footerCity": "Stuttgart",
+        "uspTitle": "Wirtschaftsstarke Region",
+        "uspText": "Stuttgart und die Region sind wirtschaftlich stark — kaufkräftige Kunden und hohe Nachfrage nach Beauty-Dienstleistungen.",
+        "trust1Num": "635.000",
+        "trust1Label": "Einwohner Stuttgart",
+        "trust2Num": "23",
+        "trust2Label": "Stadtbezirke abgedeckt",
+        "metaTitle": "Stuhlvermietung Stuttgart — Friseurstuhl mieten | ChairMatch",
+        "metaDescription": "Stuhlvermietung in Stuttgart: Friseurstuhl, Kosmetikstuhl oder Barbershop-Platz mieten. ChairMatch vermittelt Beauty-Profis und Salons in der Schwabenmetropole."
+      },
+      "wiesbaden": {
+        "city": "Wiesbaden",
+        "heroSubtitle": "Wiesbaden, die hessische Landeshauptstadt, ist bekannt für ihre wohlhabende Kundschaft und hochwertigen Salons. ChairMatch bringt Salonbesitzer und Beauty-Profis zusammen — flexibel, fair und ohne langfristige Bindung.",
+        "catTitle": "Stuhlmiete in Wiesbaden — alle Beauty-Sparten",
+        "footerCity": "Wiesbaden",
+        "uspTitle": "Landeshauptstadt Hessen",
+        "uspText": "Wiesbaden hat eine kaufkräftige Bevölkerung und gehobene Beauty-Nachfrage — ideal für Premium-Dienstleistungen.",
+        "trust1Num": "280k+",
+        "trust1Label": "Einwohner Wiesbaden",
+        "trust2Num": "5.8 Mio",
+        "trust2Label": "Rhein-Main-Gebiet",
+        "metaTitle": "Stuhlvermietung Wiesbaden — Friseurstuhl mieten | ChairMatch",
+        "metaDescription": "Stuhlvermietung in Wiesbaden: Friseurstuhl, Kosmetikstuhl oder Barbershop-Platz mieten. ChairMatch vermittelt Beauty-Profis und Salons in Rhein-Main-Gebiet."
+      },
+      "wuppertal": {
+        "city": "Wuppertal",
+        "heroSubtitle": "Wuppertal ist die größte Stadt im Bergischen Land und liegt zwischen Düsseldorf und dem Ruhrgebiet. ChairMatch bringt Salonbesitzer und Beauty-Profis zusammen — flexibel, fair und ohne langfristige Bindung.",
+        "catTitle": "Stuhlmiete in Wuppertal — alle Beauty-Sparten",
+        "footerCity": "Wuppertal",
+        "uspTitle": "Bergisches Land",
+        "uspText": "Wuppertal hat eine treue Kundschaft und moderate Mietpreise — ideal für selbstständige Beauty-Profis.",
+        "trust1Num": "360k+",
+        "trust1Label": "Einwohner Wuppertal",
+        "trust2Num": "11 Mio",
+        "trust2Label": "Bergisches Land",
+        "metaTitle": "Stuhlvermietung Wuppertal — Friseurstuhl mieten | ChairMatch",
+        "metaDescription": "Stuhlvermietung in Wuppertal: Friseurstuhl, Kosmetikstuhl oder Barbershop-Platz mieten. ChairMatch vermittelt Beauty-Profis und Salons in Bergisches Land."
+      }
+    }
+  },
+  "blog": {
+    "heroBadge": "ChairMatch Blog",
+    "heroTitle": "Wissen für <span>Beauty-Profis</span> und Salonbesitzer",
+    "heroText": "Praxiswissen zu Stuhlvermietung, Selbstständigkeit und den neuesten Trends in der Beauty-Branche.",
+    "readMore": "Artikel lesen →",
+    "readTime_one": "{count} Min. Lesezeit",
+    "readTime_other": "{count} Min. Lesezeit",
+    "badge": {
+      "owner": "Salonbesitzer",
+      "freelancer": "Freelancer",
+      "trend": "Trend",
+      "pricing": "Preise",
+      "founding": "Gründung"
+    },
+    "post": {
+      "salonGuide": {
+        "title": "Stuhlvermietung im Friseursalon: Der komplette Leitfaden für Salonbesitzer",
+        "teaser": "Leere Stühle kosten Geld. Erfahren Sie, wie Sie durch Stuhlvermietung regelmäßige Einnahmen generieren, welche rechtlichen Grundlagen gelten und welche Preismodelle sich bewährt haben."
+      },
+      "freelancer": {
+        "title": "Freelancer Friseur: So finden Sie den perfekten Arbeitsplatz per Stuhlmiete",
+        "teaser": "Selbstständig arbeiten, ohne einen eigenen Salon eröffnen zu müssen: Stuhlmiete macht es möglich. Kostenvergleich, Versicherungen, Gewerbeanmeldung und Tipps zum Aufbau Ihrer eigenen Marke."
+      },
+      "coworking": {
+        "title": "Beauty Coworking in Deutschland: Der Shared-Salon-Trend, der die Branche verändert",
+        "teaser": "Was in den USA Milliarden umsetzt, erreicht jetzt Deutschland: Beauty Coworking Spaces verbinden selbstständige Profis in geteilten, professionellen Arbeitsräumen. Was dahinter steckt und warum der Trend kommt."
+      },
+      "prices": {
+        "title": "Stuhlmiete Preise 2026: Was kostet ein Stuhl im Salon?",
+        "teaser": "Preisvergleich nach Stadt, Kostenrechner und Verhandlungstipps: So finden Sie die richtige Stuhlmiete für Ihr Budget — von Berlin bis München.",
+        "short": "Stuhlmiete Preise 2026",
+        "shortTeaser": "Was kostet ein Stuhl im Salon? Preisvergleich nach Stadt."
+      },
+      "selfemployed": {
+        "title": "Selbstständig als Friseur: Stuhlmiete als Einstieg in die Selbstständigkeit",
+        "teaser": "Schritt-für-Schritt in die Selbstständigkeit: Gewerbeanmeldung, Versicherungen, Startkosten und warum Stuhlmiete der risikoärmste Weg ist.",
+        "short": "Selbstständig als Friseur",
+        "shortTeaser": "Stuhlmiete als Einstieg in die Selbstständigkeit."
+      },
+      "vacancy": {
+        "title": "Leere Stühle im Salon? So monetarisieren Sie ungenutzten Platz",
+        "teaser": "ROI-Berechnung, Preismodelle und Praxisbeispiele: Wie Salonbesitzer mit Stuhlvermietung aus Leerstand Einnahmen machen.",
+        "short": "Leere Stühle monetarisieren",
+        "shortTeaser": "So verdienen Salonbesitzer mit ungenutztem Platz."
+      }
+    },
+    "allArticles": "Alle Artikel",
+    "readTimeApprox_one": "Lesezeit: ca. {count} Minute",
+    "readTimeApprox_other": "Lesezeit: ca. {count} Minuten",
+    "germanOnly": "Dieser Artikel liegt nur auf Deutsch vor."
+  },
+  "meta": {
+    "home": {
+      "title": "ChairMatch — Dein Stuhl in der Beauty-Branche",
+      "description": "ChairMatch vermittelt Stuhlmiete und Raumvermietung für Beauty-Profis: Barbershop, Friseur, Kosmetik, Nails, Massage und mehr. 1 € jeder Buchung geht an Kinder in Not."
+    },
+    "faq": {
+      "title": "FAQ — Stuhlvermietung & Stuhlmiete | ChairMatch",
+      "description": "Häufige Fragen zu Stuhlvermietung und Stuhlmiete in der Beauty-Branche. Alles über Preise, Verträge, Versicherung, Gewerbeschein und mehr — beantwortet von ChairMatch.",
+      "ogDescription": "Häufige Fragen zu Stuhlvermietung in der Beauty-Branche. Preise, Verträge, Versicherung und mehr."
+    },
+    "blog": {
+      "title": "ChairMatch Blog — Ratgeber für Stuhlvermietung & Beauty Coworking",
+      "description": "Der ChairMatch Blog: Expertenwissen zu Stuhlvermietung, Freelancer-Arbeitsplätzen und Beauty Coworking in Deutschland. Tipps für Salonbesitzer und Beauty-Profis.",
+      "ogDescription": "Expertenwissen zu Stuhlvermietung, Freelancer-Arbeitsplätzen und Beauty Coworking. Tipps für Salonbesitzer und selbstständige Beauty-Profis."
+    },
+    "city": {
+      "title": "Stuhlvermietung {city} — Stuhl mieten in {city} | ChairMatch",
+      "description": "Stuhlvermietung in {city}: Friseurstuhl, Kosmetikplatz oder Barbershop-Stuhl mieten. ChairMatch vermittelt Salonbesitzer und Beauty-Profis in {city}."
+    }
+  }
+}
