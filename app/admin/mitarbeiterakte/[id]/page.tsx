@@ -249,10 +249,10 @@ export default function MitarbeiteraktePage() {
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div style={{ background: 'var(--coal2)', border: '1px solid var(--border)', borderRadius: 10, padding: '10px 14px' }}>
+    <label style={{ display: 'block', background: 'var(--coal2)', border: '1px solid var(--border)', borderRadius: 10, padding: '10px 14px'}}>
       <div style={{ fontSize: 11, color: 'var(--ink4)', textTransform: 'uppercase', letterSpacing: '.4px', marginBottom: 4 }}>{label}</div>
       <div style={{ fontSize: 14, color: 'var(--ink)' }}>{children}</div>
-    </div>
+    </label>
   )
 }
 

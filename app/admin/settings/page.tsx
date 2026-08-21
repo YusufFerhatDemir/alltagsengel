@@ -382,7 +382,7 @@ export default function AdminSettings() {
         </h2>
         <form onSubmit={handlePasswordChange}>
           <div style={{ position: 'relative', marginBottom: 10 }}>
-            <input
+            <input aria-label="Neues Passwort (min. 6 Zeichen)"
               type={showNewPw ? 'text' : 'password'}
               placeholder="Neues Passwort (min. 6 Zeichen)"
               value={newPassword}
@@ -396,7 +396,7 @@ export default function AdminSettings() {
             </button>
           </div>
           <div style={{ position: 'relative', marginBottom: 10 }}>
-            <input
+            <input aria-label="Passwort bestätigen"
               type={showConfirmPw ? 'text' : 'password'}
               placeholder="Passwort bestätigen"
               value={confirmPassword}
@@ -540,7 +540,7 @@ export default function AdminSettings() {
               ))}
             </select>
             <div style={{ position: 'relative', marginBottom: 10 }}>
-              <input
+              <input aria-label="Neues Passwort (min. 6 Zeichen)"
                 type={showResetPw ? 'text' : 'password'}
                 placeholder="Neues Passwort (min. 6 Zeichen)"
                 value={resetPassword}

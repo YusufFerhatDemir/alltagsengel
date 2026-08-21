@@ -35,7 +35,7 @@ export default function EngelProfilActions({ angelId, angelName }: { angelId: st
       <div className="ep-action" onClick={handleLike} style={{ cursor: 'pointer' }}>
         <IconHeart size={18} fill={liked ? 'var(--gold)' : 'none'} color={liked ? 'var(--gold)' : 'currentColor'} />
       </div>
-      <div className="ep-action" onClick={() => setMenuOpen(!menuOpen)} style={{ cursor: 'pointer', position: 'relative' }}>
+      <div role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); (() => setMenuOpen(!menuOpen))() } }} className="ep-action" onClick={() => setMenuOpen(!menuOpen)} style={{ cursor: 'pointer', position: 'relative' }}>
         <IconMore size={18} />
         {menuOpen && (
           <div style={{

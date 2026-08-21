@@ -147,7 +147,7 @@ export default function PflegeberichtPage() {
                   const isExpanded = expandedId === bericht.id
 
                   return (
-                    <div
+                    <div role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); (() => setExpandedId(isExpanded ? null : bericht.id))() } }}
                       key={bericht.id}
                       className="portal-list-item"
                       style={{ cursor: 'pointer' }}

@@ -291,8 +291,8 @@ function CreateZugangModal({ onClose, onSaved }: { onClose: () => void; onSaved:
   }
 
   return (
-    <div className="admin-modal-overlay" onClick={onClose}>
-      <div className="admin-modal" style={{ maxWidth: 520, width: '92%' }} onClick={e => e.stopPropagation()}>
+    <div role="presentation" className="admin-modal-overlay" onClick={onClose}>
+      <div role="dialog" aria-label="Zugang erteilen" aria-modal="true" className="admin-modal" style={{ maxWidth: 520, width: '92%' }} onClick={e => e.stopPropagation()}>
         <h3>Zugang erteilen</h3>
         <p style={{ fontSize: 12, color: 'var(--ink4)', margin: '0 0 16px' }}>
           Einem Angehörigen Zugang zum Portal gewähren. Der Benutzer muss bereits registriert sein.
@@ -392,8 +392,8 @@ function EditFreigabenModal({ zugangId, zugang, onClose, onSaved }: {
   }
 
   return (
-    <div className="admin-modal-overlay" onClick={onClose}>
-      <div className="admin-modal" style={{ maxWidth: 460, width: '92%' }} onClick={e => e.stopPropagation()}>
+    <div role="presentation" className="admin-modal-overlay" onClick={onClose}>
+      <div role="dialog" aria-label="Freigabe-Bereiche bearbeiten" aria-modal="true" className="admin-modal" style={{ maxWidth: 460, width: '92%' }} onClick={e => e.stopPropagation()}>
         <h3>Freigabe-Bereiche bearbeiten</h3>
 
         {err && <Banner tone="danger">{err}</Banner>}
@@ -459,8 +459,8 @@ function RevokeModal({ zugangId, onClose, onRevoked }: {
   }
 
   return (
-    <div className="admin-modal-overlay" onClick={onClose}>
-      <div className="admin-modal" style={{ maxWidth: 420, width: '92%' }} onClick={e => e.stopPropagation()}>
+    <div role="presentation" className="admin-modal-overlay" onClick={onClose}>
+      <div role="dialog" aria-label="Zugang widerrufen" aria-modal="true" className="admin-modal" style={{ maxWidth: 420, width: '92%' }} onClick={e => e.stopPropagation()}>
         <h3>Zugang widerrufen</h3>
         <p style={{ fontSize: 13, color: 'var(--ink3)', margin: '0 0 16px' }}>
           Der Angehörige verliert sofort den Zugang zum Portal. Diese Aktion wird im Audit-Log protokolliert.
@@ -493,9 +493,9 @@ function RevokeModal({ zugangId, onClose, onRevoked }: {
 // ═══════════════════════════════════════════════════════════════
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div style={{ flex: 1, minWidth: 0, marginBottom: 10 }}>
+    <label style={{ display: 'block', flex: 1, minWidth: 0, marginBottom: 10}}>
       <span style={{ fontSize: 12, color: 'var(--ink3)', fontWeight: 600 }}>{label}</span>
       <div style={{ marginTop: 3 }}>{children}</div>
-    </div>
+    </label>
   )
 }

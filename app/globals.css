@@ -20,8 +20,8 @@
   --ink:       #F7F2EA;
   --ink2:      #D4C8B8;
   --ink3:      #A89C8C;
-  --ink4:      #8A7E6E;
-  --ink5:      #6A5E4E;
+  --ink4:      #A19381;   /* BITV/WCAG AA: war #8A7E6E (4.04:1 auf --coal2), jetzt 5.35:1 */
+  --ink5:      #998B78;   /* BITV/WCAG AA: war #6A5E4E (2.54:1 — Durchfall), jetzt 4.83:1 */
   --border:    rgba(255,255,255,.08);
   --border2:   rgba(255,255,255,.12);
   --green:     #5CB882;

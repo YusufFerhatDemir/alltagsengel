@@ -262,7 +262,7 @@ export default function FahrerChatDetailPage() {
               color: '#F5F0E8', fontSize: '14px', outline: 'none', fontFamily: 'inherit',
             }}
           />
-          <button onClick={handleSend} style={{
+          <button onClick={handleSend} aria-label="Nachricht senden" style={{
             width: '44px', height: '44px', borderRadius: '50%',
             background: newMsg.trim() ? 'linear-gradient(135deg, #C9963C, #DBA84A)' : '#252118',
             border: 'none', color: newMsg.trim() ? '#1A1612' : 'rgba(245,240,232,0.3)',

@@ -354,8 +354,8 @@ function DocCallModal({ clients, preset, onClose, onSaved }: {
   }
 
   return (
-    <div className="admin-modal-overlay" onClick={onClose}>
-      <div className="admin-modal" style={{ maxWidth: 480, width: '92%' }} onClick={e => e.stopPropagation()}>
+    <div role="presentation" className="admin-modal-overlay" onClick={onClose}>
+      <div role="dialog" aria-label="Zufriedenheitsanruf dokumentieren" aria-modal="true" className="admin-modal" style={{ maxWidth: 480, width: '92%' }} onClick={e => e.stopPropagation()}>
         <h3>Zufriedenheitsanruf dokumentieren</h3>
         {err && <Banner tone="danger">{err}</Banner>}
         <Field label="Klient *">
@@ -403,10 +403,10 @@ function Toggle({ label, value, onChange }: { label: string; value: boolean; onC
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div style={{ flex: 1, minWidth: 0, marginBottom: 10 }}>
+    <label style={{ display: 'block', flex: 1, minWidth: 0, marginBottom: 10}}>
       <span style={{ fontSize: 12, color: 'var(--ink3)', fontWeight: 600 }}>{label}</span>
       <div style={{ marginTop: 3 }}>{children}</div>
-    </div>
+    </label>
   )
 }
 

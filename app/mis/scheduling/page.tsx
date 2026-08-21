@@ -729,7 +729,7 @@ export default function SchedulingPage() {
                           s.datum === assignOpen.datum && s.engel_name === a.engel_name && s.status !== 'storniert' && s.id !== assignOpen.id
                         )
                         return (
-                          <div
+                          <div role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); (() => !alreadyAssigned && setAssignName(a.engel_name))() } }}
                             key={a.id}
                             onClick={() => !alreadyAssigned && setAssignName(a.engel_name)}
                             style={{

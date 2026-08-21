@@ -346,7 +346,7 @@ export default function RecruitingPage() {
                     <div style={{ fontSize: 12, color: BRAND.muted, textAlign: 'center', padding: 16 }}>Keine Bewerber</div>
                   ) : (
                     stepApplicants.map(a => (
-                      <div key={a.id} onClick={() => setSelectedApplicant(a)} style={{
+                      <div role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); (() => setSelectedApplicant(a))() } }} key={a.id} onClick={() => setSelectedApplicant(a)} style={{
                         background: BRAND.light,
                         borderRadius: 10,
                         padding: '10px 12px',
@@ -534,7 +534,14 @@ export default function RecruitingPage() {
                 {CHANNELS.map(ch => {
                   const selected = postingForm.channels.includes(ch)
                   return (
-                    <span key={ch} onClick={() => {
+                    <span role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); (() => {
+                      setPostingForm({
+                        ...postingForm,
+                        channels: selected
+                          ? postingForm.channels.filter(c => c !== ch)
+                          : [...postingForm.channels, ch],
+                      })
+                    })() } }} key={ch} onClick={() => {
                       setPostingForm({
                         ...postingForm,
                         channels: selected
@@ -602,7 +609,7 @@ export default function RecruitingPage() {
               <div style={{ fontSize: 11, color: BRAND.muted, marginBottom: 6 }}>Bewertung</div>
               <div style={{ display: 'flex', gap: 4 }}>
                 {[1, 2, 3, 4, 5].map(n => (
-                  <span key={n} onClick={() => handleRating(selectedApplicant.id, n)} style={{
+                  <span role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); (() => handleRating(selectedApplicant.id, n))() } }} key={n} onClick={() => handleRating(selectedApplicant.id, n)} style={{
                     cursor: 'pointer', fontSize: 22,
                     color: n <= selectedApplicant.rating ? BRAND.gold : `${BRAND.muted}40`,
                     transition: 'color 0.15s',
@@ -650,7 +657,7 @@ export default function RecruitingPage() {
                   return (
                     <React.Fragment key={step}>
                       {i > 0 && <div style={{ flex: '0 0 12px', height: 2, background: isActive ? st.color : BRAND.border }} />}
-                      <div
+                      <div role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); (() => handleStatusUpdate(selectedApplicant.id, step))() } }}
                         onClick={() => handleStatusUpdate(selectedApplicant.id, step)}
                         style={{
                           flex: 1, textAlign: 'center', padding: '6px 4px', borderRadius: 8, cursor: 'pointer',

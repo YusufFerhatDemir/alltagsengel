@@ -277,14 +277,14 @@ export default function LeistungsnachweisUploadPage() {
         <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 12 }}>
           <div style={{ flex: '1 1 240px' }}>
             <span style={label}>Klient</span>
-            <select value={clientId} onChange={e => setClientId(e.target.value)} style={select}>
+            <select aria-label="Klient" value={clientId} onChange={e => setClientId(e.target.value)} style={select}>
               <option value="">— wählen —</option>
               {clients.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
             </select>
           </div>
           <div style={{ flex: '1 1 240px' }}>
             <span style={label}>Leistungsnachweis</span>
-            <select value={recordId} onChange={e => setRecordId(e.target.value)} style={select} disabled={!clientId || loadingRecords}>
+            <select aria-label="Leistungsnachweis" value={recordId} onChange={e => setRecordId(e.target.value)} style={select} disabled={!clientId || loadingRecords}>
               <option value="">{loadingRecords ? 'Laden…' : '— wählen —'}</option>
               {records.map(r => (
                 <option key={r.id} value={r.id}>
@@ -302,11 +302,11 @@ export default function LeistungsnachweisUploadPage() {
             <div style={{ display: 'flex', gap: 10, alignItems: 'flex-end', flexWrap: 'wrap', marginBottom: 8 }}>
               <div>
                 <span style={label}>Datum</span>
-                <input type="date" value={newDate} onChange={e => setNewDate(e.target.value)} style={{ ...select, width: 160 }} />
+                <input aria-label="Datum" type="date" value={newDate} onChange={e => setNewDate(e.target.value)} style={{ ...select, width: 160 }} />
               </div>
               <div>
                 <span style={label}>Leistung</span>
-                <input type="text" value={newServiceType} onChange={e => setNewServiceType(e.target.value)} style={{ ...select, width: 220 }} />
+                <input aria-label="Leistung" type="text" value={newServiceType} onChange={e => setNewServiceType(e.target.value)} style={{ ...select, width: 220 }} />
               </div>
               <button onClick={createDraftRecord} disabled={creatingRecord} style={primaryBtnSm}>
                 {creatingRecord ? 'Anlegen…' : 'Anlegen'}

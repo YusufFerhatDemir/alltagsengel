@@ -257,7 +257,7 @@ export default function BuchenPage() {
           <div className="form-card">
             <div className="form-card-h">Für wen buchen Sie?</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <div
+              <div role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); (() => setSelectedCareRecipient(''))() } }}
                 className={`pay-opt${!selectedCareRecipient ? ' on' : ''}`}
                 onClick={() => setSelectedCareRecipient('')}
                 style={{ padding: '10px 14px', cursor: 'pointer' }}
@@ -265,7 +265,7 @@ export default function BuchenPage() {
                 <div className="pay-lbl">Für mich selbst</div>
               </div>
               {careRecipients.map(cr => (
-                <div
+                <div role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); (() => setSelectedCareRecipient(cr.id))() } }}
                   key={cr.id}
                   className={`pay-opt${selectedCareRecipient === cr.id ? ' on' : ''}`}
                   onClick={() => setSelectedCareRecipient(cr.id)}
@@ -319,7 +319,7 @@ export default function BuchenPage() {
           <select className="input" value={service} onChange={e => setService(e.target.value)}>
             <option>Alltagsbegleitung</option><option>Arztbesuch-Begleitung</option><option>Einkaufsbegleitung</option><option>Haushaltshilfe</option><option>Freizeitbegleitung</option><option>Krankenfahrdienst</option><option>Hygienebox</option>
           </select>
-          <textarea className="input" rows={3} placeholder="Besondere Wünsche oder Hinweise..." value={notes} onChange={e => setNotes(e.target.value)}></textarea>
+          <textarea aria-label="Besondere Wünsche oder Hinweise..." className="input" rows={3} placeholder="Besondere Wünsche oder Hinweise..." value={notes} onChange={e => setNotes(e.target.value)}></textarea>
         </div>
 
         <div className="form-card">
@@ -329,7 +329,7 @@ export default function BuchenPage() {
               ? [{key:'kasse',label:'§45b Kasse',sub:'Direkte Abrechnung'},{key:'privat',label:'Privat',sub:'Selbstzahler'},{key:'kombi',label:'Kombi',sub:'Kasse + Privat'}]
               : [{key:'privat',label:'Privat',sub:'Selbstzahler'}]
             ).map(p => (
-              <div key={p.key} className={`pay-opt${payMethod===p.key?' on':''}`} onClick={() => setPayMethod(p.key)}>
+              <div role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); (() => setPayMethod(p.key))() } }} key={p.key} className={`pay-opt${payMethod===p.key?' on':''}`} onClick={() => setPayMethod(p.key)}>
                 <div className="pay-ic"><IconCard size={16} /></div>
                 <div className="pay-lbl">{p.label}</div>
                 <div className="pay-sub">{p.sub}</div>
@@ -353,7 +353,7 @@ export default function BuchenPage() {
                 freigeschaltet ist.
               </div>
               <div style={{ display: 'flex', gap: 8 }}>
-                <input
+                <input aria-label="Ihre PLZ, z.B. 60311"
                   className="input"
                   style={{ flex: 1, margin: 0 }}
                   inputMode="numeric"
@@ -383,7 +383,7 @@ export default function BuchenPage() {
             <div className="kk-panel show">
               <div className="kk-type-row">
                 {['gesetzlich','privat'].map(t => (
-                  <div key={t} className={`kk-type${kkType===t?' on':''}`} onClick={() => setKkType(t)}>
+                  <div role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); (() => setKkType(t))() } }} key={t} className={`kk-type${kkType===t?' on':''}`} onClick={() => setKkType(t)}>
                     <div className="kk-type-main">{t === 'gesetzlich' ? 'Gesetzlich' : 'Privat'}</div>
                     <div className="kk-type-sub">{t === 'gesetzlich' ? 'GKV' : 'PKV'}</div>
                   </div>
@@ -392,13 +392,13 @@ export default function BuchenPage() {
               <div className="kk-label">Krankenkasse wählen</div>
               <div className="kk-grid">
                 {['AOK','TK','Barmer','DAK','IKK','KKH'].map(kk => (
-                  <div key={kk} className={`kk-item${selectedKK===kk?' on':''}`} onClick={() => setSelectedKK(kk)}>
+                  <div role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); (() => setSelectedKK(kk))() } }} key={kk} className={`kk-item${selectedKK===kk?' on':''}`} onClick={() => setSelectedKK(kk)}>
                     <div className="kk-dot"></div>
                     <div className="kk-name">{kk}</div>
                   </div>
                 ))}
               </div>
-              <input className="kk-other" placeholder="Andere Kasse eingeben..." />
+              <input aria-label="Andere Kasse eingeben..." className="kk-other" placeholder="Andere Kasse eingeben..." />
               <div className="kk-result"><IconInfo size={14} /> Ihr <strong>§45b Budget:</strong> 131€/Monat verfügbar. Restbudget dieses Monat: <strong>131,00€</strong></div>
             </div>
           )}

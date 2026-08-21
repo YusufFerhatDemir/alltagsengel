@@ -311,11 +311,11 @@ function RegisterForm() {
         </div>
         <form onSubmit={handleSubmit}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-            <input className="auth-input" type="text" placeholder="Vorname" value={firstName} onChange={e => setFirstName(e.target.value)} required />
-            <input className="auth-input" type="text" placeholder="Nachname" value={lastName} onChange={e => setLastName(e.target.value)} required />
+            <input aria-label="Vorname" className="auth-input" type="text" placeholder="Vorname" value={firstName} onChange={e => setFirstName(e.target.value)} required />
+            <input aria-label="Nachname" className="auth-input" type="text" placeholder="Nachname" value={lastName} onChange={e => setLastName(e.target.value)} required />
           </div>
-          <input className="auth-input" type="email" placeholder="E-Mail-Adresse" value={email} onChange={e => setEmail(e.target.value)} required autoComplete="email" />
-          <input className="auth-input" type="password" placeholder="Passwort (min. 8 Zeichen)" value={password} onChange={e => handlePasswordChange(e.target.value)} required minLength={8} autoComplete="new-password" />
+          <input aria-label="E-Mail-Adresse" className="auth-input" type="email" placeholder="E-Mail-Adresse" value={email} onChange={e => setEmail(e.target.value)} required autoComplete="email" />
+          <input aria-label="Passwort (min. 8 Zeichen)" className="auth-input" type="password" placeholder="Passwort (min. 8 Zeichen)" value={password} onChange={e => handlePasswordChange(e.target.value)} required minLength={8} autoComplete="new-password" />
           {password.length > 0 && (
             <div style={{ marginTop: -4, marginBottom: 8 }}>
               <div style={{ display: 'flex', gap: 4, marginBottom: 4 }}>
@@ -334,8 +334,8 @@ function RegisterForm() {
             </div>
           )}
           <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr', gap: 10 }}>
-            <input className="auth-input" type="text" placeholder="PLZ" value={plz} onChange={e => setPlz(e.target.value.replace(/\D/g, '').slice(0, 5))} inputMode="numeric" maxLength={5} minLength={5} required />
-            <input className="auth-input" type="text" placeholder="Stadt" value={stadt} onChange={e => setStadt(e.target.value)} required />
+            <input aria-label="PLZ" className="auth-input" type="text" placeholder="PLZ" value={plz} onChange={e => setPlz(e.target.value.replace(/\D/g, '').slice(0, 5))} inputMode="numeric" maxLength={5} minLength={5} required />
+            <input aria-label="Stadt" className="auth-input" type="text" placeholder="Stadt" value={stadt} onChange={e => setStadt(e.target.value)} required />
           </div>
           {role === 'kunde' && (
             <>
@@ -367,11 +367,11 @@ function RegisterForm() {
                 <div className="reg-section" style={{ background: 'rgba(212,175,55,0.08)', borderRadius: 12, padding: 14, marginBottom: 8 }}>
                   <div className="reg-section-title" style={{ marginBottom: 8 }}>Angaben zur pflegebedürftigen Person</div>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                    <input className="auth-input" type="text" placeholder="Vorname *" value={crFirstName} onChange={e => setCrFirstName(e.target.value)} required />
-                    <input className="auth-input" type="text" placeholder="Nachname *" value={crLastName} onChange={e => setCrLastName(e.target.value)} required />
+                    <input aria-label="Vorname *" className="auth-input" type="text" placeholder="Vorname *" value={crFirstName} onChange={e => setCrFirstName(e.target.value)} required />
+                    <input aria-label="Nachname *" className="auth-input" type="text" placeholder="Nachname *" value={crLastName} onChange={e => setCrLastName(e.target.value)} required />
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                    <input className="auth-input" type="text" placeholder="Geburtsjahr" value={crBirthYear} onChange={e => setCrBirthYear(e.target.value.replace(/\D/g, '').slice(0, 4))} inputMode="numeric" maxLength={4} />
+                    <input aria-label="Geburtsjahr" className="auth-input" type="text" placeholder="Geburtsjahr" value={crBirthYear} onChange={e => setCrBirthYear(e.target.value.replace(/\D/g, '').slice(0, 4))} inputMode="numeric" maxLength={4} />
                     <select className="auth-input" value={crRelationship} onChange={e => setCrRelationship(e.target.value)} style={{ color: crRelationship ? '#F5F0E8' : '#8a8070' }}>
                       <option value="">Beziehung...</option>
                       <option value="Mutter">Mutter</option>
@@ -382,12 +382,12 @@ function RegisterForm() {
                       <option value="Sonstige">Sonstige</option>
                     </select>
                   </div>
-                  <input className="auth-input" type="text" placeholder="Adresse der pflegebedürftigen Person" value={crAddress} onChange={e => setCrAddress(e.target.value)} />
+                  <input aria-label="Adresse der pflegebedürftigen Person" className="auth-input" type="text" placeholder="Adresse der pflegebedürftigen Person" value={crAddress} onChange={e => setCrAddress(e.target.value)} />
                   <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr', gap: 10 }}>
-                    <input className="auth-input" type="text" placeholder="PLZ" value={crPlz} onChange={e => setCrPlz(e.target.value.replace(/\D/g, '').slice(0, 5))} inputMode="numeric" maxLength={5} />
-                    <input className="auth-input" type="text" placeholder="Stadt" value={crCity} onChange={e => setCrCity(e.target.value)} />
+                    <input aria-label="PLZ" className="auth-input" type="text" placeholder="PLZ" value={crPlz} onChange={e => setCrPlz(e.target.value.replace(/\D/g, '').slice(0, 5))} inputMode="numeric" maxLength={5} />
+                    <input aria-label="Stadt" className="auth-input" type="text" placeholder="Stadt" value={crCity} onChange={e => setCrCity(e.target.value)} />
                   </div>
-                  <textarea className="auth-input" placeholder="Besondere Hinweise (z.B. Mobilität, Demenz, Allergien...)" value={crNotes} onChange={e => setCrNotes(e.target.value)} rows={2} style={{ resize: 'vertical', minHeight: 50 }} />
+                  <textarea aria-label="Besondere Hinweise (z.B. Mobilität, Demenz, Allergien...)" className="auth-input" placeholder="Besondere Hinweise (z.B. Mobilität, Demenz, Allergien...)" value={crNotes} onChange={e => setCrNotes(e.target.value)} rows={2} style={{ resize: 'vertical', minHeight: 50 }} />
                 </div>
               )}
 
@@ -418,7 +418,7 @@ function RegisterForm() {
               {/* Häusliche Pflege Toggle */}
               <div className="reg-section">
                 <div className="reg-section-title">Pflege zu Hause?</div>
-                <div className="reg-switch-row" onClick={() => setHomeCare(!homeCare)}>
+                <div role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); (() => setHomeCare(!homeCare))() } }} className="reg-switch-row" onClick={() => setHomeCare(!homeCare)}>
                   <span className="reg-switch-label">{homeCare ? 'Ja, häusliche Pflege' : 'Nein'}</span>
                   <div className={`reg-switch${homeCare ? ' on' : ''}`}>
                     <div className="reg-switch-knob" />
@@ -431,7 +431,7 @@ function RegisterForm() {
                 <div className="reg-section">
                   <div className="reg-section-title">Pflegehilfsmittel (bis 42 €/Monat)</div>
                   <div className="reg-section-desc">Handschuhe, Desinfektion, Masken u.v.m. — von der Pflegekasse übernommen.</div>
-                  <div className="reg-switch-row" onClick={() => setPflegehilfsmittel(!pflegehilfsmittel)}>
+                  <div role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); (() => setPflegehilfsmittel(!pflegehilfsmittel))() } }} className="reg-switch-row" onClick={() => setPflegehilfsmittel(!pflegehilfsmittel)}>
                     <span className="reg-switch-label">{pflegehilfsmittel ? 'Ja, Interesse' : 'Noch nicht'}</span>
                     <div className={`reg-switch${pflegehilfsmittel ? ' on' : ''}`}>
                       <div className="reg-switch-knob" />
@@ -478,7 +478,7 @@ function RegisterForm() {
               </span>
             </label>
           </div>
-          {error && <div className="auth-error">{error}</div>}
+          {error && <div className="auth-error" role="alert" aria-live="assertive">{error}</div>}
           <button className="btn-gold" type="submit" disabled={loading || !agbAccepted} style={{ width: '100%', marginTop: 8, opacity: agbAccepted ? 1 : 0.5 }}>
             {loading ? 'Wird erstellt...' : 'REGISTRIEREN'}
           </button>

@@ -174,7 +174,7 @@ export default function HygieneboBoxPage() {
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {products.map(product => (
-              <div
+              <div role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); (() => toggleProduct(product.id))() } }}
                 key={product.id}
                 onClick={() => toggleProduct(product.id)}
                 style={{
@@ -368,7 +368,7 @@ export default function HygieneboBoxPage() {
         </div>
 
         {/* Consent */}
-        <div
+        <div role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); (() => setConsent(!consent))() } }}
           onClick={() => setConsent(!consent)}
           style={{
             display: 'flex',

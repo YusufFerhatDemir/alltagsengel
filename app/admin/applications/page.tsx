@@ -220,8 +220,8 @@ function CreateAppModal({ onClose, onCreated }: { onClose: () => void; onCreated
   }
 
   return (
-    <div className="admin-modal-overlay" onClick={onClose}>
-      <div className="admin-modal" style={{ maxWidth: 500, width: '92%' }} onClick={e => e.stopPropagation()}>
+    <div role="presentation" className="admin-modal-overlay" onClick={onClose}>
+      <div role="dialog" aria-label="Neue Bewerbung erfassen" aria-modal="true" className="admin-modal" style={{ maxWidth: 500, width: '92%' }} onClick={e => e.stopPropagation()}>
         <h3>Neue Bewerbung erfassen</h3>
         {err && <Banner tone="danger">{err}</Banner>}
         <div style={{ display: 'flex', gap: 10 }}>
@@ -258,10 +258,10 @@ function CreateAppModal({ onClose, onCreated }: { onClose: () => void; onCreated
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div style={{ flex: 1, minWidth: 0, marginBottom: 10 }}>
+    <label style={{ display: 'block', flex: 1, minWidth: 0, marginBottom: 10}}>
       <span style={{ fontSize: 12, color: 'var(--ink3)', fontWeight: 600 }}>{label}</span>
       <div style={{ marginTop: 3 }}>{children}</div>
-    </div>
+    </label>
   )
 }
 

@@ -321,7 +321,7 @@ export function Modal({ open, onClose, title, children, width = 560 }: {
           position: 'sticky', top: 0, background: BRAND.white, zIndex: 1,
         }}>
           <h3 style={{ fontSize: 17, fontWeight: 700, color: BRAND.text, margin: 0, fontFamily: 'var(--font-cormorant), serif' }}>{title}</h3>
-          <button onClick={onClose} style={{
+          <button onClick={onClose} aria-label="Dialog schließen" style={{
             background: 'none', border: 'none', cursor: 'pointer', color: BRAND.muted, padding: 4,
           }}><MIcon name="x" size={20} /></button>
         </div>

@@ -71,8 +71,11 @@ export function Banner({ tone, children }: { tone: 'warn' | 'danger' | 'info' | 
     info: { bg: 'rgba(33,150,243,.10)', border: 'rgba(33,150,243,.35)', color: '#64B5F6' },
     success: { bg: 'rgba(92,184,130,.10)', border: 'rgba(92,184,130,.35)', color: '#5CB882' },
   }[tone]
+  // WCAG 4.1.3 (Statusmeldungen): Fehler/Warnungen unterbrechen (assertive),
+  // Info/Erfolg werden höflich nachgereicht (polite).
+  const dringend = tone === 'danger' || tone === 'warn'
   return (
-    <div style={{
+    <div role={dringend ? 'alert' : 'status'} aria-live={dringend ? 'assertive' : 'polite'} style={{
       background: tones.bg, border: `1px solid ${tones.border}`, borderRadius: 12,
       padding: '12px 16px', margin: '0 0 16px', color: tones.color, fontSize: 14,
       display: 'flex', alignItems: 'center', gap: 10,

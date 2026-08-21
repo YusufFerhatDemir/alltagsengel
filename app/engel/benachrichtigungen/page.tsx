@@ -168,7 +168,7 @@ export default function EngelBenachrichtigungenPage() {
             const isEskalation = b.typ === 'eskalation' || b.typ === 'fehler'
 
             return (
-              <div
+              <div role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); (() => handleClick(b))() } }}
                 key={b.id}
                 onClick={() => handleClick(b)}
                 style={{

@@ -65,9 +65,9 @@ export default function KundeKalenderPage() {
 
       <div className="kal-body">
         <div className="kal-header">
-          <button className="kal-nav" onClick={prevMonth}>‹</button>
+          <button className="kal-nav" aria-label="Vorheriger Monat" onClick={prevMonth}>‹</button>
           <div className="kal-month">{MONTHS[month]} {year}</div>
-          <button className="kal-nav" onClick={nextMonth}>›</button>
+          <button className="kal-nav" aria-label="Nächster Monat" onClick={nextMonth}>›</button>
         </div>
 
         <div className="kal-weekdays">
@@ -83,7 +83,7 @@ export default function KundeKalenderPage() {
             const hasBooking = bookingDates.has(dateStr)
             const isSelected = dateStr === selectedDate
             return (
-              <div
+              <div role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); (() => setSelectedDate(dateStr === selectedDate ? null : dateStr))() } }}
                 key={day}
                 className={`kal-day${isToday ? ' today' : ''}${hasBooking ? ' has-booking' : ''}${isSelected ? ' selected' : ''}`}
                 onClick={() => setSelectedDate(dateStr === selectedDate ? null : dateStr)}

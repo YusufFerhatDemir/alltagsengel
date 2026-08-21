@@ -1,7 +1,7 @@
 # MASTER PROJECT STATUS
 
-> Stand: 21.08.2026 18:15 | Baseline: FINAL_FINAL_GO_LIVE_REPORT_2026-08-21.md
-> CI: #318 GREEN (49503a3) | Tests: 3403 vitest + 794 node:test | HEAD: 49503a3
+> Stand: 21.08.2026 18:45 | Baseline: FINAL_FINAL_GO_LIVE_REPORT_2026-08-21.md
+> CI: #320 GREEN (96f6632) | Tests: 3403 vitest + 794 node:test | HEAD: 96f6632
 
 ---
 
@@ -137,6 +137,7 @@ Letzter Check: 21.08.2026
 | ~~2~~ | ~~Structured Logging~~ | ~~P1~~ | **ERLEDIGT** (lib/logger.ts, 7 Dateien migriert, 12 Tests, 193076e) |
 | ~~3~~ | ~~Error Boundaries pro Route-Segment~~ | ~~P1~~ | **ERLEDIGT** (10 Segmente + Root, aa280e6) |
 | ~~4~~ | ~~Type Safety: as-any Cleanup~~ | ~~P1~~ | **ERLEDIGT** (~90 Casts entfernt, join.ts Helfer, 49503a3) |
+| ~~5~~ | ~~Structured Logger: Vollmigration~~ | ~~P1~~ | **ERLEDIGT** (234 Dateien migriert, 96f6632) |
 
 ---
 
@@ -160,7 +161,7 @@ Letzter Check: 21.08.2026
 | ~~3~~ | ~~DSFA erstellen~~ | ~~P1~~ | **ERLEDIGT** (docs/DSFA_ALLTAGSENGEL.md, Selbstbewertung, 193076e) |
 | 4 | AVV mit Supabase/Vercel abschliessen | P1 | EXTERN |
 | 5 | BSI C5 / ISO 27001 (nur fuer DiPA/BfArM) | P1 | EXTERN |
-| 6 | BITV/WCAG Barrierefreiheit | P1 | INTERN |
+| 6 | BITV/WCAG Barrierefreiheit | P1 | **TEILWEISE** (docs/BARRIEREFREIHEIT_AUDIT.md — Kontrast/Labels/Dialoge/Landmarks gefixt; Fokus-Management, axe-core-Lauf, Screenreader-Test offen) |
 
 ---
 

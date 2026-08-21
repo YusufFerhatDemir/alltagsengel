@@ -310,7 +310,7 @@ export default function KundeProfilPage() {
         </button>
 
         {deleteConfirm && (
-          <div style={{
+          <div role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); (() => { if (!deleting) { setDeleteConfirm(false); setDeletePassword(''); setDeleteError('') } })() } }} style={{
             position: 'fixed', inset: 0, background: 'rgba(0,0,0,.7)', zIndex: 9999,
             display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24,
           }} onClick={() => { if (!deleting) { setDeleteConfirm(false); setDeletePassword(''); setDeleteError('') } }}>

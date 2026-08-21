@@ -841,10 +841,10 @@ export default function PersonalDetailPage() {
 
 function FieldRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div style={fieldRow}>
+    <label style={fieldRow}>
       <span style={fieldLabel}>{label}</span>
       <div>{children}</div>
-    </div>
+    </label>
   )
 }
 
@@ -875,7 +875,7 @@ function Modal({ title, children, onClose }: { title: string; children: React.Re
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
           <h3 style={{ fontSize: 16, fontWeight: 600, margin: 0 }}>{title}</h3>
-          <button onClick={onClose} style={{
+          <button onClick={onClose} aria-label="Dialog schließen" style={{
             background: 'none', border: 'none', fontSize: 20, cursor: 'pointer',
             color: 'var(--ink4)', fontFamily: 'inherit',
           }}>x</button>

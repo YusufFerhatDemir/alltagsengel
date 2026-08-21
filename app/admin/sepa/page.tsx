@@ -455,7 +455,7 @@ function NewBatchDialog({ onClose, onSaved }: { onClose: () => void; onSaved: ()
 // Shared components + styles
 // ---------------------------------------------------------------------------
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return <div style={{ marginBottom: 12 }}><label style={{ display: 'block', fontSize: 13, fontWeight: 500, marginBottom: 4 }}>{label}</label>{children}</div>
+  return <label style={{ display: 'block', marginBottom: 12 }}><span style={{ display: 'block', fontSize: 13, fontWeight: 500, marginBottom: 4 }}>{label}</span>{children}</label>
 }
 
 const tableStyle: React.CSSProperties = { width: '100%', borderCollapse: 'collapse', fontSize: 14 }

@@ -271,11 +271,11 @@ export default function KimPage() {
           {/* ── Konfiguration ── */}
           <h2 style={cardTitle}>Postfach-Konfiguration</h2>
           <form onSubmit={konfigAnlegen} style={formRow}>
-            <input style={inputStyle} placeholder="Bezeichnung" value={neueKonfig.bezeichnung}
+            <input aria-label="Bezeichnung" style={inputStyle} placeholder="Bezeichnung" value={neueKonfig.bezeichnung}
               onChange={e => setNeueKonfig(s => ({ ...s, bezeichnung: e.target.value }))} />
-            <input style={inputStyle} placeholder="Postfachadresse (optional)" value={neueKonfig.postfachadresse}
+            <input aria-label="Postfachadresse (optional)" style={inputStyle} placeholder="Postfachadresse (optional)" value={neueKonfig.postfachadresse}
               onChange={e => setNeueKonfig(s => ({ ...s, postfachadresse: e.target.value }))} />
-            <input style={inputStyle} placeholder="Provider (optional)" value={neueKonfig.provider_name}
+            <input aria-label="Provider (optional)" style={inputStyle} placeholder="Provider (optional)" value={neueKonfig.provider_name}
               onChange={e => setNeueKonfig(s => ({ ...s, provider_name: e.target.value }))} />
             <button type="submit" style={actionBtn}>Anlegen</button>
           </form>
@@ -313,9 +313,9 @@ export default function KimPage() {
               <option value="smc_b">SMC-B</option>
               <option value="ehba">eHBA</option>
             </select>
-            <input style={inputStyle} placeholder="Kartennummer (optional)" value={neueKarte.kartennummer}
+            <input aria-label="Kartennummer (optional)" style={inputStyle} placeholder="Kartennummer (optional)" value={neueKarte.kartennummer}
               onChange={e => setNeueKarte(s => ({ ...s, kartennummer: e.target.value }))} />
-            <input style={inputStyle} placeholder="Inhaber (optional)" value={neueKarte.inhaber_name}
+            <input aria-label="Inhaber (optional)" style={inputStyle} placeholder="Inhaber (optional)" value={neueKarte.inhaber_name}
               onChange={e => setNeueKarte(s => ({ ...s, inhaber_name: e.target.value }))} />
             <button type="submit" style={actionBtn}>Anlegen</button>
           </form>
@@ -350,9 +350,9 @@ export default function KimPage() {
           {/* ── Nachrichten ── */}
           <h2 style={cardTitle}>Nachrichten-Warteschlange</h2>
           <form onSubmit={nachrichtAnlegen} style={formRow}>
-            <input style={inputStyle} placeholder="Betreff" value={neueNachricht.betreff}
+            <input aria-label="Betreff" style={inputStyle} placeholder="Betreff" value={neueNachricht.betreff}
               onChange={e => setNeueNachricht(s => ({ ...s, betreff: e.target.value }))} />
-            <input style={inputStyle} placeholder="Empfängeradresse (optional)" value={neueNachricht.empfaenger_adresse}
+            <input aria-label="Empfängeradresse (optional)" style={inputStyle} placeholder="Empfängeradresse (optional)" value={neueNachricht.empfaenger_adresse}
               onChange={e => setNeueNachricht(s => ({ ...s, empfaenger_adresse: e.target.value }))} />
             <button type="submit" style={actionBtn}>Entwurf anlegen</button>
           </form>

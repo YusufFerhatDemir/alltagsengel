@@ -375,32 +375,32 @@ function LeistungsnachweisDigitalInner() {
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginBottom: 16, alignItems: 'flex-end' }}>
         <label style={filterLabelStyle}>
           <span style={filterLabelText}>Monat</span>
-          <input type="month" value={filterMonth} onChange={e => setFilterMonth(e.target.value)} style={filterInputStyle} />
+          <input aria-label="Monat" type="month" value={filterMonth} onChange={e => setFilterMonth(e.target.value)} style={filterInputStyle} />
         </label>
         <label style={filterLabelStyle}>
           <span style={filterLabelText}>Klient</span>
-          <select value={filterClient} onChange={e => setFilterClient(e.target.value)} style={filterInputStyle}>
+          <select aria-label="Klient" value={filterClient} onChange={e => setFilterClient(e.target.value)} style={filterInputStyle}>
             <option value="">Alle</option>
             {clients.map(c => <option key={c.id} value={c.id}>{fullName(c)}</option>)}
           </select>
         </label>
         <label style={filterLabelStyle}>
           <span style={filterLabelText}>Betreuungskraft</span>
-          <select value={filterCaregiver} onChange={e => setFilterCaregiver(e.target.value)} style={filterInputStyle}>
+          <select aria-label="Betreuungskraft" value={filterCaregiver} onChange={e => setFilterCaregiver(e.target.value)} style={filterInputStyle}>
             <option value="">Alle</option>
             {caregivers.map(c => <option key={c.id} value={c.id}>{fullName(c)}</option>)}
           </select>
         </label>
         <label style={filterLabelStyle}>
           <span style={filterLabelText}>Nachweis-Status</span>
-          <select value={filterProofStatus} onChange={e => setFilterProofStatus(e.target.value)} style={filterInputStyle}>
+          <select aria-label="Nachweis-Status" value={filterProofStatus} onChange={e => setFilterProofStatus(e.target.value)} style={filterInputStyle}>
             <option value="">Alle</option>
             {Object.entries(PROOF_STATUS).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
           </select>
         </label>
         <label style={filterLabelStyle}>
           <span style={filterLabelText}>Abrechnungs-Status</span>
-          <select value={filterBillingStatus} onChange={e => setFilterBillingStatus(e.target.value)} style={filterInputStyle}>
+          <select aria-label="Abrechnungs-Status" value={filterBillingStatus} onChange={e => setFilterBillingStatus(e.target.value)} style={filterInputStyle}>
             <option value="">Alle</option>
             {Object.entries(BILLING_STATUS).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
           </select>
@@ -459,8 +459,8 @@ function LeistungsnachweisDigitalInner() {
 
       {/* Detail-Modal */}
       {selectedId && (
-        <div className="admin-modal-overlay" onClick={closeDetail}>
-          <div className="admin-modal" style={{ maxWidth: 820, maxHeight: '90vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
+        <div role="presentation" className="admin-modal-overlay" onClick={closeDetail}>
+          <div role="dialog" aria-label="Leistungsnachweis-Details" aria-modal="true" className="admin-modal" style={{ maxWidth: 820, maxHeight: '90vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
             {detailLoading ? <p>Laden...</p> : detailRecord ? (
               <>
                 <h2 style={{ margin: '0 0 4px', fontSize: 18 }}>Leistungsnachweis</h2>
@@ -701,8 +701,8 @@ function LeistungsnachweisDigitalInner() {
 
       {/* Erstellungs-Modal */}
       {showCreate && (
-        <div className="admin-modal-overlay" onClick={() => setShowCreate(false)}>
-          <div className="admin-modal" style={{ maxWidth: 640 }} onClick={e => e.stopPropagation()}>
+        <div role="presentation" className="admin-modal-overlay" onClick={() => setShowCreate(false)}>
+          <div role="dialog" aria-modal="true" aria-label="Neuer Leistungsnachweis" className="admin-modal" style={{ maxWidth: 640 }} onClick={e => e.stopPropagation()}>
             <h2 style={{ margin: '0 0 16px', fontSize: 18 }}>Neuer Leistungsnachweis</h2>
 
             {createError && <Banner tone="danger">{createError}</Banner>}
@@ -710,62 +710,62 @@ function LeistungsnachweisDigitalInner() {
             <div style={formGrid}>
               <label style={formLabel}>
                 <span style={filterLabelText}>Klient *</span>
-                <select value={createForm.client_id} onChange={e => setCreateForm(f => ({ ...f, client_id: e.target.value }))} style={filterInputStyle}>
+                <select aria-label="Klient" value={createForm.client_id} onChange={e => setCreateForm(f => ({ ...f, client_id: e.target.value }))} style={filterInputStyle}>
                   <option value="">Bitte waehlen</option>
                   {clients.map(c => <option key={c.id} value={c.id}>{fullName(c)}</option>)}
                 </select>
               </label>
               <label style={formLabel}>
                 <span style={filterLabelText}>Betreuungskraft *</span>
-                <select value={createForm.caregiver_id} onChange={e => setCreateForm(f => ({ ...f, caregiver_id: e.target.value }))} style={filterInputStyle}>
+                <select aria-label="Betreuungskraft" value={createForm.caregiver_id} onChange={e => setCreateForm(f => ({ ...f, caregiver_id: e.target.value }))} style={filterInputStyle}>
                   <option value="">Bitte waehlen</option>
                   {caregivers.map(c => <option key={c.id} value={c.id}>{fullName(c)}</option>)}
                 </select>
               </label>
               <label style={formLabel}>
                 <span style={filterLabelText}>Datum *</span>
-                <input type="date" value={createForm.date} onChange={e => setCreateForm(f => ({ ...f, date: e.target.value }))} style={filterInputStyle} />
+                <input aria-label="Datum" type="date" value={createForm.date} onChange={e => setCreateForm(f => ({ ...f, date: e.target.value }))} style={filterInputStyle} />
               </label>
               <label style={formLabel}>
                 <span style={filterLabelText}>Start *</span>
-                <input type="time" value={createForm.start_time} onChange={e => setCreateForm(f => ({ ...f, start_time: e.target.value }))} style={filterInputStyle} />
+                <input aria-label="Start" type="time" value={createForm.start_time} onChange={e => setCreateForm(f => ({ ...f, start_time: e.target.value }))} style={filterInputStyle} />
               </label>
               <label style={formLabel}>
                 <span style={filterLabelText}>Ende *</span>
-                <input type="time" value={createForm.end_time} onChange={e => setCreateForm(f => ({ ...f, end_time: e.target.value }))} style={filterInputStyle} />
+                <input aria-label="Ende" type="time" value={createForm.end_time} onChange={e => setCreateForm(f => ({ ...f, end_time: e.target.value }))} style={filterInputStyle} />
               </label>
               <label style={formLabel}>
                 <span style={filterLabelText}>Leistungsart *</span>
-                <select value={createForm.service_type} onChange={e => setCreateForm(f => ({ ...f, service_type: e.target.value }))} style={filterInputStyle}>
+                <select aria-label="Leistungsart" value={createForm.service_type} onChange={e => setCreateForm(f => ({ ...f, service_type: e.target.value }))} style={filterInputStyle}>
                   <option value="">Bitte waehlen</option>
                   {SERVICE_TYPES.map(st => <option key={st} value={st}>{st}</option>)}
                 </select>
               </label>
               <label style={formLabel}>
                 <span style={filterLabelText}>Abrechnungsart</span>
-                <select value={createForm.billing_type} onChange={e => setCreateForm(f => ({ ...f, billing_type: e.target.value }))} style={filterInputStyle}>
+                <select aria-label="Abrechnungsart" value={createForm.billing_type} onChange={e => setCreateForm(f => ({ ...f, billing_type: e.target.value }))} style={filterInputStyle}>
                   {Object.entries(BILLING_TYPE_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
                 </select>
               </label>
               <label style={formLabel}>
                 <span style={filterLabelText}>Budget-Topf</span>
-                <select value={createForm.budget_type} onChange={e => setCreateForm(f => ({ ...f, budget_type: e.target.value }))} style={filterInputStyle}>
+                <select aria-label="Budget-Topf" value={createForm.budget_type} onChange={e => setCreateForm(f => ({ ...f, budget_type: e.target.value }))} style={filterInputStyle}>
                   {Object.entries(BUDGET_TYPE).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
                 </select>
               </label>
               <label style={formLabel}>
                 <span style={filterLabelText}>Betrag</span>
-                <input type="number" step="0.01" min="0" placeholder="0.00" value={createForm.amount} onChange={e => setCreateForm(f => ({ ...f, amount: e.target.value }))} style={filterInputStyle} />
+                <input aria-label="Betrag" type="number" step="0.01" min="0" placeholder="0.00" value={createForm.amount} onChange={e => setCreateForm(f => ({ ...f, amount: e.target.value }))} style={filterInputStyle} />
               </label>
             </div>
 
             <label style={{ ...formLabel, marginTop: 8 }}>
               <span style={filterLabelText}>Leistungsbeschreibung</span>
-              <textarea value={createForm.leistung_beschreibung} onChange={e => setCreateForm(f => ({ ...f, leistung_beschreibung: e.target.value }))} rows={3} style={{ ...filterInputStyle, resize: 'vertical' }} />
+              <textarea aria-label="Leistungsbeschreibung" value={createForm.leistung_beschreibung} onChange={e => setCreateForm(f => ({ ...f, leistung_beschreibung: e.target.value }))} rows={3} style={{ ...filterInputStyle, resize: 'vertical' }} />
             </label>
             <label style={{ ...formLabel, marginTop: 8 }}>
               <span style={filterLabelText}>Bemerkungen</span>
-              <textarea value={createForm.notes} onChange={e => setCreateForm(f => ({ ...f, notes: e.target.value }))} rows={2} style={{ ...filterInputStyle, resize: 'vertical' }} />
+              <textarea aria-label="Bemerkungen" value={createForm.notes} onChange={e => setCreateForm(f => ({ ...f, notes: e.target.value }))} rows={2} style={{ ...filterInputStyle, resize: 'vertical' }} />
             </label>
 
             <div className="admin-modal-btns" style={{ marginTop: 16 }}>

@@ -164,7 +164,7 @@ export default function EngelNachrichtenPage() {
             const isDringend = n.prioritaet === 'dringend'
 
             return (
-              <div
+              <div role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); (() => handleExpand(n.nachricht_id))() } }}
                 key={n.nachricht_id}
                 style={{
                   background: 'var(--coal2)',

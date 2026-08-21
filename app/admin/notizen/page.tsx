@@ -176,8 +176,8 @@ export default function AdminNotizenPage() {
 
       {/* ═══ Neue Notiz (Modal) ═══ */}
       {showModal && (
-        <div className="admin-modal-overlay" onClick={() => setShowModal(false)}>
-          <div className="admin-modal" style={{ maxWidth: 520, width: '92%' }} onClick={e => e.stopPropagation()}>
+        <div role="presentation" className="admin-modal-overlay" onClick={() => setShowModal(false)}>
+          <div role="dialog" aria-label="Neue Notiz" aria-modal="true" className="admin-modal" style={{ maxWidth: 520, width: '92%' }} onClick={e => e.stopPropagation()}>
             <h3>Neue Notiz</h3>
             <NoteComposer
               clients={clients}

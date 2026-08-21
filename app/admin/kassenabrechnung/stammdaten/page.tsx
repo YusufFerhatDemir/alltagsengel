@@ -158,15 +158,15 @@ export default function StammdatenPage() {
 
         <h4>Neue Datenannahmestelle</h4>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 10 }}>
-          <input placeholder="IK-Nummer (9 Ziffern)" value={dasForm.ik_nummer} onChange={e => setDasForm({ ...dasForm, ik_nummer: e.target.value })} />
-          <input placeholder="Name" value={dasForm.name} onChange={e => setDasForm({ ...dasForm, name: e.target.value })} />
+          <input aria-label="IK-Nummer (9 Ziffern)" placeholder="IK-Nummer (9 Ziffern)" value={dasForm.ik_nummer} onChange={e => setDasForm({ ...dasForm, ik_nummer: e.target.value })} />
+          <input aria-label="Name" placeholder="Name" value={dasForm.name} onChange={e => setDasForm({ ...dasForm, name: e.target.value })} />
           <select value={dasForm.kassenart} onChange={e => setDasForm({ ...dasForm, kassenart: e.target.value })}>
             {KASSENARTEN.map(k => <option key={k.code} value={k.code}>{k.code} — {k.label}</option>)}
           </select>
-          <input placeholder="SFTP-Host" value={dasForm.sftp_host} onChange={e => setDasForm({ ...dasForm, sftp_host: e.target.value })} />
-          <input placeholder="SFTP-Benutzer" value={dasForm.sftp_user} onChange={e => setDasForm({ ...dasForm, sftp_user: e.target.value })} />
-          <input placeholder="SFTP-Verzeichnis" value={dasForm.sftp_verzeichnis} onChange={e => setDasForm({ ...dasForm, sftp_verzeichnis: e.target.value })} />
-          <input placeholder="KIM-Adresse (optional)" value={dasForm.kim_adresse} onChange={e => setDasForm({ ...dasForm, kim_adresse: e.target.value })} />
+          <input aria-label="SFTP-Host" placeholder="SFTP-Host" value={dasForm.sftp_host} onChange={e => setDasForm({ ...dasForm, sftp_host: e.target.value })} />
+          <input aria-label="SFTP-Benutzer" placeholder="SFTP-Benutzer" value={dasForm.sftp_user} onChange={e => setDasForm({ ...dasForm, sftp_user: e.target.value })} />
+          <input aria-label="SFTP-Verzeichnis" placeholder="SFTP-Verzeichnis" value={dasForm.sftp_verzeichnis} onChange={e => setDasForm({ ...dasForm, sftp_verzeichnis: e.target.value })} />
+          <input aria-label="KIM-Adresse (optional)" placeholder="KIM-Adresse (optional)" value={dasForm.kim_adresse} onChange={e => setDasForm({ ...dasForm, kim_adresse: e.target.value })} />
         </div>
         <p style={{ color: 'var(--muted)', fontSize: 13, margin: '8px 0' }}>
           Der SSH-Key wird separat unter Abrechnung → Einstellungen hochgeladen, nicht hier.
@@ -215,12 +215,12 @@ export default function StammdatenPage() {
 
         <h4>Neuer Kostenträger</h4>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 10 }}>
-          <input placeholder="IK-Nummer (9 Ziffern)" value={ktForm.ik_nummer} onChange={e => setKtForm({ ...ktForm, ik_nummer: e.target.value })} />
-          <input placeholder="Name der Kasse" value={ktForm.name} onChange={e => setKtForm({ ...ktForm, name: e.target.value })} />
+          <input aria-label="IK-Nummer (9 Ziffern)" placeholder="IK-Nummer (9 Ziffern)" value={ktForm.ik_nummer} onChange={e => setKtForm({ ...ktForm, ik_nummer: e.target.value })} />
+          <input aria-label="Name der Kasse" placeholder="Name der Kasse" value={ktForm.name} onChange={e => setKtForm({ ...ktForm, name: e.target.value })} />
           <select value={ktForm.kassenart} onChange={e => setKtForm({ ...ktForm, kassenart: e.target.value })}>
             {KASSENARTEN.map(k => <option key={k.code} value={k.code}>{k.code} — {k.label}</option>)}
           </select>
-          <input placeholder="Bundesland" value={ktForm.bundesland} onChange={e => setKtForm({ ...ktForm, bundesland: e.target.value })} />
+          <input aria-label="Bundesland" placeholder="Bundesland" value={ktForm.bundesland} onChange={e => setKtForm({ ...ktForm, bundesland: e.target.value })} />
           <select value={ktForm.datenannahmestelle_id} onChange={e => setKtForm({ ...ktForm, datenannahmestelle_id: e.target.value })}>
             <option value="">— Datenannahmestelle wählen —</option>
             {stellen.map(s => <option key={s.id} value={s.id}>{s.name} ({s.ik_nummer})</option>)}

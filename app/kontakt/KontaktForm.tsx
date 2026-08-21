@@ -86,22 +86,22 @@ export default function KontaktForm() {
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-        <input
+        <input aria-label="Ihr Name"
           type="text" required placeholder="Ihr Name" value={form.name}
           onChange={e => setForm({ ...form, name: e.target.value })}
           style={inputStyle}
         />
-        <input
+        <input aria-label="E-Mail Adresse"
           type="email" required placeholder="E-Mail Adresse" value={form.email}
           onChange={e => setForm({ ...form, email: e.target.value })}
           style={inputStyle}
         />
-        <input
+        <input aria-label="Telefonnummer (optional)"
           type="tel" placeholder="Telefonnummer (optional)" value={form.phone}
           onChange={e => setForm({ ...form, phone: e.target.value })}
           style={inputStyle}
         />
-        <textarea
+        <textarea aria-label="Ihre Nachricht..."
           required placeholder="Ihre Nachricht..." value={form.message}
           onChange={e => setForm({ ...form, message: e.target.value })}
           rows={4}

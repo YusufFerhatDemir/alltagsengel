@@ -261,10 +261,10 @@ function NewRecordInner() {
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div style={{ flex: 1, minWidth: 0 }}>
+    <label style={{ display: 'block', flex: 1, minWidth: 0}}>
       <span style={fieldLabel}>{label}</span>
       <div style={{ marginTop: 4 }}>{children}</div>
-    </div>
+    </label>
   )
 }
 

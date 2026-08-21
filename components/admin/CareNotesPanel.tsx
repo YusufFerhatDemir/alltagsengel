@@ -283,10 +283,10 @@ export function CareNotesPanel({ clientId }: { clientId: string }) {
 // ── Bausteine & Styles ──────────────────────────────────────────
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div style={{ flex: 1, minWidth: 160 }}>
+    <label style={{ display: 'block', flex: 1, minWidth: 160}}>
       <span style={{ fontSize: 12, color: 'var(--ink3)', fontWeight: 600 }}>{label}</span>
       <div style={{ marginTop: 3 }}>{children}</div>
-    </div>
+    </label>
   )
 }
 

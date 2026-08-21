@@ -329,7 +329,7 @@ export default function FahrerRegisterPage() {
                 gap: 10,
                 marginBottom: 10,
               }}>
-                <input
+                <input aria-label="Vorname"
                   type="text"
                   placeholder="Vorname"
                   value={formData.firstName}
@@ -346,7 +346,7 @@ export default function FahrerRegisterPage() {
                     fontFamily: 'Jost, sans-serif',
                   }}
                 />
-                <input
+                <input aria-label="Nachname"
                   type="text"
                   placeholder="Nachname"
                   value={formData.lastName}
@@ -364,7 +364,7 @@ export default function FahrerRegisterPage() {
                   }}
                 />
               </div>
-              <input
+              <input aria-label="E-Mail-Adresse"
                 type="email"
                 placeholder="E-Mail-Adresse"
                 value={formData.email}
@@ -382,7 +382,7 @@ export default function FahrerRegisterPage() {
                   marginBottom: 10,
                 }}
               />
-              <input
+              <input aria-label="Passwort (min. 8 Zeichen)"
                 type="password"
                 placeholder="Passwort (min. 8 Zeichen)"
                 value={formData.password}
@@ -417,7 +417,7 @@ export default function FahrerRegisterPage() {
               }}>
                 Unternehmensdaten
               </div>
-              <input
+              <input aria-label="Firmenname"
                 type="text"
                 placeholder="Firmenname"
                 value={formData.companyName}
@@ -435,7 +435,7 @@ export default function FahrerRegisterPage() {
                   marginBottom: 10,
                 }}
               />
-              <input
+              <input aria-label="Lizenz-Nr."
                 type="text"
                 placeholder="Lizenz-Nr."
                 value={formData.licenseNumber}
@@ -453,7 +453,7 @@ export default function FahrerRegisterPage() {
                   marginBottom: 10,
                 }}
               />
-              <input
+              <input aria-label="Steuernummer"
                 type="text"
                 placeholder="Steuernummer"
                 value={formData.taxId}
@@ -488,7 +488,7 @@ export default function FahrerRegisterPage() {
               }}>
                 Kontakt & Adresse
               </div>
-              <input
+              <input aria-label="Adresse"
                 type="text"
                 placeholder="Adresse"
                 value={formData.address}
@@ -507,7 +507,7 @@ export default function FahrerRegisterPage() {
                 }}
               />
               <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr', gap: 10, marginBottom: 10 }}>
-                <input
+                <input aria-label="PLZ"
                   type="text"
                   placeholder="PLZ"
                   value={formData.plz}
@@ -527,7 +527,7 @@ export default function FahrerRegisterPage() {
                     fontFamily: 'Jost, sans-serif',
                   }}
                 />
-                <input
+                <input aria-label="Stadt"
                   type="text"
                   placeholder="Stadt"
                   value={formData.city}
@@ -545,7 +545,7 @@ export default function FahrerRegisterPage() {
                   }}
                 />
               </div>
-              <input
+              <input aria-label="Telefonnummer"
                 type="tel"
                 placeholder="Telefonnummer"
                 value={formData.phone}

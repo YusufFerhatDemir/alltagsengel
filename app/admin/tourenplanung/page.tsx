@@ -776,7 +776,7 @@ function NeueTourDialog({ caregivers, clients, defaultDate, onClose, onDone }: {
             {caregivers.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
           </select>
           <input type="date" value={datum} onChange={e => setDatum(e.target.value)} style={input} />
-          <input placeholder="Tour-Name (optional)" value={name} onChange={e => setName(e.target.value)} style={{ ...input, flex: 1, minWidth: 160 }} />
+          <input aria-label="Tour-Name (optional)" placeholder="Tour-Name (optional)" value={name} onChange={e => setName(e.target.value)} style={{ ...input, flex: 1, minWidth: 160 }} />
         </div>
         <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink3)', marginBottom: 6 }}>
           Stops (in Reihenfolge — Fahrtzeiten werden automatisch berechnet)

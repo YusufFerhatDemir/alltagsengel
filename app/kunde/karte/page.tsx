@@ -99,7 +99,7 @@ export default function KarteSeite() {
 
       {selectedAngel && (
         <div className="map-card">
-          <div className="map-card-close" onClick={() => setSelectedAngel(null)}>&times;</div>
+          <div role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); (() => setSelectedAngel(null))() } }} className="map-card-close" onClick={() => setSelectedAngel(null)}>&times;</div>
           <div className="engel-card" style={{ marginBottom: 0 }}>
             <div className="engel-avatar" style={{ overflow: 'visible' }}>
               <Icon3D size={62} />
