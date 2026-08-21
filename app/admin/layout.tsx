@@ -9,6 +9,7 @@ import OpsNotificationBell from '@/components/OpsNotificationBell'
 import OrgSwitcher from '@/components/OrgSwitcher'
 import BundeslandSwitcher from '@/components/admin/BundeslandSwitcher'
 import { BundeslandProvider } from '@/components/admin/BundeslandContext'
+import { MFA_AUSNAHME_PFADE } from '@/lib/admin/mfa'
 import { ReactNode } from 'react'
 
 // ═══════════════════════════════════════════════════════════════
@@ -261,6 +262,79 @@ const navGroups = [
   },
 ]
 
+// ═══════════════════════════════════════════════════════════════
+// AdminMfaGuard — Erzwingt MFA (TOTP) für Admin-Konten
+//
+// Läuft NACH useAdminAuth (Rolle bestätigt). Prüft:
+// 1. Hat der Admin einen bestätigten Faktor? Nein → /admin/mfa-einrichtung
+// 2. Ist die Sitzung auf AAL2? Nein → /admin/mfa-pruefen
+// Ausnahme-Pfade (Einrichtung/Prüfung selbst) werden durchgelassen.
+// ═══════════════════════════════════════════════════════════════
+function AdminMfaGuard({ children }: { children: ReactNode }) {
+  const router = useRouter()
+  const pathname = usePathname()
+  const [mfaOk, setMfaOk] = useState<'loading' | 'ok' | 'redirecting'>('loading')
+
+  useEffect(() => {
+    // Ausnahme-Pfade sofort durchlassen
+    if (MFA_AUSNAHME_PFADE.some(p => pathname.startsWith(p))) {
+      setMfaOk('ok')
+      return
+    }
+
+    let cancelled = false
+    async function check() {
+      try {
+        const supabase = createClient()
+        const { data: faktoren } = await supabase.auth.mfa.listFactors()
+        const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
+        if (cancelled) return
+
+        const verifiedFactors = (faktoren?.all ?? []).filter(
+          (f: { status?: string | null }) => f.status === 'verified',
+        )
+        const currentLevel = aal?.currentLevel ?? null
+        const nextLevel = aal?.nextLevel ?? null
+
+        if (verifiedFactors.length === 0) {
+          setMfaOk('redirecting')
+          router.replace('/admin/mfa-einrichtung')
+          return
+        }
+
+        if (nextLevel === 'aal2' && currentLevel !== 'aal2') {
+          setMfaOk('redirecting')
+          router.replace('/admin/mfa-pruefen')
+          return
+        }
+
+        setMfaOk('ok')
+      } catch {
+        // Fail-open bei Netzwerkfehler (serverseitige Guards fangen ab)
+        setMfaOk('ok')
+      }
+    }
+    check()
+    return () => { cancelled = true }
+  }, [pathname, router])
+
+  if (mfaOk === 'loading') {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '50vh' }}>
+        <div style={{
+          width: 32, height: 32, border: '3px solid var(--gold2, #C9963C)',
+          borderTopColor: 'transparent', borderRadius: '50%',
+          animation: 'spin 0.8s linear infinite',
+        }} />
+      </div>
+    )
+  }
+
+  if (mfaOk === 'redirecting') return null
+
+  return <>{children}</>
+}
+
 function ChevronIcon({ open }: { open: boolean }) {
   return (
     <svg
@@ -453,7 +527,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       </div>
 
       <div className="admin-main">
-        {children}
+        <AdminMfaGuard>{children}</AdminMfaGuard>
       </div>
     </div>
     </BundeslandProvider>

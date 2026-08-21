@@ -1,7 +1,7 @@
 # MASTER PROJECT STATUS
 
-> Stand: 21.08.2026 14:30 | Baseline: FINAL_FINAL_GO_LIVE_REPORT_2026-08-21.md
-> CI: #305 green (cfb6c88), #306 in progress (9a2b464) | HEAD: 9a2b464
+> Stand: 21.08.2026 15:15 | Baseline: FINAL_FINAL_GO_LIVE_REPORT_2026-08-21.md
+> CI: #305-#307 green, #308 in progress (311d3a0) | HEAD: 311d3a0
 
 ---
 
@@ -29,7 +29,7 @@ Letzter Check: 21.08.2026
 | 4 | **Haftpflichtversicherung** abschliessen | P0 | CEO | Versicherung |
 | 5 | **Arbeitsvertrag Sabrina Martin** (4 Felder ausfuellen) | P1 | CEO | intern |
 | 6 | **12 Unterschriften** auf Antragsunterlagen | P1 | CEO | intern |
-| ~~7~~ | ~~160 API-Routen ohne Error-Sanitizer~~ | ~~P1~~ | **TEILWEISE ERLEDIGT** (37/217 kritische Routen, 9a2b464) |
+| ~~7~~ | ~~API-Routen ohne Error-Sanitizer~~ | ~~P1~~ | **ERLEDIGT** (202/217 Routen, 6 bewusst ausgenommen, 311d3a0) |
 | 8 | **MFA/TOTP fuer Admin** | P1 | INTERN | Entwicklung |
 
 ---
@@ -155,7 +155,7 @@ Letzter Check: 21.08.2026
 | # | Item | Prio | Typ |
 |---|------|------|-----|
 | 1 | SEPA Creditor-ID Platzhalter | MEDIUM | EXTERN (Bankantrag) |
-| 2 | Loeschkonzept dokumentieren | MEDIUM | INTERN |
+| ~~2~~ | ~~Loeschkonzept dokumentieren~~ | ~~MEDIUM~~ | **ERLEDIGT** (docs/LOESCHKONZEPT.md, 5e8ff5a) |
 | 3 | DSFA erstellen | P1 | INTERN (kein Startblocker) |
 | 4 | AVV mit Supabase/Vercel abschliessen | P1 | EXTERN |
 | 5 | BSI C5 / ISO 27001 (nur fuer DiPA/BfArM) | P1 | EXTERN |
