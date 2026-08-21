@@ -4,6 +4,54 @@ Chronologische Dokumentation aller KI-gestuetzten Arbeitssitzungen.
 
 ---
 
+## 2026-08-22 | Session: Phase 2 — Dependency Map, Funktionale Lueckenanalyse, ChairMatch Delta
+
+### Track E: Supabase Key Dependency Map
+- **6 Projekte** kartiert (2 mehr als erwartet: P5 Staging verwaist, P6 Legacy lebt)
+- Alle Projekte im Legacy-JWT-Modell: anon + service_role nicht einzeln rotierbar
+- P1 Alltagsengel-Repo sauber: 0 hartkodierte JWTs, 0 Production-Secrets in GitHub
+- 3 hartkodierte Keys in ausgelagerten Repos (efy-care, chairmatch mobile, chairmatch legacy)
+- Rotationsbewertung: P2 ROTATE_SAFE, P1/P3/P4 BLOCKED_BY_RISK (Legacy-JWT)
+- Empfehlung: Migration auf `publishable`/`secret`-Keys vor jeder Rotation
+- Commit: f8ad0ae
+
+### Track F: Funktionale Lueckenanalyse (Alltagsengel)
+- **14 Bereiche** systematisch geprueft mit Zeilenreferenzen
+- Live-Daten-Inventar: 4 Kunden, 30 Nachweise, 3 Rechnungen, 0 Zahlungen
+- **Top-Befunde:**
+  1. §45b-Tarife 8/9 `blocked`, VP/KZP 0/4 verifiziert → keine Kassenabrechnung
+  2. Buchung → Einsatz → Nachweis: Kette nicht verbunden
+  3. Mahnungen erzeugt aber nie versendet (Queue ohne Konsument)
+  4. Rechnungszustellung fehlt (kein E-Mail, nur Portal)
+  5. Offline-Erfassung nur im nicht ausgelieferten Expo-Projekt
+- IK-Nummer 460629986 in Prod-DB gesetzt und funktionsfaehig
+- Empfohlene Reihenfolge: 7 klein → 3 mittel → 2 gross
+- Commit: b3564d2
+
+### Track G: ChairMatch Delta + Gaps
+- HEAD unveraendert seit c0e6af6, 231/231 Tests gruen, tsc 0 Fehler
+- Production live: 50 User, 16 Salons, 1 Buchung, 48 Bewertungen
+- **9 funktionale Luecken** gefunden:
+  1. MeinBereichSubPage speichert in localStorage statt DB (9 Seiten)
+  2. Bild-Uploads verlassen Browser nicht
+  3. Mietanfrage wird nie zugestellt
+  4. Gesamter Miet-Flow abgeklemmt (API hat 0 Aufrufer)
+  5. rental_equipment kein CRUD (Vermieter kann keinen Stuhl anlegen)
+  6. createNotification() hat 0 Aufrufer
+  7. Stripe-Webhook benachrichtigt niemanden
+  8. Kein Reminder-Cron
+  9. Stripe-Env in Vercel ungeklaert
+- Commit: 24e67e9
+
+### CI
+| Commit | Beschreibung | Status |
+|--------|-------------|--------|
+| f8ad0ae | Supabase Key Dependency Map | **DEPLOYED** |
+| 24e67e9 | ChairMatch Delta-Analyse | **DEPLOYED** |
+| b3564d2 | Funktionale Lueckenanalyse | **DEPLOYED** |
+
+---
+
 ## 2026-08-21 | Session: Parallel-Tracks A-D (Error Sanitizer, WCAG, ChairMatch E2E, ChairMatch i18n)
 
 ### Track A: Error Sanitizer + Logging Final Check

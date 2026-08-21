@@ -1,7 +1,7 @@
 # MASTER PROJECT STATUS
 
-> Stand: 21.08.2026 22:30 | Baseline: FINAL_FINAL_GO_LIVE_REPORT_2026-08-21.md
-> CI: GREEN | HEAD: ad23806 | Commits diese Session: +4 (b344329, ad23806, c9d603a, c0e6af6)
+> Stand: 22.08.2026 01:00 | Baseline: FINAL_FINAL_GO_LIVE_REPORT_2026-08-21.md
+> CI: GREEN | HEAD: b3564d2 | Commits diese Session: +7 (b344329, ad23806, c9d603a, c0e6af6, f8ad0ae, 24e67e9, b3564d2)
 
 ---
 
@@ -31,6 +31,19 @@ Letzter Check: 21.08.2026
 | 6 | **12 Unterschriften** auf Antragsunterlagen | P1 | CEO | intern |
 | ~~7~~ | ~~API-Routen ohne Error-Sanitizer~~ | ~~P1~~ | **ERLEDIGT** (UserFacingError fail-closed, 195 Leak-Punkte behoben, 25 Tests, b344329) |
 | ~~8~~ | ~~MFA/TOTP fuer Admin~~ | ~~P1~~ | **ERLEDIGT** (Enrollment, Verify, AAL2-Guards, 15 Tests, 6de1254) |
+
+### Neue Befunde aus Funktionaler Lueckenanalyse (b3564d2)
+Vollstaendige Analyse: `docs/FUNKTIONALE_LUECKENANALYSE.md` (690 Zeilen, 14 Bereiche)
+
+| # | Item | Prio | Typ |
+|---|------|------|-----|
+| 9 | §45b-Tarife live `blocked` (8/9), VP/KZP 0/4 verifiziert | P1 | EXTERN (Bescheid) |
+| 10 | Buchung erzeugt keinen Einsatz/Leistungsnachweis (Kettenbruch) | P1 | INTERN |
+| 11 | Mahnungen werden erzeugt aber nie versendet (`dunning_email_queue` ohne Konsument) | P1 | INTERN |
+| 12 | Keine manuelle Zahlungserfassung in UI (nur CAMT-Import) | P1 | INTERN |
+| 13 | Rechnung wird nicht zugestellt (kein E-Mail-Versand, nur Portal-Download) | P1 | INTERN |
+| 14 | Offline-Erfassung nur im nicht ausgelieferten Expo-Projekt | P1 | INTERN |
+| 15 | Kundenstammdaten nach Anlage nur teilweise editierbar | P1 | INTERN |
 
 ---
 
@@ -114,7 +127,20 @@ Supabase: pwdbjqfpgumyfktbfswg
 | ~~3~~ | ~~TypeScript-Fehler fixen (strict mode)~~ | ~~P1~~ | **NICHT ZUTREFFEND** (ChairMatch = statisches HTML, kein TS) |
 | ~~4~~ | ~~E2E-Tests fuer Booking/Payment~~ | ~~P1~~ | **ERLEDIGT** (174 Tests, 3 Prod-Bugs gefixt: Statuswechsel, Rate-Limit, Rollen-Check, c0e6af6 in /chairmatch) |
 | ~~5~~ | ~~i18n-Abdeckung~~ | ~~P1~~ | **ERLEDIGT** (de/en-Kataloge 479 Keys, 33 Seiten instrumentiert, Intl-Formatierung, c9d603a) |
-| 6 | Supabase API-Keys rotieren | P1 | INTERN |
+| ~~6~~ | ~~Supabase API-Key Dependency Map~~ | ~~P1~~ | **ERLEDIGT** (docs/SUPABASE_KEY_DEPENDENCY_MAP.md, 6 Projekte kartiert, f8ad0ae) |
+| 7 | Supabase API-Keys rotieren | P1 | **BLOCKED_BY_RISK** — Legacy-JWT-Modell, Rotation loggt alle Nutzer aus. Erst `publishable`/`secret`-Keys einfuehren. Details in Dependency Map. |
+
+### Neue Befunde aus ChairMatch Delta-Analyse (24e67e9)
+Vollstaendige Analyse: `docs/CHAIRMATCH_DELTA_ANALYSE.md` · 231/231 Tests gruen
+
+| # | Item | Prio | Typ |
+|---|------|------|-----|
+| 8 | `MeinBereichSubPage` speichert in localStorage statt DB (9 Seiten) | P1 | INTERN |
+| 9 | Bild-Uploads verlassen den Browser nicht (Data-URLs in localStorage) | P1 | INTERN |
+| 10 | Mietanfrage wird nie zugestellt (kein Fetch/Mail) | P1 | INTERN |
+| 11 | Gesamter Miet-Flow abgeklemmt (API 0 Aufrufer) | P1 | INTERN |
+| 12 | `rental_equipment` kein CRUD (Vermieter kann keinen Stuhl anlegen) | P1 | INTERN |
+| 13 | `createNotification()` 0 Aufrufer (Glocke strukturell leer) | P2 | INTERN |
 
 ---
 
