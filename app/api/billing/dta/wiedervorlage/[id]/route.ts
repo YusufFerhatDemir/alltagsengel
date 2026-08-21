@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireAdminMitOrg } from '@/lib/abrechnung/require-admin'
 import { aktualisiereWiedervorlage, type WiedervorlageStatus } from '@/lib/abrechnung/wiedervorlage'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -53,12 +54,6 @@ export async function PATCH(
 
     return NextResponse.json(eintrag)
   } catch (err) {
-    const message = (err as Error).message
-    const status = message.includes('nicht gefunden')
-      ? 404
-      : message.includes('nicht vorgesehen') || message.includes('Pflicht')
-        ? 409
-        : 500
-    return NextResponse.json({ error: message }, { status })
+    return safeApiError(err, request)
   }
 }

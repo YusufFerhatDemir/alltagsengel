@@ -6,6 +6,7 @@ import {
   type WiedervorlageStatus,
 } from '@/lib/abrechnung/wiedervorlage'
 import { FEHLER_KATEGORIEN, type FehlerKategorie } from '@/lib/abrechnung/ruecklaeufer-fehlercodes'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -52,7 +53,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json({ eintraege, uebersicht, kategorien: FEHLER_KATEGORIEN })
   } catch (err) {
-    return NextResponse.json({ error: (err as Error).message }, { status: 500 })
+    return safeApiError(err, request)
   }
 }
 
@@ -83,10 +84,6 @@ export async function POST(request: Request) {
 
     return NextResponse.json(ergebnis)
   } catch (err) {
-    const message = (err as Error).message
-    return NextResponse.json(
-      { error: message },
-      { status: message.includes('nicht gefunden') ? 404 : 500 },
-    )
+    return safeApiError(err, request)
   }
 }

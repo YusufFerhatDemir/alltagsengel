@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { discardCreditNote } from '@/lib/billing/core'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 
 /**
  * POST /api/billing/corrections/[id]/discard
@@ -35,8 +36,6 @@ export async function POST(
     const result = await discardCreditNote(admin, id, reason, userId, organizationId)
     return NextResponse.json(result)
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'Interner Serverfehler'
-    console.error('[billing/corrections/discard] Fehler:', message)
-    return NextResponse.json({ error: message }, { status: 400 })
+    return safeApiError(err, request)
   }
 }

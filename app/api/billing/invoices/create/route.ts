@@ -3,6 +3,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { NextResponse } from 'next/server'
 import { createInvoiceDraft } from '@/lib/billing/core'
 import { getActiveOrgId } from '@/lib/organizations/server'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -153,10 +154,7 @@ export async function POST(request: Request) {
         .lte('date', periodEnd)
 
       if (recError) {
-        return NextResponse.json(
-          { error: `Leistungen laden fehlgeschlagen: ${recError.message}` },
-          { status: 500 }
-        )
+        return safeApiError(recError, request)
       }
 
       if (!records || records.length === 0) {
@@ -218,11 +216,6 @@ export async function POST(request: Request) {
       count: results.length,
     })
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'Interner Serverfehler'
-    console.error('[billing/invoices/create] Fehler:', message)
-    return NextResponse.json(
-      { error: message },
-      { status: 500 }
-    )
+    return safeApiError(err, request)
   }
 }

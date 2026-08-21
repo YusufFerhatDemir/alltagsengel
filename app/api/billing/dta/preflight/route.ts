@@ -3,6 +3,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { NextResponse } from 'next/server'
 import { preFlightValidierung } from '@/lib/abrechnung/kassenabrechnung-engine'
 import { getActiveOrgId } from '@/lib/organizations/server'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 import { logBillingAction } from '@/lib/billing/core/audit'
 import { meldeAbrechnungsfehler } from '@/lib/automation/abrechnung-fehler-aufgabe'
 
@@ -85,6 +86,6 @@ export async function POST(request: Request) {
 
     return NextResponse.json(ergebnis)
   } catch (err) {
-    return NextResponse.json({ error: (err as Error).message }, { status: 500 })
+    return safeApiError(err, request)
   }
 }

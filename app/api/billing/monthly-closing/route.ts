@@ -3,6 +3,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { NextResponse } from 'next/server'
 import { getActiveOrgId } from '@/lib/organizations/server'
 import { erstelleMonatsabschluss } from '@/lib/abrechnung/monatsabschluss'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 
 export async function GET(request: Request) {
   try {
@@ -120,8 +121,7 @@ export async function GET(request: Request) {
       closings,
     })
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'Interner Serverfehler'
-    return NextResponse.json({ error: message }, { status: 500 })
+    return safeApiError(err, request)
   }
 }
 
@@ -186,7 +186,6 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ modus: dryRun === true ? 'vorschau' : 'abschluss', ...ergebnis })
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'Interner Serverfehler'
-    return NextResponse.json({ error: message }, { status: 500 })
+    return safeApiError(err, request)
   }
 }

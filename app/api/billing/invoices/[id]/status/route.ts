@@ -8,6 +8,7 @@ import {
   logBillingAction,
   type InvoiceStatus,
 } from '@/lib/billing/core'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 
 /**
  * POST /api/billing/invoices/[id]/status
@@ -106,8 +107,6 @@ export async function POST(
       allowedNext: getAllowedTransitions(target as InvoiceStatus),
     })
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'Interner Serverfehler'
-    console.error('[billing/invoices/status] Fehler:', message)
-    return NextResponse.json({ error: message }, { status: 400 })
+    return safeApiError(err, request)
   }
 }

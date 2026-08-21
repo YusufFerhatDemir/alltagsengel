@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireAdminMitOrg } from '@/lib/abrechnung/require-admin'
 import { reicheKorrigierteEin } from '@/lib/abrechnung/wiedervorlage'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -38,10 +39,6 @@ export async function POST(request: Request) {
 
     return NextResponse.json(ergebnis)
   } catch (err) {
-    const message = (err as Error).message
-    return NextResponse.json(
-      { error: message },
-      { status: message.includes('Keine korrigierten') ? 409 : 500 },
-    )
+    return safeApiError(err, request)
   }
 }

@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { logAuditEvent } from '@/lib/audit-log'
 import { getActiveOrgId } from '@/lib/organizations/server'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 
 export async function POST(request: NextRequest) {
   try {
@@ -78,7 +79,7 @@ export async function POST(request: NextRequest) {
       .eq('id', userId)
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      return safeApiError(error, request)
     }
 
     // 7. app_metadata (serverseitig, NICHT vom User editierbar) setzen — das ist
@@ -113,8 +114,7 @@ export async function POST(request: NextRequest) {
         ? `${targetProfile.first_name} ${targetProfile.last_name} ist jetzt Admin`
         : `Admin-Rolle von ${targetProfile.first_name} ${targetProfile.last_name} entzogen`,
     })
-  } catch (err: any) {
-    console.error('manage-role error:', err)
-    return NextResponse.json({ error: err.message || 'Fehler bei der Rollenverwaltung' }, { status: 500 })
+  } catch (err) {
+    return safeApiError(err, request)
   }
 }

@@ -5,6 +5,7 @@ import { alsGesperrtMarkieren } from '@/lib/kim/nachrichten'
 import { aktuelleVersion } from '@/lib/kim/versionen'
 import { versendeKimNachricht, KimSpecFehltError } from '@/lib/kim/versand'
 import { heuteBerlin } from '@/lib/utils/timezone';
+import { safeApiError } from '@/lib/api/error-sanitizer'
 
 /**
  * POST /api/billing/kim/nachrichten/[id]/versenden
@@ -44,8 +45,6 @@ export async function POST(
       }
       return NextResponse.json({ error: err.message, code: err.code }, { status: 409 })
     }
-    const message = err instanceof Error ? err.message : 'Interner Serverfehler'
-    console.error('[billing/kim/nachrichten/versenden] Fehler:', message)
-    return NextResponse.json({ error: message }, { status: 500 })
+    return safeApiError(err, _request)
   }
 }
