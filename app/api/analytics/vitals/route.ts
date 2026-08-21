@@ -59,7 +59,8 @@ export async function POST(req: NextRequest) {
     }
 
     // Ohne Supabase-ENV: still durchwinken, damit Local-Dev nicht raucht.
-    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    const geheimerKey = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !geheimerKey) {
       return NextResponse.json({ ok: true, persisted: false })
     }
 

@@ -16,6 +16,7 @@
  * Exit 0 = alle Tests wie erwartet, Exit 1 = mindestens ein FAIL.
  */
 import { readFileSync, existsSync } from 'node:fs'
+import { apiHeaders, publishableKey, secretKey } from './lib/supabase-keys.mjs'
 
 for (const datei of ['.env.local', '.env']) {
   if (!existsSync(datei)) continue
@@ -27,8 +28,8 @@ for (const datei of ['.env.local', '.env']) {
 }
 
 const BASIS = process.env.NEXT_PUBLIC_SUPABASE_URL
-const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-const SVC = process.env.SUPABASE_SERVICE_ROLE_KEY
+const ANON = publishableKey()
+const SVC = secretKey()
 if (!BASIS || !ANON || !SVC) {
   console.error('NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY / SUPABASE_SERVICE_ROLE_KEY fehlen')
   process.exit(1)
@@ -48,13 +49,13 @@ function pruefe(id, bestanden, meldung) {
 async function post(fn, body, key) {
   const res = await fetch(`${BASIS}/rest/v1/rpc/${fn}`, {
     method: 'POST',
-    headers: { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
+    headers: apiHeaders(key, { 'Content-Type': 'application/json' }),
     body: JSON.stringify(body),
   })
   return { status: res.status, text: (await res.text()).slice(0, 800) }
 }
 async function hole(pfad, key, extraHeaders = {}) {
-  const res = await fetch(`${BASIS}/rest/v1/${pfad}`, { headers: { apikey: key, Authorization: `Bearer ${key}`, ...extraHeaders } })
+  const res = await fetch(`${BASIS}/rest/v1/${pfad}`, { headers: apiHeaders(key, { ...extraHeaders }) })
   return { status: res.status, text: (await res.text()).slice(0, 800) }
 }
 
@@ -130,7 +131,7 @@ let fixtureClient = null
 try {
   const insViaRest = await fetch(`${BASIS}/rest/v1/clients`, {
     method: 'POST',
-    headers: { apikey: SVC, Authorization: `Bearer ${SVC}`, 'Content-Type': 'application/json', Prefer: 'return=representation' },
+    headers: apiHeaders(SVC, { 'Content-Type': 'application/json', Prefer: 'return=representation' }),
     body: JSON.stringify({ organization_id: FREMD_ORG, customer_number: 'RV-SIG-DUR-002', first_name: 'Reverify', last_name: 'Durability', care_level: 2 }),
   })
   const clientRows = await insViaRest.json()
@@ -139,7 +140,7 @@ try {
 
   const insSr = await fetch(`${BASIS}/rest/v1/service_records`, {
     method: 'POST',
-    headers: { apikey: SVC, Authorization: `Bearer ${SVC}`, 'Content-Type': 'application/json', Prefer: 'return=representation' },
+    headers: apiHeaders(SVC, { 'Content-Type': 'application/json', Prefer: 'return=representation' }),
     body: JSON.stringify({
       organization_id: FREMD_ORG, client_id: fixtureClient, caregiver_id: CAREGIVER,
       date: '2026-06-02', start_time: '09:00', end_time: '10:00',
@@ -168,9 +169,9 @@ try {
       : `KEIN Audit-Eintrag persistiert (RPC-Antwort war HTTP ${rpcRes.status}: ${rpcRes.text.slice(0, 150)}) — INSERT und nachfolgendes RAISE EXCEPTION laufen in DERSELBEN Transaktion, PostgREST rollt beides gemeinsam zurueck. H-3 hat nur den CHECK-Constraint-Blocker beseitigt, nicht die fehlende Persistenz.`)
 } finally {
   if (fixtureClient) {
-    await fetch(`${BASIS}/rest/v1/service_records?client_id=eq.${fixtureClient}`, { method: 'DELETE', headers: { apikey: SVC, Authorization: `Bearer ${SVC}` } })
-    await fetch(`${BASIS}/rest/v1/billing_audit_trail?entity_id=eq.${fixtureClient}`, { method: 'DELETE', headers: { apikey: SVC, Authorization: `Bearer ${SVC}` } })
-    await fetch(`${BASIS}/rest/v1/clients?id=eq.${fixtureClient}`, { method: 'DELETE', headers: { apikey: SVC, Authorization: `Bearer ${SVC}` } })
+    await fetch(`${BASIS}/rest/v1/service_records?client_id=eq.${fixtureClient}`, { method: 'DELETE', headers: apiHeaders(SVC) })
+    await fetch(`${BASIS}/rest/v1/billing_audit_trail?entity_id=eq.${fixtureClient}`, { method: 'DELETE', headers: apiHeaders(SVC) })
+    await fetch(`${BASIS}/rest/v1/clients?id=eq.${fixtureClient}`, { method: 'DELETE', headers: apiHeaders(SVC) })
     console.log(`  (Cleanup: Fixture-Client ${fixtureClient} + service_records + etwaige Audit-Zeilen geloescht)`)
   }
 }

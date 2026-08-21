@@ -3,6 +3,7 @@ import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient as createRawClient } from '@supabase/supabase-js'
+import { supabasePublishableKey, supabaseUrl } from '@/lib/supabase/keys'
 import { randomBytes } from 'node:crypto'
 import { logAuditEvent } from '@/lib/audit-log'
 import { sendAccountDeletionEmail } from '@/lib/emails/account-deletion'
@@ -74,15 +75,13 @@ export async function DELETE(request: NextRequest) {
     }
 
     // ── 3. Re-Auth via Isolations-Client ─────────────────────────
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-    const supabaseAnonKey =
-      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-    if (!supabaseUrl || !supabaseAnonKey) {
+    const projektUrl = supabaseUrl()
+    const oeffentlicherKey = supabasePublishableKey()
+    if (!projektUrl || !oeffentlicherKey) {
       log.error('user/delete: Supabase-Env-Vars fehlen')
       return NextResponse.json({ error: 'Konfigurationsfehler' }, { status: 500 })
     }
-    const verifier = createRawClient(supabaseUrl, supabaseAnonKey, {
+    const verifier = createRawClient(projektUrl, oeffentlicherKey, {
       auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
     })
     const { error: signInError } = await verifier.auth.signInWithPassword({

@@ -14,14 +14,15 @@
  * Liest ausschliesslich. Keine Schreiboperationen.
  */
 import fs from 'node:fs';
+import { apiHeaders, publishableKey, secretKey } from './lib/supabase-keys.mjs'
 
 const read = (f) => { try { return fs.readFileSync(f, 'utf8'); } catch { return ''; } };
 const env = read('.env') + '\n' + read('.env.local');
 const get = (k) => process.env[k] || (env.match(new RegExp('^' + k + '=(.*)$', 'm')) || [])[1]?.trim();
 
 const URL_ = get('NEXT_PUBLIC_SUPABASE_URL');
-const ANON = get('NEXT_PUBLIC_SUPABASE_ANON_KEY');
-const SR = get('SUPABASE_SERVICE_ROLE_KEY');
+const ANON = publishableKey();
+const SR = secretKey();
 
 if (!URL_ || !ANON || !SR) {
   console.error('FEHLT: NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY / SUPABASE_SERVICE_ROLE_KEY');
@@ -43,11 +44,11 @@ const OEFFENTLICH_ERLAUBT = new Set([
 
 const req = (t, key, extra = {}) =>
   fetch(`${URL_}/rest/v1/${t}?select=*&limit=1`, {
-    headers: { apikey: key, Authorization: `Bearer ${key}`, Prefer: 'count=exact', ...extra },
+    headers: apiHeaders(key, { Prefer: 'count=exact', ...extra }),
   });
 
 const spec = await (await fetch(`${URL_}/rest/v1/`, {
-  headers: { apikey: SR, Authorization: `Bearer ${SR}` },
+  headers: apiHeaders(SR),
 })).json();
 
 const relationen = Object.keys(spec.paths)

@@ -22,6 +22,7 @@
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { dirname, join } from 'node:path'
+import { apiHeaders, publishableKey, secretKey } from './lib/supabase-keys.mjs'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const ROOT = join(__dirname, '..')
@@ -42,17 +43,13 @@ function loadEnv() {
 
 const ENV = loadEnv()
 const URL = ENV.NEXT_PUBLIC_SUPABASE_URL
-const KEY = ENV.SUPABASE_SERVICE_ROLE_KEY
+const KEY = ENV.SUPABASE_SECRET_KEY || ENV.SUPABASE_SERVICE_ROLE_KEY
 if (!URL || !KEY) {
   console.error('❌ NEXT_PUBLIC_SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY fehlen.')
   process.exit(1)
 }
 
-const H = {
-  apikey: KEY,
-  Authorization: `Bearer ${KEY}`,
-  'Content-Type': 'application/json',
-}
+const H = apiHeaders(KEY, { 'Content-Type': 'application/json' })
 
 // ── REST-Helfer ─────────────────────────────────────────────────
 async function rest(method, path, { body, prefer } = {}) {

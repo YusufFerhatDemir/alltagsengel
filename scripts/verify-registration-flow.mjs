@@ -21,6 +21,7 @@
  */
 import { readFileSync, existsSync } from 'node:fs'
 import { createClient } from '@supabase/supabase-js'
+import { apiHeaders, publishableKey, secretKey } from './lib/supabase-keys.mjs'
 
 for (const datei of ['.env.local', '.env']) {
   if (!existsSync(datei)) continue
@@ -32,8 +33,8 @@ for (const datei of ['.env.local', '.env']) {
 }
 
 const URL = process.env.NEXT_PUBLIC_SUPABASE_URL
-const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-const SVC = process.env.SUPABASE_SERVICE_ROLE_KEY
+const ANON = publishableKey()
+const SVC = secretKey()
 
 if (!URL || !ANON) {
   console.error('NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY fehlen.')

@@ -5,7 +5,13 @@
 // Variablen einmalig per `npx eas env:create` hinterlegen.
 
 export const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL ?? ''
-export const SUPABASE_ANON_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? ''
+// Supabase-Key-Migration: neuer Publishable-Key zuerst, Legacy-Anon als
+// Fallback. Expo ersetzt EXPO_PUBLIC_* beim Bundeln textuell — die Kette muss
+// deshalb ausgeschrieben bleiben, dynamischer Zugriff funktioniert nicht.
+export const SUPABASE_ANON_KEY =
+  process.env.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
+  process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ||
+  ''
 
 if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
   throw new Error('Supabase-Konfiguration fehlt — native/.env anlegen (siehe .env.example)')

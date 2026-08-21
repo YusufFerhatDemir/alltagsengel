@@ -12,6 +12,7 @@
  * Exit 0 = geschlossen, Exit 1 = offen.
  */
 import { readFileSync, existsSync } from 'node:fs'
+import { apiHeaders, publishableKey, secretKey } from './lib/supabase-keys.mjs'
 
 for (const datei of ['.env.local', '.env']) {
   if (!existsSync(datei)) continue
@@ -23,7 +24,7 @@ for (const datei of ['.env.local', '.env']) {
 }
 
 const BASIS = process.env.NEXT_PUBLIC_SUPABASE_URL
-const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+const ANON = publishableKey()
 if (!BASIS || !ANON) {
   console.error('NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY fehlen')
   process.exit(1)
@@ -38,7 +39,7 @@ function pruefe(id, bestanden, meldung) {
 async function rpc(sql) {
   const res = await fetch(`${BASIS}/rest/v1/rpc/_run_sql`, {
     method: 'POST',
-    headers: { apikey: ANON, Authorization: `Bearer ${ANON}`, 'Content-Type': 'application/json' },
+    headers: apiHeaders(ANON, { 'Content-Type': 'application/json' }),
     body: JSON.stringify({ p: sql }),
   })
   return { status: res.status, text: (await res.text()).slice(0, 200) }
@@ -69,7 +70,7 @@ pruefe(
 
 // C) Hilfstabelle _sql_parts darf fuer anon nicht lesbar sein.
 const tab = await fetch(`${BASIS}/rest/v1/_sql_parts?select=*&limit=1`, {
-  headers: { apikey: ANON, Authorization: `Bearer ${ANON}` },
+  headers: apiHeaders(ANON),
 })
 pruefe(
   'C_sql_parts_zu',

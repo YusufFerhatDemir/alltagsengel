@@ -1,5 +1,6 @@
 import { createClient as createSupabaseClient, SupabaseClient } from '@supabase/supabase-js'
 import { getStorageKeyFromEnv } from '@/lib/supabase/storage-key'
+import { supabasePublishableKey, supabaseUrl } from './keys'
 
 // ═══════════════════════════════════════════════════════════════
 // WhatsApp-Level Session Persistenz
@@ -136,8 +137,8 @@ export function createClient() {
   if (cachedClient) return cachedClient
 
   const client = createSupabaseClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    supabaseUrl(),
+    supabasePublishableKey(),
     {
       auth: {
         detectSessionInUrl: true,

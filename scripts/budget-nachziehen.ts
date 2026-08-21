@@ -47,7 +47,7 @@ for (const datei of ['.env.local', '.env']) {
 }
 
 const URL_ = process.env.NEXT_PUBLIC_SUPABASE_URL
-const KEY = process.env.SUPABASE_SERVICE_ROLE_KEY
+const KEY = (process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY)
 if (!URL_ || !KEY) {
   console.error('NEXT_PUBLIC_SUPABASE_URL und SUPABASE_SERVICE_ROLE_KEY werden benötigt.')
   process.exit(1)

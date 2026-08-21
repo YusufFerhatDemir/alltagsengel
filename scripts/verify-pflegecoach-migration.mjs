@@ -10,6 +10,7 @@
  * Aufruf: node scripts/verify-pflegecoach-migration.mjs
  */
 import { readFileSync, existsSync } from 'node:fs'
+import { apiHeaders, publishableKey, secretKey } from './lib/supabase-keys.mjs'
 
 for (const datei of ['.env.local', '.env']) {
   if (!existsSync(datei)) continue
@@ -21,7 +22,7 @@ for (const datei of ['.env.local', '.env']) {
 }
 
 const URL_BASIS = process.env.NEXT_PUBLIC_SUPABASE_URL
-const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY
+const SERVICE = secretKey()
 if (!URL_BASIS || !SERVICE) {
   console.error('NEXT_PUBLIC_SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY fehlen')
   process.exit(1)
@@ -31,7 +32,7 @@ async function orakel(label, sqlAusdruck) {
   const p = `DO $x$ BEGIN RAISE EXCEPTION 'ORAKEL=%', (${sqlAusdruck}); END $x$;`
   const res = await fetch(`${URL_BASIS}/rest/v1/rpc/_run_sql`, {
     method: 'POST',
-    headers: { apikey: SERVICE, Authorization: `Bearer ${SERVICE}`, 'Content-Type': 'application/json' },
+    headers: apiHeaders(SERVICE, { 'Content-Type': 'application/json' }),
     body: JSON.stringify({ p }),
   })
   const text = await res.text()

@@ -20,7 +20,7 @@ for (const datei of ['.env.local', '.env']) {
 }
 
 const URL_BASIS = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY!
+const SERVICE = (process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY)!
 const ORG = process.argv[2] ?? '00000000-0000-4000-8000-000460629986'
 
 if (!URL_BASIS || !SERVICE) {

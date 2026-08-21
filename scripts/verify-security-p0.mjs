@@ -24,6 +24,7 @@
  * Exit 0 = alles geschlossen, Exit 1 = mindestens ein Befund offen.
  */
 import { readFileSync, existsSync } from 'node:fs'
+import { apiHeaders, publishableKey, secretKey } from './lib/supabase-keys.mjs'
 
 for (const datei of ['.env.local', '.env']) {
   if (!existsSync(datei)) continue
@@ -35,8 +36,8 @@ for (const datei of ['.env.local', '.env']) {
 }
 
 const BASIS = process.env.NEXT_PUBLIC_SUPABASE_URL
-const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-const SVC = process.env.SUPABASE_SERVICE_ROLE_KEY
+const ANON = publishableKey()
+const SVC = secretKey()
 if (!BASIS || !ANON) {
   console.error('NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY fehlen')
   process.exit(1)
@@ -52,14 +53,14 @@ function pruefe(id, bestanden, meldung) {
 async function post(fn, body, key) {
   const res = await fetch(`${BASIS}/rest/v1/rpc/${fn}`, {
     method: 'POST',
-    headers: { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
+    headers: apiHeaders(key, { 'Content-Type': 'application/json' }),
     body: JSON.stringify(body),
   })
   return { status: res.status, text: (await res.text()).slice(0, 300) }
 }
 async function hole(pfad, key) {
   const res = await fetch(`${BASIS}/rest/v1/${pfad}`, {
-    headers: { apikey: key, Authorization: `Bearer ${key}` },
+    headers: apiHeaders(key),
   })
   return { status: res.status, text: (await res.text()).slice(0, 300) }
 }

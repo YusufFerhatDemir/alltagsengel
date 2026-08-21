@@ -10,11 +10,17 @@ import { sendPushToUser, type PushPayload } from '@/lib/push'
  */
 export async function POST(request: Request) {
   try {
-    // Verify internal call via service role key header
+    // Verify internal call via service role key header.
+    // Waehrend der Supabase-Key-Migration zaehlt sowohl der neue Secret-Key
+    // (`sb_secret_…`) als auch der Legacy-`service_role`-Key. Leere/nicht
+    // gesetzte Werte gelten nie als Treffer (fail-closed).
     const authHeader = request.headers.get('x-service-key')
-    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+    const erlaubteKeys = [
+      process.env.SUPABASE_SECRET_KEY,
+      process.env.SUPABASE_SERVICE_ROLE_KEY,
+    ].filter((k): k is string => Boolean(k))
 
-    if (!authHeader || authHeader !== serviceKey) {
+    if (!authHeader || !erlaubteKeys.includes(authHeader)) {
       return NextResponse.json({ error: 'Nicht autorisiert' }, { status: 401 })
     }
 
