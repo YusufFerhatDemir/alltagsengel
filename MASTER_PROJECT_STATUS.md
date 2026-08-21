@@ -1,7 +1,7 @@
 # MASTER PROJECT STATUS
 
-> Stand: 21.08.2026 15:15 | Baseline: FINAL_FINAL_GO_LIVE_REPORT_2026-08-21.md
-> CI: #305-#307 green, #308 in progress (311d3a0) | HEAD: 311d3a0
+> Stand: 21.08.2026 16:00 | Baseline: FINAL_FINAL_GO_LIVE_REPORT_2026-08-21.md
+> CI: #306-#309 green, #310 in progress (6de1254) | HEAD: 6de1254
 
 ---
 
@@ -30,7 +30,7 @@ Letzter Check: 21.08.2026
 | 5 | **Arbeitsvertrag Sabrina Martin** (4 Felder ausfuellen) | P1 | CEO | intern |
 | 6 | **12 Unterschriften** auf Antragsunterlagen | P1 | CEO | intern |
 | ~~7~~ | ~~API-Routen ohne Error-Sanitizer~~ | ~~P1~~ | **ERLEDIGT** (202/217 Routen, 6 bewusst ausgenommen, 311d3a0) |
-| 8 | **MFA/TOTP fuer Admin** | P1 | INTERN | Entwicklung |
+| ~~8~~ | ~~MFA/TOTP fuer Admin~~ | ~~P1~~ | **ERLEDIGT** (Enrollment, Verify, AAL2-Guards, 15 Tests, 6de1254) |
 
 ---
 
@@ -135,7 +135,7 @@ Letzter Check: 21.08.2026
 |---|------|------|-----|
 | 1 | Monitoring/Alerting einrichten | P1 | INTERN |
 | 2 | Structured Logging | P1 | INTERN |
-| 3 | Error Boundaries pro Route-Segment | P1 | INTERN |
+| ~~3~~ | ~~Error Boundaries pro Route-Segment~~ | ~~P1~~ | **ERLEDIGT** (10 Segmente + Root, aa280e6) |
 
 ---
 

@@ -64,4 +64,8 @@ Chronologische Dokumentation aller KI-gestuetzten Arbeitssitzungen.
 | Commit | Beschreibung |
 |--------|-------------|
 | cfb6c88 | P0-Security: Hardcodierte Supabase-Anon-Keys aus 30 ChairMatch-Landing-Dateien entfernt |
-| 9a2b464 | Security: API Error Sanitizer - verhindert Leaking von Stack-Traces |
+| 9a2b464 | Security: API Error Sanitizer - verhindert Leaking von Stack-Traces (37 kritische Routen) |
+| 5e8ff5a | docs: Löschkonzept erstellt — DSGVO-konformes Datenaufbewahrungskonzept |
+| 311d3a0 | API Error Sanitizer: 166 weitere Routen migriert (gesamt 202/217) |
+| aa280e6 | Error Boundaries pro Route-Segment: SharedErrorContent + 10 error.tsx |
+| 6de1254 | P1 Security: MFA/TOTP für Admin-Konten — Einrichtung, Prüfung, AAL2-Guards, 15 Tests |
