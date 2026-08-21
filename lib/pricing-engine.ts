@@ -57,7 +57,7 @@ async function loadPricingData() {
   const config: Record<string, string> = {}
   for (const row of configRows) {
     try {
-      config[row.key] = JSON.parse(row.value as any)
+      config[row.key] = JSON.parse(String(row.value))
     } catch {
       config[row.key] = String(row.value)
     }

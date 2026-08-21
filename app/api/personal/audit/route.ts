@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requirePersonalAdmin } from '@/lib/personal/api-auth'
 import { listAuditLog } from '@/lib/personal/audit'
+import type { AuditEntitaetTyp, AuditAktion } from '@/lib/personal/types'
 
 export async function GET(req: NextRequest) {
   try {
@@ -18,10 +19,10 @@ export async function GET(req: NextRequest) {
 
     const data = await listAuditLog(supabase, {
       organizationId: auth.ctx.organizationId,
-      entitaetTyp: entitaetTyp as any,
+      entitaetTyp: entitaetTyp as AuditEntitaetTyp | undefined,
       entitaetId,
       caregiverId,
-      aktion: aktion as any,
+      aktion: aktion as AuditAktion | undefined,
       limit,
     })
     return NextResponse.json(data)

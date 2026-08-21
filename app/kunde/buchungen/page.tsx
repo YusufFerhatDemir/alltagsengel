@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import { IconCalendar, IconClock, IconWings, IconCheck, IconMoney, IconTruck } from '@/components/Icons'
+import type { Angel } from '@/lib/types'
 
 const statusLabels: Record<string, { label: string; color: string }> = {
   pending: { label: 'Warten auf Bestätigung', color: 'var(--gold2)' },
@@ -136,7 +137,7 @@ export default function KundeBuchungenPage() {
         ) : (
           filtered.map(b => {
             const isRide = b._type === 'krankenfahrt'
-            const angel = b.angels as any
+            const angel = b.angels as Angel | null
             const name = isRide
               ? (b._ride?.abholadresse ? `${b._ride.abholadresse.substring(0, 25)}...` : 'Krankenfahrt')
               : (angel?.profiles ? `${angel.profiles.first_name} ${angel.profiles.last_name?.[0]}.` : 'Engel')

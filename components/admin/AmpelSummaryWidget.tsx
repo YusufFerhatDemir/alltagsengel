@@ -41,7 +41,7 @@ export default function AmpelSummaryWidget({ year, month, refreshKey }: {
 
         // Klienten mit Einsätzen in diesem Monat, aber (noch) ohne monthly_closings-Zeile
         const recordsByClient = new Map<string, { id: string; status: string }[]>()
-        for (const r of (recordsRes.data || []) as any[]) {
+        for (const r of (recordsRes.data || [])) {
           const arr = recordsByClient.get(r.client_id) || []
           arr.push({ id: r.id, status: r.status })
           recordsByClient.set(r.client_id, arr)

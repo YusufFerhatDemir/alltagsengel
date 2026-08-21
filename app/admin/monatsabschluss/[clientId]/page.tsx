@@ -81,14 +81,14 @@ function MonatsabschlussDetailInner() {
       ])
 
       if (clientRes.error || !clientRes.data) { setNotFound(true); setLoading(false); return }
-      setClientName(fullName(clientRes.data as any))
+      setClientName(fullName(clientRes.data))
       setBudgetSummary(budgetRes.data ? summarizeBudget(budgetRes.data) : null)
       setClosing(closingRes.data ? {
         id: closingRes.data.id, status: closingRes.data.status, ampel: closingRes.data.ampel,
         closed_at: closingRes.data.closed_at, notes: closingRes.data.notes || '',
       } : null)
 
-      const recs = (recordsRes.data || []) as any[]
+      const recs = (recordsRes.data || [])
       const recordIds = recs.map(r => r.id)
       const errorsByRecord = new Map<string, ReviewErrorRow[]>()
       if (recordIds.length > 0) {

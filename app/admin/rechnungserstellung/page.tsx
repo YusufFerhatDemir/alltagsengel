@@ -105,7 +105,7 @@ export default function RechnungserstellungPage() {
       const unbilled = allRecords.filter((r: any) => !billedIds.has(r.id))
 
       const byClient: Record<string, ClientGroup> = {}
-      for (const r of unbilled as any[]) {
+      for (const r of unbilled) {
         const cid = r.client_id
         if (!byClient[cid]) {
           byClient[cid] = {

@@ -125,7 +125,7 @@ export default function CaregiverDetailPage() {
         supabase.from('caregiver_bonuses').select('*').eq('caregiver_id', id).order('awarded_date', { ascending: false }),
       ])
       if (cgRes.error || !cgRes.data) { setNotFound(true); setLoading(false); return }
-      const c = cgRes.data as any
+      const c = cgRes.data
       setCg({
         id: c.id, first_name: c.first_name, last_name: c.last_name, initials: c.initials,
         phone: c.phone, email: c.email, address: c.address, city: c.city, zip_code: c.zip_code,

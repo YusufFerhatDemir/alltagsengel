@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import type { Angel } from '@/lib/types'
 
 function StarRow({ label, value, onChange }: { label: string; value: number; onChange: (v: number) => void }) {
   return (
@@ -57,7 +58,7 @@ export default function BewertungPage() {
       if (bErr || !b) { setError('Buchung nicht gefunden'); setLoading(false); return }
       setBooking(b)
 
-      const angelData = b.angels as any
+      const angelData = b.angels as Angel | null
       const prof = angelData?.profiles
         ? (Array.isArray(angelData.profiles) ? angelData.profiles[0] : angelData.profiles)
         : null
@@ -95,7 +96,7 @@ export default function BewertungPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           bookingId,
-          angelId: (booking.angels as any)?.id || booking.angel_id,
+          angelId: (booking.angels as Angel | null)?.id || booking.angel_id,
           rating,
           punctuality: punctuality || null,
           friendliness: friendliness || null,

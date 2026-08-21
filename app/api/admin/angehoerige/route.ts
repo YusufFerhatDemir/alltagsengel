@@ -3,6 +3,7 @@ import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createClient } from '@/lib/supabase/server'
 import { requireAngehAdmin } from '@/lib/angehoerige/api-auth'
 import { listeZugaenge, erstelleZugang, protokolliereZugriff } from '@/lib/angehoerige/angehoerige'
+import type { FreigabeStatus, AngehoerigenRolle } from '@/lib/angehoerige/types'
 import { logAuditEvent } from '@/lib/audit-log'
 
 export async function GET(req: NextRequest) {
@@ -18,8 +19,8 @@ export async function GET(req: NextRequest) {
     const supabase = await createClient()
     const zugaenge = await listeZugaenge(supabase, auth.ctx.organizationId, {
       client_id,
-      status: status as any,
-      rolle: rolle as any,
+      status: status as FreigabeStatus | undefined,
+      rolle: rolle as AngehoerigenRolle | undefined,
     })
 
     // Enrich: Benutzer- und Klientennamen zuordnen

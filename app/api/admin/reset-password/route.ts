@@ -110,7 +110,7 @@ export async function POST(request: NextRequest) {
 
   if (error) {
     // AUTH-002 Fix: Supabase-Error-Message nicht nach außen leaken (kann Enumeration / Credentials enthüllen)
-    log.error('updateUserById error', { errorCode: (error as any)?.code, errorName: error?.name, status: (error as any)?.status })
+    log.error('updateUserById error', { errorCode: error?.code, errorName: error?.name, status: error?.status })
     return NextResponse.json({ error: 'Passwort konnte nicht gesetzt werden' }, { status: 500 })
   }
 
@@ -154,7 +154,7 @@ export async function POST(request: NextRequest) {
       })
 
       if (linkError || !linkData?.properties?.hashed_token) {
-        log.error('generateLink error in admin reset', { errorCode: (linkError as any)?.code, errorName: linkError?.name })
+        log.error('generateLink error in admin reset', { errorCode: linkError?.code, errorName: linkError?.name })
         // Wir sagen dem Admin Success, weil das PW bereits gesetzt wurde — User kann sich manuell mitteilen lassen
       } else {
         // FIX (2026-07-15): eigener Link statt properties.action_link — siehe

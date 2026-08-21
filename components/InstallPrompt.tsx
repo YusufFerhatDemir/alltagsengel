@@ -28,9 +28,9 @@ export default function InstallPrompt() {
   useEffect(() => {
     // Nicht in nativer App anzeigen
     const isCapacitor = !!(
-      (window as any).Capacitor ||
+      window.Capacitor ||
       navigator.userAgent.includes('Capacitor') ||
-      (window as any).webkit?.messageHandlers?.bridge
+      window.webkit?.messageHandlers?.bridge
     )
     if (isCapacitor) return
 
@@ -47,7 +47,7 @@ export default function InstallPrompt() {
 
     // Plattform erkennen
     const ua = navigator.userAgent
-    const isIOS = /iPad|iPhone|iPod/.test(ua) && !(window as any).MSStream
+    const isIOS = /iPad|iPhone|iPod/.test(ua) && !window.MSStream
     const isAndroid = /Android/.test(ua)
 
     // beforeinstallprompt abfangen (Chrome/Edge/Samsung)
@@ -61,7 +61,7 @@ export default function InstallPrompt() {
 
     // iOS: Nach 5 Sekunden zeigen
     if (isIOS) {
-      const isStandalone = (navigator as any).standalone
+      const isStandalone = navigator.standalone
       if (!isStandalone) {
         setTimeout(() => {
           setPlatform('ios')

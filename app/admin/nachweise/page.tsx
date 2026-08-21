@@ -48,7 +48,7 @@ export default function AdminNachweisePage() {
         ])
 
         const acc: NachweisRow[] = []
-        for (const q of (qualifikationen.data || []) as any[]) {
+        for (const q of (qualifikationen.data || [])) {
           const cg = q.caregivers
           acc.push({
             id: q.id, caregiver_id: q.caregiver_id,
@@ -58,7 +58,7 @@ export default function AdminNachweisePage() {
             pflicht: q.pflicht ?? false, einsatzrelevant: q.einsatzrelevant ?? false,
           })
         }
-        for (const cg of (caregivers.data || []) as any[]) {
+        for (const cg of (caregivers.data || [])) {
           const name = `${cg.first_name} ${cg.last_name}`
           if (cg.fuehrungszeugnis_gueltig_bis || cg.fuehrungszeugnis_datum) {
             acc.push({ id: `fz-${cg.id}`, caregiver_id: cg.id, caregiver_name: name, titel: 'Führungszeugnis', typ: 'fuehrungszeugnis', ausgestellt: cg.fuehrungszeugnis_datum, gueltig_bis: cg.fuehrungszeugnis_gueltig_bis, pflicht: true, einsatzrelevant: true })

@@ -23,7 +23,7 @@ export default function SplashController() {
     // Nur in Capacitor-Umgebung relevant
     const isNative =
       typeof window !== 'undefined' &&
-      (window as any).Capacitor?.isNativePlatform?.()
+      window.Capacitor?.isNativePlatform?.()
 
     if (!isNative) return
 

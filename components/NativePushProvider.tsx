@@ -25,14 +25,14 @@ export default function NativePushProvider() {
     // Nur in nativer Capacitor-Umgebung
     const isNative =
       typeof window !== 'undefined' &&
-      (window as any).Capacitor?.isNativePlatform?.()
+      window.Capacitor?.isNativePlatform?.()
 
     if (!isNative) return
 
     // ═══ iOS Sicherheits-Check: APNS-Capability vorhanden? ═══
     // Wenn keine aps-environment Entitlement im App-Bundle ist,
     // würde register() crashen. Wir prüfen das vorher.
-    const platform = (window as any).Capacitor?.getPlatform?.() || ''
+    const platform = window.Capacitor?.getPlatform?.() || ''
 
     const registerNativePush = async () => {
       try {

@@ -88,7 +88,7 @@ export default function AdminAnalyticsPage() {
     const map = new Map<string, { name: string; role: string; email: string; views: number; last: string; pages: Set<string> }>()
     for (const v of views) {
       if (!v.user_id) continue
-      const p = v.profile as any
+      const p = v.profile as { first_name?: string; last_name?: string; role?: string; email?: string } | null
       const uid = v.user_id
       if (!map.has(uid)) {
         map.set(uid, {
@@ -262,7 +262,7 @@ export default function AdminAnalyticsPage() {
                     <tr><td colSpan={4} className="an-empty">Keine Daten für diesen Zeitraum</td></tr>
                   )}
                   {views.map(v => {
-                    const p = v.profile as any
+                    const p = v.profile as { first_name?: string; last_name?: string; role?: string; email?: string } | null
                     const isMobile = (v.screen_width || 0) < 768
                     return (
                       <tr key={v.id}>

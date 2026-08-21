@@ -106,7 +106,7 @@ export default function OpsAuditPage() {
           Akteur
           <input type="text" placeholder="Name…" value={akteur} onChange={e => setAkteur(e.target.value)} style={textInputStyle} />
         </label>
-        <select value={quelle} onChange={e => setQuelle(e.target.value as any)} style={selectStyle}>
+        <select value={quelle} onChange={e => setQuelle(e.target.value as typeof quelle)} style={selectStyle}>
           <option value="all">Alle Quellen</option>
           <option value="aufgaben">Aufgaben/Kommunikation</option>
           <option value="abrechnung">Abrechnung</option>

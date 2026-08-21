@@ -83,8 +83,8 @@ export default function KrankenfahrtenAdminPage() {
         .select('*, profile:profiles!krankenfahrt_providers_user_id_fkey(first_name, last_name, email, phone)')
         .order('created_at', { ascending: false })
 
-      const r = (ridesData || []) as any[]
-      const p = (providersData || []) as any[]
+      const r = (ridesData || []) as Ride[]
+      const p = (providersData || []) as Provider[]
 
       setRides(r)
       setProviders(p)

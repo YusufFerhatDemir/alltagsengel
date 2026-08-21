@@ -381,8 +381,8 @@ export async function createInvoiceDraft(
   if (rpcError) {
     const tariffError = parseTariffError(rpcError.message);
     if (tariffError) {
-      const err = new Error(rpcError.message);
-      (err as any).tariffErrorCode = tariffError;
+      const err = new Error(rpcError.message) as Error & { tariffErrorCode?: string };
+      err.tariffErrorCode = tariffError;
       throw err;
     }
     throw new Error(`Atomare Rechnungserstellung fehlgeschlagen: ${rpcError.message}`);
@@ -400,8 +400,8 @@ export async function createInvoiceDraft(
     }
     const tariffError = parseTariffError(String(rpcResult.error));
     if (tariffError) {
-      const err = new Error(errorMsg);
-      (err as any).tariffErrorCode = tariffError;
+      const err = new Error(errorMsg) as Error & { tariffErrorCode?: string };
+      err.tariffErrorCode = tariffError;
       throw err;
     }
     throw new Error(`Atomare Rechnungserstellung fehlgeschlagen: ${errorMsg}`);

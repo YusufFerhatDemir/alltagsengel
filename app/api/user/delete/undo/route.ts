@@ -88,8 +88,8 @@ export async function GET(request: NextRequest) {
         .eq('id', userId)
       if (undelErr) {
         console.error('user/delete/undo: profile-update fehlgeschlagen', {
-          code: (undelErr as any)?.code,
-          name: (undelErr as any)?.name,
+          code: undelErr?.code,
+          name: undelErr?.name,
         })
         return redirect('/auth/login?undo_error=server_error')
       }

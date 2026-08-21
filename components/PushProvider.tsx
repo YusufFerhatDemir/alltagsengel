@@ -27,7 +27,7 @@ export default function PushProvider() {
     // Native Push läuft via NativePushProvider (FCM/APNS)
     const isNative =
       typeof window !== 'undefined' &&
-      (window as any).Capacitor?.isNativePlatform?.()
+      window.Capacitor?.isNativePlatform?.()
     if (isNative) return
 
     const subscribe = async () => {

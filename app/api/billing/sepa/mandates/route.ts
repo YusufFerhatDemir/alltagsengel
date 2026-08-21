@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { createMandate, listMandates } from '@/lib/billing/sepa/sepa-service'
+import type { MandateStatus } from '@/lib/billing/sepa/sepa-service'
 import { safeApiError } from '@/lib/api/error-sanitizer'
 
 export async function GET(req: NextRequest) {
@@ -12,7 +13,7 @@ export async function GET(req: NextRequest) {
 
     const sp = req.nextUrl.searchParams
     const clientId = sp.get('clientId') ?? undefined
-    const status = sp.get('status') as any ?? undefined
+    const status = (sp.get('status') ?? undefined) as MandateStatus | undefined
 
     const data = await listMandates(supabase, auth.ctx.organizationId, { clientId, status })
     return NextResponse.json(data)

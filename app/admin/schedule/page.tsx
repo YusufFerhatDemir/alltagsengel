@@ -98,7 +98,7 @@ export default function AdminSchedulePage() {
         date: s.date, start_time: s.start_time, end_time: s.end_time, service_type: s.service_type,
         status: s.status || 'open', escalation_level: s.escalation_level ?? 0, client_notified: !!s.client_notified, notes: s.notes,
       })))
-      setPreferred((prRes.data || []) as any)
+      setPreferred((prRes.data || []) as { client_id: string; caregiver_id: string; priority: number }[])
     } catch (err) {
       console.error('Schedule load error:', err)
     } finally {

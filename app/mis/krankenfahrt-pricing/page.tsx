@@ -71,11 +71,11 @@ export default function KrankenfahrtPricingPage() {
         supabase.from('kf_pricing_config').select('*').order('key'),
         supabase.from('kf_pricing_audit').select('*').order('created_at', { ascending: false }).limit(50),
       ])
-      setTiers((tiersRes.data || []) as any)
-      setSurcharges((surchargesRes.data || []) as any)
-      setRegions((regionsRes.data || []) as any)
-      setConfig((configRes.data || []) as any)
-      setAudit((auditRes.data || []) as any)
+      setTiers((tiersRes.data || []) as PricingTier[])
+      setSurcharges((surchargesRes.data || []) as PricingSurcharge[])
+      setRegions((regionsRes.data || []) as PricingRegion[])
+      setConfig((configRes.data || []) as PricingConfig[])
+      setAudit((auditRes.data || []) as PricingAuditEntry[])
     } catch (err) {
       console.error('Failed to load pricing data', err)
     }

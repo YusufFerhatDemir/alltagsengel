@@ -14,7 +14,7 @@ export default function ServiceWorkerRegister() {
     // In Capacitor (iOS/Android) → KEIN Service Worker
     const isNative =
       typeof window !== 'undefined' &&
-      (window as any).Capacitor?.isNativePlatform?.()
+      window.Capacitor?.isNativePlatform?.()
 
     if (isNative) return
 

@@ -95,7 +95,7 @@ export default function KundeNachrichtenPage() {
               event: 'INSERT', schema: 'public', table: 'care_notes',
               filter: `client_id=eq.${cid}`,
             }, (payload) => {
-              const note = payload.new as any
+              const note = payload.new as NoteMessage
               if (note.is_internal) return
               setMessages(prev => prev.some(m => m.id === note.id) ? prev : [...prev, note as NoteMessage])
             })

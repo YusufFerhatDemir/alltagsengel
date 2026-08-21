@@ -7,7 +7,8 @@ import { isValidUUID, logError } from '@/lib/safe-query'
 import { markMessagesRead, sendChatMessage } from './actions'
 import { NotFoundState, ErrorState, LoadingState } from '@/components/UIStates'
 import { IconUser } from '@/components/Icons'
-import { useChatPagination, useScrollToLoadOlder } from '@/lib/use-chat-pagination'
+import type { Profile } from '@/lib/types'
+import { useChatPagination, useScrollToLoadOlder, type ChatMessage } from '@/lib/use-chat-pagination'
 
 export default function EngelChatConversationPage() {
   const params = useParams()
@@ -80,7 +81,7 @@ export default function EngelChatConversationPage() {
           return
         }
 
-        const customer = booking.profiles as any
+        const customer = booking.profiles as Profile | null
         setPartner(customer ? `${customer.first_name} ${customer.last_name?.[0] || ''}.` : 'Kunde')
 
         // Initial-Page laden (juengste 30 Nachrichten)
@@ -99,7 +100,7 @@ export default function EngelChatConversationPage() {
             table: 'messages',
             filter: `booking_id=eq.${bookingId}`,
           }, (payload) => {
-            appendMessage(payload.new as any)
+            appendMessage(payload.new as ChatMessage)
           })
           .subscribe()
 

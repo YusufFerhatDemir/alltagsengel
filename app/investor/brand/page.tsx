@@ -53,7 +53,7 @@ const TypoRow = ({ el, font, size, weight, color, colorName, sample }: { el: str
       <div style={{ fontSize: 11, fontWeight: 700, color: C.ink4 }}>{el}</div>
     </div>
     <div style={{ flex: 1, minWidth: 0 }}>
-      <div style={{ fontSize: size, fontWeight: weight as any, color: color, fontFamily: font.includes('Cormorant') ? "'Cormorant Garamond', serif" : "'Jost', sans-serif", overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>{sample}</div>
+      <div style={{ fontSize: size, fontWeight: weight as React.CSSProperties['fontWeight'], color: color, fontFamily: font.includes('Cormorant') ? "'Cormorant Garamond', serif" : "'Jost', sans-serif", overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>{sample}</div>
     </div>
     <div style={{ width: 140, flexShrink: 0, textAlign: 'right' as const }}>
       <div style={{ fontSize: 10, color: C.ink4 }}>{font} · {size} · {weight}</div>

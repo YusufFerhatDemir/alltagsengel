@@ -112,8 +112,8 @@ export default function SessionKeepAlive() {
 
     // ═══ 5. Capacitor App Resume ═══
     let capacitorCleanup: (() => void) | undefined
-    if (typeof window !== 'undefined' && (window as any).Capacitor) {
-      const { App } = (window as any).Capacitor.Plugins || {}
+    if (typeof window !== 'undefined' && window.Capacitor) {
+      const { App } = window.Capacitor.Plugins || {}
       if (App?.addListener) {
         const handle = App.addListener('appStateChange', (state: { isActive: boolean }) => {
           if (state.isActive) {

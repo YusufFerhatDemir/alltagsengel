@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { IconClock, IconUser } from '@/components/Icons'
+import type { Profile } from '@/lib/types'
 
 const WEEKDAYS = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So']
 const MONTHS = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember']
@@ -103,7 +104,7 @@ export default function EngelKalenderPage() {
               <div className="kal-no-events">Keine Einsätze an diesem Tag</div>
             ) : (
               selectedBookings.map(b => {
-                const customer = b.profiles as any
+                const customer = b.profiles as Profile | null
                 const name = customer ? `${customer.first_name} ${customer.last_name?.[0] || ''}.` : 'Ehem. Kunde'
                 return (
                   <div key={b.id} className="kal-event">

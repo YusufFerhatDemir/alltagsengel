@@ -223,7 +223,7 @@ export default function MahnwesenPage() {
           <tbody>
             {entries.map(e => {
               const openCents = e.amount_due_cents - e.amount_paid_cents
-              const inv = e.invoice as any
+              const inv = e.invoice
               const clientName = inv?.client ? `${inv.client.first_name} ${inv.client.last_name}` : '—'
               const invNum = inv?.invoice_number_formatted || inv?.invoice_number || '—'
 

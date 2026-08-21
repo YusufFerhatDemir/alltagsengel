@@ -49,7 +49,7 @@ function VerlaufFormular() {
           .eq('caregiver_id', cg.id)
 
         const map = new Map<string, string>()
-        for (const z of (zuordnungen || []) as any[]) {
+        for (const z of (zuordnungen || [])) {
           if (!z.client_id || map.has(z.client_id)) continue
           const c = z.client
           map.set(z.client_id, c ? `${c.first_name ?? ''} ${c.last_name ?? ''}`.trim() : 'Kunde')

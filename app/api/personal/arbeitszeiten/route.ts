@@ -3,6 +3,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { requirePersonalAdmin, requirePersonalUser } from '@/lib/personal/api-auth'
 import { createArbeitszeit, listArbeitszeiten } from '@/lib/personal/arbeitszeiten'
 import { getActiveOrgId } from '@/lib/organizations/server'
+import type { ArbeitszeitStatus } from '@/lib/personal/types'
 import { writeAuditLog } from '@/lib/personal/audit'
 
 export async function GET(req: NextRequest) {
@@ -16,7 +17,7 @@ export async function GET(req: NextRequest) {
         caregiverId: sp.get('caregiverId') ?? undefined,
         datumVon: sp.get('datumVon') ?? undefined,
         datumBis: sp.get('datumBis') ?? undefined,
-        status: (sp.get('status') ?? undefined) as any,
+        status: (sp.get('status') ?? undefined) as ArbeitszeitStatus | undefined,
         nurGesperrt: sp.get('nurGesperrt') === 'true' ? true : undefined,
       })
       return NextResponse.json(data)
@@ -37,7 +38,7 @@ export async function GET(req: NextRequest) {
       caregiverId: user.caregiverId,
       datumVon: sp.get('datumVon') ?? undefined,
       datumBis: sp.get('datumBis') ?? undefined,
-      status: (sp.get('status') ?? undefined) as any,
+      status: (sp.get('status') ?? undefined) as ArbeitszeitStatus | undefined,
     })
     return NextResponse.json(data)
   } catch (e: any) {

@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import { IconCalendar, IconClock, IconUser, IconCheck, IconMoney } from '@/components/Icons'
+import type { Profile } from '@/lib/types'
 
 const statusLabels: Record<string, { label: string; color: string }> = {
   pending: { label: 'Neue Anfrage', color: 'var(--gold2)' },
@@ -125,8 +126,8 @@ export default function EngelBuchungenPage() {
           </div>
         ) : (
           filtered.map(b => {
-            const customer = b.profiles as any
-            const careRecipient = b.care_recipients as any
+            const customer = b.profiles as Profile | null
+            const careRecipient = b.care_recipients as { first_name?: string; last_name?: string } | null
             const name = customer ? `${customer.first_name} ${customer.last_name?.[0] || ''}.` : 'Ehem. Kunde'
             const crName = careRecipient ? `${careRecipient.first_name} ${careRecipient.last_name?.[0] || ''}.` : null
             const st = statusLabels[b.status] || statusLabels.pending

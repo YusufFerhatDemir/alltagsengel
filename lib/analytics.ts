@@ -29,15 +29,15 @@ export interface AnalyticsEventParams {
 function isNativeAppContext(): boolean {
   if (typeof window === 'undefined') return false
   return !!(
-    (window as any).Capacitor?.isNativePlatform?.() ||
-    (window as any).Capacitor ||
+    window.Capacitor?.isNativePlatform?.() ||
+    window.Capacitor ||
     navigator.userAgent.includes('Capacitor') ||
-    (window as any).webkit?.messageHandlers?.bridge
+    window.webkit?.messageHandlers?.bridge
   )
 }
 
 function gtagAvailable(): boolean {
-  return typeof window !== 'undefined' && typeof (window as any).gtag === 'function'
+  return typeof window !== 'undefined' && typeof window.gtag === 'function'
 }
 
 /**
@@ -51,10 +51,10 @@ export function trackEvent(name: AnalyticsEventName, params: AnalyticsEventParam
 
   try {
     if (gtagAvailable()) {
-      ;(window as any).gtag('event', name, params)
+      ;window.gtag('event', name, params)
     }
-    ;(window as any).dataLayer = (window as any).dataLayer || []
-    ;(window as any).dataLayer.push({ event: name, ...params })
+    ;window.dataLayer = window.dataLayer || []
+    ;window.dataLayer.push({ event: name, ...params })
   } catch {
     // Niemals den User-Flow brechen, nur weil Analytics scheitert
   }

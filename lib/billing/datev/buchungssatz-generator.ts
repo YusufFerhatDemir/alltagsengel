@@ -17,6 +17,9 @@ import {
 // Types
 // ---------------------------------------------------------------------------
 
+/** Typ fuer client-Join-Ergebnis aus Supabase-Abfragen. */
+type ClientJoin = { first_name?: string; last_name?: string; email?: string } | null
+
 export interface BuchungssatzParams {
   organizationId: string;
   zeitraumVon: string; // YYYY-MM-DD
@@ -144,7 +147,7 @@ async function generiereRechnungsBuchungen(
     const rawClient = inv.client as unknown;
     const client = Array.isArray(rawClient) ? rawClient[0] : rawClient;
     const clientName = client && typeof client === 'object' && 'last_name' in client
-      ? `${(client as any).last_name || ''}`
+      ? `${(client as ClientJoin)?.last_name || ''}`
       : '';
 
     // Forderung (Debitor) an Erloes
@@ -202,12 +205,12 @@ async function generiereZahlungsBuchungen(
     const reNummer = inv.invoice_number_formatted || inv.invoice_number || '';
 
     const paymentRaw = Array.isArray(alloc.payment) ? alloc.payment[0] : alloc.payment;
-    const zahlDatum = (paymentRaw as any)?.payment_date || alloc.created_at?.slice(0, 10) || von;
+    const zahlDatum = (paymentRaw as { payment_date?: string } | null)?.payment_date || alloc.created_at?.slice(0, 10) || von;
 
-    const rawClient = (inv as any).client;
+    const rawClient = (inv as Record<string, unknown>).client;
     const client = Array.isArray(rawClient) ? rawClient[0] : rawClient;
     const clientName = client && typeof client === 'object' && 'last_name' in client
-      ? (client as any).last_name || ''
+      ? (client as ClientJoin)?.last_name || ''
       : '';
 
     // Bank an Debitor
@@ -264,7 +267,7 @@ async function generiereGutschriftBuchungen(
     const rawClient = cr.client as unknown;
     const client = Array.isArray(rawClient) ? rawClient[0] : rawClient;
     const clientName = client && typeof client === 'object' && 'last_name' in client
-      ? (client as any).last_name || ''
+      ? (client as ClientJoin)?.last_name || ''
       : '';
 
     // Erloes (S) an Debitor (H) — Storno
@@ -324,10 +327,10 @@ async function generiereMahngebuerenBuchungen(
     const datum = entry.created_at?.slice(0, 10) || von;
     const reNummer = inv.invoice_number_formatted || '';
 
-    const rawClient = (inv as any).client;
+    const rawClient = (inv as Record<string, unknown>).client;
     const client = Array.isArray(rawClient) ? rawClient[0] : rawClient;
     const clientName = client && typeof client === 'object' && 'last_name' in client
-      ? (client as any).last_name || ''
+      ? (client as ClientJoin)?.last_name || ''
       : '';
 
     // Debitor (S) an Mahnerloese (H)
@@ -387,7 +390,7 @@ async function generiereRuecklastschriftBuchungen(
     let reNummer = '';
     const paymentRaw = Array.isArray(rl.payment) ? rl.payment[0] : rl.payment;
     if (paymentRaw) {
-      const allocRaw = (paymentRaw as any).allocations;
+      const allocRaw = (paymentRaw as Record<string, unknown>)?.allocations;
       const allocs = Array.isArray(allocRaw) ? allocRaw : [];
       if (allocs.length > 0) {
         const invRaw = allocs[0].invoice;
