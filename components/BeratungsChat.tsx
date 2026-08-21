@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
 import { usePathname } from 'next/navigation'
+import { useFokusFalle } from '@/lib/a11y'
 
 // ═══════════════════════════════════════════════════════════
 // BERATUNGS-CHAT — Floating KI-Berater auf den Public-Seiten
@@ -59,6 +60,11 @@ export default function BeratungsChat() {
   const [laedt, setLaedt] = useState(false)
   const listeRef = useRef<HTMLDivElement>(null)
 
+  // Nicht-modaler Dialog: Fokus wandert beim Öffnen ins Panel, ESC schließt,
+  // der Fokus kehrt zum Chat-Button zurück. Bewusst **ohne** Tab-Zyklus —
+  // das Panel überdeckt die Seite nicht, der Fokus muss zurück können.
+  const panelRef = useFokusFalle<HTMLDivElement>(() => setOffen(false), { aktiv: offen, fangen: false })
+
   useEffect(() => {
     const t = setTimeout(() => setSichtbar(true), 2500)
     return () => clearTimeout(t)
@@ -104,6 +110,7 @@ export default function BeratungsChat() {
       {/* Chat-Panel */}
       {offen && (
         <div
+          ref={panelRef}
           role="dialog"
           aria-label="Alltagsengel Beratungs-Chat"
           style={{

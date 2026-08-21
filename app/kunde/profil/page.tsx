@@ -10,6 +10,7 @@ import { AvatarKunde } from '@/components/AvatarGlow'
 import { normalizePlz, resolvePlz } from '@/lib/expansion/plz-bundesland'
 import BundeslandErkennung from '@/components/kunde/BundeslandErkennung'
 import { logger } from '@/lib/logger'
+import DialogOverlay from '@/components/DialogOverlay'
 const log = logger.child('kunde:profil')
 
 // KASSEN-Liste entfernt (gehoerte zur Pflegedaten-UI, deaktiviert Phase 5)
@@ -310,11 +311,11 @@ export default function KundeProfilPage() {
         </button>
 
         {deleteConfirm && (
-          <div role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); (() => { if (!deleting) { setDeleteConfirm(false); setDeletePassword(''); setDeleteError('') } })() } }} style={{
+          <DialogOverlay className="" onClose={() => { if (!deleting) { setDeleteConfirm(false); setDeletePassword(''); setDeleteError('') } }} style={{
             position: 'fixed', inset: 0, background: 'rgba(0,0,0,.7)', zIndex: 9999,
             display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24,
-          }} onClick={() => { if (!deleting) { setDeleteConfirm(false); setDeletePassword(''); setDeleteError('') } }}>
-            <div onClick={e => e.stopPropagation()} style={{
+          }}>
+            <div role="dialog" aria-modal="true" aria-label="Konto löschen?" onClick={e => e.stopPropagation()} style={{
               background: 'var(--coal2)', borderRadius: 18, padding: 24, maxWidth: 340, width: '100%',
               border: '1px solid rgba(255,80,80,.2)',
             }}>
@@ -382,7 +383,7 @@ export default function KundeProfilPage() {
                 </button>
               </div>
             </div>
-          </div>
+          </DialogOverlay>
         )}
 
         <div style={{ height: 80 }}></div>

@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import type { Profile } from '@/lib/types'
+import DialogOverlay from '@/components/DialogOverlay'
 
 export default function AdminUsersPage() {
   const [profiles, setProfiles] = useState<Profile[]>([])
@@ -123,7 +124,7 @@ export default function AdminUsersPage() {
       )}
 
       {selectedUser && (
-        <div role="presentation" className="admin-modal-overlay" onClick={() => setSelectedUser(null)}>
+        <DialogOverlay onClose={() => setSelectedUser(null)}>
           <div role="dialog" aria-label="Passwort zurücksetzen" aria-modal="true" className="admin-modal" onClick={e => e.stopPropagation()}>
             <h3>Passwort zurücksetzen</h3>
             <p style={{ color: 'var(--ink3)', marginBottom: 16, fontSize: 14 }}>
@@ -165,7 +166,7 @@ export default function AdminUsersPage() {
               </button>
             </div>
           </div>
-        </div>
+        </DialogOverlay>
       )}
     </div>
   )

@@ -8,6 +8,7 @@ import {
 } from '@/lib/admin/ops'
 import { StatusBadge, SearchInput, EmptyRow, Banner } from '@/components/admin/OpsUI'
 import { logger } from '@/lib/logger'
+import { klickbareZeile } from '@/lib/a11y'
 const log = logger.child('admin:caregivers')
 
 interface Qualification {
@@ -161,9 +162,11 @@ export default function AdminCaregiversPage() {
                 const isOpen = expanded === c.id
                 return (
                   <Fragment key={c.id}>
-                    <tr onClick={() => setExpanded(isOpen ? null : c.id)} style={{ cursor: 'pointer' }}>
+                    <tr {...klickbareZeile(() => setExpanded(isOpen ? null : c.id))} aria-expanded={isOpen} style={{ cursor: 'pointer' }}>
                       <td style={{ fontWeight: 600 }}>
                         <span
+                          {...klickbar(() => router.push(`/admin/caregivers/${c.id}`))}
+                          aria-label={`Akte von ${c.name} öffnen`}
                           onClick={(e) => { e.stopPropagation(); router.push(`/admin/caregivers/${c.id}`) }}
                           style={{ color: 'var(--gold2)', cursor: 'pointer' }}
                           title="Akte öffnen"

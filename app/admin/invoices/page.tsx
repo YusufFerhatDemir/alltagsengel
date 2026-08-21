@@ -6,6 +6,7 @@ import {
 } from '@/lib/admin/ops'
 import { StatusBadge, SearchInput, EmptyRow, Banner } from '@/components/admin/OpsUI'
 import {
+import DialogOverlay from '@/components/DialogOverlay'
   advanceInvoiceSimple, recordInvoicePayment, recordInvoiceDispute, decideInvoiceKuerzung,
 } from './actions'
 
@@ -338,7 +339,7 @@ function CreateInvoiceModal({ onClose, onCreated }: { onClose: () => void; onCre
   }
 
   return (
-    <div role="presentation" className="admin-modal-overlay" onClick={onClose}>
+    <DialogOverlay onClose={onClose}>
       <div role="dialog" aria-label="Rechnung aus Leistungsnachweisen" aria-modal="true" className="admin-modal" style={{ maxWidth: 620, width: '92%' }} onClick={e => e.stopPropagation()}>
         <h3>Rechnung aus Leistungsnachweisen</h3>
         <p style={{ fontSize: 13, color: 'var(--ink4)', margin: '0 0 14px' }}>
@@ -386,7 +387,7 @@ function CreateInvoiceModal({ onClose, onCreated }: { onClose: () => void; onCre
           </button>
         </div>
       </div>
-    </div>
+    </DialogOverlay>
   )
 }
 

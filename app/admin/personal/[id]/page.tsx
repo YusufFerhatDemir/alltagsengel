@@ -10,6 +10,7 @@ import {
 } from '@/lib/admin/ops'
 import { StatusBadge, SearchInput, EmptyRow, Banner } from '@/components/admin/OpsUI'
 import { logger } from '@/lib/logger'
+import DialogOverlay from '@/components/DialogOverlay'
 const log = logger.child('admin:personal')
 
 // ── Types ──────────────────────────────────────────────────────
@@ -862,11 +863,14 @@ function SummaryCard({ label, value, color }: { label: string; value: string; co
 
 function Modal({ title, children, onClose }: { title: string; children: React.ReactNode; onClose: () => void }) {
   return (
-    <div style={{
+    <DialogOverlay className="" onClose={onClose} style={{
       position: 'fixed', inset: 0, background: 'rgba(0,0,0,.5)',
       display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000,
-    }} onClick={onClose}>
+    }}>
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-label={title}
         style={{
           background: 'var(--coal)', border: '1px solid var(--border)',
           borderRadius: 16, padding: 24, minWidth: 360, maxWidth: 480,
@@ -882,6 +886,6 @@ function Modal({ title, children, onClose }: { title: string; children: React.Re
         </div>
         {children}
       </div>
-    </div>
+    </DialogOverlay>
   )
 }

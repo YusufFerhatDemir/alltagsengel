@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { logger } from '@/lib/logger'
+import { klickbareZeile } from '@/lib/a11y'
 const log = logger.child('admin:home')
 
 interface Stats {
@@ -281,7 +282,7 @@ export default function AdminHomePage() {
               <tr><td colSpan={6} style={{ textAlign: 'center', color: 'var(--muted)' }}>Keine Buchungen</td></tr>
             ) : (
               recentBookings.map(b => (
-                <tr key={b.id} onClick={() => router.push('/admin/bookings')} style={{ cursor: 'pointer' }}>
+                <tr key={b.id} {...klickbareZeile(() => router.push('/admin/bookings'))} style={{ cursor: 'pointer' }}>
                   <td style={{ fontWeight: 600 }}>{b.customer_name}</td>
                   <td>{b.service}</td>
                   <td>{b.date} {b.time}</td>

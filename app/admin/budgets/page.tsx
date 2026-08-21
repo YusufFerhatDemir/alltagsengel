@@ -8,6 +8,7 @@ import {
 } from '@/lib/admin/ops'
 import { AmpelDot, BudgetBar, Banner, SearchInput, EmptyRow } from '@/components/admin/OpsUI'
 import { logger } from '@/lib/logger'
+import { klickbareZeile } from '@/lib/a11y'
 const log = logger.child('admin:budgets')
 
 interface BudgetRow {
@@ -124,7 +125,7 @@ export default function AdminBudgetsPage() {
               {filtered.length === 0 ? (
                 <EmptyRow colSpan={7}>{search || filter !== 'all' ? 'Keine Treffer' : 'Noch keine Budgets hinterlegt'}</EmptyRow>
               ) : filtered.map(r => (
-                <tr key={r.client_id} onClick={() => router.push(`/admin/clients/${r.client_id}`)} style={{ cursor: 'pointer' }}>
+                <tr key={r.client_id} {...klickbareZeile(() => router.push(`/admin/clients/${r.client_id}`))} style={{ cursor: 'pointer' }}>
                   <td><AmpelDot ampel={r.summary.ampel} /></td>
                   <td style={{ fontWeight: 600 }}>{r.name}</td>
                   <td><BudgetBar summary={r.summary} compact /></td>

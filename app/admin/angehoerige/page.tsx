@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { StatusBadge, Banner, EmptyRow } from '@/components/admin/OpsUI'
 import { ROLLEN_LABEL, BEREICH_LABEL, FREIGABE_BEREICHE, ANGEHOERIGEN_ROLLEN } from '@/lib/angehoerige/types'
 import type { AngehoerigenRolle, FreigabeBereich, FreigabeStatus } from '@/lib/angehoerige/types'
+import DialogOverlay from '@/components/DialogOverlay'
 
 // ═══════════════════════════════════════════════════════════════
 // Admin — Angehörigenzugänge verwalten
@@ -291,7 +292,7 @@ function CreateZugangModal({ onClose, onSaved }: { onClose: () => void; onSaved:
   }
 
   return (
-    <div role="presentation" className="admin-modal-overlay" onClick={onClose}>
+    <DialogOverlay onClose={onClose}>
       <div role="dialog" aria-label="Zugang erteilen" aria-modal="true" className="admin-modal" style={{ maxWidth: 520, width: '92%' }} onClick={e => e.stopPropagation()}>
         <h3>Zugang erteilen</h3>
         <p style={{ fontSize: 12, color: 'var(--ink4)', margin: '0 0 16px' }}>
@@ -346,7 +347,7 @@ function CreateZugangModal({ onClose, onSaved }: { onClose: () => void; onSaved:
           </button>
         </div>
       </div>
-    </div>
+    </DialogOverlay>
   )
 }
 
@@ -392,7 +393,7 @@ function EditFreigabenModal({ zugangId, zugang, onClose, onSaved }: {
   }
 
   return (
-    <div role="presentation" className="admin-modal-overlay" onClick={onClose}>
+    <DialogOverlay onClose={onClose}>
       <div role="dialog" aria-label="Freigabe-Bereiche bearbeiten" aria-modal="true" className="admin-modal" style={{ maxWidth: 460, width: '92%' }} onClick={e => e.stopPropagation()}>
         <h3>Freigabe-Bereiche bearbeiten</h3>
 
@@ -423,7 +424,7 @@ function EditFreigabenModal({ zugangId, zugang, onClose, onSaved }: {
           </button>
         </div>
       </div>
-    </div>
+    </DialogOverlay>
   )
 }
 
@@ -459,7 +460,7 @@ function RevokeModal({ zugangId, onClose, onRevoked }: {
   }
 
   return (
-    <div role="presentation" className="admin-modal-overlay" onClick={onClose}>
+    <DialogOverlay onClose={onClose}>
       <div role="dialog" aria-label="Zugang widerrufen" aria-modal="true" className="admin-modal" style={{ maxWidth: 420, width: '92%' }} onClick={e => e.stopPropagation()}>
         <h3>Zugang widerrufen</h3>
         <p style={{ fontSize: 13, color: 'var(--ink3)', margin: '0 0 16px' }}>
@@ -484,7 +485,7 @@ function RevokeModal({ zugangId, onClose, onRevoked }: {
           </button>
         </div>
       </div>
-    </div>
+    </DialogOverlay>
   )
 }
 

@@ -9,6 +9,7 @@ import { AmpelDot, BudgetBar, StatusBadge, SearchInput, EmptyRow, Banner } from 
 import { useBundeslandFilter } from '@/components/admin/BundeslandContext'
 import BundeslandFilterHinweis from '@/components/admin/BundeslandFilterHinweis'
 import { logger } from '@/lib/logger'
+import { klickbareZeile } from '@/lib/a11y'
 const log = logger.child('admin:clients')
 
 interface ClientRow {
@@ -297,7 +298,7 @@ export default function AdminClientsPage() {
               ) : filtered.map(c => {
                 const sm = statusMeta(CLIENT_STATUS, c.status)
                 return (
-                  <tr key={c.id} onClick={() => router.push(`/admin/clients/${c.id}`)} style={{ cursor: 'pointer' }}>
+                  <tr key={c.id} {...klickbareZeile(() => router.push(`/admin/clients/${c.id}`))} style={{ cursor: 'pointer' }}>
                     <td style={{ fontWeight: 600 }}>{c.first_name} {c.last_name}</td>
                     <td style={{ fontSize: 13 }}>{c.customer_number || '—'}</td>
                     <td>{c.care_level ? `PG ${c.care_level}` : '—'}</td>

@@ -9,6 +9,7 @@
 import { useRef, useState } from 'react'
 import { AKTEN_DOKUMENT_TYP, AKTEN_KATEGORIE, AKTEN_SICHTBARKEIT } from '@/lib/admin/ops'
 import type { AktenDokument } from '@/lib/akten/types'
+import { klickbar } from '@/lib/a11y'
 
 interface AktenUploadProps {
   /** Genau eine der beiden Zuordnungen setzen — bei keiner wird ein Org-Dokument angelegt. */
@@ -110,7 +111,8 @@ export default function AktenUpload({ clientId, caregiverId, defaultKategorie, d
         onDragOver={e => { e.preventDefault(); setDragOver(true) }}
         onDragLeave={() => setDragOver(false)}
         onDrop={handleDrop}
-        onClick={() => inputRef.current?.click()}
+        {...klickbar(() => inputRef.current?.click())}
+        aria-label="Datei auswählen oder hierher ziehen"
         style={{
           border: `2px dashed ${dragOver ? 'var(--gold)' : 'var(--border)'}`,
           borderRadius: 10, padding: 24, textAlign: 'center', cursor: 'pointer',

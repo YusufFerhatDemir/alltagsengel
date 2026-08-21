@@ -10,6 +10,7 @@ import { createClient } from '@/lib/supabase/client'
 import { timeAgo, NOTE_CATEGORY, NOTE_AUTHOR_ROLE } from '@/lib/admin/ops'
 import { StatusBadge, Banner } from '@/components/admin/OpsUI'
 import { createCareNoteAction } from '@/app/admin/notizen/actions'
+import { klickbar } from '@/lib/a11y'
 
 export interface CareNote {
   id: string
@@ -53,7 +54,7 @@ export function NoteCard({ note, clientName, onClientClick }: {
         {note.is_urgent && <StatusBadge label="🚨 Dringend" color="#D04B3B" />}
         {clientName && (
           <span
-            onClick={onClientClick}
+            {...(onClientClick ? { ...klickbar(onClientClick), 'aria-label': `Klientenakte ${clientName} öffnen` } : {})}
             style={{
               fontWeight: 700, color: 'var(--ink)', fontSize: 14,
               cursor: onClientClick ? 'pointer' : 'default',

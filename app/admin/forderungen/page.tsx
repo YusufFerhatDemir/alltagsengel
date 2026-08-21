@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { euro, formatDate, fullName, statusMeta, DUNNING_STATUS } from '@/lib/admin/ops'
 import { StatusBadge, SearchInput, EmptyRow, Banner } from '@/components/admin/OpsUI'
+import { klickbareZeile } from '@/lib/a11y'
 
 interface DunningRow {
   id: string
@@ -161,7 +162,7 @@ export default function ForderungenPage() {
                 const canAdvance = !e.block_dunning && e.dunning_level !== 'inkasso_vorbereitung'
                 return (
                   <tr key={e.id}>
-                    <td style={{ fontWeight: 600, cursor: 'pointer' }} onClick={() => window.location.href = `/admin/rechnungen/${e.invoice_id}`}>
+                    <td style={{ fontWeight: 600, cursor: 'pointer' }} {...klickbareZeile(() => { window.location.href = `/admin/rechnungen/${e.invoice_id}` })}>
                       {e.invoice_number}
                     </td>
                     <td>{e.client_name}</td>

@@ -9,6 +9,7 @@ import {
 } from '@/lib/admin/ops'
 import { StatusBadge, Banner, EmptyRow } from '@/components/admin/OpsUI'
 import { logger } from '@/lib/logger';
+import { klickbareZeile } from '@/lib/a11y'
 const log = logger.child('admin:monatsabschluss-vorbereitung');
 
 // -- Typen -------------------------------------------------------------------
@@ -477,7 +478,7 @@ export default function MonatsabschlussVorbereitungPage() {
                   budgetWarningRows.map(b => {
                     const ampel = budgetAmpel(b.summary.pct)
                     return (
-                      <tr key={b.id} onClick={() => router.push(`/admin/clients/${b.client_id}`)} style={{ cursor: 'pointer' }}>
+                      <tr key={b.id} {...klickbareZeile(() => router.push(`/admin/clients/${b.client_id}`))} style={{ cursor: 'pointer' }}>
                         <td style={{ fontWeight: 600 }}>{fullName(clientMap.get(b.client_id))}</td>
                         <td>{euro(b.annual_amount)}</td>
                         <td>{euro(b.used_amount)}</td>

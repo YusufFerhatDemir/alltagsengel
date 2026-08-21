@@ -6,6 +6,7 @@ import {
 } from '@/lib/admin/ops'
 import { StatusBadge, SearchInput, EmptyRow, Banner } from '@/components/admin/OpsUI'
 import { logger } from '@/lib/logger'
+import { klickbareZeile } from '@/lib/a11y'
 const log = logger.child('admin:benachrichtigungen')
 
 interface BenachrichtigungRow {
@@ -141,7 +142,7 @@ export default function BenachrichtigungenPage() {
                   <tr
                     key={r.id}
                     style={{ fontWeight: r.gelesen ? 400 : 600, cursor: r.gelesen ? 'default' : 'pointer' }}
-                    onClick={() => !r.gelesen && markAsRead(r.id)}
+                    {...(r.gelesen ? {} : klickbareZeile(() => markAsRead(r.id)))}
                   >
                     <td>
                       {!r.gelesen && <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: 'var(--gold)' }} />}

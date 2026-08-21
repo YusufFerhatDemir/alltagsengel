@@ -2,6 +2,8 @@
 import React, { useState } from 'react'
 import { BRAND, PRIORITY_LABELS, DOC_STATUS_LABELS, RISK_COLORS } from '@/lib/mis/constants'
 import { MIcon } from './MisIcons'
+import DialogOverlay from '@/components/DialogOverlay'
+import { klickbareZeile, klickbar } from '@/lib/a11y'
 
 // ===== KPI Card =====
 export function KpiCard({ title, value, target, unit, trend, icon, color, onClick }: {
@@ -10,7 +12,7 @@ export function KpiCard({ title, value, target, unit, trend, icon, color, onClic
 }) {
   const trendColor = trend === 'up' ? BRAND.success : trend === 'down' ? BRAND.error : BRAND.muted
   return (
-    <div onClick={onClick} style={{
+    <div {...(onClick ? { ...klickbar(onClick), 'aria-label': `${title}: ${value}${unit ? ' ' + unit : ''}` } : {})} style={{
       background: BRAND.white, borderRadius: 14, padding: '20px 22px',
       boxShadow: '0 1px 3px rgba(0,0,0,0.06)', border: `1px solid ${BRAND.border}`,
       cursor: onClick ? 'pointer' : 'default', transition: 'all 0.2s',
@@ -130,7 +132,7 @@ export function DataTable<T extends Record<string, unknown>>({ columns, data, on
           {data.length === 0 ? (
             <tr><td colSpan={columns.length} style={{ padding: 40, textAlign: 'center', color: BRAND.muted }}>{emptyMessage}</td></tr>
           ) : data.map((row, i) => (
-            <tr key={i} onClick={() => onRowClick?.(row)} style={{
+            <tr key={i} {...(onRowClick ? klickbareZeile(() => onRowClick(row)) : {})} style={{
               borderBottom: `1px solid ${BRAND.border}`, cursor: onRowClick ? 'pointer' : 'default',
               transition: 'background 0.1s',
             }} onMouseEnter={e => (e.currentTarget.style.background = BRAND.light)}
@@ -306,12 +308,12 @@ export function Modal({ open, onClose, title, children, width = 560 }: {
 }) {
   if (!open) return null
   return (
-    <div style={{
+    <DialogOverlay className="" onClose={onClose} style={{
       position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 1000,
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       background: 'rgba(0,0,0,0.5)', padding: 20,
-    }} onClick={onClose}>
-      <div onClick={e => e.stopPropagation()} style={{
+    }}>
+      <div role="dialog" aria-modal="true" aria-label={title} onClick={e => e.stopPropagation()} style={{
         background: BRAND.white, borderRadius: 16, width: '100%', maxWidth: width,
         maxHeight: '85vh', overflow: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
       }}>
@@ -327,7 +329,7 @@ export function Modal({ open, onClose, title, children, width = 560 }: {
         </div>
         <div style={{ padding: 20 }}>{children}</div>
       </div>
-    </div>
+    </DialogOverlay>
   )
 }
 

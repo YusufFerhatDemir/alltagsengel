@@ -17,6 +17,7 @@ import {
   updateCaregiverRegistration,
 } from './actions'
 import { logger } from '@/lib/logger'
+import DialogOverlay from '@/components/DialogOverlay'
 const log = logger.child('admin:caregivers')
 
 interface Caregiver {
@@ -596,7 +597,7 @@ function ModalShell({ title, children, onClose, onSave, saving, err, saveLabel }
   title: string; children: React.ReactNode; onClose: () => void; onSave: () => void; saving: boolean; err: string | null; saveLabel: string
 }) {
   return (
-    <div role="presentation" className="admin-modal-overlay" onClick={onClose}>
+    <DialogOverlay onClose={onClose}>
       <div role="dialog" aria-labelledby="dlg-caregiver" aria-modal="true" className="admin-modal" style={{ maxWidth: 480, width: '92%' }} onClick={e => e.stopPropagation()}>
         <h3 id="dlg-caregiver">{title}</h3>
         {err && <Banner tone="danger">{err}</Banner>}
@@ -606,7 +607,7 @@ function ModalShell({ title, children, onClose, onSave, saving, err, saveLabel }
           <button className="btn-confirm" onClick={onSave} disabled={saving}>{saving ? 'Speichern…' : saveLabel}</button>
         </div>
       </div>
-    </div>
+    </DialogOverlay>
   )
 }
 

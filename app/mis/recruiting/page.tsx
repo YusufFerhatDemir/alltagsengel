@@ -7,6 +7,7 @@ import { MIcon } from '@/components/mis/MisIcons'
 import { useMis } from '@/lib/mis/MisContext'
 import { createApplicant, createJobPosting, updateApplicantStatus, updateApplicantRating, deleteApplicant, updatePostingStatus, deleteJobPosting } from './actions'
 import { logger } from '@/lib/logger'
+import { klickbar } from '@/lib/a11y'
 const log = logger.child('mis:recruiting')
 
 // ===== Status-Definitionen =====
@@ -281,6 +282,8 @@ export default function RecruitingPage() {
                     <div style={{ display: 'flex', gap: 2 }}>
                       {[1, 2, 3, 4, 5].map(n => (
                         <span key={n} style={{ cursor: 'pointer', color: n <= (r.rating as number) ? BRAND.gold : `${BRAND.muted}40`, fontSize: 14 }}
+                          {...klickbar(() => handleRating(String(r.id), n))}
+                          aria-label={`Mit ${n} von 5 Sternen bewerten`}
                           onClick={e => { e.stopPropagation(); handleRating(String(r.id), n) }}>
                           ★
                         </span>

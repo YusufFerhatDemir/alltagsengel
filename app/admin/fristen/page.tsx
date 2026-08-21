@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { formatDate } from '@/lib/admin/ops'
 import { StatusBadge, SearchInput, EmptyRow, Banner } from '@/components/admin/OpsUI'
+import { klickbar } from '@/lib/a11y'
 
 // ═══════════════════════════════════════════════════════════════
 // Fristen-Dashboard — Zentrale Fristenübersicht für PDL/Admin
@@ -260,7 +261,9 @@ function StatCard({ label, sublabel, count, color, active, onClick }: {
   return (
     <div
       className="admin-stat-card"
-      onClick={onClick}
+      {...klickbar(onClick)}
+      aria-pressed={active}
+      aria-label={`Filter ${label}`}
       style={{
         cursor: 'pointer',
         border: active ? `2px solid ${color}` : '1px solid var(--border)',

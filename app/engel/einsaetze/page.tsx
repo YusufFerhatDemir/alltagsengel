@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client'
 import { requireUser } from '@/lib/supabase/require-session'
 import SignaturePad from '@/components/admin/SignaturePad'
 import { logger } from '@/lib/logger';
+import DialogOverlay from '@/components/DialogOverlay'
 const log = logger.child('engel:einsaetze');
 
 const STATUS_META: Record<string, { label: string; color: string }> = {
@@ -335,11 +336,11 @@ function DocumentModal({ assignment: a, onClose, onSave, saving }: {
   const [signerRole, setSignerRole] = useState('KUNDE')
 
   return (
-    <div style={{
+    <DialogOverlay className="" onClose={onClose} style={{
       position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 100,
       display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
-    }} onClick={onClose}>
-      <div style={{
+    }}>
+      <div role="dialog" aria-modal="true" aria-label="Leistung dokumentieren" style={{
         background: 'var(--coal)', borderRadius: '20px 20px 0 0', width: '100%', maxWidth: 480,
         maxHeight: '90vh', overflowY: 'auto', padding: '20px 20px 40px',
       }} onClick={e => e.stopPropagation()}>
@@ -411,7 +412,7 @@ function DocumentModal({ assignment: a, onClose, onSave, saving }: {
           </button>
         </div>
       </div>
-    </div>
+    </DialogOverlay>
   )
 }
 
