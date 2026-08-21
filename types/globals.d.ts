@@ -11,7 +11,11 @@ interface Window {
   Capacitor?: {
     isNativePlatform?(): boolean
     getPlatform?(): string
-    Plugins?: Record<string, { addListener?: (...args: unknown[]) => unknown; [key: string]: unknown }>
+    Plugins?: Record<string, {
+      /** Capacitor-Listener liefern ein Handle mit `remove()` zum Abmelden. */
+      addListener?: (...args: unknown[]) => { remove?: () => void } | undefined
+      [key: string]: unknown
+    }>
   }
   /** WebKit Message Handlers (iOS WKWebView / Capacitor-iOS). */
   webkit?: {

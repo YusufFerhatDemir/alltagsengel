@@ -7,6 +7,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { daysUntil, formatDate } from '@/lib/admin/ops'
 import { EmptyRow, Banner, SearchInput } from '@/components/admin/OpsUI'
+import { one } from '@/lib/supabase/join'
 
 interface NachweisRow {
   id: string
@@ -49,7 +50,7 @@ export default function AdminNachweisePage() {
 
         const acc: NachweisRow[] = []
         for (const q of (qualifikationen.data || [])) {
-          const cg = q.caregivers
+          const cg = one(q.caregivers)
           acc.push({
             id: q.id, caregiver_id: q.caregiver_id,
             caregiver_name: cg ? `${cg.first_name} ${cg.last_name}` : '—',

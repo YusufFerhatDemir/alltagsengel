@@ -25,6 +25,7 @@ import {
   type AlarmBewertung, type VitalSign, type VitalTyp,
 } from '@/lib/vitals/types'
 import { validierePlausibilitaet } from '@/lib/vitals/vitals'
+import { one } from '@/lib/supabase/join'
 
 const STUFEN_META: Record<AlarmBewertung['stufe'], { label: string; color: string; bg: string; border: string }> = {
   ok: { label: 'Im Normbereich', color: '#3E8E5F', bg: 'rgba(92,184,130,.10)', border: 'rgba(92,184,130,.35)' },
@@ -104,7 +105,7 @@ function VitalwerteFormular() {
         const map = new Map<string, string>()
         for (const z of (zuordnungen || [])) {
           if (!z.client_id || map.has(z.client_id)) continue
-          const c = z.client
+          const c = one(z.client)
           map.set(z.client_id, c ? `${c.first_name ?? ''} ${c.last_name ?? ''}`.trim() : 'Kunde')
         }
         const liste = [...map.entries()].map(([id, name]) => ({ id, name })).sort((a, b) => a.name.localeCompare(b.name, 'de'))

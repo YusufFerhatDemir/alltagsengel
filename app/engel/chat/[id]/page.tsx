@@ -9,6 +9,7 @@ import { NotFoundState, ErrorState, LoadingState } from '@/components/UIStates'
 import { IconUser } from '@/components/Icons'
 import type { Profile } from '@/lib/types'
 import { useChatPagination, useScrollToLoadOlder, type ChatMessage } from '@/lib/use-chat-pagination'
+import { one } from '@/lib/supabase/join'
 
 export default function EngelChatConversationPage() {
   const params = useParams()
@@ -81,7 +82,7 @@ export default function EngelChatConversationPage() {
           return
         }
 
-        const customer = booking.profiles as Profile | null
+        const customer = one(booking.profiles) as Profile | null
         setPartner(customer ? `${customer.first_name} ${customer.last_name?.[0] || ''}.` : 'Kunde')
 
         // Initial-Page laden (juengste 30 Nachrichten)

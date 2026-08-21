@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import { IconChat, IconUser, IconWings } from '@/components/Icons'
 import type { Angel } from '@/lib/types'
+import { one } from '@/lib/supabase/join'
 
 interface ChatPartner {
   id: string
@@ -47,8 +48,9 @@ export default function KundeChatPage() {
 
       const chatList: ChatPartner[] = []
       for (const b of bookings) {
-        const angel = b.angels as Angel | null
-        const name = angel?.profiles ? `${angel.profiles.first_name} ${angel.profiles.last_name?.[0]}.` : 'Engel'
+        const angel = one(b.angels) as Angel | null
+        const angelProfil = one(angel?.profiles)
+        const name = angelProfil ? `${angelProfil.first_name} ${angelProfil.last_name?.[0]}.` : 'Engel'
 
         const { data: msgs, error: msgsErr } = await supabase
           .from('messages')
