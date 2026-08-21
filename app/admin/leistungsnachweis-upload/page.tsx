@@ -7,6 +7,7 @@ import { uploadServiceProof } from '@/lib/upload-service-proof'
 import { euro, formatDate, fullName, statusMeta, OCR_STATUS, REVIEW_ERROR_TYPE } from '@/lib/admin/ops'
 import { Banner, EmptyRow, StatusBadge } from '@/components/admin/OpsUI'
 import { createDraftServiceRecordAction } from './actions'
+import { one } from '@/lib/supabase/join'
 
 interface Option { id: string; label: string }
 
@@ -143,7 +144,7 @@ export default function LeistungsnachweisUploadPage() {
         status: r.status,
         engine: r.engine,
         created_at: r.created_at,
-        client: fullName(r.service_record?.client),
+        client: fullName(one(one(r.service_record)?.client)),
         errorCount: errorCounts[r.id] || 0,
       })))
     } catch (err) {

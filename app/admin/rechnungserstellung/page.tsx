@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { euro, formatDate, statusMeta, INVOICE_STATUS } from '@/lib/admin/ops'
 import { Banner, EmptyRow, StatusBadge } from '@/components/admin/OpsUI'
+import { one } from '@/lib/supabase/join'
 
 interface BillableRecord {
   id: string
@@ -107,12 +108,13 @@ export default function RechnungserstellungPage() {
       const byClient: Record<string, ClientGroup> = {}
       for (const r of unbilled) {
         const cid = r.client_id
+        const c = one(r.client)
         if (!byClient[cid]) {
           byClient[cid] = {
             client_id: cid,
-            clientName: `${r.client?.first_name || ''} ${r.client?.last_name || ''}`.trim() || '—',
-            insurance_name: r.client?.insurance_name ?? null,
-            insurance_number: r.client?.insurance_number ?? null,
+            clientName: `${c?.first_name || ''} ${c?.last_name || ''}`.trim() || '—',
+            insurance_name: c?.insurance_name ?? null,
+            insurance_number: c?.insurance_number ?? null,
             records: [],
             count: 0,
             sum: 0,

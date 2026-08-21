@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import { IconChat, IconUser } from '@/components/Icons'
 import type { Profile } from '@/lib/types'
+import { one } from '@/lib/supabase/join'
 
 export default function EngelChatPage() {
   const [chats, setChats] = useState<any[]>([])
@@ -32,7 +33,7 @@ export default function EngelChatPage() {
       for (const b of bookings) {
         // Überspringe Buchungen ohne Kunden-Profil (Profil gelöscht → customer_id = NULL)
         if (!b.customer_id) continue
-        const customer = b.profiles as Profile | null
+        const customer = one(b.profiles) as Profile | null
         const name = customer ? `${customer.first_name} ${customer.last_name?.[0] || ''}.` : 'Ehem. Kunde'
 
         const { data: msgs, error: msgsErr } = await supabase

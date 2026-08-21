@@ -10,6 +10,7 @@ import { getOrgIK } from '@/lib/config/org-config'
 import { BUDGET_TYPE_PDF, QUALIFICATION_LEVEL } from '@/lib/admin/ops'
 import { modulAktivFuerPlz } from '@/lib/expansion/state-settings'
 import { getActiveOrgId } from '@/lib/organizations/server'
+import { one } from '@/lib/supabase/join'
 
 // ═══════════════════════════════════════════════════════════════
 // GET /api/leistungsnachweis?client_id=…&month=YYYY-MM
@@ -184,7 +185,7 @@ export async function GET(request: Request) {
       caregiver?: { id: string; first_name: string; last_name: string; lifetime_registration_number?: string; ik_nummer?: string; qualification_level?: string } | null
       [key: string]: unknown
     }
-    const rows = (records || []) as LeistungsnachweisRecord[]
+    const rows = (records || []).map(r => ({ ...r, caregiver: one(r.caregiver) })) as LeistungsnachweisRecord[]
     if (rows.length === 0) {
       return NextResponse.json(
         { error: `Keine erfassten Einsätze für ${periodLabel}` },

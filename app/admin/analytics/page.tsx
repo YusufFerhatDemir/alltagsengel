@@ -137,12 +137,13 @@ export default function AdminAnalyticsPage() {
     return `vor ${days} Tag${days > 1 ? 'en' : ''}`
   }
 
-  const roleBadge = (role: string) => {
+  const roleBadge = (role: string | null | undefined) => {
     const colors: Record<string, string> = { kunde: 'var(--green)', engel: 'var(--gold)', admin: 'var(--red-w)' }
     const labels: Record<string, string> = { kunde: 'Kunde', engel: 'Engel', admin: 'Admin' }
+    const key = role || ''
     return (
-      <span className="an-role-badge" style={{ background: `${colors[role] || 'var(--ink5)'}22`, color: colors[role] || 'var(--ink4)' }}>
-        {labels[role] || role}
+      <span className="an-role-badge" style={{ background: `${colors[key] || 'var(--ink5)'}22`, color: colors[key] || 'var(--ink4)' }}>
+        {labels[key] || key || '—'}
       </span>
     )
   }

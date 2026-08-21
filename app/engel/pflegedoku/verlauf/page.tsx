@@ -10,6 +10,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { requireUser } from '@/lib/supabase/require-session'
 import { PFLEGE_VERLAUF_KATEGORIE, PFLEGE_VERLAUF_TYP } from '@/lib/admin/ops'
+import { one } from '@/lib/supabase/join'
 
 export default function EngelVerlaufPage() {
   return (
@@ -51,7 +52,7 @@ function VerlaufFormular() {
         const map = new Map<string, string>()
         for (const z of (zuordnungen || [])) {
           if (!z.client_id || map.has(z.client_id)) continue
-          const c = z.client
+          const c = one(z.client)
           map.set(z.client_id, c ? `${c.first_name ?? ''} ${c.last_name ?? ''}`.trim() : 'Kunde')
         }
         const liste = [...map.entries()].map(([id, name]) => ({ id, name })).sort((a, b) => a.name.localeCompare(b.name, 'de'))

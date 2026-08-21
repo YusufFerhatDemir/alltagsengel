@@ -25,6 +25,7 @@ interface NoteMessage {
   author_role: string
   content: string
   is_urgent: boolean
+  is_internal?: boolean
   created_at: string
 }
 

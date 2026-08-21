@@ -11,6 +11,7 @@ import {
 } from '@/lib/admin/ops'
 import { AmpelDot, BudgetBar, StatusBadge, Banner, EmptyRow } from '@/components/admin/OpsUI'
 import { closeMonthAction } from './actions'
+import { one } from '@/lib/supabase/join'
 
 const MONTH_NAMES = [
   'Januar', 'Februar', 'März', 'April', 'Mai', 'Juni',
@@ -106,7 +107,7 @@ function MonatsabschlussDetailInner() {
       setRecords(recs.map(r => ({
         id: r.id, date: r.date, start_time: r.start_time, end_time: r.end_time,
         service_type: r.service_type, amount: r.amount, status: r.status,
-        caregiver: fullName(r.caregiver), errors: errorsByRecord.get(r.id) || [],
+        caregiver: fullName(one(r.caregiver)), errors: errorsByRecord.get(r.id) || [],
       })))
     } catch (err) {
       console.error('Monatsabschluss-Detail load error:', err)

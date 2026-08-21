@@ -14,6 +14,7 @@ import { requireUser } from '@/lib/supabase/require-session'
 import { IconPill, IconClock, IconCheck } from '@/components/Icons'
 import { KATEGORIEN } from '@/lib/medikamente/types'
 import type { Medikament, MedikamentEingabe, Einnahmezeit } from '@/lib/medikamente/types'
+import { one } from '@/lib/supabase/join'
 
 const EINNAHME_ZEIT_LABEL: Record<Einnahmezeit, string> = {
   morgens: 'Morgens', mittags: 'Mittags', abends: 'Abends', nachts: 'Nachts',
@@ -98,7 +99,7 @@ function MedikamentePage() {
         const map = new Map<string, string>()
         for (const z of (zuordnungen || [])) {
           if (!z.client_id || map.has(z.client_id)) continue
-          const c = z.client
+          const c = one(z.client)
           map.set(z.client_id, c ? `${c.first_name ?? ''} ${c.last_name ?? ''}`.trim() : 'Kunde')
         }
         const liste = [...map.entries()].map(([id, name]) => ({ id, name })).sort((a, b) => a.name.localeCompare(b.name, 'de'))

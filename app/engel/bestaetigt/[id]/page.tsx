@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client'
 import { isValidUUID, logError } from '@/lib/safe-query'
 import { NotFoundState, ErrorState, LoadingState } from '@/components/UIStates'
 import { IconCheck, IconUser, IconChat, IconShield, IconCalendar, IconClock, IconHome as IconHouse, IconMoney, IconCard, IconPin } from '@/components/Icons'
+import { one } from '@/lib/supabase/join'
 
 export default function EngelBestaetigtPage() {
   const params = useParams()
@@ -45,7 +46,10 @@ export default function EngelBestaetigtPage() {
   if (pageStatus === 'error' || !booking) return <div className="screen"><ErrorState homeHref="/engel/home" /></div>
 
   const customerName = booking.customer ? `${booking.customer.first_name} ${booking.customer.last_name?.[0] || ''}.` : 'Kunde'
-  const cr = booking.care_recipient as { first_name?: string; last_name?: string } | null
+  const cr = one(booking.care_recipient) as {
+    first_name?: string; last_name?: string; relationship?: string; pflegegrad?: number | string
+    address?: string; postal_code?: string; city?: string; notes?: string
+  } | null
   const hasCareRecipient = !!cr
   const careRecipientName = cr ? `${cr.first_name} ${cr.last_name}` : null
   const displayName = careRecipientName || customerName
