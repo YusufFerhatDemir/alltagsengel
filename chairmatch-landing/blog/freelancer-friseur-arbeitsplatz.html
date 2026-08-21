@@ -7,6 +7,9 @@
 <meta name="description" content="Freelancer Friseur Arbeitsplatz finden: Stuhlmiete als Alternative zum eigenen Salon. Kosten, Vorteile und Tipps für selbstständige Friseure und Barber.">
 <meta name="keywords" content="Freelancer Friseur Arbeitsplatz, selbstständiger Friseur Stuhlmiete, mobiler Friseur Arbeitsplatz finden, Stuhlmiete Friseur, Chair Rental Friseur">
 <link rel="canonical" href="https://chairmatch.de/blog/freelancer-friseur-arbeitsplatz">
+<link rel="alternate" hreflang="de" href="https://chairmatch.de/blog/freelancer-friseur-arbeitsplatz">
+<link rel="alternate" hreflang="x-default" href="https://chairmatch.de/blog/freelancer-friseur-arbeitsplatz">
+<meta property="og:locale" content="de_DE">
 <meta property="og:title" content="Freelancer Friseur: So finden Sie den perfekten Arbeitsplatz per Stuhlmiete">
 <meta property="og:description" content="Der komplette Guide für selbstständige Friseure: Stuhlmiete vs. eigener Salon, Kostenvergleich, Versicherung und wie ChairMatch den perfekten Stuhl findet.">
 <meta property="og:type" content="article">
@@ -139,13 +142,14 @@ footer .f-links a:hover{color:var(--accent)}
   .comparison-grid{grid-template-columns:1fr}
 }
 </style>
+<script src="/i18n/i18n.js" defer></script>
 </head>
 <body>
 
 <nav class="blog-nav">
   <div class="container">
-    <a href="../index.html" class="brand">ChairMatch</a>
-    <a href="index.html" class="back-link">Alle Artikel</a>
+    <a href="../index.html" class="brand" data-i18n="common.brand">ChairMatch</a>
+    <a href="index.html" class="back-link" data-i18n="blog.allArticles">Alle Artikel</a>
   </div>
 </nav>
 
@@ -153,10 +157,11 @@ footer .f-links a:hover{color:var(--accent)}
   <div class="container">
 
     <div class="article-meta">
-      <span>06. Juni 2026</span>
-      <span>Lesezeit: ca. 8 Minuten</span>
+      <time data-i18n-date="2026-06-06" data-i18n-date-style="long">06. Juni 2026</time>
+      <span data-i18n="blog.readTimeApprox" data-i18n-count="8">Lesezeit: ca. 8 Minuten</span>
     </div>
 
+    <p class="cm-de-only" hidden data-i18n="blog.germanOnly" style="font-size:13px;color:var(--muted,#888);border-left:2px solid var(--accent,#D4A853);padding-left:10px;margin-bottom:16px">Dieser Artikel liegt nur auf Deutsch vor.</p>
     <h1>Freelancer Friseur: So finden Sie den perfekten Arbeitsplatz per Stuhlmiete</h1>
 
     <div class="article-intro">
@@ -320,14 +325,15 @@ footer .f-links a:hover{color:var(--accent)}
 </article>
 
 <footer>
-  <div class="f-brand">CHAIRMATCH</div>
-  <div>Stuhlvermietung & Raumvermittlung für die Beauty-Branche</div>
+  <div class="f-brand" data-i18n="common.brandUpper">CHAIRMATCH</div>
+  <div data-i18n="common.tagline">Stuhlvermietung & Raumvermittlung für die Beauty-Branche</div>
   <div class="f-links">
-    <a href="../index.html">Startseite</a>
-    <a href="index.html">Blog</a>
-    <a href="mailto:info@chairmatch.de">Kontakt</a>
+    <a href="../index.html" data-i18n="common.nav.home">Startseite</a>
+    <a href="index.html" data-i18n="common.nav.blog">Blog</a>
+    <a href="mailto:info@chairmatch.de" data-i18n="common.nav.contact">Kontakt</a>
   </div>
-  <div style="margin-top:12px">&copy; 2026 ChairMatch &mdash; Frankfurt am Main</div>
+  <div style="margin-top:12px" data-i18n="common.copyright" data-i18n-vars='{"year":"2026","location":"Frankfurt am Main"}'>&copy; 2026 ChairMatch &mdash; Frankfurt am Main</div>
+  <div data-i18n-switcher style="margin-top:16px"></div>
 </footer>
 
 </body>

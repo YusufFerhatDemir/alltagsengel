@@ -1,0 +1,672 @@
+{
+  "switcher": {
+    "label": "Choose language"
+  },
+  "common": {
+    "brand": "ChairMatch",
+    "brandUpper": "CHAIRMATCH",
+    "tagline": "Chair and room rental for the beauty industry",
+    "copyright": "© {year} ChairMatch — {location}",
+    "nav": {
+      "home": "Home",
+      "faq": "FAQ",
+      "faqArrow": "FAQ →",
+      "blog": "Blog",
+      "imprint": "Imprint",
+      "privacy": "Privacy",
+      "terms": "Terms",
+      "contact": "Contact",
+      "backHome": "Back to home"
+    },
+    "cta": {
+      "start": "GET STARTED",
+      "howItWorks": "How it works",
+      "whatsapp": "WhatsApp",
+      "whatsappWrite": "Message us on WhatsApp"
+    },
+    "donationAmount": "€1"
+  },
+  "cat": {
+    "barbershop": "Barbershop",
+    "hair": "Hairdressing",
+    "cosmetics": "Cosmetics",
+    "aesthetics": "Aesthetics",
+    "nails": "Nails",
+    "massage": "Massage",
+    "other": "Other"
+  },
+  "form": {
+    "salon": {
+      "title": "🏪 Salon owners",
+      "subtitle": "Rent out chairs & earn",
+      "submit": "LIST YOUR SALON"
+    },
+    "pro": {
+      "title": "🎨 Beauty professionals",
+      "subtitle": "Rent a chair & get going",
+      "subtitleCity": "Rent a chair in {city}",
+      "submit": "FIND A CHAIR"
+    },
+    "field": {
+      "name": "Name *",
+      "phone": "Phone *",
+      "city": "City *",
+      "message": "Number of chairs, type of salon...",
+      "branch": "Speciality (optional)"
+    },
+    "sending": "Sending...",
+    "success": {
+      "title": "Thank you!",
+      "text": "We'll be in touch within 24 hours."
+    },
+    "error": {
+      "title": "That didn't work.",
+      "network": "Your enquiry could not be sent. Please check your connection and try again.",
+      "server": "We could not save your enquiry right now. Please try again later or message us on WhatsApp.",
+      "config": "The form is currently unavailable. Please message us on WhatsApp.",
+      "required": "Please fill in all required fields.",
+      "retry": "Send again"
+    },
+    "privacy": "Your data is used only to get in touch with you."
+  },
+  "home": {
+    "hero": {
+      "title": "Your <span>chair</span>. Your business.<br>Your freedom.",
+      "subtitle": "ChairMatch matches beauty professionals with chairs and rooms to rent. Find your place — flexible, fair, no long-term commitment."
+    },
+    "categories": {
+      "badge": "Specialities",
+      "title": "The right spot for every beauty speciality",
+      "subtitle": "Chair, room or cabin — ChairMatch brings hosts and professionals together."
+    },
+    "steps": {
+      "badge": "How it works",
+      "title": "Three steps to your own chair",
+      "s1": {
+        "title": "Create a profile",
+        "text": "Sign up for free and tell us what you are looking for: a chair, a room or a cabin."
+      },
+      "s2": {
+        "title": "Find your match",
+        "text": "ChairMatch shows you matching offers in your city — with prices, photos and reviews."
+      },
+      "s3": {
+        "title": "Book & get started",
+        "text": "Book directly in the app. Cancel flexibly, no hidden costs."
+      }
+    },
+    "audience": {
+      "badge": "Two sides, one match",
+      "title": "For salon owners & beauty professionals",
+      "owner": {
+        "title": "Salon owners",
+        "text": "An empty chair costs money. Rent it to qualified professionals and earn instead of paying in."
+      },
+      "pro": {
+        "title": "Beauty professionals",
+        "text": "No salon of your own needed. Rent a chair, bring your clients and work independently."
+      }
+    },
+    "donate": {
+      "badge": "Social commitment",
+      "title": "Every booking helps",
+      "subtitle": "From every booking on ChairMatch, <strong style=\"color:var(--accent)\">{amount}</strong> goes directly to children and families in need. For the children’s future — not for administration.",
+      "c1": {
+        "title": "{amount} per booking",
+        "text": "Every chair and every room booking automatically contributes."
+      },
+      "c2": {
+        "title": "For children's futures",
+        "text": "We support schools, children with disabilities and families in need."
+      },
+      "c3": {
+        "title": "100% transparent",
+        "text": "We manage the donations ourselves and disclose where every euro goes."
+      }
+    },
+    "cities": {
+      "badge": "Across Germany",
+      "title": "ChairMatch in your city",
+      "subtitle": "Chair rental in more than 20 cities — and counting."
+    },
+    "contact": {
+      "badge": "Get started",
+      "title": "Interested? Get in touch, free of charge.",
+      "subtitle": "Salon owner or beauty professional — leave your details and we will get back to you within 24 hours."
+    }
+  },
+  "faq": {
+    "hero": {
+      "title": "Frequently asked questions about <span>chair rental</span>",
+      "subtitle": "Everything about chair rental, prices, legal questions and how ChairMatch works."
+    },
+    "cat": {
+      "basics": "Basics",
+      "pricing": "Prices & costs",
+      "owners": "For salon owners",
+      "freelancers": "For freelancers",
+      "about": "About ChairMatch"
+    },
+    "q1": {
+      "q": "What is chair rental in the beauty industry?",
+      "a": "Chair rental (also known as chair rent or booth rental) is a business model in which salon owners rent individual workstations to self-employed beauty professionals. The renter brings their own clients, sets their own prices and pays the salon owner a fixed rent — by the day, by the week or by the month. The model has been established in the US and UK for decades and is growing rapidly in Germany."
+    },
+    "q2": {
+      "q": "Is chair rental legal in Germany?",
+      "a": "Yes, chair rental is legal in Germany. What matters is getting the setup right: the renter must genuinely work independently — own clients, own prices, own entrepreneurial risk. Bogus self-employment must be avoided. ChairMatch provides legally reviewed model contracts."
+    },
+    "q3": {
+      "q": "How does chair rental differ from being employed?",
+      "a": "With chair rental you are self-employed: you set your own hours and prices, keep 100% of your income and carry your own entrepreneurial risk. As an employee you work under the salon’s direction and receive a fixed salary. The biggest difference: as a chair renter you are your own boss."
+    },
+    "q4": {
+      "q": "What does chair rental cost in Germany?",
+      "a": "Costs vary by city and by fit-out. As a guide: €30–60 per day, €150–250 per week, €500–900 per month. In large cities such as Munich or Frankfurt prices sit at the upper end, in smaller cities they are lower. Compared with running your own salon (€2,000–5,000 per month in fixed costs), chair rental is considerably cheaper."
+    },
+    "q5": {
+      "q": "What does using ChairMatch cost?",
+      "a": "Listing a salon on ChairMatch is free. There is no basic fee and no contractual commitment. ChairMatch only charges a small placement fee when a rental is successful. From every booking, €1 goes to children and families in need."
+    },
+    "q6": {
+      "q": "What's included in the chair rent?",
+      "a": "Depending on the salon, chair rent covers: a workstation with chair and mirror, access to a wash station, electricity and water, reception area, waiting area and washrooms. Some salons also offer Wi-Fi, towels and product storage. You will find the exact fit-out in each listing."
+    },
+    "q7": {
+      "q": "What taxes apply to chair rental?",
+      "a": "For the salon owner: rental income is subject to VAT (19%) unless you use the small-business scheme. The income is taxed as commercial income. For the renter: you pay tax on your income from self-employment and can deduct the chair rent as a business expense."
+    },
+    "q8": {
+      "q": "Can I rent out chairs while still working myself?",
+      "a": "Yes, that is the normal case. Most salon owners only rent out the chairs their own team does not use — whether that is an empty spot on certain days or permanently free capacity. That turns dead costs into passive income."
+    },
+    "q9": {
+      "q": "How quickly will I find a renter?",
+      "a": "In popular cities such as Frankfurt, Berlin or Munich we usually place a first renter within 24 to 72 hours. In smaller cities it can take a little longer. The more complete your profile (photos, fit-out, prices), the faster the placement."
+    },
+    "q10": {
+      "q": "What happens if the workstation is damaged?",
+      "a": "Every rental arranged through ChairMatch is insured. Should damage occur, we handle the process. Salon owners carry no financial risk from renting out through our platform."
+    },
+    "q11": {
+      "q": "Do I need a trade licence to rent a chair?",
+      "a": "Yes. As a self-employed beauty professional you need a trade licence (Gewerbeschein). For hairdressers, many German states require a master craftsman certificate (exceptions are possible). Different rules apply to cosmetics, nails and massage — ChairMatch is happy to advise you on the requirements in your region."
+    },
+    "q12": {
+      "q": "What insurance do I need as a chair renter?",
+      "a": "As a self-employed beauty professional we recommend: professional indemnity insurance, public liability insurance and, if applicable, contents insurance for your own equipment. Chair rentals booked through ChairMatch are additionally covered by a platform insurance policy."
+    },
+    "q13": {
+      "q": "Can I bring my own products and equipment?",
+      "a": "Yes, as a chair renter you can generally bring and use your own products and equipment. You will find the exact rules in each salon’s description, or you can agree them directly with the salon owner."
+    },
+    "q14": {
+      "q": "Is there a minimum rental period?",
+      "a": "No. You can rent a chair by the day, by the week or by the month. There are no minimum terms and no notice periods — you can stop or switch salons at any time."
+    },
+    "q15": {
+      "q": "Which cities is ChairMatch available in?",
+      "a": "ChairMatch is available across Germany, with a particular focus on: Frankfurt (incl. Offenbach, Wiesbaden, Darmstadt, Mainz, Hanau), Berlin (incl. Potsdam), Hamburg (incl. Lüneburg), Munich (incl. Augsburg, Nuremberg), Cologne (incl. Bonn, Leverkusen), Düsseldorf (incl. Essen, Duisburg, Wuppertal, Dortmund). New cities are added continuously."
+    },
+    "q16": {
+      "q": "How does ChairMatch differ from classified ad sites?",
+      "a": "ChairMatch specialises in the beauty industry: verified profiles, insurance cover, legally reviewed model contracts and personal support. On classified ad sites you are on your own — without protection and without industry-specific features."
+    },
+    "cta": {
+      "title": "Still have questions?",
+      "text": "Write to us directly — advice is free and without obligation."
+    }
+  },
+  "city": {
+    "hero": {
+      "title": "Chair rental in <span>{city}</span>"
+    },
+    "categories": {
+      "badge": "Specialities in {city}",
+      "title": "Chair rental in {city} — every beauty speciality",
+      "subtitle": "Chair, room or cabin — in {city} you will find the right offer."
+    },
+    "benefits": {
+      "badge": "Benefits",
+      "title": "Why chair rental in {city}?",
+      "fair": {
+        "title": "Fair terms",
+        "text": "Flexible rental models: by the day, week or month — you only pay for what you need."
+      },
+      "start": {
+        "title": "Start right away",
+        "text": "No salon of your own needed. Rent a chair, bring your clients and work independently from day one."
+      }
+    },
+    "trust": {
+      "residents": "{city} residents",
+      "donation": "per booking for children in need"
+    },
+    "contact": {
+      "badge": "Get started",
+      "title": "Chair rental in {city} — enquire for free",
+      "subtitle": "Salon owner or beauty professional in {city} — leave your details and we will get back to you within 24 hours."
+    },
+    "guides": {
+      "title": "Guides & tips",
+      "all": "Read all articles →"
+    },
+    "local": {
+      "augsburg": {
+        "city": "Augsburg",
+        "heroSubtitle": "Augsburg is Bavaria’s third-largest city and offers an established beauty market with good infrastructure. ChairMatch brings salon owners and beauty professionals together — flexible, fair and with no long-term commitment.",
+        "catTitle": "Chair rental in Augsburg — every beauty speciality",
+        "footerCity": "Augsburg",
+        "uspTitle": "Bavaria’s third-largest city",
+        "uspText": "Augsburg has strong purchasing power and many established salons — perfect for freelancers and salon owners.",
+        "trust1Num": "300k+",
+        "trust1Label": "Augsburg residents",
+        "trust2Num": "6.2 M",
+        "trust2Label": "Bavarian Swabia",
+        "metaTitle": "Chair rental Augsburg — rent a salon chair | ChairMatch",
+        "metaDescription": "Chair rental in Augsburg: rent a hairdressing chair, cosmetics station or barbershop spot. ChairMatch connects beauty professionals and salons in Bavarian Swabia."
+      },
+      "berlin": {
+        "city": "Berlin",
+        "heroSubtitle": "Looking to rent a salon chair in Berlin? ChairMatch connects salon owners and independent beauty professionals in Kreuzberg, Mitte, Neukölln, Charlottenburg and every Berlin district.",
+        "catTitle": "Chair rental Berlin — every beauty speciality",
+        "catSubtitle": "From Friedrichshain to Prenzlauer Berg — find your beauty workspace in Berlin.",
+        "footerCity": "Berlin",
+        "uspTitle": "Germany’s capital",
+        "uspText": "Berlin is the trend metropolis of the beauty industry. Millions of potential clients and a vibrant freelance scene.",
+        "trust1Num": "3.7 M",
+        "trust1Label": "Berlin residents",
+        "trust2Num": "12",
+        "trust2Label": "districts covered",
+        "metaTitle": "Chair rental Berlin — rent a salon chair | ChairMatch",
+        "metaDescription": "Chair rental in Berlin: rent a hairdressing chair, cosmetics station or barbershop spot. ChairMatch connects beauty professionals and salons in every Berlin district."
+      },
+      "bonn": {
+        "city": "Bonn",
+        "heroSubtitle": "Bonn, the former federal capital, offers an affluent clientele and an international community. ChairMatch brings salon owners and beauty professionals together — flexible, fair and with no long-term commitment.",
+        "catTitle": "Chair rental in Bonn — every beauty speciality",
+        "footerCity": "Bonn",
+        "uspTitle": "Former federal capital",
+        "uspText": "Bonn’s international population and good infrastructure make it an attractive beauty location.",
+        "trust1Num": "330k+",
+        "trust1Label": "Bonn residents",
+        "trust2Num": "3.6 M",
+        "trust2Label": "Cologne/Bonn region",
+        "metaTitle": "Chair rental Bonn — rent a salon chair | ChairMatch",
+        "metaDescription": "Chair rental in Bonn: rent a hairdressing chair, cosmetics station or barbershop spot. ChairMatch connects beauty professionals and salons in the Cologne/Bonn region."
+      },
+      "darmstadt": {
+        "city": "Darmstadt",
+        "heroSubtitle": "Darmstadt is the science city in the south of the Rhine-Main region, with a young, urban population. ChairMatch brings salon owners and beauty professionals together — flexible, fair and with no long-term commitment.",
+        "catTitle": "Chair rental in Darmstadt — every beauty speciality",
+        "footerCity": "Darmstadt",
+        "uspTitle": "Young university city",
+        "uspText": "Darmstadt’s students and tech workers make for a trend-conscious clientele that values modern beauty services.",
+        "trust1Num": "160k+",
+        "trust1Label": "Darmstadt residents",
+        "trust2Num": "5.8 M",
+        "trust2Label": "Rhine-Main region",
+        "metaTitle": "Chair rental Darmstadt — rent a salon chair | ChairMatch",
+        "metaDescription": "Chair rental in Darmstadt: rent a hairdressing chair, cosmetics station or barbershop spot. ChairMatch connects beauty professionals and salons in the Rhine-Main region."
+      },
+      "dortmund": {
+        "city": "Dortmund",
+        "heroSubtitle": "Dortmund is one of the largest cities in the Ruhr area and offers a dynamic beauty market. ChairMatch brings salon owners and beauty professionals together — flexible, fair and with no long-term commitment.",
+        "catTitle": "Chair rental in Dortmund — every beauty speciality",
+        "footerCity": "Dortmund",
+        "uspTitle": "A dynamic Ruhr area",
+        "uspText": "Dortmund’s growing food and lifestyle scene is driving the beauty market too — with rising demand for flexible chair rental.",
+        "trust1Num": "600k+",
+        "trust1Label": "Dortmund residents",
+        "trust2Num": "5.1 M",
+        "trust2Label": "Ruhr area",
+        "metaTitle": "Chair rental Dortmund — rent a salon chair | ChairMatch",
+        "metaDescription": "Chair rental in Dortmund: rent a hairdressing chair, cosmetics station or barbershop spot. ChairMatch connects beauty professionals and salons in the Ruhr area."
+      },
+      "duesseldorf": {
+        "city": "Düsseldorf",
+        "heroSubtitle": "Looking to rent a salon chair in Düsseldorf? ChairMatch connects salon owners and beauty professionals in the fashion and beauty capital on the Rhine — from the Kö to Flingern.",
+        "catTitle": "Chair rental Düsseldorf — every beauty speciality",
+        "catSubtitle": "Fashion meets beauty — Düsseldorf offers prime locations for every beauty speciality.",
+        "footerCity": "Düsseldorf",
+        "uspTitle": "Fashion & beauty city",
+        "uspText": "Düsseldorf is Germany’s fashion capital, home to the Königsallee — premium clientele and the highest expectations of beauty services.",
+        "trust1Num": "620k+",
+        "trust1Label": "Düsseldorf residents",
+        "trust2Num": "11 M",
+        "trust2Label": "Rhine-Ruhr region",
+        "metaTitle": "Chair rental Düsseldorf — rent a salon chair | ChairMatch",
+        "metaDescription": "Chair rental in Düsseldorf: rent a hairdressing chair, cosmetics station or barbershop spot. ChairMatch connects beauty professionals and salons in Düsseldorf and the Lower Rhine."
+      },
+      "duisburg": {
+        "city": "Duisburg",
+        "heroSubtitle": "Duisburg lies in the western Ruhr area and offers a diverse, multicultural beauty market. ChairMatch brings salon owners and beauty professionals together — flexible, fair and with no long-term commitment.",
+        "catTitle": "Chair rental in Duisburg — every beauty speciality",
+        "footerCity": "Duisburg",
+        "uspTitle": "A multicultural Ruhr area",
+        "uspText": "Duisburg’s diverse population creates broad demand for a wide range of beauty services.",
+        "trust1Num": "500k+",
+        "trust1Label": "Duisburg residents",
+        "trust2Num": "5.1 M",
+        "trust2Label": "Ruhr area",
+        "metaTitle": "Chair rental Duisburg — rent a salon chair | ChairMatch",
+        "metaDescription": "Chair rental in Duisburg: rent a hairdressing chair, cosmetics station or barbershop spot. ChairMatch connects beauty professionals and salons in the Ruhr area."
+      },
+      "essen": {
+        "city": "Essen",
+        "heroSubtitle": "Essen is the largest city in the Ruhr area and an important beauty location in North Rhine-Westphalia. ChairMatch brings salon owners and beauty professionals together — flexible, fair and with no long-term commitment.",
+        "catTitle": "Chair rental in Essen — every beauty speciality",
+        "footerCity": "Essen",
+        "uspTitle": "Heart of the Ruhr area",
+        "uspText": "Essen sits at the centre of the Ruhr area — with 5 million potential clients in the immediate surroundings.",
+        "trust1Num": "590k+",
+        "trust1Label": "Essen residents",
+        "trust2Num": "5.1 M",
+        "trust2Label": "Ruhr area",
+        "metaTitle": "Chair rental Essen — rent a salon chair | ChairMatch",
+        "metaDescription": "Chair rental in Essen: rent a hairdressing chair, cosmetics station or barbershop spot. ChairMatch connects beauty professionals and salons in the Ruhr area."
+      },
+      "frankfurt": {
+        "city": "Frankfurt",
+        "heroSubtitle": "Looking for a hairdressing chair, cosmetics station or barbershop spot in Frankfurt am Main? ChairMatch brings salon owners and beauty professionals together across the whole Rhine-Main region — flexible, fair and with no long-term commitment.",
+        "catTitle": "Chair rental in Frankfurt — every beauty speciality",
+        "catSubtitle": "Chair, room or cabin — in Frankfurt you will find the right offer.",
+        "footerCity": "Frankfurt am Main",
+        "uspTitle": "Rhine-Main region",
+        "uspText": "Frankfurt, Offenbach, Darmstadt, Wiesbaden — the Rhine-Main region is one of Germany’s most dynamic beauty markets.",
+        "trust1Num": "750k+",
+        "trust1Label": "Frankfurt residents",
+        "trust2Num": "5.8 M",
+        "trust2Label": "Rhine-Main region",
+        "metaTitle": "Chair rental Frankfurt — rent a salon chair | ChairMatch",
+        "metaDescription": "Chair rental in Frankfurt am Main: rent a hairdressing chair, cosmetics station or barbershop spot. ChairMatch connects beauty professionals and salons across the Rhine-Main region."
+      },
+      "hamburg": {
+        "city": "Hamburg",
+        "heroSubtitle": "Looking to rent a salon chair in Hamburg? ChairMatch connects salon owners and beauty professionals across the Hanseatic city — from Eppendorf via the Schanze to Harburg.",
+        "catTitle": "Chair rental Hamburg — every beauty speciality",
+        "catSubtitle": "From HafenCity to Altona — find your beauty workspace in Hamburg.",
+        "footerCity": "Hamburg",
+        "uspTitle": "Gateway to the world",
+        "uspText": "Hamburg is Germany’s second-largest city, with an international, affluent clientele and high demand for beauty services.",
+        "trust1Num": "1.9 M",
+        "trust1Label": "Hamburg residents",
+        "trust2Num": "5.4 M",
+        "trust2Label": "Hamburg metropolitan region",
+        "metaTitle": "Chair rental Hamburg — rent a salon chair | ChairMatch",
+        "metaDescription": "Chair rental in Hamburg: rent a hairdressing chair, cosmetics station or barbershop spot. ChairMatch connects beauty professionals and salons in Hamburg and the surrounding metropolitan region."
+      },
+      "hanau": {
+        "city": "Hanau",
+        "heroSubtitle": "Hanau lies east of Frankfurt and offers beauty professionals a growing market with affordable rental terms. ChairMatch brings salon owners and beauty professionals together — flexible, fair and with no long-term commitment.",
+        "catTitle": "Chair rental in Hanau — every beauty speciality",
+        "footerCity": "Hanau",
+        "uspTitle": "A growing market",
+        "uspText": "Hanau is growing steadily and offers beauty professionals good terms alongside rising demand.",
+        "trust1Num": "100k+",
+        "trust1Label": "Hanau residents",
+        "trust2Num": "5.8 M",
+        "trust2Label": "Rhine-Main region",
+        "metaTitle": "Chair rental Hanau — rent a salon chair | ChairMatch",
+        "metaDescription": "Chair rental in Hanau: rent a hairdressing chair, cosmetics station or barbershop spot. ChairMatch connects beauty professionals and salons in the Rhine-Main region."
+      },
+      "hannover": {
+        "city": "Hanover",
+        "heroSubtitle": "Looking to rent a salon chair in Hanover? ChairMatch connects salon owners and independent beauty professionals in List, Linden, Südstadt, Nordstadt and every Hanover district.",
+        "catTitle": "Chair rental Hanover — every beauty speciality",
+        "catSubtitle": "From Linden to Kleefeld — find your beauty workspace in the capital of Lower Saxony.",
+        "footerCity": "Hanover",
+        "uspTitle": "A trade-fair city with reach",
+        "uspText": "Hanover is an international trade-fair location — the many business travellers bring extra walk-in demand for beauty services.",
+        "trust1Num": "535,000",
+        "trust1Label": "Hanover residents",
+        "trust2Num": "13",
+        "trust2Label": "city districts covered",
+        "metaTitle": "Chair rental Hanover — rent a salon chair | ChairMatch",
+        "metaDescription": "Chair rental in Hanover: rent a hairdressing chair, cosmetics station or barbershop spot. ChairMatch connects beauty professionals and salons in the capital of Lower Saxony."
+      },
+      "koeln": {
+        "city": "Cologne",
+        "heroSubtitle": "Looking to rent a salon chair in Cologne? ChairMatch connects salon owners and beauty professionals in the cathedral city — from Südstadt via Ehrenfeld to Nippes.",
+        "catTitle": "Chair rental Cologne — every beauty speciality",
+        "catSubtitle": "From Ehrenfeld to Deutz — find your beauty workspace in the Rhine metropolis.",
+        "footerCity": "Cologne",
+        "uspTitle": "Rhineland metropolis",
+        "uspText": "Cologne is one of Germany’s liveliest cities, with a diverse, international beauty scene and high demand.",
+        "trust1Num": "1.1 M",
+        "trust1Label": "Cologne residents",
+        "trust2Num": "3.6 M",
+        "trust2Label": "Cologne/Bonn region",
+        "metaTitle": "Chair rental Cologne — rent a salon chair | ChairMatch",
+        "metaDescription": "Chair rental in Cologne: rent a hairdressing chair, cosmetics station or barbershop spot. ChairMatch connects beauty professionals and salons in Cologne and the Rhineland."
+      },
+      "leipzig": {
+        "city": "Leipzig",
+        "heroSubtitle": "Looking to rent a salon chair in Leipzig? ChairMatch connects salon owners and independent beauty professionals in Connewitz, Plagwitz, Südvorstadt, Lindenau and every Leipzig district.",
+        "catTitle": "Chair rental Leipzig — every beauty speciality",
+        "catSubtitle": "From Südvorstadt to Plagwitz — find your beauty workspace in this growing creative city.",
+        "footerCity": "Leipzig",
+        "uspTitle": "A booming creative city",
+        "uspText": "Leipzig is growing fast — young, trend-conscious residents and a thriving freelance scene drive rising demand for beauty services.",
+        "trust1Num": "620,000",
+        "trust1Label": "Leipzig residents",
+        "trust2Num": "10",
+        "trust2Label": "city districts covered",
+        "metaTitle": "Chair rental Leipzig — rent a salon chair | ChairMatch",
+        "metaDescription": "Chair rental in Leipzig: rent a hairdressing chair, cosmetics station or barbershop spot. ChairMatch connects beauty professionals and salons in the Saxon boom city."
+      },
+      "leverkusen": {
+        "city": "Leverkusen",
+        "heroSubtitle": "Leverkusen lies between Cologne and Düsseldorf and benefits from both cities. ChairMatch brings salon owners and beauty professionals together — flexible, fair and with no long-term commitment.",
+        "catTitle": "Chair rental in Leverkusen — every beauty speciality",
+        "footerCity": "Leverkusen",
+        "uspTitle": "Between two metropolises",
+        "uspText": "Leverkusen’s position between Cologne and Düsseldorf gives access to two large client markets at favourable rents.",
+        "trust1Num": "165k+",
+        "trust1Label": "Leverkusen residents",
+        "trust2Num": "3.6 M",
+        "trust2Label": "Cologne/Bonn region",
+        "metaTitle": "Chair rental Leverkusen — rent a salon chair | ChairMatch",
+        "metaDescription": "Chair rental in Leverkusen: rent a hairdressing chair, cosmetics station or barbershop spot. ChairMatch connects beauty professionals and salons in the Cologne/Bonn region."
+      },
+      "lueneburg": {
+        "city": "Lüneburg",
+        "heroSubtitle": "Lüneburg is the charming university town south of Hamburg with a growing beauty market. ChairMatch brings salon owners and beauty professionals together — flexible, fair and with no long-term commitment.",
+        "catTitle": "Chair rental in Lüneburg — every beauty speciality",
+        "footerCity": "Lüneburg",
+        "uspTitle": "A student town near Hamburg",
+        "uspText": "Lüneburg’s young population and proximity to Hamburg make it an attractive location for beauty freelancers.",
+        "trust1Num": "78k+",
+        "trust1Label": "Lüneburg residents",
+        "trust2Num": "5.4 M",
+        "trust2Label": "Hamburg metropolitan region",
+        "metaTitle": "Chair rental Lüneburg — rent a salon chair | ChairMatch",
+        "metaDescription": "Chair rental in Lüneburg: rent a hairdressing chair, cosmetics station or barbershop spot. ChairMatch connects beauty professionals and salons in the Hamburg metropolitan region."
+      },
+      "mainz": {
+        "city": "Mainz",
+        "heroSubtitle": "Mainz, the capital of Rhineland-Palatinate, lies directly opposite Wiesbaden on the Rhine. ChairMatch brings salon owners and beauty professionals together — flexible, fair and with no long-term commitment.",
+        "catTitle": "Chair rental in Mainz — every beauty speciality",
+        "footerCity": "Mainz",
+        "uspTitle": "Two state capitals",
+        "uspText": "Mainz and Wiesbaden together form a beauty hotspot — clients from both cities are within reach.",
+        "trust1Num": "220k+",
+        "trust1Label": "Mainz residents",
+        "trust2Num": "5.8 M",
+        "trust2Label": "Rhine-Main region",
+        "metaTitle": "Chair rental Mainz — rent a salon chair | ChairMatch",
+        "metaDescription": "Chair rental in Mainz: rent a hairdressing chair, cosmetics station or barbershop spot. ChairMatch connects beauty professionals and salons in the Rhine-Main region."
+      },
+      "muenchen": {
+        "city": "Munich",
+        "heroSubtitle": "Looking to rent a salon chair in Munich? ChairMatch connects salon owners and beauty professionals in the Bavarian state capital — from Schwabing via Maxvorstadt to Sendling.",
+        "catTitle": "Chair rental Munich — every beauty speciality",
+        "catSubtitle": "Premium locations for beauty professionals in the Bavarian state capital.",
+        "footerCity": "Munich",
+        "uspTitle": "A premium market",
+        "uspText": "Munich has the highest purchasing power in Germany. Beauty professionals benefit from an affluent clientele and high demand.",
+        "trust1Num": "1.5 M",
+        "trust1Label": "Munich residents",
+        "trust2Num": "6.2 M",
+        "trust2Label": "metropolitan region",
+        "metaTitle": "Chair rental Munich — rent a salon chair | ChairMatch",
+        "metaDescription": "Chair rental in Munich: rent a hairdressing chair, cosmetics station or barbershop spot. ChairMatch connects beauty professionals and salons in the Bavarian state capital."
+      },
+      "nuernberg": {
+        "city": "Nuremberg",
+        "heroSubtitle": "Nuremberg is Franconia’s metropolis and offers one of the largest beauty markets in Bavaria. ChairMatch brings salon owners and beauty professionals together — flexible, fair and with no long-term commitment.",
+        "catTitle": "Chair rental in Nuremberg — every beauty speciality",
+        "footerCity": "Nuremberg",
+        "uspTitle": "Franconia’s metropolis",
+        "uspText": "With more than 500,000 residents, Nuremberg is a major beauty location with high demand for chair rental.",
+        "trust1Num": "520k+",
+        "trust1Label": "Nuremberg residents",
+        "trust2Num": "3.6 M",
+        "trust2Label": "Franconia",
+        "metaTitle": "Chair rental Nuremberg — rent a salon chair | ChairMatch",
+        "metaDescription": "Chair rental in Nuremberg: rent a hairdressing chair, cosmetics station or barbershop spot. ChairMatch connects beauty professionals and salons in Franconia."
+      },
+      "offenbach": {
+        "city": "Offenbach",
+        "heroSubtitle": "Offenbach am Main lies right next to Frankfurt and offers a growing beauty market with favourable rental terms. ChairMatch brings salon owners and beauty professionals together — flexible, fair and with no long-term commitment.",
+        "catTitle": "Chair rental in Offenbach — every beauty speciality",
+        "footerCity": "Offenbach am Main",
+        "uspTitle": "Right next to Frankfurt",
+        "uspText": "Offenbach benefits from its proximity to Frankfurt — lower rents with the same clientele from the Rhine-Main region.",
+        "trust1Num": "130k+",
+        "trust1Label": "Offenbach residents",
+        "trust2Num": "5.8 M",
+        "trust2Label": "Rhine-Main region",
+        "metaTitle": "Chair rental Offenbach am Main — rent a salon chair | ChairMatch",
+        "metaDescription": "Chair rental in Offenbach am Main: rent a hairdressing chair, cosmetics station or barbershop spot. ChairMatch connects beauty professionals and salons across the Rhine-Main region."
+      },
+      "potsdam": {
+        "city": "Potsdam",
+        "heroSubtitle": "Potsdam, the capital of Brandenburg, is known for its upmarket clientele and sits right beside Berlin. ChairMatch brings salon owners and beauty professionals together — flexible, fair and with no long-term commitment.",
+        "catTitle": "Chair rental in Potsdam — every beauty speciality",
+        "footerCity": "Potsdam",
+        "uspTitle": "Brandenburg’s capital",
+        "uspText": "Potsdam offers an affluent clientele and benefits from Berlin’s beauty boom — at lower rental costs.",
+        "trust1Num": "185k+",
+        "trust1Label": "Potsdam residents",
+        "trust2Num": "6.2 M",
+        "trust2Label": "Berlin-Brandenburg",
+        "metaTitle": "Chair rental Potsdam — rent a salon chair | ChairMatch",
+        "metaDescription": "Chair rental in Potsdam: rent a hairdressing chair, cosmetics station or barbershop spot. ChairMatch connects beauty professionals and salons in Berlin-Brandenburg."
+      },
+      "stuttgart": {
+        "city": "Stuttgart",
+        "heroSubtitle": "Looking to rent a salon chair in Stuttgart? ChairMatch connects salon owners and independent beauty professionals in Stuttgart-Mitte, Bad Cannstatt, Vaihingen, Degerloch and every Stuttgart district.",
+        "catTitle": "Chair rental Stuttgart — every beauty speciality",
+        "catSubtitle": "From Königstraße to Stuttgart-West — find your beauty workspace in the Swabian metropolis.",
+        "footerCity": "Stuttgart",
+        "uspTitle": "An economically strong region",
+        "uspText": "Stuttgart and its region are economically strong — affluent clients and high demand for beauty services.",
+        "trust1Num": "635,000",
+        "trust1Label": "Stuttgart residents",
+        "trust2Num": "23",
+        "trust2Label": "city districts covered",
+        "metaTitle": "Chair rental Stuttgart — rent a salon chair | ChairMatch",
+        "metaDescription": "Chair rental in Stuttgart: rent a hairdressing chair, cosmetics station or barbershop spot. ChairMatch connects beauty professionals and salons in the Swabian metropolis."
+      },
+      "wiesbaden": {
+        "city": "Wiesbaden",
+        "heroSubtitle": "Wiesbaden, the capital of Hesse, is known for its affluent clientele and high-quality salons. ChairMatch brings salon owners and beauty professionals together — flexible, fair and with no long-term commitment.",
+        "catTitle": "Chair rental in Wiesbaden — every beauty speciality",
+        "footerCity": "Wiesbaden",
+        "uspTitle": "Capital of Hesse",
+        "uspText": "Wiesbaden has an affluent population and upmarket beauty demand — ideal for premium services.",
+        "trust1Num": "280k+",
+        "trust1Label": "Wiesbaden residents",
+        "trust2Num": "5.8 M",
+        "trust2Label": "Rhine-Main region",
+        "metaTitle": "Chair rental Wiesbaden — rent a salon chair | ChairMatch",
+        "metaDescription": "Chair rental in Wiesbaden: rent a hairdressing chair, cosmetics station or barbershop spot. ChairMatch connects beauty professionals and salons in the Rhine-Main region."
+      },
+      "wuppertal": {
+        "city": "Wuppertal",
+        "heroSubtitle": "Wuppertal is the largest city in the Bergisches Land and lies between Düsseldorf and the Ruhr area. ChairMatch brings salon owners and beauty professionals together — flexible, fair and with no long-term commitment.",
+        "catTitle": "Chair rental in Wuppertal — every beauty speciality",
+        "footerCity": "Wuppertal",
+        "uspTitle": "Bergisches Land",
+        "uspText": "Wuppertal has a loyal clientele and moderate rents — ideal for independent beauty professionals.",
+        "trust1Num": "360k+",
+        "trust1Label": "Wuppertal residents",
+        "trust2Num": "11 M",
+        "trust2Label": "Bergisches Land",
+        "metaTitle": "Chair rental Wuppertal — rent a salon chair | ChairMatch",
+        "metaDescription": "Chair rental in Wuppertal: rent a hairdressing chair, cosmetics station or barbershop spot. ChairMatch connects beauty professionals and salons in the Bergisches Land."
+      }
+    }
+  },
+  "blog": {
+    "heroBadge": "ChairMatch Blog",
+    "heroTitle": "Knowledge for <span>beauty professionals</span> and salon owners",
+    "heroText": "Practical knowledge on chair rental, self-employment and the latest trends in the beauty industry.",
+    "readMore": "Read the article →",
+    "readTime_one": "{count} min read",
+    "readTime_other": "{count} min read",
+    "badge": {
+      "owner": "Salon owners",
+      "freelancer": "Freelancers",
+      "trend": "Trend",
+      "pricing": "Prices",
+      "founding": "Starting out"
+    },
+    "post": {
+      "salonGuide": {
+        "title": "Chair rental in hair salons: the complete guide for salon owners",
+        "teaser": "Empty chairs cost money. Learn how chair rental generates recurring income, which legal rules apply and which pricing models have proven themselves."
+      },
+      "freelancer": {
+        "title": "Freelance hairdresser: how to find the perfect workspace through chair rental",
+        "teaser": "Work independently without opening your own salon: chair rental makes it possible. Cost comparison, insurance, trade registration and tips for building your own brand."
+      },
+      "coworking": {
+        "title": "Beauty coworking in Germany: the shared-salon trend reshaping the industry",
+        "teaser": "What turns over billions in the US is now reaching Germany: beauty coworking spaces bring independent professionals together in shared, professional workspaces. What is behind it and why the trend is coming."
+      },
+      "prices": {
+        "title": "Chair rental prices 2026: what does a salon chair cost?",
+        "teaser": "Price comparison by city, cost calculator and negotiation tips: how to find the right chair rent for your budget — from Berlin to Munich.",
+        "short": "Chair rental prices 2026",
+        "shortTeaser": "What does a salon chair cost? A price comparison by city."
+      },
+      "selfemployed": {
+        "title": "Going self-employed as a hairdresser: chair rental as your first step",
+        "teaser": "Step by step into self-employment: trade registration, insurance, start-up costs and why chair rental is the lowest-risk route.",
+        "short": "Going self-employed as a hairdresser",
+        "shortTeaser": "Chair rental as your first step into self-employment."
+      },
+      "vacancy": {
+        "title": "Empty chairs in your salon? How to monetise unused space",
+        "teaser": "ROI calculation, pricing models and real-world examples: how salon owners turn vacancy into income through chair rental.",
+        "short": "Monetise empty chairs",
+        "shortTeaser": "How salon owners earn from unused space."
+      }
+    },
+    "allArticles": "All articles",
+    "readTimeApprox_one": "Reading time: approx. {count} minute",
+    "readTimeApprox_other": "Reading time: approx. {count} minutes",
+    "germanOnly": "This article is only available in German."
+  },
+  "meta": {
+    "home": {
+      "title": "ChairMatch — your chair in the beauty industry",
+      "description": "ChairMatch matches beauty professionals with chairs and rooms to rent: barbershop, hairdressing, cosmetics, nails, massage and more. €1 from every booking goes to children in need."
+    },
+    "faq": {
+      "title": "FAQ — chair rental & chair rent | ChairMatch",
+      "description": "Frequently asked questions about chair rental in the beauty industry. Everything about prices, contracts, insurance, trade licences and more — answered by ChairMatch.",
+      "ogDescription": "Frequently asked questions about chair rental in the beauty industry. Prices, contracts, insurance and more."
+    },
+    "blog": {
+      "title": "ChairMatch Blog — guides on chair rental & beauty coworking",
+      "description": "The ChairMatch blog: expert knowledge on chair rental, freelance workspaces and beauty coworking in Germany. Tips for salon owners and beauty professionals.",
+      "ogDescription": "Expert knowledge on chair rental, freelance workspaces and beauty coworking. Tips for salon owners and independent beauty professionals."
+    },
+    "city": {
+      "title": "Chair rental {city} — rent a salon chair in {city} | ChairMatch",
+      "description": "Chair rental in {city}: rent a hairdressing chair, cosmetics station or barbershop spot. ChairMatch connects salon owners and beauty professionals in {city}."
+    }
+  }
+}
