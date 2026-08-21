@@ -1,7 +1,7 @@
 # MASTER PROJECT STATUS
 
-> Stand: 21.08.2026 16:45 | Baseline: FINAL_FINAL_GO_LIVE_REPORT_2026-08-21.md
-> CI: #306-#309,#311 green, #310 cancelled (superseded), #312-#313 in progress | HEAD: 0e0a1aa
+> Stand: 21.08.2026 18:15 | Baseline: FINAL_FINAL_GO_LIVE_REPORT_2026-08-21.md
+> CI: #318 GREEN (49503a3) | Tests: 3403 vitest + 794 node:test | HEAD: 49503a3
 
 ---
 
@@ -136,6 +136,7 @@ Letzter Check: 21.08.2026
 | ~~1~~ | ~~Monitoring/Alerting einrichten~~ | ~~P1~~ | **ERLEDIGT** (Health-Endpoint, Metrics, Uptime-Action, 0e0a1aa) |
 | ~~2~~ | ~~Structured Logging~~ | ~~P1~~ | **ERLEDIGT** (lib/logger.ts, 7 Dateien migriert, 12 Tests, 193076e) |
 | ~~3~~ | ~~Error Boundaries pro Route-Segment~~ | ~~P1~~ | **ERLEDIGT** (10 Segmente + Root, aa280e6) |
+| ~~4~~ | ~~Type Safety: as-any Cleanup~~ | ~~P1~~ | **ERLEDIGT** (~90 Casts entfernt, join.ts Helfer, 49503a3) |
 
 ---
 
