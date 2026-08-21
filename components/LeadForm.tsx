@@ -151,6 +151,7 @@ export default function LeadForm({ defaultService, source }: LeadFormProps) {
           />
         </div>
         <select
+          aria-label="Interesse an (optional)"
           value={form.service}
           onChange={e => setForm({ ...form, service: e.target.value })}
           style={{ ...inputStyle, appearance: 'auto', color: form.service ? '#F5F0E8' : '#8A8279' }}
