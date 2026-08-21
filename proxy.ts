@@ -2,6 +2,8 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 import { getStorageKeyFromEnv } from '@/lib/supabase/storage-key'
 import { handleRateLimit } from '@/lib/middleware/rate-limit'
+import { logger } from '@/lib/logger'
+const log = logger.child('proxy')
 
 // ═══ Cookie-Format Kompatibilität zwischen Browser-Client und Middleware ═══
 // Key wird dynamisch aus NEXT_PUBLIC_SUPABASE_URL abgeleitet.
@@ -130,7 +132,7 @@ export async function proxy(request: NextRequest) {
   // ═══ FAIL-CLOSED: Ohne gültigen Storage-Key keine Auth möglich ═══
   const storageKey = getStorageKey()
   if (!storageKey) {
-    console.error('FAIL-CLOSED: NEXT_PUBLIC_SUPABASE_URL fehlt oder ungültig — alle geschützten Routen blockiert')
+    log.error('FAIL-CLOSED: NEXT_PUBLIC_SUPABASE_URL fehlt oder ungültig — alle geschützten Routen blockiert')
     const url = request.nextUrl.clone()
     url.pathname = '/auth/login'
     url.searchParams.set('next', pathname)
@@ -216,7 +218,7 @@ export async function proxy(request: NextRequest) {
         }
       } catch (dbError) {
         // FAIL-CLOSED: DB-Check fehlgeschlagen → Zugriff verweigern.
-        console.error('Role DB check failed:', dbError)
+        log.errorWithException('Role DB check failed', dbError)
       }
     }
 
@@ -247,7 +249,7 @@ export async function proxy(request: NextRequest) {
     return supabaseResponse
   } catch (err) {
     // ═══ FAIL-CLOSED: Exception → kein Zugriff auf geschützte Routen ═══
-    console.error('Proxy auth error:', err)
+    log.errorWithException('Proxy auth error', err)
     const url = request.nextUrl.clone()
     url.pathname = '/auth/login'
     url.searchParams.set('next', pathname)
