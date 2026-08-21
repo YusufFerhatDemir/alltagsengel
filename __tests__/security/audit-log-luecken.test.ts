@@ -78,12 +78,12 @@ describe('logAuditEventOrWarn', () => {
 
     const luecke = spy.mock.calls.find(c => String(c[0]).includes('AUDIT-LUECKE'))
     expect(luecke).toBeDefined()
-    expect(luecke![1]).toMatchObject({
-      action: 'create',
-      entityType: 'verordnung',
-      entityId: EINGABE.entityId,
-      actorId: EINGABE.actorId,
-    })
+    // Structured logger gibt einen einzelnen formatierten String aus
+    const ausgabe = String(luecke![0])
+    expect(ausgabe).toContain('"action":"create"')
+    expect(ausgabe).toContain('"entityType":"verordnung"')
+    expect(ausgabe).toContain(EINGABE.entityId!)
+    expect(ausgabe).toContain(EINGABE.actorId)
   })
 
   it('blockiert die Hauptaktion nicht — wirft nie', async () => {
