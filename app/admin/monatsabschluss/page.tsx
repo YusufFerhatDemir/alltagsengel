@@ -71,7 +71,7 @@ function MonatsabschlussInner() {
         }
 
         const recordsByClient = new Map<string, any[]>()
-        for (const r of (recordsRes.data || []) as any[]) {
+        for (const r of (recordsRes.data || [])) {
           const arr = recordsByClient.get(r.client_id) || []
           arr.push(r)
           recordsByClient.set(r.client_id, arr)

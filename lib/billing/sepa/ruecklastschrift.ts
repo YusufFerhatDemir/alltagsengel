@@ -135,7 +135,7 @@ export async function verarbeiteRuecklastschrift(
       // Allocation loeschen (soft: status setzen)
       await supabase
         .from('payment_allocations')
-        .update({ allocation_type: 'rueckzahlung' as any })
+        .update({ allocation_type: 'rueckzahlung' as string })
         .eq('id', alloc.id);
 
       // Payment-allocated_cents reduzieren

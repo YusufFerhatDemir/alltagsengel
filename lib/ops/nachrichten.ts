@@ -64,7 +64,7 @@ export async function getNachricht(
   if (eErr) throw new Error(`Nachricht-Empfaenger konnten nicht geladen werden: ${eErr.message}`)
 
   if (params.userId) {
-    const isSender = (nachricht as any).absender_id === params.userId
+    const isSender = (nachricht as OpsNachricht).absender_id === params.userId
     const isRecipient = (empfaenger ?? []).some((e: any) => e.empfaenger_id === params.userId)
     if (!isSender && !isRecipient) return null
   }

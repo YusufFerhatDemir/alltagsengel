@@ -62,7 +62,7 @@ export default function InvoiceDetailPage() {
       ...invData,
       client_name: fullName(invData.client),
       invoice_number: invData.invoice_number_formatted || invData.invoice_number,
-    } as any)
+    } as Invoice)
 
     const [itemsRes, auditRes, allocRes] = await Promise.all([
       supabase.from('invoice_items').select('*').eq('invoice_id', id).order('date'),

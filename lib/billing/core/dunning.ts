@@ -6,6 +6,9 @@ import { datumBerlin, heuteBerlin } from '@/lib/utils/timezone';
 // Types
 // ---------------------------------------------------------------------------
 
+/** Typ fuer client-Join-Ergebnis aus Supabase-Abfragen. */
+type ClientJoin = { first_name?: string; last_name?: string; email?: string } | null
+
 export type DunningLevel =
   | 'offen' | 'erinnerung' | 'mahnung_1' | 'mahnung_2'
   | 'letzte_mahnung' | 'inkasso_vorbereitung' | 'bezahlt'
@@ -520,7 +523,7 @@ async function sendDunningEmail(
     .single()
 
   if (!inv) return
-  const client = inv.client as any
+  const client = inv.client as unknown as ClientJoin
   if (!client?.email) return
 
   const { data: entry } = await supabase

@@ -121,7 +121,7 @@ export default function LeistungsnachweisUploadPage() {
         .limit(30)
       if (e) { console.error('OCR-Historie Ladefehler:', e); setLoadingRecent(false); return }
 
-      const rows = (data || []) as any[]
+      const rows = (data || [])
       const ids = rows.map(r => r.id)
       let errorCounts: Record<string, number> = {}
       if (ids.length > 0) {

@@ -18,8 +18,8 @@ export default function CapacitorLinkInterceptor() {
 
     // Nur in Capacitor-App aktivieren (nicht im normalen Browser)
     const isNative =
-      typeof (window as any).Capacitor !== "undefined" &&
-      (window as any).Capacitor?.isNativePlatform?.()
+      typeof window.Capacitor !== "undefined" &&
+      window.Capacitor?.isNativePlatform?.()
 
     if (!isNative) return
 

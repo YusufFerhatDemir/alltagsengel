@@ -176,7 +176,15 @@ export async function GET(request: Request) {
     if (recErr) {
       return NextResponse.json({ error: `Einsätze-Fehler: ${recErr.message}` }, { status: 500 })
     }
-    const rows = (records || []) as any[]
+    interface LeistungsnachweisRecord {
+      id: string; date: string; start_time?: string; end_time?: string
+      duration_minutes?: number; service_type?: string; budget_type?: string
+      amount?: number; status?: string; client_signature?: string
+      caregiver_initials?: string; client_id?: string; caregiver_id?: string
+      caregiver?: { id: string; first_name: string; last_name: string; lifetime_registration_number?: string; ik_nummer?: string; qualification_level?: string } | null
+      [key: string]: unknown
+    }
+    const rows = (records || []) as LeistungsnachweisRecord[]
     if (rows.length === 0) {
       return NextResponse.json(
         { error: `Keine erfassten Einsätze für ${periodLabel}` },
@@ -194,7 +202,11 @@ export async function GET(request: Request) {
       .in('service_record_id', recordIds)
       .order('signed_at', { ascending: false })
 
-    const signatures = (sigData || []) as any[]
+    interface ServiceSignature {
+      service_record_id: string; signer_role: string; signer_name?: string
+      signature_image?: string; signed_at?: string
+    }
+    const signatures = (sigData || []) as ServiceSignature[]
     // Neueste Unterschrift je Rolle für den Monats-Nachweis
     const clientSigImage = signatures.find(s => s.signer_role === 'client') || null
     const caregiverSigImage = signatures.find(s => s.signer_role === 'caregiver') || null

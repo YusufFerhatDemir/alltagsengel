@@ -22,9 +22,9 @@ export default function TikTokPixel() {
 
     // Nicht in Capacitor laden
     const isCapacitor = !!(
-      (window as any).Capacitor ||
+      window.Capacitor ||
       navigator.userAgent.includes('Capacitor') ||
-      (window as any).webkit?.messageHandlers?.bridge
+      window.webkit?.messageHandlers?.bridge
     )
     if (isCapacitor) return
 
@@ -74,8 +74,8 @@ export default function TikTokPixel() {
 
 // ═══ Helper: TikTok Events tracken ═══
 export function trackTikTokEvent(event: string, params?: Record<string, any>) {
-  if (typeof window !== 'undefined' && (window as any).ttq) {
-    ;(window as any).ttq.track(event, params)
+  if (typeof window !== 'undefined' && window.ttq) {
+    ;window.ttq.track(event, params)
   }
 }
 

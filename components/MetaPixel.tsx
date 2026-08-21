@@ -22,9 +22,9 @@ export default function MetaPixel() {
 
     // Nicht in Capacitor laden
     const isCapacitor = !!(
-      (window as any).Capacitor ||
+      window.Capacitor ||
       navigator.userAgent.includes('Capacitor') ||
-      (window as any).webkit?.messageHandlers?.bridge
+      window.webkit?.messageHandlers?.bridge
     )
     if (isCapacitor) return
 
@@ -81,8 +81,8 @@ export default function MetaPixel() {
 
 // ═══ Helper: Conversion Events tracken ═══
 export function trackMetaEvent(event: string, params?: Record<string, any>) {
-  if (typeof window !== 'undefined' && (window as any).fbq) {
-    ;(window as any).fbq('track', event, params)
+  if (typeof window !== 'undefined' && window.fbq) {
+    ;window.fbq('track', event, params)
   }
 }
 

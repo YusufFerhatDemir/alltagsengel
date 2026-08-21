@@ -3,6 +3,7 @@ import { datumBerlin } from '@/lib/utils/timezone';
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { IconCalendar, IconClock, IconWings } from '@/components/Icons'
+import type { Angel } from '@/lib/types'
 
 const WEEKDAYS = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So']
 const MONTHS = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember']
@@ -103,7 +104,7 @@ export default function KundeKalenderPage() {
               <div className="kal-no-events">Keine Termine an diesem Tag</div>
             ) : (
               selectedBookings.map(b => {
-                const angel = b.angels as any
+                const angel = b.angels as Angel | null
                 const name = angel?.profiles ? `${angel.profiles.first_name} ${angel.profiles.last_name?.[0]}.` : 'Engel'
                 return (
                   <div key={b.id} className="kal-event">

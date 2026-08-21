@@ -13,6 +13,9 @@ import { heuteBerlin } from '@/lib/utils/timezone';
 // Types
 // ---------------------------------------------------------------------------
 
+/** Typ fuer client-Join-Ergebnis aus Supabase-Abfragen. */
+type ClientJoin = { first_name?: string; last_name?: string; email?: string } | null
+
 export interface OffenerPosten {
   invoiceId: string;
   invoiceNumber: string;
@@ -138,7 +141,7 @@ export async function getOposListe(
     const rawClient = inv.client as unknown;
     const client = Array.isArray(rawClient) ? rawClient[0] : rawClient;
     const clientName = client && typeof client === 'object' && 'first_name' in client
-      ? `${(client as any).first_name || ''} ${(client as any).last_name || ''}`.trim()
+      ? `${(client as ClientJoin)?.first_name || ''} ${(client as ClientJoin)?.last_name || ''}`.trim()
       : '—';
 
     offenePosten.push({

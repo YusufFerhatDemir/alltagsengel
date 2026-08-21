@@ -680,10 +680,10 @@ export default function PersonalDetailPage() {
       {tab === 'arbeitszeiten' && (
         <div>
           <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 16, alignItems: 'center' }}>
-            <select value={azMonat} onChange={e => setAzMonat(Number(e.target.value))} style={inputStyle as any}>
+            <select value={azMonat} onChange={e => setAzMonat(Number(e.target.value))} style={inputStyle}>
               {MONATSNAMEN.map((m, i) => <option key={i} value={i + 1}>{m}</option>)}
             </select>
-            <select value={azJahr} onChange={e => setAzJahr(Number(e.target.value))} style={inputStyle as any}>
+            <select value={azJahr} onChange={e => setAzJahr(Number(e.target.value))} style={inputStyle}>
               {[now.getFullYear() - 1, now.getFullYear(), now.getFullYear() + 1].map(y => <option key={y} value={y}>{y}</option>)}
             </select>
           </div>

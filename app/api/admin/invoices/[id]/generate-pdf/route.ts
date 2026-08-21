@@ -215,7 +215,8 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
         compact: true, compactHint: hint,
       })
 
-    const client = (invoice as any).client || {}
+    type InvoiceClient = { first_name?: string; last_name?: string; address?: string; city?: string; zip_code?: string; insurance_name?: string; insurance_number?: string }
+    const client = ((invoice as Record<string, unknown>).client || {}) as InvoiceClient
     const clientName = `${client.first_name || ''} ${client.last_name || ''}`.trim() || '—'
 
     // ── Seite 1 ff.: Belegübersicht ──

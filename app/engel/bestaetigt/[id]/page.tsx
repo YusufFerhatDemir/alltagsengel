@@ -45,7 +45,7 @@ export default function EngelBestaetigtPage() {
   if (pageStatus === 'error' || !booking) return <div className="screen"><ErrorState homeHref="/engel/home" /></div>
 
   const customerName = booking.customer ? `${booking.customer.first_name} ${booking.customer.last_name?.[0] || ''}.` : 'Kunde'
-  const cr = booking.care_recipient as any
+  const cr = booking.care_recipient as { first_name?: string; last_name?: string } | null
   const hasCareRecipient = !!cr
   const careRecipientName = cr ? `${cr.first_name} ${cr.last_name}` : null
   const displayName = careRecipientName || customerName

@@ -61,8 +61,8 @@ export default function EngelPflegedokuPage() {
           const hoechst = risiken.reduce<string | null>((acc, r: any) => (
             !acc || (rang[r.schweregrad] ?? 0) > (rang[acc] ?? 0) ? r.schweregrad : acc
           ), null)
-          const plan = (plaeneRes.data || []).find((p: any) => p.client_id === id && p.status === 'aktiv') as any
-          const verlauf = (verlaufRes.data || []).find((v: any) => v.client_id === id) as any
+          const plan = (plaeneRes.data || []).find((p: any) => p.client_id === id && p.status === 'aktiv')
+          const verlauf = (verlaufRes.data || []).find((v: any) => v.client_id === id)
           return {
             client_id: id,
             name: c ? `${c.first_name ?? ''} ${c.last_name ?? ''}`.trim() : 'Kunde',

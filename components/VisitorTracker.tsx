@@ -23,7 +23,7 @@ export default function VisitorTracker() {
     // (App nutzt eigenes mis_auth_log + native Analytics)
     const isNative =
       typeof window !== 'undefined' &&
-      (window as any).Capacitor?.isNativePlatform?.()
+      window.Capacitor?.isNativePlatform?.()
     if (isNative) return
 
     // ═══ FIX (BUG-ATTRIB-001): gclid/utm IMMER persistieren, BEVOR Consent-Check ═══

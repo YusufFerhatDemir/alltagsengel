@@ -83,7 +83,7 @@ export default async function EngelProfilPage({ params }: { params: Promise<{ id
         <div className="ep-main">
           {/* next/image statt <img>: liefert das 68-KB-JPG als ~80px-AVIF/WebP
               aus (gleiches Pattern wie Icon3D — Gold-Optik kommt aus .icon3d-CSS) */}
-          <div className="ep-avatar icon3d" style={{ '--sz': '80px' } as any}><Image src="/assets/icon.jpg" alt="Engel-Profilbild" fill sizes="80px" /></div>
+          <div className="ep-avatar icon3d" style={{ '--sz': '80px' } as React.CSSProperties}><Image src="/assets/icon.jpg" alt="Engel-Profilbild" fill sizes="80px" /></div>
           <div>
             <div className="ep-name">{name}</div>
             <div className="ep-role">{angel.qualification || 'Alltagsbegleiter/in'}</div>

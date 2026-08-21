@@ -119,7 +119,7 @@ export async function logAuditEvent(input: AuditLogInput): Promise<boolean> {
     if (error) {
       // AUTH-002: kein rohes err-Objekt loggen — könnte sensible Info enthalten
       log.error('insert failed', {
-        errorCode: (error as any)?.code,
+        errorCode: error?.code,
         errorMessage: error?.message,
         action: input.action,
         entityType: input.entityType,

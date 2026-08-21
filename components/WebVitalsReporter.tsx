@@ -5,10 +5,10 @@ import { useEffect } from 'react'
 function isNativeAppContext(): boolean {
   if (typeof window === 'undefined') return false
   return !!(
-    (window as any).Capacitor?.isNativePlatform?.() ||
-    (window as any).Capacitor ||
+    window.Capacitor?.isNativePlatform?.() ||
+    window.Capacitor ||
     navigator.userAgent.includes('Capacitor') ||
-    (window as any).webkit?.messageHandlers?.bridge
+    window.webkit?.messageHandlers?.bridge
   )
 }
 

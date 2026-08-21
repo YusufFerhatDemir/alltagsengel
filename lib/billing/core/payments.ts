@@ -6,6 +6,9 @@ import { isTerminalStatus, isValidInvoiceStatus, type InvoiceStatus } from './st
 // Types
 // ---------------------------------------------------------------------------
 
+/** Typ fuer client-Join-Ergebnis aus Supabase-Abfragen. */
+type ClientJoin = { first_name?: string; last_name?: string; email?: string } | null
+
 export type PaymentMethod =
   | 'ueberweisung' | 'lastschrift' | 'bar' | 'scheck'
   | 'kassen_sammelueberweisung' | 'rueckzahlung'
@@ -196,8 +199,9 @@ async function autoMatchPayment(
       score += 20
     }
 
-    const clientName = typeof inv.client === 'object' && inv.client
-      ? `${(inv.client as any).first_name || ''} ${(inv.client as any).last_name || ''}`.trim().toUpperCase()
+    const rawClient = inv.client as unknown as ClientJoin
+    const clientName = rawClient
+      ? `${rawClient.first_name || ''} ${rawClient.last_name || ''}`.trim().toUpperCase()
       : ''
     if (clientName && payerName.toUpperCase().includes(clientName)) {
       score += 15

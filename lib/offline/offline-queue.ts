@@ -207,7 +207,7 @@ export class OfflineQueue {
       id: generateId(),
       queue_item_id: item.id,
       entity_typ: item.entity_typ,
-      entity_id: (item.payload as any)?.id || null,
+      entity_id: (item.payload?.id as string) || null,
       lokale_daten: item.payload,
       server_daten: serverData,
       strategie: this.config.konflikt_strategie,

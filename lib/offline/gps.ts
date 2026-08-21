@@ -40,7 +40,7 @@ export interface GpsAdapter {
 /** Erkennt, ob die App aktuell in einer Capacitor-Hülle läuft (informativ, kein Verhalten). */
 export function laeuftInCapacitor(): boolean {
   if (typeof window === 'undefined') return false
-  return !!(window as any).Capacitor?.isNativePlatform?.()
+  return !!window.Capacitor?.isNativePlatform?.()
 }
 
 /**

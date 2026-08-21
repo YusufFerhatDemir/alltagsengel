@@ -89,7 +89,7 @@ export async function DELETE(request: NextRequest) {
     })
     if (signInError) {
       console.error('user/delete re-auth error:', {
-        code: (signInError as any)?.code,
+        code: signInError?.code,
         name: signInError?.name,
       })
       return NextResponse.json({ error: 'Passwort ist falsch.' }, { status: 401 })
@@ -118,8 +118,8 @@ export async function DELETE(request: NextRequest) {
         .eq('id', userId)
       if (softErr) {
         console.error('user/delete soft-delete error:', {
-          code: (softErr as any)?.code,
-          name: (softErr as any)?.name,
+          code: softErr?.code,
+          name: softErr?.name,
         })
         return NextResponse.json(
           { error: 'Konto konnte nicht geloescht werden' },
@@ -145,8 +145,8 @@ export async function DELETE(request: NextRequest) {
       )
     if (tokenErr) {
       console.error('user/delete token upsert error:', {
-        code: (tokenErr as any)?.code,
-        name: (tokenErr as any)?.name,
+        code: tokenErr?.code,
+        name: tokenErr?.name,
       })
       // fail-soft: Soft-Delete ist trotzdem aktiv, Admin kann manuell reaktivieren
     }

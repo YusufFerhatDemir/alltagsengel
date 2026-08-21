@@ -156,11 +156,11 @@ export default function MonatsabschlussVorbereitungPage() {
         setBudgets(budgetRes.data || [])
 
         const cm = new Map<string, Person>()
-        for (const c of (clientRes.data || []) as any[]) cm.set(c.id, c)
+        for (const c of (clientRes.data || [])) cm.set(c.id, c)
         setClientMap(cm)
 
         const cg = new Map<string, Person>()
-        for (const c of (caregiverRes.data || []) as any[]) cg.set(c.id, c)
+        for (const c of (caregiverRes.data || [])) cg.set(c.id, c)
         setCaregiverMap(cg)
       } catch (err) {
         console.error('Monatsabschluss-Vorbereitung Ladefehler:', err)

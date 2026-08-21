@@ -336,7 +336,7 @@ function NewBatchDialog({ onClose, onSaved }: { onClose: () => void; onSaved: ()
           id: inv.id,
           number: inv.invoice_number_formatted || inv.invoice_number || '',
           amount: Math.round(Number(inv.total_amount || 0) * 100) - Math.round(Number(inv.paid_amount || 0) * 100),
-          clientName: inv.client ? `${(inv.client as any).first_name} ${(inv.client as any).last_name}` : '—',
+          clientName: inv.client ? `${inv.client.first_name} ${inv.client.last_name}` : '—',
         })).filter((i: any) => i.amount > 0))
       })
   }, [])

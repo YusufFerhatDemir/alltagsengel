@@ -14,6 +14,9 @@ import { berlinParts, datumBerlin, heuteBerlin } from '@/lib/utils/timezone';
  * hängt pdf-lib mit dran, das dieses Modul nicht braucht.
  * Quelle: app/impressum/page.tsx.
  */
+/** Typ fuer client-Join-Ergebnis aus Supabase-Abfragen. */
+type ClientJoin = { first_name?: string; last_name?: string; email?: string } | null
+
 const ABSENDER_FALLBACK = {
   firma: 'Alltagsengel UG (haftungsbeschränkt)',
   strasse: 'Neue Mainzer Straße 66-68',
@@ -272,7 +275,7 @@ export async function createMahnungDocument(
   deadlineDate.setDate(deadlineDate.getDate() + 14)
   const deadlineStr = datumBerlin(deadlineDate)
 
-  const client = inv.client as any
+  const client = inv.client as unknown as ClientJoin
   const invNum = inv.invoice_number_formatted || inv.invoice_number || ''
 
   const mahnungData: MahnungData = {
