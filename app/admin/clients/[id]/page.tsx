@@ -11,6 +11,7 @@ import { AmpelDot, BudgetBar, StatusBadge, Banner, EmptyRow } from '@/components
 import { CareNotesPanel } from '@/components/admin/CareNotesPanel'
 import { logger } from '@/lib/logger'
 import { klickbareZeile } from '@/lib/a11y'
+import { SETZBARE_STATUS, sperrtEinsaetze } from '@/lib/clients/status'
 const log = logger.child('admin:clients')
 
 interface ClientDetail {
@@ -139,7 +140,15 @@ export default function ClientDetailPage() {
             {client.care_level ? `Pflegegrad ${client.care_level}` : 'Kein Pflegegrad'}
           </p>
         </div>
+        <StatusEditor client={client} onSaved={load} />
       </div>
+
+      {sperrtEinsaetze(client.status) && (
+        <Banner tone="warn">
+          Betreuung ist nicht aktiv (Status „{sm.label}") — für diesen Klienten lassen sich
+          keine neuen Einsätze planen. Die vorhandenen Daten bleiben vollständig erhalten.
+        </Banner>
+      )}
 
       {/* ═══ Tabs ═══ */}
       <div className="admin-filters" style={{ marginBottom: 20 }}>
@@ -169,11 +178,7 @@ export default function ClientDetailPage() {
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, alignItems: 'start' }} className="client-detail-grid">
         {/* Stammdaten */}
         <div className="admin-stat-card" style={{ padding: 20 }}>
-          <h2 style={{ marginBottom: 12 }}>Stammdaten</h2>
-          <InfoRow label="Geburtsdatum" value={formatDate(client.date_of_birth)} />
-          <InfoRow label="Adresse" value={[client.address, [client.zip_code, client.city].filter(Boolean).join(' ')].filter(Boolean).join(', ') || '—'} />
-          <InfoRow label="Telefon" value={client.phone || '—'} />
-          <InfoRow label="E-Mail" value={client.email || '—'} />
+          <StammdatenEditor client={client} onSaved={load} />
           <InfoRow label="Pflegekasse" value={client.insurance_name || '—'} />
           <InfoRow label="Versichertennr." value={client.insurance_number || '—'} />
           <PflegegradEditor client={client} onSaved={load} />
@@ -548,6 +553,199 @@ function PflegegradEditor({ client, onSaved }: { client: ClientDetail; onSaved: 
       <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
         <button onClick={save} disabled={saving} style={addBtn}>{saving ? 'Speichert…' : 'Speichern'}</button>
         <button onClick={() => setEditing(false)} disabled={saving} style={{ ...backBtn, marginBottom: 0 }}>Abbrechen</button>
+      </div>
+    </div>
+  )
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Kontaktstammdaten — Ansicht + Bearbeitung
+// ═══════════════════════════════════════════════════════════════
+// Schließt Bereich 1 der Lückenanalyse: Name, Adresse, PLZ, Ort, Telefon,
+// E-Mail und Geburtsdatum waren nach der Anlage nicht mehr änderbar. Läuft
+// über PATCH /api/admin/clients/[id], damit die Änderung im Audit-Log landet.
+function StammdatenEditor({ client, onSaved }: { client: ClientDetail; onSaved: () => void }) {
+  const [editing, setEditing] = useState(false)
+  const [form, setForm] = useState<Record<string, string>>(() => stammdatenFormFromClient(client))
+  const [saving, setSaving] = useState(false)
+  const [err, setErr] = useState<string | null>(null)
+  const [savedOk, setSavedOk] = useState(false)
+
+  const set = (key: string) =>
+    (e: React.ChangeEvent<HTMLInputElement>) => setForm(f => ({ ...f, [key]: e.target.value }))
+
+  function startEdit() {
+    setForm(stammdatenFormFromClient(client))
+    setErr(null); setSavedOk(false); setEditing(true)
+  }
+
+  async function save() {
+    setErr(null); setSaving(true)
+    try {
+      const res = await fetch(`/api/admin/clients/${client.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          first_name: form.first_name.trim(),
+          last_name: form.last_name.trim(),
+          date_of_birth: form.date_of_birth || null,
+          address: form.address.trim() || null,
+          zip_code: form.zip_code.trim() || null,
+          city: form.city.trim() || null,
+          phone: form.phone.trim() || null,
+          email: form.email.trim() || null,
+        }),
+      })
+      const json = await res.json().catch(() => ({}))
+      if (!res.ok) { setErr(json.error || 'Speichern fehlgeschlagen.'); setSaving(false); return }
+      setEditing(false)
+      setSavedOk(true)
+      onSaved()
+    } catch (e: any) {
+      setErr(e?.message || 'Speichern fehlgeschlagen.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  if (!editing) {
+    return (
+      <>
+        <h2 style={{ marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
+          Stammdaten
+          <button onClick={startEdit} style={addBtn}>Bearbeiten</button>
+        </h2>
+        {savedOk && <Banner tone="info">✅ Stammdaten gespeichert.</Banner>}
+        <InfoRow label="Geburtsdatum" value={formatDate(client.date_of_birth)} />
+        <InfoRow label="Adresse" value={[client.address, [client.zip_code, client.city].filter(Boolean).join(' ')].filter(Boolean).join(', ') || '—'} />
+        <InfoRow label="Telefon" value={client.phone || '—'} />
+        <InfoRow label="E-Mail" value={client.email || '—'} />
+      </>
+    )
+  }
+
+  return (
+    <>
+      <h2 style={{ marginBottom: 12 }}>Stammdaten bearbeiten</h2>
+      {err && <Banner tone="danger">{err}</Banner>}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <div style={{ display: 'flex', gap: 10 }}>
+          <FormField label="Vorname"><input value={form.first_name} onChange={set('first_name')} style={fieldInput} /></FormField>
+          <FormField label="Nachname"><input value={form.last_name} onChange={set('last_name')} style={fieldInput} /></FormField>
+        </div>
+        <FormField label="Geburtsdatum"><input type="date" value={form.date_of_birth} onChange={set('date_of_birth')} style={fieldInput} /></FormField>
+        <FormField label="Straße und Hausnummer"><input value={form.address} onChange={set('address')} style={fieldInput} /></FormField>
+        <div style={{ display: 'flex', gap: 10 }}>
+          <FormField label="PLZ"><input value={form.zip_code} onChange={set('zip_code')} inputMode="numeric" maxLength={5} style={fieldInput} /></FormField>
+          <FormField label="Ort"><input value={form.city} onChange={set('city')} style={fieldInput} /></FormField>
+        </div>
+        <div style={{ display: 'flex', gap: 10 }}>
+          <FormField label="Telefon"><input type="tel" value={form.phone} onChange={set('phone')} style={fieldInput} /></FormField>
+          <FormField label="E-Mail"><input type="email" value={form.email} onChange={set('email')} style={fieldInput} /></FormField>
+        </div>
+      </div>
+      <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+        <button onClick={save} disabled={saving} style={addBtn}>{saving ? 'Speichert…' : 'Speichern'}</button>
+        <button onClick={() => setEditing(false)} disabled={saving} style={{ ...backBtn, marginBottom: 0 }}>Abbrechen</button>
+      </div>
+    </>
+  )
+}
+
+function stammdatenFormFromClient(c: ClientDetail): Record<string, string> {
+  return {
+    first_name: c.first_name || '',
+    last_name: c.last_name || '',
+    date_of_birth: c.date_of_birth || '',
+    address: c.address || '',
+    zip_code: c.zip_code || '',
+    city: c.city || '',
+    phone: c.phone || '',
+    email: c.email || '',
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Betreuungsstatus — pausieren, beenden, wieder aufnehmen
+// ═══════════════════════════════════════════════════════════════
+// AUSDRÜCKLICH KEINE LÖSCHUNG. Alle Nachweise, Rechnungen und Budgets
+// bleiben erhalten; der Klient wird nur für neue Einsätze gesperrt.
+// Für die echte Datenlöschung ist der DSGVO-Weg zuständig.
+const STATUS_HINWEIS: Record<string, string> = {
+  active: 'Betreuung läuft — Einsätze können geplant werden.',
+  paused: 'Vorübergehend ausgesetzt (z. B. Krankenhausaufenthalt). Keine neuen Einsätze.',
+  inactive: 'Betreuung beendet (Kündigung, Umzug, Versterben). Keine neuen Einsätze.',
+  archived: 'Archiviert — Vorgang abgeschlossen, nur noch Nachweis- und Rechnungshistorie.',
+}
+
+function StatusEditor({ client, onSaved }: { client: ClientDetail; onSaved: () => void }) {
+  const [offen, setOffen] = useState(false)
+  const [ziel, setZiel] = useState<string>(client.status === 'active' ? 'inactive' : 'active')
+  const [grund, setGrund] = useState('')
+  const [saving, setSaving] = useState(false)
+  const [err, setErr] = useState<string | null>(null)
+  const [hinweise, setHinweise] = useState<string[]>([])
+
+  async function save() {
+    setErr(null); setSaving(true)
+    try {
+      const res = await fetch(`/api/admin/clients/${client.id}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: ziel, grund: grund.trim() || undefined }),
+      })
+      const json = await res.json().catch(() => ({}))
+      if (!res.ok) { setErr(json.error || 'Statuswechsel fehlgeschlagen.'); setSaving(false); return }
+      setHinweise(json.hinweise || [])
+      setOffen(false)
+      setGrund('')
+      onSaved()
+    } catch (e: any) {
+      setErr(e?.message || 'Statuswechsel fehlgeschlagen.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  if (!offen) {
+    return (
+      <div style={{ textAlign: 'right' }}>
+        <button onClick={() => { setErr(null); setOffen(true) }} style={{ ...addBtn, marginLeft: 0 }}>
+          Status ändern
+        </button>
+        {hinweise.length > 0 && (
+          <div style={{ marginTop: 8, textAlign: 'left', maxWidth: 460 }}>
+            {hinweise.map((h, i) => <Banner key={i} tone="warn">{h}</Banner>)}
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  return (
+    <div className="admin-stat-card" style={{ padding: 16, minWidth: 320, maxWidth: 460 }}>
+      <h2 style={{ fontSize: 16, marginBottom: 10 }}>Betreuungsstatus ändern</h2>
+      {err && <Banner tone="danger">{err}</Banner>}
+      <FormField label="Neuer Status">
+        <select value={ziel} onChange={e => setZiel(e.target.value)} style={fieldInput}>
+          {SETZBARE_STATUS.map(w => (
+            <option key={w} value={w}>{CLIENT_STATUS[w]?.label || w}</option>
+          ))}
+        </select>
+      </FormField>
+      <p style={{ fontSize: 12, color: 'var(--ink5)', margin: '8px 0 0' }}>{STATUS_HINWEIS[ziel]}</p>
+      <div style={{ marginTop: 10 }}>
+        <FormField label="Grund (optional, wird protokolliert)">
+          <input value={grund} onChange={e => setGrund(e.target.value)} placeholder="z. B. Kündigung zum 31.03." style={fieldInput} />
+        </FormField>
+      </div>
+      <p style={{ fontSize: 12, color: 'var(--ink5)', margin: '10px 0 0' }}>
+        Es werden keine Daten gelöscht. Nachweise, Rechnungen und Budgets bleiben
+        vollständig erhalten — eine echte Löschung läuft über den DSGVO-Weg.
+      </p>
+      <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+        <button onClick={save} disabled={saving} style={{ ...addBtn, marginLeft: 0 }}>{saving ? 'Speichert…' : 'Status setzen'}</button>
+        <button onClick={() => setOffen(false)} disabled={saving} style={{ ...backBtn, marginBottom: 0 }}>Abbrechen</button>
       </div>
     </div>
   )
