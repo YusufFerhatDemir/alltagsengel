@@ -145,6 +145,7 @@ export default function EngelBewerbungForm() {
           />
         </div>
         <select
+          aria-label="Erfahrung (optional)"
           value={form.qualification}
           onChange={e => setForm({ ...form, qualification: e.target.value })}
           style={{ ...inputStyle, appearance: 'auto', color: form.qualification ? '#F5F0E8' : '#8A8279' }}
