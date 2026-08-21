@@ -1,3 +1,4 @@
+import { apiErrorResponse } from '@/lib/api/error-sanitizer'
 import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
@@ -15,7 +16,7 @@ export async function GET(
     const data = await getRegel(supabase, { organizationId: auth.ctx.organizationId, id })
     return NextResponse.json(data)
   } catch (e: any) {
-    return NextResponse.json({ error: e.message }, { status: 400 })
+    return apiErrorResponse(e)
   }
 }
 
@@ -33,7 +34,7 @@ export async function PUT(
     const data = await updateRegel(supabase, { organizationId: auth.ctx.organizationId, id, data: safeData })
     return NextResponse.json(data)
   } catch (e: any) {
-    return NextResponse.json({ error: e.message }, { status: 400 })
+    return apiErrorResponse(e)
   }
 }
 
@@ -49,6 +50,6 @@ export async function DELETE(
     await deleteRegel(supabase, { organizationId: auth.ctx.organizationId, id })
     return NextResponse.json({ ok: true })
   } catch (e: any) {
-    return NextResponse.json({ error: e.message }, { status: 400 })
+    return apiErrorResponse(e)
   }
 }

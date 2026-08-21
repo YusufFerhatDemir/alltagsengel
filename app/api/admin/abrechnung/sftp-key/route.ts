@@ -64,13 +64,13 @@ export async function POST(req: NextRequest) {
     const { error: upErr } = await supabase.storage
       .from(ZERTIFIKAT_BUCKET)
       .upload(pfad, buf, { contentType: 'application/x-pem-file', upsert: true })
-    if (upErr) return NextResponse.json({ error: `Upload fehlgeschlagen: ${upErr.message}` }, { status: 500 })
+    if (upErr) return safeApiError(upErr, req)
 
     const { error: updErr } = await supabase
       .from('datenannahmestellen')
       .update({ sftp_key_url: pfad })
       .eq('id', das.id)
-    if (updErr) return NextResponse.json({ error: updErr.message }, { status: 500 })
+    if (updErr) return safeApiError(updErr, req)
 
     // Fingerprint über den Dateiinhalt, damit ein Austausch nachweisbar ist.
     // Der Key selbst verlässt den Bucket nicht — in die Datenbank geht nur

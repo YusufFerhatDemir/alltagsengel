@@ -1,3 +1,4 @@
+import { apiErrorResponse } from '@/lib/api/error-sanitizer'
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
@@ -11,7 +12,7 @@ export async function GET() {
     const regeln = await listRegeln(supabase, auth.ctx.organizationId)
     return NextResponse.json(regeln)
   } catch (e: any) {
-    return NextResponse.json({ error: e.message }, { status: 400 })
+    return apiErrorResponse(e)
   }
 }
 
@@ -39,7 +40,7 @@ export async function POST(request: Request) {
     })
     return NextResponse.json(regel, { status: 201 })
   } catch (e: any) {
-    return NextResponse.json({ error: e.message }, { status: 400 })
+    return apiErrorResponse(e, request)
   }
 }
 
@@ -54,6 +55,6 @@ export async function PATCH(request: Request) {
     const regel = await setRegelAktiv(supabase, { organizationId: auth.ctx.organizationId, id, aktiv })
     return NextResponse.json(regel)
   } catch (e: any) {
-    return NextResponse.json({ error: e.message }, { status: 400 })
+    return apiErrorResponse(e, request)
   }
 }

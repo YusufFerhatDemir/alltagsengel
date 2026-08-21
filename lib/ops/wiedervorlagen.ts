@@ -1,3 +1,4 @@
+import { UserFacingError } from '@/lib/api/user-facing-error'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import {
   assertErlaubt,
@@ -45,12 +46,12 @@ export async function createWiedervorlage(
   supabase: SupabaseClient,
   params: { organizationId: string; data: Omit<OpsWiedervorlage, 'id' | 'organization_id' | 'created_at' | 'erledigt_am' | 'erledigt_von'> },
 ): Promise<OpsWiedervorlage> {
-  if (!params.data.titel?.trim()) throw new Error('Titel ist ein Pflichtfeld.')
-  if (!params.data.entitaet_typ) throw new Error('Entitaet-Typ ist ein Pflichtfeld.')
-  if (!params.data.entitaet_id) throw new Error('Entitaet-ID ist ein Pflichtfeld.')
-  if (!params.data.faellig_am) throw new Error('Faelligkeitsdatum ist ein Pflichtfeld.')
-  if (!params.data.empfaenger_id) throw new Error('Empfaenger ist ein Pflichtfeld.')
-  if (!params.data.erstellt_von) throw new Error('Ersteller ist ein Pflichtfeld.')
+  if (!params.data.titel?.trim()) throw new UserFacingError('Titel ist ein Pflichtfeld.')
+  if (!params.data.entitaet_typ) throw new UserFacingError('Entitaet-Typ ist ein Pflichtfeld.')
+  if (!params.data.entitaet_id) throw new UserFacingError('Entitaet-ID ist ein Pflichtfeld.')
+  if (!params.data.faellig_am) throw new UserFacingError('Faelligkeitsdatum ist ein Pflichtfeld.')
+  if (!params.data.empfaenger_id) throw new UserFacingError('Empfaenger ist ein Pflichtfeld.')
+  if (!params.data.erstellt_von) throw new UserFacingError('Ersteller ist ein Pflichtfeld.')
   assertErlaubt(params.data.entitaet_typ, WIEDERVORLAGE_ENTITAET_TYP_WERTE, 'entitaet_typ')
   const { data, error } = await supabase
     .from('ops_wiedervorlagen')
@@ -66,7 +67,7 @@ export async function updateWiedervorlage(
   params: { organizationId: string; id: string; data: Partial<Pick<OpsWiedervorlage, 'titel' | 'beschreibung' | 'faellig_am' | 'status' | 'erledigt_am' | 'erledigt_von'>> },
 ): Promise<OpsWiedervorlage> {
   if (params.data.titel !== undefined && !params.data.titel?.trim()) {
-    throw new Error('Titel darf nicht leer sein.')
+    throw new UserFacingError('Titel darf nicht leer sein.')
   }
   assertErlaubt(params.data.status, WIEDERVORLAGE_STATUS_WERTE, 'status')
   const { data, error } = await supabase

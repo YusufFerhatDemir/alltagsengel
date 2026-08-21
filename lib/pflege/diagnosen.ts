@@ -1,3 +1,4 @@
+import { UserFacingError } from '@/lib/api/user-facing-error'
 // ═══════════════════════════════════════════════════════════════
 // Diagnosen / Einschränkungen / Hinweise — pflege_diagnosen
 // Soft-Delete über aktiv=false (die Tabelle hat kein deleted_at).
@@ -32,7 +33,7 @@ export interface CreateDiagnoseParams {
 }
 
 export async function createDiagnose(supabase: SupabaseClient, params: CreateDiagnoseParams): Promise<PflegeDiagnose> {
-  if (!params.bezeichnung?.trim()) throw new Error('Bezeichnung ist ein Pflichtfeld.')
+  if (!params.bezeichnung?.trim()) throw new UserFacingError('Bezeichnung ist ein Pflichtfeld.')
   assertErlaubt(params.diagnoseTyp, DIAGNOSE_TYP_WERTE, 'diagnose_typ')
   assertErlaubt(params.schweregrad, DIAGNOSE_SCHWEREGRAD_WERTE, 'schweregrad')
 
@@ -126,7 +127,7 @@ export async function updateDiagnose(
   assertErlaubt(patch.diagnoseTyp, DIAGNOSE_TYP_WERTE, 'diagnose_typ')
   assertErlaubt(patch.schweregrad, DIAGNOSE_SCHWEREGRAD_WERTE, 'schweregrad')
   if (patch.bezeichnung !== undefined && !patch.bezeichnung.trim()) {
-    throw new Error('Bezeichnung darf nicht leer sein.')
+    throw new UserFacingError('Bezeichnung darf nicht leer sein.')
   }
 
   const update: Record<string, unknown> = {}
@@ -141,7 +142,7 @@ export async function updateDiagnose(
   if (patch.betreuungsrelevant !== undefined) update.betreuungsrelevant = patch.betreuungsrelevant
   if (patch.hinweisFuerEngel !== undefined) update.hinweis_fuer_engel = patch.hinweisFuerEngel
 
-  if (Object.keys(update).length === 0) throw new Error('Keine Änderungen übergeben.')
+  if (Object.keys(update).length === 0) throw new UserFacingError('Keine Änderungen übergeben.')
 
   const { data, error } = await supabase
     .from('pflege_diagnosen')

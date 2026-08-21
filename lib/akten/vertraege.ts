@@ -1,3 +1,4 @@
+import { UserFacingError } from '@/lib/api/user-facing-error'
 // ═══════════════════════════════════════════════════════════════
 // Vertragsverwaltung — akten_vertraege
 // CRUD, Status-Workflow, Unterschrift mit anschließender Sperre
@@ -46,7 +47,7 @@ export interface CreateVertragParams {
 
 export async function createVertrag(supabase: SupabaseClient, params: CreateVertragParams): Promise<AktenVertrag> {
   if (params.clientId && params.caregiverId) {
-    throw new Error('Ein Vertrag kann nicht gleichzeitig Kunde und Mitarbeiter zugeordnet sein.')
+    throw new UserFacingError('Ein Vertrag kann nicht gleichzeitig Kunde und Mitarbeiter zugeordnet sein.')
   }
 
   const { data, error } = await supabase
@@ -139,12 +140,12 @@ export async function updateVertrag(
   actorRole?: string
 ): Promise<AktenVertrag> {
   const existing = await getVertrag(supabase, id, organizationId)
-  if (!existing) throw new Error('Vertrag nicht gefunden.')
+  if (!existing) throw new UserFacingError('Vertrag nicht gefunden.')
   // Gesperrt (= unterschrieben) schützt nur die Kerndaten (Titel, Laufzeitbeginn) —
   // Statusfolgeschritte (unterschrieben → aktiv → gekündigt/beendet) bleiben möglich.
   // Die DB (trg_locked_contract) erzwingt dasselbe zusätzlich auf Tabellenebene.
   if (existing.gesperrt && (patch.titel !== undefined || patch.vertragsbeginn !== undefined)) {
-    throw new Error('Unterschriebener Vertrag ist gesperrt — Kerndaten können nicht mehr geändert werden.')
+    throw new UserFacingError('Unterschriebener Vertrag ist gesperrt — Kerndaten können nicht mehr geändert werden.')
   }
   if (patch.status) validateVertragsUebergang(existing.status, patch.status)
 
@@ -194,8 +195,8 @@ export async function vertragUnterschreiben(
   params: UnterschreibenParams
 ): Promise<AktenVertrag> {
   const existing = await getVertrag(supabase, id, organizationId)
-  if (!existing) throw new Error('Vertrag nicht gefunden.')
-  if (existing.gesperrt) throw new Error('Vertrag ist bereits unterschrieben und gesperrt.')
+  if (!existing) throw new UserFacingError('Vertrag nicht gefunden.')
+  if (existing.gesperrt) throw new UserFacingError('Vertrag ist bereits unterschrieben und gesperrt.')
   validateVertragsUebergang(existing.status, 'unterschrieben')
 
   const { data, error } = await supabase

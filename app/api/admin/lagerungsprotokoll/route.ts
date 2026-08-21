@@ -1,3 +1,4 @@
+import { apiErrorResponse } from '@/lib/api/error-sanitizer'
 import { NextRequest, NextResponse } from 'next/server'
 import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createAdminClient } from '@/lib/supabase/admin'
@@ -87,7 +88,7 @@ export async function POST(req: NextRequest) {
 
     if (error) {
       log.error('Anlegen fehlgeschlagen', { errorMessage: error.message })
-      return NextResponse.json({ error: `Speichern fehlgeschlagen: ${error.message}` }, { status: 500 })
+      return apiErrorResponse(error, req)
     }
 
     await logAuditEvent({
@@ -131,7 +132,7 @@ export async function DELETE(req: NextRequest) {
 
     if (error) {
       log.error('Archivierung fehlgeschlagen', { errorMessage: error.message })
-      return NextResponse.json({ error: `Archivierung fehlgeschlagen: ${error.message}` }, { status: 500 })
+      return apiErrorResponse(error, req)
     }
     if (!data) {
       return NextResponse.json({ error: 'Nicht gefunden oder bereits archiviert' }, { status: 404 })

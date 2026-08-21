@@ -1,3 +1,4 @@
+import { apiErrorResponse } from '@/lib/api/error-sanitizer'
 import { NextRequest, NextResponse } from 'next/server'
 import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createAdminClient } from '@/lib/supabase/admin'
@@ -104,7 +105,7 @@ export async function PUT(
         .eq('organization_id', auth.ctx.organizationId)
       if (error) {
         log.error('Update fehlgeschlagen', { errorMessage: error.message })
-        return NextResponse.json({ error: `Speichern fehlgeschlagen: ${error.message}` }, { status: 500 })
+        return apiErrorResponse(error)
       }
 
       // Audit-Log: archive/unarchive vs. normales Update
@@ -129,7 +130,7 @@ export async function PUT(
       .single()
     if (error) {
       log.error('Anlegen fehlgeschlagen', { errorMessage: error.message })
-      return NextResponse.json({ error: `Speichern fehlgeschlagen: ${error.message}` }, { status: 500 })
+      return apiErrorResponse(error)
     }
 
     await logAuditEvent({

@@ -1,3 +1,4 @@
+import { apiErrorResponse } from '@/lib/api/error-sanitizer'
 import { NextResponse } from 'next/server'
 import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createAdminClient } from '@/lib/supabase/admin'
@@ -170,7 +171,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ eintrag })
   } catch (err) {
-    return NextResponse.json({ error: (err as Error).message }, { status: 400 })
+    return apiErrorResponse(err, request)
   }
 }
 
@@ -208,7 +209,7 @@ export async function PATCH(request: Request) {
       .eq('organization_id', auth.ctx.organizationId)
 
     if (error) {
-      return NextResponse.json({ error: `Archivierung fehlgeschlagen: ${error.message}` }, { status: 500 })
+      return apiErrorResponse(error, request)
     }
 
     await logAuditEvent({

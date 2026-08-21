@@ -1,3 +1,4 @@
+import { apiErrorResponse } from '@/lib/api/error-sanitizer'
 import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requirePersonalAdmin } from '@/lib/personal/api-auth'
@@ -16,6 +17,6 @@ export async function GET(request: Request) {
     const data = await listTagesansicht(supabase, auth.ctx.organizationId, datum)
     return NextResponse.json(data)
   } catch (e: any) {
-    return NextResponse.json({ error: e.message }, { status: 400 })
+    return apiErrorResponse(e, request)
   }
 }

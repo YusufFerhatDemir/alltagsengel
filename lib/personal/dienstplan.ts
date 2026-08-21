@@ -1,3 +1,4 @@
+import { UserFacingError } from '@/lib/api/user-facing-error'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import {
   assertErlaubt,
@@ -19,7 +20,7 @@ export interface CreateSchichtParams {
 }
 
 export async function createSchicht(supabase: SupabaseClient, params: CreateSchichtParams): Promise<DienstplanSchicht> {
-  if (!params.bezeichnung?.trim()) throw new Error('Bezeichnung ist ein Pflichtfeld.')
+  if (!params.bezeichnung?.trim()) throw new UserFacingError('Bezeichnung ist ein Pflichtfeld.')
 
   const { data, error } = await supabase
     .from('dienstplan_schichten')
@@ -77,7 +78,7 @@ export async function updateSchicht(
   if (patch.farbe !== undefined) update.farbe = patch.farbe
   if (patch.aktiv !== undefined) update.aktiv = patch.aktiv
 
-  if (Object.keys(update).length === 0) throw new Error('Keine Änderungen übergeben.')
+  if (Object.keys(update).length === 0) throw new UserFacingError('Keine Änderungen übergeben.')
 
   const { data, error } = await supabase
     .from('dienstplan_schichten')
@@ -133,8 +134,8 @@ export async function createEintrag(supabase: SupabaseClient, params: CreateEint
     .single()
   if (error || !data) {
     const msg = error?.message ?? 'unbekannt'
-    if (msg.includes('Doppelbelegung')) throw new Error('Doppelbelegung: Der Mitarbeiter hat bereits einen Dienst in diesem Zeitraum.')
-    if (msg.includes('Konflikt')) throw new Error('Konflikt: Der Mitarbeiter ist an diesem Tag als abwesend gemeldet.')
+    if (msg.includes('Doppelbelegung')) throw new UserFacingError('Doppelbelegung: Der Mitarbeiter hat bereits einen Dienst in diesem Zeitraum.')
+    if (msg.includes('Konflikt')) throw new UserFacingError('Konflikt: Der Mitarbeiter ist an diesem Tag als abwesend gemeldet.')
     throw new Error(`Dienstplan-Eintrag konnte nicht angelegt werden: ${msg}`)
   }
   return data as DienstplanEintrag
@@ -208,7 +209,7 @@ export async function updateEintrag(
   if (patch.bestaetigtVon !== undefined) update.bestaetigt_von = patch.bestaetigtVon
   if (patch.bestaetigtAm !== undefined) update.bestaetigt_am = patch.bestaetigtAm
 
-  if (Object.keys(update).length === 0) throw new Error('Keine Änderungen übergeben.')
+  if (Object.keys(update).length === 0) throw new UserFacingError('Keine Änderungen übergeben.')
 
   const { data, error } = await supabase
     .from('dienstplan_eintraege')
@@ -219,8 +220,8 @@ export async function updateEintrag(
     .single()
   if (error || !data) {
     const msg = error?.message ?? 'unbekannt'
-    if (msg.includes('Doppelbelegung')) throw new Error('Doppelbelegung: Der Mitarbeiter hat bereits einen Dienst in diesem Zeitraum.')
-    if (msg.includes('Konflikt')) throw new Error('Konflikt: Der Mitarbeiter ist an diesem Tag als abwesend gemeldet.')
+    if (msg.includes('Doppelbelegung')) throw new UserFacingError('Doppelbelegung: Der Mitarbeiter hat bereits einen Dienst in diesem Zeitraum.')
+    if (msg.includes('Konflikt')) throw new UserFacingError('Konflikt: Der Mitarbeiter ist an diesem Tag als abwesend gemeldet.')
     throw new Error(`Dienstplan-Eintrag konnte nicht aktualisiert werden: ${msg}`)
   }
   return data as DienstplanEintrag

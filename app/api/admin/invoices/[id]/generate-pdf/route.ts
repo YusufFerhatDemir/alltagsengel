@@ -158,7 +158,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       .order('date', { ascending: true })
 
     if (itemsErr) {
-      return NextResponse.json({ error: `Positionen-Fehler: ${itemsErr.message}` }, { status: 500 })
+      return safeApiError(itemsErr, req)
     }
 
     const invoiceItems = items || []
@@ -429,7 +429,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       })
 
     if (uploadErr) {
-      return NextResponse.json({ error: `Upload-Fehler: ${uploadErr.message}` }, { status: 500 })
+      return safeApiError(uploadErr, req)
     }
 
     const { data: signedUrlData, error: signErr } = await adminClient.storage
@@ -437,7 +437,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       .createSignedUrl(storagePath, 60 * 60 * 24 * 30) // 30 Tage
 
     if (signErr || !signedUrlData?.signedUrl) {
-      return NextResponse.json({ error: `Signierte URL fehlgeschlagen: ${signErr?.message}` }, { status: 500 })
+      return safeApiError(signErr, req)
     }
 
     const pdfUrl = signedUrlData.signedUrl
@@ -455,7 +455,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       }, { onConflict: 'invoice_id' })
 
     if (pkgErr) {
-      return NextResponse.json({ error: `invoice_packages-Fehler: ${pkgErr.message}` }, { status: 500 })
+      return safeApiError(pkgErr, req)
     }
 
     await logAuditEvent({

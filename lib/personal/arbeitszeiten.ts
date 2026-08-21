@@ -1,3 +1,4 @@
+import { UserFacingError } from '@/lib/api/user-facing-error'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import {
   assertErlaubt, assertPlausibleZeiten,
@@ -109,7 +110,7 @@ export async function updateArbeitszeit(
   if (patch.gesperrt !== undefined) update.gesperrt = patch.gesperrt
   if (patch.bemerkung !== undefined) update.bemerkung = patch.bemerkung
 
-  if (Object.keys(update).length === 0) throw new Error('Keine Änderungen übergeben.')
+  if (Object.keys(update).length === 0) throw new UserFacingError('Keine Änderungen übergeben.')
 
   const { data, error } = await supabase
     .from('personal_arbeitszeiten')
@@ -120,7 +121,7 @@ export async function updateArbeitszeit(
     .single()
   if (error || !data) {
     const msg = error?.message ?? 'unbekannt'
-    if (msg.includes('Gesperrte Arbeitszeit')) throw new Error('Gesperrte Arbeitszeit kann nicht bearbeitet werden.')
+    if (msg.includes('Gesperrte Arbeitszeit')) throw new UserFacingError('Gesperrte Arbeitszeit kann nicht bearbeitet werden.')
     throw new Error(`Arbeitszeit konnte nicht aktualisiert werden: ${msg}`)
   }
   return data as PersonalArbeitszeit

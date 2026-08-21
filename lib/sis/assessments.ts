@@ -1,3 +1,4 @@
+import { UserFacingError } from '@/lib/api/user-facing-error'
 // ═══════════════════════════════════════════════════════════════
 // SIS-Assessments — sis_assessments (Kopfsatz)
 // CRUD + Statusmaschine + Abschluss-Validierung + Sperr-Logik.
@@ -160,8 +161,8 @@ export async function updateAssessment(
   assertSisWert(params.assessmentTyp, SIS_ASSESSMENT_TYP_WERTE, 'assessment_typ')
 
   const bestehend = await ladeKopfsatz(supabase, id, organizationId)
-  if (bestehend.gesperrt) throw new Error('Gesperrte Informationssammlung kann nicht bearbeitet werden.')
-  if (bestehend.status !== 'entwurf') throw new Error('Nur eine SIS im Entwurf kann bearbeitet werden.')
+  if (bestehend.gesperrt) throw new UserFacingError('Gesperrte Informationssammlung kann nicht bearbeitet werden.')
+  if (bestehend.status !== 'entwurf') throw new UserFacingError('Nur eine SIS im Entwurf kann bearbeitet werden.')
 
   const payload: Record<string, unknown> = {}
   if (params.assessmentDatum !== undefined) payload.assessment_datum = params.assessmentDatum
@@ -189,7 +190,7 @@ export async function abschliessenAssessment(
   supabase: SupabaseClient, id: string, organizationId: string, userId: string,
 ): Promise<SisAssessment> {
   const detail = await getAssessment(supabase, id, organizationId)
-  if (!detail) throw new Error('SIS nicht gefunden.')
+  if (!detail) throw new UserFacingError('SIS nicht gefunden.')
   validateSisUebergang(detail.status, 'abgeschlossen')
 
   const fehlend = relevanteThemenfelder(detail.versorgungsform).filter(nr => {
@@ -261,6 +262,6 @@ export async function ladeKopfsatz(supabase: SupabaseClient, id: string, organiz
     .eq('organization_id', organizationId)
     .maybeSingle()
   if (error) throw new Error(`SIS konnte nicht geladen werden: ${error.message}`)
-  if (!data) throw new Error('SIS nicht gefunden.')
+  if (!data) throw new UserFacingError('SIS nicht gefunden.')
   return data as SisAssessment
 }

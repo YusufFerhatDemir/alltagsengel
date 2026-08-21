@@ -1,3 +1,4 @@
+import { apiErrorResponse } from '@/lib/api/error-sanitizer'
 import { NextResponse } from 'next/server'
 import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createAdminClient } from '@/lib/supabase/admin'
@@ -68,6 +69,6 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 
     return NextResponse.json({ wunde })
   } catch (err) {
-    return NextResponse.json({ error: (err as Error).message }, { status: 400 })
+    return apiErrorResponse(err, request)
   }
 }

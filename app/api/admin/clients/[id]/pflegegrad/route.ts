@@ -108,7 +108,7 @@ export async function PATCH(
       .eq('organization_id', organizationId)
 
     if (updateError) {
-      return NextResponse.json({ error: updateError.message }, { status: 500 })
+      return safeApiError(updateError)
     }
 
     await logAuditEvent({

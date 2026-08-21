@@ -55,7 +55,7 @@ export async function POST(req: NextRequest) {
         .from(ZERTIFIKAT_BUCKET)
         .download(das.sftp_key_url)
       if (keyErr || !keyFile) {
-        return NextResponse.json({ error: `SSH-Key nicht ladbar: ${keyErr?.message}` }, { status: 500 })
+        return safeApiError(keyErr, req)
       }
       sftpKey = Buffer.from(await keyFile.arrayBuffer())
     }

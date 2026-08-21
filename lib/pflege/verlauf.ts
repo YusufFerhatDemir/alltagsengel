@@ -1,3 +1,4 @@
+import { UserFacingError } from '@/lib/api/user-facing-error'
 // ═══════════════════════════════════════════════════════════════
 // Verlaufsdokumentation — pflege_verlauf
 // CRUD, Sichtbarkeits-Validierung und Sperr-Logik. Ein gesperrter
@@ -64,7 +65,7 @@ export interface CreateVerlaufParams {
 }
 
 export async function createVerlauf(supabase: SupabaseClient, params: CreateVerlaufParams): Promise<PflegeVerlaufEintrag> {
-  if (!params.inhalt?.trim()) throw new Error('Inhalt ist ein Pflichtfeld.')
+  if (!params.inhalt?.trim()) throw new UserFacingError('Inhalt ist ein Pflichtfeld.')
   assertErlaubt(params.eintragTyp, VERLAUF_TYP_WERTE, 'eintrag_typ')
   assertErlaubt(params.kategorie, VERLAUF_KATEGORIE_WERTE, 'kategorie')
   validateSichtbarkeit(params.sichtbarkeit, params.autorRolle)
@@ -173,9 +174,9 @@ export async function updateVerlauf(
   actorRolle: string
 ): Promise<PflegeVerlaufEintrag> {
   const existing = await getVerlauf(supabase, id, organizationId)
-  if (!existing) throw new Error('Verlaufseintrag nicht gefunden.')
+  if (!existing) throw new UserFacingError('Verlaufseintrag nicht gefunden.')
   if (existing.gesperrt) {
-    throw new Error('Gesperrter Verlaufseintrag kann nicht bearbeitet werden. Erst Dokumentationsperiode wiedereröffnen.')
+    throw new UserFacingError('Gesperrter Verlaufseintrag kann nicht bearbeitet werden. Erst Dokumentationsperiode wiedereröffnen.')
   }
 
   assertErlaubt(patch.eintragTyp, VERLAUF_TYP_WERTE, 'eintrag_typ')
@@ -187,14 +188,14 @@ export async function updateVerlauf(
   if (patch.kategorie !== undefined) update.kategorie = patch.kategorie
   if (patch.titel !== undefined) update.titel = patch.titel
   if (patch.inhalt !== undefined) {
-    if (!patch.inhalt.trim()) throw new Error('Inhalt darf nicht leer sein.')
+    if (!patch.inhalt.trim()) throw new UserFacingError('Inhalt darf nicht leer sein.')
     update.inhalt = patch.inhalt.trim()
   }
   if (patch.istDringend !== undefined) update.ist_dringend = patch.istDringend
   if (patch.sichtbarkeit !== undefined) update.sichtbarkeit = patch.sichtbarkeit
   if (patch.massnahmeId !== undefined) update.massnahme_id = patch.massnahmeId
 
-  if (Object.keys(update).length === 0) throw new Error('Keine Änderungen übergeben.')
+  if (Object.keys(update).length === 0) throw new UserFacingError('Keine Änderungen übergeben.')
 
   const { data, error } = await supabase
     .from('pflege_verlauf')

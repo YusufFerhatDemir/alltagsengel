@@ -1,3 +1,4 @@
+import { UserFacingError } from '@/lib/api/user-facing-error'
 // ═══════════════════════════════════════════════════════════════
 // Monatsabschlüsse der Pflegedokumentation — pflege_doku_perioden
 // Abschließen setzt pflege_verlauf.gesperrt für den Monat auf true,
@@ -9,10 +10,10 @@ import type { PeriodenStatus, PflegeDokuPeriode } from './types'
 
 export function validateJahrMonat(jahr: number, monat: number): void {
   if (!Number.isInteger(jahr) || jahr < 2020 || jahr > 2099) {
-    throw new Error('Jahr muss zwischen 2020 und 2099 liegen.')
+    throw new UserFacingError('Jahr muss zwischen 2020 und 2099 liegen.')
   }
   if (!Number.isInteger(monat) || monat < 1 || monat > 12) {
-    throw new Error('Monat muss zwischen 1 und 12 liegen.')
+    throw new UserFacingError('Monat muss zwischen 1 und 12 liegen.')
   }
 }
 
@@ -45,7 +46,7 @@ export async function createPeriode(supabase: SupabaseClient, params: CreatePeri
     .select('*')
     .single()
   if (error || !data) {
-    if (error?.code === '23505') throw new Error('Für diesen Kunden und Monat existiert bereits eine Periode.')
+    if (error?.code === '23505') throw new UserFacingError('Für diesen Kunden und Monat existiert bereits eine Periode.')
     throw new Error(`Periode konnte nicht angelegt werden: ${error?.message ?? 'unbekannt'}`)
   }
   return data as PflegeDokuPeriode
@@ -124,8 +125,8 @@ export async function abschliessenPeriode(
   params: AbschliessenParams
 ): Promise<{ periode: PflegeDokuPeriode; gesperrteEintraege: number }> {
   const existing = await getPeriode(supabase, id, organizationId)
-  if (!existing) throw new Error('Periode nicht gefunden.')
-  if (existing.status === 'abgeschlossen') throw new Error('Periode ist bereits abgeschlossen.')
+  if (!existing) throw new UserFacingError('Periode nicht gefunden.')
+  if (existing.status === 'abgeschlossen') throw new UserFacingError('Periode ist bereits abgeschlossen.')
 
   const gesperrteEintraege = await setzeVerlaufSperre(supabase, {
     organizationId,
@@ -164,11 +165,11 @@ export async function wiedereroeffnenPeriode(
   organizationId: string,
   params: WiedereroeffnenParams
 ): Promise<{ periode: PflegeDokuPeriode; entsperrteEintraege: number }> {
-  if (!params.grund?.trim()) throw new Error('Ein Grund für die Wiedereröffnung ist erforderlich.')
+  if (!params.grund?.trim()) throw new UserFacingError('Ein Grund für die Wiedereröffnung ist erforderlich.')
 
   const existing = await getPeriode(supabase, id, organizationId)
-  if (!existing) throw new Error('Periode nicht gefunden.')
-  if (existing.status !== 'abgeschlossen') throw new Error('Nur abgeschlossene Perioden können wiedereröffnet werden.')
+  if (!existing) throw new UserFacingError('Periode nicht gefunden.')
+  if (existing.status !== 'abgeschlossen') throw new UserFacingError('Nur abgeschlossene Perioden können wiedereröffnet werden.')
 
   const entsperrteEintraege = await setzeVerlaufSperre(supabase, {
     organizationId,

@@ -1,3 +1,4 @@
+import { apiErrorResponse } from '@/lib/api/error-sanitizer'
 import { NextRequest, NextResponse } from 'next/server'
 import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createAdminClient } from '@/lib/supabase/admin'
@@ -83,7 +84,7 @@ export async function PATCH(
 
     if (error) {
       log.error('Update fehlgeschlagen', { errorMessage: error.message })
-      return NextResponse.json({ error: `Speichern fehlgeschlagen: ${error.message}` }, { status: 500 })
+      return apiErrorResponse(error)
     }
     if (!data) return NextResponse.json({ error: 'Nicht gefunden' }, { status: 404 })
 

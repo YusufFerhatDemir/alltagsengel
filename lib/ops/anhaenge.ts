@@ -1,3 +1,4 @@
+import { UserFacingError } from '@/lib/api/user-facing-error'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { OpsAufgabeAnhang } from './types'
 
@@ -19,7 +20,7 @@ export async function createAnhang(
   supabase: SupabaseClient,
   params: { organizationId: string; aufgabeId: string; dokumentId: string; hinzugefuegtVon?: string },
 ): Promise<OpsAufgabeAnhang> {
-  if (!params.dokumentId?.trim()) throw new Error('Dokument-ID ist ein Pflichtfeld.')
+  if (!params.dokumentId?.trim()) throw new UserFacingError('Dokument-ID ist ein Pflichtfeld.')
   const { data, error } = await supabase
     .from('ops_aufgaben_anhaenge')
     .insert({

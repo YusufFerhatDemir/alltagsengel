@@ -1,3 +1,4 @@
+import { UserFacingError } from '@/lib/api/user-facing-error'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { assertErlaubt, SCHULUNGSART_WERTE, type PersonalSchulung, type Schulungsart } from './types'
 
@@ -20,7 +21,7 @@ export interface CreateSchulungParams {
 }
 
 export async function createSchulung(supabase: SupabaseClient, params: CreateSchulungParams): Promise<PersonalSchulung> {
-  if (!params.titel?.trim()) throw new Error('Titel ist ein Pflichtfeld.')
+  if (!params.titel?.trim()) throw new UserFacingError('Titel ist ein Pflichtfeld.')
   assertErlaubt(params.schulungsart, SCHULUNGSART_WERTE, 'schulungsart')
 
   const { data, error } = await supabase
@@ -106,7 +107,7 @@ export async function updateSchulung(
   if (patch.naechsteAuffrischung !== undefined) update.naechste_auffrischung = patch.naechsteAuffrischung
   if (patch.bemerkung !== undefined) update.bemerkung = patch.bemerkung
 
-  if (Object.keys(update).length === 0) throw new Error('Keine Änderungen übergeben.')
+  if (Object.keys(update).length === 0) throw new UserFacingError('Keine Änderungen übergeben.')
 
   const { data, error } = await supabase
     .from('personal_schulungen')

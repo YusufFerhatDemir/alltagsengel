@@ -1,3 +1,4 @@
+import { apiErrorResponse } from '@/lib/api/error-sanitizer'
 import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsUser } from '@/lib/ops/api-auth'
@@ -34,6 +35,6 @@ export async function GET(
 
     return NextResponse.json({ ...data, replies: replies ?? [] })
   } catch (e: any) {
-    return NextResponse.json({ error: e.message }, { status: 400 })
+    return apiErrorResponse(e)
   }
 }

@@ -1,3 +1,4 @@
+import { apiErrorResponse } from '@/lib/api/error-sanitizer'
 import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
@@ -15,6 +16,6 @@ export async function DELETE(
     await deleteAktion(supabase, { organizationId: auth.ctx.organizationId, regelId: id, id: aktionId })
     return NextResponse.json({ ok: true })
   } catch (e: any) {
-    return NextResponse.json({ error: e.message }, { status: 400 })
+    return apiErrorResponse(e)
   }
 }

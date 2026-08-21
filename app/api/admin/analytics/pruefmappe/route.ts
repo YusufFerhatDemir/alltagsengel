@@ -1,3 +1,4 @@
+import { apiErrorResponse } from '@/lib/api/error-sanitizer'
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
@@ -20,6 +21,6 @@ export async function GET(request: Request) {
     const mappe = await erstellePruefmappe(supabase, { organizationId: auth.ctx.organizationId, clientId, von, bis })
     return NextResponse.json(mappe)
   } catch (e: any) {
-    return NextResponse.json({ error: e.message }, { status: 400 })
+    return apiErrorResponse(e, request)
   }
 }

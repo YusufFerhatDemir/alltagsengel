@@ -1,3 +1,4 @@
+import { UserFacingError } from '@/lib/api/user-facing-error'
 // ═══════════════════════════════════════════════════════════════
 // Block 19 — Bonussystem: Regelwerk, Berechnungslauf, Freigabe
 // Leistungsbezogene Boni auf Basis konfigurierbarer Kriterien.
@@ -139,7 +140,7 @@ export async function createRegel(
   params: { organizationId: string; name: string; kriteriumTyp: BonusKriteriumTyp; schwellenwert: number; punkte: number; userId: string },
 ): Promise<BonusRegel> {
   if (!BONUS_KRITERIUM_TYP_WERTE.includes(params.kriteriumTyp)) throw new Error(`Unbekanntes Kriterium: ${params.kriteriumTyp}`)
-  if (!(params.punkte > 0)) throw new Error('Punkte müssen größer als 0 sein.')
+  if (!(params.punkte > 0)) throw new UserFacingError('Punkte müssen größer als 0 sein.')
   const { data, error } = await supabase
     .from('bonus_regeln')
     .insert({
@@ -188,7 +189,7 @@ export async function fuehreBerechnungslaufDurch(
     .single()
   if (regelErr || !regelRow) throw new Error(`Regel nicht gefunden: ${regelErr?.message ?? regelId}`)
   const regel = mapRegel(regelRow)
-  if (!regel.aktiv) throw new Error('Regel ist deaktiviert — kein Berechnungslauf möglich.')
+  if (!regel.aktiv) throw new UserFacingError('Regel ist deaktiviert — kein Berechnungslauf möglich.')
 
   const { data: caregiverRows, error: caregiverErr } = await supabase
     .from('caregivers')

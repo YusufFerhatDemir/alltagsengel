@@ -1,3 +1,4 @@
+import { apiErrorResponse } from '@/lib/api/error-sanitizer'
 import { NextResponse } from 'next/server'
 import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createAdminClient } from '@/lib/supabase/admin'
@@ -103,6 +104,6 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ messung, bewertung, alarmeAktiv: true })
   } catch (err) {
-    return NextResponse.json({ error: (err as Error).message }, { status: 400 })
+    return apiErrorResponse(err, request)
   }
 }

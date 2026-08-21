@@ -86,7 +86,7 @@ export async function POST(
       .eq('id', id)
       .eq('status', current) // Race-Schutz: nur vom erwarteten Ausgangsstatus
     if (updError) {
-      return NextResponse.json({ error: `Statuswechsel fehlgeschlagen: ${updError.message}` }, { status: 400 })
+      return safeApiError(updError)
     }
 
     await logBillingAction(admin, {

@@ -1,3 +1,4 @@
+import { UserFacingError } from '@/lib/api/user-facing-error'
 // ═══════════════════════════════════════════════════════════════
 // Zentrales Dokumentenmanagement — akten_dokumente
 // CRUD, Upload (Storage + SHA-256), Versionierung, Sperre, Archivierung
@@ -125,7 +126,7 @@ export interface CreateDokumentParams {
 
 export async function createDokument(supabase: SupabaseClient, params: CreateDokumentParams): Promise<AktenDokument> {
   if (params.clientId && params.caregiverId) {
-    throw new Error('Ein Dokument kann nicht gleichzeitig Kunde und Mitarbeiter zugeordnet sein.')
+    throw new UserFacingError('Ein Dokument kann nicht gleichzeitig Kunde und Mitarbeiter zugeordnet sein.')
   }
 
   const { data, error } = await supabase
@@ -242,8 +243,8 @@ export async function updateDokument(
   actorRole?: string
 ): Promise<AktenDokument> {
   const existing = await getDokument(supabase, id, organizationId)
-  if (!existing) throw new Error('Dokument nicht gefunden.')
-  if (existing.gesperrt) throw new Error('Gesperrtes Dokument kann nicht bearbeitet werden. Erst entsperren.')
+  if (!existing) throw new UserFacingError('Dokument nicht gefunden.')
+  if (existing.gesperrt) throw new UserFacingError('Gesperrtes Dokument kann nicht bearbeitet werden. Erst entsperren.')
 
   const update: Record<string, unknown> = {}
   if (patch.titel !== undefined) update.titel = patch.titel
@@ -276,8 +277,8 @@ export async function updateDokument(
 
 export async function softDeleteDokument(supabase: SupabaseClient, id: string, organizationId: string, actorId: string, actorRole?: string): Promise<void> {
   const existing = await getDokument(supabase, id, organizationId)
-  if (!existing) throw new Error('Dokument nicht gefunden.')
-  if (existing.gesperrt) throw new Error('Gesperrtes Dokument kann nicht gelöscht werden. Erst entsperren.')
+  if (!existing) throw new UserFacingError('Dokument nicht gefunden.')
+  if (existing.gesperrt) throw new UserFacingError('Gesperrtes Dokument kann nicht gelöscht werden. Erst entsperren.')
 
   const { error } = await supabase
     .from('akten_dokumente')
@@ -346,8 +347,8 @@ export async function addDokumentVersion(
   }
 ): Promise<AktenDokument> {
   const existing = await getDokument(supabase, params.dokumentId, params.organizationId)
-  if (!existing) throw new Error('Dokument nicht gefunden.')
-  if (existing.gesperrt) throw new Error('Gesperrtes Dokument kann nicht versioniert werden. Erst entsperren.')
+  if (!existing) throw new UserFacingError('Dokument nicht gefunden.')
+  if (existing.gesperrt) throw new UserFacingError('Gesperrtes Dokument kann nicht versioniert werden. Erst entsperren.')
 
   const neueVersion = existing.aktuelle_version + 1
 

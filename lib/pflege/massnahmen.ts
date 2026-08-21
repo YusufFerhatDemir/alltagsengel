@@ -1,3 +1,4 @@
+import { UserFacingError } from '@/lib/api/user-facing-error'
 // ═══════════════════════════════════════════════════════════════
 // Einzelmaßnahmen eines Plans — pflege_massnahmen
 // Schreibzugriff nur solange der zugehörige Plan nicht gesperrt ist.
@@ -27,8 +28,8 @@ async function assertPlanOffen(supabase: SupabaseClient, planId: string, organiz
     .eq('organization_id', organizationId)
     .maybeSingle()
   if (error) throw new Error(`Plan konnte nicht geprüft werden: ${error.message}`)
-  if (!data) throw new Error('Maßnahmenplan nicht gefunden.')
-  if (data.gesperrt) throw new Error('Gesperrter Maßnahmenplan — Maßnahmen können nicht geändert werden.')
+  if (!data) throw new UserFacingError('Maßnahmenplan nicht gefunden.')
+  if (data.gesperrt) throw new UserFacingError('Gesperrter Maßnahmenplan — Maßnahmen können nicht geändert werden.')
 }
 
 export interface CreateMassnahmeParams {
@@ -48,11 +49,11 @@ export interface CreateMassnahmeParams {
 }
 
 export async function createMassnahme(supabase: SupabaseClient, params: CreateMassnahmeParams): Promise<PflegeMassnahme> {
-  if (!params.titel?.trim()) throw new Error('Titel ist ein Pflichtfeld.')
+  if (!params.titel?.trim()) throw new UserFacingError('Titel ist ein Pflichtfeld.')
   assertErlaubt(params.kategorie, MASSNAHME_KATEGORIE_WERTE, 'kategorie')
   assertErlaubt(params.prioritaet, MASSNAHME_PRIORITAET_WERTE, 'prioritaet')
   if (params.endeDatum && params.beginnDatum && params.endeDatum < params.beginnDatum) {
-    throw new Error('Enddatum darf nicht vor dem Beginn liegen.')
+    throw new UserFacingError('Enddatum darf nicht vor dem Beginn liegen.')
   }
   await assertPlanOffen(supabase, params.planId, params.organizationId)
 
@@ -146,7 +147,7 @@ export async function updateMassnahme(
   patch: UpdateMassnahmeParams
 ): Promise<PflegeMassnahme> {
   const existing = await getMassnahme(supabase, id, organizationId)
-  if (!existing) throw new Error('Maßnahme nicht gefunden.')
+  if (!existing) throw new UserFacingError('Maßnahme nicht gefunden.')
   await assertPlanOffen(supabase, existing.plan_id, organizationId)
 
   assertErlaubt(patch.kategorie, MASSNAHME_KATEGORIE_WERTE, 'kategorie')
@@ -155,12 +156,12 @@ export async function updateMassnahme(
 
   const beginn = patch.beginnDatum !== undefined ? patch.beginnDatum : existing.beginn_datum
   const ende = patch.endeDatum !== undefined ? patch.endeDatum : existing.ende_datum
-  if (beginn && ende && ende < beginn) throw new Error('Enddatum darf nicht vor dem Beginn liegen.')
+  if (beginn && ende && ende < beginn) throw new UserFacingError('Enddatum darf nicht vor dem Beginn liegen.')
 
   const update: Record<string, unknown> = {}
   if (patch.kategorie !== undefined) update.kategorie = patch.kategorie
   if (patch.titel !== undefined) {
-    if (!patch.titel.trim()) throw new Error('Titel darf nicht leer sein.')
+    if (!patch.titel.trim()) throw new UserFacingError('Titel darf nicht leer sein.')
     update.titel = patch.titel.trim()
   }
   if (patch.beschreibung !== undefined) update.beschreibung = patch.beschreibung
@@ -174,7 +175,7 @@ export async function updateMassnahme(
   if (patch.ergebnis !== undefined) update.ergebnis = patch.ergebnis
   if (patch.sortierung !== undefined) update.sortierung = patch.sortierung
 
-  if (Object.keys(update).length === 0) throw new Error('Keine Änderungen übergeben.')
+  if (Object.keys(update).length === 0) throw new UserFacingError('Keine Änderungen übergeben.')
 
   const { data, error } = await supabase
     .from('pflege_massnahmen')

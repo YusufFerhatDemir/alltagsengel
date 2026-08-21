@@ -1,3 +1,4 @@
+import { UserFacingError } from '@/lib/api/user-facing-error'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { CaregiverQualifikation } from './types'
 
@@ -17,7 +18,7 @@ export interface CreateQualifikationParams {
 }
 
 export async function createQualifikation(supabase: SupabaseClient, params: CreateQualifikationParams): Promise<CaregiverQualifikation> {
-  if (!params.title?.trim()) throw new Error('Titel ist ein Pflichtfeld.')
+  if (!params.title?.trim()) throw new UserFacingError('Titel ist ein Pflichtfeld.')
 
   const { data, error } = await supabase
     .from('caregiver_qualifications')
@@ -99,7 +100,7 @@ export async function updateQualifikation(
   if (patch.pflicht !== undefined) update.pflicht = patch.pflicht
   if (patch.einsatzrelevant !== undefined) update.einsatzrelevant = patch.einsatzrelevant
 
-  if (Object.keys(update).length === 0) throw new Error('Keine Änderungen übergeben.')
+  if (Object.keys(update).length === 0) throw new UserFacingError('Keine Änderungen übergeben.')
 
   const { data, error } = await supabase
     .from('caregiver_qualifications')

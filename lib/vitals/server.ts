@@ -1,3 +1,4 @@
+import { UserFacingError } from '@/lib/api/user-facing-error'
 // ═══════════════════════════════════════════════════════════════
 // Vitalwerte — Datenzugriff (CRUD auf vital_signs / vital_sign_thresholds)
 //
@@ -104,7 +105,7 @@ export async function updateVital(
     .eq('id', id)
     .eq('organization_id', organizationId)
     .single()
-  if (ladeFehler || !bestehend) throw new Error('Vitalwert nicht gefunden.')
+  if (ladeFehler || !bestehend) throw new UserFacingError('Vitalwert nicht gefunden.')
 
   const existing = bestehend as VitalSign
   const typ = existing.type
@@ -160,7 +161,7 @@ export async function deleteVital(supabase: SupabaseClient, id: string, organiza
     .eq('id', id)
     .eq('organization_id', organizationId)
   if (error) throw new Error(`Vitalwert konnte nicht gelöscht werden: ${error.message}`)
-  if (!count) throw new Error('Vitalwert nicht gefunden.')
+  if (!count) throw new UserFacingError('Vitalwert nicht gefunden.')
 }
 
 // ── CRUD: vital_sign_thresholds ──────────────────────────────────
@@ -223,5 +224,5 @@ export async function deleteThreshold(supabase: SupabaseClient, id: string, orga
     .eq('id', id)
     .eq('organization_id', organizationId)
   if (error) throw new Error(`Grenzwert konnte nicht gelöscht werden: ${error.message}`)
-  if (!count) throw new Error('Grenzwert nicht gefunden.')
+  if (!count) throw new UserFacingError('Grenzwert nicht gefunden.')
 }

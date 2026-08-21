@@ -1,3 +1,4 @@
+import { apiErrorResponse } from '@/lib/api/error-sanitizer'
 import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
@@ -43,7 +44,7 @@ export async function POST(
       } catch {
         // Markieren ist best-effort — die Sperre selbst gilt in jedem Fall.
       }
-      return NextResponse.json({ error: err.message, code: err.code }, { status: 409 })
+      return apiErrorResponse(err, undefined, 409)
     }
     return safeApiError(err, _request)
   }

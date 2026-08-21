@@ -1,3 +1,4 @@
+import { apiErrorResponse } from '@/lib/api/error-sanitizer'
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
@@ -184,7 +185,7 @@ export async function POST(req: NextRequest) {
 
   if (error) {
     if (error.message.includes('DOPPELBELEGUNG')) {
-      return NextResponse.json({ error: error.message }, { status: 409 })
+      return apiErrorResponse(error, req, 409)
     }
     return safeDbError(error)
   }

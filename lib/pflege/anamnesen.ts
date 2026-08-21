@@ -1,3 +1,4 @@
+import { UserFacingError } from '@/lib/api/user-facing-error'
 // ═══════════════════════════════════════════════════════════════
 // Anamnese — pflege_anamnesen
 // CRUD + Sperr-Logik. Eine gesperrte Anamnese ist unveränderlich;
@@ -150,9 +151,9 @@ export async function updateAnamnese(
   patch: UpdateAnamneseParams
 ): Promise<PflegeAnamnese> {
   const existing = await getAnamnese(supabase, id, organizationId)
-  if (!existing) throw new Error('Anamnese nicht gefunden.')
+  if (!existing) throw new UserFacingError('Anamnese nicht gefunden.')
   if (existing.gesperrt) {
-    throw new Error('Gesperrte Anamnese kann nicht bearbeitet werden.')
+    throw new UserFacingError('Gesperrte Anamnese kann nicht bearbeitet werden.')
   }
   assertErlaubt(patch.anamneseTyp, ANAMNESE_TYP_WERTE, 'anamnese_typ')
 
@@ -162,7 +163,7 @@ export async function updateAnamnese(
   if (patch.erhobenRolle !== undefined) update.erhoben_rolle = patch.erhobenRolle
   if (patch.status !== undefined) {
     if (patch.status === 'gesperrt') {
-      throw new Error('Sperren erfolgt über /api/pflege/anamnesen/[id]/sperren.')
+      throw new UserFacingError('Sperren erfolgt über /api/pflege/anamnesen/[id]/sperren.')
     }
     update.status = patch.status
     if (patch.status === 'abgeschlossen') update.abgeschlossen_am = new Date().toISOString()
@@ -200,10 +201,10 @@ export async function sperreAnamnese(
   organizationId: string
 ): Promise<PflegeAnamnese> {
   const existing = await getAnamnese(supabase, id, organizationId)
-  if (!existing) throw new Error('Anamnese nicht gefunden.')
-  if (existing.gesperrt) throw new Error('Anamnese ist bereits gesperrt.')
+  if (!existing) throw new UserFacingError('Anamnese nicht gefunden.')
+  if (existing.gesperrt) throw new UserFacingError('Anamnese ist bereits gesperrt.')
   if (existing.status !== 'abgeschlossen') {
-    throw new Error('Nur abgeschlossene Anamnesen können gesperrt werden.')
+    throw new UserFacingError('Nur abgeschlossene Anamnesen können gesperrt werden.')
   }
 
   const { data, error } = await supabase
@@ -234,8 +235,8 @@ export async function entsperreAnamnese(
   organizationId: string
 ): Promise<PflegeAnamnese> {
   const existing = await getAnamnese(supabase, id, organizationId)
-  if (!existing) throw new Error('Anamnese nicht gefunden.')
-  if (!existing.gesperrt) throw new Error('Anamnese ist nicht gesperrt.')
+  if (!existing) throw new UserFacingError('Anamnese nicht gefunden.')
+  if (!existing.gesperrt) throw new UserFacingError('Anamnese ist nicht gesperrt.')
 
   // trg_locked_anamnese greift nur, wenn gesperrt VOR und NACH dem Update true ist —
   // das Zurücksetzen auf false passiert also bewusst in genau einem Statement.

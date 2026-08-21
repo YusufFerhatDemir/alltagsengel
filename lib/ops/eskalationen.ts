@@ -1,3 +1,4 @@
+import { UserFacingError } from '@/lib/api/user-facing-error'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import {
   assertErlaubt,
@@ -16,19 +17,19 @@ function assertEskalationsregelGueltig(
   params: { istErstellung: boolean },
 ): void {
   if (params.istErstellung && !data.name?.trim()) {
-    throw new Error('Name ist ein Pflichtfeld.')
+    throw new UserFacingError('Name ist ein Pflichtfeld.')
   }
   if (data.name !== undefined && !data.name?.trim()) {
-    throw new Error('Name darf nicht leer sein.')
+    throw new UserFacingError('Name darf nicht leer sein.')
   }
   assertErlaubt(data.aufgaben_kategorie, AUFGABEN_KATEGORIE_WERTE, 'aufgaben_kategorie')
   assertErlaubt(data.aufgaben_prioritaet, AUFGABEN_PRIORITAET_WERTE, 'aufgaben_prioritaet')
   assertErlaubt(data.eskalation_an_rolle, ESKALATION_ROLLE_WERTE, 'eskalation_an_rolle')
   if (data.ueberfaellig_stunden != null && data.ueberfaellig_stunden < 0) {
-    throw new Error('Ueberfaellig-Stunden darf nicht negativ sein.')
+    throw new UserFacingError('Ueberfaellig-Stunden darf nicht negativ sein.')
   }
   if (data.eskalationsstufe != null && data.eskalationsstufe < 1) {
-    throw new Error('Eskalationsstufe muss mindestens 1 sein.')
+    throw new UserFacingError('Eskalationsstufe muss mindestens 1 sein.')
   }
 }
 
