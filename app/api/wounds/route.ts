@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireWundenAdmin } from '@/lib/wunden/api-auth'
 import { createWound, listWounds, zusammenfassungWunden } from '@/lib/wunden/wunden'
@@ -22,7 +23,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json({ wunden, zusammenfassung: zusammenfassungWunden(wunden) })
   } catch (err) {
-    return NextResponse.json({ error: (err as Error).message }, { status: 500 })
+    return safeApiError(err, request)
   }
 }
 

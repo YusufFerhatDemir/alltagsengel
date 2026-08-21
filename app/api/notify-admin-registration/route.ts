@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import { getActiveOrgIdOrDefault } from '@/lib/organizations/server'
@@ -66,8 +67,7 @@ export async function POST(req: NextRequest) {
     if (error) console.error('Notification insert error:', error)
 
     return NextResponse.json({ success: true, sent: admins.length })
-  } catch (err: any) {
-    console.error('Admin registration notify error:', err)
-    return NextResponse.json({ error: 'Interner Serverfehler' }, { status: 500 })
+  } catch (err) {
+    return safeApiError(err, req)
   }
 }

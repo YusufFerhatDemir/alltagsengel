@@ -12,6 +12,7 @@
  */
 
 import { NextResponse } from 'next/server'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireAdminMitOrg } from '@/lib/abrechnung/require-admin'
 import { credentialUebersicht, ladeRotationen, CREDENTIAL_KATALOG } from '@/lib/abrechnung/credentials'
@@ -41,10 +42,6 @@ export async function GET(request: Request) {
       katalog: CREDENTIAL_KATALOG,
     })
   } catch (err) {
-    console.error('[api] Zugangsmittel-Inventar fehlgeschlagen:', err)
-    return NextResponse.json(
-      { error: 'Inventar der Zugangsmittel konnte nicht erstellt werden' },
-      { status: 500 },
-    )
+    return safeApiError(err, request)
   }
 }

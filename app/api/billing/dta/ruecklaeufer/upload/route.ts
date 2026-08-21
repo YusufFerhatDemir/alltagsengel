@@ -9,6 +9,7 @@
  */
 
 import { NextResponse } from 'next/server'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { parseSlgaDatei } from '@/lib/abrechnung/slga-parser'
@@ -128,6 +129,6 @@ export async function POST(request: Request) {
       ergebnisse,
     })
   } catch (err) {
-    return NextResponse.json({ error: (err as Error).message }, { status: 500 })
+    return safeApiError(err, request)
   }
 }

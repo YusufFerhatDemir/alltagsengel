@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createClient } from '@/lib/supabase/server'
 import { requireSigAdmin } from '@/lib/signaturen/api-auth'
 import { listeDokumente, erstelleDokument } from '@/lib/signaturen/signaturen'
@@ -18,7 +19,7 @@ export async function GET(req: NextRequest) {
     })
     return NextResponse.json(dokumente)
   } catch (err) {
-    return NextResponse.json({ error: (err as Error).message }, { status: 500 })
+    return safeApiError(err, req)
   }
 }
 

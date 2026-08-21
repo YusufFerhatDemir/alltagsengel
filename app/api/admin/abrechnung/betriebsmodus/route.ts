@@ -11,6 +11,7 @@
  */
 
 import { NextResponse } from 'next/server'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireAdminMitOrg } from '@/lib/abrechnung/require-admin'
 import {
@@ -22,7 +23,7 @@ import {
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
-export async function GET() {
+export async function GET(request: Request) {
   const auth = await requireAdminMitOrg()
   if (!auth.ok) return auth.response
 
@@ -40,8 +41,7 @@ export async function GET() {
       bestaetigungswort: BESTAETIGUNG_ECHTBETRIEB,
     })
   } catch (err) {
-    console.error('[api] Betriebsmodus konnte nicht gelesen werden:', err)
-    return NextResponse.json({ error: 'Betriebsmodus konnte nicht gelesen werden' }, { status: 500 })
+    return safeApiError(err, request)
   }
 }
 

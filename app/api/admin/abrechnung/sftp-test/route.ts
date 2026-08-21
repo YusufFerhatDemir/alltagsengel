@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 import { requireAdmin } from '@/lib/abrechnung/require-admin'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { testeVerbindung, type TransportConfig } from '@/lib/abrechnung/transport'
@@ -82,8 +83,7 @@ export async function POST(req: NextRequest) {
     }
     const ergebnis = await testeVerbindung(config)
     return NextResponse.json(ergebnis)
-  } catch (e: any) {
-    console.error('[api] Unerwarteter Fehler:', e)
-    return NextResponse.json({ error: 'Interner Serverfehler' }, { status: 500 })
+  } catch (e) {
+    return safeApiError(e, req)
   }
 }

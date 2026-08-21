@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireAktenAdmin } from '@/lib/akten/api-auth'
 import { getAblaufDashboard, getKundenakteUebersicht, getMitarbeiterakteUebersicht } from '@/lib/akten/ablauf-warnungen'
@@ -37,6 +38,6 @@ export async function GET(request: Request) {
 
     return NextResponse.json({ ablauf, kundenakten, mitarbeiterakten, zusammenfassung })
   } catch (err) {
-    return NextResponse.json({ error: (err as Error).message }, { status: 500 })
+    return safeApiError(err, request)
   }
 }

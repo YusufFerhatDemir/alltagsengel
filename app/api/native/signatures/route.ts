@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireCaregiverSession } from '@/lib/native-auth'
 
@@ -113,7 +114,6 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true, signature_id: signature.id })
   } catch (err) {
-    console.error('[api/native/signatures] Unerwarteter Fehler:', err)
-    return NextResponse.json({ error: 'Interner Fehler' }, { status: 500 })
+    return safeApiError(err, request)
   }
 }

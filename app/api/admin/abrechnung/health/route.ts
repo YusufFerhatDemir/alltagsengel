@@ -15,6 +15,7 @@
  */
 
 import { NextResponse } from 'next/server'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireAdminMitOrg } from '@/lib/abrechnung/require-admin'
 import { ermittleGesundheit } from '@/lib/abrechnung/health'
@@ -50,10 +51,6 @@ export async function GET(request: Request) {
 
     return NextResponse.json(gesundheit)
   } catch (err) {
-    console.error('[api] Health-Check fehlgeschlagen:', err)
-    return NextResponse.json(
-      { error: 'Zustandsbericht konnte nicht erstellt werden' },
-      { status: 500 },
-    )
+    return safeApiError(err, request)
   }
 }

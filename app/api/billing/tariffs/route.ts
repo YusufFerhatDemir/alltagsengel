@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { NextResponse } from 'next/server'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 import { getActiveOrgId } from '@/lib/organizations/server'
 
 /**
@@ -9,7 +10,7 @@ import { getActiveOrgId } from '@/lib/organizations/server'
  * Personal (admin/superadmin/pdl/buero) — Tarifpreise sind keine Kunden-
  * oder Engel-Information.
  */
-export async function GET() {
+export async function GET(request: Request) {
   try {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
@@ -53,8 +54,7 @@ export async function GET() {
 
     return NextResponse.json({ tariffs, warnungen })
   } catch (err) {
-    console.error('Unerwarteter Fehler beim Laden der Tarife:', err)
-    return NextResponse.json({ error: 'Interner Serverfehler' }, { status: 500 })
+    return safeApiError(err, request)
   }
 }
 
@@ -214,7 +214,6 @@ export async function POST(request: Request) {
 
     return NextResponse.json(tariff, { status: 201 })
   } catch (err) {
-    console.error('Unerwarteter Fehler beim Anlegen des Tarifs:', err)
-    return NextResponse.json({ error: 'Interner Serverfehler' }, { status: 500 })
+    return safeApiError(err, request)
   }
 }

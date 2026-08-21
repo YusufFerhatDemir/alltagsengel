@@ -1,4 +1,5 @@
 import { NextResponse, NextRequest } from 'next/server'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createAdminClient } from '@/lib/supabase/admin'
 
 const supabaseAdmin = createAdminClient()
@@ -49,8 +50,7 @@ export async function GET(request: NextRequest) {
       first_name: profile?.first_name,
     })
   } catch (err) {
-    console.error('Referral GET error:', err)
-    return NextResponse.json({ error: 'Serverfehler' }, { status: 500 })
+    return safeApiError(err, request)
   }
 }
 
@@ -132,7 +132,6 @@ export async function POST(request: NextRequest) {
       message: `Empfehlung von ${referrer.first_name} angenommen! Nach deiner ersten Buchung bekommt ihr beide 20 € Bonus.`,
     })
   } catch (err) {
-    console.error('Referral POST error:', err)
-    return NextResponse.json({ error: 'Serverfehler' }, { status: 500 })
+    return safeApiError(err, request)
   }
 }

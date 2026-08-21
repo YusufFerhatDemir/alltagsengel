@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireAdminMitOrg } from '@/lib/abrechnung/require-admin'
 import { holeAntworten } from '@/lib/abrechnung/versand'
@@ -18,7 +19,7 @@ export const dynamic = 'force-dynamic'
  *
  * POST statt GET, weil der Aufruf Daten importiert.
  */
-export async function POST() {
+export async function POST(request: Request) {
   const auth = await requireAdminMitOrg()
   if (!auth.ok) return auth.response
 
@@ -28,6 +29,6 @@ export async function POST() {
 
     return NextResponse.json(ergebnis)
   } catch (err) {
-    return NextResponse.json({ error: (err as Error).message }, { status: 500 })
+    return safeApiError(err, request)
   }
 }

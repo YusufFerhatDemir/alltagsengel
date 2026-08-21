@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireAdminMitOrg } from '@/lib/abrechnung/require-admin'
 import { ermittleReadiness } from '@/lib/abrechnung/readiness'
@@ -13,7 +14,7 @@ export const dynamic = 'force-dynamic'
  * ausschliesslich mit Status- und Zählwerten — keine Zertifikatsinhalte,
  * keine SSH-Keys, keine Passwörter, nur deren Existenz als Ja/Nein.
  */
-export async function GET() {
+export async function GET(request: Request) {
   const auth = await requireAdminMitOrg()
   if (!auth.ok) return auth.response
 
@@ -22,7 +23,6 @@ export async function GET() {
     const readiness = await ermittleReadiness(admin, auth.organizationId)
     return NextResponse.json(readiness)
   } catch (e) {
-    console.error('[dta/readiness] Unerwarteter Fehler:', e)
-    return NextResponse.json({ error: 'Interner Serverfehler' }, { status: 500 })
+    return safeApiError(e, request)
   }
 }

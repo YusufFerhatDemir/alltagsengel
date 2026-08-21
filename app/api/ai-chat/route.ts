@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getActiveOrgId } from '@/lib/organizations/server'
@@ -310,10 +311,6 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ content })
   } catch (error) {
-    console.error('AI Chat error:', error)
-    return NextResponse.json(
-      { error: 'Ein Fehler ist aufgetreten.' },
-      { status: 500 }
-    )
+    return safeApiError(error, req)
   }
 }

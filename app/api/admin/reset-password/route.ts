@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { buildRecoveryLink } from '@/lib/supabase/recovery-link'
@@ -177,9 +178,7 @@ export async function POST(request: NextRequest) {
   }
 
   return NextResponse.json({ success: true })
-  } catch (err: any) {
-    // AUTH-002 Fix: Rohe Error-Objekte niemals loggen — können API-Keys / Headers enthalten
-    console.error('reset-password error:', { code: err?.code, name: err?.name, status: err?.status })
-    return NextResponse.json({ error: 'Fehler beim Zurücksetzen des Passworts' }, { status: 500 })
+  } catch (err) {
+    return safeApiError(err, request)
   }
 }

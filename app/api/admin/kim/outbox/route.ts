@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireKimAdmin } from '@/lib/kim/api-auth'
@@ -7,7 +8,7 @@ import { processOutbox, pollDeliveryStatuses } from '@/lib/kim/outbox-service'
 import { resolveOrgProvider } from '@/lib/kim/provider-config-service'
 import { ermittleVersandModus, KimBetriebsmodusError } from '@/lib/kim/versandmodus'
 
-export async function GET() {
+export async function GET(request: Request) {
   const auth = await requireKimAdmin()
   if (!auth.ok) return auth.response
 
@@ -27,9 +28,8 @@ export async function GET() {
       gesendet: [...gesendet, ...zugestellt, ...gelesen], wartend, fehler,
       betriebsmodus: ermittleVersandModus(provider),
     })
-  } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : 'Unbekannter Fehler'
-    return NextResponse.json({ error: msg }, { status: 500 })
+  } catch (e) {
+    return safeApiError(e, request)
   }
 }
 

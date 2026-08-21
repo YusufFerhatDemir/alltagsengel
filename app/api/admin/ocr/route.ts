@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getActiveOrgId } from '@/lib/organizations/server'
@@ -195,7 +196,6 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ ocr_result: ocrResult, review_errors: insertedErrors })
   } catch (err: any) {
-    console.error('[api/admin/ocr] Unerwarteter Fehler:', err)
-    return NextResponse.json({ error: err.message || 'Unerwarteter Fehler' }, { status: 500 })
+    return safeApiError(err, request)
   }
 }

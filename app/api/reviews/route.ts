@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createClient } from '@/lib/supabase/server'
 import { getActiveOrgIdOrDefault } from '@/lib/organizations/server'
 import { rateLimit } from '@/lib/rate-limit'
@@ -135,9 +136,8 @@ export async function POST(req: NextRequest) {
     await aktualisiereEngelDurchschnitt(angelId)
 
     return NextResponse.json({ success: true, review })
-  } catch (err: any) {
-    console.error('[api] Unerwarteter Fehler:', err)
-    return NextResponse.json({ error: 'Interner Serverfehler' }, { status: 500 })
+  } catch (err) {
+    return safeApiError(err, req)
   }
 }
 
@@ -172,8 +172,7 @@ export async function GET(req: NextRequest) {
     }
 
     return NextResponse.json({ error: 'angelId oder bookingId erforderlich' }, { status: 400 })
-  } catch (err: any) {
-    console.error('[api] Unerwarteter Fehler:', err)
-    return NextResponse.json({ error: 'Interner Serverfehler' }, { status: 500 })
+  } catch (err) {
+    return safeApiError(err, req)
   }
 }

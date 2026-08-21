@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireCaregiverSession } from '@/lib/native-auth'
 
@@ -112,7 +113,6 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true, ocr_result_id: ocrResult.id, path: filePath })
   } catch (err) {
-    console.error('[api/native/leistungsnachweis-upload] Unerwarteter Fehler:', err)
-    return NextResponse.json({ error: 'Interner Fehler' }, { status: 500 })
+    return safeApiError(err, request)
   }
 }

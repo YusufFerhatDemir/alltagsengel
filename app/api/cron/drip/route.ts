@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 
 // ═══════════════════════════════════════════════════════════
 // VERCEL CRON JOB — Drip E-Mail Kampagne
@@ -36,7 +37,6 @@ export async function GET(request: Request) {
       result,
     })
   } catch (err) {
-    console.error('[CRON] Drip-Kampagne Fehler:', err)
-    return NextResponse.json({ error: 'Cron job failed' }, { status: 500 })
+    return safeApiError(err, request)
   }
 }

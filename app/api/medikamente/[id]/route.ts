@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createClient } from '@/lib/supabase/server'
 import { requireMedAdmin } from '@/lib/medikamente/api-auth'
 import { logAuditEvent } from '@/lib/audit-log'
@@ -21,9 +22,8 @@ export async function GET(
     const med = await holeMedikament(sb, auth.ctx.organizationId, id)
     if (!med) return NextResponse.json({ error: 'Nicht gefunden.' }, { status: 404 })
     return NextResponse.json(med)
-  } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : 'Unbekannter Fehler'
-    return NextResponse.json({ error: msg }, { status: 500 })
+  } catch (e) {
+    return safeApiError(e, _req)
   }
 }
 
@@ -106,8 +106,7 @@ export async function DELETE(
     })
 
     return NextResponse.json(result)
-  } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : 'Unbekannter Fehler'
-    return NextResponse.json({ error: msg }, { status: 500 })
+  } catch (e) {
+    return safeApiError(e, req)
   }
 }

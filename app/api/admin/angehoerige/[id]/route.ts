@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createClient } from '@/lib/supabase/server'
 import { requireAngehAdmin } from '@/lib/angehoerige/api-auth'
 import {
@@ -25,7 +26,7 @@ export async function GET(
     }
     return NextResponse.json(zugang)
   } catch (err) {
-    return NextResponse.json({ error: (err as Error).message }, { status: 500 })
+    return safeApiError(err, _req)
   }
 }
 
@@ -73,6 +74,6 @@ export async function PATCH(
 
     return NextResponse.json({ error: 'Ungültige Aktion.' }, { status: 400 })
   } catch (err) {
-    return NextResponse.json({ error: (err as Error).message }, { status: 500 })
+    return safeApiError(err, req)
   }
 }

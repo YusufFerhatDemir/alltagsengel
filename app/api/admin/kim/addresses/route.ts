@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createClient } from '@/lib/supabase/server'
 import { requireKimAdmin } from '@/lib/kim/api-auth'
 import { createKimAddress, listKimAddresses } from '@/lib/kim/address-book-service'
@@ -22,9 +23,8 @@ export async function GET(req: NextRequest) {
       search: search ?? undefined,
     })
     return NextResponse.json(data)
-  } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : 'Unbekannter Fehler'
-    return NextResponse.json({ error: msg }, { status: 500 })
+  } catch (e) {
+    return safeApiError(e, req)
   }
 }
 

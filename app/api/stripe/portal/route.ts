@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 import { stripe } from '@/lib/stripe/client'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOrgRole } from '@/lib/organizations/server'
@@ -43,8 +44,7 @@ export async function POST(req: NextRequest) {
     })
 
     return NextResponse.json({ url: session.url })
-  } catch (e: any) {
-    console.error('[api] Unerwarteter Fehler:', e)
-    return NextResponse.json({ error: 'Interner Serverfehler' }, { status: 500 })
+  } catch (e) {
+    return safeApiError(e, req)
   }
 }

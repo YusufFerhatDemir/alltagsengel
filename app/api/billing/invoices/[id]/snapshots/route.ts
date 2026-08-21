@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { NextResponse } from 'next/server'
+import { safeApiError } from '@/lib/api/error-sanitizer'
 import { getActiveOrgId } from '@/lib/organizations/server'
 
 /**
@@ -66,7 +67,6 @@ export async function GET(
 
     return NextResponse.json(snapshots)
   } catch (err) {
-    console.error('Unerwarteter Fehler beim Laden der Snapshots:', err)
-    return NextResponse.json({ error: 'Interner Serverfehler' }, { status: 500 })
+    return safeApiError(err, request)
   }
 }
