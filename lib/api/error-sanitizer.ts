@@ -22,6 +22,9 @@
  */
 import { NextRequest, NextResponse } from 'next/server'
 import { randomUUID } from 'crypto'
+import { logger } from '@/lib/logger'
+
+const log = logger.child('api')
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -64,11 +67,12 @@ export function safeApiError(
   const error = err instanceof Error ? err : new Error(String(err))
 
   // Server-seitiges Logging — volle Details, nie nach aussen
-  console.error(`[API_ERROR] ${correlationId}`, {
+  log.error('API-Fehler', {
+    correlationId,
     path: extractPath(request),
     method: request?.method,
-    message: error.message,
-    name: error.name,
+    errorName: error.name,
+    errorMessage: error.message,
     ...(isProduction() ? {} : { stack: error.stack }),
   })
 

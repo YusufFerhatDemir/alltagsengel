@@ -7,6 +7,7 @@
  */
 
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { billingLogger as log } from '@/lib/logger';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -182,7 +183,12 @@ export async function logBillingAction(
   });
 
   if (error) {
-    console.error('[billing-audit] Fehler beim Schreiben des Audit-Trails:', error);
+    log.error('Fehler beim Schreiben des Audit-Trails', {
+      entityType: params.entityType,
+      entityId: params.entityId,
+      action: params.action,
+      errorMessage: error.message,
+    });
     throw new Error(`Audit-Trail konnte nicht geschrieben werden: ${error.message}`);
   }
 }

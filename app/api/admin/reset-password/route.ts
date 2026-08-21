@@ -7,6 +7,7 @@ import { sendEmailNotification } from '@/lib/notifications'
 import { validatePasswordAsync } from '@/lib/password-validation'
 import { logAuditEvent } from '@/lib/audit-log'
 import { getActiveOrgId } from '@/lib/organizations/server'
+import { adminLogger as log } from '@/lib/logger'
 
 export async function POST(request: NextRequest) {
   try {
@@ -73,7 +74,7 @@ export async function POST(request: NextRequest) {
       .maybeSingle()
 
     if (lookupError) {
-      console.error('profile lookup error:', { code: lookupError.code, message: lookupError.message })
+      log.error('profile lookup error', { errorCode: lookupError.code, errorMessage: lookupError.message })
       return NextResponse.json({ error: 'Benutzer konnte nicht gesucht werden' }, { status: 500 })
     }
     if (!found) {
@@ -109,7 +110,7 @@ export async function POST(request: NextRequest) {
 
   if (error) {
     // AUTH-002 Fix: Supabase-Error-Message nicht nach außen leaken (kann Enumeration / Credentials enthüllen)
-    console.error('updateUserById error:', { code: (error as any)?.code, name: error?.name, status: (error as any)?.status })
+    log.error('updateUserById error', { errorCode: (error as any)?.code, errorName: error?.name, status: (error as any)?.status })
     return NextResponse.json({ error: 'Passwort konnte nicht gesetzt werden' }, { status: 500 })
   }
 
@@ -153,7 +154,7 @@ export async function POST(request: NextRequest) {
       })
 
       if (linkError || !linkData?.properties?.hashed_token) {
-        console.error('generateLink error in admin reset:', { code: (linkError as any)?.code, name: linkError?.name })
+        log.error('generateLink error in admin reset', { errorCode: (linkError as any)?.code, errorName: linkError?.name })
         // Wir sagen dem Admin Success, weil das PW bereits gesetzt wurde — User kann sich manuell mitteilen lassen
       } else {
         // FIX (2026-07-15): eigener Link statt properties.action_link — siehe
