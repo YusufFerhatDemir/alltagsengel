@@ -1,7 +1,10 @@
 # MASTER PROJECT STATUS
 
-> Stand: 22.08.2026 01:00 | Baseline: FINAL_FINAL_GO_LIVE_REPORT_2026-08-21.md
-> CI: GREEN | HEAD: b3564d2 | Commits diese Session: +7 (b344329, ad23806, c9d603a, c0e6af6, f8ad0ae, 24e67e9, b3564d2)
+> Stand: 22.08.2026 08:15 | Baseline: FINAL_FINAL_GO_LIVE_REPORT_2026-08-21.md
+> HEAD: 79e7e0e | Commits seit letztem Stand: +6 (6d148a5, ea67b5b, e588416, 8392730, de4623b, 79e7e0e)
+> Typecheck: 0 Fehler | Tests: 3513/3552 gruen, 38 skipped, **1 rot**
+> Der rote Test ist `__tests__/security/supabase-key-migration.test.ts` und stammt aus
+> e588416 (Track 5), nicht aus den Tracks 1/2 — Details unter Track 6.
 
 ---
 
@@ -38,12 +41,26 @@ Vollstaendige Analyse: `docs/FUNKTIONALE_LUECKENANALYSE.md` (690 Zeilen, 14 Bere
 | # | Item | Prio | Typ |
 |---|------|------|-----|
 | 9 | §45b-Tarife live `blocked` (8/9), VP/KZP 0/4 verifiziert | P1 | EXTERN (Bescheid) |
-| 10 | Buchung erzeugt keinen Einsatz/Leistungsnachweis (Kettenbruch) | P1 | INTERN |
-| 11 | Mahnungen werden erzeugt aber nie versendet (`dunning_email_queue` ohne Konsument) | P1 | INTERN |
-| 12 | Keine manuelle Zahlungserfassung in UI (nur CAMT-Import) | P1 | INTERN |
-| 13 | Rechnung wird nicht zugestellt (kein E-Mail-Versand, nur Portal-Download) | P1 | INTERN |
+| ~~10~~ | ~~Buchung erzeugt keinen Einsatz/Leistungsnachweis (Kettenbruch)~~ | ~~P1~~ | **ERLEDIGT** (lib/bookings/einsatz-kette.ts, fail-closed, 20 Tests, de4623b) |
+| ~~11~~ | ~~Mahnungen werden erzeugt aber nie versendet (`dunning_email_queue` ohne Konsument)~~ | ~~P1~~ | **ERLEDIGT** (lib/billing/dunning/mahn-versand.ts + POST /api/billing/dunning/versand, 8 Tests, 79e7e0e) |
+| ~~12~~ | ~~Keine manuelle Zahlungserfassung in UI (nur CAMT-Import)~~ | ~~P1~~ | **ERLEDIGT** (components/admin/ZahlungErfassenDialog.tsx aus /admin/forderungen, 8 Tests, 79e7e0e) |
+| ~~13~~ | ~~Rechnung wird nicht zugestellt (kein E-Mail-Versand, nur Portal-Download)~~ | ~~P1~~ | **ERLEDIGT** (lib/billing/versand/rechnung-versand.ts + POST /api/billing/invoices/[id]/versenden, 13 Tests, 79e7e0e) |
 | 14 | Offline-Erfassung nur im nicht ausgelieferten Expo-Projekt | P1 | INTERN |
 | 15 | Kundenstammdaten nach Anlage nur teilweise editierbar | P1 | INTERN |
+
+> **Neu offen aus 10-13:** Migration `20260923000000_invoice_email_log.sql`
+> (Zustellprotokoll) wartet auf manuelles Live-Apply im Supabase-SQL-Editor.
+> Ohne sie versendet die Kette weiterhin (Idempotenz haengt an `invoices.sent_at`),
+> es fehlt nur die Versuchshistorie.
+>
+> **Versand ist ENV-gesteuert:** ohne `RESEND_API_KEY` wird jeder Versuch als
+> `uebersprungen` protokolliert und `sent_at` bleibt leer, damit nachversendet
+> wird. Automatischer Versand bei Festschreibung nur mit
+> `RECHNUNGSVERSAND_AUTOMATISCH='1'` — Standard ist manuell.
+>
+> **Unveraendert blockiert:** §45b-Tarife bleiben `blocked`/`unverified`
+> (Punkt 9). Die Versandkette aendert daran nichts; nicht verifizierte Tarife
+> erzeugen weiterhin keine Rechnung.
 
 ---
 
@@ -146,12 +163,23 @@ Vollstaendige Analyse: `docs/CHAIRMATCH_DELTA_ANALYSE.md` · 231/231 Tests gruen
 
 ## Track 6: CI/DevOps
 
-**Status: GO**
-Letzter Check: 21.08.2026
+**Status: GELB — 1 roter Test**
+Letzter Check: 22.08.2026
 
 ### Erledigt
-- CI: 3389/3389 Tests, 0 Failures, 0 Errors
-- Typecheck, Lint, Build, E2E alle gruen
+- Typecheck: 0 Fehler
+- 3513/3552 Tests gruen, 38 skipped
+
+### Offen
+- **`__tests__/security/supabase-key-migration.test.ts` ist rot** (seit e588416,
+  Track 5 — nicht aus Track 1/2). Der Regressionsscan „scripts/*.mjs bauen
+  PostgREST-Header nur ueber apiHeaders()" schlaegt auf
+  `scripts/verify-publishable-key.mjs:85` an. Dieser Bearer-Header ist dort
+  ABSICHT: das Skript prueft genau den Fall, den supabase-js ohne Session
+  erzeugt. Der Scan kennt bisher nur `scripts/lib/supabase-keys.mjs` als
+  Ausnahme. Fix waere, das Diagnoseskript ebenfalls auszunehmen — das
+  schwaecht eine Sicherheitspruefung und ist deshalb bewusst NICHT
+  eigenmaechtig gemacht worden.
 - deploy.sh mit Precommit-Guards (Secrets/.env/node_modules Block)
 - Worktree-Branch Auto-Push nach main
 - CI-Workflows: ci.yml, deploy-chairmatch.yml
