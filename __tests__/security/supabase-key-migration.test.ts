@@ -127,16 +127,47 @@ describe('Regressionsscan: keine direkten Legacy-Key-Lesezugriffe mehr', () => {
     ).toBe('')
   })
 
+  // Zwei Dateien duerfen den rohen Bearer-Header enthalten — beide mit Grund,
+  // beide ohne Produktivwirkung:
+  //
+  // • scripts/lib/supabase-keys.mjs ist der Helfer selbst. Er entscheidet, ob
+  //   der Header gesetzt wird (Legacy-JWT: ja, `sb_publishable_…`: nein) —
+  //   irgendwo muss das Literal stehen.
+  // • scripts/verify-publishable-key.mjs ist ein reines Diagnoseskript. Sein
+  //   Test 2 schickt `apikey` + `Authorization: Bearer <publishable>` mit
+  //   Absicht, weil genau das der Aufrufweg von supabase-js ohne Session ist.
+  //   Der Lauf misst, ob Supabase diese Kombination annimmt oder mit „Invalid
+  //   JWT" ablehnt. Nimmt man ihm den Header, misst er nichts mehr.
+  //
+  // Alles andere bleibt gesperrt: ein Skript, das den Header baut, um damit
+  // Daten zu holen, meldet mit den neuen Keys still „kein Zugriff".
+  const BEARER_AUSNAHMEN = [
+    'scripts/lib/supabase-keys.mjs',
+    'scripts/verify-publishable-key.mjs',
+  ]
+
   it('scripts/*.mjs bauen PostgREST-Header nur ueber apiHeaders()', async () => {
     const { execSync } = await import('node:child_process')
+    const ausfilter = BEARER_AUSNAHMEN.map((d) => ` | grep -v "${d}"`).join('')
     const treffer = execSync(
-      String.raw`git grep -n --untracked "Authorization: .Bearer" -- 'scripts/*.mjs' | grep -v "scripts/lib/supabase-keys.mjs" || true`,
+      String.raw`git grep -n --untracked "Authorization: .Bearer" -- 'scripts/*.mjs'` +
+        ausfilter +
+        ' || true',
       { cwd: process.cwd(), encoding: 'utf8' }
     ).trim()
     expect(
       treffer,
       `Roher Bearer-Header in einem Skript — mit den neuen Keys antwortet die API „Invalid JWT":\n${treffer}`
     ).toBe('')
+  })
+
+  it('die Bearer-Ausnahmeliste enthaelt keine toten Eintraege', async () => {
+    // Eine Ausnahme fuer eine geloeschte oder umbenannte Datei filtert
+    // stillschweigend nichts mehr — oder schlimmer: sie filtert spaeter einen
+    // echten Treffer weg, wenn der Pfad neu vergeben wird.
+    const { existsSync } = await import('node:fs')
+    const tot = BEARER_AUSNAHMEN.filter((d) => !existsSync(d))
+    expect(tot, `Ausnahme zeigt auf nicht existierende Datei:\n${tot.join('\n')}`).toEqual([])
   })
 
   it('der geheime Server-Key wird ueberall mit Secret-Vorrang gelesen', async () => {

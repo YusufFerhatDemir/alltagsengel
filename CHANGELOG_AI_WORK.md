@@ -4,6 +4,58 @@ Chronologische Dokumentation aller KI-gestuetzten Arbeitssitzungen.
 
 ---
 
+## 2026-08-22 | Session: CI wieder gruen (roter Track-5-Test geschlossen)
+
+CI war seit e588416 rot, zuletzt auf f4048df. Ursache war **ein einziger Test**
+— nicht mehrere: 180 von 181 Testdateien waren gruen, Typecheck war gruen, und
+der Production-Build lief im E2E-Job durch. Rot war ausschliesslich der Schritt
+„Unit tests (vitest)".
+
+### Ursache
+`__tests__/security/supabase-key-migration.test.ts` scannt `scripts/*.mjs` nach
+rohen `Authorization: Bearer`-Headern. Grund: die neuen Supabase-Keys
+(`sb_publishable_…`) sind keine JWTs — als Bearer geschickt antwortet die API
+„Invalid JWT", was ein Sicherheitsskript wie „kein Zugriff" liest und still
+gruen meldet.
+
+Getroffen hat der Scan `scripts/verify-publishable-key.mjs:85`. Dort ist der
+Header **Absicht**: Test 2 des Diagnoseskripts schickt `apikey` + identischen
+`Authorization: Bearer`, weil genau das der Aufrufweg von supabase-js ohne
+Session ist. Der Lauf misst, ob Supabase diese Kombination annimmt. Ohne den
+Header misst das Skript nichts mehr.
+
+### Fix
+- Ausnahmeliste `BEARER_AUSNAHMEN` im Test — benannt und im Code begruendet,
+  statt eines zweiten anonymen `grep -v`. Enthaelt den Header-Helfer
+  `scripts/lib/supabase-keys.mjs` und das Diagnoseskript.
+- **Zusatztest gegen tote Ausnahmen:** faellt, sobald ein Eintrag auf eine nicht
+  existierende Datei zeigt. Eine Ausnahme fuer eine geloeschte oder umbenannte
+  Datei filtert sonst spaeter still einen echten Treffer weg, wenn der Pfad neu
+  vergeben wird.
+- Die Sperre bleibt fuer jedes andere Skript scharf. Aufgeweicht wurde nichts:
+  ausgenommen sind nur der Helfer, der den Header definiert, und ein Skript ohne
+  Produktivwirkung, dessen Zweck das Messen dieses Headers ist.
+
+### Verifikation (lokal, jeder CI-Schritt einzeln, Exit-Code geprueft)
+| Schritt | Ergebnis |
+|---------|----------|
+| `npm run typecheck` | Exit 0, 0 Fehler |
+| `npx vitest run` | Exit 0 — 3515/3553 gruen, 38 skipped, **0 rot** |
+| `npm run test:unit` (node:test) | Exit 0 |
+| `scripts/ci-secret-scan.sh` | Exit 0 |
+| `scripts/ci-ik-check.sh` | Exit 0 |
+| `npm run lint:forbidden` | Exit 0 |
+| `npm run build` (CI-Platzhalter-ENVs, 4 GB Heap) | Exit 0 |
+
+tsc und vitest liefen strikt nacheinander (OOM-Regel). Kein Schritt endete auf
+einer Pipeline — jeder Exit-Code wurde direkt gelesen.
+
+### Nicht angefasst
+Keine Preise, keine Migrationen, keine Produktivlogik. Geaendert wurden nur die
+Testdatei und drei Statusdokumente.
+
+---
+
 ## 2026-08-22 | Session: Tracks 1 + 2 — Buchungskette, Rechnungs- und Mahnversand, Zahlungserfassung
 
 Aufraeumen und Deploy der 29 uncommitteten Dateien aus den vorangegangenen

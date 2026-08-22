@@ -143,7 +143,14 @@ Drei Entwurfsentscheidungen, die nicht offensichtlich sind:
 
 ### 3.3 Regressionsschutz
 
-Neu: `__tests__/security/supabase-key-migration.test.ts` — **13 Tests, grün.**
+Neu: `__tests__/security/supabase-key-migration.test.ts` — **14 Tests, grün.**
+
+Der Skript-Scan kennt eine benannte Ausnahmeliste (`BEARER_AUSNAHMEN`):
+`scripts/lib/supabase-keys.mjs` (der Header-Helfer selbst) und
+`scripts/verify-publishable-key.mjs` (Diagnoseskript — sein Test 2 schickt den
+Bearer-Header absichtlich, um zu messen, ob Supabase den supabase-js-Aufrufweg
+ohne Session annimmt). Ein eigener Test faellt, sobald ein Listeneintrag auf
+eine nicht mehr existierende Datei zeigt.
 
 | Was geprüft wird | Warum |
 |------------------|-------|

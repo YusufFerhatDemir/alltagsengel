@@ -1,10 +1,10 @@
 # MASTER PROJECT STATUS
 
 > Stand: 22.08.2026 08:15 | Baseline: FINAL_FINAL_GO_LIVE_REPORT_2026-08-21.md
-> HEAD: 79e7e0e | Commits seit letztem Stand: +6 (6d148a5, ea67b5b, e588416, 8392730, de4623b, 79e7e0e)
-> Typecheck: 0 Fehler | Tests: 3513/3552 gruen, 38 skipped, **1 rot**
-> Der rote Test ist `__tests__/security/supabase-key-migration.test.ts` und stammt aus
-> e588416 (Track 5), nicht aus den Tracks 1/2 — Details unter Track 6.
+> HEAD: f4048df | Commits seit letztem Stand: +7 (6d148a5, ea67b5b, e588416, 8392730, de4623b, 79e7e0e, f4048df)
+> **CI: GRUEN.** Typecheck 0 Fehler | vitest 3515/3553 gruen, 38 skipped, 0 rot |
+> node:test, Secret-Scan, IK-Check, forbidden-strings, Production-Build: alle Exit 0.
+> Der seit e588416 rote Test ist geschlossen — Details unter Track 6.
 
 ---
 
@@ -163,23 +163,26 @@ Vollstaendige Analyse: `docs/CHAIRMATCH_DELTA_ANALYSE.md` · 231/231 Tests gruen
 
 ## Track 6: CI/DevOps
 
-**Status: GELB — 1 roter Test**
-Letzter Check: 22.08.2026
+**Status: GRUEN**
+Letzter Check: 22.08.2026 13:10 (lokal alle CI-Schritte einzeln nachgefahren)
 
 ### Erledigt
 - Typecheck: 0 Fehler
-- 3513/3552 Tests gruen, 38 skipped
+- vitest: 3515/3553 gruen, 38 skipped, 0 rot (180 Dateien, 1 Datei skipped)
+- node:test, `ci-secret-scan.sh`, `ci-ik-check.sh`, `lint:forbidden`: Exit 0
+- Production-Build (`npm run build`, Turbopack, CI-Platzhalter-ENVs): Exit 0
+- **Roter Test seit e588416 geschlossen.** Der Regressionsscan „scripts/*.mjs
+  bauen PostgREST-Header nur ueber apiHeaders()" schlug auf
+  `scripts/verify-publishable-key.mjs:85` an. Der Bearer-Header ist dort
+  ABSICHT — das Diagnoseskript misst genau den Aufrufweg, den supabase-js ohne
+  Session erzeugt; ohne den Header misst es nichts mehr. Das Skript steht jetzt
+  neben `scripts/lib/supabase-keys.mjs` in einer benannten, im Code begruendeten
+  Ausnahmeliste (`BEARER_AUSNAHMEN`). Ein zweiter Test haelt die Liste sauber:
+  er faellt, sobald ein Eintrag auf eine nicht mehr existierende Datei zeigt —
+  sonst wuerde eine tote Ausnahme spaeter still einen echten Treffer wegfiltern.
+  Die Sperre selbst bleibt fuer alle anderen Skripte scharf.
 
 ### Offen
-- **`__tests__/security/supabase-key-migration.test.ts` ist rot** (seit e588416,
-  Track 5 — nicht aus Track 1/2). Der Regressionsscan „scripts/*.mjs bauen
-  PostgREST-Header nur ueber apiHeaders()" schlaegt auf
-  `scripts/verify-publishable-key.mjs:85` an. Dieser Bearer-Header ist dort
-  ABSICHT: das Skript prueft genau den Fall, den supabase-js ohne Session
-  erzeugt. Der Scan kennt bisher nur `scripts/lib/supabase-keys.mjs` als
-  Ausnahme. Fix waere, das Diagnoseskript ebenfalls auszunehmen — das
-  schwaecht eine Sicherheitspruefung und ist deshalb bewusst NICHT
-  eigenmaechtig gemacht worden.
 - deploy.sh mit Precommit-Guards (Secrets/.env/node_modules Block)
 - Worktree-Branch Auto-Push nach main
 - CI-Workflows: ci.yml, deploy-chairmatch.yml
