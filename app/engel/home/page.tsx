@@ -116,8 +116,11 @@ export default function EngelHomePage() {
       const body = await res.json().catch(() => ({}))
 
       if (!res.ok) {
-        if (res.status === 409) {
-          // Anfrage wurde zwischenzeitlich schon beantwortet (z.B. zweites Gerät)
+        // 409 ohne `code` = die Anfrage wurde zwischenzeitlich schon
+        // beantwortet (z. B. zweites Gerät). MIT `code` kommt der Konflikt
+        // aus der Einsatz-Kette (z. B. DOPPELBELEGUNG) — die Anfrage ist
+        // dann weiter offen und der Grund gehört im Klartext angezeigt.
+        if (res.status === 409 && !body?.code) {
           setPendingBookings(prev => prev.filter(b => b.id !== bookingId))
           setRespondError('Diese Anfrage wurde bereits beantwortet.')
           loadData()
