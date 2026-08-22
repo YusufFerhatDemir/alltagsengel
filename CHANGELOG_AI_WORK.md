@@ -4,6 +4,100 @@ Chronologische Dokumentation aller KI-gestuetzten Arbeitssitzungen.
 
 ---
 
+## 2026-08-22 | Session: Tracks 1 + 2 — Buchungskette, Rechnungs- und Mahnversand, Zahlungserfassung
+
+Aufraeumen und Deploy der 29 uncommitteten Dateien aus den vorangegangenen
+Code-Tasks (Typecheck war blockiert, weil parallele tsc-Laeufe kollidierten).
+
+### Track 1: Buchung → Einsatz → Leistungsnachweis (de4623b)
+Befund 10 der Lueckenanalyse: eine angenommene Buchung setzte ausschliesslich
+`bookings.status='accepted'`. Einsatzplanung, Leistungsnachweis und Abrechnung
+sahen den Termin nie.
+
+- **`lib/bookings/einsatz-kette.ts`** — Bruecke aus der Marktplatz-Welt
+  (`profiles`/`angels`) in die Betriebs-Welt (`clients`/`caregivers`/
+  `assignments`/`service_records`). Legt Einsatz (`GEPLANT`) + Nachweis-Entwurf
+  (`draft`/`ENTWURF`/`OFFEN`) an.
+- **Fail-closed an sechs Stellen:** kein Tarif fuer die Leistungsart, kein
+  Klienten-Datensatz, kein Mitarbeiter-Datensatz, fehlende Client- oder
+  Einsatzfreigabe, Budget-Block, Doppelbelegung. Kein Ausweichen auf
+  'sonstige', kein automatisches Anlegen von clients/caregivers.
+- **Keine Preise:** `service_records.amount` bleibt leer, der Betrag entsteht
+  erst im Rechnungslauf ueber den verifizierten Tarif. `duration_minutes`
+  bleibt ungesetzt (GENERATED-Spalte).
+- **`POST /api/bookings/respond`** baut die Kette NACH dem optimistic lock —
+  so gibt es unter parallelen Requests genau einen Gewinner. Reisst die Kette,
+  geht die Buchung auf `pending` zurueck. `force_override` nur fuer Admins,
+  mit Audit-Eintrag und Begruendung.
+- Engel-UI: 409 **mit** `code` (z. B. DOPPELBELEGUNG) zeigt jetzt den echten
+  Grund statt „bereits beantwortet".
+- 20 Tests: `__tests__/e2e/buchung-einsatz-kette.test.ts`
+
+### Track 2: Rechnungsversand + Mahnversand + Zahlungserfassung (79e7e0e)
+Befunde 11, 12 und 13: Rechnungen wurden erzeugt und als PDF abgelegt,
+erreichten den Kunden aber nie; die `dunning_email_queue` hatte seit ihrer
+Einfuehrung keinen Konsumenten; Zahlungen konnten nur per CAMT-Import
+erfasst werden.
+
+- **`lib/pdf/rechnung-paket.ts`** — der Belegpaket-Aufbau (495 Zeilen) aus
+  `generate-pdf/route.ts` herausgeloest. Die Route ist jetzt nur noch Auth +
+  Audit-Trail; der Versand erzeugt dieselben Bytes ohne HTTP-Umweg.
+- **`lib/billing/versand/rechnung-versand.ts`** + `POST /api/billing/invoices/
+  [id]/versenden` — Belegpaket + E-Mail an den Klienten, idempotent ueber
+  `invoices.sent_at`, Nachversand nur mit `erneutSenden: true`.
+- **`lib/notifications.ts`**: `sendRawEmail()` mit Anhaengen und freiem HTML
+  (Rechnungen brauchen ihre eigene Anrede statt des „Hallo {name}"-Templates).
+  Absender bleibt konstant „Alltagsengel" — nie ein persoenlicher Name.
+- **`freezeInvoice(..., { autoVersand })`** — opt-in, die Route setzt das Flag
+  nur bei `RECHNUNGSVERSAND_AUTOMATISCH='1'`. Ein Versandfehler kippt die
+  Festschreibung NICHT.
+- **`lib/billing/dunning/mahn-versand.ts`** + `POST /api/billing/dunning/versand`
+  — erster Konsument der `dunning_email_queue`, Mahnungs-PDF als Anhang.
+  Mahnlauf-Cron und `/admin/mahnwesen` zeigen den Versandzustand.
+- **`components/admin/ZahlungErfassenDialog.tsx`** + `lib/admin/betrag.ts` —
+  manuelle Zahlungserfassung aus `/admin/forderungen`.
+- **Migration `20260923000000_invoice_email_log.sql`** — Zustellprotokoll je
+  Versuch (Empfaenger, Betreff, Ergebnis, Fehlertext, Zaehler), `is_admin()`-
+  Policy + RESTRICTIVE `org_fence`. Rollback als `20260923000001`.
+  **Wartet auf manuelles Live-Apply.**
+- 29 Tests (13 Rechnungsversand, 8 Mahnversand, 8 Zahlungserfassung)
+
+### Fail-closed-Verhalten des Versands
+Ohne `RESEND_API_KEY` wird **nicht** geworfen und **nicht** als erledigt
+markiert: der Versuch landet als `uebersprungen` im Protokoll, `sent_at`
+bleibt leer, damit nach dem Setzen des Keys nachversendet wird.
+
+### Nicht angefasst
+§45b-Tarife bleiben `blocked`/`unverified`. Es wurden keine Preise, keine
+Tarif-Zuordnungen und keine Testdaten angelegt. `BUCHUNG_ZU_ERFASSUNG` bildet
+nur Schreibvarianten bereits entschiedener Leistungen ab ('Haushalt' →
+'haushaltshilfe'); Buchungsleistungen ohne entschiedenen Tarif ('Freizeit',
+'Apotheke', 'Aktivitaeten', 'Krankenfahrdienst', 'Hygienebox') laufen
+fail-closed in `KEINE_TARIFZUORDNUNG`.
+
+### Verifikation
+| Pruefung | Ergebnis |
+|----------|----------|
+| `npx tsc --noEmit` | 0 Fehler |
+| Neue Tests (4 Dateien) | 49/49 gruen |
+| Regression Billing + Touren + Bookings (46 Dateien) | 989 gruen, 22 skipped |
+| Volle Suite (181 Dateien) | 3513 gruen, 38 skipped, **1 rot** |
+
+Der rote Test ist `__tests__/security/supabase-key-migration.test.ts` und
+stammt aus **e588416 (Track 5)**, nicht aus Track 1/2: der Regressionsscan
+schlaegt auf `scripts/verify-publishable-key.mjs:85` an, wo der
+`Authorization: Bearer`-Header Absicht ist (das Skript prueft genau diesen
+Fall). Nicht eigenmaechtig gefixt, weil der Fix eine Sicherheitspruefung
+aufweicht — Entscheidung liegt beim CEO.
+
+### CI
+| Commit | Beschreibung | Status |
+|--------|-------------|--------|
+| de4623b | Track 1: Buchung → Einsatz → Nachweis | **DEPLOYED** |
+| 79e7e0e | Track 2: Rechnungs-/Mahnversand + Zahlungserfassung | **DEPLOYED** |
+
+---
+
 ## 2026-08-22 | Session: Phase 2 — Dependency Map, Funktionale Lueckenanalyse, ChairMatch Delta
 
 ### Track E: Supabase Key Dependency Map
