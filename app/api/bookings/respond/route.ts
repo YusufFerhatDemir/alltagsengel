@@ -8,6 +8,12 @@ import {
   type BookingNotifyData,
 } from '@/lib/notifications'
 import { getActiveOrgIdOrDefault } from '@/lib/organizations/server'
+import {
+  erzeugeEinsatzUndNachweis,
+  istEinsatzKetteFehler,
+  type KetteErgebnis,
+} from '@/lib/bookings/einsatz-kette'
+import { logAuditEventOrWarn } from '@/lib/audit-log'
 import { logger } from '@/lib/logger'
 const log = logger.child('api:bookings')
 
@@ -32,6 +38,7 @@ interface BookingRow {
   duration_hours: number | null
   total_amount: number | string | null
   status: string | null
+  payment_method: string | null
   customer: BookingProfile | BookingProfile[] | null
   angel: BookingAngel | BookingAngel[] | null
 }
@@ -48,14 +55,63 @@ function isMissingColumn(err: { code?: string; message?: string } | null): boole
 }
 
 /**
+ * Dreht einen Statuswechsel auf 'accepted' zurück, wenn die Einsatz-Kette
+ * danach gerissen ist (Track A1).
+ *
+ * Der Übergangs-Trigger `enforce_booking_status_transition` lässt den
+ * Service-Role-Client (auth.uid() IS NULL) durch — accepted → pending ist
+ * für Kunde und Engel nicht erlaubt, für diesen Pfad aber notwendig.
+ * `.eq('status','accepted')` verhindert, dass ein zwischenzeitlich anderer
+ * Status (z. B. eine Stornierung des Kunden) überschrieben wird.
+ */
+async function setzeBuchungZurueckAufPending(
+  admin: ReturnType<typeof createAdminClient>,
+  bookingId: string,
+  orgId: string,
+): Promise<boolean> {
+  const voll = await admin
+    .from('bookings')
+    .update({ status: 'pending', responded_at: null, decline_reason: null })
+    .eq('id', bookingId)
+    .eq('organization_id', orgId)
+    .eq('status', 'accepted')
+    .select('id')
+
+  if (voll.error && isMissingColumn(voll.error)) {
+    const minimal = await admin
+      .from('bookings')
+      .update({ status: 'pending' })
+      .eq('id', bookingId)
+      .eq('organization_id', orgId)
+      .eq('status', 'accepted')
+      .select('id')
+    return !minimal.error && (minimal.data?.length ?? 0) > 0
+  }
+  return !voll.error && (voll.data?.length ?? 0) > 0
+}
+
+/**
  * POST /api/bookings/respond
- * Body: { bookingId: string, action: 'accept' | 'decline', reason?: string }
+ * Body: { bookingId, action: 'accept' | 'decline', reason?, force_override?, override_reason? }
  *
  * Der zugewiesene Engel beantwortet eine Buchungsanfrage. Server-autoritativ:
  * - nur der zugewiesene Engel (oder ein Admin) darf antworten
  * - Übergang nur aus status='pending' (optimistic lock gegen Doppel-Klick
  *   und gegen Accept-nach-Decline-Races)
+ * - bei 'accept' entsteht die vollständige Kette: Einsatz (`assignments`)
+ *   + Leistungsnachweis-Entwurf (`service_records`) — siehe
+ *   lib/bookings/einsatz-kette.ts
  * - danach wird der Kunde benachrichtigt (in-app + E-Mail + Push)
+ *
+ * REIHENFOLGE bei 'accept' (Track A1): erst der Statuswechsel mit
+ * optimistic lock, dann die Kette. Der Lock bestimmt EINEN Gewinner unter
+ * parallelen Requests; nur dieser baut die Kette. Scheitert sie, wird der
+ * Status auf 'pending' zurückgedreht — eine angenommene Buchung ohne
+ * Einsatz ist genau der Zustand, den Track A1 beseitigt.
+ *
+ * `force_override` (nur admin/superadmin) nimmt eine Buchung auch dann an,
+ * wenn die Kette nicht gebaut werden kann. Der Einsatz muss dann manuell
+ * geplant werden; der Vorgang wird im Audit-Trail festgehalten.
  */
 export async function POST(req: NextRequest) {
   try {
@@ -65,7 +121,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Nicht authentifiziert' }, { status: 401 })
     }
 
-    const { bookingId, action, reason } = await req.json()
+    const { bookingId, action, reason, force_override, override_reason } = await req.json()
     if (!bookingId || !action) {
       return NextResponse.json({ error: 'bookingId und action sind erforderlich' }, { status: 400 })
     }
@@ -83,7 +139,7 @@ export async function POST(req: NextRequest) {
     let bookingQuery = supabase
       .from('bookings')
       .select(`
-        id, customer_id, angel_id, service, date, time, duration_hours, total_amount, status,
+        id, customer_id, angel_id, service, date, time, duration_hours, total_amount, status, payment_method,
         customer:profiles!bookings_customer_id_fkey(id, first_name, last_name, email),
         angel:angels!bookings_angel_id_fkey(id, profiles(id, first_name, last_name, email))
       `)
@@ -97,12 +153,22 @@ export async function POST(req: NextRequest) {
 
     const booking = bookingRaw as unknown as BookingRow
 
+    // Rolle wird immer geholt: sie entscheidet sowohl über die Berechtigung
+    // als auch darüber, ob force_override erlaubt ist (D1-Regel wie in
+    // /api/einsatzplanung — Override ausschließlich für Administratoren).
+    const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+    const istAdmin = !!profile && ['admin', 'superadmin'].includes(profile.role)
+
     // Nur der zugewiesene Engel darf annehmen/ablehnen — Admins zur Nachsteuerung.
-    if (booking.angel_id !== user.id) {
-      const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
-      if (!profile || !['admin', 'superadmin'].includes(profile.role)) {
-        return NextResponse.json({ error: 'Nur der zugewiesene Engel kann diese Anfrage beantworten' }, { status: 403 })
-      }
+    if (booking.angel_id !== user.id && !istAdmin) {
+      return NextResponse.json({ error: 'Nur der zugewiesene Engel kann diese Anfrage beantworten' }, { status: 403 })
+    }
+
+    if (force_override && !istAdmin) {
+      return NextResponse.json(
+        { error: 'force_override ist nur für Administratoren erlaubt.' },
+        { status: 403 },
+      )
     }
 
     if (booking.status !== 'pending') {
@@ -159,6 +225,109 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Diese Anfrage wurde bereits beantwortet' }, { status: 409 })
     }
 
+    // ─── Track A1: Einsatz + Leistungsnachweis-Entwurf ───
+    // Erst hier, weil der optimistic lock oben bereits EINEN Gewinner
+    // bestimmt hat. Scheitert die Kette, geht die Buchung zurück auf
+    // 'pending' und der Engel bekommt den Grund im Klartext.
+    let kette: KetteErgebnis | null = null
+    const ketteWarnungen: string[] = []
+
+    if (action === 'accept') {
+      try {
+        kette = await erzeugeEinsatzUndNachweis(admin, {
+          booking: {
+            id: booking.id,
+            customer_id: booking.customer_id,
+            angel_id: booking.angel_id,
+            service: booking.service,
+            date: booking.date,
+            time: booking.time,
+            duration_hours: booking.duration_hours,
+            payment_method: booking.payment_method,
+          },
+          organizationId: orgId,
+          actorId: user.id,
+        })
+        ketteWarnungen.push(...kette.warnungen)
+
+        await logAuditEventOrWarn({
+          action: 'create',
+          actorId: user.id,
+          actorRole: profile?.role ?? null,
+          organizationId: orgId,
+          entityType: 'assignment',
+          entityId: kette.assignmentId,
+          details: {
+            quelle: 'booking_accept',
+            booking_id: booking.id,
+            service_record_id: kette.serviceRecordId,
+            client_id: kette.clientId,
+            caregiver_id: kette.caregiverId,
+            leistungsart: kette.leistungsart,
+            zeitfenster: `${kette.assignmentDate} ${kette.startTime}–${kette.endTime}`,
+            warnungen: kette.warnungen,
+          },
+          request: req,
+        })
+      } catch (rohFehler) {
+        // Fachlicher Bruch (behebbar, Klartext für den Engel) vs. technischer
+        // Fehler (Details bleiben im Log).
+        const fachlich = istEinsatzKetteFehler(rohFehler) ? rohFehler : null
+        if (!fachlich) {
+          log.errorWithException('Booking-Kette unerwartet fehlgeschlagen', rohFehler)
+        }
+
+        if (istAdmin && force_override) {
+          // Bewusste Admin-Entscheidung: Buchung annehmen, Einsatz später
+          // von Hand planen. Wird protokolliert, nicht verschwiegen.
+          const grund = fachlich ? fachlich.message : 'Technischer Fehler beim Anlegen des Einsatzes'
+          ketteWarnungen.push(
+            `Kein Einsatz und kein Leistungsnachweis angelegt (${grund}). ` +
+            'Der Einsatz muss manuell in der Einsatzplanung erfasst werden.',
+          )
+          await logAuditEventOrWarn({
+            action: 'update',
+            actorId: user.id,
+            actorRole: profile?.role ?? null,
+            organizationId: orgId,
+            entityType: 'booking',
+            entityId: booking.id,
+            details: {
+              quelle: 'booking_accept_force_override',
+              fehlercode: fachlich ? fachlich.code : 'UNERWARTET',
+              fehler: grund,
+              begruendung: typeof override_reason === 'string' && override_reason.trim()
+                ? override_reason.trim().slice(0, 500)
+                : 'Keine Begründung angegeben',
+            },
+            request: req,
+          })
+        } else {
+          // Rollback: ohne Einsatz darf die Buchung nicht angenommen bleiben.
+          const zurueckgedreht = await setzeBuchungZurueckAufPending(admin, bookingId, orgId)
+          if (!zurueckgedreht) {
+            log.error('Rollback des Buchungsstatus fehlgeschlagen', { bookingId })
+          }
+
+          return NextResponse.json(
+            {
+              error: fachlich
+                ? fachlich.message
+                : 'Der Einsatz konnte nicht angelegt werden. Die Anfrage bleibt offen.',
+              code: fachlich ? fachlich.code : 'UNERWARTET',
+              details: fachlich ? fachlich.details : undefined,
+              status: 'pending',
+              rollback: zurueckgedreht,
+              hinweis: istAdmin
+                ? 'Mit force_override: true kann die Buchung ohne Einsatz angenommen werden.'
+                : undefined,
+            },
+            { status: fachlich ? fachlich.httpStatus : 500 },
+          )
+        }
+      }
+    }
+
     // ─── Kunde benachrichtigen ───
     const cust = firstOrSelf(booking.customer)
     const angel = firstOrSelf(booking.angel)
@@ -188,7 +357,13 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    return NextResponse.json({ success: true, status: newStatus })
+    return NextResponse.json({
+      success: true,
+      status: newStatus,
+      assignment_id: kette?.assignmentId,
+      service_record_id: kette?.serviceRecordId,
+      warnungen: ketteWarnungen.length > 0 ? ketteWarnungen : undefined,
+    })
   } catch (err) {
     return safeApiError(err, req)
   }

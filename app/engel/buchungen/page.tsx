@@ -35,7 +35,9 @@ export default function EngelBuchungenPage() {
       })
       const body = await res.json().catch(() => ({}))
       if (!res.ok) {
-        setRespondError(res.status === 409
+        // 409 mit `code` kommt aus der Einsatz-Kette (z. B. DOPPELBELEGUNG),
+        // nicht aus einem Doppel-Klick — dann den echten Grund zeigen.
+        setRespondError(res.status === 409 && !body?.code
           ? 'Diese Anfrage wurde bereits beantwortet.'
           : (body?.error || 'Anfrage konnte nicht beantwortet werden.'))
         await load()
