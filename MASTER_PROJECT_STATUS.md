@@ -1,10 +1,17 @@
 # MASTER PROJECT STATUS
 
-> Stand: 22.08.2026 08:15 | Baseline: FINAL_FINAL_GO_LIVE_REPORT_2026-08-21.md
-> HEAD: f4048df | Commits seit letztem Stand: +7 (6d148a5, ea67b5b, e588416, 8392730, de4623b, 79e7e0e, f4048df)
-> **CI: GRUEN.** Typecheck 0 Fehler | vitest 3515/3553 gruen, 38 skipped, 0 rot |
-> node:test, Secret-Scan, IK-Check, forbidden-strings, Production-Build: alle Exit 0.
-> Der seit e588416 rote Test ist geschlossen — Details unter Track 6.
+> Stand: 22.08.2026 13:15 | Baseline: FINAL_FINAL_GO_LIVE_REPORT_2026-08-21.md
+> HEAD: `3c29b00` | **11 Commits diese Session** (f8ad0ae, 24e67e9, b3564d2, 6d148a5,
+> ea67b5b, e588416, 8392730, de4623b, 79e7e0e, f4048df, 3c29b00)
+> — dazu `ebf14e2` im separaten ChairMatch-Repo (`/Users/work/chairmatch`).
+>
+> **CI: GRUEN — auf GitHub verifiziert, nicht nur lokal.**
+> Run [32569458523](https://github.com/YusufFerhatDemir/alltagsengel/actions/runs/32569458523)
+> auf `3c29b00`, abgeschlossen 22.08.2026 13:14, Dauer 6m12s. Beide Jobs
+> `success`: „Typecheck, Lint, Tests, Build" und „E2E — PflegeCoach (DiPA QS-05)
+> + Barrierefreiheit (BITV B-13)".
+> Der Vorlauf auf `f4048df` (32556332992) war **rot** — Ursache war der eine
+> Track-5-Test, den `3c29b00` geschlossen hat. Details unter Track 6.
 
 ---
 
@@ -152,19 +159,64 @@ Vollstaendige Analyse: `docs/CHAIRMATCH_DELTA_ANALYSE.md` · 231/231 Tests gruen
 
 | # | Item | Prio | Typ |
 |---|------|------|-----|
-| 8 | `MeinBereichSubPage` speichert in localStorage statt DB (9 Seiten) | P1 | INTERN |
-| 9 | Bild-Uploads verlassen den Browser nicht (Data-URLs in localStorage) | P1 | INTERN |
-| 10 | Mietanfrage wird nie zugestellt (kein Fetch/Mail) | P1 | INTERN |
-| 11 | Gesamter Miet-Flow abgeklemmt (API 0 Aufrufer) | P1 | INTERN |
-| 12 | `rental_equipment` kein CRUD (Vermieter kann keinen Stuhl anlegen) | P1 | INTERN |
-| 13 | `createNotification()` 0 Aufrufer (Glocke strukturell leer) | P2 | INTERN |
+| ~~8~~ | ~~`MeinBereichSubPage` speichert in localStorage statt DB (9 Seiten)~~ | ~~P1~~ | **ERLEDIGT** (ebf14e2) |
+| ~~9~~ | ~~Bild-Uploads verlassen den Browser nicht (Data-URLs in localStorage)~~ | ~~P1~~ | **ERLEDIGT** (ebf14e2) |
+| ~~10~~ | ~~Mietanfrage wird nie zugestellt (kein Fetch/Mail)~~ | ~~P1~~ | **ERLEDIGT** (ebf14e2, In-App-Benachrichtigung — E-Mail siehe Einschraenkung) |
+| ~~11~~ | ~~Gesamter Miet-Flow abgeklemmt (API 0 Aufrufer)~~ | ~~P1~~ | **ERLEDIGT** (ebf14e2) |
+| ~~12~~ | ~~`rental_equipment` kein CRUD (Vermieter kann keinen Stuhl anlegen)~~ | ~~P1~~ | **ERLEDIGT** (ebf14e2) |
+| ~~13~~ | ~~`createNotification()` 0 Aufrufer (Glocke strukturell leer)~~ | ~~P2~~ | **ERLEDIGT** (ebf14e2, 12 Aufrufstellen) |
+| 14 | Migration `20260821_persistence_uploads_rentals.sql` nicht angewendet — neue Routen antworten bis dahin mit 500 | P0 | INTERN (SQL-Editor, kein DDL-Zugang aus Session) |
+| 15 | Mietanfrage benachrichtigt nur in-App, keine E-Mail an den Vermieter | P2 | INTERN |
+
+### Track 3 ChairMatch: Persistenz-Umbau (ebf14e2, separates Repo /Users/work/chairmatch)
+
+**45 Dateien, +4172/-386.** Schliesst die Befunde 8-13 der Delta-Analyse in einem
+Zug — die sechs Luecken waren dieselbe Ursache: der Browser war die
+Speicherschicht.
+
+- **localStorage → DB:** `MeinBereichSubPage.tsx` schreibt nicht mehr in
+  `localStorage`, sondern gegen vier neue authentifizierte Routen —
+  `/api/me/tenant-profile`, `/api/me/salon`, `/api/me/listing`,
+  `/api/me/payout-account`. Betroffen: Mieter-Profil/-Radius, Salon-
+  Beschreibung/-Zeiten, Inserat-Ausstattung/-Preise/-Verfuegbarkeit,
+  Auszahlungskonten beider Rollen.
+- **Uploads:** `UploadField.tsx` laedt ueber `/api/uploads` in Supabase Storage
+  statt Data-URLs im Browser abzulegen (Galerie, Logo, Zertifikate, Fotos).
+- **Miet-Flow angeschlossen:** `/inserat/[id]/anfragen` ruft jetzt
+  `/api/rental-requests`; neu `/rentals/[id]/buchen` gegen
+  `/api/rental-bookings`; Vermieter beantwortet Anfragen unter
+  `/vermieter/mein-inserat/anfragen`.
+- **`rental_equipment`-CRUD:** `/api/rental-equipment` (+ `[id]`) und die Seite
+  `/vermieter/mein-inserat/inserate` — der Vermieter kann Stuehle anlegen,
+  aendern und loeschen.
+- **Benachrichtigungen:** `createNotification()` hat statt 0 jetzt 12
+  Aufrufstellen (Buchungen, Mietanfragen, Mietbuchungen, Stripe-Webhook).
+- **Zugriffsmodell unveraendert:** der Browser schreibt nie direkt. Jeder
+  Schreibpfad laeuft ueber `getSupabaseAdmin()` in einer Route mit
+  Auth-Pruefung; die neuen Policies erlauben `SELECT` nur auf die eigene Zeile
+  und kein INSERT/UPDATE/DELETE fuer anon/authenticated.
+- 4 Sprachkataloge (de/en/tr/ar) nachgezogen, `fake-supabase`-Harness erweitert.
+
+> **BLOCKER: Migration `supabase/migrations/20260821_persistence_uploads_rentals.sql`
+> ist NICHT angewendet.** Sie legt `tenant_profiles`, die Upload- und
+> Miet-Tabellen an und braucht den Supabase-SQL-Editor (kein DDL-Zugang aus der
+> Session). Bis dahin antworten die neuen Routen mit 500 — bewusst, statt still
+> auf localStorage zurueckzufallen. Der Umbau ist deployed, aber erst nach dem
+> Apply funktionsfaehig.
+>
+> **Einschraenkung Befund 10:** die Mietanfrage wird zugestellt, aber als
+> In-App-Benachrichtigung. Ein E-Mail-Versand an den Vermieter haengt nicht in
+> `/api/rental-requests` (`src/lib/email.ts` wird dort nicht aufgerufen) — offen
+> als neuer Punkt 14.
 
 ---
 
 ## Track 6: CI/DevOps
 
 **Status: GRUEN**
-Letzter Check: 22.08.2026 13:10 (lokal alle CI-Schritte einzeln nachgefahren)
+Letzter Check: 22.08.2026 13:14 — **GitHub-Actions-Run 32569458523 auf `3c29b00`
+abgeschlossen, beide Jobs `success`.** Zuvor lokal alle CI-Schritte einzeln
+nachgefahren; der Remote-Lauf bestaetigt das Ergebnis.
 
 ### Erledigt
 - Typecheck: 0 Fehler
@@ -181,6 +233,13 @@ Letzter Check: 22.08.2026 13:10 (lokal alle CI-Schritte einzeln nachgefahren)
   er faellt, sobald ein Eintrag auf eine nicht mehr existierende Datei zeigt —
   sonst wuerde eine tote Ausnahme spaeter still einen echten Treffer wegfiltern.
   Die Sperre selbst bleibt fuer alle anderen Skripte scharf.
+
+### CI-Historie der Session
+| Run | Commit | Ergebnis |
+|-----|--------|----------|
+| 32556214612 | 79e7e0e | cancelled (durch Folge-Push abgeloest) |
+| 32556332992 | f4048df | **failure** — 1 roter Test (Track-5-Bearer-Scan) |
+| 32569458523 | 3c29b00 | **success** — beide Jobs gruen, 6m12s |
 
 ### Offen
 - deploy.sh mit Precommit-Guards (Secrets/.env/node_modules Block)
