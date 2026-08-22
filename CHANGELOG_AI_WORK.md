@@ -4,6 +4,112 @@ Chronologische Dokumentation aller KI-gestuetzten Arbeitssitzungen.
 
 ---
 
+## 2026-08-22 | Session: Phase-2-Abschluss — ChairMatch-Persistenz + Tracks 4-6 nachdokumentiert
+
+Nachtrag fuer die vier Commits, die in den bisherigen Eintraegen fehlten
+(ea67b5b, e588416, 8392730 im Hauptrepo, ebf14e2 in `/Users/work/chairmatch`),
+plus Aktualisierung des Statusreports auf HEAD `3c29b00`.
+
+### Track 4: P6 Legacy Security Check (ea67b5b)
+Auftrag war „P6 NICHT loeschen, ZUERST vollstaendig pruefen". Ergebnis:
+`docs/P6_LEGACY_SECURITY_CHECK.md` (210 Zeilen), read-only + non-destruktive
+Write-Probes, keine Secret-Werte im Dokument (nur Typ, Ref, Fundort, HTTP-Codes).
+
+- **Zwei Aussagen der Dependency-Map widerlegt:** P6 (`vlrviyrgggzhayepfmop`) ist
+  nicht „keine aktive Nutzung". Es existiert ein live erreichbares
+  GitHub-Pages-Deployment, das die Legacy-SPA mit **hartkodiertem anon-JWT**
+  ausfuehrt und zur Laufzeit gegen die lebende P6-Datenbank verbindet.
+- Der Key steht getrackt im **oeffentlichen** Repo
+  (`index_legacy.html:199-200`), ueber `raw.githubusercontent.com` mit HTTP 200
+  abrufbar, gueltig bis 2036.
+- **Auth-Flaeche offen:** `disable_signup=false` + `mailer_autoconfirm=true` —
+  jeder kann auf dem unbeobachteten Projekt Konten anlegen, die sofort aktiv
+  sind. SMS-Provider Twilio konfiguriert (Kostenhebel ueber `/otp`).
+- Einstufung: `DECOMMISSION_CANDIDATE` mit akuter, sofort schliessbarer
+  Live-Exposition. P5 (`uwmjqckhjkgukhzeidyw`) als Karteileiche bestaetigt.
+- `docs/SUPABASE_KEY_DEPENDENCY_MAP.md` entsprechend korrigiert.
+
+### Track 5: Supabase publishable/secret Migration vorbereitet (e588416)
+Die Umstellung ist **additiv** — neuer Name zuerst, Legacy-Name als Fallback.
+Es wurde nichts rotiert und nichts abgeschaltet.
+
+- **`scripts/lib/supabase-keys.mjs`** — zentraler Helfer (`envWert()`,
+  `apiHeaders()`) fuer alle Verifikations-Skripte. 24 Skripte umgestellt.
+- **Die Falle, die der Helfer schliesst:** `Authorization: Bearer <key>` ist bei
+  den neuen Keys verboten — sie sind keine JWTs, die API antwortet „Invalid
+  JWT". Ein Sicherheitsskript liest das als „kein Zugriff moeglich" und meldet
+  gruen, **ohne geprueft zu haben**. `apiHeaders()` setzt den Bearer-Header
+  deshalb nur bei Legacy-JWTs.
+- **`scripts/verify-publishable-key.mjs`** — Diagnoseskript, das misst, ob
+  Supabase die neuen Keys auf diesem Projekt schon annimmt.
+- Regressionstest `__tests__/security/supabase-key-migration.test.ts` sperrt
+  rohe Bearer-Header in `scripts/*.mjs`. **Dieser Test war anschliessend rot**
+  (siehe naechster Eintrag) — er schlug auf dem Diagnoseskript an, wo der
+  Header Absicht ist.
+- **Nicht geloest:** das Logout-Problem bei Rotation. Das haengt an den
+  JWT-signing-keys, nicht an den API-Keys. Punkt 7 in Track 5 bleibt
+  `BLOCKED_BY_RISK`.
+
+### Track 6: 7 kleine Fixes aus der Lueckenanalyse (8392730)
+- **Kundenstammdaten editierbar** (`lib/clients/stammdaten.ts`,
+  `app/api/admin/clients/[id]/route.ts`) — nach der Anlage waren nur Teilfelder
+  aenderbar.
+- **Klienten-Statuswechsel** (`lib/clients/status.ts` +
+  `app/api/admin/clients/[id]/status/route.ts`) mit erlaubten Uebergaengen.
+- **Verfuegbarkeitspruefung in der Einsatzplanung**
+  (`app/api/einsatzplanung/route.ts`) — Doppelbelegung wird abgewiesen.
+- **Budget-Uebersicht** unter `/admin/budgets`.
+- **Jahresuebertrag als Cron** (`app/api/cron/jahresuebertrag/route.ts`,
+  in `vercel.json` verdrahtet).
+- **Zahlungs-Route gehaertet** (`app/api/billing/payments/route.ts`).
+- 2 neue Testdateien (Stammdaten-Status, Verfuegbarkeitspruefung).
+
+### ChairMatch Track 3: localStorage → DB (ebf14e2, separates Repo)
+**45 Dateien, +4172/-386.** Schliesst die Befunde 8-13 der Delta-Analyse in
+einem Zug — alle sechs hatten dieselbe Ursache: der Browser war die
+Speicherschicht.
+
+- **Persistenz:** `MeinBereichSubPage.tsx` schreibt gegen vier neue
+  authentifizierte Routen (`/api/me/tenant-profile`, `/api/me/salon`,
+  `/api/me/listing`, `/api/me/payout-account`) statt in `localStorage`.
+  Betroffen: Mieter-Profil/-Radius, Salon-Beschreibung/-Zeiten,
+  Inserat-Ausstattung/-Preise/-Verfuegbarkeit, Auszahlungskonten.
+- **Uploads:** `UploadField.tsx` laedt ueber `/api/uploads` in Supabase Storage
+  statt Data-URLs im Browser zu halten.
+- **Miet-Flow angeschlossen:** `/inserat/[id]/anfragen` → `/api/rental-requests`,
+  neue Seite `/rentals/[id]/buchen` → `/api/rental-bookings`,
+  Vermieter-Antwort unter `/vermieter/mein-inserat/anfragen`.
+- **`rental_equipment`-CRUD:** `/api/rental-equipment` (+ `[id]`) und
+  `/vermieter/mein-inserat/inserate` — der Vermieter kann Stuehle anlegen.
+- **`createNotification()`:** von 0 auf 12 Aufrufstellen.
+- **Zugriffsmodell unveraendert:** der Browser schreibt nie direkt; jeder
+  Schreibpfad laeuft ueber `getSupabaseAdmin()` in einer Route mit
+  Auth-Pruefung. Die neuen Policies erlauben `SELECT` nur auf die eigene Zeile,
+  kein INSERT/UPDATE/DELETE fuer anon/authenticated.
+
+> **Blocker:** `supabase/migrations/20260821_persistence_uploads_rentals.sql`
+> ist **nicht angewendet** — sie braucht den Supabase-SQL-Editor. Bis dahin
+> antworten die neuen Routen mit 500. Das ist Absicht: die Migration faellt
+> bewusst nicht still auf localStorage zurueck.
+>
+> **Offen geblieben:** die Mietanfrage erzeugt eine In-App-Benachrichtigung,
+> aber keine E-Mail an den Vermieter (`src/lib/email.ts` wird in
+> `/api/rental-requests` nicht aufgerufen).
+
+### Nicht angefasst
+Keine Preise, keine Tarif-Zuordnungen. §45b-Tarife bleiben `blocked`/
+`unverified`.
+
+### CI
+| Commit | Beschreibung | Status |
+|--------|-------------|--------|
+| ea67b5b | Track 4: P6 Legacy Security Check | **DEPLOYED** |
+| e588416 | Track 5: Supabase publishable/secret Migration | **DEPLOYED** |
+| 8392730 | Track 6: 7 kleine Fixes aus der Lueckenanalyse | **DEPLOYED** |
+| ebf14e2 | ChairMatch Track 3: localStorage → DB (separates Repo) | **DEPLOYED** — Migration wartet auf Apply |
+
+---
+
 ## 2026-08-22 | Session: CI wieder gruen (roter Track-5-Test geschlossen)
 
 CI war seit e588416 rot, zuletzt auf f4048df. Ursache war **ein einziger Test**
@@ -49,6 +155,13 @@ Header misst das Skript nichts mehr.
 
 tsc und vitest liefen strikt nacheinander (OOM-Regel). Kein Schritt endete auf
 einer Pipeline — jeder Exit-Code wurde direkt gelesen.
+
+### Verifikation auf GitHub (nachgetragen 22.08.2026 13:14)
+Run **32569458523** auf `3c29b00`: `conclusion: success`, Dauer 6m12s, beide
+Jobs gruen („Typecheck, Lint, Tests, Build" und „E2E — PflegeCoach (DiPA QS-05)
++ Barrierefreiheit (BITV B-13)"). Der Vorlauf **32556332992** auf `f4048df` war
+`failure` — derselbe eine Test. Damit ist der Fix nicht nur lokal, sondern auf
+der CI selbst bestaetigt.
 
 ### Nicht angefasst
 Keine Preise, keine Migrationen, keine Produktivlogik. Geaendert wurden nur die
