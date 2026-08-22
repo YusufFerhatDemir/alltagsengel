@@ -49,7 +49,7 @@ Kassenzulassungs-Voraussetzungen.
 | # | Befund | Bereich | PRIO | Aufwand |
 |---|--------|---------|------|---------|
 | 1 | § 45b-Tarife live `blocked` (8/9), VP/KZP 0/4 verifiziert → keine Kassenabrechnung möglich | 7 | P1 | klein (Code) / extern (Beleg) |
-| 2 | Angenommene Kundenbuchung erzeugt keinen Einsatz und keinen Leistungsnachweis | 3 | P1 | mittel |
+| 2 | ~~Angenommene Kundenbuchung erzeugt keinen Einsatz und keinen Leistungsnachweis~~ — **Code geschlossen 21.08.2026 (Track A1)**, offen bleiben die Stammdaten-Verknüpfungen (siehe Bereich 3) | 3 | P1 | mittel |
 | 3 | Mahnungen werden erzeugt, aber nie versendet (`dunning_email_queue` hat keinen Konsumenten) | 9 | P1 | klein |
 | 4 | Keine manuelle Zahlungserfassung in der Oberfläche (nur CAMT-Datei-Import) | 9 | P1 | klein |
 | 5 | Rechnung wird nie zugestellt — kein E-Mail-/Postversand, nur Portal-Download | 5 | P1 | mittel |
@@ -158,13 +158,49 @@ Kassenzulassungs-Voraussetzungen.
 - Kalender/Dienstplan-Oberflächen: `app/admin/kalender` (847 Z.),
   `app/admin/schedule` (754 Z.), `app/admin/dienstplan`.
 
-**FEHLT**
-- **Die Kundenbuchung endet im Nichts.** `bookings` (10 Datensätze live) und
-  `assignments` sind zwei getrennte Welten: `app/api/bookings/respond/route.ts`
-  setzt nur `bookings.status` — es entsteht weder ein `assignment` noch ein
-  `service_record`. Ein Kunde bucht, der Engel nimmt an, und in Planung und
-  Abrechnung taucht der Termin nie auf. Das ist der schwerwiegendste
-  funktionale Bruch der Kette. — **P1, mittel**
+**GESCHLOSSEN am 21.08.2026 (Track A1)**
+- **Die Kundenbuchung endete im Nichts.** `bookings` und `assignments` waren
+  zwei getrennte Welten: `app/api/bookings/respond/route.ts` setzte nur
+  `bookings.status` — es entstand weder ein `assignment` noch ein
+  `service_record`.
+- Neu: `lib/bookings/einsatz-kette.ts`. Bei `action='accept'` entsteht jetzt
+  ein `assignment` (Status `GEPLANT`) **und** ein `service_record`-Entwurf
+  (`status='draft'`, `proof_status='ENTWURF'`, `billing_status='OFFEN'`,
+  ohne Betrag). Beides läuft durch dieselben Prüfungen wie
+  `POST /api/einsatzplanung` (Klient-Freigabe inkl. aktivem Vertrag,
+  Einsatzfreigabe inkl. Pflichtqualifikationen, Budget) und wird im
+  Audit-Trail festgehalten.
+- Fail-closed und mit Rollback: reisst die Kette, geht die Buchung auf
+  `pending` zurück; scheitert der Nachweis, wird der eben angelegte Einsatz
+  wieder entfernt. `force_override` (nur admin/superadmin, protokolliert)
+  nimmt eine Buchung ohne Einsatz an. Abdeckung:
+  `__tests__/e2e/buchung-einsatz-kette.test.ts` (20 Tests).
+- Drei Brücken werden dabei geschlagen:
+  `bookings.customer_id → clients.user_id`,
+  `bookings.angel_id → caregivers.user_id`,
+  `bookings.service → Tarif-Schlüssel` (über `tarifLeistungsart()`).
+
+**FEHLT — Voraussetzungen, damit die Kette live etwas erzeugt**
+- **`clients.user_id` ist live bei allen 4 Klienten NULL**, `caregivers.user_id`
+  bei 1 von 2 Mitarbeitern. Die Profile der bestehenden Buchungskunden
+  (`maria@example.com`, `admin@alltagsengel.de`, `info@dripfy.de`) haben
+  ausserdem keine E-Mail-Entsprechung im Klientenstamm. Solange die
+  Verknüpfung fehlt, läuft jede Annahme in `KEIN_KLIENT` bzw.
+  `KEINE_BETREUUNGSKRAFT` — laut statt still, aber ohne Einsatz.
+  Es fehlt eine Oberfläche, die Kundenprofil und Klientendatensatz
+  verbindet (bzw. aus einer Buchung einen Klienten anlegt). — **P1, mittel**
+- **`einsatzfreigabe` steht live bei beiden Mitarbeitern auf `false`.** Auch
+  bei gesetzter Verknüpfung blockiert `EINSATZFREIGABE_FEHLT`, bis
+  Führungszeugnis und Erste-Hilfe-Nachweis hinterlegt sind. Das ist gewollt,
+  aber es ist ein Stammdaten-Blocker, kein Code-Blocker. — **P1, klein**
+- **Die Buchungsmasken benutzen ein drittes Leistungsart-Vokabular.**
+  `app/kunde/buchen-service` bietet 'Freizeit', 'Apotheke', 'Aktivitäten' an,
+  `app/kunde/buchen/[id]` zusätzlich 'Freizeitbegleitung', 'Krankenfahrdienst',
+  'Hygienebox' — für keine davon gibt es einen Tarif. Track A1 bildet nur
+  reine Schreibvarianten ab ('Haushalt'→'Haushaltshilfe', 'Einkauf',
+  'Arztbesuch', 'Spazieren'); die übrigen laufen fail-closed in
+  `KEINE_TARIFZUORDNUNG`. Welcher Tarif für sie gilt, ist eine Preis-
+  entscheidung und wurde bewusst nicht geraten. — **P1, klein (nach Tarifentscheid)**
 - **Abwesenheit wird in der Einsatzplanung nicht geprüft.** Die Prüfung existiert
   nur in `lib/touren/server.ts` und greift nur über `POST /api/tours`. Über
   `/api/einsatzplanung` lässt sich einem Engel im genehmigten Urlaub ein Einsatz
@@ -241,12 +277,18 @@ Kassenzulassungs-Voraussetzungen.
   (`lib/billing/xrechnung/`), DATEV-Export, SEPA-Lastschrift (pain.008).
 
 **FEHLT**
-- **Die Rechnung erreicht den Kunden nicht.** Es gibt keinen einzigen
-  E-Mail-Versand im gesamten Abrechnungspfad (`grep resend` über `app/api/billing`,
-  `app/api/rechnungen`, `lib/billing` → 0 Treffer). Der Kunde muss sich einloggen
-  und `app/kunde/rechnungen` öffnen. Für die Zielgruppe (Pflegebedürftige ab
-  PG 1, häufig hochbetagt) ist das kein tragfähiger Zustellweg; ein
-  Post-/PDF-Sammelversand fehlt ebenfalls. — **P1, mittel**
+- ~~**Die Rechnung erreicht den Kunden nicht.**~~ **GESCHLOSSEN (Track A2,
+  21.08.2026).** `lib/billing/versand/rechnung-versand.ts` erzeugt das
+  Belegpaket-PDF (`lib/pdf/rechnung-paket.ts`, aus der Route herausgelöst) und
+  schickt es mit `sendRawEmail()` als Anhang an die Klienten-Adresse.
+  Zustellstatus führt `invoices.sent_at` + `versand_elektronisch`, die
+  Versuchshistorie `invoice_email_log` (Migration 20260923000000).
+  Auslöser: `POST /api/billing/invoices/[id]/versenden` (Button im
+  Rechnungsdetail) und optional automatisch nach der Festschreibung, wenn
+  `RECHNUNGSVERSAND_AUTOMATISCH=1` gesetzt ist. Ohne `RESEND_API_KEY` meldet
+  der Pfad 'uebersprungen' und lässt `sent_at` leer, damit später
+  nachversendet wird. Tests: `__tests__/billing/rechnung-versand.test.ts`.
+  OFFEN bleibt der Post-/PDF-Sammelversand. — **P3, klein**
 - **Kein Rechnungslauf über alle Kunden.** `auto-invoice` arbeitet je Klient und
   Monat; einen Sammellauf „alle Kunden, Monat X" gibt es weder als Cron noch als
   Button. Bei 4 Kunden irrelevant, ab ~30 Kunden nicht mehr. — **P2, mittel**
@@ -396,17 +438,31 @@ Kassenzulassungs-Voraussetzungen.
   (`app/admin/zahlungseingaenge/zuordnung` → `/api/billing/payments/allocate`).
 
 **FEHLT**
-- **Mahnungen werden nie versendet.** `runDunningRun()` schreibt bei jeder
-  Eskalation einen Eintrag in `dunning_email_queue` (`lib/billing/core/dunning.ts:553`)
-  — und **kein einziger Codepfad liest diese Tabelle wieder aus**. Die
-  Mahnwesen-Oberfläche bietet stattdessen „E-Mail-Inhalt in Zwischenablage
-  kopieren". Der Mahnprozess endet also in einer Warteschlange ohne Konsumenten.
-  — **P1, klein**
-- **Keine manuelle Zahlungserfassung in der Oberfläche.**
-  `POST /api/billing/payments` existiert, wird aber von keiner `.tsx`-Datei
-  aufgerufen; die einzige UI-Zahlungsquelle ist der CAMT-Datei-Upload. Bar- und
-  Direktzahlungen sowie Zahlungen ohne camt.053-Datei lassen sich nicht buchen.
-  — **P1, klein**
+- ~~**Mahnungen werden nie versendet.**~~ **GESCHLOSSEN (Track A3,
+  21.08.2026).** `lib/billing/dunning/mahn-versand.ts` ist der Konsument von
+  `dunning_email_queue`: er liest die wartenden Einträge, erzeugt das
+  Mahnschreiben als echtes PDF (`mahnung-pdf-datei.ts` — bis dahin gab es nur
+  HTML und keinen HTML→PDF-Renderer im Projekt) und verschickt es mit Anhang.
+  Idempotenz: der Eintrag wird VOR dem Senden per `status='wartend'`-gefiltertem
+  UPDATE beansprucht; ein paralleler Lauf trifft keine Zeile mehr. Vor jedem
+  Versand wird die Rechnung erneut gelesen — ist sie inzwischen bezahlt oder
+  blockiert, wird der Eintrag storniert statt gemahnt. Auslöser:
+  `POST /api/billing/dunning/versand` (Button in `/admin/mahnwesen`) und der
+  Cron `/api/cron/mahnlauf`, dort nur mit `MAHNVERSAND_AUTOMATISCH=1`.
+  Tests: `__tests__/billing/mahn-versand.test.ts`.
+- ~~**Keine manuelle Zahlungserfassung in der Oberfläche.**~~ **GESCHLOSSEN
+  (Track A4, 21.08.2026).** `components/admin/ZahlungErfassenDialog.tsx`,
+  eingebunden in `/admin/forderungen` je offener Forderung. Bucht über
+  `POST /api/billing/payments` mit neuer `invoiceId` in den Kern (payments →
+  payment_allocations → `invoices.paid_amount` → `dunning_entries`) inklusive
+  Audit-Trail. Teilzahlung, Vollzahlung und Überzahlung werden ausgewiesen; der
+  Server ordnet höchstens den offenen Betrag zu, ein Überschuss bleibt als nicht
+  zugeordneter Zahlungseingang stehen. Zahlungsarten sind exakt die vom DB-CHECK
+  erlaubten — ein „Sonstiges" gibt es dort nicht.
+  Tests: `__tests__/billing/zahlung-manuell-erfassen.test.ts`.
+  ANMERKUNG: der ältere Dialog unter `/admin/zahlungskontrolle` schreibt
+  weiterhin nur in die Alt-Tabelle `payment_status` und erzeugt keine
+  Kern-Buchung — er bleibt unangetastet. — **P2, klein**
 - **Live noch nie gelaufen:** `payments` 0 Zeilen, `dunning_entries` 0 Zeilen bei
   3 Rechnungen. Der Mahnlauf hat also noch nie einen realen Fall bearbeitet.
 - **Kein Inkasso-Übergabeweg.** Stufe „Inkasso-Vorbereitung" existiert als

@@ -46,6 +46,7 @@ export default function InvoiceDetailPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [actionLoading, setActionLoading] = useState(false)
+  const [versandHinweis, setVersandHinweis] = useState<string | null>(null)
 
   async function load() {
     const supabase = createClient()
@@ -87,6 +88,7 @@ export default function InvoiceDetailPage() {
   async function handleAction(action: string) {
     setActionLoading(true)
     setError(null)
+    setVersandHinweis(null)
     try {
       const endpoint = action === 'freeze' ? `/api/billing/invoices/${id}/freeze`
         : action === 'cancel' ? `/api/billing/invoices/${id}/cancel`
@@ -96,6 +98,7 @@ export default function InvoiceDetailPage() {
         : action === 'check' ? `/api/billing/invoices/${id}/status`
         : action === 'credit' ? `/api/billing/invoices/${id}/credit`
         : action === 'zahlung' ? `/api/billing/invoices/${id}/zahlung`
+        : action === 'versenden' ? `/api/billing/invoices/${id}/versenden`
         : null
       if (!endpoint) return
 
@@ -132,6 +135,17 @@ export default function InvoiceDetailPage() {
         const zahler = window.prompt('Zahler (optional):', '')
         if (zahler && zahler.trim()) body.payerName = zahler.trim()
       }
+      if (action === 'versenden') {
+        // Nachversand ist eine bewusste Entscheidung: die Rechnung war schon
+        // beim Kunden, eine zweite Mail wirkt wie eine zweite Forderung.
+        if (inv?.sent_at) {
+          const ok = window.confirm(
+            'Diese Rechnung wurde bereits versendet. Erneut an den Kunden schicken?'
+          )
+          if (!ok) { setActionLoading(false); return }
+          body.erneutSenden = true
+        }
+      }
       if (action === 'credit') {
         // Eingabe in Euro, die API erwartet Cent.
         const amountRaw = window.prompt('Gutschriftbetrag in Euro (z. B. 35,00):')
@@ -154,6 +168,16 @@ export default function InvoiceDetailPage() {
       else {
         // Die signierte PDF-URL laeuft ab — direkt oeffnen statt merken.
         if (action === 'pdf' && json.pdf_url) window.open(json.pdf_url, '_blank', 'noopener')
+        // Der Versand antwortet auch bei 'uebersprungen'/'fehlgeschlagen' mit
+        // HTTP 200 — der Grund steht im Body und muss sichtbar werden, sonst
+        // sieht ein nicht erfolgter Versand wie ein erfolgter aus.
+        if (action === 'versenden') {
+          if (json.status === 'versendet') {
+            setVersandHinweis(`Rechnung an ${json.empfaenger} versendet.`)
+          } else {
+            setError(`Nicht versendet: ${json.grund || json.status}`)
+          }
+        }
         await load()
       }
     } catch (e: any) {
@@ -176,6 +200,7 @@ export default function InvoiceDetailPage() {
       </div>
 
       {error && <Banner tone="danger">{error}</Banner>}
+      {versandHinweis && <Banner tone="success">{versandHinweis}</Banner>}
 
       <div className="admin-page-header">
         <div>
@@ -221,6 +246,15 @@ export default function InvoiceDetailPage() {
             <ActionBtn label="Stornieren" onClick={() => handleAction('cancel')} loading={actionLoading} danger />
           )}
           <ActionBtn label="PDF erstellen" onClick={() => handleAction('pdf')} loading={actionLoading} />
+          {/* Versand erst nach Festschreibung: ein Entwurf darf das Haus nicht
+              verlassen. Der Serverpfad prueft das ebenfalls. */}
+          {inv.frozen_at && (
+            <ActionBtn
+              label={inv.sent_at ? 'Erneut versenden' : 'Per E-Mail senden'}
+              onClick={() => handleAction('versenden')}
+              loading={actionLoading}
+            />
+          )}
         </div>
       )}
 

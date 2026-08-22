@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { safeApiError } from '@/lib/api/error-sanitizer'
 import { runDunningRun } from '@/lib/billing/core'
+import { verarbeiteMahnQueue } from '@/lib/billing/dunning/mahn-versand'
 import { createAdminClient } from '@/lib/supabase/admin'
 
 // ═══════════════════════════════════════════════════════════
@@ -15,9 +16,18 @@ import { createAdminClient } from '@/lib/supabase/admin'
 //
 // Der Lauf eskaliert die Mahnstufe UND legt bei jeder Eskalation automatisch
 // eine Mahnung (PDF + E-Mail) in `dunning_email_queue` (status='wartend') an.
-// Der tatsaechliche E-Mail-VERSAND bleibt bewusst manuell unter
-// /admin/mahnwesen, weil Mahnschreiben vor dem Rausgehen gesichtet werden
-// sollen — hier wird nur die Queue befuellt, nichts verschickt.
+//
+// VERSAND: Seit dem Mahn-Consumer (lib/billing/dunning/mahn-versand.ts)
+// kann derselbe Lauf die Queue auch abarbeiten. Das passiert NUR, wenn
+// MAHNVERSAND_AUTOMATISCH='1' gesetzt ist — Mahnschreiben gehen an echte
+// Kunden und wurden bisher bewusst erst nach Sichtung unter
+// /admin/mahnwesen freigegeben. Ohne das Flag bleibt es beim bisherigen
+// Verhalten: Queue befuellen, nichts verschicken. Manuell anstossen laesst
+// sich der Versand jederzeit ueber POST /api/billing/dunning/versand.
+//
+// Der Consumer prueft unmittelbar vor jedem Versand erneut, ob die
+// Rechnung inzwischen bezahlt oder blockiert ist, und storniert den
+// Queue-Eintrag in dem Fall statt zu mahnen.
 // ═══════════════════════════════════════════════════════════
 
 const supabaseAdmin = createAdminClient()
@@ -37,9 +47,16 @@ export async function GET(request: Request) {
       return safeApiError(orgError, request)
     }
 
+    // Versand nur mit ausdruecklicher Freischaltung: Mahnschreiben gehen an
+    // echte Kunden. Ohne das Flag bleibt es beim bisherigen Verhalten —
+    // Queue befuellen, nichts verschicken.
+    const versandAktiv = process.env.MAHNVERSAND_AUTOMATISCH === '1'
+
     const laeufe: Array<Record<string, unknown>> = []
     let eskaliertGesamt = 0
     let blockiertGesamt = 0
+    let versendetGesamt = 0
+    let storniertGesamt = 0
 
     for (const org of orgs || []) {
       try {
@@ -48,7 +65,8 @@ export async function GET(request: Request) {
         const result = await runDunningRun(supabaseAdmin, org.id, org.id, { sendEmails: true })
         eskaliertGesamt += result.eskaliert.length
         blockiertGesamt += result.blockiert.length
-        laeufe.push({
+
+        const eintrag: Record<string, unknown> = {
           organizationId: org.id,
           name: org.name,
           geprueft: result.geprueft,
@@ -56,7 +74,29 @@ export async function GET(request: Request) {
           blockiert: result.blockiert.length,
           unveraendert: result.unveraendert,
           details: result.eskaliert,
-        })
+        }
+
+        if (versandAktiv) {
+          try {
+            const q = await verarbeiteMahnQueue(supabaseAdmin, {
+              organizationId: org.id,
+              actorId: org.id,
+            })
+            versendetGesamt += q.versendet
+            storniertGesamt += q.storniert
+            eintrag.versand = {
+              geprueft: q.geprueft,
+              versendet: q.versendet,
+              storniert: q.storniert,
+              fehlgeschlagen: q.fehlgeschlagen,
+              uebersprungen: q.uebersprungen,
+            }
+          } catch (versandErr) {
+            eintrag.versandFehler = versandErr instanceof Error ? versandErr.message : String(versandErr)
+          }
+        }
+
+        laeufe.push(eintrag)
       } catch (err) {
         laeufe.push({
           organizationId: org.id,
@@ -71,6 +111,12 @@ export async function GET(request: Request) {
       organisationen: laeufe.length,
       eskaliert: eskaliertGesamt,
       blockiert: blockiertGesamt,
+      versand: versandAktiv
+        ? { aktiv: true, versendet: versendetGesamt, storniert: storniertGesamt }
+        : {
+            aktiv: false,
+            hinweis: 'MAHNVERSAND_AUTOMATISCH ist nicht gesetzt — Queue wurde nur befüllt.',
+          },
       laeufe,
     })
   } catch (err) {

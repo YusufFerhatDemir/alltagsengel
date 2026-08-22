@@ -53,7 +53,13 @@ export async function POST(
       return NextResponse.json({ error: 'Rechnung nicht gefunden.' }, { status: 404 })
     }
 
-    const result = await freezeInvoice(admin, id, user.id, organizationId)
+    // Auto-Versand nur, wenn ausdruecklich freigeschaltet: eine Rechnung an
+    // den Kunden zu schicken ist der einzige Schritt der Kette, der nach
+    // draussen geht. Ohne das Flag bleibt der Versand manuell ueber
+    // POST /api/billing/invoices/[id]/versenden.
+    const result = await freezeInvoice(admin, id, user.id, organizationId, {
+      autoVersand: process.env.RECHNUNGSVERSAND_AUTOMATISCH === '1',
+    })
 
     return NextResponse.json(result)
   } catch (err) {
