@@ -27,6 +27,13 @@ export interface BookingNotifyData {
 }
 
 // ─── Email Service ───
+
+/**
+ * Absender fuer JEDE Kundenkommunikation. Nie ein persoenlicher Name —
+ * siehe CLAUDE.md, Abschnitt Kundenkommunikation.
+ */
+export const ALLTAGSENGEL_ABSENDER = 'Alltagsengel <info@alltagsengel.care>'
+
 function getResend(): Resend | null {
   const key = process.env.RESEND_API_KEY
   if (!key) return null
@@ -88,7 +95,7 @@ export async function sendEmailNotification(
   }
   try {
     const { error } = await resend.emails.send({
-      from: 'Alltagsengel <info@alltagsengel.care>',
+      from: ALLTAGSENGEL_ABSENDER,
       to,
       subject,
       html: wrapEmailTemplate(recipientName, subject, bodyHtml),
@@ -101,6 +108,85 @@ export async function sendEmailNotification(
   } catch (err) {
     log.errorWithException('sendEmailNotification error', err)
     return false
+  }
+}
+
+// ─── Email mit Anhang / freiem HTML ───
+
+export interface RawEmailAnhang {
+  filename: string
+  /** Roh-Bytes; werden fuer Resend base64-kodiert. */
+  content: Uint8Array | Buffer
+  contentType?: string
+}
+
+export interface RawEmailParams {
+  to: string
+  subject: string
+  html: string
+  text?: string
+  replyTo?: string
+  attachments?: RawEmailAnhang[]
+}
+
+export type RawEmailErgebnis =
+  | { ok: true; messageId: string | null }
+  | { ok: false; uebersprungen: true; grund: string }
+  | { ok: false; uebersprungen: false; grund: string }
+
+/**
+ * Versendet eine E-Mail mit vollstaendig selbst gebautem HTML und optionalen
+ * Anhaengen. Anders als sendEmailNotification() wird hier NICHT das
+ * "Hallo {name}"-Template drumherum gelegt — Rechnungen und Mahnungen
+ * brauchen ihre eigene Anrede.
+ *
+ * Absender ist immer "Alltagsengel" (Kundenkommunikations-Regel: nie ein
+ * persoenlicher Name).
+ *
+ * Ohne RESEND_API_KEY wird NICHT geworfen, sondern `uebersprungen: true`
+ * zurueckgegeben. Der Aufrufer entscheidet dann, ob er den Vorgang trotzdem
+ * als erledigt markiert — der Rechnungs- und der Mahnversand tun das
+ * bewusst NICHT, damit nach dem Setzen des Keys nachversendet wird.
+ */
+export async function sendRawEmail(params: RawEmailParams): Promise<RawEmailErgebnis> {
+  const resend = getResend()
+  if (!resend) {
+    log.info('RESEND_API_KEY nicht konfiguriert — E-Mail übersprungen', { subject: params.subject })
+    return { ok: false, uebersprungen: true, grund: 'RESEND_API_KEY nicht konfiguriert' }
+  }
+
+  try {
+    const { data, error } = await resend.emails.send({
+      from: ALLTAGSENGEL_ABSENDER,
+      to: params.to,
+      subject: params.subject,
+      html: params.html,
+      ...(params.text ? { text: params.text } : {}),
+      ...(params.replyTo ? { replyTo: params.replyTo } : {}),
+      ...(params.attachments?.length
+        ? {
+            attachments: params.attachments.map(a => ({
+              filename: a.filename,
+              content: Buffer.from(a.content).toString('base64'),
+              ...(a.contentType ? { contentType: a.contentType } : {}),
+            })),
+          }
+        : {}),
+    })
+
+    if (error) {
+      log.errorWithException('Resend email error', error)
+      return { ok: false, uebersprungen: false, grund: error.message || 'Resend-Fehler' }
+    }
+
+    return { ok: true, messageId: data?.id ?? null }
+  } catch (err) {
+    log.errorWithException('sendRawEmail error', err)
+    return {
+      ok: false,
+      uebersprungen: false,
+      grund: err instanceof Error ? err.message : String(err),
+    }
   }
 }
 

@@ -101,6 +101,11 @@ export interface FreezeResult {
   invoiceNumber: string;
   checksum: string;
   version: number;
+  /**
+   * Nur gesetzt, wenn freezeInvoice mit `autoVersand: true` gerufen wurde:
+   * 'versendet' | 'uebersprungen' | 'fehlgeschlagen'.
+   */
+  versandStatus?: string;
 }
 
 export interface CorrectionLineInput {
@@ -457,11 +462,27 @@ export async function createInvoiceDraft(
  * 3. Berechnet Checksumme
  * 4. Setzt frozen_at und Status -> 'freigegeben'
  */
+export interface FreezeOptions {
+  /**
+   * Nach der Festschreibung Belegpaket erzeugen und per E-Mail an den
+   * Klienten schicken.
+   *
+   * Bewusst OPT-IN und nicht Standard: der Versand ist der einzige Schritt
+   * der Kette, der nach draussen geht und sich nicht zurueckholen laesst.
+   * Die Route setzt das Flag nur, wenn RECHNUNGSVERSAND_AUTOMATISCH='1'
+   * gesetzt ist. Ein Fehlschlag beim Versand kippt die Festschreibung
+   * NICHT — die Rechnung bleibt festgeschrieben und laesst sich manuell
+   * ueber POST /api/billing/invoices/[id]/versenden nachsenden.
+   */
+  autoVersand?: boolean;
+}
+
 export async function freezeInvoice(
   supabase: SupabaseClient,
   invoiceId: string,
   actorId: string,
-  expectedOrgId?: string
+  expectedOrgId?: string,
+  options: FreezeOptions = {}
 ): Promise<FreezeResult> {
   // Rechnung laden
   const { data: invoice, error: invError } = await supabase
@@ -632,11 +653,36 @@ export async function freezeInvoice(
     log.errorWithException('Auto-Dunning bei Festschreibung fehlgeschlagen', e, { invoiceId });
   }
 
+  // Auto-Versand: Belegpaket erzeugen + per E-Mail an den Klienten.
+  // Fehler werden geschluckt — die Rechnung ist festgeschrieben, und der
+  // Versand ist ueber die Versenden-Route jederzeit nachholbar.
+  let versandStatus: string | undefined;
+  if (options.autoVersand) {
+    try {
+      const { versendeRechnungPerEmail } = await import('@/lib/billing/versand/rechnung-versand');
+      const ergebnis = await versendeRechnungPerEmail(supabase, {
+        invoiceId,
+        organizationId: invoice.organization_id,
+        actorId,
+      });
+      versandStatus = ergebnis.status;
+      if (ergebnis.status !== 'versendet') {
+        log.warn('Auto-Versand nach Festschreibung nicht durchgefuehrt', {
+          invoiceId, status: ergebnis.status, grund: ergebnis.grund,
+        });
+      }
+    } catch (e) {
+      versandStatus = 'fehlgeschlagen';
+      log.errorWithException('Auto-Versand nach Festschreibung fehlgeschlagen', e, { invoiceId });
+    }
+  }
+
   return {
     snapshotId: snapshot.id,
     invoiceNumber: formattedNumber,
     checksum,
     version,
+    versandStatus,
   };
 }
 

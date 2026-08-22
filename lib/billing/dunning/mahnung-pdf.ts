@@ -65,7 +65,12 @@ export interface MahnungData {
 // Mahnung-Text pro Stufe
 // ---------------------------------------------------------------------------
 
-const DUNNING_TEXTS: Record<string, { subject: string; body: string; closing: string }> = {
+/**
+ * Mahnungstexte pro Stufe. Exportiert, damit die PDF-Datei-Variante
+ * (mahnung-pdf-datei.ts) und die E-Mail denselben Wortlaut benutzen —
+ * eine zweite Kopie wuerde frueher oder spaeter auseinanderlaufen.
+ */
+export const DUNNING_TEXTS: Record<string, { subject: string; body: string; closing: string }> = {
   erinnerung: {
     subject: 'Zahlungserinnerung',
     body: `bei der Überprüfung unserer Konten haben wir festgestellt, dass die nachstehende Rechnung noch nicht beglichen wurde. Möglicherweise handelt es sich um ein Versehen.\n\nWir bitten Sie freundlich, den ausstehenden Betrag bis zum {deadline} auf unser unten genanntes Konto zu überweisen.\n\nSollte sich Ihre Zahlung mit diesem Schreiben gekreuzt haben, betrachten Sie diese Erinnerung bitte als gegenstandslos.`,
@@ -215,17 +220,27 @@ function formatIbanDisplay(iban: string): string {
 // createMahnungDocument — Mahnung in DB speichern + HTML liefern
 // ---------------------------------------------------------------------------
 
-export async function createMahnungDocument(
+export interface MahnungDataParams {
+  organizationId: string
+  invoiceId: string
+  dunningEntryId: string
+  dunningLevel: DunningLevel
+}
+
+/**
+ * Stellt die Mahnungsdaten zusammen — OHNE etwas zu schreiben.
+ *
+ * Bewusst getrennt von createMahnungDocument(): der Mahn-Consumer
+ * (lib/billing/dunning/mahn-versand.ts) braucht die Daten fuer PDF und
+ * E-Mail, hat aber schon ein dunning_documents-Dokument aus dem Mahnlauf.
+ * Wuerde er createMahnungDocument() rufen, entstuende bei jedem
+ * Versandversuch eine weitere Dokumentzeile zur selben Mahnstufe.
+ */
+export async function baueMahnungData(
   supabase: SupabaseClient,
-  params: {
-    organizationId: string
-    invoiceId: string
-    dunningEntryId: string
-    dunningLevel: DunningLevel
-    actorId: string
-  }
-) {
-  const { organizationId, invoiceId, dunningEntryId, dunningLevel, actorId } = params
+  params: MahnungDataParams
+): Promise<{ mahnungData: MahnungData; paymentDeadline: string; totalDueCents: number }> {
+  const { organizationId, invoiceId, dunningEntryId, dunningLevel } = params
 
   // Org-Daten laden.
   // LIVE-SCHEMA: organizations hat KEINE Spalten street/zip/city/phone/email.
@@ -312,6 +327,23 @@ export async function createMahnungDocument(
     date: heuteBerlin(),
     referenceNumber: `M-${invNum}-${dunningLevel.toUpperCase()}`,
   }
+
+  return { mahnungData, paymentDeadline: deadlineStr, totalDueCents }
+}
+
+// ---------------------------------------------------------------------------
+// createMahnungDocument — Mahnung in DB speichern + HTML liefern
+// ---------------------------------------------------------------------------
+
+export async function createMahnungDocument(
+  supabase: SupabaseClient,
+  params: MahnungDataParams & { actorId: string }
+) {
+  const { organizationId, invoiceId, dunningEntryId, dunningLevel, actorId } = params
+
+  const { mahnungData, paymentDeadline: deadlineStr, totalDueCents } =
+    await baueMahnungData(supabase, { organizationId, invoiceId, dunningEntryId, dunningLevel })
+  const invNum = mahnungData.invoiceNumber
 
   const html = generateMahnungHtml(mahnungData)
 

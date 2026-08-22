@@ -48,6 +48,23 @@ interface DunningEntry {
   }
 }
 
+interface QueueZaehler {
+  wartend: number
+  versendet: number
+  fehlgeschlagen: number
+  storniert: number
+}
+
+interface VersandErgebnis {
+  geprueft: number
+  versendet: number
+  storniert: number
+  fehlgeschlagen: number
+  uebersprungen: number
+  reaktiviert: number
+  details: Array<{ queueId: string; empfaenger: string; status: string; grund?: string }>
+}
+
 interface DunningRunResult {
   geprueft: number
   eskaliert: Array<{ invoiceNumber: string | null; fromLevel: string; toLevel: string; daysOverdue: number; feeCents: number }>
@@ -63,6 +80,52 @@ export default function MahnwesenPage() {
   const [preview, setPreview] = useState<{ html: string; email: { subject: string; body: string } } | null>(null)
   const [lauf, setLauf] = useState<DunningRunResult | null>(null)
   const [laufLoading, setLaufLoading] = useState<'dry' | 'echt' | null>(null)
+  const [queue, setQueue] = useState<QueueZaehler | null>(null)
+  const [versandLoading, setVersandLoading] = useState(false)
+  const [versand, setVersand] = useState<VersandErgebnis | null>(null)
+
+  const ladeQueue = useCallback(async () => {
+    try {
+      const res = await fetch('/api/billing/dunning/versand')
+      if (!res.ok) return
+      const json = await res.json()
+      setQueue(json.queue as QueueZaehler)
+    } catch {
+      // Der Zaehler ist Zusatzinformation — ein Fehler darf die Seite nicht kippen.
+    }
+  }, [])
+
+  /**
+   * Stoesst den Versand der wartenden Mahnschreiben an.
+   *
+   * `wiederholen` setzt vorher alle fehlgeschlagenen Eintraege dieser
+   * Organisation zurueck auf 'wartend' — gedacht fuer den Fall, dass die
+   * Ursache behoben wurde (fehlender RESEND_API_KEY, falsche Adresse).
+   */
+  async function starteVersand(wiederholen: boolean) {
+    const frage = wiederholen
+      ? 'Fehlgeschlagene Mahnschreiben erneut versenden? Die Mails gehen an echte Kunden.'
+      : 'Wartende Mahnschreiben jetzt per E-Mail versenden? Die Mails gehen an echte Kunden.'
+    if (!confirm(frage)) return
+
+    setVersandLoading(true)
+    setVersand(null)
+    try {
+      const res = await fetch('/api/billing/dunning/versand', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ wiederholen }),
+      })
+      const data = await res.json()
+      if (!res.ok) alert(`Fehler: ${data.error}`)
+      else {
+        setVersand(data as VersandErgebnis)
+        await ladeQueue()
+        await loadData()
+      }
+    } catch { alert('Netzwerkfehler') }
+    setVersandLoading(false)
+  }
 
   const loadData = useCallback(async () => {
     setLoading(true)
@@ -76,7 +139,7 @@ export default function MahnwesenPage() {
     setLoading(false)
   }, [])
 
-  useEffect(() => { loadData() }, [loadData])
+  useEffect(() => { loadData(); ladeQueue() }, [loadData, ladeQueue])
 
   const formatCurrency = (cents: number) => `${(cents / 100).toFixed(2).replace('.', ',')} €`
   const formatDate = (d: string | null) => d ? new Date(d).toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin' }) : '—'
@@ -171,7 +234,8 @@ export default function MahnwesenPage() {
             <div style={{ fontSize: 12, color: '#888', marginTop: 2 }}>
               Fristen ab Fälligkeit: 14 Tage Zahlungserinnerung · 28 Tage 1. Mahnung · 42 Tage 2. Mahnung ·
               56 Tage letzte Mahnung · 70 Tage Inkasso-Vorbereitung. Je Lauf wird höchstens eine Stufe
-              eskaliert. Läuft automatisch täglich um 07:00 Uhr — der Versand der Schreiben bleibt manuell.
+              eskaliert. Läuft automatisch täglich um 07:00 Uhr. Der Versand der Schreiben läuft nur
+              automatisch mit, wenn MAHNVERSAND_AUTOMATISCH gesetzt ist — sonst hier von Hand anstoßen.
             </div>
           </div>
           <button onClick={() => starteMahnlauf(true)} disabled={laufLoading !== null} style={btnStyle}>
@@ -199,6 +263,49 @@ export default function MahnwesenPage() {
             {lauf.blockiert.map((b, i) => (
               <div key={`b${i}`} style={{ color: '#ef4444' }}>
                 {b.invoiceNumber || '(ohne Nummer)'}: blockiert — {b.reason}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Versand der wartenden Mahnschreiben (dunning_email_queue) */}
+      <div style={{ border: '1px solid var(--border, #2a2a2a)', borderRadius: 8, padding: 16, marginBottom: 24 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+          <div style={{ flex: 1, minWidth: 240 }}>
+            <div style={{ fontWeight: 600, fontSize: 15 }}>Mahnschreiben versenden</div>
+            <div style={{ fontSize: 12, color: '#888', marginTop: 2 }}>
+              {queue
+                ? `${queue.wartend} wartend · ${queue.versendet} versendet · ${queue.fehlgeschlagen} fehlgeschlagen · ${queue.storniert} storniert`
+                : 'Warteschlange wird geladen…'}
+              <br />
+              Vor jedem Versand wird erneut geprüft, ob die Rechnung inzwischen bezahlt oder blockiert
+              ist — dann wird der Eintrag storniert statt gemahnt. Jedes Schreiben geht mit PDF-Anhang raus.
+            </div>
+          </div>
+          <button
+            onClick={() => starteVersand(false)}
+            disabled={versandLoading || !queue?.wartend}
+            style={{ ...btnStyle, background: '#c8a84e', color: '#1a1a1a', borderColor: '#c8a84e', opacity: !queue?.wartend ? 0.5 : 1 }}
+          >
+            {versandLoading ? 'Versende…' : 'Wartende versenden'}
+          </button>
+          {(queue?.fehlgeschlagen ?? 0) > 0 && (
+            <button onClick={() => starteVersand(true)} disabled={versandLoading} style={btnStyle}>
+              Fehlgeschlagene wiederholen
+            </button>
+          )}
+        </div>
+
+        {versand && (
+          <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid var(--border, #2a2a2a)', fontSize: 13 }}>
+            <div style={{ marginBottom: 6 }}>
+              {versand.geprueft} Eintrag/Einträge bearbeitet · <strong>{versand.versendet}</strong> versendet ·{' '}
+              {versand.storniert} storniert · {versand.fehlgeschlagen} fehlgeschlagen · {versand.uebersprungen} übersprungen
+            </div>
+            {versand.details.filter(d => d.status !== 'versendet').map((d, i) => (
+              <div key={`v${i}`} style={{ color: d.status === 'storniert' ? '#22c55e' : '#ef4444' }}>
+                {d.empfaenger}: {d.status}{d.grund ? ` — ${d.grund}` : ''}
               </div>
             ))}
           </div>

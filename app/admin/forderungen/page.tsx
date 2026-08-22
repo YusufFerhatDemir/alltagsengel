@@ -4,6 +4,9 @@ import { createClient } from '@/lib/supabase/client'
 import { euro, formatDate, fullName, statusMeta, DUNNING_STATUS } from '@/lib/admin/ops'
 import { StatusBadge, SearchInput, EmptyRow, Banner } from '@/components/admin/OpsUI'
 import { klickbareZeile } from '@/lib/a11y'
+import ZahlungErfassenDialog, {
+  type ZahlungRechnung, type ZahlungErfasstErgebnis,
+} from '@/components/admin/ZahlungErfassenDialog'
 
 interface DunningRow {
   id: string
@@ -48,6 +51,8 @@ export default function ForderungenPage() {
   const [search, setSearch] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [actionBusy, setActionBusy] = useState<string | null>(null)
+  const [zahlungFuer, setZahlungFuer] = useState<ZahlungRechnung | null>(null)
+  const [zahlungHinweis, setZahlungHinweis] = useState<string | null>(null)
 
   async function load() {
     try {
@@ -99,6 +104,30 @@ export default function ForderungenPage() {
     setActionBusy(null)
   }
 
+  function zahlungBuchen(e: DunningRow) {
+    setZahlungHinweis(null)
+    setError(null)
+    setZahlungFuer({
+      invoiceId: e.invoice_id,
+      invoiceNumber: e.invoice_number,
+      clientName: e.client_name,
+      offenCents: e.amount_open_cents,
+    })
+  }
+
+  async function zahlungGebucht(ergebnis: ZahlungErfasstErgebnis) {
+    setZahlungFuer(null)
+    const teile = [
+      `${euro(ergebnis.zugeordnetCents / 100)} verbucht`,
+      ergebnis.rechnungAusgeglichen ? 'Rechnung ausgeglichen' : 'Restbetrag bleibt offen',
+    ]
+    if (ergebnis.ueberzahlungCents > 0) {
+      teile.push(`${euro(ergebnis.ueberzahlungCents / 100)} Überzahlung bleibt nicht zugeordnet`)
+    }
+    setZahlungHinweis(teile.join(' · '))
+    await load()
+  }
+
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase()
     return entries.filter(e => {
@@ -120,6 +149,7 @@ export default function ForderungenPage() {
       </div>
 
       {error && <Banner tone="danger">{error}</Banner>}
+      {zahlungHinweis && <Banner tone="success">{zahlungHinweis}</Banner>}
 
       {overview && (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 10, margin: '12px 0 16px' }}>
@@ -151,7 +181,7 @@ export default function ForderungenPage() {
             <thead>
               <tr>
                 <th>Rechnung</th><th>Klient</th><th>Fällig</th><th>Tage</th>
-                <th>Forderung</th><th>Offen</th><th>Gebühren</th><th>Stufe</th><th>Aktion</th>
+                <th>Forderung</th><th>Offen</th><th>Gebühren</th><th>Stufe</th><th>Aktionen</th>
               </tr>
             </thead>
             <tbody>
@@ -175,15 +205,18 @@ export default function ForderungenPage() {
                     <td style={{ fontSize: 13 }}>{e.dunning_fee_cents > 0 ? euro(e.dunning_fee_cents / 100) : '—'}</td>
                     <td><StatusBadge label={sm.label} color={sm.color} /></td>
                     <td>
-                      {e.block_dunning ? (
-                        <span style={{ fontSize: 11, color: 'var(--ink5)' }} title={e.block_reason || ''}>Blockiert</span>
-                      ) : canAdvance ? (
-                        <button onClick={() => handleAdvance(e.invoice_id)} disabled={actionBusy === e.invoice_id} style={actionBtn}>
-                          {actionBusy === e.invoice_id ? '…' : 'Mahnen →'}
-                        </button>
-                      ) : (
-                        <span style={{ fontSize: 11, color: 'var(--ink5)' }}>—</span>
-                      )}
+                      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                        {e.amount_open_cents > 0 && (
+                          <button onClick={() => zahlungBuchen(e)} style={zahlungBtn}>Zahlung buchen</button>
+                        )}
+                        {e.block_dunning ? (
+                          <span style={{ fontSize: 11, color: 'var(--ink5)', alignSelf: 'center' }} title={e.block_reason || ''}>Blockiert</span>
+                        ) : canAdvance ? (
+                          <button onClick={() => handleAdvance(e.invoice_id)} disabled={actionBusy === e.invoice_id} style={actionBtn}>
+                            {actionBusy === e.invoice_id ? '…' : 'Mahnen →'}
+                          </button>
+                        ) : null}
+                      </div>
                     </td>
                   </tr>
                 )
@@ -191,6 +224,14 @@ export default function ForderungenPage() {
             </tbody>
           </table>
         </div>
+      )}
+
+      {zahlungFuer && (
+        <ZahlungErfassenDialog
+          rechnung={zahlungFuer}
+          onClose={() => setZahlungFuer(null)}
+          onGebucht={zahlungGebucht}
+        />
       )}
     </div>
   )
@@ -208,5 +249,11 @@ function StatCard({ label, value, color }: { label: string; value: string; color
 const actionBtn: React.CSSProperties = {
   fontSize: 12, color: '#D04B3B', background: 'rgba(208,75,59,0.1)',
   border: '1px solid rgba(208,75,59,0.3)', borderRadius: 6, padding: '4px 10px',
+  cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap',
+}
+
+const zahlungBtn: React.CSSProperties = {
+  fontSize: 12, color: '#2D8F5E', background: 'rgba(45,143,94,0.1)',
+  border: '1px solid rgba(45,143,94,0.3)', borderRadius: 6, padding: '4px 10px',
   cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap',
 }
