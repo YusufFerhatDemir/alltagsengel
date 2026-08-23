@@ -13,8 +13,14 @@
 #
 # VORAUSSETZUNG
 # Repository-Secret `CRON_SECRET` mit demselben Wert wie die
-# gleichnamige Umgebungsvariable in Vercel. Fehlt es, bricht der Lauf
-# sichtbar ab — er soll NICHT still nichts tun.
+# gleichnamige Umgebungsvariable in Vercel.
+#
+# Fehlt das Secret, endet der Lauf mit einer Warnung und einem Eintrag
+# in der Job-Zusammenfassung — nicht mit einem Fehler. Bewusst so: der
+# Workflow laeuft 288-mal am Tag, und 288 rote Laeufe taeglich wuerden
+# nur dazu fuehren, dass niemand mehr auf rote Laeufe schaut. Ein
+# fehlgeschlagener AUFRUF (HTTP != 200) bleibt dagegen rot, denn das ist
+# eine echte Stoerung.
 #
 # Der Endpunkt selbst ist mehrfach abgesichert: er nimmt nur den
 # Bearer-Token an, und der Lauf haelt eine Sperre in der Datenbank. Ein
@@ -44,15 +50,26 @@ jobs:
     timeout-minutes: 5
     steps:
       - name: Cron-Secret pruefen
+        id: secret
         env:
           CRON_SECRET: ${{ secrets.CRON_SECRET }}
         run: |
           if [ -z "${CRON_SECRET}" ]; then
-            echo "::error::Repository-Secret CRON_SECRET fehlt — der Wiederholungslauf kann nicht ausgeloest werden."
-            exit 1
+            echo "::warning::Repository-Secret CRON_SECRET fehlt — der Wiederholungslauf wird NICHT ausgeloest."
+            {
+              echo "### Wiederholungslauf uebersprungen"
+              echo ""
+              echo "Das Repository-Secret \`CRON_SECRET\` ist nicht gesetzt."
+              echo "Es muss denselben Wert haben wie die Umgebungsvariable \`CRON_SECRET\` in Vercel."
+              echo "Bis dahin laeuft die Wiederholung nur ueber den taeglichen Vercel-Cron um 04:00."
+            } >> "$GITHUB_STEP_SUMMARY"
+            echo "vorhanden=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "vorhanden=true" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Lauf ausloesen
+        if: steps.secret.outputs.vorhanden == 'true'
         env:
           CRON_SECRET: ${{ secrets.CRON_SECRET }}
           BASIS: ${{ vars.PRODUCTION_URL || 'https://alltagsengel.care' }}
