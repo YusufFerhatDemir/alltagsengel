@@ -141,8 +141,33 @@ export const BEREICHE: Readonly<Record<string, BereichsRegel>> = {
   // Benutzerverwaltung
   '/admin/users':                     { lesen: 'benutzer.verwalten' },
 
-  // Auswertungen
+  // Auswertungen und Managementinformationssystem
+  //
+  // '/mis' allein waere zu grob: darunter liegen Finanzen, Personalakten
+  // und Vertraege nebeneinander. Der laengste passende Praefix gewinnt,
+  // deshalb schneiden die Eintraege darunter den Sammelfall zu.
   '/mis':                             { lesen: 'berichte.lesen' },
+  '/mis/finance':                     { lesen: 'abrechnung.lesen', schreiben: 'abrechnung.schreiben' },
+  '/mis/krankenfahrt-pricing':        { lesen: 'tarife.lesen', schreiben: 'tarife.schreiben' },
+  '/mis/krankenfahrten':              { lesen: 'einsatz.lesen', schreiben: 'einsatz.schreiben' },
+  '/mis/scheduling':                  { lesen: 'einsatz.lesen', schreiben: 'einsatz.schreiben' },
+  '/mis/recruiting':                  { lesen: 'personal.lesen', schreiben: 'personal.schreiben' },
+  '/mis/team':                        { lesen: 'personal.lesen', schreiben: 'personal.schreiben' },
+  '/mis/training':                    { lesen: 'personal.lesen', schreiben: 'personal.schreiben' },
+  '/mis/quality':                     { lesen: 'qm.lesen', schreiben: 'qm.schreiben' },
+  '/mis/complaints':                  { lesen: 'qm.lesen', schreiben: 'qm.schreiben' },
+  '/mis/privacy':                     { lesen: 'qm.lesen', schreiben: 'qm.schreiben' },
+  '/mis/contracts':                   { lesen: 'stammdaten.lesen', schreiben: 'stammdaten.schreiben' },
+  '/mis/crm':                         { lesen: 'stammdaten.lesen', schreiben: 'stammdaten.schreiben' },
+  '/mis/documents':                   { lesen: 'stammdaten.lesen', schreiben: 'stammdaten.schreiben' },
+  '/mis/dataroom':                    { lesen: 'system.verwalten' },
+  '/mis/settings':                    { lesen: 'system.verwalten' },
+  '/mis/ai-assistant':                { lesen: 'system.verwalten' },
+  '/mis/signatures':                  { lesen: 'einsatz.lesen', schreiben: 'einsatz.schreiben' },
+  '/mis/supply-chain':                { lesen: 'einsatz.lesen', schreiben: 'einsatz.schreiben' },
+  '/mis/vehicles':                    { lesen: 'einsatz.lesen', schreiben: 'einsatz.schreiben' },
+  '/mis/market':                      { lesen: 'berichte.lesen' },
+  '/mis/analytics':                   { lesen: 'berichte.lesen' },
 
   // ── API ───────────────────────────────────────────────────────────
   '/api/ops/aktivitaetslog':          { lesen: 'audit.lesen' },
