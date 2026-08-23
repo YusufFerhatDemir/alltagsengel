@@ -12,5 +12,6 @@
 // ═══════════════════════════════════════════════════════════════════════
 
 import '@/lib/notifications/vorgaenge/buchung'
+import '@/lib/notifications/vorgaenge/rechnung'
 
 export { registrierteVorgaenge } from '@/lib/notifications/wiederherstellung'

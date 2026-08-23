@@ -9,6 +9,7 @@ import {
   type ZustellKontext,
 } from '@/lib/notifications/delivery-log'
 import { esc } from '@/lib/notifications/html'
+import { PROVIDER_OHNE_ID } from '@/lib/notifications/fehlerklassen'
 import {
   baueBuchungsNachricht,
   type BookingNotifyData,
@@ -46,6 +47,62 @@ export interface NotifyPayload {
  * siehe CLAUDE.md, Abschnitt Kundenkommunikation.
  */
 export const ALLTAGSENGEL_ABSENDER = 'Alltagsengel <info@alltagsengel.care>'
+
+/**
+ * Obergrenze fuer einen einzelnen Provider-Aufruf.
+ *
+ * WARUM DAS NOETIG IST
+ * Das Resend-SDK setzt kein eigenes Zeitlimit. Antwortet der Provider
+ * nicht, haengt der Aufruf, bis die Serverless-Funktion von der
+ * Plattform abgeraeumt wird — dann gibt es weder eine Protokollzeile
+ * noch einen Eintrag in invoice_email_log. Die Rechnung stuende ohne
+ * jede Spur da: nicht versendet, nicht fehlgeschlagen, nichts.
+ *
+ * 20 Sekunden liegen deutlich unter der Funktionslaufzeit und deutlich
+ * ueber der ueblichen Antwortzeit von Resend (< 1 s).
+ */
+const RESEND_ZEITLIMIT_MS = 20_000
+
+/**
+ * Marker fuer einen Aufruf, der das Zeitlimit gerissen hat.
+ *
+ * 408 ist bewusst gesetzt: klassifiziereFehler() wertet ihn als
+ * voruebergehend, der Vorgang wird also wiederholt statt aufgegeben.
+ */
+const ZEITUEBERSCHREITUNG = {
+  /** Unterscheidungsmerkmal gegenueber der Provider-Antwort. */
+  zeitueberschreitung: true,
+  name: 'timeout',
+  statusCode: 408,
+  message: `Zeitüberschreitung: Resend hat innerhalb von ${RESEND_ZEITLIMIT_MS} ms nicht geantwortet`,
+} as const
+
+/**
+ * Legt ein Zeitlimit ueber einen Provider-Aufruf.
+ *
+ * Der verlorene Aufruf wird NICHT abgebrochen — das Resend-SDK nimmt
+ * kein AbortSignal entgegen. Das ist unkritisch: das SDK faengt jeden
+ * Fehler selbst ab und liefert immer ein Ergebnis, es kann also keine
+ * unbehandelte Ablehnung zurueckbleiben. Gegen die eigentliche Gefahr —
+ * dass der Auftrag beim Provider doch noch durchlaeuft und die
+ * Wiederholung eine zweite Mail erzeugt — hilft nicht das Abbrechen,
+ * sondern der Idempotenzschluessel (siehe RawEmailParams).
+ */
+async function mitZeitlimit<T>(auftrag: Promise<T>): Promise<T | typeof ZEITUEBERSCHREITUNG> {
+  let uhr: ReturnType<typeof setTimeout> | undefined
+  try {
+    return await Promise.race([
+      auftrag,
+      new Promise<typeof ZEITUEBERSCHREITUNG>(auf => {
+        uhr = setTimeout(() => auf(ZEITUEBERSCHREITUNG), RESEND_ZEITLIMIT_MS)
+        // Ein offener Timer darf einen Batchlauf nicht am Beenden hindern.
+        uhr.unref?.()
+      }),
+    ])
+  } finally {
+    if (uhr) clearTimeout(uhr)
+  }
+}
 
 function getResend(): Resend | null {
   const key = process.env.RESEND_API_KEY
@@ -211,12 +268,35 @@ export interface RawEmailParams {
    * notification_delivery_log.
    */
   zustellung?: ZustellKontext
+  /**
+   * Idempotenzschluessel fuer Resend (Header `Idempotency-Key`, Fenster
+   * 24 Stunden).
+   *
+   * WARUM DAS ZUM ZEITLIMIT GEHOERT
+   * Eine Zeitueberschreitung sagt nichts darueber aus, ob der Provider
+   * den Auftrag angenommen hat. Ohne Schluessel wuerde die Wiederholung
+   * eine ZWEITE Rechnungsmail erzeugen; mit Schluessel erkennt Resend
+   * den Auftrag wieder und liefert dieselbe Nachrichten-ID zurueck.
+   *
+   * Der Schluessel muss ueber alle Versuche DESSELBEN Vorgangs gleich
+   * und zwischen verschiedenen Nachrichten verschieden sein. Ein
+   * bewusster Nachversand („bitte nochmal schicken") laesst ihn deshalb
+   * weg — dort sind zwei Mails die Absicht.
+   */
+  idempotenzSchluessel?: string
 }
 
 export type RawEmailErgebnis =
-  | { ok: true; messageId: string | null }
-  | { ok: false; uebersprungen: true; grund: string }
-  | { ok: false; uebersprungen: false; grund: string }
+  | { ok: true; messageId: string }
+  | { ok: false; uebersprungen: true; grund: string; statusCode?: null; fehler?: unknown }
+  /**
+   * `fehler` traegt das rohe Provider-Ergebnis samt statusCode. Der
+   * Wiederholungslauf braucht es: aus `grund` allein (nur der
+   * Meldungstext) laesst sich nicht ablesen, ob ein 422 vorlag —
+   * DAUERHAFT_CODES in lib/notifications/fehlerklassen.ts liefe sonst
+   * fuer den E-Mail-Kanal komplett ins Leere.
+   */
+  | { ok: false; uebersprungen: false; grund: string; statusCode: number | null; fehler: unknown }
 
 /**
  * Versendet eine E-Mail mit vollstaendig selbst gebautem HTML und optionalen
@@ -246,35 +326,78 @@ export async function sendRawEmail(params: RawEmailParams): Promise<RawEmailErge
     return { ok: false, uebersprungen: true, grund: 'RESEND_API_KEY nicht konfiguriert' }
   }
 
-  try {
-    const { data, error } = await resend.emails.send({
-      from: ALLTAGSENGEL_ABSENDER,
-      to: params.to,
-      subject: params.subject,
-      html: params.html,
-      ...(params.text ? { text: params.text } : {}),
-      ...(params.replyTo ? { replyTo: params.replyTo } : {}),
-      ...(params.attachments?.length
-        ? {
-            attachments: params.attachments.map(a => ({
-              filename: a.filename,
-              content: Buffer.from(a.content).toString('base64'),
-              ...(a.contentType ? { contentType: a.contentType } : {}),
-            })),
-          }
-        : {}),
+  /** Ein Fehlschlag geht immer denselben Weg: protokollieren, melden. */
+  const gescheitert = async (
+    fehler: unknown,
+    grund: string,
+    statusCode: number | null
+  ): Promise<RawEmailErgebnis> => {
+    await protokolliere(params.zustellung, {
+      channel: 'email',
+      recipient: params.to,
+      status: 'failed',
+      provider: 'resend',
+      fehler,
     })
+    return { ok: false, uebersprungen: false, grund, statusCode, fehler }
+  }
+
+  try {
+    const antwort = await mitZeitlimit(
+      resend.emails.send(
+        {
+          from: ALLTAGSENGEL_ABSENDER,
+          to: params.to,
+          subject: params.subject,
+          html: params.html,
+          ...(params.text ? { text: params.text } : {}),
+          ...(params.replyTo ? { replyTo: params.replyTo } : {}),
+          ...(params.attachments?.length
+            ? {
+                attachments: params.attachments.map(a => ({
+                  filename: a.filename,
+                  content: Buffer.from(a.content).toString('base64'),
+                  ...(a.contentType ? { contentType: a.contentType } : {}),
+                })),
+              }
+            : {}),
+        },
+        params.idempotenzSchluessel
+          ? { idempotencyKey: params.idempotenzSchluessel }
+          : undefined
+      )
+    )
+
+    if ('zeitueberschreitung' in antwort) {
+      log.error('Resend hat nicht rechtzeitig geantwortet', {
+        subject: params.subject,
+        zeitlimitMs: RESEND_ZEITLIMIT_MS,
+      })
+      return gescheitert(ZEITUEBERSCHREITUNG, ZEITUEBERSCHREITUNG.message, 408)
+    }
+
+    const { data, error } = antwort
 
     if (error) {
       log.errorWithException('Resend email error', error)
-      await protokolliere(params.zustellung, {
-        channel: 'email',
-        recipient: params.to,
-        status: 'failed',
-        provider: 'resend',
-        fehler: error,
+      return gescheitert(error, error.message || 'Resend-Fehler', error.statusCode ?? null)
+    }
+
+    // ── Erfolg gilt erst mit Nachrichten-ID ──
+    // Die ID IST die Empfangsbestaetigung des Providers. Ohne sie waere
+    // ein 'versendet' eine Behauptung: invoices.sent_at wuerde gesetzt
+    // und die Rechnung nie wieder angefasst, obwohl niemand weiss, ob
+    // sie rausging. Lieber ein sichtbarer Fehlschlag als eine stille
+    // Falschaussage.
+    if (!data?.id) {
+      log.error('Resend antwortete ohne Nachrichten-ID — Versand gilt als unbestaetigt', {
+        subject: params.subject,
       })
-      return { ok: false, uebersprungen: false, grund: error.message || 'Resend-Fehler' }
+      return gescheitert(
+        { name: 'unbestaetigt', statusCode: null, message: PROVIDER_OHNE_ID },
+        PROVIDER_OHNE_ID,
+        null
+      )
     }
 
     await protokolliere(params.zustellung, {
@@ -282,23 +405,12 @@ export async function sendRawEmail(params: RawEmailParams): Promise<RawEmailErge
       recipient: params.to,
       status: 'sent',
       provider: 'resend',
-      providerMessageId: data?.id ?? null,
+      providerMessageId: data.id,
     })
-    return { ok: true, messageId: data?.id ?? null }
+    return { ok: true, messageId: data.id }
   } catch (err) {
     log.errorWithException('sendRawEmail error', err)
-    await protokolliere(params.zustellung, {
-      channel: 'email',
-      recipient: params.to,
-      status: 'failed',
-      provider: 'resend',
-      fehler: err,
-    })
-    return {
-      ok: false,
-      uebersprungen: false,
-      grund: err instanceof Error ? err.message : String(err),
-    }
+    return gescheitert(err, err instanceof Error ? err.message : String(err), null)
   }
 }
 

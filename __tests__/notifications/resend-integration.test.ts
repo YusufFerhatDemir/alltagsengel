@@ -13,8 +13,13 @@
 // KEIN echter Schluessel gebraucht.
 //
 // Was er bewusst NICHT beweisen kann: dass der in Vercel hinterlegte
-// Schluessel gueltig ist. Das laesst sich ohne echten Versand nicht
-// feststellen — siehe docs/reports/TRACK2_TRACK5_ZUSTELLUNG_2026-08-23.md.
+// Schluessel gueltig ist. Dafuer gibt es seit Phase 4 ein eigenes,
+// rein lesendes Werkzeug — `node scripts/verify-resend.mjs` fragt
+// GET /domains ab und verschickt dabei nichts.
+//
+// Die Fehlerpfade (abgelehnter Schluessel, Zeitueberschreitung, 4xx,
+// 5xx, Erfolg ohne Beleg) stehen in
+// __tests__/notifications/resend-fehlerpfade.test.ts.
 // ═══════════════════════════════════════════════════════════════════════
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
@@ -283,11 +288,15 @@ describe('sendRawEmail', () => {
 
   it('gibt bei Provider-Fehler uebersprungen=false zurueck', async () => {
     process.env.RESEND_API_KEY = ATTRAPPEN_SCHLUESSEL
-    H.antwort = { data: null, error: { message: 'rate limit exceeded' } }
+    H.antwort = { data: null, error: { message: 'rate limit exceeded', statusCode: 429 } }
 
     const e = await sendRawEmail({ ...basis, zustellung: spur })
 
-    expect(e).toEqual({ ok: false, uebersprungen: false, grund: 'rate limit exceeded' })
+    // `fehler` und `statusCode` kommen mit: ohne den Statuscode kann der
+    // Wiederholungslauf einen dauerhaft unzustellbaren 422 nicht von
+    // einer kurzen Stoerung unterscheiden (siehe
+    // __tests__/notifications/resend-fehlerpfade.test.ts).
+    expect(e).toMatchObject({ ok: false, uebersprungen: false, grund: 'rate limit exceeded', statusCode: 429 })
     expect(H.protokoll[0]).toMatchObject({ status: 'failed' })
   })
 

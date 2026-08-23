@@ -31,6 +31,15 @@ import { logger } from '@/lib/logger'
 
 const log = logger.child('rechnung-versand')
 
+/**
+ * Vorgangsart in notification_delivery_log.vorgang_art.
+ *
+ * Muss dem CHECK der Spalte genuegen (^[a-z][a-z0-9-]{2,39}$) und
+ * identisch zur Registrierung in lib/notifications/vorgaenge/rechnung.ts
+ * sein — sonst findet der Wiederholungslauf den Wiederhersteller nicht.
+ */
+export const RECHNUNG_VERSAND_ART = 'rechnung-versand'
+
 /** Typ fuer den clients-Join. */
 type ClientJoin = { first_name?: string; last_name?: string; email?: string } | null
 
@@ -68,13 +77,26 @@ export interface VersandParams {
   actorId: string
   /** Auch versenden, wenn sent_at bereits gesetzt ist (bewusster Nachversand). */
   erneutSenden?: boolean
+  /**
+   * Keine Zeile in notification_delivery_log schreiben.
+   *
+   * Nur fuer den Wiederholungslauf: dort legt sendeIdempotent() die
+   * Protokollzeile selbst an. Wuerde diese Funktion zusaetzlich
+   * protokollieren, gaebe es pro Versuch zwei Zeilen und die
+   * Versuchsobergrenze waere nach der Haelfte erreicht (siehe
+   * lib/notifications/wiederherstellung.ts).
+   */
+  ohneZustellspur?: boolean
 }
 
 export async function versendeRechnungPerEmail(
   admin: SupabaseClient,
   params: VersandParams
 ): Promise<VersandErgebnis> {
-  const { invoiceId, organizationId, actorId, erneutSenden = false } = params
+  const {
+    invoiceId, organizationId, actorId,
+    erneutSenden = false, ohneZustellspur = false,
+  } = params
 
   // ── Rechnung org-fenced laden ──
   const { data: inv, error: invErr } = await admin
@@ -165,7 +187,23 @@ export async function versendeRechnungPerEmail(
     // Zustellspur: der Vorgang ist die Rechnung. Zusammen mit dem Kanal
     // 'email' ist das der Idempotenzschluessel gegen Doppelversand
     // (Migration 20260923000000).
-    zustellung: { organizationId, correlationId: invoiceId },
+    //
+    // vorgangArt/vorgangRef sind PFLICHT, nicht Schmuck: ohne sie
+    // findet der Wiederholungslauf keinen Wiederhersteller und schiebt
+    // eine gescheiterte Rechnungsmail nach 24 Stunden als „nicht
+    // wiederherstellbar" ins Dead Letter — sie ginge nie raus.
+    zustellung: ohneZustellspur
+      ? undefined
+      : {
+          organizationId,
+          correlationId: invoiceId,
+          vorgangArt: RECHNUNG_VERSAND_ART,
+          vorgangRef: invoiceId,
+        },
+    // Gegen Doppelversand beim Provider, falls ein Aufruf ins Zeitlimit
+    // laeuft und wiederholt wird. Beim ausdruecklichen Nachversand
+    // bewusst OHNE Schluessel — dort ist eine zweite Mail die Absicht.
+    idempotenzSchluessel: erneutSenden ? undefined : `rechnung:${invoiceId}`,
   })
 
   // ── Fehlschlag / Ueberspringen: sent_at bleibt leer ──

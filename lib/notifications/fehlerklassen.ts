@@ -28,6 +28,22 @@
 export type Fehlerklasse = 'voruebergehend' | 'dauerhaft'
 
 /**
+ * Meldung fuer eine Provider-Antwort ohne Nachrichten-ID.
+ *
+ * Steht hier und nicht in lib/notifications.ts, damit Text und
+ * Erkennungsmuster nicht auseinanderlaufen koennen.
+ *
+ * WARUM DAUERHAFT, OBWOHL IM ZWEIFEL VORUEBERGEHEND GILT
+ * Der Provider hat mit 2xx geantwortet — die Mail ist womoeglich raus,
+ * nur unbestaetigt. Eine Wiederholung koennte also eine zweite Mail
+ * erzeugen. Bei einer Rechnung wiegt das schwerer als eine
+ * ausgebliebene: der Vorgang geht sofort ins Dead Letter und damit in
+ * die Betriebsansicht, wo ein Mensch entscheidet.
+ */
+export const PROVIDER_OHNE_ID =
+  'Resend hat den Auftrag ohne Nachrichten-ID bestätigt — Versand nicht belegbar'
+
+/**
  * Textmuster, die eine Zustellung dauerhaft unmöglich machen. Bewusst
  * eng gehalten — siehe „im Zweifel vorübergehend" oben.
  */
@@ -45,6 +61,8 @@ const DAUERHAFT_MUSTER: readonly RegExp[] = [
   /\bsuppress(ed|ion)\b/i,
   /\bhard\s*bounce\b/i,
   /\bblocked[_\s]?recipient\b/i,
+  // Provider hat bestaetigt, aber ohne Beleg (siehe PROVIDER_OHNE_ID)
+  /\bohne\s+nachrichten-?id\b/i,
   // Web-Push: Abo ist weg (410 Gone / 404)
   /\bsubscription\s+(has\s+)?expired\b/i,
   /\bunsubscribed\s+or\s+expired\b/i,

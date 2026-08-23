@@ -207,7 +207,12 @@ async function stelleWiederHer(
     return {
       ok: false,
       uebersprungen: ergebnis.uebersprungen === true,
-      fehler: ergebnis.grund,
+      // Das rohe Provider-Ergebnis gewinnt: nur dort steht der
+      // statusCode, und ohne ihn kann klassifiziereFehler() einen 422
+      // (Adresse dauerhaft unzustellbar) nicht von einer kurzen
+      // Stoerung unterscheiden — die Nachricht wuerde fuenf Stunden
+      // lang wiederholt, statt sofort ins Dead Letter zu gehen.
+      fehler: ergebnis.fehler ?? ergebnis.grund,
     }
   }
 
