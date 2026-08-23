@@ -20,6 +20,7 @@
 // gewollt, ein mandantenloser Eintrag gehört in keine Mandantensicht.
 // ═══════════════════════════════════════════════════════════════
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { csvZelle } from '@/lib/utils/csv'
 
 export type OpsAuditQuelle = 'aufgaben' | 'abrechnung' | 'administration' | 'workflow'
 
@@ -259,20 +260,11 @@ const CSV_SPALTEN = [
 ] as const
 
 /**
- * Eine CSV-Zelle. Trennzeichen ist das Semikolon, weil Excel in deutscher
- * Locale genau das erwartet — ein Komma-CSV landet dort in einer einzigen
- * Spalte und ist für eine Prüfung wertlos.
- *
- * Der führende Apostroph bei =, +, -, @ ist kein Schönheitsfehler: ohne ihn
- * interpretiert Excel den Inhalt als Formel (CSV-Injection). Audit-Daten
- * stammen teils aus Freitextfeldern, also ist das ein echter Pfad.
+ * Eine CSV-Zelle. Implementierung liegt in lib/utils/csv.ts, damit der
+ * §-302-Prüf-Export dieselbe Entschärfung benutzt statt einer eigenen,
+ * ungeschützten Variante. Hier re-exportiert, weil die Tests darauf zeigen.
  */
-export function csvZelle(wert: unknown): string {
-  if (wert === null || wert === undefined) return ''
-  const roh = typeof wert === 'object' ? JSON.stringify(wert) : String(wert)
-  const entschaerft = /^[=+\-@]/.test(roh) ? `'${roh}` : roh
-  return `"${entschaerft.replace(/"/g, '""')}"`
-}
+export { csvZelle }
 
 /**
  * Audit-Einträge als CSV — für die Vorlage bei einer Prüfung (SGB XI).

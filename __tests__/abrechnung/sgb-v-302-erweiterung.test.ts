@@ -59,6 +59,44 @@ describe('export-generator — Prüf-Export', () => {
     expect(zeilen).toHaveLength(3) // Kommentar + Kopfzeile + 1 Position
     expect(zeilen[2]).toContain('123456789')
   })
+
+  // ── CSV-Injection (Delta Phase 4) ────────────────────────────────────
+  // Der Klientenname stammt aus kundenseitigen Formularen. Ohne Entschärfung
+  // führt Excel ihn beim Öffnen des Prüf-Exports als Formel aus.
+  it('entschärft Formelzeichen im Klientennamen', () => {
+    const boese = fall({ klient_name: '=HYPERLINK("http://example.invalid","hier")' })
+    const exp = erzeugePruefExport('lauf-1', '2026-08', aufbereitung([boese]), '2026-08-15T10:00:00.000Z')
+    const zeile = pruefExportAlsCsv(exp).split('\n')[2]
+
+    // Vorangestelltes Apostroph innerhalb der Zelle: Excel sieht Text.
+    expect(zeile).toContain(`"'=HYPERLINK`)
+    // Keine Zelle darf mit einem nackten = beginnen.
+    for (const zelle of zeile.split(';')) {
+      expect(zelle.startsWith('=')).toBe(false)
+    }
+  })
+
+  it.each(['+49 170 1234', '-Rabatt', '@Sammelruf'])(
+    'entschärft führendes Sonderzeichen: %s',
+    (name) => {
+      const exp = erzeugePruefExport('lauf-1', '2026-08', aufbereitung([fall({ klient_name: name })]), '2026-08-15T10:00:00.000Z')
+      expect(pruefExportAlsCsv(exp).split('\n')[2]).toContain(`"'${name}"`)
+    },
+  )
+
+  it('hält die Spaltenzahl auch bei Semikolon, Anführungszeichen und Zeilenumbruch im Namen', () => {
+    const exp = erzeugePruefExport(
+      'lauf-1', '2026-08',
+      aufbereitung([fall({ klient_name: 'Muster;mann "der\nZweite"' })]),
+      '2026-08-15T10:00:00.000Z',
+    )
+    const csv = pruefExportAlsCsv(exp)
+    // Der Zeilenumbruch steckt in einer quotierten Zelle und darf die
+    // Datensatzstruktur nicht verschieben: Kommentar + Kopf + 1 Datensatz.
+    // Zählung über Semikolons ausserhalb von Quotes ist hier unnötig — es
+    // genügt, dass der Name vollständig in EINER Zelle steht.
+    expect(csv).toContain('"Muster;mann ""der\nZweite"""')
+  })
 })
 
 describe('transport-adapter — MockAdapter', () => {

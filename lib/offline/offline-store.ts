@@ -6,10 +6,14 @@ import type {
 } from './types'
 
 const DB_NAME = 'alltagsengel_offline'
-const DB_VERSION = 1
+// v2: Store 'keys' ergänzt — der AES-Schlüssel liegt nicht mehr im
+// localStorage, sondern als non-extractable CryptoKey hier. Siehe
+// getOrCreateKey().
+const DB_VERSION = 2
 const STORE_QUEUE = 'queue'
 const STORE_CONFLICTS = 'conflicts'
 const STORE_AUDIT = 'audit'
+const STORE_KEYS = 'keys'
 
 export class OfflineStore {
   private db: IDBDatabase | null = null
@@ -45,6 +49,9 @@ export class OfflineStore {
           const as_ = db.createObjectStore(STORE_AUDIT, { keyPath: 'id' })
           as_.createIndex('queue_item_id', 'queue_item_id', { unique: false })
         }
+        if (!db.objectStoreNames.contains(STORE_KEYS)) {
+          db.createObjectStore(STORE_KEYS, { keyPath: 'id' })
+        }
       }
       request.onsuccess = () => resolve(request.result)
       request.onerror = () => reject(request.error)
@@ -53,25 +60,65 @@ export class OfflineStore {
 
   // ── Verschlüsselung ──────────────────────────────────────────
 
+  /**
+   * Schlüssel holen oder anlegen.
+   *
+   * Der Schlüssel liegt als NICHT-exportierbarer CryptoKey in der IndexedDB,
+   * nicht mehr als Base64-String im localStorage. Vorher wurde er mit
+   * `generateKey(…, true, …)` exportierbar erzeugt, per exportKey ausgelesen
+   * und im Klartext neben das Chiffrat gelegt — Schloss und Schlüssel im
+   * selben Fach. Jedes Skript im Seitenkontext konnte beides einsammeln.
+   *
+   * Ein CryptoKey übersteht den Structured Clone der IndexedDB; als
+   * non-extractable erzeugt, gibt ihn danach auch die Web-Crypto-API nicht
+   * mehr als Bytes heraus. Ver- und Entschlüsseln geht weiter, Auslesen nicht.
+   *
+   * Ein bereits vorhandener localStorage-Schlüssel wird einmalig übernommen
+   * und dort gelöscht — sonst wären die bisher abgelegten Einträge nicht mehr
+   * lesbar.
+   */
   private async getOrCreateKey(): Promise<CryptoKey> {
     if (typeof crypto === 'undefined' || !crypto.subtle) {
       throw new Error('Web Crypto API nicht verfügbar.')
     }
 
-    const stored = localStorage.getItem(this.encryptionKeyName)
-    if (stored) {
-      const raw = Uint8Array.from(atob(stored), c => c.charCodeAt(0))
-      return crypto.subtle.importKey('raw', raw, 'AES-GCM', false, ['encrypt', 'decrypt'])
+    const ausIdb = await this.get(STORE_KEYS, this.encryptionKeyName)
+    if (ausIdb?.key) return ausIdb.key as CryptoKey
+
+    // Einmalige Übernahme des Altschlüssels aus dem localStorage.
+    const alt = localStorage.getItem(this.encryptionKeyName)
+    if (alt) {
+      const raw = Uint8Array.from(atob(alt), c => c.charCodeAt(0))
+      const uebernommen = await crypto.subtle.importKey(
+        'raw', raw, 'AES-GCM', false, ['encrypt', 'decrypt'],
+      )
+      await this.put(STORE_KEYS, { id: this.encryptionKeyName, key: uebernommen })
+      localStorage.removeItem(this.encryptionKeyName)
+      return uebernommen
     }
 
-    const key = await crypto.subtle.generateKey({ name: 'AES-GCM', length: 256 }, true, ['encrypt', 'decrypt'])
-    const exported = await crypto.subtle.exportKey('raw', key)
-    localStorage.setItem(this.encryptionKeyName, btoa(String.fromCharCode(...new Uint8Array(exported))))
+    const key = await crypto.subtle.generateKey(
+      { name: 'AES-GCM', length: 256 },
+      false, // nicht exportierbar
+      ['encrypt', 'decrypt'],
+    )
+    await this.put(STORE_KEYS, { id: this.encryptionKeyName, key })
     return key
   }
 
   private async encrypt(data: string): Promise<string> {
-    if (!this.cryptoKey) return data
+    // FAIL-CLOSED. Vorher stand hier `if (!this.cryptoKey) return data` — die
+    // Daten gingen dann im KLARTEXT in die IndexedDB, wurden von encryptItem()
+    // aber trotzdem mit `_isEncrypted: true` beschriftet. Das Ergebnis war
+    // schlimmer als gar keine Verschlüsselung: unverschlüsselte Pflegedaten
+    // (Art. 9 DSGVO) auf dem Endgerät, die bei jeder Prüfung als verschlüsselt
+    // gezählt worden wären. Ohne Schlüssel wird jetzt nicht gespeichert.
+    if (!this.cryptoKey) {
+      throw new Error(
+        'Offline-Speicher ohne Schlüssel — es werden keine Pflegedaten abgelegt. ' +
+        'init() muss vor dem ersten Schreibzugriff erfolgreich gelaufen sein.',
+      )
+    }
     const iv = crypto.getRandomValues(new Uint8Array(12))
     const encoded = new TextEncoder().encode(data)
     const cipher = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, this.cryptoKey, encoded)
@@ -82,7 +129,11 @@ export class OfflineStore {
   }
 
   private async decrypt(data: string): Promise<string> {
-    if (!this.cryptoKey) return data
+    // Gegenstück zu encrypt(): ohne Schlüssel wird nicht geraten, dass das
+    // Chiffrat vielleicht Klartext ist, sondern abgebrochen.
+    if (!this.cryptoKey) {
+      throw new Error('Offline-Speicher ohne Schlüssel — Daten nicht lesbar.')
+    }
     const combined = Uint8Array.from(atob(data), c => c.charCodeAt(0))
     const iv = combined.slice(0, 12)
     const cipher = combined.slice(12)

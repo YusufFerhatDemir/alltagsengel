@@ -222,3 +222,28 @@ describe('Retry-Backoff-Berechnung', () => {
     expect(maxBackoff).toBe(32000)
   })
 })
+
+// ── Offline-Speicher: Verschlüsselung ist fail-closed (Delta Phase 4) ──
+//
+// Vorher gaben encrypt()/decrypt() die Daten bei fehlendem Schlüssel
+// unverändert zurück, während encryptItem() den Eintrag trotzdem mit
+// `_isEncrypted: true` beschriftete. Ergebnis: Pflegedaten (Art. 9 DSGVO)
+// lagen im Klartext auf dem Gerät und galten in jeder Prüfung als
+// verschlüsselt. Ohne Schlüssel darf jetzt nichts gespeichert werden.
+
+describe('OfflineStore — fail-closed ohne Schlüssel', () => {
+  it('speichert keinen Queue-Eintrag, solange init() nicht lief', async () => {
+    const { OfflineStore } = await import('@/lib/offline/offline-store')
+    const store = new OfflineStore('ae_test_key')
+
+    const eintrag = {
+      id: 'q-1',
+      entity_typ: 'pflegebericht',
+      status: 'pending',
+      idempotency_key: 'idem-1',
+      payload: { text: 'Blutdruck 130/85, Patient wirkt müde' },
+    } as any
+
+    await expect(store.saveQueueItem(eintrag)).rejects.toThrow(/ohne Schlüssel/)
+  })
+})
