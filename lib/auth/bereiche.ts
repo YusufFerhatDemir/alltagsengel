@@ -119,6 +119,7 @@ export const BEREICHE: Readonly<Record<string, BereichsRegel>> = {
   '/admin/abrechnung':                { lesen: 'abrechnung.lesen', schreiben: 'abrechnung.schreiben' },
   '/admin/abrechnungsfehler':         { lesen: 'abrechnung.lesen', schreiben: 'abrechnung.schreiben' },
   '/admin/kassenabrechnung':          { lesen: 'abrechnung.lesen', schreiben: 'abrechnung.schreiben' },
+  '/admin/vpkzp':                     { lesen: 'abrechnung.lesen', schreiben: 'abrechnung.schreiben' },
   '/admin/monatsabschluss':           { lesen: 'abrechnung.lesen', schreiben: 'abrechnung.schreiben' },
   '/admin/monatsabschluss-vorbereitung': { lesen: 'abrechnung.lesen', schreiben: 'abrechnung.schreiben' },
   '/admin/ruecklaeufer':              { lesen: 'abrechnung.lesen', schreiben: 'abrechnung.schreiben' },
@@ -200,6 +201,7 @@ export const BEREICHE: Readonly<Record<string, BereichsRegel>> = {
   '/api/admin/invoices':              { lesen: 'abrechnung.lesen', schreiben: 'abrechnung.schreiben' },
   '/api/admin/zuzahlungen':           { lesen: 'abrechnung.lesen', schreiben: 'abrechnung.schreiben' },
   '/api/admin/abrechnung':            { lesen: 'abrechnung.lesen', schreiben: 'abrechnung.schreiben' },
+  '/api/admin/vpkzp':                 { lesen: 'abrechnung.lesen', schreiben: 'abrechnung.schreiben' },
 
   // Zugangsdaten, Zertifikate und Betriebsschalter der Kassenabrechnung
   // sind KEINE Abrechnungsarbeit — wer sie aendert, kann den Versandweg
