@@ -1,7 +1,11 @@
 import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
-import { fuehreSammelrechnungslaufAus } from '@/lib/billing/core'
+import {
+  fuehreSammelrechnungslaufAus,
+  starteSammelrechnungslauf,
+  SammelrechnungLaeuftBereitsError,
+} from '@/lib/billing/core'
 import { safeApiError } from '@/lib/api/error-sanitizer'
 
 // ═══════════════════════════════════════════════════════════════
@@ -23,6 +27,16 @@ import { safeApiError } from '@/lib/api/error-sanitizer'
 //   festschreiben   boolean  Entwurf → geprüft → festgeschrieben
 //                            (Standard: false — die Festschreibung ist der
 //                            Punkt, ab dem nur noch Storno korrigiert)
+//
+// PARALLELITÄT: ein echter Lauf beansprucht den Monat über eine Zeile in
+// `sammelrechnungslaeufe` (Migration 20260925000000). Ein zweiter POST für
+// denselben Mandanten und Monat bekommt 409 und erzeugt NICHTS — er sieht
+// die Batch-ID des laufenden Vorgangs in der Antwort. Bricht ein Lauf ab,
+// setzt der nächste ihn an derselben Stelle fort; erledigte Gruppen werden
+// nicht erneut angefasst.
+//
+// VORSCHAU (dryRun) nimmt daran NICHT teil: sie schreibt nichts, ist damit
+// kein Lauf und darf niemanden blockieren.
 //
 // VERSAND: nicht über den Body steuerbar. Der automatische Versand hängt
 // allein an RECHNUNGSVERSAND_AUTOMATISCH='1' UND `festschreiben` — ein
@@ -89,18 +103,37 @@ export async function POST(request: Request) {
     const autoVersand = festschreiben && process.env.RECHNUNGSVERSAND_AUTOMATISCH === '1'
 
     const admin = createAdminClient()
-    const ergebnis = await fuehreSammelrechnungslaufAus(admin, {
+
+    if (dryRun) {
+      const vorschau = await fuehreSammelrechnungslaufAus(admin, {
+        organizationId,
+        periodMonth: month,
+        actorId: userId,
+        dryRun: true,
+        clientIds,
+      })
+      return NextResponse.json(vorschau, { status: 200 })
+    }
+
+    const ergebnis = await starteSammelrechnungslauf(admin, {
       organizationId,
       periodMonth: month,
       actorId: userId,
-      dryRun,
       clientIds,
       festschreiben,
       autoVersand,
     })
 
-    return NextResponse.json(ergebnis, { status: dryRun ? 200 : 201 })
+    return NextResponse.json(ergebnis, { status: 201 })
   } catch (err) {
+    if (err instanceof SammelrechnungLaeuftBereitsError) {
+      // 409 statt 500: das ist kein Fehler, sondern die Sperre bei der
+      // Arbeit. Der Aufrufer soll das unterscheiden können.
+      return NextResponse.json(
+        { error: err.message, code: 'SAMMELRECHNUNG_LAEUFT', month: err.periodMonth },
+        { status: 409 },
+      )
+    }
     return safeApiError(err, request)
   }
 }

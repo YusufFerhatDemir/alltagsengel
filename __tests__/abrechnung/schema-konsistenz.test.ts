@@ -116,6 +116,60 @@ function alleConstraintWerte(constraintName: string, spalte: string): string[] |
   return union.size > 0 ? [...union] : null
 }
 
+/**
+ * Die zuletzt gesetzte Liste — und alles, was sie gegenueber frueheren
+ * Definitionen VERLOREN hat.
+ *
+ * Warum das neben der Vereinigung noetig ist: die Vereinigung setzt
+ * voraus, dass der Constraint nur waechst. Diese Annahme hat 2026-08-23
+ * nicht gehalten. Migration 20260921010000 hat ihn verworfen und mit
+ * einer selbst geschriebenen Liste neu gesetzt, in der 'invoice_draft'
+ * und 'tariff_lookup' fehlten. Die Vereinigung sah das nicht — sie
+ * enthielt die Werte ja aus den frueheren Dateien. Live scheiterte
+ * seither jeder Audit-Eintrag einer uebersprungenen Sammelrechnungs-
+ * gruppe mit 23514, und weil der Aufruf gekapselt ist, still.
+ */
+function verloreneWerte(constraintName: string, spalte: string): string[] {
+  let bisher = new Set<string>()
+  const verloren = new Set<string>()
+
+  for (const datei of migrationsDateien()) {
+    const inhalt = readFileSync(join(MIGRATIONS, datei), 'utf8')
+    if (!inhalt.includes(constraintName)) continue
+
+    for (const liste of werteListenAusDatei(inhalt, constraintName, spalte)) {
+      const neu = new Set(liste.werte)
+      for (const wert of bisher) if (!neu.has(wert)) verloren.add(wert)
+      for (const wert of neu) verloren.delete(wert)
+      bisher = neu
+    }
+  }
+  return [...verloren].sort()
+}
+
+describe('billing_audit_trail.entity_type — keine Migration verkleinert ihn', () => {
+  it('die zuletzt gesetzte Liste hat keinen frueheren Wert verloren', () => {
+    const verloren = verloreneWerte('billing_audit_trail_entity_type_check', 'entity_type')
+    expect(
+      verloren,
+      'Diese Werte standen einmal im Constraint und fehlen in der zuletzt gesetzten Liste. '
+      + 'Jeder INSERT damit scheitert live mit 23514 — und weil die Audit-Aufrufe gekapselt '
+      + 'sind, ohne dass ein Test rot wird. Wer den Constraint neu setzt, muss die vorige '
+      + 'Liste vollstaendig uebernehmen.',
+    ).toEqual([])
+  })
+
+  it('kennt die Werte, die der Sammelrechnungslauf und die RPC schreiben', () => {
+    const letzte = letzteConstraintWerte('billing_audit_trail_entity_type_check', 'entity_type')
+    // invoice_draft: jede uebersprungene Gruppe (sammelrechnung.ts)
+    // tariff_lookup: create_invoice_draft_atomic schreibt ihn selbst
+    // sammelrechnungslauf: der Kopfsatz (20260925000000)
+    for (const wert of ['invoice_draft', 'tariff_lookup', 'sammelrechnungslauf']) {
+      expect(letzte, `${wert} fehlt in der zuletzt gesetzten Liste`).toContain(wert)
+    }
+  })
+})
+
 describe('billing_audit_trail.entity_type', () => {
   const dbWerte = alleConstraintWerte('billing_audit_trail_entity_type_check', 'entity_type')
 
