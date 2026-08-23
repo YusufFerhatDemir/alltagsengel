@@ -227,6 +227,7 @@ const navGroups = [
       { href: '/admin/wiedervorlagen', label: 'Wiedervorlagen', icon: <IconCalendar size={18} /> },
       { href: '/admin/nachrichten', label: 'Nachrichten', icon: <IconChat size={18} /> },
       { href: '/admin/benachrichtigungen', label: 'Benachrichtigungen', icon: <IconBell size={18} /> },
+      { href: '/admin/zustellspur', label: 'Zustellspur', icon: <IconBell size={18} /> },
     ],
   },
   {

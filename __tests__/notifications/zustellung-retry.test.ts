@@ -242,10 +242,11 @@ describe('sendeIdempotent', () => {
 describe('wartezeitMinuten', () => {
   it('waechst exponentiell und deckelt', () => {
     expect(wartezeitMinuten(0)).toBe(0)
-    expect(wartezeitMinuten(1)).toBe(5)
-    expect(wartezeitMinuten(2)).toBe(15)
-    expect(wartezeitMinuten(3)).toBe(60)
-    expect(wartezeitMinuten(4)).toBe(240)
+    expect(wartezeitMinuten(1)).toBe(1)
+    expect(wartezeitMinuten(2)).toBe(5)
+    expect(wartezeitMinuten(3)).toBe(15)
+    expect(wartezeitMinuten(4)).toBe(60)
+    expect(wartezeitMinuten(5)).toBe(240)
     expect(wartezeitMinuten(99)).toBe(240)
   })
 })
