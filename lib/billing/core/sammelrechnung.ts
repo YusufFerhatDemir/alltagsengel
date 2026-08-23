@@ -96,6 +96,64 @@ export type UeberspringCode = (typeof UEBERSPRING_CODES)[number];
 // Types
 // ---------------------------------------------------------------------------
 
+/**
+ * Ergebnis EINER Gruppe, wie es der Betriebsschicht gemeldet wird.
+ *
+ * Absichtlich flach und ohne Objektverweise: es geht so in eine
+ * Datenbankzeile, und ein abgebrochener Lauf muss aus genau diesen
+ * Feldern wieder aufsetzen koennen.
+ */
+export interface GruppenErgebnis {
+  clientId: string;
+  budgetType: string;
+  status: 'erstellt' | 'uebersprungen' | 'fehlgeschlagen';
+  code?: string | null;
+  grund?: string | null;
+  invoiceId?: string | null;
+  invoiceNumber?: string | null;
+  betragCent?: number | null;
+  /** Die Rechnung gab es schon (Idempotenz der RPC). */
+  bestand?: boolean;
+  festgeschrieben?: boolean;
+  versandStatus?: string | null;
+}
+
+/**
+ * Mitschrift des Laufs — implementiert in
+ * lib/billing/core/sammelrechnung-lauf.ts gegen die Datenbank.
+ *
+ * Die Engine kennt bewusst nur dieses schmale Interface. Sie soll ohne
+ * Batch-Tabellen testbar bleiben: welche Gruppe abgerechnet wird, ist
+ * eine fachliche Frage und darf nicht davon abhaengen, ob ein Kopfsatz
+ * geschrieben werden konnte.
+ */
+export interface LaufProtokoll {
+  laufId: string;
+  /**
+   * Schluessel (`gruppenSchluessel()`) der Gruppen, die ein frueherer
+   * Versuch dieses Laufs bereits erledigt hat. Sie werden uebersprungen
+   * — das IST die Wiederaufnahme.
+   */
+  erledigt: ReadonlySet<string>;
+  /** Alle Gruppen des Laufs vormerken, bevor die erste bearbeitet wird. */
+  vorbereiten(gruppen: SammelrechnungGruppe[]): Promise<void>;
+  notiere(ergebnis: GruppenErgebnis): Promise<void>;
+}
+
+// Der Herzschlag steht bewusst NICHT in diesem Interface. Er ist eine
+// Eigenschaft der Sperre, nicht der Abrechnung: die Betriebsschicht
+// setzt ihn selbst, waehrend sie die Gruppenergebnisse wegschreibt
+// (lib/billing/core/sammelrechnung-lauf.ts, DbProtokoll.notiere).
+// Haenge er hier, muesste die Engine etwas ueber Sperren wissen.
+
+/**
+ * Schluessel einer Gruppe. Eine Stelle, damit Gruppenbildung,
+ * Wiederaufnahme und Datenbankzeile nie auseinanderlaufen.
+ */
+export function gruppenSchluessel(clientId: string, budgetType: string): string {
+  return `${clientId}::${budgetType || ''}`;
+}
+
 export interface SammelrechnungParams {
   organizationId: string;
   /** Abrechnungsmonat im Format YYYY-MM. */
@@ -119,6 +177,11 @@ export interface SammelrechnungParams {
   autoVersand?: boolean;
   /** Obergrenze der bearbeiteten Gruppen je Lauf (Standard 500). */
   maxGruppen?: number;
+  /**
+   * Mitschrift gegen die Batch-Tabellen. Ohne sie laeuft die Engine
+   * genau wie vorher — nur eben ohne Batch-ID und Wiederaufnahme.
+   */
+  protokoll?: LaufProtokoll;
 }
 
 export interface SammelrechnungGruppe {
@@ -178,6 +241,11 @@ export interface SammelrechnungErgebnis {
   summeCent: number;
   /** Gruppen, die wegen `maxGruppen` gar nicht erst betrachtet wurden. */
   nichtBetrachtet: number;
+  /**
+   * Gruppen, die ein frueherer Versuch desselben Laufs schon erledigt
+   * hatte und die dieser Versuch deshalb nicht erneut angefasst hat.
+   */
+  uebernommen: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -306,7 +374,7 @@ export async function ermittleGruppen(
     // keiner Rechnung zugeordnet werden — sie taucht als eigene Gruppe mit
     // unbekanntem Budget-Typ auf, statt still zu verschwinden.
     const budgetType = r.budget_type || '';
-    const key = `${r.client_id}::${budgetType}`;
+    const key = gruppenSchluessel(r.client_id, budgetType);
     const liste = nachSchluessel.get(key);
     if (liste) liste.push(r);
     else nachSchluessel.set(key, [r]);
@@ -568,6 +636,29 @@ async function schreibeFest(
   return { festgeschrieben: true, versandStatus: ergebnis.versandStatus ?? null };
 }
 
+/**
+ * Gruppenergebnis in die Mitschrift — ohne den Lauf zu gefaehrden.
+ *
+ * Die Mitschrift ist eine Betriebsspur, keine fachliche Entscheidung.
+ * Faellt sie aus, entstehen trotzdem die richtigen Rechnungen; es fehlt
+ * dann nur die Wiederaufnahmefaehigkeit. Ein Abbruch waere hier der
+ * teurere Fehler.
+ */
+async function notiereOderWarnen(
+  protokoll: LaufProtokoll | undefined,
+  ergebnis: GruppenErgebnis
+): Promise<void> {
+  if (!protokoll) return;
+  try {
+    await protokoll.notiere(ergebnis);
+  } catch (err) {
+    log.errorWithException('Sammelrechnungslauf: Gruppenergebnis nicht protokollierbar', err, {
+      clientId: ergebnis.clientId,
+      budgetType: ergebnis.budgetType,
+    });
+  }
+}
+
 /** logBillingAction, das den Lauf nicht kippen darf. */
 async function auditOderWarnen(
   supabase: SupabaseClient,
@@ -600,6 +691,7 @@ export async function fuehreSammelrechnungslaufAus(
     festschreiben = false,
     autoVersand = false,
     maxGruppen = 500,
+    protokoll,
   } = params;
 
   if (!organizationId) {
@@ -629,6 +721,7 @@ export async function fuehreSammelrechnungslaufAus(
     vorschau: [],
     summeCent: 0,
     nichtBetrachtet: 0,
+    uebernommen: 0,
   };
 
   const { gruppen, records } = await ermittleGruppen(supabase, { organizationId, periodMonth, clientIds });
@@ -636,10 +729,26 @@ export async function fuehreSammelrechnungslaufAus(
 
   if (gruppen.length === 0) return ergebnis;
 
+  // Alle Gruppen vormerken — auch die, die wegen `maxGruppen` in diesem
+  // Versuch nicht drankommen. Nur so weiss ein spaeterer Versuch, dass da
+  // noch etwas offen ist; ohne den Eintrag saehe der Monat abgerechnet aus.
+  if (protokoll && !dryRun) {
+    await protokoll.vorbereiten(gruppen);
+  }
+
   const tarife = await ladeTarife(supabase, organizationId);
 
-  const zuBearbeiten = gruppen.slice(0, maxGruppen);
-  ergebnis.nichtBetrachtet = gruppen.length - zuBearbeiten.length;
+  // WIEDERAUFNAHME: was ein frueherer Versuch dieses Laufs schon erledigt
+  // hat, wird nicht erneut angefasst. Das spart nicht nur Zeit — ein
+  // erneuter Durchlauf wuerde fuer jede uebersprungene Gruppe einen
+  // zweiten Audit-Eintrag schreiben und die Spur verdoppeln.
+  const offeneGruppen = protokoll
+    ? gruppen.filter(g => !protokoll.erledigt.has(gruppenSchluessel(g.clientId, g.budgetType)))
+    : gruppen;
+  ergebnis.uebernommen = gruppen.length - offeneGruppen.length;
+
+  const zuBearbeiten = offeneGruppen.slice(0, maxGruppen);
+  ergebnis.nichtBetrachtet = offeneGruppen.length - zuBearbeiten.length;
   if (ergebnis.nichtBetrachtet > 0) {
     // Nie still abschneiden: eine gekappte Liste sieht sonst aus wie ein
     // vollstaendiger Lauf.
@@ -648,8 +757,39 @@ export async function fuehreSammelrechnungslaufAus(
     });
   }
 
+  // TEILFEHLER: jede Gruppe steht fuer sich. Was hier drin scheitert,
+  // beendet diese eine Gruppe — nie den Lauf. Die aeussere Klammer faengt
+  // auch das, was ausserhalb der inneren try-Bloecke passieren kann
+  // (Vorpruefung, Protokollschreiben, Programmierfehler): ohne sie
+  // koennte eine einzige unerwartete Ausnahme in Gruppe 3 die
+  // verbleibenden sieben um ihre Rechnung bringen.
   for (const gruppe of zuBearbeiten) {
-    const rows = records.get(`${gruppe.clientId}::${gruppe.budgetType}`) || [];
+    try {
+      await verarbeiteGruppe(gruppe);
+    } catch (unerwartet) {
+      const grund = unerwartet instanceof Error ? unerwartet.message : String(unerwartet);
+      log.errorWithException('Sammelrechnungslauf: Gruppe unerwartet abgebrochen', unerwartet, {
+        organizationId, periodMonth, clientId: gruppe.clientId, budgetType: gruppe.budgetType,
+      });
+      ergebnis.uebersprungen.push({
+        clientId: gruppe.clientId,
+        budgetType: gruppe.budgetType,
+        code: 'FEHLER',
+        grund,
+        recordIds: gruppe.recordIds,
+      });
+      await notiereOderWarnen(protokoll, {
+        clientId: gruppe.clientId,
+        budgetType: gruppe.budgetType,
+        status: 'fehlgeschlagen',
+        code: 'FEHLER',
+        grund,
+      });
+    }
+  }
+
+  async function verarbeiteGruppe(gruppe: SammelrechnungGruppe): Promise<void> {
+    const rows = records.get(gruppenSchluessel(gruppe.clientId, gruppe.budgetType)) || [];
 
     const befund = pruefeGruppe(gruppe, rows, tarife);
     if (befund) {
@@ -674,14 +814,22 @@ export async function fuehreSammelrechnungslaufAus(
           },
           reason: befund.grund,
           actorId,
+          batchId: protokoll?.laufId,
+        });
+        await notiereOderWarnen(protokoll, {
+          clientId: gruppe.clientId,
+          budgetType: gruppe.budgetType,
+          status: 'uebersprungen',
+          code: befund.code,
+          grund: befund.grund,
         });
       }
-      continue;
+      return;
     }
 
     if (dryRun) {
       ergebnis.vorschau.push(gruppe);
-      continue;
+      return;
     }
 
     try {
@@ -735,6 +883,17 @@ export async function fuehreSammelrechnungslaufAus(
       }
 
       ergebnis.erstellt.push(treffer);
+      await notiereOderWarnen(protokoll, {
+        clientId: gruppe.clientId,
+        budgetType: gruppe.budgetType,
+        status: 'erstellt',
+        invoiceId: treffer.invoiceId,
+        invoiceNumber: treffer.invoiceNumber,
+        betragCent: treffer.totalAmountCents,
+        bestand: treffer.alreadyExists,
+        festgeschrieben: treffer.festgeschrieben,
+        versandStatus: treffer.versandStatus ?? null,
+      });
     } catch (err) {
       const { code, grund } = ueberspringCodeFuerFehler(err);
       ergebnis.uebersprungen.push({
@@ -759,6 +918,18 @@ export async function fuehreSammelrechnungslaufAus(
         },
         reason: grund,
         actorId,
+        batchId: protokoll?.laufId,
+      });
+      // 'FEHLER' ist der Sammelcode fuer alles, was die RPC nicht selbst
+      // benennt — technisches Scheitern. Die uebrigen Codes sind bewusste
+      // Sperren. Beides im Lauf zu unterscheiden ist der Unterschied
+      // zwischen „muss jemand ansehen" und „ist so gewollt".
+      await notiereOderWarnen(protokoll, {
+        clientId: gruppe.clientId,
+        budgetType: gruppe.budgetType,
+        status: code === 'FEHLER' ? 'fehlgeschlagen' : 'uebersprungen',
+        code,
+        grund,
       });
     }
   }

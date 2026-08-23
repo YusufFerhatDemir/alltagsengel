@@ -60,6 +60,30 @@ interface Ergebnis {
   vorschau: Gruppe[]
   summeCent: number
   nichtBetrachtet: number
+  uebernommen?: number
+  batchId?: string
+  wiederaufnahme?: boolean
+  kopf?: LaufKopf
+}
+
+// Kopfsatz eines Laufs (sammelrechnungslaeufe). Die id ist die Batch-ID:
+// unter ihr steht der Lauf im Audit-Trail (billing_audit_trail.batch_id).
+interface LaufKopf {
+  id: string
+  periodMonth: string
+  status: 'laeuft' | 'abgeschlossen' | 'abgebrochen' | 'fehlgeschlagen'
+  versuch: number
+  gestartetAm: string
+  beendetAm: string | null
+  laufzeitMs: number | null
+  gruppenGesamt: number
+  gruppenErstellt: number
+  gruppenUebersprungen: number
+  gruppenFehlgeschlagen: number
+  gruppenOffen: number
+  summeCent: number
+  abbruchgrund: string | null
+  festschreiben: boolean
 }
 
 const CODE_LABELS: Record<string, string> = {
@@ -73,6 +97,32 @@ const CODE_LABELS: Record<string, string> = {
   FEHLER: 'Fehler',
 }
 
+const STATUS_LABELS: Record<LaufKopf['status'], string> = {
+  laeuft: 'läuft',
+  abgeschlossen: 'abgeschlossen',
+  abgebrochen: 'abgebrochen (fortsetzbar)',
+  fehlgeschlagen: 'fehlgeschlagen',
+}
+
+/** Laufzeit lesbar: Millisekunden sagen niemandem etwas. */
+function laufzeit(ms: number | null): string {
+  if (ms == null) return '—'
+  if (ms < 1000) return `${ms} ms`
+  const sekunden = Math.round(ms / 1000)
+  if (sekunden < 60) return `${sekunden} s`
+  const minuten = Math.floor(sekunden / 60)
+  return `${minuten} min ${sekunden % 60} s`
+}
+
+function zeitpunkt(iso: string | null): string {
+  if (!iso) return '—'
+  try {
+    return new Date(iso).toLocaleString('de-DE', { dateStyle: 'short', timeStyle: 'short' })
+  } catch {
+    return iso
+  }
+}
+
 export default function SammelrechnungPage() {
   const [month, setMonth] = useState(() => monatBerlin())
   const [ergebnis, setErgebnis] = useState<Ergebnis | null>(null)
@@ -82,6 +132,23 @@ export default function SammelrechnungPage() {
   const [festschreiben, setFestschreiben] = useState(false)
   const [fehler, setFehler] = useState<string | null>(null)
   const [hinweis, setHinweis] = useState<string | null>(null)
+  const [laeufe, setLaeufe] = useState<LaufKopf[]>([])
+
+  // Läufe des Monats. Sie stehen bewusst neben der Vorschau und nicht in
+  // ihr: die Vorschau sagt, was abrechenbar WÄRE, die Laufliste sagt, was
+  // tatsächlich passiert ist — inklusive der Läufe, die jemand anderes
+  // gestartet hat.
+  const ladeLaeufe = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/billing/sammelrechnung/laeufe?month=${encodeURIComponent(month)}&limit=20`)
+      if (!res.ok) return
+      const json = await res.json()
+      setLaeufe(Array.isArray(json.laeufe) ? json.laeufe : [])
+    } catch {
+      // Die Laufliste ist Betriebsinformation, kein Arbeitsschritt.
+      // Fällt sie aus, bleibt der Rest der Seite benutzbar.
+    }
+  }, [month])
 
   const ladeVorschau = useCallback(async () => {
     setLoading(true)
@@ -105,6 +172,7 @@ export default function SammelrechnungPage() {
   }, [month])
 
   useEffect(() => { void ladeVorschau() }, [ladeVorschau])
+  useEffect(() => { void ladeLaeufe() }, [ladeLaeufe])
 
   // Klientennamen nachladen: das Ergebnis trägt bewusst nur IDs, damit die
   // Engine keine Personendaten in Ergebnisobjekte schreibt.
@@ -155,18 +223,63 @@ export default function SammelrechnungPage() {
       })
       const json = await res.json()
       if (!res.ok) {
-        setFehler(json.error || 'Sammelrechnungslauf fehlgeschlagen.')
+        // 409 ist kein Fehlschlag, sondern die Parallelitätssperre: für
+        // diesen Monat läuft bereits ein Lauf. Es wurde NICHTS erzeugt.
+        setFehler(
+          res.status === 409
+            ? `${json.error} Der laufende Vorgang steht unten in der Laufübersicht.`
+            : json.error || 'Sammelrechnungslauf fehlgeschlagen.'
+        )
+        void ladeLaeufe()
         return
       }
       setErgebnis(json)
+      const uebernommen = Number(json.uebernommen ?? 0)
       setHinweis(
-        `${json.erstellt.length} Rechnung(en) erzeugt, ${json.uebersprungen.length} Gruppe(n) übersprungen.`
+        `${json.erstellt.length} Rechnung(en) erzeugt, ${json.uebersprungen.length} Gruppe(n) übersprungen`
+        + (uebernommen > 0 ? `, ${uebernommen} aus dem vorherigen Versuch übernommen` : '')
+        + (json.batchId ? ` · Lauf ${String(json.batchId).slice(0, 8)}` : '')
+        + '.'
       )
+      void ladeLaeufe()
     } catch (err) {
       log.errorWithException('Sammelrechnungslauf fehlgeschlagen', err)
       setFehler('Unerwarteter Fehler beim Sammelrechnungslauf.')
     } finally {
       setLaufLaeuft(false)
+    }
+  }
+
+  /**
+   * Gibt die Sperre eines hängenden Laufs frei.
+   *
+   * Hält NICHT die Rechnungserstellung an — die läuft in einer anderen
+   * Instanz und ist von hier aus nicht erreichbar. Der Lauf wird nur als
+   * abgebrochen markiert, damit der nächste ihn fortsetzen kann. Bereits
+   * erzeugte Rechnungen bleiben unberührt.
+   */
+  async function gibLaufFrei(batchId: string) {
+    if (!window.confirm(
+      'Diesen Lauf freigeben? Bereits erzeugte Rechnungen bleiben bestehen. '
+      + 'Der nächste Lauf setzt bei den offenen Gruppen fort.'
+    )) return
+    setFehler(null)
+    try {
+      const res = await fetch('/api/billing/sammelrechnung/laeufe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ batchId, grund: 'Manuell über die Laufübersicht freigegeben.' }),
+      })
+      const json = await res.json()
+      if (!res.ok) {
+        setFehler(json.error || 'Lauf konnte nicht freigegeben werden.')
+        return
+      }
+      setHinweis(`Lauf ${batchId.slice(0, 8)} freigegeben.`)
+      void ladeLaeufe()
+    } catch (err) {
+      log.errorWithException('Lauf-Freigabe fehlgeschlagen', err)
+      setFehler('Unerwarteter Fehler bei der Freigabe.')
     }
   }
 
@@ -296,6 +409,66 @@ export default function SammelrechnungPage() {
           </table>
         </div>
       )}
+
+      <div className="admin-card">
+        <h2>Läufe dieses Monats</h2>
+        <p className="admin-subtitle">
+          Jeder Lauf trägt eine eigene Kennung. Unter ihr steht er im Revisionsprotokoll —
+          und an ihr hängt auch die Sperre: pro Monat läuft höchstens einer.
+        </p>
+        <table className="admin-table">
+          <thead>
+            <tr>
+              <th>Lauf</th><th>Status</th><th>Gestartet</th><th>Laufzeit</th>
+              <th>Gruppen</th><th>Summe</th><th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {laeufe.length === 0 && (
+              <EmptyRow colSpan={7}>Für {month} wurde noch kein Lauf gestartet.</EmptyRow>
+            )}
+            {laeufe.map(l => (
+              <tr key={l.id}>
+                <td>
+                  <code>{l.id.slice(0, 8)}</code>
+                  {l.versuch > 1 && (
+                    <div style={{ color: 'var(--muted)', fontSize: 13 }}>
+                      {l.versuch}. Versuch
+                    </div>
+                  )}
+                </td>
+                <td>
+                  {STATUS_LABELS[l.status]}
+                  {l.festschreiben && (
+                    <div style={{ color: 'var(--muted)', fontSize: 13 }}>festschreibend</div>
+                  )}
+                  {l.abbruchgrund && (
+                    <div style={{ color: 'var(--muted)', fontSize: 13 }}>{l.abbruchgrund}</div>
+                  )}
+                </td>
+                <td>{zeitpunkt(l.gestartetAm)}</td>
+                <td>{laufzeit(l.laufzeitMs)}</td>
+                <td>
+                  {l.gruppenErstellt} erstellt · {l.gruppenUebersprungen} übersprungen
+                  {l.gruppenFehlgeschlagen > 0 && ` · ${l.gruppenFehlgeschlagen} fehlgeschlagen`}
+                  {l.gruppenOffen > 0 && ` · ${l.gruppenOffen} offen`}
+                  <div style={{ color: 'var(--muted)', fontSize: 13 }}>
+                    von {l.gruppenGesamt} Gruppe(n)
+                  </div>
+                </td>
+                <td>{euro(l.summeCent / 100)}</td>
+                <td>
+                  {l.status === 'laeuft' && (
+                    <button className="admin-btn" onClick={() => void gibLaufFrei(l.id)}>
+                      Freigeben
+                    </button>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
       <div className="admin-card">
         <h2>Nicht abgerechnet</h2>

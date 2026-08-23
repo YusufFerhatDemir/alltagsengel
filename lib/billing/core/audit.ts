@@ -56,6 +56,8 @@ export const AUDIT_ENTITY_TYPES = [
   'abrechnung_betriebsmodus', 'abrechnung_credential', 'dta_dead_letter',
   // § 302 SGB V Pipeline-Erweiterung (WS2) — Migration 20260921010000
   'sgb_v_korrekturlauf', 'sgb_v_uebertragung', 'sgb_v_zahlungszuordnung',
+  // Sammelrechnungslauf (Track 8) — Migration 20260925000000
+  'sammelrechnungslauf',
 ] as const;
 
 export type AuditEntityType = (typeof AUDIT_ENTITY_TYPES)[number];
@@ -80,6 +82,17 @@ export interface AuditLogParams {
   actorId: string;
   actorRole?: string;
   actorIp?: string;
+  /**
+   * Kennung des Stapellaufs, aus dem dieser Eintrag stammt
+   * (sammelrechnungslaeufe.id, Migration 20260925000000).
+   *
+   * Wird NUR dann in den INSERT aufgenommen, wenn sie gesetzt ist. Das
+   * ist Absicht: solange die Migration nicht angewendet ist, gibt es die
+   * Spalte nicht, und ein unbedingtes Feld wuerde JEDEN Audit-Eintrag
+   * mit 42703 scheitern lassen — auch die, die mit Stapellaeufen nichts
+   * zu tun haben.
+   */
+  batchId?: string | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -171,6 +184,7 @@ export async function logBillingAction(
   });
 
   const { error } = await supabase.from('billing_audit_trail').insert({
+    ...(params.batchId ? { batch_id: params.batchId } : {}),
     organization_id: params.organizationId,
     entity_type:    params.entityType,
     entity_id:      params.entityId,

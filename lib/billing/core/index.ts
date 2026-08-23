@@ -134,7 +134,23 @@ export {
   pruefeGruppe,
   ueberspringCodeFuerFehler,
   fuehreSammelrechnungslaufAus,
+  gruppenSchluessel,
+  type GruppenErgebnis,
+  type LaufProtokoll,
 } from './sammelrechnung';
+
+// Sammelrechnungslauf — Betriebsschicht (Batch-ID, Sperre, Wiederaufnahme)
+export {
+  starteSammelrechnungslauf,
+  brichLaufAb,
+  ladeLaeufe,
+  ladeLauf,
+  SammelrechnungLaeuftBereitsError,
+  type LaufStartParams,
+  type LaufErgebnis,
+  type LaufKopf,
+  type LaufGruppenZeile,
+} from './sammelrechnung-lauf';
 
 // Dunning
 export {
