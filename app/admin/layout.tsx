@@ -173,6 +173,7 @@ const navGroups = [
     title: 'Abrechnung',
     items: [
       { href: '/admin/rechnungserstellung', label: 'Rechnungserstellung', icon: <IconDocument size={18} /> },
+      { href: '/admin/sammelrechnung', label: 'Sammelrechnungslauf', icon: <IconDocument size={18} /> },
       { href: '/admin/rechnungen', label: 'Rechnungsübersicht', icon: <IconDocument size={18} /> },
       { href: '/admin/gutschriften', label: 'Gutschriften', icon: <IconDocument size={18} /> },
       { href: '/admin/leistungspreise', label: 'Leistungspreise', icon: <IconMoney size={18} /> },

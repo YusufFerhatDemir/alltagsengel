@@ -30,7 +30,10 @@ import { billingLogger as log } from '@/lib/logger';
  * `__tests__/abrechnung/audit-entity-types.test.ts` vergleicht beide Listen.
  */
 export const AUDIT_ENTITY_TYPES = [
-  'invoice', 'tariff', 'correction', 'snapshot', 'credit_note',
+  // 'invoice_draft': der abgewiesene bzw. nicht zustandegekommene Entwurf.
+  // entity_id traegt hier eine client_id, weil zum Zeitpunkt des Eintrags
+  // keine Rechnung existiert (Migration 20260912000000).
+  'invoice', 'invoice_draft', 'tariff', 'correction', 'snapshot', 'credit_note',
   'payment', 'payment_allocation', 'dunning', 'payment_difference',
   'monthly_closing',
   'dta_lauf', 'dta_kostentraeger', 'dta_dakota_auftrag',
