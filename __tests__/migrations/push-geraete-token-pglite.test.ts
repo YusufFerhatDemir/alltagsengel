@@ -1,5 +1,5 @@
 /**
- * PGlite: Push-Geraete-Token (Migration 20260928000000)
+ * PGlite: Push-Geraete-Token (Migration 20260930000000)
  *
  * Die Migration laeuft auf einer echten PostgreSQL-Instanz. Genau das ist
  * hier noetig, denn ihr Kern ist SQL-Verhalten, das eine Attrappe nicht
@@ -25,8 +25,8 @@ import path from 'node:path'
 
 const MIGRATIONS_DIR = path.join(__dirname, '..', '..', 'supabase', 'migrations')
 const DELIVERY_LOG = '20260923000000_notification_delivery_log.sql'
-const MIGRATION = '20260928000000_push_geraete_token.sql'
-const ROLLBACK = '20260928000001_rollback_push_geraete_token.sql'
+const MIGRATION = '20260930000000_push_geraete_token.sql'
+const ROLLBACK = '20260930000001_rollback_push_geraete_token.sql'
 
 const STAMM = '00000000-0000-4000-8000-000460629986'
 const ORG_B = '00000000-0000-4000-8000-0000000000ab'

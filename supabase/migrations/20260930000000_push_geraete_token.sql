@@ -42,7 +42,7 @@
 -- nicht senden. Geschuetzt wird er ueber RLS und den anon-Entzug, nicht
 -- ueber Verschluesselung.
 --
--- Rollback: 20260928000001_rollback_push_geraete_token.sql
+-- Rollback: 20260930000001_rollback_push_geraete_token.sql
 -- ═══════════════════════════════════════════════════════════════════════
 
 BEGIN;

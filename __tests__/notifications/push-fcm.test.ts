@@ -3,7 +3,7 @@
 // ═══════════════════════════════════════════════════════════════════════
 //
 // Laeuft gegen ECHTES Postgres (PGlite/WASM) mit der echten Migration
-// 20260928000000. Der Unique-Index auf (user_id, token), der
+// 20260930000000. Der Unique-Index auf (user_id, token), der
 // platform-CHECK und die Mandantenspalte greifen damit wirklich — eine
 // Fake-DB haette genau die Fehler durchgelassen, wegen derer diese
 // Migration ueberhaupt noetig war (siehe Kopfkommentar dort).
@@ -178,7 +178,7 @@ beforeAll(async () => {
   await db.exec(
     fs.readFileSync(path.join(MIGRATIONS_DIR, '20260923000000_notification_delivery_log.sql'), 'utf-8'))
   await db.exec(
-    fs.readFileSync(path.join(MIGRATIONS_DIR, '20260928000000_push_geraete_token.sql'), 'utf-8'))
+    fs.readFileSync(path.join(MIGRATIONS_DIR, '20260930000000_push_geraete_token.sql'), 'utf-8'))
 
   H.client = macheSupabaseClient(db)
 })

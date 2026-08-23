@@ -1,5 +1,5 @@
 -- ═══════════════════════════════════════════════════════════════════════
--- Rollback zu 20260928000000_push_geraete_token.sql
+-- Rollback zu 20260930000000_push_geraete_token.sql
 -- ═══════════════════════════════════════════════════════════════════════
 --
 -- WAS NICHT ZURUECKGEDREHT WIRD UND WARUM
