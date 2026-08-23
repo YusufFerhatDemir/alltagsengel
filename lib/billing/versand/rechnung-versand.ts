@@ -15,7 +15,7 @@
 // laeuft ins Leere — ausser der Aufrufer verlangt ausdruecklich
 // `erneutSenden`. Die Versuchshistorie (inkl. Fehlertext) landet
 // zusaetzlich in invoice_email_log; fehlt die Tabelle (Migration
-// 20260923000000 noch nicht eingespielt), wird nur gewarnt.
+// 20260823000000 noch nicht eingespielt), wird nur gewarnt.
 //
 // OHNE RESEND_API_KEY wird NICHT geworfen und sent_at NICHT gesetzt:
 // der Versand meldet 'uebersprungen', die Rechnung bleibt unzugestellt
