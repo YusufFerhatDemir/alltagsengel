@@ -83,7 +83,7 @@ export const PRUEF_CODES = [
   'PFLEGEGRAD_ZU_NIEDRIG',
   /** Kein Tarif, gesperrter Tarif oder Kassentarif ohne Verifizierung. */
   'TARIF_NICHT_VERIFIZIERT',
-  /** Tageskontingent (§ 39: 42 / § 42: 56) im Kalenderjahr ausgeschoepft. */
+  /** Tageskontingent (§ 39 und § 42: je 56 Tage) im Kalenderjahr ausgeschoepft. */
   'TAGE_KONTINGENT_ERSCHOEPFT',
   /** Gemeinsamer Jahresbetrag § 42a ausgeschoepft. */
   'BUDGET_ERSCHOEPFT',

@@ -63,10 +63,41 @@ export interface VpKzpZeitVersion {
 
 export const VPKZP_ZEIT_VERSIONEN: VpKzpZeitVersion[] = [
   {
+    // Rechtsstand bis einschliesslich 2024: Verhinderungspflege 6 Wochen.
+    // Bleibt stehen, damit eine Pruefung fuer ein vergangenes Jahr
+    // reproduzierbar bleibt — alte Werte werden nie ueberschrieben.
     gueltigAb: '2024-01-01',
-    gueltigBis: '9999-12-31',
+    gueltigBis: '2024-12-31',
     // 6 Wochen a 7 Tage — Hoechstdauer Verhinderungspflege je Kalenderjahr.
     vpMaxTage: 42,
+    // 8 Wochen a 7 Tage — Hoechstdauer Kurzzeitpflege je Kalenderjahr.
+    kzpMaxTage: 56,
+    minPflegegrad: 2,
+    uebertragInsFolgejahr: false,
+  },
+  {
+    /*
+     * Rechtsstand ab 2025: Verhinderungspflege 8 Wochen.
+     *
+     * Quelle: Bundesministerium fuer Gesundheit,
+     * bundesgesundheitsministerium.de/verhinderungspflege —
+     * "fuer laengstens acht Wochen je Kalenderjahr"; die Hoechstdauer der
+     * Verhinderungspflege wurde der Hoechstdauer der Kurzzeitpflege
+     * angeglichen. Wirksam mit dem gemeinsamen Jahresbetrag nach
+     * § 42a SGB XI zum 01.07.2025.
+     *
+     * Warum gueltigAb 01.01.2025 und nicht 01.07.2025: das Kontingent ist
+     * KALENDERJAHRESbezogen und zeitVersionFuerJahr() deckt ein Jahr nur
+     * ab, wenn ein Eintrag es ganz umfasst. Ein unterjaehriger Wechsel
+     * waere hier nicht darstellbar; ein Loch fuer 2025 wuerde fail-closed
+     * jede Pruefung des Jahres werfen. Fachlich traegt das: wer die
+     * Hoechstdauer im Kalenderjahr 2025 ausschoepft, tut das unter dem ab
+     * 01.07.2025 geltenden Recht — die 8 Wochen stehen ihm im Jahr 2025 zu.
+     */
+    gueltigAb: '2025-01-01',
+    gueltigBis: '9999-12-31',
+    // 8 Wochen a 7 Tage — Hoechstdauer Verhinderungspflege je Kalenderjahr.
+    vpMaxTage: 56,
     // 8 Wochen a 7 Tage — Hoechstdauer Kurzzeitpflege je Kalenderjahr.
     kzpMaxTage: 56,
     minPflegegrad: 2,
@@ -90,12 +121,6 @@ export const FRUEHESTES_ZEITJAHR = 2024
  * wird aus dieser Liste entfernt.
  */
 export const OFFENE_FACHFRAGEN: Record<string, string> = {
-  vp_dauer_ab_072025:
-    'Ob die Hoechstdauer der Verhinderungspflege mit Einfuehrung des gemeinsamen '
-    + 'Jahresbetrags zum 01.07.2025 von 6 auf 8 Wochen angehoben wurde, ist hier NICHT '
-    + 'belegt. Bis zur Fachauskunft gilt der konservative Wert 42 Tage (6 Wochen) — er '
-    + 'sperrt im Zweifel zu frueh statt zu spaet. Belegte Auskunft: neuen Eintrag in '
-    + 'VPKZP_ZEIT_VERSIONEN mit gueltigAb 2025-07-01 anlegen, alten schliessen.',
   vorpflegezeit:
     'Die Vorpflegezeit nach § 39 SGB XI (Pflege durch dieselbe Pflegeperson vor der '
     + 'ersten Verhinderungspflege) wird hier NICHT geprueft — der aktuelle Rechtsstand '
