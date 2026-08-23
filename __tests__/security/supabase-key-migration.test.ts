@@ -138,12 +138,18 @@ describe('Regressionsscan: keine direkten Legacy-Key-Lesezugriffe mehr', () => {
   //   Absicht, weil genau das der Aufrufweg von supabase-js ohne Session ist.
   //   Der Lauf misst, ob Supabase diese Kombination annimmt oder mit „Invalid
   //   JWT" ablehnt. Nimmt man ihm den Header, misst er nichts mehr.
+  // • scripts/verify-resend.mjs spricht api.resend.com an, nicht Supabase.
+  //   Dort IST `Authorization: Bearer <RESEND_API_KEY>` der vorgeschriebene
+  //   Aufrufweg; apiHeaders() waere dort schlicht falsch, es baut
+  //   Supabase-Header. Der Scan sucht nach dem Literal, nicht nach dem Ziel —
+  //   deshalb braucht dieser Fall einen Eintrag statt einer Codeaenderung.
   //
   // Alles andere bleibt gesperrt: ein Skript, das den Header baut, um damit
   // Daten zu holen, meldet mit den neuen Keys still „kein Zugriff".
   const BEARER_AUSNAHMEN = [
     'scripts/lib/supabase-keys.mjs',
     'scripts/verify-publishable-key.mjs',
+    'scripts/verify-resend.mjs',
   ]
 
   it('scripts/*.mjs bauen PostgREST-Header nur ueber apiHeaders()', async () => {

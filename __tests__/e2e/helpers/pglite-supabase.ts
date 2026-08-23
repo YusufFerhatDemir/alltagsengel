@@ -22,6 +22,19 @@
  *   • Ohne `alsNutzer` laeuft alles als Superuser — das entspricht dem
  *     service-role-Client der Anwendung (BYPASSRLS). Fuer RLS-Beweise
  *     muss `alsNutzer` gesetzt sein.
+ *   • `numeric` kommt als Zeichenkette zurueck (so liefert es der
+ *     PGlite-Treiber). PostgREST liefert dort eine JSON-Zahl. Der
+ *     Anwendungscode faehrt jede Betragsspalte ohnehin durch `Number()`,
+ *     deshalb bleibt das hier stehen — mit dieser Zeile als Hinweis.
+ *
+ * DATUMSWERTE: date/timestamp/time kommen aus dem Treiber als
+ * `Date`-Objekte, aus PostgREST dagegen als Zeichenketten. Der
+ * Unterschied ist NICHT harmlos — `zeile.due_date + 'T00:00:00+01:00'`
+ * ergibt mit einem Date-Objekt „Thu Aug 06 2026 …T00:00:00+01:00" und
+ * damit ein Invalid Date, das sich als NaN durch die Rechnung zieht und
+ * als fehlgeschlagenes UPDATE endet. Genau daran ist advanceDunning()
+ * im Mahnketten-Test still gescheitert. `alsPostgrestWert` zieht die
+ * Werte deshalb auf das Format, das die Anwendung live sieht.
  */
 
 import type { PGlite } from '@electric-sql/pglite'
@@ -146,6 +159,24 @@ interface QueryBuilder extends PromiseLike<Antwort<Zeile[]>> {
   maybeSingle(): Promise<Antwort<Zeile | null>>
 }
 
+/**
+ * Postgres-OIDs der Zeittypen. PGlite liefert sie als `Date`, PostgREST
+ * als Zeichenkette — hier wird auf PostgREST vereinheitlicht.
+ */
+const OID_DATE = 1082
+const OID_TIME = 1083
+const OID_TIMESTAMP = 1114
+const OID_TIMESTAMPTZ = 1184
+const OID_TIMETZ = 1266
+const ZEIT_OIDS = new Set([OID_DATE, OID_TIME, OID_TIMESTAMP, OID_TIMESTAMPTZ, OID_TIMETZ])
+
+function alsPostgrestWert(wert: unknown, oid: number): unknown {
+  if (!(wert instanceof Date)) return wert
+  // `date` ohne Uhrzeit — PostgREST liefert YYYY-MM-DD.
+  if (oid === OID_DATE) return wert.toISOString().slice(0, 10)
+  return wert.toISOString()
+}
+
 function alsPgFehler(e: unknown): PgFehler {
   const f = e as { message?: string; code?: string; detail?: string; hint?: string }
   return {
@@ -168,7 +199,7 @@ export function macheSupabaseClient(
     optionen.protokoll?.push(sql)
     if (!optionen.alsNutzer) {
       const r = await db.query<T>(sql, params as never[])
-      return r.rows
+      return vereinheitliche(r)
     }
     const claims = JSON.stringify({ sub: optionen.alsNutzer, role: 'authenticated' })
     return db.transaction(async tx => {
@@ -177,8 +208,47 @@ export function macheSupabaseClient(
         `SET LOCAL request.jwt.claims = '${claims.replace(/'/g, "''")}';`
       )
       const r = await tx.query<T>(sql, params as never[])
-      return r.rows
+      return vereinheitliche(r)
     }) as Promise<T[]>
+  }
+
+  /** Zeitspalten auf das PostgREST-Format ziehen (siehe Kopfkommentar). */
+  function vereinheitliche<T extends Zeile>(
+    ergebnis: { rows: T[]; fields?: Array<{ name: string; dataTypeID: number }> }
+  ): T[] {
+    const zeitSpalten = (ergebnis.fields ?? []).filter(f => ZEIT_OIDS.has(f.dataTypeID))
+    if (zeitSpalten.length === 0) return ergebnis.rows
+    for (const zeile of ergebnis.rows) {
+      for (const f of zeitSpalten) {
+        const z = zeile as Zeile
+        z[f.name] = alsPostgrestWert(z[f.name], f.dataTypeID)
+      }
+    }
+    return ergebnis.rows
+  }
+
+  /**
+   * Gibt diese Funktion eine Zeilenmenge zurueck (SETOF/RETURNS TABLE)?
+   *
+   * PostgREST antwortet dann mit einem JSON-Array; bei einem Skalar mit
+   * dem Wert selbst. Das Ergebnis wird gemerkt — pg_proc aendert sich
+   * waehrend eines Testlaufs nicht.
+   */
+  const zeilenFunktionen = new Map<string, boolean>()
+  async function liefertZeilen(name: string): Promise<boolean> {
+    const gemerkt = zeilenFunktionen.get(name)
+    if (gemerkt !== undefined) return gemerkt
+    const r = await db.query<{ mengenwertig: boolean }>(
+      `SELECT bool_or(p.proretset OR t.typtype = 'c') AS mengenwertig
+         FROM pg_proc p
+         JOIN pg_namespace n ON n.oid = p.pronamespace
+         JOIN pg_type t ON t.oid = p.prorettype
+        WHERE n.nspname = 'public' AND p.proname = $1`,
+      [name] as never[],
+    )
+    const wert = r.rows[0]?.mengenwertig === true
+    zeilenFunktionen.set(name, wert)
+    return wert
   }
 
   function builder(tabelle: string): QueryBuilder {
@@ -382,6 +452,15 @@ export function macheSupabaseClient(
       const werte = schluessel.map(k => params[k])
       const argumente = schluessel.map((k, i) => `${k} => $${i + 1}`).join(', ')
       try {
+        // RETURNS TABLE / SETOF liefert PostgREST als Zeilenliste, ein
+        // Skalar (auch jsonb) als Wert. Ein `SELECT fn() AS ergebnis`
+        // ueber eine Tabellenfunktion ergaebe dagegen einen Verbundtyp,
+        // aus dem der Aufrufer kein Feld lesen kann — genau der
+        // Unterschied, an dem ein Test sonst gruen faellt.
+        if (await liefertZeilen(name)) {
+          const rows = await fuehreAus<Zeile>(`SELECT * FROM public.${name}(${argumente})`, werte)
+          return { data: rows, error: null }
+        }
         const rows = await fuehreAus<Zeile>(
           `SELECT public.${name}(${argumente}) AS ergebnis`, werte
         )

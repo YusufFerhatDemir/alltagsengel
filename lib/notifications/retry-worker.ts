@@ -91,7 +91,14 @@ const MAX_VORGAENGE = 200
 /** Zeitbudget. Vercel-Funktionen haben eine harte Obergrenze. */
 const ZEITBUDGET_MS = 45_000
 
-/** Nach so vielen Vorgaengen wird der Herzschlag erneuert. */
+/**
+ * Nach so vielen ANGEFASSTEN Vorgaengen wird der Herzschlag erneuert.
+ *
+ * Gezaehlt wird jeder Vorgang, den die Schleife in die Hand nimmt — auch
+ * ein wartender. Ein Lauf, der 200 Zeilen durchsieht und keine einzige
+ * versendet, braucht seinen Herzschlag genauso: sonst haelt er eine
+ * Sperre, die von aussen wie verwaist aussieht.
+ */
 const HEARTBEAT_ALLE = 20
 
 export interface RetryWorkerOptionen {
@@ -232,6 +239,8 @@ async function insDeadLetter(
 interface Fortschritt {
   metriken: RetryWorkerMetriken
   abbruch: string | null
+  /** Vorgaenge seit dem letzten Herzschlag — organisationsuebergreifend. */
+  seitHerzschlag: number
 }
 
 async function verarbeiteOrganisation(
@@ -255,6 +264,16 @@ async function verarbeiteOrganisation(
     if (stand.metriken.verarbeitet >= opt.maxVorgaenge) {
       stand.abbruch = 'obergrenze_erreicht'
       return
+    }
+
+    // Herzschlag nach ANGEFASSTEN Vorgaengen, nicht nach versendeten.
+    // Ein Lauf, der 200 wartende Zeilen durchsieht, verschickt nichts —
+    // sein Herzschlag muss trotzdem weiterlaufen, sonst uebernimmt der
+    // naechste Lauf eine Sperre, die gar nicht verwaist ist.
+    stand.seitHerzschlag++
+    if (stand.seitHerzschlag >= HEARTBEAT_ALLE) {
+      stand.seitHerzschlag = 0
+      await heartbeat()
     }
 
     // ── Obergrenze: endgueltig aufgeben ──
@@ -369,9 +388,6 @@ async function verarbeiteOrganisation(
         break
     }
 
-    if ((stand.metriken.verarbeitet + stand.metriken.deadLetter) % HEARTBEAT_ALLE === 0) {
-      await heartbeat()
-    }
   }
 }
 
@@ -460,7 +476,7 @@ export async function fuehreWiederholungslaufAus(
     await admin.rpc('zustellung_retry_heartbeat', { p_lauf_id: laufId })
   }
 
-  const stand: Fortschritt = { metriken, abbruch: null }
+  const stand: Fortschritt = { metriken, abbruch: null, seitHerzschlag: 0 }
   const opt = {
     maxVorgaenge: optionen.maxVorgaenge ?? MAX_VORGAENGE,
     queuedSchwelleMinuten: optionen.queuedSchwelleMinuten ?? QUEUED_SCHWELLE_MINUTEN,
