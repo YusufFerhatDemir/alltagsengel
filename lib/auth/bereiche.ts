@@ -222,7 +222,13 @@ export const BEREICHE: Readonly<Record<string, BereichsRegel>> = {
   '/api/admin/manage-role':           { lesen: 'benutzer.verwalten' },
   '/api/admin/reset-password':        { lesen: 'benutzer.verwalten' },
   '/api/admin/pricing':               { lesen: 'tarife.lesen', schreiben: 'tarife.schreiben' },
-  '/api/pricing':                     { lesen: 'tarife.lesen', schreiben: 'tarife.schreiben' },
+  // BEWUSST NICHT hier: '/api/pricing'. Das ist die Preisauskunft fuer
+  // jeden angemeldeten Nutzer (Native App, Kundendashboard) und
+  // '/api/pricing/calculate' ist der oeffentliche Preisrechner. Eine
+  // Regel darauf wuerde eine Sperre behaupten, die es nicht gibt — und
+  // waere die erste, die bei einer spaeteren Proxy-Durchsetzung fuer
+  // /api die App und den Rechner abschaltet. Die Tarif-PFLEGE liegt
+  // unter '/api/admin/pricing' und '/api/billing/tariffs'.
 
   // Fach-API
   '/api/akten':                       { lesen: 'stammdaten.lesen', schreiben: 'stammdaten.schreiben' },

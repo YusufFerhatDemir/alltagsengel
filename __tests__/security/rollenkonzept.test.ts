@@ -181,6 +181,16 @@ describe('Bereichskatalog', () => {
   it('kennt Pfade ohne Regel und behauptet nichts', () => {
     expect(berechtigungFuerPfad('/admin/gibtsnicht')).toBeNull()
   })
+
+  it('belegt oeffentliche Preis-Endpunkte NICHT mit einer Regel', () => {
+    // /api/pricing bedient die Native App und den oeffentlichen
+    // Preisrechner. Eine Regel dort waere eine behauptete Sperre — und
+    // die erste, die bei einer Proxy-Durchsetzung fuer /api die App
+    // abschaltet. Tarifpflege laeuft ueber /api/admin/pricing.
+    expect(berechtigungFuerPfad('/api/pricing')).toBeNull()
+    expect(berechtigungFuerPfad('/api/pricing/calculate', 'POST')).toBeNull()
+    expect(berechtigungFuerPfad('/api/admin/pricing', 'POST')).toBe('tarife.schreiben')
+  })
 })
 
 describe('darfPfad — serverseitige Bereichssperre', () => {
