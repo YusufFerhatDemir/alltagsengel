@@ -1,9 +1,20 @@
 # MASTER PROJECT STATUS
 
-> Stand: 22.08.2026 13:15 | Baseline: FINAL_FINAL_GO_LIVE_REPORT_2026-08-21.md
-> HEAD: `3c29b00` | **11 Commits diese Session** (f8ad0ae, 24e67e9, b3564d2, 6d148a5,
-> ea67b5b, e588416, 8392730, de4623b, 79e7e0e, f4048df, 3c29b00)
+> Stand: 23.08.2026 | Baseline: FINAL_FINAL_GO_LIVE_REPORT_2026-08-21.md
+> Basis-HEAD: `0bd61d1` | Vorlauf 22.08.: 11 Commits (f8ad0ae, 24e67e9, b3564d2,
+> 6d148a5, ea67b5b, e588416, 8392730, de4623b, 79e7e0e, f4048df, 3c29b00)
 > — dazu `ebf14e2` im separaten ChairMatch-Repo (`/Users/work/chairmatch`).
+>
+> **23.08.2026 — 6 von 8 Master-Tracks abgeschlossen.** Zwei Migrationen sind
+> nicht mehr „wartet auf Apply", sondern **live angewendet und gegengeprueft**
+> (ChairMatch-Persistenz, `invoice_email_log`). P6-Legacy geprueft, Buchungskette
+> gegen Live-Daten gemessen. Details im CHANGELOG-Eintrag vom 23.08.
+>
+> **Offen als CEO-Aktion (nicht aus einer Session loesbar, braucht Dashboard-Login):**
+> | # | Aktion | Wo |
+> |---|--------|-----|
+> | 1 | Signup deaktivieren (`disable_signup=true`) | Supabase-Dashboard, Projekt `vlrviyrgggzhayepfmop` (P6) |
+> | 2 | `RESEND_API_KEY` setzen | Vercel Production — ohne ihn verlaesst keine Rechnung/Mahnung das System |
 >
 > **CI: GRUEN — auf GitHub verifiziert, nicht nur lokal.**
 > Run [32569458523](https://github.com/YusufFerhatDemir/alltagsengel/actions/runs/32569458523)
@@ -55,19 +66,40 @@ Vollstaendige Analyse: `docs/FUNKTIONALE_LUECKENANALYSE.md` (690 Zeilen, 14 Bere
 | 14 | Offline-Erfassung nur im nicht ausgelieferten Expo-Projekt | P1 | INTERN |
 | 15 | Kundenstammdaten nach Anlage nur teilweise editierbar | P1 | INTERN |
 
-> **Neu offen aus 10-13:** Migration `20260923000000_invoice_email_log.sql`
-> (Zustellprotokoll) wartet auf manuelles Live-Apply im Supabase-SQL-Editor.
-> Ohne sie versendet die Kette weiterhin (Idempotenz haengt an `invoices.sent_at`),
-> es fehlt nur die Versuchshistorie.
+> **ERLEDIGT 23.08.2026 — `invoice_email_log` ist LIVE_VERIFIED.** Die Migration
+> ist auf `nnwyktkqibdjxgimjyuq` angewendet: Tabelle mit 15 Spalten, RLS aktiv mit
+> beiden Policies — `invoice_email_log_admin` (PERMISSIVE, `is_admin()`) **und**
+> `org_fence_invoice_email_log` (RESTRICTIVE, `organization_id = current_org_id()`).
+> Der Dateiname im Repo war ein Tippfehler (`20260923` statt `20260823`) und ist
+> auf `20260823000000_invoice_email_log.sql` korrigiert, Rollback als
+> `20260823000001`; Referenzen in Code und Doku nachgezogen.
 >
-> **Versand ist ENV-gesteuert:** ohne `RESEND_API_KEY` wird jeder Versuch als
-> `uebersprungen` protokolliert und `sent_at` bleibt leer, damit nachversendet
-> wird. Automatischer Versand bei Festschreibung nur mit
+> **Versand ist ENV-gesteuert — und der Key fehlt noch:** ohne `RESEND_API_KEY`
+> wird jeder Versuch als `uebersprungen` protokolliert und `sent_at` bleibt leer,
+> damit nachversendet wird. Automatischer Versand bei Festschreibung nur mit
 > `RECHNUNGSVERSAND_AUTOMATISCH='1'` — Standard ist manuell.
+> **CEO_ACTION_REQUIRED: `RESEND_API_KEY` in Vercel Production setzen.** Bis dahin
+> ist die Versandkette vollstaendig gebaut, aber ohne Zustellkanal.
 >
 > **Unveraendert blockiert:** §45b-Tarife bleiben `blocked`/`unverified`
 > (Punkt 9). Die Versandkette aendert daran nichts; nicht verifizierte Tarife
 > erzeugen weiterhin keine Rechnung.
+
+### Buchungskette: Live-Delta-Check (23.08.2026) — **VERIFIZIERT**
+Erste Messung der Kette aus `de4623b` an echten Zeilen statt an Testdaten.
+
+| Stufe | Live-Bestand |
+|-------|--------------|
+| `assignments` | 5 aktiv |
+| `service_records` | 30 — 2 `draft`, 13 `signed`, 15 `invoiced` |
+| `invoice_items` | 15 |
+| `invoices` | 3 — 1 `sent`, 1 `paid`, 1 `disputed` |
+| `payments` | 0 (Zuordnung ueber `payment_allocations`) |
+
+**Keine gebrochenen Verweise, keine verwaisten Datensaetze.** Die 13 signierten
+Nachweise ohne Rechnung sind kein Defekt, sondern der normale Zwischenstand:
+unterschrieben, noch nicht abgerechnet. `payments = 0` deckt sich mit dem
+fehlenden `RESEND_API_KEY` — ohne Versand keine Zahlung.
 
 ---
 
@@ -152,7 +184,7 @@ Supabase: pwdbjqfpgumyfktbfswg
 | ~~4~~ | ~~E2E-Tests fuer Booking/Payment~~ | ~~P1~~ | **ERLEDIGT** (174 Tests, 3 Prod-Bugs gefixt: Statuswechsel, Rate-Limit, Rollen-Check, c0e6af6 in /chairmatch) |
 | ~~5~~ | ~~i18n-Abdeckung~~ | ~~P1~~ | **ERLEDIGT** (de/en-Kataloge 479 Keys, 33 Seiten instrumentiert, Intl-Formatierung, c9d603a) |
 | ~~6~~ | ~~Supabase API-Key Dependency Map~~ | ~~P1~~ | **ERLEDIGT** (docs/SUPABASE_KEY_DEPENDENCY_MAP.md, 6 Projekte kartiert, f8ad0ae) |
-| 7 | Supabase API-Keys rotieren | P1 | **BLOCKED_BY_RISK** — Legacy-JWT-Modell, Rotation loggt alle Nutzer aus. Erst `publishable`/`secret`-Keys einfuehren. Details in Dependency Map. |
+| 7 | Supabase API-Keys rotieren | P1 | **BLOCKED_BY_RISK / kein Handlungsbedarf bis Ende 2026** — Legacy-JWT-Modell, Rotation loggt alle Nutzer aus. Die Abstraktion steht (`scripts/lib/supabase-keys.mjs`, `f8ad0ae`), die Umstellung ist additiv vorbereitet. Rotiert wird erst zur Abkuendigung der Legacy-Keys (Ende 2026). Details in Dependency Map. |
 
 ### Neue Befunde aus ChairMatch Delta-Analyse (24e67e9)
 Vollstaendige Analyse: `docs/CHAIRMATCH_DELTA_ANALYSE.md` · 231/231 Tests gruen
@@ -165,7 +197,7 @@ Vollstaendige Analyse: `docs/CHAIRMATCH_DELTA_ANALYSE.md` · 231/231 Tests gruen
 | ~~11~~ | ~~Gesamter Miet-Flow abgeklemmt (API 0 Aufrufer)~~ | ~~P1~~ | **ERLEDIGT** (ebf14e2) |
 | ~~12~~ | ~~`rental_equipment` kein CRUD (Vermieter kann keinen Stuhl anlegen)~~ | ~~P1~~ | **ERLEDIGT** (ebf14e2) |
 | ~~13~~ | ~~`createNotification()` 0 Aufrufer (Glocke strukturell leer)~~ | ~~P2~~ | **ERLEDIGT** (ebf14e2, 12 Aufrufstellen) |
-| 14 | Migration `20260821_persistence_uploads_rentals.sql` nicht angewendet — neue Routen antworten bis dahin mit 500 | P0 | INTERN (SQL-Editor, kein DDL-Zugang aus Session) |
+| ~~14~~ | ~~Migration `20260821_persistence_uploads_rentals.sql` nicht angewendet~~ | ~~P0~~ | **ERLEDIGT / LIVE_VERIFIED** (23.08.2026 via Supabase-MCP als `20260823112716_persistence_uploads_rentals` angewendet) |
 | 15 | Mietanfrage benachrichtigt nur in-App, keine E-Mail an den Vermieter | P2 | INTERN |
 
 ### Track 3 ChairMatch: Persistenz-Umbau (ebf14e2, separates Repo /Users/work/chairmatch)
@@ -197,12 +229,25 @@ Speicherschicht.
   und kein INSERT/UPDATE/DELETE fuer anon/authenticated.
 - 4 Sprachkataloge (de/en/tr/ar) nachgezogen, `fake-supabase`-Harness erweitert.
 
-> **BLOCKER: Migration `supabase/migrations/20260821_persistence_uploads_rentals.sql`
-> ist NICHT angewendet.** Sie legt `tenant_profiles`, die Upload- und
-> Miet-Tabellen an und braucht den Supabase-SQL-Editor (kein DDL-Zugang aus der
-> Session). Bis dahin antworten die neuen Routen mit 500 — bewusst, statt still
-> auf localStorage zurueckzufallen. Der Umbau ist deployed, aber erst nach dem
-> Apply funktionsfaehig.
+> **~~BLOCKER~~ GELOEST 23.08.2026 — Migration ist LIVE_VERIFIED.**
+> `supabase/migrations/20260821_persistence_uploads_rentals.sql` wurde via
+> Supabase-MCP auf `pwdbjqfpgumyfktbfswg` angewendet (dort als
+> `20260823112716_persistence_uploads_rentals` gefuehrt). Angelegt:
+>
+> - **4 Tabellen:** `tenant_profiles` (8 Spalten), `payout_accounts` (7),
+>   `user_uploads` (12), `rental_requests` (15).
+> - **7 neue Spalten auf `rental_equipment`:** `price_per_hour_cents`,
+>   `price_per_week_cents`, `available_days`, `available_from`, `available_to`,
+>   `features`, `updated_at`.
+> - **Storage-Bucket `cm-uploads`**, private.
+> - **IBAN-Spalte `REVOKED`** fuer `anon` und `authenticated` — Auszahlungsdaten
+>   sind nur ueber den Server-Pfad lesbar, nicht ueber PostgREST.
+> - **Alle RLS-Policies aktiv, SELECT-only** (defense in depth); geschrieben wird
+>   weiterhin ausschliesslich ueber `getSupabaseAdmin()` in authentifizierten
+>   Routen.
+>
+> Die neuen Routen antworten damit nicht mehr mit 500 — der Umbau aus `ebf14e2`
+> ist ab jetzt funktionsfaehig.
 >
 > **Einschraenkung Befund 10:** die Mietanfrage wird zugestellt, aber als
 > In-App-Benachrichtigung. Ein E-Mail-Versand an den Vermieter haengt nicht in
@@ -278,6 +323,23 @@ Letzter Check: 21.08.2026
 | 4 | AVV mit Supabase/Vercel abschliessen | P1 | EXTERN |
 | 5 | BSI C5 / ISO 27001 (nur fuer DiPA/BfArM) | P1 | EXTERN |
 | ~~6~~ | ~~BITV/WCAG Barrierefreiheit~~ | ~~P1~~ | **ERLEDIGT** (2 Durchgaenge: Kontrast/Labels/Landmarks + Fokus-Management 34 Dialoge, Tastatur 121→1, axe-core-Lauf, ad23806. Offen: Screenreader-Test mit NVDA/JAWS) |
+| 7 | **P6-Legacy `vlrviyrgggzhayepfmop`: Signup deaktivieren** | P1 | **CEO_ACTION_REQUIRED** (Supabase-Dashboard) |
+
+### P6 Legacy Security Check (23.08.2026) — **ANALYSIERT**
+Tiefenpruefung des Legacy-Projekts `vlrviyrgggzhayepfmop` (Detailbericht:
+`docs/P6_LEGACY_SECURITY_CHECK.md`). **Ergebnis: geringe reale Exposition** —
+die Einstufung vom 22.08. wird damit praezisiert, nicht widerrufen.
+
+- **RLS auf allen Tabellen aktiv**, keine Storage-Buckets, 10 E-Mail-Nutzer.
+- **anon-SELECT nur auf Marktplatz-Katalogdaten** (`categories`, `services`,
+  `reviews`, `rental_options`, `staff`) — by design fuer den oeffentlichen
+  Marktplatz, kein PII. Der oeffentlich lesbare anon-Key aus `index_legacy.html`
+  kommt damit nicht weiter als bis zu diesen Katalogzeilen.
+- **Offen bleibt genau ein Hebel:** `disable_signup=false` +
+  `mailer_autoconfirm=true` — jeder kann auf dem unbeobachteten Projekt ein
+  sofort aktives Konto anlegen. **CEO_ACTION_REQUIRED** (Punkt 7 oben).
+- Nach dem Abschalten des Signups ist P6 ein reiner `DECOMMISSION_CANDIDATE`
+  ohne akute Live-Flaeche.
 
 ---
 

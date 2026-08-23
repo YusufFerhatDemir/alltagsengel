@@ -4,6 +4,114 @@ Chronologische Dokumentation aller KI-gestuetzten Arbeitssitzungen.
 
 ---
 
+## 2026-08-23 | Session: Master-Tracks 1-6 — zwei Migrationen live, P6 geprueft, Buchungskette an Live-Daten gemessen
+
+Sechs von acht Master-Tracks abgeschlossen. Zwei Migrationen stehen erstmals
+nicht mehr als „wartet auf Apply", sondern sind live angewendet und
+gegengeprueft. Zwei Punkte bleiben als **CEO-Aktion** offen — beide brauchen ein
+Dashboard-Login, das aus der Session nicht erreichbar ist.
+
+### Track 1: P6 Legacy Security Check (`vlrviyrgggzhayepfmop`)
+Tiefenpruefung zum Befund vom 22.08. **Ergebnis: geringe reale Exposition** —
+die Einstufung von gestern wird damit praezisiert, nicht widerrufen.
+
+- **RLS auf allen Tabellen aktiv**, keine Storage-Buckets, 10 E-Mail-Nutzer.
+- **anon-SELECT nur auf Marktplatz-Katalogdaten** (`categories`, `services`,
+  `reviews`, `rental_options`, `staff`) — by design fuer den oeffentlichen
+  Marktplatz, kein PII dahinter. Der oeffentlich lesbare anon-Key aus
+  `index_legacy.html` kommt also nicht weiter als bis zu diesen Katalogzeilen.
+- **Offen bleibt genau ein Hebel:** `disable_signup=false` +
+  `mailer_autoconfirm=true`. Jeder kann auf dem unbeobachteten Projekt ein
+  sofort aktives Konto anlegen.
+- **CEO-AKTION:** Signup im Supabase-Dashboard deaktivieren. Erst danach ist
+  P6 ein reiner `DECOMMISSION_CANDIDATE` ohne Live-Flaeche.
+
+### Track 2: ChairMatch-Migration LIVE angewendet (`pwdbjqfpgumyfktbfswg`)
+Blocker 14 der Delta-Analyse geschlossen. Angewendet via Supabase-MCP als
+`20260823112716_persistence_uploads_rentals` (Repo-Datei:
+`supabase/migrations/20260821_persistence_uploads_rentals.sql`).
+
+- **4 neue Tabellen:** `tenant_profiles` (8 Spalten), `payout_accounts` (7),
+  `user_uploads` (12), `rental_requests` (15).
+- **7 neue Spalten auf `rental_equipment`:** `price_per_hour_cents`,
+  `price_per_week_cents`, `available_days`, `available_from`, `available_to`,
+  `features`, `updated_at`.
+- **Storage-Bucket `cm-uploads`** angelegt, **private**.
+- **IBAN-Spalte `REVOKED`** fuer `anon` und `authenticated` — Auszahlungsdaten
+  sind ausschliesslich ueber den Server-Pfad lesbar, nicht ueber PostgREST.
+- **Alle RLS-Policies aktiv, SELECT-only** (defense in depth): geschrieben wird
+  weiterhin nur ueber `getSupabaseAdmin()` in authentifizierten Routen, der
+  Browser hat keinen Schreibweg.
+- Damit antworten `/api/me/tenant-profile`, `/api/me/salon`, `/api/me/listing`,
+  `/api/me/payout-account`, `/api/uploads`, `/api/rental-requests` und das
+  `rental_equipment`-CRUD nicht mehr mit 500 — der Umbau aus `ebf14e2` ist ab
+  jetzt funktionsfaehig.
+- **STATUS: LIVE_VERIFIED**
+
+### Track 3: `invoice_email_log` LIVE angewendet (`nnwyktkqibdjxgimjyuq`)
+- **Timestamp-Mismatch geklaert:** `20260923` war ein Tippfehler im Dateinamen,
+  der Migrationsinhalt war korrekt. Datei im Repo auf
+  `20260823000000_invoice_email_log.sql` umbenannt (Rollback entsprechend
+  `20260823000001`), Referenzen in `lib/billing/versand/rechnung-versand.ts`
+  und `docs/FUNKTIONALE_LUECKENANALYSE.md` nachgezogen. Die Abhaengigkeiten der
+  Migration (`organizations`, `invoices`, `is_admin()`, `current_org_id()`)
+  liegen alle vor dem neuen Datum — die Reihenfolge bleibt sauber.
+- **Live angewendet:** `invoice_email_log` mit 15 Spalten.
+- **RLS aktiv, beide Policies:** `invoice_email_log_admin` (PERMISSIVE, ueber
+  `is_admin()`) **und** `org_fence_invoice_email_log` (RESTRICTIVE, ueber
+  `organization_id = current_org_id()`). Die RESTRICTIVE greift zusaetzlich zur
+  Admin-Policy, nicht statt ihrer.
+- Damit hat der Rechnungsversand seine Versuchshistorie: jeder Versand mit
+  Empfaenger, Betreff, Ergebnis, Fehlertext und Versuchszaehler.
+- **STATUS: LIVE_VERIFIED**
+
+### Track 4: RESEND/Vercel — Code steht, Key fehlt
+Code-Analyse von `lib/billing/versand/rechnung-versand.ts` und
+`lib/billing/dunning/mahn-versand.ts`: beide lesen `RESEND_API_KEY`.
+
+- **Kein stiller Fehlschlag ohne Key:** es wird ein Eintrag mit Status
+  `uebersprungen` in `invoice_email_log` geschrieben und `invoices.sent_at`
+  bleibt leer, damit spaeter nachversendet wird.
+- **CEO-AKTION:** `RESEND_API_KEY` in Vercel Production setzen. Bis dahin
+  verlaesst weder eine Rechnung noch eine Mahnung das System — die Kette ist
+  vollstaendig gebaut, aber ohne Zustellkanal.
+
+### Track 5: Supabase Key Dependency Map — bereits erledigt
+Kein neuer Aufwand: `f8ad0ae` ist deployed, die Schluessel-Abstraktion
+(`scripts/lib/supabase-keys.mjs` mit `envWert()`/`apiHeaders()`) steht.
+**Keine Rotation noetig** bis zur Abkuendigung der Legacy-Keys Ende 2026 —
+Punkt 7 in Track 5 bleibt bewusst `BLOCKED_BY_RISK` statt „offen".
+
+### Track 6: Buchungskette gegen Live-Daten (Delta-Check)
+Erste Messung der Kette aus `de4623b` an echten Zeilen statt an Testdaten.
+
+| Stufe | Live-Bestand |
+|-------|--------------|
+| `assignments` | 5 aktiv |
+| `service_records` | 30 — 2 `draft`, 13 `signed`, 15 `invoiced` |
+| `invoice_items` | 15 |
+| `invoices` | 3 — 1 `sent`, 1 `paid`, 1 `disputed` |
+| `payments` | 0 (Zuordnung laeuft ueber `payment_allocations`) |
+
+- **Keine gebrochenen Verweise, keine verwaisten Datensaetze.** Jede Stufe
+  haengt an der vorherigen.
+- Die **13 signierten Nachweise ohne Rechnung sind kein Defekt**, sondern der
+  normale Zwischenstand: unterschrieben, noch nicht abgerechnet.
+- `payments = 0` deckt sich mit Track 4: ohne Versand keine Zahlung.
+- **STATUS: VERIFIZIERT**
+
+### Nicht angefasst
+Keine Preise, keine Tarif-Zuordnungen. §45b-Tarife bleiben `blocked`/
+`unverified` — daran aendert keiner der sechs Tracks etwas.
+
+### Offen: 2 CEO-Aktionen
+| # | Aktion | Wo |
+|---|--------|-----|
+| 1 | Signup deaktivieren (`disable_signup=true`) | Supabase-Dashboard, Projekt `vlrviyrgggzhayepfmop` |
+| 2 | `RESEND_API_KEY` setzen | Vercel Production |
+
+---
+
 ## 2026-08-22 | Session: Phase-2-Abschluss — ChairMatch-Persistenz + Tracks 4-6 nachdokumentiert
 
 Nachtrag fuer die vier Commits, die in den bisherigen Eintraegen fehlten
@@ -221,9 +329,9 @@ erfasst werden.
   Mahnlauf-Cron und `/admin/mahnwesen` zeigen den Versandzustand.
 - **`components/admin/ZahlungErfassenDialog.tsx`** + `lib/admin/betrag.ts` —
   manuelle Zahlungserfassung aus `/admin/forderungen`.
-- **Migration `20260923000000_invoice_email_log.sql`** — Zustellprotokoll je
+- **Migration `20260823000000_invoice_email_log.sql`** — Zustellprotokoll je
   Versuch (Empfaenger, Betreff, Ergebnis, Fehlertext, Zaehler), `is_admin()`-
-  Policy + RESTRICTIVE `org_fence`. Rollback als `20260923000001`.
+  Policy + RESTRICTIVE `org_fence`. Rollback als `20260823000001`.
   **Wartet auf manuelles Live-Apply.**
 - 29 Tests (13 Rechnungsversand, 8 Mahnversand, 8 Zahlungserfassung)
 

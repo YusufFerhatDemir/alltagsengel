@@ -282,7 +282,7 @@ Kassenzulassungs-Voraussetzungen.
   Belegpaket-PDF (`lib/pdf/rechnung-paket.ts`, aus der Route herausgelöst) und
   schickt es mit `sendRawEmail()` als Anhang an die Klienten-Adresse.
   Zustellstatus führt `invoices.sent_at` + `versand_elektronisch`, die
-  Versuchshistorie `invoice_email_log` (Migration 20260923000000).
+  Versuchshistorie `invoice_email_log` (Migration 20260823000000).
   Auslöser: `POST /api/billing/invoices/[id]/versenden` (Button im
   Rechnungsdetail) und optional automatisch nach der Festschreibung, wenn
   `RECHNUNGSVERSAND_AUTOMATISCH=1` gesetzt ist. Ohne `RESEND_API_KEY` meldet
