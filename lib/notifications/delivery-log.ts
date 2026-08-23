@@ -38,6 +38,19 @@ export type ZustellProvider = (typeof ZUSTELL_PROVIDER)[number]
 const ERFOLGSSTATUS: ReadonlySet<ZustellStatus> = new Set<ZustellStatus>(['sent', 'delivered'])
 
 /**
+ * Endgruende einer Zustellung, die nicht mehr wiederholt wird (Dead
+ * Letter). Geschlossene Liste — sie steht so auch als CHECK an der
+ * Spalte `grund` (Migration 20260927000000).
+ */
+export const ZUSTELL_GRUENDE = [
+  'max_versuche_erreicht',
+  'dauerhaft_fehlgeschlagen',
+  'nicht_wiederherstellbar',
+  'voraussetzung_fehlt',
+] as const
+export type ZustellGrund = (typeof ZUSTELL_GRUENDE)[number]
+
+/**
  * Kontext, den ein Aufrufer mitgeben muss, damit ueberhaupt protokolliert
  * werden kann. Ohne `organizationId` gibt es keine Zeile — die Spalte ist
  * NOT NULL und traegt die Mandantengrenze (org_fence).
@@ -48,6 +61,20 @@ export interface ZustellKontext {
   correlationId?: string | null
   /** Zeile in public.notifications, sofern der Kanal eine angelegt hat. */
   notificationId?: string | null
+  /**
+   * Vorgangsbezug fuer den Wiederholungslauf. Das Protokoll enthaelt
+   * bewusst keinen Nachrichteninhalt — ohne diese drei Angaben kann eine
+   * gescheiterte Zustellung deshalb NIE wiederholt werden (die
+   * correlation_id ist ein Hash und laesst sich nicht zurueckrechnen).
+   *
+   * NUR SCHLUESSEL, NIE INHALT: `vorgangArt` ist ein Bezeichner-Slug,
+   * die beiden anderen sind UUIDs.
+   */
+  vorgangArt?: string | null
+  /** Fachlicher Datensatz, z. B. bookings.id. */
+  vorgangRef?: string | null
+  /** profiles.id des Empfaengers (recipient ist je nach Kanal etwas anderes). */
+  vorgangEmpfaenger?: string | null
 }
 
 export interface ZustellEintrag extends ZustellKontext {
@@ -65,6 +92,8 @@ export interface ZustellEintrag extends ZustellKontext {
   attemptedAt?: string | null
   deliveredAt?: string | null
   failedAt?: string | null
+  /** Nur fuer Dead-Letter-Zeilen: warum wird nicht mehr wiederholt. */
+  grund?: ZustellGrund | null
 }
 
 export interface ZustellErgebnis {
@@ -212,6 +241,93 @@ async function ermittleVersuch(
   }
 }
 
+// ───────────────────────────────────────────────────────────────────────
+// Schema-Erweiterung 20260927000000 (Vorgangsbezug + Dead-Letter-Grund)
+// ───────────────────────────────────────────────────────────────────────
+//
+// Die vier Spalten kommen aus einer spaeteren Migration als die Tabelle.
+// Solange sie auf einer Umgebung noch nicht eingespielt ist, wuerde ein
+// Insert mit diesen Feldern mit 42703 (undefined_column) scheitern — und
+// damit die GESAMTE Zustellspur stilllegen, obwohl der Versand selbst in
+// Ordnung ist. Deshalb: einmal versuchen, bei 42703 den Befund merken
+// und ohne die Erweiterung nachlegen.
+//
+// Der Merker gilt pro Prozess. Nach dem Einspielen der Migration greift
+// die Erweiterung spaetestens mit der naechsten Serverless-Instanz; ein
+// zwischenzeitlich degradierter Eintrag verliert nur den Vorgangsbezug,
+// nicht die Zeile.
+
+let vorgangsSpaltenVorhanden: boolean | null = null
+
+/** Nur fuer Tests: den Prozess-Merker zuruecksetzen. */
+export function _setzeSchemaMerkerZurueck(): void {
+  vorgangsSpaltenVorhanden = null
+}
+
+const SLUG_RE = /^[a-z][a-z0-9-]{2,39}$/
+
+/**
+ * Haelt die Spalte `vorgang_art` fail-closed sauber: was nicht wie ein
+ * Bezeichner aussieht, wird verworfen statt an den CHECK zu laufen und
+ * die Protokollzeile zu verlieren.
+ */
+function slugOderNull(wert: string | null | undefined): string | null {
+  return typeof wert === 'string' && SLUG_RE.test(wert) ? wert : null
+}
+
+async function insertMitRueckfall(
+  client: SupabaseClient,
+  basis: Record<string, unknown>,
+  erweiterung: Record<string, unknown>
+): Promise<{ error: { code?: string; message: string } | null }> {
+  if (vorgangsSpaltenVorhanden === false) {
+    return client.from('notification_delivery_log').insert(basis)
+  }
+
+  const { error } = await client
+    .from('notification_delivery_log')
+    .insert({ ...basis, ...erweiterung })
+
+  if (error?.code === '42703') {
+    vorgangsSpaltenVorhanden = false
+    log.warn(
+      'Zustellspur ohne Vorgangsbezug — Migration 20260927000000 fehlt. ' +
+        'Zustellungen sind bis dahin nicht wiederholbar.'
+    )
+    return client.from('notification_delivery_log').insert(basis)
+  }
+
+  if (!error) vorgangsSpaltenVorhanden = true
+  return { error }
+}
+
+/**
+ * Kennt die Datenbank die Vorgangsspalten?
+ *
+ * Der Wiederholungslauf ist ohne sie sinnlos — er koennte offene
+ * Zustellungen weder zuordnen noch als Dead Letter abschliessen. Er
+ * fragt deshalb vorab und verweigert den Lauf, statt Zeilen zu
+ * verarbeiten, die er nicht sauber abschliessen kann.
+ */
+export async function zustellspurSchemaBereit(admin?: SupabaseClient): Promise<boolean> {
+  const client = await holeClient(admin)
+  if (!client) return false
+  try {
+    const { error } = await client
+      .from('notification_delivery_log')
+      .select('vorgang_art, vorgang_ref, vorgang_empfaenger, grund')
+      .limit(1)
+    if (error) {
+      if (error.code === '42703') vorgangsSpaltenVorhanden = false
+      return false
+    }
+    vorgangsSpaltenVorhanden = true
+    return true
+  } catch {
+    return false
+  }
+}
+
 /**
  * Schreibt eine Zeile in die Zustellspur.
  *
@@ -238,7 +354,7 @@ export async function protokolliereZustellung(
   const jetzt = new Date().toISOString()
   const versuch = eintrag.attemptCount ?? (await ermittleVersuch(client, eintrag))
 
-  const zeile = {
+  const zeile: Record<string, unknown> = {
     organization_id: eintrag.organizationId,
     notification_id: istUuid(eintrag.notificationId) ? eintrag.notificationId : null,
     channel: eintrag.channel,
@@ -257,13 +373,18 @@ export async function protokolliereZustellung(
   }
 
   try {
-    const { error } = await client.from('notification_delivery_log').insert(zeile)
+    const { error } = await insertMitRueckfall(client, zeile, {
+      vorgang_art: slugOderNull(eintrag.vorgangArt),
+      vorgang_ref: istUuid(eintrag.vorgangRef) ? eintrag.vorgangRef : null,
+      vorgang_empfaenger: istUuid(eintrag.vorgangEmpfaenger) ? eintrag.vorgangEmpfaenger : null,
+      grund: eintrag.grund ?? null,
+    })
     if (error) {
       // 23505 = unique_violation → der Idempotenz-Index hat gegriffen.
       if (error.code === '23505') {
         log.info('Zustellspur: Erfolg war bereits protokolliert', {
           channel: eintrag.channel,
-          correlationId: zeile.correlation_id ?? undefined,
+          correlationId: (zeile.correlation_id as string | null) ?? undefined,
         })
         return { ok: false, doppelt: true, grund: 'Bereits als zugestellt protokolliert' }
       }

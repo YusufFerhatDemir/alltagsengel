@@ -8,9 +8,16 @@ import {
   vorgangsId,
   type ZustellKontext,
 } from '@/lib/notifications/delivery-log'
+import { esc } from '@/lib/notifications/html'
+import {
+  baueBuchungsNachricht,
+  type BookingNotifyData,
+  type BuchungsArt,
+} from '@/lib/notifications/vorgaenge/buchung-inhalt'
 const log = logger.child('notifications')
 
 export type { ZustellKontext }
+export type { BookingNotifyData, BuchungsArt }
 
 // ─── Zustellspur ───
 // Jeder Kanal nimmt optional einen ZustellKontext entgegen (Organisation,
@@ -32,17 +39,6 @@ export interface NotifyPayload {
   data?: Record<string, unknown>
 }
 
-export interface BookingNotifyData {
-  bookingId: string
-  customerName: string
-  angelName: string
-  service: string
-  date: string
-  time: string
-  duration: number
-  amount: number
-}
-
 // ─── Email Service ───
 
 /**
@@ -55,22 +51,6 @@ function getResend(): Resend | null {
   const key = process.env.RESEND_API_KEY
   if (!key) return null
   return new Resend(key)
-}
-
-/**
- * HTML-Escaping fuer alles, was aus Nutzereingaben stammt (Namen,
- * Leistungsbezeichnung, Ablehnungsgrund). Ohne das kann ein Nutzer ueber
- * seinen eigenen first_name oder einen Freitext-Ablehnungsgrund HTML in
- * E-Mails injizieren, die unter der Alltagsengel-Absenderadresse an
- * ANDERE Nutzer verschickt werden (Phishing-Risiko trotz legitimen
- * Absenders). Gleiches Muster wie esc() in lib/emails/coach-bestellung.ts.
- */
-function esc(s: string): string {
-  return s
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
 }
 
 // ─── In-App Notification ───
@@ -155,7 +135,7 @@ async function protokolliere(
  */
 function buchungsKontext(
   zustellung: ZustellKontext | undefined,
-  ereignis: string,
+  ereignis: BuchungsArt,
   bookingId: string,
   empfaengerId: string
 ): ZustellKontext | undefined {
@@ -163,10 +143,41 @@ function buchungsKontext(
   return {
     ...zustellung,
     correlationId: zustellung.correlationId ?? vorgangsId(ereignis, bookingId, empfaengerId),
+    // Ohne diese drei Angaben kann der Wiederholungslauf die Nachricht
+    // nicht neu bauen — aus der correlation_id (UUID v5) laesst sich
+    // nichts zurueckrechnen.
+    vorgangArt: ereignis,
+    vorgangRef: bookingId,
+    vorgangEmpfaenger: empfaengerId,
   }
 }
 
 // ─── Email Notification ───
+
+/**
+ * Wie sendEmailNotification(), liefert aber das ausfuehrliche Ergebnis
+ * statt nur `true/false`.
+ *
+ * Der Wiederholungslauf braucht den Unterschied: „uebersprungen, weil
+ * kein Schluessel gesetzt ist" darf NICHT gegen die Versuchsobergrenze
+ * zaehlen, und der Fehlertext entscheidet, ob ein weiterer Versuch
+ * ueberhaupt Sinn hat (lib/notifications/fehlerklassen.ts).
+ */
+export async function sendEmailNotificationErgebnis(
+  to: string,
+  recipientName: string,
+  subject: string,
+  bodyHtml: string,
+  zustellung?: ZustellKontext
+): Promise<RawEmailErgebnis> {
+  return sendRawEmail({
+    to,
+    subject,
+    html: wrapEmailTemplate(recipientName, subject, bodyHtml),
+    zustellung,
+  })
+}
+
 export async function sendEmailNotification(
   to: string,
   recipientName: string,
@@ -174,55 +185,8 @@ export async function sendEmailNotification(
   bodyHtml: string,
   zustellung?: ZustellKontext
 ): Promise<boolean> {
-  const resend = getResend()
-  if (!resend) {
-    log.info('RESEND_API_KEY nicht konfiguriert — E-Mail übersprungen')
-    await protokolliere(zustellung, {
-      channel: 'email',
-      recipient: to,
-      status: 'skipped',
-      provider: 'resend',
-      fehler: 'RESEND_API_KEY nicht konfiguriert',
-    })
-    return false
-  }
-  try {
-    const { data, error } = await resend.emails.send({
-      from: ALLTAGSENGEL_ABSENDER,
-      to,
-      subject,
-      html: wrapEmailTemplate(recipientName, subject, bodyHtml),
-    })
-    if (error) {
-      log.errorWithException('Resend email error', error)
-      await protokolliere(zustellung, {
-        channel: 'email',
-        recipient: to,
-        status: 'failed',
-        provider: 'resend',
-        fehler: error,
-      })
-      return false
-    }
-    await protokolliere(zustellung, {
-      channel: 'email',
-      recipient: to,
-      status: 'sent',
-      provider: 'resend',
-      providerMessageId: data?.id ?? null,
-    })
-    return true
-  } catch (err) {
-    log.errorWithException('sendEmailNotification error', err)
-    await protokolliere(zustellung, {
-      channel: 'email',
-      recipient: to,
-      status: 'failed',
-      provider: 'resend',
-      fehler: err,
-    })
-    return false
-  }
+  const ergebnis = await sendEmailNotificationErgebnis(to, recipientName, subject, bodyHtml, zustellung)
+  return ergebnis.ok
 }
 
 // ─── Email mit Anhang / freiem HTML ───
@@ -338,164 +302,91 @@ export async function sendRawEmail(params: RawEmailParams): Promise<RawEmailErge
   }
 }
 
-// ─── Booking: Neue Buchung → Engel benachrichtigen ───
+// ─── Booking: Versandweg je Ereignis ───
+//
+// Die drei Funktionen unterscheiden sich nur noch in Ereignis und
+// Empfaenger — der Text kommt aus baueBuchungsNachricht(). Genau
+// dieselbe Quelle benutzt der Wiederholungslauf
+// (lib/notifications/vorgaenge/buchung.ts), damit ein Nachversand nicht
+// anders aussieht als der Erstversand.
+
+async function versendeBuchungsereignis(
+  supabase: SupabaseClient,
+  art: BuchungsArt,
+  empfaengerId: string,
+  data: BookingNotifyData,
+  grund: string | null,
+  zustellung?: ZustellKontext
+): Promise<void> {
+  const spur = buchungsKontext(zustellung, art, data.bookingId, empfaengerId)
+  const nachricht = baueBuchungsNachricht(art, data, grund)
+
+  // 1. In-App
+  await createNotification(supabase, {
+    userId: empfaengerId,
+    type: nachricht.inApp.type,
+    title: nachricht.inApp.title,
+    body: nachricht.inApp.body,
+    link: nachricht.inApp.link,
+    data: nachricht.inApp.data,
+  }, spur)
+
+  // 2. E-Mail
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('email, first_name')
+    .eq('id', empfaengerId)
+    .single()
+
+  if (profile?.email) {
+    await sendEmailNotification(
+      profile.email,
+      esc(profile.first_name || nachricht.email.anredeFallback),
+      nachricht.email.subject,
+      nachricht.email.html,
+      spur
+    )
+
+    await supabase.from('notifications')
+      .update({ email_sent: true })
+      .eq('user_id', empfaengerId)
+      .eq('data->>bookingId', data.bookingId)
+      .eq('title', nachricht.inApp.title)
+  }
+
+  // 3. Web Push
+  await sendPushToUser(empfaengerId, nachricht.push, spur)
+    .catch((err) => log.errorWithException('Web Push error', err, { art }))
+
+  // 4. Native Push (FCM)
+  // Bewusst OHNE Zustellspur: der Kanalkatalog der Migration kennt nur
+  // 'push' mit Provider 'web_push'. FCM braucht einen eigenen Provider-
+  // Eintrag; bis dahin waere ein Protokolleintrag hier eine Falschaussage.
+  await sendFCMToUser(empfaengerId, nachricht.fcm)
+    .catch((err) => log.errorWithException('FCM error', err, { art }))
+}
+
+/** Neue Buchung → Engel benachrichtigen. */
 export async function notifyAngelNewBooking(
   supabase: SupabaseClient,
   angelUserId: string,
   data: BookingNotifyData,
   zustellung?: ZustellKontext
 ): Promise<void> {
-  const spur = buchungsKontext(zustellung, 'booking-neu', data.bookingId, angelUserId)
-  const dateStr = new Date(data.date).toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin', day: '2-digit', month: 'long', year: 'numeric' })
-
-  // 1. In-App Notification
-  await createNotification(supabase, {
-    userId: angelUserId,
-    type: 'booking',
-    title: 'Neue Buchungsanfrage',
-    body: `${data.customerName} möchte ${data.service} am ${dateStr} um ${data.time} Uhr buchen (${data.duration}h, ${data.amount.toFixed(2)}€).`,
-    link: `/engel/buchungen`,
-    data: { bookingId: data.bookingId },
-  }, spur)
-
-  // 2. E-Mail
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('email, first_name')
-    .eq('id', angelUserId)
-    .single()
-
-  if (profile?.email) {
-    await sendEmailNotification(
-      profile.email,
-      esc(profile.first_name || 'Engel'),
-      `Neue Buchungsanfrage von ${data.customerName}`,
-      `
-        <p>Sie haben eine neue Buchungsanfrage erhalten:</p>
-        <table style="width:100%;border-collapse:collapse;margin:16px 0;">
-          <tr><td style="padding:8px 12px;border-bottom:1px solid #eee;color:#888;width:120px;">Kunde</td><td style="padding:8px 12px;border-bottom:1px solid #eee;font-weight:600;">${esc(data.customerName)}</td></tr>
-          <tr><td style="padding:8px 12px;border-bottom:1px solid #eee;color:#888;">Leistung</td><td style="padding:8px 12px;border-bottom:1px solid #eee;">${esc(data.service)}</td></tr>
-          <tr><td style="padding:8px 12px;border-bottom:1px solid #eee;color:#888;">Datum</td><td style="padding:8px 12px;border-bottom:1px solid #eee;">${dateStr}</td></tr>
-          <tr><td style="padding:8px 12px;border-bottom:1px solid #eee;color:#888;">Uhrzeit</td><td style="padding:8px 12px;border-bottom:1px solid #eee;">${esc(data.time)} Uhr</td></tr>
-          <tr><td style="padding:8px 12px;border-bottom:1px solid #eee;color:#888;">Dauer</td><td style="padding:8px 12px;border-bottom:1px solid #eee;">${data.duration} Stunden</td></tr>
-          <tr><td style="padding:8px 12px;color:#888;">Betrag</td><td style="padding:8px 12px;font-weight:600;">${data.amount.toFixed(2)}€</td></tr>
-        </table>
-        <p>Bitte öffnen Sie die App, um die Anfrage anzunehmen oder abzulehnen.</p>
-        <a href="https://alltagsengel.care/engel/buchungen" style="display:inline-block;padding:12px 28px;background:#C9963C;color:#1A1612;text-decoration:none;border-radius:10px;font-weight:600;margin-top:8px;">Anfrage ansehen</a>
-      `,
-      spur
-    )
-
-    // Mark email_sent
-    await supabase.from('notifications')
-      .update({ email_sent: true })
-      .eq('user_id', angelUserId)
-      .eq('data->>bookingId', data.bookingId)
-      .eq('title', 'Neue Buchungsanfrage')
-  }
-
-  // 3. Web Push Notification
-  await sendPushToUser(angelUserId, {
-    title: 'Neue Buchungsanfrage',
-    body: `${data.customerName} möchte ${data.service} am ${dateStr} um ${data.time} Uhr buchen.`,
-    tag: `booking-${data.bookingId}`,
-    url: '/engel/buchungen',
-    actions: [
-      { action: 'open', title: 'Ansehen' },
-    ],
-  }, spur).catch((err) => log.errorWithException('Web Push to angel error', err))
-
-  // 4. Native Push (FCM) Notification
-  // Bewusst OHNE Zustellspur: der Kanalkatalog der Migration kennt nur
-  // 'push' mit Provider 'web_push'. FCM braucht einen eigenen Provider-
-  // Eintrag; bis dahin waere ein Protokolleintrag hier eine Falschaussage.
-  await sendFCMToUser(angelUserId, {
-    title: 'Neue Buchungsanfrage',
-    body: `${data.customerName} möchte ${data.service} am ${dateStr} um ${data.time} Uhr buchen.`,
-    tag: `booking-${data.bookingId}`,
-    url: '/engel/buchungen',
-  }).catch((err) => log.errorWithException('FCM to angel error', err))
+  await versendeBuchungsereignis(supabase, 'booking-neu', angelUserId, data, null, zustellung)
 }
 
-// ─── Booking: Engel hat angenommen → Kunde benachrichtigen ───
+/** Engel hat angenommen → Kunde benachrichtigen. */
 export async function notifyCustomerBookingAccepted(
   supabase: SupabaseClient,
   customerId: string,
   data: BookingNotifyData,
   zustellung?: ZustellKontext
 ): Promise<void> {
-  const spur = buchungsKontext(zustellung, 'booking-zusage', data.bookingId, customerId)
-  const dateStr = new Date(data.date).toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin', day: '2-digit', month: 'long', year: 'numeric' })
-
-  // 1. In-App Notification
-  await createNotification(supabase, {
-    userId: customerId,
-    type: 'booking',
-    title: 'Buchung bestätigt!',
-    body: `${data.angelName} hat Ihre Buchung für ${data.service} am ${dateStr} angenommen.`,
-    link: `/kunde/bestaetigt/${data.bookingId}`,
-    data: { bookingId: data.bookingId },
-  }, spur)
-
-  // 2. E-Mail
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('email, first_name')
-    .eq('id', customerId)
-    .single()
-
-  if (profile?.email) {
-    await sendEmailNotification(
-      profile.email,
-      esc(profile.first_name || 'Kunde'),
-      `${data.angelName} hat Ihre Buchung bestätigt`,
-      `
-        <p>Gute Nachrichten! Ihr Termin wurde bestätigt:</p>
-        <table style="width:100%;border-collapse:collapse;margin:16px 0;">
-          <tr><td style="padding:8px 12px;border-bottom:1px solid #eee;color:#888;width:120px;">Engel</td><td style="padding:8px 12px;border-bottom:1px solid #eee;font-weight:600;">${esc(data.angelName)}</td></tr>
-          <tr><td style="padding:8px 12px;border-bottom:1px solid #eee;color:#888;">Leistung</td><td style="padding:8px 12px;border-bottom:1px solid #eee;">${esc(data.service)}</td></tr>
-          <tr><td style="padding:8px 12px;border-bottom:1px solid #eee;color:#888;">Datum</td><td style="padding:8px 12px;border-bottom:1px solid #eee;">${dateStr}</td></tr>
-          <tr><td style="padding:8px 12px;border-bottom:1px solid #eee;color:#888;">Uhrzeit</td><td style="padding:8px 12px;border-bottom:1px solid #eee;">${esc(data.time)} Uhr</td></tr>
-          <tr><td style="padding:8px 12px;border-bottom:1px solid #eee;color:#888;">Dauer</td><td style="padding:8px 12px;border-bottom:1px solid #eee;">${data.duration} Stunden</td></tr>
-          <tr><td style="padding:8px 12px;color:#888;">Betrag</td><td style="padding:8px 12px;font-weight:600;">${data.amount.toFixed(2)}€</td></tr>
-        </table>
-        <div style="background:#F0EBE0;border-radius:10px;padding:14px 18px;margin:16px 0;">
-          <strong>Versicherungsschutz aktiv</strong><br/>
-          Haftpflicht bis 5 Mio. € · Unfallversicherung · Sachschäden bis 50.000€
-        </div>
-        <a href="https://alltagsengel.care/kunde/bestaetigt/${data.bookingId}" style="display:inline-block;padding:12px 28px;background:#2D8F5E;color:#fff;text-decoration:none;border-radius:10px;font-weight:600;margin-top:8px;">Buchung ansehen</a>
-      `,
-      spur
-    )
-
-    await supabase.from('notifications')
-      .update({ email_sent: true })
-      .eq('user_id', customerId)
-      .eq('data->>bookingId', data.bookingId)
-      .eq('title', 'Buchung bestätigt!')
-  }
-
-  // 3. Web Push Notification
-  await sendPushToUser(customerId, {
-    title: 'Buchung bestätigt!',
-    body: `${data.angelName} hat Ihre Buchung für ${data.service} am ${dateStr} angenommen.`,
-    tag: `booking-confirmed-${data.bookingId}`,
-    url: `/kunde/bestaetigt/${data.bookingId}`,
-    actions: [
-      { action: 'open', title: 'Ansehen' },
-    ],
-  }, spur).catch((err) => log.errorWithException('Web Push to customer error', err))
-
-  // 4. Native Push (FCM) Notification
-  await sendFCMToUser(customerId, {
-    title: 'Buchung bestätigt!',
-    body: `${data.angelName} hat Ihre Buchung für ${data.service} am ${dateStr} angenommen.`,
-    tag: `booking-confirmed-${data.bookingId}`,
-    url: `/kunde/bestaetigt/${data.bookingId}`,
-  }).catch((err) => log.errorWithException('FCM to customer error', err))
+  await versendeBuchungsereignis(supabase, 'booking-zusage', customerId, data, null, zustellung)
 }
 
-// ─── Booking: Engel hat abgelehnt → Kunde benachrichtigen ───
+/** Engel hat abgelehnt → Kunde benachrichtigen. */
 export async function notifyCustomerBookingDeclined(
   supabase: SupabaseClient,
   customerId: string,
@@ -503,71 +394,7 @@ export async function notifyCustomerBookingDeclined(
   reason?: string | null,
   zustellung?: ZustellKontext
 ): Promise<void> {
-  const spur = buchungsKontext(zustellung, 'booking-absage', data.bookingId, customerId)
-  const dateStr = new Date(data.date).toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin', day: '2-digit', month: 'long', year: 'numeric' })
-  const reasonText = reason ? ` Grund: ${reason}` : ''
-
-  // 1. In-App Notification
-  await createNotification(supabase, {
-    userId: customerId,
-    type: 'booking',
-    title: 'Anfrage abgelehnt',
-    body: `${data.angelName} kann Ihre Anfrage für ${data.service} am ${dateStr} leider nicht annehmen.${reasonText} Wir finden gerne einen anderen Engel für Sie.`,
-    link: `/kunde/home`,
-    data: { bookingId: data.bookingId },
-  }, spur)
-
-  // 2. E-Mail
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('email, first_name')
-    .eq('id', customerId)
-    .single()
-
-  if (profile?.email) {
-    await sendEmailNotification(
-      profile.email,
-      esc(profile.first_name || 'Kunde'),
-      `Ihre Anfrage vom ${dateStr} konnte nicht angenommen werden`,
-      `
-        <p>leider kann ${esc(data.angelName)} Ihre Anfrage nicht annehmen:</p>
-        <table style="width:100%;border-collapse:collapse;margin:16px 0;">
-          <tr><td style="padding:8px 12px;border-bottom:1px solid #eee;color:#888;width:120px;">Leistung</td><td style="padding:8px 12px;border-bottom:1px solid #eee;">${esc(data.service)}</td></tr>
-          <tr><td style="padding:8px 12px;border-bottom:1px solid #eee;color:#888;">Datum</td><td style="padding:8px 12px;border-bottom:1px solid #eee;">${dateStr}</td></tr>
-          <tr><td style="padding:8px 12px;color:#888;">Uhrzeit</td><td style="padding:8px 12px;">${esc(data.time)} Uhr</td></tr>
-        </table>
-        ${reason ? `<p style="color:#666;">Begründung: ${esc(reason)}</p>` : ''}
-        <p>Das ist kein Problem — es stehen weitere Engel in Ihrer Nähe zur Verfügung. Suchen Sie einfach einen neuen Termin aus.</p>
-        <a href="https://alltagsengel.care/kunde/home" style="display:inline-block;padding:12px 28px;background:#C9963C;color:#1A1612;text-decoration:none;border-radius:10px;font-weight:600;margin-top:8px;">Anderen Engel finden</a>
-      `,
-      spur
-    )
-
-    await supabase.from('notifications')
-      .update({ email_sent: true })
-      .eq('user_id', customerId)
-      .eq('data->>bookingId', data.bookingId)
-      .eq('title', 'Anfrage abgelehnt')
-  }
-
-  // 3. Web Push Notification
-  await sendPushToUser(customerId, {
-    title: 'Anfrage abgelehnt',
-    body: `${data.angelName} kann Ihre Anfrage für ${dateStr} leider nicht annehmen. Jetzt anderen Engel finden.`,
-    tag: `booking-declined-${data.bookingId}`,
-    url: '/kunde/home',
-    actions: [
-      { action: 'open', title: 'Anderen Engel finden' },
-    ],
-  }, spur).catch((err) => log.errorWithException('Web Push to customer error', err))
-
-  // 4. Native Push (FCM) Notification
-  await sendFCMToUser(customerId, {
-    title: 'Anfrage abgelehnt',
-    body: `${data.angelName} kann Ihre Anfrage für ${dateStr} leider nicht annehmen.`,
-    tag: `booking-declined-${data.bookingId}`,
-    url: '/kunde/home',
-  }).catch((err) => log.errorWithException('FCM to customer error', err))
+  await versendeBuchungsereignis(supabase, 'booking-absage', customerId, data, reason ?? null, zustellung)
 }
 
 // ─── Email Template Wrapper ───

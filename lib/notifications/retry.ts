@@ -45,8 +45,14 @@ export const MAX_VERSUCHE = 5
  * Index 0 = nach dem 1. Fehlversuch. Der letzte Wert gilt fuer alles
  * darueber hinaus. Exponentiell, damit ein laengerer Provider-Ausfall
  * nicht zu Hunderten Versuchen fuehrt.
+ *
+ * Die erste Minute faengt den haeufigsten Fall ab — eine kurze Stoerung
+ * beim Provider —, ohne dass die Nachricht eine Viertelstunde liegt.
+ * Ueber alle vier Wartezeiten summiert sich der Weg bis zum Dead Letter
+ * auf gut 5 Stunden; das ist der Zeitraum, in dem ein Provider-Ausfall
+ * ueblicherweise behoben ist.
  */
-const WARTEZEIT_MINUTEN = [5, 15, 60, 240] as const
+const WARTEZEIT_MINUTEN = [1, 5, 15, 60, 240] as const
 
 export function wartezeitMinuten(bisherigeVersuche: number): number {
   if (bisherigeVersuche < 1) return 0
@@ -296,6 +302,9 @@ export async function sendeIdempotent(params: IdempotentParams): Promise<Idempot
 
 export interface OffeneZustellung {
   id: string
+  organizationId: string
+  /** 'queued' = Erstversand haengt, 'failed' = Versuch ist gescheitert. */
+  status: 'queued' | 'failed'
   channel: ZustellKanal
   recipient: string
   correlationId: string | null
@@ -303,9 +312,26 @@ export interface OffeneZustellung {
   attemptCount: number
   sanitizedError: string | null
   createdAt: string
+  /** Zeitpunkt des letzten echten Versuchs (attempted_at, sonst created_at). */
+  letzterVersuch: string | null
   wiederholbarAb: string | null
   aufgegeben: boolean
+  /**
+   * Vorgangsbezug. Ohne `vorgangArt` kann der Wiederholungslauf diese
+   * Zustellung nicht neu ausloesen — das Protokoll enthaelt keinen
+   * Nachrichteninhalt. Null bei Zeilen aus der Zeit vor Migration
+   * 20260927000000 und bei Kanaelen ohne registrierten Vorgang.
+   */
+  vorgangArt: string | null
+  vorgangRef: string | null
+  vorgangEmpfaenger: string | null
 }
+
+/** Spalten der Erweiterung 20260927000000 — separat, weil sie fehlen koennen. */
+const VORGANGS_SPALTEN = 'vorgang_art, vorgang_ref, vorgang_empfaenger'
+const BASIS_SPALTEN =
+  'id, organization_id, channel, recipient, correlation_id, notification_id, ' +
+  'attempt_count, sanitized_error, created_at, attempted_at, status'
 
 /**
  * Alle Vorgaenge, die auf ihrem Kanal noch nicht zugestellt sind.
@@ -313,6 +339,18 @@ export interface OffeneZustellung {
  * Grundlage fuer die Betriebsansicht und fuer Wiederholungslaeufe: die
  * correlation_id sagt dem Aufrufer, welchen fachlichen Vorgang er erneut
  * anstossen muss.
+ *
+ * DREI FILTER, DIE NICHT OFFENSICHTLICH SIND
+ *   1. Ein Vorgang, der auf demselben Kanal spaeter doch geklappt hat,
+ *      ist nicht offen — die Erfolgszeilen werden nachgeladen.
+ *   2. Ein Vorgang, der bereits im Dead Letter liegt (skipped-Zeile mit
+ *      `grund`), ist erledigt. Ohne diesen Filter wuerde der
+ *      Wiederholungslauf ihn in jeder Runde erneut anfassen: die
+ *      Fehlversuche bleiben ja als failed-Zeilen stehen.
+ *   3. Kennt die Datenbank die Vorgangsspalten noch nicht (Migration
+ *      20260927000000 nicht eingespielt), wird ohne sie gelesen. Die
+ *      Betriebsansicht funktioniert dann weiter, nur der
+ *      Wiederholungslauf verweigert den Dienst (siehe retry-worker.ts).
  */
 export async function offeneZustellungen(
   organizationId: string,
@@ -321,16 +359,21 @@ export async function offeneZustellungen(
   const client = await holeClient(optionen.admin)
   if (!client) return []
 
-  try {
-    const { data, error } = await client
+  async function lade(mitVorgang: boolean) {
+    return client!
       .from('notification_delivery_log')
-      .select(
-        'id, channel, recipient, correlation_id, notification_id, attempt_count, sanitized_error, created_at, attempted_at, status'
-      )
+      .select(mitVorgang ? `${BASIS_SPALTEN}, ${VORGANGS_SPALTEN}` : BASIS_SPALTEN)
       .eq('organization_id', organizationId)
       .in('status', ['queued', 'failed'])
       .order('created_at', { ascending: false })
       .limit(optionen.limit ?? 200)
+  }
+
+  try {
+    let { data, error } = await lade(true)
+    if (error?.code === '42703') {
+      ;({ data, error } = await lade(false))
+    }
 
     if (error || !data) {
       if (error) {
@@ -339,12 +382,15 @@ export async function offeneZustellungen(
       return []
     }
 
-    // Ein Vorgang, der auf demselben Kanal spaeter doch geklappt hat, ist
-    // nicht offen. Die Erfolgszeilen werden hier nachgeladen und die
-    // betroffenen Schluessel herausgefiltert.
-    const korrelationen = data
-      .map(z => z.correlation_id as string | null)
-      .filter((v): v is string => typeof v === 'string')
+    const zeilen = data as unknown as Array<Record<string, unknown>>
+
+    const korrelationen = Array.from(
+      new Set(
+        zeilen
+          .map(z => z.correlation_id as string | null)
+          .filter((v): v is string => typeof v === 'string')
+      )
+    )
 
     const erledigt = new Set<string>()
     if (korrelationen.length > 0) {
@@ -353,13 +399,27 @@ export async function offeneZustellungen(
         .select('correlation_id, channel')
         .eq('organization_id', organizationId)
         .in('status', ['sent', 'delivered'])
-        .in('correlation_id', Array.from(new Set(korrelationen)))
+        .in('correlation_id', korrelationen)
       for (const e of erfolge ?? []) {
         erledigt.add(`${e.correlation_id}:${e.channel}`)
       }
+
+      // Dead Letter: skipped-Zeile mit gesetztem Grund. Fehlt die Spalte,
+      // gibt es auch keine Dead-Letter-Zeilen — dann bleibt die Menge leer.
+      const { data: tot, error: totFehler } = await client
+        .from('notification_delivery_log')
+        .select('correlation_id, channel, grund')
+        .eq('organization_id', organizationId)
+        .eq('status', 'skipped')
+        .in('correlation_id', korrelationen)
+      if (!totFehler) {
+        for (const t of tot ?? []) {
+          if (t.grund) erledigt.add(`${t.correlation_id}:${t.channel}`)
+        }
+      }
     }
 
-    return data
+    return zeilen
       .filter(z => !erledigt.has(`${z.correlation_id}:${z.channel}`))
       .map(z => {
         const versuche = (z.attempt_count as number) ?? 1
@@ -369,6 +429,8 @@ export async function offeneZustellungen(
           : null
         return {
           id: z.id as string,
+          organizationId: (z.organization_id as string) ?? organizationId,
+          status: z.status as 'queued' | 'failed',
           channel: z.channel as ZustellKanal,
           recipient: z.recipient as string,
           correlationId: (z.correlation_id as string | null) ?? null,
@@ -376,8 +438,12 @@ export async function offeneZustellungen(
           attemptCount: versuche,
           sanitizedError: (z.sanitized_error as string | null) ?? null,
           createdAt: z.created_at as string,
+          letzterVersuch: basis ?? null,
           wiederholbarAb,
           aufgegeben: versuche >= MAX_VERSUCHE,
+          vorgangArt: (z.vorgang_art as string | null) ?? null,
+          vorgangRef: (z.vorgang_ref as string | null) ?? null,
+          vorgangEmpfaenger: (z.vorgang_empfaenger as string | null) ?? null,
         }
       })
   } catch (err) {

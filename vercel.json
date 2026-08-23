@@ -6,6 +6,10 @@
   },
   "crons": [
     {
+      "path": "/api/cron/zustellung-retry",
+      "schedule": "*/5 * * * *"
+    },
+    {
       "path": "/api/cron/automatisierung",
       "schedule": "0 5 * * *"
     },
