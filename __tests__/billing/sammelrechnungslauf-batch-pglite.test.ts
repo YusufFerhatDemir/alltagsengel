@@ -127,7 +127,7 @@ describe('PGlite: Sammelrechnungslauf-Haertung', () => {
     `)
 
     await db.exec(fs.readFileSync(path.join(MIGRATIONS_DIR, MIGRATION), 'utf-8'))
-  }, 60000)
+  }, 120000)
 
   afterAll(async () => {
     await db?.close()
@@ -644,5 +644,5 @@ describe('PGlite: Sammelrechnungslauf-Haertung', () => {
       [ORG_A, KLIENT_1] as never[],
     )
     await db2.close()
-  }, 60000)
+  }, 120000)
 })

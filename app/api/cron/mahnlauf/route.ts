@@ -57,6 +57,7 @@ export async function GET(request: Request) {
     let blockiertGesamt = 0
     let versendetGesamt = 0
     let storniertGesamt = 0
+    let aufgegebenGesamt = 0
 
     for (const org of orgs || []) {
       try {
@@ -81,15 +82,23 @@ export async function GET(request: Request) {
             const q = await verarbeiteMahnQueue(supabaseAdmin, {
               organizationId: org.id,
               actorId: org.id,
+              // Faellige Fehlversuche werden mitgenommen. Ohne das blieb
+              // jede einmal gescheiterte Mahnung fuer immer liegen —
+              // reaktiviereFehlgeschlagene() haelt Obergrenze und
+              // Wartezeit ein, ein Dead Letter kommt nicht zurueck.
+              wiederholen: true,
             })
             versendetGesamt += q.versendet
             storniertGesamt += q.storniert
+            aufgegebenGesamt += q.aufgegeben
             eintrag.versand = {
               geprueft: q.geprueft,
               versendet: q.versendet,
               storniert: q.storniert,
               fehlgeschlagen: q.fehlgeschlagen,
+              aufgegeben: q.aufgegeben,
               uebersprungen: q.uebersprungen,
+              reaktiviert: q.reaktiviert,
             }
           } catch (versandErr) {
             eintrag.versandFehler = versandErr instanceof Error ? versandErr.message : String(versandErr)
@@ -112,7 +121,15 @@ export async function GET(request: Request) {
       eskaliert: eskaliertGesamt,
       blockiert: blockiertGesamt,
       versand: versandAktiv
-        ? { aktiv: true, versendet: versendetGesamt, storniert: storniertGesamt }
+        ? {
+            aktiv: true,
+            versendet: versendetGesamt,
+            storniert: storniertGesamt,
+            // Dead Letter: diese Mahnungen gehen nie mehr raus. Steht im
+            // Cron-Ergebnis, damit ein Anstieg im Betriebsprotokoll
+            // auffaellt, statt in der Queue zu verstauben.
+            aufgegeben: aufgegebenGesamt,
+          }
         : {
             aktiv: false,
             hinweis: 'MAHNVERSAND_AUTOMATISCH ist nicht gesetzt — Queue wurde nur befüllt.',

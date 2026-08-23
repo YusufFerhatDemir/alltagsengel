@@ -238,7 +238,11 @@ describe('PGlite: Rollenmodell gegen zwei Mandanten', () => {
       INSERT INTO public.audit_logs (organization_id, aktion) VALUES
         ('${ORG_A}','anlegen'), ('${ORG_B}','anlegen');
     `)
-  }, 60000)
+    // Explizit 120s statt der frueheren 60s: der Aufbau spielt mehrere
+    // Migrationen in ein WASM-Postgres ein und teilt sich die Maschine
+    // im Gesamtlauf inzwischen mit deutlich mehr PGlite-Suiten.
+    // Entspricht dem hookTimeout aus vitest.config.ts.
+  }, 120000)
 
   afterAll(async () => {
     await db?.close()

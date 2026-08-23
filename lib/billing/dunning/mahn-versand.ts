@@ -18,10 +18,26 @@
 //      war. Damit kann dieselbe Mahnung nicht doppelt rausgehen.
 //   3. VERSAND mit PDF-Anhang (erzeugeMahnungPdf).
 //   4. Bei Fehlschlag rollt rollbackAnspruch() den eigenen Anspruch
-//      zurueck: ohne RESEND_API_KEY zurueck auf 'wartend' (der Eintrag ist
-//      nicht verbrannt), bei einer Provider-Ablehnung auf
-//      'fehlgeschlagen' (wird bewusst NICHT automatisch wiederholt —
-//      dafuer gibt es `wiederholen: true`).
+//      zurueck — mit einer der drei moeglichen Landungen:
+//        'wartend'      Es wurde gar nicht gesendet (kein RESEND_API_KEY).
+//                       Der Versuch zaehlt NICHT mit; eine fehlende
+//                       Umgebungsvariable darf kein Kontingent verbrennen.
+//        'fehlgeschlagen' Voruebergehender Fehler. `versuche` ist erhoeht,
+//                       `naechster_versuch_ab` traegt die Wartezeit.
+//        'aufgegeben'   Dead Letter — Endzustand. Erreicht bei einem
+//                       dauerhaften Fehler (ungueltige Adresse, Hard
+//                       Bounce) sofort, sonst nach MAX_VERSUCHE.
+//
+// WIEDERHOLUNG. verarbeiteMahnQueue({ wiederholen: true }) holt vor dem
+// Lauf die faelligen 'fehlgeschlagen'-Zeilen zurueck auf 'wartend' —
+// faellig heisst: versuche < MAX_VERSUCHE UND naechster_versuch_ab
+// erreicht. Der Mahn-Cron ruft mit `wiederholen: true` auf; ohne das
+// blieb frueher jede einmal gescheiterte Mahnung fuer immer liegen.
+// Fehlerklassen und Wartezeitstaffel kommen aus dem Zustellweg der
+// Benachrichtigungen (lib/notifications/retry.ts, fehlerklassen.ts) —
+// eine Quelle, zwei Nutzer, kein zweiter Satz Konstanten.
+//
+// Schema: 20261001000000_mahnqueue_retry_dead_letter.sql
 // ═══════════════════════════════════════════════════════════════
 
 import type { SupabaseClient } from '@supabase/supabase-js'
@@ -30,6 +46,8 @@ import { checkDunningBlocks, DUNNING_LABELS, type DunningLevel } from '../core/d
 import { baueMahnungData } from './mahnung-pdf'
 import { erzeugeMahnungPdf, hatMahnText, mahnungDateiname } from './mahnung-pdf-datei'
 import { sendRawEmail } from '@/lib/notifications'
+import { istDauerhaft } from '@/lib/notifications/fehlerklassen'
+import { MAX_VERSUCHE, wartezeitMinuten } from '@/lib/notifications/retry'
 import { logger } from '@/lib/logger'
 
 const log = logger.child('mahn-versand')
@@ -38,7 +56,20 @@ const log = logger.child('mahn-versand')
 // Queue-Zugriff
 // ---------------------------------------------------------------------------
 
-export type MahnmailStatus = 'wartend' | 'versendet' | 'fehlgeschlagen' | 'storniert'
+/**
+ * Obergrenze der Versuche je Queue-Zeile. Bewusst derselbe Wert wie im
+ * Zustellweg der Benachrichtigungen — beide Wege beschreiben dieselbe
+ * Sache und sollen sich nicht auseinanderentwickeln.
+ */
+export const MAHN_MAX_VERSUCHE = MAX_VERSUCHE
+
+export type MahnmailStatus =
+  | 'wartend'
+  | 'versendet'
+  | 'fehlgeschlagen'
+  /** Dead Letter — Endzustand, wird von keinem Lauf mehr aufgegriffen. */
+  | 'aufgegeben'
+  | 'storniert'
 
 export interface MahnmailEintrag {
   id: string
@@ -53,13 +84,17 @@ export interface MahnmailEintrag {
   status: MahnmailStatus
   fehler_details: string | null
   versendet_am: string | null
+  versuche: number
+  letzter_versuch_am: string | null
+  naechster_versuch_ab: string | null
   created_at: string
 }
 
 const QUEUE_SPALTEN =
   'id, organization_id, invoice_id, dunning_entry_id, dunning_document_id, ' +
   'empfaenger_email, empfaenger_name, betreff, inhalt, status, ' +
-  'fehler_details, versendet_am, created_at'
+  'fehler_details, versendet_am, versuche, letzter_versuch_am, ' +
+  'naechster_versuch_ab, created_at'
 
 /**
  * Wartende Mahn-E-Mails einer Organisation, aelteste zuerst.
@@ -112,13 +147,26 @@ async function setzeQueueStatus(
 /**
  * Beansprucht einen Eintrag, indem er VOR dem Senden auf 'versendet'
  * gesetzt wird. false ⇒ ein anderer Lauf war schneller.
+ *
+ * Der Versuchszaehler wird HIER erhoeht, nicht erst beim Ergebnis: der
+ * Anspruch ist der einzige Punkt im Ablauf, an dem genau ein Lauf
+ * gewinnt. Ein Absturz zwischen Anspruch und Versand hinterlaesst so
+ * einen gezaehlten Versuch statt einer Zeile, die ewig neu anlaeuft.
+ * Ein uebersprungener Lauf nimmt die Erhoehung wieder zurueck
+ * (rollbackAnspruch mit Ziel 'wartend').
  */
 function beanspruche(
   supabase: SupabaseClient,
   id: string,
   versendetAm: string,
+  versucheNeu: number,
 ): Promise<boolean> {
-  return setzeQueueStatus(supabase, id, 'versendet', { versendet_am: versendetAm, fehler_details: null })
+  return setzeQueueStatus(supabase, id, 'versendet', {
+    versendet_am: versendetAm,
+    fehler_details: null,
+    versuche: versucheNeu,
+    letzter_versuch_am: versendetAm,
+  })
 }
 
 /** Eintrag stornieren (Rechnung bezahlt, Mahnung zurueckgenommen). */
@@ -143,12 +191,19 @@ async function rollbackAnspruch(
   supabase: SupabaseClient,
   id: string,
   versendetAm: string,
-  ziel: 'wartend' | 'fehlgeschlagen',
+  ziel: 'wartend' | 'fehlgeschlagen' | 'aufgegeben',
   grund: string,
+  zaehler: { versuche: number; naechsterVersuchAb: string | null },
 ): Promise<boolean> {
   const { data, error } = await supabase
     .from('dunning_email_queue')
-    .update({ status: ziel, versendet_am: null, fehler_details: grund.slice(0, 2000) })
+    .update({
+      status: ziel,
+      versendet_am: null,
+      fehler_details: grund.slice(0, 2000),
+      versuche: zaehler.versuche,
+      naechster_versuch_ab: zaehler.naechsterVersuchAb,
+    })
     .eq('id', id)
     .eq('status', 'versendet')
     .eq('versendet_am', versendetAm)
@@ -159,24 +214,126 @@ async function rollbackAnspruch(
 }
 
 /**
- * Stellt fehlgeschlagene Eintraege einer Organisation wieder auf 'wartend'.
+ * Entscheidet, wo ein gescheiterter Versuch landet.
  *
- * Ausdruecklich manuell: die Queue wiederholt von sich aus nichts. Gedacht
- * fuer den Fall „Ursache behoben" — etwa ein nachgetragener
- * RESEND_API_KEY oder eine korrigierte E-Mail-Adresse.
+ * Ein dauerhafter Fehler (ungueltige Adresse, Hard Bounce) geht sofort
+ * ins Dead Letter — vier weitere Versuche an eine Adresse, die es nicht
+ * gibt, kosten nur Zeit. Sonst gilt die Obergrenze.
+ */
+export function bewerteMahnFehlschlag(
+  fehler: unknown,
+  versucheNeu: number,
+  jetzt: Date = new Date(),
+): { ziel: 'fehlgeschlagen' | 'aufgegeben'; naechsterVersuchAb: string | null; grund: string } {
+  if (istDauerhaft(fehler)) {
+    return {
+      ziel: 'aufgegeben',
+      naechsterVersuchAb: null,
+      grund: 'dauerhaft unzustellbar',
+    }
+  }
+  if (versucheNeu >= MAHN_MAX_VERSUCHE) {
+    return {
+      ziel: 'aufgegeben',
+      naechsterVersuchAb: null,
+      grund: `Obergrenze erreicht (${versucheNeu} von ${MAHN_MAX_VERSUCHE} Versuchen)`,
+    }
+  }
+  const wartenMs = wartezeitMinuten(versucheNeu) * 60_000
+  return {
+    ziel: 'fehlgeschlagen',
+    naechsterVersuchAb: new Date(jetzt.getTime() + wartenMs).toISOString(),
+    grund: `Versuch ${versucheNeu} von ${MAHN_MAX_VERSUCHE}`,
+  }
+}
+
+/**
+ * Holt die FAELLIGEN fehlgeschlagenen Eintraege einer Organisation
+ * zurueck auf 'wartend'.
+ *
+ * Faellig heisst beides zugleich:
+ *   • versuche < MAHN_MAX_VERSUCHE — was die Obergrenze erreicht hat,
+ *     steht auf 'aufgegeben' und wird hier ohnehin nicht gefunden;
+ *     die Bedingung faengt Altbestand ab, der vor der Migration
+ *     20261001000000 auf 'fehlgeschlagen' stehengeblieben ist.
+ *   • naechster_versuch_ab erreicht — sonst wuerde ein Lauf im
+ *     Minutentakt die Wartezeit aushebeln.
+ *
+ * Zeilen ohne naechster_versuch_ab (Altbestand) gelten als faellig.
+ * Sie werden in einem zweiten Durchgang geholt, weil `.or()` im
+ * PostgREST-Builder eine andere Filtersprache benutzt als der Rest
+ * dieser Datei — zwei klare Abfragen sind hier leichter zu pruefen
+ * als eine verschachtelte.
+ *
+ * Ein Dead Letter kommt hierueber NICHT zurueck. Das ist der Sinn eines
+ * Endzustands: er endet nur durch eine ausdrueckliche Entscheidung der
+ * Verwaltung (reaktiviereAufgegebene).
  */
 export async function reaktiviereFehlgeschlagene(
   supabase: SupabaseClient,
   organizationId: string,
+  jetzt: Date = new Date(),
 ): Promise<number> {
-  const { data, error } = await supabase
+  const stempel = jetzt.toISOString()
+  let anzahl = 0
+
+  const faellig = await supabase
     .from('dunning_email_queue')
     .update({ status: 'wartend', fehler_details: null })
     .eq('organization_id', organizationId)
     .eq('status', 'fehlgeschlagen')
+    .lt('versuche', MAHN_MAX_VERSUCHE)
+    .lte('naechster_versuch_ab', stempel)
     .select('id')
 
-  if (error) throw new Error(`Fehlgeschlagene Mahnmails nicht reaktivierbar: ${error.message}`)
+  if (faellig.error) {
+    throw new Error(`Fehlgeschlagene Mahnmails nicht reaktivierbar: ${faellig.error.message}`)
+  }
+  anzahl += (faellig.data ?? []).length
+
+  const ohneWartezeit = await supabase
+    .from('dunning_email_queue')
+    .update({ status: 'wartend', fehler_details: null })
+    .eq('organization_id', organizationId)
+    .eq('status', 'fehlgeschlagen')
+    .lt('versuche', MAHN_MAX_VERSUCHE)
+    .is('naechster_versuch_ab', null)
+    .select('id')
+
+  if (ohneWartezeit.error) {
+    throw new Error(`Fehlgeschlagene Mahnmails nicht reaktivierbar: ${ohneWartezeit.error.message}`)
+  }
+  anzahl += (ohneWartezeit.data ?? []).length
+
+  return anzahl
+}
+
+/**
+ * Holt Dead-Letter-Zeilen zurueck in die Warteschlange und setzt den
+ * Versuchszaehler auf 0.
+ *
+ * Nur fuer den ausdruecklichen Fall „Ursache behoben": eine korrigierte
+ * Empfaengeradresse, ein nachgetragener Schluessel. Es gibt bewusst
+ * keinen automatischen Aufrufer — sonst waere das Dead Letter kein
+ * Endzustand, sondern nur eine laengere Warteschleife.
+ */
+export async function reaktiviereAufgegebene(
+  supabase: SupabaseClient,
+  organizationId: string,
+  queueIds?: string[],
+): Promise<number> {
+  if (queueIds && queueIds.length === 0) return 0
+
+  let abfrage = supabase
+    .from('dunning_email_queue')
+    .update({ status: 'wartend', fehler_details: null, versuche: 0, naechster_versuch_ab: null })
+    .eq('organization_id', organizationId)
+    .eq('status', 'aufgegeben')
+
+  if (queueIds) abfrage = abfrage.in('id', queueIds)
+
+  const { data, error } = await abfrage.select('id')
+  if (error) throw new Error(`Aufgegebene Mahnmails nicht reaktivierbar: ${error.message}`)
   return (data ?? []).length
 }
 
@@ -195,6 +352,24 @@ export async function zaehleWartendeMahnmails(
   return count ?? 0
 }
 
+/**
+ * Anzahl aufgegebener Eintraege — die Zahl, die in der Betriebsansicht
+ * auffallen muss. Ein stilles Dead Letter ist so schlimm wie gar keins.
+ */
+export async function zaehleAufgegebeneMahnmails(
+  supabase: SupabaseClient,
+  organizationId: string,
+): Promise<number> {
+  const { count, error } = await supabase
+    .from('dunning_email_queue')
+    .select('id', { count: 'exact', head: true })
+    .eq('organization_id', organizationId)
+    .eq('status', 'aufgegeben')
+
+  if (error) throw new Error(`Dead Letter der Mahn-Warteschlange nicht zaehlbar: ${error.message}`)
+  return count ?? 0
+}
+
 // ---------------------------------------------------------------------------
 // Versand
 // ---------------------------------------------------------------------------
@@ -204,7 +379,13 @@ const ERLEDIGT_STATUS: ReadonlySet<string> = new Set([
   'bezahlt', 'akzeptiert', 'storniert', 'abgeschrieben', 'strittig', 'abgelehnt',
 ])
 
-export type MahnVersandStatus = 'versendet' | 'storniert' | 'fehlgeschlagen' | 'uebersprungen'
+export type MahnVersandStatus =
+  | 'versendet'
+  | 'storniert'
+  | 'fehlgeschlagen'
+  /** Dead Letter — dieser Eintrag wird von keinem Lauf mehr versucht. */
+  | 'aufgegeben'
+  | 'uebersprungen'
 
 export interface MahnVersandDetail {
   queueId: string
@@ -222,6 +403,8 @@ export interface MahnVersandErgebnis {
   /** Zahlung eingegangen / Mahnung blockiert → nicht versendet */
   storniert: number
   fehlgeschlagen: number
+  /** endgueltig aufgegeben (Dead Letter) — dauerhaft oder Obergrenze */
+  aufgegeben: number
   /** kein RESEND_API_KEY oder paralleler Lauf — Eintrag bleibt bearbeitbar */
   uebersprungen: number
   /** Anzahl vorab reaktivierter 'fehlgeschlagen'-Eintraege */
@@ -251,8 +434,8 @@ export async function verarbeiteMahnQueue(
 
   const ergebnis: MahnVersandErgebnis = {
     organizationId,
-    geprueft: 0, versendet: 0, storniert: 0, fehlgeschlagen: 0, uebersprungen: 0,
-    reaktiviert: 0,
+    geprueft: 0, versendet: 0, storniert: 0, fehlgeschlagen: 0, aufgegeben: 0,
+    uebersprungen: 0, reaktiviert: 0,
     details: [],
   }
 
@@ -269,6 +452,7 @@ export async function verarbeiteMahnQueue(
     if (detail.status === 'versendet') ergebnis.versendet++
     else if (detail.status === 'storniert') ergebnis.storniert++
     else if (detail.status === 'fehlgeschlagen') ergebnis.fehlgeschlagen++
+    else if (detail.status === 'aufgegeben') ergebnis.aufgegeben++
     else ergebnis.uebersprungen++
   }
 
@@ -302,8 +486,10 @@ async function verarbeiteEintrag(
   }
 
   // ── 2. Eintrag beanspruchen (at-most-once) ──
+  const versucheVorher = Number(zeile.versuche ?? 0)
+  const versucheNeu = versucheVorher + 1
   const stempel = new Date().toISOString()
-  const beansprucht = await beanspruche(admin, zeile.id, stempel)
+  const beansprucht = await beanspruche(admin, zeile.id, stempel, versucheNeu)
   if (!beansprucht) {
     // Ein paralleler Lauf war schneller — nichts tun, kein Doppelversand.
     return { ...basis, status: 'uebersprungen', grund: 'Parallel bereits verarbeitet.' }
@@ -326,19 +512,39 @@ async function verarbeiteEintrag(
         organizationId: zeile.organization_id,
         correlationId: zeile.id,
       },
+      // Laeuft ein Aufruf ins Zeitlimit, rollt rollbackAnspruch() den
+      // Eintrag auf 'fehlgeschlagen' zurueck und die Verwaltung kann ihn
+      // mit `wiederholen: true` erneut anstossen. Ohne Idempotenz-
+      // schluessel bekaeme der Kunde dann zwei Mahnungen, falls Resend
+      // den ersten Auftrag doch noch angenommen hat.
+      idempotenzSchluessel: `mahnung:${zeile.id}`,
     })
 
     if (!versand.ok) {
       // Ohne API-Key zurueck auf 'wartend' — der Eintrag darf nicht
-      // verbrannt sein, nur weil der Key noch fehlt.
-      const ziel = versand.uebersprungen ? 'wartend' : 'fehlgeschlagen'
-      await rollbackAnspruch(admin, zeile.id, stempel, ziel, versand.grund)
-      log.info('Mahnversand nicht durchgeführt', { queueId: zeile.id, ziel, grund: versand.grund })
-      return {
-        ...basis,
-        status: versand.uebersprungen ? 'uebersprungen' : 'fehlgeschlagen',
-        grund: versand.grund,
+      // verbrannt sein, nur weil der Key noch fehlt. Der Versuch wird
+      // dabei auch nicht mitgezaehlt.
+      if (versand.uebersprungen) {
+        await rollbackAnspruch(admin, zeile.id, stempel, 'wartend', versand.grund, {
+          versuche: versucheVorher,
+          naechsterVersuchAb: null,
+        })
+        log.info('Mahnversand nicht durchgeführt', {
+          queueId: zeile.id, ziel: 'wartend', grund: versand.grund,
+        })
+        return { ...basis, status: 'uebersprungen', grund: versand.grund }
       }
+
+      // Zur Einstufung geht die ganze Fehlerlage mit, nicht nur der
+      // Text: der Statuscode entscheidet ueber „dauerhaft" (400/404/410/
+      // 422) gegen „voruebergehend" (429, 5xx). Nur den Text zu
+      // uebergeben wuerde eine 400er-Adressablehnung wie eine
+      // Netzstoerung aussehen lassen.
+      return await vermerkeFehlschlag(
+        admin, zeile, stempel, versucheNeu,
+        { text: versand.grund, fehler: { statusCode: versand.statusCode, message: versand.grund } },
+        actorId,
+      )
     }
 
     await auditOderWarnen(admin, {
@@ -358,12 +564,75 @@ async function verarbeiteEintrag(
 
     return { ...basis, status: 'versendet' }
   } catch (err) {
-    const grund = err instanceof Error ? err.message : String(err)
-    await rollbackAnspruch(admin, zeile.id, stempel, 'fehlgeschlagen', grund)
-      .catch(e => log.errorWithException('Rollback des Versandanspruchs fehlgeschlagen', e, { queueId: zeile.id }))
     log.errorWithException('Mahnversand fehlgeschlagen', err, { queueId: zeile.id })
-    return { ...basis, status: 'fehlgeschlagen', grund }
+    try {
+      return await vermerkeFehlschlag(
+        admin, zeile, stempel, versucheNeu,
+        { text: err instanceof Error ? err.message : String(err), fehler: err },
+        actorId,
+      )
+    } catch (rollbackFehler) {
+      log.errorWithException('Rollback des Versandanspruchs fehlgeschlagen', rollbackFehler, {
+        queueId: zeile.id,
+      })
+      return {
+        ...basis,
+        status: 'fehlgeschlagen',
+        grund: err instanceof Error ? err.message : String(err),
+      }
+    }
   }
+}
+
+/**
+ * Schreibt einen gescheiterten Versuch fort: Zaehler, Wartezeit, und —
+ * wenn es nicht mehr weitergeht — das Dead Letter samt Audit-Eintrag.
+ *
+ * Der Audit-Eintrag steht bewusst NUR am Endzustand. Ein einzelner
+ * Fehlversuch ist Betriebsrauschen; „diese Mahnung geht nie raus" ist
+ * eine Tatsache, die im Nachhinein auffindbar sein muss.
+ */
+async function vermerkeFehlschlag(
+  admin: SupabaseClient,
+  zeile: MahnmailEintrag,
+  stempel: string,
+  versucheNeu: number,
+  lage: { text: string; fehler: unknown },
+  actorId: string,
+): Promise<MahnVersandDetail> {
+  const basis = { queueId: zeile.id, invoiceId: zeile.invoice_id, empfaenger: zeile.empfaenger_email }
+  const urteil = bewerteMahnFehlschlag(lage.fehler, versucheNeu)
+  const grund = `${lage.text} — ${urteil.grund}`
+
+  await rollbackAnspruch(admin, zeile.id, stempel, urteil.ziel, grund, {
+    versuche: versucheNeu,
+    naechsterVersuchAb: urteil.naechsterVersuchAb,
+  })
+
+  if (urteil.ziel === 'aufgegeben') {
+    await auditOderWarnen(admin, {
+      entityType: 'dunning',
+      organizationId: zeile.organization_id,
+      entityId: zeile.dunning_entry_id || zeile.id,
+      action: 'email_aufgegeben',
+      newState: {
+        queue_id: zeile.id,
+        versuche: versucheNeu,
+        max_versuche: MAHN_MAX_VERSUCHE,
+        grund: urteil.grund,
+      },
+      actorId,
+    })
+    log.error('Mahnung endgültig aufgegeben', {
+      queueId: zeile.id, versuche: versucheNeu, grund: urteil.grund,
+    })
+    return { ...basis, status: 'aufgegeben', grund }
+  }
+
+  log.info('Mahnversand fehlgeschlagen — Wiederholung vorgemerkt', {
+    queueId: zeile.id, versuche: versucheNeu, naechsterVersuchAb: urteil.naechsterVersuchAb,
+  })
+  return { ...basis, status: 'fehlgeschlagen', grund }
 }
 
 /**

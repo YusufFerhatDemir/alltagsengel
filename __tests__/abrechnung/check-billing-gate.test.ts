@@ -138,7 +138,7 @@ describe('P0-1: check_billing_gate()', () => {
     await db.exec(funktionAusMigration(REVIEW_FIXES, 'eindeutiges_bundesland_fuer_plz') + ';')
     await db.exec(funktionAusMigration(EXPANSION, 'state_flag') + ';')
     await db.exec(SEED)
-  }, 60_000)
+  }, 120_000)
 
   afterAll(async () => {
     await db?.close()
@@ -159,7 +159,7 @@ describe('P0-1: check_billing_gate()', () => {
   describe('Alter Stand (Rollback-Datei) — Nachweis des Fehlers', () => {
     beforeAll(async () => {
       await db.exec(liesMigration(ROLLBACK))
-    }, 60_000)
+    }, 120_000)
 
     it('PRIVAT geht durch (deshalb ist live nichts aufgefallen)', async () => {
       const r = await insertNachweis(CLIENT_HESSEN_A, 'PRIVAT')
@@ -177,7 +177,7 @@ describe('P0-1: check_billing_gate()', () => {
   describe('Neuer Stand (Fix-Migration)', () => {
     beforeAll(async () => {
       await db.exec(liesMigration(FIX))
-    }, 60_000)
+    }, 120_000)
 
     it('liest keine Spalte kasse_status mehr', async () => {
       const r = await db.query<{ kaputt: boolean }>(

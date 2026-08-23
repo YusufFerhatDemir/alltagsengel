@@ -682,7 +682,7 @@ describe('Sammelrechnungslauf: mehrere Nachweise ⇒ eine Rechnung', () => {
         signature_hash: 'c'.repeat(64),
       })
     }
-  }, 60000)
+  }, 120000)
 
   it('Probelauf meldet die Gruppe, ohne zu schreiben', async () => {
     const vorher = await zaehle('invoices')
@@ -866,7 +866,7 @@ describe('Mandantengrenze: der zweite Mandant sieht nichts', () => {
 
     alsAdminA = macheSupabaseClient(db, { alsNutzer: ADMIN_A })
     alsAdminB = macheSupabaseClient(db, { alsNutzer: ADMIN_B })
-  }, 60000)
+  }, 120000)
 
   it('current_org_id() loest je Nutzer die eigene Organisation auf', async () => {
     const a = await db.transaction(async tx => {

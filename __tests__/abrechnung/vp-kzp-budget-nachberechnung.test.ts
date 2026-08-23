@@ -99,7 +99,7 @@ describe('H-2: VP/KZP-Budget-Nachberechnung', () => {
   beforeAll(async () => {
     db = new PGlite()
     await db.exec(SCHEMA)
-  }, 60_000)
+  }, 120_000)
 
   afterAll(async () => {
     await db?.close()
