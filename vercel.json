@@ -7,7 +7,7 @@
   "crons": [
     {
       "path": "/api/cron/zustellung-retry",
-      "schedule": "*/5 * * * *"
+      "schedule": "0 4 * * *"
     },
     {
       "path": "/api/cron/automatisierung",

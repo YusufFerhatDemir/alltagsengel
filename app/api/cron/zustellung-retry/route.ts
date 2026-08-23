@@ -5,9 +5,18 @@ import { fuehreWiederholungslaufAus } from '@/lib/notifications/retry-worker'
 // ═══════════════════════════════════════════════════════════════════════
 // CRON: WIEDERHOLUNGSLAUF FUER BENACHRICHTIGUNGEN
 // ═══════════════════════════════════════════════════════════════════════
-// Alle 5 Minuten (vercel.json). Nimmt fehlgeschlagene und haengen
-// gebliebene Zustellungen aus notification_delivery_log wieder auf und
-// schliesst aussichtslose als Dead Letter ab.
+// Nimmt fehlgeschlagene und haengen gebliebene Zustellungen aus
+// notification_delivery_log wieder auf und schliesst aussichtslose als
+// Dead Letter ab.
+//
+// WER RUFT AUF
+//   * .github/workflows/zustellung-retry.yml — alle 5 Minuten, der
+//     eigentliche Takt
+//   * vercel.json — taeglich um 04:00 als Rueckfall
+//
+// Der 5-Minuten-Takt steht in GitHub Actions und nicht in vercel.json,
+// weil der Tarif dieses Projekts Cron-Jobs nur einmal taeglich ausloest;
+// ein Deployment mit `*/5 * * * *` wird von Vercel abgelehnt.
 //
 // WARUM ALLE 5 MINUTEN
 // Die kuerzeste Wartezeit betraegt eine Minute; ein Takt darunter wuerde
