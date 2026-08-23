@@ -11,16 +11,27 @@
 > kein Live-Apply noetig**. Details unter „Funktionale Lueckenanalyse: P2/P3"
 > weiter unten und im CHANGELOG-Eintrag vom 23.08.
 >
-> **23.08.2026 — 6 von 8 Master-Tracks abgeschlossen.** Zwei Migrationen sind
+> **23.08.2026 — Master-Tracks 1-6.** Zwei Migrationen sind
 > nicht mehr „wartet auf Apply", sondern **live angewendet und gegengeprueft**
 > (ChairMatch-Persistenz, `invoice_email_log`). P6-Legacy geprueft, Buchungskette
 > gegen Live-Daten gemessen. Details im CHANGELOG-Eintrag vom 23.08.
 >
-> **Offen als CEO-Aktion (nicht aus einer Session loesbar, braucht Dashboard-Login):**
-> | # | Aktion | Wo |
-> |---|--------|-----|
-> | 1 | Signup deaktivieren (`disable_signup=true`) | Supabase-Dashboard, Projekt `vlrviyrgggzhayepfmop` (P6) |
-> | 2 | `RESEND_API_KEY` setzen | Vercel Production — ohne ihn verlaesst keine Rechnung/Mahnung das System |
+> **23.08.2026 — alle 8 Master-Tracks abgeschlossen.** Die beiden zuletzt
+> offenen Punkte waren CEO-Aktionen im Browser; beide sind am 23.08. am
+> Dashboard erledigt bzw. geprueft (siehe Tabelle). Damit steht kein
+> Master-Track mehr offen — was bleibt, sind externe Bescheide und
+> Stammdaten-Belege, keine Session-Arbeit.
+>
+> **Ehemals CEO-Aktion — Stand 23.08.2026:**
+> | # | Aktion | Wo | Stand |
+> |---|--------|-----|-------|
+> | ~~1~~ | ~~Signup deaktivieren (`disable_signup=true`)~~ | Supabase-Dashboard, Projekt `vlrviyrgggzhayepfmop` (P6) | **ERLEDIGT 23.08.2026** — Toggle im Dashboard auf OFF, gespeichert. P6 ist damit reiner `DECOMMISSION_CANDIDATE`. |
+> | 2 | `RESEND_API_KEY` | Vercel Production | **VORHANDEN, ABER UNGEPRUEFT** — Variable existiert (angelegt 19.03.), traegt im Vercel-Dashboard das Kennzeichen „Needs Attention". Ob der hinterlegte Schluessel gueltig ist, sagt das Dashboard nicht. Naechster Schritt: einen realen Rechnungsversand ausloesen und `invoice_email_log` lesen — bleibt der Eintrag auf `uebersprungen`/Fehler, ist der Schluessel unbrauchbar. |
+>
+> **Was der zweite Punkt NICHT bedeutet:** dass Rechnungen jetzt zugestellt
+> werden. Das ist erst belegt, wenn ein Versand mit `sent_at` in
+> `invoice_email_log` steht. Bis dahin gilt die Kette als gebaut, nicht als
+> zustellend.
 >
 > **CI: GRUEN — auf GitHub verifiziert, nicht nur lokal.**
 > Run [32569458523](https://github.com/YusufFerhatDemir/alltagsengel/actions/runs/32569458523)
@@ -70,7 +81,7 @@ Vollstaendige Analyse: `docs/FUNKTIONALE_LUECKENANALYSE.md` (690 Zeilen, 14 Bere
 | ~~12~~ | ~~Keine manuelle Zahlungserfassung in UI (nur CAMT-Import)~~ | ~~P1~~ | **ERLEDIGT** (components/admin/ZahlungErfassenDialog.tsx aus /admin/forderungen, 8 Tests, 79e7e0e) |
 | ~~13~~ | ~~Rechnung wird nicht zugestellt (kein E-Mail-Versand, nur Portal-Download)~~ | ~~P1~~ | **ERLEDIGT** (lib/billing/versand/rechnung-versand.ts + POST /api/billing/invoices/[id]/versenden, 13 Tests, 79e7e0e) |
 | 14 | Offline-Erfassung nur im nicht ausgelieferten Expo-Projekt | P1 | INTERN |
-| 15 | Kundenstammdaten nach Anlage nur teilweise editierbar | P1 | INTERN |
+| ~~15~~ | ~~Kundenstammdaten nach Anlage nur teilweise editierbar~~ | ~~P1~~ | **ERLEDIGT** — war bereits in `8392730` geschlossen und im Statusbericht uebersehen: `ALLOWED_CLIENT_FIELDS` in `lib/clients/stammdaten.ts` deckt Name, Adresse, PLZ, Ort, Telefon, E-Mail, Geburtsdatum ab, `StammdatenEditor` in `app/admin/clients/[id]/page.tsx` bedient sie, `PATCH /api/admin/clients/[id]/status` deckt Deaktivierung/Beendigung ab. Tests: `__tests__/clients/stammdaten-status.test.ts` |
 
 > **ERLEDIGT 23.08.2026 — `invoice_email_log` ist LIVE_VERIFIED.** Die Migration
 > ist auf `nnwyktkqibdjxgimjyuq` angewendet: Tabelle mit 15 Spalten, RLS aktiv mit
@@ -80,12 +91,16 @@ Vollstaendige Analyse: `docs/FUNKTIONALE_LUECKENANALYSE.md` (690 Zeilen, 14 Bere
 > auf `20260823000000_invoice_email_log.sql` korrigiert, Rollback als
 > `20260823000001`; Referenzen in Code und Doku nachgezogen.
 >
-> **Versand ist ENV-gesteuert — und der Key fehlt noch:** ohne `RESEND_API_KEY`
+> **Versand ist ENV-gesteuert — Key vorhanden, Gueltigkeit ungeprueft
+> (Stand 23.08.2026):** ohne `RESEND_API_KEY`
 > wird jeder Versuch als `uebersprungen` protokolliert und `sent_at` bleibt leer,
 > damit nachversendet wird. Automatischer Versand bei Festschreibung nur mit
 > `RECHNUNGSVERSAND_AUTOMATISCH='1'` — Standard ist manuell.
-> **CEO_ACTION_REQUIRED: `RESEND_API_KEY` in Vercel Production setzen.** Bis dahin
-> ist die Versandkette vollstaendig gebaut, aber ohne Zustellkanal.
+> Die Variable **existiert** in Vercel Production (angelegt 19.03.2026), traegt
+> dort aber das Kennzeichen „Needs Attention"; ob der Wert ein gueltiger
+> Resend-Schluessel ist, sagt das Dashboard nicht. **Belegt ist die Zustellung
+> erst, wenn ein Versand mit gesetztem `sent_at` in `invoice_email_log` steht** —
+> bis dahin gilt die Versandkette als gebaut, nicht als zustellend.
 >
 > **Unveraendert blockiert:** §45b-Tarife bleiben `blocked`/`unverified`
 > (Punkt 9). Die Versandkette aendert daran nichts; nicht verifizierte Tarife
@@ -329,7 +344,7 @@ Letzter Check: 21.08.2026
 | 4 | AVV mit Supabase/Vercel abschliessen | P1 | EXTERN |
 | 5 | BSI C5 / ISO 27001 (nur fuer DiPA/BfArM) | P1 | EXTERN |
 | ~~6~~ | ~~BITV/WCAG Barrierefreiheit~~ | ~~P1~~ | **ERLEDIGT** (2 Durchgaenge: Kontrast/Labels/Landmarks + Fokus-Management 34 Dialoge, Tastatur 121→1, axe-core-Lauf, ad23806. Offen: Screenreader-Test mit NVDA/JAWS) |
-| 7 | **P6-Legacy `vlrviyrgggzhayepfmop`: Signup deaktivieren** | P1 | **CEO_ACTION_REQUIRED** (Supabase-Dashboard) |
+| ~~7~~ | ~~**P6-Legacy `vlrviyrgggzhayepfmop`: Signup deaktivieren**~~ | ~~P1~~ | **ERLEDIGT 23.08.2026** (Supabase-Dashboard, Toggle OFF + gespeichert) |
 
 ### P6 Legacy Security Check (23.08.2026) — **ANALYSIERT**
 Tiefenpruefung des Legacy-Projekts `vlrviyrgggzhayepfmop` (Detailbericht:
@@ -341,11 +356,17 @@ die Einstufung vom 22.08. wird damit praezisiert, nicht widerrufen.
   `reviews`, `rental_options`, `staff`) — by design fuer den oeffentlichen
   Marktplatz, kein PII. Der oeffentlich lesbare anon-Key aus `index_legacy.html`
   kommt damit nicht weiter als bis zu diesen Katalogzeilen.
-- **Offen bleibt genau ein Hebel:** `disable_signup=false` +
-  `mailer_autoconfirm=true` — jeder kann auf dem unbeobachteten Projekt ein
-  sofort aktives Konto anlegen. **CEO_ACTION_REQUIRED** (Punkt 7 oben).
-- Nach dem Abschalten des Signups ist P6 ein reiner `DECOMMISSION_CANDIDATE`
-  ohne akute Live-Flaeche.
+- ~~**Offen bleibt genau ein Hebel:** `disable_signup=false` +
+  `mailer_autoconfirm=true`~~ — **GESCHLOSSEN 23.08.2026.** Der Signup ist im
+  Supabase-Dashboard des Projekts deaktiviert und gespeichert. Damit kann
+  niemand mehr auf dem unbeobachteten Projekt ein sofort aktives Konto
+  anlegen; `mailer_autoconfirm` ist ohne Signup wirkungslos.
+- P6 ist damit ein reiner `DECOMMISSION_CANDIDATE` ohne akute Live-Flaeche.
+  Die Abschaltung selbst steht weiterhin aus — sie ist kein Sicherheitspunkt
+  mehr, sondern Aufraeumen.
+- **Grenze der Pruefung:** verifiziert ist die Dashboard-Einstellung, nicht ein
+  fehlgeschlagener Registrierungsversuch. Ein Gegentest gegen die Auth-API des
+  Legacy-Projekts wurde nicht gefahren.
 
 ---
 
@@ -408,6 +429,90 @@ keine CEO-Aktion, kein externer Bescheid, kein DDL-Zugang.
   Tests**) · `test:unit` 794 passed / 0 fail · `lint:forbidden` 0 Treffer bei
   24 328 Dateien · `ci-secret-scan.sh` + `ci-ik-check.sh` Exit 0 ·
   `npm run build` (Turbopack) Exit 0.
+- **LIVE:** keine Migration, kein Apply erforderlich.
+
+---
+
+## Funktionale Lueckenanalyse: zweiter P2-Durchgang (23.08.2026, nachmittags)
+
+**Status: 2 geschlossen | 3 korrigiert | Rest begruendet offen**
+Auswahlkriterium unveraendert: technisch aus der Session loesbar — keine
+CEO-Aktion, kein externer Bescheid, kein DDL-Zugang. **Keine Migration.**
+
+### Geschlossen
+
+| # | Befund | Bereich | Prio | Wo |
+|---|--------|---------|------|-----|
+| 1 | Keine Konfliktanzeige — eine Ueberschneidung fiel erst als roher Datenbankfehler auf | 3 | P2 | `lib/einsatzplanung/konflikte.ts` (neu), `konflikte-server.ts` (neu), `app/api/einsatzplanung/route.ts`, `app/admin/kalender/page.tsx` |
+| 2 | Vier Audit-Spuren ohne gemeinsame Sicht + kein Export fuer eine Pruefung | 14 | P2 | `lib/analytics/opsAudit.ts`, `app/api/admin/analytics/ops-audit/route.ts`, `app/admin/ops-audit/page.tsx` |
+
+**Zu 1 — Konflikterkennung.** Der DB-Trigger `check_assignment_overlap`
+(Migration 20260808200000) fing die Doppelbelegung einer Betreuungskraft schon
+vorher ab, aber erst beim INSERT und mit einer Meldung voller UUIDs, die der
+Fehler-Sanitizer zu Recht verschluckt — der Planende sah nur „Fehler beim
+Speichern". Jetzt prueft dieselbe reine Funktion **vor** dem Schreiben und
+liefert Klartext („Sabrina Martin hat am 01.09.2026 bereits einen Einsatz von
+10:00–12:00 bei Herrn Meier"), und der Kalender markiert betroffene Einsaetze
+samt Zaehler.
+- **Bewusst nicht uebersteuerbar:** die Mitarbeiter-Doppelbelegung bietet
+  *keinen* `force_override`-Weg an. Der Trigger blockiert sie ohnehin — ein
+  angebotener Uebersteuerungsweg waere eine Zusage, die die Datenbank nicht
+  einhaelt.
+- **Neu erkannt, aber nur als Warnung:** zwei Kraefte gleichzeitig bei
+  demselben Klienten. Der Trigger kennt den Fall nicht, und er ist fachlich
+  nicht immer falsch (Doppelbesetzung beim Transfer).
+- **Serien bleiben ungeprueft:** ein Einsatz ohne `assignment_date`
+  (`weekday` + `recurrence_rule`) hat kein Datum, gegen das sich pruefen
+  liesse. Das ist in der Antwort benannt, nicht stillschweigend uebergangen.
+
+**Zu 2 — Audit-Gesamtsicht.** `/admin/ops-audit` fuehrte bisher nur zwei der
+vier Spuren zusammen. Ergaenzt sind `mis_audit_log` (Administration, 436
+Aufrufstellen) und `wf_audit_log` (Workflow); jede Quelle wird **einzeln** auf
+`organization_id` gefenced. Dazu ein CSV-Export ueber `?format=csv` —
+Semikolon-getrennt mit BOM (deutsche Excel-Locale), mit Entschaerfung von
+Formel-Einleitungen (`=`, `+`, `-`, `@`) gegen CSV-Injection. Der Export
+protokolliert sich selbst als `data_export`.
+- **Grenze:** je Quelle werden 500 Zeilen geholt, dann gefiltert. Bei einem
+  Live-Bestand von 9 + 6 + 78 Eintraegen ist das weit weg; bei wachsendem
+  Bestand ist der Export **kein** vollstaendiger Jahresauszug.
+- Die **Aufbewahrungsfrist** ist nicht neu erfunden: sie steht seit `5e8ff5a`
+  im Loeschkonzept (10 Jahre, § 257 HGB / DSGVO Art. 30) und wird in der
+  Oberflaeche nur noch zitiert.
+
+### Korrigiert — Bericht war veraltet, nichts angefasst
+
+| Befund | Tatsaechlicher Stand |
+|---|---|
+| Kundenstammdaten nach Anlage nur teilweise editierbar (Bereich 1, P1) | bereits in `8392730` geschlossen — `ALLOWED_CLIENT_FIELDS`, `StammdatenEditor`, Tests vorhanden |
+| Keine Deaktivierung / Beendigung der Betreuung (Bereich 1, P1) | bereits in `8392730` geschlossen — `PATCH /api/admin/clients/[id]/status`, `lib/clients/status.ts` |
+| Jahresuebertrag nur manuell, keine Oberflaeche, kein Cron (Bereich 5, P1) | bereits in `8392730` geschlossen — Knopf in `app/admin/budgets`, Cron `/api/cron/jahresuebertrag` am 01.01. (`vercel.json`) |
+| Keine dokumentierte Aufbewahrungsfrist fuer die Audit-Spur (Bereich 14) | bereits in `5e8ff5a` geschlossen — `docs/LOESCHKONZEPT.md` Abschnitt 3.6 |
+
+### Bewusst NICHT angefasst — mit Begruendung
+
+- **6-/8-Wochen-Grenze fuer VP/KZP** (Bereich 6, P2). Waere Code, aber die
+  Fristen sind Rechtsanwendung, keine Rechenlogik: Hoechstdauer, Vorpflegezeit
+  und die Wirkung des gemeinsamen Jahresbetrags seit 01.07.2025 haengen
+  zusammen. Eine hier gesetzte Zahl waere geraten — dieselbe Sorte
+  Platzhalter, die bei den Tarifen bewusst gesperrt bleibt.
+- **Sammelrechnungslauf ueber alle Kunden** (Bereich 5, P2). Ein Lauf, der
+  massenhaft Rechnungen erzeugt, gehoert nicht in einen Durchgang ohne
+  Live-Gegenprobe — bei 4 Kunden ist der Nutzen ausserdem null.
+- **Benachrichtigungs-Log / Zustellkontrolle** (Bereich 11, P2). Braucht eine
+  neue Tabelle, also eine Migration und einen Live-Apply — beides steht in
+  dieser Session nicht zur Verfuegung.
+- **Feldhistorie im Audit-Trail** (Bereich 14, P2), **Rollen PDL/QM/
+  Buchhaltung** (Bereich 13, P2), **GPS in der ausgelieferten App**
+  (Bereich 4/12, P1/P2), **Kassenwechsel-Historie** (Bereich 1, P2),
+  **Serientermin-Pflege** (Bereich 3, P2): unveraendert offen, alle zu gross
+  fuer einen „kleinen Fix" und nicht halb hinterlassen.
+
+### Nachweis
+
+- **CODE:** 2 neue Bibliotheken, 4 geaenderte Dateien, 2 neue Testdateien.
+- **TEST:** `__tests__/einsatzplanung/konflikte.test.ts` (24) +
+  `__tests__/analytics/audit-gesamtsicht.test.ts` (22) = **46 neue Tests**,
+  alle gruen. `tsc --noEmit` 0 Fehler.
 - **LIVE:** keine Migration, kein Apply erforderlich.
 
 ---

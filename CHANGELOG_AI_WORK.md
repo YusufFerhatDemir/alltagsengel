@@ -4,6 +4,156 @@ Chronologische Dokumentation aller KI-gestuetzten Arbeitssitzungen.
 
 ---
 
+## 2026-08-23 | Session: Master-Track 8 — P6-Signup abgeschaltet, RESEND geprueft, zweiter P2-Durchgang
+
+Damit sind **alle 8 Master-Tracks abgeschlossen.** Die beiden zuletzt offenen
+Punkte waren CEO-Aktionen im Browser — beide sind erledigt bzw. so weit
+geprueft, wie das Dashboard es hergibt. Dazu ein zweiter Durchgang durch die
+Lueckenanalyse: zwei P2-Befunde geschlossen, drei als laengst erledigt
+korrigiert.
+
+### 1. P6-Legacy `vlrviyrgggzhayepfmop`: Signup DEAKTIVIERT
+
+Der einzige verbliebene Hebel aus dem P6-Security-Check ist zu. Im
+Supabase-Dashboard des Legacy-Projekts wurde „Allow new users to sign up"
+auf OFF gestellt und gespeichert.
+
+- Vorher: `disable_signup=false` + `mailer_autoconfirm=true` — jeder konnte auf
+  dem unbeobachteten Projekt ein **sofort aktives** Konto anlegen.
+- Nachher: kein Selbstregistrierungsweg mehr; `mailer_autoconfirm` ist ohne
+  Signup wirkungslos.
+- P6 ist damit ein reiner `DECOMMISSION_CANDIDATE`. Die eigentliche Abschaltung
+  steht weiter aus — sie ist ab jetzt Aufraeumen, kein Sicherheitspunkt.
+- **Grenze:** verifiziert ist die Dashboard-Einstellung, **nicht** ein
+  fehlgeschlagener Registrierungsversuch gegen die Auth-API. Ein solcher
+  Gegentest wurde nicht gefahren.
+
+### 2. `RESEND_API_KEY` auf Vercel: vorhanden, Gueltigkeit ungeprueft
+
+Die Variable **existiert** in Vercel Production (angelegt 19.03.2026). Sie
+traegt dort allerdings das Kennzeichen „Needs Attention", und das Dashboard
+zeigt den Wert naturgemaess nicht an.
+
+- **Was das heisst:** die frueheren Formulierungen „Key fehlt" waren falsch —
+  gesetzt ist er. Ob er *gueltig* ist, ist damit aber nicht belegt.
+- **Was es nicht heisst:** dass Rechnungen jetzt zugestellt werden. Belegt ist
+  Zustellung erst, wenn ein Versand mit gesetztem `sent_at` in
+  `invoice_email_log` steht. Bis dahin gilt: Kette gebaut, nicht zustellend.
+- **Naechster Schritt** (kein Code): einen realen Rechnungsversand ausloesen
+  und den Eintrag in `invoice_email_log` lesen. Bleibt er auf `uebersprungen`
+  oder meldet er einen Fehler, ist der Schluessel unbrauchbar.
+
+### 3. Bereich 3 (P2): Konfliktanzeige in der Einsatzplanung
+
+Befund: „Kalender und Schedule enthalten keinerlei Konflikt-/
+Ueberschneidungslogik; ein Konflikt aeussert sich erst als Datenbankfehler beim
+Speichern."
+
+Der DB-Trigger `check_assignment_overlap` (Migration 20260808200000) fing die
+Doppelbelegung einer Betreuungskraft bereits ab — aber erst beim INSERT und mit
+einer Meldung voller UUIDs, die der Fehler-Sanitizer zu Recht verschluckt. Der
+Planende sah nur „Fehler beim Speichern".
+
+- **Neu:** `lib/einsatzplanung/konflikte.ts` — reine Pruefregel, bewusst frei
+  von Server-Importen, damit **dieselbe** Funktion serverseitig blockt und
+  clientseitig markiert. Zwei Implementierungen derselben Regel waeren genau
+  die Drift, die Trigger und Oberflaeche auseinanderlaufen laesst.
+- **Semantik deckungsgleich zum Trigger:** gleiches Datum, echte
+  Zeitueberlappung (Beruehrung an den Raendern zaehlt nicht), Status
+  `STORNIERT`/`cancelled`/`NO_SHOW` zaehlen nicht mit. `HH:MM` und `HH:MM:SS`
+  werden ueber Minuten verglichen — ein String-Vergleich laege bei
+  `'10:00'` gegen `'10:00:00'` falsch.
+- **`POST`/`PATCH /api/einsatzplanung`** melden jetzt 409 mit Klartext
+  („… hat am 01.09.2026 bereits einen Einsatz von 10:00–12:00 bei …").
+- **Bewusst KEIN `force_override`** fuer die Mitarbeiter-Doppelbelegung: der
+  Trigger blockiert sie ohnehin. Ein angebotener Uebersteuerungsweg waere eine
+  Zusage, die die Datenbank nicht einhaelt.
+- **Zusaetzlich erkannt, aber nur Warnung:** zwei Kraefte gleichzeitig bei
+  demselben Klienten. Den Fall kennt der Trigger nicht, und er ist fachlich
+  nicht immer falsch (Doppelbesetzung beim Transfer).
+- **Kalender** (`/admin/kalender`): betroffene Einsaetze bekommen einen
+  Rahmen und eine Textmarke „Konflikt" plus eine Kennzahl „Zeitkonflikte".
+  Bewusst **kein neues Emoji** — das Warnzeichen bleibt eindeutig dem Ausfall
+  vorbehalten.
+- **Serien bleiben ungeprueft:** ohne `assignment_date` gibt es kein Datum, das
+  sich pruefen liesse. Steht so in der Antwort, statt stillschweigend zu
+  fehlen.
+- Tests: `__tests__/einsatzplanung/konflikte.test.ts` (24).
+
+### 4. Bereich 14 (P2, zwei Befunde): Audit-Gesamtsicht + Export
+
+Befunde: „Vier getrennte Audit-Spuren ohne gemeinsame Sicht" und „Kein Export
+der Audit-Spur fuer eine Pruefung."
+
+- `/admin/ops-audit` fuehrte bisher nur **zwei** der vier Spuren zusammen
+  (`ops_aktivitaetslog`, `billing_audit_trail`). Ergaenzt sind
+  **`mis_audit_log`** (Administration, 436 Aufrufstellen) und
+  **`wf_audit_log`** (Workflow) — inklusive Filter und Label in der
+  Oberflaeche.
+- **Jede Quelle wird einzeln auf `organization_id` gefenced**, mit
+  Regressionstest auf die Anzahl der Fences. Ohne das waere die gemeinsame
+  Sicht ein Mandantenleck.
+- Zeilen ohne `organization_id` (Altbestand in `mis_audit_log` vor Migration
+  20260822010000) fallen heraus. Gewollt: ein mandantenloser Eintrag gehoert in
+  keine Mandantensicht.
+- **CSV-Export** ueber `?format=csv`: Semikolon-getrennt mit BOM (sonst zerlegt
+  deutsches Excel die Umlaute und schiebt alles in eine Spalte), mit
+  Entschaerfung von `=`, `+`, `-`, `@` am Zellenanfang gegen CSV-Injection —
+  Audit-Details stammen teils aus Freitext, das ist ein echter Pfad.
+- Der Export **protokolliert sich selbst** (`data_export`). Sonst waere er die
+  einzige Aktion im System, die keine Spur hinterlaesst — ausgerechnet die,
+  die Daten heraustraegt.
+- **Grenze:** je Quelle werden 500 Zeilen geholt, dann gefiltert. Beim
+  aktuellen Live-Bestand (9 + 6 + 78) irrelevant; bei wachsendem Bestand ist
+  der Export **kein** vollstaendiger Jahresauszug.
+- Die **Aufbewahrungsfrist wurde nicht neu erfunden** — sie steht seit
+  `5e8ff5a` im Loeschkonzept (10 Jahre, § 257 HGB / DSGVO Art. 30) und wird in
+  der Oberflaeche nur zitiert.
+- Tests: `__tests__/analytics/audit-gesamtsicht.test.ts` (22).
+
+### 5. Korrigiert — der Bericht war veraltet, angefasst wurde nichts
+
+| Befund | Tatsaechlicher Stand |
+|---|---|
+| Kundenstammdaten nach Anlage nur teilweise editierbar (Bereich 1, **P1**) | bereits `8392730`: `ALLOWED_CLIENT_FIELDS` deckt Name, Adresse, PLZ, Ort, Telefon, E-Mail, Geburtsdatum ab; `StammdatenEditor` bedient sie |
+| Keine Deaktivierung / Beendigung der Betreuung (Bereich 1, **P1**) | bereits `8392730`: `PATCH /api/admin/clients/[id]/status` + `lib/clients/status.ts` |
+| Jahresuebertrag nur manuell, ohne Oberflaeche und ohne Cron (Bereich 5, **P1**) | bereits `8392730`: Knopf in `/admin/budgets`, Cron `/api/cron/jahresuebertrag` am 01.01. in `vercel.json` |
+| Keine dokumentierte Aufbewahrungsfrist der Audit-Spur (Bereich 14) | bereits `5e8ff5a`: `docs/LOESCHKONZEPT.md` Abschnitt 3.6 |
+
+Drei davon standen als **P1** in der Statusliste — der Bericht ueberzeichnete
+den offenen Rest also messbar.
+
+### 6. Bewusst NICHT angefasst
+
+- **6-/8-Wochen-Grenze fuer VP/KZP** (Bereich 6, P2): waere Code, aber die
+  Fristen sind Rechtsanwendung. Hoechstdauer, Vorpflegezeit und die Wirkung des
+  gemeinsamen Jahresbetrags seit 01.07.2025 haengen zusammen; eine hier
+  gesetzte Zahl waere geraten — dieselbe Sorte Platzhalter, die bei den
+  Tarifen bewusst gesperrt bleibt.
+- **Sammelrechnungslauf ueber alle Kunden** (Bereich 5, P2): ein Lauf, der
+  massenhaft Rechnungen erzeugt, gehoert nicht in einen Durchgang ohne
+  Live-Gegenprobe. Bei 4 Kunden ausserdem ohne Nutzen.
+- **Benachrichtigungs-Log / Zustellkontrolle** (Bereich 11, P2): braucht eine
+  neue Tabelle, also Migration + Live-Apply — beides steht hier nicht zur
+  Verfuegung.
+- Unveraendert offen: Feldhistorie im Audit-Trail, Rollen PDL/QM/Buchhaltung,
+  GPS in der ausgelieferten App, Kassenwechsel-Historie, Serientermin-Pflege.
+
+### Unveraendert
+
+§ 45b-/VP-Tarife bleiben `blocked`/`unverified`, 35 EUR/h bleibt gesperrt.
+Keine der Aenderungen fasst einen Preis oder einen Tarifstatus an.
+`COACH_DIPA_MODUS` bleibt `false`, Entlastungsbetrag bleibt 131 EUR/Monat.
+
+### Nachweis
+
+- **CODE:** 2 neue Bibliotheken (`lib/einsatzplanung/konflikte.ts`,
+  `konflikte-server.ts`), 4 geaenderte Dateien, 2 neue Testdateien.
+- **TEST:** 46 neue Tests, alle gruen. `tsc --noEmit` 0 Fehler.
+- **LIVE:** keine Migration, kein Apply erforderlich.
+
+---
+
 ## 2026-08-23 | Session: Master-Track 7 — technisch selbst loesbare P2/P3-Items
 
 Delta-Durchgang durch `docs/FUNKTIONALE_LUECKENANALYSE.md` nach P2/P3-Befunden,

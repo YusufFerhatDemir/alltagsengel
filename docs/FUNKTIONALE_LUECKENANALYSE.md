@@ -1,6 +1,9 @@
 # Funktionale Lückenanalyse — Alltagsengel-Plattform
 
-**Stand:** 2026-08-21 · **Nachtrag 2026-08-23 (Track 7):** sechs P2/P3-Befunde
+**Stand:** 2026-08-21 · **Nachtrag 2026-08-23 (Track 8):** zwei weitere
+P2-Befunde geschlossen (Konfliktanzeige Einsatzplanung, Audit-Gesamtsicht +
+CSV-Export), vier als bereits erledigt korrigiert — im Text markiert.
+· **Nachtrag 2026-08-23 (Track 7):** sechs P2/P3-Befunde
 geschlossen, vier weitere als bereits erledigt bzw. falsch erhoben korrigiert.
 Alle Änderungen sind im Text markiert; die Ursprungsfassung wurde nicht
 umgeschrieben, damit nachvollziehbar bleibt, was am 21.08. tatsächlich galt.
@@ -57,7 +60,7 @@ Kassenzulassungs-Voraussetzungen.
 | 4 | Keine manuelle Zahlungserfassung in der Oberfläche (nur CAMT-Datei-Import) | 9 | P1 | klein |
 | 5 | Rechnung wird nie zugestellt — kein E-Mail-/Postversand, nur Portal-Download | 5 | P1 | mittel |
 | 6 | Offline-Erfassung existiert nur im nicht ausgelieferten Expo-Projekt | 12 | P1 | groß |
-| 7 | Kundenstammdaten nach Anlage nur teilweise editierbar, keine Deaktivierung | 1 | P1 | klein |
+| ~~7~~ | ~~Kundenstammdaten nach Anlage nur teilweise editierbar, keine Deaktivierung~~ — **geschlossen `8392730`** | 1 | ~~P1~~ | — |
 | 8 | GPS-Nachweis in der ausgelieferten App nicht erfassbar | 4 | P2 | mittel |
 | ~~9~~ | ~~Einsatzplanung prüft weder Abwesenheit noch Verfügbarkeitsfenster~~ — **geschlossen `8392730`** | 3 | ~~P2~~ | — |
 | 10 | Rollenmodell kennt nur admin/kunde/engel/fahrer — PDL, QM, Buchhaltung fehlen | 13 | P2 | mittel |
@@ -83,15 +86,20 @@ Kassenzulassungs-Voraussetzungen.
 - Kundenakte `app/admin/kundenakte/[id]/page.tsx`, Biografiebogen, Verträge.
 
 **FEHLT**
-- **Stammdaten sind nach der Anlage nur zum Teil änderbar.** Die Whitelist in
-  `app/api/admin/clients/[id]/route.ts` (`ALLOWED_FIELDS`) deckt Gesundheits- und
-  Notfalldaten ab, aber **nicht** Name, Adresse, PLZ, Ort, Telefon, E-Mail,
-  Geburtsdatum. Ein Umzug oder eine Namensänderung ist über die Oberfläche nicht
-  abbildbar. — **P1, klein**
-- **Keine Deaktivierung / Beendigung der Betreuung.** Weder API noch UI setzen
-  `status` oder `pipeline_status`. Ein Kunde, der verstirbt oder kündigt, bleibt
-  aktiv; die einzige Alternative ist der DSGVO-Löschweg
-  (`app/api/user/delete/route.ts`), der fachlich etwas anderes ist. — **P1, klein**
+- ~~**Stammdaten sind nach der Anlage nur zum Teil änderbar.**~~
+  **GESCHLOSSEN in `8392730`** (bei der Erstfassung dieses Berichts übersehen).
+  `ALLOWED_CLIENT_FIELDS` in `lib/clients/stammdaten.ts` deckt Name, Adresse,
+  PLZ, Ort, Telefon, E-Mail und Geburtsdatum ab; `pruefeStammdaten()` weist
+  ungültige E-Mail, PLZ und ein Geburtsdatum in der Zukunft fail-closed ab.
+  Bedient wird das vom `StammdatenEditor` in
+  `app/admin/clients/[id]/page.tsx`. Tests:
+  `__tests__/clients/stammdaten-status.test.ts`. — **P1, klein**
+- ~~**Keine Deaktivierung / Beendigung der Betreuung.**~~
+  **GESCHLOSSEN in `8392730`.** `PATCH /api/admin/clients/[id]/status` setzt
+  `status` und `pipeline_status`; erlaubte Ziele stehen in
+  `lib/clients/status.ts::SETZBARE_STATUS` (`new` fehlt bewusst — ein beendeter
+  Klient wird nicht wieder „neu"). Fachlich weiterhin getrennt vom
+  DSGVO-Löschweg. — **P1, klein**
 - ~~**Kein Wiedervorlage-/Statuswechsel-Workflow** für die `pipeline_status`-Kette.~~
   **GESCHLOSSEN in `8392730`** (bei der Erstfassung dieses Berichts übersehen).
   `PATCH /api/admin/clients/[id]/status` setzt `status` und `pipeline_status`,
@@ -227,9 +235,20 @@ Kassenzulassungs-Voraussetzungen.
   bewusst nicht geprüft und das in der Antwort benannt.
   Abdeckung: `__tests__/einsatzplanung/verfuegbarkeitspruefung.test.ts`.
   — **P2, klein**
-- **Keine Konfliktanzeige in der Oberfläche.** Kalender und Schedule enthalten
-  keinerlei Konflikt-/Überschneidungslogik; ein Konflikt äußert sich erst als
-  Datenbankfehler beim Speichern. — **P2, mittel**
+- ~~**Keine Konfliktanzeige in der Oberfläche.**~~ **GESCHLOSSEN (23.08.2026,
+  zweiter P2-Durchgang).** `lib/einsatzplanung/konflikte.ts` hält die Regel
+  einmal — bewusst frei von Server-Importen, damit **dieselbe** Funktion
+  serverseitig blockt und im Kalender markiert. Semantik deckungsgleich zum
+  Trigger `check_assignment_overlap` (gleiches Datum, echte Überlappung,
+  Berührung an den Rändern zählt nicht, stornierte Einsätze zählen nicht mit);
+  `HH:MM` und `HH:MM:SS` werden über Minuten verglichen. `POST`/`PATCH
+  /api/einsatzplanung` melden 409 mit Klartext statt der vom Sanitizer
+  verschluckten Trigger-Meldung; `/admin/kalender` markiert betroffene Einsätze
+  und zählt sie. **Kein `force_override`** für die Mitarbeiter-Doppelbelegung —
+  der Trigger blockiert sie ohnehin. Neu erkannt, aber nur als Warnung: zwei
+  Kräfte gleichzeitig bei demselben Klienten. Serien ohne `assignment_date`
+  bleiben ungeprüft und das steht in der Antwort. Tests:
+  `__tests__/einsatzplanung/konflikte.test.ts`. — **P2, mittel**
 - **Keine Serientermin-Pflege.** `recurrence_rule` wird gespeichert, aber es gibt
   keinen Weg, eine Serie als Ganzes zu ändern oder zu beenden. — **P2, mittel**
 - **Keine Routen-/Fahrzeitberechnung.** Die Tourenplanung schätzt über PLZ-Nähe,
@@ -310,11 +329,10 @@ Kassenzulassungs-Voraussetzungen.
 - **Kein Rechnungslauf über alle Kunden.** `auto-invoice` arbeitet je Klient und
   Monat; einen Sammellauf „alle Kunden, Monat X" gibt es weder als Cron noch als
   Button. Bei 4 Kunden irrelevant, ab ~30 Kunden nicht mehr. — **P2, mittel**
-- **Jahresübertrag nur manuell.** `uebertrageJahresbudgets()` hängt an
-  `POST /api/admin/budgets/jahresuebertrag` — dazu existiert **keine
-  Oberfläche** (kein Treffer für `jahresuebertrag` in `app/**/*.tsx`) und kein
-  Cron. Der § 45b-Übertrag ins Folgejahr (verfällt zum 30.06.) passiert also nur,
-  wenn jemand die Route von Hand aufruft. — **P1, klein**
+- ~~**Jahresübertrag nur manuell.**~~ **GESCHLOSSEN in `8392730`** (bei der
+  Erstfassung dieses Berichts übersehen). `app/admin/budgets/page.tsx` hat den
+  Knopf, `vercel.json` plant `/api/cron/jahresuebertrag` auf den 01.01.
+  (`0 3 1 1 *`). — **P1, klein**
 - **Eigenanteil/Zuzahlung ist nicht durchgängig.** `app/admin/zuzahlungen`
   existiert, aber die Rechnung trennt Budget- und Privatanteil nur über
   `budget_amount`/`private_amount`; einen Kundenweg für den Eigenanteil
@@ -675,12 +693,25 @@ Kassenzulassungs-Voraussetzungen.
   Rückfrage „was stand vorher im Pflegegrad" ist nicht beantwortbar. Für
   Pflegedokumentation ist die Nachvollziehbarkeit von Änderungen Standard.
   — **P2, mittel**
-- **Vier getrennte Audit-Spuren ohne gemeinsame Sicht.** `mis_audit_log`,
-  `billing_audit_trail`, `wf_audit_log` und die Modul-Logs lassen sich nirgends
-  zusammen für einen Klienten oder Zeitraum auswerten. — **P2, mittel**
-- **Keine Aufbewahrungs-/Exportregel.** Kein Export der Audit-Spur für eine
-  Prüfung, keine dokumentierte Aufbewahrungsfrist (SGB XI: 10 Jahre für
-  Abrechnungsunterlagen). — **P2, mittel**
+- ~~**Vier getrennte Audit-Spuren ohne gemeinsame Sicht.**~~ **GESCHLOSSEN
+  (23.08.2026, zweiter P2-Durchgang).** `ladeOpsAudit()` führt jetzt alle vier
+  zusammen — `ops_aktivitaetslog`, `billing_audit_trail`, **`mis_audit_log`**
+  und **`wf_audit_log`** —, jede Quelle **einzeln** auf `organization_id`
+  gefenced (Regressionstest auf die Anzahl der Fences). `/admin/ops-audit`
+  filtert und beschriftet alle vier. Zeilen ohne `organization_id`
+  (Altbestand vor Migration 20260822010000) fallen bewusst heraus.
+  Tests: `__tests__/analytics/audit-gesamtsicht.test.ts`. — **P2, mittel**
+- ~~**Keine Aufbewahrungs-/Exportregel.**~~ **GESCHLOSSEN (23.08.2026) — in
+  zwei Teilen, davon war einer nie offen.** Die *Aufbewahrungsfrist* steht
+  bereits seit `5e8ff5a` im Löschkonzept (`docs/LOESCHKONZEPT.md`, Abschnitt
+  3.6: 10 Jahre, § 257 HGB / DSGVO Art. 30, Purge über
+  `admin_audit_log_purge()`) — der Bericht war hier veraltet. Neu ist der
+  *Export*: `GET /api/admin/analytics/ops-audit?format=csv`,
+  semikolongetrennt mit BOM für deutsches Excel, mit Entschärfung von
+  `=`/`+`/`-`/`@` am Zellenanfang gegen CSV-Injection. Der Export
+  protokolliert sich selbst als `data_export`. **Grenze:** je Quelle 500
+  Zeilen — kein vollständiger Jahresauszug bei wachsendem Bestand.
+  — **P2, mittel**
 - ~~**Die CRUD-Route `/api/leistungsnachweis/crud` ruft kein `logAuditEvent()`
   auf.**~~ **GESCHLOSSEN (Track 7, 23.08.2026).** Alle fünf Schreibpfade
   protokollieren jetzt über das Pflichtmuster `logAuditEventOrWarn()` unter

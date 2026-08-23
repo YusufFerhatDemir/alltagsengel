@@ -7,6 +7,7 @@ import { StatusBadge, Banner, EmptyRow } from '@/components/admin/OpsUI'
 import { logger } from '@/lib/logger';
 import DialogOverlay from '@/components/DialogOverlay'
 import { klickbar } from '@/lib/a11y'
+import { konfliktIds } from '@/lib/einsatzplanung/konflikte'
 const log = logger.child('admin:kalender');
 
 // ── Status-Farben ──────────────────────────────────────────────
@@ -240,6 +241,24 @@ export default function AdminKalenderPage() {
     return result
   }, [assignments, rangeStart, rangeEnd, hideAbgeschlossen])
 
+  // ── Zeitkonflikte ────────────────────────────────────────────
+  // Bereich 3 der Lückenanalyse (P2): der Kalender zeigte Überschneidungen
+  // gar nicht an — ein Konflikt fiel erst beim Speichern als Datenbankfehler
+  // auf. Dieselbe reine Funktion prüft serverseitig in
+  // /api/einsatzplanung; hier markiert sie nur.
+  const konflikte = useMemo(() => konfliktIds(
+    mapped.map(a => ({
+      id: a.id,
+      client_id: a.client_id,
+      caregiver_id: a.caregiver_id,
+      assignment_date: a.effectiveDay,
+      start_time: a.start_time,
+      end_time: a.end_time,
+      status: a.status,
+    })),
+  ), [mapped])
+  const imKonflikt = useCallback((id: string) => konflikte.has(id), [konflikte])
+
   // ── Stats ────────────────────────────────────────────────────
   const stats = useMemo(() => {
     const today = isoDate(new Date())
@@ -252,8 +271,8 @@ export default function AdminKalenderPage() {
       !['STORNIERT', 'cancelled', 'BEENDET', 'NO_SHOW'].includes(a.status) &&
       isAbsent(a.caregiver_id, today)
     ).length
-    return { planned, done, todayAbsences, openSubs }
-  }, [mapped, absences, isAbsent])
+    return { planned, done, todayAbsences, openSubs, konflikte: konflikte.size }
+  }, [mapped, absences, isAbsent, konflikte])
 
   // ── Navigation ───────────────────────────────────────────────
   function navigate(dir: -1 | 0 | 1) {
@@ -301,6 +320,10 @@ export default function AdminKalenderPage() {
         <div className="admin-stat-card accent">
           <div className="admin-stat-value">{stats.openSubs}</div>
           <div className="admin-stat-label">Offene Vertretungen</div>
+        </div>
+        <div className="admin-stat-card" style={{ borderLeft: '3px solid #FF9800' }}>
+          <div className="admin-stat-value">{stats.konflikte}</div>
+          <div className="admin-stat-label">Zeitkonflikte</div>
         </div>
       </div>
 
@@ -374,6 +397,7 @@ export default function AdminKalenderPage() {
               date={isoDate(baseDate)}
               assignments={mapped}
               isAbsent={isAbsent}
+              imKonflikt={imKonflikt}
               onSelect={setSelected}
               onCreateSlot={(hour) => { setCreateDate(isoDate(baseDate)); setCreateModal(true) }}
             />
@@ -383,6 +407,7 @@ export default function AdminKalenderPage() {
               monday={mondayOfWeek(baseDate)}
               assignments={mapped}
               isAbsent={isAbsent}
+              imKonflikt={imKonflikt}
               onSelect={setSelected}
               onDayClick={goToDay}
             />
@@ -447,13 +472,31 @@ export default function AdminKalenderPage() {
   )
 }
 
+// Zeitkonflikt-Markierung. Bewusst als Textmarke und nicht als weiteres
+// Emoji — das Ausfall-Zeichen bleibt eindeutig dem Ausfall vorbehalten.
+function KonfliktBadge() {
+  return (
+    <span
+      title="Zeitliche Überschneidung mit einem anderen Einsatz"
+      style={{
+        marginLeft: 6, fontSize: 10, fontWeight: 700, letterSpacing: '.3px',
+        color: '#FF9800', border: '1px solid #FF9800', borderRadius: 4,
+        padding: '0 4px', textTransform: 'uppercase',
+      }}
+    >
+      Konflikt
+    </span>
+  )
+}
+
 // ═══════════════════════════════════════════════════════════════
 // Tagesansicht (vertical timeline 06:00 - 22:00)
 // ═══════════════════════════════════════════════════════════════
-function DayView({ date, assignments, isAbsent, onSelect, onCreateSlot }: {
+function DayView({ date, assignments, isAbsent, imKonflikt, onSelect, onCreateSlot }: {
   date: string
   assignments: (AssignmentRow & { effectiveDay: string })[]
   isAbsent: (cgId: string, dateStr: string) => boolean
+  imKonflikt: (id: string) => boolean
   onSelect: (a: AssignmentRow) => void
   onCreateSlot: (hour: number) => void
 }) {
@@ -497,6 +540,7 @@ function DayView({ date, assignments, isAbsent, onSelect, onCreateSlot }: {
         const top = Math.max(timeToOffset(a.start_time), 0)
         const height = timeToHeight(a.start_time, a.end_time)
         const absent = isAbsent(a.caregiver_id, date)
+        const konflikt = imKonflikt(a.id)
         const sm = statusOf(a.status)
         return (
           <div
@@ -507,8 +551,8 @@ function DayView({ date, assignments, isAbsent, onSelect, onCreateSlot }: {
             style={{
               position: 'absolute', top, left: 64, right: 8, height, minHeight: 24,
               background: absent ? 'rgba(208,75,59,.15)' : `${sm.color}18`,
-              border: `1px solid ${absent ? 'rgba(208,75,59,.5)' : sm.color + '55'}`,
-              borderLeft: `3px solid ${absent ? '#D04B3B' : sm.color}`,
+              border: `1px solid ${konflikt ? '#FF9800' : absent ? 'rgba(208,75,59,.5)' : sm.color + '55'}`,
+              borderLeft: `3px solid ${absent ? '#D04B3B' : konflikt ? '#FF9800' : sm.color}`,
               borderRadius: 6, padding: '3px 8px', cursor: 'pointer', overflow: 'hidden',
               fontSize: 12, zIndex: 2,
             }}
@@ -516,6 +560,7 @@ function DayView({ date, assignments, isAbsent, onSelect, onCreateSlot }: {
             <div style={{ fontWeight: 600, color: absent ? '#D04B3B' : 'var(--ink)' }}>
               {formatTime(a.start_time)}–{formatTime(a.end_time)}
               {absent && <span title="Kraft abwesend" style={{ marginLeft: 4 }}>{'⚠️'}</span>}
+              {konflikt && <KonfliktBadge />}
             </div>
             <div style={{ color: 'var(--gold2)', fontSize: 11 }}>{fullName(a.caregiver)}</div>
             <div style={{ color: 'var(--ink4)', fontSize: 11 }}>{fullName(a.client)}</div>
@@ -531,10 +576,11 @@ function DayView({ date, assignments, isAbsent, onSelect, onCreateSlot }: {
 // ═══════════════════════════════════════════════════════════════
 // Wochenansicht (7 Spalten Mo-So)
 // ═══════════════════════════════════════════════════════════════
-function WeekView({ monday, assignments, isAbsent, onSelect, onDayClick }: {
+function WeekView({ monday, assignments, isAbsent, imKonflikt, onSelect, onDayClick }: {
   monday: Date
   assignments: (AssignmentRow & { effectiveDay: string })[]
   isAbsent: (cgId: string, dateStr: string) => boolean
+  imKonflikt: (id: string) => boolean
   onSelect: (a: AssignmentRow) => void
   onDayClick: (dateStr: string) => void
 }) {
@@ -571,19 +617,21 @@ function WeekView({ monday, assignments, isAbsent, onSelect, onDayClick }: {
               <div style={{ fontSize: 12, color: 'var(--ink5)' }}>&mdash;</div>
             ) : col.items.map(it => {
               const absent = isAbsent(it.caregiver_id, col.dateStr)
+              const konflikt = imKonflikt(it.id)
               return (
                 <div role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); (() => onSelect(it))() } }}
                   key={it.id}
                   onClick={() => onSelect(it)}
                   style={{
                     background: absent ? 'rgba(208,75,59,.12)' : 'var(--coal3)',
-                    border: `1px solid ${absent ? 'rgba(208,75,59,.4)' : 'var(--border)'}`,
+                    border: `1px solid ${konflikt ? '#FF9800' : absent ? 'rgba(208,75,59,.4)' : 'var(--border)'}`,
                     borderRadius: 8, padding: '6px 8px', marginBottom: 6, fontSize: 12, cursor: 'pointer',
                   }}
                 >
                   <div style={{ fontWeight: 600, color: absent ? '#D04B3B' : 'var(--ink2)' }}>
                     {formatTime(it.start_time)}&ndash;{formatTime(it.end_time)}
                     {absent && <span title="Kraft fällt aus" style={{ marginLeft: 4 }}>{'⚠️'}</span>}
+                    {konflikt && <KonfliktBadge />}
                   </div>
                   <div style={{ color: 'var(--gold2)' }}>{fullName(it.caregiver)}</div>
                   <div style={{ color: 'var(--ink4)' }}>&rarr; {fullName(it.client)}</div>
