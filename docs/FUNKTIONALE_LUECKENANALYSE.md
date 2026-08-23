@@ -1,6 +1,9 @@
 # Funktionale Lückenanalyse — Alltagsengel-Plattform
 
-**Stand:** 2026-08-21
+**Stand:** 2026-08-21 · **Nachtrag 2026-08-23 (Track 7):** sechs P2/P3-Befunde
+geschlossen, vier weitere als bereits erledigt bzw. falsch erhoben korrigiert.
+Alle Änderungen sind im Text markiert; die Ursprungsfassung wurde nicht
+umgeschrieben, damit nachvollziehbar bleibt, was am 21.08. tatsächlich galt.
 **Scope:** Funktionale Vollständigkeit für den Produktionsbetrieb als Angebot zur
 Unterstützung im Alltag nach § 45a/§ 45b SGB XI.
 **Ausdrücklich NICHT Gegenstand:** Security, RLS, DSGVO — dafür gelten
@@ -56,7 +59,7 @@ Kassenzulassungs-Voraussetzungen.
 | 6 | Offline-Erfassung existiert nur im nicht ausgelieferten Expo-Projekt | 12 | P1 | groß |
 | 7 | Kundenstammdaten nach Anlage nur teilweise editierbar, keine Deaktivierung | 1 | P1 | klein |
 | 8 | GPS-Nachweis in der ausgelieferten App nicht erfassbar | 4 | P2 | mittel |
-| 9 | Einsatzplanung prüft weder Abwesenheit noch Verfügbarkeitsfenster (nur Tourenplanung tut das) | 3 | P2 | klein |
+| ~~9~~ | ~~Einsatzplanung prüft weder Abwesenheit noch Verfügbarkeitsfenster~~ — **geschlossen `8392730`** | 3 | ~~P2~~ | — |
 | 10 | Rollenmodell kennt nur admin/kunde/engel/fahrer — PDL, QM, Buchhaltung fehlen | 13 | P2 | mittel |
 
 ---
@@ -89,9 +92,11 @@ Kassenzulassungs-Voraussetzungen.
   `status` oder `pipeline_status`. Ein Kunde, der verstirbt oder kündigt, bleibt
   aktiv; die einzige Alternative ist der DSGVO-Löschweg
   (`app/api/user/delete/route.ts`), der fachlich etwas anderes ist. — **P1, klein**
-- **Kein Wiedervorlage-/Statuswechsel-Workflow** für die `pipeline_status`-Kette
-  (`erstgespraech` → aktiv → beendet). Das Feld wird beim Anlegen gesetzt und
-  danach nie wieder.  — **P2, klein**
+- ~~**Kein Wiedervorlage-/Statuswechsel-Workflow** für die `pipeline_status`-Kette.~~
+  **GESCHLOSSEN in `8392730`** (bei der Erstfassung dieses Berichts übersehen).
+  `PATCH /api/admin/clients/[id]/status` setzt `status` und `pipeline_status`,
+  verdrahtet in `app/admin/clients/[id]/page.tsx` („Betreuungsstatus ändern"),
+  erlaubte Ziele in `lib/clients/status.ts::SETZBARE_STATUS`. — **P2, klein**
 - **Kein Kassenwechsel-Vorgang.** `pflegekasse_ik` ist ein einfaches Feld ohne
   Historie — nach einem Kassenwechsel lassen sich Altrechnungen nicht mehr der
   damals zuständigen Kasse zuordnen. — **P2, mittel**
@@ -132,11 +137,18 @@ Kassenzulassungs-Voraussetzungen.
   hoch; die Admin-Aktenverwaltung (`app/admin/dokumente`) arbeitet nur mit
   `akten_dokumente`. Ein Engel-Upload landet dadurch nicht in der Akte, die der
   Prüfer sieht. — **P2, mittel**
-- **Keine automatische Erinnerung vor Ablauf einer Qualifikation.** Die
-  Ablauf-Auswertung existiert, wird aber nur beim Öffnen der Seite gezogen — die
-  tägliche Automatisierungskette (`lib/automation/index.ts`) enthält sie
-  ausdrücklich nicht („Kette 4 absichtlich nicht hier"). Ein abgelaufenes
-  Führungszeugnis fällt erst auf, wenn die Einsatzplanung blockt. — **P2, klein**
+- ~~**Keine automatische Erinnerung vor Ablauf einer Qualifikation.**~~
+  **BEFUND WAR FALSCH** (korrigiert 23.08.2026). Die Erinnerung existiert und
+  läuft täglich: `warneVorFristablauf()` (Kette 2) zieht über
+  `sammleFristen()` die `caregiver_qualifications` mit `valid_until` und warnt
+  bei 30/14/7 Tagen Restlaufzeit an PDL/Admin **und** den betroffenen
+  Mitarbeiter; nach Ablauf erzeugt `eskaliereAbgelaufeneFristen()` (Kette 3)
+  eine Aufgabe. Der Verweis auf „Kette 4 absichtlich nicht hier" betraf die
+  BLOCKADE bei der Einsatzplanung, nicht die Erinnerung — die läuft
+  ereignisgetrieben an ihrer Quelle und braucht keinen Taktgeber.
+  Einschränkung, die bleibt: gewarnt wird nur, wenn die Restlaufzeit exakt
+  einer Schwelle entspricht; fällt ein Cron-Lauf aus, wird die Schwelle nicht
+  nachgeholt (dokumentierte Abwägung gegen Doppelversand).
 - **Verfügbarkeitsfenster ohne Wirkung in der Planung** — siehe Bereich 3.
 - **Kein Bewerbungs-/Onboarding-Workflow bis zur Freigabe.** `app/admin/applications`
   existiert, ist aber nicht mit `POST /api/personal/stammdaten` verbunden; aus
@@ -201,14 +213,20 @@ Kassenzulassungs-Voraussetzungen.
   'Arztbesuch', 'Spazieren'); die übrigen laufen fail-closed in
   `KEINE_TARIFZUORDNUNG`. Welcher Tarif für sie gilt, ist eine Preis-
   entscheidung und wurde bewusst nicht geraten. — **P1, klein (nach Tarifentscheid)**
-- **Abwesenheit wird in der Einsatzplanung nicht geprüft.** Die Prüfung existiert
-  nur in `lib/touren/server.ts` und greift nur über `POST /api/tours`. Über
-  `/api/einsatzplanung` lässt sich einem Engel im genehmigten Urlaub ein Einsatz
-  zuweisen. — **P2, klein** (vorhandene Prüffunktion mitbenutzen)
-- **Verfügbarkeitsfenster werden nicht gegen die Planung geprüft.**
-  `lib/availability.ts::istVerfuegbar()` wird nur vom Kunden-Matching
-  (`/api/engel/match`) und den Buchungsseiten genutzt, nicht von der
-  Einsatzplanung. — **P2, klein**
+- ~~**Abwesenheit wird in der Einsatzplanung nicht geprüft.**~~
+  ~~**Verfügbarkeitsfenster werden nicht gegen die Planung geprüft.**~~
+  **BEIDE GESCHLOSSEN in `8392730`** (bei der Erstfassung dieses Berichts
+  übersehen). `POST` **und** `PATCH /api/einsatzplanung` rufen
+  `pruefeCaregiverVerfuegbarkeit()` aus `lib/touren/server.ts` — dieselbe
+  Funktion, die schon die Tourenplanung benutzt. Semantik wie dort:
+  genehmigte/gemeldete Abwesenheit blockiert mit 422 (übersteuerbar nur mit
+  `force_override`, protokolliert), ein Termin außerhalb der gepflegten
+  `angel_availability`-Fenster warnt. Der PATCH prüft gegen Bestand + Änderung
+  zusammen, damit ein reiner Datumswechsel nicht gegen den alten Tag läuft.
+  Ohne `assignment_date` (Serie über `weekday` + `recurrence_rule`) wird
+  bewusst nicht geprüft und das in der Antwort benannt.
+  Abdeckung: `__tests__/einsatzplanung/verfuegbarkeitspruefung.test.ts`.
+  — **P2, klein**
 - **Keine Konfliktanzeige in der Oberfläche.** Kalender und Schedule enthalten
   keinerlei Konflikt-/Überschneidungslogik; ein Konflikt äußert sich erst als
   Datenbankfehler beim Speichern. — **P2, mittel**
@@ -372,17 +390,36 @@ Kassenzulassungs-Voraussetzungen.
   genau der Fall „30 € vs. 25 €" — ist im Schema vorgesehen, aber nicht bedatet,
   und der Price-Resolver bekommt die Qualifikation der eingesetzten Kraft auch gar
   nicht übergeben. — **P1, mittel**
-- **Feiertagszuschläge sind wirkungslos.** `billing_feiertage` ist live **leer**
-  (0 Zeilen), und alle 24 Tarife haben `zuschlag_feiertag_prozent = 0`,
-  `zuschlag_wochenende_prozent = 0`, `zuschlag_nacht_prozent = 0`. Der
-  Wochenendtarif wird stattdessen über eine eigene Leistungsart
-  (`wochenendbetreuung`) abgebildet — dann muss die Erfassung die richtige
-  Leistungsart wählen, was niemand prüft. Es gibt außerdem keinen Befüllungs-Job
-  für `billing_feiertage`, obwohl `bundesweiteFeiertage()`/`landesFeiertage()`
-  die Daten berechnen könnten. — **P2, klein**
-- **Kein Kombinationsabschlag im Einsatz.** `kombinations_abschlag_prozent`
-  existiert als Spalte, ist überall 0 und wird von `calculateLineTotal()` nicht
-  gelesen. — **P3, klein**
+- **Feiertagszuschläge sind wirkungslos.** Alle 24 Tarife haben
+  `zuschlag_feiertag_prozent = 0`, `zuschlag_wochenende_prozent = 0`,
+  `zuschlag_nacht_prozent = 0` — daran ändert sich nichts, bis belegte Sätze aus
+  einer Vergütungsvereinbarung vorliegen. Der Wochenendtarif wird stattdessen
+  über eine eigene Leistungsart (`wochenendbetreuung`) abgebildet — dann muss die
+  Erfassung die richtige Leistungsart wählen, was niemand prüft. — **P2, mittel
+  / extern (Vergütungsvereinbarung)**
+- ~~**Kein Befüllungs-Job für `billing_feiertage`.**~~ **GESCHLOSSEN
+  (Track 7, 23.08.2026).** `importiereFeiertage()` hatte außer den Tests keinen
+  Aufrufer, die Tabelle stand live auf 0 Zeilen. Neu:
+  `lib/automation/feiertage-pflege.ts::pflegeFeiertagskatalog()` als Kette 13 der
+  täglichen Automatisierung — laufendes plus Folgejahr, alle 16 Bundesländer,
+  idempotent. Sie schreibt **ausschließlich Feiertagsdaten**, keinen einzigen
+  Zuschlagssatz; solange die Prozentsätze auf 0 stehen, ändert der gefüllte
+  Katalog keinen Rechnungsbetrag. Mitgefixt: die alte Fassung zählte jeden
+  Fehler als `skipped`, wodurch eine fehlende Tabelle oder eine RLS-Ablehnung
+  wie eine harmlose Dublette aussah. Tests:
+  `__tests__/automation/feiertage-pflege.test.ts`. — **P2, klein**
+- ~~**Kein Kombinationsabschlag im Einsatz.**~~ **GESCHLOSSEN (Track 7,
+  23.08.2026).** `calculateLineTotal()` liest `kombinations_abschlag_prozent`
+  jetzt. Live steht die Spalte überall auf 0, der Betrag ändert sich also heute
+  nicht — der Fehlerfall war ein anderer: hätte jemand einen belegten Abschlag
+  im Tarif hinterlegt, wäre er **still** ignoriert und zum vollen Satz
+  abgerechnet worden. Fail-closed nach Projektmuster: führt der Tarif einen
+  Abschlag, muss der Aufrufer über `istKombination` erklären, ob die Position zu
+  einer Kombination gehört, sonst wirft die Berechnung. Eine Heuristik (etwa
+  `menge > 1`) wäre eine erfundene Abrechnungsregel.
+  `snapshotPrice()` sagt ebenfalls ab, solange `invoice_line_snapshots` keine
+  Abschlagsspalte hat — lieber kein Preisbeleg als ein unvollständiger.
+  Tests: `__tests__/billing/kombinations-abschlag.test.ts`. — **P3, klein**
 
 ---
 
@@ -518,9 +555,20 @@ Kassenzulassungs-Voraussetzungen.
   `components/PushProvider.tsx`, `components/NotificationBell.tsx`.
 
 **FEHLT**
-- **Keine Terminerinnerung an Kunden oder Angehörige.** Es gibt Erinnerungen für
-  fehlende Nachweise und Unterschriften, aber keine „Ihr Termin morgen um 10 Uhr".
-  — **P2, klein**
+- ~~**Keine Terminerinnerung an Kunden oder Angehörige.**~~ **GESCHLOSSEN
+  (Track 7, 23.08.2026).** `lib/automation/termin-erinnerung.ts` als Kette 12 der
+  täglichen Automatisierung: In-App-Benachrichtigung am Vortag an den Kunden
+  (`clients.user_id`) und an jeden aktiven Angehörigen-Zugang, mit
+  Dublettenschutz je (Einsatz, Empfänger) über `notifications.data->>assignment_id`
+  und portalrichtigem Link (`/kunde/kalender` bzw. `/angehoerige/termine`).
+  Stornierte und beendete Einsätze werden ausgelassen.
+  Bewusst **kein E-Mail-Versand**: der läuft über Resend und ist ohne
+  `RESEND_API_KEY` still wirkungslos — eine unbemerkt nicht zugestellte
+  Terminerinnerung ist schlechter als keine.
+  **Live-Vorbehalt:** `clients.user_id` ist bei allen vier Klienten NULL (siehe
+  Bereich 3); die Kette meldet das als `ohneEmpfaenger` und erinnert ohne
+  weitere Änderung, sobald die Verknüpfung steht.
+  Tests: `__tests__/automation/termin-erinnerung.test.ts`. — **P2, klein**
 - **Kein SMS-Kanal.** `lib/whatsapp` existiert für eingehende Nachrichten;
   ausgehende SMS/WhatsApp-Benachrichtigung an Kunden ohne App fehlt. — **P3, mittel**
 - **Kein Benachrichtigungs-Log / keine Zustellkontrolle.** Fehlgeschlagene
@@ -585,16 +633,23 @@ Kassenzulassungs-Voraussetzungen.
   - **Buchhaltung** — kein Weg, jemandem Rechnungen und Mahnwesen zu geben,
     ohne Personal- und Gesundheitsdaten mit auszuliefern.
   — **P2, mittel**
-- **`angehoerige` ist keine geführte Rolle.** `/angehoerige` steht **nicht** in
-  `PROTECTED_PREFIXES` und hat keinen `ROLE_ACCESS`/`ROLE_HOME`-Eintrag; der
-  Schutz hängt allein am Client-Guard in `app/angehoerige/layout.tsx`. Der
-  Login-Umweg funktioniert nur, weil `app/auth/login/page.tsx` eigens
-  `angehoerigen_zugaenge` abfragt. — **P2, klein**
-- **Login-Weiterleitung liest `user_metadata.role`** (`app/auth/login/page.tsx:220`)
-  — genau die Quelle, die `proxy.ts` als unsicher verwirft. Für die
-  Zugriffskontrolle unerheblich (die Middleware entscheidet), aber wer nur
-  `profiles.role` gesetzt hat, landet nach dem Login auf `/kunde/home` statt im
-  richtigen Portal. — **P2, klein**
+- ~~**`angehoerige` ist keine geführte Rolle.**~~ **GESCHLOSSEN (Track 7,
+  23.08.2026).** `/angehoerige` steht jetzt im Middleware-Matcher, in
+  `PROTECTED_PREFIXES`, in `ROLE_ACCESS` (`angehoerige` plus `admin`/`superadmin`
+  — exakt die Rollenmenge, die `lib/angehoerige/api-auth.ts` und der
+  Layout-Guard schon prüfen) und in `ROLE_HOME`. Der Bereich läuft damit
+  fail-closed wie `/admin`, `/kunde`, `/engel`, `/fahrer` und `/mis`; der
+  Client-Guard bleibt als Defense-in-Depth. Keine Rechteerweiterung — nur die
+  fehlende serverseitige Kante. Tests:
+  `__tests__/security/angehoerigenportal-routenschutz.test.ts`. — **P2, klein**
+- ~~**Login-Weiterleitung liest `user_metadata.role`.**~~ **GESCHLOSSEN
+  (Track 7, 23.08.2026).** `nachAnmeldung()` bestimmt die Rolle jetzt in
+  derselben Hierarchie wie `proxy.ts`: `app_metadata.role` (nur serverseitig
+  setzbar) vor `profiles.role`; `user_metadata.role` wird nicht mehr gelesen.
+  Die Rolle `angehoerige` führt direkt ins Angehörigenportal, der bestehende
+  Umweg über `angehoerigen_zugaenge` bleibt als Fallback für Nutzer ohne
+  gesetzte Rolle. Tests:
+  `__tests__/security/rollenquelle-und-nachweis-audit.test.ts`. — **P2, klein**
 - **Kein Vier-Augen-Prinzip** für kritische Vorgänge (Rechnungsfreigabe,
   Tarifverifizierung, Storno). Die Tarifverifizierung protokolliert zwar
   unveränderlich, verlangt aber keine zweite Person. — **P3, mittel**
@@ -626,11 +681,19 @@ Kassenzulassungs-Voraussetzungen.
 - **Keine Aufbewahrungs-/Exportregel.** Kein Export der Audit-Spur für eine
   Prüfung, keine dokumentierte Aufbewahrungsfrist (SGB XI: 10 Jahre für
   Abrechnungsunterlagen). — **P2, mittel**
-- **Live sehr dünn besetzt:** `mis_audit_log` 9 Einträge, `billing_audit_trail`
-  6 — bei 30 Leistungsnachweisen und 3 Rechnungen. Die Erfassung der 30
-  Nachweise hat offenbar keine Audit-Einträge erzeugt; die CRUD-Route
-  `/api/leistungsnachweis/crud` ruft tatsächlich kein `logAuditEvent()` auf.
+- ~~**Die CRUD-Route `/api/leistungsnachweis/crud` ruft kein `logAuditEvent()`
+  auf.**~~ **GESCHLOSSEN (Track 7, 23.08.2026).** Alle fünf Schreibpfade
+  protokollieren jetzt über das Pflichtmuster `logAuditEventOrWarn()` unter
+  `entityType: 'service_record'` — erfasst, bestätigt, unterschrieben,
+  storniert, geändert. Beim generischen Update werden `geaenderte_felder`
+  festgehalten, nicht die Werte davor: dieselbe Tiefe wie im übrigen System,
+  die fehlende Feldhistorie wird nicht vorgetäuscht (eigener Befund oben).
+  Tests: `__tests__/security/rollenquelle-und-nachweis-audit.test.ts`.
   — **P2, klein**
+- **Live-Bestand bleibt dünn:** `mis_audit_log` 9 Einträge,
+  `billing_audit_trail` 6 — bei 30 Leistungsnachweisen und 3 Rechnungen. Die
+  30 bereits erfassten Nachweise bekommen **rückwirkend keinen** Eintrag; die
+  Lücke schließt sich erst für neue Vorgänge.
 
 ---
 
@@ -654,9 +717,12 @@ bestätigt das unabhängig: „Absender-IK der Organisation: 460629986" und
 „Absenderdaten für den Briefkopf: Alltagsengel UG · IK 460629986".
 
 **Offene Punkte dazu:**
-1. **`ALLTAGSENGEL_IK` fehlt in `.env.example`.** Der Fallback ist im Code
-   dokumentiert, aber nirgends als konfigurierbare Variable ausgewiesen — beim
-   Aufsetzen einer neuen Umgebung fällt er niemandem auf. — **P2, klein**
+1. ~~**`ALLTAGSENGEL_IK` fehlt in `.env.example`.**~~ **GESCHLOSSEN in
+   `e588416`** (bei der Erstfassung dieses Berichts übersehen). `.env.example`
+   führt die Variable ab Zeile 222 mit vollständiger Begründung: Auflösungs-
+   reihenfolge, warum sie im Normalbetrieb nicht nötig ist, und der Hinweis auf
+   das CI-Gate `scripts/ci-ik-check.sh`. Kein Standardwert gesetzt — Absicht.
+   — **P2, klein**
 2. **Ob die Variable in Vercel gesetzt ist, konnte nicht geprüft werden**
    (`npx vercel whoami` → „No existing credentials found"). Sie ist im
    Normalbetrieb nicht nötig; sie wird erst relevant, wenn das Lesen der
@@ -730,10 +796,10 @@ Diese Punkte gelten damit als **nicht erfüllt**, nicht als erfüllt:
 3. Kundenstammdaten-Whitelist erweitern + Deaktivierung (B-01).
 4. Für jeden echten Kunden einen Vertrag in `akten_vertraege` anlegen — sonst
    weist `/api/einsatzplanung` ihn mit 422 ab (Betriebsschritt, kein Code).
-5. Abwesenheits- und Verfügbarkeitsprüfung aus `lib/touren/server.ts` in
-   `/api/einsatzplanung` mitbenutzen (B-03).
+5. ~~Abwesenheits- und Verfügbarkeitsprüfung aus `lib/touren/server.ts` in
+   `/api/einsatzplanung` mitbenutzen (B-03).~~ **erledigt `8392730`**
 6. Jahresübertrag als Cron + Button (B-05).
-7. `ALLTAGSENGEL_IK` in `.env.example` aufnehmen (IK-Abschnitt).
+7. ~~`ALLTAGSENGEL_IK` in `.env.example` aufnehmen (IK-Abschnitt).~~ **erledigt `e588416`**
 
 **Als Nächstes (mittel, schließt die Kette):**
 8. Buchung → Einsatz → Nachweis verbinden (B-03).

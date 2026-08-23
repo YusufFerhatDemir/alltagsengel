@@ -45,11 +45,18 @@ function encodeSessionCookie(name: string, value: string): string {
 // admin/superadmin dürfen ALLE geschützten Bereiche.
 // ═══════════════════════════════════════════════════════════════
 const ROLE_ACCESS: Record<string, string[]> = {
-  admin:      ['/admin', '/mis', '/kunde', '/engel', '/fahrer'],
-  superadmin: ['/admin', '/mis', '/kunde', '/engel', '/fahrer'],
+  admin:      ['/admin', '/mis', '/kunde', '/engel', '/fahrer', '/angehoerige'],
+  superadmin: ['/admin', '/mis', '/kunde', '/engel', '/fahrer', '/angehoerige'],
   kunde:      ['/kunde'],
   engel:      ['/engel'],
   fahrer:     ['/fahrer'],
+  // Das Angehoerigenportal war bis 2026-08-23 serverseitig ungeschuetzt:
+  // /angehoerige stand weder im matcher noch in PROTECTED_PREFIXES, der
+  // Schutz haftete allein am Client-Guard in app/angehoerige/layout.tsx
+  // (Lueckenanalyse Bereich 13, P2). Die erlaubten Rollen sind exakt
+  // dieselben, die lib/angehoerige/api-auth.ts und der Layout-Guard
+  // schon pruefen — angehoerige plus admin/superadmin.
+  angehoerige: ['/angehoerige'],
 }
 
 // ═══ Startseite pro Rolle (für Redirect bei falschem Bereich) ═══
@@ -59,10 +66,11 @@ const ROLE_HOME: Record<string, string> = {
   kunde:      '/kunde/home',
   engel:      '/engel/home',
   fahrer:     '/fahrer/home',
+  angehoerige: '/angehoerige',
 }
 
 // ═══ Geschützte Pfad-Präfixe ═══
-const PROTECTED_PREFIXES = ['/admin', '/kunde', '/engel', '/fahrer', '/mis']
+const PROTECTED_PREFIXES = ['/admin', '/kunde', '/engel', '/fahrer', '/mis', '/angehoerige']
 
 function isProtectedPath(pathname: string): boolean {
   return PROTECTED_PREFIXES.some(
@@ -266,6 +274,7 @@ export const config = {
     '/engel/:path*',
     '/fahrer/:path*',
     '/mis/:path*',
+    '/angehoerige/:path*',
     '/api/:path*',
   ],
 }

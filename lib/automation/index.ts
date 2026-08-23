@@ -24,6 +24,8 @@ import { pruefeAlleBudgetsUndWarnen } from './budget-warnung'
 import { erinnereFehlendeUnterschriften } from './unterschrift-erinnerung'
 import { pruefeMonatsabschlussVollstaendigkeit } from './monatsabschluss-pruefung'
 import { pruefeVitalwerteUndMeldePdl } from './vitalwerte-pdl'
+import { pflegeFeiertagskatalog } from './feiertage-pflege'
+import { erinnereAnKommendeTermine } from './termin-erinnerung'
 import { escaliereUeberfaellige } from '@/lib/abrechnung/fristen-manager'
 import { logger } from '@/lib/logger'
 const log = logger.child('automatisierung')
@@ -66,6 +68,10 @@ export async function fuehreTaeglicheAutomatisierungAus(
   await ketteAusfuehren(ketten, 'unterschrift_erinnerung', () => erinnereFehlendeUnterschriften(supabase, organizationId, actorId))
   await ketteAusfuehren(ketten, 'monatsabschluss_pruefung', () => pruefeMonatsabschlussVollstaendigkeit(supabase, organizationId, actorId))
   await ketteAusfuehren(ketten, 'vitalwerte_pdl', () => pruefeVitalwerteUndMeldePdl(supabase, organizationId, actorId))
+  await ketteAusfuehren(ketten, 'termin_erinnerung', () => erinnereAnKommendeTermine(supabase, organizationId))
+  // Katalogpflege, mandantenuebergreifend: schreibt nur Feiertagsdaten,
+  // keine Zuschlagssaetze (siehe feiertage-pflege.ts).
+  await ketteAusfuehren(ketten, 'feiertage_katalog', () => pflegeFeiertagskatalog(supabase))
 
   // Fallback für die überfällige-Aufgaben-Eskalation (SQL-Trigger-Kette):
   // Migration 20260918000000 legt eine pg_cron-Planung an, die nur greift,

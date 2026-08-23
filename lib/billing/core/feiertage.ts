@@ -204,22 +204,49 @@ export async function istFeiertag(
   return (data?.length ?? 0) > 0;
 }
 
+export interface FeiertagImportErgebnis {
+  /** Neu angelegte Zeilen. */
+  importiert: number;
+  /** Zeilen, die es schon gab (Unique-Verletzung) — der Normalfall bei
+   *  jedem Lauf nach dem ersten. */
+  vorhanden: number;
+  /** Echte Fehler (fehlende Tabelle, RLS, Constraint) — benannt, nicht
+   *  als "uebersprungen" verbucht. */
+  fehler: string[];
+}
+
+/** Postgres-Fehlercode fuer unique_violation. */
+const UNIQUE_VERLETZUNG = '23505';
+
 /**
  * Importiert Feiertage fuer ein Jahr in die billing_feiertage Tabelle.
- * Idempotent (ON CONFLICT DO NOTHING via unique Index).
+ * Idempotent: ein zweiter Lauf legt nichts doppelt an (unique Index
+ * ueber datum + COALESCE(bundesland,'__ALL__')).
+ *
+ * WICHTIG — Fehler werden NICHT als "uebersprungen" verbucht.
+ * Die frueehere Fassung zaehlte jeden Fehler in `skipped`: eine fehlende
+ * Tabelle, eine RLS-Ablehnung und eine harmlose Dublette sahen im Ergebnis
+ * identisch aus. Ein Lauf, der nichts geschrieben hat, war von einem Lauf,
+ * bei dem schon alles stand, nicht zu unterscheiden. Nur die
+ * Unique-Verletzung gilt jetzt als "vorhanden", alles andere landet
+ * benannt in `fehler`.
+ *
+ * Der Aufrufer braucht Schreibrechte auf den Katalog (Admin oder
+ * service_role, siehe Migration 20260808140000_katalog_rls.sql).
  */
 export async function importiereFeiertage(
   supabase: SupabaseClient,
   jahr: number,
   bundeslaender: string[]
-): Promise<{ imported: number; skipped: number }> {
+): Promise<FeiertagImportErgebnis> {
   const alleFeiertage = [
     ...bundesweiteFeiertage(jahr),
     ...bundeslaender.flatMap(bl => landesFeiertage(jahr, bl)),
   ];
 
-  let imported = 0;
-  let skipped = 0;
+  let importiert = 0;
+  let vorhanden = 0;
+  const fehler: string[] = [];
 
   for (const f of alleFeiertage) {
     const { error } = await supabase
@@ -230,14 +257,20 @@ export async function importiereFeiertage(
         bundesland: f.bundesland,
       });
 
-    if (error) {
-      skipped++;
+    if (!error) {
+      importiert++;
+      continue;
+    }
+
+    const code = (error as { code?: string }).code;
+    if (code === UNIQUE_VERLETZUNG || /duplicate key|unique/i.test(error.message)) {
+      vorhanden++;
     } else {
-      imported++;
+      fehler.push(`${f.datum} ${f.bezeichnung} (${f.bundesland ?? 'bundesweit'}): ${error.message}`);
     }
   }
 
-  return { imported, skipped };
+  return { importiert, vorhanden, fehler };
 }
 
 // --- Hilfsfunktionen ---

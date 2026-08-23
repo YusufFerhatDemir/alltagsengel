@@ -5,6 +5,12 @@
 > 6d148a5, ea67b5b, e588416, 8392730, de4623b, 79e7e0e, f4048df, 3c29b00)
 > — dazu `ebf14e2` im separaten ChairMatch-Repo (`/Users/work/chairmatch`).
 >
+> **23.08.2026 (Nachtrag, Master-Track 7 „P2/P3"): sechs P2/P3-Befunde der
+> Funktionalen Lueckenanalyse geschlossen, vier weitere als bereits erledigt
+> bzw. falsch erhoben korrigiert.** Reiner Anwendungscode — **keine Migration,
+> kein Live-Apply noetig**. Details unter „Funktionale Lueckenanalyse: P2/P3"
+> weiter unten und im CHANGELOG-Eintrag vom 23.08.
+>
 > **23.08.2026 — 6 von 8 Master-Tracks abgeschlossen.** Zwei Migrationen sind
 > nicht mehr „wartet auf Apply", sondern **live angewendet und gegengeprueft**
 > (ChairMatch-Persistenz, `invoice_email_log`). P6-Legacy geprueft, Buchungskette
@@ -340,6 +346,69 @@ die Einstufung vom 22.08. wird damit praezisiert, nicht widerrufen.
   sofort aktives Konto anlegen. **CEO_ACTION_REQUIRED** (Punkt 7 oben).
 - Nach dem Abschalten des Signups ist P6 ein reiner `DECOMMISSION_CANDIDATE`
   ohne akute Live-Flaeche.
+
+---
+
+## Funktionale Lueckenanalyse: P2/P3-Durchgang (Track 7, 23.08.2026)
+
+**Status: 6 geschlossen | 4 korrigiert | Rest begruendet offen**
+Quelle: `docs/FUNKTIONALE_LUECKENANALYSE.md` (im Text markiert, Ursprungsfassung
+nicht umgeschrieben). Auswahlkriterium: technisch aus der Session loesbar —
+keine CEO-Aktion, kein externer Bescheid, kein DDL-Zugang.
+
+### Geschlossen
+
+| # | Befund | Bereich | Prio | Wo |
+|---|--------|---------|------|-----|
+| 1 | Angehoerigenportal serverseitig ungeschuetzt (`/angehoerige` nicht in Matcher/`PROTECTED_PREFIXES`) | 13 | P2 | `proxy.ts` |
+| 2 | Login-Weiterleitung las manipulierbares `user_metadata.role` | 13 | P2 | `app/auth/login/page.tsx` |
+| 3 | Leistungsnachweis-CRUD schrieb keinen Audit-Eintrag (5 Schreibpfade) | 14 | P2 | `app/api/leistungsnachweis/crud/route.ts` |
+| 4 | `billing_feiertage` leer, kein Befuellungs-Job | 7 | P2 | `lib/automation/feiertage-pflege.ts` (neu, Kette 13) |
+| 5 | Keine Terminerinnerung an Kunden/Angehoerige | 11 | P2 | `lib/automation/termin-erinnerung.ts` (neu, Kette 12) |
+| 6 | `kombinations_abschlag_prozent` wurde nie gelesen | 7 | P3 | `lib/billing/core/price-resolver.ts` |
+
+### Korrigiert — Bericht war veraltet oder falsch, nichts angefasst
+
+| Befund | Tatsaechlicher Stand |
+|---|---|
+| Abwesenheitspruefung fehlt in der Einsatzplanung (B-03) | bereits geschlossen in `8392730` |
+| Verfuegbarkeitsfenster ohne Wirkung in der Planung (B-03) | bereits geschlossen in `8392730` |
+| Kein Wiedervorlage-/Statuswechsel-Workflow (B-01) | bereits geschlossen in `8392730` |
+| Keine Erinnerung vor Ablauf einer Qualifikation (B-02) | **war nie offen** — Kette 2 warnt 30/14/7 Tage, Kette 3 eskaliert nach Ablauf |
+| `ALLTAGSENGEL_IK` fehlt in `.env.example` (IK) | bereits geschlossen in `e588416` |
+
+### Grenzen dieses Durchgangs — unveraendert
+
+- **§45b-/VP-Tarife bleiben `blocked`/`unverified`**, 35 EUR/h bleibt gesperrt.
+  Keine der sechs Aenderungen fasst einen Preis oder einen Tarifstatus an.
+  Der gefuellte Feiertagskatalog aendert **keinen Rechnungsbetrag**, solange
+  alle `zuschlag_feiertag_prozent` auf 0 stehen — und das tun sie, bis belegte
+  Saetze aus einer Verguetungsvereinbarung vorliegen.
+- **`COACH_DIPA_MODUS`** unveraendert `false`. **Entlastungsbetrag**
+  unveraendert 131 EUR/Monat.
+- **Die Terminerinnerung erreicht heute niemanden:** `clients.user_id` ist bei
+  allen vier Live-Klienten NULL (Befund aus Bereich 3, P1, weiterhin offen).
+  Die Kette meldet das als `ohneEmpfaenger` statt still nichts zu tun und
+  erinnert ohne weitere Aenderung, sobald die Verknuepfung steht.
+- **`billing_feiertage` ist erst nach dem naechsten Cron-Lauf gefuellt** — der
+  einzige Punkt dieses Tracks, dessen Wirkung nicht sofort sichtbar ist.
+  Nachpruefbar ueber die Kette `feiertage_katalog` in der Antwort von
+  `/api/admin/automatisierung`.
+- **Nicht angefangen** (kein „kleiner Fix", nicht halb hinterlassen):
+  Feldhistorie im Audit-Trail, PDF-Export der Dokumentation, Rollen PDL/QM/
+  Buchhaltung, Sammelrechnungslauf, Serientermin-Pflege, Kassenwechsel-Historie,
+  gemeinsame Sicht ueber die vier Audit-Spuren, GPS in der ausgelieferten App.
+
+### Nachweis
+
+- **CODE:** 6 Dateien geaendert, 2 neu (`lib/automation/feiertage-pflege.ts`,
+  `lib/automation/termin-erinnerung.ts`), 5 neue Testdateien.
+- **CI/TEST (lokal vollstaendig nachgefahren):** `tsc --noEmit` 0 Fehler ·
+  `vitest run` **3553 passed / 38 skipped / 0 rot** (vorher 3515, **+38 neue
+  Tests**) · `test:unit` 794 passed / 0 fail · `lint:forbidden` 0 Treffer bei
+  24 328 Dateien · `ci-secret-scan.sh` + `ci-ik-check.sh` Exit 0 ·
+  `npm run build` (Turbopack) Exit 0.
+- **LIVE:** keine Migration, kein Apply erforderlich.
 
 ---
 

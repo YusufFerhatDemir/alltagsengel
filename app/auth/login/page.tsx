@@ -32,7 +32,7 @@ function LoginForm() {
   // Hat das Konto einen bestätigten TOTP-Faktor, steht die Sitzung nach dem
   // Passwort erst auf AAL1. Erst der Code hebt sie auf AAL2 — bis dahin wird
   // NICHT weitergeleitet. Regeln: lib/coach/mfa.ts
-  const [mfaUser, setMfaUser] = useState<{ id: string; email?: string; user_metadata?: Record<string, unknown> } | null>(null)
+  const [mfaUser, setMfaUser] = useState<{ id: string; email?: string; user_metadata?: Record<string, unknown>; app_metadata?: Record<string, unknown> } | null>(null)
   const [mfaCode, setMfaCode] = useState('')
 
   // ═══ Brute-Force State ═══
@@ -215,9 +215,31 @@ function LoginForm() {
    * Protokoll, geparkte Profildaten, Weiterleitung. Bewusst herausgezogen:
    * Der Weg mit zweitem Faktor betritt ihn erst nach der Code-Prüfung.
    */
-  async function nachAnmeldung(user: { id: string; email?: string; user_metadata?: Record<string, unknown> }) {
+  async function nachAnmeldung(user: {
+    id: string
+    email?: string
+    user_metadata?: Record<string, unknown>
+    app_metadata?: Record<string, unknown>
+  }) {
     const supabase = createClient()
-    const role = (user.user_metadata?.role as string) || ''
+
+    // Rollenquelle wie in proxy.ts: app_metadata.role (nur serverseitig
+    // setzbar) vor profiles.role (durch prevent_role_escalation geschuetzt).
+    // user_metadata.role ist vom Nutzer selbst editierbar und wird deshalb
+    // NICHT gelesen — bis 2026-08-23 hing die Weiterleitung genau daran
+    // (Lueckenanalyse Bereich 13, P2). Fuer die Zugriffskontrolle war das
+    // ohne Folge (die Middleware entscheidet), aber wer nur profiles.role
+    // gesetzt hatte, landete nach dem Login auf /kunde/home statt im
+    // eigenen Portal.
+    let role = (user.app_metadata?.role as string) || ''
+    if (!role) {
+      const { data: profil } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .maybeSingle()
+      role = (profil?.role as string) || ''
+    }
 
     // Log im Hintergrund
     logSuccessLogin().catch((err) => log.warnWithException('Success-Login-Logging fehlgeschlagen (non-blocking)', err))
@@ -236,6 +258,8 @@ function LoginForm() {
       window.location.href = '/engel/home'
     } else if (role === 'fahrer') {
       window.location.href = '/fahrer/home'
+    } else if (role === 'angehoerige') {
+      window.location.href = '/angehoerige'
     } else {
       // Prüfe ob der User einen aktiven Angehörigen-Zugang hat
       const { data: zugaenge } = await supabase
