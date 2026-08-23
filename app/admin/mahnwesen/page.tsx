@@ -53,6 +53,8 @@ interface QueueZaehler {
   versendet: number
   fehlgeschlagen: number
   storniert: number
+  /** Dead Letter — diese Mahnungen gehen ohne Eingriff nie mehr raus. */
+  aufgegeben: number
 }
 
 interface VersandErgebnis {
@@ -60,6 +62,7 @@ interface VersandErgebnis {
   versendet: number
   storniert: number
   fehlgeschlagen: number
+  aufgegeben: number
   uebersprungen: number
   reaktiviert: number
   details: Array<{ queueId: string; empfaenger: string; status: string; grund?: string }>
@@ -98,9 +101,10 @@ export default function MahnwesenPage() {
   /**
    * Stoesst den Versand der wartenden Mahnschreiben an.
    *
-   * `wiederholen` setzt vorher alle fehlgeschlagenen Eintraege dieser
-   * Organisation zurueck auf 'wartend' — gedacht fuer den Fall, dass die
-   * Ursache behoben wurde (fehlender RESEND_API_KEY, falsche Adresse).
+   * `wiederholen` holt vorher die FAELLIGEN fehlgeschlagenen Eintraege
+   * dieser Organisation zurueck auf 'wartend' — faellig heisst: die
+   * Wartezeit ist um und die Versuchsobergrenze noch nicht erreicht.
+   * Ein Eintrag im Dead Letter ('aufgegeben') kommt dabei NICHT zurueck.
    */
   async function starteVersand(wiederholen: boolean) {
     const frage = wiederholen
@@ -276,7 +280,7 @@ export default function MahnwesenPage() {
             <div style={{ fontWeight: 600, fontSize: 15 }}>Mahnschreiben versenden</div>
             <div style={{ fontSize: 12, color: '#888', marginTop: 2 }}>
               {queue
-                ? `${queue.wartend} wartend · ${queue.versendet} versendet · ${queue.fehlgeschlagen} fehlgeschlagen · ${queue.storniert} storniert`
+                ? `${queue.wartend} wartend · ${queue.versendet} versendet · ${queue.fehlgeschlagen} fehlgeschlagen · ${queue.storniert} storniert · ${queue.aufgegeben} aufgegeben`
                 : 'Warteschlange wird geladen…'}
               <br />
               Vor jedem Versand wird erneut geprüft, ob die Rechnung inzwischen bezahlt oder blockiert
@@ -297,11 +301,21 @@ export default function MahnwesenPage() {
           )}
         </div>
 
+        {(queue?.aufgegeben ?? 0) > 0 && (
+          <div style={{ marginTop: 12, padding: '10px 12px', borderRadius: 6, background: 'rgba(239,68,68,0.12)', border: '1px solid #ef4444', fontSize: 13 }}>
+            <strong>{queue?.aufgegeben} Mahnschreiben endgültig aufgegeben.</strong> Diese Einträge
+            wurden dauerhaft nicht zugestellt (ungültige Adresse) oder haben die Versuchsobergrenze
+            erreicht. Der automatische Lauf fasst sie nicht mehr an. Erst Empfängeradresse bzw.
+            Ursache prüfen — ein erneuter Versand an dieselbe Adresse führt zum selben Ergebnis.
+          </div>
+        )}
+
         {versand && (
           <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid var(--border, #2a2a2a)', fontSize: 13 }}>
             <div style={{ marginBottom: 6 }}>
               {versand.geprueft} Eintrag/Einträge bearbeitet · <strong>{versand.versendet}</strong> versendet ·{' '}
-              {versand.storniert} storniert · {versand.fehlgeschlagen} fehlgeschlagen · {versand.uebersprungen} übersprungen
+              {versand.storniert} storniert · {versand.fehlgeschlagen} fehlgeschlagen ·{' '}
+              {versand.aufgegeben} aufgegeben · {versand.uebersprungen} übersprungen
             </div>
             {versand.details.filter(d => d.status !== 'versendet').map((d, i) => (
               <div key={`v${i}`} style={{ color: d.status === 'storniert' ? '#22c55e' : '#ef4444' }}>

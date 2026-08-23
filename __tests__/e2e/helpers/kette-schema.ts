@@ -21,6 +21,7 @@ import {
   funktionAusMigration,
   doBlockAusMigration,
   liesMigration,
+  transaktionsInhalt,
 } from '../../helpers/sql-extract'
 
 // ── Quellmigrationen ─────────────────────────────────────────────────
@@ -38,6 +39,9 @@ const M_RPC_V9        = '20260914000000_audit_persistenz_v9.sql'
 const M_EMAIL_LOG     = '20260823000000_invoice_email_log.sql'
 const M_ZUSTELLSPUR   = '20260923000000_notification_delivery_log.sql'
 const M_HOCH1         = '20260922020000_hoch1_mandantentrennung.sql'
+const M_MAHNUNG       = '20260812120000_sepa_mandate_and_mahnung.sql'
+const M_MAHNQUEUE     = '20260918030000_dunning_email_queue.sql'
+const M_MAHN_RETRY    = '20261001000000_mahnqueue_retry_dead_letter.sql'
 
 /** Stamm-Organisation — Rueckfallwert von current_org_id(). */
 export const STAMM_ORG = '00000000-0000-4000-8000-000460629986'
@@ -330,4 +334,31 @@ function letzterDoBlock(datei: string): number {
 export async function baueProtokollTabellen(db: PGlite): Promise<void> {
   await db.exec(liesMigration(M_EMAIL_LOG))
   await db.exec(liesMigration(M_ZUSTELLSPUR))
+}
+
+/**
+ * Mahnwesen: Dokumente, Warteschlange und die Blockade-Tabellen, die
+ * checkDunningBlocks() abfragt.
+ *
+ * Die Warteschlange kommt wortgleich aus 20260918030000, die
+ * Versuchsspur mit Dead Letter wortgleich aus 20261001000000. Damit
+ * prueft der Kettentest genau den Status-CHECK und den
+ * Negativ-CHECK, die live gelten — und nicht eine lockerere
+ * Testfassung (siehe testschema-lockerer-als-produktion).
+ *
+ * Setzt baueKettenSchema() voraus (organizations, invoices,
+ * dunning_entries).
+ */
+export async function baueMahnTabellen(db: PGlite): Promise<void> {
+  await db.exec(tabelleAusMigration(M_MAHNUNG, 'dunning_documents'))
+
+  // Blockade-Quellen von checkDunningBlocks(). Ohne sie liefe jede
+  // Blockadepruefung ins Leere und der Test koennte „nicht blockiert"
+  // nicht von „konnte nicht nachsehen" unterscheiden.
+  await db.exec(tabelleAusMigration(M_LIVE, 'invoice_disputes'))
+  await db.exec(tabelleAusMigration(M_ZAHLUNGEN, 'payment_differences'))
+  await db.exec(tabelleAusMigration(M_BILLING_CORE, 'invoice_corrections'))
+
+  await db.exec(tabelleAusMigration(M_MAHNQUEUE, 'dunning_email_queue'))
+  await db.exec(transaktionsInhalt(M_MAHN_RETRY))
 }

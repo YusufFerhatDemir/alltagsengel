@@ -68,7 +68,12 @@ export function transaktionsInhalt(datei: string): string {
  * Dollar-Quotes kommen in Tabellendefinitionen nicht vor.
  */
 export function extrahiereTabelle(sql: string, name: string): string {
-  const muster = new RegExp(`CREATE TABLE (?:IF NOT EXISTS )?public\\.${name}\\s*\\(`, 'i')
+  // `public.` ist optional: aeltere Migrationen (z. B.
+  // 20260812120000_sepa_mandate_and_mahnung.sql) legen ihre Tabellen ohne
+  // Schemapraefix an.
+  const muster = new RegExp(
+    `CREATE TABLE (?:IF NOT EXISTS )?(?:public\\.)?${name}\\s*\\(`, 'i'
+  )
   const treffer = muster.exec(sql)
   if (!treffer) throw new Error(`Tabelle ${name} nicht in der Migration gefunden`)
 

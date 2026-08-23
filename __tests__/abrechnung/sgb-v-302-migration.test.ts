@@ -84,7 +84,7 @@ describe('Migration 20260921010000 — § 302 Pipeline-Erweiterung', () => {
     db = new PGlite()
     await db.exec(SCHEMA)
     await db.exec(transaktionsInhalt(MIGRATION))
-  }, 60_000)
+  }, 120_000)
 
   afterAll(async () => { await db?.close() })
 

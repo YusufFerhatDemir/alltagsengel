@@ -65,7 +65,7 @@ export async function GET(request: Request) {
     if (error) return safeApiError(error, request)
 
     const zaehler: Record<string, number> = {
-      wartend: 0, versendet: 0, fehlgeschlagen: 0, storniert: 0,
+      wartend: 0, versendet: 0, fehlgeschlagen: 0, storniert: 0, aufgegeben: 0,
     }
     for (const z of data || []) zaehler[z.status] = (zaehler[z.status] || 0) + 1
 

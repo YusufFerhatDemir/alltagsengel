@@ -94,6 +94,10 @@ function makeStub(opts: StubOptionen = {}) {
     status: 'wartend',
     fehler_details: null as string | null,
     versendet_am: null as string | null,
+    // Versuchsspur aus 20261001000000_mahnqueue_retry_dead_letter.sql
+    versuche: 0,
+    letzter_versuch_am: null as string | null,
+    naechster_versuch_ab: null as string | null,
     created_at: '2026-08-20T07:00:00Z',
   }
 
@@ -301,7 +305,12 @@ describe('verarbeiteMahnQueue', () => {
     expect(ergebnis.fehlgeschlagen).toBe(1)
     expect(queue.status).toBe('fehlgeschlagen')
     expect(queue.versendet_am).toBeNull()
-    expect(queue.fehler_details).toBe('Domain not verified')
+    // Seit 20261001000000 haengt der Versuchsstand am Fehlertext — der
+    // Grund selbst bleibt darin unveraendert stehen.
+    expect(queue.fehler_details).toContain('Domain not verified')
+    expect(queue.fehler_details).toContain('Versuch 1 von')
+    expect(queue.versuche).toBe(1)
+    expect(queue.naechster_versuch_ab).toBeTruthy()
   })
 
   it('setzt den Eintrag zurueck, wenn die PDF-Erzeugung wirft', async () => {
@@ -312,7 +321,8 @@ describe('verarbeiteMahnQueue', () => {
 
     expect(ergebnis.fehlgeschlagen).toBe(1)
     expect(queue.status).toBe('fehlgeschlagen')
-    expect(queue.fehler_details).toBe('Font nicht ladbar')
+    expect(queue.fehler_details).toContain('Font nicht ladbar')
+    expect(queue.versuche).toBe(1)
     expect(mailMock).not.toHaveBeenCalled()
   })
 })

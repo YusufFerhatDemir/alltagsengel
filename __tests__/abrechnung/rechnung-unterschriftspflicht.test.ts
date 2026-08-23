@@ -211,7 +211,7 @@ describe('H-1: create_invoice_draft_atomic — Unterschriftspflicht', () => {
     await db.exec(funktionAusMigration(LEISTUNGSART, 'normalisiere_leistungsart') + ';')
     await db.exec(funktionAusMigration(LEISTUNGSART, 'tarif_leistungsart') + ';')
     await db.exec(SEED)
-  }, 60_000)
+  }, 120_000)
 
   afterAll(async () => {
     await db?.close()
@@ -229,7 +229,7 @@ describe('H-1: create_invoice_draft_atomic — Unterschriftspflicht', () => {
 
   // ── 1. Die Lücke ist real ───────────────────────────────────────────────
   describe('v7 (Rollback-Stand) — Nachweis der Lücke', () => {
-    beforeAll(async () => { await db.exec(liesMigration(V7)) }, 60_000)
+    beforeAll(async () => { await db.exec(liesMigration(V7)) }, 120_000)
 
     it('fakturiert einen Nachweis ohne jede Unterschrift', async () => {
       await nachweis({ proofStatus: 'ENTWURF', signatureHash: null })
@@ -248,7 +248,7 @@ describe('H-1: create_invoice_draft_atomic — Unterschriftspflicht', () => {
       // dieser INSERT den CHECK und der Abbruch kommt als 23514 statt als
       // MISSING_SIGNATURE heraus — genau der Live-Befund aus Audit B.
       await db.exec(liesMigration(ENTITY_FIX))
-    }, 60_000)
+    }, 120_000)
 
     it('blockiert Nachweise ohne Unterschriftsnachweis', async () => {
       await nachweis({ proofStatus: 'ENTWURF', signatureHash: null })

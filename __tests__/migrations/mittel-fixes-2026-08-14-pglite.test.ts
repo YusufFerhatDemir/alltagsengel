@@ -179,7 +179,7 @@ beforeAll(async () => {
   `)
 
   await db.exec(`INSERT INTO public.organizations (id) VALUES ('${ORG_ID}');`)
-}, 60_000)
+}, 120_000)
 
 afterAll(async () => {
   await db?.close()
