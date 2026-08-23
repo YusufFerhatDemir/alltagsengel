@@ -59,3 +59,59 @@ export function transaktionsInhalt(datei: string): string {
   }
   return sql.slice(start + '\nBEGIN;'.length, ende)
 }
+
+/**
+ * Schneidet `CREATE TABLE [IF NOT EXISTS] public.<name> ( … );` aus.
+ *
+ * Der Klammerstand wird mitgezaehlt, damit verschachtelte Ausdruecke
+ * (CHECK (x IN (…)), GENERATED ALWAYS AS (…)) nicht vorzeitig beenden.
+ * Dollar-Quotes kommen in Tabellendefinitionen nicht vor.
+ */
+export function extrahiereTabelle(sql: string, name: string): string {
+  const muster = new RegExp(`CREATE TABLE (?:IF NOT EXISTS )?public\\.${name}\\s*\\(`, 'i')
+  const treffer = muster.exec(sql)
+  if (!treffer) throw new Error(`Tabelle ${name} nicht in der Migration gefunden`)
+
+  const start = treffer.index
+  let i = treffer.index + treffer[0].length - 1 // auf der oeffnenden Klammer
+  let tiefe = 0
+  let inHochkomma = false
+  for (; i < sql.length; i++) {
+    const z = sql[i]
+    if (inHochkomma) { if (z === "'") inHochkomma = false; continue }
+    if (z === "'") { inHochkomma = true; continue }
+    if (z === '(') tiefe++
+    else if (z === ')') {
+      tiefe--
+      if (tiefe === 0) {
+        const semikolon = sql.indexOf(';', i)
+        return sql.slice(start, semikolon + 1)
+      }
+    }
+  }
+  throw new Error(`Tabellenende fuer ${name} nicht gefunden`)
+}
+
+/** Wie extrahiereTabelle, aber direkt aus einer Migrationsdatei. */
+export function tabelleAusMigration(datei: string, name: string): string {
+  return extrahiereTabelle(liesMigration(datei), name)
+}
+
+/**
+ * Schneidet den n-ten anonymen `DO $$ … $$;`-Block einer Migration aus
+ * (1-basiert). Fuer Migrationen, deren Wirkung in einem DO-Block steckt —
+ * etwa der RESTRICTIVE-org_fence-Generator aus Phase 3.
+ */
+export function doBlockAusMigration(datei: string, nummer = 1): string {
+  const sql = liesMigration(datei)
+  let position = 0
+  for (let n = 0; n < nummer; n++) {
+    const start = sql.indexOf('DO $$', position)
+    if (start === -1) throw new Error(`DO-Block ${nummer} nicht in ${datei} gefunden`)
+    const ende = sql.indexOf('$$;', start + 5)
+    if (ende === -1) throw new Error(`Ende des DO-Blocks ${nummer} in ${datei} nicht gefunden`)
+    if (n === nummer - 1) return sql.slice(start, ende + 3)
+    position = ende + 3
+  }
+  throw new Error(`DO-Block ${nummer} nicht in ${datei} gefunden`)
+}

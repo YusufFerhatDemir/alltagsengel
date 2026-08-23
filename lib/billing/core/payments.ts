@@ -347,8 +347,17 @@ export async function allocatePayment(
     }
 
     const newStatus = newPaidCents >= totalCents ? 'bezahlt' : 'teilweise_bezahlt'
-    // OCC: only update if paid_amount hasn't changed since we read it
-    const { data: updatedInv, error: invUpdateErr } = await supabase
+    // OCC: nur schreiben, wenn paid_amount seit dem Lesen unveraendert ist.
+    //
+    // `paid_amount` ist nullable und hat KEINEN Spalten-Default (Baseline
+    // 20260101000000; andere Migrationen rechnen deshalb mit
+    // COALESCE(paid_amount, 0)). Eine frisch erzeugte Rechnung traegt dort
+    // NULL — create_invoice_draft_atomic schreibt die Spalte nicht.
+    // Ein `.eq('paid_amount', 0)` trifft in Postgres KEINE NULL-Zeile
+    // (NULL = 0 ist NULL, nicht true). Die erste Zahlung auf jede neue
+    // Rechnung lief damit ins Leere und meldete faelschlich
+    // „Konkurrierender Zugriff". Der NULL-Fall braucht `is`, nicht `eq`.
+    const occAbfrage = supabase
       .from('invoices')
       .update({
         paid_amount: newPaidCents / 100,
@@ -356,8 +365,12 @@ export async function allocatePayment(
         status: newStatus,
       })
       .eq('id', alloc.invoiceId)
-      .eq('paid_amount', inv.paid_amount ?? 0)
-      .select('id')
+
+    const { data: updatedInv, error: invUpdateErr } = await (
+      inv.paid_amount === null || inv.paid_amount === undefined
+        ? occAbfrage.is('paid_amount', null)
+        : occAbfrage.eq('paid_amount', inv.paid_amount)
+    ).select('id')
 
     if (invUpdateErr) {
       throw new Error(`Rechnungs-Update fehlgeschlagen: ${invUpdateErr.message}`)
