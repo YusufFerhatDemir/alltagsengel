@@ -3,9 +3,11 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { formatDate } from '@/lib/admin/ops'
 import { StatusBadge, EmptyRow } from '@/components/admin/OpsUI'
 
+type Quelle = 'aufgaben' | 'abrechnung' | 'administration' | 'workflow'
+
 interface UnifiedAuditEntry {
   id: string
-  quelle: 'aufgaben' | 'abrechnung'
+  quelle: Quelle
   entitaetTyp: string
   entitaetId: string
   aktion: string
@@ -28,9 +30,14 @@ const secondaryBtn: React.CSSProperties = {
   borderRadius: 8, padding: '6px 14px', cursor: 'pointer', fontFamily: 'inherit',
 }
 
+// Bereich 14 der Lückenanalyse (P2): die gemeinsame Sicht kannte bisher nur
+// zwei der vier Audit-Spuren. Administration (mis_audit_log) und Workflow
+// (wf_audit_log) sind ergänzt — dieselben Quellen, die ladeOpsAudit() liest.
 const QUELLE_LABEL: Record<string, { label: string; color: string }> = {
   aufgaben: { label: 'Aufgaben/Kommunikation', color: '#2196F3' },
   abrechnung: { label: 'Abrechnung', color: '#9C27B0' },
+  administration: { label: 'Administration', color: '#5CB882' },
+  workflow: { label: 'Workflow', color: '#FF9800' },
 }
 
 function timeAgoLocal(iso: string): string {
@@ -52,7 +59,7 @@ export default function OpsAuditPage() {
   const [bis, setBis] = useState('')
   const [akteur, setAkteur] = useState('')
   const [aktion, setAktion] = useState('all')
-  const [quelle, setQuelle] = useState<'all' | 'aufgaben' | 'abrechnung'>('all')
+  const [quelle, setQuelle] = useState<'all' | Quelle>('all')
   const [expanded, setExpanded] = useState<string | null>(null)
 
   const load = useCallback(async () => {
@@ -78,6 +85,18 @@ export default function OpsAuditPage() {
 
   useEffect(() => { load() }, [load])
 
+  // Gleiche Filter wie die Ansicht — nur ohne Limit, weil eine Prüfung den
+  // Zeitraum vollständig braucht und nicht die ersten 300 Zeilen.
+  const exportUrl = useMemo(() => {
+    const params = new URLSearchParams({ format: 'csv' })
+    if (von) params.set('von', von)
+    if (bis) params.set('bis', bis)
+    if (akteur.trim()) params.set('akteur', akteur.trim())
+    if (aktion !== 'all') params.set('aktion', aktion)
+    if (quelle !== 'all') params.set('quelle', quelle)
+    return `/api/admin/analytics/ops-audit?${params}`
+  }, [von, bis, akteur, aktion, quelle])
+
   const aktionen = useMemo(() => {
     const s = new Set<string>()
     entries.forEach(e => s.add(e.aktion))
@@ -89,7 +108,7 @@ export default function OpsAuditPage() {
       <div className="admin-page-header">
         <div>
           <h1>Ops-Audit</h1>
-          <p className="admin-subtitle">Betriebs-Audit über alle Quellen — Aufgaben/Kommunikation & Abrechnung, {entries.length} Einträge</p>
+          <p className="admin-subtitle">Betriebs-Audit über alle vier Quellen — Aufgaben/Kommunikation, Abrechnung, Administration & Workflow, {entries.length} Einträge</p>
         </div>
       </div>
 
@@ -110,13 +129,24 @@ export default function OpsAuditPage() {
           <option value="all">Alle Quellen</option>
           <option value="aufgaben">Aufgaben/Kommunikation</option>
           <option value="abrechnung">Abrechnung</option>
+          <option value="administration">Administration</option>
+          <option value="workflow">Workflow</option>
         </select>
         <select value={aktion} onChange={e => setAktion(e.target.value)} style={selectStyle}>
           <option value="all">Alle Aktionen</option>
           {aktionen.map(a => <option key={a} value={a}>{a}</option>)}
         </select>
         <button onClick={load} disabled={loading} style={secondaryBtn}>{loading ? 'Lädt…' : 'Aktualisieren'}</button>
+        <a href={exportUrl} download style={{ ...secondaryBtn, textDecoration: 'none', display: 'inline-block' }}>
+          Als CSV exportieren
+        </a>
       </div>
+
+      <p style={{ fontSize: 12, color: 'var(--ink5)', marginTop: -8, marginBottom: 16 }}>
+        Der Export enthält den gewählten Zeitraum vollständig, nicht nur die angezeigten
+        Einträge. Aufbewahrungsfrist der Audit-Spur: 10 Jahre (§ 257 HGB, DSGVO Art. 30) —
+        siehe Löschkonzept. Der Export wird selbst protokolliert.
+      </p>
 
       {error && (
         <div style={{ padding: '12px 16px', borderRadius: 8, background: 'rgba(208,75,59,0.1)', border: '1px solid rgba(208,75,59,0.3)', color: '#D04B3B', marginBottom: 16, fontSize: 13 }}>

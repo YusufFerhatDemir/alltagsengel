@@ -5,6 +5,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { getActiveOrgId } from '@/lib/organizations/server'
 import { pruefeEinsatzfreigabe, pruefeClientFreigabe, pruefeBudget, pruefeVPBudget } from '@/lib/personal/einsatzfreigabe'
 import { pruefeCaregiverVerfuegbarkeit } from '@/lib/touren/server'
+import { ladeKonflikte } from '@/lib/einsatzplanung/konflikte-server'
 import { logBillingAction } from '@/lib/billing/core/audit'
 import { logAuditEvent } from '@/lib/audit-log'
 import { safeErrorResponse, safeDbError } from '@/lib/utils/api-error'
@@ -171,6 +172,40 @@ export async function POST(req: NextRequest) {
     if (vpCheck.vpKzpKombiniertWarnung) warnungen.push(vpCheck.vpKzpKombiniertWarnung)
   }
 
+  // ── Zeitliche Überschneidung ──────────────────────────────────────
+  // Bereich 3 der Lückenanalyse (P2): bisher meldete sich ein Konflikt erst
+  // als roher Datenbankfehler des Triggers `check_assignment_overlap` — die
+  // Meldung enthält UUIDs und wird vom Fehler-Sanitizer zu Recht verschluckt.
+  // Der Planende sah also nur "Fehler beim Speichern".
+  //
+  // Die Mitarbeiter-Doppelbelegung ist hier BEWUSST NICHT über
+  // force_override übersteuerbar: der Trigger blockiert sie ohnehin, ein
+  // angebotener Übersteuerungsweg wäre eine Zusage, die die Datenbank nicht
+  // einhält. Die Klienten-Überschneidung kennt der Trigger nicht und ist
+  // fachlich nicht immer falsch (Doppelbesetzung beim Transfer) — sie warnt.
+  if (assignment_date) {
+    const konflikte = await ladeKonflikte(admin, organizationId, {
+      id: '',
+      client_id,
+      caregiver_id,
+      assignment_date,
+      start_time,
+      end_time,
+      status: assignmentStatus || 'GEPLANT',
+    })
+    const mitarbeiterKonflikt = konflikte.find(k => k.art === 'mitarbeiter')
+    if (mitarbeiterKonflikt) {
+      return NextResponse.json({
+        error: `Zeitliche Doppelbelegung: ${mitarbeiterKonflikt.meldung}`,
+        konflikt_id: mitarbeiterKonflikt.gegenId,
+        hinweis: 'Bitte Uhrzeit ändern oder eine andere Betreuungskraft wählen. Dieser Konflikt ist nicht übersteuerbar.',
+      }, { status: 409 })
+    }
+    for (const k of konflikte.filter(k => k.art === 'klient')) {
+      warnungen.push(`Terminüberschneidung beim Klienten: ${k.meldung}`)
+    }
+  }
+
   // Audit-Trail bei force_override
   if (body.force_override && warnungen.length > 0) {
     await logBillingAction(admin, {
@@ -287,15 +322,16 @@ export async function PATCH(req: NextRequest) {
     // Greift, sobald sich Mitarbeiter, Datum oder Uhrzeit ändern. Nicht
     // veränderte Werte kommen aus dem Bestand — sonst würde ein reiner
     // Datumswechsel gegen den alten Tag geprüft und liefe ins Leere.
-    if (updates.caregiver_id || updates.assignment_date || updates.start_time || updates.end_time) {
+    if (updates.caregiver_id || updates.assignment_date || updates.start_time || updates.end_time || updates.client_id) {
       const { data: bestand } = await admin
         .from('assignments')
-        .select('caregiver_id, assignment_date, start_time, end_time')
+        .select('client_id, caregiver_id, assignment_date, start_time, end_time, status')
         .eq('id', id)
         .eq('organization_id', organizationId)
         .maybeSingle()
 
       const caregiverId = updates.caregiver_id ?? bestand?.caregiver_id ?? null
+      const clientId = updates.client_id ?? bestand?.client_id ?? null
       const datum = updates.assignment_date ?? bestand?.assignment_date ?? null
       const startZeit = updates.start_time ?? bestand?.start_time ?? null
       const endeZeit = updates.end_time ?? bestand?.end_time ?? null
@@ -315,6 +351,33 @@ export async function PATCH(req: NextRequest) {
         }
         if (verfuegbarkeit.ausserhalbZeitfenster) {
           patchWarnungen.push('Einsatz liegt außerhalb der gepflegten Verfügbarkeits-Zeitfenster.')
+        }
+      }
+
+      // Zeitliche Überschneidung — gleiche Regel wie im POST. Geprüft wird
+      // gegen Bestand + Änderung zusammen, damit ein reiner Zeitwechsel nicht
+      // gegen die alten Werte läuft. Der eigene Datensatz zählt nicht mit
+      // (Abgleich über `id` in findeKonflikte).
+      if (datum) {
+        const konflikte = await ladeKonflikte(admin, organizationId, {
+          id,
+          client_id: clientId,
+          caregiver_id: caregiverId,
+          assignment_date: datum,
+          start_time: startZeit,
+          end_time: endeZeit,
+          status: updates.status ?? bestand?.status ?? null,
+        })
+        const mitarbeiterKonflikt = konflikte.find(k => k.art === 'mitarbeiter')
+        if (mitarbeiterKonflikt) {
+          return NextResponse.json({
+            error: `Zeitliche Doppelbelegung: ${mitarbeiterKonflikt.meldung}`,
+            konflikt_id: mitarbeiterKonflikt.gegenId,
+            hinweis: 'Bitte Uhrzeit ändern oder eine andere Betreuungskraft wählen. Dieser Konflikt ist nicht übersteuerbar.',
+          }, { status: 409 })
+        }
+        for (const k of konflikte.filter(k => k.art === 'klient')) {
+          patchWarnungen.push(`Terminüberschneidung beim Klienten: ${k.meldung}`)
         }
       }
     }
