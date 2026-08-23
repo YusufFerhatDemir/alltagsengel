@@ -118,7 +118,7 @@ export async function POST(req: NextRequest) {
       // Neue Buchung → Engel benachrichtigen
       const angelUserId = angel?.id || ap?.id
       if (angelUserId) {
-        await notifyAngelNewBooking(adminSupabase, angelUserId, notifyData)
+        await notifyAngelNewBooking(adminSupabase, angelUserId, notifyData, { organizationId: orgId })
       }
       return NextResponse.json({ success: true, event: 'created', notified: 'angel' })
     }
@@ -126,7 +126,7 @@ export async function POST(req: NextRequest) {
     if (event === 'accepted') {
       // Buchung angenommen → Kunde benachrichtigen
       if (booking.customer_id) {
-        await notifyCustomerBookingAccepted(adminSupabase, booking.customer_id, notifyData)
+        await notifyCustomerBookingAccepted(adminSupabase, booking.customer_id, notifyData, { organizationId: orgId })
       }
       return NextResponse.json({ success: true, event: 'accepted', notified: 'customer' })
     }
