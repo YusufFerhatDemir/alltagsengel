@@ -1,50 +1,39 @@
-import { createAdminClient } from '@/lib/supabase/admin'
-import { GoogleAuth } from 'google-auth-library'
+// ═══════════════════════════════════════════════════════════════════════
+// lib/fcm.ts — Bestandsschnittstelle fuer nativen Push
+// ═══════════════════════════════════════════════════════════════════════
+//
+// Die eigentliche Umsetzung liegt seit Track 4 in lib/notifications/push/
+// (Token-Verwaltung, Provider, Anbindung an die Zustellspur). Diese Datei
+// bleibt als schmale Naht bestehen, weil zwei Aufrufer sie benutzen —
+// lib/notifications.ts und lib/sync/notify.ts — und ihr Vertrag
+// (`sendFCMToUser(userId, payload)` ⇒ `{ sent, failed }`) unveraendert
+// gilt.
+//
+// WAS SICH FUER DIE AUFRUFER AENDERT, OHNE DASS SIE ETWAS TUN MUESSEN
+//   • Widerspruch des Nutzers wird beachtet (notification_preferences)
+//   • tote Token werden geloescht statt bei jedem Versand erneut versucht
+//   • ein FCM-Ausfall (429/5xx) wird kurz wiederholt, statt sofort
+//     als Fehlschlag zu enden
+//   • INVALID_ARGUMENT loescht den Token nur noch dann, wenn FCM
+//     ausdruecklich DAS TOKEN beanstandet — vorher haette ein Fehler in
+//     der Nutzlast den gesamten Geraetebestand geleert
+//
+// NEU UND OPTIONAL ist der dritte Parameter: mit Zustellkontext laeuft
+// der Versand ueber sendeIdempotent() — genau eine Zustellung je Vorgang,
+// Protokollzeile in notification_delivery_log, wiederholbar durch den
+// Retry-Worker. Ohne ihn verhaelt sich alles wie bisher (kein Protokoll),
+// damit kein bestehender Aufrufer bricht.
+// ═══════════════════════════════════════════════════════════════════════
+
+import type { ZustellKontext } from '@/lib/notifications/delivery-log'
+import {
+  sendePushAnNutzer,
+  sendePushIdempotent,
+  type PushNachricht,
+} from '@/lib/notifications/push'
 import { logger } from '@/lib/logger'
+
 const log = logger.child('fcm')
-
-// ─── FCM V1 API Config ───
-const FCM_PROJECT_ID = process.env.FCM_PROJECT_ID || 'alltagsengel-2bbe9'
-
-// Service Account credentials from environment
-function getServiceAccountCredentials() {
-  const clientEmail = process.env.FCM_CLIENT_EMAIL
-  const privateKey = process.env.FCM_PRIVATE_KEY?.replace(/\\n/g, '\n')
-
-  if (!clientEmail || !privateKey) return null
-
-  return {
-    client_email: clientEmail,
-    private_key: privateKey,
-    project_id: FCM_PROJECT_ID,
-  }
-}
-
-// ─── Get OAuth2 Access Token ───
-let cachedAuth: GoogleAuth | null = null
-
-async function getAccessToken(): Promise<string | null> {
-  const credentials = getServiceAccountCredentials()
-  if (!credentials) return null
-
-  try {
-    if (!cachedAuth) {
-      cachedAuth = new GoogleAuth({
-        credentials,
-        scopes: ['https://www.googleapis.com/auth/firebase.messaging'],
-      })
-    }
-
-    const client = await cachedAuth.getClient()
-    const tokenResponse = await client.getAccessToken()
-    return tokenResponse?.token || null
-  } catch (err) {
-    log.errorWithException('FCM: Error getting access token', err)
-    // Reset cache on error
-    cachedAuth = null
-    return null
-  }
-}
 
 export interface FCMPayload {
   title: string
@@ -55,117 +44,59 @@ export interface FCMPayload {
   data?: Record<string, string>
 }
 
-// ─── Send FCM V1 to a Single Token ───
-async function sendToToken(
-  token: string,
-  payload: FCMPayload,
-  accessToken: string
-): Promise<boolean> {
-  try {
-    const response = await fetch(
-      `https://fcm.googleapis.com/v1/projects/${FCM_PROJECT_ID}/messages:send`,
-      {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          message: {
-            token,
-            notification: {
-              title: payload.title,
-              body: payload.body,
-            },
-            android: {
-              priority: 'HIGH',
-              notification: {
-                icon: payload.icon || 'ic_notification',
-                tag: payload.tag || 'default',
-                click_action: 'FLUTTER_NOTIFICATION_CLICK',
-                sound: 'default',
-                channel_id: 'alltagsengel_default',
-              },
-            },
-            webpush: {
-              notification: {
-                icon: payload.icon || '/icon-192x192.png',
-                tag: payload.tag || 'default',
-              },
-              fcm_options: {
-                link: payload.url
-                  ? `https://alltagsengel.care${payload.url}`
-                  : 'https://alltagsengel.care',
-              },
-            },
-            data: {
-              title: payload.title,
-              body: payload.body,
-              url: payload.url || '/',
-              tag: payload.tag || 'default',
-              ...(payload.data || {}),
-            },
-          },
-        }),
-      }
-    )
-
-    if (!response.ok) {
-      const errorBody = await response.text()
-      log.error('FCM V1 send error', { responseStatus: response.status, errorBody })
-
-      // Check for unregistered/invalid token errors
-      if (
-        response.status === 404 ||
-        errorBody.includes('UNREGISTERED') ||
-        errorBody.includes('INVALID_ARGUMENT')
-      ) {
-        // Remove invalid token
-        const supabase = createAdminClient()
-        await supabase.from('fcm_tokens').delete().eq('token', token)
-        log.info('FCM token removed (invalid)', { tokenPrefix: token.slice(0, 20) + '...' })
-      }
-
-      return false
-    }
-
-    return true
-  } catch (err) {
-    log.errorWithException('FCM V1 send error', err)
-    return false
+function alsNachricht(p: FCMPayload): PushNachricht {
+  return {
+    title: p.title,
+    body: p.body,
+    icon: p.icon,
+    tag: p.tag,
+    url: p.url,
+    data: p.data,
   }
 }
 
-// ─── Send FCM to All Tokens of a User ───
+/**
+ * Sendet an alle Geraete eines Nutzers.
+ *
+ * @param zustellung Mit `organizationId` UND `correlationId` laeuft der
+ *   Versand idempotent und protokolliert. Fehlt eines von beiden, wird
+ *   direkt gesendet — ohne Protokoll, aber mit allen Schutzmechanismen
+ *   des neuen Wegs.
+ */
 export async function sendFCMToUser(
   userId: string,
-  payload: FCMPayload
+  payload: FCMPayload,
+  zustellung?: ZustellKontext & { correlationId?: string | null }
 ): Promise<{ sent: number; failed: number }> {
-  const accessToken = await getAccessToken()
-  if (!accessToken) {
-    log.info('FCM: No access token available — FCM push skipped')
+  const nachricht = alsNachricht(payload)
+
+  if (zustellung?.organizationId && zustellung.correlationId) {
+    const { correlationId, organizationId, ...rest } = zustellung
+    const ergebnis = await sendePushIdempotent({
+      userId,
+      organizationId,
+      correlationId,
+      kontext: rest,
+      nachricht,
+    })
+    // Der Aufrufer erwartet Stueckzahlen. 'versendet' heisst: mindestens
+    // ein Geraet erreicht — mehr weiss der idempotente Weg nach aussen
+    // bewusst nicht, weil die Zahl der Geraete niemanden ausserhalb
+    // dieses Moduls etwas angeht.
+    if (ergebnis.status === 'versendet') return { sent: 1, failed: 0 }
+    if (ergebnis.status === 'fehlgeschlagen') return { sent: 0, failed: 1 }
+    log.info('FCM nicht gesendet', { status: ergebnis.status, grund: ergebnis.grund })
     return { sent: 0, failed: 0 }
   }
 
-  const supabase = createAdminClient()
+  const organizationId = zustellung?.organizationId
+  const ergebnis = await sendePushAnNutzer({
+    userId,
+    // Ohne Mandantenangabe bleibt die Grenze die user_id — die gab es in
+    // fcm_tokens schon immer, und ein Geraet gehoert dem Nutzer.
+    organizationId: organizationId ?? '',
+    nachricht,
+  })
 
-  const { data: tokens, error } = await supabase
-    .from('fcm_tokens')
-    .select('token')
-    .eq('user_id', userId)
-
-  if (error || !tokens?.length) {
-    if (error) log.error('FCM: Error fetching tokens', { errorMessage: error.message })
-    return { sent: 0, failed: 0 }
-  }
-
-  const results = await Promise.allSettled(
-    tokens.map((t) => sendToToken(t.token, payload, accessToken))
-  )
-
-  const sent = results.filter((r) => r.status === 'fulfilled' && r.value).length
-  const failed = results.length - sent
-
-  log.info(`FCM V1 sent to user ${userId}: ${sent}/${results.length} successful`)
-  return { sent, failed }
+  return { sent: ergebnis.zugestellt, failed: ergebnis.fehlgeschlagen }
 }
