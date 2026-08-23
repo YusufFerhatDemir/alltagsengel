@@ -68,6 +68,37 @@
 --   bleibt unverändert: bundesweite Regeln (organization_id IS NULL) sollen
 --   für alle lesbar sein.
 --
+-- ── APPLY-WEG: NUR SUPABASE-SQL-EDITOR ─────────────────────────────────────
+--
+-- Diese Datei MUSS im Supabase-SQL-Editor laufen (dort als postgres).
+-- Der service_role-Weg (scripts/apply-migration-via-rpc.mjs) reicht NICHT,
+-- und er sagt das nicht von selbst:
+--
+--   Die Rechte wurden von postgres vergeben — in der ACL steht
+--   "anon=arwdDxtm/postgres", das Suffix nach dem Schraegstrich ist der
+--   Grantor. REVOKE wirkt nur, wenn der Aufrufer Grantor oder Eigentuemer
+--   ist. Ist er es nicht, macht PostgreSQL daraus einen stillen No-Op:
+--   eine WARNING, KEINEN Fehler. Der Aufruf ueber _run_sql antwortete
+--   deshalb mit HTTP 204 "erfolgreich", waehrend die ACL unveraendert blieb.
+--
+--   Am 2026-08-23 genau so passiert und nur aufgefallen, weil danach
+--   scripts/verify-security-delta-phase4-grantcheck.mjs die rohe ACL
+--   gegengelesen hat. Ohne diese Gegenprobe waere ein nicht existierender
+--   Fix als erledigt gemeldet worden.
+--
+-- NACH DEM APPLY zwingend gegenmessen:
+--   node scripts/verify-security-delta-phase4.mjs
+--   node scripts/verify-security-delta-phase4-grantcheck.mjs
+-- Erwartet: anon=Dxtm (ohne r/a/w/d) statt anon=arwdDxtm.
+--
+-- BEFUND 3 (billing_landesregeln) liegt in einer EIGENEN Migration:
+--   20261002000002_billing_landesregeln_mandantenzaun.sql
+-- Grund: DROP/CREATE POLICY verlangt Eigentuemerrechte an der Tabelle.
+-- Der service_role-Weg (scripts/apply-migration-via-rpc.mjs) scheitert
+-- daran mit 42501 "must be owner of relation billing_landesregeln" und
+-- haette den ganzen Lauf zurueckgerollt. Getrennt gehalten, damit die
+-- beiden REVOKE-Teile sofort greifen koennen.
+--
 -- Idempotent. Rollback: 20261002000001_rollback_least_privilege_delta_phase4.sql
 -- ════════════════════════════════════════════════════════════════════════════
 
@@ -137,32 +168,6 @@ END $$;
 
 ALTER DEFAULT PRIVILEGES IN SCHEMA public
   REVOKE EXECUTE ON FUNCTIONS FROM anon;
-
--- ── 3) billing_landesregeln an den Mandanten binden ────────────────────────
--- Die alte Policy wird ersetzt, nicht ergänzt: eine zusätzliche Policy würde
--- als PERMISSIVE danebenstehen und der mandantenblinde Vollzugriff bliebe.
-DROP POLICY IF EXISTS landesregeln_admin_write ON public.billing_landesregeln;
-
-CREATE POLICY landesregeln_admin_write ON public.billing_landesregeln
-  FOR ALL TO authenticated
-  USING (is_admin() AND organization_id = current_org_id())
-  WITH CHECK (is_admin() AND organization_id = current_org_id());
-
--- Zusätzlich der Zaun, den die Tabelle bisher nicht hatte. RESTRICTIVE, weil
--- er UND-verknüpft gelten muss — eine permissive Policy könnte ihn sonst
--- überstimmen. Bundesweite Regeln (organization_id IS NULL) bleiben für alle
--- lesbar; genau dafür ist der NULL-Zweig da.
-DROP POLICY IF EXISTS org_fence_billing_landesregeln ON public.billing_landesregeln;
-
-CREATE POLICY org_fence_billing_landesregeln ON public.billing_landesregeln
-  AS RESTRICTIVE
-  FOR ALL TO authenticated
-  USING (organization_id IS NULL OR organization_id = current_org_id())
-  WITH CHECK (organization_id = current_org_id());
-
-COMMENT ON POLICY org_fence_billing_landesregeln ON public.billing_landesregeln IS
-  'Delta Phase 4: Mandantenzaun. Lesen erlaubt zusätzlich bundesweite Regeln '
-  '(organization_id IS NULL); Schreiben nur in die eigene Organisation.';
 
 COMMIT;
 
