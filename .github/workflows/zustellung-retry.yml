@@ -1,0 +1,72 @@
+# Wiederholungslauf fuer Benachrichtigungen — alle 5 Minuten.
+#
+# WARUM NICHT ALS VERCEL-CRON
+# Der Takt gehoert nach vercel.json, dort ist er aber nicht erlaubt: ein
+# Deployment mit `*/5 * * * *` wird von Vercel mit Verweis auf die
+# Cron-Preisstaffel abgelehnt (der Tarif dieses Projekts loest Cron-Jobs
+# nur einmal taeglich aus — alle sechs Eintraege in vercel.json sind
+# deshalb Tages-, Wochen- oder Jahresjobs).
+#
+# In vercel.json steht der Lauf trotzdem, als taeglicher Rueckfall um
+# 04:00. Dieser Workflow liefert den eigentlichen Takt: dieselbe
+# 5-Minuten-Frequenz, die der Uptime-Monitor im selben Repo schon nutzt.
+#
+# VORAUSSETZUNG
+# Repository-Secret `CRON_SECRET` mit demselben Wert wie die
+# gleichnamige Umgebungsvariable in Vercel. Fehlt es, bricht der Lauf
+# sichtbar ab — er soll NICHT still nichts tun.
+#
+# Der Endpunkt selbst ist mehrfach abgesichert: er nimmt nur den
+# Bearer-Token an, und der Lauf haelt eine Sperre in der Datenbank. Ein
+# doppelter Aufruf verschickt nichts doppelt, er meldet 'blockiert'.
+
+name: Zustellung Retry
+
+on:
+  schedule:
+    # GitHub garantiert den Zeitpunkt nicht exakt (im Schnitt +/- 1 Min)
+    # und laesst Laeufe unter Last auch mal aus. Fuer einen
+    # Wiederholungslauf ist das unkritisch: ein verpasster Takt
+    # verschiebt die Nachricht um fuenf Minuten, verliert sie nicht.
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+
+# Zwei gleichzeitige Laeufe waeren harmlos (die Datenbanksperre faengt
+# sie ab), aber sinnlos — deshalb hier schon abschalten.
+concurrency:
+  group: zustellung-retry
+  cancel-in-progress: false
+
+jobs:
+  wiederholungslauf:
+    name: Wiederholungslauf
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Cron-Secret pruefen
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          if [ -z "${CRON_SECRET}" ]; then
+            echo "::error::Repository-Secret CRON_SECRET fehlt — der Wiederholungslauf kann nicht ausgeloest werden."
+            exit 1
+          fi
+
+      - name: Lauf ausloesen
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          BASIS: ${{ vars.PRODUCTION_URL || 'https://alltagsengel.care' }}
+        run: |
+          HTTP_STATUS=$(curl -s -o /tmp/retry.json -w "%{http_code}" \
+            --max-time 120 \
+            -H "Authorization: Bearer ${CRON_SECRET}" \
+            "${BASIS}/api/cron/zustellung-retry") || HTTP_STATUS=000
+
+          # Kennzahlen ins Protokoll — der Rumpf enthaelt keine
+          # Empfaengerdaten, nur Zaehler und Status.
+          jq . /tmp/retry.json 2>/dev/null || cat /tmp/retry.json
+
+          if [ "$HTTP_STATUS" != "200" ]; then
+            echo "::error::Wiederholungslauf fehlgeschlagen (HTTP $HTTP_STATUS)"
+            exit 1
+          fi
