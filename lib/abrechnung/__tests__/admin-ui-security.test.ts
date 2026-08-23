@@ -68,11 +68,20 @@ for (const route of DTA_ROUTES) {
     )
   })
 
-  test(`DTA Route ${route} prüft Admin-Rolle`, () => {
+  test(`DTA Route ${route} prüft eine Abrechnungs-Berechtigung`, () => {
     const code = readRoute(route)
+    // Seit dem Rollenkonzept (lib/auth/rollen.ts) pruefen die Routen nicht
+    // mehr auf die Rolle, sondern auf eine Berechtigung. Fuer den
+    // DTA-Versand ist das 'abrechnung.*' bzw. 'system.verwalten' bei den
+    // Zugangsdaten-Routen — beides schliesst Kundschaft, Engel, PDL und QM
+    // aus. Die alte Schreibweise bleibt zulaessig, damit dieser Test nicht
+    // die einzige Fassung erzwingt.
     assert.ok(
-      code.includes("'admin'") || code.includes("'superadmin'") || code.includes('requireAdmin'),
-      `${route}: MUSS Admin-Rolle prüfen`,
+      /'(abrechnung|system|tarife)\.(lesen|schreiben|verwalten)'/.test(code) ||
+        code.includes('rolleDarf(') ||
+        code.includes('requireAdmin') ||
+        code.includes("'superadmin'"),
+      `${route}: MUSS eine Berechtigung prüfen`,
     )
   })
 }

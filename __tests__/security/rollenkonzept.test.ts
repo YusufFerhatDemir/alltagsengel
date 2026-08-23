@@ -236,9 +236,26 @@ describe('darfPfad — serverseitige Bereichssperre', () => {
     }
   })
 
+  it('schneidet die MIS-Bereiche zu, statt sie pauschal freizugeben', () => {
+    // Die Sammelregel '/mis' allein wuerde jeder Verwaltungsrolle alles
+    // darunter geben — auch die Finanzen und die Personalakten.
+    expect(darfPfad('qm', '/mis')).toBe(true)
+    expect(darfPfad('qm', '/mis/finance')).toBe(false)
+    expect(darfPfad('qm', '/mis/team')).toBe(true)
+    expect(darfPfad('qm', '/mis/team', 'POST')).toBe(false)
+    expect(darfPfad('buchhaltung', '/mis/finance')).toBe(true)
+    expect(darfPfad('buchhaltung', '/mis/quality')).toBe(false)
+    expect(darfPfad('buchhaltung', '/mis/recruiting')).toBe(false)
+    expect(darfPfad('pdl', '/mis/finance', 'POST')).toBe(false)
+    for (const r of ['pdl', 'qm', 'buchhaltung']) {
+      expect(darfPfad(r, '/mis/settings'), r).toBe(false)
+      expect(darfPfad(r, '/mis/dataroom'), r).toBe(false)
+    }
+  })
+
   it('sperrt Kundschaft und Engel aus jedem Verwaltungspfad aus', () => {
     for (const r of ['kunde', 'engel', 'fahrer', 'angehoerige', null, 'unbekannt']) {
-      for (const p of ['/admin/home', '/admin/sepa', '/mis', '/admin/mfa-einrichtung']) {
+      for (const p of ['/admin/home', '/admin/sepa', '/mis', '/mis/finance', '/admin/mfa-einrichtung']) {
         expect(darfPfad(r, p), `${r} / ${p}`).toBe(false)
       }
     }

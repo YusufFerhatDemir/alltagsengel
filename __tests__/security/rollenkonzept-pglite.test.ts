@@ -81,12 +81,20 @@ beforeAll(async () => {
     -- Eine Auswahl der Zieltabellen. 'sepa_mandates' und 'audit_logs' sind
     -- da, 'wounds' bewusst NICHT — damit sich zeigt, dass die Migration
     -- fehlende Tabellen ueberspringt statt abzubrechen.
-    CREATE TABLE public.clients (id uuid PRIMARY KEY DEFAULT gen_random_uuid());
-    CREATE TABLE public.invoices (id uuid PRIMARY KEY DEFAULT gen_random_uuid());
-    CREATE TABLE public.sepa_mandates (id uuid PRIMARY KEY DEFAULT gen_random_uuid());
-    CREATE TABLE public.billing_tariffs (id uuid PRIMARY KEY DEFAULT gen_random_uuid());
+    CREATE FUNCTION public.current_org_id() RETURNS uuid LANGUAGE sql STABLE AS $$
+      SELECT '00000000-0000-4000-8000-000460629986'::uuid
+    $$;
+
+    -- Mit organization_id: die Mandantengrenze gehoert dann in die Policy.
+    CREATE TABLE public.clients (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), organization_id uuid);
+    CREATE TABLE public.invoices (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), organization_id uuid);
+    CREATE TABLE public.sepa_mandates (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), organization_id uuid);
+    CREATE TABLE public.billing_tariffs (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), organization_id uuid);
+    CREATE TABLE public.audit_logs (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), organization_id uuid);
+    -- OHNE organization_id: hier kann die Policy keine Grenze ziehen. Der
+    -- Fall muss mitgetestet werden, sonst faellt eine kuenftige Tabelle
+    -- ohne Mandantenspalte stillschweigend durch.
     CREATE TABLE public.pflege_verlauf (id uuid PRIMARY KEY DEFAULT gen_random_uuid());
-    CREATE TABLE public.audit_logs (id uuid PRIMARY KEY DEFAULT gen_random_uuid());
 
     INSERT INTO public.profiles (id, role) VALUES
       ('${ADMIN_ID}', 'admin'),
@@ -254,6 +262,31 @@ describe('Policies', () => {
     expect(nach('rk_pflege_verlauf_schreiben')).toContain('pflege.schreiben')
     expect(nach('rk_billing_tariffs_schreiben')).toContain('tarife.schreiben')
     expect(nach('rk_audit_logs_lesen')).toContain('audit.lesen')
+  })
+
+  it('zieht die Mandantengrenze in jede Policy einer Tabelle mit organization_id', async () => {
+    const res = await db.query<{ policyname: string; qual: string; with_check: string | null }>(
+      `SELECT policyname, qual, with_check FROM pg_policies
+        WHERE schemaname = 'public' AND policyname LIKE 'rk\\_%'
+          AND tablename IN ('clients','invoices','sepa_mandates','billing_tariffs','audit_logs')`,
+    )
+    expect(res.rows.length).toBeGreaterThan(5)
+    for (const r of res.rows) {
+      expect(r.qual, `${r.policyname}: ohne Mandantengrenze`).toContain('current_org_id()')
+      if (r.with_check) {
+        expect(r.with_check, `${r.policyname}: WITH CHECK ohne Mandantengrenze`).toContain('current_org_id()')
+      }
+    }
+  })
+
+  it('kommt ohne organization_id aus, statt abzubrechen', async () => {
+    const res = await db.query<{ qual: string }>(
+      `SELECT qual FROM pg_policies
+        WHERE schemaname = 'public' AND policyname = 'rk_pflege_verlauf_lesen'`,
+    )
+    expect(res.rows).toHaveLength(1)
+    expect(res.rows[0].qual).toContain('pflege.lesen')
+    expect(res.rows[0].qual).not.toContain('current_org_id()')
   })
 
   it('schaltet RLS auf allen betroffenen Tabellen ein', async () => {

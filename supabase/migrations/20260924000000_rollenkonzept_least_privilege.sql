@@ -190,11 +190,24 @@ GRANT EXECUTE ON FUNCTION public.rollen_matrix(text) TO authenticated, service_r
 --
 -- Tabellen, die es (noch) nicht gibt, werden uebersprungen — dieselbe
 -- Migration laeuft so auch auf einer Shadow-DB ohne alle Module.
+--
+-- MANDANTENGRENZE IST TEIL DER POLICY, NICHT NUR DES FENCE
+-- Die meisten Zieltabellen tragen bereits einen RESTRICTIVE Fence aus
+-- 20260801 ("<tabelle>_org_fence"). Sechs nicht: tours, tour_stops,
+-- dunning_entries, audit_logs, billing_tariff_audit, wf_audit_log — sie
+-- kamen spaeter dazu. Deren bisherige Admin-Policy ist org-blind; das ist
+-- fuer admin/superadmin Bestand, waere fuer eine neue Fachrolle aber eine
+-- frisch aufgerissene Mandantenluecke. Deshalb traegt JEDE Policy hier
+-- die Organisationsbedingung selbst, sobald die Tabelle eine
+-- organization_id hat — unabhaengig davon, ob ein Fence existiert.
 DO $$
 DECLARE
   e            record;
   name_lesen   text;
   name_schr    text;
+  hat_org      boolean;
+  bed_lesen    text;
+  bed_schr     text;
 BEGIN
   FOR e IN
     SELECT * FROM (VALUES
@@ -257,14 +270,31 @@ BEGIN
     -- wuerden eine Sicherheit vortaeuschen, die es nicht gibt.
     EXECUTE format('ALTER TABLE public.%I ENABLE ROW LEVEL SECURITY', e.tabelle);
 
+    SELECT EXISTS (
+      SELECT 1 FROM information_schema.columns
+      WHERE table_schema = 'public' AND table_name = e.tabelle
+        AND column_name = 'organization_id'
+    ) INTO hat_org;
+
+    IF hat_org THEN
+      bed_lesen := format('public.darf(%L) AND organization_id = public.current_org_id()', e.lesen);
+      bed_schr  := format('public.darf(%L) AND organization_id = public.current_org_id()', e.schreiben);
+    ELSE
+      -- Ohne organization_id gibt es keine Mandantengrenze, die man in
+      -- die Policy schreiben koennte. Sichtbar machen statt verschweigen.
+      RAISE NOTICE 'Rollenkonzept: % hat keine organization_id — Policy ohne Mandantengrenze', e.tabelle;
+      bed_lesen := format('public.darf(%L)', e.lesen);
+      bed_schr  := format('public.darf(%L)', e.schreiben);
+    END IF;
+
     name_lesen := 'rk_' || e.tabelle || '_lesen';
     IF NOT EXISTS (
       SELECT 1 FROM pg_policies
       WHERE schemaname = 'public' AND tablename = e.tabelle AND policyname = name_lesen
     ) THEN
       EXECUTE format(
-        'CREATE POLICY %I ON public.%I FOR SELECT USING (public.darf(%L))',
-        name_lesen, e.tabelle, e.lesen
+        'CREATE POLICY %I ON public.%I FOR SELECT USING (%s)',
+        name_lesen, e.tabelle, bed_lesen
       );
     END IF;
 
@@ -275,8 +305,8 @@ BEGIN
         WHERE schemaname = 'public' AND tablename = e.tabelle AND policyname = name_schr
       ) THEN
         EXECUTE format(
-          'CREATE POLICY %I ON public.%I FOR ALL USING (public.darf(%L)) WITH CHECK (public.darf(%L))',
-          name_schr, e.tabelle, e.schreiben, e.schreiben
+          'CREATE POLICY %I ON public.%I FOR ALL USING (%s) WITH CHECK (%s)',
+          name_schr, e.tabelle, bed_schr, bed_schr
         );
       END IF;
     END IF;
