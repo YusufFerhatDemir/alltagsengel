@@ -319,6 +319,13 @@ async function verarbeiteEintrag(
       html: alsHtml(zeile.betreff, zeile.inhalt, Boolean(anhang)),
       text: zeile.inhalt,
       attachments: anhang ? [anhang] : undefined,
+      // Vorgang ist die Queue-Zeile: genau eine Mahnmail. Der
+      // at-most-once-Anspruch oben schuetzt den Lauf, die Zustellspur
+      // macht das Ergebnis nachtraeglich pruefbar.
+      zustellung: {
+        organizationId: zeile.organization_id,
+        correlationId: zeile.id,
+      },
     })
 
     if (!versand.ok) {

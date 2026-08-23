@@ -3,7 +3,24 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { sendPushToUser } from '@/lib/push'
 import { sendFCMToUser } from '@/lib/fcm'
 import { logger } from '@/lib/logger'
+import {
+  protokolliereZustellung,
+  vorgangsId,
+  type ZustellKontext,
+} from '@/lib/notifications/delivery-log'
 const log = logger.child('notifications')
+
+export type { ZustellKontext }
+
+// ─── Zustellspur ───
+// Jeder Kanal nimmt optional einen ZustellKontext entgegen (Organisation,
+// Vorgang, ggf. notification_id). Ist er gesetzt, wird der Versuch nach
+// notification_delivery_log geschrieben — Erfolg wie Misserfolg.
+//
+// Der Kontext ist BEWUSST optional: die Zustellspur ist ein Protokoll und
+// darf keinen bestehenden Aufrufer brechen. Ohne Kontext verhalten sich
+// alle Funktionen exakt wie vorher, es wird nur nichts protokolliert.
+// Neue Aufrufer sollen ihn immer mitgeben.
 
 // ─── Types ───
 export interface NotifyPayload {
@@ -59,7 +76,8 @@ function esc(s: string): string {
 // ─── In-App Notification ───
 export async function createNotification(
   supabase: SupabaseClient,
-  payload: NotifyPayload
+  payload: NotifyPayload,
+  zustellung?: ZustellKontext
 ): Promise<boolean> {
   try {
     const { error } = await supabase.from('notifications').insert({
@@ -72,12 +90,79 @@ export async function createNotification(
     })
     if (error) {
       log.error('Notification insert error', { errorMessage: error.message })
+      await protokolliere(zustellung, {
+        channel: 'in_app',
+        recipient: payload.userId,
+        status: 'failed',
+        provider: 'supabase',
+        fehler: error.message,
+      })
       return false
     }
+    // Fuer den In-App-Kanal IST die Zeile die Zustellung — sie liegt im
+    // Postfach des Empfaengers. Deshalb 'delivered' und nicht 'sent':
+    // ein Wiederholungslauf soll hier nie nachlegen.
+    await protokolliere(zustellung, {
+      channel: 'in_app',
+      recipient: payload.userId,
+      status: 'delivered',
+      provider: 'supabase',
+    })
     return true
   } catch (err) {
     log.errorWithException('createNotification error', err)
+    await protokolliere(zustellung, {
+      channel: 'in_app',
+      recipient: payload.userId,
+      status: 'failed',
+      provider: 'supabase',
+      fehler: err,
+    })
     return false
+  }
+}
+
+/**
+ * Duennes Bindeglied zur Zustellspur.
+ *
+ * Ohne Kontext passiert nichts — kein Datenbankzugriff, kein Log. Mit
+ * Kontext wird best effort geschrieben; ein Fehler dabei bleibt folgenlos
+ * fuer den Versand (siehe lib/notifications/delivery-log.ts).
+ */
+async function protokolliere(
+  zustellung: ZustellKontext | undefined,
+  eintrag: {
+    channel: 'email' | 'push' | 'in_app' | 'whatsapp'
+    recipient: string
+    status: 'queued' | 'sent' | 'delivered' | 'failed' | 'skipped'
+    provider?: 'resend' | 'web_push' | 'supabase' | 'whatsapp_api'
+    providerMessageId?: string | null
+    fehler?: unknown
+  }
+): Promise<void> {
+  if (!zustellung) return
+  await protokolliereZustellung({ ...zustellung, ...eintrag })
+}
+
+/**
+ * Baut den Zustellkontext fuer ein Buchungs-Ereignis.
+ *
+ * Die correlation_id ist NICHT die booking_id: pro Buchung gehen mehrere
+ * Nachrichten raus (Anfrage, Zusage, Absage) und der Idempotenzschluessel
+ * ist (correlation_id, channel). Wuerden alle dieselbe ID tragen, wuerde
+ * die Zusage als Dublette der Anfrage gelten. Deshalb wird pro Ereignis
+ * und Empfaenger eine eigene, reproduzierbare Vorgangs-ID abgeleitet.
+ */
+function buchungsKontext(
+  zustellung: ZustellKontext | undefined,
+  ereignis: string,
+  bookingId: string,
+  empfaengerId: string
+): ZustellKontext | undefined {
+  if (!zustellung) return undefined
+  return {
+    ...zustellung,
+    correlationId: zustellung.correlationId ?? vorgangsId(ereignis, bookingId, empfaengerId),
   }
 }
 
@@ -86,15 +171,23 @@ export async function sendEmailNotification(
   to: string,
   recipientName: string,
   subject: string,
-  bodyHtml: string
+  bodyHtml: string,
+  zustellung?: ZustellKontext
 ): Promise<boolean> {
   const resend = getResend()
   if (!resend) {
     log.info('RESEND_API_KEY nicht konfiguriert — E-Mail übersprungen')
+    await protokolliere(zustellung, {
+      channel: 'email',
+      recipient: to,
+      status: 'skipped',
+      provider: 'resend',
+      fehler: 'RESEND_API_KEY nicht konfiguriert',
+    })
     return false
   }
   try {
-    const { error } = await resend.emails.send({
+    const { data, error } = await resend.emails.send({
       from: ALLTAGSENGEL_ABSENDER,
       to,
       subject,
@@ -102,11 +195,32 @@ export async function sendEmailNotification(
     })
     if (error) {
       log.errorWithException('Resend email error', error)
+      await protokolliere(zustellung, {
+        channel: 'email',
+        recipient: to,
+        status: 'failed',
+        provider: 'resend',
+        fehler: error,
+      })
       return false
     }
+    await protokolliere(zustellung, {
+      channel: 'email',
+      recipient: to,
+      status: 'sent',
+      provider: 'resend',
+      providerMessageId: data?.id ?? null,
+    })
     return true
   } catch (err) {
     log.errorWithException('sendEmailNotification error', err)
+    await protokolliere(zustellung, {
+      channel: 'email',
+      recipient: to,
+      status: 'failed',
+      provider: 'resend',
+      fehler: err,
+    })
     return false
   }
 }
@@ -127,6 +241,12 @@ export interface RawEmailParams {
   text?: string
   replyTo?: string
   attachments?: RawEmailAnhang[]
+  /**
+   * Optionaler Zustellkontext. Ist er gesetzt, landet jeder Versuch —
+   * versendet, uebersprungen oder fehlgeschlagen — in
+   * notification_delivery_log.
+   */
+  zustellung?: ZustellKontext
 }
 
 export type RawEmailErgebnis =
@@ -152,6 +272,13 @@ export async function sendRawEmail(params: RawEmailParams): Promise<RawEmailErge
   const resend = getResend()
   if (!resend) {
     log.info('RESEND_API_KEY nicht konfiguriert — E-Mail übersprungen', { subject: params.subject })
+    await protokolliere(params.zustellung, {
+      channel: 'email',
+      recipient: params.to,
+      status: 'skipped',
+      provider: 'resend',
+      fehler: 'RESEND_API_KEY nicht konfiguriert',
+    })
     return { ok: false, uebersprungen: true, grund: 'RESEND_API_KEY nicht konfiguriert' }
   }
 
@@ -176,12 +303,33 @@ export async function sendRawEmail(params: RawEmailParams): Promise<RawEmailErge
 
     if (error) {
       log.errorWithException('Resend email error', error)
+      await protokolliere(params.zustellung, {
+        channel: 'email',
+        recipient: params.to,
+        status: 'failed',
+        provider: 'resend',
+        fehler: error,
+      })
       return { ok: false, uebersprungen: false, grund: error.message || 'Resend-Fehler' }
     }
 
+    await protokolliere(params.zustellung, {
+      channel: 'email',
+      recipient: params.to,
+      status: 'sent',
+      provider: 'resend',
+      providerMessageId: data?.id ?? null,
+    })
     return { ok: true, messageId: data?.id ?? null }
   } catch (err) {
     log.errorWithException('sendRawEmail error', err)
+    await protokolliere(params.zustellung, {
+      channel: 'email',
+      recipient: params.to,
+      status: 'failed',
+      provider: 'resend',
+      fehler: err,
+    })
     return {
       ok: false,
       uebersprungen: false,
@@ -194,8 +342,10 @@ export async function sendRawEmail(params: RawEmailParams): Promise<RawEmailErge
 export async function notifyAngelNewBooking(
   supabase: SupabaseClient,
   angelUserId: string,
-  data: BookingNotifyData
+  data: BookingNotifyData,
+  zustellung?: ZustellKontext
 ): Promise<void> {
+  const spur = buchungsKontext(zustellung, 'booking-neu', data.bookingId, angelUserId)
   const dateStr = new Date(data.date).toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin', day: '2-digit', month: 'long', year: 'numeric' })
 
   // 1. In-App Notification
@@ -206,7 +356,7 @@ export async function notifyAngelNewBooking(
     body: `${data.customerName} möchte ${data.service} am ${dateStr} um ${data.time} Uhr buchen (${data.duration}h, ${data.amount.toFixed(2)}€).`,
     link: `/engel/buchungen`,
     data: { bookingId: data.bookingId },
-  })
+  }, spur)
 
   // 2. E-Mail
   const { data: profile } = await supabase
@@ -232,7 +382,8 @@ export async function notifyAngelNewBooking(
         </table>
         <p>Bitte öffnen Sie die App, um die Anfrage anzunehmen oder abzulehnen.</p>
         <a href="https://alltagsengel.care/engel/buchungen" style="display:inline-block;padding:12px 28px;background:#C9963C;color:#1A1612;text-decoration:none;border-radius:10px;font-weight:600;margin-top:8px;">Anfrage ansehen</a>
-      `
+      `,
+      spur
     )
 
     // Mark email_sent
@@ -252,9 +403,12 @@ export async function notifyAngelNewBooking(
     actions: [
       { action: 'open', title: 'Ansehen' },
     ],
-  }).catch((err) => log.errorWithException('Web Push to angel error', err))
+  }, spur).catch((err) => log.errorWithException('Web Push to angel error', err))
 
   // 4. Native Push (FCM) Notification
+  // Bewusst OHNE Zustellspur: der Kanalkatalog der Migration kennt nur
+  // 'push' mit Provider 'web_push'. FCM braucht einen eigenen Provider-
+  // Eintrag; bis dahin waere ein Protokolleintrag hier eine Falschaussage.
   await sendFCMToUser(angelUserId, {
     title: 'Neue Buchungsanfrage',
     body: `${data.customerName} möchte ${data.service} am ${dateStr} um ${data.time} Uhr buchen.`,
@@ -267,8 +421,10 @@ export async function notifyAngelNewBooking(
 export async function notifyCustomerBookingAccepted(
   supabase: SupabaseClient,
   customerId: string,
-  data: BookingNotifyData
+  data: BookingNotifyData,
+  zustellung?: ZustellKontext
 ): Promise<void> {
+  const spur = buchungsKontext(zustellung, 'booking-zusage', data.bookingId, customerId)
   const dateStr = new Date(data.date).toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin', day: '2-digit', month: 'long', year: 'numeric' })
 
   // 1. In-App Notification
@@ -279,7 +435,7 @@ export async function notifyCustomerBookingAccepted(
     body: `${data.angelName} hat Ihre Buchung für ${data.service} am ${dateStr} angenommen.`,
     link: `/kunde/bestaetigt/${data.bookingId}`,
     data: { bookingId: data.bookingId },
-  })
+  }, spur)
 
   // 2. E-Mail
   const { data: profile } = await supabase
@@ -308,7 +464,8 @@ export async function notifyCustomerBookingAccepted(
           Haftpflicht bis 5 Mio. € · Unfallversicherung · Sachschäden bis 50.000€
         </div>
         <a href="https://alltagsengel.care/kunde/bestaetigt/${data.bookingId}" style="display:inline-block;padding:12px 28px;background:#2D8F5E;color:#fff;text-decoration:none;border-radius:10px;font-weight:600;margin-top:8px;">Buchung ansehen</a>
-      `
+      `,
+      spur
     )
 
     await supabase.from('notifications')
@@ -327,7 +484,7 @@ export async function notifyCustomerBookingAccepted(
     actions: [
       { action: 'open', title: 'Ansehen' },
     ],
-  }).catch((err) => log.errorWithException('Web Push to customer error', err))
+  }, spur).catch((err) => log.errorWithException('Web Push to customer error', err))
 
   // 4. Native Push (FCM) Notification
   await sendFCMToUser(customerId, {
@@ -343,8 +500,10 @@ export async function notifyCustomerBookingDeclined(
   supabase: SupabaseClient,
   customerId: string,
   data: BookingNotifyData,
-  reason?: string | null
+  reason?: string | null,
+  zustellung?: ZustellKontext
 ): Promise<void> {
+  const spur = buchungsKontext(zustellung, 'booking-absage', data.bookingId, customerId)
   const dateStr = new Date(data.date).toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin', day: '2-digit', month: 'long', year: 'numeric' })
   const reasonText = reason ? ` Grund: ${reason}` : ''
 
@@ -356,7 +515,7 @@ export async function notifyCustomerBookingDeclined(
     body: `${data.angelName} kann Ihre Anfrage für ${data.service} am ${dateStr} leider nicht annehmen.${reasonText} Wir finden gerne einen anderen Engel für Sie.`,
     link: `/kunde/home`,
     data: { bookingId: data.bookingId },
-  })
+  }, spur)
 
   // 2. E-Mail
   const { data: profile } = await supabase
@@ -380,7 +539,8 @@ export async function notifyCustomerBookingDeclined(
         ${reason ? `<p style="color:#666;">Begründung: ${esc(reason)}</p>` : ''}
         <p>Das ist kein Problem — es stehen weitere Engel in Ihrer Nähe zur Verfügung. Suchen Sie einfach einen neuen Termin aus.</p>
         <a href="https://alltagsengel.care/kunde/home" style="display:inline-block;padding:12px 28px;background:#C9963C;color:#1A1612;text-decoration:none;border-radius:10px;font-weight:600;margin-top:8px;">Anderen Engel finden</a>
-      `
+      `,
+      spur
     )
 
     await supabase.from('notifications')
@@ -399,7 +559,7 @@ export async function notifyCustomerBookingDeclined(
     actions: [
       { action: 'open', title: 'Anderen Engel finden' },
     ],
-  }).catch((err) => log.errorWithException('Web Push to customer error', err))
+  }, spur).catch((err) => log.errorWithException('Web Push to customer error', err))
 
   // 4. Native Push (FCM) Notification
   await sendFCMToUser(customerId, {

@@ -347,9 +347,9 @@ export async function POST(req: NextRequest) {
     if (booking.customer_id) {
       try {
         if (action === 'accept') {
-          await notifyCustomerBookingAccepted(admin, booking.customer_id, notifyData)
+          await notifyCustomerBookingAccepted(admin, booking.customer_id, notifyData, { organizationId: orgId })
         } else {
-          await notifyCustomerBookingDeclined(admin, booking.customer_id, notifyData, declineReason)
+          await notifyCustomerBookingDeclined(admin, booking.customer_id, notifyData, declineReason, { organizationId: orgId })
         }
       } catch (notifyErr) {
         // Benachrichtigung ist Nebenwirkung — der Statuswechsel bleibt gültig.

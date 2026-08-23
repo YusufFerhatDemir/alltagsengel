@@ -1,6 +1,10 @@
 import webpush from 'web-push'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { logger } from '@/lib/logger'
+import {
+  protokolliereZustellung,
+  type ZustellKontext,
+} from '@/lib/notifications/delivery-log'
 const log = logger.child('push')
 
 // ─── VAPID Config ───
@@ -70,10 +74,28 @@ async function sendToSubscription(
 // ─── Send Push to All Subscriptions of a User ───
 export async function sendPushToUser(
   userId: string,
-  payload: PushPayload
+  payload: PushPayload,
+  zustellung?: ZustellKontext
 ): Promise<{ sent: number; failed: number }> {
+  // Best effort — die Zustellspur darf den Push nie aufhalten.
+  const spur = async (
+    status: 'sent' | 'failed' | 'skipped',
+    fehler?: unknown
+  ): Promise<void> => {
+    if (!zustellung) return
+    await protokolliereZustellung({
+      ...zustellung,
+      channel: 'push',
+      recipient: userId,
+      status,
+      provider: 'web_push',
+      fehler,
+    })
+  }
+
   if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) {
     log.info('VAPID keys not configured — push skipped')
+    await spur('skipped', 'VAPID-Schluessel nicht konfiguriert')
     return { sent: 0, failed: 0 }
   }
 
@@ -85,8 +107,15 @@ export async function sendPushToUser(
     .select('endpoint, p256dh, auth')
     .eq('user_id', userId)
 
-  if (error || !subscriptions?.length) {
-    if (error) log.error('Push: Error fetching subscriptions', { errorMessage: error.message })
+  if (error) {
+    log.error('Push: Error fetching subscriptions', { errorMessage: error.message })
+    await spur('failed', error.message)
+    return { sent: 0, failed: 0 }
+  }
+
+  if (!subscriptions?.length) {
+    // Kein Geraet registriert ist kein Fehler, aber auch keine Zustellung.
+    await spur('skipped', 'Keine Push-Registrierung fuer diesen Nutzer')
     return { sent: 0, failed: 0 }
   }
 
@@ -99,5 +128,12 @@ export async function sendPushToUser(
   const failed = results.length - sent
 
   log.info(`Push sent to user ${userId}: ${sent}/${results.length} successful`)
+  // Ein einziges erreichtes Geraet zaehlt als zugestellt — der Nutzer hat
+  // die Nachricht gesehen. Erst wenn ALLE Registrierungen scheitern, ist
+  // der Kanal fuer diesen Vorgang fehlgeschlagen.
+  await spur(
+    sent > 0 ? 'sent' : 'failed',
+    sent > 0 ? undefined : `Alle ${results.length} Push-Registrierungen fehlgeschlagen`
+  )
   return { sent, failed }
 }

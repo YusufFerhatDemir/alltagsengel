@@ -162,6 +162,10 @@ export async function versendeRechnungPerEmail(
       content: paket.pdfBytes,
       contentType: 'application/pdf',
     }],
+    // Zustellspur: der Vorgang ist die Rechnung. Zusammen mit dem Kanal
+    // 'email' ist das der Idempotenzschluessel gegen Doppelversand
+    // (Migration 20260923000000).
+    zustellung: { organizationId, correlationId: invoiceId },
   })
 
   // ── Fehlschlag / Ueberspringen: sent_at bleibt leer ──

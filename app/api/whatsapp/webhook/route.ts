@@ -28,6 +28,8 @@ import {
 } from '@/lib/whatsapp/escalation'
 import { isRateLimited, RATE_LIMIT_REPLY } from '@/lib/whatsapp/rate-limit'
 import { sendWhatsAppMessage } from '@/lib/whatsapp/send'
+import { vorgangsId } from '@/lib/notifications/delivery-log'
+import { DEFAULT_ORG_ID } from '@/lib/organizations/types'
 import { isLowConfidenceReply, sanitizeNames, HOLDING_REPLY } from '@/lib/whatsapp/confidence'
 import { logger } from '@/lib/logger'
 const log = logger.child('wa-webhook')
@@ -210,7 +212,7 @@ async function processIncomingMessage(
   // 3. Rate-Limit prüfen
   const rl = await isRateLimited(supabase, msg.from)
   if (rl.limited) {
-    await replyAndLog(supabase, msg.from, RATE_LIMIT_REPLY, 'rate-limit', true)
+    await replyAndLog(supabase, msg.from, RATE_LIMIT_REPLY, 'rate-limit', true, undefined, msg.id)
     return
   }
 
@@ -238,7 +240,7 @@ async function processIncomingMessage(
     })
     const reply = escalationReplyFor(esc.kind)
     const tag = esc.kind === 'medical' ? 'escalation-medical' : 'escalation'
-    await replyAndLog(supabase, msg.from, reply, tag, false, esc.reason)
+    await replyAndLog(supabase, msg.from, reply, tag, false, esc.reason, msg.id)
     return
   }
 
@@ -281,7 +283,14 @@ async function processIncomingMessage(
     // Draft als outbound mit escalation_reason='draft_pending' speichern.
     // body = Holding-Message (was Kunde sieht).
     // raw.bot_draft = Bot-Entwurf (für späteren Admin-Review).
-    const send = await sendWhatsAppMessage({ to: msg.from, body: HOLDING_REPLY })
+    const send = await sendWhatsAppMessage({
+      to: msg.from,
+      body: HOLDING_REPLY,
+      zustellung: {
+        organizationId: WHATSAPP_ORG_ID,
+        correlationId: vorgangsId('whatsapp-holding', msg.from, msg.id),
+      },
+    })
     await supabase.from('whatsapp_conversations').insert({
       wa_phone: msg.from,
       wa_msg_id: send.wamid || null,
@@ -314,8 +323,20 @@ async function processIncomingMessage(
   }
 
   // 7. Antwort senden + loggen
-  await replyAndLog(supabase, msg.from, cleanReply, model, false)
+  await replyAndLog(supabase, msg.from, cleanReply, model, false, undefined, msg.id)
 }
+
+/**
+ * Mandant fuer die Zustellspur.
+ *
+ * Der Webhook hat keine Sitzung — er wird von Meta aufgerufen. Eine
+ * Zuordnung ueber current_org_id() gibt es hier also nicht. Die Zuordnung
+ * ist trotzdem eindeutig: es gibt genau EINE WhatsApp-Rufnummer
+ * (WHATSAPP_PHONE_NUMBER_ID) und die gehoert der Stamm-Organisation.
+ * Kommt je eine zweite Nummer dazu, muss hier ueber die Nummer aufgeloest
+ * werden statt ueber diese Konstante.
+ */
+const WHATSAPP_ORG_ID = DEFAULT_ORG_ID
 
 async function replyAndLog(
   supabase: ReturnType<typeof getServiceClient>,
@@ -323,9 +344,18 @@ async function replyAndLog(
   body: string,
   modelOrReason: string,
   rateLimited: boolean,
-  escalationReason?: string
+  escalationReason?: string,
+  /** Eingehende Meta-Nachrichten-ID — Vorgangsbezug der Zustellspur. */
+  eingangsId?: string
 ): Promise<void> {
-  const send = await sendWhatsAppMessage({ to, body })
+  const send = await sendWhatsAppMessage({
+    to,
+    body,
+    zustellung: {
+      organizationId: WHATSAPP_ORG_ID,
+      correlationId: vorgangsId('whatsapp-antwort', to, eingangsId ?? modelOrReason),
+    },
+  })
   await supabase.from('whatsapp_conversations').insert({
     wa_phone: to,
     wa_msg_id: send.wamid || null,
