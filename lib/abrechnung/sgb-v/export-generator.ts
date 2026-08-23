@@ -17,6 +17,7 @@
  */
 
 import type { HkpAufbereitung, HkpFall } from './positionen'
+import { csvZeile } from '@/lib/utils/csv'
 
 export const PRUEF_EXPORT_HINWEIS =
   'KEIN AMTLICHER § 302-DATENSATZ — interner Prüf-Export, kein EDIFACT/SLGA-SLLA-Format. ' +
@@ -57,22 +58,34 @@ export function pruefExportAlsJson(exp: PruefExport): string {
   return JSON.stringify(exp, null, 2)
 }
 
-/** CSV-Zeile je Position, für schnelle Sichtprüfung in Tabellenkalkulation. */
+/**
+ * CSV-Zeile je Position, für schnelle Sichtprüfung in Tabellenkalkulation.
+ *
+ * Jede Zelle läuft über csvZelle(). Vorher wurde nur das Semikolon im
+ * Klientennamen durch ein Komma ersetzt und dann per join(';') zusammengefügt.
+ * Das reichte an drei Stellen nicht:
+ *   · Ein Name, der mit = + - @ beginnt, ist in Excel eine FORMEL. Namen
+ *     kommen aus kundenseitigen Formularen — der Pfad reicht von außen bis
+ *     in die Tabellenkalkulation des Sachbearbeiters (CSV-Injection).
+ *   · Ein Zeilenumbruch im Namen verschob alle Folgespalten.
+ *   · Anführungszeichen im Namen blieben unmaskiert.
+ */
 export function pruefExportAlsCsv(exp: PruefExport): string {
   const kopf = [
     '# ' + exp.hinweis,
-    'kostentraeger_ik;klient_name;versichertennummer;verordnung_nummer;datum;leistungsart;betrag_cent',
+    csvZeile(['kostentraeger_ik', 'klient_name', 'versichertennummer',
+      'verordnung_nummer', 'datum', 'leistungsart', 'betrag_cent']),
   ]
   const zeilen = exp.faelle.flatMap(fall =>
-    fall.positionen.map(p => [
+    fall.positionen.map(p => csvZeile([
       fall.kostentraeger_ik,
-      fall.klient_name.replace(/;/g, ','),
+      fall.klient_name,
       fall.versichertennummer,
       p.verordnung_nummer ?? '',
       p.datum,
       p.leistungsart ?? '',
       String(p.betrag_cent),
-    ].join(';')),
+    ])),
   )
   return [...kopf, ...zeilen].join('\n')
 }
