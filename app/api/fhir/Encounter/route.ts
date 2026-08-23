@@ -15,7 +15,7 @@ const FHIR_CONTENT_TYPE = 'application/fhir+json; charset=utf-8'
 const RECORD_COLUMNS = 'id, organization_id, client_id, caregiver_id, date, start_time, end_time, duration_minutes, service_type, status'
 
 export async function GET(request: Request) {
-  const auth = await requireOpsAdmin()
+  const auth = await requireOpsAdmin('system.verwalten')
   if (!auth.ok) return toFhirErrorResponse(auth.response)
 
   try {

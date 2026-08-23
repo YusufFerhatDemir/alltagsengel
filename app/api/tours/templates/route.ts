@@ -25,7 +25,7 @@ function validiereStops(stops: unknown): string | null {
 
 // ── GET /api/tours/templates ──────────────────────────────────────
 export async function GET(req: NextRequest) {
-  const auth = await requireOpsAdmin()
+  const auth = await requireOpsAdmin('einsatz.lesen')
   if (!auth.ok) return auth.response
 
   const admin = createAdminClient()
@@ -43,7 +43,7 @@ export async function GET(req: NextRequest) {
 
 // ── POST /api/tours/templates ─────────────────────────────────────
 export async function POST(req: NextRequest) {
-  const auth = await requireOpsAdmin()
+  const auth = await requireOpsAdmin('einsatz.schreiben')
   if (!auth.ok) return auth.response
 
   const body = await req.json()
@@ -76,7 +76,7 @@ export async function POST(req: NextRequest) {
 
 // ── PATCH /api/tours/templates — body: { id, …updates } ──────────
 export async function PATCH(req: NextRequest) {
-  const auth = await requireOpsAdmin()
+  const auth = await requireOpsAdmin('einsatz.schreiben')
   if (!auth.ok) return auth.response
 
   const body = await req.json()

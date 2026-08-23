@@ -13,7 +13,7 @@ import { monatBerlin } from '@/lib/utils/timezone';
  * lösbare und extern zu beschaffende Voraussetzungen.
  */
 export async function GET(request: Request) {
-  const auth = await requireOpsAdmin()
+  const auth = await requireOpsAdmin('abrechnung.lesen')
   if (!auth.ok) return auth.response
   const { organizationId } = auth.ctx
 

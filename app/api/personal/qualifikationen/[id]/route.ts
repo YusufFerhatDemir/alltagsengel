@@ -5,7 +5,7 @@ import { requirePersonalAdmin } from '@/lib/personal/api-auth'
 import { updateQualifikation, deleteQualifikation } from '@/lib/personal/qualifikationen'
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const auth = await requirePersonalAdmin()
+  const auth = await requirePersonalAdmin('personal.schreiben')
   if (!auth.ok) return auth.response
   const { id } = await params
   const supabase = createAdminClient()
@@ -19,7 +19,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 }
 
 export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const auth = await requirePersonalAdmin()
+  const auth = await requirePersonalAdmin('personal.schreiben')
   if (!auth.ok) return auth.response
   const { id } = await params
   const supabase = createAdminClient()

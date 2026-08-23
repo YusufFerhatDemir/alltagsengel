@@ -6,6 +6,8 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { NextResponse } from 'next/server'
+import { rolleDarf } from '@/lib/auth/guard'
+import type { Berechtigung } from '@/lib/auth/rollen'
 import { createClient } from '@/lib/supabase/server'
 import { resolveUserOrgId } from '@/lib/organizations/server'
 
@@ -22,7 +24,13 @@ export type UebergabeAuthResult =
   | { ok: true; ctx: UebergabeAuthContext }
   | { ok: false; response: NextResponse }
 
-const ADMIN_ROLLEN = ['admin', 'superadmin']
+/**
+ * Rollen, die in der Dienstuebergabe ueberhaupt vorkommen. Engel und
+ * Betreuungskraefte stehen NICHT im Rollenkonzept (lib/auth/rollen.ts) —
+ * ihr Zugriff haengt an der eigenen Einsatzzuordnung, nicht an einer
+ * Verwaltungsberechtigung. Deshalb hier zusaetzlich aufgefuehrt.
+ */
+const EINSATZ_ROLLEN = ['engel', 'caregiver', 'mitarbeiter']
 
 /** Jeder angemeldete Mitarbeitende mit gültiger Organisation. */
 export async function requireUebergabeUser(): Promise<UebergabeAuthResult> {
@@ -45,7 +53,10 @@ export async function requireUebergabeUser(): Promise<UebergabeAuthResult> {
 
   const role = profile.role ?? 'engel'
   // Kunden und Angehörige haben in der Dienstübergabe nichts zu suchen.
-  if (!['admin', 'superadmin', 'engel', 'caregiver', 'mitarbeiter'].includes(role)) {
+  // Übergaben enthalten Gesundheitsdaten — Verwaltungsrollen brauchen
+  // dafür 'pflege.lesen' (also admin/superadmin/pdl/qm, nicht die
+  // Buchhaltung).
+  if (!rolleDarf(role, 'pflege.lesen') && !EINSATZ_ROLLEN.includes(role)) {
     return { ok: false, response: NextResponse.json({ error: 'Keine Berechtigung für Übergaben.' }, { status: 403 }) }
   }
 
@@ -72,17 +83,21 @@ export async function requireUebergabeUser(): Promise<UebergabeAuthResult> {
       role,
       name,
       caregiverId: caregiver?.id ?? null,
-      istAdmin: ADMIN_ROLLEN.includes(role),
+      // „istAdmin" heisst hier: darf protokollübergreifend arbeiten.
+      // Das ist an die Schreibberechtigung für Pflegedaten gebunden.
+      istAdmin: rolleDarf(role, 'pflege.schreiben'),
     },
   }
 }
 
-/** Nur Administratoren — für löschende und protokollübergreifende Zugriffe. */
-export async function requireUebergabeAdmin(): Promise<UebergabeAuthResult> {
+/** Für löschende und protokollübergreifende Zugriffe. */
+export async function requireUebergabeAdmin(
+  berechtigung: Berechtigung = 'pflege.schreiben'
+): Promise<UebergabeAuthResult> {
   const auth = await requireUebergabeUser()
   if (!auth.ok) return auth
-  if (!auth.ctx.istAdmin) {
-    return { ok: false, response: NextResponse.json({ error: 'Nur für Administratoren.' }, { status: 403 }) }
+  if (!rolleDarf(auth.ctx.role, berechtigung)) {
+    return { ok: false, response: NextResponse.json({ error: 'Für diesen Bereich fehlt Ihnen die Berechtigung.' }, { status: 403 }) }
   }
   return auth
 }

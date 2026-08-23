@@ -5,7 +5,7 @@ import { requirePersonalAdmin } from '@/lib/personal/api-auth'
 import { listQualifikationen, createQualifikation } from '@/lib/personal/qualifikationen'
 
 export async function GET(request: Request) {
-  const auth = await requirePersonalAdmin()
+  const auth = await requirePersonalAdmin('personal.lesen')
   if (!auth.ok) return auth.response
   const supabase = createAdminClient()
   const url = new URL(request.url)
@@ -26,7 +26,7 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const auth = await requirePersonalAdmin()
+  const auth = await requirePersonalAdmin('personal.schreiben')
   if (!auth.ok) return auth.response
   const supabase = createAdminClient()
   try {

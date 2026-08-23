@@ -13,7 +13,7 @@ import type { Aufnahmestatus, RisikoPruefstatus, RisikoSchweregrad } from '@/lib
  */
 export async function GET(request: Request) {
   try {
-    const auth = await requirePflegeAdmin()
+    const auth = await requirePflegeAdmin('pflege.lesen')
     if (!auth.ok) return auth.response
     const { organizationId } = auth.ctx
 

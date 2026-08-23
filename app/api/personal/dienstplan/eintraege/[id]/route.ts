@@ -7,7 +7,7 @@ import { pruefeEinsatzfreigabe } from '@/lib/personal/einsatzfreigabe'
 import { writeAuditLog } from '@/lib/personal/audit'
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const auth = await requirePersonalAdmin()
+  const auth = await requirePersonalAdmin('personal.schreiben')
   if (!auth.ok) return auth.response
   const { id } = await params
   const supabase = createAdminClient()
@@ -97,7 +97,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 }
 
 export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const auth = await requirePersonalAdmin()
+  const auth = await requirePersonalAdmin('personal.schreiben')
   if (!auth.ok) return auth.response
   const { id } = await params
   const supabase = createAdminClient()

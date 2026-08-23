@@ -25,7 +25,7 @@ function nurErlaubteFelder(roh: Record<string, unknown>): Record<string, unknown
 
 /** GET — Lagerungsprotokolle, optional gefiltert nach Klient. */
 export async function GET(request: NextRequest) {
-  const auth = await requireOpsAdmin()
+  const auth = await requireOpsAdmin('pflege.lesen')
   if (!auth.ok) return auth.response
 
   try {
@@ -55,7 +55,7 @@ export async function GET(request: NextRequest) {
 
 /** POST — neue Umlagerung protokollieren. */
 export async function POST(req: NextRequest) {
-  const auth = await requireOpsAdmin()
+  const auth = await requireOpsAdmin('pflege.schreiben')
   if (!auth.ok) return auth.response
 
   try {
@@ -111,7 +111,7 @@ export async function POST(req: NextRequest) {
 
 /** DELETE — Lagerungseintrag archivieren (Soft-Delete). */
 export async function DELETE(req: NextRequest) {
-  const auth = await requireOpsAdmin()
+  const auth = await requireOpsAdmin('pflege.schreiben')
   if (!auth.ok) return auth.response
 
   try {

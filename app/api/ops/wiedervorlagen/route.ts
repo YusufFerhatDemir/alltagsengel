@@ -6,7 +6,7 @@ import { listWiedervorlagen, createWiedervorlage } from '@/lib/ops/wiedervorlage
 import type { WiedervorlageStatus } from '@/lib/ops/types'
 
 export async function GET(request: Request) {
-  const auth = await requireOpsAdmin()
+  const auth = await requireOpsAdmin('qm.lesen')
   if (!auth.ok) return auth.response
   const supabase = createAdminClient()
   const url = new URL(request.url)
@@ -25,7 +25,7 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const auth = await requireOpsAdmin()
+  const auth = await requireOpsAdmin('qm.schreiben')
   if (!auth.ok) return auth.response
   const supabase = createAdminClient()
   try {

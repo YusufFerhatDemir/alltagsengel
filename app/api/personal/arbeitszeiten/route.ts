@@ -9,7 +9,7 @@ import { writeAuditLog } from '@/lib/personal/audit'
 
 export async function GET(req: NextRequest) {
   try {
-    const admin = await requirePersonalAdmin()
+    const admin = await requirePersonalAdmin('personal.lesen')
     if (admin.ok) {
       const supabase = createAdminClient()
       const sp = req.nextUrl.searchParams
@@ -49,7 +49,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const admin = await requirePersonalAdmin()
+    const admin = await requirePersonalAdmin('personal.schreiben')
     if (admin.ok) {
       const supabase = createAdminClient()
       const body = await req.json()

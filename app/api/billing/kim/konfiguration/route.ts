@@ -13,7 +13,7 @@ import { ladeKonfigurationen, erstelleKonfiguration } from '@/lib/kim/config'
  * Auflisten (s. lib/kim/config.ts).
  */
 export async function GET(request: Request) {
-  const auth = await requireOpsAdmin()
+  const auth = await requireOpsAdmin('system.verwalten')
   if (!auth.ok) return auth.response
   const { organizationId } = auth.ctx
 
@@ -27,7 +27,7 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const auth = await requireOpsAdmin()
+  const auth = await requireOpsAdmin('system.verwalten')
   if (!auth.ok) return auth.response
   const { organizationId, userId } = auth.ctx
 

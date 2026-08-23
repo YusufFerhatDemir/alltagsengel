@@ -9,7 +9,7 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const auth = await requirePersonalAdmin()
+    const auth = await requirePersonalAdmin('personal.schreiben')
     if (!auth.ok) return auth.response
     const supabase = createAdminClient()
 

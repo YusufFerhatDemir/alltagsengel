@@ -9,7 +9,7 @@ export async function POST(
   { params }: { params: Promise<{ invoiceId: string }> }
 ) {
   try {
-    const auth = await requireOpsAdmin()
+    const auth = await requireOpsAdmin('abrechnung.schreiben')
     if (!auth.ok) return auth.response
     const supabase = createAdminClient()
     const { invoiceId } = await params

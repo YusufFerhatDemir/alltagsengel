@@ -21,7 +21,7 @@ import { erzeugeRechnungsPaket, RechnungsPaketError } from '@/lib/pdf/rechnung-p
 // ═══════════════════════════════════════════════════════════════
 
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
-  const auth = await requireOpsAdmin()
+  const auth = await requireOpsAdmin('abrechnung.schreiben')
   if (!auth.ok) return auth.response
   const { userId, organizationId: orgId } = auth.ctx
 

@@ -9,7 +9,7 @@ import { ladeSgbVKorrekturHistorie } from '@/lib/abrechnung/sgb-v/storno-korrekt
 
 /** GET /api/billing/sgb-v/laeufe/[id] — Detail inkl. Rückläufer, Queue, Korrekturhistorie. */
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const auth = await requireOpsAdmin()
+  const auth = await requireOpsAdmin('abrechnung.lesen')
   if (!auth.ok) return auth.response
 
   try {

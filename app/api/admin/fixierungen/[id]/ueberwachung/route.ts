@@ -15,7 +15,7 @@ export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const auth = await requireOpsAdmin()
+  const auth = await requireOpsAdmin('pflege.lesen')
   if (!auth.ok) return auth.response
   const { id } = await params
 
@@ -54,7 +54,7 @@ export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const auth = await requireOpsAdmin()
+  const auth = await requireOpsAdmin('pflege.schreiben')
   if (!auth.ok) return auth.response
   const { id } = await params
 

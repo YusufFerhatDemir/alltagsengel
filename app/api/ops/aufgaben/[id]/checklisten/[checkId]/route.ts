@@ -8,7 +8,7 @@ export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string; checkId: string }> }
 ) {
-  const auth = await requireOpsAdmin()
+  const auth = await requireOpsAdmin('einsatz.schreiben')
   if (!auth.ok) return auth.response
   const { checkId } = await params
   const supabase = createAdminClient()
@@ -30,7 +30,7 @@ export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string; checkId: string }> }
 ) {
-  const auth = await requireOpsAdmin()
+  const auth = await requireOpsAdmin('einsatz.schreiben')
   if (!auth.ok) return auth.response
   const { checkId } = await params
   const supabase = createAdminClient()

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { rolleDarf } from '@/lib/auth/guard'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getActiveOrgId } from '@/lib/organizations/server'
@@ -18,7 +19,7 @@ export async function POST(req: Request) {
     .eq('id', user.id)
     .single()
 
-  if (!profile || !['admin', 'superadmin'].includes(profile.role)) {
+  if (!profile || !rolleDarf(profile.role, 'stammdaten.schreiben')) {
     return NextResponse.json({ error: 'Nur für Administratoren.' }, { status: 403 })
   }
 

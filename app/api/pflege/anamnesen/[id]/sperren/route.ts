@@ -8,7 +8,7 @@ import { entsperreAnamnese, sperreAnamnese } from '@/lib/pflege/anamnesen'
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params
-    const auth = await requirePflegeAdmin()
+    const auth = await requirePflegeAdmin('pflege.schreiben')
     if (!auth.ok) return auth.response
 
     const body = await request.json().catch(() => ({}))

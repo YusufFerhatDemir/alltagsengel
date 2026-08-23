@@ -43,7 +43,7 @@ function validiereFelder(eingabe: Record<string, unknown>): string | null {
 
 /** GET — alle Aerzte der aktiven Organisation. */
 export async function GET(request: NextRequest) {
-  const auth = await requireOpsAdmin()
+  const auth = await requireOpsAdmin('stammdaten.lesen')
   if (!auth.ok) return auth.response
 
   try {
@@ -68,7 +68,7 @@ export async function GET(request: NextRequest) {
 
 /** POST — neuen Arzt anlegen. */
 export async function POST(req: NextRequest) {
-  const auth = await requireOpsAdmin()
+  const auth = await requireOpsAdmin('stammdaten.schreiben')
   if (!auth.ok) return auth.response
 
   try {

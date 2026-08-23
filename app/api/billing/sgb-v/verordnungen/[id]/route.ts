@@ -8,7 +8,7 @@ const log = logger.child('billing/sgb-v/verordnungen/[id]')
 
 /** GET /api/billing/sgb-v/verordnungen/[id] */
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const auth = await requireOpsAdmin()
+  const auth = await requireOpsAdmin('abrechnung.lesen')
   if (!auth.ok) return auth.response
 
   try {
@@ -24,7 +24,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
 
 /** PATCH /api/billing/sgb-v/verordnungen/[id] — Kassengenehmigung eintragen. */
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const auth = await requireOpsAdmin()
+  const auth = await requireOpsAdmin('abrechnung.schreiben')
   if (!auth.ok) return auth.response
 
   try {

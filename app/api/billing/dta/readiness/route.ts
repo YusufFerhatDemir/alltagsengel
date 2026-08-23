@@ -15,7 +15,7 @@ export const dynamic = 'force-dynamic'
  * keine SSH-Keys, keine Passwörter, nur deren Existenz als Ja/Nein.
  */
 export async function GET(request: Request) {
-  const auth = await requireAdminMitOrg()
+  const auth = await requireAdminMitOrg('abrechnung.lesen')
   if (!auth.ok) return auth.response
 
   try {

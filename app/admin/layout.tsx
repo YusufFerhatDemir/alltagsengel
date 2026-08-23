@@ -1,7 +1,7 @@
 'use client'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { IconChart, IconUsers, IconClipboard, IconWings, IconLogout, IconTarget, IconHeart, IconMoney, IconDocument, IconHandshake, IconHome, IconCalendar, IconClock, IconChat, IconBell, IconWorkflow } from '@/components/Icons'
 import NotificationBell from '@/components/NotificationBell'
@@ -10,39 +10,55 @@ import OrgSwitcher from '@/components/OrgSwitcher'
 import BundeslandSwitcher from '@/components/admin/BundeslandSwitcher'
 import { BundeslandProvider } from '@/components/admin/BundeslandContext'
 import { MFA_AUSNAHME_PFADE } from '@/lib/admin/mfa'
+import { istVerwaltungsrolle } from '@/lib/auth/rollen'
+import { darfPfad } from '@/lib/auth/bereiche'
 import { ReactNode } from 'react'
 
 // ═══════════════════════════════════════════════════════════════
 // AdminAuthGuard — WhatsApp-Level Persistenz für Admin
 // ═══════════════════════════════════════════════════════════════
-function extractRole(user: { app_metadata?: Record<string, unknown>; user_metadata?: Record<string, unknown> } | null): string {
+/**
+ * Rolle aus dem Token — NUR aus app_metadata.
+ *
+ * user_metadata war hier bis 2026-08-23 als Rueckfall eingetragen. Das ist
+ * genau die Quelle, die ein Nutzer per supabase.auth.updateUser() selbst
+ * beschreiben kann; wer sich dort role='admin' eintrug, kam an dieser
+ * Pruefung vorbei. Serverseitig hielt der Proxy trotzdem dicht (er liest
+ * user_metadata bewusst nicht), aber eine Pruefung, die man sich selbst
+ * ausstellen kann, ist keine Pruefung. Faellt app_metadata leer aus,
+ * entscheidet der profiles-Rueckfall weiter unten.
+ */
+function extractRole(user: { app_metadata?: Record<string, unknown> } | null): string {
   const appRole = user?.app_metadata?.role
-  if (typeof appRole === 'string' && appRole) return appRole
-  const metaRole = user?.user_metadata?.role
-  return typeof metaRole === 'string' ? metaRole : ''
+  return typeof appRole === 'string' ? appRole : ''
 }
 
 function useAdminAuth() {
   const router = useRouter()
   const [authState, setAuthState] = useState<'loading' | 'authenticated' | 'unauthenticated'>('loading')
+  const [rolle, setRolle] = useState<string>('')
 
   const checkAuth = useCallback(async () => {
     const supabase = createClient()
 
+    // Jede Verwaltungsrolle darf den Bereich betreten — WELCHE Seiten sie
+    // darin sieht, entscheidet die Berechtigungsmatrix (Navigation unten
+    // und, verbindlich, proxy.ts). Dieser Guard hier ist Komfort, keine
+    // Sicherheitsgrenze: er laeuft im Browser.
+    const uebernehmen = (r: string): boolean => {
+      if (!istVerwaltungsrolle(r)) return false
+      setRolle(r)
+      setAuthState('authenticated')
+      return true
+    }
+
     const { data: { session } } = await supabase.auth.getSession()
     if (session) {
       const { data: { user } } = await supabase.auth.getUser()
-      const role = extractRole(user)
-      if (role === 'admin' || role === 'superadmin') {
-        setAuthState('authenticated')
-        return
-      }
+      if (uebernehmen(extractRole(user))) return
       if (user) {
         const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
-        if (profile && ['admin', 'superadmin'].includes(profile.role)) {
-          setAuthState('authenticated')
-          return
-        }
+        if (profile && uebernehmen(profile.role)) return
       }
       router.replace('/auth/login?error=admin_required')
       return
@@ -56,17 +72,10 @@ function useAdminAuth() {
       if (retrySession) {
         clearInterval(retryInterval)
         const { data: { user } } = await supabase.auth.getUser()
-        const role = extractRole(user)
-        if (role === 'admin' || role === 'superadmin') {
-          setAuthState('authenticated')
-          return
-        }
+        if (uebernehmen(extractRole(user))) return
         if (user) {
           const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
-          if (profile && ['admin', 'superadmin'].includes(profile.role)) {
-            setAuthState('authenticated')
-            return
-          }
+          if (profile && uebernehmen(profile.role)) return
         }
         router.replace('/auth/login?error=admin_required')
         return
@@ -85,7 +94,7 @@ function useAdminAuth() {
     checkAuth()
   }, [checkAuth])
 
-  return authState
+  return { authState, rolle }
 }
 
 const IconSettings = ({ size = 18 }: { size?: number }) => (
@@ -353,7 +362,18 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   const router = useRouter()
   const [mobileOpen, setMobileOpen] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
-  const authState = useAdminAuth()
+  const { authState, rolle } = useAdminAuth()
+
+  // Navigation auf das begrenzen, was die Rolle betreten darf. Ohne das
+  // sieht eine Buchhaltung Menuepunkte fuer die Pflegedokumentation, die
+  // beim Klick zurueckgeworfen werden — dieselbe Matrix, die proxy.ts
+  // serverseitig durchsetzt (lib/auth/bereiche.ts).
+  const sichtbareGruppen = useMemo(() => {
+    if (!rolle) return []
+    return navGroups
+      .map(g => ({ ...g, items: g.items.filter(i => darfPfad(rolle, i.href)) }))
+      .filter(g => g.items.length > 0)
+  }, [rolle])
 
   // ═══ Collapsible Navigation State ═══
   const [openGroups, setOpenGroups] = useState<Set<string>>(
@@ -373,7 +393,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   }, [])
 
   useEffect(() => {
-    const active = navGroups.find(g =>
+    const active = sichtbareGruppen.find(g =>
       g.items.some(i => pathname === i.href || pathname.startsWith(i.href + '/'))
     )
     if (active) {
@@ -382,7 +402,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
         return new Set([...prev, active.key])
       })
     }
-  }, [pathname])
+  }, [pathname, sichtbareGruppen])
 
   useEffect(() => {
     if (!navReady) return
@@ -462,7 +482,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
         <OrgSwitcher />
         <BundeslandSwitcher />
         <nav className="admin-nav" id="admin-sidebar-nav" aria-label="Admin-Navigation">
-          {navGroups.map(group => {
+          {sichtbareGruppen.map(group => {
             const isOpen = openGroups.has(group.key)
             const hasActive = group.items.some(i =>
               pathname === i.href || pathname.startsWith(i.href + '/')

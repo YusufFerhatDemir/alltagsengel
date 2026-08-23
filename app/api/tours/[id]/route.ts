@@ -34,7 +34,7 @@ export async function GET(
   _req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const auth = await requireOpsAdmin()
+  const auth = await requireOpsAdmin('einsatz.lesen')
   if (!auth.ok) return auth.response
   const { id } = await params
 
@@ -61,7 +61,7 @@ export async function PATCH(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const auth = await requireOpsAdmin()
+  const auth = await requireOpsAdmin('einsatz.schreiben')
   if (!auth.ok) return auth.response
   const { id } = await params
 
@@ -98,7 +98,7 @@ export async function DELETE(
   _req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const auth = await requireOpsAdmin()
+  const auth = await requireOpsAdmin('einsatz.schreiben')
   if (!auth.ok) return auth.response
   const { id } = await params
 

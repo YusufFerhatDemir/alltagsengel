@@ -25,7 +25,7 @@ const MAX_KUNDEN = 100
  * niemals mit Zugangsdaten.
  */
 export async function GET(request: Request) {
-  const auth = await requireAdminMitOrg()
+  const auth = await requireAdminMitOrg('system.verwalten')
   if (!auth.ok) return auth.response
 
   try {

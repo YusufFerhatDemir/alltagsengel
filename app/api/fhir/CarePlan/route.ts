@@ -14,7 +14,7 @@ import type { PflegeMassnahme, PflegeMassnahmenplan } from '@/lib/pflege/types'
 const FHIR_CONTENT_TYPE = 'application/fhir+json; charset=utf-8'
 
 export async function GET(request: Request) {
-  const auth = await requireOpsAdmin()
+  const auth = await requireOpsAdmin('system.verwalten')
   if (!auth.ok) return toFhirErrorResponse(auth.response)
 
   try {

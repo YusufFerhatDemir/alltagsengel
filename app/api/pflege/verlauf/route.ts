@@ -1,4 +1,5 @@
 import { apiErrorResponse } from '@/lib/api/error-sanitizer'
+import { rolleDarf } from '@/lib/auth/guard'
 import { NextResponse } from 'next/server'
 import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createAdminClient } from '@/lib/supabase/admin'
@@ -9,7 +10,7 @@ import type { VerlaufKategorie, VerlaufSichtbarkeit, VerlaufTyp } from '@/lib/pf
 
 export async function GET(request: Request) {
   try {
-    const auth = await requirePflegeAdmin()
+    const auth = await requirePflegeAdmin('pflege.lesen')
     if (!auth.ok) return auth.response
 
     const params = new URL(request.url).searchParams
@@ -48,12 +49,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'clientId und inhalt sind Pflichtfelder.' }, { status: 400 })
     }
 
-    const istAdmin = ['admin', 'superadmin'].includes(auth.role)
+    const istAdmin = rolleDarf(auth.role, 'pflege.lesen')
     let supabase = await createClient()
     let organizationId: string | undefined
 
     if (istAdmin) {
-      const adminAuth = await requirePflegeAdmin()
+      const adminAuth = await requirePflegeAdmin('pflege.schreiben')
       if (!adminAuth.ok) return adminAuth.response
       organizationId = adminAuth.ctx.organizationId
       supabase = createAdminClient()

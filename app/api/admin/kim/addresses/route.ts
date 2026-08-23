@@ -7,7 +7,7 @@ import type { CreateKimAddressInput } from '@/lib/kim/address-book-service'
 import type { KimAddressType } from '@/lib/kim/types'
 
 export async function GET(req: NextRequest) {
-  const auth = await requireKimAdmin()
+  const auth = await requireKimAdmin('system.verwalten')
   if (!auth.ok) return auth.response
 
   const url = new URL(req.url)
@@ -29,7 +29,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const auth = await requireKimAdmin()
+  const auth = await requireKimAdmin('system.verwalten')
   if (!auth.ok) return auth.response
 
   try {

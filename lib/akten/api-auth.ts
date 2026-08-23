@@ -5,6 +5,8 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { NextResponse } from 'next/server'
+import { rolleDarf } from '@/lib/auth/guard'
+import type { Berechtigung } from '@/lib/auth/rollen'
 import { createClient } from '@/lib/supabase/server'
 import { getActiveOrgId } from '@/lib/organizations/server'
 
@@ -19,7 +21,16 @@ export type AktenAuthResult =
   | { ok: false; response: NextResponse }
 
 /** Admin/Superadmin-Guard mit Organisationszuordnung — für alle /admin/api/akten-Routen. */
-export async function requireAktenAdmin(): Promise<AktenAuthResult> {
+/**
+ * Rollenkonzept (lib/auth/rollen.ts): der Guard prueft nicht mehr auf
+ * „ist Admin", sondern auf eine BERECHTIGUNG. admin/superadmin haben alle,
+ * pdl/qm/buchhaltung nur die ihrer Aufgabe. Der Default ist die
+ * Lese-Berechtigung des Fachbereichs; schreibende Routen uebergeben die
+ * Schreib-Berechtigung ausdruecklich.
+ */
+export async function requireAktenAdmin(
+  berechtigung: Berechtigung = 'stammdaten.lesen'
+): Promise<AktenAuthResult> {
   const supabase = await createClient()
   const { data: { user }, error: authError } = await supabase.auth.getUser()
   if (authError || !user) {
@@ -32,8 +43,8 @@ export async function requireAktenAdmin(): Promise<AktenAuthResult> {
     .eq('id', user.id)
     .single()
 
-  if (!profile || !['admin', 'superadmin'].includes(profile.role)) {
-    return { ok: false, response: NextResponse.json({ error: 'Nur für Administratoren.' }, { status: 403 }) }
+  if (!profile || !rolleDarf(profile.role, berechtigung)) {
+    return { ok: false, response: NextResponse.json({ error: 'Für diesen Bereich fehlt Ihnen die Berechtigung.' }, { status: 403 }) }
   }
 
   // Die Organisation haengt am organization_members-Mapping (Org-Switcher-Cookie),

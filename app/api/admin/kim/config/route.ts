@@ -6,7 +6,7 @@ import { getActiveProviderConfig, listProviderConfigs, setActiveProviderConfig }
 import type { SetProviderConfigInput } from '@/lib/kim/provider-config-service'
 
 export async function GET(request: Request) {
-  const auth = await requireKimAdmin()
+  const auth = await requireKimAdmin('system.verwalten')
   if (!auth.ok) return auth.response
 
   try {
@@ -22,7 +22,7 @@ export async function GET(request: Request) {
 }
 
 export async function POST(req: NextRequest) {
-  const auth = await requireKimAdmin()
+  const auth = await requireKimAdmin('system.verwalten')
   if (!auth.ok) return auth.response
 
   try {

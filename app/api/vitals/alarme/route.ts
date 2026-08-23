@@ -13,7 +13,7 @@ import { grenzwertAlarmeAktiv } from '@/lib/vitals/config'
  */
 export async function GET(request: Request) {
   try {
-    const auth = await requirePflegeAdmin()
+    const auth = await requirePflegeAdmin('pflege.lesen')
     if (!auth.ok) return auth.response
 
     // MDR-Kill-Switch: Ohne regulatorische Freigabe werden keine Alarme

@@ -17,7 +17,7 @@ export const dynamic = 'force-dynamic'
  * Datenannahmestelle. Keys landen NIE in der Datenbank.
  */
 export async function POST(req: NextRequest) {
-  const auth = await requireAdminMitOrg()
+  const auth = await requireAdminMitOrg('system.verwalten')
   if (!auth.ok) return auth.response
   try {
     const organizationId = auth.organizationId

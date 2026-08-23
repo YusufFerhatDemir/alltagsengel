@@ -6,7 +6,7 @@ import { safeApiError } from '@/lib/api/error-sanitizer'
 
 /** POST /api/billing/sgb-v/zahlungen/[id]/zuordnen — Body: { laufId } */
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const auth = await requireOpsAdmin()
+  const auth = await requireOpsAdmin('abrechnung.schreiben')
   if (!auth.ok) return auth.response
 
   try {

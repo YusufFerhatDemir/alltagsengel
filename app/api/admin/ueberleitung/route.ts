@@ -27,7 +27,7 @@ function nurErlaubteFelder(roh: Record<string, unknown>): Record<string, unknown
 
 /** GET — Überleitungsbögen, optional gefiltert nach Klient. */
 export async function GET(request: NextRequest) {
-  const auth = await requireOpsAdmin()
+  const auth = await requireOpsAdmin('pflege.lesen')
   if (!auth.ok) return auth.response
 
   try {
@@ -60,7 +60,7 @@ export async function GET(request: NextRequest) {
 
 /** POST — neuen Überleitungsbogen anlegen (Status: entwurf). */
 export async function POST(req: NextRequest) {
-  const auth = await requireOpsAdmin()
+  const auth = await requireOpsAdmin('pflege.schreiben')
   if (!auth.ok) return auth.response
 
   try {

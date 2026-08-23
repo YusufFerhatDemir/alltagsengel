@@ -21,7 +21,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { werteNutzungAus, type NutzungsZeile } from '@/lib/coach/nachweise'
 
 export async function GET(request: Request) {
-  const auth = await requireOpsAdmin()
+  const auth = await requireOpsAdmin('system.verwalten')
   if (!auth.ok) return auth.response
 
   const url = new URL(request.url)

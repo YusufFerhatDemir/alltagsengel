@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { rolleDarf } from '@/lib/auth/guard'
 import { createClient } from '@/lib/supabase/server'
 import { getActiveOrgId } from '@/lib/organizations/server'
 import { datumBerlin } from '@/lib/utils/timezone';
@@ -32,8 +33,8 @@ async function requireAuth(supabase: Awaited<ReturnType<typeof createClient>>) {
 }
 
 function requireAdmin(auth: { ok: true; role: string }) {
-  if (!['admin', 'superadmin'].includes(auth.role)) {
-    return NextResponse.json({ error: 'Nur für Administratoren.' }, { status: 403 })
+  if (!rolleDarf(auth.role, 'einsatz.schreiben')) {
+    return NextResponse.json({ error: 'Für diesen Bereich fehlt Ihnen die Berechtigung.' }, { status: 403 })
   }
   return null
 }
@@ -362,7 +363,7 @@ export async function PATCH(req: NextRequest) {
   }
 
   if (action === 'cancel') {
-    if (!['admin', 'superadmin'].includes(auth.role)) {
+    if (!rolleDarf(auth.role, 'einsatz.schreiben')) {
       return NextResponse.json({ error: 'Nur Admins können stornieren' }, { status: 403 })
     }
     const { data, error } = await supabase

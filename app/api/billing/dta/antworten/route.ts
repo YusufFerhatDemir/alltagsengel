@@ -20,7 +20,7 @@ export const dynamic = 'force-dynamic'
  * POST statt GET, weil der Aufruf Daten importiert.
  */
 export async function POST(request: Request) {
-  const auth = await requireAdminMitOrg()
+  const auth = await requireAdminMitOrg('abrechnung.schreiben')
   if (!auth.ok) return auth.response
 
   try {

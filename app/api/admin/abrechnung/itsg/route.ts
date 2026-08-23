@@ -15,7 +15,7 @@ export const maxDuration = 60 // ITSG-Verzeichnis ist mehrere MB groß
  * ITSG-Trust-Center-Verzeichnis und cacht es in der DB.
  */
 export async function POST(req: NextRequest) {
-  const auth = await requireAdmin()
+  const auth = await requireAdmin('system.verwalten')
   if (!auth.ok) return auth.response
   try {
     const orgId = await getActiveOrgId()

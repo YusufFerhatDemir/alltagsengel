@@ -13,7 +13,7 @@ import { createClient } from '@/lib/supabase/server'
 import { istSchluesselGueltig } from '@/lib/coach/abrechnung'
 
 export async function GET() {
-  const auth = await requireOpsAdmin()
+  const auth = await requireOpsAdmin('system.verwalten')
   if (!auth.ok) return auth.response
 
   const supabase = await createClient()
@@ -28,7 +28,7 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const auth = await requireOpsAdmin()
+  const auth = await requireOpsAdmin('system.verwalten')
   if (!auth.ok) return auth.response
 
   const body = await request.json().catch(() => ({}))
@@ -66,7 +66,7 @@ export async function POST(request: Request) {
 }
 
 export async function PATCH(request: Request) {
-  const auth = await requireOpsAdmin()
+  const auth = await requireOpsAdmin('system.verwalten')
   if (!auth.ok) return auth.response
 
   const body = await request.json().catch(() => ({}))

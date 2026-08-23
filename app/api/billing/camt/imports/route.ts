@@ -8,7 +8,7 @@ import { requireOpsAdmin } from '@/lib/ops/api-auth';
  */
 export async function GET(req: NextRequest) {
   try {
-    const auth = await requireOpsAdmin();
+    const auth = await requireOpsAdmin('abrechnung.lesen');
     if (!auth.ok) return auth.response;
     const supabase = createAdminClient();
 

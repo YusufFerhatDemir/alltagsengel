@@ -6,7 +6,7 @@ import { safeApiError } from '@/lib/api/error-sanitizer'
 
 export async function GET() {
   try {
-    const auth = await requireOpsAdmin()
+    const auth = await requireOpsAdmin('bankdaten.lesen')
     if (!auth.ok) return auth.response
     const supabase = createAdminClient()
 
@@ -19,7 +19,7 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
-    const auth = await requireOpsAdmin()
+    const auth = await requireOpsAdmin('bankdaten.schreiben')
     if (!auth.ok) return auth.response
     const supabase = createAdminClient()
 

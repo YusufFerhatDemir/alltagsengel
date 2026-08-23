@@ -10,7 +10,7 @@ import {
 import type { MedikamentFilter } from '@/lib/medikamente/types'
 
 export async function GET(req: NextRequest) {
-  const auth = await requireMedAdmin()
+  const auth = await requireMedAdmin('pflege.lesen')
   if (!auth.ok) return auth.response
 
   const url = new URL(req.url)
@@ -33,7 +33,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const auth = await requireMedAdmin()
+  const auth = await requireMedAdmin('pflege.schreiben')
   if (!auth.ok) return auth.response
 
   try {

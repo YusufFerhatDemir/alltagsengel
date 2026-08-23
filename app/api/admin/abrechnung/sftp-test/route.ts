@@ -21,7 +21,7 @@ function sftpPasswortEnvName(name: string): string {
  * Testet die SFTP-Verbindung (Login + Verzeichnis-Check, kein Upload).
  */
 export async function POST(req: NextRequest) {
-  const auth = await requireAdmin()
+  const auth = await requireAdmin('system.verwalten')
   if (!auth.ok) return auth.response
   try {
     const organizationId = await getActiveOrgId()

@@ -9,7 +9,7 @@ import { logger } from '@/lib/logger'
 const log = logger.child('api:ops')
 
 export async function GET(request: Request) {
-  const auth = await requireOpsAdmin()
+  const auth = await requireOpsAdmin('einsatz.lesen')
   if (!auth.ok) return auth.response
   const supabase = createAdminClient()
   const url = new URL(request.url)
@@ -38,7 +38,7 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const auth = await requireOpsAdmin()
+  const auth = await requireOpsAdmin('einsatz.schreiben')
   if (!auth.ok) return auth.response
   const supabase = createAdminClient()
   try {

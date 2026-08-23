@@ -18,7 +18,7 @@ const log = logger.child('billing/invoices')
  *   ?limit=         max. 500, Default 100
  */
 export async function GET(request: Request) {
-  const auth = await requireOpsAdmin()
+  const auth = await requireOpsAdmin('abrechnung.lesen')
   if (!auth.ok) return auth.response
   const { organizationId } = auth.ctx
 

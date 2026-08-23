@@ -16,7 +16,7 @@ const log = logger.child('billing/corrections')
  *   ?limit=200 (max. 500)
  */
 export async function GET(request: Request) {
-  const auth = await requireOpsAdmin()
+  const auth = await requireOpsAdmin('abrechnung.lesen')
   if (!auth.ok) return auth.response
   const { organizationId } = auth.ctx
 

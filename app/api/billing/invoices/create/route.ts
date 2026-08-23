@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { rolleDarf } from '@/lib/auth/guard'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { NextResponse } from 'next/server'
 import { createInvoiceDraft } from '@/lib/billing/core'
@@ -65,7 +66,7 @@ export async function POST(request: Request) {
       )
     }
 
-    if (!['admin', 'superadmin'].includes(profile.role)) {
+    if (!rolleDarf(profile.role, 'abrechnung.schreiben')) {
       return NextResponse.json(
         { error: 'Nur fuer Administratoren.' },
         { status: 403 }

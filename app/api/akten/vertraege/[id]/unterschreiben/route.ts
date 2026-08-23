@@ -8,7 +8,7 @@ import type { SignaturTyp } from '@/lib/akten/types'
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params
-    const auth = await requireAktenAdmin()
+    const auth = await requireAktenAdmin('stammdaten.schreiben')
     if (!auth.ok) return auth.response
     const { organizationId, userId, role } = auth.ctx
 

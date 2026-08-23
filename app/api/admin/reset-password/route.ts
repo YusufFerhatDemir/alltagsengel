@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { rolleDarf } from '@/lib/auth/guard'
 import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
@@ -24,7 +25,7 @@ export async function POST(request: NextRequest) {
     .eq('id', user.id)
     .single()
 
-  if (!profile?.role || !['admin', 'superadmin'].includes(profile.role)) {
+  if (!profile?.role || !rolleDarf(profile.role, 'benutzer.verwalten')) {
     return NextResponse.json({ error: 'Keine Admin-Berechtigung' }, { status: 403 })
   }
 

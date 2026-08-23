@@ -13,7 +13,7 @@ export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const auth = await requireMedAdmin()
+  const auth = await requireMedAdmin('pflege.lesen')
   if (!auth.ok) return auth.response
 
   const { id } = await params
@@ -31,7 +31,7 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const auth = await requireMedAdmin()
+  const auth = await requireMedAdmin('pflege.schreiben')
   if (!auth.ok) return auth.response
 
   const { id } = await params
@@ -85,7 +85,7 @@ export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const auth = await requireMedAdmin()
+  const auth = await requireMedAdmin('pflege.schreiben')
   if (!auth.ok) return auth.response
 
   const { id } = await params

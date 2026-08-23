@@ -1,4 +1,5 @@
 import { apiErrorResponse } from '@/lib/api/error-sanitizer'
+import { rolleDarf } from '@/lib/auth/guard'
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
@@ -16,8 +17,9 @@ async function requireStaff(supabase: Awaited<ReturnType<typeof createClient>>) 
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { ok: false as const, response: NextResponse.json({ error: 'Nicht autorisiert' }, { status: 401 }) }
   const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
-  if (!profile || !['admin', 'superadmin'].includes(profile.role)) {
-    return { ok: false as const, response: NextResponse.json({ error: 'Nur für Administratoren' }, { status: 403 }) }
+  // Einsatzplanung gehoert zum Einsatzgeschehen: admin/superadmin und pdl.
+  if (!profile || !rolleDarf(profile.role, 'einsatz.lesen')) {
+    return { ok: false as const, response: NextResponse.json({ error: 'Für diesen Bereich fehlt Ihnen die Berechtigung.' }, { status: 403 }) }
   }
   return { ok: true as const, userId: user.id, role: profile.role }
 }
@@ -93,7 +95,8 @@ export async function POST(req: NextRequest) {
   const admin = createAdminClient()
 
   // D1: force_override nur fuer admin/superadmin
-  if (body.force_override && !['admin', 'superadmin'].includes(auth.role)) {
+  // Uebersteuern einer fehlenden Einsatzfreigabe ist eine Personalentscheidung.
+  if (body.force_override && !rolleDarf(auth.role, 'personal.schreiben')) {
     return NextResponse.json(
       { error: 'force_override ist nur fuer Administratoren erlaubt.' },
       { status: 403 }
@@ -280,7 +283,7 @@ export async function PATCH(req: NextRequest) {
   if (!id) return NextResponse.json({ error: 'id erforderlich' }, { status: 400 })
 
   // D1: force_override nur fuer admin/superadmin
-  if (force_override && !['admin', 'superadmin'].includes(auth.role)) {
+  if (force_override && !rolleDarf(auth.role, 'personal.schreiben')) {
     return NextResponse.json(
       { error: 'force_override ist nur fuer Administratoren erlaubt.' },
       { status: 403 }

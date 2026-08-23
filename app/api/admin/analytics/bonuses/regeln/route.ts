@@ -5,7 +5,7 @@ import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { listRegeln, createRegel, setRegelAktiv, BONUS_KRITERIUM_TYP_WERTE } from '@/lib/analytics/bonusEngine'
 
 export async function GET() {
-  const auth = await requireOpsAdmin()
+  const auth = await requireOpsAdmin('berichte.lesen')
   if (!auth.ok) return auth.response
   try {
     const supabase = await createClient()
@@ -17,7 +17,7 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const auth = await requireOpsAdmin()
+  const auth = await requireOpsAdmin('berichte.lesen')
   if (!auth.ok) return auth.response
   try {
     const body = await request.json()
@@ -45,7 +45,7 @@ export async function POST(request: Request) {
 }
 
 export async function PATCH(request: Request) {
-  const auth = await requireOpsAdmin()
+  const auth = await requireOpsAdmin('berichte.lesen')
   if (!auth.ok) return auth.response
   try {
     const body = await request.json()

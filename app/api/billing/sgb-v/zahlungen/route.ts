@@ -6,7 +6,7 @@ import { automatischeZahlungszuordnungSgbV, sgbVOffenePostenListe } from '@/lib/
 
 /** GET /api/billing/sgb-v/zahlungen — OPOS-Liste der § 302-Läufe. */
 export async function GET(request: Request) {
-  const auth = await requireOpsAdmin()
+  const auth = await requireOpsAdmin('abrechnung.lesen')
   if (!auth.ok) return auth.response
 
   try {
@@ -20,7 +20,7 @@ export async function GET(request: Request) {
 
 /** POST /api/billing/sgb-v/zahlungen — automatischen Zahlungsabgleich anstossen. */
 export async function POST(request: Request) {
-  const auth = await requireOpsAdmin()
+  const auth = await requireOpsAdmin('abrechnung.schreiben')
   if (!auth.ok) return auth.response
 
   try {

@@ -16,7 +16,7 @@ import { TOUR_SELECT, type TourZeile } from '@/lib/touren/select'
 
 // ── GET /api/tours?start=…&end=…&caregiver_id=…&status=… ──────────
 export async function GET(req: NextRequest) {
-  const auth = await requireOpsAdmin()
+  const auth = await requireOpsAdmin('einsatz.lesen')
   if (!auth.ok) return auth.response
 
   const { searchParams } = new URL(req.url)
@@ -52,7 +52,7 @@ export async function GET(req: NextRequest) {
 
 // ── POST /api/tours — Tour mit Stops anlegen ──────────────────────
 export async function POST(req: NextRequest) {
-  const auth = await requireOpsAdmin()
+  const auth = await requireOpsAdmin('einsatz.schreiben')
   if (!auth.ok) return auth.response
 
   const body = await req.json()

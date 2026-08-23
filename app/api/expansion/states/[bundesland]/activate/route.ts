@@ -34,7 +34,7 @@ interface RouteContext {
 }
 
 export async function POST(request: NextRequest, context: RouteContext) {
-  const auth = await requireExpansionAdmin()
+  const auth = await requireExpansionAdmin('system.verwalten')
   if (!auth.ok) return auth.response
 
   const { bundesland: roh } = await context.params
@@ -112,7 +112,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
 }
 
 export async function DELETE(request: NextRequest, context: RouteContext) {
-  const auth = await requireExpansionAdmin()
+  const auth = await requireExpansionAdmin('system.verwalten')
   if (!auth.ok) return auth.response
 
   const { bundesland: roh } = await context.params

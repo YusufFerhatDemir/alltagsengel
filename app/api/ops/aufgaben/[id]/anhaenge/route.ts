@@ -8,7 +8,7 @@ export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const auth = await requireOpsAdmin()
+  const auth = await requireOpsAdmin('einsatz.lesen')
   if (!auth.ok) return auth.response
   const { id: aufgabeId } = await params
   const supabase = createAdminClient()
@@ -27,7 +27,7 @@ export async function POST(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const auth = await requireOpsAdmin()
+  const auth = await requireOpsAdmin('einsatz.schreiben')
   if (!auth.ok) return auth.response
   const { id: aufgabeId } = await params
   const supabase = createAdminClient()
@@ -49,7 +49,7 @@ export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const auth = await requireOpsAdmin()
+  const auth = await requireOpsAdmin('einsatz.schreiben')
   if (!auth.ok) return auth.response
   await params
   const supabase = createAdminClient()

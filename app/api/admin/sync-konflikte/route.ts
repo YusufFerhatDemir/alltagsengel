@@ -7,7 +7,7 @@ import { listeOffeneKonflikte } from '@/lib/sync/audit'
 // GET /api/admin/sync-konflikte — offene Sync-Konflikte (status='offen')
 // für die manuelle Auflösung im Admin-UI (app/admin/sync-konflikte/).
 export async function GET(request: Request) {
-  const auth = await requireOpsAdmin()
+  const auth = await requireOpsAdmin('system.verwalten')
   if (!auth.ok) return auth.response
 
   try {

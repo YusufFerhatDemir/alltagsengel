@@ -7,7 +7,7 @@ import type { FreigabeStatus, AngehoerigenRolle } from '@/lib/angehoerige/types'
 import { logAuditEvent } from '@/lib/audit-log'
 
 export async function GET(req: NextRequest) {
-  const auth = await requireAngehAdmin()
+  const auth = await requireAngehAdmin('stammdaten.lesen')
   if (!auth.ok) return auth.response
 
   const url = new URL(req.url)
@@ -63,7 +63,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const auth = await requireAngehAdmin()
+  const auth = await requireAngehAdmin('stammdaten.schreiben')
   if (!auth.ok) return auth.response
 
   try {

@@ -134,7 +134,10 @@ export async function handleVerifizierungPatch(
   quellTabelle: QuellTabelle,
   id: string
 ): Promise<NextResponse> {
-  const auth = await requireOpsAdmin()
+  // Tarif-Freigabe ist eine Preisentscheidung, kein Abrechnungsvorgang:
+  // 'tarife.schreiben' liegt ausschliesslich bei admin/superadmin
+  // (lib/auth/rollen.ts, NUR_ADMINISTRATION).
+  const auth = await requireOpsAdmin('tarife.schreiben')
   if (!auth.ok) return auth.response
   const ctx: OpsAuthContext = auth.ctx
   const profil = PROFIL[quellTabelle]
@@ -256,7 +259,7 @@ export async function handleDetailGet(
   quellTabelle: QuellTabelle,
   id: string
 ): Promise<NextResponse> {
-  const auth = await requireOpsAdmin()
+  const auth = await requireOpsAdmin('tarife.lesen')
   if (!auth.ok) return auth.response
   const profil = PROFIL[quellTabelle]
 

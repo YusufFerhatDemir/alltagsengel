@@ -10,7 +10,7 @@ import { resolveOrgProvider } from '@/lib/kim/provider-config-service'
 import { ermittleVersandModus, KimBetriebsmodusError } from '@/lib/kim/versandmodus'
 
 export async function GET(request: Request) {
-  const auth = await requireKimAdmin()
+  const auth = await requireKimAdmin('system.verwalten')
   if (!auth.ok) return auth.response
 
   try {
@@ -36,7 +36,7 @@ export async function GET(request: Request) {
 
 /** Verarbeitet die Warteschlange (Versand + Zustellstatus-Abfrage). */
 export async function POST(_req: NextRequest) {
-  const auth = await requireKimAdmin()
+  const auth = await requireKimAdmin('system.verwalten')
   if (!auth.ok) return auth.response
 
   try {

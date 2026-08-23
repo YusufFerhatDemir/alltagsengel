@@ -15,7 +15,7 @@ export const dynamic = 'force-dynamic'
  * GET /api/billing/dta/fehlercodes?code=301   → Klassifizierung eines Codes
  */
 export async function GET(request: Request) {
-  const auth = await requireAdminMitOrg()
+  const auth = await requireAdminMitOrg('abrechnung.lesen')
   if (!auth.ok) return auth.response
 
   try {
@@ -66,7 +66,7 @@ export async function GET(request: Request) {
  * für Codes, die bei allen Mandanten dasselbe bedeuten).
  */
 export async function POST(request: Request) {
-  const auth = await requireAdminMitOrg()
+  const auth = await requireAdminMitOrg('abrechnung.schreiben')
   if (!auth.ok) return auth.response
 
   try {

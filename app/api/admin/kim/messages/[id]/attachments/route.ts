@@ -6,7 +6,7 @@ import { getMessage } from '@/lib/kim/message-service'
 import { uploadKimAttachment } from '@/lib/kim/attachment-service'
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const auth = await requireKimAdmin()
+  const auth = await requireKimAdmin('system.verwalten')
   if (!auth.ok) return auth.response
   const { id } = await params
 

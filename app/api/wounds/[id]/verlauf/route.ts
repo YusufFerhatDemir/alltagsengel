@@ -7,7 +7,7 @@ import { listAssessments, verlaufAusAssessments } from '@/lib/wunden/assessments
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params
-    const auth = await requireWundenAdmin()
+    const auth = await requireWundenAdmin('pflege.lesen')
     if (!auth.ok) return auth.response
 
     const admin = createAdminClient()

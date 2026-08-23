@@ -3,6 +3,19 @@ import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import type { Profile } from '@/lib/types'
 import DialogOverlay from '@/components/DialogOverlay'
+import { ROLLEN, ROLLEN_BEZEICHNUNG, type Rolle } from '@/lib/auth/rollen'
+
+/**
+ * Rollen, die hier vergeben werden koennen. 'superadmin' fehlt bewusst:
+ * die hoechste Stufe wird nicht ueber die Oberflaeche verteilt (dieselbe
+ * Regel setzt /api/admin/manage-role und der DB-Trigger
+ * prevent_role_escalation durch).
+ */
+const VERGEBBARE_ROLLEN: readonly Rolle[] = ROLLEN.filter(r => r !== 'superadmin')
+
+function rollenBezeichnung(rolle: string | null | undefined): string {
+  return (rolle && ROLLEN_BEZEICHNUNG[rolle as Rolle]) || rolle || 'Unbekannt'
+}
 
 export default function AdminUsersPage() {
   const [profiles, setProfiles] = useState<Profile[]>([])
@@ -13,6 +26,8 @@ export default function AdminUsersPage() {
   const [resetLoading, setResetLoading] = useState(false)
   const [resetMessage, setResetMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
   const [sendNotification, setSendNotification] = useState(true)
+  const [rollenWechsel, setRollenWechsel] = useState<string | null>(null)
+  const [rollenMeldung, setRollenMeldung] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
 
   useEffect(() => {
     async function loadUsers() {
@@ -50,6 +65,36 @@ export default function AdminUsersPage() {
     setResetLoading(false)
   }
 
+  /**
+   * Rollenwechsel. Die Entscheidung faellt serverseitig — diese Funktion
+   * schickt nur den Wunsch. Ein manipulierter Client kann hier nichts
+   * erzwingen: /api/admin/manage-role prueft die eigene Rolle erneut,
+   * und der DB-Trigger prevent_role_escalation prueft ein drittes Mal.
+   */
+  async function handleRollenWechsel(ziel: Profile, rolle: Rolle) {
+    if (rolle === ziel.role) return
+    setRollenWechsel(ziel.id)
+    setRollenMeldung(null)
+    try {
+      const res = await fetch('/api/admin/manage-role', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: ziel.id, rolle }),
+      })
+      const data = await res.json()
+      if (data.success) {
+        setProfiles(vorher => vorher.map(p => (p.id === ziel.id ? { ...p, role: rolle } : p)))
+        setRollenMeldung({ type: 'success', text: data.message })
+      } else {
+        setRollenMeldung({ type: 'error', text: data.error || 'Rollenwechsel fehlgeschlagen' })
+      }
+    } catch {
+      setRollenMeldung({ type: 'error', text: 'Rollenwechsel fehlgeschlagen — bitte erneut versuchen.' })
+    } finally {
+      setRollenWechsel(null)
+    }
+  }
+
   const filtered = filter === 'all' ? profiles : profiles.filter(p => p.role === filter)
 
   return (
@@ -61,14 +106,23 @@ export default function AdminUsersPage() {
         </div>
       </div>
 
+      {rollenMeldung && (
+        <p
+          role="status"
+          className={rollenMeldung.type === 'success' ? 'admin-success' : 'admin-error'}
+        >
+          {rollenMeldung.text}
+        </p>
+      )}
+
       <div className="admin-filters">
-        {['all', 'kunde', 'engel', 'admin'].map(f => (
+        {(['all', ...ROLLEN] as string[]).map(f => (
           <button
             key={f}
             className={`admin-filter-btn ${filter === f ? 'active' : ''}`}
             onClick={() => setFilter(f)}
           >
-            {f === 'all' ? 'Alle' : f === 'kunde' ? 'Kunden' : f === 'engel' ? 'Engel' : 'Admins'}
+            {f === 'all' ? 'Alle' : rollenBezeichnung(f)}
           </button>
         ))}
       </div>
@@ -101,9 +155,30 @@ export default function AdminUsersPage() {
                   </td>
                   <td>{p.email}</td>
                   <td>
-                    <span className={`admin-badge ${p.role}`}>
-                      {p.role === 'kunde' ? 'Kunde' : p.role === 'engel' ? 'Engel' : 'Admin'}
-                    </span>
+                    {p.role === 'superadmin' ? (
+                      // Superadmin wird hier nicht angefasst — weder herauf
+                      // noch herunter. Die Stufe gehoert in die Datenbank.
+                      <span className={`admin-badge ${p.role}`}>
+                        {rollenBezeichnung(p.role)}
+                      </span>
+                    ) : (
+                      <>
+                        <label htmlFor={`rolle-${p.id}`} className="sr-only">
+                          Rolle von {p.first_name} {(p.last_name || '').charAt(0)}.
+                        </label>
+                        <select
+                          id={`rolle-${p.id}`}
+                          className="admin-select"
+                          value={p.role || ''}
+                          disabled={rollenWechsel === p.id}
+                          onChange={e => handleRollenWechsel(p, e.target.value as Rolle)}
+                        >
+                          {VERGEBBARE_ROLLEN.map(r => (
+                            <option key={r} value={r}>{ROLLEN_BEZEICHNUNG[r]}</option>
+                          ))}
+                        </select>
+                      </>
+                    )}
                   </td>
                   <td>{p.location || '—'}</td>
                   <td>{new Date(p.created_at).toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin' })}</td>

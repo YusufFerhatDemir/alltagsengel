@@ -24,7 +24,7 @@ import { wendeAenderungAn } from '@/lib/sync/apply'
 // ═══════════════════════════════════════════════════════════════
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const auth = await requireOpsAdmin()
+  const auth = await requireOpsAdmin('system.verwalten')
   if (!auth.ok) return auth.response
 
   try {

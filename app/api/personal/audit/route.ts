@@ -7,7 +7,7 @@ import type { AuditEntitaetTyp, AuditAktion } from '@/lib/personal/types'
 
 export async function GET(req: NextRequest) {
   try {
-    const auth = await requirePersonalAdmin()
+    const auth = await requirePersonalAdmin('personal.lesen')
     if (!auth.ok) return auth.response
     const supabase = createAdminClient()
 

@@ -23,7 +23,7 @@ export async function GET(
   _request: Request,
   { params }: { params: Promise<{ clientId: string }> },
 ) {
-  const auth = await requireAdminMitOrg()
+  const auth = await requireAdminMitOrg('system.verwalten')
   if (!auth.ok) return auth.response
 
   const { clientId } = await params

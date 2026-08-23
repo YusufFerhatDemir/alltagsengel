@@ -1,5 +1,7 @@
 // Server-seitiger Admin-Check für die Abrechnungs-API-Routen.
 import { NextResponse } from 'next/server'
+import { rolleDarf } from '@/lib/auth/guard'
+import type { Berechtigung } from '@/lib/auth/rollen'
 import { createClient } from '@/lib/supabase/server'
 import { getActiveOrgId } from '@/lib/organizations/server'
 import type { SupabaseClient } from '@supabase/supabase-js'
@@ -30,7 +32,15 @@ async function requireAdminAal2(supabase: SupabaseClient): Promise<NextResponse 
   return null
 }
 
-export async function requireAdmin(): Promise<{ ok: true } | { ok: false; response: NextResponse }> {
+/**
+ * Rollenkonzept (lib/auth/rollen.ts): geprueft wird eine BERECHTIGUNG,
+ * nicht die Rolle. Default ist die Lese-Berechtigung der Abrechnung —
+ * schreibende Routen uebergeben 'abrechnung.schreiben', Routen an
+ * Zugangsdaten/Zertifikaten 'system.verwalten' (lib/auth/bereiche.ts).
+ */
+export async function requireAdmin(
+  berechtigung: Berechtigung = 'abrechnung.lesen'
+): Promise<{ ok: true } | { ok: false; response: NextResponse }> {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) {
@@ -41,8 +51,8 @@ export async function requireAdmin(): Promise<{ ok: true } | { ok: false; respon
     .select('role')
     .eq('id', user.id)
     .single()
-  if (!profile || !['admin', 'superadmin'].includes(profile.role)) {
-    return { ok: false, response: NextResponse.json({ error: 'Nur für Administratoren' }, { status: 403 }) }
+  if (!profile || !rolleDarf(profile.role, berechtigung)) {
+    return { ok: false, response: NextResponse.json({ error: 'Für diesen Bereich fehlt Ihnen die Berechtigung.' }, { status: 403 }) }
   }
   // MFA-Prüfung: Admin mit Faktor muss auf AAL2 sein
   const aalBlock = await requireAdminAal2(supabase)
@@ -60,8 +70,13 @@ export async function requireAdmin(): Promise<{ ok: true } | { ok: false; respon
  * Jede Route, die Mandantendaten liest oder schreibt, muss ueber diesen
  * Einstieg gehen: eine fehlende organization_id ist der Unterschied zwischen
  * "eigene Stammdaten" und "Stammdaten aller Mandanten".
+ *
+ * Rollenkonzept (lib/auth/rollen.ts): geprueft wird eine BERECHTIGUNG,
+ * nicht die Rolle.
  */
-export async function requireAdminMitOrg(): Promise<
+export async function requireAdminMitOrg(
+  berechtigung: Berechtigung = 'abrechnung.lesen'
+): Promise<
   | { ok: true; userId: string; organizationId: string }
   | { ok: false; response: NextResponse }
 > {
@@ -75,8 +90,8 @@ export async function requireAdminMitOrg(): Promise<
     .select('role')
     .eq('id', user.id)
     .single()
-  if (!profile || !['admin', 'superadmin'].includes(profile.role)) {
-    return { ok: false, response: NextResponse.json({ error: 'Nur für Administratoren' }, { status: 403 }) }
+  if (!profile || !rolleDarf(profile.role, berechtigung)) {
+    return { ok: false, response: NextResponse.json({ error: 'Für diesen Bereich fehlt Ihnen die Berechtigung.' }, { status: 403 }) }
   }
   // MFA-Prüfung: Admin mit Faktor muss auf AAL2 sein
   const aalBlock = await requireAdminAal2(supabase)

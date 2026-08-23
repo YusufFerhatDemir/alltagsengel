@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { rolleDarf } from '@/lib/auth/guard'
 import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
@@ -23,7 +24,7 @@ export async function GET(request: Request) {
       .eq('id', user.id)
       .single()
 
-    if (!profile || !['admin', 'superadmin'].includes(profile.role)) {
+    if (!profile || !rolleDarf(profile.role, 'einsatz.lesen')) {
       return NextResponse.json({ error: 'Nur für Administratoren' }, { status: 403 })
     }
 
@@ -104,7 +105,7 @@ export async function PUT(req: Request) {
       .eq('id', user.id)
       .single()
 
-    if (!profile || !['admin', 'superadmin'].includes(profile.role)) {
+    if (!profile || !rolleDarf(profile.role, 'einsatz.schreiben')) {
       return NextResponse.json({ error: 'Nur für Administratoren' }, { status: 403 })
     }
 

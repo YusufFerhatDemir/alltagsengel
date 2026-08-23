@@ -14,7 +14,7 @@ const FHIR_CONTENT_TYPE = 'application/fhir+json; charset=utf-8'
 
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const auth = await requireOpsAdmin()
+  const auth = await requireOpsAdmin('system.verwalten')
   if (!auth.ok) return toFhirErrorResponse(auth.response)
 
   try {

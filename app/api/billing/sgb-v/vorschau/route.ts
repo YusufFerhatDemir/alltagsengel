@@ -24,7 +24,7 @@ const log = logger.child('billing/sgb-v/vorschau')
  * die Technische Anlage fehlt (s. lib/abrechnung/sgb-v/generator.ts).
  */
 export async function GET(request: Request) {
-  const auth = await requireOpsAdmin()
+  const auth = await requireOpsAdmin('abrechnung.lesen')
   if (!auth.ok) return auth.response
   const { organizationId } = auth.ctx
 

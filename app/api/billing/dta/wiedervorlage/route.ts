@@ -21,7 +21,7 @@ const STATUS: WiedervorlageStatus[] = [
  * Der Arbeitsvorrat aus abgelehnten/gekürzten Positionen, mit Übersicht.
  */
 export async function GET(request: Request) {
-  const auth = await requireAdminMitOrg()
+  const auth = await requireAdminMitOrg('abrechnung.lesen')
   if (!auth.ok) return auth.response
 
   try {
@@ -65,7 +65,7 @@ export async function GET(request: Request) {
  * Wiederholte Aufrufe erzeugen keine Dubletten.
  */
 export async function POST(request: Request) {
-  const auth = await requireAdminMitOrg()
+  const auth = await requireAdminMitOrg('abrechnung.schreiben')
   if (!auth.ok) return auth.response
 
   try {

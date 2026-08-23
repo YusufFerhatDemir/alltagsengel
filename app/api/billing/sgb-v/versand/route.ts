@@ -20,13 +20,13 @@ export const dynamic = 'force-dynamic'
  * Versuch stattgefunden hat und woran er hängt.
  */
 export async function GET() {
-  const auth = await requireAdminMitOrg()
+  const auth = await requireAdminMitOrg('abrechnung.lesen')
   if (!auth.ok) return auth.response
   return NextResponse.json(sgbVKanalStatus())
 }
 
 export async function POST(request: Request) {
-  const auth = await requireAdminMitOrg()
+  const auth = await requireAdminMitOrg('abrechnung.schreiben')
   if (!auth.ok) return auth.response
 
   try {

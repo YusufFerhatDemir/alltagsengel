@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { rolleDarf } from '@/lib/auth/guard'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { NextResponse } from 'next/server'
 import { safeApiError } from '@/lib/api/error-sanitizer'
@@ -18,7 +19,7 @@ export async function GET(request: Request) {
       .eq('id', user.id)
       .single()
 
-    if (!profile || !['admin', 'superadmin'].includes(profile.role)) {
+    if (!profile || !rolleDarf(profile.role, 'abrechnung.lesen')) {
       return NextResponse.json({ error: 'Nur für Administratoren.' }, { status: 403 })
     }
 

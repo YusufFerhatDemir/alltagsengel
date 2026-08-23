@@ -7,7 +7,7 @@ import { deleteVital, updateVital } from '@/lib/vitals/server'
 /** PATCH — Messung korrigieren (nur Admin: Wert, Zeitpunkt, Notiz). */
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const auth = await requirePflegeAdmin()
+    const auth = await requirePflegeAdmin('pflege.schreiben')
     if (!auth.ok) return auth.response
 
     const { id } = await params
@@ -31,7 +31,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 /** DELETE — Fehleingabe entfernen (nur Admin). */
 export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const auth = await requirePflegeAdmin()
+    const auth = await requirePflegeAdmin('pflege.schreiben')
     if (!auth.ok) return auth.response
 
     const { id } = await params

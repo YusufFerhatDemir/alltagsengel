@@ -6,7 +6,7 @@ import { safeApiError } from '@/lib/api/error-sanitizer'
 
 export async function GET() {
   try {
-    const auth = await requireOpsAdmin()
+    const auth = await requireOpsAdmin('abrechnung.lesen')
     if (!auth.ok) return auth.response
     const { organizationId } = auth.ctx
 

@@ -5,7 +5,7 @@ import { requirePersonalAdmin } from '@/lib/personal/api-auth'
 import { listTagesansicht } from '@/lib/personal/dienstplan'
 
 export async function GET(request: Request) {
-  const auth = await requirePersonalAdmin()
+  const auth = await requirePersonalAdmin('personal.lesen')
   if (!auth.ok) return auth.response
   const supabase = createAdminClient()
   const url = new URL(request.url)

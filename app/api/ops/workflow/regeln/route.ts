@@ -6,7 +6,7 @@ import { listRegeln, createRegel } from '@/lib/workflow/regeln'
 import type { WfModul } from '@/lib/workflow/types'
 
 export async function GET(request: Request) {
-  const auth = await requireOpsAdmin()
+  const auth = await requireOpsAdmin('system.verwalten')
   if (!auth.ok) return auth.response
   const supabase = createAdminClient()
   const url = new URL(request.url)
@@ -25,7 +25,7 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const auth = await requireOpsAdmin()
+  const auth = await requireOpsAdmin('system.verwalten')
   if (!auth.ok) return auth.response
   const supabase = createAdminClient()
   try {

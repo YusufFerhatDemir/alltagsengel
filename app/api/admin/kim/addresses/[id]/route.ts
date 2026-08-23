@@ -8,7 +8,7 @@ import type { CreateKimAddressInput } from '@/lib/kim/address-book-service'
 type PatchBody = { action?: 'update' | 'verify' } & Partial<CreateKimAddressInput> & { is_active?: boolean }
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const auth = await requireKimAdmin()
+  const auth = await requireKimAdmin('system.verwalten')
   if (!auth.ok) return auth.response
   const { id } = await params
 

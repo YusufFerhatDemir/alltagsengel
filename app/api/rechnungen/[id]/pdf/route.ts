@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { rolleDarf } from '@/lib/auth/guard'
 import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
@@ -38,7 +39,7 @@ export async function GET(
       .select('role')
       .eq('id', user.id)
       .single()
-    const isAdmin = !!profile && ['admin', 'superadmin'].includes(profile.role)
+    const isAdmin = !!profile && rolleDarf(profile.role, 'abrechnung.lesen')
 
     // Der Admin-Client umgeht RLS — die Eigentuemerpruefung passiert deshalb
     // hier explizit ueber clients.user_id.

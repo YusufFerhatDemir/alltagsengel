@@ -7,7 +7,7 @@ import { deaktiviereDiagnose, updateDiagnose } from '@/lib/pflege/diagnosen'
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params
-    const auth = await requirePflegeAdmin()
+    const auth = await requirePflegeAdmin('pflege.schreiben')
     if (!auth.ok) return auth.response
 
     const body = await request.json()
@@ -35,7 +35,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params
-    const auth = await requirePflegeAdmin()
+    const auth = await requirePflegeAdmin('pflege.schreiben')
     if (!auth.ok) return auth.response
 
     const admin = createAdminClient()

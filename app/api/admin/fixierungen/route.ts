@@ -29,7 +29,7 @@ function nurErlaubteFelder(roh: Record<string, unknown>): Record<string, unknown
 
 /** GET — Maßnahmen der aktiven Organisation, optional gefiltert nach Klient/Status. */
 export async function GET(request: NextRequest) {
-  const auth = await requireOpsAdmin()
+  const auth = await requireOpsAdmin('pflege.lesen')
   if (!auth.ok) return auth.response
 
   try {
@@ -61,7 +61,7 @@ export async function GET(request: NextRequest) {
 
 /** POST — neue freiheitsentziehende Maßnahme anlegen. */
 export async function POST(req: NextRequest) {
-  const auth = await requireOpsAdmin()
+  const auth = await requireOpsAdmin('pflege.schreiben')
   if (!auth.ok) return auth.response
 
   try {

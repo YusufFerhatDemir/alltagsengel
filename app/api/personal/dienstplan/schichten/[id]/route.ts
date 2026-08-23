@@ -5,7 +5,7 @@ import { requirePersonalAdmin } from '@/lib/personal/api-auth'
 import { updateSchicht } from '@/lib/personal/dienstplan'
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const auth = await requirePersonalAdmin()
+  const auth = await requirePersonalAdmin('personal.schreiben')
   if (!auth.ok) return auth.response
   const { id } = await params
   const supabase = createAdminClient()

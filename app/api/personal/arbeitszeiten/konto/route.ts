@@ -6,7 +6,7 @@ import { listArbeitszeitKonto } from '@/lib/personal/arbeitszeiten'
 
 export async function GET(req: NextRequest) {
   try {
-    const auth = await requirePersonalAdmin()
+    const auth = await requirePersonalAdmin('personal.lesen')
     if (!auth.ok) return auth.response
     const supabase = createAdminClient()
 

@@ -1,4 +1,6 @@
 import { NextResponse } from 'next/server'
+import { rolleDarf } from '@/lib/auth/guard'
+import type { Berechtigung } from '@/lib/auth/rollen'
 import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
@@ -10,15 +12,20 @@ import {
   pruefeStammdaten,
 } from '@/lib/clients/stammdaten'
 
-async function requireAdmin() {
+/**
+ * Lokaler Guard dieser Route. Prueft seit dem Rollenkonzept eine
+ * BERECHTIGUNG statt der Rolle (lib/auth/rollen.ts) — Klienten-Stammdaten
+ * sehen auch pdl/qm/buchhaltung, aendern duerfen sie nur admin und pdl.
+ */
+async function requireAdmin(berechtigung: Berechtigung = 'stammdaten.lesen') {
   const supabase = await createClient()
   const { data: { user }, error } = await supabase.auth.getUser()
   if (error || !user) {
     return { ok: false as const, response: NextResponse.json({ error: 'Nicht autorisiert.' }, { status: 401 }) }
   }
   const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
-  if (!profile || !['admin', 'superadmin'].includes(profile.role)) {
-    return { ok: false as const, response: NextResponse.json({ error: 'Nur für Administratoren.' }, { status: 403 }) }
+  if (!profile || !rolleDarf(profile.role, berechtigung)) {
+    return { ok: false as const, response: NextResponse.json({ error: 'Für diesen Bereich fehlt Ihnen die Berechtigung.' }, { status: 403 }) }
   }
   const organizationId = await getActiveOrgId()
   if (!organizationId) {
@@ -60,7 +67,7 @@ export async function PATCH(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const auth = await requireAdmin()
+  const auth = await requireAdmin('stammdaten.schreiben')
   if (!auth.ok) return auth.response
 
   try {

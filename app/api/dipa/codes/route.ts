@@ -20,7 +20,7 @@ import {
 } from '@/lib/coach/freischaltung'
 
 export async function GET() {
-  const auth = await requireOpsAdmin()
+  const auth = await requireOpsAdmin('system.verwalten')
   if (!auth.ok) return auth.response
 
   const supabase = await createClient()
@@ -37,7 +37,7 @@ export async function GET() {
 
 /** Neuen Code ausstellen. Antwort enthält den Klartext-Code einmalig. */
 export async function POST(request: Request) {
-  const auth = await requireOpsAdmin()
+  const auth = await requireOpsAdmin('system.verwalten')
   if (!auth.ok) return auth.response
 
   const body = await request.json().catch(() => ({}))
