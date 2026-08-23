@@ -8,7 +8,7 @@ export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const auth = await requireOpsAdmin()
+  const auth = await requireOpsAdmin('qm.schreiben')
   if (!auth.ok) return auth.response
   const { id } = await params
   const supabase = createAdminClient()

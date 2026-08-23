@@ -11,7 +11,7 @@ import { listTreatments, naechsterVwTermin } from '@/lib/wunden/behandlungen'
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params
-    const auth = await requireWundenAdmin()
+    const auth = await requireWundenAdmin('pflege.lesen')
     if (!auth.ok) return auth.response
     const { organizationId } = auth.ctx
 
@@ -38,7 +38,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params
-    const auth = await requireWundenAdmin()
+    const auth = await requireWundenAdmin('pflege.schreiben')
     if (!auth.ok) return auth.response
 
     const body = await request.json()

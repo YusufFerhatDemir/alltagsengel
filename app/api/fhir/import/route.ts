@@ -40,7 +40,7 @@ function generateCustomerNumber(): string {
 }
 
 export async function POST(request: Request) {
-  const auth = await requireOpsAdmin()
+  const auth = await requireOpsAdmin('system.verwalten')
   if (!auth.ok) return toFhirErrorResponse(auth.response)
 
   let body: Record<string, unknown>

@@ -6,7 +6,7 @@ import { listAktivitaetslog } from '@/lib/ops/aktivitaetslog'
 import type { AktivitaetEntitaetTyp } from '@/lib/ops/types'
 
 export async function GET(request: Request) {
-  const auth = await requireOpsAdmin()
+  const auth = await requireOpsAdmin('audit.lesen')
   if (!auth.ok) return auth.response
   const supabase = createAdminClient()
   const url = new URL(request.url)

@@ -13,7 +13,7 @@ import { erzeugePruefExport, pruefExportAlsCsv, pruefExportAlsJson } from '@/lib
  * lib/abrechnung/sgb-v/export-generator.ts.
  */
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const auth = await requireOpsAdmin()
+  const auth = await requireOpsAdmin('abrechnung.schreiben')
   if (!auth.ok) return auth.response
 
   try {

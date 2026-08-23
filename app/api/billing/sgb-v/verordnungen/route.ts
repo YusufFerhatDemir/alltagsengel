@@ -8,7 +8,7 @@ const log = logger.child('billing/sgb-v/verordnungen')
 
 /** GET /api/billing/sgb-v/verordnungen — Liste der HKP-Verordnungen (§ 37 SGB V). */
 export async function GET(request: Request) {
-  const auth = await requireOpsAdmin()
+  const auth = await requireOpsAdmin('abrechnung.lesen')
   if (!auth.ok) return auth.response
 
   try {
@@ -22,7 +22,7 @@ export async function GET(request: Request) {
 
 /** POST /api/billing/sgb-v/verordnungen — neue HKP-Verordnung anlegen. */
 export async function POST(request: Request) {
-  const auth = await requireOpsAdmin()
+  const auth = await requireOpsAdmin('abrechnung.schreiben')
   if (!auth.ok) return auth.response
 
   try {

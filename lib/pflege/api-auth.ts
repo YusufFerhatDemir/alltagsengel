@@ -3,6 +3,8 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { NextResponse } from 'next/server'
+import { rolleDarf } from '@/lib/auth/guard'
+import type { Berechtigung } from '@/lib/auth/rollen'
 import { createClient } from '@/lib/supabase/server'
 import { getActiveOrgId } from '@/lib/organizations/server'
 
@@ -17,8 +19,18 @@ export type PflegeAuthResult =
   | { ok: true; ctx: PflegeAuthContext }
   | { ok: false; response: NextResponse }
 
-/** Admin/Superadmin-Guard mit Organisationszuordnung — für alle /api/pflege-Routen. */
-export async function requirePflegeAdmin(): Promise<PflegeAuthResult> {
+/**
+ * Guard mit Organisationszuordnung — für alle /api/pflege-Routen.
+ *
+ * Rollenkonzept (lib/auth/rollen.ts): der Guard prueft nicht mehr auf
+ * „ist Admin", sondern auf eine BERECHTIGUNG. admin/superadmin haben alle,
+ * pdl/qm/buchhaltung nur die ihrer Aufgabe. Der Default ist die
+ * Lese-Berechtigung des Fachbereichs; schreibende Routen uebergeben die
+ * Schreib-Berechtigung ausdruecklich.
+ */
+export async function requirePflegeAdmin(
+  berechtigung: Berechtigung = 'pflege.lesen'
+): Promise<PflegeAuthResult> {
   const supabase = await createClient()
   const { data: { user }, error: authError } = await supabase.auth.getUser()
   if (authError || !user) {
@@ -31,8 +43,8 @@ export async function requirePflegeAdmin(): Promise<PflegeAuthResult> {
     .eq('id', user.id)
     .single()
 
-  if (!profile || !['admin', 'superadmin'].includes(profile.role)) {
-    return { ok: false, response: NextResponse.json({ error: 'Nur für Administratoren.' }, { status: 403 }) }
+  if (!profile || !rolleDarf(profile.role, berechtigung)) {
+    return { ok: false, response: NextResponse.json({ error: 'Für diesen Bereich fehlt Ihnen die Berechtigung.' }, { status: 403 }) }
   }
 
   // Die Organisation haengt am organization_members-Mapping (Org-Switcher-Cookie),

@@ -44,7 +44,7 @@ function nurErlaubteFelder(roh: Record<string, unknown>): DatenannahmestelleEing
  * Ja/Nein gemeldet, ein SSH-Key gehoert nicht in eine API-Antwort.
  */
 export async function GET(request: Request) {
-  const auth = await requireAdminMitOrg()
+  const auth = await requireAdminMitOrg('abrechnung.lesen')
   if (!auth.ok) return auth.response
 
   try {
@@ -77,7 +77,7 @@ export async function GET(request: Request) {
 
 /** POST — einzelne Datenannahmestelle oder Massenimport (`dryRun` per Vorgabe an). */
 export async function POST(req: NextRequest) {
-  const auth = await requireAdminMitOrg()
+  const auth = await requireAdminMitOrg('abrechnung.schreiben')
   if (!auth.ok) return auth.response
 
   try {
@@ -134,7 +134,7 @@ export async function POST(req: NextRequest) {
 
 /** DELETE — Soft-Delete. Global gepflegte Stellen sind nicht loeschbar. */
 export async function DELETE(req: NextRequest) {
-  const auth = await requireAdminMitOrg()
+  const auth = await requireAdminMitOrg('abrechnung.schreiben')
   if (!auth.ok) return auth.response
 
   try {

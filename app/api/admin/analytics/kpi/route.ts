@@ -5,7 +5,7 @@ import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { ladeKpiDashboard, standardZeitraumAktuellerMonat } from '@/lib/analytics/kpi'
 
 export async function GET(request: Request) {
-  const auth = await requireOpsAdmin()
+  const auth = await requireOpsAdmin('berichte.lesen')
   if (!auth.ok) return auth.response
 
   const url = new URL(request.url)

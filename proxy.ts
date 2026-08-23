@@ -3,6 +3,7 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { getStorageKeyFromEnv } from '@/lib/supabase/storage-key'
 import { supabasePublishableKey, supabaseUrl } from '@/lib/supabase/keys'
 import { handleRateLimit } from '@/lib/middleware/rate-limit'
+import { darfPfad } from '@/lib/auth/bereiche'
 import { logger } from '@/lib/logger'
 const log = logger.child('proxy')
 
@@ -47,6 +48,14 @@ function encodeSessionCookie(name: string, value: string): string {
 const ROLE_ACCESS: Record<string, string[]> = {
   admin:      ['/admin', '/mis', '/kunde', '/engel', '/fahrer', '/angehoerige'],
   superadmin: ['/admin', '/mis', '/kunde', '/engel', '/fahrer', '/angehoerige'],
+  // Fachrollen (Rollenkonzept, lib/auth/rollen.ts). Der Bereich allein
+  // sagt noch nichts: WELCHE Seite unter /admin sie sehen, entscheidet
+  // darfPfad() weiter unten anhand der Berechtigungsmatrix. Ohne diesen
+  // zweiten Schritt haette eine Buchhaltung Zugriff auf die
+  // Pflegedokumentation, nur weil beides unter /admin liegt.
+  pdl:         ['/admin', '/mis'],
+  qm:          ['/admin', '/mis'],
+  buchhaltung: ['/admin', '/mis'],
   kunde:      ['/kunde'],
   engel:      ['/engel'],
   fahrer:     ['/fahrer'],
@@ -63,6 +72,11 @@ const ROLE_ACCESS: Record<string, string[]> = {
 const ROLE_HOME: Record<string, string> = {
   admin:      '/admin/home',
   superadmin: '/admin/home',
+  // /admin/home verlangt 'berichte.lesen' — das hat jede Fachrolle.
+  // Damit kann der Rueckverweis unten keine Schleife bilden.
+  pdl:         '/admin/home',
+  qm:          '/admin/home',
+  buchhaltung: '/admin/home',
   kunde:      '/kunde/home',
   engel:      '/engel/home',
   fahrer:     '/fahrer/home',
@@ -251,6 +265,26 @@ export async function proxy(request: NextRequest) {
       const homeUrl = request.nextUrl.clone()
       homeUrl.pathname = ROLE_HOME[role] || '/auth/login'
       homeUrl.search = '' // Keine Query-Parameter mitnehmen
+      return NextResponse.redirect(homeUrl)
+    }
+
+    // ═══ Feinsteuerung innerhalb des Bereichs ═══
+    // /admin und /mis sind keine Einheit: die Pflegedokumentation, die
+    // Bankdaten und die Benutzerverwaltung liegen dort nebeneinander.
+    // darfPfad() entscheidet pro Unterpfad anhand der Berechtigungsmatrix
+    // (lib/auth/bereiche.ts) und ist fail-closed — ein Unterpfad ohne
+    // Regel bleibt admin/superadmin vorbehalten.
+    //
+    // Das ersetzt KEINEN Guard in der API: diese Sperre gilt der
+    // Oberflaeche. Die Datenzugriffe haengen an den Guards in
+    // lib/**/api-auth.ts und an RLS.
+    if (
+      (area === '/admin' || area === '/mis') &&
+      !darfPfad(role, pathname, request.method)
+    ) {
+      const homeUrl = request.nextUrl.clone()
+      homeUrl.pathname = ROLE_HOME[role] || '/auth/login'
+      homeUrl.search = ''
       return NextResponse.redirect(homeUrl)
     }
 

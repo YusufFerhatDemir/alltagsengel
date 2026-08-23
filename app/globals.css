@@ -1156,7 +1156,21 @@ body {
 .admin-badge.kunde { background:rgba(33,150,243,.12); color:#64B5F6; }
 .admin-badge.engel { background:rgba(201,150,60,.12); color:var(--gold2); }
 .admin-badge.admin { background:rgba(156,39,176,.12); color:#CE93D8; }
+.admin-badge.superadmin { background:rgba(156,39,176,.2); color:#E1BEE7; }
+/* Fachrollen des Rollenkonzepts (lib/auth/rollen.ts) */
+.admin-badge.pdl { background:rgba(76,175,80,.12); color:#A5D6A7; }
+.admin-badge.qm { background:rgba(0,188,212,.12); color:#80DEEA; }
+.admin-badge.buchhaltung { background:rgba(255,152,0,.12); color:#FFCC80; }
+.admin-badge.fahrer { background:rgba(121,134,203,.14); color:#9FA8DA; }
+.admin-badge.angehoerige { background:rgba(233,30,99,.12); color:#F48FB1; }
 .admin-status { display:inline-block; padding:3px 10px; border-radius:12px; font-size:12px; font-weight:500; color:white; }
+
+/* Auswahlfeld in Admin-Tabellen (z. B. Rollenzuweisung unter /admin/users) */
+.admin-select { background:var(--coal3); color:var(--ink2); border:1px solid var(--border); border-radius:8px; padding:6px 10px; font-size:13px; font-family:inherit; }
+.admin-select:disabled { opacity:.5; cursor:progress; }
+.admin-select:focus-visible { outline:2px solid var(--gold2); outline-offset:2px; }
+.admin-success { color:#A5D6A7; background:rgba(76,175,80,.1); border:1px solid rgba(76,175,80,.25); border-radius:10px; padding:10px 14px; margin:0 0 16px; font-size:14px; }
+.admin-error { color:#EF9A9A; background:rgba(244,67,54,.1); border:1px solid rgba(244,67,54,.25); border-radius:10px; padding:10px 14px; margin:0 0 16px; font-size:14px; }
 
 /* Admin mobile header (hamburger) — gizli by default */
 .admin-mobile-header { display:none; }

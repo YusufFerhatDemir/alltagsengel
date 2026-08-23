@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { rolleDarf } from '@/lib/auth/guard'
 import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
@@ -157,7 +158,7 @@ export async function POST(req: NextRequest) {
     // als auch darüber, ob force_override erlaubt ist (D1-Regel wie in
     // /api/einsatzplanung — Override ausschließlich für Administratoren).
     const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
-    const istAdmin = !!profile && ['admin', 'superadmin'].includes(profile.role)
+    const istAdmin = !!profile && rolleDarf(profile.role, 'einsatz.schreiben')
 
     // Nur der zugewiesene Engel darf annehmen/ablehnen — Admins zur Nachsteuerung.
     if (booking.angel_id !== user.id && !istAdmin) {

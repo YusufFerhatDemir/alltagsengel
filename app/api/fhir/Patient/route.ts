@@ -17,7 +17,7 @@ const FHIR_CONTENT_TYPE = 'application/fhir+json; charset=utf-8'
 const CLIENT_COLUMNS = 'id, organization_id, customer_number, first_name, last_name, date_of_birth, geburtsdatum, address, city, zip_code, phone, email, insurance_number, versichertennummer, care_level, pflegegrad, status'
 
 export async function GET(request: Request) {
-  const auth = await requireOpsAdmin()
+  const auth = await requireOpsAdmin('system.verwalten')
   if (!auth.ok) return toFhirErrorResponse(auth.response)
 
   try {

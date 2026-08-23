@@ -83,7 +83,9 @@ describe('D6: API-Route /api/billing/invoices/[id]/abschreiben', () => {
   const routeSrc = read('app/api/billing/invoices/[id]/abschreiben/route.ts')
 
   it('prüft Admin/Superadmin-Berechtigung', () => {
-    expect(routeSrc).toContain("['admin', 'superadmin'].includes(profile.role)")
+    // Abschreiben ist ein Abrechnungsvorgang: 'abrechnung.schreiben'
+    // (admin/superadmin/buchhaltung), siehe lib/auth/rollen.ts.
+    expect(routeSrc).toContain("rolleDarf(profile.role, 'abrechnung.schreiben')")
   })
 
   it('verlangt Begründung (reason)', () => {

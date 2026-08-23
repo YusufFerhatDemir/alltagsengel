@@ -43,7 +43,7 @@ async function zeileGehoertZurOrg(
  * Belege einer Tarif-/Preiszeile mit kurzlebigen signierten Download-URLs.
  */
 export async function GET(request: Request) {
-  const auth = await requireOpsAdmin()
+  const auth = await requireOpsAdmin('abrechnung.lesen')
   if (!auth.ok) return auth.response
 
   try {
@@ -107,7 +107,7 @@ export async function GET(request: Request) {
  * ist ein zweiter, bewusster Schritt ueber PATCH …/verifizierung.
  */
 export async function POST(request: Request) {
-  const auth = await requireOpsAdmin()
+  const auth = await requireOpsAdmin('abrechnung.schreiben')
   if (!auth.ok) return auth.response
 
   try {

@@ -13,7 +13,7 @@ import { safeApiError } from '@/lib/api/error-sanitizer'
  * jedem Fall gesperrt (s. lib/kim/versand.ts), unabhängig vom Ergebnis hier.
  */
 export async function GET(request: Request) {
-  const auth = await requireOpsAdmin()
+  const auth = await requireOpsAdmin('system.verwalten')
   if (!auth.ok) return auth.response
   const { organizationId } = auth.ctx
 

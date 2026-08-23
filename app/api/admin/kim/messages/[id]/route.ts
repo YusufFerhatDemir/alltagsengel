@@ -7,7 +7,7 @@ import { listKimAttachments } from '@/lib/kim/attachment-service'
 import type { CreateKimMessageInput } from '@/lib/kim/types'
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const auth = await requireKimAdmin()
+  const auth = await requireKimAdmin('system.verwalten')
   if (!auth.ok) return auth.response
   const { id } = await params
 
@@ -27,7 +27,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
 type PatchBody = { action?: 'update' | 'queue' | 'cancel' | 'mark_read' } & Partial<CreateKimMessageInput>
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const auth = await requireKimAdmin()
+  const auth = await requireKimAdmin('system.verwalten')
   if (!auth.ok) return auth.response
   const { id } = await params
 

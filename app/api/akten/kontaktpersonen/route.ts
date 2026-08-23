@@ -7,7 +7,7 @@ import { createKontaktperson, listKontaktpersonen } from '@/lib/akten/kontaktper
 
 export async function GET(request: Request) {
   try {
-    const auth = await requireAktenAdmin()
+    const auth = await requireAktenAdmin('stammdaten.lesen')
     if (!auth.ok) return auth.response
     const { organizationId } = auth.ctx
 
@@ -25,7 +25,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const auth = await requireAktenAdmin()
+    const auth = await requireAktenAdmin('stammdaten.schreiben')
     if (!auth.ok) return auth.response
     const { organizationId, userId, role } = auth.ctx
 

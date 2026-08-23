@@ -8,7 +8,7 @@ import { sperreAssessment } from '@/lib/sis'
 export async function POST(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params
-    const auth = await requirePflegeAdmin()
+    const auth = await requirePflegeAdmin('pflege.schreiben')
     if (!auth.ok) return auth.response
 
     const admin = createAdminClient()

@@ -15,7 +15,7 @@ export const dynamic = 'force-dynamic'
  * Liste aller hinterlegten Zertifikate (Absender + Empfänger-Cache).
  */
 export async function GET(request: Request) {
-  const auth = await requireAdmin()
+  const auth = await requireAdmin('system.verwalten')
   if (!auth.ok) return auth.response
   try {
     const orgId = await getActiveOrgId()
@@ -45,7 +45,7 @@ export async function GET(request: Request) {
  *             nicht gespeichert — dauerhaft als Env SECON_ZERT_PASSWORT)
  */
 export async function POST(req: NextRequest) {
-  const auth = await requireAdminMitOrg()
+  const auth = await requireAdminMitOrg('system.verwalten')
   if (!auth.ok) return auth.response
   try {
     const orgId = auth.organizationId

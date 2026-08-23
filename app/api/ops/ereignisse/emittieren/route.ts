@@ -5,7 +5,7 @@ import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { emitEreignis } from '@/lib/ops/ereignis-emitter'
 
 export async function POST(request: Request) {
-  const auth = await requireOpsAdmin()
+  const auth = await requireOpsAdmin('qm.schreiben')
   if (!auth.ok) return auth.response
   const supabase = createAdminClient()
   try {

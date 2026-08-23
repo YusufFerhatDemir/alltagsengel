@@ -9,7 +9,7 @@ import { erstelleDatevExport, getDatevExportListe } from '@/lib/billing/datev/ex
  */
 export async function GET() {
   try {
-    const auth = await requireOpsAdmin();
+    const auth = await requireOpsAdmin('abrechnung.lesen');
     if (!auth.ok) return auth.response;
     const supabase = createAdminClient();
 
@@ -28,7 +28,7 @@ export async function GET() {
  */
 export async function POST(req: NextRequest) {
   try {
-    const auth = await requireOpsAdmin();
+    const auth = await requireOpsAdmin('abrechnung.schreiben');
     if (!auth.ok) return auth.response;
     const supabase = createAdminClient();
 

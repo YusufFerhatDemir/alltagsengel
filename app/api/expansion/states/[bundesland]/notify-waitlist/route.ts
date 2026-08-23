@@ -71,7 +71,7 @@ async function ladeStatus(orgId: string, bundesland: BundeslandCode) {
 }
 
 export async function GET(_request: NextRequest, context: RouteContext) {
-  const auth = await requireExpansionAdmin()
+  const auth = await requireExpansionAdmin('system.verwalten')
   if (!auth.ok) return auth.response
 
   const { bundesland: roh } = await context.params
@@ -102,7 +102,7 @@ export async function GET(_request: NextRequest, context: RouteContext) {
 }
 
 export async function POST(request: NextRequest, context: RouteContext) {
-  const auth = await requireExpansionAdmin()
+  const auth = await requireExpansionAdmin('system.verwalten')
   if (!auth.ok) return auth.response
 
   const { bundesland: roh } = await context.params

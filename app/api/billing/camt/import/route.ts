@@ -13,7 +13,7 @@ import { safeApiError } from '@/lib/api/error-sanitizer';
  */
 export async function POST(req: NextRequest) {
   try {
-    const auth = await requireOpsAdmin();
+    const auth = await requireOpsAdmin('abrechnung.schreiben');
     if (!auth.ok) return auth.response;
     const supabase = createAdminClient();
     const { organizationId, userId } = auth.ctx;

@@ -8,7 +8,7 @@ import type { PlanStatus, PlanTyp } from '@/lib/pflege/types'
 
 export async function GET(request: Request) {
   try {
-    const auth = await requirePflegeAdmin()
+    const auth = await requirePflegeAdmin('pflege.lesen')
     if (!auth.ok) return auth.response
 
     const params = new URL(request.url).searchParams
@@ -33,7 +33,7 @@ export async function GET(request: Request) {
  */
 export async function POST(request: Request) {
   try {
-    const auth = await requirePflegeAdmin()
+    const auth = await requirePflegeAdmin('pflege.schreiben')
     if (!auth.ok) return auth.response
     const { userId, organizationId } = auth.ctx
 

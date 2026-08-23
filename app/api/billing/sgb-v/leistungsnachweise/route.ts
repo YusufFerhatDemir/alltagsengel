@@ -11,7 +11,7 @@ import { safeApiError } from '@/lib/api/error-sanitizer'
  * `pruefen=1` liefert zusätzlich die Vollständigkeitsprüfung für den Zeitraum.
  */
 export async function GET(request: Request) {
-  const auth = await requireOpsAdmin()
+  const auth = await requireOpsAdmin('abrechnung.lesen')
   if (!auth.ok) return auth.response
 
   try {
@@ -36,7 +36,7 @@ export async function GET(request: Request) {
 
 /** POST /api/billing/sgb-v/leistungsnachweise — Leistung erfassen. */
 export async function POST(request: Request) {
-  const auth = await requireOpsAdmin()
+  const auth = await requireOpsAdmin('abrechnung.schreiben')
   if (!auth.ok) return auth.response
 
   try {

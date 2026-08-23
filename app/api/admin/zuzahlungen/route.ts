@@ -28,7 +28,7 @@ function nurErlaubteFelder(roh: Record<string, unknown>): Record<string, unknown
 
 /** GET — Zuzahlungen, optional gefiltert nach Klient/Jahr; inkl. Jahresstand (§61-28-Tage-Grenze). */
 export async function GET(request: NextRequest) {
-  const auth = await requireOpsAdmin()
+  const auth = await requireOpsAdmin('abrechnung.lesen')
   if (!auth.ok) return auth.response
 
   try {
@@ -73,7 +73,7 @@ export async function GET(request: NextRequest) {
 
 /** POST — neue Zuzahlung erfassen. */
 export async function POST(req: NextRequest) {
-  const auth = await requireOpsAdmin()
+  const auth = await requireOpsAdmin('abrechnung.schreiben')
   if (!auth.ok) return auth.response
 
   try {

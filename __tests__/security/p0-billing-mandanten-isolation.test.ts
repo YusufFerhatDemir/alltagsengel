@@ -99,13 +99,16 @@ describe('P0-1: keine Billing-Route liest profiles.organization_id', () => {
         /import\s*\{[^}]*\bgetActiveOrgId\b[^}]*\}\s*from\s*'@\/lib\/organizations\/server'/.test(src) &&
         /await\s+getActiveOrgId\(\)/.test(src)
 
+      // Seit dem Rollenkonzept (lib/auth/rollen.ts) nehmen beide Helfer eine
+      // Berechtigung entgegen. Geprueft wird weiterhin nur, DASS die Org ueber
+      // den Helfer kommt — nicht, mit welchem Argument er gerufen wird.
       const ueberHelfer =
         /import\s*\{[^}]*\brequireAdminMitOrg\b[^}]*\}\s*from\s*'@\/lib\/abrechnung\/require-admin'/.test(src) &&
-        /await\s+requireAdminMitOrg\(\)/.test(src)
+        /await\s+requireAdminMitOrg\([^)]*\)/.test(src)
 
       const ueberOpsHelfer =
         /import\s*\{[^}]*\brequireOps(Admin|User)\b[^}]*\}\s*from\s*'@\/lib\/ops\/api-auth'/.test(src) &&
-        /await\s+requireOps(Admin|User)\(\)/.test(src)
+        /await\s+requireOps(Admin|User)\([^)]*\)/.test(src)
 
       expect(
         direkt || ueberHelfer || ueberOpsHelfer,
@@ -307,16 +310,16 @@ describe('P0-5: tariffs GET erzwingt Rollen-Pruefung (MITTEL-Befund Finale Abnah
   it('prueft die Rolle gegen internes Personal, nicht nur die Anmeldung', () => {
     expect(get).toMatch(/\.from\('profiles'\)\s*\n\s*\.select\('role'\)/)
     expect(get).toMatch(
-      /\['admin',\s*'superadmin',\s*'pdl',\s*'buero'\]\.includes\(profile\.role\)/
+      /rolleDarf\(profile\.role, 'tarife\.lesen'\)/
     )
-    const roleCheckAt = get.search(/if\s*\(!profile\s*\|\|\s*!\['admin'/)
+    const roleCheckAt = get.search(/if\s*\(!profile\s*\|\|\s*!rolleDarf\(/)
     const loadAt = get.indexOf("from('billing_tariffs')")
     expect(roleCheckAt, `${REL}: keine Rollen-Pruefung vor dem Tarif-Load`).toBeGreaterThan(-1)
     expect(roleCheckAt).toBeLessThan(loadAt)
   })
 
   it('lehnt Kunden/Engel (keine interne Rolle) mit 403 ab', () => {
-    const roleCheckAt = get.search(/if\s*\(!profile\s*\|\|\s*!\['admin'/)
+    const roleCheckAt = get.search(/if\s*\(!profile\s*\|\|\s*!rolleDarf\(/)
     expect(get.slice(roleCheckAt, roleCheckAt + 200)).toMatch(/status:\s*403/)
   })
 })

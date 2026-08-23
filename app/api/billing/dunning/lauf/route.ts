@@ -14,7 +14,7 @@ import { safeApiError } from '@/lib/api/error-sanitizer'
  */
 export async function POST(request: Request) {
   try {
-    const auth = await requireOpsAdmin()
+    const auth = await requireOpsAdmin('abrechnung.schreiben')
     if (!auth.ok) return auth.response
     const { userId, organizationId } = auth.ctx
 

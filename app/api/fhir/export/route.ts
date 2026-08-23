@@ -26,7 +26,7 @@ import type { VitalSign } from '@/lib/vitals/types'
 import type { PflegeMassnahme, PflegeMassnahmenplan } from '@/lib/pflege/types'
 
 export async function GET(request: Request) {
-  const auth = await requireOpsAdmin()
+  const auth = await requireOpsAdmin('system.verwalten')
   if (!auth.ok) return toFhirErrorResponse(auth.response)
 
   const url = new URL(request.url)

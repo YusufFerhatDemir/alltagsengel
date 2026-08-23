@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { rolleDarf } from '@/lib/auth/guard'
 import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
@@ -49,7 +50,7 @@ export async function PATCH(
 
     const { data: profile } = await supabase
       .from('profiles').select('role').eq('id', user.id).single()
-    if (!profile || !['admin', 'superadmin'].includes(profile.role)) {
+    if (!profile || !rolleDarf(profile.role, 'stammdaten.schreiben')) {
       return NextResponse.json({ error: 'Nur für Administratoren.' }, { status: 403 })
     }
 

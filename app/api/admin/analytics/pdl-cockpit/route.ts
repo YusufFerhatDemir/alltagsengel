@@ -5,7 +5,7 @@ import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { ladePdlCockpit, standardZeitraumAktuellerMonat } from '@/lib/analytics/pdl-cockpit'
 
 export async function GET(request: Request) {
-  const auth = await requireOpsAdmin()
+  const auth = await requireOpsAdmin('berichte.lesen')
   if (!auth.ok) return auth.response
 
   const url = new URL(request.url)

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { rolleDarf } from '@/lib/auth/guard'
 import { safeApiError } from '@/lib/api/error-sanitizer'
 import { PDFDocument, rgb, type PDFPage, type PDFFont } from 'pdf-lib'
 import fontkit from '@pdf-lib/fontkit'
@@ -104,7 +105,7 @@ export async function GET(request: Request) {
       .select('role')
       .eq('id', user.id)
       .single()
-    const isAdmin = !!profile && ['admin', 'superadmin'].includes(profile.role)
+    const isAdmin = !!profile && rolleDarf(profile.role, 'einsatz.lesen')
 
     const admin = createAdminClient()
     const orgId = await getActiveOrgId()

@@ -5,7 +5,7 @@ import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { listEskalationshistorie } from '@/lib/ops/eskalationen'
 
 export async function GET(request: Request) {
-  const auth = await requireOpsAdmin()
+  const auth = await requireOpsAdmin('qm.lesen')
   if (!auth.ok) return auth.response
   const supabase = createAdminClient()
   const url = new URL(request.url)

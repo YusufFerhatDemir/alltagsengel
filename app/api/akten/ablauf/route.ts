@@ -7,7 +7,7 @@ import type { AktenAblaufEintrag } from '@/lib/akten/types'
 
 export async function GET(request: Request) {
   try {
-    const auth = await requireAktenAdmin()
+    const auth = await requireAktenAdmin('stammdaten.lesen')
     if (!auth.ok) return auth.response
     const { organizationId } = auth.ctx
 

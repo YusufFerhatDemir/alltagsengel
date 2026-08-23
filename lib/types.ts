@@ -1,6 +1,13 @@
+import type { Rolle } from '@/lib/auth/rollen'
+
 export interface Profile {
   id: string
-  role: 'kunde' | 'engel' | 'admin' | 'superadmin' | 'fahrer'
+  /**
+   * Kontorolle. Einzige Quelle der Wahrheit fuer die zulaessigen Werte ist
+   * ROLLEN in lib/auth/rollen.ts (und der DB-CHECK profiles_role_check,
+   * Migration 20260924000000).
+   */
+  role: Rolle
   first_name: string
   last_name: string
   email: string

@@ -5,7 +5,7 @@ import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { getDashboard } from '@/lib/workflow/dashboard'
 
 export async function GET() {
-  const auth = await requireOpsAdmin()
+  const auth = await requireOpsAdmin('system.verwalten')
   if (!auth.ok) return auth.response
   const supabase = createAdminClient()
   try {

@@ -5,7 +5,7 @@ import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { freigebenBerechnung } from '@/lib/analytics/bonusEngine'
 
 export async function POST(request: Request) {
-  const auth = await requireOpsAdmin()
+  const auth = await requireOpsAdmin('berichte.lesen')
   if (!auth.ok) return auth.response
   try {
     const body = await request.json()

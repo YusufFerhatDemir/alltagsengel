@@ -53,7 +53,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 
 export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const auth = await requireUebergabeAdmin()
+    const auth = await requireUebergabeAdmin('pflege.schreiben')
     if (!auth.ok) return auth.response
     const { id } = await params
 

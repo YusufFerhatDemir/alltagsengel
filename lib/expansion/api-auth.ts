@@ -7,6 +7,8 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { NextResponse } from 'next/server'
+import { rolleDarf } from '@/lib/auth/guard'
+import type { Berechtigung } from '@/lib/auth/rollen'
 import { createClient } from '@/lib/supabase/server'
 import { getActiveOrgId } from '@/lib/organizations/server'
 
@@ -14,7 +16,16 @@ export type AdminKontext =
   | { ok: true; userId: string; orgId: string }
   | { ok: false; response: NextResponse }
 
-export async function requireExpansionAdmin(): Promise<AdminKontext> {
+/**
+ * Rollenkonzept (lib/auth/rollen.ts): der Guard prueft nicht mehr auf
+ * „ist Admin", sondern auf eine BERECHTIGUNG. Der Default ist bewusst die
+ * strengste ('system.verwalten' = nur Administration) — eine Route, die
+ * hier nichts uebergibt, bleibt damit so eng wie vorher. Die Zuordnung
+ * pro Bereich steht in lib/auth/bereiche.ts.
+ */
+export async function requireExpansionAdmin(
+  berechtigung: Berechtigung = 'system.verwalten'
+): Promise<AdminKontext> {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
@@ -31,7 +42,7 @@ export async function requireExpansionAdmin(): Promise<AdminKontext> {
     .eq('id', user.id)
     .single()
 
-  if (!profile || !['admin', 'superadmin'].includes(profile.role)) {
+  if (!profile || !rolleDarf(profile.role, berechtigung)) {
     return {
       ok: false,
       response: NextResponse.json({ error: 'Nur für Administratoren' }, { status: 403 }),

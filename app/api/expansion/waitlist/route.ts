@@ -121,7 +121,7 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET(request: NextRequest) {
-  const auth = await requireExpansionAdmin()
+  const auth = await requireExpansionAdmin('system.verwalten')
   if (!auth.ok) return auth.response
 
   const bundeslandParam = request.nextUrl.searchParams.get('bundesland')

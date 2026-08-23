@@ -26,7 +26,7 @@ export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
 export async function GET() {
-  const auth = await requireExpansionAdmin()
+  const auth = await requireExpansionAdmin('system.verwalten')
   if (!auth.ok) return auth.response
 
   const aktiv = await getActiveBundesland()
@@ -54,7 +54,7 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  const auth = await requireExpansionAdmin()
+  const auth = await requireExpansionAdmin('system.verwalten')
   if (!auth.ok) return auth.response
 
   const body = await req.json().catch(() => null)

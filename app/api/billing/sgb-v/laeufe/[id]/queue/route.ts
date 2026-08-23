@@ -13,7 +13,7 @@ const ADAPTER_TYPEN: AdapterTyp[] = ['mock', 'file_export', 'dakota', 'kim']
 
 /** GET /api/billing/sgb-v/laeufe/[id]/queue */
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const auth = await requireOpsAdmin()
+  const auth = await requireOpsAdmin('abrechnung.lesen')
   if (!auth.ok) return auth.response
 
   try {
@@ -35,7 +35,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
  * mit einer klaren Meldung fehl).
  */
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const auth = await requireOpsAdmin()
+  const auth = await requireOpsAdmin('abrechnung.schreiben')
   if (!auth.ok) return auth.response
 
   try {

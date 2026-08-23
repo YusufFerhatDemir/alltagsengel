@@ -10,7 +10,10 @@ describe('D1: force_override Autorisierung', () => {
 
   describe('POST — Rollenprüfung', () => {
     it('prüft Rolle vor Akzeptanz von force_override', () => {
-      expect(src).toContain("body.force_override && !['admin', 'superadmin'].includes(auth.role)")
+      // Seit dem Rollenkonzept ist das Uebersteuern an die Berechtigung
+      // 'personal.schreiben' gebunden (admin/superadmin/pdl), nicht mehr an
+      // eine Rollenliste — lib/auth/rollen.ts.
+      expect(src).toContain("body.force_override && !rolleDarf(auth.role, 'personal.schreiben')")
     })
 
     it('gibt 403 bei nicht-autorisiertem force_override', () => {
@@ -20,7 +23,7 @@ describe('D1: force_override Autorisierung', () => {
 
   describe('PATCH — Rollenprüfung', () => {
     it('prüft Rolle vor Akzeptanz von force_override in PATCH', () => {
-      expect(src).toContain("force_override && !['admin', 'superadmin'].includes(auth.role)")
+      expect(src).toContain("force_override && !rolleDarf(auth.role, 'personal.schreiben')")
     })
   })
 

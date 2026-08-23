@@ -10,7 +10,7 @@ export async function GET(
   { params }: { params: Promise<{ caregiverId: string }> }
 ) {
   try {
-    const auth = await requirePersonalAdmin()
+    const auth = await requirePersonalAdmin('personal.lesen')
     if (!auth.ok) return auth.response
     const supabase = createAdminClient()
 
@@ -27,7 +27,7 @@ export async function POST(
   { params }: { params: Promise<{ caregiverId: string }> }
 ) {
   try {
-    const auth = await requirePersonalAdmin()
+    const auth = await requirePersonalAdmin('personal.schreiben')
     if (!auth.ok) return auth.response
     const supabase = createAdminClient()
 

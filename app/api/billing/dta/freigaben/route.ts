@@ -16,7 +16,7 @@ export const dynamic = 'force-dynamic'
  * Meldet ausschliesslich Ja/Nein pro Schalter — niemals Werte von Secrets.
  */
 export async function GET() {
-  const auth = await requireAdminMitOrg()
+  const auth = await requireAdminMitOrg('abrechnung.lesen')
   if (!auth.ok) return auth.response
 
   const uebersicht = freigabeUebersicht()

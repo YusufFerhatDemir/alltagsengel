@@ -11,7 +11,7 @@ import { pruefeNachweisVollstaendig } from '@/lib/coach/eul'
  * bestätigter Nachweis lässt sich inhaltlich nicht mehr ändern.
  */
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const auth = await requireOpsAdmin()
+  const auth = await requireOpsAdmin('abrechnung.schreiben')
   if (!auth.ok) return auth.response
   const { id } = await params
 
@@ -95,7 +95,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 
 /** Nur unbestätigte Nachweise dürfen gelöscht werden. */
 export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const auth = await requireOpsAdmin()
+  const auth = await requireOpsAdmin('abrechnung.schreiben')
   if (!auth.ok) return auth.response
   const { id } = await params
 

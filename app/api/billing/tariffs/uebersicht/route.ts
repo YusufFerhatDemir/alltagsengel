@@ -42,7 +42,7 @@ interface UebersichtZeile {
  * beschrieben.
  */
 export async function GET(request: Request) {
-  const auth = await requireOpsAdmin()
+  const auth = await requireOpsAdmin('tarife.lesen')
   if (!auth.ok) return auth.response
   const orgId = auth.ctx.organizationId
 

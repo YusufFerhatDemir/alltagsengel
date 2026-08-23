@@ -7,7 +7,7 @@ import { writeAuditLog } from '@/lib/personal/audit'
 import type { Vertragsstatus } from '@/lib/personal/types'
 
 export async function GET(request: Request) {
-  const auth = await requirePersonalAdmin()
+  const auth = await requirePersonalAdmin('personal.lesen')
   if (!auth.ok) return auth.response
   const supabase = createAdminClient()
   const url = new URL(request.url)
@@ -31,7 +31,7 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const auth = await requirePersonalAdmin()
+  const auth = await requirePersonalAdmin('personal.schreiben')
   if (!auth.ok) return auth.response
   const supabase = createAdminClient()
   try {
@@ -54,7 +54,7 @@ export async function POST(request: Request) {
 }
 
 export async function PATCH(request: Request) {
-  const auth = await requirePersonalAdmin()
+  const auth = await requirePersonalAdmin('personal.schreiben')
   if (!auth.ok) return auth.response
   const supabase = createAdminClient()
   const url = new URL(request.url)

@@ -1,4 +1,6 @@
 import { NextResponse } from 'next/server'
+import { rolleDarf } from '@/lib/auth/guard'
+import type { Berechtigung } from '@/lib/auth/rollen'
 import { createClient } from '@/lib/supabase/server'
 import { getActiveOrgId, resolveUserOrgId } from '@/lib/organizations/server'
 import type { SupabaseClient } from '@supabase/supabase-js'
@@ -28,7 +30,16 @@ export type OpsAuthResult =
   | { ok: true; ctx: OpsAuthContext }
   | { ok: false; response: NextResponse }
 
-export async function requireOpsAdmin(): Promise<OpsAuthResult> {
+/**
+ * Rollenkonzept (lib/auth/rollen.ts): der Guard prueft nicht mehr auf
+ * „ist Admin", sondern auf eine BERECHTIGUNG. Der Default ist bewusst die
+ * strengste ('system.verwalten' = nur Administration) — eine Route, die
+ * hier nichts uebergibt, bleibt damit so eng wie vorher. Die Zuordnung
+ * pro Bereich steht in lib/auth/bereiche.ts.
+ */
+export async function requireOpsAdmin(
+  berechtigung: Berechtigung = 'system.verwalten'
+): Promise<OpsAuthResult> {
   const supabase = await createClient()
   const { data: { user }, error: authError } = await supabase.auth.getUser()
   if (authError || !user) {
@@ -41,8 +52,8 @@ export async function requireOpsAdmin(): Promise<OpsAuthResult> {
     .eq('id', user.id)
     .single()
 
-  if (!profile || !['admin', 'superadmin'].includes(profile.role)) {
-    return { ok: false, response: NextResponse.json({ error: 'Nur fuer Administratoren.' }, { status: 403 }) }
+  if (!profile || !rolleDarf(profile.role, berechtigung)) {
+    return { ok: false, response: NextResponse.json({ error: 'Für diesen Bereich fehlt Ihnen die Berechtigung.' }, { status: 403 }) }
   }
   // MFA-Prüfung
   const aalBlock = await requireAdminAal2(supabase)

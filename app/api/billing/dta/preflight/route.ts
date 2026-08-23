@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { rolleDarf } from '@/lib/auth/guard'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { NextResponse } from 'next/server'
 import { preFlightValidierung } from '@/lib/abrechnung/kassenabrechnung-engine'
@@ -23,7 +24,7 @@ export async function POST(request: Request) {
       .eq('id', user.id)
       .single()
 
-    if (!profile || !['admin', 'superadmin'].includes(profile.role)) {
+    if (!profile || !rolleDarf(profile.role, 'abrechnung.schreiben')) {
       return NextResponse.json({ error: 'Nur für Administratoren.' }, { status: 403 })
     }
 

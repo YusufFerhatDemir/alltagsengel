@@ -3,6 +3,8 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { NextResponse } from 'next/server'
+import { rolleDarf } from '@/lib/auth/guard'
+import type { Berechtigung } from '@/lib/auth/rollen'
 import { createClient } from '@/lib/supabase/server'
 import { getActiveOrgId } from '@/lib/organizations/server'
 
@@ -18,7 +20,16 @@ export type WundenAuthResult =
   | { ok: false; response: NextResponse }
 
 /** Admin/Superadmin-Guard mit Organisationszuordnung — für alle /api/wounds-Routen. */
-export async function requireWundenAdmin(): Promise<WundenAuthResult> {
+/**
+ * Rollenkonzept (lib/auth/rollen.ts): der Guard prueft nicht mehr auf
+ * „ist Admin", sondern auf eine BERECHTIGUNG. admin/superadmin haben alle,
+ * pdl/qm/buchhaltung nur die ihrer Aufgabe. Der Default ist die
+ * Lese-Berechtigung des Fachbereichs; schreibende Routen uebergeben die
+ * Schreib-Berechtigung ausdruecklich.
+ */
+export async function requireWundenAdmin(
+  berechtigung: Berechtigung = 'pflege.lesen'
+): Promise<WundenAuthResult> {
   const supabase = await createClient()
   const { data: { user }, error: authError } = await supabase.auth.getUser()
   if (authError || !user) {
@@ -31,8 +42,8 @@ export async function requireWundenAdmin(): Promise<WundenAuthResult> {
     .eq('id', user.id)
     .single()
 
-  if (!profile || !['admin', 'superadmin'].includes(profile.role)) {
-    return { ok: false, response: NextResponse.json({ error: 'Nur für Administratoren.' }, { status: 403 }) }
+  if (!profile || !rolleDarf(profile.role, berechtigung)) {
+    return { ok: false, response: NextResponse.json({ error: 'Für diesen Bereich fehlt Ihnen die Berechtigung.' }, { status: 403 }) }
   }
 
   // Organisation über organization_members (Org-Switcher-Cookie) —

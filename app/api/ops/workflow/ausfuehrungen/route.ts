@@ -6,7 +6,7 @@ import { listAusfuehrungen } from '@/lib/workflow/ausfuehrungen'
 import type { WfAusfuehrungStatus } from '@/lib/workflow/types'
 
 export async function GET(request: Request) {
-  const auth = await requireOpsAdmin()
+  const auth = await requireOpsAdmin('system.verwalten')
   if (!auth.ok) return auth.response
   const supabase = createAdminClient()
   const url = new URL(request.url)

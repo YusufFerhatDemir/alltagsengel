@@ -11,7 +11,7 @@ const TYPEN: RuecklaeuferTyp[] = ['quittung', 'annahmebestaetigung', 'fehlermeld
 
 /** GET /api/billing/sgb-v/ruecklaeufer?laufId=... */
 export async function GET(request: Request) {
-  const auth = await requireOpsAdmin()
+  const auth = await requireOpsAdmin('abrechnung.lesen')
   if (!auth.ok) return auth.response
 
   try {
@@ -30,7 +30,7 @@ export async function GET(request: Request) {
  * Body: { sgbVLaufId, ruecklaeuferTyp, originalMeldung, ... }
  */
 export async function POST(request: Request) {
-  const auth = await requireOpsAdmin()
+  const auth = await requireOpsAdmin('abrechnung.schreiben')
   if (!auth.ok) return auth.response
 
   try {

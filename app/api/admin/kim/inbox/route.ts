@@ -10,7 +10,7 @@ import { resolveOrgProvider } from '@/lib/kim/provider-config-service'
 import { ermittleVersandModus, KimBetriebsmodusError } from '@/lib/kim/versandmodus'
 
 export async function GET(req: NextRequest) {
-  const auth = await requireKimAdmin()
+  const auth = await requireKimAdmin('system.verwalten')
   if (!auth.ok) return auth.response
 
   const url = new URL(req.url)
@@ -32,7 +32,7 @@ export async function GET(req: NextRequest) {
 
 /** Ruft neue Nachrichten vom aktiven Provider ab ("Postfach abrufen"). */
 export async function POST() {
-  const auth = await requireKimAdmin()
+  const auth = await requireKimAdmin('system.verwalten')
   if (!auth.ok) return auth.response
 
   try {

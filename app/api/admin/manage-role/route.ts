@@ -4,6 +4,18 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { logAuditEvent } from '@/lib/audit-log'
 import { getActiveOrgId } from '@/lib/organizations/server'
 import { safeApiError } from '@/lib/api/error-sanitizer'
+import { ROLLEN, ROLLEN_BEZEICHNUNG, istRolle, istVerwaltungsrolle, type Rolle } from '@/lib/auth/rollen'
+
+/**
+ * Rollen, die ueber diese Route vergeben werden duerfen.
+ *
+ * 'superadmin' fehlt bewusst: die hoechste Stufe wird nicht ueber eine
+ * API vergeben, sondern direkt in der Datenbank. Derselbe Riegel steckt
+ * im Trigger prevent_role_escalation (Migration 20260924000000) — waere
+ * er nur hier, koennte man ihn mit einem direkten PostgREST-Aufruf
+ * umgehen.
+ */
+const VERGEBBAR: readonly Rolle[] = ROLLEN.filter(r => r !== 'superadmin')
 
 export async function POST(request: NextRequest) {
   try {
@@ -33,19 +45,38 @@ export async function POST(request: NextRequest) {
     }
 
     // 3. Request-Body lesen
-    const { userId, action } = await request.json()
+    //
+    // Zwei Formen:
+    //   { userId, rolle }            — Rollenkonzept (pdl/qm/buchhaltung/…)
+    //   { userId, action: grant|revoke } — Altform, entspricht admin bzw. kunde
+    const body = await request.json()
+    const userId: unknown = body?.userId
+    const action: unknown = body?.action
+    const rolleRoh: unknown = body?.rolle
 
-    if (!userId || !action) {
-      return NextResponse.json({ error: 'userId und action erforderlich' }, { status: 400 })
+    if (typeof userId !== 'string' || !userId) {
+      return NextResponse.json({ error: 'userId erforderlich' }, { status: 400 })
     }
 
-    if (!['grant', 'revoke'].includes(action)) {
-      return NextResponse.json({ error: 'Ungültige Aktion (grant/revoke)' }, { status: 400 })
+    let newRole: Rolle
+    if (rolleRoh !== undefined) {
+      if (!istRolle(rolleRoh) || !VERGEBBAR.includes(rolleRoh)) {
+        return NextResponse.json(
+          { error: `Unbekannte oder nicht vergebbare Rolle. Zulässig: ${VERGEBBAR.join(', ')}` },
+          { status: 400 },
+        )
+      }
+      newRole = rolleRoh
+    } else if (action === 'grant' || action === 'revoke') {
+      newRole = action === 'grant' ? 'admin' : 'kunde'
+    } else {
+      return NextResponse.json({ error: 'rolle oder action (grant/revoke) erforderlich' }, { status: 400 })
     }
 
-    // 4. Sich selbst nicht entfernen
-    if (userId === user.id && action === 'revoke') {
-      return NextResponse.json({ error: 'Du kannst dir selbst nicht die Rolle entziehen' }, { status: 400 })
+    // 4. Sich selbst nicht herabstufen — sonst sperrt sich der letzte
+    //    Superadmin mit einem Klick selbst aus.
+    if (userId === user.id && newRole !== callerProfile.role) {
+      return NextResponse.json({ error: 'Die eigene Rolle kann hier nicht geändert werden' }, { status: 400 })
     }
 
     // 5. Ziel-User muss zur selben Organisation gehören
@@ -71,8 +102,6 @@ export async function POST(request: NextRequest) {
     }
 
     // 6. Rolle ändern
-    const newRole = action === 'grant' ? 'admin' : 'kunde'
-
     const { error } = await adminSupabase
       .from('profiles')
       .update({ role: newRole })
@@ -92,7 +121,10 @@ export async function POST(request: NextRequest) {
 
     // AUTH-012: Audit-Log — Rollenwechsel dokumentieren (Fail-soft).
     await logAuditEvent({
-      action: action === 'grant' ? 'role_grant' : 'role_revoke',
+      // Der Audit-Katalog kennt grant/revoke. Massgeblich ist, ob die neue
+      // Rolle Verwaltungsrechte traegt — 'kunde' nach 'pdl' ist ein grant,
+      // 'buchhaltung' nach 'kunde' ein revoke.
+      action: istVerwaltungsrolle(newRole) ? 'role_grant' : 'role_revoke',
       actorId: user.id,
       actorRole: callerProfile.role,
       organizationId,
@@ -108,11 +140,13 @@ export async function POST(request: NextRequest) {
       request,
     })
 
+    const anzeigeName =
+      [targetProfile.first_name, targetProfile.last_name].filter(Boolean).join(' ') || 'Benutzer'
+
     return NextResponse.json({
       success: true,
-      message: action === 'grant'
-        ? `${targetProfile.first_name} ${targetProfile.last_name} ist jetzt Admin`
-        : `Admin-Rolle von ${targetProfile.first_name} ${targetProfile.last_name} entzogen`,
+      rolle: newRole,
+      message: `${anzeigeName}: Rolle jetzt „${ROLLEN_BEZEICHNUNG[newRole]}"`,
     })
   } catch (err) {
     return safeApiError(err, request)

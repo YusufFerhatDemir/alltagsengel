@@ -5,7 +5,7 @@ import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { erstellePruefmappe } from '@/lib/analytics/pruefmappe'
 
 export async function GET(request: Request) {
-  const auth = await requireOpsAdmin()
+  const auth = await requireOpsAdmin('berichte.lesen')
   if (!auth.ok) return auth.response
 
   const url = new URL(request.url)

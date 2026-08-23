@@ -13,7 +13,7 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const auth = await requireOpsAdmin();
+    const auth = await requireOpsAdmin('abrechnung.schreiben');
     if (!auth.ok) return auth.response;
     const supabase = createAdminClient();
 

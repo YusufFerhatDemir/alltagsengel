@@ -15,7 +15,7 @@ const KANAELE: VersandKanal[] = ['sftp_105', 'sftp_302', 'kim', 'manuell']
  * Nachweis aller Übermittlungsversuche — auch der abgebrochenen.
  */
 export async function GET(request: Request) {
-  const auth = await requireAdminMitOrg()
+  const auth = await requireAdminMitOrg('abrechnung.lesen')
   if (!auth.ok) return auth.response
 
   try {

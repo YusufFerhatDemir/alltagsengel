@@ -8,7 +8,7 @@ import { sammleFristen } from '@/lib/automation/fristen-sammler'
 // ═══════════════════════════════════════════════════════════════
 
 export async function GET() {
-  const auth = await requireOpsAdmin()
+  const auth = await requireOpsAdmin('qm.lesen')
   if (!auth.ok) return auth.response
 
   const orgId = auth.ctx.organizationId

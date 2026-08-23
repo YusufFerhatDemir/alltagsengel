@@ -10,7 +10,7 @@ import type { DokumentKategorie, DokumentSichtbarkeit, DokumentStatus } from '@/
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params
-    const auth = await requireAktenAdmin()
+    const auth = await requireAktenAdmin('stammdaten.lesen')
     if (!auth.ok) return auth.response
     const { organizationId, userId, role } = auth.ctx
 
@@ -32,7 +32,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params
-    const auth = await requireAktenAdmin()
+    const auth = await requireAktenAdmin('stammdaten.schreiben')
     if (!auth.ok) return auth.response
     const { organizationId, userId, role } = auth.ctx
 
@@ -66,7 +66,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params
-    const auth = await requireAktenAdmin()
+    const auth = await requireAktenAdmin('stammdaten.schreiben')
     if (!auth.ok) return auth.response
     const { organizationId, userId, role } = auth.ctx
 

@@ -5,7 +5,7 @@ import { requirePersonalAdmin } from '@/lib/personal/api-auth'
 import { listAblaufWarnungen } from '@/lib/personal/qualifikationen'
 
 export async function GET() {
-  const auth = await requirePersonalAdmin()
+  const auth = await requirePersonalAdmin('personal.lesen')
   if (!auth.ok) return auth.response
   const supabase = createAdminClient()
   try {

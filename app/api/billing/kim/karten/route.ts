@@ -12,7 +12,7 @@ import { ladeKarten, erstelleKarte } from '@/lib/kim/karten'
  * (s. lib/kim/karten.ts) — nur Speichern/Auflisten der Zuordnung.
  */
 export async function GET(request: Request) {
-  const auth = await requireOpsAdmin()
+  const auth = await requireOpsAdmin('system.verwalten')
   if (!auth.ok) return auth.response
   const { organizationId } = auth.ctx
 
@@ -26,7 +26,7 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const auth = await requireOpsAdmin()
+  const auth = await requireOpsAdmin('system.verwalten')
   if (!auth.ok) return auth.response
   const { organizationId, userId } = auth.ctx
 

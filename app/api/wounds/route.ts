@@ -9,7 +9,7 @@ import type { WundStatus, WundTyp } from '@/lib/wunden/types'
 
 export async function GET(request: Request) {
   try {
-    const auth = await requireWundenAdmin()
+    const auth = await requireWundenAdmin('pflege.lesen')
     if (!auth.ok) return auth.response
 
     const params = new URL(request.url).searchParams
@@ -30,7 +30,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const auth = await requireWundenAdmin()
+    const auth = await requireWundenAdmin('pflege.schreiben')
     if (!auth.ok) return auth.response
     const { userId, organizationId } = auth.ctx
 

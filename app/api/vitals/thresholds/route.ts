@@ -8,7 +8,7 @@ import { grenzwertAlarmeAktiv } from '@/lib/vitals/config'
 
 export async function GET(request: Request) {
   try {
-    const auth = await requirePflegeAdmin()
+    const auth = await requirePflegeAdmin('pflege.lesen')
     if (!auth.ok) return auth.response
 
     const params = new URL(request.url).searchParams
@@ -24,7 +24,7 @@ export async function GET(request: Request) {
 /** PUT — Grenzwert-Satz je (Klient, Vitaltyp) anlegen oder überschreiben. */
 export async function PUT(request: Request) {
   try {
-    const auth = await requirePflegeAdmin()
+    const auth = await requirePflegeAdmin('pflege.schreiben')
     if (!auth.ok) return auth.response
 
     const body = await request.json()
@@ -72,7 +72,7 @@ export async function PUT(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
-    const auth = await requirePflegeAdmin()
+    const auth = await requirePflegeAdmin('pflege.schreiben')
     if (!auth.ok) return auth.response
 
     const params = new URL(request.url).searchParams

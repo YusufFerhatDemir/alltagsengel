@@ -10,7 +10,7 @@ import { safeApiError } from '@/lib/api/error-sanitizer';
  */
 export async function GET(req: NextRequest) {
   try {
-    const auth = await requireOpsAdmin();
+    const auth = await requireOpsAdmin('abrechnung.lesen');
     if (!auth.ok) return auth.response;
     const supabase = createAdminClient();
 

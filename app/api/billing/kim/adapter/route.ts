@@ -19,13 +19,13 @@ export const dynamic = 'force-dynamic'
  * Sperre greift, statt sie nur zu behaupten.
  */
 export async function GET() {
-  const auth = await requireAdminMitOrg()
+  const auth = await requireAdminMitOrg('system.verwalten')
   if (!auth.ok) return auth.response
   return NextResponse.json(kimKanalStatus())
 }
 
 export async function POST(request: Request) {
-  const auth = await requireAdminMitOrg()
+  const auth = await requireAdminMitOrg('system.verwalten')
   if (!auth.ok) return auth.response
 
   let body: Record<string, unknown> = {}

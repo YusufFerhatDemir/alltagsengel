@@ -1,4 +1,6 @@
 import { NextResponse } from 'next/server'
+import { rolleDarf } from '@/lib/auth/guard'
+import type { Berechtigung } from '@/lib/auth/rollen'
 import { createClient } from '@/lib/supabase/server'
 import { getActiveOrgId, resolveUserOrgId } from '@/lib/organizations/server'
 
@@ -13,7 +15,16 @@ export type AngehAuthResult =
   | { ok: true; ctx: AngehAuthContext }
   | { ok: false; response: NextResponse }
 
-export async function requireAngehAdmin(): Promise<AngehAuthResult> {
+/**
+ * Rollenkonzept (lib/auth/rollen.ts): der Guard prueft nicht mehr auf
+ * „ist Admin", sondern auf eine BERECHTIGUNG. admin/superadmin haben alle,
+ * pdl/qm/buchhaltung nur die ihrer Aufgabe. Der Default ist die
+ * Lese-Berechtigung des Fachbereichs; schreibende Routen uebergeben die
+ * Schreib-Berechtigung ausdruecklich.
+ */
+export async function requireAngehAdmin(
+  berechtigung: Berechtigung = 'stammdaten.lesen'
+): Promise<AngehAuthResult> {
   const supabase = await createClient()
   const { data: { user }, error: authError } = await supabase.auth.getUser()
   if (authError || !user) {
@@ -26,8 +37,8 @@ export async function requireAngehAdmin(): Promise<AngehAuthResult> {
     .eq('id', user.id)
     .single()
 
-  if (!profile || !['admin', 'superadmin'].includes(profile.role)) {
-    return { ok: false, response: NextResponse.json({ error: 'Nur für Administratoren.' }, { status: 403 }) }
+  if (!profile || !rolleDarf(profile.role, berechtigung)) {
+    return { ok: false, response: NextResponse.json({ error: 'Für diesen Bereich fehlt Ihnen die Berechtigung.' }, { status: 403 }) }
   }
 
   const organizationId = await getActiveOrgId()

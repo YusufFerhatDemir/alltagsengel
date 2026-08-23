@@ -16,7 +16,7 @@ const TYPEN: SgbVKorrekturTyp[] = ['storno', 'teilstorno', 'korrekturabrechnung'
  * bereit, falls eine Freigabe zwischen Anlage und Ausführung nötig wird.
  */
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const auth = await requireOpsAdmin()
+  const auth = await requireOpsAdmin('abrechnung.schreiben')
   if (!auth.ok) return auth.response
 
   try {

@@ -6,7 +6,7 @@ import { listeSignaturen, fordereSignaturAn } from '@/lib/signaturen/signaturen'
 import { SIGNATUR_STATUS_WERTE, type SignaturStatus } from '@/lib/signaturen/types'
 
 export async function GET(req: NextRequest) {
-  const auth = await requireSigAdmin()
+  const auth = await requireSigAdmin('einsatz.lesen')
   if (!auth.ok) return auth.response
 
   const url = new URL(req.url)
@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const auth = await requireSigAdmin()
+  const auth = await requireSigAdmin('einsatz.schreiben')
   if (!auth.ok) return auth.response
 
   try {

@@ -27,7 +27,7 @@ const STATUS: DeadLetterStatus[] = ['offen', 'in_analyse', 'wiedervorgelegt', 'e
 const KANAELE: VersandKanal[] = ['sftp_105', 'sftp_302', 'kim', 'manuell']
 
 export async function GET(request: Request) {
-  const auth = await requireAdminMitOrg()
+  const auth = await requireAdminMitOrg('abrechnung.lesen')
   if (!auth.ok) return auth.response
 
   try {
@@ -71,7 +71,7 @@ export async function GET(request: Request) {
  * hat die Ursache gesehen und löst den Versand danach bewusst aus.
  */
 export async function PATCH(request: Request) {
-  const auth = await requireAdminMitOrg()
+  const auth = await requireAdminMitOrg('abrechnung.schreiben')
   if (!auth.ok) return auth.response
 
   try {

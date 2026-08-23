@@ -25,7 +25,7 @@ const log = logger.child('expansion/states')
 export const dynamic = 'force-dynamic'
 
 export async function GET() {
-  const auth = await requireExpansionAdmin()
+  const auth = await requireExpansionAdmin('system.verwalten')
   if (!auth.ok) return auth.response
 
   const admin = createAdminClient()
@@ -57,7 +57,7 @@ export async function GET() {
 }
 
 export async function PATCH(request: NextRequest) {
-  const auth = await requireExpansionAdmin()
+  const auth = await requireExpansionAdmin('system.verwalten')
   if (!auth.ok) return auth.response
 
   const body = await request.json().catch(() => null)

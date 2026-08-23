@@ -6,7 +6,7 @@ import { createUrlaubskonto, listUrlaubskonten } from '@/lib/personal/urlaubskon
 
 export async function GET(req: NextRequest) {
   try {
-    const auth = await requirePersonalAdmin()
+    const auth = await requirePersonalAdmin('personal.lesen')
     if (!auth.ok) return auth.response
     const supabase = createAdminClient()
 
@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const auth = await requirePersonalAdmin()
+    const auth = await requirePersonalAdmin('personal.schreiben')
     if (!auth.ok) return auth.response
     const supabase = createAdminClient()
 

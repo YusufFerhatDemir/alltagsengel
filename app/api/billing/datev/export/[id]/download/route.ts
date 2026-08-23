@@ -16,7 +16,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const auth = await requireOpsAdmin();
+    const auth = await requireOpsAdmin('abrechnung.lesen');
     if (!auth.ok) return auth.response;
     const supabase = createAdminClient();
     const { id } = await params;
