@@ -4,6 +4,146 @@ Chronologische Dokumentation aller KI-gestuetzten Arbeitssitzungen.
 
 ---
 
+## 2026-08-23 | Session: Master-Track 7 — technisch selbst loesbare P2/P3-Items
+
+Delta-Durchgang durch `docs/FUNKTIONALE_LUECKENANALYSE.md` nach P2/P3-Befunden,
+die ohne CEO-Aktion, ohne externen Bescheid und ohne DDL-Zugang schliessbar
+sind. **Sechs geschlossen, vier als bereits erledigt gegengeprueft** (der
+Bericht fuehrte sie noch als offen), der Rest bleibt begruendet liegen.
+
+Baseline: `b5f0810`. Keine Migration, kein Live-Apply noetig — alle sechs
+Aenderungen sind reiner Anwendungscode.
+
+### Geschlossen
+
+**1. Angehoerigenportal war serverseitig ungeschuetzt** (Bereich 13, P2)
+`/angehoerige` stand weder im Middleware-Matcher noch in
+`PROTECTED_PREFIXES` und hatte keinen `ROLE_ACCESS`-Eintrag — der Schutz
+haftete allein am Client-Guard in `app/angehoerige/layout.tsx`, also an Code,
+der die Seite erst nach dem Ausliefern wieder wegnimmt. `proxy.ts` fuehrt den
+Bereich jetzt wie `/admin`, `/kunde`, `/engel`, `/fahrer` und `/mis`:
+fail-closed, Rolle `angehoerige` plus `admin`/`superadmin` — exakt die
+Rollenmenge, die `lib/angehoerige/api-auth.ts` und der Layout-Guard ohnehin
+schon pruefen. Keine Rechteerweiterung, nur die fehlende serverseitige Kante.
+
+**2. Login-Weiterleitung las eine manipulierbare Rollenquelle** (Bereich 13, P2)
+`app/auth/login/page.tsx` bestimmte die Zielseite aus `user_metadata.role` —
+genau die Quelle, die `proxy.ts` als selbst editierbar verwirft. Fuer die
+Zugriffskontrolle war das folgenlos (die Middleware entscheidet), aber wer nur
+`profiles.role` gesetzt hatte, landete auf `/kunde/home` statt im eigenen
+Portal. Jetzt dieselbe Hierarchie wie in der Middleware: `app_metadata.role` →
+`profiles.role`. Die Rolle `angehoerige` fuehrt neu direkt ins
+Angehoerigenportal.
+
+**3. Leistungsnachweis-CRUD schrieb keinen Audit-Eintrag** (Bereich 14, P2)
+Bei 30 live erfassten Nachweisen standen 0 zugehoerige Zeilen in
+`mis_audit_log` — `/api/leistungsnachweis/crud` rief schlicht nie
+`logAuditEvent()`. Fuer Abrechnungsunterlagen nach SGB XI ist die
+Nachvollziehbarkeit jeder Aenderung Pflicht. Alle fuenf Schreibpfade
+protokollieren jetzt ueber das Pflichtmuster `logAuditEventOrWarn()`:
+erfasst, bestaetigt, unterschrieben, storniert, geaendert.
+Beim generischen Update werden `geaenderte_felder` festgehalten, nicht die
+Werte davor — dieselbe Tiefe wie im uebrigen System. Eine echte Feldhistorie
+fehlt projektweit und wird hier **nicht vorgetaeuscht**; sie bleibt als
+eigener Befund offen.
+
+**4. `billing_feiertage` war leer und hatte keinen Befuellungs-Job** (Bereich 7, P2)
+`importiereFeiertage()` konnte die Feiertage aller 16 Bundeslaender berechnen,
+hatte aber ausser den Tests **keinen einzigen Aufrufer** — die Tabelle stand
+live auf 0 Zeilen, obwohl `istFeiertag()` und die SQL-Rechenwege der
+Abrechnung dagegen pruefen. Neu: `lib/automation/feiertage-pflege.ts` als
+Kette 13 der taeglichen Automatisierung, laufendes plus Folgejahr, alle 16
+Laender.
+**Wichtig — es wird kein Preis angefasst:** die Kette schreibt ausschliesslich
+Feiertagsdaten (Datum, Bezeichnung, Bundesland). Alle
+`zuschlag_feiertag_prozent` stehen auf 0 und bleiben es, bis sie aus einer
+Verguetungsvereinbarung belegt eingetragen werden. Ein gefuellter Katalog
+aendert deshalb heute **keinen einzigen Rechnungsbetrag**.
+Nebenbefund mitgefixt: `importiereFeiertage()` zaehlte JEDEN Fehler als
+`skipped` — eine fehlende Tabelle, eine RLS-Ablehnung und eine harmlose
+Dublette sahen identisch aus. Nur die Unique-Verletzung gilt jetzt als
+„vorhanden", alles andere landet benannt in `fehler`.
+
+**5. Keine Terminerinnerung an Kunden oder Angehoerige** (Bereich 11, P2)
+Erinnerungen liefen ausschliesslich nach innen (fehlende Nachweise, fehlende
+Unterschriften, ablaufende Fristen — an Mitarbeiter, PDL, Admin). Der Kunde
+bekam nie ein „Ihr Termin morgen um 10 Uhr". Neu:
+`lib/automation/termin-erinnerung.ts` als Kette 12 — In-App-Benachrichtigung
+am Vortag an den Kunden (`clients.user_id`) und an jeden aktiven
+Angehoerigen-Zugang, mit Dublettenschutz je (Einsatz, Empfaenger) und
+portalrichtigem Link.
+Bewusst **kein E-Mail-Versand**: der laeuft ueber Resend und ist ohne
+`RESEND_API_KEY` still wirkungslos — eine Terminerinnerung, die unbemerkt
+nicht rausgeht, ist schlechter als keine.
+**Live-Vorbehalt:** `clients.user_id` ist bei allen vier Live-Klienten NULL
+(bekannter Befund aus Bereich 3). Die Kette meldet das als `ohneEmpfaenger` —
+laut statt still — und erinnert ohne weitere Aenderung, sobald die
+Verknuepfung Kundenprofil ↔ Klientendatensatz steht.
+
+**6. `kombinations_abschlag_prozent` wurde nie gelesen** (Bereich 7, P3)
+Die Spalte existiert seit `20260806200000`, `calculateLineTotal()` ignorierte
+sie. Live steht sie ueberall auf 0, heute aendert das also nichts — aber
+sobald jemand einen belegten Abschlag im Tarif hinterlegt haette, waere er
+**still** verschwunden und die Position zum vollen Satz abgerechnet worden.
+Jetzt fail-closed nach Projektmuster: fuehrt der Tarif einen Abschlag, muss
+der Aufrufer ueber `istKombination` sagen, ob die Position zu einer
+Kombination gehoert — sonst wirft die Berechnung. Eine Heuristik (etwa
+`menge > 1`) waere eine erfundene Abrechnungsregel gewesen.
+`snapshotPrice()` sagt ebenfalls ab, solange `invoice_line_snapshots` keine
+Abschlagsspalte hat: lieber kein Beleg als ein unvollstaendiger.
+
+### Gegengeprueft — Bericht war veraltet, nichts angefasst
+
+| Befund | Tatsaechlicher Stand |
+|---|---|
+| Abwesenheit wird in der Einsatzplanung nicht geprueft (B-03, P2) | **Bereits geschlossen** in `8392730` — `pruefeCaregiverVerfuegbarkeit()` laeuft in POST und PATCH von `/api/einsatzplanung`, Abwesenheit blockt mit 422 |
+| Verfuegbarkeitsfenster ohne Wirkung in der Planung (B-03, P2) | **Bereits geschlossen** in `8392730` — warnt (blockt bewusst nicht) |
+| Kein Wiedervorlage-/Statuswechsel-Workflow (B-01, P2) | **Bereits geschlossen** in `8392730` — `PATCH /api/admin/clients/[id]/status`, verdrahtet in `app/admin/clients/[id]/page.tsx` |
+| Keine automatische Erinnerung vor Ablauf einer Qualifikation (B-02, P2) | **War nie offen** — Kette 2 (`warneVorFristablauf`) warnt bei 30/14/7 Tagen ueber `sammleFristen` → `caregiver_qualifications`, Kette 3 eskaliert nach Ablauf |
+| `ALLTAGSENGEL_IK` fehlt in `.env.example` (IK-Abschnitt, P2) | **Bereits geschlossen** in `e588416` — dokumentierter Block ab Zeile 222 |
+
+### Bewusst NICHT angefasst
+
+- **§45b-/VP-Tarife** bleiben `blocked`/`unverified`, 35 €/h bleibt gesperrt.
+  Keine der sechs Aenderungen fasst einen Preis oder einen Tarifstatus an.
+- **`COACH_DIPA_MODUS`** unveraendert `false`.
+- **Entlastungsbetrag** unveraendert 131 €/Monat.
+- P2/P3-Befunde mit echtem Umfang (Feldhistorie, PDF-Export der
+  Dokumentation, Rollen PDL/QM/Buchhaltung, Sammelrechnungslauf,
+  Serientermin-Pflege, Kassenwechsel-Historie, gemeinsame Audit-Sicht) sind
+  keine „kleinen Fixes" und wurden nicht angefangen, um sie nicht halb zu
+  hinterlassen.
+
+### Dreifach-Nachweis
+
+**CODE/COMMIT**
+- `proxy.ts` — `/angehoerige` in Matcher, `PROTECTED_PREFIXES`, `ROLE_ACCESS`, `ROLE_HOME`
+- `app/auth/login/page.tsx` — Rollenquelle `app_metadata` → `profiles`
+- `app/api/leistungsnachweis/crud/route.ts` — 5 Audit-Aufrufe
+- `lib/billing/core/feiertage.ts` — `importiereFeiertage()` mit benannten Fehlern
+- `lib/billing/core/price-resolver.ts` — Kombinationsabschlag fail-closed
+- `lib/automation/feiertage-pflege.ts` (neu), `lib/automation/termin-erinnerung.ts` (neu)
+- `lib/automation/index.ts` — Ketten 12 + 13 verdrahtet
+
+**CI/TEST** (lokal vollstaendig nachgefahren)
+- `npx tsc --noEmit`: 0 Fehler
+- `npx vitest run`: **3553 passed, 38 skipped, 0 rot** (186 Dateien) — vorher
+  3515; **+38 neue Tests** in 5 neuen Dateien
+- `npm run test:unit` (node:test): 794 passed, 0 fail
+- `npm run lint:forbidden`: 24 328 Dateien, 0 Treffer
+- `scripts/ci-secret-scan.sh`, `scripts/ci-ik-check.sh`: Exit 0
+- `npm run build` (Turbopack, CI-Platzhalter-ENVs): Exit 0
+
+**LIVE**
+- Kein Live-Apply erforderlich — keine Migration in diesem Track.
+- `billing_feiertage` wird beim ersten Lauf der taeglichen Automatisierung
+  in Produktion befuellt; bis dahin bleibt die Tabelle leer. Das ist der
+  einzige Punkt dieses Tracks, dessen Wirkung erst mit dem naechsten
+  Cron-Lauf sichtbar wird — nachpruefbar ueber die Kette
+  `feiertage_katalog` in der Antwort von `/api/admin/automatisierung`.
+
+---
+
 ## 2026-08-23 | Session: Master-Tracks 1-6 — zwei Migrationen live, P6 geprueft, Buchungskette an Live-Daten gemessen
 
 Sechs von acht Master-Tracks abgeschlossen. Zwei Migrationen stehen erstmals

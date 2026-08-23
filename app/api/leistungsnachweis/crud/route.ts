@@ -7,6 +7,7 @@ import { mitStatusSync } from '@/lib/leistungsnachweis/status-sync'
 import { tarifLeistungsart, bekannteLeistungsarten } from '@/lib/billing/leistungsarten'
 import { pruefeBudget } from '@/lib/personal/einsatzfreigabe'
 import type { BudgetTyp } from '@/lib/config/budget-constants'
+import { logAuditEventOrWarn } from '@/lib/audit-log'
 
 /**
  * service_records.budget_type ist ein anderes Vokabular als
@@ -56,6 +57,39 @@ function pruefeLeistungsart(serviceType: string): NextResponse | null {
     },
     { status: 422 },
   )
+}
+
+/**
+ * Audit-Eintrag fuer jeden Schreibvorgang am Leistungsnachweis.
+ *
+ * Bis 2026-08-23 schrieb diese Route KEINEN Audit-Eintrag — bei 30 live
+ * erfassten Nachweisen standen 0 zugehoerige Zeilen in `mis_audit_log`
+ * (Lueckenanalyse Bereich 14, P2). Fuer Abrechnungsunterlagen nach SGB XI
+ * ist die Nachvollziehbarkeit jeder Aenderung Pflicht.
+ *
+ * `logAuditEventOrWarn` ist das Pflichtmuster des Projekts (durch
+ * Regressionstest ueber app/ und lib/ erzwungen): der Eintrag darf den
+ * fachlichen Vorgang nicht scheitern lassen, aber auch nicht still
+ * verschwinden.
+ */
+async function protokolliere(
+  req: NextRequest,
+  auth: { userId: string; role: string },
+  organizationId: string,
+  action: 'create' | 'update',
+  entityId: string,
+  details: Record<string, unknown>,
+): Promise<void> {
+  await logAuditEventOrWarn({
+    action,
+    actorId: auth.userId,
+    actorRole: auth.role,
+    organizationId,
+    entityType: 'service_record',
+    entityId,
+    details,
+    request: req,
+  })
 }
 
 export async function GET(req: NextRequest) {
@@ -211,6 +245,19 @@ export async function POST(req: NextRequest) {
 
   const { data, error } = await supabase.from('service_records').insert(insertData).select().single()
   if (error) return safeDbError(error)
+
+  await protokolliere(req, auth, organizationId, 'create', data.id, {
+    vorgang: 'leistungsnachweis_erfasst',
+    client_id: data.client_id,
+    caregiver_id: data.caregiver_id,
+    datum: data.date,
+    service_type: data.service_type,
+    budget_type: data.budget_type,
+    proof_status: data.proof_status,
+    budget_warnung: budgetWarnung ?? null,
+    force_override: body.force_override === true,
+  })
+
   return NextResponse.json(budgetWarnung ? { ...data, budget_warnung: budgetWarnung } : data, { status: 201 })
 }
 
@@ -272,6 +319,16 @@ export async function PATCH(req: NextRequest) {
       }
       return safeDbError(error)
     }
+
+    await protokolliere(req, auth, organizationId, 'update', id, {
+      vorgang: 'leistungsnachweis_unterschrieben',
+      proof_status_von: current.proof_status,
+      proof_status_nach: 'UNTERSCHRIEBEN',
+      unterzeichner: body.client_signer_name ?? null,
+      unterzeichner_rolle: body.client_signer_role ?? null,
+      gps_erfasst: body.gps_end_lat != null && body.gps_end_lng != null,
+    })
+
     return NextResponse.json(data)
   }
 
@@ -294,6 +351,13 @@ export async function PATCH(req: NextRequest) {
       .update(confirmUpdate)
       .eq('id', id).eq('organization_id', organizationId).select().single()
     if (error) return safeDbError(error)
+
+    await protokolliere(req, auth, organizationId, 'update', id, {
+      vorgang: 'leistungsnachweis_bestaetigt',
+      proof_status_von: current.proof_status,
+      proof_status_nach: 'ABGESCHLOSSEN',
+    })
+
     return NextResponse.json(data)
   }
 
@@ -306,6 +370,14 @@ export async function PATCH(req: NextRequest) {
       .update({ proof_status: 'STORNIERT', billing_status: 'STORNIERT', updated_at: new Date().toISOString() })
       .eq('id', id).eq('organization_id', organizationId).select().single()
     if (error) return safeDbError(error)
+
+    await protokolliere(req, auth, organizationId, 'update', id, {
+      vorgang: 'leistungsnachweis_storniert',
+      proof_status_nach: 'STORNIERT',
+      billing_status_nach: 'STORNIERT',
+      grund: typeof body.grund === 'string' ? body.grund : null,
+    })
+
     return NextResponse.json(data)
   }
 
@@ -333,5 +405,15 @@ export async function PATCH(req: NextRequest) {
     }
     return safeDbError(error)
   }
+
+  // geaenderte_felder statt Werte: dieselbe Tiefe wie im uebrigen System.
+  // Eine echte Feldhistorie (Wert davor) fehlt projektweit — sie steht als
+  // eigener Befund in der Lueckenanalyse (Bereich 14) und wird hier nicht
+  // vorgetaeuscht.
+  await protokolliere(req, auth, organizationId, 'update', id, {
+    vorgang: 'leistungsnachweis_geaendert',
+    geaenderte_felder: Object.keys(safeUpdates).filter(k => k !== 'updated_at'),
+  })
+
   return NextResponse.json(data)
 }

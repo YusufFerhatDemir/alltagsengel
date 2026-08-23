@@ -122,12 +122,23 @@ export interface LineTotalParams {
   zeitBis?: string;       // HH:MM
   istWochenende?: boolean;
   istFeiertag?: boolean;
+  /**
+   * Ist diese Position Teil einer Leistungskombination, auf die der
+   * Kombinationsabschlag des Tarifs anzuwenden ist?
+   *
+   * Muss der Aufrufer entscheiden — aus der Position allein ist es nicht
+   * ableitbar. Bleibt der Wert offen, WAEHREND der Tarif einen Abschlag
+   * fuehrt, wirft `calculateLineTotal()` (siehe dort).
+   */
+  istKombination?: boolean;
 }
 
 export interface LineTotalResult {
   einzelpreisCent: number;
   zuschlagProzent: number;
   zuschlagGrund: string | null;
+  /** Angewandter Kombinationsabschlag in Prozent (0, wenn keiner greift). */
+  abschlagProzent: number;
   gesamtpreisCent: number;
 }
 
@@ -312,6 +323,27 @@ function computeSpecificityScore(
 export function calculateLineTotal(params: LineTotalParams): LineTotalResult {
   const { tarif, menge, zeitVon, zeitBis } = params;
 
+  // Kombinationsabschlag: die Spalte existiert seit 20260806200000, wurde
+  // hier aber nie gelesen (Lueckenanalyse Bereich 7, P3). Live steht sie in
+  // allen Tarifen auf 0 — heute aendert das also keinen Betrag. Sobald aber
+  // eine Verguetungsvereinbarung einen Abschlag vorgibt und jemand ihn im
+  // Tarif hinterlegt, haette die alte Fassung ihn STILL ignoriert und zum
+  // vollen Satz abgerechnet.
+  //
+  // Deshalb fail-closed statt raten: fuehrt der Tarif einen Abschlag, muss
+  // der Aufrufer sagen, ob die Position zu einer Kombination gehoert. Eine
+  // Heuristik (etwa "menge > 1") waere eine erfundene Abrechnungsregel.
+  const abschlagSatz = Number(tarif.kombinations_abschlag_prozent ?? 0);
+  if (abschlagSatz > 0 && params.istKombination === undefined) {
+    throw new Error(
+      `Tarif "${tarif.leistungsart}" (${tarif.id}) fuehrt einen Kombinationsabschlag ` +
+      `von ${abschlagSatz}%, aber der Aufrufer hat nicht angegeben, ob diese Position ` +
+      `Teil einer Leistungskombination ist. Ohne diese Angabe waere der Betrag geraten — ` +
+      `istKombination explizit setzen.`
+    );
+  }
+  const abschlagProzent = abschlagSatz > 0 && params.istKombination === true ? abschlagSatz : 0;
+
   let zuschlagProzent = 0;
   let zuschlagGrund: string | null = null;
 
@@ -339,12 +371,18 @@ export function calculateLineTotal(params: LineTotalParams): LineTotalResult {
 
   // Zuschlag anwenden
   const zuschlagCent = Math.round(basisCent * zuschlagProzent / 100);
-  const gesamtCent = Math.round(basisCent + zuschlagCent);
+  // Abschlag auf den bezuschlagten Betrag — dieselbe Reihenfolge, in der
+  // Verguetungsvereinbarungen sie beschreiben (Zuschlag auf den Satz,
+  // Abschlag auf das Ergebnis).
+  const zwischenCent = basisCent + zuschlagCent;
+  const abschlagCent = Math.round(zwischenCent * abschlagProzent / 100);
+  const gesamtCent = Math.round(zwischenCent - abschlagCent);
 
   return {
     einzelpreisCent: tarif.preis_cent,
     zuschlagProzent,
     zuschlagGrund,
+    abschlagProzent,
     gesamtpreisCent: gesamtCent,
   };
 }
@@ -391,6 +429,22 @@ export function snapshotPrice(
   tarif: BillingTarif,
   lineResult: LineTotalResult
 ): PriceSnapshot {
+  // `invoice_line_snapshots` hat Spalten fuer den Zuschlag, aber KEINE fuer
+  // einen Abschlag (Migration 20260806200000). Ein angewandter
+  // Kombinationsabschlag waere im unveraenderlichen Preisbeleg deshalb nicht
+  // nachvollziehbar — der Gesamtbetrag stimmte, aber niemand koennte
+  // erklaeren, wie er zustande kam. Lieber hier absagen als einen
+  // unvollstaendigen Beleg schreiben; die Spalte gehoert dann per Migration
+  // nachgezogen. Live traegt kein Tarif einen Abschlag, der Pfad ist heute
+  // unerreichbar.
+  if (lineResult.abschlagProzent > 0) {
+    throw new Error(
+      `Preis-Snapshot kann den Kombinationsabschlag (${lineResult.abschlagProzent}%) nicht ` +
+      `abbilden: invoice_line_snapshots hat keine Abschlagsspalte. Migration erforderlich, ` +
+      `bevor Tarife mit Kombinationsabschlag abgerechnet werden.`
+    );
+  }
+
   return {
     tarif_id: tarif.id,
     leistungsart: tarif.leistungsart,
