@@ -133,21 +133,35 @@ if (anonOffen.length) {
 console.log(`  (zusaetzlich fuer authenticated ausfuehrbar: ${secdef.filter(f => f.auth && !f.anon).length})`)
 
 // ── 4) Tabellen-Grants fuer anon ─────────────────────────────────────────
-console.log('\n── 4) Tabellen-Grants fuer anon ──')
-const anonGrants = await sql(`
-  SELECT table_name AS tabelle, string_agg(DISTINCT privilege_type, ',') AS rechte
-  FROM information_schema.role_table_grants
-  WHERE grantee='anon' AND table_schema='public'
-  GROUP BY table_name ORDER BY 1
+//
+// ACHTUNG, hier lag eine falsche Entwarnung: information_schema.role_table_grants
+// listet nur Grants mit grantee='anon'. Ein GRANT an PUBLIC steht dort unter
+// grantee='PUBLIC' — anon erbt es trotzdem. Die erste Fassung dieses Skripts
+// meldete deshalb "anon hat nirgends INSERT/UPDATE/DELETE", waehrend die rohe
+// ACL auf audit_logs/profiles/clients/invoices tatsaechlich anon=arwdDxtm zeigte.
+// has_table_privilege() rechnet die Vererbung mit ein und ist die Wahrheit.
+console.log('\n── 4) Effektive Tabellenrechte fuer anon ──')
+const anonRechte = await sql(`
+  SELECT c.relname AS tabelle,
+         has_table_privilege('anon', c.oid, 'SELECT') AS sel,
+         (has_table_privilege('anon', c.oid, 'INSERT')
+       OR has_table_privilege('anon', c.oid, 'UPDATE')
+       OR has_table_privilege('anon', c.oid, 'DELETE')
+       OR has_table_privilege('anon', c.oid, 'TRUNCATE')) AS schreibt
+  FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace
+  WHERE n.nspname='public' AND c.relkind IN ('r','p')
 `)
-const anonSchreib = anonGrants.filter(g => /INSERT|UPDATE|DELETE|TRUNCATE/.test(g.rechte))
+const anonSchreib = anonRechte.filter(g => g.schreibt)
+const anonLesen = anonRechte.filter(g => g.sel)
 if (anonSchreib.length) {
-  melde('P1', 'anon_schreibrechte', `${anonSchreib.length} Tabellen mit Schreibrecht fuer anon`)
-  for (const g of anonSchreib) console.log(`       · ${g.tabelle}: ${g.rechte}`)
+  melde('P1', 'anon_schreibrechte',
+    `${anonSchreib.length} Tabellen mit effektivem INSERT/UPDATE/DELETE/TRUNCATE fuer anon — RLS ist die einzige Grenze`)
+  console.log('       · ' + anonSchreib.slice(0, 12).map(g => g.tabelle).join(', ')
+    + (anonSchreib.length > 12 ? `, … (+${anonSchreib.length - 12})` : ''))
 } else {
-  ok('anon_schreibrechte', 'anon hat nirgends INSERT/UPDATE/DELETE')
+  ok('anon_schreibrechte', 'anon hat nirgends INSERT/UPDATE/DELETE/TRUNCATE')
 }
-console.log(`  (anon hat auf ${anonGrants.length} Tabellen ueberhaupt ein Grant — RLS entscheidet darueber)`)
+console.log(`  (anon hat auf ${anonLesen.length} von ${anonRechte.length} Tabellen effektiv SELECT — RLS entscheidet darueber)`)
 
 // ── 5) org_fence ─────────────────────────────────────────────────────────
 console.log('\n── 5) org_fence ──')
