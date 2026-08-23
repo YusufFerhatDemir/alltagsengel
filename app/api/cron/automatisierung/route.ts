@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { fuehreTaeglicheAutomatisierungAus } from '@/lib/automation'
+import { raeumeZustellspurAuf } from '@/lib/notifications/aufraeumen'
 
 // ═══════════════════════════════════════════════════════════
 // CRON: TAEGLICHE AUTOMATISIERUNGSKETTEN (WS7)
@@ -43,7 +44,12 @@ export async function GET(request: Request) {
       }
     }
 
-    return NextResponse.json({ ok: true, organisationen: laeufe.length, laeufe })
+    // Zustellspur aufraeumen — bewusst EINMAL pro Lauf, nicht je
+    // Organisation: cleanup_notification_delivery_log() loescht nach
+    // Alter, nicht nach Mandant (siehe lib/notifications/aufraeumen.ts).
+    const zustellspur = await raeumeZustellspurAuf(supabaseAdmin)
+
+    return NextResponse.json({ ok: true, organisationen: laeufe.length, laeufe, zustellspur })
   } catch (err) {
     return safeApiError(err, request)
   }
