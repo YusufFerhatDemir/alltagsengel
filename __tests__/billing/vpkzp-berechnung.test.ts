@@ -34,7 +34,9 @@ describe('berechneJahresLage', () => {
     expect(lage.kombiniertesBudgetEuro).toBe(VP_KZP_KOMBINIERT_EUR)
     expect(lage.kombiniertesBudgetEuro).toBe(3539)
     expect(lage.budgetQuelle).toBe('gesetzlich')
-    expect(lage.vpMaxTage).toBe(42)
+    // Beide Kontingente sind seit dem Rechtsstand 2025 gleich gross:
+    // 8 Wochen a 7 Tage (BMG, § 39 / § 42 SGB XI).
+    expect(lage.vpMaxTage).toBe(56)
     expect(lage.kzpMaxTage).toBe(56)
   })
 
@@ -66,7 +68,7 @@ describe('berechneJahresLage', () => {
     }))
     expect(lage.kombiniertVerbrauchtEuro).toBe(1500)
     expect(lage.kombiniertRestEuro).toBe(2039)
-    expect(lage.vpTageRest).toBe(32)
+    expect(lage.vpTageRest).toBe(46)
     expect(lage.kzpTageRest).toBe(52)
   })
 })
@@ -95,8 +97,8 @@ describe('Geld ist ein gemeinsamer Topf', () => {
 })
 
 describe('Tage sind zwei getrennte Kontingente', () => {
-  it('42 verbrauchte VP-Tage lassen das KZP-Kontingent unberuehrt', () => {
-    const lage = berechneJahresLage(stand({ vpTageVerbraucht: 42 }))
+  it('56 verbrauchte VP-Tage lassen das KZP-Kontingent unberuehrt', () => {
+    const lage = berechneJahresLage(stand({ vpTageVerbraucht: 56 }))
     expect(lage.vpTageRest).toBe(0)
     expect(lage.kzpTageRest).toBe(56)
 
@@ -105,6 +107,40 @@ describe('Tage sind zwei getrennte Kontingente', () => {
     })
     expect(kzp.tageReichen).toBe(true)
     expect(kzp.anrechenbareTage).toBe(14)
+  })
+
+  it('gibt 56 VP-Tage frei — der 57. faellt aus dem Kontingent', () => {
+    // BMG: "fuer laengstens acht Wochen je Kalenderjahr". 56 Tage sind der
+    // volle Topf, alles darueber ist nicht mehr anrechenbar.
+    const voll = berechneJahresLage(stand())
+    expect(voll.vpTageRest).toBe(56)
+    const ganz = berechneBuchung(voll, {
+      art: 'verhinderungspflege', tage: 56, betragEuro: 0,
+    })
+    expect(ganz.tageReichen).toBe(true)
+    expect(ganz.anrechenbareTage).toBe(56)
+    expect(ganz.standNachher.vpTageVerbraucht).toBe(56)
+
+    const tag57 = berechneBuchung(berechneJahresLage(ganz.standNachher), {
+      art: 'verhinderungspflege', tage: 1, betragEuro: 50,
+    })
+    expect(tag57.tageReichen).toBe(false)
+    expect(tag57.anrechenbareTage).toBe(0)
+    expect(tag57.tageUeberschuss).toBe(1)
+    expect(tag57.hinweise.join(' ')).toContain('56 Tage')
+  })
+
+  it('erlaubt im Rechtsstand 2024 weiterhin nur 42 VP-Tage', () => {
+    // Alte Jahre bleiben reproduzierbar: die Anhebung auf 8 Wochen gilt
+    // erst ab dem Rechtsstand 2025, nicht rueckwirkend.
+    const lage = berechneJahresLage(stand({ jahr: 2024 }))
+    expect(lage.vpMaxTage).toBe(42)
+    expect(lage.kzpMaxTage).toBe(56)
+    const zuViel = berechneBuchung(lage, {
+      art: 'verhinderungspflege', tage: 43, betragEuro: 0,
+    })
+    expect(zuViel.anrechenbareTage).toBe(42)
+    expect(zuViel.tageUeberschuss).toBe(1)
   })
 
   it('56 verbrauchte KZP-Tage lassen das VP-Kontingent unberuehrt', () => {
@@ -117,7 +153,8 @@ describe('Tage sind zwei getrennte Kontingente', () => {
   })
 
   it('deckelt Tage am jeweils eigenen Kontingent', () => {
-    const lage = berechneJahresLage(stand({ vpTageVerbraucht: 40 }))
+    // 54 von 56 verbraucht — von sieben angefragten Tagen passen noch zwei.
+    const lage = berechneJahresLage(stand({ vpTageVerbraucht: 54 }))
     const vp = berechneBuchung(lage, {
       art: 'verhinderungspflege', tage: 7, betragEuro: 300,
     })
@@ -180,7 +217,7 @@ describe('Budget-Erschoepfung', () => {
 describe('Jahreswechsel', () => {
   it('setzt Geld und Tage zum 01.01. zurueck — kein Uebertrag', () => {
     const staende = [
-      stand({ jahr: 2025, vpTageVerbraucht: 42, vpBetragVerbrauchtEuro: 3539 }),
+      stand({ jahr: 2025, vpTageVerbraucht: 56, vpBetragVerbrauchtEuro: 3539 }),
     ]
     const ergebnisse = berechneSegmente(staende, [
       { jahr: 2025, art: 'verhinderungspflege', tage: 5, betragEuro: 250 },

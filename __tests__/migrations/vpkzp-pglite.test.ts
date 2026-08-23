@@ -11,7 +11,7 @@
  *   2. Jahresgrenze: eine Buchung darf ihr Kalenderjahr nicht verlassen
  *   3. Fortschreibung: Jahresstand entsteht und stimmt
  *   4. Eindeutige Tage: Mehrfachleistung am selben Tag zaehlt einmal
- *   5. Tagekontingent 42/56 wird erzwungen
+ *   5. Tagekontingent 56/56 wird erzwungen (VP bis 2024: 42)
  *   6. combined_budget_remaining ist generiert und nie negativ
  *   7. Der Jahresstand ist nicht von Hand setzbar
  *   8. Storno und Loeschung schreiben zurueck
@@ -27,6 +27,10 @@ import path from 'node:path'
 const MIGRATIONS_DIR = path.join(__dirname, '..', '..', 'supabase', 'migrations')
 const MIGRATION = '20260926000000_vpkzp_zeitraum_budget.sql'
 const ROLLBACK = '20260926000001_rollback_vpkzp_zeitraum_budget.sql'
+// Hebt das VP-Kontingent ab dem Rechtsstand 2025 auf 56 Tage (8 Wochen,
+// BMG). Wird direkt hinterher angewendet, damit der Test denselben Stand
+// prueft wie die Produktion — nicht den Zwischenstand von 20260926000000.
+const MIGRATION_VP56 = '20260928000000_vpkzp_vp_56_tage.sql'
 
 const ORG = '00000000-0000-4000-8000-0000000000aa'
 const ORG_B = '00000000-0000-4000-8000-0000000000ab'
@@ -101,6 +105,7 @@ beforeAll(async () => {
   `)
 
   await db.exec(fs.readFileSync(path.join(MIGRATIONS_DIR, MIGRATION), 'utf-8'))
+  await db.exec(fs.readFileSync(path.join(MIGRATIONS_DIR, MIGRATION_VP56), 'utf-8'))
 })
 
 afterAll(async () => {
@@ -224,11 +229,31 @@ describe('4. Eindeutige Tage', () => {
 })
 
 describe('5. Tagekontingent', () => {
-  it('erzwingt 42 Tage Verhinderungspflege', async () => {
-    await buche({ zeitraum_von: '2026-01-01', zeitraum_bis: '2026-02-11', tage: 42 })
-    expect((await stand())?.vp_days_used).toBe(42)
+  it('erzwingt 56 Tage Verhinderungspflege — der 57. wird abgelehnt', async () => {
+    // BMG: acht Wochen je Kalenderjahr. 56 Tage gehen durch, der naechste
+    // Tag laeuft in den Trigger.
+    await buche({ zeitraum_von: '2026-01-01', zeitraum_bis: '2026-02-25', tage: 56 })
+    expect((await stand())?.vp_days_used).toBe(56)
     await expect(buche({
       zeitraum_von: '2026-03-01', zeitraum_bis: '2026-03-01', tage: 1,
+    })).rejects.toThrow(/VPKZP_TAGE_UEBERSCHRITTEN/)
+  })
+
+  it('laesst 42 VP-Tage nicht mehr als Grenze gelten', async () => {
+    // Regressionsschutz gegen den alten Wert: haette die Migration den
+    // Zweig nicht ersetzt, wuerde schon der 43. Tag scheitern.
+    await buche({ zeitraum_von: '2026-01-01', zeitraum_bis: '2026-02-11', tage: 42 })
+    await buche({ zeitraum_von: '2026-02-12', zeitraum_bis: '2026-02-25', tage: 14 })
+    expect((await stand())?.vp_days_used).toBe(56)
+  })
+
+  it('haelt fuer den Rechtsstand 2024 die 42 Tage', async () => {
+    // Vergangene Jahre bleiben reproduzierbar: die Anhebung wirkt nicht
+    // rueckwirkend, sonst liesse eine Nacherfassung fuer 2024 zu viel durch.
+    await buche({ calendar_year: 2024, zeitraum_von: '2024-01-01', zeitraum_bis: '2024-02-11', tage: 42 })
+    expect((await stand(2024))?.vp_days_used).toBe(42)
+    await expect(buche({
+      calendar_year: 2024, zeitraum_von: '2024-03-01', zeitraum_bis: '2024-03-01', tage: 1,
     })).rejects.toThrow(/VPKZP_TAGE_UEBERSCHRITTEN/)
   })
 
@@ -242,21 +267,21 @@ describe('5. Tagekontingent', () => {
   })
 
   it('haelt die Kontingente getrennt: volle VP-Tage sperren KZP nicht', async () => {
-    await buche({ zeitraum_von: '2026-01-01', zeitraum_bis: '2026-02-11', tage: 42 })
+    await buche({ zeitraum_von: '2026-01-01', zeitraum_bis: '2026-02-25', tage: 56 })
     await buche({
       art: 'kurzzeitpflege', zeitraum_von: '2026-07-01', zeitraum_bis: '2026-07-14', tage: 14,
     })
     const s = await stand()
-    expect(s?.vp_days_used).toBe(42)
+    expect(s?.vp_days_used).toBe(56)
     expect(s?.kzp_days_used).toBe(14)
   })
 
   it('rechnet das Kontingent je Kalenderjahr neu', async () => {
     await buche({ calendar_year: 2025, zeitraum_von: '2025-11-20', zeitraum_bis: '2025-12-31', tage: 42 })
     // Dasselbe Kontingent steht 2026 wieder voll zur Verfuegung.
-    await buche({ calendar_year: 2026, zeitraum_von: '2026-01-01', zeitraum_bis: '2026-02-11', tage: 42 })
+    await buche({ calendar_year: 2026, zeitraum_von: '2026-01-01', zeitraum_bis: '2026-02-25', tage: 56 })
     expect((await stand(2025))?.vp_days_used).toBe(42)
-    expect((await stand(2026))?.vp_days_used).toBe(42)
+    expect((await stand(2026))?.vp_days_used).toBe(56)
   })
 
   it('lehnt Jahre ohne hinterlegtes Kontingent ab', async () => {

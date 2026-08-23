@@ -141,7 +141,7 @@ describe('Fail-closed bei Tarifen', () => {
     // (fehlende Preisgrundlage) verdecken.
     const e = pruefeBuchung(eingabe({
       tarif: null,
-      staende: [{ ...leererStand(2026), vpTageVerbraucht: 42 }],
+      staende: [{ ...leererStand(2026), vpTageVerbraucht: 56 }],
     }))
     expect(codes(e)).toEqual(['TARIF_NICHT_VERIFIZIERT'])
   })
@@ -164,15 +164,16 @@ describe('Zeitraum', () => {
 describe('Tagekontingent', () => {
   it('lehnt ab, wenn die Tage im Jahr aufgebraucht sind', () => {
     const e = pruefeBuchung(eingabe({
-      staende: [{ ...leererStand(2026), vpTageVerbraucht: 42 }],
+      staende: [{ ...leererStand(2026), vpTageVerbraucht: 56 }],
     }))
     expect(e.entscheidung).toBe('abgelehnt')
     expect(codes(e)).toContain('TAGE_KONTINGENT_ERSCHOEPFT')
   })
 
   it('meldet Teildeckung, wenn nur ein Teil der Tage passt', () => {
+    // 54 von 56 verbraucht — der siebentaegige Zeitraum passt nur zu zwei Tagen.
     const e = pruefeBuchung(eingabe({
-      staende: [{ ...leererStand(2026), vpTageVerbraucht: 40 }],
+      staende: [{ ...leererStand(2026), vpTageVerbraucht: 54 }],
     }))
     expect(e.entscheidung).toBe('teilweise')
     expect(e.buchbar).toBe(false)          // 'teilweise' ist KEINE Freigabe
@@ -184,7 +185,7 @@ describe('Tagekontingent', () => {
     const e = pruefeBuchung(eingabe({
       art: 'kurzzeitpflege',
       tarif: { ...TARIF_VERIFIZIERT, rechtsgrundlage: '§ 42 SGB XI' },
-      staende: [{ ...leererStand(2026), vpTageVerbraucht: 42 }],
+      staende: [{ ...leererStand(2026), vpTageVerbraucht: 56 }],
     }))
     expect(e.entscheidung).toBe('freigegeben')
     expect(e.anrechenbareTageGesamt).toBe(7)
@@ -218,7 +219,7 @@ describe('Jahreswechsel', () => {
       zeitraum: { von: '2025-12-27', bis: '2026-01-09' },
       betragEuro: 700,
       staende: [
-        { ...leererStand(2025), vpTageVerbraucht: 42, vpBetragVerbrauchtEuro: 3539 },
+        { ...leererStand(2025), vpTageVerbraucht: 56, vpBetragVerbrauchtEuro: 3539 },
         leererStand(2026),
       ],
     }))
@@ -313,9 +314,13 @@ describe('Vokabular', () => {
     expect(befunde.every(b => b.code === 'FACHAUSKUNFT_ERFORDERLICH')).toBe(true)
   })
 
-  it('nennt die ungeklaerte VP-Dauer ausdruecklich', () => {
-    // Solange nicht belegt ist, ob die Verhinderungspflege seit 01.07.2025
-    // acht statt sechs Wochen umfasst, muss dieser Vorbehalt sichtbar sein.
-    expect(OFFENE_FACHFRAGEN.vp_dauer_ab_072025).toMatch(/42 Tage/)
+  it('fuehrt die VP-Dauer nicht mehr als offene Fachfrage', () => {
+    // Belegt durch das BMG (bundesgesundheitsministerium.de/verhinderungspflege):
+    // "fuer laengstens acht Wochen je Kalenderjahr". Die Frage ist damit
+    // beantwortet und steht als Wert in VPKZP_ZEIT_VERSIONEN, nicht mehr
+    // als Vorbehalt. Bleibt der Eintrag zurueck, meldet das Pruefprotokoll
+    // eine Unklarheit, die es nicht mehr gibt.
+    expect(OFFENE_FACHFRAGEN.vp_dauer_ab_072025).toBeUndefined()
+    expect(Object.values(OFFENE_FACHFRAGEN).join(' ')).not.toMatch(/42 Tage/)
   })
 })

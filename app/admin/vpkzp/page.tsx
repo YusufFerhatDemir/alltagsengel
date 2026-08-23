@@ -9,6 +9,7 @@
  */
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { logger } from '@/lib/logger'
+import { zeitVersionFuerJahrOderNull } from '@/lib/billing/vpkzp/konstanten'
 
 const log = logger.child('admin:vpkzp')
 
@@ -29,10 +30,19 @@ interface Fachfrage {
   text: string
 }
 
-// Kontingente wie in lib/billing/vpkzp/konstanten.ts. Die Anzeige darf
-// nichts anderes behaupten als die Pruefung durchsetzt.
-const VP_MAX_TAGE = 42
-const KZP_MAX_TAGE = 56
+// Kontingente kommen aus lib/billing/vpkzp/konstanten.ts statt aus einer
+// eigenen Konstante: die Anzeige darf nichts anderes behaupten als die
+// Pruefung durchsetzt, und sie haengen am Kalenderjahr der Zeile (bis 2024
+// gilt fuer die Verhinderungspflege ein anderes Kontingent als ab 2025).
+// Ein Jahr ohne hinterlegten Rechtsstand liefert 0 — dann steht in der
+// Zeile "x von 0 Tagen", statt einen Wert zu erfinden.
+function vpMaxTage(jahr: number): number {
+  return zeitVersionFuerJahrOderNull(jahr)?.vpMaxTage ?? 0
+}
+
+function kzpMaxTage(jahr: number): number {
+  return zeitVersionFuerJahrOderNull(jahr)?.kzpMaxTage ?? 0
+}
 
 function euro(betrag: number): string {
   return betrag.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' })
@@ -116,7 +126,7 @@ export default function VpKzpUebersichtSeite() {
     klienten: zeilen.length,
     ausgeschoepft: zeilen.filter(z => z.kombiniertRestEuro <= 0).length,
     tageVoll: zeilen.filter(
-      z => z.vpTageVerbraucht >= VP_MAX_TAGE || z.kzpTageVerbraucht >= KZP_MAX_TAGE,
+      z => z.vpTageVerbraucht >= vpMaxTage(z.jahr) || z.kzpTageVerbraucht >= kzpMaxTage(z.jahr),
     ).length,
   }), [zeilen])
 
@@ -232,14 +242,16 @@ export default function VpKzpUebersichtSeite() {
             )}
             {!laedt && gefiltert.map(z => {
               const verbraucht = z.vpBetragVerbrauchtEuro + z.kzpBetragVerbrauchtEuro
+              const vpMax = vpMaxTage(z.jahr)
+              const kzpMax = kzpMaxTage(z.jahr)
               return (
                 <tr key={`${z.clientId}-${z.jahr}`}>
                   <td className="px-4 py-3 font-medium text-gray-900">{z.name}</td>
                   <td className="px-4 py-3 w-56">
                     <Balken
                       verbraucht={z.vpTageVerbraucht}
-                      gesamt={VP_MAX_TAGE}
-                      beschriftung={`${z.vpTageVerbraucht} von ${VP_MAX_TAGE} Tagen`}
+                      gesamt={vpMax}
+                      beschriftung={`${z.vpTageVerbraucht} von ${vpMax} Tagen`}
                     />
                     <div className="mt-1 text-xs text-gray-600">
                       {euro(z.vpBetragVerbrauchtEuro)}
@@ -248,8 +260,8 @@ export default function VpKzpUebersichtSeite() {
                   <td className="px-4 py-3 w-56">
                     <Balken
                       verbraucht={z.kzpTageVerbraucht}
-                      gesamt={KZP_MAX_TAGE}
-                      beschriftung={`${z.kzpTageVerbraucht} von ${KZP_MAX_TAGE} Tagen`}
+                      gesamt={kzpMax}
+                      beschriftung={`${z.kzpTageVerbraucht} von ${kzpMax} Tagen`}
                     />
                     <div className="mt-1 text-xs text-gray-600">
                       {euro(z.kzpBetragVerbrauchtEuro)}
