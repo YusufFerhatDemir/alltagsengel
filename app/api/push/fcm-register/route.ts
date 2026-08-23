@@ -9,7 +9,7 @@
 // WAS HIER KAPUTT WAR
 // Der frühere Upsert nannte `onConflict: 'user_id,token'`, ohne dass es
 // einen passenden Unique-Index gab (nachgereicht mit Migration
-// 20260928000000). PostgREST konnte den Konflikt damit nicht aufloesen —
+// 20260930000000). PostgREST konnte den Konflikt damit nicht aufloesen —
 // jeder App-Start legte eine WEITERE Zeile an. Ein Nutzer haette
 // dieselbe Nachricht so oft bekommen, wie er die App seit der
 // Installation geoeffnet hat.

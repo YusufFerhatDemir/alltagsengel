@@ -8,7 +8,7 @@ import type { ZustellProvider } from '@/lib/notifications/delivery-log'
  * Provider-Kennung des nativen Push-Kanals in notification_delivery_log.
  *
  * WARUM HIER UND NICHT IN ZUSTELL_PROVIDER
- * Der Wert kommt mit Migration 20260928000000 in den CHECK der Spalte.
+ * Der Wert kommt mit Migration 20260930000000 in den CHECK der Spalte.
  * Die TypeScript-Union in lib/notifications/delivery-log.ts wird davon
  * unabhaengig gepflegt; sobald sie 'fcm' enthaelt, faellt die Zusicherung
  * hier ersatzlos weg. Bis dahin haelt genau diese eine Stelle den Wert —

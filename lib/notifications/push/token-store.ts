@@ -3,7 +3,7 @@
 // ═══════════════════════════════════════════════════════════════════════
 //
 // Traegt public.fcm_tokens (Baseline) in der Fassung von Migration
-// 20260928000000: mit organization_id, UNIQUE (user_id, token) und
+// 20260930000000: mit organization_id, UNIQUE (user_id, token) und
 // last_used_at.
 //
 // ZWEI DINGE, DIE HIER BEWUSST UNTERSCHIEDLICH SCHEITERN
@@ -298,7 +298,7 @@ export async function geraeteFuerNutzer(
 
   if (error && fehlerCode(error) === SPALTE_FEHLT) {
     log.warn('fcm_tokens ohne organization_id — Mandantenfilter entfaellt', {
-      hinweis: 'Migration 20260928000000 noch nicht eingespielt',
+      hinweis: 'Migration 20260930000000 noch nicht eingespielt',
     })
     ;({ data, error } = (await leseOhneOrg()) as {
       data: Record<string, unknown>[] | null
