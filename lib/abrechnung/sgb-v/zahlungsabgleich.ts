@@ -131,35 +131,75 @@ export async function automatischeZahlungszuordnungSgbV(
   if (error) throw new Error(`Zahlungseingänge konnten nicht geladen werden: ${error.message}`)
   if (!offen || offen.length === 0) return { geprueft: 0, zugeordnet: 0, klaerfaelleUnveraendert: 0 }
 
-  const { data: kandidaten } = await supabase
+  const { data: kandidaten, error: kFehler } = await supabase
     .from('sgb_v_laeufe')
     .select('id, kostentraeger_ik, gesamtbetrag_cent')
     .eq('organization_id', organizationId)
     .in('status', ['uebermittelt', 'quittiert', 'angenommen'])
     .is('deleted_at', null)
 
+  // Fail-closed: ohne Kandidatenliste bliebe JEDER Zahlungseingang liegen,
+  // und das Ergebnis {geprueft: n, zugeordnet: 0} saehe aus wie ein sauber
+  // durchgelaufener Abgleich ohne Treffer. Ein Lesefehler ist aber kein
+  // "keine Treffer" — er muss den Lauf abbrechen.
+  if (kFehler) throw new Error(`§ 302-Läufe konnten nicht geladen werden: ${kFehler.message}`)
+
+  // Nur Laeufe, auf die noch NICHTS gebucht ist, kommen in Frage. Der
+  // Abgleich trifft ueber den EXAKTEN Gesamtbetrag; ein Lauf mit bereits
+  // zugeordneter Zahlung wuerde durch einen zweiten Treffer doppelt
+  // beglichen. (Zwei Kassen koennen denselben Betrag ueberweisen.)
+  const laufIds = (kandidaten || []).map(l => l.id)
+  const belegteLaeufe = new Set<string>()
+  if (laufIds.length > 0) {
+    const { data: bereits, error: bFehler } = await supabase
+      .from('zahlungseingaenge')
+      .select('sgb_v_lauf_id')
+      .eq('organization_id', organizationId)
+      .in('sgb_v_lauf_id', laufIds)
+    if (bFehler) {
+      throw new Error(`Bestehende Zuordnungen konnten nicht geladen werden: ${bFehler.message}`)
+    }
+    for (const z of bereits || []) {
+      if (z.sgb_v_lauf_id) belegteLaeufe.add(z.sgb_v_lauf_id)
+    }
+  }
+
   let zugeordnet = 0
   for (const zahlung of offen) {
     const zweck = (zahlung.verwendungszweck || '').replace(/\s+/g, '')
-    const treffer = (kandidaten || []).find(l =>
+    const treffer = (kandidaten || []).filter(l =>
       l.gesamtbetrag_cent === zahlung.betrag_cent
       && l.kostentraeger_ik
-      && zweck.includes(l.kostentraeger_ik),
+      && zweck.includes(l.kostentraeger_ik)
+      && !belegteLaeufe.has(l.id),
     )
-    if (!treffer) continue
+    // Mehrdeutig heisst Klaerfall. `find()` haette hier den ersten Lauf
+    // genommen — also geraten, welche der gleich hohen Forderungen die
+    // Kasse gerade bezahlt hat.
+    if (treffer.length !== 1) continue
+    const lauf = treffer[0]
 
-    await supabase
+    const { error: uFehler } = await supabase
       .from('zahlungseingaenge')
-      .update({ sgb_v_lauf_id: treffer.id, zuordnungs_status: 'automatisch' })
+      .update({ sgb_v_lauf_id: lauf.id, zuordnungs_status: 'automatisch' })
       .eq('id', zahlung.id)
       .eq('organization_id', organizationId)
+
+    // Ohne diese Pruefung wurde der Zaehler hochgezaehlt und ein
+    // Audit-Eintrag ueber eine Zuordnung geschrieben, die in der Datenbank
+    // gar nicht stattgefunden hat.
+    if (uFehler) {
+      throw new Error(`Zahlungseingang konnte nicht zugeordnet werden: ${uFehler.message}`)
+    }
+
+    belegteLaeufe.add(lauf.id)
 
     await logBillingAction(supabase, {
       entityType: 'zahlungseingang',
       organizationId,
       entityId: zahlung.id,
       action: 'sgb_v_zahlung_automatisch_zugeordnet',
-      newState: { sgb_v_lauf_id: treffer.id, betrag_cent: zahlung.betrag_cent },
+      newState: { sgb_v_lauf_id: lauf.id, betrag_cent: zahlung.betrag_cent },
       actorId,
     })
     zugeordnet++

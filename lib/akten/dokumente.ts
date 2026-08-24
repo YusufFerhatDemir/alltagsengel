@@ -186,6 +186,25 @@ export interface ListDokumenteFilter {
   offset?: number
 }
 
+/**
+ * Verpackt einen Suchbegriff als PostgREST-Wert fuer eine `or()`-Gruppe.
+ *
+ * `or()` bekommt eine ZEICHENKETTE, die PostgREST selbst zerlegt: Komma
+ * trennt die Bedingungen, Punkt trennt Spalte/Operator/Wert, Klammern
+ * gruppieren. Ein ungeschuetzt eingesetzter Suchbegriff aus der URL
+ * (?suche=…) konnte damit weitere ODER-Bedingungen in die Abfrage
+ * schreiben. Der Mandantenzaun steht als eigenes eq() daneben und wurde
+ * dadurch nicht durchbrochen — die Trefferliste liess sich aber ueber
+ * den vorgesehenen Titel-/Dateinamen-Vergleich hinaus aufziehen.
+ *
+ * Anfuehrungszeichen um den Wert nehmen den Sonderzeichen ihre Bedeutung;
+ * Backslash und Anfuehrungszeichen im Begriff selbst werden maskiert.
+ */
+function postgrestWert(begriff: string): string {
+  const maskiert = begriff.replace(/\\/g, '\\\\').replace(/"/g, '\\"')
+  return `"%${maskiert}%"`
+}
+
 export async function listDokumente(supabase: SupabaseClient, filter: ListDokumenteFilter): Promise<AktenDokument[]> {
   let query = supabase
     .from('akten_dokumente')
@@ -202,7 +221,10 @@ export async function listDokumente(supabase: SupabaseClient, filter: ListDokume
   if (filter.sichtbarkeit) query = query.eq('sichtbarkeit', filter.sichtbarkeit)
   if (filter.tag) query = query.contains('tags', [filter.tag])
   if (filter.ablaufBis) query = query.lte('ablaufdatum', filter.ablaufBis)
-  if (filter.suche) query = query.or(`titel.ilike.%${filter.suche}%,dateiname.ilike.%${filter.suche}%`)
+  if (filter.suche) {
+    const s = postgrestWert(filter.suche)
+    query = query.or(`titel.ilike.${s},dateiname.ilike.${s}`)
+  }
   if (filter.limit) query = query.range(filter.offset ?? 0, (filter.offset ?? 0) + filter.limit - 1)
 
   const { data, error } = await query
@@ -303,6 +325,10 @@ export async function lockDokument(supabase: SupabaseClient, id: string, organiz
     .update({ gesperrt: true, gesperrt_grund: grund, gesperrt_am: new Date().toISOString(), gesperrt_von: actorId })
     .eq('id', id)
     .eq('organization_id', organizationId)
+    // Ein geloeschtes Dokument ist kein Dokument mehr. Ohne diesen Filter
+    // liess es sich sperren und entsperren — als einzige der Operationen
+    // hier, weil Sperre/Entsperre nicht ueber getDokument() laufen.
+    .is('deleted_at', null)
     .select('*')
     .single()
   if (error || !data) throw new Error(`Dokument konnte nicht gesperrt werden: ${error?.message ?? 'unbekannt'}`)
@@ -320,6 +346,7 @@ export async function unlockDokument(supabase: SupabaseClient, id: string, organ
     .update({ gesperrt: false, gesperrt_grund: null, gesperrt_am: null, gesperrt_von: null })
     .eq('id', id)
     .eq('organization_id', organizationId)
+    .is('deleted_at', null)
     .select('*')
     .single()
   if (error || !data) throw new Error(`Dokument konnte nicht entsperrt werden: ${error?.message ?? 'unbekannt'}`)

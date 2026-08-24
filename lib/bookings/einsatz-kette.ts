@@ -189,10 +189,16 @@ function abrechnungsartFuer(paymentMethod: string | null | undefined): Abrechnun
  * start_time/end_time innerhalb EINES Tages) — deshalb fail-closed.
  */
 export function endzeitAus(startzeit: string, dauerStunden: number): string {
+  // Number('') ist 0, nicht NaN: ein leerer oder halber Zeitstring
+  // ergab damit klaglos „00:00" und legte den Einsatz auf Mitternacht,
+  // statt den Bruch zu melden. Deshalb erst die Form pruefen, dann rechnen.
   const teile = startzeit.split(':')
   const h = Number(teile[0])
-  const m = Number(teile[1] ?? '0')
-  if (!Number.isFinite(h) || !Number.isFinite(m)) {
+  const m = teile.length > 1 ? Number(teile[1]) : 0
+  const stelligkeitOk =
+    /^\d{1,2}$/.test(teile[0] ?? '')
+    && (teile.length === 1 || /^\d{1,2}$/.test(teile[1] ?? ''))
+  if (!stelligkeitOk || !Number.isFinite(h) || !Number.isFinite(m) || h > 23 || m > 59) {
     throw new EinsatzKetteFehler('ZEITFENSTER_UNGUELTIG', `Ungültige Uhrzeit „${startzeit}".`, { startzeit })
   }
   if (!Number.isFinite(dauerStunden) || dauerStunden <= 0) {
