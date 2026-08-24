@@ -291,12 +291,45 @@ export async function ladeKorrekturHistorie(
 ): Promise<KorrekturHistorie> {
   const kette: KorrekturHistorie['kette'] = []
 
+  /*
+   * Zyklusschutz.
+   *
+   * `korrektur_von` ist ein Selbstbezug auf abrechnungslaeufe. Die Datenbank
+   * verbietet einen Zyklus nicht — ein Lauf, der (durch Fehleingabe, Backfill
+   * oder Import) auf sich selbst oder auf einen seiner Nachfolger zeigt, ist
+   * ein gueltiger Datensatz. Ohne diese Menge liefen BEIDE Schleifen unten
+   * endlos: currentId nimmt immer wieder denselben Wert an, die Abfrage
+   * trifft immer wieder zu, und der Request kommt nie zurueck (kein Timeout,
+   * keine Fehlermeldung — die Historie haengt einfach).
+   *
+   * Ein bereits besuchter Lauf beendet die jeweilige Richtung, statt ein
+   * zweites Mal in der Kette zu landen.
+   */
+  const besucht = new Set<string>()
+
+  // Spaltenliste beider Richtungen — die Rueckwaerts-Abfrage braucht
+  // zusaetzlich korrektur_von, um den Vorgaenger zu finden.
+  const SPALTEN_RUECKWAERTS =
+    'id, lauf_typ, status, abrechnungsmonat, gesamtbetrag_cent, erstellt_am, korrektur_von'
+
   // Rückwärts: alle Vorgänger
   let currentId: string | null = laufId
   while (currentId) {
+    if (besucht.has(currentId)) break
+    besucht.add(currentId)
+
+    // `deleted_at IS NULL` gehoert in BEIDE Richtungen. Die Vorwaerts-Abfrage
+    // hatte den Filter, die Rueckwaerts-Abfrage nicht — ein soft-geloeschter
+    // Vorgaenger stand damit weiter in der Historie, ein soft-geloeschter
+    // Nachfolger nicht. Dieselbe Kette lieferte je nach Blickrichtung ein
+    // anderes Ergebnis.
+    // Die Verzweigung steht bewusst als EIN Ausdruck da und die Kette wird
+    // nicht in eine Zwischenvariable gelegt: `supabase` ist untypisiert
+    // (kein generierter Database-Typ), und eine zwischengespeicherte
+    // Abfragekette laeuft dann in TS7022 (zirkulaere Typinferenz).
     const { data: lauf }: { data: KettenLaufRow | null } = organizationId
-      ? await supabase.from('abrechnungslaeufe').select('id, lauf_typ, status, abrechnungsmonat, gesamtbetrag_cent, erstellt_am, korrektur_von').eq('id', currentId).eq('organization_id', organizationId).single()
-      : await supabase.from('abrechnungslaeufe').select('id, lauf_typ, status, abrechnungsmonat, gesamtbetrag_cent, erstellt_am, korrektur_von').eq('id', currentId).single()
+      ? await supabase.from('abrechnungslaeufe').select(SPALTEN_RUECKWAERTS).eq('id', currentId).is('deleted_at', null).eq('organization_id', organizationId).maybeSingle()
+      : await supabase.from('abrechnungslaeufe').select(SPALTEN_RUECKWAERTS).eq('id', currentId).is('deleted_at', null).maybeSingle()
 
     if (!lauf) break
 
@@ -333,6 +366,10 @@ export async function ladeKorrekturHistorie(
     const { data: nachfolger }: { data: KettenLaufRow | null } = await fwdQuery.maybeSingle()
 
     if (!nachfolger) break
+    // Gleicher Zyklusschutz wie oben: ein bereits besuchter Lauf beendet die
+    // Vorwaerts-Richtung, statt die Kette endlos weiterzuschreiben.
+    if (besucht.has(nachfolger.id)) break
+    besucht.add(nachfolger.id)
 
     const { data: korrektur } = await supabase
       .from('dta_korrekturlaeufe')

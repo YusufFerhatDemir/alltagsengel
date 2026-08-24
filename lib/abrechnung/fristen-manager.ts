@@ -217,9 +217,13 @@ export async function escaliereUeberfaellige(
   let abgelaufen = 0
 
   // Alle überfälligen offenen Fristen
+  //
+  // eskaliert_am gehoert in die Spaltenliste: es ist die Grundlage der
+  // Wiederholungssperre unten. Ohne die Spalte laesst sich nicht erkennen,
+  // ob diese Frist heute schon eine Stufe bekommen hat.
   const { data: ueberfaellige } = await supabase
     .from('billing_fristen')
-    .select('id, aufgabe_id, ruecklaeufer_id, frist_typ, eskalationsstufe, faellig_am')
+    .select('id, aufgabe_id, ruecklaeufer_id, frist_typ, eskalationsstufe, faellig_am, eskaliert_am')
     .eq('organization_id', organizationId)
     .in('status', ['offen', 'eskaliert'])
     .lt('faellig_am', heute)
@@ -227,11 +231,31 @@ export async function escaliereUeberfaellige(
 
   for (const frist of ueberfaellige ?? []) {
     try {
+      /*
+       * Wiederholungssperre — hoechstens eine Stufe je Frist und Tag.
+       *
+       * Die Eskalationsstufe soll die FRISTUEBERSCHREITUNG abbilden (siehe
+       * Modulkopf), nicht die Anzahl der Laeufe. Diese Funktion wird aber von
+       * zwei Seiten aufgerufen: taeglich vom Automatisierungs-Cron
+       * (vercel.json, 05:00) und von Hand ueber
+       * POST /api/billing/dta/fristen. Ohne diese Sperre brachte dreimaliges
+       * Druecken des Knopfes jede ueberfaellige Frist binnen Sekunden von
+       * Stufe 0 auf "abgelaufen".
+       *
+       * Das ist nicht nur kosmetisch: "abgelaufen" faellt aus der
+       * Ueberwachung heraus, weil pruefeUeberfaelligeFristen nur `offen` und
+       * `eskaliert` liest. Eine unbearbeitete Frist verschwand damit aus der
+       * Liste, statt lauter zu werden.
+       */
+      if (frist.eskaliert_am && datumBerlin(new Date(frist.eskaliert_am)) >= heute) {
+        continue
+      }
+
       const neueStufe = frist.eskalationsstufe + 1
 
       if (neueStufe > 2) {
         // Maximale Eskalation erreicht → abgelaufen
-        await supabase
+        const { error: ablaufFehler } = await supabase
           .from('billing_fristen')
           .update({
             status: 'abgelaufen',
@@ -240,12 +264,19 @@ export async function escaliereUeberfaellige(
           })
           .eq('id', frist.id)
           .eq('organization_id', organizationId)
+        // Fail-closed in der Rueckmeldung: ein fehlgeschlagenes Update darf
+        // nicht als Erfolg gezaehlt werden. Vorher meldete die Oberflaeche
+        // "n Fristen eskaliert", waehrend in der Datenbank nichts stand.
+        if (ablaufFehler) {
+          fehler.push(`Frist ${frist.id}: Ablauf nicht gespeichert (${ablaufFehler.message})`)
+          continue
+        }
         abgelaufen++
         continue
       }
 
       // Frist eskalieren
-      await supabase
+      const { error: eskalationsFehler } = await supabase
         .from('billing_fristen')
         .update({
           status: 'eskaliert',
@@ -254,6 +285,11 @@ export async function escaliereUeberfaellige(
         })
         .eq('id', frist.id)
         .eq('organization_id', organizationId)
+
+      if (eskalationsFehler) {
+        fehler.push(`Frist ${frist.id}: Eskalation nicht gespeichert (${eskalationsFehler.message})`)
+        continue
+      }
 
       // Verknüpfte Aufgabe eskalieren
       if (frist.aufgabe_id) {
