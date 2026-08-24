@@ -10,7 +10,7 @@
 import { test, describe } from 'node:test'
 import assert from 'node:assert/strict'
 
-import { sanitizeFilename, getFileExtension, generateSafeFilename } from '../file-upload-validation'
+import { sanitizeFilename, sanitizeStorageName, getFileExtension, generateSafeFilename } from '../file-upload-validation'
 
 // ---------------------------------------------------------------------------
 // getFileExtension
@@ -125,5 +125,105 @@ describe('generateSafeFilename', () => {
   test('sanitisiert Input', () => {
     const r = generateSafeFilename('../../evil.pdf')
     assert.ok(!r.includes('..'))
+  })
+})
+
+// ---------------------------------------------------------------------------
+// sanitizeFilename — Umlaut-Konvertierung (neu)
+// ---------------------------------------------------------------------------
+
+describe('sanitizeFilename — Umlaute', () => {
+  test('ä → ae', () => {
+    // Ä → ae (lowercase, da Umlaut-Konvertierung kein Case-Mapping hat)
+    assert.ok(sanitizeFilename('Ärztlicher_Bericht.pdf').startsWith('aerztlicher'))
+  })
+
+  test('ö → oe', () => {
+    assert.ok(sanitizeFilename('Köln.pdf').includes('Koeln'))
+  })
+
+  test('ü → ue', () => {
+    assert.ok(sanitizeFilename('Führungszeugnis.pdf').includes('Fuehrungszeugnis'))
+  })
+
+  test('ß → ss', () => {
+    assert.ok(sanitizeFilename('Straße.pdf').includes('Strasse'))
+  })
+
+  test('Großbuchstaben: Ä Ö Ü', () => {
+    const r = sanitizeFilename('ÄÖÜ.txt')
+    assert.ok(r.includes('ae'))
+    assert.ok(r.includes('oe'))
+    assert.ok(r.includes('ue'))
+  })
+})
+
+describe('sanitizeFilename — Fallback-Parameter', () => {
+  test('default-Fallback ist "file"', () => {
+    assert.equal(sanitizeFilename(''), 'file')
+  })
+
+  test('benutzerdefinierter Fallback', () => {
+    assert.equal(sanitizeFilename('', 'anhang'), 'anhang')
+  })
+})
+
+// ---------------------------------------------------------------------------
+// sanitizeStorageName — strikte Storage-Variante (konsolidiert 6 Kopien)
+// ---------------------------------------------------------------------------
+
+describe('sanitizeStorageName', () => {
+  test('normale Datei bleibt erhalten', () => {
+    assert.equal(sanitizeStorageName('foto.jpg'), 'foto.jpg')
+  })
+
+  test('Umlaute → ASCII', () => {
+    // Ä → ae (lowercase), Rest bleibt
+    assert.equal(sanitizeStorageName('Ärztlicher-Bericht.pdf'), 'aerztlicher-Bericht.pdf')
+  })
+
+  test('Sonderzeichen → Unterstrich', () => {
+    // + Quantifier: aufeinanderfolgende Sonderzeichen → ein _
+    assert.equal(sanitizeStorageName('mein bericht (1).pdf'), 'mein_bericht_1_.pdf')
+  })
+
+  test('Leerzeichen → Unterstrich', () => {
+    assert.ok(!sanitizeStorageName('Mein Dokument.pdf').includes(' '))
+  })
+
+  test('führende Punkte entfernt', () => {
+    const r = sanitizeStorageName('..hidden')
+    assert.ok(!r.startsWith('.'))
+  })
+
+  test('Längenbegrenzung (Standard: 120)', () => {
+    const lang = 'a'.repeat(200) + '.pdf'
+    assert.ok(sanitizeStorageName(lang).length <= 120)
+  })
+
+  test('Längenbegrenzung (benutzerdefiniert)', () => {
+    const lang = 'a'.repeat(200)
+    assert.ok(sanitizeStorageName(lang, { maxLen: 50 }).length <= 50)
+  })
+
+  test('leerer Name → Fallback "file"', () => {
+    assert.equal(sanitizeStorageName(''), 'file')
+  })
+
+  test('leerer Name → benutzerdefinierter Fallback', () => {
+    assert.equal(sanitizeStorageName('', { fallback: 'foto' }), 'foto')
+  })
+
+  test('nur Sonderzeichen → Unterstrich (nicht leer)', () => {
+    // '!!!' → '_' (+ Quantifier), '_' ist im erlaubten Set → kein Fallback
+    assert.equal(sanitizeStorageName('!!!', { fallback: 'anhang' }), '_')
+  })
+
+  test('ß in Dateinamen', () => {
+    assert.equal(sanitizeStorageName('Straße.pdf'), 'Strasse.pdf')
+  })
+
+  test('erlaubte Zeichen bleiben: a-z A-Z 0-9 . _ -', () => {
+    assert.equal(sanitizeStorageName('Test-123_v2.pdf'), 'Test-123_v2.pdf')
   })
 })

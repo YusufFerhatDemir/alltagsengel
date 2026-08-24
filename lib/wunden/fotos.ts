@@ -6,14 +6,13 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { WoundPhoto, WoundPhotoMitUrl } from './types'
+import { sanitizeStorageName } from '@/lib/file-upload-validation'
 
 export const WOUND_PHOTOS_BUCKET = 'wound-photos'
 export const MAX_FOTO_BYTES = 10 * 1024 * 1024
 export const ERLAUBTE_FOTO_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/heic'] as const
 
-function sanitizeFileName(name: string): string {
-  return name.replace(/[^a-zA-Z0-9._-]+/g, '_').slice(0, 120) || 'foto'
-}
+// sanitizeFileName entfernt — zentralisiert in lib/file-upload-validation.ts (sanitizeStorageName)
 
 export interface UploadWoundPhotoParams {
   organizationId: string
@@ -35,7 +34,7 @@ export async function uploadWoundPhoto(admin: SupabaseClient, params: UploadWoun
     throw new Error('Foto ist größer als 10 MB.')
   }
 
-  const dateipfad = `${params.organizationId}/${params.woundId}/${Date.now()}-${sanitizeFileName(params.datei.name)}`
+  const dateipfad = `${params.organizationId}/${params.woundId}/${Date.now()}-${sanitizeStorageName(params.datei.name, { maxLen: 120, fallback: 'foto' })}`
 
   const { error: uploadErr } = await admin.storage
     .from(WOUND_PHOTOS_BUCKET)

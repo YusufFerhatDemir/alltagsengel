@@ -1,4 +1,5 @@
 import { createClient } from './supabase/client'
+import { sanitizeStorageName } from '@/lib/file-upload-validation'
 import { logger } from '@/lib/logger'
 const log = logger.child('upload-document')
 
@@ -113,7 +114,7 @@ export async function uploadDocument(
   const supabase = createClient()
 
   // ═══ 3. Upload mit Timeout-Race ═══
-  const filePath = `${userId}/${Date.now()}-${sanitizeFileName(file.name)}`
+  const filePath = `${userId}/${Date.now()}-${sanitizeStorageName(file.name, { maxLen: 100 })}`
 
   try {
     const uploadPromise = supabase.storage
@@ -291,16 +292,4 @@ export async function deleteDocument(documentId: string): Promise<DeleteResult> 
   return { ok: true }
 }
 
-/**
- * Entfernt problematische Zeichen aus Dateinamen (Leerzeichen, Umlaute, etc.)
- * die Supabase Storage manchmal nicht verarbeitet.
- */
-function sanitizeFileName(name: string): string {
-  return name
-    .replace(/[äÄ]/g, 'ae')
-    .replace(/[öÖ]/g, 'oe')
-    .replace(/[üÜ]/g, 'ue')
-    .replace(/ß/g, 'ss')
-    .replace(/[^a-zA-Z0-9._-]/g, '_')
-    .slice(0, 100) // Max-Länge gegen Path-too-long
-}
+// sanitizeFileName entfernt — zentralisiert in lib/file-upload-validation.ts (sanitizeStorageName)

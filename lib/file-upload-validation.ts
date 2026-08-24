@@ -61,13 +61,32 @@ export function validateFileUpload(
 }
 
 /**
- * Sanitize filename to prevent directory traversal and injection attacks
+ * Deutsche Umlaute → ASCII-Äquivalent (für Storage-Pfade und Dateinamen).
+ * Wird VOR der sonstigen Sanitization angewendet.
+ */
+function umlaute(s: string): string {
+  return s
+    .replace(/[äÄ]/g, 'ae')
+    .replace(/[öÖ]/g, 'oe')
+    .replace(/[üÜ]/g, 'ue')
+    .replace(/ß/g, 'ss')
+}
+
+/**
+ * Sanitize filename to prevent directory traversal and injection attacks.
+ * Konvertiert deutsche Umlaute, entfernt Pfad-Separatoren, Steuerzeichen
+ * und potenziell gefährliche Sonderzeichen.
+ *
  * @param filename - Original filename
+ * @param fallback - Fallback wenn nach Sanitization nichts übrig bleibt (default: 'file')
  * @returns Sanitized filename
  */
-export function sanitizeFilename(filename: string): string {
+export function sanitizeFilename(filename: string, fallback = 'file'): string {
+  // Deutsche Umlaute → ASCII
+  let sanitized = umlaute(filename)
+
   // Remove path traversal attempts
-  let sanitized = filename.replace(/\.\.\//g, '').replace(/\.\.\\/g, '')
+  sanitized = sanitized.replace(/\.\.\//g, '').replace(/\.\.\\/g, '')
 
   // Remove any path separators
   sanitized = sanitized.replace(/[\/\\]/g, '')
@@ -85,7 +104,24 @@ export function sanitizeFilename(filename: string): string {
     sanitized = name + '.' + ext
   }
 
-  return sanitized || 'file'
+  return sanitized || fallback
+}
+
+/**
+ * Strikte Variante für Supabase-Storage-Pfade: nur [a-zA-Z0-9._-],
+ * deutsche Umlaute → ASCII, kürzeres Limit, konfigurierbarer Fallback.
+ * ERSETZT die bisherigen lokalen sanitizeFileName()-Kopien.
+ */
+export function sanitizeStorageName(
+  name: string,
+  { maxLen = 120, fallback = 'file' }: { maxLen?: number; fallback?: string } = {},
+): string {
+  return (
+    umlaute(name)
+      .replace(/[^a-zA-Z0-9._-]+/g, '_')
+      .replace(/^\.+/, '')
+      .slice(0, maxLen) || fallback
+  )
 }
 
 /**

@@ -1,4 +1,5 @@
 import { createClient } from './supabase/client'
+import { sanitizeStorageName } from '@/lib/file-upload-validation'
 import { logger } from '@/lib/logger'
 const log = logger.child('upload-service-proof')
 
@@ -46,7 +47,7 @@ export async function uploadServiceProof(
   }
 
   const supabase = createClient()
-  const filePath = `${serviceRecordId}/${Date.now()}-${sanitizeFileName(file.name)}`
+  const filePath = `${serviceRecordId}/${Date.now()}-${sanitizeStorageName(file.name, { maxLen: 100 })}`
 
   try {
     const uploadPromise = supabase.storage
@@ -85,12 +86,4 @@ export async function uploadServiceProof(
   return { ok: true, path: filePath, url: signedData.signedUrl }
 }
 
-function sanitizeFileName(name: string): string {
-  return name
-    .replace(/[äÄ]/g, 'ae')
-    .replace(/[öÖ]/g, 'oe')
-    .replace(/[üÜ]/g, 'ue')
-    .replace(/ß/g, 'ss')
-    .replace(/[^a-zA-Z0-9._-]/g, '_')
-    .slice(0, 100)
-}
+// sanitizeFileName entfernt — zentralisiert in lib/file-upload-validation.ts (sanitizeStorageName)
