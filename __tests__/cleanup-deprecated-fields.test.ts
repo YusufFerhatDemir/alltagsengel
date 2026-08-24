@@ -49,9 +49,12 @@ describe('A1: bookings.completed_at Referenz korrigiert', () => {
     const src = readFile('app/api/cron/review-request/route.ts')
     expect(src).not.toContain("'completed_at'")
     expect(src).not.toContain('"completed_at"')
-    // Muss .gte('date', ...) oder ähnliches verwenden
-    expect(src).toMatch(/\.gte\(['"]date['"]/)
-    expect(src).toMatch(/\.lte\(['"]date['"]/)
+    // Muss auf das date-Feld filtern. Seit 24.08.2026 auf den Tag genau
+    // (.eq) statt ueber ein Zwei-Tage-Fenster (.gte/.lte): bookings.date
+    // ist ein reines Datum und der Cron laeuft taeglich — das Fenster
+    // schickte jede Bewertungsanfrage zweimal.
+    expect(src).toMatch(/\.eq\(['"]date['"]/)
+    expect(src).not.toMatch(/\.lte\(['"]date['"]/)
   })
 })
 

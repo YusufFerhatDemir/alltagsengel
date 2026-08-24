@@ -7,7 +7,7 @@
 #   3. Service-Account-JSON, *.pem, *.p12, *.keystore, *firebase-adminsdk*
 #   4. APK/AAB/IPA-Build-Outputs
 #   5. Klassische Secret-Patterns im Diff: "AKIA…", "sk_live_…", "sk-proj-…",
-#      Bearer-Tokens längerer Art, etc.
+#      "re_…" (Resend), "sb_secret_…" (Supabase), Bearer-Tokens längerer Art, etc.
 #
 # Wird sowohl von ./deploy.sh als auch (manuell) vom Git-Pre-Commit-Hook
 # aufgerufen. Exit-Code 0 = ok, 1 = blockiert.
@@ -74,6 +74,8 @@ declare -a secret_patterns=(
   'ghp_[A-Za-z0-9]{30,}'                                # GitHub classic PAT
   'gho_[A-Za-z0-9]{30,}'                                # GitHub OAuth
   'service_role.*ey[A-Za-z0-9_-]{30,}'                  # Supabase service-role JWT inline
+  '\bre_[A-Za-z0-9]{20,}'                               # Resend API-Key (re_ + 33 Zeichen)
+  '\bsb_secret_[A-Za-z0-9_-]{20,}'                      # Supabase Secret-Key (neues Format)
 )
 
 # Markdown/Doku ist ok für *Beispiel-Patterns*. Wir checken nur Code-Änderungen.
