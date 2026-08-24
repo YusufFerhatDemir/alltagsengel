@@ -184,14 +184,35 @@ function tokenizeSegments(raw: string, sa: EdifactServiceAdvice): ParsedSegment[
 }
 
 // ── Betrag parser (EDIFACT: "123,45" → Cent) ───────────────────
+//
+// Zwei Bugs gefixt (Phase 5, 2026-08-24):
+//   1. Tausendertrenner: "1.234,56" → vorher 123 Cent (Faktor 1000 daneben),
+//      jetzt 123456 Cent.
+//   2. Trailing Minus: "123,45-" → vorher +12345 (Vorzeichen ignoriert),
+//      jetzt -12345 Cent. EDIFACT-Konvention für negative Beträge.
 
 function parseBetragCent(s: string | undefined): number | undefined {
   if (!s || !s.trim()) return undefined
-  // EDIFACT uses comma as decimal separator
-  const clean = s.trim().replace(',', '.')
+  let clean = s.trim()
+
+  // Trailing Minus (EDIFACT-Konvention für negative Beträge)
+  const negativ = clean.endsWith('-')
+  if (negativ) clean = clean.slice(0, -1)
+
+  // Tausendertrenner entfernen: Punkt vor Komma ist Tausendertrenner.
+  // "1.234,56" → "1234,56", "1.234.567,89" → "1234567,89"
+  if (clean.includes(',')) {
+    clean = clean.replace(/\./g, '')
+  }
+
+  // Dezimalkomma → Dezimalpunkt
+  clean = clean.replace(',', '.')
+
   const val = parseFloat(clean)
   if (isNaN(val)) return undefined
-  return Math.round(val * 100)
+
+  const cents = Math.round(val * 100)
+  return negativ ? -cents : cents
 }
 
 // ── Element accessor helper ─────────────────────────────────────
