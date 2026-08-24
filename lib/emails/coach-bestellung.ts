@@ -27,7 +27,7 @@
 // wiederholen).
 // ═══════════════════════════════════════════════════════════════
 
-import { Resend } from 'resend'
+import { sendRawEmail } from '@/lib/notifications'
 import { formatiereCent } from '@/lib/coach/pricing'
 import { formatDatum } from '@/lib/coach/bestellung'
 import { COACH_SUPPORT_EMAIL } from '@/lib/coach/version'
@@ -35,13 +35,7 @@ import { WIDERRUFSFRIST_TAGE } from '@/lib/coach/bestellung'
 import { logger } from '@/lib/logger'
 const log = logger.child('coach-mail')
 
-const ABSENDER = 'Alltagsengel <info@alltagsengel.care>'
 const APP_URL = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_APP_URL || 'https://alltagsengel.care'
-
-function resendClient(): Resend | null {
-  const key = process.env.RESEND_API_KEY
-  return key ? new Resend(key) : null
-}
 
 /** Minimales HTML-Escaping für alles, was aus Nutzereingaben stammt. */
 function esc(s: string): string {
@@ -102,23 +96,49 @@ function knopf(text: string, pfad: string): string {
   </p>`
 }
 
+/**
+ * Versendet eine der vier PflegeCoach-Mails.
+ *
+ * ── WARUM UEBER sendRawEmail() UND NICHT MEHR DIREKT UEBER DAS SDK ────
+ * Dieses Modul hatte einen EIGENEN Resend-Client und damit keine der vier
+ * Haertungen, die lib/notifications.ts fuer den Provider-Aufruf hat:
+ *
+ *   1. KEIN ZEITLIMIT. Das Resend-SDK setzt keines. Antwortet der Provider
+ *      nicht, haengt der Aufruf, bis die Serverless-Funktion abgeraeumt
+ *      wird — ohne Log, ohne Rueckgabewert, ohne jede Spur.
+ *   2. ERFOLG OHNE PROVIDER-ID. `const { error } = …; if (error) …;
+ *      return true` meldete Erfolg, sobald kein Fehler kam — auch dann,
+ *      wenn Resend keine Nachrichten-ID lieferte. Die ID IST die
+ *      Empfangsbestaetigung; ohne sie war das `true` eine Behauptung.
+ *   3. STATUSCODE VERLOREN. Ohne ihn ist nicht unterscheidbar, ob ein
+ *      weiterer Versuch Sinn hat (422 dauerhaft vs. 429/5xx voruebergehend).
+ *   4. Keine einheitliche Fehlerklassifizierung.
+ *
+ * sendRawEmail() bringt alle vier mit und legt — anders als
+ * sendEmailNotification() — KEIN Layout um das HTML. Die Produktabgrenzung
+ * des PflegeCoach (siezend, werbefrei) bleibt damit unberuehrt: Betreff
+ * und HTML kommen weiter vollstaendig aus diesem Modul.
+ *
+ * Der Absender ist in beiden Faellen derselbe („Alltagsengel", nie ein
+ * persoenlicher Name).
+ *
+ * OFFEN: eine Zeile in notification_delivery_log wird hier noch nicht
+ * geschrieben — dafuer braeuchte ZustellKontext eine organizationId, die
+ * diesen vier Funktionen bisher nicht uebergeben wird. Ohne Protokollzeile
+ * ist eine gescheiterte Coach-Mail nicht wiederholbar.
+ */
 async function sende(an: string, betreff: string, html: string, anlass: string): Promise<boolean> {
-  const resend = resendClient()
-  if (!resend) {
-    log.error(`RESEND_API_KEY fehlt — ${anlass} nicht versendet`)
-    return false
-  }
-  try {
-    const { error } = await resend.emails.send({ from: ABSENDER, to: an, subject: betreff, html })
-    if (error) {
-      log.errorWithException(`${anlass} fehlgeschlagen:`, error)
-      return false
+  const ergebnis = await sendRawEmail({ to: an, subject: betreff, html })
+
+  if (!ergebnis.ok) {
+    if (ergebnis.uebersprungen) {
+      log.error(`RESEND_API_KEY fehlt — ${anlass} nicht versendet`)
+    } else {
+      log.errorWithException(`${anlass} fehlgeschlagen:`, ergebnis.fehler)
     }
-    return true
-  } catch (err) {
-    log.errorWithException(`${anlass} fehlgeschlagen:`, err)
     return false
   }
+  return true
 }
 
 // ═══════════════════════════════════════════════════════════════
