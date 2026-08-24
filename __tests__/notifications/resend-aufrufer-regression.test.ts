@@ -33,12 +33,25 @@ const WURZEL = path.join(__dirname, '..', '..')
 /**
  * Module, die das SDK direkt benutzen duerfen.
  *
- * lib/notifications.ts ist der zentrale Versandweg; lib/emails/
- * coach-bestellung.ts hat einen eigenen, ebenfalls geprueften Aufruf.
+ * Nur noch EINES: lib/notifications.ts ist der zentrale Versandweg.
+ *
+ * lib/emails/coach-bestellung.ts stand hier ebenfalls („eigener,
+ * ebenfalls gepruefter Aufruf") — geprueft war er aber nur auf `error`.
+ * Damit fehlten ihm drei der vier Haertungen des zentralen Wegs: kein
+ * Zeitlimit (das SDK setzt keines, ein haengender Aufruf laeuft ohne Spur
+ * in den Funktions-Timeout), Erfolg wurde OHNE Nachrichten-ID gemeldet
+ * (die ID ist die Empfangsbestaetigung — ohne sie ist `true` eine
+ * Behauptung), und der Statuscode ging verloren (422 dauerhaft vs.
+ * 429/5xx voruebergehend). Seit dem Delta-Check Phase 4.5 laeuft das
+ * Modul ueber sendRawEmail(); sein eigenes Layout bleibt dabei erhalten,
+ * weil sendRawEmail — anders als sendEmailNotification — kein Template
+ * drumherum legt.
+ *
+ * Diese Liste ist bewusst kurz zu halten: jeder weitere Eintrag ist ein
+ * Versandweg, dessen Fehlerpfade einzeln nachgewiesen werden muessen.
  */
 const ERLAUBT = [
   path.join('lib', 'notifications.ts'),
-  path.join('lib', 'emails', 'coach-bestellung.ts'),
 ]
 
 function tsDateien(verzeichnis: string, treffer: string[] = []): string[] {
