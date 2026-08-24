@@ -47,7 +47,6 @@
     "app/choose.tsx",
     "lib/supabase.ts",
     "constants/**",
-    "hooks/**",
     "archive/**",
     "native/**",
     "supabase/functions/**",

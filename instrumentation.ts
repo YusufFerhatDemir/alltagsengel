@@ -1,9 +1,18 @@
 // Sentry Instrumentation für Server + Edge Runtime
 // Läuft einmal pro Prozess beim Start
 import * as Sentry from '@sentry/nextjs'
+import { pruefeEnvBeimStart } from '@/lib/env'
 
 export async function register() {
+  // ENV-Prüfung VOR allem anderen: sie bricht ab, wenn das Datenbank-Trio
+  // fehlt oder ein Geheimnis unter einem NEXT_PUBLIC_-Namen steht. Beides
+  // fiel bisher erst im Betrieb auf — als 500er bzw. gar nicht.
+  // Nur in der Node-Laufzeit: die Edge-Runtime bekommt von Vercel nur die
+  // Variablen, die eine Edge-Funktion tatsächlich referenziert, ein Befund
+  // dort wäre nicht aussagekräftig.
   if (process.env.NEXT_RUNTIME === 'nodejs') {
+    pruefeEnvBeimStart()
+
     Sentry.init({
       dsn: process.env.SENTRY_DSN,
       // Kein tracesSampleRate mehr: Tracing ist per excludeTracing in
