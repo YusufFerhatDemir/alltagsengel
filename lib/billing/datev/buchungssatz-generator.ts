@@ -125,7 +125,17 @@ async function generiereRechnungsBuchungen(
     .lte('created_at', `${bis}T23:59:59`)
     .is('deleted_at', null)
     // Gutschriften/Stornos laufen über generiereGutschriftBuchungen.
-    .or('correction_type.is.null,correction_type.eq.rechnung')
+    //
+    // `korrektur` gehört ausdrücklich HIERHER und nicht dorthin:
+    // createCorrectionInvoice() (lib/billing/core/invoice-engine.ts) legt eine
+    // Korrekturrechnung als vollwertige Ausgangsrechnung mit eigener Nummer
+    // und eigenem total_amount an — sie trägt Erlös, ist also Forderung an
+    // Erlös wie jede andere Rechnung. Vorher fiel sie durch BEIDE Abfragen
+    // (hier nicht erfasst, dort nicht in der IN-Liste) und fehlte im Export
+    // vollständig. Wer diese Liste ändert, muss die Werte in
+    // generiereGutschriftBuchungen gegenprüfen: zusammen müssen beide jeden
+    // live vorkommenden correction_type abdecken.
+    .or('correction_type.is.null,correction_type.eq.rechnung,correction_type.eq.korrektur')
     .not('status', 'eq', 'entwurf');
 
   // FAIL-CLOSED: ein Lesefehler darf nicht als „keine Rechnungen" durchgehen,
@@ -178,7 +188,7 @@ async function generiereZahlungsBuchungen(
   rahmen: Kontenrahmen,
 ): Promise<DatevBuchungssatz[]> {
   // Zahlungszuordnungen im Zeitraum
-  const { data: allocations } = await supabase
+  const { data: allocations, error } = await supabase
     .from('payment_allocations')
     .select(`
       id, amount_cents, created_at,
@@ -189,6 +199,12 @@ async function generiereZahlungsBuchungen(
     .gte('created_at', `${von}T00:00:00`)
     .lte('created_at', `${bis}T23:59:59`);
 
+  // FAIL-CLOSED wie bei den Rechnungen. Ohne diese Prüfung war ein Lesefehler
+  // hier besonders teuer: der Export enthielt dann sämtliche Erlöse und
+  // KEINEN einzigen Zahlungseingang. Das Ergebnis sieht aus wie ein
+  // vollständiger Monat, in dem niemand bezahlt hat — jeder Debitorensaldo
+  // ist falsch, und auffallen kann das erst bei der Saldenabstimmung.
+  if (error) throw new Error(`Zahlungszuordnungen für DATEV nicht lesbar: ${error.message}`);
   if (!allocations?.length) return [];
 
   const bankKonto = getKonto(rahmen, 'bank');
@@ -360,7 +376,7 @@ async function generiereRuecklastschriftBuchungen(
   rahmen: Kontenrahmen,
 ): Promise<DatevBuchungssatz[]> {
   // Zahlungseingaenge mit ist_ruecklastschrift = true
-  const { data: ruecklastschriften } = await supabase
+  const { data: ruecklastschriften, error } = await supabase
     .from('zahlungseingaenge')
     .select(`
       id, betrag_cent, buchungsdatum, debitor_name, verwendungszweck,
@@ -373,10 +389,12 @@ async function generiereRuecklastschriftBuchungen(
     .gte('buchungsdatum', von)
     .lte('buchungsdatum', bis);
 
+  // FAIL-CLOSED: fehlende Rücklastschriften lassen zurückgeholte Zahlungen
+  // als Zahlungseingang stehen — die Forderung gilt dann als beglichen.
+  if (error) throw new Error(`Rücklastschriften für DATEV nicht lesbar: ${error.message}`);
   if (!ruecklastschriften?.length) return [];
 
   const bankKonto = getKonto(rahmen, 'bank');
-  const gebuehrKonto = getKonto(rahmen, 'nebenkostenGeldverkehr');
   const buchungen: DatevBuchungssatz[] = [];
 
   for (const rl of ruecklastschriften) {
@@ -416,17 +434,23 @@ async function generiereRuecklastschriftBuchungen(
       buchungstext: `Ruecklastschrift ${rl.debitor_name || ''}`.trim().substring(0, 60),
     });
 
-    // Buchung 2: Gebuehr (pauschal 5 EUR, kann angepasst werden)
-    const gebuehr = 5.00;
-    buchungen.push({
-      umsatz: gebuehr,
-      sollHaben: 'S',
-      konto: gebuehrKonto.konto,
-      gegenkonto: bankKonto.konto,
-      belegdatum: formatDatevDatum(datum),
-      belegnummer: reNummer || `RL-${rl.id.slice(0, 8)}`,
-      buchungstext: `RL-Gebuehr ${rl.debitor_name || ''}`.trim().substring(0, 60),
-    });
+    /*
+     * Hier stand eine zweite Buchung: pauschal 5,00 EUR "Nebenkosten
+     * Geldverkehr an Bank" zu JEDER Rücklastschrift. Der Betrag war ein
+     * Literal im Generator — er stand in keinem Datensatz und hing nicht
+     * davon ab, ob die Bank überhaupt etwas berechnet hat.
+     *
+     * Gegen das Bankkonto darf nur gebucht werden, was auf dem Kontoauszug
+     * steht. Jede Rücklastschrift verschob das Bankkonto sonst um 5,00 EUR
+     * gegen den Auszug; bei 20 Rücklastschriften im Monat sind das 100 EUR
+     * Differenz, die im Bankabgleich von Hand gesucht werden müssen.
+     *
+     * Nicht zu verwechseln mit der Gebühr, die WIR dem Kunden berechnen: die
+     * bucht lib/billing/sepa/ruecklastschrift.ts nach payment_differences und
+     * ist ein anderer Vorgang mit einer anderen Gegenseite. Berechnet die
+     * Bank tatsächlich ein Entgelt, erscheint es als eigene Zeile in
+     * zahlungseingaenge und wird von dort gebucht — nicht geschätzt.
+     */
   }
 
   return buchungen;

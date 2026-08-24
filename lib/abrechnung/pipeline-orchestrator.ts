@@ -118,7 +118,7 @@ export async function holePipelineStatus(
   organizationId: string,
 ): Promise<PipelineStatus> {
   // Alle aktiven Läufe (nicht storniert, nicht abgeschlossen)
-  const { data: laeufe } = await supabase
+  const { data: laeufe, error: laeufeFehler } = await supabase
     .from('abrechnungslaeufe')
     .select('id, abrechnungsmonat, kostentraeger_name, kostentraeger_ik, status, updated_at')
     .eq('organization_id', organizationId)
@@ -129,16 +129,36 @@ export async function holePipelineStatus(
     .order('erstellt_am', { ascending: false })
     .limit(100)
 
+  /*
+   * FAIL-CLOSED: ein Lesefehler darf nicht als "nichts offen" durchgehen.
+   *
+   * Ohne diese Pruefung lieferte ein RLS-Treffer, ein Schema-Drift oder ein
+   * Netzwerkfehler `laeufe: []` und eine Zusammenfassung aus lauter Nullen —
+   * nicht unterscheidbar von einer wirklich leeren Pipeline. Genau so war
+   * diese Uebersicht schon einmal wochenlang leer (der 42703-Kommentar
+   * oben); repariert wurde damals der Spaltenname, nicht das Verschlucken.
+   * Eine Kassenabrechnung, die aus dem Blick faellt, verliert Fristen.
+   */
+  if (laeufeFehler) {
+    throw new Error(`Abrechnungslaeufe fuer die Pipeline nicht lesbar: ${laeufeFehler.message}`)
+  }
+
   // Rückläufer-Counts pro Lauf
   const laufIds = (laeufe ?? []).map(l => l.id)
   const ruecklaeuferCounts: Record<string, number> = {}
 
   if (laufIds.length > 0) {
-    const { data: rlCounts } = await supabase
+    const { data: rlCounts, error: rlFehler } = await supabase
       .from('dta_ruecklaeufer')
       .select('lauf_id')
       .eq('organization_id', organizationId)
       .in('lauf_id', laufIds)
+
+    // Auch hier fail-closed: ein Lauf ohne sichtbare Ruecklaeufer sieht aus
+    // wie ein Lauf ohne Beanstandung.
+    if (rlFehler) {
+      throw new Error(`Ruecklaeufer fuer die Pipeline nicht lesbar: ${rlFehler.message}`)
+    }
 
     if (rlCounts) {
       for (const rc of rlCounts) {
@@ -150,12 +170,18 @@ export async function holePipelineStatus(
   }
 
   // Unzugeordnete Rückläufer
-  const { count: unzugeordnet } = await supabase
+  const { count: unzugeordnet, error: unzugeordnetFehler } = await supabase
     .from('dta_ruecklaeufer')
     .select('id', { count: 'exact', head: true })
     .eq('organization_id', organizationId)
     .is('lauf_id', null)
     .not('status', 'in', '("erledigt","duplikat")')
+
+  if (unzugeordnetFehler) {
+    throw new Error(
+      `Unzugeordnete Ruecklaeufer nicht zaehlbar: ${unzugeordnetFehler.message}`,
+    )
+  }
 
   const pipelineLaeufe: PipelineLauf[] = (laeufe ?? []).map(l => {
     const status = l.status as LaufStatus
@@ -280,7 +306,22 @@ export async function pruefeUndVerarbeitePipeline(
 
     for (const lauf of zuFreigeben ?? []) {
       try {
-        await supabase
+        /*
+         * Der Status gehoert in die WHERE-Bedingung, nicht nur in die
+         * Kandidatenabfrage.
+         *
+         * Zwischen Lesen und Schreiben liegt ein Zeitfenster. Traf das
+         * Update den Lauf allein ueber seine ID, gaben zwei parallele
+         * Pipeline-Laeufe (Tages-Cron plus Klick auf der Oberflaeche)
+         * denselben Lauf zweimal frei — und ein Lauf, den jemand
+         * zwischenzeitlich von Hand storniert hatte, wurde ueberschrieben
+         * und ging an die Kasse.
+         *
+         * `.select('id')` liefert die tatsaechlich getroffenen Zeilen. Nur
+         * die werden gezaehlt: wer das Rennen verliert, hat nichts
+         * freigegeben und darf das auch nicht melden.
+         */
+        const { data: getroffen, error: freigabeFehler } = await supabase
           .from('abrechnungslaeufe')
           .update({
             status: 'freigegeben',
@@ -289,6 +330,19 @@ export async function pruefeUndVerarbeitePipeline(
           })
           .eq('id', lauf.id)
           .eq('organization_id', organizationId)
+          .in('status', ['geprueft', 'bereit_zum_export'])
+          .select('id')
+
+        if (freigabeFehler) {
+          fehler.push(`Auto-Freigabe Lauf ${lauf.id}: ${freigabeFehler.message}`)
+          continue
+        }
+        if (!getroffen?.length) {
+          // Kein Fehler, aber auch keine Freigabe: der Lauf hat den Status
+          // inzwischen gewechselt. Still weiterzaehlen waere eine Luege.
+          fehler.push(`Auto-Freigabe Lauf ${lauf.id}: Status inzwischen geaendert, nicht freigegeben`)
+          continue
+        }
 
         await logBillingAction(supabase, {
           entityType: 'dta_lauf',
