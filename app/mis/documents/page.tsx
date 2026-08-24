@@ -7,6 +7,7 @@ import { MIcon } from '@/components/mis/MisIcons'
 import { useMis } from '@/lib/mis/MisContext'
 import type { MisDocument, DocumentCategory } from '@/lib/mis/types'
 import { createDocument, updateDocumentStatus, incrementDownloadCount } from './actions'
+import { sanitizeStorageName } from '@/lib/file-upload-validation'
 import { logger } from '@/lib/logger'
 const log = logger.child('mis:documents')
 
@@ -41,6 +42,14 @@ export default function DocumentsPage() {
     setLoading(false)
   }
 
+  const MAX_MIS_FILE_SIZE = 20 * 1024 * 1024 // 20 MB (= Bucket-Limit)
+  const ERLAUBTE_MIS_MIME_TYPES = [
+    'application/pdf', 'image/jpeg', 'image/png', 'image/webp',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    'text/plain', 'text/csv',
+  ]
+
   async function handleUpload() {
     const supabase = createClient()
     const file = fileRef.current?.files?.[0]
@@ -51,10 +60,18 @@ export default function DocumentsPage() {
     let fileType = ''
 
     if (file) {
+      if (file.size > MAX_MIS_FILE_SIZE) {
+        alert(`Datei zu groß (${(file.size / 1024 / 1024).toFixed(1)} MB). Maximal 20 MB erlaubt.`)
+        return
+      }
+      if (file.type && !ERLAUBTE_MIS_MIME_TYPES.includes(file.type)) {
+        alert('Dateityp nicht erlaubt. Erlaubt: PDF, JPEG, PNG, WebP, DOCX, XLSX, TXT, CSV.')
+        return
+      }
       fileName = file.name
       fileSize = file.size
       fileType = file.type
-      filePath = `documents/${Date.now()}_${file.name}`
+      filePath = `documents/${Date.now()}_${sanitizeStorageName(file.name)}`
       await supabase.storage.from('mis-documents').upload(filePath, file)
     }
 
