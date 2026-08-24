@@ -4,6 +4,7 @@ import { escapeHtml } from '@/lib/rate-limit'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { sendRawEmail } from '@/lib/notifications'
 import { logger } from '@/lib/logger'
+import { pruefeCronGeheimnis } from '@/lib/api/cron-auth'
 const log = logger.child('api:drip')
 
 // ═══════════════════════════════════════════════════════════
@@ -142,14 +143,8 @@ const templates = {
 }
 
 export async function POST(request: Request) {
-  // ═══ AUTH: Massen-Mail-Versand nur mit CRON_SECRET auslösbar ═══
-  // Vorher: KEIN Auth-Check → jeder Anonyme konnte die komplette Drip-Kampagne
-  // (alle Kunden) auslösen + Namen/Registrierungsdaten/Referral-Codes abgreifen.
-  const authHeader = request.headers.get('authorization')
-  const cronSecret = process.env.CRON_SECRET
-  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
+  const abweisung = pruefeCronGeheimnis(request)
+  if (abweisung) return abweisung
 
   try {
     if (!process.env.RESEND_API_KEY) {

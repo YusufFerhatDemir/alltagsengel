@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { safeApiError } from '@/lib/api/error-sanitizer'
 import { fuehreWiederholungslaufAus } from '@/lib/notifications/retry-worker'
+import { pruefeCronGeheimnis } from '@/lib/api/cron-auth'
 
 // ═══════════════════════════════════════════════════════════════════════
 // CRON: WIEDERHOLUNGSLAUF FUER BENACHRICHTIGUNGEN
@@ -38,10 +39,8 @@ export const dynamic = 'force-dynamic'
 export const maxDuration = 60
 
 export async function GET(request: Request) {
-  const authHeader = request.headers.get('authorization')
-  if (!process.env.CRON_SECRET || authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
+  const abweisung = pruefeCronGeheimnis(request)
+  if (abweisung) return abweisung
 
   try {
     const ergebnis = await fuehreWiederholungslaufAus({ zeitbudgetMs: 45_000 })

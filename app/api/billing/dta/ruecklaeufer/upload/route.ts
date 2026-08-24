@@ -19,6 +19,27 @@ import type { RuecklaeuferImportErgebnis } from '@/lib/abrechnung/ruecklaeufer'
 import { logger } from '@/lib/logger'
 const log = logger.child('api:billing')
 
+// Der Bucket `dta-dateien` erlaubt serverseitig 10 MB. Hier wird dieselbe
+// Grenze VOR dem Einlesen geprueft: `arrayBuffer()` zieht die Datei sonst
+// erst vollstaendig in den Speicher der Serverless-Funktion, bevor der
+// Storage sie ablehnt.
+const MAX_RUECKLAEUFER_BYTES = 10 * 1024 * 1024
+
+/**
+ * Dateiname fuer einen Storage-Schluessel entschaerfen.
+ *
+ * Der Name kam ungefiltert aus dem Upload und wurde in den Pfad
+ * `ruecklaeufer/<org>/<zeit>_<name>` eingesetzt. Ein Name mit `../` haette
+ * damit die Organisationsablage verlassen. Gleiches Muster wie in
+ * lib/akten/dokumente.ts und lib/wunden/fotos.ts.
+ */
+function sanitizeFileName(name: string): string {
+  return name
+    .replace(/[^a-zA-Z0-9._-]+/g, '_')
+    .replace(/^\.+/, '')
+    .slice(0, 120) || 'ruecklaeufer.txt'
+}
+
 export async function POST(request: Request) {
   try {
     const auth = await requireOpsAdmin('abrechnung.schreiben')
@@ -36,6 +57,13 @@ export async function POST(request: Request) {
       )
     }
 
+    if (datei.size > MAX_RUECKLAEUFER_BYTES) {
+      return NextResponse.json(
+        { error: `Datei zu gross (max. ${MAX_RUECKLAEUFER_BYTES / 1024 / 1024} MB).` },
+        { status: 413 },
+      )
+    }
+
     // Dateiinhalt lesen
     const bytes = await datei.arrayBuffer()
     const rohtext = new TextDecoder('iso-8859-1').decode(bytes)
@@ -49,7 +77,7 @@ export async function POST(request: Request) {
 
     // In Supabase Storage speichern
     const admin = createAdminClient()
-    const dateiPfad = `ruecklaeufer/${organizationId}/${Date.now()}_${datei.name}`
+    const dateiPfad = `ruecklaeufer/${organizationId}/${Date.now()}_${sanitizeFileName(datei.name)}`
 
     const { error: uploadError } = await admin.storage
       .from('dta-dateien')
@@ -63,10 +91,11 @@ export async function POST(request: Request) {
       // Storage-Fehler ist nicht kritisch — Import geht trotzdem
       log.error('Storage-Upload fehlgeschlagen', { errorMessage: uploadError.message, scope: 'ruecklaeufer-upload' })
     } else {
-      const { data: urlData } = admin.storage
-        .from('dta-dateien')
-        .getPublicUrl(dateiPfad)
-      quelldateiUrl = urlData?.publicUrl
+      // KEIN getPublicUrl(): `dta-dateien` ist ein privater Bucket, die so
+      // erzeugte URL laeuft ins Leere und taeuscht einen abrufbaren Beleg
+      // vor. Gespeichert wird der Storage-Pfad; eine signierte URL erzeugt
+      // erst der Lesepfad, mit Ablaufzeit und Rechtepruefung.
+      quelldateiUrl = dateiPfad
     }
 
     // EDIFACT parsen

@@ -153,7 +153,11 @@ describe('Gegenprobe: keine neue Route ohne Guard oder Limit', () => {
       const bewacht =
         /require[A-Za-z]*\(/.test(src) ||
         /auth\.getUser\(/.test(src) ||
-        /CRON_SECRET/.test(src) ||
+        // CRON_SECRET direkt ODER ueber den gemeinsamen Helfer
+        // lib/api/cron-auth.ts (pruefeCronGeheimnis / istCronGeheimnis).
+        // Der Helfer ersetzte den achtfach kopierten Direktvergleich —
+        // zwei Kopien hatten den Null-Riegel verloren.
+        /CRON_SECRET|pruefeCronGeheimnis|istCronGeheimnis/.test(src) ||
         /x-service-key/.test(src) ||
         /stripe\.webhooks|constructEvent/.test(src) ||
         /x-hub-signature|verifyMetaSignature/.test(src) ||

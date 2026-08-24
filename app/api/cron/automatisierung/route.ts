@@ -3,6 +3,7 @@ import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { fuehreTaeglicheAutomatisierungAus } from '@/lib/automation'
 import { raeumeZustellspurAuf } from '@/lib/notifications/aufraeumen'
+import { pruefeCronGeheimnis } from '@/lib/api/cron-auth'
 
 // ═══════════════════════════════════════════════════════════
 // CRON: TAEGLICHE AUTOMATISIERUNGSKETTEN (WS7)
@@ -16,10 +17,8 @@ import { raeumeZustellspurAuf } from '@/lib/notifications/aufraeumen'
 const supabaseAdmin = createAdminClient()
 
 export async function GET(request: Request) {
-  const authHeader = request.headers.get('authorization')
-  if (!process.env.CRON_SECRET || authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
+  const abweisung = pruefeCronGeheimnis(request)
+  if (abweisung) return abweisung
 
   try {
     const { data: orgs, error: orgError } = await supabaseAdmin

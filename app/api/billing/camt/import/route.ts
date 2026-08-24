@@ -7,6 +7,8 @@ import { verarbeiteRuecklastschrift } from '@/lib/billing/sepa/ruecklastschrift'
 import { logBillingAction } from '@/lib/billing/core/audit';
 import { safeApiError } from '@/lib/api/error-sanitizer';
 
+const MAX_CAMT_BYTES = 20 * 1024 * 1024;
+
 /**
  * POST /api/billing/camt/import
  * CAMT-Datei hochladen, parsen und automatisch matchen.
@@ -23,6 +25,18 @@ export async function POST(req: NextRequest) {
     const file = formData.get('file') as File | null;
     if (!file) {
       return NextResponse.json({ error: 'Keine Datei hochgeladen' }, { status: 400 });
+    }
+
+    // Groessenriegel VOR dem Einlesen. `file.text()` zieht die Datei
+    // vollstaendig in den Speicher der Serverless-Funktion, und der
+    // CAMT-Parser arbeitet danach mit Regexen ueber denselben String — bei
+    // einer 500-MB-Datei stirbt die Funktion, statt 400 zu antworten.
+    // 20 MB traegt jede realistische CAMT.053-Tagesdatei mit Abstand.
+    if (file.size > MAX_CAMT_BYTES) {
+      return NextResponse.json(
+        { error: `Datei zu gross (max. ${MAX_CAMT_BYTES / 1024 / 1024} MB).` },
+        { status: 413 },
+      );
     }
 
     const xmlContent = await file.text();
@@ -92,13 +106,60 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // ── Dublettenpruefung auf BUCHUNGSebene ──
+    //
+    // Der Dateihash oben faengt nur den Fall „exakt dieselbe Datei ein
+    // zweites Mal". Banken schneiden Kontoauszuege aber ueberlappend: das
+    // camt.054-Avis vom Vortag, danach der camt.053-Auszug derselben
+    // Periode, oder ein neu gezogener Auszug ueber einen groesseren
+    // Zeitraum. Der Dateihash unterscheidet sich dann — und JEDE bereits
+    // verbuchte Zahlung darin wurde ein zweites Mal als Zahlungseingang
+    // angelegt, ein zweites Mal gematcht und ein zweites Mal einer
+    // Rechnung zugeordnet.
+    //
+    // `zahlungseingaenge.quelldatei_hash` traegt den Buchungshash aus dem
+    // Parser (SHA-256 ueber Betrag, Waehrung, Daten, Zahler-IBAN, Zweck,
+    // EndToEndId und Buchungsreferenz). Er wurde bislang geschrieben, aber
+    // nie gelesen.
+    const buchungsHashes = [...new Set(zuVerarbeiten.map(b => b.buchungsHash))];
+    const { data: bekannteZeilen, error: bekanntErr } = await supabase
+      .from('zahlungseingaenge')
+      .select('quelldatei_hash')
+      .eq('organization_id', organizationId)
+      .in('quelldatei_hash', buchungsHashes);
+
+    if (bekanntErr) {
+      // Fail-closed: koennen wir die bereits verbuchten Zeilen nicht lesen,
+      // duerfen wir nicht importieren — sonst entstuende genau die
+      // Doppelbuchung, die diese Pruefung verhindern soll.
+      throw new Error(
+        `Dublettenpruefung nicht moeglich: ${bekanntErr.message}`,
+      );
+    }
+
+    const bekannt = new Set(
+      (bekannteZeilen ?? []).map(z => (z as { quelldatei_hash: string }).quelldatei_hash),
+    );
+    const neueBuchungen = zuVerarbeiten.filter(b => !bekannt.has(b.buchungsHash));
+    const dublettenUebersprungen = zuVerarbeiten.length - neueBuchungen.length;
+
+    if (neueBuchungen.length === 0) {
+      return NextResponse.json(
+        {
+          error: 'Alle Buchungen dieses Auszugs sind bereits verbucht.',
+          dublettenUebersprungen,
+        },
+        { status: 409 },
+      );
+    }
+
     // Import-Datensatz anlegen
     const { data: camtImport, error: importErr } = await supabase
       .from('camt_imports')
       .insert({
         organization_id: organizationId,
         dateiname: file.name,
-        buchungen_anzahl: zuVerarbeiten.length,
+        buchungen_anzahl: neueBuchungen.length,
         status: 'importiert',
         quelldatei_hash: fileHash,
         created_by: userId,
@@ -127,8 +188,8 @@ export async function POST(req: NextRequest) {
     /** Ausgehende Zahlungen, die keine Ruecklastschrift sind. */
     let ausgehendeUebersprungen = 0;
 
-    for (let i = 0; i < zuVerarbeiten.length; i++) {
-      const buchung = zuVerarbeiten[i];
+    for (let i = 0; i < neueBuchungen.length; i++) {
+      const buchung = neueBuchungen[i];
 
       // ── Ausgehende Zahlung, die keine Ruecklastschrift ist ──
       // Sie gehoert nicht in `zahlungseingaenge`: dort wurde sie mit
@@ -244,8 +305,9 @@ export async function POST(req: NextRequest) {
       newState: {
         dateiname: file.name,
         format: parseResult.format,
-        buchungen: zuVerarbeiten.length,
+        buchungen: neueBuchungen.length,
         vorgemerkt_uebersprungen: vorgemerkt.length,
+        dubletten_uebersprungen: dublettenUebersprungen,
         ausgehende_uebersprungen: ausgehendeUebersprungen,
         nicht_gespeichert: nichtGespeichert.length,
         zugeordnet,
@@ -258,10 +320,13 @@ export async function POST(req: NextRequest) {
       importId: camtImport.id,
       format: parseResult.format,
       kontoIban: parseResult.kontoIban,
-      buchungenGesamt: zuVerarbeiten.length,
+      buchungenGesamt: neueBuchungen.length,
       // Vorgemerkte Posten sind bewusst NICHT verbucht — die Zahl muss
       // sichtbar sein, sonst sieht ein unvollstaendiger Import vollstaendig aus.
       vorgemerktUebersprungen: vorgemerkt.length,
+      // Ebenso die bereits bekannten Buchungen aus einem ueberlappenden
+      // Auszug: sie fehlen absichtlich, das muss ablesbar sein.
+      dublettenUebersprungen,
       ausgehendeUebersprungen,
       nichtGespeichert,
       zugeordnet,
