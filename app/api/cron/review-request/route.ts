@@ -5,6 +5,7 @@ import { sendRawEmail } from '@/lib/notifications'
 import { esc } from '@/lib/notifications/html'
 import { datumBerlin } from '@/lib/utils/timezone'
 import { logger } from '@/lib/logger'
+import { pruefeCronGeheimnis } from '@/lib/api/cron-auth'
 const log = logger.child('review-cron')
 
 // ═══════════════════════════════════════════════════════════
@@ -26,14 +27,8 @@ const log = logger.child('review-cron')
 const supabaseAdmin = createAdminClient()
 
 export async function GET(request: Request) {
-  // Auth-Check
-  // Ohne gesetztes CRON_SECRET waere der Vergleichswert der Text
-  // "Bearer undefined" — den kann jeder schicken. Erst pruefen, ob es
-  // ueberhaupt ein Geheimnis gibt.
-  const authHeader = request.headers.get('authorization')
-  if (!process.env.CRON_SECRET || authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
+  const abweisung = pruefeCronGeheimnis(request)
+  if (abweisung) return abweisung
 
   try {
     if (!process.env.RESEND_API_KEY) {

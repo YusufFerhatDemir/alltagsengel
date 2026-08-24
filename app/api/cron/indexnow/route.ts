@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { safeApiError } from '@/lib/api/error-sanitizer'
 import { notifyIndexers } from '@/lib/indexing'
 import { logger } from '@/lib/logger'
+import { pruefeCronGeheimnis } from '@/lib/api/cron-auth'
 const log = logger.child('cron:indexnow')
 
 // ═══════════════════════════════════════════════════════════
@@ -17,10 +18,8 @@ const log = logger.child('cron:indexnow')
 const SITEMAP_URL = 'https://alltagsengel.care/sitemap.xml'
 
 export async function GET(request: Request) {
-  const authHeader = request.headers.get('authorization')
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
+  const abweisung = pruefeCronGeheimnis(request)
+  if (abweisung) return abweisung
 
   try {
     const res = await fetch(SITEMAP_URL, { cache: 'no-store' })

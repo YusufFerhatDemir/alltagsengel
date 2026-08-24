@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { safeApiError } from '@/lib/api/error-sanitizer'
 import { logger } from '@/lib/logger'
+import { cronAuthHeader, pruefeCronGeheimnis } from '@/lib/api/cron-auth'
 const log = logger.child('cron:drip')
 
 // ═══════════════════════════════════════════════════════════
@@ -12,11 +13,8 @@ const log = logger.child('cron:drip')
 // ═══════════════════════════════════════════════════════════
 
 export async function GET(request: Request) {
-  // Vercel Cron sendet Authorization Header
-  const authHeader = request.headers.get('authorization')
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
+  const abweisung = pruefeCronGeheimnis(request)
+  if (abweisung) return abweisung
 
   try {
     // Interne Weiterleitung an die Drip-Kampagne
@@ -26,7 +24,7 @@ export async function GET(request: Request) {
       headers: {
         'Content-Type': 'application/json',
         // CRON_SECRET weiterreichen — /api/drip ist jetzt fail-closed geschützt.
-        Authorization: `Bearer ${process.env.CRON_SECRET}`,
+        Authorization: cronAuthHeader(),
       },
     })
 

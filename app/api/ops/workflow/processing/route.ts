@@ -1,17 +1,15 @@
 import { apiErrorResponse } from '@/lib/api/error-sanitizer'
 import { NextResponse } from 'next/server'
+import { istCronGeheimnis } from '@/lib/api/cron-auth'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import { processPending, checkFristen } from '@/lib/workflow/processing'
 
 export async function POST(request: Request) {
-  const cronSecret = request.headers.get('x-cron-secret')
-  const expectedSecret = process.env.CRON_SECRET
-
-  let isCron = false
-  if (cronSecret && expectedSecret && cronSecret === expectedSecret) {
-    isCron = true
-  }
+  // Konstantzeit-Vergleich im gemeinsamen Helfer; fail-closed, wenn
+  // CRON_SECRET nicht gesetzt ist. Der Header heisst hier bewusst weiter
+  // `x-cron-secret` — die Aufrufer dieser Route kennen kein Bearer-Schema.
+  const isCron = istCronGeheimnis(request.headers.get('x-cron-secret'))
 
   if (!isCron) {
     const supabase = await createClient()

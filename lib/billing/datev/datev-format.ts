@@ -85,11 +85,32 @@ export function formatDatevBetrag(betrag: number): string {
 }
 
 /**
- * Escaped ein Textfeld fuer DATEV-CSV: in Anfuehrungszeichen, innere Anf.zeichen verdoppeln.
+ * Escaped ein Textfeld fuer DATEV-CSV: in Anfuehrungszeichen, innere
+ * Anfuehrungszeichen verdoppeln.
+ *
+ * ZWEI FEHLER, DIE HIER FRUEHER DRINSTECKTEN:
+ *
+ * 1. Gekuerzt wurde NACH dem Verdoppeln. Ein Wert, dessen verdoppeltes
+ *    Anfuehrungszeichen-Paar genau auf der Grenze 60 lag, wurde mittendrin
+ *    zerschnitten — uebrig blieb ein einzelnes `"`, das das Feld vorzeitig
+ *    beendet und die restliche Zeile in die falschen Spalten schiebt. Ein
+ *    Klientenname aus einem Kundenformular reicht dafuer aus. Jetzt wird
+ *    erst gekuerzt, dann verdoppelt.
+ *
+ * 2. Kein Formel-Riegel. Ein Feld, das mit = + - @ beginnt, ist beim
+ *    Oeffnen in Excel eine FORMEL, keine Zeichenkette (CSV-Injection). Der
+ *    Buchungstext traegt heute ein festes Praefix ("Rechnung …") und ist
+ *    damit zufaellig geschuetzt — KOST1/KOST2 und die Belegnummer nicht.
+ *    Auf Zufall darf das nicht beruhen. Gleiche Entschaerfung wie in
+ *    lib/utils/csv.ts: fuehrender Apostroph.
+ *
+ * Die Zeichenkette darf nach dem Verdoppeln laenger als 60 werden — das ist
+ * richtig so: DATEV zaehlt die Nutzzeichen, nicht die Escape-Zeichen.
  */
 function escapeText(text: string): string {
-  const clean = text.replace(/"/g, '""').substring(0, 60);
-  return `"${clean}"`;
+  const gekuerzt = text.substring(0, 60);
+  const entschaerft = /^[=+\-@]/.test(gekuerzt) ? `'${gekuerzt}` : gekuerzt;
+  return `"${entschaerft.replace(/"/g, '""')}"`;
 }
 
 /**
@@ -153,7 +174,10 @@ export function generateDatevHeader(params: DatevHeaderParams): string {
 }
 
 function escapeInner(s: string): string {
-  return s.replace(/"/g, '""');
+  // Auch die Kopfzeilen-Felder (Berater-/Mandantennummer, Erzeugerkuerzel)
+  // stammen aus einer Eingabemaske und landen in derselben Excel-Zelle.
+  const entschaerft = /^[=+\-@]/.test(s) ? `'${s}` : s;
+  return entschaerft.replace(/"/g, '""');
 }
 
 /**
