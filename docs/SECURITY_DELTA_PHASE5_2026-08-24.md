@@ -126,7 +126,7 @@ bewusste Abwägung.
 | # | Befund | Wo | Warum offen |
 |---|---|---|---|
 | **P2-a** | 5 Storage-Buckets ohne `file_size_limit` **und** ohne MIME-Allowlist: `abrechnung`, `documents`, `mis-documents`, `service-proofs`, `verordnungen`. Alle privat, aber ein berechtigter Nutzer kann beliebig große Dateien beliebigen Typs ablegen. | `storage.buckets` | DDL/Bucket-Konfiguration. Empfehlung: 20 MB + `{application/pdf,image/jpeg,image/png,image/webp}` analog `kunden-dokumente`. |
-| **P2-b** | Die drei `dta-dateien`-Storage-Policies prüfen per `EXISTS (SELECT 1 FROM profiles …)` statt `is_admin()`. Das ist die Bauform, die schon zweimal `42P17`-Rekursion ausgelöst hat, und sie ist **org-blind**: ein Admin aus Organisation B liest die DTA-Dateien von Organisation A. | `storage.objects` | DDL. Muster von `admin_abrechnung_storage_*` übernehmen und um `organization_id` erweitern. |
+| ~~**P2-b**~~ | ~~dta-dateien org-blind~~ **GEFIXT** via `apply_migration` (20261003000002). Drei Policies ersetzt: `is_admin()` + `(storage.foldername(name))[2] = current_org_id()::text`. Live verifiziert. | `storage.objects` | ✅ Erledigt 2026-08-24 |
 | **P2-c** | 7 Tabellen mit `organization_id`, aber ohne `org_fence`-Policy: `billing_tarif_belege`, `billing_tariff_audit`, `organization_members`, `organization_subscriptions`, `state_settings`, `state_settings_audit`, `state_waitlist`. Ihre permissiven Policies prüfen die Organisation überwiegend selbst — der RESTRICTIVE Riegel als zweite Schicht fehlt aber. | `pg_policies` | DDL. Reiner Tiefenschutz, keine offene Lücke: kein Lesepfad ohne Org-Bedingung gefunden. |
 | **P2-d** | `state_waitlist` hat eine `INSERT`-Policy für `authenticated,anon` **ohne `WITH CHECK`**. Für `anon` wirkungslos (kein INSERT-Grant), für `authenticated` bedeutet es: beliebige Zeilen mit beliebiger `organization_id`. | `pg_policies` | DDL. |
 | **P2-e** | Lange signierte URLs: 30 Tage für das Rechnungs-PDF (`lib/pdf/rechnung-paket.ts:453`), 7 Tage für Leistungsnachweis und Leistungsnachweis-Foto (`app/api/native/leistungsnachweis-upload/route.ts:99`, `lib/upload-service-proof.ts:78`). Eine solche URL ist ein Inhaber-Token auf ein Dokument mit Gesundheits- und Abrechnungsdaten. | Code | Bewusste Abwägung: die URLs gehen per Mail raus und müssen den Postfach-Alltag überleben. Verkürzen bricht den Versandweg — Entscheidung gehört zum Versandkonzept, nicht in einen Security-Fix. |
@@ -141,8 +141,8 @@ bewusste Abwägung.
 * **Horizontal (Mandant A → B):** kein Weg gefunden. `org_fence` ist auf 244
   Policies RESTRICTIVE, `current_org_id()` ist fail-**open** in Richtung
   Stamm-Organisation (bekannt, siehe `current-org-id-fail-open`) — das trennt
-  Mandanten weiterhin, nur keine Rollen. **Ausnahme: P2-b** (DTA-Storage,
-  org-blind) ist ein realer horizontaler Pfad zwischen Admins.
+  Mandanten weiterhin, nur keine Rollen. ~~Ausnahme: P2-b (DTA-Storage,
+  org-blind)~~ **Gefixt 2026-08-24** — kein offener horizontaler Pfad mehr.
 * **Vertikal (User → Admin):** kein Weg gefunden. Die Rollenprüfung liegt
   durchgehend in den `require*()`-Guards der Service-Schicht; die 22 Routen ohne
   Auth-Marker in der Datei wurden einzeln geprüft und delegieren entweder
