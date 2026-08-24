@@ -22,7 +22,7 @@ import { verarbeiteMahnQueue } from '@/lib/billing/dunning/mahn-versand'
  */
 export async function POST(request: Request) {
   try {
-    const auth = await pruefeAdmin()
+    const auth = await pruefeAdmin('abrechnung.schreiben')
     if (!auth.ok) return auth.response
     const { admin, organizationId, userId } = auth
 
@@ -79,7 +79,20 @@ type AdminPruefung =
   | { ok: false; response: NextResponse }
   | { ok: true; admin: ReturnType<typeof createAdminClient>; organizationId: string; userId: string }
 
-async function pruefeAdmin(): Promise<AdminPruefung> {
+/**
+ * Zugangspruefung.
+ *
+ * `recht` ist bewusst ein Parameter: GET zaehlt nur die Warteschlange
+ * (`abrechnung.lesen`), POST verschickt Mahnschreiben an echte Kunden und
+ * verlangt deshalb `abrechnung.schreiben` — wie der Rechnungsversand
+ * (app/api/billing/invoices/[id]/versenden). Vorher stand hier fuer
+ * beides `abrechnung.lesen`; damit haette die PDL-Rolle, die Rechnungen
+ * ausdruecklich nur LESEN darf (lib/auth/rollen.ts), Mahnungen ausloesen
+ * koennen.
+ */
+async function pruefeAdmin(
+  recht: 'abrechnung.lesen' | 'abrechnung.schreiben' = 'abrechnung.lesen'
+): Promise<AdminPruefung> {
   const supabase = await createClient()
   const { data: { user }, error: authError } = await supabase.auth.getUser()
   if (authError || !user) {
@@ -88,7 +101,7 @@ async function pruefeAdmin(): Promise<AdminPruefung> {
 
   const { data: profile } = await supabase
     .from('profiles').select('role').eq('id', user.id).single()
-  if (!profile || !rolleDarf(profile.role, 'abrechnung.lesen')) {
+  if (!profile || !rolleDarf(profile.role, recht)) {
     return { ok: false, response: NextResponse.json({ error: 'Nur für Administratoren.' }, { status: 403 }) }
   }
 
