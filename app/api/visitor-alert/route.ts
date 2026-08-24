@@ -130,8 +130,14 @@ export async function POST(req: NextRequest) {
     if (resendKey) {
       const now = new Date().toLocaleString('de-DE', { timeZone: 'Europe/Berlin' })
 
-      await fetch('https://api.resend.com/emails', {
+      // Antwort MUSS geprueft werden: fetch wirft nur bei Netzfehlern,
+      // eine Ablehnung von Resend (401, 422, 429) kommt als HTTP-Status
+      // zurueck und sah bisher wie ein erfolgreicher Versand aus.
+      // Zeitlimit, damit ein haengender Aufruf nicht die ganze
+      // Serverless-Funktion blockiert.
+      const alertAntwort = await fetch('https://api.resend.com/emails', {
         method: 'POST',
+        signal: AbortSignal.timeout(10_000),
         headers: {
           'Authorization': `Bearer ${resendKey}`,
           'Content-Type': 'application/json',
@@ -166,7 +172,17 @@ export async function POST(req: NextRequest) {
             </div>
           `,
         }),
-      })
+      }).catch(() => null)
+
+      if (!alertAntwort || !alertAntwort.ok) {
+        // Nur der Status, kein Antwortkoerper: der koennte den Schluessel
+        // widerspiegeln. Der Besucher-Alarm ist ein internes Signal —
+        // ein Fehlschlag darf den Aufruf nicht kippen, muss aber sichtbar
+        // sein statt still zu verschwinden.
+        log.warn('Visitor-Alert-Mail nicht versendet', {
+          status: alertAntwort?.status ?? 'Netzwerkfehler/Zeitlimit',
+        })
+      }
     }
 
     // In-App Notification — nur Stamm-Org-Admins (Multi-Mandant-sicher)

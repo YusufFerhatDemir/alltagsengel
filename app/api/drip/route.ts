@@ -1,8 +1,8 @@
-import { Resend } from 'resend'
 import { NextResponse } from 'next/server'
 import { safeApiError } from '@/lib/api/error-sanitizer'
 import { escapeHtml } from '@/lib/rate-limit'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { sendRawEmail } from '@/lib/notifications'
 import { logger } from '@/lib/logger'
 const log = logger.child('api:drip')
 
@@ -17,15 +17,25 @@ const log = logger.child('api:drip')
 // Tag 3: "Wusstest du? 131€/Monat von der Pflegekasse"
 // Tag 7: "Dein erster Engel wartet auf dich"
 // Tag 14: "Letzte Erinnerung + Referral-Bonus"
+//
+// GENAU EIN TAG JE STUFE. Die Fenster waren zwei Tage breit
+// (`>= 3 && < 5`), der Cron laeuft aber taeglich — jede Stufe ging
+// dadurch ZWEIMAL an denselben Kunden. Ein Vergleich auf den exakten
+// Tag sendet einmal; der Idempotenzschluessel je Kunde und Stufe
+// faengt zusaetzlich einen doppelten Cron-Aufruf am selben Tag ab.
+// Preis dieser Wahl: ein ausgefallener Cron-Lauf laesst die Mail dieses
+// Tages aus, statt sie zu verdoppeln. Ein uebersprungener Werbetext ist
+// harmloser als zwei identische im Postfach.
+//
+// Es gibt bewusst keinen Zustand in der Datenbank — Absendetag und
+// Registrierungsdatum reichen. Waere ein Nachholen gewuenscht, braeuchte
+// es eine eigene Tabelle; Idempotenz allein loest das nicht.
 // ═══════════════════════════════════════════════════════════
 
 const supabaseAdmin = createAdminClient()
 
-function getResend() {
-  const key = process.env.RESEND_API_KEY
-  if (!key) return null
-  return new Resend(key)
-}
+/** Stufen der Kampagne: Tage seit Registrierung. */
+const STUFEN = { day3: 3, day7: 7, day14: 14 } as const
 
 function wrapEmail(content: string) {
   return `<!DOCTYPE html>
@@ -142,13 +152,13 @@ export async function POST(request: Request) {
   }
 
   try {
-    const resend = getResend()
-    if (!resend) {
+    if (!process.env.RESEND_API_KEY) {
       return NextResponse.json({ error: 'RESEND_API_KEY nicht konfiguriert' }, { status: 500 })
     }
 
     const now = new Date()
     const sent = { day3: 0, day7: 0, day14: 0 }
+    const fehlgeschlagen = { day3: 0, day7: 0, day14: 0 }
 
     // Alle Kunden ohne Buchung laden
     const { data: customers } = await supabaseAdmin
@@ -157,7 +167,7 @@ export async function POST(request: Request) {
       .eq('role', 'kunde')
 
     if (!customers || customers.length === 0) {
-      return NextResponse.json({ message: 'Keine Kunden gefunden', sent })
+      return NextResponse.json({ message: 'Keine Kunden gefunden', sent, fehlgeschlagen })
     }
 
     // Kunden mit Buchungen identifizieren
@@ -183,45 +193,44 @@ export async function POST(request: Request) {
       const firstName = escapeHtml(firstNameSubject)
       const referralCode = escapeHtml((customer.referral_code || 'ANGEL').replace(/[\r\n]+/g, ' ').slice(0, 40))
 
-      try {
-        // Tag 3 Mail
-        if (daysSinceRegistration >= 3 && daysSinceRegistration < 5) {
-          await resend.emails.send({
-            from: 'Alltagsengel <info@alltagsengel.care>',
-            to: customer.email,
-            subject: templates.day3.subject,
-            html: templates.day3.html(firstName),
-          })
-          sent.day3++
+      // Ergebnis wird geprueft: das Resend-SDK wirft bei einer Ablehnung
+      // nicht, sondern liefert `{ error }`. Der Zaehler zaehlte deshalb
+      // bisher auch Mails mit, die der Provider abgelehnt hatte — der
+      // Cron meldete Erfolge, die es nie gab.
+      const stufe = async (
+        name: keyof typeof STUFEN,
+        subject: string,
+        html: string
+      ): Promise<void> => {
+        if (daysSinceRegistration !== STUFEN[name]) return
+        const ergebnis = await sendRawEmail({
+          to: customer.email,
+          subject,
+          html,
+          idempotenzSchluessel: `drip:${name}:${customer.id}`,
+        })
+        if (ergebnis.ok) {
+          sent[name]++
+        } else {
+          fehlgeschlagen[name]++
+          log.warn('Drip-Mail nicht versendet', { stufe: name, grund: ergebnis.grund })
         }
-
-        // Tag 7 Mail
-        if (daysSinceRegistration >= 7 && daysSinceRegistration < 9) {
-          await resend.emails.send({
-            from: 'Alltagsengel <info@alltagsengel.care>',
-            to: customer.email,
-            subject: templates.day7.subject.replace('${firstName}', firstNameSubject),
-            html: templates.day7.html(firstName),
-          })
-          sent.day7++
-        }
-
-        // Tag 14 Mail (mit Referral-Link)
-        if (daysSinceRegistration >= 14 && daysSinceRegistration < 16) {
-          await resend.emails.send({
-            from: 'Alltagsengel <info@alltagsengel.care>',
-            to: customer.email,
-            subject: templates.day14.subject.replace('${firstName}', firstNameSubject),
-            html: templates.day14.html(firstName, referralCode),
-          })
-          sent.day14++
-        }
-      } catch (emailErr) {
-        log.errorWithException(`Drip mail error for ${customer.email}:`, emailErr)
       }
+
+      await stufe('day3', templates.day3.subject, templates.day3.html(firstName))
+      await stufe(
+        'day7',
+        templates.day7.subject.replace('${firstName}', firstNameSubject),
+        templates.day7.html(firstName)
+      )
+      await stufe(
+        'day14',
+        templates.day14.subject.replace('${firstName}', firstNameSubject),
+        templates.day14.html(firstName, referralCode)
+      )
     }
 
-    return NextResponse.json({ success: true, sent })
+    return NextResponse.json({ success: true, sent, fehlgeschlagen })
   } catch (err) {
     return safeApiError(err, request)
   }
