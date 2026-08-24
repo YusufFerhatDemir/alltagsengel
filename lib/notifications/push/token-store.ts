@@ -333,6 +333,9 @@ export interface PushErlaubnis {
 /**
  * Hat der Nutzer dem Push-Kanal widersprochen?
  *
+ * Der Widerspruch gilt fuer den NUTZER, nicht je Mandant — die Tabelle
+ * hat PRIMARY KEY (user_id, channel). Siehe Begruendung im Rumpf.
+ *
  * FEHLENDE ZEILE = ERLAUBT. Ein registriertes Geraet ist bereits eine
  * Einwilligung: das Betriebssystem hat gefragt, der Nutzer hat zugesagt.
  * Die Zeile in notification_preferences ist der spaetere Widerruf.
@@ -352,14 +355,22 @@ export async function pushErlaubt(
   if (!client) return { erlaubt: false, grund: 'Einwilligung nicht pruefbar' }
 
   try {
-    let q = client
+    // BEWUSST OHNE organization_id-Filter, obwohl der Parameter existiert:
+    // notification_preferences hat PRIMARY KEY (user_id, channel). Es gibt
+    // je Nutzer und Kanal genau EINE Zeile — der Widerspruch gehoert dem
+    // Nutzer, so wie das Geraet ihm gehoert. Der Filter machte einen in
+    // Mandant A erklaerten Widerspruch in Mandant B unsichtbar: dieselbe
+    // Person bekam dort weiter Push, obwohl sie abgewaehlt hatte. Der
+    // Parameter bleibt in der Signatur, weil die Aufrufer ihn durchreichen;
+    // er waehlt nur noch den Mandanten beim SCHREIBEN.
+    void organizationId
+
+    const { data, error } = await client
       .from('notification_preferences')
       .select('enabled')
       .eq('user_id', userId)
       .eq('channel', 'push')
-    if (istUuid(organizationId)) q = q.eq('organization_id', organizationId)
-
-    const { data, error } = await q.limit(1)
+      .limit(1)
 
     if (error) {
       if (fehlerCode(error) === TABELLE_FEHLT) {

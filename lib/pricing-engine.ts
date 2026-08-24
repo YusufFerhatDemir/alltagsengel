@@ -18,6 +18,21 @@ import type {
   SurchargeDetail,
 } from '@/lib/types/pricing'
 
+/**
+ * Preisdaten konnten nicht gelesen werden.
+ *
+ * Bewusst eine eigene Klasse: der Aufrufer muss "es gibt keinen Tarif
+ * dieses Namens" (Eingabefehler, 400) von "die Preisliste ist gerade
+ * nicht lesbar" (Betriebsstoerung, 500) unterscheiden koennen. Vorher
+ * sahen beide Faelle identisch aus.
+ */
+export class PreisdatenNichtLesbarError extends Error {
+  constructor(grund: string) {
+    super(`Preisdaten konnten nicht geladen werden: ${grund}`)
+    this.name = 'PreisdatenNichtLesbarError'
+  }
+}
+
 // Simple in-memory cache (5 min TTL)
 let cache: {
   tiers: PricingTier[]
@@ -38,6 +53,16 @@ async function loadPricingData() {
     supabase.from('kf_pricing_surcharges').select('*').eq('enabled', true).order('sort_order'),
     supabase.from('kf_pricing_config').select('*').eq('enabled', true),
   ])
+
+  // Ein Lesefehler darf hier NICHT als "keine Zeilen" durchgehen. Ohne
+  // Tarifzeilen wirft calculatePrice() zwar auch — aber mit der Meldung
+  // "Tier nicht gefunden", und das leere Ergebnis landete fuenf Minuten
+  // im Cache. Ein einzelner Netzwerkaussetzer legte damit die gesamte
+  // Preisauskunft lahm, ohne dass irgendwo der wahre Grund stand.
+  const leseFehler = tiersRes.error || surchargesRes.error || configRes.error
+  if (leseFehler) {
+    throw new PreisdatenNichtLesbarError(leseFehler.message)
+  }
 
   const tiers = (tiersRes.data || []).map(t => ({
     ...t,
@@ -100,8 +125,11 @@ export async function calculatePrice(req: PricingRequest): Promise<PricingBreakd
     throw new Error(`Tier '${req.tier_slug}' nicht gefunden`)
   }
 
-  const km = Math.max(0, req.estimated_km || 0)
-  const waitMin = Math.max(0, req.estimated_wait_minutes || 0)
+  // Math.max(0, NaN) ist NaN — ohne diese Pruefung rechnete sich ein
+  // unsauberer Eingabewert bis in `total` durch, und der Kunde bekam
+  // "NaN €" als verbindlichen Preis genannt.
+  const km = endlicheMenge(req.estimated_km, 'estimated_km')
+  const waitMin = endlicheMenge(req.estimated_wait_minutes, 'estimated_wait_minutes')
 
   // Base calculations
   const base_price = tier.base_price
@@ -117,7 +145,13 @@ export async function calculatePrice(req: PricingRequest): Promise<PricingBreakd
 
   for (const slug of requestedSlugs) {
     const sc = data.surcharges.find(s => s.slug === slug)
-    if (!sc) continue
+    // Frueher: `continue`. Ein Zuschlag, den der Kunde in der Maske
+    // angehakt hat und der hier nicht auffindbar ist (abgeschaltet,
+    // umbenannt, geloescht), verschwand damit lautlos aus dem Preis —
+    // der Fahrer erbrachte die Leistung, abgerechnet wurde sie nie.
+    if (!sc) {
+      throw new Error(`Zuschlag '${slug}' ist nicht (mehr) hinterlegt oder abgeschaltet.`)
+    }
 
     let amount: number
     if (sc.surcharge_type === 'percentage') {
@@ -176,15 +210,27 @@ export async function calculatePrice(req: PricingRequest): Promise<PricingBreakd
   let region_multiplier = 1.0
   if (req.region_code) {
     const supabase = await createClient()
-    const { data: regionData } = await supabase
+    const { data: regionData, error: regionError } = await supabase
       .from('kf_pricing_regions')
       .select('price_multiplier')
       .eq('region_code', req.region_code)
       .eq('tier_id', tier.id)
       .eq('enabled', true)
-      .single()
+      .maybeSingle()
+    // Kein Eintrag = kein Aufschlag fuer diese Region (Faktor 1,0) ist
+    // eine fachliche Aussage. Ein LESEFEHLER ist es nicht: er sah bisher
+    // genauso aus und rechnete den Regionsaufschlag stillschweigend weg.
+    if (regionError) {
+      throw new PreisdatenNichtLesbarError(`Regionsfaktor '${req.region_code}': ${regionError.message}`)
+    }
     if (regionData) {
-      region_multiplier = Number(regionData.price_multiplier)
+      const faktor = Number(regionData.price_multiplier)
+      if (!Number.isFinite(faktor) || faktor <= 0) {
+        throw new PreisdatenNichtLesbarError(
+          `Regionsfaktor '${req.region_code}' ist unbrauchbar: ${String(regionData.price_multiplier)}`,
+        )
+      }
+      region_multiplier = faktor
     }
   }
 
@@ -326,11 +372,27 @@ export async function evaluateReviewRules(
   margin?: MarginBreakdown
 ): Promise<ReviewFlag[]> {
   const supabase = await createClient()
-  const { data: rules } = await supabase
+  const { data: rules, error: rulesError } = await supabase
     .from('kf_review_rules')
     .select('*')
     .eq('enabled', true)
     .order('sort_order')
+
+  // Fail-closed: die Pruefregeln sind das Tor zur manuellen Freigabe.
+  // Ein verschluckter Lesefehler lieferte eine leere Flag-Liste, und die
+  // laesst `requires_manual_review` auf false fallen — die Fahrt lief
+  // ungeprueft durch, obwohl niemand wusste, ob eine Regel gegriffen haette.
+  if (rulesError) {
+    return [{
+      rule_slug: 'regelwerk_nicht_lesbar',
+      rule_name: 'Prüfregeln nicht lesbar',
+      severity: 'critical',
+      action: 'block',
+      message:
+        'Die Prüfregeln konnten nicht geladen werden. Die Fahrt geht zur manuellen '
+        + 'Freigabe, weil nicht feststellbar ist, ob eine Regel greift.',
+    }]
+  }
 
   if (!rules || rules.length === 0) return []
 
@@ -461,6 +523,19 @@ export async function calculatePriceExtended(
 }
 
 // --- Helpers ---
+
+/**
+ * Eine Menge (km, Minuten) muss endlich und nicht-negativ sein.
+ * `undefined`/`null` heisst 0, alles andere Unbrauchbare wirft.
+ */
+function endlicheMenge(wert: number | undefined | null, feld: string): number {
+  if (wert === undefined || wert === null) return 0
+  const n = Number(wert)
+  if (!Number.isFinite(n)) {
+    throw new Error(`'${feld}' ist keine gültige Zahl.`)
+  }
+  return Math.max(0, n)
+}
 
 function round2(n: number): number {
   return Math.round(n * 100) / 100
