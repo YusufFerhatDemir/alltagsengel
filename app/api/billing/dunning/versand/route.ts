@@ -4,7 +4,11 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getActiveOrgId } from '@/lib/organizations/server'
 import { safeApiError } from '@/lib/api/error-sanitizer'
-import { verarbeiteMahnQueue } from '@/lib/billing/dunning/mahn-versand'
+import {
+  verarbeiteMahnQueue,
+  reaktiviereAufgegebene,
+} from '@/lib/billing/dunning/mahn-versand'
+import { logBillingAction } from '@/lib/billing/core/audit'
 
 /**
  * POST /api/billing/dunning/versand
@@ -15,8 +19,11 @@ import { verarbeiteMahnQueue } from '@/lib/billing/dunning/mahn-versand'
  * bezahlt oder blockiert ist — dann wird storniert statt gemahnt.
  *
  * Body (optional):
- *   { limit?: number, wiederholen?: boolean }
+ *   { limit?: number, wiederholen?: boolean,
+ *     deadLetterReaktivieren?: boolean, queueIds?: string[] }
  *   `wiederholen` nimmt auch Eintraege mit status='fehlgeschlagen' mit.
+ *   `deadLetterReaktivieren` holt aufgegebene Eintraege (Dead Letter)
+ *   zurueck in die Warteschlange — siehe unten.
  *
  * GET liefert nur die Zaehler der Queue, ohne etwas zu versenden.
  */
@@ -28,14 +35,50 @@ export async function POST(request: Request) {
 
     let limit = 100
     let wiederholen = false
+    let deadLetterReaktivieren = false
+    let queueIds: string[] | undefined
     try {
       const body = await request.json()
       if (Number.isFinite(Number(body?.limit))) {
         limit = Math.min(Math.max(1, Math.round(Number(body.limit))), 500)
       }
       wiederholen = body?.wiederholen === true
+      deadLetterReaktivieren = body?.deadLetterReaktivieren === true
+      if (Array.isArray(body?.queueIds)) {
+        queueIds = body.queueIds.filter((v: unknown) => typeof v === 'string')
+      }
     } catch {
       // Kein Body ist erlaubt.
+    }
+
+    // ── Manuelle Wiederaufnahme aus dem Dead Letter ──
+    //
+    // `reaktiviereAufgegebene()` gab es schon, aber KEINEN Aufrufer:
+    // eine Mahnung im Endzustand 'aufgegeben' liess sich ausserhalb der
+    // Datenbank durch nichts mehr zurueckholen. Genau dafuer ist der
+    // Endzustand aber gedacht — er endet durch eine ausdrueckliche
+    // Entscheidung der Verwaltung (korrigierte Adresse, nachgetragener
+    // Schluessel), nicht durch Ablauf.
+    //
+    // Bewusst KEIN automatischer Aufrufer und bewusst dasselbe Recht wie
+    // der Versand: die Reaktivierung fuehrt unmittelbar dazu, dass beim
+    // naechsten Lauf ein Mahnschreiben an einen echten Kunden geht.
+    // Eigener Name: `MahnVersandErgebnis` fuehrt bereits ein Feld
+    // `reaktiviert` fuer die faelligen FEHLGESCHLAGENEN Zeilen. Beide in
+    // eine Antwort zu legen wuerde das eine mit dem anderen ueberschreiben.
+    let deadLetterReaktiviert = 0
+    if (deadLetterReaktivieren) {
+      deadLetterReaktiviert = await reaktiviereAufgegebene(admin, organizationId, queueIds)
+      if (deadLetterReaktiviert > 0) {
+        await logBillingAction(admin, {
+          entityType: 'dunning',
+          entityId: organizationId,
+          organizationId,
+          action: 'dead_letter_reaktiviert',
+          newState: { anzahl: deadLetterReaktiviert, queueIds: queueIds ?? null },
+          actorId: userId,
+        })
+      }
     }
 
     const ergebnis = await verarbeiteMahnQueue(admin, {
@@ -45,7 +88,7 @@ export async function POST(request: Request) {
       actorId: userId,
     })
 
-    return NextResponse.json(ergebnis)
+    return NextResponse.json({ ...ergebnis, deadLetterReaktiviert })
   } catch (err) {
     return safeApiError(err, request)
   }

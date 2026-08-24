@@ -210,8 +210,24 @@ export async function verarbeiteRuecklastschrift(
     }
 
     // 5. Ruecklastschriftgebuehr — als payment_difference buchen
-    result.gebuehrCent = RUECKLASTSCHRIFT_GEBUEHR_CENT;
-    await supabase
+    //
+    // ── ZWEI SCHEMAFEHLER, DIE HIER STILL VERSCHLUCKT WURDEN ───────────
+    // Der INSERT nannte eine Spalte `status`, die es auf
+    // payment_differences nicht gibt (der Zustand heisst dort
+    // `widerspruch_status`, Migration 20260808210000), und setzte
+    // `kuerzung_kategorie = 'ruecklastschrift'` — ein Wert, den der
+    // CHECK-Constraint der Spalte nicht kennt. Beides scheiterte in
+    // Postgres mit 42703 bzw. 23514.
+    //
+    // Aufgefallen ist es nie, weil der Rueckgabewert nicht geprueft wurde:
+    // `verarbeiteRuecklastschrift()` meldete `gebuehrCent: 500`, die Route
+    // zaehlte den Vorgang als „verarbeitet", und die Gebuehr existierte
+    // trotzdem nirgends. Der Fehler wird jetzt gelesen und im Ergebnis
+    // benannt.
+    //
+    // 'sonstiges' ist die Kategorie, die der Constraint fuer diesen Fall
+    // hergibt; der konkrete Anlass steht im Klartext in `kuerzung_grund`.
+    const { error: gebuehrErr } = await supabase
       .from('payment_differences')
       .insert({
         organization_id: organizationId,
@@ -219,10 +235,17 @@ export async function verarbeiteRuecklastschrift(
         soll_cents: RUECKLASTSCHRIFT_GEBUEHR_CENT,
         ist_cents: 0,
         kuerzung_grund: 'Rücklastschriftgebühr',
-        kuerzung_kategorie: 'ruecklastschrift',
-        status: 'offen',
+        kuerzung_kategorie: 'sonstiges',
+        widerspruch_status: 'offen',
         created_by: actorId,
       });
+
+    if (gebuehrErr) {
+      result.gebuehrCent = 0;
+      result.fehler = `Rücklastschriftgebühr nicht gebucht: ${gebuehrErr.message}`;
+    } else {
+      result.gebuehrCent = RUECKLASTSCHRIFT_GEBUEHR_CENT;
+    }
 
     // 6. Mandat pruefen — bei Mehrfach-Ruecklastschrift sperren
     const { count: rlCount } = await supabase

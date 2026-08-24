@@ -163,6 +163,41 @@ export async function computeContentHash(data: unknown): Promise<string> {
 // Audit-Log schreiben
 // ---------------------------------------------------------------------------
 
+const UUID_MUSTER =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/**
+ * Trennt den Handelnden in das, was die Spalte `actor_id` aufnehmen kann,
+ * und das, was nur als Rolle festhaltbar ist.
+ *
+ * ── WARUM DAS NOETIG IST ───────────────────────────────────────────────
+ * `billing_audit_trail.actor_id` ist eine UUID-Spalte (seit 20260806600000
+ * nullable, aber weiterhin UUID). Mehrere automatische Wege reichen jedoch
+ * die Zeichenkette 'system' als Handelnden durch — allocatePayment() bei
+ * jeder maschinellen Zuordnung und die Matching-Engine des
+ * Kontoauszugs-Imports. Postgres beantwortete das mit
+ * `22P02 invalid input syntax for type uuid: "system"`, logBillingAction
+ * warf daraufhin, und weil der Audit-Aufruf MITTEN in der Zuordnung steht,
+ * riss er die bereits geschriebene Zahlung mit: `payment_allocations` und
+ * `invoices.paid_amount` waren gesetzt, der Aufrufer sah eine Ausnahme und
+ * legte zusaetzlich einen Klaerfall an. Die automatische Zuordnung von
+ * Zahlungseingaengen konnte damit NIE zustande kommen.
+ *
+ * Der Handelnde geht dabei nicht verloren: er steht als Rolle in
+ * `actor_role`. Die Checksumme rechnet mit demselben Wert, der auch in der
+ * Spalte landet — sonst waere jede spaetere Nachpruefung zwangslaeufig
+ * falsch.
+ */
+function zerlegeHandelnden(
+  actorId: string,
+  actorRole?: string
+): { actorId: string | null; actorRole: string | null } {
+  if (UUID_MUSTER.test(actorId)) {
+    return { actorId, actorRole: actorRole ?? null };
+  }
+  return { actorId: null, actorRole: actorRole ?? actorId ?? null };
+}
+
 /**
  * Schreibt einen Eintrag in den billing_audit_trail.
  * Berechnet automatisch die Checksumme.
@@ -172,6 +207,7 @@ export async function logBillingAction(
   params: AuditLogParams
 ): Promise<void> {
   const createdAt = new Date().toISOString();
+  const handelnder = zerlegeHandelnden(params.actorId, params.actorRole);
 
   const checksum = await computeChecksum({
     entityType: params.entityType,
@@ -179,7 +215,9 @@ export async function logBillingAction(
     action: params.action,
     previousState: params.previousState ?? null,
     newState: params.newState ?? null,
-    actorId: params.actorId,
+    // Bewusst der gespeicherte Wert, nicht der uebergebene: die Checksumme
+    // muss aus der Zeile reproduzierbar sein.
+    actorId: handelnder.actorId ?? '',
     createdAt,
   });
 
@@ -192,8 +230,8 @@ export async function logBillingAction(
     previous_state: params.previousState ?? null,
     new_state:      params.newState ?? null,
     reason:         params.reason ?? null,
-    actor_id:       params.actorId,
-    actor_role:     params.actorRole ?? null,
+    actor_id:       handelnder.actorId,
+    actor_role:     handelnder.actorRole,
     actor_ip:       params.actorIp ?? null,
     created_at:     createdAt,
     checksum,

@@ -330,7 +330,14 @@ export async function matchBuchung(
           payer_reference: buchung.debitorIban || null,
           bank_reference: buchung.buchungsreferenz || null,
           verwendungszweck: buchung.verwendungszweck || null,
-          created_by: 'system',
+          // `payments.created_by` ist eine UUID-Spalte mit Fremdschluessel
+          // auf auth.users. Hier stand 'system' — Postgres antwortete mit
+          // `22P02 invalid input syntax for type uuid`, der INSERT schlug
+          // fehl, und JEDE automatische Zuordnung eines Zahlungseingangs
+          // endete im Klaerfall. NULL ist der vorgesehene Wert fuer einen
+          // maschinellen Vorgang; allocatePayment() haelt es bei
+          // `allocated_by` genauso.
+          created_by: null,
           matching_status: 'automatisch_zugeordnet',
         })
         .select('id')
