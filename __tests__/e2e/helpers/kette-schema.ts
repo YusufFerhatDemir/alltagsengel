@@ -42,6 +42,7 @@ const M_HOCH1         = '20260922020000_hoch1_mandantentrennung.sql'
 const M_MAHNUNG       = '20260812120000_sepa_mandate_and_mahnung.sql'
 const M_MAHNQUEUE     = '20260918030000_dunning_email_queue.sql'
 const M_MAHN_RETRY    = '20261001000000_mahnqueue_retry_dead_letter.sql'
+const M_CAMT          = '20260825010000_zahlungseingang_opos.sql'
 
 /** Stamm-Organisation — Rueckfallwert von current_org_id(). */
 export const STAMM_ORG = '00000000-0000-4000-8000-000460629986'
@@ -161,6 +162,7 @@ ALTER TABLE public.service_records
 ALTER TABLE public.billing_tariffs
   ADD COLUMN IF NOT EXISTS ist_aktiv BOOLEAN NOT NULL DEFAULT TRUE,
   ADD COLUMN IF NOT EXISTS tarifquelle TEXT,
+  ADD COLUMN IF NOT EXISTS verifizierungs_quelle TEXT,                    -- 20260831040000
   ADD COLUMN IF NOT EXISTS tarif_status TEXT NOT NULL DEFAULT 'unverified'
     CHECK (tarif_status IN ('verified', 'unverified', 'blocked'));
 
@@ -361,4 +363,62 @@ export async function baueMahnTabellen(db: PGlite): Promise<void> {
 
   await db.exec(tabelleAusMigration(M_MAHNQUEUE, 'dunning_email_queue'))
   await db.exec(transaktionsInhalt(M_MAHN_RETRY))
+}
+
+/**
+ * CAMT-Strecke: Kontoauszugs-Import, Zahlungseingaenge, Klaerfaelle —
+ * plus alles, woran der Ruecklastschrift-Handler und die
+ * Matching-Engine haengen (SEPA-Mandate, Lastschriftposten,
+ * Zahlungsdifferenzen).
+ *
+ * Die Tabellen kommen WORTGLEICH aus den Migrationen. Genau darauf
+ * kommt es hier an: die beiden schwersten Befunde dieser Strecke sind
+ * Verstoesse gegen CHECK-Constraints und Spaltentypen, die ein
+ * handgeschriebenes Testschema nicht haette (siehe
+ * testschema-lockerer-als-produktion).
+ *
+ * Zusaetzlich wird die Lockerung aus 20260806600000 nachgezogen:
+ * billing_audit_trail.actor_id ist live nullable und traegt KEINEN
+ * Fremdschluessel mehr. Ohne diesen Nachzug scheiterte hier jeder
+ * Audit-Eintrag am FK statt am echten Grund.
+ *
+ * Setzt baueKettenSchema() voraus.
+ */
+export async function baueCamtTabellen(db: PGlite): Promise<void> {
+  // billing_audit_trail wie live: actor_id nullable, kein FK.
+  await db.exec(`
+    DO $$
+    DECLARE c text;
+    BEGIN
+      FOR c IN
+        SELECT conname FROM pg_constraint
+        WHERE conrelid = 'public.billing_audit_trail'::regclass AND contype = 'f'
+      LOOP
+        EXECUTE format('ALTER TABLE public.billing_audit_trail DROP CONSTRAINT %I', c);
+      END LOOP;
+    END $$;
+    ALTER TABLE public.billing_audit_trail ALTER COLUMN actor_id DROP NOT NULL;
+  `)
+
+  // SEPA — Mandate, Sammler, Einzelposten.
+  await db.exec(tabelleAusMigration(M_MAHNUNG, 'sepa_mandates'))
+  await db.exec(tabelleAusMigration(M_MAHNUNG, 'sepa_batches'))
+  await db.exec(tabelleAusMigration(M_MAHNUNG, 'sepa_batch_items'))
+
+  // Zahlungsdifferenzen — Ziel der Ruecklastschriftgebuehr.
+  await db.exec(tabelleAusMigration(M_ZAHLUNGEN, 'payment_differences'))
+
+  // Die CAMT-Tabellen selbst.
+  await db.exec(tabelleAusMigration(M_CAMT, 'camt_imports'))
+  await db.exec(tabelleAusMigration(M_CAMT, 'zahlungseingaenge'))
+  await db.exec(tabelleAusMigration(M_CAMT, 'klaerfaelle'))
+
+  // Indizes wortgleich aus derselben Migration — dass der Hash-Index
+  // NICHT unique ist, gehoert zum Pruefgegenstand.
+  await db.exec(`
+    CREATE INDEX IF NOT EXISTS idx_zahlungseingaenge_org_status
+      ON zahlungseingaenge(organization_id, zuordnungs_status);
+    CREATE INDEX IF NOT EXISTS idx_zahlungseingaenge_hash
+      ON zahlungseingaenge(quelldatei_hash);
+  `)
 }
