@@ -16,6 +16,7 @@ import { parseSlgaDatei } from '@/lib/abrechnung/slga-parser'
 import { importiereRuecklaeufer } from '@/lib/abrechnung/ruecklaeufer'
 import { erstelleFrist, fristFuerTyp } from '@/lib/abrechnung/fristen-manager'
 import type { RuecklaeuferImportErgebnis } from '@/lib/abrechnung/ruecklaeufer'
+import { sanitizeStorageName } from '@/lib/file-upload-validation'
 import { logger } from '@/lib/logger'
 const log = logger.child('api:billing')
 
@@ -25,20 +26,7 @@ const log = logger.child('api:billing')
 // Storage sie ablehnt.
 const MAX_RUECKLAEUFER_BYTES = 10 * 1024 * 1024
 
-/**
- * Dateiname fuer einen Storage-Schluessel entschaerfen.
- *
- * Der Name kam ungefiltert aus dem Upload und wurde in den Pfad
- * `ruecklaeufer/<org>/<zeit>_<name>` eingesetzt. Ein Name mit `../` haette
- * damit die Organisationsablage verlassen. Gleiches Muster wie in
- * lib/akten/dokumente.ts und lib/wunden/fotos.ts.
- */
-function sanitizeFileName(name: string): string {
-  return name
-    .replace(/[^a-zA-Z0-9._-]+/g, '_')
-    .replace(/^\.+/, '')
-    .slice(0, 120) || 'ruecklaeufer.txt'
-}
+// sanitizeFileName entfernt — zentralisiert in lib/file-upload-validation.ts (sanitizeStorageName)
 
 export async function POST(request: Request) {
   try {
@@ -77,7 +65,7 @@ export async function POST(request: Request) {
 
     // In Supabase Storage speichern
     const admin = createAdminClient()
-    const dateiPfad = `ruecklaeufer/${organizationId}/${Date.now()}_${sanitizeFileName(datei.name)}`
+    const dateiPfad = `ruecklaeufer/${organizationId}/${Date.now()}_${sanitizeStorageName(datei.name, { maxLen: 120, fallback: 'ruecklaeufer.txt' })}`
 
     const { error: uploadError } = await admin.storage
       .from('dta-dateien')

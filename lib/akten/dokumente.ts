@@ -1,4 +1,5 @@
 import { UserFacingError } from '@/lib/api/user-facing-error'
+import { sanitizeStorageName } from '@/lib/file-upload-validation'
 // ═══════════════════════════════════════════════════════════════
 // Zentrales Dokumentenmanagement — akten_dokumente
 // CRUD, Upload (Storage + SHA-256), Versionierung, Sperre, Archivierung
@@ -28,12 +29,7 @@ export async function computeSha256Hex(data: ArrayBuffer): Promise<string> {
   return createHash('sha256').update(Buffer.from(data)).digest('hex')
 }
 
-function sanitizeFileName(name: string): string {
-  return name
-    .replace(/[äÄ]/g, 'ae').replace(/[öÖ]/g, 'oe').replace(/[üÜ]/g, 'ue').replace(/ß/g, 'ss')
-    .replace(/[^a-zA-Z0-9._-]/g, '_')
-    .slice(0, 100)
-}
+// sanitizeFileName entfernt — zentralisiert in lib/file-upload-validation.ts (sanitizeStorageName)
 
 // ---------------------------------------------------------------------------
 // Upload
@@ -68,7 +64,7 @@ export async function uploadDokumentDatei(
   const scope = params.clientId ?? params.caregiverId ?? 'org'
   const sha256Hash = await computeSha256Hex(params.datei.arrayBuffer)
   const dateiname = params.datei.name
-  const dateipfad = `${params.organizationId}/${scope}/${Date.now()}-${sanitizeFileName(dateiname)}`
+  const dateipfad = `${params.organizationId}/${scope}/${Date.now()}-${sanitizeStorageName(dateiname, { maxLen: 100 })}`
 
   const { error: uploadErr } = await admin.storage
     .from(bucket)

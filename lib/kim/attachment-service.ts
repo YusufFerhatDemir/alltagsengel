@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto'
 import type { KimAttachment, KimAttachmentMitUrl, KimClient } from './types'
 import { writeKimAuditLog } from './audit-service'
+import { sanitizeStorageName } from '@/lib/file-upload-validation'
 
 export const KIM_ATTACHMENTS_BUCKET = 'kim-attachments'
 export const MAX_ATTACHMENT_BYTES = 25 * 1024 * 1024
@@ -14,9 +15,7 @@ export const ERLAUBTE_ANHANG_MIME_TYPES = [
   'text/xml',
 ] as const
 
-function sanitizeFileName(name: string): string {
-  return name.replace(/[^a-zA-Z0-9._-]+/g, '_').slice(0, 150) || 'anhang'
-}
+// sanitizeFileName entfernt — zentralisiert in lib/file-upload-validation.ts (sanitizeStorageName)
 
 /**
  * Virus-Check-Platzhalter. KEINE echte Prüfung — es gibt in diesem
@@ -51,7 +50,7 @@ export async function uploadKimAttachment(admin: KimClient, params: UploadKimAtt
   }
 
   const checksum = createHash('sha256').update(Buffer.from(params.datei.arrayBuffer)).digest('hex')
-  const storagePath = `${params.organizationId}/${params.messageId}/${Date.now()}-${sanitizeFileName(params.datei.name)}`
+  const storagePath = `${params.organizationId}/${params.messageId}/${Date.now()}-${sanitizeStorageName(params.datei.name, { maxLen: 150, fallback: 'anhang' })}`
 
   const { error: uploadErr } = await admin.storage
     .from(KIM_ATTACHMENTS_BUCKET)
