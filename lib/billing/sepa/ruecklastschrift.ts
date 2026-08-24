@@ -84,22 +84,50 @@ export async function verarbeiteRuecklastschrift(
         .select('id, invoice_id, mandate_id, batch_id')
         .eq('end_to_end_id', buchung.endToEndId)
         .eq('organization_id', organizationId)
-        .single();
+        .maybeSingle();
       if (data) sepaItem = data;
     }
 
     // Fallback: MandateId + Betrag
+    //
+    // ACHTUNG (Delta-Check Phase 4.5): der Filter auf mandate_id fehlte
+    // hier, obwohl der Kommentar ihn nennt. Gesucht wurde also nur nach
+    // dem BETRAG — die Abfrage lieferte damit die neueste Lastschrift
+    // IRGENDEINES Kunden mit demselben Betrag. Folge: Rechnung eines
+    // Unbeteiligten wieder geoeffnet, 5,00 EUR Ruecklastschriftgebuehr
+    // gebucht, Mahnstufe erhoeht und ggf. dessen SEPA-Mandat widerrufen.
+    // Bei runden Betraegen (gleicher Tarif, gleiche Stundenzahl) ist eine
+    // Betragsgleichheit der Normalfall, nicht die Ausnahme.
+    //
+    // Zu beachten: `buchung.mandateId` ist die CAMT-<MndtId>, also die
+    // TEXT-Mandatsreferenz. sepa_batch_items.mandate_id ist dagegen ein
+    // UUID-Fremdschluessel auf sepa_mandates(id). Die Referenz muss
+    // deshalb erst aufgeloest werden — ein direkter Vergleich der beiden
+    // Werte trifft nie zu (und laeuft auf einer UUID-Spalte in 22P02).
     if (!sepaItem && buchung.mandateId) {
       const betragCent = Math.abs(buchung.betragCent);
-      const { data } = await supabase
-        .from('sepa_batch_items')
-        .select('id, invoice_id, mandate_id, batch_id')
+
+      // (organization_id, mandate_reference) ist UNIQUE — die Auflösung
+      // ist damit eindeutig und bleibt innerhalb des Mandanten.
+      const { data: mandat } = await supabase
+        .from('sepa_mandates')
+        .select('id')
         .eq('organization_id', organizationId)
-        .eq('amount_cents', betragCent)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single();
-      if (data) sepaItem = data;
+        .eq('mandate_reference', buchung.mandateId)
+        .maybeSingle();
+
+      if (mandat) {
+        const { data } = await supabase
+          .from('sepa_batch_items')
+          .select('id, invoice_id, mandate_id, batch_id')
+          .eq('organization_id', organizationId)
+          .eq('mandate_id', mandat.id)
+          .eq('amount_cents', betragCent)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (data) sepaItem = data;
+      }
     }
 
     if (!sepaItem) {
@@ -200,6 +228,7 @@ export async function verarbeiteRuecklastschrift(
     const { count: rlCount } = await supabase
       .from('sepa_batch_items')
       .select('id', { count: 'exact', head: true })
+      .eq('organization_id', organizationId)
       .eq('mandate_id', sepaItem.mandate_id)
       .eq('status', 'ruecklastschrift');
 

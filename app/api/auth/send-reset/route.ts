@@ -2,7 +2,8 @@ import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { buildRecoveryLink } from '@/lib/supabase/recovery-link'
 import { sendEmailNotification } from '@/lib/notifications'
-import { rateLimit, getClientIp } from '@/lib/rate-limit'
+import { getClientIp } from '@/lib/rate-limit'
+import { rateLimitPersistent } from '@/lib/rate-limit-persistent'
 import { authLogger as log } from '@/lib/logger'
 
 /**
@@ -16,7 +17,7 @@ export async function POST(request: Request) {
     // diesen Endpunkt ein fremdes Postfach mit Reset-Mails fluten.
     // 3 Anfragen/10 min pro IP und zusaetzlich pro Ziel-Adresse.
     const ip = getClientIp(request)
-    if (!rateLimit(`send-reset:ip:${ip}`, 5, 600_000)) {
+    if (!(await rateLimitPersistent(`send-reset:ip:${ip}`, 5, 600_000))) {
       return NextResponse.json({ success: true })
     }
 
@@ -24,7 +25,7 @@ export async function POST(request: Request) {
     if (!email) {
       return NextResponse.json({ error: 'E-Mail erforderlich' }, { status: 400 })
     }
-    if (!rateLimit(`send-reset:mail:${String(email).toLowerCase()}`, 3, 600_000)) {
+    if (!(await rateLimitPersistent(`send-reset:mail:${String(email).toLowerCase()}`, 3, 600_000))) {
       // Stille Annahme — kein Hinweis darauf, ob die Adresse existiert.
       return NextResponse.json({ success: true })
     }

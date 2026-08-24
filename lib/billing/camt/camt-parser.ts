@@ -1,4 +1,4 @@
-import { heuteBerlin } from '@/lib/utils/timezone';
+import { createHash } from 'node:crypto';
 /**
  * CAMT.053 / CAMT.054 Parser
  *
@@ -8,11 +8,37 @@ import { heuteBerlin } from '@/lib/utils/timezone';
  * Extrahiert alle relevanten Felder fuer das Zahlungs-Matching:
  * Betrag, Valuta, Buchungsdatum, Debitor, Verwendungszweck,
  * EndToEndId, MandateId, Ruecklastschrift-Kennzeichen.
+ *
+ * ── FAIL-CLOSED (Delta-Check Phase 4.5) ────────────────────────────────
+ * Dieser Parser speist unmittelbar Geldbewegungen: jede Buchung wird zu
+ * einer Zeile in `zahlungseingaenge`, laeuft ins Matching und — wenn sie
+ * als Ruecklastschrift gilt — in verarbeiteRuecklastschrift(), das eine
+ * Rechnung wieder oeffnet, eine Gebuehr bucht und das SEPA-Mandat sperren
+ * kann. Eine falsch geratene Angabe ist hier also kein Anzeigefehler,
+ * sondern eine Falschbuchung beim Kunden.
+ *
+ * Deshalb gilt durchgehend: was nicht sicher aus der Datei hervorgeht,
+ * wird NICHT geschaetzt, sondern als Fehler gemeldet. Ein abgewiesener
+ * Kontoauszug ist reparierbar, eine stille Falschbuchung nicht.
  */
 
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
+
+/**
+ * Eine Buchung liess sich nicht eindeutig lesen.
+ *
+ * parseCamtXml() faengt das je Buchung, sammelt die Meldung in `fehler`
+ * und liefert die Buchung NICHT aus — so kann keine halb geratene Zeile
+ * in die Zahlungsverarbeitung gelangen.
+ */
+export class CamtBuchungUnlesbarError extends Error {
+  constructor(grund: string) {
+    super(grund);
+    this.name = 'CamtBuchungUnlesbarError';
+  }
+}
 
 export interface CamtBuchung {
   /** Betrag in Cent (positiv = Haben/Eingang, negativ = Soll/Ausgang) */
@@ -32,6 +58,14 @@ export interface CamtBuchung {
   mandateId: string | null;
   buchungsreferenz: string | null;
   istRuecklastschrift: boolean;
+  /**
+   * Grund der Ruecklastschrift-Einordnung, oder null. Dient dem Nachweis:
+   * bei einer Fehlbuchung muss ablesbar sein, WORAN die Datei erkannt
+   * wurde, nicht nur dass sie erkannt wurde.
+   */
+  ruecklastschriftGrund: string | null;
+  /** true, wenn die Buchung gebucht (BOOK) und damit endgueltig ist */
+  istGebucht: boolean;
   /** Hash fuer Duplikaterkennung */
   buchungsHash: string;
 }
@@ -80,6 +114,11 @@ function getAllBlocks(xml: string, tag: string): string[] {
   return results;
 }
 
+/** true, wenn der Block das Tag ueberhaupt enthaelt (mit oder ohne Namespace). */
+function hasTag(xml: string, tag: string): boolean {
+  return new RegExp(`<(?:[a-zA-Z0-9]+:)?${tag}[\\s>/]`).test(xml);
+}
+
 /**
  * Prueft ob ein XML-Tag vorhanden ist und den Wert 'true' hat.
  */
@@ -89,105 +128,167 @@ function hasFlag(xml: string, tag: string): boolean {
 }
 
 /**
+ * Liest einen Code, der entweder direkt im Tag oder in einem
+ * verschachtelten <Cd> steht.
+ *
+ * ISO 20022 kennt beide Formen — `<Sts>BOOK</Sts>` (aeltere Auspraegung)
+ * und `<Sts><Cd>BOOK</Cd></Sts>` (ab camt.053.001.04). Der Parser las
+ * vorher nur die erste; bei der zweiten schlug getTagContent fehl (der
+ * Inhalt ist kein `[^<]*`) und der Status fiel stillschweigend auf 'BOOK'
+ * zurueck — eine noch vorlaeufige Buchung (PDNG) sah damit aus wie eine
+ * endgueltige.
+ */
+function getCode(xml: string, tag: string): string | null {
+  const direkt = getTagContent(xml, tag);
+  if (direkt) return direkt;
+  const bloecke = getAllBlocks(xml, tag);
+  if (bloecke.length === 0) return null;
+  return getTagContent(bloecke[0], 'Cd');
+}
+
+/**
  * Betrag-String (z.B. "1234.56") in Cent umrechnen.
+ *
+ * Wirft bei allem, was nicht als ISO-20022-Betrag lesbar ist. Vorher gab
+ * die Funktion in diesem Fall 0 zurueck: eine unlesbare Zeile wurde dann
+ * als Zahlungseingang ueber 0,00 EUR importiert und ins Matching gegeben,
+ * ohne Fehler und ohne Spur.
  */
 function betragToCent(betragStr: string): number {
-  const n = parseFloat(betragStr);
-  if (isNaN(n)) return 0;
+  const roh = betragStr.trim();
+  // ISO 20022 schreibt den Punkt als Dezimaltrennzeichen und laesst kein
+  // Gruppentrennzeichen zu. Ein Komma waere ein deutsch formatierter
+  // Betrag — parseFloat() haette daraus stillschweigend eine ganz andere
+  // Zahl gemacht ("1.234,56" → 1.234 → 123 Cent).
+  if (!/^-?\d+(\.\d+)?$/.test(roh)) {
+    throw new CamtBuchungUnlesbarError(
+      `Betrag "${betragStr}" ist kein gueltiger ISO-20022-Betrag (erwartet: Ziffern mit Punkt als Dezimaltrennzeichen).`
+    );
+  }
+  const n = Number(roh);
+  if (!Number.isFinite(n)) {
+    throw new CamtBuchungUnlesbarError(`Betrag "${betragStr}" ist keine endliche Zahl.`);
+  }
   return Math.round(n * 100);
 }
 
 /**
- * Einfacher SHA-256-aehnlicher Hash fuer Duplikaterkennung.
- * Nutzt einen deterministischen String-Hash (kein Crypto noetig fuer Dedup).
+ * Hash fuer die Duplikaterkennung.
+ *
+ * SHA-256 statt des vorherigen 32-Bit-String-Hashes: bei 32 Bit liegt die
+ * Kollisionswahrscheinlichkeit schon im fuenfstelligen Buchungsbereich bei
+ * ueber 50 % (Geburtstagsparadox). Eine Kollision bedeutet hier, dass eine
+ * ECHTE Buchung als Dublette gilt und damit nie verbucht wird — bzw. auf
+ * Dateiebene, dass ein ganzer Kontoauszug mit 409 abgewiesen wird.
  */
-function simpleHash(input: string): string {
-  let h = 0;
-  for (let i = 0; i < input.length; i++) {
-    const ch = input.charCodeAt(i);
-    h = ((h << 5) - h + ch) | 0;
-  }
-  // Hex + Prefix fuer Lesbarkeit
-  return 'bh_' + (h >>> 0).toString(16).padStart(8, '0');
+function sha256(input: string): string {
+  return createHash('sha256').update(input, 'utf8').digest('hex');
 }
 
 /**
- * Prueft ob eine Buchung eine Ruecklastschrift ist.
- * Erkennung ueber:
- * - RvslInd = true
- * - DBIT mit Referenz auf vorherige Buchung
- * - BkTxCd/Domn/Fmly/Cd = RDDT (Return Direct Debit Transaction)
+ * Merkmale, an denen eine Ruecklastschrift SICHER erkennbar ist.
+ *
+ * ── WARUM DIE ALTE HEURISTIK FALSCH WAR ────────────────────────────────
+ * Vorher galt zusaetzlich: "DBIT und (EndToEndId oder MndtId vorhanden)".
+ * Das trifft auf praktisch JEDE ausgehende SEPA-Ueberweisung zu — Lohn,
+ * Lieferantenrechnung, Miete. Jede davon lief damit in
+ * verarbeiteRuecklastschrift(): Rechnung wieder geoeffnet, 5,00 EUR
+ * Ruecklastschriftgebuehr gebucht, nach dem zweiten Treffer das
+ * SEPA-Mandat widerrufen — beim Kunden, der nie etwas falsch gemacht hat.
+ *
+ * Es bleiben nur die eindeutigen ISO-20022-Merkmale:
+ *   - <RvslInd>true</RvslInd>            Storno-/Reversal-Kennzeichen
+ *   - BkTxCd → Fmly → Cd = RDDT/RRTN     Return Direct Debit / Returned Transaction
+ *   - <RtrInf>                           Return Information (traegt den Rueckgabegrund)
+ * Keines dieser Merkmale steht in einer normalen Ueberweisung.
  */
-function istRuecklastschrift(ntryXml: string): boolean {
+function ruecklastschriftGrund(ntryXml: string): string | null {
   // 1) Reversal-Indikator
-  if (hasFlag(ntryXml, 'RvslInd')) return true;
+  if (hasFlag(ntryXml, 'RvslInd')) return 'RvslInd=true';
 
-  // 2) BkTxCd → RDDT (Return Direct Debit)
-  const fmlyCd = getTagContent(ntryXml, 'Cd');
-  // Suche spezifisch nach Fmly > Cd = RDDT
-  if (ntryXml.includes('<Fmly>') || ntryXml.includes(':Fmly>')) {
-    const fmlyBlocks = getAllBlocks(ntryXml, 'Fmly');
-    for (const fmly of fmlyBlocks) {
-      const cd = getTagContent(fmly, 'Cd');
-      if (cd === 'RDDT') return true;
-    }
+  // 2) BkTxCd → Fmly → Cd = RDDT (Return Direct Debit) / RRTN (Returned Transaction)
+  for (const fmly of getAllBlocks(ntryXml, 'Fmly')) {
+    const cd = getTagContent(fmly, 'Cd');
+    if (cd === 'RDDT' || cd === 'RRTN') return `BkTxCd/Fmly/Cd=${cd}`;
   }
 
-  // 3) DBIT mit SEPA-Referenz (EndToEndId oder MandateId vorhanden)
-  const richtung = getTagContent(ntryXml, 'CdtDbtInd');
-  if (richtung === 'DBIT') {
-    const e2e = getTagContent(ntryXml, 'EndToEndId');
-    const mnd = getTagContent(ntryXml, 'MndtId');
-    if (e2e && e2e !== 'NOTPROVIDED') return true;
-    if (mnd) return true;
+  // 3) Return-Information — vorhanden nur bei zurueckgegebenen Zahlungen.
+  if (hasTag(ntryXml, 'RtrInf')) {
+    const rtr = getAllBlocks(ntryXml, 'RtrInf')[0] ?? '';
+    const grund = getCode(rtr, 'Rsn');
+    return grund ? `RtrInf/Rsn=${grund}` : 'RtrInf vorhanden';
   }
 
-  return false;
+  return null;
 }
 
 // ---------------------------------------------------------------------------
 // Parser
 // ---------------------------------------------------------------------------
 
+/** Betrag + Waehrung aus dem ERSTEN <Amt Ccy="…"> eines Blocks. */
+function betragAus(xml: string): { betragCent: number; waehrung: string } | null {
+  const m = xml.match(/<(?:[a-zA-Z0-9]+:)?Amt[^>]*Ccy="([^"]*)"[^>]*>([^<]*)</);
+  if (!m) return null;
+  return { betragCent: betragToCent(m[2]), waehrung: m[1] || 'EUR' };
+}
+
 /**
  * Parst eine einzelne Ntry (Buchung) aus dem CAMT-XML.
+ *
+ * @param teilbuchung Bei einer Sammelbuchung das einzelne <TxDtls>. Dann
+ *   gilt DESSEN Betrag, nicht der Gesamtbetrag der Sammelbuchung.
  */
-function parseNtry(ntryXml: string): CamtBuchung {
-  // Betrag + Waehrung
-  const amtMatch = ntryXml.match(/<(?:[a-zA-Z0-9]+:)?Amt[^>]*Ccy="([^"]*)"[^>]*>([^<]*)</);
-  const waehrung = amtMatch?.[1] ?? 'EUR';
-  const betragRaw = amtMatch?.[2] ?? '0';
-  let betragCent = betragToCent(betragRaw);
+function parseNtry(ntryXml: string, teilbuchung?: string): CamtBuchung {
+  // ── Betrag + Waehrung ──
+  // Bei einer Sammelbuchung steht im Ntry der GESAMTbetrag. Vorher wurde
+  // fuer jede Teilbuchung dieser Gesamtbetrag uebernommen: aus einem
+  // Sammelposten ueber 300 EUR mit drei Zahlungen wurden drei
+  // Zahlungseingaenge von je 300 EUR.
+  const quelle = teilbuchung ?? ntryXml;
+  const betragInfo = betragAus(quelle) ?? (teilbuchung ? betragAus(ntryXml) : null);
+  if (!betragInfo) {
+    throw new CamtBuchungUnlesbarError('Kein Betrag (<Amt Ccy="…">) in der Buchung gefunden.');
+  }
+  const waehrung = betragInfo.waehrung;
+  let betragCent = betragInfo.betragCent;
 
-  // Richtung
-  const richtung = (getTagContent(ntryXml, 'CdtDbtInd') ?? 'CRDT') as 'CRDT' | 'DBIT';
+  // Richtung — bei einer Teilbuchung hat deren eigene Angabe Vorrang.
+  const richtung = ((teilbuchung ? getTagContent(teilbuchung, 'CdtDbtInd') : null)
+    ?? getTagContent(ntryXml, 'CdtDbtInd')
+    ?? 'CRDT') as 'CRDT' | 'DBIT';
   if (richtung === 'DBIT') {
     betragCent = -Math.abs(betragCent);
+  } else {
+    betragCent = Math.abs(betragCent);
   }
 
-  // Datum
-  const buchungsdatum = getTagContent(ntryXml, 'Dt')
-    // BookgDt > Dt hat Vorrang
-    ?? (() => {
-      const bookgDt = getAllBlocks(ntryXml, 'BookgDt');
-      if (bookgDt.length > 0) return getTagContent(bookgDt[0], 'Dt');
-      return null;
-    })()
-    ?? heuteBerlin();
+  // ── Buchungsdatum ──
+  // BookgDt hat Vorrang, dann ValDt. Vorher stand hier
+  // `getTagContent(ntryXml, 'Dt')` VOR der BookgDt-Auswertung — das nahm
+  // schlicht das erste <Dt> im Ntry, unabhaengig davon, ob es das Buchungs-
+  // oder das Valutadatum war, und widersprach damit dem eigenen Kommentar.
+  const datumAus = (tag: string): string | null => {
+    const bloecke = getAllBlocks(ntryXml, tag);
+    if (bloecke.length === 0) return null;
+    return getTagContent(bloecke[0], 'Dt') ?? getTagContent(bloecke[0], 'DtTm')?.slice(0, 10) ?? null;
+  };
+  const valutadatum = datumAus('ValDt');
+  const buchungsdatum = datumAus('BookgDt') ?? valutadatum;
+  if (!buchungsdatum) {
+    // Vorher fiel der Parser hier auf heuteBerlin() zurueck und erfand
+    // damit ein Buchungsdatum — in einem Kontoauszug ist das eine
+    // Falschaussage mit Wirkung auf Faelligkeiten und Mahnstufen.
+    throw new CamtBuchungUnlesbarError(
+      'Kein Buchungs- oder Valutadatum (BookgDt/ValDt) in der Buchung gefunden.'
+    );
+  }
 
-  // Valutadatum
-  const valutadatum = (() => {
-    const valDt = getAllBlocks(ntryXml, 'ValDt');
-    if (valDt.length > 0) return getTagContent(valDt[0], 'Dt');
-    return null;
-  })();
-
-  // Status (BOOK, PDNG, INFO)
-  const status = getTagContent(ntryXml, 'Sts') ?? 'BOOK';
+  // Status (BOOK = gebucht, PDNG = vorgemerkt, INFO = informativ)
+  const status = getCode(ntryXml, 'Sts') ?? 'BOOK';
 
   // Transaktionsdetails
-  const txDtls = getAllBlocks(ntryXml, 'TxDtls');
-  const txXml = txDtls.length > 0 ? txDtls[0] : ntryXml;
+  const txXml = teilbuchung ?? getAllBlocks(ntryXml, 'TxDtls')[0] ?? ntryXml;
 
   // Debitor
   const dbtrBlocks = getAllBlocks(txXml, 'Dbtr');
@@ -214,12 +315,25 @@ function parseNtry(ntryXml: string): CamtBuchung {
   const strd = getTagContent(txXml, 'Strd');
   const verwendungszweck = [ustrd, strd].filter(Boolean).join(' ') || null;
 
-  // Ruecklastschrift erkennen
-  const isRuecklastschrift = istRuecklastschrift(ntryXml);
+  // Ruecklastschrift erkennen — bei einer Teilbuchung zaehlen deren
+  // eigene Merkmale mit.
+  const grund = ruecklastschriftGrund(teilbuchung ? `${ntryXml}${teilbuchung}` : ntryXml);
 
-  // Hash fuer Duplikaterkennung
-  const hashInput = [betragCent, buchungsdatum, debitorIban ?? '', verwendungszweck ?? ''].join('|');
-  const buchungsHash = simpleHash(hashInput);
+  // ── Hash fuer Duplikaterkennung ──
+  // endToEndId und Buchungsreferenz gehoeren dazu: zwei ECHTE Zahlungen
+  // mit gleichem Betrag, gleichem Tag, gleichem Zahler und gleichem
+  // Verwendungszweck (der Regelfall bei monatlich gleichen Betraegen)
+  // ergaben vorher denselben Hash — die zweite galt als Dublette.
+  const hashInput = [
+    betragCent,
+    waehrung,
+    buchungsdatum,
+    valutadatum ?? '',
+    debitorIban ?? '',
+    verwendungszweck ?? '',
+    endToEndId ?? '',
+    buchungsreferenz ?? '',
+  ].join('|');
 
   return {
     betragCent,
@@ -236,8 +350,10 @@ function parseNtry(ntryXml: string): CamtBuchung {
     endToEndId,
     mandateId,
     buchungsreferenz,
-    istRuecklastschrift: isRuecklastschrift,
-    buchungsHash,
+    istRuecklastschrift: grund !== null,
+    ruecklastschriftGrund: grund,
+    istGebucht: status === 'BOOK',
+    buchungsHash: 'bh_' + sha256(hashInput),
   };
 }
 
@@ -274,26 +390,27 @@ export function parseCamtXml(xmlContent: string): CamtParseResult {
   const buchungen: CamtBuchung[] = [];
 
   for (let i = 0; i < ntryBlocks.length; i++) {
-    try {
-      // Pruefen ob Batch-Buchung (mehrere TxDtls)
-      const txDtlsList = getAllBlocks(ntryBlocks[i], 'TxDtls');
+    // Pruefen ob Batch-Buchung (mehrere TxDtls)
+    const txDtlsList = getAllBlocks(ntryBlocks[i], 'TxDtls');
 
-      if (txDtlsList.length > 1) {
-        // Batch: Jede TxDtls wird eine eigene Buchung
-        for (const txDtls of txDtlsList) {
-          // Baue ein synthetisches Ntry-XML mit nur diesem TxDtls
-          const syntheticNtry = ntryBlocks[i].replace(
-            /<(?:[a-zA-Z0-9]+:)?NtryDtls[\s\S]*?<\/(?:[a-zA-Z0-9]+:)?NtryDtls>/g,
-            `<NtryDtls>${txDtls}</NtryDtls>`
-          );
-          buchungen.push(parseNtry(syntheticNtry));
+    if (txDtlsList.length > 1) {
+      // Sammelbuchung: jede TxDtls wird eine eigene Buchung — mit ihrem
+      // EIGENEN Betrag (siehe parseNtry).
+      txDtlsList.forEach((txDtls, j) => {
+        try {
+          buchungen.push(parseNtry(ntryBlocks[i], txDtls));
+        } catch (e: unknown) {
+          const msg = e instanceof Error ? e.message : String(e);
+          fehler.push(`Fehler bei Buchung ${i + 1}, Teilbuchung ${j + 1}: ${msg}`);
         }
-      } else {
+      });
+    } else {
+      try {
         buchungen.push(parseNtry(ntryBlocks[i]));
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : String(e);
+        fehler.push(`Fehler bei Buchung ${i + 1}: ${msg}`);
       }
-    } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : String(e);
-      fehler.push(`Fehler bei Buchung ${i + 1}: ${msg}`);
     }
   }
 
@@ -303,12 +420,11 @@ export function parseCamtXml(xmlContent: string): CamtParseResult {
 /**
  * Berechnet einen Content-Hash ueber den gesamten XML-Inhalt.
  * Wird als quelldatei_hash im camt_imports gespeichert.
+ *
+ * SHA-256 statt 32-Bit-Hash: eine Kollision haette hier bedeutet, dass
+ * ein neuer Kontoauszug mit HTTP 409 als "bereits importiert" abgewiesen
+ * wird und die enthaltenen Zahlungen nie ankommen.
  */
 export function computeCamtFileHash(xmlContent: string): string {
-  let h = 0;
-  for (let i = 0; i < xmlContent.length; i++) {
-    const ch = xmlContent.charCodeAt(i);
-    h = ((h << 5) - h + ch) | 0;
-  }
-  return 'camt_' + (h >>> 0).toString(16).padStart(8, '0');
+  return 'camt_' + sha256(xmlContent);
 }

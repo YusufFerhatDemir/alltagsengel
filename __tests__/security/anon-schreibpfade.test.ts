@@ -157,7 +157,11 @@ describe('Gegenprobe: keine neue Route ohne Guard oder Limit', () => {
         /x-service-key/.test(src) ||
         /stripe\.webhooks|constructEvent/.test(src) ||
         /x-hub-signature|verifyMetaSignature/.test(src) ||
-        /rateLimit\(/.test(src) ||
+        // rateLimit( und rateLimitPersistent( — letzteres zaehlt in der
+        // Datenbank und ist damit instanzuebergreifend wirksam. Beide
+        // gelten hier als Limit; welche Route welchen nutzt, prueft die
+        // eigene Zusicherung weiter unten.
+        /rateLimit(Persistent)?\(/.test(src) ||
         /resetAt|checkRate|checkTrackRateLimit|function ok\(/.test(src) ||
         // Guard eine Ebene tiefer: die Route reicht an eine Service-Schicht
         // durch, die selbst einen require*()-Guard aufruft. Wird hier nicht
@@ -168,4 +172,51 @@ describe('Gegenprobe: keine neue Route ohne Guard oder Limit', () => {
     }
     expect(ohne, `Schreibende Routen ohne Guard/Limit:\n${ohne.join('\n')}`).toEqual([])
   })
+})
+
+// ═══════════════════════════════════════════════════════════════════════
+// Delta-Check Phase 4.5 — Ratengrenze muss instanzuebergreifend wirken
+//
+// lib/rate-limit.ts zaehlt in einer Map im Modul-Scope, also PRO
+// Serverless-Instanz. Auf Vercel startet jede neue Instanz mit leerem
+// Zaehler — die Grenze ist damit durch wiederholte Aufrufe umgehbar.
+// lib/rate-limit-persistent.ts zaehlt ueber die RPC api_rate_limit_hit in
+// der Datenbank (live vorhanden) und faellt nur dann auf den
+// In-Memory-Zaehler zurueck, wenn die RPC fehlt.
+//
+// Fuer Endpunkte, bei denen ein Missbrauch ECHTE Kosten verursacht —
+// Mailversand an fremde Postfaecher, KI-Aufrufe, Stripe-Sitzungen,
+// Vollexporte — ist der instanz-lokale Zaehler deshalb nicht ausreichend.
+// Reine Zaehl-Endpunkte (60 Anfragen/Minute) bleiben bewusst beim
+// In-Memory-Zaehler: dort waere ein DB-Roundtrip pro Seitenaufruf teurer
+// als der Missbrauch, den er verhindert.
+// ═══════════════════════════════════════════════════════════════════════
+describe('Kostenrelevante Endpunkte nutzen den persistenten Limiter', () => {
+  const PERSISTENT_PFLICHT: Record<string, string> = {
+    'app/api/auth/send-reset/route.ts': 'versendet Reset-Mails an fremde Postfaecher',
+    'app/api/beratung-chat/route.ts': 'KI-Aufruf je Anfrage',
+    'app/api/kontakt/route.ts': 'versendet Mail',
+    'app/api/newsletter/route.ts': 'versendet Mail',
+    'app/api/lead-inquiry/route.ts': 'versendet Mail',
+    'app/api/coach/anfrage/route.ts': 'versendet Mail',
+    'app/api/coach/checkout/route.ts': 'erzeugt Stripe-Sitzungen',
+    'app/api/user/export/route.ts': 'Vollexport aller eigenen Daten',
+    'app/api/reviews/route.ts': 'schreibender oeffentlicher Pfad',
+  }
+
+  for (const [datei, grund] of Object.entries(PERSISTENT_PFLICHT)) {
+    it(`${datei} — ${grund}`, () => {
+      const src = lesen(datei)
+      expect(src).toContain('rateLimitPersistent(')
+      // Jeder Aufruf muss abgewartet werden: ohne await ist das Ergebnis
+      // ein Promise und damit immer wahrheitswert-wahr — die Grenze waere
+      // wirkungslos, ohne dass es auffaellt.
+      for (const treffer of src.matchAll(/rateLimitPersistent\(/g)) {
+        const davor = src.slice(Math.max(0, treffer.index - 12), treffer.index)
+        expect(davor, `rateLimitPersistent ohne await in ${datei}`).toContain('await')
+      }
+      // Der instanz-lokale Zaehler darf hier nicht mehr aufgerufen werden.
+      expect(/(^|[^A-Za-z])rateLimit\(/m.test(src)).toBe(false)
+    })
+  }
 })

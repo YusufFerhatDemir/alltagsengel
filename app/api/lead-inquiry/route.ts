@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { safeApiError } from '@/lib/api/error-sanitizer'
-import { rateLimit, getClientIp } from '@/lib/rate-limit'
+import { getClientIp } from '@/lib/rate-limit'
+import { rateLimitPersistent } from '@/lib/rate-limit-persistent'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { logger } from '@/lib/logger'
 const log = logger.child('lead-inquiry')
@@ -19,7 +20,7 @@ const MAX_LEN = { name: 120, phone: 40, message: 2000, service: 60, source: 60, 
 export async function POST(request: Request) {
   try {
     const ip = getClientIp(request)
-    if (!rateLimit(`lead:${ip}`, 5, 10 * 60 * 1000)) {
+    if (!(await rateLimitPersistent(`lead:${ip}`, 5, 10 * 60 * 1000))) {
       return NextResponse.json(
         { error: 'Zu viele Anfragen — bitte versuchen Sie es in einigen Minuten erneut.' },
         { status: 429 }

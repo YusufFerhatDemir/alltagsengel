@@ -51,7 +51,13 @@ describe('NIEDRIG-5: Art.-15-Selbstbedienungs-Export', () => {
   })
 
   it('sie ist ratenbegrenzt (Art. 12 Abs. 5 DSGVO)', () => {
-    expect(route).toContain('rateLimit(')
+    // Delta-Check Phase 4.5: der Auskunftsexport nutzt jetzt den
+    // PERSISTENTEN Limiter. Der bisherige rateLimit() zaehlte in einer Map
+    // im Modul-Scope, also pro Serverless-Instanz — auf Vercel liess sich
+    // die Grenze durch wiederholte Aufrufe (neue Instanz = neuer Zaehler)
+    // umgehen. Fuer einen Vollexport der eigenen Daten ist das die teuerste
+    // Anfrage, die ein angemeldeter Nutzer stellen kann.
+    expect(route).toContain('rateLimitPersistent(')
   })
 
   it('sie protokolliert den Export als Audit-Event', () => {

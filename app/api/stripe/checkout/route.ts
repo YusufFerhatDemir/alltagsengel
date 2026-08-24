@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { safeApiError } from '@/lib/api/error-sanitizer'
 import { stripe } from '@/lib/stripe/client'
-import { PLAN_TO_PRICE, isPaidPlan } from '@/lib/stripe/config'
+import { preisIdFuerPlan, isPaidPlan } from '@/lib/stripe/config'
 import { getOrCreateStripeCustomer } from '@/lib/stripe/helpers'
 import { requireOrgRole } from '@/lib/organizations/server'
 
@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
     const session = await stripe.checkout.sessions.create({
       customer: stripeCustomerId,
       mode: 'subscription',
-      line_items: [{ price: PLAN_TO_PRICE[plan], quantity: 1 }],
+      line_items: [{ price: preisIdFuerPlan(plan), quantity: 1 }],
       success_url: `${SITE_URL}/mis/settings?checkout=success`,
       cancel_url: `${SITE_URL}/mis/settings?checkout=cancel`,
       metadata: { orgId },
