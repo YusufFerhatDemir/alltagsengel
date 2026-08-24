@@ -30,7 +30,8 @@ import { safeApiError } from '@/lib/api/error-sanitizer'
 import { stripe } from '@/lib/stripe/client'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireCoachUser } from '@/lib/coach/api-auth'
-import { rateLimit, getClientIp } from '@/lib/rate-limit'
+import { getClientIp } from '@/lib/rate-limit'
+import { rateLimitPersistent } from '@/lib/rate-limit-persistent'
 import {
   istTarifKey, istVerkaufBereit, tarif, VERKAUF_GESPERRT_TEXT,
 } from '@/lib/coach/pricing'
@@ -86,7 +87,7 @@ export async function POST(request: Request) {
     // Rate-Limit vor allem anderen: Jeder Aufruf, der durchkommt, legt
     // einen Stripe-Customer an — das ist eine Ressource bei einem Dritten.
     const ip = getClientIp(request)
-    if (!rateLimit(`coach-checkout:${ip}`, 10, 10 * 60 * 1000)) {
+    if (!(await rateLimitPersistent(`coach-checkout:${ip}`, 10, 10 * 60 * 1000))) {
       return NextResponse.json(
         { error: 'Zu viele Versuche — bitte warten Sie einige Minuten.' },
         { status: 429 }

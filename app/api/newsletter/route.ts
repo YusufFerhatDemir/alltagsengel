@@ -1,8 +1,9 @@
-import { Resend } from 'resend'
 import { NextResponse } from 'next/server'
 import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { rateLimit, getClientIp } from '@/lib/rate-limit'
+import { sendRawEmail } from '@/lib/notifications'
+import { getClientIp } from '@/lib/rate-limit'
+import { rateLimitPersistent } from '@/lib/rate-limit-persistent'
 import { logger } from '@/lib/logger'
 const log = logger.child('newsletter')
 
@@ -18,7 +19,7 @@ export async function POST(request: Request) {
     // lead-inquiry — sonst laesst sich die Willkommens-Mail als Versandhilfe
     // auf fremde Adressen missbrauchen.
     const ip = getClientIp(request)
-    if (!rateLimit(`newsletter:${ip}`, 5, 600_000)) {
+    if (!(await rateLimitPersistent(`newsletter:${ip}`, 5, 600_000))) {
       return NextResponse.json({ error: 'Zu viele Anfragen. Bitte später erneut versuchen.' }, { status: 429 })
     }
 
@@ -48,15 +49,21 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Speicherfehler' }, { status: 500 })
     }
 
-    // Willkommens-Mail senden
-    const key = process.env.RESEND_API_KEY
-    if (key) {
-      const resend = new Resend(key)
-      await resend.emails.send({
-        from: 'Alltagsengel <info@alltagsengel.care>',
-        to: email,
-        subject: 'Willkommen beim Alltagsengel Newsletter!',
-        html: `<!DOCTYPE html>
+    // Willkommens-Mail senden.
+    //
+    // Die Anmeldung steht schon in der Datenbank — ein Fehlschlag hier
+    // darf die Antwort deshalb nicht kippen (der Absender wuerde sich
+    // sonst ein zweites Mal anmelden und bekaeme 409). Er muss aber im
+    // Protokoll landen: das Resend-SDK wirft bei einer Ablehnung nicht,
+    // ein ungeprueftes Ergebnis sah bisher wie ein Erfolg aus.
+    const willkommen = await sendRawEmail({
+      to: email,
+      subject: 'Willkommen beim Alltagsengel Newsletter!',
+      // Idempotenz: eine zweite Anmeldung derselben Adresse prallt oben
+      // an `already_subscribed` ab; der Schluessel deckt zusaetzlich den
+      // Fall ab, dass zwei Aufrufe gleichzeitig durchlaufen.
+      idempotenzSchluessel: `newsletter-willkommen:${String(email).toLowerCase()}`,
+      html: `<!DOCTYPE html>
 <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"></head>
 <body style="margin:0;padding:0;background:#F7F2EA;font-family:-apple-system,sans-serif">
 <div style="max-width:560px;margin:0 auto;padding:24px">
@@ -86,6 +93,11 @@ export async function POST(request: Request) {
   </div>
 </div>
 </body></html>`,
+    })
+
+    if (!willkommen.ok) {
+      log.warn('Willkommens-Mail nicht versendet — Anmeldung bleibt gültig', {
+        grund: willkommen.grund,
       })
     }
 

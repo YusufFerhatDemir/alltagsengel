@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createClient } from '@/lib/supabase/server'
 import { getActiveOrgIdOrDefault } from '@/lib/organizations/server'
-import { rateLimit } from '@/lib/rate-limit'
+import { rateLimitPersistent } from '@/lib/rate-limit-persistent'
 import {
   ladeEngelBewertungen,
   ladeBuchungsBewertung,
@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
     // Rate-Limit pro User: Bewertungen sind durch den Unique-Index auf
     // booking_id zwar auf eine pro Buchung begrenzt, die Validierungs-
     // und Buchungs-Lookups davor sind aber ungebremst aufrufbar.
-    if (!rateLimit(`reviews:post:${user.id}`, 10, 60_000)) {
+    if (!(await rateLimitPersistent(`reviews:post:${user.id}`, 10, 60_000))) {
       return NextResponse.json({ error: 'Zu viele Anfragen. Bitte kurz warten.' }, { status: 429 })
     }
 

@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server'
 import { safeApiError } from '@/lib/api/error-sanitizer'
-import { Resend } from 'resend'
-import { rateLimit, getClientIp, escapeHtml } from '@/lib/rate-limit'
+import { sendRawEmail } from '@/lib/notifications'
+import { getClientIp, escapeHtml } from '@/lib/rate-limit'
+import { rateLimitPersistent } from '@/lib/rate-limit-persistent'
 import { logger } from '@/lib/logger'
 const log = logger.child('kontakt')
 
@@ -11,6 +12,14 @@ const log = logger.child('kontakt')
 // Sendet Kontaktanfragen als E-Mail an das Team.
 // Bestätigung wird an den Absender geschickt (non-fatal).
 // Schutz: Rate-Limit pro IP, Längen-Caps, HTML-Escaping.
+//
+// VERSANDWEG: sendRawEmail() aus lib/notifications — NICHT das
+// Resend-SDK direkt. Das SDK wirft bei einer Ablehnung des Providers
+// nicht, sondern liefert `{ error }` zurueck. Wer das Ergebnis nicht
+// prueft, antwortet dem Absender `success: true`, obwohl die Anfrage
+// nie beim Team angekommen ist — der Lead ist dann still verloren.
+// sendRawEmail() prueft Fehler UND Nachrichten-ID und hat ein
+// Zeitlimit.
 // ═══════════════════════════════════════════════════════════
 
 const MAX_LEN = { name: 120, email: 200, phone: 40, message: 4000 }
@@ -18,7 +27,7 @@ const MAX_LEN = { name: 120, email: 200, phone: 40, message: 4000 }
 export async function POST(request: Request) {
   try {
     const ip = getClientIp(request)
-    if (!rateLimit(`kontakt:${ip}`, 5, 10 * 60 * 1000)) {
+    if (!(await rateLimitPersistent(`kontakt:${ip}`, 5, 10 * 60 * 1000))) {
       return NextResponse.json(
         { error: 'Zu viele Anfragen — bitte versuchen Sie es in einigen Minuten erneut.' },
         { status: 429 }
@@ -42,13 +51,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Ungültige E-Mail-Adresse' }, { status: 400 })
     }
 
-    const key = process.env.RESEND_API_KEY
-    if (!key) {
-      log.error('RESEND_API_KEY nicht konfiguriert')
-      return NextResponse.json({ error: 'E-Mail-Service nicht verfügbar' }, { status: 500 })
-    }
-
-    const resend = new Resend(key)
     const adminEmail = process.env.ADMIN_ALERT_EMAIL || 'info@alltagsengel.care'
     const typeLabel = type === 'engel' ? 'Alltagsbegleiter-Bewerber' : 'Kunde/Angehöriger'
 
@@ -58,9 +60,8 @@ export async function POST(request: Request) {
     const safePhone = phone ? escapeHtml(String(phone).trim()) : ''
     const safeMessage = escapeHtml(message.trim())
 
-    // E-Mail an das Team — muss erfolgreich sein
-    await resend.emails.send({
-      from: 'Alltagsengel <info@alltagsengel.care>',
+    // E-Mail an das Team — muss erfolgreich sein, sonst ist der Lead weg.
+    const teamMail = await sendRawEmail({
       to: adminEmail,
       subject: `Neue Kontaktanfrage von ${name.trim().slice(0, 80)} (${typeLabel})`,
       html: `
@@ -75,14 +76,24 @@ export async function POST(request: Request) {
       `,
     })
 
+    if (!teamMail.ok) {
+      // Bewusst 502 und kein `success: true`: der Absender soll wissen,
+      // dass die Nachricht NICHT angekommen ist, statt vergeblich auf
+      // eine Antwort zu warten. Der Grund geht nur ins Protokoll —
+      // Provider-Details haben in der Antwort nichts zu suchen.
+      log.error('Kontaktanfrage nicht zustellbar', { grund: teamMail.grund })
+      return NextResponse.json(
+        { error: 'Ihre Nachricht konnte gerade nicht übermittelt werden. Bitte versuchen Sie es erneut oder rufen Sie uns an: +49 178 338 28 25.' },
+        { status: 502 }
+      )
+    }
+
     // Bestätigung an den Absender — Fehler hier ist NICHT fatal
     // (Team-Mail ist schon raus; sonst sähe der User "Fehler" und schickt doppelt)
-    try {
-      await resend.emails.send({
-        from: 'Alltagsengel <info@alltagsengel.care>',
-        to: email.trim(),
-        subject: 'Ihre Anfrage bei Alltagsengel — Bestätigung',
-        html: `
+    const bestaetigung = await sendRawEmail({
+      to: email.trim(),
+      subject: 'Ihre Anfrage bei Alltagsengel — Bestätigung',
+      html: `
           <div style="max-width:560px;margin:0 auto;font-family:-apple-system,sans-serif;background:#F7F2EA;padding:24px">
             <div style="text-align:center;padding:16px 0">
               <img src="https://alltagsengel.care/icon-192x192.png" width="50" height="50" alt="Alltagsengel" style="border-radius:10px">
@@ -106,9 +117,10 @@ export async function POST(request: Request) {
             </div>
           </div>
         `,
-      })
-    } catch (confirmErr) {
-      log.errorWithException('Bestätigungs-Mail fehlgeschlagen (non-fatal)', confirmErr)
+    })
+
+    if (!bestaetigung.ok) {
+      log.warn('Bestätigungs-Mail fehlgeschlagen (non-fatal)', { grund: bestaetigung.grund })
     }
 
     return NextResponse.json({ success: true })

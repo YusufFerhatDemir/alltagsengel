@@ -26,8 +26,9 @@
 
 import { NextResponse } from 'next/server'
 import { safeApiError } from '@/lib/api/error-sanitizer'
-import { Resend } from 'resend'
-import { rateLimit, getClientIp, escapeHtml } from '@/lib/rate-limit'
+import { sendRawEmail } from '@/lib/notifications'
+import { getClientIp, escapeHtml } from '@/lib/rate-limit'
+import { rateLimitPersistent } from '@/lib/rate-limit-persistent'
 import { COACH_PRODUKT_VERSION, COACH_SUPPORT_EMAIL } from '@/lib/coach/version'
 import { logger } from '@/lib/logger'
 const log = logger.child('coach-anfrage')
@@ -44,7 +45,7 @@ const ROLLEN: Record<string, string> = {
 export async function POST(request: Request) {
   try {
     const ip = getClientIp(request)
-    if (!rateLimit(`coach-anfrage:${ip}`, 5, 10 * 60 * 1000)) {
+    if (!(await rateLimitPersistent(`coach-anfrage:${ip}`, 5, 10 * 60 * 1000))) {
       return NextResponse.json(
         { error: 'Zu viele Anfragen — bitte versuchen Sie es in einigen Minuten erneut.' },
         { status: 429 }
@@ -78,16 +79,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Bitte prüfen Sie Ihre E-Mail-Adresse.' }, { status: 400 })
     }
 
-    const key = process.env.RESEND_API_KEY
-    if (!key) {
-      log.error('RESEND_API_KEY nicht konfiguriert')
-      return NextResponse.json(
-        { error: 'Der Versand ist gerade nicht möglich. Bitte schreiben Sie uns an ' + COACH_SUPPORT_EMAIL + '.' },
-        { status: 500 }
-      )
-    }
-
-    const resend = new Resend(key)
     const adminEmail = process.env.ADMIN_ALERT_EMAIL || COACH_SUPPORT_EMAIL
 
     const sicherName = escapeHtml(name.trim())
@@ -97,8 +88,12 @@ export async function POST(request: Request) {
     const rolleLabel = ROLLEN[String(rolle)] ?? 'Keine Angabe'
 
     // An das Team — muss erfolgreich sein, sonst geht die Anfrage verloren.
-    await resend.emails.send({
-      from: 'Alltagsengel <info@alltagsengel.care>',
+    //
+    // sendRawEmail() statt des Resend-SDK: das SDK wirft bei einer
+    // Ablehnung nicht, sondern liefert `{ error }`. Ungeprueft haette
+    // der Anfragende `gesendet: true` gesehen, waehrend die Anfrage nie
+    // beim Team ankam.
+    const teamMail = await sendRawEmail({
       to: adminEmail,
       subject: `PflegeCoach-Anfrage von ${name.trim().slice(0, 80)}`,
       html: `
@@ -117,15 +112,21 @@ export async function POST(request: Request) {
       `,
     })
 
+    if (!teamMail.ok) {
+      log.error('PflegeCoach-Anfrage nicht zustellbar', { grund: teamMail.grund })
+      return NextResponse.json(
+        { error: 'Der Versand ist gerade nicht möglich. Bitte schreiben Sie uns an ' + COACH_SUPPORT_EMAIL + '.' },
+        { status: 502 }
+      )
+    }
+
     // Bestätigung an den Absender — Fehler hier ist NICHT fatal:
     // Die Team-Mail ist bereits raus, ein Fehler würde den Absender nur zu
     // einer zweiten Anfrage verleiten.
-    try {
-      await resend.emails.send({
-        from: 'Alltagsengel <info@alltagsengel.care>',
-        to: email.trim(),
-        subject: 'Ihre Anfrage zum PflegeCoach',
-        html: `
+    const bestaetigung = await sendRawEmail({
+      to: email.trim(),
+      subject: 'Ihre Anfrage zum PflegeCoach',
+      html: `
           <div style="max-width:560px;margin:0 auto;font-family:-apple-system,sans-serif;background:#F7F2EA;padding:24px">
             <div style="background:white;border-radius:16px;padding:28px">
               <h2 style="color:#1A1612;margin:0 0 12px">Vielen Dank, ${sicherName}!</h2>
@@ -145,9 +146,10 @@ export async function POST(request: Request) {
             </div>
           </div>
         `,
-      })
-    } catch (bestaetigungsFehler) {
-      log.error('Bestätigungsmail fehlgeschlagen (non-fatal)', { bestaetigungsFehler })
+    })
+
+    if (!bestaetigung.ok) {
+      log.warn('Bestätigungsmail fehlgeschlagen (non-fatal)', { grund: bestaetigung.grund })
     }
 
     return NextResponse.json({ gesendet: true })

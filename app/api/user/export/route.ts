@@ -18,7 +18,7 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { resolveUserOrgId } from '@/lib/organizations/server'
 import { logAuditEventOrWarn } from '@/lib/audit-log'
-import { rateLimit } from '@/lib/rate-limit'
+import { rateLimitPersistent } from '@/lib/rate-limit-persistent'
 import { sammleAuskunft, type AuskunftClient } from '@/lib/dsgvo/auskunft'
 import { heuteBerlin } from '@/lib/utils/timezone'
 
@@ -31,7 +31,7 @@ export async function GET(request: Request) {
 
   // 5 Exporte pro Stunde je Konto. Deckt jede echte Auskunft ab und
   // verhindert, dass der Endpunkt als Last-Generator dient.
-  if (!rateLimit(`user-export:${user.id}`, 5, 3_600_000)) {
+  if (!(await rateLimitPersistent(`user-export:${user.id}`, 5, 3_600_000))) {
     return NextResponse.json(
       { error: 'Sie haben zuletzt mehrere Auskuenfte angefordert. Bitte versuchen Sie es in einer Stunde erneut.' },
       { status: 429 },

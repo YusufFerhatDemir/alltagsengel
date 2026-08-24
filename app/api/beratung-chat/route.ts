@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { safeApiError } from '@/lib/api/error-sanitizer'
-import { rateLimit, getClientIp } from '@/lib/rate-limit'
+import { getClientIp } from '@/lib/rate-limit'
+import { rateLimitPersistent } from '@/lib/rate-limit-persistent'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { heuteBerlin } from '@/lib/utils/timezone';
 import { logger } from '@/lib/logger';
@@ -200,7 +201,7 @@ async function callOpenAI(messages: ChatMessage[]): Promise<string | null> {
 export async function POST(req: NextRequest) {
   try {
     const ip = getClientIp(req)
-    if (!rateLimit(`beratung-chat:min:${ip}`, 8, 60_000) || !rateLimit(`beratung-chat:h:${ip}`, 40, 3_600_000)) {
+    if (!(await rateLimitPersistent(`beratung-chat:min:${ip}`, 8, 60_000)) || !(await rateLimitPersistent(`beratung-chat:h:${ip}`, 40, 3_600_000))) {
       return NextResponse.json(
         { content: 'Sie haben gerade viele Fragen gestellt — bitte versuchen Sie es in einer Minute erneut oder buchen Sie direkt eine kostenlose Beratung: /termin.' },
         { status: 429 }
