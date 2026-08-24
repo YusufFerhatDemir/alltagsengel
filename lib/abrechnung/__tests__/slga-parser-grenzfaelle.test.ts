@@ -108,31 +108,22 @@ test('unlesbarer Text im Betragsfeld ergibt "fehlt", keine NaN', () => {
   assert.equal(n.betragAnerkanntCent, 13_100, 'Das zweite Feld bleibt lesbar.')
 })
 
-test('LUECKE: ein Tausenderpunkt macht aus 1.234,56 Euro stille 1,23 Euro', () => {
-  // Belegtes Fehlverhalten von parseBetragCent: es wird nur das ERSTE Komma
-  // durch einen Punkt ersetzt. Aus "1.234,56" wird "1.234.56", parseFloat
-  // liest davon "1.234" und bricht ab — 123 Cent.
-  //
-  // EDIFACT kennt keinen Tausendertrenner, die Formate der Kassen sind
-  // insofern regelkonform. Kritisch ist trotzdem das WIE des Scheiterns:
-  // es kommt keine Warnung und kein `undefined`, sondern eine plausible,
-  // um Faktor 1000 zu kleine Zahl. Die faellt in keiner Pruefung auf.
-  //
-  // Wer das reparieren will: alle Trennzeichen ausser dem letzten entfernen
-  // und `serviceAdvice.dezimal` beruecksichtigen (siehe naechster Test).
-  assert.equal(betraege('1.234,56').brutto, 123)
-  assert.notEqual(betraege('1.234,56').brutto, 123_456)
+test('Tausenderpunkt wird korrekt als Trenner erkannt (nicht als Dezimalpunkt)', () => {
+  // Gefixt in Phase 5 (2026-08-24): Punkte vor dem Dezimalkomma werden als
+  // Tausendertrenner entfernt. Vorher ergab "1.234,56" stille 123 Cent
+  // (Faktor 1000 daneben).
+  assert.equal(betraege('1.234,56').brutto, 123_456)
+  assert.equal(betraege('12.345.678,90').brutto, 1_234_567_890)
+  assert.equal(betraege('1.000,00').brutto, 100_000)
 })
 
-test('LUECKE: ein nachgestelltes Minus wird verschluckt — die Rueckforderung wird zur Gutschrift', () => {
-  // "123,45-" ist die in kaufmaennischen Formaten uebliche Schreibweise fuer
-  // einen negativen Betrag. parseFloat("123.45-") liefert 123.45; das
-  // Vorzeichen faellt weg. Eine Ruecknahme wuerde damit als Zahlung gelesen.
-  //
-  // Das voranstehende Minus wird dagegen korrekt uebernommen — der Parser
-  // ist also nicht generell vorzeichenblind, nur bei dieser Schreibweise.
-  assert.equal(betraege('123,45-').brutto, 12_345)
-  assert.equal(betraege('-123,45').brutto, -12_345)
+test('nachgestelltes Minus ergibt negativen Betrag (EDIFACT-Konvention)', () => {
+  // Gefixt in Phase 5 (2026-08-24): Trailing Minus wird als negatives
+  // Vorzeichen erkannt. Vorher ergab "123,45-" stille +12345 Cent — eine
+  // Rueckforderung wurde als Zahlung gelesen.
+  assert.equal(betraege('123,45-').brutto, -12_345)
+  assert.equal(betraege('-123,45').brutto, -12_345, 'Fuehrendes Minus bleibt auch korrekt.')
+  assert.equal(betraege('0,01-').brutto, -1, 'Auch Kleinstbetraege.')
 })
 
 test('das Dezimalzeichen aus dem UNA wird beim Betrag NICHT ausgewertet', () => {
