@@ -15,7 +15,7 @@ import {
 import { getActiveOrgId } from '@/lib/organizations/server'
 import { heuteBerlin } from '@/lib/utils/timezone'
 
-import { euroZuCent } from '@/lib/geld'
+import { euroZuCent, centRunden } from '@/lib/geld'
 /**
  * POST /api/billing/invoices/[id]/zahlung
  *
@@ -99,7 +99,7 @@ export async function POST(
       return NextResponse.json({ error: 'Rechnung ist bereits vollstaendig bezahlt.' }, { status: 409 })
     }
 
-    const amountCents = body.amountCents != null ? Math.round(Number(body.amountCents)) : openCents
+    const amountCents = body.amountCents != null ? centRunden(Number(body.amountCents)) : openCents
 
     if (!Number.isFinite(amountCents) || amountCents <= 0) {
       return NextResponse.json({ error: 'amountCents muss eine positive Zahl sein.' }, { status: 400 })

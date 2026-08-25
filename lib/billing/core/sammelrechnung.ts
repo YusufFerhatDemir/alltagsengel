@@ -53,6 +53,7 @@
  */
 
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { aufCent } from '@/lib/geld'
 import { billingLogger as log } from '@/lib/logger';
 import { createInvoiceDraft, freezeInvoice, parseTariffError } from './invoice-engine';
 import { budgetTypeToRechtsgrundlage, TarifNichtVerifiziertError, type TarifStatus } from './price-resolver';
@@ -401,7 +402,7 @@ export async function ermittleGruppen(
       signiert,
       abgeschlossen: rows.length - signiert,
       erfassterBetragEuro:
-        Math.round(rows.reduce((s, r) => s + Number(r.amount || 0), 0) * 100) / 100,
+        aufCent(rows.reduce((s, r) => s + Number(r.amount || 0), 0)),
     });
   }
 

@@ -1,5 +1,6 @@
 'use client'
 import { heuteBerlin } from '@/lib/utils/timezone';
+import { aufCent } from '@/lib/geld'
 import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
@@ -175,7 +176,7 @@ export default function BuchenPage() {
 
   const rate = CUSTOMER_HOURLY_RATE
   const subtotal = rate * duration
-  const platformFee = Math.round(subtotal * PLATFORM_FEE_FACTOR * 100) / 100
+  const platformFee = aufCent(subtotal * PLATFORM_FEE_FACTOR)
   const total = subtotal + platformFee
   const angelName = angel?.profiles ? `${angel.profiles.first_name} ${angel.profiles.last_name?.[0]}.` : 'Engel'
 

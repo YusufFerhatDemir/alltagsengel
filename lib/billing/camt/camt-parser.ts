@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto';
+import { euroZuCent } from '@/lib/geld';
 /**
  * CAMT.053 / CAMT.054 Parser
  *
@@ -169,7 +170,13 @@ function betragToCent(betragStr: string): number {
   if (!Number.isFinite(n)) {
     throw new CamtBuchungUnlesbarError(`Betrag "${betragStr}" ist keine endliche Zahl.`);
   }
-  return Math.round(n * 100);
+  // euroZuCent statt Math.round(n * 100): der Kontoauszug einer Bank
+  // enthaelt regelmaessig Halb-Cent-Betraege (1.005), die als
+  // `n * 100` in IEEE-754 auf 100.49999999999999 fallen und damit einen
+  // Cent zu wenig verbuchen. Die Zeichenkette `roh` wird direkt
+  // weitergereicht — sie ist oben bereits als ISO-20022-Betrag validiert
+  // und traegt die exakte Dezimaldarstellung, die der Double verliert.
+  return euroZuCent(roh);
 }
 
 /**

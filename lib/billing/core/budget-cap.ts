@@ -44,6 +44,7 @@
  */
 
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { aufCent } from '@/lib/geld'
 import { budgetVersionFuerJahr } from '@/lib/config/budget-constants'
 
 // ---------------------------------------------------------------------------
@@ -179,10 +180,21 @@ export interface BudgetDeckelErgebnis {
   greifenderDeckel: 'monat' | 'jahr' | null
 }
 
-/** Kaufmaennisch auf Cent runden — Beträge landen als NUMERIC in der DB. */
-function aufCent(betrag: number): number {
-  return Math.round((betrag + Number.EPSILON) * 100) / 100
-}
+// Die frueher hier stehende Eigenbau-Rundung
+// `Math.round((betrag + Number.EPSILON) * 100) / 100` ist ersatzlos
+// entfallen. Sie war nicht durchgehend falsch — genau das machte sie
+// gefaehrlich: fuer 1,005 € und 2,675 € lieferte sie zufaellig das
+// richtige Ergebnis, fuer 8,575 € aber 8,57 € statt 8,58 €. Number.EPSILON
+// ist der Double-Abstand *bei 1.0*; je groesser der Betrag, desto weniger
+// richtet der Summand aus.
+//
+// Bei NEGATIVEN Betraegen schiebt er zusaetzlich in die falsche Richtung:
+// -1,005 € wurde zu -1,00 €, waehrend +1,005 € zu 1,01 € wurde. Eine
+// Gutschrift war damit einen Cent kleiner als die Rechnung, die sie
+// ausgleichen soll.
+//
+// aufCent() aus lib/geld.ts verschiebt das Komma stattdessen auf der
+// Dezimal-Zeichenkette und rundet symmetrisch (DIN 1333).
 
 function monatsIndex(periodMonth: string): number {
   const treffer = /^(\d{4})-(\d{2})$/.exec(String(periodMonth || ''))

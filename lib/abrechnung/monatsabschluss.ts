@@ -22,6 +22,7 @@
 // Rückgabe: Zusammenfassung + Warnungen — nichts wird versendet.
 // ═══════════════════════════════════════════════════════════════
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { centRunden } from '@/lib/geld'
 
 // ── Ergebnis-Typen ─────────────────────────────────────────────
 export interface AbschlussWarnung {
@@ -330,7 +331,7 @@ export async function erstelleMonatsabschluss(
       minuten += mins
       const { preisCent, luecke: l } = findePreis(preise, r.service_type || v.leistungsart, r.date)
       if (preisCent != null && mins > 0) {
-        betragCent += Math.round((mins / 60) * preisCent)
+        betragCent += centRunden((mins / 60) * preisCent)
       } else {
         // Erste Lücke gewinnt; 'nicht_verifiziert' ist die aussagekräftigere
         // Meldung und verdrängt ein vorher gemerktes 'kein_eintrag'.

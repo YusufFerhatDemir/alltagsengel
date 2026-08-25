@@ -1,5 +1,6 @@
 'use client'
 import { datumBerlin } from '@/lib/utils/timezone';
+import { aufCent } from '@/lib/geld'
 import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
@@ -126,7 +127,7 @@ function BuchenServiceInner() {
   const kasseMoeglich = lage.kassenabrechnung
   const rate = CUSTOMER_HOURLY_RATE
   const subtotal = rate * duration
-  const platformFee = Math.round(subtotal * PLATFORM_FEE_FACTOR * 100) / 100
+  const platformFee = aufCent(subtotal * PLATFORM_FEE_FACTOR)
   const total = subtotal + platformFee
 
   const handleBook = async () => {

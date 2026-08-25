@@ -1,5 +1,6 @@
 'use client'
 import { datumBerlin } from '@/lib/utils/timezone';
+import { aufCent } from '@/lib/geld'
 import { Suspense, useCallback, useEffect, useMemo, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import {
@@ -286,6 +287,20 @@ function LeistungsnachweisDigitalInner() {
         return
       }
       const cg = caregivers.find(c => c.id === f.caregiver_id)
+      // parseFloat() war hier zweifach nachlaessig: es akzeptiert einen
+      // Muell-Suffix still ("12.5x" → 12.5) und liefert bei ungueltiger
+      // Eingabe NaN, das JSON.stringify als null verschickt — der
+      // Leistungsnachweis waere ohne Betrag entstanden und damit nicht
+      // abrechenbar. Number() ist streng, aufCent() rundet kaufmaennisch
+      // auf volle Cent, bevor der Wert in die EURO-Spalte
+      // service_records.amount geht.
+      const betragRoh = f.amount.trim()
+      const betrag = betragRoh ? Number(betragRoh) : null
+      if (betrag !== null && !Number.isFinite(betrag)) {
+        setCreateError('Ungültiger Betrag.')
+        setCreateLoading(false)
+        return
+      }
       const body = {
         client_id: f.client_id,
         caregiver_id: f.caregiver_id,
@@ -296,7 +311,7 @@ function LeistungsnachweisDigitalInner() {
         billing_type: f.billing_type,
         budget_type: f.budget_type,
         caregiver_initials: cg ? `${(cg.first_name || '')[0] || ''}${(cg.last_name || '')[0] || ''}`.toUpperCase() : '??',
-        amount: f.amount ? parseFloat(f.amount) : null,
+        amount: betrag === null ? null : aufCent(betrag),
         leistung_beschreibung: f.leistung_beschreibung || null,
         notes: f.notes || null,
       }

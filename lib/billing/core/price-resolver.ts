@@ -14,6 +14,7 @@
  */
 
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { centRunden } from '@/lib/geld'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -370,13 +371,17 @@ export function calculateLineTotal(params: LineTotalParams): LineTotalResult {
   const basisCent = tarif.preis_cent * menge;
 
   // Zuschlag anwenden
-  const zuschlagCent = Math.round(basisCent * zuschlagProzent / 100);
+  // centRunden statt Math.round: Zu- und Abschlaege werden auch auf
+  // negative Basisbetraege (Storno-/Korrekturpositionen) angewandt, und
+  // Math.round rundet den exakten halben Cent dort in die falsche
+  // Richtung (-100.5 → -100 statt -101).
+  const zuschlagCent = centRunden(basisCent * zuschlagProzent / 100);
   // Abschlag auf den bezuschlagten Betrag — dieselbe Reihenfolge, in der
   // Verguetungsvereinbarungen sie beschreiben (Zuschlag auf den Satz,
   // Abschlag auf das Ergebnis).
   const zwischenCent = basisCent + zuschlagCent;
-  const abschlagCent = Math.round(zwischenCent * abschlagProzent / 100);
-  const gesamtCent = Math.round(zwischenCent - abschlagCent);
+  const abschlagCent = centRunden(zwischenCent * abschlagProzent / 100);
+  const gesamtCent = centRunden(zwischenCent - abschlagCent);
 
   return {
     einzelpreisCent: tarif.preis_cent,

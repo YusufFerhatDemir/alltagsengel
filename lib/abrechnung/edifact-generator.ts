@@ -23,6 +23,7 @@
 // auf das IK 460629986 und ist ein separater Schritt (Phase 2).
 // ═══════════════════════════════════════════════════════════════
 
+import { centRunden } from '@/lib/geld'
 import {
   UNA, UNB, UNZ, UNH, UNT,
   FKT_PLGA, FKT_PLAA, REC, SRD, UST, GES, NAM,
@@ -193,9 +194,15 @@ export function physikalischerDateiname(laufendeNummer: number, test: boolean = 
   return `${test ? 'T' : 'E'}PFL0${String(laufendeNummer).padStart(3, '0')}`
 }
 
-/** Betrag einer Einzelleistung: Einzelpreis × Menge, kaufmännisch gerundet. */
-function leistungsBetragCent(l: AbrechnungsLeistung): number {
-  return Math.round(l.einzelpreis_cent * l.menge)
+/**
+ * Betrag einer Einzelleistung: Einzelpreis × Menge, kaufmännisch gerundet.
+ *
+ * Exportiert, damit die Rundung ohne einen vollstaendigen Abrechnungsfall
+ * (Kostenträger, Datenannahmestelle, Versichertendaten) pruefbar ist —
+ * siehe lib/__tests__/geld-rundung-track2.test.ts.
+ */
+export function leistungsBetragCent(l: AbrechnungsLeistung): number {
+  return centRunden(l.einzelpreis_cent * l.menge)
 }
 
 /** Gruppiert Fälle nach Kostenträger-IK (jede Kasse eigenes PLGA/PLAA-Paar). */

@@ -16,6 +16,7 @@ import { useCallback, useEffect, useMemo, useState, type CSSProperties } from 'r
 import { createClient } from '@/lib/supabase/client'
 import { getOrgIK } from '@/lib/config/org-config'
 import { euro } from '@/lib/admin/ops'
+import { euroZuCent, centRunden, rundeAufStellen } from '@/lib/geld'
 import { StatusBadge, EmptyRow, Banner } from '@/components/admin/OpsUI'
 import {
   generateEDIFACT, ALLTAGSENGEL_NAME,
@@ -254,9 +255,12 @@ export default function AbrechnungPage() {
         const stunden = (r.duration_minutes || 60) / 60
         // Zeitvergütung: Menge = Stunden, Einzelpreis = Stundensatz.
         // Sonst: Menge 1, Einzelpreis = Gesamtbetrag des Einsatzes.
-        const menge = schluessel.zeitbasiert ? Math.round(stunden * 100) / 100 : 1
-        const gesamtCent = Math.round(r.amount * 100)
-        const einzelpreisCent = menge > 0 ? Math.round(gesamtCent / menge) : gesamtCent
+        const menge = schluessel.zeitbasiert ? rundeAufStellen(stunden, 2) : 1
+        // euroZuCent statt Math.round(r.amount * 100): service_records.amount
+        // ist eine EURO-Spalte, und der Halb-Cent (1,005 €) fiel dort um
+        // einen Cent nach unten, bevor der Betrag in die Kassendatei ging.
+        const gesamtCent = euroZuCent(r.amount)
+        const einzelpreisCent = menge > 0 ? centRunden(gesamtCent / menge) : gesamtCent
         leistungen.push({
           datum: r.date,
           leistungsart: artKey,
@@ -453,7 +457,7 @@ export default function AbrechnungPage() {
         const ergebnis = pruefung[gruppe.kostentraeger_ik || 'ohne-ik']
         const stelle = gruppe.faelle.length > 0 ? findeDatenannahmestelle(gruppe.kostentraeger_name) : null
         const summe = ergebnis?.datei?.gesamtbetrag_cent
-          ?? gruppe.faelle.reduce((s, fall) => s + fall.leistungen.reduce((x, l) => x + Math.round(l.einzelpreis_cent * l.menge), 0), 0)
+          ?? gruppe.faelle.reduce((s, fall) => s + fall.leistungen.reduce((x, l) => x + centRunden(l.einzelpreis_cent * l.menge), 0), 0)
         const anzahlFehler = (ergebnis?.fehler.length || 0)
         const anzahlWarnungen = (ergebnis?.warnungen.length || 0) + gruppe.datenprobleme.length
         const ampelFarbe = !ergebnis ? '#999' : anzahlFehler > 0 ? '#D04B3B' : anzahlWarnungen > 0 ? '#E8A000' : '#5CB882'
@@ -497,7 +501,7 @@ export default function AbrechnungPage() {
                 </thead>
                 <tbody>
                   {gruppe.faelle.map((fall, i) => {
-                    const brutto = fall.leistungen.reduce((s, l) => s + Math.round(l.einzelpreis_cent * l.menge), 0)
+                    const brutto = fall.leistungen.reduce((s, l) => s + centRunden(l.einzelpreis_cent * l.menge), 0)
                     return (
                       <tr key={i}>
                         <td>{fall.client.nachname}, {fall.client.vorname}</td>

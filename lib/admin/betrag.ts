@@ -22,8 +22,18 @@ export function parseBetragZuCent(eingabe: string): number {
   const roh = String(eingabe ?? '').trim()
   if (!roh) return NaN
 
-  // Waehrungszeichen, Leerraum und schmale Leerzeichen raus.
-  let bereinigt = roh.replace(/[\s  €]/g, '')
+  // Leerraum (inkl. der schmalen und geschuetzten Leerzeichen aus
+  // Kontoauszug-Kopien) darf ueberall weg — er trennt hoechstens
+  // Tausendergruppen. Das WAEHRUNGSZEICHEN dagegen nur an den Raendern:
+  //
+  // Frueher wurde auch das € global gestrichen. Damit wurde die
+  // naheliegende Vertipper-Eingabe „12€34" (gemeint: 12,34 €) zu „1234"
+  // und ergab 1234,00 € — den hundertfachen Betrag, ohne jede Warnung.
+  // Ein Waehrungszeichen INNERHALB der Zahl ist keine gueltige Eingabe
+  // und faellt jetzt durch die Formatpruefung weiter unten.
+  let bereinigt = roh
+    .replace(/^€+|€+$/g, '')
+    .replace(/[\s  ]/g, '')
 
   const hatKomma = bereinigt.includes(',')
   if (hatKomma) {

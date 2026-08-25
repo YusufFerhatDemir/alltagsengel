@@ -15,6 +15,7 @@
 // ═══════════════════════════════════════════════════════════════
 import { useCallback, useEffect, useMemo, useState, type CSSProperties } from 'react'
 import { euro, formatDate } from '@/lib/admin/ops'
+import { parseBetragZuCent } from '@/lib/admin/betrag'
 import { SearchInput, EmptyRow, Banner, StatusBadge } from '@/components/admin/OpsUI'
 import DialogOverlay from '@/components/DialogOverlay'
 
@@ -77,13 +78,19 @@ const CORRECTION_STATUS_META: Record<string, { label: string; color: string }> =
   verarbeitet: { label: 'Verarbeitet', color: '#00BCD4' },
 }
 
-// Cent-Eingabe aus einem deutschen Betragsfeld ("12,50" oder "12.50")
+// Cent-Eingabe aus einem deutschen Betragsfeld ("12,50" oder "12.50").
+//
+// Die eigene Normalisierung ist entfallen: sie strich Punkte
+// bedingungslos, sodass die englische Schreibweise "12.50" als 1250 €
+// gelesen wurde. parseBetragZuCent() unterscheidet Tausender- und
+// Dezimalpunkt und rundet ueber euroZuCent() statt ueber
+// Math.round(value * 100) — der verfehlte den exakten Halb-Cent
+// ("1,005" ergab 100 statt 101 Cent), und eine Gutschrift muss
+// betragsgleich zur Rechnung sein.
 function parseEuroToCents(input: string): number | null {
-  const normalized = input.trim().replace(/\./g, '').replace(',', '.')
-  if (!normalized) return null
-  const value = Number(normalized)
-  if (!Number.isFinite(value) || value <= 0) return null
-  return Math.round(value * 100)
+  const cent = parseBetragZuCent(input)
+  if (!Number.isFinite(cent) || cent <= 0) return null
+  return cent
 }
 
 export default function GutschriftenPage() {
