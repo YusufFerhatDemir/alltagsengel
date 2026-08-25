@@ -28,7 +28,7 @@ und steht auf seinem fail-closed-Standard.
 |---|---|
 | Typecheck | **0 Fehler** (`npx tsc --noEmit`) |
 | node:test | **2.211 grün / 0 rot** |
-| vitest | siehe §7 — nacheinander gelaufen, nie gleichzeitig |
+| vitest | **5.627 grün / 38 übersprungen / 0 rot** |
 | Neue Tests | **+197** in 5 neuen Dateien, plus 3 in einer bestehenden E2E-Suite |
 | Neue Module | 7 |
 | Neue Routen | 2 (beide ausschließlich lesend) |
@@ -301,9 +301,11 @@ Siehe §6 — M-1 bis M-4.
 |---|---|
 | `npx tsc --noEmit` | **0 Fehler** |
 | `npm run test:unit` (node:test) | **2.211 / 2.211 grün** |
-| `npx vitest run` | siehe Deploy-Protokoll — getrennt gelaufen, nie gleichzeitig mit tsc |
+| `npx vitest run` | **5.627 grün / 38 übersprungen / 0 rot** (getrennt gelaufen, nie gleichzeitig mit tsc) |
 | Secrets im Repo | keine; `precommit-guard` läuft in `deploy.sh` |
 | Cross-Tenant-Regression | keine — org-Fence in 4 Funktionen **ergänzt**, in keiner entfernt |
+| `npm run lint:forbidden` | **0 Treffer** (24.577 Dateien, FULL-Scan) |
+| `npm run check:schema-drift` | **0 Befunde** nach Nachprüfung — siehe §8 |
 | Stille Fehlerpfade | keine neuen; **zwei bestehende geschlossen** (F-1, M-1) |
 
 ### Angefasste Bestandstests — und warum
@@ -332,26 +334,38 @@ Verhaltensänderung selbst gewollt war:
 - **Kein Eingriff in die Mahnfristen.** 14/28/42/56/70 Tage unverändert; das
   Gate macht das Mahnwesen ausschließlich **zurückhaltender**, nie aggressiver.
 
-### Offen, außerhalb dieses Auftrags
+### Nachgetragen: der Schema-Drift-Check
 
-`npm run check:schema-drift` meldet **8 vorbestehende Befunde** in Dateien, die
-diese Phase nicht angefasst hat. Jeder lässt die betreffende Abfrage mit 42703
-scheitern:
+`npm run check:schema-drift` meldete zunächst **8 Befunde**. Der erste Entwurf
+dieses Berichts nannte sie „vorbestehende 42703-Defekte, zwei davon auf
+Geldpfaden". **Das war falsch, und die Nachprüfung hat es widerlegt:**
 
-| Datei | Spalte |
+**Alle acht sind Fehlalarme derselben Klasse** — der Prüfer nimmt die Tabelle
+aus dem nächstgelegenen `.from(...)` im Dateitext. Zwei Ursachen:
+
+| Befund | Tatsächlich |
 |---|---|
-| `lib/billing/core/payments.ts:412` | `payment_allocations.paid_amount` (`.eq`) |
-| `lib/billing/core/sammelrechnung.ts:427` | `service_records.leistungsart` (`.in`) |
-| `lib/pilot/control-center.ts:189` | `zahlungseingaenge.status` (`.eq`) |
-| `lib/pilot/control-center.ts:194` | `klaerfaelle.ist_ruecklastschrift` (`.eq`) |
-| `lib/pilot/control-center.ts:413/414` | `dunning_email_queue.block_dunning`, `.dunning_level`, `.next_dunning_at` |
+| `payments.ts` → `payment_allocations.paid_amount` | Der Treffer steht in einem **Kommentar**, der begründet, warum dort *kein* `.eq('paid_amount', 0)` steht (NULL-Fall). |
+| `sammelrechnung.ts` → `service_records.leistungsart` | Ebenso ein Erklärtext: „Ohne `.in('leistungsart', …)`-Filter, weil…". |
+| `control-center.ts` → 5 Spalten | Die Abfragen entstehen in Hilfsfunktionen (`kopf()`, `ze()`, `de()`, `queue()`), der Filter steht am Aufrufort. Die Spalten existieren sämtlich — auf `camt_imports`, `zahlungseingaenge` bzw. `dunning_entries`. |
 
-Die ersten beiden liegen auf Geldpfaden. **Der Check ist weder in CI noch im
-Precommit-Guard verdrahtet** — das ist der Grund, warum die Befunde überlebt
-haben, und der eigentliche Punkt: eine Prüfung, die niemand ausführt, ist keine.
-Beides gehört in eine eigene Runde.
+Alle acht stehen jetzt begründet in `AUSNAHMEN` (`scripts/schema-drift-check.mjs`)
+— das ist der Mechanismus, den das Skript dafür vorsieht. Danach: **0 Befunde**,
+1.288 Dateien gegen 331 Live-Tabellen.
 
----
+> **Warum das hier steht und nicht stillschweigend korrigiert wurde:** Die
+> ursprüngliche Aussage hätte jemanden auf die Suche nach zwei Geldweg-Defekten
+> geschickt, die es nicht gibt. Ein Bericht, der einen Fehlalarm als Befund
+> führt, ist schlechter als keiner.
+
+### Wirklich offen, außerhalb dieses Auftrags
+
+`check:schema-drift` ist **weder in CI noch im Precommit-Guard verdrahtet**.
+Ein Prüfschritt, den niemand ausführt, ist keiner — und die Klasse, die er
+fängt (eine unbekannte Spalte lässt die ganze Abfrage still scheitern), ist in
+diesem Repo mehrfach aufgetreten. Die Verdrahtung gehört in eine eigene Runde,
+zusammen mit der Frage, ob der Zuordner Kommentare überspringen sollte; dann
+wären fünf der acht Ausnahmen überflüssig.
 
 ## 9. Neue Dateien
 
@@ -382,5 +396,6 @@ Unverändert **Erstbetrieb** — aber jetzt mit einer Vorstufe, die vorher fehlt
    Schalter nichts — der Preflight nennt den Grund.
 3. Erst danach die Schalter in der Reihenfolge aus `docs/ENV_KONFIGURATION.md` §1.
 
-**Parallel, ohne externe Abhängigkeit:** die 8 Schema-Drift-Befunde aus §8 und
-die Verdrahtung von `check:schema-drift` in CI.
+**Parallel, ohne externe Abhängigkeit:** `check:schema-drift` in CI und
+Precommit-Guard verdrahten (§8) — und dem Zuordner beibringen, Kommentare zu
+überspringen.
