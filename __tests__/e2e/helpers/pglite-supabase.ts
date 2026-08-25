@@ -299,8 +299,58 @@ export function macheSupabaseClient(
     }
 
     /** Loest `client:clients(...)` durch eine zweite Abfrage je Zeile auf. */
+    /**
+     * Spaltennamen einer Tabelle — einmal geholt, danach gemerkt.
+     * Das Schema aendert sich waehrend eines Testlaufs nicht.
+     */
+    const spaltenCache = new Map<string, Set<string>>()
+    async function spaltenVon(tabelle: string): Promise<Set<string>> {
+      const gemerkt = spaltenCache.get(tabelle)
+      if (gemerkt) return gemerkt
+      const rows = await fuehreAus<{ column_name: string }>(
+        `SELECT column_name FROM information_schema.columns
+         WHERE table_schema = 'public' AND table_name = $1`,
+        [tabelle]
+      )
+      const menge = new Set(rows.map(r => String(r.column_name)))
+      spaltenCache.set(tabelle, menge)
+      return menge
+    }
+
+    /**
+     * Prueft eine angeforderte Spaltenliste gegen das echte Schema.
+     *
+     * ── WARUM DAS SEIN MUSS ────────────────────────────────────────────
+     * Der Shim baut immer `SELECT *` und schneidet die gewuenschten
+     * Spalten hinterher in JavaScript zu. Eine Spalte, die es gar nicht
+     * gibt, kam damit als `undefined` zurueck — der Test blieb gruen.
+     * PostgREST antwortet dagegen mit 42703 und die Abfrage ist LIVE tot.
+     *
+     * Genau diese Luecke hat `listMandates()` gedeckt: die Abfrage nannte
+     * `clients(… client_number)`, live heisst die Spalte
+     * `customer_number`, und GET /api/billing/sepa/mandates war wochenlang
+     * kaputt, ohne dass ein Test es sehen konnte. Der Shim ahmt den
+     * Fehler jetzt nach, statt ihn zu verschlucken.
+     */
+    async function pruefeSpalten(tabelle: string, spalten: string[]): Promise<void> {
+      const vorhanden = await spaltenVon(tabelle)
+      if (vorhanden.size === 0) return // Tabelle unbekannt — das meldet das SELECT selbst.
+      for (const roh of spalten) {
+        const teil = roh.trim()
+        if (!teil || teil === '*' || teil.includes('(')) continue
+        // `alias:spalte` — PostgREST-Umbenennung; geprueft wird die Quelle.
+        const name = teil.includes(':') ? teil.split(':').pop()!.trim() : teil
+        if (name === '*' || vorhanden.has(name)) continue
+        throw Object.assign(
+          new Error(`column ${tabelle}.${name} does not exist`),
+          { code: '42703' }
+        )
+      }
+    }
+
     async function ergaenzeEingebettet(zeilen: Zeile[], specs: EingebettetSpec[]): Promise<void> {
       for (const spec of specs) {
+        await pruefeSpalten(spec.tabelle, spec.spalten.split(','))
         const fk = fkSpalte(spec.tabelle)
         const ids = [...new Set(zeilen.map(z => z[fk]).filter(v => v != null))]
         const treffer = new Map<string, Zeile>()
@@ -355,7 +405,10 @@ export function macheSupabaseClient(
         }
 
         // ── SELECT ────────────────────────────────────────────────────
-        const { eingebettet } = zerlegeSelect(spaltenAuswahl)
+        const { flach, eingebettet } = zerlegeSelect(spaltenAuswahl)
+        // Erst die Spaltennamen, dann die Daten — wie PostgREST, das eine
+        // unbekannte Spalte mit 42703 abweist statt sie zu ignorieren.
+        await pruefeSpalten(tabelle, flach)
 
         if (zaehlen) {
           const zSql = `SELECT count(*)::int AS anzahl FROM public."${tabelle}"${whereKlausel(params)}`

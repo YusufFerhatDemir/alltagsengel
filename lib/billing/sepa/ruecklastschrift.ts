@@ -161,11 +161,35 @@ export async function verarbeiteRuecklastschrift(
       const alloc = payAllocs[0];
       result.paymentId = alloc.payment_id;
 
-      // Allocation loeschen (soft: status setzen)
-      await supabase
+      // Zuordnung zuruecknehmen.
+      //
+      // ── EIN SCHEMAFEHLER, DER HIER STILL VERSCHLUCKT WURDE ───────────
+      // 'rueckzahlung' stand nicht im CHECK-Constraint von
+      // payment_allocations (20260808210000). Das UPDATE scheiterte mit
+      // 23514, der Rueckgabewert wurde nicht gelesen — die Zuordnung blieb
+      // als 'vollzahlung' stehen und behauptete weiter, die Rechnung sei
+      // bezahlt, waehrend payments.allocated_cents zwei Zeilen weiter
+      // bereits reduziert wurde. Zusaetzlich blockierte
+      // UNIQUE(payment_id, invoice_id) danach jede erneute Zuordnung
+      // derselben Zahlung auf dieselbe Rechnung.
+      //
+      // Migration 20261004000000 nimmt den Wert auf. Solange sie nicht
+      // angewendet ist, wird die Zeile stattdessen ENTFERNT: die Historie
+      // fehlt dann, aber die Buecher widersprechen sich nicht — und der
+      // Rueckfall steht im Ergebnis, statt unsichtbar zu bleiben.
+      const { error: markErr } = await supabase
         .from('payment_allocations')
         .update({ allocation_type: 'rueckzahlung' as string })
         .eq('id', alloc.id);
+
+      if (markErr) {
+        await supabase.from('payment_allocations').delete().eq('id', alloc.id);
+        result.fehler = [
+          result.fehler,
+          `Zuordnung konnte nicht als Rücknahme markiert werden (${markErr.message}) — ` +
+          `Zeile wurde entfernt. Migration 20261004000000 fehlt.`,
+        ].filter(Boolean).join(' | ');
+      }
 
       // Payment-allocated_cents reduzieren
       const { data: payment } = await supabase

@@ -22,7 +22,7 @@ interface Mandate {
   debtor_iban: string
   status: string
   last_used_at: string | null
-  client?: { first_name: string; last_name: string; client_number?: string }
+  client?: { first_name: string; last_name: string; customer_number?: string }
 }
 
 interface Batch {
