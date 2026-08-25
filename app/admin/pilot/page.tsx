@@ -11,10 +11,17 @@ import type {
   VoraussetzungPunkt,
 } from '@/lib/pilot/types'
 import { VORAUSSETZUNG_GRUPPEN } from '@/lib/pilot/types'
+import type {
+  MoneyPathAmpel,
+  MoneyPathBereich,
+  MoneyPathKennzahl,
+  MoneyPathUebersicht,
+} from '@/lib/pilot/control-center'
 
 interface PilotAntwort {
   voraussetzungen: VoraussetzungErgebnis
   ketten: KundenKette[]
+  moneyPath: MoneyPathUebersicht
   schritte: SchrittDefinition[]
   gekappt: boolean
 }
@@ -23,6 +30,18 @@ const AMPEL_FARBE: Record<Ampel, string> = {
   gruen: '#22c55e',
   gelb: '#f59e0b',
   rot: '#ef4444',
+}
+
+/**
+ * Vier Farben statt drei. `ungeprueft` ist bewusst NICHT rot: „Messung
+ * gescheitert" und „Befund" sind zwei verschiedene Aussagen, und wer sie
+ * gleich einfärbt, sucht später am falschen Ende.
+ */
+const MP_AMPEL: Record<MoneyPathAmpel, { farbe: string; label: string }> = {
+  gruen:      { farbe: '#22c55e', label: 'BEREIT' },
+  gelb:       { farbe: '#f59e0b', label: 'ACHTUNG' },
+  rot:        { farbe: '#ef4444', label: 'BLOCKIERT' },
+  ungeprueft: { farbe: '#6366f1', label: 'UNGEPRÜFT' },
 }
 
 const STAND_FARBE: Record<SchrittStand, string> = {
@@ -213,6 +232,32 @@ export default function PilotPage() {
         </div>
       )}
 
+      <h2 style={{ marginTop: 36 }}>3 · Money-Path — Betriebslage heute</h2>
+      <p style={{ color: 'var(--muted)', marginBottom: 12, maxWidth: 760 }}>
+        Die vier Geldpfade und die Umgebung, in gemessenen Zahlen. Abschnitt 1 fragt
+        <em> ob</em> abgerechnet werden darf, Abschnitt 2 <em>wie weit</em> ein Kunde ist —
+        dieser Abschnitt fragt, <em>was gerade liegen geblieben ist</em>.
+      </p>
+
+      <Banner tone="info">
+        <strong>Messung, keine Freigabe.</strong> {data.moneyPath.freigabeHinweis}
+      </Banner>
+
+      {data.moneyPath.hinweise.length > 0 && (
+        <div style={{ marginTop: 16 }}>
+          <Banner tone="warn">
+            <strong>Nicht messbar (gilt als ungeprüft, NICHT als 0):</strong>
+            <ul style={{ margin: '8px 0 0', paddingLeft: 18 }}>
+              {data.moneyPath.hinweise.map((h, i) => <li key={i}>{h}</li>)}
+            </ul>
+          </Banner>
+        </div>
+      )}
+
+      <div style={{ marginTop: 16 }}>
+        {data.moneyPath.bereiche.map(b => <MoneyPathKarte key={b.id} bereich={b} />)}
+      </div>
+
       <div className="admin-card" style={{ marginTop: 20 }}>
         <h3>Legende der Kettenschritte</h3>
         <ol style={{ lineHeight: 1.8, margin: 0, paddingLeft: 20, fontSize: 13 }}>
@@ -224,6 +269,53 @@ export default function PilotPage() {
         </ol>
       </div>
     </div>
+  )
+}
+
+function MoneyPathKarte({ bereich }: { bereich: MoneyPathBereich }) {
+  const a = MP_AMPEL[bereich.ampel]
+  return (
+    <div className="admin-card" style={{ marginBottom: 16, borderLeft: `4px solid ${a.farbe}` }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'center', marginBottom: 8 }}>
+        <h3 style={{ margin: 0, flex: '1 1 220px' }}>{bereich.titel}</h3>
+        <span style={{
+          padding: '3px 10px', borderRadius: 999, border: `1px solid ${a.farbe}`,
+          color: a.farbe, fontSize: 11, fontWeight: 700, letterSpacing: 0.4, whiteSpace: 'nowrap',
+        }}>
+          {a.label}
+        </span>
+      </div>
+      <p style={{ margin: '0 0 12px', fontSize: 14, lineHeight: 1.6 }}>{bereich.begruendung}</p>
+      <div style={{ overflowX: 'auto' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: 420 }}>
+          <tbody>
+            {bereich.kennzahlen.map((k, i) => <MoneyPathZeile key={i} kennzahl={k} />)}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )
+}
+
+function MoneyPathZeile({ kennzahl: k }: { kennzahl: MoneyPathKennzahl }) {
+  const auffaellig = k.wert !== null && k.wert > 0 && k.ampel !== 'gruen'
+  const farbe = k.wert === null
+    ? MP_AMPEL.ungeprueft.farbe
+    : auffaellig ? MP_AMPEL[k.ampel].farbe : 'inherit'
+
+  return (
+    <tr style={{ borderTop: '1px solid var(--border, #e5e7eb)' }}>
+      {/* Der Unterschied, um den es geht: „—" ist nicht „0". */}
+      <td style={{ padding: '8px 8px 8px 0', width: 70, textAlign: 'right', fontWeight: 700, fontSize: 16, color: farbe }}>
+        {k.wert === null ? '—' : k.wert}
+      </td>
+      <td style={{ padding: 8 }}>
+        <div style={{ fontWeight: 500 }}>{k.label}</div>
+        <div style={{ color: 'var(--muted)', fontSize: 12, marginTop: 2, lineHeight: 1.5 }}>
+          {k.wert === null ? 'Nicht messbar — siehe Hinweise oben. ' : ''}{k.bedeutung}
+        </div>
+      </td>
+    </tr>
   )
 }
 

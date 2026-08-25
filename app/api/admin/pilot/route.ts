@@ -5,6 +5,7 @@ import { requireAdminMitOrg } from '@/lib/abrechnung/require-admin'
 import { ermittleVoraussetzungen } from '@/lib/pilot/voraussetzungen'
 import { ermittleKundenKetten } from '@/lib/pilot/kundenkette'
 import { KETTEN_SCHRITTE } from '@/lib/pilot/schritte'
+import { ermittleMoneyPath } from '@/lib/pilot/control-center'
 import { logger } from '@/lib/logger'
 const log = logger.child('admin/pilot')
 
@@ -20,9 +21,15 @@ const MAX_KUNDEN = 100
  * Liefert den Pilot-Status der aktiven Organisation:
  *   - Betriebs-Voraussetzungen (darf überhaupt echt abgerechnet werden?)
  *   - Kundenketten aller aktiven Kunden (wie weit ist wer gekommen?)
+ *   - Money-Path-Betriebslage (CAMT, Rechnung, Mahnung, DATEV, System)
  *
  * Nur lesend. Antwortet ausschliesslich mit Status- und Zählwerten,
  * niemals mit Zugangsdaten.
+ *
+ * ‼️ Diese Route hat bewusst KEIN POST/PUT/PATCH/DELETE. Sie kann keine
+ * Geldaktion auslösen. Die Riegel gegen Doppelversand, Doppelbuchung und
+ * fremde Mandanten sitzen in den jeweiligen Diensten — eine Zahl aus
+ * dieser Antwort ist eine Messung, keine Erlaubnis.
  */
 export async function GET(request: Request) {
   const auth = await requireAdminMitOrg('system.verwalten')
@@ -46,14 +53,20 @@ export async function GET(request: Request) {
 
     const clientIds = (clients ?? []).map(c => c.id)
 
-    const [voraussetzungen, ketten] = await Promise.all([
+    const [voraussetzungen, ketten, moneyPath] = await Promise.all([
       ermittleVoraussetzungen(admin, auth.organizationId),
       ermittleKundenKetten(admin, auth.organizationId, clientIds),
+      // Dritte, unabhaengige Sicht: die Betriebslage der vier Geldpfade
+      // (CAMT, Rechnung, Mahnung, DATEV) plus Umgebung und Audit.
+      // Ebenfalls nur lesend — siehe Modulkopf von
+      // lib/pilot/control-center.ts.
+      ermittleMoneyPath(admin, auth.organizationId),
     ])
 
     return NextResponse.json({
       voraussetzungen,
       ketten,
+      moneyPath,
       schritte: KETTEN_SCHRITTE,
       // Ehrlich benennen, wenn die Liste abgeschnitten wurde — eine stille
       // Kappung liest sich wie "das sind alle Kunden".
