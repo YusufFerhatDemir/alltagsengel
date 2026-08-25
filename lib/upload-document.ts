@@ -32,7 +32,16 @@ const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024
 const UPLOAD_TIMEOUT_MS = 60_000 // 60 Sekunden
 const SIGNED_URL_TTL_SECONDS = 60 * 60 * 24 * 7 // 7 Tage (analog service-proofs)
 
-const ALLOWED_MIME_PREFIXES = ['image/', 'application/pdf']
+// Muss deckungsgleich zur Bucket-Allowlist bleiben
+// (Migration 20260825_security_org_fence_storage_hardening).
+// Bewusst OHNE image/svg+xml: SVG traegt ausfuehrbares Script und liefe
+// ueber die signierte URL auf der Storage-Origin.
+const ERLAUBTE_MIME_TYPES = [
+  'application/pdf',
+  'image/jpeg', 'image/png', 'image/webp',
+  'image/heic', 'image/heif', 'image/gif', 'image/tiff',
+  'image/bmp', 'image/avif',
+]
 
 export interface UploadResult {
   ok: boolean
@@ -102,7 +111,7 @@ export async function uploadDocument(
   }
 
   // ═══ 2. Validierung: Dateityp ═══
-  const typeOk = ALLOWED_MIME_PREFIXES.some(prefix => file.type.startsWith(prefix))
+  const typeOk = ERLAUBTE_MIME_TYPES.includes(file.type)
   if (!typeOk) {
     return {
       ok: false,

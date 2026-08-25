@@ -129,9 +129,19 @@ describe('Upload-Validierung (15 MB Limit)', () => {
     expect(src).toContain("errorCode: 'file_too_large'")
   })
 
-  it('erlaubt nur image/* und application/pdf', () => {
-    expect(src).toContain("'image/'")
+  it('erlaubt nur explizit gelistete Bild-Typen und application/pdf', () => {
     expect(src).toContain("'application/pdf'")
+    expect(src).toContain("'image/jpeg'")
+    expect(src).toContain("'image/png'")
+    expect(src).toContain("'image/heic'")
+  })
+
+  // SVG traegt ausfuehrbares Script und liefe ueber die signierte URL auf
+  // der Storage-Origin — darf weder hier noch in der Bucket-Allowlist stehen
+  // (Migration 20260825_security_org_fence_storage_hardening).
+  it('erlaubt kein SVG und keine Praefix-Pruefung', () => {
+    expect(src).not.toContain("'image/svg+xml'")
+    expect(src).not.toContain('startsWith(prefix)')
   })
 
   it('gibt invalid_type ErrorCode für falsche MIME-Typen zurück', () => {
