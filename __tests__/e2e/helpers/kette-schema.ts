@@ -440,3 +440,181 @@ export async function baueCamtTabellen(db: PGlite): Promise<void> {
   `)
 }
 
+
+/**
+ * Monatsabschluss-Strecke: Verordnungen, Vorschau-Preistabelle und die
+ * Abschluss-Zeilen.
+ *
+ * Die Tabellen kommen WORTGLEICH aus den Migrationen — inklusive der
+ * CHECK-Constraints, an denen die Fail-Closed-Pruefungen haengen
+ * (verordnung_type, genehmigung_status, kostentraeger_typ, bundesland,
+ * monthly_closings.status/ampel).
+ *
+ * NACHZUG unten: Spalten aus spaeteren ALTER-Migrationen, je Zeile mit
+ * Quelle. Und die Mandantenspalte inklusive Default `current_org_id()`,
+ * wie sie der Phase-3-DO-Block auf monthly_closings/verordnungen/
+ * leistungspreise gesetzt hat — genau dieser Default ist der Grund, warum
+ * ein fehlendes `organization_id` im Anwendungscode NICHT auffaellt,
+ * sondern still in der Stamm-Org landet.
+ *
+ * Setzt baueKettenSchema() voraus (clients, service_records).
+ */
+export async function baueMonatsabschlussTabellen(db: PGlite): Promise<void> {
+  await db.exec(tabelleAusMigration('20260719000200_eylem_audit_complete_features.sql', 'verordnungen'))
+  await db.exec(tabelleAusMigration('20260731010000_verordnungen_erweiterung.sql', 'leistungspreise'))
+  await db.exec(tabelleAusMigration('20260706_monatsabschluss_ki_pruefzentrale.sql', 'monthly_closings'))
+
+  await db.exec(`
+    -- verordnungen ─────────────────────────────────────────────────────
+    ALTER TABLE public.verordnungen
+      ADD COLUMN IF NOT EXISTS kostentraeger_typ text NOT NULL DEFAULT 'krankenkasse'
+        CHECK (kostentraeger_typ IN ('krankenkasse','sozialamt','privat','berufsgenossenschaft')),  -- 20260731010000
+      ADD COLUMN IF NOT EXISTS kostentraeger_name text,                                             -- 20260731010000
+      ADD COLUMN IF NOT EXISTS kostentraeger_ik_nummer text,                                        -- 20260731010000
+      ADD COLUMN IF NOT EXISTS leistungsart text,                                                   -- 20260731010000
+      ADD COLUMN IF NOT EXISTS abtretungserklaerung_vorhanden boolean DEFAULT false;                -- 20260731020000
+
+    -- leistungspreise ──────────────────────────────────────────────────
+    -- 20260902000000: Fail-Closed-Freigabe; 20260904000000: Belegpflicht
+    ALTER TABLE public.leistungspreise
+      ADD COLUMN IF NOT EXISTS tarif_status text NOT NULL DEFAULT 'unverified'
+        CHECK (tarif_status IN ('verified','unverified','blocked')),
+      ADD COLUMN IF NOT EXISTS verifizierungs_quelle text,
+      ADD COLUMN IF NOT EXISTS beleg_id uuid;
+
+    -- monthly_closings ─────────────────────────────────────────────────
+    -- 20260808210000 ergaenzt die Summenspalten.
+    ALTER TABLE public.monthly_closings
+      ADD COLUMN IF NOT EXISTS total_invoiced numeric DEFAULT 0,
+      ADD COLUMN IF NOT EXISTS total_paid numeric DEFAULT 0,
+      ADD COLUMN IF NOT EXISTS total_open numeric DEFAULT 0;
+  `)
+
+  // Mandantenspalte wie der Phase-3-DO-Block sie setzt: NOT NULL mit
+  // Default current_org_id(). Der Default ist hier Pruefgegenstand — er
+  // laesst ein vergessenes organization_id still in die Stamm-Org laufen.
+  await db.exec(`
+    DO $$
+    DECLARE t text;
+    BEGIN
+      FOREACH t IN ARRAY ARRAY['verordnungen','leistungspreise','monthly_closings'] LOOP
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_schema = 'public' AND table_name = t AND column_name = 'organization_id'
+        ) THEN
+          EXECUTE format(
+            'ALTER TABLE public.%I ADD COLUMN organization_id uuid REFERENCES public.organizations(id)', t);
+          EXECUTE format(
+            'ALTER TABLE public.%I ALTER COLUMN organization_id SET DEFAULT public.current_org_id()', t);
+          EXECUTE format(
+            'ALTER TABLE public.%I ALTER COLUMN organization_id SET NOT NULL', t);
+        END IF;
+      END LOOP;
+    END $$;
+  `)
+}
+
+/**
+ * Tarif-Stammdaten: die drei kontrollierten Kataloge, ihre
+ * Fremdschluessel auf billing_tariffs — und ein STELLVERTRETER fuer den
+ * Ueberschneidungs-Constraint.
+ *
+ * Kataloge und Seeds kommen WORTGLEICH aus 20260807120000 bzw.
+ * 20260807180000; die Codes sind kontrollierte Vokabulare, keine Preise.
+ *
+ * ── GRENZE, DIE HIER BENANNT WIRD ──────────────────────────────────────
+ * `no_overlapping_tariffs` ist live ein
+ *   EXCLUDE USING gist (… tariff_validity_range(…) WITH &&)
+ * und braucht dafuer die Erweiterung btree_gist. PGlite liefert sie
+ * NICHT („extension btree_gist is not available"). Der Constraint laesst
+ * sich hier also nicht anlegen.
+ *
+ * Statt ihn stillschweigend wegzulassen — dann liefe der Ueberschneidungs-
+ * fall im Test gruen durch und keiner saehe es — steht hier ein Trigger
+ * mit demselben Namen im Fehlertext. Was damit geprueft wird, ist
+ * ausschliesslich die REAKTION DER ANWENDUNG auf eine abgewiesene
+ * Ueberschneidung. Ob der Constraint selbst richtig greift, beweist
+ * dieser Stellvertreter NICHT — das kann nur eine Postgres-Instanz mit
+ * btree_gist.
+ *
+ * Setzt baueKettenSchema() voraus (billing_tariffs).
+ */
+export async function baueTarifStammdaten(db: PGlite): Promise<void> {
+  const M_HARDENING = '20260807120000_tariff_model_hardening.sql'
+  const M_STAMM_V2 = '20260807180000_tariff_stammdaten_v2.sql'
+
+  await db.exec(tabelleAusMigration(M_HARDENING, 'billing_leistungsarten'))
+  await db.exec(tabelleAusMigration(M_HARDENING, 'billing_rechtsgrundlagen'))
+  await db.exec(tabelleAusMigration(M_STAMM_V2, 'billing_tarifquellen'))
+
+  // Seeds wortgleich aus denselben Migrationen.
+  await db.exec(`
+    INSERT INTO public.billing_leistungsarten (code, bezeichnung, sort_order) VALUES
+      ('alltagsbegleitung',    'Alltagsbegleitung',         1),
+      ('betreuung_45a',        'Betreuung nach §45a SGB XI', 2),
+      ('verhinderungspflege',  'Verhinderungspflege',        3),
+      ('hauswirtschaft',       'Hauswirtschaftliche Versorgung', 4),
+      ('einkaufsservice',      'Einkaufsservice',            5),
+      ('begleitservice',       'Begleitservice',             6),
+      ('nachtbetreuung',       'Nachtbetreuung',             7),
+      ('wochenendbetreuung',   'Wochenendbetreuung',         8),
+      ('krankenfahrt',         'Krankenfahrt',               9),
+      ('demenzbetreuung',      'Demenzbetreuung',           10),
+      ('wegepauschale',        'Wegepauschale',             11),
+      ('sonstige',             'Sonstige Leistung',         99)
+    ON CONFLICT (code) DO NOTHING;
+
+    INSERT INTO public.billing_rechtsgrundlagen (code, bezeichnung, sort_order) VALUES
+      ('§45b SGB XI', 'Entlastungsleistungen',      1),
+      ('§39 SGB XI',  'Verhinderungspflege',         2),
+      ('§36 SGB XI',  'Haeusliche Pflegehilfe',      3),
+      ('privat',      'Privatzahler (ohne Kasse)',    4)
+    ON CONFLICT (code) DO NOTHING;
+
+    INSERT INTO public.billing_tarifquellen (code, bezeichnung, sort_order) VALUES
+      ('PRIVATE_PREISLISTE',       'Interne Preisliste fuer Privatzahler',                  1),
+      ('ANERKENNUNGSBESCHEID',     'Preis aus Anerkennungsbescheid (Landesbehoerde)',        2),
+      ('VERGUETUNGSVEREINBARUNG',  'Verguetungsvereinbarung mit Pflegekasse',               3),
+      ('KASSENVEREINBARUNG',       'Rahmenvertrag / Kassenvereinbarung',                    4),
+      ('MANUELL_FREIGEGEBEN',      'Manuell geprueft und von Geschaeftsfuehrung freigegeben', 5)
+    ON CONFLICT (code) DO NOTHING;
+  `)
+
+  // Fremdschluessel wortgleich aus 20260807120000 (Abschnitt 3).
+  await db.exec(`
+    ALTER TABLE public.billing_tariffs
+      ADD CONSTRAINT fk_tariff_leistungsart
+      FOREIGN KEY (leistungsart) REFERENCES public.billing_leistungsarten(code);
+    ALTER TABLE public.billing_tariffs
+      ADD CONSTRAINT fk_tariff_rechtsgrundlage
+      FOREIGN KEY (rechtsgrundlage) REFERENCES public.billing_rechtsgrundlagen(code);
+  `)
+
+  // STELLVERTRETER — siehe Kopfkommentar. Kein Ersatz fuer den echten
+  // EXCLUDE-Constraint, nur ein Ausloeser mit demselben Namen im Text.
+  await db.exec(`
+    CREATE FUNCTION public.stellvertreter_overlap_guard() RETURNS trigger
+    LANGUAGE plpgsql AS $$
+    BEGIN
+      IF EXISTS (
+        SELECT 1 FROM public.billing_tariffs t
+        WHERE t.organization_id = NEW.organization_id
+          AND t.leistungsart    = NEW.leistungsart
+          AND t.rechtsgrundlage = NEW.rechtsgrundlage
+          AND COALESCE(t.kostentraeger_ik, '__ALL__') = COALESCE(NEW.kostentraeger_ik, '__ALL__')
+          AND COALESCE(t.bundesland, '__ALL__')       = COALESCE(NEW.bundesland, '__ALL__')
+          AND t.deleted_at IS NULL AND t.ist_aktiv = TRUE
+          AND daterange(t.gueltig_ab, t.gueltig_bis, '[]')
+              && daterange(NEW.gueltig_ab, NEW.gueltig_bis, '[]')
+      ) THEN
+        RAISE EXCEPTION
+          'conflicting key value violates exclusion constraint "no_overlapping_tariffs"';
+      END IF;
+      RETURN NEW;
+    END $$;
+
+    CREATE TRIGGER trg_stellvertreter_overlap
+      BEFORE INSERT ON public.billing_tariffs
+      FOR EACH ROW EXECUTE FUNCTION public.stellvertreter_overlap_guard();
+  `)
+}

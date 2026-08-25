@@ -420,6 +420,14 @@ export async function erstelleMonatsabschluss(
     for (const [clientId, agg] of perClient) {
       const { error: upErr } = await supabase.from('monthly_closings').upsert(
         {
+          // MANDANT: Pflichtangabe. Fehlte sie, griff der Spalten-Default
+          // `current_org_id()` (Phase-3-Migration 20260801) — und der faellt
+          // bei einem service-role-Client ohne JWT auf die Stamm-Org
+          // zurueck. Jeder Monatsabschluss JEDES Mandanten landete damit in
+          // der Stamm-Organisation, und der Mandant sah seinen eigenen
+          // wegen der RESTRICTIVE org_fence-Policy nicht. Derselbe Fehler
+          // ist in lib/billing/core/audit.ts bereits beschrieben.
+          organization_id: organizationId,
           client_id: clientId,
           year: jahr,
           month: monatNum,

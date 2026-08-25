@@ -112,10 +112,16 @@ export async function loadInvoiceXRechnungData(
 
   let correctionOfNumber: string | null = null
   if (inv.correction_of) {
+    // MANDANTENGRENZE: der Filter auf organization_id fehlte hier. Zeigt
+    // correction_of (durch Fehleingabe oder Datenmigration) auf eine
+    // Rechnung eines anderen Mandanten, landete DEREN Rechnungsnummer als
+    // BT-25 im ausgehenden XRechnung-Dokument — also in einer Datei, die
+    // an einen Kostentraeger geht.
     const { data: origInv } = await supabase
       .from('invoices')
       .select('invoice_number_formatted, invoice_number')
       .eq('id', inv.correction_of)
+      .eq('organization_id', orgId)
       .maybeSingle()
     correctionOfNumber = origInv?.invoice_number_formatted || origInv?.invoice_number || null
   }
