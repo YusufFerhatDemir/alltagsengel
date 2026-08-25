@@ -6,6 +6,7 @@
 // (z.B. fehlende Tabelle/Spalte) wird mit 0/leer weitergemacht.
 // ═══════════════════════════════════════════════════════════════
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { aufCent } from '@/lib/geld'
 import { pflegegradVon } from '@/lib/clients/pflegegrad'
 import { heuteBerlin } from '@/lib/utils/timezone'
 
@@ -239,7 +240,7 @@ async function ladeUmsatz(
   return {
     gesamt,
     nachKostentraegerTyp: Array.from(typMap.entries())
-      .map(([typ, v]) => ({ typ, betrag: Math.round(v.betrag * 100) / 100, anzahl: v.anzahl }))
+      .map(([typ, v]) => ({ typ, betrag: aufCent(v.betrag), anzahl: v.anzahl }))
       .sort((a, b) => b.betrag - a.betrag),
     vormonat,
     veraenderungProzent,
@@ -474,8 +475,8 @@ async function ladeBudgets(
     gesamtBudgetEuro > 0 ? Math.round((verbrauchtEuro / gesamtBudgetEuro) * 1000) / 10 : null
 
   return {
-    gesamtBudgetEuro: Math.round(gesamtBudgetEuro * 100) / 100,
-    verbrauchtEuro: Math.round(verbrauchtEuro * 100) / 100,
+    gesamtBudgetEuro: aufCent(gesamtBudgetEuro),
+    verbrauchtEuro: aufCent(verbrauchtEuro),
     auslastungProzent,
     kritischeBudgets,
   }

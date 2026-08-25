@@ -210,7 +210,11 @@ describe('F5: Billing-Migrationen haben Rollbacks', () => {
 describe('F6: freezeInvoice einzelpreis_cent != gesamtpreis_cent', () => {
   it('berechnet einzelpreis_cent aus gesamtpreis_cent / menge', () => {
     const src = read('lib/billing/core/invoice-engine.ts');
-    expect(src).toMatch(/einzelpreisCent\s*=\s*menge > 0 \? Math\.round\(gesamtpreisCent \/ menge\)/);
+    // centRunden() statt Math.round(): rundet den halben Cent symmetrisch,
+    // damit eine Storno-Position betragsgleich zur Leistung bleibt
+    // (lib/geld.ts). Der geprueste Punkt ist unveraendert — der Einzelpreis
+    // wird aus Gesamtpreis / Menge abgeleitet und nicht gleichgesetzt.
+    expect(src).toMatch(/einzelpreisCent\s*=\s*menge > 0 \? centRunden\(gesamtpreisCent \/ menge\)/);
   });
 
   it('berechnet menge aus duration_minutes', () => {

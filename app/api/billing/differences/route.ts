@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { centRunden } from '@/lib/geld'
 import { rolleDarf } from '@/lib/auth/guard'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { NextResponse } from 'next/server'
@@ -49,8 +50,10 @@ export async function POST(request: Request) {
     const diffId = await recordPaymentDifference(admin, {
       organizationId,
       invoiceId,
-      sollCents: Math.round(sollCents),
-      istCents: Math.round(istCents),
+      // centRunden: eine Kuerzung kann als negative Differenz ankommen,
+      // und Math.round(-0.5) laege einen Cent daneben.
+      sollCents: centRunden(sollCents),
+      istCents: centRunden(istCents),
       kuerzungGrund,
       kuerzungKategorie,
       widerspruchFrist,

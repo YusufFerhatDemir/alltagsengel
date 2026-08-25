@@ -27,6 +27,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { Suspense, useEffect, useState } from 'react'
+import { centRunden } from '@/lib/geld'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { coachApi, useCoachProfil } from '../_lib/client'
@@ -56,7 +57,7 @@ function geld(cent: number): string {
 }
 
 function proMonat(t: TarifAnzeige): string {
-  return geld(Math.round(t.betrag_cent / t.intervall_monate))
+  return geld(centRunden(t.betrag_cent / t.intervall_monate))
 }
 
 /**

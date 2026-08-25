@@ -29,6 +29,8 @@
 // lib/coach/abrechnung.ts für die getrennte, deaktivierte DiPA-Seite).
 // ═══════════════════════════════════════════════════════════════
 
+import { centRunden } from '@/lib/geld'
+
 export const COACH_PREISE_FREIGEGEBEN_ENV = 'COACH_PREISE_FREIGEGEBEN'
 export const COACH_WAEHRUNG = 'EUR'
 
@@ -234,7 +236,7 @@ export function jahresErsparnis(): Ersparnis | null {
 
 /** Monatlicher Rechenwert eines Tarifs — nur zur Vergleichsanzeige. */
 export function proMonatCent(t: CoachTarif): number {
-  return Math.round(t.betragCent / t.intervallMonate)
+  return centRunden(t.betragCent / t.intervallMonate)
 }
 
 // ═══════════════════════════════════════════════════════════════

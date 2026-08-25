@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { centRunden } from '@/lib/geld'
 import { rolleDarf } from '@/lib/auth/guard'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { NextResponse } from 'next/server'
@@ -210,7 +211,7 @@ export async function POST(request: Request) {
       const leistungen = clientRecords.map((r: any) => {
         const menge = (r.duration_minutes ?? 60) / 60
         const gesamtCent = euroZuCent(r.amount)
-        const einzelpreisCent = menge > 0 ? Math.round(gesamtCent / menge) : gesamtCent
+        const einzelpreisCent = menge > 0 ? centRunden(gesamtCent / menge) : gesamtCent
         return {
           datum: r.date,
           leistungsart: r.service_type || 'alltagsbegleitung_45a',

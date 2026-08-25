@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
+import { parseBetragZuCent } from '@/lib/admin/betrag'
 import { useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { euro, formatDate, fullName } from '@/lib/admin/ops'
@@ -87,12 +88,23 @@ export default function ZuordnungPage() {
     setInvoices(prev => prev.map(i => i.id === id ? { ...i, allocAmount: val } : i))
   }
 
+  // Eine leere oder unlesbare Eingabe zaehlt als 0 — die Zeile wird dann
+  // durch den `amountCents > 0`-Filter aussortiert, statt als NaN in die
+  // Summe zu laufen. Die Rundung liegt in parseBetragZuCent()
+  // (euroZuCent), nicht in Math.round(x * 100): letzteres verfehlte den
+  // exakten Halb-Cent und ordnete einen Cent zu wenig zu, was die
+  // Rechnung als weiterhin offen stehen liess.
+  function zuordnungCent(eingabe: string): number {
+    const cent = parseBetragZuCent(eingabe)
+    return Number.isFinite(cent) ? cent : 0
+  }
+
   function remaining() {
     if (!payment) return 0
     const unallocated = payment.amount_cents - (payment.allocated_cents || 0)
     const allocated = invoices
       .filter(i => i.selected)
-      .reduce((s, i) => s + Math.round(Number(i.allocAmount.replace(',', '.') || 0) * 100), 0)
+      .reduce((s, i) => s + zuordnungCent(i.allocAmount), 0)
     return unallocated - allocated
   }
 
@@ -102,7 +114,7 @@ export default function ZuordnungPage() {
       .filter(i => i.selected)
       .map(i => ({
         invoiceId: i.id,
-        amountCents: Math.round(Number(i.allocAmount.replace(',', '.') || 0) * 100),
+        amountCents: zuordnungCent(i.allocAmount),
       }))
       .filter(a => a.amountCents > 0)
 

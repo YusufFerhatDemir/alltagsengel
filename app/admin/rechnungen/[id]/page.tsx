@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
+import { parseBetragZuCent } from '@/lib/admin/betrag'
 import { useParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { euro, formatDate, fullName, statusMeta, INVOICE_STATUS } from '@/lib/admin/ops'
@@ -121,7 +122,7 @@ export default function InvoiceDetailPage() {
         )
         if (amountRaw === null) { setActionLoading(false); return }
         if (amountRaw.trim()) {
-          const cents = Math.round(Number(amountRaw.trim().replace(/\./g, '').replace(',', '.')) * 100)
+          const cents = parseBetragZuCent(amountRaw)
           if (!Number.isFinite(cents) || cents <= 0) {
             setError('Ungültiger Zahlungsbetrag.')
             setActionLoading(false)
@@ -150,7 +151,7 @@ export default function InvoiceDetailPage() {
         // Eingabe in Euro, die API erwartet Cent.
         const amountRaw = window.prompt('Gutschriftbetrag in Euro (z. B. 35,00):')
         if (!amountRaw) { setActionLoading(false); return }
-        const cents = Math.round(Number(amountRaw.trim().replace(/\./g, '').replace(',', '.')) * 100)
+        const cents = parseBetragZuCent(amountRaw)
         if (!Number.isFinite(cents) || cents <= 0) {
           setError('Ungültiger Gutschriftbetrag.')
           setActionLoading(false)

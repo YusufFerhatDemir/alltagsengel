@@ -35,7 +35,7 @@ import { TarifNichtVerifiziertError, type TarifStatus } from './price-resolver';
 // dadurch war jede zahlungszielbasierte Auswertung (OPOS, Mahnwesen,
 // workflow_engine) wirkungslos.
 import { zahlungszielFelder } from './zahlungsziel';
-import { euroZuCent } from '@/lib/geld'
+import { euroZuCent, centRunden, aufCent } from '@/lib/geld'
 // Budgetdeckel § 45b / § 42a: die RPC kennt client_budgets nicht und weist
 // jeden Nicht-Privat-Betrag ungedeckelt als Kassenanteil aus (Befund A-1).
 // Der Deckel sitzt deshalb hier — Lage VOR der RPC lesen (fail-closed),
@@ -279,7 +279,13 @@ export async function wendeBudgetDeckelAn(
 
   if (!ergebnis.gedeckelt) return ergebnis;
 
-  const neuerPrivatAnteil = Math.round((bisherPrivat + ergebnis.ueberschussEuro + Number.EPSILON) * 100) / 100;
+  // aufCent() statt Math.round((x + Number.EPSILON) * 100) / 100: der
+  // EPSILON-Summand traf bei kleinen Betraegen zufaellig das richtige
+  // Ergebnis und verfehlte es bei groesseren (8,575 → 8,57 statt 8,58) —
+  // siehe die ausfuehrliche Begruendung in lib/billing/core/budget-cap.ts.
+  // Der Ueberschuss wandert hier auf den Privatanteil; ein verlorener Cent
+  // ist eine Forderung, die der Kunde nie gestellt bekommt.
+  const neuerPrivatAnteil = aufCent(bisherPrivat + ergebnis.ueberschussEuro);
 
   const notizZusatz = `[Budgetdeckel] ${ergebnis.grund}`;
   const notes = invoice.notes ? `${invoice.notes}\n${notizZusatz}` : notizZusatz;
@@ -589,7 +595,7 @@ export async function freezeInvoice(
     const lineSnapshots = items.map((item, idx) => {
       const menge = item.duration_minutes ? item.duration_minutes / 60 : 1;
       const gesamtpreisCent = euroZuCent(item.amount);
-      const einzelpreisCent = menge > 0 ? Math.round(gesamtpreisCent / menge) : gesamtpreisCent;
+      const einzelpreisCent = menge > 0 ? centRunden(gesamtpreisCent / menge) : gesamtpreisCent;
       return {
         invoice_snapshot_id: snapshot.id,
         position_nummer: idx + 1,
@@ -1046,9 +1052,14 @@ export async function correctInvoice(
       );
     }
 
-    const erwartet = Math.round(c.einzelpreisCent * c.menge);
+    // centRunden statt Math.round: eine Korrekturposition traegt einen
+    // NEGATIVEN Cent-Betrag, und Math.round(-100.5) ergibt -100 statt -101 —
+    // die Gutschrift waere um einen Cent kleiner als die Position, die sie
+    // ausgleicht, und die Plausibilitaetspruefung unten wuerde das als
+    // Betragsabweichung melden.
+    const erwartet = centRunden(c.einzelpreisCent * c.menge);
     const zuschlag = c.zuschlagProzent
-      ? Math.round(erwartet * (c.zuschlagProzent / 100))
+      ? centRunden(erwartet * (c.zuschlagProzent / 100))
       : 0;
     // 1 Cent Toleranz fuer Rundung bei gebrochenen Mengen (z.B. 1,5 Stunden).
     if (Math.abs(c.gesamtpreisCent - (erwartet + zuschlag)) > 1) {

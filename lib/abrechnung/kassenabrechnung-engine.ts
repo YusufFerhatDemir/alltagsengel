@@ -16,7 +16,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { logBillingAction, computeContentHash } from '../billing/core/audit'
 import { pflegegradVon } from '../clients/pflegegrad'
-import { euroZuCent } from '@/lib/geld'
+import { euroZuCent, centRunden } from '@/lib/geld'
 import { generateAlleDateien, type AbrechnungsFall, type GeneratorOptionen, type EdifactDatei } from './edifact-generator'
 import { validateEDIFACT, validateIK } from './edifact-validator'
 import { generateAuftragsdatei, auftragsdateiName } from './auftragsdatei'
@@ -791,7 +791,7 @@ export async function exportiereLauf(
     const leistungen = clientRecords.map((r: any) => {
       const menge = (r.duration_minutes ?? 60) / 60
       const gesamtCent = euroZuCent(r.amount)
-      const einzelpreisCent = menge > 0 ? Math.round(gesamtCent / menge) : gesamtCent
+      const einzelpreisCent = menge > 0 ? centRunden(gesamtCent / menge) : gesamtCent
       return {
         datum: r.date,
         leistungsart: r.service_type || 'alltagsbegleitung_45a',

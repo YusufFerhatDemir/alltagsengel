@@ -28,6 +28,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { formatiereCent, steuerEinstellung, type CoachTarifKey } from './pricing'
+import { centRunden } from '@/lib/geld'
 import { formatDatum } from './bestellung'
 
 // ═══════════════════════════════════════════════════════════════
@@ -160,7 +161,7 @@ export interface AufbereiteteRechnung {
  */
 export function zerlegeBrutto(bruttoCent: number, satzProzent: number): { nettoCent: number; steuerCent: number } {
   if (satzProzent <= 0) return { nettoCent: bruttoCent, steuerCent: 0 }
-  const netto = Math.round(bruttoCent / (1 + satzProzent / 100))
+  const netto = centRunden(bruttoCent / (1 + satzProzent / 100))
   return { nettoCent: netto, steuerCent: bruttoCent - netto }
 }
 

@@ -122,6 +122,25 @@ export function aufCent(betragEuro: number | string | null | undefined): number 
 }
 
 /**
+ * Rundet ein Zwischenergebnis, das bereits in CENT gerechnet wurde, auf
+ * eine ganze Cent-Zahl.
+ *
+ * Hier hilft die Zeichenketten-Verschiebung von `euroZuCent` nicht — der
+ * Wert ist schon Cent, es gibt keine Kommaverschiebung mehr. Was bleibt,
+ * ist der zweite Fehler von `Math.round`: die Asymmetrie beim exakten
+ * Halben. `Math.round(-100.5)` ist -100, `Math.round(100.5)` ist 101.
+ * Auf einer Gutschrift oder einer Ruecklastschrift steht damit ein Cent
+ * weniger als auf der Rechnung, die sie ausgleichen soll — die Position
+ * gleicht sich nicht mehr auf null aus.
+ *
+ * Deshalb: kaufmaennisch symmetrisch (DIN 1333), wie ueberall sonst in
+ * diesem Modul.
+ */
+export function centRunden(cent: number | string | null | undefined): number {
+  return rundeSymmetrisch(alsZahl(cent, 'Cent-Betrag'))
+}
+
+/**
  * Rundet kaufmaennisch auf eine beliebige Zahl von Nachkommastellen.
  * Fuer Prozent- und Quotenwerte, die keine Geldbetraege sind.
  */

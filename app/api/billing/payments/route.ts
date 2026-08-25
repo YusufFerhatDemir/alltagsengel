@@ -6,7 +6,7 @@ import { createPayment, allocatePayment, type PaymentMethod, type PayerType } fr
 import { getActiveOrgId } from '@/lib/organizations/server'
 import { safeApiError } from '@/lib/api/error-sanitizer'
 
-import { euroZuCent } from '@/lib/geld'
+import { euroZuCent, centRunden } from '@/lib/geld'
 // Spiegel der Union-Typen aus lib/billing/core/payments.ts. Fail-closed:
 // ein unbekannter Wert wird hier abgewiesen und nicht an den DB-CHECK
 // durchgereicht, der nur eine rohe Postgres-Meldung zurückgibt.
@@ -112,7 +112,7 @@ export async function POST(request: Request) {
     const result = await createPayment(admin, {
       organizationId,
       paymentDate,
-      amountCents: Math.round(betrag),
+      amountCents: centRunden(betrag),
       paymentMethod: methode,
       payerType: zahlerTyp,
       payerName,
@@ -136,8 +136,9 @@ export async function POST(request: Request) {
     // allocatePayment weist eine Zuordnung ueber den offenen Betrag hinaus
     // ab — der Ueberschuss bleibt als nicht zugeordneter Zahlungseingang
     // stehen und laesst sich spaeter auf eine andere Rechnung verteilen.
-    const zuordnungCents = Math.min(Math.round(betrag), offenCents)
-    const ueberzahlungCents = Math.round(betrag) - zuordnungCents
+    const betragCents = centRunden(betrag)
+    const zuordnungCents = Math.min(betragCents, offenCents)
+    const ueberzahlungCents = betragCents - zuordnungCents
 
     await allocatePayment(admin, {
       paymentId: result.paymentId,

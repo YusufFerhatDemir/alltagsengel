@@ -9,6 +9,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { ART_DER_LEISTUNG, VERGUETUNGSART, QUALIFIKATION } from './schluesselverzeichnis'
+import { centRunden } from '@/lib/geld'
 
 export interface ValidationIssue {
   ebene: 'fehler' | 'warnung'
@@ -309,7 +310,7 @@ export function validateEDIFACT(edifact: string): ValidationResult {
             if (anzahl === null) f(`${kennung} ELS (${letzteBelegnummer}): Anzahl "${seg[6]}" ungültig (Format 9999,99)`, 'ELS')
             if (preis !== null && anzahl !== null) {
               // anzahl ist in "Cent"-Auflösung geparst (×100) → zurückrechnen
-              fallBrutto += Math.round((preis * anzahl) / 100)
+              fallBrutto += centRunden((preis * anzahl) / 100)
             }
             // Beschäftigtennummer (Pflicht ambulant seit PLAA 6)
             if (art === '01' || art === '10' || art === '07') {
