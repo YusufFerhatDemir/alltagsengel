@@ -48,6 +48,9 @@ async function stelleWiederHer(kontext: WiederherstellungKontext): Promise<Sende
       // Organisation als Urheber ist dasselbe Muster wie im Mahnlauf
       // (app/api/cron/mahnlauf/route.ts).
       actorId: kontext.organizationId,
+      // Wiederholungslauf = Automat. Was beim ersten Versuch nicht
+      // versandreif war, wird es durch eine Wiederholung nicht.
+      preflight: 'automatisch',
       ohneZustellspur: true,
     })
 

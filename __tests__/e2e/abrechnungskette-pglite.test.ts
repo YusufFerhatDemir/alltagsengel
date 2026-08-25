@@ -432,6 +432,13 @@ describe('Kette: Buchung → Zahlung', () => {
       invoiceId: rechnungId,
       organizationId: ORG_A,
       actorId: ADMIN_A,
+      // Dieser Schritt prueft die ZUSTELLUNG, nicht die Versandreife. Der
+      // Kettenklient traegt bewusst eine example.org-Adresse — die
+      // 16-Punkte-Pruefung wuerde ihn (zu Recht) als Testdaten abweisen und
+      // damit einen anderen Grund liefern als den hier geprueften.
+      // Die Preflight-Kette hat eine eigene Suite:
+      // __tests__/e2e/rechnung-preflight-pglite.test.ts
+      preflight: 'uebersprungen',
     })
 
     expect(ergebnis.status).toBe('uebersprungen')

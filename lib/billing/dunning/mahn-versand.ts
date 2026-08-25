@@ -468,7 +468,7 @@ async function verarbeiteEintrag(
   const basis = { queueId: zeile.id, invoiceId: zeile.invoice_id, empfaenger: zeile.empfaenger_email }
 
   // ── 1. Stopp-Pruefung VOR dem Beanspruchen ──
-  const stopp = await ermittleStoppgrund(admin, zeile.invoice_id)
+  const stopp = await ermittleStoppgrund(admin, zeile.invoice_id, zeile.organization_id)
   if (stopp) {
     const storniert = await storniereMahnmail(admin, zeile.id, stopp)
     if (!storniert) {
@@ -641,11 +641,21 @@ async function vermerkeFehlschlag(
  * Deckt vor allem den Fall „Kunde hat zwischen Mahnlauf und Versand
  * bezahlt" ab.
  */
-async function ermittleStoppgrund(admin: SupabaseClient, invoiceId: string): Promise<string | null> {
+async function ermittleStoppgrund(
+  admin: SupabaseClient,
+  invoiceId: string,
+  /**
+   * Mandant aus der Queue-Zeile. Ohne ihn liest die Stopp-Pruefung eine
+   * Rechnung an der Mandantengrenze vorbei — und der Consumer laeuft mit
+   * service-role.
+   */
+  organizationId: string,
+): Promise<string | null> {
   const { data: inv, error } = await admin
     .from('invoices')
     .select('id, status, total_amount, paid_amount, deleted_at')
     .eq('id', invoiceId)
+    .eq('organization_id', organizationId)
     .maybeSingle()
 
   if (error) return `Rechnung nicht lesbar: ${error.message}`
@@ -657,7 +667,7 @@ async function ermittleStoppgrund(admin: SupabaseClient, invoiceId: string): Pro
   const paidCents = euroZuCent(inv.paid_amount || 0)
   if (totalCents - paidCents <= 0) return 'Zahlung eingegangen — Forderung ausgeglichen.'
 
-  const blocks = await checkDunningBlocks(admin, invoiceId)
+  const blocks = await checkDunningBlocks(admin, invoiceId, organizationId)
   if (blocks.length > 0) return blocks.map(b => b.reason).join('; ')
 
   return null

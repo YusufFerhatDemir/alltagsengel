@@ -173,6 +173,25 @@ export const ENV_REGISTER: readonly EnvEintrag[] = [
     beschreibung: "Nur '1' lässt den täglichen Mahnlauf (/api/cron/mahnlauf, 07:00) die Mahn-Queue auch abarbeiten. Ohne den Schalter wird die Queue nur befüllt und unter /admin/mahnwesen von Hand freigegeben.",
   },
 
+  {
+    name: 'VERSAND_NICHT_PRODUKTION_ERLAUBT',
+    geltung: 'server',
+    notwendigkeit: 'optional',
+    wann: 'entwicklung',
+    geheim: false,
+    wirktNachAussen: true,
+    beschreibung: "Ausnahme zur Umgebungstrennung der beiden Versand-Schalter: nur mit '1' wirken RECHNUNGSVERSAND_AUTOMATISCH / MAHNVERSAND_AUTOMATISCH auch ausserhalb eines Produktionslaufs (Preview, lokal). Ohne sie bleibt eine fuer 'All Environments' gesetzte Vercel-Variable in jedem Branch-Preview wirkungslos. In der Produktion selbst wirkungslos und dort zu entfernen. Ausgewertet in lib/config/versand-flags.ts.",
+  },
+  {
+    name: 'CAMT_IMPORT_MODE',
+    geltung: 'server',
+    notwendigkeit: 'optional',
+    wann: 'produktion',
+    geheim: false,
+    wirktNachAussen: false,
+    beschreibung: "Betriebsart des CAMT-Imports. Standard (und jeder unbekannte Wert) ist 'DRY_RUN': die Datei wird vollstaendig gelesen, geprueft und je Buchung eingeordnet, aber NICHTS gebucht. Nur der exakte Wert 'LIVE' laesst den Import Zahlungseingaenge anlegen und matchen. Ausgewertet in lib/billing/camt/camt-modus.ts.",
+  },
+
   // ═══ Externe Freigaben (lib/abrechnung/externe-freigaben.ts) ═══
   {
     name: 'ITSG_ZERTIFIZIERT',

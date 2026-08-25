@@ -1,6 +1,8 @@
-# Umgebungsvariablen — Verzeichnis, Prüfung und die zwei Versand-Schalter
+# Umgebungsvariablen — Verzeichnis, Prüfung und die Geld-Schalter
 
-Stand: 24.08.2026 · Quelle der Wahrheit im Code: `lib/env/register.ts`
+Stand: 26.08.2026 (Phase 7) · Quelle der Wahrheit im Code: `lib/env/register.ts`,
+Auswertung der Versand-Schalter: `lib/config/versand-flags.ts`,
+Betriebsart des Kontoauszugsimports: `lib/billing/camt/camt-modus.ts`
 
 Dieses Dokument erklärt drei Dinge:
 
@@ -14,20 +16,57 @@ Dieses Dokument erklärt drei Dinge:
 
 ## 1. Die zwei Versand-Schalter
 
-Beide sind **fail-closed**: der Code prüft auf die exakte Zeichenkette `'1'`.
-Jeder andere Wert — `true`, `yes`, `on`, `ja`, ein Leerstring oder das
-komplette Fehlen — bedeutet **aus**. Das ist Absicht: es gibt keinen
-Tippfehler, der versehentlich Post an echte Kunden auslöst.
+Beide sind **fail-closed**: nur die exakte Zeichenkette `'1'` schaltet ein.
+Jeder andere Wert — `true`, `yes`, `on`, `ja`, `' 1'` mit Leerzeichen, ein
+Leerstring oder das komplette Fehlen — bedeutet **aus**. Das ist Absicht: es
+gibt keinen Tippfehler, der versehentlich Post an echte Kunden auslöst.
+
+> **Seit Phase 7 werden beide zentral ausgewertet** — `lib/config/versand-flags.ts`.
+> Kein Modul liest sie mehr direkt aus `process.env`. Drei Dinge sind dabei
+> hinzugekommen:
+>
+> **a) Umgebungstrennung.** Eine Vercel-Variable, die für „All Environments"
+> angelegt wird, steht auch in jedem Preview-Deployment und in jedem lokalen
+> `vercel env pull`. Ohne diese Trennung hätte das Umlegen des Schalters für
+> die Produktion **jeden Branch-Preview** anfangen lassen, echte Rechnungen zu
+> verschicken — an dieselbe Produktionsdatenbank, mit demselben Resend-Schlüssel.
+> Der Schalter wirkt jetzt nur im Produktionslauf (`VERCEL_ENV=production`).
+> Für einen bewussten Test außerhalb: zusätzlich `VERSAND_NICHT_PRODUKTION_ERLAUBT=1`.
+>
+> **b) Ungültige Werte sind sichtbar.** `true` bedeutet weiterhin AUS — aber
+> jetzt als eigener Befund (`aus_ungueltig`) mit lautem Protokolleintrag beim
+> Start und im Ergebnis des Mahn-Cron. Vorher saß man vor einem System, das
+> schwieg und nichts verschickte.
+>
+> **c) Audit.** Ein Wechsel zwischen „verschickt automatisch" und „verschickt
+> nicht" landet als Zeile im `billing_audit_trail`
+> (`entity_type='abrechnung_betriebsmodus'`, `action='versand_flag_stand'`) —
+> **nur bei Änderung**, je Mandant. Nachträglich ist damit belegbar, ob ein
+> Lauf vom 3. des Monats versendet hat.
+
+### Die fünf Befunde
+
+| Befund | Bedeutung |
+|---|---|
+| `aus_fehlt` | Nicht gesetzt — Normalzustand |
+| `aus_explizit` | Steht auf `'0'` |
+| `aus_ungueltig` | Gesetzt, aber weder `'1'` noch `'0'` → **Konfigurationsfehler** |
+| `aus_umgebung` | Steht auf `'1'`, aber kein Produktionslauf und keine Ausnahme |
+| `an` | Scharf |
 
 ### `RECHNUNGSVERSAND_AUTOMATISCH`
 
-**Gelesen an genau zwei Stellen** (beide in Routen, nie in der Kern-Logik —
+**Ausgewertet an genau einer Stelle** — `lib/config/versand-flags.ts`. Zwei
+Routen fragen das Ergebnis ab (nie die Variable selbst, nie die Kern-Logik —
 die Engine bekommt nur ein `autoVersand`-Flag übergeben):
 
-| Datei | Zeile | Ausdruck |
-|---|---|---|
-| `app/api/billing/invoices/[id]/freeze/route.ts` | 62 | `process.env.RECHNUNGSVERSAND_AUTOMATISCH === '1'` |
-| `app/api/billing/sammelrechnung/route.ts` | 103 | `festschreiben && process.env.RECHNUNGSVERSAND_AUTOMATISCH === '1'` |
+| Datei | Ausdruck |
+|---|---|
+| `app/api/billing/invoices/[id]/freeze/route.ts` | `versandFlagsStand().rechnung.aktiv` |
+| `app/api/billing/sammelrechnung/route.ts` | `festschreiben && flags.rechnung.aktiv` |
+
+Dass keine dieser Routen einen zweiten, direkten Auswertungsweg daneben stellt,
+hält `__tests__/security/rollen-angriffsvektoren.test.ts` fest.
 
 **Was er steuert:** ob `freezeInvoice()` nach der Festschreibung
 (`lib/billing/core/invoice-engine.ts:659`) zusätzlich
@@ -51,9 +90,9 @@ Festschreibung *nicht*. Der Fehler wird protokolliert (`log.warn` /
 
 ### `MAHNVERSAND_AUTOMATISCH`
 
-**Gelesen an genau einer Stelle:** `app/api/cron/mahnlauf/route.ts:53`
-(täglich 07:00 laut `vercel.json`). Erwähnt wird er außerdem im Hinweistext
-unter `/admin/mahnwesen`.
+**Abgefragt an genau einer Stelle:** `app/api/cron/mahnlauf/route.ts` über
+`versandFlagsStand().mahnung` (täglich 07:00 laut `vercel.json`). Erwähnt wird
+er außerdem im Hinweistext unter `/admin/mahnwesen`.
 
 **Was er steuert:** ob derselbe Cron-Lauf nach dem Eskalieren der Mahnstufen
 auch `verarbeiteMahnQueue()` aufruft — also die in
@@ -65,38 +104,89 @@ Der Mahnlauf eskaliert weiterhin die Stufen (14/28/42/56/70 Tage nach
 Fälligkeit, höchstens eine Stufe je Rechnung und Lauf) und legt die
 Mahnungen als PDF+E-Mail mit `status='wartend'` in die Queue. Verschickt
 wird nichts. Die Antwort des Cron enthält dann ausdrücklich
-`versand: { aktiv: false, hinweis: 'MAHNVERSAND_AUTOMATISCH ist nicht gesetzt — Queue wurde nur befüllt.' }`.
+`versand: { aktiv: false, hinweis: …, befund: … }`. Der Hinweistext kommt seit
+Phase 7 aus der zentralen Auswertung und unterscheidet „nicht gesetzt" von
+„ungültiger Wert" und „kein Produktionslauf"; vorher stand dort immer derselbe
+Satz, auch wenn die Variable auf `true` stand.
 Freigabe von Hand unter `/admin/mahnwesen`, bzw. `POST /api/billing/dunning/versand`.
 
-### Setzen — Möglichkeiten und Stand
+### Setzen — was für einen kontrollierten Pilot nötig ist
 
-Setzbar wären beide über die Vercel-CLI (`vercel env add <NAME> production`,
-Wert über stdin). Der Zugang dafür ist in dieser Umgebung vorhanden
-(`vercel whoami` → angemeldet, Projekt `alltagsengel` verknüpft).
+Die Schalter sind **weiterhin bewusst NICHT gesetzt**. Beide lösen echte Post
+an echte Kunden aus; das ist eine Geschäftsentscheidung, keine
+Konfigurationsaufgabe. Was zum Umlegen gehört, steht hier vollständig — damit
+niemand die halbe Liste abarbeitet.
 
-**Sie sind trotzdem bewusst NICHT gesetzt worden.** Der Auftrag für Phase 5
-lautete, sie zu *dokumentieren* und die Setzbarkeit zu prüfen — nicht, sie
-umzulegen. Beide Schalter lösen echte Post an echte Kunden aus; das ist eine
-Geschäftsentscheidung, keine Konfigurationsaufgabe. Zum Umlegen genügt:
+#### Stufe 1 — erster begleiteter Rechnungsversand
 
 ```
 vercel env add RECHNUNGSVERSAND_AUTOMATISCH production   # Wert: 1
+```
+
+Danach **Redeploy** (Environment-Variablen greifen erst im nächsten Deployment).
+
+**Wichtig beim Anlegen:** Environment ausschließlich `Production` wählen, nicht
+„All Environments". Die Umgebungstrennung in `versand-flags.ts` fängt den Fehler
+zwar ab — aber eine Variable, die überall steht und nur an einer Stelle wirkt,
+ist eine Falle für den Nächsten.
+
+**Vorher zu klären, sonst geht der erste automatische Lauf an echte Kunden mit
+unfertigen Daten raus:**
+
+- **Testmandanten in der Produktions-Datenbank.** Der Mahnlauf iteriert über
+  *alle* Organisationen. Der Rechnungs-Preflight (Punkt 13) blockiert einen
+  Mandanten mit „Test" im Namen inzwischen von sich aus — aber der Befund
+  gehört behoben, nicht umgangen.
+- **Vorlagen gegengelesen** — Absender „Alltagsengel", nie ein persönlicher Name.
+- **Zahlungsziele**: `due_date` war live durchgängig NULL, Standard sind 14 Tage.
+  Ohne Fälligkeit sperrt das Mahn-Safety-Gate (Punkt 5) jede Mahnung.
+
+**Zur Gegenprobe VOR dem Umlegen**, ohne etwas zu verschicken:
+
+```
+GET /api/billing/invoices/<id>/preflight
+```
+
+Liefert die 16 Punkte einzeln und beide Urteile (automatisch/manuell). Solange
+dort nicht `READY_FOR_SEND` steht, verschickt der Automat auch mit gesetztem
+Schalter nichts — er meldet den Grund.
+
+#### Stufe 2 — erster begleiteter Mahnlauf
+
+```
 vercel env add MAHNVERSAND_AUTOMATISCH production        # Wert: 1
 ```
 
-anschließend ein Redeploy (Environment-Variablen greifen erst im nächsten
-Deployment).
+Erst sinnvoll, **nachdem** Stufe 1 mindestens einen belegten Versand hat
+(`invoice_email_log` > 0). Eine Mahnung zu einer Rechnung, die nie zugestellt
+wurde, ist ein Vorwurf ohne Grundlage.
 
-**Vorher zu klären — sonst geht der erste automatische Lauf an echte Kunden
-mit unfertigen Daten raus:**
+Vorher `GET /api/billing/dunning/lauf?dryRun=1` ansehen: der Lauf zeigt, welche
+Rechnungen eskalieren würden, ohne zu eskalieren.
 
-- Die Testmandanten in der Produktions-Datenbank. Der Mahnlauf iteriert über
-  **alle** Organisationen.
-- Rechnungs- und Mahnvorlagen einmal gegengelesen (Absender „Alltagsengel", nie
-  ein persönlicher Name).
-- Die Zahlungsziele: `due_date` war live durchgängig NULL, Standard sind 14 Tage.
+#### Stufe 3 — erster Kontoauszugsimport
 
----
+```
+vercel env add CAMT_IMPORT_MODE production               # Wert: LIVE
+```
+
+**Standard ist DRY_RUN** — ohne diese Variable liest der Import die Datei
+vollständig, prüft jede Buchung und ordnet sie ein, **bucht aber nichts**.
+Vor dem Umlegen die echte Bankdatei durch den Trockenlauf schicken:
+
+```
+POST /api/billing/camt/preflight?format=text
+```
+
+Der Bericht beantwortet in der ersten Zeile, ob die Datei scharf importiert
+werden darf. Solange dort ein Blocker steht, würde der scharfe Import
+denselben Befund haben — nur ohne Vorwarnung.
+
+#### Was NICHT gesetzt werden sollte
+
+`VERSAND_NICHT_PRODUKTION_ERLAUBT` gehört **nicht** in die Produktion. Dort ist
+die Variable wirkungslos und verschleiert nur, woran der Versand hängt; die
+Startprüfung meldet sie als überflüssig.
 
 ## 2. `CRON_SECRET`
 

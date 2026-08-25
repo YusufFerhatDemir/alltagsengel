@@ -66,10 +66,16 @@ export async function ensureDunningEntry(
   organizationId: string,
   actorId: string
 ): Promise<string> {
+  // MANDANTENGRENZE: Der Aufrufer reicht service-role herein (BYPASSRLS).
+  // Ohne diesen Filter legte ein Aufruf mit fremder invoiceId einen
+  // Mahneintrag auf einer Rechnung an, die dem Mandanten nicht gehoert —
+  // die Routen fencen zwar davor, aber eine Funktion, die Geldbelange
+  // aendert, darf sich darauf nicht verlassen.
   const { data: inv } = await supabase
     .from('invoices')
     .select('id, total_amount, paid_amount, due_date, status')
     .eq('id', invoiceId)
+    .eq('organization_id', organizationId)
     .single()
 
   if (!inv) throw new Error(`Rechnung ${invoiceId} nicht gefunden.`)
@@ -79,11 +85,36 @@ export async function ensureDunningEntry(
 
   const { data: existing } = await supabase
     .from('dunning_entries')
-    .select('id')
+    .select('id, amount_due_cents, amount_paid_cents')
     .eq('invoice_id', invoiceId)
+    .eq('organization_id', organizationId)
     .maybeSingle()
 
-  if (existing) return existing.id
+  if (existing) {
+    // ── Betraege nachziehen ──
+    //
+    // Vorher endete die Funktion hier. `amount_paid_cents` wurde damit
+    // EINMAL bei der Anlage geschrieben und danach nie wieder: zahlt der
+    // Kunde, aendert sich `invoices.paid_amount`, der Mahneintrag bleibt
+    // auf 0. getDunningOverview() rechnet den offenen Betrag aber aus dem
+    // MAHNEINTRAG — die Mahnuebersicht wies deshalb dauerhaft den vollen
+    // Rechnungsbetrag als offen aus, auch bei laengst bezahlten Posten.
+    //
+    // Der Mahnlauf selbst war nie betroffen (er liest die Rechnung), es
+    // wurde also nie falsch gemahnt. Falsch war die Anzeige.
+    const abweichend =
+      (existing.amount_due_cents ?? 0) !== totalCents ||
+      (existing.amount_paid_cents ?? 0) !== paidCents
+
+    if (abweichend) {
+      await supabase
+        .from('dunning_entries')
+        .update({ amount_due_cents: totalCents, amount_paid_cents: paidCents })
+        .eq('id', existing.id)
+        .eq('organization_id', organizationId)
+    }
+    return existing.id
+  }
 
   const dueDate = inv.due_date || heuteBerlin()
 
@@ -111,17 +142,32 @@ export async function ensureDunningEntry(
 
 export async function checkDunningBlocks(
   supabase: SupabaseClient,
-  invoiceId: string
+  invoiceId: string,
+  /**
+   * Mandant. Optional, weil zwei Bestandsaufrufer ihn nicht zur Hand haben —
+   * wo er gesetzt ist, wird er in JEDE Abfrage geschrieben. Fehlt er, ist die
+   * Funktion so mandantenblind wie vorher; die Aufrufer in app/ reichen ihn
+   * durch.
+   */
+  organizationId?: string
 ): Promise<DunningBlockReason[]> {
   const blocks: DunningBlockReason[] = []
 
-  const { data: inv } = await supabase
+  const invAbfrage = supabase
     .from('invoices')
     .select('id, status')
     .eq('id', invoiceId)
-    .single()
+  if (organizationId) invAbfrage.eq('organization_id', organizationId)
+  const { data: inv } = await invAbfrage.single()
 
-  if (!inv) return [{ invoiceId, reason: 'Rechnung nicht gefunden' }]
+  if (!inv) {
+    return [{
+      invoiceId,
+      reason: organizationId
+        ? 'Rechnung nicht gefunden oder gehört zu einem anderen Mandanten'
+        : 'Rechnung nicht gefunden',
+    }]
+  }
 
   if (inv.status === 'storniert') {
     blocks.push({ invoiceId, reason: 'Rechnung ist storniert' })
@@ -150,11 +196,20 @@ export async function checkDunningBlocks(
     blocks.push({ invoiceId, reason: 'Offener Widerspruch gegen Kürzung' })
   }
 
+  // ── Gutschrift/Korrektur ──
+  //
+  // `deleted_at IS NULL` fehlte hier. verwerfeGutschrift() setzt beim
+  // Verwerfen NUR `deleted_at` und laesst `status` auf 'entwurf' stehen
+  // (lib/billing/core/credit-notes.ts) — eine verworfene Gutschrift blieb
+  // damit fuer immer als Blocker stehen, und die zugehoerige Rechnung wurde
+  // NIE wieder gemahnt. Fachlich fail-closed und deshalb ohne Geldschaden,
+  // aber eine berechtigte Forderung lief still aus dem Mahnwesen heraus.
   const { data: corrections } = await supabase
     .from('invoice_corrections')
     .select('id, status')
     .eq('original_invoice_id', invoiceId)
     .in('status', ['entwurf', 'freigegeben'])
+    .is('deleted_at', null)
 
   if (corrections && corrections.length > 0) {
     blocks.push({ invoiceId, reason: 'Offene Gutschrift/Korrektur' })
@@ -170,23 +225,44 @@ export async function checkDunningBlocks(
 export async function advanceDunning(
   supabase: SupabaseClient,
   invoiceId: string,
-  actorId: string
+  actorId: string,
+  /**
+   * Mandant. PFLICHT, ohne Standardwert.
+   *
+   * Diese Funktion ist der EINZIGE Ort, an dem eine Mahnstufe steigt. Wer sie
+   * aufruft, reicht service-role herein (BYPASSRLS) — ohne den Mandanten in
+   * der Abfrage koennte ein Aufruf mit fremder invoiceId die Mahnstufe einer
+   * fremden Rechnung hochsetzen und dort eine Mahngebuehr buchen. Die Routen
+   * fencen davor; eine Funktion mit dieser Wirkung darf sich darauf nicht
+   * verlassen.
+   */
+  organizationId: string
 ): Promise<{ newLevel: DunningLevel; feeCents: number }> {
-  const blocks = await checkDunningBlocks(supabase, invoiceId)
-  if (blocks.length > 0) {
-    throw new Error(
-      `Mahnung blockiert: ${blocks.map(b => b.reason).join('; ')}`
-    )
+  // ── Safety-Gate ──
+  //
+  // Lazy importiert, weil das Gate seinerseits DUNNING_DAYS und
+  // DUNNING_LEVEL_ORDER aus dieser Datei liest — ein statischer Import waere
+  // ein Zyklus. Dasselbe Muster wie beim Mahnungs-PDF weiter unten.
+  //
+  // Das Gate prueft ALLE zehn Sperren, nicht nur die vier aus
+  // checkDunningBlocks(): zusaetzlich Loeschung, offener Betrag inkl.
+  // Teilzahlung, Faelligkeit, Stufenabstand und die Warteschlange. Damit
+  // kann kein Aufrufer — auch kein kuenftiger — an der Pruefung vorbei
+  // eskalieren.
+  const { pruefeMahnbarkeit, MahnungGesperrtError } = await import('../dunning/mahn-safety-gate')
+  const gate = await pruefeMahnbarkeit(supabase, { invoiceId, organizationId })
+  if (!gate.darfMahnen) {
+    throw new MahnungGesperrtError(gate)
   }
 
   const { data: entry } = await supabase
     .from('dunning_entries')
     .select('*')
     .eq('invoice_id', invoiceId)
+    .eq('organization_id', organizationId)
     .single()
 
   if (!entry) throw new Error(`Kein Mahneintrag für Rechnung ${invoiceId}`)
-  if (entry.block_dunning) throw new Error(`Mahnung manuell blockiert: ${entry.block_reason || 'kein Grund'}`)
 
   const currentIdx = DUNNING_LEVEL_ORDER.indexOf(entry.dunning_level as DunningLevel)
   if (currentIdx < 0 || currentIdx >= DUNNING_LEVEL_ORDER.length - 2) {
@@ -232,11 +308,13 @@ export async function advanceDunning(
       days_overdue: daysOverdue,
     })
     .eq('invoice_id', invoiceId)
+    .eq('organization_id', organizationId)
 
   await supabase
     .from('invoices')
     .update({ dunning_level: newLevel })
     .eq('id', invoiceId)
+    .eq('organization_id', organizationId)
 
   await logBillingAction(supabase, {
     entityType: 'dunning',
@@ -456,7 +534,7 @@ export async function runDunningRun(
         continue
       }
 
-      const blocks = await checkDunningBlocks(supabase, inv.id)
+      const blocks = await checkDunningBlocks(supabase, inv.id, organizationId)
       if (blocks.length > 0) {
         result.blockiert.push({
           invoiceId: inv.id,
@@ -478,7 +556,7 @@ export async function runDunningRun(
         continue
       }
 
-      const advanced = await advanceDunning(supabase, inv.id, actorId)
+      const advanced = await advanceDunning(supabase, inv.id, actorId, organizationId)
       result.eskaliert.push({
         invoiceId: inv.id,
         invoiceNumber: nummer,

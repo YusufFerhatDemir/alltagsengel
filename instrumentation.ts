@@ -2,6 +2,7 @@
 // Läuft einmal pro Prozess beim Start
 import * as Sentry from '@sentry/nextjs'
 import { pruefeEnvBeimStart } from '@/lib/env'
+import { pruefeVersandFlagsBeimStart } from '@/lib/config/versand-flags'
 
 export async function register() {
   // ENV-Prüfung VOR allem anderen: sie bricht ab, wenn das Datenbank-Trio
@@ -12,6 +13,13 @@ export async function register() {
   // dort wäre nicht aussagekräftig.
   if (process.env.NEXT_RUNTIME === 'nodejs') {
     pruefeEnvBeimStart()
+
+    // Lage der beiden Versand-Schalter einmal pro Prozess ins Protokoll.
+    // Bricht bewusst NICHT ab (siehe lib/config/versand-flags.ts): der Zweck
+    // ist Sichtbarkeit. Nach einem Deployment steht damit im Vercel-Protokoll,
+    // ob automatisch verschickt wird — und ob ein Wert ungueltig ist, statt
+    // dass ein System schweigend nichts verschickt.
+    pruefeVersandFlagsBeimStart()
 
     Sentry.init({
       dsn: process.env.SENTRY_DSN,

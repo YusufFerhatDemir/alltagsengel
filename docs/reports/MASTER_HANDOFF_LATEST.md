@@ -1,4 +1,4 @@
-# MASTER HANDOFF — Stand 25.08.2026, nach Phase 6B
+# MASTER HANDOFF — Stand 26.08.2026, nach Phase 7 (Tracks 1–4)
 
 Dieses Dokument ist die einzige Wahrheitsquelle für den technischen Zustand
 beider Produkte. Jede neue Session liest zuerst diese Datei.
@@ -16,8 +16,13 @@ beider Produkte. Jede neue Session liest zuerst diese Datei.
 > **Was er nicht bedeutet:** Keine Freigabe für unbeaufsichtigten Regelbetrieb.
 > `payments` = 0 und `camt_imports` = 0 — das System ist gebaut und getestet,
 > aber **nie mit echtem Geld gelaufen**. Was noch aussteht, liegt außerhalb des
-> Codes: zwei Vercel-Variablen, eine echte Bankdatei, ein echter Empfänger
-> (§6). Für **efy care** (Fremdrepo) gilt dieser Status ausdrücklich **nicht** —
+> Codes: drei Vercel-Variablen, eine echte Bankdatei, ein echter Empfänger
+> (§6).
+>
+> **Neu seit Phase 7:** Für jeden der drei Geldpfade gibt es jetzt eine
+> Vorstufe, die das Ergebnis zeigt, ohne es auszulösen — CAMT-Trockenlauf,
+> Rechnungs-Preflight, Mahn-Safety-Gate (§4a). Der Erstbetrieb sollte damit
+> beginnen, nicht mit dem Umlegen eines Schalters. Für **efy care** (Fremdrepo) gilt dieser Status ausdrücklich **nicht** —
 > dort stehen zwei P1 offen (§7 T-6/T-7).
 
 ---
@@ -68,12 +73,13 @@ git rev-parse HEAD && git rev-parse origin/main
 |---|---|
 | Branch | `main` |
 | HEAD | siehe **CODE_HEAD** oben |
-| Letzter Code-Commit | `0a63657` — Track 2+3 |
-| Typecheck | **0 Fehler** (`npx tsc --noEmit`, gemessen auf `0a63657`) |
-| Tests | vitest **5.319** + node:test **2.211** = **7.530** |
-| Testläufe | node:test 2.211 grün / 0 rot · vitest 5.319 grün / 38 übersprungen / 0 rot (nacheinander gelaufen, nicht gleichzeitig) |
-| CI | GRÜN auf den Phase-6A-Commits; die drei 6B-Commits laufen nach diesem Deploy |
-| lint:forbidden | **0 Treffer** (24.553 Dateien, FULL-Scan, gemessen auf `0a63657`) |
+| Letzter Code-Commit | Phase 7, Tracks 1–4 |
+| Typecheck | **0 Fehler** (`npx tsc --noEmit`) |
+| Tests | vitest **5.627** + node:test **2.211** = **7.838** |
+| Testläufe | node:test 2.211 grün / 0 rot · vitest 5.627 grün / 38 übersprungen / 0 rot (nacheinander gelaufen, nicht gleichzeitig) |
+| CI | GRÜN auf den 6B-Commits; die Phase-7-Commits laufen nach diesem Deploy |
+| lint:forbidden | **0 Treffer** (24.577 Dateien, FULL-Scan) |
+| check:schema-drift | **8 vorbestehende Befunde** in nicht angefassten Dateien — siehe Phase-7-Bericht §8. Der Check ist weder in CI noch im Precommit-Guard verdrahtet. |
 | Live | alltagsengel.care → HTTP 200 |
 
 ### ChairMatch
@@ -156,6 +162,35 @@ git rev-parse HEAD && git rev-parse origin/main
 **Das Verifikationsskript ist nebenwirkungsfrei** — es liest ausschließlich über
 das `_run_sql`-Lese-Orakel (`RAISE`-Fehlermeldung als Rückkanal) und schreibt
 nichts. Es ist jederzeit wiederholbar.
+
+---
+
+## 4a. Zuletzt erledigte Arbeiten — Phase 7, Tracks 1–4 (26.08.2026)
+
+Volldokumentation: **`docs/reports/PHASE7_TRACKS_1-4.md`**
+
+Phase 6B endete mit „was jetzt bleibt, ist kein Code mehr, sondern Erstbetrieb".
+Das stimmte für die Frage, ob die Geldpfade *funktionieren* — nicht für die
+Frage, ob man sie *gefahrlos scharf stellen* kann. Phase 7 baut für jeden der
+drei Geldpfade einen Weg, das Ergebnis zu prüfen, **ohne es auszulösen**.
+
+**Nichts wurde scharf gestellt.** Keine Rechnung versendet, keine Mahnung
+verschickt, keine Bankdatei importiert, keine Zahlung gebucht.
+
+| Track | Ergebnis |
+|---|---|
+| **1 — Versand-Schalter** | Zentrale Auswertung (`lib/config/versand-flags.ts`): Umgebungstrennung (eine „All Environments"-Variable hätte jeden Branch-Preview echte Post verschicken lassen), ungültige Werte sichtbar statt still, Audit bei Wechsel. |
+| **2 — CAMT-Preflight** | `CAMT_IMPORT_MODE`, Standard **DRY_RUN**. Einordnung je Buchung (MATCHED/AMBIGUOUS/UNMATCHED/DUPLICATE/INVALID/CROSS_TENANT_BLOCKED) mit **derselben** Bewertung wie der scharfe Lauf. Pilot-Bericht als Text. Gegen echtes Postgres belegt, dass nichts geschrieben wird. |
+| **3 — Rechnungs-Preflight** | 16 Punkte, `READY_FOR_SEND`/`NEEDS_REVIEW`/`BLOCKED`. Fail-closed in den Versandweg verdrahtet, ohne stillen Standardwert; ein Regressionstest verbietet das Überspringen in `app/` und `lib/`. |
+| **4 — Mahn-Safety-Gate** | 10 Sperren an einer Stelle, gerufen von `advanceDunning()` — dem einzigen Ort, an dem eine Mahnstufe steigt. |
+
+**6 Produktionsbefunde gefunden und behoben** (Details: Phase-7-Bericht §6).
+Der schwerste: über `POST /api/billing/dunning/advance` liefen **alle
+Mahnstufen unmittelbar hintereinander** durch, samt aller vier Mahngebühren.
+
+**Nicht angefasst, aber gemessen:** `npm run check:schema-drift` meldet 8
+vorbestehende 42703-Befunde (zwei davon auf Geldpfaden). Der Check ist weder in
+CI noch im Precommit-Guard verdrahtet — siehe Phase-7-Bericht §8.
 
 ---
 
@@ -299,9 +334,10 @@ Details: `docs/reports/PHASE6A_TECHNICAL_PROGRESS.md` §3 und
 
 | # | Was | Wer/Wo |
 |---|---|---|
-| E1 | `RECHNUNGSVERSAND_AUTOMATISCH` nicht gesetzt | Vercel Environment Variables |
-| E2 | `MAHNVERSAND_AUTOMATISCH` nicht gesetzt | Vercel Environment Variables |
-| E3 | Erster CAMT-Import nie produktiv gelaufen | Braucht echte Bankdatei (camt.053/054) + begleiteten Import |
+| E1 | `RECHNUNGSVERSAND_AUTOMATISCH` nicht gesetzt | Vercel Environment Variables — **Reihenfolge und Vorbedingungen: `docs/ENV_KONFIGURATION.md` §1** |
+| E2 | `MAHNVERSAND_AUTOMATISCH` nicht gesetzt | dito; erst sinnvoll nach einem belegten Rechnungsversand |
+| E2b | `CAMT_IMPORT_MODE` nicht auf `LIVE` | **Neu in Phase 7, fail-closed.** Ohne die Variable liest der Import die Datei vollständig und prüft sie, bucht aber nichts. |
+| E3 | Erster CAMT-Import nie produktiv gelaufen | Braucht echte Bankdatei (camt.053/054). **Vorstufe ohne Risiko: `POST /api/billing/camt/preflight?format=text`** |
 | E4 | Erster Rechnungsversand nie produktiv | `invoice_email_log` = 0, Resend funktionsfähig aber nie genutzt |
 | E5 | §45a Bayern Antrag unvollständig | Landesamt für Pflege, Erinnerung erhalten 24.08.2026 |
 
@@ -390,6 +426,11 @@ bauen oder Menüpunkt entfernen.
 | **Live-Verifikationsskript dazu** | `scripts/verify-payment-allocation-rueckzahlung.mjs` |
 | PGlite-Shim | `__tests__/e2e/helpers/pglite-supabase.ts` |
 | Schemaaufbau Kettentests | `__tests__/e2e/helpers/kette-schema.ts` |
+| **Phase-7-Bericht (Tracks 1–4)** | `docs/reports/PHASE7_TRACKS_1-4.md` |
+| Versand-Schalter (zentral) | `lib/config/versand-flags.ts` |
+| CAMT-Betriebsart + Preflight | `lib/billing/camt/camt-modus.ts`, `…/camt-preflight.ts` |
+| Rechnungs-Preflight (16 Punkte) | `lib/billing/preflight/rechnung-preflight.ts` |
+| Mahn-Safety-Gate (10 Sperren) | `lib/billing/dunning/mahn-safety-gate.ts` |
 | Deploy-Skript | `./deploy.sh` |
 | Rollback-Skript | `./scripts/rollback.sh` |
 | Precommit-Guard | `./scripts/precommit-guard.sh` |
@@ -408,6 +449,8 @@ bauen oder Menüpunkt entfernen.
 - `RESEND_API_KEY`
 - `RECHNUNGSVERSAND_AUTOMATISCH` ← NICHT GESETZT
 - `MAHNVERSAND_AUTOMATISCH` ← NICHT GESETZT
+- `CAMT_IMPORT_MODE` ← NICHT GESETZT (⇒ Trockenlauf, fail-closed)
+- `VERSAND_NICHT_PRODUKTION_ERLAUBT` ← nicht gesetzt und gehört NICHT in die Produktion
 - `CRON_SECRET`
 
 ### ChairMatch (Vercel)
@@ -421,4 +464,4 @@ bauen oder Menüpunkt entfernen.
 
 ---
 
-*Aktualisiert 25.08.2026 nach Phase 6B — Alltagsengel*
+*Aktualisiert 26.08.2026 nach Phase 7 (Tracks 1–4) — Alltagsengel*

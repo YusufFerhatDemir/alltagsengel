@@ -10,6 +10,7 @@ import { describe, it, expect } from 'vitest'
 import fs from 'fs'
 import path from 'path'
 import { ENV_REGISTER, akzeptierteNamen } from '@/lib/env'
+import { VERSAND_FLAGS, NICHT_PRODUKTION_ERLAUBT } from '@/lib/config/versand-flags'
 
 const WURZEL = path.resolve(__dirname, '..', '..')
 const QUELLEN = ['app', 'lib', 'components', 'proxy.ts', 'next.config.ts', 'instrumentation.ts', 'instrumentation-client.ts']
@@ -81,7 +82,12 @@ describe('ENV-Verzeichnis', () => {
     // Ohne diese Probe könnte ein zu gieriger Filter alles wegschneiden und
     // der Vollständigkeitstest wäre still immer grün.
     const gefunden = gefundeneNamen()
-    for (const pflicht of ['NEXT_PUBLIC_SUPABASE_URL', 'CRON_SECRET', 'RECHNUNGSVERSAND_AUTOMATISCH']) {
+    // Bewusst KEIN Versand-Schalter mehr in dieser Liste: die beiden werden
+    // seit lib/config/versand-flags.ts nicht mehr literal gelesen, sondern
+    // ueber eine Namensliste. Der Scan sieht sie deshalb nicht — ihre
+    // Vollstaendigkeit haelt der Test „kennt die beiden Versand-Schalter"
+    // weiter unten, und zwar aus derselben Namensliste heraus.
+    for (const pflicht of ['NEXT_PUBLIC_SUPABASE_URL', 'CRON_SECRET', 'RESEND_API_KEY']) {
       expect(gefunden.has(pflicht), `${pflicht} im Scan nicht gefunden`).toBe(true)
     }
     expect(gefunden.size).toBeGreaterThan(30)
@@ -137,11 +143,29 @@ describe('ENV-Verzeichnis', () => {
   })
 
   it('kennt die beiden Versand-Schalter und markiert sie als nach außen wirkend', () => {
-    for (const name of ['RECHNUNGSVERSAND_AUTOMATISCH', 'MAHNVERSAND_AUTOMATISCH']) {
+    // Die Namen kommen aus VERSAND_FLAGS, nicht aus einer zweiten Liste hier:
+    // seit die Schalter zentral ausgewertet werden, findet der literale
+    // process.env-Scan sie nicht mehr. Dieser Test ist damit die Stelle, die
+    // ihre Verzeichnung erzwingt — er muss aus der Quelle lesen, sonst
+    // koennte ein dritter Schalter unverzeichnet dazukommen.
+    expect(VERSAND_FLAGS.length).toBe(2)
+    for (const name of VERSAND_FLAGS) {
       const eintrag = ENV_REGISTER.find((e) => e.name === name)
       expect(eintrag, `${name} fehlt im Verzeichnis`).toBeDefined()
       expect(eintrag!.wirktNachAussen, `${name} muss als nach außen wirkend markiert sein`).toBe(true)
       expect(eintrag!.notwendigkeit).toBe('optional')
+    }
+  })
+
+  it('verzeichnet auch die Variablen, die nur zentral ausgewertet werden', () => {
+    // Dieselbe Luecke wie bei den Schaltern: NICHT_PRODUKTION_ERLAUBT und
+    // CAMT_IMPORT_MODE werden ueber Konstanten bzw. in einem Modul gelesen,
+    // das der Scan nicht als literalen Zugriff erkennt.
+    for (const name of [NICHT_PRODUKTION_ERLAUBT, 'CAMT_IMPORT_MODE']) {
+      expect(
+        ALLE_VERZEICHNETEN.has(name),
+        `${name} fehlt im Verzeichnis (lib/env/register.ts)`,
+      ).toBe(true)
     }
   })
 })

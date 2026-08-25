@@ -57,6 +57,15 @@ export interface CamtBuchung {
   verwendungszweck: string | null;
   endToEndId: string | null;
   mandateId: string | null;
+  /**
+   * Glaeubiger-Identifikationsnummer aus <CdtrSchmeId> (z. B. DE98ZZZ0…).
+   *
+   * Nur bei Lastschriften vorhanden, bei Ueberweisungen nie. Wird NICHT
+   * fuer die Zuordnung benutzt, sondern nur geprueft: eine Ruecklastschrift,
+   * die eine fremde Glaeubiger-ID traegt, gehoert nicht zu diesem Haus, und
+   * ein Buchungsvorschlag dafuer waere eine Falschbuchung.
+   */
+  glaeubigerId: string | null;
   buchungsreferenz: string | null;
   istRuecklastschrift: boolean;
   /**
@@ -315,6 +324,16 @@ function parseNtry(ntryXml: string, teilbuchung?: string): CamtBuchung {
     return v && v !== 'NOTPROVIDED' ? v : null;
   })();
   const mandateId = getTagContent(txXml, 'MndtId') || null;
+  // Glaeubiger-ID: <CdtrSchmeId><Id><PrvtId><Othr><Id>DE98ZZZ…</Id>.
+  // Bewusst ueber den umschliessenden Block gesucht statt direkt nach <Id>:
+  // ein blankes getTagContent(txXml,'Id') faende das erste <Id> irgendwo im
+  // Transaktionsblock — meist die Konto- oder Nachrichtenkennung.
+  const glaeubigerId = (() => {
+    const scheme = getAllBlocks(txXml, 'CdtrSchmeId')[0];
+    if (!scheme) return null;
+    const othr = getAllBlocks(scheme, 'Othr')[0] ?? scheme;
+    return getTagContent(othr, 'Id') || null;
+  })();
   const buchungsreferenz = getTagContent(ntryXml, 'AcctSvcrRef') || null;
 
   // Verwendungszweck (Ustrd + Strd zusammenfuehren)
@@ -356,6 +375,7 @@ function parseNtry(ntryXml: string, teilbuchung?: string): CamtBuchung {
     verwendungszweck,
     endToEndId,
     mandateId,
+    glaeubigerId,
     buchungsreferenz,
     istRuecklastschrift: grund !== null,
     ruecklastschriftGrund: grund,

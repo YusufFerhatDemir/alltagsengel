@@ -413,7 +413,15 @@ describe('Angriff: Rechteausweitung ueber den Anfragekoerper', () => {
     // Der automatische Versand darf allein am ENV-Flag und an
     // `festschreiben` haengen, nie an einem Feld aus dem Browser.
     expect(quelle).not.toMatch(/autoVersand\s*=\s*\(?\s*body/)
-    expect(quelle).toContain("process.env.RECHNUNGSVERSAND_AUTOMATISCH === '1'")
+    // Der Schalter wird ueber die zentrale Auswertung gelesen
+    // (lib/config/versand-flags.ts). Sie ist strenger als der fruehere
+    // Direktvergleich: zusaetzlich zur Zeichenkette '1' muss der Lauf eine
+    // Produktion sein. Geprueft wird deshalb der Aufruf, nicht mehr der
+    // literale process.env-Zugriff.
+    expect(quelle).toContain('versandFlagsStand()')
+    expect(quelle).toContain('flags.rechnung.aktiv')
+    // Und nirgends ein zweiter, direkter Auswertungsweg daneben.
+    expect(quelle).not.toContain('process.env.RECHNUNGSVERSAND_AUTOMATISCH')
   })
 })
 

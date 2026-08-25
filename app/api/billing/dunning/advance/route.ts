@@ -29,7 +29,7 @@ export async function POST(request: Request) {
     }
 
     await ensureDunningEntry(admin, invoiceId, organizationId, userId)
-    const result = await advanceDunning(admin, invoiceId, userId)
+    const result = await advanceDunning(admin, invoiceId, userId, organizationId)
 
     return NextResponse.json(result)
   } catch (err) {

@@ -671,6 +671,10 @@ export async function freezeInvoice(
         invoiceId,
         organizationId: invoice.organization_id,
         actorId,
+        // Automat: es steht niemand davor, der einen Zweifelsfall
+        // verantworten koennte. Nur READY_FOR_SEND geht raus; alles mit
+        // offenen Pruefpunkten wartet auf den Versand von Hand.
+        preflight: 'automatisch',
       });
       versandStatus = ergebnis.status;
       if (ergebnis.status !== 'versendet') {

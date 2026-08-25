@@ -6,6 +6,8 @@ import {
   starteSammelrechnungslauf,
   SammelrechnungLaeuftBereitsError,
 } from '@/lib/billing/core'
+import { versandFlagsStand } from '@/lib/config/versand-flags'
+import { protokolliereVersandFlags } from '@/lib/config/versand-flags-audit'
 import { safeApiError } from '@/lib/api/error-sanitizer'
 
 // ═══════════════════════════════════════════════════════════════
@@ -100,7 +102,13 @@ export async function POST(request: Request) {
     // wird. Ohne das Flag entstehen Entwürfe/Belege, aber es verlässt nichts
     // das Haus — Nachsenden geht jederzeit über
     // POST /api/billing/invoices/[id]/versenden.
-    const autoVersand = festschreiben && process.env.RECHNUNGSVERSAND_AUTOMATISCH === '1'
+    //
+    // Der Schalter wird über lib/config/versand-flags.ts gelesen, nie direkt:
+    // dort hängt zusätzlich die Umgebungstrennung daran. `festschreiben` kommt
+    // aus dem Körper, der Schalter NICHT — sonst wäre der automatische Versand
+    // ein Browser-Feld.
+    const flags = versandFlagsStand()
+    const autoVersand = festschreiben && flags.rechnung.aktiv
 
     const admin = createAdminClient()
 
@@ -114,6 +122,13 @@ export async function POST(request: Request) {
       })
       return NextResponse.json(vorschau, { status: 200 })
     }
+
+    // Betriebsmodus festhalten, bevor der Lauf beginnt — aber nur bei
+    // Wechsel, und ausdrücklich NICHT im dryRun (eine Vorschau ist kein
+    // Lauf und darf keine Spur hinterlassen). Fail-soft.
+    await protokolliereVersandFlags(admin, {
+      organizationId, actorId: userId, stand: flags,
+    })
 
     const ergebnis = await starteSammelrechnungslauf(admin, {
       organizationId,

@@ -192,6 +192,10 @@ function rechnungsStub() {
 
 const versende = () =>
   versendeRechnungPerEmail(rechnungsStub().stub, {
+    // Diese Suite prueft die Fehlerpfade des Mailversands, nicht die
+    // Versandreife der Rechnung. Der 16-Punkte-Preflight hat dafuer eine
+    // eigene Suite (__tests__/billing/rechnung-preflight.test.ts).
+    preflight: 'uebersprungen',
     invoiceId: INV, organizationId: ORG, actorId: ACTOR,
   })
 
@@ -199,6 +203,7 @@ const versende = () =>
 function versendeMitProtokoll() {
   const { stub, protokoll } = rechnungsStub()
   return versendeRechnungPerEmail(stub, {
+    preflight: 'uebersprungen',
     invoiceId: INV, organizationId: ORG, actorId: ACTOR,
   }).then(ergebnis => ({ ergebnis, protokoll }))
 }
@@ -440,6 +445,7 @@ describe('Eine gescheiterte Rechnungsmail ist wiederholbar', () => {
     H.antwort = { data: { id: 'resend-msg-9' }, error: null }
     const { stub } = rechnungsStub()
     await versendeRechnungPerEmail(stub, {
+    preflight: 'uebersprungen',
       invoiceId: INV, organizationId: ORG, actorId: ACTOR, ohneZustellspur: true,
     })
     expect(H.spur).toHaveLength(0)

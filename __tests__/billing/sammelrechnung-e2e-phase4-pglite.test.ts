@@ -124,10 +124,24 @@ async function klientMitNachweisen(ueber: {
     id,
     organization_id: ORG,
     customer_number: `K-${String(klientZaehler).padStart(4, '0')}`,
-    first_name: 'Test',
-    last_name: `Fall${klientZaehler}`,
+    // ── Bewusst preflight-tauglich ──
+    //
+    // Diese Kette laeuft mit `autoVersand`, und der Automat kommt seit
+    // Phase 7 nur an einer Rechnung vorbei, die alle 16 Punkte erfuellt
+    // (lib/billing/preflight/rechnung-preflight.ts). Ein Vorname „Test",
+    // eine @example.org-Adresse oder eine fehlende Anschrift blockierten
+    // den Versand hier — zu Recht, aber dann pruefte diese Suite nicht
+    // mehr die Kette, sondern nur noch den Preflight.
+    //
+    // Die Stammdaten sind deshalb so vollstaendig, wie sie es bei einem
+    // echten Klienten waeren. Dass der Preflight greift, wenn sie es NICHT
+    // sind, haelt __tests__/billing/rechnung-preflight.test.ts fest.
+    first_name: 'Anna',
+    last_name: `Sorglos${klientZaehler}`,
+    address: 'Hauptstraße 12',
+    city: 'Frankfurt am Main',
     zip_code: '60311',
-    email: `fall${klientZaehler}@example.org`,
+    email: `a.sorglos${klientZaehler}@mandant-alpha.de`,
     care_level: 3,
   })
 
@@ -218,8 +232,11 @@ beforeAll(async () => {
 
     INSERT INTO public.angels (id, hourly_rate) VALUES ('${ENGEL_NUTZER}', 20);
 
-    INSERT INTO public.organizations (id, name, bundesland, status) VALUES
-      ('${ORG}', 'Mandant Alpha', 'hessen', 'active');
+    -- IBAN/BIC gesetzt: ohne Bankverbindung blockiert der Versand-Preflight
+    -- (Punkt 10) — auf einer Rechnung stuende sonst keine Zahlstelle.
+    INSERT INTO public.organizations (id, name, bundesland, status, iban, bic) VALUES
+      ('${ORG}', 'Mandant Alpha', 'hessen', 'active',
+       'DE02120300000000202051', 'BYLADEM1001');
 
     INSERT INTO public.caregivers (id, organization_id, user_id, first_name, last_name, initials)
       VALUES ('${ENGEL}', '${ORG}', '${ENGEL_NUTZER}', 'Marek', 'Beispiel', 'MB');
@@ -272,6 +289,9 @@ describe('Szenario 1: Nachweise → Entwurf → Batch → Festschreibung → Ver
     expect(e.kopf.summeCent).toBe(3 * BETRAG_EUR * 100)
 
     // ── Festschreibung und Versand ──
+    // 'versendet' heisst hier auch: die Rechnung hat den 16-Punkte-Preflight
+    // im Modus 'automatisch' bestanden — mit READY_FOR_SEND, nicht nur ohne
+    // Blocker. Die Kette ist damit End-zu-Ende belegt, samt Absicherung.
     expect(treffer.versandStatus).toBe('versendet')
     const [inv] = await rechnung(klient)
     expect(inv.status).toBe('freigegeben')
