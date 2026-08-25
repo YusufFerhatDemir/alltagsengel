@@ -21,6 +21,8 @@
 -- Entfernen der Zuordnungszeile zurueck (dokumentiert dort) — die Buecher
 -- bleiben dann konsistent, nur die Historie fehlt.
 
+BEGIN;
+
 ALTER TABLE public.payment_allocations
   DROP CONSTRAINT IF EXISTS payment_allocations_allocation_type_check;
 
@@ -34,3 +36,5 @@ ALTER TABLE public.payment_allocations
     -- Rechnung.
     'rueckzahlung'
   ));
+
+COMMIT;
