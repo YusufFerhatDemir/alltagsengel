@@ -13,15 +13,22 @@ Dokument nicht den Stand, der tatsächlich deployed ist — dann zuerst
 
 | Anker | Bedeutung | Wert |
 |---|---|---|
-| **CODE_HEAD** | lokaler `main`-HEAD | `PLACEHOLDER_HEAD` |
-| **HANDOFF_COMMIT** | Commit, in dem dieses Dokument zuletzt geschrieben wurde | `PLACEHOLDER_HEAD` |
-| **ORIGIN_MAIN** | `origin/main` nach `deploy.sh` (Remote-Wahrheit) | `PLACEHOLDER_HEAD` |
+| **CODE_HEAD** | lokaler `main`-HEAD | `17272f0` |
+| **HANDOFF_COMMIT** | Commit, in dem dieses Dokument zuletzt geschrieben wurde | `17272f0` |
+| **ORIGIN_MAIN** | `origin/main` nach `deploy.sh` (Remote-Wahrheit) | `17272f0` |
 
 Prüfbefehl:
 
 ```bash
 git rev-parse HEAD && git rev-parse origin/main
 ```
+
+> **Zur Lesart der Anker.** Ein Dokument kann den Hash des Commits, der es
+> selbst enthält, nicht im Voraus nennen. Die Anker wurden deshalb im
+> unmittelbar folgenden `docs:`-Commit nachgezogen. **`HEAD` genau einen
+> `docs:`-Commit vor diesen Ankern ist erwartet und keine Drift.** Alles
+> darüber hinaus — insbesondere jeder Commit, der Code anfasst — bedeutet:
+> dieses Dokument ist älter als der deployte Stand.
 
 **Letzter Code-Commit vor diesem Handoff:** `5ed3ae9`
 — `test: T1 PGlite-Integrationstests P1-Batch (Geld/Abrechnung)`
@@ -39,7 +46,7 @@ git rev-parse HEAD && git rev-parse origin/main
 | Letzter Code-Commit | `5ed3ae9` — T1 PGlite-Integrationstests P1-Batch |
 | Typecheck | **0 Fehler** (`npx tsc --noEmit`, gemessen auf `5ed3ae9`) |
 | Tests | vitest **5.232** + node:test **2.175** = **7.407** |
-| CI | grün auf `3cbae72` und `ebb95ee`; Lauf für `5ed3ae9` war beim Verfassen noch `in_progress` |
+| CI | **GRÜN** auf `3cbae72`, `ebb95ee` und `5ed3ae9` (alle drei Phase-6A-Commits abgeschlossen) |
 | lint:forbidden | 0 Treffer |
 | Live | alltagsengel.care → HTTP 200 |
 
