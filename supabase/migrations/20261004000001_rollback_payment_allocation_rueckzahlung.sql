@@ -4,6 +4,8 @@
 -- allocation_type = 'rueckzahlung' existieren. Das ist Absicht — ein
 -- Rollback darf keine bestehende Buchungshistorie unlesbar machen.
 
+BEGIN;
+
 ALTER TABLE public.payment_allocations
   DROP CONSTRAINT IF EXISTS payment_allocations_allocation_type_check;
 
@@ -13,3 +15,5 @@ ALTER TABLE public.payment_allocations
     'vollzahlung', 'teilzahlung', 'ueberzahlung',
     'sammelzahlung_anteil', 'gutschrift_verrechnung'
   ));
+
+COMMIT;
