@@ -15,8 +15,10 @@
  *
  * Bewusste Grenzen — hier benannt statt stillschweigend gefuellt:
  *   • Eingebettete Ressourcen (`client:clients(...)`) werden als zweite
- *     Abfrage aufgeloest, nicht als JOIN. Reihenfolge und Filter auf der
- *     eingebetteten Tabelle unterstuetzt der Shim nicht.
+ *     Abfrage aufgeloest, nicht als JOIN. Verschachtelung und die
+ *     eins-zu-viele-Richtung sind abgebildet (die Richtung wird am echten
+ *     Schema bestimmt, siehe `ergaenzeEingebettet`); Reihenfolge und
+ *     Filter AUF der eingebetteten Tabelle unterstuetzt der Shim nicht.
  *   • `.select()` nach insert/update liefert immer die vollstaendige Zeile
  *     (RETURNING *), nicht die angeforderte Spaltenliste.
  *   • Ohne `alsNutzer` laeuft alles als Superuser — das entspricht dem
@@ -60,6 +62,66 @@ type Filter =
   | { art: 'is'; spalte: string; wert: null | boolean }
   | { art: 'in' | 'notIn'; spalte: string; werte: unknown[] }
   | { art: 'notNull'; spalte: string }
+  /** `.or('a.eq.1,b.is.null')` — ODER-Verknuepfung auf oberster Ebene. */
+  | { art: 'oder'; teile: Filter[] }
+  /** `.not(spalte, op, wert)` mit einem Vergleichsoperator. */
+  | { art: 'nicht'; innen: Filter }
+
+/**
+ * Zerlegt eine PostgREST-`or`-Liste in Einzelfilter.
+ *
+ * Format: `spalte.operator.wert`, mehrere durch Komma getrennt, Klammern
+ * (`in.(a,b)`) zaehlen als Tiefe. Genau so schickt `@supabase/supabase-js`
+ * den Ausdruck an PostgREST:
+ *
+ *   .or('correction_type.is.null,correction_type.eq.rechnung')
+ *   .or('organization_id.eq.<uuid>,organization_id.is.null')
+ *
+ * Beide Formen kommen im Anwendungscode vor (DATEV-Buchungssatzgenerator
+ * bzw. Tarif-Verifizierung) und waren bis hierher gar nicht abbildbar —
+ * `.or()` existierte im Shim nicht, ein Test darauf waere an einer
+ * fehlenden Methode gescheitert statt an der Abfrage.
+ */
+function parseOderAusdruck(ausdruck: string): Filter[] {
+  const teile: string[] = []
+  let tiefe = 0
+  let puffer = ''
+  for (const z of ausdruck) {
+    if (z === '(') tiefe++
+    if (z === ')') tiefe--
+    if (z === ',' && tiefe === 0) { teile.push(puffer); puffer = ''; continue }
+    puffer += z
+  }
+  if (puffer.trim()) teile.push(puffer)
+
+  return teile.map(roh => {
+    const teil = roh.trim()
+    const ersterPunkt = teil.indexOf('.')
+    const zweiterPunkt = teil.indexOf('.', ersterPunkt + 1)
+    if (ersterPunkt < 0 || zweiterPunkt < 0) {
+      throw new Error(`PGlite-Shim: "${teil}" ist kein PostgREST-Filter (spalte.operator.wert)`)
+    }
+    const spalte = teil.slice(0, ersterPunkt)
+    const op = teil.slice(ersterPunkt + 1, zweiterPunkt)
+    const roherWert = teil.slice(zweiterPunkt + 1)
+
+    switch (op) {
+      case 'is': {
+        if (roherWert === 'null') return { art: 'is', spalte, wert: null } as Filter
+        if (roherWert === 'true' || roherWert === 'false') {
+          return { art: 'is', spalte, wert: roherWert === 'true' } as Filter
+        }
+        throw new Error(`PGlite-Shim: is.${roherWert} wird nicht unterstuetzt`)
+      }
+      case 'in':
+        return { art: 'in', spalte, werte: parsePgListe(roherWert) } as Filter
+      case 'eq': case 'neq': case 'lt': case 'lte': case 'gt': case 'gte':
+        return { art: op, spalte, wert: roherWert } as Filter
+      default:
+        throw new Error(`PGlite-Shim: or(…) kennt den Operator "${op}" nicht`)
+    }
+  })
+}
 
 /**
  * Fremdschluessel fuer eingebettete Ressourcen.
@@ -152,6 +214,7 @@ interface QueryBuilder extends PromiseLike<Antwort<Zeile[]>> {
   is(spalte: string, wert: null | boolean): QueryBuilder
   in(spalte: string, werte: unknown[]): QueryBuilder
   not(spalte: string, op: string, wert: unknown): QueryBuilder
+  or(ausdruck: string): QueryBuilder
   order(spalte: string, opts?: { ascending?: boolean }): QueryBuilder
   limit(n: number): QueryBuilder
   returns<T>(): QueryBuilder & PromiseLike<Antwort<T>>
@@ -263,38 +326,42 @@ export function macheSupabaseClient(
     let sortierung: { spalte: string; auf: boolean } | null = null
     let grenze: number | null = null
 
-    function whereKlausel(params: unknown[]): string {
-      const bedingungen: string[] = []
-      for (const f of filter) {
-        const q = `"${f.spalte}"`
-        switch (f.art) {
-          case 'eq': case 'neq': case 'lt': case 'lte': case 'gt': case 'gte': {
-            const op = { eq: '=', neq: '<>', lt: '<', lte: '<=', gt: '>', gte: '>=' }[f.art]
-            if (f.wert === null) {
-              bedingungen.push(f.art === 'eq' ? `${q} IS NULL` : `${q} IS NOT NULL`)
-            } else {
-              params.push(f.wert)
-              bedingungen.push(`${q} ${op} $${params.length}`)
-            }
-            break
-          }
-          case 'is':
-            bedingungen.push(f.wert === null ? `${q} IS NULL` : `${q} IS ${f.wert ? 'TRUE' : 'FALSE'}`)
-            break
-          case 'notNull':
-            bedingungen.push(`${q} IS NOT NULL`)
-            break
-          case 'in': case 'notIn': {
-            if (f.werte.length === 0) {
-              bedingungen.push(f.art === 'in' ? 'FALSE' : 'TRUE')
-              break
-            }
-            const platz = f.werte.map(w => { params.push(w); return `$${params.length}` })
-            bedingungen.push(`${q} ${f.art === 'notIn' ? 'NOT ' : ''}IN (${platz.join(', ')})`)
-            break
-          }
+    /** Ein einzelner Filter als SQL-Bedingung. Rekursiv fuer or/not. */
+    function bedingung(f: Filter, params: unknown[]): string {
+      if (f.art === 'oder') {
+        if (f.teile.length === 0) return 'FALSE'
+        return `(${f.teile.map(t => bedingung(t, params)).join(' OR ')})`
+      }
+      if (f.art === 'nicht') {
+        // PostgREST uebersetzt `spalte=not.eq.wert` zu `NOT (spalte = wert)`.
+        // Eine NULL-Spalte faellt damit HERAUS (NOT NULL ist NULL, nicht
+        // TRUE) — das ist kein Versehen des Shims, sondern die Semantik,
+        // gegen die der Anwendungscode live laeuft.
+        return `NOT (${bedingung(f.innen, params)})`
+      }
+
+      const q = `"${f.spalte}"`
+      switch (f.art) {
+        case 'eq': case 'neq': case 'lt': case 'lte': case 'gt': case 'gte': {
+          const op = { eq: '=', neq: '<>', lt: '<', lte: '<=', gt: '>', gte: '>=' }[f.art]
+          if (f.wert === null) return f.art === 'eq' ? `${q} IS NULL` : `${q} IS NOT NULL`
+          params.push(f.wert)
+          return `${q} ${op} $${params.length}`
+        }
+        case 'is':
+          return f.wert === null ? `${q} IS NULL` : `${q} IS ${f.wert ? 'TRUE' : 'FALSE'}`
+        case 'notNull':
+          return `${q} IS NOT NULL`
+        case 'in': case 'notIn': {
+          if (f.werte.length === 0) return f.art === 'in' ? 'FALSE' : 'TRUE'
+          const platz = f.werte.map(w => { params.push(w); return `$${params.length}` })
+          return `${q} ${f.art === 'notIn' ? 'NOT ' : ''}IN (${platz.join(', ')})`
         }
       }
+    }
+
+    function whereKlausel(params: unknown[]): string {
+      const bedingungen = filter.map(f => bedingung(f, params))
       return bedingungen.length ? ` WHERE ${bedingungen.join(' AND ')}` : ''
     }
 
@@ -348,27 +415,127 @@ export function macheSupabaseClient(
       }
     }
 
-    async function ergaenzeEingebettet(zeilen: Zeile[], specs: EingebettetSpec[]): Promise<void> {
+    /**
+     * Loest eingebettete Ressourcen auf — REKURSIV und in beide Richtungen.
+     *
+     * ── ZWEI ERWEITERUNGEN GEGENUEBER DER ERSTFASSUNG ──────────────────
+     *
+     * 1. VERSCHACHTELUNG. `invoice:invoices(id, client:clients(last_name))`
+     *    kommt im DATEV-Generator gleich viermal vor. Vorher wurde die
+     *    innere Ebene als flacher Spaltenname behandelt: die naive
+     *    Zerlegung an `,` zerschnitt `client:clients(last_name)` in zwei
+     *    Bruchstuecke, und `schmal['client:clients(last_name']` war
+     *    `undefined`. Der Generator hat daraus einen leeren Klientennamen
+     *    gelesen — ein Test darauf waere gruen geblieben, obwohl live ein
+     *    Name in der Buchung steht.
+     *
+     * 2. RICHTUNG. `payments(… allocations:payment_allocations(…))` zeigt
+     *    NICHT auf `payments.payment_allocation_id`, sondern umgekehrt:
+     *    `payment_allocations.payment_id`. PostgREST liefert dafuer ein
+     *    ARRAY. Der Rücklastschrift-Zweig des Generators liest genau das
+     *    (`allocs[0].invoice`). Die Richtung wird am echten Schema
+     *    bestimmt, nicht geraten.
+     */
+    async function ergaenzeEingebettet(
+      elternTabelle: string,
+      zeilen: Zeile[],
+      specs: EingebettetSpec[],
+    ): Promise<void> {
+      if (zeilen.length === 0) return
+
       for (const spec of specs) {
-        await pruefeSpalten(spec.tabelle, spec.spalten.split(','))
-        const fk = fkSpalte(spec.tabelle)
-        const ids = [...new Set(zeilen.map(z => z[fk]).filter(v => v != null))]
-        const treffer = new Map<string, Zeile>()
-        if (ids.length > 0) {
-          const platz = ids.map((_, i) => `$${i + 1}`).join(', ')
-          const rows = await fuehreAus<Zeile>(
-            `SELECT * FROM public."${spec.tabelle}" WHERE "id" IN (${platz})`, ids
-          )
-          for (const r of rows) treffer.set(String(r.id), r)
-        }
-        const gewuenscht = spec.spalten.split(',').map(s => s.trim()).filter(Boolean)
-        for (const z of zeilen) {
-          const voll = treffer.get(String(z[fk]))
-          if (!voll) { z[spec.alias] = null; continue }
+        const { flach, eingebettet: tiefer } = zerlegeSelect(spec.spalten)
+        await pruefeSpalten(spec.tabelle, flach)
+
+        const elternSpalten = await spaltenVon(elternTabelle)
+        const kindSpalten = await spaltenVon(spec.tabelle)
+
+        const fkAmEltern = fkSpalte(spec.tabelle)          // invoices → invoice_id
+        const fkAmKind = fkSpalte(elternTabelle)           // payments → payment_id
+
+        /** Die angeforderten Spalten aus einer vollen Zeile herausschneiden. */
+        function projiziere(voll: Zeile): Zeile {
           const schmal: Zeile = {}
-          for (const s of gewuenscht) schmal[s] = voll[s]
-          z[spec.alias] = schmal
+          for (const roh of flach) {
+            const name = roh.includes(':') ? roh.split(':').pop()!.trim() : roh.trim()
+            if (name === '*') Object.assign(schmal, voll)
+            else schmal[name] = voll[name]
+          }
+          return schmal
         }
+
+        /**
+         * Tiefere Ebenen werden auf den VOLLEN Zeilen aufgeloest und erst
+         * danach in die zugeschnittenen kopiert.
+         *
+         * Der Grund steht im DATEV-Generator:
+         * `allocations:payment_allocations(invoice:invoices(…))` fordert von
+         * payment_allocations KEINE einzige flache Spalte an — auch nicht
+         * `invoice_id`. Wer die naechste Ebene auf der zugeschnittenen Zeile
+         * aufloest, findet den Fremdschluessel dort nicht mehr und liefert
+         * still `null`. PostgREST hat das Problem nicht, weil es serverseitig
+         * joint.
+         */
+        async function loeseTieferAuf(paare: Array<{ voll: Zeile; schmal: Zeile }>): Promise<void> {
+          if (tiefer.length === 0) return
+          await ergaenzeEingebettet(spec.tabelle, paare.map(pp => pp.voll), tiefer)
+          for (const pp of paare) {
+            for (const t of tiefer) pp.schmal[t.alias] = pp.voll[t.alias]
+          }
+        }
+
+        if (elternSpalten.has(fkAmEltern)) {
+          // ── viele-zu-eins: Objekt oder null ──────────────────────────
+          const ids = [...new Set(zeilen.map(z => z[fkAmEltern]).filter(v => v != null))]
+          const treffer = new Map<string, Zeile>()
+          if (ids.length > 0) {
+            const platz = ids.map((_, i) => `$${i + 1}`).join(', ')
+            const rows = await fuehreAus<Zeile>(
+              `SELECT * FROM public."${spec.tabelle}" WHERE "id" IN (${platz})`, ids
+            )
+            for (const r of rows) treffer.set(String(r.id), r)
+          }
+          const paare: Array<{ voll: Zeile; schmal: Zeile }> = []
+          for (const z of zeilen) {
+            const voll = treffer.get(String(z[fkAmEltern]))
+            if (!voll) { z[spec.alias] = null; continue }
+            const schmal = projiziere(voll)
+            paare.push({ voll, schmal })
+            z[spec.alias] = schmal
+          }
+          await loeseTieferAuf(paare)
+          continue
+        }
+
+        if (kindSpalten.has(fkAmKind)) {
+          // ── eins-zu-viele: Array (moeglicherweise leer) ──────────────
+          const ids = [...new Set(zeilen.map(z => z.id).filter(v => v != null))]
+          const nachEltern = new Map<string, Zeile[]>()
+          const paare: Array<{ voll: Zeile; schmal: Zeile }> = []
+          if (ids.length > 0) {
+            const platz = ids.map((_, i) => `$${i + 1}`).join(', ')
+            const rows = await fuehreAus<Zeile>(
+              `SELECT * FROM public."${spec.tabelle}" WHERE "${fkAmKind}" IN (${platz})`, ids
+            )
+            for (const r of rows) {
+              const schmal = projiziere(r)
+              paare.push({ voll: r, schmal })
+              const schluessel = String(r[fkAmKind])
+              const liste = nachEltern.get(schluessel) ?? []
+              liste.push(schmal)
+              nachEltern.set(schluessel, liste)
+            }
+          }
+          for (const z of zeilen) z[spec.alias] = nachEltern.get(String(z.id)) ?? []
+          await loeseTieferAuf(paare)
+          continue
+        }
+
+        throw new Error(
+          `PGlite-Shim: kein Fremdschluessel zwischen "${elternTabelle}" und ` +
+          `"${spec.tabelle}" gefunden (weder ${elternTabelle}.${fkAmEltern} ` +
+          `noch ${spec.tabelle}.${fkAmKind}). Ausnahme in FK_AUSNAHMEN eintragen.`
+        )
       }
     }
 
@@ -419,7 +586,7 @@ export function macheSupabaseClient(
           const daten = await fuehreAus<Zeile>(
             `SELECT * FROM public."${tabelle}"${whereKlausel(p2)}`, p2
           )
-          await ergaenzeEingebettet(daten, eingebettet)
+          await ergaenzeEingebettet(tabelle, daten, eingebettet)
           return { data: daten, error: null, count: anzahl }
         }
 
@@ -427,7 +594,7 @@ export function macheSupabaseClient(
         if (sortierung) sql += ` ORDER BY "${sortierung.spalte}" ${sortierung.auf ? 'ASC' : 'DESC'}`
         if (grenze != null) sql += ` LIMIT ${Number(grenze)}`
         const daten = await fuehreAus<Zeile>(sql, params)
-        await ergaenzeEingebettet(daten, eingebettet)
+        await ergaenzeEingebettet(tabelle, daten, eingebettet)
         return { data: daten, error: null }
       } catch (e) {
         return { data: [], error: alsPgFehler(e) }
@@ -461,7 +628,16 @@ export function macheSupabaseClient(
       not(spalte: string, op: string, wert: unknown) {
         if (op === 'in') filter.push({ art: 'notIn', spalte, werte: parsePgListe(wert) })
         else if (op === 'is') filter.push({ art: 'notNull', spalte })
-        else throw new Error(`PGlite-Shim: not(…, '${op}', …) wird nicht unterstuetzt`)
+        else if (['eq', 'neq', 'lt', 'lte', 'gt', 'gte'].includes(op)) {
+          // `.not('status', 'eq', 'entwurf')` steht im DATEV-Generator und
+          // liess den Shim vorher werfen — der Export war damit gar nicht
+          // testbar.
+          filter.push({ art: 'nicht', innen: { art: op as Vergleich, spalte, wert } })
+        } else throw new Error(`PGlite-Shim: not(…, '${op}', …) wird nicht unterstuetzt`)
+        return b
+      },
+      or(ausdruck: string) {
+        filter.push({ art: 'oder', teile: parseOderAusdruck(ausdruck) })
         return b
       },
       order(spalte: string, opts?: { ascending?: boolean }) {

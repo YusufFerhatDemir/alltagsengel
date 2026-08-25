@@ -43,6 +43,9 @@ const M_MAHNUNG       = '20260812120000_sepa_mandate_and_mahnung.sql'
 const M_MAHNQUEUE     = '20260918030000_dunning_email_queue.sql'
 const M_MAHN_RETRY    = '20261001000000_mahnqueue_retry_dead_letter.sql'
 const M_CAMT          = '20260825010000_zahlungseingang_opos.sql'
+const M_DATEV         = '20260812180000_datev_export.sql'
+const M_TARIF_AUDIT   = '20260831040000_tarif_verifizierung_audit.sql'
+const M_BELEGPFLICHT  = '20260904000000_tarif_belege_belegpflicht.sql'
 
 /** Stamm-Organisation — Rueckfallwert von current_org_id(). */
 export const STAMM_ORG = '00000000-0000-4000-8000-000460629986'
@@ -616,5 +619,97 @@ export async function baueTarifStammdaten(db: PGlite): Promise<void> {
     CREATE TRIGGER trg_stellvertreter_overlap
       BEFORE INSERT ON public.billing_tariffs
       FOR EACH ROW EXECUTE FUNCTION public.stellvertreter_overlap_guard();
+  `)
+}
+
+/**
+ * DATEV-Strecke: Exportprotokoll und Debitorenzuordnung.
+ *
+ * Beide Tabellen kommen WORTGLEICH aus 20260812180000_datev_export.sql —
+ * einschliesslich `UNIQUE(organization_id, client_id)`, an dem die
+ * Wiederverwendung einer Debitorennummer haengt, und der
+ * `status`-CHECK-Liste des Exportprotokolls.
+ *
+ * `organizations.datev_config` ergaenzt dieselbe Migration per DO-Block;
+ * hier steht sie als ALTER, weil der Block auf information_schema prueft
+ * und in PGlite genauso laufen wuerde — nur ohne Mehrwert.
+ *
+ * Setzt baueKettenSchema() voraus (organizations, clients).
+ */
+export async function baueDatevTabellen(db: PGlite): Promise<void> {
+  await db.exec(tabelleAusMigration(M_DATEV, 'datev_exports'))
+  await db.exec(tabelleAusMigration(M_DATEV, 'datev_kontenzuordnung'))
+  await db.exec(`
+    ALTER TABLE public.organizations ADD COLUMN IF NOT EXISTS datev_config JSONB DEFAULT NULL;
+  `)
+}
+
+/**
+ * Freigabe-Strecke der Tarife: Verifizierungsstatus, Belegtabelle und das
+ * Fail-Closed-Gate `trg_verifizierung_belegpflicht`.
+ *
+ * Der Trigger ist die EINZIGE nicht umgehbare Durchsetzung der Belegpflicht
+ * (die Route und die Oberflaeche sind laut Kopfkommentar von
+ * lib/billing/core/tarif-verifizierung.ts nur fuer lesbare Fehlermeldungen
+ * da). Er wird deshalb WORTGLEICH aus der Migration gezogen, nicht
+ * nachgebaut.
+ *
+ * NICHT enthalten: der Storage-Bucket 'tarif-belege' aus derselben
+ * Migration — PGlite hat kein storage-Schema, und der Bucket traegt keine
+ * der hier geprueften Regeln.
+ *
+ * Setzt baueKettenSchema() und baueMonatsabschlussTabellen() voraus
+ * (billing_tariffs, leistungspreise).
+ */
+export async function baueTarifVerifizierung(db: PGlite): Promise<void> {
+  // Verifizierungsspalten — wortgleich aus 20260831040000 (billing_tariffs)
+  // bzw. 20260902000000 (leistungspreise).
+  await db.exec(`
+    ALTER TABLE public.billing_tariffs
+      ADD COLUMN IF NOT EXISTS tarif_status TEXT NOT NULL DEFAULT 'unverified'
+        CHECK (tarif_status IN ('verified', 'unverified', 'blocked')),
+      ADD COLUMN IF NOT EXISTS verifiziert_am TIMESTAMPTZ,
+      ADD COLUMN IF NOT EXISTS verifiziert_von TEXT,
+      ADD COLUMN IF NOT EXISTS verifizierungs_quelle TEXT;
+
+    ALTER TABLE public.leistungspreise
+      ADD COLUMN IF NOT EXISTS tarif_status TEXT NOT NULL DEFAULT 'unverified'
+        CHECK (tarif_status IN ('verified', 'unverified', 'blocked')),
+      ADD COLUMN IF NOT EXISTS verifiziert_am TIMESTAMPTZ,
+      ADD COLUMN IF NOT EXISTS verifiziert_von TEXT,
+      ADD COLUMN IF NOT EXISTS verifizierungs_quelle TEXT;
+  `)
+
+  await db.exec(tabelleAusMigration(M_TARIF_AUDIT, 'billing_tariff_audit'))
+
+  // billing_tariff_audit: leistungspreis_id + quell_tabelle aus 20260904000000,
+  // beleg_id aus derselben Migration. Der FK auf billing_tariffs faellt weg —
+  // eine Audit-Zeile fuer leistungspreise traegt dort NULL.
+  await db.exec(`
+    ALTER TABLE public.billing_tariff_audit
+      ALTER COLUMN tariff_id DROP NOT NULL,
+      ADD COLUMN IF NOT EXISTS leistungspreis_id UUID,
+      ADD COLUMN IF NOT EXISTS quell_tabelle TEXT NOT NULL DEFAULT 'billing_tariffs',
+      ADD COLUMN IF NOT EXISTS beleg_id UUID;
+  `)
+
+  await db.exec(tabelleAusMigration(M_BELEGPFLICHT, 'billing_tarif_belege'))
+
+  await db.exec(`
+    ALTER TABLE public.billing_tariffs   ADD COLUMN IF NOT EXISTS beleg_id UUID
+      REFERENCES public.billing_tarif_belege(id) ON DELETE SET NULL;
+    ALTER TABLE public.leistungspreise   ADD COLUMN IF NOT EXISTS beleg_id UUID
+      REFERENCES public.billing_tarif_belege(id) ON DELETE SET NULL;
+  `)
+
+  // Das Gate selbst — wortgleich.
+  await db.exec(funktionAusMigration(M_BELEGPFLICHT, 'trg_verifizierung_belegpflicht'))
+  await db.exec(`
+    CREATE TRIGGER trg_belegpflicht_billing_tariffs
+      BEFORE INSERT OR UPDATE ON public.billing_tariffs
+      FOR EACH ROW EXECUTE FUNCTION public.trg_verifizierung_belegpflicht();
+    CREATE TRIGGER trg_belegpflicht_leistungspreise
+      BEFORE INSERT OR UPDATE ON public.leistungspreise
+      FOR EACH ROW EXECUTE FUNCTION public.trg_verifizierung_belegpflicht();
   `)
 }
