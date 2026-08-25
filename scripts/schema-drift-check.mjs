@@ -74,6 +74,28 @@ const AUSNAHMEN = new Set([
   'app/api/admin/krankenfahrten/route.ts:krankenfahrt_reviews.organization_id',
   'app/api/dipa/nachweise/route.ts:coach_nutzungsereignisse.organization_id',
   'lib/ops/nachrichten.ts:ops_posteingang.organization_id',
+
+  // ── Phase 7 (26.08.2026) — alle acht nachgeprueft, alle falsch zugeordnet ──
+  //
+  // Zwei Ursachen, beide dieselbe Grenze des Zuordners: er nimmt die Tabelle
+  // aus dem naechstgelegenen .from(...) im Dateitext.
+  //
+  // (a) Der Treffer steht in einem ERKLAERTEXT, nicht im Code. Beide Stellen
+  //     zitieren einen Filter, um zu begruenden, warum er dort NICHT steht.
+  'lib/billing/core/payments.ts:payment_allocations.paid_amount',
+  'lib/billing/core/sammelrechnung.ts:service_records.leistungsart',
+  //
+  // (b) Die Abfrage wird in einer Hilfsfunktion gebaut (kopf(), ze(), de(),
+  //     queue()), der Filter steht am Aufrufort. Die Spalten existieren
+  //     saemtlich — nur auf der Tabelle der jeweiligen Hilfsfunktion:
+  //       zahlungseingaenge.status        → camt_imports.status
+  //       klaerfaelle.ist_ruecklastschrift → zahlungseingaenge.ist_ruecklastschrift
+  //       dunning_email_queue.*            → dunning_entries.*
+  'lib/pilot/control-center.ts:zahlungseingaenge.status',
+  'lib/pilot/control-center.ts:klaerfaelle.ist_ruecklastschrift',
+  'lib/pilot/control-center.ts:dunning_email_queue.block_dunning',
+  'lib/pilot/control-center.ts:dunning_email_queue.dunning_level',
+  'lib/pilot/control-center.ts:dunning_email_queue.next_dunning_at',
 ])
 
 const spec = await (await fetch(`${URL_}/rest/v1/`, {

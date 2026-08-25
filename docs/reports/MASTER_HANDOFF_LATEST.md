@@ -79,7 +79,7 @@ git rev-parse HEAD && git rev-parse origin/main
 | Testläufe | node:test 2.211 grün / 0 rot · vitest 5.627 grün / 38 übersprungen / 0 rot (nacheinander gelaufen, nicht gleichzeitig) |
 | CI | GRÜN auf den 6B-Commits; die Phase-7-Commits laufen nach diesem Deploy |
 | lint:forbidden | **0 Treffer** (24.577 Dateien, FULL-Scan) |
-| check:schema-drift | **8 vorbestehende Befunde** in nicht angefassten Dateien — siehe Phase-7-Bericht §8. Der Check ist weder in CI noch im Precommit-Guard verdrahtet. |
+| check:schema-drift | **0 Befunde** (1.288 Dateien gegen 331 Live-Tabellen). Die 8 zunächst gemeldeten waren sämtlich Fehlalarme des Zuordners und stehen begründet in `AUSNAHMEN` — Nachweis im Phase-7-Bericht §8. Der Check ist weiterhin **nicht** in CI oder Precommit-Guard verdrahtet. |
 | Live | alltagsengel.care → HTTP 200 |
 
 ### ChairMatch
@@ -188,9 +188,11 @@ verschickt, keine Bankdatei importiert, keine Zahlung gebucht.
 Der schwerste: über `POST /api/billing/dunning/advance` liefen **alle
 Mahnstufen unmittelbar hintereinander** durch, samt aller vier Mahngebühren.
 
-**Nicht angefasst, aber gemessen:** `npm run check:schema-drift` meldet 8
-vorbestehende 42703-Befunde (zwei davon auf Geldpfaden). Der Check ist weder in
-CI noch im Precommit-Guard verdrahtet — siehe Phase-7-Bericht §8.
+**Nebenbei geklärt:** `npm run check:schema-drift` meldete 8 Befunde — alle acht
+nachgeprüft und als Fehlalarme des Tabellen-Zuordners belegt (Kommentar-Treffer
+bzw. Abfragen aus Hilfsfunktionen). Begründet in `AUSNAHMEN` eingetragen, danach
+0 Befunde. Der Check ist weiterhin **nicht** in CI oder Precommit-Guard
+verdrahtet — das ist der eigentliche offene Punkt.
 
 ---
 
