@@ -79,6 +79,25 @@ export function getKonto(rahmen: Kontenrahmen, schluessel: KontoSchluessel): Kon
 }
 
 /**
+ * Alle Sachkonten eines Kontenrahmens.
+ *
+ * Der DATEV-Validator braucht diese Liste, um ein Konto in der fertigen
+ * Datei als „gehoert hierher" oder „unbekannt" einzustufen. Sie wird
+ * bewusst AUS der Kontenrahmen-Definition abgeleitet und nicht daneben
+ * gepflegt — eine zweite Liste waere nach dem ersten neuen Konto falsch,
+ * und der Validator wuerde eine korrekte Buchung als Fehler melden.
+ */
+export function alleSachkonten(rahmen: Kontenrahmen): string[] {
+  const konten = KONTENRAHMEN[rahmen];
+  if (!konten) {
+    throw new Error(
+      `Unbekannter Kontenrahmen "${rahmen}". Erlaubt: ${Object.keys(KONTENRAHMEN).join(', ')}.`
+    );
+  }
+  return Object.values(konten).map(k => k.konto);
+}
+
+/**
  * Prueft eine von Hand vergebene Debitorennummer.
  *
  * Dieselbe Regel, nach der getOrCreateDebitorennummer() automatisch

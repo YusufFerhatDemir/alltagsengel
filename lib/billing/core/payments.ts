@@ -343,8 +343,63 @@ export async function allocatePayment(
         notes: alloc.notes || null,
       })
 
+    // ── Abgebrochener Vorlauf: die Zeile steht schon ──
+    //
+    // `payment_allocations` traegt UNIQUE(payment_id, invoice_id). Das ist
+    // der Riegel gegen die Doppelbuchung und bleibt es.
+    //
+    // Er hatte aber eine teure Nebenwirkung: bricht ein Lauf NACH dem
+    // Insert ab (Verbindungsabbruch, Audit-Fehler, Prozessende), steht die
+    // Zuordnungszeile in der Datenbank, waehrend `invoices.paid_amount`
+    // und `payments.allocated_cents` noch den alten Stand tragen. Der
+    // Wiederholungslauf lief dann in 23505 und meldete „duplicate key" —
+    // eine Meldung, aus der niemand ablesen kann, dass Geld bereits
+    // verbucht ist. Der Zustand blieb bestehen:
+    //
+    //   · der DATEV-Export bucht die Zahlung (er liest diese Tabelle),
+    //   · die Rechnung gilt weiter als offen und wird GEMAHNT,
+    //   · und kein Wiederholungslauf kam je durch.
+    //
+    // Ein Kunde, der bezahlt hat, bekommt eine Mahnung. Deshalb wird der
+    // Vorlauf hier zu Ende gefuehrt statt abgewiesen.
+    let bereitsVerbucht = false
     if (allocError) {
-      throw new Error(`Zuordnung fehlgeschlagen: ${allocError.message}`)
+      if (allocError.code !== '23505') {
+        throw new Error(`Zuordnung fehlgeschlagen: ${allocError.message}`)
+      }
+
+      const { data: bestehend } = await supabase
+        .from('payment_allocations')
+        .select('amount_cents')
+        .eq('payment_id', paymentId)
+        .eq('invoice_id', alloc.invoiceId)
+        .maybeSingle()
+
+      // Ein ANDERER Betrag ist kein abgebrochener Lauf, sondern ein
+      // Widerspruch. Den darf niemand automatisch aufloesen.
+      if (!bestehend || bestehend.amount_cents !== alloc.amountCents) {
+        throw new Error(
+          `Fuer Zahlung ${paymentId} und Rechnung ${alloc.invoiceId} existiert bereits eine Zuordnung `
+          + `ueber ${bestehend?.amount_cents ?? '?'} Cent. Angefordert wurden ${alloc.amountCents} Cent. `
+          + `Bestehende Zuordnung pruefen und ggf. stornieren, statt eine zweite anzulegen.`
+        )
+      }
+
+      // Hat der abgebrochene Lauf die Rechnung schon fortgeschrieben?
+      //
+      // Feststellbar, nicht geraten: `paid_amount` der Rechnung wird mit
+      // der Summe ALLER Zuordnungszeilen verglichen. Deckt sie die
+      // bestehende Zeile bereits ab, war der Rechnungs-Update erfolgreich
+      // und darf nicht ein zweites Mal laufen — sonst zaehlte dieselbe
+      // Zahlung zweimal auf die Rechnung.
+      const { data: alleZeilen } = await supabase
+        .from('payment_allocations')
+        .select('amount_cents')
+        .eq('invoice_id', alloc.invoiceId)
+
+      const summeZuordnungen = (alleZeilen ?? []).reduce(
+        (s: number, z: { amount_cents: number | null }) => s + (z.amount_cents || 0), 0)
+      bereitsVerbucht = euroZuCent(inv.paid_amount || 0) >= summeZuordnungen
     }
 
     const newStatus = newPaidCents >= totalCents ? 'bezahlt' : 'teilweise_bezahlt'
@@ -367,19 +422,21 @@ export async function allocatePayment(
       })
       .eq('id', alloc.invoiceId)
 
-    const { data: updatedInv, error: invUpdateErr } = await (
-      inv.paid_amount === null || inv.paid_amount === undefined
-        ? occAbfrage.is('paid_amount', null)
-        : occAbfrage.eq('paid_amount', inv.paid_amount)
-    ).select('id')
+    if (!bereitsVerbucht) {
+      const { data: updatedInv, error: invUpdateErr } = await (
+        inv.paid_amount === null || inv.paid_amount === undefined
+          ? occAbfrage.is('paid_amount', null)
+          : occAbfrage.eq('paid_amount', inv.paid_amount)
+      ).select('id')
 
-    if (invUpdateErr) {
-      throw new Error(`Rechnungs-Update fehlgeschlagen: ${invUpdateErr.message}`)
-    }
-    if (!updatedInv?.length) {
-      throw new Error(
-        `Konkurrierender Zugriff auf Rechnung ${alloc.invoiceId} — bitte erneut versuchen.`
-      )
+      if (invUpdateErr) {
+        throw new Error(`Rechnungs-Update fehlgeschlagen: ${invUpdateErr.message}`)
+      }
+      if (!updatedInv?.length) {
+        throw new Error(
+          `Konkurrierender Zugriff auf Rechnung ${alloc.invoiceId} — bitte erneut versuchen.`
+        )
+      }
     }
 
     if (newPaidCents < totalCents && totalCents - newPaidCents > 0) {

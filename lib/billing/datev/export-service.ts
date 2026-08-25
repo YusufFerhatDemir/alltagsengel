@@ -9,7 +9,32 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { generateDatevCsv, type DatevHeaderParams } from './datev-format';
 import { generateBuchungssaetze, type BuchungssatzResult } from './buchungssatz-generator';
 import { getDatevConfig, isDatevConfigComplete } from './datev-config';
+import { alleSachkonten } from './kontenrahmen';
+import {
+  pruefeBuchungssaetze,
+  pruefeDatevCsv,
+  fasseZusammen,
+  formatierePruefbericht,
+  type DatevPruefErgebnis,
+} from './datev-validator';
 import { logBillingAction } from '../core/audit';
+
+/**
+ * Ein Buchungsstapel, der die Pruefung nicht besteht, wird nicht erzeugt.
+ *
+ * Der Fehler traegt die Befunde mit, damit die Route sie unveraendert
+ * ausgeben kann — eine auf „Export fehlgeschlagen" verkuerzte Meldung
+ * zwaenge dazu, die Datei trotzdem zu erzeugen, um zu sehen was fehlt.
+ */
+export class DatevPruefungFehlgeschlagen extends Error {
+  constructor(public readonly ergebnis: DatevPruefErgebnis) {
+    super(
+      `DATEV-Export abgebrochen: der Buchungsstapel hat die Pruefung nicht bestanden `
+      + `(${ergebnis.fehler.length} Fehler).\n${formatierePruefbericht(ergebnis)}`
+    );
+    this.name = 'DatevPruefungFehlgeschlagen';
+  }
+}
 
 // ---------------------------------------------------------------------------
 // Types
@@ -30,6 +55,8 @@ export interface ExportResult {
   csvContent: string;
   protokoll: string;
   statistik: BuchungssatzResult['statistik'];
+  /** Ergebnis der automatischen Stapel- und Dateipruefung. */
+  pruefung: DatevPruefErgebnis;
 }
 
 export interface ExportListItem {
@@ -127,10 +154,51 @@ export async function erstelleDatevExport(
     erzeugerKuerzel: config.erzeugerKuerzel,
   };
 
+  // ── 4a. Stapelpruefung VOR dem Formatieren ──
+  // Sie sieht Dinge, die in der fertigen Datei nicht mehr erkennbar sind
+  // (z. B. dass ein Umsatz mehr als zwei Nachkommastellen hatte).
+  const stapelPruefung = pruefeBuchungssaetze({
+    buchungen: result.buchungen,
+    kontenrahmen: config.kontenrahmen,
+    zeitraumVon,
+    zeitraumBis,
+    sachkonten: alleSachkonten(config.kontenrahmen),
+  });
+
   const csvContent = generateDatevCsv(headerParams, result.buchungen);
 
+  // ── 4b. Dateipruefung NACH dem Formatieren ──
+  // Der Steuerberater bekommt die Datei, nicht die Buchungsobjekte. Erst
+  // diese Ebene sieht einen Spaltenversatz.
+  const dateiPruefung = pruefeDatevCsv({
+    csv: csvContent,
+    sachkonten: alleSachkonten(config.kontenrahmen),
+    erwarteteBuchungen: result.buchungen.length,
+  });
+
+  const pruefung = fasseZusammen(stapelPruefung, dateiPruefung);
+
+  if (!pruefung.ok) {
+    // FAIL-CLOSED: nichts in den Storage, kein 'erstellt'-Datensatz. Der
+    // Lauf wird als Fehler protokolliert, damit er in der Exportliste
+    // sichtbar bleibt statt spurlos zu verschwinden.
+    await supabase.from('datev_exports').insert({
+      organization_id: organizationId,
+      zeitraum_von: zeitraumVon,
+      zeitraum_bis: zeitraumBis,
+      buchungen_anzahl: result.buchungen.length,
+      status: 'fehler',
+      beraternummer: config.beraternummer,
+      mandantennummer: config.mandantennummer,
+      kontenrahmen: config.kontenrahmen,
+      fehler_details: pruefung.fehler.map(f => `[${f.code}] ${f.meldung}`).join(' | ').slice(0, 4000),
+      created_by: actorId,
+    });
+    throw new DatevPruefungFehlgeschlagen(pruefung);
+  }
+
   // 5. Protokoll generieren
-  const protokoll = generiereProtokoll(params, result, config);
+  const protokoll = generiereProtokoll(params, result, config, pruefung);
 
   // 6. In Storage speichern
   const storagePath = `datev/${organizationId}/${zeitraumVon}_${zeitraumBis}.csv`;
@@ -196,6 +264,7 @@ export async function erstelleDatevExport(
     csvContent,
     protokoll,
     statistik: result.statistik,
+    pruefung,
   };
 }
 
@@ -295,6 +364,7 @@ function generiereProtokoll(
   params: ExportParams,
   result: BuchungssatzResult,
   config: { beraternummer: string; mandantennummer: string; kontenrahmen: string },
+  pruefung: DatevPruefErgebnis,
 ): string {
   const lines = [
     '═══════════════════════════════════════════════════════════',
@@ -318,6 +388,12 @@ function generiereProtokoll(
     `Ruecklastschriften: ${result.statistik.ruecklastschriften}`,
     `─────────────────────────────`,
     `Gesamt:            ${result.statistik.gesamt} Buchungssaetze`,
+    '',
+    '───────────────────────────────────────────────────────────',
+    '  Automatische Pruefung',
+    '───────────────────────────────────────────────────────────',
+    '',
+    formatierePruefbericht(pruefung),
     '',
     '───────────────────────────────────────────────────────────',
     '  Hinweise',
