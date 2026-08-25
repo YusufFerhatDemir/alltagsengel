@@ -15,7 +15,7 @@
 
 import { PDFDocument, rgb } from 'pdf-lib'
 import fontkit from '@pdf-lib/fontkit'
-import { DUNNING_TEXTS as MAHN_TEXTE, type MahnungData } from './mahnung-pdf'
+import { DUNNING_TEXTS as MAHN_TEXTE, mahnungAnrede, type MahnungData } from './mahnung-pdf'
 import { DUNNING_LABELS } from '../core/dunning'
 import {
   drawBriefkopf,
@@ -126,8 +126,13 @@ export async function erzeugeMahnungPdf(data: MahnungData): Promise<Uint8Array> 
   }
   y -= 8
 
-  page.drawText('Sehr geehrte Damen und Herren,', { x: MARGIN, y, size: 11, font: regular, color: rgb(0.1, 0.1, 0.1) })
-  y -= 22
+  // Anrede mit Namen — bis hierher war debtorName totes Feld (s. mahnungAnrede()).
+  for (const anredeZeile of wrapText(regular, mahnungAnrede(data.debtorName), 11, breite)) {
+    platz(15)
+    page.drawText(anredeZeile, { x: MARGIN, y, size: 11, font: regular, color: rgb(0.1, 0.1, 0.1) })
+    y -= 15
+  }
+  y -= 7
 
   // ── Fliesstext ──
   const bodyText = template.body.replace(/{deadline}/g, datumDe(data.paymentDeadline))

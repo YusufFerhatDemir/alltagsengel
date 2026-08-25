@@ -5,6 +5,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { IconMoney, IconDocument } from '@/components/Icons'
 
+import { euroZuCent } from '@/lib/geld'
 // ═══════════════════════════════════════════════════════════════
 // SEPA-Lastschrift Verwaltung
 // Mandate anlegen, Sammelaufträge erstellen, XML exportieren
@@ -335,7 +336,7 @@ function NewBatchDialog({ onClose, onSaved }: { onClose: () => void; onSaved: ()
         setInvoices((data || []).map((inv: any) => ({
           id: inv.id,
           number: inv.invoice_number_formatted || inv.invoice_number || '',
-          amount: Math.round(Number(inv.total_amount || 0) * 100) - Math.round(Number(inv.paid_amount || 0) * 100),
+          amount: euroZuCent(inv.total_amount || 0) - euroZuCent(inv.paid_amount || 0),
           clientName: inv.client ? `${inv.client.first_name} ${inv.client.last_name}` : '—',
         })).filter((i: any) => i.amount > 0))
       })

@@ -96,11 +96,13 @@ describe('euroZuCent', () => {
     assert.equal(euroZuCent(999.999), 100000)
   })
 
-  test('Grenzfall der Float-Rundung: 1,005 € ergibt 100 Cent, nicht 101', () => {
-    // 1.005 * 100 ist in IEEE-754 100.49999999999999 — Math.round rundet
-    // deshalb ab. Festgehalten, damit die Abweichung sichtbar bleibt,
-    // falls jemand die Rundung später auf Dezimal-Arithmetik umstellt.
-    assert.equal(euroZuCent(1.005), 100)
+  test('Grenzfall der Float-Rundung: 1,005 € ergibt 101 Cent', () => {
+    // Hier stand frueher die Erwartung 100: `Math.round(1.005 * 100)` ergab
+    // 100, weil 1.005 * 100 in IEEE-754 100.49999999999999 ist. Seit die
+    // Rundung in lib/geld.ts auf Dezimalverschiebung umgestellt ist, faellt
+    // der Halb-Cent korrekt auf. Die ausfuehrliche Regressionssuite steht in
+    // lib/__tests__/geld-rundung.test.ts.
+    assert.equal(euroZuCent(1.005), 101)
     assert.equal(euroZuCent(7.005), 701)   // 700.5 → rundet auf
   })
 

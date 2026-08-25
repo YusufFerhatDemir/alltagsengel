@@ -17,6 +17,7 @@ import type {
   ReviewRule,
   SurchargeDetail,
 } from '@/lib/types/pricing'
+import { aufCent } from '@/lib/geld'
 
 /**
  * Preisdaten konnten nicht gelesen werden.
@@ -537,9 +538,9 @@ function endlicheMenge(wert: number | undefined | null, feld: string): number {
   return Math.max(0, n)
 }
 
-function round2(n: number): number {
-  return Math.round(n * 100) / 100
-}
+// Kaufmaennische Rundung zentral in lib/geld.ts — `Math.round(n * 100) / 100`
+// verfehlte den exakten Halb-Cent (1,005 → 1,00 statt 1,01).
+const round2 = aufCent
 
 function fmt(n: number): string {
   return `${n.toFixed(2).replace('.', ',')} €`

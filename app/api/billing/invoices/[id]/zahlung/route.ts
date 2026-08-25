@@ -15,6 +15,7 @@ import {
 import { getActiveOrgId } from '@/lib/organizations/server'
 import { heuteBerlin } from '@/lib/utils/timezone'
 
+import { euroZuCent } from '@/lib/geld'
 /**
  * POST /api/billing/invoices/[id]/zahlung
  *
@@ -90,8 +91,8 @@ export async function POST(
       )
     }
 
-    const totalCents = Math.round(Number(invoice.total_amount || 0) * 100)
-    const paidCents = Math.round(Number(invoice.paid_amount || 0) * 100)
+    const totalCents = euroZuCent(invoice.total_amount || 0)
+    const paidCents = euroZuCent(invoice.paid_amount || 0)
     const openCents = totalCents - paidCents
 
     if (openCents <= 0) {

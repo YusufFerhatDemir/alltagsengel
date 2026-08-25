@@ -6,6 +6,7 @@ import { createPayment, allocatePayment, type PaymentMethod, type PayerType } fr
 import { getActiveOrgId } from '@/lib/organizations/server'
 import { safeApiError } from '@/lib/api/error-sanitizer'
 
+import { euroZuCent } from '@/lib/geld'
 // Spiegel der Union-Typen aus lib/billing/core/payments.ts. Fail-closed:
 // ein unbekannter Wert wird hier abgewiesen und nicht an den DB-CHECK
 // durchgereicht, der nur eine rohe Postgres-Meldung zurückgibt.
@@ -96,8 +97,8 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: 'Rechnung nicht gefunden.' }, { status: 404 })
       }
 
-      const gesamtCents = Math.round(Number(rechnung.total_amount || 0) * 100)
-      const bezahltCents = Math.round(Number(rechnung.paid_amount || 0) * 100)
+      const gesamtCents = euroZuCent(rechnung.total_amount || 0)
+      const bezahltCents = euroZuCent(rechnung.paid_amount || 0)
       offenCents = gesamtCents - bezahltCents
 
       if (offenCents <= 0) {

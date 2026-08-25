@@ -8,6 +8,7 @@ import type { SepaDirectDebitItem } from './pain008'
 import { pruefeGlaeubigerIdOderWerfe } from './glaeubiger-id'
 import { logBillingAction } from '../core/audit'
 import { heuteBerlin } from '@/lib/utils/timezone';
+import { euroZuCent } from '@/lib/geld'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -221,8 +222,8 @@ export async function createSepaBatch(
       continue
     }
 
-    const totalCents = Math.round(Number(inv.total_amount || 0) * 100)
-    const paidCents = Math.round(Number(inv.paid_amount || 0) * 100)
+    const totalCents = euroZuCent(inv.total_amount || 0)
+    const paidCents = euroZuCent(inv.paid_amount || 0)
     const openCents = totalCents - paidCents
     if (openCents <= 0) {
       skipped.push({ invoiceId: inv.id, reason: 'Rechnung bereits bezahlt' })

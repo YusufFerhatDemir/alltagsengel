@@ -11,6 +11,8 @@
 // ohne React testbar.
 // ═══════════════════════════════════════════════════════════════
 
+import { euroZuCent } from '@/lib/geld'
+
 /**
  * Wandelt eine Betragseingabe in Cent.
  *
@@ -36,5 +38,7 @@ export function parseBetragZuCent(eingabe: string): number {
 
   const zahl = Number(bereinigt)
   if (!Number.isFinite(zahl)) return NaN
-  return Math.round(zahl * 100)
+  // euroZuCent statt Math.round(zahl * 100): letzteres verfehlt den
+  // exakten Halb-Cent (Eingabe „1,005" ergab 100 statt 101 Cent).
+  return euroZuCent(zahl)
 }

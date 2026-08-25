@@ -9,6 +9,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { CamtBuchung } from '../camt/camt-parser';
 import { logBillingAction } from '../core/audit';
+import { euroZuCent } from '@/lib/geld'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -193,8 +194,8 @@ export async function verarbeiteRuecklastschrift(
       .single();
 
     if (invoice) {
-      const totalCents = Math.round(Number(invoice.total_amount || 0) * 100);
-      const paidCents = Math.round(Number(invoice.paid_amount || 0) * 100);
+      const totalCents = euroZuCent(invoice.total_amount || 0);
+      const paidCents = euroZuCent(invoice.paid_amount || 0);
       const betragRueck = Math.abs(buchung.betragCent);
       const newPaidCents = Math.max(0, paidCents - betragRueck);
 

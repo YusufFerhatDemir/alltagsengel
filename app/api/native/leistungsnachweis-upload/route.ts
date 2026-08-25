@@ -94,6 +94,15 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Upload fehlgeschlagen' }, { status: 500 })
     }
 
+    // BUSINESS_INPUT_REQUIRED — Laufzeit 7 Tage.
+    // Die URL wird als ocr_results.image_url gespeichert und in
+    // app/admin/leistungsnachweis-upload/page.tsx direkt angezeigt. Kuerzen
+    // waere technisch nur ableitbar, wenn diese Seite die URL beim Oeffnen
+    // neu signieren liesse (Muster: GET /api/rechnungen/[id]/pdf). Solange
+    // sie den gespeicherten Wert direkt oeffnet, macht jede kuerzere Frist
+    // die OCR-Pruefung nach wenigen Minuten unbrauchbar.
+    // Zu entscheiden: Re-Signier-Route fuer ocr_results bauen (dann Minuten)
+    // — oder 7 Tage bewusst als Restrisiko tragen.
     const { data: signedData } = await admin.storage
       .from('service-proofs')
       .createSignedUrl(filePath, 60 * 60 * 24 * 7)

@@ -30,6 +30,16 @@ const log = logger.child('upload-document')
 export const MAX_FILE_SIZE_MB = 15
 const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024
 const UPLOAD_TIMEOUT_MS = 60_000 // 60 Sekunden
+// BUSINESS_INPUT_REQUIRED — Laufzeit 7 Tage.
+// `documents` enthaelt Personalausweis, Fuehrungszeugnis, Versicherungs-
+// nachweis. Eine signierte URL ist ein Inhabertoken ohne Rollen-, Mandanten-
+// oder Kontopruefung; sie ueberlebt Rollenwechsel und Deaktivierung.
+// getSignedDocumentUrl() kann jederzeit frisch signieren — nur nutzt das
+// bisher keine Oberflaeche, die gespeicherte documents.file_url wird direkt
+// verwendet. Kuerzen setzt voraus, dass alle Leser auf getSignedDocumentUrl()
+// umgestellt werden.
+// Zu entscheiden: Leser umstellen (dann Laufzeit auf Minuten) — oder 7 Tage
+// bewusst als Restrisiko tragen.
 const SIGNED_URL_TTL_SECONDS = 60 * 60 * 24 * 7 // 7 Tage (analog service-proofs)
 
 // Muss deckungsgleich zur Bucket-Allowlist bleiben

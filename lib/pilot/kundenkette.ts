@@ -48,6 +48,7 @@ import { berlinParts } from '@/lib/utils/timezone'
 import { KETTEN_SCHRITTE, schrittHref } from './schritte'
 import { pflegegradVon } from '@/lib/clients/pflegegrad'
 import type { KundenKette, KundenSchritt, SchrittId, SchrittStand } from './types'
+import { euroZuCent } from '@/lib/geld'
 
 /** service_records.status-Werte, die als abrechenbar gelten. */
 const ABRECHENBARE_RECORD_STATUS = ['signed', 'complete', 'invoiced']
@@ -100,9 +101,8 @@ interface KettenRohdaten {
   fehler: Record<string, string>
 }
 
-function euroZuCent(euro: number | null | undefined): number {
-  return Math.round((euro ?? 0) * 100)
-}
+// Umrechnung zentral in lib/geld.ts — die lokale Kopie rundete den
+// exakten Halb-Cent falsch (1,005 € ergab 100 statt 101 Cent).
 
 /** Was eine Supabase-Abfrage minimal zurückgibt — Daten oder Fehler. */
 interface Antwort<T> {

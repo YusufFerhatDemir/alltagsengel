@@ -83,6 +83,20 @@ export async function uploadServiceProof(
   }
 
   // Privater Bucket → signierte URL (7 Tage), nicht getPublicUrl()
+  //
+  // BUSINESS_INPUT_REQUIRED — Laufzeit 7 Tage.
+  // Eine signierte Storage-URL ist ein Inhabertoken: sie geht am RLS vorbei
+  // und prueft weder Rolle noch Organisation noch ob das Konto noch aktiv
+  // ist. Sieben Tage ueberdauern damit einen Rollenwechsel, das Ausscheiden
+  // einer Engel und einen Mandantenwechsel.
+  // Technisch ableitbar waere eine kuerzere Frist nur mit einer Re-Signier-
+  // Route wie GET /api/rechnungen/[id]/pdf (die den Speicherpfad neu
+  // signiert, nachdem sie den Zugriff geprueft hat). Die gibt es fuer
+  // Leistungsnachweis-Fotos noch nicht, und der Aufrufer legt die
+  // zurueckgegebene URL in die Datenbank. Kuerzen ohne diese Route macht
+  // die abgelegten Nachweise unerreichbar.
+  // Zu entscheiden: Re-Signier-Route bauen (dann Laufzeit auf Minuten) —
+  // oder 7 Tage bewusst als Restrisiko tragen.
   const { data: signedData, error: signErr } = await supabase.storage
     .from('service-proofs')
     .createSignedUrl(filePath, 60 * 60 * 24 * 7)

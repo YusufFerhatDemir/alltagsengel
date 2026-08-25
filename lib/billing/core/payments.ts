@@ -2,6 +2,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { logBillingAction } from './audit'
 import { isTerminalStatus, isValidInvoiceStatus, type InvoiceStatus } from './status-machine'
 
+import { euroZuCent } from '@/lib/geld'
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
@@ -180,8 +181,8 @@ async function autoMatchPayment(
 
   for (const inv of openInvoices) {
     let score = 0
-    const totalCents = Math.round(Number(inv.total_amount || 0) * 100)
-    const paidCents = Math.round(Number(inv.paid_amount || 0) * 100)
+    const totalCents = euroZuCent(inv.total_amount || 0)
+    const paidCents = euroZuCent(inv.paid_amount || 0)
     const openCents = totalCents - paidCents
 
     if (openCents <= 0) continue
@@ -314,8 +315,8 @@ export async function allocatePayment(
       )
     }
 
-    const totalCents = Math.round(Number(inv.total_amount || 0) * 100)
-    const prevPaidCents = Math.round(Number(inv.paid_amount || 0) * 100)
+    const totalCents = euroZuCent(inv.total_amount || 0)
+    const prevPaidCents = euroZuCent(inv.paid_amount || 0)
     const openCents = totalCents - prevPaidCents
     if (alloc.amountCents > openCents && openCents > 0) {
       throw new Error(

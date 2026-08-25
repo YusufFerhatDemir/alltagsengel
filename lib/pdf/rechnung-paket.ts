@@ -105,6 +105,15 @@ export interface RechnungsPaket {
   clientName: string
 }
 
+/**
+ * Laufzeit der signierten URL auf das Rechnungs-PDF.
+ *
+ * Deckungsgleich mit GET /api/rechnungen/[id]/pdf. Kurz gehalten, weil der
+ * Link ein Inhabertoken ohne Rollen-, Mandanten- oder Kontopruefung ist —
+ * Begruendung ausfuehrlich an der Signierstelle weiter unten.
+ */
+export const RECHNUNGS_PDF_URL_TTL_SEKUNDEN = 60 * 10 // 10 Minuten
+
 export async function erzeugeRechnungsPaket(
   admin: SupabaseClient,
   params: RechnungsPaketParams
@@ -434,6 +443,24 @@ export async function erzeugeRechnungsPaket(
   const pageCount = pdfDoc.getPageCount()
   const checksum = crypto.createHash('sha256').update(pdfBytes).digest('hex')
 
+  // ── Signierte URL: Laufzeit ──────────────────────────────────
+  // Frueher 30 Tage. Eine signierte Storage-URL ist ein Inhabertoken: sie
+  // traegt ihre eigene Berechtigung, laeuft am Storage-Dienst vorbei an RLS
+  // und kennt weder Rolle noch Mandant noch Kontostatus. Wer sie hat, kommt
+  // an das PDF — auch nach einem Rollenwechsel, nach Deaktivierung des
+  // Kontos und ausserhalb der eigenen Organisation. Und sie steht dauerhaft
+  // in invoice_packages.pdf_url, also in jedem Backup und jedem Datenbank-
+  // Export.
+  //
+  // 30 Tage waren dabei ohne Nutzen: der einzige dauerhafte Zugriffsweg ist
+  // GET /api/rechnungen/[id]/pdf, und der signiert bei JEDEM Aufruf frisch
+  // (nach Eigentuemer- und Organisationspruefung). Der hier erzeugte Link
+  // wird nur unmittelbar nach dem Erzeugen an den Browser gereicht
+  // (POST /api/admin/invoices/[id]/generate-pdf) — dafuer reichen Minuten.
+  // Die gespeicherte URL dient danach nur noch als „PDF existiert"-Marke
+  // (has_pdf in /api/billing/invoices und app/kunde/rechnungen).
+  //
+  // Gleiche Laufzeit wie die Download-Route, damit es nur eine Zahl gibt.
   // ── Upload in Storage (service-proofs, service_role — RLS-frei) ──
   const storagePath = `invoice-packages/${invoiceId}.pdf`
 
@@ -450,7 +477,7 @@ export async function erzeugeRechnungsPaket(
 
   const { data: signedUrlData, error: signErr } = await admin.storage
     .from('service-proofs')
-    .createSignedUrl(storagePath, 60 * 60 * 24 * 30) // 30 Tage
+    .createSignedUrl(storagePath, RECHNUNGS_PDF_URL_TTL_SEKUNDEN)
 
   if (signErr || !signedUrlData?.signedUrl) {
     throw new RechnungsPaketError(`Signierte URL nicht erzeugbar: ${signErr?.message ?? 'unbekannt'}`, 500)

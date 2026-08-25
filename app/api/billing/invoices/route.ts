@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOpsAdmin } from '@/lib/ops/api-auth'
 import { logger } from '@/lib/logger'
+import { euroZuCent } from '@/lib/geld'
 const log = logger.child('billing/invoices')
 
 /**
@@ -86,7 +87,7 @@ export async function GET(request: Request) {
     const client = Array.isArray(inv.client) ? inv.client[0] : inv.client
     const pkg = Array.isArray(inv.invoice_packages) ? inv.invoice_packages[0] : inv.invoice_packages
     // invoices.total_amount steht in EURO (nicht Cent) — deshalb hier *100.
-    const totalCents = Math.round(Number(inv.total_amount || 0) * 100)
+    const totalCents = euroZuCent(inv.total_amount || 0)
     const creditedCents = creditedByInvoice.get(inv.id) || 0
 
     return {

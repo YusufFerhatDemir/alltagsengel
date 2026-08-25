@@ -22,6 +22,7 @@
  * Zeitraums (zeitraum.ts) Voraussetzung fuer jede Rechnung hier.
  */
 
+import { aufCent } from '@/lib/geld'
 import { budgetVersionFuerJahr } from '@/lib/config/budget-constants'
 import {
   maxTageFuer,
@@ -29,10 +30,14 @@ import {
   type VpKzpArt,
 } from './konstanten'
 
-/** Kaufmaennisch auf Cent runden — Betraege liegen als NUMERIC in EURO vor. */
-export function aufCent(betrag: number): number {
-  return Math.round((Number(betrag) + Number.EPSILON) * 100) / 100
-}
+/**
+ * Kaufmaennisch auf Cent runden — Betraege liegen als NUMERIC in EURO vor.
+ *
+ * Der frueher hier stehende `+ Number.EPSILON`-Trick war wirkungslos:
+ * EPSILON ist der Double-Abstand bei 1.0, bei 100.5 ist der Abstand das
+ * 64-fache. Die Rundung liegt jetzt in lib/geld.ts.
+ */
+export { aufCent }
 
 /** Der in einem Kalenderjahr bereits verbrauchte Stand eines Klienten. */
 export interface JahresStand {

@@ -2,6 +2,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { logBillingAction } from './audit'
 import { datumBerlin, heuteBerlin } from '@/lib/utils/timezone';
 import { logger } from '@/lib/logger';
+import { euroZuCent } from '@/lib/geld'
 const log = logger.child('mahnlauf');
 
 // ---------------------------------------------------------------------------
@@ -73,8 +74,8 @@ export async function ensureDunningEntry(
 
   if (!inv) throw new Error(`Rechnung ${invoiceId} nicht gefunden.`)
 
-  const totalCents = Math.round(Number(inv.total_amount || 0) * 100)
-  const paidCents = Math.round(Number(inv.paid_amount || 0) * 100)
+  const totalCents = euroZuCent(inv.total_amount || 0)
+  const paidCents = euroZuCent(inv.paid_amount || 0)
 
   const { data: existing } = await supabase
     .from('dunning_entries')
@@ -400,8 +401,8 @@ export async function runDunningRun(
   for (const inv of invoices || []) {
     if (NICHT_MAHNFAEHIG.has(inv.status)) continue
 
-    const totalCents = Math.round(Number(inv.total_amount || 0) * 100)
-    const paidCents = Math.round(Number(inv.paid_amount || 0) * 100)
+    const totalCents = euroZuCent(inv.total_amount || 0)
+    const paidCents = euroZuCent(inv.paid_amount || 0)
     if (totalCents - paidCents <= 0) continue
 
     result.geprueft++

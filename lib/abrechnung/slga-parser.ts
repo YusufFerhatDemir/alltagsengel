@@ -18,6 +18,7 @@
  */
 
 import type { RuecklaeuferImportParams, RuecklaeuferPosition, RuecklaeuferTyp } from './ruecklaeufer'
+import { euroZuCent } from '@/lib/geld'
 
 // ── Parsed Types ────────────────────────────────────────────────
 
@@ -211,7 +212,7 @@ function parseBetragCent(s: string | undefined): number | undefined {
   const val = parseFloat(clean)
   if (isNaN(val)) return undefined
 
-  const cents = Math.round(val * 100)
+  const cents = euroZuCent(val)
   return negativ ? -cents : cents
 }
 

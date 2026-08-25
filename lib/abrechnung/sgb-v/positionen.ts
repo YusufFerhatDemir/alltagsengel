@@ -16,6 +16,8 @@
  * Technischen Anlage und werden erst mit ihr hinterlegt.
  */
 
+import { euroZuCent } from '@/lib/geld'
+
 export type HkpPositionsProblem =
   | 'keine_verordnung'
   | 'verordnung_nicht_genehmigt'
@@ -199,7 +201,7 @@ export function bereiteHkpVor(
     const k = klient as HkpKlient
     const ik = v.kostentraeger_ik_nummer as string
     // service_records.amount steht in EURO — Positionen rechnen in Cent.
-    const betragCent = Math.round(Number(leistung.amount) * 100)
+    const betragCent = euroZuCent(leistung.amount as number | string | null)
 
     const position: HkpPosition = {
       leistung_id: leistung.id,

@@ -18,6 +18,7 @@ import {
   ENTLASTUNG_MONATLICH_EUR,
   ENTLASTUNG_JAEHRLICH_EUR,
 } from '@/lib/config/budget-constants'
+import { euroZuCent } from '@/lib/geld'
 
 export const ENTLASTUNGSBETRAG_MONAT = ENTLASTUNG_MONATLICH_EUR
 export const ENTLASTUNGSBETRAG_JAHR = ENTLASTUNG_JAEHRLICH_EUR
@@ -476,7 +477,7 @@ export function euroToCent(value: string | number | null | undefined): number | 
   if (value === '' || value === null || value === undefined) return null
   const n = typeof value === 'number' ? value : Number(String(value).replace(',', '.'))
   if (isNaN(n)) return null
-  return Math.round(n * 100)
+  return euroZuCent(n)
 }
 
 export interface LeistungspreisRow {

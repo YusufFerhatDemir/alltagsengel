@@ -8,6 +8,7 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { heuteBerlin } from '@/lib/utils/timezone';
+import { euroZuCent } from '@/lib/geld'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -119,8 +120,8 @@ export async function getOposListe(
   const offenePosten: OffenerPosten[] = [];
 
   for (const inv of invoices || []) {
-    const sollCent = Math.round(Number(inv.total_amount || 0) * 100);
-    const bezahltCent = Math.round(Number(inv.paid_amount || 0) * 100);
+    const sollCent = euroZuCent(inv.total_amount || 0);
+    const bezahltCent = euroZuCent(inv.paid_amount || 0);
     const offenCent = sollCent - bezahltCent;
 
     if (offenCent <= 0) continue;
