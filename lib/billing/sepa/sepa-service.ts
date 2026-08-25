@@ -54,13 +54,27 @@ export async function createMandate(
   // LIVE-SCHEMA: die Kundennummer heißt customer_number. Mit dem alten Namen
   // scheiterte die Abfrage mit 42703 und jede Mandatsreferenz fiel auf einen
   // UUID-Ausschnitt zurück — für den Kunden nicht wiedererkennbar.
+  //
+  // MANDANTENGRENZE: der Filter auf organization_id fehlte hier. Der
+  // Service läuft mit dem service-role-Client (BYPASSRLS), die Trennung
+  // steht also ausschliesslich im Filter. Ohne ihn konnte ein Admin von
+  // Mandant A ein Lastschriftmandat auf einen Klienten von Mandant B
+  // anlegen — die Mandatszeile landete in A, die IBAN gehörte B. Der
+  // fehlende Klient ist jetzt ein Abbruch, kein UUID-Rückfall: eine
+  // Mandatsreferenz auf einen Klienten, den es in diesem Mandanten nicht
+  // gibt, darf gar nicht erst entstehen.
   const { data: client } = await supabase
     .from('clients')
     .select('customer_number, first_name, last_name')
     .eq('id', clientId)
-    .single()
+    .eq('organization_id', organizationId)
+    .maybeSingle()
 
-  const clientNum = client?.customer_number || clientId.slice(0, 8)
+  if (!client) {
+    throw new Error('Klient nicht gefunden oder gehört zu einer anderen Organisation.')
+  }
+
+  const clientNum = client.customer_number || clientId.slice(0, 8)
   const mandateReference = generateMandateReference('AE', clientNum)
 
   const { data, error } = await supabase
@@ -106,7 +120,11 @@ export async function listMandates(
 ) {
   let query = supabase
     .from('sepa_mandates')
-    .select('*, client:clients(first_name, last_name, client_number)')
+    // `client_number` gibt es nicht — die Kundennummer heisst live
+    // `customer_number` (Baseline 20260101000000). PostgREST beantwortete
+    // den alten Namen mit 42703; GET /api/billing/sepa/mandates lieferte
+    // damit ausnahmslos einen Fehler statt der Mandatsliste.
+    .select('*, client:clients(first_name, last_name, customer_number)')
     .eq('organization_id', organizationId)
     .order('created_at', { ascending: false })
 
@@ -193,7 +211,13 @@ export async function createSepaBatch(
 
   if (!invoices || invoices.length === 0) throw new Error('Keine gültigen Rechnungen gefunden.')
 
-  // Für jeden Client das aktive Mandat laden
+  // Für jeden Client das aktive Mandat laden.
+  //
+  // Neueste zuerst und nur den ersten Treffer je Klient übernehmen: sind
+  // (aus Altbestand oder Doppelanlage) zwei aktive Mandate vorhanden,
+  // entschied vorher die Reihenfolge der Datenbank, von welchem Konto
+  // abgebucht wird. Das ist keine Kleinigkeit — es ist die Frage, wessen
+  // IBAN belastet wird.
   const clientIds = [...new Set(invoices.map(i => i.client_id))]
   const { data: mandates } = await supabase
     .from('sepa_mandates')
@@ -201,12 +225,42 @@ export async function createSepaBatch(
     .eq('organization_id', organizationId)
     .eq('status', 'aktiv')
     .in('client_id', clientIds)
+    .order('created_at', { ascending: false })
 
-   
+
   const mandateByClient = new Map<string, any>()
   for (const m of mandates || []) {
-    mandateByClient.set(m.client_id, m)
+    if (!mandateByClient.has(m.client_id)) mandateByClient.set(m.client_id, m)
   }
+
+  // Rechnungen, die bereits in einem laufenden Sammelauftrag stecken.
+  //
+  // Ohne diese Sperre liess sich dieselbe Rechnung beliebig oft einziehen:
+  // beim Kunden wird zweimal abgebucht, und die zweite Abbuchung ist eine
+  // unberechtigte Lastschrift, die er bis zu 13 Monate zurückholen kann.
+  // 'ruecklastschrift' und 'fehlerhaft' zählen bewusst NICHT — dort ist der
+  // Posten erledigt, die Forderung lebt weiter und darf erneut eingezogen
+  // werden.
+  const { data: laufendePosten } = await supabase
+    .from('sepa_batch_items')
+    .select('invoice_id, status')
+    .eq('organization_id', organizationId)
+    .in('invoice_id', invoiceIds)
+    .in('status', ['offen', 'eingezogen'])
+
+  const bereitsImEinzug = new Set<string>((laufendePosten || []).map(p => p.invoice_id))
+
+  /**
+   * Rechnungsstatus, aus denen KEIN Lastschrifteinzug entstehen darf.
+   *
+   * `status` wurde bisher mitgelesen, aber nie ausgewertet. Damit wurden
+   * Entwürfe (nicht festgeschrieben, nicht versandt) genauso eingezogen
+   * wie stornierte und abgeschriebene Rechnungen — also Beträge, die dem
+   * Unternehmen gar nicht zustehen.
+   */
+  const NICHT_EINZIEHBAR = new Set([
+    'entwurf', 'draft', 'storniert', 'abgeschrieben', 'akzeptiert', 'bezahlt',
+  ])
 
   // Batch-Nummer generieren
   const batchNumber = `SEPA-${heuteBerlin().replace(/-/g, '')}-${Date.now().toString(36).toUpperCase()}`
@@ -216,6 +270,16 @@ export async function createSepaBatch(
   const skipped: { invoiceId: string; reason: string }[] = []
 
   for (const inv of invoices) {
+    if (NICHT_EINZIEHBAR.has(String(inv.status ?? ''))) {
+      skipped.push({ invoiceId: inv.id, reason: `Status "${inv.status}" — kein Einzug` })
+      continue
+    }
+
+    if (bereitsImEinzug.has(inv.id)) {
+      skipped.push({ invoiceId: inv.id, reason: 'Bereits in einem laufenden Sammelauftrag' })
+      continue
+    }
+
     const mandate = mandateByClient.get(inv.client_id)
     if (!mandate) {
       skipped.push({ invoiceId: inv.id, reason: 'Kein aktives SEPA-Mandat' })

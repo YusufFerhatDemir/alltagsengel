@@ -131,6 +131,23 @@ ALTER TABLE public.invoices
 ALTER TABLE public.invoices
   ADD COLUMN IF NOT EXISTS payment_terms_days INTEGER NOT NULL DEFAULT 14;
 
+-- organizations ───────────────────────────────────────────────────────
+-- WORTGLEICH aus 20260812120000_sepa_mandate_and_mahnung.sql (Abschnitt 1).
+-- baueKettenSchema() schneidet organizations aus der Phase-3-Migration,
+-- die diese vier Spalten noch nicht kennt. Ohne den Nachzug scheiterte
+-- JEDE Abfrage, die sie mitliest, mit 42703 — mahnung-pdf.ts liest
+-- iban und bic und brach damit den kompletten Mahnversand ab.
+--
+-- Der Platzhalter-UPDATE aus derselben Migration wird bewusst NICHT
+-- mitgezogen: welche Glaeubiger-ID ein Mandant traegt, setzt der jeweilige
+-- Test selbst — genau daran haengt die Fail-Closed-Pruefung in
+-- lib/billing/sepa/glaeubiger-id.ts.
+ALTER TABLE public.organizations
+  ADD COLUMN IF NOT EXISTS iban TEXT,
+  ADD COLUMN IF NOT EXISTS bic TEXT,
+  ADD COLUMN IF NOT EXISTS bank_name TEXT,
+  ADD COLUMN IF NOT EXISTS sepa_creditor_id TEXT;
+
 -- invoice_items ───────────────────────────────────────────────────────
 -- 20260807110000_tariff_based_invoice_creation.sql: Tarif-Nachweis je Position
 ALTER TABLE public.invoice_items
@@ -422,3 +439,4 @@ export async function baueCamtTabellen(db: PGlite): Promise<void> {
       ON zahlungseingaenge(quelldatei_hash);
   `)
 }
+
