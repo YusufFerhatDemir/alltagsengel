@@ -30,9 +30,9 @@ Dokument nicht den Stand, der tatsächlich deployed ist — dann zuerst
 
 | Anker | Bedeutung | Wert |
 |---|---|---|
-| **CODE_HEAD** | lokaler `main`-HEAD | `0a63657` |
-| **HANDOFF_COMMIT** | Commit, in dem dieses Dokument zuletzt geschrieben wurde | `0a63657` |
-| **ORIGIN_MAIN** | `origin/main` nach `deploy.sh` (Remote-Wahrheit) | `0a63657` |
+| **CODE_HEAD** | lokaler `main`-HEAD | `9ff8652` |
+| **HANDOFF_COMMIT** | Commit, in dem dieses Dokument zuletzt geschrieben wurde | `9ff8652` |
+| **ORIGIN_MAIN** | `origin/main` nach `deploy.sh` (Remote-Wahrheit) | `9ff8652` |
 
 Prüfbefehl:
 
