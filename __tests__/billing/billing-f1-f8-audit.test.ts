@@ -220,7 +220,9 @@ describe('F6: freezeInvoice einzelpreis_cent != gesamtpreis_cent', () => {
 
   it('gesamtpreis_cent kommt aus item.amount', () => {
     const src = read('lib/billing/core/invoice-engine.ts');
-    expect(src).toMatch(/const gesamtpreisCent = Math\.round\(Number\(item\.amount\) \* 100\)/);
+    // Die Euro→Cent-Umrechnung liegt seit dem Rundungsfix in lib/geld.ts —
+    // `Math.round(x * 100)` verfehlte den exakten Halb-Cent.
+    expect(src).toMatch(/const gesamtpreisCent = euroZuCent\(item\.amount\)/);
   });
 });
 

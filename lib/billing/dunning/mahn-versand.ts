@@ -50,6 +50,7 @@ import { istDauerhaft } from '@/lib/notifications/fehlerklassen'
 import { MAX_VERSUCHE, wartezeitMinuten } from '@/lib/notifications/retry'
 import { logger } from '@/lib/logger'
 
+import { euroZuCent } from '@/lib/geld'
 const log = logger.child('mahn-versand')
 
 // ---------------------------------------------------------------------------
@@ -652,8 +653,8 @@ async function ermittleStoppgrund(admin: SupabaseClient, invoiceId: string): Pro
   if (inv.deleted_at) return 'Rechnung ist gelöscht.'
   if (ERLEDIGT_STATUS.has(inv.status)) return `Rechnung steht auf "${inv.status}" — keine Mahnung.`
 
-  const totalCents = Math.round(Number(inv.total_amount || 0) * 100)
-  const paidCents = Math.round(Number(inv.paid_amount || 0) * 100)
+  const totalCents = euroZuCent(inv.total_amount || 0)
+  const paidCents = euroZuCent(inv.paid_amount || 0)
   if (totalCents - paidCents <= 0) return 'Zahlung eingegangen — Forderung ausgeglichen.'
 
   const blocks = await checkDunningBlocks(admin, invoiceId)

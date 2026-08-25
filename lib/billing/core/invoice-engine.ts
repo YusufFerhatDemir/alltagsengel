@@ -35,6 +35,7 @@ import { TarifNichtVerifiziertError, type TarifStatus } from './price-resolver';
 // dadurch war jede zahlungszielbasierte Auswertung (OPOS, Mahnwesen,
 // workflow_engine) wirkungslos.
 import { zahlungszielFelder } from './zahlungsziel';
+import { euroZuCent } from '@/lib/geld'
 // Budgetdeckel § 45b / § 42a: die RPC kennt client_budgets nicht und weist
 // jeden Nicht-Privat-Betrag ungedeckelt als Kassenanteil aus (Befund A-1).
 // Der Deckel sitzt deshalb hier — Lage VOR der RPC lesen (fail-closed),
@@ -443,7 +444,7 @@ export async function createInvoiceDraft(
   return {
     invoiceId: rpcResult.invoice_id,
     invoiceNumber: rpcResult.invoice_number,
-    totalAmountCents: Math.round(Number(rpcResult.total_amount) * 100),
+    totalAmountCents: euroZuCent(rpcResult.total_amount),
     lineCount: rpcResult.line_count,
     alreadyExists: rpcResult.already_exists,
     priceSource: 'billing_tariffs',
@@ -587,7 +588,7 @@ export async function freezeInvoice(
   if (items && items.length > 0) {
     const lineSnapshots = items.map((item, idx) => {
       const menge = item.duration_minutes ? item.duration_minutes / 60 : 1;
-      const gesamtpreisCent = Math.round(Number(item.amount) * 100);
+      const gesamtpreisCent = euroZuCent(item.amount);
       const einzelpreisCent = menge > 0 ? Math.round(gesamtpreisCent / menge) : gesamtpreisCent;
       return {
         invoice_snapshot_id: snapshot.id,
@@ -894,7 +895,7 @@ export async function cancelInvoice(
       original_invoice_id: invoiceId,
       correction_invoice_id: stornoInvoice.id,
       correction_type: 'storno',
-      original_amount_cents: Math.round(Number(original.total_amount) * 100),
+      original_amount_cents: euroZuCent(original.total_amount),
       corrected_amount_cents: 0,
       reason,
       status: 'freigegeben',
@@ -930,7 +931,7 @@ export async function cancelInvoice(
     correctionId: correction.id,
     correctionInvoiceId: stornoInvoice.id,
     correctionInvoiceNumber: stornoNummer,
-    differenceCents: -Math.round(Number(original.total_amount) * 100),
+    differenceCents: -euroZuCent(original.total_amount),
   };
 }
 
@@ -1194,7 +1195,7 @@ export async function correctInvoice(
   }
 
   // Korrektur-Eintrag
-  const originalAmountCents = Math.round(Number(original.total_amount) * 100);
+  const originalAmountCents = euroZuCent(original.total_amount);
   const { data: correction, error: corrError } = await supabase
     .from('invoice_corrections')
     .insert({
@@ -1358,7 +1359,7 @@ export async function createCreditNote(
     throw new Error('Rechnung ist abgeschrieben — Gutschrift nicht moeglich.');
   }
 
-  const originalAmountCents = Math.round(Number(original.total_amount) * 100);
+  const originalAmountCents = euroZuCent(original.total_amount);
 
   const { data: existingCredits } = await supabase
     .from('invoice_corrections')
@@ -1544,8 +1545,8 @@ export async function writeOffInvoice(
     );
   }
 
-  const totalAmountCents = Math.round(Number(original.total_amount) * 100);
-  const paidAmountCents = Math.round(Number(original.paid_amount || 0) * 100);
+  const totalAmountCents = euroZuCent(original.total_amount);
+  const paidAmountCents = euroZuCent(original.paid_amount || 0);
   const writtenOffAmountCents = totalAmountCents - paidAmountCents;
 
   if (writtenOffAmountCents <= 0) {

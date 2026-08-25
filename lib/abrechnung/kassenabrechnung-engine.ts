@@ -16,6 +16,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { logBillingAction, computeContentHash } from '../billing/core/audit'
 import { pflegegradVon } from '../clients/pflegegrad'
+import { euroZuCent } from '@/lib/geld'
 import { generateAlleDateien, type AbrechnungsFall, type GeneratorOptionen, type EdifactDatei } from './edifact-generator'
 import { validateEDIFACT, validateIK } from './edifact-validator'
 import { generateAuftragsdatei, auftragsdateiName } from './auftragsdatei'
@@ -129,11 +130,10 @@ export function monatsGrenzen(abrechnungsmonat: string): { von: string; bis: str
  * abrechnungslaeufe.gesamtbetrag_cent, dta_lauf_rechnungen.betrag_cent, im
  * Audit-Trail und in der an die Kasse uebermittelten EDIFACT-Datei.
  *
- * Math.round schuetzt vor Float-Artefakten (19.99 * 100 = 1998.9999...).
+ * Die Rundung liegt in lib/geld.ts — `Math.round(betrag * 100)` verfehlte
+ * den exakten Halb-Cent (1,005 € ergab 100 statt 101 Cent).
  */
-export function euroZuCent(betragEuro: number | null | undefined): number {
-  return Math.round((betragEuro ?? 0) * 100)
-}
+export { euroZuCent }
 
 // ── Pre-Flight-Validierung ──────────────────────────────────────
 

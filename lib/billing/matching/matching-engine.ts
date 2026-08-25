@@ -16,6 +16,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import type { CamtBuchung } from '../camt/camt-parser';
 import { createPayment, allocatePayment, type PaymentMethod } from '../core/payments';
 import { logBillingAction } from '../core/audit';
+import { euroZuCent } from '@/lib/geld'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -194,8 +195,8 @@ export async function matchBuchung(
 
   // ------- Scoring pro Rechnung -------
   for (const inv of openInvoices) {
-    const totalCents = Math.round(Number(inv.total_amount || 0) * 100);
-    const paidCents = Math.round(Number(inv.paid_amount || 0) * 100);
+    const totalCents = euroZuCent(inv.total_amount || 0);
+    const paidCents = euroZuCent(inv.paid_amount || 0);
     const openCents = totalCents - paidCents;
     if (openCents <= 0) continue;
 
@@ -477,8 +478,8 @@ export async function manuellZuordnen(
 
   if (!inv) throw new Error('Rechnung nicht gefunden.');
 
-  const totalCents = Math.round(Number(inv.total_amount || 0) * 100);
-  const paidCents = Math.round(Number(inv.paid_amount || 0) * 100);
+  const totalCents = euroZuCent(inv.total_amount || 0);
+  const paidCents = euroZuCent(inv.paid_amount || 0);
   const openCents = totalCents - paidCents;
   const allocCents = Math.min(Number(ze.betrag_cent), openCents);
 

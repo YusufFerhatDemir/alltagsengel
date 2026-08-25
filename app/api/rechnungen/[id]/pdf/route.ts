@@ -4,6 +4,7 @@ import { safeApiError } from '@/lib/api/error-sanitizer'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getActiveOrgId } from '@/lib/organizations/server'
+import { RECHNUNGS_PDF_URL_TTL_SEKUNDEN } from '@/lib/pdf/rechnung-paket'
 import { logger } from '@/lib/logger'
 const log = logger.child('rechnungen/pdf')
 
@@ -13,10 +14,12 @@ const log = logger.child('rechnungen/pdf')
  * Liefert dem angemeldeten Kunden eine FRISCH signierte URL zu seinem
  * Rechnungs-PDF.
  *
- * Hintergrund: `invoice_packages.pdf_url` enthaelt eine signierte Storage-URL
- * mit 30 Tagen Laufzeit. Das Kundenportal hat diese gespeicherte URL bisher
- * direkt geoeffnet — nach Ablauf war der Download schlicht kaputt. Diese Route
- * signiert stattdessen bei jedem Aufruf neu.
+ * Hintergrund: `invoice_packages.pdf_url` enthaelt eine signierte Storage-URL.
+ * Das Kundenportal hat diese gespeicherte URL bisher direkt geoeffnet — nach
+ * Ablauf war der Download schlicht kaputt. Diese Route signiert stattdessen
+ * bei jedem Aufruf neu, nach Eigentuemer- bzw. Organisationspruefung. Die
+ * gespeicherte URL ist deshalb nur noch eine „PDF existiert"-Marke und
+ * bewusst kurzlebig (RECHNUNGS_PDF_URL_TTL_SEKUNDEN).
  *
  * Zugriff: nur die eigene Rechnung (clients.user_id = auth.uid()) oder ein
  * Administrator.
@@ -94,7 +97,7 @@ export async function GET(
     const storagePath = `invoice-packages/${invoiceId}.pdf`
     const { data: signed, error: signErr } = await admin.storage
       .from('service-proofs')
-      .createSignedUrl(storagePath, 60 * 10) // 10 Minuten reichen zum Download
+      .createSignedUrl(storagePath, RECHNUNGS_PDF_URL_TTL_SEKUNDEN)
 
     if (signErr || !signed?.signedUrl) {
       log.error('Signierung fehlgeschlagen', { errorMessage: signErr?.message })

@@ -3,6 +3,7 @@ import { generateCiiXml } from './cii-generator'
 import { BRIEFKOPF } from '@/lib/pdf/briefkopf'
 import { getOrgIK } from '@/lib/config/org-config'
 import type { XRechnungData, XRechnungLineItem, InvoiceTypeCode } from './types'
+import { euroZuCent } from '@/lib/geld'
 
 function typeCodeFromCorrectionType(correctionType: string | null): InvoiceTypeCode {
   switch (correctionType) {
@@ -125,7 +126,7 @@ export async function loadInvoiceXRechnungData(
 
   const lineItems: XRechnungLineItem[] = invoiceItems.map((item, idx) => {
     const qty = quantityFromItem(item)
-    const lineTotalCents = Math.round(Number(item.amount) * 100)
+    const lineTotalCents = euroZuCent(item.amount as number | string | null)
     const unitPriceCents = item.tariff_preis_cent ?? (qty > 0 ? Math.round(lineTotalCents / qty) : lineTotalCents)
 
     return {
@@ -139,7 +140,7 @@ export async function loadInvoiceXRechnungData(
     }
   })
 
-  const totalAmountCents = Math.round(Number(inv.total_amount) * 100)
+  const totalAmountCents = euroZuCent(inv.total_amount as number | string | null)
 
   const issueDate = inv.created_at ? inv.created_at.slice(0, 10) : new Date().toISOString().slice(0, 10)
 

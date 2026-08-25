@@ -14,7 +14,7 @@
 import { test, describe } from 'node:test'
 import assert from 'node:assert/strict'
 
-import { generateMahnungHtml, generateMahnungEmail, DUNNING_TEXTS, type MahnungData } from '../billing/dunning/mahnung-pdf'
+import { generateMahnungHtml, generateMahnungEmail, mahnungAnrede, DUNNING_TEXTS, type MahnungData } from '../billing/dunning/mahnung-pdf'
 import { DUNNING_LABELS, type DunningLevel } from '../billing/core/dunning'
 
 const STUFEN = Object.keys(DUNNING_TEXTS) as DunningLevel[]
@@ -174,6 +174,58 @@ describe('generateMahnungHtml', () => {
   test('mehrzeilige Anschriften werden mit <br> verbunden', () => {
     const html = generateMahnungHtml(daten({ debtorAddress: ['Zeile A', 'Zeile B'] }))
     assert.ok(html.includes('Zeile A<br>Zeile B'))
+  })
+})
+
+// ───────────────────────────────────────────────────────────────
+// Anrede — debtorName war gesetzt, wurde aber nirgends ausgegeben
+// ───────────────────────────────────────────────────────────────
+describe('mahnungAnrede', () => {
+  test('mit Namen wird persoenlich angeredet', () => {
+    assert.equal(mahnungAnrede('Erika Mustermann'), 'Sehr geehrte/r Erika Mustermann,')
+  })
+
+  test('ohne Namen bleibt der bisherige Wortlaut', () => {
+    assert.equal(mahnungAnrede(''), 'Sehr geehrte Damen und Herren,')
+    assert.equal(mahnungAnrede('   '), 'Sehr geehrte Damen und Herren,')
+    assert.equal(mahnungAnrede(null), 'Sehr geehrte Damen und Herren,')
+    assert.equal(mahnungAnrede(undefined), 'Sehr geehrte Damen und Herren,')
+  })
+
+  test('kein geratenes „Frau"/„Herr" — clients fuehrt kein Anredefeld', () => {
+    const anrede = mahnungAnrede('Kim Mustermensch')
+    assert.equal(/\b(Frau|Herr)\b/.test(anrede), false)
+  })
+})
+
+describe('debtorName erscheint im Schreiben', () => {
+  test('HTML traegt die Anrede mit dem Schuldnernamen', () => {
+    const html = generateMahnungHtml(daten({ debtorName: 'Erika Mustermann' }))
+    assert.ok(html.includes('Sehr geehrte/r Erika Mustermann,'), 'Anrede fehlt im HTML')
+    assert.equal(html.includes('Sehr geehrte Damen und Herren'), false)
+  })
+
+  test('E-Mail traegt dieselbe Anrede', () => {
+    const mail = generateMahnungEmail(daten({ debtorName: 'Erika Mustermann' }))
+    assert.ok(mail.body.startsWith('Sehr geehrte/r Erika Mustermann,'))
+  })
+
+  test('HTML und E-Mail benutzen denselben Wortlaut', () => {
+    for (const name of ['Erika Mustermann', '', 'Kim Mustermensch']) {
+      const erwartet = mahnungAnrede(name)
+      assert.ok(generateMahnungEmail(daten({ debtorName: name })).body.startsWith(erwartet), name)
+    }
+  })
+
+  test('ohne Namen faellt das Schreiben auf die neutrale Anrede zurueck', () => {
+    const html = generateMahnungHtml(daten({ debtorName: '' }))
+    assert.ok(html.includes('Sehr geehrte Damen und Herren,'))
+  })
+
+  test('der Name kommt aus clients.* und wird im HTML maskiert', () => {
+    const html = generateMahnungHtml(daten({ debtorName: '<script>alert(1)</script>' }))
+    assert.equal(html.includes('<script>alert(1)</script>'), false)
+    assert.ok(html.includes('&lt;script&gt;'))
   })
 })
 

@@ -6,6 +6,7 @@ import { getActiveOrgId } from '@/lib/organizations/server'
 import { erstelleMonatsabschluss } from '@/lib/abrechnung/monatsabschluss'
 import { safeApiError } from '@/lib/api/error-sanitizer'
 
+import { euroZuCent } from '@/lib/geld'
 export async function GET(request: Request) {
   try {
     const supabase = await createClient()
@@ -76,10 +77,10 @@ export async function GET(request: Request) {
     const partialInvoices = invoices.filter(i => ['teilweise_bezahlt', 'partial'].includes(i.status)).length
     const overdueInvoices = invoices.filter(i => ['gekuerzt', 'strittig', 'abgelehnt'].includes(i.status)).length
 
-    const totalInvoicedCents = invoices.reduce((s, i) => s + Math.round(Number(i.total_amount || 0) * 100), 0)
+    const totalInvoicedCents = invoices.reduce((s, i) => s + euroZuCent(i.total_amount || 0), 0)
     const totalPaidCents = invoices
       .filter(i => ['bezahlt', 'akzeptiert', 'paid', 'teilweise_bezahlt', 'partial'].includes(i.status))
-      .reduce((s, i) => s + Math.round(Number(i.paid_amount || i.total_amount || 0) * 100), 0)
+      .reduce((s, i) => s + euroZuCent(i.paid_amount || i.total_amount || 0), 0)
     const totalOpenCents = totalInvoicedCents - totalPaidCents
 
     const totalPaymentsCents = payments.reduce((s, p) => s + (p.amount_cents || 0), 0)

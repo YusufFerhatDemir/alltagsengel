@@ -7,6 +7,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { DUNNING_LABELS, DUNNING_FEES_CENTS, type DunningLevel } from '../core/dunning'
 import { logBillingAction } from '../core/audit'
 import { berlinParts, datumBerlin, heuteBerlin } from '@/lib/utils/timezone';
+import { euroZuCent } from '@/lib/geld'
 
 /**
  * Absender-Rückfall, falls die Organisation keine Anschrift gepflegt hat.
@@ -38,7 +39,9 @@ export interface MahnungData {
   creditorBic?: string
 
   // Schuldner
+  /** Voller Name des Schuldners — traegt die Anrede (s. mahnungAnrede()). */
   debtorName: string
+  /** Anschriftenblock inkl. Namenszeile — so wie er im Briefkopf steht. */
   debtorAddress: string[]
 
   // Rechnung
@@ -108,6 +111,24 @@ function formatCurrency(cents: number): string {
   return `${(cents / 100).toFixed(2).replace('.', ',')} €`
 }
 
+/**
+ * Anrede aus dem Schuldnernamen.
+ *
+ * `debtorName` wurde in baueMahnungData() zwar gesetzt, aber weder im HTML
+ * noch im PDF noch in der E-Mail je ausgegeben — jede Mahnung ging mit dem
+ * unpersoenlichen „Sehr geehrte Damen und Herren" an eine namentlich
+ * bekannte Privatperson. Exportiert, damit HTML-, PDF- und E-Mail-Variante
+ * denselben Wortlaut ziehen; eine zweite Kopie liefe auseinander.
+ *
+ * clients fuehrt kein Anrede-/Geschlechtsfeld, deshalb bewusst die
+ * geschlechtsneutrale Form „Sehr geehrte/r <Vorname Nachname>" statt eines
+ * geratenen „Frau"/„Herr". Ohne Namen bleibt es beim bisherigen Wortlaut.
+ */
+export function mahnungAnrede(debtorName: string | null | undefined): string {
+  const name = (debtorName ?? '').trim()
+  return name ? `Sehr geehrte/r ${name},` : 'Sehr geehrte Damen und Herren,'
+}
+
 // ---------------------------------------------------------------------------
 // generateMahnungHtml — HTML für serverseitige PDF-Generierung
 // ---------------------------------------------------------------------------
@@ -168,7 +189,7 @@ export function generateMahnungHtml(data: MahnungData): string {
 
 <div class="betreff">${escHtml(template.subject)} — Rechnung Nr. ${escHtml(data.invoiceNumber)}</div>
 
-<div class="anrede">Sehr geehrte Damen und Herren,</div>
+<div class="anrede">${escHtml(mahnungAnrede(data.debtorName))}</div>
 
 <div class="text">${escHtml(bodyText)}</div>
 
@@ -278,8 +299,8 @@ export async function baueMahnungData(
     .eq('id', dunningEntryId)
     .single()
 
-  const totalCents = Math.round(Number(inv.total_amount || 0) * 100)
-  const paidCents = Math.round(Number(inv.paid_amount || 0) * 100)
+  const totalCents = euroZuCent(inv.total_amount as number | string | null)
+  const paidCents = euroZuCent(inv.paid_amount as number | string | null)
   const openCents = totalCents - paidCents
   const feeCents = entry?.dunning_fee_cents || DUNNING_FEES_CENTS[dunningLevel] || 0
   const totalDueCents = openCents + feeCents
@@ -392,7 +413,7 @@ export function generateMahnungEmail(data: MahnungData): { subject: string; body
 
   const bodyText = template.body.replace(/{deadline}/g, formatDateDE(data.paymentDeadline))
 
-  const body = `Sehr geehrte Damen und Herren,
+  const body = `${mahnungAnrede(data.debtorName)}
 
 ${bodyText}
 
