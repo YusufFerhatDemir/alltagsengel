@@ -42,9 +42,9 @@ Dokument nicht den Stand, der tatsächlich deployed ist — dann zuerst
 
 | Anker | Bedeutung | Wert |
 |---|---|---|
-| **CODE_HEAD** | lokaler `main`-HEAD | `0ed44c8` |
-| **HANDOFF_COMMIT** | Commit, in dem dieses Dokument zuletzt geschrieben wurde | `0ed44c8` |
-| **ORIGIN_MAIN** | `origin/main` nach `deploy.sh` (Remote-Wahrheit) | `0ed44c8` |
+| **CODE_HEAD** | lokaler `main`-HEAD | `5ac312b` |
+| **HANDOFF_COMMIT** | Commit, in dem dieses Dokument zuletzt geschrieben wurde | `5ac312b` |
+| **ORIGIN_MAIN** | `origin/main` nach `deploy.sh` (Remote-Wahrheit) | `5ac312b` |
 
 Prüfbefehl:
 
@@ -58,6 +58,11 @@ git rev-parse HEAD && git rev-parse origin/main
 > `docs:`-Commit vor diesen Ankern ist erwartet und keine Drift.** Alles
 > darüber hinaus — insbesondere jeder Commit, der Code anfasst — bedeutet:
 > dieses Dokument ist älter als der deployte Stand.
+
+**Letzter Code-Commit** (der letzte Commit, der Anwendungscode anfasst): `0ed44c8`
+— alles danach ist Dokumentation.
+
+**Dieser Handoff:** `5ac312b` — `docs: Phase 7 Money Path Pilot — Handoff + Abschluss`
 
 **Letzter Code-Commit vor diesem Handoff:** `0ed44c8`
 — `fix: Schema-Drift-Befunde nachgeprueft — 8 Fehlalarme begruendet als Ausnahmen`
