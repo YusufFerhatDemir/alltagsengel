@@ -16,7 +16,16 @@ export const MAX_PROOF_SIZE_MB = 15
 const MAX_PROOF_SIZE_BYTES = MAX_PROOF_SIZE_MB * 1024 * 1024
 const UPLOAD_TIMEOUT_MS = 60_000
 
-const ALLOWED_MIME_PREFIXES = ['image/', 'application/pdf']
+// Muss deckungsgleich zur Bucket-Allowlist bleiben
+// (Migration 20260825_security_org_fence_storage_hardening).
+// Bewusst OHNE image/svg+xml: SVG traegt ausfuehrbares Script und liefe
+// ueber die signierte URL auf der Storage-Origin.
+const ERLAUBTE_MIME_TYPES = [
+  'application/pdf',
+  'image/jpeg', 'image/png', 'image/webp',
+  'image/heic', 'image/heif', 'image/gif', 'image/tiff',
+  'image/bmp', 'image/avif',
+]
 
 export interface ProofUploadResult {
   ok: boolean
@@ -41,7 +50,7 @@ export async function uploadServiceProof(
     return { ok: false, errorMessage: `Datei zu groß (${mb} MB). Maximal ${MAX_PROOF_SIZE_MB} MB erlaubt.` }
   }
 
-  const typeOk = ALLOWED_MIME_PREFIXES.some(prefix => file.type.startsWith(prefix))
+  const typeOk = ERLAUBTE_MIME_TYPES.includes(file.type)
   if (!typeOk) {
     return { ok: false, errorMessage: 'Nur Bilder (JPG, PNG, HEIC) und PDF-Dateien sind erlaubt.' }
   }
