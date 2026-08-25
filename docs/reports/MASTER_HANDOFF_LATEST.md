@@ -1,7 +1,24 @@
-# MASTER HANDOFF — Stand 25.08.2026, nach Phase 6A
+# MASTER HANDOFF — Stand 25.08.2026, nach Phase 6B
 
 Dieses Dokument ist die einzige Wahrheitsquelle für den technischen Zustand
 beider Produkte. Jede neue Session liest zuerst diese Datei.
+
+> ## Gesamtstatus: `TECHNICAL_READY_FOR_CONTROLLED_MONEY_PATH_PILOT`
+>
+> **Kein technischer P0 oder P1 im Alltagsengel-Repo ist mehr offen.** Alle
+> Punkte T-1 bis T-4 aus dem Phase-6A-Handoff sind geschlossen; die einzige
+> wartende Migration ist live und live nachgeprüft.
+>
+> **Was dieser Status bedeutet:** Der Erstbetrieb der Geldpfade kann
+> **begleitet** beginnen — ein Rechnungsversand, ein CAMT-Import, ein
+> SEPA-Sammelauftrag, jeweils gegengeprüft.
+>
+> **Was er nicht bedeutet:** Keine Freigabe für unbeaufsichtigten Regelbetrieb.
+> `payments` = 0 und `camt_imports` = 0 — das System ist gebaut und getestet,
+> aber **nie mit echtem Geld gelaufen**. Was noch aussteht, liegt außerhalb des
+> Codes: zwei Vercel-Variablen, eine echte Bankdatei, ein echter Empfänger
+> (§6). Für **efy care** (Fremdrepo) gilt dieser Status ausdrücklich **nicht** —
+> dort stehen zwei P1 offen (§7 T-6/T-7).
 
 ---
 
@@ -13,9 +30,9 @@ Dokument nicht den Stand, der tatsächlich deployed ist — dann zuerst
 
 | Anker | Bedeutung | Wert |
 |---|---|---|
-| **CODE_HEAD** | lokaler `main`-HEAD | `17272f0` |
-| **HANDOFF_COMMIT** | Commit, in dem dieses Dokument zuletzt geschrieben wurde | `17272f0` |
-| **ORIGIN_MAIN** | `origin/main` nach `deploy.sh` (Remote-Wahrheit) | `17272f0` |
+| **CODE_HEAD** | lokaler `main`-HEAD | `0a63657` |
+| **HANDOFF_COMMIT** | Commit, in dem dieses Dokument zuletzt geschrieben wurde | `0a63657` |
+| **ORIGIN_MAIN** | `origin/main` nach `deploy.sh` (Remote-Wahrheit) | `0a63657` |
 
 Prüfbefehl:
 
@@ -24,14 +41,22 @@ git rev-parse HEAD && git rev-parse origin/main
 ```
 
 > **Zur Lesart der Anker.** Ein Dokument kann den Hash des Commits, der es
-> selbst enthält, nicht im Voraus nennen. Die Anker wurden deshalb im
+> selbst enthält, nicht im Voraus nennen. Die Anker werden deshalb im
 > unmittelbar folgenden `docs:`-Commit nachgezogen. **`HEAD` genau einen
 > `docs:`-Commit vor diesen Ankern ist erwartet und keine Drift.** Alles
 > darüber hinaus — insbesondere jeder Commit, der Code anfasst — bedeutet:
 > dieses Dokument ist älter als der deployte Stand.
 
-**Letzter Code-Commit vor diesem Handoff:** `5ed3ae9`
-— `test: T1 PGlite-Integrationstests P1-Batch (Geld/Abrechnung)`
+**Letzter Code-Commit vor diesem Handoff:** `0a63657`
+— `fix: Track 2+3 — Geldrundung Reststellen + DATEV/Tarif PGlite-Tests`
+
+**Phase-6B-Commits:**
+
+| Commit | Inhalt |
+|---|---|
+| `6ef8d7f` | Migration `20261004000000` transaktional (`BEGIN`/`COMMIT`) + Live-Verifikationsskript |
+| `8a99e04` | Track 2 — Geldrundung Reststellen auf `lib/geld.ts` + Regressionssuite |
+| `0a63657` | Track 2+3 — Rest der Geldrundung + DATEV-/Tarif-PGlite-Suiten |
 
 ---
 
@@ -43,11 +68,12 @@ git rev-parse HEAD && git rev-parse origin/main
 |---|---|
 | Branch | `main` |
 | HEAD | siehe **CODE_HEAD** oben |
-| Letzter Code-Commit | `5ed3ae9` — T1 PGlite-Integrationstests P1-Batch |
-| Typecheck | **0 Fehler** (`npx tsc --noEmit`, gemessen auf `5ed3ae9`) |
-| Tests | vitest **5.232** + node:test **2.175** = **7.407** |
-| CI | **GRÜN** auf `3cbae72`, `ebb95ee` und `5ed3ae9` (alle drei Phase-6A-Commits abgeschlossen) |
-| lint:forbidden | 0 Treffer |
+| Letzter Code-Commit | `0a63657` — Track 2+3 |
+| Typecheck | **0 Fehler** (`npx tsc --noEmit`, gemessen auf `0a63657`) |
+| Tests | vitest **5.319** + node:test **2.211** = **7.530** |
+| Testläufe | node:test 2.211 grün / 0 rot · vitest 5.319 grün / 38 übersprungen / 0 rot (nacheinander gelaufen, nicht gleichzeitig) |
+| CI | GRÜN auf den Phase-6A-Commits; die drei 6B-Commits laufen nach diesem Deploy |
+| lint:forbidden | **0 Treffer** (24.553 Dateien, FULL-Scan, gemessen auf `0a63657`) |
 | Live | alltagsengel.care → HTTP 200 |
 
 ### ChairMatch
@@ -60,10 +86,10 @@ git rev-parse HEAD && git rev-parse origin/main
 | Typecheck | 0 Fehler |
 | Tests | vitest 487/487 |
 | CI | GRÜN (`1706c5d`) |
-| Live | chairmatch.de → HTTP 200 |
+| Live | chairmatch.de → 308 → www.chairmatch.de → HTTP 200 |
 
-> In Phase 6A **nicht angefasst**. Werte aus dem Handoff vom 25.08., 22:00;
-> HEAD und CI-Status wurden neu gegengeprüft und stimmen noch.
+> In Phase 6B **nicht angefasst**. Test- und Typecheck-Werte aus dem Handoff vom
+> 25.08.; HEAD und Live-Erreichbarkeit wurden neu gegengeprüft und stimmen noch.
 
 ### efy care
 
@@ -78,6 +104,8 @@ git rev-parse HEAD && git rev-parse origin/main
 | Supabase | ACTIVE_HEALTHY, 12 Migrationsdateien im Repo |
 | Baseline-Bericht | `/Users/work/efy-care/docs/EFY_CARE_BASELINE_2026-08-25.md` |
 
+> In Phase 6B **nicht angefasst**. Werte aus der 6A-Baseline.
+
 ---
 
 ## 2. Supabase-Status
@@ -85,14 +113,14 @@ git rev-parse HEAD && git rev-parse origin/main
 ### Alltagsengel (nnwyktkqibdjxgimjyuq)
 
 - Status: ACTIVE_HEALTHY
-- Migrationen: 225+ angewendet
+- Migrationen: 226+ angewendet — **inkl. `20261004000000`** (neu in 6B)
 - Tabellen: 308, davon **308 mit RLS** (100 %)
 - org_fence RESTRICTIVE: alle relevanten Tabellen, 2 dokumentierte Ausnahmen
   (`organization_members`: Multi-Org-Verwaltung; `state_waitlist`: öffentlich)
 - anon writes: 0
 - Storage: 7 Buckets gehärtet (file_size_limit + MIME-Allowlist)
 - DTA-Policies: org-scoped (`foldername[2] = current_org_id`)
-- **1 Migration wartet auf Live-Apply** → siehe §7 T-1
+- **Keine wartende Migration mehr.** (Der 6A-Punkt T-1 ist erledigt, §3.)
 
 ### ChairMatch (pwdbjqfpgumyfktbfswg)
 
@@ -109,10 +137,11 @@ git rev-parse HEAD && git rev-parse origin/main
 
 ---
 
-## 3. LIVE_VERIFIZIERT (gegen Supabase geprüft, 25.08.2026)
+## 3. LIVE_VERIFIZIERT (gegen Supabase geprüft)
 
 | Track | Commit/Migration | Verifikation |
 |---|---|---|
+| **payment_allocation `rueckzahlung`** (neu 6B) | `20261004000000` | **CHECK trägt 6 Werte inkl. `rueckzahlung`; alle 5 Altwerte erhalten; 0 Bestandsverletzer; RLS aktiv; `org_fence_payment_allocations` weiterhin RESTRICTIVE.** Nachgeprüft mit `scripts/verify-payment-allocation-rueckzahlung.mjs` → Exit 0 |
 | RLS 308/308 | diverse | `pg_tables.rowsecurity` = 308 |
 | org_fence alle Tabellen | `0a84ade` | Live-Query bestätigt |
 | DTA Storage org-scoped | `3561ab4` | `pg_policies` zeigt org-Filter |
@@ -124,94 +153,130 @@ git rev-parse HEAD && git rev-parse origin/main
 | P1-4 Testabdeckung Welle 6 | `0e8418f` | 358 neue Tests, 15 Dateien |
 | Client-Upload-Validierung | `354b056` | SVG blockiert, HEIC erlaubt |
 
-> Phase 6A hat **keine** neuen Live-Verifikationen gegen Supabase hinzugefügt —
-> die Arbeit lief gegen PGlite (echtes Postgres im Prozess) und den Quelltext.
+**Das Verifikationsskript ist nebenwirkungsfrei** — es liest ausschließlich über
+das `_run_sql`-Lese-Orakel (`RAISE`-Fehlermeldung als Rückkanal) und schreibt
+nichts. Es ist jederzeit wiederholbar.
 
 ---
 
-## 4. Zuletzt erledigte Arbeiten — Phase 6A (25.08.2026)
+## 4. Zuletzt erledigte Arbeiten — Phase 6B (25.08.2026)
 
-Alle fünf offenen technischen Punkte T1–T5 des Vorgänger-Handoffs sind
-abgearbeitet. Volldokumentation:
-**`docs/reports/PHASE6A_TECHNICAL_PROGRESS.md`**
+Volldokumentation: **`docs/reports/PHASE6B_TECHNICAL_PROGRESS.md`**
 
-### T0 — Bestandsaufnahme
+Phase 6B hat die drei technischen Punkte abgearbeitet, die Phase 6A offen
+gelassen hatte (T-1 bis T-4 des Vorgänger-Handoffs).
 
-Die Zahl „~120 ungetestete Module" aus dem Vorgänger-Handoff hielt der Prüfung
-nicht stand. Belastbares Kriterium („wird das Modul von einer Testdatei direkt
-importiert", nicht „kommt der Name irgendwo vor"):
+### Track 1 — Migration `payment_allocation_rueckzahlung` ✅ LIVE
 
-- 237 `lib/`-Module mit Supabase-Bezug
-- davon **36** ohne direkten Testimport
-- davon **6** in den P1-Kategorien Geld / Abrechnung / CAMT / Mandantentrennung
+Vor dem Apply zwei Vorarbeiten (`6ef8d7f`):
 
-### T1 — PGlite-Integrationstests, P1-Batch ✅ `ebb95ee`, `5ed3ae9`
+**Transaktionale Kapselung.** `DROP CONSTRAINT` und `ADD CONSTRAINT` liefen als
+zwei getrennte Anweisungen. Scheitert das `ADD`, stünde `payment_allocations`
+danach **ganz ohne** `allocation_type`-Prüfung da — schlimmer als der Zustand,
+den die Migration beheben soll. Migration und Rollback sind jetzt in
+`BEGIN; … COMMIT;` gefasst.
 
-6 neue Testdateien, **149 Tests**, gegen echtes Postgres (PGlite/WASM).
-**7 Produktionsbefunde gefunden und gefixt** → §5.
+**Verifikationsskript.** `scripts/verify-payment-allocation-rueckzahlung.mjs`
+prüft fünf Dinge statt nur eines: den neuen Wert, **alle fünf Altwerte** (ein
+`DROP`+`ADD` kann sie verlieren), Bestandsdaten, RLS und den RESTRICTIVE
+`org_fence`. Die letzten beiden stehen dort, weil eine Constraint-Migration kein
+Anlass ist, die Sicherheitslage einer Geldtabelle ungeprüft zu lassen.
 
-Zusätzlich geschlossen: eine **systematische Lücke im PGlite-Shim**. Er baute
-immer `SELECT *` und schnitt die Spalten hinterher in JavaScript zu — eine
-Spalte, die es gar nicht gibt, kam als `undefined` zurück und der Test blieb
-grün. PostgREST antwortet mit `42703` und die Abfrage ist live tot. Genau das
-deckte Befund B-1. Der Shim prüft jetzt flache **und** eingebettete Spaltenlisten
-gegen `information_schema.columns`.
+Der Apply ist erfolgt und **live nachgeprüft** (§3). **Befund R-1 aus Phase 6A
+ist damit vollständig geschlossen.**
 
-Benannte Grenze: `no_overlapping_tariffs` ist live ein `EXCLUDE USING gist` und
-braucht `btree_gist` — das liefert PGlite nicht. Statt den Fall stillschweigend
-grün laufen zu lassen, steht dort ein Stellvertreter-Trigger. Geprüft wird nur
-die *Reaktion der Anwendung*; **ob der echte Constraint greift, beweist das
-nicht.**
+Der Rückfall im Code (`lib/billing/sepa/ruecklastschrift.ts:185`) bleibt stehen.
+Er ist jetzt ein toter Zweig — und genau deshalb sinnvoll: liefe die Anwendung je
+gegen eine Datenbank ohne diese Migration (Shadow-Instanz, neuer Mandanten-Stack,
+Rollback), bleiben die Bücher konsistent statt still auseinanderzulaufen.
 
-### T2 — `euroZuCent`-Rundung ✅ `3cbae72`
+### Track 2 — Geldrundung Reststellen ✅ `8a99e04`, `0a63657`
 
-`Math.round(betrag * 100)` ist am exakten Halb-Cent falsch (`1.005 * 100` ist in
-IEEE-754 `100.49999999999999` → 100 statt 101). Ersetzt durch **String-basierte
-Dezimalverschiebung** in `lib/geld.ts` — keine neue Abhängigkeit.
-`+ Number.EPSILON` ist im Modul ausdrücklich als **verworfene** Variante
-dokumentiert (der Summand ist um Faktor 64 zu klein).
+Die drei im 6A-Bericht genannten Reststellen sind umgestellt (CAMT-Parser,
+Gutschriften-Dialog, Abrechnungsseite). **Die anschließende globale Durchsicht
+fand 18 weitere** geldrelevante Stellen — und ein zweites Fehlerbild, das im
+6A-Bericht nicht vorkam:
 
-**37 geldrelevante Stellen zentralisiert, 36 Tests.**
-⚠️ Nicht restlos — siehe §7 T-2.
+**Cent-Zwischenergebnisse.** `Math.round(cent)` auf einem Wert, der schon in Cent
+gerechnet ist (Einzelpreis × Menge, Zuschlag, Gesamtpreis ÷ Menge). Die
+Kommaverschiebung hilft dort nichts; was bleibt, ist die Asymmetrie:
+`Math.round(100.5) = 101`, aber `Math.round(-100.5) = -100`. Auf einer
+**Gutschrift**, einer **Storno-Position** oder einer **Rücklastschrift** steht
+damit ein Cent weniger als auf der Rechnung, die sie ausgleichen soll — die
+Position gleicht sich nicht auf null aus.
 
-### T3 — `debtorName` ✅ `3cbae72`
+→ **`centRunden()`** neu in `lib/geld.ts` (symmetrisch, DIN 1333,
+`-0`-Normalisierung, wirft bei Müll).
 
-Das Feld wurde befüllt, aber nie gerendert: jede Mahnung ging mit „Sehr geehrte
-Damen und Herren" hinaus. `mahnungAnrede()` erzeugt jetzt die persönliche,
-geschlechtsneutrale Anrede („Sehr geehrte/r …"), mit Rückfall auf die
-allgemeine Form bei leerem Namen. **12 Tests.**
+**Zwei echte Bugs nebenbei gefunden** → §5 (G-1, G-2).
 
-### T4 — Signierte URLs ✅ `3cbae72`
+**`docs/MONEY_ROUNDING_REVIEW_COMPLETE.md`** hält zusätzlich rund **60 bewusst
+nicht geänderte Stellen** mit Begründung fest (Prozentwerte, Mengen/Zeiten,
+`toFixed()`-Darstellung, und die Bestandstests, die `Math.round(x*100)`
+absichtlich als dokumentiertes Fehlerbild zitieren). Ohne diesen zweiten Teil
+prüft die nächste Durchsicht dieselben 60 Fundstellen noch einmal einzeln.
 
-Rechnungs-PDF **30 Tage → 10 Minuten**, an beiden Stellen über eine gemeinsame
-Konstante `RECHNUNGS_PDF_URL_TTL_SEKUNDEN`. Die 30 Tage brachten keinen Nutzen:
-`GET /api/rechnungen/[id]/pdf` signiert bei jedem Aufruf frisch, nach
-Berechtigungsprüfung.
+### Track 3 — DATEV + Tarif-Verifizierung auf PGlite ✅ `0a63657`
 
-Vollbestand aller 12 Signierstellen: `docs/security/signierte-urls-audit.md`.
-Positiv: nirgends `getPublicUrl()` — alle Buckets privat.
-3 Stellen mit 7 Tagen sind **BUSINESS_INPUT_REQUIRED** → §6 B3.
+T-3 und T-4 des Vorgänger-Handoffs. Beide Module waren ungetestet, weil der
+PGlite-Shim die von ihnen benutzten PostgREST-Merkmale nicht abbilden konnte.
 
-### T5 — efy care Baseline ✅ (nicht committed, Fremdrepo)
+**Shim erweitert:** `.or(…)`, `.not(spalte,'eq',wert)`, rekursiv verschachtelte
+Einbettungen und eins-zu-viele-Einbettungen (Richtung am echten Schema bestimmt:
+FK am Eltern → Objekt, FK am Kind → Array).
 
-tsc 0 · lint 0 · 177 Tests grün / 30 übersprungen · Build Exit 0 ·
-RLS 41/41 auf Migrationsebene · kein Service-Role-Key im Client · keine Secrets.
+**Die Falle dabei:** Die erste Fassung löste die tiefere Ebene auf der schon
+**zugeschnittenen** Zeile auf. Fordert ein Embed keine flachen Spalten an (auch
+nicht den Fremdschlüssel), findet man ihn dort nicht mehr und liefert still
+`null`. Ohne die Korrektur wäre der Test grün geworden und hätte behauptet, die
+Rücklastschrift trage ein Debitorenkonto — sie fiel in Wahrheit auf das
+Sammelkonto 1400 zurück. Dasselbe Muster wie die Shim-Lücke aus Phase 6A: **ein
+Testhilfsmittel, das freundlicher antwortet als die echte Schicht, beweist
+nichts.**
 
-**3 kritische Befunde:** Buchung schreibt nicht in die DB (`buchung/[id].tsx`),
-Konto-Löschung ist ein TODO (**DSGVO Art. 17**), Prod-Migrationsstand
-unverifiziert.
+**Zwei neue Suiten:** DATEV-Export **46 Tests**, Tarif-Verifizierung **41 Tests**.
+**Zwei echte Bugs gefunden** → §5 (D-1, D-2).
 
-Bericht: `/Users/work/efy-care/docs/EFY_CARE_BASELINE_2026-08-25.md`.
-Die dortige Freigabe-Aussage aus `audit/GO_NO_GO_REPORT_v2.md` wurde bewusst
-**nicht** übernommen.
+Die 111 bestehenden PGlite-Suiten laufen mit dem erweiterten Shim unverändert
+grün — die Erweiterungen sind additiv.
 
 ---
 
-## 5. Gefundene und behobene Produktionsbefunde (Phase 6A / T1)
+## 5. Gefundene und behobene Produktionsbefunde
 
-Sieben Befunde, alle in produktiv erreichbarem Code, alle gefixt. **Alle sieben
-lagen in Modulen ohne einen einzigen Test** — das ist der Befund hinter den
-Befunden.
+### Phase 6B — vier neue Befunde, alle gefixt
+
+| # | Befund | Wirkung | Schweregrad |
+|---|---|---|---|
+| **G-1** | `parseBetragZuCent('12€34')` ergab **1.234,00 €**. `lib/admin/betrag.ts` strich das € **global**, also auch mitten in der Zahl. | Der naheliegende Vertipper `12€34` (gemeint 12,34 €) wurde zum **hundertfachen Betrag**, ohne Warnung. Inzwischen rufen **drei** Dialoge den Parser auf: Gutschrift, Rechnungszahlung, Zahlungszuordnung. Eine als 1.234 € gebuchte Gutschrift von 12,34 € ist ein Verlust von 1.221,66 €, den erst der Kontoabgleich findet. | 🔴 **P1 Geld** |
+| **D-1** | CSV-Injection über die **Debitorennummer**. `generateDatevBuchungszeile()` schrieb Konto/Gegenkonto ohne Anführungszeichen-Verdopplung und ohne Formel-Riegel — anders als jedes andere Textfeld derselben Zeile. Die Route prüfte nur „nicht leer". | Ein Wert wie `1";"9999` beendet das Feld mitten in der Zeile und schiebt alles Folgende in die falsche Spalte — **der Steuerberater importiert Beträge auf fremde Konten**. Führendes `=` war in Excel eine Formel. | 🔴 **P1 Sicherheit/Geld** |
+| **G-2** | `parseFloat()` im Leistungsnachweis-Formular. Akzeptierte Müll-Suffix still (`'12.5x'` → 12.5) und lieferte bei ungültiger Eingabe `NaN` → als `null` verschickt. | Der Leistungsnachweis entstand **ohne Betrag** und war damit nicht abrechenbar. | 🟠 **P2 Funktion** |
+| **D-2** | `getKonto()` griff mit `KONTENRAHMEN[rahmen][schluessel]` doppelt zu; `getDatevConfig()` castet den JSONB-Wert nur. | Bei einem anderen Wert als SKR03/SKR04 kam „Cannot read properties of undefined (reading 'bank')" aus der Tiefe des Generators statt einer klaren Meldung. | 🟡 **P3 Diagnose** |
+
+**Fixes:**
+- G-1: € nur noch an den Rändern entfernt; innen fällt es durch die Formatprüfung.
+  Leerraum darf weiterhin überall weg (`1 234,56` bleibt lesbar).
+- D-1: **an beiden Enden** — neue `pruefeDebitorennummer()` (ganzzahlig
+  10000–69999, dieselbe Regel wie die automatische Vergabe; Route gibt 400
+  zurück) **und** `escapeText(sanitize(…, 9))` im CSV-Format, weil die Zeile auch
+  aus Werten entsteht, die **vor** der neuen Eingangsprüfung in die Tabelle
+  gelangt sind.
+- G-2: `Number()` (streng), Fehlermeldung statt stillem `null`, `aufCent()` vor
+  dem Versand.
+- D-2: `getKonto()` meldet Klartext.
+
+**Nebenbefund:** Der Gutschriften-Dialog hatte einen eigenen Parser, dessen
+Normalisierung Punkte **bedingungslos** strich — die englische Schreibweise
+`12.50` wurde als **1.250 €** gelesen. Mit der Umstellung auf
+`parseBetragZuCent()` miterledigt.
+
+> **Zwei von vier Befunden lagen außerhalb des beauftragten Umfangs.** Der
+> Auftrag nannte drei Reststellen; die vollständige Durchsicht fand 18 weitere
+> und die beiden schwersten Fehler. Derselbe Befund hinter den Befunden wie in
+> Phase 6A — mit dem Zusatz, dass diesmal nicht fehlende Tests das Problem waren,
+> sondern eine **zu eng gefasste Fundstellenliste**.
+
+### Phase 6A — sieben Befunde, alle gefixt (unverändert)
 
 | # | Befund | Wirkung | Bereich |
 |---|---|---|---|
@@ -219,22 +284,12 @@ Befunden.
 | **B-2** | `createMandate()` las den Klienten **ohne** `organization_id`-Filter (service-role = BYPASSRLS). | Admin von Mandant A konnte ein SEPA-Mandat auf einen Klienten von Mandant B anlegen → **Abbuchung von fremdem Konto**. | Sicherheit |
 | **B-3** | `createSepaBatch()` las `invoices.status`, wertete ihn aber nie aus. | **Entwürfe, Stornos und abgeschriebene Rechnungen wurden eingezogen** — Beträge, die dem Unternehmen nicht zustehen. | Geld |
 | **B-4** | Nichts hinderte daran, dieselbe Rechnung in einen zweiten Sammelauftrag zu legen. | **Doppelte Abbuchung.** Die zweite ist eine unberechtigte Lastschrift — bis zu **13 Monate** rückholbar. | Geld |
-| **R-1** | `allocation_type = 'rueckzahlung'` stand nicht im CHECK-Constraint → `23514`, Rückgabewert wurde nicht gelesen. | `payment_allocations` behauptete weiter „bezahlt", während `payments.allocated_cents` schon reduziert war. Beide Tabellen widersprachen sich nach **jeder** Rücklastschrift. | Geld |
+| **R-1** | `allocation_type = 'rueckzahlung'` stand nicht im CHECK-Constraint → `23514`. | `payment_allocations` behauptete weiter „bezahlt", während `payments.allocated_cents` schon reduziert war. | Geld — **in 6B vollständig geschlossen** |
 | **X-1** | `correction_of`-Nachschlag in `loadInvoiceXRechnungData()` ohne Mandantenfilter. | **Fremde Rechnungsnummer** als BT-25 in der CII-Datei — in einem Dokument, das an einen Kostenträger geht. | Sicherheit |
-| **M-1** | Upsert auf `monthly_closings` ohne `organization_id` → Default `current_org_id()` fällt bei service-role auf die Stamm-Org. | **Jeder** Monatsabschluss landete in der Stamm-Organisation; der Mandant sah ihn wegen `org_fence` nie. Im Test beweisbar reproduziert. | Mandanten |
+| **M-1** | Upsert auf `monthly_closings` ohne `organization_id` → Default `current_org_id()` fällt bei service-role auf die Stamm-Org. | **Jeder** Monatsabschluss landete in der Stamm-Organisation; der Mandant sah ihn wegen `org_fence` nie. | Mandanten |
 
-**Mitgenommen bei B-4:** Die Mandatsauswahl je Klient ist jetzt deterministisch
-(neuestes aktives Mandat). Vorher entschied die Reihenfolge der Datenbank,
-**wessen IBAN** belastet wird, sobald zwei aktive Mandate existierten
-(Kontowechsel).
-
-**R-1 ist nur halb geschlossen:** Migration
-`20261004000000_payment_allocation_rueckzahlung.sql` **wartet auf Live-Apply**.
-Bis dahin greift ein dokumentierter Rückfall (Zuordnungszeile wird entfernt —
-Bücher konsistent, Historie fehlt), der im Ergebnis sichtbar ist statt still zu
-bleiben.
-
-Details je Befund: `docs/reports/PHASE6A_TECHNICAL_PROGRESS.md` §3.
+Details: `docs/reports/PHASE6A_TECHNICAL_PROGRESS.md` §3 und
+`docs/reports/PHASE6B_TECHNICAL_PROGRESS.md` §4.
 
 ---
 
@@ -250,65 +305,64 @@ Details je Befund: `docs/reports/PHASE6A_TECHNICAL_PROGRESS.md` §3.
 | E4 | Erster Rechnungsversand nie produktiv | `invoice_email_log` = 0, Resend funktionsfähig aber nie genutzt |
 | E5 | §45a Bayern Antrag unvollständig | Landesamt für Pflege, Erinnerung erhalten 24.08.2026 |
 
+> **Entfallen:** Der Punkt „Migration `20261004000000` wartet auf Live-Apply"
+> stand hier im 6A-Handoff. Die Migration ist **live und verifiziert** (§3).
+
 ### BUSINESS_INPUT_REQUIRED
 
 | # | Was | Details |
 |---|---|---|
 | B1 | ChairMatch Preise festlegen | `protect_pricing` + `compliance_plans` strukturell fertig, Tabellen leer. Beträge aus `20260310` sind Entwurfswerte und gelten NICHT. Befüllung über `supabase/seed/pricing.seed.template.sql` |
 | B2 | Geldpfade Erstbetrieb | `payments` = 0, `camt_imports` = 0 — System gebaut und getestet, aber nie mit echtem Geld gelaufen |
-| **B3** | **3× Signaturlaufzeit 7 Tage entscheiden** (neu aus T4) | `lib/upload-document.ts` (Ausweis/Führungszeugnis/Versicherung), `lib/upload-service-proof.ts`, `app/api/native/leistungsnachweis-upload/route.ts`. Im Quelltext an Ort und Stelle markiert. Entweder Re-Signier-Route bauen (für `documents` existiert `getSignedDocumentUrl()` schon, nur ohne Oberfläche) **oder** 7 Tage bewusst als Restrisiko tragen — ein Link auf einen Personalausweis überdauert dann Rollenwechsel und Konto-Deaktivierung um bis zu sieben Tage. **Empfehlung: Re-Signier-Route für `documents`.** |
-| **B4** | **`getOposListe()` zeigt Entwürfe im Forderungsbestand** (neu aus T1) | Ausgeschlossen sind nur die Endstatus. Wer die Altersstruktur als Forderungsbestand liest, überschätzt ihn um die Summe aller Entwürfe. Der Mahnlauf ist **nicht** betroffen (wählt selbst). Der Test hält den Ist-Zustand fest, damit eine Änderung auffällt; geändert wurde nichts. |
+| B3 | **3× Signaturlaufzeit 7 Tage entscheiden** | `lib/upload-document.ts` (Ausweis/Führungszeugnis/Versicherung), `lib/upload-service-proof.ts`, `app/api/native/leistungsnachweis-upload/route.ts`. Im Quelltext an Ort und Stelle markiert. Entweder Re-Signier-Route bauen (für `documents` existiert `getSignedDocumentUrl()` schon, nur ohne Oberfläche) **oder** 7 Tage bewusst als Restrisiko tragen — ein Link auf einen Personalausweis überdauert dann Rollenwechsel und Konto-Deaktivierung um bis zu sieben Tage. **Empfehlung: Re-Signier-Route für `documents`.** |
+| B4 | **`getOposListe()` zeigt Entwürfe im Forderungsbestand** | Ausgeschlossen sind nur die Endstatus. Wer die Altersstruktur als Forderungsbestand liest, überschätzt ihn um die Summe aller Entwürfe. Der Mahnlauf ist **nicht** betroffen (wählt selbst). Der Test hält den Ist-Zustand fest, damit eine Änderung auffällt; geändert wurde nichts. |
 
 ---
 
 ## 7. Echte offene technische Probleme
 
-T1–T5 des Vorgänger-Handoffs sind **alle erledigt** und hier entfernt.
-Was neu offen ist:
+T-1 bis T-4 des Vorgänger-Handoffs sind **erledigt** und hier entfernt.
+**Kein technischer P0/P1 im Alltagsengel-Repo mehr offen.**
 
 | # | Problem | Priorität |
 |---|---|---|
-| **T-1** | **Migration `20261004000000_payment_allocation_rueckzahlung.sql` wartet auf Live-Apply** (Supabase SQL-Editor). Bis dahin verliert jede Rücklastschrift ihre Zuordnungshistorie. Rollback liegt daneben (`…000001_rollback_…`). | **P1** |
-| **T-2** | **T2-Rest: 3 geldrelevante Euro→Cent-Umrechnungen laufen weiter an `lib/geld.ts` vorbei** — `lib/billing/camt/camt-parser.ts:172` (Bankdaten!), `app/admin/gutschriften/page.tsx:86`, `app/admin/abrechnung/page.tsx:258`. Die übrigen `Math.round(… * 100)`-Treffer sind Prozentwerte/Anzeigerundung und kein Befund. | P2 |
-| **T-3** | **DATEV-Export ungetestet** (`lib/billing/datev/export-service.ts`, `buchungssatz-generator.ts`). Braucht zuerst `.or(…)` und **zweistufig verschachtelte** eingebettete Ressourcen im PGlite-Shim. Eigener Batch, nicht als Nebenprodukt. | P2 |
-| **T-4** | **`lib/billing/tarif-verifizierung-service.ts` ungetestet** — braucht ebenfalls `.or(…)` im Shim. | P2 |
-| **T-5** | 30 der 36 ungetesteten `lib/`-Module (P2/P3-Kategorien) stehen noch aus. | P2 |
-| **T-6** | `no_overlapping_tariffs` bleibt unter PGlite **unbeweisbar** (kein `btree_gist`). Nur gegen echtes Postgres prüfbar. | benannte Grenze |
-| **T-7** | efy care: Buchung schreibt nicht in die DB; Konto-Löschung ist ein TODO (**DSGVO Art. 17**). Beides Funktionen, die dem Nutzer etwas zusagen, was nicht passiert. | **P1** (Fremdrepo) |
-| **T-8** | efy care: Prod-Migrationsstand, RLS live, Edge-Function-Deploy und Secrets unverifiziert. Solange offen, ist jede Deploy-Freigabe dort eine Annahme. | P1 (Fremdrepo) |
-| **T-9** | efy care: 30 HTTP-Isolationstests übersprungen (PostgREST/GoTrue/Storage-Schicht). Braucht Shadow-Supabase-Instanz + 2 Env-Vars in CI. | P2 (Fremdrepo) |
+| **T-1** | 30 der 36 ungetesteten `lib/`-Module (P2/P3-Kategorien) stehen noch aus. Nach dem Muster von 6A/T1 und 6B/Track 3: in ungetesteten Modulen liegen Befunde. | P2 |
+| **T-2** | **DATEV-Storage-Schicht ungeprüft.** `erstelleDatevExport()` schreibt in Supabase Storage; der PGlite-Shim bildet Storage nicht ab. Die neue Suite läuft auf den beiden Schichten darunter (Buchungssatz-Generator, CSV-Format). | benannte Grenze |
+| **T-3** | `no_overlapping_tariffs` bleibt unter PGlite **unbeweisbar** (kein `btree_gist`). Ein Stellvertreter-Trigger prüft nur die **Reaktion** der Anwendung, nicht den echten Constraint. Nur gegen echtes Postgres prüfbar. | benannte Grenze |
+| **T-4** | `tarif-verifizierung-service.ts` begründet den ODER-Zweig `organization_id.is.null` mit `leistungspreise`-Altbestand vor Phase 3. Nach Schema kann es den nicht geben (`20260801` setzt `NOT NULL`). **Kein Leck** — der Zweig öffnet nur für herrenlose Zeilen, nie für fremde. Ob die Spalte live `NOT NULL` ist, wäre einmal zu prüfen. | P3 / Beobachtung |
+| **T-5** | Der Rückfall in `lib/billing/sepa/ruecklastschrift.ts:185` ist seit dem Live-Apply ein **toter Zweig**. Bewusst stehen gelassen (Shadow-Instanzen, Rollback). Kein Handlungsbedarf — hier notiert, damit ihn niemand als Fehler meldet. | keine |
+| **T-6** | efy care: Buchung schreibt nicht in die DB; Konto-Löschung ist ein TODO (**DSGVO Art. 17**). Beides Funktionen, die dem Nutzer etwas zusagen, was nicht passiert. | **P1** (Fremdrepo) |
+| **T-7** | efy care: Prod-Migrationsstand, RLS live, Edge-Function-Deploy und Secrets unverifiziert. Solange offen, ist jede Deploy-Freigabe dort eine Annahme. | **P1** (Fremdrepo) |
+| **T-8** | efy care: 30 HTTP-Isolationstests übersprungen (PostgREST/GoTrue/Storage-Schicht). Braucht Shadow-Supabase-Instanz + 2 Env-Vars in CI. | P2 (Fremdrepo) |
 
 ---
 
 ## 8. Nächster sinnvoller Schritt
 
-**Zuerst der eine Handgriff, der eine halbe Sache ganz macht:**
+Der eine Handgriff, der seit zwei Handoffs oben stand, ist erledigt: die
+Migration ist live. **Was jetzt bleibt, ist kein Code mehr, sondern
+Erstbetrieb.**
 
-1. **`20261004000000_payment_allocation_rueckzahlung.sql` im Supabase
-   SQL-Editor anwenden** (T-1). Das ist der einzige Punkt aus Phase 6A, der
-   ohne Yusuf nicht abschließbar ist — ein `ALTER TABLE … CHECK`, 36 Zeilen,
-   Rollback liegt daneben. Danach ist R-1 vollständig geschlossen.
+**Phase 6C — begleiteter Erstbetrieb der Geldpfade.** Reihenfolge:
 
-**Danach Phase 6B — Erstbetrieb der Geldpfade, begleitet.**
+1. `RECHNUNGSVERSAND_AUTOMATISCH` in Vercel setzen (E1)
+2. **Erster Rechnungsversand an einen echten Empfänger**, danach
+   `invoice_email_log` gegenprüfen. Bis heute steht die Tabelle auf 0 — die
+   Versandkette ist getestet, aber nie gelaufen.
+3. **Erster begleiteter CAMT-Import** mit echter Bankdatei. Der CAMT-Parser lief
+   bis Phase 6B an der zentralen Rundung vorbei; das ist jetzt behoben, der
+   Erstbetrieb sollte auf dem gefixten Stand laufen.
+4. **Erster SEPA-Sammelauftrag** — ausdrücklich gegen die 6A-Fixes B-3/B-4
+   gegengeprüft (keine Entwürfe im Stapel, keine Rechnung zweimal).
+5. **Erste DATEV-Ausleitung an den Steuerberater** — neu in dieser Liste wegen
+   D-1. Die erste echte CSV sollte jemand öffnen und die Spaltenausrichtung
+   ansehen, bevor sie importiert wird.
 
-Diese Reihenfolge steht seit dem letzten Handoff und ist durch Phase 6A
-**dringender** geworden: B-3 und B-4 zeigen, dass der SEPA-Einzug bis gestern
-Entwürfe eingezogen und doppelt abgebucht hätte. Der Erstbetrieb sollte auf
-dem gefixten Stand laufen, nicht davor.
+**Parallel, ohne externe Abhängigkeit:** T-1 — die verbleibenden 30 ungetesteten
+`lib/`-Module. Zwei Phasen in Folge haben gezeigt, was dort liegt: 6A/T1 fand
+sieben Befunde in sechs Modulen, 6B/Track 3 zwei weitere in zwei Modulen.
 
-2. `RECHNUNGSVERSAND_AUTOMATISCH` in Vercel setzen (E1)
-3. Erster Rechnungsversand an echten Empfänger, `invoice_email_log` gegenprüfen
-4. Erster begleiteter CAMT-Import mit echter Bankdatei — **vorher T-2
-   erledigen**, denn der CAMT-Parser ist eine der drei Stellen, die noch an der
-   zentralen Rundung vorbeilaufen
-5. Erster SEPA-Sammelauftrag, gegen B-3/B-4-Fixes gegengeprüft
-
-**Parallel, ohne externe Abhängigkeit:** T-3/T-4 — den PGlite-Shim um `.or(…)`
-und verschachtelte Einbettungen erweitern, dann DATEV und
-`tarif-verifizierung-service` testen. Das ist der nächste Batch nach dem Muster
-von T1, und T1 hat gezeigt, was in ungetesteten Geldmodulen liegt.
-
-**Für efy care getrennt zu entscheiden:** T-7 ist kein Testthema, sondern ein
+**Für efy care getrennt zu entscheiden:** T-6 ist kein Testthema, sondern ein
 Produktentscheid — Buchungs-Button anbinden oder deaktivieren, Konto-Löschung
 bauen oder Menüpunkt entfernen.
 
@@ -318,15 +372,22 @@ bauen oder Menüpunkt entfernen.
 
 | Zweck | Pfad |
 |---|---|
-| **Phase-6A-Fortschrittsbericht** | `docs/reports/PHASE6A_TECHNICAL_PROGRESS.md` |
-| T1-Detailbericht | `docs/T1-PGLITE-INTEGRATIONSTESTS-P1-2026-08-25.md` |
+| **Phase-6B-Fortschrittsbericht** | `docs/reports/PHASE6B_TECHNICAL_PROGRESS.md` |
+| Phase-6A-Fortschrittsbericht | `docs/reports/PHASE6A_TECHNICAL_PROGRESS.md` |
+| Geldrundung-Durchsichtsprotokoll (inkl. ~60 nicht geänderter Stellen) | `docs/MONEY_ROUNDING_REVIEW_COMPLETE.md` |
+| DATEV-/Tarif-Testbericht | `docs/DATEV_TARIF_PGLITE_TESTS.md` |
+| T1-Detailbericht (6A) | `docs/T1-PGLITE-INTEGRATIONSTESTS-P1-2026-08-25.md` |
 | Signierte-URL-Audit | `docs/security/signierte-urls-audit.md` |
 | efy-care-Baseline (Fremdrepo) | `/Users/work/efy-care/docs/EFY_CARE_BASELINE_2026-08-25.md` |
 | Status-Matrix | `docs/reports/STATUS_MATRIX_2026-08-25.md` |
 | Abschlussbericht 25.08. | `docs/reports/MASTER_ABSCHLUSSBERICHT_2026-08-25.md` |
 | Geldrundung (zentral) | `lib/geld.ts` |
-| **Wartende Migration** | `supabase/migrations/20261004000000_payment_allocation_rueckzahlung.sql` |
+| Betragsparser (G-1) | `lib/admin/betrag.ts` |
+| DATEV-Kontenrahmen (D-1, D-2) | `lib/billing/datev/kontenrahmen.ts` |
+| DATEV-CSV-Format (D-1) | `lib/billing/datev/datev-format.ts` |
+| **Migration (LIVE)** | `supabase/migrations/20261004000000_payment_allocation_rueckzahlung.sql` |
 | Rollback dazu | `supabase/migrations/20261004000001_rollback_payment_allocation_rueckzahlung.sql` |
+| **Live-Verifikationsskript dazu** | `scripts/verify-payment-allocation-rueckzahlung.mjs` |
 | PGlite-Shim | `__tests__/e2e/helpers/pglite-supabase.ts` |
 | Schemaaufbau Kettentests | `__tests__/e2e/helpers/kette-schema.ts` |
 | Deploy-Skript | `./deploy.sh` |
@@ -360,4 +421,4 @@ bauen oder Menüpunkt entfernen.
 
 ---
 
-*Aktualisiert 25.08.2026 nach Phase 6A — Alltagsengel*
+*Aktualisiert 25.08.2026 nach Phase 6B — Alltagsengel*
