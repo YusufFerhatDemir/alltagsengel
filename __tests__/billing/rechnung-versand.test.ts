@@ -198,6 +198,7 @@ describe('versendeRechnungPerEmail', () => {
   it('versendet mit PDF-Anhang und setzt sent_at', async () => {
     const { stub, protokoll } = makeStub()
     const ergebnis = await versendeRechnungPerEmail(stub, {
+    preflight: 'uebersprungen',
       invoiceId: INV, organizationId: ORG, actorId: ACTOR,
     })
 
@@ -255,6 +256,7 @@ describe('versendeRechnungPerEmail', () => {
     })
 
     const ergebnis = await versendeRechnungPerEmail(stub, {
+    preflight: 'uebersprungen',
       invoiceId: INV, organizationId: ORG, actorId: ACTOR, erneutSenden: true,
     })
     expect(ergebnis.status).toBe('versendet')
@@ -273,6 +275,7 @@ describe('versendeRechnungPerEmail', () => {
     })
 
     const ergebnis = await versendeRechnungPerEmail(stub, {
+    preflight: 'uebersprungen',
       invoiceId: INV, organizationId: ORG, actorId: ACTOR,
     })
 
@@ -285,6 +288,7 @@ describe('versendeRechnungPerEmail', () => {
   it('ueberspringt ohne E-Mail-Adresse des Klienten', async () => {
     const { stub } = makeStub({ clientEmail: null })
     const ergebnis = await versendeRechnungPerEmail(stub, {
+    preflight: 'uebersprungen',
       invoiceId: INV, organizationId: ORG, actorId: ACTOR,
     })
     expect(ergebnis.status).toBe('uebersprungen')
@@ -298,6 +302,7 @@ describe('versendeRechnungPerEmail', () => {
     const { stub, protokoll } = makeStub()
 
     const ergebnis = await versendeRechnungPerEmail(stub, {
+    preflight: 'uebersprungen',
       invoiceId: INV, organizationId: ORG, actorId: ACTOR,
     })
 
@@ -314,6 +319,7 @@ describe('versendeRechnungPerEmail', () => {
     const { stub, protokoll } = makeStub()
 
     const ergebnis = await versendeRechnungPerEmail(stub, {
+    preflight: 'uebersprungen',
       invoiceId: INV, organizationId: ORG, actorId: ACTOR,
     })
 
@@ -327,7 +333,8 @@ describe('versendeRechnungPerEmail', () => {
 
   it('schreibt einen Audit-Eintrag mit der Empfaengeradresse', async () => {
     const { stub, protokoll } = makeStub()
-    await versendeRechnungPerEmail(stub, { invoiceId: INV, organizationId: ORG, actorId: ACTOR })
+    await versendeRechnungPerEmail(stub, {
+    preflight: 'uebersprungen', invoiceId: INV, organizationId: ORG, actorId: ACTOR })
 
     expect(protokoll.auditInserts).toHaveLength(1)
     expect(protokoll.auditInserts[0]).toMatchObject({

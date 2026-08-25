@@ -101,8 +101,13 @@ function fuzzyNameMatch(name1: string, name2: string): number {
 /**
  * Extrahiert Rechnungsnummern aus einem Verwendungszweck.
  * Erkennt Muster wie: RE-2026-0042, RE2026-042, Rechnung 2026-0042
+ *
+ * Exportiert, weil der CAMT-Preflight dieselbe Erkennung fuer die
+ * Mandantengrenzen-Pruefung braucht. Zwei Erkennungen waeren zwei
+ * Wahrheiten: der Trockenlauf saehe eine Rechnungsnummer, die der scharfe
+ * Lauf nicht sieht — oder umgekehrt.
  */
-function extractInvoiceNumbers(verwendungszweck: string): string[] {
+export function extrahiereRechnungsnummern(verwendungszweck: string): string[] {
   if (!verwendungszweck) return [];
   const patterns = [
     /RE-?\d{4}-?\d{3,6}/gi,
@@ -149,24 +154,40 @@ interface MandateMatch {
 }
 
 /**
- * Fuehrt das Matching fuer eine einzelne CAMT-Buchung durch.
+ * Ergebnis der reinen BEWERTUNG einer Buchung — ohne jede Buchung.
+ *
+ * Herausgeloest aus matchBuchung(), damit der Preflight-Lauf
+ * (lib/billing/camt/camt-preflight.ts) dieselbe Bewertung benutzt, die der
+ * echte Import benutzt. Zwei Bewertungen waeren zwei Wahrheiten: der
+ * Trockenlauf saehe eine Zuordnung, die der echte Lauf nicht macht — oder
+ * schlimmer, umgekehrt.
  */
-export async function matchBuchung(
+export interface BewertungErgebnis {
+  /** Alle Rechnungen mit Score > 0, absteigend sortiert. */
+  kandidaten: MatchCandidate[];
+  /** Gesetzt, wenn schon vor dem Scoring feststeht, dass nichts geht. */
+  klaerfallGrund: string | null;
+  /** Wie viele offene Rechnungen ueberhaupt betrachtet wurden. */
+  geprueft: number;
+}
+
+/**
+ * Bewertet eine Buchung gegen die offenen Rechnungen einer Organisation.
+ *
+ * LIEST NUR. Keine Zahlung, keine Zuordnung, kein Audit-Eintrag, kein
+ * Klaerfall. Genau deshalb ist sie fuer den Trockenlauf verwendbar.
+ */
+export async function bewerteBuchung(
   supabase: SupabaseClient,
   buchung: CamtBuchung,
-  zahlungseingangsId: string,
   organizationId: string,
   config: MatchingConfig = DEFAULT_CONFIG,
-): Promise<MatchResult> {
-  // Nur Haben-Buchungen matchen (Zahlungseingaenge)
+): Promise<BewertungErgebnis> {
   if (buchung.richtung === 'DBIT') {
     return {
-      zahlungseingangsId,
-      status: 'klaerfall',
-      confidence: 0,
-      paymentId: null,
       kandidaten: [],
       klaerfallGrund: 'Soll-Buchung (Ausgang) — kein Zahlungseingang',
+      geprueft: 0,
     };
   }
 
@@ -181,14 +202,7 @@ export async function matchBuchung(
     .is('deleted_at', null) as { data: OpenInvoice[] | null };
 
   if (!openInvoices || openInvoices.length === 0) {
-    return {
-      zahlungseingangsId,
-      status: 'klaerfall',
-      confidence: 0,
-      paymentId: null,
-      kandidaten: [],
-      klaerfallGrund: 'Keine offenen Rechnungen gefunden',
-    };
+    return { kandidaten: [], klaerfallGrund: 'Keine offenen Rechnungen gefunden', geprueft: 0 };
   }
 
   const kandidaten: MatchCandidate[] = [];
@@ -215,7 +229,7 @@ export async function matchBuchung(
         methods.push('rechnungsnummer_vz');
       } else {
         // Versuche extrahierte Nummern
-        const extracted = extractInvoiceNumbers(buchung.verwendungszweck);
+        const extracted = extrahiereRechnungsnummern(buchung.verwendungszweck);
         for (const ex of extracted) {
           if (invNum.includes(ex) || ex.includes(invNum.replace(/-/g, ''))) {
             score += 45;
@@ -312,6 +326,38 @@ export async function matchBuchung(
 
   // Sortiere nach Confidence absteigend
   kandidaten.sort((a, b) => b.confidence - a.confidence);
+
+  return { kandidaten, klaerfallGrund: null, geprueft: openInvoices.length };
+}
+
+/**
+ * Fuehrt das Matching fuer eine einzelne CAMT-Buchung durch — und BUCHT
+ * bei ausreichender Confidence.
+ *
+ * Die Bewertung selbst kommt aus bewerteBuchung(); hier steht nur noch,
+ * was daraus folgt.
+ */
+export async function matchBuchung(
+  supabase: SupabaseClient,
+  buchung: CamtBuchung,
+  zahlungseingangsId: string,
+  organizationId: string,
+  config: MatchingConfig = DEFAULT_CONFIG,
+): Promise<MatchResult> {
+  const bewertung = await bewerteBuchung(supabase, buchung, organizationId, config);
+  const kandidaten = bewertung.kandidaten;
+  const betragCent = Math.abs(buchung.betragCent);
+
+  if (bewertung.klaerfallGrund) {
+    return {
+      zahlungseingangsId,
+      status: 'klaerfall',
+      confidence: 0,
+      paymentId: null,
+      kandidaten: [],
+      klaerfallGrund: bewertung.klaerfallGrund,
+    };
+  }
 
   // ------- Auto-Zuordnung -------
   if (kandidaten.length > 0 && kandidaten[0].confidence >= config.autoMatchThreshold) {

@@ -30,7 +30,7 @@ export async function POST(
     await ensureDunningEntry(supabase, invoiceId, auth.ctx.organizationId, auth.ctx.userId)
 
     // Eskalieren
-    const result = await advanceDunning(supabase, invoiceId, auth.ctx.userId)
+    const result = await advanceDunning(supabase, invoiceId, auth.ctx.userId, auth.ctx.organizationId)
 
     return NextResponse.json(result)
   } catch (e) {

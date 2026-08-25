@@ -220,7 +220,21 @@ async function legeRechnung(opts: {
 
 // ─────────────────────────────────────────────────────────────────────
 
+/**
+ * Diese Suite prueft den BUCHENDEN Weg. Der Import laeuft seit
+ * lib/billing/camt/camt-modus.ts fail-closed: ohne CAMT_IMPORT_MODE=LIVE
+ * antwortet die Route mit einem Trockenlauf (200, nichts geschrieben).
+ *
+ * Der Schalter wird hier ausdruecklich gesetzt und nach der Suite wieder
+ * zurueckgenommen — nicht global in der Testumgebung. Eine Testumgebung, in
+ * der der scharfe Modus dauerhaft an ist, koennte die Absicherung selbst
+ * nicht mehr pruefen; genau dafuer gibt es den Abschnitt
+ * „Betriebsart" weiter unten.
+ */
+const MODUS_VORHER = process.env.CAMT_IMPORT_MODE
+
 beforeAll(async () => {
+  process.env.CAMT_IMPORT_MODE = 'LIVE'
   db = await baueKettenSchema()
   await baueCamtTabellen(db)
 
@@ -249,6 +263,8 @@ beforeAll(async () => {
 }, 120000)
 
 afterAll(async () => {
+  if (MODUS_VORHER === undefined) delete process.env.CAMT_IMPORT_MODE
+  else process.env.CAMT_IMPORT_MODE = MODUS_VORHER
   await db?.close()
 })
 
@@ -957,5 +973,75 @@ describe('Fehlerpfade werden nicht still verschluckt', () => {
     } finally {
       await db.exec('DROP TRIGGER IF EXISTS trg_test_blockiere ON public.zahlungseingaenge;')
     }
+  })
+})
+
+// ═══════════════════════════════════════════════════════════════════════
+// Betriebsart — der Trockenlauf gegen echtes Postgres
+// ═══════════════════════════════════════════════════════════════════════
+//
+// Alles darueber prueft den scharfen Weg. Dieser Abschnitt prueft die
+// Absicherung davor, und zwar an der Stelle, an der sie zaehlt: nicht „der
+// Preflight meldet nichts geschrieben", sondern „nach dem Aufruf stehen
+// dieselben Zeilenzahlen in der Datenbank wie davor". Ein Doppelgaenger
+// koennte das nicht belegen — eine echte Datenbank kann es.
+describe('Betriebsart: ohne CAMT_IMPORT_MODE=LIVE wird nichts gebucht', () => {
+  beforeAll(async () => { await leereStrecke() })
+
+  /** Zeilenzahlen aller Tabellen, die ein Import anfassen wuerde. */
+  async function bestand(): Promise<Record<string, number>> {
+    const tabellen = [
+      'camt_imports', 'zahlungseingaenge', 'klaerfaelle',
+      'payments', 'payment_allocations', 'billing_audit_trail',
+    ]
+    const stand: Record<string, number> = {}
+    for (const t of tabellen) stand[t] = await zaehle(t)
+    return stand
+  }
+
+  it('antwortet mit 200 und einem Preflight, ohne eine einzige Zeile anzulegen', async () => {
+    const vorher = await bestand()
+    process.env.CAMT_IMPORT_MODE = ''
+    try {
+      const r = await importiere(auszug(ntry({ betrag: '150.50', ref: 'REF-TROCKEN' }), 'M-TROCKEN'), 'trocken.xml')
+
+      // 200, nicht 201: es wurde nichts angelegt.
+      expect(r.status).toBe(200)
+      expect(r.body.gebucht).toBe(false)
+      expect(r.body.modus).toBe('DRY_RUN')
+
+      const preflight = r.body.preflight as Record<string, unknown>
+      expect(preflight.gesamt).toBe(1)
+      expect(Array.isArray(preflight.buchungen)).toBe(true)
+
+      expect(await bestand()).toEqual(vorher)
+    } finally {
+      process.env.CAMT_IMPORT_MODE = 'LIVE'
+    }
+  })
+
+  it('ein unbekannter Wert bucht ebenfalls nicht', async () => {
+    const vorher = await bestand()
+    process.env.CAMT_IMPORT_MODE = 'live'
+    try {
+      const r = await importiere(auszug(ntry({ betrag: '77.00', ref: 'REF-KLEIN' }), 'M-KLEIN'), 'kleingeschrieben.xml')
+      expect(r.status).toBe(200)
+      expect(r.body.gebucht).toBe(false)
+      expect(await bestand()).toEqual(vorher)
+    } finally {
+      process.env.CAMT_IMPORT_MODE = 'LIVE'
+    }
+  })
+
+  // Gegenprobe: derselbe Aufruf mit LIVE legt sehr wohl an. Ohne sie
+  // koennte der Trockenlauf-Test auch dann gruen sein, wenn der Import
+  // generell nichts mehr schreibt.
+  it('Gegenprobe: mit LIVE entsteht ein Import und ein Zahlungseingang', async () => {
+    const vorher = await bestand()
+    const r = await importiere(auszug(ntry({ betrag: '150.50', ref: 'REF-SCHARF' }), 'M-SCHARF'), 'scharf.xml')
+    expect(r.status).toBe(201)
+    const nachher = await bestand()
+    expect(nachher.camt_imports).toBe(vorher.camt_imports + 1)
+    expect(nachher.zahlungseingaenge).toBe(vorher.zahlungseingaenge + 1)
   })
 })

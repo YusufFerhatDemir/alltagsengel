@@ -122,6 +122,28 @@ function makeStub(opts: StubOptionen = {}) {
     return [{ id: queue.id }]
   }
 
+  /**
+   * Kettbarer Lesezugriff mit fester Antwort.
+   *
+   * Der Stub bildete jede Abfrage in ihrer damaligen Form nach — ein
+   * `.eq().eq()` mehr im Pruefling, und er warf „is not a function". Genau
+   * das passierte, als die Stopp-Pruefung und checkDunningBlocks einen
+   * Mandantenfilter bekamen. Ein Testhilfsmittel, das an der FORM der
+   * Abfrage haengt statt an ihrem Inhalt, meldet solche Aenderungen als
+   * Fehler, obwohl keiner vorliegt.
+   */
+  function lesekette(antwort: { data: unknown; error?: unknown }) {
+    const kette: Record<string, unknown> = {}
+    for (const m of ['eq', 'neq', 'in', 'is', 'not', 'or', 'order', 'limit', 'gte', 'lte']) {
+      kette[m] = () => kette
+    }
+    kette.maybeSingle = async () => ({ ...antwort, error: antwort.error ?? null })
+    kette.single = async () => ({ ...antwort, error: antwort.error ?? null })
+    kette.then = (aufloesen: (v: unknown) => unknown, ablehnen?: (e: unknown) => unknown) =>
+      Promise.resolve({ ...antwort, error: antwort.error ?? null }).then(aufloesen, ablehnen)
+    return kette as never
+  }
+
   const stub = {
     from(tabelle: string) {
       if (tabelle === 'dunning_email_queue') {
@@ -150,42 +172,27 @@ function makeStub(opts: StubOptionen = {}) {
 
       if (tabelle === 'invoices') {
         // Zwei Aufrufer: ermittleStoppgrund (maybeSingle) und
-        // checkDunningBlocks (single).
-        return {
-          select: () => ({
-            eq: () => ({
-              maybeSingle: async () => ({ data: invoice, error: null }),
-              single: async () => ({ data: invoice, error: null }),
-            }),
-          }),
-        } as never
+        // checkDunningBlocks (single) — beide inzwischen mit
+        // Mandantenfilter, also mit zwei .eq().
+        return { select: () => lesekette({ data: invoice }) } as never
       }
 
       if (tabelle === 'invoice_disputes') {
         const anzahl = opts.offeneBeanstandungen ?? 0
         return {
-          select: () => ({
-            eq: () => ({
-              eq: async () => ({
-                data: Array.from({ length: anzahl }, (_, i) => ({ id: `d${i}`, status: 'open' })),
-                error: null,
-              }),
-            }),
+          select: () => lesekette({
+            data: Array.from({ length: anzahl }, (_, i) => ({ id: `d${i}`, status: 'open' })),
           }),
         } as never
       }
 
       if (tabelle === 'payment_differences' || tabelle === 'invoice_corrections') {
-        return {
-          select: () => ({ eq: () => ({ in: async () => ({ data: [], error: null }) }) }),
-        } as never
+        return { select: () => lesekette({ data: [] }) } as never
       }
 
       if (tabelle === 'dunning_entries') {
         return {
-          select: () => ({
-            eq: () => ({ maybeSingle: async () => ({ data: { id: ENTRY_ID, dunning_level: 'mahnung_1' }, error: null }) }),
-          }),
+          select: () => lesekette({ data: { id: ENTRY_ID, dunning_level: 'mahnung_1' } }),
         } as never
       }
 

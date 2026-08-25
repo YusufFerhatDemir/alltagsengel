@@ -27,6 +27,12 @@ import { logBillingAction } from '@/lib/billing/core/audit'
 import { erzeugeRechnungsPaket } from '@/lib/pdf/rechnung-paket'
 import { baueRechnungEmail } from '@/lib/emails/rechnung-email'
 import { sendRawEmail } from '@/lib/notifications'
+import {
+  pruefeRechnungVersandbereit,
+  darfVersenden,
+  type PreflightStrenge,
+  type RechnungPreflightErgebnis,
+} from '@/lib/billing/preflight/rechnung-preflight'
 import { logger } from '@/lib/logger'
 
 const log = logger.child('rechnung-versand')
@@ -69,12 +75,39 @@ export interface VersandErgebnis {
   grund?: string
   /** true, wenn invoice_email_log geschrieben werden konnte */
   protokolliert: boolean
+  /** Das Preflight-Ergebnis, sofern einer gelaufen ist. */
+  preflight?: RechnungPreflightErgebnis
 }
+
+/**
+ * Wie streng der 16-Punkte-Preflight angewandt wird.
+ *
+ * KEIN Standardwert — und das ist der Punkt. Waere „ohne Preflight" der
+ * Standard, umginge ihn jeder neue Aufrufer, ohne es zu merken; waere
+ * „automatisch" der Standard, blockierte er Aufrufer, die einen Menschen vor
+ * sich haben. Beides ist schlechter als eine erzwungene Entscheidung, die im
+ * Diff sichtbar ist.
+ *
+ * 'uebersprungen' ist ausschliesslich fuer Tests gedacht, die die
+ * Versandlogik selbst pruefen. Ein Regressionstest
+ * (__tests__/billing/rechnung-preflight-pflicht.test.ts) stellt sicher, dass
+ * kein Aufruf in app/ oder lib/ diesen Wert benutzt.
+ */
+export type VersandPreflightModus = PreflightStrenge | 'uebersprungen'
 
 export interface VersandParams {
   invoiceId: string
   organizationId: string
   actorId: string
+  /**
+   * 'automatisch' — der Versand wurde von einem Automaten angestossen
+   *   (Festschreibung mit autoVersand, Sammelrechnungslauf,
+   *   Wiederholungslauf). Nur READY_FOR_SEND geht raus.
+   * 'manuell' — ein Mensch hat auf Versenden gedrueckt. NEEDS_REVIEW darf
+   *   er verantworten, BLOCKED nicht.
+   * 'uebersprungen' — nur fuer Tests der Versandlogik.
+   */
+  preflight: VersandPreflightModus
   /** Auch versenden, wenn sent_at bereits gesetzt ist (bewusster Nachversand). */
   erneutSenden?: boolean
   /**
@@ -94,7 +127,7 @@ export async function versendeRechnungPerEmail(
   params: VersandParams
 ): Promise<VersandErgebnis> {
   const {
-    invoiceId, organizationId, actorId,
+    invoiceId, organizationId, actorId, preflight,
     erneutSenden = false, ohneZustellspur = false,
   } = params
 
@@ -139,6 +172,26 @@ export async function versendeRechnungPerEmail(
   }
   if (!client?.email) {
     return abbruch('uebersprungen', 'Keine E-Mail-Adresse beim Klienten hinterlegt.')
+  }
+
+  // ── 16-Punkte-Preflight ──
+  //
+  // Erst hier, nicht ganz oben: die fuenf Vorpruefungen darueber sind
+  // billig und beantworten die haeufigsten Faelle („schon versendet",
+  // „nicht festgeschrieben") ohne ein Dutzend Abfragen. Aber VOR der
+  // PDF-Erzeugung — die laedt in den Storage und schreibt
+  // invoice_packages, und einen Beleg fuer eine Rechnung zu erzeugen, die
+  // gar nicht raus darf, ist eine Nebenwirkung ohne Zweck.
+  let preflightErgebnis: RechnungPreflightErgebnis | undefined
+  if (preflight !== 'uebersprungen') {
+    preflightErgebnis = await pruefeRechnungVersandbereit(admin, {
+      invoiceId, organizationId, erneutSenden,
+    })
+    const urteil = darfVersenden(preflightErgebnis, preflight)
+    if (!urteil.erlaubt) {
+      const ergebnis = await abbruch('uebersprungen', urteil.grund ?? 'Versand-Preflight nicht bestanden.')
+      return { ...ergebnis, preflight: preflightErgebnis }
+    }
   }
 
   // ── Bankdaten fuer den Mailtext ──
@@ -235,6 +288,7 @@ export async function versendeRechnungPerEmail(
       empfaenger: client.email,
       grund: ergebnis.grund,
       protokolliert,
+      preflight: preflightErgebnis,
     }
   }
 
@@ -287,6 +341,7 @@ export async function versendeRechnungPerEmail(
     invoiceNumber: paket.invoiceNumber,
     empfaenger: client.email,
     protokolliert,
+    preflight: preflightErgebnis,
   }
 }
 

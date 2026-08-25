@@ -716,7 +716,7 @@ describe('Negativ 18: Mahnung wird bei strittiger Rechnung oder offener Gutschri
     db.table('dunning_entries').push({ id: 'de-1', invoice_id: 'invoice-negativ-1', organization_id: ORG_A, dunning_level: 'offen', due_date: `${PERIOD}-01` })
     db.table('invoice_corrections').push({ id: 'ic-1', original_invoice_id: 'invoice-negativ-1', status: 'entwurf' })
 
-    await expect(advanceDunning(db as any, 'invoice-negativ-1', ACTOR))
+    await expect(advanceDunning(db as any, 'invoice-negativ-1', ACTOR, ORG_A))
       .rejects.toThrow(/Mahnung blockiert/)
   })
 
@@ -728,7 +728,7 @@ describe('Negativ 18: Mahnung wird bei strittiger Rechnung oder offener Gutschri
       dunning_level: 'offen', due_date: `${PERIOD}-01`, block_dunning: true, block_reason: 'Ratenzahlung vereinbart',
     })
 
-    await expect(advanceDunning(db as any, 'invoice-negativ-1', ACTOR))
+    await expect(advanceDunning(db as any, 'invoice-negativ-1', ACTOR, ORG_A))
       .rejects.toThrow(/Ratenzahlung vereinbart/)
   })
 

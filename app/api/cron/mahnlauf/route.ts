@@ -4,6 +4,8 @@ import { runDunningRun } from '@/lib/billing/core'
 import { verarbeiteMahnQueue } from '@/lib/billing/dunning/mahn-versand'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { pruefeCronGeheimnis } from '@/lib/api/cron-auth'
+import { versandFlagsStand } from '@/lib/config/versand-flags'
+import { protokolliereVersandFlags } from '@/lib/config/versand-flags-audit'
 
 // ═══════════════════════════════════════════════════════════
 // CRON: AUTOMATISCHER MAHNLAUF
@@ -49,7 +51,14 @@ export async function GET(request: Request) {
     // Versand nur mit ausdruecklicher Freischaltung: Mahnschreiben gehen an
     // echte Kunden. Ohne das Flag bleibt es beim bisherigen Verhalten —
     // Queue befuellen, nichts verschicken.
-    const versandAktiv = process.env.MAHNVERSAND_AUTOMATISCH === '1'
+    //
+    // Gelesen ueber lib/config/versand-flags.ts, nie direkt: dort haengt die
+    // Umgebungstrennung daran. Ein Vercel-Preview mit derselben Variablen
+    // wuerde sonst denselben Cron gegen dieselbe Produktionsdatenbank fahren
+    // und echte Mahnungen verschicken.
+    const flags = versandFlagsStand()
+    const versandStand = flags.mahnung
+    const versandAktiv = versandStand.aktiv
 
     const laeufe: Array<Record<string, unknown>> = []
     let eskaliertGesamt = 0
@@ -60,6 +69,13 @@ export async function GET(request: Request) {
 
     for (const org of orgs || []) {
       try {
+        // Betriebsmodus je Mandant festhalten — nur bei Wechsel, fail-soft.
+        // Ein Mahnlauf, der plötzlich verschickt, muss im Trail eine Zeile
+        // haben, an der das ablesbar ist.
+        await protokolliereVersandFlags(supabaseAdmin, {
+          organizationId: org.id, actorId: org.id, stand: flags,
+        })
+
         // actorId = Org-ID: der Lauf ist systemgetrieben, es gibt keinen
         // handelnden Benutzer. Der Audit-Eintrag bleibt so zuordenbar.
         const result = await runDunningRun(supabaseAdmin, org.id, org.id, { sendEmails: true })
@@ -131,7 +147,12 @@ export async function GET(request: Request) {
           }
         : {
             aktiv: false,
-            hinweis: 'MAHNVERSAND_AUTOMATISCH ist nicht gesetzt — Queue wurde nur befüllt.',
+            // Der Grund kommt jetzt aus der zentralen Auswertung: er
+            // unterscheidet „nicht gesetzt" von „ungueltiger Wert" und von
+            // „gesetzt, aber kein Produktionslauf". Vorher stand hier immer
+            // derselbe Satz, auch wenn die Variable auf 'true' stand.
+            hinweis: versandStand.grund,
+            befund: versandStand.befund,
           },
       laeufe,
     })

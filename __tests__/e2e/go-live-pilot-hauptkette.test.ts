@@ -388,15 +388,66 @@ describe('Hauptkette 11-13: Zahlung → OPOS → Mahnung', () => {
     ])
 
     await ensureDunningEntry(db as any, invoiceId, ORG, ACTOR)
+    const invoice = db.table('invoices').find(i => i.id === invoiceId)!
+    const eintrag = () => db.table('dunning_entries').find(d => d.invoice_id === invoiceId)!
+
+    // ── Zeit vergeht, statt fuenfmal hintereinander zu eskalieren ──
+    //
+    // Vorher stand hier eine Schleife, die advanceDunning() fuenfmal
+    // unmittelbar nacheinander rief und alle Stufen durchlief. Das war kein
+    // Testartefakt, sondern die tatsaechliche Lage: bis zum Safety-Gate
+    // pruefte advanceDunning() den Stufenabstand NICHT — nur der Massenlauf
+    // tat das. Ueber POST /api/billing/dunning/advance liess sich eine
+    // Rechnung damit in wenigen Sekunden von 'offen' bis
+    // 'inkasso_vorbereitung' treiben, samt aller Mahngebuehren
+    // (2,50 + 5,00 + 7,50 + 10,00 EUR).
+    //
+    // Jetzt verlangt jede Stufe ihren Verzug. Der Test stellt ihn her, indem
+    // er die Faelligkeit zurueckdatiert und die Wiedervorlage der vorigen
+    // Stufe abraeumt — genau das, was in der Wirklichkeit der Kalender tut.
+    const stufen: Array<[string, number]> = [
+      ['erinnerung', DUNNING_DAYS.erinnerung],
+      ['mahnung_1', DUNNING_DAYS.mahnung_1],
+      ['mahnung_2', DUNNING_DAYS.mahnung_2],
+      ['letzte_mahnung', DUNNING_DAYS.letzte_mahnung],
+      ['inkasso_vorbereitung', DUNNING_DAYS.inkasso_vorbereitung],
+    ]
+
     let level = 'offen'
-    for (const erwarteteStufe of ['erinnerung', 'mahnung_1', 'mahnung_2', 'letzte_mahnung', 'inkasso_vorbereitung']) {
-      const { newLevel } = await advanceDunning(db as any, invoiceId, ACTOR)
+    for (const [erwarteteStufe, tage] of stufen) {
+      const faellig = new Date()
+      faellig.setDate(faellig.getDate() - tage)
+      invoice.due_date = faellig.toISOString().slice(0, 10)
+      eintrag().next_dunning_at = null
+
+      const { newLevel } = await advanceDunning(db as any, invoiceId, ACTOR, ORG)
       expect(newLevel).toBe(erwarteteStufe)
       level = newLevel
     }
-    // Höchste automatische Stufe erreicht — weitere Eskalation ist nicht möglich.
-    await expect(advanceDunning(db as any, invoiceId, ACTOR)).rejects.toThrow(/nicht weiter eskaliert/)
     expect(level).toBe('inkasso_vorbereitung')
+
+    // Höchste automatische Stufe erreicht — weiter geht es nur von Hand.
+    eintrag().next_dunning_at = null
+    await expect(advanceDunning(db as any, invoiceId, ACTOR, ORG))
+      .rejects.toThrow(/höchste automatisch erreichbare/)
+  })
+
+  it('eine zweite Stufe im selben Zeitraum wird abgewiesen', async () => {
+    // Die Kehrseite des vorigen Tests, und der eigentliche Schutz:
+    // ohne dass Zeit vergeht, geht keine zweite Stufe.
+    await ensureDunningEntry(db as any, invoiceId, ORG, ACTOR)
+    const invoice = db.table('invoices').find(i => i.id === invoiceId)!
+    const faellig = new Date()
+    faellig.setDate(faellig.getDate() - DUNNING_DAYS.erinnerung)
+    invoice.due_date = faellig.toISOString().slice(0, 10)
+
+    const erste = await advanceDunning(db as any, invoiceId, ACTOR, ORG)
+    expect(erste.newLevel).toBe('erinnerung')
+
+    await expect(advanceDunning(db as any, invoiceId, ACTOR, ORG)).rejects.toThrow()
+
+    const eintrag = db.table('dunning_entries').find(d => d.invoice_id === invoiceId)!
+    expect(eintrag.dunning_level).toBe('erinnerung')
   })
 
   it('runDunningRun eskaliert eine überfällige, unbezahlte Rechnung automatisch um eine Stufe', async () => {

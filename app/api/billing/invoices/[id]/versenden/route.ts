@@ -60,6 +60,11 @@ export async function POST(
       organizationId,
       actorId: user.id,
       erneutSenden,
+      // Ein Mensch hat den Versand ausgeloest: er darf einen Punkt mit
+      // Sichtungsbedarf (NEEDS_REVIEW) verantworten — etwa eine
+      // unvollstaendige Postanschrift. BLOCKED bleibt auch fuer ihn
+      // gesperrt; das sind Befunde, die den Beleg selbst falsch machen.
+      preflight: 'manuell',
     })
 
     return NextResponse.json(ergebnis)

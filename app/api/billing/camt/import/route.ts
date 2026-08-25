@@ -6,6 +6,8 @@ import { matchBuchung } from '@/lib/billing/matching/matching-engine';
 import { verarbeiteRuecklastschrift } from '@/lib/billing/sepa/ruecklastschrift';
 import { logBillingAction } from '@/lib/billing/core/audit';
 import { safeApiError } from '@/lib/api/error-sanitizer';
+import { camtImportModus } from '@/lib/billing/camt/camt-modus';
+import { camtPreflight } from '@/lib/billing/camt/camt-preflight';
 
 const MAX_CAMT_BYTES = 20 * 1024 * 1024;
 
@@ -42,6 +44,35 @@ export async function POST(req: NextRequest) {
     const xmlContent = await file.text();
     if (!xmlContent.trim()) {
       return NextResponse.json({ error: 'Datei ist leer' }, { status: 400 });
+    }
+
+    // ── Betriebsart ──
+    //
+    // Fail-closed: ohne CAMT_IMPORT_MODE=LIVE bucht dieser Aufruf NICHT. Er
+    // liest die Datei vollstaendig, prueft jede Buchung gegen die Stammdaten
+    // und liefert die Einordnung zurueck — aber es entsteht kein
+    // Zahlungseingang, keine Zuordnung, kein Klaerfall und keine
+    // Ruecklastschrift-Verarbeitung.
+    //
+    // Warum das der Standard ist: ein Kontoauszugsimport ist der einzige
+    // Vorgang, der aus einer hochgeladenen Datei unmittelbar Geld bewegt, und
+    // rueckgaengig ist davon nichts mit einem Knopf. `camt_imports` steht live
+    // auf 0 — es gibt keinen Bestandsbetrieb, den diese Wahl unterbricht.
+    const modus = camtImportModus();
+    if (!modus.buchend) {
+      const preflight = await camtPreflight(supabase, {
+        organizationId,
+        dateiname: file.name,
+        xmlInhalt: xmlContent,
+      });
+      // 200, nicht 201: es wurde nichts angelegt. Ein 201 mit leerem Ergebnis
+      // waere genau die stille Falschaussage, die dieser Modus verhindert.
+      return NextResponse.json({
+        gebucht: false,
+        modus: modus.modus,
+        hinweis: modus.grund,
+        preflight,
+      }, { status: 200 });
     }
 
     // Duplikatpruefung
