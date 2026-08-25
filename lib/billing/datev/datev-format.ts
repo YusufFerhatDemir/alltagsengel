@@ -208,8 +208,22 @@ export function generateDatevBuchungszeile(bs: DatevBuchungssatz): string {
   const fields = [
     formatDatevBetrag(bs.umsatz),           // Umsatz
     `"${bs.sollHaben}"`,                    // S/H
-    `"${bs.konto}"`,                        // Konto
-    `"${bs.gegenkonto}"`,                   // Gegenkonto
+    // Konto und Gegenkonto standen frueher als `"${bs.konto}"` in der Zeile
+    // — ohne Verdoppeln der Anfuehrungszeichen und ohne Formel-Riegel.
+    //
+    // Das ist kein theoretischer Fall: das Konto ist bei jeder Rechnungs-,
+    // Gutschrift- und Mahnbuchung die DEBITORENNUMMER, und die kann ein
+    // Admin ueber POST /api/billing/datev/kontenzuordnung frei setzen. Ein
+    // Wert wie `1";"9999` beendete das Feld mitten in der Zeile und schob
+    // alles Folgende in die falsche Spalte — der Steuerberater importiert
+    // dann Betraege auf fremde Konten. Ein Wert mit `=` am Anfang war beim
+    // Oeffnen in Excel eine Formel.
+    //
+    // Die Eingangspruefung in upsertKontenzuordnung() faengt das ebenfalls
+    // ab; hier steht der zweite Riegel, weil die Zeile auch aus Werten
+    // entsteht, die vor dieser Pruefung in die Tabelle gelangt sind.
+    escapeText(sanitize(bs.konto, 9)),      // Konto
+    escapeText(sanitize(bs.gegenkonto, 9)), // Gegenkonto
     bs.ustSchluessel !== undefined ? String(bs.ustSchluessel) : '', // BU-Schluessel
     bs.belegdatum,                          // Belegdatum TTMM
     escapeText(sanitize(bs.belegnummer, 36)), // Belegfeld 1

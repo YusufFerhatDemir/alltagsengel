@@ -54,8 +54,52 @@ const KONTENRAHMEN: Record<Kontenrahmen, Record<KontoSchluessel, KontoDefinition
   SKR04,
 };
 
+/** Debitorennummern-Bereich: 10000–69999 */
+const DEBITOR_MIN = 10000;
+const DEBITOR_MAX = 69999;
+
 export function getKonto(rahmen: Kontenrahmen, schluessel: KontoSchluessel): KontoDefinition {
-  return KONTENRAHMEN[rahmen][schluessel];
+  // getDatevConfig() liest den Kontenrahmen aus einer JSONB-Spalte und
+  // castet ihn nur (`stored.kontenrahmen as Kontenrahmen`). Steht dort ein
+  // anderer Wert — die Spalte ist per SQL beschreibbar —, ergab
+  // `KONTENRAHMEN[rahmen][schluessel]` einen TypeError
+  // („Cannot read properties of undefined"), der tief im Buchungssatz-
+  // Generator auftaucht und nichts darueber sagt, was falsch ist.
+  const konten = KONTENRAHMEN[rahmen];
+  if (!konten) {
+    throw new Error(
+      `Unbekannter Kontenrahmen "${rahmen}". Erlaubt: ${Object.keys(KONTENRAHMEN).join(', ')}.`
+    );
+  }
+  const konto = konten[schluessel];
+  if (!konto) {
+    throw new Error(`Konto "${schluessel}" ist im Kontenrahmen ${rahmen} nicht hinterlegt.`);
+  }
+  return konto;
+}
+
+/**
+ * Prueft eine von Hand vergebene Debitorennummer.
+ *
+ * Dieselbe Regel, nach der getOrCreateDebitorennummer() automatisch
+ * vergibt: ganzzahlig im Bereich DEBITOR_MIN…DEBITOR_MAX. Die
+ * Kontenzuordnungs-Route pruefte bisher nur auf „nicht leer" und liess
+ * damit jede Zeichenkette in eine Spalte, die spaeter unveraendert als
+ * Kontonummer in den Buchungsstapel geschrieben wird.
+ */
+export function pruefeDebitorennummer(wert: string): { ok: true } | { ok: false; fehler: string } {
+  const roh = String(wert ?? '').trim();
+  if (!/^\d+$/.test(roh)) {
+    return { ok: false, fehler: 'Debitorennummer muss ausschliesslich aus Ziffern bestehen.' };
+  }
+  const zahl = Number(roh);
+  if (zahl < DEBITOR_MIN || zahl > DEBITOR_MAX) {
+    return {
+      ok: false,
+      fehler: `Debitorennummer muss zwischen ${DEBITOR_MIN} und ${DEBITOR_MAX} liegen.`,
+    };
+  }
+  return { ok: true };
 }
 
 // ---------------------------------------------------------------------------
@@ -72,10 +116,6 @@ export function getUStSchluessel(steuerfrei: boolean): UStSchluessel {
 // ---------------------------------------------------------------------------
 // Debitorennummer-Verwaltung
 // ---------------------------------------------------------------------------
-
-/** Debitorennummern-Bereich: 10000–69999 */
-const DEBITOR_MIN = 10000;
-const DEBITOR_MAX = 69999;
 
 /**
  * Holt oder erstellt eine Debitorennummer fuer einen Klienten.
@@ -177,6 +217,9 @@ export async function upsertKontenzuordnung(
   clientId: string,
   debitorennummer: string,
 ): Promise<void> {
+  const pruefung = pruefeDebitorennummer(debitorennummer);
+  if (!pruefung.ok) throw new Error(pruefung.fehler);
+
   const { error } = await supabase
     .from('datev_kontenzuordnung')
     .upsert(

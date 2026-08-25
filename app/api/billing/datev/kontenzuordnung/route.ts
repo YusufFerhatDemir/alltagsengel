@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { requireOpsAdmin } from '@/lib/ops/api-auth';
-import { getKontenzuordnungen, upsertKontenzuordnung } from '@/lib/billing/datev/kontenrahmen';
+import { getKontenzuordnungen, upsertKontenzuordnung, pruefeDebitorennummer } from '@/lib/billing/datev/kontenrahmen';
 import { logBillingAction } from '@/lib/billing/core/audit';
 
 /**
@@ -41,6 +41,16 @@ export async function POST(req: NextRequest) {
         { error: 'clientId und debitorennummer sind Pflichtfelder.' },
         { status: 400 },
       );
+    }
+
+    // Bis hierher galt nur „nicht leer". Die Debitorennummer wird spaeter
+    // unveraendert als Kontonummer in den DATEV-Buchungsstapel geschrieben —
+    // ein Wert wie `1";"9999` zerschnitt dort die Zeile und schob die
+    // Betraege in fremde Spalten. Geprueft wird gegen denselben
+    // Nummernkreis, aus dem die automatische Vergabe zieht.
+    const nummerPruefung = pruefeDebitorennummer(String(debitorennummer));
+    if (!nummerPruefung.ok) {
+      return NextResponse.json({ error: nummerPruefung.fehler }, { status: 400 });
     }
 
     await upsertKontenzuordnung(supabase, auth.ctx.organizationId, clientId, debitorennummer);
