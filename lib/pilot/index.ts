@@ -183,3 +183,21 @@ export {
   type PhasenParams,
   type VorgangStatus,
 } from './pilot-phasen'
+
+// Phase 8.3, Track 4 — Kandidatenfrage und Herkunft des laufenden Codes.
+export {
+  ermittlePilotKandidat,
+  ACTION_REQUIRED_KEIN_KANDIDAT,
+  type KandidatZustand,
+  type KandidatToken,
+  type PilotKandidat,
+  type PilotKandidatUebersicht,
+} from './pilot-kandidat'
+
+export {
+  ermittleLaufzeitHerkunft,
+  supabaseProjektKennung,
+  type LaufzeitHerkunft,
+  type HerkunftPunkt,
+  type HerkunftStand,
+} from './laufzeit-herkunft'

@@ -8,6 +8,8 @@ import { KETTEN_SCHRITTE } from '@/lib/pilot/schritte'
 import { ermittleMoneyPath } from '@/lib/pilot/control-center'
 import { ermittlePilotPhasen } from '@/lib/pilot/pilot-phasen'
 import { ermittleBusinessInputs } from '@/lib/pilot/business-inputs'
+import { ermittlePilotKandidat } from '@/lib/pilot/pilot-kandidat'
+import { ermittleLaufzeitHerkunft } from '@/lib/pilot/laufzeit-herkunft'
 import { logger } from '@/lib/logger'
 const log = logger.child('admin/pilot')
 
@@ -24,6 +26,8 @@ const MAX_KUNDEN = 100
  *   - Betriebs-Voraussetzungen (darf überhaupt echt abgerechnet werden?)
  *   - Kundenketten aller aktiven Kunden (wie weit ist wer gekommen?)
  *   - Money-Path-Betriebslage (CAMT, Rechnung, Mahnung, DATEV, System)
+ *   - Pilot-Kandidat: welche Rechnung traegt den ersten echten Versand
+ *   - Laufzeit-Herkunft: welcher Commit misst hier gegen welche Datenbank
  *
  * Nur lesend. Antwortet ausschliesslich mit Status- und Zählwerten,
  * niemals mit Zugangsdaten.
@@ -55,7 +59,7 @@ export async function GET(request: Request) {
 
     const clientIds = (clients ?? []).map(c => c.id)
 
-    const [voraussetzungen, ketten, moneyPath, phasen, businessInputs] = await Promise.all([
+    const [voraussetzungen, ketten, moneyPath, phasen, businessInputs, kandidat] = await Promise.all([
       ermittleVoraussetzungen(admin, auth.organizationId),
       ermittleKundenKetten(admin, auth.organizationId, clientIds),
       // Dritte, unabhaengige Sicht: die Betriebslage der vier Geldpfade
@@ -70,6 +74,11 @@ export async function GET(request: Request) {
       // Fuenfte Sicht (Phase 8, Track 9): welche Geschaeftsangaben fehlen
       // und was trotzdem laeuft. Nennt keinen Wert, nur den Stand.
       ermittleBusinessInputs(admin, auth.organizationId),
+      // Sechste Sicht (Phase 8.3, Track 4): WELCHE Rechnung soll den ersten
+      // echten Versand tragen? Steht keine bereit, ist die Antwort
+      // NO_PILOT_INVOICE mit der zugehoerigen Handlungsanweisung — eine
+      // fehlende Geschaeftshandlung, kein technischer Fehler.
+      ermittlePilotKandidat(admin, auth.organizationId),
     ])
 
     return NextResponse.json({
@@ -78,6 +87,11 @@ export async function GET(request: Request) {
       moneyPath,
       phasen,
       businessInputs,
+      kandidat,
+      // Woher die Zahlen stammen: laufender Commit, Bereitstellungsart,
+      // Supabase-Projekt. Rein aus der Umgebung des laufenden Prozesses,
+      // ohne Datenbankzugriff und ohne einen einzigen Geheimniswert.
+      herkunft: ermittleLaufzeitHerkunft(),
       schritte: KETTEN_SCHRITTE,
       // Ehrlich benennen, wenn die Liste abgeschnitten wurde — eine stille
       // Kappung liest sich wie "das sind alle Kunden".
