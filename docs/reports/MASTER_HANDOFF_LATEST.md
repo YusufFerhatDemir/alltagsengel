@@ -46,9 +46,9 @@ Dokument nicht den Stand, der tatsaechlich deployed ist -- dann zuerst
 
 | Anker | Bedeutung | Wert |
 |---|---|---|
-| **CODE_HEAD** | lokaler `main`-HEAD | *(wird nach deploy.sh nachgezogen)* |
-| **HANDOFF_COMMIT** | Commit, in dem dieses Dokument zuletzt geschrieben wurde | *(wird nach deploy.sh nachgezogen)* |
-| **ORIGIN_MAIN** | `origin/main` nach `deploy.sh` (Remote-Wahrheit) | *(wird nach deploy.sh nachgezogen)* |
+| **CODE_HEAD** | lokaler `main`-HEAD | `d6d4f1f` (Phase 8.2 Code+Docs) |
+| **HANDOFF_COMMIT** | Commit, in dem dieses Dokument zuletzt geschrieben wurde | `d6d4f1f` |
+| **ORIGIN_MAIN** | `origin/main` nach `deploy.sh` (Remote-Wahrheit) | `d6d4f1f` |
 
 Pruefbefehl:
 
@@ -63,9 +63,13 @@ git rev-parse HEAD && git rev-parse origin/main
 > darueber hinaus -- insbesondere jeder Commit, der Code anfasst -- bedeutet:
 > dieses Dokument ist aelter als der deployte Stand.
 
-**Letzter Code-Commit** (der letzte Commit, der Anwendungscode anfasst): *(wird nach deploy.sh nachgezogen)*
+**Letzter Code-Commit** (der letzte Commit, der Anwendungscode anfasst): `d6d4f1f`
 
-**Phase-8.2-Commits (Alltagsengel):** *(wird nach deploy.sh nachgezogen)*
+**Phase-8.2-Commits (Alltagsengel):**
+
+| Commit | Inhalt |
+|---|---|
+| `d6d4f1f` | Phase 8.2: DATEV-Validierung, P0-Detailtabelle, VersandSperreDetail, Reports, Pricing-Template |
 
 **Phase-8-Commits (Alltagsengel):**
 
