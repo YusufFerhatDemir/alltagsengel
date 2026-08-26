@@ -10,8 +10,15 @@
  * Es erzeugt KEIN Token, versendet NICHTS, bucht NICHTS.
  *
  * Exit 0 = jede der 14 Kategorien (5 Bereiche + 9 Phasen) hat aufgeloest,
- * Exit 1 = mindestens eine Kategorie ist 'ungeprueft'/'BLOCKED' wegen eines
- *          Lesefehlers.
+ * Exit 1 = mindestens eine Kategorie war NICHT MESSBAR.
+ *
+ * ── MESSFEHLER IST NICHT SACHBEFUND ──────────────────────────────────────
+ * Eine Phase auf BLOCKED ist zweierlei: entweder war die Abfrage nicht
+ * ausfuehrbar (Messfehler — dann steht ein Eintrag in `hinweise`), oder die
+ * Messung gelang und das Ergebnis ist eine Sperre (Sachbefund). Nur das
+ * erste ist ein Grund, diesem Lauf zu misstrauen. Wuerde das Skript beides
+ * gleich behandeln, faerbte jeder korrekt erkannte Missstand den Lauf rot
+ * und man gewoehnte sich das Rot ab.
  *
  * Aufruf: npx tsx scripts/verify-pilot-control-center-live.ts [orgId]
  */
@@ -43,7 +50,10 @@ if (!URL_ || !KEY) {
 const orgId = process.argv[2] || DEFAULT_ORG_ID
 const admin = createClient(URL_, KEY, { auth: { persistSession: false } })
 
-let offen = 0
+/** Nicht messbar — dem Lauf ist nicht zu trauen. */
+let nichtMessbar = 0
+/** Messung gelang, das Ergebnis ist ein Missstand. */
+const sachbefunde: string[] = []
 
 async function main() {
   console.log(`\nPilot Control Center — Live-Gegenprobe (org ${orgId})\n`)
@@ -53,7 +63,8 @@ async function main() {
   console.log('── Money-Path-Bereiche (5) ──')
   for (const b of mp.bereiche) {
     const schlecht = b.ampel === 'ungeprueft'
-    if (schlecht) offen++
+    if (schlecht) nichtMessbar++
+    else if (b.ampel === 'rot') sachbefunde.push(`${b.id}: ${b.begruendung}`)
     console.log(` ${schlecht ? 'OFFEN' : ' OK  '} ${b.id.padEnd(9)} ${b.ampel.padEnd(11)} ${b.begruendung}`)
     for (const k of b.kennzahlen) {
       console.log(`         · ${k.label.padEnd(30)} ${k.wert === null ? 'NICHT MESSBAR' : k.wert}`)
@@ -68,9 +79,15 @@ async function main() {
   const ph = await ermittlePilotPhasen(admin, { organizationId: orgId })
   console.log('\n── Erstbetriebs-Phasen (9) ──')
   for (const p of ph.phasen) {
-    const schlecht = p.status === 'BLOCKED'
-    if (schlecht) offen++
-    console.log(` ${schlecht ? 'OFFEN' : ' OK  '} ${String(p.nr).padStart(2)} ${p.id.padEnd(15)} ${p.status.padEnd(12)} ${p.begruendung}`)
+    // BLOCKED aus einem Lesefehler erkennt man daran, dass die Phase auf
+    // einen Hinweis verweist; BLOCKED aus einem Befund nicht.
+    const messfehler = p.status === 'BLOCKED' && ph.hinweise.length > 0
+    if (messfehler) nichtMessbar++
+    else if (p.status === 'BLOCKED' || p.status === 'FAILED') {
+      sachbefunde.push(`Phase ${p.id}: ${p.begruendung}`)
+    }
+    const marke = messfehler ? 'OFFEN' : p.status === 'BLOCKED' || p.status === 'FAILED' ? 'BEFUND' : ' OK  '
+    console.log(` ${marke} ${String(p.nr).padStart(2)} ${p.id.padEnd(15)} ${p.status.padEnd(12)} ${p.begruendung}`)
     if (p.naechsterSchritt) console.log(`         → ${p.naechsterSchritt}`)
   }
   console.log(`\n  Fortschritt: ${ph.fortschritt.verifiziert}/${ph.fortschritt.gesamt} (${ph.fortschritt.prozent}%)`)
@@ -94,7 +111,7 @@ async function main() {
     console.log(`  Rechnung:       ${k.kandidat.invoiceNumber} / ${k.kandidat.invoiceId}`)
     console.log(`  Urteil:         ${k.kandidat.urteil}`)
   }
-  if (k.zustand === 'NICHT_MESSBAR') offen++
+  if (k.zustand === 'NICHT_MESSBAR') nichtMessbar++
   if (k.hinweise.length) for (const h of k.hinweise) console.log(`   ! ${h}`)
 
   // ── CAMT — Betriebsart der ECHTEN Umgebung ───────────────────────────────
@@ -105,11 +122,17 @@ async function main() {
   console.log(`  Umgebungsgrund:           ${umg.grund}`)
   console.log(`  PILOT_MODUS:              ${PILOT_MODUS}`)
   console.log(`  PILOT_QUELLE eingefroren: ${Object.isFrozen(PILOT_QUELLE) ? 'JA' : 'NEIN'}`)
-  if (umg.buchend) { console.log('  OFFEN: die echte Umgebung wuerde buchen.'); offen++ }
-  if (!Object.isFrozen(PILOT_QUELLE)) { console.log('  OFFEN: PILOT_QUELLE ist nicht eingefroren.'); offen++ }
+  if (umg.buchend) { sachbefunde.push('CAMT: die echte Umgebung wuerde buchen.'); console.log('  BEFUND: die echte Umgebung wuerde buchen.') }
+  if (!Object.isFrozen(PILOT_QUELLE)) { sachbefunde.push('CAMT: PILOT_QUELLE ist nicht eingefroren.'); console.log('  BEFUND: PILOT_QUELLE ist nicht eingefroren.') }
 
-  console.log(`\n${offen === 0 ? 'Alle 14 Kategorien aufgeloest.' : `${offen} Kategorie(n) nicht aufgeloest.`}`)
-  process.exit(offen === 0 ? 0 : 1)
+  console.log(`\n${nichtMessbar === 0
+    ? 'Alle 14 Kategorien aufgeloest (keine Messung ist gescheitert).'
+    : `${nichtMessbar} Kategorie(n) NICHT MESSBAR — dem Lauf ist nicht zu trauen.`}`)
+  if (sachbefunde.length > 0) {
+    console.log(`\n${sachbefunde.length} Sachbefund(e) — gemessen, nicht geraten:`)
+    for (const b of sachbefunde) console.log(`   · ${b}`)
+  }
+  process.exit(nichtMessbar === 0 ? 0 : 1)
 }
 
 main().catch(err => {
