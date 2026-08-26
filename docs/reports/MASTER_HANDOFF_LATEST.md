@@ -1,4 +1,4 @@
-# MASTER HANDOFF -- Stand 26.08.2026, nach Phase 8 (Tracks 1--10, abgeschlossen)
+# MASTER HANDOFF -- Stand 26.08.2026, nach Phase 8.1 (Source-of-Truth Reconciliation)
 
 Dieses Dokument ist die einzige Wahrheitsquelle fuer den technischen Zustand
 beider Produkte. Jede neue Session liest zuerst diese Datei.
@@ -7,7 +7,7 @@ beider Produkte. Jede neue Session liest zuerst diese Datei.
 >
 > **Technisch ist alles fuer den ersten kontrollierten echten Geldvorgang
 > vorbereitet.** Kein P0 und kein P1 im Alltagsengel-Repo. CI gruen auf
-> `f4ded2a`, Typecheck 0 Fehler, 8.228 Tests gruen, eine wartende Migration
+> `ae080be`, Typecheck 0 Fehler, 8.228 Tests gruen, eine wartende Migration
 > (`20261005000000_pilot_send_gate.sql`).
 >
 > **Was dieser Status bedeutet:** Der Geschaeftsfuehrer entscheidet, wann und
@@ -46,9 +46,9 @@ Dokument nicht den Stand, der tatsaechlich deployed ist -- dann zuerst
 
 | Anker | Bedeutung | Wert |
 |---|---|---|
-| **CODE_HEAD** | lokaler `main`-HEAD | `f4ded2a` |
-| **HANDOFF_COMMIT** | Commit, in dem dieses Dokument zuletzt geschrieben wurde | `f4ded2a` |
-| **ORIGIN_MAIN** | `origin/main` nach `deploy.sh` (Remote-Wahrheit) | `f4ded2a` |
+| **CODE_HEAD** | lokaler `main`-HEAD | `ae080be` (docs) / `f4ded2a` (letzter Code-Commit) |
+| **HANDOFF_COMMIT** | Commit, in dem dieses Dokument zuletzt geschrieben wurde | `ae080be` |
+| **ORIGIN_MAIN** | `origin/main` nach `deploy.sh` (Remote-Wahrheit) | `ae080be` |
 
 Pruefbefehl:
 
@@ -98,7 +98,7 @@ git rev-parse HEAD && git rev-parse origin/main
 | Typecheck | **0 Fehler** (`npx tsc --noEmit`, Exit 0) |
 | Tests | vitest **6.017** + node:test **2.211** = **8.228** (vorher 7.838, **+390**) |
 | Testlaeufe | node:test 2.211 gruen / 0 rot -- vitest 6.017 gruen / 38 uebersprungen / 0 rot (nacheinander gelaufen, nicht gleichzeitig, nicht parallel zum Typecheck) |
-| CI | **GRUEN auf `f4ded2a`** |
+| CI | **GRUEN auf `ae080be`** (4/4 Checks: Typecheck/Lint/Tests/Build, E2E, Health Check, Wiederholungslauf) |
 | lint:forbidden | **0 Treffer** (24.608 Dateien, FULL-Scan, Exit 0) |
 | check:schema-drift | **0 Befunde** (1.305 Dateien gegen 331 Live-Tabellen) |
 | Live | alltagsengel.care -- HTTP 200 |
@@ -486,6 +486,7 @@ Geschaeftsentscheidung, keine technische Aufgabe.**
 | Pilot-Routen (lesend) | `app/api/pilot/snapshot/route.ts`, `app/api/pilot/camt-dry-run/route.ts`, `app/api/pilot/mahnwesen/route.ts`, `app/api/pilot/abstimmung/route.ts`, `app/api/pilot/zuordnung-pruefung/route.ts` |
 | Freigabe-Route | `app/api/billing/invoices/[id]/freigabe/route.ts` |
 | Pilot-Bericht-Route | `app/api/billing/invoices/[id]/pilot/route.ts` |
+| **Phase-8.1-Preflight** | `docs/reports/PHASE8_1_LIVE_PILOT_PREFLIGHT.md` |
 | Preflight-Routen (Phase 7) | `app/api/billing/camt/preflight/route.ts`, `app/api/billing/invoices/[id]/preflight/route.ts` |
 | ChairMatch: Pruefskript | `/Users/work/chairmatch/scripts/verify-pricing-schema.mjs` |
 | ChairMatch: Migration (NICHT angewendet) | `/Users/work/chairmatch/supabase/migrations/20260826_pricing_gueltigkeit.sql` |
@@ -522,4 +523,30 @@ Geschaeftsentscheidung, keine technische Aufgabe.**
 
 ---
 
-*Aktualisiert 26.08.2026 nach Phase 8 (Tracks 1--10, abgeschlossen) -- Alltagsengel*
+---
+
+## 11. Phase 8.1 -- Preflight-Snapshot (26.08.2026)
+
+Unabhaengige Gegenpruefung aller Anker und Schalter. Vollbericht:
+`docs/reports/PHASE8_1_LIVE_PILOT_PREFLIGHT.md`
+
+| Pruefpunkt | Ergebnis |
+|---|---|
+| HEAD = origin/main = GitHub = Vercel | `ae080be` -- **identisch** |
+| CI | **4/4 GRUEN** |
+| `pilot_send_gate` Tabelle | **existiert NICHT** (Migration wartet) |
+| `payments` | 0 |
+| `camt_imports` | 0 |
+| `invoice_email_log` | 0 |
+| `payment_allocations` | 0 |
+| Rechnungskandidaten | 0 (3 existieren, alle versendet) |
+| `zahlungseingaenge` | 0 |
+| Versand-Schalter | alle AUS |
+| CAMT-Modus | DRY_RUN |
+| FIRST_REAL_INVOICE_APPROVED | false |
+| Admin-Pilot | read-only, tenant-isoliert, fail-closed |
+| Safety-Mechanismen | 4/4 korrekt (send-gate, post-send, allocation, reconciliation) |
+
+**REAL_ACTIONS_EXECUTED: NONE**
+
+*Aktualisiert 26.08.2026 nach Phase 8.1 (Source-of-Truth Reconciliation) -- Alltagsengel*
