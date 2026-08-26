@@ -21,6 +21,7 @@ import type {
   PilotPhase,
   PilotPhasenUebersicht,
   VorgangStatus,
+  VersandSperreDetail,
 } from '@/lib/pilot/pilot-phasen'
 import type { BusinessInputBericht, BusinessInputStand } from '@/lib/pilot/business-inputs'
 
@@ -328,6 +329,32 @@ export default function PilotPage() {
       <div>
         {data.phasen.phasen.map(p => <PhasenKarte key={p.id} phase={p} />)}
       </div>
+
+      {data.phasen.versandSperrenDetails && data.phasen.versandSperrenDetails.length > 0 && (
+        <div style={{ marginTop: 24 }}>
+          <h3>Offene Versandsperren (P0)</h3>
+          <table className="admin-table" style={{ fontSize: 13, width: '100%' }}>
+            <thead>
+              <tr>
+                <th>Schwere</th>
+                <th>Grund</th>
+                <th>Rechnung</th>
+                <th>Gesetzt am</th>
+              </tr>
+            </thead>
+            <tbody>
+              {data.phasen.versandSperrenDetails.map(s => (
+                <tr key={s.id}>
+                  <td><strong>{s.schwere}</strong></td>
+                  <td>{s.grund}</td>
+                  <td>{s.invoice_id ? <code>{s.invoice_id.slice(0, 8)}</code> : 'alle'}</td>
+                  <td>{new Date(s.gesetzt_am).toLocaleString('de-DE')}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
 
       <h2 style={{ marginTop: 36 }}>5 · Offene Geschäftsangaben</h2>
       <p style={{ color: 'var(--muted)', marginBottom: 12, maxWidth: 760 }}>

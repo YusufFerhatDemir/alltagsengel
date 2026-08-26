@@ -1,14 +1,15 @@
-# MASTER HANDOFF -- Stand 26.08.2026, nach Phase 8.1 (Source-of-Truth Reconciliation)
+# MASTER HANDOFF -- Stand 26.08.2026, nach Phase 8.2 (Live Pilot Final Readiness)
 
 Dieses Dokument ist die einzige Wahrheitsquelle fuer den technischen Zustand
 beider Produkte. Jede neue Session liest zuerst diese Datei.
 
-> ## Gesamtstatus: `READY_FOR_USER_APPROVED_LIVE_PILOT`
+> ## Gesamtstatus: `READY_FOR_EXPLICIT_USER_APPROVAL`
 >
 > **Technisch ist alles fuer den ersten kontrollierten echten Geldvorgang
-> vorbereitet.** Kein P0 und kein P1 im Alltagsengel-Repo. CI gruen auf
-> `ae080be`, Typecheck 0 Fehler, 8.228 Tests gruen, eine wartende Migration
-> (`20261005000000_pilot_send_gate.sql`).
+> bereit.** Kein P0 und kein P1 im Alltagsengel-Repo. Typecheck 0 Fehler,
+> 8.228+ Tests gruen. Migration `20261005000000` ist **LIVE** -- die
+> Einmal-Freigabe ist benutzbar, die Phasenkette in `/admin/pilot` steht
+> nicht mehr auf BLOCKIERT.
 >
 > **Was dieser Status bedeutet:** Der Geschaeftsfuehrer entscheidet, wann und
 > ob der erste echte Vorgang stattfindet. Fuer jeden der drei Geldpfade gibt
@@ -29,9 +30,8 @@ beider Produkte. Jede neue Session liest zuerst diese Datei.
 > - **Der DATEV-Export ist ohne D1/D2 nicht lauffaehig** -- Berater- und
 >   Mandantennummer fehlen, der Export bricht vorher ab (Paragraph 6,
 >   `docs/ENV_KONFIGURATION.md` Paragraph 1).
-> - **Migration `20261005000000` wartet auf den Supabase-SQL-Editor.** Ohne
->   sie ist die Einmal-Freigabe nicht benutzbar und die `APPROVAL`-Phase
->   in `/admin/pilot` steht auf BLOCKIERT.
+> - **Kein Pilot-Kandidat vorhanden.** Alle 3 Rechnungen sind Seed-Daten.
+>   Fuer den Pilot muss ein neuer Klient + Rechnung erzeugt werden.
 >
 > **Fuer efy care (Fremdrepo) gilt dieser Status ausdruecklich nicht** --
 > dort stehen zwei P1 offen (Paragraph 7 T-6/T-7).
@@ -46,9 +46,9 @@ Dokument nicht den Stand, der tatsaechlich deployed ist -- dann zuerst
 
 | Anker | Bedeutung | Wert |
 |---|---|---|
-| **CODE_HEAD** | lokaler `main`-HEAD | `ae080be` (docs) / `f4ded2a` (letzter Code-Commit) |
-| **HANDOFF_COMMIT** | Commit, in dem dieses Dokument zuletzt geschrieben wurde | `ae080be` |
-| **ORIGIN_MAIN** | `origin/main` nach `deploy.sh` (Remote-Wahrheit) | `ae080be` |
+| **CODE_HEAD** | lokaler `main`-HEAD | *(wird nach deploy.sh nachgezogen)* |
+| **HANDOFF_COMMIT** | Commit, in dem dieses Dokument zuletzt geschrieben wurde | *(wird nach deploy.sh nachgezogen)* |
+| **ORIGIN_MAIN** | `origin/main` nach `deploy.sh` (Remote-Wahrheit) | *(wird nach deploy.sh nachgezogen)* |
 
 Pruefbefehl:
 
@@ -63,7 +63,9 @@ git rev-parse HEAD && git rev-parse origin/main
 > darueber hinaus -- insbesondere jeder Commit, der Code anfasst -- bedeutet:
 > dieses Dokument ist aelter als der deployte Stand.
 
-**Letzter Code-Commit** (der letzte Commit, der Anwendungscode anfasst): `f4ded2a`
+**Letzter Code-Commit** (der letzte Commit, der Anwendungscode anfasst): *(wird nach deploy.sh nachgezogen)*
+
+**Phase-8.2-Commits (Alltagsengel):** *(wird nach deploy.sh nachgezogen)*
 
 **Phase-8-Commits (Alltagsengel):**
 
@@ -148,8 +150,8 @@ git rev-parse HEAD && git rev-parse origin/main
 - anon writes: 0
 - Storage: 7 Buckets gehaertet (file_size_limit + MIME-Allowlist)
 - DTA-Policies: org-scoped (`foldername[2] = current_org_id`)
-- **Eine wartende Migration:** `20261005000000_pilot_send_gate.sql`
-  (Send Gate + Versandsperre). DDL, wartet auf den Supabase-SQL-Editor.
+- **Migration `20261005000000` LIVE:** `pilot_send_gate` + `pilot_versand_sperre`
+  existieren, 0 Zeilen, RLS aktiv, Constraints korrekt. In Phase 8.2 verifiziert.
 
 ### ChairMatch (pwdbjqfpgumyfktbfswg)
 
@@ -191,7 +193,46 @@ git rev-parse HEAD && git rev-parse origin/main
 
 ---
 
-## 4a. Zuletzt erledigte Arbeiten -- Phase 8, alle 10 Tracks (26.08.2026)
+## 4a. Zuletzt erledigte Arbeiten -- Phase 8.2, alle 12 Tracks (26.08.2026)
+
+Volldokumentation: **`docs/reports/PHASE8_2_LIVE_PILOT_FINAL_READINESS.md`**
+Detailberichte: `PHASE8_2_TRACKS_1-6.md` -- `PHASE8_2_TRACKS_7-12.md`
+
+Phase 8.2 schliesst die Live-Pilot-Vorbereitung ab. Alle technischen Blocker
+sind beseitigt, alle Sicherheitsmechanismen verifiziert.
+
+**Kritische Statusaenderung:** Migration `20261005000000` ist jetzt **LIVE**.
+Die `APPROVAL`-Phase in `/admin/pilot` steht nicht mehr auf BLOCKIERT.
+
+**Invoice-Log-Widerspruch aufgeklaert:** Die 3 Rechnungen mit `sent_at` sind
+Seed-Daten (Masseneinfuegung 2026-07-02, `versand_elektronisch = false`,
+`frozen_at = NULL`). Kein echter Versand hat je stattgefunden.
+
+| Track | Ergebnis |
+|---|---|
+| **1 -- Source of Truth** | SYNCHRON: HEAD=Origin=GitHub=Vercel=5019ac4, CI gruen |
+| **2 -- Pilot Send Gate** | LIVE: Tabellen existieren, Constraints korrekt, 0 Zeilen, RLS aktiv |
+| **3 -- Invoice Log** | Aufgeklaert: 3 Seed-Rechnungen, nie echt versendet |
+| **4 -- Pilot Candidate** | BUSINESS_INPUT_REQUIRED: 0 unversendete Rechnungen |
+| **5 -- Resend Preflight** | Versandkette komplett: 14 Pruefpunkte, 4 Duplikat-Sperren, fail-closed |
+| **6 -- Versand-Flags** | Fail-closed: alle AUS, Code-Default AUS |
+| **7 -- CAMT** | Bereit: DRY_RUN fest (Object.freeze), Post-Assertion |
+| **8 -- Control Center** | 14/14 Kategorien, P0-Detailliste ergaenzt |
+| **9 -- Chaos Check** | 10/10 Szenarien fail-closed, DB-UNIQUE-Riegel |
+| **10 -- Mac Storage** | Bereinigung durchgefuehrt |
+| **11 -- ChairMatch** | Template erstellt, blockiert Alltagsengel NICHT |
+| **12 -- DATEV** | Format-Validierung gefixt (D-3), D1/D2 fehlen weiterhin |
+
+**3 Code-Aenderungen:** Format-Validierung DATEV-Config, P0-Detailtabelle in
+Pilot-UI, VersandSperreDetail-Interface. **7 neue Befunde** (1 MITTEL gefixt,
+1 MITTEL Beobachtung, 5 GERING).
+
+**Nichts wurde scharf gestellt.** Keine echte Rechnung versendet, keine Mahnung,
+keine Bankdatei, keine Zahlung, kein Flag aktiviert, keine Preise gesetzt.
+
+---
+
+## 4b. Phase 8, alle 10 Tracks (26.08.2026)
 
 Volldokumentation: **`docs/reports/PHASE8_FIRST_REAL_PILOT.md`**
 Detailberichte: `PHASE8_TRACKS_1-4.md` -- `PHASE8_TRACKS_5-10.md`
@@ -228,7 +269,7 @@ fuer `gesetzt_am`, Regressionstest auf Import-Zeilen statt Volltext.
 
 ---
 
-## 4b. Phase 7 -- alle 8 Tracks (25./26.08.2026)
+## 4c. Phase 7 -- alle 8 Tracks (25./26.08.2026)
 
 Volldokumentation: **`docs/reports/PHASE7_MONEY_PATH_PILOT.md`**
 Detailberichte: `PHASE7_TRACKS_1-4.md` -- `PHASE7_TRACKS_5-8.md`
@@ -255,7 +296,7 @@ einer Mahnung an einen zahlenden Kunden (C-1).
 
 ---
 
-## 4c. Phase 6B (25.08.2026)
+## 4d. Phase 6B (25.08.2026)
 
 Volldokumentation: **`docs/reports/PHASE6B_TECHNICAL_PROGRESS.md`**
 
@@ -268,7 +309,19 @@ auf PGlite -- Shim erweitert, zwei neue Suiten, zwei echte Bugs gefunden.
 
 ## 5. Gefundene und behobene Produktionsbefunde
 
-**23 Befunde insgesamt** ueber Phasen 6A--8 gefunden und behoben bzw. benannt.
+**30 Befunde insgesamt** ueber Phasen 6A--8.2 gefunden und behoben bzw. benannt.
+
+### Phase 8.2 -- 7 Befunde (1 gefixt, 6 Beobachtungen)
+
+| # | Track | Befund | Schwere |
+|---|---|---|---|
+| **C-1** | 7 | Cross-Tenant-Check fehlt im Live-Import-Route (Preflight prueft, Live-Route nicht) | MITTEL / Beobachtung |
+| **D-3** | 12 | Format-Validierung Beraternummer/Mandantennummer fehlte | MITTEL / **GEFIXT** |
+| **C-2** | 7 | CdtDbtInd-Fallback auf CRDT bei fehlendem Tag | GERING / Beobachtung |
+| **C-3** | 7 | Sts-Fallback auf BOOK bei fehlendem Tag | GERING / Beobachtung |
+| **C-4** | 7 | CAMT-Freigabe global (env), nicht pro Datei | GERING / Beobachtung |
+| **D-1** (P8.2) | 12 | Windows-1252 Header deklariert, UTF-8 erzeugt | GERING / Offen |
+| **D-2** (P8.2) | 12 | Kein Audit-Trail bei DATEV-Config-Aenderungen | GERING / Offen |
 
 ### Phase 8 -- 3 Befunde + 2 Selbstkorrekturen
 
@@ -333,7 +386,7 @@ Abschnitt.** Nichts davon ist ein Code-Problem.
 | E3 | Erster CAMT-Import nie produktiv gelaufen | Braucht echte Bankdatei. **Vorstufe: `POST /api/pilot/camt-dry-run?format=text`** |
 | E4 | Erster Rechnungsversand nie produktiv | `invoice_email_log` = 0. **Vorstufe: `GET /api/billing/invoices/<id>/pilot?format=text`** |
 | E5 | Paragraph 45a Bayern Antrag unvollstaendig | Landesamt fuer Pflege |
-| **E6** | **Migration `20261005000000_pilot_send_gate.sql` nicht angewendet** | Supabase SQL-Editor (DDL). Ohne sie: `APPROVAL`-Phase blockiert, Einmal-Freigabe nicht benutzbar. **Erster Schritt vor allem anderen.** |
+| ~~E6~~ | ~~Migration `20261005000000`~~ | **ERLEDIGT** -- Phase 8.2 Track 2 verifiziert: Tabellen existieren, RLS aktiv, 0 Zeilen. |
 
 ### BUSINESS_INPUT_REQUIRED
 
@@ -401,13 +454,12 @@ behoben oder als benannte Grenzen dokumentiert (Paragraph 5).
 
 ## 8. Naechster sinnvoller Schritt
 
-**Phase 8 ist abgeschlossen. Der naechste Schritt ist eine
+**Phase 8.2 ist abgeschlossen. Der naechste Schritt ist eine
 Geschaeftsentscheidung, keine technische Aufgabe.**
 
 ### Reihenfolge fuer den begleiteten Erstbetrieb
 
-1. **Migration `20261005000000` im Supabase-SQL-Editor anwenden.** Erst
-   danach ist die Phasenkette nutzbar und die Einmal-Freigabe benutzbar.
+1. ~~Migration `20261005000000` anwenden~~ -- **ERLEDIGT.**
 2. **`/admin/pilot` Abschnitt 4 oeffnen.** Die Phasenkette zeigt, wo der
    Erstbetrieb steht. Ein `--` statt einer Zahl heisst „nicht messbar".
 3. **`GET /api/pilot/snapshot?format=text`** einmal ansehen -- Zeile 1 muss
@@ -453,6 +505,10 @@ Geschaeftsentscheidung, keine technische Aufgabe.**
 
 | Zweck | Pfad |
 |---|---|
+| **Phase-8.2-Gesamtbericht** | `docs/reports/PHASE8_2_LIVE_PILOT_FINAL_READINESS.md` |
+| Phase-8.2-Detailbericht Tracks 1--6 | `docs/reports/PHASE8_2_TRACKS_1-6.md` |
+| Phase-8.2-Detailbericht Tracks 7--12 | `docs/reports/PHASE8_2_TRACKS_7-12.md` |
+| ChairMatch Pricing Template | `docs/chairmatch-pricing-template.md` |
 | **Phase-8-Gesamtbericht** | `docs/reports/PHASE8_FIRST_REAL_PILOT.md` |
 | Phase-8-Detailbericht Tracks 1--4 | `docs/reports/PHASE8_TRACKS_1-4.md` |
 | Phase-8-Detailbericht Tracks 5--10 | `docs/reports/PHASE8_TRACKS_5-10.md` |
@@ -525,28 +581,29 @@ Geschaeftsentscheidung, keine technische Aufgabe.**
 
 ---
 
-## 11. Phase 8.1 -- Preflight-Snapshot (26.08.2026)
+## 11. Phase 8.2 -- Live Pilot Final Readiness (26.08.2026)
 
-Unabhaengige Gegenpruefung aller Anker und Schalter. Vollbericht:
-`docs/reports/PHASE8_1_LIVE_PILOT_PREFLIGHT.md`
+Abschliessende Pruefung aller 12 Tracks. Vollbericht:
+`docs/reports/PHASE8_2_LIVE_PILOT_FINAL_READINESS.md`
 
-| Pruefpunkt | Ergebnis |
-|---|---|
-| HEAD = origin/main = GitHub = Vercel | `ae080be` -- **identisch** |
-| CI | **4/4 GRUEN** |
-| `pilot_send_gate` Tabelle | **existiert NICHT** (Migration wartet) |
-| `payments` | 0 |
-| `camt_imports` | 0 |
-| `invoice_email_log` | 0 |
-| `payment_allocations` | 0 |
-| Rechnungskandidaten | 0 (3 existieren, alle versendet) |
-| `zahlungseingaenge` | 0 |
-| Versand-Schalter | alle AUS |
-| CAMT-Modus | DRY_RUN |
-| FIRST_REAL_INVOICE_APPROVED | false |
-| Admin-Pilot | read-only, tenant-isoliert, fail-closed |
-| Safety-Mechanismen | 4/4 korrekt (send-gate, post-send, allocation, reconciliation) |
+| Pruefpunkt | Phase 8.1 | Phase 8.2 |
+|---|---|---|
+| HEAD = origin/main = GitHub = Vercel | `ae080be` | `5019ac4` -- **identisch** |
+| CI | 4/4 GRUEN | **GRUEN** |
+| `pilot_send_gate` Tabelle | existiert NICHT | **LIVE** (0 Zeilen, RLS aktiv) |
+| `pilot_versand_sperre` Tabelle | existiert NICHT | **LIVE** (0 Zeilen, RLS aktiv) |
+| `payments` | 0 | 0 |
+| `camt_imports` | 0 | 0 |
+| `invoice_email_log` | 0 | 0 (Widerspruch aufgeklaert) |
+| `payment_allocations` | 0 | 0 |
+| Rechnungskandidaten | 0 | 0 (3 Seed, neue Rechnung noetig) |
+| Versand-Schalter | alle AUS | alle AUS |
+| CAMT-Modus | DRY_RUN | DRY_RUN (Object.freeze) |
+| FIRST_REAL_INVOICE_APPROVED | false | false |
+| Chaos-Tests | -- | **10/10 verifiziert** |
+| Control Center | -- | **14/14 Kategorien** |
+| DATEV Format-Validierung | -- | **hinzugefuegt** |
 
 **REAL_ACTIONS_EXECUTED: NONE**
 
-*Aktualisiert 26.08.2026 nach Phase 8.1 (Source-of-Truth Reconciliation) -- Alltagsengel*
+*Aktualisiert 26.08.2026 nach Phase 8.2 (Live Pilot Final Readiness) -- Alltagsengel*
