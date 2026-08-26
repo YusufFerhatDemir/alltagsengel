@@ -1,4 +1,4 @@
-# MASTER HANDOFF -- Stand 27.08.2026, nach Phase 8.4 (Migration LIVE + Production Readiness)
+# MASTER HANDOFF -- Stand 27.08.2026, nach Phase 8.4 (Production Readiness)
 
 Dieses Dokument ist die einzige Wahrheitsquelle fuer den technischen Zustand
 beider Produkte. Jede neue Session liest zuerst diese Datei.
@@ -47,9 +47,9 @@ Dokument nicht den Stand, der tatsaechlich deployed ist -- dann zuerst
 
 | Anker | Bedeutung | Wert |
 |---|---|---|
-| **CODE_HEAD** | lokaler `main`-HEAD | `8d5f52a` (Phase 8.3 Code+Docs) |
-| **HANDOFF_COMMIT** | Commit, in dem dieses Dokument zuletzt geschrieben wurde | `8d5f52a` |
-| **ORIGIN_MAIN** | `origin/main` nach `deploy.sh` (Remote-Wahrheit) | `8d5f52a` |
+| **CODE_HEAD** | lokaler `main`-HEAD | `a224175` (Phase 8.4 Production Readiness) |
+| **HANDOFF_COMMIT** | Commit, in dem dieses Dokument zuletzt geschrieben wurde | `a224175` |
+| **ORIGIN_MAIN** | `origin/main` nach `deploy.sh` (Remote-Wahrheit) | `a224175` |
 
 Pruefbefehl:
 
@@ -64,7 +64,14 @@ git rev-parse HEAD && git rev-parse origin/main
 > darueber hinaus -- insbesondere jeder Commit, der Code anfasst -- bedeutet:
 > dieses Dokument ist aelter als der deployte Stand.
 
-**Letzter Code-Commit** (der letzte Commit, der Anwendungscode anfasst): `8d5f52a`
+**Letzter Code-Commit** (der letzte Commit, der Anwendungscode anfasst): `a224175`
+
+**Phase-8.4-Commits (Alltagsengel):**
+
+| Commit | Inhalt |
+|---|---|
+| `06c27b9` | Token-Enforcement, Audit-Trail, Control-Center-Fix, Tests |
+| `a224175` | Phase 8.4 Production Readiness Bericht |
 
 **Phase-8.3-Commits (Alltagsengel):**
 
@@ -111,7 +118,7 @@ git rev-parse HEAD && git rev-parse origin/main
 | HEAD | siehe **CODE_HEAD** oben |
 | Letzter Code-Commit | Phase 8, alle 10 Tracks abgeschlossen |
 | Typecheck | **0 Fehler** (`npx tsc --noEmit`, Exit 0) |
-| Tests | vitest **6.017** + node:test **2.211** = **8.228** (vorher 7.838, **+390**) |
+| Tests | vitest **6.089** + node:test **2.211** = **8.300** (vorher 8.228, **+72**) |
 | Testlaeufe | node:test 2.211 gruen / 0 rot -- vitest 6.017 gruen / 38 uebersprungen / 0 rot (nacheinander gelaufen, nicht gleichzeitig, nicht parallel zum Typecheck) |
 | CI | **GRUEN auf `ae080be`** (4/4 Checks: Typecheck/Lint/Tests/Build, E2E, Health Check, Wiederholungslauf) |
 | lint:forbidden | **0 Treffer** (24.608 Dateien, FULL-Scan, Exit 0) |
@@ -208,7 +215,29 @@ git rev-parse HEAD && git rev-parse origin/main
 
 ---
 
-## 4a. Zuletzt erledigte Arbeiten -- Phase 8.3, alle 10 Tracks (27.08.2026)
+## 4a. Zuletzt erledigte Arbeiten -- Phase 8.4, Production Readiness (27.08.2026)
+
+Volldokumentation: **`docs/reports/PHASE8_4_PRODUCTION_READINESS.md`**
+
+**Migration `20261005000000` LIVE_VERIFIZIERT** — 26/26 Pruefpunkte bestanden.
+
+**3 Befunde gefunden und geschlossen:**
+
+| # | Schwere | Befund |
+|---|---|---|
+| **B-1** | **P0** | Einmal-Freigabe war ausstellbar und wirkungslos: `pruefeSendeToken()`/`verbraucheSendeToken()` hatten keinen Aufrufer im Versandweg. Token-Enforcement jetzt in `versendeRechnungPerEmail()` verdrahtet (an `PILOT_ERSTVERSAND_FREIGEGEBEN` gebunden). |
+| **B-2** | **P1** | Token-Lebenslauf ohne Audit-Trail. Jetzt in `billing_audit_trail`: Erteilung, Verbrauch, Ablehnung, Entwertung. |
+| **B-3** | **P1** | `sent_at` galt als Beweis fuer erfolgten Versand. Die 3 Seed-Rechnungen trugen `sent_at` ohne `frozen_at` und ohne Protokollzeile — Control Center meldete faelschlich VERIFIED. Jetzt nur noch `versendetBelegt` (sent_at + Protokolleintrag). |
+
+**Verifikation:** Migration 26/26, Control Center 14/14 (APPROVAL nicht mehr BLOCKED),
+Resend-Kette komplett, alle Produktions-Schalter nicht gesetzt (via `vercel env ls`),
+Typecheck 0, vitest 6089 + node:test 2211 = 8300 gruen.
+
+**REAL_ACTIONS_EXECUTED: NONE**
+
+---
+
+## 4b. Phase 8.3, alle 10 Tracks (27.08.2026)
 
 Volldokumentation: **`docs/reports/PHASE8_3_FINAL_LIVE_PILOT_PREP.md`**
 Detailberichte: `PHASE8_3_TRACKS_1-5.md` -- `PHASE8_3_TRACKS_6-10.md`
@@ -240,7 +269,7 @@ das (`to_regclass` = NULL, PostgREST 404). Das Verifikations-Tool
 
 ---
 
-## 4b. Phase 8.2, alle 12 Tracks (26.08.2026)
+## 4c. Phase 8.2, alle 12 Tracks (26.08.2026)
 
 Volldokumentation: **`docs/reports/PHASE8_2_LIVE_PILOT_FINAL_READINESS.md`**
 Detailberichte: `PHASE8_2_TRACKS_1-6.md` -- `PHASE8_2_TRACKS_7-12.md`
@@ -279,7 +308,7 @@ keine Bankdatei, keine Zahlung, kein Flag aktiviert, keine Preise gesetzt.
 
 ---
 
-## 4c. Phase 8, alle 10 Tracks (26.08.2026)
+## 4d. Phase 8, alle 10 Tracks (26.08.2026)
 
 Volldokumentation: **`docs/reports/PHASE8_FIRST_REAL_PILOT.md`**
 Detailberichte: `PHASE8_TRACKS_1-4.md` -- `PHASE8_TRACKS_5-10.md`
@@ -316,7 +345,7 @@ fuer `gesetzt_am`, Regressionstest auf Import-Zeilen statt Volltext.
 
 ---
 
-## 4d. Phase 7 -- alle 8 Tracks (25./26.08.2026)
+## 4e. Phase 7 -- alle 8 Tracks (25./26.08.2026)
 
 Volldokumentation: **`docs/reports/PHASE7_MONEY_PATH_PILOT.md`**
 Detailberichte: `PHASE7_TRACKS_1-4.md` -- `PHASE7_TRACKS_5-8.md`
@@ -343,7 +372,7 @@ einer Mahnung an einen zahlenden Kunden (C-1).
 
 ---
 
-## 4e. Phase 6B (25.08.2026)
+## 4f. Phase 6B (25.08.2026)
 
 Volldokumentation: **`docs/reports/PHASE6B_TECHNICAL_PROGRESS.md`**
 
@@ -356,7 +385,24 @@ auf PGlite -- Shim erweitert, zwei neue Suiten, zwei echte Bugs gefunden.
 
 ## 5. Gefundene und behobene Produktionsbefunde
 
-**30 Befunde insgesamt** ueber Phasen 6A--8.2 gefunden und behoben bzw. benannt.
+**36 Befunde insgesamt** ueber Phasen 6A--8.4 gefunden und behoben bzw. benannt.
+
+### Phase 8.4 -- 3 Befunde, alle gefixt
+
+| # | Track | Befund | Schwere |
+|---|---|---|---|
+| **B-1** | 4 | Token-Enforcement fehlte: `pruefeSendeToken()`/`verbraucheSendeToken()` hatten keinen Aufrufer im Versandweg | **P0 Geld** |
+| **B-2** | 7 | Token-Lebenslauf (Erteilung/Verbrauch/Entwertung) ohne Audit-Trail | **P1 Audit** |
+| **B-3** | 1 | `sent_at` galt als Beweis; Seed-Daten taeuschen Control Center | **P1 Funktion** |
+
+### Phase 8.3 -- 4 Befunde (2 gefixt, 2 Beobachtungen)
+
+| # | Track | Befund | Schwere |
+|---|---|---|---|
+| **T3-1** | 3 | Token→Versandweg nicht verdrahtet (geschlossen durch B-1 in Phase 8.4) | **P0** |
+| **I-1** | 9 | Idempotenz-Key hatte 0 Tests, 2 ergaenzt | **MITTEL / GEFIXT** |
+| **R-1** | 6 | replyTo nie gesetzt | GERING / Beobachtung |
+| **R-2** | 6 | Kein Apex-SPF | Info |
 
 ### Phase 8.2 -- 7 Befunde (1 gefixt, 6 Beobachtungen)
 
