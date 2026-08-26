@@ -298,9 +298,15 @@ async function bereichRechnung(
 
   const nichtVersandfaehig = `(${NICHT_VERSANDFAEHIGE_STATUS.join(',')})`
 
-  const [gesamt, versendet, blockiert, nichtFestgeschrieben, offen, protokollzeilen] = await Promise.all([
+  const [gesamt, versendet, versendetUnbelegt, blockiert, nichtFestgeschrieben, offen, protokollzeilen] = await Promise.all([
     zaehle(hinweise, 'invoices', () => inv()),
     zaehle(hinweise, 'invoices (versendet)', () => inv().not('sent_at', 'is', null)),
+    // Versandzeitpunkt OHNE Festschreibung. Der Versandweg weist eine nicht
+    // festgeschriebene Rechnung ab (rechnung-versand.ts), also kann so eine
+    // Zeile nicht über ihn entstanden sein. Sie zählt deshalb nicht als
+    // Beleg dafür, dass der Versandpfad je gelaufen ist.
+    zaehle(hinweise, 'invoices (versendet ohne Festschreibung)', () =>
+      inv().not('sent_at', 'is', null).is('frozen_at', null)),
     zaehle(hinweise, 'invoices (nicht versandfähiger Status)', () => inv().in('status', [...NICHT_VERSANDFAEHIGE_STATUS])),
     zaehle(hinweise, 'invoices (nicht festgeschrieben)', () =>
       inv().is('frozen_at', null).not('status', 'in', nichtVersandfaehig)),
@@ -323,6 +329,13 @@ async function bereichRechnung(
     kennzahl('blockiert: nicht festgeschrieben', nichtFestgeschrieben, 'Ohne frozen_at darf die Rechnung das Haus nicht verlassen.', 'rot'),
     kennzahl('blockiert: Status', blockiert, `Status in ${nichtVersandfaehig} — Entwurf, in Korrektur, storniert oder abgeschrieben.`, 'rot'),
     kennzahl('versendet', versendet, 'sent_at gesetzt.'),
+    kennzahl(
+      'versendet ohne Festschreibung',
+      versendetUnbelegt,
+      'Trägt einen Versandzeitpunkt, aber kein frozen_at. Über den Versandweg nicht entstehbar — '
+      + 'stammt aus einer Einspielung oder einem Direkteingriff und belegt KEINEN Versand.',
+      'rot',
+    ),
     kennzahl('Protokollzeilen', protokollzeilen, 'Einträge in invoice_email_log. 0 bei versendeten Rechnungen wäre eine Protokolllücke.'),
   ]
 
@@ -335,16 +348,23 @@ async function bereichRechnung(
     id: 'rechnung',
     titel: 'Rechnung — Versand',
     ampel,
-    begruendung: `${begruendungRechnung(gesamt, versendet, bereit, ohneEmpfaenger)} ${schalter}`,
+    begruendung: `${begruendungRechnung(gesamt, versendet, versendetUnbelegt, bereit, ohneEmpfaenger)} ${schalter}`,
     kennzahlen,
   }
 }
 
 function begruendungRechnung(
-  gesamt: Messwert, versendet: Messwert, bereit: Messwert, ohneEmpfaenger: Messwert,
+  gesamt: Messwert, versendet: Messwert, versendetUnbelegt: Messwert,
+  bereit: Messwert, ohneEmpfaenger: Messwert,
 ): string {
   if (gesamt === null || bereit === null) return 'Mindestens eine Messung war nicht ausführbar.'
   if (gesamt === 0) return 'Keine Rechnungen vorhanden.'
+  // Vor allen anderen Befunden: ein Versandzeitpunkt ohne Festschreibung
+  // macht jede darauf gestützte Aussage („bereits versendet") falsch.
+  if ((versendetUnbelegt ?? 0) > 0) {
+    return `${versendetUnbelegt} von ${versendet} Rechnung(en) mit Versandzeitpunkt sind NICHT `
+      + 'festgeschrieben — über den Versandweg nicht entstehbar. Sie belegen keinen Versand.'
+  }
   if ((ohneEmpfaenger ?? 0) > 0) return `${ohneEmpfaenger} versandbereite Rechnung(en) ohne E-Mail-Adresse.`
   if (versendet === 0) return `${bereit} Rechnung(en) versandbereit, bisher wurde keine versendet.`
   return `${bereit} Rechnung(en) versandbereit, ${versendet} bereits versendet.`

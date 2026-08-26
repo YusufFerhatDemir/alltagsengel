@@ -233,13 +233,15 @@ export async function ermittlePilotPhasen(
 
   // ── Rohmessungen ──
   const [
-    versandbereit, versendet, protokollErfolg, protokollFehler, protokollWartend,
+    versandbereit, versendet, versendetUnbelegt, protokollErfolg, protokollFehler, protokollWartend,
     camtImporte, camtFehler, buchungen, automatisch, klaerfaelle,
     zuordnungen, auditZeilen,
   ] = await Promise.all([
     zaehle(z, 'invoices (versandbereit)', () =>
       inv().is('sent_at', null).not('frozen_at', 'is', null).not('status', 'in', nichtVersandfaehig)),
     zaehle(z, 'invoices (versendet)', () => inv().not('sent_at', 'is', null)),
+    zaehle(z, 'invoices (versendet ohne Festschreibung)', () =>
+      inv().not('sent_at', 'is', null).is('frozen_at', null)),
     zaehle(z, 'invoice_email_log (versendet)', () => admin
       .from('invoice_email_log').select('id', { count: 'exact', head: true })
       .eq('organization_id', orgId).eq('status', 'versendet')),
@@ -281,6 +283,17 @@ export async function ermittlePilotPhasen(
     .from('pilot_versand_sperre').select('id', { count: 'exact', head: true })
     .eq('organization_id', orgId).is('aufgehoben_am', null))
 
+  // ── Was ein Versandzeitpunkt belegt ──────────────────────────────────────
+  // `sent_at` allein ist kein Beleg. Der Versandweg setzt es nur nach einem
+  // Lauf, der `frozen_at` voraussetzt; eine Zeile mit Versandzeitpunkt OHNE
+  // Festschreibung kann also nicht über ihn entstanden sein. Wird sie
+  // mitgezählt, meldet PRE-FLIGHT „mindestens einmal durchlaufen" und SEND
+  // „VERIFIED", obwohl der Pfad nie lief — die Anzeigetafel behauptete dann
+  // genau den Fortschritt, den zu messen ihre Aufgabe ist.
+  const versendetBelegt = versendet !== null && versendetUnbelegt !== null
+    ? Math.max(0, versendet - versendetUnbelegt)
+    : null
+
   let versandSperrenDetails: VersandSperreDetail[] | null = null
   try {
     const { data, error } = await admin
@@ -316,16 +329,18 @@ export async function ermittlePilotPhasen(
   {
     const kz = [
       kennzahl('versandbereit', versandbereit, 'Festgeschrieben, versandfähiger Status, noch nicht versendet.'),
-      kennzahl('bereits versendet', versendet, 'sent_at gesetzt.'),
+      kennzahl('bereits versendet (belegt)', versendetBelegt, 'sent_at gesetzt UND festgeschrieben.'),
+      kennzahl('Versandzeitpunkt ohne Festschreibung', versendetUnbelegt,
+        'Über den Versandweg nicht entstehbar — belegt keinen Durchlauf des Preflights.'),
     ]
-    if (unmessbar(versandbereit, versendet)) {
+    if (unmessbar(versandbereit, versendet, versendetUnbelegt)) {
       phase('PRE_FLIGHT', 'BLOCKED',
         'Der Rechnungsbestand ist nicht messbar — siehe Hinweise. Solange das so ist, gilt die Phase als gesperrt, nicht als leer.',
         'lib/billing/preflight/rechnung-preflight.ts',
         'Die fehlgeschlagene Abfrage in den Hinweisen nachsehen.', kz)
-    } else if ((versendet ?? 0) > 0) {
+    } else if ((versendetBelegt ?? 0) > 0) {
       phase('PRE_FLIGHT', 'VERIFIED',
-        `${versendet} Rechnung(en) sind bereits versendet — der Preflight ist mindestens einmal durchlaufen.`,
+        `${versendetBelegt} festgeschriebene Rechnung(en) sind versendet — der Preflight ist mindestens einmal durchlaufen.`,
         'lib/billing/preflight/rechnung-preflight.ts', null, kz)
     } else if ((versandbereit ?? 0) > 0) {
       phase('PRE_FLIGHT', 'READY',
@@ -334,7 +349,12 @@ export async function ermittlePilotPhasen(
         'GET /api/billing/invoices/<id>/preflight für die Rechnung aufrufen, die den Erstlauf tragen soll.', kz)
     } else {
       phase('PRE_FLIGHT', 'NOT_STARTED',
-        'Keine festgeschriebene, versandfähige Rechnung vorhanden.',
+        'Keine festgeschriebene, versandfähige Rechnung vorhanden.'
+        + ((versendetUnbelegt ?? 0) > 0
+          ? ` ${versendetUnbelegt} Rechnung(en) tragen zwar einen Versandzeitpunkt, sind aber nicht `
+            + 'festgeschrieben — sie können nicht über den Versandweg entstanden sein und zählen '
+            + 'hier nicht als Durchlauf.'
+          : ''),
         'lib/billing/preflight/rechnung-preflight.ts',
         'Eine Rechnung erzeugen und festschreiben (freezeInvoice).', kz)
     }
@@ -384,14 +404,15 @@ export async function ermittlePilotPhasen(
       ? protokollErfolg + protokollFehler + protokollWartend
       : null
     const kz = [
-      kennzahl('Rechnungen mit sent_at', versendet, 'Der Versand gilt als ausgelöst.'),
+      kennzahl('Rechnungen mit belegtem sent_at', versendetBelegt, 'Versandzeitpunkt UND Festschreibung — nur so kann der Versandweg ihn gesetzt haben.'),
+      kennzahl('Versandzeitpunkt ohne Festschreibung', versendetUnbelegt, 'Belegt keinen Versand; stammt aus einer Einspielung oder einem Direkteingriff.'),
       kennzahl('Protokollzeilen gesamt', gesamtProtokoll, 'Jeder Versuch hinterlässt eine Zeile in invoice_email_log.'),
       kennzahl('Schalter scharf', flags.rechnung.aktiv ? 1 : 0,
         flags.rechnung.aktiv
           ? 'RECHNUNGSVERSAND_AUTOMATISCH ist gesetzt — der Automat verschickt.'
           : flags.rechnung.grund),
     ]
-    if (unmessbar(versendet, gesamtProtokoll)) {
+    if (unmessbar(versendet, versendetUnbelegt, gesamtProtokoll)) {
       phase('SEND', 'BLOCKED', 'Versandstand nicht messbar — siehe Hinweise.',
         'lib/billing/versand/rechnung-versand.ts', 'Die fehlgeschlagene Abfrage nachsehen.', kz)
     } else if ((protokollFehler ?? 0) > 0 && (protokollErfolg ?? 0) === 0) {
@@ -399,9 +420,21 @@ export async function ermittlePilotPhasen(
         `${protokollFehler} Versandversuch(e) sind gescheitert, kein einziger erfolgreich.`,
         'lib/billing/versand/rechnung-versand.ts',
         'Die Fehlermeldungen in invoice_email_log.grund lesen, bevor ein weiterer Versuch läuft.', kz)
-    } else if ((versendet ?? 0) > 0) {
-      phase('SEND', 'VERIFIED', `${versendet} Rechnung(en) tragen sent_at.`,
+    } else if ((versendetBelegt ?? 0) > 0) {
+      phase('SEND', 'VERIFIED', `${versendetBelegt} festgeschriebene Rechnung(en) tragen sent_at.`,
         'lib/billing/versand/rechnung-versand.ts', null, kz)
+    } else if ((versendetUnbelegt ?? 0) > 0) {
+      // Der gefährlichste Zustand dieser Phase: es SIEHT versendet aus, ist
+      // es aber nachweislich nicht. BLOCKED statt VERIFIED — und mit der
+      // Aufforderung, die Herkunft zu klären, bevor irgendetwas rausgeht.
+      phase('SEND', 'BLOCKED',
+        `${versendetUnbelegt} Rechnung(en) tragen einen Versandzeitpunkt, sind aber nicht `
+        + 'festgeschrieben. Der Versandweg weist so eine Rechnung ab — diese Zeitpunkte können '
+        + 'nicht von ihm stammen. Solange ihre Herkunft ungeklärt ist, gilt der Versandpfad als '
+        + 'NICHT gelaufen.',
+        'lib/billing/versand/rechnung-versand.ts',
+        'Herkunft der Versandzeitpunkte klären (Einspielung? Direkteingriff?) und entweder '
+        + 'bereinigen oder als Altbestand dokumentieren.', kz)
     } else if ((protokollWartend ?? 0) > 0) {
       phase('SEND', 'EXECUTING',
         `${protokollWartend} Versandversuch(e) wurden übersprungen und stehen noch aus.`,
@@ -533,11 +566,14 @@ export async function ermittlePilotPhasen(
   // ═══ 8 — RECONCILIATION ═══
   {
     const kz = [
-      kennzahl('Rechnungen versendet', versendet, 'Ausgangsseite der Kette.'),
+      kennzahl('Rechnungen versendet (belegt)', versendetBelegt, 'Ausgangsseite der Kette — nur festgeschriebene Versendungen zählen.'),
       kennzahl('Zuordnungen', zuordnungen, 'Eingangsseite der Kette.'),
     ]
-    const etwasPassiert = (versendet ?? 0) > 0 || (zuordnungen ?? 0) > 0
-    if (unmessbar(versendet, zuordnungen)) {
+    // Ein Versandzeitpunkt ohne Festschreibung ist keine Ausgangsseite: es
+    // gibt weder Beleg noch Protokollzeile, gegen die sich etwas abstimmen
+    // liesse.
+    const etwasPassiert = (versendetBelegt ?? 0) > 0 || (zuordnungen ?? 0) > 0
+    if (unmessbar(versendetBelegt, zuordnungen)) {
       phase('RECONCILIATION', 'BLOCKED', 'Die Eckwerte der Kette sind nicht messbar — eine Abstimmung darauf wäre wertlos.',
         'lib/pilot/reconciliation.ts', 'Die fehlgeschlagene Abfrage nachsehen.', kz)
     } else if (!etwasPassiert) {
@@ -560,10 +596,10 @@ export async function ermittlePilotPhasen(
   {
     const kz = [
       kennzahl('Audit-Einträge', auditZeilen, 'Zeilen in billing_audit_trail für diesen Mandanten.'),
-      kennzahl('Vorgänge', versendet !== null && zuordnungen !== null ? versendet + zuordnungen : null,
-        'Versendete Rechnungen plus Zuordnungen — jede davon muss protokolliert sein.'),
+      kennzahl('Vorgänge', versendetBelegt !== null && zuordnungen !== null ? versendetBelegt + zuordnungen : null,
+        'Belegt versendete Rechnungen plus Zuordnungen — jede davon muss protokolliert sein.'),
     ]
-    const vorgaenge = versendet !== null && zuordnungen !== null ? versendet + zuordnungen : null
+    const vorgaenge = versendetBelegt !== null && zuordnungen !== null ? versendetBelegt + zuordnungen : null
     if (unmessbar(auditZeilen, vorgaenge)) {
       phase('AUDIT', 'BLOCKED', 'Audit-Trail nicht messbar — siehe Hinweise.',
         'lib/billing/core/audit.ts', 'Die fehlgeschlagene Abfrage nachsehen.', kz)

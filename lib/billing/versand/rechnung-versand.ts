@@ -20,6 +20,14 @@
 // OHNE RESEND_API_KEY wird NICHT geworfen und sent_at NICHT gesetzt:
 // der Versand meldet 'uebersprungen', die Rechnung bleibt unzugestellt
 // und geht beim naechsten Lauf mit gesetztem Key wieder mit.
+//
+// EINMAL-FREIGABE (Pilotbetrieb): steht
+// PILOT_ERSTVERSAND_FREIGEGEBEN=1, verlangt jeder ERSTversand ein
+// gueltiges Token aus `pilot_send_gate` (`pilotToken`). Es wird nach
+// dem Preflight geprueft und unmittelbar VOR dem Absenden verbraucht.
+// Steht der Schalter aus, aendert der Parameter nichts — dann sind
+// ohnehin keine Freigaben ausstellbar. Begruendung der Kopplung in
+// lib/pilot/send-gate.ts → pilotGatePflicht().
 // ═══════════════════════════════════════════════════════════════
 
 import type { SupabaseClient } from '@supabase/supabase-js'
@@ -33,6 +41,13 @@ import {
   type PreflightStrenge,
   type RechnungPreflightErgebnis,
 } from '@/lib/billing/preflight/rechnung-preflight'
+import {
+  pilotGatePflicht,
+  pruefeSendeToken,
+  verbraucheSendeToken,
+} from '@/lib/pilot/send-gate'
+import type { EnvQuelle } from '@/lib/env/pruefung'
+import { euroZuCent } from '@/lib/geld'
 import { logger } from '@/lib/logger'
 
 const log = logger.child('rechnung-versand')
@@ -120,6 +135,22 @@ export interface VersandParams {
    * lib/notifications/wiederherstellung.ts).
    */
   ohneZustellspur?: boolean
+  /**
+   * Die Einmal-Freigabe aus `pilot_send_gate` (lib/pilot/send-gate.ts).
+   *
+   * Nur waehrend des Pilotbetriebs von Belang: steht
+   * `PILOT_ERSTVERSAND_FREIGEGEBEN` auf `1`, wird sie fuer jeden ERSTversand
+   * verlangt und VOR dem Absenden verbraucht. Steht der Schalter aus, ist der
+   * Wert bedeutungslos — dann sind ohnehin keine Freigaben ausstellbar.
+   *
+   * Ein Nachversand (`erneutSenden`) ist ausgenommen: fuer eine bereits
+   * versendete Rechnung laesst sich keine Freigabe mehr ausstellen (der
+   * Preflight blockt, und der UNIQUE-Teilindex `einmal_verbraucht` erst
+   * recht). Ein Tokenzwang waere dort keine Sperre, sondern eine Sackgasse.
+   */
+  pilotToken?: string | null
+  /** Nur fuer Tests der Gate-Pflicht. Werte werden nie ausgegeben. */
+  quelle?: EnvQuelle
 }
 
 export async function versendeRechnungPerEmail(
@@ -129,6 +160,7 @@ export async function versendeRechnungPerEmail(
   const {
     invoiceId, organizationId, actorId, preflight,
     erneutSenden = false, ohneZustellspur = false,
+    pilotToken = null, quelle = process.env,
   } = params
 
   // ── Rechnung org-fenced laden ──
@@ -194,6 +226,37 @@ export async function versendeRechnungPerEmail(
     }
   }
 
+  // ── Einmal-Freigabe des Pilotbetriebs (T3-1) ──
+  //
+  // Nach dem Preflight, aber VOR der PDF-Erzeugung: ein Beleg fuer einen
+  // Versand, der am fehlenden Token scheitert, waere eine Nebenwirkung ohne
+  // Zweck. Geprueft wird hier nur; VERBRAUCHT wird unmittelbar vor dem
+  // Absenden — zwischen Pruefung und Verbrauch liegt sonst die PDF-Erzeugung,
+  // und ein Abbruch darin wuerde ein Token verbrennen, ohne dass eine Mail
+  // rausging.
+  const gatePflicht = pilotGatePflicht(quelle)
+  const gateGilt = gatePflicht.pflicht && !erneutSenden
+  if (gateGilt) {
+    const pruefung = await pruefeSendeToken(admin, {
+      token: pilotToken,
+      invoiceId,
+      organizationId,
+      empfaenger: client.email,
+      // Dieselbe Umrechnung wie im Piloten (euroZuCent), nicht `* 100`:
+      // ein Rundungsunterschied wuerde ein gueltiges Token an der
+      // Betragsbindung scheitern lassen.
+      betragCents: euroZuCent(inv.total_amount ?? 0),
+      quelle,
+    })
+    if (!pruefung.erlaubt) {
+      const ergebnis = await abbruch(
+        'uebersprungen',
+        `Einmal-Freigabe nicht gueltig (${pruefung.code}): ${pruefung.grund}`,
+      )
+      return { ...ergebnis, preflight: preflightErgebnis }
+    }
+  }
+
   // ── Bankdaten fuer den Mailtext ──
   const { data: org } = await admin
     .from('organizations')
@@ -226,6 +289,29 @@ export async function versendeRechnungPerEmail(
     bic: org?.bic ?? null,
     bank: org?.bank_name ?? null,
   })
+
+  // ── Freigabe verbrauchen — VOR dem Absenden ──
+  //
+  // Reihenfolge wie im Modulkopf von lib/pilot/send-gate.ts begruendet:
+  // bricht der Lauf zwischen Verbrauch und Mail ab, ist das Token verbrannt
+  // und ein Mensch stellt nach einer Sichtung ein neues aus. Andersherum
+  // waere ein Abbruch genau der Zustand, in dem ein Wiederholungslauf ein
+  // zweites Mal senden duerfte.
+  if (gateGilt) {
+    const verbrauch = await verbraucheSendeToken(admin, {
+      token: String(pilotToken),
+      invoiceId,
+      organizationId,
+      actorId,
+    })
+    if (!verbrauch.ok) {
+      const ergebnis = await abbruch(
+        'uebersprungen',
+        `Einmal-Freigabe war beim Verbrauch nicht mehr offen (${verbrauch.code}): ${verbrauch.grund}`,
+      )
+      return { ...ergebnis, preflight: preflightErgebnis }
+    }
+  }
 
   const ergebnis = await sendRawEmail({
     to: client.email,

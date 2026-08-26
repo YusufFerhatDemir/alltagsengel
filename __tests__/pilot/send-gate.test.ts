@@ -473,11 +473,27 @@ describe('Ausstellen', () => {
     expect(new Date(payload.gueltig_bis).getTime()).toBeGreaterThan(new Date(payload.erstellt_am).getTime())
   })
 
-  it('schreibt genau eine Zeile und sonst nichts', async () => {
+  it('schreibt die Freigabe und ihre Protokollzeile — und sonst nichts', async () => {
+    // Seit Phase 8.4 entsteht zusätzlich ein Eintrag im billing_audit_trail
+    // (Track 7): wer die Erstversand-Freigabe erteilt hat und wann, stand
+    // vorher nur im flüchtigen Anwendungsprotokoll. Zwei Zeilen sind also
+    // richtig — aber ausschliesslich diese zwei. Jede weitere Tabelle wäre
+    // eine Fachnebenwirkung, die eine Freigabe nicht haben darf.
     const { fake } = await stelleAus()
     const schreibend = fake.aufrufe.filter(a => a.operation !== 'select')
-    expect(schreibend).toHaveLength(1)
-    expect(schreibend[0].tabelle).toBe('pilot_send_gate')
+    expect(schreibend.map(a => a.tabelle).sort())
+      .toEqual(['billing_audit_trail', 'pilot_send_gate'])
+  })
+
+  it('protokolliert die Ausstellung mit Rechnung, Empfänger und Betrag', async () => {
+    const { fake } = await stelleAus()
+    const eintrag = fake.ersterAuf('billing_audit_trail', 'insert')!.payload as Record<string, unknown>
+    expect(eintrag.action).toBe('pilot_freigabe_erteilt')
+    expect(eintrag.entity_type).toBe('invoice')
+    expect(eintrag.entity_id).toBe(INV)
+    const zustand = eintrag.new_state as Record<string, unknown>
+    expect(zustand.empfaenger).toBe(EMPFAENGER)
+    expect(zustand.preflight_status).toBe('READY_FOR_SEND')
   })
 })
 

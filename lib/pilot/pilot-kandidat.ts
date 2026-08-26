@@ -98,6 +98,14 @@ export interface PilotKandidatUebersicht {
   versandbereit: number | null
   /** Wie viele davon keine Empfängeradresse haben (kämen nie in Frage). */
   ohneEmpfaenger: number | null
+  /**
+   * Rechnungen mit Versandzeitpunkt, aber ohne Festschreibung.
+   *
+   * Über den Versandweg können sie nicht entstanden sein — er weist eine
+   * nicht festgeschriebene Rechnung ab. Sie zählen deshalb NICHT als
+   * erfolgter Erstversand. `null` heißt „nicht messbar".
+   */
+  versendetUnbelegt: number | null
   kandidat: PilotKandidat | null
   /** Der Stand der Umgebungs-Freigabe — ohne sie ist kein Token ausstellbar. */
   freigabe: FreigabeStand
@@ -172,6 +180,23 @@ export async function ermittlePilotKandidat(
   const versendet = await zaehle(hinweise, 'invoices (versendet)', () =>
     inv().not('sent_at', 'is', null))
 
+  // ── Was ein Versandzeitpunkt WERT ist ──────────────────────────────────
+  // `sent_at` allein belegt keinen Versand. Dieses System setzt es nur nach
+  // einem Lauf, der `frozen_at` voraussetzt (lib/billing/versand/
+  // rechnung-versand.ts weist eine nicht festgeschriebene Rechnung ab). Eine
+  // Zeile mit Versandzeitpunkt OHNE Festschreibung kann also nicht ueber den
+  // Versandweg entstanden sein — sie stammt aus einer Einspielung oder einem
+  // Direkteingriff.
+  //
+  // Der Unterschied ist keine Kosmetik: ohne ihn meldet diese Uebersicht
+  // BEREITS_VERSENDET, obwohl der Erstversand nie stattgefunden hat, und der
+  // Erstlauf gilt faelschlich als erledigt.
+  const versendetUnbelegt = await zaehle(hinweise, 'invoices (versendet ohne Festschreibung)', () =>
+    inv().not('sent_at', 'is', null).is('frozen_at', null))
+  const versendetBelegt = versendet !== null && versendetUnbelegt !== null
+    ? Math.max(0, versendet - versendetUnbelegt)
+    : null
+
   // Rechnungen ohne Empfängeradresse: kommen als Kandidat nie in Frage, und
   // ihre Zahl erklärt, warum „versandbereit > 0" trotzdem zu keinem
   // Kandidaten führen kann.
@@ -210,17 +235,20 @@ export async function ermittlePilotKandidat(
           'Der Rechnungsbestand ist nicht lesbar. Ob eine Pilotrechnung bereitsteht, ist damit '
           + 'unbekannt — das ist NICHT dasselbe wie „keine vorhanden".',
         actionRequired: null,
-        versandbereit, ohneEmpfaenger, kandidat: null, freigabe, hinweise,
+        versandbereit, ohneEmpfaenger, versendetUnbelegt, kandidat: null, freigabe, hinweise,
       }
     }
-    if ((versandbereit ?? 0) === 0 && (versendet ?? 0) > 0) {
+    // BEREITS_VERSENDET nur bei einem BELEGTEN Versand — sonst bliebe der
+    // Erstlauf als erledigt stehen, obwohl er nie lief.
+    if ((versandbereit ?? 0) === 0 && (versendetBelegt ?? 0) > 0) {
       return {
         zustand: 'BEREITS_VERSENDET',
         begruendung:
-          `Es steht keine unversendete Rechnung mehr offen; ${versendet} trägt bereits einen `
-          + 'Versandzeitpunkt. Für einen weiteren Erstlauf gibt es nichts auszuwählen.',
+          `Es steht keine unversendete Rechnung mehr offen; ${versendetBelegt} trägt einen `
+          + 'Versandzeitpunkt aus einem festgeschriebenen Beleg. Für einen weiteren Erstlauf gibt '
+          + 'es nichts auszuwählen.',
         actionRequired: null,
-        versandbereit, ohneEmpfaenger, kandidat: null, freigabe, hinweise,
+        versandbereit, ohneEmpfaenger, versendetUnbelegt, kandidat: null, freigabe, hinweise,
       }
     }
     return {
@@ -228,9 +256,14 @@ export async function ermittlePilotKandidat(
       begruendung:
         'Es gibt keine festgeschriebene, noch nicht versendete Rechnung. Der Erstversand wartet '
         + 'nicht auf Technik, sondern auf einen Geschäftsvorgang: Kunde anlegen, Leistung erfassen, '
-        + 'Rechnung erzeugen und festschreiben.',
+        + 'Rechnung erzeugen und festschreiben.'
+        + ((versendetUnbelegt ?? 0) > 0
+          ? ` Hinweis: ${versendetUnbelegt} Rechnung(en) tragen einen Versandzeitpunkt OHNE `
+            + 'Festschreibung. Über den Versandweg können sie nicht entstanden sein — sie zählen '
+            + 'deshalb nicht als erfolgter Erstversand.'
+          : ''),
       actionRequired: ACTION_REQUIRED_KEIN_KANDIDAT,
-      versandbereit, ohneEmpfaenger, kandidat: null, freigabe, hinweise,
+      versandbereit, ohneEmpfaenger, versendetUnbelegt, kandidat: null, freigabe, hinweise,
     }
   }
 
@@ -273,7 +306,7 @@ export async function ermittlePilotKandidat(
             ? 'READY_FOR_APPROVAL — für diese Rechnung eine Einmal-Freigabe ausstellen.'
             : `BLOCKED_BY_ENV — ohne ${FREIGABE_ENV}=${FREIGABE_AN_WERT} lässt sich keine Freigabe ausstellen.`)
         : `PREFLIGHT_${bericht.urteil} — die offenen Punkte am Beleg klären, bevor freigegeben wird.`,
-    versandbereit, ohneEmpfaenger, freigabe, hinweise,
+    versandbereit, ohneEmpfaenger, versendetUnbelegt, freigabe, hinweise,
     kandidat: {
       invoiceId: bericht.invoiceId,
       invoiceNumber: bericht.invoiceNumber,
