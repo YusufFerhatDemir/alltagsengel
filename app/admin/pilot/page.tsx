@@ -24,6 +24,8 @@ import type {
   VersandSperreDetail,
 } from '@/lib/pilot/pilot-phasen'
 import type { BusinessInputBericht, BusinessInputStand } from '@/lib/pilot/business-inputs'
+import type { PilotKandidatUebersicht, KandidatZustand } from '@/lib/pilot/pilot-kandidat'
+import type { LaufzeitHerkunft } from '@/lib/pilot/laufzeit-herkunft'
 
 interface PilotAntwort {
   voraussetzungen: VoraussetzungErgebnis
@@ -31,8 +33,25 @@ interface PilotAntwort {
   moneyPath: MoneyPathUebersicht
   phasen: PilotPhasenUebersicht
   businessInputs: BusinessInputBericht
+  kandidat: PilotKandidatUebersicht
+  herkunft: LaufzeitHerkunft
   schritte: SchrittDefinition[]
   gekappt: boolean
+}
+
+/**
+ * Vier Zustände der Kandidatenfrage.
+ *
+ * NO_PILOT_INVOICE ist bewusst blau und nicht rot: es ist kein Defekt,
+ * sondern eine offene Geschäftshandlung. NICHT_MESSBAR dagegen ist rot —
+ * dort weiss die Seite nicht, was sie zeigt, und das ist der gefährlichere
+ * Zustand von beiden.
+ */
+const KANDIDAT_ZUSTAND: Record<KandidatZustand, { farbe: string; label: string }> = {
+  KANDIDAT_VORHANDEN: { farbe: '#0ea5e9', label: 'KANDIDAT VORHANDEN' },
+  NO_PILOT_INVOICE:   { farbe: '#6366f1', label: 'KEINE PILOTRECHNUNG' },
+  BEREITS_VERSENDET:  { farbe: '#22c55e', label: 'BEREITS VERSENDET' },
+  NICHT_MESSBAR:      { farbe: '#b91c1c', label: 'NICHT MESSBAR' },
 }
 
 /**
@@ -122,6 +141,8 @@ export default function PilotPage() {
         Weg vom Stammdatensatz bis in die Buchhaltung (Kundenketten).
       </p>
 
+      <HerkunftZeile herkunft={data.herkunft} />
+
       <Banner tone={v.echtbetriebFreigegeben ? 'success' : 'danger'}>
         {v.echtbetriebFreigegeben
           ? 'Alle Pflichtpunkte erfüllt — ein echter Kunde kann vollständig bearbeitet und abgerechnet werden.'
@@ -165,6 +186,14 @@ export default function PilotPage() {
         <KPI label="Pilotkunden" value={data.ketten.length} />
         <KPI label="Kette komplett" value={data.ketten.filter(k => k.vollstaendig).length} color={AMPEL_FARBE.gruen} />
       </div>
+
+      <h2 style={{ marginTop: 32 }}>0 · Pilotrechnung — welche trägt den Erstversand?</h2>
+      <p style={{ color: 'var(--muted)', marginBottom: 12, maxWidth: 760 }}>
+        Die operativ erste Frage: <strong>welche</strong> Rechnung ginge raus, an <strong>wen</strong>,
+        über <strong>welchen Betrag</strong>. Eine Zahl wie „3 versandbereit" beantwortet das nicht —
+        keine dieser drei muss eine Empfängeradresse haben.
+      </p>
+      <KandidatKarte uebersicht={data.kandidat} />
 
       <h2 style={{ marginTop: 32 }}>1 · Betriebs-Checkliste</h2>
       {VORAUSSETZUNG_GRUPPEN.map(gruppe => {
@@ -577,6 +606,171 @@ function EingabeZeile({ eingabe: e }: { eingabe: BusinessInputStand }) {
         <div style={{ color: 'var(--muted)', fontSize: 12, marginTop: 3, lineHeight: 1.5 }}>
           <strong>Blockiert nicht:</strong> {e.blockiertNicht}
         </div>
+      </td>
+    </tr>
+  )
+}
+
+/**
+ * Die Herkunftszeile: welcher Commit misst hier gegen welche Datenbank.
+ *
+ * Steht bewusst GANZ OBEN und nicht in einem aufklappbaren Bereich. Jede Zahl
+ * darunter beschreibt einen bestimmten Stand; wer den nicht kennt, liest die
+ * Seite als Aussage über „das System" statt über diese eine Bereitstellung.
+ */
+function HerkunftZeile({ herkunft }: { herkunft: LaufzeitHerkunft }) {
+  const nichtMessbar = herkunft.punkte.filter(p => p.stand === 'nicht_messbar')
+
+  return (
+    <div
+      className="admin-card"
+      style={{
+        marginBottom: 16, padding: '10px 14px',
+        borderLeft: `4px solid ${herkunft.produktion ? '#ef4444' : '#94a3b8'}`,
+      }}
+    >
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'baseline' }}>
+        <span style={{
+          padding: '1px 6px', borderRadius: 4, fontSize: 10, fontWeight: 700,
+          background: herkunft.produktion ? '#fee2e2' : '#f1f5f9',
+          color: herkunft.produktion ? '#991b1b' : '#475569',
+          whiteSpace: 'nowrap',
+        }}>
+          {herkunft.produktion ? 'PRODUKTION' : 'KEINE PRODUKTION'}
+        </span>
+        <span style={{ fontSize: 13, fontWeight: 500 }}>{herkunft.zusammenfassung}</span>
+      </div>
+
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 18px', marginTop: 8 }}>
+        {herkunft.punkte.map(p => (
+          <span key={p.schluessel} title={p.bedeutung} style={{ fontSize: 12, color: 'var(--muted)' }}>
+            {p.label}:{' '}
+            <code style={{ fontSize: 12, color: p.wert === null ? '#b91c1c' : 'inherit' }}>
+              {/* „—" heisst nicht messbar, niemals „nein". */}
+              {p.wert ?? '—'}
+            </code>
+          </span>
+        ))}
+      </div>
+
+      {nichtMessbar.length > 0 && (
+        <div style={{ color: 'var(--muted)', fontSize: 12, marginTop: 6, lineHeight: 1.5 }}>
+          Nicht messbar: {nichtMessbar.map(p => p.label).join(', ')}. <code>git HEAD</code>,{' '}
+          <code>origin/main</code> und der CI-Ausgang stehen hier grundsätzlich nicht — ein
+          Serverless-Lauf hat kein Arbeitsverzeichnis. Für den Abgleich:{' '}
+          <code>GET /api/pilot/snapshot?git=…&amp;origin=…&amp;ci=…</code>, dort sind sie als
+          „gemeldet" gekennzeichnet.
+        </div>
+      )}
+    </div>
+  )
+}
+
+/**
+ * Die Kandidatenkarte.
+ *
+ * Wichtiger als der Fall „Kandidat vorhanden" ist der leere Fall: dort steht
+ * die Auftragskennung, damit nicht jemand auf eine Technik wartet, die auf
+ * eine Geschäftshandlung wartet.
+ */
+function KandidatKarte({ uebersicht: u }: { uebersicht: PilotKandidatUebersicht }) {
+  const z = KANDIDAT_ZUSTAND[u.zustand]
+  const k = u.kandidat
+
+  return (
+    <div className="admin-card" style={{ marginBottom: 16, borderLeft: `4px solid ${z.farbe}` }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'center' }}>
+        <span style={{
+          padding: '2px 8px', borderRadius: 4, fontSize: 11, fontWeight: 700,
+          border: `1px solid ${z.farbe}`, color: z.farbe, whiteSpace: 'nowrap',
+        }}>
+          {z.label}
+        </span>
+        <span style={{ fontSize: 13, color: 'var(--muted)' }}>
+          {u.versandbereit === null ? '—' : u.versandbereit} versandbereit
+          {u.ohneEmpfaenger !== null && u.ohneEmpfaenger > 0
+            ? `, davon ${u.ohneEmpfaenger} ohne Empfängeradresse`
+            : ''}
+        </span>
+      </div>
+
+      <p style={{ margin: '10px 0 0', fontSize: 14, lineHeight: 1.6 }}>{u.begruendung}</p>
+
+      {u.actionRequired && (
+        <div style={{
+          marginTop: 10, padding: '8px 10px', borderRadius: 6,
+          background: '#eef2ff', color: '#3730a3', fontSize: 13, fontWeight: 600,
+        }}>
+          <code style={{ fontSize: 13 }}>{u.actionRequired}</code>
+        </div>
+      )}
+
+      {k && (
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, marginTop: 12 }}>
+          <tbody>
+            <KandidatZeile label="Rechnung" wert={k.invoiceNumber ?? k.invoiceId.slice(0, 8)} />
+            <KandidatZeile label="Kunde" wert={k.kundeName} />
+            <KandidatZeile label="Empfänger" wert={k.empfaenger} />
+            <KandidatZeile
+              label="Betrag"
+              wert={`${k.betragEuro.toFixed(2)} € (${k.betragCent} Cent)`}
+            />
+            <KandidatZeile label="Pilot-Urteil" wert={k.urteil} />
+            <KandidatZeile
+              label="Belegpaket-PDF"
+              wert={k.pdfBereit === null ? null : k.pdfBereit ? 'erzeugbar' : 'nicht erzeugbar'}
+            />
+            <KandidatZeile
+              label="Freigaben"
+              wert={
+                `${k.token.offen ?? '—'} offen, ${k.token.verbraucht ?? '—'} verbraucht`
+                + `, ${k.token.verfallen ?? '—'} verfallen`
+              }
+            />
+          </tbody>
+        </table>
+      )}
+
+      {k && k.blocker.length > 0 && (
+        <div style={{ marginTop: 10 }}>
+          <strong style={{ fontSize: 13 }}>Blocker:</strong>
+          <ul style={{ margin: '4px 0 0', paddingLeft: 18, fontSize: 13, lineHeight: 1.6 }}>
+            {k.blocker.map((b, i) => <li key={i}>{b}</li>)}
+          </ul>
+        </div>
+      )}
+
+      {k && k.zuPruefen.length > 0 && (
+        <div style={{ marginTop: 8 }}>
+          <strong style={{ fontSize: 13 }}>Zur Sichtung:</strong>
+          <ul style={{ margin: '4px 0 0', paddingLeft: 18, fontSize: 13, lineHeight: 1.6 }}>
+            {k.zuPruefen.map((b, i) => <li key={i}>{b}</li>)}
+          </ul>
+        </div>
+      )}
+
+      <p style={{ color: 'var(--muted)', fontSize: 12, marginTop: 12, lineHeight: 1.5 }}>
+        {u.freigabe.grund} Diese Karte ist eine Beschreibung, keine Erlaubnis — die Erlaubnis ist
+        ausschliesslich eine Zeile in <code>pilot_send_gate</code>, ausgestellt über{' '}
+        <code>POST /api/billing/invoices/&lt;id&gt;/freigabe</code>.
+      </p>
+
+      {u.hinweise.length > 0 && (
+        <div style={{ color: 'var(--muted)', fontSize: 12, marginTop: 8, lineHeight: 1.5 }}>
+          <strong>Nicht messbar:</strong> {u.hinweise.join(' · ')}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function KandidatZeile({ label, wert }: { label: string; wert: string | null }) {
+  return (
+    <tr style={{ borderTop: '1px solid var(--border, #e5e7eb)' }}>
+      <td style={{ padding: '7px 8px 7px 0', width: 150, color: 'var(--muted)' }}>{label}</td>
+      <td style={{ padding: '7px 0', fontWeight: 500, color: wert === null ? '#b91c1c' : 'inherit' }}>
+        {/* Wieder: „—" ist „nicht ermittelt", nicht „leer". */}
+        {wert ?? '—'}
       </td>
     </tr>
   )
