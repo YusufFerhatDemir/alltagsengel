@@ -1,15 +1,15 @@
-# MASTER HANDOFF -- Stand 26.08.2026, nach Phase 8.2 (Live Pilot Final Readiness)
+# MASTER HANDOFF -- Stand 27.08.2026, nach Phase 8.3 (Final Live-Pilot Preparation)
 
 Dieses Dokument ist die einzige Wahrheitsquelle fuer den technischen Zustand
 beider Produkte. Jede neue Session liest zuerst diese Datei.
 
-> ## Gesamtstatus: `READY_FOR_EXPLICIT_USER_APPROVAL`
+> ## Gesamtstatus: `NOT_READY_FOR_LIVE_PILOT` — ein P0 offen
 >
-> **Technisch ist alles fuer den ersten kontrollierten echten Geldvorgang
-> bereit.** Kein P0 und kein P1 im Alltagsengel-Repo. Typecheck 0 Fehler,
-> 8.228+ Tests gruen. Migration `20261005000000` ist **LIVE** -- die
-> Einmal-Freigabe ist benutzbar, die Phasenkette in `/admin/pilot` steht
-> nicht mehr auf BLOCKIERT.
+> **Ein technischer Blocker verhindert die Pilotbereitschaft:** Migration
+> `20261005000000_pilot_send_gate.sql` ist **NICHT LIVE**. Phase 8.2 hatte
+> sie faelschlich als angewendet gemeldet -- Phase 8.3 widerlegt das mit
+> zwei unabhaengigen Pruefwegen (`to_regclass` = NULL, PostgREST 404).
+> Alles andere ist technisch sauber. Typecheck 0 Fehler, 8.228+ Tests gruen.
 >
 > **Was dieser Status bedeutet:** Der Geschaeftsfuehrer entscheidet, wann und
 > ob der erste echte Vorgang stattfindet. Fuer jeden der drei Geldpfade gibt
@@ -32,6 +32,9 @@ beider Produkte. Jede neue Session liest zuerst diese Datei.
 >   `docs/ENV_KONFIGURATION.md` Paragraph 1).
 > - **Kein Pilot-Kandidat vorhanden.** Alle 3 Rechnungen sind Seed-Daten.
 >   Fuer den Pilot muss ein neuer Klient + Rechnung erzeugt werden.
+> - **Migration `20261005000000` wartet auf den Supabase-SQL-Editor.** Ohne
+>   sie ist die Einmal-Freigabe nicht benutzbar und die `APPROVAL`-Phase
+>   in `/admin/pilot` steht auf BLOCKIERT.
 >
 > **Fuer efy care (Fremdrepo) gilt dieser Status ausdruecklich nicht** --
 > dort stehen zwei P1 offen (Paragraph 7 T-6/T-7).
@@ -46,9 +49,9 @@ Dokument nicht den Stand, der tatsaechlich deployed ist -- dann zuerst
 
 | Anker | Bedeutung | Wert |
 |---|---|---|
-| **CODE_HEAD** | lokaler `main`-HEAD | `d6d4f1f` (Phase 8.2 Code+Docs) |
-| **HANDOFF_COMMIT** | Commit, in dem dieses Dokument zuletzt geschrieben wurde | `d6d4f1f` |
-| **ORIGIN_MAIN** | `origin/main` nach `deploy.sh` (Remote-Wahrheit) | `d6d4f1f` |
+| **CODE_HEAD** | lokaler `main`-HEAD | *(wird nach deploy.sh nachgezogen)* |
+| **HANDOFF_COMMIT** | Commit, in dem dieses Dokument zuletzt geschrieben wurde | *(wird nach deploy.sh nachgezogen)* |
+| **ORIGIN_MAIN** | `origin/main` nach `deploy.sh` (Remote-Wahrheit) | *(wird nach deploy.sh nachgezogen)* |
 
 Pruefbefehl:
 
@@ -63,13 +66,21 @@ git rev-parse HEAD && git rev-parse origin/main
 > darueber hinaus -- insbesondere jeder Commit, der Code anfasst -- bedeutet:
 > dieses Dokument ist aelter als der deployte Stand.
 
-**Letzter Code-Commit** (der letzte Commit, der Anwendungscode anfasst): `d6d4f1f`
+**Letzter Code-Commit** (der letzte Commit, der Anwendungscode anfasst): `aa50d11`
+
+**Phase-8.3-Commits (Alltagsengel):**
+
+| Commit | Inhalt |
+|---|---|
+| `aa50d11` | Tracks 1-5: Source-of-Truth, Send-Gate-Verifikation, Pilot-Kandidat, Laufzeit-Herkunft, Control Center |
+| *(nach deploy)* | Tracks 6-10: Idempotenz-Tests, Reports, Handoff |
 
 **Phase-8.2-Commits (Alltagsengel):**
 
 | Commit | Inhalt |
 |---|---|
 | `d6d4f1f` | Phase 8.2: DATEV-Validierung, P0-Detailtabelle, VersandSperreDetail, Reports, Pricing-Template |
+| `d534383` | Phase 8.2 Commit-Anker nachgezogen |
 
 **Phase-8-Commits (Alltagsengel):**
 
@@ -154,8 +165,10 @@ git rev-parse HEAD && git rev-parse origin/main
 - anon writes: 0
 - Storage: 7 Buckets gehaertet (file_size_limit + MIME-Allowlist)
 - DTA-Policies: org-scoped (`foldername[2] = current_org_id`)
-- **Migration `20261005000000` LIVE:** `pilot_send_gate` + `pilot_versand_sperre`
-  existieren, 0 Zeilen, RLS aktiv, Constraints korrekt. In Phase 8.2 verifiziert.
+- **Migration `20261005000000` NICHT LIVE:** Phase 8.2 meldete sie als
+  angewendet, Phase 8.3 widerlegt das (`to_regclass` = NULL, PostgREST 404).
+  Wartet auf den Supabase-SQL-Editor. Verifikation: `scripts/verify-pilot-send-gate.mjs`
+  (26 Pruefpunkte, muss 26/26 zeigen).
 
 ### ChairMatch (pwdbjqfpgumyfktbfswg)
 
@@ -197,7 +210,39 @@ git rev-parse HEAD && git rev-parse origin/main
 
 ---
 
-## 4a. Zuletzt erledigte Arbeiten -- Phase 8.2, alle 12 Tracks (26.08.2026)
+## 4a. Zuletzt erledigte Arbeiten -- Phase 8.3, alle 10 Tracks (27.08.2026)
+
+Volldokumentation: **`docs/reports/PHASE8_3_FINAL_LIVE_PILOT_PREP.md`**
+Detailberichte: `PHASE8_3_TRACKS_1-5.md` -- `PHASE8_3_TRACKS_6-10.md`
+
+**P0: Migration `20261005000000` ist NICHT LIVE.** Phase 8.2 hatte sie
+faelschlich als angewendet gemeldet. Zwei unabhaengige Pruefwege widerlegen
+das (`to_regclass` = NULL, PostgREST 404). Das Verifikations-Tool
+`scripts/verify-pilot-send-gate.mjs` (26 Pruefpunkte) meldet 0/26.
+
+| Track | Ergebnis |
+|---|---|
+| **1 -- Source of Truth** | GEKLAERT: Lock-Datei verursachte stale cache, kein echter Widerspruch |
+| **2 -- Pilot Send Gate** | **P0: NICHT LIVE.** Beide Tabellen fehlen |
+| **3 -- Pilot-Workflow** | 12/15 verdrahtet, 2 bewusst offen (Token→Versand, Post-Send nicht aufgerufen) |
+| **4 -- /admin/pilot** | 3 Punkte nachgeruestet: Kandidat, Herkunft, Token-Zaehlung |
+| **5 -- Flag-Safety** | SAFE: Variable allein kann keinen Versand ausloesen |
+| **6 -- Resend** | VERSANDBEREIT: API Key gueltig, Domain verifiziert, DKIM/SPF/DMARC korrekt |
+| **7 -- CAMT** | Bereit (DRY_RUN fest), C-1 weiterhin offen |
+| **8 -- Business Input** | D1/D2 fehlen, Template bereit, §45a offen |
+| **9 -- Tests** | 1 Fund: Idempotenz-Key hatte 0 Tests, 2 ergaenzt (15/15 gruen) |
+| **10 -- Reports** | Erstellt, nicht scharf gestellt |
+
+**3 Code-Aenderungen:** pilot-kandidat.ts, laufzeit-herkunft.ts, verify-pilot-send-gate.mjs.
+**2 Befunde** (R-1 niedrig: replyTo nie gesetzt; R-2 info: kein Apex-SPF).
+**1 Praezisierung:** Duplikatschutz = 3 Ebenen vor Versand (nicht 4).
+**1 Fund:** Idempotenz-Key hatte 0 Tests.
+
+**Nichts wurde scharf gestellt.** Kein Versand, kein Token, kein Flag, kein DDL.
+
+---
+
+## 4b. Phase 8.2, alle 12 Tracks (26.08.2026)
 
 Volldokumentation: **`docs/reports/PHASE8_2_LIVE_PILOT_FINAL_READINESS.md`**
 Detailberichte: `PHASE8_2_TRACKS_1-6.md` -- `PHASE8_2_TRACKS_7-12.md`
@@ -236,7 +281,7 @@ keine Bankdatei, keine Zahlung, kein Flag aktiviert, keine Preise gesetzt.
 
 ---
 
-## 4b. Phase 8, alle 10 Tracks (26.08.2026)
+## 4c. Phase 8, alle 10 Tracks (26.08.2026)
 
 Volldokumentation: **`docs/reports/PHASE8_FIRST_REAL_PILOT.md`**
 Detailberichte: `PHASE8_TRACKS_1-4.md` -- `PHASE8_TRACKS_5-10.md`
@@ -273,7 +318,7 @@ fuer `gesetzt_am`, Regressionstest auf Import-Zeilen statt Volltext.
 
 ---
 
-## 4c. Phase 7 -- alle 8 Tracks (25./26.08.2026)
+## 4d. Phase 7 -- alle 8 Tracks (25./26.08.2026)
 
 Volldokumentation: **`docs/reports/PHASE7_MONEY_PATH_PILOT.md`**
 Detailberichte: `PHASE7_TRACKS_1-4.md` -- `PHASE7_TRACKS_5-8.md`
@@ -300,7 +345,7 @@ einer Mahnung an einen zahlenden Kunden (C-1).
 
 ---
 
-## 4d. Phase 6B (25.08.2026)
+## 4e. Phase 6B (25.08.2026)
 
 Volldokumentation: **`docs/reports/PHASE6B_TECHNICAL_PROGRESS.md`**
 
@@ -390,7 +435,7 @@ Abschnitt.** Nichts davon ist ein Code-Problem.
 | E3 | Erster CAMT-Import nie produktiv gelaufen | Braucht echte Bankdatei. **Vorstufe: `POST /api/pilot/camt-dry-run?format=text`** |
 | E4 | Erster Rechnungsversand nie produktiv | `invoice_email_log` = 0. **Vorstufe: `GET /api/billing/invoices/<id>/pilot?format=text`** |
 | E5 | Paragraph 45a Bayern Antrag unvollstaendig | Landesamt fuer Pflege |
-| ~~E6~~ | ~~Migration `20261005000000`~~ | **ERLEDIGT** -- Phase 8.2 Track 2 verifiziert: Tabellen existieren, RLS aktiv, 0 Zeilen. |
+| **E6** | **Migration `20261005000000_pilot_send_gate.sql` NICHT angewendet** | Supabase SQL-Editor (DDL). Phase 8.2 meldete faelschlich LIVE; Phase 8.3 widerlegt. Verifikation: `scripts/verify-pilot-send-gate.mjs` (26 Punkte). **Erster Schritt vor allem anderen.** |
 
 ### BUSINESS_INPUT_REQUIRED
 
@@ -463,7 +508,8 @@ Geschaeftsentscheidung, keine technische Aufgabe.**
 
 ### Reihenfolge fuer den begleiteten Erstbetrieb
 
-1. ~~Migration `20261005000000` anwenden~~ -- **ERLEDIGT.**
+1. **Migration `20261005000000` im Supabase-SQL-Editor anwenden.** Danach
+   `scripts/verify-pilot-send-gate.mjs` ausfuehren -- muss 26/26 zeigen.
 2. **`/admin/pilot` Abschnitt 4 oeffnen.** Die Phasenkette zeigt, wo der
    Erstbetrieb steht. Ein `--` statt einer Zahl heisst „nicht messbar".
 3. **`GET /api/pilot/snapshot?format=text`** einmal ansehen -- Zeile 1 muss
@@ -509,6 +555,12 @@ Geschaeftsentscheidung, keine technische Aufgabe.**
 
 | Zweck | Pfad |
 |---|---|
+| **Phase-8.3-Gesamtbericht** | `docs/reports/PHASE8_3_FINAL_LIVE_PILOT_PREP.md` |
+| Phase-8.3-Detailbericht Tracks 1--5 | `docs/reports/PHASE8_3_TRACKS_1-5.md` |
+| Phase-8.3-Detailbericht Tracks 6--10 | `docs/reports/PHASE8_3_TRACKS_6-10.md` |
+| Send-Gate-Verifikation (26 Punkte) | `scripts/verify-pilot-send-gate.mjs` |
+| Pilot-Kandidat | `lib/pilot/pilot-kandidat.ts` |
+| Laufzeit-Herkunft | `lib/pilot/laufzeit-herkunft.ts` |
 | **Phase-8.2-Gesamtbericht** | `docs/reports/PHASE8_2_LIVE_PILOT_FINAL_READINESS.md` |
 | Phase-8.2-Detailbericht Tracks 1--6 | `docs/reports/PHASE8_2_TRACKS_1-6.md` |
 | Phase-8.2-Detailbericht Tracks 7--12 | `docs/reports/PHASE8_2_TRACKS_7-12.md` |
@@ -585,7 +637,25 @@ Geschaeftsentscheidung, keine technische Aufgabe.**
 
 ---
 
-## 11. Phase 8.2 -- Live Pilot Final Readiness (26.08.2026)
+## 11. Phase 8.3 -- Final Live-Pilot Preparation (27.08.2026)
+
+| Pruefpunkt | Phase 8.2 | Phase 8.3 |
+|---|---|---|
+| HEAD = origin/main | `d534383` | `aa50d11` + Tracks 6-10 |
+| CI | GRUEN | GRUEN |
+| `pilot_send_gate` Tabelle | Faelschlich LIVE gemeldet | **NICHT LIVE** (P0) |
+| Resend API Key | ungeprüeft | **GUELTIG** (HTTP 200) |
+| Domain/DKIM/SPF/DMARC | dokumentiert | **LIVE VERIFIZIERT** |
+| Idempotenz-Key Tests | 0 | **2 ergaenzt (15/15)** |
+| Flag-Safety | -- | **SAFE** |
+| Pilot-Kandidat UI | fehlte | **nachgeruestet** |
+| Workflow-Verdrahtung | -- | 12/15 (2 bewusst, 1 unbeabsichtigt) |
+
+**REAL_ACTIONS_EXECUTED: NONE**
+
+---
+
+## 11b. Phase 8.2 -- Live Pilot Final Readiness (26.08.2026)
 
 Abschliessende Pruefung aller 12 Tracks. Vollbericht:
 `docs/reports/PHASE8_2_LIVE_PILOT_FINAL_READINESS.md`
@@ -610,4 +680,4 @@ Abschliessende Pruefung aller 12 Tracks. Vollbericht:
 
 **REAL_ACTIONS_EXECUTED: NONE**
 
-*Aktualisiert 26.08.2026 nach Phase 8.2 (Live Pilot Final Readiness) -- Alltagsengel*
+*Aktualisiert 27.08.2026 nach Phase 8.3 (Final Live-Pilot Preparation) -- Alltagsengel*

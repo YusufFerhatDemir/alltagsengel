@@ -331,6 +331,52 @@ describe('versendeRechnungPerEmail', () => {
     })
   })
 
+  // ── Doppelversand-Schutz beim Provider ──
+  //
+  // WARUM DIESE ZWEI TESTS NOETIG SIND
+  // sendRawEmail() legt ein Zeitlimit von 20 s ueber den Resend-Aufruf. Reisst
+  // es, gilt der Versuch als fehlgeschlagen (408 = voruebergehend) und der
+  // Wiederholungslauf sendet erneut — ohne dass irgendjemand weiss, ob Resend
+  // den Auftrag beim ersten Mal doch angenommen hat. Das EINZIGE, was den
+  // Kunden dann vor einer zweiten Rechnungsmail schuetzt, ist der
+  // Idempotenzschluessel: Resend erkennt den Auftrag 24 Stunden lang wieder.
+  //
+  // Der Schluessel wurde bisher von keinem Test beruehrt. Faellt er weg oder
+  // aendert sich seine Form, bleibt die Suite gruen und der Schaden zeigt sich
+  // erst beim Kunden im Posteingang.
+  it('sendet mit Idempotenzschluessel rechnung:{invoiceId}', async () => {
+    const { stub } = makeStub()
+    await versendeRechnungPerEmail(stub, {
+      preflight: 'uebersprungen', invoiceId: INV, organizationId: ORG, actorId: ACTOR,
+    })
+
+    expect(mailMock.mock.calls[0][0].idempotenzSchluessel).toBe(`rechnung:${INV}`)
+  })
+
+  // Die Gegenprobe: ein ausdruecklicher Nachversand SOLL eine zweite Mail
+  // erzeugen. Mit Schluessel wuerde Resend sie innerhalb von 24 Stunden
+  // verschlucken und der Kunde bekaeme nichts — obwohl ein Mensch genau das
+  // angefordert hat. Deshalb bleibt der Schluessel hier bewusst leer.
+  it('laesst den Idempotenzschluessel beim Nachversand bewusst weg', async () => {
+    const { stub } = makeStub({
+      invoice: {
+        id: INV, invoice_number: 'RE-1', invoice_number_formatted: 'RE-1',
+        status: 'freigegeben', correction_type: null, total_amount: 10,
+        period_start: null, period_end: null, due_date: null,
+        sent_at: '2026-08-01T09:00:00Z', frozen_at: '2026-07-31T10:00:00Z',
+        deleted_at: null,
+        client: { first_name: 'A', last_name: 'B', email: 'a@example.org' },
+      },
+    })
+
+    await versendeRechnungPerEmail(stub, {
+      preflight: 'uebersprungen', invoiceId: INV, organizationId: ORG,
+      actorId: ACTOR, erneutSenden: true,
+    })
+
+    expect(mailMock.mock.calls[0][0].idempotenzSchluessel).toBeUndefined()
+  })
+
   it('schreibt einen Audit-Eintrag mit der Empfaengeradresse', async () => {
     const { stub, protokoll } = makeStub()
     await versendeRechnungPerEmail(stub, {
