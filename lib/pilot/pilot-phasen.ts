@@ -132,6 +132,14 @@ export interface PilotPhase {
   kennzahlen: PhasenKennzahl[]
 }
 
+export interface VersandSperreDetail {
+  id: string
+  schwere: string
+  grund: string
+  invoice_id: string | null
+  gesetzt_am: string
+}
+
 export interface PilotPhasenUebersicht {
   stichtag: string
   organizationId: string
@@ -142,6 +150,8 @@ export interface PilotPhasenUebersicht {
   aktuellePhase: PilotPhase | null
   /** Wie viele Phasen sind durch? */
   fortschritt: { verifiziert: number; gesamt: number; prozent: number }
+  /** Offene Versandsperren mit Details — leer wenn keine, null wenn nicht lesbar. */
+  versandSperrenDetails: VersandSperreDetail[] | null
   /** Messungen, die technisch nicht ausgeführt werden konnten. */
   hinweise: string[]
   /** Muss jede Oberfläche mitzeigen. */
@@ -270,6 +280,22 @@ export async function ermittlePilotPhasen(
   const versandSperren = await zaehle(z, 'pilot_versand_sperre (offen)', () => admin
     .from('pilot_versand_sperre').select('id', { count: 'exact', head: true })
     .eq('organization_id', orgId).is('aufgehoben_am', null))
+
+  let versandSperrenDetails: VersandSperreDetail[] | null = null
+  try {
+    const { data, error } = await admin
+      .from('pilot_versand_sperre')
+      .select('id, schwere, grund, invoice_id, gesetzt_am')
+      .eq('organization_id', orgId)
+      .is('aufgehoben_am', null)
+      .order('gesetzt_am', { ascending: false })
+      .limit(50)
+    if (!error && data) {
+      versandSperrenDetails = data as VersandSperreDetail[]
+    }
+  } catch {
+    z.hinweise.push('pilot_versand_sperre Details nicht lesbar')
+  }
 
   const phasen: PilotPhase[] = []
   const phase = (
@@ -570,6 +596,7 @@ export async function ermittlePilotPhasen(
       gesamt: phasen.length,
       prozent: phasen.length === 0 ? 0 : Math.round((verifiziert / phasen.length) * 100),
     },
+    versandSperrenDetails,
     hinweise: z.hinweise,
     freigabeHinweis: PHASEN_FREIGABE_HINWEIS,
   }

@@ -41,6 +41,21 @@ const DEFAULT_CONFIG: DatevConfig = {
 };
 
 // ---------------------------------------------------------------------------
+// Validierung
+// ---------------------------------------------------------------------------
+
+const BERATERNUMMER_RE = /^\d{1,7}$/;
+const MANDANTENNUMMER_RE = /^\d{1,5}$/;
+
+export function validiereBeraternummer(v: string): boolean {
+  return BERATERNUMMER_RE.test(v);
+}
+
+export function validiereMandantennummer(v: string): boolean {
+  return MANDANTENNUMMER_RE.test(v);
+}
+
+// ---------------------------------------------------------------------------
 // Laden / Speichern
 // ---------------------------------------------------------------------------
 
@@ -91,6 +106,12 @@ export async function saveDatevConfig(
   if (merged.kontenrahmen !== 'SKR03' && merged.kontenrahmen !== 'SKR04') {
     throw new Error('Kontenrahmen muss SKR03 oder SKR04 sein.');
   }
+  if (merged.beraternummer && !validiereBeraternummer(merged.beraternummer)) {
+    throw new Error('Beraternummer muss 1-7 Ziffern sein (DATEV-Vorgabe).');
+  }
+  if (merged.mandantennummer && !validiereMandantennummer(merged.mandantennummer)) {
+    throw new Error('Mandantennummer muss 1-5 Ziffern sein (DATEV-Vorgabe).');
+  }
 
   const { error } = await supabase
     .from('organizations')
@@ -107,7 +128,15 @@ export async function saveDatevConfig(
  */
 export function isDatevConfigComplete(config: DatevConfig): { ok: boolean; fehlend: string[] } {
   const fehlend: string[] = [];
-  if (!config.beraternummer) fehlend.push('Beraternummer');
-  if (!config.mandantennummer) fehlend.push('Mandantennummer');
+  if (!config.beraternummer) {
+    fehlend.push('Beraternummer');
+  } else if (!validiereBeraternummer(config.beraternummer)) {
+    fehlend.push('Beraternummer (Format: 1-7 Ziffern)');
+  }
+  if (!config.mandantennummer) {
+    fehlend.push('Mandantennummer');
+  } else if (!validiereMandantennummer(config.mandantennummer)) {
+    fehlend.push('Mandantennummer (Format: 1-5 Ziffern)');
+  }
   return { ok: fehlend.length === 0, fehlend };
 }
