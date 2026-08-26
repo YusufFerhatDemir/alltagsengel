@@ -75,6 +75,32 @@ function zaehlerFuer(werte: { tabelle: string; wenn?: (a: FakeAufruf) => boolean
 const ohneFilterAusser = (spalten: string[]) => (a: FakeAufruf) =>
   !a.filter.some(f => f.spalte !== 'organization_id' && !spalten.includes(f.spalte))
 
+// ── Versendet: belegt vs. unbelegt ───────────────────────────────────────
+// Seit Phase 8.4 fragt die Phasenkette zweimal nach `sent_at IS NOT NULL`:
+// einmal insgesamt, einmal zusaetzlich mit `frozen_at IS NULL`. Ein Fixture,
+// das beide Abfragen gleich beantwortet, behauptet „alle Versendungen sind
+// unbelegt" — deshalb muessen sie hier getrennt werden.
+const istVersendetGesamt = (a: FakeAufruf) =>
+  hatFilter(a, 'not', 'sent_at') && !hatFilter(a, 'is', 'frozen_at', null)
+const istVersendetUnbelegt = (a: FakeAufruf) =>
+  hatFilter(a, 'not', 'sent_at') && hatFilter(a, 'is', 'frozen_at', null)
+
+/** n belegte Versendungen (festgeschrieben), keine unbelegten. */
+function versendetBelegt(n: number) {
+  return [
+    { tabelle: 'invoices', wenn: istVersendetUnbelegt, count: 0 },
+    { tabelle: 'invoices', wenn: istVersendetGesamt, count: n },
+  ]
+}
+
+/** n Versandzeitpunkte OHNE Festschreibung — kein einziger belegter Versand. */
+function versendetUnbelegt(n: number) {
+  return [
+    { tabelle: 'invoices', wenn: istVersendetUnbelegt, count: n },
+    { tabelle: 'invoices', wenn: istVersendetGesamt, count: n },
+  ]
+}
+
 // ═══════════════════════════════════════════════════════════════════════
 // 1. Struktur
 // ═══════════════════════════════════════════════════════════════════════
@@ -243,12 +269,21 @@ describe('PRE-FLIGHT', () => {
     expect(phase(u, 'PRE_FLIGHT').begruendung).toContain('sagt es NICHT')
   })
 
-  it('VERIFIED, sobald etwas versendet wurde', async () => {
-    const f = fake(zaehlerFuer([
-      { tabelle: 'invoices', wenn: a => hatFilter(a, 'not', 'sent_at'), count: 1 },
-    ]))
+  it('VERIFIED, sobald etwas BELEGT versendet wurde', async () => {
+    const f = fake(zaehlerFuer(versendetBelegt(1)))
     const u = await lauf(f)
     expect(phase(u, 'PRE_FLIGHT').status).toBe('VERIFIED')
+  })
+
+  it('NICHT VERIFIED, wenn der Versandzeitpunkt ohne Festschreibung dasteht', async () => {
+    // Der Versandweg weist eine nicht festgeschriebene Rechnung ab — ein
+    // sent_at ohne frozen_at kann also nicht von ihm stammen. Vor Phase 8.4
+    // meldete die Kette hier „der Preflight ist mindestens einmal
+    // durchlaufen", obwohl er nie lief.
+    const f = fake(zaehlerFuer(versendetUnbelegt(3)))
+    const u = await lauf(f)
+    expect(phase(u, 'PRE_FLIGHT').status).toBe('NOT_STARTED')
+    expect(phase(u, 'PRE_FLIGHT').begruendung).toContain('nicht festgeschrieben')
   })
 })
 
@@ -291,14 +326,24 @@ describe('SEND und DELIVERY', () => {
     expect(phase(u, 'DELIVERY').status).toBe('FAILED')
   })
 
-  it('EXECUTING bei sent_at ohne erfolgreiche Protokollzeile — der Fall für die Nachprüfung', async () => {
-    const f = fake(zaehlerFuer([
-      { tabelle: 'invoices', wenn: a => hatFilter(a, 'not', 'sent_at'), count: 1 },
-    ]))
+  it('EXECUTING bei belegtem sent_at ohne erfolgreiche Protokollzeile — der Fall für die Nachprüfung', async () => {
+    const f = fake(zaehlerFuer(versendetBelegt(1)))
     const u = await lauf(f)
     expect(phase(u, 'SEND').status).toBe('VERIFIED')
     expect(phase(u, 'DELIVERY').status).toBe('EXECUTING')
     expect(phase(u, 'DELIVERY').naechsterSchritt).toContain('pruefeNachVersand')
+  })
+
+  it('BLOCKED statt VERIFIED, wenn alle Versandzeitpunkte unbelegt sind', async () => {
+    // Der gefährlichste Zustand: es SIEHT versendet aus, ist es aber
+    // nachweislich nicht.
+    const f = fake(zaehlerFuer(versendetUnbelegt(3)))
+    const u = await lauf(f)
+    expect(phase(u, 'SEND').status).toBe('BLOCKED')
+    expect(phase(u, 'SEND').begruendung).toContain('nicht festgeschrieben')
+    expect(phase(u, 'SEND').naechsterSchritt).toContain('Herkunft')
+    // Und DELIVERY darf daraus kein „läuft noch" ableiten.
+    expect(phase(u, 'DELIVERY').status).toBe('NOT_STARTED')
   })
 
   it('VERIFIED bei belegter Zustellung', async () => {
@@ -370,8 +415,8 @@ describe('ALLOCATION', () => {
 describe('RECONCILIATION', () => {
   it('ist NIE VERIFIED — diese Übersicht rechnet die Abstimmung nicht mit', async () => {
     const f = fake(zaehlerFuer([
-      { tabelle: 'invoices', wenn: a => hatFilter(a, 'not', 'sent_at'), count: 5 },
       { tabelle: 'payment_allocations', count: 5 },
+      ...versendetBelegt(5),
       { tabelle: 'invoice_email_log', wenn: a => hatFilter(a, 'eq', 'status', 'versendet'), count: 5 },
       { tabelle: 'camt_imports', wenn: ohneFilterAusser([]), count: 1 },
       { tabelle: 'zahlungseingaenge', count: 5 },

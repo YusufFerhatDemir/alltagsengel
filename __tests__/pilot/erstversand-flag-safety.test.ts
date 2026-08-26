@@ -29,6 +29,19 @@ import {
 
 const WURZEL = process.cwd()
 
+/**
+ * Streicht Block- und Zeilenkommentare.
+ *
+ * Der Scan unten wollte von Anfang an nur ECHTE Auswertungen zaehlen — er tat
+ * es aber nicht: `includes()` traf auch jede Erwaehnung in einem Kommentar.
+ * Solange keine Datei den Namen im Fliesstext nannte, fiel das nicht auf.
+ */
+function ohneKommentare(quelle: string): string {
+  return quelle
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .replace(/(^|[^:])\/\/.*$/gm, '$1')
+}
+
 function dateienUnter(verzeichnis: string, endungen = ['.ts', '.tsx']): string[] {
   const treffer: string[] = []
   const gehe = (pfad: string) => {
@@ -78,13 +91,19 @@ describe('Reichweite', () => {
   const lesestellen = dateienUnter(join(WURZEL, 'app'))
     .concat(dateienUnter(join(WURZEL, 'lib')))
     .filter(d => {
-      const inhalt = readFileSync(d, 'utf8')
+      const inhalt = ohneKommentare(readFileSync(d, 'utf8'))
       // Nur echte Auswertungen zählen, keine Erwähnung in einem Kommentar
       // oder in der Beschreibung des Variablenregisters.
       return inhalt.includes(FREIGABE_ENV)
         && !d.endsWith(join('lib', 'env', 'register.ts'))
     })
     .map(d => relative(WURZEL, d))
+
+  it('findet die Auswertung überhaupt (Gegenprobe)', () => {
+    // Ohne diese Probe wäre der Scan still grün, sobald ohneKommentare()
+    // zu gierig wird und den ganzen Quelltext wegstreicht.
+    expect(lesestellen).toContain(join('lib', 'pilot', 'send-gate.ts'))
+  })
 
   it('wird ausserhalb des Registers nur an einer Stelle ausgewertet', () => {
     // Jede weitere Lesestelle wäre ein zweiter Versandschalter mit
@@ -102,12 +121,26 @@ describe('Reichweite', () => {
     }
   })
 
-  it('der Versandweg selbst wertet sie nicht aus', () => {
-    // Belegt die Trennung: die Variable regelt die FREIGABE, nicht den
-    // VERSAND. Wer das ändert, macht sie zu einem Versandschalter.
-    const versand = readFileSync(join(WURZEL, 'lib/billing/versand/rechnung-versand.ts'), 'utf8')
+  it('der Versandweg liest die Variable nicht selbst, sondern fragt das Gate', () => {
+    // ── GEÄNDERTE AUSSAGE (Phase 8.4, Schliessung von T3-1) ──────────────
+    // Vorher stand hier: „der Versandweg wertet sie nicht aus" — die
+    // Variable regelte die FREIGABE, nicht den VERSAND. Das war zugleich der
+    // Befund: eine Freigabe war ausstellbar, aber kein Versandweg verlangte
+    // sie. Seit `versendeRechnungPerEmail()` die Einmal-Freigabe erzwingt,
+    // hängt der Versand an der Variable — mittelbar.
+    //
+    // Was weiterhin gilt und hier geschützt wird: es gibt genau EINE
+    // Definition der Strenge. Der Versandweg darf `process.env` NICHT selbst
+    // befragen, sondern ausschliesslich `pilotGatePflicht()` — sonst
+    // entstünde ein zweiter Schalter mit eigener Auslegung von „gesetzt",
+    // und der schwächere gewinnt immer.
+    const versand = ohneKommentare(
+      readFileSync(join(WURZEL, 'lib/billing/versand/rechnung-versand.ts'), 'utf8'),
+    )
     expect(versand).not.toContain(FREIGABE_ENV)
     expect(versand).not.toContain('FIRST_REAL_INVOICE_APPROVED')
+    expect(versand).toContain('pilotGatePflicht(')
+    expect(versand).toContain('verbraucheSendeToken(')
   })
 })
 

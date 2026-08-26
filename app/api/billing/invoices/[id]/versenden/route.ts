@@ -12,8 +12,14 @@ import { versendeRechnungPerEmail } from '@/lib/billing/versand/rechnung-versand
  * Erzeugt das Belegpaket-PDF und schickt es als E-Mail an den Klienten.
  * Nur fuer Administratoren, nur fuer die eigene Organisation.
  *
- * Body (optional): { erneutSenden?: boolean } — versendet auch dann, wenn
- * invoices.sent_at schon gesetzt ist (bewusster Nachversand).
+ * Body (optional):
+ *   { erneutSenden?: boolean } — versendet auch dann, wenn invoices.sent_at
+ *     schon gesetzt ist (bewusster Nachversand).
+ *   { token?: string } — die Einmal-Freigabe aus
+ *     POST /api/billing/invoices/[id]/freigabe. PFLICHT, solange
+ *     PILOT_ERSTVERSAND_FREIGEGEBEN=1 gesetzt ist und es sich um den
+ *     Erstversand handelt; sonst wirkungslos. Ohne gueltiges Token antwortet
+ *     der Versand mit 'uebersprungen' und nennt den Ablehnungscode.
  *
  * Antwort-Status:
  *   'versendet'      — Mail ist raus, sent_at gesetzt
@@ -47,11 +53,15 @@ export async function POST(
     }
 
     let erneutSenden = false
+    let token: string | null = null
     try {
       const body = await request.json()
       erneutSenden = body?.erneutSenden === true
+      token = typeof body?.token === 'string' ? body.token : null
     } catch {
-      // Kein Body ist erlaubt — Standard: kein Nachversand.
+      // Kein Body ist erlaubt — Standard: kein Nachversand, kein Token.
+      // Ohne Token laeuft der Versand nur, solange der Pilotbetrieb aus ist;
+      // ist er an, weist ihn die Gate-Pruefung ab.
     }
 
     const admin = createAdminClient()
@@ -60,6 +70,7 @@ export async function POST(
       organizationId,
       actorId: user.id,
       erneutSenden,
+      pilotToken: token,
       // Ein Mensch hat den Versand ausgeloest: er darf einen Punkt mit
       // Sichtungsbedarf (NEEDS_REVIEW) verantworten — etwa eine
       // unvollstaendige Postanschrift. BLOCKED bleibt auch fuer ihn

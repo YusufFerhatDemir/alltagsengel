@@ -67,8 +67,14 @@ console.log(`\nPilot-Send-Gate-Verifikation gegen ${BASIS.replace(/^https:\/\//,
 // ── 1) Existenz der beiden Tabellen ────────────────────────────────────────
 console.log('── 1) Tabellen ──')
 for (const t of ['pilot_send_gate', 'pilot_versand_sperre']) {
-  const da = await orakel(`SELECT to_regclass('public.${t}')::text`)
-  pruefe(`T_${t}_existiert`, da === `public.${t}`, da === `public.${t}` ? 'existiert' : `nicht gefunden (${da})`)
+  // to_regclass::text liefert den Namen unqualifiziert, sobald `public` im
+  // search_path steht — deshalb wird gegen pg_class geprueft, nicht gegen den
+  // (schema-abhaengigen) Textwert.
+  const da = await orakel(
+    `SELECT (to_regclass('public.${t}') IS NOT NULL)::text || ':' || coalesce(to_regclass('public.${t}')::text, '-')`
+  )
+  const [gefunden, name] = da.split(':')
+  pruefe(`T_${t}_existiert`, gefunden === 'true', gefunden === 'true' ? `existiert (${name})` : `nicht gefunden (${da})`)
 }
 
 // ── 2) RLS aktiv ───────────────────────────────────────────────────────────

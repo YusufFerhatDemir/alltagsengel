@@ -291,6 +291,48 @@ describe('Versandfähigkeit', () => {
     expect(rechnung.kennzahlen.find(k => k.label === 'versandbereit')!.wert).toBe(1)
   })
 
+  it('weist Versandzeitpunkte ohne Festschreibung als eigene rote Kennzahl aus', async () => {
+    // Der Befund aus Phase 8.4: `sent_at` allein belegt keinen Versand. Der
+    // Versandweg weist eine nicht festgeschriebene Rechnung ab, also kann
+    // eine solche Zeile nicht über ihn entstanden sein — sie stammt aus
+    // einer Einspielung. Ohne diese Kennzahl liest sich die Zahl
+    // „3 versendet" wie ein Erfolg des Versandpfads.
+    const f = fake(a => {
+      if (a.tabelle !== 'invoices') return undefined
+      if (!a.head) return { data: [] }
+      // Der Bestand: 3 Rechnungen, alle mit sent_at, keine festgeschrieben.
+      // Alles, was auf „noch nicht versendet" oder auf einen gesperrten
+      // Status filtert, ist damit leer.
+      if (hatFilter(a, 'is', 'sent_at', null)) return { count: 0 }
+      if (hatFilter(a, 'in', 'status')) return { count: 0 }
+      return { count: 3 }
+    })
+    const u = await lauf(f)
+    const rechnung = u.bereiche.find(b => b.id === 'rechnung')!
+    const kz = rechnung.kennzahlen.find(k => k.label === 'versendet ohne Festschreibung')!
+    expect(kz.wert).toBe(3)
+    expect(kz.ampel).toBe('rot')
+    expect(rechnung.ampel).toBe('rot')
+    expect(rechnung.begruendung).toContain('NICHT')
+  })
+
+  it('meldet die Kennzahl als nicht messbar, statt sie auf 0 zu setzen', async () => {
+    // Fail-closed: „keine unbelegten Versendungen" und „konnte nicht
+    // nachsehen" dürfen nicht dieselbe Zahl erzeugen.
+    const f = fake(a => {
+      if (a.tabelle !== 'invoices') return undefined
+      if (!a.head) return { data: [] }
+      if (hatFilter(a, 'not', 'sent_at') && hatFilter(a, 'is', 'frozen_at', null)) {
+        return { error: { message: 'permission denied' } }
+      }
+      return { count: 0 }
+    })
+    const u = await lauf(f)
+    const rechnung = u.bereiche.find(b => b.id === 'rechnung')!
+    expect(rechnung.kennzahlen.find(k => k.label === 'versendet ohne Festschreibung')!.wert).toBeNull()
+    expect(rechnung.ampel).toBe('ungeprueft')
+  })
+
   it('fehlende Empfänger färben den Bereich gelb, nicht grün', async () => {
     // Die blockierenden Zähler müssen hier ausdrücklich 0 sein — sonst
     // prüfte der Test, dass 'blockiert' 'blockiert' schlägt, und nicht,

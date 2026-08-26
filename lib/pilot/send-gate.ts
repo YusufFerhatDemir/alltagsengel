@@ -50,9 +50,77 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { EnvQuelle } from '@/lib/env/pruefung'
 import { pruefeRechnungFuerPilot, type RechnungPilotBericht } from './rechnung-pilot'
+import { logBillingAction } from '@/lib/billing/core/audit'
 import { logger } from '@/lib/logger'
 
 const log = logger.child('pilot-send-gate')
+
+// ---------------------------------------------------------------------------
+// Audit
+// ---------------------------------------------------------------------------
+
+/**
+ * Die vier Ereignisse im Leben einer Einmal-Freigabe.
+ *
+ * Sie stehen im `billing_audit_trail`, nicht nur im Anwendungsprotokoll: das
+ * Anwendungsprotokoll ist fluechtig und mandantenblind, der Audit-Trail ist
+ * beides nicht. Wer nachtraeglich fragt „wer hat den ersten echten Versand
+ * freigegeben, und wann wurde die Freigabe verbraucht", bekommt die Antwort
+ * sonst nirgends — `pilot_send_gate` selbst traegt zwar Zeitstempel, kann aber
+ * nach einem Rollback der Migration verschwinden.
+ */
+export const GATE_AUDIT_AKTIONEN = [
+  'pilot_freigabe_erteilt',
+  'pilot_freigabe_verbraucht',
+  'pilot_freigabe_verbrauch_abgelehnt',
+  'pilot_freigabe_entwertet',
+] as const
+
+export type GateAuditAktion = (typeof GATE_AUDIT_AKTIONEN)[number]
+
+/**
+ * Schreibt einen Audit-Eintrag, ohne den Aufrufer scheitern zu lassen.
+ *
+ * `logBillingAction()` wirft bei einem Schreibfehler. Das ist an den meisten
+ * Stellen richtig, hier aber genau falsch: der Verbrauch eines Tokens ist zum
+ * Zeitpunkt des Audit-Aufrufs bereits geschrieben. Wuerde ein Audit-Fehler
+ * durchschlagen, sähe der Aufrufer einen Fehlschlag und liefe Gefahr, es
+ * erneut zu versuchen — mit einem Token, das schon verbraucht ist. Eine
+ * fehlende Protokollzeile ist schlimm; ein daraus entstandener Doppelversand
+ * waere schlimmer.
+ *
+ * `entity_type` ist 'invoice': die Freigabe hat keine eigene Entitaet im
+ * CHECK-Constraint (`AUDIT_ENTITY_TYPES`), und sie gehoert ohnehin zu genau
+ * einer Rechnung. Die Freigabe-Kennung steht in `new_state.gate_id`.
+ */
+async function protokolliereGate(
+  admin: SupabaseClient,
+  p: {
+    organizationId: string
+    invoiceId: string
+    action: GateAuditAktion
+    actorId: string
+    gateId: string | null
+    newState?: Record<string, unknown>
+    reason?: string
+  },
+): Promise<void> {
+  try {
+    await logBillingAction(admin, {
+      entityType: 'invoice',
+      entityId: p.invoiceId,
+      organizationId: p.organizationId,
+      action: p.action,
+      newState: { gate_id: p.gateId, ...(p.newState ?? {}) },
+      reason: p.reason,
+      actorId: p.actorId,
+    })
+  } catch (err) {
+    log.errorWithException('Audit-Eintrag zur Einmal-Freigabe fehlgeschlagen', err, {
+      invoiceId: p.invoiceId, action: p.action,
+    })
+  }
+}
 
 // ---------------------------------------------------------------------------
 // Freigabe
@@ -109,6 +177,51 @@ export function erstversandFreigabe(quelle: EnvQuelle = process.env): FreigabeSt
       `Der erste echte Rechnungsversand ist nicht freigegeben (FIRST_REAL_INVOICE_APPROVED=false, `
       + `${FREIGABE_ENV}${typeof roh === 'string' && roh !== '' ? ' trägt einen anderen Wert als ' + FREIGABE_AN_WERT : ' nicht gesetzt'}).`,
   }
+}
+
+/**
+ * Muss ein Rechnungsversand eine Einmal-Freigabe mitbringen?
+ *
+ * ── DER BEFUND, DEN DAS SCHLIESST (T3-1 aus Phase 8.3) ─────────────────────
+ * Bis hierhin liess sich eine Freigabe ausstellen, aber kein Versandweg
+ * verlangte sie. `POST /api/billing/invoices/[id]/versenden` kannte dieses
+ * Modul nicht — die staerkste Sperre des Systems war ausstellbar und
+ * wirkungslos. Der Kommentar in der Freigabe-Route („der Versand ist ein
+ * eigener Aufruf, der das Token mitbringen muss") beschrieb einen Zustand,
+ * den es nicht gab.
+ *
+ * ── WARUM DIE PFLICHT AM FREIGABE-SCHALTER HAENGT ──────────────────────────
+ * Die Pflicht gilt genau dann, wenn der Pilotbetrieb laeuft — also wenn
+ * ueberhaupt Freigaben ausstellbar sind. Andersherum waere es ein Deadlock:
+ * ohne gesetzten Schalter stellt `erzeugeSendeToken()` nichts aus, und ein
+ * unbedingtes Tokenverlangen wuerde damit JEDEN Rechnungsversand auf Dauer
+ * sperren — auch den regulaeren Betrieb nach dem Piloten.
+ *
+ * Die Wirkung ist deshalb: solange der Schalter aus ist, aendert sich nichts
+ * am heutigen Verhalten (Rolle, Preflight, Festschreibung, sent_at). Sobald
+ * er auf `1` steht — also fuer den ersten echten Versand, um den es geht —
+ * geht ohne Token nichts mehr raus, und zwar auf KEINEM Weg: auch nicht ueber
+ * den Automaten nach dem Festschreiben oder den Wiederholungslauf. Waehrend
+ * eines begleiteten Erstlaufs ist genau das richtig.
+ */
+export function pilotGatePflicht(quelle: EnvQuelle = process.env): {
+  pflicht: boolean
+  grund: string
+} {
+  const freigabe = erstversandFreigabe(quelle)
+  return freigabe.freigegeben
+    ? {
+        pflicht: true,
+        grund:
+          'Der Pilotbetrieb ist eingeschaltet — jeder Erstversand braucht eine Einmal-Freigabe '
+          + `(${freigabe.grund})`,
+      }
+    : {
+        pflicht: false,
+        grund:
+          'Der Pilotbetrieb ist aus — es sind keine Freigaben ausstellbar, also wird auch keine '
+          + 'verlangt. Der Versand haengt an Rolle, Preflight, Festschreibung und sent_at.',
+      }
 }
 
 // ---------------------------------------------------------------------------
@@ -327,6 +440,20 @@ export async function erzeugeSendeToken(
     invoiceId, organizationId, gueltigBis: String(data.gueltig_bis),
   })
 
+  await protokolliereGate(admin, {
+    organizationId, invoiceId, actorId,
+    action: 'pilot_freigabe_erteilt',
+    gateId: String(data.id),
+    newState: {
+      empfaenger: bericht.empfaenger,
+      betrag_cents: bericht.betragCent,
+      preflight_status: 'READY_FOR_SEND',
+      gueltig_bis: String(data.gueltig_bis),
+      freigabe_herkunft: freigabe.herkunft,
+    },
+    reason: 'Einmal-Freigabe für den ersten echten Rechnungsversand ausgestellt.',
+  })
+
   return { ok: true, token: String(data.id), gueltigBis: String(data.gueltig_bis), bericht }
 }
 
@@ -527,6 +654,15 @@ export async function verbraucheSendeToken(
 
   const zeilen = (data ?? []) as Record<string, unknown>[]
   if (zeilen.length !== 1) {
+    // Ein abgelehnter Verbrauch ist die Spur eines Doppelversand-Versuchs.
+    // Genau die will ein Nachprüfer sehen — sie steht sonst nirgends.
+    await protokolliereGate(admin, {
+      organizationId, invoiceId, actorId,
+      action: 'pilot_freigabe_verbrauch_abgelehnt',
+      gateId: token.trim(),
+      newState: { getroffene_zeilen: zeilen.length },
+      reason: 'Die Freigabe war beim Verbrauch nicht mehr offen. Es wurde nichts versendet.',
+    })
     return {
       ok: false,
       code: 'token_verbraucht',
@@ -537,7 +673,19 @@ export async function verbraucheSendeToken(
   }
 
   log.info('Einmal-Freigabe verbraucht', { invoiceId, organizationId })
-  return { ok: true, gate: ausZeile(zeilen[0]) }
+  const gate = ausZeile(zeilen[0])
+  await protokolliereGate(admin, {
+    organizationId, invoiceId, actorId,
+    action: 'pilot_freigabe_verbraucht',
+    gateId: gate.id,
+    newState: {
+      empfaenger: gate.empfaenger,
+      betrag_cents: gate.betragCents,
+      verbraucht_am: gate.verbrauchtAm,
+    },
+    reason: 'Einmal-Freigabe vor dem Versand verbraucht.',
+  })
+  return { ok: true, gate }
 }
 
 /**
@@ -548,9 +696,9 @@ export async function verbraucheSendeToken(
  */
 export async function entwerteSendeToken(
   admin: SupabaseClient,
-  params: { token: string; organizationId: string; grund: string; jetzt?: Date },
+  params: { token: string; organizationId: string; grund: string; actorId?: string; jetzt?: Date },
 ): Promise<{ ok: boolean; grund: string }> {
-  const { token, organizationId, grund, jetzt } = params
+  const { token, organizationId, grund, actorId = 'system', jetzt } = params
 
   if (!UUID_MUSTER.test(token.trim())) {
     return { ok: false, grund: 'Die mitgegebene Freigabe ist keine gültige Kennung.' }
@@ -563,14 +711,24 @@ export async function entwerteSendeToken(
     .eq('organization_id', organizationId)
     .is('verbraucht_am', null)
     .is('entwertet_am', null)
-    .select('id')
+    // `invoice_id` mit auslesen: der Audit-Eintrag haengt an der Rechnung,
+    // und die Kennung allein sagt nicht, um welche es ging.
+    .select('id, invoice_id')
 
   if (error) return { ok: false, grund: `Die Freigabe konnte nicht entwertet werden: ${error.message}` }
 
-  const zeilen = (data ?? []) as unknown[]
-  return zeilen.length === 1
-    ? { ok: true, grund: 'Freigabe entwertet.' }
-    : { ok: false, grund: 'Es gab keine offene Freigabe mit dieser Kennung.' }
+  const zeilen = (data ?? []) as { id: string; invoice_id: string }[]
+  if (zeilen.length !== 1) {
+    return { ok: false, grund: 'Es gab keine offene Freigabe mit dieser Kennung.' }
+  }
+
+  await protokolliereGate(admin, {
+    organizationId, invoiceId: String(zeilen[0].invoice_id), actorId,
+    action: 'pilot_freigabe_entwertet',
+    gateId: String(zeilen[0].id),
+    reason: grund,
+  })
+  return { ok: true, grund: 'Freigabe entwertet.' }
 }
 
 /**
@@ -582,9 +740,9 @@ export async function entwerteSendeToken(
  */
 export async function entwerteAlleOffenenTokens(
   admin: SupabaseClient,
-  params: { organizationId: string; grund: string; jetzt?: Date },
+  params: { organizationId: string; grund: string; actorId?: string; jetzt?: Date },
 ): Promise<number | null> {
-  const { organizationId, grund, jetzt } = params
+  const { organizationId, grund, actorId = 'system', jetzt } = params
   try {
     const { data, error } = await admin
       .from('pilot_send_gate')
@@ -592,13 +750,26 @@ export async function entwerteAlleOffenenTokens(
       .eq('organization_id', organizationId)
       .is('verbraucht_am', null)
       .is('entwertet_am', null)
-      .select('id')
+      .select('id, invoice_id')
 
     if (error) {
       log.warn('Offene Freigaben konnten nicht entwertet werden', { organizationId, errorMessage: error.message })
       return null
     }
-    return ((data ?? []) as unknown[]).length
+
+    const zeilen = (data ?? []) as { id: string; invoice_id: string }[]
+    // Je entwerteter Freigabe eine eigene Zeile: eine Sammelmeldung liesse
+    // sich nicht der einzelnen Rechnung zuordnen, und genau danach wird beim
+    // Nachvollziehen gesucht.
+    for (const zeile of zeilen) {
+      await protokolliereGate(admin, {
+        organizationId, invoiceId: String(zeile.invoice_id), actorId,
+        action: 'pilot_freigabe_entwertet',
+        gateId: String(zeile.id),
+        reason: grund,
+      })
+    }
+    return zeilen.length
   } catch (err) {
     log.errorWithException('Entwertung offener Freigaben scheiterte', err, { organizationId })
     return null

@@ -94,7 +94,7 @@ export async function DELETE(req: NextRequest) {
   try {
     const auth = await requireOpsAdmin('abrechnung.schreiben')
     if (!auth.ok) return auth.response
-    const { organizationId } = auth.ctx
+    const { organizationId, userId } = auth.ctx
 
     const token = new URL(req.url).searchParams.get('token')
     if (!token) {
@@ -104,6 +104,7 @@ export async function DELETE(req: NextRequest) {
     const ergebnis = await entwerteSendeToken(createAdminClient(), {
       token,
       organizationId,
+      actorId: userId,
       grund: 'Von Hand entwertet.',
     })
 

@@ -393,6 +393,7 @@ export async function pruefeNachVersand(
 
   ergebnis.entwerteteFreigaben = await entwerteAlleOffenenTokens(admin, {
     organizationId,
+    actorId,
     grund: `Versand-Nachprüfung ${geprueftAm} mit Abweichung — offene Freigaben beziehen sich auf einen überholten Zustand.`,
     jetzt,
   })

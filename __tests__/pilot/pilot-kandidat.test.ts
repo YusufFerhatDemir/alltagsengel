@@ -125,17 +125,38 @@ describe('Kein Kandidat', () => {
     expect(u.hinweise.length).toBeGreaterThan(0)
   })
 
-  it('meldet BEREITS_VERSENDET statt NO_PILOT_INVOICE, wenn nur Versendetes übrig ist', async () => {
+  it('meldet BEREITS_VERSENDET statt NO_PILOT_INVOICE, wenn nur BELEGT Versendetes übrig ist', async () => {
     let n = 0
     const u = await lauf(fake(a => {
       if (a.tabelle !== 'invoices') return undefined
       if (!a.head) return { data: [] }
-      // Erste Zählung = versandbereit (0), zweite = versendet (3).
+      // 1 = versandbereit (0), 2 = versendet (3), 3 = versendet ohne
+      // Festschreibung (0). Alle drei sind festgeschrieben, also belegt.
       n += 1
-      return { count: n === 1 ? 0 : 3 }
+      return { count: n === 1 ? 0 : n === 2 ? 3 : 0 }
     }))
     expect(u.zustand).toBe('BEREITS_VERSENDET')
     expect(u.actionRequired).toBeNull()
+    expect(u.versendetUnbelegt).toBe(0)
+  })
+
+  it('bleibt NO_PILOT_INVOICE, wenn die Versandzeitpunkte nicht festgeschrieben sind', async () => {
+    // Der Live-Fall aus Phase 8.4: drei eingespielte Rechnungen tragen
+    // sent_at, aber kein frozen_at. Der Versandweg weist eine nicht
+    // festgeschriebene Rechnung ab — er kann sie also nicht gesetzt haben.
+    // Vorher meldete diese Übersicht dafür BEREITS_VERSENDET und der
+    // Erstversand galt fälschlich als erledigt.
+    let n = 0
+    const u = await lauf(fake(a => {
+      if (a.tabelle !== 'invoices') return undefined
+      if (!a.head) return { data: [] }
+      n += 1
+      return { count: n === 1 ? 0 : 3 }
+    }))
+    expect(u.zustand).toBe('NO_PILOT_INVOICE')
+    expect(u.actionRequired).toBe(ACTION_REQUIRED_KEIN_KANDIDAT)
+    expect(u.versendetUnbelegt).toBe(3)
+    expect(u.begruendung).toContain('OHNE')
   })
 })
 
