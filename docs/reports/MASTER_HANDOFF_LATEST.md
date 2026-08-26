@@ -49,9 +49,9 @@ Dokument nicht den Stand, der tatsaechlich deployed ist -- dann zuerst
 
 | Anker | Bedeutung | Wert |
 |---|---|---|
-| **CODE_HEAD** | lokaler `main`-HEAD | *(wird nach deploy.sh nachgezogen)* |
-| **HANDOFF_COMMIT** | Commit, in dem dieses Dokument zuletzt geschrieben wurde | *(wird nach deploy.sh nachgezogen)* |
-| **ORIGIN_MAIN** | `origin/main` nach `deploy.sh` (Remote-Wahrheit) | *(wird nach deploy.sh nachgezogen)* |
+| **CODE_HEAD** | lokaler `main`-HEAD | `8d5f52a` (Phase 8.3 Code+Docs) |
+| **HANDOFF_COMMIT** | Commit, in dem dieses Dokument zuletzt geschrieben wurde | `8d5f52a` |
+| **ORIGIN_MAIN** | `origin/main` nach `deploy.sh` (Remote-Wahrheit) | `8d5f52a` |
 
 Pruefbefehl:
 
@@ -66,14 +66,14 @@ git rev-parse HEAD && git rev-parse origin/main
 > darueber hinaus -- insbesondere jeder Commit, der Code anfasst -- bedeutet:
 > dieses Dokument ist aelter als der deployte Stand.
 
-**Letzter Code-Commit** (der letzte Commit, der Anwendungscode anfasst): `aa50d11`
+**Letzter Code-Commit** (der letzte Commit, der Anwendungscode anfasst): `8d5f52a`
 
 **Phase-8.3-Commits (Alltagsengel):**
 
 | Commit | Inhalt |
 |---|---|
 | `aa50d11` | Tracks 1-5: Source-of-Truth, Send-Gate-Verifikation, Pilot-Kandidat, Laufzeit-Herkunft, Control Center |
-| *(nach deploy)* | Tracks 6-10: Idempotenz-Tests, Reports, Handoff |
+| `8d5f52a` | Tracks 6-10: Idempotenz-Tests, Reports, Handoff |
 
 **Phase-8.2-Commits (Alltagsengel):**
 
