@@ -34,6 +34,35 @@ beider Produkte. Jede neue Session liest zuerst diese Datei.
 
 ---
 
+> ## ⚠️ NACHTRAG 26.08.2026 — Phase 8 läuft, dieses Dokument beschreibt Phase 7
+>
+> Der Fließtext unten (§§ 0–10) ist auf dem Stand **nach Phase 7** und wurde
+> für Phase 8 **nicht** neu geschrieben. Er ist damit älter als der deployte
+> Stand — insbesondere die Commit-Anker in §0.
+>
+> **Für Phase 8 gelten diese beiden Berichte:**
+>
+> | Bericht | Inhalt |
+> |---|---|
+> | `docs/reports/PHASE8_TRACKS_1-4.md` | Pilot-Snapshot, Rechnungs-Pilotprüfung, Einmal-Freigabe für den Erstversand, Nachprüfung nach Versand — Commit `f0d14c2` |
+> | `docs/reports/PHASE8_TRACKS_5-10.md` | CAMT-Pilot (fest DRY_RUN), Zuordnungs-Gate, Mahn-Trockenlauf, Money-Path-Abstimmung, Business Inputs, Control-Center-Phasenkette |
+>
+> **Was sich am Gesamtstatus NICHT geändert hat:** `payments` = 0,
+> `camt_imports` = 0, `invoice_email_log` = 0. Kein Schalter ist umgelegt.
+> Phase 8 hat ausschließlich Vorstufen und Anzeigen gebaut — keine echte
+> Transaktion, kein echter Versand, keine Buchung.
+>
+> **Neu offen:** Migration `20261005000000_pilot_send_gate.sql` wartet auf den
+> Supabase-SQL-Editor. Sie ist die erste wartende Migration seit Phase 6B; ohne
+> sie ist die Einmal-Freigabe für den Erstversand nicht benutzbar, und die
+> `APPROVAL`-Phase in `/admin/pilot` steht auf BLOCKIERT (mit korrekter
+> Begründung).
+>
+> **Der nächste vollständige Handoff schreibt §§ 0–10 neu.** Bis dahin gilt:
+> Phase-7-Aussagen unten sind weiterhin richtig, aber nicht mehr vollständig.
+
+---
+
 ## 0. Commit-Anker
 
 Die drei Werte müssen **identisch** sein. Weichen sie ab, beschreibt dieses
