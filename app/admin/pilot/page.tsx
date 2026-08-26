@@ -17,13 +17,37 @@ import type {
   MoneyPathKennzahl,
   MoneyPathUebersicht,
 } from '@/lib/pilot/control-center'
+import type {
+  PilotPhase,
+  PilotPhasenUebersicht,
+  VorgangStatus,
+} from '@/lib/pilot/pilot-phasen'
+import type { BusinessInputBericht, BusinessInputStand } from '@/lib/pilot/business-inputs'
 
 interface PilotAntwort {
   voraussetzungen: VoraussetzungErgebnis
   ketten: KundenKette[]
   moneyPath: MoneyPathUebersicht
+  phasen: PilotPhasenUebersicht
+  businessInputs: BusinessInputBericht
   schritte: SchrittDefinition[]
   gekappt: boolean
+}
+
+/**
+ * Sieben Zustände, sieben Farben — und BLOCKED ist bewusst NICHT dieselbe
+ * Farbe wie FAILED. „Etwas verbietet den Schritt" und „der Schritt wurde
+ * versucht und ging schief" schicken jemanden an völlig verschiedene
+ * Stellen.
+ */
+const PHASE_STATUS: Record<VorgangStatus, { farbe: string; label: string }> = {
+  NOT_STARTED: { farbe: '#94a3b8', label: 'NICHT BEGONNEN' },
+  READY:       { farbe: '#0ea5e9', label: 'BEREIT' },
+  APPROVED:    { farbe: '#8b5cf6', label: 'FREIGEGEBEN' },
+  EXECUTING:   { farbe: '#f59e0b', label: 'LÄUFT' },
+  VERIFIED:    { farbe: '#22c55e', label: 'GEPRÜFT' },
+  FAILED:      { farbe: '#ef4444', label: 'GESCHEITERT' },
+  BLOCKED:     { farbe: '#b91c1c', label: 'BLOCKIERT' },
 }
 
 const AMPEL_FARBE: Record<Ampel, string> = {
@@ -258,6 +282,91 @@ export default function PilotPage() {
         {data.moneyPath.bereiche.map(b => <MoneyPathKarte key={b.id} bereich={b} />)}
       </div>
 
+      <h2 style={{ marginTop: 36 }}>4 · Erstbetrieb — Phasenkette</h2>
+      <p style={{ color: 'var(--muted)', marginBottom: 12, maxWidth: 760 }}>
+        Der begleitete Erstlauf in neun Phasen, in fester Reihenfolge. Jede Phase nennt das Modul,
+        das die Aktion <em>tatsächlich</em> freigibt — diese Seite selbst gibt nichts frei.
+      </p>
+
+      <Banner tone="info">
+        <strong>Anzeigetafel, kein Gate.</strong> {data.phasen.freigabeHinweis}
+      </Banner>
+
+      {data.phasen.hinweise.length > 0 && (
+        <div style={{ marginTop: 16 }}>
+          <Banner tone="warn">
+            <strong>Nicht messbar (die betroffene Phase steht auf BLOCKIERT, nicht auf 0):</strong>
+            <ul style={{ margin: '8px 0 0', paddingLeft: 18 }}>
+              {data.phasen.hinweise.map((h, i) => <li key={i}>{h}</li>)}
+            </ul>
+          </Banner>
+        </div>
+      )}
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 16, margin: '20px 0' }}>
+        <KPI
+          label="Phasen geprüft"
+          value={data.phasen.fortschritt.verifiziert}
+          color={PHASE_STATUS.VERIFIED.farbe}
+        />
+        <KPI label="Phasen gesamt" value={data.phasen.fortschritt.gesamt} />
+        <KPI label="Fortschritt %" value={data.phasen.fortschritt.prozent} />
+      </div>
+
+      {data.phasen.aktuellePhase && (
+        <div className="admin-card" style={{ marginBottom: 16, borderLeft: `4px solid ${PHASE_STATUS[data.phasen.aktuellePhase.status].farbe}` }}>
+          <h3 style={{ marginTop: 0 }}>Nächster Schritt: {data.phasen.aktuellePhase.titel}</h3>
+          <p style={{ margin: '0 0 8px', fontSize: 14, lineHeight: 1.6 }}>
+            {data.phasen.aktuellePhase.naechsterSchritt ?? data.phasen.aktuellePhase.begruendung}
+          </p>
+          <p style={{ margin: 0, fontSize: 12, color: 'var(--muted)' }}>
+            Freigabe liegt bei <code>{data.phasen.aktuellePhase.gate}</code>
+          </p>
+        </div>
+      )}
+
+      <div>
+        {data.phasen.phasen.map(p => <PhasenKarte key={p.id} phase={p} />)}
+      </div>
+
+      <h2 style={{ marginTop: 36 }}>5 · Offene Geschäftsangaben</h2>
+      <p style={{ color: 'var(--muted)', marginBottom: 12, maxWidth: 760 }}>
+        Angaben, die niemand im System erfinden darf. Entscheidend ist die erste Zeile: ob sie den
+        Rechnungspilot aufhalten.
+      </p>
+
+      <Banner tone={data.businessInputs.rechnungspilotBlockiert ? 'danger' : 'success'}>
+        <strong>
+          Rechnungspilot blockiert: {data.businessInputs.rechnungspilotBlockiert ? 'JA' : 'NEIN'}.
+        </strong>{' '}
+        {data.businessInputs.rechnungspilotBlockiert
+          ? 'Mindestens eine offene Angabe liegt auf dem Rechnungsweg.'
+          : 'Keine der offenen Angaben liegt auf dem Rechnungsweg — DATEV ist eine nachgelagerte Ausleitung, ChairMatch ein anderes Repo und ein anderes Supabase-Projekt.'}
+      </Banner>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16, margin: '16px 0' }}>
+        <div className="admin-card">
+          <h3 style={{ marginTop: 0 }}>Läuft ohne jede dieser Angaben</h3>
+          <ul style={{ lineHeight: 1.7, margin: 0, paddingLeft: 18, fontSize: 13 }}>
+            {data.businessInputs.laeuftUnabhaengig.map(x => <li key={x}>{x}</li>)}
+          </ul>
+        </div>
+        <div className="admin-card" style={{ borderLeft: '4px solid #ef4444' }}>
+          <h3 style={{ marginTop: 0 }}>Läuft nicht, solange D1/D2 fehlen</h3>
+          <ul style={{ lineHeight: 1.7, margin: 0, paddingLeft: 18, fontSize: 13 }}>
+            {data.businessInputs.laeuftNicht.map(x => <li key={x}>{x}</li>)}
+          </ul>
+        </div>
+      </div>
+
+      <div className="admin-card" style={{ overflowX: 'auto' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: 640 }}>
+          <tbody>
+            {data.businessInputs.eingaben.map(e => <EingabeZeile key={e.id} eingabe={e} />)}
+          </tbody>
+        </table>
+      </div>
+
       <div className="admin-card" style={{ marginTop: 20 }}>
         <h3>Legende der Kettenschritte</h3>
         <ol style={{ lineHeight: 1.8, margin: 0, paddingLeft: 20, fontSize: 13 }}>
@@ -364,5 +473,84 @@ function KPI({ label, value, color }: { label: string; value: number; color?: st
       <div style={{ fontSize: 28, fontWeight: 700, color: color ?? 'inherit' }}>{value}</div>
       <div style={{ color: 'var(--muted)', fontSize: 13 }}>{label}</div>
     </div>
+  )
+}
+
+function PhasenKarte({ phase }: { phase: PilotPhase }) {
+  const s = PHASE_STATUS[phase.status]
+  return (
+    <div className="admin-card" style={{ marginBottom: 12, borderLeft: `4px solid ${s.farbe}` }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'center', marginBottom: 6 }}>
+        <h3 style={{ margin: 0, flex: '1 1 260px', fontSize: 15 }}>
+          {phase.nr}. {phase.titel}
+        </h3>
+        <span style={{
+          padding: '3px 10px', borderRadius: 999, border: `1px solid ${s.farbe}`,
+          color: s.farbe, fontSize: 11, fontWeight: 700, letterSpacing: 0.4, whiteSpace: 'nowrap',
+        }}>
+          {s.label}
+        </span>
+      </div>
+      <p style={{ margin: '0 0 8px', fontSize: 14, lineHeight: 1.6 }}>{phase.begruendung}</p>
+      {phase.naechsterSchritt && (
+        <p style={{ margin: '0 0 8px', fontSize: 13, lineHeight: 1.6 }}>
+          <strong>Zu tun:</strong> {phase.naechsterSchritt}
+        </p>
+      )}
+      <p style={{ margin: '0 0 10px', fontSize: 12, color: 'var(--muted)' }}>
+        Backend-Gate: <code>{phase.gate}</code>
+      </p>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16 }}>
+        {phase.kennzahlen.map((k, i) => (
+          <div key={i} style={{ minWidth: 130 }}>
+            {/* „—" ist nicht „0". */}
+            <div style={{ fontSize: 18, fontWeight: 700, color: k.wert === null ? '#6366f1' : 'inherit' }}>
+              {k.wert === null ? '—' : k.wert}
+            </div>
+            <div style={{ fontSize: 12, fontWeight: 500 }}>{k.label}</div>
+            <div style={{ fontSize: 11, color: 'var(--muted)', lineHeight: 1.45 }}>
+              {k.wert === null ? 'Nicht messbar. ' : ''}{k.bedeutung}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+const EINGABE_FARBE: Record<BusinessInputStand['stand'], string> = {
+  offen: '#f59e0b',
+  gesetzt: '#22c55e',
+  nicht_pruefbar: '#6366f1',
+}
+
+function EingabeZeile({ eingabe: e }: { eingabe: BusinessInputStand }) {
+  return (
+    <tr style={{ borderTop: '1px solid var(--border, #e5e7eb)' }}>
+      <td style={{ padding: '10px 8px 10px 0', width: 46, verticalAlign: 'top', fontWeight: 700 }}>
+        {e.id}
+      </td>
+      <td style={{ padding: '10px 8px', width: 110, verticalAlign: 'top' }}>
+        <span style={{
+          padding: '1px 6px', borderRadius: 4, fontSize: 10, fontWeight: 700,
+          border: `1px solid ${EINGABE_FARBE[e.stand]}`, color: EINGABE_FARBE[e.stand],
+          whiteSpace: 'nowrap',
+        }}>
+          {e.stand === 'nicht_pruefbar' ? 'NICHT PRÜFBAR' : e.stand.toUpperCase()}
+        </span>
+      </td>
+      <td style={{ padding: '10px 0' }}>
+        <div style={{ fontWeight: 500 }}>{e.frage}</div>
+        <div style={{ color: 'var(--muted)', fontSize: 12, marginTop: 3, lineHeight: 1.5 }}>
+          Quelle: {e.quelle} · {e.befund}
+        </div>
+        <div style={{ color: 'var(--muted)', fontSize: 12, marginTop: 3, lineHeight: 1.5 }}>
+          <strong>Offen:</strong> {e.wirkungOffen}
+        </div>
+        <div style={{ color: 'var(--muted)', fontSize: 12, marginTop: 3, lineHeight: 1.5 }}>
+          <strong>Blockiert nicht:</strong> {e.blockiertNicht}
+        </div>
+      </td>
+    </tr>
   )
 }

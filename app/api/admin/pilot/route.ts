@@ -6,6 +6,8 @@ import { ermittleVoraussetzungen } from '@/lib/pilot/voraussetzungen'
 import { ermittleKundenKetten } from '@/lib/pilot/kundenkette'
 import { KETTEN_SCHRITTE } from '@/lib/pilot/schritte'
 import { ermittleMoneyPath } from '@/lib/pilot/control-center'
+import { ermittlePilotPhasen } from '@/lib/pilot/pilot-phasen'
+import { ermittleBusinessInputs } from '@/lib/pilot/business-inputs'
 import { logger } from '@/lib/logger'
 const log = logger.child('admin/pilot')
 
@@ -53,7 +55,7 @@ export async function GET(request: Request) {
 
     const clientIds = (clients ?? []).map(c => c.id)
 
-    const [voraussetzungen, ketten, moneyPath] = await Promise.all([
+    const [voraussetzungen, ketten, moneyPath, phasen, businessInputs] = await Promise.all([
       ermittleVoraussetzungen(admin, auth.organizationId),
       ermittleKundenKetten(admin, auth.organizationId, clientIds),
       // Dritte, unabhaengige Sicht: die Betriebslage der vier Geldpfade
@@ -61,12 +63,21 @@ export async function GET(request: Request) {
       // Ebenfalls nur lesend — siehe Modulkopf von
       // lib/pilot/control-center.ts.
       ermittleMoneyPath(admin, auth.organizationId),
+      // Vierte Sicht (Phase 8, Track 10): der Erstbetrieb als Phasenkette.
+      // PRE-FLIGHT bis AUDIT, je mit Stand und mit dem Namen des Moduls,
+      // das die Aktion tatsaechlich freigibt. Fuehrt nichts aus.
+      ermittlePilotPhasen(admin, { organizationId: auth.organizationId }),
+      // Fuenfte Sicht (Phase 8, Track 9): welche Geschaeftsangaben fehlen
+      // und was trotzdem laeuft. Nennt keinen Wert, nur den Stand.
+      ermittleBusinessInputs(admin, auth.organizationId),
     ])
 
     return NextResponse.json({
       voraussetzungen,
       ketten,
       moneyPath,
+      phasen,
+      businessInputs,
       schritte: KETTEN_SCHRITTE,
       // Ehrlich benennen, wenn die Liste abgeschnitten wurde — eine stille
       // Kappung liest sich wie "das sind alle Kunden".
