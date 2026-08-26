@@ -191,6 +191,15 @@ export const ENV_REGISTER: readonly EnvEintrag[] = [
     wirktNachAussen: false,
     beschreibung: "Betriebsart des CAMT-Imports. Standard (und jeder unbekannte Wert) ist 'DRY_RUN': die Datei wird vollstaendig gelesen, geprueft und je Buchung eingeordnet, aber NICHTS gebucht. Nur der exakte Wert 'LIVE' laesst den Import Zahlungseingaenge anlegen und matchen. Ausgewertet in lib/billing/camt/camt-modus.ts.",
   },
+  {
+    name: 'PILOT_ERSTVERSAND_FREIGEGEBEN',
+    geltung: 'server',
+    notwendigkeit: 'optional',
+    wann: 'produktion',
+    geheim: false,
+    wirktNachAussen: true,
+    beschreibung: "Einmal-Freigabe fuer den ERSTEN echten Rechnungsversand. Nur der exakte Wert '1' gibt frei; ohne die Variable laesst sich kein Freigabe-Token ausstellen und der begleitete Erstversand ist nicht moeglich. Ersetzt KEINEN der beiden Versand-Schalter, sondern kommt obendrauf: das Token gilt fuer genau eine Rechnung und genau einmal. Ausgewertet in lib/pilot/send-gate.ts (Gegenstueck zur einkompilierten Konstante FIRST_REAL_INVOICE_APPROVED).",
+  },
 
   // ═══ Externe Freigaben (lib/abrechnung/externe-freigaben.ts) ═══
   {
