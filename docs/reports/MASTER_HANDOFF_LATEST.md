@@ -1,15 +1,14 @@
-# MASTER HANDOFF -- Stand 27.08.2026, nach Phase 8.3 (Final Live-Pilot Preparation)
+# MASTER HANDOFF -- Stand 27.08.2026, nach Phase 8.4 (Migration LIVE + Production Readiness)
 
 Dieses Dokument ist die einzige Wahrheitsquelle fuer den technischen Zustand
 beider Produkte. Jede neue Session liest zuerst diese Datei.
 
-> ## Gesamtstatus: `NOT_READY_FOR_LIVE_PILOT` — ein P0 offen
+> ## Gesamtstatus: `READY_FOR_EXPLICIT_USER_APPROVAL`
 >
-> **Ein technischer Blocker verhindert die Pilotbereitschaft:** Migration
-> `20261005000000_pilot_send_gate.sql` ist **NICHT LIVE**. Phase 8.2 hatte
-> sie faelschlich als angewendet gemeldet -- Phase 8.3 widerlegt das mit
-> zwei unabhaengigen Pruefwegen (`to_regclass` = NULL, PostgREST 404).
-> Alles andere ist technisch sauber. Typecheck 0 Fehler, 8.228+ Tests gruen.
+> **Kein technischer P0/P1 offen.** Migration `20261005000000_pilot_send_gate.sql`
+> ist LIVE_VERIFIZIERT (Phase 8.4, via Supabase MCP `apply_migration`).
+> Beide Tabellen existieren, Constraints korrekt, RLS aktiv, Policies korrekt,
+> 0 Zeilen. Typecheck 0 Fehler, 8.228+ Tests gruen.
 >
 > **Was dieser Status bedeutet:** Der Geschaeftsfuehrer entscheidet, wann und
 > ob der erste echte Vorgang stattfindet. Fuer jeden der drei Geldpfade gibt
@@ -32,9 +31,8 @@ beider Produkte. Jede neue Session liest zuerst diese Datei.
 >   `docs/ENV_KONFIGURATION.md` Paragraph 1).
 > - **Kein Pilot-Kandidat vorhanden.** Alle 3 Rechnungen sind Seed-Daten.
 >   Fuer den Pilot muss ein neuer Klient + Rechnung erzeugt werden.
-> - **Migration `20261005000000` wartet auf den Supabase-SQL-Editor.** Ohne
->   sie ist die Einmal-Freigabe nicht benutzbar und die `APPROVAL`-Phase
->   in `/admin/pilot` steht auf BLOCKIERT.
+> - **Migration `20261005000000` ist LIVE_VERIFIZIERT.** Einmal-Freigabe
+>   benutzbar, `APPROVAL`-Phase in `/admin/pilot` nicht mehr BLOCKIERT.
 >
 > **Fuer efy care (Fremdrepo) gilt dieser Status ausdruecklich nicht** --
 > dort stehen zwei P1 offen (Paragraph 7 T-6/T-7).
@@ -158,17 +156,17 @@ git rev-parse HEAD && git rev-parse origin/main
 ### Alltagsengel (nnwyktkqibdjxgimjyuq)
 
 - Status: ACTIVE_HEALTHY
-- Migrationen: 226+ angewendet -- **inkl. `20261004000000`** (neu in 6B)
-- Tabellen: 308, davon **308 mit RLS** (100 %)
+- Migrationen: 226+ angewendet -- **inkl. `20261004000000`** (neu in 6B) und **`20261005000000`** (Phase 8.4 LIVE)
+- Tabellen: 310, davon **310 mit RLS** (100 %)
 - org_fence RESTRICTIVE: alle relevanten Tabellen, 2 dokumentierte Ausnahmen
   (`organization_members`: Multi-Org-Verwaltung; `state_waitlist`: oeffentlich)
 - anon writes: 0
 - Storage: 7 Buckets gehaertet (file_size_limit + MIME-Allowlist)
 - DTA-Policies: org-scoped (`foldername[2] = current_org_id`)
-- **Migration `20261005000000` NICHT LIVE:** Phase 8.2 meldete sie als
-  angewendet, Phase 8.3 widerlegt das (`to_regclass` = NULL, PostgREST 404).
-  Wartet auf den Supabase-SQL-Editor. Verifikation: `scripts/verify-pilot-send-gate.mjs`
-  (26 Pruefpunkte, muss 26/26 zeigen).
+- **Migration `20261005000000` LIVE_VERIFIZIERT (Phase 8.4):** Angewendet via
+  Supabase MCP `apply_migration`. Beide Tabellen existieren, 13+11 Spalten,
+  4+2 CHECK-Constraints, 2+2 FK-Constraints, 4+2 Indexes (inkl. 2 UNIQUE partial),
+  RLS aktiv, je 2 Policies (admin + org_fence RESTRICTIVE), 0 Zeilen.
 
 ### ChairMatch (pwdbjqfpgumyfktbfswg)
 
@@ -250,8 +248,8 @@ Detailberichte: `PHASE8_2_TRACKS_1-6.md` -- `PHASE8_2_TRACKS_7-12.md`
 Phase 8.2 schliesst die Live-Pilot-Vorbereitung ab. Alle technischen Blocker
 sind beseitigt, alle Sicherheitsmechanismen verifiziert.
 
-**Kritische Statusaenderung:** Migration `20261005000000` ist jetzt **LIVE**.
-Die `APPROVAL`-Phase in `/admin/pilot` steht nicht mehr auf BLOCKIERT.
+**Korrektur:** Phase 8.2 meldete Migration `20261005000000` faelschlich als LIVE.
+Phase 8.3 widerlegte das. **Phase 8.4 hat sie korrekt angewendet** (via Supabase MCP).
 
 **Invoice-Log-Widerspruch aufgeklaert:** Die 3 Rechnungen mit `sent_at` sind
 Seed-Daten (Masseneinfuegung 2026-07-02, `versand_elektronisch = false`,
@@ -435,7 +433,7 @@ Abschnitt.** Nichts davon ist ein Code-Problem.
 | E3 | Erster CAMT-Import nie produktiv gelaufen | Braucht echte Bankdatei. **Vorstufe: `POST /api/pilot/camt-dry-run?format=text`** |
 | E4 | Erster Rechnungsversand nie produktiv | `invoice_email_log` = 0. **Vorstufe: `GET /api/billing/invoices/<id>/pilot?format=text`** |
 | E5 | Paragraph 45a Bayern Antrag unvollstaendig | Landesamt fuer Pflege |
-| **E6** | **Migration `20261005000000_pilot_send_gate.sql` NICHT angewendet** | Supabase SQL-Editor (DDL). Phase 8.2 meldete faelschlich LIVE; Phase 8.3 widerlegt. Verifikation: `scripts/verify-pilot-send-gate.mjs` (26 Punkte). **Erster Schritt vor allem anderen.** |
+| ~~E6~~ | ~~Migration `20261005000000_pilot_send_gate.sql`~~ | **ERLEDIGT Phase 8.4:** via Supabase MCP `apply_migration` angewendet und LIVE_VERIFIZIERT. |
 
 ### BUSINESS_INPUT_REQUIRED
 
@@ -479,7 +477,8 @@ sie nicht in einem Bericht verschwindet.
 
 ## 7. Echte offene technische Probleme
 
-**Kein technischer P0/P1 im Alltagsengel-Repo offen.** T-1 bis T-4 des
+**Kein technischer P0/P1 im Alltagsengel-Repo offen.** Migration
+`20261005000000` ist LIVE_VERIFIZIERT (Phase 8.4). T-1 bis T-4 des
 6A-Handoffs sind erledigt; die Phase-7- und Phase-8-Befunde sind saemtlich
 behoben oder als benannte Grenzen dokumentiert (Paragraph 5).
 
@@ -643,7 +642,7 @@ Geschaeftsentscheidung, keine technische Aufgabe.**
 |---|---|---|
 | HEAD = origin/main | `d534383` | `aa50d11` + Tracks 6-10 |
 | CI | GRUEN | GRUEN |
-| `pilot_send_gate` Tabelle | Faelschlich LIVE gemeldet | **NICHT LIVE** (P0) |
+| `pilot_send_gate` Tabelle | Faelschlich LIVE gemeldet | **LIVE_VERIFIZIERT** (Phase 8.4 via Supabase MCP) |
 | Resend API Key | ungeprüeft | **GUELTIG** (HTTP 200) |
 | Domain/DKIM/SPF/DMARC | dokumentiert | **LIVE VERIFIZIERT** |
 | Idempotenz-Key Tests | 0 | **2 ergaenzt (15/15)** |
