@@ -100,11 +100,28 @@ export async function updateAbwesenheit(
 
   if (Object.keys(update).length === 0) throw new UserFacingError('Keine Änderungen übergeben.')
 
+  // Genehmigte/abgelehnte Abwesenheiten sind entschieden — insbesondere darf
+  // eine bereits genehmigte Urlaubsabwesenheit nicht mehr im Zeitraum
+  // verändert werden, ohne dass genehmigenAbwesenheit erneut über das
+  // Urlaubskonto läuft. Sonst weichen die genommenen Tage von den
+  // tatsächlich freigegebenen Daten ab (zu viel oder zu wenig gebucht).
+  const { data: bestand, error: ladeFehler } = await supabase
+    .from('absences')
+    .select('status')
+    .eq('id', id)
+    .eq('organization_id', organizationId)
+    .single()
+  if (ladeFehler || !bestand) throw new UserFacingError('Abwesenheit nicht gefunden.')
+  if (bestand.status !== 'beantragt') {
+    throw new UserFacingError('Nur beantragte Abwesenheiten können bearbeitet werden. Bereits entschiedene Anträge sind unveränderlich.')
+  }
+
   const { data, error } = await supabase
     .from('absences')
     .update(update)
     .eq('id', id)
     .eq('organization_id', organizationId)
+    .eq('status', 'beantragt')
     .select('*')
     .single()
   if (error || !data) throw new Error(`Abwesenheit konnte nicht aktualisiert werden: ${error?.message ?? 'unbekannt'}`)
@@ -154,24 +171,66 @@ export async function genehmigenAbwesenheit(
     const dauer = abwesenheit.halber_tag ? 0.5 : tage
     const jahr = start.getFullYear()
 
-    const { data: konto } = await supabase
-      .from('personal_urlaubskonto')
-      .select('id, genommen_tage')
-      .eq('organization_id', organizationId)
-      .eq('caregiver_id', abwesenheit.caregiver_id)
-      .eq('jahr', jahr)
-      .maybeSingle()
-
-    if (konto) {
-      await supabase
-        .from('personal_urlaubskonto')
-        .update({ genommen_tage: (konto.genommen_tage ?? 0) + dauer })
-        .eq('id', konto.id)
-        .eq('organization_id', organizationId)
-    }
+    await bucheGenommeneTage(supabase, organizationId, abwesenheit.caregiver_id, jahr, dauer)
   }
 
   return abwesenheit
+}
+
+/**
+ * Bucht genommene Urlaubstage auf das Konto — mit Restanspruch-Prüfung und
+ * optimistischer Nebenläufigkeitskontrolle (compare-and-swap auf
+ * genommen_tage). Ohne die CAS-Bedingung könnten zwei nahezu gleichzeitige
+ * Genehmigungen (verschiedene Anträge desselben Jahres) denselben gelesenen
+ * Stand fortschreiben und sich gegenseitig überschreiben ("lost update").
+ * `resturlaub` ist eine generierte Spalte ohne CHECK — ohne diese Prüfung
+ * hier könnte ein Konto beliebig weit ins Minus genehmigt werden.
+ */
+async function bucheGenommeneTage(
+  supabase: SupabaseClient,
+  organizationId: string,
+  caregiverId: string,
+  jahr: number,
+  dauer: number,
+  versuche = 3,
+): Promise<void> {
+  for (let versuch = 0; versuch < versuche; versuch++) {
+    const { data: konto, error: ladeFehler } = await supabase
+      .from('personal_urlaubskonto')
+      .select('id, anspruch_tage, uebertrag_vorjahr, genommen_tage, geplant_tage')
+      .eq('organization_id', organizationId)
+      .eq('caregiver_id', caregiverId)
+      .eq('jahr', jahr)
+      .maybeSingle()
+    if (ladeFehler) throw new Error(`Urlaubskonto konnte nicht geprüft werden: ${ladeFehler.message}`)
+    if (!konto) {
+      throw new UserFacingError(
+        `Für ${jahr} existiert kein Urlaubskonto für diese Betreuungskraft — Genehmigung ohne Kontobuchung nicht möglich.`
+      )
+    }
+
+    const bisherGenommen = konto.genommen_tage ?? 0
+    const resturlaub = (konto.anspruch_tage ?? 0) + (konto.uebertrag_vorjahr ?? 0) - bisherGenommen - (konto.geplant_tage ?? 0)
+    if (dauer > resturlaub) {
+      throw new UserFacingError(
+        `Nicht genug Resturlaub: verfügbar ${resturlaub} Tage, beantragt ${dauer} Tage.`
+      )
+    }
+
+    const { data: aktualisiert, error: schreibFehler } = await supabase
+      .from('personal_urlaubskonto')
+      .update({ genommen_tage: bisherGenommen + dauer })
+      .eq('id', konto.id)
+      .eq('organization_id', organizationId)
+      .eq('genommen_tage', bisherGenommen) // CAS: nur wenn seit dem Lesen unverändert
+      .select('id')
+      .maybeSingle()
+    if (schreibFehler) throw new Error(`Urlaubskonto konnte nicht aktualisiert werden: ${schreibFehler.message}`)
+    if (aktualisiert) return // Erfolg
+
+    // Zwischenzeitlich anderweitig geändert — mit frischem Stand erneut versuchen.
+  }
+  throw new UserFacingError('Urlaubskonto wird gerade von einer anderen Genehmigung verändert — bitte erneut versuchen.')
 }
 
 export async function ablehnenAbwesenheit(
