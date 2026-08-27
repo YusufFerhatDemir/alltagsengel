@@ -5,6 +5,7 @@ import { NextResponse } from 'next/server'
 import { safeApiError } from '@/lib/api/error-sanitizer'
 import { getActiveOrgId } from '@/lib/organizations/server'
 import { logger } from '@/lib/logger'
+import { pruefeObergrenze, pruefeObergrenzenStapel, meldungenAus } from '@/lib/billing/obergrenzen'
 const log = logger.child('api:billing')
 
 /**
@@ -54,6 +55,29 @@ export async function GET(request: Request) {
         }
         return `Tarif "${t.leistungsart}" ist nicht verifiziert. Kassenabrechnung nicht moeglich.`
       })
+
+    // T-9: Preise gegen die gesetzlichen Obergrenzen (PfluV) halten. Die
+    // DB-Sperre greift nur bei bestaetigten Grenzen — der Seed steht auf
+    // unbestaetigt, also ist diese Warnung fuer die hessischen 30/25-EUR-Saetze
+    // derzeit die EINZIGE Stelle, an der eine Ueberschreitung sichtbar wird.
+    const obergrenzenBefunde = await pruefeObergrenzenStapel(
+      admin,
+      (tariffs ?? []).map((t: Record<string, unknown>) => ({
+        preisCent: Number(t.preis_cent),
+        rechtsgrundlage: String(t.rechtsgrundlage ?? ''),
+        verguetungsart: String(t.verguetungsart ?? ''),
+        leistungsart: t.leistungsart ? String(t.leistungsart) : null,
+        bundesland: t.bundesland ? String(t.bundesland) : null,
+        gueltigAb: String(t.gueltig_ab ?? ''),
+      })),
+    )
+    warnungen.push(
+      ...obergrenzenBefunde.flatMap((b, i) => {
+        if (!b.meldung) return []
+        const t = (tariffs ?? [])[i] as Record<string, unknown>
+        return [`Tarif "${t?.leistungsart ?? '?'}": ${b.meldung}`]
+      }),
+    )
 
     return NextResponse.json({ tariffs, warnungen })
   } catch (err) {
@@ -201,6 +225,31 @@ export async function POST(request: Request) {
       ...tarifDaten
     } = body as Record<string, unknown>
 
+    // T-9: Obergrenzen-Vorpruefung. Bewusst VOR dem Insert, damit die Meldung
+    // auch dann entsteht, wenn der DB-Trigger (bestaetigte Grenze) das
+    // Speichern gleich abweist — dann ist der Befund die einzige Erklaerung,
+    // die der Aufrufer bekommt.
+    const obergrenzeBefund = await pruefeObergrenze(admin, {
+      preisCent: Number((body as Record<string, unknown>).preis_cent),
+      rechtsgrundlage: String(body.rechtsgrundlage ?? ''),
+      verguetungsart: String((body as Record<string, unknown>).verguetungsart ?? ''),
+      leistungsart: body.leistungsart ? String(body.leistungsart) : null,
+      bundesland: (body as Record<string, unknown>).bundesland
+        ? String((body as Record<string, unknown>).bundesland)
+        : null,
+      gueltigAb: String((body as Record<string, unknown>).gueltig_ab ?? ''),
+    })
+    if (obergrenzeBefund.meldung) {
+      log.warn('Tarifpreis gegen gesetzliche Obergrenze auffaellig', {
+        organizationId,
+        leistungsart: body.leistungsart,
+        rechtsgrundlage: body.rechtsgrundlage,
+        preisCent: obergrenzeBefund.preisCent,
+        obergrenzeCent: obergrenzeBefund.obergrenzeCent,
+        obergrenzeStatus: obergrenzeBefund.status,
+      })
+    }
+
     // Admin-Client für den Insert verwenden (RLS erfordert Admin).
     // Org-Fence: organization_id kommt aus der Auth, NICHT aus dem Body — der
     // Spread steht davor, damit ein mitgeschicktes Feld ueberschrieben wird.
@@ -215,7 +264,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Tarif konnte nicht angelegt werden' }, { status: 500 })
     }
 
-    return NextResponse.json(tariff, { status: 201 })
+    return NextResponse.json(
+      { ...tariff, warnungen: meldungenAus([obergrenzeBefund]) },
+      { status: 201 },
+    )
   } catch (err) {
     return safeApiError(err, request)
   }

@@ -158,7 +158,7 @@ const HIBP_TIMEOUT_MS = 3000 // 3s — Login soll nicht hängen wenn API langsam
  * @returns `true` wenn das Passwort kompromittiert ist, sonst `false`.
  *          Bei Netzfehler / Timeout: `false` (fail-safe — User wird
  *          nicht blockiert wenn die API down ist; das Ereignis landet
- *          im console.warn).
+ *          als warn im strukturierten Log, Modul 'password-validation').
  */
 export async function checkPasswordBreach(password: string): Promise<boolean> {
   if (!password) return false
