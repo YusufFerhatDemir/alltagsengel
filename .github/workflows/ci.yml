@@ -83,6 +83,30 @@ jobs:
       - name: Forbidden-strings lint
         run: npm run lint:forbidden
 
+      - name: Schema-Drift-Check (warn-only — blockiert nicht)
+        # Findet Code, der Spalten anspricht, die es live nicht gibt.
+        # PostgREST lehnt so eine Abfrage komplett ab (42703); im Code sieht
+        # das aus wie „keine Daten". TypeScript und Unit-Tests sehen das nicht.
+        #
+        # Der Check braucht ein echtes PostgREST (OpenAPI-Beschreibung unter
+        # /rest/v1/). Die Shadow-DB ist ein lokales Postgres ohne API-Schicht
+        # und taugt dafür nicht — deshalb laufen hier Repo-Secrets:
+        #   SCHEMA_DRIFT_SUPABASE_URL         (Projekt-URL)
+        #   SCHEMA_DRIFT_SUPABASE_SECRET_KEY  (sb_secret_… oder service_role)
+        # Sind sie nicht gesetzt, meldet der Check laut ÜBERSPRUNGEN und endet
+        # mit 0 — er tut NICHT so, als hätte er geprüft.
+        #
+        # warn-only, weil Schema-Drift P2 ist: sichtbar im Log, aber kein
+        # Merge-Blocker. Die Platzhalter-ENVs am Workflow-Kopf werden hier
+        # bewusst leer überschrieben, sonst liefe der Check gegen eine
+        # nicht auflösbare Domain.
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SCHEMA_DRIFT_SUPABASE_URL }}
+          SUPABASE_SECRET_KEY: ${{ secrets.SCHEMA_DRIFT_SUPABASE_SECRET_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ''
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ''
+        run: node scripts/schema-drift-check.mjs --warn-only
+
       - name: Production build
         env:
           # Next.js Production-Builds dieses Repos sind speicherhungrig

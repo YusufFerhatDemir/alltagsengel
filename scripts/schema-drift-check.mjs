@@ -46,10 +46,27 @@ for (const datei of ['.env.local', '.env']) {
   }
 }
 
+/**
+ * `--warn-only` (CI, Pre-Commit): Befunde werden gemeldet, der Lauf endet
+ * trotzdem mit Exit 0. Schema-Drift ist P2 — er soll sichtbar sein, aber
+ * keinen Merge und keinen Commit blockieren.
+ *
+ * Ohne Zugangsdaten kann der Check nichts prüfen. Er meldet das dann laut
+ * als ÜBERSPRUNGEN. Exit 0 nur mit `--warn-only`; im Pflichtmodus ist ein
+ * nicht durchgeführter Check ein Fehler, kein Erfolg.
+ */
+const WARN_ONLY = process.argv.includes('--warn-only')
+
 const URL_ = process.env.NEXT_PUBLIC_SUPABASE_URL
 const KEY = secretKey()
 if (!URL_ || !KEY) {
-  console.error('NEXT_PUBLIC_SUPABASE_URL und SUPABASE_SERVICE_ROLE_KEY werden benötigt.')
+  const text = 'Schema-Drift-Check ÜBERSPRUNGEN — NEXT_PUBLIC_SUPABASE_URL und ein geheimer Key werden benötigt (echtes PostgREST, die lokale Shadow-DB hat keine OpenAPI-Beschreibung).'
+  if (WARN_ONLY) {
+    console.warn(`⚠️  ${text}`)
+    console.warn('   NICHTS GEPRÜFT — dieser Lauf ist kein grünes Ergebnis.')
+    process.exit(0)
+  }
+  console.error(`❌ ${text}`)
   process.exit(1)
 }
 
@@ -98,13 +115,29 @@ const AUSNAHMEN = new Set([
   'lib/pilot/control-center.ts:dunning_email_queue.next_dunning_at',
 ])
 
-const spec = await (await fetch(`${URL_}/rest/v1/`, {
-  headers: apiHeaders(KEY),
-})).json()
-
-const schema = new Map()
-for (const [name, def] of Object.entries(spec.definitions ?? {})) {
-  schema.set(name, new Set(Object.keys(def.properties ?? {})))
+/**
+ * Fehlschlag beim Schema-Abruf darf NIE als „keine Befunde" durchgehen:
+ * ein leeres Schema lässt jede Tabelle unbekannt aussehen, der Check
+ * überspringt dann stillschweigend alles und meldet ✅.
+ */
+let schema = new Map()
+try {
+  const antwort = await fetch(`${URL_}/rest/v1/`, { headers: apiHeaders(KEY) })
+  if (!antwort.ok) throw new Error(`HTTP ${antwort.status} ${antwort.statusText}`)
+  const spec = await antwort.json()
+  for (const [name, def] of Object.entries(spec.definitions ?? {})) {
+    schema.set(name, new Set(Object.keys(def.properties ?? {})))
+  }
+  if (schema.size === 0) throw new Error('OpenAPI-Beschreibung enthält keine Tabellen')
+} catch (fehler) {
+  const text = `Schema konnte nicht gelesen werden: ${fehler instanceof Error ? fehler.message : String(fehler)}`
+  if (WARN_ONLY) {
+    console.warn(`⚠️  ${text}`)
+    console.warn('   NICHTS GEPRÜFT — dieser Lauf ist kein grünes Ergebnis.')
+    process.exit(0)
+  }
+  console.error(`❌ ${text}`)
+  process.exit(1)
 }
 
 function dateien(dir, out = []) {
@@ -177,4 +210,8 @@ console.error(befunde.join('\n'))
 console.error(`\n${befunde.length} Befund(e). Jeder davon lässt die ganze Abfrage mit 42703 scheitern.`)
 console.error('Entweder den Spaltennamen korrigieren, die Migration anwenden — oder,')
 console.error('wenn der Befund nachweislich falsch zugeordnet ist, in AUSNAHMEN begründen.')
+if (WARN_ONLY) {
+  console.error('\n(--warn-only: Befunde gemeldet, Lauf endet trotzdem mit Exit 0.)')
+  process.exit(0)
+}
 process.exit(1)
