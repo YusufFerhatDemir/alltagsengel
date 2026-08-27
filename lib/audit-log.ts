@@ -9,7 +9,8 @@
 // Design-Prinzipien:
 //   1. Fail-soft: Wenn das Logging scheitert (DB-Glitch), darf die
 //      eigentliche Admin-Aktion NICHT blockiert werden. Wir loggen
-//      den Fehler in `console.error` (kein rohes err-Objekt, AUTH-002)
+//      den Fehler ueber den strukturierten Logger (kein rohes
+//      err-Objekt, AUTH-002)
 //      und liefern silent success zurück. Rationale: lieber ein
 //      funktionierender Passwort-Reset mit fehlendem Audit-Row als
 //      ein komplett gescheiterter Reset und User ausgesperrt.
@@ -152,8 +153,8 @@ export async function logAuditEvent(input: AuditLogInput): Promise<boolean> {
  *
  * `logAuditEventOrWarn` behält das Fail-soft-Prinzip bei — die
  * Hauptaktion wird NICHT blockiert —, wartet den Insert aber ab und
- * meldet den Fehlschlag auf `console.error` mit klarer Kennung, sodass
- * er im Log auffindbar ist.
+ * meldet den Fehlschlag ueber den strukturierten Logger (Modul 'audit')
+ * mit klarer Kennung, sodass er im Log auffindbar ist.
  *
  * Für Vorgänge, bei denen der Eintrag rechtlich zwingend ist (der
  * Vorgang also NICHT ohne Spur stattfinden darf), gibt es

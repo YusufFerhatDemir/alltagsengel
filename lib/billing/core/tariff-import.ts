@@ -21,6 +21,7 @@
  */
 
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { pruefeObergrenzenStapel } from '@/lib/billing/obergrenzen';
 
 export interface TariffImportRow {
   bundesland: string;
@@ -45,6 +46,20 @@ export interface TariffImportResult {
   imported: number;
   skipped: number;
   errors: TariffImportError[];
+  /**
+   * T-9: Hinweise auf Preise ueber der gesetzlichen Obergrenze (PfluV).
+   *
+   * Bewusst KEINE errors: die geseedeten Obergrenzen stehen auf
+   * `bestaetigt = FALSE`, also auf einem nicht 1:1 gegen den Verordnungstext
+   * geprueften Wert. Ein Import, den ein ungepruefter Wert abweist, waere
+   * schlimmer als die Luecke. Ist eine Grenze bestaetigt, weist ohnehin der
+   * DB-Trigger `enforce_tariff_obergrenze` den Insert zurueck — dann steht
+   * die Zeile zusaetzlich in errors.
+   *
+   * Die Pruefung laeuft auch im dryRun — dort ist sie sogar der eigentliche
+   * Zweck: erst pruefen, dann importieren.
+   */
+  warnungen: string[];
 }
 
 export interface TariffImportError {
@@ -138,7 +153,7 @@ export async function importTariffs(
   }
 
   if (allErrors.length > 0) {
-    return { imported: 0, skipped: rows.length, errors: allErrors };
+    return { imported: 0, skipped: rows.length, errors: allErrors, warnungen: [] };
   }
 
   // 2. Katalog-Validierung (leistungsart, rechtsgrundlage, tarifquelle)
@@ -171,11 +186,29 @@ export async function importTariffs(
   }
 
   if (allErrors.length > 0) {
-    return { imported: 0, skipped: rows.length, errors: allErrors };
+    return { imported: 0, skipped: rows.length, errors: allErrors, warnungen: [] };
   }
 
+  // 2b. T-9: Preise gegen die gesetzlichen Obergrenzen halten.
+  // Nach der Katalogpruefung, weil eine unbekannte Leistungsart die
+  // Angebotstyp-Zuordnung ohnehin nicht treffen koennte.
+  const obergrenzenBefunde = await pruefeObergrenzenStapel(
+    supabase,
+    rows.map(r => ({
+      preisCent: r.preis_cent,
+      rechtsgrundlage: r.rechtsgrundlage,
+      verguetungsart: r.verguetungsart,
+      leistungsart: r.leistungsart,
+      bundesland: r.bundesland,
+      gueltigAb: r.gueltig_ab,
+    })),
+  );
+  const warnungen = obergrenzenBefunde.flatMap((b, i) =>
+    b.meldung ? [`Zeile ${i + 1} (${rows[i].leistungsart}): ${b.meldung}`] : [],
+  );
+
   if (options.dryRun) {
-    return { imported: 0, skipped: rows.length, errors: [] };
+    return { imported: 0, skipped: rows.length, errors: [], warnungen };
   }
 
   // 3. Import
@@ -220,7 +253,7 @@ export async function importTariffs(
     }
   }
 
-  return { imported, skipped, errors: allErrors };
+  return { imported, skipped, errors: allErrors, warnungen };
 }
 
 /**

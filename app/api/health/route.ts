@@ -8,6 +8,18 @@
  *
  * Gibt JSON mit Status, einzelnen Checks, Timestamp und Version zurueck.
  * Leakt KEINE Secrets, Connection-Strings oder interne Fehlerdetails.
+ *
+ * Drei Zustaende:
+ *   healthy    alles antwortet innerhalb seines Zeitbudgets  → HTTP 200
+ *   degraded   alles antwortet, mindestens eines zu langsam  → HTTP 200
+ *   unhealthy  mindestens ein Check ist gescheitert          → HTTP 503
+ *
+ * Warum 'degraded' 200 bekommt: .github/workflows/uptime.yml legt bei jeder
+ * Nicht-2xx-Antwort ein GitHub-Issue an. Eine Datenbankabfrage, die statt
+ * 200 ms eben 1,6 s braucht, ist ein Hinweis, kein Ausfall — und ein
+ * Alarmkanal, in dem Hinweise stehen, wird nach zwei Wochen ignoriert. Die
+ * Verlangsamung steht im Feld `status` und in `hinweis`; wer sie ueberwachen
+ * will, liest den Rumpf statt des Statuscodes.
  */
 
 import { NextResponse } from 'next/server'
@@ -20,7 +32,26 @@ interface CheckResult {
   status: 'pass' | 'fail'
   durationMs: number
   message?: string
+  /** true, wenn der Check zwar bestanden hat, aber ueber dem Zeitbudget lag. */
+  slow?: boolean
 }
+
+/**
+ * Zeitbudget je Check in Millisekunden.
+ *
+ * Warum ueberhaupt eines: ein Health-Check, der nur pass/fail kennt, meldet
+ * bis zur letzten Sekunde vor dem Ausfall „healthy". Eine Datenbank, die
+ * 4 Sekunden fuer ein SELECT 1 braucht, ist nicht gesund — sie ist kurz vor
+ * dem Timeout. 'degraded' ist genau dieser Zustand: erreichbar, aber nicht
+ * in Ordnung.
+ *
+ * 1500 ms fuer die Verbindung (Aufbau inklusive), 800 ms fuer eine
+ * Zaehlabfrage mit head:true auf einem indizierten Primaerschluessel.
+ */
+const ZEITBUDGET_MS = {
+  database: 1500,
+  tabelle: 800,
+} as const
 
 export async function GET() {
   const checks: CheckResult[] = []
@@ -42,8 +73,16 @@ export async function GET() {
   const tableChecks = await checkCriticalTables()
   checks.push(...tableChecks)
 
-  const overallStatus = checks.every(c => c.status === 'pass') ? 'healthy' : 'degraded'
   const totalDuration = Math.round(performance.now() - start)
+
+  // Drei Zustaende statt zwei: 'unhealthy' heisst „etwas antwortet nicht",
+  // 'degraded' heisst „alles antwortet, aber zu langsam". Beides mit 503 zu
+  // beantworten waere richtig, beides gleich zu BENENNEN nicht — wer den
+  // Endpunkt ueberwacht, muss den Unterschied sehen.
+  const fehler = checks.filter(c => c.status === 'fail')
+  const langsam = checks.filter(c => c.status === 'pass' && c.slow)
+  const overallStatus =
+    fehler.length > 0 ? 'unhealthy' : langsam.length > 0 ? 'degraded' : 'healthy'
 
   return NextResponse.json(
     {
@@ -52,9 +91,16 @@ export async function GET() {
       version: process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7) ?? 'dev',
       durationMs: totalDuration,
       checks,
+      ...(langsam.length > 0
+        ? {
+            hinweis:
+              `${langsam.length} Check(s) ueber dem Zeitbudget: `
+              + langsam.map(c => `${c.name} (${c.durationMs} ms)`).join(', '),
+          }
+        : {}),
     },
     {
-      status: overallStatus === 'healthy' ? 200 : 503,
+      status: overallStatus === 'unhealthy' ? 503 : 200,
       headers: {
         'Cache-Control': 'no-store, no-cache, must-revalidate',
       },
@@ -93,10 +139,17 @@ async function checkSupabase(): Promise<CheckResult> {
       }
     }
 
+    const dauer = Math.round(performance.now() - start)
     return {
       name: 'database',
       status: 'pass',
-      durationMs: Math.round(performance.now() - start),
+      durationMs: dauer,
+      ...(dauer > ZEITBUDGET_MS.database
+        ? {
+            slow: true,
+            message: `Verbindung erreichbar, aber ${dauer} ms — Budget ${ZEITBUDGET_MS.database} ms.`,
+          }
+        : {}),
     }
   } catch {
     return {
@@ -123,11 +176,19 @@ async function checkCriticalTables(): Promise<CheckResult[]> {
           .from(table)
           .select('id', { count: 'exact', head: true })
 
+        const dauer = Math.round(performance.now() - start)
         results.push({
           name: `table:${table}`,
           status: error ? 'fail' : 'pass',
-          durationMs: Math.round(performance.now() - start),
-          ...(error ? { message: `Tabelle ${table} nicht erreichbar` } : {}),
+          durationMs: dauer,
+          ...(error
+            ? { message: `Tabelle ${table} nicht erreichbar` }
+            : dauer > ZEITBUDGET_MS.tabelle
+              ? {
+                  slow: true,
+                  message: `Tabelle ${table} erreichbar, aber ${dauer} ms — Budget ${ZEITBUDGET_MS.tabelle} ms.`,
+                }
+              : {}),
         })
       } catch {
         results.push({

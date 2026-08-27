@@ -110,7 +110,10 @@ describe('Der gute Fall', () => {
   it('importiert eine vollstaendige Zeile mit allen Feldern', async () => {
     const r = await importTariffs(admin, ORG_A, [zeile()], ADMIN_A)
 
-    expect(r).toEqual({ imported: 1, skipped: 0, errors: [] })
+    // warnungen (T-9, gesetzliche Obergrenze) gehoert seit der PfluV-Pruefung
+    // zum Rueckgabewert. Leer, weil die Testzeile keine Obergrenze reisst —
+    // dass das Feld ueberhaupt kommt, ist Teil der Zusage an die Aufrufer.
+    expect(r).toEqual({ imported: 1, skipped: 0, errors: [], warnungen: [] })
 
     const [t] = await zeilen<{
       organization_id: string; bundesland: string; leistungsart: string
